@@ -266,9 +266,10 @@ DeleteScopeData(ConcreteScopeData* data)
 template <typename ConcreteScope, XDRMode mode>
 /* static */ bool
 Scope::XDRSizedBindingNames(XDRState<mode>* xdr, Handle<ConcreteScope*> scope,
-                            MutableHandle<typename ConcreteScope::Data*> data)
+                            MutableHandle<typename ConcreteScope::Data*> data, uint32_t* lengthOut)
 {
     MOZ_ASSERT(!data);
+    MOZ_ASSERT(!*lengthOut);
 
     JSContext* cx = xdr->cx();
 
@@ -281,10 +282,12 @@ Scope::XDRSizedBindingNames(XDRState<mode>* xdr, Handle<ConcreteScope*> scope,
     if (mode == XDR_ENCODE) {
         data.set(&scope->data());
     } else {
-        data.set(NewEmptyScopeData<ConcreteScope>(cx, length).release());
-        if (!data)
-            return false;
-        data->length = length;
+        if (length) {
+            data.set(NewEmptyScopeData<ConcreteScope>(cx, length).release());
+            if (!data)
+                return false;
+            data->length = length;
+        }
     }
 
     for (uint32_t i = 0; i < length; i++) {
@@ -298,6 +301,7 @@ Scope::XDRSizedBindingNames(XDRState<mode>* xdr, Handle<ConcreteScope*> scope,
         }
     }
 
+    *lengthOut = length;
     return true;
 }
 
@@ -559,7 +563,8 @@ LexicalScope::XDR(XDRState<mode>* xdr, ScopeKind kind, HandleScope enclosing,
     JSContext* cx = xdr->cx();
 
     Rooted<Data*> data(cx);
-    if (!XDRSizedBindingNames<LexicalScope>(xdr, scope.as<LexicalScope>(), &data))
+    uint32_t length = 0;
+    if (!XDRSizedBindingNames<LexicalScope>(xdr, scope.as<LexicalScope>(), &data, &length))
         return false;
 
     {
@@ -583,6 +588,9 @@ LexicalScope::XDR(XDRState<mode>* xdr, ScopeKind kind, HandleScope enclosing,
             return false;
 
         if (mode == XDR_DECODE) {
+            if (!data)
+                return false;
+
             scope.set(create(cx, kind, data, firstFrameSlot, enclosing));
             if (!scope)
                 return false;
@@ -743,7 +751,8 @@ FunctionScope::XDR(XDRState<mode>* xdr, HandleFunction fun, HandleScope enclosin
 {
     JSContext* cx = xdr->cx();
     Rooted<Data*> data(cx);
-    if (!XDRSizedBindingNames<FunctionScope>(xdr, scope.as<FunctionScope>(), &data))
+    uint32_t length = 0;
+    if (!XDRSizedBindingNames<FunctionScope>(xdr, scope.as<FunctionScope>(), &data, &length))
         return false;
 
     {
@@ -754,30 +763,35 @@ FunctionScope::XDR(XDRState<mode>* xdr, HandleFunction fun, HandleScope enclosin
 
         uint8_t needsEnvironment;
         uint8_t hasParameterExprs;
+        uint16_t nonPositionalFormalStart;
+        uint16_t varStart;
         uint32_t nextFrameSlot;
         if (mode == XDR_ENCODE) {
             needsEnvironment = scope->hasEnvironment();
             hasParameterExprs = data->hasParameterExprs;
+            nonPositionalFormalStart = data->nonPositionalFormalStart;
+            varStart = data->varStart;
             nextFrameSlot = data->nextFrameSlot;
         }
         if (!xdr->codeUint8(&needsEnvironment))
             return false;
         if (!xdr->codeUint8(&hasParameterExprs))
             return false;
-        if (!xdr->codeUint16(&data->nonPositionalFormalStart))
+        if (!xdr->codeUint16(&nonPositionalFormalStart))
             return false;
-        if (!xdr->codeUint16(&data->varStart))
+        if (!xdr->codeUint16(&varStart))
             return false;
         if (!xdr->codeUint32(&nextFrameSlot))
             return false;
 
         if (mode == XDR_DECODE) {
-            if (!data->length) {
-                MOZ_ASSERT(!data->nonPositionalFormalStart);
-                MOZ_ASSERT(!data->varStart);
-                MOZ_ASSERT(!data->nextFrameSlot);
-                DeleteScopeData(data.get());
-                data = nullptr;
+            MOZ_ASSERT(!length == !data);
+            if (length) {
+                data->nonPositionalFormalStart = nonPositionalFormalStart;
+                data->varStart = varStart;
+            } else {
+                MOZ_ASSERT(!nonPositionalFormalStart);
+                MOZ_ASSERT(!varStart);
             }
 
             scope.set(create(cx, data, hasParameterExprs, needsEnvironment, fun, enclosing));
@@ -786,6 +800,7 @@ FunctionScope::XDR(XDRState<mode>* xdr, HandleFunction fun, HandleScope enclosin
 
             // nextFrameSlot is used only for this correctness check.
             MOZ_ASSERT(nextFrameSlot == scope->as<FunctionScope>().data().nextFrameSlot);
+            MOZ_ASSERT_IF(!data, !nextFrameSlot);
         }
     }
 
@@ -871,7 +886,8 @@ VarScope::XDR(XDRState<mode>* xdr, ScopeKind kind, HandleScope enclosing,
 {
     JSContext* cx = xdr->cx();
     Rooted<Data*> data(cx);
-    if (!XDRSizedBindingNames<VarScope>(xdr, scope.as<VarScope>(), &data))
+    uint32_t length = 0;
+    if (!XDRSizedBindingNames<VarScope>(xdr, scope.as<VarScope>(), &data, &length))
         return false;
 
     {
@@ -896,12 +912,7 @@ VarScope::XDR(XDRState<mode>* xdr, ScopeKind kind, HandleScope enclosing,
             return false;
 
         if (mode == XDR_DECODE) {
-            if (!data->length) {
-                MOZ_ASSERT(!data->nextFrameSlot);
-                DeleteScopeData(data.get());
-                data = nullptr;
-            }
-
+            MOZ_ASSERT(!length == !data);
             scope.set(create(cx, kind, data, firstFrameSlot, needsEnvironment, enclosing));
             if (!scope)
                 return false;
@@ -974,7 +985,8 @@ GlobalScope::XDR(XDRState<mode>* xdr, ScopeKind kind, MutableHandleScope scope)
 
     JSContext* cx = xdr->cx();
     Rooted<Data*> data(cx);
-    if (!XDRSizedBindingNames<GlobalScope>(xdr, scope.as<GlobalScope>(), &data))
+    uint32_t length = 0;
+    if (!XDRSizedBindingNames<GlobalScope>(xdr, scope.as<GlobalScope>(), &data, &length))
         return false;
 
     {
@@ -983,20 +995,31 @@ GlobalScope::XDR(XDRState<mode>* xdr, ScopeKind kind, MutableHandleScope scope)
                 DeleteScopeData(data.get());
         });
 
-        if (!xdr->codeUint32(&data->varStart))
+        uint32_t varStart;
+        uint32_t letStart;
+        uint32_t constStart;
+        if (mode == XDR_ENCODE) {
+            varStart = data->varStart;
+            letStart = data->letStart;
+            constStart = data->constStart;
+        }
+        if (!xdr->codeUint32(&varStart))
             return false;
-        if (!xdr->codeUint32(&data->letStart))
+        if (!xdr->codeUint32(&letStart))
             return false;
-        if (!xdr->codeUint32(&data->constStart))
+        if (!xdr->codeUint32(&constStart))
             return false;
 
         if (mode == XDR_DECODE) {
-            if (!data->length) {
-                MOZ_ASSERT(!data->varStart);
-                MOZ_ASSERT(!data->letStart);
-                MOZ_ASSERT(!data->constStart);
-                DeleteScopeData(data.get());
-                data = nullptr;
+            MOZ_ASSERT(!length == !data);
+            if (length) {
+                data->varStart = varStart;
+                data->letStart = letStart;
+                data->constStart = constStart;
+            } else {
+                MOZ_ASSERT(!varStart);
+                MOZ_ASSERT(!letStart);
+                MOZ_ASSERT(!constStart);
             }
 
             scope.set(create(cx, kind, data));
@@ -1106,16 +1129,12 @@ EvalScope::XDR(XDRState<mode>* xdr, ScopeKind kind, HandleScope enclosing,
                 DeleteScopeData(data.get());
         });
 
-        if (!XDRSizedBindingNames<EvalScope>(xdr, scope.as<EvalScope>(), &data))
+        uint32_t length = 0;
+        if (!XDRSizedBindingNames<EvalScope>(xdr, scope.as<EvalScope>(), &data, &length))
             return false;
 
         if (mode == XDR_DECODE) {
-            if (!data->length) {
-                MOZ_ASSERT(!data->nextFrameSlot);
-                DeleteScopeData(data.get());
-                data = nullptr;
-            }
-
+            MOZ_ASSERT(!length == !data);
             scope.set(create(cx, kind, data, enclosing));
             if (!scope)
                 return false;
