@@ -51,6 +51,25 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
         aStackingContext.ToRelativeWrRect(contentRect),
         aStackingContext.ToRelativeWrRect(clipBounds));
   }
+
+  // The scrolled clip on the layer is "inside" all of the scrollable metadatas
+  // on that layer. That is, the clip scrolls along with the content in
+  // child layers. So we need to apply this after pushing all the scroll layers,
+  // which we do above.
+  if (Maybe<LayerClip> scrolledClip = layer->GetScrolledClip()) {
+    LayerRect clipRect = IntRectToRect(ViewAs<LayerPixel>(
+        scrolledClip->GetClipRect(),
+        PixelCastJustification::MovingDownToChildren));
+    Maybe<WrImageMask> mask;
+    if (Maybe<size_t> maskLayerIndex = scrolledClip->GetMaskLayerIndex()) {
+      Layer* maskLayer = layer->GetAncestorMaskLayerAt(maskLayerIndex.value());
+      WebRenderLayer* maskWrLayer = WebRenderLayer::ToWebRenderLayer(maskLayer);
+      // TODO: check this transform is correct in all cases
+      mask = maskWrLayer->RenderMaskLayer(maskLayer->GetTransform());
+    }
+    mBuilder->PushClip(aStackingContext.ToRelativeWrRect(clipRect),
+        mask.ptrOr(nullptr));
+  }
 }
 
 ScrollingLayersHelper::~ScrollingLayersHelper()
@@ -60,6 +79,9 @@ ScrollingLayersHelper::~ScrollingLayersHelper()
   }
 
   Layer* layer = mLayer->GetLayer();
+  if (layer->GetScrolledClip()) {
+    mBuilder->PopClip();
+  }
   for (int32_t i = layer->GetScrollMetadataCount(); i > 0; i--) {
     const FrameMetrics& fm = layer->GetFrameMetrics(i - 1);
     if (!fm.IsScrollable()) {
