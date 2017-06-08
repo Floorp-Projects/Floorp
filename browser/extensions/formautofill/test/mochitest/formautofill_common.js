@@ -17,10 +17,7 @@ function setInput(selector, value) {
   // TODO: "setTimeout" is used here temporarily because there's no event to
   //       notify us of the state of "identifyAutofillFields" for now. We should
   //       figure out a better way after the heuristics land.
-  SimpleTest.requestFlakyTimeout("Guarantee asynchronous identifyAutofillFields is invoked");
-  return new Promise(resolve => setTimeout(() => {
-    resolve(input);
-  }, 500));
+  return new Promise(resolve => setTimeout(resolve));
 }
 
 function checkMenuEntries(expectedValues) {
