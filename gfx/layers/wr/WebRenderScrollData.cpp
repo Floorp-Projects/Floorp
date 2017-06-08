@@ -4,8 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/WebRenderScrollData.h"
+
+#include "Layers.h"
 #include "mozilla/Unused.h"
 #include "nsTArray.h"
+#include "UnitTransforms.h"
 
 namespace mozilla {
 namespace layers {
