@@ -193,7 +193,9 @@ class Simulator
     T get_pc_as() const { return reinterpret_cast<T>(get_pc()); }
 
     void trigger_wasm_interrupt() {
-        MOZ_ASSERT(!wasm_interrupt_);
+        // This can be called several times if a single interrupt isn't caught
+        // and handled by the simulator, but this is fine; once the current
+        // instruction is done executing, the interrupt will be handled anyhow.
         wasm_interrupt_ = true;
     }
 
