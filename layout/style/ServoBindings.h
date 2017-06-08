@@ -222,7 +222,6 @@ bool Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed,
 void Gecko_UpdateAnimations(RawGeckoElementBorrowed aElementOrPseudo,
                             ServoComputedValuesBorrowedOrNull aOldComputedValues,
                             ServoComputedValuesBorrowedOrNull aComputedValues,
-                            ServoComputedValuesBorrowedOrNull aParentComputedValues,
                             mozilla::UpdateAnimationsTasks aTasks);
 bool Gecko_ElementHasAnimations(RawGeckoElementBorrowed aElementOrPseudo);
 bool Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElementOrPseudo);
