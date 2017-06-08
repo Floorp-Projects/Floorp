@@ -16,7 +16,6 @@
 #include "nsCSSValue.h"
 #include "nsColor.h"
 #include "nsPresContext.h"
-#include "mozilla/Keyframe.h" // For PropertyValuePair
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StyleAnimationValue.h" // For AnimationValue
 #include "mozilla/StyleSetHandleInlines.h"
@@ -28,6 +27,8 @@
 
 using namespace mozilla::dom;
 using mozilla::StyleAnimationValue;
+
+typedef AutoTArray<RefPtr<RawServoAnimationValue>, 1> ServoAnimationValues;
 
 /*static*/ nsSMILCSSValueType nsSMILCSSValueType::sSingleton;
 
@@ -46,6 +47,8 @@ struct ValueWrapper {
   ValueWrapper(nsCSSPropertyID aPropID,
                const RefPtr<RawServoAnimationValue>& aValue)
     : mPropID(aPropID), mServoValues{(aValue)} {}
+  ValueWrapper(nsCSSPropertyID aPropID, ServoAnimationValues&& aValues)
+    : mPropID(aPropID), mServoValues{aValues} {}
 
   bool operator==(const ValueWrapper& aOther) const
   {
@@ -76,7 +79,7 @@ struct ValueWrapper {
   }
 
   nsCSSPropertyID mPropID;
-  AutoTArray<RefPtr<RawServoAnimationValue>, 1> mServoValues;
+  ServoAnimationValues mServoValues;
   StyleAnimationValue mGeckoValue;
 
 };
@@ -621,21 +624,22 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
   return true;
 }
 
-static already_AddRefed<RawServoAnimationValue>
+static ServoAnimationValues
 ValueFromStringHelper(nsCSSPropertyID aPropID,
                       Element* aTargetElement,
                       nsPresContext* aPresContext,
                       nsStyleContext* aStyleContext,
                       const nsAString& aString)
 {
+  ServoAnimationValues result;
   // FIXME (bug 1358966): Support shorthand properties
   if (nsCSSProps::IsShorthand(aPropID)) {
-    return nullptr;
+    return result;
   }
 
   nsIDocument* doc = aTargetElement->GetUncomposedDoc();
   if (!doc) {
-    return nullptr;
+    return result;
   }
 
   // Parse property
@@ -652,7 +656,7 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
                         ParsingMode::AllowAllNumericValues,
                         doc->GetCompatibilityMode()).Consume();
   if (!servoDeclarationBlock) {
-    return nullptr;
+    return result;
   }
 
   // Get a suitable style context for Servo
@@ -660,27 +664,12 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
     aStyleContext->StyleSource().AsServoComputedValues();
 
   // Compute value
-  PropertyValuePair propValuePair;
-  propValuePair.mProperty = aPropID;
-  propValuePair.mServoDeclarationBlock = servoDeclarationBlock;
-  AutoTArray<Keyframe, 1> keyframes;
-  keyframes.AppendElement()->mPropertyValues.AppendElement(Move(propValuePair));
-  nsTArray<ComputedKeyframeValues> computedValues =
-    aPresContext->StyleSet()->AsServo()
-      ->GetComputedKeyframeValuesFor(keyframes, aTargetElement, currentStyle);
-
-  // Pull out the appropriate value
-  if (computedValues.IsEmpty() || computedValues[0].IsEmpty()) {
-    return nullptr;
-  }
-  // So long as we don't support shorthands (bug 1358966) the following
-  // assertion should hold.
-  MOZ_ASSERT(computedValues.Length() == 1 &&
-             computedValues[0].Length() == 1,
-             "Should only have a single property with a single value");
-  AnimationValue computedValue = computedValues[0][0].mValue;
-  if (!computedValue.mServo) {
-    return nullptr;
+  aPresContext->StyleSet()->AsServo()->GetAnimationValues(servoDeclarationBlock,
+                                                          aTargetElement,
+                                                          currentStyle,
+                                                          result);
+  if (result.IsEmpty()) {
+    return result;
   }
 
   if (aPropID == eCSSProperty_font_size) {
@@ -692,8 +681,7 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
     }
   }
 
-  // Result should be already add-refed
-  return computedValue.mServo.forget();
+  return result;
 }
 
 // static
@@ -727,7 +715,7 @@ nsSMILCSSValueType::ValueFromString(nsCSSPropertyID aPropID,
   }
 
   if (aTargetElement->IsStyledByServo()) {
-    RefPtr<RawServoAnimationValue> parsedValue =
+    ServoAnimationValues parsedValues =
       ValueFromStringHelper(aPropID, aTargetElement, presContext,
                             styleContext, aString);
     if (aIsContextSensitive) {
@@ -736,9 +724,9 @@ nsSMILCSSValueType::ValueFromString(nsCSSPropertyID aPropID,
       *aIsContextSensitive = false;
     }
 
-    if (parsedValue) {
+    if (!parsedValues.IsEmpty()) {
       sSingleton.Init(aValue);
-      aValue.mU.mPtr = new ValueWrapper(aPropID, parsedValue);
+      aValue.mU.mPtr = new ValueWrapper(aPropID, Move(parsedValues));
     }
     return;
   }
