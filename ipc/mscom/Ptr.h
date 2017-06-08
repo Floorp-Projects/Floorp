@@ -48,6 +48,21 @@ struct MainThreadRelease
 };
 
 template <typename T>
+struct MTADelete
+{
+  void operator()(T* aPtr)
+  {
+    if (!aPtr) {
+      return;
+    }
+
+    EnsureMTA::AsyncOperation([aPtr]() -> void {
+      delete aPtr;
+    });
+  }
+};
+
+template <typename T>
 struct MTARelease
 {
   void operator()(T* aPtr)
@@ -55,8 +70,8 @@ struct MTARelease
     if (!aPtr) {
       return;
     }
-    EnsureMTA([&]() -> void
-    {
+
+    EnsureMTA::AsyncOperation([aPtr]() -> void {
       aPtr->Release();
     });
   }
@@ -70,13 +85,14 @@ struct MTAReleaseInChildProcess
     if (!aPtr) {
       return;
     }
+
     if (XRE_IsParentProcess()) {
       MOZ_ASSERT(NS_IsMainThread());
       aPtr->Release();
       return;
     }
-    EnsureMTA([&]() -> void
-    {
+
+    EnsureMTA::AsyncOperation([aPtr]() -> void {
       aPtr->Release();
     });
   }
@@ -97,6 +113,9 @@ using STAUniquePtr = mozilla::UniquePtr<T, detail::MainThreadRelease<T>>;
 
 template <typename T>
 using MTAUniquePtr = mozilla::UniquePtr<T, detail::MTARelease<T>>;
+
+template <typename T>
+using MTADeletePtr = mozilla::UniquePtr<T, detail::MTADelete<T>>;
 
 template <typename T>
 using ProxyUniquePtr = mozilla::UniquePtr<T, detail::MTAReleaseInChildProcess<T>>;
