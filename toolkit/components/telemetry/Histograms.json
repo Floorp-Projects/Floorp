@@ -7174,7 +7174,7 @@
   "TELEMETRY_ARCHIVE_LOAD_MS": {
     "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
-    "expires_in_version": "61",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 2000,
     "n_buckets": 20,
@@ -7194,7 +7194,7 @@
   "TELEMETRY_FAILED_SEND_PINGS_SIZE_KB": {
     "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
-    "expires_in_version": "never",
+    "expires_in_version": "61",
     "kind": "exponential",
     "low": 10,
     "high": 1024,
