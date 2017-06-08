@@ -2673,6 +2673,7 @@ ShutdownState::Enter()
   master->mNextPlayState.DisconnectIfConnected();
   master->mVolume.DisconnectIfConnected();
   master->mPreservesPitch.DisconnectIfConnected();
+  master->mLooping.DisconnectIfConnected();
   master->mSameOriginMedia.DisconnectIfConnected();
   master->mMediaPrincipalHandle.DisconnectIfConnected();
   master->mPlaybackBytesPerSecond.DisconnectIfConnected();
@@ -2735,6 +2736,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   INIT_MIRROR(mNextPlayState, MediaDecoder::PLAY_STATE_PAUSED),
   INIT_MIRROR(mVolume, 1.0),
   INIT_MIRROR(mPreservesPitch, true),
+  INIT_MIRROR(mLooping, false),
   INIT_MIRROR(mSameOriginMedia, false),
   INIT_MIRROR(mMediaPrincipalHandle, PRINCIPAL_HANDLE_NONE),
   INIT_MIRROR(mPlaybackBytesPerSecond, 0.0),
@@ -2781,6 +2783,7 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
   mNextPlayState.Connect(aDecoder->CanonicalNextPlayState());
   mVolume.Connect(aDecoder->CanonicalVolume());
   mPreservesPitch.Connect(aDecoder->CanonicalPreservesPitch());
+  mLooping.Connect(aDecoder->CanonicalLooping());
   mSameOriginMedia.Connect(aDecoder->CanonicalSameOriginMedia());
   mMediaPrincipalHandle.Connect(aDecoder->CanonicalMediaPrincipalHandle());
   mPlaybackBytesPerSecond.Connect(aDecoder->CanonicalPlaybackBytesPerSecond());
