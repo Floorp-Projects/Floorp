@@ -89,6 +89,8 @@
   <string name="firstrun_tracking_text">ปิดกั้นการติดตามออนไลน์โดยอัตโนมัติขณะที่คุณท่องเว็บ จากนั้นเอาหน้าที่เยี่ยมชมแล้วและคุกกี้ออกโดยสัมผัสที่ไอคอนถังขยะในแอปหรือในการแจ้งเตือนของคุณ</string>
   <string name="firstrun_defaultbrowser_title">เพิ่มความเป็นส่วนตัวของคุณ</string>
   <string name="firstrun_defaultbrowser_text">ตั้ง %1$s เป็นเบราว์เซอร์เริ่มต้นของคุณและรับประโยชน์จากการท่องเว็บแบบส่วนตัวเมื่อคุณเชื่อมโยงไปยังเว็บจากแอป Android อื่น ๆ</string>
+  <string name="firstrun_breaking_title">การแก้ไขอย่างรวดเร็วเมื่อ\nการปิดกั้นทำให้แสดงผลไม่สมบูรณ์</string>
+  <string name="firstrun_breaking_text">เมื่อข้อเสียของการปิดกั้นตัวติดตามออนไลน์คือไซต์ที่แสดงผลไม่สมบูรณ์ ปิดการปิดกั้นโดยแตะที่เมนู เครื่องมือ</string>
   <string name="firstrun_close_button">ตกลง เข้าใจแล้ว!</string>
   <string name="firstrun_skip_button">ข้าม</string>
   <string name="firstrun_next_button">ถัดไป</string>
