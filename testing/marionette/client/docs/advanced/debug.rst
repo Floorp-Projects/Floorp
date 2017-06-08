@@ -1,7 +1,7 @@
 Debugging
 =========
 
-.. py:currentmodule:: marionette
+.. py:currentmodule:: marionette_driver.marionette
 
 Sometimes when working with Marionette you'll run into unexpected behaviour and
 need to do some debugging. This page outlines some of the Marionette methods
@@ -18,8 +18,9 @@ a related topic about `using the debugger with Marionette`_ on MDN.
 Storing Logs on the Server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By calling `~Marionette.log` it is possible to store a message on the server.
-Logs can later be retrieved using `~Marionette.get_logs`. For example::
+By calling :func:`~Marionette.log` it is possible to store a message on the
+server.
+Logs can later be retrieved using :func:`~Marionette.get_logs`. For example::
 
     try:
         marionette.log("Sending a click event") # logged at INFO level
@@ -39,15 +40,15 @@ Seeing What's on the Page
 Sometimes it's difficult to tell what is actually on the page that is being
 manipulated. Either because it happens too fast, the window isn't big enough or
 you are manipulating a remote server! There are two methods that can help you
-out. The first is `~Marionette.screenshot`::
+out. The first is :func:`~Marionette.screenshot`::
 
     marionette.screenshot() # takes screenshot of entire frame
     elem = marionette.find_element(By.ID, 'some-div')
     marionette.screenshot(elem) # takes a screenshot of only the given element
 
 Sometimes you just want to see the DOM layout. You can do this with the
-`~Marionette.page_source` property. Note that the page source depends on the
-context you are in::
+:attr:`~Marionette.page_source` property. Note that the page source depends on
+the context you are in::
 
     print(marionette.page_source)
     marionette.set_context('chrome')
