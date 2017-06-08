@@ -232,7 +232,7 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
     private void maybeNotifyDataArrived() {
         if (mWaitingForData && isQueuedEnoughData()) {
             if (DEBUG) { Log.d(LOGTAG, "onDataArrived"); }
-            mPlayerEventDispatcher.onDataArrived();
+            mPlayerEventDispatcher.onDataArrived(getTrackType());
             mWaitingForData = false;
         }
     }
