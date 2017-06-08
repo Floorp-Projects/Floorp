@@ -497,24 +497,33 @@ InterpolateForServo(const ValueWrapper* aStartWrapper,
                     double aUnitDistance,
                     nsSMILValue& aResult)
 {
-  const RefPtr<RawServoAnimationValue>*
-    startValue = aStartWrapper
-                 ? &aStartWrapper->mServoValues[0]
-                 : nullptr;
-  const RefPtr<RawServoAnimationValue>* endValue = &aEndWrapper.mServoValues[0];
-  RefPtr<RawServoAnimationValue> zeroValueStorage;
-  if (!FinalizeServoAnimationValues(startValue, endValue, zeroValueStorage)) {
-    return NS_ERROR_FAILURE;
-  }
+  ServoAnimationValues results;
+  size_t len = aEndWrapper.mServoValues.Length();
+  results.SetCapacity(len);
+  MOZ_ASSERT(!aStartWrapper || aStartWrapper->mServoValues.Length() == len,
+             "Start and end values length should be the same if "
+             "The start value exists");
+  for (size_t i = 0; i < len; i++) {
+    const RefPtr<RawServoAnimationValue>*
+      startValue = aStartWrapper
+                   ? &aStartWrapper->mServoValues[i]
+                   : nullptr;
+    const RefPtr<RawServoAnimationValue>* endValue = &aEndWrapper.mServoValues[i];
+    RefPtr<RawServoAnimationValue> zeroValueStorage;
+    if (!FinalizeServoAnimationValues(startValue, endValue, zeroValueStorage)) {
+      return NS_ERROR_FAILURE;
+    }
 
-  RefPtr<RawServoAnimationValue> result =
-    Servo_AnimationValues_Interpolate(*startValue,
-                                      *endValue,
-                                      aUnitDistance).Consume();
-  if (!result) {
-    return NS_ERROR_FAILURE;
+    RefPtr<RawServoAnimationValue> result =
+      Servo_AnimationValues_Interpolate(*startValue,
+                                        *endValue,
+                                        aUnitDistance).Consume();
+    if (!result) {
+      return NS_ERROR_FAILURE;
+    }
+    results.AppendElement(result);
   }
-  aResult.mU.mPtr = new ValueWrapper(aEndWrapper.mPropID, Move(result));
+  aResult.mU.mPtr = new ValueWrapper(aEndWrapper.mPropID, Move(results));
 
   return NS_OK;
 }
