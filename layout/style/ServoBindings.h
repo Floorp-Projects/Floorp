@@ -177,15 +177,16 @@ nsIAtom* Gecko_GetXMLLangValue(RawGeckoElementBorrowed element);
   bool prefix_##AttrEquals(implementor_ element, nsIAtom* ns, nsIAtom* name,  \
                            nsIAtom* str, bool ignoreCase);                    \
   bool prefix_##AttrDashEquals(implementor_ element, nsIAtom* ns,             \
-                               nsIAtom* name, nsIAtom* str);                  \
+                               nsIAtom* name, nsIAtom* str, bool ignore_case);\
   bool prefix_##AttrIncludes(implementor_ element, nsIAtom* ns,               \
-                             nsIAtom* name, nsIAtom* str);                    \
+                             nsIAtom* name, nsIAtom* str, bool ignore_case);  \
   bool prefix_##AttrHasSubstring(implementor_ element, nsIAtom* ns,           \
-                                 nsIAtom* name, nsIAtom* str);                \
+                                 nsIAtom* name, nsIAtom* str,                 \
+                                 bool ignore_case);                           \
   bool prefix_##AttrHasPrefix(implementor_ element, nsIAtom* ns,              \
-                              nsIAtom* name, nsIAtom* str);                   \
+                              nsIAtom* name, nsIAtom* str, bool ignore_case); \
   bool prefix_##AttrHasSuffix(implementor_ element, nsIAtom* ns,              \
-                              nsIAtom* name, nsIAtom* str);                   \
+                              nsIAtom* name, nsIAtom* str, bool ignore_case); \
   uint32_t prefix_##ClassOrClassList(implementor_ element, nsIAtom** class_,  \
                                      nsIAtom*** classList);
 
