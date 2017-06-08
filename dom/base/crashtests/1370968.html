@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<body>
+<iframe id="iframe" src="1370968-inner.xul"></iframe>
+<script>
+    var io = new IntersectionObserver(function () {
+    }, { });
+    var iframe = document.getElementById('iframe');
+    iframe.onload = function () {
+        io.observe(iframe.contentDocument.getElementById('target'));
+    };
+</script>
+</body>
+</html>

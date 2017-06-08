@@ -248,7 +248,8 @@ class Scope : public js::gc::TenuredCell
 
     template <typename ConcreteScope, XDRMode mode>
     static bool XDRSizedBindingNames(XDRState<mode>* xdr, Handle<ConcreteScope*> scope,
-                                     MutableHandle<typename ConcreteScope::Data*> data);
+                                     MutableHandle<typename ConcreteScope::Data*> data,
+                                     uint32_t* lengthOut);
 
     Shape* maybeCloneEnvironmentShape(JSContext* cx);
 

@@ -1364,10 +1364,15 @@ ContentParent::Init()
   // process.
   if (nsIPresShell::IsAccessibilityActive()) {
 #if defined(XP_WIN)
-    Unused <<
-      SendActivateA11y(a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
+#if defined(RELEASE_OR_BETA)
+    // On Windows we currently only enable a11y in the content process
+    // for testing purposes.
+    if (Preferences::GetBool(kForceEnableE10sPref, false))
+#endif
+      Unused << SendActivateA11y(::GetCurrentThreadId(),
+                                 a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
 #else
-    Unused << SendActivateA11y(0);
+    Unused << SendActivateA11y(0, 0);
 #endif
   }
 #endif
@@ -2772,10 +2777,15 @@ ContentParent::Observe(nsISupports* aSubject,
       // Make sure accessibility is running in content process when
       // accessibility gets initiated in chrome process.
 #if defined(XP_WIN)
-      Unused <<
-        SendActivateA11y(a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
+#if defined(RELEASE_OR_BETA)
+      // On Windows we currently only enable a11y in the content process
+      // for testing purposes.
+      if (Preferences::GetBool(kForceEnableE10sPref, false))
+#endif
+        Unused << SendActivateA11y(::GetCurrentThreadId(),
+                                   a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
 #else
-      Unused << SendActivateA11y(0);
+      Unused << SendActivateA11y(0, 0);
 #endif
     } else {
       // If possible, shut down accessibility in content process when

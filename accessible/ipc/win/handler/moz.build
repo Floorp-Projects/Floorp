@@ -49,6 +49,7 @@ RCINCLUDE = 'AccessibleHandler.rc'
 # we add the prefix "Proxy" to all of the generated counterparts.
 DEFINES['ENTRY_PREFIX'] = 'Proxy'
 DEFINES['REGISTER_PROXY_DLL'] = True
+LIBRARY_DEFINES['MOZ_MSCOM_REMARSHAL_NO_HANDLER'] = True
 
 # We want to generate distinct UUIDs on a per-channel basis, so we need
 # finer granularity than the standard preprocessor definitions offer.
