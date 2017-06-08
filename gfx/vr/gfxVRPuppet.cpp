@@ -438,6 +438,10 @@ VRDisplayPuppet::SubmitFrame(TextureSourceD3D11* aSource,
       mContext->VSSetShader(mQuadVS, nullptr, 0);
       mContext->PSSetShader(mQuadPS, nullptr, 0);
       ID3D11ShaderResourceView* srView = aSource->GetShaderResourceView();
+      if (!srView) {
+        NS_WARNING("Failed to get SRV for Puppet");
+        return false;
+      }
       mContext->PSSetShaderResources(0 /* 0 == TexSlot::RGB */, 1, &srView);
       // XXX Use Constant from TexSlot in CompositorD3D11.cpp?
 

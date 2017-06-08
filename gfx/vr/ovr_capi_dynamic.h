@@ -408,6 +408,8 @@ typedef struct {
 typedef enum {
   ovrInit_Debug          = 0x00000001,
   ovrInit_RequestVersion = 0x00000004,
+  ovrInit_Invisible      = 0x00000010,
+  ovrInit_MixedRendering = 0x00000020,
   ovrinit_WritableBits   = 0x00ffffff,
   ovrInit_EnumSize       = 0x7fffffff
 } ovrInitFlags;
@@ -532,7 +534,7 @@ typedef void (OVR_PFN* pfn_ovr_DestroyTextureSwapChain)(ovrSession session, ovrT
 typedef void (OVR_PFN* pfn_ovr_DestroyMirrorTexture)(ovrSession session, ovrMirrorTexture mirrorTexture);
 typedef ovrSizei(OVR_PFN* pfn_ovr_GetFovTextureSize)(ovrSession session, ovrEyeType eye, ovrFovPort fov, float pixelsPerDisplayPixel);
 typedef ovrEyeRenderDesc(OVR_PFN* pfn_ovr_GetRenderDesc)(ovrSession session, ovrEyeType eyeType, ovrFovPort fov);
-typedef ovrResult(OVR_PFN* pfn_ovr_SubmitFrame)(ovrSession session, unsigned int frameIndex,
+typedef ovrResult(OVR_PFN* pfn_ovr_SubmitFrame)(ovrSession session, long long frameIndex,
 	const ovrViewScaleDesc* viewScaleDesc,
 	ovrLayerHeader const * const * layerPtrList, unsigned int layerCount);
 typedef double (OVR_PFN* pfn_ovr_GetPredictedDisplayTime)(ovrSession session, long long frameIndex);
