@@ -58,9 +58,6 @@
           <children includes="panelview"/>
         </xul:stack>
       </xul:box>
-      <xul:box class="panel-viewcontainer offscreen">
-        <xul:box anonid="offscreenViewStack" class="panel-viewstack"/>
-      </xul:box>
     </content>
   </binding>
 
