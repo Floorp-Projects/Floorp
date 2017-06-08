@@ -2299,22 +2299,12 @@ ScriptLoader::GiveUpBytecodeEncoding()
   // removal of all request from the current list and these large buffers would
   // be removed at the same time as the source object.
   nsCOMPtr<nsIScriptGlobalObject> globalObject = GetScriptGlobalObject();
+  Maybe<AutoEntryScript> aes;
+
   if (globalObject) {
     nsCOMPtr<nsIScriptContext> context = globalObject->GetScriptContext();
     if (context) {
-      AutoEntryScript aes(globalObject, "give-up bytecode encoding", true);
-      JS::RootedScript script(aes.cx());
-      while (!mBytecodeEncodingQueue.isEmpty()) {
-        RefPtr<ScriptLoadRequest> request = mBytecodeEncodingQueue.StealFirst();
-        LOG(("ScriptLoadRequest (%p): Cannot serialize bytecode", request.get()));
-        TRACE_FOR_TEST_NONE(request->mElement, "scriptloader_bytecode_failed");
-        script.set(request->mScript);
-        Unused << JS::FinishIncrementalEncoding(aes.cx(), script,
-                                                request->mScriptBytecode);
-        request->mScriptBytecode.clearAndFree();
-        request->DropBytecodeCacheReferences();
-      }
-      return;
+      aes.emplace(globalObject, "give-up bytecode encoding", true);
     }
   }
 
@@ -2322,6 +2312,13 @@ ScriptLoader::GiveUpBytecodeEncoding()
     RefPtr<ScriptLoadRequest> request = mBytecodeEncodingQueue.StealFirst();
     LOG(("ScriptLoadRequest (%p): Cannot serialize bytecode", request.get()));
     TRACE_FOR_TEST_NONE(request->mElement, "scriptloader_bytecode_failed");
+
+    if (aes.isSome()) {
+      JS::RootedScript script(aes->cx(), request->mScript);
+      Unused << JS::FinishIncrementalEncoding(aes->cx(), script,
+                                              request->mScriptBytecode);
+    }
+
     request->mScriptBytecode.clearAndFree();
     request->DropBytecodeCacheReferences();
   }

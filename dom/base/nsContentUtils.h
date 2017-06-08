@@ -2993,6 +2993,13 @@ public:
   // heuristic strategy should be used to trigger the caching of the bytecode.
   static int32_t BytecodeCacheStrategy() { return sBytecodeCacheStrategy; }
 
+  /**
+   * Checks if the passed-in name should override an existing name on the
+   * window. Values which should not override include: "", "_blank", "_top",
+   * "_parent" and "_self".
+   */
+  static bool IsOverridingWindowName(const nsAString& aName);
+
 private:
   static bool InitializeEventTable();
 

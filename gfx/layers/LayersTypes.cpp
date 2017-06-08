@@ -25,6 +25,24 @@ CSSFilter ToCSSFilter(const nsStyleFilter& filter)
           filter.GetFilterParameter().GetFactorOrPercentValue(),
       };
     }
+    case NS_STYLE_FILTER_GRAYSCALE: {
+      return {
+          CSSFilterType::GRAYSCALE,
+          filter.GetFilterParameter().GetFactorOrPercentValue(),
+      };
+    }
+    case NS_STYLE_FILTER_INVERT: {
+      return {
+          CSSFilterType::INVERT,
+          filter.GetFilterParameter().GetFactorOrPercentValue(),
+      };
+    }
+    case NS_STYLE_FILTER_SEPIA: {
+      return {
+          CSSFilterType::SEPIA,
+          filter.GetFilterParameter().GetFactorOrPercentValue(),
+      };
+    }
     // All other filter types should be prevented by the code which converts
     // display items into layers.
     default:

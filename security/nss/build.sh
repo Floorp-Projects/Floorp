@@ -15,6 +15,7 @@ set -e
 cwd=$(cd $(dirname $0); pwd -P)
 source "$cwd"/coreconf/nspr.sh
 source "$cwd"/coreconf/sanitizers.sh
+GYP=${GYP:-gyp}
 
 # Usage info
 show_help()
@@ -183,7 +184,7 @@ if [[ "$rebuild_nspr" = 1 && "$no_local_nspr" = 0 ]]; then
     mv -f "$nspr_config".new "$nspr_config"
 fi
 if [ "$rebuild_gyp" = 1 ]; then
-    if ! hash gyp 2> /dev/null; then
+    if ! hash ${GYP} 2> /dev/null; then
         echo "Please install gyp" 1>&2
         exit 1
     fi
@@ -194,7 +195,7 @@ if [ "$rebuild_gyp" = 1 ]; then
         set_nspr_path "$obj_dir/include/nspr:$obj_dir/lib"
     fi
 
-    run_verbose run_scanbuild gyp -f ninja "${gyp_params[@]}" "$cwd"/nss.gyp
+    run_verbose run_scanbuild ${GYP} -f ninja "${gyp_params[@]}" "$cwd"/nss.gyp
 
     mv -f "$gyp_config".new "$gyp_config"
 fi

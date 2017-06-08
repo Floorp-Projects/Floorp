@@ -269,7 +269,7 @@ class ProtoAndIfaceCache
   class ArrayCache : public Array<JS::Heap<JSObject*>, kProtoAndIfaceCacheCount>
   {
   public:
-    JSObject* EntrySlotIfExists(size_t i) {
+    bool HasEntryInSlot(size_t i) {
       return (*this)[i];
     }
 
@@ -305,13 +305,13 @@ class ProtoAndIfaceCache
       }
     }
 
-    JSObject* EntrySlotIfExists(size_t i) {
+    bool HasEntryInSlot(size_t i) {
       MOZ_ASSERT(i < kProtoAndIfaceCacheCount);
       size_t pageIndex = i / kPageSize;
       size_t leafIndex = i % kPageSize;
       Page* p = mPages[pageIndex];
       if (!p) {
-        return nullptr;
+        return false;
       }
       return (*p)[leafIndex];
     }
@@ -397,10 +397,12 @@ public:
     }                                                \
   } while(0)
 
-  // Return the JSObject stored in slot i, if that slot exists.  If
-  // the slot does not exist, return null.
-  JSObject* EntrySlotIfExists(size_t i) {
-    FORWARD_OPERATION(EntrySlotIfExists, (i));
+  // Return whether slot i contains an object.  This doesn't return the object
+  // itself because in practice consumers just want to know whether it's there
+  // or not, and that doesn't require barriering, which returning the object
+  // pointer does.
+  bool HasEntryInSlot(size_t i) {
+    FORWARD_OPERATION(HasEntryInSlot, (i));
   }
 
   // Return a reference to slot i, creating it if necessary.  There

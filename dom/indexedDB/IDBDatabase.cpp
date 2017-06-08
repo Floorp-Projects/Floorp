@@ -56,6 +56,7 @@
 namespace mozilla {
 namespace dom {
 
+using namespace mozilla::dom::indexedDB;
 using namespace mozilla::dom::quota;
 using namespace mozilla::ipc;
 using namespace mozilla::services;
@@ -248,13 +249,6 @@ IDBDatabase::AssertIsOnOwningThread() const
 {
   MOZ_ASSERT(mFactory);
   mFactory->AssertIsOnOwningThread();
-}
-
-PRThread*
-IDBDatabase::OwningThread() const
-{
-  MOZ_ASSERT(mFactory);
-  return mFactory->OwningThread();
 }
 
 #endif // DEBUG

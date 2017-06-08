@@ -107,25 +107,7 @@ private:
       , mTargetInterface(aTargetInterface)
     {}
 
-    MapEntry(const MapEntry& aOther)
-      : mIID(aOther.mIID)
-      , mInterceptor(aOther.mInterceptor)
-      , mTargetInterface(aOther.mTargetInterface)
-    {
-    }
-
-    MapEntry(MapEntry&& aOther)
-      : mIID(aOther.mIID)
-      , mInterceptor(Move(aOther.mInterceptor))
-      , mTargetInterface(aOther.mTargetInterface)
-    {
-      aOther.mTargetInterface = nullptr;
-    }
-
-    MapEntry& operator=(const MapEntry& aOther) = delete;
-    MapEntry& operator=(MapEntry&& aOther) = delete;
-
-    REFIID            mIID;
+    IID               mIID;
     RefPtr<IUnknown>  mInterceptor;
     IUnknown*         mTargetInterface;
   };

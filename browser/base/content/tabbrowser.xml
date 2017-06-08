@@ -1558,6 +1558,7 @@
             var aCreateLazyBrowser;
             var aNextTabParentId;
             var aFocusUrlBar;
+            var aName;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
                 !(arguments[1] instanceof Ci.nsIURI)) {
@@ -1584,6 +1585,7 @@
               aCreateLazyBrowser        = params.createLazyBrowser;
               aNextTabParentId          = params.nextTabParentId;
               aFocusUrlBar              = params.focusUrlBar;
+              aName                     = params.name;
             }
 
             var bgLoad = (aLoadInBackground != null) ? aLoadInBackground :
@@ -1612,7 +1614,8 @@
                                   opener: aOpener,
                                   isPrerendered: aIsPrerendered,
                                   nextTabParentId: aNextTabParentId,
-                                  focusUrlBar: aFocusUrlBar });
+                                  focusUrlBar: aFocusUrlBar,
+                                  name: aName });
             if (!bgLoad)
               this.selectedTab = tab;
 
@@ -2058,6 +2061,14 @@
               b.sameProcessAsFrameLoader = aParams.sameProcessAsFrameLoader;
             }
 
+            // This will be used by gecko to control the name of the opened
+            // window.
+            if (aParams.name) {
+              // XXX: The `name` property is special in HTML and XUL. Should
+              // we use a different attribute name for this?
+              b.setAttribute("name", aParams.name);
+            }
+
             // Create the browserStack container
             var stack = document.createElementNS(NS_XUL, "stack");
             stack.className = "browserStack";
@@ -2318,6 +2329,7 @@
             var aNextTabParentId;
             var aNoInitialLabel;
             var aFocusUrlBar;
+            var aName;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
                 !(arguments[1] instanceof Ci.nsIURI)) {
@@ -2348,6 +2360,7 @@
               aNextTabParentId          = params.nextTabParentId;
               aNoInitialLabel           = params.noInitialLabel;
               aFocusUrlBar              = params.focusUrlBar;
+              aName                     = params.name;
             }
 
             // if we're adding tabs, we're past interrupt mode, ditch the owner
@@ -2474,7 +2487,8 @@
                                         sameProcessAsFrameLoader: aSameProcessAsFrameLoader,
                                         opener: aOpener,
                                         isPrerendered: aIsPrerendered,
-                                        nextTabParentId: aNextTabParentId });
+                                        nextTabParentId: aNextTabParentId,
+                                        name: aName });
             }
 
             t.linkedBrowser = b;

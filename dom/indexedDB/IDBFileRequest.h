@@ -10,11 +10,10 @@
 #include "DOMRequest.h"
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/FileRequestBase.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsString.h"
 
 template <class> struct already_AddRefed;
-class nsPIDOMWindowInner;
 
 namespace mozilla {
 
@@ -24,17 +23,47 @@ namespace dom {
 
 class IDBFileHandle;
 
-class IDBFileRequest final : public DOMRequest,
-                             public FileRequestBase
+class IDBFileRequest final
+  : public DOMRequest
 {
   RefPtr<IDBFileHandle> mFileHandle;
 
+  nsString mEncoding;
+
   bool mWrapAsDOMRequest;
+  bool mHasEncoding;
 
 public:
+  class ResultCallback;
+
   static already_AddRefed<IDBFileRequest>
-  Create(nsPIDOMWindowInner* aOwner, IDBFileHandle* aFileHandle,
+  Create(IDBFileHandle* aFileHandle,
          bool aWrapAsDOMRequest);
+
+  void
+  SetEncoding(const nsAString& aEncoding)
+  {
+    mEncoding = aEncoding;
+    mHasEncoding = true;
+  }
+
+  const nsAString&
+  GetEncoding() const
+  {
+    return mEncoding;
+  }
+
+  bool
+  HasEncoding() const
+  {
+    return mHasEncoding;
+  }
+
+  void
+  FireProgressEvent(uint64_t aLoaded, uint64_t aTotal);
+
+  void
+  SetResultCallback(ResultCallback* aCallback);
 
   // WebIDL
   IDBFileHandle*
@@ -53,6 +82,12 @@ public:
 
   IMPL_EVENT_HANDLER(progress)
 
+  void
+  AssertIsOnOwningThread() const
+  {
+    NS_ASSERT_OWNINGTHREAD(IDBFileRequest);
+  }
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBFileRequest, DOMRequest)
 
@@ -64,28 +99,22 @@ public:
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  // FileRequestBase
-  virtual FileHandleBase*
-  FileHandle() const override;
-
-  virtual void
-  OnProgress(uint64_t aProgress, uint64_t aProgressMax) override;
-
-  virtual void
-  SetResultCallback(ResultCallback* aCallback) override;
-
-  virtual void
-  SetError(nsresult aError) override;
-
 private:
-  IDBFileRequest(nsPIDOMWindowInner* aWindow,
-                 IDBFileHandle* aFileHandle,
+  IDBFileRequest(IDBFileHandle* aFileHandle,
                  bool aWrapAsDOMRequest);
 
   ~IDBFileRequest();
+};
 
-  void
-  FireProgressEvent(uint64_t aLoaded, uint64_t aTotal);
+class NS_NO_VTABLE IDBFileRequest::ResultCallback
+{
+public:
+  virtual nsresult
+  GetResult(JSContext* aCx, JS::MutableHandle<JS::Value> aResult) = 0;
+
+protected:
+  ResultCallback()
+  { }
 };
 
 } // namespace dom

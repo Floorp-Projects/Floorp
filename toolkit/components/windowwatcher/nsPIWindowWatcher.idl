@@ -105,6 +105,9 @@ interface nsPIWindowWatcher : nsISupports
    * @param aNextTabParentId
    *        The integer ID for the next tab parent actor.
    *        0 means there is no next tab parent actor to use.
+   * @param aForceNoOpener
+   *        If true, then aOpeningTab will not be used to set the opener
+   *        for the newly created window.
    *
    * @return the nsITabParent of the initial browser for the newly opened
    *         window.
@@ -113,7 +116,8 @@ interface nsPIWindowWatcher : nsISupports
                                        in ACString aFeatures,
                                        in boolean aCalledFromJS,
                                        in float aOpenerFullZoom,
-                                       in unsigned long long aNextTabParentId);
+                                       in unsigned long long aNextTabParentId,
+                                       in boolean aForceNoOpener);
 
   /**
    * Find a named docshell tree item amongst all windows registered

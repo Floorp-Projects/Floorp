@@ -10,6 +10,12 @@ using namespace mozilla::hal;
 namespace mozilla {
 namespace hal_impl {
 
+bool
+SetProcessPrioritySupported()
+{
+  return false;
+}
+
 void
 SetProcessPriority(int aPid, ProcessPriority aPriority)
 {
