@@ -837,7 +837,7 @@ bool nsHttpTransaction::ShouldStopReading()
 
     if (mContentRead < 16000) {
         // Let the first bytes go, it may also well be all the content we get
-        LOG(("nsHttpTransaction::ShouldStopReading too few content (%llu) this=%p", mContentRead, this));
+        LOG(("nsHttpTransaction::ShouldStopReading too few content (%" PRIi64 ") this=%p", mContentRead, this));
         return false;
     }
 
