@@ -863,8 +863,9 @@ IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
     MOZ_LOG(sISMLog, LogLevel::Debug,
       ("  UpdateIMEState(), try to reinitialize the "
        "active IMEContentObserver"));
-    if (!sActiveIMEContentObserver->MaybeReinitialize(widget, sPresContext,
-                                                      aContent, &aEditorBase)) {
+    RefPtr<IMEContentObserver> contentObserver = sActiveIMEContentObserver;
+    if (!contentObserver->MaybeReinitialize(widget, sPresContext,
+                                            aContent, &aEditorBase)) {
       MOZ_LOG(sISMLog, LogLevel::Error,
         ("  UpdateIMEState(), failed to reinitialize the "
          "active IMEContentObserver"));
