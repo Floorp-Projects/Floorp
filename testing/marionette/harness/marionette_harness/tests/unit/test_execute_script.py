@@ -6,7 +6,7 @@ import os
 import urllib
 
 from marionette_driver import By, errors
-from marionette_driver.marionette import Alert, HTMLElement
+from marionette_driver.marionette import HTMLElement
 from marionette_driver.wait import Wait
 
 from marionette_harness import MarionetteTestCase, skip_if_mobile, WindowManagerMixin
@@ -30,23 +30,6 @@ globals = set([
 
 
 class TestExecuteContent(MarionetteTestCase):
-
-    def alert_present(self):
-        try:
-            Alert(self.marionette).text
-            return True
-        except errors.NoAlertPresentException:
-            return False
-
-    def wait_for_alert_closed(self, timeout=None):
-        Wait(self.marionette, timeout=timeout).until(
-            lambda _: not self.alert_present())
-
-    def tearDown(self):
-        if self.alert_present():
-            alert = self.marionette.switch_to_alert()
-            alert.dismiss()
-            self.wait_for_alert_closed()
 
     def assert_is_defined(self, property, sandbox="default"):
         self.assertTrue(self.marionette.execute_script(
@@ -357,11 +340,6 @@ class TestExecuteContent(MarionetteTestCase):
             sandbox=None)
         self.assert_is_web_element(el)
 
-    def test_return_value_on_alert(self):
-        res = self.marionette._send_message("executeScript", {"script": "alert()"})
-        self.assertIn("value", res)
-        self.assertIsNone(res)
-
 
 class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
 
@@ -428,9 +406,6 @@ class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
         pass
 
     def test_access_chrome_objects_in_event_listeners(self):
-        pass
-
-    def test_return_value_on_alert(self):
         pass
 
 
