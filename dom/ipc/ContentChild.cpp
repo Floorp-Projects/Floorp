@@ -1391,6 +1391,7 @@ StartMacOSContentSandbox()
   }
 
   nsAutoCString tempDirPath;
+  tempDir->Normalize();
   rv = tempDir->GetNativePath(tempDirPath);
   if (NS_FAILED(rv)) {
     MOZ_CRASH("Failed to get NS_OS_TEMP_DIR path");
