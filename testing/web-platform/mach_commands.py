@@ -66,7 +66,7 @@ class WebPlatformTestsRunner(MozbuildObject):
         kwargs["capture_stdio"] = True
 
         if kwargs["webdriver_binary"] is None:
-            kwargs["webdriver_binary"] = self.get_binary_path("geckodriver")
+            kwargs["webdriver_binary"] = self.get_binary_path("geckodriver", validate_exists=False)
 
         kwargs = wptcommandline.check_args(kwargs)
 
