@@ -118,34 +118,39 @@
         android:contentDescription="@string/content_description_stop"
         android:src="@drawable/ic_close" />
 
-    <!-- The contentDescription is supplied by other applications in the Custom Tab Intent, and
-         is therefore set programatically. -->
-    <ImageButton
-        tools:ignore="contentDescription"
-        android:id="@+id/customtab_actionbutton"
+    <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:adjustViewBounds="true"
-        android:maxWidth="@dimen/customtabs_toolbar_icon_size"
-        android:maxHeight="@dimen/customtabs_toolbar_icon_size"
-        android:scaleType="centerInside"
-        android:visibility="gone"
-        android:layout_gravity="center_vertical"
-        android:background="?android:attr/selectableItemBackgroundBorderless"/>
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="4dp">
 
+        <ImageButton
+            android:id="@+id/menu"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center_vertical"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/content_description_menu"
+            android:src="@drawable/ic_menu" />
 
-    <ImageButton
-        android:id="@+id/menu"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_gravity="center_vertical"
-        android:layout_marginBottom="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:padding="4dp"
-        android:contentDescription="@string/content_description_menu"
-        android:src="@drawable/ic_menu" />
+        <!-- Block icon to indicate blocking has been turned off -->
+        <FrameLayout
+            android:id="@+id/block"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_gravity="top|end|center"
+            android:layout_marginEnd="4dp"
+            android:background="@drawable/purple_badge_background"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="12dp"
+                android:layout_height="13.33dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_tracking_protection_disabled"
+                android:tint="#FFFFFF" />
+        </FrameLayout>
+
+    </FrameLayout>
 
 </LinearLayout>

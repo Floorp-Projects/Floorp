@@ -92,6 +92,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     private TransitionDrawable backgroundTransition;
     private TextView urlView;
     private AnimatedProgressBar progressView;
+    private FrameLayout blockView;
     private ImageView lockView;
     private ImageButton menuView;
     private WeakReference<BrowserMenu> menuWeakReference = new WeakReference<>(null);
@@ -186,6 +187,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         if ((backButton = view.findViewById(R.id.back)) != null) {
             backButton.setOnClickListener(this);
         }
+
+        blockView = (FrameLayout) view.findViewById(R.id.block);
 
         lockView = (ImageView) view.findViewById(R.id.lock);
 
@@ -333,8 +336,10 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
                 lockView.setVisibility(View.GONE);
 
-                progressView.announceForAccessibility(getString(R.string.accessibility_announcement_loading));
+                // Hide badging while loading
+                updateBlockingBadging(true);
 
+                progressView.announceForAccessibility(getString(R.string.accessibility_announcement_loading));
 
                 backgroundTransition.resetTransition();
 
@@ -357,6 +362,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 if (isSecure) {
                     lockView.setVisibility(View.VISIBLE);
                 }
+
+                updateBlockingBadging(isBlockingEnabled());
 
                 updateToolbarButtonStates();
             }
@@ -872,7 +879,6 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         if (webView != null) {
             webView.setBlockingEnabled(enabled);
         }
-
         backgroundView.setBackgroundResource(enabled ? R.drawable.animated_background : R.drawable.animated_background_disabled);
         backgroundTransition = (TransitionDrawable) backgroundView.getBackground();
     }
@@ -880,5 +886,10 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     public boolean isBlockingEnabled() {
         final IWebView webView = getWebView();
         return webView == null || webView.isBlockingEnabled();
+    }
+
+    // In the future, if more badging icons are needed, this should be abstracted
+    public void updateBlockingBadging(boolean enabled) {
+        blockView.setVisibility(enabled ? View.GONE : View.VISIBLE);
     }
 }
