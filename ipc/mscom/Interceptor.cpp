@@ -6,11 +6,13 @@
 
 #define INITGUID
 
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/Move.h"
 #include "mozilla/mscom/DispatchForwarder.h"
 #include "mozilla/mscom/Interceptor.h"
 #include "mozilla/mscom/InterceptorLog.h"
 #include "mozilla/mscom/MainThreadInvoker.h"
+#include "mozilla/mscom/Objref.h"
 #include "mozilla/mscom/Registration.h"
 #include "mozilla/mscom/Utils.h"
 #include "MainThreadUtils.h"
@@ -20,6 +22,7 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsRefPtrHashtable.h"
 #include "nsThreadUtils.h"
+#include "nsXULAppAPI.h"
 
 namespace mozilla {
 namespace mscom {
@@ -142,6 +145,7 @@ Interceptor::GetClassForHandler(DWORD aDestContext, void* aDestContextPtr,
       aDestContext == MSHCTX_DIFFERENTMACHINE) {
     return E_INVALIDARG;
   }
+
   MOZ_ASSERT(mEventSink);
   return mEventSink->GetHandler(WrapNotNull(aHandlerClsid));
 }
@@ -177,11 +181,59 @@ Interceptor::MarshalInterface(IStream* pStm, REFIID riid, void* pv,
                               DWORD dwDestContext, void* pvDestContext,
                               DWORD mshlflags)
 {
-  HRESULT hr = mStdMarshal->MarshalInterface(pStm, riid, pv, dwDestContext,
-                                             pvDestContext, mshlflags);
+  HRESULT hr;
+
+#if defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
+  // Save the current stream position
+  LARGE_INTEGER seekTo;
+  seekTo.QuadPart = 0;
+
+  ULARGE_INTEGER objrefPos;
+
+  hr = pStm->Seek(seekTo, STREAM_SEEK_CUR, &objrefPos);
   if (FAILED(hr)) {
     return hr;
   }
+
+#endif // defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
+
+  hr = mStdMarshal->MarshalInterface(pStm, riid, pv, dwDestContext,
+                                     pvDestContext, mshlflags);
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+#if defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
+  if (XRE_IsContentProcess()) {
+    const DWORD chromeMainTid =
+      dom::ContentChild::GetSingleton()->GetChromeMainThreadId();
+
+    /*
+     * CoGetCallerTID() gives us the caller's thread ID when that thread resides
+     * in a single-threaded apartment. Since our chrome main thread does live
+     * inside an STA, we will therefore be able to check whether the caller TID
+     * equals our chrome main thread TID. This enables us to distinguish
+     * between our chrome thread vs other out-of-process callers.
+     */
+    DWORD callerTid;
+    if (::CoGetCallerTID(&callerTid) == S_FALSE && callerTid != chromeMainTid) {
+      // The caller isn't our chrome process, so do not provide a handler.
+      // First, seek back to the stream position that we prevously saved.
+      seekTo.QuadPart = objrefPos.QuadPart;
+      hr = pStm->Seek(seekTo, STREAM_SEEK_SET, nullptr);
+      if (FAILED(hr)) {
+        return hr;
+      }
+
+      // Now strip out the handler.
+      if (!StripHandlerFromOBJREF(WrapNotNull(pStm))) {
+        return E_FAIL;
+      }
+
+      return S_OK;
+    }
+  }
+#endif // defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
 
   return mEventSink->WriteHandlerPayload(WrapNotNull(pStm));
 }

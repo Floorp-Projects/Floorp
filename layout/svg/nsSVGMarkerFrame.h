@@ -79,15 +79,15 @@ public:
   // nsSVGMarkerFrame methods:
   void PaintMark(gfxContext& aContext,
                  const gfxMatrix& aToMarkedFrameUserSpace,
-                 mozilla::SVGGeometryFrame *aMarkedFrame,
-                 nsSVGMark *aMark,
+                 mozilla::SVGGeometryFrame* aMarkedFrame,
+                 const nsSVGMark& aMark,
                  float aStrokeWidth,
                  imgDrawingParams& aImgParams);
 
-  SVGBBox GetMarkBBoxContribution(const Matrix &aToBBoxUserspace,
+  SVGBBox GetMarkBBoxContribution(const Matrix& aToBBoxUserspace,
                                   uint32_t aFlags,
-                                  mozilla::SVGGeometryFrame *aMarkedFrame,
-                                  const nsSVGMark *aMark,
+                                  mozilla::SVGGeometryFrame* aMarkedFrame,
+                                  const nsSVGMark& aMark,
                                   float aStrokeWidth);
 
   // Update the style on our anonymous box child.
@@ -98,8 +98,7 @@ public:
 private:
   // stuff needed for callback
   mozilla::SVGGeometryFrame *mMarkedFrame;
-  float mStrokeWidth, mX, mY, mAutoAngle;
-  bool mIsStart;  // whether the callback is for a marker-start marker
+  Matrix mMarkerTM;
 
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM() override;
