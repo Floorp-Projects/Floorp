@@ -21,6 +21,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
+#include "nsCRTGlue.h"
 #include "nsNSSCertificate.h"
 #include "nsServiceManagerUtils.h"
 #include "nss.h"
@@ -1260,32 +1261,27 @@ DisableMD5()
 bool
 LoadLoadableRoots(const nsCString& dir, const nsCString& modNameUTF8)
 {
-  UniquePRLibraryName fullLibraryPath(
-    PR_GetLibraryName(dir.IsEmpty() ? nullptr : dir.get(), "nssckbi"));
-  if (!fullLibraryPath) {
-    return false;
-  }
-
-  // Escape the \ and " characters.
-  nsAutoCString escapedFullLibraryPath(fullLibraryPath.get());
-  escapedFullLibraryPath.ReplaceSubstring("\\", "\\\\");
-  escapedFullLibraryPath.ReplaceSubstring("\"", "\\\"");
-  if (escapedFullLibraryPath.IsEmpty()) {
-    return false;
-  }
-
   // If a module exists with the same name, make a best effort attempt to delete
   // it. Note that it isn't possible to delete the internal module, so checking
   // the return value would be detrimental in that case.
   int unusedModType;
   Unused << SECMOD_DeleteModule(modNameUTF8.get(), &unusedModType);
 
-  nsAutoCString pkcs11ModuleSpec;
-  pkcs11ModuleSpec.AppendPrintf("name=\"%s\" library=\"%s\"", modNameUTF8.get(),
-                                escapedFullLibraryPath.get());
-  if (pkcs11ModuleSpec.IsEmpty()) {
-    return false;
+  nsAutoCString fullLibraryPath;
+  if (!dir.IsEmpty()) {
+    fullLibraryPath.Assign(dir);
+    fullLibraryPath.AppendLiteral(FILE_PATH_SEPARATOR);
   }
+  fullLibraryPath.Append(DLL_PREFIX "nssckbi" DLL_SUFFIX);
+  // Escape the \ and " characters.
+  fullLibraryPath.ReplaceSubstring("\\", "\\\\");
+  fullLibraryPath.ReplaceSubstring("\"", "\\\"");
+
+  nsAutoCString pkcs11ModuleSpec("name=\"");
+  pkcs11ModuleSpec.Append(modNameUTF8);
+  pkcs11ModuleSpec.AppendLiteral("\" library=\"");
+  pkcs11ModuleSpec.Append(fullLibraryPath);
+  pkcs11ModuleSpec.AppendLiteral("\"");
 
   UniqueSECMODModule rootsModule(
     SECMOD_LoadUserModule(const_cast<char*>(pkcs11ModuleSpec.get()), nullptr,

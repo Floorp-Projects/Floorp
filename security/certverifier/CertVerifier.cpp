@@ -137,6 +137,10 @@ IsCertChainRootBuiltInRoot(const UniqueCERTCertList& chain, bool& result)
 Result
 IsCertBuiltInRoot(CERTCertificate* cert, bool& result)
 {
+  if (NS_FAILED(BlockUntilLoadableRootsLoaded())) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
   result = false;
 #ifdef DEBUG
   nsCOMPtr<nsINSSComponent> component(do_GetService(PSM_COMPONENT_CONTRACTID));
@@ -463,6 +467,10 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
   MOZ_ASSERT(usage == certificateUsageSSLServer || !(flags & FLAG_MUST_BE_EV));
   MOZ_ASSERT(usage == certificateUsageSSLServer || !keySizeStatus);
   MOZ_ASSERT(usage == certificateUsageSSLServer || !sha1ModeResult);
+
+  if (NS_FAILED(BlockUntilLoadableRootsLoaded())) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
 
   if (evOidPolicy) {
     *evOidPolicy = SEC_OID_UNKNOWN;
