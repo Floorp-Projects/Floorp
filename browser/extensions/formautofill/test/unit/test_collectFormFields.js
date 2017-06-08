@@ -91,7 +91,6 @@ for (let tc of TESTCASES) {
       let doc = MockDocument.createTestDocument("http://localhost:8080/test/",
                                                 testcase.document);
       let form = doc.querySelector("form");
-      let formLike = FormLikeFactory.createFromForm(form);
 
       testcase.fieldDetails.forEach((detail, index) => {
         let elementRef;
@@ -102,7 +101,7 @@ for (let tc of TESTCASES) {
         }
         detail.elementWeakRef = Cu.getWeakReference(elementRef);
       });
-      let handler = new FormAutofillHandler(formLike);
+      let handler = new FormAutofillHandler(form);
 
       handler.collectFormFields();
 
