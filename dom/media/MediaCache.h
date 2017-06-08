@@ -438,6 +438,9 @@ private:
   // Update mPrincipal given that data has been received from aPrincipal
   bool UpdatePrincipal(nsIPrincipal* aPrincipal);
 
+  // Instance of MediaCache to use with this MediaCacheStream.
+  MediaCache* mMediaCache;
+
   // These fields are main-thread-only.
   ChannelMediaResource*  mClient;
   nsCOMPtr<nsIPrincipal> mPrincipal;
