@@ -7864,6 +7864,7 @@ var gPageActionButton = {
       if (clientId) {
         item.classList.add("subviewbutton-iconic");
       }
+      item.setAttribute("tooltiptext", name);
       return item;
     });
 
