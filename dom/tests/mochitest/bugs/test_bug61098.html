@@ -306,35 +306,6 @@ async function runtestsInner()
 
   w.close();
 
-  let iframe = document.createElement("iframe");
-  document.body.appendChild(iframe);
-  await new Promise(resolve => {
-    iframe.addEventListener("load", resolve);
-  });
-  window.showModalDialog = iframe.contentWindow.showModalDialog;
-
-  // Test that showModalDialog() works normally and then gets blocked
-  // on the second call.
-  if (window.showModalDialog) {
-    w = window.open();
-    w.showModalDialog("data:text/html,%3Cscript>window.close();%3C/script>")
-    is (promptState, void(0), "Wrong prompt state");
-
-    try {
-      w.showModalDialog("data:text/html,%3Cscript>window.close();%3C/script>")
-      ok(false, "showModalDialog call should throw an exception");
-    } catch(e) {
-      is(e.name, "NS_ERROR_NOT_AVAILABLE", "Wrong exception");
-    }
-    is (promptState.method, "confirm", "Wrong prompt method called");
-    is (promptState.parent, w, "Wrong confirm parent");
-    is (promptState.msg, "Prevent this page from creating additional dialogs",
-        "Wrong confirm message");
-    promptState = void(0);
-
-    w.close();
-  }
-
   mockPromptFactoryRegisterer.unregister();
   mockPromptServiceRegisterer.unregister();
 
