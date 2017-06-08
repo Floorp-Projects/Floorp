@@ -38,6 +38,7 @@ class ManifestEntry(object):
         'xpcnativewrappers',
         'tablet',
         'process',
+        'contentaccessible',
     ]
 
     def __init__(self, base, *flags):
