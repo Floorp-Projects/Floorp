@@ -1086,7 +1086,15 @@ class Marionette(object):
             self.delete_session(send_request=False, reset_session_id=True)
 
             # Give the application some time to shutdown
-            self.instance.runner.wait(timeout=self.DEFAULT_SHUTDOWN_TIMEOUT)
+            returncode = self.instance.runner.wait(timeout=self.DEFAULT_SHUTDOWN_TIMEOUT)
+            if returncode is None:
+                # This will force-close the application without sending any other message.
+                self.cleanup()
+
+                message = ("Process killed because a requested application quit did not happen "
+                           "within {}s. Check gecko.log for errors.")
+                raise IOError(message.format(self.DEFAULT_SHUTDOWN_TIMEOUT))
+
         else:
             self.delete_session(reset_session_id=True)
             self.instance.close()
@@ -1127,7 +1135,8 @@ class Marionette(object):
             self.delete_session(send_request=False, reset_session_id=True)
 
             try:
-                self.raise_for_port()
+                timeout = self.DEFAULT_SHUTDOWN_TIMEOUT + self.DEFAULT_STARTUP_TIMEOUT
+                self.raise_for_port(timeout=timeout)
             except socket.timeout:
                 if self.instance.runner.returncode is not None:
                     exc, val, tb = sys.exc_info()
@@ -1137,7 +1146,7 @@ class Marionette(object):
         else:
             self.delete_session()
             self.instance.restart(clean=clean)
-            self.raise_for_port()
+            self.raise_for_port(timeout=self.DEFAULT_STARTUP_TIMEOUT)
 
         self.start_session(session_id=session_id)
 
