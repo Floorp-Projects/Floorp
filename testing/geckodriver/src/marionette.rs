@@ -40,9 +40,8 @@ use webdriver::command::{
     SwitchToFrameParameters, LocatorParameters, JavascriptCommandParameters,
     GetNamedCookieParameters, AddCookieParameters, TimeoutsParameters,
     ActionsParameters, TakeScreenshotParameters};
-use webdriver::response::{CloseWindowResponse, Cookie, CookieResponse, ElementRectResponse,
-                          NewSessionResponse, TimeoutsResponse, ValueResponse, WebDriverResponse,
-                          WindowRectResponse};
+use webdriver::response::{CloseWindowResponse, Cookie, CookieResponse, RectResponse,
+                          NewSessionResponse, TimeoutsResponse, ValueResponse, WebDriverResponse};
 use webdriver::common::{
     Date, Nullable, WebElement, FrameId, ELEMENT_KEY};
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
@@ -637,7 +636,7 @@ impl MarionetteSession {
         Ok(match msg.command {
             // Everything that doesn't have a response value
             Get(_) | GoBack | GoForward | Refresh | SetTimeouts(_) |
-            MaximizeWindow | SwitchToWindow(_) | SwitchToFrame(_) |
+            SwitchToWindow(_) | SwitchToFrame(_) |
             SwitchToParentFrame | AddCookie(_) | DeleteCookies | DeleteCookie(_) |
             DismissAlert | AcceptAlert | SendAlertText(_) | ElementClick(_) |
             ElementTap(_) | ElementClear(_) | ElementSendKeys(_, _) |
@@ -704,40 +703,6 @@ impl MarionetteSession {
                                             })
                                        .collect());
                 WebDriverResponse::CloseWindow(CloseWindowResponse { window_handles: handles })
-            }
-            GetWindowRect => {
-                let width = try_opt!(
-                    try_opt!(resp.result.find("width"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find width field").as_u64(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret width as integer");
-
-                let height = try_opt!(
-                    try_opt!(resp.result.find("height"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find height field").as_u64(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret width as integer");
-
-                let x = try_opt!(
-                    try_opt!(resp.result.find("x"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find x field").as_i64(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret x as integer");
-
-                let y = try_opt!(
-                    try_opt!(resp.result.find("y"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find y field").as_i64(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret y as integer");
-
-                WebDriverResponse::WindowRect(WindowRectResponse {x: x,
-                                                                  y: y,
-                                                                  width: width,
-                                                                  height: height})
             },
             GetElementRect(_) => {
                 let x = try_opt!(
@@ -768,40 +733,10 @@ impl MarionetteSession {
                     ErrorStatus::UnknownError,
                     "Failed to interpret width as float");
 
-                WebDriverResponse::ElementRect(ElementRectResponse::new(x, y, width, height))
+                WebDriverResponse::ElementRect(RectResponse::new(x, y, width, height))
             },
-            SetWindowRect(_) => {
-                let x = try_opt!(
-                    try_opt!(resp.result.find("x"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find x field").as_f64(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret x as float");
-
-                let y = try_opt!(
-                    try_opt!(resp.result.find("y"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find y field").as_f64(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret y as float");
-
-                let width = try_opt!(
-                    try_opt!(resp.result.find("width"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find width field").as_f64(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret width as float");
-
-                let height = try_opt!(
-                    try_opt!(resp.result.find("height"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find height field").as_f64(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret width as float");
-
-                WebDriverResponse::ElementRect(ElementRectResponse::new(x, y, width, height))
-            },
-            FullscreenWindow => {
+            FullscreenWindow | MaximizeWindow | GetWindowRect |
+            MaximizeWindow | SetWindowRect(_) => {
                 let width = try_opt!(
                     try_opt!(resp.result.find("width"),
                              ErrorStatus::UnknownError,
@@ -830,10 +765,7 @@ impl MarionetteSession {
                     ErrorStatus::UnknownError,
                     "Failed to interpret y as integer");
 
-                WebDriverResponse::WindowRect(WindowRectResponse {x: x,
-                                                                  y: y,
-                                                                  width: width,
-                                                                  height: height})
+                WebDriverResponse::WindowRect(RectResponse::new(x, y, width, height))
             },
             GetCookies => {
                 let cookies = try!(self.process_cookies(&resp.result));
