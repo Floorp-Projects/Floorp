@@ -68,11 +68,6 @@
             'UNSAFE_FUZZER_MODE',
           ],
         }],
-        [ 'mozilla_client==1', {
-          'defines': [
-            'NSS_ENABLE_TLS13_SHORT_HEADERS',
-          ],
-        }],
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',

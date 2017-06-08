@@ -110,6 +110,37 @@ function openComputedView() {
 }
 
 /**
+ * Open the toolbox, with the inspector tool visible, and the layout view
+ * sidebar tab selected to display the box model view with properties.
+ *
+ * @return {Promise} a promise that resolves when the inspector is ready and the layout
+ *         view is visible and ready.
+ */
+function openLayoutView() {
+  return openInspectorSidebarTab("layoutview").then(data => {
+    // The actual highligher show/hide methods are mocked in box model tests.
+    // The highlighter is tested in devtools/inspector/test.
+    function mockHighlighter({highlighter}) {
+      highlighter.showBoxModel = function () {
+        return promise.resolve();
+      };
+      highlighter.hideBoxModel = function () {
+        return promise.resolve();
+      };
+    }
+    mockHighlighter(data.toolbox);
+
+    return {
+      toolbox: data.toolbox,
+      inspector: data.inspector,
+      boxmodel: data.inspector.getPanel("boxmodel"),
+      gridInspector: data.inspector.gridInspector,
+      testActor: data.testActor
+    };
+  });
+}
+
+/**
  * Select the rule view sidebar tab on an already opened inspector panel.
  *
  * @param {InspectorPanel} inspector

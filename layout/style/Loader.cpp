@@ -1410,8 +1410,8 @@ Loader::InsertChildSheet(StyleSheet* aSheet,
   LOG(("css::Loader::InsertChildSheet"));
   MOZ_ASSERT(aSheet, "Nothing to insert");
   MOZ_ASSERT(aParentSheet, "Need a parent to insert into");
-  MOZ_ASSERT_IF(aSheet->IsGecko(), aGeckoParentRule && !aServoChildSheet);
-  MOZ_ASSERT_IF(aSheet->IsServo(), aServoChildSheet && !aGeckoParentRule);
+  MOZ_ASSERT(!aSheet->IsGecko() || (aGeckoParentRule && !aServoChildSheet));
+  MOZ_ASSERT(!aSheet->IsServo() || (aServoChildSheet && !aGeckoParentRule));
   // child sheets should always start out enabled, even if they got
   // cloned off of top-level sheets which were disabled
   aSheet->SetEnabled(true);
@@ -2205,8 +2205,8 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
   NS_PRECONDITION(aURL, "Must have a URI to load");
   NS_PRECONDITION(aParentSheet, "Must have a parent sheet");
 
-  MOZ_ASSERT_IF(aParentSheet->IsGecko(), aGeckoParentRule && !aServoChildSheet);
-  MOZ_ASSERT_IF(aParentSheet->IsServo(), aServoChildSheet && !aGeckoParentRule);
+  MOZ_ASSERT(!aParentSheet->IsGecko() || (aGeckoParentRule && !aServoChildSheet));
+  MOZ_ASSERT(!aParentSheet->IsServo() || (aServoChildSheet && !aGeckoParentRule));
 
   if (!mEnabled) {
     LOG_WARN(("  Not enabled"));

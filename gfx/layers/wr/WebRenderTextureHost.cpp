@@ -27,6 +27,15 @@ WebRenderTextureHost::WebRenderTextureHost(const SurfaceDescriptor& aDesc,
   , mExternalImageId(aExternalImageId)
   , mIsWrappingNativeHandle(false)
 {
+  // The wrapped textureHost will be used in WebRender, and the WebRender could
+  // run at another thread. It's hard to control the life-time when gecko
+  // receives PTextureParent destroy message. It's possible that textureHost is
+  // still used by WebRender. So, we only accept the textureHost without
+  // DEALLOCATE_CLIENT flag here. If the buffer deallocation is controlled by
+  // parent, we could do something to make sure the wrapped textureHost is not
+  // used by WebRender and then release it.
+  MOZ_ASSERT(!(aFlags & TextureFlags::DEALLOCATE_CLIENT));
+
   MOZ_COUNT_CTOR(WebRenderTextureHost);
   mWrappedTextureHost = aTexture;
 
@@ -67,7 +76,7 @@ WebRenderTextureHost::CreateRenderTextureHost(const layers::SurfaceDescriptor& a
       gfxCriticalError() << "No WR implement for texture type:" << aDesc.type();
   }
 
-  wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(mExternalImageId), texture);
+  wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(mExternalImageId), texture.forget());
 }
 
 bool
@@ -157,6 +166,14 @@ WebRenderTextureHost::GetRGBStride()
 }
 
 void
+WebRenderTextureHost::GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
+                                     const std::function<wr::ImageKey()>& aImageKeyAllocator)
+{
+  MOZ_ASSERT(aImageKeys.IsEmpty());
+  mWrappedTextureHost->GetWRImageKeys(aImageKeys, aImageKeyAllocator);
+}
+
+void
 WebRenderTextureHost::AddWRImage(wr::WebRenderAPI* aAPI,
                                  Range<const wr::ImageKey>& aImageKeys,
                                  const wr::ExternalImageId& aExtID)
@@ -165,6 +182,21 @@ WebRenderTextureHost::AddWRImage(wr::WebRenderAPI* aAPI,
   MOZ_ASSERT(mExternalImageId == aExtID);
 
   mWrappedTextureHost->AddWRImage(aAPI, aImageKeys, aExtID);
+}
+
+void
+WebRenderTextureHost::PushExternalImage(wr::DisplayListBuilder& aBuilder,
+                                        const WrRect& aBounds,
+                                        const WrClipRegionToken aClip,
+                                        wr::ImageRendering aFilter,
+                                        Range<const wr::ImageKey>& aImageKeys)
+{
+  MOZ_ASSERT(aImageKeys.length() > 0);
+  mWrappedTextureHost->PushExternalImage(aBuilder,
+                                         aBounds,
+                                         aClip,
+                                         aFilter,
+                                         aImageKeys);
 }
 
 } // namespace layers

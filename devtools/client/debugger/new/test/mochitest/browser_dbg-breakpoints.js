@@ -8,7 +8,7 @@ function toggleBreakpoint(dbg, index) {
 }
 
 function removeBreakpoint(dbg, index) {
-  return Task.spawn(function* () {
+  return Task.spawn(function*() {
     const bp = findElement(dbg, "breakpointItem", index);
     bp.querySelector(".close-btn").click();
     yield waitForDispatch(dbg, "REMOVE_BREAKPOINT");
@@ -16,21 +16,21 @@ function removeBreakpoint(dbg, index) {
 }
 
 function disableBreakpoint(dbg, index) {
-  return Task.spawn(function* () {
+  return Task.spawn(function*() {
     toggleBreakpoint(dbg, index);
-    yield waitForDispatch(dbg, "REMOVE_BREAKPOINT");
+    yield waitForDispatch(dbg, "DISABLE_BREAKPOINT");
   });
 }
 
 function enableBreakpoint(dbg, index) {
-  return Task.spawn(function* () {
+  return Task.spawn(function*() {
     toggleBreakpoint(dbg, index);
-    yield waitForDispatch(dbg, "ADD_BREAKPOINT");
+    yield waitForDispatch(dbg, "ENABLE_BREAKPOINT");
   });
 }
 
 function toggleBreakpoints(dbg) {
-  return Task.spawn(function* () {
+  return Task.spawn(function*() {
     clickElement(dbg, "toggleBreakpoints");
     yield waitForDispatch(dbg, "TOGGLE_BREAKPOINTS");
   });
@@ -47,7 +47,7 @@ function findBreakpoints(dbg) {
   return getBreakpoints(getState());
 }
 
-add_task(function* () {
+add_task(function*() {
   const dbg = yield initDebugger("doc-scripts.html");
 
   // Create two breakpoints
@@ -70,7 +70,7 @@ add_task(function* () {
 });
 
 // toggle all
-add_task(function* () {
+add_task(function*() {
   const dbg = yield initDebugger("doc-scripts.html");
 
   // Create two breakpoints

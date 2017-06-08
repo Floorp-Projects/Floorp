@@ -6,7 +6,9 @@
 
 #include "FileSnapshot.h"
 
+#include "IDBDatabase.h"
 #include "IDBFileHandle.h"
+#include "IDBMutableFile.h"
 #include "mozilla/Assertions.h"
 #include "nsIAsyncInputStream.h"
 #include "nsICloneableInputStream.h"

@@ -2075,7 +2075,9 @@ PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
   aFrame->DisplayItemData().Clear();
 
   if (!mIgnoreFrameDestruction) {
-    mDocument->StyleImageLoader()->DropRequestsForFrame(aFrame);
+    if (aFrame->HasImageRequest()) {
+      mDocument->StyleImageLoader()->DropRequestsForFrame(aFrame);
+    }
 
     mFrameConstructor->NotifyDestroyingFrame(aFrame);
 
@@ -4367,9 +4369,9 @@ static inline nsINode*
 RealContainer(nsIDocument* aDocument, nsIContent* aContainer, nsIContent* aContent)
 {
   MOZ_ASSERT(aDocument);
-  MOZ_ASSERT_IF(aContainer, aContainer->OwnerDoc() == aDocument);
+  MOZ_ASSERT(!aContainer || aContainer->OwnerDoc() == aDocument);
   MOZ_ASSERT(aContent->OwnerDoc() == aDocument);
-  MOZ_ASSERT_IF(!aContainer, aContent->GetParentNode() == aDocument);
+  MOZ_ASSERT(aContainer || aContent->GetParentNode() == aDocument);
   if (!aContainer) {
     return aDocument;
   }

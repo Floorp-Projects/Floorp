@@ -8,25 +8,16 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM")
 
 EXPORTS.mozilla.dom.filehandle += [
-    'ActorsChild.h',
     'ActorsParent.h',
     'SerializationHelpers.h',
 ]
 
 EXPORTS.mozilla.dom += [
-    'FileHandleBase.h',
-    'FileHandleCommon.h',
     'FileHandleStorage.h',
-    'FileRequestBase.h',
-    'MutableFileBase.h',
 ]
 
 UNIFIED_SOURCES += [
-    'ActorsChild.cpp',
     'ActorsParent.cpp',
-    'FileHandleBase.cpp',
-    'FileHandleCommon.cpp',
-    'MutableFileBase.cpp',
 ]
 
 IPDL_SOURCES += [

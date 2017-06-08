@@ -34,6 +34,7 @@ struct ScopedDelete {
     SECKEY_DestroyPrivateKeyList(list);
   }
   void operator()(PK11URI* uri) { PK11URI_DestroyURI(uri); }
+  void operator()(PLArenaPool* arena) { PORT_FreeArena(arena, PR_FALSE); }
 };
 
 template <class T>
@@ -62,6 +63,7 @@ SCOPED(SECKEYPublicKey);
 SCOPED(SECKEYPrivateKey);
 SCOPED(SECKEYPrivateKeyList);
 SCOPED(PK11URI);
+SCOPED(PLArenaPool);
 
 #undef SCOPED
 

@@ -9,7 +9,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/FileHandleCommon.h"
 #include "mozilla/dom/PBackgroundFileHandleParent.h"
 #include "mozilla/dom/PBackgroundFileRequestParent.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
@@ -201,7 +200,9 @@ class FileHandle
   bool mFinishedOrAborted;
   bool mForceAborted;
 
-  DEBUGONLY(nsCOMPtr<nsIEventTarget> mThreadPoolEventTarget;)
+#ifdef DEBUG
+  nsCOMPtr<nsIEventTarget> mThreadPoolEventTarget;
+#endif
 
 public:
   void
@@ -457,7 +458,9 @@ class NormalFileHandleOp
   bool mActorDestroyed;
   const bool mFileHandleIsAborted;
 
-  DEBUGONLY(bool mResponseSent;)
+#ifdef DEBUG
+  bool mResponseSent;
+#endif
 
 protected:
   nsCOMPtr<nsISupports> mFileStream;
@@ -507,7 +510,9 @@ protected:
     , mOperationMayProceed(true)
     , mActorDestroyed(false)
     , mFileHandleIsAborted(aFileHandle->IsAborted())
-    DEBUGONLY(, mResponseSent(false))
+#ifdef DEBUG
+    , mResponseSent(false)
+#endif
   {
     MOZ_ASSERT(aFileHandle);
   }
@@ -2069,7 +2074,9 @@ NormalFileHandleOp::SendSuccessResult()
     }
   }
 
-  DEBUGONLY(mResponseSent = true;)
+#ifdef DEBUG
+  mResponseSent = true;
+#endif
 
   return NS_OK;
 }
@@ -2087,7 +2094,9 @@ NormalFileHandleOp::SendFailureResult(nsresult aResultCode)
       PBackgroundFileRequestParent::Send__delete__(this, aResultCode);
   }
 
-  DEBUGONLY(mResponseSent = true;)
+#ifdef DEBUG
+  mResponseSent = true;
+#endif
 
   return result;
 }

@@ -6,7 +6,7 @@ win32/debug:
     treeherder:
         platform: windows2012-32/debug
         symbol: tc(B)
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
@@ -67,7 +67,7 @@ win64/debug:
     treeherder:
         platform: windows2012-64/debug
         symbol: tc(B)
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200

@@ -53,6 +53,7 @@
 namespace mozilla {
 namespace dom {
 
+using namespace mozilla::dom::indexedDB;
 using namespace mozilla::dom::quota;
 using namespace mozilla::dom::workers;
 using namespace mozilla::ipc;

@@ -28,6 +28,12 @@ public:
 
   nsresult Init();
 
+  // Determine if X-Frame-Options allows content to be framed
+  // as a subdocument
+  static bool CheckFrameOptions(nsIChannel* aChannel,
+                                nsIDocShell* aDocShell,
+                                nsIPrincipal* aPrincipal);
+
 protected:
   explicit nsDSURIContentListener(nsDocShell* aDocShell);
   virtual ~nsDSURIContentListener();
@@ -39,12 +45,9 @@ protected:
     mExistingJPEGStreamListener = nullptr;
   }
 
-  // Determine if X-Frame-Options allows content to be framed
-  // as a subdocument
-  bool CheckFrameOptions(nsIRequest* aRequest);
-  bool CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
-                                  const nsAString& aPolicy);
-
+  static bool CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
+                                         const nsAString& aPolicy,
+                                         nsIDocShell* aDocShell);
   enum XFOHeader
   {
     eDENY,
@@ -52,9 +55,9 @@ protected:
     eALLOWFROM
   };
 
-  void ReportXFOViolation(nsIDocShellTreeItem* aTopDocShellItem,
-                          nsIURI* aThisURI,
-                          XFOHeader aHeader);
+  static void ReportXFOViolation(nsIDocShellTreeItem* aTopDocShellItem,
+                                 nsIURI* aThisURI,
+                                 XFOHeader aHeader);
 
 protected:
   nsDocShell* mDocShell;

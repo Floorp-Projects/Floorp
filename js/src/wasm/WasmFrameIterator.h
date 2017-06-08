@@ -93,6 +93,8 @@ class ExitReason
 {
     uint32_t payload_;
 
+    ExitReason() {}
+
   public:
     enum class Fixed : uint32_t
     {
@@ -117,13 +119,19 @@ class ExitReason
         MOZ_ASSERT(!isFixed());
     }
 
+    static ExitReason Decode(uint32_t payload) {
+        ExitReason reason;
+        reason.payload_ = payload;
+        return reason;
+    }
+
     static ExitReason None() { return ExitReason(ExitReason::Fixed::None); }
 
     bool isFixed() const { return (payload_ & 0x1) == 0; }
     bool isNone() const { return isFixed() && fixed() == Fixed::None; }
     bool isNative() const { return !isFixed() || fixed() == Fixed::BuiltinNative; }
 
-    uint32_t raw() const {
+    uint32_t encode() const {
         return payload_;
     }
     Fixed fixed() const {

@@ -7,6 +7,9 @@
 #ifndef mozilla_dom_indexeddb_scripterrorhelper_h__
 #define mozilla_dom_indexeddb_scripterrorhelper_h__
 
+#include <inttypes.h>
+
+class nsACString;
 class nsAString;
 
 namespace mozilla {
