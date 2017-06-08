@@ -319,10 +319,9 @@ def makensis_progs(target):
         return
 
     candidates = [
-        'makensis-3.01.exe',
-        'makensis-3.0b3.exe',
-        'makensis-3.0b1.exe',
-        'makensis.exe',
+        'makensis-3.01',
+        'makensis-3.0b3',
+        'makensis-3.0b1',
         'makensis',
     ]
 
@@ -360,8 +359,8 @@ def nsis_version(nsis):
 
     return ver
 
-# And that makensis is 32-bit.
-@depends_if(nsis)
+# And that makensis is 32-bit (but only on Windows).
+@depends_if(nsis, when=depends(host)(lambda h: h.kernel == 'WINNT'))
 @checking('for 32-bit NSIS')
 def nsis_binary_type(nsis):
     bin_type = windows_binary_type(nsis)
@@ -370,6 +369,14 @@ def nsis_binary_type(nsis):
 
     return 'yes'
 
+# And any flags we have to give to makensis
+@depends(host)
+def nsis_flags(host):
+    if host.kernel != 'WINNT':
+        return '-nocd'
+    return ''
+
+set_config('MAKENSISU_FLAGS', nsis_flags)
 
 # Fallthrough to autoconf-based configure
 include('build/moz.configure/old.configure')
