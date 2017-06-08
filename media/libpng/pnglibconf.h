@@ -8,15 +8,12 @@
 #define MOZ_EMBEDDED_LIBPNG
 
 /* Limit image dimensions (bug #251381, #591822, #967656, and #1283961) */
-#define PNG_USER_LIMITS_SUPPORTED
 #ifndef MOZ_PNG_MAX_WIDTH
 #  define MOZ_PNG_MAX_WIDTH 0x7fffffffL /* Unlimited */
 #endif
 #ifndef MOZ_PNG_MAX_HEIGHT
 #  define MOZ_PNG_MAX_HEIGHT 0x7fffffffL /* Unlimited */
 #endif
-/* but allow nsPNGDecoder to override the limits (bug #1368407) */
-#define PNG_SET_USER_LIMITS_SUPPORTED
 
 #define PNG_API_RULE 0
 #define PNG_COST_SHIFT 3
