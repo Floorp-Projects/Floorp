@@ -1008,8 +1008,10 @@ protected:
   static StaticRefPtr<ITfKeystrokeMgr> sKeystrokeMgr;
   // TSF display attribute manager
   static StaticRefPtr<ITfDisplayAttributeMgr> sDisplayAttrMgr;
+  static already_AddRefed<ITfDisplayAttributeMgr> GetDisplayAttributeMgr();
   // TSF category manager
   static StaticRefPtr<ITfCategoryMgr> sCategoryMgr;
+  static already_AddRefed<ITfCategoryMgr> GetCategoryMgr();
 
   // Current text store which is managing a keyboard enabled editor (i.e.,
   // editable editor).  Currently only ONE TSFTextStore instance is ever used,

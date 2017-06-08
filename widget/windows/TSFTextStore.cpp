@@ -2588,9 +2588,12 @@ TSFTextStore::GetDisplayAttribute(ITfProperty* aAttrProperty,
     return E_FAIL;
   }
 
-  NS_ENSURE_TRUE(sCategoryMgr, E_FAIL);
+  RefPtr<ITfCategoryMgr> categoryMgr = GetCategoryMgr();
+  if (NS_WARN_IF(!categoryMgr)) {
+    return E_FAIL;
+  }
   GUID guid;
-  hr = sCategoryMgr->GetGUID(DWORD(propValue.lVal), &guid);
+  hr = categoryMgr->GetGUID(DWORD(propValue.lVal), &guid);
   ::VariantClear(&propValue);
   if (FAILED(hr)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
@@ -2599,10 +2602,13 @@ TSFTextStore::GetDisplayAttribute(ITfProperty* aAttrProperty,
     return hr;
   }
 
-  NS_ENSURE_TRUE(sDisplayAttrMgr, E_FAIL);
+  RefPtr<ITfDisplayAttributeMgr> displayAttrMgr = GetDisplayAttributeMgr();
+  if (NS_WARN_IF(!displayAttrMgr)) {
+    return E_FAIL;
+  }
   RefPtr<ITfDisplayAttributeInfo> info;
-  hr = sDisplayAttrMgr->GetDisplayAttributeInfo(guid, getter_AddRefs(info),
-                                                nullptr);
+  hr = displayAttrMgr->GetDisplayAttributeInfo(guid, getter_AddRefs(info),
+                                               nullptr);
   if (FAILED(hr) || !info) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
       ("0x%p   TSFTextStore::GetDisplayAttribute() FAILED due to "
@@ -6062,28 +6068,6 @@ TSFTextStore::Initialize()
     return;
   }
 
-  RefPtr<ITfDisplayAttributeMgr> displayAttributeMgr;
-  hr = ::CoCreateInstance(CLSID_TF_DisplayAttributeMgr, nullptr,
-                          CLSCTX_INPROC_SERVER, IID_ITfDisplayAttributeMgr,
-                          getter_AddRefs(displayAttributeMgr));
-  if (FAILED(hr) || !displayAttributeMgr) {
-    MOZ_LOG(sTextStoreLog, LogLevel::Error,
-      ("  TSFTextStore::Initialize() FAILED to create "
-       "a display attribute manager instance, hr=0x%08X", hr));
-    return;
-  }
-
-  RefPtr<ITfCategoryMgr> categoryMgr;
-  hr = ::CoCreateInstance(CLSID_TF_CategoryMgr, nullptr,
-                          CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr,
-                          getter_AddRefs(categoryMgr));
-  if (FAILED(hr) || !categoryMgr) {
-    MOZ_LOG(sTextStoreLog, LogLevel::Error,
-      ("  TSFTextStore::Initialize() FAILED to create "
-       "a category manager instance, hr=0x%08X", hr));
-    return;
-  }
-
   RefPtr<ITfDocumentMgr> disabledDocumentMgr;
   hr = threadMgr->CreateDocumentMgr(getter_AddRefs(disabledDocumentMgr));
   if (FAILED(hr) || !disabledDocumentMgr) {
@@ -6124,8 +6108,6 @@ TSFTextStore::Initialize()
   sThreadMgr = threadMgr;
   sMessagePump = messagePump;
   sKeystrokeMgr = keystrokeMgr;
-  sDisplayAttrMgr = displayAttributeMgr;
-  sCategoryMgr = categoryMgr;
   sDisabledDocumentMgr = disabledDocumentMgr;
   sDisabledContext = disabledContext;
 
@@ -6166,22 +6148,68 @@ TSFTextStore::Initialize()
 
   MOZ_LOG(sTextStoreLog, LogLevel::Info,
     ("  TSFTextStore::Initialize(), sThreadMgr=0x%p, "
-     "sClientId=0x%08X, sDisplayAttrMgr=0x%p, "
-     "sCategoryMgr=0x%p, sDisabledDocumentMgr=0x%p, sDisabledContext=%p, "
+     "sClientId=0x%08X, sDisabledDocumentMgr=0x%p, sDisabledContext=%p, "
      "sCreateNativeCaretForLegacyATOK=%s, "
      "sDoNotReturnNoLayoutErrorToATOKOfCompositionString=%s, "
      "sDoNotReturnNoLayoutErrorToFreeChangJie=%s, "
      "sDoNotReturnNoLayoutErrorToEasyChangjei=%s, "
      "sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar=%s, "
      "sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret=%s",
-     sThreadMgr.get(), sClientId, sDisplayAttrMgr.get(),
-     sCategoryMgr.get(), sDisabledDocumentMgr.get(), sDisabledContext.get(),
+     sThreadMgr.get(), sClientId,
+     sDisabledDocumentMgr.get(), sDisabledContext.get(),
      GetBoolName(sCreateNativeCaretForLegacyATOK),
      GetBoolName(sDoNotReturnNoLayoutErrorToATOKOfCompositionString),
      GetBoolName(sDoNotReturnNoLayoutErrorToFreeChangJie),
      GetBoolName(sDoNotReturnNoLayoutErrorToEasyChangjei),
      GetBoolName(sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar),
      GetBoolName(sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret)));
+}
+
+// static
+already_AddRefed<ITfDisplayAttributeMgr>
+TSFTextStore::GetDisplayAttributeMgr()
+{
+  RefPtr<ITfDisplayAttributeMgr> displayAttributeMgr;
+  if (sDisplayAttrMgr) {
+    displayAttributeMgr = sDisplayAttrMgr;
+    return displayAttributeMgr.forget();
+  }
+
+  HRESULT hr =
+    ::CoCreateInstance(CLSID_TF_DisplayAttributeMgr, nullptr,
+                       CLSCTX_INPROC_SERVER, IID_ITfDisplayAttributeMgr,
+                       getter_AddRefs(displayAttributeMgr));
+  if (NS_WARN_IF(FAILED(hr)) || NS_WARN_IF(!displayAttributeMgr)) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("TSFTextStore::GetDisplayAttributeMgr() FAILED to create "
+       "a display attribute manager instance, hr=0x%08X", hr));
+    return nullptr;
+  }
+  sDisplayAttrMgr = displayAttributeMgr;
+  return displayAttributeMgr.forget();
+}
+
+// static
+already_AddRefed<ITfCategoryMgr>
+TSFTextStore::GetCategoryMgr()
+{
+  RefPtr<ITfCategoryMgr> categoryMgr;
+  if (sCategoryMgr) {
+    categoryMgr = sCategoryMgr;
+    return categoryMgr.forget();
+  }
+  HRESULT hr =
+    ::CoCreateInstance(CLSID_TF_CategoryMgr, nullptr,
+                       CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr,
+                       getter_AddRefs(categoryMgr));
+  if (NS_WARN_IF(FAILED(hr)) || NS_WARN_IF(!categoryMgr)) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("TSFTextStore::GetCategoryMgr() FAILED to create "
+       "a category manager instance, hr=0x%08X", hr));
+    return nullptr;
+  }
+  sCategoryMgr = categoryMgr;
+  return categoryMgr.forget();
 }
 
 // static
