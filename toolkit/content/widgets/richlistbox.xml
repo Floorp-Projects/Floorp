@@ -534,8 +534,6 @@
     </resources>
 
     <implementation>
-      <field name="selectedByMouseOver">false</field>
-
       <destructor>
         <![CDATA[
           var control = this.control;
