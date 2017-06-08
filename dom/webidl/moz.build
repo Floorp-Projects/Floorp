@@ -926,6 +926,7 @@ WEBIDL_FILES = [
     'TreeBoxObject.webidl',
     'TreeColumn.webidl',
     'TreeColumns.webidl',
+    'TreeContentView.webidl',
     'TreeView.webidl',
     'TreeWalker.webidl',
     'U2F.webidl',
