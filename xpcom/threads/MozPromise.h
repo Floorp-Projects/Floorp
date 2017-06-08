@@ -851,12 +851,10 @@ protected:
   };
 
 public:
-  void ThenInternal(AbstractThread* aResponseThread,
-                    already_AddRefed<ThenValueBase> aThenValue,
+  void ThenInternal(already_AddRefed<ThenValueBase> aThenValue,
                     const char* aCallSite)
   {
     PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic && mMagic3 == sMagic && mMagic4 == &mMutex);
-    MOZ_ASSERT(aResponseThread);
     RefPtr<ThenValueBase> thenValue = aThenValue;
     MutexAutoLock lock(mMutex);
     MOZ_DIAGNOSTIC_ASSERT(!IsExclusive || !mHaveRequest);
@@ -894,16 +892,13 @@ protected:
     using PromiseType = typename ThenValueType::PromiseType;
     using Private = typename PromiseType::Private;
 
-    ThenCommand(AbstractThread* aResponseThread,
-                const char* aCallSite,
+    ThenCommand(const char* aCallSite,
                 already_AddRefed<ThenValueType> aThenValue,
                 MozPromise* aReceiver)
-      : mResponseThread(aResponseThread)
-      , mCallSite(aCallSite)
+      : mCallSite(aCallSite)
       , mThenValue(aThenValue)
       , mReceiver(aReceiver)
     {
-      MOZ_ASSERT(aResponseThread);
     }
 
     ThenCommand(ThenCommand&& aOther) = default;
@@ -913,8 +908,7 @@ protected:
     {
       // Issue the request now if the return value of Then() is not used.
       if (mThenValue) {
-        mReceiver->ThenInternal(
-          mResponseThread, mThenValue.forget(), mCallSite);
+        mReceiver->ThenInternal(mThenValue.forget(), mCallSite);
       }
     }
 
@@ -934,7 +928,7 @@ protected:
       mThenValue->mCompletionPromise = p;
       // Note ThenInternal() might nullify mCompletionPromise before return.
       // So we need to return p instead of mCompletionPromise.
-      mReceiver->ThenInternal(mResponseThread, mThenValue.forget(), mCallSite);
+      mReceiver->ThenInternal(mThenValue.forget(), mCallSite);
       return p;
     }
 
@@ -949,7 +943,7 @@ protected:
     void Track(MozPromiseRequestHolder<MozPromise>& aRequestHolder)
     {
       aRequestHolder.Track(do_AddRef(mThenValue));
-      mReceiver->ThenInternal(mResponseThread, mThenValue.forget(), mCallSite);
+      mReceiver->ThenInternal(mThenValue.forget(), mCallSite);
     }
 
     // Allow calling ->Then() again for more promise chaining or ->Track() to
@@ -960,7 +954,6 @@ protected:
     }
 
   private:
-    AbstractThread* mResponseThread;
     const char* mCallSite;
     RefPtr<ThenValueType> mThenValue;
     MozPromise* mReceiver;
@@ -978,7 +971,7 @@ public:
   {
     RefPtr<ThenValueType> thenValue =
       new ThenValueType(aResponseThread, aThisVal, aMethods..., aCallSite);
-    return ReturnType(aResponseThread, aCallSite, thenValue.forget(), this);
+    return ReturnType(aCallSite, thenValue.forget(), this);
   }
 
   template<typename... Functions,
@@ -990,7 +983,7 @@ public:
   {
     RefPtr<ThenValueType> thenValue =
       new ThenValueType(aResponseThread, Move(aFunctions)..., aCallSite);
-    return ReturnType(aResponseThread, aCallSite, thenValue.forget(), this);
+    return ReturnType(aCallSite, thenValue.forget(), this);
   }
 
   void ChainTo(already_AddRefed<Private> aChainedPromise, const char* aCallSite)
