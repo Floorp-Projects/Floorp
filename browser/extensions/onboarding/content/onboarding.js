@@ -42,7 +42,7 @@ class Onboarding {
   handleEvent(evt) {
     switch (evt.target.id) {
       case "onboarding-overlay-icon":
-      case "onboarding-overlay-close-btn":
+      case "onboarding-tour-close-btn":
       // If the clicking target is directly on the outer-most overlay,
       // that means clicking outside the tour content area.
       // Let's toggle the overlay.
@@ -69,7 +69,7 @@ class Onboarding {
     // We're not shipping yet so l10n strings is going to be closed for now.
     div.innerHTML = `
       <div id="onboarding-overlay-dialog">
-        <span id="onboarding-overlay-close-btn"></span>
+        <button id="onboarding-tour-close-btn">X</button>
         <header>Getting started?</header>
         <nav>
           <ul></ul>
