@@ -1039,7 +1039,12 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset,
   aOutData = frame;
   // Set the potentially corrected pts and duration.
   aOutData->mTime = pts;
-  aOutData->mDuration = duration;
+  // The VP9 decoder doesn't provide a valid duration. AS VP9 doesn't have a
+  // concept of pts vs dts and have no latency. We can as such use the last
+  // known input duration.
+  aOutData->mDuration = (mStreamType == VP9 && duration == TimeUnit::Zero())
+                        ? mLastDuration
+                        : duration;
 
   if (mNullOutputCount) {
     mGotValidOutputAfterNullOutput = true;
