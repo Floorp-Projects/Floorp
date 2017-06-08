@@ -303,8 +303,7 @@ SVGMarkerElement::GetPreserveAspectRatio()
 
 gfx::Matrix
 SVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
-                                     float aX, float aY, float aAutoAngle,
-                                     bool aIsStart)
+                                     const nsSVGMark& aMark)
 {
   float scale = mEnumAttributes[MARKERUNITS].GetAnimValue() ==
                      SVG_MARKERUNITS_STROKEWIDTH ? aStrokeWidth : 1.0f;
@@ -312,10 +311,10 @@ SVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
   float angle;
   switch (mOrientType.GetAnimValueInternal()) {
     case SVG_MARKER_ORIENT_AUTO:
-      angle = aAutoAngle;
+      angle = aMark.angle;
       break;
     case SVG_MARKER_ORIENT_AUTO_START_REVERSE:
-      angle = aAutoAngle + (aIsStart ? M_PI : 0.0f);
+      angle = aMark.angle + (aMark.type == nsSVGMark::eStart ? M_PI : 0.0f);
       break;
     default: // SVG_MARKER_ORIENT_ANGLE
       angle = mAngleAttributes[ORIENT].GetAnimValue() * M_PI / 180.0f;
@@ -324,7 +323,7 @@ SVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
 
   return gfx::Matrix(cos(angle) * scale,   sin(angle) * scale,
                      -sin(angle) * scale,  cos(angle) * scale,
-                     aX,                    aY);
+                     aMark.x,              aMark.y);
 }
 
 nsSVGViewBoxRect
