@@ -17,6 +17,7 @@ const {
   getCurrentZoom,
   getDisplayPixelRatio,
   setIgnoreLayoutChanges,
+  getNodeBounds,
   getViewportDimensions,
 } = require("devtools/shared/layout/utils");
 const {
@@ -25,8 +26,8 @@ const {
   translate,
   multiply,
   scale,
-  isIdentity,
   getNodeTransformationMatrix,
+  getNodeTransformOrigin
 } = require("devtools/shared/layout/dom-matrix-2d");
 const { stringifyGridFragments } = require("devtools/server/actors/utils/css-grid-utils");
 const { LocalizationHelper } = require("devtools/shared/l10n");
@@ -1046,6 +1047,9 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
    *  bug 1355675).
    */
   updateCurrentMatrix() {
+    let origin = getNodeTransformOrigin(this.currentNode);
+    let bounds = getNodeBounds(this.win, this.currentNode);
+    let nodeMatrix = getNodeTransformationMatrix(this.currentNode);
     let computedStyle = this.currentNode.ownerGlobal.getComputedStyle(this.currentNode);
 
     let paddingTop = parseFloat(computedStyle.paddingTop);
@@ -1053,24 +1057,31 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     let borderTop = parseFloat(computedStyle.borderTopWidth);
     let borderLeft = parseFloat(computedStyle.borderLeftWidth);
 
-    let nodeMatrix = getNodeTransformationMatrix(this.currentNode,
-      this.win.document.documentElement);
+    // Subtract padding and border values to compensate for top/left being moved by
+    // padding and / or borders.
+    let ox = origin[0] - paddingLeft - borderLeft;
+    let oy = origin[1] - paddingTop - borderTop;
 
     let m = identity();
 
-    // First, we scale based on the device pixel ratio.
-    m = multiply(m, scale(this.win.devicePixelRatio));
-    // Then, we apply the current node's transformation matrix, relative to the
-    // inspected window's root element, but only if it's not a identity matrix.
-    if (isIdentity(nodeMatrix)) {
-      this.hasNodeTransformations = false;
-    } else {
-      m = multiply(m, nodeMatrix);
-      this.hasNodeTransformations = true;
-    }
-
-    // Finally, we translate the origin based on the node's padding and border values.
+    // First, we scale based on the display's current pixel ratio.
+    m = multiply(m, scale(getDisplayPixelRatio(this.win)));
+    // Then we translate the origin to the node's top left corner.
+    m = multiply(m, translate(bounds.p1.x, bounds.p1.y));
+    // And scale based on the current zoom factor.
+    m = multiply(m, scale(getCurrentZoom(this.win)));
+    // Then translate the origin based on the node's padding and border values.
     m = multiply(m, translate(paddingLeft + borderLeft, paddingTop + borderTop));
+    // Finally, we can apply the current node's transformation matrix, taking in account
+    // the `transform-origin` property and the node's top and left padding.
+    if (nodeMatrix) {
+      m = multiply(m, translate(ox, oy));
+      m = multiply(m, nodeMatrix);
+      m = multiply(m, translate(-ox, -oy));
+      this.hasNodeTransformations = true;
+    } else {
+      this.hasNodeTransformations = false;
+    }
 
     this.currentMatrix = m;
   },
