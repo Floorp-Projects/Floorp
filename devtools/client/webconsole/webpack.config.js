@@ -70,7 +70,6 @@ webpackConfig.resolve = {
 
     "devtools/client/shared/components/reps/reps": path.join(__dirname, "../../client/shared/components/reps/reps"),
     "devtools/client/shared/redux/middleware/thunk": path.join(__dirname, "../../client/shared/redux/middleware/thunk"),
-    "devtools/client/shared/redux/middleware/debounce": path.join(__dirname, "../../client/shared/redux/middleware/debounce"),
     "devtools/client/shared/components/stack-trace": path.join(__dirname, "../../client/shared/components/stack-trace"),
     "devtools/client/shared/source-utils": path.join(__dirname, "../../client/shared/source-utils"),
     "devtools/client/shared/components/frame": path.join(__dirname, "../../client/shared/components/frame"),
