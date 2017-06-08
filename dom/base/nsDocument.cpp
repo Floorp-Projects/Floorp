@@ -741,16 +741,15 @@ nsExternalResourceMap::RequestResource(nsIURI* aURI,
     return resource->mDocument;
   }
 
-  RefPtr<PendingLoad> load;
-  mPendingLoads.Get(clone, getter_AddRefs(load));
-  if (load) {
+  RefPtr<PendingLoad>& loadEntry = mPendingLoads.GetOrInsert(clone);
+  if (loadEntry) {
+    RefPtr<PendingLoad> load(loadEntry);
     load.forget(aPendingLoad);
     return nullptr;
   }
 
-  load = new PendingLoad(aDisplayDocument);
-
-  mPendingLoads.Put(clone, load);
+  RefPtr<PendingLoad> load(new PendingLoad(aDisplayDocument));
+  loadEntry = load;
 
   if (NS_FAILED(load->StartLoad(clone, aRequestingNode))) {
     // Make sure we don't thrash things by trying this load again, since
@@ -873,8 +872,7 @@ nsExternalResourceMap::AddExternalResource(nsIURI* aURI,
                   "Must have both or neither");
 
   RefPtr<PendingLoad> load;
-  mPendingLoads.Get(aURI, getter_AddRefs(load));
-  mPendingLoads.Remove(aURI);
+  mPendingLoads.Remove(aURI, getter_AddRefs(load));
 
   nsresult rv = NS_OK;
 
