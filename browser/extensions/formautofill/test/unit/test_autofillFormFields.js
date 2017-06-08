@@ -260,8 +260,7 @@ function do_test(testcases, testFn) {
         let doc = MockDocument.createTestDocument("http://localhost:8080/test/",
                                                   testcase.document);
         let form = doc.querySelector("form");
-        let formLike = FormLikeFactory.createFromForm(form);
-        let handler = new FormAutofillHandler(formLike);
+        let handler = new FormAutofillHandler(form);
         let promises = [];
 
         handler.fieldDetails = testcase.fieldDetails;
