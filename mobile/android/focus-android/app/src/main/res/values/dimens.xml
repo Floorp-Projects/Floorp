@@ -19,8 +19,6 @@
     <dimen name="design_navigation_separator_vertical_padding" tools:override="true">0dp</dimen>
     <dimen name="design_navigation_padding_bottom" tools:override="true">0dp</dimen>
 
-    <dimen name="firstun_page_overlap">32dp</dimen>
-
     <dimen name="firstrun_card_width">300dp</dimen>
     <dimen name="firstrun_card_height">460dp</dimen>
 </resources>

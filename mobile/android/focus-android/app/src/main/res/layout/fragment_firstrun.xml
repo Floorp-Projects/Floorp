@@ -14,7 +14,8 @@
         android:id="@+id/skip"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:text="@string/firstrun_skip_button" />
 
@@ -23,22 +24,25 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-    <android.support.v4.view.ViewPager
-        android:id="@+id/pager"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
+        <org.mozilla.focus.firstrun.FirstrunViewPager
+            android:id="@+id/pager"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
-    <android.support.design.widget.TabLayout
-        android:id="@+id/tabs"
-        android:layout_width="match_parent"
-        android:layout_height="25dp"
-        android:layout_gravity="bottom"
-        app:tabBackground="@drawable/indicator_onboarding"
-        app:tabGravity="center"
-        app:tabIndicatorHeight="0dp"
-        app:tabPadding="10dp"/>
+        <android.support.design.widget.TabLayout
+            android:id="@+id/tabs"
+            android:layout_width="match_parent"
+            android:layout_height="16dp"
+            android:layout_gravity="bottom"
+            android:layout_marginBottom="16dp"
+            app:tabBackground="@drawable/indicator_onboarding"
+            app:tabGravity="center"
+            app:tabIndicatorHeight="0dp"
+            app:tabPadding="10dp" />
 
     </LinearLayout>
+
+
 
 </FrameLayout>
