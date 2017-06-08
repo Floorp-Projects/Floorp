@@ -132,6 +132,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IMEContentObserver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditableNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditor)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentObserver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEndOfAddedTextCache.mContainerNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mStartOfRemovingTextRangeCache.mContainerNode)
 
@@ -147,6 +148,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IMEContentObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEditableNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEditor)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEndOfAddedTextCache.mContainerNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
     mStartOfRemovingTextRangeCache.mContainerNode)
@@ -201,7 +203,6 @@ IMEContentObserver::Init(nsIWidget* aWidget,
     // If this is now trying to initialize with new contents, all observers
     // should be registered again for simpler implementation.
     UnregisterObservers();
-    // Clear members which may not be initialized again.
     Clear();
   }
 
@@ -352,6 +353,8 @@ IMEContentObserver::InitWithEditor(nsPresContext* aPresContext,
     return false;
   }
 
+  mDocumentObserver = new DocumentObserver(*this);
+
   MOZ_ASSERT(!WasInitializedWithPlugin());
 
   return true;
@@ -383,6 +386,11 @@ IMEContentObserver::InitWithPlugin(nsPresContext* aPresContext,
   mEditor = nullptr;
   mEditableNode = aContent;
   mRootContent = aContent;
+  // Should be safe to clear mDocumentObserver here even though it *might*
+  // grab this instance because this is called by Init() and the callers of
+  // it and MaybeReinitialize() grabs this instance with local RefPtr.
+  // So, this won't cause refcount of this instance become 0.
+  mDocumentObserver = nullptr;
 
   mDocShell = aPresContext->GetDocShell();
   if (NS_WARN_IF(!mDocShell)) {
@@ -408,6 +416,12 @@ IMEContentObserver::Clear()
   mEditableNode = nullptr;
   mRootContent = nullptr;
   mDocShell = nullptr;
+  // Should be safe to clear mDocumentObserver here even though it grabs
+  // this instance in most cases because this is called by Init() or Destroy().
+  // The callers of Init() grab this instance with local RefPtr.
+  // The caller of Destroy() also grabs this instance with local RefPtr.
+  // So, this won't cause refcount of this instance become 0.
+  mDocumentObserver = nullptr;
 }
 
 void
@@ -446,6 +460,13 @@ IMEContentObserver::ObserveEditableNode()
     // non-plugin content since we cannot detect text changes in
     // plugins.
     mRootContent->AddMutationObserver(this);
+    // If it's in a document (should be so), we can use document observer to
+    // reduce redundant computation of text change offsets.
+    nsIDocument* doc = mRootContent->GetComposedDoc();
+    if (doc) {
+      RefPtr<DocumentObserver> documentObserver = mDocumentObserver;
+      documentObserver->Observe(doc);
+    }
   }
 
   if (mDocShell) {
@@ -517,6 +538,11 @@ IMEContentObserver::UnregisterObservers()
 
   if (mRootContent) {
     mRootContent->RemoveMutationObserver(this);
+  }
+
+  if (mDocumentObserver) {
+    RefPtr<DocumentObserver> documentObserver = mDocumentObserver;
+    documentObserver->StopObserving();
   }
 
   if (mDocShell) {
@@ -1148,6 +1174,18 @@ IMEContentObserver::AttributeChanged(nsIDocument* aDocument,
                       IsEditorHandlingEventForComposition(),
                       IsEditorComposing());
   MaybeNotifyIMEOfTextChange(data);
+}
+
+void
+IMEContentObserver::BeginDocumentUpdate()
+{
+  // TODO: Implement this later.
+}
+
+void
+IMEContentObserver::EndDocumentUpdate()
+{
+  // TODO: Implement this later.
 }
 
 void
@@ -1973,6 +2011,107 @@ IMEContentObserver::IMENotificationSender::SendCompositionEventHandled()
     ("0x%p IMEContentObserver::IMENotificationSender::"
      "SendCompositionEventHandled(), sent "
      "NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED", this));
+}
+
+/******************************************************************************
+ * mozilla::IMEContentObserver::DocumentObservingHelper
+ ******************************************************************************/
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(IMEContentObserver::DocumentObserver)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IMEContentObserver::DocumentObserver)
+  // StopObserving() releases mIMEContentObserver and mDocument.
+  tmp->StopObserving();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IMEContentObserver::DocumentObserver)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIMEContentObserver)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IMEContentObserver::DocumentObserver)
+ NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
+ NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
+ NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(IMEContentObserver::DocumentObserver)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(IMEContentObserver::DocumentObserver)
+
+void
+IMEContentObserver::DocumentObserver::Observe(nsIDocument* aDocument)
+{
+  MOZ_ASSERT(aDocument);
+
+  // Guarantee that aDocument won't be destroyed during a call of
+  // StopObserving().
+  RefPtr<nsIDocument> newDocument = aDocument;
+
+  StopObserving();
+
+  mDocument = newDocument.forget();
+  mDocument->AddObserver(this);
+}
+
+void
+IMEContentObserver::DocumentObserver::StopObserving()
+{
+  if (!IsObserving()) {
+    return;
+  }
+
+  // Grab IMEContentObserver which could be destroyed during method calls.
+  RefPtr<IMEContentObserver> observer = mIMEContentObserver.forget();
+
+  // Stop observing the document first.
+  RefPtr<nsIDocument> document = mDocument.forget();
+  document->RemoveObserver(this);
+
+  // Notify IMEContentObserver of ending of document updates if this already
+  // notified it of beginning of document updates.
+  for (; IsUpdating(); --mDocumentUpdating) {
+    // FYI: IsUpdating() returns true until mDocumentUpdating becomes 0.
+    //      However, IsObserving() returns false now because mDocument was
+    //      already cleared above.  Therefore, this method won't be called
+    //      recursively.
+    observer->EndDocumentUpdate();
+  }
+}
+
+void
+IMEContentObserver::DocumentObserver::Destroy()
+{
+  StopObserving();
+  mIMEContentObserver = nullptr;
+}
+
+void
+IMEContentObserver::DocumentObserver::BeginUpdate(nsIDocument* aDocument,
+                                                  nsUpdateType aUpdateType)
+{
+  if (NS_WARN_IF(Destroyed()) || NS_WARN_IF(!IsObserving())) {
+    return;
+  }
+  if (!(aUpdateType & UPDATE_CONTENT_MODEL)) {
+    return;
+  }
+  mDocumentUpdating++;
+  mIMEContentObserver->BeginDocumentUpdate();
+}
+
+void
+IMEContentObserver::DocumentObserver::EndUpdate(nsIDocument* aDocument,
+                                                nsUpdateType aUpdateType)
+{
+  if (NS_WARN_IF(Destroyed()) || NS_WARN_IF(!IsObserving()) ||
+      NS_WARN_IF(!IsUpdating())) {
+    return;
+  }
+  if (!(aUpdateType & UPDATE_CONTENT_MODEL)) {
+    return;
+  }
+  mDocumentUpdating--;
+  mIMEContentObserver->EndDocumentUpdate();
 }
 
 } // namespace mozilla

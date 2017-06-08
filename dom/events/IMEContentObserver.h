@@ -17,6 +17,7 @@
 #include "nsISelectionListener.h"
 #include "nsIScrollObserver.h"
 #include "nsIWidget.h"
+#include "nsStubDocumentObserver.h"
 #include "nsStubMutationObserver.h"
 #include "nsThreadUtils.h"
 #include "nsWeakReference.h"
@@ -73,9 +74,39 @@ public:
 
   nsresult HandleQueryContentEvent(WidgetQueryContentEvent* aEvent);
 
+  /**
+   * Init() initializes the instance, i.e., retrieving necessary objects and
+   * starts to observe something.
+   * Be aware, callers of this method need to guarantee that the instance
+   * won't be released during calling this.
+   *
+   * @param aWidget         The widget which can access native IME.
+   * @param aPresContext    The PresContext which has aContent.
+   * @param aContent        An editable element or a plugin host element which
+   *                        user may use IME in.
+   *                        Or nullptr if this will observe design mode
+   *                        document.
+   * @param aEditor         When aContent is an editable element or nullptr,
+   *                        non-nullptr referring an editor instance which
+   *                        manages aContent.
+   *                        Otherwise, i.e., this will observe a plugin content,
+   *                        should be nullptr.
+   */
   void Init(nsIWidget* aWidget, nsPresContext* aPresContext,
             nsIContent* aContent, nsIEditor* aEditor);
+
+  /**
+   * Destroy() finalizes the instance, i.e., stops observing contents and
+   * clearing the members.
+   * Be aware, callers of this method need to guarantee that the instance
+   * won't be released during calling this.
+   */
   void Destroy();
+
+  /**
+   * Returns false if the instance refers some objects and observing them.
+   * Otherwise, true.
+   */
   bool Destroyed() const;
 
   /**
@@ -84,10 +115,14 @@ public:
    * storing the instance.
    */
   void DisconnectFromEventStateManager();
+
   /**
    * MaybeReinitialize() tries to restart to observe the editor's root node.
    * This is useful when the editor is reframed and all children are replaced
    * with new node instances.
+   * Be aware, callers of this method need to guarantee that the instance
+   * won't be released during calling this.
+   *
    * @return            Returns true if the instance is managing the content.
    *                    Otherwise, false.
    */
@@ -95,6 +130,7 @@ public:
                          nsPresContext* aPresContext,
                          nsIContent* aContent,
                          nsIEditor* aEditor);
+
   bool IsManaging(nsPresContext* aPresContext, nsIContent* aContent) const;
   bool IsManaging(const TextComposition* aTextComposition) const;
   bool WasInitializedWithPlugin() const;
@@ -145,6 +181,11 @@ private:
   bool IsReflowLocked() const;
   bool IsSafeToNotifyIME() const;
   bool IsEditorComposing() const;
+
+  // Following methods are called by DocumentObserver when
+  // beginning to update the contents and ending updating the contents.
+  void BeginDocumentUpdate();
+  void EndDocumentUpdate();
 
   void PostFocusSetNotification();
   void MaybeNotifyIMEOfFocusSet();
@@ -277,6 +318,47 @@ private:
 
   // mQueuedSender is, it was put into the event queue but not run yet.
   RefPtr<IMENotificationSender> mQueuedSender;
+
+  /**
+   * IMEContentObserver is a mutation observer of mRootContent.  However,
+   * it needs to know the beginning of content changes and end of it too for
+   * reducing redundant computation of text offset with ContentEventHandler.
+   * Therefore, it needs helper class to listen only them since if
+   * both mutations were observed by IMEContentObserver directly, each
+   * methods need to check if the changing node is in mRootContent but it's
+   * too expensive.
+   */
+  class DocumentObserver final : public nsStubDocumentObserver
+  {
+  public:
+    explicit DocumentObserver(IMEContentObserver& aIMEContentObserver)
+      : mIMEContentObserver(&aIMEContentObserver)
+      , mDocumentUpdating(0)
+    {
+    }
+
+    NS_DECL_CYCLE_COLLECTION_CLASS(DocumentObserver)
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE
+    NS_DECL_NSIDOCUMENTOBSERVER_ENDUPDATE
+
+    void Observe(nsIDocument* aDocument);
+    void StopObserving();
+    void Destroy();
+
+    bool Destroyed() const { return !mIMEContentObserver; }
+    bool IsObserving() const { return mDocument != nullptr; }
+    bool IsUpdating() const { return mDocumentUpdating != 0; }
+
+  private:
+    DocumentObserver() = delete;
+    virtual ~DocumentObserver() { Destroy(); }
+
+    RefPtr<IMEContentObserver> mIMEContentObserver;
+    nsCOMPtr<nsIDocument> mDocument;
+    uint32_t mDocumentUpdating;
+  };
+  RefPtr<DocumentObserver> mDocumentObserver;
 
   /**
    * FlatTextCache stores flat text length from start of the content to
