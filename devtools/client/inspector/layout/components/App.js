@@ -61,16 +61,6 @@ const App = createClass({
       Accordion({
         items: [
           {
-            header: BOXMODEL_L10N.getStr("boxmodel.title"),
-            component: BoxModel,
-            componentProps: this.props,
-            opened: Services.prefs.getBoolPref(BOXMODEL_OPENED_PREF),
-            onToggled: () => {
-              let opened = Services.prefs.getBoolPref(BOXMODEL_OPENED_PREF);
-              Services.prefs.setBoolPref(BOXMODEL_OPENED_PREF, !opened);
-            }
-          },
-          {
             header: LAYOUT_L10N.getStr("layout.header"),
             component: Grid,
             componentProps: this.props,
@@ -78,6 +68,16 @@ const App = createClass({
             onToggled: () => {
               let opened = Services.prefs.getBoolPref(GRID_OPENED_PREF);
               Services.prefs.setBoolPref(GRID_OPENED_PREF, !opened);
+            }
+          },
+          {
+            header: BOXMODEL_L10N.getStr("boxmodel.title"),
+            component: BoxModel,
+            componentProps: this.props,
+            opened: Services.prefs.getBoolPref(BOXMODEL_OPENED_PREF),
+            onToggled: () => {
+              let opened = Services.prefs.getBoolPref(BOXMODEL_OPENED_PREF);
+              Services.prefs.setBoolPref(BOXMODEL_OPENED_PREF, !opened);
             }
           },
         ]

@@ -911,8 +911,8 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
       subImage = ImageOps::Clip(image, srcRect, aSVGViewportSize);
     }
 
-    MOZ_ASSERT_IF(aSVGViewportSize,
-                  subImage->GetType() == imgIContainer::TYPE_VECTOR);
+    MOZ_ASSERT(!aSVGViewportSize ||
+               subImage->GetType() == imgIContainer::TYPE_VECTOR);
 
     SamplingFilter samplingFilter = nsLayoutUtils::GetSamplingFilterForFrame(mForFrame);
 

@@ -539,8 +539,8 @@ nsSVGUtils::DetermineMaskUsage(nsIFrame* aFrame, bool aHandleOpacity,
 #endif
 
   nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame();
-  MOZ_ASSERT_IF(clipPathFrame,
-                svgReset->mClipPath.GetType() == StyleShapeSourceType::URL);
+  MOZ_ASSERT(!clipPathFrame ||
+             svgReset->mClipPath.GetType() == StyleShapeSourceType::URL);
 
   switch (svgReset->mClipPath.GetType()) {
     case StyleShapeSourceType::URL:
@@ -1110,7 +1110,7 @@ nsSVGUtils::GetBBox(nsIFrame* aFrame, uint32_t aFlags,
   }
 
   const bool isOuterSVG = svg && !hasSVGLayout;
-  MOZ_ASSERT_IF(isOuterSVG, aFrame->IsSVGOuterSVGFrame());
+  MOZ_ASSERT(!isOuterSVG || aFrame->IsSVGOuterSVGFrame());
   if (!svg ||
       (isOuterSVG && (aFlags & eUseFrameBoundsForOuterSVG))) {
     // An HTML element or an SVG outer frame.

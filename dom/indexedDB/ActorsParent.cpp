@@ -5129,15 +5129,15 @@ private:
 
 #ifdef DEBUG
   uint32_t mDEBUGSavepointCount;
-  PRThread* mDEBUGThread;
 #endif
+
+  NS_DECL_OWNINGTHREAD
 
 public:
   void
   AssertIsOnConnectionThread() const
   {
-    MOZ_ASSERT(mDEBUGThread);
-    MOZ_ASSERT(PR_GetCurrentThread() == mDEBUGThread);
+    NS_ASSERT_OWNINGTHREAD(DatabaseConnection);
   }
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DatabaseConnection)
@@ -5470,20 +5470,14 @@ private:
   bool mShutdownRequested;
   bool mShutdownComplete;
 
-#ifdef DEBUG
-  PRThread* mDEBUGOwningThread;
-#endif
-
 public:
   ConnectionPool();
 
   void
   AssertIsOnOwningThread() const
-#ifdef DEBUG
-  ;
-#else
-  { }
-#endif
+  {
+    NS_ASSERT_OWNINGTHREAD(ConnectionPool);
+  }
 
   nsresult
   GetOrCreateConnection(const Database* aDatabase,
@@ -5663,7 +5657,7 @@ struct ConnectionPool::DatabaseInfo final
   AssertIsOnConnectionThread() const
   {
     MOZ_ASSERT(mDEBUGConnectionThread);
-    MOZ_ASSERT(PR_GetCurrentThread() == mDEBUGConnectionThread);
+    MOZ_ASSERT(GetCurrentPhysicalThread() == mDEBUGConnectionThread);
   }
 
   uint64_t
@@ -10646,7 +10640,6 @@ DatabaseConnection::DatabaseConnection(
   , mInWriteTransaction(false)
 #ifdef DEBUG
   , mDEBUGSavepointCount(0)
-  , mDEBUGThread(PR_GetCurrentThread())
 #endif
 {
   AssertIsOnConnectionThread();
@@ -12126,9 +12119,6 @@ ConnectionPool::ConnectionPool()
   , mTotalThreadCount(0)
   , mShutdownRequested(false)
   , mShutdownComplete(false)
-#ifdef DEBUG
-  , mDEBUGOwningThread(PR_GetCurrentThread())
-#endif
 {
   AssertIsOnOwningThread();
   AssertIsOnBackgroundThread();
@@ -12150,17 +12140,6 @@ ConnectionPool::~ConnectionPool()
   MOZ_ASSERT(mShutdownRequested);
   MOZ_ASSERT(mShutdownComplete);
 }
-
-#ifdef DEBUG
-
-void
-ConnectionPool::AssertIsOnOwningThread() const
-{
-  MOZ_ASSERT(mDEBUGOwningThread);
-  MOZ_ASSERT(PR_GetCurrentThread() == mDEBUGOwningThread);
-}
-
-#endif // DEBUG
 
 // static
 void
@@ -12278,7 +12257,7 @@ ConnectionPool::GetOrCreateConnection(const Database* aDatabase,
                    NS_ConvertUTF16toUTF8(aDatabase->FilePath()).get()));
 
 #ifdef DEBUG
-    dbInfo->mDEBUGConnectionThread = PR_GetCurrentThread();
+    dbInfo->mDEBUGConnectionThread = GetCurrentPhysicalThread();
 #endif
   }
 
@@ -22487,8 +22466,8 @@ OpenDatabaseOp::NoteDatabaseClosed(Database* aDatabase)
     rv = NS_OK;
   }
 
-  // We are being called with an assuption that mWaitingFactoryOp holds a strong
-  // reference to us.
+  // We are being called with an assumption that mWaitingFactoryOp holds
+  // a strong reference to us.
   RefPtr<OpenDatabaseOp> kungFuDeathGrip;
 
   if (mMaybeBlockedDatabases.RemoveElement(aDatabase) &&
@@ -23314,8 +23293,8 @@ DeleteDatabaseOp::NoteDatabaseClosed(Database* aDatabase)
     rv = NS_OK;
   }
 
-  // We are being called with an assuption that mWaitingFactoryOp holds a strong
-  // reference to us.
+  // We are being called with an assumption that mWaitingFactoryOp holds
+  // a strong reference to us.
   RefPtr<OpenDatabaseOp> kungFuDeathGrip;
 
   if (mMaybeBlockedDatabases.RemoveElement(aDatabase) &&

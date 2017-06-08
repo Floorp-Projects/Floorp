@@ -284,6 +284,10 @@ protected:
   // of a pending idle event.  This is used to remember to return that idle
   // event from GetIdleEvent() to ensure that HasPendingEvents() never lies.
   bool mHasPendingEventsPromisedIdleEvent;
+
+#ifndef RELEASE_OR_BETA
+  mozilla::TimeStamp mNextIdleDeadline;
+#endif
 };
 
 #if defined(XP_UNIX) && !defined(ANDROID) && !defined(DEBUG) && HAVE_UALARM \

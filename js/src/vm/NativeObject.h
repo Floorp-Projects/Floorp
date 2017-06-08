@@ -355,11 +355,6 @@ class ObjectElements
         MOZ_ASSERT(!isCopyOnWrite());
         flags |= FROZEN;
     }
-    void markNotFrozen() {
-        MOZ_ASSERT(isFrozen());
-        MOZ_ASSERT(!isCopyOnWrite());
-        flags &= ~FROZEN;
-    }
 
     uint8_t elementAttributes() const {
         if (isFrozen())

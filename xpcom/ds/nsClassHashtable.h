@@ -111,7 +111,7 @@ public:
   };
 
   /**
-   * Looks up aKey in the hash table and returns an object that allows you to
+   * Looks up aKey in the hashtable and returns an object that allows you to
    * insert a new entry into the hashtable for that key if an existing entry
    * isn't found for it.
    *
@@ -210,7 +210,7 @@ nsClassHashtable<KeyClass, T>::RemoveAndForget(KeyType aKey, nsAutoPtr<T>& aOut)
   // Transfer ownership from ent->mData into aOut.
   aOut = mozilla::Move(ent->mData);
 
-  this->Remove(aKey);
+  this->RemoveEntry(ent);
 }
 
 #endif // nsClassHashtable_h__

@@ -3289,7 +3289,7 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
 
             /* Check to see whether the interface objects are already installed */
             ProtoAndIfaceCache& protoAndIfaceCache = *GetProtoAndIfaceCache(global);
-            if (!protoAndIfaceCache.EntrySlotIfExists(${id})) {
+            if (!protoAndIfaceCache.HasEntryInSlot(${id})) {
               JS::Rooted<JSObject*> rootedGlobal(aCx, global);
               CreateInterfaceObjects(aCx, rootedGlobal, protoAndIfaceCache, aDefineOnGlobal);
             }

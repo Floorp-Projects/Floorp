@@ -28,6 +28,7 @@
 #include "ServiceWorkerManager.h"
 
 #include "mozilla/ErrorResult.h"
+#include "mozilla/LoadInfo.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/BodyUtil.h"
 #include "mozilla/dom/DOMException.h"
@@ -229,7 +230,8 @@ public:
        mChannel->SynthesizeHeader(entries[i].mName, entries[i].mValue);
     }
 
-    loadInfo->MaybeIncreaseTainting(mInternalResponse->GetTainting());
+    auto castLoadInfo = static_cast<LoadInfo*>(loadInfo.get());
+    castLoadInfo->SynthesizeServiceWorkerTainting(mInternalResponse->GetTainting());
 
     rv = mChannel->FinishSynthesizedResponse(mResponseURLSpec);
     if (NS_WARN_IF(NS_FAILED(rv))) {

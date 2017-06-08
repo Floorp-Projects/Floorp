@@ -108,20 +108,20 @@ ObjectElements::MakeElementsCopyOnWrite(JSContext* cx, NativeObject* obj)
 /* static */ bool
 ObjectElements::FreezeElements(JSContext* cx, HandleNativeObject obj)
 {
+    MOZ_ASSERT_IF(obj->is<ArrayObject>(),
+                  !obj->as<ArrayObject>().lengthIsWritable());
+
     if (!obj->maybeCopyElementsForWrite(cx))
         return false;
 
-    if (obj->hasEmptyElements())
+    if (obj->hasEmptyElements() || obj->denseElementsAreFrozen())
         return true;
 
     if (obj->getElementsHeader()->numShiftedElements() > 0)
         obj->moveShiftedElements();
 
-    ObjectElements* header = obj->getElementsHeader();
-
-    // Note: this method doesn't update type information to indicate that the
-    // elements might be frozen. Handling this is left to the caller.
-    header->freeze();
+    MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_FROZEN_ELEMENTS);
+    obj->getElementsHeader()->freeze();
 
     return true;
 }
@@ -1888,6 +1888,69 @@ js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj, PropertyName* na
     return NativeDefineProperty(cx, obj, id, value, getter, setter, attrs);
 }
 
+static bool
+DefineNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
+                          Handle<PropertyDescriptor> desc, ObjectOpResult& result)
+{
+    desc.assertComplete();
+
+    // Optimized NativeDefineProperty() version for known absent properties.
+
+    // Dispense with custom behavior of exotic native objects first.
+    if (obj->is<ArrayObject>()) {
+        // Array's length property is non-configurable, so we shouldn't
+        // encounter it in this function.
+        MOZ_ASSERT(id != NameToId(cx->names().length));
+
+        // 9.4.2.1 step 3. Don't extend a fixed-length array.
+        uint32_t index;
+        if (IdIsIndex(id, &index)) {
+            if (WouldDefinePastNonwritableLength(obj, index))
+                return result.fail(JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
+        }
+    } else if (obj->is<TypedArrayObject>()) {
+        // 9.4.5.3 step 3. Indexed properties of typed arrays are special.
+        uint64_t index;
+        if (IsTypedArrayIndex(id, &index)) {
+            // This method is only called for non-existent properties, which
+            // means any absent indexed property must be out of range.
+            MOZ_ASSERT(index >= obj->as<TypedArrayObject>().length());
+
+            // We (wrongly) ignore out of range defines.
+            return result.succeed();
+        }
+    } else if (obj->is<ArgumentsObject>()) {
+        // If this method is called with either |length| or |@@iterator|, the
+        // property was previously deleted and hence should already be marked
+        // as overridden.
+        MOZ_ASSERT_IF(id == NameToId(cx->names().length),
+                      obj->as<ArgumentsObject>().hasOverriddenLength());
+        MOZ_ASSERT_IF(JSID_IS_SYMBOL(id) && JSID_TO_SYMBOL(id) == cx->wellKnownSymbols().iterator,
+                      obj->as<ArgumentsObject>().hasOverriddenIterator());
+
+        // We still need to mark any element properties as overridden.
+        if (JSID_IS_INT(id))
+            obj->as<ArgumentsObject>().markElementOverridden();
+    }
+
+#ifdef DEBUG
+    Rooted<PropertyResult> prop(cx);
+    NativeLookupOwnPropertyNoResolve(cx, obj, id, &prop);
+    MOZ_ASSERT(!prop, "didn't expect to find an existing property");
+#endif
+
+    // 9.1.6.3, ValidateAndApplyPropertyDescriptor.
+    // Step 1 is a redundant assertion, step 3 and later don't apply here.
+
+    // Step 2.
+    if (!obj->nonProxyIsExtensible())
+        return result.fail(JSMSG_CANT_DEFINE_PROP_OBJECT_NOT_EXTENSIBLE);
+
+    if (!AddOrChangeProperty<IsAddOrChange::Add>(cx, obj, id, desc))
+        return false;
+    return result.succeed();
+}
+
 
 /*** [[HasProperty]] *****************************************************************************/
 
@@ -2439,6 +2502,30 @@ NativeSetExistingDataProperty(JSContext* cx, HandleNativeObject obj, HandleShape
     return true;  // result is populated by CallJSSetterOp above.
 }
 
+static bool
+CallSetPropertyHookAfterDefining(JSContext* cx, HandleObject receiver, HandleId id, HandleValue v,
+                                 ObjectOpResult& result)
+{
+    MOZ_ASSERT(receiver->is<NativeObject>());
+    MOZ_ASSERT(receiver->getClass()->getSetProperty());
+
+    if (!result)
+        return true;
+
+    Rooted<NativeObject*> nativeReceiver(cx, &receiver->as<NativeObject>());
+    MOZ_ASSERT(!cx->helperThread());
+    RootedValue receiverValue(cx, ObjectValue(*receiver));
+
+    // This lookup is a bit unfortunate, but not nearly the most
+    // unfortunate thing about Class getters and setters. Since the above
+    // DefineProperty call succeeded, receiver is native, and the property
+    // has a setter (and thus can't be a dense element), this lookup is
+    // guaranteed to succeed.
+    RootedShape shape(cx, nativeReceiver->lookup(cx, id));
+    MOZ_ASSERT(shape);
+    return NativeSetExistingDataProperty(cx, nativeReceiver, shape, v, receiverValue, result);
+}
+
 /*
  * When a [[Set]] operation finds no existing property with the given id
  * or finds a writable data property on the prototype chain, we end up here.
@@ -2498,24 +2585,8 @@ js::SetPropertyByDefining(JSContext* cx, HandleId id, HandleValue v, HandleValue
 
     // If the receiver is native, there is one more legacy wrinkle: the class
     // JSSetterOp is called after defining the new property.
-    if (setter && receiver->is<NativeObject>()) {
-        if (!result)
-            return true;
-
-        Rooted<NativeObject*> nativeReceiver(cx, &receiver->as<NativeObject>());
-        MOZ_ASSERT(!cx->helperThread());
-        RootedValue receiverValue(cx, ObjectValue(*receiver));
-
-        // This lookup is a bit unfortunate, but not nearly the most
-        // unfortunate thing about Class getters and setters. Since the above
-        // DefineProperty call succeeded, receiver is native, and the property
-        // has a setter (and thus can't be a dense element), this lookup is
-        // guaranteed to succeed.
-        RootedShape shape(cx, nativeReceiver->lookup(cx, id));
-        MOZ_ASSERT(shape);
-        return NativeSetExistingDataProperty(cx, nativeReceiver, shape, v,
-                                             receiverValue, result);
-    }
+    if (setter && receiver->is<NativeObject>())
+        return CallSetPropertyHookAfterDefining(cx, receiver, id, v, result);
 
     return true;
 }
@@ -2543,13 +2614,61 @@ js::SetPropertyOnProto(JSContext* cx, HandleObject obj, HandleId id, HandleValue
  * steps 4.d.i and 5.
  */
 static bool
-SetNonexistentProperty(JSContext* cx, HandleId id, HandleValue v, HandleValue receiver,
-                       QualifiedBool qualified, ObjectOpResult& result)
+SetNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id, HandleValue v,
+                       HandleValue receiver, QualifiedBool qualified, ObjectOpResult& result)
 {
     if (!qualified && receiver.isObject() && receiver.toObject().isUnqualifiedVarObj()) {
         RootedString idStr(cx, JSID_TO_STRING(id));
         if (!MaybeReportUndeclaredVarAssignment(cx, idStr))
             return false;
+    }
+
+    // Pure optimization for the common case. There's no point performing the
+    // lookup in step 5.c again, as our caller just did it for us.
+    if (qualified && receiver.isObject() && obj == &receiver.toObject()) {
+        // Ensure that a custom GetOwnPropertyOp, if present, doesn't
+        // introduce additional properties which weren't previously found by
+        // LookupOwnProperty.
+#ifdef DEBUG
+        if (GetOwnPropertyOp op = obj->getOpsGetOwnPropertyDescriptor()) {
+            Rooted<PropertyDescriptor> desc(cx);
+            if (!op(cx, obj, id, &desc))
+                return false;
+
+            MOZ_ASSERT(!desc.object());
+        }
+#endif
+
+        // Step 5.e. Define the new data property.
+
+        const Class* clasp = obj->getClass();
+        JSGetterOp getter = clasp->getGetProperty();
+        JSSetterOp setter = clasp->getSetProperty();
+        MOZ_ASSERT(getter != JS_PropertyStub);
+        MOZ_ASSERT(setter != JS_StrictPropertyStub);
+
+        Rooted<PropertyDescriptor> desc(cx);
+        desc.initFields(nullptr, v, JSPROP_ENUMERATE, getter, setter);
+
+        if (DefinePropertyOp op = obj->getOpsDefineProperty()) {
+            // Purge the property cache of now-shadowed id in receiver's environment chain.
+            if (!PurgeEnvironmentChain(cx, obj, id))
+                return false;
+
+            MOZ_ASSERT(!cx->helperThread());
+            if (!op(cx, obj, id, desc, result))
+                return false;
+        } else {
+            if (!DefineNonexistentProperty(cx, obj, id, desc, result))
+                return false;
+        }
+
+        // There is one more legacy wrinkle: the class JSSetterOp is called
+        // after defining the new property.
+        if (setter)
+            return CallSetPropertyHookAfterDefining(cx, obj, id, v, result);
+
+        return true;
     }
 
     return SetPropertyByDefining(cx, id, v, receiver, result);
@@ -2709,7 +2828,7 @@ js::NativeSetProperty(JSContext* cx, HandleNativeObject obj, HandleId id, Handle
         RootedObject proto(cx, done ? nullptr : pobj->staticPrototype());
         if (!proto) {
             // Step 4.d.i (and step 5).
-            return SetNonexistentProperty(cx, id, v, receiver, qualified, result);
+            return SetNonexistentProperty(cx, obj, id, v, receiver, qualified, result);
         }
 
         // Step 4.c.i. If the prototype is also native, this step is a
@@ -2726,7 +2845,7 @@ js::NativeSetProperty(JSContext* cx, HandleNativeObject obj, HandleId id, Handle
                 if (!HasProperty(cx, proto, id, &found))
                     return false;
                 if (!found)
-                    return SetNonexistentProperty(cx, id, v, receiver, qualified, result);
+                    return SetNonexistentProperty(cx, obj, id, v, receiver, qualified, result);
             }
 
             return SetProperty(cx, proto, id, v, receiver, result);
