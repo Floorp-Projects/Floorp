@@ -62,6 +62,7 @@ public final class TelemetryWrapper {
         private static final String INTENT_URL = "intent_url";
         private static final String INTENT_CUSTOM_TAB = "intent_custom_tab";
         private static final String TEXT_SELECTION_INTENT = "text_selection_intent";
+        private static final String SHOW = "show";
     }
 
     private static class Object {
@@ -78,6 +79,7 @@ public final class TelemetryWrapper {
         private static final String BROWSER_CONTEXTMENU = "browser_contextmenu";
         private static final String CUSTOM_TAB_CLOSE_BUTTON = "custom_tab_close_but";
         private static final String CUSTOM_TAB_ACTION_BUTTON = "custom_tab_action_bu";
+        private static final String FIRSTRUN = "firstrun";
     }
 
     private static class Value {
@@ -88,6 +90,8 @@ public final class TelemetryWrapper {
         private static final String IMAGE = "image";
         private static final String LINK = "link";
         private static final String CUSTOM_TAB = "custom_tab";
+        private static final String SKIP = "skip";
+        private static final String FINISH = "finish";
     }
 
     private static class Extra {
@@ -337,5 +341,17 @@ public final class TelemetryWrapper {
 
     public static void blockingSwitchEvent(boolean isBlockingEnabled) {
         TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.BLOCKING_SWITCH, String.valueOf(isBlockingEnabled)).queue();
+    }
+
+    public static void showFirstRunPageEvent(int page) {
+        TelemetryEvent.create(Category.ACTION, Method.SHOW, Object.FIRSTRUN, String.valueOf(page)).queue();
+    }
+
+    public static void skipFirstRunEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.FIRSTRUN, Value.SKIP).queue();
+    }
+
+    public static void finishFirstRunEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.FIRSTRUN, Value.FINISH).queue();
     }
 }

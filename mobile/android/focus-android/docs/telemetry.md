@@ -57,6 +57,9 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 * Open default app for URL - ("action", "open", "menu", "default")
 * Open Firefox directly - ("action", "open", "menu", "firefox")
 * Open an app for this URL from a list of available apps - ("action", "open", "menu", "selection")
+* (Firstrun) Showing a first run page: ("action", "show", "firstrun", "<page>") (Page numbers start at 0. Initially when the firstrun tour is shown an event for the first page (0) is fired.
+* (Firstrun) Skip button is pressed: ("action", "click", "firstrun", "skip")
+* (Firstrun) Finish button on the last page of the tour is pressed: ("action", "click", "firstrun", "finish")
 
 #### Limits
 

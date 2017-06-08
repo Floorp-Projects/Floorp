@@ -21,6 +21,7 @@ import android.view.ViewGroup;
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.MainActivity;
 import org.mozilla.focus.firstrun.FirstrunPagerAdapter;
+import org.mozilla.focus.telemetry.TelemetryWrapper;
 
 public class FirstrunFragment extends Fragment implements View.OnClickListener {
     public static final String FRAGMENT_TAG = "firstrun";
@@ -41,6 +42,10 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
                 inflateTransition(R.transition.firstrun_exit);
 
         setExitTransition(transition);
+
+        // We will send a telemetry event whenever a new firstrun page is shown. However this page
+        // listener won't fire for the initial page we are showing. So we are going to firing here.
+        TelemetryWrapper.showFirstRunPageEvent(0);
     }
 
     @Override
@@ -62,6 +67,18 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
             public void transformPage(View page, float position) {
                 page.setAlpha(1 - (0.5f * Math.abs(position)));
             }
+        });
+        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageSelected(int position) {
+                TelemetryWrapper.showFirstRunPageEvent(position);
+            }
+
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
+
+            @Override
+            public void onPageScrollStateChanged(int state) {}
         });
 
         viewPager.setClipToPadding(false);
@@ -99,17 +116,26 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
                 break;
 
             case R.id.skip:
-            case R.id.finish:
-                PreferenceManager.getDefaultSharedPreferences(getContext())
-                        .edit()
-                        .putBoolean(FIRSTRUN_PREF, true)
-                        .apply();
+                finishFirstrun();
+                TelemetryWrapper.skipFirstRunEvent();
+                break;
 
-                ((MainActivity) getActivity()).firstrunFinished();
+            case R.id.finish:
+                finishFirstrun();
+                TelemetryWrapper.finishFirstRunEvent();
                 break;
 
             default:
                 throw new IllegalArgumentException("Unknown view");
         }
+    }
+
+    private void finishFirstrun() {
+        PreferenceManager.getDefaultSharedPreferences(getContext())
+                .edit()
+                .putBoolean(FIRSTRUN_PREF, true)
+                .apply();
+
+        ((MainActivity) getActivity()).firstrunFinished();
     }
 }
