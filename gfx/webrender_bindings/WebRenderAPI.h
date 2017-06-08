@@ -167,6 +167,9 @@ public:
                        const WrRect& aClipRect);
   void PopScrollLayer();
 
+  void PushClipAndScrollInfo(const layers::FrameMetrics::ViewID& aScrollId,
+                             const uint64_t* aClipId);
+  void PopClipAndScrollInfo();
 
   void PushRect(const WrRect& aBounds,
                 const WrClipRegionToken aClip,
