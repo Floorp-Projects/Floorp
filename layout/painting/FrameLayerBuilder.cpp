@@ -4378,13 +4378,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
           layerState == LAYER_ACTIVE_FORCE) {
         newLayerEntry->mPropagateComponentAlphaFlattening = false;
       }
-
-      float contentXScale = 1.0f;
-      float contentYScale = 1.0f;
-      if (ContainerLayer* ownContainer = ownLayer->AsContainerLayer()) {
-        contentXScale = 1 / ownContainer->GetPreXScale();
-        contentYScale = 1 / ownContainer->GetPreYScale();
-      }
       // nsDisplayTransform::BuildLayer must set layerContentsVisibleRect.
       // We rely on this to ensure 3D transforms compute a reasonable
       // layer visible region.
@@ -4402,7 +4395,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
           // to avoid failure caused by singular transforms.
           newLayerEntry->mUntransformedVisibleRegion = true;
           newLayerEntry->mVisibleRegion =
-            item->GetVisibleRectForChildren().ScaleToOutsidePixels(contentXScale, contentYScale, mAppUnitsPerDevPixel);
+            item->GetVisibleRectForChildren().ToOutsidePixels(mAppUnitsPerDevPixel);
         } else {
           newLayerEntry->mVisibleRegion = itemVisibleRegion;
         }
@@ -4416,7 +4409,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
           (item->Frame()->IsPreserve3DLeaf() ||
            item->Frame()->HasPerspective());
         const nsIntRegion &visible = useChildrenVisible ?
-          item->GetVisibleRectForChildren().ScaleToOutsidePixels(contentXScale, contentYScale, mAppUnitsPerDevPixel):
+          item->GetVisibleRectForChildren().ToOutsidePixels(mAppUnitsPerDevPixel):
           itemVisibleRegion;
 
         SetOuterVisibleRegionForLayer(ownLayer, visible,
