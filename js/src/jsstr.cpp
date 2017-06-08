@@ -1800,7 +1800,7 @@ StringMatch(JSLinearString* text, JSLinearString* pat, uint32_t start = 0)
     return (match == -1) ? -1 : start + match;
 }
 
-static const size_t sRopeMatchThresholdRatioLog2 = 5;
+static const size_t sRopeMatchThresholdRatioLog2 = 4;
 
 bool
 js::StringHasPattern(JSLinearString* text, const char16_t* pat, uint32_t patLen)
