@@ -420,15 +420,31 @@ ComputeDistanceForServo(const ValueWrapper* aFromWrapper,
                         const ValueWrapper& aToWrapper,
                         double& aDistance)
 {
-  const RefPtr<RawServoAnimationValue>* fromValue =
-    aFromWrapper ? &aFromWrapper->mServoValues[0] : nullptr;
-  const RefPtr<RawServoAnimationValue>* toValue = &aToWrapper.mServoValues[0];
-  RefPtr<RawServoAnimationValue> zeroValueStorage;
-  if (!FinalizeServoAnimationValues(fromValue, toValue, zeroValueStorage)) {
-    return NS_ERROR_FAILURE;
+  size_t len = aToWrapper.mServoValues.Length();
+  MOZ_ASSERT(!aFromWrapper || aFromWrapper->mServoValues.Length() == len,
+             "From and to values length should be the same if "
+             "The start value exists");
+
+  double squareDistance = 0;
+
+  for (size_t i = 0; i < len; i++) {
+    const RefPtr<RawServoAnimationValue>* fromValue =
+      aFromWrapper ? &aFromWrapper->mServoValues[0] : nullptr;
+    const RefPtr<RawServoAnimationValue>* toValue = &aToWrapper.mServoValues[0];
+    RefPtr<RawServoAnimationValue> zeroValueStorage;
+    if (!FinalizeServoAnimationValues(fromValue, toValue, zeroValueStorage)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    double distance = Servo_AnimationValues_ComputeDistance(*fromValue, *toValue);
+    if (len == 1) {
+      aDistance = distance;
+      return NS_OK;
+    }
+    squareDistance += distance * distance;
   }
 
-  aDistance = Servo_AnimationValues_ComputeDistance(*fromValue, *toValue);
+  aDistance = sqrt(squareDistance);
 
   return NS_OK;
 }
