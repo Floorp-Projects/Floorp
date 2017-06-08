@@ -166,6 +166,10 @@ public:
     MOZ_COUNT_DTOR(MediaCache);
   }
 
+  // Get an instance of the file-backed MediaCache.
+  // Returns nullptr if initialization failed.
+  static MediaCache* GetMediaCache();
+
   // Main thread only. Creates the backing cache file. If this fails,
   // then the cache is still in a semi-valid state; mFD will be null,
   // so all I/O on the cache file will fail.
@@ -693,11 +697,13 @@ MediaCache::MaybeShutdown()
   gMediaCache = nullptr;
 }
 
-static void
-InitMediaCache()
+/* static */ MediaCache*
+MediaCache::GetMediaCache()
 {
-  if (gMediaCache)
-    return;
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+  if (gMediaCache) {
+    return gMediaCache;
+  }
 
   gMediaCache = new MediaCache();
   nsresult rv = gMediaCache->Init();
@@ -705,6 +711,8 @@ InitMediaCache()
     delete gMediaCache;
     gMediaCache = nullptr;
   }
+
+  return gMediaCache;
 }
 
 nsresult
@@ -2483,9 +2491,10 @@ MediaCacheStream::Init()
   if (mInitialized)
     return NS_OK;
 
-  InitMediaCache();
-  if (!gMediaCache)
+  MediaCache::GetMediaCache();
+  if (!gMediaCache) {
     return NS_ERROR_FAILURE;
+  }
   gMediaCache->OpenStream(this);
   mInitialized = true;
   return NS_OK;
