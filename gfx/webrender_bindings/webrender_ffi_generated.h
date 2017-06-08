@@ -732,9 +732,9 @@ void wr_dp_push_built_display_list(WrState *aState,
 WR_FUNC;
 
 WR_INLINE
-void wr_dp_push_clip(WrState *aState,
-                     WrRect aClipRect,
-                     const WrImageMask *aMask)
+uint64_t wr_dp_push_clip(WrState *aState,
+                         WrRect aClipRect,
+                         const WrImageMask *aMask)
 WR_FUNC;
 
 WR_INLINE
