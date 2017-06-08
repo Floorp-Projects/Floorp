@@ -1337,6 +1337,19 @@ RedirectIonBackedgesToInterruptCheck(JSContext* cx)
     }
 }
 
+bool
+wasm::InInterruptibleCode(JSContext* cx, uint8_t* pc, const CodeSegment** cs)
+{
+    // Only interrupt in function code so that the frame iterators have the
+    // invariant that resumePC always has a function CodeRange and we can't
+    // get into any weird interrupt-during-interrupt-stub cases.
+    if (!cx->compartment())
+        return false;
+
+    const Code* code = cx->compartment()->wasm.lookupCode(pc, cs);
+    return code && (*cs)->containsFunctionPC(pc);
+}
+
 // The return value indicates whether the PC was changed, not whether there was
 // a failure.
 static bool
@@ -1358,14 +1371,8 @@ RedirectJitCodeToInterruptCheck(JSContext* cx, CONTEXT* context)
     uint8_t* pc = *ContextToPC(context);
 #endif
 
-    // Only interrupt in function code so that the frame iterators have the
-    // invariant that resumePC always has a function CodeRange and we can't
-    // get into any weird interrupt-during-interrupt-stub cases.
-    if (!cx->compartment())
-        return false;
-    const CodeSegment* codeSegment;
-    const Code* code = cx->compartment()->wasm.lookupCode(pc, &codeSegment);
-    if (!code || !codeSegment->containsFunctionPC(pc))
+    const CodeSegment* codeSegment = nullptr;
+    if (!InInterruptibleCode(cx, pc, &codeSegment))
         return false;
 
     // Only probe cx->activation() via ActivationIfInnermost after we know the

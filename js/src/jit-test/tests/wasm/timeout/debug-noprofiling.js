@@ -28,5 +28,6 @@ outer = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
         call_indirect $v2v)
     )`)), { imports: { t } });
 
+setJitCompilerOption('simulator.always-interrupt', 1);
 timeout(1);
 outer.exports.run();
