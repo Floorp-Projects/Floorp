@@ -300,7 +300,11 @@ JAR_MANIFESTS += ['jar.mn']
 RESOURCE_FILES += [
     'contenteditable.css',
     'designmode.css',
+]
+
+CONTENT_ACCESSIBLE_FILES += [
     'ImageDocument.css',
+    'res/viewsource.css',
     'TopLevelImageDocument.css',
     'TopLevelVideoDocument.css',
 ]
