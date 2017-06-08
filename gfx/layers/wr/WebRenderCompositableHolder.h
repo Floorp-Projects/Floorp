@@ -93,14 +93,7 @@ private:
     key.mHandle = GetNextResourceId();
     return key;
   }
-  void GetImageKeys(nsTArray<wr::ImageKey>& aKeys, size_t aChannelNumber);
-  void GetImageKeysForExternalImage(nsTArray<wr::ImageKey>& aKeys);
   bool GetImageKeyForTextureHost(wr::WebRenderAPI* aApi, TextureHost* aTexture, nsTArray<wr::ImageKey>& aKeys);
-  void PushExternalImage(wr::DisplayListBuilder& aBuilder,
-                         const WrRect& aBounds,
-                         const WrClipRegionToken aClip,
-                         wr::ImageRendering aFilter,
-                         nsTArray<wr::ImageKey>& aKeys);
 
   struct ForwardingTextureHost {
     ForwardingTextureHost(const wr::Epoch& aEpoch, TextureHost* aTexture)

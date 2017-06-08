@@ -31,11 +31,11 @@ skip-if(d2d) == blur-cap-large-radius-on-software.html blur-cap-large-radius-on-
 == drop-shadow-negative-offset.html drop-shadow-negative-offset-ref.html
 == filter-on-huge-bbox.html pass.svg
 == filter-on-outer-svg.html pass.svg
-fuzzy-if(d2d,1,10000) == grayscale.html grayscale-ref.html
-fuzzy-if(d2d,1,10000) == grayscale-one.html grayscale-one-ref.html
-fuzzy-if(d2d,1,10000) == grayscale-over-one.html grayscale-over-one-ref.html
-fuzzy-if(d2d,1,10000) == grayscale-percent.html grayscale-percent-ref.html
-== grayscale-zero.html grayscale-zero-ref.html
+fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) == grayscale.html grayscale-ref.html
+fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) == grayscale-one.html grayscale-one-ref.html
+fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) == grayscale-over-one.html grayscale-over-one-ref.html
+fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) == grayscale-percent.html grayscale-percent-ref.html
+fuzzy-if(webrender,1,10000) == grayscale-zero.html grayscale-zero-ref.html
 == hue-rotate.html hue-rotate-ref.html
 == hue-rotate-360.html hue-rotate-360-ref.html
 == hue-rotate-grad.html hue-rotate-grad-ref.html
@@ -45,11 +45,11 @@ fuzzy-if(d2d,2,7500) == hue-rotate-multichannel.html hue-rotate-multichannel-ref
 == hue-rotate-rad.html hue-rotate-rad-ref.html
 == hue-rotate-turn.html hue-rotate-turn-ref.html
 == hue-rotate-zero.html hue-rotate-zero-ref.html
-fuzzy-if(d2d,1,10000) == invert.html invert-ref.html
-== invert-half.html invert-half-ref.html
+fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) == invert.html invert-ref.html
+fuzzy-if(webrender,1,10000) == invert-half.html invert-half-ref.html
 == invert-one.html invert-one-ref.html
 == invert-over-one.html invert-over-one-ref.html
-fuzzy-if(d2d,1,10000) == invert-percent.html invert-percent-ref.html
+fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) == invert-percent.html invert-percent-ref.html
 == invert-zero.html invert-zero-ref.html
 fuzzy-if(d2d,1,10000) == opacity.html opacity-ref.html
 == opacity-one.html opacity-one-ref.html
@@ -63,10 +63,10 @@ fuzzy-if(d2d,1,10000) == saturate-desaturate.html saturate-desaturate-ref.html
 == saturate-one.html saturate-one-ref.html
 == saturate-percent.html saturate-percent-ref.html
 fuzzy-if(d2d,1,10000) == saturate-zero.html saturate-zero-ref.html
-fuzzy-if(d2d,1,10000) == sepia.html sepia-ref.html
-fuzzy-if(d2d,1,10000) == sepia-one.html sepia-one-ref.html
-fuzzy-if(d2d,1,10000) == sepia-over-one.html sepia-over-one-ref.html
-fuzzy-if(d2d,1,10000) == sepia-percent.html sepia-percent-ref.html
+fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) == sepia.html sepia-ref.html
+fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) == sepia-one.html sepia-one-ref.html
+fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) == sepia-over-one.html sepia-over-one-ref.html
+fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) == sepia-percent.html sepia-percent-ref.html
 == sepia-zero.html sepia-zero-ref.html
 
 fuzzy(2,125000) == scale-filtered-content-01.html scale-filtered-content-01-ref.html

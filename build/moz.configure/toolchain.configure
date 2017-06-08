@@ -1027,3 +1027,8 @@ def security_hardening_cflags(value, c_compiler):
 
 add_old_configure_assignment('HARDENING_CFLAGS', security_hardening_cflags)
 imply_option('--enable-pie', depends_if('--enable-hardening')(lambda v: v))
+
+option(env='RUSTFLAGS',
+       nargs=1,
+       help='Rust compiler flags')
+set_config('RUSTFLAGS', depends('RUSTFLAGS')(lambda flags: flags))

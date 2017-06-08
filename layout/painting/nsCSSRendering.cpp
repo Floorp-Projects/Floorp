@@ -2515,8 +2515,8 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
 
   // If we're drawing all layers, aCompositonOp is ignored, so make sure that
   // it was left at its default value.
-  MOZ_ASSERT_IF(aParams.layer == -1,
-                aParams.compositionOp == CompositionOp::OP_OVER);
+  MOZ_ASSERT(aParams.layer != -1 ||
+             aParams.compositionOp == CompositionOp::OP_OVER);
 
   // Check to see if we have an appearance defined.  If so, we let the theme
   // renderer draw the background and bail out.

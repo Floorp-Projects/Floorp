@@ -251,42 +251,54 @@ FrameIterator::debugTrapCallsite() const
 #if defined(JS_CODEGEN_X64)
 static const unsigned PushedRetAddr = 0;
 static const unsigned PushedTLS = 2;
-static const unsigned PushedFP = 3;
-static const unsigned SetFP = 6;
-static const unsigned PoppedFP = 2;
+static const unsigned PushedExitReason = 4;
+static const unsigned PushedFP = 5;
+static const unsigned SetFP = 8;
+static const unsigned PoppedFP = 4;
+static const unsigned PoppedExitReason = 2;
 #elif defined(JS_CODEGEN_X86)
 static const unsigned PushedRetAddr = 0;
 static const unsigned PushedTLS = 1;
-static const unsigned PushedFP = 2;
-static const unsigned SetFP = 4;
-static const unsigned PoppedFP = 1;
+static const unsigned PushedExitReason = 3;
+static const unsigned PushedFP = 4;
+static const unsigned SetFP = 6;
+static const unsigned PoppedFP = 2;
+static const unsigned PoppedExitReason = 1;
 #elif defined(JS_CODEGEN_ARM)
 static const unsigned BeforePushRetAddr = 0;
 static const unsigned PushedRetAddr = 4;
 static const unsigned PushedTLS = 8;
-static const unsigned PushedFP = 12;
-static const unsigned SetFP = 16;
-static const unsigned PoppedFP = 4;
+static const unsigned PushedExitReason = 16;
+static const unsigned PushedFP = 20;
+static const unsigned SetFP = 24;
+static const unsigned PoppedFP = 8;
+static const unsigned PoppedExitReason = 4;
 #elif defined(JS_CODEGEN_ARM64)
 static const unsigned BeforePushRetAddr = 0;
 static const unsigned PushedRetAddr = 0;
-static const unsigned PushedTLS = 0;
+static const unsigned PushedTLS = 1;
+static const unsigned PushedExitReason = 2;
 static const unsigned PushedFP = 0;
 static const unsigned SetFP = 0;
 static const unsigned PoppedFP = 0;
+static const unsigned PoppedExitReason = 0;
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 static const unsigned BeforePushRetAddr = 0;
 static const unsigned PushedRetAddr = 4;
 static const unsigned PushedTLS = 8;
-static const unsigned PushedFP = 12;
-static const unsigned SetFP = 16;
-static const unsigned PoppedFP = 4;
+static const unsigned PushedExitReason = 12;
+static const unsigned PushedFP = 16;
+static const unsigned SetFP = 20;
+static const unsigned PoppedFP = 8;
+static const unsigned PoppedExitReason = 4;
 #elif defined(JS_CODEGEN_NONE)
 static const unsigned PushedRetAddr = 0;
-static const unsigned PushedTLS = 0;
+static const unsigned PushedTLS = 1;
+static const unsigned PushedExitReason = 2;
 static const unsigned PushedFP = 0;
 static const unsigned SetFP = 0;
 static const unsigned PoppedFP = 0;
+static const unsigned PoppedExitReason = 0;
 #else
 # error "Unknown architecture!"
 #endif
@@ -327,7 +339,7 @@ GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason 
     // randomly inserted between two instructions.
     {
 #if defined(JS_CODEGEN_ARM)
-        AutoForbidPools afp(&masm, /* number of instructions in scope = */ 8);
+        AutoForbidPools afp(&masm, /* number of instructions in scope = */ 7);
 #endif
         *entry = masm.currentOffset();
 
@@ -335,6 +347,8 @@ GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason 
         MOZ_ASSERT_IF(!masm.oom(), PushedRetAddr == masm.currentOffset() - *entry);
         masm.push(WasmTlsReg);
         MOZ_ASSERT_IF(!masm.oom(), PushedTLS == masm.currentOffset() - *entry);
+        masm.push(Imm32(reason.encode()));
+        MOZ_ASSERT_IF(!masm.oom(), PushedExitReason == masm.currentOffset() - *entry);
         masm.push(FramePointer);
         MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - *entry);
         masm.moveStackPtrTo(FramePointer);
@@ -342,21 +356,20 @@ GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason 
     }
 
     if (!reason.isNone()) {
-        // Native callers expect the native ABI, which assume that nonvolatile
-        // registers are preserved.
-        Register scratch = ABINonArgReg0;
-        if (reason.isNative() && !scratch.volatile_())
-            masm.Push(scratch);
+        Register act = ABINonArgReg0;
 
-        LoadActivation(masm, scratch);
-        masm.wasmAssertNonExitInvariants(scratch);
-        Address exitReason(scratch, WasmActivation::offsetOfExitReason());
-        masm.store32(Imm32(reason.raw()), exitReason);
-        Address exitFP(scratch, WasmActivation::offsetOfExitFP());
-        masm.storePtr(FramePointer, exitFP);
+        // Native callers expect the native ABI, which assume that non-saved
+        // registers are preserved. Explicitly preserve the act register
+        // in that case.
+        if (reason.isNative() && !act.volatile_())
+            masm.Push(act);
 
-        if (reason.isNative() && !scratch.volatile_())
-            masm.Pop(scratch);
+        LoadActivation(masm, act);
+        masm.wasmAssertNonExitInvariants(act);
+        masm.storePtr(FramePointer, Address(act, WasmActivation::offsetOfExitFP()));
+
+        if (reason.isNative() && !act.volatile_())
+            masm.Pop(act);
     }
 
     if (framePushed)
@@ -371,34 +384,35 @@ GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason 
         masm.addToStackPtr(Imm32(framePushed));
 
     if (!reason.isNone()) {
-        // See comment in GenerateCallablePrologue.
-        Register scratch = ABINonArgReturnReg0;
-        if (reason.isNative() && !scratch.volatile_())
-            masm.Push(scratch);
+        Register act = ABINonArgReturnReg0;
 
-        LoadActivation(masm, scratch);
-        Address exitFP(scratch, WasmActivation::offsetOfExitFP());
-        masm.storePtr(ImmWord(0), exitFP);
-        Address exitReason(scratch, WasmActivation::offsetOfExitReason());
+        // See comment in GenerateCallablePrologue.
+        if (reason.isNative() && !act.volatile_())
+            masm.Push(act);
+
+        LoadActivation(masm, act);
+        masm.storePtr(ImmWord(0), Address(act, WasmActivation::offsetOfExitFP()));
+
 #ifdef DEBUG
         // Check the passed exitReason is the same as the one on entry.
-        masm.push(scratch);
-        masm.loadPtr(exitReason, ABINonArgReturnReg0);
+        // Do it here rather than in the pop sequence to not perturbate the
+        // static stack structure in debug vs optimized mode.
+        Register scratch = act;
+        size_t exitReasonSlot = 1 + (reason.isNative() && !scratch.volatile_() ? 1 : 0);
+        masm.load32(Address(masm.getStackPointer(), exitReasonSlot * sizeof(void*)), scratch);
         Label ok;
-        masm.branch32(Assembler::Condition::Equal, ABINonArgReturnReg0, Imm32(reason.raw()), &ok);
+        masm.branch32(Assembler::Condition::Equal, scratch, Imm32(reason.encode()), &ok);
         masm.breakpoint();
         masm.bind(&ok);
-        masm.pop(scratch);
 #endif
-        masm.store32(Imm32(ExitReason::None().raw()), exitReason);
 
-        if (reason.isNative() && !scratch.volatile_())
-            masm.Pop(scratch);
+        if (reason.isNative() && !act.volatile_())
+            masm.Pop(act);
     }
 
     // Forbid pools for the same reason as described in GenerateCallablePrologue.
 #if defined(JS_CODEGEN_ARM)
-    AutoForbidPools afp(&masm, /* number of instructions in scope = */ 3);
+    AutoForbidPools afp(&masm, /* number of instructions in scope = */ 7);
 #endif
 
     // There is an important ordering constraint here: fp must be repointed to
@@ -410,11 +424,18 @@ GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason 
 
     masm.pop(FramePointer);
     DebugOnly<uint32_t> poppedFP = masm.currentOffset();
+
+    // Pop the exit reason to WasmTlsReg; it's going to be clobbered just
+    // thereafter to store the real value of WasmTlsReg.
+    masm.pop(WasmTlsReg);
+    DebugOnly<uint32_t> poppedExitReason = masm.currentOffset();
+
     masm.pop(WasmTlsReg);
     *ret = masm.currentOffset();
     masm.ret();
 
     MOZ_ASSERT_IF(!masm.oom(), PoppedFP == *ret - poppedFP);
+    MOZ_ASSERT_IF(!masm.oom(), PoppedExitReason == *ret - poppedExitReason);
 }
 
 void
@@ -537,6 +558,10 @@ ProfilingFrameIterator::initFromExitFP()
     Frame* fp = activation_->exitFP();
     void* pc = fp->returnAddress;
 
+    // The iterator inserts a pretend innermost frame for ExitReasons.
+    // This allows the variety of exit reasons to show up in the callstack.
+    exitReason_ = ExitReason::Decode(fp->encodedExitReason);
+
     stackAddress_ = fp;
 
     code_ = activation_->compartment()->wasm.lookupCode(pc);
@@ -574,10 +599,6 @@ ProfilingFrameIterator::initFromExitFP()
       case CodeRange::FarJumpIsland:
         MOZ_CRASH("Unexpected CodeRange kind");
     }
-
-    // The iterator inserts a pretend innermost frame for non-None ExitReasons.
-    // This allows the variety of exit reasons to show up in the callstack.
-    exitReason_ = activation_->exitReason();
 
     MOZ_ASSERT(!done());
 }
@@ -667,10 +688,16 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
             callerPC_ = sp[0];
             callerFP_ = fp;
             AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
-        } else if (offsetFromEntry == PushedTLS) {
-            // The return address and caller's TLS have been pushed on the stack; fp
-            // is still the caller's fp.
+        } else if (offsetFromEntry >= PushedTLS && offsetFromEntry < PushedExitReason) {
+            // The return address and caller's TLS have been pushed on the
+            // stack; fp is still the caller's fp.
             callerPC_ = sp[1];
+            callerFP_ = fp;
+            AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
+        } else if (offsetFromEntry == PushedExitReason) {
+            // The return address, caller's TLS and exit reason have been
+            // pushed on the stack; fp is still the caller's fp.
+            callerPC_ = sp[2];
             callerFP_ = fp;
             AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
         } else if (offsetFromEntry == PushedFP) {
@@ -680,9 +707,17 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
             callerFP_ = fp;
             AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
         } else if (offsetInCode == codeRange->ret() - PoppedFP) {
-            // The callerFP field of the Frame has been popped into fp.
+            // The callerFP field of the Frame has been popped into fp, but the
+            // exit reason hasn't been popped yet.
+            callerPC_ = sp[2];
+            callerFP_ = fp;
+            AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
+        } else if (offsetInCode == codeRange->ret() - PoppedExitReason) {
+            // The callerFP field of the Frame has been popped into fp, and the
+            // exit reason has been popped.
             callerPC_ = sp[1];
             callerFP_ = fp;
+            AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
         } else if (offsetInCode == codeRange->ret()) {
             // Both the TLS and callerFP fields have been popped and fp now
             // points to the caller's frame.

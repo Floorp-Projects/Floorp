@@ -42,7 +42,6 @@ public:
 private:
   virtual ~RenderBufferTextureHost();
 
-  already_AddRefed<gfx::DataSourceSurface> GetAsSurface();
   uint8_t* GetBuffer() const
   {
     return mBuffer;
@@ -52,8 +51,17 @@ private:
   layers::BufferDescriptor mDescriptor;
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
+
   RefPtr<gfx::DataSourceSurface> mSurface;
   gfx::DataSourceSurface::MappedSurface mMap;
+
+  RefPtr<gfx::DataSourceSurface> mYSurface;
+  RefPtr<gfx::DataSourceSurface> mCbSurface;
+  RefPtr<gfx::DataSourceSurface> mCrSurface;
+  gfx::DataSourceSurface::MappedSurface mYMap;
+  gfx::DataSourceSurface::MappedSurface mCbMap;
+  gfx::DataSourceSurface::MappedSurface mCrMap;
+
   bool mLocked;
 };
 

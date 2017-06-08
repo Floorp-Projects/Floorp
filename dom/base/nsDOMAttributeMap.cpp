@@ -118,14 +118,11 @@ void
 nsDOMAttributeMap::DropAttribute(int32_t aNamespaceID, nsIAtom* aLocalName)
 {
   nsAttrKey attr(aNamespaceID, aLocalName);
-  Attr *node = mAttributeCache.GetWeak(attr);
-  if (node) {
-    // Break link to map
-    node->SetMap(nullptr);
-
-    // Remove from cache
-    mAttributeCache.Remove(attr);
-  }
+  mAttributeCache.LookupRemoveIf(attr,
+    [] (Attr* aNode) {
+      aNode->SetMap(nullptr); // break link to map
+      return true; // remove from cache
+    });
 }
 
 Attr*
@@ -135,13 +132,13 @@ nsDOMAttributeMap::GetAttribute(mozilla::dom::NodeInfo* aNodeInfo)
 
   nsAttrKey attr(aNodeInfo->NamespaceID(), aNodeInfo->NameAtom());
 
-  Attr* node = mAttributeCache.GetWeak(attr);
+  RefPtr<Attr>& entryValue = mAttributeCache.GetOrInsert(attr);
+  Attr* node = entryValue;
   if (!node) {
+    // Newly inserted entry!
     RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
-    RefPtr<Attr> newAttr =
-      new Attr(this, ni.forget(), EmptyString());
-    mAttributeCache.Put(attr, newAttr);
-    node = newAttr;
+    entryValue = new Attr(this, ni.forget(), EmptyString());
+    node = entryValue;
   }
 
   return node;

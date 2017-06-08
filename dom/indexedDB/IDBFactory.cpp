@@ -45,6 +45,7 @@
 namespace mozilla {
 namespace dom {
 
+using namespace mozilla::dom::indexedDB;
 using namespace mozilla::dom::quota;
 using namespace mozilla::ipc;
 
@@ -100,9 +101,6 @@ IDBFactory::IDBFactory()
   , mBackgroundActorFailed(false)
   , mPrivateBrowsingMode(false)
 {
-#ifdef DEBUG
-  mOwningThread = PR_GetCurrentThread();
-#endif
   AssertIsOnOwningThread();
 }
 
@@ -418,24 +416,6 @@ IDBFactory::AllowedForPrincipal(nsIPrincipal* aPrincipal,
 
   return true;
 }
-
-#ifdef DEBUG
-
-void
-IDBFactory::AssertIsOnOwningThread() const
-{
-  MOZ_ASSERT(mOwningThread);
-  MOZ_ASSERT(PR_GetCurrentThread() == mOwningThread);
-}
-
-PRThread*
-IDBFactory::OwningThread() const
-{
-  MOZ_ASSERT(mOwningThread);
-  return mOwningThread;
-}
-
-#endif // DEBUG
 
 bool
 IDBFactory::IsChrome() const

@@ -21,7 +21,6 @@ include protocol PFileDescriptorSet;
 include protocol PIPCBlobInputStream;
 include protocol PPaymentRequest;
 
-include PBackgroundSharedTypes;
 include DOMTypes;
 include IPCBlob;
 include IPCStream;
@@ -84,6 +83,7 @@ using mozilla::widget::CandidateWindowPosition from "ipc/nsGUIEventIPC.h";
 using class mozilla::NativeEventData from "ipc/nsGUIEventIPC.h";
 using mozilla::FontRange from "ipc/nsGUIEventIPC.h";
 using mozilla::a11y::IAccessibleHolder from "mozilla/a11y/IPCTypes.h";
+using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -196,7 +196,7 @@ parent:
      *
      * aLinks A flat array of url, name, and type for each link
      */
-    async DropLinks(nsString[] aLinks, PrincipalInfo aTriggeringPrincipalInfo);
+    async DropLinks(nsString[] aLinks);
 
     async Event(RemoteDOMEvent aEvent);
 
@@ -890,6 +890,17 @@ child:
      * Loads which occur until this flag is cleared will not leave the process.
      */
     async AwaitLargeAlloc();
+
+    /**
+     * Tell the TabChild to set the name of its toplevel docshell to the given name.
+     */
+    async SetWindowName(nsString aName);
+
+    /**
+     * Tell the TabChild what OriginAttributes it should inherit from. This must
+     * be called before the first non-blank document is loaded in the TabChild.
+     */
+    async SetOriginAttributes(OriginAttributes aOriginAttributes);
 
 /*
  * FIXME: write protocol!

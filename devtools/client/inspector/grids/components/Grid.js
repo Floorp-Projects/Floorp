@@ -95,7 +95,7 @@ module.exports = createClass({
         {
           className: "layout-no-grids",
         },
-        getStr("layout.noGrids")
+        getStr("layout.noGridsOnThisPage")
       );
   },
 

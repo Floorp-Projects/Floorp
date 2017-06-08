@@ -300,7 +300,7 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
     changeHint |= nsChangeHint_ReconstructFrame;
     // The only time the primary frame is non-null is when image maps do hacky
     // SetPrimaryFrame calls.
-    MOZ_ASSERT_IF(styleFrame, styleFrame->IsImageFrame());
+    MOZ_ASSERT(!styleFrame || styleFrame->IsImageFrame());
     styleFrame = nullptr;
   }
 
@@ -510,7 +510,7 @@ ServoRestyleManager::SnapshotFor(Element* aElement)
 ServoRestyleManager::FrameForPseudoElement(const nsIContent* aContent,
                                            nsIAtom* aPseudoTagOrNull)
 {
-  MOZ_ASSERT_IF(aPseudoTagOrNull, aContent->IsElement());
+  MOZ_ASSERT(!aPseudoTagOrNull || aContent->IsElement());
   if (!aPseudoTagOrNull) {
     return aContent->GetPrimaryFrame();
   }
@@ -792,7 +792,7 @@ ServoRestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
                                       const nsAttrValue* aOldValue)
 {
   MOZ_ASSERT(!mInStyleRefresh);
-  MOZ_ASSERT_IF(mSnapshots.Get(aElement), mSnapshots.Get(aElement)->HasAttrs());
+  MOZ_ASSERT(!mSnapshots.Get(aElement) || mSnapshots.Get(aElement)->HasAttrs());
 
   nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
   if (primaryFrame) {

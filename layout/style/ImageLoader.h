@@ -100,6 +100,10 @@ private:
   nsresult OnImageIsAnimated(imgIRequest* aRequest);
   nsresult OnFrameUpdate(imgIRequest* aRequest);
 
+  // Helpers for DropRequestsForFrame / DisassociateRequestFromFrame above.
+  void RemoveRequestToFrameMapping(imgIRequest* aRequest, nsIFrame* aFrame);
+  void RemoveFrameToRequestMapping(imgIRequest* aRequest, nsIFrame* aFrame);
+
   // A map of imgIRequests to the nsIFrames that are using them.
   RequestToFrameMap mRequestToFrameMap;
 

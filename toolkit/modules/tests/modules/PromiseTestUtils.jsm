@@ -53,6 +53,13 @@ this.PromiseTestUtils = {
   _rejectionIgnoreFns: [],
 
   /**
+   * If any of the functions in this array returns true when called with the
+   * rejection details as its only argument, the rejection is ignored. This
+   * happens after the "_rejectionIgnoreFns" array is processed.
+   */
+  _globalRejectionIgnoreFns: [],
+
+  /**
    * Called only by the test infrastructure, registers the rejection observers.
    *
    * This should be called only once, and a matching "uninit" call must be made
@@ -150,13 +157,21 @@ this.PromiseTestUtils = {
       message = reason.message || ("" + reason);
     } catch (ex) {}
 
+    // We should convert the rejection stack to a string immediately. This is
+    // because the object might not be available when we report the rejection
+    // later, if the error occurred in a context that has been unloaded.
+    let stack = "(Unable to convert rejection stack to string.)";
+    try {
+      stack = "" + PromiseDebugging.getRejectionStack(promise);
+    } catch (ex) {}
+
     // It's important that we don't store any reference to the provided Promise
     // object or its value after this function returns in order to avoid leaks.
     this._rejections.push({
       id: PromiseDebugging.getPromiseID(promise),
       message,
       date: new Date(),
-      stack: PromiseDebugging.getRejectionStack(promise),
+      stack,
     });
   },
 
@@ -195,6 +210,19 @@ this.PromiseTestUtils = {
   },
 
   /**
+   * Whitelists an entire class of Promise rejections. Usage of this function
+   * should be kept to a minimum because it has a broad scope and doesn't
+   * prevent new unhandled rejections of this class from being added.
+   *
+   * @param regExp
+   *        This should match the error message of the rejection.
+   */
+  whitelistRejectionsGlobally(regExp) {
+    this._globalRejectionIgnoreFns.push(
+      rejection => regExp.test(rejection.message));
+  },
+
+  /**
    * Fails the test if there are any uncaught rejections at this time that have
    * not been whitelisted using expectUncaughtRejection.
    *
@@ -219,6 +247,11 @@ this.PromiseTestUtils = {
         continue;
       }
 
+      // Check the global whitelisting functions.
+      if (this._globalRejectionIgnoreFns.some(fn => fn(rejection))) {
+        continue;
+      }
+
       // Report the error. This operation can throw an exception, depending on
       // the configuration of the test suite that handles the assertion.
       Assert.ok(false,
@@ -240,5 +273,7 @@ this.PromiseTestUtils = {
       Assert.equal(this._rejectionIgnoreFns.length, 0,
              "Unable to find a rejection expected by expectUncaughtRejection.");
     }
+    // Reset the list of expected rejections in case the test suite continues.
+    this._rejectionIgnoreFns = [];
   },
 };
