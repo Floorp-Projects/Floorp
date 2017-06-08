@@ -25,6 +25,10 @@ function test_normalized_vs_non_normalized()
   if (!exists)
     return;
 
+  // the test logic below assumes we're starting with a normalized path, but the
+  // default location on macos is a symbolic link, so resolve it before starting
+  tmp1.normalize();
+
   // this has the same exact path as tmp1, it should equal tmp1
   var tmp2 = new LocalFile(tmp1.path);
   do_check_true(tmp1.equals(tmp2));

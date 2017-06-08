@@ -894,6 +894,11 @@ public:
    * normally return the same SourceSurface object.
    */
   virtual already_AddRefed<SourceSurface> Snapshot() = 0;
+
+  // Snapshots the contents and returns an alpha mask
+  // based on the RGB values.
+  virtual already_AddRefed<SourceSurface> IntoLuminanceSource(LuminanceType aLuminanceType,
+                                                              float aOpacity);
   virtual IntSize GetSize() = 0;
 
   /**
