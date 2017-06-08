@@ -37,9 +37,9 @@
 
   --toolbarbutton-active-bordercolor: rgba(0,0,0,.3);
   --toolbarbutton-active-boxshadow: 0 0 0 1px rgba(0,0,0,.15) inset;
-%endif
 
   --toolbarbutton-checkedhover-backgroundcolor: rgba(0,0,0,.1);
+%endif
 
   --urlbar-dropmarker-url: url("chrome://browser/skin/urlbar-history-dropmarker.png");
   --urlbar-dropmarker-region: rect(0px, 11px, 14px, 0px);
@@ -64,6 +64,7 @@
   }
 }
 
+%ifndef MOZ_PHOTON_THEME
 toolbar[brighttext] {
   --toolbarbutton-hover-background: rgba(255,255,255,.25);
   --toolbarbutton-hover-bordercolor: rgba(255,255,255,.5);
@@ -74,7 +75,7 @@ toolbar[brighttext] {
 
   --toolbarbutton-checkedhover-backgroundcolor: rgba(255,255,255,.3);
 }
-
+%endif
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
 }
