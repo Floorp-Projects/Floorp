@@ -1,7 +1,7 @@
 Actions
 =======
 
-.. py:currentmodule:: marionette
+.. py:currentmodule:: marionette_driver.marionette
 
 Action Sequences
 ----------------
@@ -12,7 +12,7 @@ and drag your finger to another part of the screen and lift it off.
 
 This can be simulated using an Action::
 
-    from marionette import Actions
+    from marionette_driver.marionette import Actions
 
     start_element = marionette.find_element('id', 'start')
     end_element = marionette.find_element('id', 'end')
@@ -33,6 +33,8 @@ Sometimes it may be necessary to simulate multiple actions at the same time.
 For example a user may be dragging one finger while tapping another. This is
 where :class:`MultiActions` come in. MultiActions are simply a way of combining
 two or more actions together and performing them all at the same time::
+
+    from marionette_driver.marionette import Actions, MultiActions
 
     action1 = Actions(marionette)
     action1.press(start_element).move(end_element).release()

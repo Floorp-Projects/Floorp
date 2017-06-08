@@ -12,7 +12,7 @@ Marionette. Let's use a typical python shell:
 First, import Marionette:
 
 .. parsed-literal::
-   from marionette import Marionette
+   from marionette_driver.marionette import Marionette
 
 Now create the client for this session. Assuming you're using the default
 port on a Marionette instance running locally:
@@ -45,7 +45,7 @@ You can even find an element and click on it. Let's say you want to get
 the first link:
 
 .. parsed-literal::
-   from marionette import By
+   from marionette_driver import By
    first_link = client.find_element(By.TAG_NAME, "a")
 
 first_link now holds a reference to the first link on the page. You can click it:
