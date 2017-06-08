@@ -7,6 +7,8 @@ from marionette_driver.errors import NoAlertPresentException
 
 
 class TestFirefoxRefresh(MarionetteTestCase):
+    _sandbox = "firefox-refresh"
+
     _username = "marionette-test-login"
     _password = "marionette-test-password"
     _bookmarkURL = "about:mozilla"
@@ -37,7 +39,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
             "password"
           );
           Services.logins.addLogin(myLogin)
-        """, script_args=[self._username, self._password])
+        """, script_args=(self._username, self._password))
 
     def createBookmark(self):
         self.marionette.execute_script("""
@@ -45,7 +47,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
           let title = arguments[1];
           PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarks.bookmarksMenuFolder,
             makeURI(url), 0, title);
-        """, script_args=[self._bookmarkURL, self._bookmarkText])
+        """, script_args=(self._bookmarkURL, self._bookmarkText))
 
     def createHistory(self):
         error = self.runAsyncCode("""
@@ -71,7 +73,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
               },
             }
           );
-        """, script_args=[self._historyURL, self._historyTitle])
+        """, script_args=(self._historyURL, self._historyTitle))
         if error:
             print error
 
@@ -95,7 +97,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
               }
             }
           });
-        """, script_args=[self._formHistoryFieldName, self._formHistoryValue])
+        """, script_args=(self._formHistoryFieldName, self._formHistoryValue))
         if error:
           print error
 
@@ -105,7 +107,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
           let expireTime = Math.floor(Date.now() / 1000) + 15 * 60;
           Services.cookies.add(arguments[0], arguments[1], arguments[2], arguments[3],
                                true, false, false, expireTime);
-        """, script_args=[self._cookieHost, self._cookiePath, self._cookieName, self._cookieValue])
+        """, script_args=(self._cookieHost, self._cookiePath, self._cookieName, self._cookieValue))
 
     def createSession(self):
         self.runAsyncCode("""
@@ -142,7 +144,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
               gBrowser.removeTab(tab);
             }
           }
-        """, script_args=[self._expectedURLs])
+        """, script_args=(self._expectedURLs,))
 
     def checkPassword(self):
         loginInfo = self.marionette.execute_script("""
@@ -166,7 +168,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
           let url = arguments[0];
           let bookmarkIds = PlacesUtils.bookmarks.getBookmarkIdsForURI(makeURI(url), {}, {});
           return bookmarkIds.length == 1 ? PlacesUtils.bookmarks.getItemTitle(bookmarkIds[0]) : "";
-        """, script_args=[self._bookmarkURL])
+        """, script_args=(self._bookmarkURL,))
         self.assertEqual(titleInBookmarks, self._bookmarkText)
 
     def checkHistory(self):
@@ -180,7 +182,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
           }).catch(e => {
             marionetteScriptFinished("Unexpected error in fetching page: " + e);
           });
-        """, script_args=[self._historyURL])
+        """, script_args=(self._historyURL,))
         if type(historyResult) == str:
             self.fail(historyResult)
             return
@@ -201,7 +203,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
               marionetteScriptFinished(results);
             },
           });
-        """, script_args=[self._formHistoryFieldName])
+        """, script_args=(self._formHistoryFieldName,))
         if type(formFieldResults) == str:
             self.fail(formFieldResults)
             return
@@ -243,7 +245,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
           } catch (ex) {
             return "got exception trying to fetch cookie: " + ex;
           }
-        """, script_args=[self._cookieHost])
+        """, script_args=(self._cookieHost,))
         if not isinstance(cookieInfo, dict):
             self.fail(cookieInfo)
             return
@@ -309,18 +311,27 @@ class TestFirefoxRefresh(MarionetteTestCase):
 
     def setUpScriptData(self):
         self.marionette.set_context(self.marionette.CONTEXT_CHROME)
-        self.marionette.execute_script("""
+        self.runCode("""
+          window.global = {};
           global.LoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1", "nsILoginInfo", "init");
           global.profSvc = Cc["@mozilla.org/toolkit/profile-service;1"].getService(Ci.nsIToolkitProfileService);
           global.Preferences = Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
           global.FormHistory = Cu.import("resource://gre/modules/FormHistory.jsm", {}).FormHistory;
-        """, new_sandbox=False, sandbox='system')
+        """)
 
     def runCode(self, script, *args, **kwargs):
-        return self.marionette.execute_script(script, new_sandbox=False, sandbox='system', *args, **kwargs)
+        return self.marionette.execute_script(script,
+                                              new_sandbox=False,
+                                              sandbox=self._sandbox,
+                                              *args,
+                                              **kwargs)
 
     def runAsyncCode(self, script, *args, **kwargs):
-        return self.marionette.execute_async_script(script, new_sandbox=False, sandbox='system', *args, **kwargs)
+        return self.marionette.execute_async_script(script,
+                                                    new_sandbox=False,
+                                                    sandbox=self._sandbox,
+                                                    *args,
+                                                    **kwargs)
 
     def setUp(self):
         MarionetteTestCase.setUp(self)
@@ -361,7 +372,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
               let profile = global.profSvc.getProfileByName(name);
               profile.remove(false)
               global.profSvc.flush();
-            """, script_args=[self.profileNameToRemove])
+            """, script_args=(self.profileNameToRemove,))
             # And delete all the files.
             shutil.rmtree(self.reset_profile_path, ignore_errors=False, onerror=handleRemoveReadonly)
 
@@ -387,7 +398,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
           env.set("MOZ_RESET_PROFILE_RESTART", "1");
           env.set("XRE_PROFILE_PATH", arguments[0]);
           env.set("XRE_PROFILE_NAME", profileName);
-        """, script_args=[self.marionette.instance.profile.profile, profileName])
+        """, script_args=(self.marionette.instance.profile.profile, profileName,))
 
         profileLeafName = os.path.basename(os.path.normpath(self.marionette.instance.profile.profile))
 
@@ -414,7 +425,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
           container.append(dirName);
           container.append(arguments[0]);
           return container.path;
-        """, script_args = [profileLeafName])
+        """, script_args=(profileLeafName,))
 
         self.assertTrue(os.path.isdir(self.reset_profile_path), "Reset profile path should be present")
         self.assertTrue(os.path.isdir(self.desktop_backup_path), "Backup profile path should be present")
