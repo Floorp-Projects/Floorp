@@ -436,6 +436,17 @@ nsHttpHandler::Init()
         mAppVersion.AssignLiteral(MOZ_APP_UA_VERSION);
     }
 
+    // Generating the spoofed userAgent for fingerprinting resistance. We will
+    // round the version to the nearest 10. By doing so, the anonymity group will
+    // cover more versions instead of one version.
+    uint32_t spoofedVersion = mAppVersion.ToInteger(&rv);
+    if (NS_SUCCEEDED(rv)) {
+        spoofedVersion = spoofedVersion - (spoofedVersion % 10);
+        mSpoofedUserAgent.Assign(nsPrintfCString(
+            "Mozilla/5.0 (Windows NT 6.1; rv:%d.0) Gecko/20100101 Firefox/%d.0",
+            spoofedVersion, spoofedVersion));
+    }
+
     mSessionStartTime = NowInSeconds();
     mHandlerActive = true;
 
@@ -778,6 +789,12 @@ nsHttpHandler::GenerateHostPort(const nsCString& host, int32_t port,
 const nsAFlatCString &
 nsHttpHandler::UserAgent()
 {
+    if (nsContentUtils::ShouldResistFingerprinting() &&
+        !mSpoofedUserAgent.IsEmpty()) {
+        LOG(("using spoofed userAgent : %s\n", mSpoofedUserAgent.get()));
+        return mSpoofedUserAgent;
+    }
+
     if (mUserAgentOverride) {
         LOG(("using general.useragent.override : %s\n", mUserAgentOverride.get()));
         return mUserAgentOverride;
