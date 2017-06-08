@@ -18,6 +18,7 @@
 #include "mozilla/dom/SVGAnimatedEnumeration.h"
 
 class nsSVGMarkerFrame;
+struct nsSVGMark;
 
 nsresult NS_NewSVGMarkerElement(nsIContent **aResult,
                                 already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -121,9 +122,7 @@ public:
   virtual bool HasValidDimensions() const override;
 
   // public helpers
-  gfx::Matrix GetMarkerTransform(float aStrokeWidth,
-                                 float aX, float aY, float aAutoAngle,
-                                 bool aIsStart);
+  gfx::Matrix GetMarkerTransform(float aStrokeWidth, const nsSVGMark& aMark);
   nsSVGViewBoxRect GetViewBoxRect();
   gfx::Matrix GetViewBoxTransform();
 
