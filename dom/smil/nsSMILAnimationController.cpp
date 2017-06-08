@@ -767,6 +767,7 @@ nsSMILAnimationController::PreTraverseInSubtree(Element* aRoot)
 
     context->RestyleManager()->AsServo()->
       PostRestyleEventForAnimations(key.mElement,
+                                    CSSPseudoElementType::NotPseudo,
                                     eRestyle_StyleAttribute_Animations);
 
     foundElementsNeedingRestyle = true;
