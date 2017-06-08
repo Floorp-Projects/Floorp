@@ -12,6 +12,7 @@ import com.adjust.sdk.Adjust;
 import com.adjust.sdk.AdjustConfig;
 
 import org.mozilla.focus.BuildConfig;
+import org.mozilla.focus.telemetry.TelemetryWrapper;
 
 public class AdjustHelper {
     public static void setupAdjustIfNeeded(Context context) {
@@ -22,7 +23,12 @@ public class AdjustHelper {
             throw new IllegalStateException("No adjust token defined for release build");
         }
 
+        if (!TelemetryWrapper.isTelemetryEnabled(context)) {
+            return;
+        }
+
         AdjustConfig config = new AdjustConfig(context, BuildConfig.ADJUST_TOKEN, AdjustConfig.ENVIRONMENT_PRODUCTION);
+
         Adjust.onCreate(config);
     }
 }
