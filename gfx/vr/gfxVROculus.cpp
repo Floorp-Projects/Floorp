@@ -124,7 +124,7 @@ static pfn_ovr_GetMirrorTextureBufferGL ovr_GetMirrorTextureBufferGL = nullptr;
 
 #define OVR_PRODUCT_VERSION 1
 #define OVR_MAJOR_VERSION   1
-#define OVR_MINOR_VERSION   10
+#define OVR_MINOR_VERSION   15
 
 enum class OculusLeftControllerButtonType : uint16_t {
   LThumb,
@@ -439,14 +439,13 @@ VRHMDSensorState
 VRDisplayOculus::GetSensorState()
 {
   VRHMDSensorState result;
-  double frameDelta = 0.0f;
+  double predictedFrameTime = 0.0f;
   if (gfxPrefs::VRPosePredictionEnabled()) {
     // XXX We might need to call ovr_GetPredictedDisplayTime even if we don't use the result.
     // If we don't call it, the Oculus driver will spew out many warnings...
-    double predictedFrameTime = ovr_GetPredictedDisplayTime(mSession, 0);
-    frameDelta = predictedFrameTime - ovr_GetTimeInSeconds();
+    predictedFrameTime = ovr_GetPredictedDisplayTime(mSession, 0);
   }
-  result = GetSensorState(frameDelta);
+  result = GetSensorState(predictedFrameTime);
   result.inputFrameID = mDisplayInfo.mFrameId;
   result.position[1] -= mEyeHeight;
   mDisplayInfo.mLastSensorState[result.inputFrameID % kVRMaxLatencyFrames] = result;
@@ -454,11 +453,11 @@ VRDisplayOculus::GetSensorState()
 }
 
 VRHMDSensorState
-VRDisplayOculus::GetSensorState(double timeOffset)
+VRDisplayOculus::GetSensorState(double absTime)
 {
   VRHMDSensorState result;
 
-  ovrTrackingState state = ovr_GetTrackingState(mSession, timeOffset, true);
+  ovrTrackingState state = ovr_GetTrackingState(mSession, absTime, true);
   ovrPoseStatef& pose(state.HeadPose);
 
   result.timestamp = pose.TimeInSeconds;
@@ -764,6 +763,10 @@ VRDisplayOculus::SubmitFrame(TextureSourceD3D11* aSource,
   mContext->VSSetShader(mQuadVS, nullptr, 0);
   mContext->PSSetShader(mQuadPS, nullptr, 0);
   ID3D11ShaderResourceView* srView = aSource->GetShaderResourceView();
+  if (!srView) {
+    NS_WARNING("Failed to get SRV for Oculus");
+    return false;
+  }
   mContext->PSSetShaderResources(0 /* 0 == TexSlot::RGB */, 1, &srView);
   // XXX Use Constant from TexSlot in CompositorD3D11.cpp?
 
