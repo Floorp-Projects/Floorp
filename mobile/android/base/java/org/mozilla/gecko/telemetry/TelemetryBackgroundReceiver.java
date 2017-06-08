@@ -17,6 +17,8 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.Experiments;
+import org.mozilla.gecko.switchboard.SwitchBoard;
 import org.mozilla.gecko.sync.telemetry.TelemetryContract;
 import org.mozilla.gecko.telemetry.pingbuilders.TelemetrySyncEventPingBuilder;
 import org.mozilla.gecko.telemetry.pingbuilders.TelemetrySyncPingBuilder;
@@ -84,6 +86,12 @@ public class TelemetryBackgroundReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(final Context context, final Intent intent) {
         Log.i(LOG_TAG, "Handling background telemetry broadcast");
+
+        // This is our kill-switch for background telemetry (or a functionality throttle).
+        if (!SwitchBoard.isInExperiment(context, Experiments.ENABLE_PROCESSING_BACKGROUND_TELEMETRY)) {
+            Log.i(LOG_TAG, "Background telemetry processing disabled via switchboard.");
+            return;
+        }
 
         if (!intent.hasExtra(TelemetryContract.KEY_TELEMETRY)) {
             throw new IllegalStateException("Received a background telemetry broadcast without data.");
