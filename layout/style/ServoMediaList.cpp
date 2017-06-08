@@ -56,6 +56,9 @@ ServoMediaList::IndexedGetter(uint32_t aIndex, bool& aFound,
                               nsAString& aReturn)
 {
   aFound = Servo_MediaList_GetMediumAt(mRawList, aIndex, &aReturn);
+  if (!aFound) {
+    SetDOMStringToNull(aReturn);
+  }
 }
 
 nsresult
