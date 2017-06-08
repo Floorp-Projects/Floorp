@@ -1460,6 +1460,10 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="e16408c3-4e08-47fd-85a9-3cbbce534e95" id="WebProtection@360safe.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="5.0.0.1009" severity="3"/>
+    </emItem>
     <emItem blockID="i82" id="{8f42fb8b-b6f6-45de-81c0-d6d39f54f971}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -1499,14 +1503,6 @@
     <emItem blockID="i262" id="{167d9323-f7cc-48f5-948a-6f012831a69f}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
-    </emItem>
-    <emItem blockID="08addad8-2f03-4cff-a791-e6f2a1b170ed" id="WebProtection@360safe.com">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="3">
-        <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="52.0a1"/>
-        </targetApplication>
-      </versionRange>
     </emItem>
     <emItem blockID="i838" id="{87b5a11e-3b54-42d2-9102-0a7cb1f79ebf}">
       <prefs/>
@@ -2019,6 +2015,10 @@
     <emItem blockID="i1264" id="suchpony@suchpony.de">
       <prefs/>
       <versionRange minVersion="0" maxVersion="1.6.7" severity="3"/>
+    </emItem>
+    <emItem blockID="c806b01c-3352-4083-afd9-9a8ab6e00b19" id="html5@encoding">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="i656" id="hdv@vovcacik.addons.mozilla.org">
       <prefs/>
