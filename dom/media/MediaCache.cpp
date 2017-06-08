@@ -19,6 +19,7 @@
 #include "nsIPrincipal.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
 #include <algorithm>
 
@@ -69,38 +70,60 @@ static MediaCache* gMediaCache;
 class MediaCacheFlusher final : public nsIObserver,
                                 public nsSupportsWeakReference
 {
-  MediaCacheFlusher() {}
-  ~MediaCacheFlusher();
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  static void Init();
+  static void RegisterMediaCache(MediaCache* aMediaCache);
+  static void UnregisterMediaCache(MediaCache* aMediaCache);
+
+private:
+  MediaCacheFlusher() {}
+  ~MediaCacheFlusher() {}
+
+  // Singleton instance created when a first MediaCache is registered, and
+  // released when the last MediaCache is unregistered.
+  // The observer service will keep a weak reference to it, for notifications.
+  static StaticRefPtr<MediaCacheFlusher> gMediaCacheFlusher;
+
+  nsTArray<MediaCache*> mMediaCaches;
 };
 
-static MediaCacheFlusher* gMediaCacheFlusher;
+/* static */ StaticRefPtr<MediaCacheFlusher>
+  MediaCacheFlusher::gMediaCacheFlusher;
 
 NS_IMPL_ISUPPORTS(MediaCacheFlusher, nsIObserver, nsISupportsWeakReference)
 
-MediaCacheFlusher::~MediaCacheFlusher()
+/* static */ void
+MediaCacheFlusher::RegisterMediaCache(MediaCache* aMediaCache)
 {
-  gMediaCacheFlusher = nullptr;
-}
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
-void MediaCacheFlusher::Init()
-{
-  if (gMediaCacheFlusher) {
-    return;
+  if (!gMediaCacheFlusher) {
+    gMediaCacheFlusher = new MediaCacheFlusher();
+
+    nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+    if (observerService) {
+      observerService->AddObserver(
+        gMediaCacheFlusher, "last-pb-context-exited", true);
+      observerService->AddObserver(
+        gMediaCacheFlusher, "cacheservice:empty-cache", true);
+    }
   }
 
-  gMediaCacheFlusher = new MediaCacheFlusher();
-  NS_ADDREF(gMediaCacheFlusher);
+  gMediaCacheFlusher->mMediaCaches.AppendElement(aMediaCache);
+}
 
-  nsCOMPtr<nsIObserverService> observerService =
-    mozilla::services::GetObserverService();
-  if (observerService) {
-    observerService->AddObserver(gMediaCacheFlusher, "last-pb-context-exited", true);
-    observerService->AddObserver(gMediaCacheFlusher, "cacheservice:empty-cache", true);
+/* static */ void
+MediaCacheFlusher::UnregisterMediaCache(MediaCache* aMediaCache)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
+  gMediaCacheFlusher->mMediaCaches.RemoveElement(aMediaCache);
+
+  if (gMediaCacheFlusher->mMediaCaches.Length() == 0) {
+    gMediaCacheFlusher = nullptr;
   }
 }
 
@@ -118,8 +141,10 @@ public:
 #endif
   {
     MOZ_COUNT_CTOR(MediaCache);
+    MediaCacheFlusher::RegisterMediaCache(this);
   }
   ~MediaCache() {
+    MediaCacheFlusher::UnregisterMediaCache(this);
     NS_ASSERTION(mStreams.IsEmpty(), "Stream(s) still open!");
     Truncate();
     NS_ASSERTION(mIndex.Length() == 0, "Blocks leaked?");
@@ -150,16 +175,15 @@ public:
   // normal operation we are likely to start up the cache and shut it down
   // many times, but that's OK since starting it up is cheap and
   // shutting it down cleans things up and releases disk space.
-  static void MaybeShutdown();
+  void MaybeShutdown();
 
   // Brutally flush the cache contents. Main thread only.
-  static void Flush();
-  void FlushInternal();
+  void Flush();
 
   // Close all streams associated with private browsing windows. This will
   // also remove the blocks from the cache since we don't want to leave any
   // traces when PB is done.
-  static void CloseStreamsForPrivateBrowsing();
+  void CloseStreamsForPrivateBrowsing();
 
   // Cache-file access methods. These are the lowest-level cache methods.
   // mReentrantMonitor must be held; these can be called on any thread.
@@ -380,12 +404,18 @@ protected:
 NS_IMETHODIMP
 MediaCacheFlusher::Observe(nsISupports *aSubject, char const *aTopic, char16_t const *aData)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
   if (strcmp(aTopic, "last-pb-context-exited") == 0) {
-    MediaCache::CloseStreamsForPrivateBrowsing();
+    for (MediaCache* mc : mMediaCaches) {
+      mc->CloseStreamsForPrivateBrowsing();
+    }
     return NS_OK;
   }
   if (strcmp(aTopic, "cacheservice:empty-cache") == 0) {
-    MediaCache::Flush();
+    for (MediaCache* mc : mMediaCaches) {
+      mc->Flush();
+    }
     return NS_OK;
   }
   return NS_OK;
@@ -606,8 +636,6 @@ MediaCache::Init()
   nsresult rv = mFileCache->Init();
   NS_ENSURE_SUCCESS(rv,rv);
 
-  MediaCacheFlusher::Init();
-
   return NS_OK;
 }
 
@@ -615,16 +643,6 @@ void
 MediaCache::Flush()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
-  if (!gMediaCache)
-    return;
-
-  gMediaCache->FlushInternal();
-}
-
-void
-MediaCache::FlushInternal()
-{
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   for (uint32_t blockIndex = 0; blockIndex < mIndex.Length(); ++blockIndex) {
@@ -645,10 +663,7 @@ void
 MediaCache::CloseStreamsForPrivateBrowsing()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!gMediaCache) {
-    return;
-  }
-  for (auto& s : gMediaCache->mStreams) {
+  for (MediaCacheStream* s : mStreams) {
     if (s->mIsPrivateBrowsing) {
       s->Close();
     }
@@ -660,7 +675,7 @@ MediaCache::MaybeShutdown()
 {
   NS_ASSERTION(NS_IsMainThread(),
                "MediaCache::MaybeShutdown called on non-main thread");
-  if (!gMediaCache->mStreams.IsEmpty()) {
+  if (!mStreams.IsEmpty()) {
     // Don't shut down yet, streams are still alive
     return;
   }
@@ -670,7 +685,6 @@ MediaCache::MaybeShutdown()
   // This function is static so we don't have to delete 'this'.
   delete gMediaCache;
   gMediaCache = nullptr;
-  NS_IF_RELEASE(gMediaCacheFlusher);
 }
 
 static void
@@ -1974,7 +1988,7 @@ MediaCacheStream::~MediaCacheStream()
   if (gMediaCache) {
     NS_ASSERTION(mClosed, "Stream was not closed");
     gMediaCache->ReleaseStream(this);
-    MediaCache::MaybeShutdown();
+    gMediaCache->MaybeShutdown();
   }
 
   uint32_t lengthKb = uint32_t(
