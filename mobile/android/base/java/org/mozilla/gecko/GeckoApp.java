@@ -1456,7 +1456,7 @@ public abstract class GeckoApp
                 final Locale osLocale = Locale.getDefault();
 
                 // Both of these are Java-format locale strings: "en_US", not "en-US".
-                final String osLocaleString = osLocale.toString();
+                final String osLocaleString = osLocale.getLanguage() + "_" + osLocale.getCountry();
                 String appLocaleString = localeManager.getAndApplyPersistedLocale(GeckoApp.this);
                 Log.d(LOGTAG, "OS locale is " + osLocaleString + ", app locale is " + appLocaleString);
 
