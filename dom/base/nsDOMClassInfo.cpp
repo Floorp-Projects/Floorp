@@ -73,10 +73,6 @@
 #include "nsMemory.h"
 
 // includes needed for the prototype chain interfaces
-#ifdef MOZ_XUL
-#include "nsITreeContentView.h"
-#include "nsITreeView.h"
-#endif
 
 #include "nsIEventListenerService.h"
 #include "nsIMessageManager.h"
@@ -173,12 +169,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            XPC_SCRIPTABLE_DONT_ENUM_QUERY_INTERFACE)
 
   // Misc Core related classes
-
-  // XUL classes
-#ifdef MOZ_XUL
-  NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(TreeContentView, nsDOMGenericSH,
-                                      DEFAULT_SCRIPTABLE_FLAGS)
-#endif
 
   NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ContentFrameMessageManager,
                                        nsMessageManagerSH<nsEventTargetSH>,
@@ -447,13 +437,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(DOMConstructor, nsIDOMDOMConstructor)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMConstructor)
   DOM_CLASSINFO_MAP_END
-
-#ifdef MOZ_XUL
-  DOM_CLASSINFO_MAP_BEGIN(TreeContentView, nsITreeContentView)
-    DOM_CLASSINFO_MAP_ENTRY(nsITreeContentView)
-    DOM_CLASSINFO_MAP_ENTRY(nsITreeView)
-  DOM_CLASSINFO_MAP_END
-#endif
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ContentFrameMessageManager, nsISupports)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
