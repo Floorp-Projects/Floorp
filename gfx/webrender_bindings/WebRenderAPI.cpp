@@ -624,6 +624,22 @@ DisplayListBuilder::PopScrollLayer()
 }
 
 void
+DisplayListBuilder::PushClipAndScrollInfo(const layers::FrameMetrics::ViewID& aScrollId,
+                                          const uint64_t* aClipId)
+{
+  WRDL_LOG("PushClipAndScroll s=%" PRIu64 " c=%s\n", aScrollId,
+      aClipId ? Stringify(*aClipId).c_str() : "none");
+  wr_dp_push_clip_and_scroll_info(mWrState, aScrollId, aClipId);
+}
+
+void
+DisplayListBuilder::PopClipAndScrollInfo()
+{
+  WRDL_LOG("PopClipAndScroll\n");
+  wr_dp_pop_clip_and_scroll_info(mWrState);
+}
+
+void
 DisplayListBuilder::PushRect(const WrRect& aBounds,
                              const WrClipRegionToken aClip,
                              const WrColor& aColor)
