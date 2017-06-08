@@ -62,11 +62,6 @@ static const uint32_t FREE_BLOCK_SCAN_LIMIT = 16;
 // #define DEBUG_VERIFY_CACHE
 #endif
 
-// There is at most one media cache (although that could quite easily be
-// relaxed if we wanted to manage multiple caches with independent
-// size limits).
-static MediaCache* gMediaCache;
-
 class MediaCacheFlusher final : public nsIObserver,
                                 public nsSupportsWeakReference
 {
@@ -393,6 +388,9 @@ protected:
   // Otherwise when the update is processed, it will destroy the MediaCache.
   void ShutdownAndDestroyThis();
 
+  // There is at most one file-backed media cache.
+  static MediaCache* gMediaCache;
+
   // This member is main-thread only. It's used to allocate unique
   // resource IDs to streams.
   int64_t                       mNextResourceID;
@@ -425,6 +423,9 @@ protected:
   // A list of resource IDs to notify about the change in suspended status.
   nsTArray<int64_t> mSuspendedStatusToNotify;
 };
+
+// Initialized to nullptr by non-local static initialization.
+/* static */ MediaCache* MediaCache::gMediaCache;
 
 NS_IMETHODIMP
 MediaCacheFlusher::Observe(nsISupports *aSubject, char const *aTopic, char16_t const *aData)
