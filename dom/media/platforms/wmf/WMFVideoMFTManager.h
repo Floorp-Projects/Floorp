@@ -94,8 +94,8 @@ private:
   RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   nsAutoPtr<DXVA2Manager> mDXVA2Manager;
 
-  float mLastDuration;
-  int64_t mLastTime = 0;
+  media::TimeUnit mLastDuration;
+  media::TimeUnit mLastTime;
   bool mDraining = false;
   int64_t mSamplesCount = 0;
 
