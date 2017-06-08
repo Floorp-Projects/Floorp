@@ -30,7 +30,7 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
   for (uint32_t i = layer->GetScrollMetadataCount(); i > 0; i--) {
     const FrameMetrics& fm = layer->GetFrameMetrics(i - 1);
     if (!fm.IsScrollable()) {
-      return;
+      continue;
     }
     LayerRect contentRect = ViewAs<LayerPixel>(
         fm.GetExpandedScrollableRect() * fm.GetDevPixelsPerCSSPixel(),
@@ -63,7 +63,7 @@ ScrollingLayersHelper::~ScrollingLayersHelper()
   for (int32_t i = layer->GetScrollMetadataCount(); i > 0; i--) {
     const FrameMetrics& fm = layer->GetFrameMetrics(i - 1);
     if (!fm.IsScrollable()) {
-      return;
+      continue;
     }
     mBuilder->PopScrollLayer();
   }
