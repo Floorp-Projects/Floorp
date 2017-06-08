@@ -15,7 +15,7 @@
 extern crate khronos_api;
 
 use std::borrow::Cow;
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::io;
@@ -26,12 +26,20 @@ use Generator;
 mod parse;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Api { Gl, Glx, Wgl, Egl, GlCore, Gles1, Gles2 }
+pub enum Api {
+    Gl,
+    Glx,
+    Wgl,
+    Egl,
+    GlCore,
+    Gles1,
+    Gles2,
+}
 
 impl fmt::Display for Api {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Api::Gl  => write!(fmt, "gl"),
+            Api::Gl => write!(fmt, "gl"),
             Api::Glx => write!(fmt, "glx"),
             Api::Wgl => write!(fmt, "wgl"),
             Api::Egl => write!(fmt, "egl"),
@@ -43,12 +51,18 @@ impl fmt::Display for Api {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Fallbacks { All, None }
+pub enum Fallbacks {
+    All,
+    None,
+}
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Profile { Core, Compatibility }
+pub enum Profile {
+    Core,
+    Compatibility,
+}
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Enum {
     pub ident: String,
     pub value: String,
@@ -63,13 +77,13 @@ impl Hash for Enum {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Binding {
     pub ident: String,
     pub ty: Cow<'static, str>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Cmd {
     pub proto: Binding,
     pub params: Vec<Binding>,
@@ -84,7 +98,7 @@ impl Hash for Cmd {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct GlxOpcode {
     pub opcode: String,
     pub name: Option<String>,
@@ -93,17 +107,24 @@ pub struct GlxOpcode {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Registry {
     pub api: Api,
-    pub enums: HashSet<Enum>,
-    pub cmds: HashSet<Cmd>,
-    pub aliases: HashMap<String, Vec<String>>,
+    pub enums: BTreeSet<Enum>,
+    pub cmds: BTreeSet<Cmd>,
+    pub aliases: BTreeMap<String, Vec<String>>,
 }
 
 impl Registry {
-    pub fn new<'a, Exts>(api: Api, version: (u8, u8), profile: Profile, fallbacks: Fallbacks, extensions: Exts) -> Registry where
-        Exts: AsRef<[&'a str]>,
+    pub fn new<'a, Exts>(api: Api,
+                         version: (u8, u8),
+                         profile: Profile,
+                         fallbacks: Fallbacks,
+                         extensions: Exts)
+                         -> Registry
+        where Exts: AsRef<[&'a str]>
     {
         let (major, minor) = version;
-        let extensions = extensions.as_ref().iter()
+        let extensions = extensions
+            .as_ref()
+            .iter()
             .map(<&str>::to_string)
             .collect();
 
@@ -125,9 +146,9 @@ impl Registry {
         parse::from_xml(src, filter)
     }
 
-    pub fn write_bindings<W, G>(&self, generator: G, output: &mut W) -> io::Result<()> where
-        G: Generator,
-        W: io::Write,
+    pub fn write_bindings<W, G>(&self, generator: G, output: &mut W) -> io::Result<()>
+        where G: Generator,
+              W: io::Write
     {
         generator.write(&self, output)
     }

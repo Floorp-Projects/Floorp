@@ -15,10 +15,8 @@
 extern crate khronos_api;
 
 use std::borrow::Cow;
-use std::collections::hash_map::Entry;
-use std::collections::BTreeSet;
-use std::collections::HashSet;
-use std::collections::HashMap;
+use std::collections::btree_map::Entry;
+use std::collections::{BTreeMap, BTreeSet};
 use std::io;
 use xml::attribute::OwnedAttribute;
 use xml::EventReader as XmlEventReader;
@@ -28,7 +26,8 @@ use {Fallbacks, Api, Profile};
 use registry::{Binding, Cmd, Enum, GlxOpcode, Registry};
 
 pub fn from_xml<R: io::Read>(src: R, filter: Filter) -> Registry {
-    XmlEventReader::new(src).into_iter()
+    XmlEventReader::new(src)
+        .into_iter()
         .map(Result::unwrap)
         .filter_map(ParseEvent::from_xml)
         .parse(filter)
@@ -41,9 +40,9 @@ struct Attribute {
 }
 
 impl Attribute {
-    fn new<Key, Value>(key: Key, value: Value) -> Attribute where
-        Key: ToString,
-        Value: ToString,
+    fn new<Key, Value>(key: Key, value: Value) -> Attribute
+        where Key: ToString,
+              Value: ToString
     {
         Attribute {
             key: key.to_string(),
@@ -71,11 +70,9 @@ impl ParseEvent {
             XmlEvent::StartDocument { .. } => None,
             XmlEvent::EndDocument => None,
             XmlEvent::StartElement { name, attributes, .. } => {
-                let attributes = attributes.into_iter()
-                    .map(Attribute::from)
-                    .collect();
+                let attributes = attributes.into_iter().map(Attribute::from).collect();
                 Some(ParseEvent::Start(name.local_name, attributes))
-            },
+            }
             XmlEvent::EndElement { name } => Some(ParseEvent::End(name.local_name)),
             XmlEvent::Characters(chars) => Some(ParseEvent::Text(chars)),
             XmlEvent::ProcessingInstruction { .. } => None,
@@ -95,7 +92,7 @@ fn api_from_str(src: &str) -> Result<Api, ()> {
         "glcore" => Ok(Api::GlCore),
         "gles1" => Ok(Api::Gles1),
         "gles2" => Ok(Api::Gles2),
-        _     => Err(()),
+        _ => Err(()),
     }
 }
 
@@ -124,15 +121,19 @@ fn underscore_keyword(ident: String) -> String {
 }
 
 fn trim_str<'a>(s: &'a str, trim: &str) -> &'a str {
-    if s.starts_with(trim) { &s[trim.len()..] } else { s }
+    if s.starts_with(trim) {
+        &s[trim.len()..]
+    } else {
+        s
+    }
 }
 
 fn trim_enum_prefix(ident: &str, api: Api) -> String {
     let ident = match api {
         Api::Gl | Api::GlCore | Api::Gles1 | Api::Gles2 => trim_str(ident, "GL_"),
         Api::Glx => trim_str(ident, "GLX_"),
-        Api::Wgl =>  trim_str(ident, "WGL_"),
-        Api::Egl =>  trim_str(ident, "EGL_"),
+        Api::Wgl => trim_str(ident, "WGL_"),
+        Api::Egl => trim_str(ident, "EGL_"),
     };
     underscore_numeric_prefix(ident)
 }
@@ -144,10 +145,10 @@ fn make_enum(ident: String, ty: Option<String>, value: String, alias: Option<Str
 
             // nothing to see here....
             // just brute forcing some paren matching... (ﾉ ◕ ◡ ◕)ﾉ *:･ﾟ✧
-            let working = &value[2 .. value.len() - 1];
+            let working = &value[2..value.len() - 1];
             if let Some((i, _)) = working.match_indices(")").next() {
-                let ty = working[.. i].to_string();
-                let value = working[i + 1 ..].to_string();
+                let ty = working[..i].to_string();
+                let value = working[i + 1..].to_string();
 
                 (Cow::Owned(ty), value, true)
             } else {
@@ -179,16 +180,20 @@ fn trim_cmd_prefix(ident: &str, api: Api) -> &str {
     match api {
         Api::Gl | Api::GlCore | Api::Gles1 | Api::Gles2 => trim_str(ident, "gl"),
         Api::Glx => trim_str(ident, "glX"),
-        Api::Wgl =>  trim_str(ident, "wgl"),
-        Api::Egl =>  trim_str(ident, "egl"),
+        Api::Wgl => trim_str(ident, "wgl"),
+        Api::Egl => trim_str(ident, "egl"),
     }
 }
 
-fn merge_map(a: &mut HashMap<String, Vec<String>>, b: HashMap<String, Vec<String>>) {
+fn merge_map(a: &mut BTreeMap<String, Vec<String>>, b: BTreeMap<String, Vec<String>>) {
     for (k, v) in b {
         match a.entry(k) {
-            Entry::Occupied(mut ent) => { ent.get_mut().extend(v); },
-            Entry::Vacant(ent) => { ent.insert(v); }
+            Entry::Occupied(mut ent) => {
+                ent.get_mut().extend(v);
+            }
+            Entry::Vacant(ent) => {
+                ent.insert(v);
+            }
         }
     }
 }
@@ -244,7 +249,7 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
         let mut cmds = Vec::new();
         let mut features = Vec::new();
         let mut extensions = Vec::new();
-        let mut aliases = HashMap::new();
+        let mut aliases = BTreeMap::new();
 
         while let Some(event) = self.next() {
             match event {
@@ -291,8 +296,8 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
             }
         }
 
-        let mut desired_enums = HashSet::new();
-        let mut desired_cmds = HashSet::new();
+        let mut desired_enums = BTreeSet::new();
+        let mut desired_cmds = BTreeSet::new();
 
         // find the features we want
         let mut found_feature = false;
@@ -329,7 +334,9 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
         for extension in &extensions {
             if filter.extensions.contains(&extension.name) {
                 if !extension.supported.contains(&filter.api) {
-                    panic!("Requested {}, which doesn't support the {} API", extension.name, filter.api);
+                    panic!("Requested {}, which doesn't support the {} API",
+                           extension.name,
+                           filter.api);
                 }
                 for require in &extension.requires {
                     desired_enums.extend(require.enums.iter().map(|x| x.clone()));
@@ -356,7 +363,11 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
             api: filter.api,
             enums: enums.into_iter().filter(is_desired_enum).collect(),
             cmds: cmds.into_iter().filter(is_desired_cmd).collect(),
-            aliases: if filter.fallbacks == Fallbacks::None { HashMap::new() } else { aliases },
+            aliases: if filter.fallbacks == Fallbacks::None {
+                BTreeMap::new()
+            } else {
+                aliases
+            },
         }
     }
 
@@ -370,7 +381,9 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
     fn consume_start_element(&mut self, expected_name: &str) -> Vec<Attribute> {
         match self.next().unwrap() {
             ParseEvent::Start(name, attributes) => {
-                if expected_name == name { attributes } else {
+                if expected_name == name {
+                    attributes
+                } else {
                     panic!("Expected <{}>, found: <{}>", expected_name, name)
                 }
             }
@@ -389,12 +402,16 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
         loop {
             match self.next().unwrap() {
                 ParseEvent::End(ref name) if expected_name == name => break,
-                _ => {},
+                _ => {}
             }
         }
     }
 
-    fn consume_two<'a, T: FromXml, U: FromXml>(&mut self, one: &'a str, two: &'a str, end: &'a str) -> (Vec<T>, Vec<U>) {
+    fn consume_two<'a, T: FromXml, U: FromXml>(&mut self,
+                                               one: &'a str,
+                                               two: &'a str,
+                                               end: &'a str)
+                                               -> (Vec<T>, Vec<U>) {
         debug!("consume_two: looking for {} and {} until {}", one, two, end);
 
         let mut ones = Vec::new();
@@ -421,7 +438,7 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
                     } else {
                         panic!("Unexpected element: <{:?} {:?}>", n, &attributes);
                     }
-                },
+                }
                 ParseEvent::End(ref name) => {
                     debug!("Found end element </{:?}>", name);
 
@@ -438,8 +455,9 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
                     } else {
                         panic!("Unexpected end element {:?}", name);
                     }
-                },
-                event => panic!("Unexpected message {:?}", event) }
+                }
+                event => panic!("Unexpected message {:?}", event),
+            }
         }
     }
 
@@ -448,13 +466,13 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
         loop {
             match self.next().unwrap() {
                 // ignores
-                ParseEvent::Text(_) => {},
+                ParseEvent::Text(_) => {}
                 ParseEvent::Start(ref name, _) if name == "unused" => self.skip_to_end("unused"),
 
                 // add enum definition
                 ParseEvent::Start(ref name, ref attributes) if name == "enum" => {
                     enums.push(self.consume_enum(api, attributes));
-                },
+                }
 
                 // finished building the namespace
                 ParseEvent::End(ref name) if name == "enums" => break,
@@ -475,9 +493,9 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
         make_enum(ident, ty, value, alias)
     }
 
-    fn consume_cmds(&mut self, api: Api) -> (Vec<Cmd>, HashMap<String, Vec<String>>) {
+    fn consume_cmds(&mut self, api: Api) -> (Vec<Cmd>, BTreeMap<String, Vec<String>>) {
         let mut cmds = Vec::new();
-        let mut aliases: HashMap<String, Vec<String>> = HashMap::new();
+        let mut aliases: BTreeMap<String, Vec<String>> = BTreeMap::new();
         loop {
             match self.next().unwrap() {
                 // add command definition
@@ -485,8 +503,12 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
                     let new = self.consume_cmd(api);
                     if let Some(ref v) = new.alias {
                         match aliases.entry(v.clone()) {
-                            Entry::Occupied(mut ent) => { ent.get_mut().push(new.proto.ident.clone()); },
-                            Entry::Vacant(ent) => { ent.insert(vec![new.proto.ident.clone()]); }
+                            Entry::Occupied(mut ent) => {
+                                ent.get_mut().push(new.proto.ident.clone());
+                            }
+                            Entry::Vacant(ent) => {
+                                ent.insert(vec![new.proto.ident.clone()]);
+                            }
                         }
                     }
                     cmds.push(new);
@@ -526,9 +548,9 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
                 }
                 ParseEvent::Start(ref name, ref attributes) if name == "glx" => {
                     glx = Some(GlxOpcode {
-                        opcode: get_attribute(&attributes, "opcode").unwrap(),
-                        name: get_attribute(&attributes, "name"),
-                    });
+                                   opcode: get_attribute(&attributes, "opcode").unwrap(),
+                                   name: get_attribute(&attributes, "name"),
+                               });
                     self.consume_end_element("glx");
                 }
                 ParseEvent::End(ref name) if name == "command" => break,
@@ -578,12 +600,11 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
     }
 }
 
-impl<T> Parse for T where
-    T: Sized + Iterator<Item = ParseEvent>,
-{}
+impl<T> Parse for T where T: Sized + Iterator<Item = ParseEvent> {}
 
 fn get_attribute(attribs: &[Attribute], key: &str) -> Option<String> {
-    attribs.iter()
+    attribs
+        .iter()
         .find(|attrib| attrib.key == key)
         .map(|attrib| attrib.value.clone())
 }
@@ -598,7 +619,7 @@ impl FromXml for Require {
         let (enums, commands) = parser.consume_two("enum", "command", "require");
         Require {
             enums: enums,
-            commands: commands
+            commands: commands,
         }
     }
 }
@@ -613,7 +634,7 @@ impl FromXml for Remove {
         Remove {
             profile: profile,
             enums: enums,
-            commands: commands
+            commands: commands,
         }
     }
 }
@@ -635,7 +656,7 @@ impl FromXml for Feature {
             name: name,
             number: number,
             requires: require,
-            removes: remove
+            removes: remove,
         }
     }
 }
@@ -644,7 +665,8 @@ impl FromXml for Extension {
     fn convert<P: Parse>(parser: &mut P, a: &[Attribute]) -> Extension {
         debug!("Doing a FromXml on Extension");
         let name = get_attribute(a, "name").unwrap();
-        let supported = get_attribute(a, "supported").unwrap()
+        let supported = get_attribute(a, "supported")
+            .unwrap()
             .split('|')
             .map(api_from_str)
             .map(Result::unwrap)
@@ -656,14 +678,14 @@ impl FromXml for Extension {
                     require.push(FromXml::convert(parser, &attributes));
                 }
                 ParseEvent::End(ref name) if name == "extension" => break,
-                event => panic!("Unexpected message {:?}", event)
+                event => panic!("Unexpected message {:?}", event),
             }
         }
 
         Extension {
             name: name,
             supported: supported,
-            requires: require
+            requires: require,
         }
     }
 }
@@ -678,162 +700,162 @@ impl FromXml for String {
 pub fn to_rust_ty<T: AsRef<str>>(ty: T) -> Cow<'static, str> {
     let ty = match ty.as_ref() {
         // gl.xml types
-        "GLDEBUGPROC"               => "types::GLDEBUGPROC",
-        "GLDEBUGPROCAMD"            => "types::GLDEBUGPROCAMD",
-        "GLDEBUGPROCARB"            => "types::GLDEBUGPROCARB",
-        "GLDEBUGPROCKHR"            => "types::GLDEBUGPROCKHR",
-        "GLbitfield"                => "types::GLbitfield",
-        "GLboolean"                 => "types::GLboolean",
-        "GLbyte"                    => "types::GLbyte",
-        "GLclampd"                  => "types::GLclampd",
-        "GLclampf"                  => "types::GLclampf",
-        "GLclampx"                  => "types::GLclampx",
-        "GLdouble"                  => "types::GLdouble",
-        "GLeglImageOES"             => "types::GLeglImageOES",
-        "GLenum"                    => "types::GLenum",
-        "GLfixed"                   => "types::GLfixed",
-        "GLfloat"                   => "types::GLfloat",
-        "GLhalfNV"                  => "types::GLhalfNV",
-        "GLhandleARB"               => "types::GLhandleARB",
-        "GLint"                     => "types::GLint",
-        "GLint64"                   => "types::GLint64",
-        "GLint64EXT"                => "types::GLint64EXT",
-        "GLintptr"                  => "types::GLintptr",
-        "GLintptrARB"               => "types::GLintptrARB",
-        "GLshort"                   => "types::GLshort",
-        "GLsizei"                   => "types::GLsizei",
-        "GLsizeiptr"                => "types::GLsizeiptr",
-        "GLsizeiptrARB"             => "types::GLsizeiptrARB",
-        "GLsync"                    => "types::GLsync",
-        "GLubyte"                   => "types::GLubyte",
-        "GLuint"                    => "types::GLuint",
-        "GLuint64"                  => "types::GLuint64",
-        "GLuint64EXT"               => "types::GLuint64EXT",
-        "GLushort"                  => "types::GLushort",
-        "GLvdpauSurfaceNV"          => "types::GLvdpauSurfaceNV",
-        "void "                     => "()",
-        "GLboolean *"               => "*mut types::GLboolean",
-        "GLchar *"                  => "*mut types::GLchar",
-        "GLcharARB *"               => "*mut types::GLcharARB",
-        "GLdouble *"                => "*mut types::GLdouble",
-        "GLenum *"                  => "*mut types::GLenum",
-        "GLfixed *"                 => "*mut types::GLfixed",
-        "GLfloat *"                 => "*mut types::GLfloat",
-        "GLhandleARB *"             => "*mut types::GLhandleARB",
-        "GLint *"                   => "*mut types::GLint",
-        "GLint64 *"                 => "*mut types::GLint64",
-        "GLint64EXT *"              => "*mut types::GLint64EXT",
-        "GLsizei *"                 => "*mut types::GLsizei",
-        "GLubyte *"                 => "*mut types::GLubyte",
-        "GLuint *"                  => "*mut types::GLuint",
-        "GLuint [2]"                => "*mut [types::GLuint; 2]",
-        "GLuint64 *"                => "*mut types::GLuint64",
-        "GLuint64EXT *"             => "*mut types::GLuint64EXT",
-        "GLushort *"                => "*mut types::GLushort",
-        "GLvoid *"                  => "*mut types::GLvoid",
-        "GLvoid **"                 => "*const *mut types::GLvoid",
-        "void *"                    => "*mut __gl_imports::raw::c_void",
-        "void **"                   => "*const *mut __gl_imports::raw::c_void",
-        "const GLboolean *"         => "*const types::GLboolean",
-        "const GLbyte *"            => "*const types::GLbyte",
-        "const GLchar *"            => "*const types::GLchar",
-        "const GLcharARB *"         => "*const types::GLcharARB",
-        "const GLclampf *"          => "*const types::GLclampf",
-        "const GLdouble *"          => "*const types::GLdouble",
-        "const GLenum *"            => "*const types::GLenum",
-        "const GLfixed *"           => "*const types::GLfixed",
-        "const GLfloat"             => "types::GLfloat",
-        "const GLfloat *"           => "*const types::GLfloat",
-        "const GLhalfNV *"          => "*const types::GLhalfNV",
-        "const GLint *"             => "*const types::GLint",
-        "const GLint64 *"           => "*const types::GLint64",
-        "const GLint64EXT *"        => "*const types::GLint64EXT",
-        "const GLintptr *"          => "*const types::GLintptr",
-        "const GLshort *"           => "*const types::GLshort",
-        "const GLsizei *"           => "*const types::GLsizei",
-        "const GLsizeiptr *"        => "*const types::GLsizeiptr",
-        "const GLubyte *"           => "*const types::GLubyte",
-        "const GLuint *"            => "*const types::GLuint",
-        "const GLuint64 *"          => "*const types::GLuint64",
-        "const GLuint64EXT *"       => "*const types::GLuint64EXT",
-        "const GLushort *"          => "*const types::GLushort",
-        "const GLvdpauSurfaceNV *"  => "*const types::GLvdpauSurfaceNV",
-        "const GLvoid *"            => "*const types::GLvoid",
-        "const void *"              => "*const __gl_imports::raw::c_void",
-        "const void **"             => "*const *const __gl_imports::raw::c_void",
-        "const void *const*"        => "*const *const __gl_imports::raw::c_void",
-        "const GLboolean **"        => "*const *const types::GLboolean",
-        "const GLchar **"           => "*const *const types::GLchar",
-        "const GLcharARB **"        => "*const *const types::GLcharARB",
-        "const GLvoid **"           => "*const *const types::GLvoid",
-        "const GLchar *const*"      => "*const *const types::GLchar",
-        "const GLvoid *const*"      => "*const *const types::GLvoid",
-        "struct _cl_context *"      => "*const types::_cl_context",
-        "struct _cl_event *"        => "*const types::_cl_event",
-        "GLuint[2]"                 => "[Gluint; 2]",
+        "GLDEBUGPROC" => "types::GLDEBUGPROC",
+        "GLDEBUGPROCAMD" => "types::GLDEBUGPROCAMD",
+        "GLDEBUGPROCARB" => "types::GLDEBUGPROCARB",
+        "GLDEBUGPROCKHR" => "types::GLDEBUGPROCKHR",
+        "GLbitfield" => "types::GLbitfield",
+        "GLboolean" => "types::GLboolean",
+        "GLbyte" => "types::GLbyte",
+        "GLclampd" => "types::GLclampd",
+        "GLclampf" => "types::GLclampf",
+        "GLclampx" => "types::GLclampx",
+        "GLdouble" => "types::GLdouble",
+        "GLeglImageOES" => "types::GLeglImageOES",
+        "GLenum" => "types::GLenum",
+        "GLfixed" => "types::GLfixed",
+        "GLfloat" => "types::GLfloat",
+        "GLhalfNV" => "types::GLhalfNV",
+        "GLhandleARB" => "types::GLhandleARB",
+        "GLint" => "types::GLint",
+        "GLint64" => "types::GLint64",
+        "GLint64EXT" => "types::GLint64EXT",
+        "GLintptr" => "types::GLintptr",
+        "GLintptrARB" => "types::GLintptrARB",
+        "GLshort" => "types::GLshort",
+        "GLsizei" => "types::GLsizei",
+        "GLsizeiptr" => "types::GLsizeiptr",
+        "GLsizeiptrARB" => "types::GLsizeiptrARB",
+        "GLsync" => "types::GLsync",
+        "GLubyte" => "types::GLubyte",
+        "GLuint" => "types::GLuint",
+        "GLuint64" => "types::GLuint64",
+        "GLuint64EXT" => "types::GLuint64EXT",
+        "GLushort" => "types::GLushort",
+        "GLvdpauSurfaceNV" => "types::GLvdpauSurfaceNV",
+        "void " => "()",
+        "GLboolean *" => "*mut types::GLboolean",
+        "GLchar *" => "*mut types::GLchar",
+        "GLcharARB *" => "*mut types::GLcharARB",
+        "GLdouble *" => "*mut types::GLdouble",
+        "GLenum *" => "*mut types::GLenum",
+        "GLfixed *" => "*mut types::GLfixed",
+        "GLfloat *" => "*mut types::GLfloat",
+        "GLhandleARB *" => "*mut types::GLhandleARB",
+        "GLint *" => "*mut types::GLint",
+        "GLint64 *" => "*mut types::GLint64",
+        "GLint64EXT *" => "*mut types::GLint64EXT",
+        "GLsizei *" => "*mut types::GLsizei",
+        "GLubyte *" => "*mut types::GLubyte",
+        "GLuint *" => "*mut types::GLuint",
+        "GLuint [2]" => "*mut [types::GLuint; 2]",
+        "GLuint64 *" => "*mut types::GLuint64",
+        "GLuint64EXT *" => "*mut types::GLuint64EXT",
+        "GLushort *" => "*mut types::GLushort",
+        "GLvoid *" => "*mut types::GLvoid",
+        "GLvoid **" => "*const *mut types::GLvoid",
+        "void *" => "*mut __gl_imports::raw::c_void",
+        "void **" => "*const *mut __gl_imports::raw::c_void",
+        "const GLboolean *" => "*const types::GLboolean",
+        "const GLbyte *" => "*const types::GLbyte",
+        "const GLchar *" => "*const types::GLchar",
+        "const GLcharARB *" => "*const types::GLcharARB",
+        "const GLclampf *" => "*const types::GLclampf",
+        "const GLdouble *" => "*const types::GLdouble",
+        "const GLenum *" => "*const types::GLenum",
+        "const GLfixed *" => "*const types::GLfixed",
+        "const GLfloat" => "types::GLfloat",
+        "const GLfloat *" => "*const types::GLfloat",
+        "const GLhalfNV *" => "*const types::GLhalfNV",
+        "const GLint *" => "*const types::GLint",
+        "const GLint64 *" => "*const types::GLint64",
+        "const GLint64EXT *" => "*const types::GLint64EXT",
+        "const GLintptr *" => "*const types::GLintptr",
+        "const GLshort *" => "*const types::GLshort",
+        "const GLsizei *" => "*const types::GLsizei",
+        "const GLsizeiptr *" => "*const types::GLsizeiptr",
+        "const GLubyte *" => "*const types::GLubyte",
+        "const GLuint *" => "*const types::GLuint",
+        "const GLuint64 *" => "*const types::GLuint64",
+        "const GLuint64EXT *" => "*const types::GLuint64EXT",
+        "const GLushort *" => "*const types::GLushort",
+        "const GLvdpauSurfaceNV *" => "*const types::GLvdpauSurfaceNV",
+        "const GLvoid *" => "*const types::GLvoid",
+        "const void *" => "*const __gl_imports::raw::c_void",
+        "const void **" => "*const *const __gl_imports::raw::c_void",
+        "const void *const*" => "*const *const __gl_imports::raw::c_void",
+        "const GLboolean **" => "*const *const types::GLboolean",
+        "const GLchar **" => "*const *const types::GLchar",
+        "const GLcharARB **" => "*const *const types::GLcharARB",
+        "const GLvoid **" => "*const *const types::GLvoid",
+        "const GLchar *const*" => "*const *const types::GLchar",
+        "const GLvoid *const*" => "*const *const types::GLvoid",
+        "struct _cl_context *" => "*const types::_cl_context",
+        "struct _cl_event *" => "*const types::_cl_event",
+        "GLuint[2]" => "[Gluint; 2]",
 
         // glx.xml types
-        "Bool"                      => "types::Bool",
-        "Colormap"                  => "types::Colormap",
-        "DMbuffer"                  => "types::DMbuffer",
-        "Font"                      => "types::Font",
-        "GLXContext"                => "types::GLXContext",
-        "GLXContextID"              => "types::GLXContextID",
-        "GLXDrawable"               => "types::GLXDrawable",
-        "GLXFBConfig"               => "types::GLXFBConfig",
-        "GLXFBConfigSGIX"           => "types::GLXFBConfigSGIX",
-        "GLXPbuffer"                => "types::GLXPbuffer",
-        "GLXPbufferSGIX"            => "types::GLXPbufferSGIX",
-        "GLXPixmap"                 => "types::GLXPixmap",
-        "GLXVideoCaptureDeviceNV"   => "types::GLXVideoCaptureDeviceNV",
-        "GLXVideoDeviceNV"          => "types::GLXVideoDeviceNV",
-        "GLXVideoSourceSGIX"        => "types::GLXVideoSourceSGIX",
-        "GLXWindow"                 => "types::GLXWindow",
+        "Bool" => "types::Bool",
+        "Colormap" => "types::Colormap",
+        "DMbuffer" => "types::DMbuffer",
+        "Font" => "types::Font",
+        "GLXContext" => "types::GLXContext",
+        "GLXContextID" => "types::GLXContextID",
+        "GLXDrawable" => "types::GLXDrawable",
+        "GLXFBConfig" => "types::GLXFBConfig",
+        "GLXFBConfigSGIX" => "types::GLXFBConfigSGIX",
+        "GLXPbuffer" => "types::GLXPbuffer",
+        "GLXPbufferSGIX" => "types::GLXPbufferSGIX",
+        "GLXPixmap" => "types::GLXPixmap",
+        "GLXVideoCaptureDeviceNV" => "types::GLXVideoCaptureDeviceNV",
+        "GLXVideoDeviceNV" => "types::GLXVideoDeviceNV",
+        "GLXVideoSourceSGIX" => "types::GLXVideoSourceSGIX",
+        "GLXWindow" => "types::GLXWindow",
         // "GLboolean"                 => "types::GLboolean",
         // "GLenum"                    => "types::GLenum",
         // "GLint"                     => "types::GLint",
         // "GLsizei"                   => "types::GLsizei",
         // "GLuint"                    => "types::GLuint",
-        "Pixmap"                    => "types::Pixmap",
-        "Status"                    => "types::Status",
-        "VLNode"                    => "types::VLNode",
-        "VLPath"                    => "types::VLPath",
-        "VLServer"                  => "types::VLServer",
-        "Window"                    => "types::Window",
-        "__GLXextFuncPtr"           => "types::__GLXextFuncPtr",
-        "const GLXContext"          => "const types::GLXContext",
-        "float "                    => "__gl_imports::raw::c_float",
-        "int "                      => "__gl_imports::raw::c_int",
-        "int64_t"                   => "i64",
-        "unsigned int "             => "__gl_imports::raw::c_uint",
-        "unsigned long "            => "__gl_imports::raw::c_ulong",
+        "Pixmap" => "types::Pixmap",
+        "Status" => "types::Status",
+        "VLNode" => "types::VLNode",
+        "VLPath" => "types::VLPath",
+        "VLServer" => "types::VLServer",
+        "Window" => "types::Window",
+        "__GLXextFuncPtr" => "types::__GLXextFuncPtr",
+        "const GLXContext" => "const types::GLXContext",
+        "float " => "__gl_imports::raw::c_float",
+        "int " => "__gl_imports::raw::c_int",
+        "int64_t" => "i64",
+        "unsigned int " => "__gl_imports::raw::c_uint",
+        "unsigned long " => "__gl_imports::raw::c_ulong",
         // "void "                     => "()",
-        "DMparams *"                => "*mut types::DMparams",
-        "Display *"                 => "*mut types::Display",
-        "GLXFBConfig *"             => "*mut types::GLXFBConfig",
-        "GLXFBConfigSGIX *"         => "*mut types::GLXFBConfigSGIX",
-        "GLXHyperpipeConfigSGIX *"  => "*mut types::GLXHyperpipeConfigSGIX",
+        "DMparams *" => "*mut types::DMparams",
+        "Display *" => "*mut types::Display",
+        "GLXFBConfig *" => "*mut types::GLXFBConfig",
+        "GLXFBConfigSGIX *" => "*mut types::GLXFBConfigSGIX",
+        "GLXHyperpipeConfigSGIX *" => "*mut types::GLXHyperpipeConfigSGIX",
         "GLXHyperpipeNetworkSGIX *" => "*mut types::GLXHyperpipeNetworkSGIX",
         "GLXVideoCaptureDeviceNV *" => "*mut types::GLXVideoCaptureDeviceNV",
-        "GLXVideoDeviceNV *"        => "*mut types::GLXVideoDeviceNV",
+        "GLXVideoDeviceNV *" => "*mut types::GLXVideoDeviceNV",
         // "GLuint *"                  => "*mut types::GLuint",
-        "XVisualInfo *"             => "*mut types::XVisualInfo",
+        "XVisualInfo *" => "*mut types::XVisualInfo",
         // "const GLubyte *"           => "*GLubyte",
-        "const char *"              => "*const __gl_imports::raw::c_char",
-        "const int *"               => "*const __gl_imports::raw::c_int",
+        "const char *" => "*const __gl_imports::raw::c_char",
+        "const int *" => "*const __gl_imports::raw::c_int",
         // "const void *"              => "*const __gl_imports::raw::c_void",
-        "int *"                     => "*mut __gl_imports::raw::c_int",
-        "int32_t *"                 => "*mut i32",
-        "int64_t *"                 => "*mut i64",
-        "long *"                    => "*mut __gl_imports::raw::c_long",
-        "unsigned int *"            => "*mut __gl_imports::raw::c_uint",
-        "unsigned long *"           => "*mut __gl_imports::raw::c_ulong",
+        "int *" => "*mut __gl_imports::raw::c_int",
+        "int32_t *" => "*mut i32",
+        "int64_t *" => "*mut i64",
+        "long *" => "*mut __gl_imports::raw::c_long",
+        "unsigned int *" => "*mut __gl_imports::raw::c_uint",
+        "unsigned long *" => "*mut __gl_imports::raw::c_ulong",
         // "void *"                    => "*mut __gl_imports::raw::c_void",
 
         // wgl.xml types
-        "BOOL"                      => "types::BOOL",
-        "DWORD"                     => "types::DWORD",
-        "FLOAT"                     => "types::FLOAT",
+        "BOOL" => "types::BOOL",
+        "DWORD" => "types::DWORD",
+        "FLOAT" => "types::FLOAT",
         // "GLbitfield"                => "types::GLbitfield",
         // "GLboolean"                 => "types::GLboolean",
         // "GLenum"                    => "types::GLenum",
@@ -842,116 +864,116 @@ pub fn to_rust_ty<T: AsRef<str>>(ty: T) -> Cow<'static, str> {
         // "GLsizei"                   => "types::GLsizei",
         // "GLuint"                    => "types::GLuint",
         // "GLushort"                  => "types::GLushort",
-        "HANDLE"                    => "types::HANDLE",
-        "HDC"                       => "types::HDC",
-        "HENHMETAFILE"              => "types::HENHMETAFILE",
-        "HGLRC"                     => "types::HGLRC",
-        "HGPUNV"                    => "types::HGPUNV",
-        "HPBUFFERARB"               => "types::HPBUFFERARB",
-        "HPBUFFEREXT"               => "types::HPBUFFEREXT",
-        "HPVIDEODEV"                => "types::HPVIDEODEV",
-        "HVIDEOINPUTDEVICENV"       => "types::HVIDEOINPUTDEVICENV",
-        "HVIDEOOUTPUTDEVICENV"      => "types::HVIDEOOUTPUTDEVICENV",
-        "INT"                       => "types::INT",
-        "INT64"                     => "types::INT64",
-        "LPCSTR"                    => "types::LPCSTR",
-        "LPGLYPHMETRICSFLOAT"       => "types::LPGLYPHMETRICSFLOAT",
-        "LPVOID"                    => "types::LPVOID",
-        "PGPU_DEVICE"               => "types::PGPU_DEVICE",
-        "PROC"                      => "types::PROC",
-        "UINT"                      => "types::UINT",
-        "VOID"                      => "types::VOID",
+        "HANDLE" => "types::HANDLE",
+        "HDC" => "types::HDC",
+        "HENHMETAFILE" => "types::HENHMETAFILE",
+        "HGLRC" => "types::HGLRC",
+        "HGPUNV" => "types::HGPUNV",
+        "HPBUFFERARB" => "types::HPBUFFERARB",
+        "HPBUFFEREXT" => "types::HPBUFFEREXT",
+        "HPVIDEODEV" => "types::HPVIDEODEV",
+        "HVIDEOINPUTDEVICENV" => "types::HVIDEOINPUTDEVICENV",
+        "HVIDEOOUTPUTDEVICENV" => "types::HVIDEOOUTPUTDEVICENV",
+        "INT" => "types::INT",
+        "INT64" => "types::INT64",
+        "LPCSTR" => "types::LPCSTR",
+        "LPGLYPHMETRICSFLOAT" => "types::LPGLYPHMETRICSFLOAT",
+        "LPVOID" => "types::LPVOID",
+        "PGPU_DEVICE" => "types::PGPU_DEVICE",
+        "PROC" => "types::PROC",
+        "UINT" => "types::UINT",
+        "VOID" => "types::VOID",
         // "int "                      => "__gl_imports::raw::c_int",
         // "unsigned int "             => "__gl_imports::raw::c_uint",
         // "void "                     => "()",
-        "BOOL *"                    => "*mut types::BOOL",
-        "DWORD *"                   => "*mut types::DWORD",
-        "FLOAT *"                   => "*mut types::FLOAT",
+        "BOOL *" => "*mut types::BOOL",
+        "DWORD *" => "*mut types::DWORD",
+        "FLOAT *" => "*mut types::FLOAT",
         // "GLuint *"                  => "*mut types::GLuint",
-        "HANDLE *"                  => "*mut types::HANDLE",
-        "HGPUNV *"                  => "*mut types::HGPUNV",
-        "HPVIDEODEV *"              => "*mut types::HPVIDEODEV",
-        "HVIDEOINPUTDEVICENV *"     => "*mut types::HVIDEOINPUTDEVICENV",
-        "HVIDEOOUTPUTDEVICENV *"    => "*mut types::HVIDEOOUTPUTDEVICENV",
-        "INT32 *"                   => "*mut types::INT32",
-        "INT64 *"                   => "*mut types::INT64",
-        "UINT *"                    => "*mut types::UINT",
-        "USHORT *"                  => "*mut types::USHORT",
-        "const COLORREF *"          => "*const types::COLORREF",
-        "const DWORD *"             => "*const types::DWORD",
-        "const FLOAT *"             => "*const types::FLOAT",
+        "HANDLE *" => "*mut types::HANDLE",
+        "HGPUNV *" => "*mut types::HGPUNV",
+        "HPVIDEODEV *" => "*mut types::HPVIDEODEV",
+        "HVIDEOINPUTDEVICENV *" => "*mut types::HVIDEOINPUTDEVICENV",
+        "HVIDEOOUTPUTDEVICENV *" => "*mut types::HVIDEOOUTPUTDEVICENV",
+        "INT32 *" => "*mut types::INT32",
+        "INT64 *" => "*mut types::INT64",
+        "UINT *" => "*mut types::UINT",
+        "USHORT *" => "*mut types::USHORT",
+        "const COLORREF *" => "*const types::COLORREF",
+        "const DWORD *" => "*const types::DWORD",
+        "const FLOAT *" => "*const types::FLOAT",
         // "const GLushort *"          => "*const types::GLushort",
-        "const HANDLE *"            => "*const types::HANDLE",
-        "const HGPUNV *"            => "*const types::HGPUNV",
-        "const LAYERPLANEDESCRIPTOR *"  => "*const types::LAYERPLANEDESCRIPTOR",
-        "const LPVOID *"            => "*const types::LPVOID",
+        "const HANDLE *" => "*const types::HANDLE",
+        "const HGPUNV *" => "*const types::HGPUNV",
+        "const LAYERPLANEDESCRIPTOR *" => "*const types::LAYERPLANEDESCRIPTOR",
+        "const LPVOID *" => "*const types::LPVOID",
         "const PIXELFORMATDESCRIPTOR *" => "*const types::IXELFORMATDESCRIPTOR",
-        "const USHORT *"            => "*const types::USHORT",
+        "const USHORT *" => "*const types::USHORT",
         // "const char *"              => "*const __gl_imports::raw::c_char",
         // "const int *"               => "*const __gl_imports::raw::c_int",
-        "float *"                   => "*mut __gl_imports::raw::c_float",
+        "float *" => "*mut __gl_imports::raw::c_float",
         // "int *"                     => "*mut __gl_imports::raw::c_int",
         // "unsigned long *"           => "*mut __gl_imports::raw::c_ulong",
         // "void *"                    => "*mut __gl_imports::raw::c_void",
 
         // elx.xml types
-        "khronos_utime_nanoseconds_t"   => "types::khronos_utime_nanoseconds_t",
-        "khronos_uint64_t"          => "types::khronos_uint64_t",
-        "khronos_ssize_t"           => "types::khronos_ssize_t",
-        "EGLNativeDisplayType"      => "types::EGLNativeDisplayType",
-        "EGLNativePixmapType"       => "types::EGLNativePixmapType",
-        "EGLNativeWindowType"       => "types::EGLNativeWindowType",
-        "EGLint"                    => "types::EGLint",
-        "EGLint *"                  => "*mut types::EGLint",
-        "const EGLint *"            => "*const types::EGLint",
-        "NativeDisplayType"         => "types::NativeDisplayType",
-        "NativePixmapType"          => "types::NativePixmapType",
-        "NativeWindowType"          => "types::NativeWindowType",
+        "khronos_utime_nanoseconds_t" => "types::khronos_utime_nanoseconds_t",
+        "khronos_uint64_t" => "types::khronos_uint64_t",
+        "khronos_ssize_t" => "types::khronos_ssize_t",
+        "EGLNativeDisplayType" => "types::EGLNativeDisplayType",
+        "EGLNativePixmapType" => "types::EGLNativePixmapType",
+        "EGLNativeWindowType" => "types::EGLNativeWindowType",
+        "EGLint" => "types::EGLint",
+        "EGLint *" => "*mut types::EGLint",
+        "const EGLint *" => "*const types::EGLint",
+        "NativeDisplayType" => "types::NativeDisplayType",
+        "NativePixmapType" => "types::NativePixmapType",
+        "NativeWindowType" => "types::NativeWindowType",
         //"Bool"                      => "types::Bool",
-        "EGLBoolean"                => "types::EGLBoolean",
-        "EGLenum"                   => "types::EGLenum",
-        "EGLAttribKHR"              => "types::EGLAttribKHR",
-        "EGLAttrib"                 => "types::EGLAttrib",
-        "EGLAttrib *"               => "*mut types::EGLAttrib",
-        "const EGLAttrib *"         => "*const types::EGLAttrib",
-        "EGLConfig"                 => "types::EGLConfig",
-        "EGLConfig *"               => "*mut types::EGLConfig",
-        "EGLContext"                => "types::EGLContext",
-        "EGLDeviceEXT"              => "types::EGLDeviceEXT",
-        "EGLDisplay"                => "types::EGLDisplay",
-        "EGLSurface"                => "types::EGLSurface",
-        "EGLClientBuffer"           => "types::EGLClientBuffer",
+        "EGLBoolean" => "types::EGLBoolean",
+        "EGLenum" => "types::EGLenum",
+        "EGLAttribKHR" => "types::EGLAttribKHR",
+        "EGLAttrib" => "types::EGLAttrib",
+        "EGLAttrib *" => "*mut types::EGLAttrib",
+        "const EGLAttrib *" => "*const types::EGLAttrib",
+        "EGLConfig" => "types::EGLConfig",
+        "EGLConfig *" => "*mut types::EGLConfig",
+        "EGLContext" => "types::EGLContext",
+        "EGLDeviceEXT" => "types::EGLDeviceEXT",
+        "EGLDisplay" => "types::EGLDisplay",
+        "EGLSurface" => "types::EGLSurface",
+        "EGLClientBuffer" => "types::EGLClientBuffer",
         "__eglMustCastToProperFunctionPointerType" => "types::__eglMustCastToProperFunctionPointerType",
-        "EGLImageKHR"               => "types::EGLImageKHR",
-        "EGLImage"                  => "types::EGLImage",
-        "EGLOutputLayerEXT"         => "types::EGLOutputLayerEXT",
-        "EGLOutputPortEXT"          => "types::EGLOutputPortEXT",
-        "EGLSyncKHR"                => "types::EGLSyncKHR",
-        "EGLSync"                   => "types::EGLSync",
-        "EGLTimeKHR"                => "types::EGLTimeKHR",
-        "EGLTime"                   => "types::EGLTime",
-        "EGLSyncNV"                 => "types::EGLSyncNV",
-        "EGLTimeNV"                 => "types::EGLTimeNV",
-        "EGLuint64NV"               => "types::EGLuint64NV",
-        "EGLStreamKHR"              => "types::EGLStreamKHR",
-        "EGLuint64KHR"              => "types::EGLuint64KHR",
+        "EGLImageKHR" => "types::EGLImageKHR",
+        "EGLImage" => "types::EGLImage",
+        "EGLOutputLayerEXT" => "types::EGLOutputLayerEXT",
+        "EGLOutputPortEXT" => "types::EGLOutputPortEXT",
+        "EGLSyncKHR" => "types::EGLSyncKHR",
+        "EGLSync" => "types::EGLSync",
+        "EGLTimeKHR" => "types::EGLTimeKHR",
+        "EGLTime" => "types::EGLTime",
+        "EGLSyncNV" => "types::EGLSyncNV",
+        "EGLTimeNV" => "types::EGLTimeNV",
+        "EGLuint64NV" => "types::EGLuint64NV",
+        "EGLStreamKHR" => "types::EGLStreamKHR",
+        "EGLuint64KHR" => "types::EGLuint64KHR",
         "EGLNativeFileDescriptorKHR" => "types::EGLNativeFileDescriptorKHR",
-        "EGLsizeiANDROID"           => "types::EGLsizeiANDROID",
-        "EGLSetBlobFuncANDROID"     => "types::EGLSetBlobFuncANDROID",
-        "EGLGetBlobFuncANDROID"     => "types::EGLGetBlobFuncANDROID",
-        "EGLClientPixmapHI"         => "types::EGLClientPixmapHI",
+        "EGLsizeiANDROID" => "types::EGLsizeiANDROID",
+        "EGLSetBlobFuncANDROID" => "types::EGLSetBlobFuncANDROID",
+        "EGLGetBlobFuncANDROID" => "types::EGLGetBlobFuncANDROID",
+        "EGLClientPixmapHI" => "types::EGLClientPixmapHI",
         "struct EGLClientPixmapHI *" => "*const types::EGLClientPixmapHI",
-        "const EGLAttribKHR *"      => "*const types::EGLAttribKHR",
-        "const EGLuint64KHR *"      => "*const types::EGLuint64KHR",
-        "EGLAttribKHR *"            => "*mut types::EGLAttribKHR",
-        "EGLDeviceEXT *"            => "*mut types::EGLDeviceEXT",
-        "EGLNativeDisplayType *"    => "*mut types::EGLNativeDisplayType",
-        "EGLNativePixmapType *"     => "*mut types::EGLNativePixmapType",
-        "EGLNativeWindowType *"     => "*mut types::EGLNativeWindowType",
-        "EGLOutputLayerEXT *"       => "*mut types::EGLOutputLayerEXT",
-        "EGLTimeKHR *"              => "*mut types::EGLTimeKHR",
-        "EGLOutputPortEXT *"        => "*mut types::EGLOutputPortEXT",
-        "EGLuint64KHR *"            => "*mut types::EGLuint64KHR",
+        "const EGLAttribKHR *" => "*const types::EGLAttribKHR",
+        "const EGLuint64KHR *" => "*const types::EGLuint64KHR",
+        "EGLAttribKHR *" => "*mut types::EGLAttribKHR",
+        "EGLDeviceEXT *" => "*mut types::EGLDeviceEXT",
+        "EGLNativeDisplayType *" => "*mut types::EGLNativeDisplayType",
+        "EGLNativePixmapType *" => "*mut types::EGLNativePixmapType",
+        "EGLNativeWindowType *" => "*mut types::EGLNativeWindowType",
+        "EGLOutputLayerEXT *" => "*mut types::EGLOutputLayerEXT",
+        "EGLTimeKHR *" => "*mut types::EGLTimeKHR",
+        "EGLOutputPortEXT *" => "*mut types::EGLOutputPortEXT",
+        "EGLuint64KHR *" => "*mut types::EGLuint64KHR",
 
         // failure
         _ => panic!("Type conversion not implemented for `{}`", ty.as_ref()),
@@ -1000,7 +1022,10 @@ mod tests {
 
         #[test]
         fn test_cast_0() {
-            let e = parse::make_enum("FOO".to_string(), None, "((EGLint)-1)".to_string(), Some("BAR".to_string()));
+            let e = parse::make_enum("FOO".to_string(),
+                                     None,
+                                     "((EGLint)-1)".to_string(),
+                                     Some("BAR".to_string()));
             assert_eq!(e.ident, "FOO");
             assert_eq!((&*e.ty, &*e.value), ("EGLint", "-1"));
             assert_eq!(e.alias, Some("BAR".to_string()));
@@ -1008,7 +1033,10 @@ mod tests {
 
         #[test]
         fn test_cast_1() {
-            let e = parse::make_enum("FOO".to_string(), None, "((EGLint)(-1))".to_string(), Some("BAR".to_string()));
+            let e = parse::make_enum("FOO".to_string(),
+                                     None,
+                                     "((EGLint)(-1))".to_string(),
+                                     Some("BAR".to_string()));
             assert_eq!(e.ident, "FOO");
             assert_eq!((&*e.ty, &*e.value), ("EGLint", "(-1)"));
             assert_eq!(e.alias, Some("BAR".to_string()));
@@ -1016,7 +1044,10 @@ mod tests {
 
         #[test]
         fn test_no_type() {
-            let e = parse::make_enum("FOO".to_string(), None, "value".to_string(), Some("BAR".to_string()));
+            let e = parse::make_enum("FOO".to_string(),
+                                     None,
+                                     "value".to_string(),
+                                     Some("BAR".to_string()));
             assert_eq!(e.ident, "FOO");
             assert_eq!(e.value, "value");
             assert_eq!(e.alias, Some("BAR".to_string()));
@@ -1026,20 +1057,29 @@ mod tests {
 
         #[test]
         fn test_u() {
-            let e = parse::make_enum("FOO".to_string(), Some("u".to_string()), String::new(), None);
+            let e = parse::make_enum("FOO".to_string(),
+                                     Some("u".to_string()),
+                                     String::new(),
+                                     None);
             assert_eq!(e.ty, "GLuint");
         }
 
         #[test]
         fn test_ull() {
-            let e = parse::make_enum("FOO".to_string(), Some("ull".to_string()), String::new(), None);
+            let e = parse::make_enum("FOO".to_string(),
+                                     Some("ull".to_string()),
+                                     String::new(),
+                                     None);
             assert_eq!(e.ty, "GLuint64");
         }
 
         #[test]
         #[should_panic]
         fn test_unknown_type() {
-            parse::make_enum("FOO".to_string(), Some("blargh".to_string()), String::new(), None);
+            parse::make_enum("FOO".to_string(),
+                             Some("blargh".to_string()),
+                             String::new(),
+                             None);
         }
 
         #[test]
@@ -1075,27 +1115,19 @@ mod tests {
             fn test_start_event() {
                 let given = XmlEvent::StartElement {
                     name: OwnedName::local("element"),
-                    attributes: vec![
-                        OwnedAttribute::new(OwnedName::local("attr1"), "val1"),
-                        OwnedAttribute::new(OwnedName::local("attr2"), "val2"),
-                    ],
+                    attributes: vec![OwnedAttribute::new(OwnedName::local("attr1"), "val1"),
+                                     OwnedAttribute::new(OwnedName::local("attr2"), "val2")],
                     namespace: Namespace::empty(),
                 };
-                let expected = ParseEvent::Start(
-                    "element".to_string(),
-                    vec![
-                        Attribute::new("attr1", "val1"),
-                        Attribute::new("attr2", "val2"),
-                    ],
-                );
+                let expected = ParseEvent::Start("element".to_string(),
+                                                 vec![Attribute::new("attr1", "val1"),
+                                                      Attribute::new("attr2", "val2")]);
                 assert_eq!(ParseEvent::from_xml(given), Some(expected));
             }
 
             #[test]
             fn test_end_element() {
-                let given = XmlEvent::EndElement {
-                    name: OwnedName::local("element"),
-                };
+                let given = XmlEvent::EndElement { name: OwnedName::local("element") };
                 let expected = ParseEvent::End("element".to_string());
                 assert_eq!(ParseEvent::from_xml(given), Some(expected));
             }
