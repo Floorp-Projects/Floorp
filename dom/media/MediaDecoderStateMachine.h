@@ -702,6 +702,10 @@ private:
   // Pitch preservation for the playback rate.
   Mirror<bool> mPreservesPitch;
 
+  // Whether to seek back to the start of the media resource
+  // upon reaching the end.
+  Mirror<bool> mLooping;
+
   // True if the media is same-origin with the element. Data can only be
   // passed to MediaStreams when this is true.
   Mirror<bool> mSameOriginMedia;

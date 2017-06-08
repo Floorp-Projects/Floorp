@@ -66,6 +66,7 @@ struct MediaDecoderInit
   const double mPlaybackRate;
   const bool mMinimizePreroll;
   const bool mHasSuspendTaint;
+  const bool mLooping;
 
   MediaDecoderInit(MediaDecoderOwner* aOwner,
                    dom::AudioChannel aAudioChannel,
@@ -73,7 +74,8 @@ struct MediaDecoderInit
                    bool aPreservesPitch,
                    double aPlaybackRate,
                    bool aMinimizePreroll,
-                   bool aHasSuspendTaint)
+                   bool aHasSuspendTaint,
+                   bool aLooping)
     : mOwner(aOwner)
     , mAudioChannel(aAudioChannel)
     , mVolume(aVolume)
@@ -81,6 +83,7 @@ struct MediaDecoderInit
     , mPlaybackRate(aPlaybackRate)
     , mMinimizePreroll(aMinimizePreroll)
     , mHasSuspendTaint(aHasSuspendTaint)
+    , mLooping(aLooping)
   {
   }
 };
@@ -227,6 +230,7 @@ public:
 
   void SetPlaybackRate(double aPlaybackRate);
   void SetPreservesPitch(bool aPreservesPitch);
+  void SetLooping(bool aLooping);
 
   bool GetMinimizePreroll() const { return mMinimizePreroll; }
 
@@ -766,6 +770,8 @@ protected:
 
   Canonical<bool> mPreservesPitch;
 
+  Canonical<bool> mLooping;
+
   // Media duration set explicitly by JS. At present, this is only ever present
   // for MSE.
   Canonical<Maybe<double>> mExplicitDuration;
@@ -810,6 +816,10 @@ public:
   AbstractCanonical<bool>* CanonicalPreservesPitch()
   {
     return &mPreservesPitch;
+  }
+  AbstractCanonical<bool>* CanonicalLooping()
+  {
+    return &mLooping;
   }
   AbstractCanonical<Maybe<double>>* CanonicalExplicitDuration()
   {
