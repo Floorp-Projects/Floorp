@@ -13,7 +13,7 @@
 #endif
 #endif
 
-// Expands to all the defines from configure.
+/* Expands to all the defines from configure. */
 #undef ALLDEFINES
 
 /*
