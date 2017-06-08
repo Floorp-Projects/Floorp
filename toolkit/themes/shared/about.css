@@ -56,8 +56,3 @@ ul > li {
 th, td {
   padding: 0 5px;
 }
-
-.columns {
-  -moz-column-width: 20em;
-  -moz-column-gap: 3em;
-}

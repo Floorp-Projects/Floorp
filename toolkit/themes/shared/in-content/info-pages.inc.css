@@ -15,7 +15,7 @@ body {
   flex-direction: column;
   box-sizing: border-box;
   min-height: 100vh;
-  padding: 0 48px;
+  padding: 40px 48px;
   align-items: center;
   justify-content: center;
 }
@@ -81,6 +81,17 @@ ul {
 
 dt {
   font-weight: bold;
+}
+
+ul.columns {
+  column-count: 2;
+  column-gap: 5em;
+}
+
+@media (max-width: 35em) {
+  ul.columns {
+    column-count: 1;
+  }
 }
 
 /* Buttons */
