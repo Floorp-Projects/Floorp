@@ -46,6 +46,7 @@ class nsWindow;
 namespace mozilla {
 namespace widget {
 
+class TSFStaticSink;
 struct MSGResult;
 
 /*
@@ -56,6 +57,7 @@ class TSFTextStore final : public ITextStoreACP
                          , public ITfContextOwnerCompositionSink
                          , public ITfMouseTrackerACP
 {
+  friend class TSFStaticSink;
 private:
   typedef IMENotification::SelectionChangeDataBase SelectionChangeDataBase;
   typedef IMENotification::SelectionChangeData SelectionChangeData;
@@ -1002,6 +1004,7 @@ protected:
 
   // TSF thread manager object for the current application
   static StaticRefPtr<ITfThreadMgr> sThreadMgr;
+  static already_AddRefed<ITfThreadMgr> GetThreadMgr();
   // sMessagePump is QI'ed from sThreadMgr
   static StaticRefPtr<ITfMessagePump> sMessagePump;
   // sKeystrokeMgr is QI'ed from sThreadMgr
@@ -1024,6 +1027,8 @@ protected:
   static StaticRefPtr<ITfContext> sDisabledContext;
 
   static StaticRefPtr<ITfInputProcessorProfiles> sInputProcessorProfiles;
+  static already_AddRefed<ITfInputProcessorProfiles>
+           GetInputProcessorProfiles();
 
   // TSF client ID for the current application
   static DWORD sClientId;
