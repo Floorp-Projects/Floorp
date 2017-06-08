@@ -2,6 +2,9 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+// The ext-* files are imported into the same scopes.
+/* import-globals-from ../../../toolkit/components/extensions/ext-c-toolkit.js */
+
 Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
