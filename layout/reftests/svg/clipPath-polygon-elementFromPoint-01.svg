@@ -1,0 +1,43 @@
+<!--
+      Any copyright is dedicated to the Public Domain.
+      http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg onload="testElementFromPoint();" xmlns="http://www.w3.org/2000/svg">
+
+  <title>Testcase for CSS polygon clipPath</title>
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=1246741 -->
+
+  <rect id="out" width="100%" height="100%"/>
+
+  <!-- test elementFromPoint can get the element using clip-path -->
+  <rect id="in" x="100" y="100" width="100" height="100"
+        clip-path="polygon(0 0,50px 0,50px 50px,0 50px)"/>
+  <script>
+    function testElementFromPoint() {
+      let inCount = outCount = 0, inElem, outElem;
+      document.getElementById("in").style.fill = "red";
+      document.getElementById("out").style.fill = "blue";
+
+      inElem = document.elementFromPoint(100, 100);
+      if (inElem.style.fill == "red") { ++inCount; }
+      inElem = document.elementFromPoint(150, 100);
+      if (inElem.style.fill == "red") { ++inCount; }
+      inElem = document.elementFromPoint(150, 150);
+      if (inElem.style.fill == "red") { ++inCount; }
+      inElem = document.elementFromPoint(100, 150);
+      if (inElem.style.fill == "red") { ++inCount; }
+      if (inCount == 4) { document.getElementById("in").style.fill = "lime"; }
+
+      outElem = document.elementFromPoint(99, 100);
+      if (outElem.style.fill == "blue") { ++outCount; }
+      outElem = document.elementFromPoint(150, 99);
+      if (outElem.style.fill == "blue") { ++outCount; }
+      outElem = document.elementFromPoint(151, 150);
+      if (outElem.style.fill == "blue") { ++outCount; }
+      outElem = document.elementFromPoint(100, 151);
+      if (outElem.style.fill == "blue") { ++outCount; }
+      if (outCount == 4) { document.getElementById("out").style.fill = "lime"; }
+    }
+  </script>
+</svg>
