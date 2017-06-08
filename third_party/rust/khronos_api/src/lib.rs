@@ -1,4 +1,4 @@
-// Copyright 2015 Brendan Zabarauskas
+// Copyright 2015 Brendan Zabarauskas and the gl-rs developers
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
