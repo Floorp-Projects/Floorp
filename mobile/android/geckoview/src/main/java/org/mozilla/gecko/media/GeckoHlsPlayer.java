@@ -83,6 +83,8 @@ public class GeckoHlsPlayer implements ExoPlayer.EventListener {
         private int mNumAudioTracks = 0;
         private boolean mVideoInfoUpdated = false;
         private boolean mAudioInfoUpdated = false;
+        private boolean mVideoDataArrived = false;
+        private boolean mAudioDataArrived = false;
         HlsMediaTracksInfo(int numVideoTracks, int numAudioTracks) {
             this.mNumVideoTracks = numVideoTracks;
             this.mNumAudioTracks = numAudioTracks;
@@ -93,11 +95,18 @@ public class GeckoHlsPlayer implements ExoPlayer.EventListener {
         public int getNumOfAudioTracks() { return mNumAudioTracks; }
         public void onVideoInfoUpdated() { mVideoInfoUpdated = true; }
         public void onAudioInfoUpdated() { mAudioInfoUpdated = true; }
+        public void onDataArrived(int trackType) {
+            if (trackType == C.TRACK_TYPE_VIDEO) {
+                mVideoDataArrived = true;
+            } else if (trackType == C.TRACK_TYPE_AUDIO) {
+                mAudioDataArrived = true;
+            }
+        }
         public boolean videoReady() {
-            return hasVideo() ? mVideoInfoUpdated : true;
+            return !hasVideo() || (mVideoInfoUpdated && mVideoDataArrived);
         }
         public boolean audioReady() {
-            return hasAudio() ? mAudioInfoUpdated : true;
+            return !hasAudio() || (mAudioInfoUpdated && mAudioDataArrived);
         }
     }
     private HlsMediaTracksInfo mTracksInfo = null;
@@ -179,7 +188,7 @@ public class GeckoHlsPlayer implements ExoPlayer.EventListener {
     }
 
     public final class ComponentEventDispatcher {
-        public void onDataArrived() {
+        public void onDataArrived(final int trackType) {
             assertTrue(mMainHandler != null);
             assertTrue(mComponentListener != null);
             if (!mIsPlayerInitDone) {
@@ -189,7 +198,7 @@ public class GeckoHlsPlayer implements ExoPlayer.EventListener {
                 mMainHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        mComponentListener.onDataArrived();
+                        mComponentListener.onDataArrived(trackType);
                     }
                 });
             }
@@ -231,10 +240,13 @@ public class GeckoHlsPlayer implements ExoPlayer.EventListener {
     public final class ComponentListener {
 
         // General purpose implementation
-        public void onDataArrived() {
+        public void onDataArrived(int trackType) {
             assertTrue(mResourceCallbacks != null);
+            assertTrue(mTracksInfo != null);
             Log.d(LOGTAG, "[CB][onDataArrived]");
+            mTracksInfo.onDataArrived(trackType);
             mResourceCallbacks.onDataArrived();
+            checkInitDone();
         }
 
         public void onVideoInputFormatChanged(Format format) {
@@ -299,7 +311,7 @@ public class GeckoHlsPlayer implements ExoPlayer.EventListener {
         if (DEBUG) { Log.d(LOGTAG, "loading [" + isLoading + "]"); }
         if (!isLoading) {
             // To update buffered position.
-            mComponentEventDispatcher.onDataArrived();
+            mComponentEventDispatcher.onDataArrived(C.TRACK_TYPE_DEFAULT);
         }
     }
 
