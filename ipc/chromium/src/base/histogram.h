@@ -182,14 +182,10 @@ class Histogram {
                                    size_t bucket_count,
                                    Flags flags);
 
+  virtual ~Histogram();
+
   void Add(int value);
   void Subtract(int value);
-
-  // TODO: Currently recording_enabled_ is not used by any Histogram class, but
-  //       rather examined only by the telemetry code (via IsRecordingEnabled).
-  //       Move handling to Histogram's Add() etc after simplifying Histogram.
-  void SetRecordingEnabled(bool aEnabled) { recording_enabled_ = aEnabled; };
-  bool IsRecordingEnabled() const { return recording_enabled_; };
 
   // This method is an interface, used only by BooleanHistogram.
   virtual void AddBoolean(bool value);
@@ -247,8 +243,6 @@ class Histogram {
  protected:
   Histogram(Sample minimum, Sample maximum, size_t bucket_count);
   Histogram(TimeDelta minimum, TimeDelta maximum, size_t bucket_count);
-
-  virtual ~Histogram();
 
   // Initialize ranges_ mapping.
   void InitializeBucketRange();
@@ -329,9 +323,6 @@ class Histogram {
   // are generated.  If ever there is ever a difference, then the histogram must
   // have been corrupted.
   uint32_t range_checksum_;
-
-  // When false, new samples are completely ignored.
-  mozilla::Atomic<bool, mozilla::Relaxed> recording_enabled_;
 
   DISALLOW_COPY_AND_ASSIGN(Histogram);
 };
