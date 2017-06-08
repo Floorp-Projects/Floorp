@@ -20,10 +20,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1077002
 <pre id="test">
 <script type="application/javascript">
 
-/** Test for showModalDialog unavailability in Firefox **/
+/** Test for showModalDialog unavailability in Firefox. **/
 
-// NB: This test runs in e10s only. In e10s showModalDialog should not
-// exist.
+// showModalDialog was removed in bug 981796.
 ok(!window.showModalDialog, "showModalDialog should not exist");
 
 </script>
