@@ -13,13 +13,10 @@ const {
 } = require("devtools/client/shared/vendor/redux");
 const { thunk } = require("devtools/client/shared/redux/middleware/thunk");
 const {
-  debounceActions,
-  BATCH_ACTIONS
-} = require("devtools/client/shared/redux/middleware/debounce");
-const {
   MESSAGE_ADD,
   MESSAGES_CLEAR,
   REMOVED_MESSAGES_CLEAR,
+  BATCH_ACTIONS,
   PREFS,
 } = require("devtools/client/webconsole/new-console-output/constants");
 const { reducers } = require("./reducers/index");
@@ -46,16 +43,10 @@ function configureStore(hud, options = {}) {
     })
   };
 
-  let args = [thunk];
-  if (!options.noDebounce) {
-    args.push(debounceActions(16, 500));
-  }
-
-  let middleware = applyMiddleware(...args);
   return createStore(
     createRootReducer(),
     initialState,
-    compose(middleware, enableActorReleaser(hud), enableBatching())
+    compose(applyMiddleware(thunk), enableActorReleaser(hud), enableBatching())
   );
 }
 
