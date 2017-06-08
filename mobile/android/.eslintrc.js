@@ -32,8 +32,6 @@ module.exports = {
     "module": false,
     "require": false,
     "uuidgen": false,
-
-    "Iterator": false // TODO: Remove - deprecated!
   },
   rules: {
     // XXX Bug 1358949 - This should be reduced down - probably to 20 or to

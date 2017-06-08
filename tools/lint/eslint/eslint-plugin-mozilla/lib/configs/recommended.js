@@ -7,6 +7,7 @@ module.exports = {
   },
 
   "globals": {
+    "AddonManagerPermissions": false,
     "BroadcastChannel": false,
     "BrowserFeedWriter": false,
     "CSSPrimitiveValue": false,
@@ -29,6 +30,9 @@ module.exports = {
     // https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/InternalError
     "InternalError": true,
     "KeyEvent": false,
+    "MatchGlob": false,
+    "MatchPattern": false,
+    "MatchPatternSet": false,
     "MenuBoxObject": false,
     // Specific to Firefox (Chrome code only).
     "MozSelfSupport": false,
@@ -37,7 +41,10 @@ module.exports = {
     // Note: StopIteration will likely be removed as part of removing legacy
     // generators, see bug 968038.
     "StopIteration": false,
+    "StructuredCloneHolder": false,
     "WebAssembly": false,
+    "WebExtensionContentScript": false,
+    "WebExtensionPolicy": false,
     "WebrtcGlobalInformation": false,
     // Non-standard, specific to Firefox.
     "XULElement": false,
