@@ -1797,5 +1797,20 @@ TypeOfObject(JSObject* obj, JSRuntime* rt)
     return TypeName(type, *rt->commonNames);
 }
 
+bool
+ConcatStringsPure(JSContext* cx, JSString* lhs, JSString* rhs, JSString** res)
+{
+    JS::AutoCheckCannotGC nogc;
+
+    // ConcatStrings without GC or throwing. If this fails, we set result to
+    // nullptr and let caller do a bailout. Return true to indicate no exception
+    // thrown.
+    *res = ConcatStrings<NoGC>(cx, lhs, rhs);
+
+    MOZ_ASSERT(!cx->isExceptionPending());
+    return true;
+}
+
+
 } // namespace jit
 } // namespace js
