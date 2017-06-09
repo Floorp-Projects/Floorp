@@ -185,14 +185,11 @@
           return innerRect;
         ]]></getter>
       </property>
-      <property name="scrollboxPaddingStart" readonly="true">
-        <getter><![CDATA[
-          var ltr = (window.getComputedStyle(this).direction == "ltr");
-          var paddingStartName = ltr ? "padding-left" : "padding-right";
-          var scrollboxStyle = window.getComputedStyle(this._scrollbox);
-          return parseFloat(scrollboxStyle.getPropertyValue(paddingStartName));
-        ]]></getter>
-      </property>
+      <field name="scrollboxPaddingStart"><![CDATA[
+        parseFloat(window.getComputedStyle(this._scrollbox)[
+          this._isRTLScrollbox ? "paddingRight" : "paddingLeft"
+        ]);
+      ]]></field>
       <property name="scrollPosition">
         <getter><![CDATA[
           return this.orient == "vertical" ?
@@ -208,12 +205,9 @@
         ]]></setter>
       </property>
 
-      <property name="_startEndProps" readonly="true">
-        <getter><![CDATA[
-          return this.orient == "vertical" ?
-                 ["top", "bottom"] : ["left", "right"];
-        ]]></getter>
-      </property>
+      <field name="_startEndProps"><![CDATA[
+        this.orient == "vertical" ? ["top", "bottom"] : ["left", "right"];
+      ]]></field>
 
       <field name="_isRTLScrollbox"><![CDATA[
         this.orient != "vertical" &&
