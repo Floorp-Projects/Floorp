@@ -131,7 +131,7 @@ GetIsLineBreakAllowed(nsIFrame* aFrame, bool aIsLineBreakable,
  * happens across the boundary of those frames.
  */
 static nscoord
-CalculateColumnPrefISize(nsRenderingContext* aRenderingContext,
+CalculateColumnPrefISize(gfxContext* aRenderingContext,
                          const RubyColumnEnumerator& aEnumerator,
                          nsIFrame::InlineIntrinsicISizeData* aBaseISizeData)
 {
@@ -167,7 +167,7 @@ CalculateColumnPrefISize(nsRenderingContext* aRenderingContext,
 //       See bug 1134945.
 /* virtual */ void
 nsRubyBaseContainerFrame::AddInlineMinISize(
-  nsRenderingContext *aRenderingContext, nsIFrame::InlineMinISizeData *aData)
+  gfxContext *aRenderingContext, nsIFrame::InlineMinISizeData *aData)
 {
   AutoRubyTextContainerArray textContainers(this);
 
@@ -222,7 +222,7 @@ nsRubyBaseContainerFrame::AddInlineMinISize(
 
 /* virtual */ void
 nsRubyBaseContainerFrame::AddInlinePrefISize(
-  nsRenderingContext *aRenderingContext, nsIFrame::InlinePrefISizeData *aData)
+  gfxContext *aRenderingContext, nsIFrame::InlinePrefISizeData *aData)
 {
   AutoRubyTextContainerArray textContainers(this);
 
@@ -263,7 +263,7 @@ nsRubyBaseContainerFrame::CanContinueTextRun() const
 }
 
 /* virtual */ LogicalSize
-nsRubyBaseContainerFrame::ComputeSize(nsRenderingContext *aRenderingContext,
+nsRubyBaseContainerFrame::ComputeSize(gfxContext *aRenderingContext,
                                       WritingMode aWM,
                                       const LogicalSize& aCBSize,
                                       nscoord aAvailableISize,
