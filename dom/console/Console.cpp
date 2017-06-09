@@ -181,8 +181,6 @@ public:
   void
   Trace(const TraceCallbacks& aCallbacks, void* aClosure)
   {
-    AssertIsOnOwningThread();
-
     ConsoleCallData* tmp = this;
     for (uint32_t i = 0; i < mCopiedArguments.Length(); ++i) {
       NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mCopiedArguments[i])
