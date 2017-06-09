@@ -437,7 +437,7 @@ private:
   RefPtr<nsRange> mAnchorFocusRange;
   RefPtr<nsFrameSelection> mFrameSelection;
   RefPtr<nsAutoScrollTimer> mAutoScrollTimer;
-  nsCOMArray<nsISelectionListener> mSelectionListeners;
+  FallibleTArray<nsCOMPtr<nsISelectionListener>> mSelectionListeners;
   nsRevocableEventPtr<ScrollSelectionIntoViewEvent> mScrollEvent;
   CachedOffsetForFrame* mCachedOffsetForFrame;
   nsDirection mDirection;
