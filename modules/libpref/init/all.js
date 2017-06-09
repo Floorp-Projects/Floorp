@@ -317,7 +317,7 @@ pref("mathml.scale_stretchy_operators.enabled", true);
 
 pref("media.dormant-on-pause-timeout-ms", 5000);
 
-// Media cache size in kilobytes
+// File-backed MediaCache size in kilobytes
 pref("media.cache_size", 512000);
 // When a network connection is suspended, don't resume it until the
 // amount of buffered data falls below this threshold (in seconds).
@@ -326,6 +326,10 @@ pref("media.cache_resume_threshold", 30);
 // of the current playback position. This limit can stop us from using arbitrary
 // amounts of network bandwidth prefetching huge videos.
 pref("media.cache_readahead_limit", 60);
+// If a resource is known to be smaller than this size (in kilobytes), a
+// memory-backed MediaCache may be used; otherwise the (single shared
+// global) file-backed MediaCache is used.
+pref("media.memory_cache_max_size", 8192);
 
 // Cache size hint (in bytes) for each MediaResourceIndex.
 // 0 -> no cache. Will use next power of 2, clamped to 32B-128KB.
