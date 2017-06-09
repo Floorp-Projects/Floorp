@@ -240,6 +240,10 @@ public:
   Create(CollectorRunnerCallback aCallback, uint32_t aDelay,
          int64_t aBudget, bool aRepeating, void* aData = nullptr)
   {
+    if (sShuttingDown) {
+      return nullptr;
+    }
+
     RefPtr<CollectorRunner> runner =
       new CollectorRunner(aCallback, aDelay, aBudget, aRepeating, aData);
     runner->Schedule(false); // Initial scheduling shouldn't use idle dispatch.
@@ -1921,7 +1925,10 @@ InterSliceGCRunnerFired(TimeStamp aDeadline, void* aData)
 {
   nsJSContext::KillInterSliceGCRunner();
   MOZ_ASSERT(sActiveIntersliceGCBudget > 0);
-  int64_t budget = sActiveIntersliceGCBudget;
+  // We use longer budgets when timer runs since that means
+  // there hasn't been idle time recently and we may have significant amount
+  // garbage to collect.
+  int64_t budget = sActiveIntersliceGCBudget * 2;
   if (!aDeadline.IsNull()) {
     budget = int64_t((aDeadline - TimeStamp::Now()).ToMilliseconds());
   }
