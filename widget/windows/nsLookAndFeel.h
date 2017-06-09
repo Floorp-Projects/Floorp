@@ -36,16 +36,16 @@ public:
   nsLookAndFeel();
   virtual ~nsLookAndFeel();
 
-  virtual nsresult NativeGetColor(ColorID aID, nscolor &aResult);
-  virtual nsresult GetIntImpl(IntID aID, int32_t &aResult);
-  virtual nsresult GetFloatImpl(FloatID aID, float &aResult);
-  virtual bool GetFontImpl(FontID aID, nsString& aFontName,
-                           gfxFontStyle& aFontStyle,
-                           float aDevPixPerCSSPixel);
-  virtual char16_t GetPasswordCharacterImpl();
+  nsresult NativeGetColor(ColorID aID, nscolor &aResult) override;
+  nsresult GetIntImpl(IntID aID, int32_t &aResult) override;
+  nsresult GetFloatImpl(FloatID aID, float &aResult) override;
+  bool GetFontImpl(FontID aID, nsString& aFontName,
+                   gfxFontStyle& aFontStyle,
+                   float aDevPixPerCSSPixel) override;
+  char16_t GetPasswordCharacterImpl() override;
 
-  virtual nsTArray<LookAndFeelInt> GetIntCacheImpl();
-  virtual void SetIntCacheImpl(const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache);
+  nsTArray<LookAndFeelInt> GetIntCacheImpl() override;
+  void SetIntCacheImpl(const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) override;
 
 private:
   // Content process cached values that get shipped over from the browser
