@@ -9,4 +9,5 @@ DevToolsModules(
     'panel.js',
     'parser-worker.js',
     'pretty-print-worker.js',
+    'search-worker.js',
 )
