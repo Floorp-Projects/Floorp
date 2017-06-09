@@ -167,6 +167,11 @@ this.UITour = {
         return gPhotonStructure ? "appMenu-developer-button" : "developer-button";
       },
     }],
+    ["forget", {
+      allowAdd: true,
+      query: "#panic-button",
+      widgetName: "panic-button",
+    }],
     ["help", {
       query: (aDocument) => {
         let buttonId = gPhotonStructure ? "appMenu-help-button" : "PanelUI-help";
@@ -174,10 +179,12 @@ this.UITour = {
       }
     }],
     ["home",        {query: "#home-button"}],
-    ["forget", {
-      allowAdd: true,
-      query: "#panic-button",
-      widgetName: "panic-button",
+    ["library", {
+     query: (aDocument) => {
+        let buttonId = "appMenu-library-button";
+        return gPhotonStructure ?
+          aDocument.getElementById(buttonId) : null;
+      }
     }],
     ["pocket", {
       allowAdd: true,
