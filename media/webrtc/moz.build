@@ -134,7 +134,11 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
 
     if CONFIG['ENABLE_TESTS']:
         TEST_DIRS += [
-            'signaling/fuzztest',
             'signaling/gtest',
             'trunk/gtest',
+        ]
+
+    if CONFIG['FUZZING']:
+        TEST_DIRS += [
+            'signaling/fuzztest'
         ]
