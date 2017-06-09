@@ -124,13 +124,13 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
     nsSVGUtils::PaintFrameWithEffects(kid, *tmpCtx, m, aParams.imgParams);
   }
 
-  if (StyleSVG()->mColorInterpolation ==
-    NS_STYLE_COLOR_INTERPOLATION_LINEARRGB) {
-    maskType = NS_STYLE_COLOR_INTERPOLATION_LINEARRGB;
-  }
-
   RefPtr<SourceSurface> surface;
   if (maskType == NS_STYLE_MASK_TYPE_LUMINANCE) {
+    if (StyleSVG()->mColorInterpolation ==
+        NS_STYLE_COLOR_INTERPOLATION_LINEARRGB) {
+      maskType = NS_STYLE_COLOR_INTERPOLATION_LINEARRGB;
+    }
+
     RefPtr<SourceSurface> maskSnapshot =
       maskDT->IntoLuminanceSource(GetLuminanceType(maskType),
                                   aParams.opacity);
