@@ -427,10 +427,6 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   // mDuration
   mWatchManager.Watch(mStateMachineDuration, &MediaDecoder::DurationChanged);
 
-  // mStateMachineIsShutdown
-  mWatchManager.Watch(mStateMachineIsShutdown,
-                      &MediaDecoder::ShutdownBitChanged);
-
   // readyState
   mWatchManager.Watch(mPlayState, &MediaDecoder::UpdateReadyState);
   mWatchManager.Watch(mNextFrameStatus, &MediaDecoder::UpdateReadyState);

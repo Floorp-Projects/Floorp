@@ -538,9 +538,6 @@ protected:
   // State-watching manager.
   WatchManager<MediaDecoder> mWatchManager;
 
-  // Used by the ogg decoder to watch mStateMachineIsShutdown.
-  virtual void ShutdownBitChanged() {}
-
   double ExplicitDuration() { return mExplicitDuration.Ref().ref(); }
 
   void SetExplicitDuration(double aValue)
