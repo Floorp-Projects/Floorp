@@ -155,6 +155,7 @@ void Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
 StyleChildrenIteratorOwnedOrNull Gecko_MaybeCreateStyleChildrenIterator(RawGeckoNodeBorrowed node);
 void Gecko_DropStyleChildrenIterator(StyleChildrenIteratorOwned it);
 RawGeckoNodeBorrowedOrNull Gecko_GetNextStyleChild(StyleChildrenIteratorBorrowedMut it);
+bool Gecko_ElementHasBindingWithAnonymousContent(RawGeckoElementBorrowed element);
 
 // Selector Matching.
 uint64_t Gecko_ElementState(RawGeckoElementBorrowed element);
