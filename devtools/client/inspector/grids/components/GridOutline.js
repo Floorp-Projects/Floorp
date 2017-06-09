@@ -297,6 +297,7 @@ module.exports = createClass({
 
     return dom.g(
       {
+        id: "grid-cell-group",
         "className": "grid-cell-group",
         "data-grid-line-color": color,
         "style": { color }
@@ -329,6 +330,7 @@ module.exports = createClass({
     return showOutline ?
       dom.svg(
         {
+          id: "grid-outline",
           width: "100%",
           height: this.getHeight(),
           viewBox: `${TRANSLATE_X} ${TRANSLATE_Y} ${width} ${height}`,
@@ -345,7 +347,8 @@ module.exports = createClass({
     return selectedGrid ?
       dom.div(
         {
-          className: "grid-outline",
+          id: "grid-outline-container",
+          className: "grid-outline-container",
         },
         this.renderOutline()
       )
