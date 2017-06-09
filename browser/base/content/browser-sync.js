@@ -322,12 +322,12 @@ var gSync = {
       addTargetDevice(client.id, client.name, client.type);
     }
 
-    // "Send to All Devices" menu item
+    // "All devices" menu item
     if (clients.length > 1) {
       const separator = createDeviceNodeFn();
       separator.classList.add("sync-menuitem");
       fragment.appendChild(separator);
-      const allDevicesLabel = this.fxaStrings.GetStringFromName("sendToAllDevices.menuitem");
+      const allDevicesLabel = this.fxaStrings.GetStringFromName("sendTabToAllDevices.menuitem");
       addTargetDevice("", allDevicesLabel, "");
     }
 
