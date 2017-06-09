@@ -13,6 +13,8 @@ const ONBOARDING_CSS_URL = "resource://onboarding/onboarding.css";
 const ABOUT_HOME_URL = "about:home";
 const ABOUT_NEWTAB_URL = "about:newtab";
 const BUNDLE_URI = "chrome://onboarding/locale/onboarding.properties";
+const UITOUR_JS_URI = "chrome://browser/content/UITour-lib.js";
+const TOUR_AGENT_JS_URI = "resource://onboarding/onboarding-tour-agent.js";
 const BRAND_SHORT_NAME = Services.strings
                      .createBundle("chrome://branding/locale/brand.properties")
                      .GetStringFromName("brandShortName");
@@ -48,6 +50,9 @@ var onboardingTours = [
         <section class="onboarding-tour-content">
           <img src="resource://onboarding/img/figure_private.svg" />
         </section>
+        <aside class="onboarding-tour-button">
+          <button id="onboarding-tour-private-browsing-button" data-l10n-id="onboarding.tour-private-browsing.button"></button>
+        </aside>
       `;
       return div;
     },
@@ -73,6 +78,9 @@ var onboardingTours = [
         <section class="onboarding-tour-content">
           <img src="resource://onboarding/img/figure_search.svg" />
         </section>
+        <aside class="onboarding-tour-button">
+          <button id="onboarding-tour-search-button" data-l10n-id="onboarding.tour-search.button"></button>
+        </aside>
       `;
       return div;
     },
@@ -108,6 +116,9 @@ class Onboarding {
     this._overlay = this._renderOverlay();
     this._window.document.body.appendChild(this._overlayIcon);
     this._window.document.body.appendChild(this._overlay);
+
+    this._loadJS(UITOUR_JS_URI);
+    this._loadJS(TOUR_AGENT_JS_URI);
 
     this._overlayIcon.addEventListener("click", this);
     this._overlay.addEventListener("click", this);
@@ -242,6 +253,14 @@ class Onboarding {
       link.addEventListener("load", resolve);
       doc.head.appendChild(link);
     });
+  }
+
+  _loadJS(uri) {
+    let doc = this._window.document;
+    let script = doc.createElement("script");
+    script.type = "text/javascript";
+    script.src = uri;
+    doc.head.appendChild(script);
   }
 }
 
