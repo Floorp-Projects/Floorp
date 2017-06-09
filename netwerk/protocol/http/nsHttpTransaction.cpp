@@ -820,6 +820,37 @@ nsHttpTransaction::WritePipeSegment(nsIOutputStream *stream,
     return rv; // failure code only stops WriteSegments; it is not propagated.
 }
 
+bool nsHttpTransaction::ShouldStopReading()
+{
+    if (mActivatedAsH2) {
+        // Throttling feature is now disabled for http/2 transactions
+        // because of bug 1367861.  The logic around mActivatedAsH2
+        // will be removed when that is fixed
+        return false;
+    }
+
+    if (!gHttpHandler->ConnMgr()->ShouldStopReading(
+            this, mClassOfService & nsIClassOfService::Throttleable)) {
+        // We are not obligated to throttle
+        return false;
+    }
+
+    if (mContentRead < 16000) {
+        // Let the first bytes go, it may also well be all the content we get
+        LOG(("nsHttpTransaction::ShouldStopReading too few content (%" PRIi64 ") this=%p", mContentRead, this));
+        return false;
+    }
+
+    if (gHttpHandler->ConnMgr()->IsConnEntryUnderPressure(mConnInfo)) {
+        LOG(("nsHttpTransaction::ShouldStopReading entry pressure this=%p", this));
+        // This is expensive to check (two hashtable lookups) but may help
+        // freeing connections for active tab transactions.
+        return false;
+    }
+
+    return true;
+}
+
 nsresult
 nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
                                  uint32_t count, uint32_t *countWritten)
@@ -832,15 +863,10 @@ nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
         return NS_SUCCEEDED(mStatus) ? NS_BASE_STREAM_CLOSED : mStatus;
     }
 
-    // Throttling feature is now disabled for http/2 transactions
-    // because of bug 1367861.  The logic around mActivatedAsH2
-    // will be removed when that is fixed
-    if (!mActivatedAsH2 &&
-        gHttpHandler->ConnMgr()->ShouldStopReading(this,
-            mClassOfService & nsIClassOfService::Throttleable)) {
-        LOG(("nsHttpTransaction::WriteSegments %p response throttled", this));
+    if (ShouldStopReading()) {
         // Must remember that we have to call ResumeRecv() on our connection when
         // called back by the conn manager to resume reading.
+        LOG(("nsHttpTransaction::WriteSegments %p response throttled", this));
         mReadingStopped = true;
         // This makes the underlaying connection or stream wait for explicit resume.
         // For h1 this means we stop reading from the socket.

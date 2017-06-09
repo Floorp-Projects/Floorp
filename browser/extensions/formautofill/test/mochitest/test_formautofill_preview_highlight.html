@@ -1,0 +1,171 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test form autofill - preview and highlight</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="formautofill_common.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Form autofill test: preview and highlight
+
+<script>
+/* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/SpawnTask.js */
+/* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
+/* import-globals-from formautofill_common.js */
+
+"use strict";
+
+let expectingPopup = null;
+let defaultTextColor;
+const MOCK_STORAGE = [{
+  organization: "Sesame Street",
+  "street-address": "123 Sesame Street.",
+  tel: "1-345-345-3456",
+}, {
+  organization: "Mozilla",
+  "street-address": "331 E. Evelyn Avenue",
+}, {
+  organization: "Tel org",
+  tel: "2-222-333-444",
+}];
+
+function expectPopup() {
+  info("expecting a popup");
+  return new Promise(resolve => {
+    expectingPopup = resolve;
+  });
+}
+
+function popupShownListener() {
+  info("popup shown for test ");
+  if (expectingPopup) {
+    expectingPopup();
+    expectingPopup = null;
+  }
+}
+
+// We could not get ManuallyManagedState of element now, so directly check if
+// filter and text color style are applied.
+function checkFieldPreview(elem, expectedText) {
+  const computedStyle = window.getComputedStyle(elem);
+  const isStyleApplied = computedStyle.getPropertyValue("filter") !== "none" &&
+                         computedStyle.getPropertyValue("color") !== defaultTextColor;
+
+  is(SpecialPowers.wrap(elem).previewValue, expectedText, `Checking #${elem.id} previewValue`);
+  is(isStyleApplied, !!expectedText, `Checking #${elem.id} preview style`);
+}
+
+function checkFilledFieldHighlight(elem, expectedValue) {
+  const computedStyle = window.getComputedStyle(elem);
+  const isStyleApplied = computedStyle.getPropertyValue("filter") !== "none" &&
+                         computedStyle.getPropertyValue("color") === defaultTextColor;
+
+  is(SpecialPowers.wrap(elem).previewValue, "", `Checking #${elem.id} filled previewValue`);
+  is(expectedValue, isStyleApplied, `Checking #${elem.id} filled style`);
+}
+
+function checkFormPreviewFields(previewingAddress) {
+  const inputs = document.querySelectorAll("input");
+
+  for (const input of inputs) {
+    const previewValue = previewingAddress && previewingAddress[input.id] || "";
+
+    checkFieldPreview(input, previewValue);
+  }
+}
+
+function checkFormFilledFields(address) {
+  const inputs = document.querySelectorAll("input");
+
+  for (const input of inputs) {
+    const isFilledByAutofill = !!address[input.id];
+
+    checkFilledFieldHighlight(input, isFilledByAutofill);
+  }
+}
+
+function confirmAllFieldsFilled(address) {
+  const pendingPromises = [];
+
+  for (const prop in address) {
+    const element = document.getElementById(prop);
+
+    pendingPromises.push(new Promise(resolve => {
+      element.addEventListener("change", resolve, {once: true});
+    }));
+  }
+
+  return Promise.all(pendingPromises);
+}
+
+add_task(async function setup_storage() {
+  defaultTextColor = window.getComputedStyle(document.querySelector("input")).getPropertyValue("color");
+
+  await addAddress(MOCK_STORAGE[0]);
+  await addAddress(MOCK_STORAGE[1]);
+  await addAddress(MOCK_STORAGE[2]);
+});
+
+add_task(async function check_preview() {
+  const focusedInput = await setInput("#organization", "");
+
+  doKey("down");
+  await expectPopup();
+  checkFormPreviewFields();
+
+  for (let i = 0; i < MOCK_STORAGE.length; i++) {
+    doKey("down");
+    await notifySelectedIndex(i);
+    checkFormPreviewFields(MOCK_STORAGE[i]);
+  }
+
+  doKey("down");
+  await notifySelectedIndex(-1);
+  checkFormPreviewFields();
+
+  focusedInput.blur();
+});
+
+add_task(async function check_filled_highlight() {
+  const focusedInput = await setInput("#organization", "");
+
+  doKey("down");
+  await expectPopup();
+
+  doKey("down");
+  await notifySelectedIndex(0);
+  const waitForFilled = confirmAllFieldsFilled(MOCK_STORAGE[0]);
+
+  // filled 1st address
+  doKey("return");
+  // blur to fire off change event from focusedInput
+  focusedInput.blur();
+  await waitForFilled;
+  checkFormFilledFields(MOCK_STORAGE[0]);
+});
+
+registerPopupShownListener(popupShownListener);
+
+</script>
+
+<p id="display"></p>
+
+<div id="content">
+
+  <form id="form1">
+    <p>This is a basic form.</p>
+    <p><label>organization: <input id="organization" autocomplete="organization"></label></p>
+    <p><label>streetAddress: <input id="street-address" autocomplete="street-address"></label></p>
+    <p><label>tel: <input id="tel" autocomplete="tel"></label></p>
+    <p><label>country: <input id="country" autocomplete="country"></label></p>
+  </form>
+
+</div>
+
+<pre id="test"></pre>
+</body>
+</html>

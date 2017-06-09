@@ -16,7 +16,7 @@ var test = Task.async(function* () {
   };
   var dbg = initDebugger(TAB_URL, options);
   const [tab,, panel] = yield dbg;
-  const debuggerLineNumber = 24;
+  const debuggerLineNumber = 26;
   const scopes = waitForCaretAndScopes(panel, debuggerLineNumber);
   callInTab(tab, "doPause");
   yield scopes;
@@ -40,7 +40,7 @@ var test = Task.async(function* () {
   obj.expand();
   yield expanded;
 
-  let values = ["", " ", "\r", "\n", "\t", "\f", "\uFEFF", "\xA0"];
+  let values = ["", " ", "\r", "\n", "\t", "\f", "\uFEFF", "\xA0", "\u2028", "\u2029"];
   let count = values.length;
 
   for (let [property, value] of obj) {

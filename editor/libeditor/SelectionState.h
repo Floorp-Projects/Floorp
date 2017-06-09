@@ -67,7 +67,7 @@ public:
   void MakeEmpty();
   bool IsEmpty();
 private:
-  nsTArray<RefPtr<RangeItem>> mArray;
+  AutoTArray<RefPtr<RangeItem>, 1> mArray;
 
   friend class RangeUpdater;
   friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,

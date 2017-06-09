@@ -6,6 +6,7 @@
 
 #include "SandboxInitialization.h"
 
+#include "sandbox/win/src/restricted_token.h"
 #include "sandbox/win/src/sandbox_factory.h"
 #include "mozilla/sandboxing/permissionsService.h"
 
@@ -76,6 +77,22 @@ GetInitializedBrokerServices()
     InitializeBrokerServices();
 
   return sInitializedBrokerServices;
+}
+
+void
+NetworkDriveCheck()
+{
+  wchar_t exePath[MAX_PATH];
+  if (!::GetModuleFileNameW(nullptr, exePath, MAX_PATH)) {
+    return;
+  }
+
+  wchar_t volPath[MAX_PATH];
+  if (!::GetVolumePathNameW(exePath, volPath, MAX_PATH)) {
+    return;
+  }
+
+  sandbox::gUseRestricting = (::GetDriveTypeW(volPath) != DRIVE_REMOTE);
 }
 
 PermissionsService* GetPermissionsService()
