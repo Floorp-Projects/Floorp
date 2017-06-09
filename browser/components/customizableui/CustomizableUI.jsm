@@ -1523,8 +1523,7 @@ var CustomizableUIInternal = {
       if (areaType != CustomizableUI.TYPE_MENU_PANEL) {
         let wrapper = this.wrapWidget(aWidget.id).forWindow(ownerWindow);
 
-        let hasMultiView = !!aNode.closest("photonpanelmultiview,panelmultiview");
-        if (wrapper && !hasMultiView && wrapper.anchor) {
+        if (wrapper && !wrapper.overflowed && wrapper.anchor) {
           this.hidePanelForNode(aNode);
           anchor = wrapper.anchor;
         }
@@ -1727,13 +1726,9 @@ var CustomizableUIInternal = {
 
     if (closemenu == "single") {
       let panel = this._getPanelForNode(target);
-      let multiview = panel.querySelector("photonpanelmultiview,panelmultiview");
+      let multiview = panel.querySelector("panelmultiview");
       if (multiview.showingSubView) {
-        if (multiview.instance.panelViews) {
-          multiview.goBack();
-        } else {
-          multiview.showMainView();
-        }
+        multiview.showMainView();
         return;
       }
     }
@@ -4161,15 +4156,9 @@ OverflowableToolbar.prototype = {
     return new Promise(resolve => {
       let doc = this._panel.ownerDocument;
       this._panel.hidden = false;
-      let photonView = this._panel.querySelector("photonpanelmultiview");
-      let contextMenu;
-      if (photonView) {
-        let mainViewId = photonView.getAttribute("mainViewId");
-        let mainView = doc.getElementById(mainViewId);
-        contextMenu = doc.getElementById(mainView.getAttribute("context"));
-      } else {
-        contextMenu = doc.getElementById(this._panel.getAttribute("context"));
-      }
+      let mainViewId = this._panel.querySelector("panelmultiview").getAttribute("mainViewId");
+      let mainView = doc.getElementById(mainViewId);
+      let contextMenu = doc.getElementById(mainView.getAttribute("context"));
       gELS.addSystemEventListener(contextMenu, "command", this, true);
       let anchor = doc.getAnonymousElementByAttribute(this._chevron, "class", "toolbarbutton-icon");
       // Ensure we update the gEditUIVisible flag when opening the popup, in
