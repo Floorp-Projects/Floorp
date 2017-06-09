@@ -628,6 +628,34 @@ Classifier::RemoveUpdateIntermediaries()
 }
 
 void
+Classifier::CopyAndInvalidateFullHashCache()
+{
+  MOZ_ASSERT(NS_GetCurrentThread() != mUpdateThread,
+             "CopyAndInvalidateFullHashCache cannot be called on update thread "
+             "since it mutates mLookupCaches which is only safe on "
+             "worker thread.");
+
+  // New lookup caches are built from disk, data likes cache which is
+  // generated online won't exist. We have to manually copy cache from
+  // old LookupCache to new LookupCache.
+  for (auto& newCache: mNewLookupCaches) {
+    for (auto& oldCache: mLookupCaches) {
+      if (oldCache->TableName() == newCache->TableName()) {
+        newCache->CopyFullHashCache(oldCache);
+        break;
+      }
+    }
+  }
+
+  // Clear cache when update.
+  // Invalidate cache entries in CopyAndInvalidateFullHashCache because only
+  // at this point we will have cache data in LookupCache.
+  for (auto& newCache: mNewLookupCaches) {
+    newCache->InvalidateExpiredCacheEntries();
+  }
+}
+
+void
 Classifier::MergeNewLookupCaches()
 {
   MOZ_ASSERT(NS_GetCurrentThread() != mUpdateThread,
@@ -860,6 +888,10 @@ Classifier::ApplyUpdatesForeground(nsresult aBackgroundRv,
     return NS_OK;
   }
   if (NS_SUCCEEDED(aBackgroundRv)) {
+    // Copy and Invalidate fullhash cache here because this call requires
+    // mLookupCaches which is only available on work-thread
+    CopyAndInvalidateFullHashCache();
+
     return SwapInNewTablesAndCleanup();
   }
   if (NS_ERROR_OUT_OF_MEMORY != aBackgroundRv) {
@@ -1223,9 +1255,6 @@ Classifier::UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
     return NS_ERROR_UC_UPDATE_TABLE_NOT_FOUND;
   }
 
-  // Clear cache when update
-  lookupCache->InvalidateExpiredCacheEntries();
-
   FallibleTArray<uint32_t> AddPrefixHashes;
   rv = lookupCache->GetPrefixes(AddPrefixHashes);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1314,11 +1343,6 @@ Classifier::UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
   if (!lookupCache) {
     return NS_ERROR_UC_UPDATE_TABLE_NOT_FOUND;
   }
-
-  // Remove cache entries whose negative cache time is expired when update.
-  // We don't check if positive cache time is expired here because we want to
-  // keep the eviction rule simple when doing an update.
-  lookupCache->InvalidateExpiredCacheEntries();
 
   nsresult rv = NS_OK;
 

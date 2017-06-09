@@ -148,7 +148,7 @@ LookupCache::CheckCache(const Completion& aCompletion,
 
   uint32_t prefix = aCompletion.ToUint32();
 
-  CachedFullHashResponse* fullHashResponse = mCache.Get(prefix);
+  CachedFullHashResponse* fullHashResponse = mFullHashCache.Get(prefix);
   if (!fullHashResponse) {
     return NS_OK;
   }
@@ -178,7 +178,7 @@ LookupCache::CheckCache(const Completion& aCompletion,
         fullHashes.Remove(completion);
         if (fullHashes.Count() == 0 &&
             fullHashResponse->negativeCacheExpirySec < nowSec) {
-          mCache.Remove(prefix);
+          mFullHashCache.Remove(prefix);
         }
       }
     }
@@ -193,7 +193,7 @@ LookupCache::CheckCache(const Completion& aCompletion,
   } else {
     LOG(("Found an expired prefix in the negative cache"));
     if (fullHashes.Count() == 0) {
-      mCache.Remove(prefix);
+      mFullHashCache.Remove(prefix);
     }
   }
 
@@ -209,7 +209,7 @@ LookupCache::InvalidateExpiredCacheEntries()
 {
   int64_t nowSec = PR_Now() / PR_USEC_PER_SEC;
 
-  for (auto iter = mCache.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mFullHashCache.Iter(); !iter.Done(); iter.Next()) {
     CachedFullHashResponse* response = iter.Data();
     if (response->negativeCacheExpirySec < nowSec) {
       iter.Remove();
@@ -218,9 +218,20 @@ LookupCache::InvalidateExpiredCacheEntries()
 }
 
 void
+LookupCache::CopyFullHashCache(const LookupCache* aSource)
+{
+  if (!aSource) {
+    return;
+  }
+
+  CopyClassHashTable<FullHashResponseMap>(aSource->mFullHashCache,
+                                          mFullHashCache);
+}
+
+void
 LookupCache::ClearCache()
 {
-  mCache.Clear();
+  mFullHashCache.Clear();
 }
 
 void
@@ -239,7 +250,7 @@ LookupCache::GetCacheInfo(nsIUrlClassifierCacheInfo** aCache)
   RefPtr<nsUrlClassifierCacheInfo> info = new nsUrlClassifierCacheInfo;
   info->table = mTableName;
 
-  for (auto iter = mCache.ConstIter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mFullHashCache.ConstIter(); !iter.Done(); iter.Next()) {
     RefPtr<nsUrlClassifierCacheEntry> entry = new nsUrlClassifierCacheEntry;
 
     // Set prefix of the cache entry.
@@ -505,7 +516,7 @@ LookupCache::DumpCache()
     return;
   }
 
-  for (auto iter = mCache.ConstIter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mFullHashCache.ConstIter(); !iter.Done(); iter.Next()) {
     CachedFullHashResponse* response = iter.Data();
 
     nsAutoCString prefix;
@@ -640,7 +651,7 @@ LookupCacheV2::AddGethashResultToCache(AddCompleteArray& aAddCompletes,
                                        MissPrefixArray& aMissPrefixes,
                                        int64_t aExpirySec)
 {
-  int64_t defaultExpirySec  = PR_Now() / PR_USEC_PER_SEC + V2_CACHE_DURATION_SEC;
+  int64_t defaultExpirySec = PR_Now() / PR_USEC_PER_SEC + V2_CACHE_DURATION_SEC;
   if (aExpirySec != 0) {
     defaultExpirySec = aExpirySec;
   }
@@ -649,7 +660,8 @@ LookupCacheV2::AddGethashResultToCache(AddCompleteArray& aAddCompletes,
     nsDependentCSubstring fullhash(
       reinterpret_cast<const char*>(add.CompleteHash().buf), COMPLETE_SIZE);
 
-    CachedFullHashResponse* response = mCache.LookupOrAdd(add.ToUint32());
+    CachedFullHashResponse* response =
+      mFullHashCache.LookupOrAdd(add.ToUint32());
     response->negativeCacheExpirySec = defaultExpirySec;
 
     FullHashExpiryCache& fullHashes = response->fullHashes;
@@ -657,7 +669,9 @@ LookupCacheV2::AddGethashResultToCache(AddCompleteArray& aAddCompletes,
   }
 
   for (const Prefix& prefix : aMissPrefixes) {
-    CachedFullHashResponse* response = mCache.LookupOrAdd(prefix.ToUint32());
+    CachedFullHashResponse* response =
+      mFullHashCache.LookupOrAdd(prefix.ToUint32());
+
     response->negativeCacheExpirySec = defaultExpirySec;
   }
 }
