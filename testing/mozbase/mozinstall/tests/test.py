@@ -113,6 +113,10 @@ class TestMozInstall(unittest.TestCase):
             self.assertRaises(mozinstall.InvalidSource, mozinstall.install,
                               self.bz2, 'firefox')
 
+        # Test an invalid url handler
+        self.assertRaises(mozinstall.InvalidSource, mozinstall.install,
+                          'file://foo.bar', 'firefox')
+
     @unittest.skipIf(mozinfo.isWin, "Bug 1157352 - We need a new firefox.exe "
                      "for mozinstall 1.12 and higher.")
     def test_install(self):
@@ -166,6 +170,7 @@ class TestMozInstall(unittest.TestCase):
             installdir = mozinstall.install(self.dmg, self.tempdir)
             mozinstall.uninstall(installdir)
             self.assertFalse(os.path.exists(installdir))
+
 
 if __name__ == '__main__':
     mozunit.main()

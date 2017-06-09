@@ -33,6 +33,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "BatteryManager.h"
+#include "mozilla/dom/CredentialsContainer.h"
 #include "mozilla/dom/GamepadServiceTest.h"
 #include "mozilla/dom/PowerManager.h"
 #include "mozilla/dom/WakeLock.h"
@@ -48,7 +49,6 @@
 #include "mozilla/dom/VRDisplay.h"
 #include "mozilla/dom/VRDisplayEvent.h"
 #include "mozilla/dom/VRServiceTest.h"
-#include "mozilla/dom/WebAuthentication.h"
 #include "mozilla/dom/workers/RuntimeService.h"
 #include "mozilla/Hal.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -205,7 +205,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPowerManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConnection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStorageManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAuthentication)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCredentials)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaDevices)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTimeManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mServiceWorkerContainer)
@@ -2001,13 +2001,13 @@ Navigator::GetPresentation(ErrorResult& aRv)
   return mPresentation;
 }
 
-WebAuthentication*
-Navigator::Authentication()
+CredentialsContainer*
+Navigator::Credentials()
 {
-  if (!mAuthentication) {
-    mAuthentication = new WebAuthentication(GetWindow());
+  if (!mCredentials) {
+    mCredentials = new CredentialsContainer(GetWindow());
   }
-  return mAuthentication;
+  return mCredentials;
 }
 
 } // namespace dom

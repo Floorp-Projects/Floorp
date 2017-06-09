@@ -24,6 +24,7 @@ this.runtime = class extends ExtensionAPI {
 
         sendMessage(...args) {
           let extensionId, message, options, responseCallback;
+
           if (typeof args[args.length - 1] === "function") {
             responseCallback = args.pop();
           }
@@ -55,18 +56,18 @@ this.runtime = class extends ExtensionAPI {
             message = args[0];
           } else if (args.length === 2) {
             // With two optional arguments, this is the ambiguous case,
-            // particularly sendMessage("string", {});
+            // particularly sendMessage("string", {} or null)
             // Given that sending a message within the extension is generally
             // more common than sending the empty object to another extension,
             // we prefer that conclusion, as long as the second argument looks
-            // like valid options.
+            // like valid options object, or is null/undefined.
             let [validOpts] = checkOptions(args[1]);
-            if (validOpts) {
+            if (validOpts || args[1] == null) {
               [message, options] = args;
             } else {
               [extensionId, message] = args;
             }
-          } else if (args.length === 3) {
+          } else if (args.length === 3 || (args.length === 4 && args[3] == null)) {
             [extensionId, message, options] = args;
           } else if (args.length === 4 && !responseCallback) {
             return Promise.reject({message: "runtime.sendMessage's last argument is not a function"});

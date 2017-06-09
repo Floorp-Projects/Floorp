@@ -180,8 +180,8 @@ class LocalesMixin(ChunkingMixin):
             dirs['abs_locales_src_dir'] = os.path.join(dirs['abs_mozilla_dir'],
                                                        c['locales_dir'])
             dirs['abs_compare_locales_dir'] = os.path.join(dirs['abs_mozilla_dir'],
-                                                           'python', 'compare-locales',
-                                                           'compare_locales')
+                                                           'third_party', 'python',
+                                                           'compare-locales', 'compare_locales')
         else:
             # Use old-compare-locales if no mozilla_dir set, needed
             # for clobberer, and existing mozharness tests.

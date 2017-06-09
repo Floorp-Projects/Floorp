@@ -25,11 +25,12 @@ SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
                                    ["security.webauth.webauthn_enable_softtoken", true],
                                    ["security.webauth.webauthn_enable_usbtoken", false]]},
 function() {
-  isnot(navigator.authentication, undefined, "WebAuthn API endpoint must exist");
-  isnot(navigator.authentication.makeCredential, undefined, "WebAuthn makeCredential API endpoint must exist");
-  isnot(navigator.authentication.getAssertion, undefined, "WebAuthn getAssertion API endpoint must exist");
+  is(navigator.authentication, undefined, "navigator.authentication does not exist any longer");
+  isnot(navigator.credentials, undefined, "Credential Management API endpoint must exist");
+  isnot(navigator.credentials.create, undefined, "CredentialManagement create API endpoint must exist");
+  isnot(navigator.credentials.get, undefined, "CredentialManagement get API endpoint must exist");
 
-  let authn = navigator.authentication;
+  let credm = navigator.credentials;
 
   let gCredentialChallenge = new Uint8Array(16);
   window.crypto.getRandomValues(gCredentialChallenge);
@@ -39,28 +40,23 @@ function() {
   testMakeCredential();
 
   function checkCredentialValid(aCredInfo) {
-    /* ScopedCredentialInfo
-    - Credential
-    -- ID: Key Handle buffer pulled from U2F Register() Response
-    -- Type: "ScopedCred"
-    - WebAuthnAttestation
-    -- Format: "u2f"
-    -- ClientData: serialized JSON
-    -- AuthenticatorData: RP ID Hash || U2F Sign() Response
-    -- Attestation: U2F Register() Response */
+    /* PublicKeyCredential : Credential
+       - rawId: Key Handle buffer pulled from U2F Register() Response
+       - response : AuthenticatorAttestationResponse : AuthenticatorResponse
+         - attestationObject: RP ID Hash || U2F Sign() Response
+         - clientDataJSON: serialized JSON
+       - clientExtensionResults: (not yet supported)
+    */
 
-    is(aCredInfo.credential.type, "ScopedCred", "Type is correct");
-    ok(aCredInfo.credential.id.length > 0, "Key ID exists");
+    ok(aCredInfo.rawId.length > 0, "Key ID exists");
 
-    is(aCredInfo.attestation.format, "u2f", "Format is correct");
-    is(aCredInfo.attestation.attestation[0], 0x05, "Reserved byte is correct");
-    ok(aCredInfo.attestation.authenticatorData.length > 0, "Authenticator data exists");
-    let clientData = JSON.parse(buffer2string(aCredInfo.attestation.clientData));
+    is(aCredInfo.response.attestationObject[0], 0x05, "Reserved byte is correct");
+    let clientData = JSON.parse(buffer2string(aCredInfo.response.clientDataJSON));
     is(clientData.challenge, bytesToBase64UrlSafe(gCredentialChallenge), "Challenge is correct");
     is(clientData.origin, window.location.origin, "Origin is correct");
     is(clientData.hashAlg, "S256", "Hash algorithm is correct");
 
-    return decodeU2FRegistration(aCredInfo.attestation.attestation)
+    return decodeU2FRegistration(aCredInfo.response.attestationObject)
     .then(function(u2fObj) {
       aCredInfo.u2fReg = u2fObj;
       return aCredInfo;
@@ -68,37 +64,36 @@ function() {
   }
 
   function checkAssertionAndSigValid(aPublicKey, aAssertion) {
-    /* WebAuthnAssertion
-    - Credential
-    -- ID: ID of Credential from AllowList that succeeded
-    -- Type: "ScopedCred"
-    - ClientData: serialized JSON
-    - AuthenticatorData: RP ID Hash || U2F Sign() Response
-    - Signature: U2F Sign() Response */
+    /* PublicKeyCredential : Credential
+       - rawId: ID of Credential from AllowList that succeeded
+       - response : AuthenticatorAssertionResponse : AuthenticatorResponse
+         - clientDataJSON: serialized JSON
+         - authenticatorData: RP ID Hash || U2F Sign() Response
+         - signature: U2F Sign() Response
+    */
 
-    is(aAssertion.credential.type, "ScopedCred", "Type is correct");
-    ok(aAssertion.credential.id.length > 0, "Key ID exists");
+    ok(aAssertion.rawId.length > 0, "Key ID exists");
 
-    ok(aAssertion.authenticatorData.length > 0, "Authenticator data exists");
-    let clientData = JSON.parse(buffer2string(aAssertion.clientData));
+    ok(aAssertion.response.authenticatorData.length > 0, "Authenticator data exists");
+    let clientData = JSON.parse(buffer2string(aAssertion.response.clientDataJSON));
     is(clientData.challenge, bytesToBase64UrlSafe(gAssertionChallenge), "Challenge is correct");
     is(clientData.origin, window.location.origin, "Origin is correct");
     is(clientData.hashAlg, "S256", "Hash algorithm is correct");
 
     // Parse the signature data
-    if (aAssertion.signature[0] != 0x01) {
+    if (aAssertion.response.signature[0] != 0x01) {
       throw "User presence byte not set";
     }
-    let presenceAndCounter = aAssertion.signature.slice(0,5);
-    let signatureValue = aAssertion.signature.slice(5);
+    let presenceAndCounter = aAssertion.response.signature.slice(0,5);
+    let signatureValue = aAssertion.response.signature.slice(5);
 
-    let rpIdHash = aAssertion.authenticatorData.slice(0,32);
+    let rpIdHash = aAssertion.response.authenticatorData.slice(0,32);
 
     // Assemble the signed data and verify the signature
-    return deriveAppAndChallengeParam(clientData.origin, aAssertion.clientData)
+    return deriveAppAndChallengeParam(clientData.origin, aAssertion.response.clientDataJSON)
     .then(function(aParams) {
       console.log(aParams.appParam, rpIdHash, presenceAndCounter, aParams.challengeParam);
-      console.log("ClientData buffer: ", hexEncode(aAssertion.clientData));
+      console.log("ClientData buffer: ", hexEncode(aAssertion.response.clientDataJSON));
       console.log("ClientDataHash: ", hexEncode(aParams.challengeParam));
       return assembleSignedData(aParams.appParam, presenceAndCounter, aParams.challengeParam);
     })
@@ -109,10 +104,16 @@ function() {
   }
 
   function testMakeCredential() {
-    let acct = {rpDisplayName: "none", displayName: "none", id: "none"};
-    let param = {type: "ScopedCred", algorithm: "p-256"};
-
-    authn.makeCredential(acct, [param], gCredentialChallenge)
+    let rp = {id: document.origin, name: "none", icon: "none"};
+    let user = {id: "none", name: "none", icon: "none", displayName: "none"};
+    let param = {type: "public-key", algorithm: "P-256"};
+    let makeCredentialOptions = {
+      rp: rp,
+      user: user,
+      challenge: gCredentialChallenge,
+      parameters: [param]
+    };
+    credm.create({publicKey: makeCredentialOptions})
     .then(checkCredentialValid)
     .then(testMakeDuplicate)
     .catch(function(aReason) {
@@ -122,33 +123,43 @@ function() {
   }
 
   function testMakeDuplicate(aCredInfo) {
-    let acct = {rpDisplayName: "none", displayName: "none", id: "none"};
-    let param = {type: "ScopedCred", algorithm: "p-256"};
-    let options = {rpId: document.origin,
-                   excludeList: [aCredInfo.credential]};
-
-    authn.makeCredential(acct, [param], gCredentialChallenge, options)
+    let rp = {id: document.origin, name: "none", icon: "none"};
+    let user = {id: "none", name: "none", icon: "none", displayName: "none"};
+    let param = {type: "public-key", algorithm: "P-256"};
+    let makeCredentialOptions = {
+      rp: rp,
+      user: user,
+      challenge: gCredentialChallenge,
+      parameters: [param],
+      excludeList: [{type: "public-key", id: Uint8Array.from(aCredInfo.rawId),
+                     transports: ["usb"]}]
+    };
+    credm.create({publicKey: makeCredentialOptions})
     .then(function() {
       // We should have errored here!
       ok(false, "The excludeList didn't stop a duplicate being created!");
       SimpleTest.finish();
     })
     .catch(function(aReason) {
-      ok(aReason.toString().startsWith("NotAllowedError"), "Expect NotAllowedError, got" + aReason);
+      ok(aReason.toString().startsWith("NotAllowedError"), "Expect NotAllowedError, got " + aReason);
       testAssertion(aCredInfo);
     });
   }
 
   function testAssertion(aCredInfo) {
     let newCredential = {
-      type: aCredInfo.credential.type,
-      id: Uint8Array.from(aCredInfo.credential.id),
-      transports: [ "usb" ],
+      type: "public-key",
+      id: Uint8Array.from(aCredInfo.rawId),
+      transports: ["usb"],
     }
 
-    let assertOptions = {rpId: document.origin, timeoutSeconds: 5,
-                         allowList: [ newCredential ]};
-    authn.getAssertion(gAssertionChallenge, assertOptions)
+    let publicKeyCredentialRequestOptions = {
+      challenge: gAssertionChallenge,
+      timeout: 5000, // the minimum timeout is actually 15 seconds
+      rpId: document.origin,
+      allowList: [newCredential]
+    };
+    credm.get({publicKey: publicKeyCredentialRequestOptions})
     .then(function(aAssertion) {
       /* Pass along the pubKey. */
       return checkAssertionAndSigValid(aCredInfo.u2fReg.publicKey, aAssertion);

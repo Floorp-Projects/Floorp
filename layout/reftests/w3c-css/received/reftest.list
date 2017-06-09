@@ -1011,9 +1011,9 @@ fails-if(Android) == css-writing-modes-3/sizing-orthog-vlr-in-htb-021.xht css-wr
 == css-writing-modes-3/sizing-orthog-vlr-in-htb-022.xht css-writing-modes-3/sizing-orthog-vlr-in-htb-022-ref.xht
 == css-writing-modes-3/sizing-orthog-vlr-in-htb-023.xht css-writing-modes-3/sizing-orthog-vlr-in-htb-023-ref.xht
 == css-writing-modes-3/sizing-orthog-vlr-in-htb-024.xht css-writing-modes-3/sizing-orthog-vlr-in-htb-018-ref.xht
-== css-writing-modes-3/sizing-orthog-vrl-in-htb-001.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-001-ref.xht
+fails-if(stylo) == css-writing-modes-3/sizing-orthog-vrl-in-htb-001.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-001-ref.xht
 fails-if(Android) == css-writing-modes-3/sizing-orthog-vrl-in-htb-003.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-003-ref.xht
-== css-writing-modes-3/sizing-orthog-vrl-in-htb-004.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-004-ref.xht
+fails-if(stylo) == css-writing-modes-3/sizing-orthog-vrl-in-htb-004.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-004-ref.xht
 == css-writing-modes-3/sizing-orthog-vrl-in-htb-006.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-006-ref.xht
 == css-writing-modes-3/sizing-orthog-vrl-in-htb-007.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-007-ref.xht
 fails-if(OSX||winWidget||Android) == css-writing-modes-3/sizing-orthog-vrl-in-htb-008.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-008-ref.xht
@@ -1021,7 +1021,7 @@ fails-if(Android) == css-writing-modes-3/sizing-orthog-vrl-in-htb-009.xht css-wr
 == css-writing-modes-3/sizing-orthog-vrl-in-htb-010.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-010-ref.xht
 == css-writing-modes-3/sizing-orthog-vrl-in-htb-011.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-011-ref.xht
 == css-writing-modes-3/sizing-orthog-vrl-in-htb-012.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-012-ref.xht
-== css-writing-modes-3/sizing-orthog-vrl-in-htb-013.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-013-ref.xht
+fails-if(stylo) == css-writing-modes-3/sizing-orthog-vrl-in-htb-013.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-013-ref.xht
 fails-if(Android) == css-writing-modes-3/sizing-orthog-vrl-in-htb-015.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-015-ref.xht
 == css-writing-modes-3/sizing-orthog-vrl-in-htb-016.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-016-ref.xht
 == css-writing-modes-3/sizing-orthog-vrl-in-htb-018.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-018-ref.xht

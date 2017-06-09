@@ -1,0 +1,26 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <bindings xmlns="http://www.mozilla.org/xbl"
+              xmlns:xhtml="http://www.w3.org/1999/xhtml">
+      <binding id="a">
+        <content>
+          <span>This should be green</span>
+          <xhtml:p>
+            <children></children>
+          </xhtml:p>
+        </content>
+      </binding>
+    </bindings>
+    <style>
+      div > span { color: green; }
+      p > span { color: red !important; }
+      p { color: purple }
+    </style>
+  </head>
+  <body>
+    <div style="-moz-binding: url(#a)">
+      <span>This should also be green</span><br/>
+      <b>This should be purple</b>
+    </div>
+  </body>
+</html>

@@ -119,11 +119,11 @@ function isInDevEdition() {
 }
 
 function isInNightly() {
-  return AppConstants.NIGHTLY_BUILD && !AppConstants.MOZ_DEV_EDITION;
+  return AppConstants.NIGHTLY_BUILD;
 }
 
 function isNotReleaseOrBeta() {
-  return !AppConstants.RELEASE_OR_BETA;
+  return (isInDevEdition() || isInNightly());
 }
 
 function removeNonReleaseButtons(areaPanelPlacements) {

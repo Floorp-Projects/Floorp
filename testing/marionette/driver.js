@@ -884,7 +884,6 @@ GeckoDriver.prototype.execute_ = function (script, args, timeout, opts = {}) {
       let sb = this.sandboxes.get(opts.sandboxName, opts.newSandbox);
       if (opts.sandboxName) {
         sb = sandbox.augment(sb, new logging.Adapter(this.marionetteLog));
-        sb = sandbox.augment(sb, {global: sb});
       }
 
       opts.timeout = timeout;
