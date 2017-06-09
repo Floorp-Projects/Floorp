@@ -2726,6 +2726,7 @@ nsCookieService::AsyncReadComplete()
   NS_ASSERTION(mDefaultDBState->pendingRead, "no pending read");
   NS_ASSERTION(mDefaultDBState->readListener, "no read listener");
 
+  mozStorageTransaction transaction(mDefaultDBState->dbConn, false);
   // Merge the data read on the background thread with the data synchronously
   // read on the main thread. Note that transactions on the cookie table may
   // have occurred on the main thread since, making the background data stale.
@@ -2740,10 +2741,16 @@ nsCookieService::AsyncReadComplete()
 
     AddCookieToList(tuple.key, tuple.cookie, mDefaultDBState, nullptr, false);
   }
+  DebugOnly<nsresult> rv = transaction.Commit();
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   mDefaultDBState->stmtReadDomain = nullptr;
   mDefaultDBState->pendingRead = nullptr;
   mDefaultDBState->readListener = nullptr;
+
+  // Close sync connection asynchronously: if we let destructor close, it may
+  // cause an expensive fsync operation on the main-thread.
+  mDefaultDBState->syncConn->AsyncClose(nullptr);
   mDefaultDBState->syncConn = nullptr;
   mDefaultDBState->hostArray.Clear();
   mDefaultDBState->readSet.Clear();
@@ -2864,11 +2871,14 @@ nsCookieService::EnsureReadDomain(const nsCookieKey &aKey)
                                          aKey.mOriginAttributes));
   }
 
+  mozStorageTransaction transaction(mDefaultDBState->dbConn, false);
   // Add the cookies to the table in a single operation. This makes sure that
   // either all the cookies get added, or in the case of corruption, none.
   for (uint32_t i = 0; i < array.Length(); ++i) {
     AddCookieToList(aKey, array[i], mDefaultDBState, nullptr, false);
   }
+  rv = transaction.Commit();
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // Add it to the hashset of read entries, so we don't read it again.
   mDefaultDBState->readSet.PutEntry(aKey);
@@ -2956,6 +2966,7 @@ nsCookieService::EnsureReadComplete()
     tuple->cookie = GetCookieFromRow(stmt, attrs);
   }
 
+  mozStorageTransaction transaction(mDefaultDBState->dbConn, false);
   // Add the cookies to the table in a single operation. This makes sure that
   // either all the cookies get added, or in the case of corruption, none.
   for (uint32_t i = 0; i < array.Length(); ++i) {
@@ -2963,6 +2974,8 @@ nsCookieService::EnsureReadComplete()
     AddCookieToList(tuple.key, tuple.cookie, mDefaultDBState, nullptr,
       false);
   }
+  rv = transaction.Commit();
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   mDefaultDBState->syncConn = nullptr;
   mDefaultDBState->readSet.Clear();
@@ -4899,6 +4912,7 @@ nsCookieService::RemoveCookiesWithOriginAttributes(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  mozStorageTransaction transaction(mDBState->dbConn, false);
   // Iterate the hash table of nsCookieEntry.
   for (auto iter = mDBState->hostTable.Iter(); !iter.Done(); iter.Next()) {
     nsCookieEntry* entry = iter.Get();
@@ -4931,6 +4945,8 @@ nsCookieService::RemoveCookiesWithOriginAttributes(
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
+  DebugOnly<nsresult> rv = transaction.Commit();
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   return NS_OK;
 }
