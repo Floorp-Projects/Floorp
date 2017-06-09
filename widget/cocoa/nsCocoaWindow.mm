@@ -36,6 +36,7 @@
 #include "nsIPresShell.h"
 
 #include "gfxPlatform.h"
+#include "gfxPrefs.h"
 #include "qcms.h"
 
 #include "mozilla/AutoRestore.h"
@@ -2199,6 +2200,13 @@ nsCocoaWindow::SetWindowTransform(const gfx::Matrix& aTransform)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (!mWindow) {
+    return;
+  }
+
+  if (gfxPrefs::WindowTransformsDisabled()) {
+    // CGSSetWindowTransform is a private API. In case calling it causes
+    // problems either now or in the future, we'll want to have an easy kill
+    // switch. So we allow disabling it with a pref.
     return;
   }
 
