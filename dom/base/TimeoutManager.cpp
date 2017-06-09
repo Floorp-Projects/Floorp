@@ -491,6 +491,7 @@ TimeoutManager::ClearTimeout(int32_t aTimerId, Timeout::Reason aReason)
   uint32_t timerId = (uint32_t)aTimerId;
 
   bool firstTimeout = true;
+  bool deferredDeletion = false;
 
   ForEachUnorderedTimeoutAbortable([&](Timeout* aTimeout) {
     MOZ_LOG(gLog, LogLevel::Debug,
@@ -504,6 +505,7 @@ TimeoutManager::ClearTimeout(int32_t aTimerId, Timeout::Reason aReason)
            aTimeout for deferred deletion by the code in
            RunTimeout() */
         aTimeout->mIsInterval = false;
+        deferredDeletion = true;
       }
       else {
         /* Delete the aTimeout from the pending aTimeout list */
@@ -517,12 +519,19 @@ TimeoutManager::ClearTimeout(int32_t aTimerId, Timeout::Reason aReason)
     return false;
   });
 
-  if (!firstTimeout) {
+  // We don't need to reschedule the executor if any of the following are true:
+  //  * If the we weren't cancelling the first timeout, then the executor's
+  //    state doesn't need to change.  It will only reflect the next soonest
+  //    Timeout.
+  //  * If we did cancel the first Timeout, but its currently running, then
+  //    RunTimeout() will handle rescheduling the executor.
+  //  * If the window has become suspended then we should not start executing
+  //    Timeouts.
+  if (!firstTimeout || deferredDeletion || mWindow.IsSuspended()) {
     return;
   }
 
-  // If the first timeout was cancelled we need to stop the executor and
-  // restart at the next soonest deadline.
+  // Stop the executor and restart it at the next soonest deadline.
   mExecutor->Cancel();
 
   OrderedTimeoutIterator iter(mNormalTimeouts, mTrackingTimeouts);
