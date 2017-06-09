@@ -8,6 +8,7 @@
 #define VideoUtils_h
 
 #include "MediaInfo.h"
+#include "mozilla/AbstractThread.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MozPromise.h"
