@@ -1697,46 +1697,6 @@ nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime)
   }
 }
 
-struct RunnableWithDelay
-{
-  nsCOMPtr<nsIRunnable> mRunnable;
-  uint32_t mDelay;
-};
-
-static AutoTArray<RunnableWithDelay, 8>* sPendingIdleRunnables = nullptr;
-
-void
-nsRefreshDriver::DispatchIdleRunnableAfterTick(nsIRunnable* aRunnable,
-                                               uint32_t aDelay)
-{
-  if (!sPendingIdleRunnables) {
-    sPendingIdleRunnables = new AutoTArray<RunnableWithDelay, 8>();
-  }
-
-  RunnableWithDelay rwd = {aRunnable, aDelay};
-  sPendingIdleRunnables->AppendElement(rwd);
-}
-
-void
-nsRefreshDriver::CancelIdleRunnable(nsIRunnable* aRunnable)
-{
-  if (!sPendingIdleRunnables) {
-    return;
-  }
-
-  for (uint32_t i = 0; i < sPendingIdleRunnables->Length(); ++i) {
-    if ((*sPendingIdleRunnables)[i].mRunnable == aRunnable) {
-      sPendingIdleRunnables->RemoveElementAt(i);
-      break;
-    }
-  }
-
-  if (sPendingIdleRunnables->IsEmpty()) {
-    delete sPendingIdleRunnables;
-    sPendingIdleRunnables = nullptr;
-  }
-}
-
 void
 nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
 {
@@ -1999,7 +1959,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     }
   }
 
-  bool dispatchRunnablesAfterTick = false;
+  bool notifyGC = false;
   if (mViewManagerFlushIsPending) {
     RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
 
@@ -2038,7 +1998,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
       timelines->AddMarkerForDocShell(docShell, "Paint",  MarkerTracingType::END);
     }
 
-    dispatchRunnablesAfterTick = true;
+    notifyGC = true;
   }
 
 #ifndef ANDROID  /* bug 1142079 */
@@ -2057,14 +2017,10 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     ScheduleViewManagerFlush();
   }
 
-  if (dispatchRunnablesAfterTick && sPendingIdleRunnables) {
-    AutoTArray<RunnableWithDelay, 8>* runnables = sPendingIdleRunnables;
-    sPendingIdleRunnables = nullptr;
-    for (uint32_t i = 0; i < runnables->Length(); ++i) {
-      NS_IdleDispatchToCurrentThread((*runnables)[i].mRunnable.forget(),
-                                     (*runnables)[i].mDelay);
-    }
-    delete runnables;
+  if (notifyGC && nsContentUtils::XPConnect()) {
+    GeckoProfilerTracingRAII tracer("Paint", "NotifyDidPaint");
+    nsContentUtils::XPConnect()->NotifyDidPaint();
+    nsJSContext::NotifyDidPaint();
   }
 }
 

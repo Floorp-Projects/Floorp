@@ -1394,7 +1394,7 @@ pref("javascript.options.mem.high_water_mark", 128);
 pref("javascript.options.mem.max", -1);
 pref("javascript.options.mem.gc_per_zone", true);
 pref("javascript.options.mem.gc_incremental", true);
-pref("javascript.options.mem.gc_incremental_slice_ms", 5);
+pref("javascript.options.mem.gc_incremental_slice_ms", 10);
 pref("javascript.options.mem.gc_compacting", true);
 pref("javascript.options.mem.log", false);
 pref("javascript.options.mem.notify", false);
@@ -5746,4 +5746,4 @@ pref("layers.advanced.text-layers", 2);
 pref("layers.advanced.filter-layers", 2);
 
 // Enable lowercased response header name
-pref("dom.xhr.lowercase_header.enabled", true);
+pref("dom.xhr.lowercase_header.enabled", false);

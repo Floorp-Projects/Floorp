@@ -123,12 +123,7 @@ public:
    */
   DataType& GetOrInsert(const KeyType& aKey)
   {
-    EntryType* ent = this->GetEntry(aKey);
-    if (ent) {
-      return ent->mData;
-    }
-
-    ent = this->PutEntry(aKey);
+    EntryType* ent = this->PutEntry(aKey);
     return ent->mData;
   }
 
