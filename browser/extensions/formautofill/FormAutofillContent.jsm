@@ -324,11 +324,9 @@ var FormAutofillContent = {
    * Send the profile to parent for doorhanger and storage saving/updating.
    *
    * @param {Object} profile Submitted form's address/creditcard guid and record.
-   * @param {Object} domWin Current content window.
    */
-  _onFormSubmit(profile, domWin) {
-    let mm = this._messageManagerFromWindow(domWin);
-    mm.sendAsyncMessage("FormAutofill:OnFormSubmit", profile);
+  _onFormSubmit(profile) {
+    Services.cpmm.sendAsyncMessage("FormAutofill:OnFormSubmit", profile);
   },
 
   /**
@@ -367,7 +365,7 @@ var FormAutofillContent = {
         record: pendingAddress,
       },
       // creditCard: {}
-    }, domWin);
+    });
 
     return true;
   },
@@ -508,14 +506,6 @@ var FormAutofillContent = {
     } else {
       ProfileAutocomplete._previewSelectedProfile(selectedIndex);
     }
-  },
-
-  _messageManagerFromWindow(win) {
-    return win.QueryInterface(Ci.nsIInterfaceRequestor)
-              .getInterface(Ci.nsIWebNavigation)
-              .QueryInterface(Ci.nsIDocShell)
-              .QueryInterface(Ci.nsIInterfaceRequestor)
-              .getInterface(Ci.nsIContentFrameMessageManager);
   },
 };
 
