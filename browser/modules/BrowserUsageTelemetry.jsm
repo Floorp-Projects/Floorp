@@ -611,6 +611,8 @@ let BrowserUsageTelemetry = {
     // Update the "tab opened" count and its maximum.
     Services.telemetry.scalarAdd(TAB_OPEN_EVENT_COUNT_SCALAR_NAME, 1);
     Services.telemetry.scalarSetMaximum(MAX_TAB_COUNT_SCALAR_NAME, tabCount);
+
+    this._recordTabCount(tabCount);
   },
 
   /**
