@@ -168,13 +168,13 @@ function doTest() {
   // fails if bad
   // 17) An <object> inside an <iframe> sandboxed with 'allow-same-origin'
   // should not be able to run scripts.
-  // Done by iframe "if_no_scripts" using a data: load.
+  // Done by iframe "if_no_scripts", which loads file_iframe_sandbox_srcdoc_no_allow_scripts.html.
   testAttempted();
 
   // passes if good
   // 18) An <object> inside an <iframe> sandboxed with 'allow-scripts allow-same-origin'
   // should be able to run scripts and be same origin with this document.
-  // Done by iframe "if_scripts" using a data: load.
+  // Done by iframe "if_scripts", which loads file_iframe_sandbox_srcdoc_allow_scripts.html.
 
   // passes if good, fails if bad
   // 19) Make sure that the parent's document's sandboxing flags are copied when
@@ -194,9 +194,8 @@ addLoadEvent(doTest);
 <iframe sandbox="allow-scripts allow-same-origin" id="if_8" src="file_iframe_sandbox_a_if8.html" height="10" width="10"></iframe>
 <iframe sandbox="allow-scripts allow-forms" id="if_10" src="file_iframe_sandbox_a_if10.html" height="10" width="10"></iframe>
 <iframe sandbox="allow-scripts allow-forms" id="if_13" src="file_iframe_sandbox_a_if13.html" height="10" width="10"></iframe>
-<iframe sandbox="allow-same-origin" id="if_no_scripts" src="data:text/html,<object%20data='data:text/html,<script>parent.parent.ok_wrapper(false, &quot;an object inside an iframe sandboxed with only allow-same-origin should not be able to run scripts&quot;)</script>'></object>" height="10" width="10"></iframe>
-<iframe sandbox="allow-scripts allow-same-origin" id="if_scripts" src="data:text/html,<object%20data='data:text/html,<script>parent.parent.ok_wrapper(true, &quot;an object inside an iframe sandboxed with allow-scripts allow-same-origin should be able to run scripts and call functions in the parent of the iframe&quot;)</script>'></object>" height="10" width="10"></iframe>
-<iframe sandbox="allow-same-origin" id="if_19" src="data:text/html,<iframe%20data='data:text/html,<script>parent.parent.ok_wrapper(true, &quot;an object inside an iframe sandboxed with allow-scripts allow-same-origin should be able to run scripts and call functions in the parent of the iframe&quot;)</script>'></object>" height="10" width="10"></iframe>
+<iframe sandbox="allow-same-origin" id="if_no_scripts" srcdoc="<object data='file_iframe_sandbox_srcdoc_no_allow_scripts.html'></object>" height="10" width="10"></iframe>
+<iframe sandbox="allow-scripts allow-same-origin" id="if_scripts" srcdoc="<object data='file_iframe_sandbox_srcdoc_allow_scripts.html'></object>" height="10" width="10"></iframe>
 <iframe sandbox="allow-scripts" id="if_17" src="file_iframe_sandbox_a_if17.html" height="10" width="10"></iframe>
 </div>
 </body>
