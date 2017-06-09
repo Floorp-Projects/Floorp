@@ -637,3 +637,17 @@ description > html|a {
 .search-tooltip-parent {
   position: relative;
 }
+
+menulist[indicator=true] > menupopup menuitem:not([image]) > .menu-iconic-left {
+  display: -moz-box;
+  width: 10px;
+  min-width: auto; /* Override the min-width defined in menu.css */
+  height: 10px;
+  margin-inline-end: 6px;
+}
+
+menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .menu-iconic-left {
+  background-image: url(chrome://global/skin/icons/search-arrow-indicator.svg);
+  background-repeat: no-repeat;
+  background-size: 12px 10px;
+}
