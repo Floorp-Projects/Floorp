@@ -7,6 +7,8 @@
 #define __nsLookAndFeel
 
 #include "nsXPLookAndFeel.h"
+#include "gfxFont.h"
+#include "mozilla/RangedArray.h"
 
 /*
  * Gesture System Metrics
@@ -42,6 +44,7 @@ public:
   bool GetFontImpl(FontID aID, nsString& aFontName,
                    gfxFontStyle& aFontStyle,
                    float aDevPixPerCSSPixel) override;
+  void RefreshImpl() override;
   char16_t GetPasswordCharacterImpl() override;
 
   nsTArray<LookAndFeelInt> GetIntCacheImpl() override;
@@ -53,6 +56,21 @@ private:
   int32_t mUseAccessibilityTheme;
   int32_t mUseDefaultTheme; // is the current theme a known default?
   int32_t mNativeThemeId; // see LookAndFeel enum 'WindowsTheme'
+
+  struct CachedSystemFont {
+    CachedSystemFont()
+      : mCacheValid(false)
+    {}
+
+    bool mCacheValid;
+    bool mHaveFont;
+    nsString mFontName;
+    gfxFontStyle mFontStyle;
+  };
+
+  mozilla::RangedArray<CachedSystemFont,
+                       FontID_MINIMUM,
+                       FontID_MAXIMUM + 1 - FontID_MINIMUM> mSystemFontCache;
 };
 
 #endif
