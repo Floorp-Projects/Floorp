@@ -390,8 +390,8 @@ var gPluginHandler = {
         switch (pluginInfo.fallbackType) {
           case Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY:
             message = gNavigatorBundle.getFormattedString(
-              "pluginActivateNew.message",
-              [pluginName, origin]);
+              "pluginActivationWarning.message",
+              [brand]);
             break;
           case Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE:
             message = gNavigatorBundle.getFormattedString(

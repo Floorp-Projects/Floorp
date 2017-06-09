@@ -45,6 +45,7 @@ const RequestListContent = createClass({
     onSecurityIconMouseDown: PropTypes.func.isRequired,
     onSelectDelta: PropTypes.func.isRequired,
     onThumbnailMouseDown: PropTypes.func.isRequired,
+    onWaterfallMouseDown: PropTypes.func.isRequired,
     scale: PropTypes.number,
     selectedRequestId: PropTypes.string,
   },
@@ -229,6 +230,7 @@ const RequestListContent = createClass({
       onItemMouseDown,
       onSecurityIconMouseDown,
       onThumbnailMouseDown,
+      onWaterfallMouseDown,
       selectedRequestId,
     } = this.props;
 
@@ -255,6 +257,7 @@ const RequestListContent = createClass({
               onCauseBadgeMouseDown: () => onCauseBadgeMouseDown(item.cause),
               onSecurityIconMouseDown: () => onSecurityIconMouseDown(item.securityState),
               onThumbnailMouseDown: () => onThumbnailMouseDown(),
+              onWaterfallMouseDown: () => onWaterfallMouseDown(),
             }))
           )
         )
@@ -298,6 +301,12 @@ module.exports = connect(
      */
     onThumbnailMouseDown: () => {
       dispatch(Actions.selectDetailsPanelTab("response"));
+    },
+    /**
+     * A handler that opens the timing sidebar panel if the waterfall is clicked.
+     */
+    onWaterfallMouseDown: () => {
+      dispatch(Actions.selectDetailsPanelTab("timings"));
     },
   }),
 )(RequestListContent);

@@ -23,6 +23,7 @@
 #include "js/Value.h"
 #include "Layers.h"
 #include "MediaDecoder.h"
+#include "nsAppRunner.h"
 // nsNPAPIPluginInstance must be included before nsIDocument.h, which is included in mozAutoDocUpdate.h.
 #include "nsNPAPIPluginInstance.h"
 #include "gfxDrawable.h"
@@ -304,8 +305,10 @@ bool nsContentUtils::sLowerNetworkPriority = false;
 #ifndef RELEASE_OR_BETA
 bool nsContentUtils::sBypassCSSOMOriginCheck = false;
 #endif
+
 bool nsContentUtils::sIsBytecodeCacheEnabled = false;
 int32_t nsContentUtils::sBytecodeCacheStrategy = 0;
+nsCString* nsContentUtils::sJSBytecodeMimeType = nullptr;
 
 int32_t nsContentUtils::sPrivacyMaxInnerWidth = 1000;
 int32_t nsContentUtils::sPrivacyMaxInnerHeight = 1000;
@@ -732,6 +735,9 @@ nsContentUtils::Init()
 
   Preferences::AddIntVarCache(&sBytecodeCacheStrategy,
                               "dom.script_loader.bytecode_cache.strategy", 0);
+
+  nsDependentCString buildID(mozilla::PlatformBuildID());
+  sJSBytecodeMimeType = new nsCString(NS_LITERAL_CSTRING("javascript/moz-bytecode-") + buildID);
 
   Element::InitCCCallbacks();
 
@@ -2136,6 +2142,9 @@ nsContentUtils::Shutdown()
   sAltText = nullptr;
   delete sModifierSeparator;
   sModifierSeparator = nullptr;
+
+  delete sJSBytecodeMimeType;
+  sJSBytecodeMimeType = nullptr;
 
   NS_IF_RELEASE(sSameOriginChecker);
 
