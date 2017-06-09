@@ -652,6 +652,10 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
   // of them spins the event loop the executor must already be scheduled
   // in order for timeouts to fire properly.
   if (!nextDeadline.IsNull()) {
+    // Note, we verified the window is not suspended at the top of
+    // method and the window should not have been suspended while
+    // executing the loop above since it doesn't call out to js.
+    MOZ_DIAGNOSTIC_ASSERT(!mWindow.IsSuspended());
     MOZ_ALWAYS_SUCCEEDS(mExecutor->MaybeSchedule(nextDeadline));
   }
 
@@ -770,10 +774,14 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
       TimeDuration elapsed = now - start;
       if (elapsed >= totalTimeLimit) {
         // We ran out of time.  Make sure to schedule the executor to
-        // run immediately for the next timer, if it exists.
-        RefPtr<Timeout> timeout = runIter.Next();
-        if (timeout) {
-          MOZ_ALWAYS_SUCCEEDS(mExecutor->MaybeSchedule(timeout->When()));
+        // run immediately for the next timer, if it exists.  Its possible,
+        // however, that the last timeout handler suspended the window.  If
+        // that happened then we must skip this step.
+        if (!mWindow.IsSuspended()) {
+          RefPtr<Timeout> timeout = runIter.Next();
+          if (timeout) {
+            MOZ_ALWAYS_SUCCEEDS(mExecutor->MaybeSchedule(timeout->When()));
+          }
         }
         break;
       }
