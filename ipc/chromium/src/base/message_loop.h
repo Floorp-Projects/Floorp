@@ -30,6 +30,7 @@
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
 
+class nsISerialEventTarget;
 class nsIThread;
 
 namespace mozilla {
@@ -144,6 +145,9 @@ public:
       return NS_OK;
     }
   };
+
+  // Return an XPCOM-compatible event target for this thread.
+  nsISerialEventTarget* SerialEventTarget();
 
   // A MessageLoop has a particular type, which indicates the set of
   // asynchronous events it may process in addition to tasks and timers.
@@ -437,6 +441,9 @@ public:
 
   // The next sequence number to use for delayed tasks.
   int next_sequence_num_;
+
+  class EventTarget;
+  RefPtr<EventTarget> mEventTarget;
 
   DISALLOW_COPY_AND_ASSIGN(MessageLoop);
 };
