@@ -51,11 +51,13 @@
   width: 0;
 }
 
-.tab-label-container[textoverflow]:not([pinned]) {
+.tab-label-container[textoverflow][dir=ltr]:not([pinned]) {
+  direction: ltr;
   mask-image: linear-gradient(to left, transparent, black 2em);
 }
 
-.tab-label-container[textoverflow]:not([pinned]):-moz-locale-dir(rtl) {
+.tab-label-container[textoverflow][dir=rtl]:not([pinned]) {
+  direction: rtl;
   mask-image: linear-gradient(to right, transparent, black 2em);
 }
 
