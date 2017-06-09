@@ -25,7 +25,7 @@ add_task(async function test_tab_contextmenu() {
   let devices = document.getElementById("context_sendTabToDevicePopupMenu").childNodes;
   is(devices[0].getAttribute("label"), "Foo", "Foo target is present");
   is(devices[1].getAttribute("label"), "Bar", "Bar target is present");
-  is(devices[3].getAttribute("label"), "All Devices", "All Devices target is present");
+  is(devices[3].getAttribute("label"), "Send to All Devices", "All Devices target is present");
 });
 
 add_task(async function test_tab_contextmenu_only_one_remote_device() {
