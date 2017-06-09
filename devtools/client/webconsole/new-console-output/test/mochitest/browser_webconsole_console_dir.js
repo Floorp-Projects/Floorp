@@ -30,15 +30,12 @@ add_task(async function () {
       [1, 2, {a: "a", b: "b"}],
     );
   });
-
   let dirMessageNode = await waitFor(() =>
-    findConsoleDir(hud.ui.experimentalOutputNode, 0));
+    findConsoleDir(hud.ui.outputNode, 0));
   let objectInspectors = [...dirMessageNode.querySelectorAll(".tree")];
   is(objectInspectors.length, 1, "There is the expected number of object inspectors");
-
   const [arrayOi] = objectInspectors;
   let arrayOiNodes = arrayOi.querySelectorAll(".node");
-
   // The tree can be collapsed since the properties are fetched asynchronously.
   if (arrayOiNodes.length === 1) {
     // If this is the case, we wait for the properties to be fetched and displayed.
@@ -60,18 +57,14 @@ add_task(async function () {
     res["item-" + (i + 1).toString().padStart(3, "0")] = i + 1;
     return res;
   }, {});
-
   await ContentTask.spawn(gBrowser.selectedBrowser, obj, function (data) {
     content.wrappedJSObject.console.dir(data);
   });
-
-  dirMessageNode = await waitFor(() => findConsoleDir(hud.ui.experimentalOutputNode, 1));
+  dirMessageNode = await waitFor(() => findConsoleDir(hud.ui.outputNode, 1));
   objectInspectors = [...dirMessageNode.querySelectorAll(".tree")];
   is(objectInspectors.length, 1, "There is the expected number of object inspectors");
-
   const [objectOi] = objectInspectors;
   let objectOiNodes = objectOi.querySelectorAll(".node");
-
   // The tree can be collapsed since the properties are fetched asynchronously.
   if (objectOiNodes.length === 1) {
     // If this is the case, we wait for the properties to be fetched and displayed.
