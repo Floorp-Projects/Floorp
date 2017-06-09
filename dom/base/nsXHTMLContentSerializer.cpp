@@ -25,7 +25,6 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsEscape.h"
-#include "nsITextToSubURI.h"
 #include "nsCRT.h"
 #include "nsIParserService.h"
 #include "nsContentUtils.h"
@@ -155,70 +154,6 @@ nsXHTMLContentSerializer::AppendText(nsIContent* aText,
   }
 
   return NS_OK;
-}
-
-nsresult
-nsXHTMLContentSerializer::EscapeURI(nsIContent* aContent, const nsAString& aURI, nsAString& aEscapedURI)
-{
-  // URL escape %xx cannot be used in JS.
-  // No escaping if the scheme is 'javascript'.
-  if (IsJavaScript(aContent, nsGkAtoms::href, kNameSpaceID_None, aURI)) {
-    aEscapedURI = aURI;
-    return NS_OK;
-  }
-
-  // nsITextToSubURI does charset convert plus uri escape
-  // This is needed to convert to a document charset which is needed to support existing browsers.
-  // But we eventually want to use UTF-8 instead of a document charset, then the code would be much simpler.
-  // See HTML 4.01 spec, "Appendix B.2.1 Non-ASCII characters in URI attribute values"
-  nsCOMPtr<nsITextToSubURI> textToSubURI;
-  nsAutoString uri(aURI); // in order to use FindCharInSet()
-  nsresult rv = NS_OK;
-
-  if (!mCharset.IsEmpty() && !IsASCII(uri)) {
-    textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  int32_t start = 0;
-  int32_t end;
-  nsAutoString part;
-  nsXPIDLCString escapedURI;
-  aEscapedURI.Truncate(0);
-
-  // Loop and escape parts by avoiding escaping reserved characters
-  // (and '%', '#', as well as '[' and ']' for IPv6 address literals).
-  while ((end = uri.FindCharInSet("%#;/?:@&=+$,[]", start)) != -1) {
-    part = Substring(aURI, start, (end-start));
-    if (textToSubURI && !IsASCII(part)) {
-      rv = textToSubURI->ConvertAndEscape(mCharset.get(), part.get(), getter_Copies(escapedURI));
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else if (NS_WARN_IF(!NS_Escape(NS_ConvertUTF16toUTF8(part), escapedURI,
-                                     url_Path))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    AppendASCIItoUTF16(escapedURI, aEscapedURI);
-
-    // Append a reserved character without escaping.
-    part = Substring(aURI, end, 1);
-    aEscapedURI.Append(part);
-    start = end + 1;
-  }
-
-  if (start < (int32_t) aURI.Length()) {
-    // Escape the remaining part.
-    part = Substring(aURI, start, aURI.Length()-start);
-    if (textToSubURI) {
-      rv = textToSubURI->ConvertAndEscape(mCharset.get(), part.get(), getter_Copies(escapedURI));
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else if (NS_WARN_IF(!NS_Escape(NS_ConvertUTF16toUTF8(part), escapedURI,
-                                     url_Path))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    AppendASCIItoUTF16(escapedURI, aEscapedURI);
-  }
-
-  return rv;
 }
 
 bool
@@ -373,10 +308,6 @@ nsXHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
             }
           }
         }
-        // Need to escape URI.
-        nsAutoString tempURI(valueStr);
-        if (!isJS && NS_FAILED(EscapeURI(aContent, tempURI, valueStr)))
-          valueStr = tempURI;
       }
 
       if (mRewriteEncodingDeclaration && aTagName == nsGkAtoms::meta &&

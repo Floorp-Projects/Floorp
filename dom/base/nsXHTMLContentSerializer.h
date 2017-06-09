@@ -92,10 +92,6 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
   virtual bool AppendAndTranslateEntities(const nsAString& aStr,
                                           nsAString& aOutputStr) override;
 
-  nsresult EscapeURI(nsIContent* aContent,
-                     const nsAString& aURI,
-                     nsAString& aEscapedURI);
-
 private:
   bool IsElementPreformatted(nsIContent* aNode);
 
