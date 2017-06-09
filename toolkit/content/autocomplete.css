@@ -30,8 +30,8 @@ richlistitem {
   display: none;
 }
 
-.ac-action[actiontype=searchengine]:not([selected]),
-.ac-separator[actiontype=searchengine]:not([selected]) {
+.autocomplete-richlistitem:not([selected]):not(:hover) > .ac-action[actiontype=searchengine],
+.autocomplete-richlistitem:not([selected]):not(:hover) > .ac-separator[actiontype=searchengine] {
   display: none;
 }
 
