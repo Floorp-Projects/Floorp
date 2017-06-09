@@ -26,11 +26,12 @@ SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
                                    ["security.webauth.webauthn_enable_softtoken", false],
                                    ["security.webauth.webauthn_enable_usbtoken", false]]},
 function() {
-  isnot(navigator.authentication, undefined, "WebAuthn API endpoint must exist");
-  isnot(navigator.authentication.makeCredential, undefined, "WebAuthn makeCredential API endpoint must exist");
-  isnot(navigator.authentication.getAssertion, undefined, "WebAuthn getAssertion API endpoint must exist");
+  is(navigator.authentication, undefined, "navigator.authentication does not exist any longer");
+  isnot(navigator.credentials, undefined, "Credential Management API endpoint must exist");
+  isnot(navigator.credentials.create, undefined, "CredentialManagement create API endpoint must exist");
+  isnot(navigator.credentials.get, undefined, "CredentialManagement get API endpoint must exist");
 
-  let authn = navigator.authentication;
+  let credm = navigator.credentials;
 
   let credentialChallenge = new Uint8Array(16);
   window.crypto.getRandomValues(credentialChallenge);
@@ -42,9 +43,13 @@ function() {
   testMakeCredential();
 
   function testMakeCredential() {
-    let acct = {rpDisplayName: "none", displayName: "none", id: "none"};
-    let param = {type: "ScopedCred", algorithm: "p-256"};
-    authn.makeCredential(acct, [param], credentialChallenge)
+    let rp = {id: "none", name: "none", icon: "none"};
+    let user = {id: "none", name: "none", icon: "none", displayName: "none"};
+    let param = {type: "public-key", algorithm: "p-256"};
+    let makeCredentialOptions = {
+      rp: rp, user: user, challenge: credentialChallenge, parameters: [param]
+    };
+    credm.create({publicKey: makeCredentialOptions})
     .then(function(aResult) {
       ok(false, "Should have failed.");
       testAssertion();
@@ -57,13 +62,17 @@ function() {
 
   function testAssertion() {
     let newCredential = {
-      type: "ScopedCred",
+      type: "public-key",
       id: credentialId,
-      transports: [ "usb" ],
+      transports: ["usb"],
     }
-    let assertOptions = {rpId: document.origin, timeoutSeconds: 5,
-                         allowList: [ newCredential ]};
-    authn.getAssertion(assertionChallenge, assertOptions)
+    let publicKeyCredentialRequestOptions = {
+      challenge: assertionChallenge,
+      timeout: 5000, // the minimum timeout is actually 15 seconds
+      rpId: document.origin,
+      allowList: [newCredential]
+    };
+    credm.get({publicKey: publicKeyCredentialRequestOptions})
     .then(function(aResult) {
       ok(false, "Should have failed.");
       SimpleTest.finish();

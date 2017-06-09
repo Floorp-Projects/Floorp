@@ -20,12 +20,6 @@ mach_schema = Schema({
 
     # The mach command (omitting `./mach`) to run
     Required('mach'): basestring,
-
-    # Whether the job requires a build artifact or not. If True, the task
-    # will depend on a build task and run-task will download and set up the
-    # installer. Build labels are determined by the `dependent-build-platforms`
-    # config in kind.yml.
-    Required('requires-build', default=False): bool,
 })
 
 

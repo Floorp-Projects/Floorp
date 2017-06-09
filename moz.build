@@ -40,6 +40,10 @@ with Files('GNUmakefile'):
 with Files('*gradle*'):
     BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
 
+with Files('**/l10n.toml'):
+    BUG_COMPONENT = ('Core', 'Localization')
+    FINAL = True
+
 with Files('README.txt'):
     BUG_COMPONENT = ('Core', 'General')
 
@@ -69,6 +73,7 @@ if not CONFIG['JS_STANDALONE']:
     # These python manifests are included here so they get picked up without an objdir
     PYTHON_UNITTEST_MANIFESTS += [
         'testing/marionette/harness/marionette_harness/tests/harness_unit/python.ini',
+        'testing/mochitest/tests/python/python.ini',
     ]
 
     CONFIGURE_SUBST_FILES += [

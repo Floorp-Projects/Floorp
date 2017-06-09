@@ -346,7 +346,6 @@ class MacArtifactJob(ArtifactJob):
             # These get copied into dist/bin without the path, so "root/a/b/c" -> "dist/bin/c".
             paths_no_keep_path = ('Contents/MacOS', [
                 'crashreporter.app/Contents/MacOS/crashreporter',
-                'crashreporter.app/Contents/MacOS/minidump-analyzer',
                 'firefox',
                 'firefox-bin',
                 'libfreebl3.dylib',
@@ -370,15 +369,20 @@ class MacArtifactJob(ArtifactJob):
             ])
 
             # These get copied into dist/bin with the path, so "root/a/b/c" -> "dist/bin/a/b/c".
-            paths_keep_path = ('Contents/Resources', [
-                'browser/components/libbrowsercomps.dylib',
-                'dependentlibs.list',
-                # 'firefox',
-                'gmp-clearkey/0.1/libclearkey.dylib',
-                # 'gmp-fake/1.0/libfake.dylib',
-                # 'gmp-fakeopenh264/1.0/libfakeopenh264.dylib',
-                '**/interfaces.xpt',
-            ])
+            paths_keep_path = [
+                ('Contents/MacOS', [
+                    'crashreporter.app/Contents/MacOS/minidump-analyzer',
+                ]),
+                ('Contents/Resources', [
+                    'browser/components/libbrowsercomps.dylib',
+                    'dependentlibs.list',
+                    # 'firefox',
+                    'gmp-clearkey/0.1/libclearkey.dylib',
+                    # 'gmp-fake/1.0/libfake.dylib',
+                    # 'gmp-fakeopenh264/1.0/libfakeopenh264.dylib',
+                    '**/interfaces.xpt',
+                ]),
+            ]
 
             with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
                 root, paths = paths_no_keep_path
@@ -391,15 +395,15 @@ class MacArtifactJob(ArtifactJob):
                         destpath = mozpath.join('bin', os.path.basename(p))
                         writer.add(destpath.encode('utf-8'), f, mode=f.mode)
 
-                root, paths = paths_keep_path
-                finder = UnpackFinder(mozpath.join(source, root))
-                for path in paths:
-                    for p, f in finder.find(path):
-                        self.log(logging.INFO, 'artifact',
-                            {'path': p},
-                            'Adding {path} to processed archive')
-                        destpath = mozpath.join('bin', p)
-                        writer.add(destpath.encode('utf-8'), f.open(), mode=f.mode)
+                for root, paths in paths_keep_path:
+                    finder = UnpackFinder(mozpath.join(source, root))
+                    for path in paths:
+                        for p, f in finder.find(path):
+                            self.log(logging.INFO, 'artifact',
+                                     {'path': p},
+                                     'Adding {path} to processed archive')
+                            destpath = mozpath.join('bin', p)
+                            writer.add(destpath.encode('utf-8'), f.open(), mode=f.mode)
 
         finally:
             os.chdir(oldcwd)

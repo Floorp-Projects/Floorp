@@ -1,4 +1,4 @@
-# geckodriver [![Build Status](https://travis-ci.org/mozilla/geckodriver.svg?branch=master)](https://travis-ci.org/mozilla/geckodriver)
+# geckodriver [![Build Status](https://travis-ci.org/mozilla/geckodriver.svg?branch=release)](https://travis-ci.org/mozilla/geckodriver)
 
 Proxy for using W3C WebDriver-compatible clients
 to interact with Gecko-based browsers.

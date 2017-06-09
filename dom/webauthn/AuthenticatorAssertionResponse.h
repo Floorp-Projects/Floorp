@@ -4,63 +4,53 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_ScopedCredential_h
-#define mozilla_dom_ScopedCredential_h
+#ifndef mozilla_dom_AuthenticatorAssertionResponse_h
+#define mozilla_dom_AuthenticatorAssertionResponse_h
 
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/AuthenticatorResponse.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/CryptoBuffer.h"
-#include "mozilla/dom/WebAuthenticationBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {
 namespace dom {
 
-class ScopedCredential final : public nsISupports
-                             , public nsWrapperCache
+class AuthenticatorAssertionResponse final : public AuthenticatorResponse
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ScopedCredential)
+  NS_DECL_ISUPPORTS_INHERITED
 
-public:
-  explicit ScopedCredential(nsPIDOMWindowInner* aParent);
+  explicit AuthenticatorAssertionResponse(nsPIDOMWindowInner* aParent);
 
 protected:
-  ~ScopedCredential();
+  ~AuthenticatorAssertionResponse() override;
 
 public:
-  nsISupports*
-  GetParentObject() const
-  {
-    return mParent;
-  }
-
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  ScopedCredentialType
-  Type() const;
+  void
+  GetAuthenticatorData(JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal) const;
+
+  nsresult
+  SetAuthenticatorData(CryptoBuffer& aBuffer);
 
   void
-  GetId(JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal) const;
+  GetSignature(JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal) const;
 
   nsresult
-  SetType(ScopedCredentialType aType);
-
-  nsresult
-  SetId(CryptoBuffer& aBuffer);
+  SetSignature(CryptoBuffer& aBuffer);
 
 private:
-  nsCOMPtr<nsPIDOMWindowInner> mParent;
-  CryptoBuffer mIdBuffer;
-  ScopedCredentialType mType;
+  CryptoBuffer mAuthenticatorData;
+  CryptoBuffer mSignature;
 };
 
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_ScopedCredential_h
+#endif // mozilla_dom_AuthenticatorAssertionResponse_h

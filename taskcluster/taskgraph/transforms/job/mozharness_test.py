@@ -439,28 +439,28 @@ def mozharness_test_buildbot_bridge(config, job, taskdesc):
     if test.get('suite', '') == 'talos':
         # on linux64-<variant>/<build>, we add the variant to the buildername
         m = re.match(r'\w+-([^/]+)/.*', test['test-platform'])
-        variant = ''
-        if m and m.group(1):
-            variant = m.group(1) + ' '
+        variant = m.group(1) if m and m.group(1) else ''
+
         # On beta and release, we run nightly builds on-push; the talos
         # builders need to run against non-nightly buildernames
-        if variant == 'nightly ':
+        if variant == 'nightly':
             variant = ''
+
         # this variant name has branch after the variant type in BBB bug 1338871
         if variant in ('stylo', 'stylo-sequential'):
-            buildername = '{} {}{} talos {}'.format(
-                BUILDER_NAME_PREFIX[platform],
-                variant,
-                branch,
-                test_name
-            )
+            name = '{prefix} {variant} {branch} talos {test_name}'
+        elif variant:
+            name = '{prefix} {branch} {variant} talos {test_name}'
         else:
-            buildername = '{} {} {}talos {}'.format(
-                BUILDER_NAME_PREFIX[platform],
-                branch,
-                variant,
-                test_name
-            )
+            name = '{prefix} {branch} talos {test_name}'
+
+        buildername = name.format(
+            prefix=BUILDER_NAME_PREFIX[platform],
+            variant=variant,
+            branch=branch,
+            test_name=test_name
+        )
+
         if buildername.startswith('Ubuntu'):
             buildername = buildername.replace('VM', 'HW')
     else:
