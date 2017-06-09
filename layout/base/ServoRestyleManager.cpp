@@ -63,7 +63,20 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
     mHaveNonAnimationRestyles = true;
   }
 
-  Servo_NoteExplicitHints(aElement, aRestyleHint, aMinChangeHint);
+  if (aRestyleHint & eRestyle_LaterSiblings) {
+    aRestyleHint &= ~eRestyle_LaterSiblings;
+
+    nsRestyleHint siblingHint = eRestyle_Subtree;
+    Element* current = aElement->GetNextElementSibling();
+    while (current) {
+      Servo_NoteExplicitHints(current, siblingHint, nsChangeHint(0));
+      current = current->GetNextElementSibling();
+    }
+  }
+
+  if (aRestyleHint || aMinChangeHint) {
+    Servo_NoteExplicitHints(aElement, aRestyleHint, aMinChangeHint);
+  }
 }
 
 void
