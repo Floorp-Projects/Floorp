@@ -261,6 +261,7 @@ name = "cubeb-pulse"
 version = "0.0.1"
 dependencies = [
  "cubeb-ffi 0.0.1",
+ "pulse 0.1.0",
  "pulse-ffi 0.1.0",
  "semver 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -691,6 +692,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "procedural-masquerade"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "pulse"
+version = "0.1.0"
+dependencies = [
+ "bitflags 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pulse-ffi 0.1.0",
+]
 
 [[package]]
 name = "pulse-ffi"

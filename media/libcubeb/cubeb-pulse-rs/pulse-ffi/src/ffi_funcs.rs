@@ -8,8 +8,8 @@ macro_rules! cstr {
 
 #[cfg(not(feature = "dlopen"))]
 mod static_fns {
-    use std::os::raw::{c_char, c_double, c_int, c_float, c_uint, c_void};
     use super::*;
+    use std::os::raw::{c_char, c_double, c_float, c_int, c_uint, c_void};
 
     #[link(name = "pulse")]
     extern "C" {
@@ -62,6 +62,7 @@ mod static_fns {
                                                 userdata: *mut c_void)
                                                 -> *mut pa_operation;
         pub fn pa_context_set_state_callback(c: *mut pa_context, cb: pa_context_notify_cb_t, userdata: *mut c_void);
+        pub fn pa_context_errno(c: *mut pa_context) -> c_int;
         pub fn pa_context_set_subscribe_callback(c: *mut pa_context,
                                                  cb: pa_context_subscribe_cb_t,
                                                  userdata: *mut c_void);
@@ -70,6 +71,7 @@ mod static_fns {
                                     cb: pa_context_success_cb_t,
                                     userdata: *mut c_void)
                                     -> *mut pa_operation;
+        pub fn pa_context_ref(c: *mut pa_context) -> *mut pa_context;
         pub fn pa_context_unref(c: *mut pa_context);
         pub fn pa_cvolume_set(a: *mut pa_cvolume, channels: c_uint, v: pa_volume_t) -> *mut pa_cvolume;
         pub fn pa_cvolume_set_balance(v: *mut pa_cvolume,
@@ -80,12 +82,20 @@ mod static_fns {
         pub fn pa_mainloop_api_once(m: *mut pa_mainloop_api,
                                     callback: pa_mainloop_api_once_cb_t,
                                     userdata: *mut c_void);
-        pub fn pa_operation_get_state(o: *const pa_operation) -> pa_operation_state_t;
+        pub fn pa_strerror(error: pa_error_code_t) -> *const c_char;
+        pub fn pa_operation_ref(o: *mut pa_operation) -> *mut pa_operation;
         pub fn pa_operation_unref(o: *mut pa_operation);
+        pub fn pa_operation_cancel(o: *mut pa_operation);
+        pub fn pa_operation_get_state(o: *const pa_operation) -> pa_operation_state_t;
+        pub fn pa_operation_set_state_callback(o: *mut pa_operation,
+                                               cb: pa_operation_notify_cb_t,
+                                               userdata: *mut c_void);
         pub fn pa_proplist_gets(p: *mut pa_proplist, key: *const c_char) -> *const c_char;
         pub fn pa_rtclock_now() -> pa_usec_t;
         pub fn pa_stream_begin_write(p: *mut pa_stream, data: *mut *mut c_void, nbytes: *mut usize) -> c_int;
         pub fn pa_stream_cancel_write(p: *mut pa_stream) -> c_int;
+        pub fn pa_stream_is_suspended(s: *const pa_stream) -> c_int;
+        pub fn pa_stream_is_corked(s: *const pa_stream) -> c_int;
         pub fn pa_stream_connect_playback(s: *mut pa_stream,
                                           dev: *const c_char,
                                           attr: *const pa_buffer_attr,
@@ -112,6 +122,7 @@ mod static_fns {
         pub fn pa_stream_get_latency(s: *const pa_stream, r_usec: *mut pa_usec_t, negative: *mut c_int) -> c_int;
         pub fn pa_stream_get_sample_spec(s: *const pa_stream) -> *const pa_sample_spec;
         pub fn pa_stream_get_state(p: *const pa_stream) -> pa_stream_state_t;
+        pub fn pa_stream_get_context(s: *const pa_stream) -> *mut pa_context;
         pub fn pa_stream_get_time(s: *const pa_stream, r_usec: *mut pa_usec_t) -> c_int;
         pub fn pa_stream_new(c: *mut pa_context,
                              name: *const c_char,
@@ -123,6 +134,7 @@ mod static_fns {
         pub fn pa_stream_set_state_callback(s: *mut pa_stream, cb: pa_stream_notify_cb_t, userdata: *mut c_void);
         pub fn pa_stream_set_write_callback(p: *mut pa_stream, cb: pa_stream_request_cb_t, userdata: *mut c_void);
         pub fn pa_stream_set_read_callback(p: *mut pa_stream, cb: pa_stream_request_cb_t, userdata: *mut c_void);
+        pub fn pa_stream_ref(s: *mut pa_stream) -> *mut pa_stream;
         pub fn pa_stream_unref(s: *mut pa_stream);
         pub fn pa_stream_update_timing_info(p: *mut pa_stream,
                                             cb: pa_stream_success_cb_t,
@@ -148,8 +160,6 @@ mod static_fns {
         pub fn pa_threaded_mainloop_unlock(m: *mut pa_threaded_mainloop);
         pub fn pa_threaded_mainloop_wait(m: *mut pa_threaded_mainloop);
         pub fn pa_usec_to_bytes(t: pa_usec_t, spec: *const pa_sample_spec) -> usize;
-        pub fn pa_xfree(ptr: *mut c_void);
-        pub fn pa_xstrdup(str: *const c_char) -> *mut c_char;
         pub fn pa_xrealloc(ptr: *mut c_void, size: usize) -> *mut c_void;
     }
 }
@@ -159,9 +169,9 @@ pub use self::static_fns::*;
 
 #[cfg(feature = "dlopen")]
 mod dynamic_fns {
-    use std::os::raw::{c_char, c_double, c_int, c_float, c_uint, c_void};
-    use libc::{dlclose, dlopen, dlsym, RTLD_LAZY};
     use super::*;
+    use libc::{RTLD_LAZY, dlclose, dlopen, dlsym};
+    use std::os::raw::{c_char, c_double, c_float, c_int, c_uint, c_void};
 
     #[derive(Debug)]
     pub struct LibLoader {
@@ -287,6 +297,13 @@ mod dynamic_fns {
                 }
                 fp
             };
+            PA_CONTEXT_ERRNO = {
+                let fp = dlsym(h, cstr!("pa_context_errno"));
+                if fp.is_null() {
+                    return None;
+                }
+                fp
+            };
             PA_CONTEXT_SET_SUBSCRIBE_CALLBACK = {
                 let fp = dlsym(h, cstr!("pa_context_set_subscribe_callback"));
                 if fp.is_null() {
@@ -296,6 +313,13 @@ mod dynamic_fns {
             };
             PA_CONTEXT_SUBSCRIBE = {
                 let fp = dlsym(h, cstr!("pa_context_subscribe"));
+                if fp.is_null() {
+                    return None;
+                }
+                fp
+            };
+            PA_CONTEXT_REF = {
+                let fp = dlsym(h, cstr!("pa_context_ref"));
                 if fp.is_null() {
                     return None;
                 }
@@ -336,8 +360,15 @@ mod dynamic_fns {
                 }
                 fp
             };
-            PA_OPERATION_GET_STATE = {
-                let fp = dlsym(h, cstr!("pa_operation_get_state"));
+            PA_STRERROR = {
+                let fp = dlsym(h, cstr!("pa_strerror"));
+                if fp.is_null() {
+                    return None;
+                }
+                fp
+            };
+            PA_OPERATION_REF = {
+                let fp = dlsym(h, cstr!("pa_operation_ref"));
                 if fp.is_null() {
                     return None;
                 }
@@ -345,6 +376,27 @@ mod dynamic_fns {
             };
             PA_OPERATION_UNREF = {
                 let fp = dlsym(h, cstr!("pa_operation_unref"));
+                if fp.is_null() {
+                    return None;
+                }
+                fp
+            };
+            PA_OPERATION_CANCEL = {
+                let fp = dlsym(h, cstr!("pa_operation_cancel"));
+                if fp.is_null() {
+                    return None;
+                }
+                fp
+            };
+            PA_OPERATION_GET_STATE = {
+                let fp = dlsym(h, cstr!("pa_operation_get_state"));
+                if fp.is_null() {
+                    return None;
+                }
+                fp
+            };
+            PA_OPERATION_SET_STATE_CALLBACK = {
+                let fp = dlsym(h, cstr!("pa_operation_set_state_callback"));
                 if fp.is_null() {
                     return None;
                 }
@@ -373,6 +425,20 @@ mod dynamic_fns {
             };
             PA_STREAM_CANCEL_WRITE = {
                 let fp = dlsym(h, cstr!("pa_stream_cancel_write"));
+                if fp.is_null() {
+                    return None;
+                }
+                fp
+            };
+            PA_STREAM_IS_SUSPENDED = {
+                let fp = dlsym(h, cstr!("pa_stream_is_suspended"));
+                if fp.is_null() {
+                    return None;
+                }
+                fp
+            };
+            PA_STREAM_IS_CORKED = {
+                let fp = dlsym(h, cstr!("pa_stream_is_corked"));
                 if fp.is_null() {
                     return None;
                 }
@@ -462,6 +528,13 @@ mod dynamic_fns {
                 }
                 fp
             };
+            PA_STREAM_GET_CONTEXT = {
+                let fp = dlsym(h, cstr!("pa_stream_get_context"));
+                if fp.is_null() {
+                    return None;
+                }
+                fp
+            };
             PA_STREAM_GET_TIME = {
                 let fp = dlsym(h, cstr!("pa_stream_get_time"));
                 if fp.is_null() {
@@ -506,6 +579,13 @@ mod dynamic_fns {
             };
             PA_STREAM_SET_READ_CALLBACK = {
                 let fp = dlsym(h, cstr!("pa_stream_set_read_callback"));
+                if fp.is_null() {
+                    return None;
+                }
+                fp
+            };
+            PA_STREAM_REF = {
+                let fp = dlsym(h, cstr!("pa_stream_ref"));
                 if fp.is_null() {
                     return None;
                 }
@@ -618,20 +698,6 @@ mod dynamic_fns {
             };
             PA_USEC_TO_BYTES = {
                 let fp = dlsym(h, cstr!("pa_usec_to_bytes"));
-                if fp.is_null() {
-                    return None;
-                }
-                fp
-            };
-            PA_XFREE = {
-                let fp = dlsym(h, cstr!("pa_xfree"));
-                if fp.is_null() {
-                    return None;
-                }
-                fp
-            };
-            PA_XSTRDUP = {
-                let fp = dlsym(h, cstr!("pa_xstrdup"));
                 if fp.is_null() {
                     return None;
                 }
@@ -837,6 +903,12 @@ mod dynamic_fns {
                                                *mut c_void)>(PA_CONTEXT_SET_STATE_CALLBACK))(c, cb, userdata)
     }
 
+    static mut PA_CONTEXT_ERRNO: *mut ::libc::c_void = 0 as *mut _;
+    #[inline]
+    pub unsafe fn pa_context_errno(c: *mut pa_context) -> c_int {
+        (::std::mem::transmute::<_, extern "C" fn(*mut pa_context) -> c_int>(PA_CONTEXT_ERRNO))(c)
+    }
+
     static mut PA_CONTEXT_SET_SUBSCRIBE_CALLBACK: *mut ::libc::c_void = 0 as *mut _;
     #[inline]
     pub unsafe fn pa_context_set_subscribe_callback(c: *mut pa_context,
@@ -861,6 +933,12 @@ mod dynamic_fns {
                                                pa_context_success_cb_t,
                                                *mut c_void)
                                                -> *mut pa_operation>(PA_CONTEXT_SUBSCRIBE))(c, m, cb, userdata)
+    }
+
+    static mut PA_CONTEXT_REF: *mut ::libc::c_void = 0 as *mut _;
+    #[inline]
+    pub unsafe fn pa_context_ref(c: *mut pa_context) -> *mut pa_context {
+        (::std::mem::transmute::<_, extern "C" fn(*mut pa_context) -> *mut pa_context>(PA_CONTEXT_REF))(c)
     }
 
     static mut PA_CONTEXT_UNREF: *mut ::libc::c_void = 0 as *mut _;
@@ -907,6 +985,30 @@ mod dynamic_fns {
                                                *mut c_void)>(PA_MAINLOOP_API_ONCE))(m, callback, userdata)
     }
 
+    static mut PA_STRERROR: *mut ::libc::c_void = 0 as *mut _;
+    #[inline]
+    pub unsafe fn pa_strerror(error: pa_error_code_t) -> *const c_char {
+        (::std::mem::transmute::<_, extern "C" fn(pa_error_code_t) -> *const c_char>(PA_STRERROR))(error)
+    }
+
+    static mut PA_OPERATION_REF: *mut ::libc::c_void = 0 as *mut _;
+    #[inline]
+    pub unsafe fn pa_operation_ref(o: *mut pa_operation) -> *mut pa_operation {
+        (::std::mem::transmute::<_, extern "C" fn(*mut pa_operation) -> *mut pa_operation>(PA_OPERATION_REF))(o)
+    }
+
+    static mut PA_OPERATION_UNREF: *mut ::libc::c_void = 0 as *mut _;
+    #[inline]
+    pub unsafe fn pa_operation_unref(o: *mut pa_operation) {
+        (::std::mem::transmute::<_, extern "C" fn(*mut pa_operation)>(PA_OPERATION_UNREF))(o)
+    }
+
+    static mut PA_OPERATION_CANCEL: *mut ::libc::c_void = 0 as *mut _;
+    #[inline]
+    pub unsafe fn pa_operation_cancel(o: *mut pa_operation) {
+        (::std::mem::transmute::<_, extern "C" fn(*mut pa_operation)>(PA_OPERATION_CANCEL))(o)
+    }
+
     static mut PA_OPERATION_GET_STATE: *mut ::libc::c_void = 0 as *mut _;
     #[inline]
     pub unsafe fn pa_operation_get_state(o: *const pa_operation) -> pa_operation_state_t {
@@ -915,10 +1017,15 @@ mod dynamic_fns {
                                                -> pa_operation_state_t>(PA_OPERATION_GET_STATE))(o)
     }
 
-    static mut PA_OPERATION_UNREF: *mut ::libc::c_void = 0 as *mut _;
+    static mut PA_OPERATION_SET_STATE_CALLBACK: *mut ::libc::c_void = 0 as *mut _;
     #[inline]
-    pub unsafe fn pa_operation_unref(o: *mut pa_operation) {
-        (::std::mem::transmute::<_, extern "C" fn(*mut pa_operation)>(PA_OPERATION_UNREF))(o)
+    pub unsafe fn pa_operation_set_state_callback(o: *mut pa_operation,
+                                                  cb: pa_operation_notify_cb_t,
+                                                  userdata: *mut c_void) {
+        (::std::mem::transmute::<_,
+                                 extern "C" fn(*mut pa_operation,
+                                               pa_operation_notify_cb_t,
+                                               *mut c_void)>(PA_OPERATION_SET_STATE_CALLBACK))(o, cb, userdata)
     }
 
     static mut PA_PROPLIST_GETS: *mut ::libc::c_void = 0 as *mut _;
@@ -949,6 +1056,18 @@ mod dynamic_fns {
     #[inline]
     pub unsafe fn pa_stream_cancel_write(p: *mut pa_stream) -> c_int {
         (::std::mem::transmute::<_, extern "C" fn(*mut pa_stream) -> c_int>(PA_STREAM_CANCEL_WRITE))(p)
+    }
+
+    static mut PA_STREAM_IS_SUSPENDED: *mut ::libc::c_void = 0 as *mut _;
+    #[inline]
+    pub unsafe fn pa_stream_is_suspended(s: *const pa_stream) -> c_int {
+        (::std::mem::transmute::<_, extern "C" fn(*const pa_stream) -> c_int>(PA_STREAM_IS_SUSPENDED))(s)
+    }
+
+    static mut PA_STREAM_IS_CORKED: *mut ::libc::c_void = 0 as *mut _;
+    #[inline]
+    pub unsafe fn pa_stream_is_corked(s: *const pa_stream) -> c_int {
+        (::std::mem::transmute::<_, extern "C" fn(*const pa_stream) -> c_int>(PA_STREAM_IS_CORKED))(s)
     }
 
     static mut PA_STREAM_CONNECT_PLAYBACK: *mut ::libc::c_void = 0 as *mut _;
@@ -1066,6 +1185,12 @@ mod dynamic_fns {
         (::std::mem::transmute::<_, extern "C" fn(*const pa_stream) -> pa_stream_state_t>(PA_STREAM_GET_STATE))(p)
     }
 
+    static mut PA_STREAM_GET_CONTEXT: *mut ::libc::c_void = 0 as *mut _;
+    #[inline]
+    pub unsafe fn pa_stream_get_context(s: *const pa_stream) -> *mut pa_context {
+        (::std::mem::transmute::<_, extern "C" fn(*const pa_stream) -> *mut pa_context>(PA_STREAM_GET_CONTEXT))(s)
+    }
+
     static mut PA_STREAM_GET_TIME: *mut ::libc::c_void = 0 as *mut _;
     #[inline]
     pub unsafe fn pa_stream_get_time(s: *const pa_stream, r_usec: *mut pa_usec_t) -> c_int {
@@ -1130,6 +1255,12 @@ mod dynamic_fns {
                                  extern "C" fn(*mut pa_stream,
                                                pa_stream_request_cb_t,
                                                *mut c_void)>(PA_STREAM_SET_READ_CALLBACK))(p, cb, userdata)
+    }
+
+    static mut PA_STREAM_REF: *mut ::libc::c_void = 0 as *mut _;
+    #[inline]
+    pub unsafe fn pa_stream_ref(s: *mut pa_stream) -> *mut pa_stream {
+        (::std::mem::transmute::<_, extern "C" fn(*mut pa_stream) -> *mut pa_stream>(PA_STREAM_REF))(s)
     }
 
     static mut PA_STREAM_UNREF: *mut ::libc::c_void = 0 as *mut _;
@@ -1251,18 +1382,6 @@ mod dynamic_fns {
     pub unsafe fn pa_usec_to_bytes(t: pa_usec_t, spec: *const pa_sample_spec) -> usize {
         (::std::mem::transmute::<_, extern "C" fn(pa_usec_t, *const pa_sample_spec) -> usize>(PA_USEC_TO_BYTES))(t,
                                                                                                                  spec)
-    }
-
-    static mut PA_XFREE: *mut ::libc::c_void = 0 as *mut _;
-    #[inline]
-    pub unsafe fn pa_xfree(ptr: *mut c_void) {
-        (::std::mem::transmute::<_, extern "C" fn(*mut c_void)>(PA_XFREE))(ptr)
-    }
-
-    static mut PA_XSTRDUP: *mut ::libc::c_void = 0 as *mut _;
-    #[inline]
-    pub unsafe fn pa_xstrdup(str: *const c_char) -> *mut c_char {
-        (::std::mem::transmute::<_, extern "C" fn(*const c_char) -> *mut c_char>(PA_XSTRDUP))(str)
     }
 
     static mut PA_XREALLOC: *mut ::libc::c_void = 0 as *mut _;
