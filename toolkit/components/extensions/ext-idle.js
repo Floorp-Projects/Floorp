@@ -76,7 +76,7 @@ this.idle = class extends ExtensionAPI {
         setDetectionInterval: function(detectionIntervalInSeconds) {
           setDetectionInterval(extension, context, detectionIntervalInSeconds);
         },
-        onStateChanged: new SingletonEventManager(context, "idle.onStateChanged", fire => {
+        onStateChanged: new EventManager(context, "idle.onStateChanged", fire => {
           let listener = (event, data) => {
             fire.sync(data);
           };

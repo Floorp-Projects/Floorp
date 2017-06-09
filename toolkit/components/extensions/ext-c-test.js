@@ -168,7 +168,7 @@ this.test = class extends ExtensionAPI {
           }
         },
 
-        onMessage: new SingletonEventManager(context, "test.onMessage", fire => {
+        onMessage: new EventManager(context, "test.onMessage", fire => {
           let handler = (event, ...args) => {
             fire.async(...args);
           };

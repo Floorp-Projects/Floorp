@@ -144,10 +144,10 @@ function WebNavigationEventManager(context, eventName) {
     };
   };
 
-  return SingletonEventManager.call(this, context, name, register);
+  return EventManager.call(this, context, name, register);
 }
 
-WebNavigationEventManager.prototype = Object.create(SingletonEventManager.prototype);
+WebNavigationEventManager.prototype = Object.create(EventManager.prototype);
 
 const convertGetFrameResult = (tabId, data) => {
   return {
@@ -165,7 +165,7 @@ this.webNavigation = class extends ExtensionAPI {
 
     return {
       webNavigation: {
-        onTabReplaced: new SingletonEventManager(context, "webNavigation.onTabReplaced", fire => {
+        onTabReplaced: new EventManager(context, "webNavigation.onTabReplaced", fire => {
           return () => {};
         }).api(),
         onBeforeNavigate: new WebNavigationEventManager(context, "onBeforeNavigate").api(),

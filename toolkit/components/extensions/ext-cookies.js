@@ -378,7 +378,7 @@ this.cookies = class extends ExtensionAPI {
           return Promise.resolve(result);
         },
 
-        onChanged: new SingletonEventManager(context, "cookies.onChanged", fire => {
+        onChanged: new EventManager(context, "cookies.onChanged", fire => {
           let observer = (subject, topic, data) => {
             let notify = (removed, cookie, cause) => {
               cookie.QueryInterface(Ci.nsICookie2);

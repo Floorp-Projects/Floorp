@@ -317,7 +317,7 @@ this.bookmarks = class extends ExtensionAPI {
           }
         },
 
-        onCreated: new SingletonEventManager(context, "bookmarks.onCreated", fire => {
+        onCreated: new EventManager(context, "bookmarks.onCreated", fire => {
           let listener = (event, bookmark) => {
             fire.sync(bookmark.id, bookmark);
           };
@@ -330,7 +330,7 @@ this.bookmarks = class extends ExtensionAPI {
           };
         }).api(),
 
-        onRemoved: new SingletonEventManager(context, "bookmarks.onRemoved", fire => {
+        onRemoved: new EventManager(context, "bookmarks.onRemoved", fire => {
           let listener = (event, data) => {
             fire.sync(data.guid, data.info);
           };
@@ -343,7 +343,7 @@ this.bookmarks = class extends ExtensionAPI {
           };
         }).api(),
 
-        onChanged: new SingletonEventManager(context, "bookmarks.onChanged", fire => {
+        onChanged: new EventManager(context, "bookmarks.onChanged", fire => {
           let listener = (event, data) => {
             fire.sync(data.guid, data.info);
           };
@@ -356,7 +356,7 @@ this.bookmarks = class extends ExtensionAPI {
           };
         }).api(),
 
-        onMoved: new SingletonEventManager(context, "bookmarks.onMoved", fire => {
+        onMoved: new EventManager(context, "bookmarks.onMoved", fire => {
           let listener = (event, data) => {
             fire.sync(data.guid, data.info);
           };

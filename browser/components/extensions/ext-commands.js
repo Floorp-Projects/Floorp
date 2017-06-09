@@ -241,7 +241,7 @@ this.commands = class extends ExtensionAPI {
             });
           }));
         },
-        onCommand: new SingletonEventManager(context, "commands.onCommand", fire => {
+        onCommand: new EventManager(context, "commands.onCommand", fire => {
           let listener = (eventName, commandName) => {
             fire.async(commandName);
           };
