@@ -749,7 +749,6 @@ public:
   {
     return &mDuration;
   }
-  AbstractCanonical<bool>* CanonicalIsShutdown() { return &mIsShutdown; }
   AbstractCanonical<NextFrameStatus>* CanonicalNextFrameStatus()
   {
     return &mNextFrameStatus;
