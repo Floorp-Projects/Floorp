@@ -137,5 +137,9 @@
 <!ENTITY limitContentProcessOption.description
                                          "Additional content processes can improve performance when using multiple tabs, but will also use more memory.">
 <!ENTITY limitContentProcessOption.accesskey   "L">
+<!ENTITY limitContentProcessOption.disabledDescription
+                                         "Modifying the number of content processes is only possible with multiprocess &brandShortName.">
+<!ENTITY limitContentProcessOption.disabledDescriptionLink
+                                         "Learn how to check if multiprocess is enabled">
 <!ENTITY allowHWAccel.label              "Use hardware acceleration when available">
 <!ENTITY allowHWAccel.accesskey          "r">
