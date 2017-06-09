@@ -21,9 +21,9 @@ random skip-if(Android) HTTP(..) == object-aspect-ratio-2b.xhtml aspect-ratio-2-
 skip-if(Android) fuzzy-if(winWidget,1,56000) fuzzy-if(cocoaWidget,1,56000) HTTP(..) == zoomed-1.xhtml zoomed-1-ref.html # bug 778995 for fuzzy
 fails-if(styloVsGecko) == poster-1.html poster-ref-blue250x200.html
 fails-if(Android) fails-if(styloVsGecko) == poster-2.html poster-ref-black140x100.html
-fails-if(Android) == poster-3.html poster-ref-black140x100.html
+random-if(Android) == poster-3.html poster-ref-black140x100.html
 == poster-4.html poster-ref-black140x100.html
-fails-if(Android) == poster-5.html poster-ref-black140x100.html
+random-if(Android) == poster-5.html poster-ref-black140x100.html
 == poster-6.html poster-ref-black140x100.html
 == poster-7.html poster-ref-red140x100.html
 fuzzy-if(Android,2,14000) == poster-8.html poster-ref-black140x100.html
