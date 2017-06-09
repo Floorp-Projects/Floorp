@@ -7,6 +7,7 @@
 #ifndef nsXBLBinding_h_
 #define nsXBLBinding_h_
 
+#include "mozilla/ServoBindings.h"
 #include "nsXBLService.h"
 #include "nsCOMPtr.h"
 #include "nsINodeList.h"
@@ -128,6 +129,8 @@ public:
   void ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument);
 
   void WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc, void* aData);
+
+  const mozilla::ServoStyleSet* GetServoStyleSet() const;
 
   static nsresult DoInitJSClass(JSContext *cx, JS::Handle<JSObject*> obj,
                                 const nsAFlatString& aClassName,

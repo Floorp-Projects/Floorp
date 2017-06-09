@@ -1,5 +1,5 @@
 # Checking if these types/elements support :required
-fails-if(styloVsGecko) == css-required-textarea.html css-required-textarea-ref.html
+== css-required-textarea.html css-required-textarea-ref.html
 == css-required-radio.html css-required-radio-ref.html
 == css-required-text.html css-required-text-ref.html
 == css-required-checkbox.html css-required-checkbox-ref.html

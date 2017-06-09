@@ -92,9 +92,9 @@ private:
   MozPromiseRequestHolder<DecodePromise> mDecodePromiseRequest;
   MozPromiseHolder<DecodePromise> mDecodePromise;
   MozPromiseRequestHolder<FlushPromise> mFlushRequest;
-  RefPtr<FlushPromise> mFlushPromise;
   MozPromiseRequestHolder<ShutdownPromise> mShutdownRequest;
   RefPtr<ShutdownPromise> mShutdownPromise;
+  MozPromiseHolder<FlushPromise> mFlushPromise;
 
   RefPtr<GMPCrashHelper> mGMPCrashHelper;
   Maybe<bool> mNeedAVCC;

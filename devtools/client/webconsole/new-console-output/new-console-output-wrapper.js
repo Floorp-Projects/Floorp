@@ -11,14 +11,13 @@ const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 const { createContextMenu } = require("devtools/client/webconsole/new-console-output/utils/context-menu");
 const { configureStore } = require("devtools/client/webconsole/new-console-output/store");
+const { batchActions } = require("devtools/client/shared/redux/middleware/debounce");
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const ConsoleOutput = React.createFactory(require("devtools/client/webconsole/new-console-output/components/console-output"));
 const FilterBar = React.createFactory(require("devtools/client/webconsole/new-console-output/components/filter-bar"));
 
 let store = null;
-let queuedActions = [];
-let throttledDispatchTimeout = false;
 
 function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner, document) {
   EventEmitter.decorate(this);
@@ -145,7 +144,7 @@ NewConsoleOutputWrapper.prototype = {
 
   dispatchMessageAdd: function (message, waitForResponse) {
     let action = actions.messageAdd(message);
-    batchedMessageAdd(action);
+    store.dispatch(action);
 
     // Wait for the message to render to resolve with the DOM node.
     // This is just for backwards compatibility with old tests, and should
@@ -172,7 +171,7 @@ NewConsoleOutputWrapper.prototype = {
 
   dispatchMessagesAdd: function (messages) {
     const batchedActions = messages.map(message => actions.messageAdd(message));
-    store.dispatch(actions.batchActions(batchedActions));
+    store.dispatch(batchActions(batchedActions));
   },
 
   dispatchMessagesClear: function () {
@@ -187,7 +186,7 @@ NewConsoleOutputWrapper.prototype = {
     // network-message-updated will emit when eventTimings message arrives
     // which is the last one of 8 updates happening on network message update.
     if (res.packet.updateType === "eventTimings") {
-      batchedMessageAdd(actions.networkMessageUpdate(message));
+      store.dispatch(actions.networkMessageUpdate(message));
       this.jsterm.hud.emit("network-message-updated", res);
     }
   },
@@ -197,17 +196,6 @@ NewConsoleOutputWrapper.prototype = {
     return store;
   }
 };
-
-function batchedMessageAdd(action) {
-  queuedActions.push(action);
-  if (!throttledDispatchTimeout) {
-    throttledDispatchTimeout = setTimeout(() => {
-      store.dispatch(actions.batchActions(queuedActions));
-      queuedActions = [];
-      throttledDispatchTimeout = null;
-    }, 50);
-  }
-}
 
 // Exports from this module
 module.exports = NewConsoleOutputWrapper;

@@ -230,12 +230,10 @@ nsXBLPrototypeBinding::GetAllowScripts() const
 }
 
 bool
-nsXBLPrototypeBinding::LoadResources()
+nsXBLPrototypeBinding::LoadResources(nsIContent* aBoundElement)
 {
   if (mResources) {
-    bool result;
-    mResources->LoadResources(&result);
-    return result;
+    return mResources->LoadResources(aBoundElement);
   }
 
   return true;
@@ -569,6 +567,12 @@ nsXBLPrototypeBinding::GetRuleProcessor()
   }
 
   return nullptr;
+}
+
+const ServoStyleSet*
+nsXBLPrototypeBinding::GetServoStyleSet() const
+{
+  return mResources ? mResources->GetServoStyleSet() : nullptr;
 }
 
 void

@@ -871,6 +871,12 @@ nsXBLBinding::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc, void* aData)
     (*aFunc)(rules, aData);
 }
 
+const ServoStyleSet*
+nsXBLBinding::GetServoStyleSet() const
+{
+  return mPrototypeBinding->GetServoStyleSet();
+}
+
 // Internal helper methods ////////////////////////////////////////////////////////////////
 
 // Get or create a WeakMap object on a given XBL-hosting global.

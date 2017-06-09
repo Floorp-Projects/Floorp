@@ -28,7 +28,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
                                   "resource://gre/modules/Timer.jsm");
 
-var {Cc: classes, Ci: interfaces} = Components;
+var {classes: Cc, interfaces: Ci} = Components;
 
 /**
  * A number of iterations after which to yield time back

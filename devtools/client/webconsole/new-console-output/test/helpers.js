@@ -34,7 +34,11 @@ function setupActions() {
 /**
  * Prepare the store for use in testing.
  */
-function setupStore(input, hud, options) {
+function setupStore(input, hud, options = {}) {
+  // Disable debouncing for tests. It makes tests simpler
+  // if actions are dispatched and handled synchronously.
+  options.noDebounce = true;
+
   const store = configureStore(hud, options);
 
   // Add the messages from the input commands to the store.

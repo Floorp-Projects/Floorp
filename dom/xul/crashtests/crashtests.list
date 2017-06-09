@@ -8,7 +8,7 @@ load 326644-2.html
 load 326864-1.xul
 load 326875-1.xul
 load 326881-1.xul
-load 329982-1.xhtml
+asserts-if(stylo,4) load 329982-1.xhtml # bug 1370830
 load 336096-1.xhtml
 load 344215-1.xul
 load 354611-1.html
@@ -23,7 +23,7 @@ load 428951-1.xul
 load 429085-1.xhtml
 load 431906-1.html
 load 451311-1.xul
-load 461917-1.xhtml
+skip-if(stylo) load 461917-1.xhtml # bug 1370153
 load 468211-1.xul
 load 468211-2.xul
 load 468211-3.xul

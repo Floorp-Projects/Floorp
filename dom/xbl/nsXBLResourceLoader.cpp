@@ -81,24 +81,28 @@ nsXBLResourceLoader::~nsXBLResourceLoader()
   delete mResourceList;
 }
 
-void
-nsXBLResourceLoader::LoadResources(bool* aResult)
+bool
+nsXBLResourceLoader::LoadResources(nsIContent* aBoundElement)
 {
   mInLoadResourcesFunc = true;
 
   if (mLoadingResources) {
-    *aResult = (mPendingSheets == 0);
     mInLoadResourcesFunc = false;
-    return;
+    return mPendingSheets == 0;
   }
 
   mLoadingResources = true;
-  *aResult = true;
 
   // Declare our loaders.
   nsCOMPtr<nsIDocument> doc = mBinding->XBLDocumentInfo()->GetDocument();
+  mBoundDocument = aBoundElement->OwnerDoc();
 
   mozilla::css::Loader* cssLoader = doc->CSSLoader();
+  MOZ_ASSERT(cssLoader->GetDocument() &&
+             cssLoader->GetDocument()->GetStyleBackendType()
+               == mBoundDocument->GetStyleBackendType(),
+             "The style backends of the loader and bound document are mismatched!");
+
   nsIURI *docURL = doc->GetDocumentURI();
   nsIPrincipal* docPrincipal = doc->NodePrincipal();
 
@@ -154,12 +158,13 @@ nsXBLResourceLoader::LoadResources(bool* aResult)
     }
   }
 
-  *aResult = (mPendingSheets == 0);
   mInLoadResourcesFunc = false;
 
   // Destroy our resource list.
   delete mResourceList;
   mResourceList = nullptr;
+
+  return mPendingSheets == 0;
 }
 
 // nsICSSLoaderObserver
@@ -182,6 +187,9 @@ nsXBLResourceLoader::StyleSheetLoaded(StyleSheet* aSheet,
     // All stylesheets are loaded.
     if (aSheet->IsGecko()) {
       mResources->GatherRuleProcessor();
+    } else {
+      mResources->ComputeServoStyleSet(
+        mBoundDocument->GetShell()->GetPresContext());
     }
 
     // XXX Check for mPendingScripts when scripts also come online.

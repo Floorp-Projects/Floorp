@@ -8,7 +8,7 @@ skip-if(Android) load 336744-1.html # bug 1268050
 load 336960-1.html
 load 342954-1.xhtml
 load 342954-2.xhtml
-load 368276-1.xhtml
+asserts-if(stylo,4) load 368276-1.xhtml # bug 1370830
 load 368641-1.xhtml
 load 378521-1.xhtml
 load 382376-1.xhtml

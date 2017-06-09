@@ -151,6 +151,7 @@
   skin/classic/browser/sidebars.svg                   (../shared/icons/sidebars.svg)
   skin/classic/browser/stop.svg                       (../shared/icons/stop.svg)
   skin/classic/browser/sync.svg                       (../shared/icons/sync.svg)
+  skin/classic/browser/synced-tabs.svg                (../shared/icons/synced-tabs.svg)
   skin/classic/browser/webIDE.svg                     (../shared/icons/webIDE.svg)
   skin/classic/browser/zoom-in.svg                    (../shared/icons/zoom-in.svg)
   skin/classic/browser/zoom-out.svg                   (../shared/icons/zoom-out.svg)

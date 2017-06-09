@@ -1,5 +1,5 @@
 # Checking if these elements support :optional.
-fails-if(styloVsGecko) == css-optional-textarea.html css-optional-textarea-ref.html
+== css-optional-textarea.html css-optional-textarea-ref.html
 == css-optional-input.html css-optional-input-ref.html
 == css-optional-select.html css-optional-select-ref.html
 == css-optional-button.html about:blank

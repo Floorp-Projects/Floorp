@@ -64,6 +64,7 @@ headers = [
     "nsCSSFontFaceRule.h",
     "nsMediaFeatures.h",
     "nsMediaList.h",
+    "nsXBLBinding.h",
 ]
 raw-lines = [
     # FIXME(emilio): Incrementally remove these "pub use"s. Probably
@@ -346,6 +347,7 @@ structs-types = [
     "RawGeckoStyleAnimationList",
     "RawGeckoServoStyleRuleList",
     "RawGeckoURLExtraData",
+    "RawGeckoXBLBinding",
     "RefPtr",
     "CSSPseudoClassType",
     "CSSPseudoElementType",
@@ -459,6 +461,7 @@ servo-immutable-borrow-types = [
     "RawServoDeclarationBlockStrong",
     "RawGeckoPresContext",
     "RawGeckoStyleAnimationList",
+    "RawGeckoXBLBinding",
 ]
 servo-borrow-types = [
     "nsCSSPropertyIDSet",

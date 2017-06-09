@@ -1855,7 +1855,14 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           try {
             let whichNotification = aInput.whichSearchSuggestionsNotification;
             if (whichNotification != "none") {
-              aInput.updateSearchSuggestionsNotificationImpressions(whichNotification);
+              // Update the impressions count on real popupshown, since there's
+              // no guarantee openPopup will be respected by the platform.
+              // Though, we must ensure the handled event is the expected one.
+              let impressionId = this._searchSuggestionsImpressionId = {};
+              this.addEventListener("popupshown", () => {
+                if (this._searchSuggestionsImpressionId == impressionId)
+                  aInput.updateSearchSuggestionsNotificationImpressions(whichNotification);
+              }, {once: true});
               this._showSearchSuggestionsNotification(whichNotification, popupDirection);
             } else if (this.classList.contains("showSearchSuggestionsNotification")) {
               this._hideSearchSuggestionsNotification();
