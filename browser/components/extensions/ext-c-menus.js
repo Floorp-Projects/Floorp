@@ -158,7 +158,7 @@ this.menusInternal = class extends ExtensionAPI {
           return context.childManager.callParentAsyncFunction("menusInternal.removeAll", []);
         },
 
-        onClicked: new SingletonEventManager(context, "menus.onClicked", fire => {
+        onClicked: new EventManager(context, "menus.onClicked", fire => {
           let listener = (info, tab) => {
             fire.async(info, tab);
           };

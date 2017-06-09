@@ -566,7 +566,7 @@ this.browserAction = class extends ExtensionAPI {
 
     return {
       browserAction: {
-        onClicked: new SingletonEventManager(context, "browserAction.onClicked", fire => {
+        onClicked: new EventManager(context, "browserAction.onClicked", fire => {
           let listener = () => {
             fire.async(tabManager.convert(tabTracker.activeTab));
           };
