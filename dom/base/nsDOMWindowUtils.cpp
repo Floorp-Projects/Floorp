@@ -4304,6 +4304,27 @@ nsDOMWindowUtils::GetStorageUsage(nsIDOMStorage* aStorage, int64_t* aRetval)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::GetDirectionFromText(const nsAString& aString, int32_t* aRetval)
+{
+  Directionality dir = ::GetDirectionFromText(aString.BeginReading(), aString.Length(), nullptr);
+  switch (dir) {
+    case eDir_NotSet:
+      *aRetval = nsIDOMWindowUtils::DIRECTION_NOT_SET;
+      break;
+    case eDir_RTL:
+      *aRetval = nsIDOMWindowUtils::DIRECTION_RTL;
+      break;
+    case eDir_LTR:
+      *aRetval = nsIDOMWindowUtils::DIRECTION_LTR;
+      break;
+    case eDir_Auto:
+      MOZ_ASSERT_UNREACHABLE("GetDirectionFromText should never return this value");
+      return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
 NS_INTERFACE_MAP_BEGIN(nsTranslationNodeList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsITranslationNodeList)
