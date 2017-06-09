@@ -5198,6 +5198,15 @@ ContentParent::RecvRecordChildEvents(nsTArray<mozilla::Telemetry::ChildEventData
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+ContentParent::RecvRecordDiscardedData(
+                const mozilla::Telemetry::DiscardedData& aDiscardedData)
+{
+  TelemetryIPC::RecordDiscardedData(GetTelemetryProcessID(mRemoteType),
+                                    aDiscardedData);
+  return IPC_OK();
+}
+
 //////////////////////////////////////////////////////////////////
 // PURLClassifierParent
 
