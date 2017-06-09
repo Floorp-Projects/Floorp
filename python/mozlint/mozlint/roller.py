@@ -15,7 +15,7 @@ from Queue import Empty
 from .errors import LintersNotConfigured
 from .parser import Parser
 from .types import supported_types
-from .vcs import VCSFiles
+from .vcs import VCSHelper
 
 
 def _run_linters(queue, paths, **lintargs):
@@ -68,7 +68,7 @@ class LintRoller(object):
 
     def __init__(self, root=None, **lintargs):
         self.parse = Parser()
-        self.vcs = VCSFiles()
+        self.vcs = VCSHelper.create()
 
         self.linters = []
         self.lintargs = lintargs
@@ -98,20 +98,31 @@ class LintRoller(object):
         :return: A dictionary with file names as the key, and a list of
                  :class:`~result.ResultContainer`s as the value.
         """
-        paths = paths or []
+        # Need to use a set in case vcs operations specify the same file
+        # more than once.
+        paths = paths or set()
         if isinstance(paths, basestring):
-            paths = [paths]
+            paths = set([paths])
+        elif isinstance(paths, (list, tuple)):
+            paths = set(paths)
 
         if not self.linters:
             raise LintersNotConfigured
 
         # Calculate files from VCS
         if workdir:
-            paths.extend(self.vcs.by_workdir())
+            paths.update(self.vcs.by_workdir())
         if outgoing:
-            paths.extend(self.vcs.outgoing(outgoing))
+            paths.update(self.vcs.by_outgoing(outgoing))
+
+        if not paths and (workdir or outgoing):
+            print("warning: no files linted")
+            return {}
 
         paths = paths or ['.']
+
+        # This will convert paths back to a list, but that's ok since
+        # we're done adding to it.
         paths = map(os.path.abspath, paths)
 
         # Set up multiprocessing
