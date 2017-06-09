@@ -26,7 +26,13 @@ def get_session():
 
 def _do_request(url):
     session = get_session()
-    return session.get(url, stream=True)
+    response = session.get(url, stream=True)
+    if response.status_code >= 400:
+        # Consume content before raise_for_status, so that the connection can be
+        # reused.
+        response.content
+    response.raise_for_status()
+    return response
 
 
 def get_artifact_url(task_id, path, use_proxy=False):
@@ -47,7 +53,6 @@ def get_artifact(task_id, path, use_proxy=False):
     For other types of content, a file-like object is returned.
     """
     response = _do_request(get_artifact_url(task_id, path, use_proxy))
-    response.raise_for_status()
     if path.endswith('.json'):
         return response.json()
     if path.endswith('.yml'):
@@ -59,7 +64,6 @@ def get_artifact(task_id, path, use_proxy=False):
 
 def list_artifacts(task_id, use_proxy=False):
     response = _do_request(get_artifact_url(task_id, '', use_proxy).rstrip('/'))
-    response.raise_for_status()
     return response.json()['artifacts']
 
 
@@ -73,5 +77,4 @@ def get_index_url(index_path, use_proxy=False):
 
 def find_task_id(index_path, use_proxy=False):
     response = _do_request(get_index_url(index_path, use_proxy))
-    response.raise_for_status()
     return response.json()['taskId']
