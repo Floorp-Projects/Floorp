@@ -82,6 +82,9 @@ public:
     // in deadlocks.
   }
 
+  // Prevent a GCC warning about the other overload of Dispatch being hidden.
+  using AbstractThread::Dispatch;
+
   // Puts the queue in a shutdown state and returns immediately. The queue will
   // remain alive at least until all the events are drained, because the Runners
   // hold a strong reference to the task queue, and one of them is always held
