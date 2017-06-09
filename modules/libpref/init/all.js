@@ -5746,4 +5746,4 @@ pref("layers.advanced.text-layers", 2);
 pref("layers.advanced.filter-layers", 2);
 
 // Enable lowercased response header name
-pref("dom.xhr.lowercase_header.enabled", true);
+pref("dom.xhr.lowercase_header.enabled", false);

@@ -830,6 +830,12 @@ this.PanelMultiView = class {
         this.node.removeAttribute("panelopen");
         this.showMainView();
         if (this.panelViews) {
+          for (let panelView of this._viewStack.children) {
+            if (panelView.nodeName != "children") {
+              panelView.style.removeProperty("min-width");
+              panelView.style.removeProperty("max-width");
+            }
+          }
           this.window.removeEventListener("keydown", this);
           this._panel.removeEventListener("mousemove", this);
           this._resetKeyNavigation();

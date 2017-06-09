@@ -21,18 +21,12 @@ public:
   typedef TimeoutManager::Timeouts Timeouts;
   typedef Timeouts::TimeoutList    TimeoutList;
 
-  // Passing null for aNormalStopAt or aTrackingStopAt means that the
-  // corresponding timeout list should be iterated all the way to the end.
   OrderedTimeoutIterator(Timeouts& aNormalTimeouts,
-                         Timeouts& aTrackingTimeouts,
-                         Timeout* aNormalStopAt,
-                         Timeout* aTrackingStopAt)
+                         Timeouts& aTrackingTimeouts)
     : mNormalTimeouts(aNormalTimeouts.mTimeoutList),
       mTrackingTimeouts(aTrackingTimeouts.mTimeoutList),
       mNormalIter(mNormalTimeouts.getFirst()),
       mTrackingIter(mTrackingTimeouts.getFirst()),
-      mNormalStopAt(aNormalStopAt),
-      mTrackingStopAt(aTrackingStopAt),
       mKind(Kind::None),
       mUpdateIteratorCalled(true)
   {
@@ -44,16 +38,14 @@ public:
   Timeout* Next()
   {
     MOZ_ASSERT(mUpdateIteratorCalled);
-    MOZ_ASSERT_IF(mNormalIter && mNormalIter != mNormalStopAt,
-                  mNormalIter->isInList());
-    MOZ_ASSERT_IF(mTrackingIter && mTrackingIter != mTrackingStopAt,
-                  mTrackingIter->isInList());
+    MOZ_ASSERT_IF(mNormalIter, mNormalIter->isInList());
+    MOZ_ASSERT_IF(mTrackingIter, mTrackingIter->isInList());
 
     mUpdateIteratorCalled = false;
     mKind = Kind::None;
     Timeout* timeout = nullptr;
-    if (mNormalIter == mNormalStopAt) {
-      if (mTrackingIter == mTrackingStopAt) {
+    if (!mNormalIter) {
+      if (!mTrackingIter) {
         // We have reached the end of both lists.  Bail out!
         return nullptr;
       } else {
@@ -62,7 +54,7 @@ public:
         timeout = mTrackingIter;
         mKind = Kind::Tracking;
       }
-    } else if (mTrackingIter == mTrackingStopAt) {
+    } else if (!mTrackingIter) {
       // We have reached the end of the tracking timeout list, select the next
       // normal timeout.
       timeout = mNormalIter;
@@ -76,17 +68,15 @@ public:
       // different mWhen values, so in practice we shouldn't fall back to
       // comparing timeout IDs.
       if (mNormalIter && mTrackingIter &&
-          mNormalIter != mNormalStopAt &&
-          mTrackingIter != mTrackingStopAt &&
           (mTrackingIter->When() < mNormalIter->When() ||
            (mTrackingIter->When() == mNormalIter->When() &&
             mTrackingIter->mTimeoutId < mNormalIter->mTimeoutId))) {
         timeout = mTrackingIter;
         mKind = Kind::Tracking;
-      } else if (mNormalIter && mNormalIter != mNormalStopAt) {
+      } else if (mNormalIter) {
         timeout = mNormalIter;
         mKind = Kind::Normal;
-      } else if (mTrackingIter && mTrackingIter != mTrackingStopAt) {
+      } else if (mTrackingIter) {
         timeout = mTrackingIter;
         mKind = Kind::Tracking;
       }
@@ -120,14 +110,12 @@ public:
     // the timeout pointed to from one of our iterators.
     if (mKind == Kind::Normal) {
       mNormalIter = mCurrent->getNext();
-      if (mTrackingIter && mTrackingIter != mTrackingStopAt &&
-          !mTrackingIter->isInList()) {
+      if (mTrackingIter && !mTrackingIter->isInList()) {
         mTrackingIter = mTrackingTimeouts.getFirst();
       }
     } else {
       mTrackingIter = mCurrent->getNext();
-      if (mNormalIter && mNormalIter != mNormalStopAt &&
-          !mNormalIter->isInList()) {
+      if (mNormalIter && !mNormalIter->isInList()) {
         mNormalIter = mNormalTimeouts.getFirst();
       }
     }
@@ -173,8 +161,6 @@ private:
   TimeoutList& mTrackingTimeouts;        // The list of tracking timeouts.
   RefPtr<Timeout> mNormalIter;           // The iterator over the normal timeout list.
   RefPtr<Timeout> mTrackingIter;         // The iterator over the tracking timeout list.
-  void* mNormalStopAt;                   // Where to stop iterating the normal list at.
-  void* mTrackingStopAt;                 // Where to stop iterating the tracking list at.
   RefPtr<Timeout> mCurrent;              // The current timeout that Next() just found.
   enum class Kind { Normal, Tracking, None };
   Kind mKind;                            // The kind of iterator picked the last time.
