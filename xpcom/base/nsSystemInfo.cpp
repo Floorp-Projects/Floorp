@@ -229,7 +229,7 @@ nsresult GetCountryCode(nsAString& aCountryCode)
   }
   // Now get the string for real
   aCountryCode.SetLength(numChars);
-  numChars = GetGeoInfoW(geoid, GEO_ISO2, wwc(aCountryCode.BeginWriting()),
+  numChars = GetGeoInfoW(geoid, GEO_ISO2, char16ptr_t(aCountryCode.BeginWriting()),
                          aCountryCode.Length(), 0);
   if (!numChars) {
     return NS_ERROR_FAILURE;
