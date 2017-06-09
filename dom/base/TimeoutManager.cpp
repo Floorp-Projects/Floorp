@@ -424,8 +424,6 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
 
   // If we're not suspended, then set the timer.
   if (!mWindow.IsSuspended()) {
-    MOZ_ASSERT(!timeout->When().IsNull());
-
     nsresult rv = mExecutor->MaybeSchedule(timeout->When());
     if (NS_FAILED(rv)) {
       return rv;
@@ -547,11 +545,10 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
   MOZ_DIAGNOSTIC_ASSERT(!aNow.IsNull());
   MOZ_DIAGNOSTIC_ASSERT(!aTargetDeadline.IsNull());
 
+  MOZ_ASSERT_IF(mWindow.IsFrozen(), mWindow.IsSuspended());
   if (mWindow.IsSuspended()) {
     return;
   }
-
-  NS_ASSERTION(!mWindow.IsFrozen(), "Timeout running on a window in the bfcache!");
 
   // Limit the overall time spent in RunTimeout() to reduce jank.
   uint32_t totalTimeLimitMS = std::max(1u, gMaxConsecutiveCallbacksMilliseconds);
@@ -838,20 +835,18 @@ TimeoutManager::ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS
 {
   MOZ_ASSERT(aPreviousThrottleDelayMS > 0);
 
-  if (mWindow.IsFrozen() || mWindow.IsSuspended()) {
+  MOZ_ASSERT_IF(mWindow.IsFrozen(), mWindow.IsSuspended());
+  if (mWindow.IsSuspended()) {
     return NS_OK;
   }
 
-  Timeouts::SortBy sortBy = mWindow.IsFrozen() ? Timeouts::SortBy::TimeRemaining
-                                               : Timeouts::SortBy::TimeWhen;
-
   nsresult rv = mNormalTimeouts.ResetTimersForThrottleReduction(aPreviousThrottleDelayMS,
                                                                 *this,
-                                                                sortBy);
+                                                                Timeouts::SortBy::TimeWhen);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mTrackingTimeouts.ResetTimersForThrottleReduction(aPreviousThrottleDelayMS,
                                                          *this,
-                                                         sortBy);
+                                                         Timeouts::SortBy::TimeWhen);
   NS_ENSURE_SUCCESS(rv, rv);
 
   OrderedTimeoutIterator iter(mNormalTimeouts, mTrackingTimeouts);
