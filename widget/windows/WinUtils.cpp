@@ -1805,111 +1805,41 @@ WinUtils::GetMaxTouchPoints()
   return 0;
 }
 
-#pragma pack(push, 1)
-typedef struct REPARSE_DATA_BUFFER {
-  ULONG  ReparseTag;
-  USHORT ReparseDataLength;
-  USHORT Reserved;
-  union {
-    struct {
-      USHORT SubstituteNameOffset;
-      USHORT SubstituteNameLength;
-      USHORT PrintNameOffset;
-      USHORT PrintNameLength;
-      ULONG  Flags;
-      WCHAR  PathBuffer[1];
-    } SymbolicLinkReparseBuffer;
-    struct {
-      USHORT SubstituteNameOffset;
-      USHORT SubstituteNameLength;
-      USHORT PrintNameOffset;
-      USHORT PrintNameLength;
-      WCHAR  PathBuffer[1];
-    } MountPointReparseBuffer;
-    struct {
-      UCHAR DataBuffer[1];
-    } GenericReparseBuffer;
-  };
-} REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
-#pragma pack(pop)
-
 /* static */
 bool
-WinUtils::ResolveMovedUsersFolder(std::wstring& aPath)
+WinUtils::ResolveJunctionPointsAndSymLinks(std::wstring& aPath)
 {
-  wchar_t* usersPath;
-  if (FAILED(SHGetKnownFolderPath(FOLDERID_UserProfiles, 0, nullptr,
-                                  &usersPath))) {
-    return false;
-  }
+  wchar_t path[MAX_PATH] = { 0 };
 
-  // Ensure usersPath gets freed properly.
-  UniquePtr<wchar_t, CoTaskMemFreePolicy> autoFreePath(usersPath);
-
-  // Is aPath in Users folder?
-  size_t usersLen = wcslen(usersPath);
-  if (_wcsnicmp(aPath.c_str(), usersPath, usersLen) != 0 ||
-      aPath[usersLen] != L'\\') {
-    return true;
-  }
-
-  DWORD attributes = ::GetFileAttributesW(usersPath);
-  if (attributes == INVALID_FILE_ATTRIBUTES) {
-    return false;
-  }
-
-  // Junction points are implemented as reparse points, is the Users folder one?
-  if (!(attributes & FILE_ATTRIBUTE_REPARSE_POINT)) {
-    return true;
-  }
-
-  // Get the reparse point data.
-  nsAutoHandle usersHandle(
-    ::CreateFileW(usersPath, 0,
+  nsAutoHandle handle(
+    ::CreateFileW(aPath.c_str(),
+                  0,
                   FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                  nullptr, OPEN_EXISTING,
-                  FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+                  nullptr,
+                  OPEN_EXISTING,
+                  FILE_FLAG_BACKUP_SEMANTICS,
                   nullptr));
 
-  char maxReparseBuf[MAXIMUM_REPARSE_DATA_BUFFER_SIZE] = {0};
-  REPARSE_DATA_BUFFER* reparseBuf = (REPARSE_DATA_BUFFER*)maxReparseBuf;
-  DWORD bytesReturned = 0;
-  if (!::DeviceIoControl(usersHandle, FSCTL_GET_REPARSE_POINT, nullptr, 0,
-                         reparseBuf, MAXIMUM_REPARSE_DATA_BUFFER_SIZE,
-                         &bytesReturned, nullptr)) {
+  if (handle == INVALID_HANDLE_VALUE) {
     return false;
   }
 
-  // Check to see if the reparse point is a junction point.
-  if (reparseBuf->ReparseTag != IO_REPARSE_TAG_MOUNT_POINT) {
-    return true;
-  }
-
-  // The offset and length are in bytes. Length doesn't include null.
-  wchar_t* substituteName = reparseBuf->MountPointReparseBuffer.PathBuffer +
-    reparseBuf->MountPointReparseBuffer.SubstituteNameOffset / sizeof(wchar_t);
-  std::wstring::size_type substituteLen =
-    reparseBuf->MountPointReparseBuffer.SubstituteNameLength / sizeof(wchar_t);
-
-  // If the substitute path starts with the NT namespace then remove it.
-  if (wcsncmp(substituteName, kNTPrefix, kNTPrefixLen) == 0) {
-    substituteName += kNTPrefixLen;
-    substituteLen -= kNTPrefixLen;
-  }
-
-  // Check that what remains looks like a drive letter path.
-  if (substituteName[1] != L':' || substituteName[2] != L'\\') {
+  DWORD pathLen = GetFinalPathNameByHandleW(
+    handle, path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+  if (pathLen == 0 || pathLen >= MAX_PATH) {
     return false;
   }
+  aPath = path;
 
-  // The documentation for SHGetKnownFolderPath says that it doesn't return a
-  // trailing backslash. The REPARSE_DATA_BUFFER path doesn't seem to have one
-  // either, but the documentation doesn't mention it, so let's make sure.
-  if (substituteName[substituteLen - 1] == L'\\') {
-    --substituteLen;
+  // GetFinalPathNameByHandle sticks a '\\?\' in front of the path,
+  // but that confuses some APIs so strip it off. It will also put
+  // '\\?\UNC\' in front of network paths, we convert that to '\\'.
+  if (aPath.compare(0, 7, L"\\\\?\\UNC") == 0) {
+    aPath.erase(2, 6);
+  } else if (aPath.compare(0, 4, L"\\\\?\\") == 0) {
+    aPath.erase(0, 4);
   }
 
-  aPath.replace(0, usersLen, substituteName, substituteLen);
   return true;
 }
 

@@ -179,7 +179,7 @@ IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
     }
     // IME isn't implemented with IMM, IMMHandler shouldn't handle any
     // messages.
-    if (!TSFTextStore::IsIMM_IMEActive()) {
+    if (!IsIMMActive()) {
       return false;
     }
   }
@@ -421,7 +421,7 @@ bool
 IMEHandler::NeedsToAssociateIMC()
 {
   if (sAssociateIMCOnlyWhenIMM_IMEActive) {
-    return TSFTextStore::IsIMM_IMEActive();
+    return IsIMMActive();
   }
 
   // Even if IMC should be associated with focused widget with non-IMM-IME,
@@ -556,6 +556,11 @@ IMEHandler::CurrentKeyboardLayoutHasIME()
 void
 IMEHandler::OnKeyboardLayoutChanged()
 {
+  // Be aware, this method won't be called until TSFStaticSink starts to
+  // observe active TIP change.  If you need to be notified of this, you
+  // need to create TSFStaticSink::Observe() or something and call it
+  // TSFStaticSink::EnsureInitActiveTIPKeyboard() forcibly.
+
   if (!sIsIMMEnabled || !IsTSFAvailable()) {
     return;
   }

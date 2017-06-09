@@ -32,6 +32,7 @@
 #include "nsJSEnvironment.h"
 #include "nsLayoutUtils.h"
 #include "nsPIWindowRoot.h"
+#include "nsRFPService.h"
 #include "WorkerPrivate.h"
 
 namespace mozilla {
@@ -1094,7 +1095,7 @@ Event::DefaultPrevented(CallerType aCallerType) const
 }
 
 double
-Event::TimeStamp() const
+Event::TimeStampImpl() const
 {
   if (!sReturnHighResTimeStamp) {
     return static_cast<double>(mEvent->mTime);
@@ -1127,6 +1128,12 @@ Event::TimeStamp() const
   MOZ_ASSERT(workerPrivate);
 
   return workerPrivate->TimeStampToDOMHighRes(mEvent->mTimeStamp);
+}
+
+double
+Event::TimeStamp() const
+{
+  return nsRFPService::ReduceTimePrecisionAsMSecs(TimeStampImpl());
 }
 
 bool
