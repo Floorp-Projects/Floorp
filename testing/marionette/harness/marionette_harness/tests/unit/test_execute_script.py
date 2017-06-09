@@ -207,10 +207,6 @@ class TestExecuteContent(MarionetteTestCase):
         self.assertEqual(self.marionette.execute_script(
             "return this.foobar;", new_sandbox=False), [23, 42])
 
-        self.marionette.execute_script("global.barfoo = [42, 23];")
-        self.assertEqual(self.marionette.execute_script(
-            "return global.barfoo;", new_sandbox=False), [42, 23])
-
     def test_sandbox_refresh_arguments(self):
         self.marionette.execute_script(
             "this.foobar = [arguments[0], arguments[1]]", [23, 42])

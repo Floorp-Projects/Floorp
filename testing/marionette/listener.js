@@ -740,7 +740,6 @@ function* executeInSandbox(script, args, timeout, opts) {
 
   let sb = sandboxes.get(opts.sandboxName, opts.newSandbox);
   if (opts.sandboxName) {
-    sb = sandbox.augment(sb, {global: sb});
     sb = sandbox.augment(sb, new logging.Adapter(contentLog));
   }
 

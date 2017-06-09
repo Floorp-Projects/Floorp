@@ -18,7 +18,9 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryChecking.h"
+#include "mozilla/Move.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/UniquePtr.h"
 
 #include "LulCommonExt.h"
 #include "LulElfExt.h"
@@ -514,15 +516,6 @@ class PriMap {
     : mLog(aLog)
   {}
 
-  ~PriMap() {
-    for (std::vector<SecMap*>::iterator iter = mSecMaps.begin();
-         iter != mSecMaps.end();
-         ++iter) {
-      delete *iter;
-    }
-    mSecMaps.clear();
-  }
-
   // RUNS IN NO-MALLOC CONTEXT
   pair<const RuleSet*, const vector<PfxInstr>*>
   Lookup(uintptr_t ia)
@@ -535,7 +528,7 @@ class PriMap {
 
   // Add a secondary map.  No overlaps allowed w.r.t. existing
   // secondary maps.
-  void AddSecMap(SecMap* aSecMap) {
+  void AddSecMap(mozilla::UniquePtr<SecMap>&& aSecMap) {
     // We can't add an empty SecMap to the PriMap.  But that's OK
     // since we'd never be able to find anything in it anyway.
     if (aSecMap->IsEmpty()) {
@@ -552,7 +545,7 @@ class PriMap {
     size_t num_secMaps = mSecMaps.size();
     uintptr_t i;
     for (i = 0; i < num_secMaps; ++i) {
-      SecMap* sm_i = mSecMaps[i];
+      mozilla::UniquePtr<SecMap>& sm_i = mSecMaps[i];
       MOZ_ASSERT(sm_i->mSummaryMinAddr <= sm_i->mSummaryMaxAddr);
       if (aSecMap->mSummaryMinAddr < sm_i->mSummaryMaxAddr) {
         // |aSecMap| needs to be inserted immediately before mSecMaps[i].
@@ -562,10 +555,10 @@ class PriMap {
     MOZ_ASSERT(i <= num_secMaps);
     if (i == num_secMaps) {
       // It goes at the end.
-      mSecMaps.push_back(aSecMap);
+      mSecMaps.push_back(mozilla::Move(aSecMap));
     } else {
-      std::vector<SecMap*>::iterator iter = mSecMaps.begin() + i;
-      mSecMaps.insert(iter, aSecMap);
+      std::vector<mozilla::UniquePtr<SecMap>>::iterator iter = mSecMaps.begin() + i;
+      mSecMaps.insert(iter, mozilla::Move(aSecMap));
     }
     char buf[100];
     SprintfLiteral(buf, "AddSecMap: now have %d SecMaps\n",
@@ -586,7 +579,7 @@ class PriMap {
       // the entire address space, can be completed in time proportional
       // to the number of elements in the map.
       for (i = (intptr_t)num_secMaps-1; i >= 0; i--) {
-        SecMap* sm_i = mSecMaps[i];
+        mozilla::UniquePtr<SecMap>& sm_i = mSecMaps[i];
         if (sm_i->mSummaryMaxAddr < avma_min ||
             avma_max < sm_i->mSummaryMinAddr) {
           // There's no overlap.  Move on.
@@ -595,7 +588,6 @@ class PriMap {
         // We need to remove mSecMaps[i] and slide all those above it
         // downwards to cover the hole.
         mSecMaps.erase(mSecMaps.begin() + i);
-        delete sm_i;
       }
     }
   }
@@ -828,20 +820,20 @@ class PriMap {
         return nullptr;
       }
       long int  mid         = lo + ((hi - lo) / 2);
-      SecMap*   mid_secMap  = mSecMaps[mid];
+      mozilla::UniquePtr<SecMap>& mid_secMap = mSecMaps[mid];
       uintptr_t mid_minAddr = mid_secMap->mSummaryMinAddr;
       uintptr_t mid_maxAddr = mid_secMap->mSummaryMaxAddr;
       if (ia < mid_minAddr) { hi = mid-1; continue; }
       if (ia > mid_maxAddr) { lo = mid+1; continue; }
       MOZ_ASSERT(mid_minAddr <= ia && ia <= mid_maxAddr);
-      return mid_secMap;
+      return mid_secMap.get();
     }
     // NOTREACHED
   }
 
  private:
   // sorted array of per-object ranges, non overlapping, non empty
-  std::vector<SecMap*> mSecMaps;
+  std::vector<mozilla::UniquePtr<SecMap>> mSecMaps;
 
   // a logging sink, for debugging.
   void (*mLog)(const char*);
@@ -956,17 +948,17 @@ LUL::NotifyAfterMap(uintptr_t aRXavma, size_t aSize,
   if (aSize > 0) {
 
     // Here's a new mapping, for this object.
-    SecMap* smap = new SecMap(mLog);
+    mozilla::UniquePtr<SecMap> smap = mozilla::MakeUnique<SecMap>(mLog);
 
     // Read CFI or EXIDX unwind data into |smap|.
     if (!aMappedImage) {
       (void)lul::ReadSymbolData(
-              string(aFileName), std::vector<string>(), smap,
+              string(aFileName), std::vector<string>(), smap.get(),
               (void*)aRXavma, aSize, mUSU, mLog);
     } else {
       (void)lul::ReadSymbolDataInternal(
               (const uint8_t*)aMappedImage,
-              string(aFileName), std::vector<string>(), smap,
+              string(aFileName), std::vector<string>(), smap.get(),
               (void*)aRXavma, aSize, mUSU, mLog);
     }
 
@@ -980,7 +972,7 @@ LUL::NotifyAfterMap(uintptr_t aRXavma, size_t aSize,
     mLog(buf);
 
     // Add it to the primary map (the top level set of mapped objects).
-    mPriMap->AddSecMap(smap);
+    mPriMap->AddSecMap(mozilla::Move(smap));
 
     // Tell the segment array about the mapping, so that the stack
     // scan and __kernel_syscall mechanisms know where valid code is.

@@ -1913,24 +1913,24 @@ skip-if(!Android) == 1133905-3-rtl.html 1133905-ref-rtl.html
 skip-if(!Android) == 1133905-4-rtl.html 1133905-ref-rtl.html
 skip-if(!Android) == 1133905-5-rtl.html 1133905-ref-rtl.html
 skip-if(!Android) == 1133905-6-rtl.html 1133905-ref-rtl.html
-skip-if(!Android) fails-if(Android) fails-if(styloVsGecko) == 1133905-1-v-rtl.html 1133905-ref-v-rtl.html
-skip-if(!Android) fails-if(Android) fails-if(styloVsGecko) == 1133905-2-v-rtl.html 1133905-ref-v-rtl.html
-skip-if(!Android) fails-if(Android) fails-if(styloVsGecko) == 1133905-3-v-rtl.html 1133905-ref-v-rtl.html
-skip-if(!Android) fails-if(styloVsGecko) == 1133905-4-v-rtl.html 1133905-ref-v-rtl.html
-skip-if(!Android) fails-if(Android) fails-if(styloVsGecko) == 1133905-5-v-rtl.html 1133905-ref-v-rtl.html
-skip-if(!Android) fails-if(Android) fails-if(styloVsGecko) == 1133905-6-v-rtl.html 1133905-ref-v-rtl.html
+skip-if(!Android) fails-if(Android) == 1133905-1-v-rtl.html 1133905-ref-v-rtl.html
+skip-if(!Android) fails-if(Android) == 1133905-2-v-rtl.html 1133905-ref-v-rtl.html
+skip-if(!Android) fails-if(Android) == 1133905-3-v-rtl.html 1133905-ref-v-rtl.html
+skip-if(!Android) == 1133905-4-v-rtl.html 1133905-ref-v-rtl.html
+skip-if(!Android) fails-if(Android) == 1133905-5-v-rtl.html 1133905-ref-v-rtl.html
+skip-if(!Android) fails-if(Android) == 1133905-6-v-rtl.html 1133905-ref-v-rtl.html
 skip-if(!Android) == 1133905-1-h-rtl.html 1133905-ref-h-rtl.html
 skip-if(!Android) == 1133905-2-h-rtl.html 1133905-ref-h-rtl.html
 skip-if(!Android) == 1133905-3-h-rtl.html 1133905-ref-h-rtl.html
 skip-if(!Android) == 1133905-4-h-rtl.html 1133905-ref-h-rtl.html
 skip-if(!Android) == 1133905-5-h-rtl.html 1133905-ref-h-rtl.html
 skip-if(!Android) == 1133905-6-h-rtl.html 1133905-ref-h-rtl.html
-skip-if(!Android) fails-if(Android) fails-if(styloVsGecko) == 1133905-1-vh-rtl.html 1133905-ref-vh-rtl.html
-skip-if(!Android) fails-if(Android) fails-if(styloVsGecko) == 1133905-2-vh-rtl.html 1133905-ref-vh-rtl.html
-skip-if(!Android) fails-if(Android) fails-if(styloVsGecko) == 1133905-3-vh-rtl.html 1133905-ref-vh-rtl.html
-skip-if(!Android) fails-if(styloVsGecko) == 1133905-4-vh-rtl.html 1133905-ref-vh-rtl.html
-skip-if(!Android) fails-if(Android) fails-if(styloVsGecko) == 1133905-5-vh-rtl.html 1133905-ref-vh-rtl.html
-skip-if(!Android) fails-if(Android) fails-if(styloVsGecko) == 1133905-6-vh-rtl.html 1133905-ref-vh-rtl.html
+skip-if(!Android) fails-if(Android) == 1133905-1-vh-rtl.html 1133905-ref-vh-rtl.html
+skip-if(!Android) fails-if(Android) == 1133905-2-vh-rtl.html 1133905-ref-vh-rtl.html
+skip-if(!Android) fails-if(Android) == 1133905-3-vh-rtl.html 1133905-ref-vh-rtl.html
+skip-if(!Android) == 1133905-4-vh-rtl.html 1133905-ref-vh-rtl.html
+skip-if(!Android) fails-if(Android) == 1133905-5-vh-rtl.html 1133905-ref-vh-rtl.html
+skip-if(!Android) fails-if(Android) == 1133905-6-vh-rtl.html 1133905-ref-vh-rtl.html
 == 1150021-1.xul 1150021-1-ref.xul
 == 1151145-1.html 1151145-1-ref.html
 == 1151306-1.html 1151306-1-ref.html
@@ -2010,3 +2010,4 @@ fails-if(!stylo||styloVsGecko) == 1365162-1.html 1365162-1-ref.html
 == 1367592-1.html 1367592-1-ref.html
 == 1369584-1a.html 1369584-1-ref.html
 == 1369584-1b.html 1369584-1-ref.html
+== 1369954-1.xhtml 1369954-1-ref.xhtml
