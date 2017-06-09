@@ -43,9 +43,10 @@ class MozlintParser(ArgumentParser):
         [['-o', '--outgoing'],
          {'const': 'default',
           'nargs': '?',
-          'help': "Lint files touched by commits that are not on the remote repository."
-                  "If you are using git please specify which remote you want to compare to."
-                  "Works with mercurial or git."
+          'help': "Lint files touched by commits that are not on the remote repository. "
+                  "Without arguments, finds the default remote that would be pushed to. "
+                  "The remote branch can also be specified manually. Works with "
+                  "mercurial or git."
           }],
         [['-w', '--workdir'],
          {'default': False,
