@@ -81,7 +81,6 @@ pref("devtools.promote.layoutview.showPromoteBar", true);
 // Grid highlighter preferences
 pref("devtools.gridinspector.showGridAreas", false);
 pref("devtools.gridinspector.showGridLineNumbers", false);
-pref("devtools.gridinspector.showGridOutline", false);
 pref("devtools.gridinspector.showInfiniteLines", false);
 
 // Whether or not the box model panel is opened in the computed view
