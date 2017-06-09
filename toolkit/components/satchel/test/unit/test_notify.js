@@ -139,7 +139,11 @@ expectedNotification = "formhistory-remove";
 expectedData = [10, 99999999999];
 
 yield FormHistory.update({ op: "remove", firstUsedStart: expectedData[0], firstUsedEnd: expectedData[1] },
-                         { handleCompletion(reason) { if (!reason) next_test() },
+                         { handleCompletion(reason) {
+                             if (!reason) {
+                               next_test()
+                             }
+                           },
                            handleErrors(error) {
                              do_throw("Error occurred updating form history: " + error);
                            }

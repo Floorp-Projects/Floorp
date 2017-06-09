@@ -44,8 +44,9 @@ function doKey(aKey, modifier) {
     var key = SpecialPowers.Ci.nsIDOMKeyEvent[keyName];
 
     // undefined --> null
-    if (!modifier)
-        modifier = null;
+    if (!modifier) {
+      modifier = null;
+    }
 
     // Window utils for sending fake key events.
     var wutils = SpecialPowers.getDOMWindowUtils(window);
@@ -76,8 +77,9 @@ function getMenuEntries() {
 
 function checkArrayValues(actualValues, expectedValues, msg) {
   is(actualValues.length, expectedValues.length, "Checking array values: " + msg);
-  for (var i = 0; i < expectedValues.length; i++)
+  for (var i = 0; i < expectedValues.length; i++) {
     is(actualValues[i], expectedValues[i], msg + " Checking array entry #" + i);
+  }
 }
 
 var checkObserver = {
@@ -94,15 +96,17 @@ var checkObserver = {
   },
 
   waitForChecks(callback) {
-    if (this.verifyStack.length == 0)
+    if (this.verifyStack.length == 0) {
       callback();
-    else
+    } else {
       this.callback = callback;
+    }
   },
 
   observe({ subject, topic, data }) {
-    if (data != "formhistory-add" && data != "formhistory-update")
+    if (data != "formhistory-add" && data != "formhistory-update") {
       return;
+    }
     ok(this.verifyStack.length > 0, "checking if saved form data was expected");
 
     // Make sure that every piece of data we expect to be saved is saved, and no
@@ -262,8 +266,9 @@ function satchelCommonSetup() {
   gChromeScript = SpecialPowers.loadChromeScript(chromeURL);
   gChromeScript.addMessageListener("onpopupshown", ({ results }) => {
     gLastAutoCompleteResults = results;
-    if (gPopupShownListener)
+    if (gPopupShownListener) {
       gPopupShownListener({results});
+    }
   });
 
   SimpleTest.registerCleanupFunction(() => {

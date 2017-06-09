@@ -429,10 +429,11 @@ function runTest() { // eslint-disable-line complexity
 
         // On OS X, shift-backspace and shift-delete work, just delete does not.
         // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
-        if (SpecialPowers.OS == "Darwin")
-          doKey("back_space", shiftModifier);
-        else
-          doKey("delete", shiftModifier);
+        if (SpecialPowers.OS == "Darwin") {
+            doKey("back_space", shiftModifier);
+        } else {
+            doKey("delete", shiftModifier);
+        }
 
         // This tests that on OS X shift-backspace didn't delete the last character
         // in the input (bug 480262).
@@ -1032,8 +1033,9 @@ function addEntry(name, value) {
 // Runs the next test when scroll event occurs
 function waitForScroll() {
   addEventListener("scroll", function() {
-    if (!window.pageYOffset)
-      return;
+    if (!window.pageYOffset) {
+        return;
+    }
 
     removeEventListener("scroll", arguments.callee, false);
     setTimeout(runTest, 100);
@@ -1047,8 +1049,9 @@ function waitForMenuChange(expectedCount, expectedFirstValue) {
 function checkMenuEntries(expectedValues, testNumber) {
     var actualValues = getMenuEntries();
     is(actualValues.length, expectedValues.length, testNumber + " Checking length of expected menu");
-    for (var i = 0; i < expectedValues.length; i++)
+    for (var i = 0; i < expectedValues.length; i++) {
         is(actualValues[i], expectedValues[i], testNumber + " Checking menu entry #" + i);
+    }
 }
 
 function startTest() {

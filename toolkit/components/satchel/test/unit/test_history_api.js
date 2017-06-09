@@ -48,10 +48,12 @@ function checkTimeDeleted(guid, checkFunction) {
 
 function promiseUpdateEntry(op, name, value) {
   var change = { op };
-  if (name !== null)
+  if (name !== null) {
     change.fieldname = name;
-  if (value !== null)
+  }
+  if (value !== null) {
     change.value = value;
+  }
   return promiseUpdate(change);
 }
 
@@ -81,7 +83,11 @@ function promiseSearchEntries(terms, params) {
                            do_throw("Error occurred searching form history: " + error);
                            reject(error);
                          },
-                         handleCompletion(reason) { if (!reason) resolve(results); }
+                         handleCompletion(reason) {
+                           if (!reason) {
+                             resolve(results);
+                           }
+                         }
                        });
   });
 }
@@ -105,8 +111,9 @@ add_task(async function() {
   // Cleanup from any previous tests or failures.
   var destFile = profileDir.clone();
   destFile.append("formhistory.sqlite");
-  if (destFile.exists())
+  if (destFile.exists()) {
     destFile.remove(false);
+  }
 
   testfile.copyTo(profileDir, "formhistory.sqlite");
 
@@ -167,7 +174,11 @@ add_task(async function() {
                             handleError(error) {
                               do_throw("Error occurred searching form history: " + error);
                             },
-                            handleCompletion(reason) { if (!reason) deferred.resolve() }
+                            handleCompletion(reason) {
+                              if (!reason) {
+                                deferred.resolve()
+                              }
+                            }
                           });
   await deferred.promise;
 

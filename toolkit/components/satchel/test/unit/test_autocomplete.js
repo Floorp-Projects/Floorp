@@ -14,8 +14,9 @@ const DEFAULT_EXPIRE_DAYS = 180;
 
 function padLeft(number, length) {
     var str = number + "";
-    while (str.length < length)
-        str = "0" + str;
+    while (str.length < length) {
+      str = "0" + str;
+    }
     return str;
 }
 
@@ -34,8 +35,9 @@ function run_test() {
     // Cleanup from any previous tests or failures.
     var destFile = profileDir.clone();
     destFile.append("formhistory.sqlite");
-    if (destFile.exists())
+    if (destFile.exists()) {
       destFile.remove(false);
+    }
 
     testfile.copyTo(profileDir, "formhistory.sqlite");
 
