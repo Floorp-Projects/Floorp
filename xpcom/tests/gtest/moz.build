@@ -22,6 +22,7 @@ UNIFIED_SOURCES += [
     'TestFile.cpp',
     'TestGCPostBarriers.cpp',
     'TestID.cpp',
+    'TestMozPromise.cpp',
     'TestMultiplexInputStream.cpp',
     'TestNsDeque.cpp',
     'TestNSPRLogModulesParser.cpp',
@@ -85,3 +86,5 @@ LOCAL_INCLUDES += [
 ]
 
 FINAL_LIBRARY = 'xul-gtest'
+
+include('/ipc/chromium/chromium-config.mozbuild')
