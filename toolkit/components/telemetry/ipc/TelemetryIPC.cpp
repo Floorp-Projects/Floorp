@@ -45,4 +45,10 @@ TelemetryIPC::RecordChildEvents(Telemetry::ProcessID aProcessType, const nsTArra
   TelemetryEvent::RecordChildEvents(aProcessType, aEvents);
 }
 
+void
+TelemetryIPC::RecordDiscardedData(Telemetry::ProcessID aProcessType,
+                                  const Telemetry::DiscardedData& aDiscardedData)
+{
+  TelemetryScalar::RecordDiscardedData(aProcessType, aDiscardedData);
+}
 }

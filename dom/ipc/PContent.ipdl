@@ -95,6 +95,7 @@ using mozilla::Telemetry::KeyedAccumulation from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::ScalarAction from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::KeyedScalarAction from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
 using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
 
 union ChromeRegistryItem
@@ -1091,6 +1092,7 @@ parent:
     async UpdateChildScalars(ScalarAction[] updates);
     async UpdateChildKeyedScalars(KeyedScalarAction[] updates);
     async RecordChildEvents(ChildEventData[] events);
+    async RecordDiscardedData(DiscardedData data);
 
     sync GetA11yContentId() returns (uint32_t aContentId);
     async A11yHandlerControl(uint32_t aPid,
