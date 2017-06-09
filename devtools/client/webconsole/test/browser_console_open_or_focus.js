@@ -28,7 +28,7 @@ add_task(function* () {
   });
 
   currWindow = Services.wm.getMostRecentWindow(null);
-  is(currWindow.document.documentURI, Tools.webConsole.url,
+  is(currWindow.document.documentURI, Tools.webConsole.oldWebConsoleURL,
      "The Browser Console is open and has focus");
 
   mainWindow.focus();
@@ -36,7 +36,7 @@ add_task(function* () {
   yield HUDService.openBrowserConsoleOrFocus();
 
   currWindow = Services.wm.getMostRecentWindow(null);
-  is(currWindow.document.documentURI, Tools.webConsole.url,
+  is(currWindow.document.documentURI, Tools.webConsole.oldWebConsoleURL,
      "The Browser Console is open and has focus");
 
   yield HUDService.toggleBrowserConsole();

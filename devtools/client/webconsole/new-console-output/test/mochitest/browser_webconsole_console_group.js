@@ -76,7 +76,7 @@ add_task(function* () {
   testClass(node, "log");
   testIndent(node, 0);
 
-  let nodes = hud.ui.experimentalOutputNode.querySelectorAll(".message");
+  let nodes = hud.ui.outputNode.querySelectorAll(".message");
   is(nodes.length, 8, "expected number of messages are displayed");
 });
 

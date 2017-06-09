@@ -13,7 +13,7 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-cons
 
 add_task(function* () {
   let hud = yield openNewTabAndConsole(TEST_URI);
-  const outputNode = hud.ui.experimentalOutputNode;
+  const outputNode = hud.ui.outputNode;
 
   const toolbar = yield waitFor(() => {
     return outputNode.querySelector(".webconsole-filterbar-primary");
@@ -58,7 +58,7 @@ function filterIsEnabled(button) {
 
 function* testFilterPersistence() {
   let hud = yield openNewTabAndConsole(TEST_URI);
-  const outputNode = hud.ui.experimentalOutputNode;
+  const outputNode = hud.ui.outputNode;
   const filterBar = yield waitFor(() => {
     return outputNode.querySelector(".webconsole-filterbar-secondary");
   });

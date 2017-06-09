@@ -126,12 +126,12 @@ add_task(function* () {
   let nodes = [];
   for (let testCase of testCases) {
     let node = yield waitFor(
-      () => findConsoleTable(hud.ui.experimentalOutputNode, testCases.indexOf(testCase))
+      () => findConsoleTable(hud.ui.outputNode, testCases.indexOf(testCase))
     );
     nodes.push(node);
   }
 
-  let consoleTableNodes = hud.ui.experimentalOutputNode.querySelectorAll(
+  let consoleTableNodes = hud.ui.outputNode.querySelectorAll(
     ".message .new-consoletable");
 
   is(consoleTableNodes.length, testCases.length,

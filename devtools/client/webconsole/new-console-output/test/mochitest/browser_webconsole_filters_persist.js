@@ -46,7 +46,7 @@ add_task(function* () {
 });
 
 function* getFilterButtons(hud) {
-  const outputNode = hud.ui.experimentalOutputNode;
+  const outputNode = hud.ui.outputNode;
 
   info("Wait for console toolbar to appear");
   const toolbar = yield waitFor(() => {

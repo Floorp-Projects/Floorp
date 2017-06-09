@@ -100,9 +100,10 @@ Tools.webConsole = {
   accesskey: l10n("webConsoleCmd.accesskey"),
   modifiers: Services.appinfo.OS == "Darwin" ? "accel,alt" : "accel,shift",
   ordinal: 2,
+  oldWebConsoleURL: "chrome://devtools/content/webconsole/webconsole.xul",
+  newWebConsoleURL: "chrome://devtools/content/webconsole/webconsole.xhtml",
   icon: "chrome://devtools/skin/images/tool-webconsole.svg",
   invertIconForDarkTheme: true,
-  url: "chrome://devtools/content/webconsole/webconsole.xul",
   label: l10n("ToolboxTabWebconsole.label"),
   menuLabel: l10n("MenuWebconsole.label"),
   panelLabel: l10n("ToolboxWebConsole.panelLabel"),
@@ -131,6 +132,20 @@ Tools.webConsole = {
     return new WebConsolePanel(iframeWindow, toolbox);
   }
 };
+
+function switchWebconsole() {
+  if (Services.prefs.getBoolPref("devtools.webconsole.new-frontend-enabled")) {
+    Tools.webConsole.url = Tools.webConsole.newWebConsoleURL;
+  } else {
+    Tools.webConsole.url = Tools.webConsole.oldWebConsoleURL;
+  }
+}
+switchWebconsole();
+
+Services.prefs.addObserver(
+  "devtools.webconsole.new-frontend-enabled",
+  { observe: switchWebconsole }
+);
 
 Tools.jsdebugger = {
   id: "jsdebugger",
