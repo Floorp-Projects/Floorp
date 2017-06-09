@@ -133,47 +133,10 @@ public:
   typedef MediaCacheStream::BlockList BlockList;
   static const int64_t BLOCK_SIZE = MediaCacheStream::BLOCK_SIZE;
 
-  MediaCache() : mNextResourceID(1),
-    mReentrantMonitor("MediaCache.mReentrantMonitor"),
-    mUpdateQueued(false)
-#ifdef DEBUG
-    , mInUpdate(false)
-#endif
-  {
-    MOZ_COUNT_CTOR(MediaCache);
-    MediaCacheFlusher::RegisterMediaCache(this);
-  }
-  ~MediaCache() {
-    MediaCacheFlusher::UnregisterMediaCache(this);
-    NS_ASSERTION(mStreams.IsEmpty(), "Stream(s) still open!");
-    Truncate();
-    NS_ASSERTION(mIndex.Length() == 0, "Blocks leaked?");
-    if (mFileCache) {
-      mFileCache->Close();
-      mFileCache = nullptr;
-    }
-    LOG("MediaCache::~MediaCache(this=%p) MEDIACACHE_WATERMARK_KB=%u",
-        this, unsigned(mIndexWatermark * MediaCache::BLOCK_SIZE / 1024));
-    Telemetry::Accumulate(
-      Telemetry::HistogramID::MEDIACACHE_WATERMARK_KB,
-      uint32_t(mIndexWatermark * MediaCache::BLOCK_SIZE / 1024));
-    LOG("MediaCache::~MediaCache(this=%p) MEDIACACHE_BLOCKOWNERS_WATERMARK=%u",
-        this, unsigned(mBlockOwnersWatermark));
-    Telemetry::Accumulate(
-      Telemetry::HistogramID::MEDIACACHE_BLOCKOWNERS_WATERMARK,
-      mBlockOwnersWatermark);
-
-    MOZ_COUNT_DTOR(MediaCache);
-  }
-
   // Get an instance of the file-backed MediaCache.
   // Returns nullptr if initialization failed.
   static MediaCache* GetMediaCache();
 
-  // Main thread only. Creates the backing cache file. If this fails,
-  // then the cache is still in a semi-valid state; mFD will be null,
-  // so all I/O on the cache file will fail.
-  nsresult Init();
   // Shut down the global cache if it's no longer needed. We shut down
   // the cache as soon as there are no streams. This means that during
   // normal operation we are likely to start up the cache and shut it down
@@ -292,6 +255,49 @@ public:
   };
 
 protected:
+  MediaCache()
+    : mNextResourceID(1)
+    , mReentrantMonitor("MediaCache.mReentrantMonitor")
+    , mUpdateQueued(false)
+#ifdef DEBUG
+    , mInUpdate(false)
+#endif
+  {
+    MOZ_COUNT_CTOR(MediaCache);
+    MediaCacheFlusher::RegisterMediaCache(this);
+  }
+
+  ~MediaCache()
+  {
+    MediaCacheFlusher::UnregisterMediaCache(this);
+    NS_ASSERTION(mStreams.IsEmpty(), "Stream(s) still open!");
+    Truncate();
+    NS_ASSERTION(mIndex.Length() == 0, "Blocks leaked?");
+    if (mFileCache) {
+      mFileCache->Close();
+      mFileCache = nullptr;
+    }
+    LOG("MediaCache::~MediaCache(this=%p) MEDIACACHE_WATERMARK_KB=%u",
+        this,
+        unsigned(mIndexWatermark * MediaCache::BLOCK_SIZE / 1024));
+    Telemetry::Accumulate(
+      Telemetry::HistogramID::MEDIACACHE_WATERMARK_KB,
+      uint32_t(mIndexWatermark * MediaCache::BLOCK_SIZE / 1024));
+    LOG("MediaCache::~MediaCache(this=%p) MEDIACACHE_BLOCKOWNERS_WATERMARK=%u",
+        this,
+        unsigned(mBlockOwnersWatermark));
+    Telemetry::Accumulate(
+      Telemetry::HistogramID::MEDIACACHE_BLOCKOWNERS_WATERMARK,
+      mBlockOwnersWatermark);
+
+    MOZ_COUNT_DTOR(MediaCache);
+  }
+
+  // Main thread only. Creates the backing cache file. If this fails,
+  // then the cache is still in a semi-valid state; mFD will be null,
+  // so all I/O on the cache file will fail.
+  nsresult Init();
+
   // Find a free or reusable block and return its index. If there are no
   // free blocks and no reusable blocks, add a new block to the cache
   // and return it. Can return -1 on OOM.
