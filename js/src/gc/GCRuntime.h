@@ -969,6 +969,8 @@ class GCRuntime
     void pushZealSelectedObjects();
     void purgeRuntime(AutoLockForExclusiveAccess& lock);
     MOZ_MUST_USE bool beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAccess& lock);
+    bool prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOut,
+                                   AutoLockForExclusiveAccess& lock);
     bool shouldPreserveJITCode(JSCompartment* comp, int64_t currentTime,
                                JS::gcreason::Reason reason, bool canAllocateMoreCode);
     void traceRuntimeForMajorGC(JSTracer* trc, AutoLockForExclusiveAccess& lock);
@@ -1174,9 +1176,6 @@ class GCRuntime
 
     /* Incremented on every GC slice. */
     ActiveThreadData<uint64_t> number;
-
-    /* The number at the time of the most recent GC's first slice. */
-    ActiveThreadData<uint64_t> startNumber;
 
     /* Whether the currently running GC can finish in multiple slices. */
     ActiveThreadData<bool> isIncremental;
