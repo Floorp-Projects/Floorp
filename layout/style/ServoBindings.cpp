@@ -158,7 +158,7 @@ Gecko_IsSignificantChild(RawGeckoNodeBorrowed aNode, bool aTextIsSignificant,
 }
 
 RawGeckoNodeBorrowedOrNull
-Gecko_GetParentNode(RawGeckoNodeBorrowed aNode)
+Gecko_GetFlattenedTreeParentNode(RawGeckoNodeBorrowed aNode)
 {
   MOZ_ASSERT(!FlattenedTreeParentIsParent<nsIContent::eForStyle>(aNode),
              "Should have taken the inline path");
