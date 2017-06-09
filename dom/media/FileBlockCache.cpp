@@ -52,7 +52,11 @@ FileBlockCache::SetCacheFile(PRFileDesc* aFD)
       if (mIsWriteScheduled) {
         // A write was scheduled while waiting for FD. We need to run/dispatch a
         // task to service the request.
-        mThread->Dispatch(this, NS_DISPATCH_NORMAL);
+        nsCOMPtr<nsIRunnable> event = mozilla::NewRunnableMethod(
+          "FileBlockCache::SetCacheFile -> PerformBlockIOs",
+          this,
+          &FileBlockCache::PerformBlockIOs);
+        mThread->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
       }
       return;
     }
@@ -217,7 +221,11 @@ void FileBlockCache::EnsureWriteScheduled()
     // the write will be scheduled.
     return;
   }
-  mThread->Dispatch(this, NS_DISPATCH_NORMAL);
+  nsCOMPtr<nsIRunnable> event = mozilla::NewRunnableMethod(
+    "FileBlockCache::EnsureWriteScheduled -> PerformBlockIOs",
+    this,
+    &FileBlockCache::PerformBlockIOs);
+  mThread->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
 }
 
 nsresult FileBlockCache::Seek(int64_t aOffset)
@@ -295,7 +303,8 @@ nsresult FileBlockCache::MoveBlockInFile(int32_t aSourceBlockIndex,
   return WriteBlockToFile(aDestBlockIndex, buf);
 }
 
-nsresult FileBlockCache::Run()
+void
+FileBlockCache::PerformBlockIOs()
 {
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
   MutexAutoLock mon(mDataMutex);
@@ -308,13 +317,13 @@ nsresult FileBlockCache::Run()
     if (!mIsOpen) {
       // We've been closed, abort, discarding unwritten changes.
       mIsWriteScheduled = false;
-      return NS_ERROR_FAILURE;
+      return;
     }
 
     if (mIsReading) {
       // We're trying to read; postpone all writes. (Reader will resume writes.)
       mIsWriteScheduled = false;
-      return NS_OK;
+      return;
     }
 
     // Process each pending change. We pop the index out of the change
@@ -339,7 +348,7 @@ nsresult FileBlockCache::Run()
       if (!mFD) {
         // We may be here if mFD has been reset because we're closing, so we
         // don't care anymore about writes.
-        return NS_OK;
+        return;
       }
       if (change->IsWrite()) {
         WriteBlockToFile(blockIndex, change->mData.get());
@@ -357,8 +366,6 @@ nsresult FileBlockCache::Run()
   }
 
   mIsWriteScheduled = false;
-
-  return NS_OK;
 }
 
 nsresult FileBlockCache::Read(int64_t aOffset,
