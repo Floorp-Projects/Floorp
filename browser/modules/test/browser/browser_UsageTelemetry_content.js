@@ -45,7 +45,7 @@ add_task(async function test_context_menu() {
   // Let's reset the Telemetry data.
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
-  let search_hist = getSearchCountsHistogram();
+  let search_hist = getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   // Open a new tab with a page containing some text.
   let tab =
@@ -93,7 +93,7 @@ add_task(async function test_about_newtab() {
   // Let's reset the counts.
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
-  let search_hist = getSearchCountsHistogram();
+  let search_hist = getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:newtab", false);
   await ContentTask.spawn(tab.linkedBrowser, null, async function() {
