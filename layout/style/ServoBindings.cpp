@@ -192,18 +192,13 @@ Gecko_GetNextSibling(RawGeckoNodeBorrowed aNode)
 }
 
 RawGeckoElementBorrowedOrNull
-Gecko_GetParentElement(RawGeckoElementBorrowed aElement)
-{
-  return aElement->GetFlattenedTreeParentElementForStyle();
-}
-
-RawGeckoElementBorrowedOrNull
 Gecko_GetFirstChildElement(RawGeckoElementBorrowed aElement)
 {
   return aElement->GetFirstElementChild();
 }
 
-RawGeckoElementBorrowedOrNull Gecko_GetLastChildElement(RawGeckoElementBorrowed aElement)
+RawGeckoElementBorrowedOrNull
+Gecko_GetLastChildElement(RawGeckoElementBorrowed aElement)
 {
   return aElement->GetLastElementChild();
 }
