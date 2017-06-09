@@ -7174,7 +7174,7 @@
   "TELEMETRY_ARCHIVE_LOAD_MS": {
     "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
-    "expires_in_version": "61",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 2000,
     "n_buckets": 20,
@@ -7194,7 +7194,7 @@
   "TELEMETRY_FAILED_SEND_PINGS_SIZE_KB": {
     "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
-    "expires_in_version": "never",
+    "expires_in_version": "61",
     "kind": "exponential",
     "low": 10,
     "high": 1024,
@@ -9454,24 +9454,6 @@
     "description": "Number of times the DevTools WebIDE has been opened.",
     "releaseChannelCollection": "opt-out"
   },
-  "DEVTOOLS_WEBIDE_PROJECT_EDITOR_OPENED_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "bug_numbers": [1247985],
-    "description": "Number of times the DevTools WebIDE project editor has been opened.",
-    "releaseChannelCollection": "opt-out"
-  },
-  "DEVTOOLS_WEBIDE_PROJECT_EDITOR_SAVE_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "bug_numbers": [1247985],
-    "description": "Number of times a file has been saved in the DevTools WebIDE project editor.",
-    "releaseChannelCollection": "opt-out"
-  },
   "DEVTOOLS_WEBIDE_NEW_PROJECT_COUNT": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
@@ -9745,14 +9727,6 @@
     "high": 10000000,
     "n_buckets": 100,
     "description": "How long has WebIDE been active (seconds)"
-  },
-  "DEVTOOLS_WEBIDE_PROJECT_EDITOR_TIME_ACTIVE_SECONDS": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 10000000,
-    "n_buckets": 100,
-    "description": "How long has WebIDE's project editor been active (seconds)"
   },
   "DEVTOOLS_CUSTOM_TIME_ACTIVE_SECONDS": {
     "record_in_processes": ["main", "content"],

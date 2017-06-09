@@ -114,11 +114,11 @@
             ]
         },
         "quantum-pageload-e10s": {
-            "tests": ["Quantum_1"],
-            "mitmproxy_recording_set": "mitmproxy-recording-set.zip",
+            "tests": ["quantum_pageload_google", "quantum_pageload_youtube", "quantum_pageload_amazon", "quantum_pageload_facebook"],
+            "mitmproxy_recording_set": "mitmproxy-recording-set-win10.zip",
             "talos_options": [
                 "--mitmproxy",
-                "mitmproxy-recording-1.mp",
+                "mitmproxy-recording-google.mp mitmproxy-recording-youtube.mp mitmproxy-recording-amazon.mp mitmproxy-recording-facebook.mp",
                 "--firstNonBlankPaint"
             ]
         }

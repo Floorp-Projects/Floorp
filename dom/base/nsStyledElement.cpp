@@ -40,13 +40,28 @@ nsStyledElement::ParseAttribute(int32_t aNamespaceID,
                                 nsAttrValue& aResult)
 {
   if (aAttribute == nsGkAtoms::style && aNamespaceID == kNameSpaceID_None) {
-    SetMayHaveStyle();
     ParseStyleAttribute(aValue, aResult, false);
     return true;
   }
 
   return nsStyledElementBase::ParseAttribute(aNamespaceID, aAttribute, aValue,
                                              aResult);
+}
+
+nsresult
+nsStyledElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+                               const nsAttrValueOrString* aValue, bool aNotify)
+{
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aName == nsGkAtoms::style) {
+      if (aValue) {
+        SetMayHaveStyle();
+      }
+    }
+  }
+
+  return nsStyledElementBase::BeforeSetAttr(aNamespaceID, aName, aValue,
+                                            aNotify);
 }
 
 nsresult

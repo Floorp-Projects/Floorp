@@ -644,6 +644,43 @@ nsGenericHTMLElement::GetHrefURIForAnchors() const
 }
 
 nsresult
+nsGenericHTMLElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+                                    const nsAttrValueOrString* aValue,
+                                    bool aNotify)
+{
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aName == nsGkAtoms::accesskey) {
+      // Have to unregister before clearing flag. See UnregAccessKey
+      UnregAccessKey();
+      if (!aValue) {
+        UnsetFlags(NODE_HAS_ACCESSKEY);
+      }
+    } else if (aName == nsGkAtoms::name) {
+      // Have to do this before clearing flag. See RemoveFromNameTable
+      RemoveFromNameTable();
+      if (!aValue || aValue->IsEmpty()) {
+        ClearHasName();
+      }
+    } else if (aName == nsGkAtoms::contenteditable) {
+      if (aValue) {
+        // Set this before the attribute is set so that any subclass code that
+        // runs before the attribute is set won't think we're missing a
+        // contenteditable attr when we actually have one.
+        SetMayHaveContentEditableAttr();
+      }
+    }
+    if (!aValue && IsEventAttributeName(aName)) {
+      if (EventListenerManager* manager = GetExistingListenerManager()) {
+        manager->RemoveEventHandler(aName, EmptyString());
+      }
+    }
+  }
+
+  return nsGenericHTMLElementBase::BeforeSetAttr(aNamespaceID, aName, aValue,
+                                                 aNotify);
+}
+
+nsresult
 nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                    const nsAttrValue* aValue,
                                    const nsAttrValue* aOldValue, bool aNotify)
@@ -683,6 +720,34 @@ nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
         }
       }
       SetDirectionalityOnDescendants(this, dir, aNotify);
+    } else if (aName == nsGkAtoms::contenteditable) {
+      int32_t editableCountDelta = 0;
+      if (aOldValue &&
+          (aOldValue->Equals(NS_LITERAL_STRING("true"), eIgnoreCase) ||
+          aOldValue->Equals(EmptyString(), eIgnoreCase))) {
+        editableCountDelta = -1;
+      }
+      if (aValue && (aValue->Equals(NS_LITERAL_STRING("true"), eIgnoreCase) ||
+                     aValue->Equals(EmptyString(), eIgnoreCase))) {
+        ++editableCountDelta;
+      }
+      ChangeEditableState(editableCountDelta);
+    } else if (aName == nsGkAtoms::accesskey) {
+      if (aValue && !aValue->Equals(EmptyString(), eIgnoreCase)) {
+        SetFlags(NODE_HAS_ACCESSKEY);
+        RegAccessKey();
+      }
+    } else if (aName == nsGkAtoms::name) {
+      if (aValue && !aValue->Equals(EmptyString(), eIgnoreCase) &&
+          CanHaveName(NodeInfo()->NameAtom())) {
+        // This may not be quite right because we can have subclass code run
+        // before here. But in practice subclasses don't care about this flag,
+        // and in particular selector matching does not care.  Otherwise we'd
+        // want to handle it like we handle id attributes (in PreIdMaybeChange
+        // and PostIdMaybeChange).
+        SetHasName();
+        AddToNameTable(aValue->GetAtomValue());
+      }
     }
   }
 
@@ -808,87 +873,6 @@ nsGenericHTMLElement::SetOn##name_(EventHandlerNonNull* handler)              \
 #undef FORWARDED_EVENT
 #undef EVENT
 
-nsresult
-nsGenericHTMLElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                              nsIAtom* aPrefix, const nsAString& aValue,
-                              bool aNotify)
-{
-  bool contentEditable = aNameSpaceID == kNameSpaceID_None &&
-                           aName == nsGkAtoms::contenteditable;
-  bool accessKey = aName == nsGkAtoms::accesskey && 
-                     aNameSpaceID == kNameSpaceID_None;
-
-  int32_t change = 0;
-  if (contentEditable) {
-    change = GetContentEditableValue() == eTrue ? -1 : 0;
-    SetMayHaveContentEditableAttr();
-  }
-
-  if (accessKey) {
-    UnregAccessKey();
-  }
-
-  nsresult rv = nsStyledElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
-                                         aNotify);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (contentEditable) {
-    if (aValue.IsEmpty() || aValue.LowerCaseEqualsLiteral("true")) {
-      change += 1;
-    }
-
-    ChangeEditableState(change);
-  }
-
-  if (accessKey && !aValue.IsEmpty()) {
-    SetFlags(NODE_HAS_ACCESSKEY);
-    RegAccessKey();
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                                bool aNotify)
-{
-  bool contentEditable = false;
-  int32_t contentEditableChange = 0;
-
-  // Check for event handlers
-  if (aNameSpaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::name) {
-      // Have to do this before clearing flag. See RemoveFromNameTable
-      RemoveFromNameTable();
-      ClearHasName();
-    }
-    else if (aAttribute == nsGkAtoms::contenteditable) {
-      contentEditable = true;
-      contentEditableChange = GetContentEditableValue() == eTrue ? -1 : 0;
-    }
-    else if (aAttribute == nsGkAtoms::accesskey) {
-      // Have to unregister before clearing flag. See UnregAccessKey
-      UnregAccessKey();
-      UnsetFlags(NODE_HAS_ACCESSKEY);
-    }
-    else if (IsEventAttributeName(aAttribute)) {
-      if (EventListenerManager* manager = GetExistingListenerManager()) {
-        manager->RemoveEventHandler(aAttribute, EmptyString());
-      }
-    }
-  }
-
-  nsresult rv = nsGenericHTMLElementBase::UnsetAttr(aNameSpaceID, aAttribute,
-                                                    aNotify);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (contentEditable) {
-    ChangeEditableState(contentEditableChange);
-  }
-
-  return NS_OK;
-}
-
 void
 nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
 {
@@ -918,20 +902,11 @@ nsGenericHTMLElement::ParseAttribute(int32_t aNamespaceID,
 
     if (aAttribute == nsGkAtoms::name) {
       // Store name as an atom.  name="" means that the element has no name,
-      // not that it has an emptystring as the name.
-      RemoveFromNameTable();
+      // not that it has an empty string as the name.
       if (aValue.IsEmpty()) {
-        ClearHasName();
         return false;
       }
-
       aResult.ParseAtom(aValue);
-
-      if (CanHaveName(NodeInfo()->NameAtom())) {
-        SetHasName();
-        AddToNameTable(aResult.GetAtomValue());
-      }
-      
       return true;
     }
 

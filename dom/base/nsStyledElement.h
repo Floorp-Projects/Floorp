@@ -82,6 +82,10 @@ protected:
   nsresult ReparseStyleAttribute(bool aForceInDataDoc, bool aForceIfAlreadyParsed);
 
   virtual void NodeInfoChanged(nsIDocument* aOldDoc) override;
+
+  virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+                                 const nsAttrValueOrString* aValue,
+                                 bool aNotify) override;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsStyledElement, NS_STYLED_ELEMENT_IID)

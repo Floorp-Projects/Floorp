@@ -19,8 +19,10 @@ pub type GLeglImageOES = *const super::__gl_imports::raw::c_void;
 pub type GLchar = super::__gl_imports::raw::c_char;
 pub type GLcharARB = super::__gl_imports::raw::c_char;
 
-#[cfg(target_os = "macos")] pub type GLhandleARB = *const super::__gl_imports::raw::c_void;
-#[cfg(not(target_os = "macos"))] pub type GLhandleARB = super::__gl_imports::raw::c_uint;
+#[cfg(target_os = "macos")]
+pub type GLhandleARB = *const super::__gl_imports::raw::c_void;
+#[cfg(not(target_os = "macos"))]
+pub type GLhandleARB = super::__gl_imports::raw::c_uint;
 
 pub type GLhalfARB = super::__gl_imports::raw::c_ushort;
 pub type GLhalf = super::__gl_imports::raw::c_ushort;
@@ -40,13 +42,31 @@ pub type GLuint64EXT = u64;
 pub enum __GLsync {}
 pub type GLsync = *const __GLsync;
 
-    // compatible with OpenCL cl_context
+// compatible with OpenCL cl_context
 pub enum _cl_context {}
 pub enum _cl_event {}
 
-pub type GLDEBUGPROC = extern "system" fn(source: GLenum, gltype: GLenum, id: GLuint, severity: GLenum, length: GLsizei, message: *const GLchar, userParam: *mut super::__gl_imports::raw::c_void);
-pub type GLDEBUGPROCARB = extern "system" fn(source: GLenum, gltype: GLenum, id: GLuint, severity: GLenum, length: GLsizei, message: *const GLchar, userParam: *mut super::__gl_imports::raw::c_void);
-pub type GLDEBUGPROCKHR = extern "system" fn(source: GLenum, gltype: GLenum, id: GLuint, severity: GLenum, length: GLsizei, message: *const GLchar, userParam: *mut super::__gl_imports::raw::c_void);
+pub type GLDEBUGPROC = extern "system" fn(source: GLenum,
+                                          gltype: GLenum,
+                                          id: GLuint,
+                                          severity: GLenum,
+                                          length: GLsizei,
+                                          message: *const GLchar,
+                                          userParam: *mut super::__gl_imports::raw::c_void);
+pub type GLDEBUGPROCARB = extern "system" fn(source: GLenum,
+                                             gltype: GLenum,
+                                             id: GLuint,
+                                             severity: GLenum,
+                                             length: GLsizei,
+                                             message: *const GLchar,
+                                             userParam: *mut super::__gl_imports::raw::c_void);
+pub type GLDEBUGPROCKHR = extern "system" fn(source: GLenum,
+                                             gltype: GLenum,
+                                             id: GLuint,
+                                             severity: GLenum,
+                                             length: GLsizei,
+                                             message: *const GLchar,
+                                             userParam: *mut super::__gl_imports::raw::c_void);
 
 // GLES 1 types
 // "pub type GLclampx = i32;",
@@ -78,6 +98,11 @@ pub type GLDEBUGPROCKHR = extern "system" fn(source: GLenum, gltype: GLenum, id:
 // GLES 2 types (none currently)
 
 // Vendor extension types
-pub type GLDEBUGPROCAMD = extern "system" fn(id: GLuint, category: GLenum, severity: GLenum, length: GLsizei, message: *const GLchar, userParam: *mut super::__gl_imports::raw::c_void);
+pub type GLDEBUGPROCAMD = extern "system" fn(id: GLuint,
+                                             category: GLenum,
+                                             severity: GLenum,
+                                             length: GLsizei,
+                                             message: *const GLchar,
+                                             userParam: *mut super::__gl_imports::raw::c_void);
 pub type GLhalfNV = super::__gl_imports::raw::c_ushort;
 pub type GLvdpauSurfaceNV = GLintptr;

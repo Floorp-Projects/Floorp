@@ -1,5 +1,17 @@
 "use strict";
 
+// These are defined on "global" which is used for the same scopes as the other
+// ext-*.js files.
+/* exported getCookieStoreIdForTab, getCookieStoreIdForContainer,
+            getContainerForCookieStoreId,
+            isValidCookieStoreId, isContainerCookieStoreId,
+            SingletonEventManager */
+/* global getCookieStoreIdForTab:false, getCookieStoreIdForContainer:false,
+          getContainerForCookieStoreId: false,
+          isValidCookieStoreId:false, isContainerCookieStoreId:false,
+          isDefaultCookieStoreId: false, isPrivateCookieStoreId:false,
+          SingletonEventManager: false */
+
 XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
                                   "resource://gre/modules/ContextualIdentityService.jsm");
 

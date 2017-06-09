@@ -4,13 +4,12 @@
 
 <SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
 <ShortName>Ordbok</ShortName>
-<Description>Norske ordbøker.</Description>
-<InputEncoding>ISO-8859-1</InputEncoding>
+<Description>Norske ordbøker</Description>
+<InputEncoding>UTF-8</InputEncoding>
 <Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAB2UlEQVQ4ja3TzWuSAQDH8edvyqioiIg61FBIRqNDjBi1YIeYk8VeFJJWTy+jIJq5ww5L7ZArNsuY0xE2e2G6YTC1NnGlOdPHR30eH19W8O2wQ8dq7vC7fk7fn1BVNVStuatVVQ2hpjXRGtu7Wk1rIqhtAOqeARW1yeqXEs/efOPhTBLRFcMVSKFqLbTGNtXFp8hTJipOE6rvFtqnOTRF/gMsxQrYX6xz40kc06Mo3TdDnBkKMBNMUlp6iXRVhzRymLJ4AmWig7qzk9Y7cQeQKnXmQlkmZzcQ3QkGHav03A6jHwlwRfSTHuum1L8PyXqUyt2TqA49Dfc5fvouohVTCKlsFe/b70y/TiO645jtK/SOv+esdZEui4/ENQPygI7S9WOU7+wATc95fvl7aKT8CNGExMTzJL3jYYyWAPrheYyWBQyjQYxDr0gMnEY26SiYD/Kj/wAF8yFk23Hq0520ovcRVpJFDMPznDL76LIFmfQm+LCWZyGS5Z4rwuaUDSU8i7L2kbLXQcHaQb5PR75vP2rEg5ArqlwYCzFoXyadq/49nkIe+fFlpNEjKJtxhK9bCg88n8kUav/egFxEcV5C3VhG2JJqrGeU/46onolRyyX2oMS2z9TunX8DKb6IjiC3ONQAAAAASUVORK5CYII=</Image>
-<Url type="text/html" method="GET" template="http://www.nob-ordbok.uio.no/perl/ordbok.cgi" resultdomain="uio.no">
+<Url type="text/html" method="GET" template="http://ordbok.uib.no/perl/ordbok.cgi" resultdomain="uib.no">
   <Param name="OPP" value="{searchTerms}"/>
   <Param name="sourceid" value="Mozilla-search"/>
 </Url>
-<SearchForm>http://www.nob-ordbok.uio.no/</SearchForm>
+<SearchForm>http://ordbok.uib.no/</SearchForm>
 </SearchPlugin>
-

@@ -3,7 +3,6 @@ config = {
     'stage_platform': 'android-test',
     'build_type': 'api-15-opt',
     'src_mozconfig': 'mobile/android/config/mozconfigs/android-api-15-frontend/nightly',
-    'tooltool_manifest_src': 'mobile/android/config/tooltool-manifests/android-frontend/releng.manifest',
     'multi_locale_config_platform': 'android',
     # unit tests don't produce a package. So don't collect package metrics.
     'disable_package_metrics': True,

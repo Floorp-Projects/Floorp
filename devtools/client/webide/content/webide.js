@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var Cc = Components.classes;
 var Cu = Components.utils;
 var Ci = Components.interfaces;
 
@@ -16,7 +15,6 @@ const {Connection} = require("devtools/shared/client/connection-manager");
 const {AppManager} = require("devtools/client/webide/modules/app-manager");
 const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
-const ProjectEditor = require("devtools/client/projecteditor/lib/projecteditor");
 const {GetAvailableAddons} = require("devtools/client/webide/modules/addons");
 const {getJSON} = require("devtools/client/shared/getjson");
 const utils = require("devtools/client/webide/modules/utils");
@@ -127,15 +125,7 @@ var UI = {
     Simulators.off("configure", this.configureSimulator);
     this.updateConnectionTelemetry();
     this._telemetry.toolClosed("webide");
-    this._telemetry.toolClosed("webideProjectEditor");
     this._telemetry.destroy();
-  },
-
-  canCloseProject: function () {
-    if (this.projecteditor) {
-      return this.projecteditor.confirmUnsaved();
-    }
-    return true;
   },
 
   onfocus: function () {
@@ -167,11 +157,6 @@ var UI = {
         this.updateRuntimeButton();
         this.updateCommands();
         this.updateConnectionTelemetry();
-        break;
-      case "before-project":
-        if (!this.canCloseProject()) {
-          details.cancel();
-        }
         break;
       case "project":
         this._updatePromise = Task.spawn(function* () {
@@ -209,7 +194,6 @@ var UI = {
       case "project-validated":
         this.updateTitle();
         this.updateCommands();
-        this.updateProjectEditorHeader();
         break;
       case "install-progress":
         this.updateProgress(Math.round(100 * details.bytesSent / details.totalBytes));
@@ -604,104 +588,15 @@ var UI = {
 
   /** ******** PROJECTS **********/
 
-  // ProjectEditor & details screen
-
-  destroyProjectEditor: function () {
-    if (this.projecteditor) {
-      this.projecteditor.destroy();
-      this.projecteditor = null;
-    }
-  },
-
-  /**
-   * Called when selecting or deselecting the project editor panel.
-   */
-  onChangeProjectEditorSelected: function () {
-    if (this.projecteditor) {
-      let panel = document.querySelector("#deck").selectedPanel;
-      if (panel && panel.id == "deck-panel-projecteditor") {
-        this.projecteditor.menuEnabled = true;
-        this._telemetry.toolOpened("webideProjectEditor");
-      } else {
-        this.projecteditor.menuEnabled = false;
-        this._telemetry.toolClosed("webideProjectEditor");
-      }
-    }
-  },
-
-  getProjectEditor: function () {
-    if (this.projecteditor) {
-      return this.projecteditor.loaded;
-    }
-
-    let projecteditorIframe = document.querySelector("#deck-panel-projecteditor");
-    this.projecteditor = ProjectEditor.ProjectEditor(projecteditorIframe, {
-      menubar: document.querySelector("#main-menubar"),
-      menuindex: 1
-    });
-    this.projecteditor.on("onEditorSave", () => {
-      AppManager.validateAndUpdateProject(AppManager.selectedProject);
-      this._telemetry.actionOccurred("webideProjectEditorSave");
-    });
-    return this.projecteditor.loaded;
-  },
-
-  updateProjectEditorHeader: function () {
-    let project = AppManager.selectedProject;
-    if (!project || !this.projecteditor) {
-      return;
-    }
-    let status = project.validationStatus || "unknown";
-    if (status == "error warning") {
-      status = "error";
-    }
-    this.getProjectEditor().then((projecteditor) => {
-      projecteditor.setProjectToAppPath(project.location, {
-        name: project.name,
-        iconUrl: project.icon,
-        projectOverviewURL: "chrome://webide/content/details.xhtml",
-        validationStatus: status
-      }).then(null, console.error);
-    }, console.error);
-  },
-
-  isProjectEditorEnabled: function () {
-    return Services.prefs.getBoolPref("devtools.webide.showProjectEditor");
-  },
-
   openProject: function () {
     let project = AppManager.selectedProject;
-
-    // Nothing to show
 
     if (!project) {
       this.resetDeck();
       return;
     }
 
-    // Make sure the directory exist before we show Project Editor
-
-    let forceDetailsOnly = false;
-    if (project.type == "packaged") {
-      forceDetailsOnly = !utils.doesFileExist(project.location);
-    }
-
-    // Show only the details screen
-
-    if (project.type != "packaged" ||
-        !this.isProjectEditorEnabled() ||
-        forceDetailsOnly) {
-      this.selectDeckPanel("details");
-      return;
-    }
-
-    // Show ProjectEditor
-
-    this.getProjectEditor().then(() => {
-      this.updateProjectEditorHeader();
-    }, console.error);
-
-    this.selectDeckPanel("projecteditor");
+    this.selectDeckPanel("details");
   },
 
   autoStartProject: Task.async(function* () {
@@ -869,14 +764,12 @@ var UI = {
       panel.setAttribute("src", lazysrc);
     }
     deck.selectedPanel = panel;
-    this.onChangeProjectEditorSelected();
   },
 
   resetDeck: function () {
     this.resetFocus();
     let deck = document.querySelector("#deck");
     deck.selectedPanel = null;
-    this.onChangeProjectEditorSelected();
   },
 
   buildIDToDate(buildID) {
@@ -1000,9 +893,7 @@ EventEmitter.decorate(UI);
 
 var Cmds = {
   quit: function () {
-    if (UI.canCloseProject()) {
-      window.close();
-    }
+    window.close();
   },
 
   showProjectPanel: function () {
@@ -1049,11 +940,6 @@ var Cmds = {
     let busy;
     switch (AppManager.selectedProject.type) {
       case "packaged":
-        let autosave =
-          Services.prefs.getBoolPref("devtools.webide.autosaveFiles");
-        if (autosave && UI.projecteditor) {
-          yield UI.projecteditor.saveAllFiles();
-        }
         busy = UI.busyWithProgressUntil(AppManager.installAndRunProject(),
                                         "installing and running app");
         break;
@@ -1091,15 +977,6 @@ var Cmds = {
 
   removeProject: function () {
     AppManager.removeSelectedProject();
-  },
-
-  toggleEditors: function () {
-    let isNowEnabled = !UI.isProjectEditorEnabled();
-    Services.prefs.setBoolPref("devtools.webide.showProjectEditor", isNowEnabled);
-    if (!isNowEnabled) {
-      UI.destroyProjectEditor();
-    }
-    UI.openProject();
   },
 
   showTroubleShooting: function () {

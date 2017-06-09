@@ -93,6 +93,7 @@
   list-style-image: url("chrome://browser/skin/page-action.svg");
   margin: 0;
   padding: 0 6px;
+  color: inherit;
   -moz-context-properties: fill;
   fill: currentColor;
 }

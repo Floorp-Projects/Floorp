@@ -32,15 +32,4 @@ module.exports = {
     "semi": ["error", "always"],
     "strict": ["error", "global"],
   },
-
-  // Globals accessible within node modules.
-  "globals": {
-    "DTRACE_HTTP_CLIENT_REQUEST": true,
-    "DTRACE_HTTP_CLIENT_RESPONSE": true,
-    "DTRACE_HTTP_SERVER_REQUEST": true,
-    "DTRACE_HTTP_SERVER_RESPONSE": true,
-    "DTRACE_NET_SERVER_CONNECTION": true,
-    "DTRACE_NET_STREAM_END": true,
-    "Intl": true,
-  },
 };

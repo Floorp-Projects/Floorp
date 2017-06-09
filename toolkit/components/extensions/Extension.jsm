@@ -6,6 +6,7 @@
 
 this.EXPORTED_SYMBOLS = ["Extension", "ExtensionData"];
 
+/* exported Extension, ExtensionData */
 /* globals Extension ExtensionData */
 
 /*

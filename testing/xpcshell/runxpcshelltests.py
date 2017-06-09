@@ -924,6 +924,11 @@ class XPCShellTests(object):
         if self.mozInfo.get("topsrcdir") is not None:
             self.env["MOZ_DEVELOPER_REPO_DIR"] = self.mozInfo["topsrcdir"].encode()
 
+        # Disable the content process sandbox for the xpcshell tests. They
+        # currently attempt to do things like bind() sockets, which is not
+        # compatible with the sandbox.
+        self.env["MOZ_DISABLE_CONTENT_SANDBOX"] = "1"
+
     def buildEnvironment(self):
         """
           Create and returns a dictionary of self.env to include all the appropriate env variables and values.

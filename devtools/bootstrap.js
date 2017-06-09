@@ -73,9 +73,11 @@ function interpretPreprocessingInstructions(content) {
       ignoring = !ifMap[line];
     } else if (line.startsWith("#else")) {
       ignoring = !ignoring;
+    } else if (line.startsWith("#endif")) {
+      ignoring = false;
     }
 
-    let isPrefLine = /^ *pref\("([^"]+)"/.test(line);
+    let isPrefLine = /^ *(sticky_)?pref\("([^"]+)"/.test(line);
     if (continuation || (!ignoring && isPrefLine)) {
       newLines.push(line);
 
@@ -94,7 +96,7 @@ function processPrefFile(url) {
   content.match(/pref\("[^"]+",\s*.+\s*\)/g).forEach(item => {
     let m = item.match(/pref\("([^"]+)",\s*(.+)\s*\)/);
     let name = m[1];
-    let val = m[2];
+    let val = m[2].trim();
 
     // Prevent overriding prefs that have been changed by the user
     if (Services.prefs.prefHasUserValue(name)) {

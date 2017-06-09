@@ -15,6 +15,93 @@
                 "format": "relativeUrl",
                 "optional": true,
                 "preprocess": "localize"
+              },
+             "search_provider": {
+                "type": "object",
+                "optional": true,
+                "additionalProperties": { "$ref": "UnrecognizedProperty" },
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "preprocess": "localize"
+                  },
+                  "keyword": {
+                    "type": "string",
+                    "optional": true,
+                    "preprocess": "localize"
+                  },
+                  "search_url": {
+                    "type": "string",
+                    "format": "url",
+                    "pattern": "^https://.*$",
+                    "preprocess": "localize"
+                  },
+                  "favicon_url": {
+                    "type": "string",
+                    "optional": true,
+                    "format": "url",
+                    "preprocess": "localize"
+                  },
+                  "suggest_url": {
+                    "type": "string",
+                    "optional": true,
+                    "format": "url",
+                    "preprocess": "localize",
+                    "deprecated": "Unsupported on Firefox at this time."
+                  },
+                  "instant_url": {
+                    "type": "string",
+                    "optional": true,
+                    "format": "url",
+                    "preprocess": "localize",
+                    "deprecated": "Unsupported on Firefox at this time."
+                  },
+                  "image_url": {
+                    "type": "string",
+                    "optional": true,
+                    "format": "url",
+                    "preprocess": "localize",
+                    "deprecated": "Unsupported on Firefox at this time."
+                  },
+                  "search_url_post_params": {
+                    "type": "string",
+                    "optional": true,
+                    "preprocess": "localize",
+                    "deprecated": "Unsupported on Firefox at this time."
+                  },
+                  "instant_url_post_params": {
+                    "type": "string",
+                    "optional": true,
+                    "preprocess": "localize",
+                    "deprecated": "Unsupported on Firefox at this time."
+                  },
+                  "image_url_post_params": {
+                    "type": "string",
+                    "optional": true,
+                    "preprocess": "localize",
+                    "deprecated": "Unsupported on Firefox at this time."
+                  },
+                  "alternate_urls": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "url",
+                      "preprocess": "localize"
+                    },
+                    "optional": true,
+                    "deprecated": "Unsupported on Firefox at this time."
+                  },
+                  "prepopulated_id": {
+                    "type": "integer",
+                    "optional": true,
+                    "deprecated": "Unsupported on Firefox."
+                  },
+                  "is_default": {
+                    "type": "boolean",
+                    "optional": true,
+                    "deprecated": "Unsupported on Firefox at this time."
+                  }
+                }
               }
             }
           }

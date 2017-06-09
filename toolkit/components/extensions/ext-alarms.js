@@ -1,5 +1,8 @@
 "use strict";
 
+// The ext-* files are imported into the same scopes.
+/* import-globals-from ext-toolkit.js */
+
 // WeakMap[Extension -> Map[name -> Alarm]]
 let alarmsMap = new WeakMap();
 

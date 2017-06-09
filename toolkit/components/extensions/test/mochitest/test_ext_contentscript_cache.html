@@ -13,6 +13,9 @@
 <script type="text/javascript">
 "use strict";
 
+// This file defines content scripts.
+/* eslint-env mozilla/frame-script */
+
 add_task(async function test_contentscript_cache() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {

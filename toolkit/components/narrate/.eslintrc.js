@@ -1,10 +1,6 @@
 "use strict";
 
 module.exports = {
-  "globals": {
-    "Iterator": true
-  },
-
   "rules": {
     "mozilla/no-aArgs": "warn",
     "mozilla/reject-importGlobalProperties": "warn",

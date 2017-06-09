@@ -1041,6 +1041,20 @@ ServoStyleSet::GetComputedKeyframeValuesFor(
   return result;
 }
 
+void
+ServoStyleSet::GetAnimationValues(
+  RawServoDeclarationBlock* aDeclarations,
+  Element* aElement,
+  ServoComputedValuesBorrowed aComputedValues,
+  nsTArray<RefPtr<RawServoAnimationValue>>& aAnimationValues)
+{
+  Servo_GetAnimationValues(aDeclarations,
+                           aElement,
+                           aComputedValues,
+                           mRawSet.get(),
+                           &aAnimationValues);
+}
+
 already_AddRefed<ServoComputedValues>
 ServoStyleSet::GetBaseComputedValuesForElement(Element* aElement,
                                                CSSPseudoElementType aPseudoType)

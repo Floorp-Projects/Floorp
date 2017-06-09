@@ -218,6 +218,7 @@ function treatAsSafeArgument(entry, varName, csuName)
         ["Gecko_CalcStyleDifference", "aAnyStyleChanged", null],
         ["Gecko_nsStyleSVG_CopyContextProperties", "aDst", null],
         ["Gecko_nsStyleFont_PrefillDefaultForGeneric", "aFont", null],
+        ["Gecko_nsStyleSVG_SetContextPropertiesLength", "aSvg", null],
     ];
     for (var [entryMatch, varMatch, csuMatch] of whitelist) {
         assert(entryMatch || varMatch || csuMatch);
@@ -332,7 +333,8 @@ function ignoreCallEdge(entry, callee)
     // We manually lock here
     if (name == "Gecko_nsFont_InitSystem" ||
         name == "Gecko_GetFontMetrics" ||
-        name == "ThreadSafeGetDefaultFontHelper")
+        name == "Gecko_nsStyleFont_FixupMinFontSize" ||
+        /ThreadSafeGetDefaultFontHelper/.test(name))
     {
         return true;
     }

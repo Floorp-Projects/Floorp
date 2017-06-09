@@ -4,6 +4,5 @@ config = {
     'publish_nightly_en_US_routes': False,
     'build_type': 'x86-opt',
     'src_mozconfig': 'mobile/android/config/mozconfigs/android-x86/nightly',
-    'tooltool_manifest_src': 'mobile/android/config/tooltool-manifests/android-x86/releng.manifest',
     'artifact_flag_build_variant_in_try': 'x86-artifact',
 }

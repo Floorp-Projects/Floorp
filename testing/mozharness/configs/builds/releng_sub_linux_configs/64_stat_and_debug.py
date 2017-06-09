@@ -80,8 +80,6 @@ config = {
         'freetype-devel-2.3.11-6.el6_1.8.x86_64'
     ],
     'src_mozconfig': 'browser/config/mozconfigs/linux64/debug-static-analysis-clang',
-    'tooltool_manifest_src': 'browser/config/tooltool-manifests/linux64/\
-clang.manifest.centos6',
     #######################
     'artifact_flag_build_variant_in_try': None,
 }

@@ -346,7 +346,6 @@ class MarionetteTestCase(CommonTestCase):
 
         if not self.marionette.crashed:
             try:
-                self.marionette.clear_imported_scripts()
                 self.marionette.execute_script("log('TEST-END: {0}')"
                                                .format(self.test_name),
                                                sandbox="simpletest")
