@@ -2494,6 +2494,9 @@ nsCookieService::AddNative(const nsACString &aHost,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  AutoRestore<DBState*> savePrevDBState(mDBState);
+  mDBState = (aOriginAttributes->mPrivateBrowsingId > 0) ? mPrivateDBState : mDefaultDBState;
+
   // first, normalize the hostname, and fail if it contains illegal characters.
   nsAutoCString host(aHost);
   nsresult rv = NormalizeHost(host);
@@ -2535,6 +2538,9 @@ nsCookieService::Remove(const nsACString& aHost, const OriginAttributes& aAttrs,
     NS_WARNING("No DBState! Profile already closed?");
     return NS_ERROR_NOT_AVAILABLE;
   }
+
+  AutoRestore<DBState*> savePrevDBState(mDBState);
+  mDBState = (aAttrs.mPrivateBrowsingId > 0) ? mPrivateDBState : mDefaultDBState;
 
   // first, normalize the hostname, and fail if it contains illegal characters.
   nsAutoCString host(aHost);
@@ -2619,25 +2625,6 @@ nsCookieService::RemoveNative(const nsACString &aHost,
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCookieService::UsePrivateMode(bool aIsPrivate,
-                                nsIPrivateModeCallback* aCallback)
-{
-  if (!aCallback) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  if (!mDBState) {
-    NS_WARNING("No DBState! Profile already closed?");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  AutoRestore<DBState*> savePrevDBState(mDBState);
-  mDBState = aIsPrivate ? mPrivateDBState : mDefaultDBState;
-
-  return aCallback->Callback();
 }
 
 /******************************************************************************
@@ -4641,6 +4628,9 @@ nsCookieService::CookieExistsNative(nsICookie2* aCookie,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  AutoRestore<DBState*> savePrevDBState(mDBState);
+  mDBState = (aOriginAttributes->mPrivateBrowsingId > 0) ? mPrivateDBState : mDefaultDBState;
+
   nsAutoCString host, name, path;
   nsresult rv = aCookie->GetHost(host);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -4831,6 +4821,9 @@ nsCookieService::GetCookiesFromHost(const nsACString     &aHost,
                                   u"2");
   NS_ENSURE_SUCCESS(rv, rv);
 
+  AutoRestore<DBState*> savePrevDBState(mDBState);
+  mDBState = (attrs.mPrivateBrowsingId > 0) ? mPrivateDBState : mDefaultDBState;
+
   nsCookieKey key = nsCookieKey(baseDomain, attrs);
   EnsureReadDomain(key);
 
@@ -4878,6 +4871,10 @@ nsCookieService::GetCookiesWithOriginAttributes(
     NS_WARNING("No DBState! Profile already closed?");
     return NS_ERROR_NOT_AVAILABLE;
   }
+
+  AutoRestore<DBState*> savePrevDBState(mDBState);
+  mDBState = (aPattern.mPrivateBrowsingId.WasPassed() &&
+      aPattern.mPrivateBrowsingId.Value() > 0) ? mPrivateDBState : mDefaultDBState;
 
   nsCOMArray<nsICookie> cookies;
   for (auto iter = mDBState->hostTable.Iter(); !iter.Done(); iter.Next()) {
@@ -4932,6 +4929,10 @@ nsCookieService::RemoveCookiesWithOriginAttributes(
     NS_WARNING("No DBState! Profile already close?");
     return NS_ERROR_NOT_AVAILABLE;
   }
+
+  AutoRestore<DBState*> savePrevDBState(mDBState);
+  mDBState = (aPattern.mPrivateBrowsingId.WasPassed() &&
+      aPattern.mPrivateBrowsingId.Value() > 0) ? mPrivateDBState : mDefaultDBState;
 
   mozStorageTransaction transaction(mDBState->dbConn, false);
   // Iterate the hash table of nsCookieEntry.
