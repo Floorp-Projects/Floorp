@@ -2746,16 +2746,6 @@ nsCSSFrameConstructor::ConstructRootFrame()
 
   StyleSetHandle styleSet = mPresShell->StyleSet();
 
-  // Set up our style rule observer.
-  // XXXbz wouldn't this make more sense as part of presshell init?
-  if (styleSet->IsGecko()) {
-    // XXXheycam We don't support XBL bindings providing style to
-    // ServoStyleSets yet.
-    styleSet->AsGecko()->SetBindingManager(mDocument->BindingManager());
-  } else {
-    NS_WARNING("stylo: cannot get ServoStyleSheets from XBL bindings yet. See bug 1290276.");
-  }
-
   // --------- BUILD VIEWPORT -----------
   RefPtr<nsStyleContext> viewportPseudoStyle =
     styleSet->ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::viewport,
@@ -5829,14 +5819,27 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
         aState.AddPendingBinding(newPendingBinding.forget());
       }
 
-      if (aContent->IsStyledByServo()) {
-        NS_WARNING("stylo: Skipping Unsupported binding re-resolve. This needs fixing.");
-        resolveStyle = false;
-      }
-
       if (resolveStyle) {
-        styleContext =
-          ResolveStyleContext(styleContext->GetParent(), aContent, &aState);
+        if (aContent->IsStyledByServo()) {
+          Element* element = aContent->AsElement();
+          ServoStyleSet* styleSet = mPresShell->StyleSet()->AsServo();
+
+          // XXX: We should have a better way to restyle ourselves.
+          ServoRestyleManager::ClearServoDataFromSubtree(element);
+          styleSet->StyleNewSubtree(element);
+
+          // Servo's should_traverse_children() in traversal.rs skips
+          // styling descendants of elements with a -moz-binding the
+          // first time. Thus call StyleNewChildren() again.
+          styleSet->StyleNewChildren(element);
+
+          styleContext =
+            styleSet->ResolveStyleFor(element, nullptr, LazyComputeBehavior::Allow);
+        } else {
+          styleContext =
+            ResolveStyleContext(styleContext->GetParent(), aContent, &aState);
+        }
+
         display = styleContext->StyleDisplay();
         aStyleContext = styleContext;
       }

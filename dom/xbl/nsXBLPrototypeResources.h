@@ -7,6 +7,7 @@
 #ifndef nsXBLPrototypeResources_h__
 #define nsXBLPrototypeResources_h__
 
+#include "mozilla/ServoBindings.h"
 #include "mozilla/StyleSheet.h"
 #include "nsICSSLoaderObserver.h"
 
@@ -18,6 +19,7 @@ class nsXBLResourceLoader;
 
 namespace mozilla {
 class CSSStyleSheet;
+class ServoStyleSet;
 } // namespace mozilla
 
 // *********************************************************************/
@@ -29,7 +31,7 @@ public:
   explicit nsXBLPrototypeResources(nsXBLPrototypeBinding* aBinding);
   ~nsXBLPrototypeResources();
 
-  void LoadResources(bool* aResult);
+  bool LoadResources(nsIContent* aBoundElement);
   void AddResource(nsIAtom* aResourceType, const nsAString& aSrc);
   void AddResourceListener(nsIContent* aElement);
   nsresult FlushSkinSheets();
@@ -58,6 +60,13 @@ public:
 
   nsCSSRuleProcessor* GetRuleProcessor() const { return mRuleProcessor; }
 
+  // Updates the ServoStyleSet object that holds the result of cascading the
+  // sheets in mStyleSheetList. Equivalent to GatherRuleProcessor(), but for
+  // the Servo style backend.
+  void ComputeServoStyleSet(nsPresContext* aPresContext);
+
+  const mozilla::ServoStyleSet* GetServoStyleSet() const { return mServoStyleSet.get(); }
+
 private:
   // A loader object. Exists only long enough to load resources, and then it dies.
   RefPtr<nsXBLResourceLoader> mLoader;
@@ -67,6 +76,12 @@ private:
 
   // The list of stylesheets converted to a rule processor.
   RefPtr<nsCSSRuleProcessor> mRuleProcessor;
+
+  // The result of cascading the XBL style sheets like mRuleProcessor, but
+  // for the Servo style backend.
+  // XXX: We might want to design a better representation for the result of
+  // cascading the XBL style sheets, like a collection of SelectorMaps.
+  mozilla::UniquePtr<mozilla::ServoStyleSet> mServoStyleSet;
 };
 
 #endif

@@ -26,7 +26,7 @@ pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     GetWindowRect,
     SetWindowRect(WindowRectParameters),
     MaximizeWindow,
-//    FullscreenWindow // Not supported in marionette
+    FullscreenWindow,
     SwitchToWindow(SwitchToWindowParameters),
     SwitchToFrame(SwitchToFrameParameters),
     SwitchToParentFrame,
@@ -136,6 +136,7 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
                 WebDriverCommand::SetWindowRect(parameters)
             },
             Route::MaximizeWindow => WebDriverCommand::MaximizeWindow,
+            Route::FullscreenWindow => WebDriverCommand::FullscreenWindow,
             Route::SwitchToWindow => {
                 let parameters: SwitchToWindowParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::SwitchToWindow(parameters)
@@ -401,6 +402,7 @@ impl <U:WebDriverExtensionRoute> ToJson for WebDriverMessage<U> {
             WebDriverCommand::IsEnabled(_) |
             WebDriverCommand::IsSelected(_) |
             WebDriverCommand::MaximizeWindow |
+            WebDriverCommand::FullscreenWindow |
             WebDriverCommand::NewSession(_) |
             WebDriverCommand::Refresh |
             WebDriverCommand::Status |
@@ -540,7 +542,7 @@ impl Parameters for TimeoutsParameters {
             Some(json) => {
                 Some(try_opt!(json.as_u64(),
                               ErrorStatus::InvalidArgument,
-                              "Script timeout duration was not a signed integer"))
+                              "Page load timeout duration was not a signed integer"))
             }
             None => None,
         };
@@ -549,7 +551,7 @@ impl Parameters for TimeoutsParameters {
             Some(json) => {
                 Some(try_opt!(json.as_u64(),
                               ErrorStatus::InvalidArgument,
-                              "Script timeout duration was not a signed integer"))
+                              "Implicit timeout duration was not a signed integer"))
             }
             None => None,
         };

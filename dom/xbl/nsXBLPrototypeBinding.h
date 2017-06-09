@@ -58,7 +58,9 @@ public:
   nsresult BindingAttached(nsIContent* aBoundElement);
   nsresult BindingDetached(nsIContent* aBoundElement);
 
-  bool LoadResources();
+  // aBoundElement is passed in here because we need to get owner document
+  // and PresContext in nsXBLResourceLoader::LoadResources().
+  bool LoadResources(nsIContent* aBoundElement);
   nsresult AddResource(nsIAtom* aResourceType, const nsAString& aSrc);
 
   bool InheritsStyle() const { return mInheritStyle; }
@@ -129,6 +131,7 @@ public:
   void AppendStyleSheetsTo(nsTArray<mozilla::StyleSheet*>& aResult) const;
 
   nsIStyleRuleProcessor* GetRuleProcessor();
+  const mozilla::ServoStyleSet* GetServoStyleSet() const;
 
   nsresult FlushSkinSheets();
 

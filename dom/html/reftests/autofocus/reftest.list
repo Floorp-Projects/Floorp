@@ -9,6 +9,6 @@ fuzzy-if(skiaContent,1,3) needs-focus fails-if(styloVsGecko) == textarea-load.ht
 fuzzy-if(skiaContent,1,3) needs-focus fails-if(styloVsGecko) == textarea-create.html textarea-ref.html
 fuzzy-if(skiaContent,9,6) needs-focus == select-load.html select-ref.html
 fuzzy-if(skiaContent,2,4) needs-focus == select-create.html select-ref.html
-needs-focus fails-if(styloVsGecko) == autofocus-after-load.html autofocus-after-load-ref.html
+needs-focus == autofocus-after-load.html autofocus-after-load-ref.html
 fuzzy-if(skiaContent,2,5) needs-focus == autofocus-leaves-iframe.html autofocus-leaves-iframe-ref.html
 fuzzy-if(skiaContent,2,5) needs-focus == autofocus-after-body-focus.html autofocus-after-body-focus-ref.html

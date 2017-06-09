@@ -2187,6 +2187,32 @@ Gecko_GetBaseSize(nsIAtom* aLanguage)
   return sizes;
 }
 
+RawGeckoElementBorrowedOrNull
+Gecko_GetBindingParent(RawGeckoElementBorrowed aElement)
+{
+  nsIContent* parent = aElement->GetBindingParent();
+  return parent ? parent->AsElement() : nullptr;
+}
+
+RawGeckoXBLBindingBorrowedOrNull
+Gecko_GetXBLBinding(RawGeckoElementBorrowed aElement)
+{
+  return aElement->GetXBLBinding();
+}
+
+RawServoStyleSetBorrowedOrNull
+Gecko_XBLBinding_GetRawServoStyleSet(RawGeckoXBLBindingBorrowed aXBLBinding)
+{
+  const ServoStyleSet* set = aXBLBinding->GetServoStyleSet();
+  return set ? set->RawSet() : nullptr;
+}
+
+bool
+Gecko_XBLBinding_InheritsStyle(RawGeckoXBLBindingBorrowed aXBLBinding)
+{
+  return aXBLBinding->InheritsStyle();
+}
+
 void
 InitializeServo()
 {

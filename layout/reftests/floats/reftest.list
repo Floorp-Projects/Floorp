@@ -5,7 +5,7 @@ fails-if(!styloVsGecko) == other-float-outside-rule-3-left-2.html other-float-ou
 fails-if(!styloVsGecko) == other-float-outside-rule-3-right-2.html other-float-outside-rule-3-right-2-ref.html # bug 616334
 fails-if(!styloVsGecko) == other-float-outside-rule-7-left.html other-float-outside-rule-7-left-ref.html # bug 616334
 fails-if(!styloVsGecko) == other-float-outside-rule-7-right.html other-float-outside-rule-7-right-ref.html # bug 616334
-fuzzy-if(gtkWidget,1,10) fails-if(styloVsGecko) == float-outside-block-push.html float-outside-block-push-ref.html # bug 815612
+fuzzy-if(gtkWidget,1,10) == float-outside-block-push.html float-outside-block-push-ref.html # bug 815612
 == relative-float-1.html relative-float-1-ref.html
 == relative-float-2.html relative-float-2-ref.html
 == zero-height-float-base.html zero-height-float-ref.html

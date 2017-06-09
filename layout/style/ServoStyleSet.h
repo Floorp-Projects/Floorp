@@ -142,7 +142,9 @@ public:
   void InvalidateStyleForCSSRuleChanges();
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-  const RawServoStyleSet& RawSet() const { return *mRawSet; }
+  const RawServoStyleSet* RawSet() const {
+    return mRawSet.get();
+  }
 
   bool GetAuthorStyleDisabled() const;
   nsresult SetAuthorStyleDisabled(bool aStyleDisabled);

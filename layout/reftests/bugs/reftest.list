@@ -82,11 +82,11 @@ fuzzy-if(gtkWidget,6,26200) == 28811-2b.html 28811-2-ref.html  # Bug 1128229
 == 68061-2.xml 68061-2-ref.xml
 == 76331-1.html 76331-1-ref.html
 == 81947-1.html 81947-ref.html
-fails-if(styloVsGecko) == 82711-1.html 82711-1-ref.html
+== 82711-1.html 82711-1-ref.html
 fails-if(styloVsGecko) == 82711-2.html 82711-2-ref.html
-fails-if(styloVsGecko) == 82711-3.html 82711-3-ref.html
-fails-if(styloVsGecko) != 82711-1-ref.html 82711-2-ref.html
-fails-if(styloVsGecko) != 82711-1-ref.html 82711-3-ref.html
+== 82711-3.html 82711-3-ref.html
+!= 82711-1-ref.html 82711-2-ref.html
+!= 82711-1-ref.html 82711-3-ref.html
 fails-if(styloVsGecko) != 82711-2-ref.html 82711-3-ref.html
 fuzzy-if(Android,4,1) == 84400-1.html 84400-1-ref.html
 fuzzy-if(skiaContent,2,13) == 84400-2.html 84400-2-ref.html
@@ -237,14 +237,14 @@ fuzzy-if(skiaContent,1,4) == 220165-1.svg 220165-1-ref.svg
 == 234686-17.html 234686-ref.html
 == 234686-18.html 234686-ref.html
 == 234686-19.html 234686-ref.html
-fails-if(styloVsGecko) == 234964-1.html 234964-1-ref.html
+== 234964-1.html 234964-1-ref.html
 == 234964-2.html 234964-2-ref.html
 == 235593-1.html 235593-1-ref.html
 fuzzy-if(skiaContent,4,2) == 236539-1.html 236539-1-ref.html
 == 240029-1.html 240029-1-ref.html
 == 240470-1.html 240470-1-ref.html
-fails-if(styloVsGecko) == 240933-1.html 240933-1-ref.html
-skip-if(Android) fails-if(styloVsGecko) == 240933-2.html 240933-2-ref.html
+== 240933-1.html 240933-1-ref.html
+skip-if(Android) == 240933-2.html 240933-2-ref.html
 == 243266-1.html 243266-1-ref.html
 == 243302-1.html 243302-1-ref.html
 skip-if(Android&&asyncPan) == 243519-1.html 243519-1-ref.html
@@ -304,10 +304,10 @@ fuzzy-if(Android,3,50) fuzzy-if(skiaContent,1,133) == 273681-1.html 273681-1-ref
 == 283686-1.html about:blank
 == 283686-2.html 283686-2-ref.html
 == 283686-3.html about:blank
-fails-if(styloVsGecko) == 289384-1.xhtml 289384-ref.xhtml
+== 289384-1.xhtml 289384-ref.xhtml
 random-if(d2d) fuzzy-if(Android,8,1439) skip-if(styloVsGecko) HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 578114 for the d2d failures, bug 1354406
 == 290129-1.html 290129-1-ref.html
-fails-if(styloVsGecko) == 291078-1.html 291078-1-ref.html
+== 291078-1.html 291078-1-ref.html
 == 291078-2.html 291078-2-ref.html
 == 291262-1.html 291262-1-ref.html
 == 294306-1.html 294306-1a-ref.html
@@ -318,12 +318,12 @@ fails-if(styloVsGecko) == 291078-1.html 291078-1-ref.html
 == 299837-1.html 299837-1-ref.html
 == 299837-2.xul 299837-2-ref.xul
 random-if(d2d) == 299837-3.xul 299837-3-ref.xul # bug 587631
-fails-if(styloVsGecko) == 300691-1a.html 300691-1-ref.html
-fails-if(styloVsGecko) == 300691-1b.html 300691-1-ref.html
-fails-if(styloVsGecko) == 300691-1c.html 300691-1-ref.html
-fails-if(styloVsGecko) == 300691-1d.html 300691-1-ref.html
-fails-if(styloVsGecko) == 300691-1e.html 300691-1-ref.html
-fails-if(styloVsGecko) == 300691-1f.html 300691-1-ref.html
+== 300691-1a.html 300691-1-ref.html
+== 300691-1b.html 300691-1-ref.html
+== 300691-1c.html 300691-1-ref.html
+== 300691-1d.html 300691-1-ref.html
+== 300691-1e.html 300691-1-ref.html
+== 300691-1f.html 300691-1-ref.html
 == 301726-1.html 301726-1-ref.html
 fails-if(Android) != 301726-2.html 301726-2-ref.html
 == 302379.html 302379-ref.html
@@ -550,7 +550,7 @@ fuzzy-if(skiaContent,2,4) == 362594-2c.html 362594-2-standards-ref.html
 == 363637-1.html 363637-1-ref.html
 skip-if(Android) == 363706-1.html 363706-1-ref.html
 != 363706-1.html about:blank
-fails-if(styloVsGecko) == 363728-1.html 363728-1-ref.html
+== 363728-1.html 363728-1-ref.html
 == 363728-2.html 363728-2-ref.html
 fuzzy-if(skiaContent||Android,4,11) == 363858-1.html 363858-1-ref.html
 == 363858-2.html 363858-2-ref.html
@@ -735,7 +735,7 @@ HTTP(..) == 385569-1b.html 385569-1-ref.html
 fuzzy-if(webrender,0-1,0-600) == 385823-2a.html 385823-2-ref.html
 fails-if(!styloVsGecko) == 385823-2b.html 385823-2-ref.html
 fuzzy-if(webrender,0-1,0-600) == 385823-2c.html 385823-2-ref.html
-fuzzy-if(skiaContent,2,11) fails-if(styloVsGecko) == 385870-1.html 385870-1-ref.html
+fuzzy-if(skiaContent,2,11) == 385870-1.html 385870-1-ref.html
 fuzzy-if(skiaContent,2,3) == 385870-2.html 385870-2-ref.html
 == 386014-1a.html 386014-1-ref.html
 == 386014-1b.html 386014-1-ref.html
@@ -1501,8 +1501,8 @@ fuzzy-if(Android,12,300) == 551463-1.html 551463-1-ref.html
 random != 553571-1.html 553571-1-notref.html # expect dotted circle in test, not in ref: "fails" under harfbuzz, which doesn't consider the sequence invalid
 fuzzy-if(!contentSameGfxBackendAsCanvas,128,91) random-if(d2d) skip-if(azureSkiaGL) fuzzy-if(skiaContent,32,150) == 555388-1.html 555388-1-ref.html
 == 556661-1.html 556661-1-ref.html
-fuzzy-if(skiaContent,4,5) fails-if(styloVsGecko) == 557087-1.html 557087-ref.html
-fails-if(Android) fuzzy-if(skiaContent&&!Android,2,5) fails-if(styloVsGecko) == 557087-2.html 557087-ref.html
+fuzzy-if(skiaContent,4,5) == 557087-1.html 557087-ref.html
+fails-if(Android) fuzzy-if(skiaContent&&!Android,2,5) == 557087-2.html 557087-ref.html
 == 557736-1.html 557736-1-ref.html
 != 558011-1.xul 558011-1-ref.xul
 == 559284-1.html 559284-1-ref.html
@@ -1605,7 +1605,7 @@ fails-if(!haveTestPlugin) HTTP == 599476.html 599476-ref.html
 == 599882-1b.html 599882-1-ref.html
 == 599882-2.html 599882-2-ref.html
 == 600045-1.html 600045-1-ref.html
-fails-if(styloVsGecko) == 600803-1.html 600803-1-ref.html
+== 600803-1.html 600803-1-ref.html
 == 600974-1.html 600974-1-ref.html
 == 600974-2.html 600974-1-ref.html
 == 600974-3.html 600974-1-ref.html
@@ -1728,20 +1728,20 @@ fuzzy-if(cocoaWidget,1,300000) fuzzy-if(skiaContent,2,300000) == 745934-1.html 7
 == 748692-1b.html 748692-1-ref.html
 == 748803-1.html 748803-1-ref.html
 == 750551-1.html 750551-1-ref.html
-fuzzy-if(skiaContent,1,1) fails-if(styloVsGecko) == 751012-1a.html 751012-1-ref.html
-fuzzy-if(skiaContent,1,1) fails-if(styloVsGecko) == 751012-1b.html 751012-1-ref.html
+fuzzy-if(skiaContent,1,1) == 751012-1a.html 751012-1-ref.html
+fuzzy-if(skiaContent,1,1) == 751012-1b.html 751012-1-ref.html
 random-if(Android) == 753329-1.html about:blank
 == 758561-1.html 758561-1-ref.html
 fuzzy-if(true,1,90) fuzzy-if(skiaContent,1,320) == 759036-1.html 759036-1-ref.html
 fuzzy-if(true,17,5886) fuzzy-if(skiaContent,9,5894) == 759036-2.html 759036-2-ref.html
-fails-if(styloVsGecko) == 776265-1a.html 776265-1-ref.html
-fails-if(styloVsGecko) == 776265-1b.html 776265-1-ref.html
-fails-if(styloVsGecko) == 776265-1c.html 776265-1-ref.html
-fails-if(styloVsGecko) == 776265-1d.html 776265-1-ref.html
-fails-if(styloVsGecko) == 776265-2a.html 776265-2-ref.html
-fails-if(styloVsGecko) == 776265-2b.html 776265-2-ref.html
-fails-if(styloVsGecko) == 776265-2c.html 776265-2-ref.html
-fails-if(styloVsGecko) == 776265-2d.html 776265-2-ref.html
+== 776265-1a.html 776265-1-ref.html
+== 776265-1b.html 776265-1-ref.html
+== 776265-1c.html 776265-1-ref.html
+== 776265-1d.html 776265-1-ref.html
+== 776265-2a.html 776265-2-ref.html
+== 776265-2b.html 776265-2-ref.html
+== 776265-2c.html 776265-2-ref.html
+== 776265-2d.html 776265-2-ref.html
 == 776443-1.html 776443-1-ref.html
 == 776443-2.html 776443-2-ref.html
 == 786254-1.html 786254-1-ref.html
@@ -1966,7 +1966,7 @@ fuzzy-if(webrender,0-1,0-2400) == 1242172-2.html 1242172-2-ref.html
 == 1272997-1.html 1272997-1-ref.html
 random-if(!winWidget) == 1273154-1.html 1273154-1-ref.html # depends on Windows font
 random-if(!winWidget) == 1273154-2.html 1273154-2-ref.html # depends on Windows font
-fails-if(styloVsGecko) == 1274368-1.html 1274368-1-ref.html
+== 1274368-1.html 1274368-1-ref.html
 != 1276161-1a.html 1276161-1-notref.html
 != 1276161-1b.html 1276161-1-notref.html
 != 1276161-1a.html 1276161-1b.html
