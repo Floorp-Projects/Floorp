@@ -778,7 +778,7 @@ nsHTMLScrollFrame::PlaceScrollArea(ScrollReflowInput& aState,
 }
 
 nscoord
-nsHTMLScrollFrame::GetIntrinsicVScrollbarWidth(nsRenderingContext *aRenderingContext)
+nsHTMLScrollFrame::GetIntrinsicVScrollbarWidth(gfxContext *aRenderingContext)
 {
   ScrollbarStyles ss = GetScrollbarStyles();
   if (ss.mVertical != NS_STYLE_OVERFLOW_SCROLL || !mHelper.mVScrollbarBox)
@@ -794,7 +794,7 @@ nsHTMLScrollFrame::GetIntrinsicVScrollbarWidth(nsRenderingContext *aRenderingCon
 }
 
 /* virtual */ nscoord
-nsHTMLScrollFrame::GetMinISize(nsRenderingContext *aRenderingContext)
+nsHTMLScrollFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord result = mHelper.mScrolledFrame->GetMinISize(aRenderingContext);
   DISPLAY_MIN_WIDTH(this, result);
@@ -802,7 +802,7 @@ nsHTMLScrollFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsHTMLScrollFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
+nsHTMLScrollFrame::GetPrefISize(gfxContext *aRenderingContext)
 {
   nscoord result = mHelper.mScrolledFrame->GetPrefISize(aRenderingContext);
   DISPLAY_PREF_WIDTH(this, result);

@@ -37,7 +37,7 @@
 #include "nsStyleStructInlines.h"
 #include "SVGTextFrame.h"
 #include "nsCoord.h"
-#include "nsRenderingContext.h"
+#include "gfxContext.h"
 #include "nsIPresShell.h"
 #include "nsTArray.h"
 #include "nsCSSPseudoElements.h"
@@ -4429,9 +4429,9 @@ public:
   nsIFrame* FirstInFlow() const override;
   nsIFrame* FirstContinuation() const override;
 
-  void AddInlineMinISize(nsRenderingContext* aRenderingContext,
+  void AddInlineMinISize(gfxContext* aRenderingContext,
                          InlineMinISizeData* aData) override;
-  void AddInlinePrefISize(nsRenderingContext* aRenderingContext,
+  void AddInlinePrefISize(gfxContext* aRenderingContext,
                           InlinePrefISizeData* aData) override;
 
 protected:
@@ -4577,20 +4577,20 @@ nsContinuingTextFrame::FirstContinuation() const
 
 // Needed for text frames in XUL.
 /* virtual */ nscoord
-nsTextFrame::GetMinISize(nsRenderingContext *aRenderingContext)
+nsTextFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   return nsLayoutUtils::MinISizeFromInline(this, aRenderingContext);
 }
 
 // Needed for text frames in XUL.
 /* virtual */ nscoord
-nsTextFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
+nsTextFrame::GetPrefISize(gfxContext *aRenderingContext)
 {
   return nsLayoutUtils::PrefISizeFromInline(this, aRenderingContext);
 }
 
 /* virtual */ void
-nsContinuingTextFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
+nsContinuingTextFrame::AddInlineMinISize(gfxContext *aRenderingContext,
                                          InlineMinISizeData *aData)
 {
   // Do nothing, since the first-in-flow accounts for everything.
@@ -4598,7 +4598,7 @@ nsContinuingTextFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
 }
 
 /* virtual */ void
-nsContinuingTextFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
+nsContinuingTextFrame::AddInlinePrefISize(gfxContext *aRenderingContext,
                                           InlinePrefISizeData *aData)
 {
   // Do nothing, since the first-in-flow accounts for everything.
@@ -4895,7 +4895,7 @@ public:
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) override;
+                     gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("Text", TYPE_TEXT)
 
   virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) override
@@ -5127,7 +5127,7 @@ nsDisplayText::GetLayerState(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) {
+                     gfxContext* aCtx) {
   PROFILER_LABEL("nsDisplayText", "Paint",
     js::ProfileEntry::Category::GRAPHICS);
 
@@ -5135,7 +5135,7 @@ nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
 
   DrawTargetAutoDisableSubpixelAntialiasing disable(aCtx->GetDrawTarget(),
                                                     mDisableSubpixelAA);
-  RenderToContext(aCtx->ThebesContext(), aBuilder);
+  RenderToContext(aCtx, aBuilder);
 }
 
 already_AddRefed<layers::Layer>
@@ -8419,7 +8419,7 @@ void nsTextFrame::MarkIntrinsicISizesDirty()
 // XXX this doesn't handle characters shaped by line endings. We need to
 // temporarily override the "current line ending" settings.
 void
-nsTextFrame::AddInlineMinISizeForFlow(nsRenderingContext *aRenderingContext,
+nsTextFrame::AddInlineMinISizeForFlow(gfxContext *aRenderingContext,
                                       nsIFrame::InlineMinISizeData *aData,
                                       TextRunType aTextRunType)
 {
@@ -8564,7 +8564,7 @@ bool nsTextFrame::IsCurrentFontInflation(float aInflation) const {
 // XXX Need to do something here to avoid incremental reflow bugs due to
 // first-line and first-letter changing min-width
 /* virtual */ void
-nsTextFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
+nsTextFrame::AddInlineMinISize(gfxContext *aRenderingContext,
                                nsIFrame::InlineMinISizeData *aData)
 {
   float inflation = nsLayoutUtils::FontSizeInflationFor(this);
@@ -8604,7 +8604,7 @@ nsTextFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
 // XXX this doesn't handle characters shaped by line endings. We need to
 // temporarily override the "current line ending" settings.
 void
-nsTextFrame::AddInlinePrefISizeForFlow(nsRenderingContext *aRenderingContext,
+nsTextFrame::AddInlinePrefISizeForFlow(gfxContext *aRenderingContext,
                                        nsIFrame::InlinePrefISizeData *aData,
                                        TextRunType aTextRunType)
 {
@@ -8715,7 +8715,7 @@ nsTextFrame::AddInlinePrefISizeForFlow(nsRenderingContext *aRenderingContext,
 // XXX Need to do something here to avoid incremental reflow bugs due to
 // first-line and first-letter changing pref-width
 /* virtual */ void
-nsTextFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
+nsTextFrame::AddInlinePrefISize(gfxContext *aRenderingContext,
                                 nsIFrame::InlinePrefISizeData *aData)
 {
   float inflation = nsLayoutUtils::FontSizeInflationFor(this);
@@ -8754,7 +8754,7 @@ nsTextFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
 
 /* virtual */
 LogicalSize
-nsTextFrame::ComputeSize(nsRenderingContext *aRenderingContext,
+nsTextFrame::ComputeSize(gfxContext *aRenderingContext,
                          WritingMode aWM,
                          const LogicalSize& aCBSize,
                          nscoord aAvailableISize,
@@ -8817,7 +8817,7 @@ nsTextFrame::ComputeTightBounds(DrawTarget* aDrawTarget) const
 }
 
 /* virtual */ nsresult
-nsTextFrame::GetPrefWidthTightBounds(nsRenderingContext* aContext,
+nsTextFrame::GetPrefWidthTightBounds(gfxContext* aContext,
                                      nscoord* aX,
                                      nscoord* aXMost)
 {

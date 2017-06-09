@@ -50,7 +50,7 @@
 #include "ImageRegion.h"
 #include "gfxRect.h"
 #include "gfxContext.h"
-#include "nsRenderingContext.h"
+#include "gfxContext.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsCSSRendering.h"
 #include "nsTextFragment.h"
@@ -3420,7 +3420,7 @@ nsLayoutUtils::ExpireDisplayPortOnAsyncScrollableAncestor(nsIFrame* aFrame)
 }
 
 nsresult
-nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFrame,
+nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
                           const nsRegion& aDirtyRegion, nscolor aBackstop,
                           nsDisplayListBuilderMode aBuilderMode,
                           PaintFrameFlags aFlags)
@@ -3518,8 +3518,8 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
         gfxPoint devPixelOffset =
           nsLayoutUtils::PointToGfxPoint(pos,
                                          presContext->AppUnitsPerDevPixel());
-        aRenderingContext->ThebesContext()->SetMatrix(
-          aRenderingContext->ThebesContext()->CurrentMatrix().Translate(devPixelOffset));
+        aRenderingContext->SetMatrix(
+          aRenderingContext->CurrentMatrix().Translate(devPixelOffset));
       }
     }
     builder.SetIgnoreScrollFrame(rootScrollFrame);
@@ -4857,7 +4857,7 @@ GetDefiniteSizeTakenByBoxSizing(StyleBoxSizing aBoxSizing,
 enum eWidthProperty { PROP_WIDTH, PROP_MAX_WIDTH, PROP_MIN_WIDTH };
 static bool
 GetIntrinsicCoord(const nsStyleCoord& aStyle,
-                  nsRenderingContext* aRenderingContext,
+                  gfxContext* aRenderingContext,
                   nsIFrame* aFrame,
                   eWidthProperty aProperty,
                   nscoord& aResult)
@@ -4965,7 +4965,7 @@ FormControlShrinksForPercentISize(nsIFrame* aFrame)
  * @param aContainerWM the container's WM
  */
 static nscoord
-AddIntrinsicSizeOffset(nsRenderingContext* aRenderingContext,
+AddIntrinsicSizeOffset(gfxContext* aRenderingContext,
                        nsIFrame* aFrame,
                        const nsIFrame::IntrinsicISizeOffsetData& aOffsets,
                        nsLayoutUtils::IntrinsicISizeType aType,
@@ -5110,7 +5110,7 @@ AddStateBitToAncestors(nsIFrame* aFrame, nsFrameState aBit)
 
 /* static */ nscoord
 nsLayoutUtils::IntrinsicForAxis(PhysicalAxis              aAxis,
-                                nsRenderingContext*       aRenderingContext,
+                                gfxContext*               aRenderingContext,
                                 nsIFrame*                 aFrame,
                                 IntrinsicISizeType        aType,
                                 const Maybe<LogicalSize>& aPercentageBasis,
@@ -5364,7 +5364,7 @@ nsLayoutUtils::IntrinsicForAxis(PhysicalAxis              aAxis,
 }
 
 /* static */ nscoord
-nsLayoutUtils::IntrinsicForContainer(nsRenderingContext* aRenderingContext,
+nsLayoutUtils::IntrinsicForContainer(gfxContext* aRenderingContext,
                                      nsIFrame* aFrame,
                                      IntrinsicISizeType aType,
                                      uint32_t aFlags)
@@ -5378,7 +5378,7 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext* aRenderingContext,
 
 /* static */ nscoord
 nsLayoutUtils::MinSizeContributionForAxis(PhysicalAxis        aAxis,
-                                          nsRenderingContext* aRC,
+                                          gfxContext*         aRC,
                                           nsIFrame*           aFrame,
                                           IntrinsicISizeType  aType,
                                           uint32_t            aFlags)
@@ -5674,7 +5674,7 @@ nsLayoutUtils::ComputeAutoSizeWithIntrinsicDimensions(nscoord minWidth, nscoord 
 
 /* static */ nscoord
 nsLayoutUtils::MinISizeFromInline(nsIFrame* aFrame,
-                                  nsRenderingContext* aRenderingContext)
+                                  gfxContext* aRenderingContext)
 {
   NS_ASSERTION(!aFrame->IsContainerForFontSizeInflation(),
                "should not be container for font size inflation");
@@ -5688,7 +5688,7 @@ nsLayoutUtils::MinISizeFromInline(nsIFrame* aFrame,
 
 /* static */ nscoord
 nsLayoutUtils::PrefISizeFromInline(nsIFrame* aFrame,
-                                   nsRenderingContext* aRenderingContext)
+                                   gfxContext* aRenderingContext)
 {
   NS_ASSERTION(!aFrame->IsContainerForFontSizeInflation(),
                "should not be container for font size inflation");
@@ -5821,7 +5821,7 @@ nsLayoutUtils::AppUnitWidthOfStringBidi(const char16_t* aString,
                                         uint32_t aLength,
                                         const nsIFrame* aFrame,
                                         nsFontMetrics& aFontMetrics,
-                                        nsRenderingContext& aContext)
+                                        gfxContext& aContext)
 {
   nsPresContext* presContext = aFrame->PresContext();
   if (presContext->BidiEnabled()) {
@@ -5890,7 +5890,7 @@ nsLayoutUtils::AppUnitBoundsOfString(const char16_t* aString,
 void
 nsLayoutUtils::DrawString(const nsIFrame*     aFrame,
                           nsFontMetrics&      aFontMetrics,
-                          nsRenderingContext* aContext,
+                          gfxContext* aContext,
                           const char16_t*     aString,
                           int32_t             aLength,
                           nsPoint             aPoint,
@@ -5934,7 +5934,7 @@ nsLayoutUtils::DrawUniDirString(const char16_t* aString,
                                 uint32_t aLength,
                                 nsPoint aPoint,
                                 nsFontMetrics& aFontMetrics,
-                                nsRenderingContext& aContext)
+                                gfxContext& aContext)
 {
   nscoord x = aPoint.x;
   nscoord y = aPoint.y;
@@ -5972,7 +5972,7 @@ nsLayoutUtils::DrawUniDirString(const char16_t* aString,
 
 /* static */ void
 nsLayoutUtils::PaintTextShadow(const nsIFrame* aFrame,
-                               nsRenderingContext* aContext,
+                               gfxContext* aContext,
                                const nsRect& aTextRect,
                                const nsRect& aDirtyRect,
                                const nscolor& aForegroundColor,
@@ -5985,7 +5985,7 @@ nsLayoutUtils::PaintTextShadow(const nsIFrame* aFrame,
 
   // Text shadow happens with the last value being painted at the back,
   // ie. it is painted first.
-  gfxContext* aDestCtx = aContext->ThebesContext();
+  gfxContext* aDestCtx = aContext;
   for (uint32_t i = textStyle->mTextShadow->Length(); i > 0; --i) {
     nsCSSShadowItem* shadowDetails = textStyle->mTextShadow->ShadowAt(i - 1);
     nsPoint shadowOffset(shadowDetails->mXOffset,
@@ -6009,16 +6009,12 @@ nsLayoutUtils::PaintTextShadow(const nsIFrame* aFrame,
     else
       shadowColor = aForegroundColor;
 
-    // Conjure an nsRenderingContext from a gfxContext for drawing the text
-    // to blur.
-    nsRenderingContext renderingContext(shadowContext);
-
     aDestCtx->Save();
     aDestCtx->NewPath();
     aDestCtx->SetColor(Color::FromABGR(shadowColor));
 
     // The callback will draw whatever we want to blur as a shadow.
-    aCallback(&renderingContext, shadowOffset, shadowColor, aCallbackData);
+    aCallback(shadowContext, shadowOffset, shadowColor, aCallbackData);
 
     contextBoxBlur.DoPaint();
     aDestCtx->Restore();

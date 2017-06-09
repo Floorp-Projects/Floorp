@@ -67,7 +67,7 @@ nsNumberControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 }
 
 nscoord
-nsNumberControlFrame::GetMinISize(nsRenderingContext* aRenderingContext)
+nsNumberControlFrame::GetMinISize(gfxContext* aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -85,7 +85,7 @@ nsNumberControlFrame::GetMinISize(nsRenderingContext* aRenderingContext)
 }
 
 nscoord
-nsNumberControlFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
+nsNumberControlFrame::GetPrefISize(gfxContext* aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);

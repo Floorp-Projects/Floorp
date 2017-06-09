@@ -644,7 +644,7 @@ nsresult nsSubDocumentFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 /* virtual */ nscoord
-nsSubDocumentFrame::GetMinISize(nsRenderingContext *aRenderingContext)
+nsSubDocumentFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -660,7 +660,7 @@ nsSubDocumentFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsSubDocumentFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
+nsSubDocumentFrame::GetPrefISize(gfxContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
@@ -697,7 +697,7 @@ nsSubDocumentFrame::GetIntrinsicRatio()
 
 /* virtual */
 LogicalSize
-nsSubDocumentFrame::ComputeAutoSize(nsRenderingContext* aRenderingContext,
+nsSubDocumentFrame::ComputeAutoSize(gfxContext*         aRenderingContext,
                                     WritingMode         aWM,
                                     const LogicalSize&  aCBSize,
                                     nscoord             aAvailableISize,
@@ -720,7 +720,7 @@ nsSubDocumentFrame::ComputeAutoSize(nsRenderingContext* aRenderingContext,
 
 /* virtual */
 LogicalSize
-nsSubDocumentFrame::ComputeSize(nsRenderingContext* aRenderingContext,
+nsSubDocumentFrame::ComputeSize(gfxContext*         aRenderingContext,
                                 WritingMode         aWM,
                                 const LogicalSize&  aCBSize,
                                 nscoord             aAvailableISize,

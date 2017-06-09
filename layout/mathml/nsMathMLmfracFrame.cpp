@@ -11,7 +11,6 @@
 #include "mozilla/RefPtr.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
-#include "nsRenderingContext.h"
 #include "nsDisplayList.h"
 #include "gfxContext.h"
 #include "nsMathMLElement.h"
@@ -609,7 +608,7 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) override;
+                     gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("MathMLSlash", TYPE_MATHML_SLASH)
 
 private:
@@ -619,7 +618,7 @@ private:
 };
 
 void nsDisplayMathMLSlash::Paint(nsDisplayListBuilder* aBuilder,
-                                 nsRenderingContext* aCtx)
+                                 gfxContext* aCtx)
 {
   DrawTarget& aDrawTarget = *aCtx->GetDrawTarget();
 

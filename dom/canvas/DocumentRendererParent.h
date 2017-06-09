@@ -5,10 +5,10 @@
 #ifndef mozilla_dom_DocumentRendererParent
 #define mozilla_dom_DocumentRendererParent
 
+#include "gfxContext.h"
 #include "mozilla/ipc/PDocumentRendererParent.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "gfxContext.h"
 
 class nsICanvasRenderingContextInternal;
 

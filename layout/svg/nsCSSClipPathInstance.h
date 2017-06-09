@@ -11,7 +11,7 @@
 #include "mozilla/gfx/2D.h"
 
 class nsIFrame;
-class nsRenderingContext;
+class gfxContext;
 
 namespace mozilla {
 
