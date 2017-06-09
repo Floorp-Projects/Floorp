@@ -258,7 +258,7 @@
 <!ENTITY pluginDeprecation.description "Missing something? Some plugins are no longer supported by &brandShortName;.">
 <!ENTITY pluginDeprecation.learnMore "Learn More.">
 
-<!ENTITY legacyWarning.description "Missing something?  Some extensions are no longer supported by Firefox.">
+<!ENTITY legacyWarning.description "Missing something? Some extensions are no longer supported by &brandShortName;.">
 <!ENTITY legacyWarning.showLegacy "Show legacy extensions">
-<!ENTITY legacyExtensions.description "These extensions do not meet current Firefox standards so we deactivated them.">
-<!ENTITY legacyExtensions.learnMore "Learn about the changes to Firefox add-ons">
+<!ENTITY legacyExtensions.description "These extensions do not meet current &brandShortName; standards so they have been deactivated.">
+<!ENTITY legacyExtensions.learnMore "Learn about the changes to add-ons">

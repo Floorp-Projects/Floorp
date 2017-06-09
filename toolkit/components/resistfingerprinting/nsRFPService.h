@@ -6,6 +6,7 @@
 #ifndef __nsRFPService_h__
 #define __nsRFPService_h__
 
+#include "mozilla/Atomics.h"
 #include "nsIObserver.h"
 
 #include "nsString.h"
@@ -24,6 +25,11 @@ public:
     return sPrivacyResistFingerprinting;
   }
 
+  // The following Reduce methods can be called off main thread.
+  static double ReduceTimePrecisionAsMSecs(double aTime);
+  static double ReduceTimePrecisionAsUSecs(double aTime);
+  static double ReduceTimePrecisionAsSecs(double aTime);
+
 private:
   nsresult Init();
 
@@ -34,7 +40,7 @@ private:
   void UpdatePref();
   void StartShutdown();
 
-  static bool sPrivacyResistFingerprinting;
+  static Atomic<bool, ReleaseAcquire> sPrivacyResistFingerprinting;
 
   nsCString mInitialTZValue;
 };

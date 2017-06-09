@@ -18,6 +18,7 @@
 #include "jsdate.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Sprintf.h"
 
@@ -48,16 +49,21 @@
 
 using namespace js;
 
+using mozilla::Atomic;
 using mozilla::ArrayLength;
 using mozilla::IsFinite;
 using mozilla::IsNaN;
 using mozilla::NumbersAreIdentical;
+using mozilla::ReleaseAcquire;
 
 using JS::AutoCheckCannotGC;
 using JS::ClippedTime;
 using JS::GenericNaN;
 using JS::TimeClip;
 using JS::ToInteger;
+
+// When this value is non-zero, we'll round the time by this resolution.
+static Atomic<uint32_t, ReleaseAcquire> sResolutionUsec;
 
 /*
  * The JS 'Date' object is patterned after the Java 'Date' object.
@@ -397,6 +403,12 @@ JS_PUBLIC_API(double)
 JS::DayWithinYear(double time, double year)
 {
     return ::DayWithinYear(time, year);
+}
+
+JS_PUBLIC_API(void)
+JS::SetTimeResolutionUsec(uint32_t resolution)
+{
+    sResolutionUsec = resolution;
 }
 
 /*
@@ -1250,7 +1262,11 @@ date_parse(JSContext* cx, unsigned argc, Value* vp)
 static ClippedTime
 NowAsMillis()
 {
-    return TimeClip(static_cast<double>(PRMJ_Now()) / PRMJ_USEC_PER_MSEC);
+    double now = PRMJ_Now();
+    if (sResolutionUsec) {
+        now = floor(now / sResolutionUsec) * sResolutionUsec;
+    }
+    return TimeClip(now / PRMJ_USEC_PER_MSEC);
 }
 
 bool

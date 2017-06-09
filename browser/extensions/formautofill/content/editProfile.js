@@ -9,8 +9,8 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
-function EditDialog(address) {
-  this._address = address;
+function EditDialog() {
+  this._address = window.arguments && window.arguments[0];
   window.addEventListener("DOMContentLoaded", this, {once: true});
 }
 
@@ -137,4 +137,4 @@ EditDialog.prototype = {
 };
 
 // Pass in argument from openDialog
-new EditDialog(window.arguments[0]);
+new EditDialog();
