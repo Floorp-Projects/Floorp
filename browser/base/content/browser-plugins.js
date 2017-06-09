@@ -53,7 +53,8 @@ var gPluginHandler = {
         break;
       case "PluginContent:UpdateHiddenPluginUI":
         this.updateHiddenPluginUI(msg.target, msg.data.haveInsecure, msg.data.actions,
-                                  msg.principal, msg.data.location);
+                                  msg.principal, msg.data.location)
+          .catch(Cu.reportError);
         break;
       case "PluginContent:HideNotificationBar":
         this.hideNotificationBar(msg.target, msg.data.name);
@@ -304,9 +305,25 @@ var gPluginHandler = {
       notificationBox.removeNotification(notification, true);
   },
 
-  updateHiddenPluginUI(browser, haveInsecure, actions,
+  infobarBlockedForURI(uri) {
+    return new Promise((resolve, reject) => {
+      let tableName = Services.prefs.getStringPref("urlclassifier.flashInfobarTable", "");
+      if (!tableName) {
+        resolve(false);
+      }
+      let classifier = Cc["@mozilla.org/url-classifier/dbservice;1"]
+        .getService(Ci.nsIURIClassifier);
+      classifier.asyncClassifyLocalWithTables(uri, tableName, (c, list) => {
+        resolve(list.length > 0);
+      });
+    });
+  },
+
+  async updateHiddenPluginUI(browser, haveInsecure, actions,
                                  principal, location) {
     let origin = principal.originNoSuffix;
+
+    let shouldShowNotification = !(await this.infobarBlockedForURI(browser.documentURI));
 
     // It is possible that we've received a message from the frame script to show
     // the hidden plugin notification for a principal that no longer matches the one
@@ -442,15 +459,17 @@ var gPluginHandler = {
     }
 
     if (actions.length == 0) {
-      hideNotification();
+      shouldShowNotification = false;
+    }
+    if (shouldShowNotification &&
+        Services.perms.testPermissionFromPrincipal(principal, "plugin-hidden-notification") ==
+        Ci.nsIPermissionManager.DENY_ACTION) {
+      shouldShowNotification = false;
+    }
+    if (shouldShowNotification) {
+      showNotification();
     } else {
-      let notificationPermission = Services.perms.testPermissionFromPrincipal(
-        principal, "plugin-hidden-notification");
-      if (notificationPermission == Ci.nsIPermissionManager.DENY_ACTION) {
-        hideNotification();
-      } else {
-        showNotification();
-      }
+      hideNotification();
     }
   },
 

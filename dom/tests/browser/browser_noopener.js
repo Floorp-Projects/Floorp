@@ -61,14 +61,14 @@ async function doTests(private, container) {
       tab = await waitFor;
     }
 
-    if (container) {
-      is(tab.linkedBrowser.getAttribute("usercontextid"), 1, "Should have usercontextid set for " + testid);
-    } else {
-      ok(!tab.linkedBrowser.hasAttribute("usercontextid"), "Should have usercontextid set for " + testid);
-    }
-
     // Check that the name matches.
-    await ContentTask.spawn(tab.linkedBrowser, [test, testid], async ([test, testid]) => {
+    await ContentTask.spawn(tab.linkedBrowser, [test, container, testid], async ([test, container, testid]) => {
+      if (container) {
+        is(content.document.nodePrincipal.originAttributes.userContextId, 1);
+      } else {
+        is(content.document.nodePrincipal.originAttributes.userContextId, 0);
+      }
+
       is(content.window.name, test.name, "Name should match for " + testid);
       if (test.opener) {
         ok(content.window.opener, "Opener should have been set for " + testid);
@@ -122,7 +122,3 @@ add_task(async function newwindow_newproc() {
                                          [NOOPENER_NEWPROC_PREF, true]]});
   await doAllTests();
 });
-
-// add_task(async function() {
-//   await doTests(false, true);
-// })

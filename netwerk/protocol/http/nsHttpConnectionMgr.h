@@ -226,6 +226,12 @@ public:
     // throttling state.
     bool ShouldStopReading(nsHttpTransaction* aTrans, bool aThrottled);
 
+    // return true iff the connection has pending transactions for the active tab.
+    // it's mainly used to disallow throttling (stop reading) of a response
+    // belonging to the same conn info to free up a connection ASAP.
+    // NOTE: relatively expensive to call, there are two hashtable lookups.
+    bool IsConnEntryUnderPressure(nsHttpConnectionInfo*);
+
 private:
     virtual ~nsHttpConnectionMgr();
 

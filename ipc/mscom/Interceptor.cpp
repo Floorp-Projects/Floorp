@@ -26,6 +26,7 @@
 
 namespace mozilla {
 namespace mscom {
+namespace detail {
 
 class LiveSet final
 {
@@ -65,17 +66,53 @@ public:
     mLiveSet.Remove(aKey);
   }
 
-  typedef BaseAutoLock<LiveSet> AutoLock;
-
 private:
   Mutex mMutex;
   nsRefPtrHashtable<nsPtrHashKey<IUnknown>, IWeakReference> mLiveSet;
 };
 
-static LiveSet&
+/**
+ * We don't use the normal XPCOM BaseAutoLock because we need the ability
+ * to explicitly Unlock.
+ */
+class MOZ_RAII LiveSetAutoLock final
+{
+public:
+  explicit LiveSetAutoLock(LiveSet& aLiveSet)
+    : mLiveSet(&aLiveSet)
+  {
+    aLiveSet.Lock();
+  }
+
+  ~LiveSetAutoLock()
+  {
+    if (mLiveSet) {
+      mLiveSet->Unlock();
+    }
+  }
+
+  void Unlock()
+  {
+    MOZ_ASSERT(mLiveSet);
+    mLiveSet->Unlock();
+    mLiveSet = nullptr;
+  }
+
+  LiveSetAutoLock(const LiveSetAutoLock& aOther) = delete;
+  LiveSetAutoLock(LiveSetAutoLock&& aOther) = delete;
+  LiveSetAutoLock& operator=(const LiveSetAutoLock& aOther) = delete;
+  LiveSetAutoLock& operator=(LiveSetAutoLock&& aOther) = delete;
+
+private:
+  LiveSet*  mLiveSet;
+};
+
+} // namespace detail
+
+static detail::LiveSet&
 GetLiveSet()
 {
-  static LiveSet sLiveSet;
+  static detail::LiveSet sLiveSet;
   return sLiveSet;
 }
 
@@ -88,12 +125,17 @@ Interceptor::Create(STAUniquePtr<IUnknown> aTarget, IInterceptorSink* aSink,
     return E_INVALIDARG;
   }
 
-  LiveSet::AutoLock lock(GetLiveSet());
+  detail::LiveSetAutoLock lock(GetLiveSet());
 
-  RefPtr<IWeakReference> existingInterceptor(Move(GetLiveSet().Get(aTarget.get())));
-  if (existingInterceptor &&
-      SUCCEEDED(existingInterceptor->Resolve(aInitialIid, aOutInterface))) {
-    return S_OK;
+  RefPtr<IWeakReference> existingWeak(Move(GetLiveSet().Get(aTarget.get())));
+  if (existingWeak) {
+    RefPtr<IWeakReferenceSource> existingStrong;
+    if (SUCCEEDED(existingWeak->ToStrongRef(getter_AddRefs(existingStrong)))) {
+      // QI on existingStrong may touch other threads. Since we now hold a
+      // strong ref on the interceptor, we may now release the lock.
+      lock.Unlock();
+      return existingStrong->QueryInterface(aInitialIid, aOutInterface);
+    }
   }
 
   *aOutInterface = nullptr;
@@ -103,7 +145,7 @@ Interceptor::Create(STAUniquePtr<IUnknown> aTarget, IInterceptorSink* aSink,
   }
 
   RefPtr<Interceptor> intcpt(new Interceptor(aSink));
-  return intcpt->GetInitialInterceptorForIID(aInitialIid, Move(aTarget),
+  return intcpt->GetInitialInterceptorForIID(lock, aInitialIid, Move(aTarget),
                                              aOutInterface);
 }
 
@@ -123,7 +165,7 @@ Interceptor::Interceptor(IInterceptorSink* aSink)
 Interceptor::~Interceptor()
 {
   { // Scope for lock
-    LiveSet::AutoLock lock(GetLiveSet());
+    detail::LiveSetAutoLock lock(GetLiveSet());
     GetLiveSet().Remove(mTarget.get());
   }
 
@@ -323,7 +365,8 @@ Interceptor::CreateInterceptor(REFIID aIid, IUnknown* aOuter, IUnknown** aOutput
 }
 
 HRESULT
-Interceptor::GetInitialInterceptorForIID(REFIID aTargetIid,
+Interceptor::GetInitialInterceptorForIID(detail::LiveSetAutoLock& aLock,
+                                         REFIID aTargetIid,
                                          STAUniquePtr<IUnknown> aTarget,
                                          void** aOutInterceptor)
 {
@@ -365,6 +408,10 @@ Interceptor::GetInitialInterceptorForIID(REFIID aTargetIid,
   // lifetime of this Interceptor.
   mTarget = ToInterceptorTargetPtr(aTarget);
   GetLiveSet().Put(mTarget.get(), weakRef.forget());
+
+  // Release the live set lock because GetInterceptorForIID will post work to
+  // the main thread, creating potential for deadlocks.
+  aLock.Unlock();
 
   // Now we transfer aTarget's ownership into mInterceptorMap.
   mInterceptorMap.AppendElement(MapEntry(aTargetIid,

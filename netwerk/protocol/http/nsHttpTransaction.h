@@ -223,6 +223,10 @@ private:
     void CheckForStickyAuthScheme();
     void CheckForStickyAuthSchemeAt(nsHttpAtom const& header);
 
+    // Called from WriteSegments.  Checks for conditions whether to throttle reading
+    // the content.  When this returns true, WriteSegments returns WOULD_BLOCK.
+    bool ShouldStopReading();
+
 private:
     class UpdateSecurityCallbacks : public Runnable
     {

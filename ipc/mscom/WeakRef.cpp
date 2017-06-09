@@ -52,6 +52,23 @@ SharedRef::Unlock()
 }
 
 HRESULT
+SharedRef::ToStrongRef(IWeakReferenceSource** aOutStrongReference)
+{
+  RefPtr<IWeakReferenceSource> strongRef;
+
+  { // Scope for lock
+    AutoCriticalSection lock(&mCS);
+    if (!mSupport) {
+      return E_POINTER;
+    }
+    strongRef = mSupport;
+  }
+
+  strongRef.forget(aOutStrongReference);
+  return S_OK;
+}
+
+HRESULT
 SharedRef::Resolve(REFIID aIid, void** aOutStrongReference)
 {
   RefPtr<WeakReferenceSupport> strongRef;
@@ -213,6 +230,12 @@ WeakRef::Release()
     delete this;
   }
   return newRefCnt;
+}
+
+HRESULT
+WeakRef::ToStrongRef(IWeakReferenceSource** aOutStrongReference)
+{
+  return mSharedRef->ToStrongRef(aOutStrongReference);
 }
 
 HRESULT
