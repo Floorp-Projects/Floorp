@@ -21,7 +21,7 @@ config = {
     "previous_archive_prefix": "https://archive.mozilla.org/pub",
     "download_domain": "download.mozilla.org",
     "balrog_url": "http://ec2-54-241-39-23.us-west-1.compute.amazonaws.com",
-    "balrog_username": "stage-ffxbld",
+    "balrog_username": "balrog-stage-ffxbld",
     "update_channels": {
         "beta-dev": {
             "version_regex": r"^(\d+\.\d+(b\d+)?)$",

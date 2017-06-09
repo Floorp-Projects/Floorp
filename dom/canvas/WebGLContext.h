@@ -310,6 +310,7 @@ class WebGLContext
     friend class WebGLExtensionCompressedTextureETC1;
     friend class WebGLExtensionCompressedTexturePVRTC;
     friend class WebGLExtensionCompressedTextureS3TC;
+    friend class WebGLExtensionCompressedTextureS3TC_SRGB;
     friend class WebGLExtensionDepthTexture;
     friend class WebGLExtensionDisjointTimerQuery;
     friend class WebGLExtensionDrawBuffers;

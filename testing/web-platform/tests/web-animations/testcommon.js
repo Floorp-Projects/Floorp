@@ -78,7 +78,8 @@ function createStyle(test, rules, doc) {
 // Create a pseudo element
 function createPseudo(test, type) {
   createStyle(test, { '@keyframes anim': '',
-                      ['.pseudo::' + type]: 'animation: anim 10s;' });
+                      ['.pseudo::' + type]: 'animation: anim 10s; ' +
+                                            'content: \'\';'  });
   var div = createDiv(test);
   div.classList.add('pseudo');
   var anims = document.getAnimations();

@@ -19,6 +19,7 @@
 
 #include "frontend/Parser.h"
 
+#include "mozilla/Range.h"
 #include "mozilla/Sprintf.h"
 
 #include "jsapi.h"
@@ -34,6 +35,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/FoldConstants.h"
 #include "frontend/TokenStream.h"
+#include "irregexp/RegExpParser.h"
 #include "vm/RegExpObject.h"
 #include "wasm/AsmJS.h"
 
@@ -9387,12 +9389,13 @@ Parser<ParseHandler, CharT>::noSubstitutionUntaggedTemplate()
     return handler.newTemplateStringLiteral(tokenStream.currentToken().atom(), pos());
 }
 
-template <template <typename CharT> class ParseHandler, typename CharT>
-typename ParseHandler<CharT>::Node
-Parser<ParseHandler, CharT>::newRegExp()
+template <>
+ParseNode*
+Parser<FullParseHandler, char16_t>::newRegExp()
 {
     MOZ_ASSERT(!options().selfHostingMode);
-    // Create the regexp even when doing a syntax parse, to check the regexp's syntax.
+
+    // Create the regexp and check its syntax.
     const char16_t* chars = tokenStream.getTokenbuf().begin();
     size_t length = tokenStream.getTokenbuf().length();
     RegExpFlag flags = tokenStream.currentToken().regExpFlags();
@@ -9404,6 +9407,24 @@ Parser<ParseHandler, CharT>::newRegExp()
         return null();
 
     return handler.newRegExp(reobj, pos(), *this);
+}
+
+template <>
+SyntaxParseHandlerBase::Node
+Parser<SyntaxParseHandler, char16_t>::newRegExp()
+{
+    MOZ_ASSERT(!options().selfHostingMode);
+
+    // Only check the regexp's syntax, but don't create a regexp object.
+    const char16_t* chars = tokenStream.getTokenbuf().begin();
+    size_t length = tokenStream.getTokenbuf().length();
+    RegExpFlag flags = tokenStream.currentToken().regExpFlags();
+
+    mozilla::Range<const char16_t> source(chars, length);
+    if (!js::irregexp::ParsePatternSyntax(tokenStream, alloc, source, flags & UnicodeFlag))
+        return null();
+
+    return handler.newRegExp(SyntaxParseHandlerBase::NodeGeneric, pos(), *this);
 }
 
 template <template <typename CharT> class ParseHandler, typename CharT>

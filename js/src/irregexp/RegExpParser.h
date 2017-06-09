@@ -31,6 +31,8 @@
 #ifndef V8_PARSER_H_
 #define V8_PARSER_H_
 
+#include "mozilla/Range.h"
+
 #include <stdarg.h>
 
 #include "irregexp/RegExpAST.h"
@@ -51,6 +53,10 @@ ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, JSAtom* str,
 bool
 ParsePatternSyntax(frontend::TokenStream& ts, LifoAlloc& alloc, JSAtom* str,
                    bool unicode);
+
+bool
+ParsePatternSyntax(frontend::TokenStream& ts, LifoAlloc& alloc,
+                   const mozilla::Range<const char16_t> chars, bool unicode);
 
 // A BufferedVector is an automatically growing list, just like (and backed
 // by) a Vector, that is optimized for the case of adding and removing

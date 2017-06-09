@@ -1,5 +1,5 @@
 == input.html input-ref.html
-fuzzy-if(webrender,1-1,5-10) == button.html button-ref.html
+fuzzy-if(webrender,1-1,6-6) == button.html button-ref.html
 == textarea.html textarea-ref.html
 == select.html select-ref.html
 == fieldset.html fieldset-ref.html
