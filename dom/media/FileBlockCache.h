@@ -52,8 +52,11 @@ namespace mozilla {
 // changes listed in mBlockChanges to file. Read() checks mBlockChanges and
 // determines the current data to return, reading from file or from
 // mBlockChanges as necessary.
-class FileBlockCache : public Runnable {
+class FileBlockCache
+{
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileBlockCache)
+
   enum {
     BLOCK_SIZE = MediaCacheStream::BLOCK_SIZE
   };
@@ -72,9 +75,6 @@ public:
   // Can be called on any thread. This defers to a non-main thread.
   nsresult WriteBlock(uint32_t aBlockIndex,
     Span<const uint8_t> aData1, Span<const uint8_t> aData2);
-
-  // Performs block writes and block moves on its own thread.
-  NS_IMETHOD Run() override;
 
   // Synchronously reads data from file. May read from file or memory
   // depending on whether written blocks have been flushed to file yet.
@@ -142,6 +142,9 @@ private:
   }
 
   void SetCacheFile(PRFileDesc* aFD);
+
+  // Performs block writes and block moves on its own thread.
+  void PerformBlockIOs();
 
   // Mutex which controls access to mFD and mFDCurrentPos. Don't hold
   // mDataMutex while holding mFileMutex! mFileMutex must be owned
