@@ -129,7 +129,7 @@
 
 /* Onboarding tour pages */
 .onboarding-tour-page {
-  grid-row: page-start / footer-start;
+  grid-row: page-start / footer-end;
   grid-column: page-start;
   display: grid;
   grid-template-rows: [tour-page-start] 393px [tour-button-start] 1fr [tour-page-end];
@@ -167,6 +167,38 @@
   width: 100%;
   height: 100%;
   border: none;
+}
+
+.onboarding-tour-page.onboarding-no-button > .onboarding-tour-content {
+  grid-row: tour-page-start / tour-page-end;
+  grid-column: tour-content-start / tour-page-end;
+}
+
+.onboarding-tour-button {
+  grid-row: tour-button-start / tour-page-end;
+  grid-column: tour-content-start / tour-page-end;
+}
+
+.onboarding-tour-page.onboarding-no-button > .onboarding-tour-button {
+  display: none;
+  grid-row: tour-page-end;
+  grid-column: tour-page-end;
+}
+
+.onboarding-tour-button > button {
+  background: #0d96ff;
+  border: none;
+  border-radius: 3px;
+  padding: 10px 20px;
+  font-size: 14px;
+  color: #fff;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.23);
+  float: inline-end;
+  margin-inline-end: 70px;
+}
+
+.onboarding-tour-button > button:active {
+  background: #0881dd;
 }
 
 /* Tour Icons */
