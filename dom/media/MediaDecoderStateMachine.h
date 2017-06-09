@@ -305,9 +305,6 @@ private:
   bool HaveEnoughDecodedAudio();
   bool HaveEnoughDecodedVideo();
 
-  // True if shutdown process has begun.
-  bool IsShutdown() const;
-
   // Returns true if we're currently playing. The decoder monitor must
   // be held.
   bool IsPlaying() const;
