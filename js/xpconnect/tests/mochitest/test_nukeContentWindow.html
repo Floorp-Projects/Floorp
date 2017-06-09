@@ -25,11 +25,11 @@ function waitForWindowDestroyed(winID, callback) {
       if (id != winID) {
         return;
       }
-      SpecialPowers.removeObserver(observer, "outer-window-destroyed");
+      SpecialPowers.removeObserver(observer, "outer-window-nuked");
       SpecialPowers.executeSoon(callback);
     }
   };
-  SpecialPowers.addObserver(observer, "outer-window-destroyed");
+  SpecialPowers.addObserver(observer, "outer-window-nuked");
 }
 
 add_task(function* () {
