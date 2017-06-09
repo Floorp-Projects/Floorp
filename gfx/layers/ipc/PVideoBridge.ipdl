@@ -8,6 +8,8 @@ include LayersMessages;
 include protocol PTexture;
 
 include "mozilla/GfxMessageUtils.h";
+include "mozilla/layers/LayersMessageUtils.h";
+
 using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
 
 namespace mozilla {
