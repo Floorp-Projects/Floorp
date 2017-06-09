@@ -40,11 +40,6 @@ class MozlintParser(ArgumentParser):
                   "testing a directory that otherwise wouldn't be run, "
                   "without needing to modify the config file.",
           }],
-        [['-r', '--rev'],
-         {'default': None,
-          'help': "Lint files touched by the given revision(s). Works with "
-                  "mercurial or git."
-          }],
         [['-o', '--outgoing'],
          {'const': 'default',
           'nargs': '?',
@@ -101,16 +96,14 @@ def find_linters(linters=None):
     return lints
 
 
-def run(paths, linters, fmt, rev, outgoing, workdir, **lintargs):
+def run(paths, linters, fmt, outgoing, workdir, **lintargs):
     from mozlint import LintRoller, formatters
 
     lint = LintRoller(**lintargs)
     lint.read(find_linters(linters))
 
     # run all linters
-    results = lint.roll(paths, rev=rev, outgoing=outgoing,
-                        workdir=workdir)
-
+    results = lint.roll(paths, outgoing=outgoing, workdir=workdir)
     formatter = formatters.get(fmt)
 
     # Encode output with 'replace' to avoid UnicodeEncodeErrors on

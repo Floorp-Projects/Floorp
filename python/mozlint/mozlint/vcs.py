@@ -47,13 +47,6 @@ class VCSFiles(object):
         files = subprocess.check_output(cmd).split()
         return [os.path.join(self.root, f) for f in files]
 
-    def by_rev(self, rev):
-        if self.is_hg:
-            return self._run(['hg', 'log', '--template', '{files % "\\n{file}"}', '-r', rev])
-        elif self.is_git:
-            return self._run(['git', 'diff', '--name-only', rev])
-        return []
-
     def outgoing(self, destination='default'):
         if self.is_hg:
             return self._run(['hg', 'outgoing', '--quiet', '-r .',

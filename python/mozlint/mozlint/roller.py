@@ -88,11 +88,10 @@ class LintRoller(object):
         for path in paths:
             self.linters.extend(self.parse(path))
 
-    def roll(self, paths=None, rev=None, outgoing=None, workdir=None, num_procs=None):
+    def roll(self, paths=None, outgoing=None, workdir=None, num_procs=None):
         """Run all of the registered linters against the specified file paths.
 
         :param paths: An iterable of files and/or directories to lint.
-        :param rev: Lint all files touched by the specified revision.
         :param outgoing: Lint files touched by commits that are not on the remote repository.
         :param workdir: Lint all files touched in the working directory.
         :param num_procs: The number of processes to use. Default: cpu count
@@ -107,8 +106,6 @@ class LintRoller(object):
             raise LintersNotConfigured
 
         # Calculate files from VCS
-        if rev:
-            paths.extend(self.vcs.by_rev(rev))
         if workdir:
             paths.extend(self.vcs.by_workdir())
         if outgoing:
