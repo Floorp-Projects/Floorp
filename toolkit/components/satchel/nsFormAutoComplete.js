@@ -515,13 +515,19 @@ FormAutoComplete.prototype = {
     let boundaryCalc = 0;
     // for each word, calculate word boundary weights
     for (let token of searchTokens) {
-      boundaryCalc += (entry.textLowerCase.indexOf(token) == 0);
-      boundaryCalc += (entry.textLowerCase.includes(" " + token));
+      if (entry.textLowerCase.startsWith(token)) {
+        boundaryCalc++;
+      }
+      if (entry.textLowerCase.includes(" " + token)) {
+        boundaryCalc++;
+      }
     }
     boundaryCalc = boundaryCalc * this._boundaryWeight;
     // now add more weight if we have a traditional prefix match and
     // multiply boundary bonuses by boundary weight
-    boundaryCalc += this._prefixWeight * (entry.textLowerCase.indexOf(aSearchString) == 0);
+    if (entry.textLowerCase.startsWith(aSearchString)) {
+      boundaryCalc += this._prefixWeight;
+    }
     entry.totalScore = Math.round(entry.frecency * Math.max(1, boundaryCalc));
   }
 

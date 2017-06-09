@@ -557,8 +557,8 @@ class GCSchedulingState
 
 template<typename F>
 struct Callback {
-    ActiveThreadData<F> op;
-    ActiveThreadData<void*> data;
+    ActiveThreadOrGCTaskData<F> op;
+    ActiveThreadOrGCTaskData<void*> data;
 
     Callback()
       : op(nullptr), data(nullptr)
@@ -905,6 +905,8 @@ class GCRuntime
     static T* tryNewTenuredThing(JSContext* cx, AllocKind kind, size_t thingSize);
     static TenuredCell* refillFreeListInGC(Zone* zone, AllocKind thingKind);
 
+    void bufferGrayRoots();
+
   private:
     enum IncrementalResult
     {
@@ -969,13 +971,14 @@ class GCRuntime
     void pushZealSelectedObjects();
     void purgeRuntime(AutoLockForExclusiveAccess& lock);
     MOZ_MUST_USE bool beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAccess& lock);
+    bool prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOut,
+                                   AutoLockForExclusiveAccess& lock);
     bool shouldPreserveJITCode(JSCompartment* comp, int64_t currentTime,
                                JS::gcreason::Reason reason, bool canAllocateMoreCode);
     void traceRuntimeForMajorGC(JSTracer* trc, AutoLockForExclusiveAccess& lock);
     void traceRuntimeAtoms(JSTracer* trc, AutoLockForExclusiveAccess& lock);
     void traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrMark,
                             AutoLockForExclusiveAccess& lock);
-    void bufferGrayRoots();
     void maybeDoCycleCollection();
     void markCompartments();
     IncrementalProgress drainMarkStack(SliceBudget& sliceBudget, gcstats::PhaseKind phase);
@@ -1139,7 +1142,7 @@ class GCRuntime
         Okay,
         Failed
     };
-    ActiveThreadData<GrayBufferState> grayBufferState;
+    ActiveThreadOrGCTaskData<GrayBufferState> grayBufferState;
     bool hasBufferedGrayRoots() const { return grayBufferState == GrayBufferState::Okay; }
 
     // Clear each zone's gray buffers, but do not change the current state.
@@ -1174,9 +1177,6 @@ class GCRuntime
 
     /* Incremented on every GC slice. */
     ActiveThreadData<uint64_t> number;
-
-    /* The number at the time of the most recent GC's first slice. */
-    ActiveThreadData<uint64_t> startNumber;
 
     /* Whether the currently running GC can finish in multiple slices. */
     ActiveThreadData<bool> isIncremental;
