@@ -278,13 +278,19 @@ ClientEngine.prototype = {
   },
 
   _addClientCommand(clientId, command) {
-    const allCommands = this._readCommands();
-    const clientCommands = allCommands[clientId] || [];
+    const localCommands = this._readCommands();
+    const localClientCommands = localCommands[clientId] || [];
+    const remoteClient = this._store._remoteClients[clientId];
+    let remoteClientCommands = []
+    if (remoteClient && remoteClient.commands) {
+      remoteClientCommands = remoteClient.commands;
+    }
+    const clientCommands = localClientCommands.concat(remoteClientCommands);
     if (hasDupeCommand(clientCommands, command)) {
       return false;
     }
-    allCommands[clientId] = clientCommands.concat(command);
-    this._saveCommands(allCommands);
+    localCommands[clientId] = localClientCommands.concat(command);
+    this._saveCommands(localCommands);
     return true;
   },
 
