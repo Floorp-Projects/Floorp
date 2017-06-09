@@ -139,6 +139,8 @@ jsdcov-code-coverage-tests:
 windows-vm-tests:
     - cppunit
     - crashtest
+    - firefox-ui-functional-local
+    - firefox-ui-functional-remote
     - gtest
     - jittest
     - jsreftest
