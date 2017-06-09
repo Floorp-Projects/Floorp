@@ -1988,15 +1988,15 @@ ScriptLoader::ShouldCacheBytecode(ScriptLoadRequest* aRequest)
       LOG(("ScriptLoadRequest (%p): Bytecode-cache: Cannot get lastFetched.", aRequest));
       return false;
     }
-    TimeStamp now = TimeStamp::NowLoRes();
-    TimeStamp last = TimeStamp() + TimeDuration::FromSeconds(lastFetched);
-    if (now < last) {
+    uint32_t now = PR_Now() / PR_USEC_PER_SEC;
+    if (now < lastFetched) {
       LOG(("ScriptLoadRequest (%p): Bytecode-cache: (What?) lastFetched set in the future.", aRequest));
       return false;
     }
+    TimeDuration since = TimeDuration::FromSeconds(now - lastFetched);
     LOG(("ScriptLoadRequest (%p): Bytecode-cache: lastFetched = %f sec. ago.",
-         aRequest, (now - last).ToSeconds()));
-    if (now - last >= timeSinceLastFetched) {
+         aRequest, since.ToSeconds()));
+    if (since >= timeSinceLastFetched) {
       return false;
     }
   }
