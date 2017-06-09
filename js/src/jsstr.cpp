@@ -1637,6 +1637,11 @@ template <class InnerMatch, typename TextChar, typename PatChar>
 static int
 Matcher(const TextChar* text, uint32_t textlen, const PatChar* pat, uint32_t patlen)
 {
+    MOZ_ASSERT(patlen > 0);
+
+    if (sizeof(TextChar) == 1 && sizeof(PatChar) > 1 && pat[0] > 0xff)
+        return -1;
+
     const typename InnerMatch::Extent extent = InnerMatch::computeExtent(pat, patlen);
 
     uint32_t i = 0;
@@ -1644,10 +1649,12 @@ Matcher(const TextChar* text, uint32_t textlen, const PatChar* pat, uint32_t pat
     while (i < n) {
         const TextChar* pos;
 
-        if (sizeof(TextChar) == 1 && sizeof(PatChar) == 1)
+        if (sizeof(TextChar) == 1) {
+            MOZ_ASSERT(pat[0] <= 0xff);
             pos = (TextChar*) FirstCharMatcher8bit((char*) text + i, n - i, pat[0]);
-        else
-            pos = (TextChar*) FirstCharMatcherUnrolled<TextChar, PatChar>(text + i, n - i, pat[0]);
+        } else {
+            pos = FirstCharMatcherUnrolled(text + i, n - i, char16_t(pat[0]));
+        }
 
         if (pos == nullptr)
             return -1;
