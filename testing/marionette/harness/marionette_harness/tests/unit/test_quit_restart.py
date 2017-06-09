@@ -161,6 +161,19 @@ class TestQuitRestart(MarionetteTestCase):
         self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
                             "about:")
 
+    def test_in_app_restart_with_callback_no_shutdown(self):
+        try:
+            timeout_startup = self.marionette.DEFAULT_STARTUP_TIMEOUT
+            timeout_shutdown = self.marionette.DEFAULT_SHUTDOWN_TIMEOUT
+            self.marionette.DEFAULT_SHUTDOWN_TIMEOUT = 5
+            self.marionette.DEFAULT_STARTUP_TIMEOUT = 5
+
+            with self.assertRaisesRegexp(IOError, "the connection to Marionette server is lost"):
+                self.marionette.restart(in_app=True, callback=lambda: False)
+        finally:
+            self.marionette.DEFAULT_STARTUP_TIMEOUT = timeout_startup
+            self.marionette.DEFAULT_SHUTDOWN_TIMEOUT = timeout_shutdown
+
     @skip("Bug 1363368 - Wrong window handles after in_app restarts")
     def test_in_app_quit(self):
         if self.marionette.session_capabilities["platformName"] != "windows_nt":
@@ -191,6 +204,16 @@ class TestQuitRestart(MarionetteTestCase):
         self.assertNotEqual(self.marionette.session_id, self.session_id)
         self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
                             "about:")
+
+    def test_in_app_quit_with_callback_no_shutdown(self):
+        try:
+            timeout = self.marionette.DEFAULT_SHUTDOWN_TIMEOUT
+            self.marionette.DEFAULT_SHUTDOWN_TIMEOUT = 10
+
+            with self.assertRaisesRegexp(IOError, "a requested application quit did not happen"):
+                self.marionette.quit(in_app=True, callback=lambda: False)
+        finally:
+            self.marionette.DEFAULT_SHUTDOWN_TIMEOUT = timeout
 
     @skip("Bug 1363368 - Wrong window handles after in_app restarts")
     def test_reset_context_after_quit_by_set_context(self):

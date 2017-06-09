@@ -1679,3 +1679,14 @@ pref("browser.suppress_first_window_animation", true);
 
 // Preferences for Photon onboarding system extension
 pref("browser.onboarding.enabled", true);
+
+// Preferences for the Screenshots feature:
+// Temporarily disable Screenshots in Beta & Release, so that we can gradually
+// roll out the feature using SHIELD pref flipping.
+#ifdef NIGHTLY_BUILD
+pref("extensions.screenshots.system-disabled", false);
+#else
+pref("extensions.screenshots.system-disabled", true);
+#endif
+// Permanent pref that allows individual users to disable Screenshots.
+pref("extensions.screenshots.disabled", false);

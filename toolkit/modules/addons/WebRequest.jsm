@@ -680,6 +680,10 @@ HttpObserverManager = {
   },
 
   shouldRunListener(policyType, uri, filter) {
+    // force the protocol to be ws again.
+    if (policyType == "websocket" && uri.startsWith("http")) {
+      uri = `ws${uri.substring(4)}`;
+    }
     return WebRequestCommon.typeMatches(policyType, filter.types) &&
            WebRequestCommon.urlMatches(uri, filter.urls);
   },
@@ -760,6 +764,11 @@ HttpObserverManager = {
       windowId: 0,
       parentWindowId: -1,
     };
+
+    // force the protocol to be ws again.
+    if (data.type == "websocket" && data.url.startsWith("http")) {
+      data.url = `ws${data.url.substring(4)}`;
+    }
 
     if (loadInfo) {
       let originPrincipal = loadInfo.triggeringPrincipal;

@@ -871,11 +871,13 @@ GeckoDriver.prototype.execute_ = function (script, args, timeout, opts = {}) {
     case Context.CONTENT:
       // evaluate in content with lasting side-effects
       if (!opts.sandboxName) {
-        return this.listener.execute(script, args, timeout, opts);
+        return this.listener.execute(script, args, timeout, opts)
+            .then(evaluate.toJSON);
 
       // evaluate in content with sandbox
       } else {
-        return this.listener.executeInSandbox(script, args, timeout, opts);
+        return this.listener.executeInSandbox(script, args, timeout, opts)
+            .then(evaluate.toJSON);
       }
 
     case Context.CHROME:
@@ -887,8 +889,8 @@ GeckoDriver.prototype.execute_ = function (script, args, timeout, opts = {}) {
 
       opts.timeout = timeout;
       let wargs = evaluate.fromJSON(args, this.curBrowser.seenEls, sb.window);
-      let evaluatePromise = evaluate.sandbox(sb, script, wargs, opts);
-      return evaluatePromise.then(res => evaluate.toJSON(res, this.curBrowser.seenEls));
+      return evaluate.sandbox(sb, script, wargs, opts)
+          .then(res => evaluate.toJSON(res, this.curBrowser.seenEls));
   }
 };
 

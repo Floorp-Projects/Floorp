@@ -678,8 +678,8 @@ WMFVideoMFTManager::Input(MediaRawData* aSample)
                                            &inputSample);
   NS_ENSURE_TRUE(SUCCEEDED(hr) && inputSample != nullptr, hr);
 
-  mLastDuration = aSample->mDuration.ToMicroseconds();
-  mLastTime = aSample->mTime.ToMicroseconds();
+  mLastDuration = aSample->mDuration;
+  mLastTime = aSample->mTime;
   mSamplesCount++;
 
   // Forward sample data to the decoder.
@@ -736,7 +736,7 @@ WMFVideoMFTManager::CanUseDXVA(IMFMediaType* aType)
 
   // Assume the current samples duration is representative for the
   // entire video.
-  float framerate = 1000000.0 / mLastDuration;
+  float framerate = 1000000.0 / mLastDuration.ToMicroseconds();
 
   // The supports config check must be done on the main thread since we have
   // a crash guard protecting it.
@@ -1005,8 +1005,8 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset,
         // circumstances.
         // Seeing that we've only fed the decoder a single frame, the pts
         // and duration are known, it's of the last sample.
-        pts = TimeUnit::FromMicroseconds(mLastTime);
-        duration = TimeUnit::FromMicroseconds(mLastDuration);
+        pts = mLastTime;
+        duration = mLastDuration;
       }
       if (mSeekTargetThreshold.isSome()) {
         if ((pts + duration) < mSeekTargetThreshold.ref()) {
@@ -1039,7 +1039,12 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset,
   aOutData = frame;
   // Set the potentially corrected pts and duration.
   aOutData->mTime = pts;
-  aOutData->mDuration = duration;
+  // The VP9 decoder doesn't provide a valid duration. AS VP9 doesn't have a
+  // concept of pts vs dts and have no latency. We can as such use the last
+  // known input duration.
+  aOutData->mDuration = (mStreamType == VP9 && duration == TimeUnit::Zero())
+                        ? mLastDuration
+                        : duration;
 
   if (mNullOutputCount) {
     mGotValidOutputAfterNullOutput = true;

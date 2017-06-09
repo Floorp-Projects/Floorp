@@ -1693,7 +1693,13 @@ var fetchQueryItem = async function(bookmarkItem) {
 
 function addRowToChangeRecords(row, changeRecords) {
   let syncId = BookmarkSyncUtils.guidToSyncId(row.getResultByName("guid"));
-  let modified = row.getResultByName("modified") / MICROSECONDS_PER_SECOND;
+  let modifiedAsPRTime = row.getResultByName("modified");
+  let modified = modifiedAsPRTime / MICROSECONDS_PER_SECOND;
+  if (Number.isNaN(modified) || modified <= 0) {
+    BookmarkSyncLog.error("addRowToChangeRecords: Invalid modified date for " +
+                          syncId, modifiedAsPRTime);
+    modified = 0;
+  }
   changeRecords[syncId] = {
     modified,
     counter: row.getResultByName("syncChangeCounter"),

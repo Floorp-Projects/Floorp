@@ -338,8 +338,8 @@ structs-types = [
     "RawGeckoComputedKeyframeValuesList",
     "RawGeckoFontFaceRuleList",
     "RawGeckoNode",
-    "RawGeckoAnimationValueList",
     "RawServoAnimationValue",
+    "RawGeckoServoAnimationValueList",
     "RawServoDeclarationBlock",
     "RawServoStyleRule",
     "RawGeckoPresContext",
@@ -468,13 +468,13 @@ servo-borrow-types = [
     "nsCSSValue",
     "nsTimingFunction",
     "RawGeckoAnimationPropertySegment",
-    "RawGeckoAnimationValueList",
     "RawGeckoComputedTiming",
     "RawGeckoCSSPropertyIDList",
     "RawGeckoKeyframeList",
     "RawGeckoComputedKeyframeValuesList",
     "RawGeckoFontFaceRuleList",
     "RawGeckoServoStyleRuleList",
+    "RawGeckoServoAnimationValueList",
 ]
 fixups = [
     # hack for gecko-owned string

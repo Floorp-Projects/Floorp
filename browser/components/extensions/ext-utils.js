@@ -2,6 +2,11 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+/* exported WindowEventManager, makeWidgetId */
+/* global EventEmitter:false, TabContext:false, WindowEventManager:false,
+          makeWidgetId:false, tabTracker:true, windowTracker:true */
+/* import-globals-from ../../../toolkit/components/extensions/ext-toolkit.js */
+
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 

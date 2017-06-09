@@ -39,28 +39,28 @@ pub struct XVisualInfo {
 
 #[repr(C)]
 pub struct GLXPbufferClobberEvent {
-    pub event_type: super::__gl_imports::raw::c_int,          // GLX_DAMAGED or GLX_SAVED
-    pub draw_type: super::__gl_imports::raw::c_int,           // GLX_WINDOW or GLX_PBUFFER
-    pub serial: super::__gl_imports::raw::c_ulong,            // # of last request processed by server
-    pub send_event: Bool,                                     // true if this came for SendEvent request
-    pub display: *const Display,                              // display the event was read from
-    pub drawable: GLXDrawable,                                // XID of Drawable
-    pub buffer_mask: super::__gl_imports::raw::c_uint,        // mask indicating which buffers are affected
-    pub aux_buffer: super::__gl_imports::raw::c_uint,         // which aux buffer was affected
+    pub event_type: super::__gl_imports::raw::c_int, // GLX_DAMAGED or GLX_SAVED
+    pub draw_type: super::__gl_imports::raw::c_int, // GLX_WINDOW or GLX_PBUFFER
+    pub serial: super::__gl_imports::raw::c_ulong, // # of last request processed by server
+    pub send_event: Bool, // true if this came for SendEvent request
+    pub display: *const Display, // display the event was read from
+    pub drawable: GLXDrawable, // XID of Drawable
+    pub buffer_mask: super::__gl_imports::raw::c_uint, // mask indicating which buffers are affected
+    pub aux_buffer: super::__gl_imports::raw::c_uint, // which aux buffer was affected
     pub x: super::__gl_imports::raw::c_int,
     pub y: super::__gl_imports::raw::c_int,
     pub width: super::__gl_imports::raw::c_int,
     pub height: super::__gl_imports::raw::c_int,
-    pub count: super::__gl_imports::raw::c_int,               // if nonzero, at least this many more
+    pub count: super::__gl_imports::raw::c_int, // if nonzero, at least this many more
 }
 
 #[repr(C)]
 pub struct GLXBufferSwapComplete {
     pub type_: super::__gl_imports::raw::c_int,
-    pub serial: super::__gl_imports::raw::c_ulong,            // # of last request processed by server
-    pub send_event: Bool,                                     // true if this came from a SendEvent request
-    pub display: *const Display,                              // Display the event was read from
-    pub drawable: GLXDrawable,                                // drawable on which event was requested in event mask
+    pub serial: super::__gl_imports::raw::c_ulong, // # of last request processed by server
+    pub send_event: Bool, // true if this came from a SendEvent request
+    pub display: *const Display, // Display the event was read from
+    pub drawable: GLXDrawable, // drawable on which event was requested in event mask
     pub event_type: super::__gl_imports::raw::c_int,
     pub ust: i64,
     pub msc: i64,
@@ -76,29 +76,29 @@ pub struct GLXBufferSwapComplete {
 #[repr(C)]
 pub struct GLXBufferClobberEventSGIX {
     pub type_: super::__gl_imports::raw::c_int,
-    pub serial: super::__gl_imports::raw::c_ulong,            // # of last request processed by server
-    pub send_event: Bool,                                     // true if this came for SendEvent request
-    pub display: *const Display,                              // display the event was read from
-    pub drawable: GLXDrawable,                                // i.d. of Drawable
-    pub event_type: super::__gl_imports::raw::c_int,          // GLX_DAMAGED_SGIX or GLX_SAVED_SGIX
-    pub draw_type: super::__gl_imports::raw::c_int,           // GLX_WINDOW_SGIX or GLX_PBUFFER_SGIX
-    pub mask: super::__gl_imports::raw::c_uint,               // mask indicating which buffers are affected
+    pub serial: super::__gl_imports::raw::c_ulong, // # of last request processed by server
+    pub send_event: Bool, // true if this came for SendEvent request
+    pub display: *const Display, // display the event was read from
+    pub drawable: GLXDrawable, // i.d. of Drawable
+    pub event_type: super::__gl_imports::raw::c_int, // GLX_DAMAGED_SGIX or GLX_SAVED_SGIX
+    pub draw_type: super::__gl_imports::raw::c_int, // GLX_WINDOW_SGIX or GLX_PBUFFER_SGIX
+    pub mask: super::__gl_imports::raw::c_uint, // mask indicating which buffers are affected
     pub x: super::__gl_imports::raw::c_int,
     pub y: super::__gl_imports::raw::c_int,
     pub width: super::__gl_imports::raw::c_int,
     pub height: super::__gl_imports::raw::c_int,
-    pub count: super::__gl_imports::raw::c_int,               // if nonzero, at least this many more
+    pub count: super::__gl_imports::raw::c_int, // if nonzero, at least this many more
 }
 
 #[repr(C)]
 pub struct GLXHyperpipeNetworkSGIX {
-    pub pipeName: [super::__gl_imports::raw::c_char; 80],   // Should be [GLX_HYPERPIPE_PIPE_NAME_LENGTH_SGIX]
+    pub pipeName: [super::__gl_imports::raw::c_char; 80], // Should be [GLX_HYPERPIPE_PIPE_NAME_LENGTH_SGIX]
     pub networkId: super::__gl_imports::raw::c_int,
 }
 
 #[repr(C)]
 pub struct GLXHyperpipeConfigSGIX {
-    pub pipeName: [super::__gl_imports::raw::c_char; 80],   // Should be [GLX_HYPERPIPE_PIPE_NAME_LENGTH_SGIX]
+    pub pipeName: [super::__gl_imports::raw::c_char; 80], // Should be [GLX_HYPERPIPE_PIPE_NAME_LENGTH_SGIX]
     pub channel: super::__gl_imports::raw::c_int,
     pub participationType: super::__gl_imports::raw::c_uint,
     pub timeSlice: super::__gl_imports::raw::c_int,
@@ -106,7 +106,7 @@ pub struct GLXHyperpipeConfigSGIX {
 
 #[repr(C)]
 pub struct GLXPipeRect {
-    pub pipeName: [super::__gl_imports::raw::c_char; 80],   // Should be [GLX_HYPERPIPE_PIPE_NAME_LENGTH_SGIX]
+    pub pipeName: [super::__gl_imports::raw::c_char; 80], // Should be [GLX_HYPERPIPE_PIPE_NAME_LENGTH_SGIX]
     pub srcXOrigin: super::__gl_imports::raw::c_int,
     pub srcYOrigin: super::__gl_imports::raw::c_int,
     pub srcWidth: super::__gl_imports::raw::c_int,
@@ -119,7 +119,7 @@ pub struct GLXPipeRect {
 
 #[repr(C)]
 pub struct GLXPipeRectLimits {
-    pub pipeName: [super::__gl_imports::raw::c_char; 80],   // Should be [GLX_HYPERPIPE_PIPE_NAME_LENGTH_SGIX]
+    pub pipeName: [super::__gl_imports::raw::c_char; 80], // Should be [GLX_HYPERPIPE_PIPE_NAME_LENGTH_SGIX]
     pub XOrigin: super::__gl_imports::raw::c_int,
     pub YOrigin: super::__gl_imports::raw::c_int,
     pub maxHeight: super::__gl_imports::raw::c_int,

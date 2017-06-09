@@ -154,54 +154,49 @@ HTMLIFrameElement::GetAttributeMappingFunction() const
 }
 
 nsresult
-HTMLIFrameElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                           nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify)
-{
-  nsresult rv = nsGenericHTMLFrameElement::SetAttr(aNameSpaceID, aName,
-                                                   aPrefix, aValue, aNotify);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::srcdoc) {
-    // Don't propagate error here. The attribute was successfully set, that's
-    // what we should reflect.
-    LoadSrc();
-  }
-
-  return NS_OK;
-}
-
-nsresult
 HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue, bool aNotify)
 {
-  if (aName == nsGkAtoms::sandbox &&
-      aNameSpaceID == kNameSpaceID_None && mFrameLoader) {
-    // If we have an nsFrameLoader, apply the new sandbox flags.
-    // Since this is called after the setter, the sandbox flags have
-    // alreay been updated.
-    mFrameLoader->ApplySandboxFlags(GetSandboxFlags());
+  AfterMaybeChangeAttr(aNameSpaceID, aName, aNotify);
+
+  if (aNameSpaceID == kNameSpaceID_None) {
+    if (aName == nsGkAtoms::sandbox) {
+      if (mFrameLoader) {
+        // If we have an nsFrameLoader, apply the new sandbox flags.
+        // Since this is called after the setter, the sandbox flags have
+        // alreay been updated.
+        mFrameLoader->ApplySandboxFlags(GetSandboxFlags());
+      }
+    }
   }
   return nsGenericHTMLFrameElement::AfterSetAttr(aNameSpaceID, aName, aValue,
                                                  aOldValue, aNotify);
 }
 
 nsresult
-HTMLIFrameElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify)
+HTMLIFrameElement::OnAttrSetButNotChanged(int32_t aNamespaceID, nsIAtom* aName,
+                                          const nsAttrValueOrString& aValue,
+                                          bool aNotify)
 {
-  // Invoke on the superclass.
-  nsresult rv = nsGenericHTMLFrameElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
-  NS_ENSURE_SUCCESS(rv, rv);
+  AfterMaybeChangeAttr(aNamespaceID, aName, aNotify);
 
-  if (aNameSpaceID == kNameSpaceID_None &&
-      aAttribute == nsGkAtoms::srcdoc) {
-    // Fall back to the src attribute, if any
-    LoadSrc();
+  return nsGenericHTMLFrameElement::OnAttrSetButNotChanged(aNamespaceID, aName,
+                                                           aValue, aNotify);
+}
+
+void
+HTMLIFrameElement::AfterMaybeChangeAttr(int32_t aNamespaceID,
+                                        nsIAtom* aName,
+                                        bool aNotify)
+{
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aName == nsGkAtoms::srcdoc) {
+      // Don't propagate errors from LoadSrc. The attribute was successfully
+      // set/unset, that's what we should reflect.
+      LoadSrc();
+    }
   }
-
-  return NS_OK;
 }
 
 uint32_t

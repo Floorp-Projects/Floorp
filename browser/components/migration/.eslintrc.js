@@ -1,10 +1,6 @@
 "use strict";
 
 module.exports = {
-  "globals": {
-    "Iterator": true
-  },
-
   "rules": {
     "block-scoped-var": "error",
     "comma-dangle": "off",

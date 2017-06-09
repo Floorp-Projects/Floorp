@@ -45,8 +45,6 @@
 
 <!ENTITY viewMenu_label "View">
 <!ENTITY viewMenu_accesskey "V">
-<!ENTITY viewMenu_toggleEditor_label "Toggle Editor">
-<!ENTITY viewMenu_toggleEditor_accesskey "E">
 <!ENTITY viewMenu_zoomin_label "Zoom In">
 <!ENTITY viewMenu_zoomin_accesskey "I">
 <!ENTITY viewMenu_zoomout_label "Zoom Out">
@@ -66,8 +64,6 @@
 <!ENTITY key_play "R">
 <!-- show toolbox -->
 <!ENTITY key_toggleToolbox "VK_F12">
-<!-- toggle sidebar -->
-<!ENTITY key_toggleEditor "B">
 <!-- zoom -->
 <!ENTITY key_zoomin "+">
 <!ENTITY key_zoomin2 "=">
@@ -123,21 +119,6 @@
 <!ENTITY prefs_options_rememberlastproject_tooltip "Restore previous project when WebIDE starts">
 <!ENTITY prefs_options_templatesurl "Templates URL">
 <!ENTITY prefs_options_templatesurl_tooltip "Index of available templates">
-<!ENTITY prefs_options_showeditor "Show editor">
-<!ENTITY prefs_options_showeditor_tooltip "Show internal editor">
-<!ENTITY prefs_options_tabsize "Tab size">
-<!ENTITY prefs_options_expandtab "Soft tabs">
-<!ENTITY prefs_options_expandtab_tooltip "Use spaces instead of the tab character">
-<!ENTITY prefs_options_detectindentation "Autoindent">
-<!ENTITY prefs_options_detectindentation_tooltip "Guess indentation based on source content">
-<!ENTITY prefs_options_autocomplete "Autocomplete">
-<!ENTITY prefs_options_autocomplete_tooltip "Enable code autocompletion">
-<!ENTITY prefs_options_autoclosebrackets "Autoclose brackets">
-<!ENTITY prefs_options_autoclosebrackets_tooltip "Automatically insert closing brackets">
-<!ENTITY prefs_options_keybindings "Keybindings">
-<!ENTITY prefs_options_keybindings_default "Default">
-<!ENTITY prefs_options_autosavefiles "Autosave files">
-<!ENTITY prefs_options_autosavefiles_tooltip "Automatically save edited files before running project">
 
 <!-- Runtime Details -->
 <!ENTITY runtimedetails_title "Runtime Info">

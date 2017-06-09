@@ -7,7 +7,6 @@ build environment.
 
 import argparse
 import os.path
-import re
 import sys
 
 import requests
@@ -61,8 +60,6 @@ def install(filename, target):
     log('Unpacking %s...' % filename)
     subprocess.check_call(['tar', 'xf', filename])
     basename = filename.split('.tar')[0]
-    # Work around bad tarball naming in 1.15+ cargo packages.
-    basename = re.sub(r'cargo-0\.[\d\.]+', 'cargo-nightly', basename)
     log('Installing %s...' % basename)
     install_cmd = [os.path.join(basename, 'install.sh')]
     install_cmd += ['--prefix=' + os.path.abspath(target)]

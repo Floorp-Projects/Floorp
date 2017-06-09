@@ -11,6 +11,7 @@ DIRS += [
     'pdfjs',
     'pocket',
     'screenshots',
+    'shield-recipe-client',
     'webcompat',
 ]
 
@@ -20,7 +21,6 @@ if not CONFIG['RELEASE_OR_BETA']:
         'flyweb',
         'formautofill',
         'presentation',
-        'shield-recipe-client',
         'webcompat-reporter',
     ]
 

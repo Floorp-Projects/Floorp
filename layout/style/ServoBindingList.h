@@ -240,6 +240,12 @@ SERVO_BINDING_FUNC(Servo_MatrixTransform_Operate, void,
                    const RawGeckoGfxMatrix4x4* to,
                    double progress,
                    RawGeckoGfxMatrix4x4* result)
+SERVO_BINDING_FUNC(Servo_GetAnimationValues, void,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   RawGeckoElementBorrowed element,
+                   ServoComputedValuesBorrowed style,
+                   RawServoStyleSetBorrowed style_set,
+                   RawGeckoServoAnimationValueListBorrowedMut animation_values)
 
 // AnimationValues handling
 SERVO_BINDING_FUNC(Servo_AnimationValues_Interpolate,
@@ -268,6 +274,10 @@ SERVO_BINDING_FUNC(Servo_AnimationValues_ComputeDistance, double,
 SERVO_BINDING_FUNC(Servo_AnimationValue_Serialize, void,
                    RawServoAnimationValueBorrowed value,
                    nsCSSPropertyID property,
+                   nsAString* buffer)
+SERVO_BINDING_FUNC(Servo_Shorthand_AnimationValues_Serialize, void,
+                   nsCSSPropertyID shorthand_property,
+                   RawGeckoServoAnimationValueListBorrowed values,
                    nsAString* buffer)
 SERVO_BINDING_FUNC(Servo_AnimationValue_GetOpacity, float,
                    RawServoAnimationValueBorrowed value)

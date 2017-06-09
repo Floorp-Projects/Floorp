@@ -1326,12 +1326,22 @@ pub extern "C" fn wr_dp_pop_stacking_context(state: &mut WrState) {
 #[no_mangle]
 pub extern "C" fn wr_dp_push_clip(state: &mut WrState,
                                   clip_rect: WrRect,
-                                  mask: *const WrImageMask) {
+                                  mask: *const WrImageMask)
+                                  -> u64 {
     assert!(unsafe { is_in_main_thread() });
     let clip_rect = clip_rect.into();
     let mask = unsafe { mask.as_ref() }.map(|x| x.into());
     let clip_region = state.frame_builder.dl_builder.push_clip_region(&clip_rect, vec![], mask);
-    state.frame_builder.dl_builder.push_clip_node(clip_rect, clip_region, None);
+    let clip_id = state.frame_builder.dl_builder.define_clip(clip_rect, clip_region, None);
+    state.frame_builder.dl_builder.push_clip_id(clip_id);
+    // return the u64 id value from inside the ClipId::Clip(..)
+    match clip_id {
+        ClipId::Clip(id, pipeline_id) => {
+            assert!(pipeline_id == state.pipeline_id);
+            id
+        },
+        _ => panic!("Got unexpected clip id type"),
+    }
 }
 
 #[no_mangle]
@@ -1373,6 +1383,28 @@ pub extern "C" fn wr_scroll_layer_with_id(api: &mut WrAPI,
     assert!(unsafe { is_in_compositor_thread() });
     let clip_id = ClipId::new(scroll_id, pipeline_id);
     api.scroll_node_with_id(new_scroll_origin.into(), clip_id, ScrollClamping::NoClamping);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_push_clip_and_scroll_info(state: &mut WrState,
+                                                  scroll_id: u64,
+                                                  clip_id: *const u64) {
+    assert!(unsafe { is_in_main_thread() });
+    let scroll_id = ClipId::new(scroll_id, state.pipeline_id);
+    let info = if let Some(&id) = unsafe { clip_id.as_ref() } {
+        ClipAndScrollInfo::new(
+            scroll_id,
+            ClipId::Clip(id, state.pipeline_id))
+    } else {
+        ClipAndScrollInfo::simple(scroll_id)
+    };
+    state.frame_builder.dl_builder.push_clip_and_scroll_info(info);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_pop_clip_and_scroll_info(state: &mut WrState) {
+    assert!(unsafe { is_in_main_thread() });
+    state.frame_builder.dl_builder.pop_clip_id();
 }
 
 #[no_mangle]

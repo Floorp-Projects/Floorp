@@ -59,11 +59,6 @@ public:
                               bool aCompileEventHandlers) override;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
-  virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom *aName,
-                           nsIAtom *aPrefix, const nsAString &aValue,
-                           bool aNotify) override;
-  virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify) override;
 
   virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex) override;
   virtual IMEState GetDesiredIMEState() override;
@@ -252,6 +247,14 @@ protected:
   // Override for nsImageLoadingContent.
   nsIContent* AsContent() override { return this; }
 
+  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+                                const nsAttrValue* aValue,
+                                const nsAttrValue* aOldValue,
+                                bool aNotify) override;
+  virtual nsresult OnAttrSetButNotChanged(int32_t aNamespaceID, nsIAtom* aName,
+                                          const nsAttrValueOrString& aValue,
+                                          bool aNotify) override;
+
 private:
   /**
    * Returns if the element is currently focusable regardless of it's tabindex
@@ -270,6 +273,18 @@ private:
 
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                     GenericSpecifiedValues* aGenericData);
+
+  /**
+   * This function is called by AfterSetAttr and OnAttrSetButNotChanged.
+   * This function will be called by AfterSetAttr whether the attribute is being
+   * set or unset.
+   *
+   * @param aNamespaceID the namespace of the attr being set
+   * @param aName the localname of the attribute being set
+   * @param aNotify Whether we plan to notify document observers.
+   */
+  nsresult AfterMaybeChangeAttr(int32_t aNamespaceID, nsIAtom* aName,
+                                bool aNotify);
 
   bool mIsDoneAddingChildren;
 };

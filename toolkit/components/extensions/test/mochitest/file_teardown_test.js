@@ -1,6 +1,7 @@
 "use strict";
 
-/* globals addMessageListener */
+/* eslint-env mozilla/frame-script */
+
 let {Management} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
 let events = [];
 function record(type, extensionContext) {

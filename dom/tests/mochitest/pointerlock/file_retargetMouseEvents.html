@@ -42,7 +42,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       var parent = document.getElementById("parent")
         , child = document.getElementById("child")
         , parentStats = new MouseEventStats()
-        , childStats = new MouseEventStats();
+        , childStats = new MouseEventStats()
+        , mouseMoveIntervalID;
 
       function runTests () {
         is(childStats.mouseMove, false, "Child shound not receive mousemove event.");
@@ -68,6 +69,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
        * retargetted to the locked element
        **/
       var childMoveTest = function() {
+        clearInterval(mouseMoveIntervalID);
         childStats.mouseMove = true;
       }
 
@@ -94,6 +96,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       //  Event listeners for the parent element
       var startMouseTests = function() {
         info("Got parent mousemove");
+        clearInterval(mouseMoveIntervalID);
         parent.removeEventListener("mousemove", startMouseTests);
         parent.addEventListener("DOMMouseScroll", parentScrollTest);
         child.addEventListener("DOMMouseScroll", childScrollTest);
@@ -185,9 +188,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           info("Got pointerlockchange for entering");
           parent.addEventListener("mousemove", startMouseTests);
           child.addEventListener("mousemove", childMoveTest);
-          SimpleTest.executeSoon(function () {
+          // Bug 1357082
+          // Retrigger synthesizeMouseAtCenter until it actually happens.
+          mouseMoveIntervalID = setInterval(() => {
             synthesizeMouseAtCenter(parent, {type: "mousemove"}, window);
-          });
+          }, 100);
         } else {
           info("Got pointerlockchange for exiting");
         }

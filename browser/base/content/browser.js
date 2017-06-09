@@ -4226,19 +4226,30 @@ function updateEditUIVisibility() {
                    contextMenuPopupState == "open" ||
                    placesContextMenuPopupState == "showing" ||
                    placesContextMenuPopupState == "open";
+  const kOpenPopupStates = ["showing", "open"];
   if (!gEditUIVisible) {
     // Now check the edit-controls toolbar buttons.
     let placement = CustomizableUI.getPlacementOfWidget("edit-controls");
     let areaType = placement ? CustomizableUI.getAreaType(placement.area) : "";
     if (areaType == CustomizableUI.TYPE_MENU_PANEL) {
-      let panelUIMenuPopupState = document.getElementById("PanelUI-popup").state;
-      if (panelUIMenuPopupState == "showing" || panelUIMenuPopupState == "open") {
+      let customizablePanel = gPhotonStructure ? PanelUI.overflowPanel : PanelUI.panel;
+      gEditUIVisible = kOpenPopupStates.includes(customizablePanel.state);
+    } else if (areaType == CustomizableUI.TYPE_TOOLBAR && window.toolbar.visible) {
+      // The edit controls are on a toolbar, so they are visible,
+      // unless they're in a panel that isn't visible...
+      if (placement.area == "nav-bar") {
+        let editControls = document.getElementById("edit-controls");
+        gEditUIVisible = !editControls.hasAttribute("overflowedItem") ||
+                          kOpenPopupStates.includes(document.getElementById("widget-overflow").state);
+      } else {
         gEditUIVisible = true;
       }
-    } else if (areaType == CustomizableUI.TYPE_TOOLBAR) {
-      // The edit controls are on a toolbar, so they are visible.
-      gEditUIVisible = true;
     }
+  }
+
+  // Now check the main menu panel if we're using photon
+  if (!gEditUIVisible && gPhotonStructure) {
+    gEditUIVisible = kOpenPopupStates.includes(PanelUI.panel.state);
   }
 
   // No need to update commands if the edit UI visibility has not changed.
@@ -7853,6 +7864,7 @@ var gPageActionButton = {
       if (clientId) {
         item.classList.add("subviewbutton-iconic");
       }
+      item.setAttribute("tooltiptext", name);
       return item;
     });
 

@@ -1,0 +1,23 @@
+# Redirect old .spec file URLs to the cached locations
+
+redirect 301 /registry/api/enum.spec		http://www.opengl.org/registry/oldspecs/enum.spec
+redirect 301 /registry/api/enumext.spec		http://www.opengl.org/registry/oldspecs//enumext.spec
+redirect 301 /registry/api/gl.spec		http://www.opengl.org/registry/oldspecs//gl.spec
+redirect 301 /registry/api/gl.tm		http://www.opengl.org/registry/oldspecs//gl.tm
+redirect 301 /registry/api/gl3.h		http://www.opengl.org/registry/oldspecs//gl3.h
+redirect 301 /registry/api/glcorearb.h		http://www.opengl.org/registry/oldspecs//glcorearb.h
+redirect 301 /registry/api/glcorearbrelease.txt http://www.opengl.org/registry/oldspecs//glcorearbrelease.txt
+redirect 301 /registry/api/glext.h		http://www.opengl.org/registry/oldspecs//glext.h
+redirect 301 /registry/api/glextrelease.txt	http://www.opengl.org/registry/oldspecs//glextrelease.txt
+redirect 301 /registry/api/glx.spec		http://www.opengl.org/registry/oldspecs//glx.spec
+redirect 301 /registry/api/glx.tm		http://www.opengl.org/registry/oldspecs//glx.tm
+redirect 301 /registry/api/glxenum.spec		http://www.opengl.org/registry/oldspecs//glxenum.spec
+redirect 301 /registry/api/glxenumext.spec	http://www.opengl.org/registry/oldspecs//glxenumext.spec
+redirect 301 /registry/api/glxext.h		http://www.opengl.org/registry/oldspecs//glxext.h
+redirect 301 /registry/api/glxext.spec		http://www.opengl.org/registry/oldspecs//glxext.spec
+redirect 301 /registry/api/wgl.spec		http://www.opengl.org/registry/oldspecs//wgl.spec
+redirect 301 /registry/api/wgl.tm		http://www.opengl.org/registry/oldspecs//wgl.tm
+redirect 301 /registry/api/wglenum.spec		http://www.opengl.org/registry/oldspecs//wglenum.spec
+redirect 301 /registry/api/wglenumext.spec	http://www.opengl.org/registry/oldspecs//wglenumext.spec
+redirect 301 /registry/api/wglext.h		http://www.opengl.org/registry/oldspecs//wglext.h
+redirect 301 /registry/api/wglext.spec		http://www.opengl.org/registry/oldspecs//wglext.spec

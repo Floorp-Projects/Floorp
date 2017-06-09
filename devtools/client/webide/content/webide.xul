@@ -47,7 +47,6 @@
       <command id="cmd_showMonitor" oncommand="Cmds.showMonitor()" label="&runtimeMenu_showMonitor_label;"/>
       <command id="cmd_showRuntimeDetails" oncommand="Cmds.showRuntimeDetails()" label="&runtimeMenu_showDetails_label;"/>
       <command id="cmd_takeScreenshot" oncommand="Cmds.takeScreenshot()" label="&runtimeMenu_takeScreenshot_label;"/>
-      <command id="cmd_toggleEditor" oncommand="Cmds.toggleEditors()" label="&viewMenu_toggleEditor_label;"/>
       <command id="cmd_showAddons" oncommand="Cmds.showAddons()"/>
       <command id="cmd_showPrefs" oncommand="Cmds.showPrefs()"/>
       <command id="cmd_showTroubleShooting" oncommand="Cmds.showTroubleShooting()"/>
@@ -93,7 +92,6 @@
 
     <menu id="menu-view" label="&viewMenu_label;" accesskey="&viewMenu_accesskey;">
       <menupopup id="menu-ViewPopup">
-        <menuitem command="cmd_toggleEditor" key="key_toggleEditor" accesskey="&viewMenu_toggleEditor_accesskey;"/>
         <menuseparator/>
         <menuitem command="cmd_zoomin" key="key_zoomin" accesskey="&viewMenu_zoomin_accesskey;"/>
         <menuitem command="cmd_zoomout" key="key_zoomout" accesskey="&viewMenu_zoomout_accesskey;"/>
@@ -107,7 +105,6 @@
     <key key="&key_quit;" id="key_quit" command="cmd_quit" modifiers="accel"/>
     <key key="&key_showProjectPanel;" id="key_showProjectPanel" command="cmd_showProjectPanel" modifiers="accel"/>
     <key key="&key_play;" id="key_play" command="cmd_play" modifiers="accel"/>
-    <key key="&key_toggleEditor;" id="key_toggleEditor" command="cmd_toggleEditor" modifiers="accel"/>
     <key keycode="&key_toggleToolbox;" id="key_toggleToolbox" command="cmd_toggleToolbox"/>
     <key key="&key_zoomin;" id="key_zoomin" command="cmd_zoomin" modifiers="accel"/>
     <key key="&key_zoomin2;" id="key_zoomin2" command="cmd_zoomin" modifiers="accel"/>
@@ -151,7 +148,6 @@
       <splitter class="devtools-side-splitter" id="project-listing-splitter"/>
       <deck flex="1" id="deck" selectedIndex="-1">
         <iframe id="deck-panel-details" flex="1" src="details.xhtml"/>
-        <iframe id="deck-panel-projecteditor" flex="1"/>
         <iframe id="deck-panel-addons" flex="1" src="addons.xhtml"/>
         <iframe id="deck-panel-prefs" flex="1" src="prefs.xhtml"/>
         <iframe id="deck-panel-runtimedetails" flex="1" lazysrc="runtimedetails.xhtml"/>

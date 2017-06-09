@@ -44,7 +44,7 @@ const ProjectBuilding = exports.ProjectBuilding = {
     }
     let data = yield OS.File.read(cordovaConfigPath);
     data = new TextDecoder().decode(data);
-    if (data.contains("cordova.apache.org")) {
+    if (data.includes("cordova.apache.org")) {
       return {
         "webide": {
           "prepackage": "cordova prepare",

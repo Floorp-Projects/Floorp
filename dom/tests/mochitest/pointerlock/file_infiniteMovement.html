@@ -37,7 +37,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           , divCenterWidth = 0
           , divCenterHeight = 0
           , totalMovementX = 0
-          , totalMovementY = 0;
+          , totalMovementY = 0
+          , mouseMoveIntervalID;
 
         function runTests () {
           ok(totalMovementX > div.getBoundingClientRect().width,
@@ -50,17 +51,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
 
         var firstMoveListener = function (e) {
           info("Got first mousemove");
+          clearInterval(mouseMoveIntervalID);
           div.removeEventListener("mousemove", firstMoveListener);
           div.addEventListener("mousemove", secondMoveListener);
 
-          synthesizeMouse(div,(divCenterWidth/2) * 3,
-            (divCenterHeight/2) * 3, {
-            type: "mousemove"
-          }, window);
+          // Bug 1357082
+          // Retrigger synthesizeMouse until it actually happens.
+          mouseMoveIntervalID = setInterval(() => {
+            synthesizeMouse(div,(divCenterWidth/2) * 3,
+              (divCenterHeight/2) * 3, {
+              type: "mousemove"
+            }, window);
+          }, 100);
         }
 
         var secondMoveListener = function (e) {
           info("Got second mousemove");
+          clearInterval(mouseMoveIntervalID);
           totalMovementX = divCenterWidth + ((divCenterWidth / 2) * 3);
           totalMovementY = divCenterHeight + ((divCenterHeight / 2) * 3);
 
@@ -81,9 +88,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
             divCenterWidth = Math.round(div.getBoundingClientRect().width / 2);
             divCenterHeight = Math.round(div.getBoundingClientRect().height / 2);
 
-            synthesizeMouse(div, divCenterWidth, divCenterHeight, {
-              type: "mousemove"
-            }, window);
+            // Bug 1357082
+            // Retrigger synthesizeMouse until it actually happens.
+            mouseMoveIntervalID = setInterval(() => {
+              synthesizeMouse(div, divCenterWidth, divCenterHeight, {
+                type: "mousemove"
+              }, window);
+            }, 100);
           } else {
             info("Got pointerlockchange for exiting");
           }

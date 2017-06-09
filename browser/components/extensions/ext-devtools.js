@@ -2,7 +2,11 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-/* global getTargetTabIdForToolbox */
+/* exported getDevToolsTargetForContext */
+/* global getTargetTabIdForToolbox, getDevToolsTargetForContext */
+
+// The ext-* files are imported into the same scopes.
+/* import-globals-from ext-utils.js */
 
 /**
  * This module provides helpers used by the other specialized `ext-devtools-*.js` modules
