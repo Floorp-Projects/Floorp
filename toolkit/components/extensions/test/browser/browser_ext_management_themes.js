@@ -11,6 +11,8 @@ add_task(async function setup() {
 });
 
 add_task(async function test_management_themes() {
+  const TEST_ID = "test_management_themes@tests.mozilla.com";
+
   let theme = ExtensionTestUtils.loadExtension({
     manifest: {
       "name": "Simple theme test",
@@ -28,7 +30,7 @@ add_task(async function test_management_themes() {
     useAddonManager: "temporary",
   });
 
-  async function background() {
+  async function background(TEST_ID) {
     browser.management.onInstalled.addListener(info => {
       browser.test.log(`${info.name} was installed`);
       browser.test.assertEq(info.type, "theme", "addon is theme");
@@ -52,10 +54,15 @@ add_task(async function test_management_themes() {
 
     async function getAddon(type) {
       let addons = await browser.management.getAll();
+      let themes = addons.filter(addon => addon.type === "theme");
       // We get the 3 built-in themes plus the lwt and our addon.
-      browser.test.assertEq(5, addons.length, "got expected addons");
+      browser.test.assertEq(5, themes.length, "got expected addons");
+      // We should also get our test extension.
+      let testExtension = addons.find(addon => { return addon.id === TEST_ID; });
+      browser.test.assertTrue(!!testExtension,
+                              `The extension with id ${TEST_ID} was returned by getAll.`);
       let found;
-      for (let addon of addons) {
+      for (let addon of themes) {
         browser.test.assertEq(addon.type, "theme", "addon is theme");
         if (type == "theme" && addon.id.includes("temporary-addon")) {
           found = addon;
@@ -89,9 +96,16 @@ add_task(async function test_management_themes() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
+      applications: {
+        gecko: {
+          id: TEST_ID,
+        },
+      },
+      name: TEST_ID,
       permissions: ["management"],
     },
-    background,
+    background: `(${background})("${TEST_ID}")`,
+    useAddonManager: "temporary",
   });
   await extension.startup();
 
