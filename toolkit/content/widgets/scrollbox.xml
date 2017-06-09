@@ -216,10 +216,39 @@
 
       <field name="_scrollTarget">null</field>
 
+      <method name="_boundsWithoutFlushing">
+        <parameter name="element"/>
+        <body><![CDATA[
+          if (!("_DOMWindowUtils" in this)) {
+            try {
+              this._DOMWindowUtils =
+                window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
+            } catch (e) {
+              // Can't access nsIDOMWindowUtils if we're unprivileged.
+              this._DOMWindowUtils = null;
+            }
+          }
+
+          return this._DOMWindowUtils ?
+                 this._DOMWindowUtils.getBoundsWithoutFlushing(element) :
+                 element.getBoundingClientRect();
+        ]]></body>
+      </method>
+
       <method name="_canScrollToElement">
         <parameter name="element"/>
         <body><![CDATA[
-          return window.getComputedStyle(element).display != "none";
+          if (element.hidden) {
+            return false;
+          }
+
+          // See if the element is hidden via CSS without the hidden attribute.
+          // If we get only zeros for the client rect, this means the element
+          // is hidden. As a performance optimization, we don't flush layout
+          // here which means that on the fly changes aren't fully supported.
+          let rect = this._boundsWithoutFlushing(element);
+          return !!(rect.top || rect.left || rect.width || rect.height);
         ]]></body>
       </method>
 
