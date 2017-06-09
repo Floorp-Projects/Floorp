@@ -14,6 +14,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "FileBlockCache.h"
+#include "MediaBlockCacheBase.h"
 #include "nsIObserverService.h"
 #include "nsISeekableStream.h"
 #include "nsIPrincipal.h"
@@ -415,7 +416,7 @@ protected:
   // Keep track for highest number of blocks owners, for telemetry purposes.
   uint32_t mBlockOwnersWatermark = 0;
   // Writer which performs IO, asynchronously writing cache blocks.
-  RefPtr<FileBlockCache> mFileCache;
+  RefPtr<MediaBlockCacheBase> mFileCache;
   // The list of free blocks; they are not ordered.
   BlockList       mFreeBlocks;
   // True if an event to run Update() has been queued but not processed
@@ -775,7 +776,7 @@ MediaCache::ReadCacheFile(
   int64_t aOffset, void* aData, int32_t aLength, int32_t* aBytes)
 {
   mReentrantMonitor.AssertCurrentThreadIn();
-  RefPtr<FileBlockCache> fileCache = mFileCache;
+  RefPtr<MediaBlockCacheBase> fileCache = mFileCache;
   if (!fileCache) {
     return NS_ERROR_FAILURE;
   }

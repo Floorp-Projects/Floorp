@@ -13,7 +13,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/AbstractThread.h"
 #include "nsTArray.h"
-#include "MediaCache.h"
+#include "MediaBlockCacheBase.h"
 #include "nsDeque.h"
 #include "nsThreadUtils.h"
 #include <deque>
@@ -52,29 +52,24 @@ namespace mozilla {
 // changes listed in mBlockChanges to file. Read() checks mBlockChanges and
 // determines the current data to return, reading from file or from
 // mBlockChanges as necessary.
-class FileBlockCache
+class FileBlockCache : public MediaBlockCacheBase
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileBlockCache)
-
-  enum {
-    BLOCK_SIZE = MediaCacheStream::BLOCK_SIZE
-  };
-
   FileBlockCache();
 
 protected:
-  ~FileBlockCache();
+  virtual ~FileBlockCache();
 
 public:
-  nsresult Init();
+  nsresult Init() override;
 
   // Closes writer, shuts down thread.
-  void Close();
+  void Close() override;
 
   // Can be called on any thread. This defers to a non-main thread.
   nsresult WriteBlock(uint32_t aBlockIndex,
-    Span<const uint8_t> aData1, Span<const uint8_t> aData2);
+                      Span<const uint8_t> aData1,
+                      Span<const uint8_t> aData2) override;
 
   // Synchronously reads data from file. May read from file or memory
   // depending on whether written blocks have been flushed to file yet.
@@ -82,11 +77,12 @@ public:
   nsresult Read(int64_t aOffset,
                 uint8_t* aData,
                 int32_t aLength,
-                int32_t* aBytes);
+                int32_t* aBytes) override;
 
   // Moves a block asynchronously. Can be called on any thread.
   // This defers file I/O to a non-main thread.
-  nsresult MoveBlock(int32_t aSourceBlockIndex, int32_t aDestBlockIndex);
+  nsresult MoveBlock(int32_t aSourceBlockIndex,
+                     int32_t aDestBlockIndex) override;
 
   // Represents a change yet to be made to a block in the file. The change
   // is either a write (and the data to be written is stored in this struct)
