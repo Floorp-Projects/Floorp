@@ -20,11 +20,23 @@
  *  - group        this attribute must be set to "sidebar".
  */
 var SidebarUI = {
-  browser: null,
+  // Avoid getting the browser element from init() to avoid triggering the
+  // <browser> constructor during startup if the sidebar is hidden.
+  get browser() {
+    if (this._browser)
+      return this._browser;
+    return this._browser = document.getElementById("sidebar");
+  },
   POSITION_START_PREF: "sidebar.position_start",
 
   _box: null,
-  _title: null,
+  // The constructor of this label accesses the browser element due to the
+  // control="sidebar" attribute, so avoid getting this label during startup.
+  get _title() {
+    if (this.__title)
+      return this.__title;
+    return this.__title = document.getElementById("sidebar-title");
+  },
   _splitter: null,
   _icon: null,
   _reversePositionButton: null,
@@ -34,8 +46,6 @@ var SidebarUI = {
 
   init() {
     this._box = document.getElementById("sidebar-box");
-    this.browser = document.getElementById("sidebar");
-    this._title = document.getElementById("sidebar-title");
     this._splitter = document.getElementById("sidebar-splitter");
     this._icon = document.getElementById("sidebar-icon");
     this._reversePositionButton = document.getElementById("sidebar-reverse-position");

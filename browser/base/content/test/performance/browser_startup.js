@@ -47,22 +47,23 @@ const startupPhases = {
   // For the following phases of startup we have only a black list for now
 
   // We are at this phase after creating the first browser window (ie. after final-ui-startup).
-  "before opening first browser window": {blacklist: {
-    components: new Set([
-      "nsSearchService.js",
-    ])
-  }},
+  "before opening first browser window": {},
 
   // We reach this phase right after showing the first browser window.
   // This means that anything already loaded at this point has been loaded
   // before first paint and delayed it.
-  "before first paint": {},
+  "before first paint": {blacklist: {
+    components: new Set([
+      "nsSearchService.js",
+      "UnifiedComplete.js",
+    ])
+  }},
 
   // We are at this phase once we are ready to handle user events.
   // Anything loaded at this phase or before gets in the way of the user
   // interacting with the first browser window.
   "before handling user events": {},
-}
+};
 
 function test() {
   if (!AppConstants.NIGHTLY_BUILD && !AppConstants.DEBUG) {

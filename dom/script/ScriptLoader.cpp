@@ -77,10 +77,9 @@ LazyLogModule ScriptLoader::gScriptLoaderLog("ScriptLoader");
 #define LOG(args) \
   MOZ_LOG(gScriptLoaderLog, mozilla::LogLevel::Debug, args)
 
-// These are the Alternate Data MIME type used by the ScriptLoader to
-// register and read bytecode out of the nsCacheInfoChannel.
-static NS_NAMED_LITERAL_CSTRING(
-  kBytecodeMimeType, "javascript/moz-bytecode-" NS_STRINGIFY(MOZ_BUILDID));
+
+// Alternate Data MIME type used by the ScriptLoader to register that we want to
+// store bytecode without reading it.
 static NS_NAMED_LITERAL_CSTRING(kNullMimeType, "javascript/null");
 
 //////////////////////////////////////////////////////////////
@@ -909,7 +908,7 @@ ScriptLoader::StartLoad(ScriptLoadRequest* aRequest)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // To avoid decoding issues, the JSVersion is explicitly guarded here, and the
-  // build-id is part of the kBytecodeMimeType constant.
+  // build-id is part of the JSBytecodeMimeType constant.
   aRequest->mCacheInfo = nullptr;
   nsCOMPtr<nsICacheInfoChannel> cic(do_QueryInterface(channel));
   if (cic && nsContentUtils::IsBytecodeCacheEnabled() &&
@@ -918,7 +917,7 @@ ScriptLoader::StartLoad(ScriptLoadRequest* aRequest)
       // Inform the HTTP cache that we prefer to have information coming from the
       // bytecode cache instead of the sources, if such entry is already registered.
       LOG(("ScriptLoadRequest (%p): Maybe request bytecode", aRequest));
-      cic->PreferAlternativeDataType(kBytecodeMimeType);
+      cic->PreferAlternativeDataType(nsContentUtils::JSBytecodeMimeType());
     } else {
       // If we are explicitly loading from the sources, such as after a
       // restarted request, we might still want to save the bytecode after.
@@ -1989,15 +1988,15 @@ ScriptLoader::ShouldCacheBytecode(ScriptLoadRequest* aRequest)
       LOG(("ScriptLoadRequest (%p): Bytecode-cache: Cannot get lastFetched.", aRequest));
       return false;
     }
-    TimeStamp now = TimeStamp::NowLoRes();
-    TimeStamp last = TimeStamp() + TimeDuration::FromSeconds(lastFetched);
-    if (now < last) {
+    uint32_t now = PR_Now() / PR_USEC_PER_SEC;
+    if (now < lastFetched) {
       LOG(("ScriptLoadRequest (%p): Bytecode-cache: (What?) lastFetched set in the future.", aRequest));
       return false;
     }
+    TimeDuration since = TimeDuration::FromSeconds(now - lastFetched);
     LOG(("ScriptLoadRequest (%p): Bytecode-cache: lastFetched = %f sec. ago.",
-         aRequest, (now - last).ToSeconds()));
-    if (now - last >= timeSinceLastFetched) {
+         aRequest, since.ToSeconds()));
+    if (since >= timeSinceLastFetched) {
       return false;
     }
   }
@@ -2264,7 +2263,7 @@ ScriptLoader::EncodeRequestBytecode(JSContext* aCx, ScriptLoadRequest* aRequest)
   // might fail if the stream is already open by another request, in which
   // case, we just ignore the current one.
   nsCOMPtr<nsIOutputStream> output;
-  rv = aRequest->mCacheInfo->OpenAlternativeOutputStream(kBytecodeMimeType,
+  rv = aRequest->mCacheInfo->OpenAlternativeOutputStream(nsContentUtils::JSBytecodeMimeType(),
                                                          getter_AddRefs(output));
   if (NS_FAILED(rv)) {
     LOG(("ScriptLoadRequest (%p): Cannot open bytecode cache (rv = %X, output = %p)",
