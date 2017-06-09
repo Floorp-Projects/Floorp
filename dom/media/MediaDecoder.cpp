@@ -392,7 +392,6 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   , mForcedHidden(false)
   , mHasSuspendTaint(aInit.mHasSuspendTaint)
   , mPlaybackRate(aInit.mPlaybackRate)
-  , INIT_MIRROR(mStateMachineIsShutdown, true)
   , INIT_MIRROR(mBuffered, TimeIntervals())
   , INIT_MIRROR(mNextFrameStatus, MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE)
   , INIT_MIRROR(mCurrentPosition, TimeUnit::Zero())
@@ -1454,7 +1453,6 @@ MediaDecoder::ConnectMirrors(MediaDecoderStateMachine* aObject)
   MOZ_ASSERT(aObject);
   mStateMachineDuration.Connect(aObject->CanonicalDuration());
   mBuffered.Connect(aObject->CanonicalBuffered());
-  mStateMachineIsShutdown.Connect(aObject->CanonicalIsShutdown());
   mNextFrameStatus.Connect(aObject->CanonicalNextFrameStatus());
   mCurrentPosition.Connect(aObject->CanonicalCurrentPosition());
   mPlaybackPosition.Connect(aObject->CanonicalPlaybackOffset());
@@ -1467,7 +1465,6 @@ MediaDecoder::DisconnectMirrors()
   MOZ_ASSERT(NS_IsMainThread());
   mStateMachineDuration.DisconnectIfConnected();
   mBuffered.DisconnectIfConnected();
-  mStateMachineIsShutdown.DisconnectIfConnected();
   mNextFrameStatus.DisconnectIfConnected();
   mCurrentPosition.DisconnectIfConnected();
   mPlaybackPosition.DisconnectIfConnected();
