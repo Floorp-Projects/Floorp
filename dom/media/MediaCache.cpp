@@ -15,6 +15,7 @@
 #include "mozilla/Preferences.h"
 #include "FileBlockCache.h"
 #include "MediaBlockCacheBase.h"
+#include "MemoryBlockCache.h"
 #include "nsIObserverService.h"
 #include "nsISeekableStream.h"
 #include "nsIPrincipal.h"
@@ -257,8 +258,9 @@ public:
   };
 
 protected:
-  MediaCache()
-    : mNextResourceID(1)
+  explicit MediaCache(int64_t aContentLength)
+    : mContentLength(aContentLength)
+    , mNextResourceID(1)
     , mReentrantMonitor("MediaCache.mReentrantMonitor")
     , mUpdateQueued(false)
     , mShutdownInsteadOfUpdating(false)
@@ -280,18 +282,22 @@ protected:
       mBlockCache->Close();
       mBlockCache = nullptr;
     }
-    LOG("MediaCache::~MediaCache(this=%p) MEDIACACHE_WATERMARK_KB=%u",
-        this,
-        unsigned(mIndexWatermark * MediaCache::BLOCK_SIZE / 1024));
-    Telemetry::Accumulate(
-      Telemetry::HistogramID::MEDIACACHE_WATERMARK_KB,
-      uint32_t(mIndexWatermark * MediaCache::BLOCK_SIZE / 1024));
-    LOG("MediaCache::~MediaCache(this=%p) MEDIACACHE_BLOCKOWNERS_WATERMARK=%u",
+    if (mContentLength <= 0) {
+      // Only gather "MEDIACACHE" telemetry for the file-based cache.
+      LOG("MediaCache::~MediaCache(this=%p) MEDIACACHE_WATERMARK_KB=%u",
+          this,
+          unsigned(mIndexWatermark * MediaCache::BLOCK_SIZE / 1024));
+      Telemetry::Accumulate(
+        Telemetry::HistogramID::MEDIACACHE_WATERMARK_KB,
+        uint32_t(mIndexWatermark * MediaCache::BLOCK_SIZE / 1024));
+      LOG(
+        "MediaCache::~MediaCache(this=%p) MEDIACACHE_BLOCKOWNERS_WATERMARK=%u",
         this,
         unsigned(mBlockOwnersWatermark));
-    Telemetry::Accumulate(
-      Telemetry::HistogramID::MEDIACACHE_BLOCKOWNERS_WATERMARK,
-      mBlockOwnersWatermark);
+      Telemetry::Accumulate(
+        Telemetry::HistogramID::MEDIACACHE_BLOCKOWNERS_WATERMARK,
+        mBlockOwnersWatermark);
+    }
 
     MOZ_COUNT_DTOR(MediaCache);
   }
@@ -397,6 +403,11 @@ protected:
 
   // There is at most one file-backed media cache.
   static MediaCache* gMediaCache;
+
+  // Expected content length if known initially from the HTTP Content-Length
+  // header (this is a memory-backed MediaCache), otherwise -1 (file-backed
+  // MediaCache).
+  const int64_t mContentLength;
 
   // This member is main-thread only. It's used to allocate unique
   // resource IDs to streams.
@@ -665,7 +676,13 @@ MediaCache::Init()
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   NS_ASSERTION(!mBlockCache, "Block cache already open?");
 
-  mBlockCache = new FileBlockCache();
+  if (mContentLength <= 0) {
+    // The global MediaCache uses a file-backed storage for its resource blocks.
+    mBlockCache = new FileBlockCache();
+  } else {
+    // Non-global MediaCaches keep the whole resource in memory.
+    mBlockCache = new MemoryBlockCache(mContentLength);
+  }
   nsresult rv = mBlockCache->Init();
   NS_ENSURE_SUCCESS(rv,rv);
 
@@ -747,7 +764,7 @@ MediaCache::GetMediaCache(int64_t aContentLength)
       aContentLength <=
         int64_t(MediaPrefs::MediaMemoryCacheMaxSize()) * 1024) {
     // Small-enough resource, use a new memory-backed MediaCache.
-    MediaCache* mc = new MediaCache();
+    MediaCache* mc = new MediaCache(aContentLength);
     nsresult rv = mc->Init();
     if (NS_SUCCEEDED(rv)) {
       return mc;
@@ -761,7 +778,7 @@ MediaCache::GetMediaCache(int64_t aContentLength)
     return gMediaCache;
   }
 
-  gMediaCache = new MediaCache();
+  gMediaCache = new MediaCache(-1);
   nsresult rv = gMediaCache->Init();
   if (NS_FAILED(rv)) {
     delete gMediaCache;
