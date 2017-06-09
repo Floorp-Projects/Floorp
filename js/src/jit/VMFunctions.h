@@ -444,6 +444,7 @@ template <> struct OutParamToDataType<uint32_t*> { static const DataType result 
 template <> struct OutParamToDataType<uint8_t**> { static const DataType result = Type_Pointer; };
 template <> struct OutParamToDataType<bool*> { static const DataType result = Type_Bool; };
 template <> struct OutParamToDataType<double*> { static const DataType result = Type_Double; };
+template <> struct OutParamToDataType<JSString**> { static const DataType result = Type_Pointer; };
 template <> struct OutParamToDataType<MutableHandleValue> { static const DataType result = Type_Handle; };
 template <> struct OutParamToDataType<MutableHandleObject> { static const DataType result = Type_Handle; };
 template <> struct OutParamToDataType<MutableHandleString> { static const DataType result = Type_Handle; };
@@ -869,6 +870,9 @@ ObjectHasGetterSetter(JSContext* cx, JSObject* obj, Shape* propShape);
 
 JSString*
 TypeOfObject(JSObject* obj, JSRuntime* rt);
+
+bool
+ConcatStringsPure(JSContext* cx, JSString* lhs, JSString* rhs, JSString** res);
 
 } // namespace jit
 } // namespace js

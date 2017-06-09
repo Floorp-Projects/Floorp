@@ -121,6 +121,11 @@ enum BailoutKind
     // Derived constructors must return object or undefined
     Bailout_BadDerivedConstructorReturn,
 
+    // Operation would throw or GC to complete. Bailout and retry the operation
+    // in baseline. Allows instructions to be hoisted while exceptions throw
+    // from correct location.
+    Bailout_NotPure,
+
     // We hit this code for the first time.
     Bailout_FirstExecution,
 
@@ -223,6 +228,8 @@ BailoutKindString(BailoutKind kind)
         return "Bailout_UninitializedThis";
       case Bailout_BadDerivedConstructorReturn:
         return "Bailout_BadDerivedConstructorReturn";
+      case Bailout_NotPure:
+        return "Bailout_NotPure";
       case Bailout_FirstExecution:
         return "Bailout_FirstExecution";
 
