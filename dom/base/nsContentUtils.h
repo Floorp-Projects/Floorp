@@ -2993,6 +2993,10 @@ public:
   // heuristic strategy should be used to trigger the caching of the bytecode.
   static int32_t BytecodeCacheStrategy() { return sBytecodeCacheStrategy; }
 
+  // Alternate data MIME type used by the ScriptLoader to register and read
+  // bytecode out of the nsCacheInfoChannel.
+  static nsCString& JSBytecodeMimeType() { return *sJSBytecodeMimeType; }
+
   /**
    * Checks if the passed-in name should override an existing name on the
    * window. Values which should not override include: "", "_blank", "_top",
@@ -3156,6 +3160,10 @@ private:
   static nsString* sOSText;
   static nsString* sAltText;
   static nsString* sModifierSeparator;
+
+  // Alternate data mime type, used by the ScriptLoader to register and read the
+  // bytecode out of the nsCacheInfoChannel.
+  static nsCString* sJSBytecodeMimeType;
 
 #if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
   static bool sDOMWindowDumpEnabled;
