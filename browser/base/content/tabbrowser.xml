@@ -817,11 +817,11 @@
                   this.mBrowser.mIconURL = null;
                 }
 
-                let unifiedComplete = this.mTabBrowser._unifiedComplete;
                 let userContextId = this.mBrowser.getAttribute("usercontextid") || 0;
                 if (this.mBrowser.registeredOpenURI) {
-                  unifiedComplete.unregisterOpenPage(this.mBrowser.registeredOpenURI,
-                                                     userContextId);
+                  this.mTabBrowser._unifiedComplete
+                                  .unregisterOpenPage(this.mBrowser.registeredOpenURI,
+                                                      userContextId);
                   delete this.mBrowser.registeredOpenURI;
                 }
                 // Tabs in private windows aren't registered as "Open" so
@@ -829,7 +829,8 @@
                 if (!isBlankPageURL(aLocation.spec) &&
                     (!PrivateBrowsingUtils.isWindowPrivate(window) ||
                     PrivateBrowsingUtils.permanentPrivateBrowsing)) {
-                  unifiedComplete.registerOpenPage(aLocation, userContextId);
+                  this.mTabBrowser._unifiedComplete
+                                  .registerOpenPage(aLocation, userContextId);
                   this.mBrowser.registeredOpenURI = aLocation;
                 }
               }
