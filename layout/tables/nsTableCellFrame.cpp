@@ -960,9 +960,10 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   FinishReflowChild(firstKid, aPresContext, kidSize, &kidReflowInput,
                     wm, kidOrigin, containerSize, 0);
 
-  nsTableFrame::InvalidateTableFrame(firstKid, origRect, origVisualOverflow,
-                                     firstReflow);
-
+  if (tableFrame->IsBorderCollapse()) {
+    nsTableFrame::InvalidateTableFrame(firstKid, origRect, origVisualOverflow,
+                                       firstReflow);
+  }
   // first, compute the bsize which can be set w/o being restricted by
   // available bsize
   LogicalSize cellSize(wm);

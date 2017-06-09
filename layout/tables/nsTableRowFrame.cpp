@@ -394,9 +394,13 @@ nsTableRowFrame::DidResize()
 
         cellSize.BSize(wm) = cellBSize;
         cellFrame->SetSize(wm, cellSize);
-        nsTableFrame::InvalidateTableFrame(cellFrame, cellOldRect,
-                                           cellVisualOverflow,
-                                           false);
+
+        nsTableFrame* tableFrame = GetTableFrame();
+        if (tableFrame->IsBorderCollapse()) {
+          nsTableFrame::InvalidateTableFrame(cellFrame, cellOldRect,
+                                             cellVisualOverflow,
+                                             false);
+        }
       }
 
       // realign cell content based on the new bsize.  We might be able to
@@ -957,8 +961,11 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
       FinishReflowChild(kidFrame, aPresContext, desiredSize, nullptr,
                         wm, kidPosition, containerSize, 0);
 
-      nsTableFrame::InvalidateTableFrame(kidFrame, kidRect, kidVisualOverflow,
-                                         firstReflow);
+      nsTableFrame* tableFrame = GetTableFrame();
+      if (tableFrame->IsBorderCollapse()) {
+        nsTableFrame::InvalidateTableFrame(kidFrame, kidRect, kidVisualOverflow,
+                                           firstReflow);
+      }
 
       iCoord += desiredSize.ISize(wm);
     } else {

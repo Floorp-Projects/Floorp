@@ -293,8 +293,11 @@ nsTableRowGroupFrame::PlaceChild(nsPresContext*         aPresContext,
   FinishReflowChild(aKidFrame, aPresContext, aDesiredSize, nullptr,
                     aWM, aKidPosition, aContainerSize, 0);
 
-  nsTableFrame::InvalidateTableFrame(aKidFrame, aOriginalKidRect,
-                                     aOriginalKidVisualOverflow, isFirstReflow);
+  nsTableFrame* tableFrame = GetTableFrame();
+  if (tableFrame->IsBorderCollapse()) {
+    nsTableFrame::InvalidateTableFrame(aKidFrame, aOriginalKidRect,
+                                       aOriginalKidVisualOverflow, isFirstReflow);
+  }
 
   // Adjust the running block-offset
   aReflowInput.bCoord += aDesiredSize.BSize(aWM);
