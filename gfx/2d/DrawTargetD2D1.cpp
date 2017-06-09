@@ -116,7 +116,6 @@ DrawTargetD2D1::EnsureLuminanceEffect()
 already_AddRefed<SourceSurface>
 DrawTargetD2D1::IntoLuminanceSource(LuminanceType aLuminanceType, float aOpacity)
 {
-  //return DrawTarget::IntoLuminanceSource(aLuminanceType, aOpacity);
   if (aLuminanceType != LuminanceType::LUMINANCE) {
     return DrawTarget::IntoLuminanceSource(aLuminanceType, aOpacity);
   }

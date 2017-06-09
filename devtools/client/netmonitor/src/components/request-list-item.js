@@ -87,6 +87,7 @@ const RequestListItem = createClass({
     onMouseDown: PropTypes.func.isRequired,
     onSecurityIconMouseDown: PropTypes.func.isRequired,
     onThumbnailMouseDown: PropTypes.func.isRequired,
+    onWaterfallMouseDown: PropTypes.func.isRequired,
     waterfallWidth: PropTypes.number,
   },
 
@@ -124,6 +125,7 @@ const RequestListItem = createClass({
       onCauseBadgeMouseDown,
       onSecurityIconMouseDown,
       onThumbnailMouseDown,
+      onWaterfallMouseDown,
     } = this.props;
 
     let classList = ["request-list-item", index % 2 ? "odd" : "even"];
@@ -162,7 +164,8 @@ const RequestListItem = createClass({
         columns.get("duration") && RequestListColumnDuration({ item }),
         columns.get("latency") && RequestListColumnLatency({ item }),
         columns.get("waterfall") &&
-          RequestListColumnWaterfall({ item, firstRequestStartedMillis }),
+          RequestListColumnWaterfall({ item, firstRequestStartedMillis,
+                                       onWaterfallMouseDown }),
       )
     );
   }
