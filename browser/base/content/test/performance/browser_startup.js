@@ -55,6 +55,7 @@ const startupPhases = {
   "before first paint": {blacklist: {
     components: new Set([
       "nsSearchService.js",
+      "UnifiedComplete.js",
     ])
   }},
 
