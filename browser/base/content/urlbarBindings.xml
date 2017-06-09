@@ -121,7 +121,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           cxmenu.insertBefore(pasteAndGo, insertLocation.nextSibling);
         }
 
-        this._enableOrDisableOneOffSearches();
+        this.popup.addEventListener("popupshowing", () => {
+          this._enableOrDisableOneOffSearches();
+        }, {capturing: true, once: true});
 
         // The autocomplete controller uses heuristic on some internal caches
         // to handle cases like backspace, autofill or repeated searches.
