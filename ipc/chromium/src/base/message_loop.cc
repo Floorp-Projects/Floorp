@@ -248,7 +248,7 @@ bool MessageLoop::ProcessNextDelayedNonNestableTask() {
   if (deferred_non_nestable_work_queue_.empty())
     return false;
 
-  RefPtr<Runnable> task = deferred_non_nestable_work_queue_.front().task.forget();
+  nsCOMPtr<nsIRunnable> task = deferred_non_nestable_work_queue_.front().task.forget();
   deferred_non_nestable_work_queue_.pop();
 
   RunTask(task.forget());
@@ -266,15 +266,15 @@ void MessageLoop::Quit() {
   }
 }
 
-void MessageLoop::PostTask(already_AddRefed<Runnable> task) {
+void MessageLoop::PostTask(already_AddRefed<nsIRunnable> task) {
   PostTask_Helper(Move(task), 0);
 }
 
-void MessageLoop::PostDelayedTask(already_AddRefed<Runnable> task, int delay_ms) {
+void MessageLoop::PostDelayedTask(already_AddRefed<nsIRunnable> task, int delay_ms) {
   PostTask_Helper(Move(task), delay_ms);
 }
 
-void MessageLoop::PostIdleTask(already_AddRefed<Runnable> task) {
+void MessageLoop::PostIdleTask(already_AddRefed<nsIRunnable> task) {
   DCHECK(current() == this);
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -283,7 +283,7 @@ void MessageLoop::PostIdleTask(already_AddRefed<Runnable> task) {
 }
 
 // Possibly called on a background thread!
-void MessageLoop::PostTask_Helper(already_AddRefed<Runnable> task, int delay_ms) {
+void MessageLoop::PostTask_Helper(already_AddRefed<nsIRunnable> task, int delay_ms) {
   if (nsIEventTarget* target = pump_->GetXPCOMThread()) {
     nsresult rv;
     if (delay_ms) {
@@ -296,7 +296,7 @@ void MessageLoop::PostTask_Helper(already_AddRefed<Runnable> task, int delay_ms)
   }
 
 #ifdef MOZ_TASK_TRACER
-  RefPtr<Runnable> tracedTask = task;
+  nsCOMPtr<nsIRunnable> tracedTask = task;
   if (mozilla::tasktracer::IsStartLogging()) {
     tracedTask = mozilla::tasktracer::CreateTracedRunnable(Move(task));
     (static_cast<mozilla::tasktracer::TracedRunnable*>(tracedTask.get()))->DispatchTask();
@@ -352,12 +352,12 @@ bool MessageLoop::NestableTasksAllowed() const {
 
 //------------------------------------------------------------------------------
 
-void MessageLoop::RunTask(already_AddRefed<Runnable> aTask) {
+void MessageLoop::RunTask(already_AddRefed<nsIRunnable> aTask) {
   DCHECK(nestable_tasks_allowed_);
   // Execute the task and assume the worst: It is probably not reentrant.
   nestable_tasks_allowed_ = false;
 
-  RefPtr<Runnable> task = aTask;
+  nsCOMPtr<nsIRunnable> task = aTask;
   task->Run();
   task = nullptr;
 
