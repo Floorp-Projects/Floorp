@@ -252,8 +252,6 @@ this.PanelMultiView = class {
       document.getAnonymousElementByAttribute(this.node, "anonid", "subViews");
     this._viewStack =
       document.getAnonymousElementByAttribute(this.node, "anonid", "viewStack");
-    this._offscreenViewStack =
-      document.getAnonymousElementByAttribute(this.node, "anonid", "offscreenViewStack");
 
     XPCOMUtils.defineLazyGetter(this, "_panelViewCache", () => {
       let viewCacheId = this.node.getAttribute("viewCacheId");
@@ -445,7 +443,6 @@ this.PanelMultiView = class {
           // of the main view, i.e. whilst the panel is shown and/ or visible.
           if (!this._mainViewHeight) {
             this._mainViewHeight = previousRect.height;
-            this._viewContainer.style.minHeight = this._mainViewHeight + "px";
           }
         }
       }
@@ -531,106 +528,114 @@ this.PanelMultiView = class {
 
         if (aAnchor)
           aAnchor.setAttribute("open", true);
-
-        // Set the viewContainer dimensions to make sure only the current view
-        // is visible.
         this._viewContainer.style.height = Math.max(previousRect.height, this._mainViewHeight) + "px";
         this._viewContainer.style.width = previousRect.width + "px";
-        // Lock the dimensions of the window that hosts the popup panel.
-        let rect = this._panel.popupBoxObject.getOuterScreenRect();
-        this._panel.setAttribute("width", rect.width);
-        this._panel.setAttribute("height", rect.height);
 
-        this._viewBoundsOffscreen(viewNode, viewRect => {
-          this._transitioning = true;
-          if (this._autoResizeWorkaroundTimer)
-            window.clearTimeout(this._autoResizeWorkaroundTimer);
-          this._viewContainer.setAttribute("transition-reverse", reverse);
-          let nodeToAnimate = reverse ? previousViewNode : viewNode;
+        this._transitioning = true;
+        if (this._autoResizeWorkaroundTimer)
+          window.clearTimeout(this._autoResizeWorkaroundTimer);
+        this._viewContainer.setAttribute("transition-reverse", reverse);
+        let nodeToAnimate = reverse ? previousViewNode : viewNode;
 
-          if (!reverse) {
-            // We set the margin here to make sure the view is positioned next
-            // to the view that is currently visible. The animation is taken
-            // care of by transitioning the `transform: translateX()` property
-            // instead.
-            // Once the transition finished, we clean both properties up.
-            nodeToAnimate.style.marginInlineStart = previousRect.width + "px";
+        if (!reverse) {
+          // We set the margin here to make sure the view is positioned next
+          // to the view that is currently visible. The animation is taken
+          // care of by transitioning the `transform: translateX()` property
+          // instead.
+          // Once the transition finished, we clean both properties up.
+          nodeToAnimate.style.marginInlineStart = previousRect.width + "px";
+        }
+
+        // Set the transition style and listen for its end to clean up and
+        // make sure the box sizing becomes dynamic again.
+        // Somehow, putting these properties in PanelUI.css doesn't work for
+        // newly shown nodes in a XUL parent node.
+        nodeToAnimate.style.transition = "transform ease-" + (reverse ? "in" : "out") +
+          " var(--panelui-subview-transition-duration)";
+        nodeToAnimate.style.willChange = "transform";
+        nodeToAnimate.style.borderInlineStart = "1px solid var(--panel-separator-color)";
+
+        // Wait until after the first paint to ensure setting 'current=true'
+        // has taken full effect; once both views are visible, we want to
+        // correctly measure rects using `dwu.getBoundsWithoutFlushing`.
+        window.addEventListener("MozAfterPaint", () => {
+          let viewRect = viewNode.__lastKnownBoundingRect;
+          if (!viewRect) {
+            viewRect = dwu.getBoundsWithoutFlushing(viewNode);
+            if (!reverse) {
+              // When showing two nodes at the same time (one partly out of view,
+              // but that doesn't seem to make a difference in this case) inside
+              // a XUL node container, the flexible box layout on the vertical
+              // axis gets confused. I.e. it lies.
+              // So what we need to resort to here is count the height of each
+              // individual child element of the view.
+              viewRect.height = [viewNode.header, ...viewNode.children].reduce((acc, node) => {
+                return acc + dwu.getBoundsWithoutFlushing(node).height;
+              }, this._viewVerticalPadding);
+            }
           }
 
-          // Set the transition style and listen for its end to clean up and
-          // make sure the box sizing becomes dynamic again.
-          // Somehow, putting these properties in PanelUI.css doesn't work for
-          // newly shown nodes in a XUL parent node.
-          nodeToAnimate.style.transition = "transform ease-" + (reverse ? "in" : "out") +
-            " var(--panelui-subview-transition-duration)";
-          nodeToAnimate.style.willChange = "transform";
-          nodeToAnimate.style.borderInlineStart = "1px solid var(--panel-separator-color)";
+          // Set the viewContainer dimensions to make sure only the current view
+          // is visible.
+          this._viewContainer.style.height = Math.max(viewRect.height, this._mainViewHeight) + "px";
+          this._viewContainer.style.width = viewRect.width + "px";
 
-          // Wait until after the first paint to ensure setting 'current=true'
-          // has taken full effect; once both views are visible, we want to
-          // correctly measure rects using `dwu.getBoundsWithoutFlushing`.
-          window.addEventListener("MozAfterPaint", () => {
-            // Now set the viewContainer dimensions to that of the new view, which
-            // kicks of the height animation.
-            this._viewContainer.style.height = Math.max(viewRect.height, this._mainViewHeight) + "px";
-            this._viewContainer.style.width = viewRect.width + "px";
-            this._panel.removeAttribute("width");
-            this._panel.removeAttribute("height");
+          // The 'magic' part: build up the amount of pixels to move right or left.
+          let moveToLeft = (this._dir == "rtl" && !reverse) || (this._dir == "ltr" && reverse);
+          let movementX = reverse ? viewRect.width : previousRect.width;
+          let moveX = (moveToLeft ? "" : "-") + movementX;
+          nodeToAnimate.style.transform = "translateX(" + moveX + "px)";
+          // We're setting the width property to prevent flickering during the
+          // sliding animation with smaller views.
+          nodeToAnimate.style.width = viewRect.width + "px";
 
-            // The 'magic' part: build up the amount of pixels to move right or left.
-            let moveToLeft = (this._dir == "rtl" && !reverse) || (this._dir == "ltr" && reverse);
-            let movementX = reverse ? viewRect.width : previousRect.width;
-            let moveX = (moveToLeft ? "" : "-") + movementX;
-            nodeToAnimate.style.transform = "translateX(" + moveX + "px)";
-            // We're setting the width property to prevent flickering during the
-            // sliding animation with smaller views.
-            nodeToAnimate.style.width = viewRect.width + "px";
+          let listener;
+          this._viewContainer.addEventListener("transitionend", listener = ev => {
+            // It's quite common that `height` on the view container doesn't need
+            // to transition, so we make sure to do all the work on the transform
+            // transition-end, because that is guaranteed to happen.
+            if (ev.target != nodeToAnimate || ev.propertyName != "transform")
+              return;
 
-            let listener;
-            this._viewContainer.addEventListener("transitionend", listener = ev => {
-              // It's quite common that `height` on the view container doesn't need
-              // to transition, so we make sure to do all the work on the transform
-              // transition-end, because that is guaranteed to happen.
-              if (ev.target != nodeToAnimate || ev.propertyName != "transform")
-                return;
+            this._viewContainer.removeEventListener("transitionend", listener);
+            onTransitionEnd();
+            this._transitioning = false;
+            this._resetKeyNavigation(previousViewNode);
 
-              this._viewContainer.removeEventListener("transitionend", listener);
-              onTransitionEnd();
-              this._transitioning = false;
-              this._resetKeyNavigation(previousViewNode);
-
-              // Myeah, panel layout auto-resizing is a funky thing. We'll wait
-              // another few milliseconds to remove the width and height 'fixtures',
-              // to be sure we don't flicker annoyingly.
-              // NB: HACK! Bug 1363756 is there to fix this.
-              this._autoResizeWorkaroundTimer = window.setTimeout(() => {
+            // Myeah, panel layout auto-resizing is a funky thing. We'll wait
+            // another few milliseconds to remove the width and height 'fixtures',
+            // to be sure we don't flicker annoyingly.
+            // NB: HACK! Bug 1363756 is there to fix this.
+            this._autoResizeWorkaroundTimer = window.setTimeout(() => {
+              // Only remove the height when the view is larger than the main
+              // view, otherwise it'll snap back to its own height.
+              if (viewNode == this._mainView || viewRect.height > this._mainViewHeight)
                 this._viewContainer.style.removeProperty("height");
-                this._viewContainer.style.removeProperty("width");
-              }, 500);
+              this._viewContainer.style.removeProperty("width");
+            }, 500);
 
-              // Take another breather, just like before, to wait for the 'current'
-              // attribute removal to take effect. This prevents a flicker.
-              // The cleanup we do doesn't affect the display anymore, so we're not
-              // too fussed about the timing here.
-              window.addEventListener("MozAfterPaint", () => {
-                nodeToAnimate.style.removeProperty("border-inline-start");
-                nodeToAnimate.style.removeProperty("transition");
-                nodeToAnimate.style.removeProperty("transform");
-                nodeToAnimate.style.removeProperty("width");
+            // Take another breather, just like before, to wait for the 'current'
+            // attribute removal to take effect. This prevents a flicker.
+            // The cleanup we do doesn't affect the display anymore, so we're not
+            // too fussed about the timing here.
+            window.addEventListener("MozAfterPaint", () => {
+              nodeToAnimate.style.removeProperty("border-inline-start");
+              nodeToAnimate.style.removeProperty("transition");
+              nodeToAnimate.style.removeProperty("transform");
+              nodeToAnimate.style.removeProperty("width");
 
-                if (!reverse)
-                  viewNode.style.removeProperty("margin-inline-start");
-                if (aAnchor)
-                  aAnchor.removeAttribute("open");
+              if (!reverse)
+                viewNode.style.removeProperty("margin-inline-start");
+              if (aAnchor)
+                aAnchor.removeAttribute("open");
 
-                this._viewContainer.removeAttribute("transition-reverse");
+              this._viewContainer.removeAttribute("transition-reverse");
 
-                evt = new window.CustomEvent("ViewShown", { bubbles: true, cancelable: false });
-                viewNode.dispatchEvent(evt);
-              }, { once: true });
-            });
-          }, { once: true });
-        });
+              evt = new window.CustomEvent("ViewShown", { bubbles: true, cancelable: false });
+              viewNode.dispatchEvent(evt);
+            }, { once: true });
+          });
+        }, { once: true });
       } else if (!this.panelViews) {
         this._transitionHeight(() => {
           viewNode.setAttribute("current", true);
@@ -642,36 +647,6 @@ this.PanelMultiView = class {
         this._shiftMainView(aAnchor);
       }
     })().catch(e => Cu.reportError(e));
-  }
-
-  /**
-   * Calculate the correct bounds of a panelview node offscreen to minimize the
-   * amount of paint flashing and keep the stack vs panel layouts from interfering.
-   *
-   * @param {panelview} viewNode Node to measure the bounds of.
-   * @param {Function}  callback Called when we got the measurements in and pass
-   *                             them on as its first argument.
-   */
-  _viewBoundsOffscreen(viewNode, callback) {
-    if (viewNode.__lastKnownBoundingRect) {
-      callback(viewNode.__lastKnownBoundingRect);
-      return;
-    }
-
-    let oldSibling = viewNode.nextSibling || null;
-    this._offscreenViewStack.appendChild(viewNode);
-
-    this.window.addEventListener("MozAfterPaint", () => {
-      let viewRect = this._dwu.getBoundsWithoutFlushing(viewNode);
-
-      try {
-        this._viewStack.insertBefore(viewNode, oldSibling);
-      } catch (ex) {
-        this._viewStack.appendChild(viewNode);
-      }
-
-      callback(viewRect);
-    }, { once: true });
   }
 
   /**
