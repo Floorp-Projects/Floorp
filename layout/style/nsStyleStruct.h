@@ -695,25 +695,25 @@ struct nsStyleImageLayers {
   struct Repeat;
   friend struct Repeat;
   struct Repeat {
-    uint8_t mXRepeat, mYRepeat;
+    mozilla::StyleImageLayerRepeat mXRepeat, mYRepeat;
 
     // Initialize nothing
     Repeat() {}
 
     bool IsInitialValue() const {
-      return mXRepeat == NS_STYLE_IMAGELAYER_REPEAT_REPEAT &&
-             mYRepeat == NS_STYLE_IMAGELAYER_REPEAT_REPEAT;
+      return mXRepeat == mozilla::StyleImageLayerRepeat::Repeat &&
+             mYRepeat == mozilla::StyleImageLayerRepeat::Repeat;
     }
 
     bool DependsOnPositioningAreaSize() const {
-      return mXRepeat == NS_STYLE_IMAGELAYER_REPEAT_SPACE ||
-             mYRepeat == NS_STYLE_IMAGELAYER_REPEAT_SPACE;
+      return mXRepeat == mozilla::StyleImageLayerRepeat::Space ||
+             mYRepeat == mozilla::StyleImageLayerRepeat::Space;
     }
 
     // Initialize to initial values
     void SetInitialValues() {
-      mXRepeat = NS_STYLE_IMAGELAYER_REPEAT_REPEAT;
-      mYRepeat = NS_STYLE_IMAGELAYER_REPEAT_REPEAT;
+      mXRepeat = mozilla::StyleImageLayerRepeat::Repeat;
+      mYRepeat = mozilla::StyleImageLayerRepeat::Repeat;
     }
 
     bool operator==(const Repeat& aOther) const {
