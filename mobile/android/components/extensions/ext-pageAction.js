@@ -226,7 +226,7 @@ this.pageAction = class extends ExtensionAPI {
 
     return {
       pageAction: {
-        onClicked: new SingletonEventManager(context, "pageAction.onClicked", fire => {
+        onClicked: new EventManager(context, "pageAction.onClicked", fire => {
           let listener = (event, tab) => {
             fire.async(tabManager.convert(tab));
           };

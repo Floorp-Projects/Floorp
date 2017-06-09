@@ -224,7 +224,7 @@ this.management = class extends ExtensionAPI {
           addon.userDisabled = !enabled;
         },
 
-        onDisabled: new SingletonEventManager(context, "management.onDisabled", fire => {
+        onDisabled: new EventManager(context, "management.onDisabled", fire => {
           let listener = (event, data) => {
             fire.async(data);
           };
@@ -235,7 +235,7 @@ this.management = class extends ExtensionAPI {
           };
         }).api(),
 
-        onEnabled: new SingletonEventManager(context, "management.onEnabled", fire => {
+        onEnabled: new EventManager(context, "management.onEnabled", fire => {
           let listener = (event, data) => {
             fire.async(data);
           };
@@ -246,7 +246,7 @@ this.management = class extends ExtensionAPI {
           };
         }).api(),
 
-        onInstalled: new SingletonEventManager(context, "management.onInstalled", fire => {
+        onInstalled: new EventManager(context, "management.onInstalled", fire => {
           let listener = (event, data) => {
             fire.async(data);
           };
@@ -257,7 +257,7 @@ this.management = class extends ExtensionAPI {
           };
         }).api(),
 
-        onUninstalled: new SingletonEventManager(context, "management.onUninstalled", fire => {
+        onUninstalled: new EventManager(context, "management.onUninstalled", fire => {
           let listener = (event, data) => {
             fire.async(data);
           };

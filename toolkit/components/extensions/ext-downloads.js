@@ -738,7 +738,7 @@ this.downloads = class extends ExtensionAPI {
         //   ...
         // }
 
-        onChanged: new SingletonEventManager(context, "downloads.onChanged", fire => {
+        onChanged: new EventManager(context, "downloads.onChanged", fire => {
           const handler = (what, item) => {
             let changes = {};
             const noundef = val => (val === undefined) ? null : val;
@@ -766,7 +766,7 @@ this.downloads = class extends ExtensionAPI {
           };
         }).api(),
 
-        onCreated: new SingletonEventManager(context, "downloads.onCreated", fire => {
+        onCreated: new EventManager(context, "downloads.onCreated", fire => {
           const handler = (what, item) => {
             fire.async(item.serialize());
           };
@@ -780,7 +780,7 @@ this.downloads = class extends ExtensionAPI {
           };
         }).api(),
 
-        onErased: new SingletonEventManager(context, "downloads.onErased", fire => {
+        onErased: new EventManager(context, "downloads.onErased", fire => {
           const handler = (what, item) => {
             fire.async(item.id);
           };
