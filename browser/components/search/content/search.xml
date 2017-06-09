@@ -70,6 +70,8 @@
 
     <implementation implements="nsIObserver">
       <constructor><![CDATA[
+        this._textbox.placeholder = this._stringBundle.getString("searchPlaceholder");
+
         if (this.parentNode.parentNode.localName == "toolbarpaletteitem")
           return;
 
@@ -77,27 +79,36 @@
 
         this._initialized = true;
 
-        Services.search.init(aStatus => {
-          // Bail out if the binding's been destroyed
-          if (!this._initialized)
-            return;
+        (window.delayedStartupPromise || Promise.resolve()).then(() => {
+          window.requestIdleCallback(() => {
+            Services.search.init(aStatus => {
+              // Bail out if the binding's been destroyed
+              if (!this._initialized)
+                return;
 
-          if (Components.isSuccessCode(aStatus)) {
-            // Refresh the display (updating icon, etc)
-            this.updateDisplay();
-            BrowserSearch.updateOpenSearchBadge();
-          } else {
-            Components.utils.reportError("Cannot initialize search service, bailing out: " + aStatus);
-          }
+              if (Components.isSuccessCode(aStatus)) {
+                // Refresh the display (updating icon, etc)
+                this.updateDisplay();
+                BrowserSearch.updateOpenSearchBadge();
+              } else {
+                Components.utils.reportError("Cannot initialize search service, bailing out: " + aStatus);
+              }
+            });
+          });
         });
 
-        // Some accessibility tests create their own <searchbar> that doesn't
-        // use the popup binding below, so null-check oneOffButtons.
-        if (this.textbox.popup.oneOffButtons) {
-          this.textbox.popup.oneOffButtons.telemetryOrigin = "searchbar";
-          this.textbox.popup.oneOffButtons.popup = this.textbox.popup;
-          this.textbox.popup.oneOffButtons.textbox = this.textbox;
-        }
+        // Wait until the popupshowing event to avoid forcing immediate
+        // attachment of the search-one-offs binding.
+        this.textbox.popup.addEventListener("popupshowing", () => {
+          let oneOffButtons = this.textbox.popup.oneOffButtons;
+          // Some accessibility tests create their own <searchbar> that doesn't
+          // use the popup binding below, so null-check oneOffButtons.
+          if (oneOffButtons) {
+            oneOffButtons.telemetryOrigin = "searchbar";
+            oneOffButtons.popup = this.textbox.popup;
+            oneOffButtons.textbox = this.textbox;
+          }
+        }, {capturing: true, once: true});
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -286,8 +297,6 @@
 
           var name = this.currentEngine.name;
           var text = this._stringBundle.getFormattedString("searchtip", [name]);
-
-          this._textbox.placeholder = this._stringBundle.getString("searchPlaceholder");
           this._textbox.label = text;
           this._textbox.tooltipText = text;
         ]]></body>
@@ -567,108 +576,115 @@
 
   <binding id="searchbar-textbox"
       extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
-    <implementation implements="nsIObserver">
+    <implementation>
       <constructor><![CDATA[
-        const kXULNS =
-          "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
         if (document.getBindingParent(this).parentNode.parentNode.localName ==
             "toolbarpaletteitem")
           return;
 
-        // Initialize fields
-        this._stringBundle = document.getBindingParent(this)._stringBundle;
-        this._suggestEnabled =
-          Services.prefs.getBoolPref("browser.search.suggest.enabled");
-
         if (Services.prefs.getBoolPref("browser.urlbar.clickSelectsAll"))
           this.setAttribute("clickSelectsAll", true);
 
-        // Add items to context menu and attach controller to handle them
         var textBox = document.getAnonymousElementByAttribute(this,
                                               "anonid", "textbox-input-box");
         var cxmenu = document.getAnonymousElementByAttribute(textBox,
                                           "anonid", "input-box-contextmenu");
-        var pasteAndSearch;
-        cxmenu.addEventListener("popupshowing", function() {
-          BrowserSearch.searchBar._textbox.closePopup();
-          if (!pasteAndSearch)
-            return;
-          var controller = document.commandDispatcher.getControllerForCommand("cmd_paste");
-          var enabled = controller.isCommandEnabled("cmd_paste");
-          if (enabled)
-            pasteAndSearch.removeAttribute("disabled");
-          else
-            pasteAndSearch.setAttribute("disabled", "true");
-        });
-
-        var element, label, akey;
-
-        element = document.createElementNS(kXULNS, "menuseparator");
-        cxmenu.appendChild(element);
+        cxmenu.addEventListener("popupshowing",
+                                () => { this.initContextMenu(cxmenu); },
+                                {capturing: true, once: true});
 
         this.setAttribute("aria-owns", this.popup.id);
-
-        var insertLocation = cxmenu.firstChild;
-        while (insertLocation.nextSibling &&
-               insertLocation.getAttribute("cmd") != "cmd_paste")
-          insertLocation = insertLocation.nextSibling;
-        if (insertLocation) {
-          element = document.createElementNS(kXULNS, "menuitem");
-          label = this._stringBundle.getString("cmd_pasteAndSearch");
-          element.setAttribute("label", label);
-          element.setAttribute("anonid", "paste-and-search");
-          element.setAttribute("oncommand", "BrowserSearch.pasteAndSearch(event)");
-          cxmenu.insertBefore(element, insertLocation.nextSibling);
-          pasteAndSearch = element;
-        }
-
-        element = document.createElementNS(kXULNS, "menuitem");
-        label = this._stringBundle.getString("cmd_clearHistory");
-        akey = this._stringBundle.getString("cmd_clearHistory_accesskey");
-        element.setAttribute("label", label);
-        element.setAttribute("accesskey", akey);
-        element.setAttribute("cmd", "cmd_clearhistory");
-        cxmenu.appendChild(element);
-
-        element = document.createElementNS(kXULNS, "menuitem");
-        label = this._stringBundle.getString("cmd_showSuggestions");
-        akey = this._stringBundle.getString("cmd_showSuggestions_accesskey");
-        element.setAttribute("anonid", "toggle-suggest-item");
-        element.setAttribute("label", label);
-        element.setAttribute("accesskey", akey);
-        element.setAttribute("cmd", "cmd_togglesuggest");
-        element.setAttribute("type", "checkbox");
-        element.setAttribute("checked", this._suggestEnabled);
-        element.setAttribute("autocheck", "false");
-        this._suggestMenuItem = element;
-        cxmenu.appendChild(element);
-
-        this.addEventListener("keypress", aEvent => {
-          if (navigator.platform.startsWith("Mac") && aEvent.keyCode == KeyEvent.VK_F4)
-            this.openSearch()
-        }, true);
-
-        this.controllers.appendController(this.searchbarController);
         document.getBindingParent(this)._textboxInitialized = true;
-
-        // Add observer for suggest preference
-        Services.prefs.addObserver("browser.search.suggest.enabled", this);
       ]]></constructor>
 
       <destructor><![CDATA[
-        Services.prefs.removeObserver("browser.search.suggest.enabled", this);
-
-        // Because XBL and the customize toolbar code interacts poorly,
-        // there may not be anything to remove here
+        // If the context menu has never been opened, there won't be anything
+        // to remove here.
+        // Also, XBL and the customize toolbar code sometimes interact poorly.
         try {
           this.controllers.removeController(this.searchbarController);
         } catch (ex) { }
       ]]></destructor>
 
-      <field name="_stringBundle"/>
-      <field name="_suggestMenuItem"/>
-      <field name="_suggestEnabled"/>
+      // Add items to context menu and attach controller to handle them the
+      // first time the context menu is opened.
+      <method name="initContextMenu">
+        <parameter name="aMenu"/>
+        <body><![CDATA[
+          const kXULNS =
+            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          let stringBundle = document.getBindingParent(this)._stringBundle;
+
+          let pasteAndSearch, suggestMenuItem;
+          let element, label, akey;
+
+          element = document.createElementNS(kXULNS, "menuseparator");
+          aMenu.appendChild(element);
+
+          let insertLocation = aMenu.firstChild;
+          while (insertLocation.nextSibling &&
+                 insertLocation.getAttribute("cmd") != "cmd_paste")
+            insertLocation = insertLocation.nextSibling;
+          if (insertLocation) {
+            element = document.createElementNS(kXULNS, "menuitem");
+            label = stringBundle.getString("cmd_pasteAndSearch");
+            element.setAttribute("label", label);
+            element.setAttribute("anonid", "paste-and-search");
+            element.setAttribute("oncommand", "BrowserSearch.pasteAndSearch(event)");
+            aMenu.insertBefore(element, insertLocation.nextSibling);
+            pasteAndSearch = element;
+          }
+
+          element = document.createElementNS(kXULNS, "menuitem");
+          label = stringBundle.getString("cmd_clearHistory");
+          akey = stringBundle.getString("cmd_clearHistory_accesskey");
+          element.setAttribute("label", label);
+          element.setAttribute("accesskey", akey);
+          element.setAttribute("cmd", "cmd_clearhistory");
+          aMenu.appendChild(element);
+
+          element = document.createElementNS(kXULNS, "menuitem");
+          label = stringBundle.getString("cmd_showSuggestions");
+          akey = stringBundle.getString("cmd_showSuggestions_accesskey");
+          element.setAttribute("anonid", "toggle-suggest-item");
+          element.setAttribute("label", label);
+          element.setAttribute("accesskey", akey);
+          element.setAttribute("cmd", "cmd_togglesuggest");
+          element.setAttribute("type", "checkbox");
+          element.setAttribute("autocheck", "false");
+          suggestMenuItem = element;
+          aMenu.appendChild(element);
+
+          if (AppConstants.platform == "macosx") {
+            this.addEventListener("keypress", aEvent => {
+              if (aEvent.keyCode == KeyEvent.DOM_VK_F4)
+                this.openSearch()
+            }, true);
+          }
+
+          this.controllers.appendController(this.searchbarController);
+
+          let onpopupshowing = function() {
+            BrowserSearch.searchBar._textbox.closePopup();
+            if (suggestMenuItem) {
+              let enabled =
+                Services.prefs.getBoolPref("browser.search.suggest.enabled");
+              suggestMenuItem.setAttribute("checked", enabled);
+            }
+
+            if (!pasteAndSearch)
+              return;
+            let controller = document.commandDispatcher.getControllerForCommand("cmd_paste");
+            let enabled = controller.isCommandEnabled("cmd_paste");
+            if (enabled)
+              pasteAndSearch.removeAttribute("disabled");
+            else
+              pasteAndSearch.setAttribute("disabled", "true");
+          };
+          aMenu.addEventListener("popupshowing", onpopupshowing);
+          onpopupshowing();
+        ]]></body>
+      </method>
 
       <!--
         This overrides the searchParam property in autocomplete.xml.  We're
@@ -745,19 +761,6 @@
 
             var yOffset = outerRect.bottom - innerRect.bottom;
             popup.openPopup(this.inputField, "after_start", 0, yOffset, false, false);
-          }
-        ]]></body>
-      </method>
-
-      <method name="observe">
-        <parameter name="aSubject"/>
-        <parameter name="aTopic"/>
-        <parameter name="aData"/>
-        <body><![CDATA[
-          if (aTopic == "nsPref:changed") {
-            this._suggestEnabled =
-              Services.prefs.getBoolPref("browser.search.suggest.enabled");
-            this._suggestMenuItem.setAttribute("checked", this._suggestEnabled);
           }
         ]]></body>
       </method>
@@ -863,10 +866,10 @@
               this._self.value = "";
               break;
             case "cmd_togglesuggest":
-              // The pref observer will update _suggestEnabled and the menu
-              // checkmark.
+              let enabled =
+                Services.prefs.getBoolPref("browser.search.suggest.enabled");
               Services.prefs.setBoolPref("browser.search.suggest.enabled",
-                                         !this._self._suggestEnabled);
+                                         !enabled);
               break;
             default:
               // do nothing with unrecognized command
