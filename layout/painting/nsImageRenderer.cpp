@@ -10,6 +10,7 @@
 
 #include "mozilla/webrender/WebRenderAPI.h"
 
+#include "gfxContext.h"
 #include "gfxDrawable.h"
 #include "ImageOps.h"
 #include "mozilla/layers/StackingContextHelper.h"
@@ -17,7 +18,6 @@
 #include "nsCSSRendering.h"
 #include "nsCSSRenderingGradients.h"
 #include "nsIFrame.h"
-#include "nsRenderingContext.h"
 #include "nsStyleStructInlines.h"
 #include "nsSVGEffects.h"
 #include "nsSVGIntegrationUtils.h"
@@ -462,7 +462,7 @@ RGBALuminanceOperation(uint8_t *aData,
 
 DrawResult
 nsImageRenderer::Draw(nsPresContext*       aPresContext,
-                      nsRenderingContext&  aRenderingContext,
+                      gfxContext&          aRenderingContext,
                       const nsRect&        aDirtyRect,
                       const nsRect&        aDest,
                       const nsRect&        aFill,
@@ -482,7 +482,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
 
   SamplingFilter samplingFilter = nsLayoutUtils::GetSamplingFilterForFrame(mForFrame);
   DrawResult result = DrawResult::SUCCESS;
-  RefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
+  RefPtr<gfxContext> ctx = &aRenderingContext;
   IntRect tmpDTRect;
 
   if (ctx->CurrentOp() != CompositionOp::OP_OVER || mMaskOp == NS_STYLE_MASK_MODE_LUMINANCE) {
@@ -567,11 +567,11 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
       surf = maskData;
     }
 
-    DrawTarget* dt = aRenderingContext.ThebesContext()->GetDrawTarget();
+    DrawTarget* dt = aRenderingContext.GetDrawTarget();
     dt->DrawSurface(surf, Rect(tmpDTRect.x, tmpDTRect.y, tmpDTRect.width, tmpDTRect.height),
                     Rect(0, 0, tmpDTRect.width, tmpDTRect.height),
                     DrawSurfaceOptions(SamplingFilter::POINT),
-                    DrawOptions(1.0f, aRenderingContext.ThebesContext()->CurrentOp()));
+                    DrawOptions(1.0f, aRenderingContext.CurrentOp()));
   }
 
   return result;
@@ -686,7 +686,7 @@ nsImageRenderer::DrawableForElement(const nsRect& aImageRect,
 
 DrawResult
 nsImageRenderer::DrawLayer(nsPresContext*       aPresContext,
-                           nsRenderingContext&  aRenderingContext,
+                           gfxContext&          aRenderingContext,
                            const nsRect&        aDest,
                            const nsRect&        aFill,
                            const nsPoint&       aAnchor,
@@ -847,7 +847,7 @@ RequiresScaling(const nsRect&        aFill,
 
 DrawResult
 nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
-                                          nsRenderingContext&  aRenderingContext,
+                                          gfxContext&          aRenderingContext,
                                           const nsRect&        aDirtyRect,
                                           const nsRect&        aFill,
                                           const CSSIntRect&    aSrc,
@@ -901,7 +901,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
 
       RefPtr<gfxDrawable> drawable =
         DrawableForElement(nsRect(nsPoint(), mSize),
-                           *aRenderingContext.ThebesContext());
+                           aRenderingContext);
       if (!drawable) {
         NS_WARNING("Could not create drawable for element");
         return DrawResult::TEMPORARY_ERROR;
@@ -917,7 +917,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
     SamplingFilter samplingFilter = nsLayoutUtils::GetSamplingFilterForFrame(mForFrame);
 
     if (!RequiresScaling(aFill, aHFill, aVFill, aUnitSize)) {
-      return nsLayoutUtils::DrawSingleImage(*aRenderingContext.ThebesContext(),
+      return nsLayoutUtils::DrawSingleImage(aRenderingContext,
                                             aPresContext,
                                             subImage,
                                             samplingFilter,
@@ -930,7 +930,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
     nsRect fillRect(aFill);
     nsRect tile = ComputeTile(fillRect, aHFill, aVFill, aUnitSize, repeatSize);
     CSSIntSize imageSize(srcRect.width, srcRect.height);
-    return nsLayoutUtils::DrawBackgroundImage(*aRenderingContext.ThebesContext(),
+    return nsLayoutUtils::DrawBackgroundImage(aRenderingContext,
                                               mForFrame, aPresContext,
                                               subImage, imageSize, samplingFilter,
                                               tile, fillRect, repeatSize,

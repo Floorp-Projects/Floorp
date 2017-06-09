@@ -9,6 +9,7 @@
 #include "nsPluginFrame.h"
 
 #include "gfx2DGlue.h"
+#include "gfxContext.h"
 #include "gfxMatrix.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/BasicEvents.h"
@@ -30,7 +31,6 @@
 #include "nsIPluginInstanceOwner.h"
 #include "nsNPAPIPluginInstance.h"
 #include "nsIDOMElement.h"
-#include "nsRenderingContext.h"
 #include "npapi.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsContentUtils.h"
@@ -374,7 +374,7 @@ nsPluginFrame::PrepForDrawing(nsIWidget *aWidget)
 #define EMBED_DEF_HEIGHT 200
 
 /* virtual */ nscoord
-nsPluginFrame::GetMinISize(nsRenderingContext *aRenderingContext)
+nsPluginFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord result = 0;
 
@@ -392,7 +392,7 @@ nsPluginFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsPluginFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
+nsPluginFrame::GetPrefISize(gfxContext *aRenderingContext)
 {
   return nsPluginFrame::GetMinISize(aRenderingContext);
 }
@@ -871,18 +871,16 @@ nsPluginFrame::DidReflow(nsPresContext*            aPresContext,
 }
 
 /* static */ void
-nsPluginFrame::PaintPrintPlugin(nsIFrame* aFrame, nsRenderingContext* aCtx,
+nsPluginFrame::PaintPrintPlugin(nsIFrame* aFrame, gfxContext* aCtx,
                                 const nsRect& aDirtyRect, nsPoint aPt)
 {
-  gfxContext* ctx = aCtx->ThebesContext();
-
   // Translate the context:
   nsPoint pt = aPt + aFrame->GetContentRectRelativeToSelf().TopLeft();
   gfxPoint devPixelPt =
     nsLayoutUtils::PointToGfxPoint(pt, aFrame->PresContext()->AppUnitsPerDevPixel());
 
-  gfxContextMatrixAutoSaveRestore autoSR(ctx);
-  ctx->SetMatrix(ctx->CurrentMatrix().Translate(devPixelPt));
+  gfxContextMatrixAutoSaveRestore autoSR(aCtx);
+  aCtx->SetMatrix(aCtx->CurrentMatrix().Translate(devPixelPt));
 
   // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
 
@@ -1000,7 +998,7 @@ nsDisplayPlugin::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
 
 void
 nsDisplayPlugin::Paint(nsDisplayListBuilder* aBuilder,
-                       nsRenderingContext* aCtx)
+                       gfxContext* aCtx)
 {
   nsPluginFrame* f = static_cast<nsPluginFrame*>(mFrame);
   bool snap;
@@ -1272,7 +1270,7 @@ nsPluginFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 void
-nsPluginFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
+nsPluginFrame::PrintPlugin(gfxContext& aRenderingContext,
                            const nsRect& aDirtyRect)
 {
   nsCOMPtr<nsIObjectLoadingContent> obj(do_QueryInterface(mContent));
@@ -1343,17 +1341,15 @@ nsPluginFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
   window.width = presContext->AppUnitsToDevPixels(contentSize.width);
   window.height = presContext->AppUnitsToDevPixels(contentSize.height);
 
-  gfxContext *ctx = aRenderingContext.ThebesContext();
-
-  ctx->Save();
+  aRenderingContext.Save();
 
   /* Make sure plugins don't do any damage outside of where they're supposed to */
-  ctx->NewPath();
+  aRenderingContext.NewPath();
   gfxRect r(window.x, window.y, window.width, window.height);
-  ctx->Rectangle(r);
-  ctx->Clip();
+  aRenderingContext.Rectangle(r);
+  aRenderingContext.Clip();
 
-  gfxWindowsNativeDrawing nativeDraw(ctx, r);
+  gfxWindowsNativeDrawing nativeDraw(&aRenderingContext, r);
   do {
     HDC dc = nativeDraw.BeginNativeDrawing();
     if (!dc)
@@ -1369,7 +1365,7 @@ nsPluginFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
   } while (nativeDraw.ShouldRenderAgain());
   nativeDraw.PaintToContext();
 
-  ctx->Restore();
+  aRenderingContext.Restore();
 #endif
 
   // XXX Nav 4.x always sent a SetWindow call after print. Should we do the same?
@@ -1603,7 +1599,7 @@ nsPluginFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 void
 nsPluginFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
-                           nsRenderingContext& aRenderingContext,
+                           gfxContext& aRenderingContext,
                            const nsRect& aDirtyRect, const nsRect& aPluginRect)
 {
 #if defined(MOZ_WIDGET_ANDROID)
@@ -1613,9 +1609,7 @@ nsPluginFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
     gfxRect dirtyGfxRect =
       PresContext()->AppUnitsToGfxUnits(aDirtyRect);
 
-    gfxContext* ctx = aRenderingContext.ThebesContext();
-
-    mInstanceOwner->Paint(ctx, frameGfxRect, dirtyGfxRect);
+    mInstanceOwner->Paint(aRenderingContext, frameGfxRect, dirtyGfxRect);
     return;
   }
 #else

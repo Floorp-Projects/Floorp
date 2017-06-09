@@ -85,11 +85,11 @@ public:
     return false;
   }
 
-  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
-  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
+  virtual nscoord GetMinISize(gfxContext *aRenderingContext) override;
+  virtual nscoord GetPrefISize(gfxContext *aRenderingContext) override;
 
   virtual mozilla::LogicalSize
-  ComputeAutoSize(nsRenderingContext*         aRenderingContext,
+  ComputeAutoSize(gfxContext*                 aRenderingContext,
                   mozilla::WritingMode        aWM,
                   const mozilla::LogicalSize& aCBSize,
                   nscoord                     aAvailableISize,
@@ -282,7 +282,7 @@ protected:
    * If aMarginResult is non-null, fill it with the part of the
    * margin-isize that was contributed by the margin.
    */
-  nscoord ChildShrinkWrapISize(nsRenderingContext*  aRenderingContext,
+  nscoord ChildShrinkWrapISize(gfxContext*          aRenderingContext,
                                nsIFrame*            aChildFrame,
                                mozilla::WritingMode aWM,
                                mozilla::LogicalSize aCBSize,

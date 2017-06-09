@@ -9,9 +9,9 @@
 #include "mozilla/IntegerRange.h"
 #include "mozilla/WritingModes.h"
 
+#include "gfxContext.h"
 #include "nsCOMPtr.h"
 #include "nsTableFrame.h"
-#include "nsRenderingContext.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
@@ -1271,7 +1271,7 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) override;
+                     gfxContext* aCtx) override;
   virtual already_AddRefed<layers::Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                                      LayerManager* aManager,
                                                      const ContainerLayerParameters& aContainerParameters) override;
@@ -1287,7 +1287,7 @@ public:
 
 void
 nsDisplayTableBorderCollapse::Paint(nsDisplayListBuilder* aBuilder,
-                                    nsRenderingContext* aCtx)
+                                    gfxContext* aCtx)
 {
   nsPoint pt = ToReferenceFrame();
   DrawTarget* drawTarget = aCtx->GetDrawTarget();
@@ -1751,7 +1751,7 @@ nsTableFrame::MarkIntrinsicISizesDirty()
 }
 
 /* virtual */ nscoord
-nsTableFrame::GetMinISize(nsRenderingContext *aRenderingContext)
+nsTableFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   if (NeedToCalcBCBorders())
     CalcBCBorders();
@@ -1762,7 +1762,7 @@ nsTableFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsTableFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
+nsTableFrame::GetPrefISize(gfxContext *aRenderingContext)
 {
   if (NeedToCalcBCBorders())
     CalcBCBorders();
@@ -1794,7 +1794,7 @@ nsTableFrame::IntrinsicISizeOffsets()
 
 /* virtual */
 LogicalSize
-nsTableFrame::ComputeSize(nsRenderingContext* aRenderingContext,
+nsTableFrame::ComputeSize(gfxContext*         aRenderingContext,
                           WritingMode         aWM,
                           const LogicalSize&  aCBSize,
                           nscoord             aAvailableISize,
@@ -1829,7 +1829,7 @@ nsTableFrame::ComputeSize(nsRenderingContext* aRenderingContext,
 }
 
 nscoord
-nsTableFrame::TableShrinkISizeToFit(nsRenderingContext *aRenderingContext,
+nsTableFrame::TableShrinkISizeToFit(gfxContext *aRenderingContext,
                                     nscoord aISizeInCB)
 {
   // If we're a container for font size inflation, then shrink
@@ -1861,7 +1861,7 @@ nsTableFrame::TableShrinkISizeToFit(nsRenderingContext *aRenderingContext,
 
 /* virtual */
 LogicalSize
-nsTableFrame::ComputeAutoSize(nsRenderingContext* aRenderingContext,
+nsTableFrame::ComputeAutoSize(gfxContext*         aRenderingContext,
                               WritingMode         aWM,
                               const LogicalSize&  aCBSize,
                               nscoord             aAvailableISize,
@@ -3508,7 +3508,7 @@ nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
 }
 
 void
-nsTableFrame::ReflowColGroups(nsRenderingContext *aRenderingContext)
+nsTableFrame::ReflowColGroups(gfxContext *aRenderingContext)
 {
   if (!GetPrevInFlow() && !HaveReflowedColGroups()) {
     ReflowOutput kidMet(GetWritingMode());

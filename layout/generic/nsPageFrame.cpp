@@ -6,11 +6,11 @@
 #include "nsPageFrame.h"
 
 #include "mozilla/gfx/2D.h"
+#include "gfxContext.h"
 #include "nsDeviceContext.h"
 #include "nsFontMetrics.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
-#include "nsRenderingContext.h"
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
 #include "nsPageContentFrame.h"
@@ -231,7 +231,7 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
 
 
 //------------------------------------------------------------------------------
-nscoord nsPageFrame::GetXPosition(nsRenderingContext& aRenderingContext,
+nscoord nsPageFrame::GetXPosition(gfxContext&          aRenderingContext,
                                   nsFontMetrics&       aFontMetrics,
                                   const nsRect&        aRect, 
                                   int32_t              aJust,
@@ -268,7 +268,7 @@ nscoord nsPageFrame::GetXPosition(nsRenderingContext& aRenderingContext,
 // @param aAscent - the ascent of the font
 // @param aHeight - the height of the font
 void
-nsPageFrame::DrawHeaderFooter(nsRenderingContext& aRenderingContext,
+nsPageFrame::DrawHeaderFooter(gfxContext&          aRenderingContext,
                               nsFontMetrics&       aFontMetrics,
                               nsHeaderFooterEnum   aHeaderFooter,
                               const nsString&      aStrLeft,
@@ -313,7 +313,7 @@ nsPageFrame::DrawHeaderFooter(nsRenderingContext& aRenderingContext,
 // @param aAscent - the ascent of the font
 // @param aWidth - available width for the string
 void
-nsPageFrame::DrawHeaderFooter(nsRenderingContext& aRenderingContext,
+nsPageFrame::DrawHeaderFooter(gfxContext&          aRenderingContext,
                               nsFontMetrics&       aFontMetrics,
                               nsHeaderFooterEnum   aHeaderFooter,
                               int32_t              aJust,
@@ -326,7 +326,6 @@ nsPageFrame::DrawHeaderFooter(nsRenderingContext& aRenderingContext,
 
   nscoord contentWidth = aWidth - (mPD->mEdgePaperMargin.left + mPD->mEdgePaperMargin.right);
 
-  gfxContext* gfx = aRenderingContext.ThebesContext();
   DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
 
   if ((aHeaderFooter == eHeader && aHeight < mPageContentMargin.top) ||
@@ -381,16 +380,16 @@ nsPageFrame::DrawHeaderFooter(nsRenderingContext& aRenderingContext,
     }
 
     // set up new clip and draw the text
-    gfx->Save();
-    gfx->Clip(NSRectToSnappedRect(aRect, PresContext()->AppUnitsPerDevPixel(),
-                                  *drawTarget));
-    gfx->SetColor(Color(0.f, 0.f, 0.f));
+    aRenderingContext.Save();
+    aRenderingContext.Clip(
+      NSRectToSnappedRect(aRect, PresContext()->AppUnitsPerDevPixel(), *drawTarget));
+    aRenderingContext.SetColor(Color(0.f, 0.f, 0.f));
     nsLayoutUtils::DrawString(this, aFontMetrics, &aRenderingContext,
                               str.get(), str.Length(),
                               nsPoint(x, y + aAscent),
                               nullptr,
                               DrawStringFlags::eForceHorizontal);
-    gfx->Restore();
+    aRenderingContext.Restore();
   }
 }
 
@@ -488,7 +487,7 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) override {
+                     gfxContext* aCtx) override {
 #ifdef DEBUG
     nsPageFrame* pageFrame = do_QueryFrame(mFrame);
     MOZ_ASSERT(pageFrame, "We should have an nsPageFrame");
@@ -607,7 +606,7 @@ nsPageFrame::SetPageNumInfo(int32_t aPageNumber, int32_t aTotalPages)
 
 
 void
-nsPageFrame::PaintHeaderFooter(nsRenderingContext& aRenderingContext,
+nsPageFrame::PaintHeaderFooter(gfxContext& aRenderingContext,
                                nsPoint aPt, bool aDisableSubpixelAA)
 {
   nsPresContext* pc = PresContext();
@@ -620,7 +619,7 @@ nsPageFrame::PaintHeaderFooter(nsRenderingContext& aRenderingContext,
   }
 
   nsRect rect(aPt, mRect.Size());
-  aRenderingContext.ThebesContext()->SetColor(Color(0.f, 0.f, 0.f));
+  aRenderingContext.SetColor(Color(0.f, 0.f, 0.f));
 
   DrawTargetAutoDisableSubpixelAntialiasing
     disable(aRenderingContext.GetDrawTarget(), aDisableSubpixelAA);
