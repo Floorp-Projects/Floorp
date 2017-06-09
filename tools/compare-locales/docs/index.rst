@@ -20,24 +20,7 @@ Exposing strings
 Localizers only handle a few file formats in well-known locations in the
 source tree.
 
-The locations are specified by TOML files. They're part of the bigger
-localization ecosystem at Mozilla, and `the documentation about the
-file format <http://moz-l10n-config.readthedocs.io/en/latest/fileformat.html>`_
-explains how to set them up, and what the entries mean. In short, you find
-
-.. code-block:: toml
-
-    [[paths]]
-        reference = browser/locales/en-US/**
-        l10n = {l}browser/**
-
-to add a directory for all localizations. Changes to these files are best
-submitted for review by :Pike or :flod.
-
-These configuration files are the future, and right now, we still have
-support for the previous way to configuring l10n, which is described below.
-
-The locations are commonly in directories like
+The locations are in directories like
 
     :file:`browser/`\ ``locales/en-US/``\ :file:`subdir/file.ext`
 
@@ -105,7 +88,7 @@ Properties
 ini
     Used by the crashreporter and updater, avoid if possible.
 foo.defines
-    Used during builds, for example to create :file:`install.rdf` for
+    Used during builds, for example to create file:`install.rdf` for
     language packs.
 
 Adding new formats involves changing various different tools, and is strongly

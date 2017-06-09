@@ -37,7 +37,7 @@
 % resource search-plugins chrome://browser/locale/searchplugins/
 
 # overrides for toolkit l10n, also for en-US
-# keep this file list in sync with l10n.toml and filter.py
+# keep this file list in sync with filter.py
 relativesrcdir toolkit/locales:
   locale/@AB_CD@/browser/overrides/about.dtd                       (%chrome/global/about.dtd)
   locale/@AB_CD@/browser/overrides/aboutAbout.dtd                  (%chrome/global/aboutAbout.dtd)

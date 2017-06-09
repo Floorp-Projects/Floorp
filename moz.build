@@ -40,10 +40,6 @@ with Files('GNUmakefile'):
 with Files('*gradle*'):
     BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
 
-with Files('l10n.toml'):
-    BUG_COMPONENT = ('Core', 'Localization')
-    FINAL = True
-
 with Files('README.txt'):
     BUG_COMPONENT = ('Core', 'General')
 
