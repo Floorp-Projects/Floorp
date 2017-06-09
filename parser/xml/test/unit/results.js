@@ -431,7 +431,7 @@ var vectors = [
   },
   {
     "data": "<!-- IE 5-8 standards mode -->\r\n<a href=http://foo.bar/#x=`y></a><img alt=\"`><img src=xx:x onerror=alert(1)></a>\">\r\n\r\n<!-- IE 5-9 standards mode -->\r\n<!a foo=x=`y><img alt=\"`><img src=xx:x onerror=alert(2)//\">\r\n<?a foo=x=`y><img alt=\"`><img src=xx:x onerror=alert(3)//\">",
-    "sanitized": "<html><head></head><body><a href=\"http://foo.bar/#x=%60y\"></a><img alt=\"`&gt;&lt;img src=xx:x onerror=alert(1)&gt;&lt;/a&gt;\">\n\n\n<img alt=\"`&gt;&lt;img src=xx:x onerror=alert(2)//\">\n<img alt=\"`&gt;&lt;img src=xx:x onerror=alert(3)//\"></body></html>"
+    "sanitized": "<html><head></head><body><a href=\"http://foo.bar/#x=`y\"></a><img alt=\"`&gt;&lt;img src=xx:x onerror=alert(1)&gt;&lt;/a&gt;\">\n\n\n<img alt=\"`&gt;&lt;img src=xx:x onerror=alert(2)//\">\n<img alt=\"`&gt;&lt;img src=xx:x onerror=alert(3)//\"></body></html>"
   },
   {
     "data": "<svg xmlns=\"http://www.w3.org/2000/svg\">\n<a id=\"x\"><rect fill=\"white\" width=\"1000\" height=\"1000\"/></a>\n<rect  fill=\"white\" style=\"clip-path:url(test3.svg#a);fill:url(#b);filter:url(#c);marker:url(#d);mask:url(#e);stroke:url(#f);\"/>\n</svg>",
