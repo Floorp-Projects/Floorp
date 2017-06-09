@@ -223,20 +223,10 @@ function* testFileAccess() {
   // for tests that run in a web content process
   let webBrowser = gBrowser.selectedBrowser;
 
-  // For now, we'll only test file access from the file content process if
-  // the file content process is enabled. Once the file content process is
-  // ready to ride the trains, this test should be changed to always test
-  // file content process access. We use todo() to cause failures
-  // if the file process is enabled on a non-Nightly release so that we'll
-  // know to update this test to always run the tests. i.e., we'll want to
-  // catch bugs that accidentally disable file content process.
+  // Ensure that the file content process is enabled.
   let fileContentProcessEnabled =
     prefs.getBoolPref("browser.tabs.remote.separateFileUriProcess");
-  if (isNightly()) {
-    ok(fileContentProcessEnabled, "separate file content process is enabled");
-  } else {
-    todo(fileContentProcessEnabled, "separate file content process is enabled");
-  }
+  ok(fileContentProcessEnabled, "separate file content process is enabled");
 
   // for tests that run in a file content process
   let fileBrowser = undefined;
