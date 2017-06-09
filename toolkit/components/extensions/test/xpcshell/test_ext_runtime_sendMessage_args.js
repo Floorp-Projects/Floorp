@@ -59,6 +59,10 @@ add_task(async function() {
   // Due to this insane design we parse its arguments manually.  This
   // test is meant to cover all the combinations.
 
+  // A single null or undefined argument is allowed, and represents the message
+  extension1.sendMessage(null);
+  await checkLocalMessage(null);
+
   // With one argument, it must be just the message
   extension1.sendMessage("message");
   await checkLocalMessage("message");
@@ -70,12 +74,24 @@ add_task(async function() {
   extension1.sendMessage(ID2, {msg: "message"});
   await checkRemoteMessage({msg: "message"});
 
-  // And this case should be (message, options)
+  // And these should be (message, options)
   extension1.sendMessage("message", {});
+  await checkLocalMessage("message");
+
+  // or (message, non-callback), pick your poison
+  extension1.sendMessage("message", undefined);
   await checkLocalMessage("message");
 
   // With three arguments, we send a cross-extension message
   extension1.sendMessage(ID2, "message", {});
+  await checkRemoteMessage("message");
+
+  // Even when the last one is null or undefined
+  extension1.sendMessage(ID2, "message", undefined);
+  await checkRemoteMessage("message");
+
+  // The four params case is unambigous, so we allow null as a (non-) callback
+  extension1.sendMessage(ID2, "message", {}, null);
   await checkRemoteMessage("message");
 
   await Promise.all([extension1.unload(), extension2.unload()]);

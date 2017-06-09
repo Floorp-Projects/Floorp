@@ -3,6 +3,15 @@
 
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
+// Tests within /browser/components/preferences/in-content-new/tests/
+// test the "new" preferences organization, after it was reorganized.
+// Thus, all of these tests should set the "oldOrganization" to false
+// before running.
+Services.prefs.setBoolPref("browser.preferences.useOldOrganization", false);
+registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("browser.preferences.useOldOrganization");
+});
+
 const kDefaultWait = 2000;
 
 function is_hidden(aElement) {

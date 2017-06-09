@@ -904,6 +904,9 @@ class ProcessHandler(ProcessHandlerMixin):
     def __init__(self, cmd, logfile=None, storeOutput=True, **kwargs):
         kwargs.setdefault('processOutputLine', [])
 
+        if not isinstance(kwargs['processOutputLine'], (list, tuple)):
+            kwargs['processOutputLine'] = [kwargs['processOutputLine']]
+
         # Print to standard output only if no outputline provided
         if not kwargs['processOutputLine']:
             kwargs['processOutputLine'].append(print_output)

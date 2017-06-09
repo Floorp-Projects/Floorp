@@ -13,6 +13,7 @@ import copy
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.job import job_description_schema
+from taskgraph.util.attributes import keymatch
 from taskgraph.util.schema import (
     validate_schema,
     resolve_keyed_by,
@@ -23,6 +24,8 @@ from voluptuous import (
     Required,
     Schema,
 )
+
+ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 
 job_description_schema = {str(k): v for k, v in job_description_schema.schema.iteritems()}
 
@@ -35,6 +38,12 @@ source_test_description_schema = Schema({
     # (for try selection) and treeherder metadata (for display).  If given as a list,
     # the job will be "split" into multiple tasks, one with each platform.
     Required('platform'): Any(basestring, [basestring]),
+
+    # Whether the job requires a build artifact or not. If True, the task will
+    # depend on a build task and the installer url will be saved to the
+    # GECKO_INSTALLER_URL environment variable. Build labels are determined by the
+    # `dependent-build-platforms` config in kind.yml.
+    Required('require-build', default=False): bool,
 
     # These fields can be keyed by "platform", and are otherwise identical to
     # job descriptions.
@@ -83,6 +92,32 @@ def expand_platforms(config, jobs):
             yield pjob
 
 
+def add_build_dependency(config, job):
+    """
+    Add build dependency to the job and installer_url to env.
+    """
+    key = job['platform']
+    build_labels = config.config.get('dependent-build-platforms', {})
+    matches = keymatch(build_labels, key)
+    if not matches:
+        raise Exception("No build platform found for '{}'. "
+                        "Define 'dependent-build-platforms' in the kind config.".format(key))
+
+    if len(matches) > 1:
+        raise Exception("More than one build platform found for '{}'.".format(key))
+
+    label = matches[0]['label']
+    target = matches[0]['target-name']
+    deps = job.setdefault('dependencies', {})
+    deps.update({'build': label})
+
+    build_artifact = 'public/build/{}'.format(target)
+    installer_url = ARTIFACT_URL.format('<build>', build_artifact)
+
+    env = job['worker'].setdefault('env', {})
+    env.update({'GECKO_INSTALLER_URL': {'task-reference': installer_url}})
+
+
 @transforms.add
 def handle_platform(config, jobs):
     """
@@ -102,6 +137,9 @@ def handle_platform(config, jobs):
 
         if 'treeherder' in job:
             job['treeherder']['platform'] = platform
+
+        if job.pop('require-build'):
+            add_build_dependency(config, job)
 
         del job['platform']
         yield job

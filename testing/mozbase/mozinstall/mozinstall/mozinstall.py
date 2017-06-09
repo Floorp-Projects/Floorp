@@ -8,8 +8,11 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import tempfile
 import time
 import zipfile
+
+import requests
 
 import mozfile
 import mozinfo
@@ -96,11 +99,20 @@ def install(src, dest):
     :param dest: Path to install to (to ensure we do not overwrite any existent
                  files the folder should not exist yet)
     """
-    src = os.path.realpath(src)
-    dest = os.path.realpath(dest)
 
     if not is_installer(src):
-        raise InvalidSource(src + ' is not valid installer file.')
+        msg = "{} is not a valid installer file".format(src)
+        if '://' in src:
+            try:
+                return _install_url(src, dest)
+            except:
+                exc, val, tb = sys.exc_info()
+                msg = "{} ({})".format(msg, val)
+                raise InvalidSource, msg, tb
+        raise InvalidSource(msg)
+
+    src = os.path.realpath(src)
+    dest = os.path.realpath(dest)
 
     did_we_create = False
     if not os.path.exists(dest):
@@ -235,6 +247,26 @@ def uninstall(install_folder):
     # Ensure that we remove any trace of the installation. Even the uninstaller
     # on Windows leaves files behind we have to explicitely remove.
     mozfile.remove(install_folder)
+
+
+def _install_url(url, dest):
+    """Saves a url to a temporary file, and passes that through to the
+    install function.
+
+    :param url: Url to the install file
+    :param dest: Path to install to (to ensure we do not overwrite any existent
+                 files the folder should not exist yet)
+    """
+    r = requests.get(url, stream=True)
+    name = tempfile.mkstemp()[1]
+    try:
+        with open(name, 'w+b') as fh:
+            for chunk in r.iter_content(chunk_size=16*1024):
+                fh.write(chunk)
+        result = install(name, dest)
+    finally:
+        mozfile.remove(name)
+    return result
 
 
 def _install_dmg(src, dest):

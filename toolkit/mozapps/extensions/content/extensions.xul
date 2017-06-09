@@ -443,7 +443,7 @@
             <!-- legacy extensions view -->
             <vbox id="legacy-view" flex="1" class="view-pane" align="stretch" tabindex="0">
               <vbox id="legacy-extensions-info">
-                <label id="legacy-extensions-heading" value="Legacy Extensions"/>
+                <label id="legacy-extensions-heading" value="&legacyExtensions.title;"/>
                 <description>
                   &legacyExtensions.description;
                   <label class="text-link plain" id="legacy-learnmore">&legacyExtensions.learnMore;</label>

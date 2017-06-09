@@ -50,6 +50,42 @@ marionette-harness:
           - 'testing/mozbase/packages.txt'
           - 'python/mach_commands.py'
 
+mochitest-harness:
+    description: testing/mochitest unittests
+    platform: linux64/opt
+    require-build: true
+    treeherder:
+        symbol: py(mch)
+        kind: test
+        tier: 2
+    worker-type:
+        by-platform:
+            linux64.*: aws-provisioner-v1/gecko-t-linux-xlarge
+    worker:
+        by-platform:
+            linux64.*:
+                docker-image: {in-tree: "desktop1604-test"}
+                max-run-time: 3600
+    run:
+        using: run-task
+        command: >
+            source /home/worker/scripts/xvfb.sh &&
+            start_xvfb '1600x1200x24' 0 &&
+            cd /home/worker/checkouts/gecko &&
+            ./mach python-test --subsuite mochitest
+    run-on-projects:
+        - integration
+        - release
+    when:
+        files-changed:
+            - 'config/mozunit.py'
+            - 'python/mach_commands.py'
+            - 'testing/mochitest/**'
+            - 'testing/mozharness/mozharness/base/log.py'
+            - 'testing/mozharness/mozharness/mozilla/structuredlog.py'
+            - 'testing/mozharness/mozharness/mozilla/testing/errors.py'
+            - 'testing/profiles/prefs_general.js'
+
 mozbase:
     description: testing/mozbase unit tests
     platform:
