@@ -892,7 +892,6 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     majorGCNumber(0),
     jitReleaseNumber(0),
     number(0),
-    startNumber(0),
     isFull(false),
     incrementalState(gc::State::NotActive),
     lastMarkSlice(false),
@@ -3627,6 +3626,8 @@ ArenaLists::checkEmptyArenaList(AllocKind kind)
 void
 GCRuntime::purgeRuntime(AutoLockForExclusiveAccess& lock)
 {
+    gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::PURGE);
+
     for (GCCompartmentsIter comp(rt); !comp.done(); comp.next())
         comp->purge();
 
@@ -3808,27 +3809,25 @@ ShouldCollectZone(Zone* zone, JS::gcreason::Reason reason)
 }
 
 bool
-GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAccess& lock)
+GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOut,
+                                     AutoLockForExclusiveAccess& lock)
 {
-    int64_t currentTime = PRMJ_Now();
-
 #ifdef DEBUG
-    if (fullCompartmentChecks)
-        checkForCompartmentMismatches();
-#endif
-
-    isFull = true;
-    bool any = false;
-
+    /* Assert that zone state is as we expect */
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-        /* Assert that zone state is as we expect */
         MOZ_ASSERT(!zone->isCollecting());
         MOZ_ASSERT(!zone->compartments().empty());
-#ifdef DEBUG
         for (auto i : AllAllocKinds())
             MOZ_ASSERT(!zone->arenas.arenaListsToSweep(i));
+    }
 #endif
 
+    *isFullOut = true;
+    bool any = false;
+
+    int64_t currentTime = PRMJ_Now();
+
+    for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
         /* Set up which zones will be collected. */
         if (ShouldCollectZone(zone, reason)) {
             if (!zone->isAtomsZone()) {
@@ -3836,7 +3835,7 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAcces
                 zone->setGCState(Zone::Mark);
             }
         } else {
-            isFull = false;
+            *isFullOut = false;
         }
 
         zone->setPreservingCode(false);
@@ -3854,7 +3853,7 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAcces
             c->zone()->setPreservingCode(true);
     }
 
-    if (!rt->gc.cleanUpEverything && canAllocateMoreCode) {
+    if (!cleanUpEverything && canAllocateMoreCode) {
         jit::JitActivationIterator activation(TlsContext.get());
         if (!activation.done())
             activation->compartment()->zone()->setPreservingCode(true);
@@ -3887,7 +3886,68 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAcces
     }
 
     /* Check that at least one zone is scheduled for collection. */
-    if (!any)
+    return any;
+}
+
+static void
+DiscardJITCodeForIncrementalGC(JSRuntime* rt)
+{
+    js::CancelOffThreadIonCompile(rt, JS::Zone::Mark);
+    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+        gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::MARK_DISCARD_CODE);
+        zone->discardJitCode(rt->defaultFreeOp());
+    }
+}
+
+static void
+RelazifyFunctionsForShrinkingGC(JSRuntime* rt)
+{
+    gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::RELAZIFY_FUNCTIONS);
+    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+        if (zone->isSelfHostingZone())
+            continue;
+        RelazifyFunctions(zone, AllocKind::FUNCTION);
+        RelazifyFunctions(zone, AllocKind::FUNCTION_EXTENDED);
+    }
+}
+
+static void
+PurgeShapeTablesForShrinkingGC(JSRuntime* rt)
+{
+    gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::PURGE_SHAPE_TABLES);
+    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+        if (zone->keepShapeTables() || zone->isSelfHostingZone())
+            continue;
+        for (auto baseShape = zone->cellIter<BaseShape>(); !baseShape.done(); baseShape.next())
+            baseShape->maybePurgeTable();
+    }
+}
+
+static void
+UnmarkCollectedZones(JSRuntime* rt)
+{
+    gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::UNMARK);
+
+    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+        /* Unmark everything in the zones being collected. */
+        zone->arenas.unmarkAll();
+    }
+
+    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+        /* Unmark all weak maps in the zones being collected. */
+        WeakMapBase::unmarkZone(zone);
+    }
+}
+
+bool
+GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAccess& lock)
+{
+#ifdef DEBUG
+    if (fullCompartmentChecks)
+        checkForCompartmentMismatches();
+#endif
+
+    if (!prepareZonesForCollection(reason, &isFull.ref(), lock))
         return false;
 
     /*
@@ -3904,87 +3964,45 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAcces
     GCMarker* gcmarker = &marker;
 
     /* For non-incremental GC the following sweep discards the jit code. */
-    if (isIncremental) {
-        js::CancelOffThreadIonCompile(rt, JS::Zone::Mark);
-        for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-            gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_DISCARD_CODE);
-            zone->discardJitCode(rt->defaultFreeOp());
-        }
-    }
+    if (isIncremental)
+        DiscardJITCodeForIncrementalGC(rt);
 
     /*
-     * Relazify functions after discarding JIT code (we can't relazify
-     * functions with JIT code) and before the actual mark phase, so that
-     * the current GC can collect the JSScripts we're unlinking here.
-     * We do this only when we're performing a shrinking GC, as too much
-     * relazification can cause performance issues when we have to reparse
-     * the same functions over and over.
+     * Relazify functions after discarding JIT code (we can't relazify functions
+     * with JIT code) and before the actual mark phase, so that the current GC
+     * can collect the JSScripts we're unlinking here.  We do this only when
+     * we're performing a shrinking GC, as too much relazification can cause
+     * performance issues when we have to reparse the same functions over and
+     * over.
      */
     if (invocationKind == GC_SHRINK) {
-        {
-            gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::RELAZIFY_FUNCTIONS);
-            for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-                if (zone->isSelfHostingZone())
-                    continue;
-                RelazifyFunctions(zone, AllocKind::FUNCTION);
-                RelazifyFunctions(zone, AllocKind::FUNCTION_EXTENDED);
-            }
-        }
-
-        /* Purge ShapeTables. */
-        gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::PURGE_SHAPE_TABLES);
-        for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-            if (zone->keepShapeTables() || zone->isSelfHostingZone())
-                continue;
-            for (auto baseShape = zone->cellIter<BaseShape>(); !baseShape.done(); baseShape.next())
-                baseShape->maybePurgeTable();
-        }
+        RelazifyFunctionsForShrinkingGC(rt);
+        PurgeShapeTablesForShrinkingGC(rt);
     }
 
-    /*
-     * Process any queued source compressions during the start of a major
-     * GC.
-     */
+    /* Process any queued source compressions during the start of a major GC. */
     {
         AutoLockHelperThreadState helperLock;
         HelperThreadState().startHandlingCompressionTasks(helperLock);
     }
 
-    startNumber = number;
-
     /*
      * We must purge the runtime at the beginning of an incremental GC. The
-     * danger if we purge later is that the snapshot invariant of incremental
-     * GC will be broken, as follows. If some object is reachable only through
-     * some cache (say the dtoaCache) then it will not be part of the snapshot.
-     * If we purge after root marking, then the mutator could obtain a pointer
-     * to the object and start using it. This object might never be marked, so
-     * a GC hazard would exist.
+     * danger if we purge later is that the snapshot invariant of incremental GC
+     * will be broken, as follows. If some object is reachable only through some
+     * cache (say the dtoaCache) then it will not be part of the snapshot.  If
+     * we purge after root marking, then the mutator could obtain a pointer to
+     * the object and start using it. This object might never be marked, so a GC
+     * hazard would exist.
      */
-    {
-        gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::PURGE);
-        purgeRuntime(lock);
-    }
+    purgeRuntime(lock);
 
     /*
      * Mark phase.
      */
     gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::MARK);
 
-    {
-        gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::UNMARK);
-
-        for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-            /* Unmark everything in the zones being collected. */
-            zone->arenas.unmarkAll();
-        }
-
-        for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-            /* Unmark all weak maps in the zones being collected. */
-            WeakMapBase::unmarkZone(zone);
-        }
-    }
-
+    UnmarkCollectedZones(rt);
     traceRuntimeForMajorGC(gcmarker, lock);
 
     gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::MARK_ROOTS);
