@@ -374,7 +374,7 @@ this.geckoProfiler = class extends ExtensionAPI {
           throw new Error(`Ran out of options to get symbols from library ${debugName} ${breakpadId}.`);
         },
 
-        onRunning: new SingletonEventManager(context, "geckoProfiler.onRunning", fire => {
+        onRunning: new EventManager(context, "geckoProfiler.onRunning", fire => {
           isRunningObserver.addObserver(fire.async);
           return () => {
             isRunningObserver.removeObserver(fire.async);

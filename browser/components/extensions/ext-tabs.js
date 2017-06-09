@@ -100,7 +100,7 @@ this.tabs = class extends ExtensionAPI {
 
     let self = {
       tabs: {
-        onActivated: new SingletonEventManager(context, "tabs.onActivated", fire => {
+        onActivated: new EventManager(context, "tabs.onActivated", fire => {
           let listener = (eventName, event) => {
             fire.async(event);
           };
@@ -111,7 +111,7 @@ this.tabs = class extends ExtensionAPI {
           };
         }).api(),
 
-        onCreated: new SingletonEventManager(context, "tabs.onCreated", fire => {
+        onCreated: new EventManager(context, "tabs.onCreated", fire => {
           let listener = (eventName, event) => {
             fire.async(tabManager.convert(event.nativeTab, event.currentTab));
           };
@@ -128,7 +128,7 @@ this.tabs = class extends ExtensionAPI {
          * the tabId in an array to match the API.
          * @see  https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/Tabs/onHighlighted
         */
-        onHighlighted: new SingletonEventManager(context, "tabs.onHighlighted", fire => {
+        onHighlighted: new EventManager(context, "tabs.onHighlighted", fire => {
           let listener = (eventName, event) => {
             fire.async({tabIds: [event.tabId], windowId: event.windowId});
           };
@@ -139,7 +139,7 @@ this.tabs = class extends ExtensionAPI {
           };
         }).api(),
 
-        onAttached: new SingletonEventManager(context, "tabs.onAttached", fire => {
+        onAttached: new EventManager(context, "tabs.onAttached", fire => {
           let listener = (eventName, event) => {
             fire.async(event.tabId, {newWindowId: event.newWindowId, newPosition: event.newPosition});
           };
@@ -150,7 +150,7 @@ this.tabs = class extends ExtensionAPI {
           };
         }).api(),
 
-        onDetached: new SingletonEventManager(context, "tabs.onDetached", fire => {
+        onDetached: new EventManager(context, "tabs.onDetached", fire => {
           let listener = (eventName, event) => {
             fire.async(event.tabId, {oldWindowId: event.oldWindowId, oldPosition: event.oldPosition});
           };
@@ -161,7 +161,7 @@ this.tabs = class extends ExtensionAPI {
           };
         }).api(),
 
-        onRemoved: new SingletonEventManager(context, "tabs.onRemoved", fire => {
+        onRemoved: new EventManager(context, "tabs.onRemoved", fire => {
           let listener = (eventName, event) => {
             fire.async(event.tabId, {windowId: event.windowId, isWindowClosing: event.isWindowClosing});
           };
@@ -172,11 +172,11 @@ this.tabs = class extends ExtensionAPI {
           };
         }).api(),
 
-        onReplaced: new SingletonEventManager(context, "tabs.onReplaced", fire => {
+        onReplaced: new EventManager(context, "tabs.onReplaced", fire => {
           return () => {};
         }).api(),
 
-        onMoved: new SingletonEventManager(context, "tabs.onMoved", fire => {
+        onMoved: new EventManager(context, "tabs.onMoved", fire => {
           // There are certain circumstances where we need to ignore a move event.
           //
           // Namely, the first time the tab is moved after it's created, we need
@@ -219,7 +219,7 @@ this.tabs = class extends ExtensionAPI {
           };
         }).api(),
 
-        onUpdated: new SingletonEventManager(context, "tabs.onUpdated", fire => {
+        onUpdated: new EventManager(context, "tabs.onUpdated", fire => {
           const restricted = ["url", "favIconUrl", "title"];
 
           function sanitize(extension, changeInfo) {
@@ -679,7 +679,7 @@ this.tabs = class extends ExtensionAPI {
           return Promise.resolve();
         },
 
-        onZoomChange: new SingletonEventManager(context, "tabs.onZoomChange", fire => {
+        onZoomChange: new EventManager(context, "tabs.onZoomChange", fire => {
           let getZoomLevel = browser => {
             let {ZoomManager} = browser.ownerGlobal;
 
