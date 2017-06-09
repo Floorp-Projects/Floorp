@@ -34,8 +34,9 @@ var ParentUtils = {
         sendAsyncMessage("formHistoryUpdated", { ok: false });
       },
       handleCompletion(reason) {
-        if (!reason)
+        if (!reason) {
           sendAsyncMessage("formHistoryUpdated", { ok: true });
+        }
       },
     };
     FormHistory.update(changes, handler);
@@ -48,10 +49,12 @@ var ParentUtils = {
 
   countEntries(name, value) {
     let obj = {};
-    if (name)
+    if (name) {
       obj.fieldname = name;
-    if (value)
+    }
+    if (value) {
       obj.value = value;
+    }
 
     let count = 0;
     let listener = {

@@ -336,8 +336,9 @@ function makeMoveToDeletedStatement(aGuid, aNow, aData, aBindingArrays) {
     } else {
       // TODO: Add these items to the deleted items table once we've sorted
       //       out the issues from bug 756701
-      if (!queryTerms)
+      if (!queryTerms) {
         return undefined;
+      }
 
       query += " SELECT guid, :timeDeleted FROM moz_formhistory WHERE " + queryTerms;
     }
@@ -383,8 +384,9 @@ XPCOMUtils.defineLazyGetter(this, "dbConnection", function() {
     _dbConnection = Services.storage.openUnsharedDatabase(dbFile);
     dbInit();
   } catch (e) {
-    if (e.result != Cr.NS_ERROR_FILE_CORRUPTED)
+    if (e.result != Cr.NS_ERROR_FILE_CORRUPTED) {
       throw e;
+    }
     dbCleanup(dbFile);
     _dbConnection = Services.storage.openUnsharedDatabase(dbFile);
     dbInit();
