@@ -86,11 +86,11 @@
   <string name="contextmenu_image_save">保存图片</string>
   <string name="contextmenu_image_warning"><![CDATA[在您擦除 %1$s 历史记录时，已保存和已分享的图像<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#19981;&#20250;&#34987;&#21024;&#38500;</b>。]]></string>
   <string name="firstrun_tracking_title">避开监视，浏览网络</string>
-  <string name="firstrun_tracking_text">浏览器时自动屏蔽网络跟踪器。之后可以点按应用程序或通知中的垃圾桶图标，删除访问过的页面和 Cookie。</string>
+  <string name="firstrun_tracking_text">在您浏览时自动屏蔽网络跟踪器。之后可以点按应用程序或通知中的垃圾桶图标来删除访问记录和 Cookie。</string>
   <string name="firstrun_defaultbrowser_title">强化您的隐私</string>
   <string name="firstrun_defaultbrowser_text">将 %1$s 设为您的默认浏览器，便于从其他 Android 应用访问网站时使用隐私浏览。</string>
   <string name="firstrun_breaking_title">快速解决\n拦截导致的故障</string>
-  <string name="firstrun_breaking_text">当拦截网上跟踪器的功能意外致使网站故障时，使用菜单可以关闭拦截功能。</string>
+  <string name="firstrun_breaking_text">当拦截网上跟踪器的功能意外致使网站功能故障时，使用菜单可以关闭拦截功能。</string>
   <string name="firstrun_close_button">明白了！</string>
   <string name="firstrun_skip_button">跳过</string>
   <string name="firstrun_next_button">下一步</string>

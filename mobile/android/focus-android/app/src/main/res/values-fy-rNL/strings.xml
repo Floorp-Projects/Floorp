@@ -86,9 +86,9 @@
   <string name="contextmenu_image_save">Ofbylding bewarje</string>
   <string name="contextmenu_image_warning"><![CDATA["Bewarre en dielde ôfbyldingen "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">wurde net fuortsmiten</b>" as jo skiednis fan %1$s wiskje."]]></string>
   <string name="firstrun_tracking_title">Sneup as oft gjinien meisjocht</string>
-  <string name="firstrun_tracking_text">Blokkearje automatysk onlinetrackers wylst jo sneupje. Smyt dêrnei besochte siden en cookies mei ien tik nei it jiskefetpiktogram yn de app of yn jo meldingen.</string>
+  <string name="firstrun_tracking_text">Blokkearje automatysk onlinetrackers wylst jo sneupe. Smyt dêrnei besochte siden en cookies mei ien tik nei it jiskefetpiktogram yn de app of yn jo meldingen.</string>
   <string name="firstrun_defaultbrowser_title">Fergrutsje jo privacy</string>
-  <string name="firstrun_defaultbrowser_text">Stel %1$s yn as jo standertbrowser en genietsje fan de foardielen fan priveenavigaasje wannear\'t jo fan oare Android-apps út nei it web ferwise.</string>
+  <string name="firstrun_defaultbrowser_text">Stel %1$s yn as jo standertbrowser en genietsje fan de foardielen fan priveenavigaasje wannear\'t jo fan oare Android-apps út nei it web ferwize.</string>
   <string name="firstrun_breaking_title">In flugge oplossing as\nblokkearjen fersteuring jout</string>
   <string name="firstrun_breaking_text">Troch it neidiel fan it blokkearjen fan onlinetrackers wêrby in website defekt lykje kin, kinne jo blokkearring mei ien tik yn it helpmiddelenmenu útsette.</string>
   <string name="firstrun_close_button">OK, begrepen!</string>
