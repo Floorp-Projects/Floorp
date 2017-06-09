@@ -5,6 +5,8 @@
 
 #include "gtest/gtest.h"
 
+#include "base/message_loop.h"
+
 #include "mozilla/TaskQueue.h"
 #include "mozilla/MozPromise.h"
 
@@ -405,6 +407,26 @@ TEST(MozPromise, HeterogeneousChaining)
       EXPECT_EQ(94, *aVal.ResolveValue());
       queue->BeginShutdown();
     });
+}
+
+TEST(MozPromise, XPCOMEventTarget)
+{
+  TestPromise::CreateAndResolve(42, __func__)->Then(GetCurrentThreadSerialEventTarget(), __func__,
+    [] (int aResolveValue) -> void { EXPECT_EQ(aResolveValue, 42); },
+    DO_FAIL);
+
+  // Spin the event loop.
+  NS_ProcessPendingEvents(nullptr);
+}
+
+TEST(MozPromise, MessageLoopEventTarget)
+{
+  TestPromise::CreateAndResolve(42, __func__)->Then(MessageLoop::current()->SerialEventTarget(), __func__,
+    [] (int aResolveValue) -> void { EXPECT_EQ(aResolveValue, 42); },
+    DO_FAIL);
+
+  // Spin the event loop.
+  NS_ProcessPendingEvents(nullptr);
 }
 
 #undef DO_FAIL
