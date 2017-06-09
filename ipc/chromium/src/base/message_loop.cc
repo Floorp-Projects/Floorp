@@ -29,6 +29,7 @@
 #ifdef ANDROID
 #include "base/message_pump_android.h"
 #endif
+#include "nsISerialEventTarget.h"
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
 #include "TracedTaskCommon.h"
@@ -84,6 +85,84 @@ static LPTOP_LEVEL_EXCEPTION_FILTER GetTopSEHFilter() {
 
 //------------------------------------------------------------------------------
 
+class MessageLoop::EventTarget
+  : public nsISerialEventTarget
+  , public MessageLoop::DestructionObserver
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIEVENTTARGET_FULL
+
+  explicit EventTarget(MessageLoop* aLoop) : mLoop(aLoop) {
+    aLoop->AddDestructionObserver(this);
+  }
+
+private:
+  virtual ~EventTarget() {
+    if (mLoop) {
+      mLoop->RemoveDestructionObserver(this);
+    }
+  }
+
+  void WillDestroyCurrentMessageLoop() override {
+    mLoop->RemoveDestructionObserver(this);
+    mLoop = nullptr;
+  }
+
+  MessageLoop* mLoop;
+};
+
+NS_IMPL_ISUPPORTS(MessageLoop::EventTarget, nsIEventTarget, nsISerialEventTarget)
+
+NS_IMETHODIMP_(bool)
+MessageLoop::EventTarget::IsOnCurrentThreadInfallible()
+{
+  return mLoop == MessageLoop::current();
+}
+
+NS_IMETHODIMP
+MessageLoop::EventTarget::IsOnCurrentThread(bool* aResult)
+{
+  *aResult = IsOnCurrentThreadInfallible();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MessageLoop::EventTarget::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags)
+{
+  nsCOMPtr<nsIRunnable> event(aEvent);
+  return Dispatch(event.forget(), aFlags);
+}
+
+NS_IMETHODIMP
+MessageLoop::EventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
+{
+  if (!mLoop) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  if (aFlags != NS_DISPATCH_NORMAL) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  mLoop->PostTask(Move(aEvent));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MessageLoop::EventTarget::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
+                                          uint32_t aDelayMs)
+{
+  if (!mLoop) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  mLoop->PostDelayedTask(Move(aEvent), aDelayMs);
+  return NS_OK;
+}
+
+//------------------------------------------------------------------------------
+
 // static
 MessageLoop* MessageLoop::current() {
   return get_tls_ptr().Get();
@@ -103,7 +182,8 @@ MessageLoop::MessageLoop(Type type, nsIThread* aThread)
 #endif  // OS_WIN
       transient_hang_timeout_(0),
       permanent_hang_timeout_(0),
-      next_sequence_num_(0) {
+      next_sequence_num_(0),
+      mEventTarget(new EventTarget(this)) {
   DCHECK(!current()) << "should only have one message loop per thread";
   get_tls_ptr().Set(this);
 
@@ -522,6 +602,13 @@ bool MessageLoop::PendingTask::operator<(const PendingTask& other) const {
   // If the times happen to match, then we use the sequence number to decide.
   // Compare the difference to support integer roll-over.
   return (sequence_num - other.sequence_num) > 0;
+}
+
+//------------------------------------------------------------------------------
+// MessageLoop::SerialEventTarget
+
+nsISerialEventTarget* MessageLoop::SerialEventTarget() {
+  return mEventTarget;
 }
 
 //------------------------------------------------------------------------------
