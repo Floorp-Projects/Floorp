@@ -267,3 +267,39 @@ add_task(async function test_URIAndDomainCounts() {
   await BrowserTestUtils.removeTab(firstTab);
   await BrowserTestUtils.closeWindow(newWin);
 });
+
+function checkTabCountHistogram(result, expected, message) {
+  let expectedPadded = result.counts.map((val, idx) => idx < expected.length ? expected[idx] : 0);
+  Assert.deepEqual(result.counts, expectedPadded, message);
+}
+
+add_task(async function test_tabsHistogram() {
+  let openedTabs = [];
+  let tabCountHist = getAndClearHistogram("TAB_COUNT");
+
+  checkTabCountHistogram(tabCountHist.snapshot(), [0, 0], "TAB_COUNT telemetry - initial tab counts")
+
+  // Add a new tab and check that the count is right.
+  openedTabs.push(await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank"));
+  checkTabCountHistogram(tabCountHist.snapshot(), [0, 0, 1], "TAB_COUNT telemetry - opening tabs");
+
+  // Add two new tabs in the same window.
+  openedTabs.push(await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank"));
+  openedTabs.push(await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank"));
+  checkTabCountHistogram(tabCountHist.snapshot(), [0, 0, 1, 1, 1], "TAB_COUNT telemetry - opening more tabs");
+
+  // Add a new window and then some tabs in it. A new window starts with one tab.
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  checkTabCountHistogram(tabCountHist.snapshot(), [0, 0, 1, 1, 1, 1], "TAB_COUNT telemetry - opening window");
+
+  openedTabs.push(await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:blank"));
+  openedTabs.push(await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:blank"));
+  openedTabs.push(await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:blank"));
+  checkTabCountHistogram(tabCountHist.snapshot(), [0, 0, 1, 1, 1, 1, 1, 1, 1], "TAB_COUNT telemetry - opening more tabs in another window");
+
+  // Remove all the extra windows and tabs.
+  for (let tab of openedTabs) {
+    await BrowserTestUtils.removeTab(tab);
+  }
+  await BrowserTestUtils.closeWindow(win);
+});
