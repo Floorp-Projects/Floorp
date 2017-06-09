@@ -269,23 +269,6 @@ class CommonTestCase(unittest.TestCase):
                     pass
         self.marionette = None
 
-    def setup_SpecialPowers_observer(self):
-        self.marionette.set_context("chrome")
-        self.marionette.execute_script("""
-let SECURITY_PREF = "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
-Components.utils.import("resource://gre/modules/Preferences.jsm");
-Preferences.set(SECURITY_PREF, true);
-
-if (!testUtils.hasOwnProperty("specialPowersObserver")) {
-  let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-    .getService(Components.interfaces.mozIJSSubScriptLoader);
-  loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.jsm",
-    testUtils);
-  testUtils.specialPowersObserver = new testUtils.SpecialPowersObserver();
-  testUtils.specialPowersObserver.init();
-}
-""")
-
 
 class MarionetteTestCase(CommonTestCase):
 
