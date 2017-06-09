@@ -1548,6 +1548,55 @@ TSFStaticSink::IsTIPCategoryKeyboard(REFCLSID aTextService, LANGID aLangID,
 }
 
 /******************************************************************/
+/* TSFPreference                                                  */
+/******************************************************************/
+
+class TSFPrefs final
+{
+public:
+#define DECL_AND_IMPL_BOOL_PREF(aPref, aName, aDefaultValue)                   \
+  static bool aName ()                                                         \
+  {                                                                            \
+    static bool s ## aName ## Value =                                          \
+      Preferences::GetBool(aPref, aDefaultValue);                              \
+    return s ## aName ## Value;                                                \
+  }
+
+  DECL_AND_IMPL_BOOL_PREF(
+    "intl.tsf.hack.atok.create_native_caret",
+    NeedToCreateNativeCaretForLegacyATOK, true)
+  DECL_AND_IMPL_BOOL_PREF(
+    "intl.tsf.hack.atok.do_not_return_no_layout_error_of_composition_string",
+    DoNotReturnNoLayoutErrorToATOKOfCompositionString, true)
+  DECL_AND_IMPL_BOOL_PREF(
+    "intl.tsf.hack.ms_simplified_chinese.do_not_return_no_layout_error",
+    DoNotReturnNoLayoutErrorToMSSimplifiedTIP, true)
+  DECL_AND_IMPL_BOOL_PREF(
+    "intl.tsf.hack.ms_traditional_chinese.do_not_return_no_layout_error",
+    DoNotReturnNoLayoutErrorToMSTraditionalTIP, true)
+  DECL_AND_IMPL_BOOL_PREF(
+    "intl.tsf.hack.free_chang_jie.do_not_return_no_layout_error",
+    DoNotReturnNoLayoutErrorToFreeChangJie, true)
+  DECL_AND_IMPL_BOOL_PREF(
+    "intl.tsf.hack.easy_changjei.do_not_return_no_layout_error",
+    DoNotReturnNoLayoutErrorToEasyChangjei, true)
+  DECL_AND_IMPL_BOOL_PREF(
+    "intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_first_char",
+    DoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar, true)
+  DECL_AND_IMPL_BOOL_PREF(
+    "intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_caret",
+    DoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret, true)
+  DECL_AND_IMPL_BOOL_PREF(
+    "intl.tsf.hack.ms_simplified_chinese.query_insert_result",
+    NeedToHackQueryInsertForMSSimplifiedTIP, true)
+  DECL_AND_IMPL_BOOL_PREF(
+    "intl.tsf.hack.ms_traditional_chinese.query_insert_result",
+    NeedToHackQueryInsertForMSTraditionalTIP, true)
+
+#undef DECL_AND_IMPL_BOOL_PREF
+};
+
+/******************************************************************/
 /* TSFTextStore                                                   */
 /******************************************************************/
 
@@ -1561,17 +1610,6 @@ StaticRefPtr<ITfContext> TSFTextStore::sDisabledContext;
 StaticRefPtr<ITfInputProcessorProfiles> TSFTextStore::sInputProcessorProfiles;
 StaticRefPtr<TSFTextStore> TSFTextStore::sEnabledTextStore;
 DWORD TSFTextStore::sClientId  = 0;
-
-bool TSFTextStore::sCreateNativeCaretForLegacyATOK = false;
-bool TSFTextStore::sDoNotReturnNoLayoutErrorToATOKOfCompositionString = false;
-bool TSFTextStore::sDoNotReturnNoLayoutErrorToMSSimplifiedTIP = false;
-bool TSFTextStore::sDoNotReturnNoLayoutErrorToMSTraditionalTIP = false;
-bool TSFTextStore::sDoNotReturnNoLayoutErrorToFreeChangJie = false;
-bool TSFTextStore::sDoNotReturnNoLayoutErrorToEasyChangjei = false;
-bool TSFTextStore::sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar = false;
-bool TSFTextStore::sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret = false;
-bool TSFTextStore::sHackQueryInsertForMSSimplifiedTIP = false;
-bool TSFTextStore::sHackQueryInsertForMSTraditionalTIP = false;
 
 #define TEXTSTORE_DEFAULT_VIEW (1)
 
@@ -2357,10 +2395,10 @@ TSFTextStore::QueryInsert(LONG acpTestStart,
   // XXX need to adjust to cluster boundary
   // Assume we are given good offsets for now
   if (IsWin8OrLater() && !mComposition.IsComposing() &&
-      ((sHackQueryInsertForMSTraditionalTIP &&
+      ((TSFPrefs::NeedToHackQueryInsertForMSTraditionalTIP() &&
          (TSFStaticSink::IsMSChangJieActive() ||
           TSFStaticSink::IsMSQuickQuickActive())) ||
-       (sHackQueryInsertForMSSimplifiedTIP &&
+       (TSFPrefs::NeedToHackQueryInsertForMSSimplifiedTIP() &&
          (TSFStaticSink::IsMSPinyinActive() ||
           TSFStaticSink::IsMSWubiActive())))) {
     MOZ_LOG(sTextStoreLog, LogLevel::Warning,
@@ -4056,8 +4094,8 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
     // mode on Win7.  So, we should never return TS_E_NOLAYOUT to MS IME for
     // Japanese.
     if (kIsMSOfficeJapaneseIME2010 ||
-        ((sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar ||
-          sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret) &&
+        ((TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar() ||
+          TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret()) &&
          TSFStaticSink::IsMSJapaneseIMEActive())) {
       // Basically, MS-IME tries to retrieve whole composition string rect
       // at deciding suggest window immediately after unlocking the document.
@@ -4065,7 +4103,7 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
       // Therefore, if the first character at the retrieving range rect is
       // available, we should use it as the result.
       if ((kIsMSOfficeJapaneseIME2010 ||
-           sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar) &&
+           TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar()) &&
           acpStart < acpEnd) {
         acpEnd = acpStart;
         dontReturnNoLayoutError = true;
@@ -4075,7 +4113,7 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
       // before unlocking the document.  In such case, we should return the
       // nearest character rect.
       else if ((kIsMSOfficeJapaneseIME2010 ||
-                sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret) &&
+                TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret()) &&
                acpStart == acpEnd &&
                selectionForTSF.IsCollapsed() &&
                selectionForTSF.EndOffset() == acpEnd) {
@@ -4101,10 +4139,10 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
     //     Mozilla window classes and we stop creating native caret for ATOK
     //     because creating native caret causes ATOK refers caret position
     //     when GetTextExt() returns TS_E_NOLAYOUT.
-    else if (sDoNotReturnNoLayoutErrorToATOKOfCompositionString &&
+    else if (TSFPrefs::DoNotReturnNoLayoutErrorToATOKOfCompositionString() &&
              TSFStaticSink::IsATOKActive() &&
              (!TSFStaticSink::IsATOKReferringNativeCaretActive() ||
-              !sCreateNativeCaretForLegacyATOK) &&
+              !TSFPrefs::NeedToCreateNativeCaretForLegacyATOK()) &&
              mComposition.mStart == acpStart &&
              mComposition.EndOffset() == acpEnd) {
       dontReturnNoLayoutError = true;
@@ -4113,9 +4151,9 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
     // ITfContextView::GetTextExt() properly.  Prehaps, it's due to the bug of
     // TSF.  We need to check if this is necessary on Windows 10 before
     // disabling this on Windows 10.
-    else if ((sDoNotReturnNoLayoutErrorToFreeChangJie &&
+    else if ((TSFPrefs::DoNotReturnNoLayoutErrorToFreeChangJie() &&
               TSFStaticSink::IsFreeChangJieActive()) ||
-             (sDoNotReturnNoLayoutErrorToEasyChangjei &&
+             (TSFPrefs::DoNotReturnNoLayoutErrorToEasyChangjei() &&
               TSFStaticSink::IsEasyChangjeiActive())) {
       acpEnd = mComposition.mStart;
       acpStart = std::min(acpStart, acpEnd);
@@ -4123,13 +4161,14 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
     }
     // Some Chinese TIPs of Microsoft doesn't show candidate window in e10s
     // mode on Win8 or later.
-    else if (IsWin8OrLater() &&
-             ((sDoNotReturnNoLayoutErrorToMSTraditionalTIP &&
-               (TSFStaticSink::IsMSChangJieActive() ||
-                TSFStaticSink::IsMSQuickQuickActive())) ||
-              (sDoNotReturnNoLayoutErrorToMSSimplifiedTIP &&
-                (TSFStaticSink::IsMSPinyinActive() ||
-                 TSFStaticSink::IsMSWubiActive())))) {
+    else if (
+      IsWin8OrLater() &&
+      ((TSFPrefs::DoNotReturnNoLayoutErrorToMSTraditionalTIP() &&
+        (TSFStaticSink::IsMSChangJieActive() ||
+         TSFStaticSink::IsMSQuickQuickActive())) ||
+       (TSFPrefs::DoNotReturnNoLayoutErrorToMSSimplifiedTIP() &&
+         (TSFStaticSink::IsMSPinyinActive() ||
+          TSFStaticSink::IsMSWubiActive())))) {
       acpEnd = mComposition.mStart;
       acpStart = std::min(acpStart, acpEnd);
       dontReturnNoLayoutError = true;
@@ -4278,7 +4317,7 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
   // class name is one of Mozilla's windows for deciding candidate window
   // position.  Therefore, we need to create native caret only when ATOK 2011 -
   // 2016 is active.
-  if (sCreateNativeCaretForLegacyATOK &&
+  if (TSFPrefs::NeedToCreateNativeCaretForLegacyATOK() &&
       TSFStaticSink::IsATOKReferringNativeCaretActive() &&
       mComposition.IsComposing() &&
       mComposition.mStart <= acpStart && mComposition.EndOffset() >= acpStart &&
@@ -6144,58 +6183,11 @@ TSFTextStore::Initialize()
   sDisabledDocumentMgr = disabledDocumentMgr;
   sDisabledContext = disabledContext;
 
-  sCreateNativeCaretForLegacyATOK =
-    Preferences::GetBool("intl.tsf.hack.atok.create_native_caret", true);
-  sDoNotReturnNoLayoutErrorToATOKOfCompositionString =
-    Preferences::GetBool(
-      "intl.tsf.hack.atok.do_not_return_no_layout_error_of_composition_string",
-      true);
-  sDoNotReturnNoLayoutErrorToMSSimplifiedTIP =
-    Preferences::GetBool(
-      "intl.tsf.hack.ms_simplified_chinese.do_not_return_no_layout_error",
-      true);
-  sDoNotReturnNoLayoutErrorToMSTraditionalTIP =
-    Preferences::GetBool(
-      "intl.tsf.hack.ms_traditional_chinese.do_not_return_no_layout_error",
-      true);
-  sDoNotReturnNoLayoutErrorToFreeChangJie =
-    Preferences::GetBool(
-      "intl.tsf.hack.free_chang_jie.do_not_return_no_layout_error", true);
-  sDoNotReturnNoLayoutErrorToEasyChangjei =
-    Preferences::GetBool(
-      "intl.tsf.hack.easy_changjei.do_not_return_no_layout_error", true);
-  sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar =
-    Preferences::GetBool(
-      "intl.tsf.hack.ms_japanese_ime."
-      "do_not_return_no_layout_error_at_first_char", true);
-  sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret =
-    Preferences::GetBool(
-      "intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_caret",
-      true);
-  sHackQueryInsertForMSSimplifiedTIP =
-    Preferences::GetBool(
-      "intl.tsf.hack.ms_simplified_chinese.query_insert_result", true);
-  sHackQueryInsertForMSTraditionalTIP =
-    Preferences::GetBool(
-      "intl.tsf.hack.ms_traditional_chinese.query_insert_result", true);
-
   MOZ_LOG(sTextStoreLog, LogLevel::Info,
     ("  TSFTextStore::Initialize(), sThreadMgr=0x%p, "
-     "sClientId=0x%08X, sDisabledDocumentMgr=0x%p, sDisabledContext=%p, "
-     "sCreateNativeCaretForLegacyATOK=%s, "
-     "sDoNotReturnNoLayoutErrorToATOKOfCompositionString=%s, "
-     "sDoNotReturnNoLayoutErrorToFreeChangJie=%s, "
-     "sDoNotReturnNoLayoutErrorToEasyChangjei=%s, "
-     "sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar=%s, "
-     "sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret=%s",
+     "sClientId=0x%08X, sDisabledDocumentMgr=0x%p, sDisabledContext=%p",
      sThreadMgr.get(), sClientId,
-     sDisabledDocumentMgr.get(), sDisabledContext.get(),
-     GetBoolName(sCreateNativeCaretForLegacyATOK),
-     GetBoolName(sDoNotReturnNoLayoutErrorToATOKOfCompositionString),
-     GetBoolName(sDoNotReturnNoLayoutErrorToFreeChangJie),
-     GetBoolName(sDoNotReturnNoLayoutErrorToEasyChangjei),
-     GetBoolName(sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar),
-     GetBoolName(sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret)));
+     sDisabledDocumentMgr.get(), sDisabledContext.get()));
 }
 
 // static

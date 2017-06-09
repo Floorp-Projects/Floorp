@@ -1032,18 +1032,6 @@ protected:
 
   // TSF client ID for the current application
   static DWORD sClientId;
-
-  // Enables/Disables hack for specific TIP.
-  static bool sCreateNativeCaretForLegacyATOK;
-  static bool sDoNotReturnNoLayoutErrorToATOKOfCompositionString;
-  static bool sDoNotReturnNoLayoutErrorToMSSimplifiedTIP;
-  static bool sDoNotReturnNoLayoutErrorToMSTraditionalTIP;
-  static bool sDoNotReturnNoLayoutErrorToFreeChangJie;
-  static bool sDoNotReturnNoLayoutErrorToEasyChangjei;
-  static bool sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar;
-  static bool sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret;
-  static bool sHackQueryInsertForMSSimplifiedTIP;
-  static bool sHackQueryInsertForMSTraditionalTIP;
 };
 
 } // namespace widget
