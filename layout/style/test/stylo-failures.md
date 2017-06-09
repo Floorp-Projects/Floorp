@@ -99,8 +99,6 @@ to mochitest command.
   * :-moz-tree bits bug 1348488
     * test_selectors.html `:-moz-tree` [10]
 * Unsupported pseudo-classes
-  * :-moz-locale-dir is internal bug 1367310
-    * test_selectors.html `:-moz-locale-dir` [15]
   * :-moz-lwtheme-* bug 1367312
     * test_selectors.html `:-moz-lwtheme` [3]
   * :-moz-window-inactive bug 1348489

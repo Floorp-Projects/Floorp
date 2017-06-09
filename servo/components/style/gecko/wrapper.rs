@@ -726,17 +726,6 @@ impl<'le> TElement for GeckoElement<'le> {
         }
     }
 
-    #[inline]
-    fn attr_equals(&self, namespace: &Namespace, attr: &Atom, val: &Atom) -> bool {
-        unsafe {
-            bindings::Gecko_AttrEquals(self.0,
-                                       namespace.0.as_ptr(),
-                                       attr.as_ptr(),
-                                       val.as_ptr(),
-                                       /* ignoreCase = */ false)
-        }
-    }
-
     fn each_class<F>(&self, callback: F)
         where F: FnMut(&Atom)
     {
@@ -874,20 +863,12 @@ impl<'le> TElement for GeckoElement<'le> {
             computed_data.as_ref().map(|d| d.styles().primary.values());
         let computed_values_opt =
             computed_values.map(|v| *HasArcFFI::arc_as_borrowed(v));
-        let parent_element = self.parent_element();
-        let parent_data =
-            parent_element.as_ref().and_then(|e| e.borrow_data());
-        let parent_values =
-            parent_data.as_ref().map(|d| d.styles().primary.values());
-        let parent_values_opt =
-            parent_values.map(|v| *HasArcFFI::arc_as_borrowed(v));
         let before_change_values =
             before_change_style.as_ref().map(|v| *HasArcFFI::arc_as_borrowed(v));
         unsafe {
             Gecko_UpdateAnimations(self.0,
                                    before_change_values,
                                    computed_values_opt,
-                                   parent_values_opt,
                                    tasks.bits());
         }
     }
@@ -1363,30 +1344,35 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
                             ns.atom_or_null(),
                             local_name.as_ptr(),
                             expected_value.as_ptr(),
+                            ignore_case,
                         ),
                         AttrSelectorOperator::DashMatch => bindings::Gecko_AttrDashEquals(
                             self.0,
                             ns.atom_or_null(),
                             local_name.as_ptr(),
                             expected_value.as_ptr(),
+                            ignore_case,
                         ),
                         AttrSelectorOperator::Prefix => bindings::Gecko_AttrHasPrefix(
                             self.0,
                             ns.atom_or_null(),
                             local_name.as_ptr(),
                             expected_value.as_ptr(),
+                            ignore_case,
                         ),
                         AttrSelectorOperator::Suffix => bindings::Gecko_AttrHasSuffix(
                             self.0,
                             ns.atom_or_null(),
                             local_name.as_ptr(),
                             expected_value.as_ptr(),
+                            ignore_case,
                         ),
                         AttrSelectorOperator::Substring => bindings::Gecko_AttrHasSubstring(
                             self.0,
                             ns.atom_or_null(),
                             local_name.as_ptr(),
                             expected_value.as_ptr(),
+                            ignore_case,
                         ),
                     }
                 }

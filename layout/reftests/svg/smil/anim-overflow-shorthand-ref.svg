@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Reference for animation of the "overflow" shorthand attribute</title>
+
+  <rect width="100%" height="100%" fill="none"/>
+  <marker id="marker" markerWidth="20" markerHeight="20"
+          viewBox="0 0 10 10" style="overflow: hidden">
+    <path fill="red" d="M 0 0 L 20 10 L 0 20 z" />
+  </marker>
+  <line x2="0" y2="0" marker-end="url(#marker)" stroke="transparent"/>
+</svg>

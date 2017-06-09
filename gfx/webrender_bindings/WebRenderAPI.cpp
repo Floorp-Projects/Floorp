@@ -582,14 +582,17 @@ void
 DisplayListBuilder::PushClip(const WrRect& aClipRect,
                              const WrImageMask* aMask)
 {
-  WRDL_LOG("PushClip r=%s m=%p\n", Stringify(aClipRect).c_str(), aMask);
-  wr_dp_push_clip(mWrState, aClipRect, aMask);
+  uint64_t clip_id = wr_dp_push_clip(mWrState, aClipRect, aMask);
+  WRDL_LOG("PushClip id=%" PRIu64 " r=%s m=%p\n", clip_id,
+      Stringify(aClipRect).c_str(), aMask);
+  mClipIdStack.push_back(clip_id);
 }
 
 void
 DisplayListBuilder::PopClip()
 {
-  WRDL_LOG("PopClip\n");
+  WRDL_LOG("PopClip id=%" PRIu64 "\n", mClipIdStack.back());
+  mClipIdStack.pop_back();
   wr_dp_pop_clip(mWrState);
 }
 
@@ -609,13 +612,31 @@ DisplayListBuilder::PushScrollLayer(const layers::FrameMetrics::ViewID& aScrollI
   WRDL_LOG("PushScrollLayer id=%" PRIu64 " co=%s cl=%s\n",
       aScrollId, Stringify(aContentRect).c_str(), Stringify(aClipRect).c_str());
   wr_dp_push_scroll_layer(mWrState, aScrollId, aContentRect, aClipRect);
+  mScrollIdStack.push_back(aScrollId);
 }
 
 void
 DisplayListBuilder::PopScrollLayer()
 {
-  WRDL_LOG("PopScrollLayer\n");
+  WRDL_LOG("PopScrollLayer id=%" PRIu64 "\n", mScrollIdStack.back());
+  mScrollIdStack.pop_back();
   wr_dp_pop_scroll_layer(mWrState);
+}
+
+void
+DisplayListBuilder::PushClipAndScrollInfo(const layers::FrameMetrics::ViewID& aScrollId,
+                                          const uint64_t* aClipId)
+{
+  WRDL_LOG("PushClipAndScroll s=%" PRIu64 " c=%s\n", aScrollId,
+      aClipId ? Stringify(*aClipId).c_str() : "none");
+  wr_dp_push_clip_and_scroll_info(mWrState, aScrollId, aClipId);
+}
+
+void
+DisplayListBuilder::PopClipAndScrollInfo()
+{
+  WRDL_LOG("PopClipAndScroll\n");
+  wr_dp_pop_clip_and_scroll_info(mWrState);
 }
 
 void
@@ -864,6 +885,29 @@ DisplayListBuilder::PushClipRegion(const WrRect& aMain,
                                 aMain,
                                 aComplex.Elements(), aComplex.Length(),
                                 aMask);
+}
+
+Maybe<uint64_t>
+DisplayListBuilder::TopmostClipId()
+{
+  if (mClipIdStack.empty()) {
+    return Nothing();
+  }
+  return Some(mClipIdStack.back());
+}
+
+Maybe<layers::FrameMetrics::ViewID>
+DisplayListBuilder::ParentScrollIdFor(layers::FrameMetrics::ViewID aScrollId)
+{
+  // Finds the scrollId in mScrollIdStack immediately before aScrollId, or
+  // returns Nothing() if it can't find one
+  for (auto it = mScrollIdStack.rbegin(); it != mScrollIdStack.rend(); it++) {
+    if (*it == aScrollId) {
+      it++;
+      return (it == mScrollIdStack.rend() ? Nothing() : Some(*it));
+    }
+  }
+  return Nothing();
 }
 
 } // namespace wr

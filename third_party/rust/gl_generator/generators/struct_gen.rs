@@ -19,7 +19,9 @@ use std::io;
 pub struct StructGenerator;
 
 impl super::Generator for StructGenerator {
-    fn write<W>(&self, registry: &Registry, dest: &mut W) -> io::Result<()> where W: io::Write {
+    fn write<W>(&self, registry: &Registry, dest: &mut W) -> io::Result<()>
+        where W: io::Write
+    {
         try!(write_header(dest));
         try!(write_type_aliases(registry, dest));
         try!(write_enums(registry, dest));
@@ -33,8 +35,11 @@ impl super::Generator for StructGenerator {
 
 /// Creates a `__gl_imports` module which contains all the external symbols that we need for the
 ///  bindings.
-fn write_header<W>(dest: &mut W) -> io::Result<()> where W: io::Write {
-    writeln!(dest, r#"
+fn write_header<W>(dest: &mut W) -> io::Result<()>
+    where W: io::Write
+{
+    writeln!(dest,
+             r#"
         mod __gl_imports {{
             pub use std::mem;
             pub use std::marker::Send;
@@ -46,8 +51,11 @@ fn write_header<W>(dest: &mut W) -> io::Result<()> where W: io::Write {
 /// Creates a `types` module which contains all the type aliases.
 ///
 /// See also `generators::gen_types`.
-fn write_type_aliases<W>(registry: &Registry, dest: &mut W) -> io::Result<()> where W: io::Write {
-    try!(writeln!(dest, r#"
+fn write_type_aliases<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
+    where W: io::Write
+{
+    try!(writeln!(dest,
+                  r#"
         pub mod types {{
             #![allow(non_camel_case_types, non_snake_case, dead_code, missing_copy_implementations)]
     "#));
@@ -58,7 +66,9 @@ fn write_type_aliases<W>(registry: &Registry, dest: &mut W) -> io::Result<()> wh
 }
 
 /// Creates all the `<enum>` elements at the root of the bindings.
-fn write_enums<W>(registry: &Registry, dest: &mut W) -> io::Result<()> where W: io::Write {
+fn write_enums<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
+    where W: io::Write
+{
     for enm in &registry.enums {
         try!(super::gen_enum_item(enm, "types::", dest));
     }
@@ -67,8 +77,11 @@ fn write_enums<W>(registry: &Registry, dest: &mut W) -> io::Result<()> where W: 
 }
 
 /// Creates a `FnPtr` structure which contains the store for a single binding.
-fn write_fnptr_struct_def<W>(dest: &mut W) -> io::Result<()> where W: io::Write {
-    writeln!(dest, "
+fn write_fnptr_struct_def<W>(dest: &mut W) -> io::Result<()>
+    where W: io::Write
+{
+    writeln!(dest,
+             "
         #[allow(dead_code, missing_copy_implementations)]
         #[derive(Clone)]
         pub struct FnPtr {{
@@ -106,26 +119,29 @@ fn write_fnptr_struct_def<W>(dest: &mut W) -> io::Result<()> where W: io::Write 
 /// Creates a `panicking` module which contains one function per GL command.
 ///
 /// These functions are the mocks that are called if the real function could not be loaded.
-fn write_panicking_fns<W>(registry: &Registry, dest: &mut W) -> io::Result<()> where W: io::Write {
+fn write_panicking_fns<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
+    where W: io::Write
+{
     writeln!(dest,
-        "#[inline(never)]
+             "#[inline(never)]
         fn missing_fn_panic() -> ! {{
             panic!(\"{api} function was not loaded\")
         }}",
-        api = registry.api
-    )
+             api = registry.api)
 }
 
 /// Creates a structure which stores all the `FnPtr` of the bindings.
 ///
 /// The name of the struct corresponds to the namespace.
-fn write_struct<W>(registry: &Registry, dest: &mut W) -> io::Result<()> where W: io::Write {
-    try!(writeln!(dest, "
+fn write_struct<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
+    where W: io::Write
+{
+    try!(writeln!(dest,
+                  "
         #[allow(non_camel_case_types, non_snake_case, dead_code)]
         #[derive(Clone)]
         pub struct {api} {{",
-        api = super::gen_struct_name(registry.api)
-    ));
+                  api = super::gen_struct_name(registry.api)));
 
     for cmd in &registry.cmds {
         if let Some(v) = registry.aliases.get(&cmd.proto.ident) {
@@ -138,9 +154,11 @@ fn write_struct<W>(registry: &Registry, dest: &mut W) -> io::Result<()> where W:
 }
 
 /// Creates the `impl` of the structure created by `write_struct`.
-fn write_impl<W>(registry: &Registry, dest: &mut W) -> io::Result<()> where W: io::Write {
+fn write_impl<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
+    where W: io::Write
+{
     try!(writeln!(dest,
-        "impl {api} {{
+                  "impl {api} {{
             /// Load each OpenGL symbol using a custom load function. This allows for the
             /// use of functions like `glfwGetProcAddress` or `SDL_GL_GetProcAddress`.
             ///
@@ -167,8 +185,7 @@ fn write_impl<W>(registry: &Registry, dest: &mut W) -> io::Result<()> where W: i
                     do_metaloadfn(&mut loadfn, symbol, symbols)
                 }};
                 {api} {{",
-        api = super::gen_struct_name(registry.api)
-    ));
+                  api = super::gen_struct_name(registry.api)));
 
     for cmd in &registry.cmds {
         try!(writeln!(dest,
@@ -187,9 +204,8 @@ fn write_impl<W>(registry: &Registry, dest: &mut W) -> io::Result<()> where W: i
     }
 
     try!(writeln!(dest,
-            "}}
-        }}"
-    ));
+                  "}}
+        }}"));
 
     for cmd in &registry.cmds {
         try!(writeln!(dest,
@@ -207,9 +223,8 @@ fn write_impl<W>(registry: &Registry, dest: &mut W) -> io::Result<()> where W: i
     }
 
     writeln!(dest,
-        "}}
+             "}}
 
         unsafe impl __gl_imports::Send for {api} {{}}",
-        api = super::gen_struct_name(registry.api)
-    )
+             api = super::gen_struct_name(registry.api))
 }

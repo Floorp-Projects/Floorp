@@ -32,14 +32,12 @@
 //! * We check that the target and candidate have the same inline style and
 //!   presentation hint declarations.  This addresses constraint 3.
 //!
-//! * We ensure that elements that have pseudo-element styles are not inserted
-//!   into the cache.  This partially addresses constraint 4.
-//!
 //! * We ensure that a target matches a candidate only if they have the same
 //!   matching result for all selectors that target either elements or the
-//!   originating elements of pseudo-elements.  This addresses the second half
-//!   of constraint 4 (because it prevents a target that has pseudo-element
-//!   styles from matching any candidate) as well as constraint 2.
+//!   originating elements of pseudo-elements.  This addresses constraint 4
+//!   (because it prevents a target that has pseudo-element styles from matching
+//!   a candidate that has different pseudo-element styles) as well as
+//!   constraint 2.
 //!
 //! The actual checks that ensure that elements match the same rules are
 //! conceptually split up into two pieces.  First, we do various checks on
@@ -61,20 +59,21 @@
 //! the up-front checks but would have different matching results for the
 //! selector in question.  In this case, "descendants" includes pseudo-elements,
 //! so there is a single selector map of revalidation selectors that includes
-//! both selectors targeting element and selectors targeting pseudo-elements.
-//! This relies on matching an element against a pseudo-element-targeting
-//! selector being a sensible operation that will effectively check whether that
-//! element is a matching originating element for the selector.
+//! both selectors targeting elements and selectors targeting pseudo-element
+//! originating elements.  We ensure that the pseudo-element parts of all these
+//! selectors are effectively stripped off, so that matching them all against
+//! elements makes sense.
 
 use Atom;
 use bit_vec::BitVec;
 use bloom::StyleBloom;
 use cache::{LRUCache, LRUCacheMutIterator};
 use context::{SelectorFlagsMap, SharedStyleContext, StyleContext};
-use data::{ComputedStyle, ElementData, ElementStyles};
+use data::{ElementData, ElementStyles};
 use dom::{TElement, SendElement};
 use matching::{ChildCascadeRequirement, MatchMethods};
 use properties::ComputedValues;
+use selector_parser::RestyleDamage;
 use selectors::matching::{ElementSelectorFlags, VisitedHandlingMode, StyleRelations};
 use smallvec::SmallVec;
 use std::mem;
@@ -84,8 +83,16 @@ use stylist::{ApplicableDeclarationBlock, Stylist};
 mod checks;
 
 /// The amount of nodes that the style sharing candidate cache should hold at
-/// most.
-pub const STYLE_SHARING_CANDIDATE_CACHE_SIZE: usize = 8;
+/// most.  We'd somewhat like 32, but ArrayDeque only implements certain backing
+/// store sizes.  A cache size of 32 would mean a backing store of 33, but
+/// that's not an implemented size: we can do 32 or 40.
+///
+/// The cache size was chosen by measuring style sharing and resulting
+/// performance on a few pages; sizes up to about 32 were giving good sharing
+/// improvements (e.g. 3x fewer styles having to be resolved than at size 8) and
+/// slight performance improvements.  Sizes larger than 32 haven't really been
+/// tested.
+pub const STYLE_SHARING_CANDIDATE_CACHE_SIZE: usize = 31;
 
 /// Controls whether the style sharing cache is used.
 #[derive(Clone, Copy, PartialEq)]
@@ -351,6 +358,61 @@ impl<E: TElement> StyleSharingTarget<E> {
             self.validation_data.take();
         result
     }
+
+    fn accumulate_damage_when_sharing(&self,
+                                      shared_context: &SharedStyleContext,
+                                      shared_style: &ElementStyles,
+                                      data: &mut ElementData) -> ChildCascadeRequirement {
+        // Accumulate restyle damage for the case when our sharing
+        // target managed to share style.  This can come from several
+        // sources:
+        //
+        // 1) We matched a different set of eager pseudos (which
+        //    should cause a reconstruct).
+        // 2) We have restyle damage from the eager pseudo computed
+        //    styles.
+        // 3) We have restyle damage from our own computed styles.
+        if data.has_styles() {
+            // We used to have pseudos (because we had styles).
+            // Check for damage from the set of pseudos changing or
+            // pseudos being restyled.
+            let (styles, restyle_data) = data.styles_and_restyle_mut();
+            if let Some(restyle_data) = restyle_data {
+                let old_pseudos = &styles.pseudos;
+                let new_pseudos = &shared_style.pseudos;
+                if !old_pseudos.has_same_pseudos_as(new_pseudos) {
+                    restyle_data.damage |= RestyleDamage::reconstruct();
+                } else {
+                    // It's a bit unfortunate that we have to keep
+                    // mapping PseudoElements back to indices
+                    // here....
+                    for pseudo in old_pseudos.keys() {
+                        let old_values =
+                            old_pseudos.get(&pseudo).unwrap().values.as_ref().map(|v| &**v);
+                        let new_values =
+                            new_pseudos.get(&pseudo).unwrap().values();
+                        self.element.accumulate_damage(
+                            &shared_context,
+                            Some(restyle_data),
+                            old_values,
+                            new_values,
+                            Some(&pseudo)
+                        );
+                    }
+                }
+            }
+        }
+
+        let old_values = data.get_styles_mut()
+                             .and_then(|s| s.primary.values.take());
+        self.element.accumulate_damage(
+            &shared_context,
+            data.get_restyle_mut(),
+            old_values.as_ref().map(|v| &**v),
+            shared_style.primary.values(),
+            None
+        )
+    }
 }
 
 /// A cache miss result.
@@ -453,11 +515,6 @@ impl<E: TElement> StyleSharingCandidateCache<E> {
 
         // These are things we don't check in the candidate match because they
         // are either uncommon or expensive.
-        if !checks::relations_are_shareable(&relations) {
-            debug!("Failing to insert to the cache: {:?}", relations);
-            return;
-        }
-
         let box_style = style.get_box();
         if box_style.specifies_transitions() {
             debug!("Failing to insert to the cache: transitions");
@@ -540,26 +597,13 @@ impl<E: TElement> StyleSharingCandidateCache<E> {
                 Ok(shared_style) => {
                     // Yay, cache hit. Share the style.
 
-                    // Accumulate restyle damage.
                     debug_assert_eq!(data.has_styles(), data.has_restyle());
-                    let old_values = data.get_styles_mut()
-                                         .and_then(|s| s.primary.values.take());
-                    let child_cascade_requirement =
-                        target.accumulate_damage(
-                            &shared_context,
-                            data.get_restyle_mut(),
-                            old_values.as_ref().map(|v| &**v),
-                            shared_style.values(),
-                            None
-                        );
 
-                    // We never put elements with pseudo style into the style
-                    // sharing cache, so we can just mint an ElementStyles
-                    // directly here.
-                    //
-                    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1329361
-                    let styles = ElementStyles::new(shared_style);
-                    data.set_styles(styles);
+                    let child_cascade_requirement =
+                        target.accumulate_damage_when_sharing(shared_context,
+                                                              &shared_style,
+                                                              data);
+                    data.set_styles(shared_style);
 
                     return StyleSharingResult::StyleWasShared(i, child_cascade_requirement)
                 }
@@ -590,7 +634,7 @@ impl<E: TElement> StyleSharingCandidateCache<E> {
                       shared: &SharedStyleContext,
                       bloom: &StyleBloom<E>,
                       selector_flags_map: &mut SelectorFlagsMap<E>)
-                      -> Result<ComputedStyle, CacheMiss> {
+                      -> Result<ElementStyles, CacheMiss> {
         macro_rules! miss {
             ($miss: ident) => {
                 return Err(CacheMiss::$miss);
@@ -666,6 +710,6 @@ impl<E: TElement> StyleSharingCandidateCache<E> {
 
         debug!("Sharing style between {:?} and {:?}",
                target.element, candidate.element);
-        Ok(data.styles().primary.clone())
+        Ok(data.styles().clone())
     }
 }

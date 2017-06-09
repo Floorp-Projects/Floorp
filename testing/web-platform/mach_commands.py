@@ -66,7 +66,7 @@ class WebPlatformTestsRunner(MozbuildObject):
         kwargs["capture_stdio"] = True
 
         if kwargs["webdriver_binary"] is None:
-            kwargs["webdriver_binary"] = self.get_binary_path("geckodriver")
+            kwargs["webdriver_binary"] = self.get_binary_path("geckodriver", validate_exists=False)
 
         kwargs = wptcommandline.check_args(kwargs)
 
@@ -299,12 +299,12 @@ testing/web-platform/tests for tests that may be shared
 
 
 class WPTManifestUpdater(MozbuildObject):
-    def run_update(self, check_clean=False, **kwargs):
+    def run_update(self, check_clean=False, rebuild=False, **kwargs):
         import manifestupdate
         from wptrunner import wptlogging
         logger = wptlogging.setup(kwargs, {"mach": sys.stdout})
         wpt_dir = os.path.abspath(os.path.join(self.topsrcdir, 'testing', 'web-platform'))
-        manifestupdate.update(logger, wpt_dir, check_clean)
+        manifestupdate.update(logger, wpt_dir, check_clean, rebuild)
 
 
 def create_parser_wpt():

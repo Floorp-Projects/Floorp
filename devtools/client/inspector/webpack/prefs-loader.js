@@ -57,6 +57,8 @@ module.exports = function (content) {
         ignoring = !ifMap[line];
       } else if (line.startsWith("#else")) {
         ignoring = !ignoring;
+      } else if (line.startsWith("#endif")) {
+        ignoring = false;
       }
     }
 

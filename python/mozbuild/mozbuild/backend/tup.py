@@ -11,9 +11,11 @@ from mozbuild.base import MozbuildObject
 from mozbuild.backend.base import PartialBackend, HybridBackend
 from mozbuild.backend.recursivemake import RecursiveMakeBackend
 from mozbuild.shellutil import quote as shell_quote
+from mozbuild.util import OrderedDefaultDict
 
 from .common import CommonBackend
 from ..frontend.data import (
+    ChromeManifestEntry,
     ContextDerived,
     Defines,
     FinalTargetFiles,
@@ -124,6 +126,7 @@ class TupOnly(CommonBackend, PartialBackend):
 
         self._backend_files = {}
         self._cmd = MozbuildObject.from_environment()
+        self._manifest_entries = OrderedDefaultDict(set)
 
         # This is a 'group' dependency - All rules that list this as an output
         # will be built before any rules that list this as an input.
@@ -179,6 +182,14 @@ class TupOnly(CommonBackend, PartialBackend):
                 backend_file.delayed_generated_files.append(obj)
             else:
                 self._process_generated_file(backend_file, obj)
+        elif (isinstance(obj, ChromeManifestEntry) and
+              obj.install_target.startswith('dist/bin')):
+            top_level = mozpath.join(obj.install_target, 'chrome.manifest')
+            if obj.path != top_level:
+                entry = 'manifest %s' % mozpath.relpath(obj.path,
+                                                        obj.install_target)
+                self._manifest_entries[top_level].add(entry)
+            self._manifest_entries[obj.path].add(str(obj.entry))
         elif isinstance(obj, Defines):
             self._process_defines(backend_file, obj)
         elif isinstance(obj, HostDefines):
@@ -194,6 +205,13 @@ class TupOnly(CommonBackend, PartialBackend):
 
     def consume_finished(self):
         CommonBackend.consume_finished(self)
+
+        # The approach here is similar to fastermake.py, but we
+        # simply write out the resulting files here.
+        for target, entries in self._manifest_entries.iteritems():
+            with self._write_file(mozpath.join(self.environment.topobjdir,
+                                               target)) as fh:
+                fh.write(''.join('%s\n' % e for e in sorted(entries)))
 
         for objdir, backend_file in sorted(self._backend_files.items()):
             for obj in backend_file.delayed_generated_files:
@@ -353,6 +371,13 @@ class TupOnly(CommonBackend, PartialBackend):
                 cmd=cmd,
                 outputs=outputs,
             )
+
+        for manifest, entries in manager.interface_manifests.items():
+            for xpt in entries:
+                self._manifest_entries[manifest].add('interfaces %s' % xpt)
+
+        for m in manager.chrome_manifests:
+            self._manifest_entries[m].add('manifest components/interfaces.manifest')
 
     def _preprocess(self, backend_file, input_file, destdir=None):
         # .css files use '%' as the preprocessor marker, which must be scaped as

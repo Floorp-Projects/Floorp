@@ -1,5 +1,8 @@
 "use strict";
 
+// The ext-* files are imported into the same scopes.
+/* import-globals-from ext-toolkit.js */
+
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
                                   "resource://gre/modules/EventEmitter.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "idleService",

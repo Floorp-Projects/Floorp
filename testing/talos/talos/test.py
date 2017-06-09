@@ -245,6 +245,19 @@ class PageloaderTest(Test):
             'lower_is_better', 'alert_threshold', 'unit', 'webextensions']
 
 
+class QuantumPageloadTest(PageloaderTest):
+    """
+    Base class for a Quantum Pageload test
+    """
+    tpcycles = 1
+    tppagecycles = 25
+    gecko_profile_interval = 1
+    gecko_profile_entries = 2000000
+    filters = filter.ignore_first.prepare(5) + filter.median.prepare()
+    unit = 'ms'
+    lower_is_better = True
+
+
 @register_test()
 class tabpaint(PageloaderTest):
     """
@@ -795,15 +808,32 @@ class bloom_basic_ref(PageloaderTest):
 
 
 @register_test()
-class Quantum_1(PageloaderTest):
+class quantum_pageload_google(QuantumPageloadTest):
     """
-    Quantum Pageload Test 1
+    Quantum Pageload Test - Google
     """
-    tpmanifest = '${talos}/tests/quantum_pageload/quantum_1.manifest'
-    tpcycles = 1
-    tppagecycles = 25
-    gecko_profile_interval = 1
-    gecko_profile_entries = 2000000
-    filters = filter.ignore_first.prepare(5) + filter.median.prepare()
-    unit = 'ms'
-    lower_is_better = True
+    tpmanifest = '${talos}/tests/quantum_pageload/quantum_pageload_google.manifest'
+
+
+@register_test()
+class quantum_pageload_youtube(QuantumPageloadTest):
+    """
+    Quantum Pageload Test - YouTube
+    """
+    tpmanifest = '${talos}/tests/quantum_pageload/quantum_pageload_youtube.manifest'
+
+
+@register_test()
+class quantum_pageload_amazon(QuantumPageloadTest):
+    """
+    Quantum Pageload Test - Amazon
+    """
+    tpmanifest = '${talos}/tests/quantum_pageload/quantum_pageload_amazon.manifest'
+
+
+@register_test()
+class quantum_pageload_facebook(QuantumPageloadTest):
+    """
+    Quantum Pageload Test - Facebook
+    """
+    tpmanifest = '${talos}/tests/quantum_pageload/quantum_pageload_facebook.manifest'

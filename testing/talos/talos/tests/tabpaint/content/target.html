@@ -14,24 +14,51 @@
    * appended with the "starting time" (in ms) of when the tab
    * was opened.
    *
-   * Example: target.htmml?1457063506846
+   * Example: target.html?1457063506846
    */
-  addEventListener("load", function onLoad() {
-    removeEventListener("load", onLoad);
-    addEventListener("MozAfterPaint", function onPaint() {
-      let presented = Date.now();
-      removeEventListener("MozAfterPaint", onPaint);
+  addEventListener("MozAfterPaint", function onPaint(e) {
+    // Bug 1371332 - sometimes, MozAfterPaint events fire
+    // for "empty" paints, where nothing has actually been
+    // painted. We can detect that by looking at the rect
+    // for the region that has painted.
+    let rect = e.boundingClientRect;
+    if (!rect.width && !rect.height) {
+      return;
+    }
+    // The MozAfterPaint event comes with a paintTimeStamp
+    // which tells us when in this content's lifetime the
+    // paint actually occurred. Note that this is not a
+    // measurement of when this paint occurred from
+    // the UNIX epoch. This makes it a little tricky to
+    // calculate when the paint actually occurred relative
+    // to the starting time that's been appended to the
+    // page's URL.
+    //
+    // Thankfully, the PerformanceTiming API gives us a
+    // sense of when this page's lifetime started, relative
+    // to the UNIX epoch - the "fetchStart". Taking that
+    // time and adding the paintTimeStamp should give us
+    // a pretty decent approximation of when since the
+    // UNIX epoch the paint actually occurred for this
+    // content.
+    //
+    // We can then subtract the starting time to get the
+    // delta, which should now represent the time it took
+    // from requesting that the tab be opened, to the
+    // paint occurring within the tab.
+    let fetchStart = window.performance.timing.fetchStart;
+    let presented = fetchStart + e.paintTimeStamp;
+    removeEventListener("MozAfterPaint", onPaint);
 
-      let opened = parseInt(location.search.substring(1), 10);
-      let delta = presented - opened;
+    let opened = parseInt(location.search.substring(1), 10);
+    let delta = presented - opened;
 
-      let mm = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIWebNavigation)
-                     .QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIContentFrameMessageManager);
+    let mm = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIWebNavigation)
+                   .QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIContentFrameMessageManager);
 
-      mm.sendAsyncMessage("TabPaint:Painted", { delta });
-    });
+    mm.sendAsyncMessage("TabPaint:Painted", { delta });
   });
 </script>
 </html>

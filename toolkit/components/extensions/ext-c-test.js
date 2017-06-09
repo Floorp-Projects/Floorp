@@ -1,5 +1,8 @@
 "use strict";
 
+// The ext-c-* files are imported into the same scopes.
+/* import-globals-from ext-c-toolkit.js */
+
 /**
  * Checks whether the given error matches the given expectations.
  *

@@ -8,7 +8,7 @@
 
   <link rel="author" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/" />
   <link rel="help" href="http://www.w3.org/TR/css-writing-modes-3/#vertical-layout" title="7.1 Principles of Layout in Vertical Writing Modes" />
-  <link rel="match" href="../css21/reference/ref-filled-green-100px-square.xht" />
+  <link rel="match" href="../reference/ref-filled-green-100px-square.xht" />
 
   <meta content="" name="flags" />
   <meta content="This test checks that when the initial containing block's writing-mode is 'horizontal-tb' and its 'direction' is 'ltr', then an absolutely positioned box (with 'left: auto', 'width: auto' and 'right: auto') whose containing block is the initial containing block must set 'left' to the static position. Whether such absolutely positioned box's 'writing-mode' is vertical or not is irrelevant." name="assert" />
@@ -89,9 +89,7 @@
     {
       background-color: red;
       height: 100px;
-      position: relative;
       width: 100px;
-      z-index: -1;
     }
   ]]></style>
  </head>

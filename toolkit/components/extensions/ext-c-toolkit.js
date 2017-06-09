@@ -2,6 +2,11 @@
 
 Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 
+// These are defined on "global" which is used for the same scopes as the other
+// ext-c-*.js files.
+/* exported SingletonEventManager */
+/* global SingletonEventManager: false */
+
 global.SingletonEventManager = ExtensionCommon.SingletonEventManager;
 
 global.initializeBackgroundPage = (contentWindow) => {

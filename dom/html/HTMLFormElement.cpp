@@ -190,27 +190,31 @@ HTMLFormElement::GetElements(nsIDOMHTMLCollection** aElements)
 }
 
 nsresult
-HTMLFormElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                         nsIAtom* aPrefix, const nsAString& aValue,
-                         bool aNotify)
+HTMLFormElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+                               const nsAttrValueOrString* aValue, bool aNotify)
 {
-  if ((aName == nsGkAtoms::action || aName == nsGkAtoms::target) &&
-      aNameSpaceID == kNameSpaceID_None) {
-    if (mPendingSubmission) {
-      // aha, there is a pending submission that means we're in
-      // the script and we need to flush it. let's tell it
-      // that the event was ignored to force the flush.
-      // the second argument is not playing a role at all.
-      FlushPendingSubmission();
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aName == nsGkAtoms::action || aName == nsGkAtoms::target) {
+      // This check is mostly to preserve previous behavior.
+      if (aValue) {
+        if (mPendingSubmission) {
+          // aha, there is a pending submission that means we're in
+          // the script and we need to flush it. let's tell it
+          // that the event was ignored to force the flush.
+          // the second argument is not playing a role at all.
+          FlushPendingSubmission();
+        }
+        // Don't forget we've notified the password manager already if the
+        // page sets the action/target in the during submit. (bug 343182)
+        bool notifiedObservers = mNotifiedObservers;
+        ForgetCurrentSubmission();
+        mNotifiedObservers = notifiedObservers;
+      }
     }
-    // Don't forget we've notified the password manager already if the
-    // page sets the action/target in the during submit. (bug 343182)
-    bool notifiedObservers = mNotifiedObservers;
-    ForgetCurrentSubmission();
-    mNotifiedObservers = notifiedObservers;
   }
-  return nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
-                                       aNotify);
+
+  return nsGenericHTMLElement::BeforeSetAttr(aNamespaceID, aName, aValue,
+                                             aNotify);
 }
 
 nsresult

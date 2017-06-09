@@ -210,75 +210,63 @@ IsValidContentSelectors(nsCSSSelector* aSelector)
 }
 
 nsresult
-HTMLContentElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                            nsIAtom* aPrefix, const nsAString& aValue,
-                            bool aNotify)
+HTMLContentElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+                                 const nsAttrValue* aValue,
+                                 const nsAttrValue* aOldValue, bool aNotify)
 {
-  nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
-                                              aValue, aNotify);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::select) {
+    if (aValue) {
+      // Select attribute was updated, the insertion point may match different
+      // elements.
+      nsIDocument* doc = OwnerDoc();
+      nsCSSParser parser(doc->CSSLoader());
 
-  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::select) {
-    // Select attribute was updated, the insertion point may match different
-    // elements.
-    nsIDocument* doc = OwnerDoc();
-    nsCSSParser parser(doc->CSSLoader());
+      mValidSelector = true;
+      mSelectorList = nullptr;
 
-    mValidSelector = true;
-    mSelectorList = nullptr;
+      nsAutoString valueStr;
+      aValue->ToString(valueStr);
+      nsresult rv = parser.ParseSelectorString(valueStr,
+                                               doc->GetDocumentURI(),
+                                               // Bug 11240
+                                               0, // XXX get the line number!
+                                               getter_Transfers(mSelectorList));
 
-    nsresult rv = parser.ParseSelectorString(aValue,
-                                             doc->GetDocumentURI(),
-                                             // Bug 11240
-                                             0, // XXX get the line number!
-                                             getter_Transfers(mSelectorList));
-
-    // We don't want to return an exception if parsing failed because
-    // the spec does not define it as an exception case.
-    if (NS_SUCCEEDED(rv)) {
-      // Ensure that all the selectors are valid
-      nsCSSSelectorList* selectors = mSelectorList;
-      while (selectors) {
-        if (!IsValidContentSelectors(selectors->mSelectors)) {
-          // If we have an invalid selector, we can not match anything.
-          mValidSelector = false;
-          mSelectorList = nullptr;
-          break;
+      // We don't want to return an exception if parsing failed because
+      // the spec does not define it as an exception case.
+      if (NS_SUCCEEDED(rv)) {
+        // Ensure that all the selectors are valid
+        nsCSSSelectorList* selectors = mSelectorList;
+        while (selectors) {
+          if (!IsValidContentSelectors(selectors->mSelectors)) {
+            // If we have an invalid selector, we can not match anything.
+            mValidSelector = false;
+            mSelectorList = nullptr;
+            break;
+          }
+          selectors = selectors->mNext;
         }
-        selectors = selectors->mNext;
+      }
+
+      ShadowRoot* containingShadow = GetContainingShadow();
+      if (containingShadow) {
+        containingShadow->DistributeAllNodes();
+      }
+    } else {
+      // The select attribute was removed. This insertion point becomes
+      // a universal selector.
+      mValidSelector = true;
+      mSelectorList = nullptr;
+
+      ShadowRoot* containingShadow = GetContainingShadow();
+      if (containingShadow) {
+        containingShadow->DistributeAllNodes();
       }
     }
-
-    ShadowRoot* containingShadow = GetContainingShadow();
-    if (containingShadow) {
-      containingShadow->DistributeAllNodes();
-    }
   }
 
-  return NS_OK;
-}
-
-nsresult
-HTMLContentElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                              bool aNotify)
-{
-  nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID,
-                                                aAttribute, aNotify);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::select) {
-    // The select attribute was removed. This insertion point becomes
-    // a universal selector.
-    mValidSelector = true;
-    mSelectorList = nullptr;
-
-    ShadowRoot* containingShadow = GetContainingShadow();
-    if (containingShadow) {
-      containingShadow->DistributeAllNodes();
-    }
-  }
-
-  return NS_OK;
+  return nsGenericHTMLElement::AfterSetAttr(aNamespaceID, aName, aValue,
+                                            aOldValue, aNotify);
 }
 
 bool

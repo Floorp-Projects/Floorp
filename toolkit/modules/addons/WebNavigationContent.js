@@ -1,6 +1,6 @@
 "use strict";
 
-/* globals docShell */
+/* eslint-env mozilla/frame-script */
 
 var Ci = Components.interfaces;
 

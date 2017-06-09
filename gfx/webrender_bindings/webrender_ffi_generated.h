@@ -655,6 +655,10 @@ void wr_dp_pop_clip(WrState *aState)
 WR_FUNC;
 
 WR_INLINE
+void wr_dp_pop_clip_and_scroll_info(WrState *aState)
+WR_FUNC;
+
+WR_INLINE
 void wr_dp_pop_scroll_layer(WrState *aState)
 WR_FUNC;
 
@@ -732,9 +736,15 @@ void wr_dp_push_built_display_list(WrState *aState,
 WR_FUNC;
 
 WR_INLINE
-void wr_dp_push_clip(WrState *aState,
-                     WrRect aClipRect,
-                     const WrImageMask *aMask)
+uint64_t wr_dp_push_clip(WrState *aState,
+                         WrRect aClipRect,
+                         const WrImageMask *aMask)
+WR_FUNC;
+
+WR_INLINE
+void wr_dp_push_clip_and_scroll_info(WrState *aState,
+                                     uint64_t aScrollId,
+                                     const uint64_t *aClipId)
 WR_FUNC;
 
 WR_INLINE

@@ -1,40 +1,6 @@
 "use strict";
 
 module.exports = {
-  globals: {
-    // TODO: Create custom rule for `Cu.import`
-    "AddonManager": false,
-    "AppConstants": false,
-    "Downloads": false,
-    "File": false,
-    "FileUtils": false,
-    "HelperApps": true, // TODO: Can be more specific here.
-    "JNI": true, // TODO: Can be more specific here.
-    "LightweightThemeManager": false,
-    "Messaging": false,
-    "Notifications": false,
-    "OS": false,
-    "ParentalControls": false,
-    "PrivateBrowsingUtils": false,
-    "Prompt": false,
-    "Services": false,
-    "SharedPreferences": false,
-    "strings": false,
-    "Strings": false,
-    "Task": false,
-    "TelemetryStopwatch": false,
-    "UITelemetry": false,
-    "UserAgentOverrides": 0,
-    "XPCOMUtils": false,
-    "ctypes": false,
-    "exports": false,
-    "importScripts": false,
-    "module": false,
-    "require": false,
-    "uuidgen": false,
-
-    "Iterator": false // TODO: Remove - deprecated!
-  },
   rules: {
     // XXX Bug 1358949 - This should be reduced down - probably to 20 or to
     // be removed & synced with the mozilla/recommended value.

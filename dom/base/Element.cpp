@@ -2423,7 +2423,7 @@ Element::SetAttr(int32_t aNamespaceID, nsIAtom* aName,
 
   if (OnlyNotifySameValueSet(aNamespaceID, aName, aPrefix, value, aNotify,
                              oldValue, &modType, &hasListeners, &oldValueSet)) {
-    return NS_OK;
+    return OnAttrSetButNotChanged(aNamespaceID, aName, value, aNotify);
   }
 
   nsAttrValue attrValue;
@@ -2441,19 +2441,20 @@ Element::SetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                      preparsedAttrValue);
   }
 
-  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Hold a script blocker while calling ParseAttribute since that can call
   // out to id-observers
   nsIDocument* document = GetComposedDoc();
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
 
-  // Even the value was pre-parsed, we still need to call ParseAttribute because
-  // it can have side effects.
-  if (!ParseAttribute(aNamespaceID, aName, aValue, attrValue)) {
+  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!preparsedAttrValue &&
+      !ParseAttribute(aNamespaceID, aName, aValue, attrValue)) {
     attrValue.SetTo(aValue);
   }
+
+  PreIdMaybeChange(aNamespaceID, aName, &value);
 
   return SetAttrAndNotify(aNamespaceID, aName, aPrefix,
                           oldValueSet ? &oldValue : nullptr,
@@ -2485,7 +2486,7 @@ Element::SetParsedAttr(int32_t aNamespaceID, nsIAtom* aName,
 
   if (OnlyNotifySameValueSet(aNamespaceID, aName, aPrefix, value, aNotify,
                              oldValue, &modType, &hasListeners, &oldValueSet)) {
-    return NS_OK;
+    return OnAttrSetButNotChanged(aNamespaceID, aName, value, aNotify);
   }
 
   if (aNotify) {
@@ -2495,6 +2496,8 @@ Element::SetParsedAttr(int32_t aNamespaceID, nsIAtom* aName,
 
   nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  PreIdMaybeChange(aNamespaceID, aName, &value);
 
   nsIDocument* document = GetComposedDoc();
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
@@ -2553,6 +2556,8 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
     rv = mAttrsAndChildren.SetAndSwapAttr(ni, aParsedValue, &oldValueSet);
   }
   NS_ENSURE_SUCCESS(rv, rv);
+
+  PostIdMaybeChange(aNamespaceID, aName, &valueForAfterSetAttr);
 
   // If the old value owns its own data, we know it is OK to keep using it.
   // oldValue will be null if there was no previously set value
@@ -2653,22 +2658,16 @@ Element::ParseAttribute(int32_t aNamespaceID,
                         nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::_class) {
-      SetMayHaveClass();
-      // Result should have been preparsed above.
-      return true;
-    }
+    MOZ_ASSERT(aAttribute != nsGkAtoms::_class,
+               "The class attribute should be preparsed and therefore should "
+               "never be passed to Element::ParseAttribute");
     if (aAttribute == nsGkAtoms::id) {
       // Store id as an atom.  id="" means that the element has no id,
       // not that it has an emptystring as the id.
-      RemoveFromIdTable();
       if (aValue.IsEmpty()) {
-        ClearHasID();
         return false;
       }
       aResult.ParseAtom(aValue);
-      SetHasID();
-      AddToIdTable(aResult.GetAtomValue());
       return true;
     }
   }
@@ -2684,6 +2683,57 @@ Element::SetAndSwapMappedAttribute(nsIAtom* aName,
 {
   *aRetval = NS_OK;
   return false;
+}
+
+nsresult
+Element::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+                       const nsAttrValueOrString* aValue, bool aNotify)
+{
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aName == nsGkAtoms::_class) {
+      if (aValue) {
+        // Note: This flag is asymmetrical. It is never unset and isn't exact.
+        // If it is ever made to be exact, we probably need to handle this
+        // similarly to how ids are handled in PreIdMaybeChange and
+        // PostIdMaybeChange.
+        SetMayHaveClass();
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+void
+Element::PreIdMaybeChange(int32_t aNamespaceID, nsIAtom* aName,
+                          const nsAttrValueOrString* aValue)
+{
+  if (aNamespaceID != kNameSpaceID_None || aName != nsGkAtoms::id) {
+    return;
+  }
+  RemoveFromIdTable();
+
+  return;
+}
+
+void
+Element::PostIdMaybeChange(int32_t aNamespaceID, nsIAtom* aName,
+                           const nsAttrValue* aValue)
+{
+  if (aNamespaceID != kNameSpaceID_None || aName != nsGkAtoms::id) {
+    return;
+  }
+
+  // id="" means that the element has no id, not that it has an empty
+  // string as the id.
+  if (aValue && !aValue->IsEmptyString()) {
+    SetHasID();
+    AddToIdTable(aValue->GetAtomValue());
+  } else {
+    ClearHasID();
+  }
+
+  return;
 }
 
 EventListenerManager*
@@ -2779,6 +2829,8 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                          NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
                                          this);
 
+  PreIdMaybeChange(aNameSpaceID, aName, nullptr);
+
   // Grab the attr node if needed before we remove it from the attr map
   RefPtr<Attr> attrNode;
   if (hasMutationListeners) {
@@ -2797,12 +2849,6 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   // react to unexpected attribute changes.
   nsMutationGuard::DidMutate();
 
-  if (aName == nsGkAtoms::id && aNameSpaceID == kNameSpaceID_None) {
-    // Have to do this before clearing flag. See RemoveFromIdTable
-    RemoveFromIdTable();
-    ClearHasID();
-  }
-
   bool hadValidDir = false;
   bool hadDirAuto = false;
 
@@ -2814,6 +2860,8 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   nsAttrValue oldValue;
   rv = mAttrsAndChildren.RemoveAttrAt(index, oldValue);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  PostIdMaybeChange(aNameSpaceID, aName, nullptr);
 
   if (document || HasFlag(NODE_FORCE_XBL_BINDINGS)) {
     RefPtr<nsXBLBinding> binding = GetXBLBinding();

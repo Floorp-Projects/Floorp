@@ -1211,11 +1211,15 @@
         <sidebarheader id="sidebar-header" align="center">
           <toolbarbutton id="sidebar-switcher-target" flex="1" class="tabbable">
             <image id="sidebar-icon" consumeanchor="sidebar-switcher-target"/>
-            <label id="sidebar-title" persist="value" crop="end" control="sidebar"/>
+            <label id="sidebar-title" persist="value" crop="end" flex="1" control="sidebar"/>
             <image id="sidebar-switcher-arrow"/>
-            <spacer flex="1"/>
           </toolbarbutton>
           <image id="sidebar-throbber"/>
+# To ensure the button label's intrinsic width doesn't expand the sidebar
+# if the label is long, the button needs flex=1.
+# To ensure the button doesn't expand unnecessarily for short labels, the
+# spacer should significantly out-flex the button.
+          <spacer flex="1000"/>
           <toolbarbutton id="sidebar-close" class="tabbable" tooltiptext="&sidebarCloseButton.tooltip;" oncommand="SidebarUI.hide();"/>
         </sidebarheader>
         <browser id="sidebar" flex="1" autoscroll="false" disablehistory="true" disablefullscreen="true"

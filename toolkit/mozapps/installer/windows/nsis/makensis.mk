@@ -44,9 +44,9 @@ $(CONFIG_DIR)/setup.exe::
 	$(INSTALL) $(addprefix $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) $(CONFIG_DIR)
 	$(INSTALL) $(addprefix $(MOZILLA_DIR)/other-licenses/nsis/Plugins/,$(CUSTOM_NSIS_PLUGINS)) $(CONFIG_DIR)
 	$(INSTALL) $(addprefix $(MOZILLA_DIR)/other-licenses/nsis/,$(CUSTOM_UI)) $(CONFIG_DIR)
-	cd $(CONFIG_DIR) && $(MAKENSISU) installer.nsi
+	cd $(CONFIG_DIR) && $(MAKENSISU) $(MAKENSISU_FLAGS) installer.nsi
 ifdef MOZ_STUB_INSTALLER
-	cd $(CONFIG_DIR) && $(MAKENSISU) stub.nsi
+	cd $(CONFIG_DIR) && $(MAKENSISU) $(MAKENSISU_FLAGS) stub.nsi
 ifdef MOZ_EXTERNAL_SIGNING_FORMAT
 	$(MOZ_SIGN_CMD) $(foreach f,$(MOZ_EXTERNAL_SIGNING_FORMAT),-f $(f)) $(CONFIG_DIR)/setup-stub.exe
 endif
@@ -59,7 +59,7 @@ endif
 endif
 # Support for building the uninstaller when repackaging locales
 ifeq ($(CONFIG_DIR),l10ngen)
-	cd $(CONFIG_DIR) && $(MAKENSISU) uninstaller.nsi
+	cd $(CONFIG_DIR) && $(MAKENSISU) $(MAKENSISU_FLAGS) uninstaller.nsi
 endif
 ifdef MOZ_EXTERNAL_SIGNING_FORMAT
 	$(MOZ_SIGN_CMD) $(foreach f,$(MOZ_EXTERNAL_SIGNING_FORMAT),-f $(f)) "$@"
@@ -88,13 +88,13 @@ endif
 uninstaller::
 	$(INSTALL) $(addprefix $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) $(CONFIG_DIR)
 	$(INSTALL) $(addprefix $(MOZILLA_DIR)/other-licenses/nsis/Plugins/,$(CUSTOM_NSIS_PLUGINS)) $(CONFIG_DIR)
-	cd $(CONFIG_DIR) && $(MAKENSISU) uninstaller.nsi
+	cd $(CONFIG_DIR) && $(MAKENSISU) $(MAKENSISU_FLAGS) uninstaller.nsi
 	$(NSINSTALL) -D $(DIST)/bin/uninstall
 	cp $(CONFIG_DIR)/helper.exe $(DIST)/bin/uninstall
 
 ifdef MOZ_MAINTENANCE_SERVICE
 maintenanceservice_installer::
-	cd $(CONFIG_DIR) && $(MAKENSISU) maintenanceservice_installer.nsi
+	cd $(CONFIG_DIR) && $(MAKENSISU) $(MAKENSISU_FLAGS) maintenanceservice_installer.nsi
 	$(NSINSTALL) -D $(DIST)/bin/
 	cp $(CONFIG_DIR)/maintenanceservice_installer.exe $(DIST)/bin
 endif

@@ -118,7 +118,7 @@ def start_mitmproxy_playback(mitmdump_path,
         LOG.error('Aborting: talos mitmproxy is currently only supported on Windows')
         sys.exit()
 
-    command = [mitmdump_path, '-s', param2]
+    command = [mitmdump_path, '-k', '-s', param2]
 
     LOG.info("Starting mitmproxy playback using env path: %s" % env["PATH"])
     LOG.info("Starting mitmproxy playback using command: %s" % ' '.join(command))

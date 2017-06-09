@@ -196,8 +196,8 @@ arm_platforms="--enable-runtime-cpu-detect --enable-realtime-only"
 gen_config_files linux/x64 "--target=x86_64-linux-gcc ${all_platforms} ${x86_platforms}"
 gen_config_files linux/ia32 "--target=x86-linux-gcc ${all_platforms} ${x86_platforms}"
 gen_config_files mac/x64 "--target=x86_64-darwin9-gcc ${all_platforms} ${x86_platforms}"
-gen_config_files win/x64 "--target=x86_64-win64-vs12 ${all_platforms} ${x86_platforms}"
-gen_config_files win/ia32 "--target=x86-win32-gcc ${all_platforms} ${x86_platforms}"
+gen_config_files win/x64 "--target=x86_64-win64-vs14 ${all_platforms} ${x86_platforms}"
+gen_config_files win/ia32 "--target=x86-win32-vs14 ${all_platforms} ${x86_platforms}"
 
 gen_config_files linux/arm "--target=armv7-linux-gcc ${all_platforms} ${arm_platforms}"
 

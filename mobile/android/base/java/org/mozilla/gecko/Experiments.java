@@ -77,6 +77,9 @@ public class Experiments {
     // Enable Leanplum SDK
     public static final String LEANPLUM = "leanplum-start";
 
+    // Enable processing of background telemetry.
+    public static final String ENABLE_PROCESSING_BACKGROUND_TELEMETRY = "process-background-telemetry";
+
     /**
      * Returns if a user is in certain local experiment.
      * @param experiment Name of experiment to look up
