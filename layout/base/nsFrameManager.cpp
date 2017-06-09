@@ -276,15 +276,25 @@ nsFrameManager::ClearUndisplayedContentIn(nsIContent* aContent,
 }
 
 void
-nsFrameManager::ClearAllUndisplayedContentIn(nsIContent* aParentContent)
+nsFrameManager::ClearAllMapsFor(nsIContent* aParentContent)
 {
-#ifdef DEBUG_UNDISPLAYED_MAP
+#if defined(DEBUG_UNDISPLAYED_MAP) || defined(DEBUG_DISPLAY_CONTENTS_MAP)
   static int i = 0;
-  printf("ClearAllUndisplayedContentIn(%d): parent=%p \n", i++, (void*)aParentContent);
+  printf("ClearAllMapsFor(%d): parent=%p \n", i++, aParentContent);
 #endif
 
   if (mUndisplayedMap) {
     mUndisplayedMap->RemoveNodesFor(aParentContent);
+  }
+  if (mDisplayContentsMap) {
+    nsAutoPtr<LinkedList<UndisplayedNode>> list =
+      mDisplayContentsMap->UnlinkNodesFor(aParentContent);
+    if (list) {
+      while (UndisplayedNode* node = list->popFirst()) {
+        ClearAllMapsFor(node->mContent);
+        delete node;
+      }
+    }
   }
 
   // Need to look at aParentContent's content list due to XBL insertions.
@@ -293,8 +303,10 @@ nsFrameManager::ClearAllUndisplayedContentIn(nsIContent* aParentContent)
   // the flattened content list and just ignore any nodes we don't care about.
   FlattenedChildIterator iter(aParentContent);
   for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
-    if (child->GetParent() != aParentContent) {
-      ClearUndisplayedContentIn(child, child->GetParent());
+    auto parent = child->GetParent();
+    if (parent != aParentContent) {
+      ClearUndisplayedContentIn(child, parent);
+      ClearDisplayContentsIn(child, parent);
     }
   }
 }
@@ -341,47 +353,13 @@ nsFrameManager::ClearDisplayContentsIn(nsIContent* aContent,
       // make sure that there are no more entries for the same content
       MOZ_ASSERT(!GetDisplayContentsStyleFor(aContent),
                  "Found more entries for aContent after removal");
-      ClearAllDisplayContentsIn(aContent);
-      ClearAllUndisplayedContentIn(aContent);
+      ClearAllMapsFor(aContent);
       return;
     }
   }
 #ifdef DEBUG_DISPLAY_CONTENTS_MAP
   printf( "not found.\n");
 #endif
-}
-
-void
-nsFrameManager::ClearAllDisplayContentsIn(nsIContent* aParentContent)
-{
-#ifdef DEBUG_DISPLAY_CONTENTS_MAP
-  static int i = 0;
-  printf("ClearAllDisplayContentsIn(%d): parent=%p \n", i++, (void*)aParentContent);
-#endif
-
-  if (mDisplayContentsMap) {
-    nsAutoPtr<LinkedList<UndisplayedNode>> list =
-      mDisplayContentsMap->UnlinkNodesFor(aParentContent);
-    if (list) {
-      while (UndisplayedNode* node = list->popFirst()) {
-        ClearAllDisplayContentsIn(node->mContent);
-        ClearAllUndisplayedContentIn(node->mContent);
-        delete node;
-      }
-    }
-  }
-
-  // Need to look at aParentContent's content list due to XBL insertions.
-  // Nodes in aParentContent's content list do not have aParentContent as a
-  // parent, but are treated as children of aParentContent. We iterate over
-  // the flattened content list and just ignore any nodes we don't care about.
-  FlattenedChildIterator iter(aParentContent);
-  for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
-    if (child->GetParent() != aParentContent) {
-      ClearDisplayContentsIn(child, child->GetParent());
-      ClearUndisplayedContentIn(child, child->GetParent());
-    }
-  }
 }
 
 //----------------------------------------------------------------------
@@ -460,8 +438,7 @@ nsFrameManager::NotifyDestroyingFrame(nsIFrame* aFrame)
 {
   nsIContent* content = aFrame->GetContent();
   if (content && content->GetPrimaryFrame() == aFrame) {
-    ClearAllUndisplayedContentIn(content);
-    ClearAllDisplayContentsIn(content);
+    ClearAllMapsFor(content);
   }
 }
 

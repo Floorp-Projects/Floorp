@@ -41,6 +41,7 @@
 <script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout('nsPresContext internally delays applying prefs using an nsITimer');
 
 var cs1 = getComputedStyle(document.getElementById("one"), "");
 var cs2 = getComputedStyle(document.getElementById("two"), "");
@@ -50,7 +51,18 @@ var cs5 = getComputedStyle(document.getElementById("five"), "");
 var cs6 = getComputedStyle(document.getElementById("six"), "");
 var cs7 = getComputedStyle(document.getElementById("seven"), "");
 
-SpecialPowers.pushPrefEnv({'set': [['browser.display.document_color_use', 1]]}, part1);
+function pushPrefEnvAndWait(args, cb) {
+  SpecialPowers.pushPrefEnv(args, _ => {
+    // The nsPresContext delays applying a preference change until after a 0ms
+    // nsITimer fires.  The SpecialPowers.pushPrefEnv() uses setTimeout(f, 0)
+    // which may execute as a simple runnable dispatch and fire before the
+    // 0ms nsITimer.  Therefore wait an additional 1ms to allow the nsPresContext
+    // to apply the preferences.
+    setTimeout(cb, 1);
+  });
+}
+
+pushPrefEnvAndWait({'set': [['browser.display.document_color_use', 1]]}, part1);
 
 var transparentBackgroundColor;
 var inputBackgroundColor, inputColor, inputBorderTopColor;
@@ -121,7 +133,7 @@ function part1()
     inputBorderRightColor = cs4.borderRightColor;
     inputBorderLeftColor = cs4.borderLeftColor;
     inputBorderBottomColor = cs4.borderBottomColor;
-    SpecialPowers.pushPrefEnv({'set': [['browser.display.document_color_use', 2]]}, part2);
+    pushPrefEnvAndWait({'set': [['browser.display.document_color_use', 2]]}, part2);
 }
 
 function part2()
