@@ -468,6 +468,7 @@ public:
   // NS_STYLE_FONT_* system font constants.
   enum FontID {
     eFont_Caption = 1,     // css2
+    FontID_MINIMUM = eFont_Caption,
     eFont_Icon,
     eFont_Menu,
     eFont_MessageBox,
@@ -486,7 +487,8 @@ public:
     eFont_Field,
 
     eFont_Tooltips,        // moz
-    eFont_Widget
+    eFont_Widget,
+    FontID_MAXIMUM = eFont_Widget
   };
 
   /**
