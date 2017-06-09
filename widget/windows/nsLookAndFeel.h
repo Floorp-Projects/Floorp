@@ -7,6 +7,8 @@
 #define __nsLookAndFeel
 
 #include "nsXPLookAndFeel.h"
+#include "gfxFont.h"
+#include "mozilla/RangedArray.h"
 
 /*
  * Gesture System Metrics
@@ -36,16 +38,17 @@ public:
   nsLookAndFeel();
   virtual ~nsLookAndFeel();
 
-  virtual nsresult NativeGetColor(ColorID aID, nscolor &aResult);
-  virtual nsresult GetIntImpl(IntID aID, int32_t &aResult);
-  virtual nsresult GetFloatImpl(FloatID aID, float &aResult);
-  virtual bool GetFontImpl(FontID aID, nsString& aFontName,
-                           gfxFontStyle& aFontStyle,
-                           float aDevPixPerCSSPixel);
-  virtual char16_t GetPasswordCharacterImpl();
+  nsresult NativeGetColor(ColorID aID, nscolor &aResult) override;
+  nsresult GetIntImpl(IntID aID, int32_t &aResult) override;
+  nsresult GetFloatImpl(FloatID aID, float &aResult) override;
+  bool GetFontImpl(FontID aID, nsString& aFontName,
+                   gfxFontStyle& aFontStyle,
+                   float aDevPixPerCSSPixel) override;
+  void RefreshImpl() override;
+  char16_t GetPasswordCharacterImpl() override;
 
-  virtual nsTArray<LookAndFeelInt> GetIntCacheImpl();
-  virtual void SetIntCacheImpl(const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache);
+  nsTArray<LookAndFeelInt> GetIntCacheImpl() override;
+  void SetIntCacheImpl(const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) override;
 
 private:
   // Content process cached values that get shipped over from the browser
@@ -53,6 +56,21 @@ private:
   int32_t mUseAccessibilityTheme;
   int32_t mUseDefaultTheme; // is the current theme a known default?
   int32_t mNativeThemeId; // see LookAndFeel enum 'WindowsTheme'
+
+  struct CachedSystemFont {
+    CachedSystemFont()
+      : mCacheValid(false)
+    {}
+
+    bool mCacheValid;
+    bool mHaveFont;
+    nsString mFontName;
+    gfxFontStyle mFontStyle;
+  };
+
+  mozilla::RangedArray<CachedSystemFont,
+                       FontID_MINIMUM,
+                       FontID_MAXIMUM + 1 - FontID_MINIMUM> mSystemFontCache;
 };
 
 #endif

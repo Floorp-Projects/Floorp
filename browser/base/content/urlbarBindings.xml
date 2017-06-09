@@ -121,7 +121,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           cxmenu.insertBefore(pasteAndGo, insertLocation.nextSibling);
         }
 
-        this._enableOrDisableOneOffSearches();
+        this.popup.addEventListener("popupshowing", () => {
+          this._enableOrDisableOneOffSearches();
+        }, {capturing: true, once: true});
 
         // The autocomplete controller uses heuristic on some internal caches
         // to handle cases like backspace, autofill or repeated searches.
@@ -2763,7 +2765,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             };
             switch (action.blocklistState) {
             case Ci.nsIBlocklistService.STATE_NOT_BLOCKED:
-              label = "pluginActivateNew.message";
+              label = "pluginActivate2.message";
               linkLabel = "pluginActivate.learnMore";
               button2.default = true;
               break;

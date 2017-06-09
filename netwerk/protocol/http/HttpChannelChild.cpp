@@ -2685,7 +2685,7 @@ NS_IMETHODIMP
 HttpChannelChild::GetCacheTokenFetchCount(int32_t *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-  if (!mCacheEntryAvailable || !mAltDataCacheEntryAvailable) {
+  if (!mCacheEntryAvailable && !mAltDataCacheEntryAvailable) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -2697,7 +2697,7 @@ NS_IMETHODIMP
 HttpChannelChild::GetCacheTokenLastFetched(uint32_t *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-  if (!mCacheEntryAvailable || !mAltDataCacheEntryAvailable) {
+  if (!mCacheEntryAvailable && !mAltDataCacheEntryAvailable) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
