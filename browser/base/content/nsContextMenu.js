@@ -62,14 +62,14 @@ function openContextMenu(aMessage) {
   let popup = browser.ownerDocument.getElementById("contentAreaContextMenu");
   let event = gContextMenuContentData.event;
 
-  // Set touch mode to get larger menu items.
-  if (event.mozInputSource == MouseEvent.MOZ_SOURCE_TOUCH) {
-    popup.setAttribute("touchmode", "true");
-  } else {
-    popup.removeAttribute("touchmode");
-  }
+  // The event is a CPOW that can't be passed into the native openPopupAtScreen
+  // function. Therefore we synthesize a new MouseEvent to propagate the
+  // inputSource to the subsequently triggered popupshowing event.
+  var newEvent = document.createEvent("MouseEvent");
+  newEvent.initNSMouseEvent("contextmenu", true, true, null, 0, event.screenX, event.screenY,
+                            0, 0, false, false, false, false, 0, null, 0, event.mozInputSource);
 
-  popup.openPopupAtScreen(event.screenX, event.screenY, true);
+  popup.openPopupAtScreen(newEvent.screenX, newEvent.screenY, true, newEvent);
 }
 
 function nsContextMenu(aXulMenu, aIsShift) {
