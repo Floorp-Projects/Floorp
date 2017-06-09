@@ -5,8 +5,8 @@
 /* Notification overrides for Heartbeat UI */
 
 notification.heartbeat {
-  background-image: linear-gradient(-179deg, #FBFBFB 0%, #EBEBEB 100%);
-  border-bottom: 1px solid #C1C1C1;
+  background-image: linear-gradient(-179deg, #FBFBFB 0%, #EBEBEB 100%) !important;
+  border-bottom: 1px solid #C1C1C1 !important;
   height: 40px;
 }
 
