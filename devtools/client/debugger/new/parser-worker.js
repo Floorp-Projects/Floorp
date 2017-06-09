@@ -10497,6 +10497,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 	  });
 
+	  instance.extend("stmtToDirective", function (inner) {
+	    return function (stmt) {
+	      var directive = inner.call(this, stmt);
+	      var value = stmt.expression.value;
+
+	      // Reset value to the actual value as in estree mode we want
+	      // the stmt to have the real value and not the raw value
+	      directive.value.value = value;
+
+	      return directive;
+	    };
+	  });
+
 	  instance.extend("parseBlockBody", function (inner) {
 	    return function (node) {
 	      var _this2 = this;
@@ -11228,7 +11241,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	pp$8.reinterpretTypeAsFunctionTypeParam = function (type) {
-	  var node = this.startNodeAt(type.start, type.loc);
+	  var node = this.startNodeAt(type.start, type.loc.start);
 	  node.name = null;
 	  node.optional = false;
 	  node.typeAnnotation = type;
@@ -11439,7 +11452,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	pp$8.flowParseAnonFunctionWithoutParens = function () {
 	  var param = this.flowParsePrefixType();
 	  if (!this.state.noAnonFunctionType && this.eat(types.arrow)) {
-	    var node = this.startNodeAt(param.start, param.loc);
+	    var node = this.startNodeAt(param.start, param.loc.start);
 	    node.params = [this.reinterpretTypeAsFunctionTypeParam(param)];
 	    node.rest = null;
 	    node.returnType = this.flowParseType();
@@ -19067,7 +19080,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	    },
 	    value: {
-	      validate: (0, _index2.assertNodeType)("Expression")
+	      validate: (0, _index2.assertNodeType)("Expression", "Pattern", "RestElement")
 	    },
 	    shorthand: {
 	      validate: (0, _index2.assertValueType)("boolean"),
@@ -19294,7 +19307,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  aliases: ["Pattern", "LVal"],
 	  fields: {
 	    elements: {
-	      validate: (0, _index.chain)((0, _index.assertValueType)("array"), (0, _index.assertEach)((0, _index.assertNodeType)("Expression")))
+	      validate: (0, _index.chain)((0, _index.assertValueType)("array"), (0, _index.assertEach)((0, _index.assertNodeType)("Identifier", "Pattern", "RestElement")))
 	    },
 	    decorators: {
 	      validate: (0, _index.chain)((0, _index.assertValueType)("array"), (0, _index.assertEach)((0, _index.assertNodeType)("Decorator")))
@@ -19865,6 +19878,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	(0, _index2.default)("ObjectTypeProperty", {
 	  visitor: ["key", "value"],
+	  aliases: ["Flow", "UserWhitespacable"],
+	  fields: {}
+	});
+
+	(0, _index2.default)("ObjectTypeSpreadProperty", {
+	  visitor: ["argument"],
 	  aliases: ["Flow", "UserWhitespacable"],
 	  fields: {}
 	});
@@ -21897,7 +21916,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  Scope.prototype.warnOnFlowBinding = function warnOnFlowBinding(binding) {
 	    if (_crawlCallsCount === 0 && binding && binding.path.isFlow()) {
-	      console.warn("\n        You or one of the Babel plugins you are using are using Flow declarations as bindings.\n        Support for this will be removed in version 6.8. To find out the caller, grep for this\n        message and change it to a `console.trace()`.\n      ");
+	      console.warn("\n        You or one of the Babel plugins you are using are using Flow declarations as bindings.\n        Support for this will be removed in version 7. To find out the caller, grep for this\n        message and change it to a `console.trace()`.\n      ");
 	    }
 	    return binding;
 	  };
@@ -23975,6 +23994,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"caches": false,
 			"CacheStorage": false,
 			"cancelAnimationFrame": false,
+			"cancelIdleCallback": false,
 			"CanvasGradient": false,
 			"CanvasPattern": false,
 			"CanvasRenderingContext2D": false,
@@ -23996,6 +24016,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"confirm": false,
 			"console": false,
 			"ConvolverNode": false,
+			"createImageBitmap": false,
 			"Credential": false,
 			"CredentialsContainer": false,
 			"crypto": false,
@@ -24693,6 +24714,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			"pending": false,
 			"runs": false,
 			"spyOn": false,
+			"spyOnProperty": false,
 			"waits": false,
 			"waitsFor": false,
 			"xdescribe": false,
@@ -28412,6 +28434,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	          }
 	        }
 	      }
+	    }
+
+	    if (path.parentPath.isExportDeclaration()) {
+	      path = path.parentPath;
 	    }
 
 	    return path;
