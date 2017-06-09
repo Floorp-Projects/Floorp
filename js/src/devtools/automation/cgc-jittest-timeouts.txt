@@ -33,6 +33,7 @@ parallel/alloc-too-many-objs.js
 parser/bug-1263881-1.js
 parser/bug-1263881-2.js
 parser/bug-1263881-3.js
+parser/bug-1355046.js
 parser/modifier-yield-without-operand-2.js
 saved-stacks/bug-1006876-too-much-recursion.js
 self-test/assertDeepEq.js
