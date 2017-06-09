@@ -265,13 +265,13 @@ public:
   void SetFontSizeInflation(float aInflation);
 
   void MarkIntrinsicISizesDirty() override;
-  nscoord GetMinISize(nsRenderingContext* aRenderingContext) override;
-  nscoord GetPrefISize(nsRenderingContext* aRenderingContext) override;
-  void AddInlineMinISize(nsRenderingContext* aRenderingContext,
+  nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  nscoord GetPrefISize(gfxContext* aRenderingContext) override;
+  void AddInlineMinISize(gfxContext* aRenderingContext,
                          InlineMinISizeData* aData) override;
-  void AddInlinePrefISize(nsRenderingContext* aRenderingContext,
+  void AddInlinePrefISize(gfxContext* aRenderingContext,
                           InlinePrefISizeData* aData) override;
-  mozilla::LogicalSize ComputeSize(nsRenderingContext* aRenderingContext,
+  mozilla::LogicalSize ComputeSize(gfxContext* aRenderingContext,
                                    mozilla::WritingMode aWritingMode,
                                    const mozilla::LogicalSize& aCBSize,
                                    nscoord aAvailableISize,
@@ -280,7 +280,7 @@ public:
                                    const mozilla::LogicalSize& aPadding,
                                    ComputeSizeFlags aFlags) override;
   nsRect ComputeTightBounds(DrawTarget* aDrawTarget) const override;
-  nsresult GetPrefWidthTightBounds(nsRenderingContext* aContext,
+  nsresult GetPrefWidthTightBounds(gfxContext* aContext,
                                    nscoord* aX,
                                    nscoord* aXMost) override;
   void Reflow(nsPresContext* aPresContext,
@@ -320,10 +320,10 @@ public:
     eNotInflated
   };
 
-  void AddInlineMinISizeForFlow(nsRenderingContext* aRenderingContext,
+  void AddInlineMinISizeForFlow(gfxContext* aRenderingContext,
                                 nsIFrame::InlineMinISizeData* aData,
                                 TextRunType aTextRunType);
-  void AddInlinePrefISizeForFlow(nsRenderingContext* aRenderingContext,
+  void AddInlinePrefISizeForFlow(gfxContext* aRenderingContext,
                                  InlinePrefISizeData* aData,
                                  TextRunType aTextRunType);
 

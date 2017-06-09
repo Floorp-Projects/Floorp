@@ -17,7 +17,7 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 
-class nsRenderingContext;
+class gfxContext;
 namespace mozilla {
 struct ReflowInput;
 } // namespace mozilla
@@ -29,7 +29,7 @@ class MOZ_STACK_CLASS nsBoxLayoutState
 
 public:
   explicit nsBoxLayoutState(nsPresContext* aPresContext,
-                            nsRenderingContext* aRenderingContext = nullptr,
+                            gfxContext* aRenderingContext = nullptr,
                             // see OuterReflowInput() below
                             const ReflowInput* aOuterReflowInput = nullptr,
                             uint16_t aReflowDepth = 0);
@@ -49,7 +49,7 @@ public:
   // nsBoxLayoutState and should be null-checked before it is used.
   // However, passing a null rendering context to the constructor when
   // doing box layout or intrinsic size calculation will cause bugs.
-  nsRenderingContext* GetRenderingContext() const { return mRenderingContext; }
+  gfxContext* GetRenderingContext() const { return mRenderingContext; }
 
   struct AutoReflowDepth {
     explicit AutoReflowDepth(nsBoxLayoutState& aState)
@@ -66,7 +66,7 @@ public:
   
 private:
   RefPtr<nsPresContext> mPresContext;
-  nsRenderingContext *mRenderingContext;
+  gfxContext *mRenderingContext;
   const ReflowInput *mOuterReflowInput;
   uint32_t mLayoutFlags;
   uint16_t mReflowDepth; 

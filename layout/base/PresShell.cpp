@@ -45,6 +45,7 @@
 #include "winuser.h"
 #endif
 
+#include "gfxContext.h"
 #include "gfxPrefs.h"
 #include "gfxUserFontSet.h"
 #include "nsPresContext.h"
@@ -102,7 +103,6 @@
 #include "prenv.h"
 #include "nsDisplayList.h"
 #include "nsRegion.h"
-#include "nsRenderingContext.h"
 #include "nsAutoLayoutPhase.h"
 #ifdef MOZ_REFLOW_PERF
 #include "nsFontMetrics.h"
@@ -118,7 +118,6 @@
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "nsStyleSheetService.h"
-#include "gfxContext.h"
 #include "gfxUtils.h"
 #include "nsSMILAnimationController.h"
 #include "SVGContentUtils.h"
@@ -381,7 +380,7 @@ public:
   void Add(const char * aName, nsIFrame * aFrame);
   ReflowCounter * LookUp(const char * aName);
 
-  void PaintCount(const char *aName, nsRenderingContext* aRenderingContext,
+  void PaintCount(const char *aName, gfxContext* aRenderingContext,
                   nsPresContext *aPresContext, nsIFrame *aFrame,
                   const nsPoint &aOffset, uint32_t aColor);
 
@@ -4685,8 +4684,6 @@ PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
 
   AutoSaveRestoreRenderingState _(this);
 
-  nsRenderingContext rc(aThebesContext);
-
   bool wouldFlushRetainedLayers = false;
   PaintFrameFlags flags = PaintFrameFlags::PAINT_IGNORE_SUPPRESSION;
   if (aThebesContext->CurrentMatrix().HasNonIntegerTranslation()) {
@@ -4735,7 +4732,7 @@ PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
     flags &= ~PaintFrameFlags::PAINT_WIDGET_LAYERS;
   }
 
-  nsLayoutUtils::PaintFrame(&rc, rootFrame, nsRegion(aRect),
+  nsLayoutUtils::PaintFrame(aThebesContext, rootFrame, nsRegion(aRect),
                             aBackgroundColor,
                             nsDisplayListBuilderMode::PAINTING,
                             flags);
@@ -5075,8 +5072,6 @@ PresShell::PaintRangePaintInfo(const nsTArray<UniquePtr<RangePaintInfo>>& aItems
     ctx->Clip(path);
   }
 
-  nsRenderingContext rc(ctx);
-
   gfxMatrix initialTM = ctx->CurrentMatrix();
 
   if (resize)
@@ -5111,7 +5106,7 @@ PresShell::PaintRangePaintInfo(const nsTArray<UniquePtr<RangePaintInfo>>& aItems
     aArea.MoveBy(-rangeInfo->mRootOffset.x, -rangeInfo->mRootOffset.y);
     nsRegion visible(aArea);
     RefPtr<LayerManager> layerManager =
-        rangeInfo->mList.PaintRoot(&rangeInfo->mBuilder, &rc,
+        rangeInfo->mList.PaintRoot(&rangeInfo->mBuilder, ctx,
                                    nsDisplayList::PAINT_DEFAULT);
     aArea.MoveBy(rangeInfo->mRootOffset.x, rangeInfo->mRootOffset.y);
   }
@@ -9243,7 +9238,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
 
   // CreateReferenceRenderingContext can return nullptr
-  nsRenderingContext rcx(CreateReferenceRenderingContext());
+  RefPtr<gfxContext> rcx(CreateReferenceRenderingContext());
 
 #ifdef DEBUG
   mCurrentReflowRoot = target;
@@ -9266,7 +9261,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   // Don't pass size directly to the reflow state, since a
   // constrained height implies page/column breaking.
   LogicalSize reflowSize(wm, size.ISize(wm), NS_UNCONSTRAINEDSIZE);
-  ReflowInput reflowInput(mPresContext, target, &rcx, reflowSize,
+  ReflowInput reflowInput(mPresContext, target, rcx, reflowSize,
                                 ReflowInput::CALLER_WILL_INIT);
   reflowInput.mOrthogonalLimit = size.BSize(wm);
 
@@ -9347,7 +9342,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
                                              target->GetView(),
                                              boundsRelativeToTarget);
   nsContainerFrame::SyncWindowProperties(mPresContext, target,
-                                         target->GetView(), &rcx,
+                                         target->GetView(), rcx,
                                          nsContainerFrame::SET_ASYNC);
 
   target->DidReflow(mPresContext, nullptr, nsDidReflowStatus::FINISHED);
@@ -10265,7 +10260,7 @@ PresShell::CountReflows(const char * aName, nsIFrame * aFrame)
 //-------------------------------------------------------------
 void
 PresShell::PaintCount(const char * aName,
-                      nsRenderingContext* aRenderingContext,
+                      gfxContext* aRenderingContext,
                       nsPresContext* aPresContext,
                       nsIFrame * aFrame,
                       const nsPoint& aOffset,
@@ -10458,7 +10453,7 @@ void ReflowCountMgr::Add(const char * aName, nsIFrame * aFrame)
 
 //------------------------------------------------------------------
 void ReflowCountMgr::PaintCount(const char*     aName,
-                                nsRenderingContext* aRenderingContext,
+                                gfxContext*     aRenderingContext,
                                 nsPresContext*  aPresContext,
                                 nsIFrame*       aFrame,
                                 const nsPoint&  aOffset,
@@ -10475,11 +10470,11 @@ void ReflowCountMgr::PaintCount(const char*     aName,
       DrawTarget* drawTarget = aRenderingContext->GetDrawTarget();
       int32_t appUnitsPerDevPixel = aPresContext->AppUnitsPerDevPixel();
 
-      aRenderingContext->ThebesContext()->Save();
+      aRenderingContext->Save();
       gfxPoint devPixelOffset =
         nsLayoutUtils::PointToGfxPoint(aOffset, appUnitsPerDevPixel);
-      aRenderingContext->ThebesContext()->SetMatrix(
-        aRenderingContext->ThebesContext()->CurrentMatrix().Translate(devPixelOffset));
+      aRenderingContext->SetMatrix(
+        aRenderingContext->CurrentMatrix().Translate(devPixelOffset));
 
       // We don't care about the document language or user fonts here;
       // just get a default Latin font.
@@ -10522,12 +10517,12 @@ void ReflowCountMgr::PaintCount(const char*     aName,
       ColorPattern black(ToDeviceColor(Color(0.f, 0.f, 0.f, 1.f)));
       drawTarget->FillRect(devPxRect, black);
 
-      aRenderingContext->ThebesContext()->SetColor(color2);
+      aRenderingContext->SetColor(color2);
       fm->DrawString(buf, len, x+15, y+15, aRenderingContext);
-      aRenderingContext->ThebesContext()->SetColor(color);
+      aRenderingContext->SetColor(color);
       fm->DrawString(buf, len, x, y, aRenderingContext);
 
-      aRenderingContext->ThebesContext()->Restore();
+      aRenderingContext->Restore();
     }
   }
 }
@@ -11192,8 +11187,8 @@ nsIPresShell::SyncWindowProperties(nsView* aView)
   nsIFrame* frame = aView->GetFrame();
   if (frame && mPresContext) {
     // CreateReferenceRenderingContext can return nullptr
-    nsRenderingContext rcx(CreateReferenceRenderingContext());
-    nsContainerFrame::SyncWindowProperties(mPresContext, frame, aView, &rcx, 0);
+    RefPtr<gfxContext> rcx(CreateReferenceRenderingContext());
+    nsContainerFrame::SyncWindowProperties(mPresContext, frame, aView, rcx, 0);
   }
 }
 
