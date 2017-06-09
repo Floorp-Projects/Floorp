@@ -8,6 +8,8 @@
 #include "ScriptLoader.h"
 #include "ScriptTrace.h"
 
+#include "nsContentUtils.h"
+
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/Telemetry.h"
 
@@ -277,10 +279,11 @@ ScriptLoadHandler::EnsureKnownDataType(nsIIncrementalStreamLoader* aLoader)
   if (cic) {
     nsAutoCString altDataType;
     cic->GetAlternativeDataType(altDataType);
-    if (altDataType.EqualsLiteral("javascript/moz-bytecode-" NS_STRINGIFY(MOZ_BUILDID))) {
+    if (altDataType.Equals(nsContentUtils::JSBytecodeMimeType())) {
       mRequest->mDataType = ScriptLoadRequest::DataType::Bytecode;
       TRACE_FOR_TEST(mRequest->mElement, "scriptloader_load_bytecode");
     } else {
+      MOZ_ASSERT(altDataType.IsEmpty());
       mRequest->mDataType = ScriptLoadRequest::DataType::Source;
       TRACE_FOR_TEST(mRequest->mElement, "scriptloader_load_source");
     }

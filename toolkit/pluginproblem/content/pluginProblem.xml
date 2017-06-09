@@ -27,6 +27,7 @@
                 <html:label>
                     <html:button class="icon" anonid="icon"/>
                     <html:div class="msg msgVulnerabilityStatus" anonid="vulnerabilityStatus"><!-- set at runtime --></html:div>
+                    <html:div class="msg msgActivationWarning">&pluginActivationWarning;</html:div>
                     <html:div class="msg msgTapToPlay">&tapToPlayPlugin;</html:div>
                     <html:div class="msg msgClickToPlay" anonid="clickToPlay">&clickToActivatePlugin;</html:div>
                 </html:label>

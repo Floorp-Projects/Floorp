@@ -9,7 +9,6 @@
 #include "nsStyleConsts.h"
 #include "nsUXThemeData.h"
 #include "nsUXThemeConstants.h"
-#include "gfxFont.h"
 #include "WinUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/WindowsVersion.h"
@@ -663,12 +662,41 @@ nsLookAndFeel::GetFontImpl(FontID anID, nsString &aFontName,
                            gfxFontStyle &aFontStyle,
                            float aDevPixPerCSSPixel)
 {
-  HDC tdc = GetDC(nullptr);
-  bool status = GetSysFontInfo(tdc, anID, aFontName, aFontStyle);
-  ReleaseDC(nullptr, tdc);
+  CachedSystemFont &cacheSlot = mSystemFontCache[anID];
+
+  bool status;
+  if (cacheSlot.mCacheValid) {
+    status = cacheSlot.mHaveFont;
+    if (status) {
+      aFontName = cacheSlot.mFontName;
+      aFontStyle = cacheSlot.mFontStyle;
+    }
+  } else {
+    HDC tdc = GetDC(nullptr);
+    status = GetSysFontInfo(tdc, anID, aFontName, aFontStyle);
+    ReleaseDC(nullptr, tdc);
+
+    cacheSlot.mCacheValid = true;
+    cacheSlot.mHaveFont = status;
+    if (status) {
+      cacheSlot.mFontName = aFontName;
+      cacheSlot.mFontStyle = aFontStyle;
+    }
+  }
   // now convert the logical font size from GetSysFontInfo into device pixels for layout
   aFontStyle.size *= aDevPixPerCSSPixel;
   return status;
+}
+
+/* virtual */ void
+nsLookAndFeel::RefreshImpl()
+{
+  nsXPLookAndFeel::RefreshImpl();
+
+  for (auto e = mSystemFontCache.begin(), end = mSystemFontCache.end();
+       e != end; ++e) {
+    e->mCacheValid = false;
+  }
 }
 
 /* virtual */
