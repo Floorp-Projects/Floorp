@@ -2590,7 +2590,14 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           return;
         }
 
-        this.mousedOverIndex = this.getIndexOfItem(item);
+        let index = this.getIndexOfItem(item);
+
+        this.mousedOverIndex = index;
+
+        if (item.selectedByMouseOver) {
+          this.selectedIndex = index;
+        }
+
         this.mLastMoveTime = Date.now();
       ]]>
       </handler>

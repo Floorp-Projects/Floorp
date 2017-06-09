@@ -23,6 +23,7 @@
 namespace mozilla {
 namespace mscom {
 
+struct IWeakReferenceSource;
 class WeakReferenceSupport;
 
 namespace detail {
@@ -34,6 +35,7 @@ public:
   void Lock();
   void Unlock();
 
+  HRESULT ToStrongRef(IWeakReferenceSource** aOutStringReference);
   HRESULT Resolve(REFIID aIid, void** aOutStrongReference);
   void Clear();
 
@@ -60,6 +62,7 @@ DEFINE_GUID(IID_IWeakReference,
 
 struct IWeakReference : public IUnknown
 {
+  virtual STDMETHODIMP ToStrongRef(IWeakReferenceSource** aOutStrongReference) = 0;
   virtual STDMETHODIMP Resolve(REFIID aIid, void** aOutStrongReference) = 0;
 };
 
@@ -114,6 +117,7 @@ public:
   STDMETHODIMP_(ULONG) Release() override;
 
   // IWeakReference
+  STDMETHODIMP ToStrongRef(IWeakReferenceSource** aOutStrongReference) override;
   STDMETHODIMP Resolve(REFIID aIid, void** aOutStrongReference) override;
 
   explicit WeakRef(RefPtr<detail::SharedRef>& aSharedRef);

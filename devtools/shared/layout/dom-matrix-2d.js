@@ -105,48 +105,34 @@ const apply = (M, P) => [
 exports.apply = apply;
 
 /**
- * Returns the transformation origin point for the given node.
+ * Returns `true` if the given matrix is a identity matrix.
  *
- * @param {DOMNode} node
- *        The node.
- * @return {Array}
- *        The transformation origin point.
+ * @param {Array} M
+ *        The matrix to check
+ * @return {Boolean}
+ *        `true` if the matrix passed is a identity matrix, `false` otherwise.
  */
-function getNodeTransformOrigin(node) {
-  let origin = node.ownerGlobal.getComputedStyle(node).transformOrigin;
-
-  return origin.split(/ /).map(parseFloat);
-}
-exports.getNodeTransformOrigin = getNodeTransformOrigin;
+const isIdentity = (M) =>
+  M[0] === 1 && M[1] === 0 && M[2] === 0 &&
+  M[3] === 0 && M[4] === 1 && M[5] === 0 &&
+  M[6] === 0 && M[7] === 0 && M[8] === 1;
+exports.isIdentity = isIdentity;
 
 /**
- * Returns the transformation matrix for the given node.
+ * Returns the transformation matrix for the given node, relative to the ancestor passed
+ * as second argument.
+ * If no ancestor is specified, it will returns the transformation matrix relative to the
+ * node's parent element.
  *
  * @param {DOMNode} node
  *        The node.
- * @return {Array}
+ * @param {DOMNode} ancestor
+ *        The ancestor of the node given.
+ ** @return {Array}
  *        The transformation matrix.
  */
-function getNodeTransformationMatrix(node) {
-  let t = node.ownerGlobal.getComputedStyle(node).transform;
-
-  if (t === "none") {
-    return null;
-  }
-
-  // We're assuming is a 2d matrix.
-  let m = t.substring(t.indexOf("(") + 1, t.length - 1).split(/,\s*/).map(Number);
-  let [a, b, c, d, e, f] = m;
-
-  // If the length is 16, it's a 3d matrix: in that case we'll extrapolate only the values
-  // we need for the 2D transformation; this cover the scenario where 3D CSS properties
-  // are used only for HW acceleration on 2D transformation.
-  if (m.length === 16) {
-    c = m[4];
-    d = m[5];
-    e = m[12];
-    f = m[13];
-  }
+function getNodeTransformationMatrix(node, ancestor = node.parentElement) {
+  let { a, b, c, d, e, f } = node.getTransformToAncestor(ancestor);
 
   return [
     a, c, e,
@@ -154,5 +140,4 @@ function getNodeTransformationMatrix(node) {
     0, 0, 1
   ];
 }
-
 exports.getNodeTransformationMatrix = getNodeTransformationMatrix;

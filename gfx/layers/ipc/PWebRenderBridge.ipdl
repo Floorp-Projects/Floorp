@@ -43,13 +43,13 @@ parent:
   async InitReadLocks(ReadLockInit[] locks);
 
   sync Create(IntSize aSize);
-  sync AddImage(ImageKey aImageKey, IntSize aSize, uint32_t aStride,
-                SurfaceFormat aFormat, ByteBuffer aBytes);
+  async AddImage(ImageKey aImageKey, IntSize aSize, uint32_t aStride,
+                 SurfaceFormat aFormat, ByteBuffer aBytes);
   async AddBlobImage(ImageKey aImageKey, IntSize aSize, uint32_t aStride,
                      SurfaceFormat aFormat, ByteBuffer aBytes);
-  sync UpdateImage(ImageKey aImageKey, IntSize aSize,
+  async UpdateImage(ImageKey aImageKey, IntSize aSize,
                    SurfaceFormat aFormat, ByteBuffer aBytes);
-  sync DeleteImage(ImageKey aImageKey);
+  async DeleteImage(ImageKey aImageKey);
   async DeleteCompositorAnimations(uint64_t[] aIds);
   async AddRawFont(FontKey aFontKey, ByteBuffer aBytes, uint32_t aFontIndex);
   async DeleteFont(FontKey aFontKey);

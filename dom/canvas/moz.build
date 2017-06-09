@@ -135,6 +135,7 @@ UNIFIED_SOURCES += [
     'WebGLExtensionCompressedTextureETC1.cpp',
     'WebGLExtensionCompressedTexturePVRTC.cpp',
     'WebGLExtensionCompressedTextureS3TC.cpp',
+    'WebGLExtensionCompressedTextureS3TC_SRGB.cpp',
     'WebGLExtensionDebugRendererInfo.cpp',
     'WebGLExtensionDebugShaders.cpp',
     'WebGLExtensionDepthTexture.cpp',

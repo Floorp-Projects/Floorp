@@ -29,6 +29,8 @@ FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 function FormAutofillHandler(form) {
   this.form = form;
   this.fieldDetails = [];
+  this.winUtils = this.form.rootElement.ownerGlobal.QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIDOMWindowUtils);
 }
 
 FormAutofillHandler.prototype = {
@@ -56,6 +58,23 @@ FormAutofillHandler.prototype = {
    * String of the filled profile's guid.
    */
   filledProfileGUID: null,
+
+  /**
+   * A WindowUtils reference of which Window the form belongs
+   */
+  winUtils: null,
+
+  /**
+   * Enum for form autofill MANUALLY_MANAGED_STATES values
+   */
+  fieldStateEnum: {
+    // not themed
+    NORMAL: null,
+    // highlighted
+    AUTO_FILLED: "-moz-autofill",
+    // highlighted && grey color text
+    PREVIEW: "-moz-autofill-preview",
+  },
 
   /**
    * Set fieldDetails from the form about fields that can be autofilled.
@@ -87,16 +106,16 @@ FormAutofillHandler.prototype = {
       // 4. value already chosen in select element
 
       let element = fieldDetail.elementWeakRef.get();
-      if (!element || element === focusedInput) {
+      if (!element) {
         continue;
       }
 
       let value = profile[fieldDetail.fieldName];
-      if (element instanceof Ci.nsIDOMHTMLInputElement && value) {
-        if (element.value) {
-          continue;
+      if (element instanceof Ci.nsIDOMHTMLInputElement && !element.value && value) {
+        if (element !== focusedInput) {
+          element.setUserInput(value);
         }
-        element.setUserInput(value);
+        this.changeFieldState(fieldDetail, "AUTO_FILLED");
       } else if (element instanceof Ci.nsIDOMHTMLSelectElement) {
         for (let option of element.options) {
           if (value === option.textContent || value === option.value) {
@@ -110,11 +129,62 @@ FormAutofillHandler.prototype = {
             option.selected = true;
             element.dispatchEvent(new Event("input", {"bubbles": true}));
             element.dispatchEvent(new Event("change", {"bubbles": true}));
+            this.changeFieldState(fieldDetail, "AUTO_FILLED");
             break;
           }
         }
       }
+
+      // Unlike using setUserInput directly, FormFillController dispatches an
+      // asynchronous "DOMAutoComplete" event with an "input" event follows right
+      // after. So, we need to suppress the first "input" event fired off from
+      // focused input to make sure the latter change handler won't be affected
+      // by auto filling.
+      if (element === focusedInput) {
+        const suppressFirstInputHandler = e => {
+          if (e.isTrusted) {
+            e.stopPropagation();
+            element.removeEventListener("input", suppressFirstInputHandler);
+          }
+        };
+
+        element.addEventListener("input", suppressFirstInputHandler);
+      }
+      element.previewValue = "";
     }
+
+    // Handle the highlight style resetting caused by user's correction afterward.
+    log.debug("register change handler for filled form:", this.form);
+    const onChangeHandler = e => {
+      let hasFilledFields;
+
+      if (!e.isTrusted) {
+        return;
+      }
+
+      for (let fieldDetail of this.fieldDetails) {
+        let element = fieldDetail.elementWeakRef.get();
+
+        if (!element) {
+          return;
+        }
+
+        if (e.target == element || (e.target == element.form && e.type == "reset")) {
+          this.changeFieldState(fieldDetail, "NORMAL");
+        }
+
+        hasFilledFields |= (fieldDetail.state == "AUTO_FILLED");
+      }
+
+      // Unregister listeners once no field is in AUTO_FILLED state.
+      if (!hasFilledFields) {
+        this.form.rootElement.removeEventListener("input", onChangeHandler);
+        this.form.rootElement.removeEventListener("reset", onChangeHandler);
+      }
+    };
+
+    this.form.rootElement.addEventListener("input", onChangeHandler);
+    this.form.rootElement.addEventListener("reset", onChangeHandler);
   },
 
   /**
@@ -125,33 +195,81 @@ FormAutofillHandler.prototype = {
    */
   previewFormFields(profile) {
     log.debug("preview profile in autofillFormFields:", profile);
-    /*
+
     for (let fieldDetail of this.fieldDetails) {
+      let element = fieldDetail.elementWeakRef.get();
       let value = profile[fieldDetail.fieldName] || "";
 
-      // Skip the fields that already has text entered
-      if (fieldDetail.element.value) {
+      // Skip the field that is null or already has text entered
+      if (!element || element.value) {
         continue;
       }
 
-      // TODO: Set highlight style and preview text.
+      element.previewValue = value;
+      this.changeFieldState(fieldDetail, value ? "PREVIEW" : "NORMAL");
     }
-    */
   },
 
+  /**
+   * Clear preview text and background highlight of all fields.
+   */
   clearPreviewedFormFields() {
     log.debug("clear previewed fields in:", this.form);
-    /*
-    for (let fieldDetail of this.fieldDetails) {
-      // TODO: Clear preview text
 
-      // We keep the highlight of all fields if this form has
-      // already been auto-filled with a profile.
-      if (this.filledProfileGUID == null) {
-        // TODO: Remove highlight style
+    for (let fieldDetail of this.fieldDetails) {
+      let element = fieldDetail.elementWeakRef.get();
+      if (!element) {
+        log.warn(fieldDetail.fieldName, "is unreachable");
+        continue;
+      }
+
+      element.previewValue = "";
+
+      // We keep the state if this field has
+      // already been auto-filled.
+      if (fieldDetail.state === "AUTO_FILLED") {
+        continue;
+      }
+
+      this.changeFieldState(fieldDetail, "NORMAL");
+    }
+  },
+
+  /**
+   * Change the state of a field to correspond with different presentations.
+   *
+   * @param {Object} fieldDetail
+   *        A fieldDetail of which its element is about to update the state.
+   * @param {string} nextState
+   *        Used to determine the next state
+   */
+  changeFieldState(fieldDetail, nextState) {
+    let element = fieldDetail.elementWeakRef.get();
+
+    if (!element) {
+      log.warn(fieldDetail.fieldName, "is unreachable while changing state");
+      return;
+    }
+    if (!(nextState in this.fieldStateEnum)) {
+      log.warn(fieldDetail.fieldName, "is trying to change to an invalid state");
+      return;
+    }
+
+    for (let [state, mmStateValue] of Object.entries(this.fieldStateEnum)) {
+      // The NORMAL state is simply the absence of other manually
+      // managed states so we never need to add or remove it.
+      if (!mmStateValue) {
+        continue;
+      }
+
+      if (state == nextState) {
+        this.winUtils.addManuallyManagedState(element, mmStateValue);
+      } else {
+        this.winUtils.removeManuallyManagedState(element, mmStateValue);
       }
     }
-    */
+
+    fieldDetail.state = nextState;
   },
 
   /**
