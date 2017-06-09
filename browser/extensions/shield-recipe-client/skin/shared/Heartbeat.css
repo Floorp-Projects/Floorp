@@ -5,13 +5,10 @@
 /* Notification overrides for Heartbeat UI */
 
 notification.heartbeat {
-  background-color: #F1F1F1;
-  border-bottom: 1px solid #C1C1C1;
+  background-color: #F1F1F1 !important;
+  border-bottom: 1px solid #C1C1C1 !important;
   height: 40px;
 }
-
-/* In themes/osx/global/notification.css the close icon is inverted because notifications
-   on OSX are usually dark. Heartbeat is light, so override that behaviour. */
 
 @keyframes pulse-onshow {
   0% {
@@ -52,17 +49,17 @@ notification.heartbeat {
 }
 
 .messageText.heartbeat {
-  color: #333;
+  color: #333 !important;
   margin-inline-end: 12px !important; /* The !important is required to override OSX default style. */
   margin-inline-start: 0;
   text-shadow: none;
 }
 
 .messageImage.heartbeat {
-  height: 24px;
-  margin-inline-end: 8px;
-  margin-inline-start: 8px;
-  width: 24px;
+  height: 24px !important;
+  margin-inline-end: 8px !important;
+  margin-inline-start: 8px !important;
+  width: 24px !important;
 }
 
 .messageImage.heartbeat.pulse-onshow {
@@ -81,17 +78,17 @@ notification.heartbeat {
 
 /* Learn More link styles */
 .heartbeat > .text-link {
-  color: #0095DD;
-  margin-inline-start: 0;
+  color: #0095DD !important;
+  margin-inline-start: 0 !important;
 }
 
 .heartbeat > .text-link:hover {
-  color: #008ACB;
-  text-decoration: none;
+  color: #008ACB !important;
+  text-decoration: none !important;
 }
 
 .heartbeat > .text-link:hover:active {
-  color: #006B9D;
+  color: #006B9D !important;
 }
 
 /* Heartbeat UI Rating Star Classes */
