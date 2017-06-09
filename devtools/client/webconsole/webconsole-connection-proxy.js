@@ -287,11 +287,12 @@ WebConsoleConnectionProxy.prototype = {
    *        The message received from the server.
    */
   _onPageError: function (type, packet) {
-    if (this.webConsoleFrame && packet.from == this._consoleActor) {
-      if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
-        this.dispatchMessageAdd(packet);
-        return;
-      }
+    if (!this.webConsoleFrame || packet.from != this._consoleActor) {
+      return;
+    }
+    if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
+      this.dispatchMessageAdd(packet);
+    } else {
       this.webConsoleFrame.handlePageError(packet.pageError);
     }
   },
@@ -310,7 +311,6 @@ WebConsoleConnectionProxy.prototype = {
     if (!this.webConsoleFrame || packet.from != this._consoleActor) {
       return;
     }
-
     if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
       this.dispatchMessageAdd(packet);
     } else {
@@ -329,12 +329,13 @@ WebConsoleConnectionProxy.prototype = {
    *        The message received from the server.
    */
   _onConsoleAPICall: function (type, packet) {
-    if (this.webConsoleFrame && packet.from == this._consoleActor) {
-      if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
-        this.dispatchMessageAdd(packet);
-      } else {
-        this.webConsoleFrame.handleConsoleAPICall(packet.message);
-      }
+    if (!this.webConsoleFrame || packet.from != this._consoleActor) {
+      return;
+    }
+    if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
+      this.dispatchMessageAdd(packet);
+    } else {
+      this.webConsoleFrame.handleConsoleAPICall(packet.message);
     }
   },
 
@@ -349,12 +350,13 @@ WebConsoleConnectionProxy.prototype = {
    *        The network request information.
    */
   _onNetworkEvent: function (type, networkInfo) {
-    if (this.webConsoleFrame) {
-      if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
-        this.dispatchMessageAdd(networkInfo);
-      } else {
-        this.webConsoleFrame.handleNetworkEvent(networkInfo);
-      }
+    if (!this.webConsoleFrame) {
+      return;
+    }
+    if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
+      this.dispatchMessageAdd(networkInfo);
+    } else {
+      this.webConsoleFrame.handleNetworkEvent(networkInfo);
     }
   },
 
@@ -369,11 +371,13 @@ WebConsoleConnectionProxy.prototype = {
    *        The update response received from the server.
    */
   _onNetworkEventUpdate: function (type, response) {
+    if (!this.webConsoleFrame) {
+      return;
+    }
     let { packet, networkInfo } = response;
-    if (this.webConsoleFrame) {
-      if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
-        this.dispatchMessageUpdate(networkInfo, response);
-      }
+    if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
+      this.dispatchMessageUpdate(networkInfo, response);
+    } else {
       this.webConsoleFrame.handleNetworkEventUpdate(networkInfo, packet);
     }
   },
@@ -389,13 +393,23 @@ WebConsoleConnectionProxy.prototype = {
    *        The message received from the server.
    */
   _onFileActivity: function (type, packet) {
-    if (this.webConsoleFrame && packet.from == this._consoleActor) {
+    if (!this.webConsoleFrame || packet.from != this._consoleActor) {
+      return;
+    }
+    if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
+      // TODO: Implement for new console
+    } else {
       this.webConsoleFrame.handleFileActivity(packet.uri);
     }
   },
 
   _onReflowActivity: function (type, packet) {
-    if (this.webConsoleFrame && packet.from == this._consoleActor) {
+    if (!this.webConsoleFrame || packet.from != this._consoleActor) {
+      return;
+    }
+    if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
+      // TODO: Implement for new console
+    } else {
       this.webConsoleFrame.handleReflowActivity(packet);
     }
   },
@@ -411,7 +425,12 @@ WebConsoleConnectionProxy.prototype = {
    *        The message received from the server.
    */
   _onServerLogCall: function (type, packet) {
-    if (this.webConsoleFrame && packet.from == this._consoleActor) {
+    if (!this.webConsoleFrame || packet.from != this._consoleActor) {
+      return;
+    }
+    if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
+      // TODO: Implement for new console
+    } else {
       this.webConsoleFrame.handleConsoleAPICall(packet.message);
     }
   },

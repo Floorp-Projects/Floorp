@@ -16,6 +16,7 @@ DevToolsModules(
     'console-output.js',
     'hudservice.js',
     'jsterm.js',
+    'new-webconsole.js',
     'panel.js',
     'utils.js',
     'webconsole-connection-proxy.js',
