@@ -6,16 +6,15 @@ import os
 import subprocess
 
 
-class VCSFiles(object):
-    def __init__(self):
-        self._root = None
-        self._vcs = None
+class VCSHelper(object):
+    """A base VCS helper that always returns an empty list
+    for the case when no version control was found.
+    """
+    def __init__(self, root):
+        self.root = root
 
-    @property
-    def root(self):
-        if self._root:
-            return self._root
-
+    @classmethod
+    def find_vcs(cls):
         # First check if we're in an hg repo, if not try git
         commands = (
             ['hg', 'root'],
@@ -27,42 +26,57 @@ class VCSFiles(object):
             output = proc.communicate()[0].strip()
 
             if proc.returncode == 0:
-                self._vcs = cmd[0]
-                self._root = output
-                return self._root
+                return cmd[0], output
+        return 'none', ''
 
-    @property
-    def vcs(self):
-        return self._vcs or (self.root and self._vcs)
+    @classmethod
+    def create(cls):
+        vcs, root = cls.find_vcs()
+        return vcs_class[vcs](root)
 
-    @property
-    def is_hg(self):
-        return self.vcs == 'hg'
+    def run(self, cmd):
+        try:
+            files = subprocess.check_output(cmd, stderr=subprocess.STDOUT).split()
+        except subprocess.CalledProcessError as e:
+            print(' '.join(cmd))
+            print(e.output)
+            return []
+        return [os.path.join(self.root, f) for f in files if f]
 
-    @property
-    def is_git(self):
-        return self.vcs == 'git'
-
-    def _run(self, cmd):
-        files = subprocess.check_output(cmd).split()
-        return [os.path.join(self.root, f) for f in files]
-
-    def outgoing(self, destination='default'):
-        if self.is_hg:
-            return self._run(['hg', 'outgoing', '--quiet', '-r .',
-                              destination, '--template',
-                              '{files % "\n{file}"}'])
-        elif self.is_git:
-            if destination == 'default':
-                comparing = 'origin/master..HEAD'
-            else:
-                comparing = '{}..HEAD'.format(destination)
-            return self._run(['git', 'log', '--name-only', comparing])
+    def by_workdir(self, workdir):
         return []
+
+    def by_outgoing(self, dest='default'):
+        return []
+
+
+class HgHelper(VCSHelper):
+    """A helper to find files to lint from Mercurial."""
+
+    def by_outgoing(self, dest='default'):
+        return self.run(['hg', 'outgoing', '--quiet', '-r .',
+                         dest, '--template', '{files % "\n{file}"}'])
 
     def by_workdir(self):
-        if self.is_hg:
-            return self._run(['hg', 'status', '-amn'])
-        elif self.is_git:
-            return self._run(['git', 'diff', '--name-only'])
-        return []
+        return self.run(['hg', 'status', '-amn'])
+
+
+class GitHelper(VCSHelper):
+    """A helper to find files to lint from Git."""
+
+    def by_outgoing(self, dest='default'):
+        if dest == 'default':
+            comparing = 'origin/master..HEAD'
+        else:
+            comparing = '{}..HEAD'.format(dest)
+        return self.run(['git', 'log', '--name-only', comparing])
+
+    def by_workdir(self):
+        return self.run(['git', 'diff', '--name-only'])
+
+
+vcs_class = {
+    'git': GitHelper,
+    'hg': HgHelper,
+    'none': VCSHelper,
+}
