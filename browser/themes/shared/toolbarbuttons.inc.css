@@ -17,6 +17,8 @@
   --toolbarbutton-inner-padding: 6px;
 
   --backbutton-background: hsla(0,100%,100%,.8);
+  --backbutton-hover-background: var(--backbutton-background);
+  --backbutton-active-background: var(--toolbarbutton-active-background);
 
   --backbutton-border-color: hsla(240,5%,5%,.3);
 %else
@@ -34,8 +36,8 @@
   --toolbarbutton-inner-padding: 9px;
 }
 
-toolbar:-moz-lwtheme {
 %ifndef MOZ_PHOTON_THEME
+toolbar:-moz-lwtheme {
   --toolbarbutton-hover-background: rgba(255,255,255,.25);
   --toolbarbutton-active-background: rgba(70%,70%,70%,.25);
 
@@ -43,13 +45,17 @@ toolbar:-moz-lwtheme {
 
   --toolbarbutton-active-bordercolor: rgba(0,0,0,.3);
   --toolbarbutton-active-boxshadow: 0 0 2px rgba(0,0,0,.6) inset;
-%endif
+
   --toolbarbutton-checkedhover-backgroundcolor: rgba(85%,85%,85%,.25);
 }
-
-%ifdef MOZ_PHOTON_THEME
+%else
 toolbar[brighttext] {
-  --backbutton-background: hsla(240,5%,5%,.1);
+  --toolbarbutton-hover-background: hsla(0,0%,100%,.2);
+  --toolbarbutton-active-background: hsla(0,0%,100%,.3);
+
+  --backbutton-background: var(--toolbarbutton-hover-background);
+  --backbutton-hover-background: var(--toolbarbutton-active-background);
+  --backbutton-active-background: hsla(0,0%,100%,.4);
 }
 %endif
 
@@ -288,8 +294,10 @@ toolbarbutton.bookmark-item:not(.subviewbutton):hover:not([disabled="true"]):not
 @conditionalForwardWithUrlbar@ > #forward-button:not([open]):not(:active):not([disabled]):hover > .toolbarbutton-icon,
 %endif
 #nav-bar .toolbarbutton-1:not([buttonover]):not([open]):not(:active):hover > .toolbarbutton-menubutton-dropmarker:not([disabled]) > .dropmarker-icon {
+%ifdef MOZ_PHOTON_THEME
+  background-color: var(--toolbarbutton-hover-background);
+%else
   background: var(--toolbarbutton-hover-background);
-%ifndef MOZ_PHOTON_THEME
   border-color: var(--toolbarbutton-hover-bordercolor);
   box-shadow: var(--toolbarbutton-hover-boxshadow);
 %endif
@@ -304,8 +312,10 @@ toolbarbutton.bookmark-item[open="true"],
 #nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-text,
 #nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-badge-stack {
+%ifdef MOZ_PHOTON_THEME
+  background-color: var(--toolbarbutton-active-background);
+%else
   background: var(--toolbarbutton-active-background);
-%ifndef MOZ_PHOTON_THEME
   border-color: var(--toolbarbutton-active-bordercolor);
   box-shadow: var(--toolbarbutton-active-boxshadow);
 %endif
@@ -314,7 +324,11 @@ toolbarbutton.bookmark-item[open="true"],
 }
 
 #nav-bar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
+%ifdef MOZ_PHOTON_THEME
+  background-color: var(--toolbarbutton-hover-background);
+%else
   background-color: var(--toolbarbutton-checkedhover-backgroundcolor);
+%endif
   transition: background-color .4s;
 }
 
@@ -382,10 +396,10 @@ toolbarbutton.bookmark-item[open="true"],
 
 :root:not([uidensity=compact]) #back-button > .toolbarbutton-icon {
 %ifdef MOZ_PHOTON_THEME
-  background: var(--backbutton-background);
-  border: 1px solid var(--backbutton-border-color);
+  background-color: var(--backbutton-background);
   background-origin: padding-box;
   background-clip: padding-box;
+  border: 1px solid var(--backbutton-border-color);
 %endif
   border-radius: 10000px;
   max-width: 32px;
@@ -404,14 +418,14 @@ toolbarbutton.bookmark-item[open="true"],
 
 %ifdef MOZ_PHOTON_THEME
 :root:not([uidensity=compact]) #back-button:not([disabled]):not([open]):hover > .toolbarbutton-icon {
-  background: var(--backbutton-background) !important;
+  background-color: var(--backbutton-hover-background) !important;
   box-shadow: 0 1px 6px hsla(0,0%,0%,.1);
   border-color: hsla(240,5%,5%,.35);
 }
 
 :root:not([uidensity=compact]) #back-button[open] > .toolbarbutton-icon,
 :root:not([uidensity=compact]) #back-button:not([disabled]):hover:active > .toolbarbutton-icon {
-  background: var(--toolbarbutton-active-background) !important;
+  background-color: var(--backbutton-active-background) !important;
   border-color: hsla(240,5%,5%,.40);
 }
 %endif

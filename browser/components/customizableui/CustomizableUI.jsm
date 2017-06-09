@@ -229,7 +229,7 @@ var CustomizableUIInternal = {
       panelPlacements.push("characterencoding-button");
     }
 
-    if (!AppConstants.RELEASE_OR_BETA) {
+    if (AppConstants.MOZ_DEV_EDITION || AppConstants.NIGHTLY_BUILD) {
       if (Services.prefs.getBoolPref("extensions.webcompat-reporter.enabled")) {
         panelPlacements.push("webcompat-reporter-button");
       }
