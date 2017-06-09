@@ -11,6 +11,7 @@
 
 #ifdef BUILD_ARM_NEON
 #include "mozilla/arm.h"
+#include "LuminanceNEON.h"
 #endif
 
 namespace mozilla {
@@ -76,6 +77,15 @@ ComputesRGBLuminanceMask(const uint8_t *aSourceData,
                          const IntSize &aSize,
                          float aOpacity)
 {
+#ifdef BUILD_ARM_NEON
+  if (mozilla::supports_neon()) {
+    ComputesRGBLuminanceMask_NEON(aSourceData, aSourceStride,
+                                  aDestData, aDestStride,
+                                  aSize, aOpacity);
+    return;
+  }
+#endif
+
   int32_t redFactor = 55 * aOpacity; // 255 * 0.2125 * opacity
   int32_t greenFactor = 183 * aOpacity; // 255 * 0.7154 * opacity
   int32_t blueFactor = 18 * aOpacity; // 255 * 0.0721

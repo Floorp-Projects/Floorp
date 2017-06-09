@@ -232,6 +232,14 @@ add_task(async function testAutocomplete() {
 });
 
 add_task(async function testClearHistory() {
+  // Open the textbox context menu to trigger controller attachment.
+  let textbox = searchBar.textbox;
+  let popupShownPromise = BrowserTestUtils.waitForEvent(textbox, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(textbox, { type: "contextmenu", button: 2 });
+  await popupShownPromise;
+  // Close the context menu.
+  EventUtils.synthesizeKey("VK_ESCAPE", {});
+
   let controller = searchBar.textbox.controllers.getControllerForCommand("cmd_clearhistory")
   ok(controller.isCommandEnabled("cmd_clearhistory"), "Clear history command enabled");
   controller.doCommand("cmd_clearhistory");
