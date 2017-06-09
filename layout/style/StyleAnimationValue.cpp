@@ -2925,12 +2925,10 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
                                  aCoeff2 * double(aValue2.GetIntValue());
       int32_t result = floor(interpolatedValue + 0.5);
       if (aProperty == eCSSProperty_font_weight) {
-        if (result < 100) {
-          result = 100;
-        } else if (result > 900) {
-          result = 900;
-        }
+        // https://drafts.csswg.org/css-transitions/#animtype-font-weight
+        result += 50;
         result -= result % 100;
+        result = Clamp(result, 100, 900);
       } else {
         result = RestrictValue(aProperty, result);
       }
