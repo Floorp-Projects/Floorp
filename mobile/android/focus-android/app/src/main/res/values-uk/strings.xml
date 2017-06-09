@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">Поділитись зображенням</string>
   <string name="contextmenu_image_copy">Копіювати адресу зображення</string>
   <string name="contextmenu_image_save">Зберегти зображення</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1085;&#1077; &#1074;&#1080;&#1076;&#1072;&#1083;&#1103;&#1102;&#1090;&#1100;&#1089;&#1103;</b>" &#1087;&#1088;&#1080; &#1089;&#1090;&#1080;&#1088;&#1072;&#1085;&#1085;&#1110; &#1110;&#1089;&#1090;&#1086;&#1088;&#1110;&#1111; %1$s."]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["Збережені та поширені зображення "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1085;&#1077; &#1074;&#1080;&#1076;&#1072;&#1083;&#1103;&#1102;&#1090;&#1100;&#1089;&#1103;</b>" при стиранні історії %1$s."]]></string>
   <string name="firstrun_tracking_title">Переглядайте без думки, що за вами хтось спостерігає</string>
   <string name="firstrun_tracking_text">Автоматично блокуйте стеження онлайн. Потім видаляйте відвідані сторінки та куки, торкнувшись піктограми смітника в програмі, або в панелі сповіщень.</string>
   <string name="firstrun_defaultbrowser_title">Прокачайте вашу приватність</string>

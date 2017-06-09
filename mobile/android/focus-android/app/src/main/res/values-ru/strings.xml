@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">Поделиться изображением</string>
   <string name="contextmenu_image_copy">Копировать адрес изображения</string>
   <string name="contextmenu_image_save">Сохранить изображение</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1085;&#1077; &#1073;&#1091;&#1076;&#1091;&#1090; &#1091;&#1076;&#1072;&#1083;&#1077;&#1085;&#1099;</b>, &#1082;&#1086;&#1075;&#1076;&#1072; &#1074;&#1099; &#1089;&#1086;&#1090;&#1088;&#1105;&#1090;&#1077; &#1080;&#1089;&#1090;&#1086;&#1088;&#1080;&#1102; %1$s.]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["Сохранённые и отправленные фотографии "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1085;&#1077; &#1073;&#1091;&#1076;&#1091;&#1090; &#1091;&#1076;&#1072;&#1083;&#1077;&#1085;&#1099;</b>, когда вы сотрёте историю %1$s.]]></string>
   <string name="firstrun_tracking_title">Сёрфите Интернет не опасаясь слежки</string>
   <string name="firstrun_tracking_text">Автоматически блокируйте онлайн-трекеры при веб-сёрфинге. Затем стирайте историю посещения страниц и куки одним касанием значка корзины в приложении или ваших уведомлениях.</string>
   <string name="firstrun_defaultbrowser_title">Усильте свою приватность</string>

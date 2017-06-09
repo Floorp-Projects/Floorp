@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">Համօգտագործել պատկերը</string>
   <string name="contextmenu_image_copy">Պատճենել պատկերի հասցեն</string>
   <string name="contextmenu_image_save">Պահպանել պատկերը</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1401;&#1381;&#1398; &#1403;&#1398;&#1403;&#1406;&#1387;</b>, &#1381;&#1408;&#1378; &#1380;&#1400;&#1410;&#1412; &#1403;&#1398;&#1403;&#1381;&#1412; %1$s-&#1384;]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["Պահպանված և համօգտագործված պատկերները "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1401;&#1381;&#1398; &#1403;&#1398;&#1403;&#1406;&#1387;</b>, երբ դուք ջնջեք %1$s-ը]]></string>
   <string name="firstrun_tracking_title">Դիտարկեք այնպես, կարծես ոչ ոք չի նայում ձեզ</string>
   <string name="firstrun_tracking_text">Ինքնաբար արգելափակել առցանց հետագծումները դիտարկումների ընթացքում: Ապա հեռացրեք այցելած էջերը և cookie-ները՝ հպելով հավելվածի ջնջելու պատկերակին կամ ծանուցումներին:</string>
   <string name="firstrun_defaultbrowser_title">Հզորացրեք ձեր գաղտնիությունը</string>

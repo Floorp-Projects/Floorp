@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">Del bilde</string>
   <string name="contextmenu_image_copy">Kopier bildeadresse</string>
   <string name="contextmenu_image_save">Lagre bilde</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">vil ikke bli fjernet</b>" n&#229;r du sletter %1$s-historikken."]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["Lagrede og delte bilder "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">vil ikke bli fjernet</b>" når du sletter %1$s-historikken."]]></string>
   <string name="firstrun_tracking_title">Surf uten å føle deg overvåket</string>
   <string name="firstrun_tracking_text">Blokker automatisk sporing når du surfer. Deretter fjerner du besøkte sider og infokapsler med et trykk på søppelikonet i appen eller i varslene dine.</string>
   <string name="firstrun_defaultbrowser_title">Styrk personvernet ditt</string>

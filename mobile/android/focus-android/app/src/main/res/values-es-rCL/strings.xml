@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">Compartir imagen</string>
   <string name="contextmenu_image_copy">Copiar dirección de la imagen</string>
   <string name="contextmenu_image_save">Guardar imagen</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">no ser&#225;n eliminadas</b>" cuando borres el historial de %1$s."]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["Las imágenes guardadas y compartidas "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">no ser&#225;n eliminadas</b>" cuando borres el historial de %1$s."]]></string>
   <string name="firstrun_tracking_title">Navega como si nadie te mirase</string>
   <string name="firstrun_tracking_text">Bloquea automáticamente los rastreadores en línea cuando navegas. Luego, elimina las páginas visitadas y las cookies con solo tocar el ícono de la papelera en tus notificaciones.</string>
   <string name="firstrun_defaultbrowser_title">Potencia tu privacidad</string>

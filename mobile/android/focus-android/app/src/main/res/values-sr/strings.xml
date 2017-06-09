@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">Подели слику</string>
   <string name="contextmenu_image_copy">Копирај адресу слике</string>
   <string name="contextmenu_image_save">Сачувај слику</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1085;&#1077;&#1115;&#1077; &#1073;&#1080;&#1090;&#1080; &#1086;&#1073;&#1088;&#1080;&#1089;&#1072;&#1085;&#1077;</b>" &#1082;&#1072;&#1076;&#1072; &#1086;&#1073;&#1088;&#1080;&#1096;&#1077;&#1090;&#1077; %1$s &#1080;&#1089;&#1090;&#1086;&#1088;&#1080;&#1112;&#1072;&#1090;."]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["Сачуване и дељене слике "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1085;&#1077;&#1115;&#1077; &#1073;&#1080;&#1090;&#1080; &#1086;&#1073;&#1088;&#1080;&#1089;&#1072;&#1085;&#1077;</b>" када обришете %1$s историјат."]]></string>
   <string name="firstrun_tracking_title">Сурфујте као да нико не гледа</string>
   <string name="firstrun_tracking_text">Аутоматски блокирајте трагаче док сурфујете интернетом. Затим обришите посећене странице и колачиће притиском на иконицу канте у апликацији или у вашим нотификацијама.</string>
   <string name="firstrun_defaultbrowser_title">Ојачајте вашу приватност</string>

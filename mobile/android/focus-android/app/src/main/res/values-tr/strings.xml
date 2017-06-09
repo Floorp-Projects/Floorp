@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">Resmi paylaş</string>
   <string name="contextmenu_image_copy">Resmin adresini kopyala</string>
   <string name="contextmenu_image_save">Resmi kaydet</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">silinmeyecektir</b>.]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["%1$s geçmişini sildiğinizde, kaydettiğiniz ve paylaştığınız resimler "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">silinmeyecektir</b>.]]></string>
   <string name="firstrun_tracking_title">Hiç kimse izlemiyormuş gibi gez</string>
   <string name="firstrun_tracking_text">Siz internette gezinirken çevrimiçi takipçiler otomatik olarak engellenecek. İşiniz bitince uygulamadaki veya bildirimlerinizdeki çöp kutusuna dokunarak gezdiğiniz sayfaları ve çerezleri silebilirsiniz.</string>
   <string name="firstrun_defaultbrowser_title">Gizliliğini güçlendir</string>

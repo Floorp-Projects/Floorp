@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">Bagikan gambar</string>
   <string name="contextmenu_image_copy">Salin alamat gambar</string>
   <string name="contextmenu_image_save">Simpan gambar</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">tidak akan dihapus</b>" ketika Anda menghapus riwayat %1$s."]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["Gambar yang disimpan dan dibagikan "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">tidak akan dihapus</b>" ketika Anda menghapus riwayat %1$s."]]></string>
   <string name="firstrun_tracking_title">Menjelajah seperti tidak ada yang mengawasi</string>
   <string name="firstrun_tracking_text">Secara otomatis memblokir pelacak daring ketika Anda menjelajah. Kemudian menghapus laman yang dikunjungi dan kuki dengan satu sentuhan pada ikon tempat sampah pada aplikasi atau di notifikasi Anda.</string>
   <string name="firstrun_defaultbrowser_title">Perkuat privasi Anda</string>

@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">ແບ່ງປັນຮູບພາບ</string>
   <string name="contextmenu_image_copy">ສຳເນົາທີ່ຢູ່ຂອງຮູບພາບ</string>
   <string name="contextmenu_image_save">ບັນທຶກຮູບພາບ</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#3720;&#3760;&#3738;&#3789;&#3784;&#3734;&#3767;&#3713;&#3749;&#3771;&#3738;</b>" &#3776;&#3745;&#3767;&#3784;&#3757;&#3735;&#3784;&#3762;&#3737;&#3749;&#3766;&#3738;&#3739;&#3760;&#3755;&#3751;&#3761;&#3732;&#3713;&#3762;&#3737;&#3737;&#3763;&#3779;&#3722;&#3785;&#3714;&#3757;&#3719; %1$s"]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["ບັນທຶກໄວ້ ແລະ ໄດ້ແບ່ງປັນຮູບພາບ "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#3720;&#3760;&#3738;&#3789;&#3784;&#3734;&#3767;&#3713;&#3749;&#3771;&#3738;</b>" ເມື່ອທ່ານລຶບປະຫວັດການນຳໃຊ້ຂອງ %1$s"]]></string>
   <string name="firstrun_tracking_title">ທ່ອງເວັບແບບບໍ່ມີໃຜມາຫລັກເຝົ້າຕິດຕາມ.</string>
   <string name="firstrun_tracking_text">ບັອກການຕິດຕາມອອນລາຍແບບອັດຕະໂນມັດໃນຂະນະທີ່ທ່ານທ່ອງເວັບ. ຫລັງຈາກນັ້ນລຶບຫນ້າເວັບທີ່ທ່ານເຂົ້າໄປ ແລະ ຄຸກກີ້ອອກ ໂດຍການສຳພັດທີ່ໄອຄອນຖັງຂີ້ເຫຍື້ອ ຫລື ໃນການແຈ້ງເຕືອນຂອງທ່ານ.</string>
   <string name="firstrun_defaultbrowser_title">ເພີ່ມຄວາມເປັນສ່ວນໂຕຂອງທ່ານ</string>

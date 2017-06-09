@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">Deli sliko</string>
   <string name="contextmenu_image_copy">Kopiraj naslov slike</string>
   <string name="contextmenu_image_save">Shrani sliko</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne bodo izbrisane</b>.]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["Ob izbrisu zgodovine %1$sa shranjene in deljene slike "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne bodo izbrisane</b>.]]></string>
   <string name="firstrun_tracking_title">Brskajte, kot da vas nihče ne gleda</string>
   <string name="firstrun_tracking_text">Samodejno zavračajte spletne sledilce, medtem ko brskate. Nato odstranite zgodovino strani in piškotke z dotikom ikone koša v aplikaciji ali med obvestili.</string>
   <string name="firstrun_defaultbrowser_title">Okrepite svojo zasebnost</string>

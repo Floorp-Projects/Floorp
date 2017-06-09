@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">Comhroinn an íomhá</string>
   <string name="contextmenu_image_copy">Cóipeáil seoladh na híomhá</string>
   <string name="contextmenu_image_save">Sábháil an íomhá</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">N&#237; scriosfar</b>" &#237;omh&#225;nna s&#225;bh&#225;ilte n&#243; comhroinnte nuair a scriosann t&#250; stair %1$s."]]></string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">N&#237; scriosfar</b>" íomhánna sábháilte nó comhroinnte nuair a scriosann tú stair %1$s."]]></string>
   <string name="firstrun_tracking_title">Brabhsáil i leith is nach bhfuil éinne ag cúlchoimhéad ort</string>
   <string name="firstrun_tracking_text">Blocáil lorgairí go huathoibríoch le linn brabhsála. Ansin tapáil an deilbhín bruscair san aip nó i do chuid fógraí chun fianáin agus na leathanaigh ar thug tú cuairt orthu a scriosadh.</string>
   <string name="firstrun_defaultbrowser_title">Príobháideachas praiticiúil proifisiúnta</string>

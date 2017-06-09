@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">Rhannu delwedd</string>
   <string name="contextmenu_image_copy">Copïo cyfeiriad delwedd</string>
   <string name="contextmenu_image_save">Cadw delwedd</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">yn cael eu dileu</b>" pan fyddwch yn dileu hanes %1$s."]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["Ni fydd delweddau sydd wedi eu cadw a\'u rhannu "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">yn cael eu dileu</b>" pan fyddwch yn dileu hanes %1$s."]]></string>
   <string name="firstrun_tracking_title">Pori fel petai neb yn eich gwylio</string>
   <string name="firstrun_tracking_text">Rhwystrwch dracio ar-lein yn awtomatig wrth i chi bori. Yna tynnwch dudalennau ymwelwyd â nhw a\'u cwcis gyda chyffyrddiad o\'r eicon sbwriel yn yr ap neu eich hysbysiadau.</string>
   <string name="firstrun_defaultbrowser_title">Cryfhewch eich preifatrwydd</string>

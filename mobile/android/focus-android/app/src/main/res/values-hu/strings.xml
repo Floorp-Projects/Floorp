@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">Kép megosztása</string>
   <string name="contextmenu_image_copy">Kép címének másolása</string>
   <string name="contextmenu_image_save">Kép mentése</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nem ker&#252;lnek t&#246;rl&#233;sre</b>, ha t&#246;rli a %1$s el&#337;zm&#233;nyeit.]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["A mentett és megosztott képek "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nem ker&#252;lnek t&#246;rl&#233;sre</b>, ha törli a %1$s előzményeit.]]></string>
   <string name="firstrun_tracking_title">Böngésszen úgy, mintha senki sem figyelné</string>
   <string name="firstrun_tracking_text">Automatikusan blokkolja az online követést böngészés közben. Aztán eltávolítja a felkeresett oldalakat és a sütiket, egyetlen érintéssel az appban vagy az értesítésekben lévő kuka ikonon.</string>
   <string name="firstrun_defaultbrowser_title">Tuningolja fel az adatvédelmét</string>

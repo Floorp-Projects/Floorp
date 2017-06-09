@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">画像を共有</string>
   <string name="contextmenu_image_copy">画像アドレスをコピー</string>
   <string name="contextmenu_image_save">画像を保存</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#21066;&#38500;&#12373;&#12428;&#12414;&#12379;&#12435;</b>&#12290;]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["保存、共有された画像は %1$s の履歴を消去しても "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#21066;&#38500;&#12373;&#12428;&#12414;&#12379;&#12435;</b>。]]></string>
   <string name="firstrun_tracking_title">誰にも監視されないブラウジング</string>
   <string name="firstrun_tracking_text">ブラウジング中のオンライン追跡を自動的にブロック。後から、アプリ内あるいは通知内のゴミ箱アイコンをタップするだけで、訪れたページや Cookie を削除できます。</string>
   <string name="firstrun_defaultbrowser_title">プライバシーを強化</string>

@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">Afbeelding delen</string>
   <string name="contextmenu_image_copy">Afbeeldingsadres kopiëren</string>
   <string name="contextmenu_image_save">Afbeelding opslaan</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">worden niet verwijderd</b>" als u geschiedenis van %1$s wist."]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["Opgeslagen en gedeelde afbeeldingen "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">worden niet verwijderd</b>" als u geschiedenis van %1$s wist."]]></string>
   <string name="firstrun_tracking_title">Surf alsof niemand meekijkt</string>
   <string name="firstrun_tracking_text">Blokkeer automatisch onlinetrackers terwijl u surft. Verwijder daarna bezochte pagina’s en cookies met één tik naar het prullenbakpictogram in de app of in uw meldingen.</string>
   <string name="firstrun_defaultbrowser_title">Vergroot uw privacy</string>

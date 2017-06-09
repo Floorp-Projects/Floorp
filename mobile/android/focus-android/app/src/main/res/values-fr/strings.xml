@@ -76,7 +76,7 @@
   <string name="error_unsupportedprotocol_title">L’adresse n’a pas été reconnue</string>
   <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Il est peut-&#234;tre n&#233;cessaire d&#8217;installer une autre application pour ouvrir ce type d&#8217;adresse.</li>\n</ul>\n]]></string>
   <string name="error_sslhandshake_title">Échec de la connexion sécurisée</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" "<li>Ceci peut &#234;tre d&#251; &#224; un probl&#232;me de configuration du serveur ou &#224; une personne essayant d&#8217;usurper l&#8217;identit&#233; du serveur.</li>" "<li>Si vous avez d&#233;j&#224; pu vous connecter &#224; ce serveur, l&#8217;erreur est peut-&#234;tre temporaire et vous pouvez essayer &#224; nouveau plus tard.</li>" "</ul>" "]]></string>
+  <string name="error_sslhandshake_message"><![CDATA[" "<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" "<li>Ceci peut &#234;tre d&#251; &#224; un probl&#232;me de configuration du serveur ou &#224; une personne essayant d&#8217;usurper l&#8217;identit&#233; du serveur.</li>" "<li>Si vous avez d&#233;j&#224; pu vous connecter &#224; ce serveur, l&#8217;erreur est peut-&#234;tre temporaire et vous pouvez essayer &#224; nouveau plus tard.</li>" "</ul>" "]]></string>
   <string name="error_generic_title">La requête ne peut aboutir</string>
   <string name="error_generic_message">Pour une raison inconnue, nous ne pouvons pas charger cette page.</string>
   <string name="contextmenu_link_share">Partager le lien</string>
@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">Partager l’image</string>
   <string name="contextmenu_image_copy">Copier l’adresse de l’image</string>
   <string name="contextmenu_image_save">Enregistrer l’image</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne seront pas supprim&#233;es</b>" lorsque vous effacez l&#8217;historique de %1$s."]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["Les images partagées ou enregistrées "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne seront pas supprim&#233;es</b>" lorsque vous effacez l’historique de %1$s."]]></string>
   <string name="firstrun_tracking_title">Naviguez comme si personne ne vous regardait</string>
   <string name="firstrun_tracking_text">Bloquez automatiquement les traqueurs lorsque vous naviguez. Supprimez ensuite les pages visitées et les cookies en appuyant sur l’icône de corbeille dans l’application ou depuis les notifications.</string>
   <string name="firstrun_defaultbrowser_title">Renforcez votre vie privée</string>

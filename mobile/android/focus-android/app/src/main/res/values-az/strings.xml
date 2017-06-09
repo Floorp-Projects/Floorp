@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">Şəkli paylaş</string>
   <string name="contextmenu_image_copy">Şəkil ünvanını köçür</string>
   <string name="contextmenu_image_save">Şəkli saxla</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">silinm&#601;y&#601;c&#601;kl&#601;r</b>.]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["Saxlanılan və paylaşılan şəkillər %1$s tarixini pozduqda "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">silinm&#601;y&#601;c&#601;kl&#601;r</b>.]]></string>
   <string name="firstrun_tracking_title">Başqalarınız izləməsindən narahat olmadan internetdə gəzin</string>
   <string name="firstrun_tracking_text">Gəzərkən avtomatik olaraq onlayn izləyiciləri əngəlləyin. Daha sonra daxil olunan saytları və çərəzləri zibil qutusu ikonuna və ya bildirişə toxunaraq silin.</string>
   <string name="firstrun_defaultbrowser_title">Məxfiliyinizi gücləndirin</string>

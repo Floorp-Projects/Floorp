@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">שיתוף תמונה</string>
   <string name="contextmenu_image_copy">העתקת כתובת תמונה</string>
   <string name="contextmenu_image_save">שמירת תמונה</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1500;&#1488; &#1497;&#1497;&#1502;&#1495;&#1511;&#1493;</b>" &#1489;&#1506;&#1514; &#1502;&#1495;&#1497;&#1511;&#1514; &#1492;&#1492;&#1497;&#1505;&#1496;&#1493;&#1512;&#1497;&#1492; &#1513;&#1500; %1$s."]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["תמונות שמורות ומשותפות "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1500;&#1488; &#1497;&#1497;&#1502;&#1495;&#1511;&#1493;</b>" בעת מחיקת ההיסטוריה של %1$s."]]></string>
   <string name="firstrun_tracking_title">גילשו כאילו אף אחד לא מסתכל</string>
   <string name="firstrun_tracking_text">חסימה אוטומטית של רכיבי מעקב מקוונים בעת הגלישה. לאחר מכן ניתן להסיר את העמודים שביקרת בהם לרבות העוגיות על ידי נגיעה בסמל האשפה ביישומון או בהתרעות שלך.</string>
   <string name="firstrun_defaultbrowser_title">חיזוק הפרטיות שלך</string>

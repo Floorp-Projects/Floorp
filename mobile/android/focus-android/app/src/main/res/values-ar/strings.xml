@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">شارك الصورة</string>
   <string name="contextmenu_image_copy">انسخ عنوان الصورة</string>
   <string name="contextmenu_image_save">احفظ الصورة</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1604;&#1606; &#1578;&#1615;&#1581;&#1584;&#1601;</b>" &#1593;&#1606;&#1583;&#1605;&#1575; &#1578;&#1605;&#1587;&#1581; &#1578;&#1571;&#1585;&#1610;&#1582; %1$s."]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["الصور المحفوظة و المُشاركة "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1604;&#1606; &#1578;&#1615;&#1581;&#1584;&#1601;</b>" عندما تمسح تأريخ %1$s."]]></string>
   <string name="firstrun_tracking_title">تصفح و لا أحد يراقبك</string>
   <string name="firstrun_tracking_text">احجب التعقّب على الإنترنت تلقائيًا أثناء تصفّحك. ثم احذف الصفحات التي زرتها و الكعكات بلمس أيقونة سلة المهملات في التطبيق أو التنبيهات.</string>
   <string name="firstrun_defaultbrowser_title">حسّن خصوصيتك</string>

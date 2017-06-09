@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">اشتراک‌گذاری تصویر</string>
   <string name="contextmenu_image_copy">رونوشت از آدرس تصویر</string>
   <string name="contextmenu_image_save">ذخیره تصویر</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1662;&#1575;&#1705; &#1606;&#1582;&#1608;&#1575;&#1607;&#1606;&#1583; &#1588;&#1583;</b>.]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["وقتی شما تاریخ‌جه %1$s را پاک می‌کنید، تصاویر ذخیره یا هم‌رسان شده "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1662;&#1575;&#1705; &#1606;&#1582;&#1608;&#1575;&#1607;&#1606;&#1583; &#1588;&#1583;</b>.]]></string>
   <string name="firstrun_tracking_title">بدون دغدغه نگاه‌ها مرور کنید</string>
   <string name="firstrun_tracking_text">هنگام مرور به صورت خودکار ردیاب‌های آنلاین را مسدود کنید. سپس صفحه‌های بازدید شده و کوکی‌ها را با لمس آیکن سطل زباله در برنامه یا در اعلان‌هایتان، حذف کنید.</string>
   <string name="firstrun_defaultbrowser_title">قدرت حریم‌شخصی خود را افزایش دهید</string>

@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">이미지 공유</string>
   <string name="contextmenu_image_copy">이미지 주소 복사</string>
   <string name="contextmenu_image_save">이미지 저장</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#51200;&#51109; &#48143; &#44277;&#50976;&#46108; &#51060;&#48120;&#51648;</b>&#45716; &#49325;&#51228;&#46104;&#51648; &#50506;&#49845;&#45768;&#45796;.]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["%1$s 기록을 지울 때 "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#51200;&#51109; &#48143; &#44277;&#50976;&#46108; &#51060;&#48120;&#51648;</b>는 삭제되지 않습니다.]]></string>
   <string name="firstrun_tracking_title">누구에게도 보이지 않는 웹 이용</string>
   <string name="firstrun_tracking_text">탐색하는 동안 자동으로 온라인 추적을 차단합니다. 그런 다음 앱이나 알림의 휴지통 아이콘을 터치하여 방문한 페이지와 쿠키를 삭제합니다.</string>
   <string name="firstrun_defaultbrowser_title">개인정보 보호 강화하기</string>

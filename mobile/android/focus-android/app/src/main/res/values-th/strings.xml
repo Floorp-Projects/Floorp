@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">แบ่งปันภาพ</string>
   <string name="contextmenu_image_copy">คัดลอกที่อยู่ภาพ</string>
   <string name="contextmenu_image_save">บันทึกภาพ</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#3592;&#3632;&#3652;&#3617;&#3656;&#3606;&#3641;&#3585;&#3621;&#3610;</b>&#3648;&#3617;&#3639;&#3656;&#3629;&#3588;&#3640;&#3603;&#3621;&#3657;&#3634;&#3591;&#3611;&#3619;&#3632;&#3623;&#3633;&#3605;&#3636;&#3586;&#3629;&#3591; %1$s]]></string>
+  <string name="contextmenu_image_warning"><![CDATA[ภาพที่บันทึกไว้และแบ่งปัน<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#3592;&#3632;&#3652;&#3617;&#3656;&#3606;&#3641;&#3585;&#3621;&#3610;</b>เมื่อคุณล้างประวัติของ %1$s]]></string>
   <string name="firstrun_tracking_title">ท่องเว็บเหมือนไม่มีใครเฝ้ามองอยู่</string>
   <string name="firstrun_tracking_text">ปิดกั้นการติดตามออนไลน์โดยอัตโนมัติขณะที่คุณท่องเว็บ จากนั้นเอาหน้าที่เยี่ยมชมแล้วและคุกกี้ออกโดยสัมผัสที่ไอคอนถังขยะในแอปหรือในการแจ้งเตือนของคุณ</string>
   <string name="firstrun_defaultbrowser_title">เพิ่มความเป็นส่วนตัวของคุณ</string>

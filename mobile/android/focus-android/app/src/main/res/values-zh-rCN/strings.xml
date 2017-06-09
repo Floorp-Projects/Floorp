@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">分享图片</string>
   <string name="contextmenu_image_copy">复制图片地址</string>
   <string name="contextmenu_image_save">保存图片</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#19981;&#20250;&#34987;&#21024;&#38500;</b>&#12290;]]></string>
+  <string name="contextmenu_image_warning"><![CDATA[在您擦除 %1$s 历史记录时，已保存和已分享的图像<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#19981;&#20250;&#34987;&#21024;&#38500;</b>。]]></string>
   <string name="firstrun_tracking_title">避开监视，浏览网络</string>
   <string name="firstrun_tracking_text">浏览器时自动屏蔽网络跟踪器。之后可以点按应用程序或通知中的垃圾桶图标，删除访问过的页面和 Cookie。</string>
   <string name="firstrun_defaultbrowser_title">强化您的隐私</string>

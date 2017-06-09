@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">படத்தைப் பகிர்</string>
   <string name="contextmenu_image_copy">பட முகவரியை நகலெடு</string>
   <string name="contextmenu_image_save">படத்தைச் சேமி</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#2949;&#2996;&#3007;&#2965;&#3021;&#2965;&#2986;&#3021;&#2986;&#2975;&#3006;&#2980;&#3009;</b>.]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["%1$s வரலாற்றை அகற்றும் போது சேமித்த பகிர்ந்த படங்கள் "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#2949;&#2996;&#3007;&#2965;&#3021;&#2965;&#2986;&#3021;&#2986;&#2975;&#3006;&#2980;&#3009;</b>.]]></string>
   <string name="firstrun_tracking_title">மற்றவர்களுக்கு தெரியா வண்ணம் உலாவு.</string>
   <string name="firstrun_tracking_text">நீங்கள் உலாவும்பொருட்டு தடமறிகளைத் தனாகத் தடு. பிறகு அறிவிப்பு பலகத்தில் (அ) செயலினுள் இருக்கும் குப்பை சின்னத்தைத் தட்டி அணைமையில் பார்த்த பக்கங்களையும் நினைவிகளையும் நீக்கவும்.</string>
   <string name="firstrun_defaultbrowser_title">தனியுரிமையை துரிதப்படுத்து</string>

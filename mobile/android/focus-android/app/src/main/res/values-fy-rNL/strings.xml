@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">Ofbylding diele</string>
   <string name="contextmenu_image_copy">Ofbyldingsadres kopiearje</string>
   <string name="contextmenu_image_save">Ofbylding bewarje</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">wurde net fuortsmiten</b>" as jo skiednis fan %1$s wiskje."]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["Bewarre en dielde ôfbyldingen "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">wurde net fuortsmiten</b>" as jo skiednis fan %1$s wiskje."]]></string>
   <string name="firstrun_tracking_title">Sneup as oft gjinien meisjocht</string>
   <string name="firstrun_tracking_text">Blokkearje automatysk onlinetrackers wylst jo sneupje. Smyt dêrnei besochte siden en cookies mei ien tik nei it jiskefetpiktogram yn de app of yn jo meldingen.</string>
   <string name="firstrun_defaultbrowser_title">Fergrutsje jo privacy</string>

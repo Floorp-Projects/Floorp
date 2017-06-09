@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">Zdieľať obrázok</string>
   <string name="contextmenu_image_copy">Kopírovať adresu obrázku</string>
   <string name="contextmenu_image_save">Uložiť obrázok</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nebud&#250; vymazan&#233;</b>" pri vymazan&#237; hist&#243;rie aplik&#225;cie %1$s."]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["Uložené a zdieľané obrázky "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nebud&#250; vymazan&#233;</b>" pri vymazaní histórie aplikácie %1$s."]]></string>
   <string name="firstrun_tracking_title">Prehliadajte, akoby sa nikto nepozeral</string>
   <string name="firstrun_tracking_text">Automaticky pri prehliadaní blokujte online sledovacie prvky. Potom odstráňte zoznam navštívených stránok a cookies jedným ťuknutím na ikonu koša v aplikácii alebo vo vašich upozorneniach.</string>
   <string name="firstrun_defaultbrowser_title">Posuňte svoje súkromie na vyššiu úroveň</string>

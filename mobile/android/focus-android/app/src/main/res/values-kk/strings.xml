@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">Суретпен бөлісу</string>
   <string name="contextmenu_image_copy">Сурет адресін көшіріп алу</string>
   <string name="contextmenu_image_save">Суретті сақтау</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1257;&#1096;&#1110;&#1088;&#1110;&#1083;&#1084;&#1077;&#1081;&#1076;&#1110;</b>.]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["%1$s тарихы өшірілген кезде сақталған және бөліскен суреттер "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1257;&#1096;&#1110;&#1088;&#1110;&#1083;&#1084;&#1077;&#1081;&#1076;&#1110;</b>.]]></string>
   <string name="firstrun_tracking_title">Бақылаудан қорықпай-ақ интернетті шолыңыз</string>
   <string name="firstrun_tracking_text">Шолу кезінде онлайн трекерлерді автоблоктаңыз. Одан кейін, қолданбадағы немесе хабарламалардағы қоқыс шелегі таңбашасына шерту арқылы қаралған беттер және cookies өшіріңіз.</string>
   <string name="firstrun_defaultbrowser_title">Жекелігіңізді күшейтіңіз</string>

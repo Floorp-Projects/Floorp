@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">Compartilhar imagem</string>
   <string name="contextmenu_image_copy">Copiar endereço da imagem</string>
   <string name="contextmenu_image_save">Salvar imagem</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">n&#227;o ser&#227;o exclu&#237;das</b>" ao apagar o hist&#243;rico do %1$s."]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["As imagens salvas e compartilhadas "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">n&#227;o ser&#227;o exclu&#237;das</b>" ao apagar o histórico do %1$s."]]></string>
   <string name="firstrun_tracking_title">Navegue como se ninguém estivesse olhando</string>
   <string name="firstrun_tracking_text">Bloqueie automaticamente o rastreamento online enquanto navega. Em seguida, remova as páginas visitadas e os cookies com um toque no ícone da lixeira no aplicativo ou em suas notificações.</string>
   <string name="firstrun_defaultbrowser_title">Potencialize sua privacidade</string>

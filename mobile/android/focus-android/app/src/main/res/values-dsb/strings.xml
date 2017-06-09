@@ -84,7 +84,7 @@
   <string name="contextmenu_image_share">Wobraz śěliś</string>
   <string name="contextmenu_image_copy">Wobrazowu adresu kopěrowaś</string>
   <string name="contextmenu_image_save">Wobraz składowaś</string>
-  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">se njewula&#353;uju</b>, ga&#382; historiju %1$s la&#353;ujo&#347;o.]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["Skłaźone a źělone wobraze "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">se njewula&#353;uju</b>, gaž historiju %1$s lašujośo.]]></string>
   <string name="firstrun_tracking_title">Pśeglědujśo mimo aby něchten wobglědował</string>
   <string name="firstrun_tracking_text">Blokěrujśo awtomatiski slědowanje online, mjaztym až pśeglědujośo. Wótwónoźćo pótom woglědane boki a cookieje z jadnym dotyknjenim na cajkowy symbol w nałoženju abo w swójich powěźeńkach.</string>
   <string name="firstrun_defaultbrowser_title">Zmocniśo swóju priwatnosć</string>
