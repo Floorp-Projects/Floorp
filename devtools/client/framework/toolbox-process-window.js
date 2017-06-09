@@ -66,6 +66,7 @@ function setPrefDefaults() {
   Services.prefs.setBoolPref("devtools.debugger.source-maps-enabled", false);
   Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", true);
   Services.prefs.setBoolPref("devtools.debugger.client-source-maps-enabled", true);
+  Services.prefs.setBoolPref("devtools.webconsole.new-frontend-enabled", false);
 }
 
 window.addEventListener("load", function () {
