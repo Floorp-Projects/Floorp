@@ -527,7 +527,7 @@ static void sendBufferToFrame(NPP instance)
         if (!((ascii >= ',' && ascii <= ';') ||
               (ascii >= 'A' && ascii <= 'Z') ||
               (ascii >= 'a' && ascii <= 'z'))) {
-          char hex[8];
+          char hex[10];
           sprintf(hex, "%%%x", ascii);
           outbuf.replace(i, 1, hex);
           i += 2;
