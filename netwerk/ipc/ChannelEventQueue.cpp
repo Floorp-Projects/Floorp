@@ -143,9 +143,32 @@ ChannelEventQueue::ResumeInternal()
       return;
     }
 
+    // Hold a strong reference of mOwner to avoid the channel release
+    // before CompleteResume was executed.
+    class CompleteResumeRunnable : public CancelableRunnable
+    {
+    public:
+      explicit CompleteResumeRunnable(ChannelEventQueue* aQueue, nsISupports* aOwner)
+        : mQueue(aQueue)
+        , mOwner(aOwner)
+      {
+      }
+
+      NS_IMETHOD Run() override
+      {
+        mQueue->CompleteResume();
+        return NS_OK;
+      }
+
+    private:
+      virtual ~CompleteResumeRunnable() {}
+
+      RefPtr<ChannelEventQueue> mQueue;
+      nsCOMPtr<nsISupports> mOwner;
+    };
+
     // Worker thread requires a CancelableRunnable.
-    RefPtr<Runnable> event =
-      NewCancelableRunnableMethod(this, &ChannelEventQueue::CompleteResume);
+    RefPtr<Runnable> event = new CompleteResumeRunnable(this, mOwner);
 
     nsCOMPtr<nsIEventTarget> target;
       target = mEventQueue[0]->GetEventTarget();
