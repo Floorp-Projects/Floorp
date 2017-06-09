@@ -77,11 +77,11 @@
  * Grid Outline
  */
 
-.grid-outline-container {
+.grid-outline {
   margin: 5px 0;
 }
 
-.grid-outline-container svg {
+.grid-outline svg {
   overflow: visible;
 }
 
