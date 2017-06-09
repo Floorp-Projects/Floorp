@@ -13,6 +13,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/FormLikeFactory.jsm");
 Cu.import("resource://testing-common/MockDocument.jsm");
 Cu.import("resource://testing-common/TestUtils.jsm");
 
@@ -116,7 +117,6 @@ async function initProfileStorage(fileName, records) {
 }
 
 function runHeuristicsTest(patterns, fixturePathPrefix) {
-  Cu.import("resource://gre/modules/FormLikeFactory.jsm");
   Cu.import("resource://formautofill/FormAutofillHeuristics.jsm");
   Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 

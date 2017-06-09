@@ -3009,8 +3009,8 @@ nsHttpConnectionMgr::RemoveActiveTransaction(nsHttpTransaction * aTrans, bool aT
     if (forActiveTab) {
         // Removing the last transaction for the active tab frees up the unthrottled
         // background tabs transactions.
-        LOG(("  resuming unthrottled for background tabs"));
-        ResumeReadOf(mActiveTransactions[false]);
+        LOG(("  delay resuming unthrottled for background tabs"));
+        DelayedResumeBackgroundThrottledTransactions();
         return;
     }
 
@@ -3036,6 +3036,7 @@ nsHttpConnectionMgr::ShouldStopReading(nsHttpTransaction * aTrans, bool aThrottl
     }
 
     uint64_t tabId = aTrans->TopLevelOuterContentWindowId();
+    bool forActiveTab = tabId == mCurrentTopLevelOuterContentWindowId;
 
     if (mActiveTabTransactionsExist) {
         if (!tabId) {
@@ -3043,7 +3044,7 @@ nsHttpConnectionMgr::ShouldStopReading(nsHttpTransaction * aTrans, bool aThrottl
             // their throttle flag, when something for the active tab is happening.
             return aThrottled;
         }
-        if (tabId != mCurrentTopLevelOuterContentWindowId) {
+        if (!forActiveTab) {
             // This is a background tab request, we want them to always throttle.
             return true;
         }
@@ -3056,6 +3057,14 @@ nsHttpConnectionMgr::ShouldStopReading(nsHttpTransaction * aTrans, bool aThrottl
         return false;
     }
 
+    MOZ_ASSERT(!forActiveTab);
+
+    if (mDelayedResumeReadTimer) {
+        // If this timer exists, background transactions are scheduled to be woken
+        // after a delay.
+        return true;
+    }
+
     if (!mActiveTransactions[false].IsEmpty()) {
         // This means there are unthrottled active transactions for background tabs.
         // If we are here, there can't be any transactions for the active tab.
@@ -3065,6 +3074,17 @@ nsHttpConnectionMgr::ShouldStopReading(nsHttpTransaction * aTrans, bool aThrottl
 
     // There are only unthrottled transactions for background tabs: don't throttle.
     return false;
+}
+
+bool nsHttpConnectionMgr::IsConnEntryUnderPressure(nsHttpConnectionInfo *connInfo)
+{
+    nsConnectionEntry *ent = mCT.Get(connInfo->HashKey());
+    MOZ_ASSERT(ent);
+
+    nsTArray<RefPtr<PendingTransactionInfo>> *transactions =
+        ent->mPendingTransactionTable.Get(mCurrentTopLevelOuterContentWindowId);
+
+    return transactions && !transactions->IsEmpty();
 }
 
 bool nsHttpConnectionMgr::IsThrottleTickerNeeded()
@@ -3153,10 +3173,14 @@ nsHttpConnectionMgr::ThrottlerTick()
 
     LOG(("nsHttpConnectionMgr::ThrottlerTick inhibit=%d", mThrottlingInhibitsReading));
 
-    if (!mThrottlingInhibitsReading && !IsThrottleTickerNeeded()) {
+    // If there are only background transactions to be woken after a delay, keep
+    // the ticker so that we woke them only for the resume-for interval and then
+    // throttle them again until the background-resume delay passes.
+    if (!mThrottlingInhibitsReading &&
+        !mDelayedResumeReadTimer &&
+        !IsThrottleTickerNeeded()) {
+        LOG(("  last tick"));
         mThrottleTicker = nullptr;
-    } else {
-        mThrottleTicker = do_CreateInstance("@mozilla.org/timer;1");
     }
 
     if (mThrottlingInhibitsReading) {
@@ -3164,10 +3188,6 @@ nsHttpConnectionMgr::ThrottlerTick()
             mThrottleTicker->Init(this, mThrottleSuspendFor, nsITimer::TYPE_ONE_SHOT);
         }
     } else {
-        // Resume by the ticker happens sooner than delayed resume, no need
-        // for the delayed resume timer
-        CancelDelayedResumeBackgroundThrottledTransactions();
-
         if (mThrottleTicker) {
             mThrottleTicker->Init(this, mThrottleResumeFor, nsITimer::TYPE_ONE_SHOT);
         }
@@ -3213,15 +3233,15 @@ nsHttpConnectionMgr::ResumeBackgroundThrottledTransactions()
     LOG(("nsHttpConnectionMgr::ResumeBackgroundThrottledTransactions"));
     mDelayedResumeReadTimer = nullptr;
 
-    // We can destroy the ticker, since only transactions to resume now
-    // are background throttled.  If 'higher class' transactions have
-    // been added, we don't get here - the ticker has been scheduled
-    // and hence the delayed resume timer canceled.
-    MOZ_ASSERT(mActiveTransactions[false].IsEmpty() &&
-                          !mActiveTabTransactionsExist);
+    if (!IsThrottleTickerNeeded()) {
+        DestroyThrottleTicker();
+    }
 
-    DestroyThrottleTicker();
-    ResumeReadOf(mActiveTransactions[true], true);
+    if (!mActiveTransactions[false].IsEmpty()) {
+        ResumeReadOf(mActiveTransactions[false], true);
+    } else {
+        ResumeReadOf(mActiveTransactions[true], true);
+    }
 }
 
 void

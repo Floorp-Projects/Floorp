@@ -2812,9 +2812,6 @@ nsTextEditorState::UpdatePlaceholderText(bool aNotify)
 void
 nsTextEditorState::SetPreviewText(const nsAString& aValue, bool aNotify)
 {
-  MOZ_ASSERT(mPreviewDiv, "This function should not be called if "
-                            "mPreviewDiv isn't set");
-
   // If we don't have a preview div, there's nothing to do.
   if (!mPreviewDiv)
     return;
