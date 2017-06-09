@@ -240,6 +240,18 @@ Gecko_DropStyleChildrenIterator(StyleChildrenIteratorOwned aIterator)
   delete aIterator;
 }
 
+bool
+Gecko_ElementHasBindingWithAnonymousContent(RawGeckoElementBorrowed aElement)
+{
+  if (!aElement->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    return false;
+  }
+
+  nsBindingManager* manager = aElement->OwnerDoc()->BindingManager();
+  nsXBLBinding* binding = manager->GetBindingWithContent(aElement);
+  return binding && binding->GetAnonymousContent();
+}
+
 RawGeckoNodeBorrowed
 Gecko_GetNextStyleChild(StyleChildrenIteratorBorrowedMut aIterator)
 {
