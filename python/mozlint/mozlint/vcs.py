@@ -54,8 +54,8 @@ class HgHelper(VCSHelper):
     """A helper to find files to lint from Mercurial."""
 
     def by_outgoing(self, dest='default'):
-        return self.run(['hg', 'outgoing', '--quiet', '-r .',
-                         dest, '--template', '{files % "\n{file}"}'])
+        return self.run(['hg', 'outgoing', '--quiet', '--template',
+                         "{file_mods % '\\n{file}'}{file_adds % '\\n{file}'}", '-r', '.', dest])
 
     def by_workdir(self):
         return self.run(['hg', 'status', '-amn'])
@@ -63,16 +63,39 @@ class HgHelper(VCSHelper):
 
 class GitHelper(VCSHelper):
     """A helper to find files to lint from Git."""
+    _default = None
+
+    @property
+    def default(self):
+        if self._default:
+            return self._default
+
+        ref = subprocess.check_output(['git', 'symbolic-ref', '-q', 'HEAD']).strip()
+        dest = subprocess.check_output(
+            ['git', 'for-each-ref', '--format=%(upstream:short)', ref]).strip()
+
+        if not dest:
+            branches = subprocess.check_output(['git', 'branch', '--list'])
+            for b in ('master', 'central', 'default'):
+                if b in branches and not ref.endswith(b):
+                    dest = b
+                    break
+
+        self._default = dest
+        return self._default
 
     def by_outgoing(self, dest='default'):
         if dest == 'default':
-            comparing = 'origin/master..HEAD'
-        else:
-            comparing = '{}..HEAD'.format(dest)
-        return self.run(['git', 'log', '--name-only', comparing])
+            if not self.default:
+                print("warning: could not find default push, specify a remote for --outgoing")
+                return []
+            dest = self.default
+        comparing = '{}..HEAD'.format(self.default)
+        return self.run(['git', 'log', '--name-only', '--diff-filter=AM',
+                         '--oneline', '--pretty=format:', comparing])
 
     def by_workdir(self):
-        return self.run(['git', 'diff', '--name-only'])
+        return self.run(['git', 'diff', '--name-only', '--diff-filter=AM', 'HEAD'])
 
 
 vcs_class = {
