@@ -19,21 +19,15 @@ const TEST_URI =
 add_task(function* () {
   let hud = yield openNewTabAndConsole(TEST_URI);
   info("Web Console opened");
-
   const outputScroller = hud.ui.outputScroller;
-
   yield waitFor(() => findMessages(hud, "").length == 100);
-
   let currentPosition = outputScroller.scrollTop;
   const bottom = currentPosition;
-
-  EventUtils.sendMouseEvent({type: "click"}, hud.jsterm.inputNode);
-
+  hud.jsterm.inputNode.focus();
   // Page up.
   EventUtils.synthesizeKey("VK_PAGE_UP", {});
   isnot(outputScroller.scrollTop, currentPosition,
     "scroll position changed after page up");
-
   // Page down.
   currentPosition = outputScroller.scrollTop;
   EventUtils.synthesizeKey("VK_PAGE_DOWN", {});

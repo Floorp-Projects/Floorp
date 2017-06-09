@@ -6,20 +6,15 @@
 // Tests filters.
 
 "use strict";
-
 const { MESSAGE_LEVEL } = require("devtools/client/webconsole/new-console-output/constants");
-
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/mochitest/test-console-filters.html";
-
 add_task(function* () {
   let hud = yield openNewTabAndConsole(TEST_URI);
-  const outputNode = hud.ui.experimentalOutputNode;
-
+  const outputNode = hud.ui.outputNode;
   const toolbar = yield waitFor(() => {
     return outputNode.querySelector(".webconsole-filterbar-primary");
   });
   ok(toolbar, "Toolbar found");
-
   // Show the filter bar
   toolbar.querySelector(".devtools-filter-icon").click();
   const filterBar = yield waitFor(() => {
@@ -51,19 +46,16 @@ add_task(function* () {
   yield closeTabAndToolbox();
   yield testFilterPersistence();
 });
-
 function filterIsEnabled(button) {
   return button.classList.contains("checked");
 }
-
 function* testFilterPersistence() {
   let hud = yield openNewTabAndConsole(TEST_URI);
-  const outputNode = hud.ui.experimentalOutputNode;
+  const outputNode = hud.ui.outputNode;
   const filterBar = yield waitFor(() => {
     return outputNode.querySelector(".webconsole-filterbar-secondary");
   });
   ok(filterBar, "Filter bar ui setting is persisted.");
-
   // Check that the filter settings were persisted.
   ok(!filterIsEnabled(filterBar.querySelector(".error")),
     "Filter button setting is persisted");
