@@ -929,12 +929,8 @@ NS_CopyNativeToUnicode(const nsACString& aInput, nsAString& aOutput)
     return NS_ERROR_OUT_OF_MEMORY;
   }
   if (resultLen > 0) {
-    nsAString::iterator out_iter;
-    aOutput.BeginWriting(out_iter);
-
-    char16_t* result = out_iter.get();
-
-    ::MultiByteToWideChar(CP_ACP, 0, buf, inputLen, wwc(result), resultLen);
+    char16ptr_t result = aOutput.BeginWriting();
+    ::MultiByteToWideChar(CP_ACP, 0, buf, inputLen, result, resultLen);
   }
   return NS_OK;
 }
@@ -976,41 +972,6 @@ NS_CopyUnicodeToNative(const nsAString&  aInput, nsACString& aOutput)
                           &defaultChar, nullptr);
   }
   return NS_OK;
-}
-
-// moved from widget/windows/nsToolkit.cpp
-int32_t
-NS_ConvertAtoW(const char* aStrInA, int aBufferSize, char16_t* aStrOutW)
-{
-  return MultiByteToWideChar(CP_ACP, 0, aStrInA, -1, wwc(aStrOutW), aBufferSize);
-}
-
-int32_t
-NS_ConvertWtoA(const char16_t* aStrInW, int aBufferSizeOut,
-               char* aStrOutA, const char* aDefault)
-{
-  if ((!aStrInW) || (!aStrOutA) || (aBufferSizeOut <= 0)) {
-    return 0;
-  }
-
-  int numCharsConverted = WideCharToMultiByte(CP_ACP, 0, char16ptr_t(aStrInW), -1,
-                                              aStrOutA, aBufferSizeOut,
-                                              aDefault, nullptr);
-
-  if (!numCharsConverted) {
-    if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
-      // Overflow, add missing null termination but return 0
-      aStrOutA[aBufferSizeOut - 1] = '\0';
-    } else {
-      // Other error, clear string and return 0
-      aStrOutA[0] = '\0';
-    }
-  } else if (numCharsConverted < aBufferSizeOut) {
-    // Add 2nd null (really necessary?)
-    aStrOutA[numCharsConverted] = '\0';
-  }
-
-  return numCharsConverted;
 }
 
 #else
