@@ -7,6 +7,7 @@
 #include "base/basictypes.h"
 
 #include "gfx2DGlue.h"
+#include "gfxContext.h"
 #include "gfxPattern.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
@@ -19,7 +20,6 @@
 #include "nsPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsColor.h"
-#include "gfxContext.h"
 #include "nsLayoutUtils.h"
 #include "nsContentUtils.h"
 #include "nsCSSValue.h"

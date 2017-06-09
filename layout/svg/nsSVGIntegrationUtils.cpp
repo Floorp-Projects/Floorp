@@ -14,7 +14,7 @@
 #include "nsDisplayList.h"
 #include "nsFilterInstance.h"
 #include "nsLayoutUtils.h"
-#include "nsRenderingContext.h"
+#include "gfxContext.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGEffects.h"
 #include "nsSVGElement.h"
@@ -465,7 +465,6 @@ PaintMaskSurface(const PaintFramesParams& aParams,
       gfxContextMatrixAutoSaveRestore matRestore(maskContext);
 
       maskContext->Multiply(gfxMatrix::Translation(-devPixelOffsetToUserSpace));
-      nsRenderingContext rc(maskContext);
       nsCSSRendering::PaintBGParams  params =
         nsCSSRendering::PaintBGParams::ForSingleLayer(*presContext,
                                                       aParams.dirtyRect,
@@ -477,7 +476,7 @@ PaintMaskSurface(const PaintFramesParams& aParams,
                                                       aOpacity);
 
       aParams.imgParams.result &=
-        nsCSSRendering::PaintStyleImageLayerWithSC(params, rc, aSC,
+        nsCSSRendering::PaintStyleImageLayerWithSC(params, *maskContext, aSC,
                                               *aParams.frame->StyleBorder());
     }
   }
@@ -1167,8 +1166,7 @@ PaintFrameCallback::operator()(gfxContext* aContext,
   if (mFlags & nsSVGIntegrationUtils::FLAG_SYNC_DECODE_IMAGES) {
     flags |= PaintFrameFlags::PAINT_SYNC_DECODE_IMAGES;
   }
-  nsRenderingContext context(aContext);
-  nsLayoutUtils::PaintFrame(&context, mFrame,
+  nsLayoutUtils::PaintFrame(aContext, mFrame,
                             dirty, NS_RGBA(0, 0, 0, 0),
                             nsDisplayListBuilderMode::PAINTING,
                             flags);
@@ -1183,7 +1181,7 @@ PaintFrameCallback::operator()(gfxContext* aContext,
     aContext->Multiply(gfxMatrix::Translation(devPxOffset));
     aContext->Multiply(gfxMatrix::Scaling(scaleX, scaleY));
 
-    nsLayoutUtils::PaintFrame(&context, currentFrame,
+    nsLayoutUtils::PaintFrame(aContext, currentFrame,
                               dirty - offset, NS_RGBA(0, 0, 0, 0),
                               nsDisplayListBuilderMode::PAINTING,
                               flags);

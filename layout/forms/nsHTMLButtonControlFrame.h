@@ -11,7 +11,7 @@
 #include "nsIFormControlFrame.h"
 #include "nsButtonFrameRenderer.h"
 
-class nsRenderingContext;
+class gfxContext;
 class nsPresContext;
 
 class nsHTMLButtonControlFrame : public nsContainerFrame,
@@ -33,9 +33,9 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
-  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
+  virtual nscoord GetMinISize(gfxContext *aRenderingContext) override;
 
-  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
+  virtual nscoord GetPrefISize(gfxContext *aRenderingContext) override;
 
   virtual void Reflow(nsPresContext*           aPresContext,
                       ReflowOutput&     aDesiredSize,

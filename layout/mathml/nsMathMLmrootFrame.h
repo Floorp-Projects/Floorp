@@ -47,7 +47,7 @@ public:
                      nscoord* aSqrOffset);
 
   virtual void
-  GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingContext,
+  GetIntrinsicISizeMetrics(gfxContext* aRenderingContext,
                            ReflowOutput& aDesiredSize) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,

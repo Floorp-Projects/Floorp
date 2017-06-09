@@ -14,7 +14,6 @@
 #include "nsNameSpaceManager.h"
 #include "nsLayoutUtils.h"
 #include "nsRegion.h"
-#include "nsRenderingContext.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGEffects.h"
 #include "mozilla/dom/SVGForeignObjectElement.h"
@@ -279,8 +278,7 @@ nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
   if (aImgParams.imageFlags & imgIContainer::FLAG_SYNC_DECODE) {
     flags |= PaintFrameFlags::PAINT_SYNC_DECODE_IMAGES;
   }
-  nsRenderingContext rendCtx(&aContext);
-  Unused << nsLayoutUtils::PaintFrame(&rendCtx, kid, nsRegion(kidDirtyRect),
+  Unused << nsLayoutUtils::PaintFrame(&aContext, kid, nsRegion(kidDirtyRect),
                                       NS_RGBA(0,0,0,0),
                                       nsDisplayListBuilderMode::PAINTING,
                                       flags);
@@ -523,14 +521,14 @@ nsSVGForeignObjectFrame::DoReflow()
     return;
 
   // initiate a synchronous reflow here and now:  
-  nsRenderingContext renderingContext(
-    presContext->PresShell()->CreateReferenceRenderingContext());
+  RefPtr<gfxContext> renderingContext =
+    presContext->PresShell()->CreateReferenceRenderingContext();
 
   mInReflow = true;
 
   WritingMode wm = kid->GetWritingMode();
   ReflowInput reflowInput(presContext, kid,
-                                &renderingContext,
+                                renderingContext,
                                 LogicalSize(wm, ISize(wm),
                                             NS_UNCONSTRAINEDSIZE));
   ReflowOutput desiredSize(reflowInput);

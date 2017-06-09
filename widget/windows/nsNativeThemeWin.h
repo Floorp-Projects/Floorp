@@ -27,7 +27,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // The nsITheme interface.
-  NS_IMETHOD DrawWidgetBackground(nsRenderingContext* aContext,
+  NS_IMETHOD DrawWidgetBackground(gfxContext* aContext,
                                   nsIFrame* aFrame,
                                   uint8_t aWidgetType,
                                   const nsRect& aRect,
@@ -89,7 +89,7 @@ protected:
                                 int32_t& aPart, int32_t& aState);
   nsresult ClassicGetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
                                        int32_t& aPart, int32_t& aState, bool& aFocused);
-  nsresult ClassicDrawWidgetBackground(nsRenderingContext* aContext,
+  nsresult ClassicDrawWidgetBackground(gfxContext* aContext,
                                        nsIFrame* aFrame,
                                        uint8_t aWidgetType,
                                        const nsRect& aRect,

@@ -5,6 +5,7 @@
 
 #include "nsMathMLChar.h"
 
+#include "gfxContext.h"
 #include "gfxTextRun.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
@@ -20,7 +21,6 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsUnicharUtils.h"
-#include "nsRenderingContext.h"
 
 #include "mozilla/Preferences.h"
 #include "nsIPersistentProperties2.h"
@@ -1836,14 +1836,14 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) override;
+                     gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("MathMLSelectionRect", TYPE_MATHML_SELECTION_RECT)
 private:
   nsRect    mRect;
 };
 
 void nsDisplayMathMLSelectionRect::Paint(nsDisplayListBuilder* aBuilder,
-                                         nsRenderingContext* aCtx)
+                                         gfxContext* aCtx)
 {
   DrawTarget* drawTarget = aCtx->GetDrawTarget();
   Rect rect = NSRectToSnappedRect(mRect + ToReferenceFrame(),
@@ -1886,7 +1886,7 @@ public:
   }
   
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) override
+                     gfxContext* aCtx) override
   {
     mChar->PaintForeground(mFrame->PresContext(), *aCtx,
                            ToReferenceFrame(), mIsSelected);
@@ -1926,7 +1926,7 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) override;
+                     gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("MathMLCharDebug", TYPE_MATHML_CHAR_DEBUG)
 
 private:
@@ -1934,7 +1934,7 @@ private:
 };
 
 void nsDisplayMathMLCharDebug::Paint(nsDisplayListBuilder* aBuilder,
-                                     nsRenderingContext* aCtx)
+                                     gfxContext* aCtx)
 {
   // for visual debug
   Sides skipSides;
@@ -2039,7 +2039,7 @@ nsMathMLChar::ApplyTransforms(gfxContext* aThebesContext,
 
 void
 nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
-                              nsRenderingContext& aRenderingContext,
+                              gfxContext& aRenderingContext,
                               nsPoint aPt,
                               bool aIsSelected)
 {
@@ -2052,8 +2052,6 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
     styleContext = parentContext;
   }
 
-  RefPtr<gfxContext> thebesContext = aRenderingContext.ThebesContext();
-
   // Set color ...
   nscolor fgColor = styleContext->
     GetVisitedDependentColor(&nsStyleText::mWebkitTextFillColor);
@@ -2062,10 +2060,10 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
     fgColor = LookAndFeel::GetColor(LookAndFeel::eColorID_TextSelectForeground,
                                     fgColor);
   }
-  thebesContext->SetColor(Color::FromABGR(fgColor));
-  thebesContext->Save();
+  aRenderingContext.SetColor(Color::FromABGR(fgColor));
+  aRenderingContext.Save();
   nsRect r = mRect + aPt;
-  ApplyTransforms(thebesContext, aPresContext->AppUnitsPerDevPixel(), r);
+  ApplyTransforms(&aRenderingContext, aPresContext->AppUnitsPerDevPixel(), r);
 
   switch(mDraw)
   {
@@ -2075,15 +2073,15 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
       // XXXfredw verify if mGlyphs[0] is non-null to workaround bug 973322.
       if (mGlyphs[0]) {
         mGlyphs[0]->Draw(Range(mGlyphs[0].get()), gfxPoint(0.0, mUnscaledAscent),
-                         gfxTextRun::DrawParams(thebesContext));
+                         gfxTextRun::DrawParams(&aRenderingContext));
       }
       break;
     case DRAW_PARTS: {
       // paint by parts
       if (NS_STRETCH_DIRECTION_VERTICAL == mDirection)
-        PaintVertically(aPresContext, thebesContext, r, fgColor);
+        PaintVertically(aPresContext, &aRenderingContext, r, fgColor);
       else if (NS_STRETCH_DIRECTION_HORIZONTAL == mDirection)
-        PaintHorizontally(aPresContext, thebesContext, r, fgColor);
+        PaintHorizontally(aPresContext, &aRenderingContext, r, fgColor);
       break;
     }
     default:
@@ -2091,7 +2089,7 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
       break;
   }
 
-  thebesContext->Restore();
+  aRenderingContext.Restore();
 }
 
 /* =============================================================================

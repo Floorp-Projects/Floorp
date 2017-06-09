@@ -33,7 +33,7 @@
 #include "nsPIListBoxObject.h"
 #include "nsContentUtils.h"
 #include "ChildIterator.h"
-#include "nsRenderingContext.h"
+#include "gfxContext.h"
 #include "prtime.h"
 #include <algorithm>
 
@@ -733,7 +733,7 @@ nsListBoxBodyFrame::ComputeIntrinsicISize(nsBoxLayoutState& aBoxLayoutState)
     FlattenedChildIterator iter(mContent);
     for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
       if (child->IsXULElement(nsGkAtoms::listitem)) {
-        nsRenderingContext* rendContext = aBoxLayoutState.GetRenderingContext();
+        gfxContext* rendContext = aBoxLayoutState.GetRenderingContext();
         if (rendContext) {
           nsAutoString value;
           uint32_t textCount = child->GetChildCount();

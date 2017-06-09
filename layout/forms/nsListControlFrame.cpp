@@ -323,7 +323,7 @@ nsListControlFrame::CalcBSizeOfARow()
 }
 
 nscoord
-nsListControlFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
+nsListControlFrame::GetPrefISize(gfxContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
@@ -341,7 +341,7 @@ nsListControlFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 }
 
 nscoord
-nsListControlFrame::GetMinISize(nsRenderingContext *aRenderingContext)
+nsListControlFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);

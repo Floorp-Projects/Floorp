@@ -6,8 +6,8 @@
 
 #include "nsMathMLmmultiscriptsFrame.h"
 #include "nsPresContext.h"
-#include "nsRenderingContext.h"
 #include <algorithm>
+#include "gfxContext.h"
 #include "gfxMathTable.h"
 
 using mozilla::WritingMode;
