@@ -6,7 +6,8 @@
 
 var gSearchResultsPane = {
   findSelection: null,
-  listSearchTooltips: [],
+  listSearchTooltips: new Set(),
+  listSearchMenuitemIndicators: new Set(),
   searchResultsCategory: null,
   searchInput: null,
 
@@ -193,6 +194,7 @@ var gSearchResultsPane = {
     let query = event.target.value.trim().toLowerCase();
     this.findSelection.removeAllRanges();
     this.removeAllSearchTooltips();
+    this.removeAllSearchMenuitemIndicators();
 
     let srHeader = document.getElementById("header-searchResults");
 
@@ -242,9 +244,7 @@ var gSearchResultsPane = {
           strings.getFormattedString("searchResults.needHelp2", [helpUrl, brandName]);
       } else {
         // Creating tooltips for all the instances found
-        for (let node of this.listSearchTooltips) {
-          this.createSearchTooltip(node, query);
-        }
+        this.listSearchTooltips.forEach((node) => this.createSearchTooltip(node, query));
       }
     } else {
       this.searchResultsCategory.hidden = true;
@@ -300,9 +300,18 @@ var gSearchResultsPane = {
       // Searching some elements, such as xul:button, buttons to open subdialogs.
       let keywordsResult = this.stringMatchesFilters(nodeObject.getAttribute("searchkeywords"), searchPhrase);
 
-      // Creating tooltips for buttons and menulists.
+      // Creating tooltips for buttons
       if (keywordsResult && (nodeObject.tagName === "button" || nodeObject.tagName == "menulist")) {
-        this.listSearchTooltips.push(nodeObject);
+        this.listSearchTooltips.add(nodeObject);
+      }
+
+      if (keywordsResult && nodeObject.tagName === "menuitem") {
+        nodeObject.setAttribute("indicator", "true");
+        this.listSearchMenuitemIndicators.add(nodeObject);
+        let menulist = nodeObject.closest("menulist");
+
+        menulist.setAttribute("indicator", "true");
+        this.listSearchMenuitemIndicators.add(menulist);
       }
 
       if ((nodeObject.tagName == "button" ||
@@ -349,7 +358,7 @@ var gSearchResultsPane = {
       result = this.searchWithinNode(nodeObject.childNodes[index], searchPhrase);
       // Creating tooltips for menulist element
       if (result && nodeObject.tagName === "menulist") {
-        this.listSearchTooltips.push(nodeObject);
+        this.listSearchTooltips.add(nodeObject);
       }
     }
     return result;
@@ -395,6 +404,14 @@ var gSearchResultsPane = {
       searchTooltip.parentElement.classList.remove("search-tooltip-parent");
       searchTooltip.remove();
     }
-    this.listSearchTooltips = [];
+    this.listSearchTooltips.clear();
+  },
+
+  /**
+   * Remove all indicators on menuitem.
+   */
+  removeAllSearchMenuitemIndicators() {
+    this.listSearchMenuitemIndicators.forEach((node) => node.removeAttribute("indicator"));
+    this.listSearchMenuitemIndicators.clear();
   }
 }
