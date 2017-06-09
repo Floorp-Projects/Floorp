@@ -995,7 +995,7 @@ nsLocalFile::ResolveShortcut()
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  wchar_t* resolvedPath = mResolvedPath.get();
+  wchar_t* resolvedPath = wwc(mResolvedPath.BeginWriting());
 
   // resolve this shortcut
   nsresult rv = gResolver->Resolve(mWorkingPath.get(), resolvedPath);
@@ -1365,7 +1365,7 @@ nsLocalFile::Create(uint32_t aType, uint32_t aAttributes)
   // Skip the first 'X:\' for the first form, and skip the first full
   // '\\machine\volume\' segment for the second form.
 
-  wchar_t* path = char16ptr_t(mResolvedPath.BeginWriting());
+  wchar_t* path = wwc(mResolvedPath.BeginWriting());
 
   if (path[0] == L'\\' && path[1] == L'\\') {
     // dealing with a UNC path here; skip past '\\machine\'
@@ -3743,7 +3743,7 @@ nsDriveEnumerator::Init()
   if (!mDrives.SetLength(length + 1, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  if (!GetLogicalDriveStringsW(length, mDrives.get())) {
+  if (!GetLogicalDriveStringsW(length, wwc(mDrives.BeginWriting()))) {
     return NS_ERROR_FAILURE;
   }
   mDrives.BeginReading(mStartOfCurrentDrive);

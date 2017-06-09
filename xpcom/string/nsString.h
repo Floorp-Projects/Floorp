@@ -148,6 +148,49 @@ private:
   NS_ConvertUTF8toUTF16(char16_t) = delete;
 };
 
+
+#ifdef MOZ_USE_CHAR16_WRAPPER
+
+inline char16_t*
+wwc(wchar_t* aStr)
+{
+  return reinterpret_cast<char16_t*>(aStr);
+}
+
+inline wchar_t*
+wwc(char16_t* aStr)
+{
+  return reinterpret_cast<wchar_t*>(aStr);
+}
+
+inline const char16_t*
+wwc(const wchar_t* aStr)
+{
+  return reinterpret_cast<const char16_t*>(aStr);
+}
+
+inline const wchar_t*
+wwc(const char16_t* aStr)
+{
+  return reinterpret_cast<const wchar_t*>(aStr);
+}
+
+#else
+
+inline char16_t*
+wwc(char16_t* aStr)
+{
+  return aStr;
+}
+
+inline const char16_t*
+wwc(const char16_t* aStr)
+{
+  return aStr;
+}
+
+#endif
+
 // the following are included/declared for backwards compatibility
 typedef nsAutoString nsVoidableString;
 
