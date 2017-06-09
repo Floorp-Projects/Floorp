@@ -160,8 +160,8 @@ fuzzy-if(skiaContent,255,10) == img-novb-width-slice-1.html    img-novb-width-al
 == svg-image-simple-3.svg lime100x100.svg
 
 # tests for <svg> files that include themselves as an <image>
-fuzzy-if(webrender,1-1,3-5) == svg-image-recursive-1a.svg  svg-image-recursive-1-ref.svg
-fuzzy-if(webrender,1-1,3-5) == svg-image-recursive-1b.svg  svg-image-recursive-1-ref.svg
+fuzzy-if(webrender,1-1,4-4) == svg-image-recursive-1a.svg  svg-image-recursive-1-ref.svg
+fuzzy-if(webrender,1-1,4-4) == svg-image-recursive-1b.svg  svg-image-recursive-1-ref.svg
 == svg-image-recursive-2a.svg  svg-image-recursive-2-ref.svg
 == svg-image-recursive-2b.html svg-image-recursive-2-ref.svg
 

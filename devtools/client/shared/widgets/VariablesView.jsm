@@ -3901,14 +3901,22 @@ var generateId = (function () {
 })();
 
 /**
- * Serialize a string to JSON. The result can be inserted in a string evaluated by `eval`.
+ * Quote and escape a string. The result will be another string containing an
+ * ECMAScript StringLiteral which will produce the original one when evaluated
+ * by `eval` or similar.
  *
  * @param string aString
- *       The string to be escaped. If undefined, the function returns the empty string.
+ *       An optional string to be escaped. If no string is passed, the function
+ *       returns an empty string.
  * @return string
  */
 function escapeString(aString) {
-  return JSON.stringify(aString) || "";
+  if (typeof aString !== "string") {
+    return "";
+  }
+  // U+2028 and U+2029 are allowed in JSON but not in ECMAScript string literals.
+  return JSON.stringify(aString).replace(/\u2028/g, '\\u2028')
+                                .replace(/\u2029/g, '\\u2029');
 }
 
 /**

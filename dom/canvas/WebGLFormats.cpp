@@ -113,6 +113,12 @@ InitCompressedFormatInfo()
     AddCompressedFormatInfo(EffectiveFormat::COMPRESSED_RGBA_S3TC_DXT3_EXT, 128, 4, 4, CompressionFamily::S3TC);
     AddCompressedFormatInfo(EffectiveFormat::COMPRESSED_RGBA_S3TC_DXT5_EXT, 128, 4, 4, CompressionFamily::S3TC);
 
+    // EXT_texture_compression_s3tc_srgb
+    AddCompressedFormatInfo(EffectiveFormat::COMPRESSED_SRGB_S3TC_DXT1_EXT ,       64, 4, 4, CompressionFamily::S3TC);
+    AddCompressedFormatInfo(EffectiveFormat::COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT,  64, 4, 4, CompressionFamily::S3TC);
+    AddCompressedFormatInfo(EffectiveFormat::COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT, 128, 4, 4, CompressionFamily::S3TC);
+    AddCompressedFormatInfo(EffectiveFormat::COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT, 128, 4, 4, CompressionFamily::S3TC);
+
     // KHR_texture_compression_astc_ldr
     AddCompressedFormatInfo(EffectiveFormat::COMPRESSED_RGBA_ASTC_4x4_KHR          , 128,  4,  4, CompressionFamily::ASTC);
     AddCompressedFormatInfo(EffectiveFormat::COMPRESSED_RGBA_ASTC_5x4_KHR          , 128,  5,  4, CompressionFamily::ASTC);
@@ -322,6 +328,12 @@ InitFormatInfo()
     AddFormatInfo(FOO(COMPRESSED_RGBA_S3TC_DXT1_EXT), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
     AddFormatInfo(FOO(COMPRESSED_RGBA_S3TC_DXT3_EXT), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
     AddFormatInfo(FOO(COMPRESSED_RGBA_S3TC_DXT5_EXT), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+
+    // EXT_texture_compression_s3tc_srgb
+    AddFormatInfo(FOO(COMPRESSED_SRGB_S3TC_DXT1_EXT ), 0, 1,1,1,0, 0,0, UnsizedFormat::RGB , true, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, true, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, true, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, true, ComponentType::NormUInt);
 
     // KHR_texture_compression_astc_ldr
     AddFormatInfo(FOO(COMPRESSED_RGBA_ASTC_4x4_KHR          ), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
