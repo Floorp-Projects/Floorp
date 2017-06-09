@@ -2639,7 +2639,6 @@ ShutdownState::Enter()
 {
   auto master = mMaster;
 
-  master->mIsShutdown = true;
   master->mDelayedScheduler.Reset();
 
   // Shutdown happens while decode timer is active, we need to disconnect and
@@ -2681,7 +2680,6 @@ ShutdownState::Enter()
   master->mDecoderPosition.DisconnectIfConnected();
 
   master->mDuration.DisconnectAll();
-  master->mIsShutdown.DisconnectAll();
   master->mNextFrameStatus.DisconnectAll();
   master->mCurrentPosition.DisconnectAll();
   master->mPlaybackOffset.DisconnectAll();
@@ -2743,7 +2741,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   INIT_MIRROR(mPlaybackRateReliable, true),
   INIT_MIRROR(mDecoderPosition, 0),
   INIT_CANONICAL(mDuration, NullableTimeUnit()),
-  INIT_CANONICAL(mIsShutdown, false),
   INIT_CANONICAL(mNextFrameStatus, MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE),
   INIT_CANONICAL(mCurrentPosition, TimeUnit::Zero()),
   INIT_CANONICAL(mPlaybackOffset, 0),
