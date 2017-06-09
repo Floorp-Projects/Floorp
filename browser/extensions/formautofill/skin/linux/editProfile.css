@@ -3,3 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Linux specific rules */
+body {
+  font-size: 0.85rem;
+}

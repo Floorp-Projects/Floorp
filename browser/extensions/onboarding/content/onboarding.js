@@ -12,6 +12,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 const ONBOARDING_CSS_URL = "resource://onboarding/onboarding.css";
 const ABOUT_HOME_URL = "about:home";
 const ABOUT_NEWTAB_URL = "about:newtab";
+const BUNDLE_URI = "chrome://onboarding/locale/onboarding.properties";
 
 /**
  * The script won't be initialized if we turned off onboarding by
@@ -20,6 +21,7 @@ const ABOUT_NEWTAB_URL = "about:newtab";
 class Onboarding {
   constructor(contentWindow) {
     this.init(contentWindow);
+    this._bundle = Services.strings.createBundle(BUNDLE_URI);
   }
 
   async init(contentWindow) {
@@ -62,6 +64,9 @@ class Onboarding {
   }
 
   _renderOverlay() {
+    const BRAND_SHORT_NAME = Services.strings
+                         .createBundle("chrome://branding/locale/brand.properties")
+                         .GetStringFromName("brandShortName");
     let div = this._window.document.createElement("div");
     div.id = "onboarding-overlay";
     // Here we use `innerHTML` is for more friendly reading.
@@ -70,7 +75,7 @@ class Onboarding {
     div.innerHTML = `
       <div id="onboarding-overlay-dialog">
         <span id="onboarding-overlay-close-btn"></span>
-        <header>Getting started?</header>
+        <header id="onboarding-header"></header>
         <nav>
           <ul></ul>
         </nav>
@@ -78,6 +83,9 @@ class Onboarding {
         </footer>
       </div>
     `;
+
+    div.querySelector("#onboarding-header").textContent =
+       this._bundle.formatStringFromName("onboarding.overlay-title", [BRAND_SHORT_NAME], 1);
     return div;
   }
 

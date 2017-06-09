@@ -4,9 +4,6 @@
 
 body {
   font-size: 1rem;
-  /* body needs padding until the edit profile dialog could be loaded as a
-     stacked subdialog */
-  padding: 2em;
 }
 
 form,
@@ -24,6 +21,7 @@ label {
 }
 
 label > span {
+  box-sizing: border-box;
   flex: 0 0 8em;
   padding-inline-end: 0.5em;
   align-self: center;
@@ -32,12 +30,13 @@ label > span {
 
 input,
 select {
+  box-sizing: border-box;
   flex: 1 0 auto;
-  width: 9em;
+  width: calc(50% - 8em);
 }
 
 option {
-  padding: 6px;
+  padding: 5px 10px;
 }
 
 textarea {
@@ -46,10 +45,6 @@ textarea {
 
 button {
   padding: 3px 2em;
-}
-
-#country-container {
-  width: 15em;
 }
 
 #given-name-container,
@@ -79,7 +74,6 @@ button {
 #address-level2,
 #tel{
   flex: 0 0 auto;
-  width: calc(50% - 10em);
 }
 
 #street-address,

@@ -1,6 +1,6 @@
 [package]
 name = "geckodriver"
-version = "0.16.1"
+version = "0.17.0"
 authors = [
   "James Graham <james@hoppipolla.co.uk>",
   "Andreas Tolfsen <ato@mozilla.com>",

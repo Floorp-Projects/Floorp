@@ -11,6 +11,7 @@
 #include "mozilla/dom/UnionTypes.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIMultiplexInputStream.h"
+#include "nsRFPService.h"
 #include "nsStringStream.h"
 #include "nsTArray.h"
 #include "nsJSUtils.h"
@@ -269,8 +270,8 @@ MultipartBlobImpl::SetLengthAndModifiedDate(ErrorResult& aRv)
     //   var x = new Date(); var f = new File(...);
     //   x.getTime() < f.dateModified.getTime()
     // could fail.
-    mLastModificationDate =
-      lastModifiedSet ? lastModified * PR_USEC_PER_MSEC : JS_Now();
+    mLastModificationDate = nsRFPService::ReduceTimePrecisionAsUSecs(
+      lastModifiedSet ? lastModified * PR_USEC_PER_MSEC : JS_Now());
   }
 }
 
