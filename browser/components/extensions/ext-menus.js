@@ -673,7 +673,7 @@ this.menusInternal = class extends ExtensionAPI {
           }
         },
 
-        onClicked: new SingletonEventManager(context, "menusInternal.onClicked", fire => {
+        onClicked: new EventManager(context, "menusInternal.onClicked", fire => {
           let listener = (event, info, tab) => {
             fire.async(info, tab);
           };

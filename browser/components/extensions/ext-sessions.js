@@ -127,7 +127,7 @@ this.sessions = class extends ExtensionAPI {
           return createSession(session, extension, closedId);
         },
 
-        onChanged: new SingletonEventManager(context, "sessions.onChanged", fire => {
+        onChanged: new EventManager(context, "sessions.onChanged", fire => {
           let observer = () => {
             fire.async();
           };

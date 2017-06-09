@@ -219,7 +219,7 @@ this.history = class extends ExtensionAPI {
           return Promise.resolve(results);
         },
 
-        onVisited: new SingletonEventManager(context, "history.onVisited", fire => {
+        onVisited: new EventManager(context, "history.onVisited", fire => {
           let listener = (event, data) => {
             fire.sync(data);
           };
@@ -230,7 +230,7 @@ this.history = class extends ExtensionAPI {
           };
         }).api(),
 
-        onVisitRemoved: new SingletonEventManager(context, "history.onVisitRemoved", fire => {
+        onVisitRemoved: new EventManager(context, "history.onVisitRemoved", fire => {
           let listener = (event, data) => {
             fire.sync(data);
           };
@@ -241,7 +241,7 @@ this.history = class extends ExtensionAPI {
           };
         }).api(),
 
-        onTitleChanged: new SingletonEventManager(context, "history.onTitleChanged", fire => {
+        onTitleChanged: new EventManager(context, "history.onTitleChanged", fire => {
           let listener = (event, data) => {
             fire.sync(data);
           };

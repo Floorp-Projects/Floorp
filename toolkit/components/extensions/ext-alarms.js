@@ -136,7 +136,7 @@ this.alarms = class extends ExtensionAPI {
           return Promise.resolve(cleared);
         },
 
-        onAlarm: new SingletonEventManager(context, "alarms.onAlarm", fire => {
+        onAlarm: new EventManager(context, "alarms.onAlarm", fire => {
           let callback = alarm => {
             fire.sync(alarm.data);
           };

@@ -19,7 +19,7 @@ this.runtime = class extends ExtensionAPI {
     let {extension} = context;
     return {
       runtime: {
-        onStartup: new SingletonEventManager(context, "runtime.onStartup", fire => {
+        onStartup: new EventManager(context, "runtime.onStartup", fire => {
           if (context.incognito) {
             // This event should not fire if we are operating in a private profile.
             return () => {};
@@ -35,7 +35,7 @@ this.runtime = class extends ExtensionAPI {
           };
         }).api(),
 
-        onInstalled: new SingletonEventManager(context, "runtime.onInstalled", fire => {
+        onInstalled: new EventManager(context, "runtime.onInstalled", fire => {
           let temporary = !!extension.addonData.temporarilyInstalled;
 
           let listener = () => {
@@ -63,7 +63,7 @@ this.runtime = class extends ExtensionAPI {
           };
         }).api(),
 
-        onUpdateAvailable: new SingletonEventManager(context, "runtime.onUpdateAvailable", fire => {
+        onUpdateAvailable: new EventManager(context, "runtime.onUpdateAvailable", fire => {
           let instanceID = extension.addonData.instanceID;
           AddonManager.addUpgradeListener(instanceID, upgrade => {
             extension.upgrade = upgrade;
