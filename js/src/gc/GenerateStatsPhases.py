@@ -62,12 +62,11 @@ class PhaseKind():
 
 # The root marking phase appears in several places in the graph.
 MarkRootsPhaseKind = PhaseKind("MARK_ROOTS", "Mark Roots", 48, [
-    PhaseKind("BUFFER_GRAY_ROOTS", "Buffer Gray Roots", 49),
     PhaseKind("MARK_CCWS", "Mark Cross Compartment Wrappers", 50),
     PhaseKind("MARK_STACK", "Mark C and JS stacks", 51),
     PhaseKind("MARK_RUNTIME_DATA", "Mark Runtime-wide Data", 52),
     PhaseKind("MARK_EMBEDDING", "Mark Embedding", 53),
-    PhaseKind("MARK_COMPARTMENTS", "Mark Compartments", 54),
+    PhaseKind("MARK_COMPARTMENTS", "Mark Compartments", 54)
 ])
 
 JoinParallelTasksPhaseKind = PhaseKind("JOIN_PARALLEL_TASKS", "Join Parallel Tasks", 67)
@@ -76,13 +75,18 @@ PhaseKindGraphRoots = [
     PhaseKind("MUTATOR", "Mutator Running", 0),
     PhaseKind("GC_BEGIN", "Begin Callback", 1),
     PhaseKind("WAIT_BACKGROUND_THREAD", "Wait Background Thread", 2),
-    PhaseKind("MARK_DISCARD_CODE", "Mark Discard Code", 3),
-    PhaseKind("RELAZIFY_FUNCTIONS", "Relazify Functions", 4),
-    PhaseKind("PURGE", "Purge", 5),
-    PhaseKind("MARK", "Mark", 6, [
+    PhaseKind("PREPARE", "Prepare For Collection", 69, [
         PhaseKind("UNMARK", "Unmark", 7),
+        PhaseKind("BUFFER_GRAY_ROOTS", "Buffer Gray Roots", 49),
+        PhaseKind("MARK_DISCARD_CODE", "Mark Discard Code", 3),
+        PhaseKind("RELAZIFY_FUNCTIONS", "Relazify Functions", 4),
+        PhaseKind("PURGE", "Purge", 5),
+        PhaseKind("PURGE_SHAPE_TABLES", "Purge ShapeTables", 60),
+        JoinParallelTasksPhaseKind
+        ]),
+    PhaseKind("MARK", "Mark", 6, [
         MarkRootsPhaseKind,
-        PhaseKind("MARK_DELAYED", "Mark Delayed", 8),
+        PhaseKind("MARK_DELAYED", "Mark Delayed", 8)
         ]),
     PhaseKind("SWEEP", "Sweep", 9, [
         PhaseKind("SWEEP_MARK", "Mark During Sweeping", 10, [
@@ -151,8 +155,7 @@ PhaseKindGraphRoots = [
     ]),
     PhaseKind("BARRIER", "Barriers", 55, [
         PhaseKind("UNMARK_GRAY", "Unmark gray", 56),
-    ]),
-    PhaseKind("PURGE_SHAPE_TABLES", "Purge ShapeTables", 60)
+    ])
 ]
 
 # Make a linear list of all unique phases by performing a depth first
