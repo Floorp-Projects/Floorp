@@ -29,8 +29,9 @@ var TestObserver = {
 
 function test_finished() {
   // Make sure we always reset prefs.
-  if (Services.prefs.prefHasUserValue("browser.formfill.expire_days"))
+  if (Services.prefs.prefHasUserValue("browser.formfill.expire_days")) {
     Services.prefs.clearUserPref("browser.formfill.expire_days");
+  }
 
   do_test_finished();
 }
@@ -56,8 +57,9 @@ function* tests() {
   // Cleanup from any previous tests or failures.
   dbFile = profileDir.clone();
   dbFile.append("formhistory.sqlite");
-  if (dbFile.exists())
+  if (dbFile.exists()) {
     dbFile.remove(false);
+  }
 
   testfile.copyTo(profileDir, "formhistory.sqlite");
   do_check_true(dbFile.exists());
