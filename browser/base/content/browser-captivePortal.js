@@ -62,9 +62,12 @@ var CaptivePortalWatcher = {
       if (windows.getNext() == window && !windows.hasMoreElements()) {
         this.ensureCaptivePortalTab();
       }
+    } else if (cps.state == cps.UNKNOWN) {
+      // We trigger a portal check after delayed startup to avoid doing a network
+      // request before first paint.
+      this._delayedRecheckPending = true;
+      Services.obs.addObserver(this, "browser-delayed-startup-finished");
     }
-
-    cps.recheckCaptivePortal();
   },
 
   uninit() {
@@ -72,6 +75,9 @@ var CaptivePortalWatcher = {
     Services.obs.removeObserver(this, "captive-portal-login-abort");
     Services.obs.removeObserver(this, "captive-portal-login-success");
 
+    if (this._delayedRecheckPending) {
+      Services.obs.removeObserver(this, "browser-delayed-startup-finished");
+    }
 
     if (this._delayedCaptivePortalDetectedInProgress) {
       Services.obs.removeObserver(this, "xul-window-visible");
@@ -80,6 +86,11 @@ var CaptivePortalWatcher = {
 
   observe(aSubject, aTopic, aData) {
     switch (aTopic) {
+      case "browser-delayed-startup-finished":
+        Services.obs.removeObserver(this, "browser-delayed-startup-finished");
+        delete this._delayedRecheckPending;
+        cps.recheckCaptivePortal();
+        break;
       case "captive-portal-login":
         this._captivePortalDetected();
         break;

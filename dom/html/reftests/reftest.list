@@ -2,12 +2,12 @@
 include autofocus/reftest.list
 include toblob-todataurl/reftest.list
 
-fails-if(styloVsGecko) == 41464-1a.html 41464-1-ref.html
-fails-if(styloVsGecko) == 41464-1b.html 41464-1-ref.html
+== 41464-1a.html 41464-1-ref.html
+== 41464-1b.html 41464-1-ref.html
 == 52019-1.html 52019-1-ref.html
-fails-if(styloVsGecko) == 82711-1.html 82711-1-ref.html
-fails-if(styloVsGecko) == 82711-2.html 82711-2-ref.html
-fails-if(styloVsGecko) != 82711-1-ref.html 82711-2-ref.html
+== 82711-1.html 82711-1-ref.html
+== 82711-2.html 82711-2-ref.html
+!= 82711-1-ref.html 82711-2-ref.html
 != 468263-1a.html about:blank
 != 468263-1b.html about:blank
 != 468263-1c.html about:blank
@@ -20,10 +20,10 @@ fails-if(styloVsGecko) != 82711-1-ref.html 82711-2-ref.html
 == 560059-video-dimensions.html 560059-video-dimensions-ref.html
 == 573322-quirks.html 573322-quirks-ref.html
 == 573322-no-quirks.html 573322-no-quirks-ref.html
-fails-if(styloVsGecko) == 596455-1a.html 596455-ref-1.html
-fails-if(styloVsGecko) == 596455-1b.html 596455-ref-1.html
-fails-if(styloVsGecko) == 596455-2a.html 596455-ref-2.html
-fails-if(styloVsGecko) == 596455-2b.html 596455-ref-2.html
+== 596455-1a.html 596455-ref-1.html
+== 596455-1b.html 596455-ref-1.html
+== 596455-2a.html 596455-ref-2.html
+== 596455-2b.html 596455-ref-2.html
 == 610935.html 610935-ref.html
 == 649134-1.html 649134-ref.html
 skip-if(Android) == 649134-2.html 649134-2-ref.html

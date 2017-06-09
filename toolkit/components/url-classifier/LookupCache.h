@@ -199,12 +199,15 @@ public:
   // Called when update to clear expired entries.
   void InvalidateExpiredCacheEntries();
 
-  // Clear completions retrieved from gethash request.
+  // Copy fullhash cache from another LookupCache.
+  void CopyFullHashCache(const LookupCache* aSource);
+
+  // Clear fullhash cache from fullhash/gethash response.
   void ClearCache();
 
   // Check if completions can be found in cache.
   // Currently this is only used by testcase.
-  bool IsInCache(uint32_t key) { return mCache.Get(key); };
+  bool IsInCache(uint32_t key) { return mFullHashCache.Get(key); };
 
 #if DEBUG
   void DumpCache();
@@ -254,8 +257,8 @@ protected:
   // For gtest to inspect private members.
   friend class PerProviderDirectoryTestUtils;
 
-  // Cache gethash result.
-  FullHashResponseMap mCache;
+  // Cache stores fullhash response(V4)/gethash response(V2)
+  FullHashResponseMap mFullHashCache;
 };
 
 class LookupCacheV2 final : public LookupCache

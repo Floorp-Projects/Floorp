@@ -87,7 +87,7 @@ toolbar:not([brighttext]) #bookmarks-menu-button[cui-areatype="toolbar"][starred
 }
 
 #sync-button[cui-areatype="toolbar"] {
-  list-style-image: url("chrome://browser/skin/sync.svg");
+  list-style-image: url("chrome://browser/skin/synced-tabs.svg");
 }
 
 #containers-panelmenu[cui-areatype="toolbar"] {

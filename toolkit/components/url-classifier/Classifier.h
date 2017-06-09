@@ -140,6 +140,8 @@ private:
 
   void MergeNewLookupCaches(); // Merge mNewLookupCaches into mLookupCaches.
 
+  void CopyAndInvalidateFullHashCache();
+
   // Remove any intermediary for update, including in-memory
   // and on-disk data.
   void RemoveUpdateIntermediaries();
