@@ -72,7 +72,6 @@ class CommonTestCase(unittest.TestCase):
         self._marionette_weakref = marionette_weakref
         self.fixtures = fixtures
 
-        self.loglines = []
         self.duration = 0
         self.start_time = 0
         self.expected = kwargs.pop('expected', 'pass')
@@ -251,22 +250,17 @@ class CommonTestCase(unittest.TestCase):
         super(CommonTestCase, self).setUp()
 
     def cleanTest(self):
-        self._deleteSession()
+        self._delete_session()
 
-    def _deleteSession(self):
-        if hasattr(self, 'start_time'):
+    def _delete_session(self):
+        if hasattr(self, "start_time"):
             self.duration = time.time() - self.start_time
-        if hasattr(self.marionette, 'session'):
-            if self.marionette.session is not None:
-                try:
-                    self.loglines.extend(self.marionette.get_logs())
-                except Exception, inst:
-                    self.loglines = [['Error getting log: {}'.format(inst)]]
-                try:
-                    self.marionette.delete_session()
-                except IOError:
-                    # Gecko has crashed?
-                    pass
+        if self.marionette.session is not None:
+            try:
+                self.marionette.delete_session()
+            except IOError:
+                # Gecko has crashed?
+                pass
         self.marionette = None
 
 
