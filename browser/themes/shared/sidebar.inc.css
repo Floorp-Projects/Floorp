@@ -128,7 +128,7 @@
 
 #sidebar-switcher-tabs > .toolbarbutton-icon,
 #sidebar-box[sidebarcommand="viewTabsSidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
-  list-style-image: url(chrome://browser/skin/sync.svg);
+  list-style-image: url(chrome://browser/skin/synced-tabs.svg);
   -moz-context-properties: fill;
   fill: currentColor;
   opacity: 0.8;

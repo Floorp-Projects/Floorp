@@ -4,13 +4,13 @@ load 309732-2.xul
 load 366583-1.xul
 load 380217-1.xul
 load 382444-1.html
-load 391178-1.xhtml
+asserts-if(stylo,3) load 391178-1.xhtml # bug 1370830
 load 391178-2.xul
 load 393665-1.xul
 load 399227-1.xul
 load 399227-2.xul
 asserts-if(stylo,3) load 399692-1.xhtml # bug 1324698
-load 399715-1.xhtml
+asserts-if(stylo,2) load 399715-1.xhtml # bug 1370830
 load 409807-1.xul
 load 414170-1.xul
 load 430394-1.xul

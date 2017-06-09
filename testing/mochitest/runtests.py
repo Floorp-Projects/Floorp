@@ -153,6 +153,7 @@ class MessageLogger(object):
                          'test_status', 'log',
                          'buffering_on', 'buffering_off'])
     TEST_PATH_PREFIXES = ['/tests/',
+                          'chrome://mochitests/content/a11y/',
                           'chrome://mochitests/content/browser/',
                           'chrome://mochitests/content/chrome/']
 

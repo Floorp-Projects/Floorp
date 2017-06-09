@@ -7,14 +7,14 @@
 != listbox-not-blank.html about:blank
 != radio-not-blank.html about:blank
 != text-control-not-blank.html about:blank
-fails-if(styloVsGecko) != textarea-not-blank.html about:blank
+!= textarea-not-blank.html about:blank
 
 # The following tests will fail if the platform does not have native
 # theme support (which all platforms should have).
 fails-if(!nativeThemePref) != text-input-native.html text-input-nonnative.html
 fuzzy-if(skiaContent,2,88) fails-if(styloVsGecko||stylo) == text-input-nonnative-when-styled.html text-input-nonnative-when-styled-ref.html
-fails-if(!nativeThemePref) fails-if(styloVsGecko) != textarea-native.html textarea-nonnative.html
-fuzzy-if(skiaContent,2,53) fails-if(styloVsGecko) == textarea-nonnative-when-styled.html textarea-nonnative-when-styled-ref.html
+fails-if(!nativeThemePref) != textarea-native.html textarea-nonnative.html
+fuzzy-if(skiaContent,2,53) == textarea-nonnative-when-styled.html textarea-nonnative-when-styled-ref.html
 fails-if(!nativeThemePref) != button-native.html button-nonnative.html
 == button-nonnative-when-styled.html button-nonnative-when-styled-ref.html
 fails-if(!nativeThemePref&&!Android) != combobox-native.html combobox-nonnative.html
