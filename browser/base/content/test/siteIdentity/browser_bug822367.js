@@ -24,7 +24,7 @@ add_task(async function test() {
   // Mixed Script Test
   var url = HTTPS_TEST_ROOT + "file_bug822367_1.html";
   BrowserTestUtils.loadURI(gTestBrowser, url);
-  await BrowserTestUtils.browserLoaded(gTestBrowser);
+  await BrowserTestUtils.browserLoaded(gTestBrowser, false, url);
 });
 
 // Mixed Script Test
@@ -48,7 +48,7 @@ add_task(async function MixedTest1B() {
 add_task(async function MixedTest2() {
   var url = HTTPS_TEST_ROOT_2 + "file_bug822367_2.html";
   BrowserTestUtils.loadURI(gTestBrowser, url);
-  await BrowserTestUtils.browserLoaded(gTestBrowser);
+  await BrowserTestUtils.browserLoaded(gTestBrowser, false, url);
 
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: false, passiveLoaded: false});
 });
@@ -57,7 +57,7 @@ add_task(async function MixedTest2() {
 add_task(async function MixedTest3() {
   var url = HTTPS_TEST_ROOT + "file_bug822367_3.html";
   BrowserTestUtils.loadURI(gTestBrowser, url);
-  await BrowserTestUtils.browserLoaded(gTestBrowser);
+  await BrowserTestUtils.browserLoaded(gTestBrowser, false, url);
 });
 
 add_task(async function MixedTest3A() {
@@ -86,7 +86,7 @@ add_task(async function MixedTest3B() {
 add_task(async function MixedTest4() {
   var url = HTTPS_TEST_ROOT_2 + "file_bug822367_4.html";
   BrowserTestUtils.loadURI(gTestBrowser, url);
-  await BrowserTestUtils.browserLoaded(gTestBrowser);
+  await BrowserTestUtils.browserLoaded(gTestBrowser, false, url);
 });
 
 add_task(async function MixedTest4A() {
@@ -120,7 +120,7 @@ add_task(async function MixedTest4C() {
 add_task(async function MixedTest5() {
   var url = HTTPS_TEST_ROOT + "file_bug822367_5.html";
   BrowserTestUtils.loadURI(gTestBrowser, url);
-  await BrowserTestUtils.browserLoaded(gTestBrowser);
+  await BrowserTestUtils.browserLoaded(gTestBrowser, false, url);
 });
 
 add_task(async function MixedTest5A() {
@@ -143,7 +143,7 @@ add_task(async function MixedTest5B() {
 add_task(async function MixedTest6() {
   var url = HTTPS_TEST_ROOT_2 + "file_bug822367_6.html";
   BrowserTestUtils.loadURI(gTestBrowser, url);
-  await BrowserTestUtils.browserLoaded(gTestBrowser);
+  await BrowserTestUtils.browserLoaded(gTestBrowser, false, url);
 });
 
 add_task(async function MixedTest6A() {

@@ -8,6 +8,7 @@
 #include "nsNetCID.h"
 #include "nsICryptoHash.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/dom/AuthenticatorAttestationResponse.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WebAuthnManager.h"
 #include "mozilla/dom/WebAuthnUtil.h"
@@ -39,7 +40,7 @@ NS_IMPL_ISUPPORTS(WebAuthnManager, nsIIPCBackgroundChildCreateCallback);
 
 template<class OOS>
 static nsresult
-GetAlgorithmName(JSContext* aCx, const OOS& aAlgorithm,
+GetAlgorithmName(const OOS& aAlgorithm,
                  /* out */ nsString& aName)
 {
   MOZ_ASSERT(aAlgorithm.IsString()); // TODO: remove assertion when we coerce.
@@ -99,10 +100,10 @@ AssembleClientData(const nsAString& aOrigin, const CryptoBuffer& aChallenge,
     return NS_ERROR_FAILURE;
   }
 
-  WebAuthnClientData clientDataObject;
-  clientDataObject.mOrigin.Assign(aOrigin);
-  clientDataObject.mHashAlg.SetAsString().Assign(NS_LITERAL_STRING("S256"));
+  CollectedClientData clientDataObject;
   clientDataObject.mChallenge.Assign(challengeBase64);
+  clientDataObject.mOrigin.Assign(aOrigin);
+  clientDataObject.mHashAlg.Assign(NS_LITERAL_STRING("S256"));
 
   nsAutoString temp;
   if (NS_WARN_IF(!clientDataObject.ToJSON(temp))) {
@@ -214,11 +215,8 @@ WebAuthnManager::Get()
 }
 
 already_AddRefed<Promise>
-WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent, JSContext* aCx,
-                                const Account& aAccountInformation,
-                                const Sequence<ScopedCredentialParameters>& aCryptoParameters,
-                                const ArrayBufferViewOrArrayBuffer& aChallenge,
-                                const ScopedCredentialOptions& aOptions)
+WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
+                                const MakeCredentialOptions& aOptions)
 {
   MOZ_ASSERT(aParent);
 
@@ -244,15 +242,15 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent, JSContext* aCx,
   // closest value lying within that range.
 
   double adjustedTimeout = 30.0;
-  if (aOptions.mTimeoutSeconds.WasPassed()) {
-    adjustedTimeout = aOptions.mTimeoutSeconds.Value();
+  if (aOptions.mTimeout.WasPassed()) {
+    adjustedTimeout = aOptions.mTimeout.Value();
     adjustedTimeout = std::max(15.0, adjustedTimeout);
     adjustedTimeout = std::min(120.0, adjustedTimeout);
   }
 
   nsCString rpId;
-  if (!aOptions.mRpId.WasPassed()) {
-    // If rpId is not specified, then set rpId to callerOrigin, and rpIdHash to
+  if (!aOptions.mRp.mId.WasPassed()) {
+    // If rp.id is not specified, then set rpId to callerOrigin, and rpIdHash to
     // the SHA-256 hash of rpId.
     rpId.Assign(NS_ConvertUTF16toUTF8(origin));
   } else {
@@ -264,7 +262,7 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent, JSContext* aCx,
     // Otherwise, reject promise with a DOMException whose name is
     // "SecurityError", and terminate this algorithm.
 
-    if (NS_FAILED(RelaxSameOrigin(aParent, aOptions.mRpId.Value(), rpId))) {
+    if (NS_FAILED(RelaxSameOrigin(aParent, aOptions.mRp.mId.Value(), rpId))) {
       promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
       return promise.forget();
     }
@@ -292,15 +290,15 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent, JSContext* aCx,
 
   // Process each element of cryptoParameters using the following steps, to
   // produce a new sequence normalizedParameters.
-  nsTArray<ScopedCredentialParameters> normalizedParams;
-  for (size_t a = 0; a < aCryptoParameters.Length(); ++a) {
+  nsTArray<PublicKeyCredentialParameters> normalizedParams;
+  for (size_t a = 0; a < aOptions.mParameters.Length(); ++a) {
     // Let current be the currently selected element of
     // cryptoParameters.
 
-    // If current.type does not contain a ScopedCredentialType
+    // If current.type does not contain a PublicKeyCredentialType
     // supported by this implementation, then stop processing current and move
     // on to the next element in cryptoParameters.
-    if (aCryptoParameters[a].mType != ScopedCredentialType::ScopedCred) {
+    if (aOptions.mParameters[a].mType != PublicKeyCredentialType::Public_key) {
       continue;
     }
 
@@ -311,16 +309,16 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent, JSContext* aCx,
     // element in cryptoParameters.
 
     nsString algName;
-    if (NS_FAILED(GetAlgorithmName(aCx, aCryptoParameters[a].mAlgorithm,
+    if (NS_FAILED(GetAlgorithmName(aOptions.mParameters[a].mAlgorithm,
                                    algName))) {
       continue;
     }
 
-    // Add a new object of type ScopedCredentialParameters to
+    // Add a new object of type PublicKeyCredentialParameters to
     // normalizedParameters, with type set to current.type and algorithm set to
     // normalizedAlgorithm.
-    ScopedCredentialParameters normalizedObj;
-    normalizedObj.mType = aCryptoParameters[a].mType;
+    PublicKeyCredentialParameters normalizedObj;
+    normalizedObj.mType = aOptions.mParameters[a].mType;
     normalizedObj.mAlgorithm.SetAsString().Assign(algName);
 
     if (!normalizedParams.AppendElement(normalizedObj, mozilla::fallible)){
@@ -332,7 +330,7 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent, JSContext* aCx,
   // If normalizedAlgorithm is empty and cryptoParameters was not empty, cancel
   // the timer started in step 2, reject promise with a DOMException whose name
   // is "NotSupportedError", and terminate this algorithm.
-  if (normalizedParams.IsEmpty() && !aCryptoParameters.IsEmpty()) {
+  if (normalizedParams.IsEmpty() && !aOptions.mParameters.IsEmpty()) {
     promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return promise.forget();
   }
@@ -340,16 +338,17 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent, JSContext* aCx,
   // TODO: The following check should not be here. This is checking for
   // parameters specific to the soft key, and should be put in the soft key
   // manager in the parent process. Still need to serialize
-  // ScopedCredentialParameters first.
+  // PublicKeyCredentialParameters first.
 
-  // Check if at least one of the specified combinations of ScopedCredentialType
-  // and cryptographic parameters is supported. If not, return an error code
-  // equivalent to NotSupportedError and terminate the operation.
+  // Check if at least one of the specified combinations of
+  // PublicKeyCredentialParameters and cryptographic parameters is supported. If
+  // not, return an error code equivalent to NotSupportedError and terminate the
+  // operation.
 
   bool isValidCombination = false;
 
   for (size_t a = 0; a < normalizedParams.Length(); ++a) {
-    if (normalizedParams[a].mType == ScopedCredentialType::ScopedCred &&
+    if (normalizedParams[a].mType == PublicKeyCredentialType::Public_key &&
         normalizedParams[a].mAlgorithm.IsString() &&
         normalizedParams[a].mAlgorithm.GetAsString().EqualsLiteral(
           WEBCRYPTO_NAMED_CURVE_P256)) {
@@ -378,7 +377,7 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent, JSContext* aCx,
   // and compute the clientDataJSON and clientDataHash.
 
   CryptoBuffer challenge;
-  if (!challenge.Assign(aChallenge)) {
+  if (!challenge.Assign(aOptions.mChallenge)) {
     promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     return promise.forget();
   }
@@ -406,15 +405,9 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent, JSContext* aCx,
   if (aOptions.mExcludeList.WasPassed()) {
     for (const auto& s: aOptions.mExcludeList.Value()) {
       WebAuthnScopedCredentialDescriptor c;
-      c.type() = static_cast<uint32_t>(s.mType);
       CryptoBuffer cb;
       cb.Assign(s.mId);
       c.id() = cb;
-      if (s.mTransports.WasPassed()) {
-        for (const auto& t: s.mTransports.Value()) {
-          c.transports().AppendElement(static_cast<uint32_t>(t));
-        }
-      }
       excludeList.AppendElement(c);
     }
   }
@@ -463,8 +456,7 @@ WebAuthnManager::StartSign() {
 
 already_AddRefed<Promise>
 WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
-                              const ArrayBufferViewOrArrayBuffer& aChallenge,
-                              const AssertionOptions& aOptions)
+                              const PublicKeyCredentialRequestOptions& aOptions)
 {
   MOZ_ASSERT(aParent);
 
@@ -489,11 +481,11 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
   // reasonable range as defined by the platform and if not, correct it to the
   // closest value lying within that range.
 
-  double adjustedTimeout = 30.0;
-  if (aOptions.mTimeoutSeconds.WasPassed()) {
-    adjustedTimeout = aOptions.mTimeoutSeconds.Value();
-    adjustedTimeout = std::max(15.0, adjustedTimeout);
-    adjustedTimeout = std::min(120.0, adjustedTimeout);
+  uint32_t adjustedTimeout = 30000;
+  if (aOptions.mTimeout.WasPassed()) {
+    adjustedTimeout = aOptions.mTimeout.Value();
+    adjustedTimeout = std::max(15000u, adjustedTimeout);
+    adjustedTimeout = std::min(120000u, adjustedTimeout);
   }
 
   nsCString rpId;
@@ -541,7 +533,7 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
   // representing this request. Choose a hash algorithm for hashAlg and compute
   // the clientDataJSON and clientDataHash.
   CryptoBuffer challenge;
-  if (!challenge.Assign(aChallenge)) {
+  if (!challenge.Assign(aOptions.mChallenge)) {
     promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     return promise.forget();
   }
@@ -567,23 +559,17 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
 
   // Note: we only support U2F-style authentication for now, so we effectively
   // require an AllowList.
-  if (!aOptions.mAllowList.WasPassed()) {
+  if (aOptions.mAllowList.Length() < 1) {
     promise->MaybeReject(NS_ERROR_DOM_NOT_ALLOWED_ERR);
     return promise.forget();
   }
 
   nsTArray<WebAuthnScopedCredentialDescriptor> allowList;
-  for (const auto& s: aOptions.mAllowList.Value()) {
+  for (const auto& s: aOptions.mAllowList) {
     WebAuthnScopedCredentialDescriptor c;
-    c.type() = static_cast<uint32_t>(s.mType);
     CryptoBuffer cb;
     cb.Assign(s.mId);
     c.id() = cb;
-    if (s.mTransports.WasPassed()) {
-      for (const auto& t: s.mTransports.Value()) {
-        c.transports().AppendElement(static_cast<uint32_t>(t));
-      }
-    }
     allowList.AppendElement(c);
   }
 
@@ -597,7 +583,7 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
 
   WebAuthnTransactionInfo info(rpIdHash,
                                clientDataHash,
-                               10000,
+                               adjustedTimeout,
                                allowList,
                                extensions);
   RefPtr<MozPromise<nsresult, nsresult, false>> p = GetOrCreateBackgroundActor();
@@ -674,25 +660,19 @@ WebAuthnManager::FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer,
     return;
   }
 
-  // Create a new ScopedCredentialInfo object named value and populate its
-  // fields with the values returned from the authenticator as well as the
-  // clientDataJSON computed earlier.
+  // Create a new PublicKeyCredential object and populate its fields with the
+  // values returned from the authenticator as well as the clientDataJSON
+  // computed earlier.
+  RefPtr<AuthenticatorAttestationResponse> attestation =
+      new AuthenticatorAttestationResponse(mCurrentParent);
+  attestation->SetClientDataJSON(clientDataBuf);
+  attestation->SetAttestationObject(regData);
 
-  RefPtr<ScopedCredential> credential = new ScopedCredential(mCurrentParent);
-  credential->SetType(ScopedCredentialType::ScopedCred);
-  credential->SetId(keyHandleBuf);
+  RefPtr<PublicKeyCredential> credential = new PublicKeyCredential(mCurrentParent);
+  credential->SetRawId(keyHandleBuf);
+  credential->SetResponse(attestation);
 
-  RefPtr<WebAuthnAttestation> attestation = new WebAuthnAttestation(mCurrentParent);
-  attestation->SetFormat(NS_LITERAL_STRING("u2f"));
-  attestation->SetClientData(clientDataBuf);
-  attestation->SetAuthenticatorData(authenticatorDataBuf);
-  attestation->SetAttestation(regData);
-
-  RefPtr<ScopedCredentialInfo> info = new ScopedCredentialInfo(mCurrentParent);
-  info->SetCredential(credential);
-  info->SetAttestation(attestation);
-
-  mTransactionPromise->MaybeResolve(info);
+  mTransactionPromise->MaybeResolve(credential);
   MaybeClearTransaction();
 }
 
@@ -737,21 +717,21 @@ WebAuthnManager::FinishGetAssertion(nsTArray<uint8_t>& aCredentialId,
 
   // If any authenticator returns success:
 
-  // Create a new WebAuthnAssertion object named value and populate its fields
+  // Create a new PublicKeyCredential object named value and populate its fields
   // with the values returned from the authenticator as well as the
   // clientDataJSON computed earlier.
-
-  RefPtr<ScopedCredential> credential = new ScopedCredential(mCurrentParent);
-  credential->SetType(ScopedCredentialType::ScopedCred);
-  credential->SetId(credentialBuf);
-
-  RefPtr<WebAuthnAssertion> assertion = new WebAuthnAssertion(mCurrentParent);
-  assertion->SetCredential(credential);
-  assertion->SetClientData(clientDataBuf);
+  RefPtr<AuthenticatorAssertionResponse> assertion =
+    new AuthenticatorAssertionResponse(mCurrentParent);
+  assertion->SetClientDataJSON(clientDataBuf);
   assertion->SetAuthenticatorData(authenticatorDataBuf);
   assertion->SetSignature(signatureData);
 
-  mTransactionPromise->MaybeResolve(assertion);
+  RefPtr<PublicKeyCredential> credential =
+    new PublicKeyCredential(mCurrentParent);
+  credential->SetRawId(credentialBuf);
+  credential->SetResponse(assertion);
+
+  mTransactionPromise->MaybeResolve(credential);
   MaybeClearTransaction();
 }
 

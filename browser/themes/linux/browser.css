@@ -31,11 +31,11 @@
   --toolbarbutton-active-background: rgba(154,154,154,.5) linear-gradient(rgba(255,255,255,.7), rgba(255,255,255,.4));
   --toolbarbutton-active-bordercolor: rgba(0,0,0,.3);
   --toolbarbutton-active-boxshadow: 0 1px 1px rgba(0,0,0,.1) inset, 0 0 1px rgba(0,0,0,.3) inset;
+
+  --toolbarbutton-checkedhover-backgroundcolor: rgba(200,200,200,.5);
 %endif
 
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) - 1px);
-
-  --toolbarbutton-checkedhover-backgroundcolor: rgba(200,200,200,.5);
 
   --panel-separator-color: ThreeDShadow;
   --arrowpanel-dimmed: hsla(0,0%,80%,.3);

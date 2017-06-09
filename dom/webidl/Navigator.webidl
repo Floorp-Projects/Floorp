@@ -371,5 +371,5 @@ interface NavigatorConcurrentHardware {
 
 partial interface Navigator {
   [Pref="security.webauth.webauthn", SameObject]
-  readonly attribute WebAuthentication authentication;
+  readonly attribute CredentialsContainer credentials;
 };

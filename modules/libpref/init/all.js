@@ -4867,7 +4867,7 @@ pref("layers.popups.compositing.enabled", false);
 
 // Report Site Issue button
 pref("extensions.webcompat-reporter.newIssueEndpoint", "https://webcompat.com/issues/new");
-#ifndef RELEASE_OR_BETA
+#if defined(MOZ_DEV_EDITION) || defined(NIGHTLY_BUILD)
 pref("extensions.webcompat-reporter.enabled", true);
 #else
 pref("extensions.webcompat-reporter.enabled", false);

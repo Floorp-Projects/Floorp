@@ -12,15 +12,14 @@ IPDL_SOURCES += [
 ]
 
 EXPORTS.mozilla.dom += [
+    'AuthenticatorAssertionResponse.h',
+    'AuthenticatorAttestationResponse.h',
+    'AuthenticatorResponse.h',
     'NSSU2FTokenRemote.h',
-    'ScopedCredential.h',
-    'ScopedCredentialInfo.h',
+    'PublicKeyCredential.h',
     'U2FSoftTokenManager.h',
     'U2FTokenManager.h',
     'U2FTokenTransport.h',
-    'WebAuthentication.h',
-    'WebAuthnAssertion.h',
-    'WebAuthnAttestation.h',
     'WebAuthnManager.h',
     'WebAuthnRequest.h',
     'WebAuthnTransactionChild.h',
@@ -29,14 +28,13 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    'AuthenticatorAssertionResponse.cpp',
+    'AuthenticatorAttestationResponse.cpp',
+    'AuthenticatorResponse.cpp',
     'NSSU2FTokenRemote.cpp',
-    'ScopedCredential.cpp',
-    'ScopedCredentialInfo.cpp',
+    'PublicKeyCredential.cpp',
     'U2FSoftTokenManager.cpp',
     'U2FTokenManager.cpp',
-    'WebAuthentication.cpp',
-    'WebAuthnAssertion.cpp',
-    'WebAuthnAttestation.cpp',
     'WebAuthnManager.cpp',
     'WebAuthnTransactionChild.cpp',
     'WebAuthnTransactionParent.cpp',
