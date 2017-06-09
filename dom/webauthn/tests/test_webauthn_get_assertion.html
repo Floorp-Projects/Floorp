@@ -16,91 +16,112 @@
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1309284">Mozilla Bug 1309284</a>
 
   <script class="testbody" type="text/javascript">
-   "use strict";
+    "use strict";
 
-   // Execute the full-scope test
-   SimpleTest.waitForExplicitFinish();
+    // Execute the full-scope test
+    SimpleTest.waitForExplicitFinish();
 
-   function arrivingHereIsBad(aResult) {
-     ok(false, "Bad result! Received a: " + aResult);
-     return Promise.resolve();
-   }
+    function arrivingHereIsBad(aResult) {
+      ok(false, "Bad result! Received a: " + aResult);
+      return Promise.resolve();
+    }
 
-   function expectNotAllowedError(aResult) {
-     ok(aResult.toString().startsWith("NotAllowedError"), "Expecting a NotAllowedError");
-     return Promise.resolve();
-   }
+    function expectNotAllowedError(aResult) {
+      ok(aResult.toString().startsWith("NotAllowedError"), "Expecting a NotAllowedError");
+      return Promise.resolve();
+    }
 
-   function expectTypeError(aResult) {
-     ok(aResult.toString().startsWith("TypeError"), "Expecting a TypeError");
-     return Promise.resolve();
-   }
+    function expectTypeError(aResult) {
+      ok(aResult.toString().startsWith("TypeError"), "Expecting a TypeError");
+      return Promise.resolve();
+    }
 
-   SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
-                                      ["security.webauth.webauthn_enable_softtoken", true],
-                                      ["security.webauth.webauthn_enable_usbtoken", false]]},
-                             runTests);
+    SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
+                                       ["security.webauth.webauthn_enable_softtoken", true],
+                                       ["security.webauth.webauthn_enable_usbtoken", false]]},
+                              runTests);
 
-   function runTests() {
-     isnot(navigator.authentication, undefined, "WebAuthn API endpoint must exist");
-     isnot(navigator.authentication.makeCredential, undefined, "WebAuthn makeCredential API endpoint must exist");
-     isnot(navigator.authentication.getAssertion, undefined, "WebAuthn getAssertion API endpoint must exist");
+    function runTests() {
+      is(navigator.authentication, undefined, "navigator.authentication does not exist any longer");
+      isnot(navigator.credentials, undefined, "Credential Management API endpoint must exist");
+      isnot(navigator.credentials.create, undefined, "CredentialManagement create API endpoint must exist");
+      isnot(navigator.credentials.get, undefined, "CredentialManagement get API endpoint must exist");
 
-     let authn = navigator.authentication;
+      let credm = navigator.credentials;
 
-     let gAssertionChallenge = new Uint8Array(16);
-     window.crypto.getRandomValues(gAssertionChallenge);
+      let gAssertionChallenge = new Uint8Array(16);
+      window.crypto.getRandomValues(gAssertionChallenge);
 
-     let invalidCred = { type: "Magic", id: base64ToBytes("AAA=") };
-     let unknownCred = { type: "ScopedCred", id: base64ToBytes("AAA=") };
+      let invalidCred = {type: "Magic", id: base64ToBytes("AAA=")};
+      let unknownCred = {type: "public-key", id: base64ToBytes("AAA=")};
 
-     var testFuncs = [
-       function () {
-         // Test basic good call, but without giving a credential so expect failures
-         // this is OK by the standard, but not supported by U2F-backed authenticators
-         // like the soft token in use here.
-         return authn.getAssertion(gAssertionChallenge)
-                     .then(arrivingHereIsBad)
-                     .catch(expectNotAllowedError);
-       },
-       function () {
-         // Test with an unexpected option
-         return authn.getAssertion(gAssertionChallenge, { unknownValue: "hi" })
-                     .then(arrivingHereIsBad)
-                     .catch(expectNotAllowedError);
-       },
-       function () {
-         // Test with an invalid credential
-         return authn.getAssertion(gAssertionChallenge, { allowList: [invalidCred] })
-                     .then(arrivingHereIsBad)
-                     .catch(expectTypeError);
-       },
-       function () {
-         // Test with an unknown credential
-         return authn.getAssertion(gAssertionChallenge, { allowList: [unknownCred] })
-                     .then(arrivingHereIsBad)
-                     .catch(expectNotAllowedError);
-       },
-       function () {
-         // Test with an unexpected option and an invalid credential
-         return authn.getAssertion(gAssertionChallenge, { unknownValue: "hi" })
-                     .then(arrivingHereIsBad)
-                     .catch(expectNotAllowedError);
-       }
-     ];
+      var testFuncs = [
+        function () {
+          // Test basic good call, but without giving a credential so expect failures
+          // this is OK by the standard, but not supported by U2F-backed authenticators
+          // like the soft token in use here.
+          let publicKeyCredentialRequestOptions = {
+            challenge: gAssertionChallenge
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(expectNotAllowedError);
+        },
+        function () {
+          // Test with an unexpected option
+          let publicKeyCredentialRequestOptions = {
+            challenge: gAssertionChallenge,
+            unknownValue: "hi"
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(expectNotAllowedError);
+        },
+        function () {
+          // Test with an invalid credential
+          let publicKeyCredentialRequestOptions = {
+            challenge: gAssertionChallenge,
+            allowList: [invalidCred]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(expectTypeError);
+        },
+        function () {
+          // Test with an unknown credential
+          let publicKeyCredentialRequestOptions = {
+            challenge: gAssertionChallenge,
+            allowList: [unknownCred]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(expectNotAllowedError);
+        },
+        function () {
+          // Test with an unexpected option and an invalid credential
+          let publicKeyCredentialRequestOptions = {
+            challenge: gAssertionChallenge,
+            unknownValue: "hi",
+            allowList: [invalidCred]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(expectTypeError);
+        }
+      ];
 
-     var i = 0;
-     var runNextTest = () => {
-       if (i == testFuncs.length) {
-         SimpleTest.finish();
-         return;
-       }
-       testFuncs[i]().then(() => { runNextTest(); });
-       i = i + 1;
-     };
-     runNextTest();
+      var i = 0;
+      var runNextTest = () => {
+        if (i == testFuncs.length) {
+          SimpleTest.finish();
+          return;
+        }
+        testFuncs[i]().then(() => { runNextTest(); });
+        i = i + 1;
+      };
+      runNextTest();
 
-   }
+    }
 
   </script>
 

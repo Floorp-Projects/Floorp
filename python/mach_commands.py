@@ -6,8 +6,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import logging
-import mozpack.path as mozpath
 import os
+import tempfile
 
 from concurrent.futures import (
     ThreadPoolExecutor,
@@ -19,6 +19,7 @@ import mozinfo
 from manifestparser import TestManifest
 from manifestparser import filters as mpf
 
+import mozpack.path as mozpath
 from mozbuild.base import (
     MachCommandBase,
 )
@@ -69,13 +70,21 @@ class MachCommands(MachCommandBase):
         metavar='TEST',
         help=('Tests to run. Each test can be a single file or a directory. '
               'Default test resolution relies on PYTHON_UNITTEST_MANIFESTS.'))
-    def python_test(self,
-                    tests=[],
-                    test_objects=None,
-                    subsuite=None,
-                    verbose=False,
-                    stop=False,
-                    jobs=1):
+    def python_test(self, *args, **kwargs):
+        try:
+            tempdir = os.environ[b'PYTHON_TEST_TMP'] = str(tempfile.mkdtemp(suffix='-python-test'))
+            return self.run_python_tests(*args, **kwargs)
+        finally:
+            import mozfile
+            mozfile.remove(tempdir)
+
+    def run_python_tests(self,
+                         tests=[],
+                         test_objects=None,
+                         subsuite=None,
+                         verbose=False,
+                         stop=False,
+                         jobs=1):
         self._activate_virtualenv()
 
         def find_tests_by_path():
@@ -129,26 +138,38 @@ class MachCommands(MachCommandBase):
             filters.append(mpf.subsuite(subsuite))
 
         tests = mp.active_tests(filters=filters, disabled=False, **mozinfo.info)
+        parallel = []
+        sequential = []
+        for test in tests:
+            if test.get('sequential'):
+                sequential.append(test)
+            else:
+                parallel.append(test)
 
         self.jobs = jobs
         self.terminate = False
         self.verbose = verbose
 
         return_code = 0
+
+        def on_test_finished(result):
+            output, ret, test_path = result
+
+            for line in output:
+                self.log(logging.INFO, 'python-test', {'line': line.rstrip()}, '{line}')
+
+            if ret and not return_code:
+                self.log(logging.ERROR, 'python-test', {'test_path': test_path, 'ret': ret},
+                         'Setting retcode to {ret} from {test_path}')
+            return return_code or ret
+
         with ThreadPoolExecutor(max_workers=self.jobs) as executor:
             futures = [executor.submit(self._run_python_test, test['path'])
-                       for test in tests]
+                       for test in parallel]
 
             try:
                 for future in as_completed(futures):
-                    output, ret, test_path = future.result()
-
-                    for line in output:
-                        self.log(logging.INFO, 'python-test', {'line': line.rstrip()}, '{line}')
-
-                    if ret and not return_code:
-                        self.log(logging.ERROR, 'python-test', {'test_path': test_path, 'ret': ret}, 'Setting retcode to {ret} from {test_path}')
-                    return_code = return_code or ret
+                    return_code = on_test_finished(future.result())
             except KeyboardInterrupt:
                 # Hack to force stop currently running threads.
                 # https://gist.github.com/clchiou/f2608cbe54403edb0b13
@@ -156,7 +177,11 @@ class MachCommands(MachCommandBase):
                 thread._threads_queues.clear()
                 raise
 
-        self.log(logging.INFO, 'python-test', {'return_code': return_code}, 'Return code from mach python-test: {return_code}')
+        for test in sequential:
+            return_code = on_test_finished(self._run_python_test(test['path']))
+
+        self.log(logging.INFO, 'python-test', {'return_code': return_code},
+                 'Return code from mach python-test: {return_code}')
         return return_code
 
     def _run_python_test(self, test_path):

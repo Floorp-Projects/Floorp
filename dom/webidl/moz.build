@@ -444,6 +444,7 @@ WEBIDL_FILES = [
     'ConvolverNode.webidl',
     'Coordinates.webidl',
     'CreateOfferRequest.webidl',
+    'CredentialManagement.webidl',
     'Crypto.webidl',
     'CSPDictionaries.webidl',
     'CSPReport.webidl',
