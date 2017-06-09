@@ -122,24 +122,19 @@ add_task(function* () {
       content.wrappedJSObject.doConsoleTable(test.input, test.headers);
     });
   });
-
   let nodes = [];
   for (let testCase of testCases) {
     let node = yield waitFor(
-      () => findConsoleTable(hud.ui.experimentalOutputNode, testCases.indexOf(testCase))
+      () => findConsoleTable(hud.ui.outputNode, testCases.indexOf(testCase))
     );
     nodes.push(node);
   }
-
-  let consoleTableNodes = hud.ui.experimentalOutputNode.querySelectorAll(
+  let consoleTableNodes = hud.ui.outputNode.querySelectorAll(
     ".message .new-consoletable");
-
   is(consoleTableNodes.length, testCases.length,
     "console has the expected number of consoleTable items");
-
   testCases.forEach((testCase, index) => testItem(testCase, nodes[index]));
 });
-
 function testItem(testCase, node) {
   info(testCase.info);
 

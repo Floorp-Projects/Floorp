@@ -26,21 +26,15 @@ add_task(function* () {
       text: "testmessage"
     }],
   });
-
   currWindow = Services.wm.getMostRecentWindow(null);
-  is(currWindow.document.documentURI, Tools.webConsole.url,
+  is(currWindow.document.documentURI, Tools.webConsole.oldWebConsoleURL,
      "The Browser Console is open and has focus");
-
   mainWindow.focus();
-
   yield HUDService.openBrowserConsoleOrFocus();
-
   currWindow = Services.wm.getMostRecentWindow(null);
-  is(currWindow.document.documentURI, Tools.webConsole.url,
+  is(currWindow.document.documentURI, Tools.webConsole.oldWebConsoleURL,
      "The Browser Console is open and has focus");
-
   yield HUDService.toggleBrowserConsole();
-
   hud = HUDService.getBrowserConsole();
   ok(!hud, "Browser Console has been closed");
 });

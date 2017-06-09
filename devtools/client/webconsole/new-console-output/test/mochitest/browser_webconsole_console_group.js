@@ -70,20 +70,16 @@ add_task(function* () {
   node = yield waitFor(() => findMessage(hud, "group-3"));
   testClass(node, "startGroupCollapsed");
   testIndent(node, 0);
-
   info("Test a message at root level, after closing a collapsed group");
   node = yield waitFor(() => findMessage(hud, "log-6"));
   testClass(node, "log");
   testIndent(node, 0);
-
-  let nodes = hud.ui.experimentalOutputNode.querySelectorAll(".message");
+  let nodes = hud.ui.outputNode.querySelectorAll(".message");
   is(nodes.length, 8, "expected number of messages are displayed");
 });
-
 function testClass(node, className) {
   ok(node.classList.contains(className), `message has the expected "${className}" class`);
 }
-
 function testIndent(node, indent) {
   indent = `${indent * INDENT_WIDTH}px`;
   is(node.querySelector(".indent").style.width, indent,
