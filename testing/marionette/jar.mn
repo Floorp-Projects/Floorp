@@ -22,7 +22,7 @@ marionette.jar:
   content/modal.js (modal.js)
   content/proxy.js (proxy.js)
   content/capture.js (capture.js)
-  content/cookies.js (cookies.js)
+  content/cookie.js (cookie.js)
   content/atom.js (atom.js)
   content/evaluate.js (evaluate.js)
   content/navigate.js (navigate.js)
