@@ -4,47 +4,39 @@
 add_task(async function() {
   do_load_manifest("nsDummyObserver.manifest");
 
-  let dummyCreated = false;
-  let dummyReceivedOnVisit = false;
-
-  Services.obs.addObserver(function created() {
-    Services.obs.removeObserver(created, "dummy-observer-created");
-    dummyCreated = true;
-  }, "dummy-observer-created");
-  Services.obs.addObserver(function visited() {
-    Services.obs.removeObserver(visited, "dummy-observer-visited");
-    dummyReceivedOnVisit = true;
-  }, "dummy-observer-visited");
+  let promises = [];
+  let resolved = 0;
+  promises.push(TestUtils.topicObserved("dummy-observer-created", () => ++resolved));
+  promises.push(TestUtils.topicObserved("dummy-observer-visited", () => ++resolved));
 
   let initialObservers = PlacesUtils.history.getObservers();
 
   // Add a common observer, it should be invoked after the category observer.
-  let notificationsPromised = new Promise((resolve, reject) => {
-    PlacesUtils.history.addObserver({
-      __proto__: NavHistoryObserver.prototype,
-      onVisit() {
-        let observers = PlacesUtils.history.getObservers();
-        Assert.equal(observers.length, initialObservers.length + 1);
+  promises.push(new Promise(resolve => {
+    let observer = new NavHistoryObserver();
+    observer.onVisit = uri => {
+      do_print("Got visit for " + uri.spec);
+      let observers = PlacesUtils.history.getObservers();
+      let observersCount = observers.length;
+      Assert.ok(observersCount > initialObservers.length);
 
-        // Check the common observer is the last one.
-        for (let i = 0; i < initialObservers.length; ++i) {
-          Assert.equal(initialObservers[i], observers[i]);
-        }
-
-        PlacesUtils.history.removeObserver(this);
-        observers = PlacesUtils.history.getObservers();
-        Assert.equal(observers.length, initialObservers.length);
-
-        // Check the category observer has been invoked before this one.
-        Assert.ok(dummyCreated);
-        Assert.ok(dummyReceivedOnVisit);
-        resolve();
+      // Check the common observer is the last one.
+      for (let i = 0; i < initialObservers.length; ++i) {
+        Assert.equal(initialObservers[i], observers[i]);
       }
-    });
-  });
 
-  // Add a visit.
+      PlacesUtils.history.removeObserver(observer);
+      observers = PlacesUtils.history.getObservers();
+      Assert.ok(observers.length < observersCount);
+
+      // Check the category observer has been invoked before this one.
+      Assert.equal(resolved, 2);
+      resolve();
+    };
+    PlacesUtils.history.addObserver(observer);
+  }));
+
+  do_print("Add a visit");
   await PlacesTestUtils.addVisits(uri("http://typed.mozilla.org"));
-
-  await notificationsPromised;
+  await Promise.all(promises);
 });
