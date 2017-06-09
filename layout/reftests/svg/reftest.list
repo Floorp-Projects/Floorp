@@ -80,6 +80,8 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/
 default-preferences pref(layout.css.clip-path-shapes.enabled,true)
 fuzzy(1,32400) == clipPath-on-outflowElement-02a.html clipPath-on-outflowElement-02-ref.html
 fuzzy(1,32400) == clipPath-on-outflowElement-02b.html clipPath-on-outflowElement-02-ref.html
+== clipPath-polygon-01.svg pass.svg
+== clipPath-polygon-elementFromPoint-01.svg pass.svg
 default-preferences
 != clipPath-on-thin-object.svg about:blank
 == clipPath-winding-01.svg pass.svg
