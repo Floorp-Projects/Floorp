@@ -49,3 +49,9 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CC']:
     CFLAGS += ['-Wno-sign-compare']
+
+if CONFIG['_MSC_VER'] and not CONFIG['CLANG_CL']:
+    CFLAGS += [
+        '-wd4018', # '<' : signed/unsigned mismatch
+        '-wd4101', # unreferenced local variable
+    ]
