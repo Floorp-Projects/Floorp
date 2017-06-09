@@ -444,8 +444,6 @@ private:
   // These fields are main-thread-only.
   ChannelMediaResource*  mClient;
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  // Set to true when Init or InitAsClone has been called
-  bool                   mInitialized;
   // Set to true when MediaCache::Update() has finished while this stream
   // was present.
   bool                   mHasHadUpdate;
