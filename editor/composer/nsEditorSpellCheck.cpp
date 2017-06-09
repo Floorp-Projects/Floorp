@@ -6,6 +6,7 @@
 
 #include <stdlib.h>                     // for getenv
 
+#include "mozilla/AbstractThread.h"     // for AbstractThread
 #include "mozilla/Attributes.h"         // for final
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/dom/Element.h"        // for Element
