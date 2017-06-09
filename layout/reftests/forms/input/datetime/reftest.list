@@ -11,3 +11,14 @@ skip-if(!Android) fails-if(styloVsGecko) == time-simple-unthemed.html time-simpl
 # type change
 skip-if(Android) fails-if(styloVsGecko) == to-time-from-other-type-unthemed.html time-simple-unthemed.html
 skip-if(Android) == from-time-to-other-type-unthemed.html from-time-to-other-type-unthemed-ref.html
+
+# content should not overflow on small width/height
+skip-if(Android) == time-small-width.html time-small-width-ref.html
+skip-if(Android) == time-small-height.html time-small-height-ref.html
+skip-if(Android) == time-small-width-height.html time-small-width-height-ref.html
+
+# content (text) should be left aligned
+skip-if(Android) == time-content-left-aligned.html time-content-left-aligned-ref.html
+
+# reset button should be right aligned
+skip-if(Android) fails-if(styloVsGecko) == time-reset-button-right-aligned.html time-reset-button-right-aligned-ref.html
