@@ -53,6 +53,7 @@
   --urlbar-dropmarker-active-2x-region: rect(0px, 33px, 14px, 22px);
 }
 
+%ifndef MOZ_PHOTON_THEME
 /* Override the lwtheme-specific styling for toolbar buttons */
 :root:-moz-lwtheme-brighttext,
 toolbar:-moz-lwtheme-brighttext  {
@@ -63,9 +64,8 @@ toolbar:-moz-lwtheme-brighttext  {
   --toolbarbutton-active-boxshadow: none;
   --toolbarbutton-active-bordercolor: rgba(25,33,38,.8);
   --toolbarbutton-checkedhover-backgroundcolor: #3C5283;
-
 }
-
+%endif
 :root:-moz-lwtheme-darktext {
   --url-and-searchbar-background-color: #fff;
 
@@ -88,6 +88,7 @@ toolbar:-moz-lwtheme-brighttext  {
   --pinned-tab-glow: radial-gradient(22px at center calc(100% - 2px), rgba(76,158,217,0.9) 13%, transparent 16%);
 }
 
+%ifndef MOZ_PHOTON_THEME
 /* Override the lwtheme-specific styling for toolbar buttons */
 :root:-moz-lwtheme-darktext,
 toolbar:-moz-lwtheme-darktext {
@@ -100,7 +101,6 @@ toolbar:-moz-lwtheme-darktext {
   --toolbarbutton-checkedhover-backgroundcolor: #d7d7d8;
 }
 
-%ifndef MOZ_PHOTON_THEME
 /* Give some space to drag the window around while customizing
    (normal space to left and right of tabs doesn't work in this case) */
 #main-window[tabsintitlebar][customizing] {

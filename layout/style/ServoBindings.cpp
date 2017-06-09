@@ -158,7 +158,7 @@ Gecko_IsSignificantChild(RawGeckoNodeBorrowed aNode, bool aTextIsSignificant,
 }
 
 RawGeckoNodeBorrowedOrNull
-Gecko_GetParentNode(RawGeckoNodeBorrowed aNode)
+Gecko_GetFlattenedTreeParentNode(RawGeckoNodeBorrowed aNode)
 {
   MOZ_ASSERT(!FlattenedTreeParentIsParent<nsIContent::eForStyle>(aNode),
              "Should have taken the inline path");
@@ -192,18 +192,13 @@ Gecko_GetNextSibling(RawGeckoNodeBorrowed aNode)
 }
 
 RawGeckoElementBorrowedOrNull
-Gecko_GetParentElement(RawGeckoElementBorrowed aElement)
-{
-  return aElement->GetFlattenedTreeParentElementForStyle();
-}
-
-RawGeckoElementBorrowedOrNull
 Gecko_GetFirstChildElement(RawGeckoElementBorrowed aElement)
 {
   return aElement->GetFirstElementChild();
 }
 
-RawGeckoElementBorrowedOrNull Gecko_GetLastChildElement(RawGeckoElementBorrowed aElement)
+RawGeckoElementBorrowedOrNull
+Gecko_GetLastChildElement(RawGeckoElementBorrowed aElement)
 {
   return aElement->GetLastElementChild();
 }
@@ -243,6 +238,18 @@ Gecko_DropStyleChildrenIterator(StyleChildrenIteratorOwned aIterator)
 {
   MOZ_ASSERT(aIterator);
   delete aIterator;
+}
+
+bool
+Gecko_ElementHasBindingWithAnonymousContent(RawGeckoElementBorrowed aElement)
+{
+  if (!aElement->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    return false;
+  }
+
+  nsBindingManager* manager = aElement->OwnerDoc()->BindingManager();
+  nsXBLBinding* binding = manager->GetBindingWithContent(aElement);
+  return binding && binding->GetAnonymousContent();
 }
 
 RawGeckoNodeBorrowed
