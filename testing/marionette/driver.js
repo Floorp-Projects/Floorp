@@ -211,7 +211,7 @@ Object.defineProperty(GeckoDriver.prototype, "windowHandles", {
       let tabBrowser = browser.getTabBrowser(win);
 
       // Only return handles for browser windows
-      if (tabBrowser) {
+      if (tabBrowser && tabBrowser.tabs) {
         tabBrowser.tabs.forEach(tab => {
           let winId = this.getIdForBrowser(browser.getBrowserForTab(tab));
           if (winId !== null) {
@@ -1436,7 +1436,7 @@ GeckoDriver.prototype.findWindow = function (winIterable, filter) {
     if (filter(win, outerId)) {
       // In case the wanted window is a chrome window, we are done.
       return {win: win, outerId: outerId, hasTabBrowser: !!tabBrowser};
-    } else if (tabBrowser) {
+    } else if (tabBrowser && tabBrowser.tabs) {
       // Otherwise check if the chrome window has a tab browser, and that it
       // contains a tab with the wanted window handle.
       for (let i = 0; i < tabBrowser.tabs.length; ++i) {
@@ -2541,9 +2541,10 @@ GeckoDriver.prototype.close = function (cmd, resp) {
   for (let win of this.windows) {
     // For browser windows count the tabs. Otherwise take the window itself.
     let tabbrowser = browser.getTabBrowser(win);
-
-    if (tabbrowser) {
+    if (tabbrowser && tabbrowser.tabs) {
       nwins += tabbrowser.tabs.length;
+    } else {
+      nwins += 1;
     }
   }
 
