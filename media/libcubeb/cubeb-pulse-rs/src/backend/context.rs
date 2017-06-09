@@ -155,13 +155,16 @@ impl Context {
         if !self.context.is_null() {
             unsafe { self.pulse_context_destroy() };
         }
+        assert!(self.context.is_null());
 
         if !self.mainloop.is_null() {
             unsafe {
                 pa_threaded_mainloop_stop(self.mainloop);
                 pa_threaded_mainloop_free(self.mainloop);
+                self.mainloop = ptr::null_mut();
             }
         }
+        assert!(self.mainloop.is_null());
     }
 
     pub fn new_stream(&mut self,
@@ -399,7 +402,7 @@ impl Context {
             if !self.wait_until_context_ready() {
                 pa_threaded_mainloop_unlock(self.mainloop);
                 self.pulse_context_destroy();
-                self.context = ptr::null_mut();
+                assert!(self.context.is_null());
                 return cubeb::ERROR;
             }
 
@@ -432,6 +435,7 @@ impl Context {
         pa_context_set_state_callback(self.context, None, ptr::null_mut());
         pa_context_disconnect(self.context);
         pa_context_unref(self.context);
+        self.context = ptr::null_mut();
         pa_threaded_mainloop_unlock(self.mainloop);
     }
 
