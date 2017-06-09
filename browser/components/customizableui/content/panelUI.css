@@ -48,4 +48,16 @@ photonpanelmultiview[transitioning] {
   pointer-events: none;
 }
 
+.panel-viewcontainer.offscreen {
+  position: absolute;
+  top: 100000px;
+  left: 100000px;
+}
+
+.panel-viewcontainer.offscreen,
+.panel-viewcontainer.offscreen > .panel-viewstack {
+  margin: 0;
+  padding: 0;
+}
+
 /* END photon adjustments */

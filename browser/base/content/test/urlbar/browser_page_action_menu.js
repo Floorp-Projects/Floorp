@@ -333,7 +333,7 @@ function promiseViewShown() {
 function promiseViewShowing() {
   return new Promise(resolve => {
     gPanel.addEventListener("ViewShowing", (event) => {
-      resolve(event.target);
+      resolve(event.originalTarget);
     }, { once: true });
   });
 }
@@ -341,7 +341,7 @@ function promiseViewShowing() {
 function promiseTransitionEnd() {
   return new Promise(resolve => {
     gPanel.addEventListener("transitionend", (event) => {
-      resolve(event.target);
+      resolve(event.originalTarget);
     }, { once: true });
   });
 }
