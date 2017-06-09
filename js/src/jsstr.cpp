@@ -1630,11 +1630,7 @@ FirstCharMatcherUnrolled(const TextChar* text, uint32_t n, const PatChar pat)
 static const char*
 FirstCharMatcher8bit(const char* text, uint32_t n, const char pat)
 {
-#if  defined(__clang__)
-    return FirstCharMatcherUnrolled<char, char>(text, n, pat);
-#else
     return reinterpret_cast<const char*>(memchr(text, pat, n));
-#endif
 }
 
 static const char16_t*
