@@ -11,8 +11,13 @@
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
+#include "nsStandardURL.h"
+#include "nsURLHelper.h"
 
 namespace mozilla {
+
+using net::nsStandardURL;
+
 namespace dom {
 
 using namespace workers;
@@ -505,24 +510,6 @@ private:
   bool mFailed;
 };
 
-already_AddRefed<URLWorker>
-FinishConstructor(JSContext* aCx, WorkerPrivate* aPrivate,
-                  ConstructorRunnable* aRunnable, ErrorResult& aRv)
-{
-  aRunnable->Dispatch(Terminating, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  RefPtr<URLWorker::URLProxy> proxy = aRunnable->GetURLProxy(aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  RefPtr<URLWorker> url = new URLWorker(aPrivate, proxy);
-  return url.forget();
-}
-
 /* static */ already_AddRefed<URLWorker>
 URLWorker::Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
                        const Optional<nsAString>& aBase, ErrorResult& aRv)
@@ -530,26 +517,20 @@ URLWorker::Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
   JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
 
-  RefPtr<ConstructorRunnable> runnable =
-    new ConstructorRunnable(workerPrivate, aURL, aBase);
+  RefPtr<URLWorker> url = new URLWorker(workerPrivate);
+  url->Init(aURL, aBase, aRv);
 
-  return FinishConstructor(cx, workerPrivate, runnable, aRv);
+  return aRv.Failed() ? nullptr : url.forget();
 }
 
 /* static */ already_AddRefed<URLWorker>
 URLWorker::Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
                        const nsAString& aBase, ErrorResult& aRv)
 {
-  JSContext* cx = aGlobal.Context();
-  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
-
   Optional<nsAString> base;
   base = &aBase;
 
-  RefPtr<ConstructorRunnable> runnable =
-    new ConstructorRunnable(workerPrivate, aURL, base);
-
-  return FinishConstructor(cx, workerPrivate, runnable, aRv);
+  return Constructor(aGlobal, aURL, base, aRv);
 }
 
 /* static */ void
@@ -624,11 +605,56 @@ URLWorker::IsValidURL(const GlobalObject& aGlobal, const nsAString& aUrl,
   return runnable->IsValidURL();
 }
 
-URLWorker::URLWorker(WorkerPrivate* aWorkerPrivate, URLProxy* aURLProxy)
+URLWorker::URLWorker(WorkerPrivate* aWorkerPrivate)
   : URL(nullptr)
   , mWorkerPrivate(aWorkerPrivate)
-  , mURLProxy(aURLProxy)
 {}
+
+void
+URLWorker::Init(const nsAString& aURL, const Optional<nsAString>& aBase,
+                ErrorResult& aRv)
+{
+  nsAutoCString scheme;
+  nsresult rv = net_ExtractURLScheme(NS_ConvertUTF16toUTF8(aURL), scheme);
+  if (NS_FAILED(rv)) {
+    // this may be a relative URL, check baseURL
+    if (!aBase.WasPassed()) {
+      aRv.ThrowTypeError<MSG_INVALID_URL>(aURL);
+      return;
+    }
+    rv = net_ExtractURLScheme(NS_ConvertUTF16toUTF8(aBase.Value()), scheme);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.ThrowTypeError<MSG_INVALID_URL>(aURL);
+      return;
+    }
+  }
+
+  if (scheme.Equals(NS_LITERAL_CSTRING("http")) ||
+      scheme.Equals(NS_LITERAL_CSTRING("https"))) {
+    RefPtr<nsStandardURL> baseURL;
+    if (aBase.WasPassed()) {
+      baseURL = new nsStandardURL();
+      rv = baseURL->SetSpec(NS_ConvertUTF16toUTF8(aBase.Value()));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        aRv.ThrowTypeError<MSG_INVALID_URL>(aBase.Value());
+        return;
+      }
+    }
+    mStdURL = new nsStandardURL();
+    aRv = mStdURL->Init(nsIStandardURL::URLTYPE_STANDARD, -1,
+                        NS_ConvertUTF16toUTF8(aURL), nullptr, baseURL);
+    return;
+  }
+
+  // create url proxy
+  RefPtr<ConstructorRunnable> runnable =
+    new ConstructorRunnable(mWorkerPrivate, aURL, aBase);
+  runnable->Dispatch(Terminating, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+  mURLProxy = runnable->GetURLProxy(aRv);
+}
 
 URLWorker::~URLWorker()
 {
@@ -648,29 +674,77 @@ URLWorker::~URLWorker()
 void
 URLWorker::GetHref(nsAString& aHref, ErrorResult& aRv) const
 {
+  aHref.Truncate();
+  if (mStdURL) {
+    nsAutoCString href;
+    aRv = mStdURL->GetSpec(href);
+    if (!aRv.Failed()) {
+      CopyUTF8toUTF16(href, aHref);
+    }
+    return;
+  }
+
+  MOZ_ASSERT(mURLProxy);
   RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterHref, aHref,
                        mURLProxy);
-
   runnable->Dispatch(aRv);
 }
 
 void
 URLWorker::SetHref(const nsAString& aHref, ErrorResult& aRv)
 {
-  RefPtr<SetterRunnable> runnable =
-    new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterHref, aHref,
-                       mURLProxy);
-
-  runnable->Dispatch(aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  if (runnable->Failed()) {
+  nsAutoCString scheme;
+  nsresult rv = net_ExtractURLScheme(NS_ConvertUTF16toUTF8(aHref), scheme);
+  if (NS_FAILED(rv)) {
     aRv.ThrowTypeError<MSG_INVALID_URL>(aHref);
     return;
   }
+
+  if (scheme.Equals(NS_LITERAL_CSTRING("http")) ||
+      scheme.Equals(NS_LITERAL_CSTRING("https"))) {
+    mStdURL = new nsStandardURL();
+    aRv = mStdURL->SetSpec(NS_ConvertUTF16toUTF8(aHref));
+    if (mURLProxy) {
+      mWorkerPrivate->AssertIsOnWorkerThread();
+
+      RefPtr<TeardownURLRunnable> runnable =
+        new TeardownURLRunnable(mURLProxy);
+      mURLProxy = nullptr;
+
+      if (NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)))) {
+        return;
+      }
+    }
+
+    UpdateURLSearchParams();
+    return;
+  }
+
+  mStdURL = nullptr;
+  // fallback to using a main thread url proxy
+  if (mURLProxy) {
+    RefPtr<SetterRunnable> runnable =
+      new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterHref, aHref,
+                         mURLProxy);
+
+    runnable->Dispatch(aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+
+    UpdateURLSearchParams();
+    return;
+  }
+
+  // create the proxy now
+  RefPtr<ConstructorRunnable> runnable =
+    new ConstructorRunnable(mWorkerPrivate, aHref, Optional<nsAString>());
+  runnable->Dispatch(Terminating, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+  mURLProxy = runnable->GetURLProxy(aRv);
 
   UpdateURLSearchParams();
 }
@@ -678,6 +752,12 @@ URLWorker::SetHref(const nsAString& aHref, ErrorResult& aRv)
 void
 URLWorker::GetOrigin(nsAString& aOrigin, ErrorResult& aRv) const
 {
+  if (mStdURL) {
+    nsContentUtils::GetUTFOrigin(mStdURL, aOrigin);
+    return;
+  }
+
+  MOZ_ASSERT(mURLProxy);
   RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterOrigin, aOrigin,
                        mURLProxy);
@@ -688,6 +768,18 @@ URLWorker::GetOrigin(nsAString& aOrigin, ErrorResult& aRv) const
 void
 URLWorker::GetProtocol(nsAString& aProtocol, ErrorResult& aRv) const
 {
+  aProtocol.Truncate();
+  nsAutoCString protocol;
+  if (mStdURL) {
+    if (NS_SUCCEEDED(mStdURL->GetScheme(protocol))) {
+      CopyASCIItoUTF16(protocol, aProtocol);
+      aProtocol.Append(char16_t(':'));
+    }
+
+    return;
+  }
+
+  MOZ_ASSERT(mURLProxy);
   RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterProtocol, aProtocol,
                        mURLProxy);
@@ -698,6 +790,30 @@ URLWorker::GetProtocol(nsAString& aProtocol, ErrorResult& aRv) const
 void
 URLWorker::SetProtocol(const nsAString& aProtocol, ErrorResult& aRv)
 {
+  if (mStdURL) {
+    nsAString::const_iterator start, end;
+    aProtocol.BeginReading(start);
+    aProtocol.EndReading(end);
+    nsAString::const_iterator iter(start);
+
+    FindCharInReadable(':', iter, end);
+
+    nsresult rv = mStdURL->SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+
+    nsAutoCString href;
+    rv = mStdURL->GetSpec(href);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+
+    SetHref(NS_ConvertUTF8toUTF16(href), aRv);
+    return;
+  }
+
+  MOZ_ASSERT(mURLProxy);
   RefPtr<SetterRunnable> runnable =
     new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterProtocol,
                        aProtocol, mURLProxy);
@@ -707,9 +823,29 @@ URLWorker::SetProtocol(const nsAString& aProtocol, ErrorResult& aRv)
   MOZ_ASSERT(!runnable->Failed());
 }
 
+#define STDURL_GETTER(value, method)    \
+  if (mStdURL) {                        \
+    value.Truncate();                   \
+    nsAutoCString tmp;                  \
+    nsresult rv = mStdURL->method(tmp); \
+    if (NS_SUCCEEDED(rv)) {             \
+      CopyUTF8toUTF16(tmp, value);      \
+    }                                   \
+    return;                             \
+  }
+
+#define STDURL_SETTER(value, method)                     \
+  if (mStdURL) {                                         \
+    aRv = mStdURL->method(NS_ConvertUTF16toUTF8(value)); \
+    return;                                              \
+  }
+
 void
 URLWorker::GetUsername(nsAString& aUsername, ErrorResult& aRv) const
 {
+  STDURL_GETTER(aUsername, GetUsername);
+
+  MOZ_ASSERT(mURLProxy);
   RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterUsername, aUsername,
                        mURLProxy);
@@ -720,6 +856,9 @@ URLWorker::GetUsername(nsAString& aUsername, ErrorResult& aRv) const
 void
 URLWorker::SetUsername(const nsAString& aUsername, ErrorResult& aRv)
 {
+  STDURL_SETTER(aUsername, SetUsername);
+
+  MOZ_ASSERT(mURLProxy);
   RefPtr<SetterRunnable> runnable =
     new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterUsername,
                        aUsername, mURLProxy);
@@ -735,6 +874,9 @@ URLWorker::SetUsername(const nsAString& aUsername, ErrorResult& aRv)
 void
 URLWorker::GetPassword(nsAString& aPassword, ErrorResult& aRv) const
 {
+  STDURL_GETTER(aPassword, GetPassword);
+
+  MOZ_ASSERT(mURLProxy);
   RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterPassword, aPassword,
                        mURLProxy);
@@ -745,6 +887,9 @@ URLWorker::GetPassword(nsAString& aPassword, ErrorResult& aRv) const
 void
 URLWorker::SetPassword(const nsAString& aPassword, ErrorResult& aRv)
 {
+  STDURL_SETTER(aPassword, SetPassword);
+
+  MOZ_ASSERT(mURLProxy);
   RefPtr<SetterRunnable> runnable =
     new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterPassword,
                        aPassword, mURLProxy);
@@ -760,6 +905,9 @@ URLWorker::SetPassword(const nsAString& aPassword, ErrorResult& aRv)
 void
 URLWorker::GetHost(nsAString& aHost, ErrorResult& aRv) const
 {
+  STDURL_GETTER(aHost, GetHostPort);
+
+  MOZ_ASSERT(mURLProxy);
   RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterHost, aHost,
                        mURLProxy);
@@ -770,6 +918,9 @@ URLWorker::GetHost(nsAString& aHost, ErrorResult& aRv) const
 void
 URLWorker::SetHost(const nsAString& aHost, ErrorResult& aRv)
 {
+  STDURL_SETTER(aHost, SetHostPort);
+
+  MOZ_ASSERT(mURLProxy);
   RefPtr<SetterRunnable> runnable =
     new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterHost,
                        aHost, mURLProxy);
@@ -785,6 +936,13 @@ URLWorker::SetHost(const nsAString& aHost, ErrorResult& aRv)
 void
 URLWorker::GetHostname(nsAString& aHostname, ErrorResult& aRv) const
 {
+  aHostname.Truncate();
+  if (mStdURL) {
+    aRv = nsContentUtils::GetHostOrIPv6WithBrackets(mStdURL, aHostname);
+    return;
+  }
+
+  MOZ_ASSERT(mURLProxy);
   RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterHostname, aHostname,
                        mURLProxy);
@@ -795,6 +953,9 @@ URLWorker::GetHostname(nsAString& aHostname, ErrorResult& aRv) const
 void
 URLWorker::SetHostname(const nsAString& aHostname, ErrorResult& aRv)
 {
+  STDURL_SETTER(aHostname, SetHost);
+
+  MOZ_ASSERT(mURLProxy);
   RefPtr<SetterRunnable> runnable =
     new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterHostname,
                        aHostname, mURLProxy);
@@ -810,6 +971,20 @@ URLWorker::SetHostname(const nsAString& aHostname, ErrorResult& aRv)
 void
 URLWorker::GetPort(nsAString& aPort, ErrorResult& aRv) const
 {
+  aPort.Truncate();
+
+  if (mStdURL) {
+    int32_t port;
+    nsresult rv = mStdURL->GetPort(&port);
+    if (NS_SUCCEEDED(rv) && port != -1) {
+      nsAutoString portStr;
+      portStr.AppendInt(port, 10);
+      aPort.Assign(portStr);
+    }
+    return;
+  }
+
+  MOZ_ASSERT(mURLProxy);
   RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterPort, aPort,
                        mURLProxy);
@@ -820,6 +995,24 @@ URLWorker::GetPort(nsAString& aPort, ErrorResult& aRv) const
 void
 URLWorker::SetPort(const nsAString& aPort, ErrorResult& aRv)
 {
+  if (mStdURL) {
+    nsresult rv;
+    nsAutoString portStr(aPort);
+    int32_t port = -1;
+
+    // nsIURI uses -1 as default value.
+    if (!portStr.IsEmpty()) {
+      port = portStr.ToInteger(&rv);
+      if (NS_FAILED(rv)) {
+        return;
+      }
+    }
+
+    mStdURL->SetPort(port);
+    return;
+  }
+
+  MOZ_ASSERT(mURLProxy);
   RefPtr<SetterRunnable> runnable =
     new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterPort,
                        aPort, mURLProxy);
@@ -835,6 +1028,18 @@ URLWorker::SetPort(const nsAString& aPort, ErrorResult& aRv)
 void
 URLWorker::GetPathname(nsAString& aPathname, ErrorResult& aRv) const
 {
+  aPathname.Truncate();
+
+  if (mStdURL) {
+    nsAutoCString file;
+    nsresult rv = mStdURL->GetFilePath(file);
+    if (NS_SUCCEEDED(rv)) {
+      CopyUTF8toUTF16(file, aPathname);
+    }
+    return;
+  }
+
+  MOZ_ASSERT(mURLProxy);
   RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterPathname,
                        aPathname, mURLProxy);
@@ -845,6 +1050,9 @@ URLWorker::GetPathname(nsAString& aPathname, ErrorResult& aRv) const
 void
 URLWorker::SetPathname(const nsAString& aPathname, ErrorResult& aRv)
 {
+  STDURL_SETTER(aPathname, SetFilePath);
+
+  MOZ_ASSERT(mURLProxy);
   RefPtr<SetterRunnable> runnable =
     new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterPathname,
                        aPathname, mURLProxy);
@@ -860,6 +1068,20 @@ URLWorker::SetPathname(const nsAString& aPathname, ErrorResult& aRv)
 void
 URLWorker::GetSearch(nsAString& aSearch, ErrorResult& aRv) const
 {
+  aSearch.Truncate();
+
+  if (mStdURL) {
+    nsAutoCString search;
+    nsresult rv;
+
+    rv = mStdURL->GetQuery(search);
+    if (NS_SUCCEEDED(rv) && !search.IsEmpty()) {
+      CopyUTF8toUTF16(NS_LITERAL_CSTRING("?") + search, aSearch);
+    }
+    return;
+  }
+
+  MOZ_ASSERT(mURLProxy);
   RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterSearch, aSearch,
                        mURLProxy);
@@ -870,6 +1092,18 @@ URLWorker::GetSearch(nsAString& aSearch, ErrorResult& aRv) const
 void
 URLWorker::GetHash(nsAString& aHash, ErrorResult& aRv) const
 {
+  aHash.Truncate();
+  if (mStdURL) {
+    nsAutoCString ref;
+    nsresult rv = mStdURL->GetRef(ref);
+    if (NS_SUCCEEDED(rv) && !ref.IsEmpty()) {
+      aHash.Assign(char16_t('#'));
+      AppendUTF8toUTF16(ref, aHash);
+    }
+    return;
+  }
+
+  MOZ_ASSERT(mURLProxy);
   RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterHash, aHash,
                        mURLProxy);
@@ -880,6 +1114,9 @@ URLWorker::GetHash(nsAString& aHash, ErrorResult& aRv) const
 void
 URLWorker::SetHash(const nsAString& aHash, ErrorResult& aRv)
 {
+  STDURL_SETTER(aHash, SetRef);
+
+  MOZ_ASSERT(mURLProxy);
   RefPtr<SetterRunnable> runnable =
     new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterHash,
                        aHash, mURLProxy);
@@ -895,6 +1132,13 @@ URLWorker::SetHash(const nsAString& aHash, ErrorResult& aRv)
 void
 URLWorker::SetSearchInternal(const nsAString& aSearch, ErrorResult& aRv)
 {
+  if (mStdURL) {
+    // URLMainThread ignores failures here.
+    mStdURL->SetQuery(NS_ConvertUTF16toUTF8(aSearch));
+    return;
+  }
+
+  MOZ_ASSERT(mURLProxy);
   RefPtr<SetterRunnable> runnable =
     new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterSearch,
                        aSearch, mURLProxy);
@@ -921,13 +1165,6 @@ URLWorker::UpdateURLSearchParams()
 
     mSearchParams->ParseInput(NS_ConvertUTF16toUTF8(Substring(search, 1)));
   }
-}
-
-URLWorker::URLProxy*
-URLWorker::GetURLProxy() const
-{
-  mWorkerPrivate->AssertIsOnWorkerThread();
-  return mURLProxy;
 }
 
 } // namespace dom
