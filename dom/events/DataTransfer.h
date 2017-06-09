@@ -270,10 +270,6 @@ public:
                                             nsIPrincipal* aPrincipal,
                                             bool aHidden);
 
-  // Adds a dummy type to the DataTransfer which is hidden from the user to
-  // allow the drag to run. This type is not visible to content code.
-  void AddDummyHiddenData();
-
   // returns a weak reference to the drag image
   Element* GetDragImage(int32_t* aX, int32_t* aY) const
   {
