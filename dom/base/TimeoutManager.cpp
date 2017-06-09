@@ -525,10 +525,7 @@ TimeoutManager::ClearTimeout(int32_t aTimerId, Timeout::Reason aReason)
   // restart at the next soonest deadline.
   mExecutor->Cancel();
 
-  OrderedTimeoutIterator iter(mNormalTimeouts,
-                              mTrackingTimeouts,
-                              nullptr,
-                              nullptr);
+  OrderedTimeoutIterator iter(mNormalTimeouts, mTrackingTimeouts);
   Timeout* nextTimeout = iter.Next();
   if (nextTimeout) {
     MOZ_ALWAYS_SUCCEEDS(mExecutor->MaybeSchedule(nextTimeout->When()));
@@ -565,10 +562,6 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
   TimeStamp now(aNow);
   TimeStamp start = now;
 
-  Timeout* last_expired_normal_timeout = nullptr;
-  Timeout* last_expired_tracking_timeout = nullptr;
-  bool     last_expired_timeout_is_normal = false;
-
   uint32_t firingId = CreateFiringId();
   auto guard = MakeScopeExit([&] {
     DestroyFiringId(firingId);
@@ -598,6 +591,7 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
   }
 
   TimeStamp nextDeadline;
+  uint32_t numTimersToRun = 0;
 
   // The timeout list is kept in deadline order. Discover the latest timeout
   // whose deadline has expired. On some platforms, native timeout events fire
@@ -608,12 +602,7 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
   {
     // Use a nested scope in order to make sure the strong references held by
     // the iterator are freed after the loop.
-    OrderedTimeoutIterator expiredIter(mNormalTimeouts,
-                                       mTrackingTimeouts,
-                                       nullptr,
-                                       nullptr);
-
-    uint32_t numTimersToRun = 0;
+    OrderedTimeoutIterator expiredIter(mNormalTimeouts, mTrackingTimeouts);
 
     while (true) {
       Timeout* timeout = expiredIter.Next();
@@ -628,12 +617,6 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
         // Mark any timeouts that are on the list to be fired with the
         // firing depth so that we can reentrantly run timeouts
         timeout->mFiringId = firingId;
-        last_expired_timeout_is_normal = expiredIter.PickedNormalIter();
-        if (last_expired_timeout_is_normal) {
-          last_expired_normal_timeout = timeout;
-        } else {
-          last_expired_tracking_timeout = timeout;
-        }
 
         numTimersToRun += 1;
 
@@ -666,7 +649,7 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
   // Maybe the timeout that the event was fired for has been deleted
   // and there are no others timeouts with deadlines that make them
   // eligible for execution yet. Go away.
-  if (!last_expired_normal_timeout && !last_expired_tracking_timeout) {
+  if (!numTimersToRun) {
     return;
   }
 
@@ -680,14 +663,7 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
   {
     // Use a nested scope in order to make sure the strong references held by
     // the iterator are freed after the loop.
-    OrderedTimeoutIterator runIter(mNormalTimeouts,
-                                   mTrackingTimeouts,
-                                   last_expired_normal_timeout ?
-                                     last_expired_normal_timeout->getNext() :
-                                     nullptr,
-                                   last_expired_tracking_timeout ?
-                                     last_expired_tracking_timeout->getNext() :
-                                     nullptr);
+    OrderedTimeoutIterator runIter(mNormalTimeouts, mTrackingTimeouts);
     while (true) {
       RefPtr<Timeout> timeout = runIter.Next();
       if (!timeout) {
@@ -696,10 +672,24 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
       }
       runIter.UpdateIterator();
 
+      // We should only execute callbacks for the set of expired Timeout
+      // objects we computed above.
       if (timeout->mFiringId != firingId) {
-        // We skip the timeout since it's on the list to run at another
-        // depth.
-        continue;
+        // If the FiringId does not match, but is still valid, then this is
+        // a TImeout for another RunTimeout() on the call stack.  Just
+        // skip it.
+        if (IsValidFiringId(timeout->mFiringId)) {
+          continue;
+        }
+
+        // If, however, the FiringId is invalid then we have reached Timeout
+        // objects beyond the list we calculated above.  This can happen
+        // if the Timeout just beyond our last expired Timeout is cancelled
+        // by one of the callbacks we've just executed.  In this case we
+        // should just stop iterating.  We're done.
+        else {
+          break;
+        }
       }
 
       MOZ_ASSERT_IF(mWindow.IsFrozen(), mWindow.IsSuspended());
@@ -847,10 +837,7 @@ TimeoutManager::ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS
                                                          sortBy);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  OrderedTimeoutIterator iter(mNormalTimeouts,
-                              mTrackingTimeouts,
-                              nullptr,
-                              nullptr);
+  OrderedTimeoutIterator iter(mNormalTimeouts, mTrackingTimeouts);
   Timeout* firstTimeout = iter.Next();
   if (firstTimeout) {
     rv = mExecutor->MaybeSchedule(firstTimeout->When());

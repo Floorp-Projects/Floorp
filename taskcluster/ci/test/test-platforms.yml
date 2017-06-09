@@ -58,8 +58,6 @@ linux64-nightly/opt:
         - web-platform-tests
         - opt-only-tests
         - desktop-screenshot-capture
-        - talos
-        - awsy
         - headless
 linux64-devedition/opt:
     build-platform: linux64-devedition-nightly/opt
@@ -68,7 +66,6 @@ linux64-devedition/opt:
         - web-platform-tests
         - opt-only-tests
         - desktop-screenshot-capture
-        - awsy
         - headless
 
 # TODO: use 'pgo' and 'asan' labels here, instead of -pgo/opt
