@@ -724,9 +724,6 @@ private:
   // decoding the first frame.
   Canonical<media::NullableTimeUnit> mDuration;
 
-  // Whether we're currently in or transitioning to shutdown state.
-  Canonical<bool> mIsShutdown;
-
   // The status of our next frame. Mirrored on the main thread and used to
   // compute ready state.
   Canonical<NextFrameStatus> mNextFrameStatus;
