@@ -132,7 +132,8 @@ var PdfjsChromeUtils = {
       // manager, which means this is going to fire to every child process
       // we have open. Unfortunately I can't find a way to get at that
       // process specific mm from js.
-      this._ppmm.broadcastAsyncMessage("PDFJS:Child:updateSettings", {enabled});
+      this._ppmm.broadcastAsyncMessage("PDFJS:Child:updateSettings",
+                                       { enabled, });
     }
   },
 
