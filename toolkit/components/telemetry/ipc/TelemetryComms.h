@@ -74,6 +74,14 @@ struct ChildEventData {
   nsTArray<EventExtraEntry> extra;
 };
 
+struct DiscardedData {
+  uint32_t mDiscardedAccumulations;
+  uint32_t mDiscardedKeyedAccumulations;
+  uint32_t mDiscardedScalarActions;
+  uint32_t mDiscardedKeyedScalarActions;
+  uint32_t mDiscardedChildEvents;
+};
+
 } // namespace Telemetry
 } // namespace mozilla
 
@@ -356,6 +364,12 @@ ParamTraits<mozilla::Telemetry::EventExtraEntry>
     return true;
   }
 };
+
+template<>
+struct
+ParamTraits<mozilla::Telemetry::DiscardedData>
+  : public PlainOldDataSerializer<mozilla::Telemetry::DiscardedData>
+{ };
 
 } // namespace IPC
 
