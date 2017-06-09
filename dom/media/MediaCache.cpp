@@ -441,7 +441,6 @@ MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient,
                                    bool aIsPrivateBrowsing)
   : mMediaCache(nullptr)
   , mClient(aClient)
-  , mInitialized(false)
   , mHasHadUpdate(false)
   , mClosed(false)
   , mDidNotifyDataEnded(false)
@@ -2072,8 +2071,9 @@ MediaCacheStream::Close()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
-  if (!mInitialized)
+  if (!mMediaCache) {
     return;
+  }
 
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   CloseInternal(mon);
@@ -2500,15 +2500,15 @@ MediaCacheStream::Init()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
-  if (mInitialized)
+  if (mMediaCache) {
     return NS_OK;
+  }
 
   mMediaCache = MediaCache::GetMediaCache();
   if (!mMediaCache) {
     return NS_ERROR_FAILURE;
   }
   mMediaCache->OpenStream(this);
-  mInitialized = true;
   return NS_OK;
 }
 
@@ -2518,8 +2518,9 @@ MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
   if (!aOriginal->IsAvailableForSharing())
     return NS_ERROR_FAILURE;
 
-  if (mInitialized)
+  if (mMediaCache) {
     return NS_OK;
+  }
 
   nsresult rv = Init();
   if (NS_FAILED(rv))
