@@ -56,12 +56,6 @@ public:
   {
     return reinterpret_cast<const wchar_t*>(mPtr);
   }
-
-  operator wchar_t*()
-  {
-    return const_cast<wchar_t*>(reinterpret_cast<const wchar_t*>(mPtr));
-  }
-
   operator const void*() const
   {
     return mPtr;
