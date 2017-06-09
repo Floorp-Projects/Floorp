@@ -33,7 +33,6 @@ EXPORTS += [
     'nsRect.h',
     'nsRegion.h',
     'nsRegionFwd.h',
-    'nsRenderingContext.h',
     'nsSize.h',
     'nsThemeConstants.h',
     'nsTransform2D.h',

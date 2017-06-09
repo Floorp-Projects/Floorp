@@ -28,7 +28,7 @@ FixedTableLayoutStrategy::~FixedTableLayoutStrategy()
 }
 
 /* virtual */ nscoord
-FixedTableLayoutStrategy::GetMinISize(nsRenderingContext* aRenderingContext)
+FixedTableLayoutStrategy::GetMinISize(gfxContext* aRenderingContext)
 {
   DISPLAY_MIN_WIDTH(mTableFrame, mMinISize);
   if (mMinISize != NS_INTRINSIC_WIDTH_UNKNOWN) {
@@ -118,7 +118,7 @@ FixedTableLayoutStrategy::GetMinISize(nsRenderingContext* aRenderingContext)
 }
 
 /* virtual */ nscoord
-FixedTableLayoutStrategy::GetPrefISize(nsRenderingContext* aRenderingContext,
+FixedTableLayoutStrategy::GetPrefISize(gfxContext* aRenderingContext,
                                        bool aComputingSize)
 {
   // It's theoretically possible to do something much better here that

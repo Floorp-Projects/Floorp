@@ -66,7 +66,6 @@
 class nsIAtom;
 class nsPresContext;
 class nsIPresShell;
-class nsRenderingContext;
 class nsView;
 class nsIWidget;
 class nsISelectionController;
@@ -2104,7 +2103,7 @@ public:
    *
    * This method must not return a negative value.
    */
-  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) = 0;
+  virtual nscoord GetMinISize(gfxContext *aRenderingContext) = 0;
 
   /**
    * Get the max-content intrinsic inline size of the frame.  This must be
@@ -2112,7 +2111,7 @@ public:
    *
    * Otherwise, all the comments for |GetMinISize| above apply.
    */
-  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) = 0;
+  virtual nscoord GetPrefISize(gfxContext *aRenderingContext) = 0;
 
   /**
    * |InlineIntrinsicISize| represents the intrinsic width information
@@ -2271,7 +2270,7 @@ public:
    * which calls |GetMinISize|.
    */
   virtual void
-  AddInlineMinISize(nsRenderingContext *aRenderingContext,
+  AddInlineMinISize(gfxContext *aRenderingContext,
                     InlineMinISizeData *aData) = 0;
 
   /**
@@ -2285,7 +2284,7 @@ public:
    * based on using all *mandatory* breakpoints within the frame.
    */
   virtual void
-  AddInlinePrefISize(nsRenderingContext *aRenderingContext,
+  AddInlinePrefISize(gfxContext *aRenderingContext,
                      InlinePrefISizeData *aData) = 0;
 
   /**
@@ -2397,7 +2396,7 @@ public:
    * @param aFlags   Flags to further customize behavior (definitions above).
    */
   virtual mozilla::LogicalSize
-  ComputeSize(nsRenderingContext *aRenderingContext,
+  ComputeSize(gfxContext *aRenderingContext,
               mozilla::WritingMode aWritingMode,
               const mozilla::LogicalSize& aCBSize,
               nscoord aAvailableISize,
@@ -2437,7 +2436,7 @@ public:
    * @param aXMost  computed intrinsic width of the tight bounding rectangle
    *
    */
-  virtual nsresult GetPrefWidthTightBounds(nsRenderingContext* aContext,
+  virtual nsresult GetPrefWidthTightBounds(gfxContext* aContext,
                                            nscoord* aX,
                                            nscoord* aXMost);
 
@@ -3897,7 +3896,7 @@ public:
   /**
    * Helper function - computes the content-box inline size for aCoord.
    */
-  nscoord ComputeISizeValue(nsRenderingContext* aRenderingContext,
+  nscoord ComputeISizeValue(gfxContext*         aRenderingContext,
                             nscoord             aContainingBlockISize,
                             nscoord             aContentEdgeToBoxSizing,
                             nscoord             aBoxSizingToMarginEdge,

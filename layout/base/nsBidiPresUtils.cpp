@@ -5,12 +5,12 @@
 
 #include "mozilla/IntegerRange.h"
 
+#include "gfxContext.h"
 #include "nsAutoPtr.h"
 #include "nsBidiPresUtils.h"
 #include "nsFontMetrics.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
-#include "nsRenderingContext.h"
 #include "nsBidiUtils.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsContainerFrame.h"
@@ -2300,7 +2300,7 @@ class MOZ_STACK_CLASS nsIRenderingContextBidiProcessor final
 public:
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
-  nsIRenderingContextBidiProcessor(nsRenderingContext* aCtx,
+  nsIRenderingContextBidiProcessor(gfxContext* aCtx,
                                    DrawTarget* aTextRunConstructionDrawTarget,
                                    nsFontMetrics* aFontMetrics,
                                    const nsPoint&       aPt)
@@ -2344,7 +2344,7 @@ public:
   }
 
 private:
-  nsRenderingContext* mCtx;
+  gfxContext* mCtx;
   DrawTarget* mTextRunConstructionDrawTarget;
   nsFontMetrics* mFontMetrics;
   nsPoint mPt;
@@ -2356,7 +2356,7 @@ nsresult nsBidiPresUtils::ProcessTextForRenderingContext(const char16_t*       a
                                                          int32_t                aLength,
                                                          nsBidiLevel            aBaseLevel,
                                                          nsPresContext*         aPresContext,
-                                                         nsRenderingContext&   aRenderingContext,
+                                                         gfxContext&            aRenderingContext,
                                                          DrawTarget*           aTextRunConstructionDrawTarget,
                                                          nsFontMetrics&         aFontMetrics,
                                                          Mode                   aMode,

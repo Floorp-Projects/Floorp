@@ -31,7 +31,6 @@
 #ifdef MOZ_X11
 #include "gfxXlibSurface.h"
 #endif
-#include "gfxContext.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "Layers.h"
