@@ -742,6 +742,20 @@ MediaCache::ShutdownAndDestroyThis()
 MediaCache::GetMediaCache(int64_t aContentLength)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+  if (aContentLength > 0 &&
+      aContentLength <=
+        int64_t(MediaPrefs::MediaMemoryCacheMaxSize()) * 1024) {
+    // Small-enough resource, use a new memory-backed MediaCache.
+    MediaCache* mc = new MediaCache();
+    nsresult rv = mc->Init();
+    if (NS_SUCCEEDED(rv)) {
+      return mc;
+    }
+    // Memory-backed MediaCache initialization failed, clean up and try for a
+    // file-backed MediaCache below.
+    delete mc;
+  }
+
   if (gMediaCache) {
     return gMediaCache;
   }
