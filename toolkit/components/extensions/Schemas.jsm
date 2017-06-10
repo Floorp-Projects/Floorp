@@ -2219,12 +2219,9 @@ class Namespace extends Map {
     super();
 
     this._lazySchemas = [];
-    this.initialized = false;
 
     this.name = name;
     this.path = name ? [...path, name] : [...path];
-
-    this.superNamespace = null;
 
     this.permissions = null;
     this.allowedContexts = [];
@@ -2247,23 +2244,15 @@ class Namespace extends Map {
         this[prop] = schema[prop];
       }
     }
-
-    if (schema.$import) {
-      this.superNamespace = Schemas.getNamespace(schema.$import);
-    }
   }
 
   /**
    * Initializes the keys of this namespace based on the schema objects
    * added via previous `addSchema` calls.
    */
-  init() {
-    if (this.initialized) {
+  init() { // eslint-disable-line complexity
+    if (!this._lazySchemas) {
       return;
-    }
-
-    if (this.superNamespace) {
-      this._lazySchemas.unshift(...this.superNamespace._lazySchemas);
     }
 
     for (let type of Object.keys(LOADERS)) {
@@ -2307,7 +2296,7 @@ class Namespace extends Map {
       }
     }
 
-    this.initialized = true;
+    this._lazySchemas = null;
 
     if (DEBUG) {
       for (let key of this.keys()) {
