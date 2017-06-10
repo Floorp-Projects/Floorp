@@ -36,10 +36,10 @@ NS_IMPL_ISUPPORTS(HttpServer,
                   nsIServerSocketListener,
                   nsILocalCertGetCallback)
 
-HttpServer::HttpServer(AbstractThread* aMainThread)
+HttpServer::HttpServer(nsISerialEventTarget* aEventTarget)
   : mPort()
   , mHttps()
-  , mAbstractMainThread(aMainThread)
+  , mEventTarget(aEventTarget)
 {
 }
 
@@ -1256,7 +1256,7 @@ HttpServer::Connection::OnOutputStreamReady(nsIAsyncOutputStream* aStream)
       RefPtr<Connection> self = this;
 
       mOutputCopy->
-        Then(mServer->mAbstractMainThread,
+        Then(mServer->mEventTarget,
              __func__,
              [self, this] (nsresult aStatus) {
                MOZ_ASSERT(mOutputBuffers[0].mStream);

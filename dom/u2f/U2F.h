@@ -26,10 +26,9 @@
 
 #include "U2FAuthenticator.h"
 
+class nsISerialEventTarget;
+
 namespace mozilla {
-
-class AbstractThread;
-
 namespace dom {
 
 class U2FRegisterCallback;
@@ -67,7 +66,7 @@ class U2FPrepTask : public Runnable
 {
 public:
   explicit U2FPrepTask(const Authenticator& aAuthenticator,
-                       AbstractThread* aMainThread);
+                       nsISerialEventTarget* aEventTarget);
 
   RefPtr<U2FPrepPromise> Execute();
 
@@ -76,7 +75,7 @@ protected:
 
   Authenticator mAuthenticator;
   MozPromiseHolder<U2FPrepPromise> mPromise;
-  const RefPtr<AbstractThread> mAbstractMainThread;
+  const nsCOMPtr<nsISerialEventTarget> mEventTarget;
 };
 
 // Determine whether the provided Authenticator already knows
@@ -87,7 +86,7 @@ public:
   U2FIsRegisteredTask(const Authenticator& aAuthenticator,
                       const LocalRegisteredKey& aRegisteredKey,
                       const CryptoBuffer& aAppParam,
-                      AbstractThread* aMainThread);
+                      nsISerialEventTarget* aEventTarget);
 
   NS_DECL_NSIRUNNABLE
 private:
@@ -103,14 +102,14 @@ public:
   U2FTask(const nsAString& aOrigin,
           const nsAString& aAppId,
           const Authenticator& aAuthenticator,
-          AbstractThread* aMainThread);
+          nsISerialEventTarget* aEventTarget);
 
   RefPtr<U2FPromise> Execute();
 
   nsString mOrigin;
   nsString mAppId;
   Authenticator mAuthenticator;
-  const RefPtr<AbstractThread> mAbstractMainThread;
+  const nsCOMPtr<nsISerialEventTarget> mEventTarget;
 
 protected:
   virtual ~U2FTask();
@@ -129,7 +128,7 @@ public:
                   const CryptoBuffer& aAppParam,
                   const CryptoBuffer& aChallengeParam,
                   const LocalRegisterRequest& aRegisterEntry,
-                  AbstractThread* aMainThread);
+                  nsISerialEventTarget* aEventTarget);
 
   NS_DECL_NSIRUNNABLE
 private:
@@ -153,7 +152,7 @@ public:
               const CryptoBuffer& aChallengeParam,
               const CryptoBuffer& aClientData,
               const CryptoBuffer& aKeyHandle,
-              AbstractThread* aMainThread);
+              nsISerialEventTarget* aEventTarget);
 
   NS_DECL_NSIRUNNABLE
 private:
@@ -203,7 +202,7 @@ class U2FRunnable : public Runnable
 {
 public:
   U2FRunnable(const nsAString& aOrigin, const nsAString& aAppId,
-              AbstractThread* aMainThread);
+              nsISerialEventTarget* aEventTarget);
 
   // No NSS resources to release.
   virtual
@@ -215,7 +214,7 @@ protected:
 
   nsString mOrigin;
   nsString mAppId;
-  const RefPtr<AbstractThread> mAbstractMainThread;
+  const nsCOMPtr<nsISerialEventTarget> mEventTarget;
 };
 
 // This U2FRunnable completes a single application-requested U2F Register
@@ -229,7 +228,7 @@ public:
                       const Sequence<RegisteredKey>& aRegisteredKeys,
                       const Sequence<Authenticator>& aAuthenticators,
                       U2FRegisterCallback* aCallback,
-                      AbstractThread* aMainThread);
+                      nsISerialEventTarget* aEventTarget);
 
   void SendResponse(const RegisterResponse& aResponse);
   void SetTimeout(const int32_t aTimeoutMillis);
@@ -256,7 +255,7 @@ public:
                   const Sequence<RegisteredKey>& aRegisteredKeys,
                   const Sequence<Authenticator>& aAuthenticators,
                   U2FSignCallback* aCallback,
-                  AbstractThread* aMainThread);
+                  nsISerialEventTarget* aEventTarget);
 
   void SendResponse(const SignResponse& aResponse);
   void SetTimeout(const int32_t aTimeoutMillis);
@@ -322,7 +321,7 @@ private:
   nsString mOrigin;
   Sequence<Authenticator> mAuthenticators;
   bool mInitialized;
-  RefPtr<AbstractThread> mAbstractMainThread;
+  nsCOMPtr<nsISerialEventTarget> mEventTarget;
 
   ~U2F();
 };

@@ -7,7 +7,6 @@
 #include "hasht.h"
 #include "nsNetCID.h"
 #include "nsICryptoHash.h"
-#include "mozilla/AbstractThread.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/AuthenticatorAttestationResponse.h"
 #include "mozilla/dom/Promise.h"
@@ -18,6 +17,7 @@
 #include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
+#include "nsThreadUtils.h"
 
 using namespace mozilla::ipc;
 
@@ -422,7 +422,7 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
                                excludeList,
                                extensions);
   RefPtr<MozPromise<nsresult, nsresult, false>> p = GetOrCreateBackgroundActor();
-  p->Then(AbstractThread::MainThread(), __func__,
+  p->Then(GetMainThreadSerialEventTarget(), __func__,
           []() {
             WebAuthnManager* mgr = WebAuthnManager::Get();
             if (!mgr) {
@@ -588,7 +588,7 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
                                allowList,
                                extensions);
   RefPtr<MozPromise<nsresult, nsresult, false>> p = GetOrCreateBackgroundActor();
-  p->Then(AbstractThread::MainThread(), __func__,
+  p->Then(GetMainThreadSerialEventTarget(), __func__,
           []() {
             WebAuthnManager* mgr = WebAuthnManager::Get();
             if (!mgr) {
