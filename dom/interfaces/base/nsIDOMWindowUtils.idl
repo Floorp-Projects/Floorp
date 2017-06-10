@@ -2011,6 +2011,16 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   int64_t getStorageUsage(in nsIDOMStorage aStorage);
 
+  /**
+   * Returns the directionality of a string using the first-strong character
+   * algorithm defined in http://unicode.org/reports/tr9/#P2.
+   *
+   * @param aString the string to retrieve the direction for.
+   * @return one of DIRECTION_LTR, DIRECTION_RTL or DIRECTION_NOT_SET depending
+   *         on the first-strong character found in the string.
+   */
+  long getDirectionFromText(in AString aString);
+
   // These consts are only for testing purposes.
   const long DEFAULT_MOUSE_POINTER_ID = 0;
   const long DEFAULT_PEN_POINTER_ID   = 1;
@@ -2034,6 +2044,11 @@ interface nsIDOMWindowUtils : nsISupports {
   const long MOUSE_BUTTONS_5TH_BUTTON = 0x10;
   // Buttons are not specified, will be calculated from |aButton|.
   const long MOUSE_BUTTONS_NOT_SPECIFIED = -1;
+
+  // Return values for getDirectionFromText().
+  const long DIRECTION_LTR = 0;
+  const long DIRECTION_RTL = 1;
+  const long DIRECTION_NOT_SET = 2;
 };
 
 [scriptable, uuid(c694e359-7227-4392-a138-33c0cc1f15a6)]
