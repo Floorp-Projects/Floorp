@@ -58,6 +58,7 @@ SOURCES += [
     'HangReports.cpp',
     'ipc/TelemetryIPC.cpp',
     'ipc/TelemetryIPCAccumulator.cpp',
+    'ProcessedStack.cpp',
     'Telemetry.cpp',
     'TelemetryCommon.cpp',
     'TelemetryEvent.cpp',
