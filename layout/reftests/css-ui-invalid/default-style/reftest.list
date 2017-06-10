@@ -1,10 +1,10 @@
 == input.html input-ref.html
-fuzzy-if(webrender,1-1,6-6) == button.html button-ref.html
+fuzzy-if(webrender,1-1,6-6) fuzzy-if(cocoaWidget,2,32) == button.html button-ref.html
 == textarea.html textarea-ref.html
 == select.html select-ref.html
 == fieldset.html fieldset-ref.html
 == output.html output-ref.html
 random-if(winWidget) needs-focus == input-focus.html input-focus-ref.html # Intermittent failures, bug 660224
-needs-focus == button-focus.html button-focus-ref.html
+needs-focus fuzzy-if(cocoaWidget,1,10) == button-focus.html button-focus-ref.html
 needs-focus == textarea-focus.html textarea-focus-ref.html
 random-if(winWidget) needs-focus == select-focus.html select-focus-ref.html # Intermittent failures, bug 660224
