@@ -143,21 +143,6 @@ var gMainPane = {
               .notifyObservers(window, "main-pane-loaded");
   },
 
-  isE10SEnabled() {
-    let e10sEnabled;
-    try {
-      let e10sStatus = Components.classes["@mozilla.org/supports-PRUint64;1"]
-                         .createInstance(Ci.nsISupportsPRUint64);
-      let appinfo = Services.appinfo.QueryInterface(Ci.nsIObserver);
-      appinfo.observe(e10sStatus, "getE10SBlocked", "");
-      e10sEnabled = e10sStatus.data < 2;
-    } catch (e) {
-      e10sEnabled = false;
-    }
-
-    return e10sEnabled;
-  },
-
   enableE10SChange() {
     if (AppConstants.E10S_TESTING_ONLY) {
       let e10sCheckbox = document.getElementById("e10sAutoStart");
@@ -441,26 +426,14 @@ var gMainPane = {
   },
 
   buildContentProcessCountMenuList() {
-    if (gMainPane.isE10SEnabled()) {
-      let processCountPref = document.getElementById("dom.ipc.processCount");
-      let bundlePreferences = document.getElementById("bundlePreferences");
-      let label = bundlePreferences.getFormattedString("defaultContentProcessCount",
-        [processCountPref.defaultValue]);
-      let contentProcessCount =
-        document.querySelector(`#contentProcessCount > menupopup >
-                                menuitem[value="${processCountPref.defaultValue}"]`);
-      contentProcessCount.label = label;
-
-      document.getElementById("limitContentProcess").disabled = false;
-      document.getElementById("contentProcessCount").disabled = false;
-      document.getElementById("contentProcessCountEnabledDescription").hidden = false;
-      document.getElementById("contentProcessCountDisabledDescription").hidden = true;
-    } else {
-      document.getElementById("limitContentProcess").disabled = true;
-      document.getElementById("contentProcessCount").disabled = true;
-      document.getElementById("contentProcessCountEnabledDescription").hidden = true;
-      document.getElementById("contentProcessCountDisabledDescription").hidden = false;
-    }
+    let processCountPref = document.getElementById("dom.ipc.processCount");
+    let bundlePreferences = document.getElementById("bundlePreferences");
+    let label = bundlePreferences.getFormattedString("defaultContentProcessCount",
+      [processCountPref.defaultValue]);
+    let contentProcessCount =
+      document.querySelector(`#contentProcessCount > menupopup >
+                              menuitem[value="${processCountPref.defaultValue}"]`);
+    contentProcessCount.label = label;
   },
 
   // DOWNLOADS
