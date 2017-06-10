@@ -24,12 +24,12 @@
 namespace js {
 namespace frontend {
 
-template<template<typename CharT> class ParseHandler>
+template<class ParseHandler>
 class EitherParser
 {
     const mozilla::Variant<Parser<ParseHandler, char16_t>* const> parser;
 
-    using Node = typename ParseHandler<char16_t>::Node;
+    using Node = typename ParseHandler::Node;
 
   public:
     template<class Parser>

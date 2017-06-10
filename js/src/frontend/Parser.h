@@ -33,7 +33,7 @@ namespace frontend {
 
 class ParserBase;
 
-template <template <typename CharT> class ParseHandler, typename CharT> class Parser;
+template <class ParseHandler, typename CharT> class Parser;
 
 /*
  * The struct ParseContext stores information about the current parsing context,
@@ -352,11 +352,11 @@ class ParseContext : public Nestable<ParseContext>
     bool funHasReturnVoid;
 
   public:
-    template <template <typename CharT> class ParseHandler, typename CharT>
+    template <class ParseHandler, typename CharT>
     ParseContext(Parser<ParseHandler, CharT>* prs, SharedContext* sc, Directives* newDirectives)
       : Nestable<ParseContext>(&prs->pc),
         traceLog_(sc->context,
-                  mozilla::IsSame<ParseHandler<CharT>, FullParseHandler<CharT>>::value
+                  mozilla::IsSame<ParseHandler, FullParseHandler>::value
                   ? TraceLogger_ParsingFull
                   : TraceLogger_ParsingSyntax,
                   prs->tokenStream),
@@ -805,13 +805,6 @@ class ParserBase : public StrictModeGetter
     bool checkOptionsCalled:1;
 #endif
 
-    /*
-     * Not all language constructs can be handled during syntax parsing. If it
-     * is not known whether the parse succeeds or fails, this bit is set and
-     * the parse will return false.
-     */
-    bool abortedSyntaxParse:1;
-
     /* Unexpected end of input, i.e. TOK_EOF not at top-level. */
     bool isUnexpectedEOF_:1;
 
@@ -858,13 +851,6 @@ class ParserBase : public StrictModeGetter
 
     const ReadOnlyCompileOptions& options() const {
         return tokenStream.options();
-    }
-
-    bool hadAbortedSyntaxParse() {
-        return abortedSyntaxParse;
-    }
-    void clearAbortedSyntaxParse() {
-        abortedSyntaxParse = false;
     }
 
     bool isUnexpectedEOF() const { return isUnexpectedEOF_; }
@@ -988,11 +974,11 @@ ParseContext::VarScope::VarScope(ParserBase* parser)
     useAsVarScope(parser->pc);
 }
 
-template <template<typename CharT> class ParseHandler, typename CharT>
+template <class ParseHandler, typename CharT>
 class Parser final : public ParserBase, private JS::AutoGCRooter
 {
   private:
-    using Node = typename ParseHandler<CharT>::Node;
+    using Node = typename ParseHandler::Node;
 
     /*
      * A class for temporarily stashing errors while parsing continues.
@@ -1121,9 +1107,22 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
         void transferErrorsTo(PossibleError* other);
     };
 
+    // When ParseHandler is FullParseHandler:
+    //
+    //   If non-null, this field holds the syntax parser used to attempt lazy
+    //   parsing of inner functions. If null, then lazy parsing is disabled.
+    //
+    // When ParseHandler is SyntaxParseHandler:
+    //
+    //   If non-null, this field must be a sentinel value signaling that the
+    //   syntax parse was aborted. If null, then lazy parsing was aborted due
+    //   to encountering unsupported language constructs.
+    using SyntaxParser = Parser<SyntaxParseHandler, CharT>;
+    SyntaxParser* syntaxParser_;
+
   public:
     /* State specific to the kind of parse being performed. */
-    ParseHandler<CharT> handler;
+    ParseHandler handler;
 
     void prepareNodeForMutation(Node node) { handler.prepareNodeForMutation(node); }
     void freeTree(Node node) { handler.freeTree(node); }
@@ -1131,11 +1130,23 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
   public:
     Parser(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
            const CharT* chars, size_t length, bool foldConstants, UsedNameTracker& usedNames,
-           Parser<SyntaxParseHandler, CharT>* syntaxParser, LazyScript* lazyOuterFunction);
+           SyntaxParser* syntaxParser, LazyScript* lazyOuterFunction);
     ~Parser();
 
     friend class AutoAwaitIsKeyword<Parser>;
     void setAwaitIsKeyword(bool isKeyword);
+
+    // If ParseHandler is SyntaxParseHandler, whether the last syntax parse was
+    // aborted due to unsupported language constructs.
+    //
+    // If ParseHandler is FullParseHandler, false.
+    bool hadAbortedSyntaxParse();
+
+    // If ParseHandler is SyntaxParseHandler, clear whether the last syntax
+    // parse was aborted.
+    //
+    // If ParseHandler is FullParseHandler, do nothing.
+    void clearAbortedSyntaxParse();
 
     bool checkOptions();
 
@@ -1168,14 +1179,24 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     inline Node newName(PropertyName* name);
     inline Node newName(PropertyName* name, TokenPos pos);
 
+    // If ParseHandler is SyntaxParseHandler, flag the current syntax parse as
+    // aborted due to unsupported language constructs and return
+    // false. Aborting the current syntax parse does not disable attempts to
+    // syntax parse future inner functions.
+    //
+    // If ParseHandler is FullParseHandler, disable syntax parsing of all
+    // future inner functions and return true.
     inline bool abortIfSyntaxParser();
+
+    // If ParseHandler is SyntaxParseHandler, do nothing.
+    //
+    // If ParseHandler is FullParseHandler, disable syntax parsing of all
+    // future inner functions.
+    void disableSyntaxParser();
 
   public:
     /* Public entry points for parsing. */
-    Node statement(YieldHandling yieldHandling);
     Node statementListItem(YieldHandling yieldHandling, bool canHaveDirectives = false);
-
-    bool maybeParseDirective(Node list, Node pn, bool* cont);
 
     // Parse the body of an eval.
     //
@@ -1245,6 +1266,8 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
                       FunctionAsyncKind asyncKind = SyncFunction);
 
     Node statementList(YieldHandling yieldHandling);
+    Node statement(YieldHandling yieldHandling);
+    bool maybeParseDirective(Node list, Node pn, bool* cont);
 
     Node blockStatement(YieldHandling yieldHandling,
                         unsigned errorNumber = JSMSG_CURLY_IN_COMPOUND);
@@ -1564,7 +1587,7 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
         return handler.newNumber(tok.number(), tok.decimalPoint(), tok.pos);
     }
 
-    static Node null() { return ParseHandler<CharT>::null(); }
+    static Node null() { return ParseHandler::null(); }
 
     JSAtom* prefixAccessorName(PropertyType propType, HandleAtom propAtom);
 
