@@ -658,7 +658,6 @@
         </menupopup>
       </menulist>
     </hbox>
-    <description id="contentProcessCountEnabledDescription">&limitContentProcessOption.description;</description>
-    <description id="contentProcessCountDisabledDescription">&limitContentProcessOption.disabledDescription;<label class="text-link" href="https://wiki.mozilla.org/Electrolysis">&limitContentProcessOption.disabledDescriptionLink;</label></description>
+    <description>&limitContentProcessOption.description;</description>
   </vbox>
 </groupbox>
