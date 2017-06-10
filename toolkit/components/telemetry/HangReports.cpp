@@ -11,9 +11,6 @@ namespace Telemetry {
 
 using namespace HangMonitor;
 
-/** The maximum number of stacks that we're keeping for hang reports. */
-const size_t kMaxHangStacksKept = 50;
-
 // This utility function generates a string key that is used to index the annotations
 // in a hash map from |HangReports::AddHang|.
 nsresult
@@ -36,6 +33,9 @@ ComputeAnnotationsKey(const HangAnnotationsPtr& aAnnotations, nsAString& aKeyOut
 }
 
 #if defined(MOZ_GECKO_PROFILER)
+/** The maximum number of stacks that we're keeping for hang reports. */
+const size_t kMaxHangStacksKept = 50;
+
 void
 HangReports::AddHang(const Telemetry::ProcessedStack& aStack,
                      uint32_t aDuration,
