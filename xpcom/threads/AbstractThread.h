@@ -21,6 +21,11 @@ class TaskQueue;
 class TaskDispatcher;
 
 /*
+ * NOTE: PLEASE AVOID USE OF AbstractThread OUTSIDE MEDIA CODE WHEN POSSIBLE.
+ * The nsISerialEventTarget interface should be preferred. AbstractThread
+ * has unusual "tail dispatch" semantics that usually are not needed outside
+ * of media code.
+ *
  * We often want to run tasks on a target that guarantees that events will never
  * run in parallel. There are various target types that achieve this - namely
  * nsIThread and TaskQueue. Note that nsIThreadPool (which implements

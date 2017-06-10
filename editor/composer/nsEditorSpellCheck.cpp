@@ -6,7 +6,6 @@
 
 #include <stdlib.h>                     // for getenv
 
-#include "mozilla/AbstractThread.h"     // for AbstractThread
 #include "mozilla/Attributes.h"         // for final
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/dom/Element.h"        // for Element
@@ -35,6 +34,7 @@
 #include "nsITextServicesDocument.h"    // for nsITextServicesDocument
 #include "nsITextServicesFilter.h"      // for nsITextServicesFilter
 #include "nsIURI.h"                     // for nsIURI
+#include "nsThreadUtils.h"              // for GetMainThreadSerialEventTarget
 #include "nsVariant.h"                  // for nsIWritableVariant, etc
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING, etc
 #include "nsMemory.h"                   // for nsMemory
@@ -842,7 +842,7 @@ nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
       RefPtr<nsEditorSpellCheck> self = this;
       RefPtr<DictionaryFetcher> fetcher = aFetcher;
       mSpellChecker->SetCurrentDictionaryFromList(tryDictList)->Then(
-        AbstractThread::MainThread(),
+        GetMainThreadSerialEventTarget(),
         __func__,
         [self, fetcher]() {
 #ifdef DEBUG_DICT
@@ -1025,7 +1025,7 @@ nsEditorSpellCheck::SetFallbackDictionary(DictionaryFetcher* aFetcher)
   RefPtr<nsEditorSpellCheck> self = this;
   RefPtr<DictionaryFetcher> fetcher = aFetcher;
   mSpellChecker->SetCurrentDictionaryFromList(tryDictList)->Then(
-    AbstractThread::MainThread(),
+    GetMainThreadSerialEventTarget(),
     __func__,
     [self, fetcher]() {
       // If an error was thrown while setting the dictionary, just
