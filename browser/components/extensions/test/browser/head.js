@@ -309,7 +309,7 @@ async function closeExtensionContextMenu(itemToSelect, modifiers = {}) {
   let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
   EventUtils.synthesizeMouseAtCenter(itemToSelect, modifiers);
-  return popupHiddenPromise;
+  await popupHiddenPromise;
 }
 
 async function openChromeContextMenu(menuId, target, win = window) {
