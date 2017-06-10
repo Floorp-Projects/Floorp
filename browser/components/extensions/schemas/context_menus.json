@@ -11,7 +11,6 @@
         "choices": [{
           "type": "string",
           "enum": [
-            "menus",
             "contextMenus"
           ]
         }]
@@ -20,14 +19,8 @@
   },
   {
     "namespace": "contextMenus",
+    "description": "Use the <code>browser.contextMenus</code> API to add items to the browser's context menu. You can choose what types of objects your context menu additions apply to, such as images, hyperlinks, and pages.",
     "permissions": ["contextMenus"],
-    "description": "Use the browser.contextMenus API to add items to the browser's context menu. You can choose what types of objects your context menu additions apply to, such as images, hyperlinks, and pages.",
-    "$import": "menus"
-  },
-  {
-    "namespace": "menus",
-    "permissions": ["menus"],
-    "description": "Use the browser.menus API to add items to the browser's menus. You can choose what types of objects your context menu additions apply to, such as images, hyperlinks, and pages.",
     "properties": {
       "ACTION_MENU_TOP_LEVEL_LIMIT": {
         "value": 6,
@@ -271,7 +264,7 @@
                 "parameters": [
                   {
                     "name": "info",
-                    "$ref": "menusInternal.OnClickData"
+                    "$ref": "contextMenusInternal.OnClickData"
                   },
                   {
                     "name": "tab",
