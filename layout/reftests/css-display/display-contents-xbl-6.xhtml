@@ -1,0 +1,70 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<head>
+  <title>CSS Test: CSS display:contents in XBL</title>
+  <link rel="author" title="William Chen" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1040291"/>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=907396"/>
+  <link rel="help" href="http://dev.w3.org/csswg/css-display"/>
+
+<style>
+.c { display:contents; }
+</style>
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <binding id="a">
+    <content>
+      <style xmlns="http://www.w3.org/1999/xhtml">
+        .a {
+          display: contents;
+          color: blue;
+        }
+      </style>
+      <xhtml:span>a</xhtml:span>
+      <xhtml:span class="a">
+        <children></children>
+      </xhtml:span>
+      <xhtml:span>c</xhtml:span>
+    </content>
+  </binding>
+
+  <binding id="g">
+    <content>
+      <style xmlns="http://www.w3.org/1999/xhtml">
+        .a {
+          display: contents;
+          color: blue;
+        }
+      </style>
+      <xhtml:span class="a"><children includes="b"></children></xhtml:span>
+      <xhtml:span class="a" style="color:green"><children includes="c"></children></xhtml:span>
+    </content>
+  </binding>
+</bindings>
+</head>
+<body>
+<div id="hostI" style="color:green"><b style="display:contents">I</b></div>
+<div id="hostL" style="color:red"><c>2</c><b style="display:contents">L1</b></div>
+<div id="hostM" style="-moz-binding:url(#g); color:red"><c>2</c><b style="display:contents">M1</b></div>
+<div id="hostQ" class="c" style="color:red"><c>2</c><b style="display:contents">Q1</b></div>
+<div id="hostR" class="c" style="-moz-binding:url(#g); color:red"><c>2</c><b style="display:contents">R1</b></div>
+
+<script>
+
+function tweak() {
+  document.body.offsetHeight;
+
+  hostI.style.MozBinding='url(#a)';
+  hostL.style.MozBinding='url(#g)';
+  hostQ.style.MozBinding='url(#g)';
+
+  document.body.offsetHeight;
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("MozReftestInvalidate", tweak);
+</script>
+</body>
+</html>
