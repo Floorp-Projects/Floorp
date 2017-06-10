@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<style>
+  input::placeholder { color: red; }
+  input.green::placeholder { color: green; }
+</style>
+<input type="number" placeholder="This should be green">
+<script>
+  var i = document.querySelector("input");
+  var s = getComputedStyle(i, "::placeholder");
+  // Make sure we've computed the old color.
+  var oldColor = s.color;
+  i.className = "green";
+</script>
