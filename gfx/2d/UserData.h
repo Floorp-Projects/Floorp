@@ -72,6 +72,21 @@ public:
     return nullptr;
   }
 
+  /* Remove and destroy a given key */
+  void RemoveAndDestroy(UserDataKey *key)
+  {
+    for (int i=0; i<count; i++) {
+      if (key == entries[i].key) {
+        entries[i].destroy(entries[i].userData);
+        // decrement before looping so entries[i+1] doesn't read past the end:
+        --count;
+        for (;i<count; i++) {
+          entries[i] = entries[i+1];
+        }
+      }
+    }
+  }
+
   /* Retrives the userData for the associated key */
   void *Get(UserDataKey *key) const
   {
