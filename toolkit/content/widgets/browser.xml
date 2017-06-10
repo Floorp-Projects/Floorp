@@ -1372,6 +1372,7 @@
               "_documentContentType",
               "_contentTitle",
               "_characterSet",
+              "_mayEnableCharacterEncodingMenu",
               "_contentPrincipal",
               "_imageDocument",
               "_fullZoom",
