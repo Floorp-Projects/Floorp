@@ -674,7 +674,7 @@ pref("plugins.testmode", false);
 pref("plugins.show_infobar", true);
 
 // Should dismissing the hidden plugin infobar suppress it permanently?
-pref("plugins.remember_infobar_dismissal", false);
+pref("plugins.remember_infobar_dismissal", true);
 
 pref("plugin.default.state", 1);
 
@@ -684,20 +684,26 @@ pref("plugin.defaultXpi.state", 2);
 // Java is Click-to-Activate by default on all channels.
 pref("plugin.state.java", 1);
 
-// Flash is Click-to-Activate by default on Nightly,
-// Always-Activate on other channels.
+// Flash is Click-to-Activate by default on Nightly.
+// On other channels, it will be controlled by a
+// rollout system addon.
 #ifdef NIGHTLY_BUILD
-pref("plugins.flashBlock.enabled", true);
 pref("plugin.state.flash", 1);
+#else
+pref("plugin.state.flash", 2);
+#endif
+
+// Enables the download and use of the flash blocklists.
+pref("plugins.flashBlock.enabled", true);
 
 // Prefer HTML5 video over Flash content, and don't
 // load plugin instances with no src declared.
 // These prefs are documented in details on all.js.
+// With the "follow-ctp" setting, this will only
+// apply to users that have plugin.state.flash = 1.
 pref("plugins.favorfallback.mode", "follow-ctp");
 pref("plugins.favorfallback.rules", "nosrc,video");
-#else
-pref("plugin.state.flash", 2);
-#endif
+
 
 #ifdef XP_WIN
 pref("browser.preferences.instantApply", false);

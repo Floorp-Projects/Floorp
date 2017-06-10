@@ -293,18 +293,9 @@ inline static bool NodeAffectsDirAutoAncestor(nsINode* aTextNode)
           parent->NodeOrAncestorHasDirAuto());
 }
 
-/**
- * Various methods for returning the directionality of a string using the
- * first-strong algorithm defined in http://unicode.org/reports/tr9/#P2
- *
- * @param[out] aFirstStrong the offset to the first character in the string with
- *             strong directionality, or UINT32_MAX if there is none (return
-               value is eDir_NotSet).
- * @return the directionality of the string
- */
-static Directionality
+Directionality
 GetDirectionFromText(const char16_t* aText, const uint32_t aLength,
-                     uint32_t* aFirstStrong = nullptr)
+                     uint32_t* aFirstStrong)
 {
   const char16_t* start = aText;
   const char16_t* end = aText + aLength;
