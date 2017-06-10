@@ -3,55 +3,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-add_task(async function test_permissions() {
-  function background() {
-    browser.test.sendMessage("apis", {
-      menus: typeof browser.menus,
-      contextMenus: typeof browser.contextMenus,
-      menusInternal: typeof browser.menusInternal,
-    });
-  }
-
-  const first = ExtensionTestUtils.loadExtension({manifest: {permissions: ["menus"]}, background});
-  const second = ExtensionTestUtils.loadExtension({manifest: {permissions: ["contextMenus"]}, background});
-
-  await first.startup();
-  await second.startup();
-
-  const apis1 = await first.awaitMessage("apis");
-  const apis2 = await second.awaitMessage("apis");
-
-  is(apis1.menus, "object", "browser.menus available with 'menus' permission");
-  is(apis1.contextMenus, "undefined", "browser.contextMenus unavailable with  'menus' permission");
-  is(apis1.menusInternal, "undefined", "browser.menusInternal is never available");
-
-  is(apis2.menus, "undefined", "browser.menus unavailable with 'contextMenus' permission");
-  is(apis2.contextMenus, "object", "browser.contextMenus unavailable with  'contextMenus' permission");
-  is(apis2.menusInternal, "undefined", "browser.menusInternal is never available");
-
-  await first.unload();
-  await second.unload();
-});
-
 add_task(async function test_actionContextMenus() {
   const manifest = {
     page_action: {},
     browser_action: {},
-    permissions: ["menus"],
+    permissions: ["contextMenus"],
   };
 
   async function background() {
     const contexts = ["page_action", "browser_action"];
 
-    const parentId = browser.menus.create({contexts, title: "parent"});
-    await browser.menus.create({parentId, title: "click A"});
-    await browser.menus.create({parentId, title: "click B"});
+    const parentId = browser.contextMenus.create({contexts, title: "parent"});
+    await browser.contextMenus.create({parentId, title: "click A"});
+    await browser.contextMenus.create({parentId, title: "click B"});
 
     for (let i = 1; i < 9; i++) {
-      await browser.menus.create({contexts, id: `${i}`, title: `click ${i}`});
+      await browser.contextMenus.create({contexts, id: `${i}`, title: `click ${i}`});
     }
 
-    browser.menus.onClicked.addListener((info, tab) => {
+    browser.contextMenus.onClicked.addListener((info, tab) => {
       browser.test.sendMessage("click", {info, tab});
     });
 
@@ -100,19 +70,19 @@ add_task(async function test_actionContextMenus() {
 add_task(async function test_tabContextMenu() {
   const first = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: ["menus"],
+      permissions: ["contextMenus"],
     },
     async background() {
-      await browser.menus.create({
+      await browser.contextMenus.create({
         id: "alpha-beta-parent", title: "alpha-beta parent", contexts: ["tab"],
       });
 
-      await browser.menus.create({parentId: "alpha-beta-parent", title: "alpha"});
-      await browser.menus.create({parentId: "alpha-beta-parent", title: "beta"});
+      await browser.contextMenus.create({parentId: "alpha-beta-parent", title: "alpha"});
+      await browser.contextMenus.create({parentId: "alpha-beta-parent", title: "beta"});
 
-      await browser.menus.create({title: "dummy", contexts: ["page"]});
+      await browser.contextMenus.create({title: "dummy", contexts: ["page"]});
 
-      browser.menus.onClicked.addListener((info, tab) => {
+      browser.contextMenus.onClicked.addListener((info, tab) => {
         browser.test.sendMessage("click", {info, tab});
       });
 
@@ -123,10 +93,10 @@ add_task(async function test_tabContextMenu() {
 
   const second = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: ["menus"],
+      permissions: ["contextMenus"],
     },
     async background() {
-      await browser.menus.create({title: "gamma", contexts: ["tab"]});
+      await browser.contextMenus.create({title: "gamma", contexts: ["tab"]});
       browser.test.sendMessage("ready");
     },
   });
@@ -173,14 +143,14 @@ add_task(async function test_tabContextMenu() {
 
 add_task(async function test_onclick_frameid() {
   const manifest = {
-    permissions: ["menus"],
+    permissions: ["contextMenus"],
   };
 
   function background() {
     function onclick(info) {
       browser.test.sendMessage("click", info);
     }
-    browser.menus.create({contexts: ["frame", "page"], title: "modify", onclick});
+    browser.contextMenus.create({contexts: ["frame", "page"], title: "modify", onclick});
     browser.test.sendMessage("ready");
   }
 
