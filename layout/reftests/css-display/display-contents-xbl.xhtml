@@ -30,23 +30,6 @@
     </content>
   </binding>
 
-  <binding id="b">
-    <content>
-      <style xmlns="http://www.w3.org/1999/xhtml">
-        .b {
-          display: contents;
-          color: blue;
-        }
-	.b::after {
-          content: 'c';
-        }
-      </style>
-      <xhtml:span class="b">
-        a <children></children>
-      </xhtml:span>
-    </content>
-  </binding>
-
   <binding id="c">
     <content>
       <xhtml:span>a</xhtml:span>
@@ -111,7 +94,6 @@
 </head>
 <body>
 <div id="host1" style="-moz-binding: url(#a);"></div>
-<div id="host2" style="-moz-binding: url(#b);"></div>
 <div id="host3" style="-moz-binding: url(#c); display: contents;"></div>d
 <div id="host4" style="-moz-binding: url(#d);"></div>
 <div id="host5" style="-moz-binding: url(#e);"></div>
@@ -130,17 +112,9 @@
 <div id="hostF" style="-moz-binding: url(#f)"><i>Two</i><b>One</b></div>
 <div id="hostG" style="-moz-binding: url(#f)"><i style="display: contents;">Two</i><b>One</b></div>
 <div id="hostH" style="-moz-binding: url(#f)"><i>Two</i><b style="display: contents;">One</b></div>
-<div id="hostI" style="color:green"><b style="display:contents">I</b></div>
 <div id="hostJ" style="-moz-binding:url(#a); color:green"><b>J</b></div>
-<div id="hostK" style="-moz-binding:url(#b); color:red"><b>K</b></div>
-<div id="hostL" style="color:red"><c>2</c><b style="display:contents">L1</b></div>
-<div id="hostM" style="-moz-binding:url(#g); color:red"><c>2</c><b style="display:contents">M1</b></div>
 <div id="hostO" class="c" style="-moz-binding:url(#a); color:green"><b>O</b></div>
-<div id="hostP" class="c" style="-moz-binding:url(#b); color:red"><b>P</b></div>
-<div id="hostQ" class="c" style="color:red"><c>2</c><b style="display:contents">Q1</b></div>
-<div id="hostR" class="c" style="-moz-binding:url(#g); color:red"><c>2</c><b style="display:contents">R1</b></div>
 <div id="hostS" style="-moz-binding: url(#a);"></div>
-<div id="hostT" style="-moz-binding: url(#b);"></div>
 <div id="hostU" style="-moz-binding: url(#c); display: contents;"></div>d
 <div id="hostV" style="-moz-binding: url(#d);"></div>
 <div id="hostW" style="-moz-binding: url(#e);"></div>
@@ -180,11 +154,6 @@ function tweak() {
   // Span should be distributed to the xbl:children insertion point between 'a' and 'c'.
   host1.appendChild(span("b"));
 
-  var elm = span("b");
-  elm.style.display = "contents";
-  elm.style.color = "blue";
-  host2.appendChild(elm);
-
   host3.appendChild(span("b"));
   host4.appendChild(span("b"));
   host5.appendChild(span("b"));
@@ -206,13 +175,9 @@ function tweak() {
   hostH.insertBefore(elem("i"), hostH.firstChild);
 
   document.body.offsetHeight;
-  hostI.style.MozBinding='url(#a)';
-  hostL.style.MozBinding='url(#g)';
   hostO.style.MozBinding='url(#a)';
-  hostQ.style.MozBinding='url(#g)';
 
   hostS.className="c";
-  hostT.className="c";
   hostU.className="c";
   hostV.className="c";
   hostW.className="c";
@@ -230,11 +195,6 @@ function tweak() {
   hosti.className="c";
 
   hostS.appendChild(span("b"));
-
-  var elm = span("b");
-  elm.style.display = "contents";
-  elm.style.color = "blue";
-  hostT.appendChild(elm);
 
   hostU.appendChild(span("b"));
   hostV.appendChild(span("b"));
