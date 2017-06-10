@@ -615,10 +615,14 @@ description > html|a {
 
 .search-tooltip {
   position: absolute;
-  pointer-events: none;
   padding: 0 10px;
   bottom: 100%;
   background-color: #ffe900;
+}
+
+.search-tooltip:hover,
+.search-tooltip:hover::before {
+  filter: opacity(10%);
 }
 
 .search-tooltip::before {

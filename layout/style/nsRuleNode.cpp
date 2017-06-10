@@ -6742,21 +6742,22 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleImageLayers::Repeat>
                  "Invalid unit");
 
     bool hasContraction = true;
-    uint8_t value = aSpecifiedValue->mXValue.GetIntValue();
+    StyleImageLayerRepeat value =
+      static_cast<StyleImageLayerRepeat>(aSpecifiedValue->mXValue.GetIntValue());
     switch (value) {
-    case NS_STYLE_IMAGELAYER_REPEAT_REPEAT_X:
-      aComputedValue.mXRepeat = NS_STYLE_IMAGELAYER_REPEAT_REPEAT;
-      aComputedValue.mYRepeat = NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT;
+      case StyleImageLayerRepeat::RepeatX:
+      aComputedValue.mXRepeat = StyleImageLayerRepeat::Repeat;
+      aComputedValue.mYRepeat = StyleImageLayerRepeat::NoRepeat;
       break;
-    case NS_STYLE_IMAGELAYER_REPEAT_REPEAT_Y:
-      aComputedValue.mXRepeat = NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT;
-      aComputedValue.mYRepeat = NS_STYLE_IMAGELAYER_REPEAT_REPEAT;
+      case StyleImageLayerRepeat::RepeatY:
+      aComputedValue.mXRepeat = StyleImageLayerRepeat::NoRepeat;
+      aComputedValue.mYRepeat = StyleImageLayerRepeat::Repeat;
       break;
     default:
-      NS_ASSERTION(value == NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT ||
-                   value == NS_STYLE_IMAGELAYER_REPEAT_REPEAT ||
-                   value == NS_STYLE_IMAGELAYER_REPEAT_SPACE ||
-                   value == NS_STYLE_IMAGELAYER_REPEAT_ROUND, "Unexpected value");
+      NS_ASSERTION(value == StyleImageLayerRepeat::NoRepeat ||
+                   value == StyleImageLayerRepeat::Repeat ||
+                   value == StyleImageLayerRepeat::Space ||
+                   value == StyleImageLayerRepeat::Round, "Unexpected value");
       aComputedValue.mXRepeat = value;
       hasContraction = false;
       break;
@@ -6773,11 +6774,12 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleImageLayers::Repeat>
       aComputedValue.mYRepeat = aComputedValue.mXRepeat;
       break;
     case eCSSUnit_Enumerated:
-      value = aSpecifiedValue->mYValue.GetIntValue();
-      NS_ASSERTION(value == NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT ||
-                   value == NS_STYLE_IMAGELAYER_REPEAT_REPEAT ||
-                   value == NS_STYLE_IMAGELAYER_REPEAT_SPACE ||
-                   value == NS_STYLE_IMAGELAYER_REPEAT_ROUND, "Unexpected value");
+      value =
+        static_cast<StyleImageLayerRepeat>(aSpecifiedValue->mYValue.GetIntValue());
+      NS_ASSERTION(value == StyleImageLayerRepeat::NoRepeat ||
+                   value == StyleImageLayerRepeat::Repeat ||
+                   value == StyleImageLayerRepeat::Space ||
+                   value == StyleImageLayerRepeat::Round, "Unexpected value");
       aComputedValue.mYRepeat = value;
       break;
     default:

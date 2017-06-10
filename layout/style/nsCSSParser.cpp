@@ -12313,7 +12313,7 @@ CSSParserImpl::ParseImageLayersItem(
                                          eCSSUnit_Enumerated);
   aState.mClip->mValue.SetEnumValue(StyleGeometryBox::BorderBox);
 
-  aState.mRepeat->mXValue.SetIntValue(NS_STYLE_IMAGELAYER_REPEAT_REPEAT,
+  aState.mRepeat->mXValue.SetIntValue(uint8_t(StyleImageLayerRepeat::Repeat),
                                       eCSSUnit_Enumerated);
   aState.mRepeat->mYValue.Reset();
 
@@ -12601,8 +12601,8 @@ CSSParserImpl::ParseImageLayerRepeatValues(nsCSSValuePair& aValue)
   if (ParseEnum(xValue, nsCSSProps::kImageLayerRepeatKTable)) {
     int32_t value = xValue.GetIntValue();
     // For single values set yValue as eCSSUnit_Null.
-    if (value == NS_STYLE_IMAGELAYER_REPEAT_REPEAT_X ||
-        value == NS_STYLE_IMAGELAYER_REPEAT_REPEAT_Y ||
+    if (value == uint8_t(StyleImageLayerRepeat::RepeatX) ||
+        value == uint8_t(StyleImageLayerRepeat::RepeatY) ||
         !ParseEnum(yValue, nsCSSProps::kImageLayerRepeatPartKTable)) {
       // the caller will fail cases like "repeat-x no-repeat"
       // by expecting a list separator or an end property.

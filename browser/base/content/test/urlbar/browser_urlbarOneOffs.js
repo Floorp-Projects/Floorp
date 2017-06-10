@@ -196,7 +196,7 @@ add_task(async function oneOffClick() {
   let oneOffs = gURLBar.popup.oneOffSearchButtons.getSelectableButtons(true);
   let resultsPromise =
     BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false,
-                                   "http://mochi.test:8888/");
+                                   "http://mochi.test:8888/?terms=foo.bar");
   EventUtils.synthesizeMouseAtCenter(oneOffs[0], {});
   await resultsPromise;
 
@@ -220,7 +220,7 @@ add_task(async function oneOffReturn() {
 
   let resultsPromise =
     BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false,
-                                   "http://mochi.test:8888/");
+                                   "http://mochi.test:8888/?terms=foo.bar");
   EventUtils.synthesizeKey("VK_RETURN", {})
   await resultsPromise;
 
