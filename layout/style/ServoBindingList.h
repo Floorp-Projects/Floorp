@@ -58,6 +58,8 @@ SERVO_BINDING_FUNC(Servo_StyleSet_RebuildData, void,
 SERVO_BINDING_FUNC(Servo_StyleSet_MediumFeaturesChanged, bool,
                    RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_StyleSet_Drop, void, RawServoStyleSetOwned set)
+SERVO_BINDING_FUNC(Servo_StyleSet_CompatModeChanged, void,
+                   RawServoStyleSetBorrowed raw_data)
 SERVO_BINDING_FUNC(Servo_StyleSet_AppendStyleSheet, void,
                    RawServoStyleSetBorrowed set,
                    RawServoStyleSheetBorrowed sheet,

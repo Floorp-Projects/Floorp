@@ -1187,6 +1187,11 @@ nsPresContext::CompatibilityModeChanged()
     return;
   }
 
+  StyleSetHandle styleSet = mShell->StyleSet();
+  if (styleSet->IsServo()) {
+    styleSet->AsServo()->CompatibilityModeChanged();
+  }
+
   if (doc->IsSVGDocument()) {
     // SVG documents never load quirk.css.
     return;
@@ -1197,7 +1202,6 @@ nsPresContext::CompatibilityModeChanged()
     return;
   }
 
-  StyleSetHandle styleSet = mShell->StyleSet();
   auto cache = nsLayoutStylesheetCache::For(styleSet->BackendType());
   StyleSheet* sheet = cache->QuirkSheet();
 
