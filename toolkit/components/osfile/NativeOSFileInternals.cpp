@@ -95,10 +95,7 @@ struct MOZ_NON_TEMPORARY_CLASS ScopedArrayBufferContents: public Scoped<ScopedAr
   explicit ScopedArrayBufferContents(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM):
     Scoped<ScopedArrayBufferContentsTraits>(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT)
   { }
-  explicit ScopedArrayBufferContents(const ArrayBufferContents& v
-                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM):
-    Scoped<ScopedArrayBufferContentsTraits>(v MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)
-  { }
+
   ScopedArrayBufferContents& operator=(ArrayBufferContents ptr) {
     Scoped<ScopedArrayBufferContentsTraits>::operator=(ptr);
     return *this;
@@ -918,4 +915,3 @@ NativeOSFileInternalsService::Read(const nsAString& aPath,
 }
 
 } // namespace mozilla
-
