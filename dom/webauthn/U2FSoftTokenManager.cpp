@@ -6,10 +6,10 @@
 
 #include "mozilla/dom/U2FSoftTokenManager.h"
 #include "CryptoBuffer.h"
-#include "mozilla/AbstractThread.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
 #include "nsNSSComponent.h"
+#include "nsThreadUtils.h"
 #include "pk11pub.h"
 #include "prerror.h"
 #include "secerr.h"
@@ -233,7 +233,7 @@ U2FSoftTokenManager::GetOrCreateWrappingKey(const UniquePK11SlotInfo& aSlot,
   MOZ_LOG(gNSSTokenLog, LogLevel::Debug,
           ("Key stored, nickname set to %s.", mSecretNickname.get()));
 
-  AbstractThread::MainThread()->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
                                            [] () {
                                              MOZ_ASSERT(NS_IsMainThread());
                                              Preferences::SetUint(PREF_U2F_NSSTOKEN_COUNTER, 0);
@@ -796,7 +796,7 @@ U2FSoftTokenManager::Sign(const nsTArray<uint8_t>& aApplication,
   counterItem.data[2] = (mCounter >>  8) & 0xFF;
   counterItem.data[3] = (mCounter >>  0) & 0xFF;
   uint32_t counter = mCounter;
-  AbstractThread::MainThread()->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
                                            [counter] () {
                                              MOZ_ASSERT(NS_IsMainThread());
                                              Preferences::SetUint(PREF_U2F_NSSTOKEN_COUNTER, counter);
