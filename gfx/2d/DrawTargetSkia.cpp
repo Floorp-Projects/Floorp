@@ -1040,7 +1040,8 @@ SetupCGContext(DrawTargetSkia* aDT,
                CGContextRef aCGContext,
                SkCanvas* aCanvas,
                const IntPoint& aOrigin,
-               const IntSize& aSize)
+               const IntSize& aSize,
+               bool aClipped)
 {
   // DrawTarget expects the origin to be at the top left, but CG
   // expects it to be at the bottom left. Transform to set the origin to
@@ -1053,15 +1054,20 @@ SetupCGContext(DrawTargetSkia* aDT,
 
   // Want to apply clips BEFORE the transform since the transform
   // will apply to the clips we apply.
-  SkIRect clipBounds;
-  if (!aCanvas->getDeviceClipBounds(&clipBounds)) {
-    clipBounds = SkIRect::MakeXYWH(aOrigin.x, aOrigin.y,
-                                   aSize.width, aSize.height);
+  if (aClipped) {
+    SkRegion clipRegion;
+    aCanvas->temporary_internal_getRgnClip(&clipRegion);
+    Vector<CGRect, 8> rects;
+    for (SkRegion::Iterator it(clipRegion); !it.done(); it.next()) {
+      const SkIRect& rect = it.rect();
+      if (!rects.append(CGRectMake(rect.x(), rect.y(), rect.width(), rect.height()))) {
+        break;
+      }
+    }
+    if (rects.length()) {
+      CGContextClipToRects(aCGContext, rects.begin(), rects.length());
+    }
   }
-
-  CGContextClipToRect(aCGContext,
-                      CGRectMake(clipBounds.x(), clipBounds.y(),
-                                 clipBounds.width(), clipBounds.height()));
 
   CGContextConcatCTM(aCGContext, GfxMatrixToCGAffineTransform(aDT->GetTransform()));
   return true;
@@ -1127,9 +1133,10 @@ DrawTargetSkia::BorrowCGContext(const DrawOptions &aOptions)
   if (!mNeedLayer && (data == mCanvasData) && mCG && (mCGSize == size)) {
     // If our canvas data still points to the same data,
     // we can reuse the CG Context
-    CGContextSaveGState(mCG);
     CGContextSetAlpha(mCG, aOptions.mAlpha);
-    SetupCGContext(this, mCG, mCanvas, origin, size);
+    CGContextSetShouldAntialias(mCG, aOptions.mAntialiasMode != AntialiasMode::NONE);
+    CGContextSaveGState(mCG);
+    SetupCGContext(this, mCG, mCanvas, origin, size, true);
     return mCG;
   }
 
@@ -1173,7 +1180,7 @@ DrawTargetSkia::BorrowCGContext(const DrawOptions &aOptions)
   CGContextSetShouldSmoothFonts(mCG, true);
   CGContextSetTextDrawingMode(mCG, kCGTextFill);
   CGContextSaveGState(mCG);
-  SetupCGContext(this, mCG, mCanvas, origin, size);
+  SetupCGContext(this, mCG, mCanvas, origin, size, !mNeedLayer);
   return mCG;
 }
 
