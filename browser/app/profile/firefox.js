@@ -1695,6 +1695,11 @@ pref("browser.suppress_first_window_animation", true);
 
 // Preferences for Photon onboarding system extension
 pref("browser.onboarding.enabled", true);
+pref("browser.onboarding.hidden", false);
+// On the Activity-Stream page, the snippet's position overlaps with our notification.
+// So use `browser.onboarding.notification.finished` to let the AS page know
+// if our notification is finished and safe to show their snippet.
+pref("browser.onboarding.notification.finished", false);
 
 // Preferences for the Screenshots feature:
 // Temporarily disable Screenshots in Beta & Release, so that we can gradually
