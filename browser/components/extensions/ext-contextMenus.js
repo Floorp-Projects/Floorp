@@ -25,7 +25,7 @@ const ACTION_MENU_TOP_LEVEL_LIMIT = 6;
 // Map[Extension -> Map[ID -> MenuItem]]
 // Note: we want to enumerate all the menu items so
 // this cannot be a weak map.
-var gMenuMap = new Map();
+var gContextMenuMap = new Map();
 
 // Map[Extension -> MenuItem]
 var gRootItems = new Map();
@@ -40,7 +40,7 @@ var gNextRadioGroupID = 0;
 var gMaxLabelLength = 64;
 
 var gMenuBuilder = {
-  // When a new menu is opened, this function is called and
+  // When a new contextMenu is opened, this function is called and
   // we populate the |xulMenu| with all the items from extensions
   // to be displayed. We always clear all the items again when
   // popuphidden fires.
@@ -258,7 +258,7 @@ var gMenuBuilder = {
         info.modifiers.push("MacCtrl");
       }
 
-      // Allow menus to open various actions supported in webext prior
+      // Allow context menu's to open various actions supported in webext prior
       // to notifying onclicked.
       let actionFor = {
         _execute_page_action: global.pageActionFor,
@@ -270,7 +270,7 @@ var gMenuBuilder = {
         actionFor(item.extension).triggerAction(win);
       }
 
-      item.extension.emit("webext-menu-menuitem-click", info, tab);
+      item.extension.emit("webext-contextmenu-menuitem-click", info, tab);
     });
 
     return element;
@@ -414,7 +414,7 @@ MenuItem.prototype = {
     if (this.hasOwnProperty("_id")) {
       throw new Error("Id of a MenuItem cannot be changed");
     }
-    let isIdUsed = gMenuMap.get(this.extension).has(id);
+    let isIdUsed = gContextMenuMap.get(this.extension).has(id);
     if (isIdUsed) {
       throw new Error("Id already exists");
     }
@@ -429,7 +429,7 @@ MenuItem.prototype = {
     if (parentId === undefined) {
       return;
     }
-    let menuMap = gMenuMap.get(this.extension);
+    let menuMap = gContextMenuMap.get(this.extension);
     if (!menuMap.has(parentId)) {
       throw new Error("Could not find any MenuItem with id: " + parentId);
     }
@@ -450,7 +450,7 @@ MenuItem.prototype = {
     if (parentId === undefined) {
       this.root.addChild(this);
     } else {
-      let menuMap = gMenuMap.get(this.extension);
+      let menuMap = gContextMenuMap.get(this.extension);
       menuMap.get(parentId).addChild(this);
     }
   },
@@ -497,7 +497,7 @@ MenuItem.prototype = {
       child.remove();
     }
 
-    let menuMap = gMenuMap.get(this.extension);
+    let menuMap = gContextMenuMap.get(this.extension);
     menuMap.delete(this.id);
     if (this.root == this) {
       gRootItems.delete(this.extension);
@@ -577,7 +577,7 @@ MenuItem.prototype = {
 
 // While any extensions are active, this Tracker registers to observe/listen
 // for contex-menu events from both content and chrome.
-const menuTracker = {
+const contextMenuTracker = {
   register() {
     Services.obs.addObserver(this, "on-build-contextmenu");
     for (const window of windowTracker.browserWindows()) {
@@ -602,7 +602,7 @@ const menuTracker = {
 
   onWindowOpen(window) {
     const menu = window.document.getElementById("tabContextMenu");
-    menu.addEventListener("popupshowing", menuTracker);
+    menu.addEventListener("popupshowing", contextMenuTracker);
   },
 
   handleEvent(event) {
@@ -618,15 +618,15 @@ const menuTracker = {
 
 var gExtensionCount = 0;
 
-this.menusInternal = class extends ExtensionAPI {
+this.contextMenus = class extends ExtensionAPI {
   onShutdown(reason) {
     let {extension} = this;
 
-    if (gMenuMap.has(extension)) {
-      gMenuMap.delete(extension);
+    if (gContextMenuMap.has(extension)) {
+      gContextMenuMap.delete(extension);
       gRootItems.delete(extension);
       if (--gExtensionCount == 0) {
-        menuTracker.unregister();
+        contextMenuTracker.unregister();
       }
     }
   }
@@ -634,30 +634,30 @@ this.menusInternal = class extends ExtensionAPI {
   getAPI(context) {
     let {extension} = context;
 
-    gMenuMap.set(extension, new Map());
+    gContextMenuMap.set(extension, new Map());
     if (++gExtensionCount == 1) {
-      menuTracker.register();
+      contextMenuTracker.register();
     }
 
     return {
-      menusInternal: {
-        create: function(createProperties) {
+      contextMenus: {
+        createInternal: function(createProperties) {
           // Note that the id is required by the schema. If the addon did not set
-          // it, the implementation of menus.create in the child should
+          // it, the implementation of contextMenus.create in the child should
           // have added it.
           let menuItem = new MenuItem(extension, createProperties);
-          gMenuMap.get(extension).set(menuItem.id, menuItem);
+          gContextMenuMap.get(extension).set(menuItem.id, menuItem);
         },
 
         update: function(id, updateProperties) {
-          let menuItem = gMenuMap.get(extension).get(id);
+          let menuItem = gContextMenuMap.get(extension).get(id);
           if (menuItem) {
             menuItem.setProps(updateProperties);
           }
         },
 
         remove: function(id) {
-          let menuItem = gMenuMap.get(extension).get(id);
+          let menuItem = gContextMenuMap.get(extension).get(id);
           if (menuItem) {
             menuItem.remove();
           }
@@ -670,14 +670,14 @@ this.menusInternal = class extends ExtensionAPI {
           }
         },
 
-        onClicked: new SingletonEventManager(context, "menusInternal.onClicked", fire => {
+        onClicked: new SingletonEventManager(context, "contextMenus.onClicked", fire => {
           let listener = (event, info, tab) => {
             fire.async(info, tab);
           };
 
-          extension.on("webext-menu-menuitem-click", listener);
+          extension.on("webext-contextmenu-menuitem-click", listener);
           return () => {
-            extension.off("webext-menu-menuitem-click", listener);
+            extension.off("webext-contextmenu-menuitem-click", listener);
           };
         }).api(),
       },

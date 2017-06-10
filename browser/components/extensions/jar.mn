@@ -18,13 +18,13 @@ browser.jar:
     content/browser/ext-browsingData.js
     content/browser/ext-chrome-settings-overrides.js
     content/browser/ext-commands.js
+    content/browser/ext-contextMenus.js
     content/browser/ext-devtools.js
     content/browser/ext-devtools-inspectedWindow.js
     content/browser/ext-devtools-network.js
     content/browser/ext-devtools-panels.js
     content/browser/ext-geckoProfiler.js
     content/browser/ext-history.js
-    content/browser/ext-menus.js
     content/browser/ext-omnibox.js
     content/browser/ext-pageAction.js
     content/browser/ext-sessions.js
@@ -34,9 +34,9 @@ browser.jar:
     content/browser/ext-utils.js
     content/browser/ext-windows.js
     content/browser/ext-c-browser.js
+    content/browser/ext-c-contextMenus.js
     content/browser/ext-c-devtools-inspectedWindow.js
     content/browser/ext-c-devtools-panels.js
     content/browser/ext-c-devtools.js
-    content/browser/ext-c-menus.js
     content/browser/ext-c-omnibox.js
     content/browser/ext-c-tabs.js

@@ -22,13 +22,11 @@ extensions.registerModules({
       ["devtools", "panels"],
     ],
   },
-  // Because of permissions, the module name must differ from both namespaces.
-  menusInternal: {
-    url: "chrome://browser/content/ext-c-menus.js",
+  contextMenus: {
+    url: "chrome://browser/content/ext-c-contextMenus.js",
     scopes: ["addon_child"],
     paths: [
       ["contextMenus"],
-      ["menus"],
     ],
   },
   omnibox: {
