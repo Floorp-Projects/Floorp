@@ -347,6 +347,11 @@ public:
   void ClearDataAndMarkDeviceDirty();
 
   /**
+   * Notifies the Servo stylesheet that the document's compatibility mode has changed.
+   */
+  void CompatibilityModeChanged();
+
+  /**
    * Resolve style for the given element, and return it as a
    * ServoComputedValues, not an nsStyleContext.
    */
