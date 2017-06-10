@@ -1421,8 +1421,11 @@ FinishAnyIncrementalGC()
 }
 
 static void
-FireForgetSkippable(uint32_t aSuspected, bool aRemoveChildless)
+FireForgetSkippable(uint32_t aSuspected, bool aRemoveChildless,
+                    TimeStamp aDeadline)
 {
+  GeckoProfilerTracingRAII
+    tracer("CC", aDeadline.IsNull() ? "ForgetSkippable" : "IdleForgetSkippable");
   PRTime startTime = PR_Now();
   FinishAnyIncrementalGC();
   bool earlyForgetSkippable =
@@ -1595,12 +1598,12 @@ CycleCollectorStats::RunForgetSkippable()
     TimeStamp beginForgetSkippable = TimeStamp::Now();
     bool ranSyncForgetSkippable = false;
     while (sCleanupsSinceLastGC < NS_MAJOR_FORGET_SKIPPABLE_CALLS) {
-      FireForgetSkippable(nsCycleCollector_suspectedCount(), false);
+      FireForgetSkippable(nsCycleCollector_suspectedCount(), false, TimeStamp());
       ranSyncForgetSkippable = true;
     }
 
     for (int32_t i = 0; i < mExtraForgetSkippableCalls; ++i) {
-      FireForgetSkippable(nsCycleCollector_suspectedCount(), false);
+      FireForgetSkippable(nsCycleCollector_suspectedCount(), false, TimeStamp());
       ranSyncForgetSkippable = true;
     }
 
@@ -1638,6 +1641,9 @@ nsJSContext::RunCycleCollectorSlice(TimeStamp aDeadline)
   if (!NS_IsMainThread()) {
     return;
   }
+
+  GeckoProfilerTracingRAII
+    tracer("CC", aDeadline.IsNull() ? "CCSlice" : "IdleCCSlice");
 
   PROFILER_LABEL("nsJSContext", "RunCycleCollectorSlice",
     js::ProfileEntry::Category::CC);
@@ -2016,7 +2022,7 @@ CCRunnerFired(TimeStamp aDeadline, void* aData)
   uint32_t suspected = nsCycleCollector_suspectedCount();
   if (isLateTimerFire && ShouldTriggerCC(suspected)) {
     if (sCCRunnerFireCount == numEarlyTimerFires + 1) {
-      FireForgetSkippable(suspected, true);
+      FireForgetSkippable(suspected, true, aDeadline);
       didDoWork = true;
       if (ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
         // Our efforts to avoid a CC have failed, so we return to let the
@@ -2034,7 +2040,7 @@ CCRunnerFired(TimeStamp aDeadline, void* aData)
              (sCleanupsSinceLastGC < NS_MAJOR_FORGET_SKIPPABLE_CALLS)) {
       // Only do a forget skippable if there are more than a few new objects
       // or we're doing the initial forget skippables.
-      FireForgetSkippable(suspected, false);
+      FireForgetSkippable(suspected, false, aDeadline);
       didDoWork = true;
   }
 
