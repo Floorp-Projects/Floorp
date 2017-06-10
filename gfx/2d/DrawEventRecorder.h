@@ -28,6 +28,19 @@ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorderPrivate)
   explicit DrawEventRecorderPrivate(std::ostream *aStream);
   virtual ~DrawEventRecorderPrivate() { }
+  virtual void Finish() {
+    // The iteration is a bit awkward here because our iterator will
+    // be invalidated by the removal
+    for (auto font = mStoredFonts.begin(); font != mStoredFonts.end(); ) {
+      auto oldFont = font++;
+      (*oldFont)->RemoveUserData(reinterpret_cast<UserDataKey*>(this));
+    }
+    for (auto surface = mStoredSurfaces.begin(); surface != mStoredSurfaces.end(); ) {
+      auto oldSurface = surface++;
+      (*oldSurface)->RemoveUserData(reinterpret_cast<UserDataKey*>(this));
+    }
+
+  }
 
   void WriteHeader();
 
@@ -40,6 +53,22 @@ public:
 
   void RemoveStoredObject(const ReferencePtr aObject) {
     mStoredObjects.erase(aObject);
+  }
+
+  void AddScaledFont(ScaledFont* aFont) {
+    mStoredFonts.insert(aFont);
+  }
+
+  void RemoveScaledFont(ScaledFont* aFont) {
+    mStoredFonts.erase(aFont);
+  }
+
+  void AddSourceSurface(SourceSurface* aSurface) {
+    mStoredSurfaces.insert(aSurface);
+  }
+
+  void RemoveSourceSurface(SourceSurface* aSurface) {
+    mStoredSurfaces.erase(aSurface);
   }
 
   bool HasStoredObject(const ReferencePtr aObject) {
@@ -62,13 +91,19 @@ protected:
 #if defined(_MSC_VER)
   typedef std::unordered_set<const void*> ObjectSet;
   typedef std::unordered_set<uint64_t> Uint64Set;
+  typedef std::unordered_set<ScaledFont*> FontSet;
+  typedef std::unordered_set<SourceSurface*> SurfaceSet;
 #else
   typedef std::set<const void*> ObjectSet;
   typedef std::set<uint64_t> Uint64Set;
+  typedef std::set<ScaledFont*> FontSet;
+  typedef std::set<SourceSurface*> SurfaceSet;
 #endif
 
   ObjectSet mStoredObjects;
   Uint64Set mStoredFontData;
+  FontSet mStoredFonts;
+  SurfaceSet mStoredSurfaces;
 };
 
 class DrawEventRecorderFile : public DrawEventRecorderPrivate

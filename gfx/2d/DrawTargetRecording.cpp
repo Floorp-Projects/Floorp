@@ -28,6 +28,7 @@ void RecordingSourceSurfaceUserDataFunc(void *aUserData)
   RecordingSourceSurfaceUserData *userData =
     static_cast<RecordingSourceSurfaceUserData*>(aUserData);
 
+  userData->recorder->RemoveSourceSurface((SourceSurface*)userData->refPtr);
   userData->recorder->RemoveStoredObject(userData->refPtr);
   userData->recorder->RecordEvent(
     RecordedSourceSurfaceDestruction(userData->refPtr));
@@ -66,6 +67,7 @@ EnsureSurfaceStored(DrawEventRecorderPrivate *aRecorder, SourceSurface *aSurface
   RefPtr<DataSourceSurface> dataSurf = aSurface->GetDataSurface();
   StoreSourceSurface(aRecorder, aSurface, dataSurf, reason);
   aRecorder->AddStoredObject(aSurface);
+  aRecorder->AddSourceSurface(aSurface);
 
   RecordingSourceSurfaceUserData *userData = new RecordingSourceSurfaceUserData;
   userData->refPtr = aSurface;
@@ -375,7 +377,7 @@ void RecordingFontUserDataDestroyFunc(void *aUserData)
     static_cast<RecordingFontUserData*>(aUserData);
 
   userData->recorder->RecordEvent(RecordedScaledFontDestruction(userData->refPtr));
-
+  userData->recorder->RemoveScaledFont((ScaledFont*)userData->refPtr);
   delete userData;
 }
 
@@ -421,6 +423,7 @@ DrawTargetRecording::FillGlyphs(ScaledFont *aFont,
     userData->refPtr = aFont;
     userData->recorder = mRecorder;
     aFont->AddUserData(userDataKey, userData, &RecordingFontUserDataDestroyFunc);
+    userData->recorder->AddScaledFont(aFont);
   }
 
   mRecorder->RecordEvent(RecordedFillGlyphs(this, aFont, aPattern, aOptions, aBuffer.mGlyphs, aBuffer.mNumGlyphs));
