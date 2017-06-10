@@ -45,16 +45,14 @@ public final class HardwareUtils {
 
         // Pre-populate common flags from the context.
         final int screenLayoutSize = context.getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK;
-        if (Build.VERSION.SDK_INT >= 11) {
-            if (screenLayoutSize == Configuration.SCREENLAYOUT_SIZE_XLARGE) {
-                sIsLargeTablet = true;
-            } else if (screenLayoutSize == Configuration.SCREENLAYOUT_SIZE_LARGE) {
-                sIsSmallTablet = true;
-            }
-            if (Build.VERSION.SDK_INT >= 16) {
-                if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEVISION)) {
-                    sIsTelevision = true;
-                }
+        if (screenLayoutSize == Configuration.SCREENLAYOUT_SIZE_XLARGE) {
+            sIsLargeTablet = true;
+        } else if (screenLayoutSize == Configuration.SCREENLAYOUT_SIZE_LARGE) {
+            sIsSmallTablet = true;
+        }
+        if (Build.VERSION.SDK_INT >= 16) {
+            if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEVISION)) {
+                sIsTelevision = true;
             }
         }
 
