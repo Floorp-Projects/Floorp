@@ -2301,14 +2301,6 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
   if (nativeWidgetRect.IsEmpty())
     return NS_OK; // Don't attempt to draw invisible widgets.
 
-  // Bug 1059031 -
-  // Quartz theme drawing often adjusts drawing rects, so make
-  // sure our surface is big enough for that.
-  // For example, DrawCellWithSnapping snaps the drawing rect, and that can
-  // result in us drawing outside of what we thought the bounds were.
-  // The 5 is just a guess of how much margin we need to handle that.
-  nativeDirtyRect.Inflate(5);
-
   AutoRestoreTransform autoRestoreTransform(&aDrawTarget);
 
   bool hidpi = IsHiDPIContext(aFrame->PresContext()->DeviceContext());
