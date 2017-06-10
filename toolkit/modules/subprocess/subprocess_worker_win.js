@@ -380,14 +380,20 @@ class Process extends BaseProcess {
         srcHandle = libc.GetStdHandle(win32.STD_ERROR_HANDLE);
       }
 
-      let handle = win32.HANDLE();
+      // If we don't have a valid stderr handle, just pass it along without duplicating.
+      if (String(srcHandle) == win32.INVALID_HANDLE_VALUE ||
+          String(srcHandle) == win32.NULL_HANDLE_VALUE) {
+        their_pipes[2] = srcHandle;
+      } else {
+        let handle = win32.HANDLE();
 
-      let curProc = libc.GetCurrentProcess();
-      let ok = libc.DuplicateHandle(curProc, srcHandle, curProc, handle.address(),
-                                    0, true /* inheritable */,
-                                    win32.DUPLICATE_SAME_ACCESS);
+        let curProc = libc.GetCurrentProcess();
+        let ok = libc.DuplicateHandle(curProc, srcHandle, curProc, handle.address(),
+                                      0, true /* inheritable */,
+                                      win32.DUPLICATE_SAME_ACCESS);
 
-      their_pipes[2] = ok && win32.Handle(handle);
+        their_pipes[2] = ok && win32.Handle(handle);
+      }
     }
 
     if (!their_pipes.every(handle => handle)) {
@@ -502,7 +508,10 @@ class Process extends BaseProcess {
       procInfo.address());
 
     for (let handle of new Set(handles)) {
-      handle.dispose();
+      // If any of our handles are invalid, they don't have finalizers.
+      if (handle && handle.dispose) {
+        handle.dispose();
+      }
     }
 
     if (threadAttrs) {

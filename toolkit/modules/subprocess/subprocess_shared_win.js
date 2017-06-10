@@ -69,6 +69,9 @@ Object.assign(win32, {
 });
 
 Object.assign(win32, {
+  INVALID_HANDLE_VALUE: ctypes.cast(ctypes.int64_t(-1), win32.HANDLE),
+  NULL_HANDLE_VALUE: ctypes.cast(ctypes.uintptr_t(0), win32.HANDLE),
+
   CREATE_SUSPENDED: 0x00000004,
   CREATE_NEW_CONSOLE: 0x00000010,
   CREATE_UNICODE_ENVIRONMENT: 0x00000400,
