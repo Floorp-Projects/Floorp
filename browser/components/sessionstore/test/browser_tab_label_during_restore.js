@@ -16,7 +16,7 @@ add_task(async function() {
   });
 
   const BACKUP_STATE = SessionStore.getBrowserState();
-  const TEST_URL = "http://example.com/";
+  const TEST_URL = "http://www.example.com/";
   const ABOUT_ROBOTS_URI = "about:robots";
   const ABOUT_ROBOTS_TITLE = "Gort! Klaatu barada nikto!";
 
@@ -65,7 +65,7 @@ add_task(async function() {
   // about: pages' initial tab titles were blank until the page title was known.
   is(secondTab.label, ABOUT_ROBOTS_URI, "second tab displays URI as its initial title");
   ok(thirdTab.hasAttribute("pending"), "third tab is pending");
-  is(thirdTab.label, TEST_URL, "third tab displays URI as its initial title");
+  is(thirdTab.label, "example.com", "third tab displays hostname without www as its initial title");
 
   info("selecting the second tab");
   let checkLabelChangeCount = observeLabelChanges(secondTab);
