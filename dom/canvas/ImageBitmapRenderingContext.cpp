@@ -200,10 +200,9 @@ ImageBitmapRenderingContext::GetSurfaceSnapshot(gfxAlphaType* const aOutAlphaTyp
   return surface.forget();
 }
 
-NS_IMETHODIMP
+void
 ImageBitmapRenderingContext::SetIsOpaque(bool aIsOpaque)
 {
-  return NS_OK;
 }
 
 bool

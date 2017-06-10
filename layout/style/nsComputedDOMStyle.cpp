@@ -2476,19 +2476,19 @@ nsComputedDOMStyle::DoGetImageLayerRepeat(const nsStyleImageLayers& aLayers)
     RefPtr<nsDOMCSSValueList> itemList = GetROCSSValueList(false);
     RefPtr<nsROCSSPrimitiveValue> valX = new nsROCSSPrimitiveValue;
 
-    const uint8_t& xRepeat = aLayers.mLayers[i].mRepeat.mXRepeat;
-    const uint8_t& yRepeat = aLayers.mLayers[i].mRepeat.mYRepeat;
+    const StyleImageLayerRepeat xRepeat = aLayers.mLayers[i].mRepeat.mXRepeat;
+    const StyleImageLayerRepeat yRepeat = aLayers.mLayers[i].mRepeat.mYRepeat;
 
     bool hasContraction = true;
     unsigned contraction;
     if (xRepeat == yRepeat) {
-      contraction = xRepeat;
-    } else if (xRepeat == NS_STYLE_IMAGELAYER_REPEAT_REPEAT &&
-               yRepeat == NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT) {
-      contraction = NS_STYLE_IMAGELAYER_REPEAT_REPEAT_X;
-    } else if (xRepeat == NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT &&
-               yRepeat == NS_STYLE_IMAGELAYER_REPEAT_REPEAT) {
-      contraction = NS_STYLE_IMAGELAYER_REPEAT_REPEAT_Y;
+      contraction = uint8_t(xRepeat);
+    } else if (xRepeat == StyleImageLayerRepeat::Repeat &&
+               yRepeat == StyleImageLayerRepeat::NoRepeat) {
+      contraction = uint8_t(StyleImageLayerRepeat::RepeatX);
+    } else if (xRepeat == StyleImageLayerRepeat::NoRepeat &&
+               yRepeat == StyleImageLayerRepeat::Repeat) {
+      contraction = uint8_t(StyleImageLayerRepeat::RepeatY);
     } else {
       hasContraction = false;
     }

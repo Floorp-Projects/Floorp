@@ -2466,10 +2466,10 @@ nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
 
   // We can skip painting the background color if a background image is opaque.
   nsStyleImageLayers::Repeat repeat = bg->BottomLayer().mRepeat;
-  bool xFullRepeat = repeat.mXRepeat == NS_STYLE_IMAGELAYER_REPEAT_REPEAT ||
-                     repeat.mXRepeat == NS_STYLE_IMAGELAYER_REPEAT_ROUND;
-  bool yFullRepeat = repeat.mYRepeat == NS_STYLE_IMAGELAYER_REPEAT_REPEAT ||
-                     repeat.mYRepeat == NS_STYLE_IMAGELAYER_REPEAT_ROUND;
+  bool xFullRepeat = repeat.mXRepeat == StyleImageLayerRepeat::Repeat ||
+                     repeat.mXRepeat == StyleImageLayerRepeat::Round;
+  bool yFullRepeat = repeat.mYRepeat == StyleImageLayerRepeat::Repeat ||
+                     repeat.mYRepeat == StyleImageLayerRepeat::Round;
   if (aDrawBackgroundColor &&
       xFullRepeat && yFullRepeat &&
       bg->BottomLayer().mImage.IsOpaque() &&
@@ -2967,7 +2967,8 @@ static nsSize
 ComputeDrawnSizeForBackground(const CSSSizeOrRatio& aIntrinsicSize,
                               const nsSize& aBgPositioningArea,
                               const nsStyleImageLayers::Size& aLayerSize,
-                              uint8_t aXRepeat, uint8_t aYRepeat)
+                              StyleImageLayerRepeat aXRepeat,
+                              StyleImageLayerRepeat aYRepeat)
 {
   nsSize imageSize;
 
@@ -3005,12 +3006,12 @@ ComputeDrawnSizeForBackground(const CSSSizeOrRatio& aIntrinsicSize,
   // "If 'background-repeat' is 'round' for one dimension only and if 'background-size'
   //  is 'auto' for the other dimension, then there is a third step: that other dimension
   //  is scaled so that the original aspect ratio is restored."
-  bool isRepeatRoundInBothDimensions = aXRepeat == NS_STYLE_IMAGELAYER_REPEAT_ROUND &&
-                                       aYRepeat == NS_STYLE_IMAGELAYER_REPEAT_ROUND;
+  bool isRepeatRoundInBothDimensions = aXRepeat == StyleImageLayerRepeat::Round  &&
+                                       aYRepeat == StyleImageLayerRepeat::Round;
 
   // Calculate the rounded size only if the background-size computation
   // returned a correct size for the image.
-  if (imageSize.width && aXRepeat == NS_STYLE_IMAGELAYER_REPEAT_ROUND) {
+  if (imageSize.width && aXRepeat == StyleImageLayerRepeat::Round) {
     imageSize.width =
       nsCSSRendering::ComputeRoundedSize(imageSize.width,
                                          aBgPositioningArea.width);
@@ -3026,7 +3027,7 @@ ComputeDrawnSizeForBackground(const CSSSizeOrRatio& aIntrinsicSize,
 
   // Calculate the rounded size only if the background-size computation
   // returned a correct size for the image.
-  if (imageSize.height && aYRepeat == NS_STYLE_IMAGELAYER_REPEAT_ROUND) {
+  if (imageSize.height && aYRepeat == StyleImageLayerRepeat::Round) {
     imageSize.height =
       nsCSSRendering::ComputeRoundedSize(imageSize.height,
                                          aBgPositioningArea.height);
@@ -3186,8 +3187,8 @@ nsCSSRendering::PrepareImageLayer(nsPresContext* aPresContext,
     bgClipRect = positionArea + aBorderArea.TopLeft();
   }
 
-  int repeatX = aLayer.mRepeat.mXRepeat;
-  int repeatY = aLayer.mRepeat.mYRepeat;
+  StyleImageLayerRepeat repeatX = aLayer.mRepeat.mXRepeat;
+  StyleImageLayerRepeat repeatY = aLayer.mRepeat.mYRepeat;
 
   // Scale the image as specified for background-size and background-repeat.
   // Also as required for proper background positioning when background-position
@@ -3218,7 +3219,7 @@ nsCSSRendering::PrepareImageLayer(nsPresContext* aPresContext,
                                             bgPositionSize, imageSize,
                                             &imageTopLeft, &state.mAnchor);
   state.mRepeatSize = imageSize;
-  if (repeatX == NS_STYLE_IMAGELAYER_REPEAT_SPACE) {
+  if (repeatX == StyleImageLayerRepeat::Space) {
     bool isRepeat;
     state.mRepeatSize.width = ComputeSpacedRepeatSize(imageSize.width,
                                                       bgPositionSize.width,
@@ -3227,11 +3228,11 @@ nsCSSRendering::PrepareImageLayer(nsPresContext* aPresContext,
       imageTopLeft.x = 0;
       state.mAnchor.x = 0;
     } else {
-      repeatX = NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT;
+      repeatX = StyleImageLayerRepeat::NoRepeat;
     }
   }
 
-  if (repeatY == NS_STYLE_IMAGELAYER_REPEAT_SPACE) {
+  if (repeatY == StyleImageLayerRepeat::Space) {
     bool isRepeat;
     state.mRepeatSize.height = ComputeSpacedRepeatSize(imageSize.height,
                                                        bgPositionSize.height,
@@ -3240,7 +3241,7 @@ nsCSSRendering::PrepareImageLayer(nsPresContext* aPresContext,
       imageTopLeft.y = 0;
       state.mAnchor.y = 0;
     } else {
-      repeatY = NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT;
+      repeatY = StyleImageLayerRepeat::NoRepeat;
     }
   }
 
@@ -3250,16 +3251,16 @@ nsCSSRendering::PrepareImageLayer(nsPresContext* aPresContext,
   state.mFillArea = state.mDestArea;
 
   ExtendMode repeatMode = ExtendMode::CLAMP;
-  if (repeatX == NS_STYLE_IMAGELAYER_REPEAT_REPEAT ||
-      repeatX == NS_STYLE_IMAGELAYER_REPEAT_ROUND ||
-      repeatX == NS_STYLE_IMAGELAYER_REPEAT_SPACE) {
+  if (repeatX == StyleImageLayerRepeat::Repeat ||
+      repeatX == StyleImageLayerRepeat::Round ||
+      repeatX == StyleImageLayerRepeat::Space) {
     state.mFillArea.x = bgClipRect.x;
     state.mFillArea.width = bgClipRect.width;
     repeatMode = ExtendMode::REPEAT_X;
   }
-  if (repeatY == NS_STYLE_IMAGELAYER_REPEAT_REPEAT ||
-      repeatY == NS_STYLE_IMAGELAYER_REPEAT_ROUND ||
-      repeatY == NS_STYLE_IMAGELAYER_REPEAT_SPACE) {
+  if (repeatY == StyleImageLayerRepeat::Repeat ||
+      repeatY == StyleImageLayerRepeat::Round ||
+      repeatY == StyleImageLayerRepeat::Space) {
     state.mFillArea.y = bgClipRect.y;
     state.mFillArea.height = bgClipRect.height;
 

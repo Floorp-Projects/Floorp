@@ -1434,6 +1434,7 @@ PuppetWidget::HasPendingInputEvent()
           case mozilla::dom::PBrowser::Msg_UpdateDimensions__ID:
           case mozilla::dom::PBrowser::Msg_MouseEvent__ID:
           case mozilla::dom::PBrowser::Msg_KeyEvent__ID:
+          case mozilla::dom::PBrowser::Msg_SetDocShellIsActive__ID:
             ret = true;
             return false;  // Stop peeking.
         }

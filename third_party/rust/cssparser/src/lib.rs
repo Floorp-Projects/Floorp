@@ -89,7 +89,7 @@ pub use from_bytes::{stylesheet_encoding, EncodingSupport};
 pub use color::{RGBA, Color, parse_color_keyword};
 pub use nth::parse_nth;
 pub use serializer::{ToCss, CssStringWriter, serialize_identifier, serialize_string, TokenSerializationType};
-pub use parser::{Parser, Delimiter, Delimiters, SourcePosition};
+pub use parser::{Parser, Delimiter, Delimiters, SourcePosition, ParseError, BasicParseError, ParserInput};
 pub use unicode_range::UnicodeRange;
 
 // For macros

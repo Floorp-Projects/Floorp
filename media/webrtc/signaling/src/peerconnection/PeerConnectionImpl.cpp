@@ -309,8 +309,6 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
   , mForceIceTcp(false)
   , mMedia(nullptr)
   , mUuidGen(MakeUnique<PCUuidGenerator>())
-  , mNumAudioStreams(0)
-  , mNumVideoStreams(0)
   , mHaveConfiguredCodecs(false)
   , mHaveDataStream(false)
   , mAddCandidateErrorCount(0)
@@ -2340,7 +2338,6 @@ PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
     if (NS_FAILED(res)) {
       return res;
     }
-    mNumAudioStreams++;
   }
 
   if (aTrack.AsVideoStreamTrack()) {
@@ -2354,7 +2351,6 @@ PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
     if (NS_FAILED(res)) {
       return res;
     }
-    mNumVideoStreams++;
   }
   OnNegotiationNeeded();
   return NS_OK;

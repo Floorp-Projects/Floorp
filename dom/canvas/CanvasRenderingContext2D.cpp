@@ -2026,15 +2026,13 @@ CanvasRenderingContext2D::InitializeWithDrawTarget(nsIDocShell* aShell,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 CanvasRenderingContext2D::SetIsOpaque(bool aIsOpaque)
 {
   if (aIsOpaque != mOpaque) {
     mOpaque = aIsOpaque;
     ClearTarget();
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP

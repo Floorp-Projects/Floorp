@@ -513,6 +513,8 @@ nsProtocolProxyService::~nsProtocolProxyService()
 nsresult
 nsProtocolProxyService::Init()
 {
+    NS_NewNamedThread("SysProxySetting", getter_AddRefs(mProxySettingThread));
+
     // failure to access prefs is non-fatal
     nsCOMPtr<nsIPrefBranch> prefBranch =
             do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -531,8 +533,6 @@ nsProtocolProxyService::Init()
         obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
         obs->AddObserver(this, NS_NETWORK_LINK_TOPIC, false);
     }
-
-    NS_NewNamedThread("SysProxySetting", getter_AddRefs(mProxySettingThread));
 
     return NS_OK;
 }
@@ -590,10 +590,6 @@ nsProtocolProxyService::AsyncConfigureFromPAC(bool aForceReload,
 {
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (NS_WARN_IF(!mProxySettingThread)) {
-        return NS_ERROR_NOT_INITIALIZED;
-    }
-
     bool mainThreadOnly;
     nsresult rv = mSystemProxySettings->GetMainThreadOnly(&mainThreadOnly);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -610,6 +606,10 @@ nsProtocolProxyService::AsyncConfigureFromPAC(bool aForceReload,
 
     if (mainThreadOnly) {
         return req->Run();
+    }
+
+    if (NS_WARN_IF(!mProxySettingThread)) {
+        return NS_ERROR_NOT_INITIALIZED;
     }
     return mProxySettingThread->Dispatch(req, nsIEventTarget::DISPATCH_NORMAL);
 }
