@@ -580,8 +580,7 @@ public class testBrowserProvider extends ContentProviderTest {
                 mAsserter.is(id, -1L,
                              "Should not be able to insert bookmark with null type");
 
-                if (Build.VERSION.SDK_INT >= 8 &&
-                    Build.VERSION.SDK_INT < 16) {
+                if (Build.VERSION.SDK_INT < 16) {
                     b = createOneBookmark();
                     b.put(BrowserContract.Bookmarks.PARENT, -1);
                     id = -1;
@@ -708,8 +707,7 @@ public class testBrowserProvider extends ContentProviderTest {
                          "Inserted bookmark can't be found after deletion using URI with ID");
             c.close();
 
-            if (Build.VERSION.SDK_INT >= 8 &&
-                Build.VERSION.SDK_INT < 16) {
+            if (Build.VERSION.SDK_INT < 16) {
                 ContentValues b = createBookmark("Folder", null, mMobileFolderId,
                         BrowserContract.Bookmarks.TYPE_FOLDER, 0, "folderTags", "folderDescription", "folderKeyword");
 
