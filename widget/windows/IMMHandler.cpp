@@ -344,7 +344,7 @@ IMMHandler::InitKeyboardLayout(nsWindow* aWindow,
     // Add room for the terminating null character
     sIMEName.SetLength(++IMENameLength);
     IMENameLength =
-      ::ImmGetDescriptionW(aKeyboardLayout, wwc(sIMEName.BeginWriting()),
+      ::ImmGetDescriptionW(aKeyboardLayout, sIMEName.get(),
                            IMENameLength);
     // Adjust the length to ignore the terminating null character
     sIMEName.SetLength(IMENameLength);
