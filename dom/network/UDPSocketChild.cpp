@@ -165,7 +165,8 @@ UDPSocketChild::Bind(nsIUDPSocketInternal* aSocket,
                      bool aAddressReuse,
                      bool aLoopback,
                      uint32_t recvBufferSize,
-                     uint32_t sendBufferSize)
+                     uint32_t sendBufferSize,
+                     nsIEventTarget* aMainThreadEventTarget)
 {
   UDPSOCKET_LOG(("%s: %s:%u", __FUNCTION__, PromiseFlatCString(aHost).get(), aPort));
 
@@ -180,6 +181,9 @@ UDPSocketChild::Bind(nsIUDPSocketInternal* aSocket,
     MOZ_ASSERT(!aPrincipal);
     mBackgroundManager->SendPUDPSocketConstructor(this, void_t(), mFilterName);
   } else {
+    if (aMainThreadEventTarget) {
+      gNeckoChild->SetEventTargetForActor(this, aMainThreadEventTarget);
+    }
     gNeckoChild->SendPUDPSocketConstructor(this, IPC::Principal(aPrincipal),
                                            mFilterName);
   }
