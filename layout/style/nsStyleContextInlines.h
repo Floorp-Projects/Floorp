@@ -23,4 +23,12 @@ using namespace mozilla;
 
 MOZ_DEFINE_STYLO_METHODS(nsStyleContext, GeckoStyleContext, ServoStyleContext);
 
+nsRuleNode*
+nsStyleContext::RuleNode()
+{
+    MOZ_RELEASE_ASSERT(IsGecko());
+    return AsGecko()->RuleNode();
+}
+
+
 #endif // nsStyleContextInlines_h

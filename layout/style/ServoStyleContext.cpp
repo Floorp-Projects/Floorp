@@ -18,8 +18,8 @@ ServoStyleContext::ServoStyleContext(nsStyleContext* aParent,
                                nsIAtom* aPseudoTag,
                                CSSPseudoElementType aPseudoType,
                                already_AddRefed<ServoComputedValues> aComputedValues)
-  : nsStyleContext(aParent, OwningStyleContextSource(Move(aComputedValues)),
-                   aPseudoTag, aPseudoType)
+  : nsStyleContext(aParent, aPseudoTag, aPseudoType),
+  mSource(Move(aComputedValues))
 {
   mPresContext = aPresContext;
 

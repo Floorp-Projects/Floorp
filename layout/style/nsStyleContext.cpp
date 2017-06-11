@@ -82,12 +82,10 @@ static bool sExpensiveStyleStructAssertionsEnabled;
 #endif
 
 nsStyleContext::nsStyleContext(nsStyleContext* aParent,
-                               OwningStyleContextSource&& aSource,
                                nsIAtom* aPseudoTag,
                                CSSPseudoElementType aPseudoType)
   : mParent(aParent)
   , mPseudoTag(aPseudoTag)
-  , mSource(Move(aSource))
   , mCachedResetData(nullptr)
   , mBits(((uint64_t)aPseudoType) << NS_STYLE_CONTEXT_TYPE_SHIFT)
   , mRefCnt(0)
@@ -106,7 +104,7 @@ nsStyleContext::FinishConstruction()
                  static_cast<CSSPseudoElementTypeBase>(
                    CSSPseudoElementType::MAX),
                 "pseudo element bits no longer fit in a uint64_t");
-  MOZ_ASSERT(!mSource.IsNull());
+  MOZ_ASSERT(!StyleSource().IsNull());
 
 #ifdef DEBUG
   static_assert(MOZ_ARRAY_LENGTH(nsStyleContext::sDependencyTable)
@@ -126,15 +124,16 @@ nsStyleContext::FinishConstruction()
   #undef eStyleStruct_LastItem
 }
 
-nsStyleContext::~nsStyleContext()
+void
+nsStyleContext::Destructor()
 {
   if (const GeckoStyleContext* gecko = GetAsGecko()) {
     NS_ASSERTION(gecko->HasNoChildren(), "destructing context with children");
   }
-  MOZ_ASSERT(!mSource.IsServoComputedValues() || !mCachedResetData);
+  MOZ_ASSERT(!IsServo() || !mCachedResetData);
 
 #ifdef DEBUG
-  if (mSource.IsServoComputedValues()) {
+  if (IsServo()) {
     MOZ_ASSERT(!mCachedResetData,
                "Servo shouldn't cache reset structs in nsStyleContext");
     for (const auto* data : mCachedInheritedData.mStyleStructs) {
@@ -163,7 +162,7 @@ nsStyleContext::~nsStyleContext()
   nsPresContext *presContext = PresContext();
   DebugOnly<nsStyleSet*> geckoStyleSet = presContext->PresShell()->StyleSet()->GetAsGecko();
   NS_ASSERTION(!geckoStyleSet ||
-               geckoStyleSet->GetRuleTree() == mSource.AsGeckoRuleNode()->RuleTree() ||
+               geckoStyleSet->GetRuleTree() == AsGecko()->RuleNode()->RuleTree() ||
                geckoStyleSet->IsInRuleTreeReconstruct(),
                "destroying style context from old rule tree too late");
 
@@ -326,8 +325,8 @@ const void* nsStyleContext::StyleData(nsStyleStructID aSID)
     return cachedData; // We have computed data stored on this node in the context tree.
   // Our style source will take care of it for us.
   const void* newData;
-  if (mSource.IsGeckoRuleNode()) {
-    newData = mSource.AsGeckoRuleNode()->GetStyleData(aSID, this, true);
+  if (IsGecko()) {
+    newData = AsGecko()->RuleNode()->GetStyleData(aSID, this, true);
     if (!nsCachedStyleData::IsReset(aSID)) {
       // always cache inherited data on the style context; the rule
       // node set the bit in mBits for us if needed.
@@ -370,7 +369,7 @@ const void* nsStyleContext::StyleData(nsStyleStructID aSID)
 void
 nsStyleContext::SetStyle(nsStyleStructID aSID, void* aStruct)
 {
-  MOZ_ASSERT(!mSource.IsServoComputedValues(),
+  MOZ_ASSERT(!IsServo(),
              "Servo shouldn't cache style structs in the style context!");
   // This method should only be called from nsRuleNode!  It is not a public
   // method!
@@ -443,7 +442,7 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
   // structs, not just those that are returned from PeekStyleData, although
   // if PeekStyleData does return null we still don't want to accumulate
   // any change hints for those structs.
-  bool checkUnrequestedServoStructs = mSource.IsServoComputedValues();
+  bool checkUnrequestedServoStructs = IsServo();
 
 #define EXPAND(...) __VA_ARGS__
 #define DO_STRUCT_DIFFERENCE_WITH_ARGS(struct_, extra_args_)                  \
@@ -455,7 +454,7 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
       structsFound |= NS_STYLE_INHERIT_BIT(struct_);                          \
     } else if (checkUnrequestedServoStructs) {                                \
       this##struct_ =                                                         \
-        Servo_GetStyle##struct_(mSource.AsServoComputedValues());             \
+        Servo_GetStyle##struct_(AsServo()->ComputedValues());                 \
       unrequestedStruct = true;                                               \
     } else {                                                                  \
       unrequestedStruct = false;                                              \
@@ -708,7 +707,7 @@ nsStyleContext::EnsureSameStructsCached(nsStyleContext* aOldContext)
 #undef STYLE_STRUCT
 
 #ifdef DEBUG
-  if (mSource.IsServoComputedValues()) {
+  if (IsServo()) {
     auto oldMask = aOldContext->mBits & NS_STYLE_INHERIT_MASK;
     auto newMask = mBits & NS_STYLE_INHERIT_MASK;
     MOZ_ASSERT((oldMask & newMask) == oldMask,
@@ -736,12 +735,11 @@ void nsStyleContext::List(FILE* out, int32_t aIndent, bool aListDescendants)
     str.Append(' ');
   }
 
-  if (mSource.IsServoComputedValues()) {
+  if (IsServo()) {
     fprintf_stderr(out, "%s{ServoComputedValues}\n", str.get());
-  } else if (mSource.IsGeckoRuleNode()) {
+  } else if (nsRuleNode* ruleNode = AsGecko()->RuleNode()) {
     fprintf_stderr(out, "%s{\n", str.get());
     str.Truncate();
-    nsRuleNode* ruleNode = mSource.AsGeckoRuleNode();
     while (ruleNode) {
       nsIStyleRule *styleRule = ruleNode->GetRule();
       if (styleRule) {
@@ -765,6 +763,30 @@ void nsStyleContext::List(FILE* out, int32_t aIndent, bool aListDescendants)
   }
 }
 #endif
+
+NonOwningStyleContextSource
+nsStyleContext::StyleSource() const
+{
+  MOZ_STYLO_FORWARD(StyleSource, ())
+}
+
+#define STYLE_STRUCT(name_, checkdata_cb_)                      \
+const nsStyle##name_ *                                          \
+nsStyleContext::Style##name_() {                                \
+  return DoGetStyle##name_<true>();                             \
+}                                                               \
+const nsStyle##name_ *                                          \
+nsStyleContext::ThreadsafeStyle##name_() {                      \
+  if (mozilla::ServoStyleSet::IsInServoTraversal()) {           \
+    return Servo_GetStyle##name_(AsServo()->ComputedValues());  \
+  }                                                             \
+  return Style##name_();                                        \
+}                                                               \
+const nsStyle##name_ * nsStyleContext::PeekStyle##name_() {     \
+  return DoGetStyle##name_<false>();                            \
+}
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
 
 // Overridden to prevent the global delete from being called, since the memory
 // came out of an nsIArena instead of the global delete operator's heap.
