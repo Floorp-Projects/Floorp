@@ -72,7 +72,7 @@ public:
   // These two methods are for use by ArenaRefPtr.
   static mozilla::ArenaObjectID ArenaObjectID()
   {
-    return mozilla::eArenaObjectID_nsStyleContext;
+    return mozilla::eArenaObjectID_GeckoStyleContext;
   }
   nsIPresShell* Arena();
 

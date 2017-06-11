@@ -13,7 +13,7 @@
 #include "nsDebug.h"
 #include "nsArenaMemoryStats.h"
 #include "nsPrintfCString.h"
-#include "nsStyleContext.h"
+#include "GeckoStyleContext.h"
 #include "FrameLayerBuilder.h"
 #include "mozilla/ArrayUtils.h"
 
@@ -208,7 +208,7 @@ nsPresArena::AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
       case eArenaObjectID_nsRuleNode:
         p = &aArenaStats->mRuleNodes;
         break;
-      case eArenaObjectID_nsStyleContext:
+      case eArenaObjectID_GeckoStyleContext:
         p = &aArenaStats->mStyleContexts;
         break;
 #define STYLE_STRUCT(name_, checkdata_cb_)      \
