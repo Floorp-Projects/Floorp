@@ -27,6 +27,18 @@ public:
 
   void AddChild(GeckoStyleContext* aChild);
   void RemoveChild(GeckoStyleContext* aChild);
+
+  void* GetUniqueStyleData(const nsStyleStructID& aSID);
+  void* CreateEmptyStyleData(const nsStyleStructID& aSID);
+
+
+  /**
+   * Sets the NS_STYLE_INELIGIBLE_FOR_SHARING bit on this style context
+   * and its descendants.  If it finds a descendant that has the bit
+   * already set, assumes that it can skip that subtree.
+   */
+  void SetIneligibleForSharing();
+  void LogChildStyleContextTree(uint32_t aStructs) const;
   /**
    * On each descendant of this style context, clears out any cached inherited
    * structs indicated in aStructs.
@@ -46,15 +58,20 @@ public:
                      bool aRelevantLinkVisited);
 
 #ifdef DEBUG
+  void AssertChildStructsNotUsedElsewhere(nsStyleContext* aDestroyingContext,
+                                          int32_t aLevels) const;
   void ListDescendants(FILE* out, int32_t aIndent);
 #endif
+
+  // Only called for Gecko-backed nsStyleContexts.
+  void ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup);
+
+  bool HasNoChildren() const;
 
 private:
   // Helper for ClearCachedInheritedStyleDataOnDescendants.
   void DoClearCachedInheritedStyleDataOnDescendants(uint32_t aStructs);
 
-
-public:
   // Children are kept in two circularly-linked lists.  The list anchor
   // is not part of the list (null for empty), and we point to the first
   // child.

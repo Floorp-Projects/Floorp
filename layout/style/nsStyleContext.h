@@ -447,14 +447,6 @@ public:
    */
   void SwapStyleData(nsStyleContext* aNewContext, uint32_t aStructs);
 
-
-  /**
-   * Sets the NS_STYLE_INELIGIBLE_FOR_SHARING bit on this style context
-   * and its descendants.  If it finds a descendant that has the bit
-   * already set, assumes that it can skip that subtree.
-   */
-  void SetIneligibleForSharing();
-
 #ifdef DEBUG
   void List(FILE* out, int32_t aIndent, bool aListDescendants = true);
   static const char* StructName(nsStyleStructID aSID);
@@ -508,13 +500,7 @@ public: // temporary
   void AddChild(nsStyleContext* aChild);
   void RemoveChild(nsStyleContext* aChild);
 
-  void* GetUniqueStyleData(const nsStyleStructID& aSID);
-  void* CreateEmptyStyleData(const nsStyleStructID& aSID);
-
   void SetStyleBits();
-
-  // Only called for Gecko-backed nsStyleContexts.
-  void ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup);
 
   const void* StyleStructFromServoComputedValues(nsStyleStructID aSID) {
     switch (aSID) {
