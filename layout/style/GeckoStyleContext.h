@@ -56,6 +56,28 @@ public:
                      nsRuleNode* aSourceIfVisited,
                      bool aRelevantLinkVisited);
 
+  // Tell this style context to cache aStruct as the struct for aSID
+  void SetStyle(nsStyleStructID aSID, void* aStruct);
+
+
+  /*
+   * Get the style data for a style struct.  This is the most important
+   * member function of nsStyleContext.  It fills in a const pointer
+   * to a style data struct that is appropriate for the style context's
+   * frame.  This struct may be shared with other contexts (either in
+   * the rule tree or the style context tree), so it should not be
+   * modified.
+   *
+   * This function will NOT return null (even when out of memory) when
+   * given a valid style struct ID, so the result does not need to be
+   * null-checked.
+   *
+   * The typesafe functions below are preferred to the use of this
+   * function, both because they're easier to read and because they're
+   * faster.
+   */
+  const void* NS_FASTCALL StyleData(nsStyleStructID aSID) MOZ_NONNULL_RETURN;
+
 #ifdef DEBUG
   void AssertChildStructsNotUsedElsewhere(nsStyleContext* aDestroyingContext,
                                           int32_t aLevels) const;

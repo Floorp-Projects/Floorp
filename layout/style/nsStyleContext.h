@@ -130,11 +130,7 @@ public:
 
   nsPresContext* PresContext() const;
 
-  nsStyleContext* GetParent() const {
-    MOZ_ASSERT(IsGecko(),
-               "This should be used only in Gecko-backed style system!");
-    return mParent;
-  }
+  mozilla::GeckoStyleContext* GetParent() const;
 
   nsStyleContext* GetParentAllowServo() const {
     return mParent;
@@ -266,9 +262,6 @@ public:
   bool IsShared() const
     { return !!(mBits & NS_STYLE_IS_SHARED); }
 
-  // Tell this style context to cache aStruct as the struct for aSID
-  void SetStyle(nsStyleStructID aSID, void* aStruct);
-
   /**
    * Returns whether this style context has cached style data for a
    * given style struct and it does NOT own that struct.  This can
@@ -282,24 +275,6 @@ public:
   inline nsRuleNode* RuleNode();
 
   void AddStyleBit(const uint64_t& aBit) { mBits |= aBit; }
-
-  /*
-   * Get the style data for a style struct.  This is the most important
-   * member function of nsStyleContext.  It fills in a const pointer
-   * to a style data struct that is appropriate for the style context's
-   * frame.  This struct may be shared with other contexts (either in
-   * the rule tree or the style context tree), so it should not be
-   * modified.
-   *
-   * This function will NOT return null (even when out of memory) when
-   * given a valid style struct ID, so the result does not need to be
-   * null-checked.
-   *
-   * The typesafe functions below are preferred to the use of this
-   * function, both because they're easier to read and because they're
-   * faster.
-   */
-  const void* NS_FASTCALL StyleData(nsStyleStructID aSID) MOZ_NONNULL_RETURN;
 
   /**
    * Define typesafe getter functions for each style struct by
@@ -554,7 +529,7 @@ protected:
         AUTO_CHECK_DEPENDENCY(eStyleStruct_##name_);                    \
         const nsStyle##name_ * newData =                                \
           StyleSource().AsGeckoRuleNode()->                             \
-            GetStyle##name_<aComputeData>(this, mBits);                 \
+            GetStyle##name_<aComputeData>(this->AsGecko(), mBits);      \
         /* always cache inherited data on the style context; the rule */\
         /* node set the bit in mBits for us if needed. */               \
         mCachedInheritedData.mStyleStructs[eStyleStruct_##name_] =      \
@@ -621,7 +596,7 @@ protected:
         /* Have the rulenode deal */                                    \
         AUTO_CHECK_DEPENDENCY(eStyleStruct_##name_);                    \
         return StyleSource().AsGeckoRuleNode()->                        \
-          GetStyle##name_<aComputeData>(this);                          \
+          GetStyle##name_<aComputeData>(this->AsGecko());               \
       }                                                                 \
       const bool needToCompute = !(mBits & NS_STYLE_INHERIT_BIT(name_));\
       if (!aComputeData && needToCompute) {                             \
