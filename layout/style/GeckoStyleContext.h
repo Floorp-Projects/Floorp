@@ -18,6 +18,8 @@ public:
                     CSSPseudoElementType aPseudoType,
                     already_AddRefed<nsRuleNode> aRuleNode,
                     bool aSkipParentDisplayBasedStyleFixup);
+
+  void* operator new(size_t sz, nsPresContext* aPresContext);
 };
 
 }

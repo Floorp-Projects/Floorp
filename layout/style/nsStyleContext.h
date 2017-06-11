@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/RestyleLogging.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/ServoUtils.h"
 #include "mozilla/StyleContextSource.h"
 #include "mozilla/StyleComplexColor.h"
 #include "nsCSSAnonBoxes.h"
@@ -21,6 +22,8 @@ class nsPresContext;
 
 namespace mozilla {
 enum class CSSPseudoElementType : uint8_t;
+class GeckoStyleContext;
+class ServoStyleContext;
 } // namespace mozilla
 
 extern "C" {
@@ -55,6 +58,15 @@ extern "C" {
 class nsStyleContext
 {
 public:
+#ifdef MOZ_STYLO
+  bool IsGecko() const { return !IsServo(); }
+  bool IsServo() const { return (mBits & NS_STYLE_CONTEXT_IS_GECKO) == 0; }
+#else
+  bool IsGecko() const { return true; }
+  bool IsServo() const { return false; }
+#endif
+  MOZ_DECL_STYLO_CONVERT_METHODS(mozilla::GeckoStyleContext, mozilla::ServoStyleContext);
+
   void Destroy();
 
   // These two methods are for use by ArenaRefPtr.
