@@ -382,7 +382,7 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
   // elements, though that is buggy right now even in non-stylo mode, see
   // bug 1251799.
   const bool recreateContext = oldStyleContext &&
-    oldStyleContext->StyleSource().AsServoComputedValues() != computedValues;
+    oldStyleContext->ComputedValues() != computedValues;
 
   RefPtr<nsStyleContext> newContext = nullptr;
   if (recreateContext) {

@@ -212,7 +212,7 @@ GeckoStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
   if (list) {
     GeckoStyleContext *child = list;
     do {
-      if (child->StyleSource() == aSource &&
+      if (child->RuleNode() == aSource &&
           child->mPseudoTag == aPseudoTag &&
           !child->IsStyleIfVisited() &&
           child->RelevantLinkVisited() == aRelevantLinkVisited) {

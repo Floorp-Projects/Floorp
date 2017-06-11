@@ -170,7 +170,7 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
     EffectCompositor::GetAnimationElementAndPseudoForFrame(aFrame);
   if (pseudoElement) {
     StyleBackendType backend =
-      aFrame->StyleContext()->StyleSource().IsServoComputedValues()
+      aFrame->StyleContext()->IsServo()
       ? StyleBackendType::Servo
       : StyleBackendType::Gecko;
     EffectCompositor::MaybeUpdateCascadeResults(backend,
