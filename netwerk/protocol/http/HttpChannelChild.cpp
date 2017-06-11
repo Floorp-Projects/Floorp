@@ -2715,8 +2715,20 @@ HttpChannelChild::OpenAlternativeOutputStream(const nsACString & aType, nsIOutpu
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  RefPtr<AltDataOutputStreamChild> stream =
-    static_cast<AltDataOutputStreamChild*>(gNeckoChild->SendPAltDataOutputStreamConstructor(nsCString(aType), this));
+  nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
+  MOZ_ASSERT(neckoTarget);
+
+  RefPtr<AltDataOutputStreamChild> stream = new AltDataOutputStreamChild();
+  stream->AddIPDLReference();
+
+  gNeckoChild->SetEventTargetForActor(stream, neckoTarget);
+
+  if (!gNeckoChild->SendPAltDataOutputStreamConstructor(stream,
+                                                        nsCString(aType),
+                                                        this)) {
+    return NS_ERROR_FAILURE;
+  }
+
   stream.forget(_retval);
   return NS_OK;
 }
