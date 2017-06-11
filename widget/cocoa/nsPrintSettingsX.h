@@ -40,6 +40,7 @@ public:
   virtual nsresult WritePageFormatToPrefs();
   virtual nsresult GetEffectivePageSize(double *aWidth,
       double *aHeight) override;
+  void GetFilePageSize(double *aWidth, double *aHeight);
 
   // In addition to setting the paper width and height, these
   // overrides set the adjusted width and height returned from
@@ -63,8 +64,6 @@ public:
 
   void SetInchesScale(float aWidthScale, float aHeightScale);
   void GetInchesScale(float *aWidthScale, float *aHeightScale);
-
-  NS_IMETHOD SetPaperSizeUnit(int16_t aPaperSizeUnit) override;
 
   NS_IMETHOD SetScaling(double aScaling) override;
   NS_IMETHOD SetToFileName(const char16_t * aToFileName) override;

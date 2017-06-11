@@ -60,23 +60,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 
-/***/ 223:
-/***/ function(module, exports) {
-
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = assert;
-	function assert(condition, message) {
-	  if (!condition) {
-	    throw new Error(`Assertion failure: ${message}`);
-	  }
-	}
-
-/***/ },
-
 /***/ 802:
 /***/ function(module, exports, __webpack_require__) {
 
@@ -5852,6 +5835,125 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 
+/***/ 900:
+/***/ function(module, exports, __webpack_require__) {
+
+	const networkRequest = __webpack_require__(901);
+	const workerUtils = __webpack_require__(902);
+
+	module.exports = {
+	  networkRequest,
+	  workerUtils
+	};
+
+/***/ },
+
+/***/ 901:
+/***/ function(module, exports) {
+
+	function networkRequest(url, opts) {
+	  return new Promise((resolve, reject) => {
+	    const req = new XMLHttpRequest();
+
+	    req.addEventListener("readystatechange", () => {
+	      if (req.readyState === XMLHttpRequest.DONE) {
+	        if (req.status === 200) {
+	          resolve({ content: req.responseText });
+	        } else {
+	          resolve(req.statusText);
+	        }
+	      }
+	    });
+
+	    // Not working yet.
+	    // if (!opts.loadFromCache) {
+	    //   req.channel.loadFlags = (
+	    //     Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE |
+	    //       Components.interfaces.nsIRequest.INHIBIT_CACHING |
+	    //       Components.interfaces.nsIRequest.LOAD_ANONYMOUS
+	    //   );
+	    // }
+
+	    req.open("GET", url);
+	    req.send();
+	  });
+	}
+
+	module.exports = networkRequest;
+
+/***/ },
+
+/***/ 902:
+/***/ function(module, exports) {
+
+	
+
+	function WorkerDispatcher() {
+	  this.msgId = 1;
+	  this.worker = null;
+	}
+
+	WorkerDispatcher.prototype = {
+	  start(url) {
+	    this.worker = new Worker(url);
+	    this.worker.onerror = () => {
+	      console.error(`Error in worker ${url}`);
+	    };
+	  },
+
+	  stop() {
+	    if (!this.worker) {
+	      return;
+	    }
+
+	    this.worker.terminate();
+	    this.worker = null;
+	  },
+
+	  task(method) {
+	    return (...args) => {
+	      return new Promise((resolve, reject) => {
+	        const id = this.msgId++;
+	        this.worker.postMessage({ id, method, args });
+
+	        const listener = ({ data: result }) => {
+	          if (result.id !== id) {
+	            return;
+	          }
+
+	          this.worker.removeEventListener("message", listener);
+	          if (result.error) {
+	            reject(result.error);
+	          } else {
+	            resolve(result.response);
+	          }
+	        };
+
+	        this.worker.addEventListener("message", listener);
+	      });
+	    };
+	  }
+	};
+
+	function workerHandler(publicInterface) {
+	  return function workerHandler(msg) {
+	    const { id, method, args } = msg.data;
+	    const response = publicInterface[method].apply(undefined, args);
+	    if (response instanceof Promise) {
+	      response.then(val => self.postMessage({ id, response: val }), err => self.postMessage({ id, error: err }));
+	    } else {
+	      self.postMessage({ id, response });
+	    }
+	  };
+	}
+
+	module.exports = {
+	  WorkerDispatcher,
+	  workerHandler
+	};
+
+/***/ },
+
 /***/ 964:
 /***/ function(module, exports, __webpack_require__) {
 
@@ -5861,30 +5963,27 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _prettyFast2 = _interopRequireDefault(_prettyFast);
 
-	var _assert = __webpack_require__(223);
-
-	var _assert2 = _interopRequireDefault(_assert);
+	var _devtoolsUtils = __webpack_require__(900);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var workerHandler = _devtoolsUtils.workerUtils.workerHandler;
+
 
 	function prettyPrint(_ref) {
 	  var url = _ref.url,
 	      indent = _ref.indent,
 	      source = _ref.source;
 
-	  try {
-	    var prettified = (0, _prettyFast2.default)(source, {
-	      url: url,
-	      indent: " ".repeat(indent)
-	    });
+	  var prettified = (0, _prettyFast2.default)(source, {
+	    url: url,
+	    indent: " ".repeat(indent)
+	  });
 
-	    return {
-	      code: prettified.code,
-	      mappings: prettified.map._mappings
-	    };
-	  } catch (e) {
-	    throw new Error(`${e.message}\n${e.stack}`);
-	  }
+	  return {
+	    code: prettified.code,
+	    mappings: invertMappings(prettified.map._mappings)
+	  };
 	}
 
 	function invertMappings(mappings) {
@@ -5907,29 +6006,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  });
 	}
 
-	self.onmessage = function (msg) {
-	  var _msg$data = msg.data,
-	      id = _msg$data.id,
-	      args = _msg$data.args;
-
-	  (0, _assert2.default)(msg.data.method === "prettyPrint", "Method must be `prettyPrint`");
-
-	  try {
-	    var _prettyPrint = prettyPrint(args[0]),
-	        code = _prettyPrint.code,
-	        mappings = _prettyPrint.mappings;
-
-	    self.postMessage({
-	      id,
-	      response: {
-	        code,
-	        mappings: invertMappings(mappings)
-	      }
-	    });
-	  } catch (e) {
-	    self.postMessage({ id, error: e });
-	  }
-	};
+	self.onmessage = workerHandler({ prettyPrint });
 
 /***/ }
 

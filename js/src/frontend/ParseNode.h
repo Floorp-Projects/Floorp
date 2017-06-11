@@ -16,7 +16,7 @@ namespace js {
 namespace frontend {
 
 class ParseContext;
-class FullParseHandlerBase;
+class FullParseHandler;
 class FunctionBox;
 class ObjectBox;
 
@@ -610,7 +610,7 @@ class ParseNode
      */
     static ParseNode*
     appendOrCreateList(ParseNodeKind kind, JSOp op, ParseNode* left, ParseNode* right,
-                       FullParseHandlerBase* handler, ParseContext* pc);
+                       FullParseHandler* handler, ParseContext* pc);
 
     inline PropertyName* name() const;
     inline JSAtom* atom() const;

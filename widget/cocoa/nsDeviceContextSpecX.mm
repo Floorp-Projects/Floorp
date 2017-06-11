@@ -70,10 +70,7 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIWidget *aWidget,
   bool toPrinter = !toFile && !aIsPrintPreview;
   if (!toPrinter) {
     double width, height;
-    settings->GetEffectivePageSize(&width, &height);
-    width /= TWIPS_PER_POINT_FLOAT;
-    height /= TWIPS_PER_POINT_FLOAT;
-
+    settings->GetFilePageSize(&width, &height);
     settings->SetCocoaPaperSize(width, height);
   }
 
