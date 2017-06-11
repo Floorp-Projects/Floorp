@@ -94,10 +94,6 @@ public:
 
   bool HasNoChildren() const;
 
-  NonOwningStyleContextSource StyleSource() const {
-    return NonOwningStyleContextSource(mRuleNode);
-  }
-
   nsRuleNode* RuleNode() const {
     MOZ_ASSERT(mRuleNode);
     return mRuleNode;
