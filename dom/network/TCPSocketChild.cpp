@@ -88,9 +88,12 @@ NS_IMETHODIMP_(MozExternalRefCountType) TCPSocketChild::Release(void)
   return refcnt;
 }
 
-TCPSocketChild::TCPSocketChild(const nsAString& aHost, const uint16_t& aPort)
+TCPSocketChild::TCPSocketChild(const nsAString& aHost,
+                               const uint16_t& aPort,
+                               nsIEventTarget* aTarget)
 : mHost(aHost)
 , mPort(aPort)
+, mIPCEventTarget(aTarget)
 {
 }
 
@@ -98,6 +101,10 @@ void
 TCPSocketChild::SendOpen(nsITCPSocketCallback* aSocket, bool aUseSSL, bool aUseArrayBuffers)
 {
   mSocket = aSocket;
+
+  if (mIPCEventTarget) {
+    gNeckoChild->SetEventTargetForActor(this, mIPCEventTarget);
+  }
 
   AddIPDLReference();
   gNeckoChild->SendPTCPSocketConstructor(this, mHost, mPort);
@@ -112,6 +119,11 @@ TCPSocketChild::SendWindowlessOpenBind(nsITCPSocketCallback* aSocket,
                                        bool aUseSSL, bool aReuseAddrPort)
 {
   mSocket = aSocket;
+
+  if (mIPCEventTarget) {
+    gNeckoChild->SetEventTargetForActor(this, mIPCEventTarget);
+  }
+
   AddIPDLReference();
   gNeckoChild->SendPTCPSocketConstructor(this,
                                          NS_ConvertUTF8toUTF16(aRemoteHost),
