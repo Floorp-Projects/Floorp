@@ -98,6 +98,10 @@ function getOpenTabsAndWinsCounts() {
   return { tabCount, winCount };
 }
 
+function getTabCount() {
+  return getOpenTabsAndWinsCounts().tabCount;
+}
+
 function getSearchEngineId(engine) {
   if (engine) {
     if (engine.identifier) {
@@ -634,5 +638,9 @@ let BrowserUsageTelemetry = {
       this._onTabOpen(counts.tabCount);
     };
     win.addEventListener("load", onLoad);
+  },
+
+  _recordTabCount(tabCount = getTabCount()) {
+    Services.telemetry.getHistogramById("TAB_COUNT").add(tabCount);
   },
 };
