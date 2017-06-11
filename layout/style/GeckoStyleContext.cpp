@@ -769,3 +769,48 @@ GeckoStyleContext::HasNoChildren() const
 {
   return (nullptr == mChild) && (nullptr == mEmptyChild);
 }
+
+void
+GeckoStyleContext::SetStyle(nsStyleStructID aSID, void* aStruct)
+{
+  // This method should only be called from nsRuleNode!  It is not a public
+  // method!
+
+  NS_ASSERTION(aSID >= 0 && aSID < nsStyleStructID_Length, "out of bounds");
+
+  // NOTE:  nsCachedStyleData::GetStyleData works roughly the same way.
+  // See the comments there (in nsRuleNode.h) for more details about
+  // what this is doing and why.
+
+  void** dataSlot;
+  if (nsCachedStyleData::IsReset(aSID)) {
+    if (!mCachedResetData) {
+      mCachedResetData = new (PresContext()) nsResetStyleData;
+    }
+    dataSlot = &mCachedResetData->mStyleStructs[aSID];
+  } else {
+    dataSlot = &mCachedInheritedData.mStyleStructs[aSID];
+  }
+  NS_ASSERTION(!*dataSlot || (mBits & nsCachedStyleData::GetBitForSID(aSID)),
+               "Going to leak style data");
+  *dataSlot = aStruct;
+}
+
+
+const void*
+GeckoStyleContext::StyleData(nsStyleStructID aSID)
+{
+  const void* cachedData = GetCachedStyleData(aSID);
+  if (cachedData)
+    return cachedData; // We have computed data stored on this node in the context tree.
+  // Our style source will take care of it for us.
+  const void* newData = AsGecko()->RuleNode()->GetStyleData(aSID, this->AsGecko(), true);
+  if (!nsCachedStyleData::IsReset(aSID)) {
+    // always cache inherited data on the style context; the rule
+    // node set the bit in mBits for us if needed.
+    mCachedInheritedData.mStyleStructs[aSID] = const_cast<void*>(newData);
+  }
+
+  return newData;
+}
+
