@@ -175,32 +175,21 @@ public:
   typedef RejectValueT RejectValueType;
   class ResolveOrRejectValue
   {
-    template <int, typename T>
-    struct Holder
-    {
-      template <typename... Args>
-      explicit Holder(Args&&... aArgs) : mData(Forward<Args>(aArgs)...) { }
-      T mData;
-    };
-
-    // Ensure Holder<0, T1> and Holder<1, T2> are different types
-    // which is required by Variant.
-    using ResolveValueHolder = Holder<0, ResolveValueType>;
-    using RejectValueHolder = Holder<1, RejectValueType>;
-
   public:
     template<typename ResolveValueType_>
     void SetResolve(ResolveValueType_&& aResolveValue)
     {
       MOZ_ASSERT(IsNothing());
-      mValue = AsVariant(ResolveValueHolder(Forward<ResolveValueType_>(aResolveValue)));
+      mValue = Storage(VariantIndex<ResolveIndex>{},
+                       Forward<ResolveValueType_>(aResolveValue));
     }
 
     template<typename RejectValueType_>
     void SetReject(RejectValueType_&& aRejectValue)
     {
       MOZ_ASSERT(IsNothing());
-      mValue = AsVariant(RejectValueHolder(Forward<RejectValueType_>(aRejectValue)));
+      mValue = Storage(VariantIndex<RejectIndex>{},
+                       Forward<RejectValueType_>(aRejectValue));
     }
 
     template<typename ResolveValueType_>
@@ -219,29 +208,31 @@ public:
       return val;
     }
 
-    bool IsResolve() const { return mValue.template is<ResolveValueHolder>(); }
-    bool IsReject() const { return mValue.template is<RejectValueHolder>(); }
-    bool IsNothing() const { return mValue.template is<Nothing>(); }
+    bool IsResolve() const { return mValue.template is<ResolveIndex>(); }
+    bool IsReject() const { return mValue.template is<RejectIndex>(); }
+    bool IsNothing() const { return mValue.template is<NothingIndex>(); }
 
     const ResolveValueType& ResolveValue() const
     {
-      return mValue.template as<ResolveValueHolder>().mData;
+      return mValue.template as<ResolveIndex>();
     }
     ResolveValueType& ResolveValue()
     {
-      return mValue.template as<ResolveValueHolder>().mData;
+      return mValue.template as<ResolveIndex>();
     }
     const RejectValueType& RejectValue() const
     {
-      return mValue.template as<RejectValueHolder>().mData;
+      return mValue.template as<RejectIndex>();
     }
     RejectValueType& RejectValue()
     {
-      return mValue.template as<RejectValueHolder>().mData;
+      return mValue.template as<RejectIndex>();
     }
 
   private:
-    Variant<Nothing, ResolveValueHolder, RejectValueHolder> mValue = AsVariant(Nothing{});
+    enum { NothingIndex, ResolveIndex, RejectIndex };
+    using Storage = Variant<Nothing, ResolveValueType, RejectValueType>;
+    Storage mValue = Storage(VariantIndex<NothingIndex>{});
   };
 
 protected:
