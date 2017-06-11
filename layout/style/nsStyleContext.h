@@ -154,19 +154,6 @@ public:
   bool IsPseudoElement() const { return mPseudoTag && !IsAnonBox(); }
 
 
-  // Find, if it already exists *and is easily findable* (i.e., near the
-  // start of the child list), a style context whose:
-  //  * GetPseudo() matches aPseudoTag
-  //  * mSource matches aSource
-  //  * !!GetStyleIfVisited() == !!aSourceIfVisited, and, if they're
-  //    non-null, GetStyleIfVisited()->mSource == aSourceIfVisited
-  //  * RelevantLinkVisited() == aRelevantLinkVisited
-  already_AddRefed<nsStyleContext>
-  FindChildWithRules(const nsIAtom* aPseudoTag,
-                     mozilla::NonOwningStyleContextSource aSource,
-                     mozilla::NonOwningStyleContextSource aSourceIfVisited,
-                     bool aRelevantLinkVisited);
-
   // Does this style context or any of its ancestors have text
   // decoration lines?
   // Differs from nsStyleTextReset::HasTextDecorationLines, which tests
@@ -460,11 +447,6 @@ public:
    */
   void SwapStyleData(nsStyleContext* aNewContext, uint32_t aStructs);
 
-  /**
-   * On each descendant of this style context, clears out any cached inherited
-   * structs indicated in aStructs.
-   */
-  void ClearCachedInheritedStyleDataOnDescendants(uint32_t aStructs);
 
   /**
    * Sets the NS_STYLE_INELIGIBLE_FOR_SHARING bit on this style context
@@ -509,7 +491,7 @@ public:
 
   mozilla::NonOwningStyleContextSource StyleSource() const { return mSource.AsRaw(); }
 
-protected:
+public: // temporary
   // Private destructor, to discourage deletion outside of Release():
   ~nsStyleContext();
 
@@ -522,6 +504,7 @@ protected:
   // Helper post-contruct hook.
   void FinishConstruction();
 
+  // Only does stuff in Gecko mode
   void AddChild(nsStyleContext* aChild);
   void RemoveChild(nsStyleContext* aChild);
 
@@ -681,9 +664,6 @@ protected:
   #undef STYLE_STRUCT_RESET
   #undef STYLE_STRUCT_INHERITED
 
-  // Helper for ClearCachedInheritedStyleDataOnDescendants.
-  void DoClearCachedInheritedStyleDataOnDescendants(uint32_t aStructs);
-
 #ifdef DEBUG
   void AssertStructsNotUsedElsewhere(nsStyleContext* aDestroyingContext,
                                      int32_t aLevels) const;
@@ -699,17 +679,6 @@ protected:
 #endif
 
   RefPtr<nsStyleContext> mParent;
-
-  // Children are kept in two circularly-linked lists.  The list anchor
-  // is not part of the list (null for empty), and we point to the first
-  // child.
-  // mEmptyChild for children whose rule node is the root rule node, and
-  // mChild for other children.  The order of children is not
-  // meaningful.
-  nsStyleContext* mChild;
-  nsStyleContext* mEmptyChild;
-  nsStyleContext* mPrevSibling;
-  nsStyleContext* mNextSibling;
 
   // Style to be used instead for the R, G, and B components of color,
   // background-color, and border-*-color if the nearest ancestor link

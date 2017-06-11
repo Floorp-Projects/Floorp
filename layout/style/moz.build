@@ -69,6 +69,7 @@ EXPORTS += [
     'nsStyleAutoArray.h',
     'nsStyleConsts.h',
     'nsStyleContext.h',
+    'nsStyleContextInlines.h',
     'nsStyleCoord.h',
     'nsStyleSet.h',
     'nsStyleStruct.h',

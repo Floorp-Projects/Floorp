@@ -6,8 +6,6 @@
 /* the interface (to internal code) for retrieving computed style data */
 
 #include "nsStyleContext.h"
-#include "nsStyleContextInlines.h"
-
 #include "CSSVariableImageTable.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
@@ -37,6 +35,7 @@
 #include "mozilla/StyleSetHandleInlines.h"
 #include "mozilla/GeckoStyleContext.h"
 #include "mozilla/ServoStyleContext.h"
+#include "nsStyleContextInlines.h"
 
 #include "mozilla/ReflowInput.h"
 #include "nsLayoutUtils.h"
@@ -87,8 +86,6 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
                                nsIAtom* aPseudoTag,
                                CSSPseudoElementType aPseudoType)
   : mParent(aParent)
-  , mChild(nullptr)
-  , mEmptyChild(nullptr)
   , mPseudoTag(aPseudoTag)
   , mSource(Move(aSource))
   , mCachedResetData(nullptr)
@@ -117,8 +114,6 @@ nsStyleContext::FinishConstruction()
                 "Number of items in dependency table doesn't match IDs");
 #endif
 
-  mNextSibling = this;
-  mPrevSibling = this;
   if (mParent) {
     mParent->AddChild(this);
   }
@@ -133,7 +128,10 @@ nsStyleContext::FinishConstruction()
 
 nsStyleContext::~nsStyleContext()
 {
-  NS_ASSERTION((nullptr == mChild) && (nullptr == mEmptyChild), "destructing context with children");
+  if (const GeckoStyleContext* gecko = GetAsGecko()) {
+    NS_ASSERTION((nullptr == gecko->mChild) && (nullptr == gecko->mEmptyChild),
+                 "destructing context with children");
+  }
   MOZ_ASSERT(!mSource.IsServoComputedValues() || !mCachedResetData);
 
 #ifdef DEBUG
@@ -255,66 +253,39 @@ nsStyleContext::AssertStructsNotUsedElsewhere(
     }
   }
 
-  if (mChild) {
-    const nsStyleContext* child = mChild;
-    do {
-      child->AssertStructsNotUsedElsewhere(aDestroyingContext, aLevels - 1);
-      child = child->mNextSibling;
-    } while (child != mChild);
-  }
+  if (const GeckoStyleContext* gecko = GetAsGecko()) {
+    if (gecko->mChild) {
+      const GeckoStyleContext* child = gecko->mChild;
+      do {
+        child->AssertStructsNotUsedElsewhere(aDestroyingContext, aLevels - 1);
+        child = child->mNextSibling;
+      } while (child != gecko->mChild);
+    }
 
-  if (mEmptyChild) {
-    const nsStyleContext* child = mEmptyChild;
-    do {
-      child->AssertStructsNotUsedElsewhere(aDestroyingContext, aLevels - 1);
-      child = child->mNextSibling;
-    } while (child != mEmptyChild);
+    if (gecko->mEmptyChild) {
+      const GeckoStyleContext* child = gecko->mEmptyChild;
+      do {
+        child->AssertStructsNotUsedElsewhere(aDestroyingContext, aLevels - 1);
+        child = child->mNextSibling;
+      } while (child != gecko->mEmptyChild);
+    }
   }
 }
 #endif
 
+
 void nsStyleContext::AddChild(nsStyleContext* aChild)
 {
-  NS_ASSERTION(aChild->mPrevSibling == aChild &&
-               aChild->mNextSibling == aChild,
-               "child already in a child list");
-
-  nsStyleContext **listPtr = aChild->mSource.MatchesNoRules() ? &mEmptyChild : &mChild;
-  // Explicitly dereference listPtr so that compiler doesn't have to know that mNextSibling
-  // etc. don't alias with what ever listPtr points at.
-  nsStyleContext *list = *listPtr;
-
-  // Insert at the beginning of the list.  See also FindChildWithRules.
-  if (list) {
-    // Link into existing elements, if there are any.
-    aChild->mNextSibling = list;
-    aChild->mPrevSibling = list->mPrevSibling;
-    list->mPrevSibling->mNextSibling = aChild;
-    list->mPrevSibling = aChild;
+  if (GeckoStyleContext* gecko = GetAsGecko()) {
+    gecko->AddChild(aChild->AsGecko());
   }
-  (*listPtr) = aChild;
 }
 
 void nsStyleContext::RemoveChild(nsStyleContext* aChild)
 {
-  NS_PRECONDITION(nullptr != aChild && this == aChild->mParent, "bad argument");
-
-  nsStyleContext **list = aChild->mSource.MatchesNoRules() ? &mEmptyChild : &mChild;
-
-  if (aChild->mPrevSibling != aChild) { // has siblings
-    if ((*list) == aChild) {
-      (*list) = (*list)->mNextSibling;
-    }
+  if (GeckoStyleContext* gecko = GetAsGecko()) {
+    gecko->RemoveChild(aChild->AsGecko());
   }
-  else {
-    NS_ASSERTION((*list) == aChild, "bad sibling pointers");
-    (*list) = nullptr;
-  }
-
-  aChild->mPrevSibling->mNextSibling = aChild->mNextSibling;
-  aChild->mNextSibling->mPrevSibling = aChild->mPrevSibling;
-  aChild->mNextSibling = aChild;
-  aChild->mPrevSibling = aChild;
 }
 
 void
@@ -361,56 +332,6 @@ nsStyleContext::MoveTo(nsStyleContext* aNewParent)
     mStyleIfVisited->mParent = aNewParent;
     mStyleIfVisited->mParent->AddChild(mStyleIfVisited);
   }
-}
-
-already_AddRefed<nsStyleContext>
-nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
-                                   NonOwningStyleContextSource aSource,
-                                   NonOwningStyleContextSource aSourceIfVisited,
-                                   bool aRelevantLinkVisited)
-{
-  uint32_t threshold = 10; // The # of siblings we're willing to examine
-                           // before just giving this whole thing up.
-
-  RefPtr<nsStyleContext> result;
-  nsStyleContext *list = aSource.MatchesNoRules() ? mEmptyChild : mChild;
-
-  if (list) {
-    nsStyleContext *child = list;
-    do {
-      if (child->mSource.AsRaw() == aSource &&
-          child->mPseudoTag == aPseudoTag &&
-          !child->IsStyleIfVisited() &&
-          child->RelevantLinkVisited() == aRelevantLinkVisited) {
-        bool match = false;
-        if (!aSourceIfVisited.IsNull()) {
-          match = child->GetStyleIfVisited() &&
-                  child->GetStyleIfVisited()->mSource.AsRaw() == aSourceIfVisited;
-        } else {
-          match = !child->GetStyleIfVisited();
-        }
-        if (match && !(child->mBits & NS_STYLE_INELIGIBLE_FOR_SHARING)) {
-          result = child;
-          break;
-        }
-      }
-      child = child->mNextSibling;
-      threshold--;
-      if (threshold == 0)
-        break;
-    } while (child != list);
-  }
-
-  if (result) {
-    if (result != list) {
-      // Move result to the front of the list.
-      RemoveChild(result);
-      AddChild(result);
-    }
-    result->mBits |= NS_STYLE_IS_SHARED;
-  }
-
-  return result.forget();
 }
 
 const void* nsStyleContext::StyleData(nsStyleStructID aSID)
@@ -476,7 +397,12 @@ nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
   // have kids depending on the data.  ClearStyleData would be OK, but
   // this test for no mChild or mEmptyChild doesn't catch that case.)
   const void *current = StyleData(aSID);
-  if (!mChild && !mEmptyChild &&
+  GeckoStyleContext *child = nullptr, *emptyChild = nullptr;
+  if (const GeckoStyleContext* gecko = GetAsGecko()) {
+    child = gecko->mChild;
+    emptyChild = gecko->mEmptyChild;
+  }
+  if (!child && !emptyChild &&
       !(mBits & nsCachedStyleData::GetBitForSID(aSID)) &&
       GetCachedStyleData(aSID))
     return const_cast<void*>(current);
@@ -515,8 +441,10 @@ nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
 void*
 nsStyleContext::CreateEmptyStyleData(const nsStyleStructID& aSID)
 {
-  MOZ_ASSERT(!mChild && !mEmptyChild &&
-             !(mBits & nsCachedStyleData::GetBitForSID(aSID)) &&
+  if (const GeckoStyleContext* gecko = GetAsGecko()) {
+    MOZ_ASSERT(!gecko->mChild && !gecko->mEmptyChild, "This style should not have been computed");
+  }
+  MOZ_ASSERT(!(mBits & nsCachedStyleData::GetBitForSID(aSID)) &&
              !GetCachedStyleData(aSID),
              "This style should not have been computed");
 
@@ -1305,19 +1233,8 @@ void nsStyleContext::List(FILE* out, int32_t aIndent, bool aListDescendants)
   }
 
   if (aListDescendants) {
-    if (nullptr != mChild) {
-      nsStyleContext* child = mChild;
-      do {
-        child->List(out, aIndent + 1, aListDescendants);
-        child = child->mNextSibling;
-      } while (mChild != child);
-    }
-    if (nullptr != mEmptyChild) {
-      nsStyleContext* child = mEmptyChild;
-      do {
-        child->List(out, aIndent + 1, aListDescendants);
-        child = child->mNextSibling;
-      } while (mEmptyChild != child);
+    if (GeckoStyleContext* gecko = GetAsGecko()) {
+      gecko->ListDescendants(out, aIndent);
     }
   }
 }
@@ -1536,83 +1453,27 @@ nsStyleContext::SwapStyleData(nsStyleContext* aNewContext, uint32_t aStructs)
 }
 
 void
-nsStyleContext::ClearCachedInheritedStyleDataOnDescendants(uint32_t aStructs)
-{
-  if (mChild) {
-    nsStyleContext* child = mChild;
-    do {
-      child->DoClearCachedInheritedStyleDataOnDescendants(aStructs);
-      child = child->mNextSibling;
-    } while (mChild != child);
-  }
-  if (mEmptyChild) {
-    nsStyleContext* child = mEmptyChild;
-    do {
-      child->DoClearCachedInheritedStyleDataOnDescendants(aStructs);
-      child = child->mNextSibling;
-    } while (mEmptyChild != child);
-  }
-}
-
-void
-nsStyleContext::DoClearCachedInheritedStyleDataOnDescendants(uint32_t aStructs)
-{
-  NS_ASSERTION(mFrameRefCnt == 0, "frame still referencing style context");
-  for (nsStyleStructID i = nsStyleStructID_Inherited_Start;
-       i < nsStyleStructID_Inherited_Start + nsStyleStructID_Inherited_Count;
-       i = nsStyleStructID(i + 1)) {
-    uint32_t bit = nsCachedStyleData::GetBitForSID(i);
-    if (aStructs & bit) {
-      if (!(mBits & bit) && mCachedInheritedData.mStyleStructs[i]) {
-        aStructs &= ~bit;
-      } else {
-        mCachedInheritedData.mStyleStructs[i] = nullptr;
-      }
-    }
-  }
-
-  if (mCachedResetData) {
-    for (nsStyleStructID i = nsStyleStructID_Reset_Start;
-         i < nsStyleStructID_Reset_Start + nsStyleStructID_Reset_Count;
-         i = nsStyleStructID(i + 1)) {
-      uint32_t bit = nsCachedStyleData::GetBitForSID(i);
-      if (aStructs & bit) {
-        if (!(mBits & bit) && mCachedResetData->mStyleStructs[i]) {
-          aStructs &= ~bit;
-        } else {
-          mCachedResetData->mStyleStructs[i] = nullptr;
-        }
-      }
-    }
-  }
-
-  if (aStructs == 0) {
-    return;
-  }
-
-  ClearCachedInheritedStyleDataOnDescendants(aStructs);
-}
-
-void
 nsStyleContext::SetIneligibleForSharing()
 {
   if (mBits & NS_STYLE_INELIGIBLE_FOR_SHARING) {
     return;
   }
   mBits |= NS_STYLE_INELIGIBLE_FOR_SHARING;
-  if (mChild) {
-    nsStyleContext* child = mChild;
-    do {
-      child->SetIneligibleForSharing();
-      child = child->mNextSibling;
-    } while (mChild != child);
-  }
-  if (mEmptyChild) {
-    nsStyleContext* child = mEmptyChild;
-    do {
-      child->SetIneligibleForSharing();
-      child = child->mNextSibling;
-    } while (mEmptyChild != child);
+  if (const GeckoStyleContext* gecko = GetAsGecko()) {
+    if (gecko->mChild) {
+      GeckoStyleContext* child = gecko->mChild;
+      do {
+        child->SetIneligibleForSharing();
+        child = child->mNextSibling;
+      } while (gecko->mChild != child);
+    }
+    if (gecko->mEmptyChild) {
+      GeckoStyleContext* child = gecko->mEmptyChild;
+      do {
+        child->SetIneligibleForSharing();
+        child = child->mNextSibling;
+      } while (gecko->mEmptyChild != child);
+    }
   }
 }
 
@@ -1692,19 +1553,21 @@ nsStyleContext::LogStyleContextTree(bool aFirst, uint32_t aStructs)
 
   LOG_RESTYLE_INDENT();
 
-  if (nullptr != mChild) {
-    nsStyleContext* child = mChild;
-    do {
-      child->LogStyleContextTree(false, aStructs);
-      child = child->mNextSibling;
-    } while (mChild != child);
-  }
-  if (nullptr != mEmptyChild) {
-    nsStyleContext* child = mEmptyChild;
-    do {
-      child->LogStyleContextTree(false, aStructs);
-      child = child->mNextSibling;
-    } while (mEmptyChild != child);
+  if (const GeckoStyleContext* gecko = GetAsGecko()) {
+    if (nullptr != gecko->mChild) {
+      GeckoStyleContext* child = gecko->mChild;
+      do {
+        child->LogStyleContextTree(false, aStructs);
+        child = child->mNextSibling;
+      } while (gecko->mChild != child);
+    }
+    if (nullptr != gecko->mEmptyChild) {
+      GeckoStyleContext* child = gecko->mEmptyChild;
+      do {
+        child->LogStyleContextTree(false, aStructs);
+        child = child->mNextSibling;
+      } while (gecko->mEmptyChild != child);
+    }
   }
 }
 #endif
@@ -1724,3 +1587,4 @@ nsStyleContext::PresContext() const
 {
     MOZ_STYLO_FORWARD(PresContext, ())
 }
+
