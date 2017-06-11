@@ -13,6 +13,7 @@
 #include "mozilla/ServoBindingTypes.h"
 
 #include "nsIDOMCSSStyleRule.h"
+#include "nsICSSStyleRuleDOMWrapper.h"
 #include "nsDOMCSSDeclaration.h"
 
 namespace mozilla {

@@ -52,47 +52,9 @@ extern "C" {
  *     expectation, but it makes sense in this case)
  */
 
-class nsStyleContext final
+class nsStyleContext
 {
 public:
-  /**
-   * Create a new style context.
-   * @param aParent  The parent of a style context is used for CSS
-   *                 inheritance.  When the element or pseudo-element
-   *                 this style context represents the style data of
-   *                 inherits a CSS property, the value comes from the
-   *                 parent style context.  This means style context
-   *                 parentage must match the definitions of inheritance
-   *                 in the CSS specification.
-   * @param aPseudoTag  The pseudo-element or anonymous box for which
-   *                    this style context represents style.  Null if
-   *                    this style context is for a normal DOM element.
-   * @param aPseudoType  Must match aPseudoTag.
-   * @param aRuleNode  A rule node representing the ordered sequence of
-   *                   rules that any element, pseudo-element, or
-   *                   anonymous box that this style context is for
-   *                   matches.  See |nsRuleNode| and |nsIStyleRule|.
-   * @param aSkipParentDisplayBasedStyleFixup
-   *                 If set, this flag indicates that we should skip
-   *                 the chunk of ApplyStyleFixups() that applies to
-   *                 special cases where a child element's style may
-   *                 need to be modified based on its parent's display
-   *                 value.
-   */
-  nsStyleContext(nsStyleContext* aParent, nsIAtom* aPseudoTag,
-                 mozilla::CSSPseudoElementType aPseudoType,
-                 already_AddRefed<nsRuleNode> aRuleNode,
-                 bool aSkipParentDisplayBasedStyleFixup);
-
-  // Version of the above that takes a ServoComputedValues instead of a Gecko
-  // nsRuleNode.
-  nsStyleContext(nsStyleContext* aParent,
-                 nsPresContext* aPresContext,
-                 nsIAtom* aPseudoTag,
-                 mozilla::CSSPseudoElementType aPseudoType,
-                 already_AddRefed<ServoComputedValues> aComputedValues);
-
-  void* operator new(size_t sz, nsPresContext* aPresContext);
   void Destroy();
 
   // These two methods are for use by ArenaRefPtr.
@@ -541,7 +503,7 @@ public:
 
   mozilla::NonOwningStyleContextSource StyleSource() const { return mSource.AsRaw(); }
 
-private:
+protected:
   // Private destructor, to discourage deletion outside of Release():
   ~nsStyleContext();
 

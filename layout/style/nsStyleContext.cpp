@@ -34,6 +34,8 @@
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/GeckoStyleContext.h"
+#include "mozilla/ServoStyleContext.h"
 
 #include "mozilla/ReflowInput.h"
 #include "nsLayoutUtils.h"
@@ -99,54 +101,6 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
   , mComputingStruct(nsStyleStructID_None)
 #endif
 {}
-
-nsStyleContext::nsStyleContext(nsStyleContext* aParent,
-                               nsIAtom* aPseudoTag,
-                               CSSPseudoElementType aPseudoType,
-                               already_AddRefed<nsRuleNode> aRuleNode,
-                               bool aSkipParentDisplayBasedStyleFixup)
-  : nsStyleContext(aParent, OwningStyleContextSource(Move(aRuleNode)),
-                   aPseudoTag, aPseudoType)
-{
-#ifdef MOZ_STYLO
-  mPresContext = mSource.AsGeckoRuleNode()->PresContext();
-#endif
-
-  if (aParent) {
-#ifdef DEBUG
-    nsRuleNode *r1 = mParent->RuleNode(), *r2 = mSource.AsGeckoRuleNode();
-    while (r1->GetParent())
-      r1 = r1->GetParent();
-    while (r2->GetParent())
-      r2 = r2->GetParent();
-    NS_ASSERTION(r1 == r2, "must be in the same rule tree as parent");
-#endif
-  } else {
-    PresContext()->PresShell()->StyleSet()->RootStyleContextAdded();
-  }
-
-  mSource.AsGeckoRuleNode()->SetUsedDirectly(); // before ApplyStyleFixups()!
-  FinishConstruction();
-  ApplyStyleFixups(aSkipParentDisplayBasedStyleFixup);
-}
-
-nsStyleContext::nsStyleContext(nsStyleContext* aParent,
-                               nsPresContext* aPresContext,
-                               nsIAtom* aPseudoTag,
-                               CSSPseudoElementType aPseudoType,
-                               already_AddRefed<ServoComputedValues> aComputedValues)
-  : nsStyleContext(aParent, OwningStyleContextSource(Move(aComputedValues)),
-                   aPseudoTag, aPseudoType)
-{
-#ifdef MOZ_STYLO
-  mPresContext = aPresContext;
-#endif
-
-  FinishConstruction();
-
-  // No need to call ApplyStyleFixups here, since fixups are handled by Servo when
-  // producing the ServoComputedValues.
-}
 
 void
 nsStyleContext::FinishConstruction()
@@ -1408,7 +1362,7 @@ NS_NewStyleContext(nsStyleContext* aParentContext,
   RefPtr<nsRuleNode> node = aRuleNode;
   RefPtr<nsStyleContext> context =
     new (aRuleNode->PresContext())
-    nsStyleContext(aParentContext, aPseudoTag, aPseudoType, node.forget(),
+    GeckoStyleContext(aParentContext, aPseudoTag, aPseudoType, node.forget(),
                    aSkipParentDisplayBasedStyleFixup);
   return context.forget();
 }
@@ -1422,7 +1376,7 @@ NS_NewStyleContext(nsStyleContext* aParentContext,
 {
   RefPtr<nsStyleContext> context =
     new (aPresContext)
-    nsStyleContext(aParentContext, aPresContext, aPseudoTag, aPseudoType,
+    ServoStyleContext(aParentContext, aPresContext, aPseudoTag, aPseudoType,
                    Move(aComputedValues));
   return context.forget();
 }
