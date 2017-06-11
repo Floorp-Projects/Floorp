@@ -18,6 +18,13 @@ public:
                     nsIAtom* aPseudoTag,
                     CSSPseudoElementType aPseudoType,
                     already_AddRefed<ServoComputedValues> aComputedValues);
+
+  nsPresContext* PresContext() const {
+    return mPresContext;
+  }
+
+private:
+  nsPresContext* mPresContext;
 };
 
 }
