@@ -11,6 +11,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/net/HttpBaseChannel.h"
+#include "mozilla/net/NeckoTargetHolder.h"
 #include "mozilla/net/PHttpChannelChild.h"
 #include "mozilla/net/ChannelEventQueue.h"
 
@@ -55,6 +56,7 @@ class HttpChannelChild final : public PHttpChannelChild
                              , public nsIHttpChannelChild
                              , public nsIDivertableChannel
                              , public nsIThreadRetargetableRequest
+                             , public NeckoTargetHolder
 {
   virtual ~HttpChannelChild();
 public:
@@ -170,6 +172,9 @@ protected:
   AsyncCall(void (HttpChannelChild::*funcPtr)(),
             nsRunnableMethod<HttpChannelChild> **retval = nullptr) override;
 
+  // Get event target for processing network events.
+  already_AddRefed<nsIEventTarget> GetNeckoTarget() override;
+
 private:
   // this section is for main-thread-only object
   // all the references need to be proxy released on main thread.
@@ -203,9 +208,6 @@ private:
   // with the channel. Should be called when a new channel is being set up,
   // before the constructor message is sent to the parent.
   void SetEventTarget();
-
-  // Get event target for processing network events.
-  already_AddRefed<nsIEventTarget> GetNeckoTarget();
 
   // Get event target for ODA.
   already_AddRefed<nsIEventTarget> GetODATarget();
@@ -344,8 +346,6 @@ private:
   // Used to call OverrideWithSynthesizedResponse in FinishInterceptedRedirect
   RefPtr<OverrideRunnable> mOverrideRunnable;
 
-  // EventTarget for labeling networking events.
-  nsCOMPtr<nsIEventTarget> mNeckoTarget;
   // Target thread for delivering ODA.
   nsCOMPtr<nsIEventTarget> mODATarget;
   // Used to ensure atomicity of mNeckoTarget / mODATarget;
@@ -430,6 +430,7 @@ private:
   friend class InterceptStreamListener;
   friend class InterceptedChannelContent;
   friend class HttpBackgroundChannelChild;
+  friend class NeckoTargetChannelEvent<HttpChannelChild>;
 };
 
 // A stream listener interposed between the nsInputStreamPump used for intercepted channels
