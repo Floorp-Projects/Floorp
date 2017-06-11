@@ -1526,6 +1526,12 @@ void Gecko_SetStyleGridTemplateArrayLengths(nsStyleGridTemplate* aValue,
   aValue->mLineNameLists.SetLength(aTrackSizes + 1);
 }
 
+void Gecko_SetGridTemplateLineNamesLength(nsStyleGridTemplate* aValue,
+                                          uint32_t aNames)
+{
+  aValue->mLineNameLists.SetLength(aNames);
+}
+
 void Gecko_ResizeTArrayForStrings(nsTArray<nsString>* aArray, uint32_t aLength)
 {
   aArray->SetLength(aLength);
