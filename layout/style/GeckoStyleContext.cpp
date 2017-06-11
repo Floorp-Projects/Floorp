@@ -21,9 +21,6 @@ GeckoStyleContext::GeckoStyleContext(nsStyleContext* aParent,
                    aPseudoTag, aPseudoType)
 {
   mBits |= NS_STYLE_CONTEXT_IS_GECKO;
-#ifdef MOZ_STYLO
-  mPresContext = mSource.AsGeckoRuleNode()->PresContext();
-#endif
 
   if (aParent) {
 #ifdef DEBUG

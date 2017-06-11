@@ -20,6 +20,10 @@ public:
                     bool aSkipParentDisplayBasedStyleFixup);
 
   void* operator new(size_t sz, nsPresContext* aPresContext);
+
+  nsPresContext* PresContext() const {
+    return mSource.AsGeckoRuleNode()->PresContext();
+  }
 };
 
 }

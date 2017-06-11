@@ -91,9 +91,6 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
   , mEmptyChild(nullptr)
   , mPseudoTag(aPseudoTag)
   , mSource(Move(aSource))
-#ifdef MOZ_STYLO
-  , mPresContext(nullptr)
-#endif
   , mCachedResetData(nullptr)
   , mBits(((uint64_t)aPseudoType) << NS_STYLE_CONTEXT_TYPE_SHIFT)
   , mRefCnt(0)
@@ -1721,3 +1718,9 @@ nsStyleContext::Initialize()
       "layout.css.expensive-style-struct-assertions.enabled");
 }
 #endif
+
+nsPresContext*
+nsStyleContext::PresContext() const
+{
+    MOZ_STYLO_FORWARD(PresContext, ())
+}
