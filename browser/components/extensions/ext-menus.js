@@ -25,7 +25,7 @@ const ACTION_MENU_TOP_LEVEL_LIMIT = 6;
 // Map[Extension -> Map[ID -> MenuItem]]
 // Note: we want to enumerate all the menu items so
 // this cannot be a weak map.
-var gContextMenuMap = new Map();
+var gMenuMap = new Map();
 
 // Map[Extension -> MenuItem]
 var gRootItems = new Map();
@@ -40,7 +40,7 @@ var gNextRadioGroupID = 0;
 var gMaxLabelLength = 64;
 
 var gMenuBuilder = {
-  // When a new contextMenu is opened, this function is called and
+  // When a new menu is opened, this function is called and
   // we populate the |xulMenu| with all the items from extensions
   // to be displayed. We always clear all the items again when
   // popuphidden fires.
@@ -258,7 +258,7 @@ var gMenuBuilder = {
         info.modifiers.push("MacCtrl");
       }
 
-      // Allow context menu's to open various actions supported in webext prior
+      // Allow menus to open various actions supported in webext prior
       // to notifying onclicked.
       let actionFor = {
         _execute_page_action: global.pageActionFor,
@@ -270,7 +270,7 @@ var gMenuBuilder = {
         actionFor(item.extension).triggerAction(win);
       }
 
-      item.extension.emit("webext-contextmenu-menuitem-click", info, tab);
+      item.extension.emit("webext-menu-menuitem-click", info, tab);
     });
 
     return element;
@@ -414,7 +414,7 @@ MenuItem.prototype = {
     if (this.hasOwnProperty("_id")) {
       throw new Error("Id of a MenuItem cannot be changed");
     }
-    let isIdUsed = gContextMenuMap.get(this.extension).has(id);
+    let isIdUsed = gMenuMap.get(this.extension).has(id);
     if (isIdUsed) {
       throw new Error("Id already exists");
     }
@@ -429,7 +429,7 @@ MenuItem.prototype = {
     if (parentId === undefined) {
       return;
     }
-    let menuMap = gContextMenuMap.get(this.extension);
+    let menuMap = gMenuMap.get(this.extension);
     if (!menuMap.has(parentId)) {
       throw new Error("Could not find any MenuItem with id: " + parentId);
     }
@@ -450,7 +450,7 @@ MenuItem.prototype = {
     if (parentId === undefined) {
       this.root.addChild(this);
     } else {
-      let menuMap = gContextMenuMap.get(this.extension);
+      let menuMap = gMenuMap.get(this.extension);
       menuMap.get(parentId).addChild(this);
     }
   },
@@ -497,7 +497,7 @@ MenuItem.prototype = {
       child.remove();
     }
 
-    let menuMap = gContextMenuMap.get(this.extension);
+    let menuMap = gMenuMap.get(this.extension);
     menuMap.delete(this.id);
     if (this.root == this) {
       gRootItems.delete(this.extension);
@@ -577,7 +577,7 @@ MenuItem.prototype = {
 
 // While any extensions are active, this Tracker registers to observe/listen
 // for contex-menu events from both content and chrome.
-const contextMenuTracker = {
+const menuTracker = {
   register() {
     Services.obs.addObserver(this, "on-build-contextmenu");
     for (const window of windowTracker.browserWindows()) {
@@ -602,7 +602,7 @@ const contextMenuTracker = {
 
   onWindowOpen(window) {
     const menu = window.document.getElementById("tabContextMenu");
-    menu.addEventListener("popupshowing", contextMenuTracker);
+    menu.addEventListener("popupshowing", menuTracker);
   },
 
   handleEvent(event) {
@@ -616,17 +616,24 @@ const contextMenuTracker = {
   },
 };
 
-var gExtensionCount = 0;
+this.menusInternal = class extends ExtensionAPI {
+  constructor(extension) {
+    super(extension);
 
-this.contextMenus = class extends ExtensionAPI {
+    if (!gMenuMap.size) {
+      menuTracker.register();
+    }
+    gMenuMap.set(extension, new Map());
+  }
+
   onShutdown(reason) {
     let {extension} = this;
 
-    if (gContextMenuMap.has(extension)) {
-      gContextMenuMap.delete(extension);
+    if (gMenuMap.has(extension)) {
+      gMenuMap.delete(extension);
       gRootItems.delete(extension);
-      if (--gExtensionCount == 0) {
-        contextMenuTracker.unregister();
+      if (!gMenuMap.size) {
+        menuTracker.unregister();
       }
     }
   }
@@ -634,30 +641,25 @@ this.contextMenus = class extends ExtensionAPI {
   getAPI(context) {
     let {extension} = context;
 
-    gContextMenuMap.set(extension, new Map());
-    if (++gExtensionCount == 1) {
-      contextMenuTracker.register();
-    }
-
     return {
-      contextMenus: {
-        createInternal: function(createProperties) {
+      menusInternal: {
+        create: function(createProperties) {
           // Note that the id is required by the schema. If the addon did not set
-          // it, the implementation of contextMenus.create in the child should
+          // it, the implementation of menus.create in the child should
           // have added it.
           let menuItem = new MenuItem(extension, createProperties);
-          gContextMenuMap.get(extension).set(menuItem.id, menuItem);
+          gMenuMap.get(extension).set(menuItem.id, menuItem);
         },
 
         update: function(id, updateProperties) {
-          let menuItem = gContextMenuMap.get(extension).get(id);
+          let menuItem = gMenuMap.get(extension).get(id);
           if (menuItem) {
             menuItem.setProps(updateProperties);
           }
         },
 
         remove: function(id) {
-          let menuItem = gContextMenuMap.get(extension).get(id);
+          let menuItem = gMenuMap.get(extension).get(id);
           if (menuItem) {
             menuItem.remove();
           }
@@ -670,14 +672,14 @@ this.contextMenus = class extends ExtensionAPI {
           }
         },
 
-        onClicked: new SingletonEventManager(context, "contextMenus.onClicked", fire => {
+        onClicked: new SingletonEventManager(context, "menusInternal.onClicked", fire => {
           let listener = (event, info, tab) => {
             fire.async(info, tab);
           };
 
-          extension.on("webext-contextmenu-menuitem-click", listener);
+          extension.on("webext-menu-menuitem-click", listener);
           return () => {
-            extension.off("webext-contextmenu-menuitem-click", listener);
+            extension.off("webext-menu-menuitem-click", listener);
           };
         }).api(),
       },

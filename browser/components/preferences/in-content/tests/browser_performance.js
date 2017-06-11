@@ -36,8 +36,15 @@ add_task(function*() {
   is(allowHWAccel.checked, !DEFAULT_HW_ACCEL_PREF, "checkbox should show the invert of the default value");
 
   let contentProcessCount = doc.querySelector("#contentProcessCount");
+  is(contentProcessCount.disabled, false, "process count control should be enabled");
   is(Services.prefs.getIntPref("dom.ipc.processCount"), DEFAULT_PROCESS_COUNT, "default pref value should be default value");
   is(contentProcessCount.selectedItem.value, DEFAULT_PROCESS_COUNT, "selected item should be the default one");
+
+  let contentProcessCountEnabledDescription = doc.querySelector("#contentProcessCountEnabledDescription");
+  is(contentProcessCountEnabledDescription.hidden, false, "process count enabled description should be shown");
+
+  let contentProcessCountDisabledDescription = doc.querySelector("#contentProcessCountDisabledDescription");
+  is(contentProcessCountDisabledDescription.hidden, true, "process count enabled description should be hidden");
 
   allowHWAccel.click();
   allowHWAccelPref = Services.prefs.getBoolPref("layers.acceleration.disabled");

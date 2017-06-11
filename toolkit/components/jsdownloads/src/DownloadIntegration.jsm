@@ -28,6 +28,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
                                   "resource://gre/modules/AsyncShutdown.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                  "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
                                   "resource://gre/modules/DeferredTask.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
@@ -635,20 +637,6 @@ this.DownloadIntegration = {
   async launchDownload(aDownload) {
     let file = new FileUtils.File(aDownload.target.path);
 
-#ifndef XP_WIN
-    // Ask for confirmation if the file is executable, except on Windows where
-    // the operating system will show the prompt based on the security zone.
-    // We do this here, instead of letting the caller handle the prompt
-    // separately in the user interface layer, for two reasons.  The first is
-    // because of its security nature, so that add-ons cannot forget to do
-    // this check.  The second is that the system-level security prompt would
-    // be displayed at launch time in any case.
-    if (file.isExecutable() &&
-        !(await this.confirmLaunchExecutable(file.path))) {
-      return;
-    }
-#endif
-
     // In case of a double extension, like ".tar.gz", we only
     // consider the last one, because the MIME service cannot
     // handle multiple extensions.
@@ -656,6 +644,21 @@ this.DownloadIntegration = {
     let match = file.leafName.match(/\.([^.]+)$/);
     if (match) {
       fileExtension = match[1];
+    }
+
+    let isWindowsExe = AppConstants.platform == "win" &&
+      fileExtension.toLowerCase() == "exe";
+
+    // Ask for confirmation if the file is executable, except for .exe on
+    // Windows where the operating system will show the prompt based on the
+    // security zone.  We do this here, instead of letting the caller handle
+    // the prompt separately in the user interface layer, for two reasons.  The
+    // first is because of its security nature, so that add-ons cannot forget
+    // to do this check.  The second is that the system-level security prompt
+    // would be displayed at launch time in any case.
+    if (file.isExecutable() && !isWindowsExe &&
+        !(await this.confirmLaunchExecutable(file.path))) {
+      return;
     }
 
     try {

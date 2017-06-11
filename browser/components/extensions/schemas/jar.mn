@@ -8,14 +8,14 @@ browser.jar:
     content/browser/schemas/browsing_data.json
     content/browser/schemas/chrome_settings_overrides.json
     content/browser/schemas/commands.json
-    content/browser/schemas/context_menus.json
-    content/browser/schemas/context_menus_internal.json
     content/browser/schemas/devtools.json
     content/browser/schemas/devtools_inspected_window.json
     content/browser/schemas/devtools_network.json
     content/browser/schemas/devtools_panels.json
     content/browser/schemas/geckoProfiler.json
     content/browser/schemas/history.json
+    content/browser/schemas/menus.json
+    content/browser/schemas/menus_internal.json
     content/browser/schemas/omnibox.json
     content/browser/schemas/page_action.json
     content/browser/schemas/sessions.json
