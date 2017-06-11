@@ -6,6 +6,7 @@
 /* the interface (to internal code) for retrieving computed style data */
 
 #include "nsStyleContext.h"
+#include "nsStyleContextInlines.h"
 
 #include "CSSVariableImageTable.h"
 #include "mozilla/DebugOnly.h"
@@ -1325,31 +1326,23 @@ void nsStyleContext::List(FILE* out, int32_t aIndent, bool aListDescendants)
 }
 #endif
 
-// Overloaded new operator. Initializes the memory to 0 and relies on an arena
-// (which comes from the presShell) to perform the allocation.
-void*
-nsStyleContext::operator new(size_t sz, nsPresContext* aPresContext)
-{
-  // Check the recycle list first.
-  return aPresContext->PresShell()->
-    AllocateByObjectID(eArenaObjectID_nsStyleContext, sz);
-}
-
 // Overridden to prevent the global delete from being called, since the memory
 // came out of an nsIArena instead of the global delete operator's heap.
 void
 nsStyleContext::Destroy()
 {
-  // Get the pres context.
-  RefPtr<nsPresContext> presContext = PresContext();
-
-  // Call our destructor.
-  this->~nsStyleContext();
-
-  // Don't let the memory be freed, since it will be recycled
-  // instead. Don't call the global operator delete.
-  presContext->PresShell()->
-    FreeByObjectID(eArenaObjectID_nsStyleContext, this);
+  if (IsGecko()) {
+    // Get the pres context.
+    RefPtr<nsPresContext> presContext = PresContext();
+    // Call our destructor.
+    this->AsGecko()->~GeckoStyleContext();
+    // Don't let the memory be freed, since it will be recycled
+    // instead. Don't call the global operator delete.
+    presContext->PresShell()->
+      FreeByObjectID(eArenaObjectID_nsStyleContext, this);
+    } else {
+      delete static_cast<ServoStyleContext*>(this);
+    }
 }
 
 already_AddRefed<nsStyleContext>
@@ -1375,7 +1368,7 @@ NS_NewStyleContext(nsStyleContext* aParentContext,
                    already_AddRefed<ServoComputedValues> aComputedValues)
 {
   RefPtr<nsStyleContext> context =
-    new (aPresContext)
+    new
     ServoStyleContext(aParentContext, aPresContext, aPseudoTag, aPseudoType,
                    Move(aComputedValues));
   return context.forget();
