@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <bindings xmlns="http://www.mozilla.org/xbl">
+      <binding id="a">
+        <content>
+          <children/>
+        </content>
+      </binding>
+    </bindings>
+    <script>
+      function doTest() {
+        // Cause XBL bindings to be attached to the object element by
+        // wrapping it for JS.
+        document.querySelector("object");
+      }
+    </script>
+  </head>
+  <body onload="doTest()">
+    <div style="display: none;">
+      <object style="-moz-binding: url(#a);" data="about:blank"></object>
+    </div>
+  </body>
+</html>
