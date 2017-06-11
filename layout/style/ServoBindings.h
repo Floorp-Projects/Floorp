@@ -376,6 +376,9 @@ void Gecko_ResizeTArrayForStrings(nsTArray<nsString>* array, uint32_t length);
 void Gecko_SetStyleGridTemplateArrayLengths(nsStyleGridTemplate* grid_template,
                                             uint32_t track_sizes);
 
+void Gecko_SetGridTemplateLineNamesLength(nsStyleGridTemplate* grid_template,
+                                          uint32_t track_sizes);
+
 void Gecko_CopyStyleGridTemplateValues(nsStyleGridTemplate* grid_template,
                                        const nsStyleGridTemplate* other);
 
