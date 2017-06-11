@@ -1178,12 +1178,6 @@ class FunctionCompiler
         return numPushed;
     }
 
-    static MDefinition* peekPushedDef(MBasicBlock* block)
-    {
-        MOZ_ASSERT(hasPushed(block));
-        return block->getSlot(block->stackDepth() - 1);
-    }
-
   public:
     void pushDef(MDefinition* def)
     {
@@ -1550,7 +1544,9 @@ class FunctionCompiler
         return iter_.lastOpcodeOffset();
     }
 
+#if DEBUG
     bool done() const { return iter_.done(); }
+#endif
 
     /*************************************************************************/
   private:
