@@ -201,6 +201,9 @@ let URICountListener = {
     // Update the URI counts.
     Services.telemetry.scalarAdd(TOTAL_URI_COUNT_SCALAR_NAME, 1);
 
+    // Update tab count
+    BrowserUsageTelemetry._recordTabCount();
+
     // We only want to count the unique domains up to MAX_UNIQUE_VISITED_DOMAINS.
     if (this._domainSet.size == MAX_UNIQUE_VISITED_DOMAINS) {
       return;
