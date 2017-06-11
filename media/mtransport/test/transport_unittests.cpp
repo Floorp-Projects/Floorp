@@ -914,11 +914,6 @@ class TransportTest : public MtransportTest {
     ASSERT_EQ_WAIT(s2, p2_->state(), 10000);
   }
 
-  void InitIce() {
-    p1_->InitIce();
-    p2_->InitIce();
-  }
-
   void ConnectIce() {
     p1_->InitIce();
     p2_->InitIce();
