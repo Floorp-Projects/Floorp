@@ -694,24 +694,6 @@ nsStyleContext::StyleSource() const
   MOZ_STYLO_FORWARD(StyleSource, ())
 }
 
-#define STYLE_STRUCT(name_, checkdata_cb_)                      \
-const nsStyle##name_ *                                          \
-nsStyleContext::Style##name_() {                                \
-  return DoGetStyle##name_<true>();                             \
-}                                                               \
-const nsStyle##name_ *                                          \
-nsStyleContext::ThreadsafeStyle##name_() {                      \
-  if (mozilla::ServoStyleSet::IsInServoTraversal()) {           \
-    return Servo_GetStyle##name_(AsServo()->ComputedValues());  \
-  }                                                             \
-  return Style##name_();                                        \
-}                                                               \
-const nsStyle##name_ * nsStyleContext::PeekStyle##name_() {     \
-  return DoGetStyle##name_<false>();                            \
-}
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
-
 // Overridden to prevent the global delete from being called, since the memory
 // came out of an nsIArena instead of the global delete operator's heap.
 void
@@ -1015,21 +997,3 @@ nsStyleContext::Initialize()
       "layout.css.expensive-style-struct-assertions.enabled");
 }
 #endif
-
-nsPresContext*
-nsStyleContext::PresContext() const
-{
-    MOZ_STYLO_FORWARD(PresContext, ())
-}
-
-GeckoStyleContext*
-nsStyleContext::GetParent() const
-{
-  MOZ_ASSERT(IsGecko(),
-             "This should be used only in Gecko-backed style system!");
-  if (mParent) {
-    return mParent->AsGecko();
-  } else {
-    return nullptr;
-  }
-}
