@@ -43,6 +43,7 @@
 #include "mozilla/RestyleManager.h"
 #include "mozilla/RestyleManagerInlines.h"
 #include "nsQueryObject.h"
+#include "nsStyleContextInlines.h"
 
 #include <inttypes.h>
 
@@ -926,7 +927,7 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
 
   RefPtr<nsStyleContext> result;
   if (aParentContext)
-    result = aParentContext->FindChildWithRules(aPseudoTag, aRuleNode,
+    result = aParentContext->AsGecko()->FindChildWithRules(aPseudoTag, aRuleNode,
                                                 aVisitedRuleNode,
                                                 relevantLinkVisited);
 
