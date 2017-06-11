@@ -62,7 +62,8 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {        \
   if (auto gecko = GetAsGecko()) {                                  \
     const nsStyle##name_ * cachedData =                             \
       static_cast<nsStyle##name_*>(                                 \
-        mCachedInheritedData.mStyleStructs[eStyleStruct_##name_]);  \
+        gecko->mCachedInheritedData                                 \
+        .mStyleStructs[eStyleStruct_##name_]);                      \
     if (cachedData) /* Have it cached already, yay */               \
       return cachedData;                                            \
     if (!aComputeData) {                                            \
@@ -77,7 +78,8 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {        \
         GetStyle##name_<aComputeData>(this->AsGecko(), mBits);      \
     /* always cache inherited data on the style context; the rule */\
     /* node set the bit in mBits for us if needed. */               \
-    mCachedInheritedData.mStyleStructs[eStyleStruct_##name_] =      \
+    gecko->mCachedInheritedData                                     \
+      .mStyleStructs[eStyleStruct_##name_] =                        \
       const_cast<nsStyle##name_ *>(newData);                        \
     return newData;                                                 \
   }                                                                 \
@@ -132,10 +134,10 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {        \
 template<bool aComputeData>                                                   \
 const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {                  \
   if (auto gecko = GetAsGecko()) {                                            \
-    if (mCachedResetData) {                                                   \
+    if (gecko->mCachedResetData) {                                            \
       const nsStyle##name_ * cachedData =                                     \
         static_cast<nsStyle##name_*>(                                         \
-          mCachedResetData->mStyleStructs[eStyleStruct_##name_]);             \
+          gecko->mCachedResetData->mStyleStructs[eStyleStruct_##name_]);      \
       if (cachedData) /* Have it cached already, yay */                       \
         return cachedData;                                                    \
     }                                                                         \
