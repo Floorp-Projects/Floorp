@@ -643,4 +643,8 @@ let BrowserUsageTelemetry = {
     };
     win.addEventListener("load", onLoad);
   },
+
+  _recordTabCount(tabCount = getTabCount()) {
+    Services.telemetry.getHistogramById("TAB_COUNT").add(tabCount);
+  },
 };
