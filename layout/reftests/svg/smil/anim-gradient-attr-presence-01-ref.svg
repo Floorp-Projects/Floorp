@@ -12,9 +12,9 @@
       <stop offset="100%" stop-color="#FF6" />
     </linearGradient>
   </defs>
-  <rect width="100" height="100" fill="url(#gradientUnits)"/>
-  <g transform="translate(100)">
-    <rect width="100" height="100" fill="url(#gradientUnits)"/>
+  <rect width="100px" height="100px" fill="url(#gradientUnits)"/>
+  <g transform="translate(100px)">
+    <rect width="100px" height="100px" fill="url(#gradientUnits)"/>
   </g>
   <!-- 2. gradientTransform -->
   <defs>
@@ -24,10 +24,10 @@
       <stop offset="100%" stop-color="#FF6" />
     </linearGradient>
   </defs>
-  <g transform="translate(0 100)">
-    <rect width="100" height="100" fill="url(#gradientTransform)"/>
-    <g transform="translate(100)">
-      <rect width="100" height="100" fill="url(#gradientTransform)"/>
+  <g transform="translate(0px 100px)">
+    <rect width="100px" height="100px" fill="url(#gradientTransform)"/>
+    <g transform="translate(100px)">
+      <rect width="100px" height="100px" fill="url(#gradientTransform)"/>
     </g>
   </g>
   <!-- 3. x1, x2 -->
@@ -37,10 +37,10 @@
       <stop offset="100%" stop-color="#FF6" />
     </linearGradient>
   </defs>
-  <g transform="translate(0 200)">
-    <rect width="100" height="100" fill="url(#x1x2)"/>
-    <g transform="translate(100)">
-      <rect width="100" height="100" fill="url(#x1x2)"/>
+  <g transform="translate(0px 200px)">
+    <rect width="100px" height="100px" fill="url(#x1x2)"/>
+    <g transform="translate(100px)">
+      <rect width="100px" height="100px" fill="url(#x1x2)"/>
     </g>
   </g>
   <!-- 4. y1, y2 -->
@@ -50,10 +50,10 @@
       <stop offset="100%" stop-color="#FF6" />
     </linearGradient>
   </defs>
-  <g transform="translate(0 300)">
-    <rect width="100" height="100" fill="url(#y1y2)"/>
-    <g transform="translate(100)">
-      <rect width="100" height="100" fill="url(#y1y2)"/>
+  <g transform="translate(0px 300px)">
+    <rect width="100px" height="100px" fill="url(#y1y2)"/>
+    <g transform="translate(100px)">
+      <rect width="100px" height="100px" fill="url(#y1y2)"/>
     </g>
   </g>
   <!-- 5. cx, cy -->
@@ -63,10 +63,10 @@
       <stop offset="100%" stop-color="#FF6" />
     </radialGradient>
   </defs>
-  <g transform="translate(0 400)">
-    <rect width="100" height="100" fill="url(#cxcy)"/>
-    <g transform="translate(100)">
-      <rect width="100" height="100" fill="url(#cxcy)"/>
+  <g transform="translate(0px 400px)">
+    <rect width="100px" height="100px" fill="url(#cxcy)"/>
+    <g transform="translate(100px)">
+      <rect width="100px" height="100px" fill="url(#cxcy)"/>
     </g>
   </g>
   <!-- 6. r -->
@@ -76,10 +76,10 @@
       <stop offset="100%" stop-color="#FF6" />
     </radialGradient>
   </defs>
-  <g transform="translate(0 500)">
-    <rect width="100" height="100" fill="url(#r)"/>
-    <g transform="translate(100)">
-      <rect width="100" height="100" fill="url(#r)"/>
+  <g transform="translate(0px 500px)">
+    <rect width="100px" height="100px" fill="url(#r)"/>
+    <g transform="translate(100px)">
+      <rect width="100px" height="100px" fill="url(#r)"/>
     </g>
   </g>
   <!-- 7. fx, fy -->
@@ -89,10 +89,10 @@
       <stop offset="100%" stop-color="#FF6" />
     </radialGradient>
   </defs>
-  <g transform="translate(0 600)">
-    <rect width="100" height="100" fill="url(#fxfy)"/>
-    <g transform="translate(100)">
-      <rect width="100" height="100" fill="url(#fxfy)"/>
+  <g transform="translate(0px 600px)">
+    <rect width="100px" height="100px" fill="url(#fxfy)"/>
+    <g transform="translate(100px)">
+      <rect width="100px" height="100px" fill="url(#fxfy)"/>
     </g>
   </g>
   <!-- 8. spreadMethod -->
@@ -102,10 +102,10 @@
       <stop offset="100%" stop-color="#FF6" />
     </linearGradient>
   </defs>
-  <g transform="translate(0 700)">
-    <rect width="100" height="100" fill="url(#spreadMethod)"/>
-    <g transform="translate(100)">
-      <rect width="100" height="100" fill="url(#spreadMethod)"/>
+  <g transform="translate(0px 700px)">
+    <rect width="100px" height="100px" fill="url(#spreadMethod)"/>
+    <g transform="translate(100px)">
+      <rect width="100px" height="100px" fill="url(#spreadMethod)"/>
     </g>
   </g>
   <!-- 9. xlink:href -->
@@ -116,16 +116,16 @@
       <stop offset="100%" stop-color="#FF6" />
     </linearGradient>
   </defs>
-  <g transform="translate(0 800)">
-    <rect width="100" height="100" fill="url(#xlink)"/>
-    <g transform="translate(100)">
-      <rect width="100" height="100" fill="url(#xlinkRef)"/>
+  <g transform="translate(0px 800px)">
+    <rect width="100px" height="100" fill="url(#xlink)"/>
+    <g transform="translate(100px)">
+      <rect width="100px" height="100px" fill="url(#xlinkRef)"/>
     </g>
   </g>
   <!-- We were getting random but very minor anti-aliasing differences on OSX
        and OSX64 along the edges of these gradients so we draw a thick stroke
        over all the edges. -->
-  <path stroke="black" stroke-width="3" stroke-linecap="square" fill="none"
+  <path stroke="black" stroke-width="3px" stroke-linecap="square" fill="none"
     d="M0 0H200V900H0V0
        M0 100H200
        M0 200H200
