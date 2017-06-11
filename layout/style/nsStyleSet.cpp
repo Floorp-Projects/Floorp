@@ -308,7 +308,7 @@ nsStyleSet::BeginReconstruct()
 
   // Clear any ArenaRefPtr-managed style contexts, as we don't want them
   // held on to after the rule tree has been reconstructed.
-  PresContext()->PresShell()->ClearArenaRefPtrs(eArenaObjectID_nsStyleContext);
+  PresContext()->PresShell()->ClearArenaRefPtrs(eArenaObjectID_GeckoStyleContext);
 
   // Clear our cached style contexts for non-inheriting anonymous boxes.
   ClearNonInheritingStyleContexts();

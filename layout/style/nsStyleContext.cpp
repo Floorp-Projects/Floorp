@@ -1336,7 +1336,7 @@ nsStyleContext::Destroy()
     // Don't let the memory be freed, since it will be recycled
     // instead. Don't call the global operator delete.
     presContext->PresShell()->
-      FreeByObjectID(eArenaObjectID_nsStyleContext, this);
+      FreeByObjectID(eArenaObjectID_GeckoStyleContext, this);
     } else {
       delete static_cast<ServoStyleContext*>(this);
     }
