@@ -169,9 +169,13 @@
 #identity-popup-securityView-body > description,
 #identity-popup-permissions-content > description,
 #tracking-protection-content > description {
-  white-space: pre-wrap;
   font-size: 110%;
   margin: 0;
+}
+
+/* This element needs the pre-wrap because we add newlines to it in the code. */
+#identity-popup-content-supplemental {
+  white-space: pre-wrap;
 }
 
 .identity-popup-headline {

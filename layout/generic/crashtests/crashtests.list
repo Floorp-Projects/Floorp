@@ -15,9 +15,9 @@ load 289864-1.html
 asserts(0-1) load 295292-1.html # Bug 1315855
 load 295292-2.html
 load 302260-1.html
-load 307979-1.html # bug 1338007
-load 309322-1.html # bug 1338007
-load 309322-2.html # bug 1338007
+load 307979-1.html
+load 309322-1.html
+load 309322-2.html
 load 309322-3.html
 load 309322-4.html
 load 310556-1.xhtml

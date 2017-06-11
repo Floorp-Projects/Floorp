@@ -1991,22 +1991,39 @@ html|*.addon-webext-perm-list {
   padding: 0;
 }
 
+.popup-notification-description[popupid="addon-installed"] {
+  display: none;
+}
+
+.addon-installed-notification-content {
+  margin-top: 0;
+}
+
+#addon-installed-notification-header {
+  /* Align the text more closely with the icon by clearing some top line height. */
+  margin-top: -1px;
+}
+
 .addon-webext-name {
   display: inline;
   font-weight: bold;
   margin: 0;
 }
 
-.addon-addon-icon {
+.addon-addon-icon,
+.addon-toolbar-icon {
   width: 14px;
   height: 14px;
+  vertical-align: bottom;
+  margin-bottom: 1px;
+}
+
+.addon-addon-icon {
   list-style-image: url("chrome://browser/skin/menuPanel.svg");
   -moz-image-region: rect(0px, 288px, 32px, 256px);
 }
 
 .addon-toolbar-icon {
-  width: 14px;
-  height: 14px;
   list-style-image: url("chrome://browser/skin/menu.svg");
   -moz-context-properties: fill;
   fill: var(--toolbarbutton-icon-fill);

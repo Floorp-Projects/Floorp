@@ -1,0 +1,71 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<head>
+  <title>CSS Test: CSS display:contents in XBL</title>
+  <link rel="author" title="William Chen" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1040291"/>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=907396"/>
+  <link rel="help" href="http://dev.w3.org/csswg/css-display"/>
+
+<style>
+.c { display:contents; }
+</style>
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <binding id="b">
+    <content>
+      <style xmlns="http://www.w3.org/1999/xhtml">
+        .b {
+          display: contents;
+          color: blue;
+        }
+	.b::after {
+          content: 'c';
+        }
+      </style>
+      <xhtml:span class="b">
+        a <children></children>
+      </xhtml:span>
+    </content>
+  </binding>
+</bindings>
+</head>
+<body>
+<div id="host2" style="-moz-binding: url(#b);"></div>
+<div id="hostK" style="-moz-binding:url(#b); color:red"><b>K</b></div>
+<div id="hostP" class="c" style="-moz-binding:url(#b); color:red"><b>P</b></div>
+<div id="hostT" style="-moz-binding: url(#b);"></div>
+
+<script>
+
+function tweak() {
+  document.body.offsetHeight;
+
+  function span(s) {
+    var elm = document.createElement("span");
+    elm.textContent = s;
+    return elm;
+  }
+
+  var elm = span("b");
+  elm.style.display = "contents";
+  elm.style.color = "blue";
+  host2.appendChild(elm);
+
+  hostT.className="c";
+
+  var elm = span("b");
+  elm.style.display = "contents";
+  elm.style.color = "blue";
+  hostT.appendChild(elm);
+
+  document.body.offsetHeight;
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("MozReftestInvalidate", tweak);
+</script>
+</body>
+</html>

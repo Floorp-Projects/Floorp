@@ -741,17 +741,9 @@ ElementForStyleContext(nsIContent* aParentContent,
   }
 
   Element* frameElement = aFrame->GetContent()->AsElement();
-  if (frameElement->IsNativeAnonymous() &&
-      nsCSSPseudoElements::PseudoElementIsJSCreatedNAC(aPseudoType)) {
+  if (frameElement->IsNativeAnonymous()) {
     // NAC-implemented pseudos use the closest non-NAC element as their
     // element to inherit from.
-    //
-    // FIXME(heycam): In theory we shouldn't need to limit this only to
-    // JS-created pseudo-implementing NAC, as all pseudo-implementing
-    // should use the closest non-native anonymous ancestor element as
-    // its originating element.  But removing that part of the condition
-    // reveals some bugs in style resultion with display:contents and
-    // XBL.  See bug 1345809.
     Element* originatingElement =
       nsContentUtils::GetClosestNonNativeAnonymousAncestor(frameElement);
     if (originatingElement) {
