@@ -3,16 +3,24 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "StunAddrsRequestChild.h"
+
 #include "mozilla/net/NeckoChild.h"
+#include "nsIEventTarget.h"
 
 using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace net {
 
-StunAddrsRequestChild::StunAddrsRequestChild(StunAddrsListener* listener) :
-  mListener(listener)
+StunAddrsRequestChild::StunAddrsRequestChild(
+                                         StunAddrsListener* listener,
+                                         nsIEventTarget* mainThreadEventTarget)
+  : mListener(listener)
 {
+  if (mainThreadEventTarget) {
+    gNeckoChild->SetEventTargetForActor(this, mainThreadEventTarget);
+  }
+
   gNeckoChild->SendPStunAddrsRequestConstructor(this);
   // IPDL holds a reference until IPDL channel gets destroyed
   AddIPDLReference();
