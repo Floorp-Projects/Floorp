@@ -49,7 +49,9 @@ class TCPSocketChild : public mozilla::net::PTCPSocketChild
 public:
   NS_IMETHOD_(MozExternalRefCountType) Release() override;
 
-  TCPSocketChild(const nsAString& aHost, const uint16_t& aPort);
+  TCPSocketChild(const nsAString& aHost,
+                 const uint16_t& aPort,
+                 nsIEventTarget* aTarget);
   ~TCPSocketChild();
 
   void SendOpen(nsITCPSocketCallback* aSocket, bool aUseSSL, bool aUseArrayBuffers);
@@ -82,6 +84,7 @@ private:
   nsString mHost;
   uint16_t mPort;
   nsCString mFilterName;
+  nsCOMPtr<nsIEventTarget> mIPCEventTarget;
 };
 
 } // namespace dom
