@@ -2171,6 +2171,15 @@ ThreadClient.prototype = {
   },
 
   /**
+   * Request the frame environment.
+   *
+   * @param frameId string
+   */
+  getEnvironment: function (frameId) {
+    return this.request({ to: frameId, type: "getEnvironment" });
+  },
+
+  /**
    * Ensure that at least total stack frames have been loaded in the
    * ThreadClient's stack frame cache. A framesadded event will be
    * sent when the stack frame cache is updated.

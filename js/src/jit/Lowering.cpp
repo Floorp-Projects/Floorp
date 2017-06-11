@@ -1967,7 +1967,6 @@ LIRGenerator::visitConcat(MConcat* ins)
                                         tempFixed(CallTempReg2),
                                         tempFixed(CallTempReg3),
                                         tempFixed(CallTempReg4));
-    assignSnapshot(lir, Bailout_NotPure);
     defineFixed(lir, ins, LAllocation(AnyRegister(CallTempReg5)));
     assignSafepoint(lir, ins);
 }

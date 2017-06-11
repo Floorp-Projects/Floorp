@@ -442,7 +442,7 @@ function CanonicalizeLanguageTag(locale) {
     if (i === subtags.length)
         return callFunction(std_Array_join, subtags, "-");
 
-    var normal = callFunction(std_Array_join, callFunction(std_Array_slice, subtags, 0, i), "-");
+    var normal = ArrayJoinRange(subtags, "-", 0, i);
 
     // Extension sequences are sorted by their singleton characters.
     // "u-ca-chinese-t-zh-latn" -> "t-zh-latn-u-ca-chinese"
@@ -452,7 +452,7 @@ function CanonicalizeLanguageTag(locale) {
         i++;
         while (i < subtags.length && subtags[i].length > 1)
             i++;
-        var extension = callFunction(std_Array_join, callFunction(std_Array_slice, subtags, extensionStart, i), "-");
+        var extension = ArrayJoinRange(subtags, "-", extensionStart, i);
         _DefineDataProperty(extensions, extensions.length, extension);
     }
     callFunction(std_Array_sort, extensions);
@@ -460,7 +460,7 @@ function CanonicalizeLanguageTag(locale) {
     // Private use sequences are left as is. "x-private"
     var privateUse = "";
     if (i < subtags.length)
-        privateUse = callFunction(std_Array_join, callFunction(std_Array_slice, subtags, i), "-");
+        privateUse = ArrayJoinRange(subtags, "-", i);
 
     // Put everything back together.
     var canonical = normal;
@@ -475,6 +475,26 @@ function CanonicalizeLanguageTag(locale) {
     }
 
     return canonical;
+}
+
+
+/**
+ * Joins the array elements in the given range with the supplied separator.
+ */
+function ArrayJoinRange(array, separator, from, to = array.length) {
+    assert(typeof separator === "string", "|separator| is a string value");
+    assert(typeof from === "number", "|from| is a number value");
+    assert(typeof to === "number", "|to| is a number value");
+    assert(0 <= from && from <= to && to <= array.length, "|from| and |to| form a valid range");
+
+    if (from === to)
+        return "";
+
+    var result = array[from];
+    for (var i = from + 1; i < to; i++) {
+        result += separator + array[i];
+    }
+    return result;
 }
 
 
@@ -3415,10 +3435,15 @@ function Intl_PluralRules_resolvedOptions() {
 
     var internals = getPluralRulesInternals(this);
 
+    var internalsPluralCategories = internals.pluralCategories;
+    var pluralCategories = [];
+    for (var i = 0; i < internalsPluralCategories.length; i++)
+        _DefineDataProperty(pluralCategories, i, internalsPluralCategories[i]);
+
     var result = {
         locale: internals.locale,
         type: internals.type,
-        pluralCategories: callFunction(std_Array_slice, internals.pluralCategories, 0),
+        pluralCategories,
         minimumIntegerDigits: internals.minimumIntegerDigits,
         minimumFractionDigits: internals.minimumFractionDigits,
         maximumFractionDigits: internals.maximumFractionDigits,

@@ -254,14 +254,27 @@ NS_IMETHODIMP nsPrintSettingsX::SetPaperHeight(double aPaperHeight)
 NS_IMETHODIMP
 nsPrintSettingsX::GetEffectivePageSize(double *aWidth, double *aHeight)
 {
-  if (kPaperSizeInches == GetCocoaUnit(mPaperSizeUnit)) {
-    *aWidth  = NS_INCHES_TO_TWIPS(mAdjustedPaperWidth / mWidthScale);
-    *aHeight = NS_INCHES_TO_TWIPS(mAdjustedPaperHeight / mHeightScale);
-  } else {
-    *aWidth  = NS_MILLIMETERS_TO_TWIPS(mAdjustedPaperWidth / mWidthScale);
-    *aHeight = NS_MILLIMETERS_TO_TWIPS(mAdjustedPaperHeight / mHeightScale);
-  }
+  *aWidth  = NS_INCHES_TO_TWIPS(mAdjustedPaperWidth / mWidthScale);
+  *aHeight = NS_INCHES_TO_TWIPS(mAdjustedPaperHeight / mHeightScale);
   return NS_OK;
+}
+
+void
+nsPrintSettingsX::GetFilePageSize(double *aWidth, double *aHeight)
+{
+  double height, width;
+  if (kPaperSizeInches == GetCocoaUnit(mPaperSizeUnit)) {
+    width  = NS_INCHES_TO_TWIPS(mAdjustedPaperWidth / mWidthScale);
+    height = NS_INCHES_TO_TWIPS(mAdjustedPaperHeight / mHeightScale);
+  } else {
+    width  = NS_MILLIMETERS_TO_TWIPS(mAdjustedPaperWidth / mWidthScale);
+    height = NS_MILLIMETERS_TO_TWIPS(mAdjustedPaperHeight / mHeightScale);
+  }
+  width /= TWIPS_PER_POINT_FLOAT;
+  height /= TWIPS_PER_POINT_FLOAT;
+
+  *aWidth = width;
+  *aHeight = height;
 }
 
 void nsPrintSettingsX::SetAdjustedPaperSize(double aWidth, double aHeight)
@@ -274,13 +287,6 @@ void nsPrintSettingsX::GetAdjustedPaperSize(double *aWidth, double *aHeight)
 {
   *aWidth = mAdjustedPaperWidth;
   *aHeight = mAdjustedPaperHeight;
-}
-
-NS_IMETHODIMP
-nsPrintSettingsX::SetPaperSizeUnit(int16_t aPaperSizeUnit)
-{
-  mPaperSizeUnit = aPaperSizeUnit;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
