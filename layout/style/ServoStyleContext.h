@@ -23,8 +23,18 @@ public:
     return mPresContext;
   }
 
+  NonOwningStyleContextSource StyleSource() const {
+    return NonOwningStyleContextSource(mSource);
+  }
+  ServoComputedValues* ComputedValues() const {
+    return mSource;
+  }
+  ~ServoStyleContext() {
+    Destructor();
+  }
 private:
   nsPresContext* mPresContext;
+  RefPtr<ServoComputedValues> mSource;
 };
 
 }

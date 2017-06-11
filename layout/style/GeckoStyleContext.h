@@ -22,7 +22,7 @@ public:
   void* operator new(size_t sz, nsPresContext* aPresContext);
 
   nsPresContext* PresContext() const {
-    return mSource.AsGeckoRuleNode()->PresContext();
+    return RuleNode()->PresContext();
   }
 
   void AddChild(GeckoStyleContext* aChild);
@@ -38,7 +38,6 @@ public:
    * already set, assumes that it can skip that subtree.
    */
   void SetIneligibleForSharing();
-  void LogChildStyleContextTree(uint32_t aStructs) const;
   /**
    * On each descendant of this style context, clears out any cached inherited
    * structs indicated in aStructs.
@@ -47,26 +46,44 @@ public:
   // Find, if it already exists *and is easily findable* (i.e., near the
   // start of the child list), a style context whose:
   //  * GetPseudo() matches aPseudoTag
-  //  * mSource matches aSource
+  //  * mRuleNode matches aSource
   //  * !!GetStyleIfVisited() == !!aSourceIfVisited, and, if they're
-  //    non-null, GetStyleIfVisited()->mSource == aSourceIfVisited
+  //    non-null, GetStyleIfVisited()->mRuleNode == aSourceIfVisited
   //  * RelevantLinkVisited() == aRelevantLinkVisited
   already_AddRefed<GeckoStyleContext>
   FindChildWithRules(const nsIAtom* aPseudoTag,
-                     mozilla::NonOwningStyleContextSource aSource,
-                     mozilla::NonOwningStyleContextSource aSourceIfVisited,
+                     nsRuleNode* aSource,
+                     nsRuleNode* aSourceIfVisited,
                      bool aRelevantLinkVisited);
 
 #ifdef DEBUG
   void AssertChildStructsNotUsedElsewhere(nsStyleContext* aDestroyingContext,
                                           int32_t aLevels) const;
   void ListDescendants(FILE* out, int32_t aIndent);
+
+#endif
+
+#ifdef RESTYLE_LOGGING
+  void LogChildStyleContextTree(uint32_t aStructs) const;
 #endif
 
   // Only called for Gecko-backed nsStyleContexts.
   void ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup);
 
   bool HasNoChildren() const;
+
+  NonOwningStyleContextSource StyleSource() const {
+    return NonOwningStyleContextSource(mRuleNode);
+  }
+
+  nsRuleNode* RuleNode() const {
+    MOZ_ASSERT(mRuleNode);
+    return mRuleNode;
+  }
+
+  ~GeckoStyleContext() {
+    Destructor();
+  }
 
 private:
   // Helper for ClearCachedInheritedStyleDataOnDescendants.
@@ -82,6 +99,7 @@ private:
   GeckoStyleContext* mEmptyChild;
   GeckoStyleContext* mPrevSibling;
   GeckoStyleContext* mNextSibling;
+  RefPtr<nsRuleNode> mRuleNode;
 };
 
 }

@@ -22,16 +22,16 @@ GeckoStyleContext::GeckoStyleContext(nsStyleContext* aParent,
                                      CSSPseudoElementType aPseudoType,
                                      already_AddRefed<nsRuleNode> aRuleNode,
                                      bool aSkipParentDisplayBasedStyleFixup)
-  : nsStyleContext(aParent, OwningStyleContextSource(Move(aRuleNode)),
-                   aPseudoTag, aPseudoType)
+  : nsStyleContext(aParent, aPseudoTag, aPseudoType)
   , mChild(nullptr)
   , mEmptyChild(nullptr)
+  , mRuleNode(Move(aRuleNode))
 {
   mBits |= NS_STYLE_CONTEXT_IS_GECKO;
 
   if (aParent) {
 #ifdef DEBUG
-    nsRuleNode *r1 = mParent->RuleNode(), *r2 = mSource.AsGeckoRuleNode();
+    nsRuleNode *r1 = mParent->RuleNode(), *r2 = mRuleNode;
     while (r1->GetParent())
       r1 = r1->GetParent();
     while (r2->GetParent())
@@ -42,7 +42,7 @@ GeckoStyleContext::GeckoStyleContext(nsStyleContext* aParent,
     PresContext()->PresShell()->StyleSet()->RootStyleContextAdded();
   }
 
-  mSource.AsGeckoRuleNode()->SetUsedDirectly(); // before ApplyStyleFixups()!
+  mRuleNode->SetUsedDirectly(); // before ApplyStyleFixups()!
   // FinishConstruction() calls AddChild which needs these
   // to be initialized!
   mNextSibling = this;
@@ -71,7 +71,13 @@ GeckoStyleContext::AddChild(GeckoStyleContext* aChild)
                aChild->mNextSibling == aChild,
                "child already in a child list");
 
-  GeckoStyleContext **listPtr = aChild->mSource.MatchesNoRules() ? &mEmptyChild : &mChild;
+  GeckoStyleContext **listPtr = aChild->mRuleNode->IsRoot() ? &mEmptyChild : &mChild;
+  if (const nsRuleNode* source = aChild->mRuleNode) {
+    if (source->IsRoot()) {
+      listPtr = &mEmptyChild;
+    }
+  }
+
   // Explicitly dereference listPtr so that compiler doesn't have to know that mNextSibling
   // etc. don't alias with what ever listPtr points at.
   GeckoStyleContext *list = *listPtr;
@@ -92,7 +98,8 @@ GeckoStyleContext::RemoveChild(GeckoStyleContext* aChild)
 {
   NS_PRECONDITION(nullptr != aChild && this == aChild->mParent, "bad argument");
 
-  GeckoStyleContext **list = aChild->mSource.MatchesNoRules() ? &mEmptyChild : &mChild;
+  MOZ_ASSERT(aChild->mRuleNode, "child context should have rule node");
+  GeckoStyleContext **list = aChild->mRuleNode->IsRoot() ? &mEmptyChild : &mChild;
 
   if (aChild->mPrevSibling != aChild) { // has siblings
     if ((*list) == aChild) {
@@ -189,30 +196,30 @@ GeckoStyleContext::DoClearCachedInheritedStyleDataOnDescendants(uint32_t aStruct
   ClearCachedInheritedStyleDataOnDescendants(aStructs);
 }
 
-
 already_AddRefed<GeckoStyleContext>
 GeckoStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
-                                   NonOwningStyleContextSource aSource,
-                                   NonOwningStyleContextSource aSourceIfVisited,
+                                   nsRuleNode* aSource,
+                                   nsRuleNode* aSourceIfVisited,
                                    bool aRelevantLinkVisited)
 {
   uint32_t threshold = 10; // The # of siblings we're willing to examine
                            // before just giving this whole thing up.
 
   RefPtr<GeckoStyleContext> result;
-  GeckoStyleContext *list = aSource.MatchesNoRules() ? mEmptyChild : mChild;
+  MOZ_ASSERT(aSource);
+  GeckoStyleContext *list = aSource->IsRoot() ? mEmptyChild : mChild;
 
   if (list) {
     GeckoStyleContext *child = list;
     do {
-      if (child->mSource.AsRaw() == aSource &&
+      if (child->StyleSource() == aSource &&
           child->mPseudoTag == aPseudoTag &&
           !child->IsStyleIfVisited() &&
           child->RelevantLinkVisited() == aRelevantLinkVisited) {
         bool match = false;
-        if (!aSourceIfVisited.IsNull()) {
+        if (aSourceIfVisited) {
           match = child->GetStyleIfVisited() &&
-                  child->GetStyleIfVisited()->AsGecko()->mSource.AsRaw() == aSourceIfVisited;
+                  child->GetStyleIfVisited()->RuleNode() == aSourceIfVisited;
         } else {
           match = !child->GetStyleIfVisited();
         }
@@ -348,6 +355,7 @@ GeckoStyleContext::SetIneligibleForSharing()
   }
 }
 
+#ifdef RESTYLE_LOGGING
 void
 GeckoStyleContext::LogChildStyleContextTree(uint32_t aStructs) const
 {
@@ -366,6 +374,7 @@ GeckoStyleContext::LogChildStyleContextTree(uint32_t aStructs) const
     } while (mEmptyChild != child);
   }
 }
+#endif
 
 static bool
 ShouldSuppressLineBreak(const nsStyleContext* aContext,
@@ -511,9 +520,6 @@ GeckoStyleContext::AssertChildStructsNotUsedElsewhere(nsStyleContext* aDestroyin
 void
 GeckoStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
 {
-  MOZ_ASSERT(!mSource.IsServoComputedValues(),
-             "Can't do Gecko style fixups on Servo values");
-
 #define GET_UNIQUE_STYLE_DATA(name_) \
   static_cast<nsStyle##name_*>(GetUniqueStyleData(eStyleStruct_##name_))
 
@@ -737,9 +743,9 @@ GeckoStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
   if (disp->mDisplay == mozilla::StyleDisplay::Inline &&
       !nsCSSAnonBoxes::IsNonElement(mPseudoTag) &&
       mParent) {
-    auto cbContext = mParent;
+    auto cbContext = GetParent();
     while (cbContext->StyleDisplay()->mDisplay == mozilla::StyleDisplay::Contents) {
-      cbContext = cbContext->mParent;
+      cbContext = cbContext->GetParent();
     }
     MOZ_ASSERT(cbContext, "the root context can't have display:contents");
     // We don't need the full mozilla::WritingMode value (incorporating dir
