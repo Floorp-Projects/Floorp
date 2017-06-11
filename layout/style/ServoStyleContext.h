@@ -23,9 +23,6 @@ public:
     return mPresContext;
   }
 
-  NonOwningStyleContextSource StyleSource() const {
-    return NonOwningStyleContextSource(mSource);
-  }
   ServoComputedValues* ComputedValues() const {
     return mSource;
   }

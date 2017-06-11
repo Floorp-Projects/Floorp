@@ -30,6 +30,13 @@ nsStyleContext::RuleNode()
     return AsGecko()->RuleNode();
 }
 
+ServoComputedValues*
+nsStyleContext::ComputedValues()
+{
+    MOZ_RELEASE_ASSERT(IsServo());
+    return AsServo()->ComputedValues();
+}
+
 #define STYLE_STRUCT(name_, checkdata_cb_)                      \
 const nsStyle##name_ *                                          \
 nsStyleContext::Style##name_() {                                \
@@ -52,7 +59,7 @@ const nsStyle##name_ * nsStyleContext::PeekStyle##name_() {     \
 #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)                \
 template<bool aComputeData>                                         \
 const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {        \
-  if (IsGecko()) {                                                  \
+  if (auto gecko = GetAsGecko()) {                                  \
     const nsStyle##name_ * cachedData =                             \
       static_cast<nsStyle##name_*>(                                 \
         mCachedInheritedData.mStyleStructs[eStyleStruct_##name_]);  \
@@ -66,7 +73,7 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {        \
     /* Have the rulenode deal */                                    \
     AUTO_CHECK_DEPENDENCY(eStyleStruct_##name_);                    \
     const nsStyle##name_ * newData =                                \
-      StyleSource().AsGeckoRuleNode()->                             \
+      gecko->RuleNode()->                                           \
         GetStyle##name_<aComputeData>(this->AsGecko(), mBits);      \
     /* always cache inherited data on the style context; the rule */\
     /* node set the bit in mBits for us if needed. */               \
@@ -74,6 +81,7 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {        \
       const_cast<nsStyle##name_ *>(newData);                        \
     return newData;                                                 \
   }                                                                 \
+  auto servo = AsServo();                                           \
   /**                                                               \
    * Also (conservatively) set the owning bit in the parent style   \
    * context if we're a text node.                                  \
@@ -108,47 +116,47 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {        \
   }                                                                 \
                                                                     \
   const nsStyle##name_* data =                                      \
-    Servo_GetStyle##name_(StyleSource().AsServoComputedValues());   \
+    Servo_GetStyle##name_(servo->ComputedValues());   \
   /* perform any remaining main thread work on the struct */        \
   if (needToCompute) {                                              \
     MOZ_ASSERT(NS_IsMainThread());                                  \
     MOZ_ASSERT(!mozilla::ServoStyleSet::IsInServoTraversal());      \
     const_cast<nsStyle##name_*>(data)->FinishStyle(PresContext());  \
-    /* the Servo-backed StyleContextSource owns the struct */       \
+    /* the ServoStyleContext owns the struct */                     \
     AddStyleBit(NS_STYLE_INHERIT_BIT(name_));                       \
   }                                                                 \
   return data;                                                      \
 }
 
-#define STYLE_STRUCT_RESET(name_, checkdata_cb_)                    \
-template<bool aComputeData>                                         \
-const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {        \
-  if (IsGecko()) {                                                  \
-    if (mCachedResetData) {                                         \
-      const nsStyle##name_ * cachedData =                           \
-        static_cast<nsStyle##name_*>(                               \
-          mCachedResetData->mStyleStructs[eStyleStruct_##name_]);   \
-      if (cachedData) /* Have it cached already, yay */             \
-        return cachedData;                                          \
-    }                                                               \
-    /* Have the rulenode deal */                                    \
-    AUTO_CHECK_DEPENDENCY(eStyleStruct_##name_);                    \
-    return StyleSource().AsGeckoRuleNode()->                        \
-      GetStyle##name_<aComputeData>(this->AsGecko());               \
-  }                                                                 \
-  const bool needToCompute = !(mBits & NS_STYLE_INHERIT_BIT(name_));\
-  if (!aComputeData && needToCompute) {                             \
-    return nullptr;                                                 \
-  }                                                                 \
-  const nsStyle##name_* data =                                      \
-    Servo_GetStyle##name_(StyleSource().AsServoComputedValues());   \
-  /* perform any remaining main thread work on the struct */        \
-  if (needToCompute) {                                              \
-    const_cast<nsStyle##name_*>(data)->FinishStyle(PresContext());  \
-    /* the Servo-backed StyleContextSource owns the struct */       \
-    AddStyleBit(NS_STYLE_INHERIT_BIT(name_));                       \
-  }                                                                 \
-  return data;                                                      \
+#define STYLE_STRUCT_RESET(name_, checkdata_cb_)                              \
+template<bool aComputeData>                                                   \
+const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {                  \
+  if (auto gecko = GetAsGecko()) {                                            \
+    if (mCachedResetData) {                                                   \
+      const nsStyle##name_ * cachedData =                                     \
+        static_cast<nsStyle##name_*>(                                         \
+          mCachedResetData->mStyleStructs[eStyleStruct_##name_]);             \
+      if (cachedData) /* Have it cached already, yay */                       \
+        return cachedData;                                                    \
+    }                                                                         \
+    /* Have the rulenode deal */                                              \
+    AUTO_CHECK_DEPENDENCY(eStyleStruct_##name_);                              \
+    return gecko->RuleNode()->GetStyle##name_<aComputeData>(this->AsGecko()); \
+  }                                                                           \
+  auto servo = AsServo();                                                     \
+  const bool needToCompute = !(mBits & NS_STYLE_INHERIT_BIT(name_));          \
+  if (!aComputeData && needToCompute) {                                       \
+    return nullptr;                                                           \
+  }                                                                           \
+  const nsStyle##name_* data =                                                \
+    Servo_GetStyle##name_(servo->ComputedValues());                           \
+  /* perform any remaining main thread work on the struct */                  \
+  if (needToCompute) {                                                        \
+    const_cast<nsStyle##name_*>(data)->FinishStyle(PresContext());            \
+    /* the ServoStyleContext owns the struct */                               \
+    AddStyleBit(NS_STYLE_INHERIT_BIT(name_));                                 \
+  }                                                                           \
+  return data;                                                                \
 }
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT_RESET

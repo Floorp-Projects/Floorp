@@ -10401,7 +10401,7 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
                                     bool aAuthorColorsAllowed)
 {
 #ifdef MOZ_STYLO
-  if (aStyleContext->StyleSource().IsServoComputedValues()) {
+  if (aStyleContext->IsServo()) {
     NS_WARNING("stylo: nsRuleNode::HasAuthorSpecifiedRules not implemented");
     return true;
   }

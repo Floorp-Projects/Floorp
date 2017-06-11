@@ -12,7 +12,6 @@
 #include "mozilla/RestyleLogging.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoUtils.h"
-#include "mozilla/StyleContextSource.h"
 #include "mozilla/StyleComplexColor.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsStyleSet.h"
@@ -270,6 +269,7 @@ public:
   }
 
   inline nsRuleNode* RuleNode();
+  inline ServoComputedValues* ComputedValues();
 
   void AddStyleBit(const uint64_t& aBit) { mBits |= aBit; }
 
@@ -438,8 +438,6 @@ public:
     return cachedData;
   }
 
-  mozilla::NonOwningStyleContextSource StyleSource() const;
-
 protected:
   // protected destructor to discourage deletion outside of Release()
   ~nsStyleContext() {}
@@ -466,7 +464,7 @@ protected:
     switch (aSID) {
 #define STYLE_STRUCT(name_, checkdata_cb_)                                    \
       case eStyleStruct_##name_:                                              \
-        return Servo_GetStyle##name_(StyleSource().AsServoComputedValues());
+        return Servo_GetStyle##name_(ComputedValues());
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
       default:

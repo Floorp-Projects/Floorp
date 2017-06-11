@@ -104,9 +104,14 @@ nsStyleContext::FinishConstruction()
                  static_cast<CSSPseudoElementTypeBase>(
                    CSSPseudoElementType::MAX),
                 "pseudo element bits no longer fit in a uint64_t");
-  MOZ_ASSERT(!StyleSource().IsNull());
 
 #ifdef DEBUG
+  if (auto servo = GetAsServo()) {
+    MOZ_ASSERT(servo->ComputedValues());
+  } else {
+    MOZ_ASSERT(RuleNode());
+  }
+
   static_assert(MOZ_ARRAY_LENGTH(nsStyleContext::sDependencyTable)
                   == nsStyleStructID_Length,
                 "Number of items in dependency table doesn't match IDs");
@@ -127,12 +132,12 @@ nsStyleContext::FinishConstruction()
 void
 nsStyleContext::Destructor()
 {
+#ifdef DEBUG
   if (const GeckoStyleContext* gecko = GetAsGecko()) {
     NS_ASSERTION(gecko->HasNoChildren(), "destructing context with children");
   }
   MOZ_ASSERT(!IsServo() || !mCachedResetData);
 
-#ifdef DEBUG
   if (IsServo()) {
     MOZ_ASSERT(!mCachedResetData,
                "Servo shouldn't cache reset structs in nsStyleContext");
@@ -575,10 +580,6 @@ public:
   explicit FakeStyleContext(const ServoComputedValues* aComputedValues)
     : mComputedValues(aComputedValues) {}
 
-  mozilla::NonOwningStyleContextSource StyleSource() const {
-    return mozilla::NonOwningStyleContextSource(mComputedValues);
-  }
-
   nsStyleContext* GetStyleIfVisited() {
     // Bug 1364484: Figure out what to do here for Stylo visited values.  We can
     // get the visited computed values:
@@ -687,12 +688,6 @@ void nsStyleContext::List(FILE* out, int32_t aIndent, bool aListDescendants)
   }
 }
 #endif
-
-NonOwningStyleContextSource
-nsStyleContext::StyleSource() const
-{
-  MOZ_STYLO_FORWARD(StyleSource, ())
-}
 
 // Overridden to prevent the global delete from being called, since the memory
 // came out of an nsIArena instead of the global delete operator's heap.

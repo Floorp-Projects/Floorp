@@ -243,14 +243,13 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
     return NS_OK;
   }
 
-  NonOwningStyleContextSource source = styleContext->StyleSource();
-  if (source.IsNull()) {
-    return NS_OK;
-  }
 
   nsCOMPtr<nsIMutableArray> rules = nsArray::Create();
-  if (source.IsGeckoRuleNodeOrNull()) {
-    nsRuleNode* ruleNode = source.AsGeckoRuleNode();
+  if (auto gecko = styleContext->GetAsGecko()) {
+    nsRuleNode* ruleNode = gecko->RuleNode();
+    if (!ruleNode) {
+      return NS_OK;
+    }
 
     AutoTArray<nsRuleNode*, 16> ruleNodes;
     while (!ruleNode->IsRoot()) {

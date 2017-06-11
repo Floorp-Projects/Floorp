@@ -564,7 +564,7 @@ MustReresolveStyle(const nsStyleContext* aContext)
 
   if (aContext->HasPseudoElementData()) {
     if (!aContext->GetPseudo() ||
-        aContext->StyleSource().IsServoComputedValues()) {
+        aContext->IsServo()) {
       // TODO(emilio): When ::first-line is supported in Servo, we may want to
       // fix this to avoid re-resolving pseudo-element styles.
       return true;
@@ -871,7 +871,7 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
 
   if (!mStyleContext || MustReresolveStyle(mStyleContext)) {
 #ifdef DEBUG
-    if (mStyleContext && mStyleContext->StyleSource().IsGeckoRuleNodeOrNull()) {
+    if (mStyleContext && mStyleContext->IsGecko()) {
       // We want to check that going through this path because of
       // HasPseudoElementData is rare, because it slows us down a good
       // bit.  So check that we're really inside something associated
