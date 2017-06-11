@@ -288,7 +288,7 @@ PTCPSocketChild*
 NeckoChild::AllocPTCPSocketChild(const nsString& host,
                                  const uint16_t& port)
 {
-  TCPSocketChild* p = new TCPSocketChild(host, port);
+  TCPSocketChild* p = new TCPSocketChild(host, port, nullptr);
   p->AddIPDLReference();
   return p;
 }
