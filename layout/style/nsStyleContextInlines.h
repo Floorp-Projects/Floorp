@@ -11,8 +11,8 @@
  * in stylo mode.
  */
 
-#ifndef mozilla_nsStyleContextInlines_h
-#define mozilla_nsStyleContextInlines_h
+#ifndef nsStyleContextInlines_h
+#define nsStyleContextInlines_h
 
 #include "nsStyleContext.h"
 #include "mozilla/ServoStyleContext.h"
@@ -23,4 +23,4 @@ using namespace mozilla;
 
 MOZ_DEFINE_STYLO_METHODS(nsStyleContext, GeckoStyleContext, ServoStyleContext);
 
-#endif // mozilla_nsStyleContextInlines_h
+#endif // nsStyleContextInlines_h
