@@ -99,6 +99,9 @@ public:
   {
     mSuccess = !!VirtualProtectEx(GetCurrentProcess(), mFunc, mSize,
                                   mNewProtect, &mOldProtect);
+    if (!mSuccess) {
+      // printf("VirtualProtectEx failed! %d\n", GetLastError());
+    }
     return mSuccess;
   }
 
@@ -138,7 +141,6 @@ public:
       // Ensure we can write to the code.
       AutoVirtualProtect protect(fn, 2, PAGE_EXECUTE_READWRITE);
       if (!protect.Protect()) {
-        // printf("VirtualProtectEx failed! %d\n", GetLastError());
         continue;
       }
 
@@ -271,7 +273,6 @@ public:
     AutoVirtualProtect protectBefore(fn - 5, 5, PAGE_EXECUTE_READWRITE);
     AutoVirtualProtect protectAfter(fn, 2, PAGE_EXECUTE_READWRITE);
     if (!protectBefore.Protect() || !protectAfter.Protect()) {
-      //printf ("VirtualProtectEx failed! %d\n", GetLastError());
       return false;
     }
 
@@ -400,7 +401,6 @@ public:
       // ensure we can modify the original code
       AutoVirtualProtect protect(origBytes, nBytes, PAGE_EXECUTE_READWRITE);
       if (!protect.Protect()) {
-        //printf ("VirtualProtectEx failed! %d\n", GetLastError());
         continue;
       }
 
@@ -440,7 +440,7 @@ public:
     mHookPage = (byteptr_t)VirtualAllocEx(GetCurrentProcess(), nullptr,
                                           mMaxHooks * kHookSize,
                                           MEM_COMMIT | MEM_RESERVE,
-                                          PAGE_EXECUTE_READWRITE);
+                                          PAGE_EXECUTE_READ);
     if (!mHookPage) {
       mModule = 0;
       return;
@@ -448,19 +448,6 @@ public:
   }
 
   bool Initialized() { return !!mModule; }
-
-  void LockHooks()
-  {
-    if (!mModule) {
-      return;
-    }
-
-    DWORD op;
-    VirtualProtectEx(GetCurrentProcess(), mHookPage, mMaxHooks * kHookSize,
-                     PAGE_EXECUTE_READ, &op);
-
-    mModule = 0;
-  }
 
   bool AddHook(const char* aName, intptr_t aHookDest, void** aOrigFunc)
   {
@@ -735,6 +722,12 @@ protected:
   void CreateTrampoline(void* aOrigFunction, intptr_t aDest, void** aOutTramp)
   {
     *aOutTramp = nullptr;
+
+    AutoVirtualProtect protectHookPage(mHookPage, mMaxHooks * kHookSize,
+                                       PAGE_EXECUTE_READWRITE);
+    if (!protectHookPage.Protect()) {
+      return;
+    }
 
     byteptr_t tramp = FindTrampolineSpace();
     if (!tramp) {
@@ -1249,7 +1242,6 @@ protected:
     // ensure we can modify the original code
     AutoVirtualProtect protect(aOrigFunction, nOrigBytes, PAGE_EXECUTE_READWRITE);
     if (!protect.Protect()) {
-      //printf ("VirtualProtectEx failed! %d\n", GetLastError());
       return;
     }
 
@@ -1353,13 +1345,6 @@ public:
 
     // Lazily initialize mDetourPatcher, since it allocates memory and we might
     // not need it.
-  }
-
-  void LockHooks()
-  {
-    if (mDetourPatcher.Initialized()) {
-      mDetourPatcher.LockHooks();
-    }
   }
 
   /**

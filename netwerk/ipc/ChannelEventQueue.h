@@ -296,7 +296,10 @@ ChannelEventQueue::MaybeFlushQueue()
 class MOZ_STACK_CLASS AutoEventEnqueuer
 {
  public:
-  explicit AutoEventEnqueuer(ChannelEventQueue *queue) : mEventQueue(queue) {
+  explicit AutoEventEnqueuer(ChannelEventQueue *queue)
+    : mEventQueue(queue)
+    , mOwner(queue->mOwner)
+  {
     mEventQueue->StartForcedQueueing();
   }
   ~AutoEventEnqueuer() {
@@ -304,6 +307,8 @@ class MOZ_STACK_CLASS AutoEventEnqueuer
   }
  private:
   RefPtr<ChannelEventQueue> mEventQueue;
+  // Ensure channel object lives longer than ChannelEventQueue.
+  nsCOMPtr<nsISupports> mOwner;
 };
 
 } // namespace net

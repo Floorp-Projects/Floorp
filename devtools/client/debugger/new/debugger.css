@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 .landing-page {
   flex: 1;
   display: flex;
@@ -99,6 +103,10 @@
   font-size: 14px;
   color: var(--theme-comment);
 }
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 .landing-page .tab-group {
   flex: 1;
   overflow-y: auto;
@@ -157,6 +165,10 @@
 .landing-page .tab.active .tab-url {
   color: var(--theme-highlight-gray);
 }
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 .landing-page .sidebar {
   display: flex;
   background-color: var(--theme-tab-toolbar-background);
@@ -210,6 +222,10 @@
 .landing-page .sidebar li:focus a {
   color: inherit;
 }
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 menu {
   display: inline;
   padding: 0;
@@ -295,6 +311,10 @@ menuseparator {
   height: 100%;
   z-index: 999;
 }
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 :root.theme-light,
 :root .theme-light {
   --theme-search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
@@ -1749,10 +1769,6 @@ html .toggle-button-end.vertical svg {
   --theme-conditional-breakpoint-color: #ccd1d5;
 }
 
-.theme-firebug {
-  --theme-conditional-breakpoint-color: #ccd1d5;
-}
-
 .out-of-scope .CodeMirror-line,
 .out-of-scope .CodeMirror-linenumber {
   opacity: 0.8;
@@ -1988,25 +2004,6 @@ html[dir="rtl"] .editor-mount {
   border-top-right-radius: 2px;
   border-bottom-right-radius: 2px;
 }
-
-.why-paused {
-  background-color: var(--theme-body-background);
-  border-bottom: 1px solid var(--theme-splitter-color);
-  color: var(--theme-highlight-blue);
-  padding: 10px 10px 10px 20px;
-  white-space: normal;
-  opacity: 0.9;
-  font-size: 12px;
-  flex: 0 1 auto;
-}
-
-.theme-dark .secondary-panes .why-paused {
-  color: white;
-}
-
-.why-paused .message {
-  font-size: 10px;
-}
 .breakpoints-toggle {
   margin: 2px 3px;
 }
@@ -2215,6 +2212,33 @@ html .breakpoints-list .breakpoint.paused {
 .frames ul .frames-group .frames-list {
   border-top: 1px solid var(--theme-splitter-color);
   border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.why-paused {
+  background-color: var(--theme-body-background);
+  color: var(--theme-body-color);
+  padding: 10px 10px 10px 20px;
+  white-space: normal;
+  opacity: 0.6;
+  font-size: 12px;
+  flex: 0 1 auto;
+  text-align: center;
+  font-style: italic;
+  font-weight: 300;
+}
+
+.theme-dark .secondary-panes .why-paused {
+  color: white;
+}
+
+.why-paused .message {
+  font-size: 10px;
+}
+
+.why-paused .message.warning {
+  font-size: 10px;
+  color: var(--theme-graphs-full-red);
+  font-weight: bold;
 }
 .frames ul {
   list-style: none;
