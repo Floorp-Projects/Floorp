@@ -79,14 +79,20 @@ public:
   const void* NS_FASTCALL StyleData(nsStyleStructID aSID) MOZ_NONNULL_RETURN;
 
 #ifdef DEBUG
-  void AssertChildStructsNotUsedElsewhere(nsStyleContext* aDestroyingContext,
-                                          int32_t aLevels) const;
   void ListDescendants(FILE* out, int32_t aIndent);
 
 #endif
 
 #ifdef RESTYLE_LOGGING
-  void LogChildStyleContextTree(uint32_t aStructs) const;
+
+  // This only gets called under call trees where we've already checked
+  // that PresContext()->RestyleManager()->ShouldLogRestyle() returned true.
+  // It exists here just to satisfy LOG_RESTYLE's expectations.
+  bool ShouldLogRestyle() { return true; }
+  void LogStyleContextTree(int32_t aLoggingDepth, uint32_t aStructs);
+  void LogStyleContextTree(bool aFirst, uint32_t aStructs);
+  int32_t& LoggingDepth();
+  nsCString GetCachedStyleDataAsString(uint32_t aStructs);
 #endif
 
   // Only called for Gecko-backed nsStyleContexts.
@@ -103,6 +109,67 @@ public:
     Destructor();
   }
 
+  /**
+   * Swaps owned style struct pointers between this and aNewContext, on
+   * the assumption that aNewContext is the new style context for a frame
+   * and this is the old one.  aStructs indicates which structs to consider
+   * swapping; only those which are owned in both this and aNewContext
+   * will be swapped.
+   *
+   * Additionally, if there are identical struct pointers for one of the
+   * structs indicated by aStructs, and it is not an owned struct on this,
+   * then the cached struct slot on this will be set to null.  If the struct
+   * has been swapped on an ancestor, this style context (being the old one)
+   * will be left caching the struct pointer on the new ancestor, despite
+   * inheriting from the old ancestor.  This is not normally a problem, as
+   * this style context will usually be destroyed by being released at the
+   * end of ElementRestyler::Restyle; but for style contexts held on to outside
+   * of the frame, we need to clear out the cached pointer so that if we need
+   * it again we'll re-fetch it from the new ancestor.
+   */
+  void SwapStyleData(GeckoStyleContext* aNewContext, uint32_t aStructs);
+
+  void DestroyCachedStructs(nsPresContext* aPresContext);
+
+  /**
+   * Return style data that is currently cached on the style context.
+   * Only returns the structs we cache ourselves; never consults the
+   * rule tree.
+   *
+   * For "internal" use only in nsStyleContext and nsRuleNode.
+   */
+  const void* GetCachedStyleData(nsStyleStructID aSID)
+  {
+    const void* cachedData;
+    if (nsCachedStyleData::IsReset(aSID)) {
+      if (mCachedResetData) {
+        cachedData = mCachedResetData->mStyleStructs[aSID];
+      } else {
+        cachedData = nullptr;
+      }
+    } else {
+      cachedData = mCachedInheritedData.mStyleStructs[aSID];
+    }
+    return cachedData;
+  }
+
+  // mCachedInheritedData and mCachedResetData point to both structs that
+  // are owned by this style context and structs that are owned by one of
+  // this style context's ancestors (which are indirectly owned since this
+  // style context owns a reference to its parent).  If the bit in |mBits|
+  // is set for a struct, that means that the pointer for that struct is
+  // owned by an ancestor or by the rule node rather than by this style context.
+  // Since style contexts typically have some inherited data but only sometimes
+  // have reset data, we always allocate the mCachedInheritedData, but only
+  // sometimes allocate the mCachedResetData.
+  nsResetStyleData*       mCachedResetData; // Cached reset style data.
+  nsInheritedStyleData    mCachedInheritedData; // Cached inherited style data
+
+#ifdef DEBUG
+  void AssertStructsNotUsedElsewhere(GeckoStyleContext* aDestroyingContext,
+                                     int32_t aLevels) const;
+#endif
+
 private:
   // Helper for ClearCachedInheritedStyleDataOnDescendants.
   void DoClearCachedInheritedStyleDataOnDescendants(uint32_t aStructs);
@@ -118,8 +185,8 @@ private:
   GeckoStyleContext* mPrevSibling;
   GeckoStyleContext* mNextSibling;
   RefPtr<nsRuleNode> mRuleNode;
-};
 
+};
 }
 
 #endif // mozilla_GeckoStyleContext_h

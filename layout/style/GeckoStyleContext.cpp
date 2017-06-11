@@ -23,6 +23,7 @@ GeckoStyleContext::GeckoStyleContext(nsStyleContext* aParent,
                                      already_AddRefed<nsRuleNode> aRuleNode,
                                      bool aSkipParentDisplayBasedStyleFixup)
   : nsStyleContext(aParent, aPseudoTag, aPseudoType)
+  , mCachedResetData(nullptr)
   , mChild(nullptr)
   , mEmptyChild(nullptr)
   , mRuleNode(Move(aRuleNode))
@@ -356,9 +357,81 @@ GeckoStyleContext::SetIneligibleForSharing()
 }
 
 #ifdef RESTYLE_LOGGING
-void
-GeckoStyleContext::LogChildStyleContextTree(uint32_t aStructs) const
+nsCString
+GeckoStyleContext::GetCachedStyleDataAsString(uint32_t aStructs)
 {
+  nsCString structs;
+  for (nsStyleStructID i = nsStyleStructID(0);
+       i < nsStyleStructID_Length;
+       i = nsStyleStructID(i + 1)) {
+    if (aStructs & nsCachedStyleData::GetBitForSID(i)) {
+      const void* data = GetCachedStyleData(i);
+      if (!structs.IsEmpty()) {
+        structs.Append(' ');
+      }
+      structs.AppendPrintf("%s=%p", StructName(i), data);
+      if (HasCachedDependentStyleData(i)) {
+        structs.AppendLiteral("(dependent)");
+      } else {
+        structs.AppendLiteral("(owned)");
+      }
+    }
+  }
+  return structs;
+}
+
+int32_t&
+GeckoStyleContext::LoggingDepth()
+{
+  static int32_t depth = 0;
+  return depth;
+}
+
+void
+GeckoStyleContext::LogStyleContextTree(int32_t aLoggingDepth, uint32_t aStructs)
+{
+  LoggingDepth() = aLoggingDepth;
+  LogStyleContextTree(true, aStructs);
+}
+
+void
+GeckoStyleContext::LogStyleContextTree(bool aFirst, uint32_t aStructs)
+{
+  nsCString structs = GetCachedStyleDataAsString(aStructs);
+  if (!structs.IsEmpty()) {
+    structs.Append(' ');
+  }
+
+  nsCString pseudo;
+  if (mPseudoTag) {
+    nsAutoString pseudoTag;
+    mPseudoTag->ToString(pseudoTag);
+    AppendUTF16toUTF8(pseudoTag, pseudo);
+    pseudo.Append(' ');
+  }
+
+  nsCString flags;
+  if (IsStyleIfVisited()) {
+    flags.AppendLiteral("IS_STYLE_IF_VISITED ");
+  }
+  if (HasChildThatUsesGrandancestorStyle()) {
+    flags.AppendLiteral("CHILD_USES_GRANDANCESTOR_STYLE ");
+  }
+  if (IsShared()) {
+    flags.AppendLiteral("IS_SHARED ");
+  }
+
+  nsCString parent;
+  if (aFirst) {
+    parent.AppendPrintf("parent=%p ", mParent.get());
+  }
+
+  LOG_RESTYLE("%p(%d) %s%s%s%s",
+              this, mRefCnt,
+              structs.get(), pseudo.get(), flags.get(), parent.get());
+
+  LOG_RESTYLE_INDENT();
+
   if (nullptr != mChild) {
     GeckoStyleContext* child = mChild;
     do {
@@ -496,9 +569,73 @@ ShouldBlockifyChildren(const nsStyleDisplay* aStyleDisp)
 
 #ifdef DEBUG
 void
-GeckoStyleContext::AssertChildStructsNotUsedElsewhere(nsStyleContext* aDestroyingContext,
-                                                      int32_t aLevels) const
+GeckoStyleContext::AssertStructsNotUsedElsewhere(
+                                       GeckoStyleContext* aDestroyingContext,
+                                       int32_t aLevels) const
 {
+  if (aLevels == 0) {
+    return;
+  }
+
+  void* data;
+
+  if (mBits & NS_STYLE_IS_GOING_AWAY) {
+    return;
+  }
+
+  if (this != aDestroyingContext) {
+    nsInheritedStyleData& destroyingInheritedData =
+      aDestroyingContext->mCachedInheritedData;
+#define STYLE_STRUCT_INHERITED(name_, checkdata_cb)                            \
+    data = destroyingInheritedData.mStyleStructs[eStyleStruct_##name_];        \
+    if (data &&                                                                \
+        !(aDestroyingContext->mBits & NS_STYLE_INHERIT_BIT(name_)) &&          \
+         (mCachedInheritedData.mStyleStructs[eStyleStruct_##name_] == data)) { \
+      printf_stderr("style struct %p found on style context %p\n", data, this);\
+      nsString url;                                                            \
+      nsresult rv = PresContext()->Document()->GetURL(url);                    \
+      if (NS_SUCCEEDED(rv)) {                                                  \
+        printf_stderr("  in %s\n", NS_ConvertUTF16toUTF8(url).get());          \
+      }                                                                        \
+      MOZ_ASSERT(false, "destroying " #name_ " style struct still present "    \
+                        "in style context tree");                              \
+    }
+#define STYLE_STRUCT_RESET(name_, checkdata_cb)
+
+#include "nsStyleStructList.h"
+
+#undef STYLE_STRUCT_INHERITED
+#undef STYLE_STRUCT_RESET
+
+    if (mCachedResetData) {
+      nsResetStyleData* destroyingResetData =
+        aDestroyingContext->mCachedResetData;
+      if (destroyingResetData) {
+#define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)
+#define STYLE_STRUCT_RESET(name_, checkdata_cb)                                \
+        data = destroyingResetData->mStyleStructs[eStyleStruct_##name_];       \
+        if (data &&                                                            \
+            !(aDestroyingContext->mBits & NS_STYLE_INHERIT_BIT(name_)) &&      \
+            (mCachedResetData->mStyleStructs[eStyleStruct_##name_] == data)) { \
+          printf_stderr("style struct %p found on style context %p\n", data,   \
+                        this);                                                 \
+          nsString url;                                                        \
+          nsresult rv = PresContext()->Document()->GetURL(url);                \
+          if (NS_SUCCEEDED(rv)) {                                              \
+            printf_stderr("  in %s\n", NS_ConvertUTF16toUTF8(url).get());      \
+          }                                                                    \
+          MOZ_ASSERT(false, "destroying " #name_ " style struct still present "\
+                            "in style context tree");                          \
+        }
+
+#include "nsStyleStructList.h"
+
+#undef STYLE_STRUCT_INHERITED
+#undef STYLE_STRUCT_RESET
+      }
+    }
+  }
+
   if (mChild) {
     const GeckoStyleContext* child = mChild;
     do {
@@ -516,6 +653,7 @@ GeckoStyleContext::AssertChildStructsNotUsedElsewhere(nsStyleContext* aDestroyin
   }
 }
 #endif
+
 
 void
 GeckoStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
@@ -814,3 +952,60 @@ GeckoStyleContext::StyleData(nsStyleStructID aSID)
   return newData;
 }
 
+void
+GeckoStyleContext::DestroyCachedStructs(nsPresContext* aPresContext)
+{
+  mCachedInheritedData.DestroyStructs(mBits, aPresContext);
+  if (mCachedResetData) {
+    mCachedResetData->Destroy(mBits, aPresContext);
+  }
+}
+
+
+void
+GeckoStyleContext::SwapStyleData(GeckoStyleContext* aNewContext, uint32_t aStructs)
+{
+  static_assert(nsStyleStructID_Length <= 32, "aStructs is not big enough");
+
+  for (nsStyleStructID i = nsStyleStructID_Inherited_Start;
+       i < nsStyleStructID_Inherited_Start + nsStyleStructID_Inherited_Count;
+       i = nsStyleStructID(i + 1)) {
+    uint32_t bit = nsCachedStyleData::GetBitForSID(i);
+    if (!(aStructs & bit)) {
+      continue;
+    }
+    void*& thisData = mCachedInheritedData.mStyleStructs[i];
+    void*& otherData = aNewContext->mCachedInheritedData.mStyleStructs[i];
+    if (mBits & bit) {
+      if (thisData == otherData) {
+        thisData = nullptr;
+      }
+    } else if (!(aNewContext->mBits & bit) && thisData && otherData) {
+      std::swap(thisData, otherData);
+    }
+  }
+
+  for (nsStyleStructID i = nsStyleStructID_Reset_Start;
+       i < nsStyleStructID_Reset_Start + nsStyleStructID_Reset_Count;
+       i = nsStyleStructID(i + 1)) {
+    uint32_t bit = nsCachedStyleData::GetBitForSID(i);
+    if (!(aStructs & bit)) {
+      continue;
+    }
+    if (!mCachedResetData) {
+      mCachedResetData = new (PresContext()) nsResetStyleData;
+    }
+    if (!aNewContext->mCachedResetData) {
+      aNewContext->mCachedResetData = new (PresContext()) nsResetStyleData;
+    }
+    void*& thisData = mCachedResetData->mStyleStructs[i];
+    void*& otherData = aNewContext->mCachedResetData->mStyleStructs[i];
+    if (mBits & bit) {
+      if (thisData == otherData) {
+        thisData = nullptr;
+      }
+    } else if (!(aNewContext->mBits & bit) && thisData && otherData) {
+      std::swap(thisData, otherData);
+    }
+  }
+}

@@ -88,7 +88,7 @@ RestyleTracker::ProcessOneRestyle(Element* aElement,
         GeckoRestyleManager::StructsToLog() != 0) {
       LOG_RESTYLE("style context tree before restyle:");
       LOG_RESTYLE_INDENT();
-      primaryFrame->StyleContext()->LogStyleContextTree(
+      primaryFrame->StyleContext()->AsGecko()->LogStyleContextTree(
           LoggingDepth(), GeckoRestyleManager::StructsToLog());
     }
 #endif
