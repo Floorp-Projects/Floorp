@@ -50,7 +50,7 @@ load 377960-2.html
 load 384663-1.html
 load 386000-1.html
 load 386794-1.html
-skip-if(stylo) load 387460-1.html # bug 1323647
+load 387460-1.html
 load 395469-1.xhtml
 load 395469-2.xhtml
 load 398088-1.xul
