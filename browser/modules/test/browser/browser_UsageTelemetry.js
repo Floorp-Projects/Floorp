@@ -283,19 +283,25 @@ add_task(async function test_tabsHistogram() {
   openedTabs.push(await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank"));
   checkTabCountHistogram(tabCountHist.snapshot(), [0, 0, 1], "TAB_COUNT telemetry - opening tabs");
 
-  // Add two new tabs in the same window.
+  // Open a different page and check the counts.
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
+  openedTabs.push(tab);
+  await BrowserTestUtils.loadURI(tab.linkedBrowser, "http://example.com/");
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  checkTabCountHistogram(tabCountHist.snapshot(), [0, 0, 1, 2], "TAB_COUNT telemetry - loading page");
+
+  // Open another tab
   openedTabs.push(await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank"));
-  openedTabs.push(await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank"));
-  checkTabCountHistogram(tabCountHist.snapshot(), [0, 0, 1, 1, 1], "TAB_COUNT telemetry - opening more tabs");
+  checkTabCountHistogram(tabCountHist.snapshot(), [0, 0, 1, 2, 1], "TAB_COUNT telemetry - opening more tabs");
 
   // Add a new window and then some tabs in it. A new window starts with one tab.
   let win = await BrowserTestUtils.openNewBrowserWindow();
-  checkTabCountHistogram(tabCountHist.snapshot(), [0, 0, 1, 1, 1, 1], "TAB_COUNT telemetry - opening window");
+  checkTabCountHistogram(tabCountHist.snapshot(), [0, 0, 1, 2, 1, 1], "TAB_COUNT telemetry - opening window");
 
   openedTabs.push(await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:blank"));
   openedTabs.push(await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:blank"));
   openedTabs.push(await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:blank"));
-  checkTabCountHistogram(tabCountHist.snapshot(), [0, 0, 1, 1, 1, 1, 1, 1, 1], "TAB_COUNT telemetry - opening more tabs in another window");
+  checkTabCountHistogram(tabCountHist.snapshot(), [0, 0, 1, 2, 1, 1, 1, 1, 1], "TAB_COUNT telemetry - opening more tabs in another window");
 
   // Remove all the extra windows and tabs.
   for (let tab of openedTabs) {
