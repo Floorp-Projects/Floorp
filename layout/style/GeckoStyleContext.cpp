@@ -20,6 +20,7 @@ GeckoStyleContext::GeckoStyleContext(nsStyleContext* aParent,
   : nsStyleContext(aParent, OwningStyleContextSource(Move(aRuleNode)),
                    aPseudoTag, aPseudoType)
 {
+  mBits |= NS_STYLE_CONTEXT_IS_GECKO;
 #ifdef MOZ_STYLO
   mPresContext = mSource.AsGeckoRuleNode()->PresContext();
 #endif
@@ -40,4 +41,14 @@ GeckoStyleContext::GeckoStyleContext(nsStyleContext* aParent,
   mSource.AsGeckoRuleNode()->SetUsedDirectly(); // before ApplyStyleFixups()!
   FinishConstruction();
   ApplyStyleFixups(aSkipParentDisplayBasedStyleFixup);
+}
+
+// Overloaded new operator. Initializes the memory to 0 and relies on an arena
+// (which comes from the presShell) to perform the allocation.
+void*
+GeckoStyleContext::operator new(size_t sz, nsPresContext* aPresContext)
+{
+  // Check the recycle list first.
+  return aPresContext->PresShell()->
+    AllocateByObjectID(eArenaObjectID_nsStyleContext, sz);
 }
