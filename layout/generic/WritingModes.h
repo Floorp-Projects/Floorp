@@ -8,6 +8,7 @@
 
 #include "nsRect.h"
 #include "nsStyleContext.h"
+#include "nsStyleContextInlines.h"
 #include "nsBidiUtils.h"
 
 // It is the caller's responsibility to operate on logical-coordinate objects
