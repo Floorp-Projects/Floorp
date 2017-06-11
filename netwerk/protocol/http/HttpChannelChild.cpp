@@ -150,6 +150,7 @@ InterceptStreamListener::Cleanup()
 
 HttpChannelChild::HttpChannelChild()
   : HttpAsyncAborter<HttpChannelChild>(this)
+  , NeckoTargetHolder(nullptr)
   , mSynthesizedStreamLength(0)
   , mIsFromCache(false)
   , mCacheEntryAvailable(false)
@@ -296,26 +297,19 @@ HttpChannelChild::OnBackgroundChildDestroyed()
   mBgChild = nullptr;
 }
 
-class AssociateApplicationCacheEvent : public ChannelEvent
+class AssociateApplicationCacheEvent : public NeckoTargetChannelEvent<HttpChannelChild>
 {
   public:
     AssociateApplicationCacheEvent(HttpChannelChild* aChild,
                                    const nsCString &aGroupID,
                                    const nsCString &aClientID)
-    : mChild(aChild)
+    : NeckoTargetChannelEvent<HttpChannelChild>(aChild)
     , groupID(aGroupID)
     , clientID(aClientID) {}
 
     void Run() { mChild->AssociateApplicationCache(groupID, clientID); }
 
-    already_AddRefed<nsIEventTarget> GetEventTarget()
-    {
-      MOZ_ASSERT(mChild);
-      nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
-      return target.forget();
-    }
   private:
-    HttpChannelChild* mChild;
     nsCString groupID;
     nsCString clientID;
 };
@@ -344,7 +338,7 @@ HttpChannelChild::AssociateApplicationCache(const nsCString &groupID,
   mApplicationCache->InitAsHandle(groupID, clientID);
 }
 
-class StartRequestEvent : public ChannelEvent
+class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
 {
  public:
   StartRequestEvent(HttpChannelChild* aChild,
@@ -364,7 +358,7 @@ class StartRequestEvent : public ChannelEvent
                     const uint32_t& aCacheKey,
                     const nsCString& altDataType,
                     const int64_t& altDataLen)
-  : mChild(aChild)
+  : NeckoTargetChannelEvent<HttpChannelChild>(aChild)
   , mChannelStatus(aChannelStatus)
   , mResponseHead(aResponseHead)
   , mRequestHeaders(aRequestHeaders)
@@ -394,14 +388,7 @@ class StartRequestEvent : public ChannelEvent
                            mCacheKey, mAltDataType, mAltDataLen);
   }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
-  {
-    MOZ_ASSERT(mChild);
-    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
-    return target.forget();
-  }
  private:
-  HttpChannelChild* mChild;
   nsresult mChannelStatus;
   nsHttpResponseHead mResponseHead;
   nsHttpHeaderArray mRequestHeaders;
@@ -652,7 +639,7 @@ HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   }
 }
 
-class TransportAndDataEvent : public ChannelEvent
+class TransportAndDataEvent : public NeckoTargetChannelEvent<HttpChannelChild>
 {
  public:
   TransportAndDataEvent(HttpChannelChild* child,
@@ -661,7 +648,7 @@ class TransportAndDataEvent : public ChannelEvent
                         const nsCString& data,
                         const uint64_t& offset,
                         const uint32_t& count)
-  : mChild(child)
+  : NeckoTargetChannelEvent<HttpChannelChild>(child)
   , mChannelStatus(channelStatus)
   , mTransportStatus(transportStatus)
   , mData(data)
@@ -674,14 +661,7 @@ class TransportAndDataEvent : public ChannelEvent
                                mOffset, mCount, mData);
   }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
-  {
-    MOZ_ASSERT(mChild);
-    nsCOMPtr<nsIEventTarget> target = mChild->GetODATarget();
-    return target.forget();
-  }
  private:
-  HttpChannelChild* mChild;
   nsresult mChannelStatus;
   nsresult mTransportStatus;
   nsCString mData;
@@ -706,14 +686,14 @@ HttpChannelChild::ProcessOnTransportAndData(const nsresult& aChannelStatus,
                         mDivertingToParent);
 }
 
-class MaybeDivertOnDataHttpEvent : public ChannelEvent
+class MaybeDivertOnDataHttpEvent : public NeckoTargetChannelEvent<HttpChannelChild>
 {
  public:
   MaybeDivertOnDataHttpEvent(HttpChannelChild* child,
                              const nsCString& data,
                              const uint64_t& offset,
                              const uint32_t& count)
-  : mChild(child)
+  : NeckoTargetChannelEvent<HttpChannelChild>(child)
   , mData(data)
   , mOffset(offset)
   , mCount(count) {}
@@ -723,14 +703,7 @@ class MaybeDivertOnDataHttpEvent : public ChannelEvent
     mChild->MaybeDivertOnData(mData, mOffset, mCount);
   }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
-  {
-    MOZ_ASSERT(mChild);
-    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
-    return target.forget();
-  }
  private:
-  HttpChannelChild* mChild;
   nsCString mData;
   uint64_t mOffset;
   uint32_t mCount;
@@ -907,26 +880,19 @@ HttpChannelChild::DoOnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
   }
 }
 
-class StopRequestEvent : public ChannelEvent
+class StopRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
 {
  public:
   StopRequestEvent(HttpChannelChild* child,
                    const nsresult& channelStatus,
                    const ResourceTimingStruct& timing)
-  : mChild(child)
+  : NeckoTargetChannelEvent<HttpChannelChild>(child)
   , mChannelStatus(channelStatus)
   , mTiming(timing) {}
 
   void Run() { mChild->OnStopRequest(mChannelStatus, mTiming); }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
-  {
-    MOZ_ASSERT(mChild);
-    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
-    return target.forget();
-  }
  private:
-  HttpChannelChild* mChild;
   nsresult mChannelStatus;
   ResourceTimingStruct mTiming;
 };
@@ -944,12 +910,12 @@ HttpChannelChild::ProcessOnStopRequest(const nsresult& aChannelStatus,
                         mDivertingToParent);
 }
 
-class MaybeDivertOnStopHttpEvent : public ChannelEvent
+class MaybeDivertOnStopHttpEvent : public NeckoTargetChannelEvent<HttpChannelChild>
 {
  public:
   MaybeDivertOnStopHttpEvent(HttpChannelChild* child,
                              const nsresult& channelStatus)
-  : mChild(child)
+  : NeckoTargetChannelEvent<HttpChannelChild>(child)
   , mChannelStatus(channelStatus)
   {}
 
@@ -958,14 +924,7 @@ class MaybeDivertOnStopHttpEvent : public ChannelEvent
     mChild->MaybeDivertOnStop(mChannelStatus);
   }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
-  {
-    MOZ_ASSERT(mChild);
-    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
-    return target.forget();
-  }
  private:
-  HttpChannelChild* mChild;
   nsresult mChannelStatus;
 };
 
@@ -1157,26 +1116,19 @@ HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest, nsresult aChannelStatus,
     mLoadGroup->RemoveRequest(this, nullptr, mStatus);
 }
 
-class ProgressEvent : public ChannelEvent
+class ProgressEvent : public NeckoTargetChannelEvent<HttpChannelChild>
 {
  public:
   ProgressEvent(HttpChannelChild* child,
                 const int64_t& progress,
                 const int64_t& progressMax)
-  : mChild(child)
+  : NeckoTargetChannelEvent<HttpChannelChild>(child)
   , mProgress(progress)
   , mProgressMax(progressMax) {}
 
   void Run() { mChild->OnProgress(mProgress, mProgressMax); }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
-  {
-    MOZ_ASSERT(mChild);
-    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
-    return target.forget();
-  }
  private:
-  HttpChannelChild* mChild;
   int64_t mProgress, mProgressMax;
 };
 
@@ -1215,24 +1167,17 @@ HttpChannelChild::OnProgress(const int64_t& progress,
   }
 }
 
-class StatusEvent : public ChannelEvent
+class StatusEvent : public NeckoTargetChannelEvent<HttpChannelChild>
 {
  public:
   StatusEvent(HttpChannelChild* child,
               const nsresult& status)
-  : mChild(child)
+  : NeckoTargetChannelEvent<HttpChannelChild>(child)
   , mStatus(status) {}
 
   void Run() { mChild->OnStatus(mStatus); }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
-  {
-    MOZ_ASSERT(mChild);
-    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
-    return target.forget();
-  }
  private:
-  HttpChannelChild* mChild;
   nsresult mStatus;
 };
 
@@ -1271,23 +1216,16 @@ HttpChannelChild::OnStatus(const nsresult& status)
   }
 }
 
-class FailedAsyncOpenEvent : public ChannelEvent
+class FailedAsyncOpenEvent : public NeckoTargetChannelEvent<HttpChannelChild>
 {
  public:
   FailedAsyncOpenEvent(HttpChannelChild* child, const nsresult& status)
-  : mChild(child)
+  : NeckoTargetChannelEvent<HttpChannelChild>(child)
   , mStatus(status) {}
 
   void Run() { mChild->FailedAsyncOpen(mStatus); }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
-  {
-    MOZ_ASSERT(mChild);
-    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
-    return target.forget();
-  }
  private:
-  HttpChannelChild* mChild;
   nsresult mStatus;
 };
 
@@ -1367,20 +1305,12 @@ HttpChannelChild::DoNotifyListenerCleanup()
   }
 }
 
-class DeleteSelfEvent : public ChannelEvent
+class DeleteSelfEvent : public NeckoTargetChannelEvent<HttpChannelChild>
 {
  public:
-  explicit DeleteSelfEvent(HttpChannelChild* child) : mChild(child) {}
+  explicit DeleteSelfEvent(HttpChannelChild* child)
+  : NeckoTargetChannelEvent<HttpChannelChild>(child) {}
   void Run() { mChild->DeleteSelf(); }
-
-  already_AddRefed<nsIEventTarget> GetEventTarget()
-  {
-    MOZ_ASSERT(mChild);
-    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
-    return target.forget();
-  }
- private:
-  HttpChannelChild* mChild;
 };
 
 mozilla::ipc::IPCResult
@@ -1493,7 +1423,7 @@ HttpChannelChild::RecvReportSecurityMessage(const nsString& messageTag,
   return IPC_OK();
 }
 
-class Redirect1Event : public ChannelEvent
+class Redirect1Event : public NeckoTargetChannelEvent<HttpChannelChild>
 {
  public:
   Redirect1Event(HttpChannelChild* child,
@@ -1503,7 +1433,7 @@ class Redirect1Event : public ChannelEvent
                  const nsHttpResponseHead& responseHead,
                  const nsACString& securityInfoSerialization,
                  const uint64_t& channelId)
-  : mChild(child)
+  : NeckoTargetChannelEvent<HttpChannelChild>(child)
   , mRegistrarId(registrarId)
   , mNewURI(newURI)
   , mRedirectFlags(redirectFlags)
@@ -1518,14 +1448,7 @@ class Redirect1Event : public ChannelEvent
                            mChannelId);
   }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
-  {
-    MOZ_ASSERT(mChild);
-    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
-    return target.forget();
-  }
  private:
-  HttpChannelChild*   mChild;
   uint32_t            mRegistrarId;
   URIParams           mNewURI;
   uint32_t            mRedirectFlags;
@@ -1697,20 +1620,12 @@ HttpChannelChild::OverrideSecurityInfoForNonIPCRedirect(nsISupports* securityInf
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
-class Redirect3Event : public ChannelEvent
+class Redirect3Event : public NeckoTargetChannelEvent<HttpChannelChild>
 {
  public:
-  explicit Redirect3Event(HttpChannelChild* child) : mChild(child) {}
+  explicit Redirect3Event(HttpChannelChild* child)
+  : NeckoTargetChannelEvent<HttpChannelChild>(child) {}
   void Run() { mChild->Redirect3Complete(nullptr); }
-
-  already_AddRefed<nsIEventTarget> GetEventTarget()
-  {
-    MOZ_ASSERT(mChild);
-    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
-    return target.forget();
-  }
- private:
-  HttpChannelChild* mChild;
 };
 
 mozilla::ipc::IPCResult
@@ -1721,11 +1636,11 @@ HttpChannelChild::RecvRedirect3Complete()
   return IPC_OK();
 }
 
-class HttpFlushedForDiversionEvent : public ChannelEvent
+class HttpFlushedForDiversionEvent : public NeckoTargetChannelEvent<HttpChannelChild>
 {
  public:
   explicit HttpFlushedForDiversionEvent(HttpChannelChild* aChild)
-  : mChild(aChild)
+  : NeckoTargetChannelEvent<HttpChannelChild>(aChild)
   {
     MOZ_RELEASE_ASSERT(aChild);
   }
@@ -1734,15 +1649,6 @@ class HttpFlushedForDiversionEvent : public ChannelEvent
   {
     mChild->FlushedForDiversion();
   }
-
-  already_AddRefed<nsIEventTarget> GetEventTarget()
-  {
-    MOZ_ASSERT(mChild);
-    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
-    return target.forget();
-  }
- private:
-  HttpChannelChild* mChild;
 };
 
 void
@@ -3321,12 +3227,12 @@ HttpChannelChild::AsyncCall(void (HttpChannelChild::*funcPtr)(),
   return rv;
 }
 
-class CancelEvent final : public ChannelEvent
+class CancelEvent final : public NeckoTargetChannelEvent<HttpChannelChild>
 {
 public:
   CancelEvent(HttpChannelChild* aChild, nsresult aRv)
-    : mChild(aChild)
-    , mRv(aRv)
+  : NeckoTargetChannelEvent<HttpChannelChild>(aChild)
+  , mRv(aRv)
   {
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(aChild);
@@ -3337,15 +3243,7 @@ public:
     mChild->Cancel(mRv);
   }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
-  {
-    MOZ_ASSERT(mChild);
-    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
-    return target.forget();
-  }
-
 private:
-  HttpChannelChild* mChild;
   const nsresult mRv;
 };
 
