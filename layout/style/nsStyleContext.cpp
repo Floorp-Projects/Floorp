@@ -86,7 +86,6 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
                                CSSPseudoElementType aPseudoType)
   : mParent(aParent)
   , mPseudoTag(aPseudoTag)
-  , mCachedResetData(nullptr)
   , mBits(((uint64_t)aPseudoType) << NS_STYLE_CONTEXT_TYPE_SHIFT)
   , mRefCnt(0)
 #ifdef DEBUG
@@ -132,35 +131,25 @@ nsStyleContext::FinishConstruction()
 void
 nsStyleContext::Destructor()
 {
+  GeckoStyleContext* gecko = GetAsGecko();
 #ifdef DEBUG
-  if (const GeckoStyleContext* gecko = GetAsGecko()) {
+  if (gecko) {
     NS_ASSERTION(gecko->HasNoChildren(), "destructing context with children");
-  }
-  MOZ_ASSERT(!IsServo() || !mCachedResetData);
-
-  if (IsServo()) {
-    MOZ_ASSERT(!mCachedResetData,
-               "Servo shouldn't cache reset structs in nsStyleContext");
-    for (const auto* data : mCachedInheritedData.mStyleStructs) {
-      MOZ_ASSERT(!data,
-                 "Servo shouldn't cache inherit structs in nsStyleContext");
+    if (sExpensiveStyleStructAssertionsEnabled) {
+      // Assert that the style structs we are about to destroy are not referenced
+      // anywhere else in the style context tree.  These checks are expensive,
+      // which is why they are not enabled by default.
+      GeckoStyleContext* root = gecko;
+      while (root->GetParent()) {
+        root = root->GetParent();
+      }
+      root->AssertStructsNotUsedElsewhere(gecko,
+                                          std::numeric_limits<int32_t>::max());
+    } else {
+      // In DEBUG builds when the pref is not enabled, we perform a more limited
+      // check just of the children of this style context.
+      gecko->AssertStructsNotUsedElsewhere(gecko, 2);
     }
-  }
-
-  if (sExpensiveStyleStructAssertionsEnabled) {
-    // Assert that the style structs we are about to destroy are not referenced
-    // anywhere else in the style context tree.  These checks are expensive,
-    // which is why they are not enabled by default.
-    nsStyleContext* root = this;
-    while (root->mParent) {
-      root = root->mParent;
-    }
-    root->AssertStructsNotUsedElsewhere(this,
-                                        std::numeric_limits<int32_t>::max());
-  } else {
-    // In DEBUG builds when the pref is not enabled, we perform a more limited
-    // check just of the children of this style context.
-    AssertStructsNotUsedElsewhere(this, 2);
   }
 #endif
 
@@ -178,90 +167,13 @@ nsStyleContext::Destructor()
   }
 
   // Free up our data structs.
-  mCachedInheritedData.DestroyStructs(mBits, presContext);
-  if (mCachedResetData) {
-    mCachedResetData->Destroy(mBits, presContext);
+  if (gecko) {
+    gecko->DestroyCachedStructs(presContext);
   }
 
   // Free any ImageValues we were holding on to for CSS variable values.
   CSSVariableImageTable::RemoveAll(this);
 }
-
-#ifdef DEBUG
-void
-nsStyleContext::AssertStructsNotUsedElsewhere(
-                                       nsStyleContext* aDestroyingContext,
-                                       int32_t aLevels) const
-{
-  if (aLevels == 0) {
-    return;
-  }
-
-  void* data;
-
-  if (mBits & NS_STYLE_IS_GOING_AWAY) {
-    return;
-  }
-
-  if (this != aDestroyingContext) {
-    nsInheritedStyleData& destroyingInheritedData =
-      aDestroyingContext->mCachedInheritedData;
-#define STYLE_STRUCT_INHERITED(name_, checkdata_cb)                            \
-    data = destroyingInheritedData.mStyleStructs[eStyleStruct_##name_];        \
-    if (data &&                                                                \
-        !(aDestroyingContext->mBits & NS_STYLE_INHERIT_BIT(name_)) &&          \
-         (mCachedInheritedData.mStyleStructs[eStyleStruct_##name_] == data)) { \
-      printf_stderr("style struct %p found on style context %p\n", data, this);\
-      nsString url;                                                            \
-      nsresult rv = PresContext()->Document()->GetURL(url);                    \
-      if (NS_SUCCEEDED(rv)) {                                                  \
-        printf_stderr("  in %s\n", NS_ConvertUTF16toUTF8(url).get());          \
-      }                                                                        \
-      MOZ_ASSERT(false, "destroying " #name_ " style struct still present "    \
-                        "in style context tree");                              \
-    }
-#define STYLE_STRUCT_RESET(name_, checkdata_cb)
-
-#include "nsStyleStructList.h"
-
-#undef STYLE_STRUCT_INHERITED
-#undef STYLE_STRUCT_RESET
-
-    if (mCachedResetData) {
-      nsResetStyleData* destroyingResetData =
-        aDestroyingContext->mCachedResetData;
-      if (destroyingResetData) {
-#define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)
-#define STYLE_STRUCT_RESET(name_, checkdata_cb)                                \
-        data = destroyingResetData->mStyleStructs[eStyleStruct_##name_];       \
-        if (data &&                                                            \
-            !(aDestroyingContext->mBits & NS_STYLE_INHERIT_BIT(name_)) &&      \
-            (mCachedResetData->mStyleStructs[eStyleStruct_##name_] == data)) { \
-          printf_stderr("style struct %p found on style context %p\n", data,   \
-                        this);                                                 \
-          nsString url;                                                        \
-          nsresult rv = PresContext()->Document()->GetURL(url);                \
-          if (NS_SUCCEEDED(rv)) {                                              \
-            printf_stderr("  in %s\n", NS_ConvertUTF16toUTF8(url).get());      \
-          }                                                                    \
-          MOZ_ASSERT(false, "destroying " #name_ " style struct still present "\
-                            "in style context tree");                          \
-        }
-
-#include "nsStyleStructList.h"
-
-#undef STYLE_STRUCT_INHERITED
-#undef STYLE_STRUCT_RESET
-      }
-    }
-  }
-
-  if (const GeckoStyleContext* gecko = GetAsGecko()) {
-    gecko->AssertChildStructsNotUsedElsewhere(aDestroyingContext, aLevels - 1);
-  }
-}
-#endif
-
 
 void nsStyleContext::AddChild(nsStyleContext* aChild)
 {
@@ -850,136 +762,6 @@ nsStyleContext::LookupStruct(const nsACString& aName, nsStyleStructID& aResult)
   else
     return false;
   return true;
-}
-#endif
-
-void
-nsStyleContext::SwapStyleData(nsStyleContext* aNewContext, uint32_t aStructs)
-{
-  static_assert(nsStyleStructID_Length <= 32, "aStructs is not big enough");
-
-  for (nsStyleStructID i = nsStyleStructID_Inherited_Start;
-       i < nsStyleStructID_Inherited_Start + nsStyleStructID_Inherited_Count;
-       i = nsStyleStructID(i + 1)) {
-    uint32_t bit = nsCachedStyleData::GetBitForSID(i);
-    if (!(aStructs & bit)) {
-      continue;
-    }
-    void*& thisData = mCachedInheritedData.mStyleStructs[i];
-    void*& otherData = aNewContext->mCachedInheritedData.mStyleStructs[i];
-    if (mBits & bit) {
-      if (thisData == otherData) {
-        thisData = nullptr;
-      }
-    } else if (!(aNewContext->mBits & bit) && thisData && otherData) {
-      std::swap(thisData, otherData);
-    }
-  }
-
-  for (nsStyleStructID i = nsStyleStructID_Reset_Start;
-       i < nsStyleStructID_Reset_Start + nsStyleStructID_Reset_Count;
-       i = nsStyleStructID(i + 1)) {
-    uint32_t bit = nsCachedStyleData::GetBitForSID(i);
-    if (!(aStructs & bit)) {
-      continue;
-    }
-    if (!mCachedResetData) {
-      mCachedResetData = new (PresContext()) nsResetStyleData;
-    }
-    if (!aNewContext->mCachedResetData) {
-      aNewContext->mCachedResetData = new (PresContext()) nsResetStyleData;
-    }
-    void*& thisData = mCachedResetData->mStyleStructs[i];
-    void*& otherData = aNewContext->mCachedResetData->mStyleStructs[i];
-    if (mBits & bit) {
-      if (thisData == otherData) {
-        thisData = nullptr;
-      }
-    } else if (!(aNewContext->mBits & bit) && thisData && otherData) {
-      std::swap(thisData, otherData);
-    }
-  }
-}
-
-#ifdef RESTYLE_LOGGING
-nsCString
-nsStyleContext::GetCachedStyleDataAsString(uint32_t aStructs)
-{
-  nsCString structs;
-  for (nsStyleStructID i = nsStyleStructID(0);
-       i < nsStyleStructID_Length;
-       i = nsStyleStructID(i + 1)) {
-    if (aStructs & nsCachedStyleData::GetBitForSID(i)) {
-      const void* data = GetCachedStyleData(i);
-      if (!structs.IsEmpty()) {
-        structs.Append(' ');
-      }
-      structs.AppendPrintf("%s=%p", StructName(i), data);
-      if (HasCachedDependentStyleData(i)) {
-        structs.AppendLiteral("(dependent)");
-      } else {
-        structs.AppendLiteral("(owned)");
-      }
-    }
-  }
-  return structs;
-}
-
-int32_t&
-nsStyleContext::LoggingDepth()
-{
-  static int32_t depth = 0;
-  return depth;
-}
-
-void
-nsStyleContext::LogStyleContextTree(int32_t aLoggingDepth, uint32_t aStructs)
-{
-  LoggingDepth() = aLoggingDepth;
-  LogStyleContextTree(true, aStructs);
-}
-
-void
-nsStyleContext::LogStyleContextTree(bool aFirst, uint32_t aStructs)
-{
-  nsCString structs = GetCachedStyleDataAsString(aStructs);
-  if (!structs.IsEmpty()) {
-    structs.Append(' ');
-  }
-
-  nsCString pseudo;
-  if (mPseudoTag) {
-    nsAutoString pseudoTag;
-    mPseudoTag->ToString(pseudoTag);
-    AppendUTF16toUTF8(pseudoTag, pseudo);
-    pseudo.Append(' ');
-  }
-
-  nsCString flags;
-  if (IsStyleIfVisited()) {
-    flags.AppendLiteral("IS_STYLE_IF_VISITED ");
-  }
-  if (HasChildThatUsesGrandancestorStyle()) {
-    flags.AppendLiteral("CHILD_USES_GRANDANCESTOR_STYLE ");
-  }
-  if (IsShared()) {
-    flags.AppendLiteral("IS_SHARED ");
-  }
-
-  nsCString parent;
-  if (aFirst) {
-    parent.AppendPrintf("parent=%p ", mParent.get());
-  }
-
-  LOG_RESTYLE("%p(%d) %s%s%s%s",
-              this, mRefCnt,
-              structs.get(), pseudo.get(), flags.get(), parent.get());
-
-  LOG_RESTYLE_INDENT();
-
-  if (const GeckoStyleContext* gecko = GetAsGecko()) {
-    gecko->LogChildStyleContextTree(aStructs);
-  }
 }
 #endif
 
