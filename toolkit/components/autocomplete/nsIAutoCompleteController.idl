@@ -170,4 +170,11 @@ interface nsIAutoCompleteController : nsISupports
    * tracking variables of features like completeSelectedIndex.
    */
   void setInitiallySelectedIndex(in long index);
+
+  /*
+   * Reset controller internal caches for cases where the input doesn't change
+   * but its context resets, thus it is about to start a completely new search
+   * session.
+   */
+  void resetInternalState();
 };

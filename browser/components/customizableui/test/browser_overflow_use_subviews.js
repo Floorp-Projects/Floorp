@@ -41,8 +41,10 @@ add_task(async function check_developer_subview_in_overflow() {
   let subviewShownPromise = subviewShown(developerView);
   button.click();
   await subviewShownPromise;
-  is(developerView.closest("panel"), kOverflowPanel, "Should be inside the panel");
-  kOverflowPanel.hidePopup();
+  let hasSubviews = !!kOverflowPanel.querySelector("photonpanelmultiview,panelmultiview");
+  let expectedPanel = hasSubviews ? kOverflowPanel : document.getElementById("customizationui-widget-panel");
+  is(developerView.closest("panel"), expectedPanel, "Should be inside the panel");
+  expectedPanel.hidePopup();
   await Promise.resolve(); // wait for popup to hide fully.
 });
 

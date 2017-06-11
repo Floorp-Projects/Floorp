@@ -1123,6 +1123,12 @@ ServoStyleSet::ClearDataAndMarkDeviceDirty()
   mStylistState |= StylistState::FullyDirty;
 }
 
+void
+ServoStyleSet::CompatibilityModeChanged()
+{
+  Servo_StyleSet_CompatModeChanged(mRawSet.get());
+}
+
 already_AddRefed<ServoComputedValues>
 ServoStyleSet::ResolveServoStyle(Element* aElement)
 {

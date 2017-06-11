@@ -467,12 +467,20 @@ button.warning {
   font-size: 0.9rem;
   font-weight: 600;
   -moz-user-focus: ignore;
+  transition-property: color, background-color;
+  transition-timing-function: cubic-bezier(.07,.95,0,1);
+  transition-duration: 150ms;
 }
 
 .legacy-warning:hover {
   background-color: #D7B600;
   color: #3E2800;
   text-decoration: none;
+}
+
+.legacy-warning:hover:active {
+  background-color: #a47f00;
+  color: #FFF;
 }
 
 #detail-view .legacy-warning {

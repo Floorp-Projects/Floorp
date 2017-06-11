@@ -41,6 +41,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                  "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AppMenuNotifications",
                                   "resource://gre/modules/AppMenuNotifications.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
@@ -426,8 +428,12 @@ this.DownloadsCommon = {
       throw new Error("aOwnerWindow must be a dom-window object");
     }
 
+    let isWindowsExe = AppConstants.platform == "win" &&
+      aFile.leafName.toLowerCase().endsWith(".exe");
+
     let promiseShouldLaunch;
-    if (aFile.isExecutable()) {
+    // Don't prompt on Windows for .exe since there will be a native prompt.
+    if (aFile.isExecutable() && !isWindowsExe) {
       // We get a prompter for the provided window here, even though anchoring
       // to the most recently active window should work as well.
       promiseShouldLaunch =
