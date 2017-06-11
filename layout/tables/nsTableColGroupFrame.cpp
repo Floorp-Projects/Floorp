@@ -13,6 +13,7 @@
 #include "nsCOMPtr.h"
 #include "nsCSSRendering.h"
 #include "nsIPresShell.h"
+#include "mozilla/GeckoStyleContext.h"
 
 using namespace mozilla;
 
@@ -298,7 +299,7 @@ nsTableColGroupFrame::RemoveFrame(ChildListID     aListID,
         nsStyleContext* psc = colFrame->GetParentStyleContext(&providerFrame);
         if (psc->StyleSource().IsGeckoRuleNodeOrNull()) {
           // This check code is useful only in Gecko-backed style system.
-          if (colFrame->StyleContext()->GetParent() == psc) {
+          if (static_cast<nsStyleContext*>(colFrame->StyleContext()->GetParent()) == psc) {
             NS_ASSERTION(col->StyleContext() == colFrame->StyleContext() &&
                          col->GetContent() == colFrame->GetContent(),
                          "How did that happen??");
