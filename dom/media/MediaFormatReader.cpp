@@ -1542,6 +1542,11 @@ bool
 MediaFormatReader::ShouldSkip(TimeUnit aTimeThreshold)
 {
   MOZ_ASSERT(HasVideo());
+
+  if (!MediaPrefs::MFRSkipToNextKeyFrameEnabled()) {
+    return false;
+  }
+
   TimeUnit nextKeyframe;
   nsresult rv = mVideo.mTrackDemuxer->GetNextRandomAccessPoint(&nextKeyframe);
   if (NS_FAILED(rv)) {
