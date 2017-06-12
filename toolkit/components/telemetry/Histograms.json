@@ -8442,6 +8442,16 @@
     "n_buckets": 66,
     "description": "MediaCacheStream stream length size in KB; Either known size from the HTTP header if available, or otherwise the size actually downloaded. Recorded at every MediaCacheStream destruction."
   },
+  "MEDIACACHESTREAM_NOTIFIED_LENGTH": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["gsquelart@mozilla.com"],
+    "bug_numbers": [1371205],
+    "expires_in_version": "60",
+    "kind": "linear",
+    "high": 16777216,
+    "n_buckets": 66,
+    "description": "MediaCacheStream stream notified length size in bytes, from the HTTP header. Recorded when each MediaCacheStream is first notified."
+  },
   "VIDEO_MFT_OUTPUT_NULL_SAMPLES": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["cpearce@mozilla.com"],

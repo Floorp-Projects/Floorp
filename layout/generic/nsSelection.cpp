@@ -23,7 +23,6 @@
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
 #include "nsRange.h"
-#include "nsCOMArray.h"
 #include "nsITableCellLayout.h"
 #include "nsTArray.h"
 #include "nsTableWrapperFrame.h"
@@ -6365,7 +6364,7 @@ void
 Selection::AddSelectionListener(nsISelectionListener* aNewListener,
                                 ErrorResult& aRv)
 {
-  bool result = mSelectionListeners.AppendObject(aNewListener); // AddRefs
+  bool result = mSelectionListeners.AppendElement(aNewListener, fallible); // AddRefs
   if (!result) {
     aRv.Throw(NS_ERROR_FAILURE);
   }
@@ -6388,7 +6387,7 @@ void
 Selection::RemoveSelectionListener(nsISelectionListener* aListenerToRemove,
                                    ErrorResult& aRv)
 {
-  bool result = mSelectionListeners.RemoveObject(aListenerToRemove); // Releases
+  bool result = mSelectionListeners.RemoveElement(aListenerToRemove); // Releases
   if (!result) {
     aRv.Throw(NS_ERROR_FAILURE);
   }
@@ -6490,11 +6489,8 @@ Selection::NotifySelectionListeners()
     frameSelection->SetDirty();
     return NS_OK;
   }
-  nsCOMArray<nsISelectionListener> selectionListeners(mSelectionListeners);
-  int32_t cnt = selectionListeners.Count();
-  if (cnt != mSelectionListeners.Count()) {
-    return NS_ERROR_OUT_OF_MEMORY;  // nsCOMArray is fallible
-  }
+  AutoTArray<nsCOMPtr<nsISelectionListener>, 8>
+    selectionListeners(mSelectionListeners);
 
   nsCOMPtr<nsIDOMDocument> domdoc;
   nsIPresShell* ps = GetPresShell();
@@ -6503,8 +6499,8 @@ Selection::NotifySelectionListeners()
   }
 
   short reason = frameSelection->PopReason();
-  for (int32_t i = 0; i < cnt; i++) {
-    selectionListeners[i]->NotifySelectionChanged(domdoc, this, reason);
+  for (auto& listener : selectionListeners) {
+    listener->NotifySelectionChanged(domdoc, this, reason);
   }
   return NS_OK;
 }
