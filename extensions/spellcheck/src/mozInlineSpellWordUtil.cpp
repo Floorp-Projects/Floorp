@@ -345,6 +345,247 @@ mozInlineSpellWordUtil::MakeRange(NodeOffset aBegin, NodeOffset aEnd,
   return NS_OK;
 }
 
+/*********** Word Splitting ************/
+
+// classifies a given character in the DOM word
+enum CharClass {
+  CHAR_CLASS_WORD,
+  CHAR_CLASS_SEPARATOR,
+  CHAR_CLASS_END_OF_INPUT };
+
+// Encapsulates DOM-word to real-word splitting
+struct MOZ_STACK_CLASS WordSplitState
+{
+  mozInlineSpellWordUtil*    mWordUtil;
+  const nsDependentSubstring mDOMWordText;
+  int32_t                    mDOMWordOffset;
+  CharClass                  mCurCharClass;
+
+  WordSplitState(mozInlineSpellWordUtil* aWordUtil,
+                 const nsString& aString, int32_t aStart, int32_t aLen)
+    : mWordUtil(aWordUtil), mDOMWordText(aString, aStart, aLen),
+      mDOMWordOffset(0), mCurCharClass(CHAR_CLASS_END_OF_INPUT) {}
+
+  CharClass ClassifyCharacter(int32_t aIndex, bool aRecurse) const;
+  void Advance();
+  void AdvanceThroughSeparators();
+  void AdvanceThroughWord();
+
+  // Finds special words like email addresses and URLs that may start at the
+  // current position, and returns their length, or 0 if not found. This allows
+  // arbitrary word breaking rules to be used for these special entities, as
+  // long as they can not contain whitespace.
+  bool IsSpecialWord();
+
+  // Similar to IsSpecialWord except that this takes a split word as
+  // input. This checks for things that do not require special word-breaking
+  // rules.
+  bool ShouldSkipWord(int32_t aStart, int32_t aLength);
+};
+
+// WordSplitState::ClassifyCharacter
+
+CharClass
+WordSplitState::ClassifyCharacter(int32_t aIndex, bool aRecurse) const
+{
+  NS_ASSERTION(aIndex >= 0 && aIndex <= int32_t(mDOMWordText.Length()),
+               "Index out of range");
+  if (aIndex == int32_t(mDOMWordText.Length()))
+    return CHAR_CLASS_SEPARATOR;
+
+  // this will classify the character, we want to treat "ignorable" characters
+  // such as soft hyphens, and also ZWJ and ZWNJ as word characters.
+  nsUGenCategory charCategory =
+    mozilla::unicode::GetGenCategory(mDOMWordText[aIndex]);
+  if (charCategory == nsUGenCategory::kLetter ||
+      IsIgnorableCharacter(mDOMWordText[aIndex]) ||
+      mDOMWordText[aIndex] == 0x200C /* ZWNJ */ ||
+      mDOMWordText[aIndex] == 0x200D /* ZWJ */)
+    return CHAR_CLASS_WORD;
+
+  // If conditional punctuation is surrounded immediately on both sides by word
+  // characters it also counts as a word character.
+  if (IsConditionalPunctuation(mDOMWordText[aIndex])) {
+    if (!aRecurse) {
+      // not allowed to look around, this punctuation counts like a separator
+      return CHAR_CLASS_SEPARATOR;
+    }
+
+    // check the left-hand character
+    if (aIndex == 0)
+      return CHAR_CLASS_SEPARATOR;
+    if (ClassifyCharacter(aIndex - 1, false) != CHAR_CLASS_WORD)
+      return CHAR_CLASS_SEPARATOR;
+    // If the previous charatcer is a word-char, make sure that it's not a
+    // special dot character.
+    if (mDOMWordText[aIndex - 1] == '.')
+      return CHAR_CLASS_SEPARATOR;
+
+    // now we know left char is a word-char, check the right-hand character
+    if (aIndex == int32_t(mDOMWordText.Length()) - 1)
+      return CHAR_CLASS_SEPARATOR;
+    if (ClassifyCharacter(aIndex + 1, false) != CHAR_CLASS_WORD)
+      return CHAR_CLASS_SEPARATOR;
+    // If the next charatcer is a word-char, make sure that it's not a
+    // special dot character.
+    if (mDOMWordText[aIndex + 1] == '.')
+      return CHAR_CLASS_SEPARATOR;
+
+    // char on either side is a word, this counts as a word
+    return CHAR_CLASS_WORD;
+  }
+
+  // The dot character, if appearing at the end of a word, should
+  // be considered part of that word.  Example: "etc.", or
+  // abbreviations
+  if (aIndex > 0 &&
+      mDOMWordText[aIndex] == '.' &&
+      mDOMWordText[aIndex - 1] != '.' &&
+      ClassifyCharacter(aIndex - 1, false) != CHAR_CLASS_WORD) {
+    return CHAR_CLASS_WORD;
+  }
+
+  // all other punctuation
+  if (charCategory == nsUGenCategory::kSeparator ||
+      charCategory == nsUGenCategory::kOther ||
+      charCategory == nsUGenCategory::kPunctuation ||
+      charCategory == nsUGenCategory::kSymbol) {
+    // Don't break on hyphens, as hunspell handles them on its own.
+    if (aIndex > 0 &&
+        mDOMWordText[aIndex] == '-' &&
+        mDOMWordText[aIndex - 1] != '-' &&
+        ClassifyCharacter(aIndex - 1, false) == CHAR_CLASS_WORD) {
+      // A hyphen is only meaningful as a separator inside a word
+      // if the previous and next characters are a word character.
+      if (aIndex == int32_t(mDOMWordText.Length()) - 1)
+        return CHAR_CLASS_SEPARATOR;
+      if (mDOMWordText[aIndex + 1] != '.' &&
+          ClassifyCharacter(aIndex + 1, false) == CHAR_CLASS_WORD)
+        return CHAR_CLASS_WORD;
+    }
+    return CHAR_CLASS_SEPARATOR;
+  }
+
+  // any other character counts as a word
+  return CHAR_CLASS_WORD;
+}
+
+
+// WordSplitState::Advance
+
+void
+WordSplitState::Advance()
+{
+  NS_ASSERTION(mDOMWordOffset >= 0, "Negative word index");
+  NS_ASSERTION(mDOMWordOffset < (int32_t)mDOMWordText.Length(),
+               "Length beyond end");
+
+  mDOMWordOffset ++;
+  if (mDOMWordOffset >= (int32_t)mDOMWordText.Length())
+    mCurCharClass = CHAR_CLASS_END_OF_INPUT;
+  else
+    mCurCharClass = ClassifyCharacter(mDOMWordOffset, true);
+}
+
+
+// WordSplitState::AdvanceThroughSeparators
+
+void
+WordSplitState::AdvanceThroughSeparators()
+{
+  while (mCurCharClass == CHAR_CLASS_SEPARATOR)
+    Advance();
+}
+
+// WordSplitState::AdvanceThroughWord
+
+void
+WordSplitState::AdvanceThroughWord()
+{
+  while (mCurCharClass == CHAR_CLASS_WORD)
+    Advance();
+}
+
+
+// WordSplitState::IsSpecialWord
+
+bool
+WordSplitState::IsSpecialWord()
+{
+  // Search for email addresses. We simply define these as any sequence of
+  // characters with an '@' character in the middle. The DOM word is already
+  // split on whitepace, so we know that everything to the end is the address
+  int32_t firstColon = -1;
+  for (int32_t i = mDOMWordOffset;
+       i < int32_t(mDOMWordText.Length()); i ++) {
+    if (mDOMWordText[i] == '@') {
+      // only accept this if there are unambiguous word characters (don't bother
+      // recursing to disambiguate apostrophes) on each side. This prevents
+      // classifying, e.g. "@home" as an email address
+
+      // Use this condition to only accept words with '@' in the middle of
+      // them. It works, but the inlinespellcker doesn't like this. The problem
+      // is that you type "fhsgfh@" that's a misspelled word followed by a
+      // symbol, but when you type another letter "fhsgfh@g" that first word
+      // need to be unmarked misspelled. It doesn't do this. it only checks the
+      // current position for potentially removing a spelling range.
+      if (i > 0 && ClassifyCharacter(i - 1, false) == CHAR_CLASS_WORD &&
+          i < (int32_t)mDOMWordText.Length() - 1 &&
+          ClassifyCharacter(i + 1, false) == CHAR_CLASS_WORD) {
+        return true;
+      }
+    } else if (mDOMWordText[i] == ':' && firstColon < 0) {
+      firstColon = i;
+
+      // If the first colon is followed by a slash, consider it a URL
+      // This will catch things like asdf://foo.com
+      if (firstColon < (int32_t)mDOMWordText.Length() - 1 &&
+          mDOMWordText[firstColon + 1] == '/') {
+        return true;
+      }
+    }
+  }
+
+  // Check the text before the first colon against some known protocols. It
+  // is impossible to check against all protocols, especially since you can
+  // plug in new protocols. We also don't want to waste time here checking
+  // against a lot of obscure protocols.
+  if (firstColon > mDOMWordOffset) {
+    nsString protocol(Substring(mDOMWordText, mDOMWordOffset,
+                      firstColon - mDOMWordOffset));
+    if (protocol.EqualsIgnoreCase("http") ||
+        protocol.EqualsIgnoreCase("https") ||
+        protocol.EqualsIgnoreCase("news") ||
+        protocol.EqualsIgnoreCase("file") ||
+        protocol.EqualsIgnoreCase("javascript") ||
+        protocol.EqualsIgnoreCase("data") ||
+        protocol.EqualsIgnoreCase("ftp")) {
+      return true;
+    }
+  }
+
+  // not anything special
+  return false;
+}
+
+// WordSplitState::ShouldSkipWord
+
+bool
+WordSplitState::ShouldSkipWord(int32_t aStart, int32_t aLength)
+{
+  int32_t last = aStart + aLength;
+
+  // check to see if the word contains a digit
+  for (int32_t i = aStart; i < last; i ++) {
+    if (unicode::GetGenCategory(mDOMWordText[i]) == nsUGenCategory::kNumber) {
+      return true;
+    }
+  }
+
+  // not special
+  return false;
+}
+
 /*********** DOM text extraction ************/
 
 // IsDOMWordSeparator
@@ -404,11 +645,20 @@ TextNodeContainsDOMWordSeparator(nsINode* aNode,
   nsIContent* content = static_cast<nsIContent*>(aNode);
   const nsTextFragment* textFragment = content->GetText();
   NS_ASSERTION(textFragment, "Where is our text?");
-  for (int32_t i = std::min(aBeforeOffset, int32_t(textFragment->GetLength())) - 1; i >= 0; --i) {
-    if (IsDOMWordSeparator(textFragment->CharAt(i))) {
+  nsString text;
+  int32_t end = std::min(aBeforeOffset, int32_t(textFragment->GetLength()));
+  bool ok = textFragment->AppendTo(text, 0, end, mozilla::fallible);
+  if(!ok)
+    return false;
+
+  WordSplitState state(nullptr, text, 0, end);
+  for (int32_t i = end - 1; i >= 0; --i) {
+    if (IsDOMWordSeparator(textFragment->CharAt(i)) ||
+        state.ClassifyCharacter(i, true) == CHAR_CLASS_SEPARATOR) {
       // Be greedy, find as many separators as we can
       for (int32_t j = i - 1; j >= 0; --j) {
-        if (IsDOMWordSeparator(textFragment->CharAt(j))) {
+        if (IsDOMWordSeparator(textFragment->CharAt(j)) ||
+            state.ClassifyCharacter(j, true) == CHAR_CLASS_SEPARATOR) {
           i = j;
         } else {
           break;
@@ -800,247 +1050,6 @@ mozInlineSpellWordUtil::FindRealWordContaining(int32_t aSoftTextOffset,
   }
 
   return -1;
-}
-
-/*********** Word Splitting ************/
-
-// classifies a given character in the DOM word
-enum CharClass {
-  CHAR_CLASS_WORD,
-  CHAR_CLASS_SEPARATOR,
-  CHAR_CLASS_END_OF_INPUT };
-
-// Encapsulates DOM-word to real-word splitting
-struct MOZ_STACK_CLASS WordSplitState
-{
-  mozInlineSpellWordUtil*    mWordUtil;
-  const nsDependentSubstring mDOMWordText;
-  int32_t                    mDOMWordOffset;
-  CharClass                  mCurCharClass;
-
-  WordSplitState(mozInlineSpellWordUtil* aWordUtil,
-                 const nsString& aString, int32_t aStart, int32_t aLen)
-    : mWordUtil(aWordUtil), mDOMWordText(aString, aStart, aLen),
-      mDOMWordOffset(0), mCurCharClass(CHAR_CLASS_END_OF_INPUT) {}
-
-  CharClass ClassifyCharacter(int32_t aIndex, bool aRecurse) const;
-  void Advance();
-  void AdvanceThroughSeparators();
-  void AdvanceThroughWord();
-
-  // Finds special words like email addresses and URLs that may start at the
-  // current position, and returns their length, or 0 if not found. This allows
-  // arbitrary word breaking rules to be used for these special entities, as
-  // long as they can not contain whitespace.
-  bool IsSpecialWord();
-
-  // Similar to IsSpecialWord except that this takes a split word as
-  // input. This checks for things that do not require special word-breaking
-  // rules.
-  bool ShouldSkipWord(int32_t aStart, int32_t aLength);
-};
-
-// WordSplitState::ClassifyCharacter
-
-CharClass
-WordSplitState::ClassifyCharacter(int32_t aIndex, bool aRecurse) const
-{
-  NS_ASSERTION(aIndex >= 0 && aIndex <= int32_t(mDOMWordText.Length()),
-               "Index out of range");
-  if (aIndex == int32_t(mDOMWordText.Length()))
-    return CHAR_CLASS_SEPARATOR;
-
-  // this will classify the character, we want to treat "ignorable" characters
-  // such as soft hyphens, and also ZWJ and ZWNJ as word characters.
-  nsUGenCategory charCategory =
-    mozilla::unicode::GetGenCategory(mDOMWordText[aIndex]);
-  if (charCategory == nsUGenCategory::kLetter ||
-      IsIgnorableCharacter(mDOMWordText[aIndex]) ||
-      mDOMWordText[aIndex] == 0x200C /* ZWNJ */ ||
-      mDOMWordText[aIndex] == 0x200D /* ZWJ */)
-    return CHAR_CLASS_WORD;
-
-  // If conditional punctuation is surrounded immediately on both sides by word
-  // characters it also counts as a word character.
-  if (IsConditionalPunctuation(mDOMWordText[aIndex])) {
-    if (!aRecurse) {
-      // not allowed to look around, this punctuation counts like a separator
-      return CHAR_CLASS_SEPARATOR;
-    }
-
-    // check the left-hand character
-    if (aIndex == 0)
-      return CHAR_CLASS_SEPARATOR;
-    if (ClassifyCharacter(aIndex - 1, false) != CHAR_CLASS_WORD)
-      return CHAR_CLASS_SEPARATOR;
-    // If the previous charatcer is a word-char, make sure that it's not a
-    // special dot character.
-    if (mDOMWordText[aIndex - 1] == '.')
-      return CHAR_CLASS_SEPARATOR;
-
-    // now we know left char is a word-char, check the right-hand character
-    if (aIndex == int32_t(mDOMWordText.Length()) - 1)
-      return CHAR_CLASS_SEPARATOR;
-    if (ClassifyCharacter(aIndex + 1, false) != CHAR_CLASS_WORD)
-      return CHAR_CLASS_SEPARATOR;
-    // If the next charatcer is a word-char, make sure that it's not a
-    // special dot character.
-    if (mDOMWordText[aIndex + 1] == '.')
-      return CHAR_CLASS_SEPARATOR;
-
-    // char on either side is a word, this counts as a word
-    return CHAR_CLASS_WORD;
-  }
-
-  // The dot character, if appearing at the end of a word, should
-  // be considered part of that word.  Example: "etc.", or
-  // abbreviations
-  if (aIndex > 0 &&
-      mDOMWordText[aIndex] == '.' &&
-      mDOMWordText[aIndex - 1] != '.' &&
-      ClassifyCharacter(aIndex - 1, false) != CHAR_CLASS_WORD) {
-    return CHAR_CLASS_WORD;
-  }
-
-  // all other punctuation
-  if (charCategory == nsUGenCategory::kSeparator ||
-      charCategory == nsUGenCategory::kOther ||
-      charCategory == nsUGenCategory::kPunctuation ||
-      charCategory == nsUGenCategory::kSymbol) {
-    // Don't break on hyphens, as hunspell handles them on its own.
-    if (aIndex > 0 &&
-        mDOMWordText[aIndex] == '-' &&
-        mDOMWordText[aIndex - 1] != '-' &&
-        ClassifyCharacter(aIndex - 1, false) == CHAR_CLASS_WORD) {
-      // A hyphen is only meaningful as a separator inside a word
-      // if the previous and next characters are a word character.
-      if (aIndex == int32_t(mDOMWordText.Length()) - 1)
-        return CHAR_CLASS_SEPARATOR;
-      if (mDOMWordText[aIndex + 1] != '.' &&
-          ClassifyCharacter(aIndex + 1, false) == CHAR_CLASS_WORD)
-        return CHAR_CLASS_WORD;
-    }
-    return CHAR_CLASS_SEPARATOR;
-  }
-
-  // any other character counts as a word
-  return CHAR_CLASS_WORD;
-}
-
-
-// WordSplitState::Advance
-
-void
-WordSplitState::Advance()
-{
-  NS_ASSERTION(mDOMWordOffset >= 0, "Negative word index");
-  NS_ASSERTION(mDOMWordOffset < (int32_t)mDOMWordText.Length(),
-               "Length beyond end");
-
-  mDOMWordOffset ++;
-  if (mDOMWordOffset >= (int32_t)mDOMWordText.Length())
-    mCurCharClass = CHAR_CLASS_END_OF_INPUT;
-  else
-    mCurCharClass = ClassifyCharacter(mDOMWordOffset, true);
-}
-
-
-// WordSplitState::AdvanceThroughSeparators
-
-void
-WordSplitState::AdvanceThroughSeparators()
-{
-  while (mCurCharClass == CHAR_CLASS_SEPARATOR)
-    Advance();
-}
-
-// WordSplitState::AdvanceThroughWord
-
-void
-WordSplitState::AdvanceThroughWord()
-{
-  while (mCurCharClass == CHAR_CLASS_WORD)
-    Advance();
-}
-
-
-// WordSplitState::IsSpecialWord
-
-bool
-WordSplitState::IsSpecialWord()
-{
-  // Search for email addresses. We simply define these as any sequence of
-  // characters with an '@' character in the middle. The DOM word is already
-  // split on whitepace, so we know that everything to the end is the address
-  int32_t firstColon = -1;
-  for (int32_t i = mDOMWordOffset;
-       i < int32_t(mDOMWordText.Length()); i ++) {
-    if (mDOMWordText[i] == '@') {
-      // only accept this if there are unambiguous word characters (don't bother
-      // recursing to disambiguate apostrophes) on each side. This prevents
-      // classifying, e.g. "@home" as an email address
-
-      // Use this condition to only accept words with '@' in the middle of
-      // them. It works, but the inlinespellcker doesn't like this. The problem
-      // is that you type "fhsgfh@" that's a misspelled word followed by a
-      // symbol, but when you type another letter "fhsgfh@g" that first word
-      // need to be unmarked misspelled. It doesn't do this. it only checks the
-      // current position for potentially removing a spelling range.
-      if (i > 0 && ClassifyCharacter(i - 1, false) == CHAR_CLASS_WORD &&
-          i < (int32_t)mDOMWordText.Length() - 1 &&
-          ClassifyCharacter(i + 1, false) == CHAR_CLASS_WORD) {
-        return true;
-      }
-    } else if (mDOMWordText[i] == ':' && firstColon < 0) {
-      firstColon = i;
-
-      // If the first colon is followed by a slash, consider it a URL
-      // This will catch things like asdf://foo.com
-      if (firstColon < (int32_t)mDOMWordText.Length() - 1 &&
-          mDOMWordText[firstColon + 1] == '/') {
-        return true;
-      }
-    }
-  }
-
-  // Check the text before the first colon against some known protocols. It
-  // is impossible to check against all protocols, especially since you can
-  // plug in new protocols. We also don't want to waste time here checking
-  // against a lot of obscure protocols.
-  if (firstColon > mDOMWordOffset) {
-    nsString protocol(Substring(mDOMWordText, mDOMWordOffset,
-                      firstColon - mDOMWordOffset));
-    if (protocol.EqualsIgnoreCase("http") ||
-        protocol.EqualsIgnoreCase("https") ||
-        protocol.EqualsIgnoreCase("news") ||
-        protocol.EqualsIgnoreCase("file") ||
-        protocol.EqualsIgnoreCase("javascript") ||
-        protocol.EqualsIgnoreCase("data") ||
-        protocol.EqualsIgnoreCase("ftp")) {
-      return true;
-    }
-  }
-
-  // not anything special
-  return false;
-}
-
-// WordSplitState::ShouldSkipWord
-
-bool
-WordSplitState::ShouldSkipWord(int32_t aStart, int32_t aLength)
-{
-  int32_t last = aStart + aLength;
-
-  // check to see if the word contains a digit
-  for (int32_t i = aStart; i < last; i ++) {
-    if (unicode::GetGenCategory(mDOMWordText[i]) == nsUGenCategory::kNumber) {
-      return true;
-    }
-  }
-
-  // not special
-  return false;
 }
 
 // mozInlineSpellWordUtil::SplitDOMWord
