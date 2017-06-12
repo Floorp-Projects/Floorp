@@ -116,6 +116,23 @@ var onboardingTours = [
       return div;
     },
   },
+  {
+    id: "onboarding-tour-default-browser",
+    tourNameId: "onboarding.tour-default-browser",
+    getPage(win) {
+      let div = win.document.createElement("div");
+      div.innerHTML = `
+        <section class="onboarding-tour-description">
+          <h1 data-l10n-id="onboarding.tour-default-browser.title"></h1>
+          <p data-l10n-id="onboarding.tour-default-browser.description"></p>
+        </section>
+        <section class="onboarding-tour-content">
+          <img src="resource://onboarding/img/figure_default.svg" />
+        </section>
+      `;
+      return div;
+    },
+  },
 ];
 
 /**
