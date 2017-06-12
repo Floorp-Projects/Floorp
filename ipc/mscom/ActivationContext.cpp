@@ -8,123 +8,38 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/mscom/Utils.h"
 
 namespace mozilla {
 namespace mscom {
 
-ActivationContext::ActivationContext(WORD aResourceId)
-  : ActivationContext(reinterpret_cast<HMODULE>(GetContainingModuleHandle()),
-                      aResourceId)
-{
-}
-
-ActivationContext::ActivationContext(HMODULE aLoadFromModule, WORD aResourceId)
+ActivationContext::ActivationContext(HMODULE aLoadFromModule)
   : mActCtx(INVALID_HANDLE_VALUE)
+  , mActivationCookie(0)
 {
   ACTCTX actCtx = {sizeof(actCtx)};
   actCtx.dwFlags = ACTCTX_FLAG_RESOURCE_NAME_VALID | ACTCTX_FLAG_HMODULE_VALID;
-  actCtx.lpResourceName = MAKEINTRESOURCE(aResourceId);
+  actCtx.lpResourceName = MAKEINTRESOURCE(2);
   actCtx.hModule = aLoadFromModule;
 
-  Init(actCtx);
-}
-
-void
-ActivationContext::Init(ACTCTX& aActCtx)
-{
-  MOZ_ASSERT(mActCtx == INVALID_HANDLE_VALUE);
-  mActCtx = ::CreateActCtx(&aActCtx);
+  mActCtx = ::CreateActCtx(&actCtx);
   MOZ_ASSERT(mActCtx != INVALID_HANDLE_VALUE);
-}
-
-void
-ActivationContext::AddRef()
-{
   if (mActCtx == INVALID_HANDLE_VALUE) {
     return;
   }
-  ::AddRefActCtx(mActCtx);
-}
-
-ActivationContext::ActivationContext(ActivationContext&& aOther)
-  : mActCtx(aOther.mActCtx)
-{
-  aOther.mActCtx = INVALID_HANDLE_VALUE;
-}
-
-ActivationContext&
-ActivationContext::operator=(ActivationContext&& aOther)
-{
-  Release();
-
-  mActCtx = aOther.mActCtx;
-  aOther.mActCtx = INVALID_HANDLE_VALUE;
-  return *this;
-}
-
-ActivationContext::ActivationContext(const ActivationContext& aOther)
-  : mActCtx(aOther.mActCtx)
-{
-  AddRef();
-}
-
-ActivationContext&
-ActivationContext::operator=(const ActivationContext& aOther)
-{
-  Release();
-  mActCtx = aOther.mActCtx;
-  AddRef();
-  return *this;
-}
-
-void
-ActivationContext::Release()
-{
-  if (mActCtx == INVALID_HANDLE_VALUE) {
-    return;
+  if (!::ActivateActCtx(mActCtx, &mActivationCookie)) {
+    ::ReleaseActCtx(mActCtx);
+    mActCtx = INVALID_HANDLE_VALUE;
   }
-  ::ReleaseActCtx(mActCtx);
-  mActCtx = INVALID_HANDLE_VALUE;
 }
 
 ActivationContext::~ActivationContext()
 {
-  Release();
-}
-
-ActivationContextRegion::ActivationContextRegion(const ActivationContext& aActCtx)
-  : mActCtx(aActCtx)
-  , mActCookie(0)
-{
-  if (aActCtx.mActCtx == INVALID_HANDLE_VALUE) {
+  if (mActCtx == INVALID_HANDLE_VALUE) {
     return;
   }
-
-  DebugOnly<BOOL> activated = ::ActivateActCtx(aActCtx.mActCtx, &mActCookie);
-  MOZ_ASSERT(activated);
-}
-
-ActivationContextRegion::ActivationContextRegion(ActivationContext&& aActCtx)
-  : mActCtx(Move(aActCtx))
-  , mActCookie(0)
-{
-  if (aActCtx.mActCtx == INVALID_HANDLE_VALUE) {
-    return;
-  }
-
-  DebugOnly<BOOL> activated = ::ActivateActCtx(aActCtx.mActCtx, &mActCookie);
-  MOZ_ASSERT(activated);
-}
-
-ActivationContextRegion::~ActivationContextRegion()
-{
-  if (!mActCookie) {
-    return;
-  }
-
-  DebugOnly<BOOL> deactivated = ::DeactivateActCtx(0, mActCookie);
+  DebugOnly<BOOL> deactivated = ::DeactivateActCtx(0, mActivationCookie);
   MOZ_ASSERT(deactivated);
+  ::ReleaseActCtx(mActCtx);
 }
 
 } // namespace mscom
