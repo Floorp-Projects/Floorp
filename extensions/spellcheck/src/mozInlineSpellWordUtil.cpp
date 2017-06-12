@@ -81,8 +81,11 @@ mozInlineSpellWordUtil::Init(const nsWeakPtr& aWeakEditor)
 }
 
 static inline bool
-IsTextNode(nsINode* aNode)
+IsSpellCheckingTextNode(nsINode* aNode)
 {
+  nsIContent *parent = aNode->GetParent();
+  if (parent && parent->IsAnyOfHTMLElements(nsGkAtoms::script, nsGkAtoms::style))
+      return false;
   return aNode->IsNodeOfType(nsINode::eTEXT);
 }
 
@@ -132,7 +135,7 @@ static nsINode*
 FindNextTextNode(nsINode* aNode, int32_t aOffset, nsINode* aRoot)
 {
   NS_PRECONDITION(aNode, "Null starting node?");
-  NS_ASSERTION(!IsTextNode(aNode), "FindNextTextNode should start with a non-text node");
+  NS_ASSERTION(!IsSpellCheckingTextNode(aNode), "FindNextTextNode should start with a non-text node");
 
   nsINode* checkNode;
   // Need to start at the aOffset'th child
@@ -147,7 +150,7 @@ FindNextTextNode(nsINode* aNode, int32_t aOffset, nsINode* aRoot)
     checkNode = aNode->GetNextNonChildNode(aRoot);
   }
   
-  while (checkNode && !IsTextNode(checkNode)) {
+  while (checkNode && !IsSpellCheckingTextNode(checkNode)) {
     checkNode = checkNode->GetNextNode(aRoot);
   }
   return checkNode;
@@ -179,7 +182,7 @@ mozInlineSpellWordUtil::SetEnd(nsINode* aEndNode, int32_t aEndOffset)
 
   InvalidateWords();
 
-  if (!IsTextNode(aEndNode)) {
+  if (!IsSpellCheckingTextNode(aEndNode)) {
     // End at the start of the first text node after aEndNode/aEndOffset.
     aEndNode = FindNextTextNode(aEndNode, aEndOffset, mRootNode);
     aEndOffset = 0;
@@ -193,7 +196,7 @@ mozInlineSpellWordUtil::SetPosition(nsINode* aNode, int32_t aOffset)
 {
   InvalidateWords();
 
-  if (!IsTextNode(aNode)) {
+  if (!IsSpellCheckingTextNode(aNode)) {
     // Start at the start of the first text node after aNode/aOffset.
     aNode = FindNextTextNode(aNode, aOffset, mRootNode);
     aOffset = 0;
@@ -688,7 +691,7 @@ ContainsDOMWordSeparator(nsINode* aNode, int32_t aBeforeOffset,
     return true;
   }
 
-  if (!IsTextNode(aNode))
+  if (!IsSpellCheckingTextNode(aNode))
     return false;
 
   return TextNodeContainsDOMWordSeparator(aNode, aBeforeOffset,
@@ -769,7 +772,7 @@ mozInlineSpellWordUtil::BuildSoftText()
           if (!ContainsDOMWordSeparator(node, firstOffsetInNode - 1,
                                         &newOffset)) {
             nsINode* prevNode = node->GetPreviousSibling();
-            while (prevNode && IsTextNode(prevNode)) {
+            while (prevNode && IsSpellCheckingTextNode(prevNode)) {
               mSoftBegin.mNode = prevNode;
               if (TextNodeContainsDOMWordSeparator(prevNode, INT32_MAX,
                                                    &newOffset)) {
@@ -812,7 +815,7 @@ mozInlineSpellWordUtil::BuildSoftText()
     }
 
     bool exit = false;
-    if (IsTextNode(node)) {
+    if (IsSpellCheckingTextNode(node)) {
       nsIContent* content = static_cast<nsIContent*>(node);
       NS_ASSERTION(content, "Where is our content?");
       const nsTextFragment* textFragment = content->GetText();
