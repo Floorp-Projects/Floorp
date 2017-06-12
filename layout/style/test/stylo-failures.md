@@ -102,8 +102,6 @@ to mochitest command.
     * test_selectors.html `:-moz-lwtheme` [3]
   * :-moz-window-inactive bug 1348489
     * test_selectors.html `:-moz-window-inactive` [2]
-* Quirks mode support
-  * test_hover_quirk.html: hover quirks bug 1371963 [2]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]
 * getComputedStyle style doesn't contain custom properties bug 1336891
