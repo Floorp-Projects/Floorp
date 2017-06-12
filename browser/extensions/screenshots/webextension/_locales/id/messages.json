@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Anda tidak dapat merekam gambar dari laman Firefox Screenshots!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "Seleksi Anda terlalu kecil"
+  },
   "genericErrorTitle": {
     "message": "Wah! Firefox Screenshots mendadak kacau."
   },
@@ -80,16 +83,16 @@
     "message": "Klik dan seret untuk merekam sebagian area laman. Anda juga dapat menggeser kursor untuk menyoroti pilihan Anda."
   },
   "tourHeaderThree": {
-    "message": "Sesuka Anda"
-  },
-  "tourBodyThree": {
-    "message": "Simpan potongan tangkapan Anda ke Web agar mudah dibagikan, atau unduh ke komputer. Anda pun dapat mengeklik pada tombol Gambar Saya untuk menemukan semua tangkapan yang pernah Anda rekam."
-  },
-  "tourHeaderFour": {
     "message": "Rekam Jendela atau Seluruh Laman"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Pilih tombol di kanan atas untuk merekam area yang terlihat pada jendela atau rekam seluruh laman."
+  },
+  "tourHeaderFour": {
+    "message": "Sesuka Anda"
+  },
+  "tourBodyFour": {
+    "message": "Simpan potongan tangkapan Anda ke Web agar mudah dibagikan, atau unduh ke komputer. Anda pun dapat mengeklik pada tombol Gambar Saya untuk menemukan semua tangkapan yang pernah Anda rekam."
   },
   "tourSkip": {
     "message": "Lewati"

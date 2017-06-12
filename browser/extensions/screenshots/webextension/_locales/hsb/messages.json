@@ -83,16 +83,16 @@
     "message": "Klikńće a ćehńće, zo byšće dźěl strony fotografował. Móžeće tež pokazowak myški nad nim pohibować, zo byšće swój wuběr wuzběhnył."
   },
   "tourHeaderThree": {
-    "message": "Tak, kaž so wam spodoba"
-  },
-  "tourBodyThree": {
-    "message": "Składujće swoje přitřihane fota wobrazowki w interneće, zo byšće je lóšo dźělił, abo sćehńće je na swój ličak. Móžeće tež na tłóčatko „Moje fota wobrazowki“ kliknyć, zo byšće wšě fota wobrazowki namakał, kotrež sće činił."
-  },
-  "tourHeaderFour": {
     "message": "Wokna abo cyłe strony składować"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Wubjerće tłóčatka horjeka naprawo, zo byšće widźomny wobwod we woknje abo cyłu stronu fotografować."
+  },
+  "tourHeaderFour": {
+    "message": "Tak, kaž so wam spodoba"
+  },
+  "tourBodyFour": {
+    "message": "Składujće swoje přitřihane fota wobrazowki w interneće, zo byšće je lóšo dźělił, abo sćehńće je na swój ličak. Móžeće tež na tłóčatko „Moje fota wobrazowki“ kliknyć, zo byšće wšě fota wobrazowki namakał, kotrež sće činił."
   },
   "tourSkip": {
     "message": "Přeskočić"

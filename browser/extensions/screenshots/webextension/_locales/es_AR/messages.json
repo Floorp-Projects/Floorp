@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "¡No se puede hacer una captura de la página de capturas de Firefox!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "La selección es demasiado chica"
+  },
   "genericErrorTitle": {
     "message": "¡Apa! La capturas de pantalla de Firefox se volvieron locas."
   },
@@ -80,16 +83,16 @@
     "message": "Hacé clic y arrastrá para capturar una porción de la página. También podés pasar por encima para resaltar la selección."
   },
   "tourHeaderThree": {
-    "message": "Como te guste"
-  },
-  "tourBodyThree": {
-    "message": "Guardá tus capturas recortadas a la web para compartir o descargarlas más fácilmente a tu computadora. También podés hacer clic en el botón Mis capturas para encontrar todas las capturas hechas."
-  },
-  "tourHeaderFour": {
     "message": "Capturar ventanas o páginas enteras"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Seleccioná los botones arriba a la derecha para capturar el área visible en la ventana o la página completa."
+  },
+  "tourHeaderFour": {
+    "message": "Como te guste"
+  },
+  "tourBodyFour": {
+    "message": "Guardá tus capturas recortadas a la web para compartir o descargarlas más fácilmente a tu computadora. También podés hacer clic en el botón Mis capturas para encontrar todas las capturas hechas."
   },
   "tourSkip": {
     "message": "Saltear"

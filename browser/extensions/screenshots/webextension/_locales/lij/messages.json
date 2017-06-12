@@ -80,16 +80,16 @@
     "message": "Sciacca e rebela pe catuâ solo 'na porçion de 'na pagina. Ti peu anche anâ co-o ratto sorvia l'area seleçionâ pe evidençiala."
   },
   "tourHeaderThree": {
-    "message": "Comme te piaxe"
-  },
-  "tourBodyThree": {
-    "message": "Sarva 'n ritaggio de 'na pagina Web pe condividila in mòddo ciù façile ò scaregala into teu computer. Ti peu anche sciacâ into pomello  “E mæ föto do schermo pe atrovâ” quello che t'æ za pigiou."
-  },
-  "tourHeaderFour": {
     "message": "Catua 'n barcon ò 'na pagina intrega"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Seleçionn-a i pomelli de d'ato a drita pe catuâ l'area vixibile into barcon ò a pagina intrega."
+  },
+  "tourHeaderFour": {
+    "message": "Comme te piaxe"
+  },
+  "tourBodyFour": {
+    "message": "Sarva 'n ritaggio de 'na pagina Web pe condividila in mòddo ciù façile ò scaregala into teu computer. Ti peu anche sciacâ into pomello  “E mæ föto do schermo pe atrovâ” quello che t'æ za pigiou."
   },
   "tourSkip": {
     "message": "Ignòra"
