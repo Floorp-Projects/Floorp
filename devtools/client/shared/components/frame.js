@@ -50,35 +50,35 @@ module.exports = createClass({
   },
 
   componentWillMount() {
-    const sourceMapService = this.props.sourceMapService;
-    if (sourceMapService) {
+    if (this.props.sourceMapService) {
       const { source, line, column } = this.props.frame;
-      sourceMapService.originalPositionFor(source, line, column)
-        .then(resolvedLocation => {
-          if (resolvedLocation) {
-            this.onSourceUpdated(resolvedLocation);
-          }
-        });
+      this.props.sourceMapService.subscribe(source, line, column,
+                                            this._locationChanged);
     }
   },
 
-  /**
-   * Component method to update the FrameView when a resolved location is available
-   * @param {Location} resolvedLocation
-   *        the resolved location as found via a source map
-   */
-  onSourceUpdated(resolvedLocation) {
-    const { sourceUrl, line, column } = resolvedLocation;
-    const frame = {
-      source: sourceUrl,
-      line,
-      column,
-      functionDisplayName: this.props.frame.functionDisplayName,
+  componentWillUnmount() {
+    if (this.props.sourceMapService) {
+      const { source, line, column } = this.props.frame;
+      this.props.sourceMapService.unsubscribe(source, line, column,
+                                              this._locationChanged);
+    }
+  },
+
+  _locationChanged(isSourceMapped, url, line, column) {
+    let newState = {
+      isSourceMapped,
     };
-    this.setState({
-      frame,
-      isSourceMapped: true,
-    });
+    if (isSourceMapped) {
+      newState.frame = {
+        source: url,
+        line,
+        column,
+        functionDisplayName: this.props.frame.functionDisplayName,
+      };
+    }
+
+    this.setState(newState);
   },
 
   /**
@@ -108,7 +108,7 @@ module.exports = createClass({
       showFullSourceUrl
     } = this.props;
 
-    if (this.state && this.state.isSourceMapped) {
+    if (this.state && this.state.isSourceMapped && this.state.frame) {
       frame = this.state.frame;
       isSourceMapped = this.state.isSourceMapped;
     } else {
