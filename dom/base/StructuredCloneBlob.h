@@ -26,8 +26,10 @@ public:
 
   explicit StructuredCloneBlob();
 
-  static JSObject* ReadStructuredClone(JSContext* aCx, JSStructuredCloneReader* aReader);
-  bool WriteStructuredClone(JSContext* aCx, JSStructuredCloneWriter* aWriter);
+  static JSObject* ReadStructuredClone(JSContext* aCx, JSStructuredCloneReader* aReader,
+                                       StructuredCloneHolder* aHolder);
+  bool WriteStructuredClone(JSContext* aCx, JSStructuredCloneWriter* aWriter,
+                            StructuredCloneHolder* aHolder);
 
   static already_AddRefed<StructuredCloneBlob>
   Constructor(GlobalObject& aGlobal, JS::HandleValue aValue, JS::HandleObject aTargetGlobal, ErrorResult& aRv);
@@ -47,7 +49,8 @@ protected:
   ~StructuredCloneBlob() = default;
 
 private:
-  bool ReadStructuredCloneInternal(JSContext* aCx, JSStructuredCloneReader* aReader);
+  bool ReadStructuredCloneInternal(JSContext* aCx, JSStructuredCloneReader* aReader,
+                                   StructuredCloneHolder* aHolder);
 };
 
 } // namespace dom
