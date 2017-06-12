@@ -199,12 +199,6 @@ public:
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(ObjectBoundingBoxProperty, gfxRect)
 
   /**
-   * Gets the nearest nsSVGInnerSVGFrame or nsSVGOuterSVGFrame frame. aFrame
-   * must be an SVG frame.
-   */
-  static nsIFrame* GetNearestSVGViewport(nsIFrame *aFrame);
-
-  /**
    * Returns the frame's post-filter visual overflow rect when passed the
    * frame's pre-filter visual overflow rect. If the frame is not currently
    * being filtered, this function simply returns aUnfilteredRect.
