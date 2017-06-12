@@ -22,8 +22,10 @@
 #include <mach/mach.h>
 #endif
 
-// Support pseudostack and native stack on these platforms.
-#if defined(XP_LINUX) || defined(XP_WIN) || defined(XP_MACOSX)
+// Support pseudostack and native stack on these platforms. We don't support
+// collecting this information on x86 linux builds, as our LUL stackwalking
+// initialization code can occasionally crash. (see bug 1365309 comment 8).
+#if (defined(XP_LINUX) && defined(HAVE_64BIT_BUILD)) || defined(XP_WIN) || defined(XP_MACOSX)
 #  ifdef MOZ_GECKO_PROFILER
 #    define MOZ_THREADSTACKHELPER_PSEUDO
 #    define MOZ_THREADSTACKHELPER_NATIVE
