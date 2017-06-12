@@ -2208,6 +2208,33 @@ HttpBaseChannel::GetProtocolVersion(nsACString& aProtocolVersion)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
+HttpBaseChannel::SetTopWindowURIIfUnknown(nsIURI *aTopWindowURI)
+{
+  if (!aTopWindowURI) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (mTopWindowURI) {
+    LOG(("HttpChannelBase::SetTopWindowURIIfUnknown [this=%p] "
+         "mTopWindowURI is already set.\n", this));
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIURI> topWindowURI;
+  Unused << GetTopWindowURI(getter_AddRefs(topWindowURI));
+
+  // Don't modify |mTopWindowURI| if we can get one from GetTopWindowURI().
+  if (topWindowURI) {
+    LOG(("HttpChannelBase::SetTopWindowURIIfUnknown [this=%p] "
+         "Return an error since we got a top window uri.\n", this));
+    return NS_ERROR_FAILURE;
+  }
+
+  mTopWindowURI = aTopWindowURI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpBaseChannel::GetTopWindowURI(nsIURI **aTopWindowURI)
 {
   nsresult rv = NS_OK;

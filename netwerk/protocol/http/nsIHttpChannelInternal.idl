@@ -272,6 +272,13 @@ interface nsIHttpChannelInternal : nsISupports
     [must_use] readonly attribute nsIURI topWindowURI;
 
     /**
+     * Set top-level window URI to this channel only when the topWindowURI
+     * is null and there is no window associated to this channel.
+     * Note that the current usage of this method is only for xpcshell test.
+     */
+    [must_use] void setTopWindowURIIfUnknown(in nsIURI topWindowURI);
+
+    /**
      * The network interface id that's associated with this channel.
      */
     [must_use] attribute ACString networkInterfaceId;
