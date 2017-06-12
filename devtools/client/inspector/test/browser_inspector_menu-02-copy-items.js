@@ -8,6 +8,8 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 const TEST_URL = URL_ROOT + "doc_inspector_menu.html";
 const SELECTOR_UNIQUE = "devtools.copy.unique.css.selector.opened";
 const SELECTOR_FULL = "devtools.copy.full.css.selector.opened";
+const XPATH = "devtools.copy.xpath.opened";
+
 const COPY_ITEMS_TEST_DATA = [
   {
     desc: "copy inner html",
@@ -32,6 +34,12 @@ const COPY_ITEMS_TEST_DATA = [
     id: "node-menu-copycsspath",
     selector: "[data-id=\"copy\"]",
     text: "html body div p",
+  },
+  {
+    desc: "copy XPath",
+    id: "node-menu-copyxpath",
+    selector: "[data-id=\"copy\"]",
+    text: "/html/body/div/p[1]",
   },
   {
     desc: "copy image data uri",
@@ -73,13 +81,16 @@ function checkTelemetryResults(Telemetry) {
     }
   }
 
-  is(results.size, 2, "The correct number of scalars were logged");
+  is(results.size, 3, "The correct number of scalars were logged");
 
   let pings = checkPings(SELECTOR_UNIQUE, results);
   is(pings, 1, `${SELECTOR_UNIQUE} has just 1 ping`);
 
   pings = checkPings(SELECTOR_FULL, results);
   is(pings, 1, `${SELECTOR_FULL} has just 1 ping`);
+
+  pings = checkPings(XPATH, results);
+  is(pings, 1, `${XPATH} has just 1 ping`);
 }
 
 function checkPings(scalarId, results) {
