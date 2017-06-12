@@ -4,17 +4,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ChromiumCDMParent.h"
-#include "mozilla/gmp/GMPTypes.h"
+
+#include "ChromiumCDMProxy.h"
+#include "content_decryption_module.h"
 #include "GMPContentChild.h"
 #include "GMPContentParent.h"
-#include "mozilla/Unused.h"
-#include "ChromiumCDMProxy.h"
-#include "mozilla/dom/MediaKeyMessageEventBinding.h"
-#include "mozilla/Telemetry.h"
-#include "content_decryption_module.h"
 #include "GMPLog.h"
-#include "MediaPrefs.h"
 #include "GMPUtils.h"
+#include "MediaPrefs.h"
+#include "mozilla/dom/MediaKeyMessageEventBinding.h"
+#include "mozilla/gmp/GMPTypes.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/Unused.h"
+#include "mp4_demuxer/AnnexB.h"
+#include "mp4_demuxer/H264.h"
 
 namespace mozilla {
 namespace gmp {
@@ -731,7 +734,7 @@ ChromiumCDMParent::RecvDecodedData(const CDMVideoFrame& aFrame,
     return IPC_OK();
   }
 
-  mDecodePromise.ResolveIfExists({ Move(v) }, __func__);
+  ReorderAndReturnOutput(Move(v));
 
   return IPC_OK();
 }
@@ -740,7 +743,11 @@ ipc::IPCResult
 ChromiumCDMParent::RecvDecodedShmem(const CDMVideoFrame& aFrame,
                                     ipc::Shmem&& aShmem)
 {
-  GMP_LOG("ChromiumCDMParent::RecvDecodedShmem(this=%p)", this);
+  GMP_LOG("ChromiumCDMParent::RecvDecodedShmem(this=%p) time=%" PRId64
+          " duration=%" PRId64,
+          this,
+          aFrame.mTimestamp(),
+          aFrame.mDuration());
 
   // On failure we need to deallocate the shmem we're to return to the
   // CDM. On success we return it to the CDM to be reused.
@@ -775,9 +782,24 @@ ChromiumCDMParent::RecvDecodedShmem(const CDMVideoFrame& aFrame,
   // for it again.
   autoDeallocateShmem.release();
 
-  mDecodePromise.ResolveIfExists({ Move(v) }, __func__);
+  ReorderAndReturnOutput(Move(v));
 
   return IPC_OK();
+}
+
+void
+ChromiumCDMParent::ReorderAndReturnOutput(RefPtr<VideoData>&& aFrame)
+{
+  if (mMaxRefFrames == 0) {
+    mDecodePromise.ResolveIfExists({ Move(aFrame) }, __func__);
+    return;
+  }
+  mReorderQueue.Push(Move(aFrame));
+  MediaDataDecoder::DecodedData results;
+  while (mReorderQueue.Length() > mMaxRefFrames) {
+    results.AppendElement(mReorderQueue.Pop());
+  }
+  mDecodePromise.Resolve(Move(results), __func__);
 }
 
 already_AddRefed<VideoData>
@@ -915,6 +937,13 @@ ChromiumCDMParent::InitializeVideoDecoder(
       __func__);
   }
 
+  mMaxRefFrames =
+    (aConfig.mCodec() == cdm::VideoDecoderConfig::kCodecH264)
+      ? mp4_demuxer::AnnexB::HasSPS(aInfo.mExtraData)
+          ? mp4_demuxer::H264::ComputeMaxRefFrames(aInfo.mExtraData)
+          : 16
+      : 0;
+
   mVideoDecoderInitialized = true;
   mImageContainer = aImageContainer;
   mVideoInfo = aInfo;
@@ -987,11 +1016,14 @@ RefPtr<MediaDataDecoder::FlushPromise>
 ChromiumCDMParent::FlushVideoDecoder()
 {
   if (mIsShutdown) {
+    MOZ_ASSERT(mReorderQueue.IsEmpty());
     return MediaDataDecoder::FlushPromise::CreateAndReject(
       MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                   RESULT_DETAIL("ChromiumCDMParent is shutdown")),
       __func__);
   }
+
+  mReorderQueue.Clear();
 
   mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   if (!SendResetVideoDecoder()) {
@@ -1005,6 +1037,7 @@ ChromiumCDMParent::FlushVideoDecoder()
 ipc::IPCResult
 ChromiumCDMParent::RecvResetVideoDecoderComplete()
 {
+  MOZ_ASSERT(mReorderQueue.IsEmpty());
   if (mIsShutdown) {
     MOZ_ASSERT(mFlushDecoderPromise.IsEmpty());
     return IPC_OK();
@@ -1038,7 +1071,13 @@ ChromiumCDMParent::RecvDrainComplete()
     MOZ_ASSERT(mDecodePromise.IsEmpty());
     return IPC_OK();
   }
-  mDecodePromise.ResolveIfExists(MediaDataDecoder::DecodedData(), __func__);
+
+  MediaDataDecoder::DecodedData samples;
+  while (!mReorderQueue.IsEmpty()) {
+    samples.AppendElement(Move(mReorderQueue.Pop()));
+  }
+
+  mDecodePromise.ResolveIfExists(Move(samples), __func__);
   return IPC_OK();
 }
 RefPtr<ShutdownPromise>
@@ -1096,6 +1135,8 @@ ChromiumCDMParent::Shutdown()
   // let's clear our local weak pointer to ensure it will not be used afterward
   // (including from an already-queued task, e.g.: ActorDestroy).
   mProxy = nullptr;
+
+  mReorderQueue.Clear();
 
   for (RefPtr<DecryptJob>& decrypt : mDecrypts) {
     decrypt->PostResult(eme::AbortedErr);
