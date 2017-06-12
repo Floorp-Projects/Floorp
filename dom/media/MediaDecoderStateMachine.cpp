@@ -809,7 +809,6 @@ private:
   void DispatchDecodeTasksIfNeeded();
   void EnsureAudioDecodeTaskQueued();
   void EnsureVideoDecodeTaskQueued();
-  bool NeedToSkipToNextKeyframe();
   void MaybeStartBuffering();
 
   void CheckSlowDecoding(TimeStamp aDecodeStart)
@@ -2397,53 +2396,6 @@ DecodingState::EnsureVideoDecodeTaskQueued()
     return;
   }
   mMaster->RequestVideoData(mMaster->GetMediaTime());
-}
-
-bool
-MediaDecoderStateMachine::
-DecodingState::NeedToSkipToNextKeyframe()
-{
-  // Since GetClock() can only be called after starting MediaSink, we return
-  // false quickly if it is not started because we won't fall behind playback
-  // when not consuming media data.
-  if (!mMaster->mMediaSink->IsStarted()) {
-    return false;
-  }
-
-  // Don't skip frame for video-only decoded stream because the clock time of
-  // the stream relies on the video frame.
-  if (mMaster->mAudioCaptured && !mMaster->HasAudio()) {
-    return false;
-  }
-
-  // We'll skip the video decode to the next keyframe if we're low on
-  // audio, or if we're low on video, provided we're not running low on
-  // data to decode. If we're running low on downloaded data to decode,
-  // we won't start keyframe skipping, as we'll be pausing playback to buffer
-  // soon anyway and we'll want to be able to display frames immediately
-  // after buffering finishes. We ignore the low audio calculations for
-  // readers that are async, as since their audio decode runs on a different
-  // task queue it should never run low and skipping won't help their decode.
-  bool isLowOnDecodedAudio =
-    !Reader()->IsAsync()
-    && mMaster->IsAudioDecoding()
-    && (mMaster->GetDecodedAudioDuration()
-        < mMaster->mLowAudioThreshold.MultDouble(mMaster->mPlaybackRate));
-  bool isLowOnDecodedVideo =
-    (mMaster->GetClock()
-     - mMaster->mDecodedVideoEndTime).MultDouble(mMaster->mPlaybackRate)
-    > LOW_VIDEO_THRESHOLD;
-  bool lowBuffered = mMaster->HasLowBufferedData();
-
-  if ((isLowOnDecodedAudio || isLowOnDecodedVideo) && !lowBuffered) {
-    SLOG("Skipping video decode to the next keyframe lowAudio=%d lowVideo=%d "
-         "lowUndecoded=%d async=%d",
-         isLowOnDecodedAudio, isLowOnDecodedVideo, lowBuffered,
-         Reader()->IsAsync());
-    return true;
-  }
-
-  return false;
 }
 
 void
