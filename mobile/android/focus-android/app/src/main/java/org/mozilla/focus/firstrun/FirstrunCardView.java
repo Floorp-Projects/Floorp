@@ -40,18 +40,18 @@ public class FirstrunCardView extends CardView {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         // The view is set to match_parent in the layout file. So width and height should be the
-        // value needed to fill the whole view.
-        int width = MeasureSpec.getSize(widthMeasureSpec);
-        int height = MeasureSpec.getSize(heightMeasureSpec);
+        // value needed to fill the whole parent view.
+        final int availableWidth = MeasureSpec.getSize(widthMeasureSpec);
+        final int availableHeight = MeasureSpec.getSize(heightMeasureSpec);
 
         // Now let's use those sizes to measure - but let's not exceed our defined max sizes (We do
         // not want to have gigantic cards on large devices like tablets.)
+        final int measuredWidth = Math.min(availableWidth, maxWidth);
+        final int measuredHeight = Math.min(availableHeight, maxHeight);
 
-        widthMeasureSpec = MeasureSpec.makeMeasureSpec(
-                Math.min(width, maxWidth), MeasureSpec.AT_MOST);
-
-        heightMeasureSpec = MeasureSpec.makeMeasureSpec(
-                Math.min(height, maxHeight), MeasureSpec.AT_MOST);
+        // Let's use the measured values to hand them to the super class to measure the child views etc.
+        widthMeasureSpec = MeasureSpec.makeMeasureSpec(measuredWidth, MeasureSpec.EXACTLY);
+        heightMeasureSpec = MeasureSpec.makeMeasureSpec(measuredHeight, MeasureSpec.EXACTLY);
 
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
