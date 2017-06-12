@@ -110,8 +110,7 @@ Link::TryDNSPrefetchPreconnectOrPrefetchOrPrerender()
     return;
   }
 
-  uint32_t linkTypes = nsStyleLinkElement::ParseLinkTypes(rel,
-                         mElement->NodePrincipal());
+  uint32_t linkTypes = nsStyleLinkElement::ParseLinkTypes(rel);
 
   if ((linkTypes & nsStyleLinkElement::ePREFETCH) ||
       (linkTypes & nsStyleLinkElement::eNEXT)){
