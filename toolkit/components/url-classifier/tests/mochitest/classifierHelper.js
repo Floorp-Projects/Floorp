@@ -5,8 +5,6 @@ if (typeof(classifierHelper) == "undefined") {
 const CLASSIFIER_COMMON_URL = SimpleTest.getTestFileURL("classifierCommon.js");
 var gScript = SpecialPowers.loadChromeScript(CLASSIFIER_COMMON_URL);
 
-const ADD_CHUNKNUM = 524;
-const SUB_CHUNKNUM = 523;
 const HASHLEN = 32;
 
 const PREFS = {
@@ -15,7 +13,9 @@ const PREFS = {
   PROVIDER_GETHASHURL : "browser.safebrowsing.provider.mozilla.gethashURL"
 };
 
-// addUrlToDB & removeUrlFromDB are asynchronous, queue the task to ensure
+classifierHelper._curAddChunkNum = 1;
+
+// addUrlToDB is asynchronous, queue the task to ensure
 // the callback follow correct order.
 classifierHelper._updates = [];
 
@@ -66,12 +66,15 @@ classifierHelper.addUrlToDB = function(updateData) {
       var CHUNKLEN = CHUNKDATA.length;
       var HASHLEN = update.len ? update.len : 32;
 
+      update.addChunk = classifierHelper._curAddChunkNum;
+      classifierHelper._curAddChunkNum += 1;
+
       classifierHelper._updatesToCleanup.push(update);
       testUpdate +=
         "n:1000\n" +
         "i:" + LISTNAME + "\n" +
         "ad:1\n" +
-        "a:" + ADD_CHUNKNUM + ":" + HASHLEN + ":" + CHUNKLEN + "\n" +
+        "a:" + update.addChunk + ":" + HASHLEN + ":" + CHUNKLEN + "\n" +
         CHUNKDATA;
     }
 
@@ -79,48 +82,17 @@ classifierHelper.addUrlToDB = function(updateData) {
   });
 }
 
-// Pass { url: ..., db: ... } to remove url from database,
-// onsuccess/onerror will be called when update complete.
-classifierHelper.removeUrlFromDB = function(updateData) {
-  return new Promise(function(resolve, reject) {
-    var testUpdate = "";
-    for (var update of updateData) {
-      var LISTNAME = update.db;
-      var CHUNKDATA = ADD_CHUNKNUM + ":" + update.url;
-      var CHUNKLEN = CHUNKDATA.length;
-      var HASHLEN = update.len ? update.len : 32;
-
-      testUpdate +=
-        "n:1000\n" +
-        "i:" + LISTNAME + "\n" +
-        "s:" + SUB_CHUNKNUM + ":" + HASHLEN + ":" + CHUNKLEN + "\n" +
-        CHUNKDATA;
-    }
-
-    classifierHelper._updatesToCleanup =
-      classifierHelper._updatesToCleanup.filter((v) => {
-        return updateData.indexOf(v) == -1;
-      });
-
-    classifierHelper._update(testUpdate, resolve, reject);
-  });
-};
-
 // This API is used to expire all add/sub chunks we have updated
-// by using addUrlToDB and removeUrlFromDB.
+// by using addUrlToDB.
 classifierHelper.resetDatabase = function() {
   function removeDatabase() {
     return new Promise(function(resolve, reject) {
       var testUpdate = "";
       for (var update of classifierHelper._updatesToCleanup) {
-        if (testUpdate.includes(update.db))
-          continue;
-
         testUpdate +=
           "n:1000\n" +
           "i:" + update.db + "\n" +
-          "ad:" + ADD_CHUNKNUM + "\n" +
-          "sd:" + SUB_CHUNKNUM + "\n"
+          "ad:" + update.addChunk + "\n";
       }
 
       classifierHelper._update(testUpdate, resolve, reject);
