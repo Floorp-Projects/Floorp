@@ -2466,7 +2466,17 @@ nsresult HTMLMediaElement::LoadResource()
   }
 
   if (mMediaSource) {
-    RefPtr<MediaSourceDecoder> decoder = new MediaSourceDecoder(this);
+    MediaDecoderInit decoderInit(
+      this,
+      mAudioChannel,
+      mMuted ? 0.0 : mVolume,
+      mPreservesPitch,
+      mPlaybackRate,
+      mPreloadAction == HTMLMediaElement::PRELOAD_METADATA,
+      mHasSuspendTaint,
+      HasAttr(kNameSpaceID_None, nsGkAtoms::loop));
+
+    RefPtr<MediaSourceDecoder> decoder = new MediaSourceDecoder(decoderInit);
     if (!mMediaSource->Attach(decoder)) {
       // TODO: Handle failure: run "If the media data cannot be fetched at
       // all, due to network errors, causing the user agent to give up
@@ -4225,6 +4235,10 @@ HTMLMediaElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       }
     } else if (aName == nsGkAtoms::preload) {
       UpdatePreloadAction();
+    } else if (aName == nsGkAtoms::loop) {
+      if (mDecoder) {
+        mDecoder->SetLooping(!!aValue);
+      }
     }
   }
 
@@ -4590,7 +4604,18 @@ nsresult HTMLMediaElement::InitializeDecoderAsClone(MediaDecoder* aOriginal)
   MediaResource* originalResource = aOriginal->GetResource();
   if (!originalResource)
     return NS_ERROR_FAILURE;
-  RefPtr<MediaDecoder> decoder = aOriginal->Clone(this);
+
+  MediaDecoderInit decoderInit(
+    this,
+    mAudioChannel,
+    mMuted ? 0.0 : mVolume,
+    mPreservesPitch,
+    mPlaybackRate,
+    mPreloadAction == HTMLMediaElement::PRELOAD_METADATA,
+    mHasSuspendTaint,
+    HasAttr(kNameSpaceID_None, nsGkAtoms::loop));
+
+  RefPtr<MediaDecoder> decoder = aOriginal->Clone(decoderInit);
   if (!decoder)
     return NS_ERROR_FAILURE;
 
@@ -4619,8 +4644,18 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
   NS_ASSERTION(!mimeType.IsEmpty(), "We should have the Content-Type.");
 
   DecoderDoctorDiagnostics diagnostics;
+  MediaDecoderInit decoderInit(
+    this,
+    mAudioChannel,
+    mMuted ? 0.0 : mVolume,
+    mPreservesPitch,
+    mPlaybackRate,
+    mPreloadAction == HTMLMediaElement::PRELOAD_METADATA,
+    mHasSuspendTaint,
+    HasAttr(kNameSpaceID_None, nsGkAtoms::loop));
+
   RefPtr<MediaDecoder> decoder =
-    DecoderTraits::CreateDecoder(mimeType, this, &diagnostics);
+    DecoderTraits::CreateDecoder(mimeType, decoderInit, &diagnostics);
   diagnostics.StoreFormatDiagnostics(OwnerDoc(),
                                      NS_ConvertASCIItoUTF16(mimeType),
                                      decoder != nullptr,
@@ -4669,15 +4704,6 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
   // Tell the decoder about its MediaResource now so things like principals are
   // available immediately.
   mDecoder->SetResource(aStream);
-  mDecoder->SetAudioChannel(mAudioChannel);
-  mDecoder->SetVolume(mMuted ? 0.0 : mVolume);
-  mDecoder->SetPreservesPitch(mPreservesPitch);
-  mDecoder->SetPlaybackRate(mPlaybackRate);
-  if (mPreloadAction == HTMLMediaElement::PRELOAD_METADATA) {
-    mDecoder->SetMinimizePrerollUntilPlaybackStarts();
-  }
-  // Notify the decoder of suspend taint.
-  mDecoder->SetSuspendTaint(mHasSuspendTaint);
   // Notify the decoder of the initial activity status.
   NotifyDecoderActivityChanges();
 

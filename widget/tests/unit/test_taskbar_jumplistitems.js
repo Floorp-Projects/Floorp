@@ -174,7 +174,7 @@ function test_shortcuts()
   }
 }
 
-function test_jumplist()
+async function test_jumplist()
 {
   // Jump lists can't register links unless the application is the default
   // protocol handler for the protocol of the link, so we skip off testing
@@ -225,6 +225,10 @@ function test_jumplist()
   var notepad = dirSvc.get("WinD", Ci.nsIFile);
   notepad.append("notepad.exe");
   if (notepad.exists()) {
+    // To ensure "profile-before-change" will fire before
+    // "xpcom-shutdown-threads"
+    do_get_profile();
+
     handlerApp.executable = notepad;
     sc.app = handlerApp;
     items.appendElement(sc);
@@ -235,13 +239,19 @@ function test_jumplist()
     do_check_true(builder.addListToBuild(builder.JUMPLIST_CATEGORY_TASKS, items));
     do_check_true(builder.addListToBuild(builder.JUMPLIST_CATEGORY_RECENT));
     do_check_true(builder.addListToBuild(builder.JUMPLIST_CATEGORY_FREQUENT));
-    do_check_true(builder.commitListBuild());
+    let rv = new Promise((resolve) => {
+      builder.commitListBuild(resolve);
+    });
+    do_check_true(await rv);
 
     builder.deleteActiveList();
 
     do_check_true(builder.initListBuild(removed));
-    do_check_true(builder.addListToBuild(builder.JUMPLIST_CATEGORY_CUSTOM, items, "Custom List"));
-    do_check_true(builder.commitListBuild());
+    do_check_true(builder.addListToBuild(builder.JUMPLIST_CATEGORY_CUSTOMLIST, items, "Custom List"));
+    rv = new Promise((resolve) => {
+      builder.commitListBuild(resolve);
+    });
+    do_check_true(await rv);
 
     builder.deleteActiveList();
   }
@@ -257,5 +267,8 @@ function run_test()
   test_hashes();
   test_links();
   test_shortcuts();
-  test_jumplist();
+
+  run_next_test();
 }
+
+add_task(test_jumplist);

@@ -573,6 +573,7 @@ private:
 
   int32_t mIcoNoDeleteSeconds;
   bool mIgnoreRecent;
+  nsCOMPtr<nsIFile> mJumpListCacheDir;
 };
 
 class FaviconHelper

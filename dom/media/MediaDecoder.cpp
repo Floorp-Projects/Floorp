@@ -366,39 +366,41 @@ MediaDecoder::IsInfinite() const
 }
 
 #define INIT_MIRROR(name, val) \
-  name(aOwner->AbstractMainThread(), val, "MediaDecoder::" #name " (Mirror)")
+  name(mOwner->AbstractMainThread(), val, "MediaDecoder::" #name " (Mirror)")
 #define INIT_CANONICAL(name, val) \
-  name(aOwner->AbstractMainThread(), val, "MediaDecoder::" #name " (Canonical)")
+  name(mOwner->AbstractMainThread(), val, "MediaDecoder::" #name " (Canonical)")
 
-MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
-  : mWatchManager(this, aOwner->AbstractMainThread())
+MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
+  : mWatchManager(this, aInit.mOwner->AbstractMainThread())
   , mLogicalPosition(0.0)
   , mDuration(std::numeric_limits<double>::quiet_NaN())
-  , mResourceCallback(new ResourceCallback(aOwner->AbstractMainThread()))
+  , mResourceCallback(new ResourceCallback(aInit.mOwner->AbstractMainThread()))
   , mCDMProxyPromise(mCDMProxyPromiseHolder.Ensure(__func__))
   , mIgnoreProgressData(false)
   , mInfiniteStream(false)
-  , mOwner(aOwner)
-  , mAbstractMainThread(aOwner->AbstractMainThread())
+  , mOwner(aInit.mOwner)
+  , mAbstractMainThread(aInit.mOwner->AbstractMainThread())
   , mFrameStats(new FrameStatistics())
-  , mVideoFrameContainer(aOwner->GetVideoFrameContainer())
+  , mVideoFrameContainer(aInit.mOwner->GetVideoFrameContainer())
   , mPinnedForSeek(false)
-  , mMinimizePreroll(false)
+  , mAudioChannel(aInit.mAudioChannel)
+  , mMinimizePreroll(aInit.mMinimizePreroll)
   , mFiredMetadataLoaded(false)
   , mIsDocumentVisible(false)
   , mElementVisibility(Visibility::UNTRACKED)
   , mIsElementInTree(false)
   , mForcedHidden(false)
-  , mHasSuspendTaint(false)
-  , INIT_MIRROR(mStateMachineIsShutdown, true)
+  , mHasSuspendTaint(aInit.mHasSuspendTaint)
+  , mPlaybackRate(aInit.mPlaybackRate)
   , INIT_MIRROR(mBuffered, TimeIntervals())
   , INIT_MIRROR(mNextFrameStatus, MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE)
   , INIT_MIRROR(mCurrentPosition, TimeUnit::Zero())
   , INIT_MIRROR(mStateMachineDuration, NullableTimeUnit())
   , INIT_MIRROR(mPlaybackPosition, 0)
   , INIT_MIRROR(mIsAudioDataAudible, false)
-  , INIT_CANONICAL(mVolume, 0.0)
-  , INIT_CANONICAL(mPreservesPitch, true)
+  , INIT_CANONICAL(mVolume, aInit.mVolume)
+  , INIT_CANONICAL(mPreservesPitch, aInit.mPreservesPitch)
+  , INIT_CANONICAL(mLooping, aInit.mLooping)
   , INIT_CANONICAL(mExplicitDuration, Maybe<double>())
   , INIT_CANONICAL(mPlayState, PLAY_STATE_LOADING)
   , INIT_CANONICAL(mNextState, PLAY_STATE_PAUSED)
@@ -409,14 +411,13 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   , INIT_CANONICAL(mPlaybackRateReliable, true)
   , INIT_CANONICAL(mDecoderPosition, 0)
   , mTelemetryReported(false)
-  , mIsMediaElement(!!aOwner->GetMediaElement())
-  , mElement(aOwner->GetMediaElement())
+  , mIsMediaElement(!!mOwner->GetMediaElement())
+  , mElement(mOwner->GetMediaElement())
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mAbstractMainThread);
   MediaMemoryTracker::AddMediaDecoder(this);
 
-  mAudioChannel = AudioChannelService::GetDefaultAudioChannel();
   mResourceCallback->Connect(this);
 
   //
@@ -425,10 +426,6 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
 
   // mDuration
   mWatchManager.Watch(mStateMachineDuration, &MediaDecoder::DurationChanged);
-
-  // mStateMachineIsShutdown
-  mWatchManager.Watch(mStateMachineIsShutdown,
-                      &MediaDecoder::ShutdownBitChanged);
 
   // readyState
   mWatchManager.Watch(mPlayState, &MediaDecoder::UpdateReadyState);
@@ -679,18 +676,6 @@ MediaDecoder::SetStateMachineParameters()
     mAbstractMainThread, this, &MediaDecoder::OnDecoderDoctorEvent);
   mOnMediaNotSeekable = mDecoderStateMachine->OnMediaNotSeekable().Connect(
     mAbstractMainThread, this, &MediaDecoder::OnMediaNotSeekable);
-}
-
-void
-MediaDecoder::SetMinimizePrerollUntilPlaybackStarts()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  LOG("SetMinimizePrerollUntilPlaybackStarts()");
-  mMinimizePreroll = true;
-
-  // This needs to be called before we init the state machine, otherwise it will
-  // have no effect.
-  MOZ_DIAGNOSTIC_ASSERT(!mDecoderStateMachine);
 }
 
 nsresult
@@ -1463,13 +1448,19 @@ MediaDecoder::SetPreservesPitch(bool aPreservesPitch)
 }
 
 void
+MediaDecoder::SetLooping(bool aLooping)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mLooping = aLooping;
+}
+
+void
 MediaDecoder::ConnectMirrors(MediaDecoderStateMachine* aObject)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aObject);
   mStateMachineDuration.Connect(aObject->CanonicalDuration());
   mBuffered.Connect(aObject->CanonicalBuffered());
-  mStateMachineIsShutdown.Connect(aObject->CanonicalIsShutdown());
   mNextFrameStatus.Connect(aObject->CanonicalNextFrameStatus());
   mCurrentPosition.Connect(aObject->CanonicalCurrentPosition());
   mPlaybackPosition.Connect(aObject->CanonicalPlaybackOffset());
@@ -1482,7 +1473,6 @@ MediaDecoder::DisconnectMirrors()
   MOZ_ASSERT(NS_IsMainThread());
   mStateMachineDuration.DisconnectIfConnected();
   mBuffered.DisconnectIfConnected();
-  mStateMachineIsShutdown.DisconnectIfConnected();
   mNextFrameStatus.DisconnectIfConnected();
   mCurrentPosition.DisconnectIfConnected();
   mPlaybackPosition.DisconnectIfConnected();

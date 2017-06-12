@@ -107,9 +107,10 @@ if (typeof Mozilla == "undefined") {
    * <li>controlCenter-trackingBlock
    * <li>customize
    * <li>devtools
+   * <li>forget
    * <li>help
    * <li>home
-   * <li>forget
+   * <li>library
    * <li>pocket
    * <li>privateWindow
    * <li>quit
