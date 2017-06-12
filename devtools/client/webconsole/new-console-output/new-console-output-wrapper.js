@@ -152,7 +152,7 @@ NewConsoleOutputWrapper.prototype = {
     // be removed once it's not needed anymore.
     // Can only wait for response if the action contains a valid message.
     if (waitForResponse && action.message) {
-      let messageId = action.message.get("id");
+      let messageId = action.message.id;
       return new Promise(resolve => {
         let jsterm = this.jsterm;
         jsterm.hud.on("new-messages", function onThisMessage(e, messages) {

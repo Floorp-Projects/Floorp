@@ -25,9 +25,10 @@ function prepareMessage(packet, idGenerator) {
   }
 
   if (packet.allowRepeating) {
-    packet = packet.set("repeatId", getRepeatId(packet));
+    packet.repeatId = getRepeatId(packet);
   }
-  return packet.set("id", idGenerator.getNextId(packet));
+  packet.id = idGenerator.getNextId(packet);
+  return packet;
 }
 
 /**
@@ -236,9 +237,17 @@ function transformPacket(packet) {
 
 // Helpers
 function getRepeatId(message) {
-  message = message.toJS();
-  message.timeStamp = null;
-  return JSON.stringify(message);
+  return JSON.stringify({
+    frame: message.frame,
+    groupId: message.groupId,
+    indent: message.indent,
+    level: message.level,
+    messageText: message.messageText,
+    parameters: message.parameters,
+    source: message.source,
+    type: message.type,
+    userProvidedStyles: message.userProvidedStyles,
+  });
 }
 
 function convertCachedPacket(packet) {
