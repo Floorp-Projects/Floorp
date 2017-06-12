@@ -580,26 +580,6 @@ MediaStreamGraphImpl::UpdateStreamOrder()
     }
   }
 
-#ifdef MOZ_WEBRTC
-  // Whenever we change AEC state, notify the current driver, which also
-  // will sample the state when the driver inits
-  if (shouldAEC && !mFarendObserverRef && gFarendObserver) {
-    mFarendObserverRef = gFarendObserver;
-    mMixer.AddCallback(mFarendObserverRef);
-    if (CurrentDriver()->AsAudioCallbackDriver()) {
-      CurrentDriver()->AsAudioCallbackDriver()->SetMicrophoneActive(true);
-    }
-  } else if (!shouldAEC && mFarendObserverRef){
-    if (mMixer.FindCallback(mFarendObserverRef)) {
-      mMixer.RemoveCallback(mFarendObserverRef);
-      mFarendObserverRef = nullptr;
-      if (CurrentDriver()->AsAudioCallbackDriver()) {
-        CurrentDriver()->AsAudioCallbackDriver()->SetMicrophoneActive(false);
-      }
-    }
-  }
-#endif
-
   if (!mStreamOrderDirty) {
     return;
   }
@@ -1009,6 +989,7 @@ MediaStreamGraphImpl::OpenAudioInputImpl(int aID,
     MonitorAutoLock mon(mMonitor);
     if (mLifecycleState == LIFECYCLE_RUNNING) {
       AudioCallbackDriver* driver = new AudioCallbackDriver(this);
+      driver->SetMicrophoneActive(true);
       LOG(
         LogLevel::Debug,
         ("OpenAudioInput: starting new AudioCallbackDriver(input) %p", driver));
@@ -1119,7 +1100,6 @@ MediaStreamGraphImpl::CloseAudioInput(AudioDataListener *aListener)
   };
   this->AppendMessage(MakeUnique<Message>(this, aListener));
 }
-
 
 // All AudioInput listeners get the same speaker data (at least for now).
 void

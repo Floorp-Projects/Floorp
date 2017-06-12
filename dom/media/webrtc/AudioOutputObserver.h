@@ -21,23 +21,18 @@ typedef struct FarEndAudioChunk_ {
   int16_t mData[1]; // variable-length
 } FarEndAudioChunk;
 
-// XXX Really a singleton currently
-class AudioOutputObserver : public MixerCallbackReceiver
+// This class is used to packetize and send the mixed audio from an MSG, in
+// int16, to the AEC module of WebRTC.org.
+class AudioOutputObserver
 {
 public:
   AudioOutputObserver();
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioOutputObserver);
 
-  void MixerCallback(AudioDataValue* aMixedBuffer,
-                     AudioSampleFormat aFormat,
-                     uint32_t aChannels,
-                     uint32_t aFrames,
-                     uint32_t aSampleRate) override;
-
   void Clear();
   void InsertFarEnd(const AudioDataValue *aBuffer, uint32_t aFrames, bool aOverran,
-                    int aFreq, int aChannels, AudioSampleFormat aFormat);
+                    int aFreq, int aChannels);
   uint32_t PlayoutFrequency() { return mPlayoutFreq; }
   uint32_t PlayoutChannels() { return mPlayoutChannels; }
 

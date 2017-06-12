@@ -117,8 +117,6 @@ MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs &aPrefs)
   if (compMgr) {
     compMgr->IsContractIDRegistered(NS_TABSOURCESERVICE_CONTRACTID, &mHasTabVideoSource);
   }
-  // XXX
-  gFarendObserver = new AudioOutputObserver();
 
   camera::GetChildAndCall(
     &camera::CamerasChild::AddDeviceChangeCallback,
