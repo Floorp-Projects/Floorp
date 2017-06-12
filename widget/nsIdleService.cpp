@@ -143,10 +143,11 @@ nsIdleServiceDaily::Observe(nsISupports *,
          ("nsIdleServiceDaily: Restarting daily timer"));
 
   // Start timer for the next check in one day.
-  (void)mTimer->InitWithFuncCallback(DailyCallback,
-                                     this,
-                                     SECONDS_PER_DAY * PR_MSEC_PER_SEC,
-                                     nsITimer::TYPE_ONE_SHOT);
+  (void)mTimer->InitWithNamedFuncCallback(DailyCallback,
+                                          this,
+                                          SECONDS_PER_DAY * PR_MSEC_PER_SEC,
+                                          nsITimer::TYPE_ONE_SHOT,
+                                          "nsIdleServiceDaily::Observe");
 
   return NS_OK;
 }
@@ -218,10 +219,11 @@ nsIdleServiceDaily::Init()
     mExpectedTriggerTime  = PR_Now() +
       (milliSecLeftUntilDaily * PR_USEC_PER_MSEC);
 
-    (void)mTimer->InitWithFuncCallback(DailyCallback,
-                                       this,
-                                       milliSecLeftUntilDaily,
-                                       nsITimer::TYPE_ONE_SHOT);
+    (void)mTimer->InitWithNamedFuncCallback(DailyCallback,
+                                            this,
+                                            milliSecLeftUntilDaily,
+                                            nsITimer::TYPE_ONE_SHOT,
+                                            "nsIdleServiceDaily::Init");
   }
 
   // Register for when we should terminate/pause
@@ -292,10 +294,12 @@ nsIdleServiceDaily::DailyCallback(nsITimer* aTimer, void* aClosure)
                         delayTime / PR_USEC_PER_MSEC);
 #endif
 
-    (void)self->mTimer->InitWithFuncCallback(DailyCallback,
-                                             self,
-                                             delayTime / PR_USEC_PER_MSEC,
-                                             nsITimer::TYPE_ONE_SHOT);
+    (void)self->mTimer->InitWithNamedFuncCallback(
+      DailyCallback,
+      self,
+      delayTime / PR_USEC_PER_MSEC,
+      nsITimer::TYPE_ONE_SHOT,
+      "nsIdleServiceDaily::DailyCallback");
     return;
   }
 
@@ -828,11 +832,11 @@ nsIdleService::SetTimerExpiryIfBefore(TimeStamp aNextTimeout)
 #endif
 
     // Start the timer
-    mTimer->InitWithFuncCallback(StaticIdleTimerCallback,
-                                 this,
-                                 deltaTime.ToMilliseconds(),
-                                 nsITimer::TYPE_ONE_SHOT);
-
+    mTimer->InitWithNamedFuncCallback(StaticIdleTimerCallback,
+                                      this,
+                                      deltaTime.ToMilliseconds(),
+                                      nsITimer::TYPE_ONE_SHOT,
+                                      "nsIdleService::SetTimerExpiryIfBefore");
   }
 }
 

@@ -206,7 +206,7 @@ public:
             void Run() override
             {
                 MessageLoop::current()->PostIdleTask(
-                        NS_NewRunnableFunction(Move(Base::lambda)));
+                    NS_NewRunnableFunction("OnNativeCall", Move(Base::lambda)));
             }
         };
 

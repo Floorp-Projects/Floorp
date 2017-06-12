@@ -601,8 +601,10 @@ nsWyciwygChannel::OnCacheEntryAvailable(nsICacheEntry *aCacheEntry,
     LOG(("channel was canceled [this=%p status=%" PRIx32 "]\n", this, static_cast<uint32_t>(mStatus)));
     // Since OnCacheEntryAvailable can be called directly from AsyncOpen
     // we must dispatch.
-    NS_DispatchToCurrentThread(mozilla::NewRunnableMethod(
-      this, &nsWyciwygChannel::NotifyListener));
+    NS_DispatchToCurrentThread(
+      mozilla::NewRunnableMethod("nsWyciwygChannel::NotifyListener",
+                                 this,
+                                 &nsWyciwygChannel::NotifyListener));
   }
 
   return NS_OK;

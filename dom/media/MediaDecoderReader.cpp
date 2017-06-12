@@ -92,7 +92,10 @@ MediaDecoderReader::Init()
       mTaskQueue, this, &MediaDecoderReader::NotifyDataArrived);
   }
   // Dispatch initialization that needs to happen on that task queue.
-  mTaskQueue->Dispatch(NewRunnableMethod(this, &MediaDecoderReader::InitializationTask));
+  mTaskQueue->Dispatch(
+    NewRunnableMethod("MediaDecoderReader::InitializationTask",
+                      this,
+                      &MediaDecoderReader::InitializationTask));
   return InitInternal();
 }
 
@@ -244,7 +247,8 @@ class ReRequestVideoWithSkipTask : public Runnable
 public:
   ReRequestVideoWithSkipTask(MediaDecoderReader* aReader,
                              const media::TimeUnit& aTimeThreshold)
-    : mReader(aReader)
+    : Runnable("ReRequestVideoWithSkipTask")
+    , mReader(aReader)
     , mTimeThreshold(aTimeThreshold)
   {
   }
@@ -270,7 +274,8 @@ class ReRequestAudioTask : public Runnable
 {
 public:
   explicit ReRequestAudioTask(MediaDecoderReader* aReader)
-    : mReader(aReader)
+    : Runnable("ReRequestAudioTask")
+    , mReader(aReader)
   {
   }
 

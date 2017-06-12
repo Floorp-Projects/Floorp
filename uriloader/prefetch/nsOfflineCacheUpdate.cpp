@@ -1751,8 +1751,10 @@ nsOfflineCacheUpdate::Begin()
     mItemsInProgress = 0;
 
     if (mState == STATE_CANCELLED) {
-      nsresult rv = NS_DispatchToMainThread(NewRunnableMethod(this,
-                                                              &nsOfflineCacheUpdate::AsyncFinishWithError));
+      nsresult rv = NS_DispatchToMainThread(
+        NewRunnableMethod("nsOfflineCacheUpdate::AsyncFinishWithError",
+                          this,
+                          &nsOfflineCacheUpdate::AsyncFinishWithError));
       NS_ENSURE_SUCCESS(rv, rv);
 
       return NS_OK;

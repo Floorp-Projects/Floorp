@@ -57,6 +57,7 @@ CompositorManagerParent::Create(Endpoint<PCompositorManagerParent>&& aEndpoint)
   RefPtr<CompositorManagerParent> bridge = new CompositorManagerParent();
 
   RefPtr<Runnable> runnable = NewRunnableMethod<Endpoint<PCompositorManagerParent>&&>(
+    "CompositorManagerParent::Bind",
     bridge,
     &CompositorManagerParent::Bind,
     Move(aEndpoint));
