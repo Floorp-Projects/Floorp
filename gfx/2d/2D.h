@@ -1496,6 +1496,9 @@ public:
     CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFormat aFormat);
 
   static already_AddRefed<DrawTarget>
+    CreateWrapAndRecordDrawTarget(DrawEventRecorder *aRecorder, DrawTarget *aDT);
+
+  static already_AddRefed<DrawTarget>
     CreateRecordingDrawTarget(DrawEventRecorder *aRecorder, DrawTarget *aDT);
 
   static already_AddRefed<DrawTarget>

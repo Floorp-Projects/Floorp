@@ -49,6 +49,7 @@
 
 #include "DrawTargetDual.h"
 #include "DrawTargetTiled.h"
+#include "DrawTargetWrapAndRecord.h"
 #include "DrawTargetRecording.h"
 
 #include "SourceSurfaceRawData.h"
@@ -388,7 +389,7 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
   }
 
   if (mRecorder && retVal) {
-    return MakeAndAddRef<DrawTargetRecording>(mRecorder, retVal);
+    return MakeAndAddRef<DrawTargetWrapAndRecord>(mRecorder, retVal);
   }
 
   if (!retVal) {
@@ -397,6 +398,12 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
   }
 
   return retVal.forget();
+}
+
+already_AddRefed<DrawTarget>
+Factory::CreateWrapAndRecordDrawTarget(DrawEventRecorder *aRecorder, DrawTarget *aDT)
+{
+  return MakeAndAddRef<DrawTargetWrapAndRecord>(aRecorder, aDT);
 }
 
 already_AddRefed<DrawTarget>
@@ -450,7 +457,7 @@ Factory::CreateDrawTargetForData(BackendType aBackend,
   }
 
   if (mRecorder && retVal) {
-    return MakeAndAddRef<DrawTargetRecording>(mRecorder, retVal, true);
+    return MakeAndAddRef<DrawTargetWrapAndRecord>(mRecorder, retVal, true);
   }
 
   if (!retVal) {
@@ -641,7 +648,7 @@ Factory::CreateDualDrawTarget(DrawTarget *targetA, DrawTarget *targetB)
   RefPtr<DrawTarget> retVal = newTarget;
 
   if (mRecorder) {
-    retVal = new DrawTargetRecording(mRecorder, retVal);
+    retVal = new DrawTargetWrapAndRecord(mRecorder, retVal);
   }
 
   return retVal.forget();
@@ -737,7 +744,7 @@ Factory::CreateDrawTargetForD3D11Texture(ID3D11Texture2D *aTexture, SurfaceForma
     RefPtr<DrawTarget> retVal = newTarget;
 
     if (mRecorder) {
-      retVal = new DrawTargetRecording(mRecorder, retVal, true);
+      retVal = new DrawTargetWrapAndRecord(mRecorder, retVal, true);
     }
 
     return retVal.forget();
@@ -918,7 +925,7 @@ Factory::CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface, const IntSiz
   }
 
   if (mRecorder && retVal) {
-    return MakeAndAddRef<DrawTargetRecording>(mRecorder, retVal, true);
+    return MakeAndAddRef<DrawTargetWrapAndRecord>(mRecorder, retVal, true);
   }
 #endif
   return retVal.forget();
