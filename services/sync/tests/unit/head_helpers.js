@@ -18,6 +18,26 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/ObjectUtils.jsm");
 
+// ================================================
+// Load mocking/stubbing library, sinon
+// docs: http://sinonjs.org/releases/v2.3.2/
+Cu.import("resource://gre/modules/Timer.jsm");
+const {Loader} = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
+const loader = new Loader.Loader({
+  paths: {
+    "": "resource://testing-common/",
+  },
+  globals: {
+    setTimeout,
+    setInterval,
+    clearTimeout,
+    clearInterval,
+  },
+});
+const require = Loader.Require(loader, {id: ""});
+const sinon = require("sinon-2.3.2");
+// ================================================
+
 XPCOMUtils.defineLazyGetter(this, "SyncPingSchema", function() {
   let ns = {};
   Cu.import("resource://gre/modules/FileUtils.jsm", ns);
