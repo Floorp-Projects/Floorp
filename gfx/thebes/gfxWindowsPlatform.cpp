@@ -1684,7 +1684,8 @@ public:
         }
 
         mVsyncThread->message_loop()->PostTask(
-            NewRunnableMethod(this, &D3DVsyncDisplay::VBlankLoop));
+            NewRunnableMethod("D3DVsyncDisplay::VBlankLoop",
+                              this, &D3DVsyncDisplay::VBlankLoop));
       }
 
       virtual void DisableVsync() override
@@ -1722,7 +1723,8 @@ public:
         }
 
         mVsyncThread->message_loop()->PostDelayedTask(
-            NewRunnableMethod(this, &D3DVsyncDisplay::VBlankLoop),
+            NewRunnableMethod("D3DVsyncDisplay::VBlankLoop",
+                              this, &D3DVsyncDisplay::VBlankLoop),
             delay.ToMilliseconds());
       }
 

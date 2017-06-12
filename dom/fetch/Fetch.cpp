@@ -73,7 +73,8 @@ class FetchSignalProxy final : public FetchSignal::Follower
 
   public:
     explicit FetchSignalProxyRunnable(FetchSignalProxy* aProxy)
-      : mProxy(aProxy)
+      : Runnable("dom::FetchSignalProxy::FetchSignalProxyRunnable")
+      , mProxy(aProxy)
     {}
 
     NS_IMETHOD
@@ -262,7 +263,8 @@ class MainThreadFetchRunnable : public Runnable
 public:
   MainThreadFetchRunnable(WorkerFetchResolver* aResolver,
                           InternalRequest* aRequest)
-    : mResolver(aResolver)
+    : Runnable("dom::MainThreadFetchRunnable")
+    , mResolver(aResolver)
     , mRequest(aRequest)
   {
     MOZ_ASSERT(mResolver);
@@ -1049,7 +1051,8 @@ class BeginConsumeBodyRunnable final : public Runnable
   FetchBody<Derived>* mFetchBody;
 public:
   explicit BeginConsumeBodyRunnable(FetchBody<Derived>* aBody)
-    : mFetchBody(aBody)
+    : Runnable("dom::BeginConsumeBodyRunnable")
+    , mFetchBody(aBody)
   { }
 
   NS_IMETHOD

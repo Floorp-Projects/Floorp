@@ -302,7 +302,8 @@ Classifier::Reset()
     return;
   }
 
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(resetFunc);
+  nsCOMPtr<nsIRunnable> r =
+    NS_NewRunnableFunction("safebrowsing::Classifier::Reset", resetFunc);
   SyncRunnable::DispatchToThread(mUpdateThread, r);
 }
 
@@ -738,25 +739,30 @@ Classifier::AsyncApplyUpdates(nsTArray<TableUpdate*>* aUpdates,
   nsCOMPtr<nsIThread> callerThread = NS_GetCurrentThread();
   MOZ_ASSERT(callerThread != mUpdateThread);
 
-  nsCOMPtr<nsIRunnable> bgRunnable = NS_NewRunnableFunction([=] {
-    MOZ_ASSERT(NS_GetCurrentThread() == mUpdateThread, "MUST be on update thread");
+  nsCOMPtr<nsIRunnable> bgRunnable =
+    NS_NewRunnableFunction("safebrowsing::Classifier::AsyncApplyUpdates", [=] {
+      MOZ_ASSERT(NS_GetCurrentThread() == mUpdateThread,
+                 "MUST be on update thread");
 
-    LOG(("Step 1. ApplyUpdatesBackground on update thread."));
-    nsCString failedTableName;
-    nsresult bgRv = ApplyUpdatesBackground(aUpdates, failedTableName);
+      LOG(("Step 1. ApplyUpdatesBackground on update thread."));
+      nsCString failedTableName;
+      nsresult bgRv = ApplyUpdatesBackground(aUpdates, failedTableName);
 
-    nsCOMPtr<nsIRunnable> fgRunnable = NS_NewRunnableFunction([=] {
-      MOZ_ASSERT(NS_GetCurrentThread() == callerThread, "MUST be on caller thread");
+      nsCOMPtr<nsIRunnable> fgRunnable = NS_NewRunnableFunction(
+        "safebrowsing::Classifier::AsyncApplyUpdates", [=] {
+          MOZ_ASSERT(NS_GetCurrentThread() == callerThread,
+                     "MUST be on caller thread");
 
-      LOG(("Step 2. ApplyUpdatesForeground on caller thread"));
-      nsresult rv = ApplyUpdatesForeground(bgRv, failedTableName);;
+          LOG(("Step 2. ApplyUpdatesForeground on caller thread"));
+          nsresult rv = ApplyUpdatesForeground(bgRv, failedTableName);
+          ;
 
-      LOG(("Step 3. Updates applied! Fire callback."));
+          LOG(("Step 3. Updates applied! Fire callback."));
 
-      aCallback(rv);
+          aCallback(rv);
+        });
+      callerThread->Dispatch(fgRunnable, NS_DISPATCH_NORMAL);
     });
-    callerThread->Dispatch(fgRunnable, NS_DISPATCH_NORMAL);
-  });
 
   return mUpdateThread->Dispatch(bgRunnable, NS_DISPATCH_NORMAL);
 }

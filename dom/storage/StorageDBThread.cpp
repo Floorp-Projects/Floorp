@@ -723,8 +723,10 @@ StorageDBThread::NotifyFlushCompletion()
 {
 #ifdef DOM_STORAGE_TESTS
   if (!NS_IsMainThread()) {
-    RefPtr<nsRunnableMethod<StorageDBThread, void, false> > event =
-      NewNonOwningRunnableMethod(this, &StorageDBThread::NotifyFlushCompletion);
+    RefPtr<nsRunnableMethod<StorageDBThread, void, false>> event =
+      NewNonOwningRunnableMethod("dom::StorageDBThread::NotifyFlushCompletion",
+                                 this,
+                                 &StorageDBThread::NotifyFlushCompletion);
     NS_DispatchToMainThread(event);
     return;
   }

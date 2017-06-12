@@ -305,7 +305,8 @@ class FinishSynthesizedResponse : public Runnable
   nsCOMPtr<nsIInterceptedChannel> mChannel;
 public:
   explicit FinishSynthesizedResponse(nsIInterceptedChannel* aChannel)
-  : mChannel(aChannel)
+    : Runnable("net::FinishSynthesizedResponse")
+    , mChannel(aChannel)
   {
   }
 

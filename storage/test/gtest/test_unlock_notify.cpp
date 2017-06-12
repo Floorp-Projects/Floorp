@@ -29,9 +29,10 @@ class DatabaseLocker : public mozilla::Runnable
 {
 public:
   explicit DatabaseLocker(const char* aSQL)
-  : monitor("DatabaseLocker::monitor")
-  , mSQL(aSQL)
-  , mState(STARTING)
+    : mozilla::Runnable("DatabaseLocker")
+    , monitor("DatabaseLocker::monitor")
+    , mSQL(aSQL)
+    , mState(STARTING)
   {
   }
 

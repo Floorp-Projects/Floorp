@@ -490,8 +490,9 @@ class OpenPGMPServiceChild : public mozilla::Runnable
 public:
   OpenPGMPServiceChild(UniquePtr<GMPServiceChild>&& aGMPServiceChild,
                        ipc::Endpoint<PGMPServiceChild>&& aEndpoint)
-    : mGMPServiceChild(Move(aGMPServiceChild)),
-      mEndpoint(Move(aEndpoint))
+    : Runnable("gmp::OpenPGMPServiceChild")
+    , mGMPServiceChild(Move(aGMPServiceChild))
+    , mEndpoint(Move(aEndpoint))
   {
   }
 

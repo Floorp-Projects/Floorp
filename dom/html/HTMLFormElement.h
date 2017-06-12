@@ -426,7 +426,8 @@ protected:
   class RemoveElementRunnable : public Runnable {
   public:
     explicit RemoveElementRunnable(HTMLFormElement* aForm)
-      : mForm(aForm)
+      : Runnable("dom::HTMLFormElement::RemoveElementRunnable")
+      , mForm(aForm)
     {}
 
     NS_IMETHOD Run() override {

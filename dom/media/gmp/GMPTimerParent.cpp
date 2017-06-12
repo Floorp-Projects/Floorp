@@ -54,10 +54,12 @@ GMPTimerParent::RecvSetTimer(const uint32_t& aTimerId,
   NS_ENSURE_SUCCESS(rv, IPC_OK());
   ctx->mParent = this;
 
-  rv = ctx->mTimer->InitWithFuncCallback(&GMPTimerParent::GMPTimerExpired,
-                                          ctx,
-                                          aTimeoutMs,
-                                          nsITimer::TYPE_ONE_SHOT);
+  rv =
+    ctx->mTimer->InitWithNamedFuncCallback(&GMPTimerParent::GMPTimerExpired,
+                                           ctx,
+                                           aTimeoutMs,
+                                           nsITimer::TYPE_ONE_SHOT,
+                                           "gmp::GMPTimerParent::RecvSetTimer");
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   mTimers.PutEntry(ctx.forget());

@@ -111,10 +111,10 @@ class GetRunnable final : public Runnable
   RefPtr<PromiseWorkerProxy> mPromiseProxy;
   nsString mClientId;
 public:
-  GetRunnable(PromiseWorkerProxy* aPromiseProxy,
-              const nsAString& aClientId)
-    : mPromiseProxy(aPromiseProxy),
-      mClientId(aClientId)
+  GetRunnable(PromiseWorkerProxy* aPromiseProxy, const nsAString& aClientId)
+    : mozilla::Runnable("GetRunnable")
+    , mPromiseProxy(aPromiseProxy)
+    , mClientId(aClientId)
   {
   }
 
@@ -201,10 +201,11 @@ public:
                    const nsCString& aScope,
                    uint64_t aServiceWorkerID,
                    bool aIncludeUncontrolled)
-    : mPromiseProxy(aPromiseProxy),
-      mScope(aScope),
-      mServiceWorkerID(aServiceWorkerID),
-      mIncludeUncontrolled(aIncludeUncontrolled)
+    : mozilla::Runnable("MatchAllRunnable")
+    , mPromiseProxy(aPromiseProxy)
+    , mScope(aScope)
+    , mServiceWorkerID(aServiceWorkerID)
+    , mIncludeUncontrolled(aIncludeUncontrolled)
   {
     MOZ_ASSERT(mPromiseProxy);
   }
@@ -279,7 +280,8 @@ class ClaimRunnable final : public Runnable
 
 public:
   ClaimRunnable(PromiseWorkerProxy* aPromiseProxy, const nsCString& aScope)
-    : mPromiseProxy(aPromiseProxy)
+    : mozilla::Runnable("ClaimRunnable")
+    , mPromiseProxy(aPromiseProxy)
     , mScope(aScope)
     // Safe to call GetWorkerPrivate() since we are being called on the worker
     // thread via script (so no clean up has occured yet).
@@ -508,7 +510,8 @@ public:
   OpenWindowRunnable(PromiseWorkerProxy* aPromiseProxy,
                      const nsAString& aUrl,
                      const nsAString& aScope)
-    : mPromiseProxy(aPromiseProxy)
+    : mozilla::Runnable("OpenWindowRunnable")
+    , mPromiseProxy(aPromiseProxy)
     , mUrl(aUrl)
     , mScope(aScope)
   {

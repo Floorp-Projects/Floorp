@@ -183,7 +183,11 @@ class TestRunnable : public Runnable
 public:
   NS_DECL_NSIRUNNABLE
 
-  TestRunnable() : mFirstRunnableDone(false) { }
+  TestRunnable()
+    : mozilla::Runnable("TestRacingServiceManager::TestRunnable")
+    , mFirstRunnableDone(false)
+  {
+  }
 
   bool mFirstRunnableDone;
 };

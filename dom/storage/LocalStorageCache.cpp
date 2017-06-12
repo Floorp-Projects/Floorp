@@ -111,8 +111,9 @@ LocalStorageCache::Release(void)
     return;
   }
 
-  RefPtr<nsRunnableMethod<LocalStorageCacheBridge, void, false> > event =
-    NewNonOwningRunnableMethod(static_cast<LocalStorageCacheBridge*>(this),
+  RefPtr<nsRunnableMethod<LocalStorageCacheBridge, void, false>> event =
+    NewNonOwningRunnableMethod("dom::LocalStorageCacheBridge::Release",
+                               static_cast<LocalStorageCacheBridge*>(this),
                                &LocalStorageCacheBridge::Release);
 
   nsresult rv = NS_DispatchToMainThread(event);
@@ -625,7 +626,8 @@ class LoadUsageRunnable : public Runnable
 {
 public:
   LoadUsageRunnable(int64_t* aUsage, const int64_t aDelta)
-    : mTarget(aUsage)
+    : Runnable("dom::LoadUsageRunnable")
+    , mTarget(aUsage)
     , mDelta(aDelta)
   {}
 

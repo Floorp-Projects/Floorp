@@ -27,7 +27,7 @@ typedef void (nsServerSocket:: *nsServerSocketFunc)(void);
 static nsresult
 PostEvent(nsServerSocket *s, nsServerSocketFunc func)
 {
-  nsCOMPtr<nsIRunnable> ev = NewRunnableMethod(s, func);
+  nsCOMPtr<nsIRunnable> ev = NewRunnableMethod("net::PostEvent", s, func);
   if (!gSocketTransportService)
     return NS_ERROR_FAILURE;
 
@@ -122,8 +122,8 @@ nsServerSocket::TryAttach()
   //
   if (!gSocketTransportService->CanAttachSocket())
   {
-    nsCOMPtr<nsIRunnable> event =
-      NewRunnableMethod(this, &nsServerSocket::OnMsgAttach);
+    nsCOMPtr<nsIRunnable> event = NewRunnableMethod(
+      "net::nsServerSocket::OnMsgAttach", this, &nsServerSocket::OnMsgAttach);
     if (!event)
       return NS_ERROR_OUT_OF_MEMORY;
 
@@ -434,10 +434,12 @@ public:
   class OnSocketAcceptedRunnable : public Runnable
   {
   public:
-    OnSocketAcceptedRunnable(const nsMainThreadPtrHandle<nsIServerSocketListener>& aListener,
-                             nsIServerSocket* aServ,
-                             nsISocketTransport* aTransport)
-      : mListener(aListener)
+    OnSocketAcceptedRunnable(
+      const nsMainThreadPtrHandle<nsIServerSocketListener>& aListener,
+      nsIServerSocket* aServ,
+      nsISocketTransport* aTransport)
+      : Runnable("net::ServerSocketListenerProxy::OnSocketAcceptedRunnable")
+      , mListener(aListener)
       , mServ(aServ)
       , mTransport(aTransport)
     { }
@@ -453,10 +455,12 @@ public:
   class OnStopListeningRunnable : public Runnable
   {
   public:
-    OnStopListeningRunnable(const nsMainThreadPtrHandle<nsIServerSocketListener>& aListener,
-                            nsIServerSocket* aServ,
-                            nsresult aStatus)
-      : mListener(aListener)
+    OnStopListeningRunnable(
+      const nsMainThreadPtrHandle<nsIServerSocketListener>& aListener,
+      nsIServerSocket* aServ,
+      nsresult aStatus)
+      : Runnable("net::ServerSocketListenerProxy::OnStopListeningRunnable")
+      , mListener(aListener)
       , mServ(aServ)
       , mStatus(aStatus)
     { }

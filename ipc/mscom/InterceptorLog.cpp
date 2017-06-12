@@ -133,7 +133,7 @@ Logger::Logger(const nsACString& aLeafBaseName)
   }
 
   nsCOMPtr<nsIRunnable> openRunnable(
-      NewNonOwningRunnableMethod(this, &Logger::OpenFile));
+    NewNonOwningRunnableMethod("Logger::OpenFile", this, &Logger::OpenFile));
   rv = NS_NewNamedThread("COM Intcpt Log", getter_AddRefs(mThread),
                          openRunnable);
   if (NS_FAILED(rv)) {
@@ -181,7 +181,8 @@ nsresult
 Logger::Shutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsresult rv = mThread->Dispatch(NewNonOwningRunnableMethod(this,
+  nsresult rv = mThread->Dispatch(NewNonOwningRunnableMethod("Logger::CloseFile",
+                                                             this,
                                                              &Logger::CloseFile),
                                   NS_DISPATCH_NORMAL);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Dispatch failed");
@@ -283,7 +284,8 @@ Logger::LogQI(HRESULT aResult, IUnknown* aTarget, REFIID aIid, IUnknown* aInterf
 
   MutexAutoLock lock(mMutex);
   mEntries.AppendElement(line);
-  mThread->Dispatch(NewNonOwningRunnableMethod(this, &Logger::Flush),
+  mThread->Dispatch(NewNonOwningRunnableMethod("Logger::Flush",
+                                               this, &Logger::Flush),
                     NS_DISPATCH_NORMAL);
 }
 
@@ -393,7 +395,8 @@ Logger::LogEvent(ICallFrame* aCallFrame, IUnknown* aTargetInterface)
   // (3) Enqueue event for logging
   MutexAutoLock lock(mMutex);
   mEntries.AppendElement(line);
-  mThread->Dispatch(NewNonOwningRunnableMethod(this, &Logger::Flush),
+  mThread->Dispatch(NewNonOwningRunnableMethod("Logger::Flush",
+                                               this, &Logger::Flush),
                     NS_DISPATCH_NORMAL);
 }
 
