@@ -16,8 +16,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
 
-public final class GeckoHlsDemuxerWrapper {
-    private static final String LOGTAG = "GeckoHlsDemuxerWrapper";
+public final class GeckoHLSDemuxerWrapper {
+    private static final String LOGTAG = "GeckoHLSDemuxerWrapper";
     private static final boolean DEBUG = true;
 
     // NOTE : These TRACK definitions should be synced with Gecko.
@@ -37,11 +37,11 @@ public final class GeckoHlsDemuxerWrapper {
 
     private GeckoHlsPlayer mPlayer = null;
 
-    public static class HlsDemuxerCallbacks extends JNIObject
+    public static class Callbacks extends JNIObject
         implements GeckoHlsPlayer.DemuxerCallbacks {
 
         @WrapForJNI(calledFrom = "gecko")
-        HlsDemuxerCallbacks() {}
+        Callbacks() {}
 
         @Override
         @WrapForJNI
@@ -55,7 +55,7 @@ public final class GeckoHlsDemuxerWrapper {
         protected void disposeNative() {
             throw new UnsupportedOperationException();
         }
-    } // HlsDemuxerCallbacks
+    } // Callbacks
 
     private static void assertTrue(boolean condition) {
         if (DEBUG && !condition) {
@@ -81,9 +81,9 @@ public final class GeckoHlsDemuxerWrapper {
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static GeckoHlsDemuxerWrapper create(GeckoHlsPlayer player,
+    public static GeckoHLSDemuxerWrapper create(GeckoHlsPlayer player,
                                                 GeckoHlsPlayer.DemuxerCallbacks callback) {
-        return new GeckoHlsDemuxerWrapper(player, callback);
+        return new GeckoHLSDemuxerWrapper(player, callback);
     }
 
     @WrapForJNI
@@ -143,16 +143,16 @@ public final class GeckoHlsDemuxerWrapper {
         return mPlayer.seek(seekTime);
     }
 
-    GeckoHlsDemuxerWrapper(GeckoHlsPlayer player,
+    GeckoHLSDemuxerWrapper(GeckoHlsPlayer player,
                            GeckoHlsPlayer.DemuxerCallbacks callback) {
-        if (DEBUG) Log.d(LOGTAG, "Constructing GeckoHlsDemuxerWrapper ...");
+        if (DEBUG) Log.d(LOGTAG, "Constructing GeckoHLSDemuxerWrapper ...");
         assertTrue(callback != null);
         assertTrue(player != null);
         try {
             this.mPlayer = player;
             this.mPlayer.addDemuxerWrapperCallbackListener(callback);
         } catch (Exception e) {
-            Log.e(LOGTAG, "Constructing GeckoHlsDemuxerWrapper ... error", e);
+            Log.e(LOGTAG, "Constructing GeckoHLSDemuxerWrapper ... error", e);
             callback.onError(GeckoHlsPlayer.DemuxerError.UNKNOWN.code());
         }
     }
