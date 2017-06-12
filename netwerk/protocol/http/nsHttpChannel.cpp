@@ -6094,12 +6094,12 @@ private:
 NS_IMPL_ISUPPORTS(InitLocalBlockListXpcCallback, nsIURIClassifierCallback)
 
 /*virtual*/ nsresult
-InitLocalBlockListXpcCallback::OnClassifyComplete(nsresult /*aErrorCode*/,
-                                               const nsACString& aLists, // Only this matters.
+InitLocalBlockListXpcCallback::OnClassifyComplete(nsresult aErrorCode, // Only this matters.
+                                               const nsACString& /*aLists*/,
                                                const nsACString& /*aProvider*/,
                                                const nsACString& /*aPrefix*/)
 {
-    bool localBlockList = !aLists.IsEmpty();
+    bool localBlockList = aErrorCode == NS_ERROR_TRACKING_URI;
     mCallback(localBlockList);
     return NS_OK;
 }
@@ -6129,34 +6129,17 @@ nsHttpChannel::InitLocalBlockList(const InitLocalBlockListCallback& aCallback)
     }
 
     // Check to see if this principal exists on local blocklists.
-    nsCOMPtr<nsIURIClassifier> classifier(services::GetURIClassifier());
     RefPtr<nsChannelClassifier> channelClassifier =
         GetOrCreateChannelClassifier();
-    bool tpEnabled = false;
-    channelClassifier->ShouldEnableTrackingProtection(&tpEnabled);
-    if (!classifier || !tpEnabled) {
-        return false;
-    }
 
     // We skip speculative connections by setting mLocalBlocklist only
     // when tracking protection is enabled. Though we could do this for
     // both phishing and malware, it is not necessary for correctness,
     // since no network events will be received while the
     // nsChannelClassifier is in progress. See bug 1122691.
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = GetURI(getter_AddRefs(uri));
-    if (NS_FAILED(rv) || !uri) {
-        return false;
-    }
-
-    nsAutoCString tables;
-    Preferences::GetCString("urlclassifier.trackingTable", &tables);
-    nsTArray<nsCString> results;
-
     RefPtr<InitLocalBlockListXpcCallback> xpcCallback
         = new InitLocalBlockListXpcCallback(aCallback);
-    rv = classifier->AsyncClassifyLocalWithTables(uri, tables, xpcCallback);
-    if (NS_FAILED(rv)) {
+    if (NS_FAILED(channelClassifier->CheckIsTrackerWithLocalTable(xpcCallback))) {
         return false;
     }
 
