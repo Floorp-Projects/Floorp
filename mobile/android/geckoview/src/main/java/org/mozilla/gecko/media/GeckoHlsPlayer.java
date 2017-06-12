@@ -9,7 +9,6 @@ import android.net.Uri;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.Surface;
 
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlaybackException;
@@ -19,8 +18,6 @@ import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.RendererCapabilities;
 import com.google.android.exoplayer2.Timeline;
-import com.google.android.exoplayer2.decoder.DecoderCounters;
-import com.google.android.exoplayer2.mediacodec.MediaCodecSelector;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.TrackGroup;
 import com.google.android.exoplayer2.source.TrackGroupArray;
@@ -564,14 +561,14 @@ public class GeckoHlsPlayer implements ExoPlayer.EventListener {
     // =======================================================================
     // API for GeckoHlsDemuxerWrapper
     // =======================================================================
-    public ConcurrentLinkedQueue<GeckoHlsSample> getVideoSamples(int number) {
+    public ConcurrentLinkedQueue<GeckoHLSSample> getVideoSamples(int number) {
         return mVRenderer != null ? mVRenderer.getQueuedSamples(number) :
-                                    new ConcurrentLinkedQueue<GeckoHlsSample>();
+                                    new ConcurrentLinkedQueue<GeckoHLSSample>();
     }
 
-    public ConcurrentLinkedQueue<GeckoHlsSample> getAudioSamples(int number) {
+    public ConcurrentLinkedQueue<GeckoHLSSample> getAudioSamples(int number) {
         return mARenderer != null ? mARenderer.getQueuedSamples(number) :
-                                    new ConcurrentLinkedQueue<GeckoHlsSample>();
+                                    new ConcurrentLinkedQueue<GeckoHLSSample>();
     }
 
     public long getDuration() {
