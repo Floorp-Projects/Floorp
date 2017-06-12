@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Jo kinne net in skermprintsje meitsje fan in Firefox Screenshots-side!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "Jo seleksje is te lyts"
+  },
   "genericErrorTitle": {
     "message": "Oeps! Firefox Screenshots is yn 'e war."
   },
@@ -80,16 +83,16 @@
     "message": "Klik en sleep om in part fan in side te fetsjen. Jo kinne ek oer in gebiet gean om jo seleksje út te ljochtsjen."
   },
   "tourHeaderThree": {
-    "message": "Nei jo winsk"
-  },
-  "tourBodyThree": {
-    "message": "Bewarje jo byknippe skermprintsjes nei it web om se maklik te dielen, of download se nei jo kompjûter. Jo kinne ek op de knop Myn skermprintsjes klikke om al jo makke skermprintsjes te finen."
-  },
-  "tourHeaderFour": {
     "message": "Fetsje finsters of folsleine websiden"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Selektearje knoppen rjochts boppe-oan om it sichtbere gebiet yn it finster te fetsjen, of fetsje in folsleine side."
+  },
+  "tourHeaderFour": {
+    "message": "Nei jo winsk"
+  },
+  "tourBodyFour": {
+    "message": "Bewarje jo byknippe skermprintsjes nei it web om se maklik te dielen, of download se nei jo kompjûter. Jo kinne ek op de knop Myn skermprintsjes klikke om al jo makke skermprintsjes te finen."
   },
   "tourSkip": {
     "message": "Oerslaan"

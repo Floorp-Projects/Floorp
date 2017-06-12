@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Negalite padaryti „Firefox Screenshots“ tinklalapio nuotraukos!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "Jūsų pasirinkimas yra per mažas"
+  },
   "genericErrorTitle": {
     "message": "Vau! „Firefox Screenshots“ sugedo."
   },
@@ -80,16 +83,16 @@
     "message": "Spustelėkite ir tempkite, kad užfiksuotumėte tik dalį tinklalapio. Taip pat galite užvesti pelę, norėdami paryškinti savo pasirinkimą."
   },
   "tourHeaderThree": {
-    "message": "Kaip jums patogiau"
-  },
-  "tourBodyThree": {
-    "message": "Įrašykite padarytas nuotraukas saityne patogesniam dalinimuisi, arba atsisiųskite jas į savo kompiuterį. Spustelėję mygtuką „Mano kadrai“, matysite visas savo padarytas nuotraukas."
-  },
-  "tourHeaderFour": {
     "message": "Fiksuokite langus arba ištisus tinklalapius"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Pasirinkite mygtukus aukščiau dešinėje, norėdami užfiksuoti matomą lango dalį arba visą tinklalapį."
+  },
+  "tourHeaderFour": {
+    "message": "Kaip jums patogiau"
+  },
+  "tourBodyFour": {
+    "message": "Įrašykite padarytas nuotraukas saityne patogesniam dalinimuisi, arba atsisiųskite jas į savo kompiuterį. Spustelėję mygtuką „Mano kadrai“, matysite visas savo padarytas nuotraukas."
   },
   "tourSkip": {
     "message": "SKIP"

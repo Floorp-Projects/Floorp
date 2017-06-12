@@ -1,0 +1,126 @@
+{
+  "addonDescription": {
+    "message": "வலைபக்கங்களை நிரந்தரமாக (அ) தற்காலிகமாக துணுக்குகளாக (அ) திரைப்பிடிப்புகளாக சேமியுங்கள்."
+  },
+  "addonAuthorsList": {
+    "message": "மொசில்லா <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "ஒரு திரைப்பிடிப்பு செய்"
+  },
+  "myShotsLink": {
+    "message": "எனது திரைகள்"
+  },
+  "screenshotInstructions": {
+    "message": "பக்கத்தில் இழுத்தோ (அ) சொடுக்கியோ ஒரு பகுதியைத் தேர்வுச்செய்க. இரத்து செய்ய ESC விசையை அழுத்தவும்."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "சேமி"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "பார்ப்பதைச் சேமி"
+  },
+  "saveScreenshotFullPage": {
+    "message": "முழு பக்கத்தைச் சேமி"
+  },
+  "cancelScreenshot": {
+    "message": "இரத்து"
+  },
+  "downloadScreenshot": {
+    "message": "பதிவிறக்கு"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "தொடுப்பு நகலெடுக்கப்பட்டது"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "நீங்கள் எடுத்த திரைப்பிடிப்பிற்கான தொடுப்பு ஒட்டுபலகைக்கு நகலெடுக்கப்பட்டது. ஒட்ட $META_KEY$ விசையை அழுத்தவும்.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "சேவை இணைப்பில் இல்லை."
+  },
+  "requestErrorDetails": {
+    "message": "மன்னிக்க! உங்களின் திரைப்பிடிப்பைச் சேமிக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்."
+  },
+  "connectionErrorTitle": {
+    "message": "உங்களின் திரைப்பிடிப்பு சேவையகத்தை அணுக முடியவில்லை."
+  },
+  "connectionErrorDetails": {
+    "message": "தயவுச்செய்து உங்கள் இணைய இணைப்பைச் சரிபாருங்கள். உங்களால் இணையத்தை அணுக முடிந்தால் இது பயர்பாஃசு திரைப்பிடிப்பிற்கான இடைப்பட்ட சேவை துண்டிப்பாகும்."
+  },
+  "loginErrorDetails": {
+    "message": "பயர்பாஃசின் திரைப்பிடிப்பு சேவை தடைப்பட்டதால் உங்களின் திரைப்பிடிப்பைச் சேமிக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "இப்பக்கத்தை திரைப்பிடிப்பு செய்ய முடியாது."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "இது ஒரு இணையத்தளம் போன்று தெரிவில்லை, எனவே உங்களால் திரைப்பிடிப்பு எடுக்க முடியாது."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "பயர்பாஃசு திரைப்பிடிப்பு பக்கத்தை உங்களால் திரைப்பிடிப்பு செய்ய முடியாது!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "உங்களின் தேர்வு மிகச் சிறியது"
+  },
+  "genericErrorTitle": {
+    "message": "அய் அய்யோ! பயர்பாஃசு திரைப்பிடிப்பு வீணாய் போனது. "
+  },
+  "genericErrorDetails": {
+    "message": "என்ன நடந்தது என எங்களுக்குத் தெரியவில்லை. முடிந்தால் மீண்டும் முயற்சியுங்கள் (அ) வேறொரு பக்கத்தில் முயற்சியுங்கள்?"
+  },
+  "tourBodyOne": {
+    "message": "பயர்பாஃசை விட்டு வெளியேறாமல் திரைப்பிடிப்புகளைச் எடுங்க, சேமிங்க மற்றவருடன் பகிர்ந்துக்கொள்க."
+  },
+  "tourHeaderTwo": {
+    "message": "உங்களுக்கு என்ன வேண்டுமோ அதைக் கைப்பற்றுங்கள்"
+  },
+  "tourBodyTwo": {
+    "message": "சொடுக்கி இழுத்து சும்மா ஒரு பகுதியைத் தேர்வுச்செய்க. நீங்கள் இங்கும் அங்குமாக நகர்த்திக் கூட நீங்கள் தேர்வுச்செய்த பக்கத்தை மிளிர்க்கச் செய்யலாம்."
+  },
+  "tourHeaderThree": {
+    "message": "சாளரங்களை (அ) முழுப் பக்கங்களை கைப்பற்றவும்"
+  },
+  "tourBodyThree": {
+    "message": "வலது மேல்முனையில் உள்ள கத்திரிகோல் போன்ற பயன்படுத்தி பார்வையில் இருக்கும் வலைப்பக்கத்தையோ (அ) முழு பக்கத்தையோ திரைப்பிடிப்புச் செய்யுங்கள்."
+  },
+  "tourHeaderFour": {
+    "message": "நீங்கள் விரும்பியவாறே"
+  },
+  "tourBodyFour": {
+    "message": "நீங்கள் எடுத்த வெட்டிய திரைப்பிடிப்புகளை இணையத்தில் எளிதில் சேமித்து பகிரவோ (அ) கணினியில் பதிவிறக்கவோ முடியும். 'எனது பிடிப்புகள்' மீது சொடுக்கி உங்களின் திரைப்பிடிப்புகளைக் காணலாம்."
+  },
+  "tourSkip": {
+    "message": "தாவு"
+  },
+  "tourNext": {
+    "message": "அடுத்த வில்லை"
+  },
+  "tourPrevious": {
+    "message": "முந்தைய வில்லை"
+  },
+  "tourDone": {
+    "message": "முடிந்தது"
+  },
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "பயர்பாஃசு திரைப்பிடிப்பைப் பயன்படுத்துவதன் மூலம் எங்களின் முகில் கணிமச் சேவைகளுக்கான பின்வரும் $TERMSANDPRIVACYNOTICETERMSLINK$ $TERMSANDPRIVACYNOTICEPRIVACYLINK$ நிபந்தனைகளை ஏற்றுக் கொள்கிறீர்கள்.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "நிபந்தனைகள்"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "தனியுரிம கொள்கை"
+  }
+}

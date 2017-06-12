@@ -86,13 +86,12 @@ this.selectorLoader = (function() {
         return browser.tabs.executeScript(tabId, {
           file,
           runAt: "document_end"
-        })
-          .catch((error) => {
-            log.error("error in script:", file, error);
-            error.scriptName = file;
-            throw error;
-          })
-      })
+        }).catch((error) => {
+          log.error("error in script:", file, error);
+          error.scriptName = file;
+          throw error;
+        });
+      });
     });
     return lastPromise.then(() => {
       log.debug("finished loading scripts:", scripts.join(" "));

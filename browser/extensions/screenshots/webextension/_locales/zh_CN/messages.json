@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "您不能截取 Firefox Screenshots 的页面！"
   },
+  "emptySelectionErrorTitle": {
+    "message": "您选择的范围太小"
+  },
   "genericErrorTitle": {
     "message": "哎呀，Firefox Screenshots 遇到问题。"
   },
@@ -80,16 +83,16 @@
     "message": "单击并拖动以截取页面某个区域。您也可以悬停以高亮您的选择范围。"
   },
   "tourHeaderThree": {
-    "message": "做您所想"
-  },
-  "tourBodyThree": {
-    "message": "将您裁剪后的截图保存到网上以便共享，或者下载到您的计算机。您也可以点击“我的截图”按钮找到您截取的所有截图。"
-  },
-  "tourHeaderFour": {
     "message": "截取窗口或整个页面"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "选择右上角的按钮可以截取窗口中的可见区域或者整个页面。"
+  },
+  "tourHeaderFour": {
+    "message": "做您所想"
+  },
+  "tourBodyFour": {
+    "message": "将您裁剪后的截图保存到网上以便共享，或者下载到您的计算机。您也可以点击“我的截图”按钮找到您截取的所有截图。"
   },
   "tourSkip": {
     "message": "跳过"

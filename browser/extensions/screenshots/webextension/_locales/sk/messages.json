@@ -83,16 +83,16 @@
     "message": "Ak chcete zachytiť časť stránky, urobíte to kliknutím a potiahnutím. Váš výber zvýrazníte tak, že sa naň presuniete myšou."
   },
   "tourHeaderThree": {
-    "message": "Tak ako to chcete"
-  },
-  "tourBodyThree": {
-    "message": "Uložte si orezanú snímku na web, aby ste ju mohli ľahšie zdieľať alebo si ju prevziať do počítača. Môžete si taktiež pozrieť všetky vaše snímky, stačí ak kliknete na tlačidlo Moje snímky."
-  },
-  "tourHeaderFour": {
     "message": "Zachyťte okná alebo celé webové stránky"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Kliknutím na tlačidlo v pravom hornom rohu môžete zachytiť viditeľnú časť stránky. Pomocou ďalšieho tlačidla zachytíte celú stránku."
+  },
+  "tourHeaderFour": {
+    "message": "Tak ako to chcete"
+  },
+  "tourBodyFour": {
+    "message": "Uložte si orezanú snímku na web, aby ste ju mohli ľahšie zdieľať alebo si ju prevziať do počítača. Môžete si taktiež pozrieť všetky vaše snímky, stačí ak kliknete na tlačidlo Moje snímky."
   },
   "tourSkip": {
     "message": "Preskočiť"

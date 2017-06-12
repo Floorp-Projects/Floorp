@@ -80,16 +80,16 @@
     "message": "Cliciwch a llusgo i gipio rhan o dudalen. Gallwch hofran i amlygu eich dewis."
   },
   "tourHeaderThree": {
-    "message": "Yn Ôl eich Dewis"
-  },
-  "tourBodyThree": {
-    "message": "Cadwch eich lluniau wedi eu golygu i'r We ar gyfer rhannu haws, neu eu llwytho i lawr i'ch cyfrifiadur. Gallwch hefyd glicio ar Fy Lluniau i weld pob llun sydd gennych."
-  },
-  "tourHeaderFour": {
     "message": "Cipio Ffenestri neu Dudalennau Cyfan"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Dewiswch y botymau ar y dde uchod i gipio ardal gweladwy mewn ffenestr neu i gipio tudalen gyfan."
+  },
+  "tourHeaderFour": {
+    "message": "Yn Ôl eich Dewis"
+  },
+  "tourBodyFour": {
+    "message": "Cadwch eich lluniau wedi eu golygu i'r We ar gyfer rhannu haws, neu eu llwytho i lawr i'ch cyfrifiadur. Gallwch hefyd glicio ar Fy Lluniau i weld pob llun sydd gennych."
   },
   "tourSkip": {
     "message": "SKIP"

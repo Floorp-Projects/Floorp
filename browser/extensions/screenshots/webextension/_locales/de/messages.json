@@ -83,16 +83,16 @@
     "message": "Klicken und ziehen Sie, um nur einen Teil einer Seite aufzunehmen. Sie können den Mauszeiger auch darüber bewegen, um Ihre Auswahl hervorzuheben."
   },
   "tourHeaderThree": {
-    "message": "Wie Sie möchten"
-  },
-  "tourBodyThree": {
-    "message": "Speichern Sie Ihre zugeschnittenen Bildschirmfotos im Internet, sodass sie leicht zu teilen sind, oder laden Sie sie auf Ihren Computer herunter. Sie können auch auf die Schaltfläche „Meine Bildschirmfotos“ klicken, um alle Ihre Bildschirmfotos zu finden."
-  },
-  "tourHeaderFour": {
     "message": "Fenster oder ganze Seiten speichern"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Nutzen Sie die Schaltflächen rechts oben, um den sichtbaren Bereich im Fenster oder eine ganze Seite zu speichern."
+  },
+  "tourHeaderFour": {
+    "message": "Wie Sie möchten"
+  },
+  "tourBodyFour": {
+    "message": "Speichern Sie Ihre zugeschnittenen Bildschirmfotos im Internet, sodass sie leicht zu teilen sind, oder laden Sie sie auf Ihren Computer herunter. Sie können auch auf die Schaltfläche „Meine Bildschirmfotos“ klicken, um alle Ihre Bildschirmfotos zu finden."
   },
   "tourSkip": {
     "message": "Überspringen"

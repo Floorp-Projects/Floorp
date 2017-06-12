@@ -248,6 +248,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
   'webextension/_locales/sv_SE/messages.json'
 ]
 
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["ta"] += [
+  'webextension/_locales/ta/messages.json'
+]
+
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["te"] += [
   'webextension/_locales/te/messages.json'
 ]
@@ -292,6 +296,7 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["backgrou
   'webextension/background/main.js',
   'webextension/background/selectorLoader.js',
   'webextension/background/senderror.js',
+  'webextension/background/startBackground.js',
   'webextension/background/takeshot.js'
 ]
 

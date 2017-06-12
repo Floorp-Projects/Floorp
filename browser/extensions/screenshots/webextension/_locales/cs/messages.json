@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Nelze pořizovat snímek stránky Firefox Screenshots!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "Vybraná oblast je moc malá"
+  },
   "genericErrorTitle": {
     "message": "Jejda! Služba Firefox Screenshots přestala pracovat."
   },
@@ -80,16 +83,16 @@
     "message": "Stiskem tlačítka myši a tahem můžete vybrat oblast stránky. Výběr můžete provést také najetím myši na prvek stránky."
   },
   "tourHeaderThree": {
-    "message": "Jak sami chcete"
-  },
-  "tourBodyThree": {
-    "message": "Uložte si oříznutý snímek stránky na web pro rychlejší sdílení, nebo si ho stáhněte do počítače. Pro zobrazení všech snímků stačí klepnout na tlačítko Mé snímky."
-  },
-  "tourHeaderFour": {
     "message": "Pořizujte snímky jen částí nebo i celých stránek"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Pomocí tlačítek vpravo nahoře můžete pořídit snímek jen viditelné části nebo úplně celé stránky."
+  },
+  "tourHeaderFour": {
+    "message": "Jak sami chcete"
+  },
+  "tourBodyFour": {
+    "message": "Uložte si oříznutý snímek stránky na web pro rychlejší sdílení, nebo si ho stáhněte do počítače. Pro zobrazení všech snímků stačí klepnout na tlačítko Mé snímky."
   },
   "tourSkip": {
     "message": "Přeskočit"

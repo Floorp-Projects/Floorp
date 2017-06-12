@@ -80,16 +80,16 @@
     "message": "Click and drag to capture just a portion of a page. You can also hover to highlight your selection."
   },
   "tourHeaderThree": {
-    "message": "As You Like it"
-  },
-  "tourBodyThree": {
-    "message": "Save your cropped shots to the Web for easier sharing, or download them to your computer. You also can click on the My Shots button to find all the shots you’ve taken."
-  },
-  "tourHeaderFour": {
     "message": "Capture Windows or Entire Pages"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Select the buttons in the upper right to capture the visible area in the window or to capture an entire page."
+  },
+  "tourHeaderFour": {
+    "message": "As You Like It"
+  },
+  "tourBodyFour": {
+    "message": "Save your cropped shots to the web for easier sharing, or download them to your computer. You also can click on the My Shots button to find all the shots you’ve taken."
   },
   "tourSkip": {
     "message": "SKIP"

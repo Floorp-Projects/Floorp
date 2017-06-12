@@ -153,6 +153,12 @@ this.slides = (function() {
       event.preventDefault();
       callBackground("openPrivacyPage");
     })));
+    doc.querySelector("#slide-overlay").addEventListener("click", watchFunction(assertIsTrusted((event) => {
+      if (event.target == doc.querySelector("#slide-overlay")) {
+        shooter.sendEvent("cancel-slides", "background-click");
+        callbacks.onEnd();
+      }
+    })));
     setSlide(1);
   }
 
