@@ -414,14 +414,16 @@ pref("ui.bookmark.mobilefolder.enabled", true);
 pref("ui.bookmark.mobilefolder.enabled", false);
 #endif
 
-#if MOZ_UPDATE_CHANNEL == nightly
-pref("mma.enabled", true);
-#elif MOZ_UPDATE_CHANNEL == beta
+#ifdef RELEASE_OR_BETA
+// MMA is disabled in shipping Beta and Release builds.
+pref("mma.enabled", false);
+#elif MOZ_UPDATE_CHANNEL == nightly
+// Enabled in shipping Nightly builds.
 pref("mma.enabled", true);
 #else
+// And enabled in local developer builds.
 pref("mma.enabled", true);
 #endif
-
 
 pref("ui.touch.radius.enabled", false);
 pref("ui.touch.radius.leftmm", 3);
