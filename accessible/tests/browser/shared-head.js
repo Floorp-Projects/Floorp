@@ -8,7 +8,7 @@
 /* import-globals-from events.js */
 
 /* exported Logger, MOCHITESTS_DIR, invokeSetAttribute, invokeFocus,
-            invokeSetStyle, getAccessibleDOMNodeID,
+            invokeSetStyle, getAccessibleDOMNodeID, getAccessibleTagName,
             addAccessibleTask, findAccessibleChildByID, isDefunct,
             CURRENT_CONTENT_DIR, loadScripts, loadFrameScripts, Cc, Cu */
 
@@ -30,6 +30,8 @@ const MOCHITESTS_DIR =
  */
 const CURRENT_CONTENT_DIR =
   'http://example.com/browser/accessible/tests/browser/';
+
+const LOADED_FRAMESCRIPTS = new Map();
 
 /**
  * Used to dump debug information.
@@ -188,7 +190,17 @@ function loadFrameScripts(browser, ...scripts) {
       // Script is a object that has { dir, name } format.
       frameScript = `${script.dir}${script.name}`;
     }
+
+    let loadedScriptSet = LOADED_FRAMESCRIPTS.get(frameScript);
+    if (!loadedScriptSet) {
+      loadedScriptSet = new WeakSet();
+      LOADED_FRAMESCRIPTS.set(frameScript, loadedScriptSet);
+    } else if (loadedScriptSet.has(browser)) {
+      continue;
+    }
+
     mm.loadFrameScript(frameScript, false, true);
+    loadedScriptSet.add(browser);
   }
 }
 
@@ -278,6 +290,19 @@ function isDefunct(accessible) {
     }
   }
   return defunct;
+}
+
+/**
+ * Get the DOM tag name for a given accessible.
+ * @param  {nsIAccessible}  accessible accessible
+ * @return {String?}                   tag name of associated DOM node, or null.
+ */
+function getAccessibleTagName(acc) {
+  try {
+    return acc.attributes.getStringProperty("tag");
+  } catch (e) {
+    return null;
+  }
 }
 
 /**
