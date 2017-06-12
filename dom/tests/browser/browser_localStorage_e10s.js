@@ -32,8 +32,10 @@ class KnownTabs {
  * really is in its own process.
  */
 function* openTestTabInOwnProcess(name, knownTabs) {
-  let url = HELPER_PAGE_URL + '?' + encodeURIComponent(name);
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  let opening = HELPER_PAGE_URL + '?' + encodeURIComponent(name);
+  let tab = yield BrowserTestUtils.openNewForegroundTab({
+    gBrowser, opening, forceNewProcess: true
+  });
   let pid = tab.linkedBrowser.frameLoader.tabParent.osPid;
   ok(!knownTabs.byName.has(name), "tab needs its own name: " + name);
   ok(!knownTabs.byPid.has(pid), "tab needs to be in its own process: " + pid);
@@ -218,49 +220,22 @@ requestLongerTimeout(4);
  *   added an event listener.
  */
 add_task(function*() {
-  // - Boost process count so all of our tabs get new processes.
-  // Our test wants to assert things about the precache status which is only
-  // populated at process startup and never updated.  (Per analysis at
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1312022 this still makes
-  // sense.)  https://bugzilla.mozilla.org/show_bug.cgi?id=1312022 introduced
-  // a mechanism for keeping an arbitrary number of processes alive, modifying
-  // all browser chrome tests to keep alive whatever dom.ipc.processCount is set
-  // to.  The mechanism was slightly modified later to be type-based, so now
-  // it's "dom.ipc.keepProcessesAlive.web" we care about.
-  //
-  // Our options for ensuring we get a new process are to either:
-  // 1) Try and push keepalive down to 1 and kill off the processes that are
-  //    already hanging around.
-  // 2) Just bump the process count up enough so that every tab we open will
-  //    get a new process.
-  //
-  // The first option turns out to be hard to get right.  Specifically,
-  // although one can set the keepalive and process counts to 1 and open and
-  // close tabs to try and trigger process termination down to 1, since we don't
-  // know how many processes might exist, we can't reliably listen for observer
-  // notifications of their shutdown to ensure we're avoiding shutdown races.
-  // (If there are races then the processes won't actually be shut down.)  So
-  // it's easiest to just boost the limit.
-  let keepAliveCount = 0;
-  try {
-    // This will throw if the preference is not defined, leaving our value at 0.
-    // Alternately, we could use Preferences.jsm's Preferences.get() API which
-    // supports default values, but we're sticking with SpecialPowers here for
-    // consistency.
-    keepAliveCount = SpecialPowers.getIntPref("dom.ipc.keepProcessesAlive.web");
-  } catch (ex) {
-    // Then zero is correct.
-  }
-  let safeProcessCount = keepAliveCount + 6;
-  info("dom.ipc.keepProcessesAlive.web is " + keepAliveCount + ", boosting " +
-       "process count temporarily to " + safeProcessCount);
-
-  // (There's already one about:blank page open and we open 5 new tabs, so 6
-  // processes.  Actually, 7, just in case.)
   yield SpecialPowers.pushPrefEnv({
     set: [
-      ["dom.ipc.processCount", safeProcessCount],
-      ["dom.ipc.processCount.web", safeProcessCount]
+      // Stop the preallocated process manager from speculatively creating
+      // processes.  Our test explicitly asserts on whether preload happened or
+      // not for each tab's process.  This information is loaded and latched by
+      // the StorageDBParent constructor which the child process's
+      // LocalStorageManager() constructor causes to be created via a call to
+      // LocalStorageCache::StartDatabase().  Although the service is lazily
+      // created and should not have been created prior to our opening the tab,
+      // it's safest to ensure the process simply didn't exist before we ask for
+      // it.
+      //
+      // This is done in conjunction with our use of forceNewProcess when
+      // opening tabs.  There would be no point if we weren't also requesting a
+      // new process.
+      ["dom.ipc.processPrelaunch.enabled", false],
     ]
   });
 
