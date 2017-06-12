@@ -11,15 +11,17 @@
 
 add_task(function* () {
   yield addTab(URL_ROOT + "doc_negative_animation.html");
-  let {controller, panel} = yield openAnimationInspector();
+  const {controller, panel} = yield openAnimationInspector();
+  const timeline = panel.animationsTimelineComponent;
 
-  info("Wait until all animations have been added " +
-       "(they're added with setTimeout)");
-  while (controller.animationPlayers.length < 3) {
-    yield controller.once(controller.PLAYERS_UPDATED_EVENT);
+  const areTracksReady = () => timeline.animations.every(a => timeline.tracksMap.has(a));
+
+  // We need to wait for all tracks to be ready, cause this is an async part of the init
+  // of the panel.
+  while (controller.animationPlayers.length < 3 || !areTracksReady()) {
     yield waitForAnimationTimelineRendering(panel);
   }
-
+  // Same for animation targets, they're retrieved asynchronously.
   yield waitForAllAnimationTargets(panel);
 
   is(panel.animationsTimelineComponent.animations.length, 3,
@@ -28,6 +30,5 @@ add_task(function* () {
   // Reduce the known nodeFronts to a set to make them unique.
   let nodeFronts = new Set(panel.animationsTimelineComponent
                                 .targetNodes.map(n => n.previewer.nodeFront));
-  is(nodeFronts.size, 3,
-     "The animations are applied to 3 different node fronts");
+  is(nodeFronts.size, 3, "The animations are applied to 3 different node fronts");
 });
