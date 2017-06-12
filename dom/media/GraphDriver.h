@@ -536,7 +536,7 @@ private:
   /**
    * True if microphone is being used by this process. This is synchronized by
    * the graph's monitor. */
-  bool mMicrophoneActive;
+  Atomic<bool> mMicrophoneActive;
   /* True if this driver was created from a driver created because of a previous
    * AudioCallbackDriver failure. */
   bool mFromFallback;
