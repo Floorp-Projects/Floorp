@@ -218,9 +218,7 @@ add_task(async function test_privacy() {
   await promiseShutdownManager();
 });
 
-// This test can be used for any settings that are added which utilize only
-// boolean prefs.
-add_task(async function test_privacy_boolean_prefs() {
+add_task(async function test_privacy_other_prefs() {
   // Create an object to hold the values to which we will initialize the prefs.
   const SETTINGS = {
     "network.webRTCIPHandlingPolicy": {
@@ -230,6 +228,9 @@ add_task(async function test_privacy_boolean_prefs() {
     },
     "network.peerConnectionEnabled": {
       "media.peerconnection.enabled": true,
+    },
+    "websites.referrersEnabled": {
+      "network.http.sendRefererHeader": 2,
     },
   };
 
@@ -243,12 +244,6 @@ add_task(async function test_privacy_boolean_prefs() {
       switch (msg) {
         case "set":
           await apiObj.set(data);
-          settingData = await apiObj.get({});
-          browser.test.sendMessage("settingData", settingData);
-          break;
-
-        case "clear":
-          await apiObj.clear(data);
           settingData = await apiObj.get({});
           browser.test.sendMessage("settingData", settingData);
           break;
@@ -283,35 +278,63 @@ add_task(async function test_privacy_boolean_prefs() {
   await promiseStartupManager();
   await extension.startup();
 
-  async function testSetting(setting, value, truePrefs) {
+  async function testSetting(setting, value, expected) {
     extension.sendMessage("set", {value: value}, setting);
     let data = await extension.awaitMessage("settingData");
     equal(data.value, value);
-    for (let pref in SETTINGS[setting]) {
-      let prefValue = Preferences.get(pref);
-      equal(prefValue, truePrefs.includes(pref), `${pref} set correctly for ${value}`);
+    for (let pref in expected) {
+      equal(Preferences.get(pref), expected[pref], `${pref} set correctly for ${value}`);
     }
   }
 
   await testSetting(
     "network.webRTCIPHandlingPolicy",
     "default_public_and_private_interfaces",
-    ["media.peerconnection.ice.default_address_only"]);
-
+    {
+      "media.peerconnection.ice.default_address_only": true,
+      "media.peerconnection.ice.no_host": false,
+      "media.peerconnection.ice.proxy_only": false,
+    });
   await testSetting(
     "network.webRTCIPHandlingPolicy",
     "default_public_interface_only",
-    ["media.peerconnection.ice.default_address_only", "media.peerconnection.ice.no_host"]);
-
+    {
+      "media.peerconnection.ice.default_address_only": true,
+      "media.peerconnection.ice.no_host": true,
+      "media.peerconnection.ice.proxy_only": false,
+    });
   await testSetting(
     "network.webRTCIPHandlingPolicy",
     "disable_non_proxied_udp",
-    ["media.peerconnection.ice.proxy_only"]);
+    {
+      "media.peerconnection.ice.default_address_only": false,
+      "media.peerconnection.ice.no_host": false,
+      "media.peerconnection.ice.proxy_only": true,
+    });
+  await testSetting("network.webRTCIPHandlingPolicy", "default",
+    {
+      "media.peerconnection.ice.default_address_only": false,
+      "media.peerconnection.ice.no_host": false,
+      "media.peerconnection.ice.proxy_only": false,
+    });
 
-  await testSetting("network.webRTCIPHandlingPolicy", "default", []);
+  await testSetting("network.peerConnectionEnabled", false,
+    {
+      "media.peerconnection.enabled": false,
+    });
+  await testSetting("network.peerConnectionEnabled", true,
+    {
+      "media.peerconnection.enabled": true,
+    });
 
-  await testSetting("network.peerConnectionEnabled", false, []);
-  await testSetting("network.peerConnectionEnabled", true, ["media.peerconnection.enabled"]);
+  await testSetting("websites.referrersEnabled", false,
+    {
+      "network.http.sendRefererHeader": 0,
+    });
+  await testSetting("websites.referrersEnabled", true,
+    {
+      "network.http.sendRefererHeader": 2,
+    });
 
   await extension.unload();
 
