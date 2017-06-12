@@ -993,7 +993,7 @@ function populateActionBox() {
     $("reset-box").style.display = "block";
     $("action-box").style.display = "block";
   }
-  if (!Services.appinfo.inSafeMode && AppConstants.platform !== "android") {
+  if (!Services.appinfo.inSafeMode) {
     $("safe-mode-box").style.display = "block";
     $("action-box").style.display = "block";
   }
@@ -1013,31 +1013,13 @@ function safeModeRestart() {
  * Set up event listeners for buttons.
  */
 function setupEventListeners() {
-  if (AppConstants.platform !== "android"){
-    $("show-update-history-button").addEventListener("click", function(event) {
-      var prompter = Cc["@mozilla.org/updates/update-prompt;1"].createInstance(Ci.nsIUpdatePrompt);
+  $("show-update-history-button").addEventListener("click", function(event) {
+    var prompter = Cc["@mozilla.org/updates/update-prompt;1"].createInstance(Ci.nsIUpdatePrompt);
       prompter.showUpdateHistory(window);
-    });
-    $("reset-box-button").addEventListener("click", function(event) {
-      ResetProfile.openConfirmationDialog(window);
-    });
-    $("restart-in-safe-mode-button").addEventListener("click", function(event) {
-      if (Services.obs.enumerateObservers("restart-in-safe-mode").hasMoreElements()) {
-        Services.obs.notifyObservers(null, "restart-in-safe-mode");
-      } else {
-        safeModeRestart();
-      }
-    });
-    $("verify-place-integrity-button").addEventListener("click", function(event) {
-      PlacesDBUtils.checkAndFixDatabase().then((tasksStatusMap) => {
-        let msg = PlacesDBUtils.getLegacyLog(tasksStatusMap).join("\n");
-        $("verify-place-result").style.display = "block";
-        $("verify-place-result").classList.remove("no-copy");
-        $("verify-place-result").textContent = msg;
-      });
-    });
-  }
-
+  });
+  $("reset-box-button").addEventListener("click", function(event) {
+    ResetProfile.openConfirmationDialog(window);
+  });
   $("copy-raw-data-to-clipboard").addEventListener("click", function(event) {
     copyRawDataToClipboard(this);
   });
@@ -1046,5 +1028,20 @@ function setupEventListeners() {
   });
   $("profile-dir-button").addEventListener("click", function(event) {
     openProfileDirectory();
+  });
+  $("restart-in-safe-mode-button").addEventListener("click", function(event) {
+    if (Services.obs.enumerateObservers("restart-in-safe-mode").hasMoreElements()) {
+      Services.obs.notifyObservers(null, "restart-in-safe-mode");
+    } else {
+      safeModeRestart();
+    }
+  });
+  $("verify-place-integrity-button").addEventListener("click", function(event) {
+    PlacesDBUtils.checkAndFixDatabase().then((tasksStatusMap) => {
+      let msg = PlacesDBUtils.getLegacyLog(tasksStatusMap).join("\n");
+      $("verify-place-result").style.display = "block";
+      $("verify-place-result").classList.remove("no-copy");
+      $("verify-place-result").textContent = msg;
+    });
   });
 }
