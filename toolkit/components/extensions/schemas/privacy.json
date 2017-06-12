@@ -64,8 +64,7 @@
       },
       "referrersEnabled": {
         "$ref": "types.Setting",
-        "description": "If enabled, the browser sends <code>referer</code> headers with your requests. Yes, the name of this preference doesn't match the misspelled header. No, we're not going to change it. The value of this preference is of type boolean, and the default value is <code>true</code>.",
-        "unsupported": true
+        "description": "If enabled, the browser sends <code>referer</code> headers with your requests. Yes, the name of this preference doesn't match the misspelled header. No, we're not going to change it. The value of this preference is of type boolean, and the default value is <code>true</code>."
       },
       "protectedContentEnabled": {
         "$ref": "types.Setting",
