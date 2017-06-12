@@ -521,7 +521,7 @@ GLContextGLX::CreateGLContext(CreateContextFlags flags, const SurfaceCaps& caps,
                 int core_attribs[] = {
                     LOCAL_GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
                     LOCAL_GLX_CONTEXT_MINOR_VERSION_ARB, 2,
-                    LOCAL_GLX_CONTEXT_FLAGS_ARB, LOCAL_GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
+                    LOCAL_GLX_CONTEXT_PROFILE_MASK_ARB, LOCAL_GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
                 };
                 attrib_list.AppendElements(core_attribs, MOZ_ARRAY_LENGTH(core_attribs));
             };
