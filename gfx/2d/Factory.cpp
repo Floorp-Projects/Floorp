@@ -407,9 +407,9 @@ Factory::CreateWrapAndRecordDrawTarget(DrawEventRecorder *aRecorder, DrawTarget 
 }
 
 already_AddRefed<DrawTarget>
-Factory::CreateRecordingDrawTarget(DrawEventRecorder *aRecorder, DrawTarget *aDT)
+Factory::CreateRecordingDrawTarget(DrawEventRecorder *aRecorder, DrawTarget *aDT, IntSize aSize)
 {
-  return MakeAndAddRef<DrawTargetRecording>(aRecorder, aDT);
+  return MakeAndAddRef<DrawTargetRecording>(aRecorder, aDT, aSize);
 }
 
 already_AddRefed<DrawTarget>
