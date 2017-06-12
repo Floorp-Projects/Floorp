@@ -6,7 +6,6 @@
 package org.mozilla.gecko;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -15,7 +14,6 @@ import android.support.customtabs.CustomTabsIntent;
 import android.util.Log;
 
 import org.mozilla.gecko.home.HomeConfig;
-import org.mozilla.gecko.switchboard.SwitchBoard;
 import org.mozilla.gecko.webapps.WebAppActivity;
 import org.mozilla.gecko.webapps.WebAppIndexer;
 import org.mozilla.gecko.customtabs.CustomTabsActivity;
@@ -67,7 +65,7 @@ public class LauncherActivity extends Activity {
         } else if (!isViewIntentWithURL(safeIntent)) {
             dispatchNormalIntent();
 
-        } else if (isCustomTabsIntent(safeIntent) && isCustomTabsEnabled(this) ) {
+        } else if (isCustomTabsIntent(safeIntent)) {
             dispatchCustomTabsIntent();
 
         // Can we dispatch this VIEW action intent to the tab queue service?
@@ -147,10 +145,6 @@ public class LauncherActivity extends Activity {
     private static boolean isViewIntentWithURL(@NonNull final SafeIntent safeIntent) {
         return Intent.ACTION_VIEW.equals(safeIntent.getAction())
                 && safeIntent.getDataString() != null;
-    }
-
-    private static boolean isCustomTabsEnabled(@NonNull final Context context) {
-        return SwitchBoard.isInExperiment(context, Experiments.CUSTOM_TABS);
     }
 
     private static boolean isCustomTabsIntent(@NonNull final SafeIntent safeIntent) {
