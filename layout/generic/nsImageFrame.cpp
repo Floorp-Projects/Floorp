@@ -8,7 +8,6 @@
 #include "nsImageFrame.h"
 
 #include "gfx2DGlue.h"
-#include "gfxContext.h"
 #include "gfxUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EventStates.h"
@@ -24,6 +23,7 @@
 #include "nsString.h"
 #include "nsPrintfCString.h"
 #include "nsPresContext.h"
+#include "nsRenderingContext.h"
 #include "nsIPresShell.h"
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
@@ -837,7 +837,7 @@ nsImageFrame::EnsureIntrinsicSizeAndRatio()
 
 /* virtual */
 LogicalSize
-nsImageFrame::ComputeSize(gfxContext *aRenderingContext,
+nsImageFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                           WritingMode aWM,
                           const LogicalSize& aCBSize,
                           nscoord aAvailableISize,
@@ -922,7 +922,7 @@ nsImageFrame::GetContinuationOffset() const
 }
 
 /* virtual */ nscoord
-nsImageFrame::GetMinISize(gfxContext *aRenderingContext)
+nsImageFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.
@@ -934,7 +934,7 @@ nsImageFrame::GetMinISize(gfxContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsImageFrame::GetPrefISize(gfxContext *aRenderingContext)
+nsImageFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.
@@ -1104,7 +1104,7 @@ nsImageFrame::MeasureString(const char16_t*     aString,
                             int32_t              aLength,
                             nscoord              aMaxWidth,
                             uint32_t&            aMaxFit,
-                            gfxContext& aContext,
+                            nsRenderingContext& aContext,
                             nsFontMetrics& aFontMetrics)
 {
   nscoord totalWidth = 0;
@@ -1165,12 +1165,13 @@ nsImageFrame::MeasureString(const char16_t*     aString,
 // between words if a word would extend past the edge of the rectangle
 void
 nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
-                             gfxContext&          aRenderingContext,
+                             nsRenderingContext& aRenderingContext,
                              const nsString&      aAltText,
                              const nsRect&        aRect)
 {
   // Set font and color
-  aRenderingContext.SetColor(Color::FromABGR(StyleColor()->mColor));
+  aRenderingContext.ThebesContext()->
+    SetColor(Color::FromABGR(StyleColor()->mColor));
   RefPtr<nsFontMetrics> fm =
     nsLayoutUtils::GetInflatedFontMetricsForFrame(this);
 
@@ -1321,7 +1322,7 @@ public:
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override
+                     nsRenderingContext* aCtx) override
   {
     // Always sync decode, because these icons are UI, and since they're not
     // discardable we'll pay the price of sync decoding at most once.
@@ -1341,7 +1342,7 @@ public:
 };
 
 DrawResult
-nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
+nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
                                  const nsRect& aDirtyRect,
                                  nsPoint aPt,
                                  uint32_t aFlags)
@@ -1394,11 +1395,12 @@ nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
   }
 
   DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
+  gfxContext* gfx = aRenderingContext.ThebesContext();
 
   // Clip so we don't render outside the inner rect
-  aRenderingContext.Save();
-  aRenderingContext.Clip(
-    NSRectToSnappedRect(inner, PresContext()->AppUnitsPerDevPixel(), *drawTarget));
+  gfx->Save();
+  gfx->Clip(NSRectToSnappedRect(inner, PresContext()->AppUnitsPerDevPixel(),
+                                *drawTarget));
 
   DrawResult result = DrawResult::NOT_READY;
 
@@ -1435,7 +1437,7 @@ nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
       MOZ_ASSERT(imgCon, "Load complete, but no image container?");
       nsRect dest(flushRight ? inner.XMost() - size : inner.x,
                   inner.y, size, size);
-      result = nsLayoutUtils::DrawSingleImage(aRenderingContext, PresContext(), imgCon,
+      result = nsLayoutUtils::DrawSingleImage(*gfx, PresContext(), imgCon,
         nsLayoutUtils::GetSamplingFilterForFrame(this), dest, aDirtyRect,
         /* no SVGImageContext */ Nothing(), aFlags);
     }
@@ -1491,7 +1493,7 @@ nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
     }
   }
 
-  aRenderingContext.Restore();
+  aRenderingContext.ThebesContext()->Restore();
 
   return result;
 }
@@ -1515,7 +1517,7 @@ static void PaintDebugImageMap(nsIFrame* aFrame, DrawTarget* aDrawTarget,
 
 void
 nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder,
-                      gfxContext* aCtx)
+                      nsRenderingContext* aCtx)
 {
   uint32_t flags = imgIContainer::FLAG_NONE;
   if (aBuilder->ShouldSyncDecodeImages()) {
@@ -1688,7 +1690,7 @@ nsDisplayImage::BuildLayer(nsDisplayListBuilder* aBuilder,
 }
 
 DrawResult
-nsImageFrame::PaintImage(gfxContext& aRenderingContext, nsPoint aPt,
+nsImageFrame::PaintImage(nsRenderingContext& aRenderingContext, nsPoint aPt,
                          const nsRect& aDirtyRect, imgIContainer* aImage,
                          uint32_t aFlags)
 {
@@ -1721,7 +1723,7 @@ nsImageFrame::PaintImage(gfxContext& aRenderingContext, nsPoint aPt,
   SVGImageContext::MaybeStoreContextPaint(svgContext, this, aImage);
 
   DrawResult result =
-    nsLayoutUtils::DrawSingleImage(aRenderingContext,
+    nsLayoutUtils::DrawSingleImage(*aRenderingContext.ThebesContext(),
       PresContext(), aImage,
       nsLayoutUtils::GetSamplingFilterForFrame(this), dest, aDirtyRect,
       svgContext, flags, &anchorPoint);
@@ -2460,7 +2462,7 @@ IsInAutoWidthTableCellForQuirk(nsIFrame *aFrame)
 }
 
 /* virtual */ void
-nsImageFrame::AddInlineMinISize(gfxContext* aRenderingContext,
+nsImageFrame::AddInlineMinISize(nsRenderingContext* aRenderingContext,
                                 nsIFrame::InlineMinISizeData* aData)
 {
   nscoord isize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,

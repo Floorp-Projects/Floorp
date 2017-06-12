@@ -5,7 +5,6 @@
 
 #include "mozilla/Logging.h"
 
-#include "gfxContext.h"
 #include "nsArrayUtils.h"
 #include "nsDragService.h"
 #include "nsArrayUtils.h"
@@ -26,6 +25,7 @@
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsView.h"
+#include "gfxContext.h"
 #include "nsCocoaUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "gfxPlatform.h"

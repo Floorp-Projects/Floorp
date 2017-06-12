@@ -55,10 +55,10 @@ public:
                           const Maybe<OnNonvisible>& aNonvisibleAction = Nothing()) override;
 
   /* get the size of the video's display */
-  nsSize GetVideoIntrinsicSize(gfxContext *aRenderingContext);
+  nsSize GetVideoIntrinsicSize(nsRenderingContext *aRenderingContext);
   nsSize GetIntrinsicRatio() override;
   mozilla::LogicalSize
-  ComputeSize(gfxContext *aRenderingContext,
+  ComputeSize(nsRenderingContext *aRenderingContext,
               mozilla::WritingMode aWritingMode,
               const mozilla::LogicalSize& aCBSize,
               nscoord aAvailableISize,
@@ -66,8 +66,8 @@ public:
               const mozilla::LogicalSize& aBorder,
               const mozilla::LogicalSize& aPadding,
               ComputeSizeFlags aFlags) override;
-  nscoord GetMinISize(gfxContext *aRenderingContext) override;
-  nscoord GetPrefISize(gfxContext *aRenderingContext) override;
+  nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
+  nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
   void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   void Reflow(nsPresContext*     aPresContext,

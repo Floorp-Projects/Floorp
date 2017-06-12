@@ -10,12 +10,12 @@
 // See documentation in associated header file
 //
 
-#include "gfxContext.h"
 #include "nsSplitterFrame.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMElement.h"
 #include "nsXULElement.h"
 #include "nsPresContext.h"
+#include "nsRenderingContext.h"
 #include "nsIDocument.h"
 #include "nsNameSpaceManager.h"
 #include "nsScrollbarButtonFrame.h"
@@ -636,9 +636,9 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   if (childIndex == childCount - 1 && GetResizeAfter() != Grow)
     return NS_OK;
 
-  RefPtr<gfxContext> rc =
-    outerPresContext->PresShell()->CreateReferenceRenderingContext();
-  nsBoxLayoutState state(outerPresContext, rc);
+  nsRenderingContext rc(
+    outerPresContext->PresShell()->CreateReferenceRenderingContext());
+  nsBoxLayoutState state(outerPresContext, &rc);
   mCurrentPos = 0;
   mPressed = true;
 

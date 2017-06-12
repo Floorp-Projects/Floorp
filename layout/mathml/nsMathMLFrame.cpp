@@ -5,7 +5,6 @@
 
 #include "nsMathMLFrame.h"
 
-#include "gfxContext.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "nsLayoutUtils.h"
@@ -19,6 +18,7 @@
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
 #include "nsDisplayList.h"
+#include "nsRenderingContext.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -291,14 +291,14 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override;
+                     nsRenderingContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("MathMLBoundingMetrics", TYPE_MATHML_BOUNDING_METRICS)
 private:
   nsRect    mRect;
 };
 
 void nsDisplayMathMLBoundingMetrics::Paint(nsDisplayListBuilder* aBuilder,
-                                           gfxContext* aCtx)
+                                           nsRenderingContext* aCtx)
 {
   DrawTarget* drawTarget = aCtx->GetDrawTarget();
   Rect r = NSRectToRect(mRect + ToReferenceFrame(),
@@ -339,14 +339,14 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override;
+                     nsRenderingContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("MathMLBar", TYPE_MATHML_BAR)
 private:
   nsRect    mRect;
 };
 
 void nsDisplayMathMLBar::Paint(nsDisplayListBuilder* aBuilder,
-                               gfxContext* aCtx)
+                               nsRenderingContext* aCtx)
 {
   // paint the bar with the current text color
   DrawTarget* drawTarget = aCtx->GetDrawTarget();

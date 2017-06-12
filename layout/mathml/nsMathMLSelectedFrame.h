@@ -30,7 +30,7 @@ public:
         ReflowOutput& aDesiredSize) override;
 
   virtual mozilla::LogicalSize
-  ComputeSize(gfxContext *aRenderingContext,
+  ComputeSize(nsRenderingContext *aRenderingContext,
               mozilla::WritingMode aWritingMode,
               const mozilla::LogicalSize& aCBSize,
               nscoord aAvailableISize,

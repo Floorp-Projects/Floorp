@@ -91,7 +91,7 @@ public:
 
   virtual ~nsImageBoxFrame();
 
-  DrawResult PaintImage(gfxContext& aRenderingContext,
+  DrawResult PaintImage(nsRenderingContext& aRenderingContext,
                         const nsRect& aDirtyRect,
                         nsPoint aPt, uint32_t aFlags);
 
@@ -158,7 +158,7 @@ public:
   // Doesn't handle HitTest because nsLeafBoxFrame already creates an
   // event receiver for us
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override;
+                     nsRenderingContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("XULImage", TYPE_XUL_IMAGE)
 };
 

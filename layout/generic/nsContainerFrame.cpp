@@ -588,7 +588,7 @@ void
 nsContainerFrame::SyncWindowProperties(nsPresContext*       aPresContext,
                                        nsIFrame*            aFrame,
                                        nsView*              aView,
-                                       gfxContext*          aRC,
+                                       nsRenderingContext*  aRC,
                                        uint32_t             aFlags)
 {
 #ifdef MOZ_XUL
@@ -727,7 +727,7 @@ static nscoord GetCoord(const nsStyleCoord& aCoord, nscoord aIfNotCoord)
 }
 
 void
-nsContainerFrame::DoInlineIntrinsicISize(gfxContext *aRenderingContext,
+nsContainerFrame::DoInlineIntrinsicISize(nsRenderingContext *aRenderingContext,
                                          InlineIntrinsicISizeData *aData,
                                          nsLayoutUtils::IntrinsicISizeType aType)
 {
@@ -824,7 +824,7 @@ nsContainerFrame::DoInlineIntrinsicISize(gfxContext *aRenderingContext,
 
 /* virtual */
 LogicalSize
-nsContainerFrame::ComputeAutoSize(gfxContext*         aRenderingContext,
+nsContainerFrame::ComputeAutoSize(nsRenderingContext* aRenderingContext,
                                   WritingMode         aWM,
                                   const LogicalSize&  aCBSize,
                                   nscoord             aAvailableISize,

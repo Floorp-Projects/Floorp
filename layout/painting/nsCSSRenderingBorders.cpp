@@ -3613,7 +3613,7 @@ nsCSSBorderImageRenderer::CreateBorderImageRenderer(nsPresContext* aPresContext,
 
 DrawResult
 nsCSSBorderImageRenderer::DrawBorderImage(nsPresContext* aPresContext,
-                                          gfxContext& aRenderingContext,
+                                          nsRenderingContext& aRenderingContext,
                                           nsIFrame* aForFrame,
                                           const nsRect& aDirtyRect)
 {
@@ -3622,10 +3622,11 @@ nsCSSBorderImageRenderer::DrawBorderImage(nsPresContext* aPresContext,
   gfxContextAutoSaveRestore autoSR;
 
   if (!mClip.IsEmpty()) {
-    autoSR.EnsureSaved(&aRenderingContext);
-    aRenderingContext.Clip(NSRectToSnappedRect(mClip,
-                           aForFrame->PresContext()->AppUnitsPerDevPixel(),
-                           *aRenderingContext.GetDrawTarget()));
+    autoSR.EnsureSaved(aRenderingContext.ThebesContext());
+    aRenderingContext.ThebesContext()->
+      Clip(NSRectToSnappedRect(mClip,
+                               aForFrame->PresContext()->AppUnitsPerDevPixel(),
+                               *aRenderingContext.GetDrawTarget()));
   }
 
   // intrinsicSize.CanComputeConcreteSize() return false means we can not

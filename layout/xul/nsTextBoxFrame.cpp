@@ -14,7 +14,7 @@
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
-#include "gfxContext.h"
+#include "nsRenderingContext.h"
 #include "nsStyleContext.h"
 #include "nsIContent.h"
 #include "nsNameSpaceManager.h"
@@ -297,7 +297,7 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override;
+                     nsRenderingContext* aCtx) override;
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) override;
   NS_DISPLAY_DECL_NAME("XULTextBox", TYPE_XUL_TEXT_BOX)
@@ -308,7 +308,7 @@ public:
     mDisableSubpixelAA = true;
   }
 
-  void PaintTextToContext(gfxContext* aCtx,
+  void PaintTextToContext(nsRenderingContext* aCtx,
                           nsPoint aOffset,
                           const nscolor* aColor);
 
@@ -316,7 +316,7 @@ public:
 };
 
 static void
-PaintTextShadowCallback(gfxContext* aCtx,
+PaintTextShadowCallback(nsRenderingContext* aCtx,
                         nsPoint aShadowOffset,
                         const nscolor& aShadowColor,
                         void* aData)
@@ -327,7 +327,7 @@ PaintTextShadowCallback(gfxContext* aCtx,
 
 void
 nsDisplayXULTextBox::Paint(nsDisplayListBuilder* aBuilder,
-                           gfxContext* aCtx)
+                           nsRenderingContext* aCtx)
 {
   DrawTargetAutoDisableSubpixelAntialiasing disable(aCtx->GetDrawTarget(),
                                                     mDisableSubpixelAA);
@@ -345,7 +345,7 @@ nsDisplayXULTextBox::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 void
-nsDisplayXULTextBox::PaintTextToContext(gfxContext* aCtx,
+nsDisplayXULTextBox::PaintTextToContext(nsRenderingContext* aCtx,
                                         nsPoint aOffset,
                                         const nscolor* aColor)
 {
@@ -381,7 +381,7 @@ nsTextBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 void
-nsTextBoxFrame::PaintTitle(gfxContext&          aRenderingContext,
+nsTextBoxFrame::PaintTitle(nsRenderingContext& aRenderingContext,
                            const nsRect&        aDirtyRect,
                            nsPoint              aPt,
                            const nscolor*       aOverrideColor)
@@ -393,7 +393,7 @@ nsTextBoxFrame::PaintTitle(gfxContext&          aRenderingContext,
 }
 
 void
-nsTextBoxFrame::DrawText(gfxContext&         aRenderingContext,
+nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
                          const nsRect&       aDirtyRect,
                          const nsRect&       aTextRect,
                          const nscolor*      aOverrideColor)
@@ -522,15 +522,15 @@ nsTextBoxFrame::DrawText(gfxContext&         aRenderingContext,
       }
     }
 
-    RefPtr<gfxContext> refContext =
-        PresContext()->PresShell()->CreateReferenceRenderingContext();
-    DrawTarget* refDrawTarget = refContext->GetDrawTarget();
+    nsRenderingContext refContext(
+        PresContext()->PresShell()->CreateReferenceRenderingContext());
+    DrawTarget* refDrawTarget = refContext.GetDrawTarget();
 
     CalculateUnderline(refDrawTarget, *fontMet);
 
     nscolor c = aOverrideColor ? *aOverrideColor : StyleColor()->mColor;
     ColorPattern color(ToDeviceColor(c));
-    aRenderingContext.SetColor(Color::FromABGR(c));
+    aRenderingContext.ThebesContext()->SetColor(Color::FromABGR(c));
 
     nsresult rv = NS_ERROR_FAILURE;
 
@@ -625,7 +625,7 @@ nsTextBoxFrame::CalculateUnderline(DrawTarget* aDrawTarget,
 }
 
 nscoord
-nsTextBoxFrame::CalculateTitleForWidth(gfxContext&          aRenderingContext,
+nsTextBoxFrame::CalculateTitleForWidth(nsRenderingContext& aRenderingContext,
                                        nscoord              aWidth)
 {
     DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
@@ -1054,7 +1054,7 @@ nsTextBoxFrame::MarkIntrinsicISizesDirty()
 }
 
 void
-nsTextBoxFrame::GetTextSize(gfxContext& aRenderingContext,
+nsTextBoxFrame::GetTextSize(nsRenderingContext& aRenderingContext,
                             const nsString& aString,
                             nsSize& aSize, nscoord& aAscent)
 {
@@ -1072,7 +1072,7 @@ nsTextBoxFrame::CalcTextSize(nsBoxLayoutState& aBoxLayoutState)
 {
     if (mNeedsRecalc) {
         nsSize size;
-        gfxContext* rendContext = aBoxLayoutState.GetRenderingContext();
+        nsRenderingContext* rendContext = aBoxLayoutState.GetRenderingContext();
         if (rendContext) {
             GetTextSize(*rendContext, mTitle, size, mAscent);
             if (GetWritingMode().IsVertical()) {
@@ -1085,7 +1085,7 @@ nsTextBoxFrame::CalcTextSize(nsBoxLayoutState& aBoxLayoutState)
 }
 
 void
-nsTextBoxFrame::CalcDrawRect(gfxContext &aRenderingContext)
+nsTextBoxFrame::CalcDrawRect(nsRenderingContext &aRenderingContext)
 {
     WritingMode wm = GetWritingMode();
 

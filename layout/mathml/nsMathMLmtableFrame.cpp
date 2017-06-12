@@ -3,12 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gfxContext.h"
 #include "nsMathMLmtableFrame.h"
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsNameSpaceManager.h"
+#include "nsRenderingContext.h"
 #include "nsCSSRendering.h"
 #include "nsMathMLElement.h"
 
@@ -306,7 +306,7 @@ public:
     return bounds;
   }
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) override
   {
     nsStyleBorder styleBorder = *mFrame->StyleBorder();
     nsMathMLmtdFrame* frame = static_cast<nsMathMLmtdFrame*>(mFrame);

@@ -70,8 +70,8 @@ public:
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;
-  virtual nscoord GetMinISize(gfxContext *aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext *aRenderingContext) override;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
   virtual void Reflow(nsPresContext* aPresContext,
                       ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
@@ -252,12 +252,12 @@ protected:
   LayoutDeviceIntPoint GetRemoteTabChromeOffset();
 
   static void PaintPrintPlugin(nsIFrame* aFrame,
-                               gfxContext* aRenderingContext,
+                               nsRenderingContext* aRenderingContext,
                                const nsRect& aDirtyRect, nsPoint aPt);
-  void PrintPlugin(gfxContext& aRenderingContext,
+  void PrintPlugin(nsRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
   void PaintPlugin(nsDisplayListBuilder* aBuilder,
-                   gfxContext& aRenderingContext,
+                   nsRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect, const nsRect& aPluginRect);
 
   void NotifyPluginReflowObservers();
@@ -352,7 +352,7 @@ public:
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override;
+                     nsRenderingContext* aCtx) override;
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion) override;
 

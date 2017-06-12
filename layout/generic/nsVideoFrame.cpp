@@ -537,7 +537,7 @@ nsVideoFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 LogicalSize
-nsVideoFrame::ComputeSize(gfxContext *aRenderingContext,
+nsVideoFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                           WritingMode aWM,
                           const LogicalSize& aCBSize,
                           nscoord aAvailableISize,
@@ -577,7 +577,7 @@ nsVideoFrame::ComputeSize(gfxContext *aRenderingContext,
                                             aFlags);
 }
 
-nscoord nsVideoFrame::GetMinISize(gfxContext *aRenderingContext)
+nscoord nsVideoFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -601,7 +601,7 @@ nscoord nsVideoFrame::GetMinISize(gfxContext *aRenderingContext)
   return result;
 }
 
-nscoord nsVideoFrame::GetPrefISize(gfxContext *aRenderingContext)
+nscoord nsVideoFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
@@ -663,7 +663,7 @@ bool nsVideoFrame::ShouldDisplayPoster()
 }
 
 nsSize
-nsVideoFrame::GetVideoIntrinsicSize(gfxContext *aRenderingContext)
+nsVideoFrame::GetVideoIntrinsicSize(nsRenderingContext *aRenderingContext)
 {
   // Defaulting size to 300x150 if no size given.
   nsIntSize size(300, 150);

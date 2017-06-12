@@ -161,7 +161,8 @@ WebRenderDisplayItemLayer::PushItemAsBlobImage(wr::DisplayListBuilder& aBuilder,
     RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt, offset.ToUnknownPoint());
     MOZ_ASSERT(context);
 
-    mItem->Paint(mBuilder, context);
+    nsRenderingContext ctx(context);
+    mItem->Paint(mBuilder, &ctx);
   }
 
   wr::ByteBuffer bytes;

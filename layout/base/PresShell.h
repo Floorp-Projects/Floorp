@@ -318,7 +318,7 @@ public:
   virtual void DumpReflows() override;
   virtual void CountReflows(const char * aName, nsIFrame * aFrame) override;
   virtual void PaintCount(const char * aName,
-                                      gfxContext* aRenderingContext,
+                                      nsRenderingContext* aRenderingContext,
                                       nsPresContext* aPresContext,
                                       nsIFrame * aFrame,
                                       const nsPoint& aOffset,

@@ -7,7 +7,6 @@
 #include "nsCSSClipPathInstance.h"
 
 #include "gfx2DGlue.h"
-#include "gfxContext.h"
 #include "gfxPlatform.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/gfx/2D.h"
@@ -16,6 +15,7 @@
 #include "nsCSSRendering.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
+#include "nsRenderingContext.h"
 #include "nsRuleNode.h"
 #include "nsSVGElement.h"
 #include "nsSVGUtils.h"

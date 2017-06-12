@@ -182,7 +182,7 @@ nsHTMLCanvasFrame::GetCanvasSize()
 }
 
 /* virtual */ nscoord
-nsHTMLCanvasFrame::GetMinISize(gfxContext *aRenderingContext)
+nsHTMLCanvasFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.
@@ -194,7 +194,7 @@ nsHTMLCanvasFrame::GetMinISize(gfxContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsHTMLCanvasFrame::GetPrefISize(gfxContext *aRenderingContext)
+nsHTMLCanvasFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.
@@ -219,7 +219,7 @@ nsHTMLCanvasFrame::GetIntrinsicRatio()
 
 /* virtual */
 LogicalSize
-nsHTMLCanvasFrame::ComputeSize(gfxContext *aRenderingContext,
+nsHTMLCanvasFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                WritingMode aWM,
                                const LogicalSize& aCBSize,
                                nscoord aAvailableISize,

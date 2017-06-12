@@ -88,7 +88,7 @@ public:
 #endif  
   
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override;
+                     nsRenderingContext* aCtx) override;
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) override;
   NS_DISPLAY_DECL_NAME("ButtonBoxShadowOuter", TYPE_BUTTON_BOX_SHADOW_OUTER)
@@ -102,7 +102,7 @@ nsDisplayButtonBoxShadowOuter::GetBounds(nsDisplayListBuilder* aBuilder, bool* a
 
 void
 nsDisplayButtonBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
-                                     gfxContext* aCtx) {
+                                     nsRenderingContext* aCtx) {
   nsRect frameRect = nsRect(ToReferenceFrame(), mFrame->GetSize());
 
   nsCSSRendering::PaintBoxShadowOuter(mFrame->PresContext(), *aCtx, mFrame,
@@ -127,7 +127,7 @@ public:
     aOutFrames->AppendElement(mFrame);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override;
+                     nsRenderingContext* aCtx) override;
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) override;
   virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override;
@@ -243,7 +243,7 @@ nsDisplayButtonBorder::ComputeInvalidationRegion(
 
 void
 nsDisplayButtonBorder::Paint(nsDisplayListBuilder* aBuilder,
-                             gfxContext* aCtx)
+                             nsRenderingContext* aCtx)
 {
   NS_ASSERTION(mFrame, "No frame?");
   nsPresContext* pc = mFrame->PresContext();
@@ -281,7 +281,7 @@ public:
                                  const nsDisplayItemGeometry* aGeometry,
                                  nsRegion *aInvalidRegion) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override;
+                     nsRenderingContext* aCtx) override;
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
                                    const ContainerLayerParameters& aParameters) override;
@@ -323,7 +323,7 @@ nsDisplayButtonForeground::ComputeInvalidationRegion(
 }
 
 void nsDisplayButtonForeground::Paint(nsDisplayListBuilder* aBuilder,
-                                      gfxContext* aCtx)
+                                      nsRenderingContext* aCtx)
 {
   nsPresContext *presContext = mFrame->PresContext();
   const nsStyleDisplay *disp = mFrame->StyleDisplay();
@@ -427,7 +427,7 @@ DrawResult
 nsButtonFrameRenderer::PaintInnerFocusBorder(
   nsDisplayListBuilder* aBuilder,
   nsPresContext* aPresContext,
-  gfxContext& aRenderingContext,
+  nsRenderingContext& aRenderingContext,
   const nsRect& aDirtyRect,
   const nsRect& aRect)
 {
@@ -457,7 +457,7 @@ Maybe<nsCSSBorderRenderer>
 nsButtonFrameRenderer::CreateInnerFocusBorderRenderer(
   nsDisplayListBuilder* aBuilder,
   nsPresContext* aPresContext,
-  gfxContext* aRenderingContext,
+  nsRenderingContext* aRenderingContext,
   const nsRect& aDirtyRect,
   const nsRect& aRect)
 {
@@ -481,7 +481,7 @@ DrawResult
 nsButtonFrameRenderer::PaintBorder(
   nsDisplayListBuilder* aBuilder,
   nsPresContext* aPresContext,
-  gfxContext& aRenderingContext,
+  nsRenderingContext& aRenderingContext,
   const nsRect& aDirtyRect,
   const nsRect& aRect)
 {

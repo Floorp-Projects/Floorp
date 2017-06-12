@@ -265,13 +265,13 @@ public:
   void SetFontSizeInflation(float aInflation);
 
   void MarkIntrinsicISizesDirty() override;
-  nscoord GetMinISize(gfxContext* aRenderingContext) override;
-  nscoord GetPrefISize(gfxContext* aRenderingContext) override;
-  void AddInlineMinISize(gfxContext* aRenderingContext,
+  nscoord GetMinISize(nsRenderingContext* aRenderingContext) override;
+  nscoord GetPrefISize(nsRenderingContext* aRenderingContext) override;
+  void AddInlineMinISize(nsRenderingContext* aRenderingContext,
                          InlineMinISizeData* aData) override;
-  void AddInlinePrefISize(gfxContext* aRenderingContext,
+  void AddInlinePrefISize(nsRenderingContext* aRenderingContext,
                           InlinePrefISizeData* aData) override;
-  mozilla::LogicalSize ComputeSize(gfxContext* aRenderingContext,
+  mozilla::LogicalSize ComputeSize(nsRenderingContext* aRenderingContext,
                                    mozilla::WritingMode aWritingMode,
                                    const mozilla::LogicalSize& aCBSize,
                                    nscoord aAvailableISize,
@@ -280,7 +280,7 @@ public:
                                    const mozilla::LogicalSize& aPadding,
                                    ComputeSizeFlags aFlags) override;
   nsRect ComputeTightBounds(DrawTarget* aDrawTarget) const override;
-  nsresult GetPrefWidthTightBounds(gfxContext* aContext,
+  nsresult GetPrefWidthTightBounds(nsRenderingContext* aContext,
                                    nscoord* aX,
                                    nscoord* aXMost) override;
   void Reflow(nsPresContext* aPresContext,
@@ -320,10 +320,10 @@ public:
     eNotInflated
   };
 
-  void AddInlineMinISizeForFlow(gfxContext* aRenderingContext,
+  void AddInlineMinISizeForFlow(nsRenderingContext* aRenderingContext,
                                 nsIFrame::InlineMinISizeData* aData,
                                 TextRunType aTextRunType);
-  void AddInlinePrefISizeForFlow(gfxContext* aRenderingContext,
+  void AddInlinePrefISizeForFlow(nsRenderingContext* aRenderingContext,
                                  InlinePrefISizeData* aData,
                                  TextRunType aTextRunType);
 

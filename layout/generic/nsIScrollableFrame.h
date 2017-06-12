@@ -22,12 +22,12 @@
 #define NS_DEFAULT_VERTICAL_SCROLL_DISTANCE   3
 #define NS_DEFAULT_HORIZONTAL_SCROLL_DISTANCE 5
 
-class gfxContext;
 class nsBoxLayoutState;
 class nsIScrollPositionListener;
 class nsIFrame;
 class nsPresContext;
 class nsIContent;
+class nsRenderingContext;
 class nsIAtom;
 class nsDisplayListBuilder;
 
@@ -97,13 +97,13 @@ public:
    * of the scrolled contents.
    */
   virtual nsMargin GetDesiredScrollbarSizes(nsPresContext* aPresContext,
-                                            gfxContext* aRC) = 0;
+                                            nsRenderingContext* aRC) = 0;
   /**
    * Return the width for non-disappearing scrollbars.
    */
   virtual nscoord
   GetNondisappearingScrollbarWidth(nsPresContext* aPresContext,
-                                   gfxContext* aRC,
+                                   nsRenderingContext* aRC,
                                    mozilla::WritingMode aWM) = 0;
   /**
    * GetScrolledRect is designed to encapsulate deciding which

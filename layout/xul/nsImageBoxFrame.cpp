@@ -10,9 +10,9 @@
 // See documentation in associated header file
 //
 
-#include "gfxContext.h"
 #include "nsImageBoxFrame.h"
 #include "nsGkAtoms.h"
+#include "nsRenderingContext.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsStyleUtil.h"
@@ -339,7 +339,7 @@ nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 DrawResult
-nsImageBoxFrame::PaintImage(gfxContext& aRenderingContext,
+nsImageBoxFrame::PaintImage(nsRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect, nsPoint aPt,
                             uint32_t aFlags)
 {
@@ -377,7 +377,7 @@ nsImageBoxFrame::PaintImage(gfxContext& aRenderingContext,
   Maybe<SVGImageContext> svgContext;
   SVGImageContext::MaybeStoreContextPaint(svgContext, this, imgCon);
   return nsLayoutUtils::DrawSingleImage(
-           aRenderingContext,
+           *aRenderingContext.ThebesContext(),
            PresContext(), imgCon,
            nsLayoutUtils::GetSamplingFilterForFrame(this),
            dest, dirty,
@@ -432,7 +432,7 @@ nsImageBoxFrame::GetDestRect(const nsPoint& aOffset, Maybe<nsPoint>& aAnchorPoin
 }
 
 void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,
-                              gfxContext* aCtx)
+                              nsRenderingContext* aCtx)
 {
   // Even though we call StartDecoding when we get a new image we pass
   // FLAG_SYNC_DECODE_IF_FAST here for the case where the size we draw at is not

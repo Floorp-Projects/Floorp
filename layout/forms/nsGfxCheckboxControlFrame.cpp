@@ -5,12 +5,12 @@
 
 #include "nsGfxCheckboxControlFrame.h"
 
-#include "gfxContext.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
 #include "nsLayoutUtils.h"
+#include "nsRenderingContext.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsDisplayList.h"
 #include <algorithm>

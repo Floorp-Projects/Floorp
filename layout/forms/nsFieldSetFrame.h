@@ -20,10 +20,10 @@ public:
   explicit nsFieldSetFrame(nsStyleContext* aContext);
 
   nscoord
-    GetIntrinsicISize(gfxContext* aRenderingContext,
+    GetIntrinsicISize(nsRenderingContext* aRenderingContext,
                       nsLayoutUtils::IntrinsicISizeType);
-  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
+  virtual nscoord GetMinISize(nsRenderingContext* aRenderingContext) override;
+  virtual nscoord GetPrefISize(nsRenderingContext* aRenderingContext) override;
 
   /**
    * The area to paint box-shadows around.  It's the border rect except
@@ -48,7 +48,7 @@ public:
                                 const nsDisplayListSet& aLists) override;
 
   DrawResult PaintBorder(nsDisplayListBuilder* aBuilder,
-                         gfxContext& aRenderingContext,
+                         nsRenderingContext& aRenderingContext,
                          nsPoint aPt, const nsRect& aDirtyRect);
 
 #ifdef DEBUG

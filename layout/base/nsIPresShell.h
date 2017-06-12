@@ -51,13 +51,13 @@
 #include "nsFrameState.h"
 #include "Units.h"
 
-class gfxContext;
 class nsDocShell;
 class nsIDocument;
 class nsIFrame;
 class nsPresContext;
 class nsViewManager;
 class nsView;
+class nsRenderingContext;
 class nsIPageSequenceFrame;
 class nsCanvasFrame;
 class nsAString;
@@ -77,6 +77,7 @@ template<class E> class nsCOMArray;
 class AutoWeakFrame;
 class WeakFrame;
 class nsIScrollableFrame;
+class gfxContext;
 class nsIDOMEvent;
 class nsDisplayList;
 class nsDisplayListBuilder;
@@ -1020,7 +1021,7 @@ public:
   virtual void DumpReflows() = 0;
   virtual void CountReflows(const char * aName, nsIFrame * aFrame) = 0;
   virtual void PaintCount(const char * aName,
-                                      gfxContext* aRenderingContext,
+                                      nsRenderingContext* aRenderingContext,
                                       nsPresContext * aPresContext,
                                       nsIFrame * aFrame,
                                       const nsPoint& aOffset,

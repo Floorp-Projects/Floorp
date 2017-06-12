@@ -142,7 +142,7 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 nscoord
-nsHTMLButtonControlFrame::GetMinISize(gfxContext* aRenderingContext)
+nsHTMLButtonControlFrame::GetMinISize(nsRenderingContext* aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -156,7 +156,7 @@ nsHTMLButtonControlFrame::GetMinISize(gfxContext* aRenderingContext)
 }
 
 nscoord
-nsHTMLButtonControlFrame::GetPrefISize(gfxContext* aRenderingContext)
+nsHTMLButtonControlFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
