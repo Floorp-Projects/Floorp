@@ -152,6 +152,9 @@ SERVO_BINDING_FUNC(Servo_StyleRule_GetSelectorText, void,
 SERVO_BINDING_FUNC(Servo_StyleRule_GetSelectorTextAtIndex, void,
                    RawServoStyleRuleBorrowed rule, uint32_t index,
                    nsAString* result)
+SERVO_BINDING_FUNC(Servo_StyleRule_GetSpecificityAtIndex, void,
+                   RawServoStyleRuleBorrowed rule, uint32_t index,
+                   uint64_t* specificity)
 SERVO_BINDING_FUNC(Servo_StyleRule_GetSelectorCount, void,
                    RawServoStyleRuleBorrowed rule, uint32_t* count)
 SERVO_BINDING_FUNC(Servo_ImportRule_GetHref, void,
