@@ -1845,16 +1845,6 @@ MediaCacheStream::NotifyDataLength(int64_t aLength)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
-  if (mStreamLength < 0 && aLength >= 0) {
-    uint32_t length = uint32_t(std::min(aLength, int64_t(UINT32_MAX)));
-    LOG("MediaCacheStream::NotifyDataLength(this=%p) "
-        "MEDIACACHESTREAM_NOTIFIED_LENGTH=%" PRIu32,
-        this,
-        length);
-    Telemetry::Accumulate(
-      Telemetry::HistogramID::MEDIACACHESTREAM_NOTIFIED_LENGTH, length);
-  }
-
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   mStreamLength = aLength;
 }
@@ -2553,6 +2543,14 @@ MediaCacheStream::Init(int64_t aContentLength)
   }
 
   if (aContentLength > 0) {
+    uint32_t length = uint32_t(std::min(aContentLength, int64_t(UINT32_MAX)));
+    LOG("MediaCacheStream::NotifyDataLength(this=%p) "
+        "MEDIACACHESTREAM_NOTIFIED_LENGTH=%" PRIu32,
+        this,
+        length);
+    Telemetry::Accumulate(
+      Telemetry::HistogramID::MEDIACACHESTREAM_NOTIFIED_LENGTH, length);
+
     mStreamLength = aContentLength;
   }
 
