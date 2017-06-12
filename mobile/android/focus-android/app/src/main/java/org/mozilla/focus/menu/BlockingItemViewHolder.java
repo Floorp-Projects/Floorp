@@ -67,7 +67,7 @@ import org.mozilla.focus.web.BrowsingSession;
         ThreadUtils.postToMainThread(new Runnable() {
             @Override
             public void run() {
-                view.setText("-");
+                view.setText(R.string.content_blocking_disabled);
             }
         });
     }
