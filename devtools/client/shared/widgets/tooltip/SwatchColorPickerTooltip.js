@@ -176,6 +176,7 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
     inspector.once("color-picked", color => {
       toolbox.win.focus();
       this._selectColor(color);
+      this._onEyeDropperDone();
     });
 
     inspector.once("color-pick-canceled", () => {
