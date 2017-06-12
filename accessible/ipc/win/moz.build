@@ -13,21 +13,9 @@ if CONFIG['COMPILE_ENVIRONMENT'] and CONFIG['ACCESSIBILITY']:
 # With --disable-accessibility, we need to compile PDocAccessible.ipdl (which
 # also depends on COMPtrTypes.h), but not the C++.
 IPDL_SOURCES += ['PDocAccessible.ipdl']
-
-EXPORTS.mozilla.a11y += [
-    'COMPtrTypes.h',
-]
+EXPORTS.mozilla.a11y += ['COMPtrTypes.h']
 
 if CONFIG['ACCESSIBILITY']:
-    if not CONFIG['HAVE_64BIT_BUILD']:
-        EXPORTS += [
-            'IAccessible32.manifest',
-        ]
-
-    EXPORTS += [
-        'IAccessible64.manifest',
-    ]
-
     EXPORTS.mozilla.a11y += [
         'DocAccessibleChild.h',
         'HandlerProvider.h',
