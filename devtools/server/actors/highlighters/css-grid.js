@@ -1036,8 +1036,7 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
    * clears the drawing context.
    */
   updateCanvasElement() {
-    let ratio = parseFloat((this.win.devicePixelRatio || 1).toFixed(2));
-    let size = CANVAS_SIZE / ratio;
+    let size = CANVAS_SIZE / this.win.devicePixelRatio;
     let { x, y } = this._canvasPosition;
 
     // Resize the canvas taking the dpr into account so as to have crisp lines, and
