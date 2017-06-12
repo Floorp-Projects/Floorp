@@ -15,7 +15,7 @@ const { contract, validate } = require("../sdk/util/contract");
 const { each, pairs, values } = require("../sdk/util/sequence");
 const { onEnable, onDisable } = require("../dev/theme/hooks");
 
-const { DevToolsShim } = Cu.import("chrome://devtools-shim/content/DevToolsShim.jsm", {});
+const { gDevTools } = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
 
 // This is temporary workaround to allow loading of the developer tools client - volcan
 // into a toolbox panel, this hack won't be necessary as soon as devtools patch will be
@@ -46,7 +46,7 @@ const Tool = Class({
               invertIconForDarkTheme } = validate(Panel.prototype);
       const { id } = Panel.prototype;
 
-      DevToolsShim.registerTool({
+      gDevTools.registerTool({
         id: id,
         url: "about:blank",
         label: label,
@@ -70,7 +70,7 @@ const Tool = Class({
       validate(theme);
       setup(theme);
 
-      DevToolsShim.registerTheme({
+      gDevTools.registerTheme({
         id: theme.id,
         label: theme.label,
         stylesheets: theme.getStyles(),
@@ -87,10 +87,10 @@ const Tool = Class({
     }, pairs(themes));
   },
   dispose: function() {
-    each(Panel => DevToolsShim.unregisterTool(Panel.prototype.id),
+    each(Panel => gDevTools.unregisterTool(Panel.prototype.id),
          values(this.panels));
 
-    each(Theme => DevToolsShim.unregisterTheme(Theme.prototype.id),
+    each(Theme => gDevTools.unregisterTheme(Theme.prototype.id),
          values(this.themes));
   }
 });
