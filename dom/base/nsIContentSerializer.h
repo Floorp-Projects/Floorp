@@ -30,7 +30,8 @@ class nsIContentSerializer : public nsISupports {
 
   NS_IMETHOD Init(uint32_t flags, uint32_t aWrapColumn,
                   const char* aCharSet, bool aIsCopying,
-                  bool aIsWholeDocument) = 0;
+                  bool aIsWholeDocument,
+                  bool* aNeedsPerformatScanning) = 0;
 
   NS_IMETHOD AppendText(nsIContent* aText, int32_t aStartOffset,
                         int32_t aEndOffset, nsAString& aStr) = 0;
@@ -66,6 +67,14 @@ class nsIContentSerializer : public nsISupports {
    */
   NS_IMETHOD AppendDocumentStart(nsIDocument *aDocument,
                                  nsAString& aStr) = 0;
+
+  // If Init() sets *aNeedsPerformatScanning to true, then these methods are
+  // called when elements are started and ended, before AppendElementStart
+  // and AppendElementEnd, respectively.  They are supposed to be used to
+  // allow the implementer to keep track of whether the element is
+  // preformatted.
+  NS_IMETHOD ScanElementForPreformat(mozilla::dom::Element* aElement) = 0;
+  NS_IMETHOD ForgetElementForPreformat(mozilla::dom::Element* aElement) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContentSerializer, NS_ICONTENTSERIALIZER_IID)

@@ -76,8 +76,10 @@ NS_IMPL_ISUPPORTS(nsXMLContentSerializer, nsIContentSerializer)
 NS_IMETHODIMP
 nsXMLContentSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
                              const char* aCharSet, bool aIsCopying,
-                             bool aRewriteEncodingDeclaration)
+                             bool aRewriteEncodingDeclaration,
+                             bool* aNeedsPreformatScanning)
 {
+  *aNeedsPreformatScanning = false;
   mPrefixIndex = 0;
   mColPos = 0;
   mIndentOverflow = 0;

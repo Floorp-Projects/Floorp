@@ -186,6 +186,10 @@ protected:
   AutoTArray<int32_t, 8>     mStartOffsets;
   AutoTArray<nsIContent*, 8> mEndNodes;
   AutoTArray<int32_t, 8>     mEndOffsets;
+  // Whether the serializer cares about being notified to scan elements to
+  // keep track of whether they are preformatted.  This stores the out
+  // argument of nsIContentSerializer::Init().
+  bool              mNeedsPreformatScanning;
   bool              mHaltRangeHint;
   // Used when context has already been serialized for
   // table cell selections (where parent is <tr>)
@@ -221,6 +225,7 @@ void nsDocumentEncoder::Initialize(bool aClearCachedSerializer)
   mEndDepth = 0;
   mStartRootIndex = 0;
   mEndRootIndex = 0;
+  mNeedsPreformatScanning = false;
   mHaltRangeHint = false;
   mDisableContextSerialize = false;
   mNodeIsContainer = false;
@@ -351,6 +356,10 @@ nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
                                       nsAString& aStr,
                                       nsINode* aOriginalNode)
 {
+  if (mNeedsPreformatScanning && aNode->IsElement()) {
+    mSerializer->ScanElementForPreformat(aNode->AsElement());
+  }
+
   if (!IsVisibleNode(aNode))
     return NS_OK;
 
@@ -428,6 +437,10 @@ nsresult
 nsDocumentEncoder::SerializeNodeEnd(nsINode* aNode,
                                     nsAString& aStr)
 {
+  if (mNeedsPreformatScanning && aNode->IsElement()) {
+    mSerializer->ForgetElementForPreformat(aNode->AsElement());
+  }
+
   if (!IsVisibleNode(aNode))
     return NS_OK;
 
@@ -1075,7 +1088,9 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
   nsresult rv = NS_OK;
 
   bool rewriteEncodingDeclaration = !(mSelection || mRange || mNode) && !(mFlags & OutputDontRewriteEncodingDeclaration);
-  mSerializer->Init(mFlags, mWrapColumn, mCharset.get(), mIsCopying, rewriteEncodingDeclaration);
+  mSerializer->Init(mFlags, mWrapColumn, mCharset.get(),
+                    mIsCopying, rewriteEncodingDeclaration,
+                    &mNeedsPreformatScanning);
 
   if (mSelection) {
     nsCOMPtr<nsIDOMRange> range;
