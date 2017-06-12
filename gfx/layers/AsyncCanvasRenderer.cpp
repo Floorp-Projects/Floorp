@@ -47,7 +47,8 @@ AsyncCanvasRenderer::NotifyElementAboutAttributesChanged()
   {
   public:
     explicit Runnable(AsyncCanvasRenderer* aRenderer)
-      : mRenderer(aRenderer)
+      : mozilla::Runnable("Runnable")
+      , mRenderer(aRenderer)
     {}
 
     NS_IMETHOD Run() override
@@ -82,7 +83,8 @@ AsyncCanvasRenderer::NotifyElementAboutInvalidation()
   {
   public:
     explicit Runnable(AsyncCanvasRenderer* aRenderer)
-      : mRenderer(aRenderer)
+      : mozilla::Runnable("Runnable")
+      , mRenderer(aRenderer)
     {}
 
     NS_IMETHOD Run() override

@@ -148,15 +148,17 @@ public:
     class OnFTPControlLogRunnable : public Runnable
     {
     public:
-        OnFTPControlLogRunnable(nsIFTPEventSink* aTarget,
-                                bool aServer,
-                                const char* aMessage)
-            : mTarget(aTarget)
-            , mServer(aServer)
-            , mMessage(aMessage)
-        { }
+      OnFTPControlLogRunnable(nsIFTPEventSink* aTarget,
+                              bool aServer,
+                              const char* aMessage)
+        : mozilla::Runnable("FTPEventSinkProxy::OnFTPControlLogRunnable")
+        , mTarget(aTarget)
+        , mServer(aServer)
+        , mMessage(aMessage)
+      {
+      }
 
-        NS_DECL_NSIRUNNABLE
+      NS_DECL_NSIRUNNABLE
 
     private:
         nsCOMPtr<nsIFTPEventSink> mTarget;

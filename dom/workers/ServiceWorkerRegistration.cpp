@@ -492,9 +492,9 @@ public:
 class UpdateRunnable final : public Runnable
 {
 public:
-  UpdateRunnable(PromiseWorkerProxy* aPromiseProxy,
-                 const nsAString& aScope)
-    : mPromiseProxy(aPromiseProxy)
+  UpdateRunnable(PromiseWorkerProxy* aPromiseProxy, const nsAString& aScope)
+    : Runnable("dom::UpdateRunnable")
+    , mPromiseProxy(aPromiseProxy)
     , mScope(aScope)
   {}
 
@@ -663,9 +663,9 @@ class StartUnregisterRunnable final : public Runnable
   const nsString mScope;
 
 public:
-  StartUnregisterRunnable(PromiseWorkerProxy* aProxy,
-                          const nsAString& aScope)
-    : mPromiseWorkerProxy(aProxy)
+  StartUnregisterRunnable(PromiseWorkerProxy* aProxy, const nsAString& aScope)
+    : Runnable("dom::StartUnregisterRunnable")
+    , mPromiseWorkerProxy(aProxy)
     , mScope(aScope)
   {
     MOZ_ASSERT(aProxy);
@@ -1188,7 +1188,9 @@ ServiceWorkerRegistrationWorkerThread::InitListener()
   }
 
   nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod(mListener, &WorkerListener::StartListeningForEvents);
+    NewRunnableMethod("dom::WorkerListener::StartListeningForEvents",
+                      mListener,
+                      &WorkerListener::StartListeningForEvents);
   MOZ_ALWAYS_SUCCEEDS(worker->DispatchToMainThread(r.forget()));
 }
 
@@ -1210,7 +1212,9 @@ ServiceWorkerRegistrationWorkerThread::ReleaseListener()
   mListener->ClearRegistration();
 
   nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod(mListener, &WorkerListener::StopListeningForEvents);
+    NewRunnableMethod("dom::WorkerListener::StopListeningForEvents",
+                      mListener,
+                      &WorkerListener::StopListeningForEvents);
   MOZ_ALWAYS_SUCCEEDS(mWorkerPrivate->DispatchToMainThread(r.forget()));
 
   mListener = nullptr;

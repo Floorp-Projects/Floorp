@@ -61,6 +61,7 @@ private:
                   nsTArray<RefPtr<GetFilesCallback>>& aCallbacks,
                   Sequence<RefPtr<File>>& aFiles,
                   already_AddRefed<nsIGlobalObject> aGlobal)
+    : Runnable("dom::ReleaseRunnable")
   {
     mPromises.SwapElements(aPromises);
     mCallbacks.SwapElements(aCallbacks);

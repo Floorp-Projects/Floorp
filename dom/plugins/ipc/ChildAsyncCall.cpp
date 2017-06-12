@@ -12,8 +12,10 @@ namespace mozilla {
 namespace plugins {
 
 ChildAsyncCall::ChildAsyncCall(PluginInstanceChild* instance,
-                               PluginThreadCallback aFunc, void* aUserData)
-  : mInstance(instance)
+                               PluginThreadCallback aFunc,
+                               void* aUserData)
+  : CancelableRunnable("plugins::ChildAsyncCall")
+  , mInstance(instance)
   , mFunc(aFunc)
   , mData(aUserData)
 {

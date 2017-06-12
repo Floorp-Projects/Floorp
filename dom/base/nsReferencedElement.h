@@ -129,8 +129,12 @@ private:
   {
   public:
     ChangeNotification(nsReferencedElement* aTarget,
-                       Element* aFrom, Element* aTo)
-      : Notification(aTarget), mFrom(aFrom), mTo(aTo)
+                       Element* aFrom,
+                       Element* aTo)
+      : mozilla::Runnable("nsReferencedElement::ChangeNotification")
+      , Notification(aTarget)
+      , mFrom(aFrom)
+      , mTo(aTo)
     {}
 
     NS_DECL_ISUPPORTS_INHERITED

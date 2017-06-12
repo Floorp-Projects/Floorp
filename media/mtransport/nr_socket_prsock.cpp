@@ -1673,7 +1673,7 @@ class NrTcpSocketIpc::TcpSocketReadyRunner: public Runnable
 {
 public:
   explicit TcpSocketReadyRunner(NrTcpSocketIpc *sck)
-    : socket_(sck) {}
+    : Runnable("NrTcpSocketIpc::TcpSocketReadyRunner"), socket_(sck) {}
 
   NS_IMETHOD Run() override {
     socket_->maybe_post_socket_ready();

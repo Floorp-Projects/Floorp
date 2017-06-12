@@ -926,11 +926,12 @@ void nsBaseWidget::ConfigureAPZCTreeManager()
                     bool aPreventDefault)
       {
         MOZ_ASSERT(NS_IsMainThread());
-        APZThreadUtils::RunOnControllerThread(NewRunnableMethod
-                                              <uint64_t, bool>(treeManager,
-                                                               &IAPZCTreeManager::ContentReceivedInputBlock,
-                                                               aInputBlockId,
-                                                               aPreventDefault));
+        APZThreadUtils::RunOnControllerThread(NewRunnableMethod<uint64_t, bool>(
+          "layers::IAPZCTreeManager::ContentReceivedInputBlock",
+          treeManager,
+          &IAPZCTreeManager::ContentReceivedInputBlock,
+          aInputBlockId,
+          aPreventDefault));
       });
   mAPZEventState = new APZEventState(this, mozilla::Move(callback));
 
@@ -938,11 +939,14 @@ void nsBaseWidget::ConfigureAPZCTreeManager()
                                                    const nsTArray<TouchBehaviorFlags>& aFlags)
   {
     MOZ_ASSERT(NS_IsMainThread());
-    APZThreadUtils::RunOnControllerThread(NewRunnableMethod
-      <uint64_t,
-       StoreCopyPassByLRef<nsTArray<TouchBehaviorFlags>>>(treeManager,
-                                                          &IAPZCTreeManager::SetAllowedTouchBehavior,
-                                                          aInputBlockId, aFlags));
+    APZThreadUtils::RunOnControllerThread(
+      NewRunnableMethod<uint64_t,
+                        StoreCopyPassByLRef<nsTArray<TouchBehaviorFlags>>>(
+        "layers::IAPZCTreeManager::SetAllowedTouchBehavior",
+        treeManager,
+        &IAPZCTreeManager::SetAllowedTouchBehavior,
+        aInputBlockId,
+        aFlags));
   };
 
   mRootContentController = CreateRootContentController();
@@ -969,10 +973,14 @@ void
 nsBaseWidget::SetConfirmedTargetAPZC(uint64_t aInputBlockId,
                                      const nsTArray<ScrollableLayerGuid>& aTargets) const
 {
-  APZThreadUtils::RunOnControllerThread(NewRunnableMethod
-    <uint64_t, StoreCopyPassByRRef<nsTArray<ScrollableLayerGuid>>>(mAPZC,
-                                                                   &IAPZCTreeManager::SetTargetAPZC,
-                                                                   aInputBlockId, aTargets));
+  APZThreadUtils::RunOnControllerThread(
+    NewRunnableMethod<uint64_t,
+                      StoreCopyPassByRRef<nsTArray<ScrollableLayerGuid>>>(
+      "layers::IAPZCTreeManager::SetTargetAPZC",
+      mAPZC,
+      &IAPZCTreeManager::SetTargetAPZC,
+      aInputBlockId,
+      aTargets));
 }
 
 void
@@ -1077,7 +1085,8 @@ public:
                                  nsEventStatus aAPZResult,
                                  uint64_t aInputBlockId,
                                  ScrollableLayerGuid aGuid)
-    : mWheelInput(aWheelInput)
+    : mozilla::Runnable("DispatchWheelEventOnMainThread")
+    , mWheelInput(aWheelInput)
     , mWidget(aWidget)
     , mAPZResult(aAPZResult)
     , mInputBlockId(aInputBlockId)
@@ -1106,7 +1115,8 @@ public:
   DispatchWheelInputOnControllerThread(const WidgetWheelEvent& aWheelEvent,
                                        IAPZCTreeManager* aAPZC,
                                        nsBaseWidget* aWidget)
-    : mMainMessageLoop(MessageLoop::current())
+    : mozilla::Runnable("DispatchWheelInputOnControllerThread")
+    , mMainMessageLoop(MessageLoop::current())
     , mWheelInput(aWheelEvent)
     , mAPZC(aAPZC)
     , mWidget(aWidget)
@@ -1877,10 +1887,13 @@ nsBaseWidget::StartAsyncScrollbarDrag(const AsyncDragMetrics& aDragMetrics)
   uint64_t layersId = mCompositorSession->RootLayerTreeId();
   ScrollableLayerGuid guid(layersId, aDragMetrics.mPresShellId, aDragMetrics.mViewId);
 
-  APZThreadUtils::RunOnControllerThread(NewRunnableMethod
-    <ScrollableLayerGuid, AsyncDragMetrics>(mAPZC,
-                                            &IAPZCTreeManager::StartScrollbarDrag,
-                                            guid, aDragMetrics));
+  APZThreadUtils::RunOnControllerThread(
+    NewRunnableMethod<ScrollableLayerGuid, AsyncDragMetrics>(
+      "layers::IAPZCTreeManager::StartScrollbarDrag",
+      mAPZC,
+      &IAPZCTreeManager::StartScrollbarDrag,
+      guid,
+      aDragMetrics));
 }
 
 already_AddRefed<nsIScreen>
@@ -1939,9 +1952,12 @@ nsIWidget::SynthesizeNativeTouchTap(LayoutDeviceIntPoint aPoint, bool aLongTap,
     if (timeout > TOUCH_INJECT_PUMP_TIMER_MSEC) {
       timeout = TOUCH_INJECT_PUMP_TIMER_MSEC;
     }
-    mLongTapTimer->InitWithFuncCallback(OnLongTapTimerCallback, this,
-                                        timeout,
-                                        nsITimer::TYPE_REPEATING_SLACK);
+    mLongTapTimer->InitWithNamedFuncCallback(
+      OnLongTapTimerCallback,
+      this,
+      timeout,
+      nsITimer::TYPE_REPEATING_SLACK,
+      "nsIWidget::SynthesizeNativeTouchTap");
   }
 
   // If we already have a long tap pending, cancel it. We only allow one long

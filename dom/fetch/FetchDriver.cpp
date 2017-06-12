@@ -643,7 +643,8 @@ class DataAvailableRunnable final : public Runnable
 
 public:
   explicit DataAvailableRunnable(FetchDriverObserver* aObserver)
-    : mObserver(aObserver)
+    : Runnable("dom::DataAvailableRunnable")
+    , mObserver(aObserver)
   {
      MOZ_ASSERT(aObserver);
   }

@@ -43,6 +43,7 @@ class UnlinkHostObjectURIsRunnable final : public mozilla::Runnable
 {
 public:
   explicit UnlinkHostObjectURIsRunnable(nsTArray<nsCString>& aURIs)
+    : mozilla::Runnable("UnlinkHostObjectURIsRunnable")
   {
     mURIs.SwapElements(aURIs);
   }

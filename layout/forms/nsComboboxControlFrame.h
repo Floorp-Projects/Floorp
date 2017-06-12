@@ -253,7 +253,11 @@ protected:
   class RedisplayTextEvent : public mozilla::Runnable {
   public:
     NS_DECL_NSIRUNNABLE
-    explicit RedisplayTextEvent(nsComboboxControlFrame *c) : mControlFrame(c) {}
+    explicit RedisplayTextEvent(nsComboboxControlFrame* c)
+      : mozilla::Runnable("nsComboboxControlFrame::RedisplayTextEvent")
+      , mControlFrame(c)
+    {
+    }
     void Revoke() { mControlFrame = nullptr; }
   private:
     nsComboboxControlFrame *mControlFrame;

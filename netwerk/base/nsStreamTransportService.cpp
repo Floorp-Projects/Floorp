@@ -575,17 +575,18 @@ nsStreamTransportService::Observe(nsISupports *subject, const char *topic,
 
 class AvailableEvent final : public Runnable
 {
-    public:
-    AvailableEvent(nsIInputStream *stream,
-                   nsIInputAvailableCallback *callback)
-        : mStream(stream)
-        , mCallback(callback)
-        , mDoingCallback(false)
-        , mSize(0)
-        , mResultForCallback(NS_OK)
-    {
-        mCallbackTarget = GetCurrentThreadEventTarget();
-    }
+public:
+  AvailableEvent(nsIInputStream* stream,
+                 nsIInputAvailableCallback* callback)
+    : Runnable("net::AvailableEvent")
+    , mStream(stream)
+    , mCallback(callback)
+    , mDoingCallback(false)
+    , mSize(0)
+    , mResultForCallback(NS_OK)
+  {
+    mCallbackTarget = GetCurrentThreadEventTarget();
+  }
 
     NS_IMETHOD Run() override
     {

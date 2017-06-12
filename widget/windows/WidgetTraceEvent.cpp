@@ -34,7 +34,7 @@ HANDLE sEventHandle = nullptr;
 // thread.
 class HWNDGetter : public mozilla::Runnable {
 public:
-  HWNDGetter() : hidden_window_hwnd(nullptr) {}
+  HWNDGetter() : Runnable("HWNDGetter"), hidden_window_hwnd(nullptr) {}
 
   HWND hidden_window_hwnd;
 

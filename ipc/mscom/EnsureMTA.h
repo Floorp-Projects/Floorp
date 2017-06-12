@@ -82,7 +82,7 @@ public:
     };
 
     nsresult rv =
-      thread->Dispatch(NS_NewRunnableFunction(eventSetter), NS_DISPATCH_NORMAL);
+      thread->Dispatch(NS_NewRunnableFunction("EnsureMTA", eventSetter), NS_DISPATCH_NORMAL);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     if (NS_FAILED(rv)) {
       return;
@@ -117,7 +117,8 @@ private:
     }
 
     DebugOnly<nsresult> rv = thread->Dispatch(
-        NS_NewRunnableFunction(aClosure), NS_DISPATCH_NORMAL);
+      NS_NewRunnableFunction("mscom::EnsureMTA::AsyncOperation",
+                             aClosure), NS_DISPATCH_NORMAL);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 

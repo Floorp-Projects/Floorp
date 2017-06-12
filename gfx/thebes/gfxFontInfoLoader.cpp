@@ -44,8 +44,9 @@ class FontInfoLoadCompleteEvent : public Runnable {
 
     NS_DECL_ISUPPORTS_INHERITED
 
-    explicit FontInfoLoadCompleteEvent(FontInfoData *aFontInfo) :
-        mFontInfo(aFontInfo)
+    explicit FontInfoLoadCompleteEvent(FontInfoData* aFontInfo)
+      : mozilla::Runnable("FontInfoLoadCompleteEvent")
+      , mFontInfo(aFontInfo)
     {}
 
     NS_IMETHOD Run() override;
@@ -58,8 +59,9 @@ class AsyncFontInfoLoader : public Runnable {
 
     NS_DECL_ISUPPORTS_INHERITED
 
-    explicit AsyncFontInfoLoader(FontInfoData *aFontInfo) :
-        mFontInfo(aFontInfo)
+    explicit AsyncFontInfoLoader(FontInfoData* aFontInfo)
+      : mozilla::Runnable("AsyncFontInfoLoader")
+      , mFontInfo(aFontInfo)
     {
         mCompleteEvent = new FontInfoLoadCompleteEvent(aFontInfo);
     }
@@ -75,7 +77,11 @@ class ShutdownThreadEvent : public Runnable {
 
     NS_DECL_ISUPPORTS_INHERITED
 
-    explicit ShutdownThreadEvent(nsIThread* aThread) : mThread(aThread) {}
+    explicit ShutdownThreadEvent(nsIThread* aThread)
+      : mozilla::Runnable("ShutdownThreadEvent")
+      , mThread(aThread)
+    {
+    }
     NS_IMETHOD Run() override {
         mThread->Shutdown();
         return NS_OK;
@@ -158,8 +164,11 @@ gfxFontInfoLoader::StartLoader(uint32_t aDelay, uint32_t aInterval)
     // delay? ==> start async thread after a delay
     if (aDelay) {
         mState = stateTimerOnDelay;
-        mTimer->InitWithFuncCallback(DelayedStartCallback, this, aDelay,
-                                     nsITimer::TYPE_ONE_SHOT);
+        mTimer->InitWithNamedFuncCallback(DelayedStartCallback,
+                                          this,
+                                          aDelay,
+                                          nsITimer::TYPE_ONE_SHOT,
+                                          "gfxFontInfoLoader::StartLoader");
         return;
     }
 
@@ -209,8 +218,11 @@ gfxFontInfoLoader::FinalizeLoader(FontInfoData *aFontInfo)
 
     // not all work completed ==> run load on interval
     mState = stateTimerOnInterval;
-    mTimer->InitWithFuncCallback(LoadFontInfoCallback, this, mInterval,
-                                 nsITimer::TYPE_REPEATING_SLACK);
+    mTimer->InitWithNamedFuncCallback(LoadFontInfoCallback,
+                                      this,
+                                      mInterval,
+                                      nsITimer::TYPE_REPEATING_SLACK,
+                                      "gfxFontInfoLoader::FinalizeLoader");
 }
 
 void
