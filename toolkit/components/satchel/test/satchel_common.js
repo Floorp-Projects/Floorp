@@ -40,21 +40,21 @@ function $_(formNum, name) {
 // Mochitest gives us a sendKey(), but it's targeted to a specific element.
 // This basically sends an untargeted key event, to whatever's focused.
 function doKey(aKey, modifier) {
-    var keyName = "DOM_VK_" + aKey.toUpperCase();
-    var key = SpecialPowers.Ci.nsIDOMKeyEvent[keyName];
+  var keyName = "DOM_VK_" + aKey.toUpperCase();
+  var key = SpecialPowers.Ci.nsIDOMKeyEvent[keyName];
 
-    // undefined --> null
-    if (!modifier) {
-      modifier = null;
-    }
+  // undefined --> null
+  if (!modifier) {
+    modifier = null;
+  }
 
-    // Window utils for sending fake key events.
-    var wutils = SpecialPowers.getDOMWindowUtils(window);
+  // Window utils for sending fake key events.
+  var wutils = SpecialPowers.getDOMWindowUtils(window);
 
-    if (wutils.sendKeyEvent("keydown", key, 0, modifier)) {
-      wutils.sendKeyEvent("keypress", key, 0, modifier);
-    }
-    wutils.sendKeyEvent("keyup", key, 0, modifier);
+  if (wutils.sendKeyEvent("keydown", key, 0, modifier)) {
+    wutils.sendKeyEvent("keypress", key, 0, modifier);
+  }
+  wutils.sendKeyEvent("keyup", key, 0, modifier);
 }
 
 function registerPopupShownListener(listener) {
@@ -121,14 +121,14 @@ var checkObserver = {
     var expected = this.verifyStack.shift();
 
     countEntries(expected.name, expected.value,
-      function(num) {
-        ok(num > 0, expected.message);
-        if (checkObserver.verifyStack.length == 0) {
-          var callback = checkObserver.callback;
-          checkObserver.callback = null;
-          callback();
-        }
-      });
+                 function(num) {
+                   ok(num > 0, expected.message);
+                   if (checkObserver.verifyStack.length == 0) {
+                     var callback = checkObserver.callback;
+                     checkObserver.callback = null;
+                     callback();
+                   }
+                 });
   }
 };
 
@@ -193,8 +193,8 @@ function updateFormHistory(changes, then = null) {
 function notifyMenuChanged(expectedCount, expectedFirstValue, then = null) {
   return new Promise(resolve => {
     gChromeScript.sendAsyncMessage("waitForMenuChange",
-                            { expectedCount,
-                              expectedFirstValue });
+                                   { expectedCount,
+                                     expectedFirstValue });
     gChromeScript.addMessageListener("gotMenuChange", function changed({ results }) {
       gChromeScript.removeMessageListener("gotMenuChange", changed);
       gLastAutoCompleteResults = results;

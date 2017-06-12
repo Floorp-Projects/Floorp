@@ -78,16 +78,16 @@ function doKeyUnprivileged(key) {
   let keycode, charcode, alwaysval;
 
   if (key.length == 1) {
-      keycode = 0;
-      charcode = key.charCodeAt(0);
-      alwaysval = charcode;
+    keycode = 0;
+    charcode = key.charCodeAt(0);
+    alwaysval = charcode;
   } else {
-      keycode = KeyEvent[keyName];
-      if (!keycode) {
-        throw "invalid keyname in test";
-      }
-      charcode = 0;
-      alwaysval = keycode;
+    keycode = KeyEvent[keyName];
+    if (!keycode) {
+      throw "invalid keyname in test";
+    }
+    charcode = 0;
+    alwaysval = keycode;
   }
 
   let dnEvent = document.createEvent("KeyboardEvent");

@@ -197,8 +197,10 @@ FormAutoComplete.prototype = {
   observer: {
     _self: null,
 
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                           Ci.nsISupportsWeakReference]),
+    QueryInterface: XPCOMUtils.generateQI([
+      Ci.nsIObserver,
+      Ci.nsISupportsWeakReference
+    ]),
 
     observe(subject, topic, data) {
       let self = this._self;
@@ -291,13 +293,11 @@ FormAutoComplete.prototype = {
     let client = new FormHistoryClient({ formField: aField, inputName: aInputName });
 
     // If we have datalist results, they become our "empty" result.
-    let emptyResult = aDatalistResult || new FormAutoCompleteResult(
-                                               client,
-                                               [],
-                                               aInputName,
-                                               aUntrimmedSearchString,
-                                               null
-                                             );
+    let emptyResult = aDatalistResult || new FormAutoCompleteResult(client,
+                                                                    [],
+                                                                    aInputName,
+                                                                    aUntrimmedSearchString,
+                                                                    null);
     if (!this._enabled) {
       if (aListener) {
         aListener.onSearchCompletion(emptyResult);
@@ -458,9 +458,13 @@ FormAutoComplete.prototype = {
     // FormAutoCompleteResult.
     let {FormAutoCompleteResult} = Cu.import("resource://gre/modules/nsFormAutoCompleteResult.jsm", {});
     return new FormAutoCompleteResult(datalistResult.searchString,
-                      Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
-                      0, "", finalValues, finalLabels,
-                      finalComments, historyResult);
+                                      Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
+                                      0,
+                                      "",
+                                      finalValues,
+                                      finalLabels,
+                                      finalComments,
+                                      historyResult);
   },
 
   stopAutoCompleteSearch() {

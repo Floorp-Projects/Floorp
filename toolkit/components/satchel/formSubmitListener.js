@@ -13,9 +13,11 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 var satchelFormListener = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFormSubmitObserver,
-                                         Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIFormSubmitObserver,
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference
+  ]),
 
   debug: true,
   enabled: true,
