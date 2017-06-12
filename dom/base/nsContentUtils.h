@@ -624,8 +624,16 @@ public:
    *                  string (meaning UTF-8)
    */
   static nsresult ConvertStringFromEncoding(const nsACString& aEncoding,
-                                            const nsACString& aInput,
+                                            const char* aInput,
+                                            uint32_t aInputLen,
                                             nsAString& aOutput);
+
+  static nsresult ConvertStringFromEncoding(const nsACString& aEncoding,
+                                            const nsACString& aInput,
+                                            nsAString& aOutput) {
+    return ConvertStringFromEncoding(
+        aEncoding, aInput.BeginReading(), aInput.Length(), aOutput);
+  }
 
   /**
    * Determine whether a buffer begins with a BOM for UTF-8, UTF-16LE,

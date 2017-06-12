@@ -480,8 +480,8 @@ FileReader::GetAsText(Blob *aBlob,
     }
   }
 
-  nsDependentCSubstring data(aFileData, aDataLen);
-  return nsContentUtils::ConvertStringFromEncoding(encoding, data, aResult);
+  return nsContentUtils::ConvertStringFromEncoding(
+      encoding, aFileData, aDataLen, aResult);
 }
 
 nsresult
