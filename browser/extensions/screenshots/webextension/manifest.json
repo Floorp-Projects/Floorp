@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Firefox Screenshots",
-  "version": "9.0.0",
+  "version": "10.1.0",
   "description": "__MSG_addonDescription__",
   "author": "__MSG_addonAuthorsList__",
   "homepage_url": "https://github.com/mozilla-services/screenshots",
@@ -22,19 +22,7 @@
   "background": {
     "scripts": [
       "build/buildSettings.js",
-      "log.js",
-      "makeUuid.js",
-      "catcher.js",
-      "background/selectorLoader.js",
-      "background/communication.js",
-      "background/auth.js",
-      "background/senderror.js",
-      "build/raven.js",
-      "build/shot.js",
-      "background/analytics.js",
-      "background/deviceInfo.js",
-      "background/takeshot.js",
-      "background/main.js"
+      "background/startBackground.js"
     ]
   },
   "content_scripts": [
@@ -46,8 +34,7 @@
         "catcher.js",
         "selector/callBackground.js",
         "sitehelper.js"
-      ],
-      "run_at": "document_start"
+      ]
     }
   ],
   "web_accessible_resources": [

@@ -80,16 +80,16 @@
     "message": "I-click at i-drag upang makuha lamang ang isang bahagi ng isang pahina. Maaari mo ring i-hover upang i-highlight ang iyong pagpili."
   },
   "tourHeaderThree": {
-    "message": "Bilang Nagustuhan Mo ito"
-  },
-  "tourBodyThree": {
-    "message": "I-save ang iyong crop shot sa Web para sa madaling pagbabahagi, o i-download ito sa iyong computer. Maaari mo ring i-click sa pindutan ng My Shots upang mahanap ang lahat ng mga pag-shot na kinunan mo."
-  },
-  "tourHeaderFour": {
     "message": "I-capture ang Windows o Buong Pahina"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Piliin ang pindutan sa kanang itaas upang makuha ang nakikitang lugar sa window o upang makuha ang isang buong pahina."
+  },
+  "tourHeaderFour": {
+    "message": "Bilang Nagustuhan Mo ito"
+  },
+  "tourBodyFour": {
+    "message": "I-save ang iyong crop shot sa Web para sa madaling pagbabahagi, o i-download ito sa iyong computer. Maaari mo ring i-click sa pindutan ng My Shots upang mahanap ang lahat ng mga pag-shot na kinunan mo."
   },
   "tourSkip": {
     "message": "Laktawan"

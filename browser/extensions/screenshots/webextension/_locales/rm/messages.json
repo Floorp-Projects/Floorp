@@ -80,16 +80,16 @@
     "message": "Clicca e tira per far in maletg da be ina part da la pagina. Ti pos posiziunar la mieur sur la selecziun per la relevar."
   },
   "tourHeaderThree": {
-    "message": "Co che ti prefereschas"
-  },
-  "tourBodyThree": {
-    "message": "Memorisescha ils maletgs da visur en il web per als pudair cundivider u telechargiar sin tes computer. Ti pos era cliccar sin il buttun «Mes maletgs da visur» per vesair tut ils maletgs dal visur che ti has fatg."
-  },
-  "tourHeaderFour": {
     "message": "Far maletgs da fanestras u paginas cumplettas"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Tscherna il buttun sura dretg per far in maletg da la part visibla en la fanestra u per far in maletg da la pagina cumpletta."
+  },
+  "tourHeaderFour": {
+    "message": "Co che ti prefereschas"
+  },
+  "tourBodyFour": {
+    "message": "Memorisescha ils maletgs da visur en il web per als pudair cundivider u telechargiar sin tes computer. Ti pos era cliccar sin il buttun «Mes maletgs da visur» per vesair tut ils maletgs dal visur che ti has fatg."
   },
   "tourSkip": {
     "message": "Sursiglir"

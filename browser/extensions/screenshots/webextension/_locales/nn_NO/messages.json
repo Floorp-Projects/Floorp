@@ -12,7 +12,7 @@
     "message": "Mine skjermbilde"
   },
   "screenshotInstructions": {
-    "message": "Drag eller klikk på sida for å velje ein region. Trykk på ESC for å avbryte."
+    "message": "Drag eller klikk på sida for å velje eit område. Trykk på ESC for å avbryte."
   },
   "saveScreenshotSelectedArea": {
     "message": "Lagre"
@@ -33,7 +33,7 @@
     "message": "Lenke kopiert"
   },
   "notificationLinkCopiedDetails": {
-    "message": "Lenka til skjermbildet ditt er kopiert til utklipp. Trykk på $META_KEY$-V for å lime inn.",
+    "message": "Lenka til skjermbildet ditt er kopiert til utklippstavla. Trykk på $META_KEY$-V for å lime inn.",
     "placeholders": {
       "meta_key": {
         "content": "$1"
@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Du kan ikkje ta skjermbilde av sida Firefox Screenshots!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "Markeringa di er for lita"
+  },
   "genericErrorTitle": {
     "message": "Oj! Det ser ut til at Firefox Screenshots ikkje fungerer korrekt."
   },
@@ -80,16 +83,16 @@
     "message": "Klikk for å drage og knipse berre ein del av sida. Du kan også føre musa over for å framheve merkt område."
   },
   "tourHeaderThree": {
-    "message": "Som du vil ha det"
-  },
-  "tourBodyThree": {
-    "message": "Lagre dei tilskjerte bilda dine på nettet for enklare deling, eller last dei ned til datamaskina di. Du kan også klikke på knappen Mine skjermbilde for å finne alle bilda du har tatt."
-  },
-  "tourHeaderFour": {
     "message": "Knips vindauge eller heile sider"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Vel knappane i det øvre høgre hjørnet for å knipse det synlege området i vindauget eller for å knipse ei heil side."
+  },
+  "tourHeaderFour": {
+    "message": "Som du vil ha det"
+  },
+  "tourBodyFour": {
+    "message": "Lagre dei tilskjerte bilda dine på nettet for enklare deling, eller last dei ned til datamaskina di. Du kan også klikke på knappen Mine skjermbilde for å finne alle bilda du har tatt."
   },
   "tourSkip": {
     "message": "Hopp over"

@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Não pode tirar uma captura de uma página Firefox Screenshots!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "A sua seleção é demasiado pequena"
+  },
   "genericErrorTitle": {
     "message": "Uau! Algo correu mal com o Firefox Screenshots."
   },
@@ -80,16 +83,16 @@
     "message": "Clique e arraste para capturar apenas uma porção de uma página. Pode também pairar para destacar a sua seleção."
   },
   "tourHeaderThree": {
-    "message": "Como gosta"
-  },
-  "tourBodyThree": {
-    "message": "Guarde as suas capturas na Web para partilhar mais facilmente, ou descarregue-as para o seu computador. Pode também clicar no botão Minhas capturas para encontras todas as capturas que tirou."
-  },
-  "tourHeaderFour": {
     "message": "Capture janelas ou páginas inteiras"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Selecione os botões no canto superior direito para capturar a área visível na janela ou para capturar uma página inteira."
+  },
+  "tourHeaderFour": {
+    "message": "Como gosta"
+  },
+  "tourBodyFour": {
+    "message": "Guarde as suas capturas na Web para partilhar mais facilmente, ou descarregue-as para o seu computador. Pode também clicar no botão Minhas capturas para encontras todas as capturas que tirou."
   },
   "tourSkip": {
     "message": "SALTAR"

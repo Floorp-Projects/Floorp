@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Firefox Screenshots lehest ei saa ekraanipilti teha!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "Valik on liiga väike"
+  },
   "genericErrorTitle": {
     "message": "Oi-oi! Firefox Screenshots läks sassi."
   },
@@ -80,16 +83,16 @@
     "message": "Klõpsa ja lohista lehe osa valimiseks. Samuti võid valiku esile toomiseks kursorit selle kohal hoida."
   },
   "tourHeaderThree": {
-    "message": "Nii, kuidas sulle meeldib"
-  },
-  "tourBodyThree": {
-    "message": "Salvesta kärbitud pilte lihtsamaks jagamiseks veebi või laadi need alla enda arvutisse. Võid ka klõpsata Minu pildid nupul kõigi tehtud piltide vaatamiseks."
-  },
-  "tourHeaderFour": {
     "message": "Salvesta aknaid või terveid lehti"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Kasuta nuppe ülal paremal aknas nähtava ala või terve lehe salvestamiseks."
+  },
+  "tourHeaderFour": {
+    "message": "Nii, kuidas sulle meeldib"
+  },
+  "tourBodyFour": {
+    "message": "Salvesta kärbitud pilte lihtsamaks jagamiseks veebi või laadi need alla enda arvutisse. Võid ka klõpsata Minu pildid nupul kõigi tehtud piltide vaatamiseks."
   },
   "tourSkip": {
     "message": "Jäta vahele"

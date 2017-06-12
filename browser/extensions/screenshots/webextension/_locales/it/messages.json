@@ -83,16 +83,16 @@
     "message": "Fai clic e trascina per catturare solo una parte della pagina. Posiziona il mouse sopra all’area selezionata per evidenziarla."
   },
   "tourHeaderThree": {
-    "message": "Come piace a te"
-  },
-  "tourBodyThree": {
-    "message": "Cattura lo screenshot di una pagina web, ritaglialo e salvalo online per condividerlo in modo più veloce, oppure scaricalo sul tuo computer. Puoi anche utilizzare il pulsante “I miei screenshot” per ritrovare tutte le immagini che hai salvato."
-  },
-  "tourHeaderFour": {
     "message": "Cattura una finestra o una pagina intera"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Utilizza i pulsanti in alto a destra per catturare una parte della finestra o l’intera pagina."
+  },
+  "tourHeaderFour": {
+    "message": "Come piace a te"
+  },
+  "tourBodyFour": {
+    "message": "Cattura lo screenshot di una pagina web, ritaglialo e salvalo online per condividerlo in modo più veloce, oppure scaricalo sul tuo computer. Puoi anche utilizzare il pulsante “I miei screenshot” per ritrovare tutte le immagini che hai salvato."
   },
   "tourSkip": {
     "message": "Ignora"
