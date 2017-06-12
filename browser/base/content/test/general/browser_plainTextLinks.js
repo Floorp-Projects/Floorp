@@ -129,12 +129,29 @@ add_task(async function() {
       return [rangeRect.x + 3, rangeRect.y + 3];
     });
 
-    let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
-    await BrowserTestUtils.synthesizeMouseAtPoint(menuPosition[0], menuPosition[1],
-          { type: "contextmenu", button: 2 }, gBrowser.selectedBrowser);
+    // Trigger a mouse event until we receive the popupshown event.
+    let sawPopup = false;
+    let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown", false, () => {
+      sawPopup = true;
+      return true;
+    });
+    while (!sawPopup) {
+      await BrowserTestUtils.synthesizeMouseAtPoint(menuPosition[0], menuPosition[1],
+            { type: "contextmenu", button: 2 }, gBrowser.selectedBrowser);
+      if (!sawPopup) {
+        await new Promise(r => setTimeout(r, 100));
+      }
+    }
     await popupShownPromise;
 
     checks[testid]();
+
+    // On Linux non-e10s it's possible the menu was closed by a focus-out event
+    // on the window. Work around this by calling hidePopup only if the menu
+    // hasn't been closed yet. See bug 1352709 comment 36.
+    if (contentAreaContextMenu.state === "closed") {
+      continue;
+    }
 
     let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
     contentAreaContextMenu.hidePopup();
