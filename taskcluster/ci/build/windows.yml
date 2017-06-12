@@ -123,6 +123,7 @@ win64-nightly/opt:
             - builds/taskcluster_firefox_windows_64_opt.py
             - disable_signing.py
             - taskcluster_nightly.py
+    run-on-projects: []
 
 win64/pgo:
     description: "Win64 Opt PGO"
