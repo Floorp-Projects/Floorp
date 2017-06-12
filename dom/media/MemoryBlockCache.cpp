@@ -15,11 +15,33 @@ LazyLogModule gMemoryBlockCacheLog("MemoryBlockCache");
 #define LOG(x, ...)                                                            \
   MOZ_LOG(gMemoryBlockCacheLog, LogLevel::Debug, ("%p " x, this, ##__VA_ARGS__))
 
+enum MemoryBlockCacheTelemetryErrors
+{
+  // Don't change order/numbers! Add new values at the end and update
+  // MEMORYBLOCKCACHE_ERRORS description in Histograms.json.
+  InitUnderuse = 0,
+  InitAllocation = 1,
+  ReadOverrun = 2,
+  WriteBlockOverflow = 3,
+  WriteBlockCannotGrow = 4,
+  MoveBlockSourceOverrun = 5,
+  MoveBlockDestOverflow = 6,
+  MoveBlockCannotGrow = 7,
+};
+
 MemoryBlockCache::MemoryBlockCache(int64_t aContentLength)
   // Buffer whole blocks.
   : mInitialContentLength((aContentLength >= 0) ? size_t(aContentLength) : 0)
   , mMutex("MemoryBlockCache")
+  , mHasGrown(false)
 {
+  if (aContentLength <= 0) {
+    LOG("@%p MemoryBlockCache() "
+        "MEMORYBLOCKCACHE_ERRORS='InitUnderuse'",
+        this);
+    Telemetry::Accumulate(Telemetry::HistogramID::MEMORYBLOCKCACHE_ERRORS,
+                          InitUnderuse);
+  }
 }
 
 MemoryBlockCache::~MemoryBlockCache()
@@ -40,7 +62,11 @@ MemoryBlockCache::EnsureBufferCanContain(size_t aContentLength)
     return true;
   }
   // Need larger buffer, attempt to re-allocate.
-  return mBuffer.SetLength(desiredLength, mozilla::fallible);
+  if (!mBuffer.SetLength(desiredLength, mozilla::fallible)) {
+    return false;
+  }
+  mHasGrown = false;
+  return true;
 }
 
 nsresult
@@ -49,8 +75,15 @@ MemoryBlockCache::Init()
   LOG("@%p Init()", this);
   MutexAutoLock lock(mMutex);
   // Attempt to pre-allocate buffer for expected content length.
-  return EnsureBufferCanContain(mInitialContentLength) ? NS_OK
-                                                       : NS_ERROR_FAILURE;
+  if (!EnsureBufferCanContain(mInitialContentLength)) {
+    LOG("@%p Init() MEMORYBLOCKCACHE_ERRORS='InitAllocation'", this);
+    Telemetry::Accumulate(Telemetry::HistogramID::MEMORYBLOCKCACHE_ERRORS,
+                          InitAllocation);
+    return NS_ERROR_FAILURE;
+  }
+  // Ignore initial growth.
+  mHasGrown = false;
+  return NS_OK;
 }
 
 void
@@ -69,7 +102,20 @@ MemoryBlockCache::WriteBlock(uint32_t aBlockIndex,
   MutexAutoLock lock(mMutex);
 
   size_t offset = BlockIndexToOffset(aBlockIndex);
+  if (offset + aData1.Length() + aData2.Length() > mBuffer.Length() &&
+      !mHasGrown) {
+    LOG("@%p WriteBlock() "
+        "MEMORYBLOCKCACHE_ERRORS='WriteBlockOverflow'",
+        this);
+    Telemetry::Accumulate(Telemetry::HistogramID::MEMORYBLOCKCACHE_ERRORS,
+                          WriteBlockOverflow);
+  }
   if (!EnsureBufferCanContain(offset + aData1.Length() + aData2.Length())) {
+    LOG("%p WriteBlock() "
+        "MEMORYBLOCKCACHE_ERRORS='WriteBlockCannotGrow'",
+        this);
+    Telemetry::Accumulate(Telemetry::HistogramID::MEMORYBLOCKCACHE_ERRORS,
+                          WriteBlockCannotGrow);
     return NS_ERROR_FAILURE;
   }
 
@@ -93,6 +139,9 @@ MemoryBlockCache::Read(int64_t aOffset,
 
   MOZ_ASSERT(aOffset >= 0);
   if (aOffset + aLength > int64_t(mBuffer.Length())) {
+    LOG("@%p Read() MEMORYBLOCKCACHE_ERRORS='ReadOverrun'", this);
+    Telemetry::Accumulate(Telemetry::HistogramID::MEMORYBLOCKCACHE_ERRORS,
+                          ReadOverrun);
     return NS_ERROR_FAILURE;
   }
 
@@ -109,8 +158,27 @@ MemoryBlockCache::MoveBlock(int32_t aSourceBlockIndex, int32_t aDestBlockIndex)
 
   size_t sourceOffset = BlockIndexToOffset(aSourceBlockIndex);
   size_t destOffset = BlockIndexToOffset(aDestBlockIndex);
-  if (sourceOffset + BLOCK_SIZE > mBuffer.Length() ||
-      !EnsureBufferCanContain(destOffset + BLOCK_SIZE)) {
+  if (sourceOffset + BLOCK_SIZE > mBuffer.Length()) {
+    LOG("@%p MoveBlock() "
+        "MEMORYBLOCKCACHE_ERRORS='MoveBlockSourceOverrun'",
+        this);
+    Telemetry::Accumulate(Telemetry::HistogramID::MEMORYBLOCKCACHE_ERRORS,
+                          MoveBlockSourceOverrun);
+    return NS_ERROR_FAILURE;
+  }
+  if (destOffset + BLOCK_SIZE > mBuffer.Length() && !mHasGrown) {
+    LOG("@%p MoveBlock() "
+        "MEMORYBLOCKCACHE_ERRORS='MoveBlockDestOverflow'",
+        this);
+    Telemetry::Accumulate(Telemetry::HistogramID::MEMORYBLOCKCACHE_ERRORS,
+                          MoveBlockDestOverflow);
+  }
+  if (!EnsureBufferCanContain(destOffset + BLOCK_SIZE)) {
+    LOG("@%p MoveBlock() "
+        "MEMORYBLOCKCACHE_ERRORS='MoveBlockCannotGrow'",
+        this);
+    Telemetry::Accumulate(Telemetry::HistogramID::MEMORYBLOCKCACHE_ERRORS,
+                          MoveBlockCannotGrow);
     return NS_ERROR_FAILURE;
   }
 
