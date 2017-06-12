@@ -11,13 +11,13 @@ addEventListener("load", function() {
     /**
      * Display the result, send it to the harness and quit.
      */
-    function finish(msg) {
+    async function finish(msg) {
       console.log(`main.js: received data on ${MSG_PROVIDE}`, msg);
       Services.cpmm.removeMessageListener(MSG_PROVIDE, finish);
       var duration = msg.data.duration;
-      Profiler.pause("This test measures the time between sessionRestoreInit and sessionRestored, ignore everything around that");
-      Profiler.initFromURLQueryParams(location.search);
-      Profiler.finishStartupProfiling();
+      TalosContentProfiler.initFromURLQueryParams(location.search);
+      await TalosContentProfiler.pause("This test measures the time between sessionRestoreInit and sessionRestored, ignore everything around that");
+      await TalosContentProfiler.finishStartupProfiling();
 
       // Show result on screen. Nice but not really necessary.
       document.getElementById("sessionRestoreInit-to-sessionRestored").textContent = duration + "ms";
