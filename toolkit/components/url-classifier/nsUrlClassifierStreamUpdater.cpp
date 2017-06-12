@@ -25,7 +25,6 @@
 #include "nsContentUtils.h"
 #include "nsIURLFormatter.h"
 #include "Classifier.h"
-#include "SBTelemetryUtils.h"
 
 using namespace mozilla::safebrowsing;
 

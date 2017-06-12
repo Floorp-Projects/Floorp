@@ -14,7 +14,6 @@
 #include "nsIFileStreams.h"
 #include "mozilla/RefPtr.h"
 #include "nsUrlClassifierPrefixSet.h"
-#include "SBTelemetryUtils.h"
 #include "VariableLengthPrefixSet.h"
 #include "mozilla/Logging.h"
 #include "mozilla/TypedEnumBits.h"
@@ -30,8 +29,7 @@ class LookupResult {
 public:
   LookupResult() : mNoise(false), mProtocolConfirmed(false),
                    mPartialHashLength(0), mConfirmed(false),
-                   mProtocolV2(true),
-                   mMatchResult(MatchResult::eTelemetryDisabled) {}
+                   mProtocolV2(true) {}
 
   // The fragment that matched in the LookupCache
   union {
@@ -78,10 +76,8 @@ public:
   // True as long as this lookup is complete and hasn't expired.
   bool mConfirmed;
 
+  // TODO : Is this necessary
   bool mProtocolV2;
-
-  // This is only used by telemetry to record the match result.
-  MatchResult mMatchResult;
 };
 
 typedef nsTArray<LookupResult> LookupResultArray;
