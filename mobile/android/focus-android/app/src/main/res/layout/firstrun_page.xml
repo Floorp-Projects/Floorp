@@ -16,12 +16,8 @@
         android:layout_marginTop="4dp"
         android:layout_marginBottom="4dp"
         android:elevation="4dp"
-        cardview:cardCornerRadius="6dp">
-
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:src="@drawable/firstrun_card_background" />
+        cardview:cardCornerRadius="6dp"
+        cardview:cardBackgroundColor="#FFF9F9FA">
 
         <LinearLayout
             android:layout_width="match_parent"
