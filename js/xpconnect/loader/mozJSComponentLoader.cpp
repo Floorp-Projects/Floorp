@@ -424,10 +424,6 @@ mozJSComponentLoader::LoadModule(FileLocation& aFile)
     // Cache this module for later
     mModules.Put(spec, entry);
 
-    // Set the location information for the new global, so that tools like
-    // about:memory may use that information
-    xpc::SetLocationForGlobal(entryObj, spec);
-
     // The hash owns the ModuleEntry now, forget about it
     return entry.forget();
 }
@@ -465,6 +461,7 @@ mozJSComponentLoader::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
 
 void
 mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
+                                         nsACString& aLocation,
                                          JSAddonId* aAddonID,
                                          MutableHandleObject aGlobal)
 {
@@ -507,6 +504,10 @@ mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
         return;
     }
 
+    // Set the location information for the new global, so that tools like
+    // about:memory may use that information
+    xpc::SetLocationForGlobal(global, aLocation);
+
     aGlobal.set(global);
 }
 
@@ -516,9 +517,12 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
                                                nsIURI* aURI,
                                                bool* aRealFile)
 {
+    nsAutoCString nativePath;
+    NS_ENSURE_SUCCESS(aURI->GetSpec(nativePath), nullptr);
+
     RootedObject globalObj(aCx);
 
-    CreateLoaderGlobal(aCx, MapURIToAddonID(aURI), &globalObj);
+    CreateLoaderGlobal(aCx, nativePath, MapURIToAddonID(aURI), &globalObj);
 
     // |thisObj| is the object we set properties on for a particular .jsm.
     // XXX Right now, thisObj is always globalObj, but if we start
@@ -557,10 +561,6 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
                 return nullptr;
         }
     }
-
-    nsAutoCString nativePath;
-    rv = aURI->GetSpec(nativePath);
-    NS_ENSURE_SUCCESS(rv, nullptr);
 
     // Expose the URI from which the script was imported through a special
     // variable that we insert into the JSM.
@@ -990,10 +990,6 @@ mozJSComponentLoader::ImportInto(const nsACString& aLocation,
             // Something failed, but we don't know what it is, guess.
             return NS_ERROR_FILE_NOT_FOUND;
         }
-
-        // Set the location information for the new global, so that tools like
-        // about:memory may use that information
-        xpc::SetLocationForGlobal(newEntry->obj, aLocation);
 
         mod = newEntry;
     }
