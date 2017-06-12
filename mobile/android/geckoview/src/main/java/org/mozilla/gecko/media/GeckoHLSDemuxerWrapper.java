@@ -7,7 +7,6 @@ package org.mozilla.gecko.media;
 
 import android.util.Log;
 
-import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.util.MimeTypes;
 
@@ -158,8 +157,8 @@ public final class GeckoHLSDemuxerWrapper {
     }
 
     @WrapForJNI
-    private GeckoHlsSample[] getSamples(int mediaType, int number) {
-        ConcurrentLinkedQueue<GeckoHlsSample> samples = null;
+    private GeckoHLSSample[] getSamples(int mediaType, int number) {
+        ConcurrentLinkedQueue<GeckoHLSSample> samples = null;
         // getA/VSamples will always return a non-null instance.
         if (mediaType == TrackType.VIDEO.value()) {
             samples = mPlayer.getVideoSamples(number);
@@ -168,7 +167,7 @@ public final class GeckoHLSDemuxerWrapper {
         }
 
         assertTrue(samples.size() <= number);
-        return samples.toArray(new GeckoHlsSample[samples.size()]);
+        return samples.toArray(new GeckoHLSSample[samples.size()]);
     }
 
     @WrapForJNI
