@@ -225,3 +225,12 @@
 #onboarding-tour-private-browsing:hover {
   background-image: url("img/icons_private-colored.svg");
 }
+
+#onboarding-tour-addons {
+  background-image: url("img/icons_addons.svg");
+}
+
+#onboarding-tour-addons.onboarding-active,
+#onboarding-tour-addons:hover {
+  background-image: url("img/icons_addons-colored.svg");
+}
