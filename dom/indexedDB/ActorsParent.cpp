@@ -5994,7 +5994,8 @@ public:
 protected:
   DatabaseOperationBase(const nsID& aBackgroundChildLoggingId,
                         uint64_t aLoggingSerialNumber)
-    : mOwningEventTarget(GetCurrentThreadEventTarget())
+    : Runnable("dom::indexedDB::DatabaseOperationBase")
+    , mOwningEventTarget(GetCurrentThreadEventTarget())
     , mBackgroundChildLoggingId(aBackgroundChildLoggingId)
     , mLoggingSerialNumber(aLoggingSerialNumber)
     , mResultCode(NS_OK)
@@ -6350,7 +6351,8 @@ class WaitForTransactionsHelper final
 public:
   WaitForTransactionsHelper(const nsCString& aDatabaseId,
                             nsIRunnable* aCallback)
-    : mDatabaseId(aDatabaseId)
+    : Runnable("dom::indexedDB::WaitForTransactionsHelper")
+    , mDatabaseId(aDatabaseId)
     , mCallback(aCallback)
     , mState(State::Initial)
   {
@@ -8999,7 +9001,8 @@ public:
                           const nsACString& aOrigin,
                           const nsAString& aDatabaseName,
                           int64_t aFileId)
-    : mPersistenceType(aPersistenceType)
+    : Runnable("dom::indexedDB::GetFileReferencesHelper")
+    , mPersistenceType(aPersistenceType)
     , mOrigin(aOrigin)
     , mDatabaseName(aDatabaseName)
     , mFileId(aFileId)
@@ -9027,6 +9030,9 @@ private:
 class FlushPendingFileDeletionsRunnable final
   : public Runnable
 {
+public:
+  FlushPendingFileDeletionsRunnable() : Runnable("FlushPendingFileDeletionsRunnable") {}
+
 private:
   ~FlushPendingFileDeletionsRunnable() override = default;
 
@@ -9365,7 +9371,8 @@ class Maintenance final
 
 public:
   explicit Maintenance(QuotaClient* aQuotaClient)
-    : mQuotaClient(aQuotaClient)
+    : Runnable("dom::indexedDB::Maintenance")
+    , mQuotaClient(aQuotaClient)
     , mStartTime(PR_Now())
     , mResultCode(NS_OK)
     , mAborted(false)
@@ -9581,7 +9588,8 @@ public:
                       const nsCString& aGroup,
                       const nsCString& aOrigin,
                       const nsString& aDatabasePath)
-    : mMaintenance(aMaintenance)
+    : Runnable("dom::indexedDB::DatabaseMaintenance")
+    , mMaintenance(aMaintenance)
     , mGroup(aGroup)
     , mOrigin(aOrigin)
     , mDatabasePath(aDatabasePath)
@@ -12631,7 +12639,7 @@ ConnectionPool::ShutdownThread(ThreadInfo& aThreadInfo)
                                        NS_DISPATCH_NORMAL));
 
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(
-                        NewRunnableMethod(thread, &nsIThread::Shutdown)));
+                        NewRunnableMethod("nsIThread::Shutdown", thread, &nsIThread::Shutdown)));
 
   mTotalThreadCount--;
 }
@@ -12739,7 +12747,7 @@ ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
         // We need a thread right now so force all idle processing to stop by
         // posting a dummy runnable to each thread that might be doing idle
         // maintenance.
-        nsCOMPtr<nsIRunnable> runnable = new Runnable();
+        nsCOMPtr<nsIRunnable> runnable = new Runnable("IndexedDBDummyRunnable");
 
         for (uint32_t index = mDatabasesPerformingIdleMaintenance.Length();
              index > 0;
@@ -13183,7 +13191,8 @@ ConnectionPool::CloseDatabaseWhenIdleInternal(const nsACString& aDatabaseId)
 
 ConnectionPool::
 ConnectionRunnable::ConnectionRunnable(DatabaseInfo* aDatabaseInfo)
-  : mDatabaseInfo(aDatabaseInfo)
+  : Runnable("dom::indexedDB::ConnectionPool::ConnectionRunnable")
+  , mDatabaseInfo(aDatabaseInfo)
   , mOwningEventTarget(GetCurrentThreadEventTarget())
 {
   AssertIsOnBackgroundThread();
@@ -13345,11 +13354,12 @@ DatabasesCompleteCallback::~DatabasesCompleteCallback()
   MOZ_COUNT_DTOR(ConnectionPool::DatabasesCompleteCallback);
 }
 
-ConnectionPool::
-FinishCallbackWrapper::FinishCallbackWrapper(ConnectionPool* aConnectionPool,
-                                             uint64_t aTransactionId,
-                                             FinishCallback* aCallback)
-  : mConnectionPool(aConnectionPool)
+ConnectionPool::FinishCallbackWrapper::FinishCallbackWrapper(
+  ConnectionPool* aConnectionPool,
+  uint64_t aTransactionId,
+  FinishCallback* aCallback)
+  : Runnable("dom::indexedDB::ConnectionPool::FinishCallbackWrapper")
+  , mConnectionPool(aConnectionPool)
   , mCallback(aCallback)
   , mOwningEventTarget(GetCurrentThreadEventTarget())
   , mTransactionId(aTransactionId)
@@ -13412,9 +13422,9 @@ FinishCallbackWrapper::Run()
 
 uint32_t ConnectionPool::ThreadRunnable::sNextSerialNumber = 0;
 
-ConnectionPool::
-ThreadRunnable::ThreadRunnable()
-  : mSerialNumber(++sNextSerialNumber)
+ConnectionPool::ThreadRunnable::ThreadRunnable()
+  : Runnable("dom::indexedDB::ConnectionPool::ThreadRunnable")
+  , mSerialNumber(++sNextSerialNumber)
   , mFirstRun(true)
   , mContinueRunning(true)
 {
@@ -14477,7 +14487,9 @@ Database::MaybeCloseConnection()
       IsClosed() &&
       mDirectoryLock) {
     nsCOMPtr<nsIRunnable> callback =
-      NewRunnableMethod(this, &Database::ConnectionClosedCallback);
+      NewRunnableMethod("dom::indexedDB::Database::ConnectionClosedCallback",
+                        this,
+                        &Database::ConnectionClosedCallback);
 
     RefPtr<WaitForTransactionsHelper> helper =
       new WaitForTransactionsHelper(Id(), callback);
@@ -22679,8 +22691,10 @@ OpenDatabaseOp::SendResults()
     // Make sure to release the database on this thread.
     mDatabase = nullptr;
   } else if (mDirectoryLock) {
-    nsCOMPtr<nsIRunnable> callback =
-      NewRunnableMethod(this, &OpenDatabaseOp::ConnectionClosedCallback);
+    nsCOMPtr<nsIRunnable> callback = NewRunnableMethod(
+      "dom::indexedDB::OpenDatabaseOp::ConnectionClosedCallback",
+      this,
+      &OpenDatabaseOp::ConnectionClosedCallback);
 
     RefPtr<WaitForTransactionsHelper> helper =
       new WaitForTransactionsHelper(mDatabaseId, callback);

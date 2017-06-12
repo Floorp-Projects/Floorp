@@ -746,7 +746,8 @@ XPCJSRuntime::DoCycleCollectionCallback(JSContext* cx)
     // The GC has detected that a CC at this point would collect a tremendous
     // amount of garbage that is being revivified unnecessarily.
     NS_DispatchToCurrentThread(
-            NS_NewRunnableFunction([](){nsJSContext::CycleCollectNow(nullptr);}));
+      NS_NewRunnableFunction("XPCJSRuntime::DoCycleCollectionCallback",
+                             []() { nsJSContext::CycleCollectNow(nullptr); }));
 
     XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
     if (!self)
@@ -962,9 +963,10 @@ class LargeAllocationFailureRunnable final : public Runnable
 
   public:
     LargeAllocationFailureRunnable()
-      : mMutex("LargeAllocationFailureRunnable::mMutex"),
-        mCondVar(mMutex, "LargeAllocationFailureRunnable::mCondVar"),
-        mWaiting(true)
+      : mozilla::Runnable("LargeAllocationFailureRunnable")
+      , mMutex("LargeAllocationFailureRunnable::mMutex")
+      , mCondVar(mMutex, "LargeAllocationFailureRunnable::mCondVar")
+      , mWaiting(true)
     {
         MOZ_ASSERT(!NS_IsMainThread());
     }

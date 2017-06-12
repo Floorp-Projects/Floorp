@@ -111,7 +111,8 @@ class ClientFocusRunnable final : public Runnable
 
 public:
   ClientFocusRunnable(uint64_t aWindowId, PromiseWorkerProxy* aPromiseProxy)
-    : mWindowId(aWindowId)
+    : mozilla::Runnable("ClientFocusRunnable")
+    , mWindowId(aWindowId)
     , mPromiseProxy(aPromiseProxy)
   {
     MOZ_ASSERT(mPromiseProxy);
@@ -338,10 +339,12 @@ class ClientNavigateRunnable final : public Runnable
   MOZ_INIT_OUTSIDE_CTOR WorkerPrivate* mWorkerPrivate;
 
 public:
-  ClientNavigateRunnable(uint64_t aWindowId, const nsAString& aUrl,
+  ClientNavigateRunnable(uint64_t aWindowId,
+                         const nsAString& aUrl,
                          const nsAString& aScope,
                          PromiseWorkerProxy* aPromiseProxy)
-    : mWindowId(aWindowId)
+    : mozilla::Runnable("ClientNavigateRunnable")
+    , mWindowId(aWindowId)
     , mUrl(aUrl)
     , mScope(aScope)
     , mPromiseProxy(aPromiseProxy)

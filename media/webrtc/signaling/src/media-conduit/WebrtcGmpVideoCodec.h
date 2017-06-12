@@ -80,6 +80,7 @@ class GmpInitDoneRunnable : public Runnable
 {
   public:
     explicit GmpInitDoneRunnable(const std::string& aPCHandle) :
+      Runnable("GmpInitDoneRunnable"),
       mResult(WEBRTC_VIDEO_CODEC_OK),
       mPCHandle(aPCHandle)
     {

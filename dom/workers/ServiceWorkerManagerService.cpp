@@ -109,16 +109,17 @@ ServiceWorkerManagerService::PropagateRegistration(
   // Send permissions fot the newly registered service worker to all of the
   // content processes.
   PrincipalInfo pi = aData.principal();
-  NS_DispatchToMainThread(NS_NewRunnableFunction([pi] () {
-        nsTArray<ContentParent*> cps;
-        ContentParent::GetAll(cps);
-        for (auto* cp : cps) {
-          nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(pi);
-          if (principal) {
-            cp->TransmitPermissionsForPrincipal(principal);
-          }
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+    "dom::workers::ServiceWorkerManagerService::PropagateRegistration", [pi]() {
+      nsTArray<ContentParent*> cps;
+      ContentParent::GetAll(cps);
+      for (auto* cp : cps) {
+        nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(pi);
+        if (principal) {
+          cp->TransmitPermissionsForPrincipal(principal);
         }
-      }));
+      }
+    }));
 
 #ifdef DEBUG
   MOZ_ASSERT(parentFound);

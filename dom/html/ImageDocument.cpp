@@ -493,7 +493,9 @@ ImageDocument::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aDa
   // come during painting and this will trigger invalidation.
   if (aType == imgINotificationObserver::HAS_TRANSPARENCY) {
     nsCOMPtr<nsIRunnable> runnable =
-      NewRunnableMethod(this, &ImageDocument::OnHasTransparency);
+      NewRunnableMethod("dom::ImageDocument::OnHasTransparency",
+                        this,
+                        &ImageDocument::OnHasTransparency);
     nsContentUtils::AddScriptRunner(runnable);
   }
 
@@ -566,7 +568,9 @@ ImageDocument::OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage)
   }
 
   nsCOMPtr<nsIRunnable> runnable =
-    NewRunnableMethod(this, &ImageDocument::DefaultCheckOverflowing);
+    NewRunnableMethod("dom::ImageDocument::DefaultCheckOverflowing",
+                      this,
+                      &ImageDocument::DefaultCheckOverflowing);
   nsContentUtils::AddScriptRunner(runnable);
   UpdateTitleAndCharset();
 

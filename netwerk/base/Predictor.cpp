@@ -615,9 +615,10 @@ namespace {
 class PredictorThreadShutdownRunner : public Runnable
 {
 public:
-  PredictorThreadShutdownRunner(nsIThread *ioThread, bool success)
-    :mIOThread(ioThread)
-    ,mSuccess(success)
+  PredictorThreadShutdownRunner(nsIThread* ioThread, bool success)
+    : Runnable("net::PredictorThreadShutdownRunner")
+    , mIOThread(ioThread)
+    , mSuccess(success)
   { }
   ~PredictorThreadShutdownRunner() { }
 
@@ -640,9 +641,10 @@ private:
 class PredictorOldCleanupRunner : public Runnable
 {
 public:
-  PredictorOldCleanupRunner(nsIThread *ioThread, nsIFile *dbFile)
-    :mIOThread(ioThread)
-    ,mDBFile(dbFile)
+  PredictorOldCleanupRunner(nsIThread* ioThread, nsIFile* dbFile)
+    : Runnable("net::PredictorOldCleanupRunner")
+    , mIOThread(ioThread)
+    , mDBFile(dbFile)
   { }
 
   ~PredictorOldCleanupRunner() { }

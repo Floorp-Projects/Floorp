@@ -4430,8 +4430,10 @@ nsDocument::SetStyleSheetApplicableState(StyleSheet* aSheet,
 
   if (!mSSApplicableStateNotificationPending) {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
-    nsCOMPtr<nsIRunnable> notification = NewRunnableMethod(this,
-      &nsDocument::NotifyStyleSheetApplicableStateChanged);
+    nsCOMPtr<nsIRunnable> notification =
+      NewRunnableMethod("nsDocument::NotifyStyleSheetApplicableStateChanged",
+                        this,
+                        &nsDocument::NotifyStyleSheetApplicableStateChanged);
     mSSApplicableStateNotificationPending =
       NS_SUCCEEDED(
         Dispatch("nsDocument::NotifyStyleSheetApplicableStateChanged",
@@ -5046,7 +5048,9 @@ nsDocument::MaybeEndOutermostXBLUpdate()
     } else if (!mInDestructor) {
       if (!mMaybeEndOutermostXBLUpdateRunner) {
         mMaybeEndOutermostXBLUpdateRunner =
-          NewRunnableMethod(this, &nsDocument::MaybeEndOutermostXBLUpdate);
+          NewRunnableMethod("nsDocument::MaybeEndOutermostXBLUpdate",
+                            this,
+                            &nsDocument::MaybeEndOutermostXBLUpdate);
       }
       nsContentUtils::AddScriptRunner(mMaybeEndOutermostXBLUpdateRunner);
     }
@@ -5377,7 +5381,9 @@ nsDocument::UnblockDOMContentLoaded()
   if (!mSynchronousDOMContentLoaded) {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIRunnable> ev =
-      NewRunnableMethod(this, &nsDocument::DispatchContentLoadedEvents);
+      NewRunnableMethod("nsDocument::DispatchContentLoadedEvents",
+                        this,
+                        &nsDocument::DispatchContentLoadedEvents);
     Dispatch("nsDocument::DispatchContentLoadedEvents", TaskCategory::Other, ev.forget());
   } else {
     DispatchContentLoadedEvents();
@@ -7015,7 +7021,9 @@ nsDocument::NotifyPossibleTitleChange(bool aBoundTitleElement)
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   RefPtr<nsRunnableMethod<nsDocument, void, false>> event =
-    NewNonOwningRunnableMethod(this, &nsDocument::DoNotifyPossibleTitleChange);
+    NewNonOwningRunnableMethod("nsDocument::DoNotifyPossibleTitleChange",
+                               this,
+                               &nsDocument::DoNotifyPossibleTitleChange);
   nsresult rv = Dispatch("nsDocument::DoNotifyPossibleTitleChange",
                          TaskCategory::Other, do_AddRef(event));
   if (NS_SUCCEEDED(rv)) {
@@ -7165,7 +7173,9 @@ nsDocument::InitializeFrameLoader(nsFrameLoader* aLoader)
   mInitializableFrameLoaders.AppendElement(aLoader);
   if (!mFrameLoaderRunner) {
     mFrameLoaderRunner =
-      NewRunnableMethod(this, &nsDocument::MaybeInitializeFinalizeFrameLoaders);
+      NewRunnableMethod("nsDocument::MaybeInitializeFinalizeFrameLoaders",
+                        this,
+                        &nsDocument::MaybeInitializeFinalizeFrameLoaders);
     NS_ENSURE_TRUE(mFrameLoaderRunner, NS_ERROR_OUT_OF_MEMORY);
     nsContentUtils::AddScriptRunner(mFrameLoaderRunner);
   }
@@ -7183,7 +7193,9 @@ nsDocument::FinalizeFrameLoader(nsFrameLoader* aLoader, nsIRunnable* aFinalizer)
   mFrameLoaderFinalizers.AppendElement(aFinalizer);
   if (!mFrameLoaderRunner) {
     mFrameLoaderRunner =
-      NewRunnableMethod(this, &nsDocument::MaybeInitializeFinalizeFrameLoaders);
+      NewRunnableMethod("nsDocument::MaybeInitializeFinalizeFrameLoaders",
+                        this,
+                        &nsDocument::MaybeInitializeFinalizeFrameLoaders);
     NS_ENSURE_TRUE(mFrameLoaderRunner, NS_ERROR_OUT_OF_MEMORY);
     nsContentUtils::AddScriptRunner(mFrameLoaderRunner);
   }
@@ -7207,7 +7219,9 @@ nsDocument::MaybeInitializeFinalizeFrameLoaders()
         (mInitializableFrameLoaders.Length() ||
          mFrameLoaderFinalizers.Length())) {
       mFrameLoaderRunner =
-        NewRunnableMethod(this, &nsDocument::MaybeInitializeFinalizeFrameLoaders);
+        NewRunnableMethod("nsDocument::MaybeInitializeFinalizeFrameLoaders",
+                          this,
+                          &nsDocument::MaybeInitializeFinalizeFrameLoaders);
       nsContentUtils::AddScriptRunner(mFrameLoaderRunner);
     }
     return;
@@ -8784,8 +8798,8 @@ nsDocument::BlockOnload()
       // block onload only when there are no script blockers.
       ++mAsyncOnloadBlockCount;
       if (mAsyncOnloadBlockCount == 1) {
-        nsContentUtils::AddScriptRunner(
-          NewRunnableMethod(this, &nsDocument::AsyncBlockOnload));
+        nsContentUtils::AddScriptRunner(NewRunnableMethod(
+          "nsDocument::AsyncBlockOnload", this, &nsDocument::AsyncBlockOnload));
       }
       return;
     }
@@ -8842,7 +8856,11 @@ nsDocument::UnblockOnload(bool aFireSync)
 
 class nsUnblockOnloadEvent : public Runnable {
 public:
-  explicit nsUnblockOnloadEvent(nsDocument* aDoc) : mDoc(aDoc) {}
+  explicit nsUnblockOnloadEvent(nsDocument* aDoc)
+    : mozilla::Runnable("nsUnblockOnloadEvent")
+    , mDoc(aDoc)
+  {
+  }
   NS_IMETHOD Run() override {
     mDoc->DoUnblockOnload();
     return NS_OK;
@@ -9724,6 +9742,7 @@ class nsDelayedEventDispatcher : public Runnable
 {
 public:
   explicit nsDelayedEventDispatcher(nsTArray<nsCOMPtr<nsIDocument>>& aDocuments)
+    : mozilla::Runnable("nsDelayedEventDispatcher")
   {
     mDocuments.SwapElements(aDocuments);
   }
@@ -9970,7 +9989,9 @@ nsIDocument::RegisterPendingLinkUpdate(Link* aLink)
 
   if (!mHasLinksToUpdateRunnable) {
     nsCOMPtr<nsIRunnable> event =
-      NewRunnableMethod(this, &nsIDocument::FlushPendingLinkUpdatesFromRunnable);
+      NewRunnableMethod("nsIDocument::FlushPendingLinkUpdatesFromRunnable",
+                        this,
+                        &nsIDocument::FlushPendingLinkUpdatesFromRunnable);
     // Do this work in a second in the worst case.
     nsresult rv =
       NS_IdleDispatchToCurrentThread(event.forget(), 1000);
@@ -10892,7 +10913,10 @@ class nsCallExitFullscreen : public Runnable
 {
 public:
   explicit nsCallExitFullscreen(nsIDocument* aDoc)
-    : mDoc(aDoc) {}
+    : mozilla::Runnable("nsCallExitFullscreen")
+    , mDoc(aDoc)
+  {
+  }
 
   NS_IMETHOD Run() override final
   {
@@ -10972,7 +10996,10 @@ class ExitFullscreenScriptRunnable : public Runnable
 {
 public:
   explicit ExitFullscreenScriptRunnable(nsCOMArray<nsIDocument>&& aDocuments)
-    : mDocuments(Move(aDocuments)) { }
+    : mozilla::Runnable("ExitFullscreenScriptRunnable")
+    , mDocuments(Move(aDocuments))
+  {
+  }
 
   NS_IMETHOD Run() override
   {
@@ -11166,7 +11193,10 @@ class nsCallRequestFullScreen : public Runnable
 {
 public:
   explicit nsCallRequestFullScreen(UniquePtr<FullscreenRequest>&& aRequest)
-    : mRequest(Move(aRequest)) { }
+    : mozilla::Runnable("nsCallRequestFullScreen")
+    , mRequest(Move(aRequest))
+  {
+  }
 
   NS_IMETHOD Run() override
   {
@@ -11896,7 +11926,8 @@ class PointerLockRequest final : public Runnable
 {
 public:
   PointerLockRequest(Element* aElement, bool aUserInputOrChromeCaller)
-    : mElement(do_GetWeakReference(aElement))
+    : mozilla::Runnable("PointerLockRequest")
+    , mElement(do_GetWeakReference(aElement))
     , mDocument(do_GetWeakReference(aElement->OwnerDoc()))
     , mUserInputOrChromeCaller(aUserInputOrChromeCaller)
   {}
@@ -12247,7 +12278,9 @@ nsDocument::GetVisibilityState() const
 nsDocument::PostVisibilityUpdateEvent()
 {
   nsCOMPtr<nsIRunnable> event =
-    NewRunnableMethod(this, &nsDocument::UpdateVisibilityState);
+    NewRunnableMethod("nsDocument::UpdateVisibilityState",
+                      this,
+                      &nsDocument::UpdateVisibilityState);
   Dispatch("nsDocument::UpdateVisibilityState", TaskCategory::Other, event.forget());
 }
 
@@ -12787,7 +12820,9 @@ nsDocument::ScheduleIntersectionObserverNotification()
   }
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIRunnable> notification =
-    NewRunnableMethod(this, &nsDocument::NotifyIntersectionObservers);
+    NewRunnableMethod("nsDocument::NotifyIntersectionObservers",
+                      this,
+                      &nsDocument::NotifyIntersectionObservers);
   Dispatch("nsDocument::IntersectionObserverNotification", TaskCategory::Other,
            notification.forget());
 }
@@ -13077,7 +13112,9 @@ nsIDocument::RebuildUserFontSet()
   if (!mPostedFlushUserFontSet) {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIRunnable> ev =
-      NewRunnableMethod(this, &nsIDocument::HandleRebuildUserFontSet);
+      NewRunnableMethod("nsIDocument::HandleRebuildUserFontSet",
+                        this,
+                        &nsIDocument::HandleRebuildUserFontSet);
     if (NS_SUCCEEDED(Dispatch("nsIDocument::HandleRebuildUserFontSet",
                               TaskCategory::Other, ev.forget()))) {
       mPostedFlushUserFontSet = true;

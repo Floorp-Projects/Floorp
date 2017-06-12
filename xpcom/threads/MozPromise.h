@@ -380,7 +380,9 @@ protected:
     {
     public:
       ResolveOrRejectRunnable(ThenValueBase* aThenValue, MozPromise* aPromise)
-        : mThenValue(aThenValue)
+        : CancelableRunnable(
+            "MozPromise::ThenValueBase::ResolveOrRejectRunnable")
+        , mThenValue(aThenValue)
         , mPromise(aPromise)
       {
         MOZ_DIAGNOSTIC_ASSERT(!mPromise->IsPending());
@@ -1378,9 +1380,14 @@ template<typename PromiseType, typename MethodType, typename ThisType,
 class ProxyRunnable : public CancelableRunnable
 {
 public:
-  ProxyRunnable(typename PromiseType::Private* aProxyPromise,
-                MethodCall<PromiseType, MethodType, ThisType, Storages...>* aMethodCall)
-    : mProxyPromise(aProxyPromise), mMethodCall(aMethodCall) {}
+  ProxyRunnable(
+    typename PromiseType::Private* aProxyPromise,
+    MethodCall<PromiseType, MethodType, ThisType, Storages...>* aMethodCall)
+    : CancelableRunnable("detail::ProxyRunnable")
+    , mProxyPromise(aProxyPromise)
+    , mMethodCall(aMethodCall)
+  {
+  }
 
   NS_IMETHOD Run() override
   {
@@ -1489,11 +1496,14 @@ class ProxyFunctionRunnable : public CancelableRunnable
 {
   typedef typename Decay<Function>::Type FunctionStorage;
 public:
-  template <typename F>
+  template<typename F>
   ProxyFunctionRunnable(typename PromiseType::Private* aProxyPromise,
                         F&& aFunction)
-    : mProxyPromise(aProxyPromise)
-    , mFunction(new FunctionStorage(Forward<F>(aFunction))) {}
+    : CancelableRunnable("detail::ProxyFunctionRunnable")
+    , mProxyPromise(aProxyPromise)
+    , mFunction(new FunctionStorage(Forward<F>(aFunction)))
+  {
+  }
 
   NS_IMETHOD Run() override
   {

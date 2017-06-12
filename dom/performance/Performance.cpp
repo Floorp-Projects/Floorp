@@ -516,7 +516,8 @@ class NotifyObserversTask final : public CancelableRunnable
 {
 public:
   explicit NotifyObserversTask(Performance* aPerformance)
-    : mPerformance(aPerformance)
+    : CancelableRunnable("dom::NotifyObserversTask")
+    , mPerformance(aPerformance)
   {
     MOZ_ASSERT(mPerformance);
   }
