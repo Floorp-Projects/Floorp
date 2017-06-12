@@ -145,6 +145,7 @@ private:
   DECL_MEDIA_PREF("media.decoder.fuzzing.video-output-minimum-interval-ms", PDMFuzzingInterval, uint32_t, 0);
   DECL_MEDIA_PREF("media.decoder.fuzzing.dont-delay-inputexhausted", PDMFuzzingDelayInputExhausted, bool, true);
   DECL_MEDIA_PREF("media.decoder.recycle.enabled",            MediaDecoderCheckRecycling, bool, false);
+  DECL_MEDIA_PREF("media.decoder.skip-to-next-key-frame.enabled", MFRSkipToNextKeyFrameEnabled, bool, true);
   DECL_MEDIA_PREF("media.gmp.decoder.enabled",                PDMGMPEnabled, bool, true);
   DECL_MEDIA_PREF("media.gmp.decoder.aac",                    GMPAACPreferred, uint32_t, 0);
   DECL_MEDIA_PREF("media.gmp.decoder.h264",                   GMPH264Preferred, uint32_t, 0);
