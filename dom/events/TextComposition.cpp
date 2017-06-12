@@ -70,8 +70,17 @@ TextComposition::TextComposition(nsPresContext* aPresContext,
       Preferences::GetBool("dom.compositionevent.allow_control_characters",
                            false))
   , mWasCompositionStringEmpty(true)
+  , mHasDispatchedCompositionEvents(false)
 {
   MOZ_ASSERT(aCompositionEvent->mNativeIMEContext.IsValid());
+}
+
+TextComposition::~TextComposition()
+{
+  // WARNING: mPresContext may be destroying, so, be careful if you touch it.
+  if (NS_WARN_IF(mTabParent)) {
+    Destroy();
+  }
 }
 
 void
@@ -79,7 +88,12 @@ TextComposition::Destroy()
 {
   mPresContext = nullptr;
   mNode = nullptr;
-  mTabParent = nullptr;
+  if (mTabParent) {
+    RefPtr<TabParent> tabParent = mTabParent.forget();
+    if (mHasDispatchedCompositionEvents) {
+      tabParent->OnDestroyTextComposition();
+    }
+  }
   // TODO: If the editor is still alive and this is held by it, we should tell
   //       this being destroyed for cleaning up the stuff.
 }
@@ -151,6 +165,7 @@ TextComposition::DispatchEvent(WidgetCompositionEvent* aDispatchEvent,
   nsPluginInstanceOwner::GeneratePluginEvent(aOriginalEvent,
                                              aDispatchEvent);
 
+  mHasDispatchedCompositionEvents = true;
   EventDispatcher::Dispatch(mNode, mPresContext,
                             aDispatchEvent, nullptr, aStatus, aCallBack);
 
@@ -249,6 +264,7 @@ TextComposition::DispatchCompositionEvent(
   // If the content is a container of TabParent, composition should be in the
   // remote process.
   if (mTabParent) {
+    mHasDispatchedCompositionEvents = true;
     Unused << mTabParent->SendCompositionEvent(*aCompositionEvent);
     aCompositionEvent->StopPropagation();
     if (aCompositionEvent->CausesDOMTextEvent()) {
