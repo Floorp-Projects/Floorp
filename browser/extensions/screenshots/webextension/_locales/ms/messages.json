@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Anda tidak boleh mengambil gambar halaman Firefox Screenshots!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "Pilihan anda terlalu kecil"
+  },
   "genericErrorTitle": {
     "message": "Oh tidak! Firefox Screenshot tidak berfungsi dengan betul."
   },
@@ -80,16 +83,16 @@
     "message": "Klik dan seret untuk mengambil gambar sebahagian daripada halaman. Anda boleh juga serlahkan pilihan anda."
   },
   "tourHeaderThree": {
-    "message": "Seperti Yang Anda Suka"
-  },
-  "tourBodyThree": {
-    "message": "Simpan rakaman yang dipotong ke Web, cara yang lebih mudah untuk berkongsi, atau memuatturunnya ke komputer anda. Anda juga boleh klik pada butang Shot Saya untuk mencari semua rakaman yang telah diambil."
-  },
-  "tourHeaderFour": {
     "message": "Tangkap Tetingkap atau Keseluruhan Halaman"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Pilih butang di bahagian atas kanan untuk merakam kawasan paparan dalam tetingkap atau untuk merakamkan keseluruhan halaman."
+  },
+  "tourHeaderFour": {
+    "message": "Seperti Yang Anda Suka"
+  },
+  "tourBodyFour": {
+    "message": "Simpan rakaman yang dipotong ke Web, cara yang lebih mudah untuk berkongsi, atau memuatturunnya ke komputer anda. Anda juga boleh klik pada butang Shot Saya untuk mencari semua rakaman yang telah diambil."
   },
   "tourSkip": {
     "message": "Langkau"

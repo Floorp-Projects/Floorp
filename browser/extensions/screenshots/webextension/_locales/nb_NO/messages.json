@@ -12,7 +12,7 @@
     "message": "Mine skjermbilder"
   },
   "screenshotInstructions": {
-    "message": "Dra eller klikk på siden for å velge en region. Trykk på ESC for å avbryte."
+    "message": "Dra eller klikk på siden for å velge et område. Trykk på ESC for å avbryte."
   },
   "saveScreenshotSelectedArea": {
     "message": "Lagre"
@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Du kan ikke ta skjermbilde av siden Firefox Screenshots!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "Det valgte området er for liten"
+  },
   "genericErrorTitle": {
     "message": "Oi! Det ser ut til at Firefox Screenshots ikke fungerer korrekt."
   },
@@ -80,16 +83,16 @@
     "message": "Klikk for å dra og ta skjermbilde av bare en del av siden. Du kan også føre musen over for å framheve merket område."
   },
   "tourHeaderThree": {
-    "message": "Som du vil ha det"
-  },
-  "tourBodyThree": {
-    "message": "Lagre de beskjærte skjermbildene dine på nettet for enklere deling, eller last de ned til din datamaskin. Du kan også klikke på knappen Mine skjermbilde for å finne alle skjermbildene du har tatt."
-  },
-  "tourHeaderFour": {
     "message": "Ta skjermbilde av vinduer eller hele sider."
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Bruk knappene i det øvre høyre hjørnet for å ta skjermbilde av det synlige området i vinduet eller for å ta skjermbilde av en hel side."
+  },
+  "tourHeaderFour": {
+    "message": "Som du vil ha det"
+  },
+  "tourBodyFour": {
+    "message": "Lagre de beskjærte skjermbildene dine på nettet for enklere deling, eller last de ned til din datamaskin. Du kan også klikke på knappen Mine skjermbilde for å finne alle skjermbildene du har tatt."
   },
   "tourSkip": {
     "message": "Hopp over"
