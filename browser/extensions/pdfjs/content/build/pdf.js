@@ -2409,7 +2409,7 @@ function getDocument(src, pdfDataRangeTransport, passwordCallback, progressCallb
   }
   if (!worker) {
     var workerPort = (0, _dom_utils.getDefaultSetting)('workerPort');
-    worker = workerPort ? new PDFWorker(null, workerPort) : new PDFWorker();
+    worker = workerPort ? PDFWorker.fromPort(workerPort) : new PDFWorker();
     task._worker = worker;
   }
   var docId = task.docId;
@@ -2887,7 +2887,7 @@ class LoopbackPort {
   }
 }
 var PDFWorker = function PDFWorkerClosure() {
-  var nextFakeWorkerId = 0;
+  let nextFakeWorkerId = 0;
   function getWorkerSrc() {
     if (typeof workerSrc !== 'undefined') {
       return workerSrc;
@@ -2897,7 +2897,7 @@ var PDFWorker = function PDFWorkerClosure() {
     }
     (0, _util.error)('No PDFJS.workerSrc specified');
   }
-  var fakeWorkerFilesLoadedCapability;
+  let fakeWorkerFilesLoadedCapability;
   function setupFakeWorkerGlobal() {
     var WorkerMessageHandler;
     if (fakeWorkerFilesLoadedCapability) {
@@ -2916,7 +2916,11 @@ var PDFWorker = function PDFWorkerClosure() {
     var wrapper = 'importScripts(\'' + url + '\');';
     return URL.createObjectURL(new Blob([wrapper]));
   }
+  let pdfWorkerPorts = new WeakMap();
   function PDFWorker(name, port) {
+    if (pdfWorkerPorts.has(port)) {
+      throw new Error('Cannot use more than one PDFWorker per port');
+    }
     this.name = name;
     this.destroyed = false;
     this._readyCapability = (0, _util.createPromiseCapability)();
@@ -2924,6 +2928,7 @@ var PDFWorker = function PDFWorkerClosure() {
     this._webWorker = null;
     this._messageHandler = null;
     if (port) {
+      pdfWorkerPorts.set(port, this);
       this._initializeFromPort(port);
       return;
     }
@@ -3059,6 +3064,12 @@ var PDFWorker = function PDFWorkerClosure() {
         this._messageHandler = null;
       }
     }
+  };
+  PDFWorker.fromPort = function (port) {
+    if (pdfWorkerPorts.has(port)) {
+      return pdfWorkerPorts.get(port);
+    }
+    return new PDFWorker(null, port);
   };
   return PDFWorker;
 }();
@@ -3631,8 +3642,8 @@ var _UnsupportedManager = function UnsupportedManagerClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '1.8.432';
-  exports.build = build = '93420545';
+  exports.version = version = '1.8.439';
+  exports.build = build = '08c64371';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -4634,8 +4645,8 @@ if (!_util.globalScope.PDFJS) {
 }
 var PDFJS = _util.globalScope.PDFJS;
 {
-  PDFJS.version = '1.8.432';
-  PDFJS.build = '93420545';
+  PDFJS.version = '1.8.439';
+  PDFJS.build = '08c64371';
 }
 PDFJS.pdfBug = false;
 if (PDFJS.verbosity !== undefined) {
@@ -9876,7 +9887,7 @@ var TilingPattern = function TilingPatternClosure() {
   function TilingPattern(IR, color, ctx, canvasGraphicsFactory, baseTransform) {
     this.operatorList = IR[2];
     this.matrix = IR[3] || [1, 0, 0, 1, 0, 0];
-    this.bbox = _util.Util.normalizeRect(IR[4]);
+    this.bbox = IR[4];
     this.xstep = IR[5];
     this.ystep = IR[6];
     this.paintType = IR[7];
@@ -9982,8 +9993,8 @@ exports.TilingPattern = TilingPattern;
 "use strict";
 
 
-var pdfjsVersion = '1.8.432';
-var pdfjsBuild = '93420545';
+var pdfjsVersion = '1.8.439';
+var pdfjsBuild = '08c64371';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayGlobal = __w_pdfjs_require__(8);
 var pdfjsDisplayAPI = __w_pdfjs_require__(3);
