@@ -1255,7 +1255,7 @@ var gViewController = {
     cmd_showItemPreferences: {
       isEnabled(aAddon) {
         if (!aAddon ||
-            (!aAddon.isActive && !aAddon.isGMPlugin) ||
+            (!aAddon.isActive && aAddon.type !== "plugin") ||
             !aAddon.optionsURL) {
           return false;
         }
