@@ -17,6 +17,7 @@
 
 #include "gc/Barrier.h"
 #include "gc/Heap.h"
+#include "gc/Cell.h"
 #include "gc/Rooting.h"
 #include "js/CharacterEncoding.h"
 #include "js/RootingAPI.h"
@@ -153,7 +154,7 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
  * at least X (e.g., ensureLinear will change a JSRope to be a JSFlatString).
  */
 
-class JSString : public js::gc::TenuredCell
+class JSString : public js::gc::Cell
 {
   protected:
     static const size_t NUM_INLINE_CHARS_LATIN1   = 2 * sizeof(void*) / sizeof(JS::Latin1Char);
@@ -525,6 +526,37 @@ class JSString : public js::gc::TenuredCell
 
     static const JS::TraceKind TraceKind = JS::TraceKind::String;
 
+    JS::Zone* zone() const {
+            return asTenured().zone();
+    }
+
+    // Implement TenuredZone members needed for template instantiations.
+
+    JS::Zone* zoneFromAnyThread() const {
+            return asTenured().zoneFromAnyThread();
+    }
+
+    void fixupAfterMovingGC() {}
+
+    js::gc::AllocKind getAllocKind() const {
+        using js::gc::AllocKind;
+        AllocKind kind;
+        if (isAtom())
+            if (isFatInline())
+                kind = AllocKind::FAT_INLINE_ATOM;
+            else
+                kind = AllocKind::ATOM;
+        else if (isFatInline())
+            kind = AllocKind::FAT_INLINE_STRING;
+        else if (isExternal())
+            kind = AllocKind::EXTERNAL_STRING;
+        else
+            kind = AllocKind::STRING;
+
+        MOZ_ASSERT_IF(isTenured(), kind == asTenured().getAllocKind());
+        return kind;
+    }
+
 #ifdef DEBUG
     void dump(); // Debugger-friendly stderr dump.
     void dump(js::GenericPrinter& out);
@@ -545,15 +577,17 @@ class JSString : public js::gc::TenuredCell
         if (thing->isPermanentAtom())
             return;
 
-        TenuredCell::readBarrier(thing);
+        js::gc::TenuredCell::readBarrier(&thing->asTenured());
     }
 
     static MOZ_ALWAYS_INLINE void writeBarrierPre(JSString* thing) {
         if (!thing || thing->isPermanentAtom())
             return;
 
-        TenuredCell::writeBarrierPre(thing);
+        js::gc::TenuredCell::writeBarrierPre(&thing->asTenured());
     }
+
+    static void writeBarrierPost(void* ptr, JSString* prev, JSString* next) {};
 
   private:
     JSString() = delete;
@@ -1565,6 +1599,24 @@ JSAtom::asPropertyName()
     MOZ_ASSERT(!isIndex(&dummy));
 #endif
     return static_cast<js::PropertyName*>(this);
+}
+
+namespace js {
+namespace gc {
+template<>
+inline JSString*
+Cell::as<JSString>() {
+    MOZ_ASSERT(is<JSString>());
+    return reinterpret_cast<JSString*>(this);
+}
+
+template<>
+inline JSString*
+TenuredCell::as<JSString>() {
+    MOZ_ASSERT(is<JSString>());
+    return reinterpret_cast<JSString*>(this);
+}
+}
 }
 
 #endif /* vm_String_h */
