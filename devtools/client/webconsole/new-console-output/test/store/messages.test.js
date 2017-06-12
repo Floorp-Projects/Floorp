@@ -489,13 +489,13 @@ describe("Message reducer:", () => {
       let networkUpdates = getAllNetworkMessagesUpdateById(getState());
       expect(Object.keys(networkUpdates).length).toBe(0);
 
-      let updatePacket = stubPackets.get("GET request eventTimings");
+      let updatePacket = stubPackets.get("GET request update");
       dispatch(actions.networkMessageUpdate(updatePacket));
 
       networkUpdates = getAllNetworkMessagesUpdateById(getState());
       expect(Object.keys(networkUpdates).length).toBe(1);
 
-      let xhrUpdatePacket = stubPackets.get("XHR GET request eventTimings");
+      let xhrUpdatePacket = stubPackets.get("XHR GET request update");
       dispatch(actions.networkMessageUpdate(xhrUpdatePacket));
 
       networkUpdates = getAllNetworkMessagesUpdateById(getState());
@@ -507,7 +507,7 @@ describe("Message reducer:", () => {
         "XHR GET request"
       ]);
 
-      const updatePacket = stubPackets.get("XHR GET request eventTimings");
+      const updatePacket = stubPackets.get("XHR GET request update");
       dispatch(actions.networkMessageUpdate(updatePacket));
 
       let networkUpdates = getAllNetworkMessagesUpdateById(getState());
