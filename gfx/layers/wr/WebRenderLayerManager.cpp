@@ -6,6 +6,7 @@
 #include "WebRenderLayerManager.h"
 
 #include "gfxPrefs.h"
+#include "GeckoProfiler.h"
 #include "LayersLogging.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/StackingContextHelper.h"
@@ -179,6 +180,7 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
                                               void* aCallbackData,
                                               EndTransactionFlags aFlags)
 {
+  GeckoProfilerTracingRAII tracer("Paint", "RenderLayers");
   mPaintedLayerCallback = aCallback;
   mPaintedLayerCallbackData = aCallbackData;
   mTransactionIncomplete = false;
@@ -226,7 +228,11 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   bool sync = mTarget != nullptr;
   mLatestTransactionId = mTransactionIdAllocator->GetTransactionId();
 
-  WrBridge()->DPEnd(builder, size.ToUnknownSize(), sync, mLatestTransactionId, scrollData);
+  {
+    GeckoProfilerTracingRAII
+      tracer("Paint", sync ? "ForwardDPTransactionSync":"ForwardDPTransaction");
+    WrBridge()->DPEnd(builder, size.ToUnknownSize(), sync, mLatestTransactionId, scrollData);
+  }
 
   MakeSnapshotIfRequired(size);
   mNeedsComposite = false;

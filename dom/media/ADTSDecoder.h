@@ -17,8 +17,8 @@ class ADTSDecoder : public MediaDecoder
 {
 public:
   // MediaDecoder interface.
-  explicit ADTSDecoder(MediaDecoderOwner* aOwner) : MediaDecoder(aOwner) {}
-  MediaDecoder* Clone(MediaDecoderOwner* aOwner) override;
+  explicit ADTSDecoder(MediaDecoderInit& aInit) : MediaDecoder(aInit) {}
+  MediaDecoder* Clone(MediaDecoderInit& aInit) override;
   MediaDecoderStateMachine* CreateStateMachine() override;
 
   // Returns true if the ADTS backend is pref'ed on, and we're running on a
