@@ -4,128 +4,182 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
+Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/error.js");
 
-const logger = Log.repository.getLogger("Marionette");
-
-this.EXPORTED_SYMBOLS = ["Cookies"];
+this.EXPORTED_SYMBOLS = ["cookie"];
 
 const IPV4_PORT_EXPR = /:\d+$/;
 
+this.cookie = {
+  manager: Services.cookies,
+};
+
 /**
- * Interface for manipulating cookies from content space.
+ * Unmarshal a JSON Object to a cookie representation.
+ *
+ * Effectively this will run validation checks on |json|, which will
+ * produce the errors expected by WebDriver if the input is not valid.
+ *
+ * @param {Map.<string, (number|boolean|string)> json
+ *     Cookie to be deserialised.  |name| and |value| are required fields
+ *     which must be strings.  The |path| field is optional, but must
+ *     be a string if provided.  The |secure|, |httpOnly|, and |session|
+ *     fields are similarly optional, but must be booleans.  Likewise,
+ *     the |expiry| field is optional but must be unsigned integer.
+ *
+ * @return {Map.<string, (number|boolean|string)>
+ *     Valid cookie object.
+ *
+ * @throws {InvalidArgumentError}
+ *     If any of the properties are invalid.
  */
-this.Cookies = class {
+cookie.fromJSON = function (json) {
+  let newCookie = {};
 
-  /**
-   * @param {function(): Document} documentFn
-   *     Closure that returns the current content document.
-   * @param {Proxy(SyncChromeSender)} chromeProxy
-   *     A synchronous proxy interface to chrome space.
-   */
-  constructor(documentFn, chromeProxy) {
-    this.documentFn_ = documentFn;
-    this.chrome = chromeProxy;
+  assert.object(json, error.pprint`Expected cookie object, got ${json}`);
+
+  newCookie.name = assert.string(json.name, "Cookie name must be string");
+  newCookie.value = assert.string(json.value, "Cookie value must be string");
+
+  if (typeof json.path != "undefined") {
+    newCookie.path = assert.string(json.path, "Cookie path must be string");
+  }
+  if (typeof json.secure != "undefined") {
+    newCookie.secure = assert.boolean(json.secure, "Cookie secure flag must be boolean");
+  }
+  if (typeof json.httpOnly != "undefined") {
+    newCookie.httpOnly = assert.boolean(json.httpOnly, "Cookie httpOnly flag must be boolean");
+  }
+  if (typeof json.session != "undefined") {
+    newCookie.session = assert.boolean(json.session, "Cookie session flag must be boolean");
+  }
+  if (typeof json.expiry != "undefined") {
+    newCookie.expiry = assert.positiveInteger(json.expiry, "Cookie expiry must be a positive integer");
   }
 
-  get document() {
-    return this.documentFn_();
+  return newCookie;
+};
+
+/**
+ * Insert cookie to the cookie store.
+ *
+ * @param {Map.<string, (string|number|boolean)} newCookie
+ *     Cookie to add.
+ * @param {Map.<string, ?>} opts
+ *     Optional parameters:
+ *
+ *       restrictToHost (string)
+ *         Perform test that |newCookie|'s domain matches this.
+ *
+ * @throws {TypeError}
+ *     If |name|, |value|, or |domain| are not present and of the
+ *     correct type.
+ * @throws {InvalidCookieDomainError}
+ *     If |restrictToHost| is set and |newCookie|'s domain does not match.
+ */
+cookie.add = function (newCookie, opts = {}) {
+  assert.string(newCookie.name, "Cookie name must be string");
+  assert.string(newCookie.value, "Cookie value must be string");
+  assert.string(newCookie.domain, "Cookie domain must be string");
+
+  if (typeof newCookie.path == "undefined") {
+    newCookie.path = "/";
   }
 
-  [Symbol.iterator]() {
-    let path = this.document.location.pathname || "/";
-    let cs = this.chrome.getVisibleCookies(path, this.document.location.hostname)[0];
-    return cs[Symbol.iterator]();
+  if (typeof newCookie.expiry == "undefined") {
+    // twenty years into the future
+    let date = new Date();
+    let now = new Date(Date.now());
+    date.setYear(now.getFullYear() + 20);
+    newCookie.expiry = date.getTime() / 1000;
   }
 
-  /**
-   * Add a new cookie to a content document.
-   *
-   * @param {string} name
-   *     Cookie key.
-   * @param {string} value
-   *     Cookie value.
-   * @param {Object.<string, ?>} opts
-   *     An object with the optional fields {@code domain}, {@code path},
-   *     {@code secure}, {@code httpOnly}, and {@code expiry}.
-   *
-   * @return {Object.<string, ?>}
-   *     A serialisation of the cookie that was added.
-   *
-   * @throws UnableToSetCookieError
-   *     If the document's content type isn't HTML, the current document's
-   *     domain is a mismatch to the cookie's provided domain, or there
-   *     otherwise was issues with the input data.
-   */
-  add(name, value, opts={}) {
-    if (typeof this.document == "undefined" || !this.document.contentType.match(/html/i)) {
-      throw new UnableToSetCookieError(
-          "You may only set cookies on HTML documents: " + this.document.contentType);
-    }
+  if (opts.restrictToHost) {
+    assert.in("restrictToHost", opts,
+        "Missing cookie domain for host restriction test");
 
-    if (!opts.expiry) {
-      // date twenty years into future, in seconds
-      let date = new Date();
-      let now = new Date(Date.now());
-      date.setYear(now.getFullYear() + 20);
-      opts.expiry = date.getTime() / 1000;
-    }
-
-    if (!opts.domain) {
-      opts.domain = this.document.location.host;
-    } else if (this.document.location.host.indexOf(opts.domain) < 0) {
+    if (newCookie.domain !== opts.restrictToHost) {
       throw new InvalidCookieDomainError(
-          "You may only set cookies for the current domain");
+          `Cookies may only be set for the current domain (${opts.restrictToHost})`);
     }
-
-    // remove port from domain, if present.
-    // unfortunately this catches IPv6 addresses by mistake
-    // TODO: Bug 814416
-    opts.domain = opts.domain.replace(IPV4_PORT_EXPR, "");
-
-    let cookie = {
-      domain: opts.domain,
-      path: opts.path,
-      name: name,
-      value: value,
-      secure: opts.secure,
-      httpOnly: opts.httpOnly,
-      session: false,
-      expiry: opts.expiry,
-    };
-    if (!this.chrome.addCookie(cookie)) {
-      throw new UnableToSetCookieError();
-    }
-
-    return cookie;
   }
 
-  /**
-   * Delete cookie by reference or by name.
-   *
-   * @param {(string|Object.<string, ?>)} cookie
-   *     Name of cookie or cookie object.
-   *
-   * @throws {UnknownError}
-   *     If unable to delete the cookie.
-   */
-  delete(cookie) {
-    let name;
-    if (cookie.hasOwnProperty("name")) {
-      name = cookie.name;
-    } else {
-      name = cookie;
-    }
+  // remove port from domain, if present.
+  // unfortunately this catches IPv6 addresses by mistake
+  // TODO: Bug 814416
+  newCookie.domain = newCookie.domain.replace(IPV4_PORT_EXPR, "");
 
-    for (let candidate of this) {
-      if (candidate.name == name) {
-        if (!this.chrome.deleteCookie(candidate)) {
-          throw new UnknownError("Unable to delete cookie by name: " + name);
-        }
+  cookie.manager.add(
+      newCookie.domain,
+      newCookie.path,
+      newCookie.name,
+      newCookie.value,
+      newCookie.secure,
+      newCookie.httpOnly,
+      newCookie.session,
+      newCookie.expiry,
+      {} /* origin attributes */);
+};
+
+/**
+ * Remove cookie from the cookie store.
+ *
+ * @param {Map.<string, (string|number|boolean)} toDelete
+ *     Cookie to remove.
+ */
+cookie.remove = function (toDelete) {
+  cookie.manager.remove(
+      toDelete.domain,
+      toDelete.name,
+      toDelete.path,
+      false,
+      {} /* originAttributes */);
+};
+
+/**
+ * Iterates over the cookies for the current |host|.  You may optionally
+ * filter for specific paths on that |host| by specifying a path in
+ * |currentPath|.
+ *
+ * @param {string} host
+ *     Hostname to retrieve cookies for.
+ * @param {string=} currentPath
+ *     Optionally filter the cookies for |host| for the specific path.
+ *     Defautls to "/", meaning all cookies for |host| are included.
+ *
+ * @return {[Symbol.Iterator]}
+ *     Iterator.
+ */
+cookie.iter = function* (host, currentPath = "/") {
+  assert.string(host, "host must be string");
+  assert.string(currentPath, "currentPath must be string");
+
+  const isForCurrentPath = path => currentPath.indexOf(path) != -1;
+
+  let en = cookie.manager.getCookiesFromHost(host, {});
+  while (en.hasMoreElements()) {
+    let cookie = en.getNext().QueryInterface(Ci.nsICookie2);
+    // take the hostname and progressively shorten
+    let hostname = host;
+    do {
+      if ((cookie.host == "." + hostname || cookie.host == hostname) &&
+          isForCurrentPath(cookie.path)) {
+        yield {
+          "name": cookie.name,
+          "value": cookie.value,
+          "path": cookie.path,
+          "domain": cookie.host,
+          "secure": cookie.isSecure,
+          "httpOnly": cookie.isHttpOnly,
+          "expiry": cookie.expires,
+        };
       }
-    }
+      hostname = hostname.replace(/^.*?\./, "");
+    } while (hostname.indexOf(".") != -1);
   }
 };

@@ -14,9 +14,6 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(
-    this, "cookieManager", "@mozilla.org/cookiemanager;1", "nsICookieManager2");
-
 Cu.import("chrome://marionette/content/accessibility.js");
 Cu.import("chrome://marionette/content/addon.js");
 Cu.import("chrome://marionette/content/assert.js");
@@ -24,6 +21,7 @@ Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/browser.js");
 Cu.import("chrome://marionette/content/capture.js");
 Cu.import("chrome://marionette/content/cert.js");
+Cu.import("chrome://marionette/content/cookie.js");
 Cu.import("chrome://marionette/content/element.js");
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/evaluate.js");
@@ -2364,7 +2362,11 @@ GeckoDriver.prototype.switchToShadowRoot = function* (cmd, resp) {
 };
 
 /**
- * Add a cookie to the document.
+ * Add a single cookie to the cookie store associated with the active
+ * document's address.
+ *
+ * @param {Map.<string, (string|number|boolean)> cookie
+ *     Cookie object.
  *
  * @throws {UnsupportedOperationError}
  *     Not available in current context.
@@ -2372,30 +2374,28 @@ GeckoDriver.prototype.switchToShadowRoot = function* (cmd, resp) {
  *     Top-level browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
+ * @throws {InvalidCookieDomainError}
+ *     If |cookie| is for a different domain than the active document's
+ *     host.
  */
-GeckoDriver.prototype.addCookie = function* (cmd, resp) {
+GeckoDriver.prototype.addCookie = function (cmd, resp) {
   assert.content(this.context);
   assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  let cb = msg => {
-    this.mm.removeMessageListener("Marionette:addCookie", cb);
-    let cookie = msg.json;
-    Services.cookies.add(
-        cookie.domain,
-        cookie.path,
-        cookie.name,
-        cookie.value,
-        cookie.secure,
-        cookie.httpOnly,
-        cookie.session,
-        cookie.expiry,
-        {}); // originAttributes
-    return true;
-  };
+  let {protocol, hostname} = this.currentURL;
 
-  this.mm.addMessageListener("Marionette:addCookie", cb);
-  yield this.listener.addCookie(cmd.parameters.cookie);
+  const networkSchemes = ["ftp:", "http:", "https:"];
+  if (!networkSchemes.includes(protocol)) {
+    throw new InvalidCookieDomainError("Document is cookie-averse");
+  }
+
+  let newCookie = cookie.fromJSON(cmd.parameters.cookie);
+  if (typeof newCookie.domain == "undefined") {
+    newCookie.domain = hostname;
+  }
+
+  cookie.add(newCookie, {restrictToHost: hostname});
 };
 
 /**
@@ -2411,12 +2411,13 @@ GeckoDriver.prototype.addCookie = function* (cmd, resp) {
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
-GeckoDriver.prototype.getCookies = function* (cmd, resp) {
+GeckoDriver.prototype.getCookies = function (cmd, resp) {
   assert.content(this.context);
   assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  resp.body = yield this.listener.getCookies();
+  let {hostname, pathname} = this.currentURL;
+  resp.body = [...cookie.iter(hostname, pathname)];
 };
 
 /**
@@ -2429,25 +2430,15 @@ GeckoDriver.prototype.getCookies = function* (cmd, resp) {
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
-GeckoDriver.prototype.deleteAllCookies = function* (cmd, resp) {
+GeckoDriver.prototype.deleteAllCookies = function (cmd, resp) {
   assert.content(this.context);
   assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  let cb = msg => {
-    let cookie = msg.json;
-    cookieManager.remove(
-        cookie.host,
-        cookie.name,
-        cookie.path,
-        false,
-        cookie.originAttributes);
-    return true;
-  };
-
-  this.mm.addMessageListener("Marionette:deleteCookie", cb);
-  yield this.listener.deleteAllCookies();
-  this.mm.removeMessageListener("Marionette:deleteCookie", cb);
+  let {hostname, pathname} = this.currentURL;
+  for (let toDelete of cookie.iter(hostname, pathname)) {
+    cookie.remove(toDelete);
+  }
 };
 
 /**
@@ -2460,25 +2451,18 @@ GeckoDriver.prototype.deleteAllCookies = function* (cmd, resp) {
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
-GeckoDriver.prototype.deleteCookie = function* (cmd, resp) {
+GeckoDriver.prototype.deleteCookie = function (cmd, resp) {
   assert.content(this.context);
   assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  let cb = msg => {
-    this.mm.removeMessageListener("Marionette:deleteCookie", cb);
-    let cookie = msg.json;
-    cookieManager.remove(
-        cookie.host,
-        cookie.name,
-        cookie.path,
-        false,
-        cookie.originAttributes);
-    return true;
-  };
-
-  this.mm.addMessageListener("Marionette:deleteCookie", cb);
-  yield this.listener.deleteCookie(cmd.parameters.name);
+  let {hostname, pathname} = this.currentURL;
+  let candidateName = assert.string(cmd.parameters.name);
+  for (let toDelete of cookie.iter(hostname, pathname)) {
+    if (toDelete.name === candidateName) {
+      return cookie.remove(toDelete);
+    }
+  }
 };
 
 /**
@@ -3080,36 +3064,6 @@ GeckoDriver.prototype.receiveMessage = function (message) {
         this.currentFrameElement = message.json.frameValue;
       }
       break;
-
-    case "Marionette:getVisibleCookies":
-      let [currentPath, host] = message.json;
-      let isForCurrentPath = path => currentPath.indexOf(path) != -1;
-      let results = [];
-
-      let en = cookieManager.getCookiesFromHost(host, {});
-      while (en.hasMoreElements()) {
-        let cookie = en.getNext().QueryInterface(Ci.nsICookie2);
-        // take the hostname and progressively shorten
-        let hostname = host;
-        do {
-          if ((cookie.host == "." + hostname || cookie.host == hostname) &&
-              isForCurrentPath(cookie.path)) {
-            results.push({
-              "name": cookie.name,
-              "value": cookie.value,
-              "path": cookie.path,
-              "host": cookie.host,
-              "secure": cookie.isSecure,
-              "expiry": cookie.expires,
-              "httpOnly": cookie.isHttpOnly,
-              "originAttributes": cookie.originAttributes
-            });
-            break;
-          }
-          hostname = hostname.replace(/^.*?\./, "");
-        } while (hostname.indexOf(".") != -1);
-      }
-      return results;
 
     case "Marionette:emitTouchEvent":
       globalMessageManager.broadcastAsyncMessage(
