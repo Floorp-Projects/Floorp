@@ -8,22 +8,6 @@
   Change
 ">
 
-<!ENTITY aboutTelemetry.uploadEnabled "
-  FHR data upload is <span>enabled</span>.
-">
-
-<!ENTITY aboutTelemetry.uploadDisabled "
-  FHR data upload is <span>disabled</span>.
-">
-
-<!ENTITY aboutTelemetry.extendedRecordingEnabled "
-  Extended Telemetry recording is <span>enabled</span>.
-">
-
-<!ENTITY aboutTelemetry.extendedRecordingDisabled "
-  Extended Telemetry recording is <span>disabled</span>.
-">
-
 <!ENTITY aboutTelemetry.pingDataSource "
 Ping data source:
 ">
