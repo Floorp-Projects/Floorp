@@ -77,6 +77,26 @@ var onboardingTours = [
     },
   },
   {
+    id: "onboarding-tour-customize",
+    tourNameId: "onboarding.tour-customize",
+    getPage(win) {
+      let div = win.document.createElement("div");
+      div.innerHTML = `
+        <section class="onboarding-tour-description">
+          <h1 data-l10n-id="onboarding.tour-customize.title"></h1>
+          <p data-l10n-id="onboarding.tour-customize.description"></p>
+        </section>
+        <section class="onboarding-tour-content">
+          <img src="resource://onboarding/img/figure_customize.svg" />
+        </section>
+        <aside class="onboarding-tour-button">
+          <button id="onboarding-tour-customize-button" data-l10n-id="onboarding.tour-customize.button"></button>
+        </aside>
+      `;
+      return div;
+    },
+  },
+  {
     id: "onboarding-tour-search",
     tourNameId: "onboarding.tour-search",
     getPage(win) {

@@ -234,3 +234,12 @@
 #onboarding-tour-addons:hover {
   background-image: url("img/icons_addons-colored.svg");
 }
+
+#onboarding-tour-customize {
+  background-image: url("img/icons_customize.svg");
+}
+
+#onboarding-tour-customize.onboarding-active,
+#onboarding-tour-customize:hover {
+  background-image: url("img/icons_customize-colored.svg");
+}
