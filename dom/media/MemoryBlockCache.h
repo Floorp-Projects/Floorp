@@ -77,6 +77,7 @@ private:
   Mutex mMutex;
 
   nsTArray<uint8_t> mBuffer;
+  bool mHasGrown;
 };
 
 } // End namespace mozilla.
