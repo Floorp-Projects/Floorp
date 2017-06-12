@@ -26,6 +26,7 @@ public:
   virtual bool IsRecording() const override { return true; }
 
   virtual already_AddRefed<SourceSurface> Snapshot() override;
+  virtual already_AddRefed<SourceSurface> IntoLuminanceSource(LuminanceType aLuminanceType, float aOpacity) override;
 
   virtual void DetachAllSnapshots() override;
 
