@@ -5242,6 +5242,10 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
           NSToIntRound((mHorResizeMargin - mNonClientOffset.right) * scale);
         clientRect->bottom -=
           NSToIntRound((mVertResizeMargin - mNonClientOffset.bottom) * scale);
+        // Make client rect's width and height more than 0 to
+        // avoid problems of webrender and angle.
+        clientRect->right = std::max(clientRect->right, clientRect->left + 1);
+        clientRect->bottom = std::max(clientRect->bottom, clientRect->top + 1);
 
         result = true;
         *aRetValue = 0;
