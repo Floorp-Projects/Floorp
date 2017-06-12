@@ -1,3 +1,10 @@
+
+# We do not want to obfuscate - It's just painful to debug without the right mapping file.
+-dontobfuscate
+
+
+##### Default proguard settings:
+
 # Add project specific ProGuard rules here.
 # By default, the flags in this file are appended to flags specified
 # in /Users/sebastian/Library/Android/sdk/tools/proguard/proguard-android.txt
