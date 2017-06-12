@@ -2136,14 +2136,15 @@ class PropertyDefiner:
     def usedForXrays(self):
         return self.descriptor.wantsXrays
 
+    def length(self, chrome):
+        return len(self.chrome) if chrome else len(self.regular)
+
     def __str__(self):
         # We only need to generate id arrays for things that will end
         # up used via ResolveProperty or EnumerateProperties.
-        str = self.generateArray(self.regular, self.variableName(False),
-                                 self.usedForXrays())
+        str = self.generateArray(self.regular, self.variableName(False))
         if self.hasChromeOnly():
-            str += self.generateArray(self.chrome, self.variableName(True),
-                                      self.usedForXrays())
+            str += self.generateArray(self.chrome, self.variableName(True))
         return str
 
     @staticmethod
@@ -2170,7 +2171,7 @@ class PropertyDefiner:
             nonExposureSet)
 
     def generatePrefableArray(self, array, name, specFormatter, specTerminator,
-                              specType, getCondition, getDataTuple, doIdArrays):
+                              specType, getCondition, getDataTuple):
         """
         This method generates our various arrays.
 
@@ -2239,17 +2240,26 @@ class PropertyDefiner:
 
         switchToCondition(self, lastCondition)
 
+        numSpecsInCurPrefable = 0
+        maxNumSpecsInPrefable = 0
+
         for member in array:
             curCondition = getCondition(member, self.descriptor)
             if lastCondition != curCondition:
                 # Terminate previous list
                 specs.append(specTerminator)
+                if numSpecsInCurPrefable > maxNumSpecsInPrefable:
+                    maxNumSpecsInPrefable = numSpecsInCurPrefable
+                numSpecsInCurPrefable = 0
                 # And switch to our new condition
                 switchToCondition(self, curCondition)
                 lastCondition = curCondition
             # And the actual spec
             specs.append(specFormatter(getDataTuple(member)))
+            numSpecsInCurPrefable += 1
         specs.append(specTerminator)
+        if numSpecsInCurPrefable > maxNumSpecsInPrefable:
+            maxNumSpecsInPrefable = numSpecsInCurPrefable
         prefableSpecs.append("  { nullptr, nullptr }")
 
         specType = "const " + specType
@@ -2279,8 +2289,22 @@ class PropertyDefiner:
             disablers='\n'.join(disablers),
             specs=',\n'.join(specs),
             prefableSpecs=',\n'.join(prefableSpecs))
-        if doIdArrays:
-            arrays += "static jsid %s_ids[%i];\n\n" % (name, len(specs))
+
+        if self.usedForXrays():
+            arrays = fill(
+                """
+                $*{arrays}
+                static_assert(${numPrefableSpecs} <= 1ull << NUM_BITS_PROPERTY_INFO_PREF_INDEX,
+                    "We have a prefable index that is >= (1 << NUM_BITS_PROPERTY_INFO_PREF_INDEX)");
+                static_assert(${maxNumSpecsInPrefable} <= 1ull << NUM_BITS_PROPERTY_INFO_SPEC_INDEX,
+                    "We have a spec index that is >= (1 << NUM_BITS_PROPERTY_INFO_SPEC_INDEX)");
+
+                """,
+                arrays=arrays,
+                # Minus 1 because there's a list terminator in prefableSpecs.
+                numPrefableSpecs=len(prefableSpecs)-1,
+                maxNumSpecsInPrefable=maxNumSpecsInPrefable)
+
         return arrays
 
 
@@ -2568,7 +2592,7 @@ class MethodDefiner(PropertyDefiner):
                 # non-static methods go on the interface prototype object
                 assert not self.hasChromeOnly() and not self.hasNonChromeOnly()
 
-    def generateArray(self, array, name, doIdArrays):
+    def generateArray(self, array, name):
         if len(array) == 0:
             return ""
 
@@ -2629,7 +2653,7 @@ class MethodDefiner(PropertyDefiner):
             formatSpec,
             '  JS_FS_END',
             'JSFunctionSpec',
-            condition, specData, doIdArrays)
+            condition, specData)
 
 
 def IsCrossOriginWritable(attr, descriptor):
@@ -2679,7 +2703,7 @@ class AttrDefiner(PropertyDefiner):
                 # non-static attributes go on the interface prototype object
                 assert not self.hasChromeOnly() and not self.hasNonChromeOnly()
 
-    def generateArray(self, array, name, doIdArrays):
+    def generateArray(self, array, name):
         if len(array) == 0:
             return ""
 
@@ -2762,7 +2786,7 @@ class AttrDefiner(PropertyDefiner):
             lambda fields: '  { "%s", %s, %s, %s }' % fields,
             '  { nullptr, 0, nullptr, nullptr, nullptr, nullptr }',
             'JSPropertySpec',
-            PropertyDefiner.getControllingCondition, specData, doIdArrays)
+            PropertyDefiner.getControllingCondition, specData)
 
 
 class ConstDefiner(PropertyDefiner):
@@ -2776,7 +2800,7 @@ class ConstDefiner(PropertyDefiner):
         self.chrome = [m for m in constants if isChromeOnly(m)]
         self.regular = [m for m in constants if not isChromeOnly(m)]
 
-    def generateArray(self, array, name, doIdArrays):
+    def generateArray(self, array, name):
         if len(array) == 0:
             return ""
 
@@ -2789,7 +2813,7 @@ class ConstDefiner(PropertyDefiner):
             lambda fields: '  { "%s", %s }' % fields,
             '  { 0, JS::UndefinedValue() }',
             'ConstantSpec',
-            PropertyDefiner.getControllingCondition, specData, doIdArrays)
+            PropertyDefiner.getControllingCondition, specData)
 
 
 class PropertyArrays():
@@ -2831,7 +2855,29 @@ class CGNativeProperties(CGList):
                 return p.hasChromeOnly() if chrome else p.hasNonChromeOnly()
 
             nativePropsInts = []
-            nativePropsTrios = []
+            nativePropsPtrs = []
+            nativePropsDuos = []
+
+            duosOffset = 0
+            idsOffset = 0
+            for array in properties.arrayNames():
+                propertyArray = getattr(properties, array)
+                if check(propertyArray):
+                    varName = propertyArray.variableName(chrome)
+                    bitfields = "true,  %d /* %s */" % (duosOffset, varName)
+                    duosOffset += 1
+                    nativePropsInts.append(CGGeneric(bitfields))
+
+                    if propertyArray.usedForXrays():
+                        ids = "&%s_propertyInfos[%d]" % (name, idsOffset)
+                        idsOffset += propertyArray.length(chrome)
+                    else:
+                        ids = "nullptr"
+                    duo = "{ %s, %s }" % (varName, ids)
+                    nativePropsDuos.append(CGGeneric(duo))
+                else:
+                    bitfields = "false, 0"
+                    nativePropsInts.append(CGGeneric(bitfields))
 
             iteratorAliasIndex = -1
             for index, item in enumerate(properties.methods.regular):
@@ -2840,34 +2886,53 @@ class CGNativeProperties(CGList):
                     break
             nativePropsInts.append(CGGeneric(str(iteratorAliasIndex)))
 
-            offset = 0
-            for array in properties.arrayNames():
-                propertyArray = getattr(properties, array)
-                if check(propertyArray):
-                    varName = propertyArray.variableName(chrome)
-                    bitfields = "true,  %d /* %s */" % (offset, varName)
-                    offset += 1
-                    nativePropsInts.append(CGGeneric(bitfields))
-
-                    if propertyArray.usedForXrays():
-                        ids = "%(name)s_ids"
-                    else:
-                        ids = "nullptr"
-                    trio = "{ %(name)s, " + ids + ", %(name)s_specs }"
-                    trio = trio % {'name': varName}
-                    nativePropsTrios.append(CGGeneric(trio))
-                else:
-                    bitfields = "false, 0"
-                    nativePropsInts.append(CGGeneric(bitfields))
-
-            nativePropsTrios = \
-                [CGWrapper(CGIndenter(CGList(nativePropsTrios, ",\n")),
+            nativePropsDuos = \
+                [CGWrapper(CGIndenter(CGList(nativePropsDuos, ",\n")),
                            pre='{\n', post='\n}')]
-            nativeProps = nativePropsInts + nativePropsTrios
+
             pre = ("static const NativePropertiesN<%d> %s = {\n" %
-                   (offset, name))
+                   (duosOffset, name))
+            post = "\n};\n"
+            if descriptor.wantsXrays:
+                pre = fill(
+                    """
+                    static uint16_t ${name}_sortedPropertyIndices[${size}];
+                    static PropertyInfo ${name}_propertyInfos[${size}];
+
+                    $*{pre}
+                    """,
+                    name=name,
+                    size=idsOffset,
+                    pre=pre)
+                if iteratorAliasIndex > 0:
+                    # The iteratorAliasMethodIndex is a signed integer, so the
+                    # max value it can store is 2^(nbits-1)-1.
+                    post = fill(
+                        """
+                        $*{post}
+                        static_assert(${iteratorAliasIndex} < 1ull << (CHAR_BIT * sizeof(${name}.iteratorAliasMethodIndex) - 1),
+                            "We have an iterator alias index that is oversized");
+                        """,
+                        post=post,
+                        iteratorAliasIndex=iteratorAliasIndex,
+                        name=name)
+                post = fill(
+                    """
+                    $*{post}
+                    static_assert(${propertyInfoCount} < 1ull << CHAR_BIT * sizeof(${name}.propertyInfoCount),
+                        "We have a property info count that is oversized");
+                    """,
+                    post=post,
+                    propertyInfoCount=idsOffset,
+                    name=name)
+                nativePropsInts.append(CGGeneric("%d" % idsOffset))
+                nativePropsPtrs.append(CGGeneric("%s_sortedPropertyIndices" % name))
+            else:
+                nativePropsInts.append(CGGeneric("0"))
+                nativePropsPtrs.append(CGGeneric("nullptr"))
+            nativeProps = nativePropsInts + nativePropsPtrs + nativePropsDuos
             return CGWrapper(CGIndenter(CGList(nativeProps, ",\n")),
-                             pre=pre, post="\n};\n")
+                             pre=pre, post=post)
 
         nativeProperties = []
         if properties.hasNonChromeOnly():
@@ -2982,16 +3047,13 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         idsToInit = []
         # There is no need to init any IDs in bindings that don't want Xrays.
         if self.descriptor.wantsXrays:
-            for var in self.properties.arrayNames():
-                props = getattr(self.properties, var)
-                # We only have non-chrome ids to init if we have no chrome ids.
-                if props.hasChromeOnly():
-                    idsToInit.append(props.variableName(True))
-                if props.hasNonChromeOnly():
-                    idsToInit.append(props.variableName(False))
+            if self.properties.hasNonChromeOnly():
+                idsToInit.append("sNativeProperties")
+            if self.properties.hasChromeOnly():
+                idsToInit.append("sChromeOnlyNativeProperties")
         if len(idsToInit) > 0:
-            initIdCalls = ["!InitIds(aCx, %s, %s_ids)" % (varname, varname)
-                           for varname in idsToInit]
+            initIdCalls = ["!InitIds(aCx, %s.Upcast())" % (properties)
+                           for properties in idsToInit]
             idsInitedFlag = CGGeneric("static bool sIdsInited = false;\n")
             setFlag = CGGeneric("sIdsInited = true;\n")
             initIdConditionals = [CGIfWrapper(CGGeneric("return;\n"), call)
