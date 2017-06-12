@@ -21,8 +21,8 @@ export LLVM_CONFIG="${TOOLTOOL_DIR:-$topsrcdir}/clang/bin/llvm-config"
 
 # Enable checking that add-ons are signed by the trusted root
 MOZ_ADDON_SIGNING=${MOZ_ADDON_SIGNING-1}
-# Disable enforcing that add-ons are signed by the trusted root
-MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-0}
+# Enable enforcing that add-ons are signed by the trusted root
+MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-1}
 
 ac_add_options --enable-js-shell
 
