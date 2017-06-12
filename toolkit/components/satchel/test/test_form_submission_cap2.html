@@ -129,10 +129,10 @@ var numInputFields = 101;
 
 function checkInitialState() {
   countEntries(null, null,
-    function(num) {
-      ok(!num, "checking for initially empty storage");
-      startTest();
-    });
+               function(num) {
+                 ok(!num, "checking for initially empty storage");
+                 startTest();
+               });
 }
 
 function startTest() {
@@ -150,14 +150,14 @@ function startTest() {
 // Call done() when finished.
 function checkCountEntries(formNum, index, done) {
   countEntries("test" + index, index,
-    function(num) {
-      ok(!num, "checking unsaved value " + index);
-      if (index < numInputFields) {
-        checkCountEntries(formNum, index + 1, done);
-      } else {
-        done(formNum);
-      }
-    });
+               function(num) {
+                 ok(!num, "checking unsaved value " + index);
+                 if (index < numInputFields) {
+                   checkCountEntries(formNum, index + 1, done);
+                 } else {
+                   done(formNum);
+                 }
+               });
 }
 
 // Called by each form's onsubmit handler.

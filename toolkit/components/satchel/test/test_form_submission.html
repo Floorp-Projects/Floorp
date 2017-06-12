@@ -277,10 +277,10 @@ var ccNumbers = {
 
 function checkInitialState() {
   countEntries(null, null,
-    function(num) {
-      ok(!num, "checking for initially empty storage");
-      startTest();
-    });
+               function(num) {
+                 ok(!num, "checking for initially empty storage");
+                 startTest();
+               });
 }
 
 function startTest() {
@@ -379,48 +379,48 @@ function checkSubmit(formNum) {
     case 21:
     case 22:
       countEntries(null, null,
-        function(num) {
-          ok(!num, "checking for empty storage");
-          submitForm(formNum);
-        });
-        return false;
+                   function(num) {
+                     ok(!num, "checking for empty storage");
+                     submitForm(formNum);
+                   });
+      return false;
     case 100:
-        checkForSave("subtest2", "subtestValue", "checking saved subtest value");
-        break;
+      checkForSave("subtest2", "subtestValue", "checking saved subtest value");
+      break;
     case 101:
-        checkForSave("test1", "savedValue", "checking saved value");
-        break;
+      checkForSave("test1", "savedValue", "checking saved value");
+      break;
     case 102:
-        checkForSave("test2", "savedValue", "checking saved value");
-        break;
+      checkForSave("test2", "savedValue", "checking saved value");
+      break;
     case 103:
-        checkForSave("test3", "savedValue", "checking saved value");
-        break;
+      checkForSave("test3", "savedValue", "checking saved value");
+      break;
     case 104:
-        checkForSave("test4", "trimTrailingAndLeadingSpace", "checking saved value is trimmed on both sides");
-        break;
+      checkForSave("test4", "trimTrailingAndLeadingSpace", "checking saved value is trimmed on both sides");
+      break;
     case 105:
-        checkForSave("test5", "trimTrailingAndLeadingWhitespace", "checking saved value is trimmed on both sides");
-        break;
+      checkForSave("test5", "trimTrailingAndLeadingWhitespace", "checking saved value is trimmed on both sides");
+      break;
     case 106:
-        checkForSave("test6", "00000000109181", "checking saved value");
-        break;
+      checkForSave("test6", "00000000109181", "checking saved value");
+      break;
     case 107:
-        for (let i = 0; i != ccNumbers.invalid16.length; i++) {
-          checkForSave("test7_" + (i + 1), ccNumbers.invalid16[i], "checking saved value");
-        }
-        break;
+      for (let i = 0; i != ccNumbers.invalid16.length; i++) {
+        checkForSave("test7_" + (i + 1), ccNumbers.invalid16[i], "checking saved value");
+      }
+      break;
     case 108:
-        for (let i = 0; i != ccNumbers.invalid15.length; i++) {
-          checkForSave("test8_" + (i + 1), ccNumbers.invalid15[i], "checking saved value");
-        }
-        break;
+      for (let i = 0; i != ccNumbers.invalid15.length; i++) {
+        checkForSave("test8_" + (i + 1), ccNumbers.invalid15[i], "checking saved value");
+      }
+      break;
     case 109:
-        checkForSave("test9", "savedValue", "checking saved value");
-        break;
+      checkForSave("test9", "savedValue", "checking saved value");
+      break;
     default:
-        ok(false, "Unexpected form submission");
-        break;
+      ok(false, "Unexpected form submission");
+      break;
   }
 
   return submitForm(formNum);

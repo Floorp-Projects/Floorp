@@ -68,24 +68,24 @@ add_test(function test_corruptFormHistoryDB_addEntry() {
   do_log_info("test adding an entry to the empty DB.");
 
   updateEntry("add", "name-A", "value-A",
-    function() {
-      countEntries("name-A", "value-A",
-        function(count) {
-          do_check_true(count == 1);
-          run_next_test();
-        });
-    });
-  });
+              function() {
+                countEntries("name-A", "value-A",
+                             function(count) {
+                               do_check_true(count == 1);
+                               run_next_test();
+                             });
+              });
+});
 
 add_test(function test_corruptFormHistoryDB_removeEntry() {
   do_log_info("test removing an entry to the empty DB.");
 
   updateEntry("remove", "name-A", "value-A",
-    function() {
-      countEntries("name-A", "value-A",
-        function(count) {
-          do_check_true(count == 0);
-          run_next_test();
-        });
-    });
-  });
+              function() {
+                countEntries("name-A", "value-A",
+                             function(count) {
+                               do_check_true(count == 0);
+                               run_next_test();
+                             });
+              });
+});

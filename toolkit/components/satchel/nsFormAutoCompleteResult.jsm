@@ -8,15 +8,14 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-this.FormAutoCompleteResult =
- function FormAutoCompleteResult(searchString,
-                                 searchResult,
-                                 defaultIndex,
-                                 errorDescription,
-                                 values,
-                                 labels,
-                                 comments,
-                                 prevResult) {
+this.FormAutoCompleteResult = function FormAutoCompleteResult(searchString,
+                                                              searchResult,
+                                                              defaultIndex,
+                                                              errorDescription,
+                                                              values,
+                                                              labels,
+                                                              comments,
+                                                              prevResult) {
   this.searchString = searchString;
   this._searchResult = searchResult;
   this._defaultIndex = defaultIndex;
@@ -25,12 +24,7 @@ this.FormAutoCompleteResult =
   this._labels = labels;
   this._comments = comments;
   this._formHistResult = prevResult;
-
-  if (prevResult) {
-    this.entries = prevResult.wrappedJSObject.entries;
-  } else {
-    this.entries = [];
-  }
+  this.entries = prevResult ? prevResult.wrappedJSObject.entries : [];
 }
 
 FormAutoCompleteResult.prototype = {
