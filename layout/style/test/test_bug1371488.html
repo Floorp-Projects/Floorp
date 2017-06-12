@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for bug 1371488</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+  <style id="test">
+    @import url(non-exist-file.css);
+  </style>
+</head>
+<body>
+<pre id="log">
+<script>
+  let sheet = document.getElementById("test").sheet;
+  let rule = sheet.cssRules[0];
+  ok(rule, "The import rule should not be null even if the file fails to load");
+  is(rule.type, CSSRule.IMPORT_RULE, "It is the import rule");
+  ok(rule.styleSheet, "The associated stylesheet should exists as well");
+  is(rule.styleSheet.cssRules.length, 0, "The stylesheet should be empty");
+</script>
+</pre>
+</body>
+</html>
