@@ -12,7 +12,9 @@ const { getMostRecentBrowserWindow } = require('sdk/window/utils');
 const { data } = require('sdk/self');
 const { set } = require('sdk/preferences/service');
 
-const { DevToolsShim } = Cu.import("chrome://devtools-shim/content/DevToolsShim.jsm", {});
+const { require: devtoolsRequire } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const { DebuggerServer } = devtoolsRequire("devtools/server/main");
+const { DebuggerClient } = devtoolsRequire("devtools/shared/client/main");
 
 var gClient;
 var ok;
@@ -27,7 +29,13 @@ exports.testDebugger = function(assert, done) {
   assert.pass('starting test');
   set('devtools.debugger.log', true);
 
-  gClient = DevToolsShim.createDebuggerClient();
+  if (!DebuggerServer.initialized) {
+    DebuggerServer.init();
+    DebuggerServer.addBrowserActors();
+  }
+
+  let transport = DebuggerServer.connectPipe();
+  gClient = new DebuggerClient(transport);
   gClient.connect((aType, aTraits) => {
     tabs.open({
       url: TAB_URL,
