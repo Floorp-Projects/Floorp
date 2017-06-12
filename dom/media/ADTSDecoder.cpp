@@ -14,12 +14,12 @@
 namespace mozilla {
 
 MediaDecoder*
-ADTSDecoder::Clone(MediaDecoderOwner* aOwner)
+ADTSDecoder::Clone(MediaDecoderInit& aInit)
 {
   if (!IsEnabled())
     return nullptr;
 
-  return new ADTSDecoder(aOwner);
+  return new ADTSDecoder(aInit);
 }
 
 MediaDecoderStateMachine*

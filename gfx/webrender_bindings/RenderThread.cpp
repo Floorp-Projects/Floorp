@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "base/task.h"
+#include "GeckoProfiler.h"
 #include "RenderThread.h"
 #include "nsThreadUtils.h"
 #include "mozilla/layers/CompositorThread.h"
@@ -11,7 +13,6 @@
 #include "mozilla/webrender/RendererOGL.h"
 #include "mozilla/webrender/RenderTextureHost.h"
 #include "mozilla/widget/CompositorWidget.h"
-#include "base/task.h"
 
 namespace mozilla {
 namespace wr {
@@ -178,6 +179,7 @@ NotifyDidRender(layers::CompositorBridgeParentBase* aBridge,
 void
 RenderThread::UpdateAndRender(wr::WindowId aWindowId)
 {
+  GeckoProfilerTracingRAII tracer("Paint", "Composite");
   MOZ_ASSERT(IsInRenderThread());
 
   auto it = mRenderers.find(aWindowId);

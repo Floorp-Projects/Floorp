@@ -507,6 +507,12 @@ public:
                              const bool& aIsPrivateData,
                              const IPC::Principal& aRequestingPrincipal);
 
+  /**
+   * OnDestroyTextComposition() should be called when TextComposition instance
+   * which dispatched composition events to this instance is being destroyed.
+   */
+  void OnDestroyTextComposition();
+
   static TabParent* GetFrom(nsFrameLoader* aFrameLoader);
 
   static TabParent* GetFrom(nsIFrameLoader* aFrameLoader);

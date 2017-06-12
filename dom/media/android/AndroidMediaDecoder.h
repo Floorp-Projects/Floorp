@@ -16,10 +16,10 @@ class AndroidMediaDecoder : public MediaDecoder
 {
   MediaContainerType mType;
 public:
-  AndroidMediaDecoder(MediaDecoderOwner* aOwner, const MediaContainerType& aType);
+  AndroidMediaDecoder(MediaDecoderInit& aInit, const MediaContainerType& aType);
 
-  MediaDecoder* Clone(MediaDecoderOwner* aOwner) override {
-    return new AndroidMediaDecoder(aOwner, mType);
+  MediaDecoder* Clone(MediaDecoderInit& aInit) override {
+    return new AndroidMediaDecoder(aInit, mType);
   }
   MediaDecoderStateMachine* CreateStateMachine() override;
 };

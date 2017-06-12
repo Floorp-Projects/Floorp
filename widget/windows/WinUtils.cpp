@@ -1461,20 +1461,24 @@ AsyncDeleteAllFaviconsFromDisk::
   // We can't call FaviconHelper::GetICOCacheSecondsTimeout() on non-main
   // threads, as it reads a pref, so cache its value here.
   mIcoNoDeleteSeconds = FaviconHelper::GetICOCacheSecondsTimeout() + 600;
+
+  // Prepare the profile directory cache on the main thread, to ensure we wont
+  // do this on non-main threads.
+  Unused << NS_GetSpecialDirectory("ProfLDS",
+    getter_AddRefs(mJumpListCacheDir));
 }
 
 NS_IMETHODIMP AsyncDeleteAllFaviconsFromDisk::Run()
 {
+  if (!mJumpListCacheDir) {
+    return NS_ERROR_FAILURE;
+  }
   // Construct the path of our jump list cache
-  nsCOMPtr<nsIFile> jumpListCacheDir;
-  nsresult rv = NS_GetSpecialDirectory("ProfLDS", 
-    getter_AddRefs(jumpListCacheDir));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = jumpListCacheDir->AppendNative(
+  nsresult rv = mJumpListCacheDir->AppendNative(
       nsDependentCString(FaviconHelper::kJumpListCacheDir));
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsISimpleEnumerator> entries;
-  rv = jumpListCacheDir->GetDirectoryEntries(getter_AddRefs(entries));
+  rv = mJumpListCacheDir->GetDirectoryEntries(getter_AddRefs(entries));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Loop through each directory entry and remove all ICO files found

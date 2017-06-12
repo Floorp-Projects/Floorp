@@ -1910,8 +1910,11 @@ public:
     // TODO : use more approriate way to decide whether need to release
     // resource in bug1367983.
 #ifndef MOZ_WIDGET_ANDROID
-    // We've decoded all samples. We don't need decoders anymore.
-    Reader()->ReleaseResources();
+    if (!mMaster->mLooping) {
+      // We've decoded all samples.
+      // We don't need decoders anymore if not looping.
+      Reader()->ReleaseResources();
+    }
 #endif
     bool hasNextFrame = (!mMaster->HasAudio() || !mMaster->mAudioCompleted)
                         && (!mMaster->HasVideo() || !mMaster->mVideoCompleted);
@@ -2639,7 +2642,6 @@ ShutdownState::Enter()
 {
   auto master = mMaster;
 
-  master->mIsShutdown = true;
   master->mDelayedScheduler.Reset();
 
   // Shutdown happens while decode timer is active, we need to disconnect and
@@ -2674,6 +2676,7 @@ ShutdownState::Enter()
   master->mNextPlayState.DisconnectIfConnected();
   master->mVolume.DisconnectIfConnected();
   master->mPreservesPitch.DisconnectIfConnected();
+  master->mLooping.DisconnectIfConnected();
   master->mSameOriginMedia.DisconnectIfConnected();
   master->mMediaPrincipalHandle.DisconnectIfConnected();
   master->mPlaybackBytesPerSecond.DisconnectIfConnected();
@@ -2681,7 +2684,6 @@ ShutdownState::Enter()
   master->mDecoderPosition.DisconnectIfConnected();
 
   master->mDuration.DisconnectAll();
-  master->mIsShutdown.DisconnectAll();
   master->mNextFrameStatus.DisconnectAll();
   master->mCurrentPosition.DisconnectAll();
   master->mPlaybackOffset.DisconnectAll();
@@ -2737,13 +2739,13 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   INIT_MIRROR(mNextPlayState, MediaDecoder::PLAY_STATE_PAUSED),
   INIT_MIRROR(mVolume, 1.0),
   INIT_MIRROR(mPreservesPitch, true),
+  INIT_MIRROR(mLooping, false),
   INIT_MIRROR(mSameOriginMedia, false),
   INIT_MIRROR(mMediaPrincipalHandle, PRINCIPAL_HANDLE_NONE),
   INIT_MIRROR(mPlaybackBytesPerSecond, 0.0),
   INIT_MIRROR(mPlaybackRateReliable, true),
   INIT_MIRROR(mDecoderPosition, 0),
   INIT_CANONICAL(mDuration, NullableTimeUnit()),
-  INIT_CANONICAL(mIsShutdown, false),
   INIT_CANONICAL(mNextFrameStatus, MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE),
   INIT_CANONICAL(mCurrentPosition, TimeUnit::Zero()),
   INIT_CANONICAL(mPlaybackOffset, 0),
@@ -2784,6 +2786,7 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
   mNextPlayState.Connect(aDecoder->CanonicalNextPlayState());
   mVolume.Connect(aDecoder->CanonicalVolume());
   mPreservesPitch.Connect(aDecoder->CanonicalPreservesPitch());
+  mLooping.Connect(aDecoder->CanonicalLooping());
   mSameOriginMedia.Connect(aDecoder->CanonicalSameOriginMedia());
   mMediaPrincipalHandle.Connect(aDecoder->CanonicalMediaPrincipalHandle());
   mPlaybackBytesPerSecond.Connect(aDecoder->CanonicalPlaybackBytesPerSecond());
@@ -3219,11 +3222,6 @@ MediaDecoderStateMachine::Seek(const SeekTarget& aTarget)
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  if (IsShutdown()) {
-    return MediaDecoder::SeekPromise::CreateAndReject(/* aIgnored = */ true,
-                                                      __func__);
-  }
-
   // We need to be able to seek in some way
   if (!mMediaSeekable && !mMediaSeekableOnlyInBufferedRanges) {
     LOGW("Seek() should not be called on a non-seekable media");
@@ -3502,7 +3500,6 @@ void
 MediaDecoderStateMachine::DecodeError(const MediaResult& aError)
 {
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(!IsShutdown());
   LOGW("Decode error");
   // Notify the decode error and MediaDecoder will shut down MDSM.
   mOnPlaybackErrorEvent.Notify(aError);
@@ -3762,13 +3759,6 @@ void MediaDecoderStateMachine::PreservesPitchChanged()
 {
   MOZ_ASSERT(OnTaskQueue());
   mMediaSink->SetPreservesPitch(mPreservesPitch);
-}
-
-bool
-MediaDecoderStateMachine::IsShutdown() const
-{
-  MOZ_ASSERT(OnTaskQueue());
-  return mIsShutdown;
 }
 
 TimeUnit

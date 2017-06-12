@@ -9,6 +9,7 @@
 #include "apz/src/AsyncPanZoomController.h"
 #include "CompositableHost.h"
 #include "gfxPrefs.h"
+#include "GeckoProfiler.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
 #include "mozilla/Range.h"
@@ -312,6 +313,7 @@ WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
                                  const WrBuiltDisplayListDescriptor& dlDesc,
                                  const WebRenderScrollData& aScrollData)
 {
+  GeckoProfilerTracingRAII tracer("Paint", "DPTransaction");
   UpdateFwdTransactionId(aFwdTransactionId);
   AutoClearReadLocks clearLocks(mReadLocks);
 
@@ -836,6 +838,7 @@ WebRenderBridgeParent::SampleAnimations(nsTArray<WrOpacityProperty>& aOpacityArr
 void
 WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect)
 {
+  GeckoProfilerTracingRAII tracer("Paint", "CompositeToTraget");
   if (mPaused) {
     return;
   }
