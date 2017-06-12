@@ -29,12 +29,21 @@ class KnownTabs {
 
 /**
  * Open our helper page in a tab in its own content process, asserting that it
- * really is in its own process.
+ * really is in its own process.  We initially load and wait for about:blank to
+ * load, and only then loadURI to our actual page.  This is to ensure that
+ * LocalStorageManager has had an opportunity to be created and populate
+ * mOriginsHavingData.
+ *
+ * (nsGlobalWindow will reliably create LocalStorageManager as a side-effect of
+ * the unconditional call to nsGlobalWindow::PreloadLocalStorage.  This will
+ * reliably create the StorageDBChild instance, and its corresponding
+ * StorageDBParent will send the set of origins when it is constructed.)
  */
 function* openTestTabInOwnProcess(name, knownTabs) {
-  let opening = HELPER_PAGE_URL + '?' + encodeURIComponent(name);
+  let realUrl = HELPER_PAGE_URL + '?' + encodeURIComponent(name);
+  // Load and wait for about:blank.
   let tab = yield BrowserTestUtils.openNewForegroundTab({
-    gBrowser, opening, forceNewProcess: true
+    gBrowser, opening: 'about:blank', forceNewProcess: true
   });
   let pid = tab.linkedBrowser.frameLoader.tabParent.osPid;
   ok(!knownTabs.byName.has(name), "tab needs its own name: " + name);
@@ -43,6 +52,11 @@ function* openTestTabInOwnProcess(name, knownTabs) {
   let knownTab = new KnownTab(name, tab);
   knownTabs.byPid.set(pid, knownTab);
   knownTabs.byName.set(name, knownTab);
+
+  // Now trigger the actual load of our page.
+  tab.linkedBrowser.loadURI(realUrl);
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  is(tab.linkedBrowser.frameLoader.tabParent.osPid, pid, "still same pid");
   return knownTab;
 }
 
@@ -55,6 +69,45 @@ function* cleanupTabs(knownTabs) {
     knownTab.cleanup();
   }
   knownTabs.cleanup();
+}
+
+/**
+ * Wait for a LocalStorage flush to occur.  This notification can occur as a
+ * result of any of:
+ * - The normal, hardcoded 5-second flush timer.
+ * - InsertDBOp seeing a preload op for an origin with outstanding changes.
+ * - Us generating a "domstorage-test-flush-force" observer notification.
+ */
+function waitForLocalStorageFlush() {
+  return new Promise(function(resolve) {
+    let observer = {
+      observe: function() {
+        SpecialPowers.removeObserver(observer, "domstorage-test-flushed");
+        resolve();
+      }
+    };
+    SpecialPowers.addObserver(observer, "domstorage-test-flushed");
+  });
+}
+
+/**
+ * Trigger and wait for a flush.  This is only necessary for forcing
+ * mOriginsHavingData to be updated.  Normal operations exposed to content know
+ * to automatically flush when necessary for correctness.
+ *
+ * The notification we're waiting for to verify flushing is fundamentally
+ * ambiguous (see waitForLocalStorageFlush), so we actually trigger the flush
+ * twice and wait twice.  In the event there was a race, there will be 3 flush
+ * notifications, but correctness is guaranteed after the second notification.
+ */
+function triggerAndWaitForLocalStorageFlush() {
+  SpecialPowers.notifyObservers(null, "domstorage-test-flush-force");
+  // This first wait is ambiguous...
+  return waitForLocalStorageFlush().then(function() {
+    // So issue a second flush and wait for that.
+    SpecialPowers.notifyObservers(null, "domstorage-test-flush-force");
+    return waitForLocalStorageFlush();
+  })
 }
 
 /**
@@ -79,9 +132,10 @@ function clearOriginStorageEnsuringNoPreload() {
   // origin preload hash to still have our origin in it.
   let storage = Services.domStorageManager.createStorage(null, principal, "");
   storage.clear();
-  // We don't need to wait for anything.  The clear call will have queued the
-  // clear operation on the database thread, and the child process requests
-  // for origins will likewise be answered via the database thread.
+
+  // We also need to trigger a flush os that mOriginsHavingData gets updated.
+  // The inherent flush race is fine here because
+  return triggerAndWaitForLocalStorageFlush();
 }
 
 function* verifyTabPreload(knownTab, expectStorageExists) {
@@ -236,13 +290,19 @@ add_task(function*() {
       // opening tabs.  There would be no point if we weren't also requesting a
       // new process.
       ["dom.ipc.processPrelaunch.enabled", false],
+      // Enable LocalStorage's testing API so we can explicitly trigger a flush
+      // when needed.
+      ["dom.storage.testing", true],
     ]
   });
 
   // Ensure that there is no localstorage data or potential false positives for
   // localstorage preloads by forcing the origin to be cleared prior to the
   // start of our test.
-  clearOriginStorageEnsuringNoPreload();
+  yield clearOriginStorageEnsuringNoPreload();
+
+  // Make sure mOriginsHavingData gets updated.
+  yield triggerAndWaitForLocalStorageFlush();
 
   // - Open tabs.  Don't configure any of them yet.
   const knownTabs = new KnownTabs();
@@ -330,6 +390,14 @@ add_task(function*() {
   yield* verifyTabStorageState(readerTab, lastWriteState);
   yield* verifyTabStorageEvents(lateWriteThenListenTab, lastWriteMutations);
   yield* verifyTabStorageState(lateWriteThenListenTab, lastWriteState);
+
+  // - Force a LocalStorage DB flush so mOriginsHavingData is updated.
+  // mOriginsHavingData is only updated when the storage thread runs its
+  // accumulated operations during the flush.  If we don't initiate and ensure
+  // that a flush has occurred before moving on to the next step,
+  // mOriginsHavingData may not include our origin when it's sent down to the
+  // child process.
+  yield triggerAndWaitForLocalStorageFlush();
 
   // - Open a fresh tab and make sure it sees the precache/preload
   const lateOpenSeesPreload =
