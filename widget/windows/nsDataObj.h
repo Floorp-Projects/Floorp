@@ -238,7 +238,7 @@ protected:
     class CStream : public IStream, public nsIStreamListener
     {
       nsCOMPtr<nsIChannel> mChannel;
-      nsTArray<uint8_t> mChannelData;
+      FallibleTArray<uint8_t> mChannelData;
       bool mChannelRead;
       nsresult mChannelResult;
       uint32_t mStreamRead;
