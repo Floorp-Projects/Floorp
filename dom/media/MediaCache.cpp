@@ -23,6 +23,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
+#include "prsystem.h"
 #include <algorithm>
 
 namespace mozilla {
@@ -404,6 +405,9 @@ protected:
   // There is at most one file-backed media cache.
   static MediaCache* gMediaCache;
 
+  // Combined size of all memory-backed MediaCaches. Main-thread only.
+  static int64_t gMediaMemoryCachesCombinedSize;
+
   // Expected content length if known initially from the HTTP Content-Length
   // header (this is a memory-backed MediaCache), otherwise -1 (file-backed
   // MediaCache).
@@ -444,6 +448,8 @@ protected:
 
 // Initialized to nullptr by non-local static initialization.
 /* static */ MediaCache* MediaCache::gMediaCache;
+// Initialized to 0 by non-local static initialization.
+/* static */ int64_t MediaCache::gMediaMemoryCachesCombinedSize;
 
 NS_IMETHODIMP
 MediaCacheFlusher::Observe(nsISupports *aSubject, char const *aTopic, char16_t const *aData)
@@ -753,6 +759,16 @@ MediaCache::ShutdownAndDestroyThis()
     return;
   }
 
+  if (mContentLength > 0) {
+    // This is an memory-backed MediaCache, update the combined memory usage.
+    gMediaMemoryCachesCombinedSize -= mContentLength;
+    LOG("ShutdownAndDestroyThis(Memory-backed MediaCache %p) -> combined size now %" PRIi64,
+        this,
+        gMediaMemoryCachesCombinedSize);
+  } else {
+    LOG("ShutdownAndDestroyThis(Global file-backed MediaCache)");
+  }
+
   delete this;
 }
 
@@ -760,13 +776,25 @@ MediaCache::ShutdownAndDestroyThis()
 MediaCache::GetMediaCache(int64_t aContentLength)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+  static const size_t sysmem = std::max<size_t>(PR_GetPhysicalMemorySize(), 32*1024*1024);
   if (aContentLength > 0 &&
       aContentLength <=
-        int64_t(MediaPrefs::MediaMemoryCacheMaxSize()) * 1024) {
-    // Small-enough resource, use a new memory-backed MediaCache.
+        int64_t(MediaPrefs::MediaMemoryCacheMaxSize()) * 1024 &&
+      size_t(gMediaMemoryCachesCombinedSize + aContentLength) <=
+        std::min(
+        size_t(MediaPrefs::MediaMemoryCachesCombinedLimitKb()) * 1024,
+        sysmem * MediaPrefs::MediaMemoryCachesCombinedLimitPcSysmem() / 100)) {
+    // Small-enough resource (and we are under the maximum memory usage), use
+    // a new memory-backed MediaCache.
     MediaCache* mc = new MediaCache(aContentLength);
     nsresult rv = mc->Init();
     if (NS_SUCCEEDED(rv)) {
+      gMediaMemoryCachesCombinedSize += aContentLength;
+      LOG("GetMediaCache(%" PRIi64
+          ") -> Memory MediaCache %p, combined size %" PRIi64,
+          aContentLength,
+          mc,
+          gMediaMemoryCachesCombinedSize);
       return mc;
     }
     // Memory-backed MediaCache initialization failed, clean up and try for a
@@ -775,6 +803,8 @@ MediaCache::GetMediaCache(int64_t aContentLength)
   }
 
   if (gMediaCache) {
+    LOG("GetMediaCache(%" PRIi64 ") -> Existing file-backed MediaCache",
+        aContentLength);
     return gMediaCache;
   }
 
@@ -783,6 +813,11 @@ MediaCache::GetMediaCache(int64_t aContentLength)
   if (NS_FAILED(rv)) {
     delete gMediaCache;
     gMediaCache = nullptr;
+    LOG("GetMediaCache(%" PRIi64 ") -> Failed to create file-backed MediaCache",
+        aContentLength);
+  } else {
+    LOG("GetMediaCache(%" PRIi64 ") -> Created file-backed MediaCache",
+        aContentLength);
   }
 
   return gMediaCache;

@@ -330,6 +330,10 @@ pref("media.cache_readahead_limit", 60);
 // memory-backed MediaCache may be used; otherwise the (single shared
 // global) file-backed MediaCache is used.
 pref("media.memory_cache_max_size", 8192);
+// Don't create more memory-backed MediaCaches if their combined size would go
+// above the lowest limit (in kilobytes or in percent of physical memory size).
+pref("media.memory_caches_combined_limit_kb", 524288);
+pref("media.memory_caches_combined_limit_pc_sysmem", 5);
 
 // Cache size hint (in bytes) for each MediaResourceIndex.
 // 0 -> no cache. Will use next power of 2, clamped to 32B-128KB.
