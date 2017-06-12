@@ -1133,6 +1133,88 @@ VariantToJsval(JSContext* aCx, nsIVariant* aVariant,
   return true;
 }
 
+static int
+CompareIdsAtIndices(const void* aElement1, const void* aElement2, void* aClosure)
+{
+  const uint16_t index1 = *static_cast<const uint16_t*>(aElement1);
+  const uint16_t index2 = *static_cast<const uint16_t*>(aElement2);
+  const PropertyInfo* infos = static_cast<PropertyInfo*>(aClosure);
+
+  MOZ_ASSERT(JSID_BITS(infos[index1].id) != JSID_BITS(infos[index2].id));
+
+  return JSID_BITS(infos[index1].id) < JSID_BITS(infos[index2].id) ? -1 : 1;
+}
+
+template <typename SpecT>
+static bool
+InitIdsInternal(JSContext* cx, const Prefable<SpecT>* pref, PropertyInfo* infos,
+                PropertyType type)
+{
+  MOZ_ASSERT(pref);
+  MOZ_ASSERT(pref->specs);
+
+  // Index of the Prefable that contains the id for the current PropertyInfo.
+  uint32_t prefIndex = 0;
+
+  do {
+    // We ignore whether the set of ids is enabled and just intern all the IDs,
+    // because this is only done once per application runtime.
+    const SpecT* spec = pref->specs;
+    // Index of the property/function/constant spec for our current PropertyInfo
+    // in the "specs" array of the relevant Prefable.
+    uint32_t specIndex = 0;
+    do {
+      if (!JS::PropertySpecNameToPermanentId(cx, spec->name, &infos->id)) {
+        return false;
+      }
+      infos->type = type;
+      infos->prefIndex = prefIndex;
+      infos->specIndex = specIndex++;
+      ++infos;
+    } while ((++spec)->name);
+    ++prefIndex;
+  } while ((++pref)->specs);
+
+  return true;
+}
+
+#define INIT_IDS_IF_DEFINED(TypeName) {                                       \
+  if (nativeProperties->Has##TypeName##s() &&                                 \
+      !InitIdsInternal(cx,                                                    \
+                       nativeProperties->TypeName##s(),                       \
+                       nativeProperties->TypeName##PropertyInfos(),           \
+                       e##TypeName)) {                                        \
+    return false;                                                             \
+  }                                                                           \
+}
+
+bool
+InitIds(JSContext* cx, const NativeProperties* nativeProperties)
+{
+  INIT_IDS_IF_DEFINED(StaticMethod);
+  INIT_IDS_IF_DEFINED(StaticAttribute);
+  INIT_IDS_IF_DEFINED(Method);
+  INIT_IDS_IF_DEFINED(Attribute);
+  INIT_IDS_IF_DEFINED(UnforgeableMethod);
+  INIT_IDS_IF_DEFINED(UnforgeableAttribute);
+  INIT_IDS_IF_DEFINED(Constant);
+
+  // Initialize and sort the index array.
+  uint16_t* indices = nativeProperties->sortedPropertyIndices;
+  for (unsigned int i = 0; i < nativeProperties->propertyInfoCount; ++i) {
+    indices[i] = i;
+  }
+  // CompareIdsAtIndices() doesn't actually modify the PropertyInfo array, so
+  // the const_cast here is OK in spite of the signature of NS_QuickSort().
+  NS_QuickSort(indices, nativeProperties->propertyInfoCount, sizeof(uint16_t),
+               CompareIdsAtIndices,
+               const_cast<PropertyInfo*>(nativeProperties->PropertyInfos()));
+
+  return true;
+}
+
+#undef INIT_IDS_IF_DEFINED
+
 bool
 QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
 {
@@ -1289,248 +1371,210 @@ XrayCreateFunction(JSContext* cx, JS::Handle<JSObject*> wrapper,
   return obj;
 }
 
+struct IdToIndexComparator
+{
+  // The id we're searching for.
+  const jsid& mId;
+  // The list of ids we're searching in.
+  const PropertyInfo* mInfos;
+
+  explicit IdToIndexComparator(const jsid& aId, const PropertyInfo* aInfos) :
+    mId(aId), mInfos(aInfos) {}
+  int operator()(const uint16_t aIndex) const {
+    if (JSID_BITS(mId) == JSID_BITS(mInfos[aIndex].id)) {
+      return 0;
+    }
+    return JSID_BITS(mId) < JSID_BITS(mInfos[aIndex].id) ? -1 : 1;
+  }
+};
+
+static const PropertyInfo*
+XrayFindOwnPropertyInfo(JSContext* cx, JS::Handle<jsid> id,
+                        const NativeProperties* nativeProperties)
+{
+  if (MOZ_UNLIKELY(nativeProperties->iteratorAliasMethodIndex >= 0) &&
+      id == SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, JS::SymbolCode::iterator))) {
+    return nativeProperties->MethodPropertyInfos() +
+           nativeProperties->iteratorAliasMethodIndex;
+  }
+
+  size_t idx;
+  const uint16_t* sortedPropertyIndices = nativeProperties->sortedPropertyIndices;
+  const PropertyInfo* propertyInfos = nativeProperties->PropertyInfos();
+
+  if (BinarySearchIf(sortedPropertyIndices, 0,
+                     nativeProperties->propertyInfoCount,
+                     IdToIndexComparator(id, propertyInfos), &idx)) {
+    return propertyInfos + sortedPropertyIndices[idx];
+  }
+
+  return nullptr;
+}
+
 static bool
 XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
                      JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                     const Prefable<const JSPropertySpec>* attributes,
-                     const jsid* attributeIds,
-                     const JSPropertySpec* attributeSpecs,
+                     const Prefable<const JSPropertySpec>& pref,
+                     const JSPropertySpec& attrSpec,
                      JS::MutableHandle<JS::PropertyDescriptor> desc,
                      bool& cacheOnHolder)
 {
-  for (; attributes->specs; ++attributes) {
-    if (attributes->isEnabled(cx, obj)) {
-      // Set i to be the index into our full list of ids/specs that we're
-      // looking at now.
-      size_t i = attributes->specs - attributeSpecs;
-      for ( ; attributeIds[i] != JSID_VOID; ++i) {
-        if (id == attributeIds[i]) {
-          cacheOnHolder = true;
-
-          const JSPropertySpec& attrSpec = attributeSpecs[i];
-          // Because of centralization, we need to make sure we fault in the
-          // JitInfos as well. At present, until the JSAPI changes, the easiest
-          // way to do this is wrap them up as functions ourselves.
-          desc.setAttributes(attrSpec.flags);
-          // They all have getters, so we can just make it.
-          JS::Rooted<JSObject*> funobj(cx,
-            XrayCreateFunction(cx, wrapper, attrSpec.accessors.getter.native, 0, id));
-          if (!funobj)
-            return false;
-          desc.setGetterObject(funobj);
-          desc.attributesRef() |= JSPROP_GETTER;
-          if (attrSpec.accessors.setter.native.op) {
-            // We have a setter! Make it.
-            funobj =
-              XrayCreateFunction(cx, wrapper, attrSpec.accessors.setter.native, 1, id);
-            if (!funobj)
-              return false;
-            desc.setSetterObject(funobj);
-            desc.attributesRef() |= JSPROP_SETTER;
-          } else {
-            desc.setSetter(nullptr);
-          }
-          desc.object().set(wrapper);
-          desc.value().setUndefined();
-          return true;
-        }
-      }
-    }
+  if (!pref.isEnabled(cx, obj)) {
+    return true;
   }
+
+  cacheOnHolder = true;
+
+  // Because of centralization, we need to make sure we fault in the JitInfos as
+  // well. At present, until the JSAPI changes, the easiest way to do this is
+  // wrap them up as functions ourselves.
+  desc.setAttributes(attrSpec.flags);
+  // They all have getters, so we can just make it.
+  JS::Rooted<JSObject*> funobj(cx,
+    XrayCreateFunction(cx, wrapper, attrSpec.accessors.getter.native, 0, id));
+  if (!funobj)
+    return false;
+  desc.setGetterObject(funobj);
+  desc.attributesRef() |= JSPROP_GETTER;
+  if (attrSpec.accessors.setter.native.op) {
+    // We have a setter! Make it.
+    funobj =
+      XrayCreateFunction(cx, wrapper, attrSpec.accessors.setter.native, 1, id);
+    if (!funobj)
+      return false;
+    desc.setSetterObject(funobj);
+    desc.attributesRef() |= JSPROP_SETTER;
+  } else {
+    desc.setSetter(nullptr);
+  }
+  desc.object().set(wrapper);
+  desc.value().setUndefined();
+
   return true;
 }
 
 static bool
 XrayResolveMethod(JSContext* cx, JS::Handle<JSObject*> wrapper,
                   JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                  const Prefable<const JSFunctionSpec>* methods,
-                  const jsid* methodIds,
-                  const JSFunctionSpec* methodSpecs,
+                  const Prefable<const JSFunctionSpec>& pref,
+                  const JSFunctionSpec& methodSpec,
                   JS::MutableHandle<JS::PropertyDescriptor> desc,
                   bool& cacheOnHolder)
 {
-  const Prefable<const JSFunctionSpec>* method;
-  for (method = methods; method->specs; ++method) {
-    if (method->isEnabled(cx, obj)) {
-      // Set i to be the index into our full list of ids/specs that we're
-      // looking at now.
-      size_t i = method->specs - methodSpecs;
-      for ( ; methodIds[i] != JSID_VOID; ++i) {
-        if (id == methodIds[i]) {
-          cacheOnHolder = true;
-
-          const JSFunctionSpec& methodSpec = methodSpecs[i];
-          JSObject *funobj;
-          if (methodSpec.selfHostedName) {
-            JSFunction* fun =
-              JS::GetSelfHostedFunction(cx, methodSpec.selfHostedName, id,
-                                        methodSpec.nargs);
-            if (!fun) {
-              return false;
-            }
-            MOZ_ASSERT(!methodSpec.call.op, "Bad FunctionSpec declaration: non-null native");
-            MOZ_ASSERT(!methodSpec.call.info, "Bad FunctionSpec declaration: non-null jitinfo");
-            funobj = JS_GetFunctionObject(fun);
-          } else {
-            funobj = XrayCreateFunction(cx, wrapper, methodSpec.call,
-                                        methodSpec.nargs, id);
-            if (!funobj) {
-              return false;
-            }
-          }
-          desc.value().setObject(*funobj);
-          desc.setAttributes(methodSpec.flags);
-          desc.object().set(wrapper);
-          desc.setSetter(nullptr);
-          desc.setGetter(nullptr);
-          return true;
-        }
-      }
-    }
-  }
-  return true;
-}
-
-// Try to resolve a property as an unforgeable property from the given
-// NativeProperties, if it's there.  nativeProperties is allowed to be null (in
-// which case we of course won't resolve anything).
-static bool
-XrayResolveUnforgeableProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                               JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                               JS::MutableHandle<JS::PropertyDescriptor> desc,
-                               bool& cacheOnHolder,
-                               const NativeProperties* nativeProperties)
-{
-  if (!nativeProperties) {
+  if (!pref.isEnabled(cx, obj)) {
     return true;
   }
 
-  if (nativeProperties->HasUnforgeableAttributes()) {
-    if (!XrayResolveAttribute(cx, wrapper, obj, id,
-                              nativeProperties->UnforgeableAttributes(),
-                              nativeProperties->UnforgeableAttributeIds(),
-                              nativeProperties->UnforgeableAttributeSpecs(),
-                              desc, cacheOnHolder)) {
+  cacheOnHolder = true;
+
+  JSObject *funobj;
+  if (methodSpec.selfHostedName) {
+    JSFunction* fun =
+      JS::GetSelfHostedFunction(cx, methodSpec.selfHostedName, id,
+                                methodSpec.nargs);
+    if (!fun) {
       return false;
     }
-
-    if (desc.object()) {
-      return true;
-    }
-  }
-
-  if (nativeProperties->HasUnforgeableMethods()) {
-    if (!XrayResolveMethod(cx, wrapper, obj, id,
-                           nativeProperties->UnforgeableMethods(),
-                           nativeProperties->UnforgeableMethodIds(),
-                           nativeProperties->UnforgeableMethodSpecs(),
-                           desc, cacheOnHolder)) {
+    MOZ_ASSERT(!methodSpec.call.op, "Bad FunctionSpec declaration: non-null native");
+    MOZ_ASSERT(!methodSpec.call.info, "Bad FunctionSpec declaration: non-null jitinfo");
+    funobj = JS_GetFunctionObject(fun);
+  } else {
+    funobj = XrayCreateFunction(cx, wrapper, methodSpec.call,
+                                methodSpec.nargs, id);
+    if (!funobj) {
       return false;
     }
-
-    if (desc.object()) {
-      return true;
-    }
   }
+  desc.value().setObject(*funobj);
+  desc.setAttributes(methodSpec.flags);
+  desc.object().set(wrapper);
+  desc.setSetter(nullptr);
+  desc.setGetter(nullptr);
 
   return true;
 }
+
+static bool
+XrayResolveConstant(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                    JS::Handle<JSObject*> obj, JS::Handle<jsid>,
+                    const Prefable<const ConstantSpec>& pref,
+                    const ConstantSpec& constantSpec,
+                    JS::MutableHandle<JS::PropertyDescriptor> desc,
+                    bool& cacheOnHolder)
+{
+  if (!pref.isEnabled(cx, obj)) {
+    return true;
+  }
+
+  cacheOnHolder = true;
+
+  desc.setAttributes(JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT);
+  desc.object().set(wrapper);
+  desc.value().set(constantSpec.value);
+
+  return true;
+}
+
+#define RESOLVE_CASE(PropType, SpecType, Resolver)                            \
+  case e##PropType: {                                                         \
+    MOZ_ASSERT(nativeProperties->Has##PropType##s());                         \
+    const Prefable<const SpecType>& pref =                                    \
+      nativeProperties->PropType##s()[propertyInfo.prefIndex];                \
+    return Resolver(cx, wrapper, obj, id, pref,                               \
+                    pref.specs[propertyInfo.specIndex], desc, cacheOnHolder); \
+  }
 
 static bool
 XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                     JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                     JS::MutableHandle<JS::PropertyDescriptor> desc,
                     bool& cacheOnHolder, DOMObjectType type,
-                    const NativeProperties* nativeProperties)
+                    const NativeProperties* nativeProperties,
+                    const PropertyInfo& propertyInfo)
 {
-  bool hasMethods = false;
-  if (type == eInterface) {
-    hasMethods = nativeProperties->HasStaticMethods();
-  } else {
-    hasMethods = nativeProperties->HasMethods();
-  }
-  if (hasMethods) {
-    const Prefable<const JSFunctionSpec>* methods;
-    const jsid* methodIds;
-    const JSFunctionSpec* methodSpecs;
-    if (type == eInterface) {
-      methods = nativeProperties->StaticMethods();
-      methodIds = nativeProperties->StaticMethodIds();
-      methodSpecs = nativeProperties->StaticMethodSpecs();
-    } else {
-      methods = nativeProperties->Methods();
-      methodIds = nativeProperties->MethodIds();
-      methodSpecs = nativeProperties->MethodSpecs();
-    }
-    JS::Rooted<jsid> methodId(cx);
-    if (nativeProperties->iteratorAliasMethodIndex != -1 &&
-        id == SYMBOL_TO_JSID(
-                JS::GetWellKnownSymbol(cx, JS::SymbolCode::iterator))) {
-      methodId =
-        nativeProperties->MethodIds()[nativeProperties->iteratorAliasMethodIndex];
-    } else {
-      methodId = id;
-    }
-    if (!XrayResolveMethod(cx, wrapper, obj, methodId, methods, methodIds,
-                           methodSpecs, desc, cacheOnHolder)) {
-      return false;
-    }
-    if (desc.object()) {
+  MOZ_ASSERT(type != eGlobalInterfacePrototype);
+
+  // Make sure we resolve for matched object type.
+  switch (propertyInfo.type) {
+  case eStaticMethod:
+  case eStaticAttribute:
+    if (type != eInterface) {
       return true;
     }
+    break;
+  case eMethod:
+  case eAttribute:
+    if (type != eGlobalInstance && type != eInterfacePrototype) {
+      return true;
+    }
+    break;
+  case eUnforgeableMethod:
+  case eUnforgeableAttribute:
+    if (!IsInstance(type)) {
+      return true;
+    }
+    break;
+  case eConstant:
+    if (IsInstance(type)) {
+      return true;
+    }
+    break;
   }
 
-  if (type == eInterface) {
-    if (nativeProperties->HasStaticAttributes()) {
-      if (!XrayResolveAttribute(cx, wrapper, obj, id,
-                                nativeProperties->StaticAttributes(),
-                                nativeProperties->StaticAttributeIds(),
-                                nativeProperties->StaticAttributeSpecs(),
-                                desc, cacheOnHolder)) {
-        return false;
-      }
-      if (desc.object()) {
-        return true;
-      }
-    }
-  } else {
-    if (nativeProperties->HasAttributes()) {
-      if (!XrayResolveAttribute(cx, wrapper, obj, id,
-                                nativeProperties->Attributes(),
-                                nativeProperties->AttributeIds(),
-                                nativeProperties->AttributeSpecs(),
-                                desc, cacheOnHolder)) {
-        return false;
-      }
-      if (desc.object()) {
-        return true;
-      }
-    }
-  }
-
-  if (nativeProperties->HasConstants()) {
-    const Prefable<const ConstantSpec>* constant;
-    for (constant = nativeProperties->Constants(); constant->specs; ++constant) {
-      if (constant->isEnabled(cx, obj)) {
-        // Set i to be the index into our full list of ids/specs that we're
-        // looking at now.
-        size_t i = constant->specs - nativeProperties->ConstantSpecs();
-        for ( ; nativeProperties->ConstantIds()[i] != JSID_VOID; ++i) {
-          if (id == nativeProperties->ConstantIds()[i]) {
-            cacheOnHolder = true;
-
-            desc.setAttributes(JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT);
-            desc.object().set(wrapper);
-            desc.value().set(nativeProperties->ConstantSpecs()[i].value);
-            return true;
-          }
-        }
-      }
-    }
+  switch (propertyInfo.type) {
+  RESOLVE_CASE(StaticMethod, JSFunctionSpec, XrayResolveMethod)
+  RESOLVE_CASE(StaticAttribute, JSPropertySpec, XrayResolveAttribute)
+  RESOLVE_CASE(Method, JSFunctionSpec, XrayResolveMethod)
+  RESOLVE_CASE(Attribute, JSPropertySpec, XrayResolveAttribute)
+  RESOLVE_CASE(UnforgeableMethod, JSFunctionSpec, XrayResolveMethod)
+  RESOLVE_CASE(UnforgeableAttribute, JSPropertySpec, XrayResolveAttribute)
+  RESOLVE_CASE(Constant, ConstantSpec, XrayResolveConstant)
   }
 
   return true;
 }
+
+#undef RESOLVE_CASE
 
 static bool
 ResolvePrototypeOrConstructor(JSContext* cx, JS::Handle<JSObject*> wrapper,
@@ -1612,8 +1656,6 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
   DOMObjectType type;
   const NativePropertyHooks *nativePropertyHooks =
     GetNativePropertyHooks(cx, obj, type);
-  const NativePropertiesHolder& nativeProperties =
-    nativePropertyHooks->mNativeProperties;
   ResolveOwnProperty resolveOwnProperty =
     nativePropertyHooks->mResolveOwnProperty;
 
@@ -1622,27 +1664,35 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
     return resolveOwnProperty(cx, wrapper, obj, id, desc);
   }
 
-  // Check for unforgeable properties first.
-  if (IsInstance(type)) {
-    const NativePropertiesHolder& nativeProperties =
-      nativePropertyHooks->mNativeProperties;
-    if (!XrayResolveUnforgeableProperty(cx, wrapper, obj, id, desc, cacheOnHolder,
-                                        nativeProperties.regular)) {
-      return false;
-    }
+  const NativePropertiesHolder& nativePropertiesHolder =
+    nativePropertyHooks->mNativeProperties;
+  const NativeProperties* nativeProperties = nullptr;
+  const PropertyInfo* found = nullptr;
 
-    if (!desc.object() && xpc::AccessCheck::isChrome(wrapper) &&
-        !XrayResolveUnforgeableProperty(cx, wrapper, obj, id, desc, cacheOnHolder,
-                                        nativeProperties.chromeOnly)) {
-      return false;
-    }
-
-    if (desc.object()) {
-      return true;
-    }
+  if ((nativeProperties = nativePropertiesHolder.regular)) {
+    found = XrayFindOwnPropertyInfo(cx, id, nativeProperties);
+  }
+  if (!found &&
+      (nativeProperties = nativePropertiesHolder.chromeOnly) &&
+      xpc::AccessCheck::isChrome(js::GetObjectCompartment(wrapper))) {
+    found = XrayFindOwnPropertyInfo(cx, id, nativeProperties);
   }
 
   if (IsInstance(type)) {
+    // Check for unforgeable properties first to prevent names provided by
+    // resolveOwnProperty callback from shadowing them.
+    if (found && (found->type == eUnforgeableMethod ||
+                  found->type == eUnforgeableAttribute)) {
+      if (!XrayResolveProperty(cx, wrapper, obj, id, desc, cacheOnHolder, type,
+                               nativeProperties, *found)) {
+        return false;
+      }
+
+      if (desc.object()) {
+        return true;
+      }
+    }
+
     if (resolveOwnProperty) {
       if (!resolveOwnProperty(cx, wrapper, obj, id, desc)) {
         return false;
@@ -1734,17 +1784,9 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
     }
   }
 
-  if (nativeProperties.regular &&
+  if (found &&
       !XrayResolveProperty(cx, wrapper, obj, id, desc, cacheOnHolder, type,
-                           nativeProperties.regular)) {
-    return false;
-  }
-
-  if (!desc.object() &&
-      nativeProperties.chromeOnly &&
-      xpc::AccessCheck::isChrome(js::GetObjectCompartment(wrapper)) &&
-      !XrayResolveProperty(cx, wrapper, obj, id, desc, cacheOnHolder, type,
-                           nativeProperties.chromeOnly)) {
+                           nativeProperties, *found)) {
     return false;
   }
 
@@ -1766,43 +1808,81 @@ XrayDefineProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
 
 template<typename SpecType>
 bool
-XrayAttributeOrMethodKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                          JS::Handle<JSObject*> obj,
-                          const Prefable<const SpecType>* list,
-                          const jsid* ids, const SpecType* specList,
-                          unsigned flags, JS::AutoIdVector& props)
+XrayAppendPropertyKeys(JSContext* cx, JS::Handle<JSObject*> obj,
+                       const Prefable<const SpecType>* pref,
+                       const PropertyInfo* infos, unsigned flags,
+                       JS::AutoIdVector& props)
 {
-  for (; list->specs; ++list) {
-    if (list->isEnabled(cx, obj)) {
-      // Set i to be the index into our full list of ids/specs that we're
-      // looking at now.
-      size_t i = list->specs - specList;
-      for ( ; ids[i] != JSID_VOID; ++i) {
-        // Skip non-enumerable properties and symbol-keyed properties unless
-        // they are specially requested via flags.
+  do {
+    bool prefIsEnabled = pref->isEnabled(cx, obj);
+    if (prefIsEnabled) {
+      const SpecType* spec = pref->specs;
+      do {
+        const jsid& id = infos++->id;
         if (((flags & JSITER_HIDDEN) ||
-             (specList[i].flags & JSPROP_ENUMERATE)) &&
-            ((flags & JSITER_SYMBOLS) || !JSID_IS_SYMBOL(ids[i])) &&
-            !props.append(ids[i])) {
+             (spec->flags & JSPROP_ENUMERATE)) &&
+            ((flags & JSITER_SYMBOLS) || !JSID_IS_SYMBOL(id)) &&
+            !props.append(id)) {
           return false;
         }
-      }
+      } while ((++spec)->name);
     }
-  }
+    // Break if we have reached the end of pref.
+    if (!(++pref)->specs) {
+      break;
+    }
+    // Advance infos if the previous pref is disabled. The -1 is required
+    // because there is an end-of-list terminator between pref->specs and
+    // (pref - 1)->specs.
+    if (!prefIsEnabled) {
+      infos += pref->specs - (pref - 1)->specs - 1;
+    }
+  } while (1);
+
   return true;
 }
 
-#define ADD_KEYS_IF_DEFINED(FieldName) {                                      \
-  if (nativeProperties->Has##FieldName##s() &&                                \
-      !XrayAttributeOrMethodKeys(cx, wrapper, obj,                            \
-                                 nativeProperties->FieldName##s(),            \
-                                 nativeProperties->FieldName##Ids(),          \
-                                 nativeProperties->FieldName##Specs(),        \
-                                 flags, props)) {                             \
-    return false;                                                             \
-  }                                                                           \
+template<>
+bool
+XrayAppendPropertyKeys<ConstantSpec>(JSContext* cx, JS::Handle<JSObject*> obj,
+                                     const Prefable<const ConstantSpec>* pref,
+                                     const PropertyInfo* infos, unsigned flags,
+                                     JS::AutoIdVector& props)
+{
+  do {
+    bool prefIsEnabled = pref->isEnabled(cx, obj);
+    if (prefIsEnabled) {
+      const ConstantSpec* spec = pref->specs;
+      do {
+        if (!props.append(infos++->id)) {
+          return false;
+        }
+      } while ((++spec)->name);
+    }
+    // Break if we have reached the end of pref.
+    if (!(++pref)->specs) {
+      break;
+    }
+    // Advance infos if the previous pref is disabled. The -1 is required
+    // because there is an end-of-list terminator between pref->specs and
+    // (pref - 1)->specs.
+    if (!prefIsEnabled) {
+      infos += pref->specs - (pref - 1)->specs - 1;
+    }
+  } while (1);
+
+  return true;
 }
 
+#define ADD_KEYS_IF_DEFINED(FieldName) {                                        \
+  if (nativeProperties->Has##FieldName##s() &&                                  \
+      !XrayAppendPropertyKeys(cx, obj,                                          \
+                              nativeProperties->FieldName##s(),                 \
+                              nativeProperties->FieldName##PropertyInfos(),     \
+                              flags, props)) {                                  \
+    return false;                                                               \
+  }                                                                             \
+}
 
 bool
 XrayOwnPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
@@ -1820,29 +1900,17 @@ XrayOwnPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
       ADD_KEYS_IF_DEFINED(Method);
       ADD_KEYS_IF_DEFINED(Attribute);
     }
-  } else if (type == eInterface) {
-    ADD_KEYS_IF_DEFINED(StaticMethod);
-    ADD_KEYS_IF_DEFINED(StaticAttribute);
-  } else if (type != eGlobalInterfacePrototype) {
-    MOZ_ASSERT(IsInterfacePrototype(type));
-    ADD_KEYS_IF_DEFINED(Method);
-    ADD_KEYS_IF_DEFINED(Attribute);
-  }
-
-  if (nativeProperties->HasConstants()) {
-    const Prefable<const ConstantSpec>* constant;
-    for (constant = nativeProperties->Constants(); constant->specs; ++constant) {
-      if (constant->isEnabled(cx, obj)) {
-        // Set i to be the index into our full list of ids/specs that we're
-        // looking at now.
-        size_t i = constant->specs - nativeProperties->ConstantSpecs();
-        for ( ; nativeProperties->ConstantIds()[i] != JSID_VOID; ++i) {
-          if (!props.append(nativeProperties->ConstantIds()[i])) {
-            return false;
-          }
-        }
-      }
+  } else {
+    MOZ_ASSERT(type != eGlobalInterfacePrototype);
+    if (type == eInterface) {
+      ADD_KEYS_IF_DEFINED(StaticMethod);
+      ADD_KEYS_IF_DEFINED(StaticAttribute);
+    } else {
+      MOZ_ASSERT(type == eInterfacePrototype);
+      ADD_KEYS_IF_DEFINED(Method);
+      ADD_KEYS_IF_DEFINED(Attribute);
     }
+    ADD_KEYS_IF_DEFINED(Constant);
   }
 
   return true;

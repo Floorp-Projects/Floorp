@@ -1778,31 +1778,8 @@ AtomizeAndPinJSString(JSContext* cx, jsid& id, const char* chars)
   return false;
 }
 
-// Spec needs a name property
-template <typename Spec>
-static bool
-InitIds(JSContext* cx, const Prefable<Spec>* prefableSpecs, jsid* ids)
-{
-  MOZ_ASSERT(prefableSpecs);
-  MOZ_ASSERT(prefableSpecs->specs);
-  do {
-    // We ignore whether the set of ids is enabled and just intern all the IDs,
-    // because this is only done once per application runtime.
-    Spec* spec = prefableSpecs->specs;
-    do {
-      if (!JS::PropertySpecNameToPermanentId(cx, spec->name, ids)) {
-        return false;
-      }
-    } while (++ids, (++spec)->name);
-
-    // We ran out of ids for that pref.  Put a JSID_VOID in on the id
-    // corresponding to the list terminator for the pref.
-    *ids = JSID_VOID;
-    ++ids;
-  } while ((++prefableSpecs)->specs);
-
-  return true;
-}
+bool
+InitIds(JSContext* cx, const NativeProperties* properties);
 
 bool
 QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp);
