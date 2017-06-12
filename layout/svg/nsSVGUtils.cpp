@@ -148,22 +148,6 @@ nsSVGUtils::Init()
                                "svg.new-getBBox.enabled");
 }
 
-nsIFrame*
-nsSVGUtils::GetNearestSVGViewport(nsIFrame *aFrame)
-{
-  NS_ASSERTION(aFrame->IsFrameOfType(nsIFrame::eSVG), "SVG frame expected");
-
-  for (; aFrame &&  aFrame->IsFrameOfType(nsIFrame::eSVG);
-       aFrame = aFrame->GetParent()) {
-    NS_ASSERTION(aFrame->IsFrameOfType(nsIFrame::eSVG), "SVG frame expected");
-    if (aFrame->IsSVGInnerSVGFrame() || aFrame->IsSVGOuterSVGFrame()) {
-      return aFrame;
-    }
-  }
-
-  return nullptr;
-}
-
 nsRect
 nsSVGUtils::GetPostFilterVisualOverflowRect(nsIFrame *aFrame,
                                             const nsRect &aPreFilterRect)

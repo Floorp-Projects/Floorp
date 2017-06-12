@@ -345,15 +345,6 @@ public:
                                        nsIFrame* aChildFrame);
 
   /**
-   * Takes a rectangle, aRect, in the <text> element's user space, and
-   * returns a rectangle in aChildFrame's frame user space that
-   * covers intersections of aRect with each rendered run for text frames
-   * within aChildFrame.
-   */
-  gfxRect TransformFrameRectToTextChild(const gfxRect& aRect,
-                                        nsIFrame* aChildFrame);
-
-  /**
    * Takes an app unit rectangle in the coordinate space of a given descendant
    * frame of this frame, and returns a rectangle in the <text> element's user
    * space that covers all parts of rendered runs that intersect with the
