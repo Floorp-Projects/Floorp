@@ -13,6 +13,15 @@
   <string name="menu_about">Tocante a</string>
   <string name="menu_help">Ayuda</string>
   <string name="menu_rights">Los tos drechos</string>
+  <string name="menu_trackers_blocked_title">Rastrexadores bloquiaos</string>
+  <string name="share_dialog_title">Compartir per</string>
+  <string name="notification_erase_text">Desaniciar historial de restolar</string>
+  <string name="shortcut_erase_short_label">Desaniciar</string>
+  <string name="shortcut_erase_long_label">Desaniciar historial de restolar</string>
+  <string name="text_selection_search_action">Guetar de mou priváu</string>
+  <string name="preference_language">Llingua</string>
+  <string name="preference_language_systemdefault">Predeterminao del sistema</string>
+  <string name="preference_dialog_title_search_engine">Gueta por defeutu</string>
   <string name="preference_category_privacy">Privacidá</string>
   <string name="preference_privacy_block_ads">Bloquiar rastrexadores publicitarios</string>
   <string name="preference_privacy_block_analytics">Bloquiar rastrexadores d\'analítiques</string>
@@ -40,4 +49,6 @@
   <string name="your_rights">Los tos drechos</string>
   <string name="external_app_prompt_title">Abrir l\'enllaz n\'otra aplicación</string>
   <string name="error_generic_title">Ups</string>
+  <string name="firstrun_skip_button">Saltar</string>
+  <string name="firstrun_next_button">Siguiente</string>
 </resources>

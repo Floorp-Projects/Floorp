@@ -13,9 +13,17 @@
   <string name="menu_about">Despre</string>
   <string name="menu_help">Ajutor</string>
   <string name="menu_rights">Drepturile tale</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#238;&#539;i ofer&#259; controlul.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Folose&#537;te-l ca browser privat:\n  "<ul>"\n    "<li>Caut&#259; &#537;i navigheaz&#259; direct din aplica&#539;ie</li>"\n    "<li>Blocheaz&#259; urm&#259;ritorii (sau actualizeaz&#259; set&#259;rile pentru a permite urm&#259;ritorii)</li>"\n    "<li>&#536;terge pentru a &#537;terge cookie-urile precum &#537;i istoricul de c&#259;utare &#537;i navigare</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s este produs de Mozilla. Misiunea noastr&#259; este s&#259; promov&#259;m un internet deschis &#537;i s&#259;n&#259;tos.<br/>\n<a href="%2$s">Afl&#259; mai multe</a></p>]]></string>
+  <string name="menu_trackers_blocked_title">Urmăritori blocați</string>
+  <string name="share_dialog_title">Partajează via</string>
+  <string name="notification_erase_text">Șterge istoricul de navigare</string>
+  <string name="shortcut_erase_short_label">Șterge</string>
+  <string name="shortcut_erase_long_label">Șterge istoricul de navigare</string>
+  <string name="text_selection_search_action">Caută într-un mod privat</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#238;&#539;i ofer&#259; controlul.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Folose&#537;te-l ca browser privat:\n  "<ul>"\n    "<li>Caut&#259; &#537;i navigheaz&#259; direct din aplica&#539;ie</li>"\n    "<li>Blocheaz&#259; urm&#259;ritorii (sau actualizeaz&#259; set&#259;rile pentru a permite urm&#259;ritorii)</li>"\n    "<li>&#536;terge pentru a &#238;ndep&#259;rta cookie-urile precum &#537;i istoricul de c&#259;utare &#537;i navigare</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s este produs de Mozilla. Misiunea noastr&#259; este s&#259; promov&#259;m un internet deschis &#537;i s&#259;n&#259;tos.<br/>\n<a href="%2$s">Afl&#259; mai multe</a></p>]]></string>
   <string name="preference_category_search">Căutare</string>
   <string name="preference_search_engine_default">Implicit</string>
+  <string name="preference_language">Limbă</string>
+  <string name="preference_language_systemdefault">Setarea implicită a sistemului</string>
   <string name="preference_dialog_title_search_engine">Căutare implicită</string>
   <string name="preference_category_privacy">Confidențialitate</string>
   <string name="preference_privacy_block_ads">Blochează urmăritorii publicitari</string>
@@ -23,6 +31,8 @@
   <string name="preference_privacy_block_social">Blochează urmăritorii sociali</string>
   <string name="preference_privacy_block_content">Blochează alți urmăritori de conținut</string>
   <string name="preference_privacy_block_content_summary">Poate afecta funcționalitatea unor videouri sau pagini web</string>
+  <string name="preference_privacy_secure_mode">Discret</string>
+  <string name="preference_privacy_secure_mode_summary">Oprește modul discret pentru a realiza capturi de ecran și a vedea site-urile pe care le vizitezi folosind %1$s în lista de Aplicații recente</string>
   <string name="preference_category_performance">Performanță</string>
   <string name="preference_performance_block_webfonts">Blochează fonturile web</string>
   <string name="preference_performance_block_webfonts_summary">Poate duce la pictograme și imagini lipsă</string>
@@ -43,6 +53,8 @@
   <string name="content_description_reload">Reîncarcă site-ul web</string>
   <string name="content_description_back">Navighează înapoi</string>
   <string name="content_description_stop">Oprește încărcarea site-ului web</string>
+  <string name="content_description_customtab_exit">Întoarce-te la aplicația anterioară</string>
+  <string name="content_description_blocking_switch">Blochează urmăritorii</string>
   <string name="context_menu_paste_go">Lipește și accesează</string>
   <string name="your_rights">Drepturile tale</string>
   <string name="external_app_prompt_title">Deschide linkul în altă aplicație</string>
@@ -67,4 +79,19 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Aceasta s-ar putea datora unei probleme &#238;n configura&#539;ia serverului sau ar putea s&#259; fie cineva care &#238;ncearc&#259; s&#259; uzurpeze identitatea serverului.</li>"\n  "<li>Dac&#259; te-ai conectat cu succes &#238;n trecut la acest server, eroarea poate fi temporar&#259; &#537;i po&#539;i &#238;ncerca din nou mai t&#226;rziu.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ups</string>
   <string name="error_generic_message">Nu putem încărca această pagină dintr-un motiv oarecare.</string>
+  <string name="contextmenu_link_share">Partajează linkul</string>
+  <string name="contextmenu_link_copy">Copiază adresa linkului</string>
+  <string name="contextmenu_image_share">Partajează imaginea</string>
+  <string name="contextmenu_image_copy">Copiază adresa imaginii</string>
+  <string name="contextmenu_image_save">Salvează imaginea</string>
+  <string name="contextmenu_image_warning"><![CDATA["Imaginile salvate și partajate "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nu vor fi &#238;ndep&#259;rtate</b>" când ștergi istoricul %1$s."]]></string>
+  <string name="firstrun_tracking_title">Navighează fără grija de a fi urmărit</string>
+  <string name="firstrun_tracking_text">Blochează automat urmărirea online în timp ce navighezi. Elimină apoi paginile vizitate și cookie-urile cu o atingere pe pictograma coș de gunoi din aplicație sau din notificări.</string>
+  <string name="firstrun_defaultbrowser_title">Consolidează-ți confidențialitatea</string>
+  <string name="firstrun_defaultbrowser_text">Setează %1$s ca browser implicit și beneficiază de avantajele navigării private atunci când deschizi linkuri din alte aplicații Android.</string>
+  <string name="firstrun_breaking_title">O soluție rapidă atunci când\nblocarea „defectează” o pagină</string>
+  <string name="firstrun_breaking_text">Dacă un site nu funcționează corect atunci când blocarea urmăritorilor este activată, oprește blocarea cu o atingere din meniul de unelte.</string>
+  <string name="firstrun_close_button">Ok, am înțeles!</string>
+  <string name="firstrun_skip_button">Omite</string>
+  <string name="firstrun_next_button">Următorul</string>
 </resources>

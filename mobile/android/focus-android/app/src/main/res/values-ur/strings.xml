@@ -13,9 +13,17 @@
   <string name="menu_about">کے بارے میں</string>
   <string name="menu_help">مدد</string>
   <string name="menu_rights">آپ کے حقوق</string>
+  <string name="menu_trackers_blocked_title">ٹریکر بلاک لردہ</string>
+  <string name="share_dialog_title">کے زریعے شیئر کریں</string>
+  <string name="notification_erase_text">برائوزنگ سابقات مٹائیں</string>
+  <string name="shortcut_erase_short_label">مٹائيں</string>
+  <string name="shortcut_erase_long_label">برائوزنگ سابقات مٹائیں</string>
+  <string name="text_selection_search_action">نجی طور پر طلاش کرے</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"%1$s &#1570;&#1662; &#1705;&#1608; &#1705;&#1606;&#1657;&#1585;&#1608;&#1604; &#1583;&#1740;&#1578;&#1740; &#1729;&#1746; "</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" &#1575;&#1587;&#1705;&#1608; &#1606;&#1580;&#1740; &#1576;&#1585;&#1575;&#1574;&#1608;&#1586;&#1585; &#1705;&#1740; &#1591;&#1585;&#1581; &#1575;&#1587;&#1578;&#1593;&#1605;&#1575;&#1604; &#1705;&#1585;&#1740;&#1722;:\n  "<ul>" \n    "<li>" &#1575;&#1662;&#1604;&#1740; &#1705;&#1740;&#1588;&#1606; &#1605;&#1740;&#1722; &#1729;&#1740; &#1578;&#1604;&#1575;&#1588; &#1575;&#1608;&#1585; &#1576;&#1585;&#1575;&#1572;&#1586; &#1705;&#1585;&#1740;&#1722; "</li>"\n    "<li>"&#1657;&#1585;&#1740;&#1705;&#1585;&#1585;&#1648; &#1705;&#1608; &#1576;&#1604;&#1575;&#1705; &#1705;&#1585;&#1740;&#1722; (&#1740;&#1575; &#1587;&#1657;&#1740;&#1606;&#1711;&#1608;&#1722; &#1705;&#1740; &#1578;&#1575;&#1586;&#1729; &#1705;&#1575;&#1585;&#1740; &#1705;&#1585; &#1705;&#1746; &#1657;&#1585;&#1740;&#1705;&#1585;&#1585;&#1648; &#1705;&#1608; &#1575;&#1580;&#1575;&#1586;&#1578; &#1583;&#1740;&#1722;)&#1748; "</li>"\n    "<li>" &#1705;&#1608;&#1705;&#1740;&#1586; &#1705;&#1746; &#1587;&#1575;&#1578;&#1726; &#1578;&#1604;&#1575;&#1588; &#1575;&#1608;&#1585; &#1576;&#1585;&#1575;&#1572;&#1586;&#1606;&#1711; &#1587;&#1575;&#1576;&#1602;&#1575;&#1578; &#1705;&#1608; &#1576;&#1726;&#1740; &#1581;&#1584;&#1601; &#1705;&#1585;&#1606;&#1746; &#1705;&#1740;&#1604;&#1740;&#1746; &#1605;&#1657;&#1575;&#1574;&#1740;&#1722; "</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1705;&#1740; &#1662;&#1740;&#1583;&#1575;&#1608;&#1575;&#1585; &#1729;&#1746;&#1748; &#1726;&#1605;&#1575;&#1585;&#1740; &#1605;&#1729;&#1605; &#1575;&#1740;&#1705; &#1589;&#1581;&#1578; &#1605;&#1606;&#1583; &#1705;&#1726;&#1604;&#1746; &#1575;&#1606;&#1657;&#1585;&#1606;&#1740;&#1657; &#1705;&#1608; &#1601;&#1585;&#1608;&#1593;&#1648; &#1583;&#1740;&#1606;&#1575; &#1729;&#1746;&#1748; Mozilla<br/>\n<a href="%2$s">" &#1605;&#1586;&#1740;&#1583; &#1587;&#1740;&#1705;&#1726;&#1740;&#1722; "</a></p>]]></string>
   <string name="preference_category_search">تلاش</string>
   <string name="preference_search_engine_default">طے شدہ</string>
+  <string name="preference_language">زبان</string>
+  <string name="preference_language_systemdefault">نظام طے شدہ</string>
   <string name="preference_dialog_title_search_engine">طے شدہ تلاش</string>
   <string name="preference_category_privacy">رازداری</string>
   <string name="preference_privacy_block_ads">اشتھار ٹریکرز کو بلاک کریں</string>
@@ -23,6 +31,8 @@
   <string name="preference_privacy_block_social">سماجی ٹریکرز بلاک کریں</string>
   <string name="preference_privacy_block_content">دیگر مواد کے ٹڑیکرز بلاک کریں</string>
   <string name="preference_privacy_block_content_summary">شاید کچھ وڈیوز اور ویب صفحات کو توڑ دے</string>
+  <string name="preference_privacy_secure_mode">اخفا</string>
+  <string name="preference_privacy_secure_mode_summary">سٹلتھ موڈ کو بند کرے اسکرین شاٹ لینے اور اپکی دورہ کی ہوئ سائٹ دیکھنے کے لئے %1$s استعمال کردہ اپنی حالیہ ایپ فہرست میں سے</string>
   <string name="preference_category_performance">کارکردگی</string>
   <string name="preference_performance_block_webfonts">ویب فونٹس بلاک کریں</string>
   <string name="preference_performance_block_webfonts_summary">نتیجتن اسکی شاید آئیکن یا تصاویر گایب ہو سکتی ہے</string>
@@ -43,6 +53,8 @@
   <string name="content_description_reload">ویب سائٹ دوبارہ لوڈ کریں</string>
   <string name="content_description_back">پیچھے کی طرف جائے</string>
   <string name="content_description_stop">ویبسائَٹ لوڈ کرنا بند کریں</string>
+  <string name="content_description_customtab_exit">پچھلی ایپلیکیشن میں واپس جائیں</string>
+  <string name="content_description_blocking_switch">ٹریکرز کو بلاک کریں</string>
   <string name="context_menu_paste_go">چسپاں کریں اور چلیں</string>
   <string name="your_rights">آپ کے حقوق</string>
   <string name="external_app_prompt_title">کسی دوسری اپلیکیشن میں ربط کھولیں</string>
@@ -67,4 +79,19 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"  &#1740;&#1729; &#1605;&#1587;&#1574;&#1604;&#1729; &#1662;&#1740;&#1588; &#1705;&#1575;&#1585; &#1705;&#1740; &#1578;&#1588;&#1705;&#1740;&#1604; &#1605;&#1740;&#1722; &#1576;&#1726;&#1740; &#1729;&#1608; &#1587;&#1705;&#1578;&#1575; &#1729;&#1746; &#1740;&#1575; &#1705;&#1608;&#1574;&#1740; &#1662;&#1740;&#1588;&#1705;&#1575;&#1585; &#1705;&#1740; &#1606;&#1602;&#1575;&#1604;&#1740; &#1705;&#1740; &#1705;&#1608;&#1588;&#1588; &#1705;&#1585;&#1585;&#1729;&#1575; &#1729;&#1746;"</li>"\n  "<li>" &#1575;&#1711;&#1585; &#1570;&#1662; &#1605;&#1575;&#1590;&#1740; &#1605;&#1740;&#1722; &#1575;&#1587; &#1662;&#1740;&#1588; &#1705;&#1575;&#1585; &#1662;&#1585; &#1705;&#1575;&#1605;&#1740;&#1575;&#1576;&#1740; &#1587;&#1746; &#1580;&#1681;&#1670;&#1705;&#1746; &#1729;&#1740;&#1722;&#1548; &#1578;&#1608; &#1606;&#1602;&#1589; &#1593;&#1575;&#1585;&#1590;&#1740; &#1576;&#1726;&#1740; &#1729;&#1608; &#1587;&#1705;&#1578;&#1575; &#1729;&#1746;&#1548; &#1575;&#1608;&#1585; &#1570;&#1662; &#1578;&#1726;&#1608;&#1681;&#1740; &#1583;&#1740;&#1585; &#1576;&#1593;&#1583;&#1583;&#1608;&#1576;&#1575;&#1585;&#1729; &#1705;&#1608;&#1588;&#1588; &#1576;&#1726;&#1740; &#1705;&#1585;&#1587;&#1705;&#1578;&#1746; &#1729;&#1740;&#1722;&#1748; "</li>\n</ul>]]></string>
   <string name="error_generic_title">اف</string>
   <string name="error_generic_message">ہم کچھ وجوہات کی بنا پر یہ صفحہ لوڈ نہیں کر سکتے۔</string>
+  <string name="contextmenu_link_share">ربط شیئر کریں</string>
+  <string name="contextmenu_link_copy">ربط نقل کریں</string>
+  <string name="contextmenu_image_share">نقش شیئر کریں</string>
+  <string name="contextmenu_image_copy">نقش کا پتہ نقل کریں</string>
+  <string name="contextmenu_image_save">نقش محفوظ کریں</string>
+  <string name="contextmenu_image_warning"><![CDATA["محفوظ اور شیئر کردہ تصاویر "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1581;&#1592;&#1601; &#1606;&#1729;&#1740;&#1722; &#1705;&#1740; &#1580;&#1575;&#1574;&#1746;&#1711;&#1740;</b>" جب آپ اپنی %1$s تاریخ مٹاتے ہے۔"]]></string>
+  <string name="firstrun_tracking_title">اس طرح براؤز کریں جیسے کوئی نہیں دیکھ رہا</string>
+  <string name="firstrun_tracking_text">آنلائن ٹریکنگ خود بخود طریکہ سے بلاک کرے جب بھی اپ براؤزنگ کرے۔ فر کوڑے دان آئیکن پر ٹچ کرکے یا اپنے نوٹیفکیشن سے ہٹائے دورہ کردہ صفحات اور کوکس۔</string>
+  <string name="firstrun_defaultbrowser_title">آپ کی نجی نوعیت کو پاور اپ کرے</string>
+  <string name="firstrun_defaultbrowser_text">%1$s کو اپنا طے شدہ براؤزر سیٹ کرے اور نجی براؤزنگ کا فائدہ حاصل کرے جب بھی آپ دیگر اینڈرائڈ ایپ سے ویب پر لنک ہو۔</string>
+  <string name="firstrun_breaking_title">ایک فوری درستگی جب blocking = breaking</string>
+  <string name="firstrun_breaking_text">ٹول مینو سے ٹیپ کر کے بلاکنگ بند کرے، جب بھی آنلائن ٹریکر بلاک کرنے سے آپ کی سائٹ ٹھیک سے نظر نہیں ہو رہی ہو۔</string>
+  <string name="firstrun_close_button">ٹھیک ہے، مجھے سمجھ آگئی ہے!</string>
+  <string name="firstrun_skip_button">چھوڈیں</string>
+  <string name="firstrun_next_button">آگے</string>
 </resources>
