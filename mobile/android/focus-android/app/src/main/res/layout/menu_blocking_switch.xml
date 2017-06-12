@@ -44,7 +44,7 @@
             tools:text="0" />
 
             <ImageButton
-                android:id="@+id/help"
+                android:id="@+id/help_trackers"
                 android:layout_width="22dp"
                 android:layout_height="22dp"
                 android:padding="4dp"

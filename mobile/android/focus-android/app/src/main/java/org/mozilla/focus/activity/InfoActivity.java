@@ -57,6 +57,11 @@ public class InfoActivity extends AppCompatActivity {
         return getIntentFor(context, SupportUtils.HELP_URL, resources.getString(R.string.menu_help));
     }
 
+    public static final Intent getTrackerHelpIntent(final Context context) {
+        final Resources resources = Locales.getLocalizedResources(context);
+        return getIntentFor(context, SupportUtils.getSumoURLForTopic(context, "trackers"), resources.getString(R.string.menu_help));
+    }
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

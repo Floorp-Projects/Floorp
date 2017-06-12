@@ -605,6 +605,11 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 startActivity(helpIntent);
                 break;
 
+            case R.id.help_trackers:
+                Intent trackerHelpIntent = InfoActivity.getTrackerHelpIntent(getActivity());
+                startActivity(trackerHelpIntent);
+                break;
+
             default:
                 throw new IllegalArgumentException("Unhandled menu item in BrowserFragment");
         }

@@ -30,7 +30,7 @@ import org.mozilla.focus.web.BrowsingSession;
         switchView.setChecked(fragment.isBlockingEnabled());
         switchView.setOnCheckedChangeListener(this);
 
-        final View helpView = itemView.findViewById(R.id.help);
+        final View helpView = itemView.findViewById(R.id.help_trackers);
         helpView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
