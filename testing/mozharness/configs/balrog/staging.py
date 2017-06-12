@@ -1,13 +1,13 @@
 config = {
     'balrog_servers': [
         {
-            'balrog_api_root': 'https://aus4-admin-dev.allizom.org/api',
+            'balrog_api_root': 'https://balrog-admin.stage.mozaws.net/api',
             'ignore_failures': False,
             'balrog_usernames': {
-                'firefox': 'stage-ffxbld',
-                'thunderbird': 'stage-tbirdbld',
-                'mobile': 'stage-ffxbld',
-                'Fennec': 'stage-ffxbld',
+                'firefox': 'balrog-stage-ffxbld',
+                'thunderbird': 'balrog-stage-tbirdbld',
+                'mobile': 'balrog-stage-ffxbld',
+                'Fennec': 'balrog-stage-ffxbld',
             }
         }
     ]
