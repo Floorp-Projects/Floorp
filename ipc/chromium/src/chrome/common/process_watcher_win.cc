@@ -20,7 +20,7 @@ class ChildReaper : public mozilla::Runnable,
                     public MessageLoop::DestructionObserver {
  public:
   explicit ChildReaper(base::ProcessHandle process, bool force)
-   : process_(process), force_(force) {
+    : mozilla::Runnable("ChildReaper"), process_(process), force_(force) {
     watcher_.StartWatching(process_, this);
   }
 

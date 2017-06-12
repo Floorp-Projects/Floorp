@@ -137,7 +137,11 @@ public:
   class AsyncScrollPortEvent : public Runnable {
   public:
     NS_DECL_NSIRUNNABLE
-    explicit AsyncScrollPortEvent(ScrollFrameHelper *helper) : mHelper(helper) {}
+    explicit AsyncScrollPortEvent(ScrollFrameHelper* helper)
+      : Runnable("ScrollFrameHelper::AsyncScrollPortEvent")
+      , mHelper(helper)
+    {
+    }
     void Revoke() { mHelper = nullptr; }
   private:
     ScrollFrameHelper *mHelper;
@@ -146,7 +150,11 @@ public:
   class ScrolledAreaEvent : public Runnable {
   public:
     NS_DECL_NSIRUNNABLE
-    explicit ScrolledAreaEvent(ScrollFrameHelper *helper) : mHelper(helper) {}
+    explicit ScrolledAreaEvent(ScrollFrameHelper* helper)
+      : Runnable("ScrollFrameHelper::ScrolledAreaEvent")
+      , mHelper(helper)
+    {
+    }
     void Revoke() { mHelper = nullptr; }
   private:
     ScrollFrameHelper *mHelper;

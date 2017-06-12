@@ -68,7 +68,8 @@ public:
 };
 
 nsHTTPDownloadEvent::nsHTTPDownloadEvent()
-:mResponsibleForDoneSignal(true)
+  : mozilla::Runnable("nsHTTPDownloadEvent")
+  , mResponsibleForDoneSignal(true)
 {
 }
 
@@ -196,6 +197,7 @@ nsHTTPDownloadEvent::Run()
 struct nsCancelHTTPDownloadEvent : Runnable {
   RefPtr<nsHTTPListener> mListener;
 
+  nsCancelHTTPDownloadEvent() : Runnable("nsCancelHTTPDownloadEvent") {}
   NS_IMETHOD Run() override {
     mListener->FreeLoadGroup(true);
     mListener = nullptr;

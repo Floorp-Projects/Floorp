@@ -30,7 +30,8 @@ class RegisterServiceWorkerCallback final : public Runnable
 public:
   RegisterServiceWorkerCallback(const ServiceWorkerRegistrationData& aData,
                                 uint64_t aParentID)
-    : mData(aData)
+    : Runnable("dom::workers::RegisterServiceWorkerCallback")
+    , mData(aData)
     , mParentID(aParentID)
   {
     AssertIsInMainProcess();
@@ -74,7 +75,8 @@ public:
   UnregisterServiceWorkerCallback(const PrincipalInfo& aPrincipalInfo,
                                   const nsString& aScope,
                                   uint64_t aParentID)
-    : mPrincipalInfo(aPrincipalInfo)
+    : Runnable("dom::workers::UnregisterServiceWorkerCallback")
+    , mPrincipalInfo(aPrincipalInfo)
     , mScope(aScope)
     , mParentID(aParentID)
   {
@@ -122,7 +124,8 @@ public:
   CheckPrincipalWithCallbackRunnable(already_AddRefed<ContentParent> aParent,
                                      const PrincipalInfo& aPrincipalInfo,
                                      Runnable* aCallback)
-    : mContentParent(aParent)
+    : Runnable("dom::workers::CheckPrincipalWithCallbackRunnable")
+    , mContentParent(aParent)
     , mPrincipalInfo(aPrincipalInfo)
     , mCallback(aCallback)
     , mBackgroundEventTarget(GetCurrentThreadEventTarget())

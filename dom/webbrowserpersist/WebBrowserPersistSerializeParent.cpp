@@ -75,11 +75,18 @@ WebBrowserPersistSerializeParent::ActorDestroy(ActorDestroyReason aWhy)
         MOZ_ASSERT(aWhy != Deletion);
         // See comment in WebBrowserPersistDocumentParent::ActorDestroy
         // (or bug 1202887) for why this is deferred.
-        nsCOMPtr<nsIRunnable> errorLater = NewRunnableMethod
-            <nsCOMPtr<nsIWebBrowserPersistDocument>, nsCOMPtr<nsIOutputStream>,
-             nsCString, nsresult>
-            (mFinish, &nsIWebBrowserPersistWriteCompletion::OnFinish,
-             mDocument, mStream, EmptyCString(), NS_ERROR_FAILURE);
+        nsCOMPtr<nsIRunnable> errorLater =
+          NewRunnableMethod<nsCOMPtr<nsIWebBrowserPersistDocument>,
+                            nsCOMPtr<nsIOutputStream>,
+                            nsCString,
+                            nsresult>(
+            "nsIWebBrowserPersistWriteCompletion::OnFinish",
+            mFinish,
+            &nsIWebBrowserPersistWriteCompletion::OnFinish,
+            mDocument,
+            mStream,
+            EmptyCString(),
+            NS_ERROR_FAILURE);
         NS_DispatchToCurrentThread(errorLater);
         mFinish = nullptr;
     }

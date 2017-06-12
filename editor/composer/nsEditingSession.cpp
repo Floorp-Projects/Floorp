@@ -974,10 +974,12 @@ nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress,
           NS_ENSURE_SUCCESS(rv, rv);
 
           mEditorStatus = eEditorCreationInProgress;
-          mLoadBlankDocTimer->InitWithFuncCallback(
-                                          nsEditingSession::TimerCallback,
-                                          static_cast<void*> (mDocShell.get()),
-                                          10, nsITimer::TYPE_ONE_SHOT);
+          mLoadBlankDocTimer->InitWithNamedFuncCallback(
+            nsEditingSession::TimerCallback,
+            static_cast<void*>(mDocShell.get()),
+            10,
+            nsITimer::TYPE_ONE_SHOT,
+            "nsEditingSession::EndDocumentLoad");
         }
       }
     }

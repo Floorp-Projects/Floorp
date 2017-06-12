@@ -144,7 +144,11 @@ public:
     if (!mTimer) {
       return;
     }
-    mTimer->InitWithFuncCallback(&TimerTick, this, int(1000 / mFPS), nsITimer::TYPE_REPEATING_SLACK);
+    mTimer->InitWithNamedFuncCallback(&TimerTick,
+                                      this,
+                                      int(1000 / mFPS),
+                                      nsITimer::TYPE_REPEATING_SLACK,
+                                      "dom::TimerDriver::TimerDriver");
   }
 
   static void TimerTick(nsITimer* aTimer, void* aClosure)

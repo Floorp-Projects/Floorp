@@ -99,7 +99,9 @@ void
 ChannelMediaDecoder::ResourceCallback::NotifyDataEnded(nsresult aStatus)
 {
   RefPtr<ResourceCallback> self = this;
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=]() {
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "ChannelMediaDecoder::ResourceCallback::NotifyDataEnded",
+    [=]() {
     if (!self->mDecoder) {
       return;
     }
@@ -141,7 +143,9 @@ ChannelMediaDecoder::ResourceCallback::NotifyBytesConsumed(int64_t aBytes,
                                                            int64_t aOffset)
 {
   RefPtr<ResourceCallback> self = this;
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=]() {
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "ChannelMediaDecoder::ResourceCallback::NotifyBytesConsumed",
+    [=]() {
     if (self->mDecoder) {
       self->mDecoder->NotifyBytesConsumed(aBytes, aOffset);
     }

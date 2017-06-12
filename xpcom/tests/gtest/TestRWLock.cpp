@@ -22,7 +22,8 @@ static const size_t sWriteLockIteration = 10;
 class RWLockRunnable : public mozilla::Runnable {
 public:
   RWLockRunnable(RWLock* aRWLock, mozilla::Atomic<size_t>* aSharedData)
-    : mRWLock(aRWLock)
+    : mozilla::Runnable("RWLockRunnable")
+    , mRWLock(aRWLock)
     , mSharedData(aSharedData)
   {}
 

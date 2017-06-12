@@ -185,7 +185,11 @@ private:
   class TaskGroupRunnable : public Runnable
   {
     public:
-      explicit TaskGroupRunnable(UniquePtr<PerThreadTaskGroup>&& aTasks) : mTasks(Move(aTasks)) {}
+      explicit TaskGroupRunnable(UniquePtr<PerThreadTaskGroup>&& aTasks)
+        : Runnable("AutoTaskDispatcher::TaskGroupRunnable")
+        , mTasks(Move(aTasks))
+      {
+      }
 
       NS_IMETHOD Run() override
       {

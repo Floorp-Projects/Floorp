@@ -552,9 +552,9 @@ ImageEncoder::EnsureThreadPool()
     sThreadPool = threadPool;
 
     if (!NS_IsMainThread()) {
-      NS_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
-        RegisterEncoderThreadPoolTerminatorObserver();
-      }));
+      NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "dom::ImageEncoder::EnsureThreadPool",
+        []() -> void { RegisterEncoderThreadPoolTerminatorObserver(); }));
     } else {
       RegisterEncoderThreadPoolTerminatorObserver();
     }

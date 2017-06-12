@@ -1798,7 +1798,9 @@ nsPresContext::ThemeChanged()
     sThemeChanged = true;
 
     nsCOMPtr<nsIRunnable> ev =
-      NewRunnableMethod(this, &nsPresContext::ThemeChangedInternal);
+      NewRunnableMethod("nsPresContext::ThemeChangedInternal",
+                        this,
+                        &nsPresContext::ThemeChangedInternal);
     nsresult rv = Document()->Dispatch("nsPresContext::ThemeChangedInternal",
                                        TaskCategory::Other,
                                        ev.forget());
@@ -1861,7 +1863,9 @@ nsPresContext::SysColorChanged()
   if (!mPendingSysColorChanged) {
     sLookAndFeelChanged = true;
     nsCOMPtr<nsIRunnable> ev =
-      NewRunnableMethod(this, &nsPresContext::SysColorChangedInternal);
+      NewRunnableMethod("nsPresContext::SysColorChangedInternal",
+                        this,
+                        &nsPresContext::SysColorChangedInternal);
     nsresult rv = Document()->Dispatch("nsPresContext::SysColorChangedInternal",
                                        TaskCategory::Other,
                                        ev.forget());
@@ -1896,7 +1900,9 @@ nsPresContext::UIResolutionChanged()
 {
   if (!mPendingUIResolutionChanged) {
     nsCOMPtr<nsIRunnable> ev =
-      NewRunnableMethod(this, &nsPresContext::UIResolutionChangedInternal);
+      NewRunnableMethod("nsPresContext::UIResolutionChangedInternal",
+                        this,
+                        &nsPresContext::UIResolutionChangedInternal);
     nsresult rv =
       Document()->Dispatch("nsPresContext::UIResolutionChangedInternal",
                            TaskCategory::Other,
@@ -2662,11 +2668,13 @@ nsPresContext::NotifyDidPaintSubdocumentCallback(nsIDocument* aDocument, void* a
 
 class DelayedFireDOMPaintEvent : public Runnable {
 public:
-  DelayedFireDOMPaintEvent(nsPresContext* aPresContext,
-                           nsTArray<nsRect>* aList,
-                           uint64_t aTransactionId,
-                           const mozilla::TimeStamp& aTimeStamp = mozilla::TimeStamp())
-    : mPresContext(aPresContext)
+  DelayedFireDOMPaintEvent(
+    nsPresContext* aPresContext,
+    nsTArray<nsRect>* aList,
+    uint64_t aTransactionId,
+    const mozilla::TimeStamp& aTimeStamp = mozilla::TimeStamp())
+    : mozilla::Runnable("DelayedFireDOMPaintEvent")
+    , mPresContext(aPresContext)
     , mTransactionId(aTransactionId)
     , mTimeStamp(aTimeStamp)
   {

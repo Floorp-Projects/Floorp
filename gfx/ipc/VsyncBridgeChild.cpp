@@ -29,7 +29,10 @@ VsyncBridgeChild::Create(RefPtr<VsyncIOThreadHolder> aThread,
   RefPtr<VsyncBridgeChild> child = new VsyncBridgeChild(aThread, aProcessToken);
 
   RefPtr<nsIRunnable> task = NewRunnableMethod<Endpoint<PVsyncBridgeChild>&&>(
-    child, &VsyncBridgeChild::Open, Move(aEndpoint));
+    "gfx::VsyncBridgeChild::Open",
+    child,
+    &VsyncBridgeChild::Open,
+    Move(aEndpoint));
   aThread->GetThread()->Dispatch(task.forget(), nsIThread::DISPATCH_NORMAL);
 
   return child;
@@ -58,9 +61,10 @@ public:
   NotifyVsyncTask(RefPtr<VsyncBridgeChild> aVsyncBridge,
                   TimeStamp aTimeStamp,
                   const uint64_t& aLayersId)
-   : mVsyncBridge(aVsyncBridge),
-     mTimeStamp(aTimeStamp),
-     mLayersId(aLayersId)
+    : Runnable("gfx::NotifyVsyncTask")
+    , mVsyncBridge(aVsyncBridge)
+    , mTimeStamp(aTimeStamp)
+    , mLayersId(aLayersId)
   {}
 
   NS_IMETHOD Run() override {
@@ -106,7 +110,8 @@ void
 VsyncBridgeChild::Close()
 {
   if (!IsOnVsyncIOThread()) {
-    mLoop->PostTask(NewRunnableMethod(this, &VsyncBridgeChild::Close));
+    mLoop->PostTask(NewRunnableMethod(
+      "gfx::VsyncBridgeChild::Close", this, &VsyncBridgeChild::Close));
     return;
   }
 

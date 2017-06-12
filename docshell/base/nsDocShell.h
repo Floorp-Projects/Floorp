@@ -777,7 +777,11 @@ public:
   {
   public:
     NS_DECL_NSIRUNNABLE
-    explicit RestorePresentationEvent(nsDocShell* aDs) : mDocShell(aDs) {}
+    explicit RestorePresentationEvent(nsDocShell* aDs)
+      : mozilla::Runnable("nsDocShell::RestorePresentationEvent")
+      , mDocShell(aDs)
+    {
+    }
     void Revoke() { mDocShell = nullptr; }
   private:
     RefPtr<nsDocShell> mDocShell;

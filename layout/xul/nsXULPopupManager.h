@@ -203,12 +203,13 @@ public:
 class nsXULPopupShowingEvent : public mozilla::Runnable
 {
 public:
-  nsXULPopupShowingEvent(nsIContent *aPopup,
+  nsXULPopupShowingEvent(nsIContent* aPopup,
                          bool aIsContextMenu,
                          bool aSelectFirstItem)
-    : mPopup(aPopup),
-      mIsContextMenu(aIsContextMenu),
-      mSelectFirstItem(aSelectFirstItem)
+    : mozilla::Runnable("nsXULPopupShowingEvent")
+    , mPopup(aPopup)
+    , mIsContextMenu(aIsContextMenu)
+    , mSelectFirstItem(aSelectFirstItem)
   {
     NS_ASSERTION(aPopup, "null popup supplied to nsXULPopupShowingEvent constructor");
   }
@@ -225,18 +226,19 @@ private:
 class nsXULPopupHidingEvent : public mozilla::Runnable
 {
 public:
-  nsXULPopupHidingEvent(nsIContent *aPopup,
+  nsXULPopupHidingEvent(nsIContent* aPopup,
                         nsIContent* aNextPopup,
                         nsIContent* aLastPopup,
                         nsPopupType aPopupType,
                         bool aDeselectMenu,
                         bool aIsCancel)
-    : mPopup(aPopup),
-      mNextPopup(aNextPopup),
-      mLastPopup(aLastPopup),
-      mPopupType(aPopupType),
-      mDeselectMenu(aDeselectMenu),
-      mIsRollup(aIsCancel)
+    : mozilla::Runnable("nsXULPopupHidingEvent")
+    , mPopup(aPopup)
+    , mNextPopup(aNextPopup)
+    , mLastPopup(aLastPopup)
+    , mPopupType(aPopupType)
+    , mDeselectMenu(aDeselectMenu)
+    , mIsRollup(aIsCancel)
   {
     NS_ASSERTION(aPopup, "null popup supplied to nsXULPopupHidingEvent constructor");
     // aNextPopup and aLastPopup may be null
@@ -257,10 +259,11 @@ private:
 class nsXULPopupPositionedEvent : public mozilla::Runnable
 {
 public:
-  explicit nsXULPopupPositionedEvent(nsIContent *aPopup,
+  explicit nsXULPopupPositionedEvent(nsIContent* aPopup,
                                      bool aIsContextMenu,
                                      bool aSelectFirstItem)
-    : mPopup(aPopup)
+    : mozilla::Runnable("nsXULPopupPositionedEvent")
+    , mPopup(aPopup)
     , mIsContextMenu(aIsContextMenu)
     , mSelectFirstItem(aSelectFirstItem)
   {
@@ -285,7 +288,7 @@ private:
 class nsXULMenuCommandEvent : public mozilla::Runnable
 {
 public:
-  nsXULMenuCommandEvent(nsIContent *aMenu,
+  nsXULMenuCommandEvent(nsIContent* aMenu,
                         bool aIsTrusted,
                         bool aShift,
                         bool aControl,
@@ -293,15 +296,16 @@ public:
                         bool aMeta,
                         bool aUserInput,
                         bool aFlipChecked)
-    : mMenu(aMenu),
-      mIsTrusted(aIsTrusted),
-      mShift(aShift),
-      mControl(aControl),
-      mAlt(aAlt),
-      mMeta(aMeta),
-      mUserInput(aUserInput),
-      mFlipChecked(aFlipChecked),
-      mCloseMenuMode(CloseMenuMode_Auto)
+    : mozilla::Runnable("nsXULMenuCommandEvent")
+    , mMenu(aMenu)
+    , mIsTrusted(aIsTrusted)
+    , mShift(aShift)
+    , mControl(aControl)
+    , mAlt(aAlt)
+    , mMeta(aMeta)
+    , mUserInput(aUserInput)
+    , mFlipChecked(aFlipChecked)
+    , mCloseMenuMode(CloseMenuMode_Auto)
   {
     NS_ASSERTION(aMenu, "null menu supplied to nsXULMenuCommandEvent constructor");
   }

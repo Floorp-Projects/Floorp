@@ -244,8 +244,10 @@ HTMLCanvasPrintState::Done()
     if (mCanvas) {
       mCanvas->InvalidateCanvas();
     }
-    RefPtr<nsRunnableMethod<HTMLCanvasPrintState> > doneEvent =
-      NewRunnableMethod(this, &HTMLCanvasPrintState::NotifyDone);
+    RefPtr<nsRunnableMethod<HTMLCanvasPrintState>> doneEvent =
+      NewRunnableMethod("dom::HTMLCanvasPrintState::NotifyDone",
+                        this,
+                        &HTMLCanvasPrintState::NotifyDone);
     if (NS_SUCCEEDED(NS_DispatchToCurrentThread(doneEvent))) {
       mPendingNotify = true;
     }
@@ -524,8 +526,10 @@ HTMLCanvasElement::DispatchPrintCallback(nsITimerCallback* aCallback)
   }
   mPrintState = new HTMLCanvasPrintState(this, mCurrentContext, aCallback);
 
-  RefPtr<nsRunnableMethod<HTMLCanvasElement> > renderEvent =
-    NewRunnableMethod(this, &HTMLCanvasElement::CallPrintCallback);
+  RefPtr<nsRunnableMethod<HTMLCanvasElement>> renderEvent =
+    NewRunnableMethod("dom::HTMLCanvasElement::CallPrintCallback",
+                      this,
+                      &HTMLCanvasElement::CallPrintCallback);
   return OwnerDoc()->Dispatch("HTMLCanvasElement::CallPrintCallback",
                               TaskCategory::Other,
                               renderEvent.forget());
@@ -847,13 +851,16 @@ HTMLCanvasElement::ToBlob(JSContext* aCx,
     // According to spec, blob should return null if either its horizontal
     // dimension or its vertical dimension is zero. See link below.
     // https://html.spec.whatwg.org/multipage/scripting.html#dom-canvas-toblob
-    OwnerDoc()->Dispatch("FireNullBlobEvent",
-                  TaskCategory::Other,
-                  NewRunnableMethod<Blob*, const char*>(
-                          &aCallback,
-                          static_cast<void(BlobCallback::*)(
-                            Blob*, const char*)>(&BlobCallback::Call),
-                          nullptr, nullptr));
+    OwnerDoc()->Dispatch(
+      "FireNullBlobEvent",
+      TaskCategory::Other,
+      NewRunnableMethod<Blob*, const char*>(
+        "dom::HTMLCanvasElement::ToBlob",
+        &aCallback,
+        static_cast<void (BlobCallback::*)(Blob*, const char*)>(
+          &BlobCallback::Call),
+        nullptr,
+        nullptr));
     return;
   }
 
@@ -1356,7 +1363,8 @@ HTMLCanvasElement::OnVisibilityChange()
     {
     public:
       explicit Runnable(AsyncCanvasRenderer* aRenderer)
-        : mRenderer(aRenderer)
+        : mozilla::CancelableRunnable("Runnable")
+        , mRenderer(aRenderer)
       {}
 
       NS_IMETHOD Run() override
@@ -1393,7 +1401,8 @@ HTMLCanvasElement::OnMemoryPressure()
     {
     public:
       explicit Runnable(AsyncCanvasRenderer* aRenderer)
-        : mRenderer(aRenderer)
+        : mozilla::CancelableRunnable("Runnable")
+        , mRenderer(aRenderer)
       {}
 
       NS_IMETHOD Run() override

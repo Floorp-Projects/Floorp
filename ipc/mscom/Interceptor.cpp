@@ -558,7 +558,7 @@ Interceptor::QueryInterfaceTarget(REFIID aIid, void** aOutput)
     MOZ_ASSERT(NS_IsMainThread());
     hr = mTarget->QueryInterface(aIid, aOutput);
   };
-  if (!invoker.Invoke(NS_NewRunnableFunction(runOnMainThread))) {
+  if (!invoker.Invoke(NS_NewRunnableFunction("Interceptor::QueryInterface", runOnMainThread))) {
     return E_FAIL;
   }
   return hr;

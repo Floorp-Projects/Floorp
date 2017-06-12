@@ -109,7 +109,7 @@ DispatchForwarder::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
     hr = mTarget->GetTypeInfo(iTInfo, lcid, ppTInfo);
   };
   MainThreadInvoker invoker;
-  if (!invoker.Invoke(NS_NewRunnableFunction(fn))) {
+  if (!invoker.Invoke(NS_NewRunnableFunction("DispatchForwarder::GetTypeInfo", fn))) {
     return E_UNEXPECTED;
   }
   if (FAILED(hr)) {
@@ -128,7 +128,7 @@ DispatchForwarder::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames,
     hr = mTarget->GetIDsOfNames(riid, rgszNames, cNames, lcid, rgDispId);
   };
   MainThreadInvoker invoker;
-  if (!invoker.Invoke(NS_NewRunnableFunction(fn))) {
+  if (!invoker.Invoke(NS_NewRunnableFunction("DispatchForwarder::GetIDsOfNames", fn))) {
     return E_UNEXPECTED;
   }
   return hr;

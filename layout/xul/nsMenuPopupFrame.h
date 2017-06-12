@@ -138,8 +138,10 @@ class nsXULPopupShownEvent : public mozilla::Runnable,
                              public nsIDOMEventListener
 {
 public:
-  nsXULPopupShownEvent(nsIContent *aPopup, nsPresContext* aPresContext)
-    : mPopup(aPopup), mPresContext(aPresContext)
+  nsXULPopupShownEvent(nsIContent* aPopup, nsPresContext* aPresContext)
+    : mozilla::Runnable("nsXULPopupShownEvent")
+    , mPopup(aPopup)
+    , mPresContext(aPresContext)
   {
   }
 

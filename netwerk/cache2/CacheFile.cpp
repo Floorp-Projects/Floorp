@@ -30,10 +30,11 @@ namespace net {
 
 class NotifyCacheFileListenerEvent : public Runnable {
 public:
-  NotifyCacheFileListenerEvent(CacheFileListener *aCallback,
+  NotifyCacheFileListenerEvent(CacheFileListener* aCallback,
                                nsresult aResult,
                                bool aIsNew)
-    : mCallback(aCallback)
+    : Runnable("net::NotifyCacheFileListenerEvent")
+    , mCallback(aCallback)
     , mRV(aResult)
     , mIsNew(aIsNew)
   {
@@ -65,11 +66,12 @@ protected:
 
 class NotifyChunkListenerEvent : public Runnable {
 public:
-  NotifyChunkListenerEvent(CacheFileChunkListener *aCallback,
+  NotifyChunkListenerEvent(CacheFileChunkListener* aCallback,
                            nsresult aResult,
                            uint32_t aChunkIdx,
-                           CacheFileChunk *aChunk)
-    : mCallback(aCallback)
+                           CacheFileChunk* aChunk)
+    : Runnable("net::NotifyChunkListenerEvent")
+    , mCallback(aCallback)
     , mRV(aResult)
     , mChunkIdx(aChunkIdx)
     , mChunk(aChunk)

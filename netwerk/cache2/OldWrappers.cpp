@@ -40,7 +40,9 @@ namespace {
 class DoomCallbackSynchronizer : public Runnable
 {
 public:
-  explicit DoomCallbackSynchronizer(nsICacheEntryDoomCallback* cb) : mCB(cb)
+  explicit DoomCallbackSynchronizer(nsICacheEntryDoomCallback* cb)
+    : Runnable("net::DoomCallbackSynchronizer")
+    , mCB(cb)
   {
   }
   nsresult Dispatch();
@@ -302,7 +304,8 @@ NS_IMPL_ISUPPORTS_INHERITED(_OldGetDiskConsumption,
 
 _OldGetDiskConsumption::_OldGetDiskConsumption(
   nsICacheStorageConsumptionObserver* aCallback)
-  : mCallback(aCallback)
+  : Runnable("net::_OldGetDiskConsumption")
+  , mCallback(aCallback)
   , mSize(0)
 {
 }
@@ -660,7 +663,8 @@ _OldCacheLoad::_OldCacheLoad(const nsACString& aScheme,
                              nsILoadContextInfo* aLoadInfo,
                              bool aWriteToDisk,
                              uint32_t aFlags)
-  : mScheme(aScheme)
+  : Runnable("net::_OldCacheLoad")
+  , mScheme(aScheme)
   , mCacheKey(aCacheKey)
   , mCallback(aCallback)
   , mLoadInfo(GetLoadContextInfo(aLoadInfo))

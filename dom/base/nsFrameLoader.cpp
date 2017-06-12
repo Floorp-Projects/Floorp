@@ -1986,7 +1986,11 @@ class nsFrameLoaderDestroyRunnable : public Runnable
 
 public:
   explicit nsFrameLoaderDestroyRunnable(nsFrameLoader* aFrameLoader)
-   : mFrameLoader(aFrameLoader), mPhase(eDestroyDocShell) {}
+    : mozilla::Runnable("nsFrameLoaderDestroyRunnable")
+    , mFrameLoader(aFrameLoader)
+    , mPhase(eDestroyDocShell)
+  {
+  }
 
   NS_IMETHOD Run() override;
 };
@@ -2071,9 +2075,10 @@ nsFrameLoader::StartDestroy()
     nsCOMPtr<nsIGroupedSHistory> groupedSHistory;
     GetGroupedSHistory(getter_AddRefs(groupedSHistory));
     if (groupedSHistory) {
-      NS_DispatchToCurrentThread(NS_NewRunnableFunction([groupedSHistory] () {
-        groupedSHistory->CloseInactiveFrameLoaderOwners();
-      }));
+      NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+        "nsFrameLoader::StartDestroy", [groupedSHistory]() {
+          groupedSHistory->CloseInactiveFrameLoaderOwners();
+        }));
     }
   }
 
@@ -3167,6 +3172,7 @@ public:
                         JS::Handle<JSObject*> aCpows,
                         nsFrameLoader* aFrameLoader)
     : nsSameProcessAsyncMessageBase(aRootingCx, aCpows)
+    , mozilla::Runnable("nsAsyncMessageToChild")
     , mFrameLoader(aFrameLoader)
   {
   }

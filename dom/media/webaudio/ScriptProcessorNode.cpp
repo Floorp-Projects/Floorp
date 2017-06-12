@@ -375,7 +375,8 @@ private:
       Command(AudioNodeStream* aStream,
               already_AddRefed<ThreadSharedFloatArrayBufferList> aInputBuffer,
               double aPlaybackTime)
-        : mStream(aStream)
+        : mozilla::Runnable("Command")
+        , mStream(aStream)
         , mInputBuffer(aInputBuffer)
         , mPlaybackTime(aPlaybackTime)
       {
