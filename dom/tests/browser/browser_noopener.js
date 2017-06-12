@@ -97,7 +97,7 @@ async function doAllTests() {
 
 // This test takes a really long time, especially in debug builds, as it is
 // constant starting and stopping processes, and opens a new window ~144 times.
-requestLongerTimeout(15);
+requestLongerTimeout(25);
 
 add_task(async function newtab_sameproc() {
   await SpecialPowers.pushPrefEnv({set: [[OPEN_NEWWINDOW_PREF, OPEN_NEWTAB],
