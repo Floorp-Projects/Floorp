@@ -13,11 +13,9 @@
 #include "nsIXULRuntime.h"
 #include "nsWinUtils.h"
 #include "mozilla/a11y/ProxyAccessible.h"
-#include "mozilla/mscom/ActivationContext.h"
 #include "mozilla/mscom/InterceptorLog.h"
 #include "mozilla/mscom/Registration.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/WindowsVersion.h"
 #include "ProxyWrappers.h"
 
 using namespace mozilla;
@@ -28,7 +26,6 @@ static StaticAutoPtr<RegisteredProxy> gRegCustomProxy;
 static StaticAutoPtr<RegisteredProxy> gRegProxy;
 static StaticAutoPtr<RegisteredProxy> gRegAccTlb;
 static StaticAutoPtr<RegisteredProxy> gRegMiscTlb;
-static StaticAutoPtr<ActivationContextRegion> gActCtxRgn;
 
 void
 a11y::PlatformInit()
@@ -38,21 +35,6 @@ a11y::PlatformInit()
   nsWinUtils::MaybeStartWindowEmulation();
   ia2AccessibleText::InitTextChangeData();
   if (BrowserTabsRemoteAutostart()) {
-    // The manifest for 32-bit Windows is embedded with resource ID 32.
-    // The manifest for 64-bit Windows is embedded with resource ID 64.
-    // Beginning with Windows 10 Creators Update, 32-bit builds use the 64-bit
-    // manifest.
-    DWORD actCtxResourceId;
-#if defined(HAVE_64BIT_BUILD)
-    actCtxResourceId = 64;
-#else
-    if (IsWin10CreatorsUpdateOrLater()) {
-      actCtxResourceId = 64;
-    } else {
-      actCtxResourceId = 32;
-    }
-#endif
-    gActCtxRgn = new ActivationContextRegion(actCtxResourceId);
     mscom::InterceptorLog::Init();
     UniquePtr<RegisteredProxy> regCustomProxy(
         mscom::RegisterProxy());
@@ -80,7 +62,6 @@ a11y::PlatformShutdown()
   gRegProxy = nullptr;
   gRegAccTlb = nullptr;
   gRegMiscTlb = nullptr;
-  gActCtxRgn = nullptr;
 }
 
 void
