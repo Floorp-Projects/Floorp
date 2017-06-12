@@ -232,6 +232,10 @@ for (let test of testParams) {
 
       await promiseStartupManager();
 
+      // Grab the current time so we can check the mtime of the add-on below
+      // without worrying too much about how long other tests take.
+      let startupTime = Date.now();
+
       do_check_true(isExtensionInAddonsList(profileDir, "addon1@tests.mozilla.org"));
 
       AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
@@ -247,7 +251,7 @@ for (let test of testParams) {
         // Make sure that the extension lastModifiedTime was updated.
         let testURI = a1.getResourceURI(TEST_UNPACKED ? "install.rdf" : "");
         let testFile = testURI.QueryInterface(Components.interfaces.nsIFileURL).file;
-        let difference = testFile.lastModifiedTime - Date.now();
+        let difference = testFile.lastModifiedTime - startupTime;
         do_check_true(Math.abs(difference) < MAX_TIME_DIFFERENCE);
 
         a1.uninstall();
