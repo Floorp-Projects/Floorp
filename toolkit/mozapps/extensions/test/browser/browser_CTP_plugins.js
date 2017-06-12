@@ -60,7 +60,7 @@ add_task(async function() {
   pluginEl.parentNode.ensureElementIsVisible(pluginEl);
   let enableButton = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "enable-btn");
   is_element_hidden(enableButton, "part3: enable button should not be visible");
-  let disableButton = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "enable-btn");
+  let disableButton = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "disable-btn");
   is_element_hidden(disableButton, "part3: disable button should not be visible");
   let menu = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "state-menulist");
   is_element_visible(menu, "part3: state menu should be visible");
