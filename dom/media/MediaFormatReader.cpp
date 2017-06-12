@@ -1557,8 +1557,7 @@ MediaFormatReader::ShouldSkip(TimeUnit aTimeThreshold)
 }
 
 RefPtr<MediaDecoderReader::VideoDataPromise>
-MediaFormatReader::RequestVideoData(bool aSkipToNextKeyframe,
-                                    const TimeUnit& aTimeThreshold)
+MediaFormatReader::RequestVideoData(const TimeUnit& aTimeThreshold)
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_DIAGNOSTIC_ASSERT(mSeekPromise.IsEmpty(),
@@ -1567,8 +1566,7 @@ MediaFormatReader::RequestVideoData(bool aSkipToNextKeyframe,
   MOZ_DIAGNOSTIC_ASSERT(!mVideo.mSeekRequest.Exists()
                         || mVideo.mTimeThreshold.isSome());
   MOZ_DIAGNOSTIC_ASSERT(!IsSeeking(), "called mid-seek");
-  LOGV("RequestVideoData(%d, %" PRId64 ")",
-       aSkipToNextKeyframe, aTimeThreshold.ToMicroseconds());
+  LOGV("RequestVideoData(%" PRId64 ")", aTimeThreshold.ToMicroseconds());
 
   if (!HasVideo()) {
     LOG("called with no video track");

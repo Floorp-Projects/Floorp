@@ -603,7 +603,7 @@ public:
 
   void HandleVideoCanceled() override
   {
-    mMaster->RequestVideoData(false, media::TimeUnit());
+    mMaster->RequestVideoData(media::TimeUnit());
   }
 
   void HandleEndOfVideo() override
@@ -619,7 +619,7 @@ public:
 
   void HandleVideoWaited(MediaData::Type aType) override
   {
-    mMaster->RequestVideoData(false, media::TimeUnit());
+    mMaster->RequestVideoData(media::TimeUnit());
   }
 
   void HandleVideoSuspendTimeout() override
@@ -737,8 +737,7 @@ public:
 
   void HandleVideoCanceled() override
   {
-    mMaster->RequestVideoData(
-      NeedToSkipToNextKeyframe(), mMaster->GetMediaTime());
+    mMaster->RequestVideoData(mMaster->GetMediaTime());
   }
 
   void HandleEndOfAudio() override;
@@ -763,8 +762,7 @@ public:
 
   void HandleVideoWaited(MediaData::Type aType) override
   {
-    mMaster->RequestVideoData(
-      NeedToSkipToNextKeyframe(), mMaster->GetMediaTime());
+    mMaster->RequestVideoData(mMaster->GetMediaTime());
   }
 
   void HandleAudioCaptured() override
@@ -1332,7 +1330,7 @@ private:
   void RequestVideoData()
   {
     MOZ_ASSERT(!mDoneVideoSeeking);
-    mMaster->RequestVideoData(false, media::TimeUnit());
+    mMaster->RequestVideoData(media::TimeUnit());
   }
 
   void AdjustFastSeekIfNeeded(MediaData* aSample)
@@ -1686,7 +1684,7 @@ private:
 
   void RequestVideoData()
   {
-    mMaster->RequestVideoData(false, media::TimeUnit());
+    mMaster->RequestVideoData(media::TimeUnit());
   }
 
   bool NeedMoreVideo() const
@@ -1845,7 +1843,7 @@ public:
 
   void HandleVideoCanceled() override
   {
-    mMaster->RequestVideoData(false, media::TimeUnit());
+    mMaster->RequestVideoData(media::TimeUnit());
   }
 
   void HandleWaitingForAudio() override
@@ -1865,7 +1863,7 @@ public:
 
   void HandleVideoWaited(MediaData::Type aType) override
   {
-    mMaster->RequestVideoData(false, media::TimeUnit());
+    mMaster->RequestVideoData(media::TimeUnit());
   }
 
   void HandleEndOfAudio() override;
@@ -2263,7 +2261,7 @@ DecodingFirstFrameState::Enter()
     mMaster->RequestAudioData();
   }
   if (mMaster->HasVideo()) {
-    mMaster->RequestVideoData(false, media::TimeUnit());
+    mMaster->RequestVideoData(media::TimeUnit());
   }
 }
 
@@ -2398,8 +2396,7 @@ DecodingState::EnsureVideoDecodeTaskQueued()
       || mMaster->IsWaitingVideoData()) {
     return;
   }
-  mMaster->RequestVideoData(
-    NeedToSkipToNextKeyframe(), mMaster->GetMediaTime());
+  mMaster->RequestVideoData(mMaster->GetMediaTime());
 }
 
 bool
@@ -2563,7 +2560,7 @@ BufferingState::DispatchDecodeTasksIfNeeded()
       && !mMaster->HaveEnoughDecodedVideo()
       && !mMaster->IsRequestingVideoData()
       && !mMaster->IsWaitingVideoData()) {
-    mMaster->RequestVideoData(false, media::TimeUnit());
+    mMaster->RequestVideoData(media::TimeUnit());
   }
 }
 
@@ -3305,21 +3302,20 @@ MediaDecoderStateMachine::RequestAudioData()
 }
 
 void
-MediaDecoderStateMachine::RequestVideoData(bool aSkipToNextKeyframe,
-                                           const media::TimeUnit& aCurrentTime)
+MediaDecoderStateMachine::RequestVideoData(const media::TimeUnit& aCurrentTime)
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(IsVideoDecoding());
   MOZ_ASSERT(!IsRequestingVideoData());
   MOZ_ASSERT(!IsWaitingVideoData());
   LOGV("Queueing video task - queued=%" PRIuSIZE ", decoder-queued=%" PRIoSIZE
-       ", skip=%i, time=%" PRId64,
+       ", stime=%" PRId64,
        VideoQueue().GetSize(), mReader->SizeOfVideoQueueInFrames(),
-       aSkipToNextKeyframe, aCurrentTime.ToMicroseconds());
+       aCurrentTime.ToMicroseconds());
 
   TimeStamp videoDecodeStartTime = TimeStamp::Now();
   RefPtr<MediaDecoderStateMachine> self = this;
-  mReader->RequestVideoData(aSkipToNextKeyframe, aCurrentTime)->Then(
+  mReader->RequestVideoData(aCurrentTime)->Then(
     OwnerThread(), __func__,
     [this, self, videoDecodeStartTime] (RefPtr<VideoData> aVideo) {
       MOZ_ASSERT(aVideo);
