@@ -244,6 +244,9 @@ def target_tasks_mozilla_beta(full_task_graph, parameters):
         if platform in ('linux64-pgo', 'linux-pgo', 'android-api-15-nightly',
                         'android-x86-nightly'):
             return False
+        if platform in ('macosx64-nightly', 'win64-nightly'):
+            # Don't do some nightlies on-push until it's ready.
+            return False
         if platform in ('linux64', 'linux', 'macosx64'):
             if task.attributes['build_type'] == 'opt':
                 return False
