@@ -35,12 +35,13 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillPreferences",
                                   "resource://formautofill/FormAutofillPreferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillDoorhanger",
+                                  "resource://formautofill/FormAutofillDoorhanger.jsm");
 
 this.log = null;
 FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
@@ -80,7 +81,7 @@ FormAutofillParent.prototype = {
     Services.ppmm.addMessageListener("FormAutofill:GetAddresses", this);
     Services.ppmm.addMessageListener("FormAutofill:SaveAddress", this);
     Services.ppmm.addMessageListener("FormAutofill:RemoveAddresses", this);
-    Services.ppmm.addMessageListener("FormAutofill:OnFormSubmit", this);
+    Services.mm.addMessageListener("FormAutofill:OnFormSubmit", this);
 
     // Observing the pref and storage changes
     Services.prefs.addObserver(ENABLED_PREF, this);
@@ -276,8 +277,16 @@ FormAutofillParent.prototype = {
       }
       this.profileStorage.addresses.notifyUsed(address.guid);
     } else {
-      // TODO: Add first time use probe(bug 990199) and doorhanger(bug 1303510)
-      // profileStorage.addresses.add(address.record);
+      if (!Services.prefs.getBoolPref("extensions.formautofill.firstTimeUse")) {
+        if (!this.profileStorage.addresses.mergeToStorage(address.record)) {
+          this.profileStorage.addresses.add(address.record);
+        }
+        return;
+      }
+
+      this.profileStorage.addresses.add(address.record);
+      Services.prefs.setBoolPref("extensions.formautofill.firstTimeUse", false);
+      FormAutofillDoorhanger.show(target, "firstTimeUse");
     }
   },
 };
