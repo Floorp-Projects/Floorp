@@ -515,7 +515,8 @@ nsJPEGEncoder::NotifyListener()
        mFinished)) {
     nsCOMPtr<nsIInputStreamCallback> callback;
     if (mCallbackTarget) {
-      callback = NS_NewInputStreamReadyEvent(mCallback, mCallbackTarget);
+      callback = NS_NewInputStreamReadyEvent("nsJPEGEncoder::NotifyListener",
+                                             mCallback, mCallbackTarget);
     } else {
       callback = mCallback;
     }
