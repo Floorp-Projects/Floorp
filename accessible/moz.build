@@ -33,7 +33,6 @@ TEST_DIRS += ['tests/mochitest']
 BROWSER_CHROME_MANIFESTS += [
   'tests/browser/browser.ini',
   'tests/browser/e10s/browser.ini',
-  'tests/browser/scroll/browser.ini',
   'tests/browser/states/browser.ini'
 ]
 

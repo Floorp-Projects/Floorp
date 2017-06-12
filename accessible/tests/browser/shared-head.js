@@ -208,15 +208,14 @@ function addAccessibleTask(doc, task) {
       url = `${CURRENT_CONTENT_DIR}e10s/${doc}`;
     } else {
       // Assume it's a markup snippet.
-      url = "data:text/html;charset=utf-8;base64,";
-      url += btoa(
-        `<html>
+      url = `data:text/html,
+        <html>
           <head>
             <meta charset="utf-8"/>
             <title>Accessibility Test</title>
           </head>
           <body id="body">${doc}</body>
-        </html>`);
+        </html>`;
     }
 
     registerCleanupFunction(() => {
@@ -285,34 +284,16 @@ function isDefunct(accessible) {
  * looks for an accessible that matches based on its DOMNode id.
  * @param  {nsIAccessible}  accessible root accessible
  * @param  {String}         id         id to look up accessible for
- * @param  {Array?}         interfaces the interface or an array interfaces
- *                                     to query it/them from obtained accessible
  * @return {nsIAccessible?}            found accessible if any
  */
-function findAccessibleChildByID(accessible, id, interfaces) {
+function findAccessibleChildByID(accessible, id) {
   if (getAccessibleDOMNodeID(accessible) === id) {
-    return queryInterfaces(accessible, interfaces);
+    return accessible;
   }
   for (let i = 0; i < accessible.children.length; ++i) {
     let found = findAccessibleChildByID(accessible.getChildAt(i), id);
     if (found) {
-      return queryInterfaces(found, interfaces);
+      return found;
     }
   }
-}
-
-function queryInterfaces(accessible, interfaces) {
-  if (!interfaces) {
-    return accessible;
-  }
-
-  for (let iface of interfaces.filter(i => !(accessible instanceof i))) {
-    try {
-      accessible.QueryInterface(iface);
-    } catch (e) {
-      ok(false, "Can't query " + iface);
-    }
-  }
-
-  return accessible;
 }
