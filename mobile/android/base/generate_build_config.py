@@ -39,6 +39,7 @@ def _defines():
     for var in ('MOZ_ANDROID_ACTIVITY_STREAM'
                 'MOZ_ANDROID_ANR_REPORTER',
                 'MOZ_ANDROID_BEAM',
+                'MOZ_ANDROID_CUSTOM_TABS',
                 'MOZ_ANDROID_DOWNLOADS_INTEGRATION',
                 'MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE',
                 'MOZ_ANDROID_EXCLUDE_FONTS',
