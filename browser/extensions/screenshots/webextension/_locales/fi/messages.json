@@ -80,16 +80,16 @@
     "message": "Kaappaa vain osa sivusta napsauttamalla ja vetämällä. Voit myös korostaa valinnan pitämällä hiirtä sen päällä."
   },
   "tourHeaderThree": {
-    "message": "Haluamallasi tavalla"
-  },
-  "tourBodyThree": {
-    "message": "Tallenna rajaamasi kuvat verkkoon helpompaa jakamista varten tai lataa ne tietokoneellesi. Voit myös napsauttaa Omat kaappaukset -painiketta ja nähdä kaikki ottamasi kuvat."
-  },
-  "tourHeaderFour": {
     "message": "Kaappaa ikkunoita tai kokonaisia sivuja"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Valitse oikean yläkulman painikkeista joko ikkunassa näkyvän alueen kaappaus tai koko sivun kaappaus."
+  },
+  "tourHeaderFour": {
+    "message": "Haluamallasi tavalla"
+  },
+  "tourBodyFour": {
+    "message": "Tallenna rajaamasi kuvat verkkoon helpompaa jakamista varten tai lataa ne tietokoneellesi. Voit myös napsauttaa Omat kaappaukset -painiketta ja nähdä kaikki ottamasi kuvat."
   },
   "tourSkip": {
     "message": "OHITA"
