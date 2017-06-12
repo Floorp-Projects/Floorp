@@ -13,13 +13,8 @@ class TestCapabilities(MarionetteTestCase):
         super(TestCapabilities, self).setUp()
         self.caps = self.marionette.session_capabilities
         with self.marionette.using_context("chrome"):
-            self.appinfo = self.marionette.execute_script("""
-                return {
-                  name: Services.appinfo.name,
-                  version: Services.appinfo.version,
-                  processID: Services.appinfo.processID,
-                }
-                """)
+            self.appinfo = self.marionette.execute_script(
+                "return Services.appinfo")
             self.os_name = self.marionette.execute_script(
                 "return Services.sysinfo.getProperty('name')").lower()
             self.os_version = self.marionette.execute_script(

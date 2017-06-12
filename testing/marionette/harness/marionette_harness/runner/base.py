@@ -511,6 +511,7 @@ class BaseMarionetteTestRunner(object):
                  socket_timeout=BaseMarionetteArguments.socket_timeout_default,
                  startup_timeout=None, addons=None, workspace=None,
                  verbose=0, e10s=True, emulator=False, headless=False, **kwargs):
+        self._appinfo = None
         self._appName = None
         self._capabilities = None
         self._filename_pattern = None
@@ -551,17 +552,12 @@ class BaseMarionetteTestRunner(object):
         self.workspace_path = workspace or os.getcwd()
         self.verbose = verbose
         self.headless = headless
-
-        # self.e10s stores the desired configuration, whereas
-        # self._e10s_from_browser is the cached value from querying e10s
-        # in self.is_e10s
         self.e10s = e10s
-        self._e10s_from_browser = None
         if self.e10s:
             self.prefs.update({
                 'browser.tabs.remote.autostart': True,
                 'browser.tabs.remote.force-enable': True,
-                'extensions.e10sBlocksEnabling': False,
+                'extensions.e10sBlocksEnabling': False
             })
 
         def gather_debug(test, status):
@@ -659,6 +655,23 @@ class BaseMarionetteTestRunner(object):
         self._capabilities = self.marionette.session_capabilities
         self.marionette.delete_session()
         return self._capabilities
+
+    @property
+    def appinfo(self):
+        if self._appinfo:
+            return self._appinfo
+
+        self.marionette.start_session()
+        with self.marionette.using_context('chrome'):
+            self._appinfo = self.marionette.execute_script("""
+            try {
+              return Services.appinfo;
+            } catch (e) {
+              return null;
+            }""")
+        self.marionette.delete_session()
+        self._appinfo = self._appinfo or {}
+        return self._appinfo
 
     @property
     def appName(self):
@@ -804,22 +817,6 @@ class BaseMarionetteTestRunner(object):
                                  message=test['disabled'])
             self.todo += 1
 
-    @property
-    def is_e10s(self):
-        """Query the browser on whether E10s (Electrolysis) is enabled."""
-        if self.marionette is None or self.marionette.session is None:
-            self._e10s_from_browser = None
-            raise Exception("No Marionette session to query e10s state")
-
-        if self._e10s_from_browser is not None:
-            return self._e10s_from_browser
-
-        with self.marionette.using_context("chrome"):
-            self._e10s_from_browser = self.marionette.execute_script(
-                "return Services.appinfo.browserTabsRemoteAutostart")
-
-        return self._e10s_from_browser
-
     def run_tests(self, tests):
         start_time = time.time()
         self._initialize_test_run(tests)
@@ -847,13 +844,13 @@ class BaseMarionetteTestRunner(object):
             except Exception:
                 self.logger.warning('Could not get device info', exc_info=True)
 
-        self.marionette.start_session()
-        self.logger.info("e10s is {}".format("enabled" if self.is_e10s else "disabled"))
-        if self.e10s != self.is_e10s:
+        appinfo_e10s = self.appinfo.get('browserTabsRemoteAutostart', False)
+        self.logger.info("e10s is {}".format("enabled" if appinfo_e10s else "disabled"))
+        if self.e10s != appinfo_e10s:
+            message_e10s = ("BaseMarionetteTestRunner configuration (self.e10s) does "
+                            "not match browser appinfo")
             self.cleanup()
-            raise AssertionError("BaseMarionetteTestRunner configuration (self.e10s) "
-                "does not match browser appinfo (self.is_e10s)")
-        self.marionette.delete_session()
+            raise AssertionError(message_e10s)
 
         tests_by_group = defaultdict(list)
         for test in self.tests:
