@@ -130,7 +130,24 @@ nsSessionRestoreTalosTest.prototype = {
    * A window is ready for us to open the result tab in.
    */
   onWindow(win) {
-    win.gBrowser.addTab("chrome://session-restore-test/content/index.html");
+    let args = win.arguments[0];
+    let queryString = "";
+
+    if (args && args instanceof Ci.nsIArray) {
+      // For start-up tests Gecko Profiler arguments are passed to the first URL in
+      // the query string, with the presumption that the tab that is being loaded at
+      // start-up will want to use those arguments with the TalosContentProfiler scripts.
+      //
+      // Because we're actually loading the results (and the content that reports
+      // the results) in a new tab _after_ the window has opened, we need to send
+      // those arguments over to the new tab that we open so that the profiler scripts
+      // will continue to work.
+      Cu.importGlobalProperties(["URL"]);
+      let url = new URL(args.queryElementAt(0, Ci.nsISupportsString).data);
+      queryString = url.search;
+    }
+
+    win.gBrowser.addTab("chrome://session-restore-test/content/index.html" + queryString);
   }
 };
 
