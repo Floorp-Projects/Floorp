@@ -7,10 +7,10 @@ config = {
                 ('http://archive.mozilla.org/pub', 'http://download.cdn.mozilla.net/pub'),
             ],
             'balrog_usernames': {
-                'firefox': 'ffxbld',
-                'thunderbird': 'tbirdbld',
-                'mobile': 'ffxbld',
-                'Fennec': 'ffxbld',
+                'firefox': 'balrog-ffxbld',
+                'thunderbird': 'balrog-tbirdbld',
+                'mobile': 'balrog-ffxbld',
+                'Fennec': 'balrog-ffxbld',
             }
         },
         # Bug 1261346 - temporarily disable staging balrog submissions
