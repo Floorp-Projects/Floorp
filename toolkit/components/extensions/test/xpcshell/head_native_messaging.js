@@ -92,9 +92,11 @@ async function setupHosts(scripts) {
       });
 
       for (let script of scripts) {
+        let {scriptExtension = "bat"} = script;
+
         // It's important that we use a space in this filename. See directory
         // name comment above.
-        let batPath = getPath(`batch ${script.name}.bat`);
+        let batPath = getPath(`batch ${script.name}.${scriptExtension}`);
         let scriptPath = getPath(`${script.name}.py`);
 
         let batBody = `@ECHO OFF\n${pythonPath} -u "${scriptPath}" %*\n`;

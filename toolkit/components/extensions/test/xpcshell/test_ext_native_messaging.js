@@ -42,7 +42,7 @@ const STDERR_BODY = String.raw`
   sys.stderr.write("${STDERR_MSG}")
 `;
 
-const SCRIPTS = [
+let SCRIPTS = [
   {
     name: "echo",
     description: "a native app that echoes back messages it receives",
@@ -59,6 +59,15 @@ const SCRIPTS = [
     script: STDERR_BODY.replace(/^ {2}/gm, ""),
   },
 ];
+
+if (AppConstants.platform == "win") {
+  SCRIPTS.push({
+    name: "echocmd",
+    description: "echo but using a .cmd file",
+    scriptExtension: "cmd",
+    script: ECHO_BODY.replace(/^ {2}/gm, ""),
+  });
+}
 
 add_task(async function setup() {
   await setupHosts(SCRIPTS);
@@ -141,35 +150,47 @@ add_task(async function test_happy_path() {
   await exitPromise;
 });
 
+// Just test that the given app (which should be the echo script above)
+// can be started.  Used to test corner cases in how the native application
+// is located/launched.
+async function simpleTest(app) {
+  function background(appname) {
+    let port = browser.runtime.connectNative(appname);
+    let MSG = "test";
+    port.onMessage.addListener(msg => {
+      browser.test.assertEq(MSG, msg, "Got expected message back");
+      browser.test.sendMessage("done");
+    });
+    port.postMessage(MSG);
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${background})(${JSON.stringify(app)});`,
+    manifest: {
+      applications: {gecko: {id: ID}},
+      permissions: ["nativeMessaging"],
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+
+  let procCount = await getSubprocessCount();
+  equal(procCount, 1, "subprocess is still running");
+  let exitPromise = waitForSubprocessExit();
+  await extension.unload();
+  await exitPromise;
+}
+
 if (AppConstants.platform == "win") {
   // "relative.echo" has a relative path in the host manifest.
-  add_task(async function test_relative_path() {
-    function background() {
-      let port = browser.runtime.connectNative("relative.echo");
-      let MSG = "test relative echo path";
-      port.onMessage.addListener(msg => {
-        browser.test.assertEq(MSG, msg, "Got expected message back");
-        browser.test.sendMessage("done");
-      });
-      port.postMessage(MSG);
-    }
+  add_task(function test_relative_path() {
+    return simpleTest("relative.echo");
+  });
 
-    let extension = ExtensionTestUtils.loadExtension({
-      background,
-      manifest: {
-        applications: {gecko: {id: ID}},
-        permissions: ["nativeMessaging"],
-      },
-    });
-
-    await extension.startup();
-    await extension.awaitMessage("done");
-
-    let procCount = await getSubprocessCount();
-    equal(procCount, 1, "subprocess is still running");
-    let exitPromise = waitForSubprocessExit();
-    await extension.unload();
-    await exitPromise;
+  // "echocmd" uses a .cmd file instead of a .bat file
+  add_task(function test_cmd_file() {
+    return simpleTest("echocmd");
   });
 }
 
