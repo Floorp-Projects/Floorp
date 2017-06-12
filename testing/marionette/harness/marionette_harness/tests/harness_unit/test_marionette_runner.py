@@ -30,7 +30,7 @@ def mock_runner(runner, mock_marionette, monkeypatch):
         setattr(runner, attr, Mock())
     runner._appName = 'fake_app'
     # simulate that browser runs with e10s by default
-    runner._e10s_from_browser = True
+    runner._appinfo = {'browserTabsRemoteAutostart': True}
     monkeypatch.setattr('marionette_harness.runner.base.mozversion', Mock())
     return runner
 
@@ -432,8 +432,7 @@ def test_e10s_option_sets_prefs(mach_parsed_kwargs, e10s):
         assert runner.prefs.get(k, False) == (v and e10s)
 
 def test_e10s_option_clash_raises(mock_runner):
-    mock_runner._e10s_from_browser = False
-
+    mock_runner.e10s = False
     with pytest.raises(AssertionError) as e:
         mock_runner.run_tests([u'test_fake_thing.py'])
         assert "configuration (self.e10s) does not match browser appinfo" in e.value.message
