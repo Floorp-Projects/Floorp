@@ -147,7 +147,7 @@ var NewPrefDialog = {
 
     switch(this.type) {
       case "boolean":
-        Services.prefs.setBoolPref(this._prefNameInputElt.value, (this._booleanValue.value == "true") ? true : false);
+        Services.prefs.setBoolPref(this._prefNameInputElt.value, !!(this._booleanValue.value == "true"));
         break;
       case "string":
         Services.prefs.setCharPref(this._prefNameInputElt.value, this._stringValue.value);

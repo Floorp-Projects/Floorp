@@ -311,7 +311,7 @@ add_task(async function test_unix_permissions() {
         if (Services.appinfo.OS == "WINNT") {
           // On Windows
           // Temporary downloads should be read-only
-          do_check_eq(stat.winAttributes.readOnly, isTemporary ? true : false);
+          do_check_eq(stat.winAttributes.readOnly, !!isTemporary);
         } else {
           // On Linux, Mac
           // Temporary downloads should be read-only and not accessible to other
