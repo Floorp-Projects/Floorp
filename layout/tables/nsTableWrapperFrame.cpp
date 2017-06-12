@@ -307,7 +307,7 @@ GetContainingBlockSize(const ReflowInput& aOuterRI)
 }
 
 /* virtual */ nscoord
-nsTableWrapperFrame::GetMinISize(gfxContext *aRenderingContext)
+nsTableWrapperFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord iSize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                     InnerTableFrame(), nsLayoutUtils::MIN_ISIZE);
@@ -329,7 +329,7 @@ nsTableWrapperFrame::GetMinISize(gfxContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsTableWrapperFrame::GetPrefISize(gfxContext *aRenderingContext)
+nsTableWrapperFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nscoord maxISize;
   DISPLAY_PREF_WIDTH(this, maxISize);
@@ -376,7 +376,7 @@ nsTableWrapperFrame::GetPrefISize(gfxContext *aRenderingContext)
 }
 
 nscoord
-nsTableWrapperFrame::ChildShrinkWrapISize(gfxContext*         aRenderingContext,
+nsTableWrapperFrame::ChildShrinkWrapISize(nsRenderingContext* aRenderingContext,
                                           nsIFrame*           aChildFrame,
                                           WritingMode         aWM,
                                           LogicalSize         aCBSize,
@@ -425,7 +425,7 @@ nsTableWrapperFrame::ChildShrinkWrapISize(gfxContext*         aRenderingContext,
 
 /* virtual */
 LogicalSize
-nsTableWrapperFrame::ComputeAutoSize(gfxContext*         aRenderingContext,
+nsTableWrapperFrame::ComputeAutoSize(nsRenderingContext* aRenderingContext,
                                      WritingMode         aWM,
                                      const LogicalSize&  aCBSize,
                                      nscoord             aAvailableISize,

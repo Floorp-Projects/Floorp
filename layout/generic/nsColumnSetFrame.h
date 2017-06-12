@@ -41,8 +41,8 @@ public:
                            nsIFrame*       aOldFrame) override;
 #endif
 
-  virtual nscoord GetMinISize(gfxContext *aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext *aRenderingContext) override;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
 
   /**
    * Retrieve the available height for content of this frame. The available content
@@ -92,7 +92,7 @@ public:
 
   nsRect CalculateBounds(const nsPoint& aOffset);
   void CreateBorderRenderers(nsTArray<nsCSSBorderRenderer>& aBorderRenderers,
-                             gfxContext* aCtx,
+                             nsRenderingContext* aCtx,
                              const nsRect& aDirtyRect,
                              const nsPoint& aPt);
 

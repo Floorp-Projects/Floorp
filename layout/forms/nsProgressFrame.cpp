@@ -224,7 +224,7 @@ nsProgressFrame::AttributeChanged(int32_t  aNameSpaceID,
 }
 
 LogicalSize
-nsProgressFrame::ComputeAutoSize(gfxContext*         aRenderingContext,
+nsProgressFrame::ComputeAutoSize(nsRenderingContext* aRenderingContext,
                                  WritingMode         aWM,
                                  const LogicalSize&  aCBSize,
                                  nscoord             aAvailableISize,
@@ -249,7 +249,7 @@ nsProgressFrame::ComputeAutoSize(gfxContext*         aRenderingContext,
 }
 
 nscoord
-nsProgressFrame::GetMinISize(gfxContext *aRenderingContext)
+nsProgressFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   RefPtr<nsFontMetrics> fontMet =
     nsLayoutUtils::GetFontMetricsForFrame(this, 1.0f);
@@ -265,7 +265,7 @@ nsProgressFrame::GetMinISize(gfxContext *aRenderingContext)
 }
 
 nscoord
-nsProgressFrame::GetPrefISize(gfxContext *aRenderingContext)
+nsProgressFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   return GetMinISize(aRenderingContext);
 }

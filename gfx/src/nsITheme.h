@@ -15,9 +15,9 @@
 #include "Units.h"
 
 struct nsRect;
-class gfxContext;
 class nsAttrValue;
 class nsPresContext;
+class nsRenderingContext;
 class nsDeviceContext;
 class nsIFrame;
 class nsIAtom;
@@ -55,7 +55,7 @@ public:
    * @param aRect the rectangle defining the area occupied by the widget
    * @param aDirtyRect the rectangle that needs to be drawn
    */
-  NS_IMETHOD DrawWidgetBackground(gfxContext* aContext,
+  NS_IMETHOD DrawWidgetBackground(nsRenderingContext* aContext,
                                   nsIFrame* aFrame,
                                   uint8_t aWidgetType,
                                   const nsRect& aRect,

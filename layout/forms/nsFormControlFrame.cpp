@@ -40,7 +40,7 @@ NS_QUERYFRAME_HEAD(nsFormControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsAtomicContainerFrame)
 
 /* virtual */ nscoord
-nsFormControlFrame::GetMinISize(gfxContext *aRenderingContext)
+nsFormControlFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -53,7 +53,7 @@ nsFormControlFrame::GetMinISize(gfxContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsFormControlFrame::GetPrefISize(gfxContext *aRenderingContext)
+nsFormControlFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
@@ -67,7 +67,7 @@ nsFormControlFrame::GetPrefISize(gfxContext *aRenderingContext)
 
 /* virtual */
 LogicalSize
-nsFormControlFrame::ComputeAutoSize(gfxContext*         aRC,
+nsFormControlFrame::ComputeAutoSize(nsRenderingContext* aRC,
                                     WritingMode         aWM,
                                     const LogicalSize&  aCBSize,
                                     nscoord             aAvailableISize,

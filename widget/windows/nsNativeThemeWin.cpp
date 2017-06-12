@@ -9,6 +9,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsDeviceContext.h"
+#include "nsRenderingContext.h"
 #include "nsRect.h"
 #include "nsSize.h"
 #include "nsTransform2D.h"
@@ -1384,7 +1385,7 @@ GetThemeDpiScaleFactor(nsIFrame* aFrame)
 }
 
 NS_IMETHODIMP
-nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext,
+nsNativeThemeWin::DrawWidgetBackground(nsRenderingContext* aContext,
                                        nsIFrame* aFrame,
                                        uint8_t aWidgetType,
                                        const nsRect& aRect,
@@ -1436,7 +1437,7 @@ nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext,
     return NS_OK;
   }
 
-  RefPtr<gfxContext> ctx = aContext;
+  RefPtr<gfxContext> ctx = aContext->ThebesContext();
   gfxContextMatrixAutoSaveRestore save(ctx);
 
   double themeScale = GetThemeDpiScaleFactor(aFrame);
@@ -3427,7 +3428,7 @@ void nsNativeThemeWin::DrawCheckedRect(HDC hdc, const RECT& rc, int32_t fore, in
   }
 }
 
-nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(gfxContext* aContext,
+nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsRenderingContext* aContext,
                                   nsIFrame* aFrame,
                                   uint8_t aWidgetType,
                                   const nsRect& aRect,
@@ -3452,7 +3453,7 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(gfxContext* aContext,
   tr.ScaleInverse(p2a);
   dr.ScaleInverse(p2a);
 
-  RefPtr<gfxContext> ctx = aContext;
+  RefPtr<gfxContext> ctx = aContext->ThebesContext();
 
   gfxWindowsNativeDrawing nativeDrawing(ctx, dr, GetWidgetNativeDrawingFlags(aWidgetType));
 

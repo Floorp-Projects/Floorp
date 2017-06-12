@@ -6,7 +6,6 @@
 
 /* container for a document and its presentation */
 
-#include "gfxContext.h"
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/ServoStyleSet.h"
 #include "nsAutoPtr.h"
@@ -83,6 +82,7 @@
 
 #include "nsIScrollableFrame.h"
 #include "nsStyleSheetService.h"
+#include "nsRenderingContext.h"
 #include "nsILoadContext.h"
 
 #include "nsIPrompt.h"
@@ -3527,8 +3527,8 @@ nsDocumentViewer::GetContentSizeInternal(int32_t* aWidth, int32_t* aHeight,
 
   nscoord prefWidth;
   {
-    RefPtr<gfxContext> rcx(presShell->CreateReferenceRenderingContext());
-    prefWidth = root->GetPrefISize(rcx);
+    nsRenderingContext rcx(presShell->CreateReferenceRenderingContext());
+    prefWidth = root->GetPrefISize(&rcx);
   }
   if (prefWidth > aMaxWidth) {
     prefWidth = aMaxWidth;

@@ -10,6 +10,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "nsPresContext.h"
+#include "nsRenderingContext.h"
 #include "nsWhitespaceTokenizer.h"
 
 #include "nsDisplayList.h"
@@ -758,7 +759,7 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override;
+                     nsRenderingContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("MathMLMencloseNotation", TYPE_MATHML_MENCLOSE_NOTATION)
 
 private:
@@ -768,7 +769,7 @@ private:
 };
 
 void nsDisplayNotation::Paint(nsDisplayListBuilder* aBuilder,
-                              gfxContext* aCtx)
+                              nsRenderingContext* aCtx)
 {
   DrawTarget& aDrawTarget = *aCtx->GetDrawTarget();
   nsPresContext* presContext = mFrame->PresContext();

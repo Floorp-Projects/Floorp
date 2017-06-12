@@ -89,8 +89,8 @@ public:
                                     int32_t         aModType) override;
 
   virtual void MarkIntrinsicISizesDirty() override;
-  virtual nscoord GetMinISize(gfxContext *aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext *aRenderingContext) override;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
 
   virtual void Reflow(nsPresContext*           aPresContext,
                       ReflowOutput&     aDesiredSize,
@@ -181,7 +181,7 @@ protected:
 
 #ifdef DEBUG_LAYOUT
     virtual void GetBoxName(nsAutoString& aName) override;
-    void PaintXULDebugBackground(gfxContext& aRenderingContext,
+    void PaintXULDebugBackground(nsRenderingContext& aRenderingContext,
                                  nsPoint aPt);
     void PaintXULDebugOverlay(DrawTarget& aRenderingContext,
                               nsPoint aPt);

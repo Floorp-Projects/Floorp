@@ -201,7 +201,7 @@ BlockReflowInput::ComputeReplacedBlockOffsetsForFloats(
 
 static nscoord
 GetBEndMarginClone(nsIFrame* aFrame,
-                   gfxContext* aRenderingContext,
+                   nsRenderingContext* aRenderingContext,
                    const LogicalRect& aContentArea,
                    WritingMode aWritingMode)
 {

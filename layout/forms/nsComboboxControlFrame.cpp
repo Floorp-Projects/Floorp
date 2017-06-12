@@ -5,7 +5,6 @@
 
 #include "nsComboboxControlFrame.h"
 
-#include "gfxContext.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
@@ -39,6 +38,7 @@
 #include "nsDisplayList.h"
 #include "nsITheme.h"
 #include "nsThemeConstants.h"
+#include "nsRenderingContext.h"
 #include "mozilla/Likely.h"
 #include <algorithm>
 #include "nsTextNode.h"
@@ -735,7 +735,7 @@ static void printSize(char * aDesc, nscoord aSize)
 //-------------------------------------------------------------------
 
 nscoord
-nsComboboxControlFrame::GetIntrinsicISize(gfxContext* aRenderingContext,
+nsComboboxControlFrame::GetIntrinsicISize(nsRenderingContext* aRenderingContext,
                                           nsLayoutUtils::IntrinsicISizeType aType)
 {
   // get the scrollbar width, we'll use this later
@@ -791,7 +791,7 @@ nsComboboxControlFrame::GetIntrinsicISize(gfxContext* aRenderingContext,
 }
 
 nscoord
-nsComboboxControlFrame::GetMinISize(gfxContext *aRenderingContext)
+nsComboboxControlFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord minISize;
   DISPLAY_MIN_WIDTH(this, minISize);
@@ -800,7 +800,7 @@ nsComboboxControlFrame::GetMinISize(gfxContext *aRenderingContext)
 }
 
 nscoord
-nsComboboxControlFrame::GetPrefISize(gfxContext *aRenderingContext)
+nsComboboxControlFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nscoord prefISize;
   DISPLAY_PREF_WIDTH(this, prefISize);
@@ -1539,12 +1539,12 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override;
+                     nsRenderingContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("ComboboxFocus", TYPE_COMBOBOX_FOCUS)
 };
 
 void nsDisplayComboboxFocus::Paint(nsDisplayListBuilder* aBuilder,
-                                   gfxContext* aCtx)
+                                   nsRenderingContext* aCtx)
 {
   static_cast<nsComboboxControlFrame*>(mFrame)
     ->PaintFocus(*aCtx->GetDrawTarget(), ToReferenceFrame());

@@ -45,14 +45,14 @@ public:
 
   void DestroyFrom(nsIFrame* aDestructRoot) override;
 
-  nscoord GetMinISize(gfxContext *aRenderingContext) override;
-  nscoord GetPrefISize(gfxContext *aRenderingContext) override;
+  nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
+  nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
 
   mozilla::IntrinsicSize GetIntrinsicSize() override;
   nsSize  GetIntrinsicRatio() override;
 
   mozilla::LogicalSize
-  ComputeAutoSize(gfxContext*                 aRenderingContext,
+  ComputeAutoSize(nsRenderingContext*         aRenderingContext,
                   mozilla::WritingMode        aWritingMode,
                   const mozilla::LogicalSize& aCBSize,
                   nscoord                     aAvailableISize,
@@ -62,7 +62,7 @@ public:
                   ComputeSizeFlags            aFlags) override;
 
   mozilla::LogicalSize
-  ComputeSize(gfxContext*                 aRenderingContext,
+  ComputeSize(nsRenderingContext*         aRenderingContext,
               mozilla::WritingMode        aWritingMode,
               const mozilla::LogicalSize& aCBSize,
               nscoord                     aAvailableISize,

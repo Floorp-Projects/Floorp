@@ -94,8 +94,8 @@ public:
               ReflowOutput&     aDesiredSize,
               const ReflowInput& aReflowInput,
               nsReflowStatus&          aStatus) override;
-  nscoord GetMinISize(gfxContext* aRenderingContext) override;
-  nscoord GetPrefISize(gfxContext* aRenderingContext) override;
+  nscoord GetMinISize(nsRenderingContext* aRenderingContext) override;
+  nscoord GetPrefISize(nsRenderingContext* aRenderingContext) override;
   void MarkIntrinsicISizesDirty() override;
   bool IsFrameOfType(uint32_t aFlags) const override
   {
@@ -289,7 +289,7 @@ protected:
   /**
    * Helper for GetMinISize / GetPrefISize.
    */
-  nscoord IntrinsicISize(gfxContext*         aRenderingContext,
+  nscoord IntrinsicISize(nsRenderingContext* aRenderingContext,
                          IntrinsicISizeType  aConstraint);
 
   // Helper for AppendFrames / InsertFrames.

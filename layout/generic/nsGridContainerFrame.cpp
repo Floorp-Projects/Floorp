@@ -11,7 +11,6 @@
 #include <algorithm> // for std::stable_sort
 #include <functional>
 #include <limits>
-#include "gfxContext.h"
 #include "mozilla/CSSAlignUtils.h"
 #include "mozilla/CSSOrderAwareFrameIterator.h"
 #include "mozilla/dom/GridBinding.h"
@@ -28,6 +27,7 @@
 #include "nsIFrameInlines.h"
 #include "nsPresContext.h"
 #include "nsReadableUtils.h"
+#include "nsRenderingContext.h"
 #include "nsRuleNode.h"
 #include "nsStyleContext.h"
 #include "nsTableWrapperFrame.h"
@@ -1729,7 +1729,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput
                       aRI.GetWritingMode())
   {}
   GridReflowInput(nsGridContainerFrame* aFrame,
-                  gfxContext&           aRC)
+                  nsRenderingContext&   aRC)
     : GridReflowInput(aFrame, aRC, nullptr, aFrame->StylePosition(),
                       aFrame->GetWritingMode())
   {}
@@ -1896,7 +1896,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput
    * min/max-content contributions when sizing tracks.
    */
   const ReflowInput* const mReflowInput;
-  gfxContext& mRenderingContext;
+  nsRenderingContext& mRenderingContext;
   nsGridContainerFrame* const mFrame;
   SharedGridData* mSharedGridData; // [weak] owned by mFrame's first-in-flow.
   /** Computed border+padding with mSkipSides applied. */
@@ -1922,7 +1922,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput
 
 private:
   GridReflowInput(nsGridContainerFrame*    aFrame,
-                  gfxContext&              aRenderingContext,
+                  nsRenderingContext&      aRenderingContext,
                   const ReflowInput* aReflowInput,
                   const nsStylePosition*   aGridStyle,
                   const WritingMode&       aWM)
@@ -3446,7 +3446,7 @@ nsGridContainerFrame::Tracks::Initialize(
 static nscoord
 MeasuringReflow(nsIFrame*           aChild,
                 const ReflowInput*  aReflowInput,
-                gfxContext*         aRC,
+                nsRenderingContext* aRC,
                 const LogicalSize&  aAvailableSize,
                 const LogicalSize&  aCBSize,
                 nscoord             aIMinSizeClamp = NS_MAXSIZE,
@@ -3515,7 +3515,7 @@ MeasuringReflow(nsIFrame*           aChild,
 static nscoord
 ContentContribution(const GridItemInfo&       aGridItem,
                     const GridReflowInput&    aState,
-                    gfxContext*               aRC,
+                    nsRenderingContext*       aRC,
                     WritingMode               aCBWM,
                     LogicalAxis               aAxis,
                     const Maybe<LogicalSize>& aPercentageBasis,
@@ -3612,7 +3612,7 @@ struct CachedIntrinsicSizes
 static nscoord
 MinContentContribution(const GridItemInfo&    aGridItem,
                        const GridReflowInput& aState,
-                       gfxContext*            aRC,
+                       nsRenderingContext*    aRC,
                        WritingMode            aCBWM,
                        LogicalAxis            aAxis,
                        CachedIntrinsicSizes*  aCache)
@@ -3634,7 +3634,7 @@ MinContentContribution(const GridItemInfo&    aGridItem,
 static nscoord
 MaxContentContribution(const GridItemInfo&    aGridItem,
                        const GridReflowInput& aState,
-                       gfxContext*            aRC,
+                       nsRenderingContext*    aRC,
                        WritingMode            aCBWM,
                        LogicalAxis            aAxis,
                        CachedIntrinsicSizes*  aCache)
@@ -3658,7 +3658,7 @@ MaxContentContribution(const GridItemInfo&    aGridItem,
 static nscoord
 MinSize(const GridItemInfo&    aGridItem,
         const GridReflowInput& aState,
-        gfxContext*            aRC,
+        nsRenderingContext*    aRC,
         WritingMode            aCBWM,
         LogicalAxis            aAxis,
         CachedIntrinsicSizes*  aCache)
@@ -3788,7 +3788,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
     aGridItem.mState[mAxis] |= ItemState::eClampMarginBoxMinSize;
   }
   // min sizing
-  gfxContext* rc = &aState.mRenderingContext;
+  nsRenderingContext* rc = &aState.mRenderingContext;
   if (sz.mState & TrackSize::eAutoMinSizing) {
     nscoord s;
     if (aConstraint == SizingConstraint::eMinContent) {
@@ -4167,7 +4167,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
   AutoTArray<TrackSize::StateBits, 16> stateBitsPerSpan;
   nsTArray<Step2ItemData> step2Items;
   CSSOrderAwareFrameIterator& iter = aState.mIter;
-  gfxContext* rc = &aState.mRenderingContext;
+  nsRenderingContext* rc = &aState.mRenderingContext;
   WritingMode wm = aState.mWM;
   uint32_t maxSpan = 0; // max span of the step2Items items
   // Setup track selector for step 2.2:
@@ -4509,7 +4509,7 @@ nsGridContainerFrame::Tracks::FindUsedFlexFraction(
     fr = std::max(fr, possiblyDividedBaseSize);
   }
   WritingMode wm = aState.mWM;
-  gfxContext* rc = &aState.mRenderingContext;
+  nsRenderingContext* rc = &aState.mRenderingContext;
   CSSOrderAwareFrameIterator& iter = aState.mIter;
   iter.Reset();
   // ... the result of 'finding the size of an fr' for each item that spans
@@ -6304,7 +6304,7 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
 }
 
 nscoord
-nsGridContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
+nsGridContainerFrame::IntrinsicISize(nsRenderingContext* aRenderingContext,
                                      IntrinsicISizeType  aType)
 {
   RenumberList();
@@ -6373,7 +6373,7 @@ nsGridContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
 }
 
 nscoord
-nsGridContainerFrame::GetMinISize(gfxContext* aRC)
+nsGridContainerFrame::GetMinISize(nsRenderingContext* aRC)
 {
   DISPLAY_MIN_WIDTH(this, mCachedMinISize);
   if (mCachedMinISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
@@ -6383,7 +6383,7 @@ nsGridContainerFrame::GetMinISize(gfxContext* aRC)
 }
 
 nscoord
-nsGridContainerFrame::GetPrefISize(gfxContext* aRC)
+nsGridContainerFrame::GetPrefISize(nsRenderingContext* aRC)
 {
   DISPLAY_PREF_WIDTH(this, mCachedPrefISize);
   if (mCachedPrefISize == NS_INTRINSIC_WIDTH_UNKNOWN) {

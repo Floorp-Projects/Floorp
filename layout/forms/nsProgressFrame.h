@@ -56,7 +56,7 @@ public:
                                     int32_t  aModType) override;
 
   virtual mozilla::LogicalSize
-  ComputeAutoSize(gfxContext*                 aRenderingContext,
+  ComputeAutoSize(nsRenderingContext*         aRenderingContext,
                   mozilla::WritingMode        aWM,
                   const mozilla::LogicalSize& aCBSize,
                   nscoord                     aAvailableISize,
@@ -65,8 +65,8 @@ public:
                   const mozilla::LogicalSize& aPadding,
                   ComputeSizeFlags            aFlags) override;
 
-  virtual nscoord GetMinISize(gfxContext *aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext *aRenderingContext) override;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {

@@ -82,6 +82,7 @@
 #include "SVGTextFrame.h"
 
 #include "gfxContext.h"
+#include "nsRenderingContext.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "StickyScrollContainer.h"
 #include "nsFontInflationData.h"
@@ -1956,14 +1957,14 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override;
+                     nsRenderingContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("SelectionOverlay", TYPE_SELECTION_OVERLAY)
 private:
   int16_t mSelectionValue;
 };
 
 void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
-                                      gfxContext* aCtx)
+                                      nsRenderingContext* aCtx)
 {
   DrawTarget& aDrawTarget = *aCtx->GetDrawTarget();
 
@@ -4720,7 +4721,7 @@ nsFrame::MarkIntrinsicISizesDirty()
 }
 
 /* virtual */ nscoord
-nsFrame::GetMinISize(gfxContext *aRenderingContext)
+nsFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result = 0;
   DISPLAY_MIN_WIDTH(this, result);
@@ -4728,7 +4729,7 @@ nsFrame::GetMinISize(gfxContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsFrame::GetPrefISize(gfxContext *aRenderingContext)
+nsFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result = 0;
   DISPLAY_PREF_WIDTH(this, result);
@@ -4736,7 +4737,7 @@ nsFrame::GetPrefISize(gfxContext *aRenderingContext)
 }
 
 /* virtual */ void
-nsFrame::AddInlineMinISize(gfxContext* aRenderingContext,
+nsFrame::AddInlineMinISize(nsRenderingContext* aRenderingContext,
                            nsIFrame::InlineMinISizeData* aData)
 {
   nscoord isize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
@@ -4745,7 +4746,7 @@ nsFrame::AddInlineMinISize(gfxContext* aRenderingContext,
 }
 
 /* virtual */ void
-nsFrame::AddInlinePrefISize(gfxContext* aRenderingContext,
+nsFrame::AddInlinePrefISize(nsRenderingContext* aRenderingContext,
                             nsIFrame::InlinePrefISizeData* aData)
 {
   nscoord isize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
@@ -5044,7 +5045,7 @@ nsFrame::GetIntrinsicRatio()
 
 /* virtual */
 LogicalSize
-nsFrame::ComputeSize(gfxContext*         aRenderingContext,
+nsFrame::ComputeSize(nsRenderingContext* aRenderingContext,
                      WritingMode         aWM,
                      const LogicalSize&  aCBSize,
                      nscoord             aAvailableISize,
@@ -5305,7 +5306,7 @@ nsFrame::ComputeSize(gfxContext*         aRenderingContext,
 }
 
 LogicalSize
-nsFrame::ComputeSizeWithIntrinsicDimensions(gfxContext*          aRenderingContext,
+nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingContext,
                                             WritingMode          aWM,
                                             const IntrinsicSize& aIntrinsicSize,
                                             nsSize               aIntrinsicRatio,
@@ -5755,7 +5756,7 @@ nsFrame::ComputeSimpleTightBounds(DrawTarget* aDrawTarget) const
 }
 
 /* virtual */ nsresult
-nsIFrame::GetPrefWidthTightBounds(gfxContext* aContext,
+nsIFrame::GetPrefWidthTightBounds(nsRenderingContext* aContext,
                                   nscoord* aX,
                                   nscoord* aXMost)
 {
@@ -5764,7 +5765,7 @@ nsIFrame::GetPrefWidthTightBounds(gfxContext* aContext,
 
 /* virtual */
 LogicalSize
-nsFrame::ComputeAutoSize(gfxContext*                 aRenderingContext,
+nsFrame::ComputeAutoSize(nsRenderingContext*         aRenderingContext,
                          WritingMode                 aWM,
                          const mozilla::LogicalSize& aCBSize,
                          nscoord                     aAvailableISize,
@@ -5786,7 +5787,7 @@ nsFrame::ComputeAutoSize(gfxContext*                 aRenderingContext,
 }
 
 nscoord
-nsFrame::ShrinkWidthToFit(gfxContext*         aRenderingContext,
+nsFrame::ShrinkWidthToFit(nsRenderingContext* aRenderingContext,
                           nscoord             aISizeInCB,
                           ComputeSizeFlags    aFlags)
 {
@@ -5811,7 +5812,7 @@ nsFrame::ShrinkWidthToFit(gfxContext*         aRenderingContext,
 }
 
 nscoord
-nsIFrame::ComputeISizeValue(gfxContext*         aRenderingContext,
+nsIFrame::ComputeISizeValue(nsRenderingContext* aRenderingContext,
                             nscoord             aContainingBlockISize,
                             nscoord             aContentEdgeToBoxSizing,
                             nscoord             aBoxSizingToMarginEdge,
@@ -9643,7 +9644,7 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
   //    line height. This can be done with the line iterator.
 
   // if we do have a rendering context
-  gfxContext* rendContext = aState.GetRenderingContext();
+  nsRenderingContext* rendContext = aState.GetRenderingContext();
   if (rendContext) {
     nsPresContext* presContext = aState.PresContext();
 
@@ -9858,7 +9859,7 @@ nsFrame::DoXULLayout(nsBoxLayoutState& aState)
 {
   nsRect ourRect(mRect);
 
-  gfxContext* rendContext = aState.GetRenderingContext();
+  nsRenderingContext* rendContext = aState.GetRenderingContext();
   nsPresContext* presContext = aState.PresContext();
   WritingMode ourWM = GetWritingMode();
   const WritingMode outerWM = aState.OuterReflowInput() ?
@@ -9939,7 +9940,7 @@ void
 nsFrame::BoxReflow(nsBoxLayoutState&        aState,
                    nsPresContext*           aPresContext,
                    ReflowOutput&     aDesiredSize,
-                   gfxContext*              aRenderingContext,
+                   nsRenderingContext*     aRenderingContext,
                    nscoord                  aX,
                    nscoord                  aY,
                    nscoord                  aWidth,

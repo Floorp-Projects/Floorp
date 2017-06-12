@@ -15,11 +15,11 @@
 #include "nsLayoutUtils.h"
 #include "nsPlaceholderFrame.h"
 #include "nsPresContext.h"
+#include "nsRenderingContext.h"
 #include "nsStyleContext.h"
 #include "mozilla/CSSOrderAwareFrameIterator.h"
 #include "mozilla/Logging.h"
 #include <algorithm>
-#include "gfxContext.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/UniquePtr.h"
@@ -4631,7 +4631,7 @@ nsFlexContainerFrame::ReflowPlaceholders(nsPresContext* aPresContext,
 }
 
 /* virtual */ nscoord
-nsFlexContainerFrame::GetMinISize(gfxContext* aRenderingContext)
+nsFlexContainerFrame::GetMinISize(nsRenderingContext* aRenderingContext)
 {
   nscoord minISize = 0;
   DISPLAY_MIN_WIDTH(this, minISize);
@@ -4661,7 +4661,7 @@ nsFlexContainerFrame::GetMinISize(gfxContext* aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsFlexContainerFrame::GetPrefISize(gfxContext* aRenderingContext)
+nsFlexContainerFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
 {
   nscoord prefISize = 0;
   DISPLAY_PREF_WIDTH(this, prefISize);

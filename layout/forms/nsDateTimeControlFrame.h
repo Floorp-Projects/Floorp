@@ -56,9 +56,9 @@ public:
   }
 
   // Reflow
-  nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  nscoord GetMinISize(nsRenderingContext* aRenderingContext) override;
 
-  nscoord GetPrefISize(gfxContext* aRenderingContext) override;
+  nscoord GetPrefISize(nsRenderingContext* aRenderingContext) override;
 
   void Reflow(nsPresContext* aPresContext,
               ReflowOutput& aDesiredSize,

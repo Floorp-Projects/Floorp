@@ -5,9 +5,9 @@
 #ifndef mozilla_dom_DocumentRendererChild
 #define mozilla_dom_DocumentRendererChild
 
-#include "gfxContext.h"
 #include "mozilla/ipc/PDocumentRendererChild.h"
 #include "nsString.h"
+#include "gfxContext.h"
 
 class nsIDOMWindow;
 

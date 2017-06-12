@@ -5,7 +5,6 @@
 
 /* rendering object for HTML <br> elements */
 
-#include "gfxContext.h"
 #include "nsCOMPtr.h"
 #include "nsContainerFrame.h"
 #include "nsFontMetrics.h"
@@ -14,6 +13,7 @@
 #include "nsLineLayout.h"
 #include "nsStyleConsts.h"
 #include "nsGkAtoms.h"
+#include "nsRenderingContext.h"
 #include "nsLayoutUtils.h"
 
 //FOR SELECTION
@@ -44,12 +44,12 @@ public:
                           ReflowOutput& aDesiredSize,
                           const ReflowInput& aReflowInput,
                           nsReflowStatus& aStatus) override;
-  virtual void AddInlineMinISize(gfxContext *aRenderingContext,
+  virtual void AddInlineMinISize(nsRenderingContext *aRenderingContext,
                                  InlineMinISizeData *aData) override;
-  virtual void AddInlinePrefISize(gfxContext *aRenderingContext,
+  virtual void AddInlinePrefISize(nsRenderingContext *aRenderingContext,
                                   InlinePrefISizeData *aData) override;
-  virtual nscoord GetMinISize(gfxContext *aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext *aRenderingContext) override;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
   virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
@@ -175,7 +175,7 @@ BRFrame::Reflow(nsPresContext* aPresContext,
 }
 
 /* virtual */ void
-BRFrame::AddInlineMinISize(gfxContext *aRenderingContext,
+BRFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
                            nsIFrame::InlineMinISizeData *aData)
 {
   if (!GetParent()->StyleContext()->ShouldSuppressLineBreak()) {
@@ -184,7 +184,7 @@ BRFrame::AddInlineMinISize(gfxContext *aRenderingContext,
 }
 
 /* virtual */ void
-BRFrame::AddInlinePrefISize(gfxContext *aRenderingContext,
+BRFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
                             nsIFrame::InlinePrefISizeData *aData)
 {
   if (!GetParent()->StyleContext()->ShouldSuppressLineBreak()) {
@@ -195,7 +195,7 @@ BRFrame::AddInlinePrefISize(gfxContext *aRenderingContext,
 }
 
 /* virtual */ nscoord
-BRFrame::GetMinISize(gfxContext *aRenderingContext)
+BRFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result = 0;
   DISPLAY_MIN_WIDTH(this, result);
@@ -203,7 +203,7 @@ BRFrame::GetMinISize(gfxContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-BRFrame::GetPrefISize(gfxContext *aRenderingContext)
+BRFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result = 0;
   DISPLAY_PREF_WIDTH(this, result);

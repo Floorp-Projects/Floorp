@@ -296,7 +296,7 @@ public:
 
   mozilla::image::DrawResult
   DrawBorderImage(nsPresContext* aPresContext,
-                  gfxContext& aRenderingContext,
+                  nsRenderingContext& aRenderingContext,
                   nsIFrame* aForFrame,
                   const nsRect& aDirtyRect);
 

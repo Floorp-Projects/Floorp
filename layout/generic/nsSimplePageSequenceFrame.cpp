@@ -10,6 +10,7 @@
 #include "nsDeviceContext.h"
 #include "nsPresContext.h"
 #include "gfxContext.h"
+#include "nsRenderingContext.h"
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
 #include "nsIPrintSettings.h"
@@ -771,9 +772,11 @@ nsSimplePageSequenceFrame::PrintNextPage()
       RefPtr<gfxContext> gCtx = dc->CreateRenderingContext();
       NS_ENSURE_TRUE(gCtx, NS_ERROR_OUT_OF_MEMORY);
 
+      nsRenderingContext renderingContext(gCtx);
+
       nsRect drawingRect(nsPoint(0, 0), currentPageFrame->GetSize());
       nsRegion drawingRegion(drawingRect);
-      nsLayoutUtils::PaintFrame(gCtx, currentPageFrame,
+      nsLayoutUtils::PaintFrame(&renderingContext, currentPageFrame,
                                 drawingRegion, NS_RGBA(0,0,0,0),
                                 nsDisplayListBuilderMode::PAINTING,
                                 nsLayoutUtils::PaintFrameFlags::PAINT_SYNC_DECODE_IMAGES);
