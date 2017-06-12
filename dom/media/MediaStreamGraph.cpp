@@ -3638,9 +3638,10 @@ MediaStreamGraphImpl::CollectSizesForMemoryReport(
   {
   public:
     explicit FinishCollectRunnable(
-               already_AddRefed<nsIHandleReportCallback> aHandleReport,
-               already_AddRefed<nsISupports> aHandlerData)
-      : mHandleReport(aHandleReport)
+      already_AddRefed<nsIHandleReportCallback> aHandleReport,
+      already_AddRefed<nsISupports> aHandlerData)
+      : mozilla::Runnable("FinishCollectRunnable")
+      , mHandleReport(aHandleReport)
       , mHandlerData(aHandlerData)
     {}
 

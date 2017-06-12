@@ -546,7 +546,8 @@ public:
   RefPtr<txMozillaXSLTProcessor> mProcessor;
 
   explicit nsTransformBlockerEvent(txMozillaXSLTProcessor* processor)
-    : mProcessor(processor)
+    : mozilla::Runnable("nsTransformBlockerEvent")
+    , mProcessor(processor)
   {}
 
   ~nsTransformBlockerEvent()

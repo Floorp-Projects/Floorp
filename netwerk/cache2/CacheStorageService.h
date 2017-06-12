@@ -365,7 +365,11 @@ private:
   {
   public:
     PurgeFromMemoryRunnable(CacheStorageService* aService, uint32_t aWhat)
-      : mService(aService), mWhat(aWhat) { }
+      : Runnable("net::CacheStorageService::PurgeFromMemoryRunnable")
+      , mService(aService)
+      , mWhat(aWhat)
+    {
+    }
 
   private:
     virtual ~PurgeFromMemoryRunnable() { }
@@ -386,7 +390,12 @@ private:
   class IOThreadSuspender : public Runnable
   {
   public:
-    IOThreadSuspender() : mMon("IOThreadSuspender"), mSignaled(false) { }
+    IOThreadSuspender()
+      : Runnable("net::CacheStorageService::IOThreadSuspender")
+      , mMon("IOThreadSuspender")
+      , mSignaled(false)
+    {
+    }
     void Notify();
   private:
     virtual ~IOThreadSuspender() { }

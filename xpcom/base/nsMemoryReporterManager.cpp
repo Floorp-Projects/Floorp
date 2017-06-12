@@ -1679,7 +1679,9 @@ nsMemoryReporterManager::GetReportsExtended(
 
   if (aMinimize) {
     nsCOMPtr<nsIRunnable> callback =
-      NewRunnableMethod(this, &nsMemoryReporterManager::StartGettingReports);
+      NewRunnableMethod("nsMemoryReporterManager::StartGettingReports",
+                        this,
+                        &nsMemoryReporterManager::StartGettingReports);
     rv = MinimizeMemoryUsage(callback);
   } else {
     rv = StartGettingReports();
@@ -1737,9 +1739,12 @@ nsMemoryReporterManager::StartGettingReports()
       FinishReporting();
       return NS_ERROR_FAILURE;
     }
-    rv = timer->InitWithFuncCallback(TimeoutCallback,
-                                     this, kTimeoutLengthMS,
-                                     nsITimer::TYPE_ONE_SHOT);
+    rv = timer->InitWithNamedFuncCallback(
+      TimeoutCallback,
+      this,
+      kTimeoutLengthMS,
+      nsITimer::TYPE_ONE_SHOT,
+      "nsMemoryReporterManager::StartGettingReports");
     if (NS_WARN_IF(NS_FAILED(rv))) {
       FinishReporting();
       return rv;
@@ -1768,7 +1773,8 @@ nsMemoryReporterManager::DispatchReporter(
   nsCOMPtr<nsISupports> handleReportData = aHandleReportData;
 
   nsCOMPtr<nsIRunnable> event = NS_NewRunnableFunction(
-    [self, reporter, aIsAsync, handleReport, handleReportData, aAnonymize] () {
+    "nsMemoryReporterManager::DispatchReporter",
+    [self, reporter, aIsAsync, handleReport, handleReportData, aAnonymize]() {
       reporter->CollectReports(handleReport, handleReportData, aAnonymize);
       if (!aIsAsync) {
         self->EndReport();
@@ -2510,7 +2516,8 @@ class MinimizeMemoryUsageRunnable : public Runnable
 {
 public:
   explicit MinimizeMemoryUsageRunnable(nsIRunnable* aCallback)
-    : mCallback(aCallback)
+    : mozilla::Runnable("MinimizeMemoryUsageRunnable")
+    , mCallback(aCallback)
     , mRemainingIters(sNumIters)
   {
   }

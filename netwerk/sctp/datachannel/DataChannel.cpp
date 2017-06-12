@@ -2301,11 +2301,13 @@ DataChannelConnection::SendBinary(DataChannel *channel, const char *data,
 
 class ReadBlobRunnable : public Runnable {
 public:
-  ReadBlobRunnable(DataChannelConnection* aConnection, uint16_t aStream,
-    nsIInputStream* aBlob) :
-    mConnection(aConnection),
-    mStream(aStream),
-    mBlob(aBlob)
+  ReadBlobRunnable(DataChannelConnection* aConnection,
+                   uint16_t aStream,
+                   nsIInputStream* aBlob)
+    : Runnable("ReadBlobRunnable")
+    , mConnection(aConnection)
+    , mStream(aStream)
+    , mBlob(aBlob)
   {}
 
   NS_IMETHOD Run() override {
@@ -2348,10 +2350,14 @@ DataChannelConnection::SendBlob(uint16_t stream, nsIInputStream *aBlob)
 class DataChannelBlobSendRunnable : public Runnable
 {
 public:
-  DataChannelBlobSendRunnable(already_AddRefed<DataChannelConnection>& aConnection,
-                              uint16_t aStream)
-    : mConnection(aConnection)
-    , mStream(aStream) {}
+  DataChannelBlobSendRunnable(
+    already_AddRefed<DataChannelConnection>& aConnection,
+    uint16_t aStream)
+    : Runnable("DataChannelBlobSendRunnable")
+    , mConnection(aConnection)
+    , mStream(aStream)
+  {
+  }
 
   ~DataChannelBlobSendRunnable() override
   {

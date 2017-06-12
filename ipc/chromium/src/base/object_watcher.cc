@@ -21,6 +21,8 @@ public:
   Delegate* delegate;        // Delegate to notify when signaled
   bool did_signal;           // DoneWaiting was called
 
+  Watch() : mozilla::Runnable("ObjectWatcher::Watch") {}
+
   NS_IMETHOD Run() override {
     // The watcher may have already been torn down, in which case we need to
     // just get out of dodge.

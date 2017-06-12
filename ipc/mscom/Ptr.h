@@ -41,7 +41,8 @@ struct MainThreadRelease
       return;
     }
     DebugOnly<nsresult> rv =
-      NS_DispatchToMainThread(NewNonOwningRunnableMethod(aPtr,
+      NS_DispatchToMainThread(NewNonOwningRunnableMethod("mscom::MainThreadRelease",
+                                                         aPtr,
                                                          &T::Release));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }

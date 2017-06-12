@@ -1744,7 +1744,8 @@ MLGDeviceD3D11::InitSyncObject()
 
   hr = mSyncTexture->GetSharedHandle(&mSyncHandle);
   if (FAILED(hr) || !mSyncHandle) {
-    NS_DispatchToMainThread(NS_NewRunnableFunction([] () -> void {
+    NS_DispatchToMainThread(NS_NewRunnableFunction("layers::MLGDeviceD3D11::InitSyncObject",
+                                                   [] () -> void {
       Accumulate(Telemetry::D3D11_SYNC_HANDLE_FAILURE, 1);
     }));
     return Fail("FEATURE_FAILURE_GET_SHARED_HANDLE",

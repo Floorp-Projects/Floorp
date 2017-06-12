@@ -299,10 +299,10 @@ DOMRequestService::FireDetailedError(nsIDOMDOMRequest* aRequest,
 class FireSuccessAsyncTask : public mozilla::Runnable
 {
 
-  FireSuccessAsyncTask(DOMRequest* aRequest,
-                       const JS::Value& aResult) :
-    mReq(aRequest),
-    mResult(RootingCx(), aResult)
+  FireSuccessAsyncTask(DOMRequest* aRequest, const JS::Value& aResult)
+    : mozilla::Runnable("FireSuccessAsyncTask")
+    , mReq(aRequest)
+    , mResult(RootingCx(), aResult)
   {
   }
 
@@ -336,10 +336,10 @@ private:
 class FireErrorAsyncTask : public mozilla::Runnable
 {
 public:
-  FireErrorAsyncTask(DOMRequest* aRequest,
-                     const nsAString& aError) :
-    mReq(aRequest),
-    mError(aError)
+  FireErrorAsyncTask(DOMRequest* aRequest, const nsAString& aError)
+    : mozilla::Runnable("FireErrorAsyncTask")
+    , mReq(aRequest)
+    , mError(aError)
   {
   }
 

@@ -36,13 +36,15 @@ static mozilla::LazyLogModule gWin32SoundLog("nsSound");
 class nsSoundPlayer: public mozilla::Runnable {
 public:
   explicit nsSoundPlayer(const nsAString& aSoundName)
-    : mSoundName(aSoundName)
+    : mozilla::Runnable("nsSoundPlayer")
+    , mSoundName(aSoundName)
     , mSoundData(nullptr)
   {
   }
 
   nsSoundPlayer(const uint8_t *aData, size_t aSize)
-    : mSoundName(EmptyString())
+    : mozilla::Runnable("nsSoundPlayer")
+    , mSoundName(EmptyString())
   {
     MOZ_ASSERT(aSize > 0, "Size should not be zero");
     MOZ_ASSERT(aData, "Data shoud not be null");
@@ -124,7 +126,8 @@ void nsSound::PurgeLastSound()
 {
   // Halt any currently playing sound.
   if (mPlayerThread) {
-    mPlayerThread->Dispatch(NS_NewRunnableFunction([]() {
+    mPlayerThread->Dispatch(NS_NewRunnableFunction("nsSound::PurgeLastSound",
+                                                   []() {
       ::PlaySound(nullptr, nullptr, SND_PURGE);
     }), NS_DISPATCH_NORMAL);
   }
@@ -256,7 +259,8 @@ NS_IMETHODIMP nsSound::Init()
   // be a time lag as the library gets loaded.
   // This should be done in player thread otherwise it will block main thread
   // at the first time loading sound library.
-  mPlayerThread->Dispatch(NS_NewRunnableFunction([]() {
+  mPlayerThread->Dispatch(NS_NewRunnableFunction("nsSound::Init",
+                                                 []() {
     ::PlaySound(nullptr, nullptr, SND_PURGE);
   }), NS_DISPATCH_NORMAL);
 

@@ -137,7 +137,9 @@ public:
   ServiceWorkerClientPostMessageRunnable(uint64_t aSourceID,
                                          const nsACString& aSourceScope,
                                          uint64_t aWindowId)
-    : StructuredCloneHolder(CloningSupported, TransferringSupported,
+    : mozilla::Runnable("ServiceWorkerClientPostMessageRunnable")
+    , StructuredCloneHolder(CloningSupported,
+                            TransferringSupported,
                             StructuredCloneScope::SameProcessDifferentThread)
     , mSourceID(aSourceID)
     , mSourceScope(aSourceScope)

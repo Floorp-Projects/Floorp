@@ -493,7 +493,8 @@ public:
   CheckPrincipalRunnable(already_AddRefed<ContentParent> aParent,
                          const PrincipalInfo& aPrincipalInfo,
                          const nsCString& aOrigin)
-    : mContentParent(aParent)
+    : Runnable("ipc::CheckPrincipalRunnable")
+    , mContentParent(aParent)
     , mPrincipalInfo(aPrincipalInfo)
     , mOrigin(aOrigin)
   {

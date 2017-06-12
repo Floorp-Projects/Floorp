@@ -191,7 +191,8 @@ private:
                       PromiseId aId,
                       nsresult aCode,
                       const nsCString& aReason)
-      : mProxy(aProxy)
+      : Runnable("GMPCDMProxy::RejectPromiseTask")
+      , mProxy(aProxy)
       , mId(aId)
       , mCode(aCode)
       , mReason(aReason)

@@ -286,10 +286,12 @@ public:
   class OnHandshakeDoneRunnable : public Runnable
   {
   public:
-    OnHandshakeDoneRunnable(const nsMainThreadPtrHandle<nsITLSServerSecurityObserver>& aListener,
-                            nsITLSServerSocket* aServer,
-                            nsITLSClientStatus* aStatus)
-      : mListener(aListener)
+    OnHandshakeDoneRunnable(
+      const nsMainThreadPtrHandle<nsITLSServerSecurityObserver>& aListener,
+      nsITLSServerSocket* aServer,
+      nsITLSClientStatus* aStatus)
+      : Runnable("net::TLSServerSecurityObserverProxy::OnHandshakeDoneRunnable")
+      , mListener(aListener)
       , mServer(aServer)
       , mStatus(aStatus)
     { }

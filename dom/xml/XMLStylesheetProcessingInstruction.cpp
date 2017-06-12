@@ -63,7 +63,8 @@ XMLStylesheetProcessingInstruction::BindToTree(nsIDocument* aDocument,
 
   void (XMLStylesheetProcessingInstruction::*update)() =
     &XMLStylesheetProcessingInstruction::UpdateStyleSheetInternal;
-  nsContentUtils::AddScriptRunner(NewRunnableMethod(this, update));
+  nsContentUtils::AddScriptRunner(NewRunnableMethod(
+    "dom::XMLStylesheetProcessingInstruction::BindToTree", this, update));
 
   return rv;  
 }

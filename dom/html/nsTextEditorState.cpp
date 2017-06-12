@@ -83,9 +83,10 @@ private:
 
 class RestoreSelectionState : public Runnable {
 public:
-  RestoreSelectionState(nsTextEditorState *aState, nsTextControlFrame *aFrame)
-    : mFrame(aFrame),
-      mTextEditorState(aState)
+  RestoreSelectionState(nsTextEditorState* aState, nsTextControlFrame* aFrame)
+    : mozilla::Runnable("RestoreSelectionState")
+    , mFrame(aFrame)
+    , mTextEditorState(aState)
   {
   }
 
@@ -1238,10 +1239,11 @@ nsTextEditorState::GetSelectionController() const
 // Helper class, used below in BindToFrame().
 class PrepareEditorEvent : public Runnable {
 public:
-  PrepareEditorEvent(nsTextEditorState &aState,
-                     nsIContent *aOwnerContent,
-                     const nsAString &aCurrentValue)
-    : mState(&aState)
+  PrepareEditorEvent(nsTextEditorState& aState,
+                     nsIContent* aOwnerContent,
+                     const nsAString& aCurrentValue)
+    : mozilla::Runnable("PrepareEditorEvent")
+    , mState(&aState)
     , mOwnerContent(aOwnerContent)
     , mCurrentValue(aCurrentValue)
   {

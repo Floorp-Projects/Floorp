@@ -49,6 +49,6 @@ nsresult
 NS_DispatchMemoryPressure(MemoryPressureState aState)
 {
   NS_DispatchEventualMemoryPressure(aState);
-  nsCOMPtr<nsIRunnable> event = new Runnable;
+  nsCOMPtr<nsIRunnable> event = new Runnable("NS_DispatchEventualMemoryPressure");
   return NS_DispatchToMainThread(event);
 }

@@ -87,7 +87,8 @@ private:
   {
   public:
     explicit SyncDisabledStateEvent(nsDateTimeControlFrame* aFrame)
-    : mFrame(aFrame)
+      : mozilla::Runnable("nsDateTimeControlFrame::SyncDisabledStateEvent")
+      , mFrame(aFrame)
     {}
 
     NS_IMETHOD Run() override

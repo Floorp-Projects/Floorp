@@ -76,8 +76,8 @@ TestHangsParent::ShouldContinueFromReplyTimeout()
 
     // reply should be here; we'll post a task to shut things down.
     // This must be after OnMaybeDequeueOne() in the event queue.
-    MessageLoop::current()->PostTask(
-        NewNonOwningRunnableMethod(this, &TestHangsParent::CleanUp));
+    MessageLoop::current()->PostTask(NewNonOwningRunnableMethod(
+      "_ipdltest::TestHangsParent::CleanUp", this, &TestHangsParent::CleanUp));
 
     GetIPCChannel()->CloseWithTimeout();
 

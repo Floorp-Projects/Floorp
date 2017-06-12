@@ -152,9 +152,11 @@ protected:
   class nsPositionChangedEvent : public mozilla::Runnable
   {
   public:
-    nsPositionChangedEvent(nsListBoxBodyFrame* aFrame,
-                           bool aUp, int32_t aDelta) :
-      mFrame(aFrame), mUp(aUp), mDelta(aDelta)
+    nsPositionChangedEvent(nsListBoxBodyFrame* aFrame, bool aUp, int32_t aDelta)
+      : mozilla::Runnable("nsListBoxBodyFrame::nsPositionChangedEvent")
+      , mFrame(aFrame)
+      , mUp(aUp)
+      , mDelta(aDelta)
     {}
   
     NS_IMETHOD Run() override

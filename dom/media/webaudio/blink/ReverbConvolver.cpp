@@ -151,8 +151,10 @@ ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
           NS_WARNING("Cannot start convolver thread.");
           return;
         }
-        m_backgroundThread.message_loop()->PostTask(NewNonOwningRunnableMethod(this,
-									       &ReverbConvolver::backgroundThreadEntry));
+        m_backgroundThread.message_loop()->PostTask(NewNonOwningRunnableMethod(
+          "WebCore::ReverbConvolver::backgroundThreadEntry",
+          this,
+          &ReverbConvolver::backgroundThreadEntry));
     }
 }
 

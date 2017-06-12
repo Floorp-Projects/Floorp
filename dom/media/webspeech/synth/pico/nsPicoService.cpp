@@ -469,7 +469,7 @@ nsPicoService::Observe(nsISupports* aSubject, const char* aTopic,
   DebugOnly<nsresult> rv = NS_NewNamedThread("Pico Worker", getter_AddRefs(mThread));
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   return mThread->Dispatch(
-    NewRunnableMethod(this, &nsPicoService::Init), NS_DISPATCH_NORMAL);
+    NewRunnableMethod("nsPicoService::Init", this, &nsPicoService::Init), NS_DISPATCH_NORMAL);
 }
 // nsISpeechService
 
@@ -579,7 +579,8 @@ nsPicoService::Init()
     rv = dirIterator->HasMoreElements(&hasMoreElements);
   }
 
-  NS_DispatchToMainThread(NewRunnableMethod(this, &nsPicoService::RegisterVoices));
+  NS_DispatchToMainThread(NewRunnableMethod("nsPicoService::RegisterVoices",
+                                            this, &nsPicoService::RegisterVoices));
 }
 
 void
