@@ -23,6 +23,7 @@ import android.widget.TextView;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
+import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.web.Download;
 import org.mozilla.focus.web.IWebView;
 
@@ -98,7 +99,9 @@ public class WebContextMenu {
         navigationView.getMenu().findItem(R.id.menu_link_copy).setVisible(hitTarget.isLink);
         navigationView.getMenu().findItem(R.id.menu_image_share).setVisible(hitTarget.isImage);
         navigationView.getMenu().findItem(R.id.menu_image_copy).setVisible(hitTarget.isImage);
-        navigationView.getMenu().findItem(R.id.menu_image_save).setVisible(hitTarget.isImage);
+
+        navigationView.getMenu().findItem(R.id.menu_image_save).setVisible(
+                hitTarget.isImage && UrlUtils.isHttpOrHttps(hitTarget.imageURL));
 
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override

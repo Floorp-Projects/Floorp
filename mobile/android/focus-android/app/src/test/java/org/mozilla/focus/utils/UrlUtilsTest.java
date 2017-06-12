@@ -111,4 +111,17 @@ public class UrlUtilsTest {
         assertFalse(UrlUtils.isInternalErrorURL("error:-8"));
         assertFalse(UrlUtils.isInternalErrorURL("hello world"));
     }
+
+    @Test
+    public void isHttpOrHttpsUrl() {
+        assertFalse(UrlUtils.isHttpOrHttps(null));
+        assertFalse(UrlUtils.isHttpOrHttps(""));
+        assertFalse(UrlUtils.isHttpOrHttps("     "));
+        assertFalse(UrlUtils.isHttpOrHttps("mozilla.org"));
+        assertFalse(UrlUtils.isHttpOrHttps("httpstrf://example.org"));
+
+        assertTrue(UrlUtils.isHttpOrHttps("https://www.mozilla.org"));
+        assertTrue(UrlUtils.isHttpOrHttps("http://example.org"));
+        assertTrue(UrlUtils.isHttpOrHttps("http://192.168.0.1"));
+    }
 }

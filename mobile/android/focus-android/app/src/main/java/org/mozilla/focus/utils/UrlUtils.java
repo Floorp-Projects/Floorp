@@ -41,6 +41,14 @@ public class UrlUtils {
         return url.contains(".") || url.contains(":");
     }
 
+    public static boolean isHttpOrHttps(String url) {
+        if (TextUtils.isEmpty(url)) {
+            return false;
+        }
+
+        return url.startsWith("http:") || url.startsWith("https:");
+    }
+
     public static boolean isSearchQuery(String text) {
         return text.contains(" ");
     }
