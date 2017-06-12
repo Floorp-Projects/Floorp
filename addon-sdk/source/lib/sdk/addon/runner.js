@@ -19,9 +19,9 @@ const { preferences } = metadata;
 const Startup = Cu.import("resource://gre/modules/sdk/system/Startup.js", {}).exports;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyGetter(this, "BrowserToolboxProcess", function () {
-  return Cu.import("resource://devtools/client/framework/ToolboxProcess.jsm", {}).
-         BrowserToolboxProcess;
+XPCOMUtils.defineLazyGetter(this, "DevToolsShim", function () {
+  return Cu.import("chrome://devtools-shim/content/DevToolsShim.jsm", {}).
+         DevToolsShim;
 });
 
 // Initializes default preferences
@@ -156,7 +156,7 @@ function run(options) {
     }
 
     if (get("extensions." + id + ".sdk.debug.show", false)) {
-      BrowserToolboxProcess.init({ addonID: id });
+      DevToolsShim.initBrowserToolboxProcessForAddon(id);
     }
   } catch (error) {
     console.exception(error);
