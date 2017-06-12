@@ -125,6 +125,7 @@ public:
   static void ReadPathToBuilder(std::istream &aStream, PathBuilder *aBuilder);
 
 private:
+  friend class DrawTargetWrapAndRecord;
   friend class DrawTargetRecording;
   friend class RecordedPathCreation;
 
