@@ -105,7 +105,7 @@ NS_IMPL_ISUPPORTS(ThreadObserver, nsIThreadObserver)
 NS_IMETHODIMP
 ThreadObserver::OnDispatchedEvent(nsIThreadInternal *thread)
 {
-  AndroidBridge::Bridge()->PostTaskToUiThread(NS_NewRunnableFunction(&PumpEvents), 0);
+  AndroidBridge::Bridge()->PostTaskToUiThread(NS_NewRunnableFunction("PumpEvents", &PumpEvents), 0);
   return NS_OK;
 }
 
@@ -123,7 +123,7 @@ ThreadObserver::AfterProcessNextEvent(nsIThreadInternal *thread, bool eventWasPr
 
 class CreateOnUiThread : public Runnable {
 public:
-  CreateOnUiThread()
+  CreateOnUiThread() : Runnable("CreateOnUiThread")
   {}
 
   NS_IMETHOD Run() override {
@@ -141,7 +141,7 @@ public:
 
 class DestroyOnUiThread : public Runnable {
 public:
-  DestroyOnUiThread() : mDestroyed(false)
+  DestroyOnUiThread() : Runnable("DestroyOnUiThread"), mDestroyed(false)
   {}
 
   NS_IMETHOD Run() override {

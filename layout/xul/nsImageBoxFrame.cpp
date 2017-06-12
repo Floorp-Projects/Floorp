@@ -64,8 +64,12 @@ using namespace mozilla::layers;
 class nsImageBoxFrameEvent : public Runnable
 {
 public:
-  nsImageBoxFrameEvent(nsIContent *content, EventMessage message)
-    : mContent(content), mMessage(message) {}
+  nsImageBoxFrameEvent(nsIContent* content, EventMessage message)
+    : mozilla::Runnable("nsImageBoxFrameEvent")
+    , mContent(content)
+    , mMessage(message)
+  {
+  }
 
   NS_IMETHOD Run() override;
 

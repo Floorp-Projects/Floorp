@@ -29,6 +29,7 @@ class LSPAnnotationGatherer : public Runnable
   ~LSPAnnotationGatherer() {}
 
 public:
+  LSPAnnotationGatherer() : Runnable("crashreporter::LSPAnnotationGatherer") {}
   NS_DECL_NSIRUNNABLE
 
   void Annotate();
@@ -137,7 +138,8 @@ LSPAnnotationGatherer::Run()
   }
 
   mString = str;
-  NS_DispatchToMainThread(NewRunnableMethod(this, &LSPAnnotationGatherer::Annotate));
+  NS_DispatchToMainThread(NewRunnableMethod("crashreporter::LSPAnnotationGatherer::Annotate",
+                                            this, &LSPAnnotationGatherer::Annotate));
   return NS_OK;
 }
 

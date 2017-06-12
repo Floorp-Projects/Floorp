@@ -301,9 +301,11 @@ TEST_F(TelemetryTestFixture, NonMainThreadAdd) {
   Unused << mTelemetry->ClearScalars();
 
   // Define the function that will be called on the testing thread.
-  nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([]() -> void {
-    Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, 37);
-  });
+  nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
+    "TelemetryTestFixture_NonMainThreadAdd_Test::TestBody", []() -> void {
+      Telemetry::ScalarAdd(
+        Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, 37);
+    });
 
   // Spawn the testing thread and run the function.
   nsCOMPtr<nsIThread> testingThread;

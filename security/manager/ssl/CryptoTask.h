@@ -62,8 +62,9 @@ public:
 
 protected:
   CryptoTask()
-    : mRv(NS_ERROR_NOT_INITIALIZED),
-      mReleasedNSSResources(false)
+    : Runnable("CryptoTask")
+    , mRv(NS_ERROR_NOT_INITIALIZED)
+    , mReleasedNSSResources(false)
   {
   }
 

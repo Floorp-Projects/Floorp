@@ -34,13 +34,13 @@ static mozilla::LazyLogModule gWin32SoundLog("nsSound");
 class nsSoundPlayer: public mozilla::Runnable {
 public:
   nsSoundPlayer(nsSound *aSound, const wchar_t* aSoundName) :
-    mSoundName(aSoundName), mSound(aSound)
+    Runnable("nsSoundPlayer"), mSoundName(aSoundName), mSound(aSound)
   {
     Init();
   }
 
   nsSoundPlayer(nsSound *aSound, const nsAString& aSoundName) :
-    mSoundName(aSoundName), mSound(aSound)
+    Runnable("nsSoundPlayer"), mSoundName(aSoundName), mSound(aSound)
   {
     Init();
   }
@@ -62,6 +62,7 @@ protected:
   class SoundReleaser: public mozilla::Runnable {
   public:
     explicit SoundReleaser(nsSound* aSound) :
+      Runnable("SoundReleaser"),
       mSound(aSound)
     {
     }

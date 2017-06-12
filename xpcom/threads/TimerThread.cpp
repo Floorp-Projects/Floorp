@@ -58,7 +58,8 @@ class TimerObserverRunnable : public Runnable
 {
 public:
   explicit TimerObserverRunnable(nsIObserver* aObserver)
-    : mObserver(aObserver)
+    : mozilla::Runnable("TimerObserverRunnable")
+    , mObserver(aObserver)
   {
   }
 
@@ -147,7 +148,8 @@ public:
   NS_IMETHOD GetName(nsACString& aName) override;
 
   nsTimerEvent()
-    : mTimer()
+    : mozilla::CancelableRunnable("nsTimerEvent")
+    , mTimer()
     , mGeneration(0)
   {
     // Note: We override operator new for this class, and the override is

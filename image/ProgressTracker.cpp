@@ -204,7 +204,8 @@ class AsyncNotifyCurrentStateRunnable : public Runnable
   public:
     AsyncNotifyCurrentStateRunnable(ProgressTracker* aProgressTracker,
                                     IProgressObserver* aObserver)
-      : mProgressTracker(aProgressTracker)
+      : Runnable("image::AsyncNotifyCurrentStateRunnable")
+      , mProgressTracker(aProgressTracker)
       , mObserver(aObserver)
     {
       MOZ_ASSERT(NS_IsMainThread(), "Should be created on the main thread");

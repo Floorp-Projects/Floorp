@@ -111,7 +111,8 @@ PresentationNetworkHelper::OnGetWifiIPAddress(const nsACString& aIPAddress)
   MOZ_ASSERT(mFunc);
 
   NS_DispatchToMainThread(
-    NewRunnableMethod<nsCString>(mInfo,
+    NewRunnableMethod<nsCString>("dom::PresentationNetworkHelper::OnGetWifiIPAddress",
+                                 mInfo,
                                  mFunc,
                                  aIPAddress));
   return NS_OK;
@@ -684,6 +685,7 @@ PresentationControllingInfo::GetAddress()
   // into main thread instead of calling it directly.
   NS_DispatchToMainThread(
     NewRunnableMethod<nsCString>(
+      "dom::PresentationControllingInfo::OnGetAddress",
       this,
       &PresentationControllingInfo::OnGetAddress,
       NS_ConvertUTF16toUTF8(ip)));
@@ -1109,11 +1111,11 @@ PresentationControllingInfo::OnListedNetworkAddresses(const char** aAddressArray
   // On Firefox desktop, the IP address is retrieved from a callback function.
   // To make consistent code sequence, following function call is dispatched
   // into main thread instead of calling it directly.
-  NS_DispatchToMainThread(
-    NewRunnableMethod<nsCString>(
-      this,
-      &PresentationControllingInfo::OnGetAddress,
-      ip));
+  NS_DispatchToMainThread(NewRunnableMethod<nsCString>(
+    "dom::PresentationControllingInfo::OnGetAddress",
+    this,
+    &PresentationControllingInfo::OnGetAddress,
+    ip));
 
   return NS_OK;
 }
@@ -1125,11 +1127,11 @@ PresentationControllingInfo::OnListNetworkAddressesFailed()
 
   // In 1-UA case, transport channel can still be established
   // on loopback interface even if no network address available.
-  NS_DispatchToMainThread(
-    NewRunnableMethod<nsCString>(
-      this,
-      &PresentationControllingInfo::OnGetAddress,
-      "127.0.0.1"));
+  NS_DispatchToMainThread(NewRunnableMethod<nsCString>(
+    "dom::PresentationControllingInfo::OnGetAddress",
+    this,
+    &PresentationControllingInfo::OnGetAddress,
+    "127.0.0.1"));
 
   return NS_OK;
 }

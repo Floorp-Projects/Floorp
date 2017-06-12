@@ -1075,7 +1075,8 @@ class CSPReportSenderRunnable final : public Runnable
                             const nsAString& aScriptSample,
                             uint32_t aLineNum,
                             nsCSPContext* aCSPContext)
-      : mBlockedContentSource(aBlockedContentSource)
+      : mozilla::Runnable("CSPReportSenderRunnable")
+      , mBlockedContentSource(aBlockedContentSource)
       , mOriginalURI(aOriginalURI)
       , mViolatedPolicyIndex(aViolatedPolicyIndex)
       , mReportOnlyFlag(aReportOnlyFlag)

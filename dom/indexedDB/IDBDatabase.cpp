@@ -73,9 +73,9 @@ class CancelableRunnableWrapper final
   nsCOMPtr<nsIRunnable> mRunnable;
 
 public:
-  explicit
-  CancelableRunnableWrapper(nsIRunnable* aRunnable)
-    : mRunnable(aRunnable)
+  explicit CancelableRunnableWrapper(nsIRunnable* aRunnable)
+    : CancelableRunnable("dom::CancelableRunnableWrapper")
+    , mRunnable(aRunnable)
   {
     MOZ_ASSERT(aRunnable);
   }

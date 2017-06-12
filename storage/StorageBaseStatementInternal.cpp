@@ -35,10 +35,11 @@ public:
    *        on.  We release the statement on that thread since releasing the
    *        statement might end up releasing the connection too.
    */
-  AsyncStatementFinalizer(StorageBaseStatementInternal *aStatement,
-                          Connection *aConnection)
-  : mStatement(aStatement)
-  , mConnection(aConnection)
+  AsyncStatementFinalizer(StorageBaseStatementInternal* aStatement,
+                          Connection* aConnection)
+    : Runnable("storage::AsyncStatementFinalizer")
+    , mStatement(aStatement)
+    , mConnection(aConnection)
   {
   }
 
@@ -81,10 +82,11 @@ public:
    *        responsibility for the instance and all other references to it
    *        should be forgotten.
    */
-  LastDitchSqliteStatementFinalizer(RefPtr<Connection> &aConnection,
-                                    sqlite3_stmt *aStatement)
-  : mConnection(aConnection)
-  , mAsyncStatement(aStatement)
+  LastDitchSqliteStatementFinalizer(RefPtr<Connection>& aConnection,
+                                    sqlite3_stmt* aStatement)
+    : Runnable("storage::LastDitchSqliteStatementFinalizer")
+    , mConnection(aConnection)
+    , mAsyncStatement(aStatement)
   {
     NS_PRECONDITION(aConnection, "You must provide a Connection");
   }

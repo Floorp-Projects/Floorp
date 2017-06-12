@@ -61,8 +61,10 @@ class DumpMemoryInfoToTempDirRunnable : public Runnable
 {
 public:
   DumpMemoryInfoToTempDirRunnable(const nsAString& aIdentifier,
-                                  bool aAnonymize, bool aMinimizeMemoryUsage)
-    : mIdentifier(aIdentifier)
+                                  bool aAnonymize,
+                                  bool aMinimizeMemoryUsage)
+    : mozilla::Runnable("DumpMemoryInfoToTempDirRunnable")
+    , mIdentifier(aIdentifier)
     , mAnonymize(aAnonymize)
     , mMinimizeMemoryUsage(aMinimizeMemoryUsage)
   {
@@ -93,7 +95,8 @@ public:
   GCAndCCLogDumpRunnable(const nsAString& aIdentifier,
                          bool aDumpAllTraces,
                          bool aDumpChildProcesses)
-    : mIdentifier(aIdentifier)
+    : mozilla::Runnable("GCAndCCLogDumpRunnable")
+    , mIdentifier(aIdentifier)
     , mDumpAllTraces(aDumpAllTraces)
     , mDumpChildProcesses(aDumpChildProcesses)
   {

@@ -214,30 +214,36 @@ MediaDecoder::ResourceCallback::NotifyDataArrived()
   // calls to MediaDecoder::NotifyDataArrived() which will update the buffer
   // ranges of the reader.
   mTimerArmed = true;
-  mTimer->InitWithFuncCallback(
-    TimerCallback, this, sDelay, nsITimer::TYPE_ONE_SHOT);
+  mTimer->InitWithNamedFuncCallback(
+    TimerCallback,
+    this,
+    sDelay,
+    nsITimer::TYPE_ONE_SHOT,
+    "MediaDecoder::ResourceCallback::NotifyDataArrived");
 }
 
 void
 MediaDecoder::ResourceCallback::NotifyDataEnded(nsresult aStatus)
 {
   RefPtr<ResourceCallback> self = this;
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
-    if (!self->mDecoder) {
-      return;
-    }
-    self->mDecoder->NotifyDownloadEnded(aStatus);
-    if (NS_SUCCEEDED(aStatus)) {
-      MediaDecoderOwner* owner = self->GetMediaOwner();
-      MOZ_ASSERT(owner);
-      owner->DownloadSuspended();
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "MediaDecoder::ResourceCallback::NotifyDataEnded", [=]() {
+      if (!self->mDecoder) {
+        return;
+      }
+      self->mDecoder->NotifyDownloadEnded(aStatus);
+      if (NS_SUCCEEDED(aStatus)) {
+        MediaDecoderOwner* owner = self->GetMediaOwner();
+        MOZ_ASSERT(owner);
+        owner->DownloadSuspended();
 
-      // NotifySuspendedStatusChanged will tell the element that download
-      // has been suspended "by the cache", which is true since we never
-      // download anything. The element can then transition to HAVE_ENOUGH_DATA.
-      self->mDecoder->NotifySuspendedStatusChanged();
-    }
-  });
+        // NotifySuspendedStatusChanged will tell the element that download
+        // has been suspended "by the cache", which is true since we never
+        // download anything. The element can then transition to
+        // HAVE_ENOUGH_DATA.
+        self->mDecoder->NotifySuspendedStatusChanged();
+      }
+    });
   mAbstractMainThread->Dispatch(r.forget());
 }
 
@@ -264,11 +270,12 @@ MediaDecoder::ResourceCallback::NotifyBytesConsumed(int64_t aBytes,
                                                     int64_t aOffset)
 {
   RefPtr<ResourceCallback> self = this;
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
-    if (self->mDecoder) {
-      self->mDecoder->NotifyBytesConsumed(aBytes, aOffset);
-    }
-  });
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "MediaDecoder::ResourceCallback::NotifyBytesConsumed", [=]() {
+      if (self->mDecoder) {
+        self->mDecoder->NotifyBytesConsumed(aBytes, aOffset);
+      }
+    });
   mAbstractMainThread->Dispatch(r.forget());
 }
 
@@ -471,10 +478,11 @@ MediaDecoder::Shutdown()
     // Ensure we always unregister asynchronously in order not to disrupt
     // the hashtable iterating in MediaShutdownManager::Shutdown().
     RefPtr<MediaDecoder> self = this;
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self] () {
-      self->mVideoFrameContainer = nullptr;
-      MediaShutdownManager::Instance().Unregister(self);
-    });
+    nsCOMPtr<nsIRunnable> r =
+      NS_NewRunnableFunction("MediaDecoder::Shutdown", [self]() {
+        self->mVideoFrameContainer = nullptr;
+        MediaShutdownManager::Instance().Unregister(self);
+      });
     mAbstractMainThread->Dispatch(r.forget());
   }
 

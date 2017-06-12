@@ -403,7 +403,9 @@ nsDateTimeControlFrame::AttributeChanged(int32_t aNameSpaceID,
           do_QueryInterface(mInputAreaContent);
         if (aAttribute == nsGkAtoms::value) {
           if (inputAreaContent) {
-            nsContentUtils::AddScriptRunner(NewRunnableMethod(inputAreaContent,
+            nsContentUtils::AddScriptRunner(NewRunnableMethod(
+              "nsIDateTimeInputArea::NotifyInputElementValueChanged",
+              inputAreaContent,
               &nsIDateTimeInputArea::NotifyInputElementValueChanged));
           }
         } else {

@@ -1390,40 +1390,43 @@ nsHttpConnection::PushBack(const char *data, uint32_t length)
 class HttpConnectionForceIO : public Runnable
 {
 public:
-  HttpConnectionForceIO(nsHttpConnection *aConn, bool doRecv,
+  HttpConnectionForceIO(nsHttpConnection* aConn,
+                        bool doRecv,
                         bool isFastOpenForce)
-     : mConn(aConn)
-     , mDoRecv(doRecv)
-     , mIsFastOpenForce(isFastOpenForce)
-    {}
+    : Runnable("net::HttpConnectionForceIO")
+    , mConn(aConn)
+    , mDoRecv(doRecv)
+    , mIsFastOpenForce(isFastOpenForce)
+  {
+  }
 
-    NS_IMETHOD Run() override
-    {
-        MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  NS_IMETHOD Run() override
+  {
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-        if (mDoRecv) {
-            if (!mConn->mSocketIn)
-                return NS_OK;
-            return mConn->OnInputStreamReady(mConn->mSocketIn);
-        }
+    if (mDoRecv) {
+      if (!mConn->mSocketIn)
+        return NS_OK;
+      return mConn->OnInputStreamReady(mConn->mSocketIn);
+    }
 
-        // This runnable will be called when the ForceIO timer expires
-        // (mIsFastOpenForce==false) or during the TCP Fast Open to force
-        // writes (mIsFastOpenForce==true).
-        if (mIsFastOpenForce && !mConn->mWaitingFor0RTTResponse) {
-            // If we have exit the TCP Fast Open in the meantime we can skip
-            // this.
-            return NS_OK;
-        }
-        if (!mIsFastOpenForce) {
-            MOZ_ASSERT(mConn->mForceSendPending);
-            mConn->mForceSendPending = false;
-        }
+    // This runnable will be called when the ForceIO timer expires
+    // (mIsFastOpenForce==false) or during the TCP Fast Open to force
+    // writes (mIsFastOpenForce==true).
+    if (mIsFastOpenForce && !mConn->mWaitingFor0RTTResponse) {
+      // If we have exit the TCP Fast Open in the meantime we can skip
+      // this.
+      return NS_OK;
+    }
+    if (!mIsFastOpenForce) {
+      MOZ_ASSERT(mConn->mForceSendPending);
+      mConn->mForceSendPending = false;
+    }
 
-        if (!mConn->mSocketOut) {
-            return NS_OK;
-        }
-        return mConn->OnOutputStreamReady(mConn->mSocketOut);
+    if (!mConn->mSocketOut) {
+      return NS_OK;
+    }
+    return mConn->OnOutputStreamReady(mConn->mSocketOut);
     }
 private:
     RefPtr<nsHttpConnection> mConn;
@@ -1515,8 +1518,12 @@ nsHttpConnection::MaybeForceSendIO()
     MOZ_ASSERT(!mForceSendTimer);
     mForceSendPending = true;
     mForceSendTimer = do_CreateInstance("@mozilla.org/timer;1");
-    return mForceSendTimer->InitWithFuncCallback(
-        nsHttpConnection::ForceSendIO, this, kForceDelay, nsITimer::TYPE_ONE_SHOT);
+    return mForceSendTimer->InitWithNamedFuncCallback(
+      nsHttpConnection::ForceSendIO,
+      this,
+      kForceDelay,
+      nsITimer::TYPE_ONE_SHOT,
+      "net::nsHttpConnection::MaybeForceSendIO");
 }
 
 // trigger an asynchronous read
@@ -2070,11 +2077,12 @@ nsHttpConnection::StartShortLivedTCPKeepalives()
             // Add time for final keepalive probes, and 2 seconds for a buffer.
             time += ((probeCount) * retryIntervalS) - (time % idleTimeS) + 2;
         }
-        mTCPKeepaliveTransitionTimer->InitWithFuncCallback(
-                                          nsHttpConnection::UpdateTCPKeepalive,
-                                          this,
-                                          (uint32_t)time*1000,
-                                          nsITimer::TYPE_ONE_SHOT);
+        mTCPKeepaliveTransitionTimer->InitWithNamedFuncCallback(
+          nsHttpConnection::UpdateTCPKeepalive,
+          this,
+          (uint32_t)time * 1000,
+          nsITimer::TYPE_ONE_SHOT,
+          "net::nsHttpConnection::StartShortLivedTCPKeepalives");
     } else {
         NS_WARNING("nsHttpConnection::StartShortLivedTCPKeepalives failed to "
                    "create timer.");

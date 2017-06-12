@@ -841,7 +841,8 @@ AccessibleWrap::accSelect(
       // is happening, so we dispatch TakeFocus from the main thread to
       // guarantee that we are outside any IPC.
       nsCOMPtr<nsIRunnable> runnable =
-        mozilla::NewRunnableMethod(this, &Accessible::TakeFocus);
+        mozilla::NewRunnableMethod("Accessible::TakeFocus",
+                                   this, &Accessible::TakeFocus);
       NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
       return S_OK;
     }
