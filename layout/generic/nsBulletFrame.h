@@ -81,11 +81,11 @@ public:
                       ReflowOutput& aMetrics,
                       const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
-  virtual nscoord GetMinISize(gfxContext *aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext *aRenderingContext) override;
-  void AddInlineMinISize(gfxContext* aRenderingContext,
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
+  void AddInlineMinISize(nsRenderingContext* aRenderingContext,
                          nsIFrame::InlineMinISizeData* aData) override;
-  void AddInlinePrefISize(gfxContext* aRenderingContext,
+  void AddInlinePrefISize(nsRenderingContext* aRenderingContext,
                           nsIFrame::InlinePrefISizeData* aData) override;
 
   // nsBulletFrame
@@ -98,8 +98,8 @@ public:
   void GetSpokenText(nsAString& aText);
 
   Maybe<BulletRenderer>
-  CreateBulletRenderer(gfxContext& aRenderingContext, nsPoint aPt);
-  DrawResult PaintBullet(gfxContext& aRenderingContext, nsPoint aPt,
+  CreateBulletRenderer(nsRenderingContext& aRenderingContext, nsPoint aPt);
+  DrawResult PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
                          const nsRect& aDirtyRect, uint32_t aFlags,
                          bool aDisableSubpixelAA);
 
@@ -123,7 +123,7 @@ protected:
   void AppendSpacingToPadding(nsFontMetrics* aFontMetrics,
                               mozilla::LogicalMargin* aPadding);
   void GetDesiredSize(nsPresContext* aPresContext,
-                      gfxContext *aRenderingContext,
+                      nsRenderingContext *aRenderingContext,
                       ReflowOutput& aMetrics,
                       float aFontSizeInflation,
                       mozilla::LogicalMargin* aPadding);

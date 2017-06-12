@@ -126,7 +126,7 @@ nsDateTimeControlFrame::HandleBlurEvent()
 }
 
 nscoord
-nsDateTimeControlFrame::GetMinISize(gfxContext* aRenderingContext)
+nsDateTimeControlFrame::GetMinISize(nsRenderingContext* aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -144,7 +144,7 @@ nsDateTimeControlFrame::GetMinISize(gfxContext* aRenderingContext)
 }
 
 nscoord
-nsDateTimeControlFrame::GetPrefISize(gfxContext* aRenderingContext)
+nsDateTimeControlFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);

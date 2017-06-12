@@ -5,7 +5,6 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "gfxContext.h"
 #include "nsCOMPtr.h"
 #include "nsFontMetrics.h"
 #include "nsTextControlFrame.h"
@@ -21,6 +20,7 @@
 
 #include "nsIContent.h"
 #include "nsPresContext.h"
+#include "nsRenderingContext.h"
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "nsIDOMElement.h"
@@ -138,7 +138,7 @@ nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 }
 
 LogicalSize
-nsTextControlFrame::CalcIntrinsicSize(gfxContext* aRenderingContext,
+nsTextControlFrame::CalcIntrinsicSize(nsRenderingContext* aRenderingContext,
                                       WritingMode aWM,
                                       float aFontSizeInflation) const
 {
@@ -431,7 +431,7 @@ nsTextControlFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
 }
 
 nscoord
-nsTextControlFrame::GetPrefISize(gfxContext* aRenderingContext)
+nsTextControlFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
 {
   nscoord result = 0;
   DISPLAY_PREF_WIDTH(this, result);
@@ -442,7 +442,7 @@ nsTextControlFrame::GetPrefISize(gfxContext* aRenderingContext)
 }
 
 nscoord
-nsTextControlFrame::GetMinISize(gfxContext* aRenderingContext)
+nsTextControlFrame::GetMinISize(nsRenderingContext* aRenderingContext)
 {
   // Our min width is just our preferred width if we have auto width.
   nscoord result;
@@ -452,7 +452,7 @@ nsTextControlFrame::GetMinISize(gfxContext* aRenderingContext)
 }
 
 LogicalSize
-nsTextControlFrame::ComputeAutoSize(gfxContext*         aRenderingContext,
+nsTextControlFrame::ComputeAutoSize(nsRenderingContext* aRenderingContext,
                                     WritingMode         aWM,
                                     const LogicalSize&  aCBSize,
                                     nscoord             aAvailableISize,

@@ -7,10 +7,10 @@
 
 #include "nsBoxFrame.h"
 
-#include "gfxContext.h"
 #include "mozilla/gfx/2D.h"
 #include "nsCSSRendering.h"
 #include "nsLayoutUtils.h"
+#include "nsRenderingContext.h"
 #include "nsStyleContext.h"
 #include "nsDisplayList.h"
 
@@ -40,7 +40,7 @@ public:
 
   virtual bool HonorPrintBackgroundSettings() override { return false; }
 
-  DrawResult PaintBorder(gfxContext& aRenderingContext,
+  DrawResult PaintBorder(nsRenderingContext& aRenderingContext,
                                    nsPoint aPt,
                                    const nsRect& aDirtyRect);
   nsRect GetBackgroundRectRelativeToSelf(nscoord* aOutYOffset = nullptr, nsRect* aOutGroupRect = nullptr);
@@ -107,7 +107,7 @@ public:
     aOutFrames->AppendElement(mFrame);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override;
+                     nsRenderingContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("XULGroupBackground", TYPE_XUL_GROUP_BACKGROUND)
 };
 
@@ -137,7 +137,7 @@ nsDisplayXULGroupBorder::ComputeInvalidationRegion(
 
 void
 nsDisplayXULGroupBorder::Paint(nsDisplayListBuilder* aBuilder,
-                                   gfxContext* aCtx)
+                                   nsRenderingContext* aCtx)
 {
   DrawResult result = static_cast<nsGroupBoxFrame*>(mFrame)
     ->PaintBorder(*aCtx, ToReferenceFrame(), mVisibleRect);
@@ -196,10 +196,11 @@ nsGroupBoxFrame::GetBackgroundRectRelativeToSelf(nscoord* aOutYOffset, nsRect* a
 }
 
 DrawResult
-nsGroupBoxFrame::PaintBorder(gfxContext& aRenderingContext,
+nsGroupBoxFrame::PaintBorder(nsRenderingContext& aRenderingContext,
     nsPoint aPt, const nsRect& aDirtyRect) {
 
   DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
+  gfxContext* gfx = aRenderingContext.ThebesContext();
 
   Sides skipSides;
   const nsStyleBorder* borderStyleData = StyleBorder();
@@ -225,14 +226,13 @@ nsGroupBoxFrame::PaintBorder(gfxContext& aRenderingContext,
     clipRect.width = groupRect.x - rect.x;
     clipRect.height = border.top;
 
-    aRenderingContext.Save();
-    aRenderingContext.Clip(
-      NSRectToSnappedRect(clipRect, appUnitsPerDevPixel, *drawTarget));
+    gfx->Save();
+    gfx->Clip(NSRectToSnappedRect(clipRect, appUnitsPerDevPixel, *drawTarget));
     result &=
       nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                   aDirtyRect, rect, mStyleContext,
                                   PaintBorderFlags::SYNC_DECODE_IMAGES, skipSides);
-    aRenderingContext.Restore();
+    gfx->Restore();
 
     // draw right side
     clipRect = rect;
@@ -240,30 +240,28 @@ nsGroupBoxFrame::PaintBorder(gfxContext& aRenderingContext,
     clipRect.width = rect.XMost() - groupRect.XMost();
     clipRect.height = border.top;
 
-    aRenderingContext.Save();
-    aRenderingContext.Clip(
-      NSRectToSnappedRect(clipRect, appUnitsPerDevPixel, *drawTarget));
+    gfx->Save();
+    gfx->Clip(NSRectToSnappedRect(clipRect, appUnitsPerDevPixel, *drawTarget));
     result &=
       nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                   aDirtyRect, rect, mStyleContext,
                                   PaintBorderFlags::SYNC_DECODE_IMAGES, skipSides);
+    gfx->Restore();
   
-    aRenderingContext.Restore();
     // draw bottom
 
     clipRect = rect;
     clipRect.y += border.top;
     clipRect.height = mRect.height - (yoff + border.top);
-
-    aRenderingContext.Save();
-    aRenderingContext.Clip(
-      NSRectToSnappedRect(clipRect, appUnitsPerDevPixel, *drawTarget));
+  
+    gfx->Save();
+    gfx->Clip(NSRectToSnappedRect(clipRect, appUnitsPerDevPixel, *drawTarget));
     result &=
       nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                   aDirtyRect, rect, mStyleContext,
                                   PaintBorderFlags::SYNC_DECODE_IMAGES, skipSides);
+    gfx->Restore();
     
-    aRenderingContext.Restore();
   } else {
     result &=
       nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,

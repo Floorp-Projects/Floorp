@@ -48,7 +48,7 @@ public:
                                        nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderDisplayItemLayer* aLayer) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override;
+                     nsRenderingContext* aCtx) override;
 
   NS_DISPLAY_DECL_NAME("ColumnRule", nsDisplayItem::TYPE_COLUMN_RULE);
 
@@ -58,7 +58,7 @@ private:
 
 void
 nsDisplayColumnRule::Paint(nsDisplayListBuilder* aBuilder,
-                           gfxContext* aCtx)
+                           nsRenderingContext* aCtx)
 {
   static_cast<nsColumnSetFrame*>(mFrame)->
     CreateBorderRenderers(mBorderRenderers, aCtx, mVisibleRect, ToReferenceFrame());
@@ -78,9 +78,10 @@ nsDisplayColumnRule::GetLayerState(nsDisplayListBuilder* aBuilder,
 
   RefPtr<gfxContext> screenRefCtx =
     gfxContext::CreateOrNull(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
+  nsRenderingContext ctx(screenRefCtx);
 
   static_cast<nsColumnSetFrame*>(mFrame)->
-    CreateBorderRenderers(mBorderRenderers, screenRefCtx, mVisibleRect, ToReferenceFrame());
+    CreateBorderRenderers(mBorderRenderers, &ctx, mVisibleRect, ToReferenceFrame());
 
   if (mBorderRenderers.IsEmpty()) {
     return LAYER_NONE;
@@ -210,7 +211,7 @@ nsColumnSetFrame::CalculateBounds(const nsPoint& aOffset)
 
 void
 nsColumnSetFrame::CreateBorderRenderers(nsTArray<nsCSSBorderRenderer>& aBorderRenderers,
-                                        gfxContext* aCtx,
+                                        nsRenderingContext* aCtx,
                                         const nsRect& aDirtyRect,
                                         const nsPoint& aPt)
 {
@@ -503,7 +504,7 @@ static void MoveChildTo(nsIFrame* aChild, LogicalPoint aOrigin,
 }
 
 nscoord
-nsColumnSetFrame::GetMinISize(gfxContext *aRenderingContext)
+nsColumnSetFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord iSize = 0;
   DISPLAY_MIN_WIDTH(this, iSize);
@@ -538,7 +539,7 @@ nsColumnSetFrame::GetMinISize(gfxContext *aRenderingContext)
 }
 
 nscoord
-nsColumnSetFrame::GetPrefISize(gfxContext *aRenderingContext)
+nsColumnSetFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   // Our preferred width is our desired column width, if specified, otherwise
   // the child's preferred width, times the number of columns, plus the width

@@ -265,18 +265,18 @@ public:
   bool IsSelfEmpty() override;
 
   void MarkIntrinsicISizesDirty() override;
-  nscoord GetMinISize(gfxContext *aRenderingContext) override;
-  nscoord GetPrefISize(gfxContext *aRenderingContext) override;
-  void AddInlineMinISize(gfxContext *aRenderingContext,
+  nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
+  nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
+  void AddInlineMinISize(nsRenderingContext *aRenderingContext,
                          InlineMinISizeData *aData) override;
-  void AddInlinePrefISize(gfxContext *aRenderingContext,
+  void AddInlinePrefISize(nsRenderingContext *aRenderingContext,
                           InlinePrefISizeData *aData) override;
   IntrinsicISizeOffsetData IntrinsicISizeOffsets() override;
   mozilla::IntrinsicSize GetIntrinsicSize() override;
   nsSize GetIntrinsicRatio() override;
 
   mozilla::LogicalSize
-  ComputeSize(gfxContext*                 aRenderingContext,
+  ComputeSize(nsRenderingContext*         aRenderingContext,
               mozilla::WritingMode        aWM,
               const mozilla::LogicalSize& aCBSize,
               nscoord                     aAvailableISize,
@@ -291,7 +291,7 @@ public:
    */
   mozilla::LogicalSize
   ComputeSizeWithIntrinsicDimensions(
-              gfxContext*                   aRenderingContext,
+              nsRenderingContext*           aRenderingContext,
               mozilla::WritingMode          aWM,
               const mozilla::IntrinsicSize& aIntrinsicSize,
               nsSize                        aIntrinsicRatio,
@@ -321,7 +321,7 @@ public:
    * to be unused.
    */
   virtual mozilla::LogicalSize
-  ComputeAutoSize(gfxContext*                 aRenderingContext,
+  ComputeAutoSize(nsRenderingContext*         aRenderingContext,
                   mozilla::WritingMode        aWM,
                   const mozilla::LogicalSize& aCBSize,
                   nscoord                     aAvailableISize,
@@ -334,7 +334,7 @@ public:
    * Utility function for ComputeAutoSize implementations.  Return
    * max(GetMinISize(), min(aISizeInCB, GetPrefISize()))
    */
-  nscoord ShrinkWidthToFit(gfxContext*         aRenderingContext,
+  nscoord ShrinkWidthToFit(nsRenderingContext* aRenderingContext,
                            nscoord             aISizeInCB,
                            ComputeSizeFlags    aFlags);
 
@@ -712,7 +712,7 @@ private:
   void BoxReflow(nsBoxLayoutState& aState,
                  nsPresContext*    aPresContext,
                  ReflowOutput&     aDesiredSize,
-                 gfxContext*       aRenderingContext,
+                 nsRenderingContext* aRenderingContext,
                  nscoord aX,
                  nscoord aY,
                  nscoord aWidth,

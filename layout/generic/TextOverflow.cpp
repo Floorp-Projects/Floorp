@@ -8,7 +8,6 @@
 #include <algorithm>
 
 // Please maintain alphabetical order below
-#include "gfxContext.h"
 #include "nsBlockFrame.h"
 #include "nsCaret.h"
 #include "nsContentUtils.h"
@@ -19,6 +18,7 @@
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsRect.h"
+#include "nsRenderingContext.h"
 #include "nsTextFrame.h"
 #include "nsIFrameInlines.h"
 #include "mozilla/ArrayUtils.h"
@@ -199,12 +199,12 @@ public:
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override;
+                     nsRenderingContext* aCtx) override;
 
   virtual uint32_t GetPerFrameKey() override { 
     return (mIndex << nsDisplayItem::TYPE_BITS) | nsDisplayItem::GetPerFrameKey(); 
   }
-  void PaintTextToContext(gfxContext* aCtx,
+  void PaintTextToContext(nsRenderingContext* aCtx,
                           nsPoint aOffsetFromRect);
   NS_DISPLAY_DECL_NAME("TextOverflow", TYPE_TEXT_OVERFLOW)
 private:
@@ -215,7 +215,7 @@ private:
 };
 
 static void
-PaintTextShadowCallback(gfxContext* aCtx,
+PaintTextShadowCallback(nsRenderingContext* aCtx,
                         nsPoint aShadowOffset,
                         const nscolor& aShadowColor,
                         void* aData)
@@ -226,7 +226,7 @@ PaintTextShadowCallback(gfxContext* aCtx,
 
 void
 nsDisplayTextOverflowMarker::Paint(nsDisplayListBuilder* aBuilder,
-                                   gfxContext*           aCtx)
+                                   nsRenderingContext*   aCtx)
 {
   nscolor foregroundColor = nsLayoutUtils::
     GetColor(mFrame, &nsStyleText::mWebkitTextFillColor);
@@ -235,12 +235,12 @@ nsDisplayTextOverflowMarker::Paint(nsDisplayListBuilder* aBuilder,
   nsLayoutUtils::PaintTextShadow(mFrame, aCtx, mRect, mVisibleRect,
                                  foregroundColor, PaintTextShadowCallback,
                                  (void*)this);
-  aCtx->SetColor(gfx::Color::FromABGR(foregroundColor));
+  aCtx->ThebesContext()->SetColor(gfx::Color::FromABGR(foregroundColor));
   PaintTextToContext(aCtx, nsPoint(0, 0));
 }
 
 void
-nsDisplayTextOverflowMarker::PaintTextToContext(gfxContext* aCtx,
+nsDisplayTextOverflowMarker::PaintTextToContext(nsRenderingContext* aCtx,
                                                 nsPoint aOffsetFromRect)
 {
   WritingMode wm = mFrame->GetWritingMode();
@@ -248,14 +248,14 @@ nsDisplayTextOverflowMarker::PaintTextToContext(gfxContext* aCtx,
   if (wm.IsVertical()) {
     if (wm.IsVerticalLR()) {
       pt.x = NSToCoordFloor(nsLayoutUtils::GetSnappedBaselineX(
-        mFrame, aCtx, pt.x, mAscent));
+        mFrame, aCtx->ThebesContext(), pt.x, mAscent));
     } else {
       pt.x = NSToCoordFloor(nsLayoutUtils::GetSnappedBaselineX(
-        mFrame, aCtx, pt.x + mRect.width, -mAscent));
+        mFrame, aCtx->ThebesContext(), pt.x + mRect.width, -mAscent));
     }
   } else {
     pt.y = NSToCoordFloor(nsLayoutUtils::GetSnappedBaselineY(
-      mFrame, aCtx, pt.y, mAscent));
+      mFrame, aCtx->ThebesContext(), pt.y, mAscent));
   }
   pt += aOffsetFromRect;
 
@@ -266,7 +266,7 @@ nsDisplayTextOverflowMarker::PaintTextToContext(gfxContext* aCtx,
                    "Ellipsis textruns should always be LTR!");
       gfxPoint gfxPt(pt.x, pt.y);
       textRun->Draw(gfxTextRun::Range(textRun), gfxPt,
-                    gfxTextRun::DrawParams(aCtx));
+                    gfxTextRun::DrawParams(aCtx->ThebesContext()));
     }
   } else {
     RefPtr<nsFontMetrics> fm =
@@ -852,12 +852,12 @@ TextOverflow::Marker::SetupString(nsIFrame* aFrame)
       mISize = 0;
     }
   } else {
-    RefPtr<gfxContext> rc =
-      aFrame->PresContext()->PresShell()->CreateReferenceRenderingContext();
+    nsRenderingContext rc(
+      aFrame->PresContext()->PresShell()->CreateReferenceRenderingContext());
     RefPtr<nsFontMetrics> fm =
       nsLayoutUtils::GetInflatedFontMetricsForFrame(aFrame);
     mISize = nsLayoutUtils::AppUnitWidthOfStringBidi(mStyle->mString, aFrame,
-                                                     *fm, *rc);
+                                                     *fm, rc);
   }
   mIntrinsicISize = mISize;
   mInitialized = true;

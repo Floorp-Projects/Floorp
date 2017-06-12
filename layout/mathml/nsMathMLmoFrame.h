@@ -56,7 +56,7 @@ public:
   virtual void MarkIntrinsicISizesDirty() override;
 
   virtual void
-  GetIntrinsicISizeMetrics(gfxContext* aRenderingContext,
+  GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingContext,
                            ReflowOutput& aDesiredSize) override;
 
   virtual nsresult

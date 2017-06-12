@@ -21,6 +21,7 @@
 #include "nsMenuFrame.h"
 #include "prlink.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsRenderingContext.h"
 #include "nsGkAtoms.h"
 #include "nsAttrValueInlines.h"
 
@@ -1101,7 +1102,7 @@ nsNativeThemeGTK::GetExtraSizeForWidget(nsIFrame* aFrame, uint8_t aWidgetType,
 }
 
 NS_IMETHODIMP
-nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext,
+nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
                                        nsIFrame* aFrame,
                                        uint8_t aWidgetType,
                                        const nsRect& aRect,
@@ -1115,7 +1116,7 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext,
                             &flags))
     return NS_OK;
 
-  gfxContext* ctx = aContext;
+  gfxContext* ctx = aContext->ThebesContext();
   nsPresContext *presContext = aFrame->PresContext();
 
   gfxRect rect = presContext->AppUnitsToGfxUnits(aRect);

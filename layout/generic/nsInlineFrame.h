@@ -63,12 +63,12 @@ public:
   virtual nsresult StealFrame(nsIFrame* aChild) override;
 
   // nsIHTMLReflow overrides
-  virtual void AddInlineMinISize(gfxContext *aRenderingContext,
+  virtual void AddInlineMinISize(nsRenderingContext *aRenderingContext,
                                  InlineMinISizeData *aData) override;
-  virtual void AddInlinePrefISize(gfxContext *aRenderingContext,
+  virtual void AddInlinePrefISize(nsRenderingContext *aRenderingContext,
                                   InlinePrefISizeData *aData) override;
   virtual mozilla::LogicalSize
-  ComputeSize(gfxContext *aRenderingContext,
+  ComputeSize(nsRenderingContext *aRenderingContext,
               mozilla::WritingMode aWritingMode,
               const mozilla::LogicalSize& aCBSize,
               nscoord aAvailableISize,

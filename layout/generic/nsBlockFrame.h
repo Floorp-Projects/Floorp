@@ -274,12 +274,12 @@ public:
 private:
   void CheckIntrinsicCacheAgainstShrinkWrapState();
 public:
-  nscoord GetMinISize(gfxContext *aRenderingContext) override;
-  nscoord GetPrefISize(gfxContext *aRenderingContext) override;
+  nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
+  nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
 
   nsRect ComputeTightBounds(DrawTarget* aDrawTarget) const override;
 
-  nsresult GetPrefWidthTightBounds(gfxContext* aContext,
+  nsresult GetPrefWidthTightBounds(nsRenderingContext* aContext,
                                    nscoord* aX,
                                    nscoord* aXMost) override;
 

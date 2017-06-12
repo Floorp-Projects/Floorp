@@ -15,7 +15,6 @@
 #include "mozilla/gfx/2D.h"
 
 // Interfaces Needed
-#include "gfxContext.h"
 #include "nsReadableUtils.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMDocument.h"
@@ -38,6 +37,7 @@
 #include "nsIServiceManager.h"
 #include "nsFocusManager.h"
 #include "Layers.h"
+#include "gfxContext.h"
 #include "nsILoadContext.h"
 #include "nsDocShell.h"
 

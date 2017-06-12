@@ -14,12 +14,12 @@
 #include "nsBoundingMetrics.h"
 #include "gfxTextRun.h"
 
-class gfxContext;
 class nsGlyphTable;
 class nsIFrame;
 class nsDisplayListBuilder;
 class nsDisplayListSet;
 class nsPresContext;
+class nsRenderingContext;
 struct nsBoundingMetrics;
 class nsStyleContext;
 struct nsFont;
@@ -105,9 +105,9 @@ public:
                const nsDisplayListSet& aLists,
                uint32_t                aIndex,
                const nsRect*           aSelectedRect = nullptr);
-
+          
   void PaintForeground(nsPresContext* aPresContext,
-                       gfxContext& aRenderingContext,
+                       nsRenderingContext& aRenderingContext,
                        nsPoint aPt,
                        bool aIsSelected);
 
@@ -223,7 +223,7 @@ private:
   };
   DrawingMethod mDraw;
 
-  // mMirrored indicates whether the character is mirrored.
+  // mMirrored indicates whether the character is mirrored. 
   bool               mMirrored;
 
   class StretchEnumContext;

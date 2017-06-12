@@ -13,6 +13,7 @@
 #include "nsObjCExceptions.h"
 #include "nsNumberControlFrame.h"
 #include "nsRangeFrame.h"
+#include "nsRenderingContext.h"
 #include "nsRect.h"
 #include "nsSize.h"
 #include "nsThemeConstants.h"
@@ -2279,7 +2280,7 @@ IsHiDPIContext(nsDeviceContext* aContext)
 }
 
 NS_IMETHODIMP
-nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
+nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
                                          nsIFrame* aFrame,
                                          uint8_t aWidgetType,
                                          const nsRect& aRect,

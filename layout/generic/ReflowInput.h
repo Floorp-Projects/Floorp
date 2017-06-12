@@ -14,13 +14,13 @@
 #include "mozilla/Assertions.h"
 #include <algorithm>
 
-class gfxContext;
 class nsFloatManager;
 struct nsHypotheticalPosition;
 class nsIPercentBSizeObserver;
 class nsLineLayout;
 class nsPlaceholderFrame;
 class nsPresContext;
+class nsRenderingContext;
 
 /**
  * @return aValue clamped to [aMinValue, aMaxValue].
@@ -108,7 +108,7 @@ public:
   nsIFrame* mFrame;
 
   // Rendering context to use for measurement.
-  gfxContext* mRenderingContext;
+  nsRenderingContext* mRenderingContext;
 
   const nsMargin& ComputedPhysicalMargin() const { return mComputedMargin; }
   const nsMargin& ComputedPhysicalBorderPadding() const { return mComputedBorderPadding; }
@@ -165,14 +165,14 @@ protected:
 
 public:
   // Callers using this constructor must call InitOffsets on their own.
-  SizeComputationInput(nsIFrame *aFrame, gfxContext *aRenderingContext)
+  SizeComputationInput(nsIFrame *aFrame, nsRenderingContext *aRenderingContext)
     : mFrame(aFrame)
     , mRenderingContext(aRenderingContext)
     , mWritingMode(aFrame->GetWritingMode())
   {
   }
 
-  SizeComputationInput(nsIFrame *aFrame, gfxContext *aRenderingContext,
+  SizeComputationInput(nsIFrame *aFrame, nsRenderingContext *aRenderingContext,
                    mozilla::WritingMode aContainingBlockWritingMode,
                    nscoord aContainingBlockISize);
 
@@ -685,7 +685,7 @@ public:
    */
   ReflowInput(nsPresContext*              aPresContext,
               nsIFrame*                   aFrame,
-              gfxContext*                 aRenderingContext,
+              nsRenderingContext*         aRenderingContext,
               const mozilla::LogicalSize& aAvailableSpace,
               uint32_t                    aFlags = 0);
 

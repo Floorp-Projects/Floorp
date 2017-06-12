@@ -210,7 +210,7 @@ nsMeterFrame::AttributeChanged(int32_t  aNameSpaceID,
 }
 
 LogicalSize
-nsMeterFrame::ComputeAutoSize(gfxContext*         aRenderingContext,
+nsMeterFrame::ComputeAutoSize(nsRenderingContext* aRenderingContext,
                               WritingMode         aWM,
                               const LogicalSize&  aCBSize,
                               nscoord             aAvailableISize,
@@ -236,7 +236,7 @@ nsMeterFrame::ComputeAutoSize(gfxContext*         aRenderingContext,
 }
 
 nscoord
-nsMeterFrame::GetMinISize(gfxContext *aRenderingContext)
+nsMeterFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   RefPtr<nsFontMetrics> fontMet =
     nsLayoutUtils::GetFontMetricsForFrame(this, 1.0f);
@@ -252,7 +252,7 @@ nsMeterFrame::GetMinISize(gfxContext *aRenderingContext)
 }
 
 nscoord
-nsMeterFrame::GetPrefISize(gfxContext *aRenderingContext)
+nsMeterFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   return GetMinISize(aRenderingContext);
 }

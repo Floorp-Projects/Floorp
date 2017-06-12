@@ -8,7 +8,6 @@
 #include "nsBulletFrame.h"
 
 #include "gfx2DGlue.h"
-#include "gfxContext.h"
 #include "gfxPrefs.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
@@ -27,6 +26,7 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
+#include "nsRenderingContext.h"
 #include "nsDisplayList.h"
 #include "nsCounterManager.h"
 #include "nsBidiUtils.h"
@@ -230,7 +230,7 @@ public:
                           layers::WebRenderDisplayItemLayer* aLayer);
 
   DrawResult
-  Paint(gfxContext& aRenderingContext, nsPoint aPt,
+  Paint(nsRenderingContext& aRenderingContext, nsPoint aPt,
         const nsRect& aDirtyRect, uint32_t aFlags,
         bool aDisableSubpixelAA, nsIFrame* aFrame);
 
@@ -333,13 +333,13 @@ BulletRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
 }
 
 DrawResult
-BulletRenderer::Paint(gfxContext& aRenderingContext, nsPoint aPt,
+BulletRenderer::Paint(nsRenderingContext& aRenderingContext, nsPoint aPt,
                       const nsRect& aDirtyRect, uint32_t aFlags,
                       bool aDisableSubpixelAA, nsIFrame* aFrame)
 {
   if (IsImageType()) {
     SamplingFilter filter = nsLayoutUtils::GetSamplingFilterForFrame(aFrame);
-    return nsLayoutUtils::DrawSingleImage(aRenderingContext,
+    return nsLayoutUtils::DrawSingleImage(*aRenderingContext.ThebesContext(),
                                           aFrame->PresContext(), mImage, filter,
                                           mDest, aDirtyRect,
                                           /* no SVGImageContext */ Nothing(),
@@ -370,7 +370,8 @@ BulletRenderer::Paint(gfxContext& aRenderingContext, nsPoint aPt,
     DrawTargetAutoDisableSubpixelAntialiasing
       disable(drawTarget, aDisableSubpixelAA);
 
-    aRenderingContext.SetColor(Color::FromABGR(mColor));
+    aRenderingContext.ThebesContext()->SetColor(
+      Color::FromABGR(mColor));
 
     nsPresContext* presContext = aFrame->PresContext();
     if (!presContext->BidiEnabled() && HasRTLChars(mText)) {
@@ -391,12 +392,13 @@ BulletRenderer::BuildGlyphForText(nsDisplayItem* aItem, bool disableSubpixelAA)
   RefPtr<DrawTargetCapture> capture =
     gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget()->CreateCaptureDT(IntSize());
   RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(capture);
+  nsRenderingContext ctx(captureCtx);
 
   {
     DrawTargetAutoDisableSubpixelAntialiasing
       disable(capture, disableSubpixelAA);
 
-    captureCtx->SetColor(
+    ctx.ThebesContext()->SetColor(
       Color::FromABGR(mColor));
 
     nsPresContext* presContext = aItem->Frame()->PresContext();
@@ -404,7 +406,7 @@ BulletRenderer::BuildGlyphForText(nsDisplayItem* aItem, bool disableSubpixelAA)
       presContext->SetBidiEnabled();
     }
 
-    nsLayoutUtils::DrawString(aItem->Frame(), *mFontMetrics, captureCtx,
+    nsLayoutUtils::DrawString(aItem->Frame(), *mFontMetrics, &ctx,
                               mText.get(), mText.Length(), mPoint);
   }
 
@@ -551,7 +553,7 @@ public:
     aOutFrames->AppendElement(mFrame);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override;
+                     nsRenderingContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("Bullet", TYPE_BULLET)
 
   virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) override
@@ -608,9 +610,10 @@ nsDisplayBullet::GetLayerState(nsDisplayListBuilder* aBuilder,
 
   RefPtr<gfxContext> screenRefCtx =
     gfxContext::CreateOrNull(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
+  nsRenderingContext ctx(screenRefCtx);
 
   Maybe<BulletRenderer> br = static_cast<nsBulletFrame*>(mFrame)->
-    CreateBulletRenderer(*screenRefCtx, ToReferenceFrame());
+    CreateBulletRenderer(ctx, ToReferenceFrame());
 
   if (!br) {
     return LAYER_NONE;
@@ -661,7 +664,7 @@ nsDisplayBullet::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
 }
 
 void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,
-                            gfxContext* aCtx)
+                            nsRenderingContext* aCtx)
 {
   uint32_t flags = imgIContainer::FLAG_NONE;
   if (aBuilder->ShouldSyncDecodeImages()) {
@@ -690,7 +693,7 @@ nsBulletFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 Maybe<BulletRenderer>
-nsBulletFrame::CreateBulletRenderer(gfxContext& aRenderingContext, nsPoint aPt)
+nsBulletFrame::CreateBulletRenderer(nsRenderingContext& aRenderingContext, nsPoint aPt)
 {
   const nsStyleList* myList = StyleList();
   CounterStyle* listStyleType = myList->mCounterStyle;
@@ -826,18 +829,19 @@ nsBulletFrame::CreateBulletRenderer(gfxContext& aRenderingContext, nsPoint aPt)
       nscoord ascent = wm.IsLineInverted()
                          ? fm->MaxDescent() : fm->MaxAscent();
       aPt.MoveBy(padding.left, padding.top);
+      gfxContext *ctx = aRenderingContext.ThebesContext();
       if (wm.IsVertical()) {
         if (wm.IsVerticalLR()) {
           aPt.x = NSToCoordRound(nsLayoutUtils::GetSnappedBaselineX(
-                                   this, &aRenderingContext, aPt.x, ascent));
+                                   this, ctx, aPt.x, ascent));
         } else {
           aPt.x = NSToCoordRound(nsLayoutUtils::GetSnappedBaselineX(
-                                   this, &aRenderingContext, aPt.x + mRect.width,
+                                   this, ctx, aPt.x + mRect.width,
                                    -ascent));
         }
       } else {
         aPt.y = NSToCoordRound(nsLayoutUtils::GetSnappedBaselineY(
-                                 this, &aRenderingContext, aPt.y, ascent));
+                                 this, ctx, aPt.y, ascent));
       }
 
       BulletRenderer br(text, fm, color, aPt, listStyleType->GetStyle());
@@ -850,7 +854,7 @@ nsBulletFrame::CreateBulletRenderer(gfxContext& aRenderingContext, nsPoint aPt)
 }
 
 DrawResult
-nsBulletFrame::PaintBullet(gfxContext& aRenderingContext, nsPoint aPt,
+nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
                            const nsRect& aDirtyRect, uint32_t aFlags,
                            bool aDisableSubpixelAA)
 {
@@ -940,7 +944,7 @@ nsBulletFrame::AppendSpacingToPadding(nsFontMetrics* aFontMetrics,
 
 void
 nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
-                              gfxContext *aRenderingContext,
+                              nsRenderingContext *aRenderingContext,
                               ReflowOutput& aMetrics,
                               float aFontSizeInflation,
                               LogicalMargin* aPadding)
@@ -1076,7 +1080,7 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
 }
 
 /* virtual */ nscoord
-nsBulletFrame::GetMinISize(gfxContext *aRenderingContext)
+nsBulletFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   WritingMode wm = GetWritingMode();
   ReflowOutput reflowOutput(wm);
@@ -1088,7 +1092,7 @@ nsBulletFrame::GetMinISize(gfxContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsBulletFrame::GetPrefISize(gfxContext *aRenderingContext)
+nsBulletFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   WritingMode wm = GetWritingMode();
   ReflowOutput metrics(wm);
@@ -1114,7 +1118,7 @@ IsIgnoreable(const nsIFrame* aFrame, nscoord aISize)
 }
 
 /* virtual */ void
-nsBulletFrame::AddInlineMinISize(gfxContext* aRenderingContext,
+nsBulletFrame::AddInlineMinISize(nsRenderingContext* aRenderingContext,
                                  nsIFrame::InlineMinISizeData* aData)
 {
   nscoord isize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
@@ -1125,7 +1129,7 @@ nsBulletFrame::AddInlineMinISize(gfxContext* aRenderingContext,
 }
 
 /* virtual */ void
-nsBulletFrame::AddInlinePrefISize(gfxContext* aRenderingContext,
+nsBulletFrame::AddInlinePrefISize(nsRenderingContext* aRenderingContext,
                                   nsIFrame::InlinePrefISizeData* aData)
 {
   nscoord isize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,

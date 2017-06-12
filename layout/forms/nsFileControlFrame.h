@@ -43,7 +43,7 @@ public:
   virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue) override;
   virtual void SetFocus(bool aOn, bool aRepaint) override;
 
-  virtual nscoord GetMinISize(gfxContext *aRenderingContext) override;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
