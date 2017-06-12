@@ -27,7 +27,7 @@ class HLSTrackDemuxer;
 
 class HLSDemuxer final : public MediaDataDemuxer
 {
-  class HlsDemuxerCallbacksSupport;
+  class HLSDemuxerCallbacksSupport;
 public:
   explicit HLSDemuxer(MediaResource* aResource);
 
@@ -65,14 +65,14 @@ private:
   nsTArray<RefPtr<HLSTrackDemuxer>> mDemuxers;
 
   MozPromiseHolder<InitPromise> mInitPromise;
-  RefPtr<HlsDemuxerCallbacksSupport> mCallbackSupport;
+  RefPtr<HLSDemuxerCallbacksSupport> mCallbackSupport;
 
   // Mutex to protect members below across multiple threads.
   mutable Mutex mMutex;
   MediaInfo mInfo;
 
-  java::GeckoHlsDemuxerWrapper::HlsDemuxerCallbacks::GlobalRef mJavaCallbacks;
-  java::GeckoHlsDemuxerWrapper::GlobalRef mHlsDemuxerWrapper;
+  java::GeckoHLSDemuxerWrapper::Callbacks::GlobalRef mJavaCallbacks;
+  java::GeckoHLSDemuxerWrapper::GlobalRef mHLSDemuxerWrapper;
 };
 
 class HLSTrackDemuxer : public MediaTrackDemuxer
@@ -115,7 +115,7 @@ private:
 
   CryptoSample ExtractCryptoSample(size_t aSampleSize,
                                    java::sdk::CryptoInfo::LocalRef aCryptoInfo);
-  RefPtr<MediaRawData> ConvertToMediaRawData(java::GeckoHlsSample::LocalRef aSample);
+  RefPtr<MediaRawData> ConvertToMediaRawData(java::GeckoHLSSample::LocalRef aSample);
 
   RefPtr<HLSDemuxer> mParent;
   TrackInfo::TrackType mType;
