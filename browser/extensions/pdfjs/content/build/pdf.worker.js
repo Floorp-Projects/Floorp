@@ -16938,21 +16938,30 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       }
       return this.buildFormXObject(resources, smaskContent, smaskOptions, operatorList, task, stateManager.state.clone());
     },
-    handleTilingType: function PartialEvaluator_handleTilingType(fn, args, resources, pattern, patternDict, operatorList, task) {
-      var tilingOpList = new OperatorList();
-      var resourcesArray = [patternDict.get('Resources'), resources];
-      var patternResources = _primitives.Dict.merge(this.xref, resourcesArray);
+    handleTilingType(fn, args, resources, pattern, patternDict, operatorList, task) {
+      let tilingOpList = new OperatorList();
+      let resourcesArray = [patternDict.get('Resources'), resources];
+      let patternResources = _primitives.Dict.merge(this.xref, resourcesArray);
       return this.getOperatorList({
         stream: pattern,
         task,
         resources: patternResources,
         operatorList: tilingOpList
       }).then(function () {
-        operatorList.addDependencies(tilingOpList.dependencies);
-        operatorList.addOp(fn, (0, _pattern.getTilingPatternIR)({
+        return (0, _pattern.getTilingPatternIR)({
           fnArray: tilingOpList.fnArray,
           argsArray: tilingOpList.argsArray
-        }, patternDict, args));
+        }, patternDict, args);
+      }).then(function (tilingPatternIR) {
+        operatorList.addDependencies(tilingOpList.dependencies);
+        operatorList.addOp(fn, tilingPatternIR);
+      }, reason => {
+        if (this.options.ignoreErrors) {
+          this.handler.send('UnsupportedFeature', { featureId: _util.UNSUPPORTED_FEATURES.unknown });
+          (0, _util.warn)(`handleTilingType - ignoring pattern: "${reason}".`);
+          return;
+        }
+        throw reason;
       });
     },
     handleSetFont: function PartialEvaluator_handleSetFont(resources, fontArgs, fontRef, operatorList, task, state) {
@@ -38809,12 +38818,15 @@ Shadings.Dummy = function DummyClosure() {
   return Dummy;
 }();
 function getTilingPatternIR(operatorList, dict, args) {
-  var matrix = dict.getArray('Matrix');
-  var bbox = dict.getArray('BBox');
-  var xstep = dict.get('XStep');
-  var ystep = dict.get('YStep');
-  var paintType = dict.get('PaintType');
-  var tilingType = dict.get('TilingType');
+  let matrix = dict.getArray('Matrix');
+  let bbox = _util.Util.normalizeRect(dict.getArray('BBox'));
+  let xstep = dict.get('XStep');
+  let ystep = dict.get('YStep');
+  let paintType = dict.get('PaintType');
+  let tilingType = dict.get('TilingType');
+  if (bbox[2] - bbox[0] === 0 || bbox[3] - bbox[1] === 0) {
+    throw new Error(`getTilingPatternIR - invalid /BBox array: [${bbox}].`);
+  }
   return ['TilingPattern', args, operatorList, matrix, bbox, xstep, ystep, paintType, tilingType];
 }
 exports.Pattern = Pattern;
@@ -39768,8 +39780,8 @@ exports.Type1Parser = Type1Parser;
 "use strict";
 
 
-var pdfjsVersion = '1.8.432';
-var pdfjsBuild = '93420545';
+var pdfjsVersion = '1.8.439';
+var pdfjsBuild = '08c64371';
 var pdfjsCoreWorker = __w_pdfjs_require__(17);
 ;
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
