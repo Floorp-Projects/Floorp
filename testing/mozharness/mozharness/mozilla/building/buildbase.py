@@ -1623,6 +1623,8 @@ or run without that action (ie: --no-{action})"
                 os.path.join(dirs['abs_work_dir'], 'buildprops.json'))
 
         if 'MOZILLABUILD' in os.environ:
+            # We found many issues with intermittent build failures when not invoking mach via bash.
+            # See bug 1364651 before considering changing.
             mach = [
                 os.path.join(os.environ['MOZILLABUILD'], 'msys', 'bin', 'bash.exe'),
                 os.path.join(dirs['abs_src_dir'], 'mach')
