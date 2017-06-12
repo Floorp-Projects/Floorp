@@ -30,7 +30,6 @@ module.exports = {
     "no-sequences": "error",
     "no-shadow": "warn",
     "no-throw-literal": "error",
-    "no-unneeded-ternary": "error",
     "no-unused-vars": "error",
     "padded-blocks": ["warn", "never"],
     "quotes": ["warn", "double", "avoid-escape"],

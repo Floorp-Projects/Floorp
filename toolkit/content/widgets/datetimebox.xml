@@ -1651,7 +1651,7 @@
             }
             case "ArrowRight":
             case "ArrowLeft": {
-              this.advanceToNextField(aEvent.key == "ArrowRight" ? false : true);
+              this.advanceToNextField(!(aEvent.key == "ArrowRight"));
               aEvent.preventDefault();
               break;
             }
