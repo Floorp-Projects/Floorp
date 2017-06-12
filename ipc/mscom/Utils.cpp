@@ -85,7 +85,7 @@ GUIDToString(REFGUID aGuid, nsAString& aOutString)
   // to include curly braces and dashes.
   const int kBufLenWithNul = 39;
   aOutString.SetLength(kBufLenWithNul);
-  int result = StringFromGUID2(aGuid, wwc(aOutString.BeginWriting()), kBufLenWithNul);
+  int result = StringFromGUID2(aGuid, char16ptr_t(aOutString.BeginWriting()), kBufLenWithNul);
   MOZ_ASSERT(result);
   if (result) {
     // Truncate the terminator
