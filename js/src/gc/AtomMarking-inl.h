@@ -43,7 +43,8 @@ AtomMarkingRuntime::inlinedMarkAtom(JSContext* cx, T* thing)
                   "Should only be called with JSAtom* or JS::Symbol* argument");
 
     MOZ_ASSERT(thing);
-    MOZ_ASSERT(thing->zoneFromAnyThread()->isAtomsZone());
+    js::gc::TenuredCell* cell = &thing->asTenured();
+    MOZ_ASSERT(cell->zoneFromAnyThread()->isAtomsZone());
 
     // The context's zone will be null during initialization of the runtime.
     if (!cx->zone())
@@ -53,7 +54,7 @@ AtomMarkingRuntime::inlinedMarkAtom(JSContext* cx, T* thing)
     if (ThingIsPermanent(thing))
         return;
 
-    size_t bit = GetAtomBit(thing);
+    size_t bit = GetAtomBit(cell);
     MOZ_ASSERT(bit / JS_BITS_PER_WORD < allocatedWords);
 
     cx->zone()->markedAtoms().setBit(bit);
