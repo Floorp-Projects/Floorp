@@ -122,7 +122,8 @@ add_task(async function test_cookies() {
     browser.test.assertEq(1, stores[0].tabIds.length, "one tabId returned for store");
     browser.test.assertEq("number", typeof stores[0].tabIds[0], "tabId is a number");
 
-    {
+    // Opening private windows/tabs is not supported on Android - bug 1372178
+    if (browser.windows) {
       let {windowId} = await openPrivateWindowAndTab(TEST_URL);
       let stores = await browser.cookies.getAllCookieStores();
 
@@ -213,7 +214,8 @@ add_task(async function test_cookies() {
     browser.test.assertEq("", cookie.value, "default value set");
     browser.test.assertEq(true, cookie.session, "no expiry date created session cookie");
 
-    {
+    // Opening private windows/tabs is not supported on Android - bug 1372178
+    if (browser.windows) {
       let {tabId, windowId} = await openPrivateWindowAndTab(TEST_URL);
 
       browser.test.assertEq("", await getDocumentCookie(tabId), "initially no cookie");
