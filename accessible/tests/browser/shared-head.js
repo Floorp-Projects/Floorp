@@ -208,14 +208,15 @@ function addAccessibleTask(doc, task) {
       url = `${CURRENT_CONTENT_DIR}e10s/${doc}`;
     } else {
       // Assume it's a markup snippet.
-      url = `data:text/html,
-        <html>
+      url = "data:text/html;charset=utf-8;base64,";
+      url += btoa(
+        `<html>
           <head>
             <meta charset="utf-8"/>
             <title>Accessibility Test</title>
           </head>
           <body id="body">${doc}</body>
-        </html>`;
+        </html>`);
     }
 
     registerCleanupFunction(() => {
