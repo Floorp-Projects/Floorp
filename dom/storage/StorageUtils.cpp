@@ -14,7 +14,9 @@ nsresult
 GenerateOriginKey(nsIPrincipal* aPrincipal, nsACString& aOriginAttrSuffix,
                   nsACString& aOriginKey)
 {
-  MOZ_ASSERT(aPrincipal);
+  if (NS_WARN_IF(!aPrincipal)) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   aPrincipal->OriginAttributesRef().CreateSuffix(aOriginAttrSuffix);
 
