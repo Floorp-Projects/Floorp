@@ -83,16 +83,16 @@
     "message": "Haz clic y arrastra para capturas sólo una parte de la página. También puedes desplazarte para resaltar tu selección."
   },
   "tourHeaderThree": {
-    "message": "Como te gusta"
-  },
-  "tourBodyThree": {
-    "message": "Guarda tus capturas recortadas en la Web para compartirlas más fácilmente o descárgalas en tu computadora. También puedes hacer clic en el botón Mis Capturas para encontrar todas las fotos que has tomado."
-  },
-  "tourHeaderFour": {
     "message": "Captura ventanas o páginas enteras"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Selecciona los botones en la parte superior derecha para capturar el área visible en la ventana o para capturar una página completa."
+  },
+  "tourHeaderFour": {
+    "message": "Como te gusta"
+  },
+  "tourBodyFour": {
+    "message": "Guarda tus capturas recortadas en la Web para compartirlas más fácilmente o descárgalas en tu computadora. También puedes hacer clic en el botón Mis Capturas para encontrar todas las fotos que has tomado."
   },
   "tourSkip": {
     "message": "Ignorar"
