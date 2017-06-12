@@ -25,13 +25,17 @@ nsUXThemeData::sThemes[eUXNumClasses];
 HMODULE
 nsUXThemeData::sThemeDLL = nullptr;
 
+const int NUM_COMMAND_BUTTONS = 3;
+SIZE nsUXThemeData::sCommandButtonMetrics[NUM_COMMAND_BUTTONS];
+bool nsUXThemeData::sCommandButtonMetricsInitialized = false;
+SIZE nsUXThemeData::sCommandButtonBoxMetrics;
+bool nsUXThemeData::sCommandButtonBoxMetricsInitialized = false;
+
 bool
 nsUXThemeData::sFlatMenus = false;
 
 bool nsUXThemeData::sTitlebarInfoPopulatedAero = false;
 bool nsUXThemeData::sTitlebarInfoPopulatedThemed = false;
-const int NUM_COMMAND_BUTTONS = 4;
-SIZE nsUXThemeData::sCommandButtons[NUM_COMMAND_BUTTONS];
 
 void
 nsUXThemeData::Teardown() {
@@ -132,16 +136,47 @@ const wchar_t *nsUXThemeData::GetClassName(nsUXThemeClass cls) {
 
 // static
 void
-nsUXThemeData::InitTitlebarInfo()
+nsUXThemeData::EnsureCommandButtonMetrics()
 {
-  // Pre-populate with generic metrics. These likley will not match
-  // the current theme, but they insure the buttons at least show up.
-  sCommandButtons[0].cx = GetSystemMetrics(SM_CXSIZE);
-  sCommandButtons[0].cy = GetSystemMetrics(SM_CYSIZE);
-  sCommandButtons[1].cx = sCommandButtons[2].cx = sCommandButtons[0].cx;
-  sCommandButtons[1].cy = sCommandButtons[2].cy = sCommandButtons[0].cy;
-  sCommandButtons[3].cx = sCommandButtons[0].cx * 3;
-  sCommandButtons[3].cy = sCommandButtons[0].cy;
+  if (sCommandButtonMetricsInitialized) {
+    return;
+  }
+  sCommandButtonMetricsInitialized = true;
+
+  // This code should never need to be evaluated since we should
+  // obtain the metrics we need when nsWindow::Create() is called.
+  // The generic metrics that we set here likley will not match the
+  // current theme, but they insure the buttons at least show up if
+  // there is some combination of theme settings that we aren't
+  // handling in nsWindow::Create().
+  MOZ_ASSERT_UNREACHABLE("We should avoid expensive GetSystemMetrics calls");
+
+  sCommandButtonMetrics[0].cx = GetSystemMetrics(SM_CXSIZE);
+  sCommandButtonMetrics[0].cy = GetSystemMetrics(SM_CYSIZE);
+  sCommandButtonMetrics[1].cx = sCommandButtonMetrics[2].cx = sCommandButtonMetrics[0].cx;
+  sCommandButtonMetrics[1].cy = sCommandButtonMetrics[2].cy = sCommandButtonMetrics[0].cy;
+
+  // Trigger a refresh on the next layout.
+  sTitlebarInfoPopulatedAero = sTitlebarInfoPopulatedThemed = false;
+}
+
+// static
+void
+nsUXThemeData::EnsureCommandButtonBoxMetrics()
+{
+  if (sCommandButtonBoxMetricsInitialized) {
+    return;
+  }
+  sCommandButtonBoxMetricsInitialized = true;
+
+  EnsureCommandButtonMetrics();
+
+  sCommandButtonBoxMetrics.cx = sCommandButtonMetrics[0].cx
+                                + sCommandButtonMetrics[1].cx
+                                + sCommandButtonMetrics[2].cx;
+  sCommandButtonBoxMetrics.cy = sCommandButtonMetrics[0].cy
+                                + sCommandButtonMetrics[1].cy
+                                + sCommandButtonMetrics[2].cy;
 
   // Trigger a refresh on the next layout.
   sTitlebarInfoPopulatedAero = sTitlebarInfoPopulatedThemed = false;
@@ -160,8 +195,12 @@ nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
                                         DWMWA_CAPTION_BUTTON_BOUNDS,
                                         &captionButtons,
                                         sizeof(captionButtons)))) {
-      sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cx = captionButtons.right - captionButtons.left - 3;
-      sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cy = (captionButtons.bottom - captionButtons.top) - 1;
+      sCommandButtonBoxMetrics.cx = captionButtons.right - captionButtons.left - 3;
+      sCommandButtonBoxMetrics.cy = (captionButtons.bottom - captionButtons.top) - 1;
+      sCommandButtonBoxMetricsInitialized = true;
+      MOZ_ASSERT(sCommandButtonBoxMetrics.cx > 0 &&
+                 sCommandButtonBoxMetrics.cy > 0,
+                 "We must not cache bad command button box dimensions");
       sTitlebarInfoPopulatedAero = true;
     }
   }
@@ -218,21 +257,22 @@ nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
     return;
   }
   // minimize
-  sCommandButtons[0].cx = info.rgrect[2].right - info.rgrect[2].left;
-  sCommandButtons[0].cy = info.rgrect[2].bottom - info.rgrect[2].top;
+  sCommandButtonMetrics[0].cx = info.rgrect[2].right - info.rgrect[2].left;
+  sCommandButtonMetrics[0].cy = info.rgrect[2].bottom - info.rgrect[2].top;
   // maximize/restore
-  sCommandButtons[1].cx = info.rgrect[3].right - info.rgrect[3].left;
-  sCommandButtons[1].cy = info.rgrect[3].bottom - info.rgrect[3].top;
+  sCommandButtonMetrics[1].cx = info.rgrect[3].right - info.rgrect[3].left;
+  sCommandButtonMetrics[1].cy = info.rgrect[3].bottom - info.rgrect[3].top;
   // close
-  sCommandButtons[2].cx = info.rgrect[5].right - info.rgrect[5].left;
-  sCommandButtons[2].cy = info.rgrect[5].bottom - info.rgrect[5].top;
+  sCommandButtonMetrics[2].cx = info.rgrect[5].right - info.rgrect[5].left;
+  sCommandButtonMetrics[2].cy = info.rgrect[5].bottom - info.rgrect[5].top;
+  sCommandButtonMetricsInitialized = true;
 
 #ifdef DEBUG
   // Verify that all values for the command buttons are positive values
   // otherwise we have cached bad values for the caption buttons
   for (int i = 0; i < NUM_COMMAND_BUTTONS; i++) {
-    MOZ_ASSERT(sCommandButtons[i].cx > 0);
-    MOZ_ASSERT(sCommandButtons[i].cy > 0);
+    MOZ_ASSERT(sCommandButtonMetrics[i].cx > 0);
+    MOZ_ASSERT(sCommandButtonMetrics[i].cy > 0);
   }
 #endif
 

@@ -663,8 +663,6 @@ nsWindow::nsWindow()
     }
     NS_ASSERTION(sIsOleInitialized, "***** OLE is not initialized!\n");
     MouseScrollHandler::Initialize();
-    // Init titlebar button info for custom frames.
-    nsUXThemeData::InitTitlebarInfo();
     // Init theme data
     nsUXThemeData::UpdateNativeThemeInfo();
     RedirectedKeyDownMessageManager::Forget();
@@ -3102,7 +3100,7 @@ void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion)
       // The minimum glass height must be the caption buttons height,
       // otherwise the buttons are drawn incorrectly.
       largest.y = std::max<uint32_t>(largest.y,
-                         nsUXThemeData::sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cy);
+                         nsUXThemeData::GetCommandButtonBoxMetrics().cy);
     }
     margins.cyTopHeight = largest.y;
   }
@@ -5148,7 +5146,6 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     {
       // Update non-client margin offsets 
       UpdateNonClientMargins();
-      nsUXThemeData::InitTitlebarInfo();
       nsUXThemeData::UpdateNativeThemeInfo();
 
       NotifyThemeChanged();
