@@ -299,9 +299,10 @@ void watch_for_mutex_use_on_this_thread()
 class ThreadWedger : public mozilla::Runnable
 {
 public:
-  explicit ThreadWedger(nsIEventTarget *aTarget)
-  : mReentrantMonitor("thread wedger")
-  , unwedged(false)
+  explicit ThreadWedger(nsIEventTarget* aTarget)
+    : mozilla::Runnable("ThreadWedger")
+    , mReentrantMonitor("thread wedger")
+    , unwedged(false)
   {
     aTarget->Dispatch(this, aTarget->NS_DISPATCH_NORMAL);
   }

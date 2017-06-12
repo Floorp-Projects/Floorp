@@ -186,7 +186,12 @@ template<typename OnRunType>
 class LambdaRunnable : public Runnable
 {
 public:
-  explicit LambdaRunnable(OnRunType&& aOnRun) : mOnRun(Move(aOnRun)) {}
+  explicit LambdaRunnable(OnRunType&& aOnRun)
+    : Runnable("media::LambdaRunnable")
+    , mOnRun(Move(aOnRun))
+  {
+  }
+
 private:
   NS_IMETHODIMP
   Run() override

@@ -287,7 +287,8 @@ ChromiumCDMParent::RecvOnResolveNewSessionPromise(const uint32_t& aPromiseId,
   }
 
   RefPtr<Runnable> task =
-    NewRunnableMethod<uint32_t, nsString>(mProxy,
+    NewRunnableMethod<uint32_t, nsString>("ChromiumCDMProxy::OnSetSessionId",
+                                          mProxy,
                                           &ChromiumCDMProxy::OnSetSessionId,
                                           token.value(),
                                           NS_ConvertUTF8toUTF16(aSessionId));
@@ -312,6 +313,7 @@ ChromiumCDMParent::RecvResolveLoadSessionPromise(const uint32_t& aPromiseId,
   }
 
   NS_DispatchToMainThread(NewRunnableMethod<uint32_t, bool>(
+    "ChromiumCDMProxy::OnResolveLoadSessionPromise",
     mProxy,
     &ChromiumCDMProxy::OnResolveLoadSessionPromise,
     aPromiseId,
@@ -329,8 +331,11 @@ ChromiumCDMParent::ResolvePromise(uint32_t aPromiseId)
   if (!mProxy || mIsShutdown) {
     return;
   }
-  NS_DispatchToMainThread(NewRunnableMethod<uint32_t>(
-    mProxy, &ChromiumCDMProxy::ResolvePromise, aPromiseId));
+  NS_DispatchToMainThread(
+    NewRunnableMethod<uint32_t>("ChromiumCDMProxy::ResolvePromise",
+                                mProxy,
+                                &ChromiumCDMProxy::ResolvePromise,
+                                aPromiseId));
 }
 
 ipc::IPCResult
@@ -380,6 +385,7 @@ ChromiumCDMParent::RejectPromise(uint32_t aPromiseId,
     return;
   }
   NS_DispatchToMainThread(NewRunnableMethod<uint32_t, nsresult, nsCString>(
+    "ChromiumCDMProxy::RejectPromise",
     mProxy,
     &ChromiumCDMProxy::RejectPromise,
     aPromiseId,
@@ -428,9 +434,10 @@ ChromiumCDMParent::RecvOnSessionMessage(const nsCString& aSessionId,
   dom::MediaKeyMessageType messageType = ToDOMMessageType(aMessageType);
   nsTArray<uint8_t> msg(Move(aMessage));
   NS_DispatchToMainThread(
-    NS_NewRunnableFunction([proxy, sid, messageType, msg]() mutable {
-      proxy->OnSessionMessage(sid, messageType, msg);
-    }));
+    NS_NewRunnableFunction("gmp::ChromiumCDMParent::RecvOnSessionMessage",
+                           [proxy, sid, messageType, msg]() mutable {
+                             proxy->OnSessionMessage(sid, messageType, msg);
+                           }));
   return IPC_OK();
 }
 
@@ -479,7 +486,8 @@ ChromiumCDMParent::RecvOnSessionKeysChange(
   }
   if (keyStatusesChange) {
     NS_DispatchToMainThread(
-      NewRunnableMethod<nsString>(mProxy,
+      NewRunnableMethod<nsString>("ChromiumCDMProxy::OnKeyStatusesChange",
+                                  mProxy,
                                   &ChromiumCDMProxy::OnKeyStatusesChange,
                                   NS_ConvertUTF8toUTF16(aSessionId)));
   }
@@ -497,6 +505,7 @@ ChromiumCDMParent::RecvOnExpirationChange(const nsCString& aSessionId,
     return IPC_OK();
   }
   NS_DispatchToMainThread(NewRunnableMethod<nsString, UnixTime>(
+    "ChromiumCDMProxy::OnExpirationChange",
     mProxy,
     &ChromiumCDMProxy::OnExpirationChange,
     NS_ConvertUTF8toUTF16(aSessionId),
@@ -512,7 +521,8 @@ ChromiumCDMParent::RecvOnSessionClosed(const nsCString& aSessionId)
     return IPC_OK();
   }
   NS_DispatchToMainThread(
-    NewRunnableMethod<nsString>(mProxy,
+    NewRunnableMethod<nsString>("ChromiumCDMProxy::OnSessionClosed",
+                                mProxy,
                                 &ChromiumCDMProxy::OnSessionClosed,
                                 NS_ConvertUTF8toUTF16(aSessionId)));
   return IPC_OK();
@@ -530,6 +540,7 @@ ChromiumCDMParent::RecvOnLegacySessionError(const nsCString& aSessionId,
   }
   NS_DispatchToMainThread(
     NewRunnableMethod<nsString, nsresult, uint32_t, nsString>(
+      "ChromiumCDMProxy::OnSessionError",
       mProxy,
       &ChromiumCDMProxy::OnSessionError,
       NS_ConvertUTF8toUTF16(aSessionId),
@@ -894,8 +905,8 @@ ChromiumCDMParent::ActorDestroy(ActorDestroyReason aWhy)
   }
   bool abnormalShutdown = (aWhy == AbnormalShutdown);
   if (abnormalShutdown && proxy) {
-    RefPtr<Runnable> task =
-      NewRunnableMethod(proxy, &ChromiumCDMProxy::Terminated);
+    RefPtr<Runnable> task = NewRunnableMethod(
+      "ChromiumCDMProxy::Terminated", proxy, &ChromiumCDMProxy::Terminated);
     NS_DispatchToMainThread(task);
   }
   MaybeDisconnect(abnormalShutdown);
@@ -1126,8 +1137,8 @@ ChromiumCDMParent::Shutdown()
   // collection, and that will not shut down cleanly as the GMP thread will be
   // shutdown by then.
   if (mProxy) {
-    RefPtr<Runnable> task =
-      NewRunnableMethod(mProxy, &ChromiumCDMProxy::Shutdown);
+    RefPtr<Runnable> task = NewRunnableMethod(
+      "ChromiumCDMProxy::Shutdown", mProxy, &ChromiumCDMProxy::Shutdown);
     NS_DispatchToMainThread(task.forget());
   }
 

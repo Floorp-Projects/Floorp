@@ -86,7 +86,8 @@ class AbortOperationsRunnable final
 
 public:
   explicit AbortOperationsRunnable(ContentParentId aContentParentId)
-    : mContentParentId(aContentParentId)
+    : Runnable("dom::quota::AbortOperationsRunnable")
+    , mContentParentId(aContentParentId)
   { }
 
 private:

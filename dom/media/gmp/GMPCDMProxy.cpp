@@ -92,7 +92,8 @@ GMPCDMProxy::Init(PromiseId aPromiseId,
   data->mGMPName = aGMPName;
   data->mCrashHelper = mCrashHelper;
   nsCOMPtr<nsIRunnable> task(
-    NewRunnableMethod<UniquePtr<InitData>&&>(this,
+    NewRunnableMethod<UniquePtr<InitData>&&>("GMPCDMProxy::gmp_Init",
+                                             this,
                                              &GMPCDMProxy::gmp_Init,
                                              Move(data)));
   mOwnerThread->EventTarget()->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
@@ -139,7 +140,8 @@ void GMPCDMProxy::OnSetDecryptorId(uint32_t aId)
   MOZ_ASSERT(mCreatePromiseId);
   mDecryptorId = aId;
   nsCOMPtr<nsIRunnable> task(
-    NewRunnableMethod<uint32_t>(this,
+    NewRunnableMethod<uint32_t>("GMPCDMProxy::OnCDMCreated",
+                                this,
                                 &GMPCDMProxy::OnCDMCreated,
                                 mCreatePromiseId));
   mMainThread->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
@@ -294,7 +296,8 @@ GMPCDMProxy::CreateSession(uint32_t aCreateSessionToken,
   data->mInitData = Move(aInitData);
 
   nsCOMPtr<nsIRunnable> task(
-    NewRunnableMethod<UniquePtr<CreateSessionData>&&>(this,
+    NewRunnableMethod<UniquePtr<CreateSessionData>&&>("GMPCDMProxy::gmp_CreateSession",
+                                                      this,
                                                       &GMPCDMProxy::gmp_CreateSession,
                                                       Move(data)));
   mOwnerThread->EventTarget()->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
@@ -337,7 +340,8 @@ GMPCDMProxy::LoadSession(PromiseId aPromiseId,
   data->mPromiseId = aPromiseId;
   data->mSessionId = NS_ConvertUTF16toUTF8(aSessionId);
   nsCOMPtr<nsIRunnable> task(
-    NewRunnableMethod<UniquePtr<SessionOpData>&&>(this,
+    NewRunnableMethod<UniquePtr<SessionOpData>&&>("GMPCDMProxy::gmp_LoadSession",
+                                                  this,
                                                   &GMPCDMProxy::gmp_LoadSession,
                                                   Move(data)));
   mOwnerThread->EventTarget()->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
@@ -367,7 +371,8 @@ GMPCDMProxy::SetServerCertificate(PromiseId aPromiseId,
   data->mPromiseId = aPromiseId;
   data->mCert = Move(aCert);
   nsCOMPtr<nsIRunnable> task(
-    NewRunnableMethod<UniquePtr<SetServerCertificateData>&&>(this,
+    NewRunnableMethod<UniquePtr<SetServerCertificateData>&&>("GMPCDMProxy::gmp_SetServerCertificate",
+                                                             this,
                                                              &GMPCDMProxy::gmp_SetServerCertificate,
                                                              Move(data)));
   mOwnerThread->EventTarget()->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
@@ -399,7 +404,8 @@ GMPCDMProxy::UpdateSession(const nsAString& aSessionId,
   data->mSessionId = NS_ConvertUTF16toUTF8(aSessionId);
   data->mResponse = Move(aResponse);
   nsCOMPtr<nsIRunnable> task(
-    NewRunnableMethod<UniquePtr<UpdateSessionData>&&>(this,
+    NewRunnableMethod<UniquePtr<UpdateSessionData>&&>("GMPCDMProxy::gmp_UpdateSession",
+                                                      this,
                                                       &GMPCDMProxy::gmp_UpdateSession,
                                                       Move(data)));
   mOwnerThread->EventTarget()->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
@@ -430,7 +436,8 @@ GMPCDMProxy::CloseSession(const nsAString& aSessionId,
   data->mPromiseId = aPromiseId;
   data->mSessionId = NS_ConvertUTF16toUTF8(aSessionId);
   nsCOMPtr<nsIRunnable> task(
-    NewRunnableMethod<UniquePtr<SessionOpData>&&>(this,
+    NewRunnableMethod<UniquePtr<SessionOpData>&&>("GMPCDMProxy::gmp_CloseSession",
+                                                  this,
                                                   &GMPCDMProxy::gmp_CloseSession,
                                                   Move(data)));
   mOwnerThread->EventTarget()->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
@@ -459,7 +466,8 @@ GMPCDMProxy::RemoveSession(const nsAString& aSessionId,
   data->mPromiseId = aPromiseId;
   data->mSessionId = NS_ConvertUTF16toUTF8(aSessionId);
   nsCOMPtr<nsIRunnable> task(
-    NewRunnableMethod<UniquePtr<SessionOpData>&&>(this,
+    NewRunnableMethod<UniquePtr<SessionOpData>&&>("GMPCDMProxy::gmp_RemoveSession",
+                                                  this,
                                                   &GMPCDMProxy::gmp_RemoveSession,
                                                   Move(data)));
   mOwnerThread->EventTarget()->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
@@ -483,7 +491,8 @@ GMPCDMProxy::Shutdown()
   MOZ_ASSERT(NS_IsMainThread());
   mKeys.Clear();
   // Note: This may end up being the last owning reference to the GMPCDMProxy.
-  nsCOMPtr<nsIRunnable> task(NewRunnableMethod(this, &GMPCDMProxy::gmp_Shutdown));
+  nsCOMPtr<nsIRunnable> task(NewRunnableMethod(
+    "GMPCDMProxy::gmp_Shutdown", this, &GMPCDMProxy::gmp_Shutdown));
   if (mOwnerThread) {
     mOwnerThread->EventTarget()->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
   }
@@ -535,9 +544,8 @@ GMPCDMProxy::ResolvePromise(PromiseId aId)
     }
   } else {
     nsCOMPtr<nsIRunnable> task;
-    task = NewRunnableMethod<PromiseId>(this,
-                                        &GMPCDMProxy::ResolvePromise,
-                                        aId);
+    task = NewRunnableMethod<PromiseId>(
+      "GMPCDMProxy::ResolvePromise", this, &GMPCDMProxy::ResolvePromise, aId);
     mMainThread->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
   }
 }
@@ -684,7 +692,8 @@ GMPCDMProxy::Decrypt(MediaRawData* aSample)
   RefPtr<DecryptPromise> promise(job->Ensure());
 
   nsCOMPtr<nsIRunnable> task(
-    NewRunnableMethod<RefPtr<DecryptJob>>(this, &GMPCDMProxy::gmp_Decrypt, job));
+    NewRunnableMethod<RefPtr<DecryptJob>>("GMPCDMProxy::gmp_Decrypt",
+                                          this, &GMPCDMProxy::gmp_Decrypt, job));
   mOwnerThread->EventTarget()->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
   return promise;
 }

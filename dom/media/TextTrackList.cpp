@@ -141,7 +141,8 @@ class TrackEventRunner : public Runnable
 {
 public:
   TrackEventRunner(TextTrackList* aList, nsIDOMEvent* aEvent)
-    : mList(aList)
+    : Runnable("dom::TrackEventRunner")
+    , mList(aList)
     , mEvent(aEvent)
   {}
 

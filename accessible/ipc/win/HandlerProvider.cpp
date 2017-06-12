@@ -95,7 +95,8 @@ HandlerProvider::GetAndSerializePayload(const MutexAutoLock&)
 
   IA2Payload payload{};
 
-  if (!mscom::InvokeOnMainThread(this, &HandlerProvider::BuildIA2Data,
+  if (!mscom::InvokeOnMainThread("HandlerProvider::BuildIA2Data",
+                                 this, &HandlerProvider::BuildIA2Data,
                                  &payload.mData) ||
       !payload.mData.mUniqueId) {
     return;
@@ -236,7 +237,8 @@ HandlerProvider::put_HandlerControl(long aPid, IHandlerControl* aCtrl)
 
   auto ptrProxy = mscom::ToProxyUniquePtr(aCtrl);
 
-  if (!mscom::InvokeOnMainThread(this,
+  if (!mscom::InvokeOnMainThread("HandlerProvider::SetHandlerControlOnMainThread",
+                                 this,
                                  &HandlerProvider::SetHandlerControlOnMainThread,
                                  static_cast<DWORD>(aPid), Move(ptrProxy))) {
     return E_FAIL;
@@ -250,7 +252,8 @@ HandlerProvider::Refresh(IA2Data* aOutData)
 {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
 
-  if (!mscom::InvokeOnMainThread(this, &HandlerProvider::BuildIA2Data,
+  if (!mscom::InvokeOnMainThread("HandlerProvider::BuildIA2Data",
+                                 this, &HandlerProvider::BuildIA2Data,
                                  aOutData)) {
     return E_FAIL;
   }

@@ -264,6 +264,7 @@ LazyInstantiator::ShouldInstantiate(const DWORD aClientTid)
     // the executable file to retrieve version information.
     nsCOMPtr<nsIRunnable> runnable(
         NewRunnableMethod<nsCOMPtr<nsIFile>, RefPtr<AccumulateRunnable>>(
+                                             "LazyInstantiator::GatherTelemetry",
                                              this,
                                              &LazyInstantiator::GatherTelemetry,
                                              clientExe,

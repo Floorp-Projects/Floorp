@@ -159,7 +159,7 @@ TEST(ThreadPoolListener, Test)
     ReentrantMonitorAutoEnter mon(*gReentrantMonitor);
 
     for (uint32_t i = 0; i < NUMBER_OF_THREADS; i++) {
-      nsCOMPtr<nsIRunnable> runnable = new Runnable();
+      nsCOMPtr<nsIRunnable> runnable = new Runnable("TestRunnable");
       ASSERT_TRUE(runnable);
 
       rv = pool->Dispatch(runnable, NS_DISPATCH_NORMAL);

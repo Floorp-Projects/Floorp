@@ -331,8 +331,9 @@ SchedulerGroup::SetValidatingAccess(ValidationType aType)
 
 SchedulerGroup::Runnable::Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
                                    SchedulerGroup* aGroup)
- : mRunnable(Move(aRunnable)),
-   mGroup(aGroup)
+  : mozilla::Runnable("SchedulerGroup::Runnable")
+  , mRunnable(Move(aRunnable))
+  , mGroup(aGroup)
 {
 }
 

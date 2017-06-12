@@ -281,12 +281,12 @@ PresentationRequest::Reconnect(const nsAString& aPresentationId,
   }
 
   nsString presentationId = nsString(aPresentationId);
-  nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod<nsString, RefPtr<Promise>>(
-      this,
-      &PresentationRequest::FindOrCreatePresentationConnection,
-      presentationId,
-      promise);
+  nsCOMPtr<nsIRunnable> r = NewRunnableMethod<nsString, RefPtr<Promise>>(
+    "dom::PresentationRequest::FindOrCreatePresentationConnection",
+    this,
+    &PresentationRequest::FindOrCreatePresentationConnection,
+    presentationId,
+    promise);
 
   if (NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(r)))) {
     promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);

@@ -79,9 +79,11 @@ namespace dom {
 class ImageLoadTask : public Runnable
 {
 public:
-  ImageLoadTask(HTMLImageElement *aElement, bool aAlwaysLoad,
+  ImageLoadTask(HTMLImageElement* aElement,
+                bool aAlwaysLoad,
                 bool aUseUrgentStartForChannel)
-    : mElement(aElement)
+    : Runnable("dom::ImageLoadTask")
+    , mElement(aElement)
     , mAlwaysLoad(aAlwaysLoad)
     , mUseUrgentStartForChannel(aUseUrgentStartForChannel)
   {
@@ -676,7 +678,10 @@ HTMLImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     if (LoadingEnabled() &&
         OwnerDoc()->IsCurrentActiveDocument()) {
       nsContentUtils::AddScriptRunner(
-        NewRunnableMethod<bool>(this, &HTMLImageElement::MaybeLoadImage, false));
+        NewRunnableMethod<bool>("dom::HTMLImageElement::MaybeLoadImage",
+                                this,
+                                &HTMLImageElement::MaybeLoadImage,
+                                false));
     }
   }
 
@@ -769,9 +774,14 @@ HTMLImageElement::NodeInfoChanged(nsIDocument* aOldDoc)
     // Bug 1076583 - We still behave synchronously in the non-responsive case
     nsContentUtils::AddScriptRunner(
       (InResponsiveMode())
-        ? NewRunnableMethod<bool>(this, &HTMLImageElement::QueueImageLoadTask, true)
-        : NewRunnableMethod<bool>(this, &HTMLImageElement::MaybeLoadImage, true)
-    );
+        ? NewRunnableMethod<bool>("dom::HTMLImageElement::QueueImageLoadTask",
+                                  this,
+                                  &HTMLImageElement::QueueImageLoadTask,
+                                  true)
+        : NewRunnableMethod<bool>("dom::HTMLImageElement::MaybeLoadImage",
+                                  this,
+                                  &HTMLImageElement::MaybeLoadImage,
+                                  true));
   }
 }
 
@@ -894,7 +904,10 @@ HTMLImageElement::CopyInnerTo(Element* aDest, bool aPreallocateChildren)
       mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
 
       nsContentUtils::AddScriptRunner(
-        NewRunnableMethod<bool>(dest, &HTMLImageElement::MaybeLoadImage, false));
+        NewRunnableMethod<bool>("dom::HTMLImageElement::MaybeLoadImage",
+                                dest,
+                                &HTMLImageElement::MaybeLoadImage,
+                                false));
     }
   }
 
