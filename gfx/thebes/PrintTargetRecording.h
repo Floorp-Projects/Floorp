@@ -33,8 +33,8 @@ private:
                        const IntSize& aSize);
 
   already_AddRefed<DrawTarget>
-  CreateRecordingDrawTarget(DrawEventRecorder* aRecorder,
-                            DrawTarget* aDrawTarget);
+  CreateWrapAndRecordDrawTarget(DrawEventRecorder* aRecorder,
+                                DrawTarget* aDrawTarget);
 };
 
 } // namespace gfx

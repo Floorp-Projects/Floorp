@@ -103,7 +103,7 @@ nsDeviceContextSpecProxy::MakePrintTarget()
 
   // The type of PrintTarget that we return here shouldn't really matter since
   // our implementation of GetDrawEventRecorder returns an object, which means
-  // the DrawTarget returned by the PrintTarget will be a DrawTargetRecording.
+  // the DrawTarget returned by the PrintTarget will be a DrawTargetWrapAndRecord.
   // The recording will be serialized and sent over to the parent process where
   // PrintTranslator::TranslateRecording will call MakePrintTarget (indirectly
   // via PrintTranslator::CreateDrawTarget) on whatever type of
