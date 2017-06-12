@@ -480,6 +480,18 @@ DrawTargetRecording::Snapshot()
   return retSurf.forget();
 }
 
+already_AddRefed<SourceSurface>
+DrawTargetRecording::IntoLuminanceSource(LuminanceType aLuminanceType, float aOpacity)
+{
+  RefPtr<SourceSurface> surf = mFinalDT->IntoLuminanceSource(aLuminanceType, aOpacity);
+
+  RefPtr<SourceSurface> retSurf = new SourceSurfaceRecording(surf, mRecorder);
+
+  mRecorder->RecordEvent(RecordedIntoLuminanceSource(retSurf, this, aLuminanceType, aOpacity));
+
+  return retSurf.forget();
+}
+
 void
 DrawTargetRecording::DetachAllSnapshots()
 {
