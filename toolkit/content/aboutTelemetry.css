@@ -17,15 +17,17 @@ body {
 #categories {
   padding-top: 0px;
   min-width: 300px;
+  overflow-y: auto;
 }
 
 #category-raw {
   border-top: 1px solid var(--in-content-header-border-color);
   box-sizing: border-box;
-  position: fixed;
+  background-color: inherit;
+  min-width: inherit;
+  position: absolute;
   bottom: 0;
   left: 0;
-  min-width: inherit;
 }
 
 .heading {
@@ -50,12 +52,15 @@ body {
 
 .main-content {
   width: 100%;
+  font-size: 18px;
+  line-height:1.6;
 }
 
 #page-description {
   border: 1px solid threedshadow;
   margin: 0px;
   padding: 10px;
+  line-height: 1.2;
 }
 
 #settings {
@@ -63,17 +68,25 @@ body {
   padding: 5px;
 }
 
-.description-enabled,
-.description-disabled {
-  margin: 0px;
+.change-data-choices-link {
+  border-bottom-width: 2px;
+  border-bottom-style: solid;
 }
 
-.description-enabled > span {
-  color: green;
+.change-data-choices-link:hover {
+  text-decoration: none;
 }
 
-.description-disabled > span {
-  color: red;
+#ping-explanation > span {
+  cursor: pointer;
+  border-bottom-width: 2px;
+  border-bottom-style: solid;
+}
+
+#ping-explanation > span:hover {
+  color: var(--in-content-page-color);
+  border-bottom-width: 2px;
+  border-bottom-style: solid;
 }
 
 #ping-picker {
