@@ -8,7 +8,7 @@
 // are involved.
 
 const TESTCASE_URI = URL_ROOT + "doc_sourcemaps2.html";
-const PREF = "devtools.styleeditor.source-maps-enabled";
+const PREF = "devtools.source-map.client-service.enabled";
 const SCSS_LOC = "doc_sourcemaps.scss:4";
 const CSS_LOC = "doc_sourcemaps2.css:1";
 

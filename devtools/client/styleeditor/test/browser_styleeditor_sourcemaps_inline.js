@@ -6,7 +6,7 @@
 
 // https rather than chrome to improve coverage
 const TESTCASE_URI = TEST_BASE_HTTPS + "sourcemaps-inline.html";
-const PREF = "devtools.styleeditor.source-maps-enabled";
+const PREF = "devtools.source-map.client-service.enabled";
 
 const sassContent = `body {
   background-color: black;
