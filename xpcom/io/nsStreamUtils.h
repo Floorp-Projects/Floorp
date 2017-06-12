@@ -28,7 +28,8 @@ class nsIEventTarget;
  * aTarget parameter is non-null.
  */
 extern already_AddRefed<nsIInputStreamCallback>
-NS_NewInputStreamReadyEvent(nsIInputStreamCallback* aNotify,
+NS_NewInputStreamReadyEvent(const char* aName,
+                            nsIInputStreamCallback* aNotify,
                             nsIEventTarget* aTarget);
 
 /**
