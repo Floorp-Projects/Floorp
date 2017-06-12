@@ -155,7 +155,7 @@ private:
   void Reset(TrackType aTrack);
   void DropDecodedSamples(TrackType aTrack);
 
-  bool ShouldSkip(bool aSkipToNextKeyframe, media::TimeUnit aTimeThreshold);
+  bool ShouldSkip(media::TimeUnit aTimeThreshold);
 
   void SetVideoDecodeThreshold();
 
