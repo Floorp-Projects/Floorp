@@ -76,11 +76,12 @@ protected:
   template <class Method, class Params>
   class RunnableMethod : public Runnable {
    public:
-    RunnableMethod(T* obj, Method meth, const Params& params)
-      : obj_(obj)
-      , meth_(meth)
-      , params_(params) {
-
+     RunnableMethod(T* obj, Method meth, const Params& params)
+       : Runnable("ipc::TaskFactory::RunnableMethod")
+       , obj_(obj)
+       , meth_(meth)
+       , params_(params)
+     {
     }
 
     NS_IMETHOD Run() override {

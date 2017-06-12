@@ -1350,10 +1350,12 @@ nsresult
 nsDiskCacheMap::ResetCacheTimer(int32_t timeout)
 {
     mCleanCacheTimer->Cancel();
-    nsresult rv =
-      mCleanCacheTimer->InitWithFuncCallback(RevalidateTimerCallback,
-                                             nullptr, timeout,
-                                             nsITimer::TYPE_ONE_SHOT);
+    nsresult rv = mCleanCacheTimer->InitWithNamedFuncCallback(
+      RevalidateTimerCallback,
+      nullptr,
+      timeout,
+      nsITimer::TYPE_ONE_SHOT,
+      "nsDiskCacheMap::ResetCacheTimer");
     NS_ENSURE_SUCCESS(rv, rv);
     mLastInvalidateTime = PR_IntervalNow();
 

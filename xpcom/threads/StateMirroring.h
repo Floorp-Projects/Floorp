@@ -152,9 +152,11 @@ private:
     {
       MIRROR_LOG("%s [%p] Disconnecting all mirrors", mName, this);
       for (size_t i = 0; i < mMirrors.Length(); ++i) {
-        mMirrors[i]->OwnerThread()->Dispatch(NewRunnableMethod(mMirrors[i],
-                                                               &AbstractMirror<T>::NotifyDisconnected),
-                                             AbstractThread::DontAssertDispatchSuccess);
+        mMirrors[i]->OwnerThread()->Dispatch(
+          NewRunnableMethod("AbstractMirror::NotifyDisconnected",
+                            mMirrors[i],
+                            &AbstractMirror<T>::NotifyDisconnected),
+          AbstractThread::DontAssertDispatchSuccess);
       }
       mMirrors.Clear();
     }
@@ -191,7 +193,8 @@ private:
       // we can avoid sending multiple updates, and possibly avoid sending any
       // updates at all if the value ends up where it started.
       if (!alreadyNotifying) {
-        AbstractThread::DispatchDirectTask(NewRunnableMethod(this, &Impl::DoNotify));
+        AbstractThread::DispatchDirectTask(NewRunnableMethod(
+          "Canonical::Impl::DoNotify", this, &Impl::DoNotify));
       }
     }
 
@@ -222,7 +225,11 @@ private:
 
     already_AddRefed<nsIRunnable> MakeNotifier(AbstractMirror<T>* aMirror)
     {
-      return NewRunnableMethod<T>(aMirror, &AbstractMirror<T>::UpdateValue, mValue);;
+      return NewRunnableMethod<T>("AbstractMirror::UpdateValue",
+                                  aMirror,
+                                  &AbstractMirror<T>::UpdateValue,
+                                  mValue);
+      ;
     }
 
     T mValue;
@@ -325,8 +332,12 @@ private:
       MOZ_ASSERT(!IsConnected());
       MOZ_ASSERT(OwnerThread()->RequiresTailDispatch(aCanonical->OwnerThread()), "Can't get coherency without tail dispatch");
 
-      nsCOMPtr<nsIRunnable> r = NewRunnableMethod<StoreRefPtrPassByPtr<AbstractMirror<T>>>
-                                  (aCanonical, &AbstractCanonical<T>::AddMirror, this);
+      nsCOMPtr<nsIRunnable> r =
+        NewRunnableMethod<StoreRefPtrPassByPtr<AbstractMirror<T>>>(
+          "AbstractCanonical::AddMirror",
+          aCanonical,
+          &AbstractCanonical<T>::AddMirror,
+          this);
       aCanonical->OwnerThread()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
       mCanonical = aCanonical;
     }
@@ -340,8 +351,12 @@ private:
       }
 
       MIRROR_LOG("%s [%p] Disconnecting from %p", mName, this, mCanonical.get());
-      nsCOMPtr<nsIRunnable> r = NewRunnableMethod<StoreRefPtrPassByPtr<AbstractMirror<T>>>
-                                  (mCanonical, &AbstractCanonical<T>::RemoveMirror, this);
+      nsCOMPtr<nsIRunnable> r =
+        NewRunnableMethod<StoreRefPtrPassByPtr<AbstractMirror<T>>>(
+          "AbstractCanonical::RemoveMirror",
+          mCanonical,
+          &AbstractCanonical<T>::RemoveMirror,
+          this);
       mCanonical->OwnerThread()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
       mCanonical = nullptr;
     }

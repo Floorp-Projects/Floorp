@@ -260,7 +260,8 @@ public:
 
 protected:
   MediaCodecOutputDrain()
-    : mMonitor("MediaCodecOutputDrain monitor")
+    : Runnable("MediaCodecOutputDrain")
+    , mMonitor("MediaCodecOutputDrain monitor")
     , mEnding(false)
   {}
 

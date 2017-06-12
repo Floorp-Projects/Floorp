@@ -36,7 +36,8 @@ public:
                       uint32_t aSeverityFlag,
                       bool aIsChrome,
                       uint64_t aInnerWindowID)
-    : mMessage(aMessage)
+    : mozilla::Runnable("ScriptErrorRunnable")
+    , mMessage(aMessage)
     , mFilename(aFilename)
     , mLineNumber(aLineNumber)
     , mColumnNumber(aColumnNumber)
@@ -55,7 +56,8 @@ public:
                       uint32_t aSeverityFlag,
                       bool aIsChrome,
                       uint64_t aInnerWindowID)
-    : mMessageName(aMessageName)
+    : mozilla::Runnable("ScriptErrorRunnable")
+    , mMessageName(aMessageName)
     , mFilename(aFilename)
     , mLineNumber(aLineNumber)
     , mColumnNumber(aColumnNumber)

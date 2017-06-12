@@ -564,7 +564,8 @@ public:
                        const nsACString& aGUID,
                        bool aHidden,
                        PRTime aLastVisitDate)
-    : mSpec(aSpec)
+    : mozilla::Runnable("FrecencyNotification")
+    , mSpec(aSpec)
     , mNewFrecency(aNewFrecency)
     , mGUID(aGUID)
     , mHidden(aHidden)
@@ -675,9 +676,11 @@ nsNavHistory::GetNow()
     if (!mExpireNowTimer)
       mExpireNowTimer = do_CreateInstance("@mozilla.org/timer;1");
     if (mExpireNowTimer)
-      mExpireNowTimer->InitWithFuncCallback(expireNowTimerCallback, this,
-                                            RENEW_CACHED_NOW_TIMEOUT,
-                                            nsITimer::TYPE_ONE_SHOT);
+      mExpireNowTimer->InitWithNamedFuncCallback(expireNowTimerCallback,
+                                                 this,
+                                                 RENEW_CACHED_NOW_TIMEOUT,
+                                                 nsITimer::TYPE_ONE_SHOT,
+                                                 "nsNavHistory::GetNow");
   }
   return mCachedNow;
 }

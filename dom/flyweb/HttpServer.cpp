@@ -89,10 +89,9 @@ void
 HttpServer::NotifyStarted(nsresult aStatus)
 {
   RefPtr<HttpServerListener> listener = mListener;
-  nsCOMPtr<nsIRunnable> event = NS_NewRunnableFunction([listener, aStatus] ()
-  {
-    listener->OnServerStarted(aStatus);
-  });
+  nsCOMPtr<nsIRunnable> event = NS_NewRunnableFunction(
+    "dom::HttpServer::NotifyStarted",
+    [listener, aStatus]() { listener->OnServerStarted(aStatus); });
   NS_DispatchToCurrentThread(event);
 }
 
@@ -288,12 +287,12 @@ HttpServer::TransportProvider::MaybeNotify()
 {
   if (mTransport && mListener) {
     RefPtr<TransportProvider> self = this;
-    nsCOMPtr<nsIRunnable> event = NS_NewRunnableFunction([self, this] ()
-    {
-      DebugOnly<nsresult> rv = mListener->OnTransportAvailable(mTransport,
-                                                               mInput, mOutput);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    });
+    nsCOMPtr<nsIRunnable> event = NS_NewRunnableFunction(
+      "dom::HttpServer::TransportProvider::MaybeNotify", [self, this]() {
+        DebugOnly<nsresult> rv =
+          mListener->OnTransportAvailable(mTransport, mInput, mOutput);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+      });
     NS_DispatchToCurrentThread(event);
   }
 }
@@ -633,11 +632,9 @@ HttpServer::Connection::ConsumeLine(const char* aBuffer,
 
       RefPtr<HttpServerListener> listener = mServer->mListener;
       RefPtr<InternalRequest> request = mPendingWebSocketRequest;
-      nsCOMPtr<nsIRunnable> event =
-        NS_NewRunnableFunction([listener, request] ()
-      {
-        listener->OnWebSocket(request);
-      });
+      nsCOMPtr<nsIRunnable> event = NS_NewRunnableFunction(
+        "dom::HttpServer::Connection::ConsumeLine",
+        [listener, request]() { listener->OnWebSocket(request); });
       NS_DispatchToCurrentThread(event);
 
       return NS_OK;
@@ -702,11 +699,9 @@ HttpServer::Connection::ConsumeLine(const char* aBuffer,
 
     RefPtr<HttpServerListener> listener = mServer->mListener;
     RefPtr<InternalRequest> request = mPendingReq.forget();
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableFunction([listener, request] ()
-    {
-      listener->OnRequest(request);
-    });
+    nsCOMPtr<nsIRunnable> event = NS_NewRunnableFunction(
+      "dom::HttpServer::Connection::ConsumeLine",
+      [listener, request]() { listener->OnRequest(request); });
     NS_DispatchToCurrentThread(event);
 
     mPendingReqVersion = 0;

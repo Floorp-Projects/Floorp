@@ -1840,7 +1840,8 @@ public:
   EditorInputEventDispatcher(EditorBase* aEditorBase,
                              nsIContent* aTarget,
                              bool aIsComposing)
-    : mEditorBase(aEditorBase)
+    : Runnable("EditorInputEventDispatcher")
+    , mEditorBase(aEditorBase)
     , mTarget(aTarget)
     , mIsComposing(aIsComposing)
   {

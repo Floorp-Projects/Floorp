@@ -397,7 +397,12 @@ protected:
     mTargetTime = mLastFireTime + mRateDuration;
 
     uint32_t delay = static_cast<uint32_t>(mRateMilliseconds);
-    mTimer->InitWithFuncCallback(TimerTick, this, delay, nsITimer::TYPE_ONE_SHOT);
+    mTimer->InitWithNamedFuncCallback(
+      TimerTick,
+      this,
+      delay,
+      nsITimer::TYPE_ONE_SHOT,
+      "SimpleTimerBasedRefreshDriverTimer::StartTimer");
   }
 
   void StopTimer() override
@@ -489,7 +494,12 @@ private:
     public:
       ParentProcessVsyncNotifier(RefreshDriverVsyncObserver* aObserver,
                                  TimeStamp aVsyncTimestamp)
-        : mObserver(aObserver), mVsyncTimestamp(aVsyncTimestamp) {}
+        : Runnable("VsyncRefreshDriverTimer::RefreshDriverVsyncObserver::"
+                   "ParentProcessVsyncNotifier")
+        , mObserver(aObserver)
+        , mVsyncTimestamp(aVsyncTimestamp)
+      {
+      }
 
       NS_DECL_ISUPPORTS_INHERITED
 
@@ -794,7 +804,12 @@ protected:
     // that we tick at consistent intervals.
     TimeStamp newTarget = aNowTime + mRateDuration;
     uint32_t delay = static_cast<uint32_t>((newTarget - aNowTime).ToMilliseconds());
-    mTimer->InitWithFuncCallback(TimerTick, this, delay, nsITimer::TYPE_ONE_SHOT);
+    mTimer->InitWithNamedFuncCallback(
+      TimerTick,
+      this,
+      delay,
+      nsITimer::TYPE_ONE_SHOT,
+      "StartupRefreshDriverTimer::ScheduleNextTick");
     mTargetTime = newTarget;
   }
 };
@@ -869,7 +884,11 @@ protected:
     mTargetTime = mLastFireTime + mRateDuration;
 
     uint32_t delay = static_cast<uint32_t>(mRateMilliseconds);
-    mTimer->InitWithFuncCallback(TimerTickOne, this, delay, nsITimer::TYPE_ONE_SHOT);
+    mTimer->InitWithNamedFuncCallback(TimerTickOne,
+                                      this,
+                                      delay,
+                                      nsITimer::TYPE_ONE_SHOT,
+                                      "InactiveRefreshDriverTimer::StartTimer");
   }
 
   void StopTimer() override
@@ -896,7 +915,12 @@ protected:
 
     // this doesn't need to be precise; do a simple schedule
     uint32_t delay = static_cast<uint32_t>(mNextTickDuration);
-    mTimer->InitWithFuncCallback(TimerTickOne, this, delay, nsITimer::TYPE_ONE_SHOT);
+    mTimer->InitWithNamedFuncCallback(
+      TimerTickOne,
+      this,
+      delay,
+      nsITimer::TYPE_ONE_SHOT,
+      "InactiveRefreshDriverTimer::ScheduleNextTick");
 
     LOG("[%p] inactive timer next tick in %f ms [index %d/%d]", this, mNextTickDuration,
         mNextDriverIndex, GetRefreshDriverCount());
@@ -2104,8 +2128,8 @@ nsRefreshDriver::Thaw()
       // updates our mMostRecentRefresh, but the DoRefresh call won't run
       // and notify our observers until we get back to the event loop.
       // Thus MostRecentRefresh() will lie between now and the DoRefresh.
-      RefPtr<nsRunnableMethod<nsRefreshDriver>> event =
-        NewRunnableMethod(this, &nsRefreshDriver::DoRefresh);
+      RefPtr<nsRunnableMethod<nsRefreshDriver>> event = NewRunnableMethod(
+        "nsRefreshDriver::DoRefresh", this, &nsRefreshDriver::DoRefresh);
       nsPresContext* pc = GetPresContext();
       if (pc) {
         pc->Document()->Dispatch("nsRefreshDriver::DoRefresh",

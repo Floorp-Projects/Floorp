@@ -60,7 +60,8 @@ public:
   DoCleanup(FileManager* aFileManager, int64_t aFileId);
 
   CleanupFileRunnable(FileManager* aFileManager, int64_t aFileId)
-    : mFileManager(aFileManager)
+    : Runnable("dom::indexedDB::CleanupFileRunnable")
+    , mFileManager(aFileManager)
     , mFileId(aFileId)
   {
     MOZ_ASSERT(aFileManager);

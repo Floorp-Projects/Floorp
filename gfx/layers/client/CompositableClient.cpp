@@ -194,8 +194,8 @@ CompositableClient::GetTextureClientRecycler()
   ReentrantMonitorAutoEnter mainThreadAutoMon(barrier);
   bool done = false;
 
-  RefPtr<Runnable> runnable =
-    NS_NewRunnableFunction([&]() {
+  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
+    "layers::CompositableClient::GetTextureClientRecycler", [&]() {
       if (!mTextureClientRecycler) {
         mTextureClientRecycler = new layers::TextureClientRecycleAllocator(mForwarder);
       }

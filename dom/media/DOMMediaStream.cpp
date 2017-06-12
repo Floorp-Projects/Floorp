@@ -185,7 +185,10 @@ public:
     RefPtr<MediaStreamTrack> newTrack =
       mStream->CreateDOMTrack(aTrackID, aType, source);
     NS_DispatchToMainThread(NewRunnableMethod<RefPtr<MediaStreamTrack>>(
-        mStream, &DOMMediaStream::AddTrackInternal, newTrack));
+      "DOMMediaStream::AddTrackInternal",
+      mStream,
+      &DOMMediaStream::AddTrackInternal,
+      newTrack));
   }
 
   void DoNotifyTrackEnded(MediaStream* aInputStream, TrackID aInputTrackID,
@@ -203,8 +206,10 @@ public:
     if (track) {
       LOG(LogLevel::Debug, ("DOMMediaStream %p MediaStreamTrack %p ended at the source. Marking it ended.",
                             mStream, track.get()));
-      NS_DispatchToMainThread(NewRunnableMethod(
-        track, &MediaStreamTrack::OverrideEnded));
+      NS_DispatchToMainThread(
+        NewRunnableMethod("dom::MediaStreamTrack::OverrideEnded",
+                          track,
+                          &MediaStreamTrack::OverrideEnded));
     }
   }
 
@@ -217,15 +222,27 @@ public:
     if (aTrackEvents & TrackEventCommand::TRACK_EVENT_CREATED) {
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(
         mAbstractMainThread,
-        NewRunnableMethod<TrackID, MediaSegment::Type, RefPtr<MediaStream>, TrackID>(
-          this, &OwnedStreamListener::DoNotifyTrackCreated,
-          aID, aQueuedMedia.GetType(), aInputStream, aInputTrackID));
+        NewRunnableMethod<TrackID,
+                          MediaSegment::Type,
+                          RefPtr<MediaStream>,
+                          TrackID>(
+          "DOMMediaStream::OwnedStreamListener::DoNotifyTrackCreated",
+          this,
+          &OwnedStreamListener::DoNotifyTrackCreated,
+          aID,
+          aQueuedMedia.GetType(),
+          aInputStream,
+          aInputTrackID));
     } else if (aTrackEvents & TrackEventCommand::TRACK_EVENT_ENDED) {
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(
         mAbstractMainThread,
         NewRunnableMethod<RefPtr<MediaStream>, TrackID, TrackID>(
-          this, &OwnedStreamListener::DoNotifyTrackEnded,
-          aInputStream, aInputTrackID, aID));
+          "DOMMediaStream::OwnedStreamListener::DoNotifyTrackEnded",
+          this,
+          &OwnedStreamListener::DoNotifyTrackEnded,
+          aInputStream,
+          aInputTrackID,
+          aID));
     }
   }
 
@@ -266,7 +283,9 @@ public:
     // dispatch. We have to do the same to notify of created tracks to stay
     // in sync. (Or NotifyTracksCreated is called before tracks are added).
     NS_DispatchToMainThread(
-        NewRunnableMethod(mStream, &DOMMediaStream::NotifyTracksCreated));
+      NewRunnableMethod("DOMMediaStream::NotifyTracksCreated",
+                        mStream,
+                        &DOMMediaStream::NotifyTracksCreated));
   }
 
   void DoNotifyFinished()
@@ -277,8 +296,9 @@ public:
       return;
     }
 
-    NS_DispatchToMainThread(NewRunnableMethod(
-      mStream, &DOMMediaStream::NotifyFinished));
+    NS_DispatchToMainThread(NewRunnableMethod("DOMMediaStream::NotifyFinished",
+                                              mStream,
+                                              &DOMMediaStream::NotifyFinished));
   }
 
   // The methods below are called on the MediaStreamGraph thread.
@@ -287,7 +307,10 @@ public:
   {
     aGraph->DispatchToMainThreadAfterStreamStateUpdate(
       mAbstractMainThread,
-      NewRunnableMethod(this, &PlaybackStreamListener::DoNotifyFinishedTrackCreation));
+      NewRunnableMethod(
+        "DOMMediaStream::PlaybackStreamListener::DoNotifyFinishedTrackCreation",
+        this,
+        &PlaybackStreamListener::DoNotifyFinishedTrackCreation));
   }
 
 
@@ -297,7 +320,10 @@ public:
     if (event == MediaStreamGraphEvent::EVENT_FINISHED) {
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(
         mAbstractMainThread,
-        NewRunnableMethod(this, &PlaybackStreamListener::DoNotifyFinished));
+        NewRunnableMethod(
+          "DOMMediaStream::PlaybackStreamListener::DoNotifyFinished",
+          this,
+          &PlaybackStreamListener::DoNotifyFinished));
     }
   }
 

@@ -99,11 +99,12 @@ bool EnsureNSSInitializedChromeOrContent()
     }
 
     // Forward to the main thread synchronously.
-    mozilla::SyncRunnable::DispatchToThread(mainThread,
-      new SyncRunnable(NS_NewRunnableFunction([]() {
-        initialized = EnsureNSSInitializedChromeOrContent();
-      }))
-    );
+    mozilla::SyncRunnable::DispatchToThread(
+      mainThread,
+      new SyncRunnable(
+        NS_NewRunnableFunction("EnsureNSSInitializedChromeOrContent", []() {
+          initialized = EnsureNSSInitializedChromeOrContent();
+        })));
 
     return initialized;
   }

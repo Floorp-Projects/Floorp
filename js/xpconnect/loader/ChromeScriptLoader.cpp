@@ -37,15 +37,17 @@ public:
     NS_DECL_NSIINCREMENTALSTREAMLOADEROBSERVER
     NS_DECL_NSIRUNNABLE
 
-    AsyncScriptCompiler(JSContext* aCx, nsIGlobalObject* aGlobal,
+    AsyncScriptCompiler(JSContext* aCx,
+                        nsIGlobalObject* aGlobal,
                         const nsACString& aURL,
                         const CompileScriptOptionsDictionary& aOptions,
                         Promise* aPromise)
-        : mOptions(aCx)
-        , mURL(aURL)
-        , mGlobalObject(aGlobal)
-        , mPromise(aPromise)
-        , mCharset(aOptions.mCharset)
+      : mozilla::Runnable("AsyncScriptCompiler")
+      , mOptions(aCx)
+      , mURL(aURL)
+      , mGlobalObject(aGlobal)
+      , mPromise(aPromise)
+      , mCharset(aOptions.mCharset)
     {
         mOptions.setVersion(JSVERSION_DEFAULT)
                 .setNoScriptRval(!aOptions.mHasReturnValue)

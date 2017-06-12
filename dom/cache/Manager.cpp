@@ -912,7 +912,10 @@ private:
     // here since we are guaranteed the Action will survive until
     // CompleteOnInitiatingThread is called.
     nsCOMPtr<nsIRunnable> runnable = NewNonOwningRunnableMethod<nsresult>(
-      this, &CachePutAllAction::OnAsyncCopyComplete, aRv);
+      "dom::cache::Manager::CachePutAllAction::OnAsyncCopyComplete",
+      this,
+      &CachePutAllAction::OnAsyncCopyComplete,
+      aRv);
     MOZ_ALWAYS_SUCCEEDS(
       mTarget->Dispatch(runnable.forget(), nsIThread::DISPATCH_NORMAL));
   }
@@ -1766,7 +1769,8 @@ Manager::~Manager()
 
   // Don't spin the event loop in the destructor waiting for the thread to
   // shutdown.  Defer this to the main thread, instead.
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(NewRunnableMethod(ioThread, &nsIThread::Shutdown)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(NewRunnableMethod("nsIThread::Shutdown",
+                                                                ioThread, &nsIThread::Shutdown)));
 }
 
 void

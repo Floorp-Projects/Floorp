@@ -357,7 +357,8 @@ class AsyncTeardownRunnable final : public Runnable
 
 public:
   explicit AsyncTeardownRunnable(Proxy* aProxy)
-  : mProxy(aProxy)
+    : Runnable("dom::AsyncTeardownRunnable")
+    , mProxy(aProxy)
   {
     MOZ_ASSERT(aProxy);
   }
@@ -438,9 +439,13 @@ class LoadStartDetectionRunnable final : public Runnable,
 
 public:
   LoadStartDetectionRunnable(Proxy* aProxy, XMLHttpRequestWorker* aXHRPrivate)
-  : mWorkerPrivate(aProxy->mWorkerPrivate), mProxy(aProxy), mXHR(aProxy->mXHR),
-    mXMLHttpRequestPrivate(aXHRPrivate), mChannelId(mProxy->mInnerChannelId),
-    mReceivedLoadStart(false)
+    : Runnable("dom::LoadStartDetectionRunnable")
+    , mWorkerPrivate(aProxy->mWorkerPrivate)
+    , mProxy(aProxy)
+    , mXHR(aProxy->mXHR)
+    , mXMLHttpRequestPrivate(aXHRPrivate)
+    , mChannelId(mProxy->mInnerChannelId)
+    , mReceivedLoadStart(false)
   {
     AssertIsOnMainThread();
     mEventType.AssignWithConversion(sEventStrings[STRING_loadstart]);
