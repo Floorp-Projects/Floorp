@@ -39,8 +39,7 @@ public:
   size_t SizeOfAudioQueueInFrames() override;
 
   RefPtr<VideoDataPromise>
-  RequestVideoData(bool aSkipToNextKeyframe,
-                   const media::TimeUnit& aTimeThreshold) override;
+  RequestVideoData(const media::TimeUnit& aTimeThreshold) override;
 
   RefPtr<AudioDataPromise> RequestAudioData() override;
 

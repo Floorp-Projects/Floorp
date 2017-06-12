@@ -62,8 +62,7 @@ MediaDecoderReaderWrapper::RequestAudioData()
 }
 
 RefPtr<MediaDecoderReaderWrapper::VideoDataPromise>
-MediaDecoderReaderWrapper::RequestVideoData(bool aSkipToNextKeyframe,
-                                            media::TimeUnit aTimeThreshold)
+MediaDecoderReaderWrapper::RequestVideoData(media::TimeUnit aTimeThreshold)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   MOZ_ASSERT(!mShutdown);
@@ -75,8 +74,7 @@ MediaDecoderReaderWrapper::RequestVideoData(bool aSkipToNextKeyframe,
   int64_t startTime = StartTime().ToMicroseconds();
   return InvokeAsync(
     mReader->OwnerThread(), mReader.get(), __func__,
-    &MediaDecoderReader::RequestVideoData,
-    aSkipToNextKeyframe, aTimeThreshold)
+    &MediaDecoderReader::RequestVideoData, aTimeThreshold)
   ->Then(mOwnerThread, __func__,
          [startTime] (RefPtr<VideoData> aVideo) {
            aVideo->AdjustForStartTime(startTime);

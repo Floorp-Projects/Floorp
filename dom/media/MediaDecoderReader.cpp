@@ -255,7 +255,7 @@ public:
 
     // Make sure ResetDecode hasn't been called in the mean time.
     if (!mReader->mBaseVideoPromise.IsEmpty()) {
-      mReader->RequestVideoData(/* aSkip = */ true, mTimeThreshold);
+      mReader->RequestVideoData(mTimeThreshold);
     }
 
     return NS_OK;
@@ -291,11 +291,10 @@ private:
 };
 
 RefPtr<MediaDecoderReader::VideoDataPromise>
-MediaDecoderReader::RequestVideoData(bool aSkipToNextKeyframe,
-                                     const media::TimeUnit& aTimeThreshold)
+MediaDecoderReader::RequestVideoData(const media::TimeUnit& aTimeThreshold)
 {
   RefPtr<VideoDataPromise> p = mBaseVideoPromise.Ensure(__func__);
-  bool skip = aSkipToNextKeyframe;
+  bool skip = false;
   while (VideoQueue().GetSize() == 0 &&
          !VideoQueue().IsFinished()) {
     if (!DecodeVideoFrame(skip, aTimeThreshold)) {
