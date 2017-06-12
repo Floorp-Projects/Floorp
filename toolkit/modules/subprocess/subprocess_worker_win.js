@@ -455,7 +455,7 @@ class Process extends BaseProcess {
       args = args.map(arg => this.quoteString(arg));
     }
 
-    if (/\.bat$/i.test(command)) {
+    if (/\.(bat|cmd)$/i.test(command)) {
       command = io.comspec;
       args = ["cmd.exe", "/s/c", `"${args.join(" ")}"`];
     }
