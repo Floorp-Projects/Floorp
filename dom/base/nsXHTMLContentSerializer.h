@@ -29,7 +29,8 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
 
   NS_IMETHOD Init(uint32_t flags, uint32_t aWrapColumn,
                   const char* aCharSet, bool aIsCopying,
-                  bool aRewriteEncodingDeclaration) override;
+                  bool aRewriteEncodingDeclaration,
+                  bool* aNeedsPreformatScanning) override;
 
   NS_IMETHOD AppendText(nsIContent* aText,
                         int32_t aStartOffset,

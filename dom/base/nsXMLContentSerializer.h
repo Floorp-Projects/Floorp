@@ -34,7 +34,8 @@ class nsXMLContentSerializer : public nsIContentSerializer {
 
   NS_IMETHOD Init(uint32_t flags, uint32_t aWrapColumn,
                   const char* aCharSet, bool aIsCopying,
-                  bool aRewriteEncodingDeclaration) override;
+                  bool aRewriteEncodingDeclaration,
+                  bool* aNeedsPreformatScanning) override;
 
   NS_IMETHOD AppendText(nsIContent* aText, int32_t aStartOffset,
                         int32_t aEndOffset, nsAString& aStr) override;
@@ -65,6 +66,15 @@ class nsXMLContentSerializer : public nsIContentSerializer {
 
   NS_IMETHOD AppendDocumentStart(nsIDocument *aDocument,
                                  nsAString& aStr) override;
+
+  NS_IMETHOD ScanElementForPreformat(mozilla::dom::Element* aElement) override
+  {
+    return NS_OK;
+  }
+  NS_IMETHOD ForgetElementForPreformat(mozilla::dom::Element* aElement) override
+  {
+    return NS_OK;
+  }
 
  protected:
   virtual ~nsXMLContentSerializer();
