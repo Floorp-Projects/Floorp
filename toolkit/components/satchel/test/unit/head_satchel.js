@@ -12,8 +12,8 @@ Cu.import("resource://gre/modules/FormHistory.jsm");
 
 do_get_profile();
 
-var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties);
+var dirSvc = Cc["@mozilla.org/file/directory_service;1"]
+             .getService(Ci.nsIProperties);
 
 // Send the profile-after-change notification to the form history component to ensure
 // that it has been initialized.
@@ -22,13 +22,13 @@ var formHistoryStartup = Cc["@mozilla.org/satchel/form-history-startup;1"].
 formHistoryStartup.observe(null, "profile-after-change", null);
 
 function getDBVersion(dbfile) {
-    var ss = Cc["@mozilla.org/storage/service;1"].
+  var ss = Cc["@mozilla.org/storage/service;1"].
              getService(Ci.mozIStorageService);
-    var dbConnection = ss.openDatabase(dbfile);
-    var version = dbConnection.schemaVersion;
-    dbConnection.close();
+  var dbConnection = ss.openDatabase(dbfile);
+  var version = dbConnection.schemaVersion;
+  dbConnection.close();
 
-    return version;
+  return version;
 }
 
 const isGUID = /[A-Za-z0-9\+\/]{16}/;
@@ -36,16 +36,17 @@ const isGUID = /[A-Za-z0-9\+\/]{16}/;
 // Find form history entries.
 function searchEntries(terms, params, iter) {
   let results = [];
-  FormHistory.search(terms, params, { handleResult: result => results.push(result),
-                                      handleError(error) {
-                                        do_throw("Error occurred searching form history: " + error);
-                                      },
-                                      handleCompletion(reason) {
-                                        if (!reason) {
-                                          iter.next(results);
-                                        }
-                                      }
-                                    });
+  FormHistory.search(terms, params, {
+    handleResult: result => results.push(result),
+    handleError(error) {
+      do_throw("Error occurred searching form history: " + error);
+    },
+    handleCompletion(reason) {
+      if (!reason) {
+        iter.next(results);
+      }
+    }
+  });
 }
 
 // Count the number of entries with the given name and value, and call then(number)
@@ -60,16 +61,17 @@ function countEntries(name, value, then) {
   }
 
   let count = 0;
-  FormHistory.count(obj, { handleResult: result => count = result,
-                           handleError(error) {
-                             do_throw("Error occurred searching form history: " + error);
-                           },
-                           handleCompletion(reason) {
-                             if (!reason) {
-                               then(count);
-                             }
-                           }
-                         });
+  FormHistory.count(obj, {
+    handleResult: result => count = result,
+    handleError(error) {
+      do_throw("Error occurred searching form history: " + error);
+    },
+    handleCompletion(reason) {
+      if (!reason) {
+        then(count);
+      }
+    }
+  });
 }
 
 // Perform a single form history update and call then() when done.
@@ -87,21 +89,28 @@ function updateEntry(op, name, value, then) {
 // Add a single form history entry with the current time and call then() when done.
 function addEntry(name, value, then) {
   let now = Date.now() * 1000;
-  updateFormHistory({ op: "add", fieldname: name, value, timesUsed: 1,
-                      firstUsed: now, lastUsed: now }, then);
+  updateFormHistory({
+    op: "add",
+    fieldname: name,
+    value,
+    timesUsed: 1,
+    firstUsed: now,
+    lastUsed: now
+  }, then);
 }
 
 // Wrapper around FormHistory.update which handles errors. Calls then() when done.
 function updateFormHistory(changes, then) {
-  FormHistory.update(changes, { handleError(error) {
-                                  do_throw("Error occurred updating form history: " + error);
-                                },
-                                handleCompletion(reason) {
-                                  if (!reason) {
-                                    then();
-                                  }
-                                },
-                              });
+  FormHistory.update(changes, {
+    handleError(error) {
+      do_throw("Error occurred updating form history: " + error);
+    },
+    handleCompletion(reason) {
+      if (!reason) {
+        then();
+      }
+    },
+  });
 }
 
 /**

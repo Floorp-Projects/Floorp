@@ -163,9 +163,9 @@ const dbSchema = {
       "guid": "TEXT",
     },
     moz_deleted_formhistory: {
-        "id": "INTEGER PRIMARY KEY",
-        "timeDeleted": "INTEGER",
-        "guid": "TEXT"
+      "id": "INTEGER PRIMARY KEY",
+      "timeDeleted": "INTEGER",
+      "guid": "TEXT"
     }
   },
   indices: {
@@ -721,17 +721,16 @@ function updateFormHistoryWrite(aChanges, aCallbacks) {
 function expireOldEntriesDeletion(aExpireTime, aBeginningCount) {
   log("expireOldEntriesDeletion(" + aExpireTime + "," + aBeginningCount + ")");
 
-  FormHistory.update([
-    {
-      op: "remove",
-      lastUsedEnd: aExpireTime,
-    }], {
-      handleCompletion() {
-        expireOldEntriesVacuum(aExpireTime, aBeginningCount);
-      },
-      handleError(aError) {
-        log("expireOldEntriesDeletionFailure");
-      }
+  FormHistory.update([{
+    op: "remove",
+    lastUsedEnd: aExpireTime,
+  }], {
+    handleCompletion() {
+      expireOldEntriesVacuum(aExpireTime, aBeginningCount);
+    },
+    handleError(aError) {
+      log("expireOldEntriesDeletionFailure");
+    }
   });
 }
 
@@ -968,32 +967,32 @@ this.FormHistory = {
     let where = ""
     let boundaryCalc = "";
     if (searchString.length > 1) {
-        searchTokens = searchString.split(/\s+/);
+      searchTokens = searchString.split(/\s+/);
 
-        // build up the word boundary and prefix match bonus calculation
-        boundaryCalc = "MAX(1, :prefixWeight * (value LIKE :valuePrefix ESCAPE '/') + (";
-        // for each word, calculate word boundary weights for the SELECT clause and
-        // add word to the WHERE clause of the query
-        let tokenCalc = [];
-        let searchTokenCount = Math.min(searchTokens.length, MAX_SEARCH_TOKENS);
-        for (let i = 0; i < searchTokenCount; i++) {
-            tokenCalc.push("(value LIKE :tokenBegin" + i + " ESCAPE '/') + " +
+      // build up the word boundary and prefix match bonus calculation
+      boundaryCalc = "MAX(1, :prefixWeight * (value LIKE :valuePrefix ESCAPE '/') + (";
+      // for each word, calculate word boundary weights for the SELECT clause and
+      // add word to the WHERE clause of the query
+      let tokenCalc = [];
+      let searchTokenCount = Math.min(searchTokens.length, MAX_SEARCH_TOKENS);
+      for (let i = 0; i < searchTokenCount; i++) {
+        tokenCalc.push("(value LIKE :tokenBegin" + i + " ESCAPE '/') + " +
                             "(value LIKE :tokenBoundary" + i + " ESCAPE '/')");
-            where += "AND (value LIKE :tokenContains" + i + " ESCAPE '/') ";
-        }
-        // add more weight if we have a traditional prefix match and
-        // multiply boundary bonuses by boundary weight
-        boundaryCalc += tokenCalc.join(" + ") + ") * :boundaryWeight)";
+        where += "AND (value LIKE :tokenContains" + i + " ESCAPE '/') ";
+      }
+      // add more weight if we have a traditional prefix match and
+      // multiply boundary bonuses by boundary weight
+      boundaryCalc += tokenCalc.join(" + ") + ") * :boundaryWeight)";
     } else if (searchString.length == 1) {
-        where = "AND (value LIKE :valuePrefix ESCAPE '/') ";
-        boundaryCalc = "1";
-        delete params.prefixWeight;
-        delete params.boundaryWeight;
+      where = "AND (value LIKE :valuePrefix ESCAPE '/') ";
+      boundaryCalc = "1";
+      delete params.prefixWeight;
+      delete params.boundaryWeight;
     } else {
-        where = "";
-        boundaryCalc = "1";
-        delete params.prefixWeight;
-        delete params.boundaryWeight;
+      where = "";
+      boundaryCalc = "1";
+      delete params.prefixWeight;
+      delete params.boundaryWeight;
     }
 
     params.now = Date.now() * 1000; // convert from ms to microseconds
