@@ -8,26 +8,26 @@
 <!-- In-line this to avoid compilation. -->
 <script language="Javascript" type="text/javascript" src="chrome://talos-powers-content/content/TalosPowersContent.js"></script>
 <script language="Javascript" type="text/javascript" src="../scripts/MozillaFileLogger.js"></script>
-<script language="Javascript" type="text/javascript" src="../scripts/Profiler.js"></script>
+<script language="Javascript" type="text/javascript" src="chrome://talos-powers-content/content/TalosContentProfiler.js"></script>
 <script language="JavaScript" type="text/javascript" src="../tests/quit.js"></script>
 <script language="javascript" type="text/javascript">
 
-function painted() {
-  Profiler.pause();
-  Profiler.initFromURLQueryParams(location.search);
-  Profiler.finishStartupProfiling();
+async function painted() {
+  await TalosContentProfiler.pause();
+  await TalosContentProfiler.initFromURLQueryParams(location.search);
+  await TalosContentProfiler.finishStartupProfiling();
 
   window.removeEventListener("MozAfterPaint", painted, true);
 
-  TalosPowersContent.getStartupInfo().then(function(startupInfo) {
-    let startupTime = startupInfo['firstPaint'] - startupInfo['process'];
+  let startupInfo = await TalosPowersContent.getStartupInfo();
 
-    document.body.textContent = 'Startup time = ' + startupTime + ' ms';
-    if (window.dump) {
-      dumpLog('__start_report' + startupTime + '__end_report\n\n');
-    }
-    dumpConsoleAndQuit();
-  });
+  let startupTime = startupInfo['firstPaint'] - startupInfo['process'];
+
+  document.body.textContent = 'Startup time = ' + startupTime + ' ms';
+  if (window.dump) {
+    dumpLog('__start_report' + startupTime + '__end_report\n\n');
+  }
+  dumpConsoleAndQuit();
 }
 
 function failed() {
