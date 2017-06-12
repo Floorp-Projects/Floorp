@@ -7,7 +7,9 @@ config = {
     # checkstyle doesn't produce a package. So don't collect package metrics.
     'disable_package_metrics': True,
     'postflight_build_mach_commands': [
-        ['gradle', 'app:checkstyle'],
+        ['android',
+         'checkstyle',
+        ],
     ],
     'artifact_flag_build_variant_in_try': None, # There's no artifact equivalent.
 }
