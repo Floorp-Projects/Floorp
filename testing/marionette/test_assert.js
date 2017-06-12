@@ -136,6 +136,8 @@ add_test(function test_object() {
     Assert.throws(() => assert.object(typ), InvalidArgumentError);
   }
 
+  Assert.throws(() => assert.object(null, "custom"), /custom/);
+
   run_next_test();
 });
 
