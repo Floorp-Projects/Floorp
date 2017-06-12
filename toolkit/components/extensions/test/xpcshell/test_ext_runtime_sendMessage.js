@@ -77,3 +77,35 @@ add_task(async function tabsSendMessageReply() {
   await extension.awaitFinish("sendMessage");
   await extension.unload();
 });
+
+add_task(async function tabsSendMessageBlob() {
+  function background() {
+    browser.runtime.onMessage.addListener(msg => {
+      browser.test.assertTrue(msg.blob instanceof Blob, "Message is a blob");
+      return Promise.resolve(msg);
+    });
+
+    let childFrame = document.createElement("iframe");
+    childFrame.src = "extensionpage.html";
+    document.body.appendChild(childFrame);
+  }
+
+  function senderScript() {
+    browser.runtime.sendMessage({blob: new Blob(["hello"])}).then(response => {
+      browser.test.assertTrue(response.blob instanceof Blob, "Response is a blob");
+      browser.test.notifyPass("sendBlob");
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    files: {
+      "senderScript.js": senderScript,
+      "extensionpage.html": `<!DOCTYPE html><meta charset="utf-8"><script src="senderScript.js"></script>`,
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("sendBlob");
+  await extension.unload();
+});
