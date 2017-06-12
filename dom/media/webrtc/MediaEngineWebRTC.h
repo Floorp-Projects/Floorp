@@ -565,6 +565,7 @@ private:
   webrtc::VoiceEngine* mVoiceEngine;
   RefPtr<mozilla::AudioInput> mAudioInput;
   RefPtr<WebRTCAudioDataListener> mListener;
+  RefPtr<AudioOutputObserver> mAudioOutputObserver;
 
   // Note: shared across all microphone sources - we don't want to Terminate()
   // the VoEBase until there are no active captures
@@ -573,6 +574,7 @@ private:
   static ScopedCustomReleasePtr<webrtc::VoEExternalMedia> mVoERender;
   static ScopedCustomReleasePtr<webrtc::VoENetwork> mVoENetwork;
   static ScopedCustomReleasePtr<webrtc::VoEAudioProcessing> mVoEProcessing;
+
 
   // accessed from the GraphDriver thread except for deletion
   nsAutoPtr<AudioPacketizer<AudioDataValue, int16_t>> mPacketizer;
@@ -631,9 +633,7 @@ public:
   void EnumerateAudioDevices(dom::MediaSourceEnum,
                              nsTArray<RefPtr<MediaEngineAudioSource>>*) override;
 private:
-  ~MediaEngineWebRTC() {
-    gFarendObserver = nullptr;
-  }
+  ~MediaEngineWebRTC() {}
 
   nsCOMPtr<nsIThread> mThread;
 
