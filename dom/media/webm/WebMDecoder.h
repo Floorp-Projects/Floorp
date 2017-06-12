@@ -16,12 +16,12 @@ class MediaContainerType;
 class WebMDecoder : public MediaDecoder
 {
 public:
-  explicit WebMDecoder(MediaDecoderOwner* aOwner) : MediaDecoder(aOwner) {}
-  MediaDecoder* Clone(MediaDecoderOwner* aOwner) override {
+  explicit WebMDecoder(MediaDecoderInit& aInit) : MediaDecoder(aInit) {}
+  MediaDecoder* Clone(MediaDecoderInit& aInit) override {
     if (!IsWebMEnabled()) {
       return nullptr;
     }
-    return new WebMDecoder(aOwner);
+    return new WebMDecoder(aInit);
   }
   MediaDecoderStateMachine* CreateStateMachine() override;
 

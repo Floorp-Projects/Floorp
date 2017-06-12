@@ -46,10 +46,6 @@ static inline bool IsCurrentThread(nsIThread* aThread)
 class AbstractMediaDecoder : public nsIObserver
 {
 public:
-  // A special version of the above for the ogg decoder that is allowed to be
-  // called cross-thread.
-  virtual bool IsOggDecoderShutdown() { return false; }
-
   // Get the current MediaResource being used. Its URI will be returned
   // by currentSrc. Returns what was passed to Load(), if Load() has been called.
   virtual MediaResource* GetResource() const = 0;

@@ -375,6 +375,13 @@ public:
   void OnEventNeedingAckHandled(nsIWidget* aWidget, EventMessage aMessage);
 
   /**
+   * OnDestroyTextComposition() should be called when TextComposition instance
+   * which dispatched composition events to the owner of this instance is being
+   * destroyed.
+   */
+  void OnDestroyTextComposition();
+
+  /**
    * RequestIMEToCommitComposition() requests aWidget to commit or cancel
    * composition.  If it's handled synchronously, this returns true.
    *

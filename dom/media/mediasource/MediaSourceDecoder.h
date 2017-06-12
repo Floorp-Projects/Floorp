@@ -35,9 +35,9 @@ class MediaSource;
 class MediaSourceDecoder : public MediaDecoder
 {
 public:
-  explicit MediaSourceDecoder(dom::HTMLMediaElement* aElement);
+  explicit MediaSourceDecoder(MediaDecoderInit& aInit);
 
-  MediaDecoder* Clone(MediaDecoderOwner* aOwner) override;
+  MediaDecoder* Clone(MediaDecoderInit& aInit) override;
   MediaDecoderStateMachine* CreateStateMachine() override;
   nsresult Load(nsIStreamListener**) override;
   media::TimeIntervals GetSeekable() override;

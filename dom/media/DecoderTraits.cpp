@@ -257,7 +257,7 @@ bool DecoderTraits::ShouldHandleMediaType(const char* aMIMEType,
 static
 already_AddRefed<MediaDecoder>
 InstantiateDecoder(const MediaContainerType& aType,
-                   MediaDecoderOwner* aOwner,
+                   MediaDecoderInit& aInit,
                    DecoderDoctorDiagnostics* aDiagnostics)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -265,40 +265,40 @@ InstantiateDecoder(const MediaContainerType& aType,
 
 #ifdef MOZ_FMP4
   if (MP4Decoder::IsSupportedType(aType, aDiagnostics)) {
-    decoder = new MP4Decoder(aOwner);
+    decoder = new MP4Decoder(aInit);
     return decoder.forget();
   }
 #endif
   if (MP3Decoder::IsSupportedType(aType)) {
-    decoder = new MP3Decoder(aOwner);
+    decoder = new MP3Decoder(aInit);
     return decoder.forget();
   }
   if (ADTSDecoder::IsSupportedType(aType)) {
-    decoder = new ADTSDecoder(aOwner);
+    decoder = new ADTSDecoder(aInit);
     return decoder.forget();
   }
   if (OggDecoder::IsSupportedType(aType)) {
-    decoder = new OggDecoder(aOwner);
+    decoder = new OggDecoder(aInit);
     return decoder.forget();
   }
   if (WaveDecoder::IsSupportedType(aType)) {
-    decoder = new WaveDecoder(aOwner);
+    decoder = new WaveDecoder(aInit);
     return decoder.forget();
   }
   if (FlacDecoder::IsSupportedType(aType)) {
-    decoder = new FlacDecoder(aOwner);
+    decoder = new FlacDecoder(aInit);
     return decoder.forget();
   }
 #ifdef MOZ_ANDROID_OMX
   if (MediaDecoder::IsAndroidMediaPluginEnabled() &&
       EnsureAndroidMediaPluginHost()->FindDecoder(aType, nullptr)) {
-    decoder = new AndroidMediaDecoder(aOwner, aType);
+    decoder = new AndroidMediaDecoder(aInit, aType);
     return decoder.forget();
   }
 #endif
 
   if (WebMDecoder::IsSupportedType(aType)) {
-    decoder = new WebMDecoder(aOwner);
+    decoder = new WebMDecoder(aInit);
     return decoder.forget();
   }
 
@@ -313,7 +313,7 @@ InstantiateDecoder(const MediaContainerType& aType,
 /* static */
 already_AddRefed<MediaDecoder>
 DecoderTraits::CreateDecoder(const nsACString& aType,
-                             MediaDecoderOwner* aOwner,
+                             MediaDecoderInit& aInit,
                              DecoderDoctorDiagnostics* aDiagnostics)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -321,7 +321,7 @@ DecoderTraits::CreateDecoder(const nsACString& aType,
   if (!type) {
     return nullptr;
   }
-  return InstantiateDecoder(*type, aOwner, aDiagnostics);
+  return InstantiateDecoder(*type, aInit, aDiagnostics);
 }
 
 /* static */

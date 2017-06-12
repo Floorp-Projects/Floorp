@@ -180,9 +180,20 @@ window.onload = async function () {
   ok(true, "Tests finished");
 
   let file = FileUtils.getFile("TmpD", [`test_render_perf_${Date.now()}.json`]);
-  info("PROFILE:\n\n\n\n\nSaving profile " + file.path + "\n\n\n\n\n");
   Services.profiler.dumpProfileToFile(file.path);
   Services.profiler.StopProfiler();
+
+  info(`
+
+SAVING PROFILE: ${file.path}
+
+To upload the profile, run the following commands:
+
+  gzip ${file.path}
+  curl 'https://profile-store.appspot.com/compressed-store' --compressed --data-binary @${file.path}.gz | awk '{print "Hosted at: https://perf-html.io/public/"$1}'
+
+
+`);
 
   SimpleTest.finish();
 };

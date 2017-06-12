@@ -57,6 +57,37 @@ enum class Visibility : uint8_t;
 #undef GetCurrentTime
 #endif
 
+struct MediaDecoderInit
+{
+  MediaDecoderOwner* const mOwner;
+  const dom::AudioChannel mAudioChannel;
+  const double mVolume;
+  const bool mPreservesPitch;
+  const double mPlaybackRate;
+  const bool mMinimizePreroll;
+  const bool mHasSuspendTaint;
+  const bool mLooping;
+
+  MediaDecoderInit(MediaDecoderOwner* aOwner,
+                   dom::AudioChannel aAudioChannel,
+                   double aVolume,
+                   bool aPreservesPitch,
+                   double aPlaybackRate,
+                   bool aMinimizePreroll,
+                   bool aHasSuspendTaint,
+                   bool aLooping)
+    : mOwner(aOwner)
+    , mAudioChannel(aAudioChannel)
+    , mVolume(aVolume)
+    , mPreservesPitch(aPreservesPitch)
+    , mPlaybackRate(aPlaybackRate)
+    , mMinimizePreroll(aMinimizePreroll)
+    , mHasSuspendTaint(aHasSuspendTaint)
+    , mLooping(aLooping)
+  {
+  }
+};
+
 class MediaDecoder : public AbstractMediaDecoder
 {
 public:
@@ -117,7 +148,7 @@ public:
   // Must be called exactly once, on the main thread, during startup.
   static void InitStatics();
 
-  explicit MediaDecoder(MediaDecoderOwner* aOwner);
+  explicit MediaDecoder(MediaDecoderInit& aInit);
 
   // Return a callback object used to register with MediaResource to receive
   // notifications.
@@ -125,7 +156,7 @@ public:
 
   // Create a new decoder of the same type as this one.
   // Subclasses must implement this.
-  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) = 0;
+  virtual MediaDecoder* Clone(MediaDecoderInit& aInit) = 0;
   // Create a new state machine to run this decoder.
   // Subclasses must implement this.
   virtual MediaDecoderStateMachine* CreateStateMachine() = 0;
@@ -195,15 +226,11 @@ public:
   // Pause video playback.
   virtual void Pause();
   // Adjust the speed of the playback, optionally with pitch correction,
-  virtual void SetVolume(double aVolume);
+  void SetVolume(double aVolume);
 
-  virtual void SetPlaybackRate(double aPlaybackRate);
+  void SetPlaybackRate(double aPlaybackRate);
   void SetPreservesPitch(bool aPreservesPitch);
-
-  // Directs the decoder to not preroll extra samples until the media is
-  // played. This reduces the memory overhead of media elements that may
-  // not be played. Note that seeking also doesn't cause us start prerolling.
-  void SetMinimizePrerollUntilPlaybackStarts();
+  void SetLooping(bool aLooping);
 
   bool GetMinimizePreroll() const { return mMinimizePreroll; }
 
@@ -357,7 +384,6 @@ private:
   // to buffer, given the current download and playback rates.
   virtual bool CanPlayThrough();
 
-  void SetAudioChannel(dom::AudioChannel aChannel) { mAudioChannel = aChannel; }
   dom::AudioChannel GetAudioChannel() { return mAudioChannel; }
 
   // Called from HTMLMediaElement when owner document activity changes
@@ -516,9 +542,6 @@ protected:
   // State-watching manager.
   WatchManager<MediaDecoder> mWatchManager;
 
-  // Used by the ogg decoder to watch mStateMachineIsShutdown.
-  virtual void ShutdownBitChanged() {}
-
   double ExplicitDuration() { return mExplicitDuration.Ref().ref(); }
 
   void SetExplicitDuration(double aValue)
@@ -668,13 +691,13 @@ protected:
 
   // Be assigned from media element during the initialization and pass to
   // AudioStream Class.
-  dom::AudioChannel mAudioChannel;
+  const dom::AudioChannel mAudioChannel;
 
   // True if the decoder has been directed to minimize its preroll before
   // playback starts. After the first time playback starts, we don't attempt
   // to minimize preroll, as we assume the user is likely to keep playing,
   // or play the media again.
-  bool mMinimizePreroll;
+  const bool mMinimizePreroll;
 
   // True if we've already fired metadataloaded.
   bool mFiredMetadataLoaded;
@@ -718,8 +741,8 @@ protected:
   MediaEventListener mOnMediaNotSeekable;
 
 protected:
-  // Whether the state machine is shut down.
-  Mirror<bool> mStateMachineIsShutdown;
+  // PlaybackRate and pitch preservation status we should start at.
+  double mPlaybackRate;
 
   // Buffered range, mirrored from the reader.
   Mirror<media::TimeIntervals> mBuffered;
@@ -745,10 +768,9 @@ protected:
   // Volume of playback.  0.0 = muted. 1.0 = full volume.
   Canonical<double> mVolume;
 
-  // PlaybackRate and pitch preservation status we should start at.
-  double mPlaybackRate = 1;
-
   Canonical<bool> mPreservesPitch;
+
+  Canonical<bool> mLooping;
 
   // Media duration set explicitly by JS. At present, this is only ever present
   // for MSE.
@@ -794,6 +816,10 @@ public:
   AbstractCanonical<bool>* CanonicalPreservesPitch()
   {
     return &mPreservesPitch;
+  }
+  AbstractCanonical<bool>* CanonicalLooping()
+  {
+    return &mLooping;
   }
   AbstractCanonical<Maybe<double>>* CanonicalExplicitDuration()
   {
