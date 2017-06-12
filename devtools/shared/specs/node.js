@@ -43,6 +43,12 @@ const nodeSpec = generateActorSpec({
         value: RetVal("string")
       }
     },
+    getXPath: {
+      request: {},
+      response: {
+        value: RetVal("string")
+      }
+    },
     scrollIntoView: {
       request: {},
       response: {}

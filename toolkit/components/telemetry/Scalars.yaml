@@ -445,6 +445,19 @@ devtools.copy.full.css.selector:
     record_in_processes:
       - 'main'
 
+devtools.copy.xpath:
+  opened:
+    bug_numbers:
+      - 987877
+    description: Number of times the DevTools copy XPath has been used.
+    expires: "58"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 navigator.storage:
   estimate_count:
     bug_numbers:
