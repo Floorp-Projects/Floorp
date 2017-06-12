@@ -146,6 +146,9 @@ Telemetry.prototype = {
     copyfullcssselector: {
       scalar: "devtools.copy.full.css.selector.opened",
     },
+    copyxpath: {
+      scalar: "devtools.copy.xpath.opened",
+    },
     developertoolbar: {
       histogram: "DEVTOOLS_DEVELOPERTOOLBAR_OPENED_COUNT",
       timerHistogram: "DEVTOOLS_DEVELOPERTOOLBAR_TIME_ACTIVE_SECONDS"
