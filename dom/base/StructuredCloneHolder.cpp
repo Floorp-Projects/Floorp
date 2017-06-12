@@ -358,10 +358,6 @@ StructuredCloneHolder::ReadFullySerializableObjects(JSContext* aCx,
     return ReadStructuredCloneImageData(aCx, aReader);
   }
 
-  if (aTag == SCTAG_DOM_STRUCTURED_CLONE_HOLDER) {
-    return StructuredCloneBlob::ReadStructuredClone(aCx, aReader);
-  }
-
   if (aTag == SCTAG_DOM_WEBCRYPTO_KEY || aTag == SCTAG_DOM_URLSEARCHPARAMS) {
     nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
     if (!global) {
@@ -455,14 +451,6 @@ StructuredCloneHolder::WriteFullySerializableObjects(JSContext* aCx,
     ImageData* imageData = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(ImageData, aObj, imageData))) {
       return WriteStructuredCloneImageData(aCx, aWriter, imageData);
-    }
-  }
-
-  // See if this is a StructuredCloneBlob object.
-  {
-    StructuredCloneBlob* holder = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(StructuredCloneHolder, aObj, holder))) {
-      return holder->WriteStructuredClone(aCx, aWriter);
     }
   }
 
@@ -999,6 +987,10 @@ StructuredCloneHolder::CustomReadHandler(JSContext* aCx,
                                             parent, GetSurfaces(), aIndex);
   }
 
+  if (aTag == SCTAG_DOM_STRUCTURED_CLONE_HOLDER) {
+    return StructuredCloneBlob::ReadStructuredClone(aCx, aReader, this);
+  }
+
   if (aTag == SCTAG_DOM_WASM) {
     return ReadWasmModule(aCx, aIndex, this);
   }
@@ -1059,6 +1051,14 @@ StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
       return ImageBitmap::WriteStructuredClone(aWriter,
                                                GetSurfaces(),
                                                imageBitmap);
+    }
+  }
+
+  // See if this is a StructuredCloneBlob object.
+  {
+    StructuredCloneBlob* holder = nullptr;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(StructuredCloneHolder, aObj, holder))) {
+      return holder->WriteStructuredClone(aCx, aWriter, this);
     }
   }
 
