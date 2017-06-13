@@ -122,9 +122,12 @@ if CONFIG['GNU_CXX']:
     CXXFLAGS += [
         '-Wno-return-type',
         '-Wno-sign-compare',
+        '-Wno-unused-function',
+        '-Wno-unused-local-typedef',
     ]
     if CONFIG['CLANG_CXX']:
         CXXFLAGS += [
+            '-Wno-comma',
             '-Wno-null-conversion',
         ]
 elif CONFIG['_MSC_VER']:
