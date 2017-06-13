@@ -10,6 +10,8 @@
 #include "gc/Heap.h"
 #include "js/RootingAPI.h"
 
+class JSFatInlineString;
+
 namespace js {
 
 struct Class;
@@ -18,19 +20,47 @@ struct Class;
 // fully initialize the thing before calling any function that can potentially
 // trigger GC. This will ensure that GC tracing never sees junk values stored
 // in the partially initialized thing.
-//
-// Note that JSObject allocation must use the longer signature below that
-// includes slot, heap, and finalizer information in support of various
-// object-specific optimizations. If dynamic slots are requested they will be
-// allocated and the pointer stored directly in |NativeObject::slots_|.
+
 template <typename T, AllowGC allowGC = CanGC>
 T*
 Allocate(JSContext* cx);
 
+// Use for JSObject. A longer signature that includes additional information in
+// support of various optimizations. If dynamic slots are requested they will be
+// allocated and the pointer stored directly in |NativeObject::slots_|.
 template <typename, AllowGC allowGC = CanGC>
 JSObject*
 Allocate(JSContext* cx, gc::AllocKind kind, size_t nDynamicSlots, gc::InitialHeap heap,
          const Class* clasp);
+
+// Use for nursery-allocatable strings. Returns a value cast to the correct
+// type.
+template <typename StringT, AllowGC allowGC = CanGC>
+StringT*
+Allocate(JSContext* cx, gc::InitialHeap heap)
+{
+    MOZ_ASSERT(heap == gc::TenuredHeap);
+    return static_cast<StringT*>(js::Allocate<JSString, allowGC>(cx));
+}
+
+// Specialization for JSFatInlineString that must use a different allocation
+// type. Note that we have to explicitly specialize for both values of AllowGC
+// because partial function specialization is not allowed.
+template <>
+inline JSFatInlineString*
+Allocate<JSFatInlineString, CanGC>(JSContext* cx, gc::InitialHeap heap)
+{
+    MOZ_ASSERT(heap == gc::TenuredHeap);
+    return static_cast<JSFatInlineString*>(js::Allocate<JSFatInlineString, CanGC>(cx));
+}
+
+template <>
+inline JSFatInlineString*
+Allocate<JSFatInlineString, NoGC>(JSContext* cx, gc::InitialHeap heap)
+{
+    MOZ_ASSERT(heap == gc::TenuredHeap);
+    return static_cast<JSFatInlineString*>(js::Allocate<JSFatInlineString, NoGC>(cx));
+}
 
 } // namespace js
 
