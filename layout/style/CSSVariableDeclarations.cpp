@@ -139,9 +139,8 @@ CSSVariableDeclarations::MapRuleInfoInto(nsRuleData* aRuleData)
       nsDataHashtable<nsStringHashKey, nsString>& variables =
         aRuleData->mVariables->mVariables;
       const nsAString& aName = iter.Key();
-      if (!variables.Contains(aName)) {
-        variables.Put(aName, iter.UserData());
-      }
+      variables.LookupForAdd(aName).OrInsert(
+        [&iter] () { return iter.UserData(); });
     }
   }
 }
