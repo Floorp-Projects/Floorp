@@ -868,12 +868,33 @@ pub unsafe extern "C" fn wr_rendered_epochs_delete(pipeline_epochs: *mut WrRende
     Box::from_raw(pipeline_epochs);
 }
 
+pub struct WrThreadPool(Arc<rayon::ThreadPool>);
+
+#[no_mangle]
+pub unsafe extern "C" fn wr_thread_pool_new() -> *mut WrThreadPool {
+    let worker_config = rayon::Configuration::new()
+        .thread_name(|idx|{ format!("WebRender:Worker#{}", idx) })
+        .start_handler(|idx| {
+            register_thread_with_profiler(format!("WebRender:Worker#{}", idx));
+        });
+
+    let workers = Arc::new(rayon::ThreadPool::new(worker_config).unwrap());        
+
+    Box::into_raw(Box::new(WrThreadPool(workers)))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wr_thread_pool_delete(thread_pool: *mut WrThreadPool) {
+    Box::from_raw(thread_pool);
+}
+
 // Call MakeCurrent before this.
 #[no_mangle]
 pub extern "C" fn wr_window_new(window_id: WrWindowId,
                                 window_width: u32,
                                 window_height: u32,
                                 gl_context: *mut c_void,
+                                thread_pool: *mut WrThreadPool,
                                 enable_profiler: bool,
                                 out_api: &mut *mut WrAPI,
                                 out_renderer: &mut *mut WrRenderer)
@@ -899,13 +920,9 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
 
     println!("WebRender - OpenGL version new {}", version);
 
-    let worker_config = rayon::Configuration::new()
-        .thread_name(|idx|{ format!("WebRender:Worker#{}", idx) })
-        .start_handler(|idx| {
-            register_thread_with_profiler(format!("WebRender:Worker#{}", idx));
-        });
-
-    let workers = Arc::new(rayon::ThreadPool::new(worker_config).unwrap());
+    let workers = unsafe {
+        Arc::clone(&(*thread_pool).0)
+    };
 
     let opts = RendererOptions {
         enable_aa: true,
