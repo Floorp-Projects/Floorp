@@ -2253,7 +2253,7 @@ BrowserGlue.prototype = {
           body = win.gURLBar.trimValue(body);
         }
       } else {
-        title = bundle.GetStringFromName("tabsArrivingNotification.title");
+        title = bundle.GetStringFromName("multipleTabsArrivingNotification.title");
         const allSameDevice = URIs.every(URI => URI.clientId == URIs[0].clientId);
         const unknownDevice = allSameDevice && !deviceName;
         let tabArrivingBody;
