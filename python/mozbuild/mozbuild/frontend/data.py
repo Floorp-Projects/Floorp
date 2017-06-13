@@ -332,9 +332,6 @@ class Linkable(ContextDerived):
 
     def link_library(self, obj):
         assert isinstance(obj, BaseLibrary)
-        if isinstance(obj, SharedLibrary) and obj.variant == obj.COMPONENT:
-            raise LinkageWrongKindError(
-                'Linkable.link_library() does not take components.')
         if obj.KIND != self.KIND:
             raise LinkageWrongKindError('%s != %s' % (obj.KIND, self.KIND))
         # Linking multiple Rust libraries into an object would result in
@@ -576,8 +573,7 @@ class SharedLibrary(Library):
     }
 
     FRAMEWORK = 1
-    COMPONENT = 2
-    MAX_VARIANT = 3
+    MAX_VARIANT = 2
 
     def __init__(self, context, basename, real_name=None,
                  soname=None, variant=None, symbols_file=False):

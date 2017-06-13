@@ -110,7 +110,6 @@ MOZBUILD_VARIABLES = [
     b'HOST_LIBRARY_NAME',
     b'HOST_PROGRAM',
     b'HOST_SIMPLE_PROGRAMS',
-    b'IS_COMPONENT',
     b'JAR_MANIFEST',
     b'JAVA_JAR_TARGETS',
     b'LD_VERSION_SCRIPT',
@@ -1232,8 +1231,6 @@ class RecursiveMakeBackend(CommonBackend):
         backend_file.write('FORCE_SHARED_LIB := 1\n')
         backend_file.write('IMPORT_LIBRARY := %s\n' % libdef.import_name)
         backend_file.write('SHARED_LIBRARY := %s\n' % libdef.lib_name)
-        if libdef.variant == libdef.COMPONENT:
-            backend_file.write('IS_COMPONENT := 1\n')
         if libdef.soname:
             backend_file.write('DSO_SONAME := %s\n' % libdef.soname)
         if libdef.symbols_file:
@@ -1303,7 +1300,6 @@ class RecursiveMakeBackend(CommonBackend):
                     if isinstance(obj, SharedLibrary):
                         write_shared_and_system_libs(lib)
                 elif isinstance(obj, SharedLibrary):
-                    assert lib.variant != lib.COMPONENT
                     backend_file.write_once('SHARED_LIBS += %s/%s\n'
                                         % (relpath, lib.import_name))
             elif isinstance(obj, (Program, SimpleProgram)):
@@ -1312,7 +1308,6 @@ class RecursiveMakeBackend(CommonBackend):
                                         % (relpath, lib.import_name))
                     write_shared_and_system_libs(lib)
                 else:
-                    assert lib.variant != lib.COMPONENT
                     backend_file.write_once('SHARED_LIBS += %s/%s\n'
                                         % (relpath, lib.import_name))
             elif isinstance(obj, (HostLibrary, HostProgram, HostSimpleProgram)):
