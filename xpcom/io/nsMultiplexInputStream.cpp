@@ -54,6 +54,7 @@ public:
   NS_DECL_NSIASYNCINPUTSTREAM
 
   void AsyncWaitCompleted();
+  void AsyncWaitCanceled();
 
 private:
   ~nsMultiplexInputStream()
@@ -701,13 +702,13 @@ nsMultiplexInputStream::CloseWithStatus(nsresult aStatus)
 
 // This class is used to inform nsMultiplexInputStream that it's time to execute
 // the asyncWait callback.
-class AsyncWaitRunnable final : public Runnable
+class AsyncWaitRunnable final : public CancelableRunnable
 {
   RefPtr<nsMultiplexInputStream> mStream;
 
 public:
   explicit AsyncWaitRunnable(nsMultiplexInputStream* aStream)
-    : Runnable("AsyncWaitRunnable")
+    : CancelableRunnable("AsyncWaitRunnable")
     , mStream(aStream)
   {
     MOZ_ASSERT(aStream);
@@ -717,6 +718,12 @@ public:
   Run() override
   {
     mStream->AsyncWaitCompleted();
+    return NS_OK;
+  }
+
+  nsresult Cancel() override
+  {
+    mStream->AsyncWaitCanceled();
     return NS_OK;
   }
 };
@@ -875,6 +882,21 @@ nsMultiplexInputStream::AsyncWaitCompleted()
   }
 
   callback->OnInputStreamReady(this);
+}
+
+void
+nsMultiplexInputStream::AsyncWaitCanceled()
+{
+  // The event target for our asyncwait decided to not process our event.  Go
+  // ahead and just notify our consumer that they should stop waiting for us,
+  // but that they can't get any data.  Let's hope that our AsyncWaitRunnables
+  // are always canceled on the thread we expect them to run on!  I don't see a
+  // way of checking for that, unfortunately.
+  {
+    MutexAutoLock lock(mLock);
+    mStatus = NS_BINDING_ABORTED;
+  }
+  AsyncWaitCompleted();
 }
 
 nsresult
