@@ -656,8 +656,10 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
       continue;
     }
 
+  #ifdef A11Y_LOG
     nsIContent* containerElm = containerNode->IsElement() ?
       containerNode->AsElement() : nullptr;
+  #endif
 
     nsIFrame::RenderedText text = textFrame->GetRenderedText(0,
         UINT32_MAX, nsIFrame::TextOffsetType::OFFSETS_IN_CONTENT_TEXT,

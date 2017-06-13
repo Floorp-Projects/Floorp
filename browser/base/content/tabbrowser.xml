@@ -1445,12 +1445,41 @@
         <parameter name="aTitle"/>
         <parameter name="aOptions"/>
         <body><![CDATA[
-          if (aTitle) {
+          // If we don't have the content title yet, aTitle is a URI. Set its hostname
+          // as the label so that the tab isn't empty while the content is loading.
+          const label = aOptions && aOptions.isContentTitle
+                        ? aTitle
+                        : getHostnameWithoutWWW(aTitle, this.mURIFixup);
+
+          if (label) {
             // Don't replace the set label with the empty tab label or the URL
             // while the tab is loading.
             aTab._suppressTransientPlaceholderLabel = true;
 
-            this._setTabLabel(aTab, aTitle, aOptions);
+            this._setTabLabel(aTab, label, aOptions);
+          }
+
+          function getHostnameWithoutWWW(uri, URIFixup) {
+            // about: pages don't have hostnames, so we can bail early here.
+            if (uri.startsWith("about:")) {
+              return uri;
+            }
+
+            // Some tests pass in values that are not valid URLs, such as
+            // "example.com" with no scheme. Just show whatever was passed in
+            // until we know the page's actual title.
+            let hostname;
+            try {
+              const fixedURI = URIFixup.createFixupURI(uri, URIFixup.FIXUP_FLAG_NONE);
+              hostname = fixedURI.host;
+            } catch (e) {
+            }
+
+            if (!hostname) {
+              return uri;
+            }
+
+            return hostname.startsWith("www.") ? hostname.slice(4) : hostname;
           }
         ]]></body>
       </method>

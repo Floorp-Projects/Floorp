@@ -7,6 +7,8 @@
 
 #include "mozilla/net/PStunAddrsRequestChild.h"
 
+class nsIEventTarget;
+
 namespace mozilla {
 namespace net {
 
@@ -27,7 +29,8 @@ protected:
 class StunAddrsRequestChild final : public PStunAddrsRequestChild
 {
 public:
-  explicit StunAddrsRequestChild(StunAddrsListener* listener);
+  explicit StunAddrsRequestChild(StunAddrsListener* listener,
+                                 nsIEventTarget* mainThreadEventTarget);
 
   NS_IMETHOD_(MozExternalRefCountType) AddRef();
   NS_IMETHOD_(MozExternalRefCountType) Release();

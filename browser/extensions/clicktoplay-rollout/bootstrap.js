@@ -77,14 +77,16 @@ function defineCohort() {
       // If it's either test/control, the cohort might have changed
       // if the desired sampling has been changed.
       let testThreshold = TEST_THRESHOLD[updateChannel];
-      let testGroup = (getUserSample(false) < testThreshold);
+      let userSample = getUserSample();
 
-      if (testGroup) {
+      if (userSample < testThreshold) {
         cohort = "test";
         let defaultPrefs = new Preferences({defaultBranch: true});
         defaultPrefs.set(PREF_FLASH_STATE, Ci.nsIPluginTag.STATE_CLICKTOPLAY);
-      } else {
+      } else if (userSample >= 1.0 - testThreshold) {
         cohort = "control";
+      } else {
+        cohort = "excluded";
       }
 
       setCohort(cohort);

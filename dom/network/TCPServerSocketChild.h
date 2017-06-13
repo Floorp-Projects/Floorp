@@ -44,7 +44,8 @@ public:
   NS_IMETHOD_(MozExternalRefCountType) Release() override;
 
   TCPServerSocketChild(TCPServerSocket* aServerSocket, uint16_t aLocalPort,
-                       uint16_t aBacklog, bool aUseArrayBuffers);
+                       uint16_t aBacklog, bool aUseArrayBuffers,
+                       nsIEventTarget* aIPCEventTarget);
   ~TCPServerSocketChild();
 
   void Close();

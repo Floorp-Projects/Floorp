@@ -270,7 +270,12 @@ TCPSocket::Init()
 
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     mReadyState = TCPReadyState::Connecting;
-    mSocketBridgeChild = new TCPSocketChild(mHost, mPort);
+
+    nsCOMPtr<nsIEventTarget> target;
+    if (nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal()) {
+      target = global->EventTargetFor(TaskCategory::Other);
+    }
+    mSocketBridgeChild = new TCPSocketChild(mHost, mPort, target);
     mSocketBridgeChild->SendOpen(this, mSsl, mUseArrayBuffers);
     return NS_OK;
   }

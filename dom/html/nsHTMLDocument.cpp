@@ -531,8 +531,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
               !strcmp(aCommand, "external-resource");
   bool viewSource = !strcmp(aCommand, "view-source");
   bool asData = !strcmp(aCommand, kLoadAsData);
-  bool import = !strcmp(aCommand, "import");
-  if (!(view || viewSource || asData || import)) {
+  if (!(view || viewSource || asData)) {
     MOZ_ASSERT(false, "Bad parser command");
     return NS_ERROR_INVALID_ARG;
   }
@@ -1476,7 +1475,7 @@ nsHTMLDocument::Open(JSContext* cx,
 
   NS_ASSERTION(nsContentUtils::CanCallerAccess(static_cast<nsIDOMHTMLDocument*>(this)),
                "XOW should have caught this!");
-  if (!IsHTMLDocument() || mDisableDocWrite || !IsMasterDocument()) {
+  if (!IsHTMLDocument() || mDisableDocWrite) {
     // No calling document.open() on XHTML
     rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
@@ -1894,7 +1893,7 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
     (mWriteLevel > NS_MAX_DOCUMENT_WRITE_DEPTH || mTooDeepWriteRecursion);
   NS_ENSURE_STATE(!mTooDeepWriteRecursion);
 
-  if (!IsHTMLDocument() || mDisableDocWrite || !IsMasterDocument()) {
+  if (!IsHTMLDocument() || mDisableDocWrite) {
     // No calling document.write*() on XHTML!
 
     return NS_ERROR_DOM_INVALID_STATE_ERR;
