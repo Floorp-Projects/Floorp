@@ -218,6 +218,7 @@ TCPSocket::CreateStream()
 
   mMultiplexStream = do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIInputStream> stream = do_QueryInterface(mMultiplexStream);
 
   mMultiplexStreamCopier = do_CreateInstance("@mozilla.org/network/async-stream-copier;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -226,7 +227,7 @@ TCPSocket::CreateStream()
       do_GetService("@mozilla.org/network/socket-transport-service;1");
 
   nsCOMPtr<nsIEventTarget> target = do_QueryInterface(sts);
-  rv = mMultiplexStreamCopier->Init(mMultiplexStream,
+  rv = mMultiplexStreamCopier->Init(stream,
                                     mSocketOutputStream,
                                     target,
                                     true, /* source buffered */
@@ -611,7 +612,8 @@ TCPSocket::BufferedAmount()
   }
   if (mMultiplexStream) {
     uint64_t available = 0;
-    mMultiplexStream->Available(&available);
+    nsCOMPtr<nsIInputStream> stream(do_QueryInterface(mMultiplexStream));
+    stream->Available(&available);
     return available;
   }
   return 0;

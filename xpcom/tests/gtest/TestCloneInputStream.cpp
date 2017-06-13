@@ -116,8 +116,10 @@ TEST(CloneInputStream, NonCloneableInput_Fallback)
 
 TEST(CloneInputStream, CloneMultiplexStream)
 {
-  nsCOMPtr<nsIMultiplexInputStream> stream =
+  nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
     do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
+  ASSERT_TRUE(multiplexStream);
+  nsCOMPtr<nsIInputStream> stream(do_QueryInterface(multiplexStream));
   ASSERT_TRUE(stream);
 
   nsTArray<char> inputData;
@@ -129,7 +131,7 @@ TEST(CloneInputStream, CloneMultiplexStream)
     nsresult rv = NS_NewCStringInputStream(getter_AddRefs(base), inputString);
     ASSERT_TRUE(NS_SUCCEEDED(rv));
 
-    rv = stream->AppendStream(base);
+    rv = multiplexStream->AppendStream(base);
     ASSERT_TRUE(NS_SUCCEEDED(rv));
   }
 
@@ -156,8 +158,10 @@ TEST(CloneInputStream, CloneMultiplexStream)
 
 TEST(CloneInputStream, CloneMultiplexStreamPartial)
 {
-  nsCOMPtr<nsIMultiplexInputStream> stream =
+  nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
     do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
+  ASSERT_TRUE(multiplexStream);
+  nsCOMPtr<nsIInputStream> stream(do_QueryInterface(multiplexStream));
   ASSERT_TRUE(stream);
 
   nsTArray<char> inputData;
@@ -169,7 +173,7 @@ TEST(CloneInputStream, CloneMultiplexStreamPartial)
     nsresult rv = NS_NewCStringInputStream(getter_AddRefs(base), inputString);
     ASSERT_TRUE(NS_SUCCEEDED(rv));
 
-    rv = stream->AppendStream(base);
+    rv = multiplexStream->AppendStream(base);
     ASSERT_TRUE(NS_SUCCEEDED(rv));
   }
 
