@@ -6,38 +6,31 @@
 #ifndef nsXULTemplateBuilder_h__
 #define nsXULTemplateBuilder_h__
 
-#include "mozilla/dom/Element.h"
 #include "nsStubDocumentObserver.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIObserver.h"
+#include "nsIRDFCompositeDataSource.h"
+#include "nsIRDFContainer.h"
+#include "nsIRDFContainerUtils.h"
+#include "nsIRDFDataSource.h"
+#include "nsIRDFObserver.h"
+#include "nsIRDFService.h"
 #include "nsIXULTemplateBuilder.h"
+
 #include "nsCOMArray.h"
 #include "nsTArray.h"
 #include "nsDataHashtable.h"
+#include "nsTemplateRule.h"
+#include "nsTemplateMatch.h"
+#include "nsIXULTemplateQueryProcessor.h"
 #include "nsCycleCollectionParticipant.h"
 
 #include "mozilla/Logging.h"
 extern mozilla::LazyLogModule gXULTemplateLog;
 
+class nsIContent;
 class nsIObserverService;
 class nsIRDFCompositeDataSource;
-class nsIRDFContainerUtils;
-class nsIRDFDataSource;
-class nsIRDFService;
-class nsIScriptSecurityManager;
-class nsIXULTemplateQueryProcessor;
-class nsTemplateCondition;
-class nsTemplateRule;
-class nsTemplateMatch;
-class nsTemplateQuerySet;
-
-namespace mozilla {
-namespace dom {
-
-class XULBuilderListener;
-
-} // namespace dom
-} // namespace mozilla
-
 
 /**
  * An object that translates an RDF graph into a presentation using a
@@ -45,14 +38,13 @@ class XULBuilderListener;
  */
 class nsXULTemplateBuilder : public nsIXULTemplateBuilder,
                              public nsIObserver,
-                             public nsStubDocumentObserver,
-                             public nsWrapperCache
+                             public nsStubDocumentObserver
 {
     void CleanUp(bool aIsFinal);
     void DestroyMatchMap();
 
 public:
-    nsresult Init();
+    nsXULTemplateBuilder();
 
     nsresult InitGlobals();
 
@@ -64,58 +56,8 @@ public:
 
     // nsISupports interface
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsXULTemplateBuilder,
-                                                           nsIXULTemplateBuilder)
-
-    virtual JSObject* WrapObject(JSContext* aCx,
-                                 JS::Handle<JSObject*> aGivenProto) override;
-    Element* GetParentObject()
-    {
-      return mRoot;
-    }
-
-    Element* GetRoot()
-    {
-        return mRoot;
-    }
-    nsISupports* GetDatasource();
-    void SetDatasource(nsISupports* aDatasource, mozilla::ErrorResult& aError);
-    nsIRDFCompositeDataSource* GetDatabase()
-    {
-        return mCompDB;
-    }
-    nsIXULTemplateResult* GetRootResult()
-    {
-        return mRootResult;
-    }
-    void Rebuild(mozilla::ErrorResult& aError);
-    void Refresh(mozilla::ErrorResult& aError);
-    void AddResult(nsIXULTemplateResult* aResult, nsINode& aQueryNode,
-                   mozilla::ErrorResult& aError);
-    void RemoveResult(nsIXULTemplateResult* aResult,
-                      mozilla::ErrorResult& aError);
-    void ReplaceResult(nsIXULTemplateResult* aOldResult,
-                       nsIXULTemplateResult* aNewResult,
-                       nsINode& aQueryNode,
-                       mozilla::ErrorResult& aError);
-    void ResultBindingChanged(nsIXULTemplateResult* aResult,
-                              mozilla::ErrorResult& aError);
-    nsIXULTemplateResult* GetResultForId(const nsAString& aId,
-                                         mozilla::ErrorResult& aError);
-    virtual nsIXULTemplateResult* GetResultForContent(Element& aElement)
-    {
-        return nullptr;
-    }
-    virtual bool HasGeneratedContent(nsIRDFResource* aResource,
-                                     const nsAString& aTag,
-                                     mozilla::ErrorResult& aError)
-    {
-        return false;
-    }
-    void AddRuleFilter(nsINode& aRule, nsIXULTemplateRuleFilter* aFilter,
-                       mozilla::ErrorResult& aError);
-    void AddListener(mozilla::dom::XULBuilderListener& aListener);
-    void RemoveListener(mozilla::dom::XULBuilderListener& aListener);
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULTemplateBuilder,
+                                             nsIXULTemplateBuilder)
 
     // nsIXULTemplateBuilder interface
     NS_DECL_NSIXULTEMPLATEBUILDER
@@ -141,7 +83,7 @@ public:
     nsresult
     UpdateResult(nsIXULTemplateResult* aOldResult,
                  nsIXULTemplateResult* aNewResult,
-                 nsINode* aQueryNode);
+                 nsIDOMNode* aQueryNode);
 
     /**
      * Remove an old result and/or add a new result from a specific container.
@@ -389,7 +331,6 @@ public:
                                nsIRDFResource** aResource);
 
 protected:
-    explicit nsXULTemplateBuilder(Element* aElement);
     virtual ~nsXULTemplateBuilder();
 
     nsCOMPtr<nsISupports> mDataSource;
@@ -399,14 +340,14 @@ protected:
     /**
      * Circular reference, broken when the document is destroyed.
      */
-    nsCOMPtr<Element> mRoot;
+    nsCOMPtr<nsIContent> mRoot;
 
     /**
      * The root result, translated from the root element's ref
      */
     nsCOMPtr<nsIXULTemplateResult> mRootResult;
 
-    nsTArray<nsCOMPtr<nsIXULBuilderListener>> mListeners;
+    nsCOMArray<nsIXULBuilderListener> mListeners;
 
     /**
      * The query processor which generates results
@@ -557,8 +498,5 @@ protected:
      */
     nsIDocument* mObservedDocument;
 };
-
-nsresult NS_NewXULContentBuilder(Element* aElement,
-                                 nsIXULTemplateBuilder** aBuilder);
 
 #endif // nsXULTemplateBuilder_h__

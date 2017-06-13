@@ -17,12 +17,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'xultmpl'
 
-EXPORTS += [
-    'nsTreeRows.h',
-    'nsXULTemplateBuilder.h',
-    'nsXULTreeBuilder.h',
-]
-
 UNIFIED_SOURCES += [
     'nsContentSupportMap.cpp',
     'nsContentTestNode.cpp',

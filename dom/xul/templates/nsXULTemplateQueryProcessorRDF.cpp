@@ -34,7 +34,6 @@
 #include "nsXULTemplateQueryProcessorRDF.h"
 #include "nsXULSortService.h"
 #include "nsIDocument.h"
-#include "nsIRDFCompositeDataSource.h"
 
 //----------------------------------------------------------------------
 

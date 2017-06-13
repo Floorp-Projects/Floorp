@@ -27,7 +27,7 @@ public:
     Put(nsIContent* aContent, nsIContent* aTemplate) {
         NS_ASSERTION(!mTable.Search(aContent), "aContent already in map");
 
-        auto entry = static_cast<Entry*>(mTable.Add(aContent, mozilla::fallible));
+        auto entry = static_cast<Entry*>(mTable.Add(aContent, fallible));
 
         if (entry) {
             entry->mContent = aContent;
