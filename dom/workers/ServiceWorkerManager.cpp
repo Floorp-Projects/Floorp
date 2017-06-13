@@ -2344,11 +2344,11 @@ ServiceWorkerManager::RemoveScopeAndRegistration(ServiceWorkerRegistrationInfo* 
     return;
   }
 
-  nsCOMPtr<nsITimer> timer = data->mUpdateTimers.Get(aRegistration->mScope);
-  if (timer) {
-    timer->Cancel();
-    data->mUpdateTimers.Remove(aRegistration->mScope);
-  }
+  data->mUpdateTimers.LookupRemoveIf(aRegistration->mScope,
+    [] (nsCOMPtr<nsITimer>& aTimer) {
+      aTimer->Cancel();
+      return true;  // remove it
+    });
 
   // The registration should generally only be removed if there are no controlled
   // documents, but mControlledDocuments can contain references to potentially
@@ -3679,12 +3679,11 @@ ServiceWorkerManager::ForceUnregister(RegistrationDataPerPrincipal* aRegistratio
     queue->CancelAll();
   }
 
-  nsCOMPtr<nsITimer> timer =
-    aRegistrationData->mUpdateTimers.Get(aRegistration->mScope);
-  if (timer) {
-    timer->Cancel();
-    aRegistrationData->mUpdateTimers.Remove(aRegistration->mScope);
-  }
+  aRegistrationData->mUpdateTimers.LookupRemoveIf(aRegistration->mScope,
+    [] (nsCOMPtr<nsITimer>& aTimer) {
+      aTimer->Cancel();
+      return true;  // remove it
+    });
 
   // Since Unregister is async, it is ok to call it in an enumeration.
   Unregister(aRegistration->mPrincipal, nullptr, NS_ConvertUTF8toUTF16(aRegistration->mScope));
@@ -4250,7 +4249,7 @@ ServiceWorkerManager::ScheduleUpdateTimer(nsIPrincipal* aPrincipal,
     return;
   }
 
-  nsCOMPtr<nsITimer> timer = data->mUpdateTimers.Get(aScope);
+  nsCOMPtr<nsITimer>& timer = data->mUpdateTimers.GetOrInsert(aScope);
   if (timer) {
     // There is already a timer scheduled.  In this case just use the original
     // schedule time.  We don't want to push it out to a later time since that
@@ -4261,6 +4260,7 @@ ServiceWorkerManager::ScheduleUpdateTimer(nsIPrincipal* aPrincipal,
 
   timer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    data->mUpdateTimers.Remove(aScope); // another lookup, but very rare
     return;
   }
 
@@ -4272,10 +4272,9 @@ ServiceWorkerManager::ScheduleUpdateTimer(nsIPrincipal* aPrincipal,
   rv = timer->InitWithCallback(callback, UPDATE_DELAY_MS,
                                nsITimer::TYPE_ONE_SHOT);
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    data->mUpdateTimers.Remove(aScope); // another lookup, but very rare
     return;
   }
-
-  data->mUpdateTimers.Put(aScope, timer);
 }
 
 void
@@ -4302,11 +4301,11 @@ ServiceWorkerManager::UpdateTimerFired(nsIPrincipal* aPrincipal,
     return;
   }
 
-  nsCOMPtr<nsITimer> timer = data->mUpdateTimers.Get(aScope);
-  if (timer) {
-    timer->Cancel();
-    data->mUpdateTimers.Remove(aScope);
-  }
+  data->mUpdateTimers.LookupRemoveIf(aScope,
+    [] (nsCOMPtr<nsITimer>& aTimer) {
+      aTimer->Cancel();
+      return true;  // remove it
+    });
 
   RefPtr<ServiceWorkerRegistrationInfo> registration;
   data->mInfos.Get(aScope, getter_AddRefs(registration));
