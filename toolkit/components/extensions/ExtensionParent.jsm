@@ -144,7 +144,7 @@ let apiManager = new class extends SchemaAPIManager {
         if (sync) {
           return result;
         }
-        target.messageManager.sendAsyncMessage("Extension:SetTabAndWindowId", result);
+        target.messageManager.sendAsyncMessage("Extension:SetFrameData", result);
       }
     }
   }
@@ -282,7 +282,7 @@ GlobalManager = {
       let {tabTracker} = apiManager.global;
       Object.assign(data, tabTracker.getBrowserData(browser), additionalData);
 
-      browser.messageManager.sendAsyncMessage("Extension:InitExtensionView",
+      browser.messageManager.sendAsyncMessage("Extension:SetFrameData",
                                               data);
     }
   },

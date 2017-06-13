@@ -51,12 +51,14 @@
   width: 0;
 }
 
-.tab-label-container[textoverflow][dir=ltr]:not([pinned]) {
+.tab-label-container[textoverflow][dir=ltr]:not([pinned]),
+.tab-label-container[textoverflow]:not([dir]):not([pinned]):-moz-locale-dir(ltr) {
   direction: ltr;
   mask-image: linear-gradient(to left, transparent, black 2em);
 }
 
-.tab-label-container[textoverflow][dir=rtl]:not([pinned]) {
+.tab-label-container[textoverflow][dir=rtl]:not([pinned]),
+.tab-label-container[textoverflow]:not([dir]):not([pinned]):-moz-locale-dir(rtl) {
   direction: rtl;
   mask-image: linear-gradient(to right, transparent, black 2em);
 }

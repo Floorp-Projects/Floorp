@@ -141,7 +141,6 @@ class FontFaceSet;
 class FrameRequestCallback;
 struct FullscreenRequest;
 class ImageTracker;
-class ImportManager;
 class HTMLBodyElement;
 struct LifecycleCallbackArgs;
 class Link;
@@ -2843,18 +2842,6 @@ public:
 
   virtual nsHTMLDocument* AsHTMLDocument() { return nullptr; }
   virtual mozilla::dom::SVGDocument* AsSVGDocument() { return nullptr; }
-
-  // The root document of the import tree. If this document is not an import
-  // this will return the document itself.
-  virtual nsIDocument* MasterDocument() = 0;
-  virtual void SetMasterDocument(nsIDocument* master) = 0;
-  virtual bool IsMasterDocument() = 0;
-  virtual mozilla::dom::ImportManager* ImportManager() = 0;
-  // We keep track of the order of sub imports were added to the document.
-  virtual bool HasSubImportLink(nsINode* aLink) = 0;
-  virtual uint32_t IndexOfSubImportLink(nsINode* aLink) = 0;
-  virtual void AddSubImportLink(nsINode* aLink) = 0;
-  virtual nsINode* GetSubImportLink(uint32_t aIdx) = 0;
 
   /*
    * Given a node, get a weak reference to it and append that reference to

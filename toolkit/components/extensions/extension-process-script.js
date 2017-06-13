@@ -83,6 +83,9 @@ var ExtensionManager;
 class ExtensionGlobal {
   constructor(global) {
     this.global = global;
+    this.global.addMessageListener("Extension:SetFrameData", this);
+
+    this.frameData = null;
 
     MessageChannel.addListener(global, "Extension:Capture", this);
     MessageChannel.addListener(global, "Extension:DetectLanguage", this);
@@ -97,7 +100,27 @@ class ExtensionGlobal {
     };
   }
 
-  receiveMessage({target, messageName, recipient, data}) {
+  getFrameData(force = false) {
+    if (!this.frameData && force) {
+      this.frameData = this.global.sendSyncMessage("Extension:GetTabAndWindowId")[0];
+    }
+    return this.frameData;
+  }
+
+  receiveMessage({target, messageName, recipient, data, name}) {
+    switch (name) {
+      case "Extension:SetFrameData":
+        if (this.frameData) {
+          Object.assign(this.frameData, data);
+        } else {
+          this.frameData = data;
+        }
+        if (data.viewType && WebExtensionPolicy.isExtensionProcess) {
+          ExtensionPageChild.expectViewLoad(this.global, data.viewType);
+        }
+        return;
+    }
+
     switch (messageName) {
       case "Extension:Capture":
         return ExtensionContent.handleExtensionCapture(this.global, data.width, data.height, data.options);
@@ -138,41 +161,17 @@ DocumentManager = {
     Services.obs.addObserver(this, "tab-content-frameloader-created"); // eslint-disable-line mozilla/balanced-listeners
   },
 
-  extensionProcessInitialized: false,
-  initExtensionProcess() {
-    if (this.extensionProcessInitialized || !WebExtensionPolicy.isExtensionProcess) {
-      return;
-    }
-    this.extensionProcessInitialized = true;
-
-    for (let global of this.globals.keys()) {
-      ExtensionPageChild.init(global);
-    }
-  },
-
   // Initialize a frame script global which extension contexts may be loaded
   // into.
   initGlobal(global) {
-    // Note: {once: true} does not work as expected here.
-    global.addEventListener("unload", event => { // eslint-disable-line mozilla/balanced-listeners
-      this.uninitGlobal(global);
-    });
-
     this.globals.set(global, new ExtensionGlobal(global));
-    if (this.extensionProcessInitialized && WebExtensionPolicy.isExtensionProcess) {
-      ExtensionPageChild.init(global);
-    }
-  },
-  uninitGlobal(global) {
-    if (this.extensionProcessInitialized) {
-      ExtensionPageChild.uninit(global);
-    }
-    this.globals.delete(global);
+    // eslint-disable-next-line mozilla/balanced-listeners
+    global.addEventListener("unload", () => {
+      this.globals.delete(global);
+    });
   },
 
   initExtension(extension) {
-    this.initExtensionProcess();
-
     this.injectExtensionScripts(extension);
   },
 
@@ -383,6 +382,11 @@ ExtensionProcessScript.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.mozIExtensionProcessScript]),
 
   get wrappedJSObject() { return this; },
+
+  getFrameData(global, force) {
+    let extGlobal = DocumentManager.globals.get(global);
+    return extGlobal && extGlobal.getFrameData(force);
+  },
 
   initExtension(data, extension) {
     return ExtensionManager.initExtensionPolicy(data, extension);

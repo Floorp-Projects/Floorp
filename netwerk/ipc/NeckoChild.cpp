@@ -119,9 +119,9 @@ NeckoChild::AllocPAltDataOutputStreamChild(
         const nsCString& type,
         PHttpChannelChild* channel)
 {
-  AltDataOutputStreamChild* stream = new AltDataOutputStreamChild();
-  stream->AddIPDLReference();
-  return stream;
+  // We don't allocate here: see HttpChannelChild::OpenAlternativeOutputStream()
+  NS_NOTREACHED("AllocPAltDataOutputStreamChild should not be called");
+  return nullptr;
 }
 
 bool
@@ -173,9 +173,9 @@ NeckoChild::DeallocPCookieServiceChild(PCookieServiceChild* cs)
 PWyciwygChannelChild*
 NeckoChild::AllocPWyciwygChannelChild()
 {
-  WyciwygChannelChild *p = new WyciwygChannelChild();
-  p->AddIPDLReference();
-  return p;
+  // We don't allocate here: see nsWyciwygProtocolHandler::NewChannel2()
+  NS_NOTREACHED("AllocPWyciwygChannelChild should not be called");
+  return nullptr;
 }
 
 bool
@@ -288,7 +288,7 @@ PTCPSocketChild*
 NeckoChild::AllocPTCPSocketChild(const nsString& host,
                                  const uint16_t& port)
 {
-  TCPSocketChild* p = new TCPSocketChild(host, port);
+  TCPSocketChild* p = new TCPSocketChild(host, port, nullptr);
   p->AddIPDLReference();
   return p;
 }
