@@ -12,7 +12,7 @@
  */
 
 interface nsIEditor;
-interface XULControllers;
+interface MozControllers;
 
 [HTMLConstructor]
 interface HTMLTextAreaElement : HTMLElement {
@@ -81,7 +81,7 @@ partial interface HTMLTextAreaElement {
   // Please make sure to update this list of nsIDOMHTMLTextAreaElement changes.
 
   [Throws, ChromeOnly]
-  readonly attribute XULControllers controllers;
+  readonly attribute MozControllers controllers;
 };
 
 partial interface HTMLTextAreaElement {
