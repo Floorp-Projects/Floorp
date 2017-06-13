@@ -165,6 +165,7 @@ import android.widget.ListView;
 import android.widget.ViewFlipper;
 import org.mozilla.gecko.switchboard.AsyncConfigLoader;
 import org.mozilla.gecko.switchboard.SwitchBoard;
+import org.mozilla.gecko.widget.SplashScreen;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -242,6 +243,9 @@ public class BrowserApp extends GeckoApp
     private FirstrunAnimationContainer mFirstrunAnimationContainer;
     private HomeScreen mHomeScreen;
     private TabsPanel mTabsPanel;
+
+    private boolean showSplashScreen = false;
+    private SplashScreen splashScreen;
     /**
      * Container for the home screen implementation. This will be populated with any valid
      * home screen implementation (currently that is just the HomePager, but that will be extended
@@ -613,6 +617,7 @@ public class BrowserApp extends GeckoApp
     public void onCreate(Bundle savedInstanceState) {
         final Context appContext = getApplicationContext();
 
+        showSplashScreen = true;
         GeckoLoader.loadMozGlue(appContext);
         if (!HardwareUtils.isSupportedSystem() || !GeckoLoader.neonCompatible()) {
             // This build does not support the Android version of the device; Exit early.
@@ -2772,7 +2777,23 @@ public class BrowserApp extends GeckoApp
             if (mDynamicToolbar.isEnabled()) {
                 mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
             }
+            showSplashScreen = false;
         } else {
+            // The tab going to load is not about page. It's a web page.
+            // If showSplashScreen is true, it means the app is first launched. We want to show the SlashScreen
+            // But if GeckoThread.isRunning, the will be 0 sec for web rendering.
+            // In that case, we don't want to show the SlashScreen/
+            if (showSplashScreen && !GeckoThread.isRunning()) {
+
+                final ViewGroup main = (ViewGroup) findViewById(R.id.main_layout);
+                final View splashLayout = LayoutInflater.from(this).inflate(R.layout.splash_screen, main);
+                splashScreen = (SplashScreen) splashLayout.findViewById(R.id.splash_root);
+
+                showSplashScreen = false;
+            } else if (splashScreen != null) {
+                // Below line will be run when LOCATION_CHANGE. Which means the page load is almost completed.
+                splashScreen.hide();
+            }
             hideHomePager();
         }
     }
