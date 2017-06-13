@@ -52,6 +52,8 @@ public:
    */
   FocusTarget(nsIPresShell* aRootPresShell);
 
+  bool operator==(const FocusTarget& aRhs) const;
+
 public:
   // Whether there are keydown, keypress, or keyup event listeners
   // in the event target chain of the focused element

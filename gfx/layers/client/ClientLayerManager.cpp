@@ -812,6 +812,12 @@ ClientLayerManager::SetIsFirstPaint()
 }
 
 void
+ClientLayerManager::SetFocusTarget(const FocusTarget& aFocusTarget)
+{
+  mForwarder->SetFocusTarget(aFocusTarget);
+}
+
+void
 ClientLayerManager::ClearCachedResources(Layer* aSubtree)
 {
   if (mDestroyed) {
