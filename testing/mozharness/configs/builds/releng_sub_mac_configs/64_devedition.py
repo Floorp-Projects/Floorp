@@ -3,4 +3,8 @@ config = {
     'force_clobber': True,
     'stage_platform': 'macosx64-devedition',
     'stage_product': 'devedition',
+
+    # Enable sendchanges for bug 1372412
+    'enable_talos_sendchange': True,
+    'enable_unittest_sendchange': True,
 }
