@@ -97,7 +97,7 @@ public:
     // safe to access on owning thread.
     Context* mWeakRef;
 
-    nsCOMPtr<nsIThread> mOwningThread;
+    nsCOMPtr<nsISerialEventTarget> mOwningEventTarget;
 
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(cache::Context::ThreadsafeHandle)
   };
@@ -118,7 +118,7 @@ public:
   // will run on the QuotaManager IO thread.  Note, this Action must
   // be execute synchronously.
   static already_AddRefed<Context>
-  Create(Manager* aManager, nsIThread* aTarget,
+  Create(Manager* aManager, nsISerialEventTarget* aTarget,
          Action* aInitAction, Context* aOldContext);
 
   // Execute given action on the target once the quota manager has been
@@ -183,7 +183,7 @@ private:
     RefPtr<Action> mAction;
   };
 
-  Context(Manager* aManager, nsIThread* aTarget, Action* aInitAction);
+  Context(Manager* aManager, nsISerialEventTarget* aTarget, Action* aInitAction);
   ~Context();
   void Init(Context* aOldContext);
   void Start();
@@ -202,7 +202,7 @@ private:
   DoomTargetData();
 
   RefPtr<Manager> mManager;
-  nsCOMPtr<nsIThread> mTarget;
+  nsCOMPtr<nsISerialEventTarget> mTarget;
   RefPtr<Data> mData;
   State mState;
   bool mOrphanedData;

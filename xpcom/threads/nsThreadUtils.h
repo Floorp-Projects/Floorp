@@ -1821,8 +1821,39 @@ GetCurrentPhysicalThread();
 // thread pool will return the same virtual thread. Threads that are not
 // cooperatively scheduled will have their own unique virtual PRThread (which
 // will be equal to their physical PRThread).
+//
+// The return value of GetCurrentVirtualThread() is guaranteed not to change
+// throughout the lifetime of a thread.
+//
+// Note that the original main thread (the first one created in the process) is
+// considered as part of the pool of cooperative threads, so the return value of
+// GetCurrentVirtualThread() for this thread (throughout its lifetime, even
+// during shutdown) is the same as the return value from any other thread in the
+// cooperative pool.
 PRThread*
 GetCurrentVirtualThread();
+
+// These functions return event targets that can be used to dispatch to the
+// current or main thread. They can also be used to test if you're on those
+// threads (via IsOnCurrentThread). These functions should be used in preference
+// to the nsIThread-based NS_Get{Current,Main}Thread functions since they will
+// return more useful answers in the case of threads sharing an event loop.
+
+nsIEventTarget*
+GetCurrentThreadEventTarget();
+
+nsIEventTarget*
+GetMainThreadEventTarget();
+
+// These variants of the above functions assert that the given thread has a
+// serial event target (i.e., that it's not part of a thread pool) and returns
+// that.
+
+nsISerialEventTarget*
+GetCurrentThreadSerialEventTarget();
+
+nsISerialEventTarget*
+GetMainThreadSerialEventTarget();
 
 } // namespace mozilla
 

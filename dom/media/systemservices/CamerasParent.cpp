@@ -63,9 +63,9 @@ void InputObserver::OnDeviceChange() {
       return NS_OK;
     });
 
-  nsIThread* thread = mParent->GetBackgroundThread();
-  MOZ_ASSERT(thread != nullptr);
-  thread->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
+  nsIEventTarget* target = mParent->GetBackgroundEventTarget();
+  MOZ_ASSERT(target != nullptr);
+  target->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
 };
 
 class DeliverFrameRunnable : public ::mozilla::Runnable {
@@ -281,9 +281,9 @@ CallbackHelper::RenderFrame(uint32_t aStreamId, const webrtc::VideoFrame& aVideo
                                         aVideoFrame, properties);
   }
   MOZ_ASSERT(mParent);
-  nsIThread* thread = mParent->GetBackgroundThread();
-  MOZ_ASSERT(thread != nullptr);
-  thread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+  nsIEventTarget* target = mParent->GetBackgroundEventTarget();
+  MOZ_ASSERT(target != nullptr);
+  target->Dispatch(runnable, NS_DISPATCH_NORMAL);
   return 0;
 }
 
@@ -457,7 +457,7 @@ CamerasParent::RecvNumberOfCaptureDevices(const CaptureEngine& aCapEngine)
             return NS_OK;
           }
         });
-        self->mPBackgroundThread->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
+        self->mPBackgroundEventTarget->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
       return NS_OK;
     });
   DispatchToVideoCaptureThread(webrtc_runnable);
@@ -489,7 +489,7 @@ CamerasParent::RecvEnsureInitialized(const CaptureEngine& aCapEngine)
             return NS_OK;
           }
         });
-        self->mPBackgroundThread->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
+        self->mPBackgroundEventTarget->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
       return NS_OK;
     });
   DispatchToVideoCaptureThread(webrtc_runnable);
@@ -527,7 +527,7 @@ CamerasParent::RecvNumberOfCapabilities(const CaptureEngine& aCapEngine,
           Unused << self->SendReplyNumberOfCapabilities(num);
           return NS_OK;
         });
-      self->mPBackgroundThread->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
+      self->mPBackgroundEventTarget->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
       return NS_OK;
     });
   DispatchToVideoCaptureThread(webrtc_runnable);
@@ -578,7 +578,7 @@ CamerasParent::RecvGetCaptureCapability(const CaptureEngine& aCapEngine,
           Unused << self->SendReplyGetCaptureCapability(capCap);
           return NS_OK;
         });
-      self->mPBackgroundThread->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
+      self->mPBackgroundEventTarget->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
       return NS_OK;
     });
   DispatchToVideoCaptureThread(webrtc_runnable);
@@ -629,7 +629,7 @@ CamerasParent::RecvGetCaptureDevice(const CaptureEngine& aCapEngine,
           Unused << self->SendReplyGetCaptureDevice(name, uniqueId, scary);
           return NS_OK;
         });
-      self->mPBackgroundThread->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
+      self->mPBackgroundEventTarget->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
       return NS_OK;
     });
   DispatchToVideoCaptureThread(webrtc_runnable);
@@ -740,7 +740,7 @@ CamerasParent::RecvAllocateCaptureDevice(const CaptureEngine& aCapEngine,
               return NS_OK;
             }
           });
-        self->mPBackgroundThread->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
+        self->mPBackgroundEventTarget->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
         return NS_OK;
         });
       self->DispatchToVideoCaptureThread(webrtc_runnable);
@@ -788,7 +788,7 @@ CamerasParent::RecvReleaseCaptureDevice(const CaptureEngine& aCapEngine,
             return NS_OK;
           }
         });
-      self->mPBackgroundThread->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
+      self->mPBackgroundEventTarget->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
       return NS_OK;
     });
   DispatchToVideoCaptureThread(webrtc_runnable);
@@ -854,7 +854,7 @@ CamerasParent::RecvStartCapture(const CaptureEngine& aCapEngine,
             return NS_ERROR_FAILURE;
           }
         });
-      self->mPBackgroundThread->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
+      self->mPBackgroundEventTarget->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
       return NS_OK;
     });
   DispatchToVideoCaptureThread(webrtc_runnable);
@@ -966,8 +966,9 @@ CamerasParent::CamerasParent()
 {
   LOG(("CamerasParent: %p", this));
 
-  mPBackgroundThread = NS_GetCurrentThread();
-  MOZ_ASSERT(mPBackgroundThread != nullptr, "GetCurrentThread failed");
+  mPBackgroundEventTarget = GetCurrentThreadSerialEventTarget();
+  MOZ_ASSERT(mPBackgroundEventTarget != nullptr,
+             "GetCurrentThreadEventTarget failed");
 
   LOG(("Spinning up WebRTC Cameras Thread"));
 

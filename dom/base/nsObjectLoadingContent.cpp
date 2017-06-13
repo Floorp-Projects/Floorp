@@ -3902,6 +3902,7 @@ nsObjectLoadingContent::MayResolve(jsid aId)
 void
 nsObjectLoadingContent::GetOwnPropertyNames(JSContext* aCx,
                                             JS::AutoIdVector& /* unused */,
+                                            bool /* unused */,
                                             ErrorResult& aRv)
 {
   // Just like DoResolve, just make sure we're instantiated.  That will do

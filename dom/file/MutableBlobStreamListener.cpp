@@ -24,7 +24,7 @@ MutableBlobStreamListener::MutableBlobStreamListener(MutableBlobStorage::Mutable
   MOZ_ASSERT(aCallback);
 
   if (!mEventTarget) {
-    mEventTarget = do_GetMainThread();
+    mEventTarget = GetMainThreadEventTarget();
   }
 
   MOZ_ASSERT(mEventTarget);

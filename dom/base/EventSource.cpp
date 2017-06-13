@@ -963,6 +963,12 @@ EventSourceImpl::IsOnCurrentThread(bool* aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(bool)
+EventSourceImpl::IsOnCurrentThreadInfallible()
+{
+  return IsTargetThread();
+}
+
 nsresult
 EventSourceImpl::GetBaseURI(nsIURI** aBaseURI)
 {

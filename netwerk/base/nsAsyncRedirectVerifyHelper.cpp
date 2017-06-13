@@ -71,7 +71,7 @@ nsAsyncRedirectVerifyHelper::Init(nsIChannel* oldChan, nsIChannel* newChan,
     mOldChan           = oldChan;
     mNewChan           = newChan;
     mFlags             = flags;
-    mCallbackThread    = do_GetCurrentThread();
+    mCallbackEventTarget = GetCurrentThreadEventTarget();
 
     if (!(flags & (nsIChannelEventSink::REDIRECT_INTERNAL |
                    nsIChannelEventSink::REDIRECT_STS_UPGRADE))) {
@@ -183,9 +183,9 @@ nsAsyncRedirectVerifyHelper::ExplicitCallback(nsresult result)
     nsCOMPtr<nsIAsyncVerifyRedirectCallback>
         callback(do_QueryInterface(mOldChan));
 
-    if (!callback || !mCallbackThread) {
+    if (!callback || !mCallbackEventTarget) {
         LOG(("nsAsyncRedirectVerifyHelper::ExplicitCallback() "
-             "callback=%p mCallbackThread=%p", callback.get(), mCallbackThread.get()));
+             "callback=%p mCallbackEventTarget=%p", callback.get(), mCallbackEventTarget.get()));
         return;
     }
 
@@ -200,7 +200,7 @@ nsAsyncRedirectVerifyHelper::ExplicitCallback(nsresult result)
                    "failed creating callback event!");
         return;
     }
-    nsresult rv = mCallbackThread->Dispatch(event, NS_DISPATCH_NORMAL);
+    nsresult rv = mCallbackEventTarget->Dispatch(event, NS_DISPATCH_NORMAL);
     if (NS_FAILED(rv)) {
         NS_WARNING("nsAsyncRedirectVerifyHelper::ExplicitCallback() "
                    "failed dispatching callback event!");

@@ -1015,6 +1015,33 @@ private:
   MOZ_IMPLICIT RecordedSnapshot(std::istream &aStream);
 };
 
+class RecordedIntoLuminanceSource : public RecordedEvent {
+public:
+  RecordedIntoLuminanceSource(ReferencePtr aRefPtr, DrawTarget *aDT,
+                              LuminanceType aLuminanceType, float aOpacity)
+    : RecordedEvent(SNAPSHOT), mRefPtr(aRefPtr), mDT(aDT),
+      mLuminanceType(aLuminanceType), mOpacity(aOpacity)
+  {
+  }
+
+  virtual bool PlayEvent(Translator *aTranslator) const;
+
+  virtual void RecordToStream(std::ostream &aStream) const;
+  virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const;
+
+  virtual std::string GetName() const { return "IntoLuminanceSource"; }
+  virtual ReferencePtr GetObjectRef() const { return mRefPtr; }
+private:
+  friend class RecordedEvent;
+
+  ReferencePtr mRefPtr;
+  ReferencePtr mDT;
+  LuminanceType mLuminanceType;
+  float mOpacity;
+
+  MOZ_IMPLICIT RecordedIntoLuminanceSource(std::istream &aStream);
+};
+
 class RecordedFontData : public RecordedEvent {
 public:
 

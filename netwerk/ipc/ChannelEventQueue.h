@@ -46,7 +46,7 @@ class MainThreadChannelEvent : public ChannelEvent
   {
     MOZ_ASSERT(XRE_IsParentProcess());
 
-    return do_GetMainThread();
+    return do_AddRef(GetMainThreadEventTarget());
   }
 };
 
