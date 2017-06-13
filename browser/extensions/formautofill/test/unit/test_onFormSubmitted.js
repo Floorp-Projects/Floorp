@@ -108,7 +108,7 @@ TESTCASES.forEach(testcase => {
       let input = MOCK_DOC.getElementById(key);
       input.value = testcase.formValue[key];
     }
-    sinon.spy(FormAutofillContent, "_onFormSubmit");
+    sinon.stub(FormAutofillContent, "_onFormSubmit");
 
     FormAutofillContent.identifyAutofillFields(MOCK_DOC);
     FormAutofillContent.notify(form);
