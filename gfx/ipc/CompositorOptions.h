@@ -45,7 +45,7 @@ public:
   bool UseAPZ() const { return mUseAPZ; }
   bool UseWebRender() const { return mUseWebRender; }
 
-  bool operator==(const CompositorOptions& aOther) {
+  bool operator==(const CompositorOptions& aOther) const {
     return mUseAPZ == aOther.mUseAPZ &&
            mUseWebRender == aOther.mUseWebRender;
   }
