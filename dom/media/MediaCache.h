@@ -434,9 +434,7 @@ private:
   // Update mPrincipal given that data has been received from aPrincipal
   bool UpdatePrincipal(nsIPrincipal* aPrincipal);
 
-  // This can fail when aWhence is NS_SEEK_END and no stream length
-  // is known.
-  nsresult SeekInternal(int32_t aWhence, int64_t aOffset);
+  nsresult SeekInternal(int64_t aOffset);
   // *aBytes gets the number of bytes that were actually read. This can
   // be less than aCount. If the first byte of data is not in the cache,
   // this will block until the data is available or the stream is
