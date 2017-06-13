@@ -374,7 +374,8 @@ nsHttpTransaction::Init(uint32_t caps,
         // wrap the multiplexed input stream with a buffered input stream, so
         // that we write data in the largest chunks possible.  this is actually
         // necessary to workaround some common server bugs (see bug 137155).
-        rv = NS_NewBufferedInputStream(getter_AddRefs(mRequestStream), multi,
+        nsCOMPtr<nsIInputStream> stream(do_QueryInterface(multi));
+        rv = NS_NewBufferedInputStream(getter_AddRefs(mRequestStream), stream,
                                        nsIOService::gDefaultSegmentSize);
         if (NS_FAILED(rv)) return rv;
     } else {

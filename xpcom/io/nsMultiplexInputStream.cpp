@@ -95,7 +95,7 @@ NS_IMPL_CLASSINFO(nsMultiplexInputStream, nullptr, nsIClassInfo::THREADSAFE,
 
 NS_INTERFACE_MAP_BEGIN(nsMultiplexInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIMultiplexInputStream)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIInputStream, nsIMultiplexInputStream)
+  NS_INTERFACE_MAP_ENTRY(nsIInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream, IsSeekable())
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream,
                                      IsIPCSerializable())
@@ -322,7 +322,7 @@ nsMultiplexInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
 
   nsresult rv = NS_OK;
   ReadSegmentsState state;
-  state.mThisStream = static_cast<nsIMultiplexInputStream*>(this);
+  state.mThisStream = this;
   state.mOffset = 0;
   state.mWriter = aWriter;
   state.mClosure = aClosure;
@@ -1042,7 +1042,7 @@ nsMultiplexInputStream::Clone(nsIInputStream** aClone)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIMultiplexInputStream> clone = new nsMultiplexInputStream();
+  RefPtr<nsMultiplexInputStream> clone = new nsMultiplexInputStream();
 
   nsresult rv;
   uint32_t len = mStreams.Length();

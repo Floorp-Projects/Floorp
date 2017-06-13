@@ -231,7 +231,8 @@ FileReaderSync::ReadAsText(Blob& aBlob,
     }
   }
 
-  aRv = ConvertStream(multiplexStream, encoding.get(), aResult);
+  nsCOMPtr<nsIInputStream> multiplex(do_QueryInterface(multiplexStream));
+  aRv = ConvertStream(multiplex, encoding.get(), aResult);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
