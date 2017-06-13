@@ -100,7 +100,8 @@ Connection::Update(ConnectionType aType, bool aIsWifi, bool aDHCPGateway,
   mIsWifi = aIsWifi;
   mDHCPGateway = aDHCPGateway;
 
-  if (aNotify && previousType != aType) {
+  if (aNotify && previousType != aType &&
+      !nsContentUtils::ShouldResistFingerprinting()) {
     DispatchTrustedEvent(CHANGE_EVENT_NAME);
   }
 }
