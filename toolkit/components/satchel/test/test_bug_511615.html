@@ -79,6 +79,8 @@ function checkSelectedIndexAfterResponseTime(expectedIndex) {
   });
 }
 
+let input = $_(1, "field1");
+
 function doKeyUnprivileged(key) {
   let keyName = "DOM_VK_" + key.toUpperCase();
   let keycode, charcode, alwaysval;
@@ -126,8 +128,6 @@ function doClickWithMouseEventUnprivileged() {
   input.dispatchEvent(upEvent);
   input.dispatchEvent(ckEvent);
 }
-
-let input = $_(1, "field1");
 
 add_task(async function test_initialize() {
   await new Promise(resolve => updateFormHistory([

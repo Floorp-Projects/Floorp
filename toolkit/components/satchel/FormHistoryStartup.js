@@ -92,6 +92,7 @@ FormHistoryStartup.prototype = {
         }
 
         let mm;
+        let query = null;
         if (message.target instanceof Ci.nsIMessageListenerManager) {
           // The target is the PPMM, meaning that the parent process
           // is requesting FormHistory data on the searchbar.
@@ -110,7 +111,7 @@ FormHistoryStartup.prototype = {
             // Check that the current query is still the one we created. Our
             // query might have been canceled shortly before completing, in
             // that case we don't want to call the callback anymore.
-            if (query == this.pendingQuery) {
+            if (query === this.pendingQuery) {
               this.pendingQuery = null;
               if (!aReason) {
                 mm.sendAsyncMessage("FormHistory:AutoCompleteSearchResults",
@@ -120,8 +121,7 @@ FormHistoryStartup.prototype = {
           }
         };
 
-        let query = FormHistory.getAutoCompleteResults(searchString, params,
-                                                       processResults);
+        query = FormHistory.getAutoCompleteResults(searchString, params, processResults);
         this.pendingQuery = query;
         break;
       }
