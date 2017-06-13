@@ -31,7 +31,7 @@ public:
     {
         mDescriptor = descriptor;
         mListener = listener;
-        mThread = do_GetCurrentThread();
+        mEventTarget = GetCurrentThreadEventTarget();
         // We addref the listener here and release it in nsNotifyDoomListener
         // on the callers thread. If posting of nsNotifyDoomListener event fails
         // we leak the listener which is better than releasing it on a wrong
@@ -55,8 +55,8 @@ public:
         }
 
         if (mListener) {
-            mThread->Dispatch(new nsNotifyDoomListener(mListener, status),
-                              NS_DISPATCH_NORMAL);
+            mEventTarget->Dispatch(new nsNotifyDoomListener(mListener, status),
+                                   NS_DISPATCH_NORMAL);
             // posted event will release the reference on the correct thread
             mListener = nullptr;
         }
@@ -67,7 +67,7 @@ public:
 private:
     RefPtr<nsCacheEntryDescriptor> mDescriptor;
     nsICacheListener                *mListener;
-    nsCOMPtr<nsIThread>              mThread;
+    nsCOMPtr<nsIEventTarget>       mEventTarget;
 };
 
 

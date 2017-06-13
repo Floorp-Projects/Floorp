@@ -174,7 +174,7 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
   , mTerminated(false)
   , mInterrupted(false)
   , mTerminatedMutex("nsHtml5StreamParser mTerminatedMutex")
-  , mThread(nsHtml5Module::GetStreamParserThread())
+  , mEventTarget(nsHtml5Module::GetStreamParserThread()->SerialEventTarget())
   , mExecutorFlusher(new nsHtml5ExecutorFlusher(aExecutor))
   , mLoadFlusher(new nsHtml5LoadFlusher(aExecutor))
   , mFeedChardet(false)
@@ -186,9 +186,9 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
   , mMode(aMode)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  mFlushTimer->SetTarget(mThread);
+  mFlushTimer->SetTarget(mEventTarget);
 #ifdef DEBUG
-  mAtomTable.SetPermittedLookupThread(mThread);
+  mAtomTable.SetPermittedLookupEventTarget(mEventTarget);
 #endif
   mTokenizer->setInterner(&mAtomTable);
   mTokenizer->setEncodingDeclarationHandler(this);
@@ -980,7 +980,7 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   nsCOMPtr<nsIThreadRetargetableRequest> threadRetargetableRequest =
     do_QueryInterface(mRequest, &rv);
   if (threadRetargetableRequest) {
-    rv = threadRetargetableRequest->RetargetDeliveryTo(mThread);
+    rv = threadRetargetableRequest->RetargetDeliveryTo(mEventTarget);
   }
 
   if (NS_FAILED(rv)) {
@@ -1090,7 +1090,7 @@ nsHtml5StreamParser::OnStopRequest(nsIRequest* aRequest,
     mObserver->OnStopRequest(aRequest, aContext, status);
   }
   nsCOMPtr<nsIRunnable> stopper = new nsHtml5RequestStopper(this);
-  if (NS_FAILED(mThread->Dispatch(stopper, nsIThread::DISPATCH_NORMAL))) {
+  if (NS_FAILED(mEventTarget->Dispatch(stopper, nsIThread::DISPATCH_NORMAL))) {
     NS_WARNING("Dispatching StopRequest event failed.");
   }
   return NS_OK;
@@ -1199,7 +1199,7 @@ nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
     nsCOMPtr<nsIRunnable> dataAvailable = new nsHtml5DataAvailable(this,
                                                                    Move(data),
                                                                    totalRead);
-    if (NS_FAILED(mThread->Dispatch(dataAvailable, nsIThread::DISPATCH_NORMAL))) {
+    if (NS_FAILED(mEventTarget->Dispatch(dataAvailable, nsIThread::DISPATCH_NORMAL))) {
       NS_WARNING("Dispatching DataAvailable event failed.");
     }
     return rv;
@@ -1555,9 +1555,7 @@ nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer,
     mozilla::MutexAutoLock tokenizerAutoLock(mTokenizerMutex);
     #ifdef DEBUG
     {
-      nsCOMPtr<nsIThread> mainThread;
-      NS_GetMainThread(getter_AddRefs(mainThread));
-      mAtomTable.SetPermittedLookupThread(mainThread);
+      mAtomTable.SetPermittedLookupEventTarget(GetMainThreadSerialEventTarget());
     }
     #endif
     // In principle, the speculation mutex should be acquired here,
@@ -1626,12 +1624,12 @@ nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer,
       }
     }
     nsCOMPtr<nsIRunnable> event = new nsHtml5StreamParserContinuation(this);
-    if (NS_FAILED(mThread->Dispatch(event, nsIThread::DISPATCH_NORMAL))) {
+    if (NS_FAILED(mEventTarget->Dispatch(event, nsIThread::DISPATCH_NORMAL))) {
       NS_WARNING("Failed to dispatch nsHtml5StreamParserContinuation");
     }
     // A stream event might run before this event runs, but that's harmless.
     #ifdef DEBUG
-      mAtomTable.SetPermittedLookupThread(mThread);
+      mAtomTable.SetPermittedLookupEventTarget(mEventTarget);
     #endif
   }
 }
@@ -1641,7 +1639,7 @@ nsHtml5StreamParser::ContinueAfterFailedCharsetSwitch()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   nsCOMPtr<nsIRunnable> event = new nsHtml5StreamParserContinuation(this);
-  if (NS_FAILED(mThread->Dispatch(event, nsIThread::DISPATCH_NORMAL))) {
+  if (NS_FAILED(mEventTarget->Dispatch(event, nsIThread::DISPATCH_NORMAL))) {
     NS_WARNING("Failed to dispatch nsHtml5StreamParserContinuation");
   }
 }
@@ -1691,7 +1689,7 @@ nsHtml5StreamParser::DropTimer()
   mozilla::MutexAutoLock flushTimerLock(mFlushTimerMutex);
   if (mFlushTimer) {
     nsCOMPtr<nsIRunnable> event = new nsHtml5TimerKungFu(this);
-    if (NS_FAILED(mThread->Dispatch(event, nsIThread::DISPATCH_NORMAL))) {
+    if (NS_FAILED(mEventTarget->Dispatch(event, nsIThread::DISPATCH_NORMAL))) {
       NS_WARNING("Failed to dispatch TimerKungFu event");
     }
   }

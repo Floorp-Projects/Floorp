@@ -48,6 +48,7 @@ class nsIEventTarget;
 class nsIPrincipal;
 class nsIScriptContext;
 class nsIScriptTimeoutHandler;
+class nsISerialEventTarget;
 class nsISerializable;
 class nsIThread;
 class nsIThreadInternal;
@@ -335,7 +336,7 @@ public:
   already_AddRefed<WorkerRunnable>
   MaybeWrapAsWorkerRunnable(already_AddRefed<nsIRunnable> aRunnable);
 
-  already_AddRefed<nsIEventTarget>
+  already_AddRefed<nsISerialEventTarget>
   GetEventTarget();
 
   // May be called on any thread...
@@ -1158,8 +1159,8 @@ public:
   bool
   InterruptCallback(JSContext* aCx);
 
-  nsresult
-  IsOnCurrentThread(bool* aIsOnCurrentThread);
+  bool
+  IsOnCurrentThread();
 
   bool
   CloseInternal(JSContext* aCx)

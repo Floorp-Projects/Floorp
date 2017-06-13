@@ -27,7 +27,7 @@ namespace {
 { 0xbf4e36c8, 0x7d04, 0x4ef4, \
   { 0xbb, 0xd8, 0x11, 0x09, 0x0a, 0xdb, 0x4d, 0xf7 } }
 
-class SchedulerEventTarget final : public nsIEventTarget
+class SchedulerEventTarget final : public nsISerialEventTarget
 {
   RefPtr<SchedulerGroup> mDispatcher;
   TaskCategory mCategory;
@@ -131,7 +131,10 @@ AutoCollectVsyncTelemetry::CollectTelemetry()
 
 } // namespace
 
-NS_IMPL_ISUPPORTS(SchedulerEventTarget, SchedulerEventTarget, nsIEventTarget)
+NS_IMPL_ISUPPORTS(SchedulerEventTarget,
+                  SchedulerEventTarget,
+                  nsIEventTarget,
+                  nsISerialEventTarget)
 
 NS_IMETHODIMP
 SchedulerEventTarget::DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags)
@@ -159,6 +162,12 @@ SchedulerEventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread)
 {
   *aIsOnCurrentThread = NS_IsMainThread();
   return NS_OK;
+}
+
+NS_IMETHODIMP_(bool)
+SchedulerEventTarget::IsOnCurrentThreadInfallible()
+{
+  return NS_IsMainThread();
 }
 
 /* static */ nsresult

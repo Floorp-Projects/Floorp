@@ -1375,5 +1375,13 @@ body,
   :root[platform="linux"] .requests-list-header-button {
     font-size: 85%;
   }
+
+  .network-details-panel-toggle:dir(ltr)::before {
+    transform: rotate(90deg);
+  }
+
+  .network-details-panel-toggle:dir(rtl)::before {
+    transform: rotate(-90deg);
+  }
 }
 

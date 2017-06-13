@@ -18,6 +18,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsHtml5AtomTable.h"
 #include "nsHtml5Speculation.h"
+#include "nsISerialEventTarget.h"
 #include "nsITimer.h"
 #include "nsICharsetDetector.h"
 
@@ -211,9 +212,7 @@ class nsHtml5StreamParser : public nsICharsetDetectionObserver {
 
 #ifdef DEBUG
     bool IsParserThread() {
-      bool ret;
-      mThread->IsOnCurrentThread(&ret);
-      return ret;
+      return mEventTarget->IsOnCurrentThread();
     }
 #endif
 
@@ -518,7 +517,7 @@ class nsHtml5StreamParser : public nsICharsetDetectionObserver {
     /**
      * The thread this stream parser runs on.
      */
-    nsCOMPtr<nsIThread>           mThread;
+    nsCOMPtr<nsISerialEventTarget> mEventTarget;
     
     nsCOMPtr<nsIRunnable>         mExecutorFlusher;
     

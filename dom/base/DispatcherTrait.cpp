@@ -24,8 +24,7 @@ DispatcherTrait::Dispatch(const char* aName,
 nsIEventTarget*
 DispatcherTrait::EventTargetFor(TaskCategory aCategory) const
 {
-  nsCOMPtr<nsIEventTarget> main = do_GetMainThread();
-  return main;
+  return GetMainThreadEventTarget();
 }
 
 AbstractThread*

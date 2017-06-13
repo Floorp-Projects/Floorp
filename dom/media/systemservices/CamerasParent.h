@@ -113,7 +113,7 @@ public:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
   virtual mozilla::ipc::IPCResult RecvEnsureInitialized(const CaptureEngine&) override;
 
-  nsIThread* GetBackgroundThread() { return mPBackgroundThread; };
+  nsIEventTarget* GetBackgroundEventTarget() { return mPBackgroundEventTarget; };
   bool IsShuttingDown() { return !mChildIsAlive
                               ||  mDestroyed
                               || !mWebRTCAlive; };
@@ -151,7 +151,7 @@ protected:
   mozilla::ShmemPool mShmemPool;
 
   // PBackground parent thread
-  nsCOMPtr<nsIThread> mPBackgroundThread;
+  nsCOMPtr<nsISerialEventTarget> mPBackgroundEventTarget;
 
   // Monitors creation of the thread below
   Monitor mThreadMonitor;

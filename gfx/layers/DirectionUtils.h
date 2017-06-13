@@ -10,9 +10,7 @@
 #include "Units.h"        // for Coord, Point, and Rect types
 
 namespace mozilla {
-namespace gfx {
-
-using layers::ScrollDirection;
+namespace layers {
 
 template <typename PointOrRect>
 CoordOf<PointOrRect> GetAxisStart(ScrollDirection aDir, const PointOrRect& aValue) {
@@ -42,7 +40,7 @@ CoordOf<Rect> GetAxisLength(ScrollDirection aDir, const Rect& aValue) {
 }
 
 template <typename FromUnits, typename ToUnits>
-float GetAxisScale(ScrollDirection aDir, const ScaleFactors2D<FromUnits, ToUnits>& aValue) {
+float GetAxisScale(ScrollDirection aDir, const gfx::ScaleFactors2D<FromUnits, ToUnits>& aValue) {
   if (aDir == ScrollDirection::HORIZONTAL) {
     return aValue.xScale;
   } else {

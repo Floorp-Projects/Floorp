@@ -40,7 +40,7 @@ public:
   already_AddRefed<ChromiumCDMParent> GetChromiumCDM();
   void ChromiumCDMDestroyed(ChromiumCDMParent* aCDM);
 
-  nsCOMPtr<nsIThread> GMPThread();
+  nsCOMPtr<nsISerialEventTarget> GMPEventTarget();
 
   // GMPSharedMem
   void CheckThread() override;
@@ -111,7 +111,7 @@ private:
   nsTArray<RefPtr<GMPVideoEncoderParent>> mVideoEncoders;
   nsTArray<RefPtr<GMPDecryptorParent>> mDecryptors;
   nsTArray<RefPtr<ChromiumCDMParent>> mChromiumCDMs;
-  nsCOMPtr<nsIThread> mGMPThread;
+  nsCOMPtr<nsISerialEventTarget> mGMPEventTarget;
   RefPtr<GMPParent> mParent;
   nsCString mDisplayName;
   uint32_t mPluginId;

@@ -6,12 +6,12 @@
 
 #include "mozilla/TaskQueue.h"
 
-#include "nsIEventTarget.h"
+#include "nsISerialEventTarget.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
 
-class TaskQueue::EventTargetWrapper final : public nsIEventTarget
+class TaskQueue::EventTargetWrapper final : public nsISerialEventTarget
 {
   RefPtr<TaskQueue> mTaskQueue;
 
@@ -56,10 +56,18 @@ public:
     return NS_OK;
   }
 
+  NS_IMETHOD_(bool)
+  IsOnCurrentThreadInfallible() override
+  {
+    return mTaskQueue->mTarget->IsOnCurrentThread();
+  }
+
   NS_DECL_THREADSAFE_ISUPPORTS
 };
 
-NS_IMPL_ISUPPORTS(TaskQueue::EventTargetWrapper, nsIEventTarget)
+NS_IMPL_ISUPPORTS(TaskQueue::EventTargetWrapper,
+                  nsIEventTarget,
+                  nsISerialEventTarget)
 
 TaskQueue::TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
                      const char* aName,
@@ -201,14 +209,14 @@ TaskQueue::ImpreciseLengthForHeuristics()
 bool
 TaskQueue::IsCurrentThreadIn()
 {
-  bool in = NS_GetCurrentThread() == mRunningThread;
+  bool in = mRunningThread == GetCurrentPhysicalThread();
   return in;
 }
 
-already_AddRefed<nsIEventTarget>
+already_AddRefed<nsISerialEventTarget>
 TaskQueue::WrapAsEventTarget()
 {
-  nsCOMPtr<nsIEventTarget> ref = new EventTargetWrapper(this);
+  nsCOMPtr<nsISerialEventTarget> ref = new EventTargetWrapper(this);
   return ref.forget();
 }
 

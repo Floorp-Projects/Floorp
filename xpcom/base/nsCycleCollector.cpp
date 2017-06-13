@@ -176,6 +176,7 @@
 #include "nsIConsoleService.h"
 #include "mozilla/Attributes.h"
 #include "nsICycleCollectorListener.h"
+#include "nsISerialEventTarget.h"
 #include "nsIMemoryReporter.h"
 #include "nsIFile.h"
 #include "nsDumpUtils.h"
@@ -1263,7 +1264,7 @@ private:
   RefPtr<nsCycleCollectorLogger> mLogger;
 
 #ifdef DEBUG
-  void* mThread;
+  nsISerialEventTarget* mEventTarget;
 #endif
 
   nsCycleCollectorParams mParams;
@@ -3394,7 +3395,7 @@ nsCycleCollector::nsCycleCollector() :
   mCCJSRuntime(nullptr),
   mIncrementalPhase(IdlePhase),
 #ifdef DEBUG
-  mThread(NS_GetCurrentThread()),
+  mEventTarget(GetCurrentThreadSerialEventTarget()),
 #endif
   mWhiteNodeCount(0),
   mBeforeUnlinkCB(nullptr),
@@ -3471,10 +3472,7 @@ void
 nsCycleCollector::CheckThreadSafety()
 {
 #ifdef DEBUG
-  nsIThread* currentThread = NS_GetCurrentThread();
-  // XXXkhuey we can be called so late in shutdown that NS_GetCurrentThread
-  // returns null (after the thread manager has shut down)
-  MOZ_ASSERT(mThread == currentThread || !currentThread);
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
 #endif
 }
 

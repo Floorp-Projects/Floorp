@@ -334,7 +334,7 @@ protected:
   mutable nsTArray<MessagePortIdentifier> mPortIdentifiers;
 
 #ifdef DEBUG
-  nsCOMPtr<nsIThread> mCreationThread;
+  nsCOMPtr<nsIEventTarget> mCreationEventTarget;
 #endif
 };
 

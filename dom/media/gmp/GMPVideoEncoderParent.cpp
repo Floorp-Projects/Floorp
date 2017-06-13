@@ -83,7 +83,7 @@ void
 GMPVideoEncoderParent::Close()
 {
   LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
-  MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
+  MOZ_ASSERT(mPlugin->GMPEventTarget()->IsOnCurrentThread());
   // Consumer is done with us; we can shut down.  No more callbacks should
   // be made to mCallback.  Note: do this before Shutdown()!
   mCallback = nullptr;
@@ -108,7 +108,7 @@ GMPVideoEncoderParent::InitEncode(const GMPVideoCodec& aCodecSettings,
     return GMPGenericErr;;
   }
 
-  MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
+  MOZ_ASSERT(mPlugin->GMPEventTarget()->IsOnCurrentThread());
 
   if (!aCallback) {
     return GMPGenericErr;
@@ -134,7 +134,7 @@ GMPVideoEncoderParent::Encode(GMPUniquePtr<GMPVideoi420Frame> aInputFrame,
     return GMPGenericErr;
   }
 
-  MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
+  MOZ_ASSERT(mPlugin->GMPEventTarget()->IsOnCurrentThread());
 
   GMPUniquePtr<GMPVideoi420FrameImpl> inputFrameImpl(
     static_cast<GMPVideoi420FrameImpl*>(aInputFrame.release()));
@@ -168,7 +168,7 @@ GMPVideoEncoderParent::SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT)
     return GMPGenericErr;
   }
 
-  MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
+  MOZ_ASSERT(mPlugin->GMPEventTarget()->IsOnCurrentThread());
 
   if (!SendSetChannelParameters(aPacketLoss, aRTT)) {
     return GMPGenericErr;
@@ -186,7 +186,7 @@ GMPVideoEncoderParent::SetRates(uint32_t aNewBitRate, uint32_t aFrameRate)
     return GMPGenericErr;
   }
 
-  MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
+  MOZ_ASSERT(mPlugin->GMPEventTarget()->IsOnCurrentThread());
 
   if (!SendSetRates(aNewBitRate, aFrameRate)) {
     return GMPGenericErr;
@@ -204,7 +204,7 @@ GMPVideoEncoderParent::SetPeriodicKeyFrames(bool aEnable)
     return GMPGenericErr;
   }
 
-  MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
+  MOZ_ASSERT(mPlugin->GMPEventTarget()->IsOnCurrentThread());
 
   if (!SendSetPeriodicKeyFrames(aEnable)) {
     return GMPGenericErr;
@@ -219,7 +219,7 @@ void
 GMPVideoEncoderParent::Shutdown()
 {
   LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
-  MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
+  MOZ_ASSERT(mPlugin->GMPEventTarget()->IsOnCurrentThread());
 
   if (mShuttingDown) {
     return;

@@ -29,10 +29,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIWindowsRegKey.h"
 #include "nsUnicharUtils.h"
-#include "nsIWinTaskbar.h"
-#include "nsISupportsPrimitives.h"
 #include "nsIURLFormatter.h"
-#include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/WindowsVersion.h"
 
@@ -65,15 +62,13 @@
 #define REG_FAILED(val) \
   (val != ERROR_SUCCESS)
 
-#define NS_TASKBAR_CONTRACTID "@mozilla.org/windows-taskbar;1"
-
 #define APP_REG_NAME_BASE L"Firefox-"
 
 using mozilla::IsWin8OrLater;
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-NS_IMPL_ISUPPORTS(nsWindowsShellService, nsIWindowsShellService, nsIShellService)
+NS_IMPL_ISUPPORTS(nsWindowsShellService, nsIShellService)
 
 static nsresult
 OpenKeyForReading(HKEY aKeyRoot, const nsAString& aKeyName, HKEY* aKey)
@@ -134,78 +129,6 @@ LaunchHelper(nsAutoString& aPath)
   CloseHandle(pi.hProcess);
   CloseHandle(pi.hThread);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindowsShellService::ShortcutMaintenance()
-{
-  nsresult rv;
-
-  // XXX App ids were updated to a constant install path hash,
-  // XXX this code can be removed after a few upgrade cycles.
-
-  // Launch helper.exe so it can update the application user model ids on
-  // shortcuts in the user's taskbar and start menu. This keeps older pinned
-  // shortcuts grouped correctly after major updates. Note, we also do this
-  // through the upgrade installer script, however, this is the only place we
-  // have a chance to trap links created by users who do control the install/
-  // update process of the browser.
-
-  nsCOMPtr<nsIWinTaskbar> taskbarInfo =
-    do_GetService(NS_TASKBAR_CONTRACTID);
-  if (!taskbarInfo) // If we haven't built with win7 sdk features, this fails.
-    return NS_OK;
-
-  // Avoid if this isn't Win7+
-  bool isSupported = false;
-  taskbarInfo->GetAvailable(&isSupported);
-  if (!isSupported)
-    return NS_OK;
-
-  nsAutoString appId;
-  if (NS_FAILED(taskbarInfo->GetDefaultGroupId(appId)))
-    return NS_ERROR_UNEXPECTED;
-
-  const char* prefName = "browser.taskbar.lastgroupid";
-  nsCOMPtr<nsIPrefBranch> prefs =
-    do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (!prefs)
-    return NS_ERROR_UNEXPECTED;
-
-  nsCOMPtr<nsISupportsString> prefString;
-  rv = prefs->GetComplexValue(prefName,
-                              NS_GET_IID(nsISupportsString),
-                              getter_AddRefs(prefString));
-  if (NS_SUCCEEDED(rv)) {
-    nsAutoString version;
-    prefString->GetData(version);
-    if (!version.IsEmpty() && version.Equals(appId)) {
-      // We're all good, get out of here.
-      return NS_OK;
-    }
-  }
-  // Update the version in prefs
-  prefString =
-    do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  prefString->SetData(appId);
-  rv = prefs->SetComplexValue(prefName,
-                              NS_GET_IID(nsISupportsString),
-                              prefString);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Couldn't set last user model id!");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  nsAutoString appHelperPath;
-  if (NS_FAILED(GetHelperPath(appHelperPath)))
-    return NS_ERROR_UNEXPECTED;
-
-  appHelperPath.AppendLiteral(" /UpdateShortcutAppUserModelIds");
-
-  return LaunchHelper(appHelperPath);
 }
 
 static bool

@@ -22,8 +22,6 @@
 #include "nsIFile.h"
 #include "mozilla/MozPromise.h"
 
-class nsIThread;
-
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
 #endif
@@ -100,7 +98,7 @@ public:
   void DeleteProcess();
 
   GMPState State() const;
-  nsCOMPtr<nsIThread> GMPThread();
+  nsCOMPtr<nsISerialEventTarget> GMPEventTarget();
 
   // A GMP can either be a single instance shared across all NodeIds (like
   // in the OpenH264 case), or we can require a new plugin instance for every

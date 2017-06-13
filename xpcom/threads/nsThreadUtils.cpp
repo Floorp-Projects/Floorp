@@ -196,7 +196,7 @@ NS_DispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent)
   nsresult rv;
   nsCOMPtr<nsIRunnable> event(aEvent);
 #ifdef MOZILLA_INTERNAL_API
-  nsIThread* thread = NS_GetCurrentThread();
+  nsIEventTarget* thread = GetCurrentThreadEventTarget();
   if (!thread) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -262,7 +262,7 @@ NS_DelayedDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent, uint32
 {
   nsCOMPtr<nsIRunnable> event(aEvent);
 #ifdef MOZILLA_INTERNAL_API
-  nsIThread* thread = NS_GetCurrentThread();
+  nsIEventTarget* thread = GetCurrentThreadEventTarget();
   if (!thread) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -544,4 +544,61 @@ GetCurrentPhysicalThread()
   return PR_GetCurrentThread();
 }
 
+nsIEventTarget*
+GetCurrentThreadEventTarget()
+{
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_GetCurrentThread(getter_AddRefs(thread));
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  return thread->EventTarget();
+}
+
+nsIEventTarget*
+GetMainThreadEventTarget()
+{
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  return thread->EventTarget();
+}
+
+nsISerialEventTarget*
+GetCurrentThreadSerialEventTarget()
+{
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_GetCurrentThread(getter_AddRefs(thread));
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  return thread->SerialEventTarget();
+}
+
+nsISerialEventTarget*
+GetMainThreadSerialEventTarget()
+{
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  return thread->SerialEventTarget();
+}
+
 } // namespace mozilla
+
+bool
+nsIEventTarget::IsOnCurrentThread()
+{
+  if (mVirtualThread) {
+    return mVirtualThread == GetCurrentVirtualThread();
+  }
+  return IsOnCurrentThreadInfallible();
+}

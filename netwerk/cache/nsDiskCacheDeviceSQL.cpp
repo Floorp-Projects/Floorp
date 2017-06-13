@@ -1207,7 +1207,7 @@ nsOfflineCacheDevice::InitWithSqlite(mozIStorageService * ss)
   rv = ss->OpenDatabase(indexFile, getter_AddRefs(mDB));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mInitThread = do_GetCurrentThread();
+  mInitEventTarget = GetCurrentThreadEventTarget();
 
   mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA synchronous = OFF;"));
 
@@ -1492,14 +1492,14 @@ nsOfflineCacheDevice::Shutdown()
 
   // Close Database on the correct thread
   bool isOnCurrentThread = true;
-  if (mInitThread)
-    mInitThread->IsOnCurrentThread(&isOnCurrentThread);
+  if (mInitEventTarget)
+    isOnCurrentThread = mInitEventTarget->IsOnCurrentThread();
 
   if (!isOnCurrentThread) {
     nsCOMPtr<nsIRunnable> ev = new nsCloseDBEvent(mDB);
 
     if (ev) {
-      mInitThread->Dispatch(ev, NS_DISPATCH_NORMAL);
+      mInitEventTarget->Dispatch(ev, NS_DISPATCH_NORMAL);
     }
   }
   else {
@@ -1507,7 +1507,7 @@ nsOfflineCacheDevice::Shutdown()
   }
 
   mDB = nullptr;
-  mInitThread = nullptr;
+  mInitEventTarget = nullptr;
 
   return NS_OK;
 }

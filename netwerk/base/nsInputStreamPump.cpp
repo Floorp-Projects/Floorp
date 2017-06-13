@@ -133,7 +133,7 @@ nsInputStreamPump::EnsureWaiting()
         if (mState == STATE_STOP) {
             nsCOMPtr<nsIEventTarget> mainThread = mLabeledMainThreadTarget
                 ? mLabeledMainThreadTarget
-                : do_GetMainThread();
+                : do_AddRef(GetMainThreadEventTarget());
             if (mTargetThread != mainThread) {
                 mTargetThread = do_QueryInterface(mainThread);
             }
@@ -383,7 +383,7 @@ nsInputStreamPump::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
     if (NS_IsMainThread() && mLabeledMainThreadTarget) {
         mTargetThread = mLabeledMainThreadTarget;
     } else {
-        mTargetThread = do_GetCurrentThread();
+        mTargetThread = GetCurrentThreadEventTarget();
     }
     NS_ENSURE_STATE(mTargetThread);
 
