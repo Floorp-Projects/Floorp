@@ -99,9 +99,12 @@ using Telemetry::Common::AutoHashtable;
 using mozilla::dom::Promise;
 using mozilla::dom::AutoJSAPI;
 using mozilla::Telemetry::HangReports;
-using mozilla::Telemetry::KeyedStackCapturer;
 using mozilla::Telemetry::CombinedStacks;
 using mozilla::Telemetry::ComputeAnnotationsKey;
+
+#if defined(MOZ_GECKO_PROFILER)
+using mozilla::Telemetry::KeyedStackCapturer;
+#endif
 
 /**
  * IOInterposeObserver recording statistics of main-thread I/O during execution,
