@@ -33,7 +33,8 @@ class AudioDeviceModule : public RefCountedModule {
     kAndroidJavaAudio = 5,
     kAndroidOpenSLESAudio = 6,
     kAndroidJavaInputAndOpenSLESOutputAudio = 7,
-    kDummyAudio = 8
+    kSndioAudio = 8,
+    kDummyAudio = 9
   };
 
   enum WindowsDeviceType {

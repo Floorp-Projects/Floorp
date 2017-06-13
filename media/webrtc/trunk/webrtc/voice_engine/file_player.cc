@@ -98,7 +98,7 @@ int32_t FilePlayerImpl::Frequency() const {
     return 16000;
   } else if (_codec.plfreq == 22000) {
     return 32000;
-  } else if (_codec.plfreq == 44000) {
+  } else if (_codec.plfreq == 44100) {
     return 32000;
   } else if (_codec.plfreq == 48000) {
     return 32000;

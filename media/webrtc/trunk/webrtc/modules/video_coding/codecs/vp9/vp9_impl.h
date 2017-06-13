@@ -18,7 +18,7 @@
 #include "webrtc/modules/video_coding/codecs/vp9/include/vp9.h"
 #include "webrtc/modules/video_coding/codecs/vp9/vp9_frame_buffer_pool.h"
 
-#include "vpx/svc_context.h"
+#include "vpx/vp8cx.h"
 #include "vpx/vpx_decoder.h"
 #include "vpx/vpx_encoder.h"
 
@@ -72,6 +72,9 @@ class VP9EncoderImpl : public VP9Encoder {
   // Call encoder initialize function and set control settings.
   int InitAndSetControlSettings(const VideoCodec* inst);
 
+  // Update frame size for codec.
+  int UpdateCodecFrameSize(const VideoFrame& input_image);
+
   void PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
                              const vpx_codec_cx_pkt& pkt,
                              uint32_t timestamp);
@@ -113,7 +116,7 @@ class VP9EncoderImpl : public VP9Encoder {
   vpx_codec_ctx_t* encoder_;
   vpx_codec_enc_cfg_t* config_;
   vpx_image_t* raw_;
-  SvcInternal_t svc_internal_;
+  vpx_svc_extra_cfg_t svc_params_;
   const VideoFrame* input_image_;
   GofInfoVP9 gof_;       // Contains each frame's temporal information for
                          // non-flexible mode.
@@ -121,6 +124,7 @@ class VP9EncoderImpl : public VP9Encoder {
   size_t frames_since_kf_;
   uint8_t num_temporal_layers_;
   uint8_t num_spatial_layers_;
+  uint8_t num_cores_;
 
   // Used for flexible mode.
   bool is_flexible_mode_;
@@ -156,6 +160,11 @@ class VP9DecoderImpl : public VP9Decoder {
                   uint32_t timestamp,
                   int64_t ntp_time_ms);
 
+#ifndef USE_WRAPPED_I420_BUFFER
+  // Temporarily keep VideoFrame in a separate buffer
+  // Once we debug WrappedI420VideoFrame usage, we can get rid of this
+  VideoFrame decoded_image_;
+#endif
   // Memory pool used to share buffers between libvpx and webrtc.
   Vp9FrameBufferPool frame_buffer_pool_;
   DecodedImageCallback* decode_complete_callback_;

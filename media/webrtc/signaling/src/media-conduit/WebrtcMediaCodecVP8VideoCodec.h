@@ -128,8 +128,6 @@ public:
 
   virtual int32_t Release() override;
 
-  virtual int32_t Reset() override;
-
 private:
   void DecodeFrame(EncodedFrame* frame);
   void RunCallback();

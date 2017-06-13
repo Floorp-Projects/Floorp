@@ -30,8 +30,16 @@ bool SequencedTaskCheckerImpl::CalledSequentially() const {
 #if defined(WEBRTC_MAC)
   // If we're not running on a TaskQueue, use the system dispatch queue
   // label as an identifier.
-  if (current_queue == nullptr)
+  if (current_queue == nullptr) {
+#ifdef DISPATCH_CURRENT_QUEUE_LABEL
+    // defined in 10.9
     current_queue = dispatch_queue_get_label(DISPATCH_CURRENT_QUEUE_LABEL);
+#else
+    // MacOS 10.9 or less; not available >10.9
+    dispatch_queue_t currentQueue = dispatch_get_current_queue();
+    current_queue = dispatch_queue_get_label(currentQueue);
+#endif
+  }
 #endif
   CritScope scoped_lock(&lock_);
   if (!attached_) {  // true if previously detached.

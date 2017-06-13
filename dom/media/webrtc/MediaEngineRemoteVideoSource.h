@@ -32,9 +32,6 @@
 #include "MediaEngineWrapper.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 
-// WebRTC library includes follow
-#include "webrtc/common.h"
-
 // Camera Access via IPC
 #include "CamerasChild.h"
 

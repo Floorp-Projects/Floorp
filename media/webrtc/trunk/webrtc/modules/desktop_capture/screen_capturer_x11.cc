@@ -52,6 +52,7 @@ class ScreenCapturerLinux : public DesktopCapturer,
 
   // DesktopCapturer interface.
   void Start(Callback* delegate) override;
+  void Stop() override;
   void CaptureFrame() override;
   bool GetSourceList(SourceList* sources) override;
   bool SelectSource(SourceId id) override;
@@ -222,6 +223,10 @@ void ScreenCapturerLinux::Start(Callback* callback) {
   RTC_DCHECK(callback);
 
   callback_ = callback;
+}
+
+void ScreenCapturerLinux::Stop() {
+  callback_ = NULL;
 }
 
 void ScreenCapturerLinux::CaptureFrame() {
@@ -412,7 +417,7 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawScreenCapturer(
     return nullptr;
   }
 
-  return capturer;
+  return std::unique_ptr<DesktopCapturer>(capturer.release());
 }
 
 }  // namespace webrtc

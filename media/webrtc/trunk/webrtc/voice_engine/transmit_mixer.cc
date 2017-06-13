@@ -1037,6 +1037,8 @@ bool TransmitMixer::IsRecordingMic()
     return _fileRecording;
 }
 
+// Note that if drift compensation is done here, a buffering stage will be
+// needed and this will need to switch to non-fixed resamples.
 void TransmitMixer::GenerateAudioFrame(const int16_t* audio,
                                        size_t samples_per_channel,
                                        size_t num_channels,

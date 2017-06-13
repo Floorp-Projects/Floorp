@@ -40,11 +40,12 @@ class MediaOptimization {
   // Informs media optimization of initial encoding state.
   // TODO(perkj): Deprecate SetEncodingData once its not used for stats in
   // VieEncoder.
-  void SetEncodingData(int32_t max_bit_rate,
-                       uint32_t bit_rate,
+  void SetEncodingData(int32_t max_bit_rate, // bps
+                       uint32_t bit_rate, // bps
                        uint16_t width,
                        uint16_t height,
-                       uint32_t frame_rate,
+                       uint32_t frame_rate, // in fps*1000
+                       uint8_t divisor,
                        int num_temporal_layers,
                        int32_t mtu);
 
@@ -59,6 +60,9 @@ class MediaOptimization {
   // TODO(perkj): Deprecate SetEncodingData once its not used for stats in
   // VieEncoder.
   int32_t UpdateWithEncodedData(const EncodedImage& encoded_image);
+
+  // Informs Media Optimization of CPU Load state
+  void SetCPULoadState(CPULoadState state);
 
   // InputFrameRate 0 = no frame rate estimate available.
   uint32_t InputFrameRate();
@@ -87,11 +91,12 @@ class MediaOptimization {
   // changes the state of |video_suspended_| accordingly.
   void CheckSuspendConditions() EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
 
-  void SetEncodingDataInternal(int32_t max_bit_rate,
-                               uint32_t frame_rate,
-                               uint32_t bit_rate,
+  void SetEncodingDataInternal(int32_t max_bit_rate, // bps
+                               uint32_t bit_rate, // bps
                                uint16_t width,
                                uint16_t height,
+                               uint32_t frame_rate, // in fps*1000
+                               uint8_t  divisor,
                                int num_temporal_layers,
                                int32_t mtu)
       EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
@@ -107,6 +112,8 @@ class MediaOptimization {
   int32_t max_bit_rate_ GUARDED_BY(crit_sect_);
   uint16_t codec_width_ GUARDED_BY(crit_sect_);
   uint16_t codec_height_ GUARDED_BY(crit_sect_);
+  uint16_t min_width_ GUARDED_BY(crit_sect_);
+  uint16_t min_height_  GUARDED_BY(crit_sect_);
   float user_frame_rate_ GUARDED_BY(crit_sect_);
   std::unique_ptr<FrameDropper> frame_dropper_ GUARDED_BY(crit_sect_);
   uint32_t send_statistics_[4] GUARDED_BY(crit_sect_);
@@ -119,6 +126,7 @@ class MediaOptimization {
   uint32_t avg_sent_bit_rate_bps_ GUARDED_BY(crit_sect_);
   uint32_t avg_sent_framerate_ GUARDED_BY(crit_sect_);
   int num_layers_ GUARDED_BY(crit_sect_);
+  CPULoadState loadstate_ GUARDED_BY(crit_sect_);
 };
 }  // namespace media_optimization
 }  // namespace webrtc

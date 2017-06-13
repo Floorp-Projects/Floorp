@@ -8,11 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
-
-#include "webrtc/modules/audio_processing/beamformer/covariance_matrix_generator.h"
+#endif
 
 #include <cmath>
+
+#include "webrtc/modules/audio_processing/beamformer/covariance_matrix_generator.h"
 
 namespace webrtc {
 namespace {

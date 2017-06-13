@@ -127,6 +127,8 @@ void VCMCodecDataBase::Codec(VideoCodecType codec_type, VideoCodec* settings) {
       settings->maxFramerate = VCM_DEFAULT_FRAME_RATE;
       settings->width = VCM_DEFAULT_CODEC_WIDTH;
       settings->height = VCM_DEFAULT_CODEC_HEIGHT;
+      // consider using 2 to avoid deal with 'odd' downscales
+      settings->resolution_divisor = 1; // may not actually be needed
       settings->numberOfSimulcastStreams = 0;
       settings->qpMax = 56;
       *(settings->VP8()) = VideoEncoder::GetDefaultVp8Settings();
@@ -142,6 +144,8 @@ void VCMCodecDataBase::Codec(VideoCodecType codec_type, VideoCodec* settings) {
       settings->maxFramerate = VCM_DEFAULT_FRAME_RATE;
       settings->width = VCM_DEFAULT_CODEC_WIDTH;
       settings->height = VCM_DEFAULT_CODEC_HEIGHT;
+      // consider using 2 to avoid deal with 'odd' downscales
+      settings->resolution_divisor = 1; // may not actually be needed
       settings->numberOfSimulcastStreams = 0;
       settings->qpMax = 56;
       *(settings->VP9()) = VideoEncoder::GetDefaultVp9Settings();
@@ -157,6 +161,8 @@ void VCMCodecDataBase::Codec(VideoCodecType codec_type, VideoCodec* settings) {
       settings->maxFramerate = VCM_DEFAULT_FRAME_RATE;
       settings->width = VCM_DEFAULT_CODEC_WIDTH;
       settings->height = VCM_DEFAULT_CODEC_HEIGHT;
+      // consider using 2 to avoid deal with 'odd' downscales
+      settings->resolution_divisor = 1; // may not actually be needed
       settings->numberOfSimulcastStreams = 0;
       settings->qpMax = 56;
       *(settings->H264()) = VideoEncoder::GetDefaultH264Settings();
@@ -175,6 +181,8 @@ void VCMCodecDataBase::Codec(VideoCodecType codec_type, VideoCodec* settings) {
       settings->width = VCM_DEFAULT_CODEC_WIDTH;
       settings->height = VCM_DEFAULT_CODEC_HEIGHT;
       settings->minBitrate = VCM_MIN_BITRATE;
+      // consider using 2 to avoid deal with 'odd' downscales
+      settings->resolution_divisor = 1; // may not actually be needed
       settings->numberOfSimulcastStreams = 0;
       return;
     case kVideoCodecRED:
@@ -318,6 +326,7 @@ bool VCMCodecDataBase::RequiresEncoderReset(const VideoCodec& new_send_codec) {
       new_send_codec.plType != send_codec_.plType ||
       new_send_codec.width != send_codec_.width ||
       new_send_codec.height != send_codec_.height ||
+      new_send_codec.resolution_divisor != send_codec_.resolution_divisor ||
       new_send_codec.maxBitrate != send_codec_.maxBitrate ||
       new_send_codec.minBitrate != send_codec_.minBitrate ||
       new_send_codec.qpMax != send_codec_.qpMax ||

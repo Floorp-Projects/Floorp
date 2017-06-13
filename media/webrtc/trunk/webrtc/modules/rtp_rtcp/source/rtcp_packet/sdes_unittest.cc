@@ -95,12 +95,12 @@ TEST(RtcpPacketSdesTest, CreateAndParseCnameItemWithEmptyString) {
 }
 
 TEST(RtcpPacketSdesTest, ParseSkipsNonCNameField) {
-  const char kName[] = "abc";
+  const uint8_t kName[] = "abc";
   const std::string kCname = "de";
   const uint8_t kValidPacket[] = {0x81,  202, 0x00, 0x04,
                                   0x12, 0x34, 0x56, 0x78,
                                   kNameTag,  3, kName[0],  kName[1], kName[2],
-                                  kCnameTag, 2, kCname[0], kCname[1],
+                                  kCnameTag, 2, (uint8_t)kCname[0], (uint8_t)kCname[1],
                                   kTerminatorTag, kPadding, kPadding};
   // Sanity checks packet was assembled correctly.
   ASSERT_EQ(0u, sizeof(kValidPacket) % 4);
@@ -115,8 +115,8 @@ TEST(RtcpPacketSdesTest, ParseSkipsNonCNameField) {
 }
 
 TEST(RtcpPacketSdesTest, ParseSkipsChunksWithoutCName) {
-  const char kName[] = "ab";
-  const char kEmail[] = "de";
+  const uint8_t kName[] = "ab";
+  const uint8_t kEmail[] = "de";
   const std::string kCname = "def";
   const uint8_t kPacket[] = {0x82,  202, 0x00, 0x07,
       0x12, 0x34, 0x56, 0x78,  // 1st chunk.
@@ -124,7 +124,7 @@ TEST(RtcpPacketSdesTest, ParseSkipsChunksWithoutCName) {
       kEmailTag, 2, kEmail[0], kEmail[1],
       kTerminatorTag, kPadding, kPadding,
       0x23, 0x45, 0x67, 0x89,  // 2nd chunk.
-      kCnameTag, 3, kCname[0], kCname[1], kCname[2],
+      kCnameTag, 3, (uint8_t)kCname[0], (uint8_t)kCname[1], (uint8_t)kCname[2],
       kTerminatorTag, kPadding, kPadding};
   // Sanity checks packet was assembled correctly.
   ASSERT_EQ(0u, sizeof(kPacket) % 4);
@@ -138,8 +138,8 @@ TEST(RtcpPacketSdesTest, ParseSkipsChunksWithoutCName) {
 }
 
 TEST(RtcpPacketSdesTest, ParseFailsWithoutChunkItemTerminator) {
-  const char kName[] = "abc";
-  const char kCname[] = "d";
+  const uint8_t kName[] = "abc";
+  const uint8_t kCname[] = "d";
   // No place for next chunk item.
   const uint8_t kInvalidPacket[] = {0x81,  202, 0x00, 0x03,
                                     0x12, 0x34, 0x56, 0x78,
@@ -154,8 +154,8 @@ TEST(RtcpPacketSdesTest, ParseFailsWithoutChunkItemTerminator) {
 }
 
 TEST(RtcpPacketSdesTest, ParseFailsWithDamagedChunkItem) {
-  const char kName[] = "ab";
-  const char kCname[] = "d";
+  const uint8_t kName[] = "ab";
+  const uint8_t kCname[] = "d";
   // Next chunk item has non-terminator type, but not the size.
   const uint8_t kInvalidPacket[] = {0x81,  202, 0x00, 0x03,
                                     0x12, 0x34, 0x56, 0x78,
@@ -171,8 +171,8 @@ TEST(RtcpPacketSdesTest, ParseFailsWithDamagedChunkItem) {
 }
 
 TEST(RtcpPacketSdesTest, ParseFailsWithTooLongChunkItem) {
-  const char kName[] = "abc";
-  const char kCname[] = "d";
+  const uint8_t kName[] = "abc";
+  const uint8_t kCname[] = "d";
   // Last chunk item has length that goes beyond the buffer end.
   const uint8_t kInvalidPacket[] = {0x81,  202, 0x00, 0x03,
                                     0x12, 0x34, 0x56, 0x78,
@@ -187,8 +187,8 @@ TEST(RtcpPacketSdesTest, ParseFailsWithTooLongChunkItem) {
 }
 
 TEST(RtcpPacketSdesTest, ParseFailsWithTwoCNames) {
-  const char kCname1[] = "a";
-  const char kCname2[] = "de";
+  const uint8_t kCname1[] = "a";
+  const uint8_t kCname2[] = "de";
   const uint8_t kInvalidPacket[] = {0x81,  202, 0x00, 0x03,
                                     0x12, 0x34, 0x56, 0x78,
                                     kCnameTag, 1, kCname1[0],
@@ -203,8 +203,8 @@ TEST(RtcpPacketSdesTest, ParseFailsWithTwoCNames) {
 }
 
 TEST(RtcpPacketSdesTest, ParseFailsWithTooLittleSpaceForNextChunk) {
-  const char kCname[] = "a";
-  const char kEmail[] = "de";
+  const uint8_t kCname[] = "a";
+  const uint8_t kEmail[] = "de";
   // Two chunks are promised in the header, but no place for the second chunk.
   const uint8_t kInvalidPacket[] = {0x82,  202, 0x00, 0x04,
                                     0x12, 0x34, 0x56, 0x78,  // 1st chunk.

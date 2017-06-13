@@ -41,6 +41,8 @@ RTPExtensionType StringToRtpExtensionType(const std::string& extension) {
     return kRtpExtensionTransportSequenceNumber;
   if (extension == RtpExtension::kPlayoutDelayUri)
     return kRtpExtensionPlayoutDelay;
+  if (extension == RtpExtension::kRtpStreamIdUri)
+    return kRtpExtensionRtpStreamId;
   RTC_NOTREACHED() << "Looking up unsupported RTP extension.";
   return kRtpExtensionNone;
 }
@@ -322,6 +324,11 @@ void ModuleRtpRtcpImpl::SetCsrcs(const std::vector<uint32_t>& csrcs) {
   rtp_sender_.SetCsrcs(csrcs);
 }
 
+int32_t ModuleRtpRtcpImpl::SetRID(const char *rid) {
+  //XXX rtcp_sender_.SetRID(rid);
+  return rtp_sender_.SetRID(rid);
+}
+
 // TODO(pbos): Handle media and RTX streams separately (separate RTCP
 // feedbacks).
 RTCPSender::FeedbackState ModuleRtpRtcpImpl::GetFeedbackState() {
@@ -581,7 +588,7 @@ void ModuleRtpRtcpImpl::GetRtpPacketLossStats(
         stats_source->GetMultipleLossPacketCount();
   }
 }
-
+ 
 int32_t ModuleRtpRtcpImpl::RemoteRTCPStat(RTCPSenderInfo* sender_info) {
   return rtcp_receiver_.SenderInfoReceived(sender_info);
 }
@@ -823,6 +830,16 @@ int32_t ModuleRtpRtcpImpl::SendRTCPReferencePictureSelection(
     const uint64_t picture_id) {
   return rtcp_sender_.SendRTCP(
       GetFeedbackState(), kRtcpRpsi, 0, 0, false, picture_id);
+}
+
+bool ModuleRtpRtcpImpl::GetSendReportMetadata(const uint32_t send_report,
+                                              uint64_t *time_of_send,
+                                              uint32_t *packet_count,
+                                              uint64_t *octet_count) {
+  return rtcp_sender_.GetSendReportMetadata(send_report,
+                                            time_of_send,
+                                            packet_count,
+                                            octet_count);
 }
 
 void ModuleRtpRtcpImpl::OnReceivedNack(

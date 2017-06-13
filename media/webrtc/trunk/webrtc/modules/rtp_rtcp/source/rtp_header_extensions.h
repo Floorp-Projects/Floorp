@@ -12,6 +12,7 @@
 
 #include <stdint.h>
 
+#include "webrtc/common_types.h"
 #include "webrtc/api/video/video_rotation.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 
@@ -94,6 +95,16 @@ class PlayoutDelayLimits {
 
   static bool Parse(const uint8_t* data, PlayoutDelay* playout_delay);
   static bool Write(uint8_t* data, const PlayoutDelay& playout_delay);
+};
+
+class StreamId {
+ public:
+  static constexpr RTPExtensionType kId = kRtpExtensionRtpStreamId;
+  static constexpr uint8_t kValueSizeBytes = 1; // variable! we add the RID length to this
+  static constexpr const char* kUri = "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id";
+
+  static bool Parse(const uint8_t* data, char rid[kRIDSize+1]);
+  static bool Write(uint8_t* data, const char *rid); // 1-16 bytes
 };
 
 }  // namespace webrtc

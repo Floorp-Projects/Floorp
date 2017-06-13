@@ -10,7 +10,7 @@
 
 package org.webrtc.voiceengine;
 
-import org.webrtc.Logging;
+import android.util.Log;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -66,18 +66,18 @@ public final class WebRtcAudioUtils {
   }
   public static synchronized void setWebRtcBasedAutomaticGainControl(boolean enable) {
     // TODO(henrika): deprecated; remove when no longer used by any client.
-    Logging.w(TAG, "setWebRtcBasedAutomaticGainControl() is deprecated");
+    Log.w(TAG, "setWebRtcBasedAutomaticGainControl() is deprecated");
   }
 
   public static synchronized boolean useWebRtcBasedAcousticEchoCanceler() {
     if (useWebRtcBasedAcousticEchoCanceler) {
-      Logging.w(TAG, "Overriding default behavior; now using WebRTC AEC!");
+      Log.w(TAG, "Overriding default behavior; now using WebRTC AEC!");
     }
     return useWebRtcBasedAcousticEchoCanceler;
   }
   public static synchronized boolean useWebRtcBasedNoiseSuppressor() {
     if (useWebRtcBasedNoiseSuppressor) {
-      Logging.w(TAG, "Overriding default behavior; now using WebRTC NS!");
+      Log.w(TAG, "Overriding default behavior; now using WebRTC NS!");
     }
     return useWebRtcBasedNoiseSuppressor;
   }
@@ -160,8 +160,11 @@ public final class WebRtcAudioUtils {
   }
 
   public static boolean runningOnNougatOrHigher() {
+    /* Mozilla: This requires API Level 24, but we build for 23
     // API Level 24.
     return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
+    */
+    return false;
   }
 
   // Helper method for building a string of thread information.
@@ -183,7 +186,7 @@ public final class WebRtcAudioUtils {
 
   // Information about the current build, taken from system properties.
   public static void logDeviceInfo(String tag) {
-    Logging.d(tag, "Android SDK: " + Build.VERSION.SDK_INT + ", "
+    Log.d(tag, "Android SDK: " + Build.VERSION.SDK_INT + ", "
             + "Release: " + Build.VERSION.RELEASE + ", "
             + "Brand: " + Build.BRAND + ", "
             + "Device: " + Build.DEVICE + ", "

@@ -107,9 +107,12 @@ VCMFrameBufferEnum VCMFrameBuffer::InsertPacket(
     }
   }
 
+  // add safety margin because STAP-A packets can cause it to expand by
+  // ~two bytes per NAL
   uint32_t requiredSizeBytes =
       Length() + packet.sizeBytes +
       (packet.insertStartCode ? kH264StartCodeLengthBytes : 0) +
+      kBufferSafetyMargin +
       EncodedImage::GetBufferPaddingBytes(packet.codec);
   if (requiredSizeBytes >= _size) {
     const uint8_t* prevBuffer = _buffer;
@@ -156,7 +159,7 @@ VCMFrameBufferEnum VCMFrameBuffer::InsertPacket(
   // frame (I-frame or IDR frame in H.264 (AVC), or an IRAP picture in H.265
   // (HEVC)).
   if (packet.markerBit) {
-    RTC_DCHECK(!_rotation_set);
+    //RTC_DCHECK(!_rotation_set);
     rotation_ = packet.video_header.rotation;
     _rotation_set = true;
   }

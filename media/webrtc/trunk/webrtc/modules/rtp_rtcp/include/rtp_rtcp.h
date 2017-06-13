@@ -176,6 +176,9 @@ class RtpRtcp : public Module {
   // Returns SSRC.
   virtual uint32_t SSRC() const = 0;
 
+  // Set RID value for the RID header extension or RTCP SDES
+  virtual int32_t SetRID(const char *rid) = 0;
+
   // Sets SSRC, default is a random number.
   virtual void SetSSRC(uint32_t ssrc) = 0;
 

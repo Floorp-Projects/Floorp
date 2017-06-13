@@ -290,17 +290,18 @@ struct ChannelStatistics : public RtcpStatistics {
 };
 
 // Statistics callback, called at each generation of a new RTCP report block.
-class StatisticsProxy : public RtcpStatisticsCallback {
+class StatisticsProxy : public RtcpStatisticsCallback,
+   public RtcpPacketTypeCounterObserver {
  public:
   StatisticsProxy(uint32_t ssrc) : ssrc_(ssrc) {}
   virtual ~StatisticsProxy() {}
 
   void StatisticsUpdated(const RtcpStatistics& statistics,
                          uint32_t ssrc) override {
+    rtc::CritScope cs(&stats_lock_);
     if (ssrc != ssrc_)
       return;
 
-    rtc::CritScope cs(&stats_lock_);
     stats_.rtcp = statistics;
     if (statistics.jitter > stats_.max_jitter) {
       stats_.max_jitter = statistics.jitter;
@@ -309,18 +310,38 @@ class StatisticsProxy : public RtcpStatisticsCallback {
 
   void CNameChanged(const char* cname, uint32_t ssrc) override {}
 
+  void SetSSRC(uint32_t ssrc) {
+    rtc::CritScope cs(&stats_lock_);
+    ssrc_ = ssrc;
+  }
+
   ChannelStatistics GetStats() {
     rtc::CritScope cs(&stats_lock_);
     return stats_;
   }
+
+  void RtcpPacketTypesCounterUpdated(uint32_t ssrc,
+      const RtcpPacketTypeCounter& packet_counter) override {
+    rtc::CritScope cs(&stats_lock_);
+    if (ssrc != ssrc_) {
+      return;
+    }
+    packet_counter_ = packet_counter;
+ };
+
+ void GetPacketTypeCounter(RtcpPacketTypeCounter& aPacketTypeCounter) {
+    rtc::CritScope cs(&stats_lock_);
+    aPacketTypeCounter = packet_counter_;
+ }
 
  private:
   // StatisticsUpdated calls are triggered from threads in the RTP module,
   // while GetStats calls can be triggered from the public voice engine API,
   // hence synchronization is needed.
   rtc::CriticalSection stats_lock_;
-  const uint32_t ssrc_;
+  uint32_t ssrc_;
   ChannelStatistics stats_;
+  RtcpPacketTypeCounter packet_counter_;
 };
 
 class VoERtcpObserver : public RtcpBandwidthObserver {
@@ -488,6 +509,8 @@ void Channel::OnIncomingSSRCChanged(uint32_t ssrc) {
 
   // Update ssrc so that NTP for AV sync can be updated.
   _rtpRtcpModule->SetRemoteSSRC(ssrc);
+  // Update stats proxy to receive stats for new ssrc
+  statistics_proxy_->SetSSRC(ssrc);
 }
 
 void Channel::OnIncomingCSRCChanged(uint32_t CSRC, bool added) {
@@ -917,6 +940,7 @@ Channel::Channel(int32_t channelId,
       transport_overhead_per_packet_(0),
       rtp_overhead_per_packet_(0),
       _outputSpeechType(AudioFrame::kNormalSpeech),
+      _current_sync_offset(0),
       restored_packet_in_use_(false),
       rtcp_observer_(new VoERtcpObserver(this)),
       associate_send_channel_(ChannelOwner(nullptr)),
@@ -953,6 +977,8 @@ Channel::Channel(int32_t channelId,
   configuration.retransmission_rate_limiter =
       retransmission_rate_limiter_.get();
 
+  configuration.rtcp_packet_type_counter_observer = statistics_proxy_.get();
+  
   _rtpRtcpModule.reset(RtpRtcp::CreateRtpRtcp(configuration));
   _rtpRtcpModule->SetSendingMediaStatus(false);
 
@@ -1128,7 +1154,7 @@ int32_t Channel::SetEngineInformation(Statistics& engineStatistics,
                "Channel::SetEngineInformation()");
   _engineStatisticsPtr = &engineStatistics;
   _outputMixerPtr = &outputMixer;
-  _transmitMixerPtr = &transmitMixer,
+  _transmitMixerPtr = &transmitMixer;
   _moduleProcessThreadPtr = &moduleProcessThread;
   _audioDeviceModulePtr = &audioDeviceModule;
   _voiceEngineObserverPtr = voiceEngineObserver;
@@ -2586,7 +2612,8 @@ int Channel::SendApplicationDefinedRTCPPacket(
 
 int Channel::GetRTPStatistics(unsigned int& averageJitterMs,
                               unsigned int& maxJitterMs,
-                              unsigned int& discardedPackets) {
+                              unsigned int& discardedPackets,
+                              unsigned int& cumulativeLost) {
   // The jitter statistics is updated for each received RTP packet and is
   // based on received packets.
   if (_rtpRtcpModule->RTCP() == RtcpMode::kOff) {
@@ -2608,6 +2635,7 @@ int Channel::GetRTPStatistics(unsigned int& averageJitterMs,
     // Scale RTP statistics given the current playout frequency
     maxJitterMs = stats.max_jitter / (playoutFrequency / 1000);
     averageJitterMs = stats.rtcp.jitter / (playoutFrequency / 1000);
+    cumulativeLost = stats.rtcp.cumulative_lost;
   }
 
   discardedPackets = _numberOfDiscardedPackets;
@@ -2653,12 +2681,14 @@ int Channel::GetRemoteRTCPReportBlocks(
 
 int Channel::GetRTPStatistics(CallStatistics& stats) {
   // --- RtcpStatistics
+  // GetStatistics() grabs the stream_lock_ inside the object
+  // rtp_receiver_->SSRC grabs a lock too.
 
   // The jitter statistics is updated for each received RTP packet and is
   // based on received packets.
   RtcpStatistics statistics;
   StreamStatistician* statistician =
-      rtp_receive_statistics_->GetStatistician(rtp_receiver_->SSRC());
+    rtp_receive_statistics_->GetStatistician(rtp_receiver_->SSRC());
   if (statistician) {
     statistician->GetStatistics(&statistics,
                                 _rtpRtcpModule->RTCP() == RtcpMode::kOff);
@@ -2699,6 +2729,14 @@ int Channel::GetRTPStatistics(CallStatistics& stats) {
     rtc::CritScope lock(&ts_stats_lock_);
     stats.capture_start_ntp_time_ms_ = capture_start_ntp_time_ms_;
   }
+  return 0;
+}
+
+int Channel::GetRTCPPacketTypeCounters(RtcpPacketTypeCounter& stats) {
+  if (_rtpRtcpModule->RTCP() == RtcpMode::kOff) {
+    return -1;
+  }
+  statistics_proxy_->GetPacketTypeCounter(stats);
   return 0;
 }
 
@@ -2967,17 +3005,20 @@ void Channel::GetDecodingCallStatistics(AudioDecodingCallStats* stats) const {
 }
 
 bool Channel::GetDelayEstimate(int* jitter_buffer_delay_ms,
-                               int* playout_buffer_delay_ms) const {
+                               int* playout_buffer_delay_ms,
+                               int* avsync_offset_ms) const {
   rtc::CritScope lock(&video_sync_lock_);
   *jitter_buffer_delay_ms = audio_coding_->FilteredCurrentDelayMs();
   *playout_buffer_delay_ms = playout_delay_ms_;
+  *avsync_offset_ms = _current_sync_offset;
   return true;
 }
 
 uint32_t Channel::GetDelayEstimate() const {
   int jitter_buffer_delay_ms = 0;
   int playout_buffer_delay_ms = 0;
-  GetDelayEstimate(&jitter_buffer_delay_ms, &playout_buffer_delay_ms);
+  int avsync_offset_ms = 0;
+  GetDelayEstimate(&jitter_buffer_delay_ms, &playout_buffer_delay_ms, &avsync_offset_ms);
   return jitter_buffer_delay_ms + playout_buffer_delay_ms;
 }
 

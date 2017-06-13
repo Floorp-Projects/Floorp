@@ -29,7 +29,22 @@ std::string FormFileName(const char* name,
                          int instance_index,
                          int reinit_index,
                          const std::string& suffix) {
+  char path[1024];
+  AECDebugFilenameBase(path, sizeof(path));
+
+  char* end = path + strlen(path) - 1;
+
+#ifdef WEBRTC_WIN
+  char sep = '\\';
+#else
+  char sep = '/';
+#endif
+
   std::stringstream ss;
+  ss << path;
+  if (*end != sep) {
+    ss << sep;
+  }
   ss << name << "_" << instance_index << "-" << reinit_index << suffix;
   return ss.str();
 }
@@ -39,7 +54,8 @@ std::string FormFileName(const char* name,
 
 #if WEBRTC_APM_DEBUG_DUMP == 1
 ApmDataDumper::ApmDataDumper(int instance_index)
-    : instance_index_(instance_index) {}
+    : instance_index_(instance_index)
+    , debug_written_(0) {}
 #else
 ApmDataDumper::ApmDataDumper(int instance_index) {}
 #endif

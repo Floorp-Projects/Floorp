@@ -15,6 +15,7 @@
 
 #include <memory>
 #include <string>
+#include <string.h>
 #include <unordered_map>
 
 #include "webrtc/base/array_view.h"
@@ -27,13 +28,22 @@
 #error "Set WEBRTC_APM_DEBUG_DUMP to either 0 or 1"
 #endif
 
+#if WEBRTC_APM_DEBUG_DUMP == 1
+extern "C" {
+  extern int AECDebug();
+  extern uint32_t AECDebugMaxSize();
+  extern void AECDebugEnable(uint32_t enable);
+  extern void AECDebugFilenameBase(char *buffer, size_t size);
+}
+#endif
+
 namespace webrtc {
 
 #if WEBRTC_APM_DEBUG_DUMP == 1
 // Functor used to use as a custom deleter in the map of file pointers to raw
 // files.
 struct RawFileCloseFunctor {
-  void operator()(FILE* f) const { fclose(f); }
+  void operator()(FILE* f) const { if (f) fclose(f); }
 };
 #endif
 
@@ -52,6 +62,7 @@ class ApmDataDumper {
   void InitiateNewSetOfRecordings() {
 #if WEBRTC_APM_DEBUG_DUMP == 1
     ++recording_set_index_;
+    debug_written_ = 0;
 #endif
   }
 
@@ -59,8 +70,12 @@ class ApmDataDumper {
   // various formats.
   void DumpRaw(const char* name, int v_length, const float* v) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
-    FILE* file = GetRawFile(name);
-    fwrite(v, sizeof(v[0]), v_length, file);
+    if (AECDebug()) {
+      FILE* file = GetRawFile(name);
+      if (file) {
+        fwrite(v, sizeof(v[0]), v_length, file);
+      }
+    }
 #endif
   }
 
@@ -72,10 +87,14 @@ class ApmDataDumper {
 
   void DumpRaw(const char* name, int v_length, const bool* v) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
-    FILE* file = GetRawFile(name);
-    for (int k = 0; k < v_length; ++k) {
-      int16_t value = static_cast<int16_t>(v[k]);
-      fwrite(&value, sizeof(value), 1, file);
+    if (AECDebug()) {
+      FILE* file = GetRawFile(name);
+      if (file) {
+        for (int k = 0; k < v_length; ++k) {
+          int16_t value = static_cast<int16_t>(v[k]);
+          fwrite(&value, sizeof(value), 1, file);
+        }
+      }
     }
 #endif
   }
@@ -88,8 +107,12 @@ class ApmDataDumper {
 
   void DumpRaw(const char* name, int v_length, const int16_t* v) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
-    FILE* file = GetRawFile(name);
-    fwrite(v, sizeof(v[0]), v_length, file);
+    if (AECDebug()) {
+      FILE* file = GetRawFile(name);
+      if (file) {
+        fwrite(v, sizeof(v[0]), v_length, file);
+      }
+    }
 #endif
   }
 
@@ -101,8 +124,12 @@ class ApmDataDumper {
 
   void DumpRaw(const char* name, int v_length, const int32_t* v) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
-    FILE* file = GetRawFile(name);
-    fwrite(v, sizeof(v[0]), v_length, file);
+    if (AECDebug()) {
+      FILE* file = GetRawFile(name);
+      if (file) {
+        fwrite(v, sizeof(v[0]), v_length, file);
+      }
+    }
 #endif
   }
 
@@ -118,8 +145,16 @@ class ApmDataDumper {
                int sample_rate_hz,
                int num_channels) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
-    WavWriter* file = GetWavFile(name, sample_rate_hz, num_channels);
-    file->WriteSamples(v, v_length);
+    if (AECDebug()) {
+      WavWriter* file = GetWavFile(name, sample_rate_hz, num_channels);
+      file->WriteSamples(v, v_length);
+      // Cheat and use aec_near as a stand-in for "size of the largest file"
+      // in the dump.  We're looking to limit the total time, and that's a
+      // reasonable stand-in.
+      if (strcmp(name, "aec_near") == 0) {
+        updateDebugWritten(v_length * sizeof(float));
+      }
+    }
 #endif
   }
 
@@ -142,6 +177,17 @@ class ApmDataDumper {
 
   FILE* GetRawFile(const char* name);
   WavWriter* GetWavFile(const char* name, int sample_rate_hz, int num_channels);
+
+  uint32_t debug_written_;
+
+  void updateDebugWritten(uint32_t amount) {
+    debug_written_ += amount;
+    // Limit largest files to a specific (rough) size, to avoid filling up disk.
+    if (debug_written_ >= AECDebugMaxSize()) {
+      AECDebugEnable(0);
+    }
+  }
+
 #endif
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(ApmDataDumper);
 };

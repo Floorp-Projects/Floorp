@@ -106,7 +106,10 @@ class ViEEncoder::EncodeTask : public rtc::QueuedTask {
     } else {
       // There is a newer frame in flight. Do not encode this frame.
       LOG(LS_VERBOSE)
-          << "Incoming frame dropped due to that the encoder is blocked.";
+          << "Incoming frame dropped due to that the encoder is blocked (captured="
+          << vie_encoder_->captured_frame_count_ << " dropped="
+          << vie_encoder_->dropped_frame_count_ << " queued="
+          << vie_encoder_->posted_frames_waiting_for_encode_.Value();
       ++vie_encoder_->dropped_frame_count_;
     }
     if (log_stats_) {
@@ -697,6 +700,10 @@ void ViEEncoder::OnBitrateUpdated(uint32_t bitrate_bps,
                  << (video_is_suspended ? "suspended" : "not suspended");
     stats_proxy_->OnSuspendChange(video_is_suspended);
   }
+}
+
+void ViEEncoder::onLoadStateChanged(CPULoadState state) {
+  video_sender_.SetCPULoadState(state);
 }
 
 void ViEEncoder::ScaleDown(ScaleReason reason) {

@@ -65,7 +65,7 @@ class FlexfecReceiverTest : public ::testing::Test {
   std::unique_ptr<ForwardErrorCorrection> erasure_code_;
 
   FlexfecPacketGenerator packet_generator_;
-  testing::StrictMock<MockRecoveredPacketReceiver> recovered_packet_receiver_;
+  ::testing::StrictMock<MockRecoveredPacketReceiver> recovered_packet_receiver_;
 };
 
 void FlexfecReceiverTest::PacketizeFrame(size_t num_media_packets,

@@ -11,6 +11,7 @@
 #include "webrtc/modules/audio_device/android/opensles_recorder.h"
 
 #include <android/log.h>
+#include <dlfcn.h>
 
 #include "webrtc/base/arraysize.h"
 #include "webrtc/base/checks.h"
@@ -75,6 +76,32 @@ OpenSLESRecorder::~OpenSLESRecorder() {
 int OpenSLESRecorder::Init() {
   ALOGD("Init%s", GetThreadInfo().c_str());
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
+
+  /* Try to dynamically open the OpenSLES library */
+  opensles_lib_ = dlopen("libOpenSLES.so", RTLD_LAZY);
+  if (!opensles_lib_) {
+    ALOGE("failed to dlopen OpenSLES library");
+    return -1;
+  }
+
+  slCreateEngine_ = (slCreateEngine_t)dlsym(opensles_lib_, "slCreateEngine");
+  SL_IID_ENGINE_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_ENGINE");
+  SL_IID_ANDROIDCONFIGURATION_ =
+    *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_ANDROIDCONFIGURATION");
+  SL_IID_ANDROIDSIMPLEBUFFERQUEUE_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_ANDROIDSIMPLEBUFFERQUEUE");
+  SL_IID_RECORD_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_RECORD");
+
+  if (!slCreateEngine ||
+      !SL_IID_ENGINE_ ||
+      !SL_IID_ANDROIDCONFIGURATION_ ||
+      !SL_IID_ANDROIDSIMPLEBUFFERQUEUE_ ||
+      !SL_IID_RECORD_) {
+    ALOGE("failed to links to SLES library");
+    return -1;
+  }
+
+
+
   return 0;
 }
 
@@ -213,7 +240,7 @@ bool OpenSLESRecorder::ObtainEngineInterface() {
   // Get the SL Engine Interface which is implicit.
   if (LOG_ON_ERROR(
           (*engine_object)
-              ->GetInterface(engine_object, SL_IID_ENGINE, &engine_))) {
+              ->GetInterface(engine_object, SL_IID_ENGINE_, &engine_))) {
     return false;
   }
   return true;
@@ -241,8 +268,8 @@ bool OpenSLESRecorder::CreateAudioRecorder() {
 
   // Create the audio recorder object (requires the RECORD_AUDIO permission).
   // Do not realize the recorder yet. Set the configuration first.
-  const SLInterfaceID interface_id[] = {SL_IID_ANDROIDSIMPLEBUFFERQUEUE,
-                                        SL_IID_ANDROIDCONFIGURATION};
+  const SLInterfaceID interface_id[] = {SL_IID_ANDROIDSIMPLEBUFFERQUEUE_,
+                                        SL_IID_ANDROIDCONFIGURATION_};
   const SLboolean interface_required[] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
   if (LOG_ON_ERROR((*engine_)->CreateAudioRecorder(
           engine_, recorder_object_.Receive(), &audio_source, &audio_sink,
@@ -253,7 +280,7 @@ bool OpenSLESRecorder::CreateAudioRecorder() {
   // Configure the audio recorder (before it is realized).
   SLAndroidConfigurationItf recorder_config;
   if (LOG_ON_ERROR((recorder_object_->GetInterface(recorder_object_.Get(),
-                                                   SL_IID_ANDROIDCONFIGURATION,
+                                                   SL_IID_ANDROIDCONFIGURATION_,
                                                    &recorder_config)))) {
     return false;
   }
@@ -262,7 +289,9 @@ bool OpenSLESRecorder::CreateAudioRecorder() {
   // Note that, SL_ANDROID_RECORDING_PRESET_VOICE_RECOGNITION leads to a fast
   // track but also excludes usage of required effects like AEC, AGC and NS.
   // SL_ANDROID_RECORDING_PRESET_VOICE_COMMUNICATION
-  SLint32 stream_type = SL_ANDROID_RECORDING_PRESET_VOICE_COMMUNICATION;
+  // TODO: We don't support L_ANDROID_RECORDING_PRESET_VOICE_COMMUNICATION so
+  // use SL_ANDROID_RECORDING_PRESET_GENERIC instead.
+  SLint32 stream_type = SL_ANDROID_RECORDING_PRESET_GENERIC;
   if (LOG_ON_ERROR(((*recorder_config)
                         ->SetConfiguration(recorder_config,
                                            SL_ANDROID_KEY_RECORDING_PRESET,
@@ -278,14 +307,14 @@ bool OpenSLESRecorder::CreateAudioRecorder() {
 
   // Get the implicit recorder interface (SL_IID_RECORD).
   if (LOG_ON_ERROR((recorder_object_->GetInterface(
-          recorder_object_.Get(), SL_IID_RECORD, &recorder_)))) {
+          recorder_object_.Get(), SL_IID_RECORD_, &recorder_)))) {
     return false;
   }
 
   // Get the simple buffer queue interface (SL_IID_ANDROIDSIMPLEBUFFERQUEUE).
   // It was explicitly requested.
   if (LOG_ON_ERROR((recorder_object_->GetInterface(
-          recorder_object_.Get(), SL_IID_ANDROIDSIMPLEBUFFERQUEUE,
+          recorder_object_.Get(), SL_IID_ANDROIDSIMPLEBUFFERQUEUE_,
           &simple_buffer_queue_)))) {
     return false;
   }

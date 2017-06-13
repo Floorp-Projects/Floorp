@@ -88,6 +88,8 @@ class ModuleRtpRtcpImpl : public RtpRtcp, public RTCPReceiver::ModuleRtpRtcp {
 
   void SetCsrcs(const std::vector<uint32_t>& csrcs) override;
 
+  int32_t SetRID(const char *rid) override;
+
   RTCPSender::FeedbackState GetFeedbackState();
 
   void SetRtxSendStatus(int mode) override;
@@ -184,7 +186,7 @@ class ModuleRtpRtcpImpl : public RtpRtcp, public RTCPReceiver::ModuleRtpRtcp {
       bool outgoing,
       uint32_t ssrc,
       struct RtpPacketLossStats* loss_stats) const override;
-
+ 
   // Get received RTCP report, sender info.
   int32_t RemoteRTCPStat(RTCPSenderInfo* sender_info) override;
 
@@ -294,6 +296,11 @@ class ModuleRtpRtcpImpl : public RtpRtcp, public RTCPReceiver::ModuleRtpRtcp {
 
   // Good state of RTP receiver inform sender.
   int32_t SendRTCPReferencePictureSelection(uint64_t picture_id) override;
+
+  bool GetSendReportMetadata(const uint32_t send_report,
+                             uint64_t *time_of_send,
+                             uint32_t *packet_count,
+                             uint64_t *octet_count) override;
 
   void RegisterSendChannelRtpStatisticsCallback(
       StreamDataCountersCallback* callback) override;

@@ -34,9 +34,11 @@ class VideoSyncTest : public AfterStreamingFixture {
     for (int second = 0; second < 15; second++) {
       int jitter_buffer_delay_ms = 0;
       int playout_buffer_delay_ms = 0;
+      int avsync_offset_ms = 0;
       EXPECT_EQ(0, voe_vsync_->GetDelayEstimate(channel_,
                                                 &jitter_buffer_delay_ms,
-                                                &playout_buffer_delay_ms));
+                                                &playout_buffer_delay_ms,
+                                                &avsync_offset_ms));
 
       EXPECT_GT(jitter_buffer_delay_ms, min_estimate) <<
           "The delay estimate can not conceivably get lower than " <<

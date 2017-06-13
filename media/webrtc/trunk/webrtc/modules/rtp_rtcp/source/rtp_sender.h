@@ -118,6 +118,8 @@ class RTPSender {
                         const RTPVideoHeader* rtp_header,
                         uint32_t* transport_frame_id_out);
 
+  int32_t SetRID(const char* rid);
+
   // RTP header extension
   int32_t RegisterRtpHeaderExtension(RTPExtensionType type, uint8_t id);
   bool IsRtpHeaderExtensionRegistered(RTPExtensionType type);
@@ -277,6 +279,8 @@ class RTPSender {
   std::map<int8_t, RtpUtility::Payload*> payload_type_map_;
 
   RtpHeaderExtensionMap rtp_header_extension_map_ GUARDED_BY(send_critsect_);
+
+  char* rid_;
 
   // Tracks the current request for playout delay limits from application
   // and decides whether the current RTP frame should include the playout

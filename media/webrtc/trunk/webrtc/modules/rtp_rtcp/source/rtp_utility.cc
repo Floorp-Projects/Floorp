@@ -53,7 +53,7 @@ bool StringCompare(const char* str1, const char* str2,
                    const uint32_t length) {
   return _strnicmp(str1, str2, length) == 0;
 }
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
 bool StringCompare(const char* str1, const char* str2,
                    const uint32_t length) {
   return strncasecmp(str1, str2, length) == 0;
@@ -172,6 +172,9 @@ bool RtpHeaderParser::ParseRtcp(RTPHeader* header) const {
   header->payloadType  = PT;
   header->ssrc         = SSRC;
   header->headerLength = 4 + (len << 2);
+  if (header->headerLength > static_cast<size_t>(length)) {
+    return false;
+  }
 
   return true;
 }
@@ -209,12 +212,6 @@ bool RtpHeaderParser::Parse(RTPHeader* header,
     return false;
   }
 
-  const size_t CSRCocts = CC * 4;
-
-  if ((ptr + CSRCocts) > _ptrRTPDataEnd) {
-    return false;
-  }
-
   header->markerBit      = M;
   header->payloadType    = PT;
   header->sequenceNumber = sequenceNumber;
@@ -223,13 +220,20 @@ bool RtpHeaderParser::Parse(RTPHeader* header,
   header->numCSRCs       = CC;
   header->paddingLength  = P ? *(_ptrRTPDataEnd - 1) : 0;
 
+  // 12 == sizeof(RFC rtp header) == kRtpMinParseLength, each CSRC=4 bytes
+  header->headerLength   = 12 + (CC * 4);
+  // not a full validation, just safety against underflow.  Padding must
+  // start after the header.  We can have 0 payload bytes left, note.
+  if (header->paddingLength + header->headerLength > (size_t) length) {
+    return false;
+  }
+
   for (uint8_t i = 0; i < CC; ++i) {
     uint32_t CSRC = ByteReader<uint32_t>::ReadBigEndian(ptr);
     ptr += 4;
     header->arrOfCSRCs[i] = CSRC;
   }
-
-  header->headerLength   = 12 + CSRCocts;
+  assert((ptr - _ptrRTPDataBegin) == (ptrdiff_t) header->headerLength);
 
   // If in effect, MAY be omitted for those packets for which the offset
   // is zero.
@@ -250,6 +254,10 @@ bool RtpHeaderParser::Parse(RTPHeader* header,
   header->extension.videoRotation = kVideoRotation_0;
 
   // May not be present in packet.
+  header->extension.hasRID = false;
+  header->extension.rid = NULL;
+
+  // May not be present in packet.
   header->extension.playout_delay.min_ms = -1;
   header->extension.playout_delay.max_ms = -1;
 
@@ -263,8 +271,9 @@ bool RtpHeaderParser::Parse(RTPHeader* header,
     |                        header extension                       |
     |                             ....                              |
     */
-    const ptrdiff_t remain = _ptrRTPDataEnd - ptr;
-    if (remain < 4) {
+    // earlier test ensures we have at least paddingLength bytes left
+    const ptrdiff_t remain = (_ptrRTPDataEnd - ptr) - header->paddingLength;
+    if (remain < 4) { // minimum header extension length = 32 bits
       return false;
     }
 
@@ -316,6 +325,11 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
     // number of bytes - 1.
     const int id = (*ptr & 0xf0) >> 4;
     const int len = (*ptr & 0x0f);
+    if (ptr + len + 1 > ptrRTPDataExtensionEnd) {
+      LOG(LS_WARNING)
+          << "RTP extension header length out of bounds. Terminate parsing.";
+      return;
+    }
     ptr++;
 
     if (id == 0) {
@@ -339,7 +353,9 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
     RTPExtensionType type = ptrExtensionMap->GetType(id);
     if (type == RtpHeaderExtensionMap::kInvalidType) {
       // If we encounter an unknown extension, just skip over it.
-      LOG(LS_WARNING) << "Failed to find extension id: " << id;
+      // Mozilla - we reuse the parse for demux, without registering extensions.
+      // Reduce log-spam by switching to VERBOSE
+      LOG(LS_VERBOSE) << "Failed to find extension id: " << id;
     } else {
       switch (type) {
         case kRtpExtensionTransmissionTimeOffset: {
@@ -444,6 +460,29 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
               max_playout_delay * kPlayoutDelayGranularityMs;
           break;
         }
+        case kRtpExtensionRtpStreamId: {
+          //   0                   1                   2
+          //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3
+          //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+          //  |  ID   | L=?   |UTF-8 RID value......          |...
+          //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+          // As per RFC 5285 section 4.2, len is the length of the header data
+          // - 1. E.G. a len of 0 indicates a header data length of 1
+          if ( &ptr[len + 1] > ptrRTPDataExtensionEnd ) {
+            LOG(LS_WARNING) << "Extension RtpStreamId data length " << (len + 1)
+              << " is longer than remaining input parse buffer "
+              << static_cast<size_t>(ptrRTPDataExtensionEnd - ptr);
+            return;
+          }
+
+          header->extension.rid.reset(new char[len + 2]);
+          memcpy(header->extension.rid.get(), ptr, len + 1);
+          header->extension.rid.get()[len + 1] = '\0';
+          header->extension.hasRID = true;
+          break;
+        }
+        default:
         case kRtpExtensionNone:
         case kRtpExtensionNumberOfExtensions: {
           RTC_NOTREACHED() << "Invalid extension type: " << type;

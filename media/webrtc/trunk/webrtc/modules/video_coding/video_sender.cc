@@ -132,7 +132,8 @@ int32_t VideoSender::RegisterSendCodec(const VideoCodec* sendCodec,
                   << " max payload size " << maxPayloadSize;
   _mediaOpt.SetEncodingData(sendCodec->maxBitrate * 1000,
                             sendCodec->startBitrate * 1000, sendCodec->width,
-                            sendCodec->height, sendCodec->maxFramerate,
+                            sendCodec->height, sendCodec->maxFramerate * 1000,
+                            sendCodec->resolution_divisor,
                             numLayers, maxPayloadSize);
   return VCM_OK;
 }
@@ -320,11 +321,13 @@ int32_t VideoSender::AddVideoFrame(const VideoFrame& videoFrame,
   }
   // TODO(pbos): Make sure setting send codec is synchronized with video
   // processing so frame size always matches.
+#ifdef VERIFY_FRAME_SIZE_VS_DATABASE
   if (!_codecDataBase.MatchesCurrentResolution(videoFrame.width(),
                                                videoFrame.height())) {
     LOG(LS_ERROR) << "Incoming frame doesn't match set resolution. Dropping.";
     return VCM_PARAMETER_ERROR;
   }
+#endif
   VideoFrame converted_frame = videoFrame;
   if (converted_frame.video_frame_buffer()->native_handle() &&
       !_encoder->SupportsNativeHandle()) {
@@ -398,5 +401,11 @@ int32_t VideoSender::EnableFrameDropper(bool enable) {
   _mediaOpt.EnableFrameDropper(enable);
   return VCM_OK;
 }
+
+void VideoSender::SetCPULoadState(CPULoadState state) {
+  rtc::CritScope lock(&encoder_crit_);
+  _mediaOpt.SetCPULoadState(state);
+}
+
 }  // namespace vcm
 }  // namespace webrtc

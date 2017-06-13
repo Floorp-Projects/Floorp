@@ -112,8 +112,8 @@ class AudioDeviceTemplate : public AudioDeviceGeneric {
       uint16_t index,
       char name[kAdmMaxDeviceNameSize],
       char guid[kAdmMaxGuidSize]) override {
-    FATAL() << "Should never be called";
-    return -1;
+    LOG(INFO) << __FUNCTION__;
+    return -1 ;
   }
 
   int32_t SetPlayoutDevice(uint16_t index) override {
