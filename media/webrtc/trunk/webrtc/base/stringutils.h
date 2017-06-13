@@ -23,7 +23,7 @@
 #endif  // WEBRTC_WIN 
 
 #if defined(WEBRTC_POSIX)
-#ifdef WEBRTC_BSD
+#ifdef BSD
 #include <stdlib.h>
 #else  // BSD
 #include <alloca.h>
@@ -31,8 +31,6 @@
 #endif  // WEBRTC_POSIX
 
 #include <string>
-
-#include "webrtc/base/basictypes.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Generic string/memory utilities

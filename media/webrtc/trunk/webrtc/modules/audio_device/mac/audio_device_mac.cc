@@ -10,6 +10,7 @@
 
 #include "webrtc/base/arraysize.h"
 #include "webrtc/base/checks.h"
+#include "webrtc/base/logging.h"
 #include "webrtc/base/platform_thread.h"
 #include "webrtc/modules/audio_device/audio_device_config.h"
 #include "webrtc/modules/audio_device/mac/audio_device_mac.h"
@@ -21,7 +22,6 @@
 #include <libkern/OSAtomic.h>  // OSAtomicCompareAndSwap()
 #include <mach/mach.h>         // mach_task_self()
 #include <sys/sysctl.h>        // sysctlbyname()
-#include <OSXRunLoopSingleton.h>
 
 namespace webrtc {
 
@@ -222,11 +222,11 @@ int32_t AudioDeviceMac::ActiveAudioLayer(
   return 0;
 }
 
-int32_t AudioDeviceMac::Init() {
+AudioDeviceGeneric::InitStatus AudioDeviceMac::Init() {
   CriticalSectionScoped lock(&_critSect);
 
   if (_initialized) {
-    return 0;
+    return InitStatus::OK;
   }
 
   OSStatus err = noErr;
@@ -251,7 +251,7 @@ int32_t AudioDeviceMac::Init() {
     if (bufSize == -1) {
       WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,
                    " PaUtil_InitializeRingBuffer() error");
-      return -1;
+      return InitStatus::PLAYOUT_ERROR;
     }
   }
 
@@ -273,7 +273,7 @@ int32_t AudioDeviceMac::Init() {
     if (bufSize == -1) {
       WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,
                    " PaUtil_InitializeRingBuffer() error");
-      return -1;
+      return InitStatus::RECORDING_ERROR;
     }
   }
 
@@ -283,7 +283,7 @@ int32_t AudioDeviceMac::Init() {
   if (kernErr != KERN_SUCCESS) {
     WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,
                  " semaphore_create() error: %d", kernErr);
-    return -1;
+    return InitStatus::OTHER_ERROR;
   }
 
   kernErr = semaphore_create(mach_task_self(), &_captureSemaphore,
@@ -291,7 +291,7 @@ int32_t AudioDeviceMac::Init() {
   if (kernErr != KERN_SUCCESS) {
     WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,
                  " semaphore_create() error: %d", kernErr);
-    return -1;
+    return InitStatus::OTHER_ERROR;
   }
 
   // Setting RunLoop to NULL here instructs HAL to manage its own thread for
@@ -301,7 +301,20 @@ int32_t AudioDeviceMac::Init() {
   AudioObjectPropertyAddress propertyAddress = {
       kAudioHardwarePropertyRunLoop, kAudioObjectPropertyScopeGlobal,
       kAudioObjectPropertyElementMaster};
-  mozilla_set_coreaudio_notification_runloop_if_needed();
+  CFRunLoopRef runLoop = NULL;
+  UInt32 size = sizeof(CFRunLoopRef);
+  int aoerr = AudioObjectSetPropertyData(
+      kAudioObjectSystemObject, &propertyAddress, 0, NULL, size, &runLoop);
+  if (aoerr != noErr) {
+    LOG(LS_ERROR) << "Error in AudioObjectSetPropertyData: "
+                  << (const char*)&aoerr;
+    return InitStatus::OTHER_ERROR;
+  }
+
+  // Listen for any device changes.
+  propertyAddress.mSelector = kAudioHardwarePropertyDevices;
+  WEBRTC_CA_LOG_ERR(AudioObjectAddPropertyListener(
+      kAudioObjectSystemObject, &propertyAddress, &objectListenerProc, this));
 
   // Determine if this is a MacBook Pro
   _macBookPro = false;
@@ -331,7 +344,7 @@ int32_t AudioDeviceMac::Init() {
 
   _initialized = true;
 
-  return 0;
+  return InitStatus::OK;
 }
 
 int32_t AudioDeviceMac::Terminate() {
@@ -1168,7 +1181,7 @@ int32_t AudioDeviceMac::InitPlayout() {
 
   // Listen for format changes.
   propertyAddress.mSelector = kAudioDevicePropertyStreamFormat;
-  WEBRTC_CA_RETURN_ON_ERR(AudioObjectAddPropertyListener(
+  WEBRTC_CA_LOG_WARN(AudioObjectAddPropertyListener(
       _outputDeviceID, &propertyAddress, &objectListenerProc, this));
 
   // Listen for processor overloads.
@@ -1366,7 +1379,7 @@ int32_t AudioDeviceMac::InitRecording() {
   // Listen for format changes
   // TODO(xians): should we be using kAudioDevicePropertyDeviceHasChanged?
   propertyAddress.mSelector = kAudioDevicePropertyStreamFormat;
-  WEBRTC_CA_RETURN_ON_ERR(AudioObjectAddPropertyListener(
+  WEBRTC_CA_LOG_WARN(AudioObjectAddPropertyListener(
       _inputDeviceID, &propertyAddress, &objectListenerProc, this));
 
   // Listen for processor overloads

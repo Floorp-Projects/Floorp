@@ -16,8 +16,13 @@
 namespace webrtc {
 
 AudioEncoder::EncodedInfo::EncodedInfo() = default;
-
+AudioEncoder::EncodedInfo::EncodedInfo(const EncodedInfo&) = default;
+AudioEncoder::EncodedInfo::EncodedInfo(EncodedInfo&&) = default;
 AudioEncoder::EncodedInfo::~EncodedInfo() = default;
+AudioEncoder::EncodedInfo& AudioEncoder::EncodedInfo::operator=(
+    const EncodedInfo&) = default;
+AudioEncoder::EncodedInfo& AudioEncoder::EncodedInfo::operator=(EncodedInfo&&) =
+    default;
 
 int AudioEncoder::RtpTimestampRateHz() const {
   return SampleRateHz();
@@ -26,14 +31,14 @@ int AudioEncoder::RtpTimestampRateHz() const {
 AudioEncoder::EncodedInfo AudioEncoder::Encode(
     uint32_t rtp_timestamp,
     rtc::ArrayView<const int16_t> audio,
-    size_t max_encoded_bytes,
-    uint8_t* encoded) {
+    rtc::Buffer* encoded) {
   TRACE_EVENT0("webrtc", "AudioEncoder::Encode");
   RTC_CHECK_EQ(audio.size(),
                static_cast<size_t>(NumChannels() * SampleRateHz() / 100));
-  EncodedInfo info =
-      EncodeInternal(rtp_timestamp, audio, max_encoded_bytes, encoded);
-  RTC_CHECK_LE(info.encoded_bytes, max_encoded_bytes);
+
+  const size_t old_size = encoded->size();
+  EncodedInfo info = EncodeImpl(rtp_timestamp, audio, encoded);
+  RTC_CHECK_EQ(encoded->size() - old_size, info.encoded_bytes);
   return info;
 }
 
@@ -45,14 +50,45 @@ bool AudioEncoder::SetDtx(bool enable) {
   return !enable;
 }
 
+bool AudioEncoder::GetDtx() const {
+  return false;
+}
+
 bool AudioEncoder::SetApplication(Application application) {
   return false;
 }
 
 void AudioEncoder::SetMaxPlaybackRate(int frequency_hz) {}
 
-void AudioEncoder::SetProjectedPacketLossRate(double fraction) {}
-
 void AudioEncoder::SetTargetBitrate(int target_bps) {}
+
+rtc::ArrayView<std::unique_ptr<AudioEncoder>>
+AudioEncoder::ReclaimContainedEncoders() { return nullptr; }
+
+bool AudioEncoder::EnableAudioNetworkAdaptor(const std::string& config_string,
+                                             RtcEventLog* event_log,
+                                             const Clock* clock) {
+  return false;
+}
+
+void AudioEncoder::DisableAudioNetworkAdaptor() {}
+
+void AudioEncoder::OnReceivedUplinkPacketLossFraction(
+    float uplink_packet_loss_fraction) {}
+
+void AudioEncoder::OnReceivedTargetAudioBitrate(int target_audio_bitrate_bps) {
+  OnReceivedUplinkBandwidth(target_audio_bitrate_bps, rtc::Optional<int64_t>());
+}
+
+void AudioEncoder::OnReceivedUplinkBandwidth(
+    int target_audio_bitrate_bps,
+    rtc::Optional<int64_t> probing_interval_ms) {}
+
+void AudioEncoder::OnReceivedRtt(int rtt_ms) {}
+
+void AudioEncoder::OnReceivedOverhead(size_t overhead_bytes_per_packet) {}
+
+void AudioEncoder::SetReceiverFrameLengthRange(int min_frame_length_ms,
+                                               int max_frame_length_ms) {}
 
 }  // namespace webrtc

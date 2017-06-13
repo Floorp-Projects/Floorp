@@ -13,6 +13,9 @@
 #include <assert.h>
 #include <string.h>
 
+#include <algorithm>
+
+#include "webrtc/base/checks.h"
 #include "webrtc/modules/rtp_rtcp/source/fec_private_tables_bursty.h"
 #include "webrtc/modules/rtp_rtcp/source/fec_private_tables_random.h"
 
@@ -200,11 +203,8 @@ void RemainingPacketProtection(int num_media_packets,
   if (mode == kModeNoOverlap) {
     // sub_mask21
 
-    const int l_bit =
-        (num_media_packets - num_fec_for_imp_packets) > 16 ? 1 : 0;
-
     const int res_mask_bytes =
-        (l_bit == 1) ? kMaskSizeLBitSet : kMaskSizeLBitClear;
+        PacketMaskSize(num_media_packets - num_fec_for_imp_packets);
 
     const uint8_t* packet_mask_sub_21 =
         mask_table.fec_packet_mask_table()[num_media_packets -
@@ -243,9 +243,7 @@ void ImportantPacketProtection(int num_fec_for_imp_packets,
                                int num_mask_bytes,
                                uint8_t* packet_mask,
                                const PacketMaskTable& mask_table) {
-  const int l_bit = num_imp_packets > 16 ? 1 : 0;
-  const int num_imp_mask_bytes =
-      (l_bit == 1) ? kMaskSizeLBitSet : kMaskSizeLBitClear;
+  const int num_imp_mask_bytes = PacketMaskSize(num_imp_packets);
 
   // Get sub_mask1 from table
   const uint8_t* packet_mask_sub_1 =
@@ -373,9 +371,7 @@ void GeneratePacketMasks(int num_media_packets,
   assert(num_fec_packets <= num_media_packets && num_fec_packets > 0);
   assert(num_imp_packets <= num_media_packets && num_imp_packets >= 0);
 
-  int l_bit = num_media_packets > 16 ? 1 : 0;
-  const int num_mask_bytes =
-      (l_bit == 1) ? kMaskSizeLBitSet : kMaskSizeLBitClear;
+  const int num_mask_bytes = PacketMaskSize(num_media_packets);
 
   // Equal-protection for these cases.
   if (!use_unequal_protection || num_imp_packets == 0) {
@@ -391,6 +387,46 @@ void GeneratePacketMasks(int num_media_packets,
                           num_mask_bytes, packet_mask, mask_table);
   }  // End of UEP modification
 }  // End of GetPacketMasks
+
+size_t PacketMaskSize(size_t num_sequence_numbers) {
+  RTC_DCHECK_LE(num_sequence_numbers, 8 * kUlpfecPacketMaskSizeLBitSet);
+  if (num_sequence_numbers > 8 * kUlpfecPacketMaskSizeLBitClear) {
+    return kUlpfecPacketMaskSizeLBitSet;
+  }
+  return kUlpfecPacketMaskSizeLBitClear;
+}
+
+void InsertZeroColumns(int num_zeros,
+                       uint8_t* new_mask,
+                       int new_mask_bytes,
+                       int num_fec_packets,
+                       int new_bit_index) {
+  for (uint16_t row = 0; row < num_fec_packets; ++row) {
+    const int new_byte_index = row * new_mask_bytes + new_bit_index / 8;
+    const int max_shifts = (7 - (new_bit_index % 8));
+    new_mask[new_byte_index] <<= std::min(num_zeros, max_shifts);
+  }
+}
+
+void CopyColumn(uint8_t* new_mask,
+                int new_mask_bytes,
+                uint8_t* old_mask,
+                int old_mask_bytes,
+                int num_fec_packets,
+                int new_bit_index,
+                int old_bit_index) {
+  // Copy column from the old mask to the beginning of the new mask and shift it
+  // out from the old mask.
+  for (uint16_t row = 0; row < num_fec_packets; ++row) {
+    int new_byte_index = row * new_mask_bytes + new_bit_index / 8;
+    int old_byte_index = row * old_mask_bytes + old_bit_index / 8;
+    new_mask[new_byte_index] |= ((old_mask[old_byte_index] & 0x80) >> 7);
+    if (new_bit_index % 8 != 7) {
+      new_mask[new_byte_index] <<= 1;
+    }
+    old_mask[old_byte_index] <<= 1;
+  }
+}
 
 }  // namespace internal
 }  // namespace webrtc

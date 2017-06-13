@@ -10,7 +10,6 @@
 
 #include "webrtc/voice_engine/voe_volume_control_impl.h"
 
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/voice_engine/channel.h"
 #include "webrtc/voice_engine/include/voe_errors.h"
@@ -21,19 +20,13 @@
 namespace webrtc {
 
 VoEVolumeControl* VoEVolumeControl::GetInterface(VoiceEngine* voiceEngine) {
-#ifndef WEBRTC_VOICE_ENGINE_VOLUME_CONTROL_API
-  return NULL;
-#else
   if (NULL == voiceEngine) {
     return NULL;
   }
   VoiceEngineImpl* s = static_cast<VoiceEngineImpl*>(voiceEngine);
   s->AddRef();
   return s;
-#endif
 }
-
-#ifdef WEBRTC_VOICE_ENGINE_VOLUME_CONTROL_API
 
 VoEVolumeControlImpl::VoEVolumeControlImpl(voe::SharedData* shared)
     : _shared(shared) {
@@ -216,7 +209,7 @@ int VoEVolumeControlImpl::SetInputMute(int channel, bool enable) {
                           "SetInputMute() failed to locate channel");
     return -1;
   }
-  return channelPtr->SetMute(enable);
+  return channelPtr->SetInputMute(enable);
 }
 
 int VoEVolumeControlImpl::GetInputMute(int channel, bool& enabled) {
@@ -234,7 +227,7 @@ int VoEVolumeControlImpl::GetInputMute(int channel, bool& enabled) {
                             "SetInputMute() failed to locate channel");
       return -1;
     }
-    enabled = channelPtr->Mute();
+    enabled = channelPtr->InputMute();
   }
   return 0;
 }
@@ -414,7 +407,5 @@ int VoEVolumeControlImpl::GetOutputVolumePan(int channel,
   }
   return channelPtr->GetOutputVolumePan(left, right);
 }
-
-#endif  // #ifdef WEBRTC_VOICE_ENGINE_VOLUME_CONTROL_API
 
 }  // namespace webrtc

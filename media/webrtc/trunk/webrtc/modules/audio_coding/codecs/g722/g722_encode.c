@@ -9,7 +9,7 @@
  *
  * All rights reserved.
  *
- *  Despite my general liking of the GPL, I place my own contributions 
+ *  Despite my general liking of the GPL, I place my own contributions
  *  to this code in the public domain for the benefit of all mankind -
  *  even the slimy ones who might try to proprietize my work and use it
  *  to my detriment.
@@ -29,10 +29,6 @@
  */
 
 /*! \file */
-
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 
 #include <memory.h>
 #include <stdio.h>
@@ -122,7 +118,7 @@ static void block4(G722EncoderState *s, int band, int d)
         s->band[band].d[i] = s->band[band].d[i - 1];
         s->band[band].b[i] = s->band[band].bp[i];
     }
-    
+
     for (i = 2;  i > 0;  i--)
     {
         s->band[band].r[i] = s->band[band].r[i - 1];
@@ -311,7 +307,7 @@ size_t WebRtc_g722_encode(G722EncoderState *s, uint8_t g722_data[],
                     s->x[i] = s->x[i + 2];
                 s->x[22] = amp[j++];
                 s->x[23] = amp[j++];
-    
+
                 /* Discard every other QMF output */
                 sumeven = 0;
                 sumodd = 0;
@@ -371,7 +367,7 @@ size_t WebRtc_g722_encode(G722EncoderState *s, uint8_t g722_data[],
         s->band[0].det = wd3 << 2;
 
         block4(s, 0, dlow);
-        
+
         if (s->eight_k)
         {
             /* Just leave the high bits as zero */

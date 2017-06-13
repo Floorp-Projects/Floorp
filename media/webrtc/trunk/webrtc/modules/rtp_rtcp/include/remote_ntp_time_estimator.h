@@ -11,8 +11,10 @@
 #ifndef WEBRTC_MODULES_RTP_RTCP_INCLUDE_REMOTE_NTP_TIME_ESTIMATOR_H_
 #define WEBRTC_MODULES_RTP_RTCP_INCLUDE_REMOTE_NTP_TIME_ESTIMATOR_H_
 
-#include "webrtc/base/scoped_ptr.h"
-#include "webrtc/system_wrappers/include/rtp_to_ntp.h"
+#include <memory>
+
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/system_wrappers/include/rtp_to_ntp_estimator.h"
 
 namespace webrtc {
 
@@ -40,8 +42,8 @@ class RemoteNtpTimeEstimator {
 
  private:
   Clock* clock_;
-  rtc::scoped_ptr<TimestampExtrapolator> ts_extrapolator_;
-  RtcpList rtcp_list_;
+  std::unique_ptr<TimestampExtrapolator> ts_extrapolator_;
+  RtpToNtpEstimator rtp_to_ntp_;
   int64_t last_timing_log_ms_;
   RTC_DISALLOW_COPY_AND_ASSIGN(RemoteNtpTimeEstimator);
 };

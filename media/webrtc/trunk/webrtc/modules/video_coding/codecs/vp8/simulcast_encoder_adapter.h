@@ -12,13 +12,15 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_SIMULCAST_ENCODER_ADAPTER_H_
 #define WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_SIMULCAST_ENCODER_ADAPTER_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/video_coding/codecs/vp8/include/vp8.h"
 
 namespace webrtc {
+
+class SimulcastRateAllocator;
 
 class VideoEncoderFactory {
  public:
@@ -46,19 +48,20 @@ class SimulcastEncoderAdapter : public VP8Encoder {
              const std::vector<FrameType>* frame_types) override;
   int RegisterEncodeCompleteCallback(EncodedImageCallback* callback) override;
   int SetChannelParameters(uint32_t packet_loss, int64_t rtt) override;
-  int SetRates(uint32_t new_bitrate_kbit, uint32_t new_framerate) override;
+  int SetRateAllocation(const BitrateAllocation& bitrate,
+                        uint32_t new_framerate) override;
 
   // Eventual handler for the contained encoders' EncodedImageCallbacks, but
   // called from an internal helper that also knows the correct stream
   // index.
-  int32_t Encoded(size_t stream_idx,
-                  const EncodedImage& encodedImage,
-                  const CodecSpecificInfo* codecSpecificInfo = NULL,
-                  const RTPFragmentationHeader* fragmentation = NULL);
+  EncodedImageCallback::Result OnEncodedImage(
+      size_t stream_idx,
+      const EncodedImage& encoded_image,
+      const CodecSpecificInfo* codec_specific_info,
+      const RTPFragmentationHeader* fragmentation);
 
-  void OnDroppedFrame() override;
+  VideoEncoder::ScalingSettings GetScalingSettings() const override;
 
-  int GetTargetFramerate() override;
   bool SupportsNativeHandle() const override;
   const char* ImplementationName() const override;
 
@@ -91,27 +94,16 @@ class SimulcastEncoderAdapter : public VP8Encoder {
     bool send_stream;
   };
 
-  // Get the stream bitrate, for the stream |stream_idx|, given the bitrate
-  // |new_bitrate_kbit| and the actual configured stream count in
-  // |total_number_of_streams|. The function also returns whether there's enough
-  // bandwidth to send this stream via |send_stream|.
-  uint32_t GetStreamBitrate(int stream_idx,
-                            size_t total_number_of_streams,
-                            uint32_t new_bitrate_kbit,
-                            bool* send_stream) const;
-
   // Populate the codec settings for each stream.
   void PopulateStreamCodec(const webrtc::VideoCodec* inst,
                            int stream_index,
-                           size_t total_number_of_streams,
+                           uint32_t start_bitrate_kbps,
                            bool highest_resolution_stream,
-                           webrtc::VideoCodec* stream_codec,
-                           bool* send_stream);
+                           webrtc::VideoCodec* stream_codec);
 
   bool Initialized() const;
 
-  rtc::scoped_ptr<VideoEncoderFactory> factory_;
-  rtc::scoped_ptr<Config> screensharing_extra_options_;
+  std::unique_ptr<VideoEncoderFactory> factory_;
   VideoCodec codec_;
   std::vector<StreamInfo> streaminfos_;
   EncodedImageCallback* encoded_complete_callback_;

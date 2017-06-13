@@ -27,8 +27,11 @@ class OveruseEstimator {
   // between timestamp groups as defined by the InterArrival class.
   // |current_hypothesis| should be the hypothesis of the over-use detector at
   // this time.
-  void Update(int64_t t_delta, double ts_delta, int size_delta,
-              BandwidthUsage current_hypothesis);
+  void Update(int64_t t_delta,
+              double ts_delta,
+              int size_delta,
+              BandwidthUsage current_hypothesis,
+              int64_t now_ms);
 
   // Returns the estimated noise/jitter variance in ms^2.
   double var_noise() const {

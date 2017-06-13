@@ -17,7 +17,9 @@ int32_t AudioDeviceDummy::ActiveAudioLayer(
   return -1;
 }
 
-int32_t AudioDeviceDummy::Init() { return 0; }
+AudioDeviceGeneric::InitStatus AudioDeviceDummy::Init() {
+  return InitStatus::OK;
+}
 
 int32_t AudioDeviceDummy::Terminate() { return 0; }
 

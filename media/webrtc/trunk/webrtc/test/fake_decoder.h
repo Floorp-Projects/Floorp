@@ -37,7 +37,6 @@ class FakeDecoder : public VideoDecoder {
       DecodedImageCallback* callback) override;
 
   int32_t Release() override;
-  int32_t Reset() override;
 
   const char* ImplementationName() const override;
 
@@ -45,7 +44,6 @@ class FakeDecoder : public VideoDecoder {
 
  private:
   VideoCodec config_;
-  VideoFrame frame_;
   DecodedImageCallback* callback_;
 };
 

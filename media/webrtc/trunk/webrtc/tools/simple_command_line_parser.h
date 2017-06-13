@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/test/testsupport/gtest_prod_util.h"
+#include "webrtc/base/gtest_prod_util.h"
 
 // This is a very basic command line parsing class. We pass the command line
 // arguments and their number and the class forms a vector out of these. Than we

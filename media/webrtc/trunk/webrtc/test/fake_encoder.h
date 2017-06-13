@@ -13,6 +13,8 @@
 
 #include <vector>
 
+#include "webrtc/base/criticalsection.h"
+#include "webrtc/base/task_queue.h"
 #include "webrtc/common_types.h"
 #include "webrtc/system_wrappers/include/clock.h"
 #include "webrtc/video_encoder.h"
@@ -38,18 +40,20 @@ class FakeEncoder : public VideoEncoder {
       EncodedImageCallback* callback) override;
   int32_t Release() override;
   int32_t SetChannelParameters(uint32_t packet_loss, int64_t rtt) override;
-  int32_t SetRates(uint32_t new_target_bitrate, uint32_t framerate) override;
+  int32_t SetRateAllocation(const BitrateAllocation& rate_allocation,
+                            uint32_t framerate) override;
   const char* ImplementationName() const override;
 
   static const char* kImplementationName;
 
  protected:
+  rtc::CriticalSection crit_sect_;
   Clock* const clock_;
-  VideoCodec config_;
-  EncodedImageCallback* callback_;
-  int target_bitrate_kbps_;
-  int max_target_bitrate_kbps_;
-  int64_t last_encode_time_ms_;
+  VideoCodec config_ GUARDED_BY(crit_sect_);
+  EncodedImageCallback* callback_ GUARDED_BY(crit_sect_);
+  BitrateAllocation target_bitrate_ GUARDED_BY(crit_sect_);
+  int max_target_bitrate_kbps_ GUARDED_BY(crit_sect_);
+  int64_t last_encode_time_ms_ GUARDED_BY(crit_sect_);
   uint8_t encoded_buffer_[100000];
 };
 
@@ -61,13 +65,14 @@ class FakeH264Encoder : public FakeEncoder, public EncodedImageCallback {
   int32_t RegisterEncodeCompleteCallback(
       EncodedImageCallback* callback) override;
 
-  int32_t Encoded(const EncodedImage& encodedImage,
-                  const CodecSpecificInfo* codecSpecificInfo,
-                  const RTPFragmentationHeader* fragments) override;
+  Result OnEncodedImage(const EncodedImage& encodedImage,
+                        const CodecSpecificInfo* codecSpecificInfo,
+                        const RTPFragmentationHeader* fragments) override;
 
  private:
-  EncodedImageCallback* callback_;
-  int idr_counter_;
+  rtc::CriticalSection local_crit_sect_;
+  EncodedImageCallback* callback_ GUARDED_BY(local_crit_sect_);
+  int idr_counter_ GUARDED_BY(local_crit_sect_);
 };
 
 class DelayedEncoder : public test::FakeEncoder {
@@ -75,13 +80,40 @@ class DelayedEncoder : public test::FakeEncoder {
   DelayedEncoder(Clock* clock, int delay_ms);
   virtual ~DelayedEncoder() {}
 
+  void SetDelay(int delay_ms);
   int32_t Encode(const VideoFrame& input_image,
                  const CodecSpecificInfo* codec_specific_info,
                  const std::vector<FrameType>* frame_types) override;
 
  private:
-  const int delay_ms_;
+  rtc::CriticalSection local_crit_sect_;
+  int delay_ms_ GUARDED_BY(&local_crit_sect_);
 };
+
+// This class implements a multi-threaded fake encoder by posting
+// FakeH264Encoder::Encode(.) tasks to |queue1_| and |queue2_|, in an
+// alternating fashion.
+class MultithreadedFakeH264Encoder : public test::FakeH264Encoder {
+ public:
+  explicit MultithreadedFakeH264Encoder(Clock* clock);
+  virtual ~MultithreadedFakeH264Encoder() override;
+
+  int32_t Encode(const VideoFrame& input_image,
+                 const CodecSpecificInfo* codec_specific_info,
+                 const std::vector<FrameType>* frame_types) override;
+
+  int32_t EncodeCallback(const VideoFrame& input_image,
+                         const CodecSpecificInfo* codec_specific_info,
+                         const std::vector<FrameType>* frame_types);
+
+ protected:
+  class EncodeTask;
+
+  int current_queue_;
+  rtc::TaskQueue queue1_;
+  rtc::TaskQueue queue2_;
+};
+
 }  // namespace test
 }  // namespace webrtc
 

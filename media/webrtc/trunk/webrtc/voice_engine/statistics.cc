@@ -13,7 +13,6 @@
 
 #include "webrtc/voice_engine/statistics.h"
 
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/include/trace.h"
 
 namespace webrtc {
@@ -21,20 +20,14 @@ namespace webrtc {
 namespace voe {
 
 Statistics::Statistics(uint32_t instanceId) :
-    _critPtr(CriticalSectionWrapper::CreateCriticalSection()),
     _instanceId(instanceId),
     _lastError(0),
     _isInitialized(false)
 {
 }
-	
+
 Statistics::~Statistics()
 {
-    if (_critPtr)
-    {
-        delete _critPtr;
-        _critPtr = NULL;
-    }
 }
 
 int32_t Statistics::SetInitialized()
@@ -56,7 +49,7 @@ bool Statistics::Initialized() const
 
 int32_t Statistics::SetLastError(int32_t error) const
 {
-    CriticalSectionScoped cs(_critPtr);
+    rtc::CritScope cs(&lock_);
     _lastError = error;
     return 0;
 }
@@ -64,11 +57,11 @@ int32_t Statistics::SetLastError(int32_t error) const
 int32_t Statistics::SetLastError(int32_t error,
                                  TraceLevel level) const
 {
-    CriticalSectionScoped cs(_critPtr);
-    _lastError = error;
     WEBRTC_TRACE(level, kTraceVoice, VoEId(_instanceId,-1),
                  "error code is set to %d",
-                 _lastError);
+                 error);
+    rtc::CritScope cs(&lock_);
+    _lastError = error;
     return 0;
 }
 
@@ -76,22 +69,28 @@ int32_t Statistics::SetLastError(
     int32_t error,
     TraceLevel level, const char* msg) const
 {
-    CriticalSectionScoped cs(_critPtr);
     char traceMessage[KTraceMaxMessageSize];
     assert(strlen(msg) < KTraceMaxMessageSize);
-    _lastError = error;
     sprintf(traceMessage, "%s (error=%d)", msg, error);
+
     WEBRTC_TRACE(level, kTraceVoice, VoEId(_instanceId,-1), "%s",
                  traceMessage);
+
+    rtc::CritScope cs(&lock_);
+    _lastError = error;
     return 0;
 }
 
 int32_t Statistics::LastError() const
 {
-    CriticalSectionScoped cs(_critPtr);
-    WEBRTC_TRACE(kTraceStateInfo, kTraceVoice, VoEId(_instanceId,-1),
-               "LastError() => %d", _lastError);
-    return _lastError;
+    int32_t ret;
+    {
+        rtc::CritScope cs(&lock_);
+        ret = _lastError;
+    }
+    WEBRTC_TRACE(kTraceStateInfo, kTraceVoice, VoEId(_instanceId, -1),
+                 "LastError() => %d", ret);
+    return ret;
 }
 
 }  // namespace voe

@@ -195,6 +195,28 @@ int16_t WebRtcOpus_DisableDtx(OpusEncInst* inst);
  */
 int16_t WebRtcOpus_SetComplexity(OpusEncInst* inst, int32_t complexity);
 
+/*
+ * WebRtcOpus_SetForceChannels(...)
+ *
+ * If the encoder is initialized as a stereo encoder, Opus will by default
+ * decide whether to encode in mono or stereo based on the bitrate. This
+ * function overrules the previous setting, and forces the encoder to encode
+ * in auto/mono/stereo.
+ *
+ * If the Encoder is initialized as a mono encoder, and one tries to force
+ * stereo, the function will return an error.
+ *
+ * Input:
+ *      - inst               : Encoder context
+ *      - num_channels       : 0 - Not forced
+ *                             1 - Mono
+ *                             2 - Stereo
+ *
+ * Return value              :  0 - Success
+ *                             -1 - Error
+ */
+int16_t WebRtcOpus_SetForceChannels(OpusEncInst* inst, size_t num_channels);
+
 int16_t WebRtcOpus_DecoderCreate(OpusDecInst** inst, size_t channels);
 int16_t WebRtcOpus_DecoderFree(OpusDecInst* inst);
 

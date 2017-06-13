@@ -8,12 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
 #include <string>
 
+#include "webrtc/base/fakesslidentity.h"
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/helpers.h"
 #include "webrtc/base/ssladapter.h"
+#include "webrtc/base/sslfingerprint.h"
 #include "webrtc/base/sslidentity.h"
+#include "webrtc/base/stringutils.h"
 
 using rtc::SSLIdentity;
 
@@ -61,6 +65,145 @@ const unsigned char kTestCertSha512[] = {
     0x61, 0x33, 0x0e, 0x14, 0xc3, 0x04, 0xaa, 0x07,
     0xf6, 0xa5, 0xda, 0xdc, 0x42, 0x42, 0x22, 0x35,
     0xce, 0x26, 0x58, 0x4a, 0x33, 0x6d, 0xbc, 0xb6};
+
+// These PEM strings were created by generating an identity with
+// |SSLIdentity::Generate| and invoking |identity->PrivateKeyToPEMString()|,
+// |identity->PublicKeyToPEMString()| and
+// |identity->certificate().ToPEMString()|. If the crypto library is updated,
+// and the update changes the string form of the keys, these will have to be
+// updated too.  The fingerprint, fingerprint algorithm and base64 certificate
+// were created by calling |identity->certificate().GetStats()|.
+static const char kRSA_PRIVATE_KEY_PEM[] =
+    "-----BEGIN PRIVATE KEY-----\n"
+    "MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAMQPqDStRlYeDpkX\n"
+    "erRmv+a1naM8vSVSY0gG2plnrnofViWRW3MRqWC+020MsIj3hPZeSAnt/y/FL/nr\n"
+    "4Ea7NXcwdRo1/1xEK7U/f/cjSg1aunyvHCHwcFcMr31HLFvHr0ZgcFwbgIuFLNEl\n"
+    "7kK5HMO9APz1ntUjek8BmBj8yMl9AgMBAAECgYA8FWBC5GcNtSBcIinkZyigF0A7\n"
+    "6j081sa+J/uNz4xUuI257ZXM6biygUhhvuXK06/XoIULJfhyN0fAm1yb0HtNhiUs\n"
+    "kMOYeon6b8FqFaPjrQf7Gr9FMiIHXNK19uegTMKztXyPZoUWlX84X0iawY95x0Y3\n"
+    "73f6P2rN2UOjlVVjAQJBAOKy3l2w3Zj2w0oAJox0eMwl+RxBNt1C42SHrob2mFUT\n"
+    "rytpVVYOasr8CoDI0kjacjI94sLum+buJoXXX6YTGO0CQQDdZwlYIEkoS3ftfxPa\n"
+    "Ai0YTBzAWvHJg0r8Gk/TkHo6IM+LSsZ9ZYUv/vBe4BKLw1I4hZ+bQvBiq+f8ROtk\n"
+    "+TDRAkAPL3ghwoU1h+IRBO2QHwUwd6K2N9AbBi4BP+168O3HVSg4ujeTKigRLMzv\n"
+    "T4R2iNt5bhfQgvdCgtVlxcWMdF8JAkBwDCg3eEdt5BuyjwBt8XH+/O4ED0KUWCTH\n"
+    "x00k5dZlupsuhE5Fwe4QpzXg3gekwdnHjyCCQ/NCDHvgOMTkmhQxAkA9V03KRX9b\n"
+    "bhvEzY/fu8gEp+EzsER96/D79az5z1BaMGL5OPM2xHBPJATKlswnAa7Lp3QKGZGk\n"
+    "TxslfL18J71s\n"
+    "-----END PRIVATE KEY-----\n";
+static const char kRSA_PUBLIC_KEY_PEM[] =
+    "-----BEGIN PUBLIC KEY-----\n"
+    "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDED6g0rUZWHg6ZF3q0Zr/mtZ2j\n"
+    "PL0lUmNIBtqZZ656H1YlkVtzEalgvtNtDLCI94T2XkgJ7f8vxS/56+BGuzV3MHUa\n"
+    "Nf9cRCu1P3/3I0oNWrp8rxwh8HBXDK99Ryxbx69GYHBcG4CLhSzRJe5CuRzDvQD8\n"
+    "9Z7VI3pPAZgY/MjJfQIDAQAB\n"
+    "-----END PUBLIC KEY-----\n";
+static const char kRSA_CERT_PEM[] =
+    "-----BEGIN CERTIFICATE-----\n"
+    "MIIBnDCCAQWgAwIBAgIJAOEHLgeWYwrpMA0GCSqGSIb3DQEBCwUAMBAxDjAMBgNV\n"
+    "BAMMBXRlc3QxMB4XDTE2MDQyNDE4MTAyMloXDTE2MDUyNTE4MTAyMlowEDEOMAwG\n"
+    "A1UEAwwFdGVzdDEwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAMQPqDStRlYe\n"
+    "DpkXerRmv+a1naM8vSVSY0gG2plnrnofViWRW3MRqWC+020MsIj3hPZeSAnt/y/F\n"
+    "L/nr4Ea7NXcwdRo1/1xEK7U/f/cjSg1aunyvHCHwcFcMr31HLFvHr0ZgcFwbgIuF\n"
+    "LNEl7kK5HMO9APz1ntUjek8BmBj8yMl9AgMBAAEwDQYJKoZIhvcNAQELBQADgYEA\n"
+    "C3ehaZFl+oEYN069C2ht/gMzuC77L854RF/x7xRtNZzkcg9TVgXXdM3auUvJi8dx\n"
+    "yTpU3ixErjQvoZew5ngXTEvTY8BSQUijJEaLWh8n6NDKRbEGTdAk8nPAmq9hdCFq\n"
+    "e3UkexqNHm3g/VxG4NUC1Y+w29ai0/Rgh+VvgbDwK+Q=\n"
+    "-----END CERTIFICATE-----\n";
+static const char kRSA_FINGERPRINT[] =
+    "3C:E8:B2:70:09:CF:A9:09:5A:F4:EF:8F:8D:8A:32:FF:EA:04:91:BA:6E:D4:17:78:16"
+    ":2A:EE:F9:9A:DD:E2:2B";
+static const char kRSA_FINGERPRINT_ALGORITHM[] =
+    "sha-256";
+static const char kRSA_BASE64_CERTIFICATE[] =
+    "MIIBnDCCAQWgAwIBAgIJAOEHLgeWYwrpMA0GCSqGSIb3DQEBCwUAMBAxDjAMBgNVBAMMBXRlc3"
+    "QxMB4XDTE2MDQyNDE4MTAyMloXDTE2MDUyNTE4MTAyMlowEDEOMAwGA1UEAwwFdGVzdDEwgZ8w"
+    "DQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAMQPqDStRlYeDpkXerRmv+a1naM8vSVSY0gG2plnrn"
+    "ofViWRW3MRqWC+020MsIj3hPZeSAnt/y/FL/nr4Ea7NXcwdRo1/1xEK7U/f/cjSg1aunyvHCHw"
+    "cFcMr31HLFvHr0ZgcFwbgIuFLNEl7kK5HMO9APz1ntUjek8BmBj8yMl9AgMBAAEwDQYJKoZIhv"
+    "cNAQELBQADgYEAC3ehaZFl+oEYN069C2ht/gMzuC77L854RF/x7xRtNZzkcg9TVgXXdM3auUvJ"
+    "i8dxyTpU3ixErjQvoZew5ngXTEvTY8BSQUijJEaLWh8n6NDKRbEGTdAk8nPAmq9hdCFqe3Ukex"
+    "qNHm3g/VxG4NUC1Y+w29ai0/Rgh+VvgbDwK+Q=";
+
+static const char kECDSA_PRIVATE_KEY_PEM[] =
+    "-----BEGIN PRIVATE KEY-----\n"
+    "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg/AkEA2hklq7dQ2rN\n"
+    "ZxYL6hOUACL4pn7P4FYlA3ZQhIChRANCAAR7YgdO3utP/8IqVRq8G4VZKreMAxeN\n"
+    "rUa12twthv4uFjuHAHa9D9oyAjncmn+xvZZRyVmKrA56jRzENcEEHoAg\n"
+    "-----END PRIVATE KEY-----\n";
+static const char kECDSA_PUBLIC_KEY_PEM[] =
+    "-----BEGIN PUBLIC KEY-----\n"
+    "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEe2IHTt7rT//CKlUavBuFWSq3jAMX\n"
+    "ja1GtdrcLYb+LhY7hwB2vQ/aMgI53Jp/sb2WUclZiqwOeo0cxDXBBB6AIA==\n"
+    "-----END PUBLIC KEY-----\n";
+static const char kECDSA_CERT_PEM[] =
+    "-----BEGIN CERTIFICATE-----\n"
+    "MIIBFDCBu6ADAgECAgkArpkxjw62sW4wCgYIKoZIzj0EAwIwEDEOMAwGA1UEAwwF\n"
+    "dGVzdDMwHhcNMTYwNDI0MTgxNDM4WhcNMTYwNTI1MTgxNDM4WjAQMQ4wDAYDVQQD\n"
+    "DAV0ZXN0MzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABHtiB07e60//wipVGrwb\n"
+    "hVkqt4wDF42tRrXa3C2G/i4WO4cAdr0P2jICOdyaf7G9llHJWYqsDnqNHMQ1wQQe\n"
+    "gCAwCgYIKoZIzj0EAwIDSAAwRQIhANyreQ/K5yuPPpirsd0e/4WGLHou6bIOSQks\n"
+    "DYzo56NmAiAKOr3u8ol3LmygbUCwEvtWrS8QcJDygxHPACo99hkekw==\n"
+    "-----END CERTIFICATE-----\n";
+static const char kECDSA_FINGERPRINT[] =
+    "9F:47:FA:88:76:3D:18:B8:00:A0:59:9D:C3:5D:34:0B:1F:B8:99:9E:68:DA:F3:A5:DA"
+    ":50:33:A9:FF:4D:31:89";
+static const char kECDSA_FINGERPRINT_ALGORITHM[] =
+    "sha-256";
+static const char kECDSA_BASE64_CERTIFICATE[] =
+    "MIIBFDCBu6ADAgECAgkArpkxjw62sW4wCgYIKoZIzj0EAwIwEDEOMAwGA1UEAwwFdGVzdDMwHh"
+    "cNMTYwNDI0MTgxNDM4WhcNMTYwNTI1MTgxNDM4WjAQMQ4wDAYDVQQDDAV0ZXN0MzBZMBMGByqG"
+    "SM49AgEGCCqGSM49AwEHA0IABHtiB07e60//wipVGrwbhVkqt4wDF42tRrXa3C2G/i4WO4cAdr"
+    "0P2jICOdyaf7G9llHJWYqsDnqNHMQ1wQQegCAwCgYIKoZIzj0EAwIDSAAwRQIhANyreQ/K5yuP"
+    "Ppirsd0e/4WGLHou6bIOSQksDYzo56NmAiAKOr3u8ol3LmygbUCwEvtWrS8QcJDygxHPACo99h"
+    "kekw==";
+
+struct IdentityAndInfo {
+  std::unique_ptr<rtc::SSLIdentity> identity;
+  std::vector<std::string> ders;
+  std::vector<std::string> pems;
+  std::vector<std::string> fingerprints;
+};
+
+IdentityAndInfo CreateFakeIdentityAndInfoFromDers(
+    const std::vector<std::string>& ders) {
+  RTC_CHECK(!ders.empty());
+  IdentityAndInfo info;
+  info.ders = ders;
+  for (const std::string& der : ders) {
+    info.pems.push_back(rtc::SSLIdentity::DerToPem(
+        "CERTIFICATE",
+        reinterpret_cast<const unsigned char*>(der.c_str()),
+        der.length()));
+  }
+  info.identity.reset(
+      new rtc::FakeSSLIdentity(rtc::FakeSSLCertificate(info.pems)));
+  // Strip header/footer and newline characters of PEM strings.
+  for (size_t i = 0; i < info.pems.size(); ++i) {
+    rtc::replace_substrs("-----BEGIN CERTIFICATE-----", 27,
+                         "", 0, &info.pems[i]);
+    rtc::replace_substrs("-----END CERTIFICATE-----", 25,
+                         "", 0, &info.pems[i]);
+    rtc::replace_substrs("\n", 1,
+                         "", 0, &info.pems[i]);
+  }
+  // Fingerprint of leaf certificate.
+  std::unique_ptr<rtc::SSLFingerprint> fp(
+      rtc::SSLFingerprint::Create("sha-1", &info.identity->certificate()));
+  EXPECT_TRUE(fp);
+  info.fingerprints.push_back(fp->GetRfc4572Fingerprint());
+  // Fingerprints of the rest of the chain.
+  std::unique_ptr<rtc::SSLCertChain> chain =
+      info.identity->certificate().GetChain();
+  if (chain) {
+    for (size_t i = 0; i < chain->GetSize(); i++) {
+      fp.reset(rtc::SSLFingerprint::Create("sha-1", &chain->Get(i)));
+      EXPECT_TRUE(fp);
+      info.fingerprints.push_back(fp->GetRfc4572Fingerprint());
+    }
+  }
+  EXPECT_EQ(info.ders.size(), info.fingerprints.size());
+  return info;
+}
 
 class SSLIdentityTest : public testing::Test {
  public:
@@ -173,12 +316,43 @@ class SSLIdentityTest : public testing::Test {
     EXPECT_EQ(0, memcmp(digest, expected_digest, expected_len));
   }
 
- private:
-  rtc::scoped_ptr<SSLIdentity> identity_rsa1_;
-  rtc::scoped_ptr<SSLIdentity> identity_rsa2_;
-  rtc::scoped_ptr<SSLIdentity> identity_ecdsa1_;
-  rtc::scoped_ptr<SSLIdentity> identity_ecdsa2_;
-  rtc::scoped_ptr<rtc::SSLCertificate> test_cert_;
+  void TestCloningIdentity(const SSLIdentity& identity) {
+    // Convert |identity| to PEM strings and create a new identity by converting
+    // back from the string format.
+    std::string priv_pem = identity.PrivateKeyToPEMString();
+    std::string publ_pem = identity.PublicKeyToPEMString();
+    std::string cert_pem = identity.certificate().ToPEMString();
+    std::unique_ptr<SSLIdentity> clone(
+        SSLIdentity::FromPEMStrings(priv_pem, cert_pem));
+    EXPECT_TRUE(clone);
+
+    // Make sure the clone is identical to the original.
+    EXPECT_TRUE(identity == *clone);
+    ASSERT_EQ(identity.certificate().CertificateExpirationTime(),
+              clone->certificate().CertificateExpirationTime());
+
+    // At this point we are confident that the identities are identical. To be
+    // extra sure, we compare PEM strings of the clone with the original. Note
+    // that the PEM strings of two identities are not strictly guaranteed to be
+    // equal (they describe structs whose members could be listed in a different
+    // order, for example). But because the same function is used to produce
+    // both PEMs, its a good enough bet that this comparison will work. If the
+    // assumption stops holding in the future we can always remove this from the
+    // unittest.
+    std::string clone_priv_pem = clone->PrivateKeyToPEMString();
+    std::string clone_publ_pem = clone->PublicKeyToPEMString();
+    std::string clone_cert_pem = clone->certificate().ToPEMString();
+    ASSERT_EQ(priv_pem, clone_priv_pem);
+    ASSERT_EQ(publ_pem, clone_publ_pem);
+    ASSERT_EQ(cert_pem, clone_cert_pem);
+  }
+
+ protected:
+  std::unique_ptr<SSLIdentity> identity_rsa1_;
+  std::unique_ptr<SSLIdentity> identity_rsa2_;
+  std::unique_ptr<SSLIdentity> identity_ecdsa1_;
+  std::unique_ptr<SSLIdentity> identity_ecdsa2_;
+  std::unique_ptr<rtc::SSLCertificate> test_cert_;
 };
 
 TEST_F(SSLIdentityTest, FixedDigestSHA1) {
@@ -219,69 +393,46 @@ TEST_F(SSLIdentityTest, DigestSHA512) {
   TestDigestForGeneratedCert(rtc::DIGEST_SHA_512, 64);
 }
 
+TEST_F(SSLIdentityTest, IdentityComparison) {
+  EXPECT_TRUE(*identity_rsa1_ == *identity_rsa1_);
+  EXPECT_FALSE(*identity_rsa1_ == *identity_rsa2_);
+  EXPECT_FALSE(*identity_rsa1_ == *identity_ecdsa1_);
+  EXPECT_FALSE(*identity_rsa1_ == *identity_ecdsa2_);
+
+  EXPECT_TRUE(*identity_rsa2_ == *identity_rsa2_);
+  EXPECT_FALSE(*identity_rsa2_ == *identity_ecdsa1_);
+  EXPECT_FALSE(*identity_rsa2_ == *identity_ecdsa2_);
+
+  EXPECT_TRUE(*identity_ecdsa1_ == *identity_ecdsa1_);
+  EXPECT_FALSE(*identity_ecdsa1_ == *identity_ecdsa2_);
+}
+
 TEST_F(SSLIdentityTest, FromPEMStringsRSA) {
-  static const char kRSA_PRIVATE_KEY_PEM[] =
-      "-----BEGIN RSA PRIVATE KEY-----\n"
-      "MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAMYRkbhmI7kVA/rM\n"
-      "czsZ+6JDhDvnkF+vn6yCAGuRPV03zuRqZtDy4N4to7PZu9PjqrRl7nDMXrG3YG9y\n"
-      "rlIAZ72KjcKKFAJxQyAKLCIdawKRyp8RdK3LEySWEZb0AV58IadqPZDTNHHRX8dz\n"
-      "5aTSMsbbkZ+C/OzTnbiMqLL/vg6jAgMBAAECgYAvgOs4FJcgvp+TuREx7YtiYVsH\n"
-      "mwQPTum2z/8VzWGwR8BBHBvIpVe1MbD/Y4seyI2aco/7UaisatSgJhsU46/9Y4fq\n"
-      "2TwXH9QANf4at4d9n/R6rzwpAJOpgwZgKvdQjkfrKTtgLV+/dawvpxUYkRH4JZM1\n"
-      "CVGukMfKNrSVH4Ap4QJBAOJmGV1ASPnB4r4nc99at7JuIJmd7fmuVUwUgYi4XgaR\n"
-      "WhScBsgYwZ/JoywdyZJgnbcrTDuVcWG56B3vXbhdpMsCQQDf9zeJrjnPZ3Cqm79y\n"
-      "kdqANep0uwZciiNiWxsQrCHztywOvbFhdp8iYVFG9EK8DMY41Y5TxUwsHD+67zao\n"
-      "ZNqJAkEA1suLUP/GvL8IwuRneQd2tWDqqRQ/Td3qq03hP7e77XtF/buya3Ghclo5\n"
-      "54czUR89QyVfJEC6278nzA7n2h1uVQJAcG6mztNL6ja/dKZjYZye2CY44QjSlLo0\n"
-      "MTgTSjdfg/28fFn2Jjtqf9Pi/X+50LWI/RcYMC2no606wRk9kyOuIQJBAK6VSAim\n"
-      "1pOEjsYQn0X5KEIrz1G3bfCbB848Ime3U2/FWlCHMr6ch8kCZ5d1WUeJD3LbwMNG\n"
-      "UCXiYxSsu20QNVw=\n"
-      "-----END RSA PRIVATE KEY-----\n";
-
-  static const char kCERT_PEM[] =
-      "-----BEGIN CERTIFICATE-----\n"
-      "MIIBmTCCAQKgAwIBAgIEbzBSAjANBgkqhkiG9w0BAQsFADARMQ8wDQYDVQQDEwZX\n"
-      "ZWJSVEMwHhcNMTQwMTAyMTgyNDQ3WhcNMTQwMjAxMTgyNDQ3WjARMQ8wDQYDVQQD\n"
-      "EwZXZWJSVEMwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAMYRkbhmI7kVA/rM\n"
-      "czsZ+6JDhDvnkF+vn6yCAGuRPV03zuRqZtDy4N4to7PZu9PjqrRl7nDMXrG3YG9y\n"
-      "rlIAZ72KjcKKFAJxQyAKLCIdawKRyp8RdK3LEySWEZb0AV58IadqPZDTNHHRX8dz\n"
-      "5aTSMsbbkZ+C/OzTnbiMqLL/vg6jAgMBAAEwDQYJKoZIhvcNAQELBQADgYEAUflI\n"
-      "VUe5Krqf5RVa5C3u/UTAOAUJBiDS3VANTCLBxjuMsvqOG0WvaYWP3HYPgrz0jXK2\n"
-      "LJE/mGw3MyFHEqi81jh95J+ypl6xKW6Rm8jKLR87gUvCaVYn/Z4/P3AqcQTB7wOv\n"
-      "UD0A8qfhfDM+LK6rPAnCsVN0NRDY3jvd6rzix9M=\n"
-      "-----END CERTIFICATE-----\n";
-
-  rtc::scoped_ptr<SSLIdentity> identity(
-      SSLIdentity::FromPEMStrings(kRSA_PRIVATE_KEY_PEM, kCERT_PEM));
+  std::unique_ptr<SSLIdentity> identity(
+      SSLIdentity::FromPEMStrings(kRSA_PRIVATE_KEY_PEM, kRSA_CERT_PEM));
   EXPECT_TRUE(identity);
-  EXPECT_EQ(kCERT_PEM, identity->certificate().ToPEMString());
+  EXPECT_EQ(kRSA_PRIVATE_KEY_PEM, identity->PrivateKeyToPEMString());
+  EXPECT_EQ(kRSA_PUBLIC_KEY_PEM, identity->PublicKeyToPEMString());
+  EXPECT_EQ(kRSA_CERT_PEM, identity->certificate().ToPEMString());
 }
 
 TEST_F(SSLIdentityTest, FromPEMStringsEC) {
-  static const char kRSA_PRIVATE_KEY_PEM[] =
-      "-----BEGIN EC PRIVATE KEY-----\n"
-      "MHcCAQEEIKkIztWLPbs4Y2zWv7VW2Ov4is2ifleCuPgRB8fRv3IkoAoGCCqGSM49\n"
-      "AwEHoUQDQgAEDPV33NrhSdhg9cBRkUWUXnVMXc3h17i9ARbSmNgminKcBXb8/y8L\n"
-      "A76cMWQPPM0ybHO8OS7ZVg2U/m+TwE1M2g==\n"
-      "-----END EC PRIVATE KEY-----\n";
-  static const char kCERT_PEM[] =
-      "-----BEGIN CERTIFICATE-----\n"
-      "MIIB0jCCAXmgAwIBAgIJAMCjpFt9t6LMMAoGCCqGSM49BAMCMEUxCzAJBgNVBAYT\n"
-      "AkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBXaWRn\n"
-      "aXRzIFB0eSBMdGQwIBcNMTUwNjMwMTMwMTIyWhgPMjI4OTA0MTMxMzAxMjJaMEUx\n"
-      "CzAJBgNVBAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRl\n"
-      "cm5ldCBXaWRnaXRzIFB0eSBMdGQwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAQM\n"
-      "9Xfc2uFJ2GD1wFGRRZRedUxdzeHXuL0BFtKY2CaKcpwFdvz/LwsDvpwxZA88zTJs\n"
-      "c7w5LtlWDZT+b5PATUzao1AwTjAdBgNVHQ4EFgQUYHq6nxNNIE832ZmaHc/noODO\n"
-      "rtAwHwYDVR0jBBgwFoAUYHq6nxNNIE832ZmaHc/noODOrtAwDAYDVR0TBAUwAwEB\n"
-      "/zAKBggqhkjOPQQDAgNHADBEAiAQRojsTyZG0BlKoU7gOt5h+yAMLl2cxmDtOIQr\n"
-      "GWP/PwIgJynB4AUDsPT0DWmethOXYijB5sY5UPd9DvgmiS/Mr6s=\n"
-      "-----END CERTIFICATE-----\n";
-
-  rtc::scoped_ptr<SSLIdentity> identity(
-      SSLIdentity::FromPEMStrings(kRSA_PRIVATE_KEY_PEM, kCERT_PEM));
+  std::unique_ptr<SSLIdentity> identity(
+      SSLIdentity::FromPEMStrings(kECDSA_PRIVATE_KEY_PEM, kECDSA_CERT_PEM));
   EXPECT_TRUE(identity);
-  EXPECT_EQ(kCERT_PEM, identity->certificate().ToPEMString());
+  EXPECT_EQ(kECDSA_PRIVATE_KEY_PEM, identity->PrivateKeyToPEMString());
+  EXPECT_EQ(kECDSA_PUBLIC_KEY_PEM, identity->PublicKeyToPEMString());
+  EXPECT_EQ(kECDSA_CERT_PEM, identity->certificate().ToPEMString());
+}
+
+TEST_F(SSLIdentityTest, CloneIdentityRSA) {
+  TestCloningIdentity(*identity_rsa1_);
+  TestCloningIdentity(*identity_rsa2_);
+}
+
+TEST_F(SSLIdentityTest, CloneIdentityECDSA) {
+  TestCloningIdentity(*identity_ecdsa1_);
+  TestCloningIdentity(*identity_ecdsa2_);
 }
 
 TEST_F(SSLIdentityTest, PemDerConversion) {
@@ -295,6 +446,51 @@ TEST_F(SSLIdentityTest, PemDerConversion) {
 
 TEST_F(SSLIdentityTest, GetSignatureDigestAlgorithm) {
   TestGetSignatureDigestAlgorithm();
+}
+
+TEST_F(SSLIdentityTest, SSLCertificateGetStatsRSA) {
+  std::unique_ptr<SSLIdentity> identity(
+      SSLIdentity::FromPEMStrings(kRSA_PRIVATE_KEY_PEM, kRSA_CERT_PEM));
+  std::unique_ptr<rtc::SSLCertificateStats> stats =
+      identity->certificate().GetStats();
+  EXPECT_EQ(stats->fingerprint, kRSA_FINGERPRINT);
+  EXPECT_EQ(stats->fingerprint_algorithm, kRSA_FINGERPRINT_ALGORITHM);
+  EXPECT_EQ(stats->base64_certificate, kRSA_BASE64_CERTIFICATE);
+  EXPECT_FALSE(stats->issuer);
+}
+
+TEST_F(SSLIdentityTest, SSLCertificateGetStatsECDSA) {
+  std::unique_ptr<SSLIdentity> identity(
+      SSLIdentity::FromPEMStrings(kECDSA_PRIVATE_KEY_PEM, kECDSA_CERT_PEM));
+  std::unique_ptr<rtc::SSLCertificateStats> stats =
+      identity->certificate().GetStats();
+  EXPECT_EQ(stats->fingerprint, kECDSA_FINGERPRINT);
+  EXPECT_EQ(stats->fingerprint_algorithm, kECDSA_FINGERPRINT_ALGORITHM);
+  EXPECT_EQ(stats->base64_certificate, kECDSA_BASE64_CERTIFICATE);
+  EXPECT_FALSE(stats->issuer);
+}
+
+TEST_F(SSLIdentityTest, SSLCertificateGetStatsWithChain) {
+  std::vector<std::string> ders;
+  ders.push_back("every der results in");
+  ders.push_back("an identity + certificate");
+  ders.push_back("in a certificate chain");
+  IdentityAndInfo info = CreateFakeIdentityAndInfoFromDers(ders);
+  EXPECT_TRUE(info.identity);
+  EXPECT_EQ(info.ders, ders);
+  EXPECT_EQ(info.pems.size(), info.ders.size());
+  EXPECT_EQ(info.fingerprints.size(), info.ders.size());
+
+  std::unique_ptr<rtc::SSLCertificateStats> first_stats =
+      info.identity->certificate().GetStats();
+  rtc::SSLCertificateStats* cert_stats = first_stats.get();
+  for (size_t i = 0; i < info.ders.size(); ++i) {
+    EXPECT_EQ(cert_stats->fingerprint, info.fingerprints[i]);
+    EXPECT_EQ(cert_stats->fingerprint_algorithm, "sha-1");
+    EXPECT_EQ(cert_stats->base64_certificate, info.pems[i]);
+    cert_stats = cert_stats->issuer.get();
+    EXPECT_EQ(static_cast<bool>(cert_stats), i + 1 < info.ders.size());
+  }
 }
 
 class SSLIdentityExpirationTest : public testing::Test {
@@ -387,18 +583,21 @@ class SSLIdentityExpirationTest : public testing::Test {
   }
 
   void TestExpireTime(int times) {
+    // We test just ECDSA here since what we're out to exercise is the
+    // interfaces for expiration setting and reading.
     for (int i = 0; i < times; i++) {
-      rtc::SSLIdentityParams params;
-      params.common_name = "";
-      params.not_before = 0;
       // We limit the time to < 2^31 here, i.e., we stay before 2038, since else
       // we hit time offset limitations in OpenSSL on some 32-bit systems.
-      params.not_after = rtc::CreateRandomId() % 0x80000000;
-      // We test just ECDSA here since what we're out to exercise here is the
-      // code for expiration setting and reading.
-      params.key_params = rtc::KeyParams::ECDSA(rtc::EC_NIST_P256);
-      SSLIdentity* identity = rtc::SSLIdentity::GenerateForTest(params);
-      EXPECT_EQ(params.not_after,
+      time_t time_before_generation = time(nullptr);
+      time_t lifetime =
+          rtc::CreateRandomId() % (0x80000000 - time_before_generation);
+      rtc::KeyParams key_params = rtc::KeyParams::ECDSA(rtc::EC_NIST_P256);
+      SSLIdentity* identity =
+          rtc::SSLIdentity::GenerateWithExpiration("", key_params, lifetime);
+      time_t time_after_generation = time(nullptr);
+      EXPECT_LE(time_before_generation + lifetime,
+                identity->certificate().CertificateExpirationTime());
+      EXPECT_GE(time_after_generation + lifetime,
                 identity->certificate().CertificateExpirationTime());
       delete identity;
     }

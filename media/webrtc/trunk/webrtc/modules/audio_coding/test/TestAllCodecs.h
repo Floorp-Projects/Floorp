@@ -11,15 +11,14 @@
 #ifndef WEBRTC_MODULES_AUDIO_CODING_TEST_TESTALLCODECS_H_
 #define WEBRTC_MODULES_AUDIO_CODING_TEST_TESTALLCODECS_H_
 
-#include "webrtc/base/scoped_ptr.h"
+#include <memory>
+
 #include "webrtc/modules/audio_coding/test/ACMTest.h"
 #include "webrtc/modules/audio_coding/test/Channel.h"
 #include "webrtc/modules/audio_coding/test/PCMFile.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
-
-class Config;
 
 class TestPack : public AudioPacketizationCallback {
  public:
@@ -69,8 +68,8 @@ class TestAllCodecs : public ACMTest {
   void DisplaySendReceiveCodec();
 
   int test_mode_;
-  rtc::scoped_ptr<AudioCodingModule> acm_a_;
-  rtc::scoped_ptr<AudioCodingModule> acm_b_;
+  std::unique_ptr<AudioCodingModule> acm_a_;
+  std::unique_ptr<AudioCodingModule> acm_b_;
   TestPack* channel_a_to_b_;
   PCMFile infile_a_;
   PCMFile outfile_b_;

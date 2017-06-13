@@ -10,10 +10,10 @@
 
 #include <math.h>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/format_macros.h"
 #include "webrtc/common_audio/resampler/include/push_resampler.h"
 #include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/voice_engine/utility.h"
 #include "webrtc/voice_engine/voice_engine_defines.h"
 
@@ -174,9 +174,6 @@ void UtilityTest::RunResampleTest(int src_channels,
   }
 }
 
-// These two tests assume memcpy() (no delay and no filtering) for input
-// freq == output freq && same channels.  RemixAndResample uses 'Fixed'
-// resamplers to enable this behavior
 TEST_F(UtilityTest, RemixAndResampleCopyFrameSucceeds) {
   // Stereo -> stereo.
   SetStereoFrame(&src_frame_, 10, 10);

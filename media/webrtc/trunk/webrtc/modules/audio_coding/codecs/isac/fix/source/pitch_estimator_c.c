@@ -57,8 +57,6 @@ void WebRtcIsacfix_PCorr2Q32(const int16_t* in, int32_t* logcorQ8) {
     ysum32 += in[PITCH_CORR_LEN2 + k - 1] * in[PITCH_CORR_LEN2 + k - 1] >>
         scaling;
 
-    // TODO(zhongwei.yao): Move this function into a separate NEON code file so
-    // that WEBRTC_DETECT_NEON could take advantage of it.
 #ifdef WEBRTC_HAS_NEON
     {
       int32_t vbuff[4];

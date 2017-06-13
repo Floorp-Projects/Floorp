@@ -10,32 +10,94 @@
 
 #include "webrtc/modules/audio_device/android/opensles_common.h"
 
-#include <assert.h>
+#include <SLES/OpenSLES.h>
 
-#include "webrtc/modules/audio_device/android/audio_common.h"
-
-using webrtc::kNumChannels;
+#include "webrtc/base/arraysize.h"
+#include "webrtc/base/checks.h"
 
 namespace webrtc {
 
-SLDataFormat_PCM CreatePcmConfiguration(int sample_rate) {
-  SLDataFormat_PCM configuration;
-  configuration.formatType = SL_DATAFORMAT_PCM;
-  configuration.numChannels = kNumChannels;
-  // According to the opensles documentation in the ndk:
-  // samplesPerSec is actually in units of milliHz, despite the misleading name.
-  // It further recommends using constants. However, this would lead to a lot
-  // of boilerplate code so it is not done here.
-  configuration.samplesPerSec = sample_rate * 1000;
-  configuration.bitsPerSample = SL_PCMSAMPLEFORMAT_FIXED_16;
-  configuration.containerSize = SL_PCMSAMPLEFORMAT_FIXED_16;
-  configuration.channelMask = SL_SPEAKER_FRONT_CENTER;
-  if (2 == configuration.numChannels) {
-    configuration.channelMask =
-        SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT;
+// Returns a string representation given an integer SL_RESULT_XXX code.
+// The mapping can be found in <SLES/OpenSLES.h>.
+const char* GetSLErrorString(size_t code) {
+  static const char* sl_error_strings[] = {
+      "SL_RESULT_SUCCESS",                 // 0
+      "SL_RESULT_PRECONDITIONS_VIOLATED",  // 1
+      "SL_RESULT_PARAMETER_INVALID",       // 2
+      "SL_RESULT_MEMORY_FAILURE",          // 3
+      "SL_RESULT_RESOURCE_ERROR",          // 4
+      "SL_RESULT_RESOURCE_LOST",           // 5
+      "SL_RESULT_IO_ERROR",                // 6
+      "SL_RESULT_BUFFER_INSUFFICIENT",     // 7
+      "SL_RESULT_CONTENT_CORRUPTED",       // 8
+      "SL_RESULT_CONTENT_UNSUPPORTED",     // 9
+      "SL_RESULT_CONTENT_NOT_FOUND",       // 10
+      "SL_RESULT_PERMISSION_DENIED",       // 11
+      "SL_RESULT_FEATURE_UNSUPPORTED",     // 12
+      "SL_RESULT_INTERNAL_ERROR",          // 13
+      "SL_RESULT_UNKNOWN_ERROR",           // 14
+      "SL_RESULT_OPERATION_ABORTED",       // 15
+      "SL_RESULT_CONTROL_LOST",            // 16
+  };
+
+  if (code >= arraysize(sl_error_strings)) {
+    return "SL_RESULT_UNKNOWN_ERROR";
   }
-  configuration.endianness = SL_BYTEORDER_LITTLEENDIAN;
-  return configuration;
+  return sl_error_strings[code];
 }
 
-}  // namespace webrtc_opensl
+SLDataFormat_PCM CreatePCMConfiguration(size_t channels,
+                                        int sample_rate,
+                                        size_t bits_per_sample) {
+  RTC_CHECK_EQ(bits_per_sample, SL_PCMSAMPLEFORMAT_FIXED_16);
+  SLDataFormat_PCM format;
+  format.formatType = SL_DATAFORMAT_PCM;
+  format.numChannels = static_cast<SLuint32>(channels);
+  // Note that, the unit of sample rate is actually in milliHertz and not Hertz.
+  switch (sample_rate) {
+    case 8000:
+      format.samplesPerSec = SL_SAMPLINGRATE_8;
+      break;
+    case 16000:
+      format.samplesPerSec = SL_SAMPLINGRATE_16;
+      break;
+    case 22050:
+      format.samplesPerSec = SL_SAMPLINGRATE_22_05;
+      break;
+    case 32000:
+      format.samplesPerSec = SL_SAMPLINGRATE_32;
+      break;
+    case 44100:
+      format.samplesPerSec = SL_SAMPLINGRATE_44_1;
+      break;
+    case 48000:
+      format.samplesPerSec = SL_SAMPLINGRATE_48;
+      break;
+    case 64000:
+      format.samplesPerSec = SL_SAMPLINGRATE_64;
+      break;
+    case 88200:
+      format.samplesPerSec = SL_SAMPLINGRATE_88_2;
+      break;
+    case 96000:
+      format.samplesPerSec = SL_SAMPLINGRATE_96;
+      break;
+    default:
+      RTC_CHECK(false) << "Unsupported sample rate: " << sample_rate;
+      break;
+  }
+  format.bitsPerSample = SL_PCMSAMPLEFORMAT_FIXED_16;
+  format.containerSize = SL_PCMSAMPLEFORMAT_FIXED_16;
+  format.endianness = SL_BYTEORDER_LITTLEENDIAN;
+  if (format.numChannels == 1) {
+    format.channelMask = SL_SPEAKER_FRONT_CENTER;
+  } else if (format.numChannels == 2) {
+    format.channelMask = SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT;
+  } else {
+    RTC_CHECK(false) << "Unsupported number of channels: "
+                     << format.numChannels;
+  }
+  return format;
+}
+
+}  // namespace webrtc

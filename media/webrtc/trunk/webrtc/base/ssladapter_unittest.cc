@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
 #include <string>
 
 #include "webrtc/base/gunit.h"
@@ -101,7 +102,7 @@ class SSLAdapterTestDummyClient : public sigslot::has_slots<> {
     char buffer[4096] = "";
 
     // Read data received from the server and store it in our internal buffer.
-    int read = socket->Recv(buffer, sizeof(buffer) - 1);
+    int read = socket->Recv(buffer, sizeof(buffer) - 1, nullptr);
     if (read != -1) {
       buffer[read] = '\0';
 
@@ -123,7 +124,7 @@ class SSLAdapterTestDummyClient : public sigslot::has_slots<> {
  private:
   const rtc::SSLMode ssl_mode_;
 
-  rtc::scoped_ptr<rtc::SSLAdapter> ssl_adapter_;
+  std::unique_ptr<rtc::SSLAdapter> ssl_adapter_;
 
   std::string data_;
 };
@@ -251,7 +252,7 @@ class SSLAdapterTestDummyServer : public sigslot::has_slots<> {
     ssl_stream_adapter_->SetPeerCertificateDigest(rtc::DIGEST_SHA_1, digest,
         digest_len);
 
-    ssl_stream_adapter_->StartSSLWithPeer();
+    ssl_stream_adapter_->StartSSL();
 
     ssl_stream_adapter_->SignalEvent.connect(this,
         &SSLAdapterTestDummyServer::OnSSLStreamAdapterEvent);
@@ -259,10 +260,10 @@ class SSLAdapterTestDummyServer : public sigslot::has_slots<> {
 
   const rtc::SSLMode ssl_mode_;
 
-  rtc::scoped_ptr<rtc::AsyncSocket> server_socket_;
-  rtc::scoped_ptr<rtc::SSLStreamAdapter> ssl_stream_adapter_;
+  std::unique_ptr<rtc::AsyncSocket> server_socket_;
+  std::unique_ptr<rtc::SSLStreamAdapter> ssl_stream_adapter_;
 
-  rtc::scoped_ptr<rtc::SSLIdentity> ssl_identity_;
+  std::unique_ptr<rtc::SSLIdentity> ssl_identity_;
 
   std::string data_;
 };
@@ -339,8 +340,8 @@ class SSLAdapterTestBase : public testing::Test,
 
   const rtc::SocketServerScope ss_scope_;
 
-  rtc::scoped_ptr<SSLAdapterTestDummyServer> server_;
-  rtc::scoped_ptr<SSLAdapterTestDummyClient> client_;
+  std::unique_ptr<SSLAdapterTestDummyServer> server_;
+  std::unique_ptr<SSLAdapterTestDummyClient> client_;
 
   int handshake_wait_;
 };

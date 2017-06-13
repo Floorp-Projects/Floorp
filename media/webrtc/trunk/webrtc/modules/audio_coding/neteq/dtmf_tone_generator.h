@@ -38,7 +38,7 @@ class DtmfToneGenerator {
   static const int kCoeff2[4][16];  // 2nd oscillator model coefficient table.
   static const int kInitValue1[4][16];  // Initialization for 1st oscillator.
   static const int kInitValue2[4][16];  // Initialization for 2nd oscillator.
-  static const int kAmplitude[37];  // Amplitude for 0 through -36 dBm0.
+  static const int kAmplitude[64];  // Amplitude for 0 through -63 dBm0.
   static const int16_t kAmpMultiplier = 23171;  // 3 dB attenuation (in Q15).
 
   bool initialized_;            // True if generator is initialized properly.

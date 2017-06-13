@@ -8,12 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
 #include "webrtc/common_audio/sparse_fir_filter.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/arraysize.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_audio/fir_filter.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 namespace {
@@ -214,9 +215,8 @@ TEST(SparseFIRFilterTest, SameOutputAsFIRFilterWhenSparsityOneAndOffsetZero) {
   const size_t kOffset = 0;
   float output[arraysize(kInput)];
   float sparse_output[arraysize(kInput)];
-  rtc::scoped_ptr<FIRFilter> filter(FIRFilter::Create(kCoeffs,
-                                                      arraysize(kCoeffs),
-                                                      arraysize(kInput)));
+  std::unique_ptr<FIRFilter> filter(
+      FIRFilter::Create(kCoeffs, arraysize(kCoeffs), arraysize(kInput)));
   SparseFIRFilter sparse_filter(kCoeffs,
                                 arraysize(kCoeffs),
                                 kSparsity,

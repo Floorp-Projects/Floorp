@@ -32,36 +32,18 @@ class RemoteBitrateObserver {
  public:
   // Called when a receive channel group has a new bitrate estimate for the
   // incoming streams.
-  virtual void OnReceiveBitrateChanged(const std::vector<unsigned int>& ssrcs,
-                                       unsigned int bitrate) = 0;
+  virtual void OnReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs,
+                                       uint32_t bitrate) = 0;
+  virtual void OnProbeBitrate(uint32_t bitrate) {}
 
   virtual ~RemoteBitrateObserver() {}
 };
 
-struct ReceiveBandwidthEstimatorStats {
-  ReceiveBandwidthEstimatorStats() : total_propagation_time_delta_ms(0) {}
-
-  // The "propagation_time_delta" of a frame is defined as (d_arrival - d_sent),
-  // where d_arrival is the delta of the arrival times of the frame and the
-  // previous frame, d_sent is the delta of the sent times of the frame and
-  // the previous frame. The sent time is calculated from the RTP timestamp.
-
-  // |total_propagation_time_delta_ms| is the sum of the propagation_time_deltas
-  // of all received frames, except that it's is adjusted to 0 when it becomes
-  // negative.
-  int total_propagation_time_delta_ms;
-  // The propagation_time_deltas for the frames arrived in the last
-  // kProcessIntervalMs using the clock passed to
-  // RemoteBitrateEstimatorFactory::Create.
-  std::vector<int> recent_propagation_time_delta_ms;
-  // The arrival times for the frames arrived in the last kProcessIntervalMs
-  // using the clock passed to RemoteBitrateEstimatorFactory::Create.
-  std::vector<int64_t> recent_arrival_time_ms;
-};
+// TODO(holmer): Remove when all implementations have been updated.
+struct ReceiveBandwidthEstimatorStats {};
 
 class RemoteBitrateEstimator : public CallStatsObserver, public Module {
  public:
-  static const int kDefaultMinBitrateBps = 30000;
   virtual ~RemoteBitrateEstimator() {}
 
   virtual void IncomingPacketFeedbackVector(
@@ -76,20 +58,21 @@ class RemoteBitrateEstimator : public CallStatsObserver, public Module {
   // Note that |arrival_time_ms| can be of an arbitrary time base.
   virtual void IncomingPacket(int64_t arrival_time_ms,
                               size_t payload_size,
-                              const RTPHeader& header,
-                              bool was_paced) = 0;
+                              const RTPHeader& header) = 0;
 
   // Removes all data for |ssrc|.
-  virtual void RemoveStream(unsigned int ssrc) = 0;
+  virtual void RemoveStream(uint32_t ssrc) = 0;
 
   // Returns true if a valid estimate exists and sets |bitrate_bps| to the
   // estimated payload bitrate in bits per second. |ssrcs| is the list of ssrcs
   // currently being received and of which the bitrate estimate is based upon.
-  virtual bool LatestEstimate(std::vector<unsigned int>* ssrcs,
-                              unsigned int* bitrate_bps) const = 0;
+  virtual bool LatestEstimate(std::vector<uint32_t>* ssrcs,
+                              uint32_t* bitrate_bps) const = 0;
 
-  // Returns true if the statistics are available.
-  virtual bool GetStats(ReceiveBandwidthEstimatorStats* output) const = 0;
+  // TODO(holmer): Remove when all implementations have been updated.
+  virtual bool GetStats(ReceiveBandwidthEstimatorStats* output) const {
+    return false;
+  }
 
   virtual void SetMinBitrate(int min_bitrate_bps) = 0;
 

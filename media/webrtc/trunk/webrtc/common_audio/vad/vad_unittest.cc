@@ -12,12 +12,11 @@
 
 #include <stdlib.h>
 
-#include "testing/gtest/include/gtest/gtest.h"
-
 #include "webrtc/base/arraysize.h"
 #include "webrtc/base/checks.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/common_audio/vad/include/webrtc_vad.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/typedefs.h"
 
 VadTest::VadTest() {}

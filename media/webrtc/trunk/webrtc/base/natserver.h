@@ -15,6 +15,7 @@
 #include <set>
 
 #include "webrtc/base/asyncudpsocket.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/socketaddresspair.h"
 #include "webrtc/base/thread.h"
 #include "webrtc/base/socketfactory.h"

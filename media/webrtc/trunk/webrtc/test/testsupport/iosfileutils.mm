@@ -19,25 +19,13 @@
 
 #include "webrtc/base/checks.h"
 #include "webrtc/typedefs.h"
+#include "webrtc/sdk/objc/Framework/Classes/helpers.h"
 
 namespace webrtc {
 namespace test {
 
-// TODO(henrika): move to shared location.
-// See https://code.google.com/p/webrtc/issues/detail?id=4773 for details.
-NSString* NSStringFromStdString(const std::string& stdString) {
-  // std::string may contain null termination character so we construct
-  // using length.
-  return [[NSString alloc] initWithBytes:stdString.data()
-                                  length:stdString.length()
-                                encoding:NSUTF8StringEncoding];
-}
-
-std::string StdStringFromNSString(NSString* nsString) {
-  NSData* charData = [nsString dataUsingEncoding:NSUTF8StringEncoding];
-  return std::string(reinterpret_cast<const char*>([charData bytes]),
-                     [charData length]);
-}
+using webrtc::ios::NSStringFromStdString;
+using webrtc::ios::StdStringFromNSString;
 
 // For iOS, resource files are added to the application bundle in the root
 // and not in separate folders as is the case for other platforms. This method
@@ -51,6 +39,25 @@ std::string IOSResourcePath(std::string name, std::string extension) {
     NSString* pathString = [[NSBundle mainBundle] pathForResource:fileName
                                                            ofType:fileType];
     return StdStringFromNSString(pathString);
+  }
+}
+
+std::string IOSRootPath() {
+  @autoreleasepool {
+    NSBundle* mainBundle = [NSBundle mainBundle];
+    return StdStringFromNSString(mainBundle.bundlePath) + "/";
+  }
+}
+
+// For iOS, we don't have access to the output directory. Return the path to the
+// temporary directory instead. This is mostly used by tests that need to write
+// output files to disk.
+std::string IOSOutputPath()  {
+  @autoreleasepool {
+    NSString* tempDir = NSTemporaryDirectory();
+    if (tempDir == nil)
+        tempDir = @"/tmp";
+    return StdStringFromNSString(tempDir);
   }
 }
 

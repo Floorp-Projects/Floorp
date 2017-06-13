@@ -19,20 +19,21 @@
 #ifndef WEBRTC_MODULES_AUDIO_CODING_CODECS_ILBC_MAIN_SOURCE_CB_CONSTRUCT_H_
 #define WEBRTC_MODULES_AUDIO_CODING_CODECS_ILBC_MAIN_SOURCE_CB_CONSTRUCT_H_
 
+#include <stdbool.h>
 #include "defines.h"
 
 /*----------------------------------------------------------------*
  *  Construct decoded vector from codebook and gains.
  *---------------------------------------------------------------*/
 
-void WebRtcIlbcfix_CbConstruct(
-    int16_t *decvector,  /* (o) Decoded vector */
-    int16_t *index,   /* (i) Codebook indices */
-    int16_t *gain_index,  /* (i) Gain quantization indices */
-    int16_t *mem,   /* (i) Buffer for codevector construction */
-    size_t lMem,   /* (i) Length of buffer */
-    size_t veclen   /* (i) Length of vector */
-                               );
-
+// Returns true on success, false on failure.
+bool WebRtcIlbcfix_CbConstruct(
+    int16_t* decvector,        /* (o) Decoded vector */
+    const int16_t* index,      /* (i) Codebook indices */
+    const int16_t* gain_index, /* (i) Gain quantization indices */
+    int16_t* mem,              /* (i) Buffer for codevector construction */
+    size_t lMem,               /* (i) Length of buffer */
+    size_t veclen              /* (i) Length of vector */
+    ) WARN_UNUSED_RESULT;
 
 #endif

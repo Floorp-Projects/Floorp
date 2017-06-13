@@ -99,7 +99,7 @@ int DtmfBuffer::ParseEvent(uint32_t rtp_timestamp,
 // existing one.
 int DtmfBuffer::InsertEvent(const DtmfEvent& event) {
   if (event.event_no < 0 || event.event_no > 15 ||
-      event.volume < 0 || event.volume > 36 ||
+      event.volume < 0 || event.volume > 63 ||
       event.duration <= 0 || event.duration > 65535) {
     LOG(LS_WARNING) << "InsertEvent invalid parameters";
     return kInvalidEventParameters;

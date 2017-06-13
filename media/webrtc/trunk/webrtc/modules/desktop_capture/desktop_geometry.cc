@@ -44,5 +44,15 @@ void DesktopRect::Translate(int32_t dx, int32_t dy) {
   bottom_ += dy;
 }
 
+void DesktopRect::Extend(int32_t left_offset,
+                         int32_t top_offset,
+                         int32_t right_offset,
+                         int32_t bottom_offset) {
+  left_ -= left_offset;
+  top_ -= top_offset;
+  right_ += right_offset;
+  bottom_ += bottom_offset;
+}
+
 }  // namespace webrtc
 

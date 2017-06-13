@@ -10,15 +10,17 @@
 
 #include <stdio.h>
 
+#include <memory>
+
 #include "gflags/gflags.h"
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_types.h"
+#include "webrtc/modules/audio_coding/codecs/audio_format_conversion.h"
 #include "webrtc/modules/audio_coding/include/audio_coding_module.h"
 #include "webrtc/modules/audio_coding/test/Channel.h"
 #include "webrtc/modules/audio_coding/test/PCMFile.h"
 #include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/system_wrappers/include/clock.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 // Codec.
@@ -93,7 +95,8 @@ class InsertPacketWithTiming {
                              FLAGS_codec_channels));
     ASSERT_EQ(0, receive_acm_->InitializeReceiver());
     ASSERT_EQ(0, send_acm_->RegisterSendCodec(codec));
-    ASSERT_EQ(0, receive_acm_->RegisterReceiveCodec(codec));
+    ASSERT_EQ(true, receive_acm_->RegisterReceiveCodec(codec.pltype,
+                                                       CodecInstToSdp(codec)));
 
     // Set codec-dependent parameters.
     samples_in_1ms_ = codec.plfreq / 1000;
@@ -140,8 +143,10 @@ class InsertPacketWithTiming {
     // Is it time to pull audio?
     if (time_to_playout_audio_ms_ == 0) {
       time_to_playout_audio_ms_ = kPlayoutPeriodMs;
+      bool muted;
       receive_acm_->PlayoutData10Ms(static_cast<int>(FLAGS_output_fs_hz),
-                                    &frame_);
+                                    &frame_, &muted);
+      ASSERT_FALSE(muted);
       fwrite(frame_.data_, sizeof(frame_.data_[0]),
              frame_.samples_per_channel_ * frame_.num_channels_, pcm_out_fid_);
       *action |= kAudioPlayedOut;
@@ -241,8 +246,8 @@ class InsertPacketWithTiming {
   SimulatedClock* sender_clock_;
   SimulatedClock* receiver_clock_;
 
-  rtc::scoped_ptr<AudioCodingModule> send_acm_;
-  rtc::scoped_ptr<AudioCodingModule> receive_acm_;
+  std::unique_ptr<AudioCodingModule> send_acm_;
+  std::unique_ptr<AudioCodingModule> receive_acm_;
   Channel* channel_;
 
   FILE* seq_num_fid_;  // Input (text), one sequence number per line.

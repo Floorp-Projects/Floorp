@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <list>
+#include <memory>
 #include <numeric>
 #include <set>
 #include <sstream>
@@ -24,8 +25,8 @@
 #include <vector>
 
 #include "webrtc/base/common.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/random.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/bitrate_controller/include/bitrate_controller.h"
 #include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/modules/pacing/paced_sender.h"
@@ -229,16 +230,16 @@ class RateCounterFilter : public PacketProcessor {
   RateCounterFilter(PacketProcessorListener* listener,
                     int flow_id,
                     const char* name,
-                    const std::string& plot_name);
+                    const std::string& algorithm_name);
   RateCounterFilter(PacketProcessorListener* listener,
                     const FlowIds& flow_ids,
                     const char* name,
-                    const std::string& plot_name);
+                    const std::string& algorithm_name);
   RateCounterFilter(PacketProcessorListener* listener,
                     const FlowIds& flow_ids,
                     const char* name,
                     int64_t start_plotting_time_ms,
-                    const std::string& plot_name);
+                    const std::string& algorithm_name);
   virtual ~RateCounterFilter();
 
   void LogStats();
@@ -249,10 +250,11 @@ class RateCounterFilter : public PacketProcessor {
  private:
   Stats<double> packets_per_second_stats_;
   Stats<double> kbps_stats_;
-  std::string name_;
   int64_t start_plotting_time_ms_;
+  int flow_id_;
+  std::string name_;
   // Algorithm name if single flow, Total link utilization if all flows.
-  std::string plot_name_;
+  std::string algorithm_name_;
 
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(RateCounterFilter);
 };
@@ -345,7 +347,7 @@ class ChokeFilter : public PacketProcessor {
  private:
   uint32_t capacity_kbps_;
   int64_t last_send_time_us_;
-  rtc::scoped_ptr<DelayCapHelper> delay_cap_helper_;
+  std::unique_ptr<DelayCapHelper> delay_cap_helper_;
 
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(ChokeFilter);
 };
@@ -379,9 +381,9 @@ class TraceBasedDeliveryFilter : public PacketProcessor {
   TimeList delivery_times_us_;
   TimeList::const_iterator next_delivery_it_;
   int64_t local_time_us_;
-  rtc::scoped_ptr<RateCounter> rate_counter_;
+  std::unique_ptr<RateCounter> rate_counter_;
   std::string name_;
-  rtc::scoped_ptr<DelayCapHelper> delay_cap_helper_;
+  std::unique_ptr<DelayCapHelper> delay_cap_helper_;
   Stats<double> packets_per_second_stats_;
   Stats<double> kbps_stats_;
 

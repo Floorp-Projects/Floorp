@@ -10,8 +10,7 @@
 
 #include "webrtc/common_audio/vad/vad_sp.h"
 
-#include <assert.h>
-
+#include "webrtc/base/checks.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/common_audio/vad/vad_core.h"
 #include "webrtc/typedefs.h"
@@ -72,7 +71,7 @@ int16_t WebRtcVad_FindMinimum(VadInstT* self,
   int16_t* age = &self->index_vector[offset];
   int16_t* smallest_values = &self->low_value_vector[offset];
 
-  assert(channel < kNumChannels);
+  RTC_DCHECK_LT(channel, kNumChannels);
 
   // Each value in |smallest_values| is getting 1 loop older. Update |age|, and
   // remove old values.

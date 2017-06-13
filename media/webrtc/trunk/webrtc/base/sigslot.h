@@ -86,8 +86,6 @@
 
 #ifndef WEBRTC_BASE_SIGSLOT_H__
 #define WEBRTC_BASE_SIGSLOT_H__
-#ifndef TALK_BASE_SIGSLOT_H__
-#define TALK_BASE_SIGSLOT_H__
 
 #include <list>
 #include <set>
@@ -2803,5 +2801,4 @@ namespace sigslot {
 
 }; // namespace sigslot
 
-#endif // TALK_BASE_SIGSLOT_H__
 #endif // WEBRTC_BASE_SIGSLOT_H__

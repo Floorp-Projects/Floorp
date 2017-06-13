@@ -11,8 +11,7 @@
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_COMMON_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_COMMON_H_
 
-#include <assert.h>
-
+#include "webrtc/base/checks.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 
 namespace webrtc {
@@ -26,7 +25,7 @@ static inline size_t ChannelsFromLayout(AudioProcessing::ChannelLayout layout) {
     case AudioProcessing::kStereoAndKeyboard:
       return 2;
   }
-  assert(false);
+  RTC_NOTREACHED();
   return 0;
 }
 

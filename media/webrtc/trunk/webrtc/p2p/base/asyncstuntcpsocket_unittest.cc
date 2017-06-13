@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
 #include "webrtc/p2p/base/asyncstuntcpsocket.h"
 #include "webrtc/base/asyncsocket.h"
 #include "webrtc/base/gunit.h"
@@ -122,11 +124,11 @@ class AsyncStunTCPSocketTest : public testing::Test,
     return ret;
   }
 
-  rtc::scoped_ptr<rtc::VirtualSocketServer> vss_;
+  std::unique_ptr<rtc::VirtualSocketServer> vss_;
   rtc::SocketServerScope ss_scope_;
-  rtc::scoped_ptr<AsyncStunTCPSocket> send_socket_;
-  rtc::scoped_ptr<AsyncStunTCPSocket> recv_socket_;
-  rtc::scoped_ptr<rtc::AsyncPacketSocket> listen_socket_;
+  std::unique_ptr<AsyncStunTCPSocket> send_socket_;
+  std::unique_ptr<AsyncStunTCPSocket> recv_socket_;
+  std::unique_ptr<rtc::AsyncPacketSocket> listen_socket_;
   std::list<std::string> recv_packets_;
 };
 

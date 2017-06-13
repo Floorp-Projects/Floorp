@@ -8,9 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
-#endif
 
 #include "webrtc/common_audio/window_generator.h"
 

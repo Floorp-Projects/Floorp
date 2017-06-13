@@ -10,31 +10,27 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/pli.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/modules/rtp_rtcp/source/rtcp_utility.h"
+#include "webrtc/test/gmock.h"
+#include "webrtc/test/gtest.h"
+#include "webrtc/test/rtcp_packet_parser.h"
 
+using testing::ElementsAreArray;
+using testing::make_tuple;
 using webrtc::rtcp::Pli;
-using webrtc::rtcp::RawPacket;
-using webrtc::RTCPUtility::RtcpCommonHeader;
-using webrtc::RTCPUtility::RtcpParseCommonHeader;
 
 namespace webrtc {
 namespace {
-
 const uint32_t kSenderSsrc = 0x12345678;
 const uint32_t kRemoteSsrc = 0x23456789;
 // Manually created Pli packet matching constants above.
 const uint8_t kPacket[] = {0x81, 206,  0x00, 0x02,
                            0x12, 0x34, 0x56, 0x78,
                            0x23, 0x45, 0x67, 0x89};
-const size_t kPacketLength = sizeof(kPacket);
+}  // namespace
 
 TEST(RtcpPacketPliTest, Parse) {
-  RtcpCommonHeader header;
-  EXPECT_TRUE(RtcpParseCommonHeader(kPacket, kPacketLength, &header));
   Pli mutable_parsed;
-  EXPECT_TRUE(mutable_parsed.Parse(
-      header, kPacket + RtcpCommonHeader::kHeaderSizeBytes));
+  EXPECT_TRUE(test::ParseSinglePacket(kPacket, &mutable_parsed));
   const Pli& parsed = mutable_parsed;  // Read values from constant object.
 
   EXPECT_EQ(kSenderSsrc, parsed.sender_ssrc());
@@ -43,24 +39,21 @@ TEST(RtcpPacketPliTest, Parse) {
 
 TEST(RtcpPacketPliTest, Create) {
   Pli pli;
-  pli.From(kSenderSsrc);
-  pli.To(kRemoteSsrc);
+  pli.SetSenderSsrc(kSenderSsrc);
+  pli.SetMediaSsrc(kRemoteSsrc);
 
-  rtc::scoped_ptr<RawPacket> packet(pli.Build());
+  rtc::Buffer packet = pli.Build();
 
-  ASSERT_EQ(kPacketLength, packet->Length());
-  EXPECT_EQ(0, memcmp(kPacket, packet->Buffer(), kPacketLength));
+  EXPECT_THAT(make_tuple(packet.data(), packet.size()),
+      ElementsAreArray(kPacket));
 }
 
 TEST(RtcpPacketPliTest, ParseFailsOnTooSmallPacket) {
-  RtcpCommonHeader header;
-  EXPECT_TRUE(RtcpParseCommonHeader(kPacket, kPacketLength, &header));
-  header.payload_size_bytes--;
+  const uint8_t kTooSmallPacket[] = {0x81, 206,  0x00, 0x01,
+                                     0x12, 0x34, 0x56, 0x78};
 
   Pli parsed;
-  EXPECT_FALSE(
-      parsed.Parse(header, kPacket + RtcpCommonHeader::kHeaderSizeBytes));
+  EXPECT_FALSE(test::ParseSinglePacket(kTooSmallPacket, &parsed));
 }
 
-}  // namespace
 }  // namespace webrtc

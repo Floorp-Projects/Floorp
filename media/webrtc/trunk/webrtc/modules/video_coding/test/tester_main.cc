@@ -21,7 +21,7 @@ DEFINE_int32(width, 352, "Width in pixels of the frames in the input file.");
 DEFINE_int32(height, 288, "Height in pixels of the frames in the input file.");
 DEFINE_int32(rtt, 0, "RTT (round-trip time), in milliseconds.");
 DEFINE_string(input_filename,
-              webrtc::test::ProjectRootPath() + "/resources/foreman_cif.yuv",
+              webrtc::test::ResourcePath("foreman_cif", "yuv"),
               "Input file.");
 DEFINE_string(output_filename,
               webrtc::test::OutputPath() +

@@ -68,6 +68,12 @@ class RelayPort : public Port {
   const ProtocolAddress * ServerAddress(size_t index) const;
   bool IsReady() { return ready_; }
 
+  ProtocolType GetProtocol() const override {
+    // We shouldn't be using RelayPort, but we need to provide an
+    // implementation here.
+    return PROTO_UDP;
+  }
+
   // Used for testing.
   sigslot::signal1<const ProtocolAddress*> SignalConnectFailure;
   sigslot::signal1<const ProtocolAddress*> SignalSoftTimeout;

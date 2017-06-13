@@ -11,12 +11,12 @@
 #ifndef WEBRTC_BASE_FILE_ROTATING_LOG_SINK_H_
 #define WEBRTC_BASE_FILE_ROTATING_LOG_SINK_H_
 
+#include <memory>
 #include <string>
 
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/base/filerotatingstream.h"
 #include "webrtc/base/logging.h"
-#include "webrtc/base/scoped_ptr.h"
 
 namespace rtc {
 
@@ -46,7 +46,7 @@ class FileRotatingLogSink : public LogSink {
   explicit FileRotatingLogSink(FileRotatingStream* stream);
 
  private:
-  scoped_ptr<FileRotatingStream> stream_;
+  std::unique_ptr<FileRotatingStream> stream_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(FileRotatingLogSink);
 };

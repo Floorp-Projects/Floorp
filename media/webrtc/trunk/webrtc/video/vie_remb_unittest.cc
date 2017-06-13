@@ -8,18 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
-// This file includes unit tests for ViERemb.
-
+#include <memory>
 #include <vector>
 
-#include "testing/gmock/include/gmock/gmock.h"
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_rtcp.h"
 #include "webrtc/modules/rtp_rtcp/mocks/mock_rtp_rtcp.h"
 #include "webrtc/modules/utility/include/mock/mock_process_thread.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
+#include "webrtc/test/gmock.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/video/vie_remb.h"
 
 using ::testing::_;
@@ -39,8 +35,8 @@ class ViERembTest : public ::testing::Test {
     vie_remb_.reset(new VieRemb(&fake_clock_));
   }
   SimulatedClock fake_clock_;
-  rtc::scoped_ptr<MockProcessThread> process_thread_;
-  rtc::scoped_ptr<VieRemb> vie_remb_;
+  std::unique_ptr<MockProcessThread> process_thread_;
+  std::unique_ptr<VieRemb> vie_remb_;
 };
 
 TEST_F(ViERembTest, OneModuleTestForSendingRemb) {
@@ -48,9 +44,9 @@ TEST_F(ViERembTest, OneModuleTestForSendingRemb) {
   vie_remb_->AddReceiveChannel(&rtp);
   vie_remb_->AddRembSender(&rtp);
 
-  const unsigned int bitrate_estimate = 456;
-  unsigned int ssrc = 1234;
-  std::vector<unsigned int> ssrcs(&ssrc, &ssrc + 1);
+  const uint32_t bitrate_estimate = 456;
+  uint32_t ssrc = 1234;
+  std::vector<uint32_t> ssrcs(&ssrc, &ssrc + 1);
 
   vie_remb_->OnReceiveBitrateChanged(ssrcs, bitrate_estimate);
 
@@ -73,9 +69,9 @@ TEST_F(ViERembTest, LowerEstimateToSendRemb) {
   vie_remb_->AddReceiveChannel(&rtp);
   vie_remb_->AddRembSender(&rtp);
 
-  unsigned int bitrate_estimate = 456;
-  unsigned int ssrc = 1234;
-  std::vector<unsigned int> ssrcs(&ssrc, &ssrc + 1);
+  uint32_t bitrate_estimate = 456;
+  uint32_t ssrc = 1234;
+  std::vector<uint32_t> ssrcs(&ssrc, &ssrc + 1);
 
   vie_remb_->OnReceiveBitrateChanged(ssrcs, bitrate_estimate);
   // Call OnReceiveBitrateChanged twice to get a first estimate.
@@ -99,9 +95,9 @@ TEST_F(ViERembTest, VerifyIncreasingAndDecreasing) {
   vie_remb_->AddRembSender(&rtp_0);
   vie_remb_->AddReceiveChannel(&rtp_1);
 
-  unsigned int bitrate_estimate[] = { 456, 789 };
-  unsigned int ssrc[] = { 1234, 5678 };
-  std::vector<unsigned int> ssrcs(ssrc, ssrc + sizeof(ssrc) / sizeof(ssrc[0]));
+  uint32_t bitrate_estimate[] = {456, 789};
+  uint32_t ssrc[] = {1234, 5678};
+  std::vector<uint32_t> ssrcs(ssrc, ssrc + sizeof(ssrc) / sizeof(ssrc[0]));
 
   vie_remb_->OnReceiveBitrateChanged(ssrcs, bitrate_estimate[0]);
 
@@ -130,9 +126,9 @@ TEST_F(ViERembTest, NoRembForIncreasedBitrate) {
   vie_remb_->AddRembSender(&rtp_0);
   vie_remb_->AddReceiveChannel(&rtp_1);
 
-  unsigned int bitrate_estimate = 456;
-  unsigned int ssrc[] = { 1234, 5678 };
-  std::vector<unsigned int> ssrcs(ssrc, ssrc + sizeof(ssrc) / sizeof(ssrc[0]));
+  uint32_t bitrate_estimate = 456;
+  uint32_t ssrc[] = {1234, 5678};
+  std::vector<uint32_t> ssrcs(ssrc, ssrc + sizeof(ssrc) / sizeof(ssrc[0]));
 
   vie_remb_->OnReceiveBitrateChanged(ssrcs, bitrate_estimate);
   // Call OnReceiveBitrateChanged twice to get a first estimate.
@@ -164,9 +160,9 @@ TEST_F(ViERembTest, ChangeSendRtpModule) {
   vie_remb_->AddRembSender(&rtp_0);
   vie_remb_->AddReceiveChannel(&rtp_1);
 
-  unsigned int bitrate_estimate = 456;
-  unsigned int ssrc[] = { 1234, 5678 };
-  std::vector<unsigned int> ssrcs(ssrc, ssrc + sizeof(ssrc) / sizeof(ssrc[0]));
+  uint32_t bitrate_estimate = 456;
+  uint32_t ssrc[] = {1234, 5678};
+  std::vector<uint32_t> ssrcs(ssrc, ssrc + sizeof(ssrc) / sizeof(ssrc[0]));
 
   vie_remb_->OnReceiveBitrateChanged(ssrcs, bitrate_estimate);
   // Call OnReceiveBitrateChanged twice to get a first estimate.
@@ -198,9 +194,9 @@ TEST_F(ViERembTest, ChangeSendRtpModule) {
 
 TEST_F(ViERembTest, OnlyOneRembForDoubleProcess) {
   MockRtpRtcp rtp;
-  unsigned int bitrate_estimate = 456;
-  unsigned int ssrc = 1234;
-  std::vector<unsigned int> ssrcs(&ssrc, &ssrc + 1);
+  uint32_t bitrate_estimate = 456;
+  uint32_t ssrc = 1234;
+  std::vector<uint32_t> ssrcs(&ssrc, &ssrc + 1);
 
   vie_remb_->AddReceiveChannel(&rtp);
   vie_remb_->AddRembSender(&rtp);
@@ -231,9 +227,9 @@ TEST_F(ViERembTest, NoSendingRtpModule) {
   MockRtpRtcp rtp;
   vie_remb_->AddReceiveChannel(&rtp);
 
-  unsigned int bitrate_estimate = 456;
-  unsigned int ssrc = 1234;
-  std::vector<unsigned int> ssrcs(&ssrc, &ssrc + 1);
+  uint32_t bitrate_estimate = 456;
+  uint32_t ssrc = 1234;
+  std::vector<uint32_t> ssrcs(&ssrc, &ssrc + 1);
 
   vie_remb_->OnReceiveBitrateChanged(ssrcs, bitrate_estimate);
 

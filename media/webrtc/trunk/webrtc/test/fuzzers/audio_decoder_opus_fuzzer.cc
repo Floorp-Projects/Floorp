@@ -18,6 +18,7 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
   const int kSampleRateHz = 48000;
   const size_t kAllocatedOuputSizeSamples = kSampleRateHz / 10;  // 100 ms.
   int16_t output[kAllocatedOuputSizeSamples];
-  FuzzAudioDecoder(data, size, &dec, kSampleRateHz, sizeof(output), output);
+  FuzzAudioDecoder(DecoderFunctionType::kNormalDecode, data, size, &dec,
+                   kSampleRateHz, sizeof(output), output);
 }
 }  // namespace webrtc

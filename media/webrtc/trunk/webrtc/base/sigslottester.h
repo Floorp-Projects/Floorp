@@ -44,7 +44,24 @@
 
 namespace rtc {
 
-// For all the templates below:
+// Base version for testing signals that passes no arguments.
+class SigslotTester0 : public sigslot::has_slots<> {
+ public:
+  explicit SigslotTester0(sigslot::signal0<>* signal) : callback_count_(0) {
+    signal->connect(this, &SigslotTester0::OnSignalCallback);
+  }
+
+  int callback_count() const { return callback_count_; }
+
+ private:
+  void OnSignalCallback() { callback_count_++; }
+  int callback_count_;
+
+  RTC_DISALLOW_COPY_AND_ASSIGN(SigslotTester0);
+};
+
+// Versions below are for testing signals that pass arguments. For all the
+// templates below:
 // - A1-A5 is the type of the argument i in the callback. Signals may and often
 //   do use const-references here for efficiency.
 // - C1-C5 is the type of the variable to capture argument i. These should be
