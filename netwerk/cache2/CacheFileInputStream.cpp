@@ -635,8 +635,7 @@ CacheFileInputStream::NotifyListener()
   }
 
   nsCOMPtr<nsIInputStreamCallback> asyncCallback =
-    NS_NewInputStreamReadyEvent("CacheFileInputStream::NotifyListener",
-                                mCallback, mCallbackTarget);
+    NS_NewInputStreamReadyEvent(mCallback, mCallbackTarget);
 
   mCallback = nullptr;
   mCallbackTarget = nullptr;

@@ -212,8 +212,7 @@ void AndroidCameraInputStream::NotifyListeners() {
   if (mCallback && (mAvailable > sizeof(RawVideoHeader))) {
     nsCOMPtr<nsIInputStreamCallback> callback;
     if (mCallbackTarget) {
-      callback = NS_NewInputStreamReadyEvent("AndroidCameraInputStream::NotifyListeners",
-                                             mCallback, mCallbackTarget);
+      callback = NS_NewInputStreamReadyEvent(mCallback, mCallbackTarget);
     } else {
       callback = mCallback;
     }
