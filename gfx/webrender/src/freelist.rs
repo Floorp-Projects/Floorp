@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::collections::HashSet;
-
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct FreeListItemId(u32);
 
@@ -85,11 +83,6 @@ impl<T: FreeListItem> FreeList<T> {
         &self.items[id.0 as usize]
     }
 
-    pub fn get_mut(&mut self, id: FreeListItemId) -> &mut T {
-        debug_assert_eq!(self.free_iter().find(|&fid| fid==id), None);
-        &mut self.items[id.0 as usize]
-    }
-
     #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.alloc_count
@@ -103,21 +96,5 @@ impl<T: FreeListItem> FreeList<T> {
         item.set_next_free_id(self.first_free_index);
         self.first_free_index = Some(id);
         data
-    }
-
-    pub fn for_each_item<F>(&mut self, f: F) where F: Fn(&mut T) {
-        //TODO: this could be done much faster. Instead of gathering the free
-        // indices into a set, we could re-order the free list to be ascending.
-        // That is an one-time operation with at most O(nf^2), where
-        //    nf = number of elements in the free list
-        // Then this code would just walk both `items` and the ascending free
-        // list, essentially skipping the free indices for free.
-        let free_ids: HashSet<_> = self.free_iter().collect();
-
-        for (index, mut item) in self.items.iter_mut().enumerate() {
-            if !free_ids.contains(&FreeListItemId(index as u32)) {
-                f(&mut item);
-            }
-        }
     }
 }
