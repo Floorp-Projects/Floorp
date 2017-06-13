@@ -117,7 +117,7 @@ int select_style(int color_select, vec2 fstyle) {
 
 void main(void) {
     Primitive prim = load_primitive();
-    Border border = fetch_border(prim.prim_index);
+    Border border = fetch_border(prim.specific_prim_address);
     int sub_part = prim.user_data0;
     BorderCorners corners = get_border_corners(border, prim.local_rect);
 

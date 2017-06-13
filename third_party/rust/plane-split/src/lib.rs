@@ -20,9 +20,9 @@ mod bsp;
 mod naive;
 
 use std::{fmt, mem, ops};
-use euclid::{Point2D, TypedMatrix4D, TypedPoint3D, TypedRect};
+use euclid::{Point2D, TypedTransform3D, TypedPoint3D, TypedVector3D, TypedRect};
 use euclid::approxeq::ApproxEq;
-use euclid::trig::Trig;
+use euclid::Trig;
 use num_traits::{Float, One, Zero};
 
 pub use self::bsp::BspSplitter;
@@ -35,7 +35,7 @@ fn is_zero<T>(value: T) -> bool where
     (value * value).approx_eq(&T::zero())
 }
 
-fn is_zero_vec<T, U>(vec: TypedPoint3D<T, U>) -> bool where
+fn is_zero_vec<T, U>(vec: TypedVector3D<T, U>) -> bool where
    T: Copy + Zero + ApproxEq<T> +
       ops::Add<T, Output=T> + ops::Sub<T, Output=T> + ops::Mul<T, Output=T> {
     vec.dot(vec).approx_eq(&T::zero())
@@ -47,7 +47,7 @@ pub struct Line<T, U> {
     /// Arbitrary point on the line.
     pub origin: TypedPoint3D<T, U>,
     /// Normalized direction of the line.
-    pub dir: TypedPoint3D<T, U>,
+    pub dir: TypedVector3D<T, U>,
 }
 
 impl<T, U> Line<T, U> where
@@ -73,7 +73,7 @@ pub struct Polygon<T, U> {
     /// Points making the polygon.
     pub points: [TypedPoint3D<T, U>; 4],
     /// Normalized vector perpendicular to the polygon plane.
-    pub normal: TypedPoint3D<T, U>,
+    pub normal: TypedVector3D<T, U>,
     /// Constant offset from the normal plane, specified in the
     /// direction opposite to the normal.
     pub offset: T,
@@ -179,7 +179,7 @@ impl<T, U> Polygon<T, U> where
 {
     /// Construct a polygon from a transformed rectangle.
     pub fn from_transformed_rect<V>(rect: TypedRect<T, V>,
-                                    transform: TypedMatrix4D<T, V, U>,
+                                    transform: TypedTransform3D<T, V, U>,
                                     anchor: usize)
                                     -> Polygon<T, U>
     where T: Trig + ops::Neg<Output=T> {
@@ -196,7 +196,7 @@ impl<T, U> Polygon<T, U> where
 
         let normal = (points[1] - points[0]).cross(points[2] - points[0])
                                             .normalize();
-        let offset = -TypedPoint3D::new(transform.m41, transform.m42, transform.m43).dot(normal);
+        let offset = -TypedVector3D::new(transform.m41, transform.m42, transform.m43).dot(normal);
 
         Polygon {
             points: points,
@@ -231,7 +231,7 @@ impl<T, U> Polygon<T, U> where
     /// The distance is negative if the point is on the other side of the polygon
     /// from the direction of the normal.
     pub fn signed_distance_to(&self, point: &TypedPoint3D<T, U>) -> T {
-        point.dot(self.normal) + self.offset
+        point.to_vector().dot(self.normal) + self.offset
     }
 
     /// Compute the distance across the line to the polygon plane,
@@ -283,13 +283,13 @@ impl<T, U> Polygon<T, U> where
 
     /// Project this polygon onto a 3D vector, returning a line projection.
     /// Note: we can think of it as a projection to a ray placed at the origin.
-    pub fn project_on(&self, vector: &TypedPoint3D<T, U>) -> LineProjection<T> {
+    pub fn project_on(&self, vector: &TypedVector3D<T, U>) -> LineProjection<T> {
         LineProjection {
             markers: [
-                vector.dot(self.points[0]),
-                vector.dot(self.points[1]),
-                vector.dot(self.points[2]),
-                vector.dot(self.points[3]),
+                vector.dot(self.points[0].to_vector()),
+                vector.dot(self.points[1].to_vector()),
+                vector.dot(self.points[2].to_vector()),
+                vector.dot(self.points[3].to_vector()),
             ],
         }
     }
@@ -321,7 +321,8 @@ impl<T, U> Polygon<T, U> where
         // v = (d2*w - d1) / (1 - w*w) * n1 - (d2 - d1*w) / (1 - w*w) * n2
         let w = self.normal.dot(other.normal);
         let factor = T::one() / (T::one() - w * w);
-        let center = self.normal * ((other.offset * w - self.offset) * factor) -
+        let center = TypedPoint3D::origin() +
+                     self.normal * ((other.offset * w - self.offset) * factor) -
                      other.normal* ((other.offset - self.offset * w) * factor);
         Intersection::Inside(Line {
             origin: center,
@@ -443,10 +444,10 @@ pub trait Splitter<T, U> {
 
     /// Sort the produced polygon set by the ascending distance across
     /// the specified view vector. Return the sorted slice.
-    fn sort(&mut self, TypedPoint3D<T, U>) -> &[Polygon<T, U>];
+    fn sort(&mut self, TypedVector3D<T, U>) -> &[Polygon<T, U>];
 
     /// Process a set of polygons at once.
-    fn solve(&mut self, input: &[Polygon<T, U>], view: TypedPoint3D<T, U>)
+    fn solve(&mut self, input: &[Polygon<T, U>], view: TypedVector3D<T, U>)
              -> &[Polygon<T, U>]
     where T: Clone, U: Clone {
         self.reset();
@@ -470,7 +471,7 @@ pub fn _make_grid(count: usize) -> Vec<Polygon<f32, ()>> {
             TypedPoint3D::new(len, i as f32, len),
             TypedPoint3D::new(0.0, i as f32, len),
         ],
-        normal: TypedPoint3D::new(0.0, 1.0, 0.0),
+        normal: TypedVector3D::new(0.0, 1.0, 0.0),
         offset: -(i as f32),
         anchor: 0,
     }));
@@ -481,7 +482,7 @@ pub fn _make_grid(count: usize) -> Vec<Polygon<f32, ()>> {
             TypedPoint3D::new(i as f32, len, len),
             TypedPoint3D::new(i as f32, 0.0, len),
         ],
-        normal: TypedPoint3D::new(1.0, 0.0, 0.0),
+        normal: TypedVector3D::new(1.0, 0.0, 0.0),
         offset: -(i as f32),
         anchor: 0,
     }));
@@ -492,7 +493,7 @@ pub fn _make_grid(count: usize) -> Vec<Polygon<f32, ()>> {
             TypedPoint3D::new(len, len, i as f32),
             TypedPoint3D::new(0.0, len, i as f32),
         ],
-        normal: TypedPoint3D::new(0.0, 0.0, 1.0),
+        normal: TypedVector3D::new(0.0, 0.0, 1.0),
         offset: -(i as f32),
         anchor: 0,
     }));
