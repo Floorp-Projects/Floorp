@@ -487,7 +487,7 @@ public:
   static bool MayResolve(jsid aId);
 
   void GetOwnPropertyNames(JSContext* aCx, JS::AutoIdVector& aNames,
-                           mozilla::ErrorResult& aRv);
+                           bool aEnumerableOnly, mozilla::ErrorResult& aRv);
 
   // Object Management
   static already_AddRefed<nsGlobalWindow> Create(nsGlobalWindow *aOuterWindow);
