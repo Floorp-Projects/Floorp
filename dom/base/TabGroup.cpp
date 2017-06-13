@@ -66,7 +66,7 @@ TabGroup::EnsureThrottledEventQueues()
   for (size_t i = 0; i < size_t(TaskCategory::Count); i++) {
     TaskCategory category = static_cast<TaskCategory>(i);
     if (category == TaskCategory::Worker || category == TaskCategory::Timer) {
-      nsCOMPtr<nsIEventTarget> target = ThrottledEventQueue::Create(mEventTargets[i]);
+      nsCOMPtr<nsISerialEventTarget> target = ThrottledEventQueue::Create(mEventTargets[i]);
       if (target) {
         // This may return nullptr during xpcom shutdown.  This is ok as we
         // do not guarantee a ThrottledEventQueue will be present.
@@ -250,7 +250,7 @@ TabGroup::HashEntry::HashEntry(const nsACString* aKey)
   : nsCStringHashKey(aKey), mDocGroup(nullptr)
 {}
 
-nsIEventTarget*
+nsISerialEventTarget*
 TabGroup::EventTargetFor(TaskCategory aCategory) const
 {
   if (aCategory == TaskCategory::Worker || aCategory == TaskCategory::Timer) {
