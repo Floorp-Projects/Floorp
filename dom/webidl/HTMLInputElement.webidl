@@ -19,7 +19,7 @@ enum SelectionMode {
   "preserve",
 };
 
-interface XULControllers;
+interface nsIControllers;
 
 [HTMLConstructor]
 interface HTMLInputElement : HTMLElement {
@@ -144,7 +144,7 @@ partial interface HTMLInputElement {
 
 partial interface HTMLInputElement {
   [GetterThrows, ChromeOnly]
-  readonly attribute XULControllers        controllers;
+  readonly attribute nsIControllers        controllers;
   // Binaryname because we have a FragmentOrElement function named "TextLength()".
   [NeedsCallerType, BinaryName="inputTextLength"]
   readonly attribute long                  textLength;
