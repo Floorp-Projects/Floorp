@@ -301,8 +301,14 @@ function startTest() {
   is(input.type, "text", "checking we got unidentified input");
   input.value = "dontSaveThis";
   // Form 9 has nothing to modify.
-  $_(10, "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890").value = "dontSaveThis";
-  $_(11, "test1").value = "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
+  $_(10, "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456" +
+     "789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456" +
+     "789012345678901234567890123456789012345678901234567890123456789012345678901234567890").value
+    = "dontSaveThis";
+  $_(11, "test1").value = "123456789012345678901234567890123456789012345678901234567890123456789" +
+                          "012345678901234567890123456789012345678901234567890123456789012345678" +
+                          "901234567890123456789012345678901234567890123456789012345678901234567" +
+                          "89012345678901234567890123456789012345678901234567890";
   $_(12, "test1").value = " ";
   $_(13, "test1").value = "dontSaveThis";
   $_(14, "test1").type  = "password";
@@ -399,10 +405,12 @@ function checkSubmit(formNum) {
       checkForSave("test3", "savedValue", "checking saved value");
       break;
     case 104:
-      checkForSave("test4", "trimTrailingAndLeadingSpace", "checking saved value is trimmed on both sides");
+      checkForSave("test4", "trimTrailingAndLeadingSpace",
+                   "checking saved value is trimmed on both sides");
       break;
     case 105:
-      checkForSave("test5", "trimTrailingAndLeadingWhitespace", "checking saved value is trimmed on both sides");
+      checkForSave("test5", "trimTrailingAndLeadingWhitespace",
+                   "checking saved value is trimmed on both sides");
       break;
     case 106:
       checkForSave("test6", "00000000109181", "checking saved value");
@@ -465,7 +473,8 @@ function submitForm(formNum) {
       // from an HTTPS domain in an iframe.
       if (nextFormNum == 100) {
         ok(true, "submitting iframe test " + nextFormNum);
-        SpecialPowers.wrap(document.getElementById("iframe").contentWindow).wrappedJSObject.clickButton(nextFormNum);
+        SpecialPowers.wrap(document.getElementById("iframe").contentWindow)
+        .wrappedJSObject.clickButton(nextFormNum);
       } else {
         var button = getFormSubmitButton(nextFormNum);
         button.click();

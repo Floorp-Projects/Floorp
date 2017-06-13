@@ -41,5 +41,6 @@ module.exports = {
       max: 20,
     }],
     "dot-location": ["error", "property"],
+    "max-len": ["error", 100],
   },
 };
