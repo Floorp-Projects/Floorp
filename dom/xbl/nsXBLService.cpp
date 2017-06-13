@@ -420,17 +420,7 @@ public:
       return;
     }
     if (ServoStyleSet* servoSet = presShell->StyleSet()->GetAsServo()) {
-      // In general the element is always styled by the time we're applying XBL
-      // bindings, because we need to style the element to know what the binding
-      // URI is. However, programmatic consumers of the XBL service (like the
-      // XML pretty printer) _can_ apply bindings without having styled the bound
-      // element. We could assert against this and require the callers manually
-      // resolve the style first, but it's easy enough to just handle here.
-      if (MOZ_UNLIKELY(!mElement->HasServoData())) {
-        servoSet->StyleNewSubtree(mElement);
-      } else {
-        servoSet->StyleNewChildren(mElement);
-      }
+      servoSet->StyleNewlyBoundElement(mElement);
     }
   }
 

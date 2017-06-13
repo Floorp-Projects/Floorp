@@ -85,20 +85,11 @@ public class AboutHomeComponent extends BaseComponent {
 
     public AboutHomeComponent assertBannerNotVisible() {
         View banner = getHomeBannerView();
-        if (Build.VERSION.SDK_INT >= 11) {
-            fAssertTrue("The HomeBanner is not visible",
-                        getHomePagerContainer().getVisibility() != View.VISIBLE ||
-                        banner == null ||
-                        banner.getVisibility() != View.VISIBLE ||
-                        banner.getTranslationY() == banner.getHeight());
-        } else {
-            // getTranslationY is not available before api 11.
-            // This check is a little less specific.
-            fAssertTrue("The HomeBanner is not visible",
-                        getHomePagerContainer().getVisibility() != View.VISIBLE ||
-                        banner == null ||
-                        banner.isShown() == false);
-        }
+        fAssertTrue("The HomeBanner is not visible",
+                    getHomePagerContainer().getVisibility() != View.VISIBLE ||
+                    banner == null ||
+                    banner.getVisibility() != View.VISIBLE ||
+                    banner.getTranslationY() == banner.getHeight());
         return this;
     }
 

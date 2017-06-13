@@ -238,9 +238,7 @@ abstract class ContentProviderTest extends BaseTest {
 
     @Override
     public void tearDown() throws Exception {
-        if (Build.VERSION.SDK_INT >= 11) {
-            mProvider.shutdown();
-        }
+        mProvider.shutdown();
 
         if (mDatabaseName != null) {
             mProviderContext.deleteDatabase(mDatabaseName);

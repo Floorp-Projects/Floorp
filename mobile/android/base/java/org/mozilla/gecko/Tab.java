@@ -35,7 +35,6 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
@@ -249,13 +248,9 @@ public class Tab {
 
     public Bitmap getThumbnailBitmap(int width, int height) {
         if (mThumbnailBitmap != null) {
-            // Bug 787318 - Honeycomb has a bug with bitmap caching, we can't
-            // reuse the bitmap there.
-            boolean honeycomb = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB
-                              && Build.VERSION.SDK_INT <= Build.VERSION_CODES.HONEYCOMB_MR2);
             boolean sizeChange = mThumbnailBitmap.getWidth() != width
                               || mThumbnailBitmap.getHeight() != height;
-            if (honeycomb || sizeChange) {
+            if (sizeChange) {
                 mThumbnailBitmap = null;
             }
         }

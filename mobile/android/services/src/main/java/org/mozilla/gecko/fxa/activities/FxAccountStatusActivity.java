@@ -9,13 +9,11 @@ import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
 import android.accounts.AccountManagerFuture;
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
@@ -64,12 +62,7 @@ public class FxAccountStatusActivity extends LocaleAwareAppCompatActivity {
    * href="http://stackoverflow.com/a/8953148">this stackoverflow answer</a> for
    * more information.
    */
-  @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
   protected void maybeSetHomeButtonEnabled() {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-      Logger.debug(LOG_TAG, "Not enabling home button; version too low.");
-      return;
-    }
     final ActionBar actionBar = getSupportActionBar();
     if (actionBar != null) {
       Logger.debug(LOG_TAG, "Enabling home button.");

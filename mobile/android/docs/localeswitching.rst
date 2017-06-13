@@ -37,16 +37,12 @@ Here's an example of the work that a typical activity should do::
   // This is cribbed from o.m.g.sync.setup.activities.LocaleAware.
   public static void initializeLocale(Context context) {
     final LocaleManager localeManager = BrowserLocaleManager.getInstance();
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD) {
-      localeManager.getAndApplyPersistedLocale(context);
-    } else {
-      final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
-      StrictMode.allowThreadDiskWrites();
-      try {
+    final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
+    StrictMode.allowThreadDiskWrites();
+    try {
         localeManager.getAndApplyPersistedLocale(context);
-      } finally {
+    } finally {
         StrictMode.setThreadPolicy(savedPolicy);
-      }
     }
   }
 

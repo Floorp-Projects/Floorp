@@ -183,6 +183,9 @@ private:
   DECL_MEDIA_PREF("media.ogg.flac.enabled",                   FlacInOgg, bool, false);
   DECL_MEDIA_PREF("media.flac.enabled",                       FlacEnabled, bool, true);
 
+  // Hls
+  DECL_MEDIA_PREF("media.hls.enabled",                        HLSEnabled, bool, false);
+
 #if !defined(RELEASE_OR_BETA)
   DECL_MEDIA_PREF("media.rust.test_mode",                     RustTestMode, bool, false);
 #endif

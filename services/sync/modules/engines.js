@@ -1123,7 +1123,7 @@ SyncEngine.prototype = {
     // called for every incoming record.
     let self = this;
 
-    newitems.recordHandler = function(item) {
+    let recordHandler = function(item) {
       if (aborting) {
         return;
       }
@@ -1231,12 +1231,16 @@ SyncEngine.prototype = {
 
     // Only bother getting data from the server if there's new things
     if (this.lastModified == null || this.lastModified > this.lastSync) {
-      let resp = Async.promiseSpinningly(newitems.getBatched());
-      doApplyBatchAndPersistFailed.call(this);
-      if (!resp.success) {
-        resp.failureCode = ENGINE_DOWNLOAD_FAIL;
-        throw resp;
+      let { response, records } = Async.promiseSpinningly(newitems.getBatched());
+      if (!response.success) {
+        response.failureCode = ENGINE_DOWNLOAD_FAIL;
+        throw response;
       }
+
+      for (let record of records) {
+        recordHandler(record);
+      }
+      doApplyBatchAndPersistFailed.call(this);
 
       if (aborting) {
         throw aborting;
@@ -1285,11 +1289,16 @@ SyncEngine.prototype = {
       newitems.newer = 0;
       newitems.ids = fetchBatch.slice(0, batchSize);
 
-      // Reuse the existing record handler set earlier
       let resp = Async.promiseSpinningly(newitems.get());
       if (!resp.success) {
         resp.failureCode = ENGINE_DOWNLOAD_FAIL;
         throw resp;
+      }
+
+      for (let json of resp.obj) {
+        let record = new this._recordObj();
+        record.deserialize(json);
+        recordHandler(record);
       }
 
       // This batch was successfully applied. Not using
@@ -1815,15 +1824,15 @@ SyncEngine.prototype = {
     test.full = true;
 
     let key = this.service.collectionKeys.keyForCollection(this.name);
-    test.recordHandler = function recordHandler(record) {
-      record.decrypt(key);
-      canDecrypt = true;
-    };
 
     // Any failure fetching/decrypting will just result in false
     try {
       this._log.trace("Trying to decrypt a record from the server..");
-      Async.promiseSpinningly(test.get());
+      let json = Async.promiseSpinningly(test.get()).obj[0];
+      let record = new this._recordObj();
+      record.deserialize(json);
+      record.decrypt(key);
+      canDecrypt = true;
     } catch (ex) {
       if (Async.isShutdownException(ex)) {
         throw ex;

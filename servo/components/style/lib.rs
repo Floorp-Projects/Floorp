@@ -91,6 +91,7 @@ extern crate unicode_segmentation;
 mod macros;
 
 pub mod animation;
+pub mod applicable_declarations;
 #[allow(missing_docs)] // TODO.
 #[cfg(feature = "servo")] pub mod attr;
 pub mod bezier;
@@ -215,4 +216,22 @@ pub fn serialize_comma_separated_list<W, T>(dest: &mut W,
     }
 
     Ok(())
+}
+
+#[cfg(feature = "gecko")] use gecko_string_cache::WeakAtom;
+#[cfg(feature = "servo")] use servo_atoms::Atom as WeakAtom;
+
+/// Extension methods for selectors::attr::CaseSensitivity
+pub trait CaseSensitivityExt {
+    /// Return whether two atoms compare equal according to this case sensitivity.
+    fn eq_atom(self, a: &WeakAtom, b: &WeakAtom) -> bool;
+}
+
+impl CaseSensitivityExt for selectors::attr::CaseSensitivity {
+    fn eq_atom(self, a: &WeakAtom, b: &WeakAtom) -> bool {
+        match self {
+            selectors::attr::CaseSensitivity::CaseSensitive => a == b,
+            selectors::attr::CaseSensitivity::AsciiCaseInsensitive => a.eq_ignore_ascii_case(b),
+        }
+    }
 }

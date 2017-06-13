@@ -306,6 +306,14 @@ public:
   void StyleNewChildren(dom::Element* aParent);
 
   /**
+   * Eagerly styles the children of an element that has just had an XBL
+   * binding applied to it.  Some XBL consumers attach bindings to elements
+   * that have not been styled yet, and in such cases, this will do the
+   * equivalent of StyleNewSubtree instead.
+   */
+  void StyleNewlyBoundElement(dom::Element* aElement);
+
+  /**
    * Like StyleNewSubtree, but in response to a request to reconstruct frames
    * for the given subtree, and so works on elements that already have
    * styles.  This will leave the subtree in a state just like after an initial

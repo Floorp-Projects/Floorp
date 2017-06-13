@@ -823,16 +823,14 @@ class BookmarkValidator {
     let collection = engine.itemSource();
     let collectionKey = engine.service.collectionKeys.keyForCollection(engine.name);
     collection.full = true;
-    let items = [];
-    collection.recordHandler = function(item) {
-      item.decrypt(collectionKey);
-      items.push(item.cleartext);
-    };
-    let resp = await collection.getBatched();
-    if (!resp.success) {
-      throw resp;
+    let result = await collection.getBatched();
+    if (!result.response.success) {
+      throw result.response;
     }
-    return items;
+    return result.records.map(record => {
+      record.decrypt(collectionKey);
+      return record.cleartext;
+    });
   }
 
   async validate(engine) {
