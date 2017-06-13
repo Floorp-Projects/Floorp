@@ -33,6 +33,7 @@ public class AnimatedProgressBar extends ProgressBar {
     private ValueAnimator mClosingAnimator = ValueAnimator.ofFloat(0f, 1f);
     private float mClipRegion = 0f;
     private int mExpectedProgress = 0;
+    private Rect tempRect;
 
     private ValueAnimator.AnimatorUpdateListener mListener = new ValueAnimator.AnimatorUpdateListener() {
         @Override
@@ -99,9 +100,9 @@ public class AnimatedProgressBar extends ProgressBar {
         if (mClipRegion == 0) {
             super.onDraw(canvas);
         } else {
-            Rect rect = canvas.getClipBounds();
+            canvas.getClipBounds(tempRect);
             canvas.save();
-            canvas.clipRect(rect.left + rect.width() * mClipRegion, rect.top, rect.right, rect.bottom);
+            canvas.clipRect(tempRect.left + tempRect.width() * mClipRegion, tempRect.top, tempRect.right, tempRect.bottom);
             super.onDraw(canvas);
             canvas.restore();
         }
@@ -143,6 +144,8 @@ public class AnimatedProgressBar extends ProgressBar {
     }
 
     private void init(@NonNull Context context, @Nullable AttributeSet attrs) {
+        tempRect = new Rect();
+
         final TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.AnimatedProgressBar);
         final int duration = a.getInteger(R.styleable.AnimatedProgressBar_shiftDuration, 1000);
         final int resID = a.getResourceId(R.styleable.AnimatedProgressBar_shiftInterpolator, 0);
