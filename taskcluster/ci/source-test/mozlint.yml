@@ -19,9 +19,6 @@ mozlint-eslint:
             ln -s ../tools/lint/eslint/eslint-plugin-mozilla node_modules &&
             ln -s ../tools/lint/eslint/eslint-plugin-spidermonkey-js node_modules &&
             ./mach lint -l eslint -f treeherder --quiet
-    run-on-projects:
-        - integration
-        - release
     when:
         files-changed:
             # Files that are likely audited.
@@ -55,9 +52,6 @@ mozlint-flake8:
     run:
         using: mach
         mach: lint -l flake8 -f treeherder
-    run-on-projects:
-        - integration
-        - release
     when:
         files-changed:
             - '**/*.py'
@@ -79,9 +73,6 @@ wptlint-gecko:
     run:
         using: mach
         mach: lint -l wpt -l wpt_manifest -f treeherder
-    run-on-projects:
-        - integration
-        - release
     when:
         files-changed:
             - 'testing/web-platform/tests/**'
