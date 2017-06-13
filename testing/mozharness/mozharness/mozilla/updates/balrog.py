@@ -7,6 +7,7 @@ from mozharness.base.log import INFO
 
 # BalrogMixin {{{1
 class BalrogMixin(object):
+
     @staticmethod
     def _query_balrog_username(server_config, product=None):
         username = server_config["balrog_usernames"].get(product)
@@ -14,6 +15,15 @@ class BalrogMixin(object):
             return username
         else:
             raise KeyError("Couldn't find balrog username.")
+
+    def query_python(self):
+        python = sys.executable
+        # A mock environment is a special case, the system python isn't
+        # available there
+        if 'mock_target' in self.config:
+            python = 'python2.7'
+        return python
+
 
     def generate_balrog_props(self, props_path):
         self.set_buildbot_property(
@@ -57,7 +67,7 @@ class BalrogMixin(object):
         self.generate_balrog_props(props_path)
 
         cmd = [
-            sys.executable,
+            self.query_python(),
             submitter_script,
             "--build-properties", props_path,
             "-t", release_type,
@@ -91,7 +101,10 @@ class BalrogMixin(object):
 
     def submit_balrog_release_pusher(self, dirs):
         product = self.buildbot_config["properties"]["product"]
-        cmd = [sys.executable, os.path.join(os.path.join(dirs['abs_tools_dir'], "scripts/updates/balrog-release-pusher.py"))]
+        cmd = [
+            self.query_python(),
+            os.path.join(os.path.join(dirs['abs_tools_dir'], "scripts/updates/balrog-release-pusher.py"))
+        ]
         cmd.extend(["--build-properties", os.path.join(dirs["base_work_dir"], "balrog_props.json")])
         cmd.extend(["--buildbot-configs", "https://hg.mozilla.org/build/buildbot-configs"])
         cmd.extend(["--release-config", os.path.join(dirs['build_dir'], self.config.get("release_config_file"))])
@@ -131,7 +144,7 @@ class BalrogMixin(object):
         )
 
         cmd = [
-            sys.executable,
+            self.query_python(),
             submitter_script,
             "--credentials-file", credentials_file,
             "--api-root", c["balrog_api_root"],
