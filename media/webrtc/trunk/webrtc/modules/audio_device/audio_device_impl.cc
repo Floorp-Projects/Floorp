@@ -22,20 +22,25 @@
 #include <assert.h>
 #include <string.h>
 
-#if defined(_WIN32)
+#if defined(WEBRTC_DUMMY_AUDIO_BUILD)
+// do not include platform specific headers
+#elif defined(_WIN32)
 #include "audio_device_wave_win.h"
 #if defined(WEBRTC_WINDOWS_CORE_AUDIO_BUILD)
 #include "audio_device_core_win.h"
 #endif
-#elif defined(WEBRTC_ANDROID)
+#elif defined(WEBRTC_ANDROID_OPENSLES)
 #include <stdlib.h>
+#include <dlfcn.h>
 #include "webrtc/modules/audio_device/android/audio_device_template.h"
 #include "webrtc/modules/audio_device/android/audio_manager.h"
 #include "webrtc/modules/audio_device/android/audio_record_jni.h"
 #include "webrtc/modules/audio_device/android/audio_track_jni.h"
 #include "webrtc/modules/audio_device/android/opensles_player.h"
 #include "webrtc/modules/audio_device/android/opensles_recorder.h"
-#elif defined(WEBRTC_LINUX)
+#elif defined(WEBRTC_AUDIO_SNDIO)
+#include "audio_device_sndio.h"
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
 #if defined(LINUX_ALSA)
 #include "audio_device_alsa_linux.h"
 #endif
@@ -150,7 +155,10 @@ int32_t AudioDeviceModuleImpl::CheckPlatform() {
 #elif defined(WEBRTC_ANDROID)
   platform = kPlatformAndroid;
   LOG(INFO) << "current platform is Android";
-#elif defined(WEBRTC_LINUX)
+#elif defined(WEBRTC_AUDIO_SNDIO)
+  platform = kPlatformSndio;
+  LOG(INFO) << "current platform is POSIX using SNDIO";
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
   platform = kPlatformLinux;
   LOG(INFO) << "current platform is Linux";
 #elif defined(WEBRTC_IOS)
@@ -239,13 +247,17 @@ int32_t AudioDeviceModuleImpl::CreatePlatformSpecificObjects() {
   // Create an Android audio manager.
   _audioManagerAndroid.reset(new AudioManager());
   // Select best possible combination of audio layers.
+  // Check if the OpenSLES library is available before going further.
+  void* opensles_lib = dlopen("libOpenSLES.so", RTLD_LAZY);
   if (audioLayer == kPlatformDefaultAudio) {
     if (_audioManagerAndroid->IsLowLatencyPlayoutSupported() &&
-        _audioManagerAndroid->IsLowLatencyRecordSupported()) {
+        _audioManagerAndroid->IsLowLatencyRecordSupported() &&
+        opensles_lib) {
       // Use OpenSL ES for both playout and recording.
       audioLayer = kAndroidOpenSLESAudio;
     } else if (_audioManagerAndroid->IsLowLatencyPlayoutSupported() &&
-               !_audioManagerAndroid->IsLowLatencyRecordSupported()) {
+               !_audioManagerAndroid->IsLowLatencyRecordSupported() &&
+               opensles_lib) {
       // Use OpenSL ES for output on devices that only supports the
       // low-latency output audio path.
       audioLayer = kAndroidJavaInputAndOpenSLESOutputAudio;
@@ -254,6 +266,12 @@ int32_t AudioDeviceModuleImpl::CreatePlatformSpecificObjects() {
       // not supported.
       audioLayer = kAndroidJavaAudio;
     }
+  }
+  if (opensles_lib) {
+    // TODO: We hit a pthread_mutex_unlock failure when trying to release this.
+    // It doesn't seem necessary anyway.
+    // That worked, close for now and proceed normally.
+    //dlclose(opensles_lib);
   }
   AudioManager* audio_manager = _audioManagerAndroid.get();
   if (audioLayer == kAndroidJavaAudio) {
@@ -275,10 +293,17 @@ int32_t AudioDeviceModuleImpl::CreatePlatformSpecificObjects() {
     ptrAudioDevice = nullptr;
   }
 // END #if defined(WEBRTC_ANDROID)
+#elif defined(WEBRTC_AUDIO_SNDIO)
+    ptrAudioDevice = new AudioDeviceSndio(Id());
+    if (ptrAudioDevice != NULL)
+    {
+      LOG(INFO) << "attempting to use the Sndio audio API...";
+      _platformAudioLayer = kSndioAudio;
+    }
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
 
 // Create the *Linux* implementation of the Audio Device
 //
-#elif defined(WEBRTC_LINUX)
   if ((audioLayer == kLinuxPulseAudio) ||
       (audioLayer == kPlatformDefaultAudio)) {
 #if defined(LINUX_PULSE)
@@ -313,7 +338,7 @@ int32_t AudioDeviceModuleImpl::CreatePlatformSpecificObjects() {
     LOG(INFO) << "Linux ALSA APIs will be utilized";
 #endif
   }
-#endif  // #if defined(WEBRTC_LINUX)
+#endif  // #if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
 
 // Create the *iPhone* implementation of the Audio Device
 //

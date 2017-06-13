@@ -31,18 +31,22 @@ const size_t kNaluShortStartSequenceSize = 3;
 // The size of the NALU type byte (1).
 const size_t kNaluTypeSize = 1;
 
-enum NaluType : uint8_t {
-  kSlice = 1,
-  kIdr = 5,
-  kSei = 6,
-  kSps = 7,
-  kPps = 8,
+enum NaluType : uint8_t { // 0-23 from H.264, 24-31 from RFC 6184
+  kSlice = 1, // I/P/B slice
+  kIdr = 5, // IDR slice
+  kSei = 6, // Supplementary Enhancement Info
+  kSps = 7, // Sequence Parameter Set
+  kPps = 8, // Picture Parameter Set
   kAud = 9,
   kEndOfSequence = 10,
   kEndOfStream = 11,
   kFiller = 12,
-  kStapA = 24,
-  kFuA = 28
+  kPrefix = 14, // Prefix
+  kStapA = 24, // Single-Time Aggregation Packet Type A
+  kFuA = 28 // Fragmentation Unit Type A
+};
+enum SeiType : uint8_t {
+  kSeiRecPt = 6, // Recovery Point SEI Payload
 };
 
 enum SliceType : uint8_t { kP = 0, kB = 1, kI = 2, kSp = 3, kSi = 4 };

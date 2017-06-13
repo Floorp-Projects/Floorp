@@ -151,23 +151,19 @@ class WEBRTC_DLLEXPORT VoERTP_RTCP {
   // on a specific channel.
   virtual int GetRemoteRTCP_CNAME(int channel, char cName[256]) = 0;
 
-  // Gets RTCP data from incoming RTCP Sender Reports.
-  virtual int GetRemoteRTCPData(int channel,
-                                unsigned int& NTPHigh,
-                                unsigned int& NTPLow,
-                                unsigned int& timestamp,
-                                unsigned int& playoutTimestamp,
-                                unsigned int* jitter = NULL,
-                                unsigned short* fractionLost = NULL) = 0;
-
   // Gets RTP statistics for a specific |channel|.
   virtual int GetRTPStatistics(int channel,
                                unsigned int& averageJitterMs,
                                unsigned int& maxJitterMs,
-                               unsigned int& discardedPackets) = 0;
+                               unsigned int& discardedPackets,
+                               unsigned int& cumulativeLost) = 0;
 
   // Gets RTCP statistics for a specific |channel|.
   virtual int GetRTCPStatistics(int channel, CallStatistics& stats) = 0;
+
+  // Gets RTCP packet type counters for a specific channel
+  virtual int GetRTCPPacketTypeCounters(int channel,
+                                        RtcpPacketTypeCounter& stats) = 0;
 
   // Gets the report block parts of the last received RTCP Sender Report (SR),
   // or RTCP Receiver Report (RR) on a specified |channel|. Each vector

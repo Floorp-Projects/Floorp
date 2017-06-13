@@ -9,8 +9,10 @@
  */
 
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "libyuv/planar_functions.h"
 
 #include <string.h>
+#include <limits>
 
 #include "webrtc/base/checks.h"
 // TODO(nisse): Only needed for the deprecated ConvertToI420.
@@ -60,6 +62,16 @@ VideoType RawVideoTypeToCommonVideoVideoType(RawVideoType type) {
 size_t CalcBufferSize(VideoType type, int width, int height) {
   RTC_DCHECK_GE(width, 0);
   RTC_DCHECK_GE(height, 0);
+  // Verify we won't overflow; max is width*height*4
+  // 0x7FFF * 0x7FFF * 4 = < 0x100000000
+  RTC_DCHECK_LE(width, 0x7FFF); // guarantees no overflow and cheaper than multiply
+  RTC_DCHECK_LE(height, 0x7FFF);
+  RTC_DCHECK_GE(std::numeric_limits<std::size_t>::max(), 0xFFFFFFFF);
+  // assert() is debug only
+  if (width > 0x7FFF || height > 0x7FFF) {
+    return SIZE_MAX; // very likely forces OOM
+  }
+
   size_t buffer_size = 0;
   switch (type) {
     case kI420:

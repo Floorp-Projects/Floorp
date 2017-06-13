@@ -186,6 +186,19 @@ class OpenSLESRecorder {
 
   // Last time the OpenSL ES layer delivered recorded audio data.
   uint32_t last_rec_time_;
+
+  void *opensles_lib_;
+  typedef SLresult (*slCreateEngine_t)(SLObjectItf *,
+                                       SLuint32,
+                                       const SLEngineOption *,
+                                       SLuint32,
+                                       const SLInterfaceID *,
+                                       const SLboolean *);
+  slCreateEngine_t slCreateEngine_;
+  SLInterfaceID SL_IID_ENGINE_;
+  SLInterfaceID SL_IID_ANDROIDCONFIGURATION_;
+  SLInterfaceID SL_IID_ANDROIDSIMPLEBUFFERQUEUE_;
+  SLInterfaceID SL_IID_RECORD_;
 };
 
 }  // namespace webrtc

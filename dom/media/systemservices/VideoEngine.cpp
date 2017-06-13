@@ -8,9 +8,6 @@
 #include "webrtc/video_engine/browser_capture_impl.h"
 #ifdef WEBRTC_ANDROID
 #include "webrtc/modules/video_capture/video_capture.h"
-#ifdef WEBRTC_INCLUDE_INTERNAL_VIDEO_RENDER
-#include "webrtc/modules/video_render/video_render.h"
-#endif
 #endif
 
 
@@ -48,18 +45,16 @@ VideoEngine::CreateVideoCapture(int32_t& id, const char* deviceUniqueIdUTF8) {
   LOG((__PRETTY_FUNCTION__));
   id = GenerateId();
   LOG(("CaptureDeviceInfo.type=%s id=%d",mCaptureDevInfo.TypeName(),id));
-  CaptureEntry entry = {-1,nullptr,nullptr};
+  CaptureEntry entry = {-1, nullptr};
 
   if (mCaptureDevInfo.type == webrtc::CaptureDeviceType::Camera) {
     entry = CaptureEntry(id,
-		         webrtc::VideoCaptureFactory::Create(id, deviceUniqueIdUTF8),
-                         nullptr);
+		         webrtc::VideoCaptureFactory::Create(deviceUniqueIdUTF8));
   } else {
 #ifndef WEBRTC_ANDROID
     entry = CaptureEntry(
 	      id,
-	      webrtc::DesktopCaptureImpl::Create(id, deviceUniqueIdUTF8, mCaptureDevInfo.type),
-              nullptr);
+	      webrtc::DesktopCaptureImpl::Create(id, deviceUniqueIdUTF8, mCaptureDevInfo.type));
 #else
     MOZ_ASSERT("CreateVideoCapture NO DESKTOP CAPTURE IMPL ON ANDROID" == nullptr);
 #endif
@@ -84,7 +79,7 @@ VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
   }
   switch (mCaptureDevInfo.type) {
     case webrtc::CaptureDeviceType::Camera: {
-      mDeviceInfo.reset(webrtc::VideoCaptureFactory::CreateDeviceInfo(0));
+      mDeviceInfo.reset(webrtc::VideoCaptureFactory::CreateDeviceInfo());
       break;
     }
     case webrtc::CaptureDeviceType::Browser: {
@@ -107,13 +102,6 @@ VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
   return mDeviceInfo;
 }
 
-void
-VideoEngine::RemoveRenderer(int capnum) {
-  WithEntry(capnum, [](CaptureEntry& cap) {
-    cap.mVideoRender = nullptr;
-  });
-}
-
 const UniquePtr<const webrtc::Config>&
 VideoEngine::GetConfiguration() {
   return mConfig;
@@ -128,27 +116,14 @@ RefPtr<VideoEngine> VideoEngine::Create(UniquePtr<const webrtc::Config>&& aConfi
 }
 
 VideoEngine::CaptureEntry::CaptureEntry(int32_t aCapnum,
-                                        rtc::scoped_refptr<webrtc::VideoCaptureModule> aCapture,
-                                        webrtc::VideoRender * aRenderer):
-    mCapnum(aCapnum),
-    mVideoCaptureModule(aCapture),
-    mVideoRender(aRenderer)
+                                        rtc::scoped_refptr<webrtc::VideoCaptureModule> aCapture)
+  : mCapnum(aCapnum)
+  , mVideoCaptureModule(aCapture)
 {}
 
 rtc::scoped_refptr<webrtc::VideoCaptureModule>
 VideoEngine::CaptureEntry::VideoCapture() {
   return mVideoCaptureModule;
-}
-
-const UniquePtr<webrtc::VideoRender>&
-VideoEngine::CaptureEntry::VideoRenderer() {
-  if (!mVideoRender) {
-     MOZ_ASSERT(mCapnum != -1);
-     // Create a VideoRender on demand
-     mVideoRender = UniquePtr<webrtc::VideoRender>(
-         webrtc::VideoRender::CreateVideoRender(mCapnum,nullptr,false,webrtc::kRenderExternal));
-   }
-  return mVideoRender;
 }
 
 int32_t

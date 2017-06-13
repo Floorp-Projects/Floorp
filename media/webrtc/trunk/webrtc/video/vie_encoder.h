@@ -50,6 +50,7 @@ class VideoBitrateAllocationObserver;
 class ViEEncoder : public rtc::VideoSinkInterface<VideoFrame>,
                    public EncodedImageCallback,
                    public VCMSendStatisticsCallback,
+                   public CPULoadStateObserver,
                    public ScalingObserverInterface {
  public:
   // Interface for receiving encoded video frames and notifications about
@@ -112,6 +113,9 @@ class ViEEncoder : public rtc::VideoSinkInterface<VideoFrame>,
   void OnBitrateUpdated(uint32_t bitrate_bps,
                         uint8_t fraction_lost,
                         int64_t round_trip_time_ms);
+
+  // CPULoadStateObserver interface
+  void onLoadStateChanged(CPULoadState state) override;
 
  protected:
   // Used for testing. For example the |ScalingObserverInterface| methods must

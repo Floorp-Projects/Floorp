@@ -91,6 +91,11 @@ struct RTCPReceiver::ReceiveInformation {
 struct RTCPReceiver::ReportBlockWithRtt {
   RTCPReportBlock report_block;
 
+  uint32_t remotePacketsReceived = 0;
+  uint64_t remoteOctetsReceived = 0;
+  uint32_t lastReceivedRRNTPsecs = 0;
+  uint32_t lastReceivedRRNTPfrac = 0;
+
   int64_t last_rtt_ms = 0;
   int64_t min_rtt_ms = 0;
   int64_t max_rtt_ms = 0;
@@ -462,7 +467,8 @@ void RTCPReceiver::HandleReceiverReport(const CommonHeader& rtcp_block,
 
 void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
                                      PacketInformation* packet_information,
-                                     uint32_t remote_ssrc) {
+                                     uint32_t remote_ssrc)
+    EXCLUSIVE_LOCKS_REQUIRED(rtcp_receiver_lock_) {
   // This will be called once per report block in the RTCP packet.
   // We filter out all report blocks that are not for us.
   // Each packet has max 31 RR blocks.
@@ -476,6 +482,16 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
   if (registered_ssrcs_.count(report_block.source_ssrc()) == 0)
     return;
 
+  // To avoid problem with acquiring _criticalSectionRTCPSender while holding
+  // _criticalSectionRTCPReceiver.
+  rtcp_receiver_lock_.Leave();
+  uint64_t sendTimeMS = 0;
+  uint32_t sentPackets = 0;
+  uint64_t sentOctets = 0;
+  rtp_rtcp_->GetSendReportMetadata(report_block.last_sr(),
+                                   &sendTimeMS, &sentPackets, &sentOctets);
+  rtcp_receiver_lock_.Enter();
+
   ReportBlockWithRtt* report_block_info =
       &received_report_blocks_[report_block.source_ssrc()][remote_ssrc];
 
@@ -485,6 +501,12 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
   report_block_info->report_block.fractionLost = report_block.fraction_lost();
   report_block_info->report_block.cumulativeLost =
       report_block.cumulative_lost();
+  if (sentPackets > report_block.cumulative_lost()) {
+    uint32_t packetsReceived = sentPackets - report_block.cumulative_lost();
+    report_block_info->remotePacketsReceived = packetsReceived;
+    report_block_info->remoteOctetsReceived = (sentOctets / sentPackets) *
+                                              packetsReceived;
+  }
   if (report_block.extended_high_seq_num() >
       report_block_info->report_block.extendedHighSeqNum) {
     // We have successfully delivered new RTP packets to the remote side after
@@ -500,6 +522,10 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
 
   int64_t rtt_ms = 0;
   uint32_t send_time_ntp = report_block.last_sr();
+  NtpTime ntp(*clock_);
+  report_block_info->lastReceivedRRNTPsecs = ntp.seconds();
+  report_block_info->lastReceivedRRNTPfrac = ntp.fractions();
+
   // RFC3550, section 6.4.1, LSR field discription states:
   // If no SR has been received yet, the field is set to zero.
   // Receiver rtp_rtcp module is not expected to calculate rtt using
@@ -507,7 +533,7 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
   if (!receiver_only_ && send_time_ntp != 0) {
     uint32_t delay_ntp = report_block.delay_since_last_sr();
     // Local NTP time.
-    uint32_t receive_time_ntp = CompactNtp(NtpTime(*clock_));
+    uint32_t receive_time_ntp = CompactNtp(ntp);
 
     // RTT in 1/(2^16) seconds.
     uint32_t rtt_ntp = receive_time_ntp - delay_ntp - send_time_ntp;

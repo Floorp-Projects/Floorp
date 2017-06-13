@@ -87,7 +87,7 @@ class VideoReceiveStream : public webrtc::VideoReceiveStream,
 
   const Config& config() const { return config_; }
 
-  void SetSyncChannel(VoiceEngine* voice_engine, int audio_channel_id);
+  void SetSyncChannel(VoiceEngine* voice_engine, int audio_channel_id) override;
 
   // Implements NackSender.
   void SendNack(const std::vector<uint16_t>& sequence_numbers) override;
@@ -103,6 +103,8 @@ class VideoReceiveStream : public webrtc::VideoReceiveStream,
   void EnableEncodedFrameRecording(rtc::PlatformFile file,
                                    size_t byte_limit) override;
 
+
+  bool GetRemoteRTCPSenderInfo(RTCPSenderInfo* sender_info) const override;
  private:
   static bool DecodeThreadFunction(void* ptr);
   void Decode();

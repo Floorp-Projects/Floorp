@@ -23,6 +23,7 @@
 #include "webrtc/modules/audio_coding/codecs/audio_format.h"
 #include "webrtc/modules/audio_coding/codecs/audio_encoder.h"
 #include "webrtc/modules/audio_coding/include/audio_coding_module_typedefs.h"
+#include "webrtc/modules/audio_coding/codecs/isac/main/include/audio_encoder_isac.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {

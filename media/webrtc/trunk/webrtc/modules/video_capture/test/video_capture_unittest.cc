@@ -403,7 +403,8 @@ TEST_F(VideoCaptureExternalTest, TestExternalCapture) {
   EXPECT_TRUE(capture_callback_.CompareLastFrame(*test_frame_));
 }
 
-TEST_F(VideoCaptureExternalTest, Rotation) {
+// Disabled, see Bug 1368816
+TEST_F(VideoCaptureExternalTest, DISABLED_Rotation) {
   EXPECT_EQ(0, capture_module_->SetCaptureRotation(webrtc::kVideoRotation_0));
   size_t length = webrtc::CalcBufferSize(webrtc::kI420,
                                          test_frame_->width(),

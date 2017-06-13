@@ -15,7 +15,9 @@
 #include <sys/utsname.h>
 
 #include "webrtc/base/checks.h"
+#ifndef WEBRTC_MOZILLA_BUILD
 #include "webrtc/base/common.h"
+#endif
 #include "webrtc/base/logging.h"
 #include "webrtc/base/macutils.h"
 #include "webrtc/base/stringutils.h"
@@ -73,7 +75,9 @@ void DecodeFourChar(UInt32 fc, std::string* out) {
 }
 
 static bool GetOSVersion(int* major, int* minor, int* bugfix) {
+#ifndef WEBRTC_MOZILLA_BUILD
   RTC_DCHECK(major && minor && bugfix);
+#endif
   struct utsname uname_info;
   if (uname(&uname_info) != 0)
     return false;

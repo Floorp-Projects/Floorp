@@ -75,6 +75,7 @@ enum RTPExtensionType {
   kRtpExtensionVideoRotation,
   kRtpExtensionTransportSequenceNumber,
   kRtpExtensionPlayoutDelay,
+  kRtpExtensionRtpStreamId,
   kRtpExtensionNumberOfExtensions,
 };
 

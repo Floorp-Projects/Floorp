@@ -141,6 +141,8 @@ class FrameBuffer {
 
   void UpdateJitterDelay() EXCLUSIVE_LOCKS_REQUIRED(crit_);
 
+  void ClearFramesAndHistory() EXCLUSIVE_LOCKS_REQUIRED(crit_);
+
   void UpdateHistograms() const;
 
   FrameMap frames_ GUARDED_BY(crit_);

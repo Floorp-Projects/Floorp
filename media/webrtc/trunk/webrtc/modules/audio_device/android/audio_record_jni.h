@@ -69,6 +69,8 @@ class AudioRecordJni {
   explicit AudioRecordJni(AudioManager* audio_manager);
   ~AudioRecordJni();
 
+  void EnsureRecordObject();
+
   int32_t Init();
   int32_t Terminate();
 
@@ -84,6 +86,9 @@ class AudioRecordJni {
   int32_t EnableBuiltInAEC(bool enable);
   int32_t EnableBuiltInAGC(bool enable);
   int32_t EnableBuiltInNS(bool enable);
+  int32_t RecordingDeviceName(uint16_t index,
+                              char name[kAdmMaxDeviceNameSize],
+                              char guid[kAdmMaxGuidSize]);
 
  private:
   // Called from Java side so we can cache the address of the Java-manged

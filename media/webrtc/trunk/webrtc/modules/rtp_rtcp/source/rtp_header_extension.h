@@ -30,6 +30,8 @@ const size_t kAbsoluteSendTimeLength = 4;
 const size_t kVideoRotationLength = 2;
 const size_t kTransportSequenceNumberLength = 3;
 const size_t kPlayoutDelayLength = 4;
+// kRtpStreamIdLength is variable
+const size_t kRtpStreamIdLength = 4; // max 1-byte header extension length
 
 // Playout delay in milliseconds. A playout delay limit (min or max)
 // has 12 bits allocated. This allows a range of 0-4095 values which translates

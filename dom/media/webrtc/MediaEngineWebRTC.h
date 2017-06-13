@@ -40,7 +40,6 @@
 #include "CamerasChild.h"
 
 // WebRTC library includes follow
-#include "webrtc/common.h"
 // Audio Engine
 #include "webrtc/voice_engine/include/voe_base.h"
 #include "webrtc/voice_engine/include/voe_codec.h"
@@ -641,11 +640,8 @@ private:
   // gUM runnables can e.g. Enumerate from multiple threads
   Mutex mMutex;
   webrtc::VoiceEngine* mVoiceEngine;
-  webrtc::Config mConfig;
   RefPtr<mozilla::AudioInput> mAudioInput;
   bool mFullDuplex;
-  bool mExtendedFilter;
-  bool mDelayAgnostic;
   bool mHasTabVideoSource;
 
   // Store devices we've already seen in a hashtable for quick return.

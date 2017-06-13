@@ -174,6 +174,9 @@ void UtilityTest::RunResampleTest(int src_channels,
   }
 }
 
+// These two tests assume memcpy() (no delay and no filtering) for input
+// freq == output freq && same channels.  RemixAndResample uses 'Fixed'
+// resamplers to enable this behavior
 TEST_F(UtilityTest, RemixAndResampleCopyFrameSucceeds) {
   // Stereo -> stereo.
   SetStereoFrame(&src_frame_, 10, 10);

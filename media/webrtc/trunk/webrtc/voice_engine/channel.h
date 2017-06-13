@@ -274,10 +274,12 @@ class Channel
 
   // VoEVideoSync
   bool GetDelayEstimate(int* jitter_buffer_delay_ms,
-                        int* playout_buffer_delay_ms) const;
+                        int* playout_buffer_delay_ms,
+                        int* avsync_offset_ms) const;
   uint32_t GetDelayEstimate() const;
   int LeastRequiredDelayMs() const;
   int SetMinimumPlayoutDelay(int delayMs);
+  void SetCurrentSyncOffset(int offsetMs) { _current_sync_offset = offsetMs; }
   int GetPlayoutTimestamp(unsigned int& timestamp);
   int SetInitTimestamp(unsigned int timestamp);
   int SetInitSequenceNumber(short sequenceNumber);
@@ -326,7 +328,9 @@ class Channel
                                        unsigned short dataLengthInBytes);
   int GetRTPStatistics(unsigned int& averageJitterMs,
                        unsigned int& maxJitterMs,
-                       unsigned int& discardedPackets);
+                       unsigned int& discardedPackets,
+                       unsigned int& cumulativeLost);
+  int GetRTCPPacketTypeCounters(RtcpPacketTypeCounter& stats);
   int GetRemoteRTCPReportBlocks(std::vector<ReportBlock>* report_blocks);
   int GetRTPStatistics(CallStatistics& stats);
   int SetCodecFECStatus(bool enable);
@@ -536,6 +540,7 @@ class Channel
   AudioFrame::SpeechType _outputSpeechType;
   // VoEVideoSync
   rtc::CriticalSection video_sync_lock_;
+  int _current_sync_offset;
   // VoEAudioProcessing
   bool restored_packet_in_use_;
   // RtcpBandwidthObserver

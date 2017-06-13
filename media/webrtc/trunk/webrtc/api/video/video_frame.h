@@ -25,6 +25,14 @@ namespace webrtc {
 
 class VideoFrame {
  public:
+  VideoFrame() {
+    video_frame_buffer_ = nullptr;
+    timestamp_rtp_ = 0;
+    timestamp_us_ = 0;
+    ntp_time_ms_ = 0;
+    rotation_ = kVideoRotation_0;
+  }
+
   // TODO(nisse): This constructor is consistent with the now deleted
   // cricket::WebRtcVideoFrame. We should consider whether or not we
   // want to stick to this style and deprecate the other constructor.

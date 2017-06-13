@@ -108,6 +108,8 @@ class VideoSender : public Module {
   int32_t IntraFrameRequest(size_t stream_index);
   int32_t EnableFrameDropper(bool enable);
 
+  void SetCPULoadState(CPULoadState state);
+
   int64_t TimeUntilNextProcess() override;
   void Process() override;
 
@@ -153,6 +155,7 @@ class VideoReceiver : public Module {
                 KeyFrameRequestSender* keyframe_request_sender = nullptr);
   ~VideoReceiver();
 
+  void SetReceiveState(VideoReceiveState state);
   int32_t RegisterReceiveCodec(const VideoCodec* receiveCodec,
                                int32_t numberOfCores,
                                bool requireKeyFrame);
@@ -166,6 +169,7 @@ class VideoReceiver : public Module {
       VCMDecoderTimingCallback* decoderTiming);
   int32_t RegisterFrameTypeCallback(VCMFrameTypeCallback* frameTypeCallback);
   int32_t RegisterPacketRequestCallback(VCMPacketRequestCallback* callback);
+  int32_t RegisterReceiveStateCallback(VCMReceiveStateCallback* callback);
 
   int32_t Decode(uint16_t maxWaitTimeMs);
 
@@ -198,6 +202,7 @@ class VideoReceiver : public Module {
   void Process() override;
 
   void TriggerDecoderShutdown();
+  void Reset();
 
  protected:
   int32_t Decode(const webrtc::VCMEncodedFrame& frame)
@@ -209,6 +214,7 @@ class VideoReceiver : public Module {
   Clock* const clock_;
   rtc::CriticalSection process_crit_;
   rtc::CriticalSection receive_crit_;
+  VideoReceiveState _receiveState;
   VCMTiming* _timing;
   VCMReceiver _receiver;
   VCMDecodedFrameCallback _decodedFrameCallback;
@@ -216,6 +222,7 @@ class VideoReceiver : public Module {
   VCMReceiveStatisticsCallback* _receiveStatsCallback GUARDED_BY(process_crit_);
   VCMDecoderTimingCallback* _decoderTimingCallback GUARDED_BY(process_crit_);
   VCMPacketRequestCallback* _packetRequestCallback GUARDED_BY(process_crit_);
+  VCMReceiveStateCallback* _receiveStateCallback GUARDED_BY(process_crit_);
   VCMGenericDecoder* _decoder;
 
   VCMFrameBuffer _frameFromFile;

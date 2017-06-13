@@ -176,7 +176,7 @@ using namespace webrtc::videocapturemodule;
 }
 
 - (AVCaptureVideoDataOutput*)currentOutput {
-  return [[_captureSession outputs] firstObject];
+  return [[_captureSession outputs] objectAtIndex:0]; // firstObject isn't available in 10.7
 }
 
 - (void)startCaptureInBackgroundWithOutput:

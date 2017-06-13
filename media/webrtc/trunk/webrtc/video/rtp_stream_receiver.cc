@@ -117,6 +117,7 @@ RtpStreamReceiver::RtpStreamReceiver(
       ulpfec_receiver_(UlpfecReceiver::Create(this)),
       receiving_(false),
       restored_packet_in_use_(false),
+			receiving_rid_enabled_(false),
       last_packet_log_ms_(-1),
       rtp_rtcp_(CreateRtpRtcpModule(rtp_receive_statistics_.get(),
                                     transport,
@@ -191,6 +192,10 @@ RtpStreamReceiver::RtpStreamReceiver(
     }
   }
 
+  rtp_rtcp_->SetTMMBRStatus(config_.rtp.tmmbr);
+
+  rtp_rtcp_->SetKeyFrameRequestMethod(config_.rtp.keyframe_method);
+
   if (config_.rtp.rtcp_xr.receiver_reference_time_report)
     rtp_rtcp_->SetRtcpXrRrtrStatus(true);
 
@@ -249,8 +254,28 @@ int RtpStreamReceiver::GetCsrcs(uint32_t* csrcs) const {
   return rtp_receiver_->CSRCs(csrcs);
 }
 
+void RtpStreamReceiver::GetRID(char rid[256]) const {
+  rtp_receiver_->GetRID(rid);
+}
+
 RtpReceiver* RtpStreamReceiver::GetRtpReceiver() const {
   return rtp_receiver_.get();
+}
+
+bool RtpStreamReceiver::SetReceiveRIDStatus(bool enable, int id) {
+  rtc::CritScope lock(&receive_cs_);
+  if (enable) {
+    if (rtp_header_parser_->RegisterRtpHeaderExtension(
+            kRtpExtensionRtpStreamId, id)) {
+      receiving_rid_enabled_ = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+  receiving_rid_enabled_ = false;
+  return rtp_header_parser_->DeregisterRtpHeaderExtension(
+    kRtpExtensionRtpStreamId);
 }
 
 int32_t RtpStreamReceiver::OnReceivedPayloadData(
@@ -365,6 +390,8 @@ bool RtpStreamReceiver::DeliverRtp(const uint8_t* rtp_packet,
         ss << ", toffset: " << header.extension.transmissionTimeOffset;
       if (header.extension.hasAbsoluteSendTime)
         ss << ", abs send time: " << header.extension.absoluteSendTime;
+			if (header.extension.hasRID)
+				ss << ", rid: " << header.extension.rid.get();
       LOG(LS_INFO) << ss.str();
       last_packet_log_ms_ = now_ms;
     }
@@ -676,7 +703,7 @@ void RtpStreamReceiver::InsertSpsPpsIntoTracker(uint8_t payload_type) {
 
   H264SpropParameterSets sprop_decoder;
   auto sprop_base64_it =
-      codec_params_it->second.find(cricket::kH264FmtpSpropParameterSets);
+      codec_params_it->second.find("sprop-parameter-sets");
 
   if (sprop_base64_it == codec_params_it->second.end())
     return;

@@ -19,12 +19,14 @@
 #include "webrtc/modules/desktop_capture/desktop_frame_win.h"
 #include "webrtc/modules/desktop_capture/win/window_capture_utils.h"
 #include "webrtc/system_wrappers/include/logging.h"
+#include <VersionHelpers.h>
 
 namespace webrtc {
 
 namespace {
 
 BOOL CALLBACK WindowsEnumerationHandler(HWND hwnd, LPARAM param) {
+  assert(IsGUIThread(false));
   DesktopCapturer::SourceList* list =
       reinterpret_cast<DesktopCapturer::SourceList*>(param);
 
@@ -64,6 +66,10 @@ BOOL CALLBACK WindowsEnumerationHandler(HWND hwnd, LPARAM param) {
   DesktopCapturer::Source window;
   window.id = reinterpret_cast<WindowId>(hwnd);
 
+  DWORD pid;
+  GetWindowThreadProcessId(hwnd, &pid);
+  window.pid = (pid_t)pid;
+
   const size_t kTitleLength = 500;
   WCHAR window_title[kTitleLength];
   // Truncate the title if it's longer than kTitleLength.
@@ -73,6 +79,12 @@ BOOL CALLBACK WindowsEnumerationHandler(HWND hwnd, LPARAM param) {
   // Skip windows when we failed to convert the title or it is empty.
   if (window.title.empty())
     return TRUE;
+  // Skip windows of zero visible area, except IconicWindows
+  RECT bounds;
+  if(GetClientRect(hwnd,&bounds) && !IsIconic(hwnd)
+    && IsRectEmpty(&bounds)){
+    return TRUE;
+  }
 
   list->push_back(window);
 
@@ -86,6 +98,7 @@ class WindowCapturerWin : public DesktopCapturer {
 
   // DesktopCapturer interface.
   void Start(Callback* callback) override;
+  void Stop() override;
   void CaptureFrame() override;
   bool GetSourceList(SourceList* sources) override;
   bool SelectSource(SourceId id) override;
@@ -113,6 +126,7 @@ WindowCapturerWin::WindowCapturerWin() {}
 WindowCapturerWin::~WindowCapturerWin() {}
 
 bool WindowCapturerWin::GetSourceList(SourceList* sources) {
+  assert(IsGUIThread(false));
   SourceList result;
   LPARAM param = reinterpret_cast<LPARAM>(&result);
   if (!EnumWindows(&WindowsEnumerationHandler, param))
@@ -130,6 +144,7 @@ bool WindowCapturerWin::GetSourceList(SourceList* sources) {
 }
 
 bool WindowCapturerWin::SelectSource(SourceId id) {
+  assert(IsGUIThread(false));
   HWND window = reinterpret_cast<HWND>(id);
   if (!IsWindow(window) || !IsWindowVisible(window) || IsIconic(window))
     return false;
@@ -141,6 +156,7 @@ bool WindowCapturerWin::SelectSource(SourceId id) {
 }
 
 bool WindowCapturerWin::FocusOnSelectedSource() {
+  assert(IsGUIThread(false));
   if (!window_)
     return false;
 
@@ -158,7 +174,12 @@ void WindowCapturerWin::Start(Callback* callback) {
   callback_ = callback;
 }
 
+void WindowCapturerWin::Stop() {
+  callback_ = NULL;
+}
+
 void WindowCapturerWin::CaptureFrame() {
+  assert(IsGUIThread(false));
   if (!window_) {
     LOG(LS_ERROR) << "Window hasn't been selected: " << GetLastError();
     callback_->OnCaptureResult(Result::ERROR_PERMANENT, nullptr);

@@ -33,7 +33,9 @@ bool GetScreenList(DesktopCapturer::SourceList* screens) {
     if (!(device.StateFlags & DISPLAY_DEVICE_ACTIVE))
       continue;
 
-    screens->push_back({device_index, std::string()});
+    DesktopCapturer::Source screen;
+    screen.id = device_index;
+    screens->push_back(screen);
   }
   return true;
 }
@@ -55,6 +57,7 @@ bool IsScreenValid(DesktopCapturer::SourceId screen, std::wstring* device_key) {
 
 DesktopRect GetScreenRect(DesktopCapturer::SourceId screen,
                           const std::wstring& device_key) {
+  RTC_DCHECK(IsGUIThread(false));
   if (screen == kFullDesktopScreenId) {
     return DesktopRect::MakeXYWH(GetSystemMetrics(SM_XVIRTUALSCREEN),
                                  GetSystemMetrics(SM_YVIRTUALSCREEN),

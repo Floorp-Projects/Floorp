@@ -89,7 +89,8 @@ FrameBuffer::ReturnReason FrameBuffer::NextFrame(
       if (continuous_end_it != frames_.end())
         ++continuous_end_it;
 
-      for (; frame_it != continuous_end_it; ++frame_it) {
+      for (; frame_it != continuous_end_it && frame_it != frames_.end();
+           ++frame_it) {
         if (!frame_it->second.continuous ||
             frame_it->second.num_missing_decodable > 0) {
           continue;
@@ -197,6 +198,17 @@ int FrameBuffer::InsertFrame(std::unique_ptr<FrameObject> frame) {
                            last_decoded_frame_it_->first.spatial_layer)
                     << ") was handed off for decoding, dropping frame.";
     return last_continuous_picture_id;
+  }
+
+  // Test if inserting this frame would cause the order of the frames to become
+  // ambiguous (covering more than half the interval of 2^16). This can happen
+  // when the picture id make large jumps mid stream.
+  if (!frames_.empty() &&
+      key < frames_.begin()->first &&
+      frames_.rbegin()->first < key) {
+    LOG(LS_WARNING) << "A jump in picture id was detected, clearing buffer.";
+    ClearFramesAndHistory();
+    last_continuous_picture_id = -1;
   }
 
   auto info = frames_.insert(std::make_pair(key, FrameInfo())).first;
@@ -388,6 +400,14 @@ void FrameBuffer::UpdateHistograms() const {
     RTC_HISTOGRAM_COUNTS_10000("WebRTC.Video.JitterBufferDelayInMs",
                                accumulated_delay_ / accumulated_delay_samples_);
   }
+}
+
+void FrameBuffer::ClearFramesAndHistory() {
+  frames_.clear();
+  last_decoded_frame_it_ = frames_.end();
+  last_continuous_frame_it_ = frames_.end();
+  num_frames_history_ = 0;
+  num_frames_buffered_ = 0;
 }
 
 }  // namespace video_coding

@@ -74,13 +74,23 @@ runNetworkTest(() => {
       gl.enableVertexAttribArray(program.aPosition);
       gl.vertexAttribPointer(program.aPosition, squareBuffer.itemSize, gl.FLOAT, false, 0, 0);
     },
-    function DRAW_LOCAL_GREEN(test) {
-      h.drawColor(canvas, h.green);
-    },
     function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
+      h.drawColor(canvas, h.green);
       test.pcLocal.canvasStream = canvas.captureStream(0.0);
       is(test.pcLocal.canvasStream.canvas, canvas, "Canvas attribute is correct");
       test.pcLocal.attachLocalStream(test.pcLocal.canvasStream);
+      var i = 0;
+      return setInterval(function() {
+        try {
+          info("draw " + i ? "green" : "red");
+          h.drawColor(canvas, i ? h.green : h.red);
+          i = 1 - i;
+          test.pcLocal.canvasStream.requestFrame();
+        } catch (e) {
+          // ignore; stream might have shut down, and we don't bother clearing
+          // the setInterval.
+        }
+      }, 500);
     }
   ]);
   test.chain.append([
@@ -100,16 +110,6 @@ runNetworkTest(() => {
     },
     function DRAW_LOCAL_RED() {
       h.drawColor(canvas, h.red);
-      return setInterval(function() {
-        try {
-          info("draw");
-          h.drawColor(canvas, h.red);
-          test.pcLocal.canvasStream.requestFrame();
-        } catch (e) {
-          // ignore; stream might have shut down, and we don't bother clearing
-          // the setInterval.
-        }
-      }, 500);
     },
     function WAIT_FOR_REMOTE_RED() {
       return h.waitForPixelColor(vremote, h.red, 128,

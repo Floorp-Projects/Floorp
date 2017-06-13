@@ -32,6 +32,7 @@ class EncodedImageCallback;
 class I420FrameCallback;
 class ReceiveStatisticsProxy;
 class VideoRenderCallback;
+class VCMReceiveStateCallback;
 
 namespace vcm {
 class VideoReceiver;

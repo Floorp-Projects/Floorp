@@ -47,7 +47,7 @@ enum { kMinDtmfEventCode = 0 };         // DTMF digit "0"
 enum { kMaxDtmfEventCode = 15 };        // DTMF digit "D"
 enum { kMinTelephoneEventCode = 0 };    // RFC4733 (Section 2.3.1)
 enum { kMaxTelephoneEventCode = 255 };  // RFC4733 (Section 2.3.1)
-enum { kMinTelephoneEventDuration = 100 };
+enum { kMinTelephoneEventDuration = 40 };
 enum { kMaxTelephoneEventDuration = 60000 };       // Actual limit is 2^16
 enum { kMinTelephoneEventAttenuation = 0 };        // 0 dBm0
 enum { kMaxTelephoneEventAttenuation = 36 };       // -36 dBm0
@@ -60,13 +60,13 @@ enum { kVoiceEngineMaxModuleVersionSize = 960 };
 // Audio processing
 const NoiseSuppression::Level kDefaultNsMode = NoiseSuppression::kModerate;
 const GainControl::Mode kDefaultAgcMode =
-#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS) || defined(WEBRTC_GONK)
     GainControl::kAdaptiveDigital;
 #else
     GainControl::kAdaptiveAnalog;
 #endif
 const bool kDefaultAgcState =
-#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS) || defined(WEBRTC_GONK)
     false;
 #else
     true;
@@ -261,9 +261,11 @@ inline int VoEChannelId(int moduleId) {
 // *** WEBRTC_MAC ***
 // including iPhone
 
-#ifdef WEBRTC_MAC
+#if defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
 
+#if !defined(WEBRTC_BSD)
 #include <AudioUnit/AudioUnit.h>
+#endif
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -279,7 +281,7 @@ inline int VoEChannelId(int moduleId) {
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#if !defined(WEBRTC_IOS)
+#if !defined(WEBRTC_BSD) && !defined(WEBRTC_IOS)
 #include <CoreServices/CoreServices.h>
 #include <CoreAudio/CoreAudio.h>
 #include <AudioToolbox/DefaultAudioOutput.h>
@@ -312,6 +314,6 @@ inline int VoEChannelId(int moduleId) {
 
 // Default device for Mac and iPhone
 #define WEBRTC_VOICE_ENGINE_DEFAULT_DEVICE 0
-#endif  // #ifdef WEBRTC_MAC
+#endif  // #if defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
 
 #endif  // WEBRTC_VOICE_ENGINE_VOICE_ENGINE_DEFINES_H

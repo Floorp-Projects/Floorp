@@ -25,7 +25,7 @@ namespace cricket {
 class VideoAdapter {
  public:
   VideoAdapter();
-  VideoAdapter(int required_resolution_alignment);
+  explicit VideoAdapter(int required_resolution_alignment);
   virtual ~VideoAdapter();
 
   // Return the adapted resolution and cropping parameters given the
@@ -54,6 +54,10 @@ class VideoAdapter {
   void OnResolutionRequest(rtc::Optional<int> max_pixel_count,
                            rtc::Optional<int> max_pixel_count_step_up);
 
+  // Requests the output frame size from |AdaptFrameResolution| be scaled
+  // down from the input by a factor of scale_resolution_by (min 1.0)
+  void OnScaleResolutionBy(rtc::Optional<float> scale_resolution_by);
+
  private:
   // Determine if frame should be dropped based on input fps and requested fps.
   bool KeepFrame(int64_t in_timestamp_ns);
@@ -75,6 +79,8 @@ class VideoAdapter {
   rtc::Optional<VideoFormat> requested_format_ GUARDED_BY(critical_section_);
   int resolution_request_max_pixel_count_ GUARDED_BY(critical_section_);
   bool step_up_ GUARDED_BY(critical_section_);
+  float scale_resolution_by_ GUARDED_BY(critical_section_);
+  bool scale_ GUARDED_BY(critical_section_);
 
   // The critical section to protect the above variables.
   rtc::CriticalSection critical_section_;

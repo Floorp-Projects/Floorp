@@ -52,6 +52,8 @@ class RtpReceiverImpl : public RtpReceiver {
 
   int32_t CSRCs(uint32_t array_of_csrc[kRtpCsrcSize]) const override;
 
+  void GetRID(char rid[256]) const override;
+
   int32_t Energy(uint8_t array_of_energy[kRtpCsrcSize]) const override;
 
   TelephoneEventHandler* GetTelephoneEventHandler() override;
@@ -84,6 +86,7 @@ class RtpReceiverImpl : public RtpReceiver {
   uint32_t last_received_timestamp_;
   int64_t last_received_frame_time_ms_;
   uint16_t last_received_sequence_number_;
+  char *rid_;
 };
 }  // namespace webrtc
 #endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_RECEIVER_IMPL_H_
