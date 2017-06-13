@@ -51,6 +51,9 @@ SimpleTest.requestFlakyTimeout("Must ensure that an event does not happen.");
 
 /**
  * Checks that the popup does not open in response to the given function.
+ *
+ * @param {Function} triggerFn - function that triggers an event
+ * @returns {Promise}
  */
 function expectPopupDoesNotOpen(triggerFn) {
   let popupShown = waitForNextPopup();
@@ -63,6 +66,9 @@ function expectPopupDoesNotOpen(triggerFn) {
 
 /**
  * Checks that the selected index in the popup still matches the given value.
+ *
+ * @param {number} expectedIndex
+ * @returns {Promise}
  */
 function checkSelectedIndexAfterResponseTime(expectedIndex) {
   return new Promise(resolve => {

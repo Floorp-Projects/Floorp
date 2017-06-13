@@ -249,7 +249,7 @@ async function promiseNoUnexpectedPopupShown() {
 
 /**
  * Resolve at the next popupshown event for the autocomplete popup
- * @return {Promise} with the results
+ * @returns {Promise} with the results
  */
 function promiseACShown() {
   gPopupShownExpected = true;
