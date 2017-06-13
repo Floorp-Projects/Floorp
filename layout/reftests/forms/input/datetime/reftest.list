@@ -21,4 +21,4 @@ skip-if(Android) == time-small-width-height.html time-small-width-height-ref.htm
 skip-if(Android) == time-content-left-aligned.html time-content-left-aligned-ref.html
 
 # reset button should be right aligned
-skip-if(Android) fails-if(styloVsGecko) == time-reset-button-right-aligned.html time-reset-button-right-aligned-ref.html
+skip-if(Android) fails-if(styloVsGecko) == time-reset-button-right-aligned.html time-reset-button-right-aligned-ref.html # bug 1372062

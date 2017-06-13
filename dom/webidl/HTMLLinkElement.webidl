@@ -46,12 +46,6 @@ partial interface HTMLLinkElement {
            attribute DOMString target;
 };
 
-// http://w3c.github.io/webcomponents/spec/imports/#interface-import
-partial interface HTMLLinkElement {
-    [Func="nsDocument::IsWebComponentsEnabled"]
-    readonly attribute Document? import;
-};
-
 // https://w3c.github.io/webappsec/specs/subresourceintegrity/#htmllinkelement-1
 partial interface HTMLLinkElement {
   [SetterThrows]

@@ -6830,7 +6830,15 @@ nsHttpChannel::SetProxyCredentials(const nsACString &value)
 NS_IMETHODIMP
 nsHttpChannel::SetWWWCredentials(const nsACString &value)
 {
-    return mRequestHead.SetHeader(nsHttp::Authorization, value);
+    // This method is called when various browser initiated authorization
+    // code sets the credentials.  We need to flag this header as the
+    // "browser default" so it does not show up in the ServiceWorker
+    // FetchEvent.  This may actually get called more than once, though,
+    // so we clear the header first since "default" headers are not
+    // allowed to overwrite normally.
+    Unused << mRequestHead.ClearHeader(nsHttp::Authorization);
+    return mRequestHead.SetHeader(nsHttp::Authorization, value, false,
+                                  nsHttpHeaderArray::eVarietyRequestDefault);
 }
 
 //-----------------------------------------------------------------------------

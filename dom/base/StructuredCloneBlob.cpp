@@ -27,8 +27,8 @@ StructuredCloneBlob::StructuredCloneBlob()
 
 /* static */ already_AddRefed<StructuredCloneBlob>
 StructuredCloneBlob::Constructor(GlobalObject& aGlobal, JS::HandleValue aValue,
-                                      JS::HandleObject aTargetGlobal,
-                                      ErrorResult& aRv)
+                                 JS::HandleObject aTargetGlobal,
+                                 ErrorResult& aRv)
 {
   JSContext* cx = aGlobal.Context();
 
@@ -38,7 +38,14 @@ StructuredCloneBlob::Constructor(GlobalObject& aGlobal, JS::HandleValue aValue,
   JS::RootedValue value(cx, aValue);
 
   if (aTargetGlobal) {
-    ac.emplace(cx, aTargetGlobal);
+    JS::RootedObject targetGlobal(cx, js::CheckedUnwrap(aTargetGlobal));
+    if (!targetGlobal) {
+      js::ReportAccessDenied(cx);
+      aRv.NoteJSContextException(cx);
+      return nullptr;
+    }
+
+    ac.emplace(cx, targetGlobal);
 
     if (!JS_WrapValue(cx, &value)) {
       aRv.NoteJSContextException(cx);

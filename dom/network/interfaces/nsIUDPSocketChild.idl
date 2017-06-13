@@ -8,6 +8,7 @@
 interface nsIUDPSocketInternal;
 interface nsIInputStream;
 interface nsIPrincipal;
+interface nsIEventTarget;
 
 %{ C++
 namespace mozilla {
@@ -33,7 +34,8 @@ interface nsIUDPSocketChild : nsISupports
   void bind(in nsIUDPSocketInternal socket, in nsIPrincipal principal,
             in AUTF8String host, in unsigned short port,
             in bool addressReuse, in bool loopback, in uint32_t recvBufferSize,
-            in uint32_t sendBufferSize);
+            in uint32_t sendBufferSize,
+            [optional] in nsIEventTarget mainThreadTarget);
 
   // Tell the chrome process to connect the UDP socket to a given remote host and port
   void connect(in nsIUDPSocketInternal socket, in AUTF8String host, in unsigned short port);
