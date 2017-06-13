@@ -2317,11 +2317,11 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     if (useOffMainThreadCompositing) {
       GPUProcessManager* gpm = GPUProcessManager::Get();
 
-      Endpoint<PCompositorManagerChild> compositor;
+      Endpoint<PCompositorBridgeChild> compositor;
       Endpoint<PImageBridgeChild> imageBridge;
       Endpoint<PVRManagerChild> vrBridge;
       Endpoint<PVideoDecoderManagerChild> videoManager;
-      AutoTArray<uint32_t, 3> namespaces;
+      nsTArray<uint32_t> namespaces;
 
       DebugOnly<bool> opened = gpm->CreateContentBridges(
         OtherPid(),
@@ -2337,7 +2337,7 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
         Move(imageBridge),
         Move(vrBridge),
         Move(videoManager),
-        namespaces);
+        Move(namespaces));
 
       gpm->AddListener(this);
     }
@@ -2483,11 +2483,11 @@ ContentParent::OnCompositorUnexpectedShutdown()
 {
   GPUProcessManager* gpm = GPUProcessManager::Get();
 
-  Endpoint<PCompositorManagerChild> compositor;
+  Endpoint<PCompositorBridgeChild> compositor;
   Endpoint<PImageBridgeChild> imageBridge;
   Endpoint<PVRManagerChild> vrBridge;
   Endpoint<PVideoDecoderManagerChild> videoManager;
-  AutoTArray<uint32_t, 3> namespaces;
+  nsTArray<uint32_t> namespaces;
 
   DebugOnly<bool> opened = gpm->CreateContentBridges(
     OtherPid(),
@@ -2503,7 +2503,7 @@ ContentParent::OnCompositorUnexpectedShutdown()
     Move(imageBridge),
     Move(vrBridge),
     Move(videoManager),
-    namespaces);
+    Move(namespaces));
 }
 
 void

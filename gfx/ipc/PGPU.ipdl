@@ -5,7 +5,7 @@
 
 include GraphicsMessages;
 include MemoryReportTypes;
-include protocol PCompositorManager;
+include protocol PCompositorBridge;
 include protocol PImageBridge;
 include protocol PProfiler;
 include protocol PVRManager;
@@ -14,7 +14,11 @@ include protocol PUiCompositorController;
 include protocol PVideoDecoderManager;
 
 using base::ProcessId from "base/process.h";
+using mozilla::TimeDuration from "mozilla/TimeStamp.h";
+using mozilla::CSSToLayoutDeviceScale from "Units.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
+using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
+using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
 using mozilla::Telemetry::Accumulation from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::KeyedAccumulation from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::ScalarAction from "mozilla/TelemetryComms.h";
@@ -51,7 +55,6 @@ parent:
              DevicePrefs devicePrefs,
              LayerTreeIdMapping[] mapping);
 
-  async InitCompositorManager(Endpoint<PCompositorManagerParent> endpoint);
   async InitVsyncBridge(Endpoint<PVsyncBridgeParent> endpoint);
   async InitImageBridge(Endpoint<PImageBridgeParent> endpoint);
   async InitVRManager(Endpoint<PVRManagerParent> endpoint);
@@ -62,8 +65,16 @@ parent:
   async UpdatePref(GfxPrefSetting pref);
   async UpdateVar(GfxVarUpdate var);
 
+  // Create a new top-level compositor.
+  async NewWidgetCompositor(Endpoint<PCompositorBridgeParent> endpoint,
+                            CSSToLayoutDeviceScale scale,
+                            TimeDuration vsyncRate,
+                            CompositorOptions options,
+                            bool useExternalSurface,
+                            IntSize surfaceSize);
+
   // Create a new content-process compositor bridge.
-  async NewContentCompositorManager(Endpoint<PCompositorManagerParent> endpoint);
+  async NewContentCompositorBridge(Endpoint<PCompositorBridgeParent> endpoint);
   async NewContentImageBridge(Endpoint<PImageBridgeParent> endpoint);
   async NewContentVRManager(Endpoint<PVRManagerParent> endpoint);
   async NewContentVideoDecoderManager(Endpoint<PVideoDecoderManagerParent> endpoint);
