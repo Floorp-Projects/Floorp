@@ -182,7 +182,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
 
     // Helper for WebIDL enumeration
     void GetOwnPropertyNames(JSContext* aCx, JS::AutoIdVector& /* unused */,
-                             mozilla::ErrorResult& aRv);
+                             bool /* unused */, mozilla::ErrorResult& aRv);
 
     // WebIDL API
     nsIDocument* GetContentDocument(nsIPrincipal& aSubjectPrincipal);
