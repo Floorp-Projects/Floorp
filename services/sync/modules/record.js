@@ -707,8 +707,7 @@ Collection.prototype = {
   async getBatched(batchSize = DEFAULT_DOWNLOAD_BATCH_SIZE) {
     let totalLimit = Number(this.limit) || Infinity;
     if (batchSize <= 0 || batchSize >= totalLimit) {
-      // Invalid batch sizes should arguably be an error, but they're easy to handle
-      return this.get();
+      throw new Error("Invalid batch size");
     }
 
     if (!this.full) {
@@ -716,13 +715,10 @@ Collection.prototype = {
     }
 
     // _onComplete and _onProgress are reset after each `get` by AsyncResource.
-    // We overwrite _onRecord to something that stores the data in an array
-    // until the end.
-    let { _onComplete, _onProgress, _onRecord } = this;
+    let { _onComplete, _onProgress } = this;
     let recordBuffer = [];
     let resp;
     try {
-      this._onRecord = r => recordBuffer.push(r);
       let lastModifiedTime;
       this.limit = batchSize;
 
@@ -736,7 +732,13 @@ Collection.prototype = {
         // Actually perform the request
         resp = await this.get();
         if (!resp.success) {
+          recordBuffer = [];
           break;
+        }
+        for (let json of resp.obj) {
+          let record = new this._recordObj();
+          record.deserialize(json);
+          recordBuffer.push(record);
         }
 
         // Initialize last modified, or check that something broken isn't happening.
@@ -759,54 +761,12 @@ Collection.prototype = {
       // handler so that we can more convincingly pretend to be a normal get()
       // call. Note: we're resetting these to the values they had before this
       // function was called.
-      this._onRecord = _onRecord;
       this._limit = totalLimit;
       this._offset = null;
       delete this._headers["x-if-unmodified-since"];
       this._rebuildURL();
     }
-    if (resp.success && Async.checkAppReady()) {
-      // call the original _onRecord (e.g. the user supplied record handler)
-      // for each record we've stored
-      for (let record of recordBuffer) {
-        this._onRecord(record);
-      }
-    }
-    return resp;
-  },
-
-  set recordHandler(onRecord) {
-    // Save this because onProgress is called with this as the ChannelListener
-    let coll = this;
-
-    // Switch to newline separated records for incremental parsing
-    coll.setHeader("Accept", "application/newlines");
-
-    this._onRecord = onRecord;
-
-    this._onProgress = function(httpChannel) {
-      let newline, length = 0, contentLength = "unknown";
-
-      try {
-          // Content-Length of the value of this response header
-          contentLength = httpChannel.getResponseHeader("Content-Length");
-      } catch (ex) { }
-
-      while ((newline = this._data.indexOf("\n")) > 0) {
-        // Split the json record from the rest of the data
-        let json = this._data.slice(0, newline);
-        this._data = this._data.slice(newline + 1);
-
-        length += json.length;
-        coll._log.trace("Record: Content-Length = " + contentLength +
-                        ", ByteCount = " + length);
-
-        // Deserialize a record from json and give it to the callback
-        let record = new coll._recordObj();
-        record.deserialize(json);
-        coll._onRecord(record);
-      }
-    };
+    return { response: resp, records: recordBuffer };
   },
 
   // This object only supports posting via the postQueue object.

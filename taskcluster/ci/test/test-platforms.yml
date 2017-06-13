@@ -119,7 +119,11 @@ linux64-qr/debug:
 linux64-ccov/opt:
     build-platform: linux64-ccov/opt
     test-sets:
-        - ccov-code-coverage-tests
+        - common-tests
+        - web-platform-tests
+        - desktop-screenshot-capture
+        - awsy
+        - headless
 linux64-jsdcov/opt:
     build-platform: linux64-jsdcov/opt
     test-sets:

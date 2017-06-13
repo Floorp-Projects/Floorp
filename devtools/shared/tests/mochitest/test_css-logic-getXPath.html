@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=987877
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 987877</title>
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+"use strict";
+
+const { utils: Cu } = Components;
+const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const CssLogic = require("devtools/shared/inspector/css-logic");
+
+const _tests = [];
+function addTest(test) {
+  _tests.push(test);
+}
+
+function runNextTest() {
+  if (_tests.length == 0) {
+    SimpleTest.finish();
+    return;
+  }
+  _tests.shift()();
+}
+
+window.onload = function () {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+};
+
+addTest(function getXPathForUnattachedElement() {
+  let unattached = document.createElement("div");
+  unattached.id = "unattached";
+  try {
+    CssLogic.getXPath(unattached);
+    ok(false, "Unattached node did not throw");
+  } catch (e) {
+    ok(e, "Unattached node throws an exception");
+  }
+
+  let unattachedChild = document.createElement("div");
+  unattached.appendChild(unattachedChild);
+  try {
+    CssLogic.getXPath(unattachedChild);
+    ok(false, "Unattached child node did not throw");
+  } catch (e) {
+    ok(e, "Unattached child node throws an exception");
+  }
+
+  let unattachedBody = document.createElement("body");
+  try {
+    CssLogic.getXPath(unattachedBody);
+    ok(false, "Unattached body node did not throw");
+  } catch (e) {
+    ok(e, "Unattached body node throws an exception");
+  }
+
+  runNextTest();
+});
+
+addTest(function getXPath() {
+  let data = [{
+    // Target elements that have an ID get a short XPath.
+    selector: "#i-have-an-id",
+    path: "//*[@id=\"i-have-an-id\"]"
+  }, {
+    selector: "html",
+    path: "/html"
+  }, {
+    selector: "body",
+    path: "/html/body"
+  }, {
+    selector: "body > div:nth-child(2) > div > div:nth-child(4)",
+    path: "/html/body/div[2]/div/div[4]"
+  }, {
+    // XPath should support namespace.
+    selector: "namespace\\:body",
+    path: "/html/body/namespace:test/namespace:body"
+  }];
+
+  for (let {selector, path} of data) {
+    let node = document.querySelector(selector);
+    is(CssLogic.getXPath(node), path, `Full css path is correct for ${selector}`);
+  }
+
+  runNextTest();
+});
+  </script>
+</head>
+<body>
+  <div id="i-have-an-id">find me</div>
+  <div>
+    <div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div>me too!</div>
+    </div>
+  </div>
+  <namespace:test>
+    <namespace:header></namespace:header>
+    <namespace:body>and me</namespace:body>
+  </namespace:test>
+</body>
+</html>

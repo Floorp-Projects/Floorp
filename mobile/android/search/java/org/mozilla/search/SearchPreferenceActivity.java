@@ -14,7 +14,6 @@ import org.mozilla.gecko.db.BrowserContract;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
@@ -46,10 +45,8 @@ public class SearchPreferenceActivity extends PreferenceActivity {
 
         getPreferenceManager().setSharedPreferencesName(GeckoSharedPrefs.APP_PREFS_NAME);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            if (getActionBar() != null) {
-                getActionBar().setDisplayHomeAsUpEnabled(true);
-            }
+        if (getActionBar() != null) {
+            getActionBar().setDisplayHomeAsUpEnabled(true);
         }
     }
 

@@ -71,7 +71,7 @@ async function createBookmark(parentId, url, title, index = bms.DEFAULT_INDEX) {
 function getServerRecord(collection, id) {
   let wbo = collection.get({ full: true, ids: [id] });
   // Whew - lots of json strings inside strings.
-  return JSON.parse(JSON.parse(JSON.parse(wbo).payload).ciphertext);
+  return JSON.parse(JSON.parse(JSON.parse(JSON.parse(wbo)[0]).payload).ciphertext);
 }
 
 async function promiseNoLocalItem(guid) {

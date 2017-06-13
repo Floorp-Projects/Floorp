@@ -30,6 +30,7 @@ toolkit.jar:
     # Below is a separate group using the naming convention ext-c-*.js that run
     # in the child process.
     content/extensions/ext-c-backgroundPage.js
+    content/extensions/ext-c-downloads.js
     content/extensions/ext-c-extension.js
 #ifndef ANDROID
     content/extensions/ext-c-identity.js

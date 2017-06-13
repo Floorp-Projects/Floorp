@@ -243,7 +243,7 @@ template <typename T>
 inline ProxyUniquePtr<T>
 ToProxyUniquePtr(const RefPtr<T>& aRefPtr)
 {
-  MOZ_ASSERT(IsProxy(aRawPtr));
+  MOZ_ASSERT(IsProxy(aRefPtr));
   MOZ_ASSERT((XRE_IsParentProcess() && NS_IsMainThread()) ||
              (XRE_IsContentProcess() && IsCurrentThreadMTA()));
 
