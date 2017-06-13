@@ -91,6 +91,8 @@ class Packet {
 
   template <typename Extension, typename... Values>
   bool SetExtension(Values...);
+  template <typename Extension, typename... Values>
+  bool SetExtensionWithLength(size_t length, Values...);
 
   template <typename Extension>
   bool ReserveExtension();
@@ -177,6 +179,14 @@ template <typename Extension, typename... Values>
 bool Packet::SetExtension(Values... values) {
   uint16_t offset = 0;
   if (!AllocateExtension(Extension::kId, Extension::kValueSizeBytes, &offset))
+    return false;
+  return Extension::Write(WriteAt(offset), values...);
+}
+
+template <typename Extension, typename... Values>
+bool Packet::SetExtensionWithLength(size_t length, Values... values) {
+  uint16_t offset = 0;
+  if (!AllocateExtension(Extension::kId, Extension::kValueSizeBytes + length, &offset))
     return false;
   return Extension::Write(WriteAt(offset), values...);
 }

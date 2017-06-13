@@ -64,6 +64,10 @@ const char* RtpExtension::kTransportSequenceNumberUri =
     "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01";
 const int RtpExtension::kTransportSequenceNumberDefaultId = 5;
 
+const char* RtpExtension::kRtpStreamIdUri =
+  "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id";
+const int RtpExtension::kRtpStreamIdDefaultId = 6;
+
 // This extension allows applications to adaptively limit the playout delay
 // on frames as per the current needs. For example, a gaming application
 // has very different needs on end-to-end delay compared to a video-conference
@@ -74,7 +78,8 @@ const int RtpExtension::kPlayoutDelayDefaultId = 6;
 
 bool RtpExtension::IsSupportedForAudio(const std::string& uri) {
   return uri == webrtc::RtpExtension::kAudioLevelUri ||
-         uri == webrtc::RtpExtension::kTransportSequenceNumberUri;
+         uri == webrtc::RtpExtension::kTransportSequenceNumberUri ||
+         uri == webrtc::RtpExtension::kRtpStreamIdUri;
 }
 
 bool RtpExtension::IsSupportedForVideo(const std::string& uri) {
@@ -82,7 +87,8 @@ bool RtpExtension::IsSupportedForVideo(const std::string& uri) {
          uri == webrtc::RtpExtension::kAbsSendTimeUri ||
          uri == webrtc::RtpExtension::kVideoRotationUri ||
          uri == webrtc::RtpExtension::kTransportSequenceNumberUri ||
-         uri == webrtc::RtpExtension::kPlayoutDelayUri;
+         uri == webrtc::RtpExtension::kPlayoutDelayUri ||
+         uri == webrtc::RtpExtension::kRtpStreamIdUri;
 }
 
 VideoStream::VideoStream()
@@ -92,7 +98,9 @@ VideoStream::VideoStream()
       min_bitrate_bps(-1),
       target_bitrate_bps(-1),
       max_bitrate_bps(-1),
-      max_qp(-1) {}
+      max_qp(-1) {
+  rid[0] = '\0';
+}
 
 VideoStream::~VideoStream() = default;
 
@@ -105,6 +113,7 @@ std::string VideoStream::ToString() const {
   ss << ", target_bitrate_bps:" << target_bitrate_bps;
   ss << ", max_bitrate_bps:" << max_bitrate_bps;
   ss << ", max_qp: " << max_qp;
+  ss << ", rid: " << rid;
 
   ss << ", temporal_layer_thresholds_bps: [";
   for (size_t i = 0; i < temporal_layer_thresholds_bps.size(); ++i) {

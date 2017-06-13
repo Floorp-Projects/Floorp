@@ -52,7 +52,7 @@ class ReportBlock {
   uint32_t last_sr() const { return last_sr_; }
   uint32_t delay_since_last_sr() const { return delay_since_last_sr_; }
 
- private:
+private:
   uint32_t source_ssrc_;
   uint8_t fraction_lost_;
   uint32_t cumulative_lost_;

@@ -116,9 +116,11 @@ void RtpStreamsSynchronizer::Process() {
 
   int audio_jitter_buffer_delay_ms = 0;
   int playout_buffer_delay_ms = 0;
+  int avsync_delay_ms = 0;
   if (voe_sync_interface_->GetDelayEstimate(voe_channel_id_,
                                             &audio_jitter_buffer_delay_ms,
-                                            &playout_buffer_delay_ms) != 0) {
+                                            &playout_buffer_delay_ms,
+                                            &avsync_delay_ms) != 0) {
     return;
   }
   const int current_audio_delay_ms = audio_jitter_buffer_delay_ms +

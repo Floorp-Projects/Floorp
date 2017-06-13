@@ -30,6 +30,7 @@ VideoReceiver::VideoReceiver(Clock* clock,
                              NackSender* nack_sender,
                              KeyFrameRequestSender* keyframe_request_sender)
     : clock_(clock),
+      _receiveState(kReceiveStateInitial),
       _timing(timing),
       _receiver(_timing,
                 clock_,
@@ -41,6 +42,7 @@ VideoReceiver::VideoReceiver(Clock* clock,
       _receiveStatsCallback(nullptr),
       _decoderTimingCallback(nullptr),
       _packetRequestCallback(nullptr),
+      _receiveStateCallback(nullptr),
       _decoder(nullptr),
       _frameFromFile(),
       _scheduleKeyRequest(false),
@@ -123,6 +125,25 @@ void VideoReceiver::Process() {
         }
       }
     }
+  }
+}
+
+void VideoReceiver::SetReceiveState(VideoReceiveState state) {
+  if (state == _receiveState) {
+    return;
+  }
+  if (state == kReceiveStatePreemptiveNACK &&
+      (_receiveState == kReceiveStateWaitingKey ||
+       _receiveState == kReceiveStateDecodingWithErrors)) {
+    // invalid state transition - this lets us try to set it on NACK
+    // without worrying about the current state
+    return;
+  }
+ _receiveState = state;
+
+ rtc::CritScope cs(&process_crit_);
+  if (_receiveStateCallback != NULL) {
+    _receiveStateCallback->ReceiveStateChange(_receiveState);
   }
 }
 
@@ -233,8 +254,19 @@ int32_t VideoReceiver::RegisterPacketRequestCallback(
   return VCM_OK;
 }
 
+int32_t VideoReceiver::RegisterReceiveStateCallback(
+    VCMReceiveStateCallback* callback) {
+  rtc::CritScope cs(&process_crit_);
+  _receiveStateCallback = callback;
+  return VCM_OK;
+}
+
 void VideoReceiver::TriggerDecoderShutdown() {
   _receiver.TriggerDecoderShutdown();
+}
+
+void VideoReceiver::Reset() {
+  _receiver.Reset();
 }
 
 // Decode next frame, blocking.
@@ -258,6 +290,7 @@ int32_t VideoReceiver::Decode(uint16_t maxWaitTimeMs) {
       // Still getting delta frames, schedule another keyframe request as if
       // decode failed.
       if (frame->FrameType() != kVideoFrameKey) {
+        LOG(LS_INFO) << "Dropping delta frame for receiver " << (void*) this;
         _scheduleKeyRequest = true;
         _receiver.ReleaseFrame(frame);
         return VCM_FRAME_NOT_READY;
@@ -432,6 +465,7 @@ int32_t VideoReceiver::IncomingPacket(const uint8_t* incomingPayload,
       drop_frames_until_keyframe_ = true;
     }
     RequestKeyFrame();
+    SetReceiveState(kReceiveStateWaitingKey);
   } else if (ret < 0) {
     return ret;
   }

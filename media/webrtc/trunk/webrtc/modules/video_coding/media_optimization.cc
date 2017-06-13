@@ -45,7 +45,8 @@ MediaOptimization::MediaOptimization(Clock* clock)
       encoded_frame_samples_(),
       avg_sent_bit_rate_bps_(0),
       avg_sent_framerate_(0),
-      num_layers_(0) {
+      num_layers_(0),
+      loadstate_(kLoadNormal) {
   memset(send_statistics_, 0, sizeof(send_statistics_));
   memset(incoming_frame_times_, -1, sizeof(incoming_frame_times_));
 }
@@ -55,7 +56,7 @@ MediaOptimization::~MediaOptimization(void) {
 
 void MediaOptimization::Reset() {
   CriticalSectionScoped lock(crit_sect_.get());
-  SetEncodingDataInternal(0, 0, 0, 0, 0, 0, max_payload_size_);
+  SetEncodingDataInternal(0, 0, 0, 0, 0, 1, 0, max_payload_size_);
   memset(incoming_frame_times_, -1, sizeof(incoming_frame_times_));
   incoming_frame_rate_ = 0.0;
   frame_dropper_->Reset();
@@ -64,29 +65,44 @@ void MediaOptimization::Reset() {
   video_target_bitrate_ = 0;
   codec_width_ = 0;
   codec_height_ = 0;
+  min_width_ = 0;
+  min_height_ = 0;
   user_frame_rate_ = 0;
   encoded_frame_samples_.clear();
   avg_sent_bit_rate_bps_ = 0;
   num_layers_ = 1;
 }
 
-void MediaOptimization::SetEncodingData(int32_t max_bit_rate,
-                                        uint32_t target_bitrate,
+// Euclid's algorithm
+// on arm, binary may be faster, but we do this rarely
+static int GreatestCommonDenominator(int a, int b) {
+  while (b != 0) {
+    int t = b;
+    b = a % b;
+    a = t;
+  }
+  return a;
+}
+
+void MediaOptimization::SetEncodingData(int32_t max_bit_rate, // bps
+                                        uint32_t target_bitrate, // bps
                                         uint16_t width,
                                         uint16_t height,
-                                        uint32_t frame_rate,
+                                        uint32_t frame_rate, // fps*1000
+                                        uint8_t  divisor,
                                         int num_layers,
                                         int32_t mtu) {
   CriticalSectionScoped lock(crit_sect_.get());
-  SetEncodingDataInternal(max_bit_rate, frame_rate, target_bitrate, width,
-                          height, num_layers, mtu);
+  SetEncodingDataInternal(max_bit_rate, target_bitrate, width,
+                          height, num_layers, frame_rate, divisor, mtu);
 }
 
-void MediaOptimization::SetEncodingDataInternal(int32_t max_bit_rate,
-                                                uint32_t frame_rate,
-                                                uint32_t target_bitrate,
+void MediaOptimization::SetEncodingDataInternal(int32_t max_bit_rate, // bps
+                                                uint32_t target_bitrate, // bps
                                                 uint16_t width,
                                                 uint16_t height,
+                                                uint32_t frame_rate, // in fps*1000
+                                                uint8_t  divisor,
                                                 int num_layers,
                                                 int32_t mtu) {
   // Everything codec specific should be reset here since this means the codec
@@ -96,16 +112,20 @@ void MediaOptimization::SetEncodingDataInternal(int32_t max_bit_rate,
   video_target_bitrate_ = target_bitrate;
   float target_bitrate_kbps = static_cast<float>(target_bitrate) / 1000.0f;
   frame_dropper_->Reset();
-  frame_dropper_->SetRates(target_bitrate_kbps, static_cast<float>(frame_rate));
-  user_frame_rate_ = static_cast<float>(frame_rate);
+  frame_dropper_->SetRates(target_bitrate_kbps, static_cast<float>(frame_rate) / 1000.0f);
+  user_frame_rate_ = static_cast<float>(frame_rate) / 1000.0f;
   codec_width_ = width;
   codec_height_ = height;
+  int gcd = GreatestCommonDenominator(codec_width_, codec_height_);
+  min_width_ = gcd ? (codec_width_/gcd * divisor) : 0;
+  min_height_ = gcd ? (codec_height_/gcd * divisor) : 0;
   num_layers_ = (num_layers <= 1) ? 1 : num_layers;  // Can also be zero.
   max_payload_size_ = mtu;
 }
 
 uint32_t MediaOptimization::SetTargetRates(uint32_t target_bitrate) {
   CriticalSectionScoped lock(crit_sect_.get());
+  LOG(LS_INFO) << "SetTargetRates: " <<  target_bitrate << " bps ";
 
   video_target_bitrate_ = target_bitrate;
 
@@ -173,6 +193,8 @@ int32_t MediaOptimization::UpdateWithEncodedData(
   UpdateSentFramerate();
   if (encoded_length > 0) {
     const bool delta_frame = encoded_image._frameType != kVideoFrameKey;
+    // XXX TODO(jesup): if same_frame is true, we should be considering it a single
+    // frame here.
     frame_dropper_->Fill(encoded_length, delta_frame);
   }
 
@@ -274,5 +296,11 @@ void MediaOptimization::ProcessIncomingFrameRate(int64_t now) {
     }
   }
 }
+
+void MediaOptimization::SetCPULoadState(CPULoadState state) {
+    CriticalSectionScoped lock(crit_sect_.get());
+    loadstate_ = state;
+}
+
 }  // namespace media_optimization
 }  // namespace webrtc

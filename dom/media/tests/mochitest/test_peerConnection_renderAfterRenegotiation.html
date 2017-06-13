@@ -36,18 +36,15 @@
   });
 
   runNetworkTest(function() {
-    var h = new CaptureStreamTestHelper2D();
-    var canvas = document.createElement('canvas');
-    canvas.id = 'source_canvas';
-    canvas.width = canvas.height = 10;
-    document.getElementById('content').appendChild(canvas);
-
     v2 = createMediaElement('video', 'v2');
     is(v2.currentTime, 0, "v2.currentTime is zero at outset");
 
-    h.drawColor(canvas, h.blue);
-    var stream = canvas.captureStream(0);
-    stream.getTracks().forEach(t => pc1.addTrack(t, stream));
+    const emitter = new VideoFrameEmitter(CaptureStreamTestHelper.prototype.blue,
+                                          CaptureStreamTestHelper.prototype.green,
+                                          10);
+    emitter.start();
+    emitter.stream().getTracks().forEach(t => pc1.addTrack(t, emitter.stream()));
+    let h = emitter.helper();
 
     pc1.createOffer({})
     .then(offer => pc1.setLocalDescription(offer))
@@ -66,15 +63,16 @@
     .then(() => delivered)
 
     // now verify that actually something gets rendered into the remote video
-    // element
+    // element.
     .then(() => h.waitForPixelColor(v2, h.blue, 128,
-                                    "pcRemote's video should become green"))
+                                    "pcRemote's video should become blue"))
+    // This will verify that new changes to the canvas propagate through
+    // the peerconnection
     .then(() => {
-      stream.requestFrame();
-      h.drawColor(canvas, h.red);
+      emitter.colors(h.red, h.green)
       })
     .then(() => h.waitForPixelColor(v2, h.red, 128,
-                                    "pcRemote's video should become green"))
+                                    "pcRemote's video should become red"))
 
     .catch(reason => ok(false, "unexpected failure: " + reason))
     .then(networkTestFinished);

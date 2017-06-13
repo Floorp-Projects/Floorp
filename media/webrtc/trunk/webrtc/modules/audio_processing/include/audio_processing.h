@@ -12,7 +12,9 @@
 #define WEBRTC_MODULES_AUDIO_PROCESSING_INCLUDE_AUDIO_PROCESSING_H_
 
 // MSVC++ requires this to be set before any other includes to get M_PI.
+#ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
+#endif
 
 #include <math.h>
 #include <stddef.h>  // size_t
@@ -585,6 +587,7 @@ class AudioProcessing {
     kSampleRate8kHz = 8000,
     kSampleRate16kHz = 16000,
     kSampleRate32kHz = 32000,
+    kSampleRate44_1kHz = 44100,
     kSampleRate48kHz = 48000
   };
 

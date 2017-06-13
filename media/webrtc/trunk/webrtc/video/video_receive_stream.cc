@@ -290,6 +290,7 @@ bool VideoReceiveStream::OnRecoveredPacket(const uint8_t* packet,
 void VideoReceiveStream::Start() {
   if (decode_thread_.IsRunning())
     return;
+  video_receiver_.Reset();
   if (jitter_buffer_experiment_) {
     frame_buffer_->Start();
     call_stats_->RegisterStatsObserver(&rtp_stream_receiver_);
@@ -490,6 +491,11 @@ void VideoReceiveStream::EnableEncodedFrameRecording(rtc::PlatformFile file,
 
 void VideoReceiveStream::RequestKeyFrame() {
   rtp_stream_receiver_.RequestKeyFrame();
+}
+
+bool
+VideoReceiveStream::GetRemoteRTCPSenderInfo(RTCPSenderInfo* sender_info) const {
+  return -1 != rtp_stream_receiver_.rtp_rtcp()->RemoteRTCPStat(sender_info);
 }
 
 }  // namespace internal

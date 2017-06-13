@@ -27,7 +27,7 @@ using ::testing::_;
 
 static const char* kTypicalPayloadName = "name";
 static const size_t kTypicalChannels = 1;
-static const uint32_t kTypicalFrequency = 44000;
+static const uint32_t kTypicalFrequency = 44100;
 static const CodecInst kTypicalAudioCodec = {-1 /* pltype */, "name",
                                              kTypicalFrequency, 0 /* pacsize */,
                                              kTypicalChannels};

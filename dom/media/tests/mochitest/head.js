@@ -909,8 +909,11 @@ AudioStreamHelper.prototype = {
 }
 
 class VideoFrameEmitter {
-  constructor(color1, color2) {
-    this._helper = new CaptureStreamTestHelper2D(50,50);
+  constructor(color1, color2, size) {
+    if (!size) {
+      size = 50;
+    }
+    this._helper = new CaptureStreamTestHelper2D(size, size);
     this._canvas = this._helper.createAndAppendElement('canvas', 'source_canvas');
     this._color1 = color1 ? color1 : this._helper.green;
     this._color2 = color2 ? color2 : this._helper.red;
@@ -924,8 +927,23 @@ class VideoFrameEmitter {
     return this._stream;
   }
 
+  helper() {
+    return this._helper;
+  }
+
+  colors(color1, color2) {
+    this._color1 = color1 ? color1 : this._helper.green;
+    this._color2 = color2 ? color2 : this._helper.red;
+    try {
+      this._helper.drawColor(this._canvas, this._color1);
+    } catch (e) {
+      // ignore; stream might have shut down
+    }
+  }
+
   start() {
     if (this._started) {
+      info("*** emitter already started");
       return;
     }
 

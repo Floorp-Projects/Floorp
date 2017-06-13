@@ -262,4 +262,18 @@ void AudioTrackJni::OnGetPlayoutData(size_t length) {
   RTC_DCHECK_EQ(length, bytes_per_frame * samples);
 }
 
+int32_t AudioTrackJni::PlayoutDeviceName(uint16_t index,
+                                         char name[kAdmMaxDeviceNameSize],
+                                         char guid[kAdmMaxGuidSize]) {
+  // Return empty string
+  memset(name, 0, kAdmMaxDeviceNameSize);
+
+  if (guid)
+  {
+    memset(guid, 0, kAdmMaxGuidSize);
+    }
+
+  return 0;
+}
+
 }  // namespace webrtc

@@ -65,6 +65,10 @@ class ChannelProxy {
       PacketRouter* packet_router);
   virtual void ResetCongestionControlObjects();
   virtual CallStatistics GetRTCPStatistics() const;
+  virtual int GetRTPStatistics(unsigned int& averageJitterMs,
+                               unsigned int& maxJitterMs,
+                               unsigned int& discardedPackets,
+                               unsigned int& cumulativeLost) const;
   virtual std::vector<ReportBlock> GetRemoteRTCPReportBlocks() const;
   virtual NetworkStatistics GetNetworkStatistics() const;
   virtual AudioDecodingCallStats GetDecodingCallStatistics() const;

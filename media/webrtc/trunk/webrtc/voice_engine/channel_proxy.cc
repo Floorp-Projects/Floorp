@@ -93,11 +93,34 @@ void ChannelProxy::ResetCongestionControlObjects() {
 }
 
 CallStatistics ChannelProxy::GetRTCPStatistics() const {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  // Since we (Mozilla) need to collect stats on STS, we can't
+  // use the thread-checker (which will want to be called on MainThread)
+  // without refactor of ExecuteStatsQuery_s().
+  // However, GetRTPStatistics internally locks in the SSRC()
+  // and statistician methods.
+
+  // RTC_DCHECK(thread_checker_.CalledOnValidThread());
   CallStatistics stats = {0};
   int error = channel()->GetRTPStatistics(stats);
   RTC_DCHECK_EQ(0, error);
   return stats;
+}
+
+int ChannelProxy::GetRTPStatistics(unsigned int& averageJitterMs,
+                                   unsigned int& maxJitterMs,
+                                   unsigned int& discardedPackets,
+                                   unsigned int& cumulativeLost) const {
+  // Since we (Mozilla) need to collect stats on STS, we can't
+  // use the thread-checker (which will want to be called on MainThread)
+  // without refactor of ExecuteStatsQuery_s().
+  // However, GetRTPStatistics internally locks in the SSRC()
+  // and statistician methods.  PlayoutFrequency() should also be safe.
+  // statistics_proxy_->GetStats() also locks
+
+  return channel()->GetRTPStatistics(averageJitterMs,
+                                     maxJitterMs,
+                                     discardedPackets,
+                                     cumulativeLost);
 }
 
 std::vector<ReportBlock> ChannelProxy::GetRemoteRTCPReportBlocks() const {

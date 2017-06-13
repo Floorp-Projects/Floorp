@@ -196,4 +196,35 @@ bool PlayoutDelayLimits::Write(uint8_t* data,
   return true;
 }
 
+//   0                   1                   2
+//   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3
+//  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//  |  ID   | L=?   |UTF-8 RID value......          |...
+//  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+constexpr RTPExtensionType StreamId::kId;
+constexpr uint8_t StreamId::kValueSizeBytes;
+constexpr const char* StreamId::kUri;
+
+bool StreamId::Parse(const uint8_t* data, char rid[kRIDSize+1]) {
+  uint8_t len = (data[0] & 0x0F) + 1;
+  memcpy(rid, &data[1], len);
+  rid[len] = '\0';
+  return true;
+}
+
+bool StreamId::Write(uint8_t* data, const char *rid) {
+  // XXX FIX!  how to get it to modify the length?  data points to the RID value
+  int len = strlen(rid);
+  RTC_DCHECK(len > 0 && len <= 16);
+  if (len > 16) {
+    len = 16;
+  } else if (len == 0) {
+    // really bad, but don't blow up
+    rid = "x";
+    len = 1;
+  }
+  memcpy(data, rid, len);
+  return true;
+}
+
 }  // namespace webrtc

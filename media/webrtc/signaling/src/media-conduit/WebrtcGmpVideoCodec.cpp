@@ -7,6 +7,7 @@
 #include <iostream>
 #include <vector>
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Move.h"
 #include "mozilla/SizePrintfMacros.h"
@@ -24,6 +25,8 @@
 #include "gmp-video-host.h"
 #include "gmp-video-frame-i420.h"
 #include "gmp-video-frame-encoded.h"
+#include "webrtc/common_video/include/video_frame_buffer.h"
+#include "webrtc/base/bind.h"
 
 namespace mozilla {
 
@@ -164,9 +167,14 @@ WebrtcGmpVideoEncoder::InitEncode(const webrtc::VideoCodec* aCodecSettings,
 
   memset(&mCodecSpecificInfo, 0, sizeof(webrtc::CodecSpecificInfo));
   mCodecSpecificInfo.codecType = webrtc::kVideoCodecH264;
-  mCodecSpecificInfo.codecSpecific.H264.packetizationMode = aCodecSettings->codecSpecific.H264.packetizationMode;
-  if (mCodecSpecificInfo.codecSpecific.H264.packetizationMode == 1) {
-    mMaxPayloadSize = 0; // No limit.
+  mCodecSpecificInfo.codecSpecific.H264.packetization_mode =
+    aCodecSettings->H264().packetizationMode == 1 ?
+    webrtc::H264PacketizationMode::NonInterleaved :
+    webrtc::H264PacketizationMode::SingleNalUnit;
+
+  if (mCodecSpecificInfo.codecSpecific.H264.packetization_mode ==
+      webrtc::H264PacketizationMode::NonInterleaved) {
+    mMaxPayloadSize = 0; // No limit, use FUAs
   }
 
   if (aCodecSettings->mode == webrtc::kScreensharing) {
@@ -383,18 +391,23 @@ WebrtcGmpVideoEncoder::Encode_g(const webrtc::VideoFrame* aInputImage,
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
   GMPUniquePtr<GMPVideoi420Frame> frame(static_cast<GMPVideoi420Frame*>(ftmp));
-
-  err = frame->CreateFrame(aInputImage->allocated_size(webrtc::kYPlane),
-                           aInputImage->buffer(webrtc::kYPlane),
-                           aInputImage->allocated_size(webrtc::kUPlane),
-                           aInputImage->buffer(webrtc::kUPlane),
-                           aInputImage->allocated_size(webrtc::kVPlane),
-                           aInputImage->buffer(webrtc::kVPlane),
-                           aInputImage->width(),
-                           aInputImage->height(),
-                           aInputImage->stride(webrtc::kYPlane),
-                           aInputImage->stride(webrtc::kUPlane),
-                           aInputImage->stride(webrtc::kVPlane));
+  rtc::scoped_refptr<webrtc::VideoFrameBuffer> input_image = aInputImage->video_frame_buffer();
+  // check for overflow of stride * height
+  CheckedInt32 ysize = CheckedInt32(input_image->StrideY()) * input_image->height();
+  MOZ_RELEASE_ASSERT(ysize.isValid());
+  // I will assume that if that doesn't overflow, the others case - YUV
+  // 4:2:0 has U/V widths <= Y, even with alignment issues.
+  err = frame->CreateFrame(ysize.value(),
+                           input_image->DataY(),
+                           input_image->StrideU() * ((input_image->height()+1)/2),
+                           input_image->DataU(),
+                           input_image->StrideV() * ((input_image->height()+1)/2),
+                           input_image->DataV(),
+                           input_image->width(),
+                           input_image->height(),
+                           input_image->StrideY(),
+                           input_image->StrideU(),
+                           input_image->StrideV());
   if (err != GMPNoErr) {
     return err;
   }
@@ -631,7 +644,7 @@ WebrtcGmpVideoEncoder::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
       //       specific info passed into it and just returns default values.
       //       If this changes in the future, it would be nice to get rid of
       //       mCodecSpecificInfo.
-      mCallback->Encoded(unit, &mCodecSpecificInfo, &fragmentation);
+      mCallback->OnEncodedImage(unit, &mCodecSpecificInfo, &fragmentation);
     }
   }
 }
@@ -745,7 +758,25 @@ WebrtcGmpVideoDecoder::GmpInitDone(GMPVideoDecoderProxy* aGMP,
   nsresult rv = mGMP->InitDecode(codec, codecSpecific, this, 1);
   if (NS_FAILED(rv)) {
     *aErrorOut = "GMP Decode: InitDecode failed";
+    mQueuedFrames.Clear();
     return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
+  // now release any frames that got queued waiting for InitDone
+  if (!mQueuedFrames.IsEmpty()) {
+    // So we're safe to call Decode_g(), which asserts it's empty
+    nsTArray<UniquePtr<GMPDecodeData>> temp;
+    temp.SwapElements(mQueuedFrames);
+    for (auto& queued : temp) {
+      int rv = Decode_g(queued->mImage,
+                        queued->mMissingFrames,
+                        nullptr,
+                        nullptr,
+                        queued->mRenderTimeMs);
+      if (rv) {
+        return rv;
+      }
+    }
   }
 
   return WEBRTC_VIDEO_CODEC_OK;
@@ -798,10 +829,19 @@ WebrtcGmpVideoDecoder::Decode_g(const webrtc::EncodedImage& aInputImage,
                                 int64_t aRenderTimeMs)
 {
   if (!mGMP) {
+    if (mInitting) {
+      // InitDone hasn't been called yet (race)
+      GMPDecodeData *data = new GMPDecodeData(aInputImage,
+                                              aMissingFrames,
+                                              aRenderTimeMs);
+      mQueuedFrames.AppendElement(data);
+      return WEBRTC_VIDEO_CODEC_OK;
+    }
     // destroyed via Terminate(), failed to init, or just not initted yet
     LOGD(("GMP Decode: not initted yet"));
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
+  MOZ_ASSERT(mQueuedFrames.IsEmpty());
   MOZ_ASSERT(mHost);
 
   if (!aInputImage._length) {
@@ -847,7 +887,8 @@ WebrtcGmpVideoDecoder::Decode_g(const webrtc::EncodedImage& aInputImage,
   nsTArray<uint8_t> codecSpecificInfo;
   codecSpecificInfo.AppendElements((uint8_t*)&info, sizeof(GMPCodecSpecificInfo));
 
-  LOGD(("GMP Decode: %" PRIu64 ", len %" PRIuSIZE, frame->TimeStamp(), aInputImage._length));
+  LOGD(("GMP Decode: %" PRIu64 ", len %" PRIuSIZE "%s", frame->TimeStamp(), aInputImage._length,
+        ft == kGMPKeyFrame ? ", KeyFrame" : ""));
   nsresult rv = mGMP->Decode(Move(frame),
                              aMissingFrames,
                              codecSpecificInfo,
@@ -891,13 +932,6 @@ WebrtcGmpVideoDecoder::ReleaseGmp()
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t
-WebrtcGmpVideoDecoder::Reset()
-{
-  // XXX ?
-  return WEBRTC_VIDEO_CODEC_OK;
-}
-
 void
 WebrtcGmpVideoDecoder::Terminated()
 {
@@ -910,28 +944,60 @@ WebrtcGmpVideoDecoder::Terminated()
   // Could now notify that it's dead
 }
 
+static void DeleteBuffer(uint8_t* data)
+{
+  delete[] data;
+}
+
 void
 WebrtcGmpVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame)
 {
-  MutexAutoLock lock(mCallbackMutex);
-  if (mCallback) {
-    webrtc::VideoFrame image;
-    int ret = image.CreateFrame(aDecodedFrame->Buffer(kGMPYPlane),
-                                aDecodedFrame->Buffer(kGMPUPlane),
-                                aDecodedFrame->Buffer(kGMPVPlane),
-                                aDecodedFrame->Width(),
-                                aDecodedFrame->Height(),
-                                aDecodedFrame->Stride(kGMPYPlane),
-                                aDecodedFrame->Stride(kGMPUPlane),
-                                aDecodedFrame->Stride(kGMPVPlane));
-    if (ret != 0) {
-      return;
-    }
-    image.set_timestamp((aDecodedFrame->Timestamp() * 90ll + 999)/1000); // round up
-    image.set_render_time_ms(0);
+  // we have two choices here: wrap the frame with a callback that frees
+  // the data later (risking running out of shmems), or copy the data out
+  // always.  Also, we can only Destroy() the frame on the gmp thread, so
+  // copying is simplest if expensive.
+  // I420 size including rounding...
+  CheckedInt32 length = (CheckedInt32(aDecodedFrame->Stride(kGMPYPlane)) * aDecodedFrame->Height()) +
+                        (aDecodedFrame->Stride(kGMPVPlane) +
+                         aDecodedFrame->Stride(kGMPUPlane)) * ((aDecodedFrame->Height()+1)/2);
+  int32_t size = length.value();
+  MOZ_RELEASE_ASSERT(length.isValid() && size > 0);
+  auto buffer = MakeUniqueFallible<uint8_t[]>(size);
+  if (buffer) {
+    // This is 3 separate buffers currently anyways, no use in trying to
+    // see if we can use a single memcpy.
+    uint8_t* buffer_y = buffer.get();
+    memcpy(buffer_y, aDecodedFrame->Buffer(kGMPYPlane),
+           aDecodedFrame->Stride(kGMPYPlane) * aDecodedFrame->Height());
+    // Should this be aligned, making it non-contiguous?  Assume no, this is already
+    // factored into the strides.
+    uint8_t* buffer_u = buffer_y +
+                        aDecodedFrame->Stride(kGMPYPlane) * aDecodedFrame->Height();
+    memcpy(buffer_u, aDecodedFrame->Buffer(kGMPUPlane),
+           aDecodedFrame->Stride(kGMPUPlane) * ((aDecodedFrame->Height()+1)/2));
+    uint8_t* buffer_v = buffer_u +
+                        aDecodedFrame->Stride(kGMPUPlane) * ((aDecodedFrame->Height()+1)/2);
+    memcpy(buffer_v, aDecodedFrame->Buffer(kGMPVPlane),
+           aDecodedFrame->Stride(kGMPVPlane) * ((aDecodedFrame->Height()+1)/2));
 
-    LOGD(("GMP Decoded: %" PRIu64, aDecodedFrame->Timestamp()));
-    mCallback->Decoded(image);
+    MutexAutoLock lock(mCallbackMutex);
+    if (mCallback) {
+      rtc::scoped_refptr<webrtc::WrappedI420Buffer> video_frame_buffer(
+        new rtc::RefCountedObject<webrtc::WrappedI420Buffer>(
+          aDecodedFrame->Width(), aDecodedFrame->Height(),
+          buffer_y, aDecodedFrame->Stride(kGMPYPlane),
+          buffer_u, aDecodedFrame->Stride(kGMPUPlane),
+          buffer_v, aDecodedFrame->Stride(kGMPVPlane),
+          rtc::Bind(&DeleteBuffer, buffer.release())));
+
+      webrtc::VideoFrame image(video_frame_buffer, 0, 0,
+                               webrtc::kVideoRotation_0);
+      image.set_timestamp((aDecodedFrame->Timestamp() * 90ll + 999)/1000); // round up
+      image.set_render_time_ms(0);
+
+      LOGD(("GMP Decoded: %" PRIu64, aDecodedFrame->Timestamp()));
+      mCallback->Decoded(image);
+    }
   }
   aDecodedFrame->Destroy();
 }

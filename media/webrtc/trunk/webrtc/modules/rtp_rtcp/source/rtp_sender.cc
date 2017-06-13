@@ -97,6 +97,7 @@ RTPSender::RTPSender(
       payload_type_(-1),
       payload_type_map_(),
       rtp_header_extension_map_(),
+      rid_(NULL),
       packet_history_(clock),
       flexfec_packet_history_(clock),
       // Statistics
@@ -165,6 +166,10 @@ RTPSender::~RTPSender() {
     delete it->second;
     payload_type_map_.erase(it);
   }
+
+  if (rid_) {
+    delete[] rid_;
+  }
 }
 
 uint16_t RTPSender::ActualSendBitrateKbit() const {
@@ -193,6 +198,18 @@ uint32_t RTPSender::NackOverheadRate() const {
   return nack_bitrate_sent_.Rate(clock_->TimeInMilliseconds()).value_or(0);
 }
 
+int32_t RTPSender::SetRID(const char* rid) {
+  rtc::CritScope lock(&send_critsect_);
+  // TODO(jesup) avoid allocations
+  if (!rid_ || strlen(rid_) < strlen(rid)) {
+    // rid rarely changes length....
+    delete [] rid_;
+    rid_ = new char[strlen(rid)+1];
+  }
+  strcpy(rid_, rid);
+  return 0;
+}
+
 int32_t RTPSender::RegisterRtpHeaderExtension(RTPExtensionType type,
                                               uint8_t id) {
   rtc::CritScope lock(&send_critsect_);
@@ -203,6 +220,7 @@ int32_t RTPSender::RegisterRtpHeaderExtension(RTPExtensionType type,
     case kRtpExtensionAbsoluteSendTime:
     case kRtpExtensionAudioLevel:
     case kRtpExtensionTransportSequenceNumber:
+    case kRtpExtensionRtpStreamId:
       return rtp_header_extension_map_.Register(type, id);
     case kRtpExtensionNone:
     case kRtpExtensionNumberOfExtensions:
@@ -436,7 +454,8 @@ bool RTPSender::SendOutgoingData(FrameType frame_type,
 
     result = video_->SendVideo(video_type, frame_type, payload_type,
                                rtp_timestamp, capture_time_ms, payload_data,
-                               payload_size, fragmentation, rtp_header);
+                               payload_size, fragmentation, rtp_header,
+                               rid_);
   }
 
   rtc::CritScope cs(&statistics_crit_);
@@ -534,33 +553,37 @@ size_t RTPSender::SendPadData(size_t bytes, int probe_cluster_id) {
       }
     }
 
-    RtpPacketToSend padding_packet(&rtp_header_extension_map_);
-    padding_packet.SetPayloadType(payload_type);
-    padding_packet.SetMarker(false);
-    padding_packet.SetSequenceNumber(sequence_number);
-    padding_packet.SetTimestamp(timestamp);
-    padding_packet.SetSsrc(ssrc);
+    std::unique_ptr<RtpPacketToSend> padding_packet(new RtpPacketToSend(&rtp_header_extension_map_));
+    padding_packet->SetPayloadType(payload_type);
+    padding_packet->SetMarker(false);
+    padding_packet->SetSequenceNumber(sequence_number);
+    padding_packet->SetTimestamp(timestamp);
+    padding_packet->SetSsrc(ssrc);
 
     if (capture_time_ms > 0) {
-      padding_packet.SetExtension<TransmissionOffset>(
+      padding_packet->SetExtension<TransmissionOffset>(
           (now_ms - capture_time_ms) * kTimestampTicksPerMs);
     }
-    padding_packet.SetExtension<AbsoluteSendTime>(now_ms);
+    padding_packet->SetExtension<AbsoluteSendTime>(now_ms);
     PacketOptions options;
     bool has_transport_seq_num =
-        UpdateTransportSequenceNumber(&padding_packet, &options.packet_id);
-    padding_packet.SetPadding(padding_bytes_in_packet, &random_);
+      UpdateTransportSequenceNumber(padding_packet.get(), &options.packet_id);
+    padding_packet->SetPadding(padding_bytes_in_packet, &random_);
 
     if (has_transport_seq_num) {
-      AddPacketToTransportFeedback(options.packet_id, padding_packet,
+      AddPacketToTransportFeedback(options.packet_id, *padding_packet,
                                    probe_cluster_id);
     }
 
-    if (!SendPacketToNetwork(padding_packet, options))
+    if (!SendPacketToNetwork(*padding_packet, options))
       break;
+    UpdateRtpStats(*padding_packet, over_rtx, false);
+
+    packet_history_.PutRtpPacket(std::move(padding_packet),
+                                 kAllowRetransmission,
+                                 true);
 
     bytes_sent += padding_bytes_in_packet;
-    UpdateRtpStats(padding_packet, over_rtx, false);
   }
 
   return bytes_sent;

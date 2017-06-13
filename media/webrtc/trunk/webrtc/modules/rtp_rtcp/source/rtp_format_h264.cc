@@ -550,8 +550,22 @@ bool RtpDepacketizerH264::ProcessStapAOrSingleNalu(
       case H264::NaluType::kEndOfStream:
       case H264::NaluType::kFiller:
         break;
+
+      // key frames start with SPS, PPS, IDR, or Recovery Point SEI
+      // Recovery Point SEI's are used in AIR and GDR refreshes, which don't
+      // send large iframes, and instead use forms of incremental/continuous refresh.
       case H264::NaluType::kSei:
-        parsed_payload->frame_type = kVideoFrameKey;
+        if (nalu.size <= 1) {
+          LOG(LS_ERROR) << "KSei packet with incorrect packet length";
+          return false; // malformed NAL
+        }
+        if (payload_data[start_offset + 1] != H264::SeiType::kSeiRecPt) {
+          // some other form of SEI - not a keyframe
+          parsed_payload->frame_type = kVideoFrameDelta;
+        } else {
+          // GDR is like IDR
+          parsed_payload->frame_type = kVideoFrameKey;
+        }
         break;
       case H264::NaluType::kStapA:
       case H264::NaluType::kFuA:

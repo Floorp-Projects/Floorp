@@ -67,9 +67,10 @@ ReceiveStatisticsProxy::ReceiveStatisticsProxy(
       decode_fps_estimator_(1000, 1000),
       renders_fps_estimator_(1000, 1000),
       render_fps_tracker_(100, 10u),
-      render_pixel_tracker_(100, 10u),
+      render_pixel_tracker_(100u, 10u),
       freq_offset_counter_(clock, nullptr, kFreqOffsetProcessIntervalMs),
-      first_report_block_time_ms_(-1) {
+      first_report_block_time_ms_(-1),
+      receive_state_(kReceiveStateInitial) {
   stats_.ssrc = config_.rtp.remote_ssrc;
   for (auto it : config_.rtp.rtx)
     rtx_stats_[it.second.ssrc] = StreamDataCounters();
@@ -319,6 +320,11 @@ void ReceiveStatisticsProxy::OnIncomingRate(unsigned int framerate,
     QualitySample();
   stats_.network_frame_rate = framerate;
   stats_.total_bitrate_bps = bitrate_bps;
+}
+
+void ReceiveStatisticsProxy::ReceiveStateChange(VideoReceiveState state) {
+  rtc::CritScope lock(&crit_);
+  receive_state_ = state;
 }
 
 void ReceiveStatisticsProxy::OnDecoderTiming(int decode_ms,

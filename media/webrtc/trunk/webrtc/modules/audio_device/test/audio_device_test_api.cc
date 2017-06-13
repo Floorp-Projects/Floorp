@@ -171,6 +171,8 @@ class AudioDeviceAPITest: public testing::Test {
 #if defined(_WIN32)
     EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kLinuxAlsaAudio)) == NULL);
+    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+                kId, AudioDeviceModule::kSndioAudio)) == NULL);
 #if defined(WEBRTC_WINDOWS_CORE_AUDIO_BUILD)
     TEST_LOG("WEBRTC_WINDOWS_CORE_AUDIO_BUILD is defined!\n\n");
     // create default implementation (=Core Audio) instance
@@ -207,11 +209,13 @@ class AudioDeviceAPITest: public testing::Test {
     EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kLinuxAlsaAudio)) == NULL);
     EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
+                kId, AudioDeviceModule::kSndioAudio)) == NULL);
+    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
                 kId, AudioDeviceModule::kLinuxPulseAudio)) == NULL);
     // Create default implementation instance
     EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kPlatformDefaultAudio)) != NULL);
-#elif defined(WEBRTC_LINUX)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
     EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kWindowsWaveAudio)) == NULL);
     EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
@@ -236,6 +240,8 @@ class AudioDeviceAPITest: public testing::Test {
                 kId, AudioDeviceModule::kLinuxAlsaAudio)) == NULL);
     EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kLinuxPulseAudio)) == NULL);
+    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+                kId, AudioDeviceModule::kSndioAudio)) == NULL);
     // Create default implementation instance
     EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kPlatformDefaultAudio)) != NULL);
@@ -1606,7 +1612,7 @@ TEST_F(AudioDeviceAPITest, CPULoad) {
 
 // TODO(kjellander): Fix flakiness causing failures on Windows.
 // TODO(phoglund):  Fix flakiness causing failures on Linux.
-#if !defined(_WIN32) && !defined(WEBRTC_LINUX)
+#if !defined(_WIN32) && !defined(WEBRTC_LINUX) && !defined(WEBRTC_BSD)
 TEST_F(AudioDeviceAPITest, StartAndStopRawOutputFileRecording) {
   // NOTE: this API is better tested in a functional test
   CheckInitialPlayoutStates();
@@ -1675,7 +1681,7 @@ TEST_F(AudioDeviceAPITest, StartAndStopRawInputFileRecording) {
   // - size of raw_input_not_recording.pcm shall be 0
   // - size of raw_input_not_recording.pcm shall be > 0
 }
-#endif  // !WIN32 && !WEBRTC_LINUX
+#endif  // !WIN32 && !WEBRTC_LINUX && !defined(WEBRTC_BSD)
 
 TEST_F(AudioDeviceAPITest, RecordingSampleRate) {
   uint32_t sampleRate(0);
@@ -1686,10 +1692,10 @@ TEST_F(AudioDeviceAPITest, RecordingSampleRate) {
   EXPECT_EQ(48000, sampleRate);
 #elif defined(ANDROID)
   TEST_LOG("Recording sample rate is %u\n\n", sampleRate);
-  EXPECT_TRUE((sampleRate == 44000) || (sampleRate == 16000));
+  EXPECT_TRUE((sampleRate == 44100) || (sampleRate == 16000));
 #elif defined(WEBRTC_IOS)
   TEST_LOG("Recording sample rate is %u\n\n", sampleRate);
-  EXPECT_TRUE((sampleRate == 44000) || (sampleRate == 16000) ||
+  EXPECT_TRUE((sampleRate == 44100) || (sampleRate == 16000) ||
               (sampleRate == 8000));
 #endif
 
@@ -1705,10 +1711,10 @@ TEST_F(AudioDeviceAPITest, PlayoutSampleRate) {
   EXPECT_EQ(48000, sampleRate);
 #elif defined(ANDROID)
   TEST_LOG("Playout sample rate is %u\n\n", sampleRate);
-  EXPECT_TRUE((sampleRate == 44000) || (sampleRate == 16000));
+  EXPECT_TRUE((sampleRate == 44100) || (sampleRate == 16000));
 #elif defined(WEBRTC_IOS)
   TEST_LOG("Playout sample rate is %u\n\n", sampleRate);
-  EXPECT_TRUE((sampleRate == 44000) || (sampleRate == 16000) ||
+  EXPECT_TRUE((sampleRate == 44100) || (sampleRate == 16000) ||
               (sampleRate == 8000));
 #endif
 }

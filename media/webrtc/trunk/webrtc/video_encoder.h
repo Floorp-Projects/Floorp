@@ -86,7 +86,8 @@ class VideoEncoder {
     const bool enabled;
     const rtc::Optional<QpThresholds> thresholds;
   };
-  static VideoEncoder* Create(EncoderType codec_type);
+  static VideoEncoder* Create(EncoderType codec_type,
+                              bool enable_simulcast = false);
   // Returns true if this type of encoder can be created using
   // VideoEncoder::Create.
   static bool IsSupportedSoftware(EncoderType codec_type);

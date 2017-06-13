@@ -132,6 +132,13 @@ bool VideoAdapter::AdaptFrameResolution(int in_width,
         max_pixel_count, requested_format_->width * requested_format_->height -
                              static_cast<int>(step_up_));
   }
+  if (scale_) {
+    if (max_pixel_count == std::numeric_limits<int>::max()) {
+      max_pixel_count = in_width * in_height;
+    }
+    // approximates (width/scale_resolution_by_) * (height/scale_resolution_by_)
+    max_pixel_count = (max_pixel_count / scale_resolution_by_) / scale_resolution_by_;
+  }
 
   // Drop the input frame if necessary.
   if (max_pixel_count <= 0 || !KeepFrame(in_timestamp_ns)) {
@@ -166,12 +173,12 @@ bool VideoAdapter::AdaptFrameResolution(int in_width,
       std::swap(requested_format_->width, requested_format_->height);
     }
     const float requested_aspect =
-        requested_format_->width /
-        static_cast<float>(requested_format_->height);
+      requested_format_->width /
+      static_cast<float>(requested_format_->height);
     *cropped_width =
-        std::min(in_width, static_cast<int>(in_height * requested_aspect));
+      std::min(in_width, static_cast<int>(in_height * requested_aspect));
     *cropped_height =
-        std::min(in_height, static_cast<int>(in_width / requested_aspect));
+      std::min(in_height, static_cast<int>(in_width / requested_aspect));
   }
   const Fraction scale =
       FindScale(*cropped_width * *cropped_height, max_pixel_count, step_up_);
@@ -197,8 +204,8 @@ bool VideoAdapter::AdaptFrameResolution(int in_width,
   if (scale.numerator != scale.denominator)
     ++frames_scaled_;
 
-  if (previous_width_ && (previous_width_ != *out_width ||
-                          previous_height_ != *out_height)) {
+  if ((previous_width_ || scale_) && (previous_width_ != *out_width ||
+                                      previous_height_ != *out_height)) {
     ++adaption_changes_;
     LOG(LS_INFO) << "Frame size changed: scaled " << frames_scaled_ << " / out "
                  << frames_out_ << " / in " << frames_in_
@@ -228,6 +235,14 @@ void VideoAdapter::OnResolutionRequest(
   resolution_request_max_pixel_count_ = max_pixel_count.value_or(
       max_pixel_count_step_up.value_or(std::numeric_limits<int>::max()));
   step_up_ = static_cast<bool>(max_pixel_count_step_up);
+}
+
+void VideoAdapter::OnScaleResolutionBy(
+    rtc::Optional<float> scale_resolution_by) {
+  rtc::CritScope cs(&critical_section_);
+  scale_resolution_by_ = scale_resolution_by.value_or(1.0);
+  RTC_DCHECK_GE(scale_resolution_by_, 1.0);
+  scale_ = static_cast<bool>(scale_resolution_by);
 }
 
 }  // namespace cricket

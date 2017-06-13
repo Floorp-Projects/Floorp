@@ -33,6 +33,22 @@ runNetworkTest(() => {
     function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
       stream1 = canvas1.captureStream(0);
       test.pcLocal.attachLocalStream(stream1);
+      var i = 0;
+      return setInterval(function() {
+        try {
+          info("draw " + i ? "green" : "red");
+          h1.drawColor(canvas1, i ? h1.green : h1.red);
+          i = 1 - i;
+          stream1.requestFrame();
+          if (stream2 != null) {
+            h2.drawColor(canvas2, i ? h2.green : h2.blue);
+            stream2.requestFrame();
+          }
+        } catch (e) {
+          // ignore; stream might have shut down, and we don't bother clearing
+          // the setInterval.
+        }
+      }, 500);
     }
   ]);
 
@@ -44,25 +60,6 @@ runNetworkTest(() => {
     function WAIT_FOR_REMOTE_GREEN() {
       return h1.waitForPixelColor(vremote1, h1.green, 128,
                                  "pcRemote's remote should become green");
-    },
-    function DRAW_LOCAL_RED() {
-      // After requesting a frame it will be captured at the time of next render.
-      // Next render will happen at next stable state, at the earliest,
-      // i.e., this order of `requestFrame(); draw();` should work.
-      stream1.requestFrame();
-      h1.drawColor(canvas1, h1.red);
-      var i = 0;
-      return setInterval(function() {
-        try {
-          info("draw " + i ? "green" : "red");
-          h1.drawColor(canvas1, i ? h1.green : h1.red);
-          i = 1 - i;
-          stream1.requestFrame();
-        } catch (e) {
-          // ignore; stream might have shut down, and we don't bother clearing
-          // the setInterval.
-        }
-      }, 500);
     },
     function WAIT_FOR_REMOTE_RED() {
       return h1.waitForPixelColor(vremote1, h1.red, 128,

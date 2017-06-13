@@ -440,11 +440,11 @@ BinaryDelayEstimator* WebRtc_CreateBinaryDelayEstimator(
 
 int WebRtc_AllocateHistoryBufferMemory(BinaryDelayEstimator* self,
                                        int history_size) {
-  BinaryDelayEstimatorFarend* far = self->farend;
+  BinaryDelayEstimatorFarend* farend = self->farend;
   // (Re-)Allocate memory for spectrum and history buffers.
-  if (history_size != far->history_size) {
+  if (history_size != farend->history_size) {
     // Only update far-end buffers if we need.
-    history_size = WebRtc_AllocateFarendBufferMemory(far, history_size);
+    history_size = WebRtc_AllocateFarendBufferMemory(farend, history_size);
   }
   // The extra array element in |mean_bit_counts| and |histogram| is a dummy
   // element only used while |last_delay| == -2, i.e., before we have a valid

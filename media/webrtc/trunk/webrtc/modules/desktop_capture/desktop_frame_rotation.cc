@@ -13,7 +13,7 @@
 #include <string.h>
 
 #include "webrtc/base/checks.h"
-#include "third_party/libyuv/include/libyuv/rotate_argb.h"
+#include "libyuv/rotate_argb.h"
 
 namespace webrtc {
 

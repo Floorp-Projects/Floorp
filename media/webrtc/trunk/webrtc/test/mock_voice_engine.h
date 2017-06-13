@@ -63,6 +63,11 @@ class MockVoiceEngine : public VoiceEngineImpl {
     // trigger an assertion.
     --_ref_count;
   }
+
+  int Release() {
+    return 0;
+  }
+
   // Allows injecting a ChannelProxy factory.
   MOCK_METHOD1(ChannelProxyFactory, voe::ChannelProxy*(int channel_id));
 

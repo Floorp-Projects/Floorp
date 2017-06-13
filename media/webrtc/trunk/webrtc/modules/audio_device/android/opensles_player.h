@@ -189,6 +189,20 @@ class OpenSLESPlayer {
 
   // Last time the OpenSL ES layer asked for audio data to play out.
   uint32_t last_play_time_;
+
+  void *opensles_lib_;
+  typedef SLresult (*slCreateEngine_t)(SLObjectItf *,
+                                       SLuint32,
+                                       const SLEngineOption *,
+                                       SLuint32,
+                                       const SLInterfaceID *,
+                                       const SLboolean *);
+  slCreateEngine_t slCreateEngine_;
+  SLInterfaceID SL_IID_ENGINE_;
+  SLInterfaceID SL_IID_ANDROIDCONFIGURATION_;
+  SLInterfaceID SL_IID_BUFFERQUEUE_;
+  SLInterfaceID SL_IID_VOLUME_;
+  SLInterfaceID SL_IID_PLAY_;
 };
 
 }  // namespace webrtc

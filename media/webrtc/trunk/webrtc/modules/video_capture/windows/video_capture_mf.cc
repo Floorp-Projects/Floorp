@@ -13,7 +13,7 @@
 namespace webrtc {
 namespace videocapturemodule {
 
-VideoCaptureMF::VideoCaptureMF() {}
+VideoCaptureMF::VideoCaptureMF() : VideoCaptureImpl() {}
 VideoCaptureMF::~VideoCaptureMF() {}
 
 int32_t VideoCaptureMF::Init(const char* device_id) {

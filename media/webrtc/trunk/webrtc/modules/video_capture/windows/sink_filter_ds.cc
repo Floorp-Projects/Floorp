@@ -10,8 +10,6 @@
 
 #include "webrtc/modules/video_capture/windows/sink_filter_ds.h"
 
-#include "webrtc/base/checks.h"
-#include "webrtc/base/platform_thread.h"
 #include "webrtc/modules/video_capture/windows/help_functions_ds.h"
 #include "webrtc/system_wrappers/include/trace.h"
 
@@ -22,6 +20,9 @@
 
 DEFINE_GUID(CLSID_SINKFILTER, 0x88cdbbdc, 0xa73b, 0x4afa, 0xac, 0xbf, 0x15, 0xd5,
             0xe2, 0xce, 0x12, 0xc3);
+
+using namespace mozilla::media;
+using namespace mozilla;
 
 namespace webrtc
 {
@@ -36,15 +37,17 @@ typedef struct tagTHREADNAME_INFO
    DWORD dwFlags;       // reserved for future use, must be zero
 } THREADNAME_INFO;
 
-CaptureInputPin::CaptureInputPin (IN TCHAR * szName,
+CaptureInputPin::CaptureInputPin (int32_t moduleId,
+                            IN TCHAR * szName,
                             IN CaptureSinkFilter* pFilter,
-                            IN CCritSec * pLock,
+                            IN CriticalSection * pLock,
                             OUT HRESULT * pHr,
                             IN LPCWSTR pszName)
-    : CBaseInputPin (szName, pFilter, pLock, pHr, pszName),
+    : BaseInputPin (szName, pFilter, pLock, pHr, pszName),
       _requestedCapability(),
       _resultingCapability()
 {
+    _moduleId=moduleId;
     _threadHandle = NULL;
 }
 
@@ -53,7 +56,7 @@ CaptureInputPin::~CaptureInputPin()
 }
 
 HRESULT
-CaptureInputPin::GetMediaType (IN int iPosition, OUT CMediaType * pmt)
+CaptureInputPin::GetMediaType (IN int iPosition, OUT MediaType * pmt)
 {
     // reset the thread handle
     _threadHandle = NULL;
@@ -65,7 +68,7 @@ CaptureInputPin::GetMediaType (IN int iPosition, OUT CMediaType * pmt)
                             sizeof(VIDEOINFOHEADER));
     if(NULL == pvi)
     {
-        WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, 0,
+        WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _moduleId,
                      "CheckMediaType VIDEOINFOHEADER is NULL. Returning...Line:%d\n", __LINE__);
         return(E_OUTOFMEMORY);
     }
@@ -153,7 +156,7 @@ CaptureInputPin::GetMediaType (IN int iPosition, OUT CMediaType * pmt)
         return VFW_S_NO_MORE_ITEMS;
     }
     pmt->SetSampleSize(pvi->bmiHeader.biSizeImage);
-    WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, 0,
+    WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _moduleId,
              "GetMediaType position %d, width %d, height %d, biCompression 0x%x",
              iPosition, _requestedCapability.width,
              _requestedCapability.height,pvi->bmiHeader.biCompression);
@@ -161,7 +164,7 @@ CaptureInputPin::GetMediaType (IN int iPosition, OUT CMediaType * pmt)
 }
 
 HRESULT
-CaptureInputPin::CheckMediaType ( IN const CMediaType * pMediaType)
+CaptureInputPin::CheckMediaType ( IN const MediaType * pMediaType)
 {
     // reset the thread handle
     _threadHandle = NULL;
@@ -202,8 +205,8 @@ CaptureInputPin::CheckMediaType ( IN const CMediaType * pMediaType)
            _resultingCapability.height = abs(pvi->bmiHeader.biHeight);
         }
 
-        WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, 0,
-                     "CheckMediaType width:%d height:%d Compression:0x%x\n",
+        WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _moduleId,
+                     "CheckMediaType width:%d height:%d Compression:0x%x",
                      pvi->bmiHeader.biWidth,pvi->bmiHeader.biHeight,
                      pvi->bmiHeader.biCompression);
 
@@ -255,8 +258,8 @@ CaptureInputPin::CheckMediaType ( IN const CMediaType * pMediaType)
             return E_INVALIDARG;
         }
 
-        WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, 0,
-                     "CheckMediaType width:%d height:%d Compression:0x%x\n",
+        WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _moduleId,
+                     "CheckMediaType width:%d height:%d Compression:0x%x",
                      pvi->bmiHeader.biWidth,pvi->bmiHeader.biHeight,
                      pvi->bmiHeader.biCompression);
 
@@ -319,8 +322,8 @@ CaptureInputPin::Receive ( IN IMediaSample * pIMediaSample )
 {
     HRESULT hr = S_OK;
 
-    ASSERT (m_pFilter);
-    ASSERT (pIMediaSample);
+    assert (mFilter);
+    assert (pIMediaSample);
 
     // get the thread handle of the delivering thread inc its priority
     if( _threadHandle == NULL)
@@ -328,32 +331,47 @@ CaptureInputPin::Receive ( IN IMediaSample * pIMediaSample )
         HANDLE handle= GetCurrentThread();
         SetThreadPriority(handle, THREAD_PRIORITY_HIGHEST);
         _threadHandle = handle;
+        // See http://msdn.microsoft.com/en-us/library/xcb2z8hs(VS.71).aspx for details on the code
+        // in this function. Name of article is "Setting a Thread Name (Unmanaged)".
 
-        rtc::SetCurrentThreadName("webrtc_video_capture");
+        THREADNAME_INFO info;
+        info.dwType = 0x1000;
+        info.szName = "capture_thread";
+        info.dwThreadID = (DWORD)-1;
+        info.dwFlags = 0;
+
+        __try
+        {
+            RaiseException( 0x406D1388, 0, sizeof(info)/sizeof(DWORD),
+                            (DWORD_PTR*)&info );
+        }
+        __except (EXCEPTION_CONTINUE_EXECUTION)
+        {
+        }
+
     }
 
-    reinterpret_cast <CaptureSinkFilter *>(m_pFilter)->LockReceive();
-    hr = CBaseInputPin::Receive (pIMediaSample);
+    reinterpret_cast <CaptureSinkFilter *>(mFilter)->LockReceive();
+    hr = BaseInputPin::Receive (pIMediaSample);
 
     if (SUCCEEDED (hr))
     {
-        const LONG length = pIMediaSample->GetActualDataLength();
-        RTC_DCHECK(length >= 0);
+        const int32_t length = pIMediaSample->GetActualDataLength();
 
         unsigned char* pBuffer = NULL;
         if(S_OK != pIMediaSample->GetPointer(&pBuffer))
         {
-            reinterpret_cast <CaptureSinkFilter *>(m_pFilter)->UnlockReceive();
+            reinterpret_cast <CaptureSinkFilter *>(mFilter)->UnlockReceive();
             return S_FALSE;
         }
 
         // NOTE: filter unlocked within Send call
-        reinterpret_cast <CaptureSinkFilter *> (m_pFilter)->ProcessCapturedFrame(
-            pBuffer, static_cast<size_t>(length), _resultingCapability);
+        reinterpret_cast <CaptureSinkFilter *> (mFilter)->ProcessCapturedFrame(
+                                        pBuffer,length,_resultingCapability);
     }
     else
     {
-        reinterpret_cast <CaptureSinkFilter *>(m_pFilter)->UnlockReceive();
+        reinterpret_cast <CaptureSinkFilter *>(mFilter)->UnlockReceive();
     }
 
     return hr;
@@ -372,13 +390,17 @@ HRESULT CaptureInputPin::SetMatchingMediaType(
 CaptureSinkFilter::CaptureSinkFilter (IN TCHAR * tszName,
                               IN LPUNKNOWN punk,
                               OUT HRESULT * phr,
-                              VideoCaptureExternal& captureObserver)
-    : CBaseFilter(tszName,punk,& m_crtFilter,CLSID_SINKFILTER),
+                              VideoCaptureExternal& captureObserver,
+                              int32_t moduleId)
+    : BaseFilter(tszName, CLSID_SINKFILTER),
+      m_crtFilter("CaptureSinkFilter::m_crtFilter"),
+      m_crtRecv("CaptureSinkFilter::m_crtRecv"),
       m_pInput(NULL),
-      _captureObserver(captureObserver)
+      _captureObserver(captureObserver),
+      _moduleId(moduleId)
 {
     (* phr) = S_OK;
-    m_pInput = new CaptureInputPin(NAME ("VideoCaptureInputPin"),
+    m_pInput = new CaptureInputPin(moduleId, L"VideoCaptureInputPin",
                                    this,
                                    & m_crtFilter,
                                    phr, L"VideoCapture");
@@ -401,10 +423,10 @@ int CaptureSinkFilter::GetPinCount()
     return 1;
 }
 
-CBasePin *
+BasePin *
 CaptureSinkFilter::GetPin(IN int Index)
 {
-    CBasePin * pPin;
+    BasePin * pPin;
     LockFilter ();
     if (Index == 0)
     {
@@ -422,22 +444,22 @@ STDMETHODIMP CaptureSinkFilter::Pause()
 {
     LockReceive();
     LockFilter();
-    if (m_State == State_Stopped)
+    if (mState == State_Stopped)
     {
         //  change the state, THEN activate the input pin
-        m_State = State_Paused;
+        mState = State_Paused;
         if (m_pInput && m_pInput->IsConnected())
         {
             m_pInput->Active();
         }
         if (m_pInput && !m_pInput->IsConnected())
         {
-            m_State = State_Running;
+            mState = State_Running;
         }
     }
-    else if (m_State == State_Running)
+    else if (mState == State_Running)
     {
-        m_State = State_Paused;
+        mState = State_Paused;
     }
     UnlockFilter();
     UnlockReceive();
@@ -450,7 +472,7 @@ STDMETHODIMP CaptureSinkFilter::Stop()
     LockFilter();
 
     //  set the state
-    m_State = State_Stopped;
+    mState = State_Stopped;
 
     //  inactivate the pins
     if (m_pInput)
@@ -464,17 +486,16 @@ STDMETHODIMP CaptureSinkFilter::Stop()
 void CaptureSinkFilter::SetFilterGraph(IGraphBuilder* graph)
 {
     LockFilter();
-    m_pGraph = graph;
+    mGraph = graph;
     UnlockFilter();
 }
 
-void CaptureSinkFilter::ProcessCapturedFrame(
-    unsigned char* pBuffer,
-    size_t length,
-    const VideoCaptureCapability& frameInfo)
+void CaptureSinkFilter::ProcessCapturedFrame(unsigned char* pBuffer,
+                                         int32_t length,
+                                         const VideoCaptureCapability& frameInfo)
 {
     //  we have the receiver lock
-    if (m_State == State_Running)
+    if (mState == State_Running)
     {
         _captureObserver.IncomingFrame(pBuffer, length, frameInfo);
 

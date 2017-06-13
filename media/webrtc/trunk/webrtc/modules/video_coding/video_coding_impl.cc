@@ -213,6 +213,11 @@ class VideoCodingModuleImpl : public VideoCodingModule {
     return receiver_.RegisterPacketRequestCallback(callback);
   }
 
+  virtual int32_t RegisterReceiveStateCallback(
+      VCMReceiveStateCallback* callback) override {
+    return receiver_.RegisterReceiveStateCallback(callback);
+  }
+
   int32_t Decode(uint16_t maxWaitTimeMs) override {
     return receiver_.Decode(maxWaitTimeMs);
   }
@@ -261,6 +266,10 @@ class VideoCodingModuleImpl : public VideoCodingModule {
     return receiver_.SetDecodeErrorMode(decode_error_mode);
   }
 
+  virtual void SetCPULoadState(CPULoadState state) override {
+    return sender_.SetCPULoadState(state);
+  }
+
   int SetMinReceiverDelay(int desired_delay_ms) override {
     return receiver_.SetMinReceiverDelay(desired_delay_ms);
   }
@@ -275,6 +284,7 @@ class VideoCodingModuleImpl : public VideoCodingModule {
   }
 
   void TriggerDecoderShutdown() override { receiver_.TriggerDecoderShutdown(); }
+  void Reset() override {receiver_.Reset(); }
 
  private:
   EncodedImageCallbackWrapper post_encode_callback_;

@@ -76,6 +76,7 @@ class VideoSendStream : public webrtc::VideoSendStream {
   void SetSource(rtc::VideoSourceInterface<webrtc::VideoFrame>* source,
                  const DegradationPreference& degradation_preference) override;
 
+  CPULoadStateObserver* LoadStateObserver() override;
   void ReconfigureVideoEncoder(VideoEncoderConfig) override;
   Stats GetStats() override;
 
@@ -94,7 +95,7 @@ class VideoSendStream : public webrtc::VideoSendStream {
 
   void SetTransportOverhead(size_t transport_overhead_per_packet);
 
- private:
+private:
   class ConstructionTask;
   class DestructAndGetRtpStateTask;
 

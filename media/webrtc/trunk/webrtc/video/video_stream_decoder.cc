@@ -68,6 +68,7 @@ VideoStreamDecoder::~VideoStreamDecoder() {
   video_receiver_->RegisterDecoderTimingCallback(nullptr);
   video_receiver_->RegisterReceiveStatisticsCallback(nullptr);
   video_receiver_->RegisterFrameTypeCallback(nullptr);
+	video_receiver_->RegisterReceiveStateCallback(nullptr);
   video_receiver_->RegisterReceiveCallback(nullptr);
 }
 

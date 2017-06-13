@@ -105,8 +105,8 @@ class WEBRTC_DLLEXPORT VoEVolumeControl {
   virtual int GetOutputVolumePan(int channel, float& left, float& right) = 0;
 
  protected:
-  VoEVolumeControl(){};
-  virtual ~VoEVolumeControl(){};
+  VoEVolumeControl(){}
+  virtual ~VoEVolumeControl(){}
 };
 
 }  // namespace webrtc

@@ -60,7 +60,8 @@ class RTPSenderVideo {
                  const uint8_t* payload_data,
                  size_t payload_size,
                  const RTPFragmentationHeader* fragmentation,
-                 const RTPVideoHeader* video_header);
+                 const RTPVideoHeader* video_header,
+                 const char* rid);
 
   void SetVideoCodecType(RtpVideoCodecTypes type);
 
