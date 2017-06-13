@@ -25,7 +25,7 @@ this.FormAutoCompleteResult = function FormAutoCompleteResult(searchString,
   this._comments = comments;
   this._formHistResult = prevResult;
   this.entries = prevResult ? prevResult.wrappedJSObject.entries : [];
-}
+};
 
 FormAutoCompleteResult.prototype = {
 

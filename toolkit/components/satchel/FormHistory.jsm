@@ -647,7 +647,7 @@ function updateFormHistoryWrite(aChanges, aCallbacks) {
         // a special case for updating the GUID - the new value can be
         // specified in newGuid.
         if (change.newGuid) {
-          change.guid = change.newGuid
+          change.guid = change.newGuid;
           delete change.newGuid;
         }
         stmt = makeUpdateStatement(guid, change, bindingArrays);
@@ -964,7 +964,7 @@ this.FormHistory = {
   getAutoCompleteResults(searchString, params, aCallbacks) {
     // only do substring matching when the search string contains more than one character
     let searchTokens;
-    let where = ""
+    let where = "";
     let boundaryCalc = "";
     if (searchString.length > 1) {
       searchTokens = searchString.split(/\s+/);

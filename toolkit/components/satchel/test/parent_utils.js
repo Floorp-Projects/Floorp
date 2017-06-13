@@ -58,7 +58,7 @@ var ParentUtils = {
 
     let count = 0;
     let listener = {
-      handleResult(result) { count = result },
+      handleResult(result) { count = result; },
       handleError(error) {
         assert.ok(false, error);
         sendAsyncMessage("entriesCounted", { ok: false });

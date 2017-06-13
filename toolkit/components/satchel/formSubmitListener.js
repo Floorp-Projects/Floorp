@@ -141,7 +141,7 @@ var satchelFormListener = {
         }
 
         if (name == "searchbar-history") {
-          this.log('addEntry for input name "' + name + '" is denied')
+          this.log('addEntry for input name "' + name + '" is denied');
           continue;
         }
 

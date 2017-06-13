@@ -188,7 +188,7 @@ function runTest() {
 
     case 8:
       doKey("return");
-      checkForm("Google")
+      checkForm("Google");
 
       // Trigger autocomplete popup
       expectPopup();
@@ -327,7 +327,7 @@ function runTest() {
       // push enter. Value should be one from the third suggesion.
       doKey("down");
       var datalist = document.getElementById("suggest");
-      var toRemove = datalist.children[1]
+      var toRemove = datalist.children[1];
       datalist.removeChild(toRemove);
 
       SimpleTest.executeSoon(function() {

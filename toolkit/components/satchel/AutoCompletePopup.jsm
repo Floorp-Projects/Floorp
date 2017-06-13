@@ -320,4 +320,4 @@ this.AutoCompletePopup = {
       this.sendMessageToBrowser("FormAutoComplete:Focus");
     }
   },
-}
+};

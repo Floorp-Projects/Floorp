@@ -176,7 +176,7 @@ add_task(async function() {
                               },
                               handleCompletion(reason) {
                                 if (!reason) {
-                                  deferred.resolve()
+                                  deferred.resolve();
                                 }
                               }
                             });
@@ -270,7 +270,7 @@ add_task(async function() {
         return [result.timesUsed, result.firstUsed, result.lastUsed, result.guid];
       }
       return undefined;
-    }
+    };
 
     let results = await promiseSearchEntries(["timesUsed", "firstUsed", "lastUsed"],
                                              { fieldname: "field1", value: "value1" });

@@ -46,8 +46,8 @@ function* tests() {
     testfile.copyTo(profileDir, "formhistory.sqlite");
     do_check_eq(999, getDBVersion(testfile));
 
-    let checkZero = function(num) { do_check_eq(num, 0); next_test(); }
-    let checkOne = function(num) { do_check_eq(num, 1); next_test(); }
+    let checkZero = function(num) { do_check_eq(num, 0); next_test(); };
+    let checkOne = function(num) { do_check_eq(num, 1); next_test(); };
 
     // ===== 1 =====
     testnum++;
