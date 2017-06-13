@@ -161,7 +161,7 @@ public:
 
   mozilla::ipc::IPCResult
   RecvInitRendering(
-    Endpoint<PCompositorBridgeChild>&& aCompositor,
+    Endpoint<PCompositorManagerChild>&& aCompositor,
     Endpoint<PImageBridgeChild>&& aImageBridge,
     Endpoint<PVRManagerChild>&& aVRBridge,
     Endpoint<PVideoDecoderManagerChild>&& aVideoManager,
@@ -169,7 +169,7 @@ public:
 
   mozilla::ipc::IPCResult
   RecvReinitRendering(
-    Endpoint<PCompositorBridgeChild>&& aCompositor,
+    Endpoint<PCompositorManagerChild>&& aCompositor,
     Endpoint<PImageBridgeChild>&& aImageBridge,
     Endpoint<PVRManagerChild>&& aVRBridge,
     Endpoint<PVideoDecoderManagerChild>&& aVideoManager,

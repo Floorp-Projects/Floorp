@@ -30,6 +30,22 @@ public:
                    uint32_t aNamespace);
   static void Shutdown();
 
+  static bool
+  CreateContentCompositorBridge(uint32_t aNamespace);
+
+  static already_AddRefed<CompositorBridgeChild>
+  CreateWidgetCompositorBridge(uint64_t aProcessToken,
+                               LayerManager* aLayerManager,
+                               uint32_t aNamespace,
+                               CSSToLayoutDeviceScale aScale,
+                               const CompositorOptions& aOptions,
+                               bool aUseExternalSurfaceSize,
+                               const gfx::IntSize& aSurfaceSize);
+
+  static already_AddRefed<CompositorBridgeChild>
+  CreateSameProcessWidgetCompositorBridge(LayerManager* aLayerManager,
+                                          uint32_t aNamespace);
+
   uint32_t GetNextResourceId()
   {
     return ++mResourceId;
