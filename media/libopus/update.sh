@@ -75,3 +75,4 @@ python gen-sources.py $1
 
 # apply outstanding local patches
 patch -p3 < nonunified.patch
+patch -p1 < rename.patch
