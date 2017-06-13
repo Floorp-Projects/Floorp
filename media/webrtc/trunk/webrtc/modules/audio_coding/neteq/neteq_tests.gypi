@@ -178,18 +178,6 @@
     },
 
     {
-      'target_name': 'audio_classifier_test',
-      'type': 'executable',
-      'dependencies': [
-        'neteq',
-        'webrtc_opus',
-      ],
-      'sources': [
-        'test/audio_classifier_test.cc',
-      ],
-    },
-
-    {
       'target_name': 'neteq_test_support',
       'type': 'static_library',
       'dependencies': [
