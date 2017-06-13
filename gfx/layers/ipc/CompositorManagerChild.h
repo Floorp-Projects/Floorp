@@ -62,6 +62,10 @@ public:
 
   void ProcessingError(Result aCode, const char* aReason) override;
 
+  PCompositorBridgeChild* AllocPCompositorBridgeChild(const CompositorBridgeOptions& aOptions) override;
+
+  bool DeallocPCompositorBridgeChild(PCompositorBridgeChild* aActor) override;
+
 private:
   static StaticRefPtr<CompositorManagerChild> sInstance;
 

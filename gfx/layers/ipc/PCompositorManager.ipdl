@@ -52,8 +52,21 @@ union CompositorBridgeOptions {
  */
 sync protocol PCompositorManager
 {
+  manages PCompositorBridge;
+
 parent:
-  async IgnoreTemporarySkeletonMessage();
+  /**
+   * There are three variants of a PCompositorBridge protocol, each of which can
+   * only be created by certain processes and configurations:
+   * - A "content" PCompositorBridge is requested by each content process,
+   *   representing the drawable area for Web content.
+   * - A "widget" PCompositorBridge is requested by the UI process for each
+   *   "top level browser window" for chrome and such.
+   * - A "same process widget" PCompositorBridge is requested by the combined
+   *   GPU/UI process for each "top level browser window" as above.
+   * See gfx/layers/ipc/PCompositorBridge.ipdl for more details.
+   */
+  async PCompositorBridge(CompositorBridgeOptions options);
 };
 
 } // layers
