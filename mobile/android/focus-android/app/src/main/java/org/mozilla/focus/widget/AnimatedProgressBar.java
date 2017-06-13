@@ -186,6 +186,8 @@ public class AnimatedProgressBar extends ProgressBar {
             }
         });
         setProgressDrawable(buildWrapDrawable(getProgressDrawable(), wrap, duration, resID));
+
+        a.recycle();
     }
 
     private Drawable buildWrapDrawable(Drawable original, boolean isWrap, int duration, int resID) {
