@@ -301,7 +301,7 @@ private:
     // global objects.  don't use COMPtr as its destructor will cause a
     // coredump if we leak it.
     static nsIIDNService               *gIDN;
-    static char                         gHostLimitDigits[];
+    static const char                   gHostLimitDigits[];
     static bool                         gInitialized;
     static bool                         gPunycodeHost;
 
@@ -311,7 +311,7 @@ public:
 #endif
 
 #ifdef MOZ_RUST_URLPARSE
-    static bool                        gRustEnabled;
+    static Atomic<bool>                gRustEnabled;
     RefPtr<RustURL>                    mRustURL;
 #endif
 };
