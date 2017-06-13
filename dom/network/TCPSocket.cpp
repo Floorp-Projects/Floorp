@@ -200,10 +200,8 @@ TCPSocket::CreateStream()
   nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(mSocketInputStream);
   NS_ENSURE_TRUE(asyncStream, NS_ERROR_NOT_AVAILABLE);
 
-  nsCOMPtr<nsIThread> mainThread;
-  NS_GetMainThread(getter_AddRefs(mainThread));
-
-  rv = asyncStream->AsyncWait(this, nsIAsyncInputStream::WAIT_CLOSURE_ONLY, 0, mainThread);
+  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
+  rv = asyncStream->AsyncWait(this, nsIAsyncInputStream::WAIT_CLOSURE_ONLY, 0, mainTarget);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mUseArrayBuffers) {
@@ -248,9 +246,8 @@ TCPSocket::InitWithUnconnectedTransport(nsISocketTransport* aTransport)
 
   MOZ_ASSERT(XRE_GetProcessType() != GeckoProcessType_Content);
 
-  nsCOMPtr<nsIThread> mainThread;
-  NS_GetMainThread(getter_AddRefs(mainThread));
-  mTransport->SetEventSink(this, mainThread);
+  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
+  mTransport->SetEventSink(this, mainTarget);
 
   nsresult rv = CreateStream();
   NS_ENSURE_SUCCESS(rv, rv);

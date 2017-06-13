@@ -26,7 +26,7 @@ PrintTargetRecording::CreateOrNull(const IntSize& aSize)
   }
 
   // Perhaps surprisingly, this surface is never actually drawn to.  This class
-  // creates a DrawTargetRecording using CreateRecordingDrawTarget, and that
+  // creates a DrawTargetWrapAndRecord using CreateWrapAndRecordDrawTarget, and that
   // needs another DrawTarget to be passed to it.  You might expect the type of
   // the DrawTarget that is passed to matter because it would seem logical to
   // encoded its type in the recording, and on replaying the recording a
@@ -44,7 +44,7 @@ PrintTargetRecording::CreateOrNull(const IntSize& aSize)
   //     available on all platforms and doesn't require allocating a
   //     potentially large surface.
   //
-  //   * Since we need a DrawTarget to pass to CreateRecordingDrawTarget we
+  //   * Since we need a DrawTarget to pass to CreateWrapAndRecordDrawTarget we
   //     might as well leverage our base class's machinery to create a
   //     DrawTarget (it's as good a way as any other that will work), and to do
   //     that we need a cairo_surface_t.
@@ -80,7 +80,7 @@ PrintTargetRecording::MakeDrawTarget(const IntSize& aSize,
 
   RefPtr<DrawTarget> dt = PrintTarget::MakeDrawTarget(aSize, nullptr);
   if (dt) {
-    dt = CreateRecordingDrawTarget(aRecorder, dt);
+    dt = CreateWrapAndRecordDrawTarget(aRecorder, dt);
     if (!dt || !dt->IsValid()) {
       return nullptr;
     }
@@ -90,8 +90,8 @@ PrintTargetRecording::MakeDrawTarget(const IntSize& aSize,
 }
 
 already_AddRefed<DrawTarget>
-PrintTargetRecording::CreateRecordingDrawTarget(DrawEventRecorder* aRecorder,
-                                                DrawTarget* aDrawTarget)
+PrintTargetRecording::CreateWrapAndRecordDrawTarget(DrawEventRecorder* aRecorder,
+                                                    DrawTarget* aDrawTarget)
 {
   MOZ_ASSERT(aRecorder);
   MOZ_ASSERT(aDrawTarget);
@@ -100,7 +100,7 @@ PrintTargetRecording::CreateRecordingDrawTarget(DrawEventRecorder* aRecorder,
 
   if (aRecorder) {
     // It doesn't really matter what we pass as the DrawTarget here.
-    dt = gfx::Factory::CreateRecordingDrawTarget(aRecorder, aDrawTarget);
+    dt = gfx::Factory::CreateWrapAndRecordDrawTarget(aRecorder, aDrawTarget);
   }
 
   if (!dt || !dt->IsValid()) {

@@ -2724,9 +2724,9 @@ Notification::DispatchToMainThread(already_AddRefed<nsIRunnable>&& aRunnable)
       return target->Dispatch(Move(aRunnable), nsIEventTarget::DISPATCH_NORMAL);
     }
   }
-  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-  MOZ_ASSERT(mainThread);
-  return mainThread->Dispatch(Move(aRunnable), nsIEventTarget::DISPATCH_NORMAL);
+  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
+  MOZ_ASSERT(mainTarget);
+  return mainTarget->Dispatch(Move(aRunnable), nsIEventTarget::DISPATCH_NORMAL);
 }
 
 } // namespace dom

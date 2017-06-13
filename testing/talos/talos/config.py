@@ -180,7 +180,8 @@ DEFAULTS = dict(
         'devtools.timeline.enabled': False,
         'identity.fxaccounts.migrateToDevEdition': False,
         'plugin.state.flash': 0,
-        'media.libavcodec.allow-obsolete': True
+        'media.libavcodec.allow-obsolete': True,
+        'extensions.legacy.enabled': True
     }
 )
 

@@ -303,7 +303,7 @@ IPCBlobInputStream::MaybeExecuteCallback(nsIInputStreamCallback* aCallback,
       return NS_OK;
     }
 
-    nsCOMPtr<nsIEventTarget> target = NS_GetCurrentThread();
+    RefPtr<nsIEventTarget> target = GetCurrentThreadEventTarget();
     return asyncStream->AsyncWait(this, 0, 0, target);
   }
 

@@ -2880,6 +2880,12 @@ WebSocketImpl::IsOnCurrentThread(bool* aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(bool)
+WebSocketImpl::IsOnCurrentThreadInfallible()
+{
+  return IsTargetThread();
+}
+
 bool
 WebSocketImpl::IsTargetThread() const
 {

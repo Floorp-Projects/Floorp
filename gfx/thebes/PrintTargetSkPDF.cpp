@@ -147,7 +147,7 @@ PrintTargetSkPDF::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
 
   if (aRecorder) {
     if (!mRecordingRefDT) {
-      RefPtr<DrawTarget> dt = CreateRecordingDrawTarget(aRecorder, mRefDT);
+      RefPtr<DrawTarget> dt = CreateWrapAndRecordDrawTarget(aRecorder, mRefDT);
       if (!dt || !dt->IsValid()) {
         return nullptr;
       }

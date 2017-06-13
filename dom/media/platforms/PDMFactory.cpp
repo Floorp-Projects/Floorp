@@ -189,7 +189,7 @@ PDMFactory::EnsureInit() const
   }
 
   // Not on the main thread -> Sync-dispatch creation to main thread.
-  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
   nsCOMPtr<nsIRunnable> runnable =
     NS_NewRunnableFunction([]() {
       StaticMutexAutoLock mon(sMonitor);
@@ -198,7 +198,7 @@ PDMFactory::EnsureInit() const
         ClearOnShutdown(&sInstance);
       }
     });
-  SyncRunnable::DispatchToThread(mainThread, runnable);
+  SyncRunnable::DispatchToThread(mainTarget, runnable);
 }
 
 already_AddRefed<MediaDataDecoder>

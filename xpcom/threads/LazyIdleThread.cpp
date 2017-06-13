@@ -18,12 +18,7 @@
 #ifdef DEBUG
 #define ASSERT_OWNING_THREAD()                                                 \
   do {                                                                         \
-    nsIThread* currentThread = NS_GetCurrentThread();                          \
-    if (currentThread) {                                                       \
-      nsCOMPtr<nsISupports> current(do_QueryInterface(currentThread));         \
-      nsCOMPtr<nsISupports> test(do_QueryInterface(mOwningThread));            \
-      MOZ_ASSERT(current == test, "Wrong thread!");                            \
-    }                                                                          \
+    MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());               \
   } while(0)
 #else
 #define ASSERT_OWNING_THREAD() /* nothing */
@@ -36,7 +31,7 @@ LazyIdleThread::LazyIdleThread(uint32_t aIdleTimeoutMS,
                                ShutdownMethod aShutdownMethod,
                                nsIObserver* aIdleObserver)
   : mMutex("LazyIdleThread::mMutex")
-  , mOwningThread(NS_GetCurrentThread())
+  , mOwningEventTarget(GetCurrentThreadSerialEventTarget())
   , mIdleObserver(aIdleObserver)
   , mQueuedRunnables(nullptr)
   , mIdleTimeoutMS(aIdleTimeoutMS)
@@ -48,7 +43,7 @@ LazyIdleThread::LazyIdleThread(uint32_t aIdleTimeoutMS,
   , mIdleTimeoutEnabled(true)
   , mName(aName)
 {
-  MOZ_ASSERT(mOwningThread, "Need owning thread!");
+  MOZ_ASSERT(mOwningEventTarget, "Need owning thread!");
 }
 
 LazyIdleThread::~LazyIdleThread()
@@ -380,6 +375,7 @@ LazyIdleThread::Release()
 
 NS_IMPL_QUERY_INTERFACE(LazyIdleThread, nsIThread,
                         nsIEventTarget,
+                        nsISerialEventTarget,
                         nsITimerCallback,
                         nsIThreadObserver,
                         nsIObserver)
@@ -439,6 +435,16 @@ LazyIdleThread::IsOnCurrentThread(bool* aIsOnCurrentThread)
 
   *aIsOnCurrentThread = false;
   return NS_OK;
+}
+
+NS_IMETHODIMP_(bool)
+LazyIdleThread::IsOnCurrentThreadInfallible()
+{
+  if (mThread) {
+    return mThread->IsOnCurrentThread();
+  }
+
+  return false;
 }
 
 NS_IMETHODIMP
@@ -554,7 +560,7 @@ LazyIdleThread::Notify(nsITimer* aTimer)
 NS_IMETHODIMP
 LazyIdleThread::OnDispatchedEvent(nsIThreadInternal* /*aThread */)
 {
-  MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread, "Wrong thread!");
+  MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
   return NS_OK;
 }
 
@@ -597,7 +603,7 @@ LazyIdleThread::AfterProcessNextEvent(nsIThreadInternal* /* aThread */,
       return NS_ERROR_UNEXPECTED;
     }
 
-    nsresult rv = mOwningThread->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
+    nsresult rv = mOwningEventTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -618,6 +624,26 @@ LazyIdleThread::Observe(nsISupports* /* aSubject */,
 
   Shutdown();
   return NS_OK;
+}
+
+NS_IMETHODIMP
+LazyIdleThread::GetEventTarget(nsIEventTarget** aEventTarget)
+{
+  nsCOMPtr<nsIEventTarget> target = this;
+  target.forget(aEventTarget);
+  return NS_OK;
+}
+
+nsIEventTarget*
+LazyIdleThread::EventTarget()
+{
+  return this;
+}
+
+nsISerialEventTarget*
+LazyIdleThread::SerialEventTarget()
+{
+  return this;
 }
 
 } // namespace mozilla

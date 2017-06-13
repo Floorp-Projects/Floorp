@@ -26,6 +26,7 @@
 #include "nsExceptionHandler.h"
 #endif
 #include "MessageLink.h"
+#include "nsThreadUtils.h"
 
 #include <deque>
 #include <functional>
@@ -505,8 +506,8 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
     // Can be run on either thread
     void AssertWorkerThread() const
     {
-        MOZ_ASSERT(mWorkerLoopID != -1, "Channel hasn't been opened yet");
-        MOZ_RELEASE_ASSERT(mWorkerLoopID == MessageLoop::current()->id(),
+        MOZ_ASSERT(mWorkerThread, "Channel hasn't been opened yet");
+        MOZ_RELEASE_ASSERT(mWorkerThread == GetCurrentVirtualThread(),
                            "not on worker thread!");
     }
 
@@ -515,8 +516,8 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
     // NOT our worker thread.
     void AssertLinkThread() const
     {
-        MOZ_ASSERT(mWorkerLoopID != -1, "Channel hasn't been opened yet");
-        MOZ_RELEASE_ASSERT(mWorkerLoopID != MessageLoop::current()->id(),
+        MOZ_ASSERT(mWorkerThread, "Channel hasn't been opened yet");
+        MOZ_RELEASE_ASSERT(mWorkerThread != GetCurrentVirtualThread(),
                            "on worker thread but should not be!");
     }
 
@@ -576,9 +577,9 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
     MessageLoop* mWorkerLoop;           // thread where work is done
     RefPtr<CancelableRunnable> mChannelErrorTask;  // NotifyMaybeChannelError runnable
 
-    // id() of mWorkerLoop.  This persists even after mWorkerLoop is cleared
-    // during channel shutdown.
-    int mWorkerLoopID;
+    // Thread we are allowed to send and receive on. This persists even after
+    // mWorkerLoop is cleared during channel shutdown.
+    PRThread* mWorkerThread;
 
     // Timeout periods are broken up in two to prevent system suspension from
     // triggering an abort. This method (called by WaitForEvent with a 'did

@@ -86,7 +86,7 @@ GMPParent::~GMPParent()
 nsresult
 GMPParent::CloneFrom(const GMPParent* aOther)
 {
-  MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
+  MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
   MOZ_ASSERT(aOther->mDirectory && aOther->mService, "null plugin directory");
 
   mService = aOther->mService;
@@ -110,7 +110,7 @@ GMPParent::Init(GeckoMediaPluginServiceParent* aService, nsIFile* aPluginDir)
 {
   MOZ_ASSERT(aPluginDir);
   MOZ_ASSERT(aService);
-  MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
+  MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
 
   mService = aService;
   mDirectory = aPluginDir;
@@ -147,7 +147,7 @@ nsresult
 GMPParent::LoadProcess()
 {
   MOZ_ASSERT(mDirectory, "Plugin directory cannot be NULL!");
-  MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
+  MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
   MOZ_ASSERT(mState == GMPStateNotLoaded);
 
   nsAutoString path;
@@ -222,7 +222,7 @@ GMPParent::RecvPGMPContentChildDestroyed()
 void
 GMPParent::CloseIfUnused()
 {
-  MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
+  MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
   LOGD("%s", __FUNCTION__);
 
   if ((mDeleteProcessOnlyOnUnload ||
@@ -247,7 +247,7 @@ void
 GMPParent::CloseActive(bool aDieWhenUnloaded)
 {
   LOGD("%s: state %d", __FUNCTION__, mState);
-  MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
+  MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
 
   if (aDieWhenUnloaded) {
     mDeleteProcessOnlyOnUnload = true; // don't allow this to go back...
@@ -278,7 +278,7 @@ void
 GMPParent::Shutdown()
 {
   LOGD("%s", __FUNCTION__);
-  MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
+  MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
 
   if (mAbnormalShutdownInProgress) {
     return;
@@ -324,20 +324,20 @@ void
 GMPParent::ChildTerminated()
 {
   RefPtr<GMPParent> self(this);
-  nsCOMPtr<nsIThread> gmpThread = GMPThread();
+  nsCOMPtr<nsISerialEventTarget> gmpEventTarget = GMPEventTarget();
 
-  if (!gmpThread) {
+  if (!gmpEventTarget) {
     // Bug 1163239 - this can happen on shutdown.
     // PluginTerminated removes the GMP from the GMPService.
     // On shutdown we can have this case where it is already been
     // removed so there is no harm in not trying to remove it again.
-    LOGD("%s::%s: GMPThread() returned nullptr.", __CLASS__, __FUNCTION__);
+    LOGD("%s::%s: GMPEventTarget() returned nullptr.", __CLASS__, __FUNCTION__);
   } else {
-    gmpThread->Dispatch(NewRunnableMethod<RefPtr<GMPParent>>(
-                         mService,
-                         &GeckoMediaPluginServiceParent::PluginTerminated,
-                         self),
-                         NS_DISPATCH_NORMAL);
+    gmpEventTarget->Dispatch(NewRunnableMethod<RefPtr<GMPParent>>(
+                               mService,
+                               &GeckoMediaPluginServiceParent::PluginTerminated,
+                               self),
+                             NS_DISPATCH_NORMAL);
   }
 }
 
@@ -373,8 +373,8 @@ GMPParent::State() const
   return mState;
 }
 
-nsCOMPtr<nsIThread>
-GMPParent::GMPThread()
+nsCOMPtr<nsISerialEventTarget>
+GMPParent::GMPEventTarget()
 {
   nsCOMPtr<mozIGeckoMediaPluginService> mps =
     do_GetService("@mozilla.org/gecko-media-plugin-service;1");
@@ -386,7 +386,7 @@ GMPParent::GMPThread()
   // nullptr if the GeckoMediaPluginService has started shutdown.
   nsCOMPtr<nsIThread> gmpThread;
   mps->GetThread(getter_AddRefs(gmpThread));
-  return gmpThread;
+  return gmpThread ? gmpThread->SerialEventTarget() : nullptr;
 }
 
 /* static */
@@ -584,8 +584,8 @@ GMPParent::RecvPGMPTimerConstructor(PGMPTimerParent* actor)
 PGMPTimerParent*
 GMPParent::AllocPGMPTimerParent()
 {
-  nsCOMPtr<nsIThread> thread = GMPThread();
-  GMPTimerParent* p = new GMPTimerParent(thread);
+  nsCOMPtr<nsISerialEventTarget> target = GMPEventTarget();
+  GMPTimerParent* p = new GMPTimerParent(target);
   mTimers.AppendElement(p); // Released in DeallocPGMPTimerParent, or on shutdown.
   return p;
 }
@@ -891,7 +891,7 @@ GMPParent::ResolveGetContentParentPromises()
 bool
 GMPParent::OpenPGMPContent()
 {
-  MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
+  MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
   MOZ_ASSERT(!mGMPContentParent);
 
   Endpoint<PGMPContentParent> parent;
@@ -931,7 +931,7 @@ void
 GMPParent::GetGMPContentParent(UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>>&& aPromiseHolder)
 {
   LOGD("%s %p", __FUNCTION__, this);
-  MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
+  MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
 
   if (mGMPContentParent) {
     RefPtr<GMPContentParent::CloseBlocker> blocker(new GMPContentParent::CloseBlocker(mGMPContentParent));

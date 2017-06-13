@@ -789,7 +789,7 @@ public:
 
 protected:
   explicit OriginOperationBase(
-                          nsIEventTarget* aOwningThread = NS_GetCurrentThread())
+                          nsIEventTarget* aOwningThread = GetCurrentThreadEventTarget())
     : BackgroundThreadObject(aOwningThread)
     , mResultCode(NS_OK)
     , mState(State_Initial)
@@ -1452,7 +1452,7 @@ IsTempMetadata(const nsAString& aFileName)
 } // namespace
 
 BackgroundThreadObject::BackgroundThreadObject()
-  : mOwningThread(NS_GetCurrentThread())
+  : mOwningThread(GetCurrentThreadEventTarget())
 {
   AssertIsOnOwningThread();
 }
@@ -2734,7 +2734,7 @@ CreateRunnable::GetNextState(nsCOMPtr<nsIEventTarget>& aThread) -> State
       aThread = mOwningThread;
       return State::CreatingManager;
     case State::CreatingManager:
-      aThread = do_GetMainThread();
+      aThread = GetMainThreadEventTarget();
       return State::RegisteringObserver;
     case State::RegisteringObserver:
       aThread = mOwningThread;

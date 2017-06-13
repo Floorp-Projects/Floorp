@@ -1375,9 +1375,9 @@ HTMLCanvasElement::OnVisibilityChange()
     };
 
     RefPtr<nsIRunnable> runnable = new Runnable(mAsyncCanvasRenderer);
-    nsCOMPtr<nsIThread> activeThread = mAsyncCanvasRenderer->GetActiveThread();
-    if (activeThread) {
-      activeThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL);
+    nsCOMPtr<nsIEventTarget> activeTarget = mAsyncCanvasRenderer->GetActiveEventTarget();
+    if (activeTarget) {
+      activeTarget->Dispatch(runnable, nsIThread::DISPATCH_NORMAL);
     }
     return;
   }
@@ -1417,9 +1417,9 @@ HTMLCanvasElement::OnMemoryPressure()
     };
 
     RefPtr<nsIRunnable> runnable = new Runnable(mAsyncCanvasRenderer);
-    nsCOMPtr<nsIThread> activeThread = mAsyncCanvasRenderer->GetActiveThread();
-    if (activeThread) {
-      activeThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL);
+    nsCOMPtr<nsIEventTarget> activeTarget = mAsyncCanvasRenderer->GetActiveEventTarget();
+    if (activeTarget) {
+      activeTarget->Dispatch(runnable, nsIThread::DISPATCH_NORMAL);
     }
     return;
   }

@@ -13,7 +13,7 @@ interface nsIThreadObserver;
  * The XPCOM thread object implements this interface, which allows a consumer
  * to observe dispatch activity on the thread.
  */
-[scriptable, uuid(a3a72e5f-71d9-4add-8f30-59a78fb6d5eb)]
+[builtinclass, scriptable, uuid(a3a72e5f-71d9-4add-8f30-59a78fb6d5eb)]
 interface nsIThreadInternal : nsIThread
 {
   /**

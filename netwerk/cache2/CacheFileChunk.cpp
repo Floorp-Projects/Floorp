@@ -487,7 +487,7 @@ CacheFileChunk::WaitForUpdate(CacheFileChunkListener *aCallback)
   if (!item->mTarget) {
     LOG(("CacheFileChunk::WaitForUpdate() - Cannot get Cache I/O thread! Using "
          "main thread for callback."));
-    item->mTarget = do_GetMainThread();
+    item->mTarget = GetMainThreadEventTarget();
   }
   item->mCallback = aCallback;
   MOZ_ASSERT(item->mTarget);

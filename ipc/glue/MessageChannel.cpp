@@ -521,7 +521,7 @@ MessageChannel::MessageChannel(const char* aName,
     mLink(nullptr),
     mWorkerLoop(nullptr),
     mChannelErrorTask(nullptr),
-    mWorkerLoopID(-1),
+    mWorkerThread(nullptr),
     mTimeoutMs(kNoTimeout),
     mInTimeoutSecondHalf(false),
     mNextSeqno(0),
@@ -689,7 +689,7 @@ MessageChannel::WillDestroyCurrentMessageLoop()
 void
 MessageChannel::Clear()
 {
-    // Don't clear mWorkerLoopID; we use it in AssertLinkThread() and
+    // Don't clear mWorkerThread; we use it in AssertLinkThread() and
     // AssertWorkerThread().
     //
     // Also don't clear mListener.  If we clear it, then sending a message
@@ -774,7 +774,7 @@ MessageChannel::Open(Transport* aTransport, MessageLoop* aIOLoop, Side aSide)
 
     mMonitor = new RefCountedMonitor();
     mWorkerLoop = MessageLoop::current();
-    mWorkerLoopID = mWorkerLoop->id();
+    mWorkerThread = GetCurrentVirtualThread();
     mWorkerLoop->AddDestructionObserver(this);
     mListener->SetIsMainThreadProtocol();
 
@@ -860,7 +860,7 @@ void
 MessageChannel::CommonThreadOpenInit(MessageChannel *aTargetChan, Side aSide)
 {
     mWorkerLoop = MessageLoop::current();
-    mWorkerLoopID = mWorkerLoop->id();
+    mWorkerThread = GetCurrentVirtualThread();
     mWorkerLoop->AddDestructionObserver(this);
     mListener->SetIsMainThreadProtocol();
 

@@ -1549,7 +1549,7 @@
             let isRTL = dwu.getDirectionFromText(aLabel) == Ci.nsIDOMWindowUtils.DIRECTION_RTL;
 
             aTab.setAttribute("label", aLabel);
-            aTab.setAttribute("dir", isRTL ? "rtl" : "ltr");
+            aTab.setAttribute("labeldirection", isRTL ? "rtl" : "ltr");
             aTab._labelIsContentTitle = aOptions && aOptions.isContentTitle;
 
             // Dispatch TabAttrModified event unless we're setting the label
@@ -7271,7 +7271,7 @@
                      class="tab-icon-overlay"
                      role="presentation"/>
           <xul:hbox class="tab-label-container"
-                    xbl:inherits="pinned,selected=visuallyselected,dir"
+                    xbl:inherits="pinned,selected=visuallyselected,labeldirection"
                     onoverflow="this.setAttribute('textoverflow', 'true');"
                     onunderflow="this.removeAttribute('textoverflow');"
                     flex="1">
