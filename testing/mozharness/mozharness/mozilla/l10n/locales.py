@@ -149,7 +149,13 @@ class LocalesMixin(ChunkingMixin):
         compare_locales_error_list = list(PythonErrorList)
         self.rmtree(dirs['abs_merge_dir'])
         self.mkdir_p(dirs['abs_merge_dir'])
-        command = [sys.executable, 'mach', 'compare-locales',
+        python = sys.executable
+        # A mock environment is a special case, the system python isn't
+        # available there
+        if 'mock_target' in self.config:
+            python = 'python2.7'
+
+        command = [python, 'mach', 'compare-locales',
                    '--merge-dir', dirs['abs_merge_dir'],
                    '--l10n-ini', os.path.join(dirs['abs_locales_src_dir'], 'l10n.ini'),
                    '--l10n-base', dirs['abs_l10n_dir'], locale]
