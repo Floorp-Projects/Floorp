@@ -2243,11 +2243,10 @@ MediaCacheStream::SetPlaybackRate(uint32_t aBytesPerSecond)
 }
 
 nsresult
-MediaCacheStream::Seek(int32_t aWhence, int64_t aOffset)
+MediaCacheStream::SeekInternal(int32_t aWhence, int64_t aOffset)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
+  mMediaCache->GetReentrantMonitor().AssertCurrentThreadIn();
 
-  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   if (mClosed)
     return NS_ERROR_FAILURE;
 
@@ -2301,11 +2300,10 @@ MediaCacheStream::Tell()
 }
 
 nsresult
-MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
+MediaCacheStream::ReadInternal(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
+  mMediaCache->GetReentrantMonitor().AssertCurrentThreadIn();
 
-  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   if (mClosed)
     return NS_ERROR_FAILURE;
 
@@ -2374,7 +2372,7 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
       }
 
       // No data has been read yet, so block
-      mon.Wait();
+      mMediaCache->GetReentrantMonitor().Wait();
       if (mClosed) {
         // We may have successfully read some data, but let's just throw
         // that out.
@@ -2419,9 +2417,9 @@ MediaCacheStream::ReadAt(int64_t aOffset, char* aBuffer,
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
-  nsresult rv = Seek(nsISeekableStream::NS_SEEK_SET, aOffset);
+  nsresult rv = SeekInternal(nsISeekableStream::NS_SEEK_SET, aOffset);
   if (NS_FAILED(rv)) return rv;
-  return Read(aBuffer, aCount, aBytes);
+  return ReadInternal(aBuffer, aCount, aBytes);
 }
 
 nsresult
