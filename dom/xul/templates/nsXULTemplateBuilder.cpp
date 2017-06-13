@@ -35,12 +35,10 @@
 #include "nsIXULDocument.h"
 #include "nsIXULTemplateBuilder.h"
 #include "nsIXULBuilderListener.h"
-#include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFService.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsIServiceManager.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIMutableArray.h"
@@ -52,8 +50,6 @@
 #include "nsXULContentUtils.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsTemplateMatch.h"
-#include "nsTemplateRule.h"
 #include "nsXPIDLString.h"
 #include "nsWhitespaceTokenizer.h"
 #include "nsGkAtoms.h"
@@ -63,6 +59,7 @@
 #include "rdf.h"
 #include "PLDHashTable.h"
 #include "plhash.h"
+#include "nsDOMClassInfoID.h"
 #include "nsPIDOMWindow.h"
 #include "nsIConsoleService.h" 
 #include "nsNetUtil.h"
@@ -73,7 +70,6 @@
 #include "nsContentUtils.h"
 #include "ChildIterator.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/XULTemplateBuilderBinding.h"
 #include "nsGlobalWindow.h"
 
 using namespace mozilla::dom;
@@ -100,9 +96,8 @@ LazyLogModule gXULTemplateLog("nsXULTemplateBuilder");
 // nsXULTemplateBuilder methods
 //
 
-nsXULTemplateBuilder::nsXULTemplateBuilder(Element* aElement)
-    : mRoot(aElement),
-      mQueriesCompiled(false),
+nsXULTemplateBuilder::nsXULTemplateBuilder(void)
+    : mQueriesCompiled(false),
       mFlags(0),
       mTop(nullptr),
       mObservedDocument(nullptr)
@@ -231,7 +226,6 @@ nsXULTemplateBuilder::Uninit(bool aIsFinal)
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULTemplateBuilder)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXULTemplateBuilder)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mDataSource)
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mDB)
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mCompDB)
@@ -284,26 +278,18 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULTemplateBuilder)
     }
     tmp->Traverse(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(nsXULTemplateBuilder)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULTemplateBuilder)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXULTemplateBuilder)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULTemplateBuilder)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIXULTemplateBuilder)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULTemplateBuilder)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XULTemplateBuilder)
 NS_INTERFACE_MAP_END
-
-JSObject* 
-nsXULTemplateBuilder::WrapObject(JSContext* aCx,
-                                 JS::Handle<JSObject*> aGivenProto)
-{
-    return XULTemplateBuilderBinding::Wrap(aCx, this, aGivenProto);
-}
 
 //----------------------------------------------------------------------
 //
@@ -313,46 +299,36 @@ nsXULTemplateBuilder::WrapObject(JSContext* aCx,
 NS_IMETHODIMP
 nsXULTemplateBuilder::GetRoot(nsIDOMElement** aResult)
 {
-    nsCOMPtr<nsIDOMElement> result = do_QueryInterface(GetRoot());
-    result.forget(aResult);
+    if (mRoot) {
+        return CallQueryInterface(mRoot, aResult);
+    }
+    *aResult = nullptr;
     return NS_OK;
-}
-
-nsISupports*
-nsXULTemplateBuilder::GetDatasource()
-{
-    return mCompDB ? mCompDB : mDataSource;
 }
 
 NS_IMETHODIMP
 nsXULTemplateBuilder::GetDatasource(nsISupports** aResult)
 {
-    NS_IF_ADDREF(*aResult = GetDatasource());
+    if (mCompDB)
+        NS_ADDREF(*aResult = mCompDB);
+    else
+        NS_IF_ADDREF(*aResult = mDataSource);
     return NS_OK;
-}
-
-void
-nsXULTemplateBuilder::SetDatasource(nsISupports* aDatasource,
-                                     ErrorResult& aError)
-{
-    mDataSource = aDatasource;
-    mCompDB = do_QueryInterface(mDataSource);
-
-    aError = Rebuild();
 }
 
 NS_IMETHODIMP
 nsXULTemplateBuilder::SetDatasource(nsISupports* aResult)
 {
-    ErrorResult rv;
-    SetDatasource(aResult, rv);
-    return rv.StealNSResult();
+    mDataSource = aResult;
+    mCompDB = do_QueryInterface(mDataSource);
+
+    return Rebuild();
 }
 
 NS_IMETHODIMP
 nsXULTemplateBuilder::GetDatabase(nsIRDFCompositeDataSource** aResult)
 {
-    NS_IF_ADDREF(*aResult = GetDatabase());
+    NS_IF_ADDREF(*aResult = mCompDB);
     return NS_OK;
 }
 
@@ -363,16 +339,16 @@ nsXULTemplateBuilder::GetQueryProcessor(nsIXULTemplateQueryProcessor** aResult)
     return NS_OK;
 }
 
-void
-nsXULTemplateBuilder::AddRuleFilter(nsINode& aRule,
-                                    nsIXULTemplateRuleFilter* aFilter,
-                                    ErrorResult& aError)
+NS_IMETHODIMP
+nsXULTemplateBuilder::AddRuleFilter(nsIDOMNode* aRule, nsIXULTemplateRuleFilter* aFilter)
 {
+    if (!aRule || !aFilter)
+        return NS_ERROR_NULL_POINTER;
+
     // a custom rule filter may be added, one for each rule. If a new one is
     // added, it replaces the old one. Look for the right rule and set its
     // filter
 
-    nsIDOMNode* ruleAsDOMNode = aRule.AsDOMNode();
     int32_t count = mQuerySets.Length();
     for (int32_t q = 0; q < count; q++) {
         nsTemplateQuerySet* queryset = mQuerySets[q];
@@ -383,66 +359,45 @@ nsXULTemplateBuilder::AddRuleFilter(nsINode& aRule,
 
             nsCOMPtr<nsIDOMNode> rulenode;
             rule->GetRuleNode(getter_AddRefs(rulenode));
-            if (ruleAsDOMNode == rulenode) {
+            if (aRule == rulenode) {
                 rule->SetRuleFilter(aFilter);
-                return;
+                return NS_OK;
             }
         }
     }
-}
 
-NS_IMETHODIMP
-nsXULTemplateBuilder::AddRuleFilter(nsIDOMNode* aRule, nsIXULTemplateRuleFilter* aFilter)
-{
-    nsCOMPtr<nsINode> rule = do_QueryInterface(aRule);
-    if (!rule) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    NS_ENSURE_ARG_POINTER(aFilter);
-
-    ErrorResult rv;
-    AddRuleFilter(*rule, aFilter, rv);
-    return rv.StealNSResult();
-}
-
-void
-nsXULTemplateBuilder::Rebuild(ErrorResult& aError)
-{
-    int32_t i;
-
-    for (i = mListeners.Length() - 1; i >= 0; --i) {
-        mListeners[i]->WillRebuild(this);
-    }
-
-    aError = RebuildAll();
-
-    for (i = mListeners.Length() - 1; i >= 0; --i) {
-        mListeners[i]->DidRebuild(this);
-    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULTemplateBuilder::Rebuild()
 {
-    ErrorResult rv;
-    Rebuild(rv);
-    return rv.StealNSResult();
+    int32_t i;
+
+    for (i = mListeners.Count() - 1; i >= 0; --i) {
+        mListeners[i]->WillRebuild(this);
+    }
+
+    nsresult rv = RebuildAll();
+
+    for (i = mListeners.Count() - 1; i >= 0; --i) {
+        mListeners[i]->DidRebuild(this);
+    }
+
+    return rv;
 }
 
-void
-nsXULTemplateBuilder::Refresh(ErrorResult& aError)
+NS_IMETHODIMP
+nsXULTemplateBuilder::Refresh()
 {
-    if (!mCompDB) {
-        aError.Throw(NS_ERROR_FAILURE);
-        return;
-    }
+    nsresult rv;
+
+    if (!mCompDB)
+        return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsISimpleEnumerator> dslist;
-    aError = mCompDB->GetDataSources(getter_AddRefs(dslist));
-    if (aError.Failed()) {
-        return;
-    }
+    rv = mCompDB->GetDataSources(getter_AddRefs(dslist));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     bool hasMore;
     nsCOMPtr<nsISupports> next;
@@ -457,21 +412,15 @@ nsXULTemplateBuilder::Refresh(ErrorResult& aError)
 
     // XXXbsmedberg: it would be kinda nice to install an async nsIRDFXMLSink
     // observer and call rebuild() once the load is complete. See bug 254600.
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULTemplateBuilder::Refresh()
+nsXULTemplateBuilder::Init(nsIContent* aElement)
 {
-    ErrorResult rv;
-    Refresh(rv);
-    return rv.StealNSResult();
-}
-
-nsresult
-nsXULTemplateBuilder::Init()
-{
-    nsresult rv = InitGlobals();
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
+    mRoot = aElement;
 
     nsCOMPtr<nsIDocument> doc = mRoot->GetComposedDoc();
     NS_ASSERTION(doc, "element has no document");
@@ -479,7 +428,7 @@ nsXULTemplateBuilder::Init()
         return NS_ERROR_UNEXPECTED;
 
     bool shouldDelay;
-    rv = LoadDataSources(doc, &shouldDelay);
+    nsresult rv = LoadDataSources(doc, &shouldDelay);
 
     if (NS_SUCCEEDED(rv)) {
         StartObserving(doc);
@@ -499,18 +448,8 @@ nsXULTemplateBuilder::HasGeneratedContent(nsIRDFResource* aResource,
                                           nsIAtom* aTag,
                                           bool* aGenerated)
 {
-    ErrorResult rv;
-    const nsAString& tag = aTag ? nsDependentAtomString(aTag) : NullString();
-    *aGenerated = HasGeneratedContent(aResource, tag, rv);
-    return rv.StealNSResult();
-}
-
-void
-nsXULTemplateBuilder::AddResult(nsIXULTemplateResult* aResult,
-                                nsINode& aQueryNode,
-                                ErrorResult& aError)
-{
-    aError = UpdateResult(nullptr, aResult, &aQueryNode);
+    *aGenerated = false;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -520,17 +459,7 @@ nsXULTemplateBuilder::AddResult(nsIXULTemplateResult* aResult,
     NS_ENSURE_ARG_POINTER(aResult);
     NS_ENSURE_ARG_POINTER(aQueryNode);
 
-    ErrorResult rv;
-    nsCOMPtr<nsINode> queryNode = do_QueryInterface(aQueryNode);
-    AddResult(aResult, *queryNode, rv);
-    return rv.StealNSResult();
-}
-
-void
-nsXULTemplateBuilder::RemoveResult(nsIXULTemplateResult* aResult,
-                                   ErrorResult& aError)
-{
-    aError = UpdateResult(aResult, nullptr, nullptr);
+    return UpdateResult(nullptr, aResult, aQueryNode);
 }
 
 NS_IMETHODIMP
@@ -538,21 +467,7 @@ nsXULTemplateBuilder::RemoveResult(nsIXULTemplateResult* aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
 
-    ErrorResult rv;
-    RemoveResult(aResult, rv);
-    return rv.StealNSResult();
-}
-
-void
-nsXULTemplateBuilder::ReplaceResult(nsIXULTemplateResult* aOldResult,
-                                    nsIXULTemplateResult* aNewResult,
-                                    nsINode& aQueryNode,
-                                    ErrorResult& aError)
-{
-    aError = UpdateResult(aOldResult, nullptr, nullptr);
-    if (!aError.Failed()) {
-        aError = UpdateResult(nullptr, aNewResult, &aQueryNode);
-    }
+    return UpdateResult(aResult, nullptr, nullptr);
 }
 
 NS_IMETHODIMP
@@ -564,16 +479,19 @@ nsXULTemplateBuilder::ReplaceResult(nsIXULTemplateResult* aOldResult,
     NS_ENSURE_ARG_POINTER(aNewResult);
     NS_ENSURE_ARG_POINTER(aQueryNode);
 
-    nsCOMPtr<nsINode> queryNode = do_QueryInterface(aQueryNode);
-    ErrorResult rv;
-    ReplaceResult(aOldResult, aNewResult, *queryNode, rv);
-    return rv.StealNSResult();
+    // just remove the old result and then add a new result separately
+
+    nsresult rv = UpdateResult(aOldResult, nullptr, nullptr);
+    if (NS_FAILED(rv))
+        return rv;
+
+    return UpdateResult(nullptr, aNewResult, aQueryNode);
 }
 
 nsresult
 nsXULTemplateBuilder::UpdateResult(nsIXULTemplateResult* aOldResult,
                                    nsIXULTemplateResult* aNewResult,
-                                   nsINode* aQueryNode)
+                                   nsIDOMNode* aQueryNode)
 {
     MOZ_LOG(gXULTemplateLog, LogLevel::Info,
            ("nsXULTemplateBuilder::UpdateResult %p %p %p",
@@ -1060,85 +978,62 @@ nsXULTemplateBuilder::UpdateResultInContainer(nsIXULTemplateResult* aOldResult,
     return rv;
 }
 
-void
-nsXULTemplateBuilder::ResultBindingChanged(nsIXULTemplateResult* aResult,
-                                           ErrorResult& aError)
+NS_IMETHODIMP
+nsXULTemplateBuilder::ResultBindingChanged(nsIXULTemplateResult* aResult)
 {
     // A binding update is used when only the values of the bindings have
     // changed, so the same rule still applies. Just synchronize the content.
     // The new result will have the new values.
-    if (mRoot && mQueriesCompiled) {
-        aError = SynchronizeResult(aResult);
-    }
-}
-
-NS_IMETHODIMP
-nsXULTemplateBuilder::ResultBindingChanged(nsIXULTemplateResult* aResult)
-{
     NS_ENSURE_ARG_POINTER(aResult);
 
-    ErrorResult rv;
-    ResultBindingChanged(aResult, rv);
-    return rv.StealNSResult();
+    if (!mRoot || !mQueriesCompiled)
+      return NS_OK;
+
+    return SynchronizeResult(aResult);
 }
 
 NS_IMETHODIMP
 nsXULTemplateBuilder::GetRootResult(nsIXULTemplateResult** aResult)
 {
-  NS_IF_ADDREF(*aResult = GetRootResult());
+  *aResult = mRootResult;
+  NS_IF_ADDREF(*aResult);
   return NS_OK;
-}
-
-nsIXULTemplateResult*
-nsXULTemplateBuilder::GetResultForId(const nsAString& aId, ErrorResult& aError)
-{
-    if (aId.IsEmpty()) {
-        aError.Throw(NS_ERROR_INVALID_ARG);
-        return nullptr;
-    }
-
-    nsCOMPtr<nsIRDFResource> resource;
-    gRDFService->GetUnicodeResource(aId, getter_AddRefs(resource));
-
-    nsTemplateMatch* match;
-    if (mMatchMap.Get(resource, &match)) {
-        // find the active match
-        while (match) {
-            if (match->IsActive()) {
-                return match->mResult;
-            }
-            match = match->mNext;
-        }
-    }
-
-    return nullptr;
 }
 
 NS_IMETHODIMP
 nsXULTemplateBuilder::GetResultForId(const nsAString& aId,
                                      nsIXULTemplateResult** aResult)
 {
-    ErrorResult rv;
-    NS_IF_ADDREF(*aResult = GetResultForId(aId, rv));
-    return rv.StealNSResult();
+    if (aId.IsEmpty())
+        return NS_ERROR_INVALID_ARG;
+
+    nsCOMPtr<nsIRDFResource> resource;
+    gRDFService->GetUnicodeResource(aId, getter_AddRefs(resource));
+
+    *aResult = nullptr;
+
+    nsTemplateMatch* match;
+    if (mMatchMap.Get(resource, &match)) {
+        // find the active match
+        while (match) {
+            if (match->IsActive()) {
+                *aResult = match->mResult;
+                NS_IF_ADDREF(*aResult);
+                break;
+            }
+            match = match->mNext;
+        }
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULTemplateBuilder::GetResultForContent(nsIDOMElement* aContent,
                                           nsIXULTemplateResult** aResult)
 {
-    nsCOMPtr<Element> element = do_QueryInterface(aContent);
-    NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
-    NS_IF_ADDREF(*aResult = GetResultForContent(*element));
+    *aResult = nullptr;
     return NS_OK;
-}
-
-void
-nsXULTemplateBuilder::AddListener(XULBuilderListener& aListener)
-{
-    CallbackObjectHolder<XULBuilderListener, nsIXULBuilderListener>
-        holder(&aListener);
-    mListeners.AppendElement(holder.ToXPCOMCallback());
 }
 
 NS_IMETHODIMP
@@ -1146,19 +1041,10 @@ nsXULTemplateBuilder::AddListener(nsIXULBuilderListener* aListener)
 {
     NS_ENSURE_ARG(aListener);
 
-    if (!mListeners.AppendElement(aListener))
+    if (!mListeners.AppendObject(aListener))
         return NS_ERROR_OUT_OF_MEMORY;
 
     return NS_OK;
-}
-
-void
-nsXULTemplateBuilder::RemoveListener(XULBuilderListener& aListener)
-{
-    CallbackObjectHolder<XULBuilderListener, nsIXULBuilderListener>
-        holder(&aListener);
-    nsCOMPtr<nsIXULBuilderListener> listener(holder.ToXPCOMCallback());
-    mListeners.RemoveElement(listener);
 }
 
 NS_IMETHODIMP
@@ -1166,7 +1052,7 @@ nsXULTemplateBuilder::RemoveListener(nsIXULBuilderListener* aListener)
 {
     NS_ENSURE_ARG(aListener);
 
-    mListeners.RemoveElement(aListener);
+    mListeners.RemoveObject(aListener);
 
     return NS_OK;
 }
