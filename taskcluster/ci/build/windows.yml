@@ -209,7 +209,7 @@ win64-noopt/debug:
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/taskcluster_firefox_win64_noopt_debug.py
-    run-on-projects: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
+    run-on-projects: [ 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
 
 win32-noopt/debug:
     description: "Win32 No-optimize Debug"
@@ -230,7 +230,7 @@ win32-noopt/debug:
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/taskcluster_firefox_win32_noopt_debug.py
-    run-on-projects: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
+    run-on-projects: [ 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
 
 win64-asan/debug:
     description: "Win64 Debug ASAN"
