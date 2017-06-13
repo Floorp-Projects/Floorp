@@ -74,13 +74,12 @@ public:
     // nsIXULTemplateBuilder interface
     NS_IMETHOD CreateContents(nsIContent* aElement, bool aForceCreation) override;
 
-    using nsIXULTemplateBuilder::HasGeneratedContent;
-    bool HasGeneratedContent(nsIRDFResource* aResource,
-                             const nsAString& aTag,
-                             ErrorResult& aError) override;
+    NS_IMETHOD HasGeneratedContent(nsIRDFResource* aResource,
+                                   nsIAtom* aTag,
+                                   bool* aGenerated) override;
 
-    using nsIXULTemplateBuilder::GetResultForContent;
-    nsIXULTemplateResult* GetResultForContent(Element& aElement) override;
+    NS_IMETHOD GetResultForContent(nsIDOMElement* aContent,
+                                   nsIXULTemplateResult** aResult) override;
 
     // nsIMutationObserver interface
     NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
@@ -88,9 +87,9 @@ public:
 
 protected:
     friend nsresult
-    NS_NewXULContentBuilder(Element* aElement, nsIXULTemplateBuilder** aBuilder);
+    NS_NewXULContentBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
-    explicit nsXULContentBuilder(Element* aElement);
+    nsXULContentBuilder();
 
     void Traverse(nsCycleCollectionTraversalCallback& aCb) const override
     {
@@ -341,18 +340,26 @@ protected:
 };
 
 nsresult
-NS_NewXULContentBuilder(Element* aElement, nsIXULTemplateBuilder** aBuilder)
+NS_NewXULContentBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
-    RefPtr<nsXULContentBuilder> builder = new nsXULContentBuilder(aElement);
-    nsresult rv = builder->Init();
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_PRECONDITION(aOuter == nullptr, "no aggregation");
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
 
-    builder.forget(aBuilder);
-    return NS_OK;
+    nsresult rv;
+    nsXULContentBuilder* result = new nsXULContentBuilder();
+    NS_ADDREF(result); // stabilize
+
+    rv = result->InitGlobals();
+
+    if (NS_SUCCEEDED(rv))
+        rv = result->QueryInterface(aIID, aResult);
+
+    NS_RELEASE(result);
+    return rv;
 }
 
-nsXULContentBuilder::nsXULContentBuilder(Element* aElement)
-  : nsXULTemplateBuilder(aElement)
+nsXULContentBuilder::nsXULContentBuilder()
 {
   mSortState.initialized = false;
 }
@@ -1411,71 +1418,83 @@ nsXULContentBuilder::CreateContents(nsIContent* aElement, bool aForceCreation)
     return CreateTemplateAndContainerContents(aElement, aForceCreation);
 }
 
-bool
+NS_IMETHODIMP
 nsXULContentBuilder::HasGeneratedContent(nsIRDFResource* aResource,
-                                         const nsAString& aTag,
-                                         ErrorResult& aError)
+                                         nsIAtom* aTag,
+                                         bool* aGenerated)
 {
-    if (!mRoot || !mRootResult) {
-        aError.Throw(NS_ERROR_NOT_INITIALIZED);
-        return false;
-    }
+    *aGenerated = false;
+    NS_ENSURE_TRUE(mRoot, NS_ERROR_NOT_INITIALIZED);
+    NS_ENSURE_STATE(mRootResult);
 
     nsCOMPtr<nsIRDFResource> rootresource;
-    aError = mRootResult->GetResource(getter_AddRefs(rootresource));
-    if (aError.Failed()) {
-        return false;
-    }
+    nsresult rv = mRootResult->GetResource(getter_AddRefs(rootresource));
+    if (NS_FAILED(rv))
+        return rv;
 
     // the root resource is always acceptable
     if (aResource == rootresource) {
-        return DOMStringIsNull(aTag) || mRoot->NodeInfo()->LocalName().Equals(aTag);
+        if (!aTag || mRoot->NodeInfo()->NameAtom() == aTag)
+            *aGenerated = true;
     }
+    else {
+        const char* uri;
+        aResource->GetValueConst(&uri);
 
-    const char* uri;
-    aResource->GetValueConst(&uri);
+        NS_ConvertUTF8toUTF16 refID(uri);
 
-    NS_ConvertUTF8toUTF16 refID(uri);
+        // just return if the node is no longer in a document
+        nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mRoot->GetComposedDoc());
+        if (! xuldoc)
+            return NS_OK;
 
-    // just return if the node is no longer in a document
-    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mRoot->GetComposedDoc());
-    if (!xuldoc) {
-        return false;
-    }
+        nsCOMArray<nsIContent> elements;
+        xuldoc->GetElementsForID(refID, elements);
 
-    nsCOMArray<nsIContent> elements;
-    xuldoc->GetElementsForID(refID, elements);
+        uint32_t cnt = elements.Count();
 
-    uint32_t cnt = elements.Count();
+        for (int32_t i = int32_t(cnt) - 1; i >= 0; --i) {
+            nsCOMPtr<nsIContent> content = elements.SafeObjectAt(i);
 
-    for (int32_t i = int32_t(cnt) - 1; i >= 0; --i) {
-        nsCOMPtr<nsIContent> content = elements.SafeObjectAt(i);
-
-        do {
-            nsTemplateMatch* match;
-            if (content == mRoot || mContentSupportMap.Get(content, &match)) {
-                // If we've got a tag, check it to ensure we're consistent.
-                if (DOMStringIsNull(aTag) || content->NodeInfo()->LocalName().Equals(aTag)) {
-                    return true;
+            do {
+                nsTemplateMatch* match;
+                if (content == mRoot || mContentSupportMap.Get(content, &match)) {
+                    // If we've got a tag, check it to ensure we're consistent.
+                    if (!aTag || content->NodeInfo()->NameAtom() == aTag) {
+                        *aGenerated = true;
+                        return NS_OK;
+                    }
                 }
-            }
 
-            content = content->GetParent();
-        } while (content);
+                content = content->GetParent();
+            } while (content);
+        }
     }
 
-    return false;
+    return NS_OK;
 }
 
-nsIXULTemplateResult*
-nsXULContentBuilder::GetResultForContent(Element& aElement)
+NS_IMETHODIMP
+nsXULContentBuilder::GetResultForContent(nsIDOMElement* aElement,
+                                         nsIXULTemplateResult** aResult)
 {
-    if (&aElement == mRoot) {
-        return mRootResult;
+    NS_ENSURE_ARG_POINTER(aElement);
+    NS_ENSURE_ARG_POINTER(aResult);
+
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+    if (content == mRoot) {
+        *aResult = mRootResult;
+    }
+    else {
+        nsTemplateMatch *match = nullptr;
+        if (mContentSupportMap.Get(content, &match))
+            *aResult = match->mResult;
+        else
+            *aResult = nullptr;
     }
 
-    nsTemplateMatch* match;
-    return mContentSupportMap.Get(&aElement, &match) ? match->mResult.get() : nullptr;
+    NS_IF_ADDREF(*aResult);
+    return NS_OK;
 }
 
 //----------------------------------------------------------------------

@@ -8,6 +8,7 @@ interface XULControllers;
 interface MozFrameLoader;
 interface MozRDFCompositeDataSource;
 interface MozRDFResource;
+interface MozXULTemplateBuilder;
 
 [Func="IsChromeOrXBL"]
 interface XULElement : Element {
@@ -84,7 +85,7 @@ interface XULElement : Element {
   attribute boolean allowEvents;
 
   readonly attribute MozRDFCompositeDataSource? database;
-  readonly attribute XULTemplateBuilder?        builder;
+  readonly attribute MozXULTemplateBuilder?     builder;
   [Throws]
   readonly attribute MozRDFResource?            resource;
   [Throws, ChromeOnly]

@@ -11,7 +11,6 @@
 #include "mozilla/Attributes.h"
 #include "nsCoord.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsQueryObject.h"
 #include "nsWrapperCache.h"
 #include "nsString.h"
 
@@ -46,12 +45,6 @@ public:
   nsTreeColumn(nsTreeColumns* aColumns, nsIContent* aContent);
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_TREECOLUMN_IMPL_CID)
-
-  static already_AddRefed<nsTreeColumn> From(nsITreeColumn* aColumn)
-  {
-    RefPtr<nsTreeColumn> col = do_QueryObject(aColumn);
-    return col.forget();
-  }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsTreeColumn)
@@ -105,12 +98,10 @@ protected:
   void SetColumns(nsTreeColumns* aColumns) { mColumns = aColumns; }
 
   const nsAString& GetId() { return mId; }
-
-public:
   nsIAtom* GetAtom() { return mAtom; }
+
   int32_t GetIndex() { return mIndex; }
 
-protected:
   bool IsPrimary() { return mIsPrimary; }
   bool IsCycler() { return mIsCycler; }
   bool IsEditable() { return mIsEditable; }
