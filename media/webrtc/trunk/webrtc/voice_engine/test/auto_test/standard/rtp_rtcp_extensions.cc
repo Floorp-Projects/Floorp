@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
 #include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_header_parser.h"
 #include "webrtc/system_wrappers/include/atomic32.h"
@@ -83,7 +85,7 @@ class ExtensionVerifyTransport : public webrtc::Transport {
     kPacketsExpected = 10,
     kSleepIntervalMs = 10
   };
-  rtc::scoped_ptr<webrtc::RtpHeaderParser> parser_;
+  std::unique_ptr<webrtc::RtpHeaderParser> parser_;
   webrtc::Atomic32 received_packets_;
   webrtc::Atomic32 bad_packets_;
   int audio_level_id_;
@@ -116,40 +118,3 @@ TEST_F(SendRtpRtcpHeaderExtensionsTest, SentPacketsIncludeAudioLevel) {
   EXPECT_TRUE(verifying_transport_.Wait());
 }
 
-TEST_F(SendRtpRtcpHeaderExtensionsTest, SentPacketsIncludeNoAbsoluteSenderTime)
-{
-  verifying_transport_.SetAbsoluteSenderTimeId(0);
-  ResumePlaying();
-  EXPECT_FALSE(verifying_transport_.Wait());
-}
-
-TEST_F(SendRtpRtcpHeaderExtensionsTest, SentPacketsIncludeAbsoluteSenderTime) {
-  EXPECT_EQ(0, voe_rtp_rtcp_->SetSendAbsoluteSenderTimeStatus(channel_, true,
-                                                              11));
-  verifying_transport_.SetAbsoluteSenderTimeId(11);
-  ResumePlaying();
-  EXPECT_TRUE(verifying_transport_.Wait());
-}
-
-TEST_F(SendRtpRtcpHeaderExtensionsTest, SentPacketsIncludeAllExtensions1) {
-  EXPECT_EQ(0, voe_rtp_rtcp_->SetSendAudioLevelIndicationStatus(channel_, true,
-                                                                9));
-  EXPECT_EQ(0, voe_rtp_rtcp_->SetSendAbsoluteSenderTimeStatus(channel_, true,
-                                                              11));
-  verifying_transport_.SetAudioLevelId(9);
-  verifying_transport_.SetAbsoluteSenderTimeId(11);
-  ResumePlaying();
-  EXPECT_TRUE(verifying_transport_.Wait());
-}
-
-TEST_F(SendRtpRtcpHeaderExtensionsTest, SentPacketsIncludeAllExtensions2) {
-  EXPECT_EQ(0, voe_rtp_rtcp_->SetSendAbsoluteSenderTimeStatus(channel_, true,
-                                                              3));
-  EXPECT_EQ(0, voe_rtp_rtcp_->SetSendAudioLevelIndicationStatus(channel_, true,
-                                                                9));
-  verifying_transport_.SetAbsoluteSenderTimeId(3);
-  // Don't register audio level with header parser - unknown extensions should
-  // be ignored when parsing.
-  ResumePlaying();
-  EXPECT_TRUE(verifying_transport_.Wait());
-}

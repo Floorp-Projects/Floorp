@@ -12,9 +12,10 @@
 #define WEBRTC_MODULES_UTILITY_INCLUDE_JVM_ANDROID_H_
 
 #include <jni.h>
+
+#include <memory>
 #include <string>
 
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/thread_checker.h"
 #include "webrtc/modules/utility/include/helpers_android.h"
 
@@ -63,6 +64,7 @@ class JavaClass {
   jmethodID GetMethodId(const char* name, const char* signature);
   jmethodID GetStaticMethodId(const char* name, const char* signature);
   jobject CallStaticObjectMethod(jmethodID methodID, ...);
+  jint CallStaticIntMethod(jmethodID methodID, ...);
 
  protected:
   JNIEnv* const jni_;
@@ -76,7 +78,7 @@ class NativeRegistration : public JavaClass {
   NativeRegistration(JNIEnv* jni, jclass clazz);
   ~NativeRegistration();
 
-  rtc::scoped_ptr<GlobalRef> NewObject(
+  std::unique_ptr<GlobalRef> NewObject(
       const char* name, const char* signature, ...);
 
  private:
@@ -96,7 +98,7 @@ class JNIEnvironment {
   // Note that the class name must be one of the names in the static
   // |loaded_classes| array defined in jvm_android.cc.
   // This method must be called on the construction thread.
-  rtc::scoped_ptr<NativeRegistration> RegisterNatives(
+  std::unique_ptr<NativeRegistration> RegisterNatives(
       const char* name, const JNINativeMethod *methods, int num_methods);
 
   // Converts from Java string to std::string.
@@ -120,9 +122,9 @@ class JNIEnvironment {
 //   webrtc::JVM::Initialize(jvm, context);
 //
 //   // Header (.h) file of example class called User.
-//   rtc::scoped_ptr<JNIEnvironment> env;
-//   rtc::scoped_ptr<NativeRegistration> reg;
-//   rtc::scoped_ptr<GlobalRef> obj;
+//   std::unique_ptr<JNIEnvironment> env;
+//   std::unique_ptr<NativeRegistration> reg;
+//   std::unique_ptr<GlobalRef> obj;
 //
 //   // Construction (in .cc file) of User class.
 //   User::User() {
@@ -156,7 +158,7 @@ class JVM {
   // Creates a JNIEnvironment object.
   // This method returns a NULL pointer if AttachCurrentThread() has not been
   // called successfully. Use the AttachCurrentThreadIfNeeded class if needed.
-  rtc::scoped_ptr<JNIEnvironment> environment();
+  std::unique_ptr<JNIEnvironment> environment();
 
   // Returns a JavaClass object given class |name|.
   // Note that the class name must be one of the names in the static

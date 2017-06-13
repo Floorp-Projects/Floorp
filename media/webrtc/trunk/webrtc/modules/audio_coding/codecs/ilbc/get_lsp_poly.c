@@ -65,15 +65,15 @@ void WebRtcIlbcfix_GetLspPoly(
     {
       /* Compute f[j] = f[j] + tmp*f[j-1] + f[j-2]; */
       high = (int16_t)(fPtr[-1] >> 16);
-      low = (int16_t)((fPtr[-1] - ((int32_t)high << 16)) >> 1);
+      low = (int16_t)((fPtr[-1] & 0xffff) >> 1);
 
-      tmpW32 = ((high * *lspPtr) << 2) + (((low * *lspPtr) >> 15) << 2);
+      tmpW32 = 4 * high * *lspPtr + 4 * ((low * *lspPtr) >> 15);
 
       (*fPtr) += fPtr[-2];
       (*fPtr) -= tmpW32;
       fPtr--;
     }
-    *fPtr -= *lspPtr << 10;
+    *fPtr -= *lspPtr * (1 << 10);
 
     fPtr+=i;
     lspPtr+=2;

@@ -10,7 +10,7 @@
 
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
-#include <assert.h>
+#include "webrtc/base/checks.h"
 
 size_t WebRtcSpl_AutoCorrelation(const int16_t* in_vector,
                                  size_t in_vector_length,
@@ -22,7 +22,7 @@ size_t WebRtcSpl_AutoCorrelation(const int16_t* in_vector,
   int16_t smax = 0;
   int scaling = 0;
 
-  assert(order <= in_vector_length);
+  RTC_DCHECK_LE(order, in_vector_length);
 
   // Find the maximum absolute value of the samples.
   smax = WebRtcSpl_MaxAbsValueW16(in_vector, in_vector_length);

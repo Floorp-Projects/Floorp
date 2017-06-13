@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#if WEBRTC_WIN
+#ifdef WEBRTC_WIN
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif  // WEBRTC_WIN 
@@ -33,7 +33,7 @@
 namespace rtc {
 
 void Break() {
-#if WEBRTC_WIN
+#ifdef WEBRTC_WIN
   ::DebugBreak();
 #else  // !WEBRTC_WIN 
   // On POSIX systems, SIGTRAP signals debuggers to break without killing the

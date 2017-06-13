@@ -12,11 +12,42 @@
 #define WEBRTC_BASE_NETWORKMONITOR_H_
 
 #include "webrtc/base/logging.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/sigslot.h"
 #include "webrtc/base/thread.h"
 
 namespace rtc {
+
+class IPAddress;
+
+// Error values are negative.
+enum NetworkBindingResults {
+  NETWORK_BIND_SUCCESS = 0,   // No error
+  NETWORK_BIND_FAILURE = -1,  // Generic error
+  NETWORK_BIND_NOT_IMPLEMENTED = -2,
+  NETWORK_BIND_ADDRESS_NOT_FOUND = -3,
+  NETWORK_BIND_NETWORK_CHANGED = -4
+};
+
+enum AdapterType {
+  // This enum resembles the one in Chromium net::ConnectionType.
+  ADAPTER_TYPE_UNKNOWN = 0,
+  ADAPTER_TYPE_ETHERNET = 1 << 0,
+  ADAPTER_TYPE_WIFI = 1 << 1,
+  ADAPTER_TYPE_CELLULAR = 1 << 2,
+  ADAPTER_TYPE_VPN = 1 << 3,
+  ADAPTER_TYPE_LOOPBACK = 1 << 4
+};
+
+class NetworkBinderInterface {
+ public:
+  // Binds a socket to the network that is attached to |address| so that all
+  // packets on the socket |socket_fd| will be sent via that network.
+  // This is needed because some operating systems (like Android) require a
+  // special bind call to put packets on a non-default network interface.
+  virtual int BindSocketToNetwork(int socket_fd, const IPAddress& address) = 0;
+  virtual ~NetworkBinderInterface() {}
+};
+
 /*
  * Receives network-change events via |OnNetworksChanged| and signals the
  * networks changed event.
@@ -49,6 +80,8 @@ class NetworkMonitorInterface {
   // Implementations should call this method on the base when networks change,
   // and the base will fire SignalNetworksChanged on the right thread.
   virtual void OnNetworksChanged() = 0;
+
+  virtual AdapterType GetAdapterType(const std::string& interface_name) = 0;
 };
 
 class NetworkMonitorBase : public NetworkMonitorInterface,
@@ -62,8 +95,11 @@ class NetworkMonitorBase : public NetworkMonitorInterface,
 
   void OnMessage(Message* msg) override;
 
+ protected:
+  Thread* worker_thread() { return worker_thread_; }
+
  private:
-  Thread* thread_;
+  Thread* worker_thread_;
 };
 
 /*

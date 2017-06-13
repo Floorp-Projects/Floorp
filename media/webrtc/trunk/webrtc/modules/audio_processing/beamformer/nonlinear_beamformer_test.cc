@@ -43,14 +43,14 @@ int main(int argc, char* argv[]) {
   google::ParseCommandLineFlags(&argc, &argv, true);
 
   WavReader in_file(FLAGS_i);
-  WavWriter out_file(FLAGS_o, in_file.sample_rate(), 1);
+  WavWriter out_file(FLAGS_o, in_file.sample_rate(), in_file.num_channels());
 
   const size_t num_mics = in_file.num_channels();
   const std::vector<Point> array_geometry =
       ParseArrayGeometry(FLAGS_mic_positions, num_mics);
   RTC_CHECK_EQ(array_geometry.size(), num_mics);
 
-  NonlinearBeamformer bf(array_geometry);
+  NonlinearBeamformer bf(array_geometry, array_geometry.size());
   bf.Initialize(kChunkSizeMs, in_file.sample_rate());
 
   printf("Input file: %s\nChannels: %" PRIuS ", Sample rate: %d Hz\n\n",
@@ -58,24 +58,22 @@ int main(int argc, char* argv[]) {
   printf("Output file: %s\nChannels: %" PRIuS ", Sample rate: %d Hz\n\n",
          FLAGS_o.c_str(), out_file.num_channels(), out_file.sample_rate());
 
-  ChannelBuffer<float> in_buf(
+  ChannelBuffer<float> buf(
       rtc::CheckedDivExact(in_file.sample_rate(), kChunksPerSecond),
       in_file.num_channels());
-  ChannelBuffer<float> out_buf(
-      rtc::CheckedDivExact(out_file.sample_rate(), kChunksPerSecond),
-      out_file.num_channels());
 
-  std::vector<float> interleaved(in_buf.size());
+  std::vector<float> interleaved(buf.size());
   while (in_file.ReadSamples(interleaved.size(),
                              &interleaved[0]) == interleaved.size()) {
     FloatS16ToFloat(&interleaved[0], interleaved.size(), &interleaved[0]);
-    Deinterleave(&interleaved[0], in_buf.num_frames(),
-                 in_buf.num_channels(), in_buf.channels());
+    Deinterleave(&interleaved[0], buf.num_frames(),
+                 buf.num_channels(), buf.channels());
 
-    bf.ProcessChunk(in_buf, &out_buf);
+    bf.AnalyzeChunk(buf);
+    bf.PostFilter(&buf);
 
-    Interleave(out_buf.channels(), out_buf.num_frames(),
-               out_buf.num_channels(), &interleaved[0]);
+    Interleave(buf.channels(), buf.num_frames(),
+               buf.num_channels(), &interleaved[0]);
     FloatToFloatS16(&interleaved[0], interleaved.size(), &interleaved[0]);
     out_file.WriteSamples(&interleaved[0], interleaved.size());
   }

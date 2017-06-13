@@ -13,13 +13,13 @@
 
 #include <vector>
 
+#include "webrtc/api/video/video_frame.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/modules/video_coding/include/video_error_codes.h"
 #include "webrtc/typedefs.h"
 #include "webrtc/video_decoder.h"
 #include "webrtc/video_encoder.h"
-#include "webrtc/video_frame.h"
 
 namespace webrtc {
 
@@ -78,9 +78,7 @@ struct CodecSpecificInfoGeneric {
 };
 
 struct CodecSpecificInfoH264 {
-  bool    single_nalu;
-  uint8_t simulcastIdx;
-  uint8_t packetizationMode;
+  H264PacketizationMode packetization_mode;
 };
 
 union CodecSpecificInfoUnion {
@@ -94,7 +92,9 @@ union CodecSpecificInfoUnion {
 // must be fitted with a copy-constructor. This is because it is copied
 // in the copy-constructor of VCMEncodedFrame.
 struct CodecSpecificInfo {
+  CodecSpecificInfo() : codecType(kVideoCodecUnknown), codec_name(nullptr) {}
   VideoCodecType codecType;
+  const char* codec_name;
   CodecSpecificInfoUnion codecSpecific;
 };
 

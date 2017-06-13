@@ -35,7 +35,7 @@ ConstantPcmPacketSource::ConstantPcmPacketSource(size_t payload_len_samples,
   RTC_CHECK_EQ(2U, encoded_len);
 }
 
-Packet* ConstantPcmPacketSource::NextPacket() {
+std::unique_ptr<Packet> ConstantPcmPacketSource::NextPacket() {
   RTC_CHECK_GT(packet_len_bytes_, kHeaderLenBytes);
   uint8_t* packet_memory = new uint8_t[packet_len_bytes_];
   // Fill the payload part of the packet memory with the pre-encoded value.
@@ -43,8 +43,8 @@ Packet* ConstantPcmPacketSource::NextPacket() {
     packet_memory[kHeaderLenBytes + i] = encoded_sample_[i % 2];
   WriteHeader(packet_memory);
   // |packet| assumes ownership of |packet_memory|.
-  Packet* packet =
-      new Packet(packet_memory, packet_len_bytes_, next_arrival_time_ms_);
+  std::unique_ptr<Packet> packet(
+      new Packet(packet_memory, packet_len_bytes_, next_arrival_time_ms_));
   next_arrival_time_ms_ += payload_len_samples_ / samples_per_ms_;
   return packet;
 }

@@ -35,6 +35,7 @@
 #include <strsafe.h>
 #include <uuids.h>
 
+#include "webrtc/base/logging.h"
 #include "webrtc/base/platform_thread.h"
 #include "webrtc/system_wrappers/include/sleep.h"
 #include "webrtc/system_wrappers/include/trace.h"
@@ -333,7 +334,9 @@ bool AudioDeviceWindowsCore::CoreAudioIsSupported()
         int temp_ok(0);
         bool available(false);
 
-        ok |= p->Init();
+        if (p->Init() != InitStatus::OK) {
+          ok |= -1;
+        }
 
         int16_t numDevsRec = p->RecordingDevices();
         for (uint16_t i = 0; i < numDevsRec; i++)
@@ -572,9 +575,6 @@ AudioDeviceWindowsCore::~AudioDeviceWindowsCore()
 
     Terminate();
 
-    // Recording thread should be shut down before this!
-    assert(_hRecThread == NULL);
-
     // The IMMDeviceEnumerator is created during construction. Must release
     // it here and not in Terminate() since we don't recreate it in Init().
     SAFE_RELEASE(_ptrEnumerator);
@@ -678,31 +678,27 @@ int32_t AudioDeviceWindowsCore::ActiveAudioLayer(AudioDeviceModule::AudioLayer& 
 //  Init
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsCore::Init()
-{
+AudioDeviceGeneric::InitStatus AudioDeviceWindowsCore::Init() {
+  CriticalSectionScoped lock(&_critSect);
 
-    CriticalSectionScoped lock(&_critSect);
+  if (_initialized) {
+    return InitStatus::OK;
+  }
 
-    if (_initialized)
-    {
-        return 0;
-    }
+  _playWarning = 0;
+  _playError = 0;
+  _recWarning = 0;
+  _recError = 0;
 
-    _playWarning = 0;
-    _playError = 0;
-    _recWarning = 0;
-    _recError = 0;
+  // Enumerate all audio rendering and capturing endpoint devices.
+  // Note that, some of these will not be able to select by the user.
+  // The complete collection is for internal use only.
+  _EnumerateEndpointDevicesAll(eRender);
+  _EnumerateEndpointDevicesAll(eCapture);
 
-    // Enumerate all audio rendering and capturing endpoint devices.
-    // Note that, some of these will not be able to select by the user.
-    // The complete collection is for internal use only.
-    //
-    _EnumerateEndpointDevicesAll(eRender);
-    _EnumerateEndpointDevicesAll(eCapture);
+  _initialized = true;
 
-    _initialized = true;
-
-    return 0;
+  return InitStatus::OK;
 }
 
 // ----------------------------------------------------------------------------
@@ -2236,13 +2232,13 @@ int32_t AudioDeviceWindowsCore::InitPlayout()
     Wfx.wBitsPerSample = 16;
     Wfx.cbSize = 0;
 
-    const int freqs[] = {48000, 44100, 32000, 96000, 16000, 8000};
+    const int freqs[] = {48000, 44100, 16000, 96000, 32000, 8000};
     hr = S_FALSE;
 
     // Iterate over frequencies and channels, in order of priority
-    for (int freq = 0; freq < sizeof(freqs)/sizeof(freqs[0]); freq++)
+    for (unsigned int freq = 0; freq < sizeof(freqs)/sizeof(freqs[0]); freq++)
     {
-        for (int chan = 0; chan < sizeof(_playChannelsPrioList)/sizeof(_playChannelsPrioList[0]); chan++)
+        for (unsigned int chan = 0; chan < sizeof(_playChannelsPrioList)/sizeof(_playChannelsPrioList[0]); chan++)
         {
             Wfx.nChannels = _playChannelsPrioList[chan];
             Wfx.nSamplesPerSec = freqs[freq];
@@ -2573,13 +2569,13 @@ int32_t AudioDeviceWindowsCore::InitRecording()
     Wfx.wBitsPerSample = 16;
     Wfx.cbSize = 0;
 
-    const int freqs[6] = {48000, 44100, 32000, 96000, 16000, 8000};
+    const int freqs[6] = {48000, 44100, 16000, 96000, 32000, 8000};
     hr = S_FALSE;
 
     // Iterate over frequencies and channels, in order of priority
-    for (int freq = 0; freq < sizeof(freqs)/sizeof(freqs[0]); freq++)
+    for (unsigned int freq = 0; freq < sizeof(freqs)/sizeof(freqs[0]); freq++)
     {
-        for (int chan = 0; chan < sizeof(_recChannelsPrioList)/sizeof(_recChannelsPrioList[0]); chan++)
+        for (unsigned int chan = 0; chan < sizeof(_recChannelsPrioList)/sizeof(_recChannelsPrioList[0]); chan++)
         {
             Wfx.nChannels = _recChannelsPrioList[chan];
             Wfx.nSamplesPerSec = freqs[freq];
@@ -4198,11 +4194,6 @@ int32_t AudioDeviceWindowsCore::EnableBuiltInAEC(bool enable)
     return 0;
 }
 
-bool AudioDeviceWindowsCore::BuiltInAECIsEnabled() const
-{
-    return _builtInAecEnabled;
-}
-
 int AudioDeviceWindowsCore::SetDMOProperties()
 {
     HRESULT hr = S_OK;
@@ -5081,7 +5072,7 @@ char* AudioDeviceWindowsCore::WideToUTF8(const TCHAR* src) const {
     const size_t kStrLen = sizeof(_str);
     memset(_str, 0, kStrLen);
     // Get required size (in bytes) to be able to complete the conversion.
-    int required_size = WideCharToMultiByte(CP_UTF8, 0, src, -1, _str, 0, 0, 0);
+    unsigned int required_size = (unsigned int)WideCharToMultiByte(CP_UTF8, 0, src, -1, _str, 0, 0, 0);
     if (required_size <= kStrLen)
     {
         // Process the entire input string, including the terminating null char.

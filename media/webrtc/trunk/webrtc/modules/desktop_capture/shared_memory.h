@@ -17,6 +17,8 @@
 #include <windows.h>
 #endif
 
+#include <memory>
+
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/typedefs.h"
 
@@ -26,8 +28,8 @@ namespace webrtc {
 // parameters of the buffer, but doesn't have any logic to allocate or destroy
 // the actual buffer. DesktopCapturer consumers that need to use shared memory
 // for video frames must extend this class with creation and destruction logic
-// specific for the target platform and then implement
-// DesktopCapturer::Delegate::CreateSharedMemory() as appropriate.
+// specific for the target platform and then call
+// DesktopCapturer::SetSharedMemoryFactory().
 class SharedMemory {
  public:
 #if defined(WEBRTC_WIN)
@@ -60,6 +62,18 @@ class SharedMemory {
 
  private:
   RTC_DISALLOW_COPY_AND_ASSIGN(SharedMemory);
+};
+
+// Interface used to create SharedMemory instances.
+class SharedMemoryFactory {
+ public:
+  SharedMemoryFactory() {}
+  virtual ~SharedMemoryFactory() {}
+
+  virtual std::unique_ptr<SharedMemory> CreateSharedMemory(size_t size) = 0;
+
+ private:
+  RTC_DISALLOW_COPY_AND_ASSIGN(SharedMemoryFactory);
 };
 
 }  // namespace webrtc

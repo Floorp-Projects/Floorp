@@ -12,6 +12,9 @@
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_SENDER_AUDIO_H_
 
 #include "webrtc/common_types.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/base/criticalsection.h"
+#include "webrtc/base/onetimeevent.h"
 #include "webrtc/modules/rtp_rtcp/source/dtmf_queue.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_rtcp_config.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_sender.h"
@@ -19,91 +22,77 @@
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
-class RTPSenderAudio : public DTMFqueue {
+
+class RTPSenderAudio {
  public:
-  RTPSenderAudio(Clock* clock,
-                 RTPSender* rtpSender,
-                 RtpAudioFeedback* audio_feedback);
-  virtual ~RTPSenderAudio();
+  RTPSenderAudio(Clock* clock, RTPSender* rtp_sender);
+  ~RTPSenderAudio();
 
   int32_t RegisterAudioPayload(const char payloadName[RTP_PAYLOAD_NAME_SIZE],
-                               int8_t payloadType,
+                               int8_t payload_type,
                                uint32_t frequency,
                                size_t channels,
                                uint32_t rate,
                                RtpUtility::Payload** payload);
 
-  int32_t SendAudio(FrameType frameType,
-                    int8_t payloadType,
-                    uint32_t captureTimeStamp,
-                    const uint8_t* payloadData,
-                    size_t payloadSize,
-                    const RTPFragmentationHeader* fragmentation);
-
-  // set audio packet size, used to determine when it's time to send a DTMF
-  // packet in silence (CNG)
-  int32_t SetAudioPacketSize(uint16_t packetSizeSamples);
+  bool SendAudio(FrameType frame_type,
+                 int8_t payload_type,
+                 uint32_t capture_timestamp,
+                 const uint8_t* payload_data,
+                 size_t payload_size,
+                 const RTPFragmentationHeader* fragmentation);
 
   // Store the audio level in dBov for
   // header-extension-for-audio-level-indication.
   // Valid range is [0,100]. Actual value is negative.
-  int32_t SetAudioLevel(uint8_t level_dBov);
+  int32_t SetAudioLevel(uint8_t level_dbov);
 
   // Send a DTMF tone using RFC 2833 (4733)
   int32_t SendTelephoneEvent(uint8_t key, uint16_t time_ms, uint8_t level);
 
-  int AudioFrequency() const;
-
-  // Set payload type for Redundant Audio Data RFC 2198
-  int32_t SetRED(int8_t payloadType);
-
-  // Get payload type for Redundant Audio Data RFC 2198
-  int32_t RED(int8_t* payloadType) const;
-
  protected:
-  int32_t SendTelephoneEventPacket(
+  bool SendTelephoneEventPacket(
       bool ended,
-      int8_t dtmf_payload_type,
-      uint32_t dtmfTimeStamp,
+      uint32_t dtmf_timestamp,
       uint16_t duration,
-      bool markerBit);  // set on first packet in talk burst
+      bool marker_bit);  // set on first packet in talk burst
 
-  bool MarkerBit(const FrameType frameType, const int8_t payloadType);
+  bool MarkerBit(FrameType frame_type, int8_t payload_type);
 
  private:
-  Clock* const _clock;
-  RTPSender* const _rtpSender;
-  RtpAudioFeedback* const _audioFeedback;
+  Clock* const clock_ = nullptr;
+  RTPSender* const rtp_sender_ = nullptr;
 
-  rtc::scoped_ptr<CriticalSectionWrapper> _sendAudioCritsect;
+  rtc::CriticalSection send_audio_critsect_;
 
-  uint16_t _packetSizeSamples GUARDED_BY(_sendAudioCritsect);
+  // DTMF.
+  bool dtmf_event_is_on_ = false;
+  bool dtmf_event_first_packet_sent_ = false;
+  int8_t dtmf_payload_type_ GUARDED_BY(send_audio_critsect_) = -1;
+  uint32_t dtmf_payload_freq_ GUARDED_BY(send_audio_critsect_) = 8000;
+  uint32_t dtmf_timestamp_ = 0;
+  uint32_t dtmf_length_samples_ = 0;
+  int64_t dtmf_time_last_sent_ = 0;
+  uint32_t dtmf_timestamp_last_sent_ = 0;
+  DtmfQueue::Event dtmf_current_event_;
+  DtmfQueue dtmf_queue_;
 
-  // DTMF
-  bool _dtmfEventIsOn;
-  bool _dtmfEventFirstPacketSent;
-  int8_t _dtmfPayloadType GUARDED_BY(_sendAudioCritsect);
-  uint32_t _dtmfTimestamp;
-  uint8_t _dtmfKey;
-  uint32_t _dtmfLengthSamples;
-  uint8_t _dtmfLevel;
-  int64_t _dtmfTimeLastSent;
-  uint32_t _dtmfTimestampLastSent;
+  // VAD detection, used for marker bit.
+  bool inband_vad_active_ GUARDED_BY(send_audio_critsect_) = false;
+  int8_t cngnb_payload_type_ GUARDED_BY(send_audio_critsect_) = -1;
+  int8_t cngwb_payload_type_ GUARDED_BY(send_audio_critsect_) = -1;
+  int8_t cngswb_payload_type_ GUARDED_BY(send_audio_critsect_) = -1;
+  int8_t cngfb_payload_type_ GUARDED_BY(send_audio_critsect_) = -1;
+  int8_t last_payload_type_ GUARDED_BY(send_audio_critsect_) = -1;
 
-  int8_t _REDPayloadType GUARDED_BY(_sendAudioCritsect);
-
-  // VAD detection, used for markerbit
-  bool _inbandVADactive GUARDED_BY(_sendAudioCritsect);
-  int8_t _cngNBPayloadType GUARDED_BY(_sendAudioCritsect);
-  int8_t _cngWBPayloadType GUARDED_BY(_sendAudioCritsect);
-  int8_t _cngSWBPayloadType GUARDED_BY(_sendAudioCritsect);
-  int8_t _cngFBPayloadType GUARDED_BY(_sendAudioCritsect);
-  int8_t _lastPayloadType GUARDED_BY(_sendAudioCritsect);
-
-  // Audio level indication
+  // Audio level indication.
   // (https://datatracker.ietf.org/doc/draft-lennox-avt-rtp-audio-level-exthdr/)
-  uint8_t _audioLevel_dBov GUARDED_BY(_sendAudioCritsect);
+  uint8_t audio_level_dbov_ GUARDED_BY(send_audio_critsect_) = 0;
+  OneTimeEvent first_packet_sent_;
+
+  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(RTPSenderAudio);
 };
+
 }  // namespace webrtc
 
 #endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_SENDER_AUDIO_H_

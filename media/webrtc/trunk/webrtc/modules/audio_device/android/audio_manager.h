@@ -11,19 +11,18 @@
 #ifndef WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_AUDIO_MANAGER_H_
 #define WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_AUDIO_MANAGER_H_
 
-#if !defined(MOZ_WIDGET_GONK)
-#include <jni.h>
-#endif
+#include <memory>
 
-#include "webrtc/base/scoped_ptr.h"
+#include <jni.h>
+#include <SLES/OpenSLES.h>
+
 #include "webrtc/base/thread_checker.h"
 #include "webrtc/modules/audio_device/android/audio_common.h"
 #include "webrtc/modules/audio_device/audio_device_config.h"
 #include "webrtc/modules/audio_device/include/audio_device_defines.h"
+#include "webrtc/modules/audio_device/android/opensles_common.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
-#if !defined(MOZ_WIDGET_GONK)
 #include "webrtc/modules/utility/include/helpers_android.h"
-#endif
 #include "webrtc/modules/utility/include/jvm_android.h"
 
 namespace webrtc {
@@ -43,7 +42,7 @@ class AudioManager {
   class JavaAudioManager {
    public:
     JavaAudioManager(NativeRegistration* native_registration,
-                     rtc::scoped_ptr<GlobalRef> audio_manager);
+                     std::unique_ptr<GlobalRef> audio_manager);
     ~JavaAudioManager();
 
     bool Init();
@@ -52,7 +51,7 @@ class AudioManager {
     bool IsDeviceBlacklistedForOpenSLESUsage();
 
    private:
-    rtc::scoped_ptr<GlobalRef> audio_manager_;
+    std::unique_ptr<GlobalRef> audio_manager_;
     jmethodID init_;
     jmethodID dispose_;
     jmethodID is_communication_mode_enabled_;
@@ -65,6 +64,18 @@ class AudioManager {
   // Sets the currently active audio layer combination. Must be called before
   // Init().
   void SetActiveAudioLayer(AudioDeviceModule::AudioLayer audio_layer);
+
+  // Creates and realizes the main (global) Open SL engine object and returns
+  // a reference to it. The engine object is only created at the first call
+  // since OpenSL ES for Android only supports a single engine per application.
+  // Subsequent calls returns the already created engine. The SL engine object
+  // is destroyed when the AudioManager object is deleted. It means that the
+  // engine object will be the first OpenSL ES object to be created and last
+  // object to be destroyed.
+  // Note that NULL will be returned unless the audio layer is specified as
+  // AudioDeviceModule::kAndroidOpenSLESAudio or
+  // AudioDeviceModule::kAndroidJavaInputAndOpenSLESOutputAudio.
+  SLObjectItf GetOpenSLEngine();
 
   // Initializes the audio manager and stores the current audio mode.
   bool Init();
@@ -90,6 +101,11 @@ class AudioManager {
   // Returns true if the device supports the low-latency audio paths in
   // combination with OpenSL ES.
   bool IsLowLatencyPlayoutSupported() const;
+  bool IsLowLatencyRecordSupported() const;
+
+  // Returns true if the device supports pro-audio features in combination with
+  // OpenSL ES.
+  bool IsProAudioSupported() const;
 
   // Returns the estimated total delay of this device. Unit is in milliseconds.
   // The vaule is set once at construction and never changes after that.
@@ -101,28 +117,32 @@ class AudioManager {
   // Called from Java side so we can cache the native audio parameters.
   // This method will be called by the WebRtcAudioManager constructor, i.e.
   // on the same thread that this object is created on.
-#if !defined(MOZ_WIDGET_GONK)
   static void JNICALL CacheAudioParameters(JNIEnv* env,
                                            jobject obj,
                                            jint sample_rate,
-                                           jint channels,
+                                           jint output_channels,
+                                           jint input_channels,
                                            jboolean hardware_aec,
                                            jboolean hardware_agc,
                                            jboolean hardware_ns,
                                            jboolean low_latency_output,
+                                           jboolean low_latency_input,
+                                           jboolean pro_audio,
                                            jint output_buffer_size,
                                            jint input_buffer_size,
                                            jlong native_audio_manager);
   void OnCacheAudioParameters(JNIEnv* env,
                               jint sample_rate,
-                              jint channels,
+                              jint output_channels,
+                              jint input_channels,
                               jboolean hardware_aec,
                               jboolean hardware_agc,
                               jboolean hardware_ns,
                               jboolean low_latency_output,
+                              jboolean low_latency_input,
+                              jboolean pro_audio,
                               jint output_buffer_size,
                               jint input_buffer_size);
-#endif
 
   // Stores thread ID in the constructor.
   // We can then use ThreadChecker::CalledOnValidThread() to ensure that
@@ -134,17 +154,24 @@ class AudioManager {
   AttachCurrentThreadIfNeeded attach_thread_if_needed_;
 
   // Wraps the JNI interface pointer and methods associated with it.
-  rtc::scoped_ptr<JNIEnvironment> j_environment_;
+  std::unique_ptr<JNIEnvironment> j_environment_;
 
   // Contains factory method for creating the Java object.
-  rtc::scoped_ptr<NativeRegistration> j_native_registration_;
+  std::unique_ptr<NativeRegistration> j_native_registration_;
 
-#if !defined(MOZ_WIDGET_GONK)
   // Wraps the Java specific parts of the AudioManager.
-  rtc::scoped_ptr<AudioManager::JavaAudioManager> j_audio_manager_;
-#endif
+  std::unique_ptr<AudioManager::JavaAudioManager> j_audio_manager_;
 
+  // Contains the selected audio layer specified by the AudioLayer enumerator
+  // in the AudioDeviceModule class.
   AudioDeviceModule::AudioLayer audio_layer_;
+
+  // This object is the global entry point of the OpenSL ES API.
+  // After creating the engine object, the application can obtain this object‘s
+  // SLEngineItf interface. This interface contains creation methods for all
+  // the other object types in the API. None of these interface are realized
+  // by this class. It only provides access to the global engine object.
+  webrtc::ScopedSLObjectItf engine_object_;
 
   // Set to true by Init() and false by Close().
   bool initialized_;
@@ -156,8 +183,14 @@ class AudioManager {
   // True if device supports hardware (or built-in) NS.
   bool hardware_ns_;
 
-  // True if device supports the low-latency OpenSL ES audio path.
+  // True if device supports the low-latency OpenSL ES audio path for output.
   bool low_latency_playout_;
+
+  // True if device supports the low-latency OpenSL ES audio path for input.
+  bool low_latency_record_;
+
+  // True if device supports the low-latency OpenSL ES pro-audio path.
+  bool pro_audio_;
 
   // The delay estimate can take one of two fixed values depending on if the
   // device supports low-latency output or not.

@@ -8,10 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "testing/gmock/include/gmock/gmock.h"
-#include "webrtc/base/scoped_ptr.h"
+#include <memory>
+
 #include "webrtc/modules/audio_conference_mixer/include/audio_conference_mixer.h"
 #include "webrtc/modules/audio_conference_mixer/include/audio_conference_mixer_defines.h"
+#include "webrtc/test/gmock.h"
 
 namespace webrtc {
 
@@ -56,7 +57,7 @@ TEST(AudioConferenceMixer, AnonymousAndNamed) {
   const int kAnonymous =
       AudioConferenceMixer::kMaximumAmountOfMixedParticipants + 1;
 
-  rtc::scoped_ptr<AudioConferenceMixer> mixer(
+  std::unique_ptr<AudioConferenceMixer> mixer(
       AudioConferenceMixer::Create(kId));
 
   MockMixerParticipant named[kNamed];
@@ -108,7 +109,7 @@ TEST(AudioConferenceMixer, LargestEnergyVadActiveMixed) {
       AudioConferenceMixer::kMaximumAmountOfMixedParticipants + 3;
   const int kSampleRateHz = 32000;
 
-  rtc::scoped_ptr<AudioConferenceMixer> mixer(
+  std::unique_ptr<AudioConferenceMixer> mixer(
       AudioConferenceMixer::Create(kId));
 
   MockAudioMixerOutputReceiver output_receiver;
@@ -145,7 +146,7 @@ TEST(AudioConferenceMixer, LargestEnergyVadActiveMixed) {
   EXPECT_CALL(output_receiver, NewMixedAudio(_, _, _, _))
       .Times(AtLeast(1));
 
-  EXPECT_EQ(0, mixer->Process());
+  mixer->Process();
 
   for (int i = 0; i < kParticipants; ++i) {
     bool is_mixed = participants[i].IsMixed();

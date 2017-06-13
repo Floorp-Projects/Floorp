@@ -15,9 +15,9 @@
  *
  */
 
+#include "webrtc/base/checks.h"
 #include "webrtc/modules/audio_coding/codecs/isac/fix/source/codec.h"
 
-#include <assert.h>
 #include <stdio.h>
 
 #include "webrtc/modules/audio_coding/codecs/isac/fix/source/arith_routins.h"
@@ -455,7 +455,7 @@ int WebRtcIsacfix_EncodeImpl(int16_t      *in,
 
     while (stream_length < MinBytes)
     {
-      assert(stream_length >= 0);
+      RTC_DCHECK_GE(stream_length, 0);
       if (stream_length & 0x0001){
         ISACenc_obj->bitstr_seed = WEBRTC_SPL_RAND( ISACenc_obj->bitstr_seed );
         ISACenc_obj->bitstr_obj.stream[stream_length / 2] |=

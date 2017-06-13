@@ -10,75 +10,99 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/tmmbn.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
-
-#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
+#include "webrtc/test/gmock.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/rtcp_packet_parser.h"
 
-using webrtc::rtcp::RawPacket;
+using testing::ElementsAreArray;
+using testing::IsEmpty;
+using testing::make_tuple;
+using webrtc::rtcp::TmmbItem;
 using webrtc::rtcp::Tmmbn;
-using webrtc::test::RtcpPacketParser;
 
 namespace webrtc {
+namespace {
 const uint32_t kSenderSsrc = 0x12345678;
 const uint32_t kRemoteSsrc = 0x23456789;
+const uint32_t kBitrateBps = 312000;
+const uint16_t kOverhead = 0x1fe;
+const uint8_t kPacket[] = {0x84, 205,  0x00, 0x04,
+                           0x12, 0x34, 0x56, 0x78,
+                           0x00, 0x00, 0x00, 0x00,
+                           0x23, 0x45, 0x67, 0x89,
+                           0x0a, 0x61, 0x61, 0xfe};
+}  // namespace
 
-TEST(RtcpPacketTest, TmmbnWithNoItem) {
+TEST(RtcpPacketTmmbnTest, Create) {
   Tmmbn tmmbn;
-  tmmbn.From(kSenderSsrc);
+  tmmbn.SetSenderSsrc(kSenderSsrc);
+  tmmbn.AddTmmbr(TmmbItem(kRemoteSsrc, kBitrateBps, kOverhead));
 
-  rtc::scoped_ptr<RawPacket> packet(tmmbn.Build());
-  RtcpPacketParser parser;
-  parser.Parse(packet->Buffer(), packet->Length());
-  EXPECT_EQ(1, parser.tmmbn()->num_packets());
-  EXPECT_EQ(kSenderSsrc, parser.tmmbn()->Ssrc());
-  EXPECT_EQ(0, parser.tmmbn_items()->num_packets());
+  rtc::Buffer packet = tmmbn.Build();
+
+  EXPECT_THAT(make_tuple(packet.data(), packet.size()),
+              ElementsAreArray(kPacket));
 }
 
-TEST(RtcpPacketTest, TmmbnWithOneItem) {
+TEST(RtcpPacketTmmbnTest, Parse) {
   Tmmbn tmmbn;
-  tmmbn.From(kSenderSsrc);
-  EXPECT_TRUE(tmmbn.WithTmmbr(kRemoteSsrc, 312, 60));
+  EXPECT_TRUE(test::ParseSinglePacket(kPacket, &tmmbn));
 
-  rtc::scoped_ptr<RawPacket> packet(tmmbn.Build());
-  RtcpPacketParser parser;
-  parser.Parse(packet->Buffer(), packet->Length());
-  EXPECT_EQ(1, parser.tmmbn()->num_packets());
-  EXPECT_EQ(kSenderSsrc, parser.tmmbn()->Ssrc());
-  EXPECT_EQ(1, parser.tmmbn_items()->num_packets());
-  EXPECT_EQ(kRemoteSsrc, parser.tmmbn_items()->Ssrc(0));
-  EXPECT_EQ(312U, parser.tmmbn_items()->BitrateKbps(0));
-  EXPECT_EQ(60U, parser.tmmbn_items()->Overhead(0));
+  const Tmmbn& parsed = tmmbn;
+
+  EXPECT_EQ(kSenderSsrc, parsed.sender_ssrc());
+  ASSERT_EQ(1u, parsed.items().size());
+  EXPECT_EQ(kRemoteSsrc, parsed.items().front().ssrc());
+  EXPECT_EQ(kBitrateBps, parsed.items().front().bitrate_bps());
+  EXPECT_EQ(kOverhead, parsed.items().front().packet_overhead());
 }
 
-TEST(RtcpPacketTest, TmmbnWithTwoItems) {
+TEST(RtcpPacketTmmbnTest, CreateAndParseWithoutItems) {
   Tmmbn tmmbn;
-  tmmbn.From(kSenderSsrc);
-  EXPECT_TRUE(tmmbn.WithTmmbr(kRemoteSsrc, 312, 60));
-  EXPECT_TRUE(tmmbn.WithTmmbr(kRemoteSsrc + 1, 1288, 40));
+  tmmbn.SetSenderSsrc(kSenderSsrc);
 
-  rtc::scoped_ptr<RawPacket> packet(tmmbn.Build());
-  RtcpPacketParser parser;
-  parser.Parse(packet->Buffer(), packet->Length());
-  EXPECT_EQ(1, parser.tmmbn()->num_packets());
-  EXPECT_EQ(kSenderSsrc, parser.tmmbn()->Ssrc());
-  EXPECT_EQ(2, parser.tmmbn_items()->num_packets());
-  EXPECT_EQ(kRemoteSsrc, parser.tmmbn_items()->Ssrc(0));
-  EXPECT_EQ(312U, parser.tmmbn_items()->BitrateKbps(0));
-  EXPECT_EQ(60U, parser.tmmbn_items()->Overhead(0));
-  EXPECT_EQ(kRemoteSsrc + 1, parser.tmmbn_items()->Ssrc(1));
-  EXPECT_EQ(1288U, parser.tmmbn_items()->BitrateKbps(1));
-  EXPECT_EQ(40U, parser.tmmbn_items()->Overhead(1));
+  rtc::Buffer packet = tmmbn.Build();
+  Tmmbn parsed;
+  EXPECT_TRUE(test::ParseSinglePacket(packet, &parsed));
+
+  EXPECT_EQ(kSenderSsrc, parsed.sender_ssrc());
+  EXPECT_THAT(parsed.items(), IsEmpty());
 }
 
-TEST(RtcpPacketTest, TmmbnWithTooManyItems) {
+TEST(RtcpPacketTmmbnTest, CreateAndParseWithTwoItems) {
   Tmmbn tmmbn;
-  tmmbn.From(kSenderSsrc);
-  const int kMaxTmmbrItems = 50;
-  for (int i = 0; i < kMaxTmmbrItems; ++i)
-    EXPECT_TRUE(tmmbn.WithTmmbr(kRemoteSsrc + i, 312, 60));
+  tmmbn.SetSenderSsrc(kSenderSsrc);
+  tmmbn.AddTmmbr(TmmbItem(kRemoteSsrc, kBitrateBps, kOverhead));
+  tmmbn.AddTmmbr(TmmbItem(kRemoteSsrc + 1, 4 * kBitrateBps, 40));
 
-  EXPECT_FALSE(tmmbn.WithTmmbr(kRemoteSsrc + kMaxTmmbrItems, 312, 60));
+  rtc::Buffer packet = tmmbn.Build();
+  Tmmbn parsed;
+  EXPECT_TRUE(test::ParseSinglePacket(packet, &parsed));
+
+  EXPECT_EQ(kSenderSsrc, parsed.sender_ssrc());
+  EXPECT_EQ(2u, parsed.items().size());
+  EXPECT_EQ(kRemoteSsrc, parsed.items()[0].ssrc());
+  EXPECT_EQ(kBitrateBps, parsed.items()[0].bitrate_bps());
+  EXPECT_EQ(kOverhead, parsed.items()[0].packet_overhead());
+  EXPECT_EQ(kRemoteSsrc + 1, parsed.items()[1].ssrc());
+  EXPECT_EQ(4 * kBitrateBps, parsed.items()[1].bitrate_bps());
+  EXPECT_EQ(40U, parsed.items()[1].packet_overhead());
 }
 
+TEST(RtcpPacketTmmbnTest, ParseFailsOnTooSmallPacket) {
+  const uint8_t kSmallPacket[] = {0x84, 205,  0x00, 0x01,
+                                  0x12, 0x34, 0x56, 0x78};
+  Tmmbn tmmbn;
+  EXPECT_FALSE(test::ParseSinglePacket(kSmallPacket, &tmmbn));
+}
+
+TEST(RtcpPacketTmmbnTest, ParseFailsOnUnAlignedPacket) {
+  const uint8_t kUnalignedPacket[] = {0x84,  205, 0x00, 0x03,
+                                      0x12, 0x34, 0x56, 0x78,
+                                      0x00, 0x00, 0x00, 0x00,
+                                      0x23, 0x45, 0x67, 0x89};
+
+  Tmmbn tmmbn;
+  EXPECT_FALSE(test::ParseSinglePacket(kUnalignedPacket, &tmmbn));
+}
 }  // namespace webrtc

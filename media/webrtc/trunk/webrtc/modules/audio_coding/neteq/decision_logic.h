@@ -14,6 +14,7 @@
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/audio_coding/neteq/defines.h"
 #include "webrtc/modules/audio_coding/neteq/include/neteq.h"
+#include "webrtc/modules/audio_coding/neteq/tick_timer.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -25,7 +26,7 @@ class DelayManager;
 class Expand;
 class PacketBuffer;
 class SyncBuffer;
-struct RTPHeader;
+struct Packet;
 
 // This is the base class for the decision tree implementations. Derived classes
 // must implement the method GetDecisionSpecialized().
@@ -39,7 +40,8 @@ class DecisionLogic {
                                DecoderDatabase* decoder_database,
                                const PacketBuffer& packet_buffer,
                                DelayManager* delay_manager,
-                               BufferLevelFilter* buffer_level_filter);
+                               BufferLevelFilter* buffer_level_filter,
+                               const TickTimer* tick_timer);
 
   // Constructor.
   DecisionLogic(int fs_hz,
@@ -48,10 +50,10 @@ class DecisionLogic {
                 DecoderDatabase* decoder_database,
                 const PacketBuffer& packet_buffer,
                 DelayManager* delay_manager,
-                BufferLevelFilter* buffer_level_filter);
+                BufferLevelFilter* buffer_level_filter,
+                const TickTimer* tick_timer);
 
-  // Destructor.
-  virtual ~DecisionLogic() {}
+  virtual ~DecisionLogic();
 
   // Resets object to a clean state.
   void Reset();
@@ -64,21 +66,21 @@ class DecisionLogic {
 
   // Returns the operation that should be done next. |sync_buffer| and |expand|
   // are provided for reference. |decoder_frame_length| is the number of samples
-  // obtained from the last decoded frame. If there is a packet available, the
-  // packet header should be supplied in |packet_header|; otherwise it should
-  // be NULL. The mode resulting form the last call to NetEqImpl::GetAudio is
-  // supplied in |prev_mode|. If there is a DTMF event to play, |play_dtmf|
-  // should be set to true. The output variable |reset_decoder| will be set to
-  // true if a reset is required; otherwise it is left unchanged (i.e., it can
-  // remain true if it was true before the call).
-  // This method end with calling GetDecisionSpecialized to get the actual
-  // return value.
+  // obtained from the last decoded frame. If there is a packet available, it
+  // should be supplied in |next_packet|; otherwise it should be NULL. The mode
+  // resulting from the last call to NetEqImpl::GetAudio is supplied in
+  // |prev_mode|. If there is a DTMF event to play, |play_dtmf| should be set to
+  // true. The output variable |reset_decoder| will be set to true if a reset is
+  // required; otherwise it is left unchanged (i.e., it can remain true if it
+  // was true before the call).  This method end with calling
+  // GetDecisionSpecialized to get the actual return value.
   Operations GetDecision(const SyncBuffer& sync_buffer,
                          const Expand& expand,
                          size_t decoder_frame_length,
-                         const RTPHeader* packet_header,
+                         const Packet* next_packet,
                          Modes prev_mode,
                          bool play_dtmf,
+                         size_t generated_noise_samples,
                          bool* reset_decoder);
 
   // These methods test the |cng_state_| for different conditions.
@@ -101,10 +103,7 @@ class DecisionLogic {
 
   // Accessors and mutators.
   void set_sample_memory(int32_t value) { sample_memory_ = value; }
-  size_t generated_noise_samples() const { return generated_noise_samples_; }
-  void set_generated_noise_samples(size_t value) {
-    generated_noise_samples_ = value;
-  }
+  size_t noise_fast_forward() const { return noise_fast_forward_; }
   size_t packet_length_samples() const { return packet_length_samples_; }
   void set_packet_length_samples(size_t value) {
     packet_length_samples_ = value;
@@ -113,8 +112,8 @@ class DecisionLogic {
   NetEqPlayoutMode playout_mode() const { return playout_mode_; }
 
  protected:
-  // The value 6 sets maximum time-stretch rate to about 100 ms/s.
-  static const int kMinTimescaleInterval = 6;
+  // The value 5 sets maximum time-stretch rate to about 100 ms/s.
+  static const int kMinTimescaleInterval = 5;
 
   enum CngState {
     kCngOff,
@@ -124,21 +123,21 @@ class DecisionLogic {
 
   // Returns the operation that should be done next. |sync_buffer| and |expand|
   // are provided for reference. |decoder_frame_length| is the number of samples
-  // obtained from the last decoded frame. If there is a packet available, the
-  // packet header should be supplied in |packet_header|; otherwise it should
-  // be NULL. The mode resulting form the last call to NetEqImpl::GetAudio is
-  // supplied in |prev_mode|. If there is a DTMF event to play, |play_dtmf|
-  // should be set to true. The output variable |reset_decoder| will be set to
-  // true if a reset is required; otherwise it is left unchanged (i.e., it can
-  // remain true if it was true before the call).
-  // Should be implemented by derived classes.
+  // obtained from the last decoded frame. If there is a packet available, it
+  // should be supplied in |next_packet|; otherwise it should be NULL. The mode
+  // resulting from the last call to NetEqImpl::GetAudio is supplied in
+  // |prev_mode|. If there is a DTMF event to play, |play_dtmf| should be set to
+  // true. The output variable |reset_decoder| will be set to true if a reset is
+  // required; otherwise it is left unchanged (i.e., it can remain true if it
+  // was true before the call).  Should be implemented by derived classes.
   virtual Operations GetDecisionSpecialized(const SyncBuffer& sync_buffer,
                                             const Expand& expand,
                                             size_t decoder_frame_length,
-                                            const RTPHeader* packet_header,
+                                            const Packet* next_packet,
                                             Modes prev_mode,
                                             bool play_dtmf,
-                                            bool* reset_decoder) = 0;
+                                            bool* reset_decoder,
+                                            size_t generated_noise_samples) = 0;
 
   // Updates the |buffer_level_filter_| with the current buffer level
   // |buffer_size_packets|.
@@ -148,15 +147,16 @@ class DecisionLogic {
   const PacketBuffer& packet_buffer_;
   DelayManager* delay_manager_;
   BufferLevelFilter* buffer_level_filter_;
+  const TickTimer* tick_timer_;
   int fs_mult_;
   size_t output_size_samples_;
   CngState cng_state_;  // Remember if comfort noise is interrupted by other
                         // event (e.g., DTMF).
-  size_t generated_noise_samples_;
+  size_t noise_fast_forward_ = 0;
   size_t packet_length_samples_;
   int sample_memory_;
   bool prev_time_scale_;
-  int timescale_hold_off_;
+  std::unique_ptr<TickTimer::Countdown> timescale_countdown_;
   int num_consecutive_expands_;
   const NetEqPlayoutMode playout_mode_;
 

@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <assert.h>
 #include <string.h>
 
+#include "webrtc/base/checks.h"
 #include "webrtc/modules/audio_processing/ns/noise_suppression_x.h"
 #include "webrtc/modules/audio_processing/ns/nsx_core.h"
 
@@ -131,8 +131,8 @@ void WebRtcNsx_SpeechNoiseProb(NoiseSuppressionFixedC* inst,
   }
   tmp32no1 = WEBRTC_SPL_SHIFT_W32(tmp32no1, nShifts); // Q14
   // compute indicator function: sigmoid map
-  tableIndex = (int16_t)(tmp32no1 >> 14);
-  if ((tableIndex < 16) && (tableIndex >= 0)) {
+  if (tmp32no1 < (16 << 14) && tmp32no1 >= 0) {
+    tableIndex = (int16_t)(tmp32no1 >> 14);
     tmp16no2 = kIndicatorTable[tableIndex];
     tmp16no1 = kIndicatorTable[tableIndex + 1] - kIndicatorTable[tableIndex];
     frac = (int16_t)(tmp32no1 & 0x00003fff); // Q14
@@ -163,8 +163,8 @@ void WebRtcNsx_SpeechNoiseProb(NoiseSuppressionFixedC* inst,
     // FLOAT code
     // indicator1 = 0.5 * (tanh(sgnMap * widthPrior *
     //                          (threshPrior1 - tmpFloat1)) + 1.0);
-    tableIndex = (int16_t)(tmpU32no1 >> 14);
-    if (tableIndex < 16) {
+    if (tmpU32no1 < (16 << 14)) {
+      tableIndex = (int16_t)(tmpU32no1 >> 14);
       tmp16no2 = kIndicatorTable[tableIndex];
       tmp16no1 = kIndicatorTable[tableIndex + 1] - kIndicatorTable[tableIndex];
       frac = (int16_t)(tmpU32no1 & 0x00003fff); // Q14
@@ -184,7 +184,7 @@ void WebRtcNsx_SpeechNoiseProb(NoiseSuppressionFixedC* inst,
     if (inst->featureSpecDiff) {
       normTmp = WEBRTC_SPL_MIN(20 - inst->stages,
                                WebRtcSpl_NormU32(inst->featureSpecDiff));
-      assert(normTmp >= 0);
+      RTC_DCHECK_GE(normTmp, 0);
       tmpU32no1 = inst->featureSpecDiff << normTmp;  // Q(normTmp-2*stages)
       tmpU32no2 = inst->timeAvgMagnEnergy >> (20 - inst->stages - normTmp);
       if (tmpU32no2 > 0) {
@@ -210,8 +210,8 @@ void WebRtcNsx_SpeechNoiseProb(NoiseSuppressionFixedC* inst,
     /* FLOAT code
      indicator2 = 0.5 * (tanh(widthPrior * (tmpFloat1 - threshPrior2)) + 1.0);
      */
-    tableIndex = (int16_t)(tmpU32no1 >> 14);
-    if (tableIndex < 16) {
+    if (tmpU32no1 < (16 << 14)) {
+      tableIndex = (int16_t)(tmpU32no1 >> 14);
       tmp16no2 = kIndicatorTable[tableIndex];
       tmp16no1 = kIndicatorTable[tableIndex + 1] - kIndicatorTable[tableIndex];
       frac = (int16_t)(tmpU32no1 & 0x00003fff); // Q14

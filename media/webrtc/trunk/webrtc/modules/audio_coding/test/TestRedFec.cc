@@ -12,13 +12,13 @@
 
 #include <assert.h>
 
-#include "webrtc/common.h"
 #include "webrtc/common_types.h"
-#include "webrtc/engine_configurations.h"
+#include "webrtc/modules/audio_coding/codecs/audio_format_conversion.h"
 #include "webrtc/modules/audio_coding/include/audio_coding_module_typedefs.h"
 #include "webrtc/modules/audio_coding/test/utility.h"
 #include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/typedefs.h"
 
 #ifdef SUPPORT_RED_WB
 #undef SUPPORT_RED_WB
@@ -78,7 +78,8 @@ void TestRedFec::Perform() {
     if (!strcmp(myCodecParam.plname, "opus")) {
       myCodecParam.channels = 1;
     }
-    EXPECT_EQ(0, _acmB->RegisterReceiveCodec(myCodecParam));
+    EXPECT_EQ(true, _acmB->RegisterReceiveCodec(myCodecParam.pltype,
+                                                CodecInstToSdp(myCodecParam)));
   }
 
   // Create and connect the channel
@@ -461,7 +462,9 @@ void TestRedFec::Run() {
   while (!_inFileA.EndOfFile()) {
     EXPECT_GT(_inFileA.Read10MsData(audioFrame), 0);
     EXPECT_GE(_acmA->Add10MsData(audioFrame), 0);
-    EXPECT_EQ(0, _acmB->PlayoutData10Ms(outFreqHzB, &audioFrame));
+    bool muted;
+    EXPECT_EQ(0, _acmB->PlayoutData10Ms(outFreqHzB, &audioFrame, &muted));
+    ASSERT_FALSE(muted);
     _outFileB.Write10MsData(audioFrame.data_, audioFrame.samples_per_channel_);
   }
   _inFileA.Rewind();

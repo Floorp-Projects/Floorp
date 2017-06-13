@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
 #include "webrtc/base/fileutils.h"
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/pathutils.h"
@@ -15,14 +17,21 @@
 
 namespace rtc {
 
+#if defined (WEBRTC_ANDROID)
+// Fails on Android: https://bugs.chromium.org/p/webrtc/issues/detail?id=4364.
+#define MAYBE_FilesystemTest DISABLED_FilesystemTest
+#else
+#define MAYBE_FilesystemTest FilesystemTest
+#endif
+
 // Make sure we can get a temp folder for the later tests.
-TEST(FilesystemTest, GetTemporaryFolder) {
+TEST(MAYBE_FilesystemTest, GetTemporaryFolder) {
   Pathname path;
   EXPECT_TRUE(Filesystem::GetTemporaryFolder(path, true, NULL));
 }
 
 // Test creating a temp file, reading it back in, and deleting it.
-TEST(FilesystemTest, TestOpenFile) {
+TEST(MAYBE_FilesystemTest, TestOpenFile) {
   Pathname path;
   EXPECT_TRUE(Filesystem::GetTemporaryFolder(path, true, NULL));
   path.SetPathname(Filesystem::TempFilename(path, "ut"));
@@ -50,7 +59,7 @@ TEST(FilesystemTest, TestOpenFile) {
 }
 
 // Test opening a non-existent file.
-TEST(FilesystemTest, TestOpenBadFile) {
+TEST(MAYBE_FilesystemTest, TestOpenBadFile) {
   Pathname path;
   EXPECT_TRUE(Filesystem::GetTemporaryFolder(path, true, NULL));
   path.SetFilename("not an actual file");
@@ -61,30 +70,8 @@ TEST(FilesystemTest, TestOpenBadFile) {
   EXPECT_FALSE(fs != NULL);
 }
 
-// Test that CreatePrivateFile fails for existing files and succeeds for
-// non-existent ones.
-TEST(FilesystemTest, TestCreatePrivateFile) {
-  Pathname path;
-  EXPECT_TRUE(Filesystem::GetTemporaryFolder(path, true, NULL));
-  path.SetFilename("private_file_test");
-
-  // First call should succeed because the file doesn't exist yet.
-  EXPECT_TRUE(Filesystem::CreatePrivateFile(path));
-  // Next call should fail, because now it exists.
-  EXPECT_FALSE(Filesystem::CreatePrivateFile(path));
-
-  // Verify that we have permission to open the file for reading and writing.
-  scoped_ptr<FileStream> fs(Filesystem::OpenFile(path, "wb"));
-  EXPECT_TRUE(fs.get() != NULL);
-  // Have to close the file on Windows before it will let us delete it.
-  fs.reset();
-
-  // Verify that we have permission to delete the file.
-  EXPECT_TRUE(Filesystem::DeleteFile(path));
-}
-
 // Test checking for free disk space.
-TEST(FilesystemTest, TestGetDiskFreeSpace) {
+TEST(MAYBE_FilesystemTest, TestGetDiskFreeSpace) {
   // Note that we should avoid picking any file/folder which could be located
   // at the remotely mounted drive/device.
   Pathname path;
@@ -114,18 +101,6 @@ TEST(FilesystemTest, TestGetDiskFreeSpace) {
   // EXPECT_LT(static_cast<int64_t>(free1 * .9), free3);
   // EXPECT_LT(free3, static_cast<int64_t>(free1 * 1.1));
   EXPECT_GT(free3, 0);
-}
-
-// Tests that GetCurrentDirectory() returns something.
-TEST(FilesystemTest, TestGetCurrentDirectory) {
-  EXPECT_FALSE(Filesystem::GetCurrentDirectory().empty());
-}
-
-// Tests that GetAppPathname returns something.
-TEST(FilesystemTest, TestGetAppPathname) {
-  Pathname path;
-  EXPECT_TRUE(Filesystem::GetAppPathname(&path));
-  EXPECT_FALSE(path.empty());
 }
 
 }  // namespace rtc

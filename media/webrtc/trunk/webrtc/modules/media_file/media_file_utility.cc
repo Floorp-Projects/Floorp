@@ -18,10 +18,10 @@
 #include "webrtc/base/format_macros.h"
 #include "webrtc/common_audio/wav_header.h"
 #include "webrtc/common_types.h"
-#include "webrtc/engine_configurations.h"
 #include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/system_wrappers/include/file_wrapper.h"
 #include "webrtc/system_wrappers/include/trace.h"
+#include "webrtc/typedefs.h"
 
 namespace {
 
@@ -300,22 +300,22 @@ int32_t ModuleFileUtility::InitWavCodec(uint32_t samplesPerSec,
         {
             strcpy(codec_info_.plname, "L16");
             _codecId = kCodecL16_16kHz;
-            codec_info_.pacsize = 110; // XXX inexact!
-            codec_info_.plfreq = 11000; // XXX inexact!
+            codec_info_.pacsize = 110;
+            codec_info_.plfreq = 11000;
         }
         else if(samplesPerSec == 22050)
         {
             strcpy(codec_info_.plname, "L16");
             _codecId = kCodecL16_16kHz;
-            codec_info_.pacsize = 220; // XXX inexact!
-            codec_info_.plfreq = 22000; // XXX inexact!
+            codec_info_.pacsize = 220;
+            codec_info_.plfreq = 22000;
         }
         else if(samplesPerSec == 44100)
         {
             strcpy(codec_info_.plname, "L16");
             _codecId = kCodecL16_16kHz;
-            codec_info_.pacsize = 441;
-            codec_info_.plfreq = 44100;
+            codec_info_.pacsize = 440;
+            codec_info_.plfreq = 44000;
         }
         else if(samplesPerSec == 48000)
         {
@@ -736,6 +736,8 @@ int32_t ModuleFileUtility::WriteWavHeader(
     size_t lengthInBytes)
 {
     // Frame size in bytes for 10 ms of audio.
+    // TODO (hellner): 44.1 kHz has 440 samples frame size. Doesn't seem to
+    //                 be taken into consideration here!
     const size_t frameSize = (freq / 100) * channels;
 
     // Calculate the number of full frames that the wave file contain.
@@ -1454,12 +1456,11 @@ int32_t ModuleFileUtility::FileDurationMs(const char* fileName,
                      "failed to create InStream object!");
         return -1;
     }
-    if(inStreamObj->OpenFile(fileName, true) == -1)
-    {
-        delete inStreamObj;
-        WEBRTC_TRACE(kTraceError, kTraceFile, _id,
-                     "failed to open file %s!", fileName);
-        return -1;
+    if (!inStreamObj->OpenFile(fileName, true)) {
+      delete inStreamObj;
+      WEBRTC_TRACE(kTraceError, kTraceFile, _id, "failed to open file %s!",
+                   fileName);
+      return -1;
     }
 
     switch (fileFormat)

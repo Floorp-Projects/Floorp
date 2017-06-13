@@ -9,10 +9,12 @@
  */
 
 #include "webrtc/base/buffer.h"
+
+#include "webrtc/base/array_view.h"
 #include "webrtc/base/gunit.h"
 
-#include <algorithm>  // std::swap (pre-C++11)
-#include <utility>  // std::swap (C++11 and later)
+#include <type_traits>
+#include <utility>
 
 namespace rtc {
 
@@ -47,6 +49,7 @@ TEST(BufferTest, TestConstructData) {
   Buffer buf(kTestData, 7);
   EXPECT_EQ(buf.size(), 7u);
   EXPECT_EQ(buf.capacity(), 7u);
+  EXPECT_FALSE(buf.empty());
   EXPECT_EQ(0, memcmp(buf.data(), kTestData, 7));
 }
 
@@ -54,6 +57,7 @@ TEST(BufferTest, TestConstructDataWithCapacity) {
   Buffer buf(kTestData, 7, 14);
   EXPECT_EQ(buf.size(), 7u);
   EXPECT_EQ(buf.capacity(), 14u);
+  EXPECT_FALSE(buf.empty());
   EXPECT_EQ(0, memcmp(buf.data(), kTestData, 7));
 }
 
@@ -61,31 +65,21 @@ TEST(BufferTest, TestConstructArray) {
   Buffer buf(kTestData);
   EXPECT_EQ(buf.size(), 16u);
   EXPECT_EQ(buf.capacity(), 16u);
+  EXPECT_FALSE(buf.empty());
   EXPECT_EQ(0, memcmp(buf.data(), kTestData, 16));
-}
-
-TEST(BufferTest, TestConstructCopy) {
-  Buffer buf1(kTestData), buf2(buf1);
-  EXPECT_EQ(buf2.size(), 16u);
-  EXPECT_EQ(buf2.capacity(), 16u);
-  EXPECT_EQ(0, memcmp(buf2.data(), kTestData, 16));
-  EXPECT_NE(buf1.data(), buf2.data());
-  EXPECT_EQ(buf1, buf2);
-}
-
-TEST(BufferTest, TestAssign) {
-  Buffer buf1, buf2(kTestData, sizeof(kTestData), 256);
-  EXPECT_NE(buf1, buf2);
-  buf1 = buf2;
-  EXPECT_EQ(buf1, buf2);
-  EXPECT_NE(buf1.data(), buf2.data());
 }
 
 TEST(BufferTest, TestSetData) {
   Buffer buf(kTestData + 4, 7);
   buf.SetData(kTestData, 9);
   EXPECT_EQ(buf.size(), 9u);
-  EXPECT_EQ(buf.capacity(), 9u);
+  EXPECT_EQ(buf.capacity(), 7u * 3 / 2);
+  EXPECT_FALSE(buf.empty());
+  EXPECT_EQ(0, memcmp(buf.data(), kTestData, 9));
+  Buffer buf2;
+  buf2.SetData(buf);
+  EXPECT_EQ(buf.size(), 9u);
+  EXPECT_EQ(buf.capacity(), 7u * 3 / 2);
   EXPECT_EQ(0, memcmp(buf.data(), kTestData, 9));
 }
 
@@ -94,6 +88,26 @@ TEST(BufferTest, TestAppendData) {
   buf.AppendData(kTestData + 10, 2);
   const int8_t exp[] = {0x4, 0x5, 0x6, 0xa, 0xb};
   EXPECT_EQ(buf, Buffer(exp));
+  Buffer buf2;
+  buf2.AppendData(buf);
+  buf2.AppendData(rtc::ArrayView<uint8_t>(buf));
+  const int8_t exp2[] = {0x4, 0x5, 0x6, 0xa, 0xb, 0x4, 0x5, 0x6, 0xa, 0xb};
+  EXPECT_EQ(buf2, Buffer(exp2));
+}
+
+TEST(BufferTest, TestSetAndAppendWithUnknownArg) {
+  struct TestDataContainer {
+    size_t size() const { return 3; }
+    const uint8_t* data() const { return kTestData; }
+  };
+  Buffer buf;
+  buf.SetData(TestDataContainer());
+  EXPECT_EQ(3u, buf.size());
+  EXPECT_EQ(Buffer(kTestData, 3), buf);
+  buf.AppendData(TestDataContainer());
+  EXPECT_EQ(6u, buf.size());
+  EXPECT_EQ(0, memcmp(buf.data(), kTestData, 3));
+  EXPECT_EQ(0, memcmp(buf.data() + 3, kTestData, 3));
 }
 
 TEST(BufferTest, TestSetSizeSmaller) {
@@ -102,6 +116,7 @@ TEST(BufferTest, TestSetSizeSmaller) {
   buf.SetSize(10);
   EXPECT_EQ(buf.size(), 10u);
   EXPECT_EQ(buf.capacity(), 15u);  // Hasn't shrunk.
+  EXPECT_FALSE(buf.empty());
   EXPECT_EQ(buf, Buffer(kTestData, 10));
 }
 
@@ -110,9 +125,11 @@ TEST(BufferTest, TestSetSizeLarger) {
   buf.SetData(kTestData, 15);
   EXPECT_EQ(buf.size(), 15u);
   EXPECT_EQ(buf.capacity(), 15u);
+  EXPECT_FALSE(buf.empty());
   buf.SetSize(20);
   EXPECT_EQ(buf.size(), 20u);
-  EXPECT_EQ(buf.capacity(), 20u);  // Has grown.
+  EXPECT_EQ(buf.capacity(), 15u * 3 / 2);  // Has grown.
+  EXPECT_FALSE(buf.empty());
   EXPECT_EQ(0, memcmp(buf.data(), kTestData, 15));
 }
 
@@ -122,6 +139,7 @@ TEST(BufferTest, TestEnsureCapacitySmaller) {
   buf.EnsureCapacity(4);
   EXPECT_EQ(buf.capacity(), 16u);     // Hasn't shrunk.
   EXPECT_EQ(buf.data<char>(), data);  // No reallocation.
+  EXPECT_FALSE(buf.empty());
   EXPECT_EQ(buf, Buffer(kTestData));
 }
 
@@ -132,34 +150,39 @@ TEST(BufferTest, TestEnsureCapacityLarger) {
   EXPECT_EQ(buf.capacity(), 10u);
   buf.AppendData(kTestData + 5, 5);
   EXPECT_EQ(buf.data<int8_t>(), data);  // No reallocation.
+  EXPECT_FALSE(buf.empty());
   EXPECT_EQ(buf, Buffer(kTestData, 10));
 }
 
 TEST(BufferTest, TestMoveConstruct) {
   Buffer buf1(kTestData, 3, 40);
   const uint8_t* data = buf1.data();
-  Buffer buf2(buf1.DEPRECATED_Pass());
+  Buffer buf2(std::move(buf1));
   EXPECT_EQ(buf2.size(), 3u);
   EXPECT_EQ(buf2.capacity(), 40u);
   EXPECT_EQ(buf2.data(), data);
+  EXPECT_FALSE(buf2.empty());
   buf1.Clear();
   EXPECT_EQ(buf1.size(), 0u);
   EXPECT_EQ(buf1.capacity(), 0u);
   EXPECT_EQ(buf1.data(), nullptr);
+  EXPECT_TRUE(buf1.empty());
 }
 
 TEST(BufferTest, TestMoveAssign) {
   Buffer buf1(kTestData, 3, 40);
   const uint8_t* data = buf1.data();
   Buffer buf2(kTestData);
-  buf2 = buf1.DEPRECATED_Pass();
+  buf2 = std::move(buf1);
   EXPECT_EQ(buf2.size(), 3u);
   EXPECT_EQ(buf2.capacity(), 40u);
   EXPECT_EQ(buf2.data(), data);
+  EXPECT_FALSE(buf2.empty());
   buf1.Clear();
   EXPECT_EQ(buf1.size(), 0u);
   EXPECT_EQ(buf1.capacity(), 0u);
   EXPECT_EQ(buf1.data(), nullptr);
+  EXPECT_TRUE(buf1.empty());
 }
 
 TEST(BufferTest, TestSwap) {
@@ -172,9 +195,225 @@ TEST(BufferTest, TestSwap) {
   EXPECT_EQ(buf1.size(), 6u);
   EXPECT_EQ(buf1.capacity(), 40u);
   EXPECT_EQ(buf1.data(), data2);
+  EXPECT_FALSE(buf1.empty());
   EXPECT_EQ(buf2.size(), 3u);
   EXPECT_EQ(buf2.capacity(), 3u);
   EXPECT_EQ(buf2.data(), data1);
+  EXPECT_FALSE(buf2.empty());
+}
+
+TEST(BufferTest, TestClear) {
+  Buffer buf;
+  buf.SetData(kTestData, 15);
+  EXPECT_EQ(buf.size(), 15u);
+  EXPECT_EQ(buf.capacity(), 15u);
+  EXPECT_FALSE(buf.empty());
+  const char *data = buf.data<char>();
+  buf.Clear();
+  EXPECT_EQ(buf.size(), 0u);
+  EXPECT_EQ(buf.capacity(), 15u);  // Hasn't shrunk.
+  EXPECT_EQ(buf.data<char>(), data); // No reallocation.
+  EXPECT_TRUE(buf.empty());
+}
+
+TEST(BufferTest, TestLambdaSetAppend) {
+  auto setter = [] (rtc::ArrayView<uint8_t> av) {
+    for (int i = 0; i != 15; ++i)
+      av[i] = kTestData[i];
+    return 15;
+  };
+
+  Buffer buf1;
+  buf1.SetData(kTestData, 15);
+  buf1.AppendData(kTestData, 15);
+
+  Buffer buf2;
+  EXPECT_EQ(buf2.SetData(15, setter), 15u);
+  EXPECT_EQ(buf2.AppendData(15, setter), 15u);
+  EXPECT_EQ(buf1, buf2);
+  EXPECT_EQ(buf1.capacity(), buf2.capacity());
+  EXPECT_FALSE(buf1.empty());
+  EXPECT_FALSE(buf2.empty());
+}
+
+TEST(BufferTest, TestLambdaSetAppendSigned) {
+  auto setter = [] (rtc::ArrayView<int8_t> av) {
+    for (int i = 0; i != 15; ++i)
+      av[i] = kTestData[i];
+    return 15;
+  };
+
+  Buffer buf1;
+  buf1.SetData(kTestData, 15);
+  buf1.AppendData(kTestData, 15);
+
+  Buffer buf2;
+  EXPECT_EQ(buf2.SetData<int8_t>(15, setter), 15u);
+  EXPECT_EQ(buf2.AppendData<int8_t>(15, setter), 15u);
+  EXPECT_EQ(buf1, buf2);
+  EXPECT_EQ(buf1.capacity(), buf2.capacity());
+  EXPECT_FALSE(buf1.empty());
+  EXPECT_FALSE(buf2.empty());
+}
+
+TEST(BufferTest, TestLambdaAppendEmpty) {
+  auto setter = [] (rtc::ArrayView<uint8_t> av) {
+    for (int i = 0; i != 15; ++i)
+      av[i] = kTestData[i];
+    return 15;
+  };
+
+  Buffer buf1;
+  buf1.SetData(kTestData, 15);
+
+  Buffer buf2;
+  EXPECT_EQ(buf2.AppendData(15, setter), 15u);
+  EXPECT_EQ(buf1, buf2);
+  EXPECT_EQ(buf1.capacity(), buf2.capacity());
+  EXPECT_FALSE(buf1.empty());
+  EXPECT_FALSE(buf2.empty());
+}
+
+TEST(BufferTest, TestLambdaAppendPartial) {
+  auto setter = [] (rtc::ArrayView<uint8_t> av) {
+    for (int i = 0; i != 7; ++i)
+      av[i] = kTestData[i];
+    return 7;
+  };
+
+  Buffer buf;
+  EXPECT_EQ(buf.AppendData(15, setter), 7u);
+  EXPECT_EQ(buf.size(), 7u);            // Size is exactly what we wrote.
+  EXPECT_GE(buf.capacity(), 7u);        // Capacity is valid.
+  EXPECT_NE(buf.data<char>(), nullptr); // Data is actually stored.
+  EXPECT_FALSE(buf.empty());
+}
+
+TEST(BufferTest, TestMutableLambdaSetAppend) {
+  uint8_t magic_number = 17;
+  auto setter = [magic_number] (rtc::ArrayView<uint8_t> av) mutable {
+    for (int i = 0; i != 15; ++i) {
+      av[i] = magic_number;
+      ++magic_number;
+    }
+    return 15;
+  };
+
+  EXPECT_EQ(magic_number, 17);
+
+  Buffer buf;
+  EXPECT_EQ(buf.SetData(15, setter), 15u);
+  EXPECT_EQ(buf.AppendData(15, setter), 15u);
+  EXPECT_EQ(buf.size(), 30u);           // Size is exactly what we wrote.
+  EXPECT_GE(buf.capacity(), 30u);       // Capacity is valid.
+  EXPECT_NE(buf.data<char>(), nullptr); // Data is actually stored.
+  EXPECT_FALSE(buf.empty());
+
+  for (uint8_t i = 0; i != buf.size(); ++i) {
+    EXPECT_EQ(buf.data()[i], magic_number + i);
+  }
+}
+
+TEST(BufferTest, TestBracketRead) {
+  Buffer buf(kTestData, 7);
+  EXPECT_EQ(buf.size(), 7u);
+  EXPECT_EQ(buf.capacity(), 7u);
+  EXPECT_NE(buf.data(), nullptr);
+  EXPECT_FALSE(buf.empty());
+
+  for (size_t i = 0; i != 7u; ++i) {
+    EXPECT_EQ(buf[i], kTestData[i]);
+  }
+}
+
+TEST(BufferTest, TestBracketReadConst) {
+  Buffer buf(kTestData, 7);
+  EXPECT_EQ(buf.size(), 7u);
+  EXPECT_EQ(buf.capacity(), 7u);
+  EXPECT_NE(buf.data(), nullptr);
+  EXPECT_FALSE(buf.empty());
+
+  const Buffer& cbuf = buf;
+
+  for (size_t i = 0; i != 7u; ++i) {
+    EXPECT_EQ(cbuf[i], kTestData[i]);
+  }
+}
+
+TEST(BufferTest, TestBracketWrite) {
+  Buffer buf(7);
+  EXPECT_EQ(buf.size(), 7u);
+  EXPECT_EQ(buf.capacity(), 7u);
+  EXPECT_NE(buf.data(), nullptr);
+  EXPECT_FALSE(buf.empty());
+
+  for (size_t i = 0; i != 7u; ++i) {
+    buf[i] = kTestData[i];
+  }
+
+  for (size_t i = 0; i != 7u; ++i) {
+    EXPECT_EQ(buf[i], kTestData[i]);
+  }
+}
+
+TEST(BufferTest, TestInt16) {
+  static constexpr int16_t test_data[] = {14, 15, 16, 17, 18};
+  BufferT<int16_t> buf(test_data);
+  EXPECT_EQ(buf.size(), 5u);
+  EXPECT_EQ(buf.capacity(), 5u);
+  EXPECT_NE(buf.data(), nullptr);
+  EXPECT_FALSE(buf.empty());
+  for (size_t i = 0; i != buf.size(); ++i) {
+    EXPECT_EQ(test_data[i], buf[i]);
+  }
+  BufferT<int16_t> buf2(test_data);
+  EXPECT_EQ(buf, buf2);
+  buf2[0] = 9;
+  EXPECT_NE(buf, buf2);
+}
+
+TEST(BufferTest, TestFloat) {
+  static constexpr float test_data[] = {14, 15, 16, 17, 18};
+  BufferT<float> buf;
+  EXPECT_EQ(buf.size(), 0u);
+  EXPECT_EQ(buf.capacity(), 0u);
+  EXPECT_EQ(buf.data(), nullptr);
+  EXPECT_TRUE(buf.empty());
+  buf.SetData(test_data);
+  EXPECT_EQ(buf.size(), 5u);
+  EXPECT_EQ(buf.capacity(), 5u);
+  EXPECT_NE(buf.data(), nullptr);
+  EXPECT_FALSE(buf.empty());
+  float* p1 = buf.data();
+  while (buf.data() == p1) {
+    buf.AppendData(test_data);
+  }
+  EXPECT_EQ(buf.size(), buf.capacity());
+  EXPECT_GT(buf.size(), 5u);
+  EXPECT_EQ(buf.size() % 5, 0u);
+  EXPECT_NE(buf.data(), nullptr);
+  for (size_t i = 0; i != buf.size(); ++i) {
+    EXPECT_EQ(test_data[i % 5], buf[i]);
+  }
+}
+
+TEST(BufferTest, TestStruct) {
+  struct BloodStone {
+    bool blood;
+    const char* stone;
+  };
+  BufferT<BloodStone> buf(4);
+  EXPECT_EQ(buf.size(), 4u);
+  EXPECT_EQ(buf.capacity(), 4u);
+  EXPECT_NE(buf.data(), nullptr);
+  EXPECT_FALSE(buf.empty());
+  BufferT<BloodStone*> buf2(4);
+  for (size_t i = 0; i < buf2.size(); ++i) {
+    buf2[i] = &buf[i];
+  }
+  static const char kObsidian[] = "obsidian";
+  buf2[2]->stone = kObsidian;
+  EXPECT_EQ(kObsidian, buf[2].stone);
 }
 
 }  // namespace rtc

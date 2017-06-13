@@ -13,6 +13,9 @@
 #if defined(WEBRTC_WIN)
 #include <io.h>
 #else
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 #endif
 
@@ -34,7 +37,23 @@ FILE* FdopenPlatformFileForWriting(PlatformFile file) {
 bool ClosePlatformFile(PlatformFile file) {
   return CloseHandle(file) != 0;
 }
-#else
+
+bool RemoveFile(const std::string& path) {
+  return ::DeleteFile(ToUtf16(path).c_str()) != 0;
+}
+
+PlatformFile OpenPlatformFile(const std::string& path) {
+  return ::CreateFile(ToUtf16(path).c_str(), GENERIC_READ | GENERIC_WRITE, 0,
+                      nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+}
+
+PlatformFile CreatePlatformFile(const std::string& path) {
+  return ::CreateFile(ToUtf16(path).c_str(), GENERIC_READ | GENERIC_WRITE, 0,
+                      nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+}
+
+#else  // defined(WEBRTC_WIN)
+
 const PlatformFile kInvalidPlatformFileValue = -1;
 
 FILE* FdopenPlatformFileForWriting(PlatformFile file) {
@@ -44,6 +63,19 @@ FILE* FdopenPlatformFileForWriting(PlatformFile file) {
 bool ClosePlatformFile(PlatformFile file) {
   return close(file);
 }
+
+bool RemoveFile(const std::string& path) {
+  return ::unlink(path.c_str()) == 0;
+}
+
+PlatformFile OpenPlatformFile(const std::string& path) {
+  return ::open(path.c_str(), O_RDWR);
+}
+
+PlatformFile CreatePlatformFile(const std::string& path) {
+  return ::open(path.c_str(), O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR);
+}
+
 #endif
 
 }  // namespace rtc

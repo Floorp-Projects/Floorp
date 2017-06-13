@@ -13,6 +13,7 @@
 
 #include "webrtc/voice_engine/include/voe_base.h"
 
+#include "webrtc/base/criticalsection.h"
 #include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/voice_engine/shared_data.h"
 
@@ -28,20 +29,24 @@ class VoEBaseImpl : public VoEBase,
   int DeRegisterVoiceEngineObserver() override;
 
   int Init(AudioDeviceModule* external_adm = nullptr,
-           AudioProcessing* audioproc = nullptr) override;
+           AudioProcessing* audioproc = nullptr,
+           const rtc::scoped_refptr<AudioDecoderFactory>& decoder_factory =
+               nullptr) override;
   AudioProcessing* audio_processing() override {
     return shared_->audio_processing();
+  }
+  AudioDeviceModule* audio_device_module() override {
+    return shared_->audio_device();
   }
   int Terminate() override;
 
   int CreateChannel() override;
-  int CreateChannel(const Config& config) override;
+  int CreateChannel(const ChannelConfig& config) override;
   int DeleteChannel(int channel) override;
 
   int StartReceive(int channel) override;
   int StartPlayout(int channel) override;
   int StartSend(int channel) override;
-  int StopReceive(int channel) override;
   int StopPlayout(int channel) override;
   int StopSend(int channel) override;
 
@@ -72,22 +77,6 @@ class VoEBaseImpl : public VoEBase,
                            size_t& nSamplesOut,
                            int64_t* elapsed_time_ms,
                            int64_t* ntp_time_ms) override;
-  int OnDataAvailable(const int voe_channels[],
-                      size_t number_of_voe_channels,
-                      const int16_t* audio_data,
-                      int sample_rate,
-                      size_t number_of_channels,
-                      size_t number_of_frames,
-                      int audio_delay_milliseconds,
-                      int current_volume,
-                      bool key_pressed,
-                      bool need_audio_processing) override;
-  void OnData(int voe_channel,
-              const void* audio_data,
-              int bits_per_sample,
-              int sample_rate,
-              size_t number_of_channels,
-              size_t number_of_frames) override;
   void PushCaptureData(int voe_channel,
                        const void* audio_data,
                        int bits_per_sample,
@@ -138,7 +127,8 @@ class VoEBaseImpl : public VoEBase,
   // channel.
   int InitializeChannel(voe::ChannelOwner* channel_owner);
   VoiceEngineObserver* voiceEngineObserverPtr_;
-  CriticalSectionWrapper& callbackCritSect_;
+  rtc::CriticalSection callbackCritSect_;
+  rtc::scoped_refptr<AudioDecoderFactory> decoder_factory_;
 
   AudioFrame audioFrame_;
   voe::SharedData* shared_;

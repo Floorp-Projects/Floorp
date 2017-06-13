@@ -24,9 +24,9 @@
  *
  */
 
-#include <assert.h>
 #include <stdlib.h>
 
+#include "webrtc/base/checks.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
 // TODO(bjorn/kma): Consolidate function pairs (e.g. combine
@@ -38,7 +38,7 @@ int16_t WebRtcSpl_MaxAbsValueW16C(const int16_t* vector, size_t length) {
   size_t i = 0;
   int absolute = 0, maximum = 0;
 
-  assert(length > 0);
+  RTC_DCHECK_GT(length, 0);
 
   for (i = 0; i < length; i++) {
     absolute = abs((int)vector[i]);
@@ -64,7 +64,7 @@ int32_t WebRtcSpl_MaxAbsValueW32C(const int32_t* vector, size_t length) {
   uint32_t absolute = 0, maximum = 0;
   size_t i = 0;
 
-  assert(length > 0);
+  RTC_DCHECK_GT(length, 0);
 
   for (i = 0; i < length; i++) {
     absolute = abs((int)vector[i]);
@@ -83,7 +83,7 @@ int16_t WebRtcSpl_MaxValueW16C(const int16_t* vector, size_t length) {
   int16_t maximum = WEBRTC_SPL_WORD16_MIN;
   size_t i = 0;
 
-  assert(length > 0);
+  RTC_DCHECK_GT(length, 0);
 
   for (i = 0; i < length; i++) {
     if (vector[i] > maximum)
@@ -97,7 +97,7 @@ int32_t WebRtcSpl_MaxValueW32C(const int32_t* vector, size_t length) {
   int32_t maximum = WEBRTC_SPL_WORD32_MIN;
   size_t i = 0;
 
-  assert(length > 0);
+  RTC_DCHECK_GT(length, 0);
 
   for (i = 0; i < length; i++) {
     if (vector[i] > maximum)
@@ -111,7 +111,7 @@ int16_t WebRtcSpl_MinValueW16C(const int16_t* vector, size_t length) {
   int16_t minimum = WEBRTC_SPL_WORD16_MAX;
   size_t i = 0;
 
-  assert(length > 0);
+  RTC_DCHECK_GT(length, 0);
 
   for (i = 0; i < length; i++) {
     if (vector[i] < minimum)
@@ -125,7 +125,7 @@ int32_t WebRtcSpl_MinValueW32C(const int32_t* vector, size_t length) {
   int32_t minimum = WEBRTC_SPL_WORD32_MAX;
   size_t i = 0;
 
-  assert(length > 0);
+  RTC_DCHECK_GT(length, 0);
 
   for (i = 0; i < length; i++) {
     if (vector[i] < minimum)
@@ -141,7 +141,7 @@ size_t WebRtcSpl_MaxAbsIndexW16(const int16_t* vector, size_t length) {
   size_t i = 0, index = 0;
   int absolute = 0, maximum = 0;
 
-  assert(length > 0);
+  RTC_DCHECK_GT(length, 0);
 
   for (i = 0; i < length; i++) {
     absolute = abs((int)vector[i]);
@@ -160,7 +160,7 @@ size_t WebRtcSpl_MaxIndexW16(const int16_t* vector, size_t length) {
   size_t i = 0, index = 0;
   int16_t maximum = WEBRTC_SPL_WORD16_MIN;
 
-  assert(length > 0);
+  RTC_DCHECK_GT(length, 0);
 
   for (i = 0; i < length; i++) {
     if (vector[i] > maximum) {
@@ -177,7 +177,7 @@ size_t WebRtcSpl_MaxIndexW32(const int32_t* vector, size_t length) {
   size_t i = 0, index = 0;
   int32_t maximum = WEBRTC_SPL_WORD32_MIN;
 
-  assert(length > 0);
+  RTC_DCHECK_GT(length, 0);
 
   for (i = 0; i < length; i++) {
     if (vector[i] > maximum) {
@@ -194,7 +194,7 @@ size_t WebRtcSpl_MinIndexW16(const int16_t* vector, size_t length) {
   size_t i = 0, index = 0;
   int16_t minimum = WEBRTC_SPL_WORD16_MAX;
 
-  assert(length > 0);
+  RTC_DCHECK_GT(length, 0);
 
   for (i = 0; i < length; i++) {
     if (vector[i] < minimum) {
@@ -211,7 +211,7 @@ size_t WebRtcSpl_MinIndexW32(const int32_t* vector, size_t length) {
   size_t i = 0, index = 0;
   int32_t minimum = WEBRTC_SPL_WORD32_MAX;
 
-  assert(length > 0);
+  RTC_DCHECK_GT(length, 0);
 
   for (i = 0; i < length; i++) {
     if (vector[i] < minimum) {

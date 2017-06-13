@@ -128,6 +128,16 @@ class DesktopRect {
   void Translate(int32_t dx, int32_t dy);
   void Translate(DesktopVector d) { Translate(d.x(), d.y()); };
 
+  // Enlarges current DesktopRect by subtracting |left_offset| and |top_offset|
+  // from |left_| and |top_|, and adding |right_offset| and |bottom_offset| to
+  // |right_| and |bottom_|. This function does not normalize the result, so
+  // |left_| and |top_| may be less than zero or larger than |right_| and
+  // |bottom_|.
+  void Extend(int32_t left_offset,
+              int32_t top_offset,
+              int32_t right_offset,
+              int32_t bottom_offset);
+
  private:
   DesktopRect(int32_t left, int32_t top, int32_t right, int32_t bottom)
       : left_(left), top_(top), right_(right), bottom_(bottom) {

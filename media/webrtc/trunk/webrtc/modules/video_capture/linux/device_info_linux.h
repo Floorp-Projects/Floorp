@@ -13,11 +13,6 @@
 
 #include "webrtc/modules/video_capture/device_info_impl.h"
 #include "webrtc/modules/video_capture/video_capture_impl.h"
-#ifdef WEBRTC_LINUX
-#include "webrtc/base/platform_thread.h"
-#include "webrtc/system_wrappers/include/atomic32.h"
-#include <sys/inotify.h>
-#endif
 
 namespace webrtc
 {
@@ -26,7 +21,7 @@ namespace videocapturemodule
 class DeviceInfoLinux: public DeviceInfoImpl
 {
 public:
-    DeviceInfoLinux(const int32_t id);
+    DeviceInfoLinux();
     virtual ~DeviceInfoLinux();
     virtual uint32_t NumberOfDevices();
     virtual int32_t GetDeviceName(
@@ -36,8 +31,7 @@ public:
         char* deviceUniqueIdUTF8,
         uint32_t deviceUniqueIdUTF8Length,
         char* productUniqueIdUTF8=0,
-        uint32_t productUniqueIdUTF8Length=0,
-        pid_t* pid=0);
+        uint32_t productUniqueIdUTF8Length=0);
     /*
     * Fills the membervariable _captureCapabilities with capabilites for the given device name.
     */
@@ -53,18 +47,6 @@ public:
 private:
 
     bool IsDeviceNameMatches(const char* name, const char* deviceUniqueIdUTF8);
-
-#ifdef WEBRTC_LINUX
-    void HandleEvent(inotify_event* event, int fd);
-    int EventCheck(int fd);
-    int HandleEvents(int fd);
-    int ProcessInotifyEvents();
-    rtc::scoped_ptr<rtc::PlatformThread> _inotifyEventThread;
-    static bool InotifyEventThread(void*);
-    bool InotifyProcess();
-    int _fd_v4l, _fd_snd, _fd_dev, _wd_v4l, _wd_snd, _wd_dev; /* accessed on InotifyEventThread thread */
-    Atomic32 _isShutdown;
-#endif
 };
 }  // namespace videocapturemodule
 }  // namespace webrtc

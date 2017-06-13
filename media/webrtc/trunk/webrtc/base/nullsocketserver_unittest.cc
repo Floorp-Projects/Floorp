@@ -30,14 +30,14 @@ class NullSocketServerTest
 TEST_F(NullSocketServerTest, WaitAndSet) {
   Thread thread;
   EXPECT_TRUE(thread.Start());
-  thread.Post(this, 0);
+  thread.Post(RTC_FROM_HERE, this, 0);
   // The process_io will be ignored.
   const bool process_io = true;
   EXPECT_TRUE_WAIT(ss_.Wait(SocketServer::kForever, process_io), kTimeout);
 }
 
 TEST_F(NullSocketServerTest, TestWait) {
-  uint32_t start = Time();
+  int64_t start = TimeMillis();
   ss_.Wait(200, true);
   // The actual wait time is dependent on the resolution of the timer used by
   // the Event class. Allow for the event to signal ~20ms early.

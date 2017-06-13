@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
 #include "webrtc/modules/video_coding/test/receiver_tests.h"
 #include "webrtc/modules/video_coding/test/vcm_payload_sink_factory.h"
 #include "webrtc/system_wrappers/include/trace.h"
@@ -51,7 +53,7 @@ int RtpPlay(const CmdArgs& args) {
   webrtc::rtpplayer::VcmPayloadSinkFactory factory(
       output_file, &clock, kConfigProtectionEnabled, kConfigProtectionMethod,
       kConfigRttMs, kConfigRenderDelayMs, kConfigMinPlayoutDelayMs);
-  rtc::scoped_ptr<webrtc::rtpplayer::RtpPlayerInterface> rtp_player(
+  std::unique_ptr<webrtc::rtpplayer::RtpPlayerInterface> rtp_player(
       webrtc::rtpplayer::Create(args.inputFile, &factory, &clock, payload_types,
                                 kConfigLossRate, kConfigRttMs,
                                 kConfigReordering));

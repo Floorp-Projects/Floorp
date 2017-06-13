@@ -11,8 +11,9 @@
 #ifndef WEBRTC_COMMON_AUDIO_VAD_INCLUDE_VAD_H_
 #define WEBRTC_COMMON_AUDIO_VAD_INCLUDE_VAD_H_
 
+#include <memory>
+
 #include "webrtc/base/checks.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_audio/vad/include/webrtc_vad.h"
 #include "webrtc/typedefs.h"
 
@@ -43,7 +44,7 @@ class Vad {
 };
 
 // Returns a Vad instance that's implemented on top of WebRtcVad.
-rtc::scoped_ptr<Vad> CreateVad(Vad::Aggressiveness aggressiveness);
+std::unique_ptr<Vad> CreateVad(Vad::Aggressiveness aggressiveness);
 
 }  // namespace webrtc
 

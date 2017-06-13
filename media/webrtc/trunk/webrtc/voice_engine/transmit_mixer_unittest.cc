@@ -10,7 +10,7 @@
 
 #include "webrtc/voice_engine/transmit_mixer.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/voice_engine/include/voe_external_media.h"
 
 namespace webrtc {

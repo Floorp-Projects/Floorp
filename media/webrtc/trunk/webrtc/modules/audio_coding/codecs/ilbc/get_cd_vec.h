@@ -19,12 +19,18 @@
 #ifndef WEBRTC_MODULES_AUDIO_CODING_CODECS_ILBC_MAIN_SOURCE_GET_CD_VEC_H_
 #define WEBRTC_MODULES_AUDIO_CODING_CODECS_ILBC_MAIN_SOURCE_GET_CD_VEC_H_
 
-void WebRtcIlbcfix_GetCbVec(
-    int16_t *cbvec,   /* (o) Constructed codebook vector */
-    int16_t *mem,   /* (i) Codebook buffer */
+#include <stdbool.h>
+
+#include "defines.h"
+
+// Returns true on success, false on failure. In case of failure, the decoder
+// state may be corrupted and needs resetting.
+bool WebRtcIlbcfix_GetCbVec(
+    int16_t* cbvec, /* (o) Constructed codebook vector */
+    int16_t* mem,   /* (i) Codebook buffer */
     size_t index,   /* (i) Codebook index */
-    size_t lMem,   /* (i) Length of codebook buffer */
-    size_t cbveclen   /* (i) Codebook vector length */
-                            );
+    size_t lMem,    /* (i) Length of codebook buffer */
+    size_t cbveclen /* (i) Codebook vector length */
+    ) WARN_UNUSED_RESULT;
 
 #endif

@@ -18,7 +18,7 @@
 
 namespace webrtc {
 
-static const int kBurstDeltaThresholdMs  = 5;
+static const int kBurstDeltaThresholdMs = 5;
 
 InterArrival::InterArrival(uint32_t timestamp_group_length_ticks,
                            double timestamp_to_ms_coeff,
@@ -27,10 +27,12 @@ InterArrival::InterArrival(uint32_t timestamp_group_length_ticks,
       current_timestamp_group_(),
       prev_timestamp_group_(),
       timestamp_to_ms_coeff_(timestamp_to_ms_coeff),
-      burst_grouping_(enable_burst_grouping) {}
+      burst_grouping_(enable_burst_grouping),
+      num_consecutive_reordered_packets_(0) {}
 
 bool InterArrival::ComputeDeltas(uint32_t timestamp,
                                  int64_t arrival_time_ms,
+                                 int64_t system_time_ms,
                                  size_t packet_size,
                                  uint32_t* timestamp_delta,
                                  int64_t* arrival_time_delta_ms,
@@ -53,13 +55,32 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
                          prev_timestamp_group_.timestamp;
       *arrival_time_delta_ms = current_timestamp_group_.complete_time_ms -
                                prev_timestamp_group_.complete_time_ms;
+      // Check system time differences to see if we have an unproportional jump
+      // in arrival time. In that case reset the inter-arrival computations.
+      int64_t system_time_delta_ms =
+          current_timestamp_group_.last_system_time_ms -
+          prev_timestamp_group_.last_system_time_ms;
+      if (*arrival_time_delta_ms - system_time_delta_ms >=
+          kArrivalTimeOffsetThresholdMs) {
+        LOG(LS_WARNING) << "The arrival time clock offset has changed (diff = "
+                        << *arrival_time_delta_ms - system_time_delta_ms
+                        << " ms), resetting.";
+        Reset();
+        return false;
+      }
       if (*arrival_time_delta_ms < 0) {
         // The group of packets has been reordered since receiving its local
         // arrival timestamp.
-        LOG(LS_WARNING) << "Packets are being reordered on the path from the "
-                           "socket to the bandwidth estimator. Ignoring this "
-                           "packet for bandwidth estimation.";
+        ++num_consecutive_reordered_packets_;
+        if (num_consecutive_reordered_packets_ >= kReorderedResetThreshold) {
+          LOG(LS_WARNING) << "Packets are being reordered on the path from the "
+                             "socket to the bandwidth estimator. Ignoring this "
+                             "packet for bandwidth estimation, resetting.";
+          Reset();
+        }
         return false;
+      } else {
+        num_consecutive_reordered_packets_ = 0;
       }
       assert(*arrival_time_delta_ms >= 0);
       *packet_size_delta = static_cast<int>(current_timestamp_group_.size) -
@@ -78,6 +99,7 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
   // Accumulate the frame size.
   current_timestamp_group_.size += packet_size;
   current_timestamp_group_.complete_time_ms = arrival_time_ms;
+  current_timestamp_group_.last_system_time_ms = system_time_ms;
 
   return calculated_deltas;
 }
@@ -125,5 +147,11 @@ bool InterArrival::BelongsToBurst(int64_t arrival_time_ms,
   int propagation_delta_ms = arrival_time_delta_ms - ts_delta_ms;
   return propagation_delta_ms < 0 &&
       arrival_time_delta_ms <= kBurstDeltaThresholdMs;
+}
+
+void InterArrival::Reset() {
+  num_consecutive_reordered_packets_ = 0;
+  current_timestamp_group_ = TimestampGroup();
+  prev_timestamp_group_ = TimestampGroup();
 }
 }  // namespace webrtc

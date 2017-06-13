@@ -15,7 +15,7 @@
 
 #include "webrtc/typedefs.h"
 
-#if _WIN32
+#ifdef _WIN32
 #include "webrtc/modules/audio_conference_mixer/source/memory_pool_win.h"
 #else
 #include "webrtc/modules/audio_conference_mixer/source/memory_pool_posix.h"

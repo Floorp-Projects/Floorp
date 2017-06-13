@@ -11,15 +11,15 @@
 #ifndef WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_PULSE_LINUX_H
 #define WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_PULSE_LINUX_H
 
+#include <memory>
+
 #include "webrtc/base/platform_thread.h"
 #include "webrtc/base/thread_checker.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
 #include "webrtc/modules/audio_device/linux/audio_mixer_manager_pulse_linux.h"
 #include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
-#ifdef USE_X11
 #include <X11/Xlib.h>
-#endif
 #include <pulse/pulseaudio.h>
 
 // We define this flag if it's missing from our headers, because we want to be
@@ -103,7 +103,7 @@ public:
         AudioDeviceModule::AudioLayer& audioLayer) const override;
 
     // Main initializaton and termination
-    int32_t Init() override;
+    InitStatus Init() override;
     int32_t Terminate() override;
     bool Initialized() const override;
 
@@ -286,9 +286,9 @@ private:
     EventWrapper& _recStartEvent;
     EventWrapper& _playStartEvent;
 
-    // TODO(pbos): Remove scoped_ptr and use directly without resetting.
-    rtc::scoped_ptr<rtc::PlatformThread> _ptrThreadPlay;
-    rtc::scoped_ptr<rtc::PlatformThread> _ptrThreadRec;
+    // TODO(pbos): Remove unique_ptr and use directly without resetting.
+    std::unique_ptr<rtc::PlatformThread> _ptrThreadPlay;
+    std::unique_ptr<rtc::PlatformThread> _ptrThreadRec;
     int32_t _id;
 
     AudioMixerManagerLinuxPulse _mixerManager;
@@ -370,9 +370,7 @@ private:
     pa_buffer_attr _recBufferAttr;
 
     char _oldKeyState[32];
-#ifdef USE_X11
     Display* _XDisplay;
-#endif
 };
 
 }

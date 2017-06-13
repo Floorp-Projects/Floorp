@@ -8,10 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include <memory>
+
 #include "webrtc/base/format_macros.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_coding/codecs/opus/opus_interface.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 using ::std::string;
@@ -61,9 +62,9 @@ class OpusFecTest : public TestWithParam<coding_param> {
 
   string in_filename_;
 
-  rtc::scoped_ptr<int16_t[]> in_data_;
-  rtc::scoped_ptr<int16_t[]> out_data_;
-  rtc::scoped_ptr<uint8_t[]> bit_stream_;
+  std::unique_ptr<int16_t[]> in_data_;
+  std::unique_ptr<int16_t[]> out_data_;
+  std::unique_ptr<uint8_t[]> bit_stream_;
 };
 
 void OpusFecTest::SetUp() {

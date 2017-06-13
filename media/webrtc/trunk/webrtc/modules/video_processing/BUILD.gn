@@ -11,35 +11,22 @@ import("../../build/webrtc.gni")
 
 build_video_processing_sse2 = current_cpu == "x86" || current_cpu == "x64"
 
-source_set("video_processing") {
+rtc_static_library("video_processing") {
   sources = [
-    "brightness_detection.cc",
-    "brightness_detection.h",
-    "content_analysis.cc",
-    "content_analysis.h",
-    "deflickering.cc",
-    "deflickering.h",
-    "frame_preprocessor.cc",
-    "frame_preprocessor.h",
-    "include/video_processing.h",
-    "include/video_processing_defines.h",
-    "spatial_resampler.cc",
-    "spatial_resampler.h",
     "util/denoiser_filter.cc",
     "util/denoiser_filter.h",
     "util/denoiser_filter_c.cc",
     "util/denoiser_filter_c.h",
+    "util/noise_estimation.cc",
+    "util/noise_estimation.h",
     "util/skin_detection.cc",
     "util/skin_detection.h",
-    "video_decimator.cc",
-    "video_decimator.h",
     "video_denoiser.cc",
     "video_denoiser.h",
-    "video_processing_impl.cc",
-    "video_processing_impl.h",
   ]
 
   deps = [
+    "../../base:rtc_base_approved",
     "../../common_audio",
     "../../common_video",
     "../../modules/utility",
@@ -52,31 +39,31 @@ source_set("video_processing") {
     deps += [ ":video_processing_neon" ]
   }
 
-  configs += [ "../..:common_config" ]
-  public_configs = [ "../..:common_inherited_config" ]
-
-  if (is_clang) {
-    # Suppress warnings from Chrome's Clang plugins.
-    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  if (!build_with_chromium && is_clang) {
+    # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+    suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
 }
 
 if (build_video_processing_sse2) {
-  source_set("video_processing_sse2") {
+  rtc_static_library("video_processing_sse2") {
+    # TODO(mbonadei): Remove (bugs.webrtc.org/6828)
+    # Errors on cyclic dependency with :video_processing if enabled.
+    check_includes = false
+
     sources = [
-      "content_analysis_sse2.cc",
       "util/denoiser_filter_sse2.cc",
       "util/denoiser_filter_sse2.h",
     ]
 
-    configs += [ "../..:common_config" ]
-    public_configs = [ "../..:common_inherited_config" ]
+    deps = [
+      "../../base:rtc_base_approved",
+      "../../system_wrappers",
+    ]
 
-    if (is_clang) {
-      # Suppress warnings from Chrome's Clang plugins.
-      # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-      configs -= [ "//build/config/clang:find_bad_constructs" ]
+    if (!build_with_chromium && is_clang) {
+      # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
     }
 
     if (is_posix) {
@@ -86,16 +73,19 @@ if (build_video_processing_sse2) {
 }
 
 if (rtc_build_with_neon) {
-  source_set("video_processing_neon") {
+  rtc_static_library("video_processing_neon") {
+    # TODO(mbonadei): Remove (bugs.webrtc.org/6828)
+    # Errors on cyclic dependency with :video_processing if enabled.
+    check_includes = false
+
     sources = [
       "util/denoiser_filter_neon.cc",
       "util/denoiser_filter_neon.h",
     ]
+
     if (current_cpu != "arm64") {
-      configs -= [ "//build/config/compiler:compiler_arm_fpu" ]
+      suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
       cflags = [ "-mfpu=neon" ]
     }
-    configs += [ "../..:common_config" ]
-    public_configs = [ "../..:common_inherited_config" ]
   }
 }

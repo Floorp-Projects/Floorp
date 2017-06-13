@@ -10,11 +10,23 @@
 
 #include "webrtc/modules/audio_coding/codecs/g711/audio_decoder_pcm.h"
 
+#include "webrtc/modules/audio_coding/codecs/legacy_encoded_audio_frame.h"
 #include "webrtc/modules/audio_coding/codecs/g711/g711_interface.h"
 
 namespace webrtc {
 
 void AudioDecoderPcmU::Reset() {}
+
+std::vector<AudioDecoder::ParseResult> AudioDecoderPcmU::ParsePayload(
+    rtc::Buffer&& payload,
+    uint32_t timestamp) {
+  return LegacyEncodedAudioFrame::SplitBySamples(
+      this, std::move(payload), timestamp, 8 * num_channels_, 8);
+}
+
+int AudioDecoderPcmU::SampleRateHz() const {
+  return 8000;
+}
 
 size_t AudioDecoderPcmU::Channels() const {
   return num_channels_;
@@ -25,7 +37,7 @@ int AudioDecoderPcmU::DecodeInternal(const uint8_t* encoded,
                                      int sample_rate_hz,
                                      int16_t* decoded,
                                      SpeechType* speech_type) {
-  RTC_DCHECK_EQ(sample_rate_hz, 8000);
+  RTC_DCHECK_EQ(SampleRateHz(), sample_rate_hz);
   int16_t temp_type = 1;  // Default is speech.
   size_t ret = WebRtcG711_DecodeU(encoded, encoded_len, decoded, &temp_type);
   *speech_type = ConvertSpeechType(temp_type);
@@ -40,6 +52,17 @@ int AudioDecoderPcmU::PacketDuration(const uint8_t* encoded,
 
 void AudioDecoderPcmA::Reset() {}
 
+std::vector<AudioDecoder::ParseResult> AudioDecoderPcmA::ParsePayload(
+    rtc::Buffer&& payload,
+    uint32_t timestamp) {
+  return LegacyEncodedAudioFrame::SplitBySamples(
+      this, std::move(payload), timestamp, 8 * num_channels_, 8);
+}
+
+int AudioDecoderPcmA::SampleRateHz() const {
+  return 8000;
+}
+
 size_t AudioDecoderPcmA::Channels() const {
   return num_channels_;
 }
@@ -49,7 +72,7 @@ int AudioDecoderPcmA::DecodeInternal(const uint8_t* encoded,
                                      int sample_rate_hz,
                                      int16_t* decoded,
                                      SpeechType* speech_type) {
-  RTC_DCHECK_EQ(sample_rate_hz, 8000);
+  RTC_DCHECK_EQ(SampleRateHz(), sample_rate_hz);
   int16_t temp_type = 1;  // Default is speech.
   size_t ret = WebRtcG711_DecodeA(encoded, encoded_len, decoded, &temp_type);
   *speech_type = ConvertSpeechType(temp_type);

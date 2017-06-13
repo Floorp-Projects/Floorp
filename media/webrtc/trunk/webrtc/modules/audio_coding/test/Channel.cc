@@ -14,8 +14,7 @@
 #include <iostream>
 
 #include "webrtc/base/format_macros.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/base/timeutils.h"
 
 namespace webrtc {
 
@@ -95,7 +94,7 @@ int32_t Channel::SendData(FrameType frameType,
     }
   }
 
-  _channelCritSect->Enter();
+  _channelCritSect.Enter();
   if (_saveBitStream) {
     //fwrite(payloadData, sizeof(uint8_t), payloadSize, _bitStreamFile);
   }
@@ -106,7 +105,7 @@ int32_t Channel::SendData(FrameType frameType,
   _useLastFrameSize = false;
   _lastInTimestamp = timeStamp;
   _totalBytes += payloadDataSize;
-  _channelCritSect->Leave();
+  _channelCritSect.Leave();
 
   if (_useFECTestWithPacketLoss) {
     _packetLoss += 1;
@@ -225,7 +224,6 @@ void Channel::CalcStatistics(WebRtcRTPHeader& rtpInfo, size_t payloadSize) {
 Channel::Channel(int16_t chID)
     : _receiverACM(NULL),
       _seqNo(0),
-      _channelCritSect(CriticalSectionWrapper::CreateCriticalSection()),
       _bitStreamFile(NULL),
       _saveBitStream(false),
       _lastPayloadType(-1),
@@ -236,7 +234,7 @@ Channel::Channel(int16_t chID)
       _lastFrameSizeSample(0),
       _packetLoss(0),
       _useFECTestWithPacketLoss(false),
-      _beginTime(TickTime::MillisecondTimestamp()),
+      _beginTime(rtc::TimeMillis()),
       _totalBytes(0),
       external_send_timestamp_(-1),
       external_sequence_number_(-1),
@@ -265,7 +263,6 @@ Channel::Channel(int16_t chID)
 }
 
 Channel::~Channel() {
-  delete _channelCritSect;
 }
 
 void Channel::RegisterReceiverACM(AudioCodingModule* acm) {
@@ -276,7 +273,7 @@ void Channel::RegisterReceiverACM(AudioCodingModule* acm) {
 void Channel::ResetStats() {
   int n;
   int k;
-  _channelCritSect->Enter();
+  _channelCritSect.Enter();
   _lastPayloadType = -1;
   for (n = 0; n < MAX_NUM_PAYLOADS; n++) {
     _payloadStats[n].payloadType = -1;
@@ -289,14 +286,14 @@ void Channel::ResetStats() {
       _payloadStats[n].frameSizeStats[k].totalEncodedSamples = 0;
     }
   }
-  _beginTime = TickTime::MillisecondTimestamp();
+  _beginTime = rtc::TimeMillis();
   _totalBytes = 0;
-  _channelCritSect->Leave();
+  _channelCritSect.Leave();
 }
 
 int16_t Channel::Stats(CodecInst& codecInst,
                        ACMTestPayloadStats& payloadStats) {
-  _channelCritSect->Enter();
+  _channelCritSect.Enter();
   int n;
   payloadStats.payloadType = -1;
   for (n = 0; n < MAX_NUM_PAYLOADS; n++) {
@@ -306,12 +303,12 @@ int16_t Channel::Stats(CodecInst& codecInst,
     }
   }
   if (payloadStats.payloadType == -1) {
-    _channelCritSect->Leave();
+    _channelCritSect.Leave();
     return -1;
   }
   for (n = 0; n < MAX_NUM_FRAMESIZES; n++) {
     if (payloadStats.frameSizeStats[n].frameSizeSample == 0) {
-      _channelCritSect->Leave();
+      _channelCritSect.Leave();
       return 0;
     }
     payloadStats.frameSizeStats[n].usageLenSec = (double) payloadStats
@@ -322,12 +319,12 @@ int16_t Channel::Stats(CodecInst& codecInst,
             / payloadStats.frameSizeStats[n].usageLenSec;
 
   }
-  _channelCritSect->Leave();
+  _channelCritSect.Leave();
   return 0;
 }
 
 void Channel::Stats(uint32_t* numPackets) {
-  _channelCritSect->Enter();
+  _channelCritSect.Enter();
   int k;
   int n;
   memset(numPackets, 0, MAX_NUM_PAYLOADS * sizeof(uint32_t));
@@ -343,11 +340,11 @@ void Channel::Stats(uint32_t* numPackets) {
       numPackets[k] += _payloadStats[k].frameSizeStats[n].numPackets;
     }
   }
-  _channelCritSect->Leave();
+  _channelCritSect.Leave();
 }
 
 void Channel::Stats(uint8_t* payloadType, uint32_t* payloadLenByte) {
-  _channelCritSect->Enter();
+  _channelCritSect.Enter();
 
   int k;
   int n;
@@ -367,7 +364,7 @@ void Channel::Stats(uint8_t* payloadType, uint32_t* payloadLenByte) {
     }
   }
 
-  _channelCritSect->Leave();
+  _channelCritSect.Leave();
 }
 
 void Channel::PrintStats(CodecInst& codecInst) {
@@ -406,18 +403,18 @@ void Channel::PrintStats(CodecInst& codecInst) {
 
 uint32_t Channel::LastInTimestamp() {
   uint32_t timestamp;
-  _channelCritSect->Enter();
+  _channelCritSect.Enter();
   timestamp = _lastInTimestamp;
-  _channelCritSect->Leave();
+  _channelCritSect.Leave();
   return timestamp;
 }
 
 double Channel::BitRate() {
   double rate;
-  uint64_t currTime = TickTime::MillisecondTimestamp();
-  _channelCritSect->Enter();
+  uint64_t currTime = rtc::TimeMillis();
+  _channelCritSect.Enter();
   rate = ((double) _totalBytes * 8.0) / (double) (currTime - _beginTime);
-  _channelCritSect->Leave();
+  _channelCritSect.Leave();
   return rate;
 }
 

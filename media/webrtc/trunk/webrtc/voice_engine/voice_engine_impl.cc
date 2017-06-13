@@ -10,16 +10,13 @@
 
 #if defined(WEBRTC_ANDROID)
 #include "webrtc/modules/audio_device/android/audio_device_template.h"
-#if !defined(WEBRTC_GONK)
 #include "webrtc/modules/audio_device/android/audio_record_jni.h"
 #include "webrtc/modules/audio_device/android/audio_track_jni.h"
-#endif
 #include "webrtc/modules/utility/include/jvm_android.h"
 #endif
 
 #include "webrtc/base/checks.h"
 #include "webrtc/modules/audio_coding/include/audio_coding_module.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/voice_engine/channel_proxy.h"
 #include "webrtc/voice_engine/voice_engine_impl.h"
@@ -32,8 +29,8 @@ namespace webrtc {
 // improvement here.
 static int32_t gVoiceEngineInstanceCounter = 0;
 
-VoiceEngine* GetVoiceEngine(const Config* config, bool owns_config) {
-  VoiceEngineImpl* self = new VoiceEngineImpl(config, owns_config);
+VoiceEngine* GetVoiceEngine() {
+  VoiceEngineImpl* self = new VoiceEngineImpl();
   if (self != NULL) {
     self->AddRef();  // First reference.  Released in VoiceEngine::Delete.
     gVoiceEngineInstanceCounter++;
@@ -65,22 +62,17 @@ int VoiceEngineImpl::Release() {
   return new_ref;
 }
 
-rtc::scoped_ptr<voe::ChannelProxy> VoiceEngineImpl::GetChannelProxy(
+std::unique_ptr<voe::ChannelProxy> VoiceEngineImpl::GetChannelProxy(
     int channel_id) {
   RTC_DCHECK(channel_id >= 0);
-  CriticalSectionScoped cs(crit_sec());
+  rtc::CritScope cs(crit_sec());
   RTC_DCHECK(statistics().Initialized());
-  return rtc::scoped_ptr<voe::ChannelProxy>(
+  return std::unique_ptr<voe::ChannelProxy>(
       new voe::ChannelProxy(channel_manager().GetChannel(channel_id)));
 }
 
 VoiceEngine* VoiceEngine::Create() {
-  Config* config = new Config();
-  return GetVoiceEngine(config, true);
-}
-
-VoiceEngine* VoiceEngine::Create(const Config& config) {
-  return GetVoiceEngine(&config, false);
+  return GetVoiceEngine();
 }
 
 int VoiceEngine::SetTraceFilter(unsigned int filter) {

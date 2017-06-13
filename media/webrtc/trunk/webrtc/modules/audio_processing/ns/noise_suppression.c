@@ -57,3 +57,15 @@ float WebRtcNs_prior_speech_probability(NsHandle* handle) {
   }
   return self->priorSpeechProb;
 }
+
+const float* WebRtcNs_noise_estimate(const NsHandle* handle) {
+  const NoiseSuppressionC* self = (const NoiseSuppressionC*)handle;
+  if (handle == NULL || self->initFlag == 0) {
+    return NULL;
+  }
+  return self->noise;
+}
+
+size_t WebRtcNs_num_freq() {
+  return HALF_ANAL_BLOCKL;
+}

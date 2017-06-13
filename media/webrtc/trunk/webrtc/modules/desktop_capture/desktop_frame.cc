@@ -10,8 +10,11 @@
 
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 
-#include <assert.h>
+#include <utility>
+
 #include <string.h>
+
+#include "webrtc/base/checks.h"
 
 namespace webrtc {
 
@@ -19,18 +22,18 @@ DesktopFrame::DesktopFrame(DesktopSize size,
                            int stride,
                            uint8_t* data,
                            SharedMemory* shared_memory)
-    : size_(size),
-      stride_(stride),
-      data_(data),
+    : data_(data),
       shared_memory_(shared_memory),
+      size_(size),
+      stride_(stride),
       capture_time_ms_(0) {
 }
 
 DesktopFrame::~DesktopFrame() {}
 
-void DesktopFrame::CopyPixelsFrom(uint8_t* src_buffer, int src_stride,
+void DesktopFrame::CopyPixelsFrom(const uint8_t* src_buffer, int src_stride,
                                   const DesktopRect& dest_rect) {
-  assert(DesktopRect::MakeSize(size()).ContainsRect(dest_rect));
+  RTC_CHECK(DesktopRect::MakeSize(size()).ContainsRect(dest_rect));
 
   uint8_t* dest = GetFrameDataAtPos(dest_rect.top_left());
   for (int y = 0; y < dest_rect.height(); ++y) {
@@ -43,7 +46,7 @@ void DesktopFrame::CopyPixelsFrom(uint8_t* src_buffer, int src_stride,
 void DesktopFrame::CopyPixelsFrom(const DesktopFrame& src_frame,
                                   const DesktopVector& src_pos,
                                   const DesktopRect& dest_rect) {
-  assert(DesktopRect::MakeSize(src_frame.size()).ContainsRect(
+  RTC_CHECK(DesktopRect::MakeSize(src_frame.size()).ContainsRect(
       DesktopRect::MakeOriginSize(src_pos, dest_rect.size())));
 
   CopyPixelsFrom(src_frame.GetFrameDataAtPos(src_pos),
@@ -77,15 +80,36 @@ DesktopFrame* BasicDesktopFrame::CopyOf(const DesktopFrame& frame) {
   return result;
 }
 
-
-SharedMemoryDesktopFrame::SharedMemoryDesktopFrame(
+// static
+std::unique_ptr<DesktopFrame> SharedMemoryDesktopFrame::Create(
     DesktopSize size,
-    int stride,
-    SharedMemory* shared_memory)
-    : DesktopFrame(size, stride,
-                   reinterpret_cast<uint8_t*>(shared_memory->data()),
-                   shared_memory) {
+    SharedMemoryFactory* shared_memory_factory) {
+  size_t buffer_size = size.height() * size.width() * kBytesPerPixel;
+  std::unique_ptr<SharedMemory> shared_memory =
+      shared_memory_factory->CreateSharedMemory(buffer_size);
+  if (!shared_memory)
+    return nullptr;
+
+  return Create(size, std::move(shared_memory));
 }
+
+// static
+std::unique_ptr<DesktopFrame> SharedMemoryDesktopFrame::Create(
+    DesktopSize size,
+    std::unique_ptr<SharedMemory> shared_memory) {
+  RTC_DCHECK(shared_memory);
+  int stride = size.width() * kBytesPerPixel;
+  return std::unique_ptr<DesktopFrame>(new SharedMemoryDesktopFrame(
+      size, stride, shared_memory.release()));
+}
+
+SharedMemoryDesktopFrame::SharedMemoryDesktopFrame(DesktopSize size,
+                                                   int stride,
+                                                   SharedMemory* shared_memory)
+    : DesktopFrame(size,
+                   stride,
+                   reinterpret_cast<uint8_t*>(shared_memory->data()),
+                   shared_memory) {}
 
 SharedMemoryDesktopFrame::~SharedMemoryDesktopFrame() {
   delete shared_memory_;

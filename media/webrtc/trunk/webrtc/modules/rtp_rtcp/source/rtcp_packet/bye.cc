@@ -10,15 +10,16 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/bye.h"
 
+#include <utility>
+
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/modules/rtp_rtcp/source/byte_io.h"
-
-using webrtc::RTCPUtility::RtcpCommonHeader;
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/common_header.h"
 
 namespace webrtc {
 namespace rtcp {
-
+constexpr uint8_t Bye::kPacketType;
 // Bye packet (BYE) (RFC 3550).
 //
 //        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -33,21 +34,22 @@ namespace rtcp {
 //       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 Bye::Bye() : sender_ssrc_(0) {}
 
-bool Bye::Parse(const RtcpCommonHeader& header, const uint8_t* payload) {
-  RTC_DCHECK(header.packet_type == kPacketType);
+bool Bye::Parse(const CommonHeader& packet) {
+  RTC_DCHECK_EQ(packet.type(), kPacketType);
 
-  const uint8_t src_count = header.count_or_format;
+  const uint8_t src_count = packet.count();
   // Validate packet.
-  if (header.payload_size_bytes < 4u * src_count) {
+  if (packet.payload_size_bytes() < 4u * src_count) {
     LOG(LS_WARNING)
         << "Packet is too small to contain CSRCs it promise to have.";
     return false;
   }
-  bool has_reason = (header.payload_size_bytes > 4u * src_count);
+  const uint8_t* const payload = packet.payload();
+  bool has_reason = packet.payload_size_bytes() > 4u * src_count;
   uint8_t reason_length = 0;
   if (has_reason) {
     reason_length = payload[4u * src_count];
-    if (header.payload_size_bytes - 4u * src_count < 1u + reason_length) {
+    if (packet.payload_size_bytes() - 4u * src_count < 1u + reason_length) {
       LOG(LS_WARNING) << "Invalid reason length: " << reason_length;
       return false;
     }
@@ -99,7 +101,7 @@ bool Bye::Create(uint8_t* packet,
     *index += reason_length;
     // Add padding bytes if needed.
     size_t bytes_to_pad = index_end - *index;
-    RTC_DCHECK_LE(bytes_to_pad, 3u);
+    RTC_DCHECK_LE(bytes_to_pad, 3);
     if (bytes_to_pad > 0) {
       memset(&packet[*index], 0, bytes_to_pad);
       *index += bytes_to_pad;
@@ -109,18 +111,18 @@ bool Bye::Create(uint8_t* packet,
   return true;
 }
 
-bool Bye::WithCsrc(uint32_t csrc) {
-  if (csrcs_.size() >= kMaxNumberOfCsrcs) {
-    LOG(LS_WARNING) << "Max CSRC size reached.";
+bool Bye::SetCsrcs(std::vector<uint32_t> csrcs) {
+  if (csrcs.size() > kMaxNumberOfCsrcs) {
+    LOG(LS_WARNING) << "Too many CSRCs for Bye packet.";
     return false;
   }
-  csrcs_.push_back(csrc);
+  csrcs_ = std::move(csrcs);
   return true;
 }
 
-void Bye::WithReason(const std::string& reason) {
+void Bye::SetReason(std::string reason) {
   RTC_DCHECK_LE(reason.size(), 0xffu);
-  reason_ = reason;
+  reason_ = std::move(reason);
 }
 
 size_t Bye::BlockLength() const {

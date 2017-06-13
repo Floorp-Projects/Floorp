@@ -50,7 +50,7 @@ class VCMJitterEstimator {
   //          - rttMultiplier  : RTT param multiplier (when applicable).
   //
   // Return value                   : Jitter estimate in milliseconds
-  int GetJitterEstimate(double rttMultiplier);
+  virtual int GetJitterEstimate(double rttMultiplier);
 
   // Updates the nack counter.
   void FrameNacked();

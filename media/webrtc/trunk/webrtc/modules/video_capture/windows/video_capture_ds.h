@@ -27,9 +27,9 @@ class CaptureSinkFilter;
 class VideoCaptureDS: public VideoCaptureImpl
 {
 public:
-    VideoCaptureDS(const int32_t id);
+    VideoCaptureDS();
 
-    virtual int32_t Init(const int32_t id, const char* deviceUniqueIdUTF8);
+    virtual int32_t Init(const char* deviceUniqueIdUTF8);
 
     /*************************************************************************
      *
@@ -53,17 +53,13 @@ protected:
     virtual ~VideoCaptureDS();
 
     // Help functions
-    int32_t
-        SetCameraOutputIfNeeded(const VideoCaptureCapability& requestedCapability);
-    int32_t
-        SetCameraOutput(const VideoCaptureCapability& requestedCapability,
-                        int32_t capabilityIndex);
 
+    int32_t
+        SetCameraOutput(const VideoCaptureCapability& requestedCapability);
     int32_t DisconnectGraph();
     HRESULT VideoCaptureDS::ConnectDVCamera();
 
     DeviceInfoDS _dsInfo;
-    VideoCaptureCapability _activeCapability;
 
     IBaseFilter* _captureFilter;
     IGraphBuilder* _graphBuilder;

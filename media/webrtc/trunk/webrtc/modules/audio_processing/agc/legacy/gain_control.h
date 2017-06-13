@@ -14,39 +14,32 @@
 #include "webrtc/typedefs.h"
 
 // Errors
-#define AGC_UNSPECIFIED_ERROR           18000
-#define AGC_UNSUPPORTED_FUNCTION_ERROR  18001
-#define AGC_UNINITIALIZED_ERROR         18002
-#define AGC_NULL_POINTER_ERROR          18003
-#define AGC_BAD_PARAMETER_ERROR         18004
+#define AGC_UNSPECIFIED_ERROR 18000
+#define AGC_UNSUPPORTED_FUNCTION_ERROR 18001
+#define AGC_UNINITIALIZED_ERROR 18002
+#define AGC_NULL_POINTER_ERROR 18003
+#define AGC_BAD_PARAMETER_ERROR 18004
 
 // Warnings
-#define AGC_BAD_PARAMETER_WARNING       18050
+#define AGC_BAD_PARAMETER_WARNING 18050
 
-enum
-{
-    kAgcModeUnchanged,
-    kAgcModeAdaptiveAnalog,
-    kAgcModeAdaptiveDigital,
-    kAgcModeFixedDigital
+enum {
+  kAgcModeUnchanged,
+  kAgcModeAdaptiveAnalog,
+  kAgcModeAdaptiveDigital,
+  kAgcModeFixedDigital
 };
 
-enum
-{
-    kAgcFalse = 0,
-    kAgcTrue
-};
+enum { kAgcFalse = 0, kAgcTrue };
 
-typedef struct
-{
-    int16_t targetLevelDbfs;   // default 3 (-3 dBOv)
-    int16_t compressionGaindB; // default 9 dB
-    uint8_t limiterEnable;     // default kAgcTrue (on)
+typedef struct {
+  int16_t targetLevelDbfs;    // default 3 (-3 dBOv)
+  int16_t compressionGaindB;  // default 9 dB
+  uint8_t limiterEnable;      // default kAgcTrue (on)
 } WebRtcAgcConfig;
 
 #if defined(__cplusplus)
-extern "C"
-{
+extern "C" {
 #endif
 
 /*
@@ -78,9 +71,7 @@ int WebRtcAgc_GetAddFarendError(void* state, size_t samples);
  *                          :  0 - Normal operation.
  *                          : -1 - Error
  */
-int WebRtcAgc_AddFarend(void* agcInst,
-                        const int16_t* inFar,
-                        size_t samples);
+int WebRtcAgc_AddFarend(void* agcInst, const int16_t* inFar, size_t samples);
 
 /*
  * This function processes a 10 ms frame of microphone speech to determine
@@ -243,7 +234,7 @@ void WebRtcAgc_Free(void* agcInst);
  * Return value             :  0 - Ok
  *                            -1 - Error
  */
-int WebRtcAgc_Init(void *agcInst,
+int WebRtcAgc_Init(void* agcInst,
                    int32_t minLevel,
                    int32_t maxLevel,
                    int16_t agcMode,

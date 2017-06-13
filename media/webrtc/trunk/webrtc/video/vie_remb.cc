@@ -16,8 +16,6 @@
 
 #include "webrtc/modules/rtp_rtcp/include/rtp_rtcp.h"
 #include "webrtc/modules/utility/include/process_thread.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
 #include "webrtc/system_wrappers/include/trace.h"
 
 namespace webrtc {
@@ -25,11 +23,10 @@ namespace webrtc {
 const int kRembSendIntervalMs = 200;
 
 // % threshold for if we should send a new REMB asap.
-const unsigned int kSendThresholdPercent = 97;
+const uint32_t kSendThresholdPercent = 97;
 
 VieRemb::VieRemb(Clock* clock)
     : clock_(clock),
-      list_crit_(CriticalSectionWrapper::CreateCriticalSection()),
       last_remb_time_(clock_->TimeInMilliseconds()),
       last_send_bitrate_(0),
       bitrate_(0) {}
@@ -39,7 +36,7 @@ VieRemb::~VieRemb() {}
 void VieRemb::AddReceiveChannel(RtpRtcp* rtp_rtcp) {
   assert(rtp_rtcp);
 
-  CriticalSectionScoped cs(list_crit_.get());
+  rtc::CritScope lock(&list_crit_);
   if (std::find(receive_modules_.begin(), receive_modules_.end(), rtp_rtcp) !=
       receive_modules_.end())
     return;
@@ -52,7 +49,7 @@ void VieRemb::AddReceiveChannel(RtpRtcp* rtp_rtcp) {
 void VieRemb::RemoveReceiveChannel(RtpRtcp* rtp_rtcp) {
   assert(rtp_rtcp);
 
-  CriticalSectionScoped cs(list_crit_.get());
+  rtc::CritScope lock(&list_crit_);
   for (RtpModules::iterator it = receive_modules_.begin();
        it != receive_modules_.end(); ++it) {
     if ((*it) == rtp_rtcp) {
@@ -65,7 +62,7 @@ void VieRemb::RemoveReceiveChannel(RtpRtcp* rtp_rtcp) {
 void VieRemb::AddRembSender(RtpRtcp* rtp_rtcp) {
   assert(rtp_rtcp);
 
-  CriticalSectionScoped cs(list_crit_.get());
+  rtc::CritScope lock(&list_crit_);
 
   // Verify this module hasn't been added earlier.
   if (std::find(rtcp_sender_.begin(), rtcp_sender_.end(), rtp_rtcp) !=
@@ -77,7 +74,7 @@ void VieRemb::AddRembSender(RtpRtcp* rtp_rtcp) {
 void VieRemb::RemoveRembSender(RtpRtcp* rtp_rtcp) {
   assert(rtp_rtcp);
 
-  CriticalSectionScoped cs(list_crit_.get());
+  rtc::CritScope lock(&list_crit_);
   for (RtpModules::iterator it = rtcp_sender_.begin();
        it != rtcp_sender_.end(); ++it) {
     if ((*it) == rtp_rtcp) {
@@ -88,53 +85,48 @@ void VieRemb::RemoveRembSender(RtpRtcp* rtp_rtcp) {
 }
 
 bool VieRemb::InUse() const {
-  CriticalSectionScoped cs(list_crit_.get());
-  if (receive_modules_.empty() && rtcp_sender_.empty())
-    return false;
-  else
-    return true;
+  rtc::CritScope lock(&list_crit_);
+  return !receive_modules_.empty() || !rtcp_sender_.empty();
 }
 
-void VieRemb::OnReceiveBitrateChanged(const std::vector<unsigned int>& ssrcs,
-                                      unsigned int bitrate) {
-  list_crit_->Enter();
-  // If we already have an estimate, check if the new total estimate is below
-  // kSendThresholdPercent of the previous estimate.
-  if (last_send_bitrate_ > 0) {
-    unsigned int new_remb_bitrate = last_send_bitrate_ - bitrate_ + bitrate;
+void VieRemb::OnReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs,
+                                      uint32_t bitrate) {
+  RtpRtcp* sender = nullptr;
+  {
+    rtc::CritScope lock(&list_crit_);
+    // If we already have an estimate, check if the new total estimate is below
+    // kSendThresholdPercent of the previous estimate.
+    if (last_send_bitrate_ > 0) {
+      uint32_t new_remb_bitrate = last_send_bitrate_ - bitrate_ + bitrate;
 
-    if (new_remb_bitrate < kSendThresholdPercent * last_send_bitrate_ / 100) {
-      // The new bitrate estimate is less than kSendThresholdPercent % of the
-      // last report. Send a REMB asap.
-      last_remb_time_ = clock_->TimeInMilliseconds() - kRembSendIntervalMs;
+      if (new_remb_bitrate < kSendThresholdPercent * last_send_bitrate_ / 100) {
+        // The new bitrate estimate is less than kSendThresholdPercent % of the
+        // last report. Send a REMB asap.
+        last_remb_time_ = clock_->TimeInMilliseconds() - kRembSendIntervalMs;
+      }
     }
+    bitrate_ = bitrate;
+
+    // Calculate total receive bitrate estimate.
+    int64_t now = clock_->TimeInMilliseconds();
+
+    if (now - last_remb_time_ < kRembSendIntervalMs) {
+      return;
+    }
+    last_remb_time_ = now;
+
+    if (ssrcs.empty() || receive_modules_.empty()) {
+      return;
+    }
+
+    // Send a REMB packet.
+    if (!rtcp_sender_.empty()) {
+      sender = rtcp_sender_.front();
+    } else {
+      sender = receive_modules_.front();
+    }
+    last_send_bitrate_ = bitrate_;
   }
-  bitrate_ = bitrate;
-
-  // Calculate total receive bitrate estimate.
-  int64_t now = clock_->TimeInMilliseconds();
-
-  if (now - last_remb_time_ < kRembSendIntervalMs) {
-    list_crit_->Leave();
-    return;
-  }
-  last_remb_time_ = now;
-
-  if (ssrcs.empty() || receive_modules_.empty()) {
-    list_crit_->Leave();
-    return;
-  }
-
-  // Send a REMB packet.
-  RtpRtcp* sender = NULL;
-  if (!rtcp_sender_.empty()) {
-    sender = rtcp_sender_.front();
-  } else {
-    sender = receive_modules_.front();
-  }
-  last_send_bitrate_ = bitrate_;
-
-  list_crit_->Leave();
 
   if (sender) {
     sender->SetREMBData(bitrate_, ssrcs);

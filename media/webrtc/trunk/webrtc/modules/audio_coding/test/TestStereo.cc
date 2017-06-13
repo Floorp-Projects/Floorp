@@ -14,13 +14,14 @@
 
 #include <string>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/common_types.h"
-#include "webrtc/engine_configurations.h"
+#include "webrtc/modules/audio_coding/codecs/audio_format_conversion.h"
 #include "webrtc/modules/audio_coding/include/audio_coding_module_typedefs.h"
 #include "webrtc/modules/audio_coding/test/utility.h"
 #include "webrtc/system_wrappers/include/trace.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -171,7 +172,8 @@ void TestStereo::Perform() {
   CodecInst my_codec_param;
   for (uint8_t n = 0; n < num_encoders; n++) {
     EXPECT_EQ(0, acm_b_->Codec(n, &my_codec_param));
-    EXPECT_EQ(0, acm_b_->RegisterReceiveCodec(my_codec_param));
+    EXPECT_EQ(true, acm_b_->RegisterReceiveCodec(
+                        my_codec_param.pltype, CodecInstToSdp(my_codec_param)));
   }
 
   // Test that unregister all receive codecs works.
@@ -183,7 +185,8 @@ void TestStereo::Perform() {
   // Register all available codes as receiving codecs once more.
   for (uint8_t n = 0; n < num_encoders; n++) {
     EXPECT_EQ(0, acm_b_->Codec(n, &my_codec_param));
-    EXPECT_EQ(0, acm_b_->RegisterReceiveCodec(my_codec_param));
+    EXPECT_EQ(true, acm_b_->RegisterReceiveCodec(
+                        my_codec_param.pltype, CodecInstToSdp(my_codec_param)));
   }
 
   // Create and connect the channel.
@@ -597,7 +600,9 @@ void TestStereo::Perform() {
     EXPECT_EQ(0, acm_b_->Codec(n, &opus_codec_param));
     if (!strcmp(opus_codec_param.plname, "opus")) {
       opus_codec_param.channels = 1;
-      EXPECT_EQ(0, acm_b_->RegisterReceiveCodec(opus_codec_param));
+      EXPECT_EQ(true,
+                acm_b_->RegisterReceiveCodec(opus_codec_param.pltype,
+                                             CodecInstToSdp(opus_codec_param)));
       break;
     }
   }
@@ -630,7 +635,9 @@ void TestStereo::Perform() {
         " Decode: stereo\n", test_cntr_);
   }
   opus_codec_param.channels = 2;
-  EXPECT_EQ(0, acm_b_->RegisterReceiveCodec(opus_codec_param));
+  EXPECT_EQ(true,
+            acm_b_->RegisterReceiveCodec(opus_codec_param.pltype,
+                                         CodecInstToSdp(opus_codec_param)));
   Run(channel_a2b_, audio_channels, 2);
   out_file_.Close();
   // Decode in mono.
@@ -642,7 +649,9 @@ void TestStereo::Perform() {
         " Decode: mono\n", test_cntr_);
   }
   opus_codec_param.channels = 1;
-  EXPECT_EQ(0, acm_b_->RegisterReceiveCodec(opus_codec_param));
+  EXPECT_EQ(true,
+            acm_b_->RegisterReceiveCodec(opus_codec_param.pltype,
+                                         CodecInstToSdp(opus_codec_param)));
   Run(channel_a2b_, audio_channels, codec_channels);
   out_file_.Close();
 
@@ -792,7 +801,9 @@ void TestStereo::Run(TestPackStereo* channel, int in_channels, int out_channels,
     }
 
     // Run received side of ACM
-    EXPECT_EQ(0, acm_b_->PlayoutData10Ms(out_freq_hz_b, &audio_frame));
+    bool muted;
+    EXPECT_EQ(0, acm_b_->PlayoutData10Ms(out_freq_hz_b, &audio_frame, &muted));
+    ASSERT_FALSE(muted);
 
     // Write output speech to file
     out_file_.Write10MsData(

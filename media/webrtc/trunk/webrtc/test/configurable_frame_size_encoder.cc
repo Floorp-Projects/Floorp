@@ -12,10 +12,10 @@
 
 #include <string.h>
 
-#include "testing/gtest/include/gtest/gtest.h"
-
+#include "webrtc/base/checks.h"
 #include "webrtc/common_video/include/video_image.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 namespace test {
@@ -53,7 +53,7 @@ int32_t ConfigurableFrameSizeEncoder::Encode(
   RTPFragmentationHeader* fragmentation = NULL;
   CodecSpecificInfo specific;
   memset(&specific, 0, sizeof(specific));
-  callback_->Encoded(encodedImage, &specific, fragmentation);
+  callback_->OnEncodedImage(encodedImage, &specific, fragmentation);
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -73,8 +73,9 @@ int32_t ConfigurableFrameSizeEncoder::SetChannelParameters(uint32_t packet_loss,
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t ConfigurableFrameSizeEncoder::SetRates(uint32_t new_bit_rate,
-                                               uint32_t frame_rate) {
+int32_t ConfigurableFrameSizeEncoder::SetRateAllocation(
+    const BitrateAllocation& allocation,
+    uint32_t framerate) {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -83,7 +84,7 @@ int32_t ConfigurableFrameSizeEncoder::SetPeriodicKeyFrames(bool enable) {
 }
 
 int32_t ConfigurableFrameSizeEncoder::SetFrameSize(size_t size) {
-  assert(size <= max_frame_size_);
+  RTC_DCHECK_LE(size, max_frame_size_);
   current_frame_size_ = size;
   return WEBRTC_VIDEO_CODEC_OK;
 }

@@ -8,68 +8,216 @@
 
 import("../build/webrtc.gni")
 
-source_set("video") {
+rtc_static_library("video") {
   sources = [
     "call_stats.cc",
     "call_stats.h",
-    "encoded_frame_callback_adapter.cc",
-    "encoded_frame_callback_adapter.h",
-    "encoder_state_feedback.cc",
-    "encoder_state_feedback.h",
+    "encoder_rtcp_feedback.cc",
+    "encoder_rtcp_feedback.h",
     "overuse_frame_detector.cc",
     "overuse_frame_detector.h",
     "payload_router.cc",
     "payload_router.h",
+    "quality_threshold.cc",
+    "quality_threshold.h",
     "receive_statistics_proxy.cc",
     "receive_statistics_proxy.h",
     "report_block_stats.cc",
     "report_block_stats.h",
+    "rtp_stream_receiver.cc",
+    "rtp_stream_receiver.h",
+    "rtp_streams_synchronizer.cc",
+    "rtp_streams_synchronizer.h",
+    "send_delay_stats.cc",
+    "send_delay_stats.h",
     "send_statistics_proxy.cc",
     "send_statistics_proxy.h",
+    "stats_counter.cc",
+    "stats_counter.h",
     "stream_synchronization.cc",
     "stream_synchronization.h",
-    "video_capture_input.cc",
-    "video_capture_input.h",
-    "video_decoder.cc",
-    "video_encoder.cc",
+    "transport_adapter.cc",
+    "transport_adapter.h",
     "video_receive_stream.cc",
     "video_receive_stream.h",
     "video_send_stream.cc",
     "video_send_stream.h",
-    "vie_channel.cc",
-    "vie_channel.h",
+    "video_stream_decoder.cc",
+    "video_stream_decoder.h",
     "vie_encoder.cc",
     "vie_encoder.h",
-    "vie_receiver.cc",
-    "vie_receiver.h",
     "vie_remb.cc",
     "vie_remb.h",
-    "vie_sync_module.cc",
-    "vie_sync_module.h",
   ]
 
-  configs += [ "..:common_config" ]
-  public_configs = [ "..:common_inherited_config" ]
-
-  if (is_clang) {
-    # Suppress warnings from Chrome's Clang plugins.
-    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  if (!build_with_chromium && is_clang) {
+    # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+    suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
 
   deps = [
-    "..:rtc_event_log",
     "..:webrtc_common",
+    "../api:transport_api",
+    "../base:rtc_base_approved",
+    "../base:rtc_numerics",
+    "../base:rtc_task_queue",
     "../common_video",
+    "../logging:rtc_event_log_api",
+    "../media:rtc_media_base",
     "../modules/bitrate_controller",
+    "../modules/congestion_controller",
     "../modules/pacing",
+    "../modules/remote_bitrate_estimator",
     "../modules/rtp_rtcp",
     "../modules/utility",
-    "../modules/video_capture:video_capture_module",
     "../modules/video_coding",
     "../modules/video_processing",
-    "../modules/video_render:video_render_module",
     "../system_wrappers",
     "../voice_engine",
   ]
+}
+
+if (rtc_include_tests) {
+  rtc_source_set("video_quality_test") {
+    testonly = true
+    sources = [
+      "video_quality_test.cc",
+      "video_quality_test.h",
+    ]
+    deps = [
+      "../base:rtc_task_queue",
+      "../media:rtc_media_base",
+      "../system_wrappers",
+      "//testing/gtest",
+      "//webrtc/test:test_renderer",
+    ]
+    if (!is_android) {
+      deps += [ "../modules/video_capture:video_capture_internal_impl" ]
+    }
+    if (!build_with_chromium && is_clang) {
+      # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
+  }
+
+  rtc_source_set("video_full_stack_tests") {
+    testonly = true
+    sources = [
+      "full_stack_tests.cc",
+    ]
+    deps = [
+      ":video_quality_test",
+      "//testing/gtest",
+      "//webrtc/test:test_common",
+    ]
+    if (!build_with_chromium && is_clang) {
+      # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
+    if (rtc_use_h264) {
+      defines = [ "WEBRTC_USE_H264" ]
+    }
+  }
+
+  rtc_executable("video_loopback") {
+    testonly = true
+    sources = [
+      "video_loopback.cc",
+    ]
+    deps = [
+      ":video_quality_test",
+      "../system_wrappers:metrics_default",
+      "../test:field_trial",
+      "../test:run_test",
+      "../test:test_common",
+      "../test:test_renderer",
+      "//testing/gmock",
+      "//testing/gtest",
+      "//third_party/gflags",
+    ]
+    if (!build_with_chromium && is_clang) {
+      # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
+  }
+
+  rtc_executable("screenshare_loopback") {
+    testonly = true
+    sources = [
+      "screenshare_loopback.cc",
+    ]
+
+    deps = [
+      ":video_quality_test",
+      "../system_wrappers:metrics_default",
+      "../test:field_trial",
+      "../test:run_test",
+      "../test:test_common",
+      "../test:test_renderer",
+      "//third_party/gflags",
+    ]
+    if (!build_with_chromium && is_clang) {
+      # Suppress warnings from Chrome's Clang plugins.
+      # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
+  }
+
+  rtc_executable("video_replay") {
+    testonly = true
+    sources = [
+      "replay.cc",
+    ]
+    deps = [
+      "../system_wrappers:metrics_default",
+      "../test:field_trial",
+      "../test:run_test",
+      "../test:test_common",
+      "../test:test_renderer",
+      "//third_party/gflags",
+    ]
+    if (!is_android) {
+      deps += [ "../modules/video_capture:video_capture_internal_impl" ]
+    }
+    if (!build_with_chromium && is_clang) {
+      # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
+  }
+
+  # TODO(pbos): Rename test suite.
+  rtc_source_set("video_tests") {
+    testonly = true
+    defines = []
+    sources = [
+      "call_stats_unittest.cc",
+      "encoder_rtcp_feedback_unittest.cc",
+      "end_to_end_tests.cc",
+      "overuse_frame_detector_unittest.cc",
+      "payload_router_unittest.cc",
+      "quality_threshold_unittest.cc",
+      "receive_statistics_proxy_unittest.cc",
+      "report_block_stats_unittest.cc",
+      "send_delay_stats_unittest.cc",
+      "send_statistics_proxy_unittest.cc",
+      "stats_counter_unittest.cc",
+      "stream_synchronization_unittest.cc",
+      "video_send_stream_tests.cc",
+      "vie_encoder_unittest.cc",
+      "vie_remb_unittest.cc",
+    ]
+    deps = [
+      ":video",
+      "../media:rtc_media_base",
+      "//testing/gmock",
+      "//testing/gtest",
+    ]
+    if (!build_with_chromium && is_clang) {
+      # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
+    if (rtc_use_h264) {
+      defines += [ "WEBRTC_USE_H264" ]
+    }
+  }
 }
