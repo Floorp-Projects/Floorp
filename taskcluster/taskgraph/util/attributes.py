@@ -5,17 +5,17 @@
 import re
 
 
-INTEGRATION_PROJECTS = set([
+INTEGRATION_PROJECTS = {
     'mozilla-inbound',
     'autoland',
-])
+}
 
-RELEASE_PROJECTS = set([
+RELEASE_PROJECTS = {
     'mozilla-central',
     'mozilla-aurora',
     'mozilla-beta',
     'mozilla-release',
-])
+}
 
 
 def attrmatch(attributes, **kwargs):
