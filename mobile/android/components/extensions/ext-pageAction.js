@@ -21,36 +21,35 @@ var {
 // WeakMap[Extension -> PageAction]
 var pageActionMap = new WeakMap();
 
-function PageAction(options, extension) {
-  this.id = null;
+class PageAction {
+  constructor(options, extension) {
+    this.id = null;
 
-  this.extension = extension;
-  this.icons = IconDetails.normalize({path: options.default_icon}, extension);
+    this.extension = extension;
+    this.icons = IconDetails.normalize({path: options.default_icon}, extension);
 
-  this.popupUrl = options.default_popup;
+    this.popupUrl = options.default_popup;
 
-  this.options = {
-    title: options.default_title || extension.name,
-    id: `{${extension.uuid}}`,
-    clickCallback: () => {
-      if (this.popupUrl) {
-        let win = Services.wm.getMostRecentWindow("navigator:browser");
-        win.BrowserApp.addTab(this.popupUrl, {
-          selected: true,
-          parentId: win.BrowserApp.selectedTab.id,
-        });
-      } else {
-        this.emit("click", tabTracker.activeTab);
-      }
-    },
-  };
+    this.options = {
+      title: options.default_title || extension.name,
+      id: `{${extension.uuid}}`,
+      clickCallback: () => {
+        if (this.popupUrl) {
+          let win = Services.wm.getMostRecentWindow("navigator:browser");
+          win.BrowserApp.addTab(this.popupUrl, {
+            selected: true,
+            parentId: win.BrowserApp.selectedTab.id,
+          });
+        } else {
+          this.emit("click", tabTracker.activeTab);
+        }
+      },
+    };
 
-  this.shouldShow = false;
+    this.shouldShow = false;
+    EventEmitter.decorate(this);
+  }
 
-  EventEmitter.decorate(this);
-}
-
-PageAction.prototype = {
   show(tabId, context) {
     if (this.id) {
       return Promise.resolve();
@@ -86,7 +85,7 @@ PageAction.prototype = {
         message: "Failed to load PageAction icon",
       });
     });
-  },
+  }
 
   hide(tabId) {
     this.shouldShow = false;
@@ -94,21 +93,21 @@ PageAction.prototype = {
       PageActions.remove(this.id);
       this.id = null;
     }
-  },
+  }
 
   setPopup(tab, url) {
     // TODO: Only set the popup for the specified tab once we have Tabs API support.
     this.popupUrl = url;
-  },
+  }
 
   getPopup(tab) {
     // TODO: Only return the popup for the specified tab once we have Tabs API support.
     return this.popupUrl;
-  },
+  }
 
   shutdown() {
     this.hide();
-  },
+  }
 };
 
 this.pageAction = class extends ExtensionAPI {
