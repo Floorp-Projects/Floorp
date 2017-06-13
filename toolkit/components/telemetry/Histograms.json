@@ -12488,7 +12488,7 @@
     "n_values": 50,
     "bug_numbers": [1368600],
     "cpp_guard": "XP_WIN",
-    "description": "Error code when a Windows sandboxed process fails to launch."
+    "description": "Error code when a Windows sandboxed process fails to launch. See https://dxr.mozilla.org/mozilla-central/search?q=ResultCode++path%3Asandbox_types.h&redirect=true for definitions of the error codes."
   },
   "SYNC_WORKER_OPERATION": {
     "record_in_processes": ["main", "content"],
