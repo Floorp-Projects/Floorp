@@ -6,9 +6,13 @@ CORE_DEPTH = ../..
 DEPTH      = ../..
 MODULE = nss
 
-CPPSRCS = \
-      gtests.cc \
-      $(NULL)
+LIBRARY_NAME = gtestutil
+
+ifeq ($(NSS_BUILD_UTIL_ONLY),1)
+CPPSRCS = gtests-util.cc
+else
+CPPSRCS = gtests.cc
+endif
 
 INCLUDES += -I$(CORE_DEPTH)/gtests/google_test/gtest/include \
             -I$(CORE_DEPTH)/gtests/common \
@@ -17,6 +21,3 @@ INCLUDES += -I$(CORE_DEPTH)/gtests/google_test/gtest/include \
 REQUIRES = gtest
 
 EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX)
-
-# NOTE: this is not actually used but required to build gtests.o
-PROGRAM = gtests

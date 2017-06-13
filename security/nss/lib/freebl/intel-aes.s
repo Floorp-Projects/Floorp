@@ -4,8 +4,7 @@
 
 	.text
 
-#define IV_OFFSET 16
-#define EXPANDED_KEY_OFFSET 48
+#define IV_OFFSET 256
 
 /*
  * Warning: the length values used in this module are "unsigned int"
@@ -144,9 +143,6 @@ key_expansion128:
 	.globl intel_aes_encrypt_ecb_128
 	.align	16
 intel_aes_encrypt_ecb_128:
-//	leaq	EXPANDED_KEY_OFFSET(%rdi), %rdi
-	leaq	48(%rdi), %rdi
-
 	movdqu	(%rdi), %xmm2
 	movdqu	160(%rdi), %xmm12
 	xor	%eax, %eax
@@ -328,9 +324,6 @@ intel_aes_encrypt_ecb_128:
 	.globl intel_aes_decrypt_ecb_128
 	.align	16
 intel_aes_decrypt_ecb_128:
-//	leaq	EXPANDED_KEY_OFFSET(%rdi), %rdi
-	leaq	48(%rdi), %rdi
-
 	movdqu	(%rdi), %xmm2
 	movdqu	160(%rdi), %xmm12
 	xorl	%eax, %eax
@@ -516,9 +509,7 @@ intel_aes_encrypt_cbc_128:
 	je	2f
 
 //	leaq	IV_OFFSET(%rdi), %rdx
-//	leaq	EXPANDED_KEY_OFFSET(%rdi), %rdi
-	leaq	16(%rdi), %rdx
-	leaq	48(%rdi), %rdi
+	leaq	256(%rdi), %rdx
 
 	movdqu	(%rdx), %xmm0
 	movdqu	(%rdi), %xmm2
@@ -575,9 +566,7 @@ intel_aes_encrypt_cbc_128:
 	.align	16
 intel_aes_decrypt_cbc_128:
 //	leaq	IV_OFFSET(%rdi), %rdx
-//	leaq	EXPANDED_KEY_OFFSET(%rdi), %rdi
-	leaq	16(%rdi), %rdx
-	leaq	48(%rdi), %rdi
+	leaq	256(%rdi), %rdx
 
 	movdqu	(%rdx), %xmm0   /* iv */
 	movdqu	(%rdi), %xmm2   /* first key block */
@@ -902,9 +891,6 @@ key_expansion192:
 	.globl intel_aes_encrypt_ecb_192
 	.align	16
 intel_aes_encrypt_ecb_192:
-//	leaq	EXPANDED_KEY_OFFSET(%rdi), %rdi
-	leaq	48(%rdi), %rdi
-
 	movdqu	(%rdi), %xmm2
 	movdqu	192(%rdi), %xmm14
 	xorl	%eax, %eax
@@ -1109,9 +1095,6 @@ intel_aes_encrypt_ecb_192:
 	.globl intel_aes_decrypt_ecb_192
 	.align	16
 intel_aes_decrypt_ecb_192:
-//	leaq	EXPANDED_KEY_OFFSET(%rdi), %rdi
-	leaq	48(%rdi), %rdi
-
 	movdqu	(%rdi), %xmm2
 	movdqu	192(%rdi), %xmm14
 	xorl	%eax, %eax
@@ -1320,9 +1303,7 @@ intel_aes_encrypt_cbc_192:
 	je	2f
 
 //	leaq	IV_OFFSET(%rdi), %rdx
-//	leaq	EXPANDED_KEY_OFFSET(%rdi), %rdi
-	leaq	16(%rdi), %rdx
-	leaq	48(%rdi), %rdi
+	leaq	256(%rdi), %rdx
 
 	movdqu	(%rdx), %xmm0
 	movdqu	(%rdi), %xmm2
@@ -1382,8 +1363,8 @@ intel_aes_encrypt_cbc_192:
 	.globl intel_aes_decrypt_cbc_192
 	.align	16
 intel_aes_decrypt_cbc_192:
-	leaq	16(%rdi), %rdx
-	leaq	48(%rdi), %rdi
+//	leaq	IV_OFFSET(%rdi), %rdx
+	leaq	256(%rdi), %rdx
 
 	movdqu	(%rdx), %xmm0
 	movdqu	(%rdi), %xmm2
@@ -1738,9 +1719,6 @@ key_expansion256:
 	.globl intel_aes_encrypt_ecb_256
 	.align	16
 intel_aes_encrypt_ecb_256:
-//	leaq	EXPANDED_KEY_OFFSET(%rdi), %rdi
-	leaq	48(%rdi), %rdi
-
 	movdqu	(%rdi), %xmm2
 	movdqu	224(%rdi), %xmm15
 	xorl	%eax, %eax
@@ -1970,9 +1948,6 @@ intel_aes_encrypt_ecb_256:
 	.globl intel_aes_decrypt_ecb_256
 	.align	16
 intel_aes_decrypt_ecb_256:
-//	leaq	EXPANDED_KEY_OFFSET(%rdi), %rdi
-	leaq	48(%rdi), %rdi
-
 	movdqu	(%rdi), %xmm2
 	movdqu	224(%rdi), %xmm15
 	xorl	%eax, %eax
@@ -2206,9 +2181,7 @@ intel_aes_encrypt_cbc_256:
 	je	2f
 
 //	leaq	IV_OFFSET(%rdi), %rdx
-//	leaq	EXPANDED_KEY_OFFSET(%rdi), %rdi
-	leaq	16(%rdi), %rdx
-	leaq	48(%rdi), %rdi
+	leaq	256(%rdi), %rdx
 
 	movdqu	(%rdx), %xmm0
 	movdqu	(%rdi), %xmm8
@@ -2274,9 +2247,7 @@ intel_aes_encrypt_cbc_256:
 	.align	16
 intel_aes_decrypt_cbc_256:
 //	leaq	IV_OFFSET(%rdi), %rdx
-//	leaq	EXPANDED_KEY_OFFSET(%rdi), %rdi
-	leaq	16(%rdi), %rdx
-	leaq	48(%rdi), %rdi
+	leaq	256(%rdi), %rdx
 
 	movdqu	(%rdx), %xmm0
 	movdqu	(%rdi), %xmm2
