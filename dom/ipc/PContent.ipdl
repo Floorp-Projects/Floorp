@@ -6,7 +6,7 @@
 
 include protocol PBackground;
 include protocol PBrowser;
-include protocol PCompositorManager;
+include protocol PCompositorBridge;
 include protocol PContentBridge;
 include protocol PContentPermissionRequest;
 include protocol PCycleCollectWithLogs;
@@ -352,7 +352,7 @@ child:
 
     // Give the content process its endpoints to the compositor.
     async InitRendering(
-      Endpoint<PCompositorManagerChild> compositor,
+      Endpoint<PCompositorBridgeChild> compositor,
       Endpoint<PImageBridgeChild> imageBridge,
       Endpoint<PVRManagerChild> vr,
       Endpoint<PVideoDecoderManagerChild> video,
@@ -362,7 +362,7 @@ child:
     // after the compositor process has crashed. The new endpoints may be to a
     // newly launched GPU process, or the compositor thread of the UI process.
     async ReinitRendering(
-      Endpoint<PCompositorManagerChild> compositor,
+      Endpoint<PCompositorBridgeChild> compositor,
       Endpoint<PImageBridgeChild> bridge,
       Endpoint<PVRManagerChild> vr,
       Endpoint<PVideoDecoderManagerChild> video,

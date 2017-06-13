@@ -29,7 +29,6 @@ class CompositorOptions;
 class CompositorSession;
 class CompositorUpdateObserver;
 class PCompositorBridgeChild;
-class PCompositorManagerChild;
 class PImageBridgeChild;
 class RemoteCompositorSession;
 class UiCompositorControllerChild;
@@ -66,7 +65,6 @@ class GPUProcessManager final : public GPUProcessHost::Listener
   typedef layers::IAPZCTreeManager IAPZCTreeManager;
   typedef layers::LayerManager LayerManager;
   typedef layers::PCompositorBridgeChild PCompositorBridgeChild;
-  typedef layers::PCompositorManagerChild PCompositorManagerChild;
   typedef layers::PImageBridgeChild PImageBridgeChild;
   typedef layers::RemoteCompositorSession RemoteCompositorSession;
   typedef layers::UiCompositorControllerChild UiCompositorControllerChild;
@@ -96,7 +94,7 @@ public:
 
   bool CreateContentBridges(
     base::ProcessId aOtherProcess,
-    ipc::Endpoint<PCompositorManagerChild>* aOutCompositor,
+    ipc::Endpoint<PCompositorBridgeChild>* aOutCompositor,
     ipc::Endpoint<PImageBridgeChild>* aOutImageBridge,
     ipc::Endpoint<PVRManagerChild>* aOutVRBridge,
     ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutVideoManager,
@@ -178,8 +176,8 @@ private:
   // Called from our xpcom-shutdown observer.
   void OnXPCOMShutdown();
 
-  bool CreateContentCompositorManager(base::ProcessId aOtherProcess,
-                                      ipc::Endpoint<PCompositorManagerChild>* aOutEndpoint);
+  bool CreateContentCompositorBridge(base::ProcessId aOtherProcess,
+                                     ipc::Endpoint<PCompositorBridgeChild>* aOutEndpoint);
   bool CreateContentImageBridge(base::ProcessId aOtherProcess,
                                 ipc::Endpoint<PImageBridgeChild>* aOutEndpoint);
   bool CreateContentVRManager(base::ProcessId aOtherProcess,
@@ -209,7 +207,6 @@ private:
   void EnsureVsyncIOThread();
   void ShutdownVsyncIOThread();
 
-  void EnsureCompositorManagerChild();
   void EnsureImageBridgeChild();
   void EnsureVRManager();
 

@@ -16,8 +16,6 @@
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/APZCTreeManagerChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
-#include "mozilla/layers/CompositorManagerChild.h"
-#include "mozilla/layers/CompositorManagerParent.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/ImageBridgeParent.h"
@@ -198,34 +196,6 @@ GPUProcessManager::EnsureGPUReady()
   }
 
   return false;
-}
-
-void
-GPUProcessManager::EnsureCompositorManagerChild()
-{
-  if (CompositorManagerChild::IsInitialized()) {
-    return;
-  }
-
-  if (!EnsureGPUReady()) {
-    CompositorManagerChild::InitSameProcess(AllocateNamespace());
-    return;
-  }
-
-  ipc::Endpoint<PCompositorManagerParent> parentPipe;
-  ipc::Endpoint<PCompositorManagerChild> childPipe;
-  nsresult rv = PCompositorManager::CreateEndpoints(
-    mGPUChild->OtherPid(),
-    base::GetCurrentProcId(),
-    &parentPipe,
-    &childPipe);
-  if (NS_FAILED(rv)) {
-    DisableGPUProcess("Failed to create PCompositorManager endpoints");
-    return;
-  }
-
-  mGPUChild->SendInitCompositorManager(Move(parentPipe));
-  CompositorManagerChild::Init(Move(childPipe), AllocateNamespace());
 }
 
 void
@@ -598,7 +568,6 @@ GPUProcessManager::CreateTopLevelCompositor(nsBaseWidget* aWidget,
 {
   uint64_t layerTreeId = AllocateLayerTreeId();
 
-  EnsureCompositorManagerChild();
   EnsureImageBridgeChild();
   EnsureVRManager();
 
@@ -652,20 +621,43 @@ GPUProcessManager::CreateRemoteSession(nsBaseWidget* aWidget,
                                        const gfx::IntSize& aSurfaceSize)
 {
 #ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
+  ipc::Endpoint<PCompositorBridgeParent> parentPipe;
+  ipc::Endpoint<PCompositorBridgeChild> childPipe;
+
+  nsresult rv = PCompositorBridge::CreateEndpoints(
+    mGPUChild->OtherPid(),
+    base::GetCurrentProcId(),
+    &parentPipe,
+    &childPipe);
+  if (NS_FAILED(rv)) {
+    gfxCriticalNote << "Failed to create PCompositorBridge endpoints: " << hexa(int(rv));
+    return nullptr;
+  }
+
+  RefPtr<CompositorBridgeChild> child = CompositorBridgeChild::CreateRemote(
+    mProcessToken,
+    aLayerManager,
+    Move(childPipe),
+    AllocateNamespace());
+  if (!child) {
+    gfxCriticalNote << "Failed to create CompositorBridgeChild";
+    return nullptr;
+  }
+
   CompositorWidgetInitData initData;
   aWidget->GetCompositorWidgetInitData(&initData);
 
-  RefPtr<CompositorBridgeChild> child =
-    CompositorManagerChild::CreateWidgetCompositorBridge(
-      mProcessToken,
-      aLayerManager,
-      AllocateNamespace(),
-      aScale,
-      aOptions,
-      aUseExternalSurfaceSize,
-      aSurfaceSize);
-  if (!child) {
-    gfxCriticalNote << "Failed to create CompositorBridgeChild";
+  TimeDuration vsyncRate =
+    gfxPlatform::GetPlatform()->GetHardwareVsync()->GetGlobalDisplay().GetVsyncRate();
+
+  bool ok = mGPUChild->SendNewWidgetCompositor(
+    Move(parentPipe),
+    aScale,
+    vsyncRate,
+    aOptions,
+    aUseExternalSurfaceSize,
+    aSurfaceSize);
+  if (!ok) {
     return nullptr;
   }
 
@@ -701,13 +693,13 @@ GPUProcessManager::CreateRemoteSession(nsBaseWidget* aWidget,
 
 bool
 GPUProcessManager::CreateContentBridges(base::ProcessId aOtherProcess,
-                                        ipc::Endpoint<PCompositorManagerChild>* aOutCompositor,
+                                        ipc::Endpoint<PCompositorBridgeChild>* aOutCompositor,
                                         ipc::Endpoint<PImageBridgeChild>* aOutImageBridge,
                                         ipc::Endpoint<PVRManagerChild>* aOutVRBridge,
                                         ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutVideoManager,
                                         nsTArray<uint32_t>* aNamespaces)
 {
-  if (!CreateContentCompositorManager(aOtherProcess, aOutCompositor) ||
+  if (!CreateContentCompositorBridge(aOtherProcess, aOutCompositor) ||
       !CreateContentImageBridge(aOtherProcess, aOutImageBridge) ||
       !CreateContentVRManager(aOtherProcess, aOutVRBridge))
   {
@@ -716,38 +708,39 @@ GPUProcessManager::CreateContentBridges(base::ProcessId aOtherProcess,
   // VideoDeocderManager is only supported in the GPU process, so we allow this to be
   // fallible.
   CreateContentVideoDecoderManager(aOtherProcess, aOutVideoManager);
-  // Allocates 3 namespaces(for CompositorManagerChild, CompositorBridgeChild and ImageBridgeChild)
-  aNamespaces->AppendElement(AllocateNamespace());
+  // Allocates 2 namaspaces(for CompositorBridgeChild and ImageBridgeChild)
   aNamespaces->AppendElement(AllocateNamespace());
   aNamespaces->AppendElement(AllocateNamespace());
   return true;
 }
 
 bool
-GPUProcessManager::CreateContentCompositorManager(base::ProcessId aOtherProcess,
-                                                  ipc::Endpoint<PCompositorManagerChild>* aOutEndpoint)
+GPUProcessManager::CreateContentCompositorBridge(base::ProcessId aOtherProcess,
+                                                 ipc::Endpoint<PCompositorBridgeChild>* aOutEndpoint)
 {
-  ipc::Endpoint<PCompositorManagerParent> parentPipe;
-  ipc::Endpoint<PCompositorManagerChild> childPipe;
+  ipc::Endpoint<PCompositorBridgeParent> parentPipe;
+  ipc::Endpoint<PCompositorBridgeChild> childPipe;
 
   base::ProcessId gpuPid = EnsureGPUReady()
                            ? mGPUChild->OtherPid()
                            : base::GetCurrentProcId();
 
-  nsresult rv = PCompositorManager::CreateEndpoints(
+  nsresult rv = PCompositorBridge::CreateEndpoints(
     gpuPid,
     aOtherProcess,
     &parentPipe,
     &childPipe);
   if (NS_FAILED(rv)) {
-    gfxCriticalNote << "Could not create content compositor manager: " << hexa(int(rv));
+    gfxCriticalNote << "Could not create content compositor bridge: " << hexa(int(rv));
     return false;
   }
 
   if (EnsureGPUReady()) {
-    mGPUChild->SendNewContentCompositorManager(Move(parentPipe));
+    mGPUChild->SendNewContentCompositorBridge(Move(parentPipe));
   } else {
-    CompositorManagerParent::Create(Move(parentPipe));
+    if (!CompositorBridgeParent::CreateForContent(Move(parentPipe))) {
+      return false;
+    }
   }
 
   *aOutEndpoint = Move(childPipe);

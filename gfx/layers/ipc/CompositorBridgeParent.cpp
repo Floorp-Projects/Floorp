@@ -42,7 +42,6 @@
 #include "mozilla/layers/AsyncCompositionManager.h"
 #include "mozilla/layers/BasicCompositor.h"  // for BasicCompositor
 #include "mozilla/layers/Compositor.h"  // for Compositor
-#include "mozilla/layers/CompositorManagerParent.h" // for CompositorManagerParent
 #include "mozilla/layers/CompositorOGL.h"  // for CompositorOGL
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorTypes.h"
@@ -107,16 +106,6 @@ using namespace std;
 using base::ProcessId;
 using base::Thread;
 
-CompositorBridgeParentBase::CompositorBridgeParentBase(CompositorManagerParent* aManager)
-  : mCanSend(true)
-  , mCompositorManager(aManager)
-{
-}
-
-CompositorBridgeParentBase::~CompositorBridgeParentBase()
-{
-}
-
 ProcessId
 CompositorBridgeParentBase::GetChildProcessId()
 {
@@ -180,9 +169,6 @@ CompositorBridgeParentBase::StartSharingMetrics(ipc::SharedMemoryBasic::Handle a
                                                 uint64_t aLayersId,
                                                 uint32_t aApzcId)
 {
-  if (!mCanSend) {
-    return false;
-  }
   return PCompositorBridgeParent::SendSharedCompositorFrameMetrics(
     aHandle, aMutexHandle, aLayersId, aApzcId);
 }
@@ -191,9 +177,6 @@ bool
 CompositorBridgeParentBase::StopSharingMetrics(FrameMetrics::ViewID aScrollId,
                                                uint32_t aApzcId)
 {
-  if (!mCanSend) {
-    return false;
-  }
   return PCompositorBridgeParent::SendReleaseSharedCompositorFrameMetrics(
     aScrollId, aApzcId);
 }
@@ -315,14 +298,12 @@ CompositorLoop()
   return CompositorThreadHolder::Loop();
 }
 
-CompositorBridgeParent::CompositorBridgeParent(CompositorManagerParent* aManager,
-                                               CSSToLayoutDeviceScale aScale,
+CompositorBridgeParent::CompositorBridgeParent(CSSToLayoutDeviceScale aScale,
                                                const TimeDuration& aVsyncRate,
                                                const CompositorOptions& aOptions,
                                                bool aUseExternalSurfaceSize,
                                                const gfx::IntSize& aSurfaceSize)
-  : CompositorBridgeParentBase(aManager)
-  , mWidget(nullptr)
+  : mWidget(nullptr)
   , mScale(aScale)
   , mVsyncRate(aVsyncRate)
   , mIsTesting(false)
@@ -336,6 +317,7 @@ CompositorBridgeParent::CompositorBridgeParent(CompositorManagerParent* aManager
   , mRootLayerTreeID(0)
   , mOverrideComposeReadiness(false)
   , mForceCompositionTask(nullptr)
+  , mCompositorThreadHolder(CompositorThreadHolder::GetSingleton())
   , mCompositorScheduler(nullptr)
   , mAnimationStorage(nullptr)
   , mPaintTime(TimeDuration::Forever())
@@ -345,22 +327,35 @@ CompositorBridgeParent::CompositorBridgeParent(CompositorManagerParent* aManager
   , mPluginWindowsHidden(false)
 #endif
 {
+  // Always run destructor on the main thread
+  MOZ_ASSERT(NS_IsMainThread());
 }
 
 void
 CompositorBridgeParent::InitSameProcess(widget::CompositorWidget* aWidget,
                                         const uint64_t& aLayerTreeId)
 {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(NS_IsMainThread());
-
   mWidget = aWidget;
   mRootLayerTreeID = aLayerTreeId;
   if (mOptions.UseAPZ()) {
     mApzcTreeManager = new APZCTreeManager();
   }
 
+  // IPDL initialization. mSelfRef is cleared in DeferredDestroy.
+  SetOtherProcessId(base::GetCurrentProcId());
+  mSelfRef = this;
+
   Initialize();
+}
+
+bool
+CompositorBridgeParent::Bind(Endpoint<PCompositorBridgeParent>&& aEndpoint)
+{
+  if (!aEndpoint.Bind(this)) {
+    return false;
+  }
+  mSelfRef = this;
+  return true;
 }
 
 mozilla::ipc::IPCResult
@@ -493,6 +488,8 @@ CompositorBridgeParent::RecvWillClose()
 void CompositorBridgeParent::DeferredDestroy()
 {
   MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(mCompositorThreadHolder);
+  mCompositorThreadHolder = nullptr;
   mSelfRef = nullptr;
 }
 
@@ -643,8 +640,6 @@ CompositorBridgeParent::RecvNotifyApproximatelyVisibleRegion(const ScrollableLay
 void
 CompositorBridgeParent::ActorDestroy(ActorDestroyReason why)
 {
-  mCanSend = false;
-
   StopAndClearResources();
 
   RemoveCompositor(mCompositorID);
@@ -1939,6 +1934,25 @@ CompositorBridgeParent::InvalidateRemoteLayers()
       Unused << cpcp->SendInvalidateLayers(aLayersId);
     }
   });
+}
+
+static void
+OpenCompositor(RefPtr<CrossProcessCompositorBridgeParent> aCompositor,
+               Endpoint<PCompositorBridgeParent>&& aEndpoint)
+{
+  aCompositor->Bind(Move(aEndpoint));
+}
+
+/* static */ bool
+CompositorBridgeParent::CreateForContent(Endpoint<PCompositorBridgeParent>&& aEndpoint)
+{
+  gfxPlatform::InitLayersIPC();
+
+  RefPtr<CrossProcessCompositorBridgeParent> cpcp =
+    new CrossProcessCompositorBridgeParent();
+
+  CompositorLoop()->PostTask(NewRunnableFunction(OpenCompositor, cpcp, Move(aEndpoint)));
+  return true;
 }
 
 void

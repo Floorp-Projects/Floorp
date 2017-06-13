@@ -36,17 +36,9 @@ InProcessCompositorSession::Create(nsIWidget* aWidget,
   aWidget->GetCompositorWidgetInitData(&initData);
 
   RefPtr<CompositorWidget> widget = CompositorWidget::CreateLocal(initData, aOptions, aWidget);
+  RefPtr<CompositorBridgeChild> child = new CompositorBridgeChild(aLayerManager, aNamespace);
   RefPtr<CompositorBridgeParent> parent =
-    CompositorManagerParent::CreateSameProcessWidgetCompositorBridge(aScale, aOptions,
-                                                                     aUseExternalSurfaceSize,
-                                                                     aSurfaceSize);
-  MOZ_ASSERT(parent);
-  parent->InitSameProcess(widget, aRootLayerTreeId);
-
-  RefPtr<CompositorBridgeChild> child =
-    CompositorManagerChild::CreateSameProcessWidgetCompositorBridge(aLayerManager,
-                                                                    aNamespace);
-  MOZ_ASSERT(child);
+    child->InitSameProcess(widget, aRootLayerTreeId, aScale, aOptions, aUseExternalSurfaceSize, aSurfaceSize);
 
   return new InProcessCompositorSession(widget, child, parent);
 }
