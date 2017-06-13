@@ -63,6 +63,9 @@ NS_IMPL_ISUPPORTS(nsIDNService,
 
 nsresult nsIDNService::Init()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  MutexAutoLock lock(mLock);
+
   nsCOMPtr<nsIPrefService> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefs)
     prefs->GetBranch(NS_NET_PREF_IDNWHITELIST, getter_AddRefs(mIDNWhitelistPrefBranch));
@@ -83,6 +86,9 @@ NS_IMETHODIMP nsIDNService::Observe(nsISupports *aSubject,
                                     const char *aTopic,
                                     const char16_t *aData)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  MutexAutoLock lock(mLock);
+
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     nsCOMPtr<nsIPrefBranch> prefBranch( do_QueryInterface(aSubject) );
     if (prefBranch)
@@ -93,6 +99,9 @@ NS_IMETHODIMP nsIDNService::Observe(nsISupports *aSubject,
 
 void nsIDNService::prefsChanged(nsIPrefBranch *prefBranch, const char16_t *pref)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  mLock.AssertCurrentThreadOwns();
+
   if (!pref || NS_LITERAL_STRING(NS_NET_PREF_IDNBLACKLIST).Equals(pref)) {
     nsCOMPtr<nsISupportsString> blacklist;
     nsresult rv = prefBranch->GetComplexValue(NS_NET_PREF_IDNBLACKLIST,
@@ -131,9 +140,12 @@ void nsIDNService::prefsChanged(nsIPrefBranch *prefBranch, const char16_t *pref)
 }
 
 nsIDNService::nsIDNService()
-  : mShowPunycode(false)
+  : mLock("DNService pref value lock")
+  , mShowPunycode(false)
   , mIDNUseWhitelist(false)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
 #ifdef IDNA2008
   uint32_t IDNAOptions = UIDNA_CHECK_BIDI | UIDNA_CHECK_CONTEXTJ;
   if (!kIDNA2008_TransitionalProcessing) {
@@ -152,6 +164,8 @@ nsIDNService::nsIDNService()
 
 nsIDNService::~nsIDNService()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
 #ifdef IDNA2008
   uidna_close(mIDNA);
 #else
@@ -381,8 +395,41 @@ NS_IMETHODIMP nsIDNService::Normalize(const nsACString & input,
   return NS_OK;
 }
 
+namespace {
+
+class MOZ_STACK_CLASS MutexSettableAutoUnlock final
+{
+  Mutex* mMutex;
+public:
+  MutexSettableAutoUnlock()
+    : mMutex(nullptr)
+  { }
+
+  void
+  Acquire(mozilla::Mutex& aMutex)
+  {
+    MOZ_ASSERT(!mMutex);
+    mMutex = &aMutex;
+    mMutex->Lock();
+  }
+
+  ~MutexSettableAutoUnlock()
+  {
+    if (mMutex) {
+      mMutex->Unlock();
+    }
+  }
+};
+
+} // anonymous namespace
+
 NS_IMETHODIMP nsIDNService::ConvertToDisplayIDN(const nsACString & input, bool * _isASCII, nsACString & _retval)
 {
+  MutexSettableAutoUnlock lock;
+  if (!NS_IsMainThread()) {
+    lock.Acquire(mLock);
+  }
+
   // If host is ACE, then convert to UTF-8 if the host is in the IDN whitelist.
   // Else, if host is already UTF-8, then make sure it is normalized per IDN.
 
@@ -754,6 +801,10 @@ nsresult nsIDNService::decodeACE(const nsACString& in, nsACString& out,
 
 bool nsIDNService::isInWhitelist(const nsACString &host)
 {
+  if (!NS_IsMainThread()) {
+    mLock.AssertCurrentThreadOwns();
+  }
+
   if (mIDNUseWhitelist && mIDNWhitelistPrefBranch) {
     nsAutoCString tld(host);
     // make sure the host is ACE for lookup and check that there are no
@@ -780,6 +831,10 @@ bool nsIDNService::isInWhitelist(const nsACString &host)
 
 bool nsIDNService::isLabelSafe(const nsAString &label)
 {
+  if (!NS_IsMainThread()) {
+    mLock.AssertCurrentThreadOwns();
+  }
+
   if (!isOnlySafeChars(PromiseFlatString(label), mIDNBlacklist)) {
     return false;
   }
@@ -920,6 +975,10 @@ static const int32_t scriptComboTable[13][9] = {
 
 bool nsIDNService::illegalScriptCombo(Script script, int32_t& savedScript)
 {
+  if (!NS_IsMainThread()) {
+    mLock.AssertCurrentThreadOwns();
+  }
+
   if (savedScript == -1) {
     savedScript = findScriptIndex(script);
     return false;
