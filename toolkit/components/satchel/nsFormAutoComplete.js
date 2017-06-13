@@ -428,7 +428,7 @@ FormAutoComplete.prototype = {
         if (aListener) {
           aListener.onSearchCompletion(result);
         }
-      }
+      };
 
       this.getAutoCompleteValues(client, aInputName, searchString, processEntry);
     }
@@ -494,7 +494,7 @@ FormAutoComplete.prototype = {
       timeGroupingSize:   this._timeGroupingSize,
       prefixWeight:       this._prefixWeight,
       boundaryWeight:     this._boundaryWeight
-    }
+    };
 
     this.stopAutoCompleteSearch();
     client.requestAutoCompleteResults(searchString, params, (entries) => {

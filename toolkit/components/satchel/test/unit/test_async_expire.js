@@ -12,8 +12,8 @@ function triggerExpiration() {
   Services.obs.notifyObservers(null, "formhistory-expire-now");
 }
 
-var checkExists = function(num) { do_check_true(num > 0); next_test(); }
-var checkNotExists = function(num) { do_check_true(!num); next_test(); }
+var checkExists = function(num) { do_check_true(num > 0); next_test(); };
+var checkNotExists = function(num) { do_check_true(!num); next_test(); };
 
 var TestObserver = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
@@ -90,7 +90,7 @@ function* tests() {
     }
 
     return changes;
-  }
+  };
 
   let results = yield searchEntries(["guid"], { lastUsed: 181 }, iter);
   yield updateFormHistory(updateLastUsed(results, 181), next_test);
