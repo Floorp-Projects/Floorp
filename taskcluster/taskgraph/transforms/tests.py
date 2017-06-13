@@ -514,9 +514,9 @@ def enable_code_coverage(config, tests):
             test['mozharness'].setdefault('extra-options', []).append('--code-coverage')
             test['when'] = {}
             test['instance-size'] = 'xlarge'
-            test['run-on-projects'] = []
+            test['run-on-projects'] = ['mozilla-central']
         elif test['build-platform'] == 'linux64-jsdcov/opt':
-            test['run-on-projects'] = []
+            test['run-on-projects'] = ['mozilla-central']
         yield test
 
 
