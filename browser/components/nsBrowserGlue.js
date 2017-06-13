@@ -19,6 +19,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-s
 XPCOMUtils.defineLazyGetter(this, "WeaveService", () =>
   Cc["@mozilla.org/weave/service;1"].getService().wrappedJSObject
 );
+XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
+                                  "resource://gre/modules/ContextualIdentityService.jsm");
 
 // lazy module getters
 
@@ -1178,6 +1180,11 @@ BrowserGlue.prototype = {
         });
       }
     }
+
+    // Let's load the contextual identities.
+    Services.tm.mainThread.idleDispatch(() => {
+      ContextualIdentityService.load();
+    });
 
     this._sanitizer.onStartup();
     E10SAccessibilityCheck.onWindowsRestored();
