@@ -107,11 +107,9 @@ add_test(function test_string() {
 });
 
 add_test(function test_window() {
-  assert.window({ document: { defaultView: true }});
+  assert.window({closed: false});
 
-  let deadWindow = { get document() { throw new TypeError("can't access dead object"); }};
-
-  for (let typ of [null, undefined, deadWindow]) {
+  for (let typ of [null, undefined, {closed: true}]) {
     Assert.throws(() => assert.window(typ), NoSuchWindowError);
   }
 
@@ -119,9 +117,12 @@ add_test(function test_window() {
 });
 
 add_test(function test_contentBrowser() {
-  assert.contentBrowser({contentBrowser: 42});
+  assert.contentBrowser({contentBrowser: 42, window: {closed: false}});
 
-  for (let typ of [null, undefined, {contentBrowser: null}]) {
+  let closedWindow = {contentBrowser: 42, window: {closed: true}};
+  let noContentBrowser = {contentBrowser: null, window: {closed: false}};
+
+  for (let typ of [null, undefined, closedWindow, noContentBrowser]) {
     Assert.throws(() => assert.contentBrowser(typ), NoSuchWindowError);
   }
 
