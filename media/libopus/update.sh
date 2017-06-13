@@ -74,5 +74,4 @@ sed -e "s/DEFINES\['OPUS_VERSION'\][ \t]*=[ \t]*'\".*\"'/DEFINES['OPUS_VERSION']
 python gen-sources.py $1
 
 # apply outstanding local patches
-patch -p3 < gcc-4.8-ICE.patch
 patch -p3 < nonunified.patch
