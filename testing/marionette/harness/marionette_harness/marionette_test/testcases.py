@@ -72,6 +72,7 @@ class CommonTestCase(unittest.TestCase):
         self._marionette_weakref = marionette_weakref
         self.fixtures = fixtures
 
+        self.loglines = []
         self.duration = 0
         self.start_time = 0
         self.expected = kwargs.pop('expected', 'pass')
@@ -250,17 +251,22 @@ class CommonTestCase(unittest.TestCase):
         super(CommonTestCase, self).setUp()
 
     def cleanTest(self):
-        self._delete_session()
+        self._deleteSession()
 
-    def _delete_session(self):
-        if hasattr(self, "start_time"):
+    def _deleteSession(self):
+        if hasattr(self, 'start_time'):
             self.duration = time.time() - self.start_time
-        if self.marionette.session is not None:
-            try:
-                self.marionette.delete_session()
-            except IOError:
-                # Gecko has crashed?
-                pass
+        if hasattr(self.marionette, 'session'):
+            if self.marionette.session is not None:
+                try:
+                    self.loglines.extend(self.marionette.get_logs())
+                except Exception, inst:
+                    self.loglines = [['Error getting log: {}'.format(inst)]]
+                try:
+                    self.marionette.delete_session()
+                except IOError:
+                    # Gecko has crashed?
+                    pass
         self.marionette = None
 
 
@@ -311,7 +317,9 @@ class MarionetteTestCase(CommonTestCase):
     def setUp(self):
         super(MarionetteTestCase, self).setUp()
         self.marionette.test_name = self.test_name
-        self.logger.info("TEST-START: {}".format(self.test_name))
+        self.marionette.execute_script("log('TEST-START: {0}')"
+                                       .format(self.test_name),
+                                       sandbox="simpletest")
 
     def tearDown(self):
         # In the case no session is active (eg. the application was quit), start
@@ -321,7 +329,9 @@ class MarionetteTestCase(CommonTestCase):
 
         if not self.marionette.crashed:
             try:
-                self.logger.info("TEST-END: {}".format(self.test_name))
+                self.marionette.execute_script("log('TEST-END: {0}')"
+                                               .format(self.test_name),
+                                               sandbox="simpletest")
                 self.marionette.test_name = None
             except (MarionetteException, IOError):
                 # We have tried to log the test end when there is no listener
