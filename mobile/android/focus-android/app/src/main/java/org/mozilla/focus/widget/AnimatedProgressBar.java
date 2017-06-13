@@ -14,6 +14,7 @@ import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
@@ -125,12 +126,16 @@ public class AnimatedProgressBar extends ProgressBar {
 
     private void animateClosing() {
         mClosingAnimator.cancel();
-        getHandler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mClosingAnimator.start();
-            }
-        }, CLOSING_DELAY);
+
+        final Handler handler = getHandler();
+        if (handler != null) {
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mClosingAnimator.start();
+                }
+            }, CLOSING_DELAY);
+        }
     }
 
     private void setProgressImmediately(int progress) {
