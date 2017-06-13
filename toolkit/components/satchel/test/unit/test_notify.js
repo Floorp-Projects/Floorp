@@ -56,7 +56,7 @@ function* run_test_steps() {
 
     /* ========== 1 ========== */
     testnum = 1;
-    testdesc = "Initial connection to storage module"
+    testdesc = "Initial connection to storage module";
 
     yield updateEntry("remove", null, null, next_test);
     yield countEntries(null, null, function(num) {
@@ -153,7 +153,7 @@ function* run_test_steps() {
     yield FormHistory.update({ op: "remove", firstUsedStart: expectedData[0], firstUsedEnd: expectedData[1] },
                              { handleCompletion(reason) {
                                if (!reason) {
-                                 next_test()
+                                 next_test();
                                }
                              },
                              handleErrors(error) {

@@ -18,5 +18,6 @@ module.exports = {
       //MemberExpression: "off",
       outerIIFEBody: 0,
     }],
+    semi: ["error", "always"],
   },
 };
