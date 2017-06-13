@@ -45,36 +45,15 @@ extern "C" {
 // in rpcproxy.h, so we need this declaration.
 void RPC_ENTRY GetProxyDllInfo(const ProxyFileInfo*** aInfo, const CLSID** aId);
 
-#if defined(_MSC_VER)
-extern IMAGE_DOS_HEADER __ImageBase;
-#endif
-
 }
 
 namespace mozilla {
 namespace mscom {
 
-static HMODULE
-GetContainingModule()
-{
-  HMODULE thisModule = nullptr;
-#if defined(_MSC_VER)
-  thisModule = reinterpret_cast<HMODULE>(&__ImageBase);
-#else
-  if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                         GET_MODULE_HANDLE_EX_UNCHANGED_REFCOUNT,
-                         reinterpret_cast<LPCTSTR>(&GetContainingModule),
-                         &thisModule)) {
-    return nullptr;
-  }
-#endif
-  return thisModule;
-}
-
 static bool
 GetContainingLibPath(wchar_t* aBuffer, size_t aBufferLen)
 {
-  HMODULE thisModule = GetContainingModule();
+  HMODULE thisModule = reinterpret_cast<HMODULE>(GetContainingModuleHandle());
   if (!thisModule) {
     return false;
   }
@@ -199,10 +178,7 @@ RegisterProxy(const wchar_t* aLeafName, RegistrationFlags aFlags)
 
   // Instantiate an activation context so that CoGetClassObject will use any
   // COM metadata embedded in proxyDll's manifest to resolve CLSIDs.
-  ActivationContext actCtx(proxyDll);
-  if (!actCtx) {
-    return nullptr;
-  }
+  ActivationContextRegion actCtxRgn(proxyDll.get());
 
   auto GetProxyDllInfoFn = reinterpret_cast<decltype(&GetProxyDllInfo)>(
       GetProcAddress(proxyDll, "GetProxyDllInfo"));
