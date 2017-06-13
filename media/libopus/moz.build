@@ -86,6 +86,29 @@ else:
     ]
     UNIFIED_SOURCES += silk_sources_fixed
 
+if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
+    DEFINES['OPUS_HAVE_RTCD'] = True
+    DEFINES['OPUS_X86_MAY_HAVE_SSE'] = True
+    DEFINES['OPUS_X86_MAY_HAVE_SSE2'] = True
+    DEFINES['OPUS_X86_MAY_HAVE_SSE4_1'] = True
+    DEFINES['OPUS_X86_MAY_HAVE_AVX'] = True
+    SOURCES += celt_sources_sse
+    SOURCES += celt_sources_sse2
+    SOURCES += celt_sources_sse4_1
+    SOURCES += silk_sources_sse4_1
+    if not CONFIG['MOZ_SAMPLE_TYPE_FLOAT32']:
+        SOURCES += silk_sources_fixed_sse4_1
+    if not CONFIG['_MSC_VER'] or CONFIG['CLANG_CL']:
+        for f in SOURCES:
+            if f in celt_sources_sse:
+                SOURCES[f].flags += CONFIG['SSE_FLAGS']
+            if f in celt_sources_sse2:
+                SOURCES[f].flags += CONFIG['SSE2_FLAGS']
+            if f in celt_sources_sse4_1 or \
+               f in silk_sources_sse4_1 or \
+               f in silk_sources_fixed_sse4_1:
+                SOURCES[f].flags += ['-msse4.1']
+
 if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_AS']:
     SOURCES += celt_sources_arm
     SOURCES += [
