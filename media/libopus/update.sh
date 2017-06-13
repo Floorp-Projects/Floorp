@@ -24,7 +24,7 @@ fi
 
 # "parse" the makefile fragments to get the list of source files
 # requires GNU sed extensions
-SRC_FILES=$(sed -e ':a;N;$!ba;s/#[^\n]*\(\n\)/\1/g;s/\\\n//g;s/[A-Z_]* = //g' \
+SRC_FILES=$(sed -e ':a;N;$!ba;s/#[^\n]*\(\n\)/\1/g;s/\\\n//g;s/[A-Z0-9_]*[ \t]*=[ \t]*//g' \
              $(for file in ${MK_FILES}; do echo "$1/${file}"; done))
 
 # pre-release versions of the code don't list opus_custom.h
