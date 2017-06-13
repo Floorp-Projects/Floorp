@@ -4113,12 +4113,12 @@ nsTableFrame::IsAutoBSize(WritingMode aWM)
 }
 
 nscoord
-nsTableFrame::CalcBorderBoxBSize(const ReflowInput& aState)
+nsTableFrame::CalcBorderBoxBSize(const ReflowInput& aReflowInput)
 {
-  nscoord bSize = aState.ComputedBSize();
+  nscoord bSize = aReflowInput.ComputedBSize();
   if (NS_AUTOHEIGHT != bSize) {
-    WritingMode wm = aState.GetWritingMode();
-    LogicalMargin borderPadding = GetChildAreaOffset(wm, &aState);
+    WritingMode wm = aReflowInput.GetWritingMode();
+    LogicalMargin borderPadding = GetChildAreaOffset(wm, &aReflowInput);
     bSize += borderPadding.BStartEnd(wm);
   }
   bSize = std::max(0, bSize);
