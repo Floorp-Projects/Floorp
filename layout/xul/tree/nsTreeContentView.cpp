@@ -9,15 +9,22 @@
 #include "nsTreeUtils.h"
 #include "nsTreeContentView.h"
 #include "ChildIterator.h"
+#include "nsDOMClassInfoID.h"
 #include "nsError.h"
 #include "nsIXULSortService.h"
+#include "nsContentUtils.h"
 #include "nsTreeBodyFrame.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/TreeContentViewBinding.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIDocument.h"
 
 using namespace mozilla;
+
+#define NS_ENSURE_NATIVE_COLUMN(_col)                                \
+  RefPtr<nsTreeColumn> col = nsTreeBodyFrame::GetColumnImpl(_col); \
+  if (!col) {                                                        \
+    return NS_ERROR_INVALID_ARG;                                     \
+  }
 
 // A content model view implementation for the tree.
 
@@ -29,7 +36,7 @@ using namespace mozilla;
 class Row
 {
   public:
-    Row(Element* aContent, int32_t aParentIndex)
+    Row(nsIContent* aContent, int32_t aParentIndex)
       : mContent(aContent), mParentIndex(aParentIndex),
         mSubtreeSize(0), mFlags(0) {
     }
@@ -58,7 +65,7 @@ class Row
     bool IsSeparator() { return !!(mFlags & ROW_FLAG_SEPARATOR); }
 
     // Weak reference to a content item.
-    Element*            mContent;
+    nsIContent*         mContent;
 
     // The parent index of the item, set to -1 for the top level items.
     int32_t             mParentIndex;
@@ -103,11 +110,11 @@ NS_NewTreeContentView(nsITreeView** aResult)
   return NS_OK;
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsTreeContentView,
-                                      mBoxObject,
-                                      mSelection,
-                                      mRoot,
-                                      mBody)
+NS_IMPL_CYCLE_COLLECTION(nsTreeContentView,
+                         mBoxObject,
+                         mSelection,
+                         mRoot,
+                         mBody)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTreeContentView)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTreeContentView)
@@ -118,21 +125,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTreeContentView)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITreeContentView)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TreeContentView)
 NS_INTERFACE_MAP_END
-
-JSObject*
-nsTreeContentView::WrapObject(JSContext* aCx,
-                              JS::Handle<JSObject*> aGivenProto)
-{
-  return TreeContentViewBinding::Wrap(aCx, this, aGivenProto);
-}
-
-nsISupports*
-nsTreeContentView::GetParentObject()
-{
-  return mBoxObject;
-}
 
 NS_IMETHODIMP
 nsTreeContentView::GetRowCount(int32_t* aRowCount)
@@ -145,7 +139,7 @@ nsTreeContentView::GetRowCount(int32_t* aRowCount)
 NS_IMETHODIMP
 nsTreeContentView::GetSelection(nsITreeSelection** aSelection)
 {
-  NS_IF_ADDREF(*aSelection = GetSelection());
+  NS_IF_ADDREF(*aSelection = mSelection);
 
   return NS_OK;
 }
@@ -163,32 +157,21 @@ nsTreeContentView::CanTrustTreeSelection(nsISupports* aValue)
 NS_IMETHODIMP
 nsTreeContentView::SetSelection(nsITreeSelection* aSelection)
 {
-  ErrorResult rv;
-  SetSelection(aSelection, rv);
-  return rv.StealNSResult();
-}
-
-void
-nsTreeContentView::SetSelection(nsITreeSelection* aSelection, ErrorResult& aError)
-{
-  if (aSelection && !CanTrustTreeSelection(aSelection)) {
-    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
+  NS_ENSURE_TRUE(!aSelection || CanTrustTreeSelection(aSelection),
+                 NS_ERROR_DOM_SECURITY_ERR);
 
   mSelection = aSelection;
+  return NS_OK;
 }
 
-void
-nsTreeContentView::GetRowProperties(int32_t aRow, nsAString& aProperties,
-                                    ErrorResult& aError)
+NS_IMETHODIMP
+nsTreeContentView::GetRowProperties(int32_t aIndex, nsAString& aProps)
 {
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return;
-  }
+  NS_PRECONDITION(aIndex >= 0 && aIndex < int32_t(mRows.Length()), "bad index");
+  if (aIndex < 0 || aIndex >= int32_t(mRows.Length()))
+    return NS_ERROR_INVALID_ARG;   
 
-  Row* row = mRows[aRow].get();
+  Row* row = mRows[aIndex].get();
   nsIContent* realRow;
   if (row->IsSeparator())
     realRow = row->mContent;
@@ -196,422 +179,287 @@ nsTreeContentView::GetRowProperties(int32_t aRow, nsAString& aProperties,
     realRow = nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
 
   if (realRow) {
-    realRow->GetAttr(kNameSpaceID_None, nsGkAtoms::properties, aProperties);
-  }
-}
-
-NS_IMETHODIMP
-nsTreeContentView::GetRowProperties(int32_t aIndex, nsAString& aProps)
-{
-  ErrorResult rv;
-  GetRowProperties(aIndex, aProps, rv);
-  return rv.StealNSResult();
-}
-
-void
-nsTreeContentView::GetCellProperties(int32_t aRow, nsTreeColumn& aColumn,
-                                     nsAString& aProperties,
-                                     ErrorResult& aError)
-{
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return;
+    realRow->GetAttr(kNameSpaceID_None, nsGkAtoms::properties, aProps);
   }
 
-  Row* row = mRows[aRow].get();
-  nsIContent* realRow =
-    nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
-  if (realRow) {
-    nsIContent* cell = GetCell(realRow, aColumn);
-    if (cell) {
-      cell->GetAttr(kNameSpaceID_None, nsGkAtoms::properties, aProperties);
-    }
-  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTreeContentView::GetCellProperties(int32_t aRow, nsITreeColumn* aCol,
                                      nsAString& aProps)
 {
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
+  NS_ENSURE_NATIVE_COLUMN(aCol);
+  NS_PRECONDITION(aRow >= 0 && aRow < int32_t(mRows.Length()), "bad row");
+  if (aRow < 0 || aRow >= int32_t(mRows.Length()))
+    return NS_ERROR_INVALID_ARG;   
 
-  ErrorResult rv;
-  GetCellProperties(aRow, *col, aProps, rv);
-  return rv.StealNSResult();
-}
+  Row* row = mRows[aRow].get();
+  nsIContent* realRow =
+    nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
+  if (realRow) {
+    nsIContent* cell = GetCell(realRow, aCol);
+    if (cell) {
+      cell->GetAttr(kNameSpaceID_None, nsGkAtoms::properties, aProps);
+    }
+  }
 
-void
-nsTreeContentView::GetColumnProperties(nsTreeColumn& aColumn,
-                                       nsAString& aProperties)
-{
-  nsCOMPtr<nsIDOMElement> element;
-  aColumn.GetElement(getter_AddRefs(element));
-
-  element->GetAttribute(NS_LITERAL_STRING("properties"), aProperties);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTreeContentView::GetColumnProperties(nsITreeColumn* aCol, nsAString& aProps)
 {
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
+  NS_ENSURE_NATIVE_COLUMN(aCol);
+  nsCOMPtr<nsIDOMElement> element;
+  aCol->GetElement(getter_AddRefs(element));
 
-  GetColumnProperties(*col, aProps);
+  element->GetAttribute(NS_LITERAL_STRING("properties"), aProps);
   return NS_OK;
-}
-
-bool
-nsTreeContentView::IsContainer(int32_t aRow, ErrorResult& aError)
-{
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return false;
-  }
-
-  return mRows[aRow]->IsContainer();
 }
 
 NS_IMETHODIMP
 nsTreeContentView::IsContainer(int32_t aIndex, bool* _retval)
 {
-  ErrorResult rv;
-  *_retval = IsContainer(aIndex, rv);
-  return rv.StealNSResult();
-}
+  NS_PRECONDITION(aIndex >= 0 && aIndex < int32_t(mRows.Length()), "bad index");
+  if (aIndex < 0 || aIndex >= int32_t(mRows.Length()))
+    return NS_ERROR_INVALID_ARG;   
 
-bool
-nsTreeContentView::IsContainerOpen(int32_t aRow, ErrorResult& aError)
-{
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return false;
-  }
+  *_retval = mRows[aIndex]->IsContainer();
 
-  return mRows[aRow]->IsOpen();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTreeContentView::IsContainerOpen(int32_t aIndex, bool* _retval)
 {
-  ErrorResult rv;
-  *_retval = IsContainerOpen(aIndex, rv);
-  return rv.StealNSResult();
-}
+  NS_PRECONDITION(aIndex >= 0 && aIndex < int32_t(mRows.Length()), "bad index");
+  if (aIndex < 0 || aIndex >= int32_t(mRows.Length()))
+    return NS_ERROR_INVALID_ARG;   
 
-bool
-nsTreeContentView::IsContainerEmpty(int32_t aRow, ErrorResult& aError)
-{
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return false;
-  }
+  *_retval = mRows[aIndex]->IsOpen();
 
-  return mRows[aRow]->IsEmpty();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTreeContentView::IsContainerEmpty(int32_t aIndex, bool* _retval)
 {
-  ErrorResult rv;
-  *_retval = IsContainerEmpty(aIndex, rv);
-  return rv.StealNSResult();
-}
+  NS_PRECONDITION(aIndex >= 0 && aIndex < int32_t(mRows.Length()), "bad index");
+  if (aIndex < 0 || aIndex >= int32_t(mRows.Length()))
+    return NS_ERROR_INVALID_ARG;   
 
-bool
-nsTreeContentView::IsSeparator(int32_t aRow, ErrorResult& aError)
-{
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return false;
-  }
+  *_retval = mRows[aIndex]->IsEmpty();
 
-  return mRows[aRow]->IsSeparator();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTreeContentView::IsSeparator(int32_t aIndex, bool *_retval)
 {
-  ErrorResult rv;
-  *_retval = IsSeparator(aIndex, rv);
-  return rv.StealNSResult();
+  NS_PRECONDITION(aIndex >= 0 && aIndex < int32_t(mRows.Length()), "bad index");
+  if (aIndex < 0 || aIndex >= int32_t(mRows.Length()))
+    return NS_ERROR_INVALID_ARG;   
+
+  *_retval = mRows[aIndex]->IsSeparator();
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTreeContentView::IsSorted(bool *_retval)
 {
-  *_retval = IsSorted();
+  *_retval = false;
 
   return NS_OK;
-}
-
-bool
-nsTreeContentView::CanDrop(int32_t aRow, int32_t aOrientation,
-                           DataTransfer* aDataTransfer, ErrorResult& aError)
-{
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-  }
-  return false;
 }
 
 NS_IMETHODIMP
 nsTreeContentView::CanDrop(int32_t aIndex, int32_t aOrientation,
                            nsIDOMDataTransfer* aDataTransfer, bool *_retval)
 {
-  ErrorResult rv;
-  *_retval = CanDrop(aIndex, aOrientation, DataTransfer::Cast(aDataTransfer),
-                     rv);
-  return rv.StealNSResult();
+  NS_PRECONDITION(aIndex >= 0 && aIndex < int32_t(mRows.Length()), "bad index");
+  if (aIndex < 0 || aIndex >= int32_t(mRows.Length()))
+    return NS_ERROR_INVALID_ARG;   
+
+  *_retval = false;
+ 
+  return NS_OK;
 }
  
-void
-nsTreeContentView::Drop(int32_t aRow, int32_t aOrientation,
-                        DataTransfer* aDataTransfer, ErrorResult& aError)
-{
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-  }
-}
-
 NS_IMETHODIMP
 nsTreeContentView::Drop(int32_t aRow, int32_t aOrientation, nsIDOMDataTransfer* aDataTransfer)
 {
-  ErrorResult rv;
-  Drop(aRow, aOrientation, DataTransfer::Cast(aDataTransfer), rv);
-  return rv.StealNSResult();
-}
+  NS_PRECONDITION(aRow >= 0 && aRow < int32_t(mRows.Length()), "bad row");
+  if (aRow < 0 || aRow >= int32_t(mRows.Length()))
+    return NS_ERROR_INVALID_ARG;   
 
-int32_t
-nsTreeContentView::GetParentIndex(int32_t aRow, ErrorResult& aError)
-{
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return 0;
-  }
-
-  return mRows[aRow]->mParentIndex;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTreeContentView::GetParentIndex(int32_t aRowIndex, int32_t* _retval)
 {
-  ErrorResult rv;
-  *_retval = GetParentIndex(aRowIndex, rv);
-  return rv.StealNSResult();
-}
+  NS_PRECONDITION(aRowIndex >= 0 && aRowIndex < int32_t(mRows.Length()),
+                  "bad row index");
+  if (aRowIndex < 0 || aRowIndex >= int32_t(mRows.Length()))
+    return NS_ERROR_INVALID_ARG;   
 
-bool
-nsTreeContentView::HasNextSibling(int32_t aRow, int32_t aAfterIndex,
-                                  ErrorResult& aError)
-{
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return false;
-  }
+  *_retval = mRows[aRowIndex]->mParentIndex;
 
-  // We have a next sibling if the row is not the last in the subtree.
-  int32_t parentIndex = mRows[aRow]->mParentIndex;
-  if (parentIndex < 0) {
-    return uint32_t(aRow) < mRows.Length() - 1;
-  }
-
-  // Compute the last index in this subtree.
-  int32_t lastIndex = parentIndex + (mRows[parentIndex])->mSubtreeSize;
-  Row* row = mRows[lastIndex].get();
-  while (row->mParentIndex != parentIndex) {
-    lastIndex = row->mParentIndex;
-    row = mRows[lastIndex].get();
-  }
-
-  return aRow < lastIndex;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTreeContentView::HasNextSibling(int32_t aRowIndex, int32_t aAfterIndex, bool* _retval)
 {
-  ErrorResult rv;
-  *_retval = HasNextSibling(aRowIndex, aAfterIndex, rv);
-  return rv.StealNSResult();
-}
+  NS_PRECONDITION(aRowIndex >= 0 && aRowIndex < int32_t(mRows.Length()),
+                  "bad row index");
+  if (aRowIndex < 0 || aRowIndex >= int32_t(mRows.Length()))
+    return NS_ERROR_INVALID_ARG;   
 
-int32_t
-nsTreeContentView::GetLevel(int32_t aRow, ErrorResult& aError)
-{
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return 0;
+  // We have a next sibling if the row is not the last in the subtree.
+  int32_t parentIndex = mRows[aRowIndex]->mParentIndex;
+  if (parentIndex >= 0) {
+    // Compute the last index in this subtree.
+    int32_t lastIndex = parentIndex + (mRows[parentIndex])->mSubtreeSize;
+    Row* row = mRows[lastIndex].get();
+    while (row->mParentIndex != parentIndex) {
+      lastIndex = row->mParentIndex;
+      row = mRows[lastIndex].get();
+    }
+
+    *_retval = aRowIndex < lastIndex;
+  }
+  else {
+    *_retval = uint32_t(aRowIndex) < mRows.Length() - 1;
   }
 
-  int32_t level = 0;
-  Row* row = mRows[aRow].get();
-  while (row->mParentIndex >= 0) {
-    level++;
-    row = mRows[row->mParentIndex].get();
-  }
-  return level;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTreeContentView::GetLevel(int32_t aIndex, int32_t* _retval)
 {
-  ErrorResult rv;
-  *_retval = GetLevel(aIndex, rv);
-  return rv.StealNSResult();
+  NS_PRECONDITION(aIndex >= 0 && aIndex < int32_t(mRows.Length()), "bad index");
+  if (aIndex < 0 || aIndex >= int32_t(mRows.Length()))
+    return NS_ERROR_INVALID_ARG;   
+
+  int32_t level = 0;
+  Row* row = mRows[aIndex].get();
+  while (row->mParentIndex >= 0) {
+    level++;
+    row = mRows[row->mParentIndex].get();
+  }
+  *_retval = level;
+
+  return NS_OK;
 }
 
-void
-nsTreeContentView::GetImageSrc(int32_t aRow, nsTreeColumn& aColumn,
-                               nsAString& aSrc, ErrorResult& aError)
-{
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return;
-  }
-
-  Row* row = mRows[aRow].get();
-
-  nsIContent* realRow =
-    nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
-  if (realRow) {
-    nsIContent* cell = GetCell(realRow, aColumn);
-    if (cell)
-      cell->GetAttr(kNameSpaceID_None, nsGkAtoms::src, aSrc);
-  }
-}
-
-NS_IMETHODIMP
+ NS_IMETHODIMP
 nsTreeContentView::GetImageSrc(int32_t aRow, nsITreeColumn* aCol, nsAString& _retval)
 {
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
-
-  ErrorResult rv;
-  GetImageSrc(aRow, *col, _retval, rv);
-  return rv.StealNSResult();
-}
-
-int32_t
-nsTreeContentView::GetProgressMode(int32_t aRow, nsTreeColumn& aColumn,
-                                   ErrorResult& aError)
-{
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return 0;
-  }
+  _retval.Truncate();
+  NS_ENSURE_NATIVE_COLUMN(aCol);
+  NS_PRECONDITION(aRow >= 0 && aRow < int32_t(mRows.Length()), "bad row");
+  if (aRow < 0 || aRow >= int32_t(mRows.Length()))
+    return NS_ERROR_INVALID_ARG;   
 
   Row* row = mRows[aRow].get();
 
   nsIContent* realRow =
     nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
   if (realRow) {
-    nsIContent* cell = GetCell(realRow, aColumn);
-    if (cell) {
-      static nsIContent::AttrValuesArray strings[] =
-        {&nsGkAtoms::normal, &nsGkAtoms::undetermined, nullptr};
-      switch (cell->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::mode,
-                                    strings, eCaseMatters)) {
-        case 0:
-        {
-          return nsITreeView::PROGRESS_NORMAL;
-        }
-        case 1:
-        {
-          return nsITreeView::PROGRESS_UNDETERMINED;
-        }
-      }
-    }
+    nsIContent* cell = GetCell(realRow, aCol);
+    if (cell)
+      cell->GetAttr(kNameSpaceID_None, nsGkAtoms::src, _retval);
   }
 
-  return nsITreeView::PROGRESS_NONE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTreeContentView::GetProgressMode(int32_t aRow, nsITreeColumn* aCol, int32_t* _retval)
 {
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
+  NS_ENSURE_NATIVE_COLUMN(aCol);
+  NS_PRECONDITION(aRow >= 0 && aRow < int32_t(mRows.Length()), "bad row");
+  if (aRow < 0 || aRow >= int32_t(mRows.Length()))
+    return NS_ERROR_INVALID_ARG;   
 
-  ErrorResult rv;
-  *_retval = GetProgressMode(aRow, *col, rv);
-  return rv.StealNSResult();
-}
-
-void
-nsTreeContentView::GetCellValue(int32_t aRow, nsTreeColumn& aColumn,
-                                nsAString& aValue, ErrorResult& aError)
-{
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return;
-  }
+  *_retval = nsITreeView::PROGRESS_NONE;
 
   Row* row = mRows[aRow].get();
 
   nsIContent* realRow =
     nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
   if (realRow) {
-    nsIContent* cell = GetCell(realRow, aColumn);
-    if (cell)
-      cell->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aValue);
+    nsIContent* cell = GetCell(realRow, aCol);
+    if (cell) {
+      static nsIContent::AttrValuesArray strings[] =
+        {&nsGkAtoms::normal, &nsGkAtoms::undetermined, nullptr};
+      switch (cell->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::mode,
+                                    strings, eCaseMatters)) {
+        case 0: *_retval = nsITreeView::PROGRESS_NORMAL; break;
+        case 1: *_retval = nsITreeView::PROGRESS_UNDETERMINED; break;
+      }
+    }
   }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTreeContentView::GetCellValue(int32_t aRow, nsITreeColumn* aCol, nsAString& _retval)
 {
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
-
-  ErrorResult rv;
-  GetCellValue(aRow, *col, _retval, rv);
-  return rv.StealNSResult();
-}
-
-void
-nsTreeContentView::GetCellText(int32_t aRow, nsTreeColumn& aColumn,
-                               nsAString& aText, ErrorResult& aError)
-{
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return;
-  }
+  _retval.Truncate();
+  NS_ENSURE_NATIVE_COLUMN(aCol);
+  NS_PRECONDITION(aRow >= 0 && aRow < int32_t(mRows.Length()), "bad row");
+  if (aRow < 0 || aRow >= int32_t(mRows.Length()))
+    return NS_ERROR_INVALID_ARG;   
 
   Row* row = mRows[aRow].get();
 
-  // Check for a "label" attribute - this is valid on an <treeitem>
-  // with a single implied column.
-  if (row->mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aText) &&
-      !aText.IsEmpty()) {
-    return;
+  nsIContent* realRow =
+    nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
+  if (realRow) {
+    nsIContent* cell = GetCell(realRow, aCol);
+    if (cell)
+      cell->GetAttr(kNameSpaceID_None, nsGkAtoms::value, _retval);
   }
 
-  if (row->mContent->IsXULElement(nsGkAtoms::treeitem)) {
-    nsIContent* realRow =
-      nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
-    if (realRow) {
-      nsIContent* cell = GetCell(realRow, aColumn);
-      if (cell)
-        cell->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aText);
-    }
-  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTreeContentView::GetCellText(int32_t aRow, nsITreeColumn* aCol, nsAString& _retval)
 {
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
+  _retval.Truncate();
+  NS_ENSURE_NATIVE_COLUMN(aCol);
+  NS_PRECONDITION(aRow >= 0 && aRow < int32_t(mRows.Length()), "bad row");
+  NS_PRECONDITION(aCol, "bad column");
 
-  ErrorResult rv;
-  GetCellText(aRow, *col, _retval, rv);
-  return rv.StealNSResult();
-}
+  if (aRow < 0 || aRow >= int32_t(mRows.Length()) || !aCol)
+    return NS_ERROR_INVALID_ARG;
 
-void
-nsTreeContentView::SetTree(TreeBoxObject* aTree, ErrorResult& aError)
-{
-  aError = SetTree(aTree);
+  Row* row = mRows[aRow].get();
+
+  // Check for a "label" attribute - this is valid on an <treeitem>
+  // with a single implied column.
+  if (row->mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, _retval)
+      && !_retval.IsEmpty())
+    return NS_OK;
+
+  if (row->mContent->IsXULElement(nsGkAtoms::treeitem)) {
+    nsIContent* realRow =
+      nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
+    if (realRow) {
+      nsIContent* cell = GetCell(realRow, aCol);
+      if (cell)
+        cell->GetAttr(kNameSpaceID_None, nsGkAtoms::label, _retval);
+    }
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -655,40 +503,35 @@ nsTreeContentView::SetTree(nsITreeBoxObject* aTree)
   return NS_OK;
 }
 
-void
-nsTreeContentView::ToggleOpenState(int32_t aRow, ErrorResult& aError)
+NS_IMETHODIMP
+nsTreeContentView::ToggleOpenState(int32_t aIndex)
 {
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return;
-  }
+  NS_PRECONDITION(aIndex >= 0 && aIndex < int32_t(mRows.Length()), "bad index");
+  if (aIndex < 0 || aIndex >= int32_t(mRows.Length()))
+    return NS_ERROR_INVALID_ARG;   
 
   // We don't serialize content right here, since content might be generated
   // lazily.
-  Row* row = mRows[aRow].get();
+  Row* row = mRows[aIndex].get();
 
   if (row->IsOpen())
     row->mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::open, NS_LITERAL_STRING("false"), true);
   else
     row->mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::open, NS_LITERAL_STRING("true"), true);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTreeContentView::ToggleOpenState(int32_t aIndex)
+nsTreeContentView::CycleHeader(nsITreeColumn* aCol)
 {
-  ErrorResult rv;
-  ToggleOpenState(aIndex, rv);
-  return rv.StealNSResult();
-}
+  NS_ENSURE_NATIVE_COLUMN(aCol);
 
-void
-nsTreeContentView::CycleHeader(nsTreeColumn& aColumn, ErrorResult& aError)
-{
   if (!mRoot)
-    return;
+    return NS_OK;
 
   nsCOMPtr<nsIDOMElement> element;
-  aColumn.GetElement(getter_AddRefs(element));
+  aCol->GetElement(getter_AddRefs(element));
   if (element) {
     nsCOMPtr<nsIContent> column = do_QueryInterface(element);
     nsAutoString sort;
@@ -717,17 +560,8 @@ nsTreeContentView::CycleHeader(nsTreeColumn& aColumn, ErrorResult& aError)
       }
     }
   }
-}
 
-NS_IMETHODIMP
-nsTreeContentView::CycleHeader(nsITreeColumn* aCol)
-{
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
-
-  ErrorResult rv;
-  CycleHeader(*col, rv);
-  return rv.StealNSResult();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -742,136 +576,97 @@ nsTreeContentView::CycleCell(int32_t aRow, nsITreeColumn* aCol)
   return NS_OK;
 }
 
-bool
-nsTreeContentView::IsEditable(int32_t aRow, nsTreeColumn& aColumn,
-                              ErrorResult& aError)
-{
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return false;
-  }
-
-  Row* row = mRows[aRow].get();
-
-  nsIContent* realRow =
-    nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
-  if (realRow) {
-    nsIContent* cell = GetCell(realRow, aColumn);
-    if (cell && cell->AttrValueIs(kNameSpaceID_None, nsGkAtoms::editable,
-                                  nsGkAtoms::_false, eCaseMatters)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 NS_IMETHODIMP
 nsTreeContentView::IsEditable(int32_t aRow, nsITreeColumn* aCol, bool* _retval)
 {
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
+  *_retval = false;
+  NS_ENSURE_NATIVE_COLUMN(aCol);
+  NS_PRECONDITION(aRow >= 0 && aRow < int32_t(mRows.Length()), "bad row");
+  if (aRow < 0 || aRow >= int32_t(mRows.Length()))
+    return NS_ERROR_INVALID_ARG;   
 
-  ErrorResult rv;
-  *_retval = IsEditable(aRow, *col, rv);
-  return rv.StealNSResult();
-}
-
-bool
-nsTreeContentView::IsSelectable(int32_t aRow, nsTreeColumn& aColumn,
-                                ErrorResult& aError)
-{
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return false;
-  }
+  *_retval = true;
 
   Row* row = mRows[aRow].get();
 
   nsIContent* realRow =
     nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
   if (realRow) {
-    nsIContent* cell = GetCell(realRow, aColumn);
-    if (cell && cell->AttrValueIs(kNameSpaceID_None, nsGkAtoms::selectable,
+    nsIContent* cell = GetCell(realRow, aCol);
+    if (cell && cell->AttrValueIs(kNameSpaceID_None, nsGkAtoms::editable,
                                   nsGkAtoms::_false, eCaseMatters)) {
-      return false;
+      *_retval = false;
     }
   }
 
-  return true;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTreeContentView::IsSelectable(int32_t aRow, nsITreeColumn* aCol, bool* _retval)
 {
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
+  NS_ENSURE_NATIVE_COLUMN(aCol);
+  NS_PRECONDITION(aRow >= 0 && aRow < int32_t(mRows.Length()), "bad row");
+  if (aRow < 0 || aRow >= int32_t(mRows.Length()))
+    return NS_ERROR_INVALID_ARG;   
 
-  ErrorResult rv;
-  *_retval = IsSelectable(aRow, *col, rv);
-  return rv.StealNSResult();
-}
-
-void
-nsTreeContentView::SetCellValue(int32_t aRow, nsTreeColumn& aColumn,
-                                const nsAString& aValue, ErrorResult& aError)
-{
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return;
-  }
+  *_retval = true;
 
   Row* row = mRows[aRow].get();
 
   nsIContent* realRow =
     nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
   if (realRow) {
-    nsIContent* cell = GetCell(realRow, aColumn);
-    if (cell)
-      cell->SetAttr(kNameSpaceID_None, nsGkAtoms::value, aValue, true);
+    nsIContent* cell = GetCell(realRow, aCol);
+    if (cell && cell->AttrValueIs(kNameSpaceID_None, nsGkAtoms::selectable,
+                                  nsGkAtoms::_false, eCaseMatters)) {
+      *_retval = false;
+    }
   }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTreeContentView::SetCellValue(int32_t aRow, nsITreeColumn* aCol, const nsAString& aValue)
 {
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
-
-  ErrorResult rv;
-  SetCellValue(aRow, *col, aValue, rv);
-  return rv.StealNSResult();
-}
-
-void
-nsTreeContentView::SetCellText(int32_t aRow, nsTreeColumn& aColumn,
-                               const nsAString& aValue, ErrorResult& aError)
-{
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return;
-  }
+  NS_ENSURE_NATIVE_COLUMN(aCol);
+  NS_PRECONDITION(aRow >= 0 && aRow < int32_t(mRows.Length()), "bad row");
+  if (aRow < 0 || aRow >= int32_t(mRows.Length()))
+    return NS_ERROR_INVALID_ARG;   
 
   Row* row = mRows[aRow].get();
 
   nsIContent* realRow =
     nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
   if (realRow) {
-    nsIContent* cell = GetCell(realRow, aColumn);
+    nsIContent* cell = GetCell(realRow, aCol);
     if (cell)
-      cell->SetAttr(kNameSpaceID_None, nsGkAtoms::label, aValue, true);
+      cell->SetAttr(kNameSpaceID_None, nsGkAtoms::value, aValue, true);
   }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTreeContentView::SetCellText(int32_t aRow, nsITreeColumn* aCol, const nsAString& aValue)
 {
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
+  NS_ENSURE_NATIVE_COLUMN(aCol);
+  NS_PRECONDITION(aRow >= 0 && aRow < int32_t(mRows.Length()), "bad row");
+  if (aRow < 0 || aRow >= int32_t(mRows.Length()))
+    return NS_ERROR_INVALID_ARG;   
 
-  ErrorResult rv;
-  SetCellText(aRow, *col, aValue, rv);
-  return rv.StealNSResult();
+  Row* row = mRows[aRow].get();
+
+  nsIContent* realRow =
+    nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
+  if (realRow) {
+    nsIContent* cell = GetCell(realRow, aCol);
+    if (cell)
+      cell->SetAttr(kNameSpaceID_None, nsGkAtoms::label, aValue, true);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -892,46 +687,25 @@ nsTreeContentView::PerformActionOnCell(const char16_t* aAction, int32_t aRow, ns
   return NS_OK;
 }
 
-Element*
-nsTreeContentView::GetItemAtIndex(int32_t aIndex, ErrorResult& aError)
-{
-  if (!IsValidRowIndex(aIndex)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return nullptr;
-  }
-
-  return mRows[aIndex]->mContent;
-}
 
 NS_IMETHODIMP
 nsTreeContentView::GetItemAtIndex(int32_t aIndex, nsIDOMElement** _retval)
 {
-  ErrorResult rv;
-  Element* element = GetItemAtIndex(aIndex, rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
+  NS_PRECONDITION(aIndex >= 0 && aIndex < int32_t(mRows.Length()), "bad index");
+  if (aIndex < 0 || aIndex >= int32_t(mRows.Length()))
+    return NS_ERROR_INVALID_ARG;   
 
-  if (!element) {
-    *_retval = nullptr;
-    return NS_OK;
-  }
+  Row* row = mRows[aIndex].get();
+  row->mContent->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)_retval);
 
-  return CallQueryInterface(element, _retval);
-}
-
-int32_t
-nsTreeContentView::GetIndexOfItem(Element* aItem)
-{
-  return FindContent(aItem);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTreeContentView::GetIndexOfItem(nsIDOMElement* aItem, int32_t* _retval)
 {
-  nsCOMPtr<Element> element = do_QueryInterface(aItem);
-
-  *_retval = GetIndexOfItem(element);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aItem);
+  *_retval = FindContent(content);
 
   return NS_OK;
 }
@@ -1270,9 +1044,9 @@ nsTreeContentView::Serialize(nsIContent* aContent, int32_t aParentIndex,
     int32_t count = aRows.Length();
 
     if (content->IsXULElement(nsGkAtoms::treeitem)) {
-      SerializeItem(content->AsElement(), aParentIndex, aIndex, aRows);
+      SerializeItem(content, aParentIndex, aIndex, aRows);
     } else if (content->IsXULElement(nsGkAtoms::treeseparator)) {
-      SerializeSeparator(content->AsElement(), aParentIndex, aIndex, aRows);
+      SerializeSeparator(content, aParentIndex, aIndex, aRows);
     }
 
     *aIndex += aRows.Length() - count;
@@ -1280,7 +1054,7 @@ nsTreeContentView::Serialize(nsIContent* aContent, int32_t aParentIndex,
 }
 
 void
-nsTreeContentView::SerializeItem(Element* aContent, int32_t aParentIndex,
+nsTreeContentView::SerializeItem(nsIContent* aContent, int32_t aParentIndex,
                                  int32_t* aIndex, nsTArray<UniquePtr<Row>>& aRows)
 {
   if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
@@ -1315,7 +1089,7 @@ nsTreeContentView::SerializeItem(Element* aContent, int32_t aParentIndex,
 }
 
 void
-nsTreeContentView::SerializeSeparator(Element* aContent,
+nsTreeContentView::SerializeSeparator(nsIContent* aContent,
                                       int32_t aParentIndex, int32_t* aIndex,
                                       nsTArray<UniquePtr<Row>>& aRows)
 {
@@ -1457,9 +1231,9 @@ nsTreeContentView::InsertRow(int32_t aParentIndex, int32_t aIndex, nsIContent* a
 {
   AutoTArray<UniquePtr<Row>, 8> rows;
   if (aContent->IsXULElement(nsGkAtoms::treeitem)) {
-    SerializeItem(aContent->AsElement(), aParentIndex, &aIndex, rows);
+    SerializeItem(aContent, aParentIndex, &aIndex, rows);
   } else if (aContent->IsXULElement(nsGkAtoms::treeseparator)) {
-    SerializeSeparator(aContent->AsElement(), aParentIndex, &aIndex, rows);
+    SerializeSeparator(aContent, aParentIndex, &aIndex, rows);
   }
 
   // We can't use InsertElementsAt since the destination can't steal
@@ -1568,10 +1342,12 @@ nsTreeContentView::UpdateParentIndexes(int32_t aIndex, int32_t aSkip, int32_t aC
 }
 
 nsIContent*
-nsTreeContentView::GetCell(nsIContent* aContainer, nsTreeColumn& aCol)
+nsTreeContentView::GetCell(nsIContent* aContainer, nsITreeColumn* aCol)
 {
-  nsCOMPtr<nsIAtom> colAtom(aCol.GetAtom());
-  int32_t colIndex(aCol.GetIndex());
+  nsCOMPtr<nsIAtom> colAtom;
+  int32_t colIndex;
+  aCol->GetAtom(getter_AddRefs(colAtom));
+  aCol->GetIndex(&colIndex);
 
   // Traverse through cells, try to find the cell by "ref" attribute or by cell
   // index in a row. "ref" attribute has higher priority.
@@ -1593,10 +1369,4 @@ nsTreeContentView::GetCell(nsIContent* aContainer, nsTreeColumn& aCol)
   }
 
   return result;
-}
-
-bool
-nsTreeContentView::IsValidRowIndex(int32_t aRowIndex)
-{
-  return aRowIndex >= 0 && aRowIndex < int32_t(mRows.Length());
 }
