@@ -284,7 +284,7 @@ private:
   nsTHashtable<nsCStringHashKey> mActiveCaches;
   nsTHashtable<nsCStringHashKey> mLockedEntries;
 
-  nsCOMPtr<nsIThread> mInitThread;
+  nsCOMPtr<nsIEventTarget> mInitEventTarget;
 };
 
 #endif // nsOfflineCacheDevice_h__

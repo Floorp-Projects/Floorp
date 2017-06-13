@@ -35,7 +35,7 @@ GetUiThread()
 static bool
 IsOnUiThread()
 {
-  return NS_GetCurrentThread() == GetUiThread();
+  return GetUiThread()->SerialEventTarget()->IsOnCurrentThread();
 }
 
 namespace mozilla {

@@ -25,7 +25,7 @@ static bool IsOnGMPThread()
   nsCOMPtr<nsIThread> gmpThread;
   nsresult rv = mps->GetThread(getter_AddRefs(gmpThread));
   MOZ_ASSERT(NS_SUCCEEDED(rv) && gmpThread);
-  return NS_GetCurrentThread() == gmpThread;
+  return gmpThread->EventTarget()->IsOnCurrentThread();
 }
 #endif
 

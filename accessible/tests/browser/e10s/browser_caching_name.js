@@ -239,7 +239,8 @@ const markupTests = [{
         </td>
       </tr>
     </table>`,
-  expected: ['test2 test3', 'test1', 'This is a paragraph',
+  expected: ['test2 test3', 'test1',
+    'This is a paragraph This is a link \u2022 Listitem1 \u2022 Listitem2',
     'This is a paragraph This is a link This is a list']
 }, {
   id: 't',

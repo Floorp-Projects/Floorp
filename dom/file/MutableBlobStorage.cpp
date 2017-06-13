@@ -371,7 +371,7 @@ MutableBlobStorage::MutableBlobStorage(MutableBlobStorageType aType,
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mEventTarget) {
-    mEventTarget = do_GetMainThread();
+    mEventTarget = GetMainThreadEventTarget();
   }
 
   MOZ_ASSERT(mEventTarget);

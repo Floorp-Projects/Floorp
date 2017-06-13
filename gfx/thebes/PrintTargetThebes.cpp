@@ -47,7 +47,7 @@ PrintTargetThebes::MakeDrawTarget(const IntSize& aSize,
   }
 
   if (aRecorder) {
-    dt = CreateRecordingDrawTarget(aRecorder, dt);
+    dt = CreateWrapAndRecordDrawTarget(aRecorder, dt);
     if (!dt || !dt->IsValid()) {
       return nullptr;
     }
@@ -70,7 +70,7 @@ PrintTargetThebes::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
 
   if (aRecorder) {
     if (!mRecordingRefDT) {
-      RefPtr<DrawTarget> dt = CreateRecordingDrawTarget(aRecorder, mRefDT);
+      RefPtr<DrawTarget> dt = CreateWrapAndRecordDrawTarget(aRecorder, mRefDT);
       if (!dt || !dt->IsValid()) {
         return nullptr;
       }

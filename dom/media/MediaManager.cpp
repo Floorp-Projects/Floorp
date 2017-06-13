@@ -3468,7 +3468,7 @@ SourceListener::Activate(SourceMediaStream* aStream,
   }
 
   mActivated = true;
-  mMainThreadCheck = PR_GetCurrentThread();
+  mMainThreadCheck = GetCurrentVirtualThread();
   mStream = aStream;
   mAudioDevice = aAudioDevice;
   mVideoDevice = aVideoDevice;
@@ -3674,32 +3674,31 @@ void
 SourceListener::NotifyEvent(MediaStreamGraph* aGraph,
                             MediaStreamGraphEvent aEvent)
 {
-  nsresult rv;
-  nsCOMPtr<nsIThread> thread;
+  nsCOMPtr<nsIEventTarget> target;
 
   switch (aEvent) {
     case MediaStreamGraphEvent::EVENT_FINISHED:
-      rv = NS_GetMainThread(getter_AddRefs(thread));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
+      target = GetMainThreadEventTarget();
+      if (NS_WARN_IF(!target)) {
         NS_ASSERTION(false, "Mainthread not available; running on current thread");
         // Ensure this really *was* MainThread (NS_GetCurrentThread won't work)
-        MOZ_RELEASE_ASSERT(mMainThreadCheck == PR_GetCurrentThread());
+        MOZ_RELEASE_ASSERT(mMainThreadCheck == GetCurrentVirtualThread());
         NotifyFinished();
         return;
       }
-      thread->Dispatch(NewRunnableMethod(this, &SourceListener::NotifyFinished),
+      target->Dispatch(NewRunnableMethod(this, &SourceListener::NotifyFinished),
                        NS_DISPATCH_NORMAL);
       break;
     case MediaStreamGraphEvent::EVENT_REMOVED:
-      rv = NS_GetMainThread(getter_AddRefs(thread));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
+      target = GetMainThreadEventTarget();
+      if (NS_WARN_IF(!target)) {
         NS_ASSERTION(false, "Mainthread not available; running on current thread");
         // Ensure this really *was* MainThread (NS_GetCurrentThread won't work)
-        MOZ_RELEASE_ASSERT(mMainThreadCheck == PR_GetCurrentThread());
+        MOZ_RELEASE_ASSERT(mMainThreadCheck == GetCurrentVirtualThread());
         NotifyRemoved();
         return;
       }
-      thread->Dispatch(NewRunnableMethod(this, &SourceListener::NotifyRemoved),
+      target->Dispatch(NewRunnableMethod(this, &SourceListener::NotifyRemoved),
                        NS_DISPATCH_NORMAL);
       break;
     case MediaStreamGraphEvent::EVENT_HAS_DIRECT_LISTENERS:

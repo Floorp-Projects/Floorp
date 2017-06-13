@@ -89,7 +89,7 @@ uint32_t BackgroundFileSaver::sThreadCount = 0;
 uint32_t BackgroundFileSaver::sTelemetryMaxThreadCount = 0;
 
 BackgroundFileSaver::BackgroundFileSaver()
-: mControlThread(nullptr)
+: mControlEventTarget(nullptr)
 , mWorkerThread(nullptr)
 , mPipeOutputStream(nullptr)
 , mPipeInputStream(nullptr)
@@ -150,8 +150,8 @@ BackgroundFileSaver::Init()
                    HasInfiniteBuffer() ? UINT32_MAX : 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = NS_GetCurrentThread(getter_AddRefs(mControlThread));
-  NS_ENSURE_SUCCESS(rv, rv);
+  mControlEventTarget = GetCurrentThreadEventTarget();
+  NS_ENSURE_TRUE(mControlEventTarget, NS_ERROR_NOT_INITIALIZED);
 
   rv = NS_NewNamedThread("BgFileSaver", getter_AddRefs(mWorkerThread));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -523,7 +523,7 @@ BackgroundFileSaver::ProcessStateChange()
       new NotifyTargetChangeRunnable(this, actualTargetToNotify);
     NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
 
-    rv = mControlThread->Dispatch(event, NS_DISPATCH_NORMAL);
+    rv = mControlEventTarget->Dispatch(event, NS_DISPATCH_NORMAL);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -747,9 +747,9 @@ BackgroundFileSaver::CheckCompletion()
   }
 
   // Post an event to notify that the operation completed.
-  if (NS_FAILED(mControlThread->Dispatch(NewRunnableMethod(this,
-                                                           &BackgroundFileSaver::NotifySaveComplete),
-                                         NS_DISPATCH_NORMAL))) {
+  if (NS_FAILED(mControlEventTarget->Dispatch(NewRunnableMethod(this,
+                                                                &BackgroundFileSaver::NotifySaveComplete),
+                                              NS_DISPATCH_NORMAL))) {
     NS_WARNING("Unable to post completion event to the control thread.");
   }
 
@@ -1153,9 +1153,9 @@ BackgroundFileSaverStreamListener::AsyncCopyProgressCallback(void *aClosure,
       self->mReceivedTooMuchData = false;
 
       // Post an event to verify if the request should be resumed.
-      if (NS_FAILED(self->mControlThread->Dispatch(NewRunnableMethod(self,
-                                                                     &BackgroundFileSaverStreamListener::NotifySuspendOrResume),
-                                                   NS_DISPATCH_NORMAL))) {
+      if (NS_FAILED(self->mControlEventTarget->Dispatch(NewRunnableMethod(self,
+                                                                          &BackgroundFileSaverStreamListener::NotifySuspendOrResume),
+                                                        NS_DISPATCH_NORMAL))) {
         NS_WARNING("Unable to post resume event to the control thread.");
       }
     }

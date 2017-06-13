@@ -363,10 +363,10 @@ public:
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  nsresult
-  IsOnCurrentThread(bool* aResult)
+  bool
+  IsOnCurrentThread()
   {
-    return mBaseTarget->IsOnCurrentThread(aResult);
+    return mBaseTarget->IsOnCurrentThread();
   }
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -374,7 +374,9 @@ public:
 
 NS_IMPL_ISUPPORTS(ThrottledEventQueue::Inner, nsIObserver);
 
-NS_IMPL_ISUPPORTS(ThrottledEventQueue, ThrottledEventQueue, nsIEventTarget);
+NS_IMPL_ISUPPORTS(ThrottledEventQueue,
+                  ThrottledEventQueue,
+                  nsIEventTarget);
 
 ThrottledEventQueue::ThrottledEventQueue(already_AddRefed<Inner> aInner)
   : mInner(aInner)
@@ -450,7 +452,14 @@ ThrottledEventQueue::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
 NS_IMETHODIMP
 ThrottledEventQueue::IsOnCurrentThread(bool* aResult)
 {
-  return mInner->IsOnCurrentThread(aResult);
+  *aResult = mInner->IsOnCurrentThread();
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(bool)
+ThrottledEventQueue::IsOnCurrentThreadInfallible()
+{
+  return mInner->IsOnCurrentThread();
 }
 
 } // namespace mozilla

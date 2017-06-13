@@ -322,8 +322,9 @@ SimpleTimer::Cancel() {
 #ifdef DEBUG
     nsCOMPtr<nsIEventTarget> target;
     mTimer->GetTarget(getter_AddRefs(target));
-    nsCOMPtr<nsIThread> thread(do_QueryInterface(target));
-    MOZ_ASSERT(NS_GetCurrentThread() == thread);
+    bool onCurrent;
+    nsresult rv = target->IsOnCurrentThread(&onCurrent);
+    MOZ_ASSERT(NS_SUCCEEDED(rv) && onCurrent);
 #endif
     mTimer->Cancel();
     mTimer = nullptr;
@@ -342,18 +343,18 @@ SimpleTimer::Notify(nsITimer *timer) {
 }
 
 nsresult
-SimpleTimer::Init(nsIRunnable* aTask, uint32_t aTimeoutMs, nsIThread* aTarget)
+SimpleTimer::Init(nsIRunnable* aTask, uint32_t aTimeoutMs, nsIEventTarget* aTarget)
 {
   nsresult rv;
 
   // Get target thread first, so we don't have to cancel the timer if it fails.
-  nsCOMPtr<nsIThread> target;
+  nsCOMPtr<nsIEventTarget> target;
   if (aTarget) {
     target = aTarget;
   } else {
-    rv = NS_GetMainThread(getter_AddRefs(target));
-    if (NS_FAILED(rv)) {
-      return rv;
+    target = GetMainThreadEventTarget();
+    if (!target) {
+      return NS_ERROR_NOT_AVAILABLE;
     }
   }
 
@@ -363,7 +364,7 @@ SimpleTimer::Init(nsIRunnable* aTask, uint32_t aTimeoutMs, nsIThread* aTarget)
   }
   // Note: set target before InitWithCallback in case the timer fires before
   // we change the event target.
-  rv = timer->SetTarget(aTarget);
+  rv = timer->SetTarget(target);
   if (NS_FAILED(rv)) {
     timer->Cancel();
     return rv;
@@ -381,7 +382,7 @@ SimpleTimer::Init(nsIRunnable* aTask, uint32_t aTimeoutMs, nsIThread* aTarget)
 NS_IMPL_ISUPPORTS(SimpleTimer, nsITimerCallback)
 
 already_AddRefed<SimpleTimer>
-SimpleTimer::Create(nsIRunnable* aTask, uint32_t aTimeoutMs, nsIThread* aTarget)
+SimpleTimer::Create(nsIRunnable* aTask, uint32_t aTimeoutMs, nsIEventTarget* aTarget)
 {
   RefPtr<SimpleTimer> t(new SimpleTimer());
   if (NS_FAILED(t->Init(aTask, aTimeoutMs, aTarget))) {

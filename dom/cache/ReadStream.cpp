@@ -99,7 +99,7 @@ private:
   StreamControl* mControl;
 
   const nsID mId;
-  nsCOMPtr<nsIThread> mOwningThread;
+  nsCOMPtr<nsISerialEventTarget> mOwningEventTarget;
 
   enum State
   {
@@ -197,7 +197,7 @@ ReadStream::Inner::Inner(StreamControl* aControl, const nsID& aId,
                          nsIInputStream* aStream)
   : mControl(aControl)
   , mId(aId)
-  , mOwningThread(NS_GetCurrentThread())
+  , mOwningEventTarget(GetCurrentThreadSerialEventTarget())
   , mState(Open)
   , mHasEverBeenRead(false)
   , mMutex("dom::cache::ReadStream")
@@ -214,7 +214,7 @@ ReadStream::Inner::Serialize(CacheReadStreamOrVoid* aReadStreamOut,
                              nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList,
                              ErrorResult& aRv)
 {
-  MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
+  MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
   MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut);
   *aReadStreamOut = CacheReadStream();
   Serialize(&aReadStreamOut->get_CacheReadStream(), aStreamCleanupList, aRv);
@@ -225,7 +225,7 @@ ReadStream::Inner::Serialize(CacheReadStream* aReadStreamOut,
                              nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList,
                              ErrorResult& aRv)
 {
-  MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
+  MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
   MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut);
 
   if (mState != Open) {
@@ -254,28 +254,28 @@ ReadStream::Inner::Serialize(CacheReadStream* aReadStreamOut,
 void
 ReadStream::Inner::CloseStream()
 {
-  MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
+  MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
   Close();
 }
 
 void
 ReadStream::Inner::CloseStreamWithoutReporting()
 {
-  MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
+  MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
   Forget();
 }
 
 bool
 ReadStream::Inner::MatchId(const nsID& aId) const
 {
-  MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
+  MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
   return mId.Equals(aId);
 }
 
 bool
 ReadStream::Inner::HasEverBeenRead() const
 {
-  MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
+  MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
   return mHasEverBeenRead;
 }
 
@@ -388,14 +388,14 @@ ReadStream::Inner::NoteClosed()
     return;
   }
 
-  if (NS_GetCurrentThread() == mOwningThread) {
+  if (mOwningEventTarget->IsOnCurrentThread()) {
     NoteClosedOnOwningThread();
     return;
   }
 
   nsCOMPtr<nsIRunnable> runnable = new NoteClosedRunnable(this);
   MOZ_ALWAYS_SUCCEEDS(
-    mOwningThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL));
+    mOwningEventTarget->Dispatch(runnable.forget(), nsIThread::DISPATCH_NORMAL));
 }
 
 void
@@ -406,20 +406,20 @@ ReadStream::Inner::Forget()
     return;
   }
 
-  if (NS_GetCurrentThread() == mOwningThread) {
+  if (mOwningEventTarget->IsOnCurrentThread()) {
     ForgetOnOwningThread();
     return;
   }
 
   nsCOMPtr<nsIRunnable> runnable = new ForgetRunnable(this);
   MOZ_ALWAYS_SUCCEEDS(
-    mOwningThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL));
+    mOwningEventTarget->Dispatch(runnable.forget(), nsIThread::DISPATCH_NORMAL));
 }
 
 void
 ReadStream::Inner::NoteClosedOnOwningThread()
 {
-  MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
+  MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
 
   // Mark closed and do nothing if we were already closed
   if (!mState.compareExchange(Open, Closed)) {
@@ -434,7 +434,7 @@ ReadStream::Inner::NoteClosedOnOwningThread()
 void
 ReadStream::Inner::ForgetOnOwningThread()
 {
-  MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
+  MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
 
   // Mark closed and do nothing if we were already closed
   if (!mState.compareExchange(Open, Closed)) {

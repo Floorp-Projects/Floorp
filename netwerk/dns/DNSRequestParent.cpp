@@ -41,11 +41,11 @@ DNSRequestParent::DoAsyncResolve(const nsACString &hostname,
   mFlags = flags;
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+    nsCOMPtr<nsIEventTarget> main = GetMainThreadEventTarget();
     nsCOMPtr<nsICancelable> unused;
     rv = dns->AsyncResolveExtendedNative(hostname, flags,
                                          networkInterface, this,
-                                         mainThread, originAttributes,
+                                         main, originAttributes,
                                          getter_AddRefs(unused));
   }
 

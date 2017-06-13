@@ -384,7 +384,7 @@ WebCryptoTask::DispatchWithPromise(Promise* aResultPromise)
   }
 
   // Store calling thread
-  mOriginalThread = NS_GetCurrentThread();
+  mOriginalEventTarget = GetCurrentThreadSerialEventTarget();
 
   // If we are running on a worker thread we must hold the worker
   // alive while we work on the thread pool.  Otherwise the worker
@@ -419,7 +419,7 @@ WebCryptoTask::Run()
     }
 
     // Back to the original thread, i.e. continue below.
-    mOriginalThread->Dispatch(this, NS_DISPATCH_NORMAL);
+    mOriginalEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
     return NS_OK;
   }
 
@@ -3729,7 +3729,7 @@ WebCryptoTask::WebCryptoTask()
   : CancelableRunnable("WebCryptoTask")
   , mEarlyRv(NS_OK)
   , mEarlyComplete(false)
-  , mOriginalThread(nullptr)
+  , mOriginalEventTarget(nullptr)
   , mReleasedNSSResources(false)
   , mRv(NS_ERROR_NOT_INITIALIZED)
 {
@@ -3745,7 +3745,7 @@ WebCryptoTask::~WebCryptoTask()
   }
 
   if (mWorkerHolder) {
-    NS_ProxyRelease(mOriginalThread, mWorkerHolder.forget());
+    NS_ProxyRelease(mOriginalEventTarget, mWorkerHolder.forget());
   }
 }
 

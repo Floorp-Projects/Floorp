@@ -5570,7 +5570,7 @@ class ConnectionPool::ConnectionRunnable
 {
 protected:
   DatabaseInfo* mDatabaseInfo;
-  nsCOMPtr<nsIEventTarget> mOwningThread;
+  nsCOMPtr<nsIEventTarget> mOwningEventTarget;
 
   explicit
   ConnectionRunnable(DatabaseInfo* aDatabaseInfo);
@@ -5713,7 +5713,7 @@ class ConnectionPool::FinishCallbackWrapper final
 {
   RefPtr<ConnectionPool> mConnectionPool;
   RefPtr<FinishCallback> mCallback;
-  nsCOMPtr<nsIEventTarget> mOwningThread;
+  nsCOMPtr<nsIEventTarget> mOwningEventTarget;
   uint64_t mTransactionId;
   bool mHasRunOnce;
 
@@ -5911,7 +5911,7 @@ protected:
 
   typedef nsDataHashtable<nsUint64HashKey, bool> UniqueIndexTable;
 
-  nsCOMPtr<nsIEventTarget> mOwningThread;
+  nsCOMPtr<nsIEventTarget> mOwningEventTarget;
   const nsID mBackgroundChildLoggingId;
   const uint64_t mLoggingSerialNumber;
   nsresult mResultCode;
@@ -5926,10 +5926,10 @@ public:
   bool
   IsOnOwningThread() const
   {
-    MOZ_ASSERT(mOwningThread);
+    MOZ_ASSERT(mOwningEventTarget);
 
     bool current;
-    return NS_SUCCEEDED(mOwningThread->IsOnCurrentThread(&current)) && current;
+    return NS_SUCCEEDED(mOwningEventTarget->IsOnCurrentThread(&current)) && current;
   }
 
   void
@@ -5994,7 +5994,7 @@ public:
 protected:
   DatabaseOperationBase(const nsID& aBackgroundChildLoggingId,
                         uint64_t aLoggingSerialNumber)
-    : mOwningThread(NS_GetCurrentThread())
+    : mOwningEventTarget(GetCurrentThreadEventTarget())
     , mBackgroundChildLoggingId(aBackgroundChildLoggingId)
     , mLoggingSerialNumber(aLoggingSerialNumber)
     , mResultCode(NS_OK)
@@ -13184,13 +13184,13 @@ ConnectionPool::CloseDatabaseWhenIdleInternal(const nsACString& aDatabaseId)
 ConnectionPool::
 ConnectionRunnable::ConnectionRunnable(DatabaseInfo* aDatabaseInfo)
   : mDatabaseInfo(aDatabaseInfo)
-  , mOwningThread(do_GetCurrentThread())
+  , mOwningEventTarget(GetCurrentThreadEventTarget())
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabaseInfo);
   MOZ_ASSERT(aDatabaseInfo->mConnectionPool);
   aDatabaseInfo->mConnectionPool->AssertIsOnOwningThread();
-  MOZ_ASSERT(mOwningThread);
+  MOZ_ASSERT(mOwningEventTarget);
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(ConnectionPool::IdleConnectionRunnable,
@@ -13204,7 +13204,7 @@ IdleConnectionRunnable::Run()
   MOZ_ASSERT(!mDatabaseInfo->mIdle);
 
   nsCOMPtr<nsIEventTarget> owningThread;
-  mOwningThread.swap(owningThread);
+  mOwningEventTarget.swap(owningThread);
 
   if (owningThread) {
     mDatabaseInfo->AssertIsOnConnectionThread();
@@ -13250,11 +13250,11 @@ CloseConnectionRunnable::Run()
                  "ConnectionPool::CloseConnectionRunnable::Run",
                  js::ProfileEntry::Category::STORAGE);
 
-  if (mOwningThread) {
+  if (mOwningEventTarget) {
     MOZ_ASSERT(mDatabaseInfo->mClosing);
 
     nsCOMPtr<nsIEventTarget> owningThread;
-    mOwningThread.swap(owningThread);
+    mOwningEventTarget.swap(owningThread);
 
     // The connection could be null if EnsureConnection() didn't run or was not
     // successful in TransactionDatabaseOperationBase::RunOnConnectionThread().
@@ -13351,14 +13351,14 @@ FinishCallbackWrapper::FinishCallbackWrapper(ConnectionPool* aConnectionPool,
                                              FinishCallback* aCallback)
   : mConnectionPool(aConnectionPool)
   , mCallback(aCallback)
-  , mOwningThread(do_GetCurrentThread())
+  , mOwningEventTarget(GetCurrentThreadEventTarget())
   , mTransactionId(aTransactionId)
   , mHasRunOnce(false)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aConnectionPool);
   MOZ_ASSERT(aCallback);
-  MOZ_ASSERT(mOwningThread);
+  MOZ_ASSERT(mOwningEventTarget);
 }
 
 ConnectionPool::
@@ -13376,7 +13376,7 @@ FinishCallbackWrapper::Run()
 {
   MOZ_ASSERT(mConnectionPool);
   MOZ_ASSERT(mCallback);
-  MOZ_ASSERT(mOwningThread);
+  MOZ_ASSERT(mOwningEventTarget);
 
   PROFILER_LABEL("IndexedDB",
                  "ConnectionPool::FinishCallbackWrapper::Run",
@@ -13390,7 +13390,7 @@ FinishCallbackWrapper::Run()
     Unused << mCallback->Run();
 
     MOZ_ALWAYS_SUCCEEDS(
-      mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
+      mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
 
     return NS_OK;
   }
@@ -18122,7 +18122,7 @@ QuotaClient::StartIdleMaintenance()
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mShutdownRequested);
 
-  mBackgroundThread = do_GetCurrentThread();
+  mBackgroundThread = GetCurrentThreadEventTarget();
 
   RefPtr<Maintenance> maintenance = new Maintenance(this);
 
@@ -21014,14 +21014,14 @@ FactoryOp::Open()
 
   if (permission == PermissionRequestBase::kPermissionPrompt) {
     mState = State::PermissionChallenge;
-    MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
+    MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
     return NS_OK;
   }
 
   MOZ_ASSERT(permission == PermissionRequestBase::kPermissionAllowed);
 
   mState = State::FinishOpen;
-  MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
+  MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
 
   return NS_OK;
 }
@@ -21078,7 +21078,7 @@ FactoryOp::RetryCheckPermission()
   MOZ_ASSERT(permission == PermissionRequestBase::kPermissionAllowed);
 
   mState = State::FinishOpen;
-  MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
+  MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
 
   return NS_OK;
 }
@@ -21626,7 +21626,7 @@ FactoryOp::Run()
     if (IsOnOwningThread()) {
       SendResults();
     } else {
-      MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
+      MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
     }
   }
 
@@ -21913,7 +21913,7 @@ OpenDatabaseOp::DoDatabaseWork()
            State::SendingResults :
            State::BeginVersionChange;
 
-  rv = mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL);
+  rv = mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -23198,7 +23198,7 @@ DeleteDatabaseOp::DoDatabaseWork()
     mState = State::SendingResults;
   }
 
-  rv = mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL);
+  rv = mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -23582,7 +23582,7 @@ VersionChangeOp::RunOnIOThread()
                              mDeleteDatabaseOp->mOrigin,
                              databaseName);
 
-  rv = mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL);
+  rv = mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -23675,7 +23675,7 @@ VersionChangeOp::Run()
       mResultCode = rv;
     }
 
-    MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
+    MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
   }
 
   return NS_OK;
@@ -23837,7 +23837,7 @@ TransactionDatabaseOperationBase::RunOnConnectionThread()
     mInternalState = InternalState::SendingResults;
   }
 
-  MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
+  MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
 }
 
 bool
@@ -24359,7 +24359,7 @@ DatabaseOp::Run()
     // thread.
     mState = State::SendingResults;
 
-    MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
+    MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
   }
 
   return NS_OK;
@@ -24480,7 +24480,7 @@ CreateFileOp::DoDatabaseWork()
   // thread.
   mState = State::SendingResults;
 
-  rv = mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL);
+  rv = mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

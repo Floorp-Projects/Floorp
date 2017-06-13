@@ -43,6 +43,6 @@ def set_env(config, jobs):
     for job in jobs:
         env = config.config['args'].env
         if env:
-            job_env = job['worker']['env']
+            job_env = job.setdefault('worker', {})['env']
             job_env.update(dict(x.split('=') for x in env))
         yield job

@@ -77,7 +77,7 @@ CacheEntry::Callback::Callback(CacheEntry* aEntry,
                                bool aSecret)
 : mEntry(aEntry)
 , mCallback(aCallback)
-, mTargetThread(do_GetCurrentThread())
+, mTarget(GetCurrentThreadEventTarget())
 , mReadOnly(aReadOnly)
 , mRevalidating(false)
 , mCheckOnAnyThread(aCheckOnAnyThread)
@@ -114,7 +114,7 @@ CacheEntry::Callback::Callback(CacheEntry* aEntry, bool aDoomWhenFoundInPinStatu
 CacheEntry::Callback::Callback(CacheEntry::Callback const &aThat)
 : mEntry(aThat.mEntry)
 , mCallback(aThat.mCallback)
-, mTargetThread(aThat.mTargetThread)
+, mTarget(aThat.mTarget)
 , mReadOnly(aThat.mReadOnly)
 , mRevalidating(aThat.mRevalidating)
 , mCheckOnAnyThread(aThat.mCheckOnAnyThread)
@@ -134,7 +134,7 @@ CacheEntry::Callback::Callback(CacheEntry::Callback const &aThat)
 
 CacheEntry::Callback::~Callback()
 {
-  ProxyRelease(mCallback, mTargetThread);
+  ProxyRelease(mCallback, mTarget);
 
   mEntry->ReleaseHandleRef();
   MOZ_COUNT_DTOR(CacheEntry::Callback);
@@ -171,7 +171,7 @@ nsresult CacheEntry::Callback::OnCheckThread(bool *aOnCheckThread) const
 {
   if (!mCheckOnAnyThread) {
     // Check we are on the target
-    return mTargetThread->IsOnCurrentThread(aOnCheckThread);
+    return mTarget->IsOnCurrentThread(aOnCheckThread);
   }
 
   // We can invoke check anywhere
@@ -181,7 +181,7 @@ nsresult CacheEntry::Callback::OnCheckThread(bool *aOnCheckThread) const
 
 nsresult CacheEntry::Callback::OnAvailThread(bool *aOnAvailThread) const
 {
-  return mTargetThread->IsOnCurrentThread(aOnAvailThread);
+  return mTarget->IsOnCurrentThread(aOnAvailThread);
 }
 
 // CacheEntry
@@ -663,9 +663,9 @@ bool CacheEntry::InvokeCallbacks(bool aReadOnly)
 
     if (NS_SUCCEEDED(rv) && !onCheckThread) {
       // Redispatch to the target thread
-      rv = mCallbacks[i].mTargetThread->Dispatch(NewRunnableMethod(this,
-								   &CacheEntry::InvokeCallbacksLock),
-						 nsIEventTarget::DISPATCH_NORMAL);
+      rv = mCallbacks[i].mTarget->Dispatch(NewRunnableMethod(this,
+                                                             &CacheEntry::InvokeCallbacksLock),
+                                           nsIEventTarget::DISPATCH_NORMAL);
       if (NS_SUCCEEDED(rv)) {
         LOG(("  re-dispatching to target thread"));
         return false;
@@ -839,7 +839,7 @@ void CacheEntry::InvokeAvailableCallback(Callback const & aCallback)
     RefPtr<AvailableCallbackRunnable> event =
       new AvailableCallbackRunnable(this, aCallback);
 
-    rv = aCallback.mTargetThread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
+    rv = aCallback.mTarget->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
     LOG(("  redispatched, (rv = 0x%08" PRIx32 ")", static_cast<uint32_t>(rv)));
     return;
   }
