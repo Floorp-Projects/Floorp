@@ -73,18 +73,17 @@ nsFeedSniffer::ConvertEncodedData(nsIRequest* request,
 
       converter->OnStartRequest(request, nullptr);
 
-      nsCOMPtr<nsIStringInputStream> rawStream =
-        do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID);
-      if (!rawStream)
-        return NS_ERROR_FAILURE;
+      if (data) {
+        nsCOMPtr<nsIInputStream> rawStream;
+        rv = NS_NewCStringInputStream(
+          getter_AddRefs(rawStream),
+          nsDependentCSubstring(reinterpret_cast<const char*>(data), length));
+        if (NS_SUCCEEDED(rv)) {
+          rv = converter->OnDataAvailable(request, nullptr, rawStream, 0, length);
+        }
+      }
 
-      rv = rawStream->SetData((const char*)data, length);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = converter->OnDataAvailable(request, nullptr, rawStream, 0, length);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      converter->OnStopRequest(request, nullptr, NS_OK);
+      converter->OnStopRequest(request, nullptr, rv);
     }
   }
   return rv;

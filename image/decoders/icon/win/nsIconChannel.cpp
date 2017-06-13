@@ -15,7 +15,7 @@
 #include "nsReadableUtils.h"
 #include "nsMimeTypes.h"
 #include "nsMemory.h"
-#include "nsIStringStream.h"
+#include "nsIInputStream.h"
 #include "nsIURL.h"
 #include "nsIOutputStream.h"
 #include "nsIPipe.h"

@@ -11,6 +11,7 @@
 #include "AndroidBridge.h"
 #include "nsIconChannel.h"
 #include "nsIStringStream.h"
+#include "nsIInputStream.h"
 #include "nsNetUtil.h"
 #include "nsComponentManagerUtils.h"
 #include "NullPrincipal.h"
@@ -105,12 +106,14 @@ moz_icon_to_channel(nsIURI* aURI, const nsACString& aFileExt,
     }
   }
 
-  nsCOMPtr<nsIStringInputStream> stream =
+  nsCOMPtr<nsIStringInputStream> sis =
     do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = stream->AdoptData((char*)buf, buf_size);
+  rv = sis->AdoptData((char*)buf, buf_size);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIInputStream> stream = do_QueryInterface(sis);
 
   // nsIconProtocolHandler::NewChannel2 will provide the correct loadInfo for
   // this iconChannel. Use the most restrictive security settings for the

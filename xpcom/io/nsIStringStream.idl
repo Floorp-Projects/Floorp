@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIInputStream.idl"
+#include "nsISupports.idl"
 
 %{C++
 #include "mozilla/MemoryReporting.h"
@@ -18,7 +18,7 @@ native MallocSizeOf(mozilla::MallocSizeOf);
  * nsIInputStream implementation with a simple character array.
  */
 [scriptable, builtinclass, uuid(450cd2d4-f0fd-424d-b365-b1251f80fd53)]
-interface nsIStringInputStream : nsIInputStream
+interface nsIStringInputStream : nsISupports
 {
     /**
      * SetData - assign data to the input stream (copied on assignment).
