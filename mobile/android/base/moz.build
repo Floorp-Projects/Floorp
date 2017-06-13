@@ -989,6 +989,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'widget/ResizablePathDrawable.java',
     'widget/RoundedCornerLayout.java',
     'widget/SiteLogins.java',
+    'widget/SplashScreen.java',
     'widget/SquaredImageView.java',
     'widget/SquaredRelativeLayout.java',
     'widget/SwipeDismissListViewTouchListener.java',
