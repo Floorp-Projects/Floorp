@@ -442,6 +442,8 @@ def set_tier(config, tests):
                                          'linux64-pgo/opt',
                                          'linux64-devedition/opt',
                                          'linux64-asan/opt',
+                                         'macosx64/opt',
+                                         'macosx64/debug',
                                          'android-4.3-arm7-api-15/opt',
                                          'android-4.3-arm7-api-15/debug',
                                          'android-4.2-x86/opt']:
