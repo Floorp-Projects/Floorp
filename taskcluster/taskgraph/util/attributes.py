@@ -10,6 +10,8 @@ INTEGRATION_PROJECTS = {
     'autoland',
 }
 
+TRUNK_PROJECTS = INTEGRATION_PROJECTS | {'mozilla-central',}
+
 RELEASE_PROJECTS = {
     'mozilla-central',
     'mozilla-aurora',
@@ -74,4 +76,8 @@ def match_run_on_projects(project, run_on_projects):
     if 'release' in run_on_projects:
         if project in RELEASE_PROJECTS:
             return True
+    if 'trunk' in run_on_projects:
+        if project in TRUNK_PROJECTS:
+            return True
+
     return project in run_on_projects

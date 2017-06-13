@@ -9,7 +9,7 @@ awsy:
     description: "Are we slim yet"
     suite: awsy
     treeherder-symbol: tc-SY(sy)
-    run-on-projects: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    run-on-projects: ['release', 'trunk', 'try']
     docker-image: {"in-tree": "desktop1604-test"}
     max-run-time: 7200
     e10s: true
