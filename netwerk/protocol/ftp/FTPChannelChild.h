@@ -11,6 +11,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/net/PFTPChannelChild.h"
 #include "mozilla/net/ChannelEventQueue.h"
+#include "mozilla/net/NeckoTargetHolder.h"
 #include "nsBaseChannel.h"
 #include "nsIFTPChannel.h"
 #include "nsIUploadChannel.h"
@@ -42,6 +43,7 @@ class FTPChannelChild final : public PFTPChannelChild
                             , public nsIProxiedChannel
                             , public nsIChildChannel
                             , public nsIDivertableChannel
+                            , public NeckoTargetHolder
 {
 public:
   typedef ::nsIStreamListener nsIStreamListener;
@@ -126,11 +128,9 @@ protected:
   friend class FTPFailedAsyncOpenEvent;
   friend class FTPFlushedForDiversionEvent;
   friend class FTPDeleteSelfEvent;
+  friend class NeckoTargetChannelEvent<FTPChannelChild>;
 
 private:
-  // Get event target for processing network events.
-  already_AddRefed<nsIEventTarget> GetNeckoTarget();
-
   nsCOMPtr<nsIInputStream> mUploadStream;
 
   bool mIPCOpen;
@@ -158,9 +158,6 @@ private:
   // Set if SendSuspend is called. Determines if SendResume is needed when
   // diverting callbacks to parent.
   bool mSuspendSent;
-
-  // EventTarget for labeling networking events.
-  nsCOMPtr<nsIEventTarget> mNeckoTarget;
 
   void EnsureNeckoTarget();
 };

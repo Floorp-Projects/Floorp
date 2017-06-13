@@ -114,13 +114,13 @@ gfxCallbackDrawable::gfxCallbackDrawable(gfxDrawingCallback* aCallback,
 }
 
 already_AddRefed<gfxSurfaceDrawable>
-gfxCallbackDrawable::MakeSurfaceDrawable(const SamplingFilter aSamplingFilter)
+gfxCallbackDrawable::MakeSurfaceDrawable(gfxContext *aContext, const SamplingFilter aSamplingFilter)
 {
     SurfaceFormat format =
         gfxPlatform::GetPlatform()->Optimal2DFormatForContent(gfxContentType::COLOR_ALPHA);
     RefPtr<DrawTarget> dt =
-        gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(mSize,
-                                                                     format);
+        aContext->GetDrawTarget()->CreateSimilarDrawTarget(mSize, format);
+
     if (!dt || !dt->IsValid())
         return nullptr;
 
@@ -160,7 +160,7 @@ gfxCallbackDrawable::Draw(gfxContext* aContext,
 {
     if ((IsRepeatingExtendMode(aExtendMode) || aOpacity != 1.0 || aContext->CurrentOp() != CompositionOp::OP_OVER) &&
         !mSurfaceDrawable) {
-        mSurfaceDrawable = MakeSurfaceDrawable(aSamplingFilter);
+        mSurfaceDrawable = MakeSurfaceDrawable(aContext, aSamplingFilter);
     }
 
     if (mSurfaceDrawable)
