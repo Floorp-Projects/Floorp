@@ -50,15 +50,19 @@ public:
   NS_DECL_NSICLONEABLEINPUTSTREAM
 
   nsStringInputStream()
+    : mOffset(0)
   {
-    Clear();
+    Clear(); // Sets mStatus too.
   }
 
   explicit nsStringInputStream(const nsStringInputStream& aOther)
     : mOffset(aOther.mOffset)
+    , mStatus(aOther.mStatus)
   {
     // Use Assign() here because we don't want the life of the clone to be
-    // dependent on the life of the original stream.
+    // dependent on the life of the original stream.  This will ensure that we
+    // copy the other stream's string data.  Note that this also copies the "is
+    // void" flag, so copying the other stream's mStatus makes sense.
     mData.Assign(aOther.mData);
   }
 
@@ -80,15 +84,25 @@ private:
   void Clear()
   {
     mData.SetIsVoid(true);
+    mStatus = NS_BASE_STREAM_CLOSED;
   }
 
-  bool Closed()
+  bool Closed() const
   {
+    MOZ_ASSERT(mData.IsVoid() == NS_FAILED(mStatus),
+               "Status should match data state");
     return mData.IsVoid();
+  }
+
+  void UpdateStatus()
+  {
+    // Can't use Closed() here, because that checks our status.
+    mStatus = mData.IsVoid() ? NS_BASE_STREAM_CLOSED : NS_OK;
   }
 
   nsDependentCSubstring mData;
   uint32_t mOffset;
+  nsresult mStatus;
 };
 
 // This class needs to support threadsafe refcounting since people often
@@ -130,7 +144,7 @@ nsStringInputStream::GetData(nsACString& data)
   // and return an empty string here, but it seems better to keep this return
   // value consistent with the behavior of the other 'getter' methods.
   if (NS_WARN_IF(Closed())) {
-    return NS_BASE_STREAM_CLOSED;
+    return mStatus;
   }
 
   data.Assign(mData);
@@ -141,6 +155,7 @@ NS_IMETHODIMP
 nsStringInputStream::SetData(const nsACString& aData)
 {
   mData.Assign(aData);
+  UpdateStatus();
   mOffset = 0;
   return NS_OK;
 }
@@ -163,6 +178,7 @@ nsStringInputStream::SetData(const char* aData, int32_t aDataLen)
     return NS_ERROR_INVALID_ARG;
   }
   mData.Assign(aData, aDataLen);
+  UpdateStatus();
   mOffset = 0;
   return NS_OK;
 }
@@ -174,6 +190,7 @@ nsStringInputStream::AdoptData(char* aData, int32_t aDataLen)
     return NS_ERROR_INVALID_ARG;
   }
   mData.Adopt(aData, aDataLen);
+  UpdateStatus();
   mOffset = 0;
   return NS_OK;
 }
@@ -190,6 +207,7 @@ nsStringInputStream::ShareData(const char* aData, int32_t aDataLen)
   }
 
   mData.Rebind(aData, aDataLen);
+  UpdateStatus();
   mOffset = 0;
   return NS_OK;
 }
@@ -219,7 +237,7 @@ nsStringInputStream::Available(uint64_t* aLength)
   NS_ASSERTION(aLength, "null ptr");
 
   if (Closed()) {
-    return NS_BASE_STREAM_CLOSED;
+    return mStatus;
   }
 
   *aLength = LengthRemaining();
@@ -241,7 +259,7 @@ nsStringInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
   NS_ASSERTION(Length() >= mOffset, "bad stream state");
 
   if (Closed()) {
-    return NS_BASE_STREAM_CLOSED;
+    return mStatus;
   }
 
   // We may be at end-of-file
@@ -281,7 +299,7 @@ NS_IMETHODIMP
 nsStringInputStream::Seek(int32_t aWhence, int64_t aOffset)
 {
   if (Closed()) {
-    return NS_BASE_STREAM_CLOSED;
+    return mStatus;
   }
 
   // Compute new stream position.  The given offset may be a negative value.
@@ -313,7 +331,7 @@ NS_IMETHODIMP
 nsStringInputStream::Tell(int64_t* aOutWhere)
 {
   if (Closed()) {
-    return NS_BASE_STREAM_CLOSED;
+    return mStatus;
   }
 
   *aOutWhere = mOffset;
@@ -324,7 +342,7 @@ NS_IMETHODIMP
 nsStringInputStream::SetEOF()
 {
   if (Closed()) {
-    return NS_BASE_STREAM_CLOSED;
+    return mStatus;
   }
 
   mOffset = Length();
