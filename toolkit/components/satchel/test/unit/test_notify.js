@@ -46,12 +46,10 @@ function next_test() {
 }
 
 function* run_test_steps() {
+  var testnum = 0;
+  var testdesc = "Setup of test form history entries";
 
   try {
-
-    var testnum = 0;
-    var testdesc = "Setup of test form history entries";
-
     var entry1 = ["entry1", "value1"];
 
     /* ========== 1 ========== */

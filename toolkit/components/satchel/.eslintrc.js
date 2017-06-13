@@ -33,5 +33,6 @@ module.exports = {
       requireReturn: false,
       requireReturnDescription: false,
     }],
+    "block-scoped-var": "error",
   },
 };
