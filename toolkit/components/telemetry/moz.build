@@ -57,6 +57,7 @@ SOURCES += [
     'HangReports.cpp',
     'ipc/TelemetryIPC.cpp',
     'ipc/TelemetryIPCAccumulator.cpp',
+    'KeyedStackCapturer.cpp',
     'Telemetry.cpp',
     'TelemetryCommon.cpp',
     'TelemetryEvent.cpp',
@@ -64,12 +65,6 @@ SOURCES += [
     'TelemetryScalar.cpp',
     'WebrtcTelemetry.cpp',
 ]
-
-# KeyedStackCapturer entirely relies on profiler to be enabled.
-if CONFIG['MOZ_GECKO_PROFILER']:
-    SOURCES += [
-      'KeyedStackCapturer.cpp'
-    ]
 
 EXTRA_COMPONENTS += [
     'TelemetryStartup.js',
