@@ -57,6 +57,9 @@ const startupPhases = {
       "nsSearchService.js",
       "UnifiedComplete.js",
     ]),
+    modules: new Set([
+     "resource://gre/modules/ContextualIdentityService.jsm"
+    ]),
     services: new Set([
       "@mozilla.org/browser/search-service;1",
     ])

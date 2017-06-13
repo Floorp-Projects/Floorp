@@ -90,11 +90,6 @@ _ContextualIdentityService.prototype = {
 
   init(path) {
     this._path = path;
-    this._saver = new DeferredTask(() => this.save(), SAVE_DELAY_MS);
-    AsyncShutdown.profileBeforeChange.addBlocker("ContextualIdentityService: writing data",
-                                                 () => this._saver.finalize());
-
-    this.load();
   },
 
   load() {
@@ -154,22 +149,39 @@ _ContextualIdentityService.prototype = {
   },
 
   saveSoon() {
+    if (!this._saver) {
+      this._saverCallback = () => this._saver.finalize();
+
+      this._saver = new DeferredTask(() => this.save(), SAVE_DELAY_MS);
+      AsyncShutdown.profileBeforeChange.addBlocker(
+        "ContextualIdentityService: writing data", this._saverCallback);
+    } else {
+      this._saver.disarm();
+    }
+
     this._saver.arm();
   },
 
   save() {
-   let object = {
-     version: 2,
-     lastUserContextId: this._lastUserContextId,
-     identities: this._identities
-   };
+    AsyncShutdown.profileBeforeChange.removeBlocker(this._saverCallback);
 
-   let bytes = gTextEncoder.encode(JSON.stringify(object));
-   return OS.File.writeAtomic(this._path, bytes,
-                              { tmpPath: this._path + ".tmp" });
+    this._saver = null;
+    this._saverCallback = null;
+
+    let object = {
+      version: 2,
+      lastUserContextId: this._lastUserContextId,
+      identities: this._identities
+    };
+
+    let bytes = gTextEncoder.encode(JSON.stringify(object));
+    return OS.File.writeAtomic(this._path, bytes,
+                               { tmpPath: this._path + ".tmp" });
   },
 
   create(name, icon, color) {
+    this.ensureDataReady();
+
     let identity = {
       userContextId: ++this._lastUserContextId,
       public: true,
@@ -185,6 +197,8 @@ _ContextualIdentityService.prototype = {
   },
 
   update(userContextId, name, icon, color) {
+    this.ensureDataReady();
+
     let identity = this._identities.find(identity => identity.userContextId == userContextId &&
                                          identity.public);
     if (identity && name) {
@@ -202,6 +216,8 @@ _ContextualIdentityService.prototype = {
   },
 
   remove(userContextId) {
+    this.ensureDataReady();
+
     let index = this._identities.findIndex(i => i.userContextId == userContextId && i.public);
     if (index == -1) {
       return false;
