@@ -34,5 +34,8 @@ module.exports = {
       requireReturnDescription: false,
     }],
     "block-scoped-var": "error",
+    "no-use-before-define": ["error", {
+      functions: false,
+    }],
   },
 };
