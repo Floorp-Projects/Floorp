@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1345367
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1345367</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript">
+
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  const defaultMethods = [{
+    supportedMethods: ["basic-card"],
+  }];
+  const defaultDetails = {
+    total: {
+      label: "Total",
+      amount: {
+        currency: "USD",
+        value: "1.00"
+      }
+    },
+  };
+
+  function testBeforeShow() {
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
+      payRequest.abort().then((result) => {
+        ok(false, "Should throw 'InvalidStateError', but got resolved.");
+        resolve();
+      }).catch((err) => {
+        is(err.name, "InvalidStateError",
+          "Expected 'InvalidStateError', but got '" + err.name + "'");
+        resolve();
+      });
+    });
+  }
+
+  function testAfterShow() {
+     return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
+      const acceptPromise = payRequest.show();
+      payRequest.abort().then((abortResult) => {
+        is(abortResult, undefined, "Should be resolved with undefined.");
+        resolve();
+      }).catch( (err) => {
+        ok(false, "Expected no error, but got '" + err.name + "'.");
+        resolve();
+      });
+    });
+  }
+
+  function runTests() {
+    testBeforeShow()
+    .then(testAfterShow)
+    .then(SimpleTest.finish)
+    .catch( e => {
+      ok(false, "Unexpected error: " + e.name);
+      SimpleTest.finish();
+    });
+  }
+
+  window.addEventListener('load', function() {
+    SpecialPowers.pushPrefEnv({
+      'set': [
+        ['dom.payments.request.enabled', true],
+      ]
+    }, runTests);
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1345367">Mozilla Bug 1345367</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
