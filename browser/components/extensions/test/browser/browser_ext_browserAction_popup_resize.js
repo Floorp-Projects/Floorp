@@ -63,6 +63,10 @@ add_task(async function testBrowserActionPopupResize() {
 
 async function testPopupSize(standardsMode, browserWin = window, arrowSide = "top") {
   let docType = standardsMode ? "<!DOCTYPE html>" : "";
+  let overflowView = browserWin.document.getElementById("widget-overflow-mainView");
+  if (overflowView) {
+    overflowView.style.minHeight = "600px";
+  }
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -260,6 +264,9 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
 
   await closeBrowserAction(extension, browserWin);
 
+  if (overflowView) {
+    overflowView.style.removeProperty("min-height");
+  }
   await extension.unload();
 }
 
