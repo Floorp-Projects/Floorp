@@ -19,5 +19,19 @@ module.exports = {
       outerIIFEBody: 0,
     }],
     semi: ["error", "always"],
+    "valid-jsdoc": ["error", {
+      prefer: {
+        return: "returns",
+      },
+      preferType: {
+        Boolean: "boolean",
+        Number: "number",
+        String: "string",
+        bool: "boolean",
+      },
+      requireParamDescription: false,
+      requireReturn: false,
+      requireReturnDescription: false,
+    }],
   },
 };

@@ -116,7 +116,7 @@ function updateFormHistory(changes, then) {
 /**
  * Logs info to the console in the standard way (includes the filename).
  *
- * @param aMessage
+ * @param {string} aMessage
  *        The message to log to the console.
  */
 function do_log_info(aMessage) {

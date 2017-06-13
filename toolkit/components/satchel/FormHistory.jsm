@@ -542,6 +542,7 @@ var Migrators = {
 /**
  * Sanity check to ensure that the columns this version of the code expects
  * are present in the DB we're using.
+ * @returns {boolean} whether expected columns are present
  */
 function dbAreExpectedColumnsPresent() {
   for (let name in dbSchema.tables) {
@@ -565,6 +566,7 @@ function dbAreExpectedColumnsPresent() {
 /**
  * Called when database creation fails. Finalizes database statements,
  * closes the database connection, deletes the database file.
+ * @param {Object} dbFile database file to close
  */
 function dbCleanup(dbFile) {
   log("Cleaning up DB file - close & remove & backup");
@@ -608,6 +610,9 @@ function dbClose(aShutdown) {
 /**
  * Constructs and executes database statements from a pre-processed list of
  * inputted changes.
+ *
+ * @param {Array.<Object>} aChanges changes to form history
+ * @param {Object} aCallbacks
  */
 function updateFormHistoryWrite(aChanges, aCallbacks) {
   log("updateFormHistoryWrite  " + aChanges.length);
@@ -717,6 +722,9 @@ function updateFormHistoryWrite(aChanges, aCallbacks) {
 
 /**
  * Removes entries from database.
+ *
+ * @param {number} aExpireTime expiration timestamp
+ * @param {number} aBeginningCount numer of entries at first
  */
 function expireOldEntriesDeletion(aExpireTime, aBeginningCount) {
   log("expireOldEntriesDeletion(" + aExpireTime + "," + aBeginningCount + ")");
@@ -736,6 +744,9 @@ function expireOldEntriesDeletion(aExpireTime, aBeginningCount) {
 
 /**
  * Counts number of entries removed and shrinks database as necessary.
+ *
+ * @param {number} aExpireTime expiration timestamp
+ * @param {number} aBeginningCount number of entries at first
  */
 function expireOldEntriesVacuum(aExpireTime, aBeginningCount) {
   FormHistory.count({}, {
