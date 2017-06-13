@@ -5,8 +5,36 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PCompositorBridge;
+
+using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
+using mozilla::TimeDuration from "mozilla/TimeStamp.h";
+using mozilla::CSSToLayoutDeviceScale from "Units.h";
+using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
+using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
+
 namespace mozilla {
 namespace layers {
+
+struct WidgetCompositorOptions {
+  CSSToLayoutDeviceScale scale;
+  TimeDuration vsyncRate;
+  CompositorOptions options;
+  bool useExternalSurfaceSize;
+  IntSize surfaceSize;
+};
+
+struct ContentCompositorOptions {
+};
+
+struct SameProcessWidgetCompositorOptions {
+};
+
+union CompositorBridgeOptions {
+  ContentCompositorOptions;
+  WidgetCompositorOptions;
+  SameProcessWidgetCompositorOptions;
+};
 
 /**
  * The PCompositorManager protocol is the top-level protocol between the
