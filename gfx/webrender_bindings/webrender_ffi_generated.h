@@ -737,7 +737,7 @@ WR_FUNC;
 
 WR_INLINE
 uint64_t wr_dp_push_clip(WrState *aState,
-                         WrRect aClipRect,
+                         WrRect aRect,
                          const WrImageMask *aMask)
 WR_FUNC;
 
