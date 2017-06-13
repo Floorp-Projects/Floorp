@@ -6162,16 +6162,6 @@ TSFTextStore::Initialize()
     return;
   }
 
-  RefPtr<ITfKeystrokeMgr> keystrokeMgr;
-  hr = threadMgr->QueryInterface(IID_ITfKeystrokeMgr,
-                                 getter_AddRefs(keystrokeMgr));
-  if (FAILED(hr) || !keystrokeMgr) {
-    MOZ_LOG(sTextStoreLog, LogLevel::Error,
-      ("  TSFTextStore::Initialize() FAILED to "
-       "QI keystroke manager from the thread manager, hr=0x%08X", hr));
-    return;
-  }
-
   hr = threadMgr->Activate(&sClientId);
   if (FAILED(hr)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
@@ -6205,7 +6195,6 @@ TSFTextStore::Initialize()
 
   sThreadMgr = threadMgr;
   sMessagePump = messagePump;
-  sKeystrokeMgr = keystrokeMgr;
   sDisabledDocumentMgr = disabledDocumentMgr;
   sDisabledContext = disabledContext;
 
@@ -6326,8 +6315,28 @@ TSFTextStore::Terminate()
 bool
 TSFTextStore::ProcessRawKeyMessage(const MSG& aMsg)
 {
-  if (!sKeystrokeMgr) {
+  if (!sThreadMgr) {
     return false; // not in TSF mode
+  }
+  static bool sInitialized = false;
+  if (!sKeystrokeMgr) {
+    // If it tried to retrieve ITfKeystrokeMgr from sThreadMgr but it failed,
+    // we shouldn't retry it at every keydown nor keyup due to performance
+    // reason.  Although this shouldn't occur actually.
+    if (sInitialized) {
+      return false;
+    }
+    sInitialized = true;
+    RefPtr<ITfKeystrokeMgr> keystrokeMgr;
+    HRESULT hr = sThreadMgr->QueryInterface(IID_ITfKeystrokeMgr,
+                                            getter_AddRefs(keystrokeMgr));
+    if (NS_WARN_IF(FAILED(hr)) || NS_WARN_IF(!keystrokeMgr)) {
+      MOZ_LOG(sTextStoreLog, LogLevel::Error,
+        ("TSFTextStore::ProcessRawKeyMessage() FAILED to "
+         "QI keystroke manager from the thread manager, hr=0x%08X", hr));
+      return false;
+    }
+    sKeystrokeMgr = keystrokeMgr.forget();
   }
 
   if (aMsg.message == WM_KEYDOWN) {
