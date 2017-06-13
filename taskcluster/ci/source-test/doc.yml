@@ -21,9 +21,6 @@ sphinx:
             rm -rf docs-out/html/Mozilla_Source_Tree_Docs/_venv &&
             mv docs-out/html/Mozilla_Source_Tree_Docs docs &&
             tar -czf docs.tar.gz docs
-    run-on-projects:
-        - integration
-        - release
     when:
         files-changed:
             - '**/*.py'

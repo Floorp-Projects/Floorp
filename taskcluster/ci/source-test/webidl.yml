@@ -12,9 +12,6 @@ webidl-test:
     run:
         using: mach
         mach: webidl-parser-test --verbose
-    run-on-projects:
-        - integration
-        - release
     when:
         files-changed:
             - 'dom/bindings/parser/runtests.py'
