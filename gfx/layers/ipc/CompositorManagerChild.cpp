@@ -4,8 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/CompositorManagerChild.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorManagerParent.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/dom/ContentChild.h"   // for ContentChild
+#include "mozilla/dom/TabChild.h"       // for TabChild
+#include "mozilla/dom/TabGroup.h"       // for TabGroup
 
 namespace mozilla {
 namespace layers {
@@ -106,6 +110,41 @@ void
 CompositorManagerChild::ActorDestroy(ActorDestroyReason aReason)
 {
   mCanSend = false;
+}
+
+void
+CompositorManagerChild::HandleFatalError(const char* aName, const char* aMsg) const
+{
+  dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
+}
+
+void
+CompositorManagerChild::ProcessingError(Result aCode, const char* aReason)
+{
+  if (aCode != MsgDropped) {
+    gfxDevCrash(gfx::LogReason::ProcessingError) << "Processing error in CompositorBridgeChild: " << int(aCode);
+  }
+}
+
+already_AddRefed<nsIEventTarget>
+CompositorManagerChild::GetSpecificMessageEventTarget(const Message& aMsg)
+{
+  if (aMsg.type() != PCompositorBridge::Msg_DidComposite__ID) {
+    return nullptr;
+  }
+
+  uint64_t layersId;
+  PickleIterator iter(aMsg);
+  if (!IPC::ReadParam(&aMsg, &iter, &layersId)) {
+    return nullptr;
+  }
+
+  TabChild* tabChild = TabChild::GetFrom(layersId);
+  if (!tabChild) {
+    return nullptr;
+  }
+
+  return do_AddRef(tabChild->TabGroup()->EventTargetFor(TaskCategory::Other));
 }
 
 } // namespace layers

@@ -42,6 +42,10 @@ public:
 
   void ActorDestroy(ActorDestroyReason aReason) override;
 
+  void HandleFatalError(const char* aName, const char* aMsg) const override;
+
+  void ProcessingError(Result aCode, const char* aReason) override;
+
 private:
   static StaticRefPtr<CompositorManagerChild> sInstance;
 
@@ -62,6 +66,9 @@ private:
   }
 
   void DeallocPCompositorManagerChild() override;
+
+  already_AddRefed<nsIEventTarget>
+  GetSpecificMessageEventTarget(const Message& aMsg) override;
 
   bool mCanSend;
   uint32_t mNamespace;
