@@ -10,7 +10,6 @@ skip-if(webrender) pref(dom.animations-api.core.enabled,true) load 1272475-1.htm
 pref(dom.animations-api.core.enabled,true) load 1272475-2.html
 pref(dom.animations-api.core.enabled,true) load 1278485-1.html
 pref(dom.animations-api.core.enabled,true) load 1277272-1.html
-pref(dom.animations-api.core.enabled,true) load 1290535-1.html
 pref(dom.animations-api.core.enabled,true) load 1304886-1.html
 pref(dom.animations-api.core.enabled,true) load 1322382-1.html
 pref(dom.animations-api.core.enabled,true) load 1322291-1.html
@@ -24,7 +23,6 @@ pref(dom.animations-api.core.enabled,true) load 1330190-2.html
 pref(dom.animations-api.core.enabled,true) load 1330513-1.html
 pref(dom.animations-api.core.enabled,true) load 1333539-1.html
 pref(dom.animations-api.core.enabled,true) load 1333539-2.html
-pref(dom.animations-api.core.enabled,true) load 1333418-1.html
 pref(dom.animations-api.core.enabled,true) load 1334583-1.html
 pref(dom.animations-api.core.enabled,true) load 1335998-1.html
 pref(dom.animations-api.core.enabled,true) load 1343589-1.html
