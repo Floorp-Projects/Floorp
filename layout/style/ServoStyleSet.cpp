@@ -374,8 +374,10 @@ ServoStyleSet::PrepareAndTraverseSubtree(
     aRestyleBehavior == TraversalRestyleBehavior::ForReconstruct;
   bool forAnimationOnly =
     aRestyleBehavior == TraversalRestyleBehavior::ForAnimationOnly;
+#ifdef DEBUG
   bool forNewlyBoundElement =
     aRestyleBehavior == TraversalRestyleBehavior::ForNewlyBoundElement;
+#endif
   bool postTraversalRequired = Servo_TraverseSubtree(
     aRoot, mRawSet.get(), &snapshots, aRootBehavior, aRestyleBehavior);
   MOZ_ASSERT(!(isInitial || forReconstruct || forNewlyBoundElement) ||
