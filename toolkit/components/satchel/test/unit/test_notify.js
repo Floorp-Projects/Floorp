@@ -63,8 +63,7 @@ function* run_test_steps() {
     });
 
     // Add the observer
-    var os = Cc["@mozilla.org/observer-service;1"].
-         getService(Ci.nsIObserverService);
+    var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     os.addObserver(TestObserver, "satchel-storage-changed");
 
     /* ========== 2 ========== */

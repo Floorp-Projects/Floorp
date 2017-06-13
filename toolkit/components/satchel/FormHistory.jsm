@@ -130,13 +130,13 @@ function log(aMessage) {
 
 function sendNotification(aType, aData) {
   if (typeof aData == "string") {
-    let strWrapper = Cc["@mozilla.org/supports-string;1"].
-                     createInstance(Ci.nsISupportsString);
+    let strWrapper = Cc["@mozilla.org/supports-string;1"]
+                     .createInstance(Ci.nsISupportsString);
     strWrapper.data = aData;
     aData = strWrapper;
   } else if (typeof aData == "number") {
-    let intWrapper = Cc["@mozilla.org/supports-PRInt64;1"].
-                     createInstance(Ci.nsISupportsPRInt64);
+    let intWrapper = Cc["@mozilla.org/supports-PRInt64;1"]
+                     .createInstance(Ci.nsISupportsPRInt64);
     intWrapper.data = aData;
     aData = intWrapper;
   } else if (aData) {

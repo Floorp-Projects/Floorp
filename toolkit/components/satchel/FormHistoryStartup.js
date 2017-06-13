@@ -58,8 +58,8 @@ FormHistoryStartup.prototype = {
     Services.ppmm.loadProcessScript("chrome://satchel/content/formSubmitListener.js", true);
     Services.ppmm.addMessageListener("FormHistory:FormSubmitEntries", this);
 
-    let messageManager = Cc["@mozilla.org/globalmessagemanager;1"].
-                         getService(Ci.nsIMessageListenerManager);
+    let messageManager = Cc["@mozilla.org/globalmessagemanager;1"]
+                         .getService(Ci.nsIMessageListenerManager);
     // For each of these messages, we could receive them from content,
     // or we might receive them from the ppmm if the searchbar is
     // having its history queried.

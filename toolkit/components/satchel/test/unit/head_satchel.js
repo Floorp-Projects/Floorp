@@ -17,13 +17,13 @@ var dirSvc = Cc["@mozilla.org/file/directory_service;1"]
 
 // Send the profile-after-change notification to the form history component to ensure
 // that it has been initialized.
-var formHistoryStartup = Cc["@mozilla.org/satchel/form-history-startup;1"].
-                         getService(Ci.nsIObserver);
+var formHistoryStartup = Cc["@mozilla.org/satchel/form-history-startup;1"]
+                         .getService(Ci.nsIObserver);
 formHistoryStartup.observe(null, "profile-after-change", null);
 
 function getDBVersion(dbfile) {
-  var ss = Cc["@mozilla.org/storage/service;1"].
-             getService(Ci.mozIStorageService);
+  var ss = Cc["@mozilla.org/storage/service;1"]
+             .getService(Ci.mozIStorageService);
   var dbConnection = ss.openDatabase(dbfile);
   var version = dbConnection.schemaVersion;
   dbConnection.close();
