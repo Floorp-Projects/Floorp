@@ -93,7 +93,8 @@ class YouTubePuppeteer(VideoPuppeteer):
                                                    'html5-video-player'))
             self.player = self.marionette.find_element(By.CLASS_NAME,
                                                        'html5-video-player')
-            print '.html5-video-player element obtained'
+            self.marionette.execute_script("log('.html5-video-player "
+                                           "element obtained');")
         # When an ad is playing, self.player_duration indicates the duration
         # of the spliced-in ad stream, not the duration of the main video, so
         # we attempt to skip the ad first.
@@ -139,7 +140,8 @@ class YouTubePuppeteer(VideoPuppeteer):
             try:
                 return loads(text)
             except ValueError:
-                print 'Error loading JSON: DebugText'
+                self.marionette.log('Error loading json: DebugText',
+                                    level='DEBUG')
 
     def _execute_yt_script(self, script):
         """
@@ -169,13 +171,15 @@ class YouTubePuppeteer(VideoPuppeteer):
         ad_timeout = (self._search_ad_duration() or 30) + 5
         wait = Wait(self, timeout=ad_timeout, interval=1)
         try:
-            print('process_ad: waiting {}s for ad'.format(ad_timeout))
+            self.marionette.log('process_ad: waiting {} s for ad'
+                                .format(ad_timeout))
             verbose_until(wait,
                           self,
                           YouTubePuppeteer._check_if_ad_ended,
                           "Check if ad ended")
         except TimeoutException:
-            print('Waiting for ad to end timed out')
+            self.marionette.log('Waiting for ad to end timed out',
+                                level='WARNING')
 
     def _search_ad_duration(self):
         """
@@ -204,7 +208,9 @@ class YouTubePuppeteer(VideoPuppeteer):
                     ad_seconds = int(ad_time.group('second'))
                     return 60 * ad_minutes + ad_seconds
         except (TimeoutException, NoSuchElementException):
-            print('Could not obtain element {}'.format(selector))
+            self.marionette.log('Could not obtain '
+                                'element: {}'.format(selector),
+                                level='WARNING')
         return None
 
     def _player_stalled(self):
@@ -455,7 +461,7 @@ class YouTubePuppeteer(VideoPuppeteer):
                 if self._last_seen_player_state.player_buffering:
                     # fall back on timeout in 'wait' call that comes after this
                     # in test function
-                    print('Buffering and no playback progress')
+                    self.marionette.log('Buffering and no playback progress.')
                     break
                 else:
                     message = '\n'.join(['Playback stalled', str(self)])

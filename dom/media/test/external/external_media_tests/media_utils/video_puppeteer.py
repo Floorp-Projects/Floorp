@@ -113,18 +113,22 @@ class VideoPuppeteer(object):
         wait = Wait(self.marionette, timeout=self.timeout)
         with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
             self.marionette.navigate(self.test_url)
-            print('URL: {}'.format(self.test_url))
+            self.marionette.execute_script("""
+                log('URL: {0}');""".format(self.test_url))
             verbose_until(wait, self,
                           expected.element_present(By.TAG_NAME, 'video'))
             videos_found = self.marionette.find_elements(By.CSS_SELECTOR,
                                                          video_selector)
             if len(videos_found) > 1:
-                print('{}: multiple video elements found. Using first.'.format(type(self).__name__))
+                self.marionette.log(type(self).__name__ + ': multiple video '
+                                                          'elements found. '
+                                                          'Using first.')
             if len(videos_found) <= 0:
-                print('{}: no video elements found.'.format(type(self).__name__))
+                self.marionette.log(type(self).__name__ + ': no video '
+                                                          'elements found.')
                 return
             self.video = videos_found[0]
-            print('video element obtained')
+            self.marionette.execute_script("log('video element obtained');")
             if autostart:
                 self.start()
 
