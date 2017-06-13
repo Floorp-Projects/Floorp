@@ -7221,7 +7221,7 @@ nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,
                            ReflowOutput& aMetrics,
                            nscoord aLineTop)
 {
-  const ReflowInput &rs = aState.mReflowInput;
+  const ReflowInput &ri = aState.mReflowInput;
 
   // Reflow the bullet now
   WritingMode bulletWM = aBulletFrame->GetWritingMode();
@@ -7233,7 +7233,7 @@ nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,
   // Get the reason right.
   // XXXwaterson Should this look just like the logic in
   // nsBlockReflowContext::ReflowBlock and nsLineLayout::ReflowFrame?
-  ReflowInput reflowInput(aState.mPresContext, rs,
+  ReflowInput reflowInput(aState.mPresContext, ri,
                                 aBulletFrame, availSize);
   nsReflowStatus  status;
   aBulletFrame->Reflow(aState.mPresContext, aMetrics, reflowInput, status);
@@ -7262,13 +7262,13 @@ nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,
   // IStart from floatAvailSpace gives us the content/float start edge
   // in the current writing mode. Then we subtract out the start
   // border/padding and the bullet's width and margin to offset the position.
-  WritingMode wm = rs.GetWritingMode();
+  WritingMode wm = ri.GetWritingMode();
   // Get the bullet's margin, converted to our writing mode so that we can
   // combine it with other logical values here.
   LogicalMargin bulletMargin =
     reflowInput.ComputedLogicalMargin().ConvertTo(wm, bulletWM);
   nscoord iStart = floatAvailSpace.IStart(wm) -
-                   rs.ComputedLogicalBorderPadding().IStart(wm) -
+                   ri.ComputedLogicalBorderPadding().IStart(wm) -
                    bulletMargin.IEnd(wm) -
                    aMetrics.ISize(wm);
 
