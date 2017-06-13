@@ -39,6 +39,10 @@ function init(event) {
 }
 
 function updateIndicatorState() {
+  // If gStringBundle isn't set, the window hasn't finished loading.
+  if (!gStringBundle)
+    return;
+
   updateWindowAttr("sharingvideo", webrtcUI.showCameraIndicator);
   updateWindowAttr("sharingaudio", webrtcUI.showMicrophoneIndicator);
   updateWindowAttr("sharingscreen", webrtcUI.showScreenSharingIndicator);
