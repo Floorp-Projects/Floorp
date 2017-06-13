@@ -45,10 +45,11 @@ static const unsigned GENERATOR_LIFO_DEFAULT_CHUNK_SIZE = 4 * 1024;
 static const unsigned COMPILATION_LIFO_DEFAULT_CHUNK_SIZE = 64 * 1024;
 static const uint32_t BAD_CODE_RANGE = UINT32_MAX;
 
-ModuleGenerator::ModuleGenerator(UniqueChars* error)
+ModuleGenerator::ModuleGenerator(UniqueChars* error, mozilla::Atomic<bool>* cancelled)
   : tier_(Tier(-1)),
     compileMode_(CompileMode::Once),
     error_(error),
+    cancelled_(cancelled),
     linkDataTier_(nullptr),
     metadataTier_(nullptr),
     numSigs_(0),
@@ -954,6 +955,9 @@ ModuleGenerator::launchBatchCompile()
 {
     MOZ_ASSERT(currentTask_);
 
+    if (cancelled_ && *cancelled_)
+        return false;
+
     currentTask_->setDebugEnabled(metadata_->debugEnabled);
 
     size_t numBatchedFuncs = currentTask_->units().length();
@@ -1263,6 +1267,9 @@ bool
 ModuleGenerator::finishTier2(const ShareableBytes& bytecode, SharedModule module)
 {
     MOZ_ASSERT(compileMode_ == CompileMode::Tier2);
+
+    if (cancelled_ && *cancelled_)
+        return false;
 
     if (!finishCommon(bytecode))
         return false;
