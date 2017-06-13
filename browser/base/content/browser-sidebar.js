@@ -64,7 +64,6 @@ var SidebarUI = {
     if (!enumerator.hasMoreElements()) {
       document.persist("sidebar-box", "sidebarcommand");
       document.persist("sidebar-box", "width");
-      document.persist("sidebar-box", "src");
       document.persist("sidebar-title", "value");
     }
   },
@@ -169,27 +168,16 @@ var SidebarUI = {
     }
 
     let commandID = sourceUI._box.getAttribute("sidebarcommand");
-    let commandElem = document.getElementById(commandID);
 
     // dynamically generated sidebars will fail this check, but we still
     // consider it adopted.
-    if (!commandElem) {
+    if (!document.getElementById(commandID)) {
       return true;
     }
 
-    this._title.setAttribute("value",
-                             sourceUI._title.getAttribute("value"));
     this._box.setAttribute("width", sourceUI._box.boxObject.width);
+    this._show(commandID);
 
-    this._box.setAttribute("sidebarcommand", commandID);
-    // Note: we're setting 'src' on this._box, which is a <vbox>, not on
-    // the <browser id="sidebar">. This lets us delay the actual load until
-    // delayedStartup().
-    this._box.setAttribute("src", sourceUI.browser.getAttribute("src"));
-
-    this._setVisibility(true);
-    commandElem.setAttribute("checked", "true");
-    this.browser.setAttribute("src", this._box.getAttribute("src"));
     return true;
   },
 
@@ -222,11 +210,8 @@ var SidebarUI = {
       return;
     }
 
-    let command = document.getElementById(commandID);
-    if (command) {
-      this._setVisibility(true);
-      command.setAttribute("checked", "true");
-      this.browser.setAttribute("src", this._box.getAttribute("src"));
+    if (document.getElementById(commandID)) {
+      this._show(commandID);
     } else {
       // Remove the |sidebarcommand| attribute, because the element it
       // refers to no longer exists, so we should assume this sidebar
@@ -305,9 +290,23 @@ var SidebarUI = {
    * Show the sidebar, using the parameters from the specified broadcaster.
    * @see SidebarUI note.
    *
+   * This wraps the internal method, including a ping to telemetry.
+   *
    * @param {string} commandID ID of the xul:broadcaster element to use.
    */
   show(commandID) {
+    return this._show(commandID).then(() => {
+      BrowserUITelemetry.countSidebarEvent(commandID, "show");
+    });
+  },
+
+  /**
+   * Implementation for show. Also used internally for sidebars that are shown
+   * when a window is opened and we don't want to ping telemetry.
+   *
+   * @param {string} commandID ID of the xul:broadcaster element to use.
+   */
+  _show(commandID) {
     return new Promise((resolve, reject) => {
       let sidebarBroadcaster = document.getElementById(commandID);
       if (!sidebarBroadcaster || sidebarBroadcaster.localName != "broadcaster") {
@@ -341,21 +340,18 @@ var SidebarUI = {
       this._box.setAttribute("sidebarcommand", sidebarBroadcaster.id);
       this.lastOpenedId = sidebarBroadcaster.id;
 
-      let title = sidebarBroadcaster.getAttribute("sidebartitle");
-      if (!title) {
-        title = sidebarBroadcaster.getAttribute("label");
+      let title = sidebarBroadcaster.getAttribute("sidebartitle") ||
+                  sidebarBroadcaster.getAttribute("label");
+
+      // When loading a web page in the sidebar there is no title set on the
+      // broadcaster, as it is instead set by openWebPanel. Don't clear out
+      // the title in this case.
+      if (title) {
+        this._title.value = title;
       }
-      this._title.value = title;
 
       let url = sidebarBroadcaster.getAttribute("sidebarurl");
       this.browser.setAttribute("src", url); // kick off async load
-
-      // We set this attribute here in addition to setting it on the <browser>
-      // element itself, because the code in SidebarUI.uninit() persists this
-      // attribute, not the "src" of the <browser id="sidebar">. The reason it
-      // does that is that we want to delay sidebar load a bit when a browser
-      // window opens. See delayedStartup() and SidebarUI.startDelayedLoad().
-      this._box.setAttribute("src", url);
 
       if (this.browser.contentDocument.location.href != url) {
         this.browser.addEventListener("load", event => {
@@ -380,7 +376,6 @@ var SidebarUI = {
       selBrowser.messageManager.sendAsyncMessage("Sidebar:VisibilityChange",
         {commandID, isOpen: true}
       );
-      BrowserUITelemetry.countSidebarEvent(commandID, "show");
     });
   },
 
