@@ -455,7 +455,8 @@ FormAutoComplete.prototype = {
     // that we use the one defined here. To get around that, we explicitly
     // import the module here, out of the way of the other uses of
     // FormAutoCompleteResult.
-    let {FormAutoCompleteResult} = Cu.import("resource://gre/modules/nsFormAutoCompleteResult.jsm", {});
+    let {FormAutoCompleteResult} = Cu.import("resource://gre/modules/nsFormAutoCompleteResult.jsm",
+                                             {});
     return new FormAutoCompleteResult(datalistResult.searchString,
                                       Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
                                       0,
