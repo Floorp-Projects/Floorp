@@ -1127,9 +1127,9 @@
 
       <handler event="popuphiding"><![CDATA[
         this._isHiding = true;
-        setTimeout(() => {
+        Services.tm.dispatchToMainThread(() => {
           this._isHiding = false;
-        }, 0);
+        });
       ]]></handler>
 
       <!-- This handles clicks on the topmost "Foo Search" header in the
