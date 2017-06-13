@@ -5127,10 +5127,9 @@ nsGlobalWindow::MayResolve(jsid aId)
     return true;
   }
 
-  if (aId == XPCJSRuntime::Get()->GetStringID(XPCJSContext::IDX_CONTROLLERS) ||
-      aId == XPCJSRuntime::Get()->GetStringID(XPCJSContext::IDX_CONTROLLERS_CLASS)) {
-    // We only resolve .controllers/.Controllers in release builds and on non-chrome
-    // windows, but let's not worry about any of that stuff.
+  if (aId == XPCJSRuntime::Get()->GetStringID(XPCJSContext::IDX_CONTROLLERS)) {
+    // We only resolve .controllers in release builds and on non-chrome windows,
+    // but let's not worry about any of that stuff.
     return true;
   }
 
