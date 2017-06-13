@@ -7,9 +7,10 @@
 #ifndef mozilla_KeyframeUtils_h
 #define mozilla_KeyframeUtils_h
 
+#include "mozilla/KeyframeEffectParams.h" // For CompositeOperation
+#include "nsCSSPropertyID.h"
 #include "nsTArrayForwardDeclare.h" // For nsTArray
 #include "js/RootingAPI.h" // For JS::Handle
-#include "mozilla/KeyframeEffectParams.h" // SpacingMode
 
 struct JSContext;
 class JSObject;
@@ -91,39 +92,10 @@ public:
                             const ServoComputedValues* aComputedValues);
 
   /**
-   * Fills in the mComputedOffset member of each keyframe in the given array
-   * using the specified spacing mode.
+   * Calculate the computed offset of keyframes by evenly distributing keyframes
+   * with a missing offset.
    *
-   * https://w3c.github.io/web-animations/#spacing-keyframes
-   *
-   * @param aKeyframes The set of keyframes to adjust.
-   * @param aSpacingMode The spacing mode to apply.
-   * @param aProperty The paced property. Only used when |aSpacingMode| is
-   *   SpacingMode::paced. In all other cases it is ignored and hence may be
-   *   any value, e.g. eCSSProperty_UNKNOWN.
-   * @param aComputedValues The set of computed keyframe values as returned by
-   *   GetComputedKeyframeValues. Only used when |aSpacingMode| is
-   *   SpacingMode::paced. In all other cases this parameter is unused and may
-   *   be any value including an empty array.
-   * @param aStyleContext The style context used for calculating paced spacing
-   *                      on transform.
-   */
-  static void ApplySpacing(nsTArray<Keyframe>& aKeyframes,
-                           SpacingMode aSpacingMode,
-                           nsCSSPropertyID aProperty,
-                           nsTArray<ComputedKeyframeValues>& aComputedValues,
-                           nsStyleContext* aStyleContext);
-  static void ApplySpacing(nsTArray<Keyframe>& aKeyframes,
-                           SpacingMode aSpacingMode,
-                           nsCSSPropertyID aProperty,
-                           nsTArray<ComputedKeyframeValues>& aComputedValues,
-                           const ServoComputedValues* aServoValues)
-  {
-    NS_WARNING("stylo: ApplySpacing not implemented yet");
-  }
-
-  /**
-   * Wrapper for ApplySpacing to simplify using distribute spacing.
+   * @see https://w3c.github.io/web-animations/#calculating-computed-keyframes
    *
    * @param aKeyframes The set of keyframes to adjust.
    */
@@ -140,8 +112,7 @@ public:
    *   GetComputedKeyframeValues) used to fill in the individual
    *   AnimationPropertySegment objects. Although these values could be
    *   calculated from |aKeyframes|, passing them in as a separate parameter
-   *   allows the result of GetComputedKeyframeValues to be re-used both
-   *   here and in ApplySpacing.
+   *   allows the result of GetComputedKeyframeValues to be re-used here.
    * @param aEffectComposite The composite operation specified on the effect.
    *   For any keyframes in |aKeyframes| that do not specify a composite
    *   operation, this value will be used.
