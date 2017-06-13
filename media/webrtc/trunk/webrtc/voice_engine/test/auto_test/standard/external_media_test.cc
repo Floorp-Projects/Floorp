@@ -29,43 +29,6 @@ class ExternalMediaTest : public AfterStreamingFixture {
   }
 };
 
-TEST_F(ExternalMediaTest, ManualCanRecordAndPlaybackUsingExternalPlayout) {
-  SwitchToManualMicrophone();
-
-  EXPECT_EQ(0, voe_base_->StopSend(channel_));
-  EXPECT_EQ(0, voe_base_->StopPlayout(channel_));
-  EXPECT_EQ(0, voe_xmedia_->SetExternalPlayoutStatus(true));
-  EXPECT_EQ(0, voe_base_->StartPlayout(channel_));
-  EXPECT_EQ(0, voe_base_->StartSend(channel_));
-
-  TEST_LOG("Recording data for 2 seconds starting now: please speak.\n");
-  int16_t recording[32000];
-  for (int i = 0; i < 200; i++) {
-    int sample_length = 0;
-    EXPECT_EQ(0, voe_xmedia_->ExternalPlayoutGetData(
-        &(recording[i * 160]), 16000, 100, sample_length));
-    EXPECT_EQ(160, sample_length);
-    Sleep(10);
-  }
-
-  EXPECT_EQ(0, voe_base_->StopSend(channel_));
-  EXPECT_EQ(0, voe_base_->StopPlayout(channel_));
-  EXPECT_EQ(0, voe_xmedia_->SetExternalPlayoutStatus(false));
-  EXPECT_EQ(0, voe_base_->StartPlayout(channel_));
-  EXPECT_EQ(0, voe_xmedia_->SetExternalRecordingStatus(true));
-  EXPECT_EQ(0, voe_base_->StartSend(channel_));
-
-  TEST_LOG("Playing back recording, you should hear what you said earlier.\n");
-  for (int i = 0; i < 200; i++) {
-    EXPECT_EQ(0, voe_xmedia_->ExternalRecordingInsertData(
-        &(recording[i * 160]), 160, 16000, 20));
-    Sleep(10);
-  }
-
-  EXPECT_EQ(0, voe_base_->StopSend(channel_));
-  EXPECT_EQ(0, voe_xmedia_->SetExternalRecordingStatus(false));
-}
-
 TEST_F(ExternalMediaTest,
     ManualRegisterExternalMediaProcessingOnAllChannelsAffectsPlayout) {
   TEST_LOG("Enabling external media processing: audio should be affected.\n");
@@ -139,23 +102,6 @@ TEST_F(ExternalMediaTest,
        << "Resampling succeeds for freq=" << f;
     EXPECT_EQ(f, frame.sample_rate_hz_);
     EXPECT_EQ(static_cast<size_t>(f / 100), frame.samples_per_channel_);
-  }
-  PausePlaying();
-  EXPECT_EQ(0, voe_xmedia_->SetExternalMixing(channel_, false));
-  ResumePlaying();
-}
-
-TEST_F(ExternalMediaTest,
-       ExternalMixingResamplingToInvalidFrequenciesFails) {
-  const int kInvalidFrequencies[] = {-8000, -1};
-  webrtc::AudioFrame frame;
-  PausePlaying();
-  EXPECT_EQ(0, voe_xmedia_->SetExternalMixing(channel_, true));
-  ResumePlaying();
-  for (size_t i = 0; i < arraysize(kInvalidFrequencies); i++) {
-    int f = kInvalidFrequencies[i];
-    EXPECT_EQ(-1, voe_xmedia_->GetAudioFrame(channel_, f, &frame))
-        << "Resampling fails for freq=" << f;
   }
   PausePlaying();
   EXPECT_EQ(0, voe_xmedia_->SetExternalMixing(channel_, false));

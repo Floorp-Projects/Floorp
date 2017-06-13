@@ -8,17 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/base/scoped_ptr.h"
-extern "C" {
+#include <memory>
+
 #include "webrtc/modules/audio_processing/aec/aec_core.h"
-}
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 
 TEST(EchoCancellationInternalTest, ExtendedFilter) {
-  rtc::scoped_ptr<AudioProcessing> ap(AudioProcessing::Create());
+  std::unique_ptr<AudioProcessing> ap(AudioProcessing::Create());
   EXPECT_TRUE(ap->echo_cancellation()->aec_core() == NULL);
 
   EXPECT_EQ(ap->kNoError, ap->echo_cancellation()->Enable(true));
@@ -48,7 +47,7 @@ TEST(EchoCancellationInternalTest, ExtendedFilter) {
 }
 
 TEST(EchoCancellationInternalTest, DelayAgnostic) {
-  rtc::scoped_ptr<AudioProcessing> ap(AudioProcessing::Create());
+  std::unique_ptr<AudioProcessing> ap(AudioProcessing::Create());
   EXPECT_TRUE(ap->echo_cancellation()->aec_core() == NULL);
 
   EXPECT_EQ(ap->kNoError, ap->echo_cancellation()->Enable(true));

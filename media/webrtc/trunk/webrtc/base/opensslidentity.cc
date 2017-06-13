@@ -12,6 +12,8 @@
 
 #include "webrtc/base/opensslidentity.h"
 
+#include <memory>
+
 // Must be included first before openssl headers.
 #include "webrtc/base/win32.h"  // NOLINT
 
@@ -36,12 +38,6 @@ namespace rtc {
 // Random bits for certificate serial number
 static const int SERIAL_RAND_BITS = 64;
 
-// Certificate validity lifetime
-static const int CERTIFICATE_LIFETIME = 60*60*24*30;  // 30 days, arbitrarily
-// Certificate validity window.
-// This is to compensate for slightly incorrect system clocks.
-static const int CERTIFICATE_WINDOW = -60*60*24;
-
 // Generate a key pair. Caller is responsible for freeing the returned object.
 static EVP_PKEY* MakeKey(const KeyParams& key_params) {
   LOG(LS_INFO) << "Making key pair";
@@ -65,6 +61,13 @@ static EVP_PKEY* MakeKey(const KeyParams& key_params) {
   } else if (key_params.type() == KT_ECDSA) {
     if (key_params.ec_curve() == EC_NIST_P256) {
       EC_KEY* ec_key = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+
+      // Ensure curve name is included when EC key is serialized.
+      // Without this call, OpenSSL versions before 1.1.0 will create
+      // certificates that don't work for TLS.
+      // This is a no-op for BoringSSL and OpenSSL 1.1.0+
+      EC_KEY_set_asn1_flag(ec_key, OPENSSL_EC_NAMED_CURVE);
+
       if (!pkey || !ec_key || !EC_KEY_generate_key(ec_key) ||
           !EVP_PKEY_assign_EC_KEY(pkey, ec_key)) {
         EVP_PKEY_free(pkey);
@@ -113,7 +116,7 @@ static X509* MakeCertificate(EVP_PKEY* pkey, const SSLIdentityParams& params) {
       !BN_to_ASN1_INTEGER(serial_number, asn1_serial_number))
     goto error;
 
-  if (!X509_set_version(x509, 0L))  // version 1
+  if (!X509_set_version(x509, 2L))  // version 3
     goto error;
 
   // There are a lot of possible components for the name entries. In
@@ -170,6 +173,29 @@ OpenSSLKeyPair* OpenSSLKeyPair::Generate(const KeyParams& key_params) {
   return new OpenSSLKeyPair(pkey);
 }
 
+OpenSSLKeyPair* OpenSSLKeyPair::FromPrivateKeyPEMString(
+    const std::string& pem_string) {
+  BIO* bio = BIO_new_mem_buf(const_cast<char*>(pem_string.c_str()), -1);
+  if (!bio) {
+    LOG(LS_ERROR) << "Failed to create a new BIO buffer.";
+    return nullptr;
+  }
+  BIO_set_mem_eof_return(bio, 0);
+  EVP_PKEY* pkey =
+      PEM_read_bio_PrivateKey(bio, nullptr, nullptr, const_cast<char*>("\0"));
+  BIO_free(bio);  // Frees the BIO, but not the pointed-to string.
+  if (!pkey) {
+    LOG(LS_ERROR) << "Failed to create the private key from PEM string.";
+    return nullptr;
+  }
+  if (EVP_PKEY_missing_parameters(pkey) != 0) {
+    LOG(LS_ERROR) << "The resulting key pair is missing public key parameters.";
+    EVP_PKEY_free(pkey);
+    return nullptr;
+  }
+  return new OpenSSLKeyPair(pkey);
+}
+
 OpenSSLKeyPair::~OpenSSLKeyPair() {
   EVP_PKEY_free(pkey_);
 }
@@ -185,6 +211,57 @@ void OpenSSLKeyPair::AddReference() {
 #else
   CRYPTO_add(&pkey_->references, 1, CRYPTO_LOCK_EVP_PKEY);
 #endif
+}
+
+std::string OpenSSLKeyPair::PrivateKeyToPEMString() const {
+  BIO* temp_memory_bio = BIO_new(BIO_s_mem());
+  if (!temp_memory_bio) {
+    LOG_F(LS_ERROR) << "Failed to allocate temporary memory bio";
+    RTC_NOTREACHED();
+    return "";
+  }
+  if (!PEM_write_bio_PrivateKey(
+      temp_memory_bio, pkey_, nullptr, nullptr, 0, nullptr, nullptr)) {
+    LOG_F(LS_ERROR) << "Failed to write private key";
+    BIO_free(temp_memory_bio);
+    RTC_NOTREACHED();
+    return "";
+  }
+  BIO_write(temp_memory_bio, "\0", 1);
+  char* buffer;
+  BIO_get_mem_data(temp_memory_bio, &buffer);
+  std::string priv_key_str = buffer;
+  BIO_free(temp_memory_bio);
+  return priv_key_str;
+}
+
+std::string OpenSSLKeyPair::PublicKeyToPEMString() const {
+  BIO* temp_memory_bio = BIO_new(BIO_s_mem());
+  if (!temp_memory_bio) {
+    LOG_F(LS_ERROR) << "Failed to allocate temporary memory bio";
+    RTC_NOTREACHED();
+    return "";
+  }
+  if (!PEM_write_bio_PUBKEY(temp_memory_bio, pkey_)) {
+    LOG_F(LS_ERROR) << "Failed to write public key";
+    BIO_free(temp_memory_bio);
+    RTC_NOTREACHED();
+    return "";
+  }
+  BIO_write(temp_memory_bio, "\0", 1);
+  char* buffer;
+  BIO_get_mem_data(temp_memory_bio, &buffer);
+  std::string pub_key_str = buffer;
+  BIO_free(temp_memory_bio);
+  return pub_key_str;
+}
+
+bool OpenSSLKeyPair::operator==(const OpenSSLKeyPair& other) const {
+  return EVP_PKEY_cmp(this->pkey_, other.pkey_) == 1;
+}
+
+bool OpenSSLKeyPair::operator!=(const OpenSSLKeyPair& other) const {
+  return !(*this == other);
 }
 
 #if !defined(NDEBUG)
@@ -286,11 +363,11 @@ bool OpenSSLCertificate::GetSignatureDigestAlgorithm(
   return true;
 }
 
-bool OpenSSLCertificate::GetChain(SSLCertChain** chain) const {
+std::unique_ptr<SSLCertChain> OpenSSLCertificate::GetChain() const {
   // Chains are not yet supported when using OpenSSL.
   // OpenSSLStreamAdapter::SSLVerifyCallback currently requires the remote
   // certificate to be self-signed.
-  return false;
+  return nullptr;
 }
 
 bool OpenSSLCertificate::ComputeDigest(const std::string& algorithm,
@@ -366,12 +443,20 @@ void OpenSSLCertificate::ToDER(Buffer* der_buffer) const {
 }
 
 void OpenSSLCertificate::AddReference() const {
-  ASSERT(x509_ != NULL);
+  RTC_DCHECK(x509_ != NULL);
 #if defined(OPENSSL_IS_BORINGSSL)
   X509_up_ref(x509_);
 #else
   CRYPTO_add(&x509_->references, 1, CRYPTO_LOCK_X509);
 #endif
+}
+
+bool OpenSSLCertificate::operator==(const OpenSSLCertificate& other) const {
+  return X509_cmp(this->x509_, other.x509_) == 0;
+}
+
+bool OpenSSLCertificate::operator!=(const OpenSSLCertificate& other) const {
+  return !(*this == other);
 }
 
 // Documented in sslidentity.h.
@@ -393,8 +478,8 @@ int64_t OpenSSLCertificate::CertificateExpirationTime() const {
 OpenSSLIdentity::OpenSSLIdentity(OpenSSLKeyPair* key_pair,
                                  OpenSSLCertificate* certificate)
     : key_pair_(key_pair), certificate_(certificate) {
-  ASSERT(key_pair != NULL);
-  ASSERT(certificate != NULL);
+  RTC_DCHECK(key_pair != NULL);
+  RTC_DCHECK(certificate != NULL);
 }
 
 OpenSSLIdentity::~OpenSSLIdentity() = default;
@@ -413,14 +498,18 @@ OpenSSLIdentity* OpenSSLIdentity::GenerateInternal(
   return NULL;
 }
 
-OpenSSLIdentity* OpenSSLIdentity::Generate(const std::string& common_name,
-                                           const KeyParams& key_params) {
+OpenSSLIdentity* OpenSSLIdentity::GenerateWithExpiration(
+    const std::string& common_name,
+    const KeyParams& key_params,
+    time_t certificate_lifetime) {
   SSLIdentityParams params;
   params.key_params = key_params;
   params.common_name = common_name;
   time_t now = time(NULL);
-  params.not_before = now + CERTIFICATE_WINDOW;
-  params.not_after = now + CERTIFICATE_LIFETIME;
+  params.not_before = now + kCertificateWindowInSeconds;
+  params.not_after = now + certificate_lifetime;
+  if (params.not_before > params.not_after)
+    return nullptr;
   return GenerateInternal(params);
 }
 
@@ -432,29 +521,21 @@ OpenSSLIdentity* OpenSSLIdentity::GenerateForTest(
 SSLIdentity* OpenSSLIdentity::FromPEMStrings(
     const std::string& private_key,
     const std::string& certificate) {
-  scoped_ptr<OpenSSLCertificate> cert(
+  std::unique_ptr<OpenSSLCertificate> cert(
       OpenSSLCertificate::FromPEMString(certificate));
   if (!cert) {
     LOG(LS_ERROR) << "Failed to create OpenSSLCertificate from PEM string.";
-    return NULL;
+    return nullptr;
   }
 
-  BIO* bio = BIO_new_mem_buf(const_cast<char*>(private_key.c_str()), -1);
-  if (!bio) {
-    LOG(LS_ERROR) << "Failed to create a new BIO buffer.";
-    return NULL;
-  }
-  BIO_set_mem_eof_return(bio, 0);
-  EVP_PKEY* pkey =
-      PEM_read_bio_PrivateKey(bio, NULL, NULL, const_cast<char*>("\0"));
-  BIO_free(bio);  // Frees the BIO, but not the pointed-to string.
-
-  if (!pkey) {
-    LOG(LS_ERROR) << "Failed to create the private key from PEM string.";
-    return NULL;
+  OpenSSLKeyPair* key_pair =
+      OpenSSLKeyPair::FromPrivateKeyPEMString(private_key);
+  if (!key_pair) {
+    LOG(LS_ERROR) << "Failed to create key pair from PEM string.";
+    return nullptr;
   }
 
-  return new OpenSSLIdentity(new OpenSSLKeyPair(pkey),
+  return new OpenSSLIdentity(key_pair,
                              cert.release());
 }
 
@@ -475,6 +556,23 @@ bool OpenSSLIdentity::ConfigureIdentity(SSL_CTX* ctx) {
     return false;
   }
   return true;
+}
+
+std::string OpenSSLIdentity::PrivateKeyToPEMString() const {
+  return key_pair_->PrivateKeyToPEMString();
+}
+
+std::string OpenSSLIdentity::PublicKeyToPEMString() const {
+  return key_pair_->PublicKeyToPEMString();
+}
+
+bool OpenSSLIdentity::operator==(const OpenSSLIdentity& other) const {
+  return *this->key_pair_ == *other.key_pair_ &&
+         *this->certificate_ == *other.certificate_;
+}
+
+bool OpenSSLIdentity::operator!=(const OpenSSLIdentity& other) const {
+  return !(*this == other);
 }
 
 }  // namespace rtc

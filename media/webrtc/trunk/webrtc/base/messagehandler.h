@@ -11,10 +11,10 @@
 #ifndef WEBRTC_BASE_MESSAGEHANDLER_H_
 #define WEBRTC_BASE_MESSAGEHANDLER_H_
 
+#include <memory>
 #include <utility>
 
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/base/scoped_ptr.h"
 
 namespace rtc {
 
@@ -50,18 +50,18 @@ class FunctorMessageHandler : public MessageHandler {
   ReturnT result_;
 };
 
-// Specialization for rtc::scoped_ptr<ReturnT>.
+// Specialization for std::unique_ptr<ReturnT>.
 template <class ReturnT, class FunctorT>
-class FunctorMessageHandler<class rtc::scoped_ptr<ReturnT>, FunctorT>
+class FunctorMessageHandler<class std::unique_ptr<ReturnT>, FunctorT>
     : public MessageHandler {
  public:
   explicit FunctorMessageHandler(const FunctorT& functor) : functor_(functor) {}
   virtual void OnMessage(Message* msg) { result_ = std::move(functor_()); }
-  rtc::scoped_ptr<ReturnT> result() { return std::move(result_); }
+  std::unique_ptr<ReturnT> result() { return std::move(result_); }
 
  private:
   FunctorT functor_;
-  rtc::scoped_ptr<ReturnT> result_;
+  std::unique_ptr<ReturnT> result_;
 };
 
 // Specialization for ReturnT of void.

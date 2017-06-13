@@ -15,7 +15,7 @@
 
 #include <string>
 
-#include "testing/gmock/include/gmock/gmock.h"
+#include "webrtc/test/gmock.h"
 #include "webrtc/typedefs.h"
 #include "webrtc/video_frame.h"
 

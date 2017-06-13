@@ -151,8 +151,12 @@ class Socket {
   virtual int Connect(const SocketAddress& addr) = 0;
   virtual int Send(const void *pv, size_t cb) = 0;
   virtual int SendTo(const void *pv, size_t cb, const SocketAddress& addr) = 0;
-  virtual int Recv(void *pv, size_t cb) = 0;
-  virtual int RecvFrom(void *pv, size_t cb, SocketAddress *paddr) = 0;
+  // |timestamp| is in units of microseconds.
+  virtual int Recv(void* pv, size_t cb, int64_t* timestamp) = 0;
+  virtual int RecvFrom(void* pv,
+                       size_t cb,
+                       SocketAddress* paddr,
+                       int64_t* timestamp) = 0;
   virtual int Listen(int backlog) = 0;
   virtual Socket *Accept(SocketAddress *paddr) = 0;
   virtual int Close() = 0;

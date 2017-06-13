@@ -14,10 +14,10 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "webrtc/base/exp_filter.h"
-#include "webrtc/base/scoped_ptr.h"
+#include <memory>
+
+#include "webrtc/base/numerics/exp_filter.h"
 #include "webrtc/modules/video_coding/internal_defines.h"
-#include "webrtc/modules/video_coding/qm_select.h"
 #include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/typedefs.h"
 
@@ -43,6 +43,10 @@ enum FilterPacketLossMode {
 // Thresholds for hybrid NACK/FEC
 // common to media optimization and the jitter buffer.
 const int64_t kLowRttNackMs = 20;
+
+// If the RTT is higher than this an extra RTT wont be added to to the jitter
+// buffer delay.
+const int kMaxRttDelayThreshold = 500;
 
 struct VCMProtectionParameters {
   VCMProtectionParameters()
@@ -137,9 +141,6 @@ class VCMProtectionMethod {
 
   virtual int MaxFramesFec() const { return 1; }
 
-  // Updates content metrics
-  void UpdateContentMetrics(const VideoContentMetrics* contentMetrics);
-
  protected:
   uint8_t _effectivePacketLoss;
   uint8_t _protectionFactorK;
@@ -148,7 +149,6 @@ class VCMProtectionMethod {
   float _scaleProtKey;
   int32_t _maxPayloadSize;
 
-  VCMQmRobustness* _qmRobustness;
   bool _useUepProtectionK;
   bool _useUepProtectionD;
   float _corrFecCost;
@@ -282,7 +282,7 @@ class VCMLossProtectionLogic {
   // Input:
   //          - width        : The codec frame width.
   //          - height       : The codec frame height.
-  void UpdateFrameSize(uint16_t width, uint16_t height);
+  void UpdateFrameSize(size_t width, size_t height);
 
   // Update the number of active layers
   //
@@ -333,7 +333,7 @@ class VCMLossProtectionLogic {
   // Sets the available loss protection methods.
   void UpdateMaxLossHistory(uint8_t lossPr255, int64_t now);
   uint8_t MaxFilteredLossPr(int64_t nowMs) const;
-  rtc::scoped_ptr<VCMProtectionMethod> _selectedMethod;
+  std::unique_ptr<VCMProtectionMethod> _selectedMethod;
   VCMProtectionParameters _currentParameters;
   int64_t _rtt;
   float _lossPr;
@@ -350,8 +350,8 @@ class VCMLossProtectionLogic {
   uint8_t _shortMaxLossPr255;
   rtc::ExpFilter _packetsPerFrame;
   rtc::ExpFilter _packetsPerFrameKey;
-  uint16_t _codecWidth;
-  uint16_t _codecHeight;
+  size_t _codecWidth;
+  size_t _codecHeight;
   int _numLayers;
 };
 

@@ -43,15 +43,6 @@ namespace webrtc {
 
 class VoiceEngine;
 
-// VoERxVadCallback
-class WEBRTC_DLLEXPORT VoERxVadCallback {
- public:
-  virtual void OnRxVad(int channel, int vadDecision) = 0;
-
- protected:
-  virtual ~VoERxVadCallback() {}
-};
-
 // VoEAudioProcessing
 class WEBRTC_DLLEXPORT VoEAudioProcessing {
  public:
@@ -125,42 +116,6 @@ class WEBRTC_DLLEXPORT VoEAudioProcessing {
   // and low-frequency noise. Recommended to be enabled.
   virtual int EnableHighPassFilter(bool enable) = 0;
   virtual bool IsHighPassFilterEnabled() = 0;
-
-  // Sets status and mode of the receiving-side (Rx) NS.
-  // The Rx NS reduces noise in the received signal for the specified
-  // |channel|. Intended for advanced usage only.
-  virtual int SetRxNsStatus(int channel,
-                            bool enable,
-                            NsModes mode = kNsUnchanged) = 0;
-
-  // Gets status and mode of the receiving-side NS.
-  virtual int GetRxNsStatus(int channel, bool& enabled, NsModes& mode) = 0;
-
-  // Sets status and mode of the receiving-side (Rx) AGC.
-  // The Rx AGC adjusts the received signal to an appropriate level
-  // for the specified |channel|. Intended for advanced usage only.
-  virtual int SetRxAgcStatus(int channel,
-                             bool enable,
-                             AgcModes mode = kAgcUnchanged) = 0;
-
-  // Gets status and mode of the receiving-side AGC.
-  virtual int GetRxAgcStatus(int channel, bool& enabled, AgcModes& mode) = 0;
-
-  // Modifies the AGC configuration on the receiving side for the
-  // specified |channel|.
-  virtual int SetRxAgcConfig(int channel, AgcConfig config) = 0;
-
-  // Gets the AGC configuration on the receiving side.
-  virtual int GetRxAgcConfig(int channel, AgcConfig& config) = 0;
-
-  // Registers a VoERxVadCallback |observer| instance and enables Rx VAD
-  // notifications for the specified |channel|.
-  virtual int RegisterRxVadObserver(int channel,
-                                    VoERxVadCallback& observer) = 0;
-
-  // Deregisters the VoERxVadCallback |observer| and disables Rx VAD
-  // notifications for the specified |channel|.
-  virtual int DeRegisterRxVadObserver(int channel) = 0;
 
   // Gets the VAD/DTX activity for the specified |channel|.
   // The returned value is 1 if frames of audio contains speech

@@ -13,6 +13,7 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_VP8_IMPL_H_
 #define WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_VP8_IMPL_H_
 
+#include <memory>
 #include <vector>
 
 // NOTE: This include order must remain to avoid compile errors, even though
@@ -22,11 +23,11 @@
 #include "vpx/vp8cx.h"
 #include "vpx/vp8dx.h"
 
+#include "webrtc/api/video/video_frame.h"
 #include "webrtc/common_video/include/i420_buffer_pool.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 #include "webrtc/modules/video_coding/codecs/vp8/include/vp8.h"
 #include "webrtc/modules/video_coding/codecs/vp8/reference_picture_selection.h"
-#include "webrtc/modules/video_coding/utility/frame_dropper.h"
 #include "webrtc/modules/video_coding/utility/quality_scaler.h"
 #include "webrtc/video_frame.h"
 
@@ -40,23 +41,24 @@ class VP8EncoderImpl : public VP8Encoder {
 
   virtual ~VP8EncoderImpl();
 
-  virtual int Release();
+  int Release() override;
 
-  virtual int InitEncode(const VideoCodec* codec_settings,
-                         int number_of_cores,
-                         size_t max_payload_size);
+  int InitEncode(const VideoCodec* codec_settings,
+                 int number_of_cores,
+                 size_t max_payload_size) override;
 
-  virtual int Encode(const VideoFrame& input_image,
-                     const CodecSpecificInfo* codec_specific_info,
-                     const std::vector<FrameType>* frame_types);
+  int Encode(const VideoFrame& input_image,
+             const CodecSpecificInfo* codec_specific_info,
+             const std::vector<FrameType>* frame_types) override;
 
-  virtual int RegisterEncodeCompleteCallback(EncodedImageCallback* callback);
+  int RegisterEncodeCompleteCallback(EncodedImageCallback* callback) override;
 
-  virtual int SetChannelParameters(uint32_t packet_loss, int64_t rtt);
+  int SetChannelParameters(uint32_t packet_loss, int64_t rtt) override;
 
-  virtual int SetRates(uint32_t new_bitrate_kbit, uint32_t frame_rate);
+  int SetRateAllocation(const BitrateAllocation& bitrate,
+                        uint32_t new_framerate) override;
 
-  void OnDroppedFrame() override {}
+  ScalingSettings GetScalingSettings() const override;
 
   const char* ImplementationName() const override;
 
@@ -75,7 +77,7 @@ class VP8EncoderImpl : public VP8Encoder {
   int InitAndSetControlSettings();
 
   // Update frame size for codec.
-  int UpdateCodecFrameSize(const VideoFrame& input_image);
+  int UpdateCodecFrameSize(int width, int height);
 
   void PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
                              const vpx_codec_cx_pkt& pkt,
@@ -98,14 +100,13 @@ class VP8EncoderImpl : public VP8Encoder {
   bool feedback_mode_;
   int qp_max_;
   int cpu_speed_default_;
+  int number_of_cores_;
   uint32_t rc_max_intra_target_;
   int token_partitions_;
   ReferencePictureSelection rps_;
   std::vector<TemporalLayers*> temporal_layers_;
   bool down_scale_requested_;
   uint32_t down_scale_bitrate_;
-  FrameDropper tl0_frame_dropper_;
-  FrameDropper tl1_frame_dropper_;
   std::vector<uint16_t> picture_id_;
   std::vector<int> last_key_frame_picture_id_;
   std::vector<bool> key_frame_request_;
@@ -116,8 +117,6 @@ class VP8EncoderImpl : public VP8Encoder {
   std::vector<vpx_codec_ctx_t> encoders_;
   std::vector<vpx_codec_enc_cfg_t> configurations_;
   std::vector<vpx_rational_t> downsampling_factors_;
-  QualityScaler quality_scaler_;
-  bool quality_scaler_enabled_;
 };  // end of VP8EncoderImpl class
 
 class VP8DecoderImpl : public VP8Decoder {
@@ -136,7 +135,6 @@ class VP8DecoderImpl : public VP8Decoder {
 
   int RegisterDecodeCompleteCallback(DecodedImageCallback* callback) override;
   int Release() override;
-  int Reset() override;
 
   const char* ImplementationName() const override;
 
@@ -159,7 +157,6 @@ class VP8DecoderImpl : public VP8Decoder {
   bool feedback_mode_;
   vpx_codec_ctx_t* decoder_;
   VideoCodec codec_;
-  EncodedImage last_keyframe_;
   int image_format_;
   vpx_ref_frame_t* ref_frame_;
   int propagation_cnt_;

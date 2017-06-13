@@ -13,7 +13,9 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
+#if _MSC_VER < 1900
 #define snprintf _snprintf
+#endif
 #undef ERROR  // wingdi.h
 #endif
 
@@ -40,7 +42,6 @@ static const char kLibjingle[] = "libjingle";
 #include "webrtc/base/criticalsection.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/platform_thread.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/stringencode.h"
 #include "webrtc/base/stringutils.h"
 #include "webrtc/base/timeutils.h"
@@ -123,7 +124,9 @@ LogMessage::LogMessage(const char* file,
                        const char* module)
     : severity_(sev), tag_(kLibjingle) {
   if (timestamp_) {
-    uint32_t time = TimeSince(LogStartTime());
+    // Use SystemTimeMillis so that even if tests use fake clocks, the timestamp
+    // in log messages represents the real system time.
+    int64_t time = TimeDiff(SystemTimeMillis(), LogStartTime());
     // Also ensure WallClockStartTime is initialized, so that it matches
     // LogStartTime.
     WallClockStartTime();
@@ -147,7 +150,7 @@ LogMessage::LogMessage(const char* file,
       case ERRCTX_ERRNO:
         tmp << " " << strerror(err);
         break;
-#if WEBRTC_WIN
+#ifdef WEBRTC_WIN
       case ERRCTX_HRESULT: {
         char msgbuf[256];
         DWORD flags = FORMAT_MESSAGE_FROM_SYSTEM;
@@ -169,10 +172,8 @@ LogMessage::LogMessage(const char* file,
 #endif  // WEBRTC_WIN
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
       case ERRCTX_OSSTATUS: {
-        tmp << " " << nonnull(GetMacOSStatusErrorString(err), "Unknown error");
-        if (const char* desc = GetMacOSStatusCommentString(err)) {
-          tmp << ": " << desc;
-        }
+        std::string desc(DescriptionFromOSStatus(err));
+        tmp << " " << (desc.empty() ? "Unknown error" : desc.c_str());
         break;
       }
 #endif  // WEBRTC_MAC && !defined(WEBRTC_IOS)
@@ -210,8 +211,8 @@ LogMessage::~LogMessage() {
   }
 }
 
-uint32_t LogMessage::LogStartTime() {
-  static const uint32_t g_start = Time();
+int64_t LogMessage::LogStartTime() {
+  static const int64_t g_start = SystemTimeMillis();
   return g_start;
 }
 

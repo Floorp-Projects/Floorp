@@ -147,8 +147,8 @@ class PseudoTcpTestBase : public testing::Test,
     } else {
       int id = (tcp == &local_) ? MSG_RPACKET : MSG_LPACKET;
       std::string packet(buffer, len);
-      rtc::Thread::Current()->PostDelayed(delay_, this, id,
-          rtc::WrapMessageData(packet));
+      rtc::Thread::Current()->PostDelayed(RTC_FROM_HERE, delay_, this, id,
+                                          rtc::WrapMessageData(packet));
     }
     return WR_SUCCESS;
   }
@@ -160,7 +160,7 @@ class PseudoTcpTestBase : public testing::Test,
     tcp->GetNextClock(PseudoTcp::Now(), interval);
     interval = std::max<int>(interval, 0L);  // sometimes interval is < 0
     rtc::Thread::Current()->Clear(this, message);
-    rtc::Thread::Current()->PostDelayed(interval, this, message);
+    rtc::Thread::Current()->PostDelayed(RTC_FROM_HERE, interval, this, message);
   }
 
   virtual void OnMessage(rtc::Message* message) {
@@ -208,7 +208,8 @@ class PseudoTcpTestBase : public testing::Test,
 class PseudoTcpTest : public PseudoTcpTestBase {
  public:
   void TestTransfer(int size) {
-    uint32_t start, elapsed;
+    uint32_t start;
+    int32_t elapsed;
     size_t received;
     // Create some dummy data to send.
     send_stream_.ReserveSize(size);
@@ -220,13 +221,13 @@ class PseudoTcpTest : public PseudoTcpTestBase {
     // Prepare the receive stream.
     recv_stream_.ReserveSize(size);
     // Connect and wait until connected.
-    start = rtc::Time();
+    start = rtc::Time32();
     EXPECT_EQ(0, Connect());
     EXPECT_TRUE_WAIT(have_connected_, kConnectTimeoutMs);
     // Sending will start from OnTcpWriteable and complete when all data has
     // been received.
     EXPECT_TRUE_WAIT(have_disconnected_, kTransferTimeoutMs);
-    elapsed = rtc::TimeSince(start);
+    elapsed = rtc::Time32() - start;
     recv_stream_.GetSize(&received);
     // Ensure we closed down OK and we got the right data.
     // TODO: Ensure the errors are cleared properly.
@@ -339,7 +340,7 @@ class PseudoTcpTestPingPong : public PseudoTcpTestBase {
     // Prepare the receive stream.
     recv_stream_.ReserveSize(size);
     // Connect and wait until connected.
-    start = rtc::Time();
+    start = rtc::Time32();
     EXPECT_EQ(0, Connect());
     EXPECT_TRUE_WAIT(have_connected_, kConnectTimeoutMs);
     // Sending will start from OnTcpWriteable and stop when the required
@@ -456,7 +457,7 @@ class PseudoTcpTestReceiveWindow : public PseudoTcpTestBase {
     EXPECT_EQ(0, Connect());
     EXPECT_TRUE_WAIT(have_connected_, kConnectTimeoutMs);
 
-    rtc::Thread::Current()->Post(this, MSG_WRITE);
+    rtc::Thread::Current()->Post(RTC_FROM_HERE, this, MSG_WRITE);
     EXPECT_TRUE_WAIT(have_disconnected_, kTransferTimeoutMs);
 
     ASSERT_EQ(2u, send_position_.size());
@@ -562,7 +563,7 @@ class PseudoTcpTestReceiveWindow : public PseudoTcpTestBase {
       // If there are non-clock messages remaining, attempt to continue sending
       // after giving those messages time to process, which should free up the
       // send buffer.
-      rtc::Thread::Current()->PostDelayed(10, this, MSG_WRITE);
+      rtc::Thread::Current()->PostDelayed(RTC_FROM_HERE, 10, this, MSG_WRITE);
     } else {
       if (!remote_.isReceiveBufferFull()) {
         LOG(LS_ERROR) << "This shouldn't happen - the send buffer is full, "

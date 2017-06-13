@@ -13,7 +13,7 @@
 
 #include <cstddef>
 
-#include "webrtc/base/exp_filter.h"
+#include "webrtc/base/numerics/exp_filter.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -53,8 +53,6 @@ class FrameDropper {
 
   virtual void Leak(uint32_t inputFrameRate);
 
-  void UpdateNack(uint32_t nackBytes);
-
   // Sets the target bit rate and the frame rate produced by
   // the camera.
   //
@@ -62,34 +60,39 @@ class FrameDropper {
   //          - bitRate       : The target bit rate
   virtual void SetRates(float bitRate, float incoming_frame_rate);
 
-  // Return value     : The current average frame rate produced
-  //                    if the DropFrame() function is used as
-  //                    instruction of when to drop frames.
-  virtual float ActualFrameRate(uint32_t inputFrameRate) const;
-
  private:
-  void FillBucket(float inKbits, float outKbits);
   void UpdateRatio();
   void CapAccumulator();
 
-  rtc::ExpFilter _keyFrameSizeAvgKbits;
-  rtc::ExpFilter _keyFrameRatio;
-  float _keyFrameSpreadFrames;
-  int32_t _keyFrameCount;
-  float _accumulator;
-  float _accumulatorMax;
-  float _targetBitRate;
-  bool _dropNext;
-  rtc::ExpFilter _dropRatio;
-  int32_t _dropCount;
-  float _windowSize;
-  float _incoming_frame_rate;
-  bool _wasBelowMax;
-  bool _enabled;
-  bool _fastMode;
-  float _cap_buffer_size;
-  float _max_time_drops;
-};  // end of VCMFrameDropper class
+  rtc::ExpFilter key_frame_ratio_;
+  rtc::ExpFilter delta_frame_size_avg_kbits_;
+
+  // Key frames and large delta frames are not immediately accumulated in the
+  // bucket since they can immediately overflow the bucket leading to large
+  // drops on the following packets that may be much smaller. Instead these
+  // large frames are accumulated over several frames when the bucket leaks.
+
+  // |large_frame_accumulation_spread_| represents the number of frames over
+  // which a large frame is accumulated.
+  float large_frame_accumulation_spread_;
+  // |large_frame_accumulation_count_| represents the number of frames left
+  // to finish accumulating a large frame.
+  int large_frame_accumulation_count_;
+  // |large_frame_accumulation_chunk_size_| represents the size of a single
+  // chunk for large frame accumulation.
+  float large_frame_accumulation_chunk_size_;
+
+  float accumulator_;
+  float accumulator_max_;
+  float target_bitrate_;
+  bool drop_next_;
+  rtc::ExpFilter drop_ratio_;
+  int drop_count_;
+  float incoming_frame_rate_;
+  bool was_below_max_;
+  bool enabled_;
+  const float max_drop_duration_secs_;
+};
 
 }  // namespace webrtc
 

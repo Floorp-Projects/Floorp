@@ -12,7 +12,6 @@
 
 #include "webrtc/base/format_macros.h"
 #include "webrtc/modules/audio_coding/include/audio_coding_module.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/voice_engine/channel.h"
 #include "webrtc/voice_engine/include/voe_errors.h"
@@ -21,19 +20,13 @@
 namespace webrtc {
 
 VoECodec* VoECodec::GetInterface(VoiceEngine* voiceEngine) {
-#ifndef WEBRTC_VOICE_ENGINE_CODEC_API
-  return NULL;
-#else
   if (NULL == voiceEngine) {
     return NULL;
   }
   VoiceEngineImpl* s = static_cast<VoiceEngineImpl*>(voiceEngine);
   s->AddRef();
   return s;
-#endif
 }
-
-#ifdef WEBRTC_VOICE_ENGINE_CODEC_API
 
 VoECodecImpl::VoECodecImpl(voe::SharedData* shared) : _shared(shared) {
   WEBRTC_TRACE(kTraceMemory, kTraceVoice, VoEId(_shared->instance_id(), -1),
@@ -138,8 +131,9 @@ int VoECodecImpl::SetBitRate(int channel, int bitrate_bps) {
     _shared->SetLastError(VE_NOT_INITED, kTraceError);
     return -1;
   }
+  constexpr int64_t kDefaultProbingIntervalMs = 3000;
   _shared->channel_manager().GetChannel(channel).channel()->SetBitRate(
-      bitrate_bps);
+      bitrate_bps, kDefaultProbingIntervalMs);
   return 0;
 }
 
@@ -377,10 +371,21 @@ int VoECodecImpl::SetOpusDtx(int channel, bool enable_dtx) {
   return channelPtr->SetOpusDtx(enable_dtx);
 }
 
-RtcEventLog* VoECodecImpl::GetEventLog() {
-  return _shared->channel_manager().GetEventLog();
+int VoECodecImpl::GetOpusDtxStatus(int channel, bool* enabled) {
+  WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
+               "GetOpusDtx(channel=%d)", channel);
+  if (!_shared->statistics().Initialized()) {
+    _shared->SetLastError(VE_NOT_INITED, kTraceError);
+    return -1;
+  }
+  voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+  voe::Channel* channelPtr = ch.channel();
+  if (channelPtr == NULL) {
+    _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
+                          "GetOpusDtx failed to locate channel");
+    return -1;
+  }
+  return channelPtr->GetOpusDtx(enabled);
 }
-
-#endif  // WEBRTC_VOICE_ENGINE_CODEC_API
 
 }  // namespace webrtc

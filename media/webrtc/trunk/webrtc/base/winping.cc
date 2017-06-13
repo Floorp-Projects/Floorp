@@ -10,12 +10,12 @@
 
 #include "webrtc/base/winping.h"
 
-#include <assert.h>
 #include <Iphlpapi.h>
 
 #include <algorithm>
 
 #include "webrtc/base/byteorder.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/ipaddress.h"
 #include "webrtc/base/logging.h"
@@ -218,7 +218,7 @@ WinPing::PingResult WinPing::Ping(IPAddress ip,
     return PING_INVALID_PARAMS;
   }
 
-  assert(IsValid());
+  RTC_DCHECK(IsValid());
 
   IP_OPTION_INFORMATION ipopt;
   memset(&ipopt, 0, sizeof(ipopt));

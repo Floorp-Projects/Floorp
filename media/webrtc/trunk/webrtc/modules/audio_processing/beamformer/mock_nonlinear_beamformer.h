@@ -13,19 +13,23 @@
 
 #include <vector>
 
-#include "testing/gmock/include/gmock/gmock.h"
 #include "webrtc/modules/audio_processing/beamformer/nonlinear_beamformer.h"
+#include "webrtc/test/gmock.h"
 
 namespace webrtc {
 
 class MockNonlinearBeamformer : public NonlinearBeamformer {
  public:
-  explicit MockNonlinearBeamformer(const std::vector<Point>& array_geometry)
-      : NonlinearBeamformer(array_geometry) {}
+  MockNonlinearBeamformer(const std::vector<Point>& array_geometry,
+                          size_t num_postfilter_channels)
+      : NonlinearBeamformer(array_geometry, num_postfilter_channels) {}
+
+  MockNonlinearBeamformer(const std::vector<Point>& array_geometry)
+      : NonlinearBeamformer(array_geometry, 1u) {}
 
   MOCK_METHOD2(Initialize, void(int chunk_size_ms, int sample_rate_hz));
-  MOCK_METHOD2(ProcessChunk, void(const ChannelBuffer<float>& input,
-                                  ChannelBuffer<float>* output));
+  MOCK_METHOD1(AnalyzeChunk, void(const ChannelBuffer<float>& data));
+  MOCK_METHOD1(PostFilter, void(ChannelBuffer<float>* data));
   MOCK_METHOD1(IsInBeam, bool(const SphericalPointf& spherical_point));
   MOCK_METHOD0(is_target_present, bool());
 };

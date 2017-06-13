@@ -10,27 +10,25 @@
 #include <string.h>
 
 #include <list>
+#include <memory>
 #include <queue>
 #include <vector>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/checks.h"
 #include "webrtc/modules/video_coding/encoded_frame.h"
 #include "webrtc/modules/video_coding/packet.h"
 #include "webrtc/modules/video_coding/receiver.h"
 #include "webrtc/modules/video_coding/test/stream_generator.h"
-#include "webrtc/modules/video_coding/timing.h"
 #include "webrtc/modules/video_coding/test/test_util.h"
+#include "webrtc/modules/video_coding/timing.h"
 #include "webrtc/system_wrappers/include/clock.h"
 #include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 
 class TestVCMReceiver : public ::testing::Test {
  protected:
-  enum { kWidth = 640 };
-  enum { kHeight = 480 };
-
   TestVCMReceiver()
       : clock_(new SimulatedClock(0)),
         timing_(clock_.get()),
@@ -47,7 +45,7 @@ class TestVCMReceiver : public ::testing::Test {
     EXPECT_TRUE(packet_available);
     if (!packet_available)
       return kGeneralError;  // Return here to avoid crashes below.
-    return receiver_.InsertPacket(packet, kWidth, kHeight);
+    return receiver_.InsertPacket(packet);
   }
 
   int32_t InsertPacketAndPop(int index) {
@@ -56,7 +54,7 @@ class TestVCMReceiver : public ::testing::Test {
     EXPECT_TRUE(packet_available);
     if (!packet_available)
       return kGeneralError;  // Return here to avoid crashes below.
-    return receiver_.InsertPacket(packet, kWidth, kHeight);
+    return receiver_.InsertPacket(packet);
   }
 
   int32_t InsertFrame(FrameType frame_type, bool complete) {
@@ -75,81 +73,19 @@ class TestVCMReceiver : public ::testing::Test {
   }
 
   bool DecodeNextFrame() {
-    int64_t render_time_ms = 0;
-    VCMEncodedFrame* frame =
-        receiver_.FrameForDecoding(0, &render_time_ms, false);
+    VCMEncodedFrame* frame = receiver_.FrameForDecoding(0, false);
     if (!frame)
       return false;
     receiver_.ReleaseFrame(frame);
     return true;
   }
 
-  rtc::scoped_ptr<SimulatedClock> clock_;
+  std::unique_ptr<SimulatedClock> clock_;
   VCMTiming timing_;
   NullEventFactory event_factory_;
   VCMReceiver receiver_;
-  rtc::scoped_ptr<StreamGenerator> stream_generator_;
+  std::unique_ptr<StreamGenerator> stream_generator_;
 };
-
-TEST_F(TestVCMReceiver, RenderBufferSize_AllComplete) {
-  EXPECT_EQ(0, receiver_.RenderBufferSizeMs());
-  EXPECT_GE(InsertFrame(kVideoFrameKey, true), kNoError);
-  int num_of_frames = 10;
-  for (int i = 0; i < num_of_frames; ++i) {
-    EXPECT_GE(InsertFrame(kVideoFrameDelta, true), kNoError);
-  }
-  EXPECT_EQ(num_of_frames * kDefaultFramePeriodMs,
-            receiver_.RenderBufferSizeMs());
-}
-
-TEST_F(TestVCMReceiver, RenderBufferSize_SkipToKeyFrame) {
-  EXPECT_EQ(0, receiver_.RenderBufferSizeMs());
-  const int kNumOfNonDecodableFrames = 2;
-  for (int i = 0; i < kNumOfNonDecodableFrames; ++i) {
-    EXPECT_GE(InsertFrame(kVideoFrameDelta, true), kNoError);
-  }
-  const int kNumOfFrames = 10;
-  EXPECT_GE(InsertFrame(kVideoFrameKey, true), kNoError);
-  for (int i = 0; i < kNumOfFrames - 1; ++i) {
-    EXPECT_GE(InsertFrame(kVideoFrameDelta, true), kNoError);
-  }
-  EXPECT_EQ((kNumOfFrames - 1) * kDefaultFramePeriodMs,
-            receiver_.RenderBufferSizeMs());
-}
-
-TEST_F(TestVCMReceiver, RenderBufferSize_NotAllComplete) {
-  EXPECT_EQ(0, receiver_.RenderBufferSizeMs());
-  EXPECT_GE(InsertFrame(kVideoFrameKey, true), kNoError);
-  int num_of_frames = 10;
-  for (int i = 0; i < num_of_frames; ++i) {
-    EXPECT_GE(InsertFrame(kVideoFrameDelta, true), kNoError);
-  }
-  num_of_frames++;
-  EXPECT_GE(InsertFrame(kVideoFrameDelta, false), kNoError);
-  for (int i = 0; i < num_of_frames; ++i) {
-    EXPECT_GE(InsertFrame(kVideoFrameDelta, true), kNoError);
-  }
-  EXPECT_EQ((num_of_frames - 1) * kDefaultFramePeriodMs,
-            receiver_.RenderBufferSizeMs());
-}
-
-TEST_F(TestVCMReceiver, RenderBufferSize_NoKeyFrame) {
-  EXPECT_EQ(0, receiver_.RenderBufferSizeMs());
-  int num_of_frames = 10;
-  for (int i = 0; i < num_of_frames; ++i) {
-    EXPECT_GE(InsertFrame(kVideoFrameDelta, true), kNoError);
-  }
-  int64_t next_render_time_ms = 0;
-  VCMEncodedFrame* frame =
-      receiver_.FrameForDecoding(10, &next_render_time_ms, false);
-  EXPECT_TRUE(frame == NULL);
-  receiver_.ReleaseFrame(frame);
-  EXPECT_GE(InsertFrame(kVideoFrameDelta, false), kNoError);
-  for (int i = 0; i < num_of_frames; ++i) {
-    EXPECT_GE(InsertFrame(kVideoFrameDelta, true), kNoError);
-  }
-  EXPECT_EQ(0, receiver_.RenderBufferSizeMs());
-}
 
 TEST_F(TestVCMReceiver, NonDecodableDuration_Empty) {
   // Enable NACK and with no RTT thresholds for disabling retransmission delay.
@@ -397,7 +333,7 @@ class SimulatedClockWithFrames : public SimulatedClock {
     EXPECT_TRUE(packet_available);
     if (!packet_available)
       return;  // Return here to avoid crashes below.
-    receiver_->InsertPacket(packet, 640, 480);
+    receiver_->InsertPacket(packet);
   }
 
   std::queue<TimestampPair> timestamps_;
@@ -449,8 +385,8 @@ class VCMReceiverTimingTest : public ::testing::Test {
         receiver_(
             &timing_,
             &clock_,
-            rtc::scoped_ptr<EventWrapper>(new FrameInjectEvent(&clock_, false)),
-            rtc::scoped_ptr<EventWrapper>(
+            std::unique_ptr<EventWrapper>(new FrameInjectEvent(&clock_, false)),
+            std::unique_ptr<EventWrapper>(
                 new FrameInjectEvent(&clock_, true))) {}
 
   virtual void SetUp() { receiver_.Reset(); }
@@ -471,7 +407,6 @@ TEST_F(VCMReceiverTimingTest, FrameForDecoding) {
   const int kFramePeriod = 40;
   int64_t arrive_timestamps[kNumFrames];
   int64_t render_timestamps[kNumFrames];
-  int64_t next_render_time;
 
   // Construct test samples.
   // render_timestamps are the timestamps stored in the Frame;
@@ -497,8 +432,7 @@ TEST_F(VCMReceiverTimingTest, FrameForDecoding) {
   // build bot to kill the test.
   while (num_frames_return < kNumFrames) {
     int64_t start_time = clock_.TimeInMilliseconds();
-    VCMEncodedFrame* frame =
-        receiver_.FrameForDecoding(kMaxWaitTime, &next_render_time, false);
+    VCMEncodedFrame* frame = receiver_.FrameForDecoding(kMaxWaitTime, false);
     int64_t end_time = clock_.TimeInMilliseconds();
 
     // In any case the FrameForDecoding should not wait longer than
@@ -529,7 +463,6 @@ TEST_F(VCMReceiverTimingTest, FrameForDecodingPreferLateDecoding) {
 
   int64_t arrive_timestamps[kNumFrames];
   int64_t render_timestamps[kNumFrames];
-  int64_t next_render_time;
 
   int render_delay_ms;
   int max_decode_ms;
@@ -558,8 +491,8 @@ TEST_F(VCMReceiverTimingTest, FrameForDecodingPreferLateDecoding) {
   while (num_frames_return < kNumFrames) {
     int64_t start_time = clock_.TimeInMilliseconds();
 
-    VCMEncodedFrame* frame = receiver_.FrameForDecoding(
-        kMaxWaitTime, &next_render_time, prefer_late_decoding);
+    VCMEncodedFrame* frame =
+        receiver_.FrameForDecoding(kMaxWaitTime, prefer_late_decoding);
     int64_t end_time = clock_.TimeInMilliseconds();
     if (frame) {
       EXPECT_EQ(frame->RenderTimeMs() - max_decode_ms - render_delay_ms,

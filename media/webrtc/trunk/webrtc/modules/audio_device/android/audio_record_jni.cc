@@ -31,13 +31,12 @@ namespace webrtc {
 // AudioRecordJni::JavaAudioRecord implementation.
 AudioRecordJni::JavaAudioRecord::JavaAudioRecord(
     NativeRegistration* native_reg,
-    rtc::scoped_ptr<GlobalRef> audio_record)
+    std::unique_ptr<GlobalRef> audio_record)
     : audio_record_(std::move(audio_record)),
       init_recording_(native_reg->GetMethodId("initRecording", "(II)I")),
       start_recording_(native_reg->GetMethodId("startRecording", "()Z")),
       stop_recording_(native_reg->GetMethodId("stopRecording", "()Z")),
       enable_built_in_aec_(native_reg->GetMethodId("enableBuiltInAEC", "(Z)Z")),
-      enable_built_in_agc_(native_reg->GetMethodId("enableBuiltInAGC", "(Z)Z")),
       enable_built_in_ns_(native_reg->GetMethodId("enableBuiltInNS", "(Z)Z")) {}
 
 AudioRecordJni::JavaAudioRecord::~JavaAudioRecord() {}
@@ -62,11 +61,6 @@ bool AudioRecordJni::JavaAudioRecord::EnableBuiltInAEC(bool enable) {
                                           static_cast<jboolean>(enable));
 }
 
-bool AudioRecordJni::JavaAudioRecord::EnableBuiltInAGC(bool enable) {
-  return audio_record_->CallBooleanMethod(enable_built_in_agc_,
-                                          static_cast<jboolean>(enable));
-}
-
 bool AudioRecordJni::JavaAudioRecord::EnableBuiltInNS(bool enable) {
   return audio_record_->CallBooleanMethod(enable_built_in_ns_,
                                           static_cast<jboolean>(enable));
@@ -87,9 +81,20 @@ AudioRecordJni::AudioRecordJni(AudioManager* audio_manager)
   ALOGD("ctor%s", GetThreadInfo().c_str());
   RTC_DCHECK(audio_parameters_.is_valid());
   RTC_CHECK(j_environment_);
-  // Defer creation of the j_audio_record object so we can defer native registration.
-  // See Mozilla bug 1349581
-
+  JNINativeMethod native_methods[] = {
+      {"nativeCacheDirectBufferAddress", "(Ljava/nio/ByteBuffer;J)V",
+      reinterpret_cast<void*>(
+          &webrtc::AudioRecordJni::CacheDirectBufferAddress)},
+      {"nativeDataIsRecorded", "(IJ)V",
+      reinterpret_cast<void*>(&webrtc::AudioRecordJni::DataIsRecorded)}};
+  j_native_registration_ = j_environment_->RegisterNatives(
+      "org/webrtc/voiceengine/WebRtcAudioRecord", native_methods,
+      arraysize(native_methods));
+  j_audio_record_.reset(new JavaAudioRecord(
+      j_native_registration_.get(),
+      j_native_registration_->NewObject(
+          "<init>", "(Landroid/content/Context;J)V",
+          JVM::GetInstance()->context(), PointerTojlong(this))));
   // Detach from this thread since we want to use the checker to verify calls
   // from the Java based audio thread.
   thread_checker_java_.DetachFromThread();
@@ -99,28 +104,6 @@ AudioRecordJni::~AudioRecordJni() {
   ALOGD("~dtor%s", GetThreadInfo().c_str());
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
   Terminate();
-}
-
-void
-AudioRecordJni::EnsureRecordObject()
-{
-  if (!j_audio_record_.get()) {
-    RTC_DCHECK(!j_native_registration_.get());
-    JNINativeMethod native_methods[] = {
-      {"nativeCacheDirectBufferAddress", "(Ljava/nio/ByteBuffer;J)V",
-      reinterpret_cast<void*>(
-          &webrtc::AudioRecordJni::CacheDirectBufferAddress)},
-      {"nativeDataIsRecorded", "(IJ)V",
-      reinterpret_cast<void*>(&webrtc::AudioRecordJni::DataIsRecorded)}};
-    j_native_registration_ = j_environment_->RegisterNatives(
-      "org/webrtc/voiceengine/WebRtcAudioRecord",
-      native_methods, arraysize(native_methods));
-    j_audio_record_.reset(new JavaAudioRecord(
-      j_native_registration_.get(),
-      j_native_registration_->NewObject(
-      "<init>", "(Landroid/content/Context;J)V",
-      JVM::GetInstance()->context(), PointerTojlong(this))));
-  }
 }
 
 int32_t AudioRecordJni::Init() {
@@ -141,7 +124,6 @@ int32_t AudioRecordJni::InitRecording() {
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
   RTC_DCHECK(!initialized_);
   RTC_DCHECK(!recording_);
-  EnsureRecordObject();
   int frames_per_buffer = j_audio_record_->InitRecording(
       audio_parameters_.sample_rate(), audio_parameters_.channels());
   if (frames_per_buffer < 0) {
@@ -150,8 +132,9 @@ int32_t AudioRecordJni::InitRecording() {
   }
   frames_per_buffer_ = static_cast<size_t>(frames_per_buffer);
   ALOGD("frames_per_buffer: %" PRIuS, frames_per_buffer_);
+  const size_t bytes_per_frame = audio_parameters_.channels() * sizeof(int16_t);
   RTC_CHECK_EQ(direct_buffer_capacity_in_bytes_,
-               frames_per_buffer_ * kBytesPerFrame);
+               frames_per_buffer_ * bytes_per_frame);
   RTC_CHECK_EQ(frames_per_buffer_, audio_parameters_.frames_per_10ms_buffer());
   initialized_ = true;
   return 0;
@@ -162,7 +145,6 @@ int32_t AudioRecordJni::StartRecording() {
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
   RTC_DCHECK(initialized_);
   RTC_DCHECK(!recording_);
-  RTC_DCHECK(j_audio_record_.get());
   if (!j_audio_record_->StartRecording()) {
     ALOGE("StartRecording failed!");
     return -1;
@@ -177,7 +159,6 @@ int32_t AudioRecordJni::StopRecording() {
   if (!initialized_ || !recording_) {
     return 0;
   }
-  RTC_DCHECK(j_audio_record_.get());
   if (!j_audio_record_->StopRecording()) {
     ALOGE("StopRecording failed!");
     return -1;
@@ -211,21 +192,18 @@ void AudioRecordJni::AttachAudioBuffer(AudioDeviceBuffer* audioBuffer) {
 int32_t AudioRecordJni::EnableBuiltInAEC(bool enable) {
   ALOGD("EnableBuiltInAEC%s", GetThreadInfo().c_str());
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
-  RTC_DCHECK(j_audio_record_.get());
   return j_audio_record_->EnableBuiltInAEC(enable) ? 0 : -1;
 }
 
 int32_t AudioRecordJni::EnableBuiltInAGC(bool enable) {
-  ALOGD("EnableBuiltInAGC%s", GetThreadInfo().c_str());
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
-  RTC_DCHECK(j_audio_record_.get());
-  return j_audio_record_->EnableBuiltInAGC(enable) ? 0 : -1;
+  // TODO(henrika): possibly remove when no longer used by any client.
+  FATAL() << "Should never be called";
+  return -1;
 }
 
 int32_t AudioRecordJni::EnableBuiltInNS(bool enable) {
   ALOGD("EnableBuiltInNS%s", GetThreadInfo().c_str());
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
-  RTC_DCHECK(j_audio_record_.get());
   return j_audio_record_->EnableBuiltInNS(enable) ? 0 : -1;
 }
 
@@ -274,20 +252,6 @@ void AudioRecordJni::OnDataIsRecorded(int length) {
   if (audio_device_buffer_->DeliverRecordedData() == -1) {
     ALOGE("AudioDeviceBuffer::DeliverRecordedData failed!");
   }
-}
-
-int32_t AudioRecordJni::RecordingDeviceName(uint16_t index,
-                                            char name[kAdmMaxDeviceNameSize],
-                                            char guid[kAdmMaxGuidSize]) {
-  // Return empty string
-  memset(name, 0, kAdmMaxDeviceNameSize);
-
-  if (guid)
-  {
-    memset(guid, 0, kAdmMaxGuidSize);
-  }
-
-  return 0;
 }
 
 }  // namespace webrtc

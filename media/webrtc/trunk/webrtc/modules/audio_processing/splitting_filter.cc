@@ -25,10 +25,13 @@ SplittingFilter::SplittingFilter(size_t num_channels,
     two_bands_states_.resize(num_channels);
   } else if (num_bands_ == 3) {
     for (size_t i = 0; i < num_channels; ++i) {
-      three_band_filter_banks_.push_back(new ThreeBandFilterBank(num_frames));
+      three_band_filter_banks_.push_back(std::unique_ptr<ThreeBandFilterBank>(
+          new ThreeBandFilterBank(num_frames)));
     }
   }
 }
+
+SplittingFilter::~SplittingFilter() = default;
 
 void SplittingFilter::Analysis(const IFChannelBuffer* data,
                                IFChannelBuffer* bands) {
@@ -71,8 +74,8 @@ void SplittingFilter::TwoBandsAnalysis(const IFChannelBuffer* data,
 
 void SplittingFilter::TwoBandsSynthesis(const IFChannelBuffer* bands,
                                         IFChannelBuffer* data) {
-  RTC_DCHECK_EQ(two_bands_states_.size(), data->num_channels());
-  for (size_t i = 0; i < two_bands_states_.size(); ++i) {
+  RTC_DCHECK_LE(data->num_channels(), two_bands_states_.size());
+  for (size_t i = 0; i < data->num_channels(); ++i) {
     WebRtcSpl_SynthesisQMF(bands->ibuf_const()->channels(0)[i],
                            bands->ibuf_const()->channels(1)[i],
                            bands->num_frames_per_band(),
@@ -94,8 +97,8 @@ void SplittingFilter::ThreeBandsAnalysis(const IFChannelBuffer* data,
 
 void SplittingFilter::ThreeBandsSynthesis(const IFChannelBuffer* bands,
                                           IFChannelBuffer* data) {
-  RTC_DCHECK_EQ(three_band_filter_banks_.size(), data->num_channels());
-  for (size_t i = 0; i < three_band_filter_banks_.size(); ++i) {
+  RTC_DCHECK_LE(data->num_channels(), three_band_filter_banks_.size());
+  for (size_t i = 0; i < data->num_channels(); ++i) {
     three_band_filter_banks_[i]->Synthesis(bands->fbuf_const()->bands(i),
                                            bands->num_frames_per_band(),
                                            data->fbuf()->channels()[i]);

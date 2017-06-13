@@ -13,8 +13,10 @@
 
 #include <string>
 #include <map>
+#include <memory>
 #include <set>
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/natserver.h"
 #include "webrtc/base/socketaddress.h"
 #include "webrtc/base/socketserver.h"
@@ -116,8 +118,8 @@ class NATSocketServer : public SocketServer, public NATInternalSocketFactory {
 
    private:
     NATSocketServer* server_;
-    scoped_ptr<SocketFactory> internal_factory_;
-    scoped_ptr<NATServer> nat_server_;
+    std::unique_ptr<SocketFactory> internal_factory_;
+    std::unique_ptr<NATServer> nat_server_;
     TranslatorMap nats_;
     std::set<SocketAddress> clients_;
   };

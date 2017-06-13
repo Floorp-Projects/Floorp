@@ -13,31 +13,28 @@
 
 #include <vector>
 
-#include "webrtc/base/checks.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet.h"
-#include "webrtc/modules/rtp_rtcp/source/rtcp_utility.h"
 
 namespace webrtc {
 namespace rtcp {
+class CommonHeader;
 
 class ExtendedJitterReport : public RtcpPacket {
  public:
-  static const uint8_t kPacketType = 195;
+  static constexpr uint8_t kPacketType = 195;
+  static constexpr size_t kMaxNumberOfJitterValues = 0x1f;
 
-  ExtendedJitterReport() : RtcpPacket() {}
-
-  virtual ~ExtendedJitterReport() {}
+  ExtendedJitterReport() {}
+  ~ExtendedJitterReport() override {}
 
   // Parse assumes header is already parsed and validated.
-  bool Parse(const RTCPUtility::RtcpCommonHeader& header,
-             const uint8_t* payload);  // Size of the payload is in the header.
+  bool Parse(const CommonHeader& packet);
 
-  bool WithJitter(uint32_t jitter);
+  bool SetJitterValues(std::vector<uint32_t> jitter_values);
 
-  size_t jitters_count() const { return inter_arrival_jitters_.size(); }
-  uint32_t jitter(size_t index) const {
-    RTC_DCHECK_LT(index, jitters_count());
-    return inter_arrival_jitters_[index];
+  const std::vector<uint32_t>& jitter_values() {
+    return inter_arrival_jitters_;
   }
 
  protected:
@@ -47,10 +44,10 @@ class ExtendedJitterReport : public RtcpPacket {
               RtcpPacket::PacketReadyCallback* callback) const override;
 
  private:
-  static const int kMaxNumberOfJitters = 0x1f;
+  static constexpr size_t kJitterSizeBytes = 4;
 
   size_t BlockLength() const override {
-    return kHeaderLength + 4 * inter_arrival_jitters_.size();
+    return kHeaderLength + kJitterSizeBytes * inter_arrival_jitters_.size();
   }
 
   std::vector<uint32_t> inter_arrival_jitters_;

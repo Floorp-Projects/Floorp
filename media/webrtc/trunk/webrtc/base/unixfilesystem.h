@@ -22,7 +22,7 @@ class UnixFilesystem : public FilesystemInterface {
   UnixFilesystem();
   ~UnixFilesystem() override;
 
-#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_MAC)
   // Android does not have a native code API to fetch the app data or temp
   // folders. That needs to be passed into this class from Java. Similarly, iOS
   // only supports an Objective-C API for fetching the folder locations, so that
@@ -38,10 +38,6 @@ class UnixFilesystem : public FilesystemInterface {
   // Otherwise, returns NULL.
   FileStream* OpenFile(const Pathname& filename,
                        const std::string& mode) override;
-
-  // Atomically creates an empty file accessible only to the current user if one
-  // does not already exist at the given path, otherwise fails.
-  bool CreatePrivateFile(const Pathname& filename) override;
 
   // This will attempt to delete the file located at filename.
   // It will fail with VERIY if you pass it a non-existant file, or a directory.
@@ -65,7 +61,6 @@ class UnixFilesystem : public FilesystemInterface {
   // file or directory, which will be moved recursively.
   // Returns true if function succeeds.
   bool MoveFile(const Pathname& old_path, const Pathname& new_path) override;
-  bool MoveFolder(const Pathname& old_path, const Pathname& new_path) override;
 
   // This copies a file from old_path to _new_path where "file" can be a plain
   // file or directory, which will be copied recursively.
@@ -99,9 +94,6 @@ class UnixFilesystem : public FilesystemInterface {
                    FileTimeType which,
                    time_t* time) override;
 
-  // Returns the path to the running application.
-  bool GetAppPathname(Pathname* path) override;
-
   bool GetAppDataFolder(Pathname* path, bool per_user) override;
 
   // Get a temporary folder that is unique to the current user and application.
@@ -109,11 +101,8 @@ class UnixFilesystem : public FilesystemInterface {
 
   bool GetDiskFreeSpace(const Pathname& path, int64_t* freebytes) override;
 
-  // Returns the absolute path of the current directory.
-  Pathname GetCurrentDirectory() override;
-
  private:
-#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_MAC)
   static char* provided_app_data_folder_;
   static char* provided_app_temp_folder_;
 #else

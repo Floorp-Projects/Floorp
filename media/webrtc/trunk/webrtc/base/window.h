@@ -11,7 +11,8 @@
 #ifndef WEBRTC_BASE_WINDOW_H_
 #define WEBRTC_BASE_WINDOW_H_
 
-#include "webrtc/base/basictypes.h"
+#include <stdint.h>
+
 #include "webrtc/base/stringencode.h"
 
 // Define platform specific window types.

@@ -13,13 +13,11 @@
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/modules/rtp_rtcp/source/byte_io.h"
-
-using webrtc::RTCPUtility::RtcpCommonHeader;
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/common_header.h"
 
 namespace webrtc {
 namespace rtcp {
-
-//
+constexpr uint8_t ReceiverReport::kPacketType;
 // RTCP receiver report (RFC 3550).
 //
 //   0                   1                   2                   3
@@ -31,21 +29,20 @@ namespace rtcp {
 //  +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
 //  |                         report block(s)                       |
 //  |                            ....                               |
-bool ReceiverReport::Parse(const RTCPUtility::RtcpCommonHeader& header,
-                           const uint8_t* payload) {
-  RTC_DCHECK(header.packet_type == kPacketType);
+bool ReceiverReport::Parse(const CommonHeader& packet) {
+  RTC_DCHECK_EQ(packet.type(), kPacketType);
 
-  const uint8_t report_blocks_count = header.count_or_format;
+  const uint8_t report_blocks_count = packet.count();
 
-  if (header.payload_size_bytes <
+  if (packet.payload_size_bytes() <
       kRrBaseLength + report_blocks_count * ReportBlock::kLength) {
     LOG(LS_WARNING) << "Packet is too small to contain all the data.";
     return false;
   }
 
-  sender_ssrc_ = ByteReader<uint32_t>::ReadBigEndian(payload);
+  sender_ssrc_ = ByteReader<uint32_t>::ReadBigEndian(packet.payload());
 
-  const uint8_t* next_report_block = payload + kRrBaseLength;
+  const uint8_t* next_report_block = packet.payload() + kRrBaseLength;
 
   report_blocks_.resize(report_blocks_count);
   for (ReportBlock& block : report_blocks_) {
@@ -53,7 +50,8 @@ bool ReceiverReport::Parse(const RTCPUtility::RtcpCommonHeader& header,
     next_report_block += ReportBlock::kLength;
   }
 
-  RTC_DCHECK_LE(next_report_block, payload + header.payload_size_bytes);
+  RTC_DCHECK_LE(next_report_block - packet.payload(),
+                static_cast<ptrdiff_t>(packet.payload_size_bytes()));
   return true;
 }
 
@@ -76,7 +74,7 @@ bool ReceiverReport::Create(uint8_t* packet,
   return true;
 }
 
-bool ReceiverReport::WithReportBlock(const ReportBlock& block) {
+bool ReceiverReport::AddReportBlock(const ReportBlock& block) {
   if (report_blocks_.size() >= kMaxNumberOfReportBlocks) {
     LOG(LS_WARNING) << "Max report blocks reached.";
     return false;

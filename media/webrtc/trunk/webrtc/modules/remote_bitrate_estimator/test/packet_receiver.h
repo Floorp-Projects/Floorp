@@ -11,10 +11,10 @@
 #ifndef WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_PACKET_RECEIVER_H_
 #define WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_PACKET_RECEIVER_H_
 
+#include <memory>
 #include <string>
 
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/bwe.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/bwe_test_framework.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/metric_recorder.h"
@@ -53,7 +53,7 @@ class PacketReceiver : public PacketProcessor {
                      size_t payload_size);
 
   Stats<double> delay_stats_;
-  rtc::scoped_ptr<BweReceiver> bwe_receiver_;
+  std::unique_ptr<BweReceiver> bwe_receiver_;
 
  private:
   void PlotDelay(int64_t arrival_time_ms, int64_t send_time_ms);

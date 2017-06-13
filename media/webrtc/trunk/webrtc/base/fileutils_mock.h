@@ -150,10 +150,6 @@ class FakeFileSystem : public FilesystemInterface {
      return NULL;
     }
 
-    bool CreatePrivateFile(const Pathname &filename) {
-      EXPECT_TRUE(false) << "Unsupported operation";
-      return false;
-    }
     bool DeleteFile(const Pathname &filename) {
       EXPECT_TRUE(false) << "Unsupported operation";
       return false;
@@ -171,10 +167,6 @@ class FakeFileSystem : public FilesystemInterface {
       return false;
     }
     bool CreateFolder(const Pathname &pathname) {
-      EXPECT_TRUE(false) << "Unsupported operation";
-      return false;
-    }
-    bool MoveFolder(const Pathname &old_path, const Pathname &new_path) {
       EXPECT_TRUE(false) << "Unsupported operation";
       return false;
     }
@@ -220,10 +212,6 @@ class FakeFileSystem : public FilesystemInterface {
       EXPECT_TRUE(false) << "Unsupported operation";
       return false;
     }
-    bool GetAppPathname(Pathname *path) {
-      EXPECT_TRUE(false) << "Unsupported operation";
-      return false;
-    }
     bool GetAppDataFolder(Pathname *path, bool per_user) {
       EXPECT_TRUE(per_user) << "Unsupported operation";
 #if defined(WEBRTC_WIN)
@@ -241,11 +229,8 @@ class FakeFileSystem : public FilesystemInterface {
       EXPECT_TRUE(false) << "Unsupported operation";
       return false;
     }
-    Pathname GetCurrentDirectory() {
-      return Pathname();
-    }
 
-  private:
+ private:
     const std::vector<File> all_files_;
 };
 }  // namespace rtc

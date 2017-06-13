@@ -11,6 +11,8 @@
 #ifndef WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_AUDIO_RECORD_JNI_H_
 #define WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_AUDIO_RECORD_JNI_H_
 
+#include <memory>
+
 #include <jni.h>
 
 #include "webrtc/base/thread_checker.h"
@@ -46,30 +48,26 @@ class AudioRecordJni {
   class JavaAudioRecord {
    public:
     JavaAudioRecord(NativeRegistration* native_registration,
-                   rtc::scoped_ptr<GlobalRef> audio_track);
+                   std::unique_ptr<GlobalRef> audio_track);
     ~JavaAudioRecord();
 
     int InitRecording(int sample_rate, size_t channels);
     bool StartRecording();
     bool StopRecording();
     bool EnableBuiltInAEC(bool enable);
-    bool EnableBuiltInAGC(bool enable);
     bool EnableBuiltInNS(bool enable);
 
    private:
-    rtc::scoped_ptr<GlobalRef> audio_record_;
+    std::unique_ptr<GlobalRef> audio_record_;
     jmethodID init_recording_;
     jmethodID start_recording_;
     jmethodID stop_recording_;
     jmethodID enable_built_in_aec_;
-    jmethodID enable_built_in_agc_;
     jmethodID enable_built_in_ns_;
   };
 
   explicit AudioRecordJni(AudioManager* audio_manager);
   ~AudioRecordJni();
-
-  void EnsureRecordObject();
 
   int32_t Init();
   int32_t Terminate();
@@ -86,9 +84,6 @@ class AudioRecordJni {
   int32_t EnableBuiltInAEC(bool enable);
   int32_t EnableBuiltInAGC(bool enable);
   int32_t EnableBuiltInNS(bool enable);
-  int32_t RecordingDeviceName(uint16_t index,
-                              char name[kAdmMaxDeviceNameSize],
-                              char guid[kAdmMaxGuidSize]);
 
  private:
   // Called from Java side so we can cache the address of the Java-manged
@@ -122,13 +117,13 @@ class AudioRecordJni {
   AttachCurrentThreadIfNeeded attach_thread_if_needed_;
 
   // Wraps the JNI interface pointer and methods associated with it.
-  rtc::scoped_ptr<JNIEnvironment> j_environment_;
+  std::unique_ptr<JNIEnvironment> j_environment_;
 
   // Contains factory method for creating the Java object.
-  rtc::scoped_ptr<NativeRegistration> j_native_registration_;
+  std::unique_ptr<NativeRegistration> j_native_registration_;
 
   // Wraps the Java specific parts of the AudioRecordJni class.
-  rtc::scoped_ptr<AudioRecordJni::JavaAudioRecord> j_audio_record_;
+  std::unique_ptr<AudioRecordJni::JavaAudioRecord> j_audio_record_;
 
   // Raw pointer to the audio manger.
   const AudioManager* audio_manager_;
@@ -159,7 +154,7 @@ class AudioRecordJni {
   bool recording_;
 
   // Raw pointer handle provided to us in AttachAudioBuffer(). Owned by the
-  // AudioDeviceModuleImpl class and called by AudioDeviceModuleImpl::Create().
+  // AudioDeviceModuleImpl class and called by AudioDeviceModule::Create().
   AudioDeviceBuffer* audio_device_buffer_;
 };
 

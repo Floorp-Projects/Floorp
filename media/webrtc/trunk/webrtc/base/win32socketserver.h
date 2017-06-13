@@ -44,8 +44,11 @@ class Win32Socket : public AsyncSocket {
   virtual int Connect(const SocketAddress& addr);
   virtual int Send(const void *buffer, size_t length);
   virtual int SendTo(const void *buffer, size_t length, const SocketAddress& addr);
-  virtual int Recv(void *buffer, size_t length);
-  virtual int RecvFrom(void *buffer, size_t length, SocketAddress *out_addr);
+  virtual int Recv(void* buffer, size_t length, int64_t* timestamp);
+  virtual int RecvFrom(void* buffer,
+                       size_t length,
+                       SocketAddress* out_addr,
+                       int64_t* timestamp);
   virtual int Listen(int backlog);
   virtual Win32Socket *Accept(SocketAddress *out_addr);
   virtual int Close();
@@ -159,6 +162,6 @@ class Win32Thread : public Thread {
 
 }  // namespace rtc
 
-#endif  // WEBRTC_WIN 
+#endif  // WEBRTC_WIN
 
 #endif  // WEBRTC_BASE_WIN32SOCKETSERVER_H_

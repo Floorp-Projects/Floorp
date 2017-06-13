@@ -129,8 +129,8 @@ class MixingTest : public AfterInitializationFixture {
       std::ostringstream trace_stream;
       trace_stream << samples_read << " samples read";
       SCOPED_TRACE(trace_stream.str());
-      EXPECT_LE(output_value, max_output_value);
-      EXPECT_GE(output_value, min_output_value);
+      ASSERT_LE(output_value, max_output_value);
+      ASSERT_GE(output_value, min_output_value);
     }
     // Ensure we've at least recorded half as much file as the duration of the
     // test. We have to use a relaxed tolerance here due to filesystem flakiness
@@ -185,7 +185,6 @@ class MixingTest : public AfterInitializationFixture {
     EXPECT_EQ(0, voe_rtp_rtcp_->SetLocalSSRC(
                      stream, static_cast<unsigned int>(stream)));
     transport_->AddChannel(stream, stream);
-    EXPECT_EQ(0, voe_base_->StartReceive(stream));
     EXPECT_EQ(0, voe_base_->StartPlayout(stream));
     EXPECT_EQ(0, voe_codec_->SetSendCodec(stream, codec_inst));
     EXPECT_EQ(0, voe_base_->StartSend(stream));
@@ -197,7 +196,6 @@ class MixingTest : public AfterInitializationFixture {
     for (size_t i = 0; i < streams.size(); ++i) {
       EXPECT_EQ(0, voe_base_->StopSend(streams[i]));
       EXPECT_EQ(0, voe_base_->StopPlayout(streams[i]));
-      EXPECT_EQ(0, voe_base_->StopReceive(streams[i]));
       EXPECT_EQ(0, voe_network_->DeRegisterExternalTransport(streams[i]));
       EXPECT_EQ(0, voe_base_->DeleteChannel(streams[i]));
     }

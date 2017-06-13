@@ -10,10 +10,11 @@
 
 #include "webrtc/common_audio/fir_filter.h"
 
-#include <assert.h>
 #include <string.h>
 
-#include "webrtc/base/scoped_ptr.h"
+#include <memory>
+
+#include "webrtc/base/checks.h"
 #include "webrtc/common_audio/fir_filter_neon.h"
 #include "webrtc/common_audio/fir_filter_sse.h"
 #include "webrtc/system_wrappers/include/cpu_features_wrapper.h"
@@ -30,15 +31,15 @@ class FIRFilterC : public FIRFilter {
  private:
   size_t coefficients_length_;
   size_t state_length_;
-  rtc::scoped_ptr<float[]> coefficients_;
-  rtc::scoped_ptr<float[]> state_;
+  std::unique_ptr<float[]> coefficients_;
+  std::unique_ptr<float[]> state_;
 };
 
 FIRFilter* FIRFilter::Create(const float* coefficients,
                              size_t coefficients_length,
                              size_t max_input_length) {
   if (!coefficients || coefficients_length <= 0 || max_input_length <= 0) {
-    assert(false);
+    RTC_NOTREACHED();
     return NULL;
   }
 
@@ -60,13 +61,6 @@ FIRFilter* FIRFilter::Create(const float* coefficients,
 #elif defined(WEBRTC_HAS_NEON)
   filter =
       new FIRFilterNEON(coefficients, coefficients_length, max_input_length);
-#elif defined(WEBRTC_DETECT_NEON)
-  if (WebRtc_GetCPUFeaturesARM() & kCPUFeatureNEON) {
-    filter =
-        new FIRFilterNEON(coefficients, coefficients_length, max_input_length);
-  } else {
-    filter = new FIRFilterC(coefficients, coefficients_length);
-  }
 #else
   filter = new FIRFilterC(coefficients, coefficients_length);
 #endif
@@ -86,7 +80,7 @@ FIRFilterC::FIRFilterC(const float* coefficients, size_t coefficients_length)
 }
 
 void FIRFilterC::Filter(const float* in, size_t length, float* out) {
-  assert(length > 0);
+  RTC_DCHECK_GT(length, 0);
 
   // Convolves the input signal |in| with the filter kernel |coefficients_|
   // taking into account the previous state.

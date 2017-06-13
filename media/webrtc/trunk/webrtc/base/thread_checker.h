@@ -14,20 +14,14 @@
 #define WEBRTC_BASE_THREAD_CHECKER_H_
 
 // Apart from debug builds, we also enable the thread checker in
-// builds with DCHECK_ALWAYS_ON so that trybots and waterfall bots
+// builds with RTC_DCHECK_IS_ON so that trybots and waterfall bots
 // with this define will get the same level of thread checking as
 // debug bots.
-//
-// Note that this does not perfectly match situations where RTC_DCHECK is
-// enabled.  For example a non-official release build may have
-// DCHECK_ALWAYS_ON undefined (and therefore ThreadChecker would be
-// disabled) but have RTC_DCHECKs enabled at runtime.
-#if (!defined(NDEBUG) || defined(DCHECK_ALWAYS_ON))
-#define ENABLE_THREAD_CHECKER 1
-#else
-#define ENABLE_THREAD_CHECKER 0
-#endif
+#define ENABLE_THREAD_CHECKER RTC_DCHECK_IS_ON
 
+#include "webrtc/base/checks.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/base/thread_annotations.h"
 #include "webrtc/base/thread_checker_impl.h"
 
 namespace rtc {
@@ -77,15 +71,108 @@ class ThreadCheckerDoNothing {
 //
 // In Release mode, CalledOnValidThread will always return true.
 #if ENABLE_THREAD_CHECKER
-class ThreadChecker : public ThreadCheckerImpl {
+class LOCKABLE ThreadChecker : public ThreadCheckerImpl {
 };
 #else
-class ThreadChecker : public ThreadCheckerDoNothing {
+class LOCKABLE ThreadChecker : public ThreadCheckerDoNothing {
 };
 #endif  // ENABLE_THREAD_CHECKER
 
 #undef ENABLE_THREAD_CHECKER
 
+namespace internal {
+class SCOPED_LOCKABLE AnnounceOnThread {
+ public:
+  template<typename ThreadLikeObject>
+  explicit AnnounceOnThread(const ThreadLikeObject* thread_like_object)
+      EXCLUSIVE_LOCK_FUNCTION(thread_like_object) {}
+  ~AnnounceOnThread() UNLOCK_FUNCTION() {}
+
+  template<typename ThreadLikeObject>
+  static bool IsCurrent(const ThreadLikeObject* thread_like_object) {
+    return thread_like_object->IsCurrent();
+  }
+  static bool IsCurrent(const rtc::ThreadChecker* checker) {
+    return checker->CalledOnValidThread();
+  }
+
+ private:
+  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(AnnounceOnThread);
+};
+
+}  // namespace internal
 }  // namespace rtc
+
+// RUN_ON/ACCESS_ON/RTC_DCHECK_RUN_ON macros allows to annotate variables are
+// accessed from same thread/task queue.
+// Using tools designed to check mutexes, it checks at compile time everywhere
+// variable is access, there is a run-time dcheck thread/task queue is correct.
+//
+// class ExampleThread {
+//  public:
+//   void NeedVar1() {
+//     RTC_DCHECK_RUN_ON(network_thread_);
+//     transport_->Send();
+//   }
+//
+//  private:
+//   rtc::Thread* network_thread_;
+//   int transport_ ACCESS_ON(network_thread_);
+// };
+//
+// class ExampleThreadChecker {
+//  public:
+//   int CalledFromPacer() RUN_ON(pacer_thread_checker_) {
+//     return var2_;
+//   }
+//
+//   void CallMeFromPacer() {
+//     RTC_DCHECK_RUN_ON(&pacer_thread_checker_)
+//        << "Should be called from pacer";
+//     CalledFromPacer();
+//   }
+//
+//  private:
+//   int pacer_var_ ACCESS_ON(pacer_thread_checker_);
+//   rtc::ThreadChecker pacer_thread_checker_;
+// };
+//
+// class TaskQueueExample {
+//  public:
+//   class Encoder {
+//    public:
+//     rtc::TaskQueue* Queue() { return encoder_queue_; }
+//     void Encode() {
+//       RTC_DCHECK_RUN_ON(encoder_queue_);
+//       DoSomething(var_);
+//     }
+//
+//    private:
+//     rtc::TaskQueue* const encoder_queue_;
+//     Frame var_ ACCESS_ON(encoder_queue_);
+//   };
+//
+//   void Encode() {
+//     // Will fail at runtime when DCHECK is enabled:
+//     // encoder_->Encode();
+//     // Will work:
+//     rtc::scoped_ref_ptr<Encoder> encoder = encoder_;
+//     encoder_->Queue()->PostTask([encoder] { encoder->Encode(); });
+//   }
+//
+//  private:
+//   rtc::scoped_ref_ptr<Encoder> encoder_;
+// }
+
+// Document if a variable/field is not shared and should be accessed from
+// same thread/task queue.
+#define ACCESS_ON(x) THREAD_ANNOTATION_ATTRIBUTE__(guarded_by(x))
+
+// Document if a function expected to be called from same thread/task queue.
+#define RUN_ON(x) THREAD_ANNOTATION_ATTRIBUTE__(exclusive_locks_required(x))
+
+#define RTC_DCHECK_RUN_ON(thread_like_object) \
+  rtc::internal::AnnounceOnThread thread_announcer(thread_like_object); \
+  RTC_DCHECK(rtc::internal::AnnounceOnThread::IsCurrent(thread_like_object))
 
 #endif  // WEBRTC_BASE_THREAD_CHECKER_H_

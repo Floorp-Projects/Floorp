@@ -10,7 +10,8 @@
 #ifndef WEBRTC_SYSTEM_WRAPPERS_INCLUDE_NTP_TIME_H_
 #define WEBRTC_SYSTEM_WRAPPERS_INCLUDE_NTP_TIME_H_
 
-#include "webrtc/base/basictypes.h"
+#include <stdint.h>
+
 #include "webrtc/system_wrappers/include/clock.h"
 
 namespace webrtc {

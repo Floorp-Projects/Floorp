@@ -10,6 +10,8 @@
 
 #include "webrtc/base/messagedigest.h"
 
+#include <memory>
+
 #include <string.h>
 
 #include "webrtc/base/basictypes.h"
@@ -20,7 +22,6 @@
 #include "webrtc/base/md5digest.h"
 #include "webrtc/base/sha1digest.h"
 #endif
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/stringencode.h"
 
 namespace rtc {
@@ -75,14 +76,14 @@ size_t ComputeDigest(MessageDigest* digest, const void* input, size_t in_len,
 
 size_t ComputeDigest(const std::string& alg, const void* input, size_t in_len,
                      void* output, size_t out_len) {
-  scoped_ptr<MessageDigest> digest(MessageDigestFactory::Create(alg));
+  std::unique_ptr<MessageDigest> digest(MessageDigestFactory::Create(alg));
   return (digest) ?
       ComputeDigest(digest.get(), input, in_len, output, out_len) :
       0;
 }
 
 std::string ComputeDigest(MessageDigest* digest, const std::string& input) {
-  scoped_ptr<char[]> output(new char[digest->Size()]);
+  std::unique_ptr<char[]> output(new char[digest->Size()]);
   ComputeDigest(digest, input.data(), input.size(),
                 output.get(), digest->Size());
   return hex_encode(output.get(), digest->Size());
@@ -90,7 +91,7 @@ std::string ComputeDigest(MessageDigest* digest, const std::string& input) {
 
 bool ComputeDigest(const std::string& alg, const std::string& input,
                    std::string* output) {
-  scoped_ptr<MessageDigest> digest(MessageDigestFactory::Create(alg));
+  std::unique_ptr<MessageDigest> digest(MessageDigestFactory::Create(alg));
   if (!digest) {
     return false;
   }
@@ -117,7 +118,7 @@ size_t ComputeHmac(MessageDigest* digest,
   }
   // Copy the key to a block-sized buffer to simplify padding.
   // If the key is longer than a block, hash it and use the result instead.
-  scoped_ptr<uint8_t[]> new_key(new uint8_t[block_len]);
+  std::unique_ptr<uint8_t[]> new_key(new uint8_t[block_len]);
   if (key_len > block_len) {
     ComputeDigest(digest, key, key_len, new_key.get(), block_len);
     memset(new_key.get() + digest->Size(), 0, block_len - digest->Size());
@@ -126,14 +127,14 @@ size_t ComputeHmac(MessageDigest* digest,
     memset(new_key.get() + key_len, 0, block_len - key_len);
   }
   // Set up the padding from the key, salting appropriately for each padding.
-  scoped_ptr<uint8_t[]> o_pad(new uint8_t[block_len]);
-  scoped_ptr<uint8_t[]> i_pad(new uint8_t[block_len]);
+  std::unique_ptr<uint8_t[]> o_pad(new uint8_t[block_len]);
+  std::unique_ptr<uint8_t[]> i_pad(new uint8_t[block_len]);
   for (size_t i = 0; i < block_len; ++i) {
     o_pad[i] = 0x5c ^ new_key[i];
     i_pad[i] = 0x36 ^ new_key[i];
   }
   // Inner hash; hash the inner padding, and then the input buffer.
-  scoped_ptr<uint8_t[]> inner(new uint8_t[digest->Size()]);
+  std::unique_ptr<uint8_t[]> inner(new uint8_t[digest->Size()]);
   digest->Update(i_pad.get(), block_len);
   digest->Update(input, in_len);
   digest->Finish(inner.get(), digest->Size());
@@ -146,7 +147,7 @@ size_t ComputeHmac(MessageDigest* digest,
 size_t ComputeHmac(const std::string& alg, const void* key, size_t key_len,
                    const void* input, size_t in_len,
                    void* output, size_t out_len) {
-  scoped_ptr<MessageDigest> digest(MessageDigestFactory::Create(alg));
+  std::unique_ptr<MessageDigest> digest(MessageDigestFactory::Create(alg));
   if (!digest) {
     return 0;
   }
@@ -156,7 +157,7 @@ size_t ComputeHmac(const std::string& alg, const void* key, size_t key_len,
 
 std::string ComputeHmac(MessageDigest* digest, const std::string& key,
                         const std::string& input) {
-  scoped_ptr<char[]> output(new char[digest->Size()]);
+  std::unique_ptr<char[]> output(new char[digest->Size()]);
   ComputeHmac(digest, key.data(), key.size(),
               input.data(), input.size(), output.get(), digest->Size());
   return hex_encode(output.get(), digest->Size());
@@ -164,7 +165,7 @@ std::string ComputeHmac(MessageDigest* digest, const std::string& key,
 
 bool ComputeHmac(const std::string& alg, const std::string& key,
                  const std::string& input, std::string* output) {
-  scoped_ptr<MessageDigest> digest(MessageDigestFactory::Create(alg));
+  std::unique_ptr<MessageDigest> digest(MessageDigestFactory::Create(alg));
   if (!digest) {
     return false;
   }

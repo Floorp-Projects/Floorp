@@ -16,7 +16,6 @@
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/base/event.h"
 #include "webrtc/base/platform_thread_types.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/thread_checker.h"
 
 namespace rtc {
@@ -59,20 +58,32 @@ class PlatformThread {
   PlatformThread(ThreadRunFunction func, void* obj, const char* thread_name);
   virtual ~PlatformThread();
 
+  const std::string& name() const { return name_; }
+
   // Spawns a thread and tries to set thread priority according to the priority
   // from when CreateThread was called.
   void Start();
 
   bool IsRunning() const;
 
+  // Returns an identifier for the worker thread that can be used to do
+  // thread checks.
+  PlatformThreadRef GetThreadRef() const;
+
   // Stops (joins) the spawned thread.
-  virtual void Stop();
+  void Stop();
 
   // Set the priority of the thread. Must be called when thread is running.
   bool SetPriority(ThreadPriority priority);
 
  protected:
-  virtual void Run();
+#if defined(WEBRTC_WIN)
+  // Exposed to derived classes to allow for special cases specific to Windows.
+  bool QueueAPC(PAPCFUNC apc_function, ULONG_PTR data);
+#endif
+
+ private:
+  void Run();
 
   ThreadRunFunction const run_function_;
   void* const obj_;
@@ -85,6 +96,7 @@ class PlatformThread {
 
   bool stop_;
   HANDLE thread_;
+  DWORD thread_id_;
 #else
   static void* StartThread(void* param);
 
@@ -94,44 +106,6 @@ class PlatformThread {
 #endif  // defined(WEBRTC_WIN)
   RTC_DISALLOW_COPY_AND_ASSIGN(PlatformThread);
 };
-
-#if defined(WEBRTC_WIN)
-class PlatformUIThread : public PlatformThread {
- public:
-  PlatformUIThread(ThreadRunFunction func, void* obj,
-		  const char* thread_name) :
-  PlatformThread(func, obj, thread_name),
-  hwnd_(nullptr),
-  timerid_(0),
-  timeout_(0) {
- }
- virtual ~PlatformUIThread() {}
-
- virtual void Stop() override;
-
- /**
-  * Request an async callback soon.
-  */
- void RequestCallback();
-
- /**
-  * Request a recurring callback.
-  */
- bool RequestCallbackTimer(unsigned int milliseconds);
-
- protected:
-  virtual void Run() override;
-
- private:
-  static LRESULT CALLBACK EventWindowProc(HWND, UINT, WPARAM, LPARAM);
-  void NativeEventCallback();
-  bool InternalInit();
-
-  HWND hwnd_;
-  UINT_PTR timerid_;
-  unsigned int timeout_;
-};
-#endif
 
 }  // namespace rtc
 

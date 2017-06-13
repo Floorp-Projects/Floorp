@@ -26,6 +26,10 @@ size_t AudioEncoderPcm16B::BytesPerSample() const {
   return 2;
 }
 
+AudioEncoder::CodecType AudioEncoderPcm16B::GetCodecType() const {
+  return CodecType::kOther;
+}
+
 namespace {
 AudioEncoderPcm16B::Config CreateConfig(const CodecInst& codec_inst) {
   AudioEncoderPcm16B::Config config;

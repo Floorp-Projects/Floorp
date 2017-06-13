@@ -11,9 +11,10 @@
 #ifndef WEBRTC_MODULES_AUDIO_CODING_CODECS_TOOLS_AUDIO_CODEC_SPEED_TEST_H_
 #define WEBRTC_MODULES_AUDIO_CODING_CODECS_TOOLS_AUDIO_CODEC_SPEED_TEST_H_
 
+#include <memory>
 #include <string>
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/base/scoped_ptr.h"
+
+#include "webrtc/test/gtest.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -61,11 +62,11 @@ class AudioCodecSpeedTest : public testing::TestWithParam<coding_param> {
   // Expected output number of samples-per-channel in a frame.
   size_t output_length_sample_;
 
-  rtc::scoped_ptr<int16_t[]> in_data_;
-  rtc::scoped_ptr<int16_t[]> out_data_;
+  std::unique_ptr<int16_t[]> in_data_;
+  std::unique_ptr<int16_t[]> out_data_;
   size_t data_pointer_;
   size_t loop_length_samples_;
-  rtc::scoped_ptr<uint8_t[]> bit_stream_;
+  std::unique_ptr<uint8_t[]> bit_stream_;
 
   // Maximum number of bytes in output bitstream for a frame of audio.
   size_t max_bytes_;

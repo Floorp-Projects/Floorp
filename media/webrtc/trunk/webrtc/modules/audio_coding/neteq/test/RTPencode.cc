@@ -265,7 +265,7 @@ GSMFR_encinst_t* GSMFRenc_inst[2];
 #endif
 #if (defined(CODEC_CNGCODEC8) || defined(CODEC_CNGCODEC16) || \
      defined(CODEC_CNGCODEC32) || defined(CODEC_CNGCODEC48))
-CNG_enc_inst* CNGenc_inst[2];
+webrtc::ComfortNoiseEncoder *CNG_encoder[2];
 #endif
 #ifdef CODEC_SPEEX_8
 SPEEX_encinst_t* SPEEX8enc_inst[2];
@@ -322,8 +322,9 @@ int main(int argc, char* argv[]) {
     printf("Application to encode speech into an RTP stream.\n");
     printf("The program reads a PCM file and encodes is using the specified "
            "codec.\n");
-    printf("The coded speech is packetized in RTP packest and written to the "
-           "output file.\n");
+    printf(
+        "The coded speech is packetized in RTP packets and written to the "
+        "output file.\n");
     printf("The format of the RTP stream file is simlilar to that of "
            "rtpplay,\n");
     printf("but with the receive time euqal to 0 for all packets.\n");
@@ -928,18 +929,8 @@ int NetEQTest_init_coders(webrtc::NetEqDecoder coder,
 
 #if (defined(CODEC_CNGCODEC8) || defined(CODEC_CNGCODEC16) || \
      defined(CODEC_CNGCODEC32) || defined(CODEC_CNGCODEC48))
-    ok = WebRtcCng_CreateEnc(&CNGenc_inst[k]);
-    if (ok != 0) {
-      printf("Error: Couldn't allocate memory for CNG encoding instance\n");
-      exit(0);
-    }
     if (sampfreq <= 16000) {
-      ok = WebRtcCng_InitEnc(CNGenc_inst[k], sampfreq, 200, 5);
-      if (ok == -1) {
-        printf("Error: Initialization of CNG struct failed. Error code %d\n",
-               WebRtcCng_GetErrorCodeEnc(CNGenc_inst[k]));
-        exit(0);
-      }
+      CNG_encoder[k] = new webrtc::ComfortNoiseEncoder(sampfreq, 200, 5);
     }
 #endif
 
@@ -1461,7 +1452,8 @@ int NetEQTest_free_coders(webrtc::NetEqDecoder coder, size_t numChannels) {
     WebRtcVad_Free(VAD_inst[k]);
 #if (defined(CODEC_CNGCODEC8) || defined(CODEC_CNGCODEC16) || \
      defined(CODEC_CNGCODEC32) || defined(CODEC_CNGCODEC48))
-    WebRtcCng_FreeEnc(CNGenc_inst[k]);
+    delete CNG_encoder[k];
+    CNG_encoder[k] = nullptr;
 #endif
 
     switch (coder) {
@@ -1600,7 +1592,7 @@ size_t NetEQTest_encode(webrtc::NetEqDecoder coder,
                         size_t numChannels) {
   size_t cdlen = 0;
   int16_t* tempdata;
-  static int first_cng = 1;
+  static bool first_cng = true;
   size_t tempLen;
   *vad = 1;
 
@@ -1608,9 +1600,9 @@ size_t NetEQTest_encode(webrtc::NetEqDecoder coder,
   if (useVAD) {
     *vad = 0;
 
-    size_t sampleRate_10 = static_cast<size_t>(10 * sampleRate / 1000);
-    size_t sampleRate_20 = static_cast<size_t>(20 * sampleRate / 1000);
-    size_t sampleRate_30 = static_cast<size_t>(30 * sampleRate / 1000);
+    const size_t sampleRate_10 = static_cast<size_t>(10 * sampleRate / 1000);
+    const size_t sampleRate_20 = static_cast<size_t>(20 * sampleRate / 1000);
+    const size_t sampleRate_30 = static_cast<size_t>(30 * sampleRate / 1000);
     for (size_t k = 0; k < numChannels; k++) {
       tempLen = frameLen;
       tempdata = &indata[k * frameLen];
@@ -1642,16 +1634,22 @@ size_t NetEQTest_encode(webrtc::NetEqDecoder coder,
 
     if (!*vad) {
       // all channels are silent
+      rtc::Buffer workaround;
       cdlen = 0;
       for (size_t k = 0; k < numChannels; k++) {
-        WebRtcCng_Encode(CNGenc_inst[k], &indata[k * frameLen],
-                         (frameLen <= 640 ? frameLen : 640) /* max 640 */,
-                         encoded, &tempLen, first_cng);
+        workaround.Clear();
+        tempLen = CNG_encoder[k]->Encode(
+            rtc::ArrayView<const int16_t>(
+                &indata[k * frameLen],
+                (frameLen <= 640 ? frameLen : 640) /* max 640 */),
+            first_cng,
+            &workaround);
+        memcpy(encoded, workaround.data(), tempLen);
         encoded += tempLen;
         cdlen += tempLen;
       }
       *vad = 0;
-      first_cng = 0;
+      first_cng = false;
       return (cdlen);
     }
   }
@@ -1726,7 +1724,7 @@ size_t NetEQTest_encode(webrtc::NetEqDecoder coder,
 #ifdef CODEC_OPUS
     cdlen = WebRtcOpus_Encode(opus_inst[k], indata, frameLen, kRtpDataSize - 12,
                               encoded);
-    RTC_CHECK_GT(cdlen, 0u);
+    RTC_CHECK_GT(cdlen, 0);
 #endif
     indata += frameLen;
     encoded += cdlen;
@@ -1734,7 +1732,7 @@ size_t NetEQTest_encode(webrtc::NetEqDecoder coder,
 
   }  // end for
 
-  first_cng = 1;
+  first_cng = true;
   return (totalLen);
 }
 

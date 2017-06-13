@@ -10,11 +10,11 @@
 
 #include "webrtc/modules/audio_coding/neteq/rtcp.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 #include <algorithm>
 
-#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/modules/include/module_common_types.h"
 
 namespace webrtc {
@@ -46,10 +46,10 @@ void Rtcp::Update(const RTPHeader& rtp_header, uint32_t receive_timestamp) {
   // Note that the value in |jitter_| is in Q4.
   if (received_packets_ > 1) {
     int32_t ts_diff = receive_timestamp - (rtp_header.timestamp - transit_);
-    ts_diff = WEBRTC_SPL_ABS_W32(ts_diff);
-    int32_t jitter_diff = (ts_diff << 4) - jitter_;
+    int64_t jitter_diff = (std::abs(int64_t{ts_diff}) << 4) - jitter_;
     // Calculate 15 * jitter_ / 16 + jitter_diff / 16 (with proper rounding).
     jitter_ = jitter_ + ((jitter_diff + 8) >> 4);
+    RTC_DCHECK_GE(jitter_, 0);
   }
   transit_ = rtp_header.timestamp - receive_timestamp;
 }

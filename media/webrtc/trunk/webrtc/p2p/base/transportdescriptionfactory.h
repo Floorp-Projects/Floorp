@@ -21,9 +21,11 @@ class SSLIdentity;
 namespace cricket {
 
 struct TransportOptions {
-  TransportOptions() : ice_restart(false), prefer_passive_role(false) {}
-  bool ice_restart;
-  bool prefer_passive_role;
+  bool ice_restart = false;
+  bool prefer_passive_role = false;
+  // If true, ICE renomination is supported and will be used if it is also
+  // supported by the remote side.
+  bool enable_ice_renomination = false;
 };
 
 // Creates transport descriptions according to the supplied configuration.

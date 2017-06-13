@@ -9,36 +9,29 @@
  */
 
 #include <map>
+#include <memory>
 
 #include "webrtc/base/fakesslidentity.h"
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/helpers.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/sslidentity.h"
 #include "webrtc/base/thread.h"
 #include "webrtc/p2p/base/dtlstransportchannel.h"
+#include "webrtc/p2p/base/fakeportallocator.h"
 #include "webrtc/p2p/base/faketransportcontroller.h"
 #include "webrtc/p2p/base/p2ptransportchannel.h"
 #include "webrtc/p2p/base/portallocator.h"
 #include "webrtc/p2p/base/transportcontroller.h"
-#include "webrtc/p2p/client/fakeportallocator.h"
 
 static const int kTimeout = 100;
 static const char kIceUfrag1[] = "TESTICEUFRAG0001";
 static const char kIcePwd1[] = "TESTICEPWD00000000000001";
 static const char kIceUfrag2[] = "TESTICEUFRAG0002";
 static const char kIcePwd2[] = "TESTICEPWD00000000000002";
+static const char kIceUfrag3[] = "TESTICEUFRAG0003";
+static const char kIcePwd3[] = "TESTICEPWD00000000000003";
 
-using cricket::Candidate;
-using cricket::Candidates;
-using cricket::FakeTransportChannel;
-using cricket::FakeTransportController;
-using cricket::IceConnectionState;
-using cricket::IceGatheringState;
-using cricket::TransportChannel;
-using cricket::TransportController;
-using cricket::TransportDescription;
-using cricket::TransportStats;
+namespace cricket {
 
 // Only subclassing from FakeTransportController because currently that's the
 // only way to have a TransportController with fake TransportChannels.
@@ -57,13 +50,13 @@ class TransportControllerTest : public testing::Test,
     ConnectTransportControllerSignals();
   }
 
-  void CreateTransportControllerWithWorkerThread() {
-    if (!worker_thread_) {
-      worker_thread_.reset(new rtc::Thread());
-      worker_thread_->Start();
+  void CreateTransportControllerWithNetworkThread() {
+    if (!network_thread_) {
+      network_thread_ = rtc::Thread::CreateWithSocketServer();
+      network_thread_->Start();
     }
     transport_controller_.reset(
-        new TransportControllerForTest(worker_thread_.get()));
+        new TransportControllerForTest(network_thread_.get()));
     ConnectTransportControllerSignals();
   }
 
@@ -81,44 +74,47 @@ class TransportControllerTest : public testing::Test,
   FakeTransportChannel* CreateChannel(const std::string& content,
                                       int component) {
     TransportChannel* channel =
-        transport_controller_->CreateTransportChannel_w(content, component);
+        transport_controller_->CreateTransportChannel_n(content, component);
     return static_cast<FakeTransportChannel*>(channel);
   }
 
   void DestroyChannel(const std::string& content, int component) {
-    transport_controller_->DestroyTransportChannel_w(content, component);
+    transport_controller_->DestroyTransportChannel_n(content, component);
   }
 
   Candidate CreateCandidate(int component) {
     Candidate c;
     c.set_address(rtc::SocketAddress("192.168.1.1", 8000));
     c.set_component(1);
-    c.set_protocol(cricket::UDP_PROTOCOL_NAME);
+    c.set_protocol(UDP_PROTOCOL_NAME);
     c.set_priority(1);
     return c;
   }
 
   // Used for thread hopping test.
-  void CreateChannelsAndCompleteConnectionOnWorkerThread() {
-    worker_thread_->Invoke<void>(rtc::Bind(
-        &TransportControllerTest::CreateChannelsAndCompleteConnection_w, this));
+  void CreateChannelsAndCompleteConnectionOnNetworkThread() {
+    network_thread_->Invoke<void>(
+        RTC_FROM_HERE,
+        rtc::Bind(
+            &TransportControllerTest::CreateChannelsAndCompleteConnection_w,
+            this));
   }
 
   void CreateChannelsAndCompleteConnection_w() {
-    transport_controller_->SetIceRole(cricket::ICEROLE_CONTROLLING);
+    transport_controller_->SetIceRole(ICEROLE_CONTROLLING);
     FakeTransportChannel* channel1 = CreateChannel("audio", 1);
     ASSERT_NE(nullptr, channel1);
     FakeTransportChannel* channel2 = CreateChannel("video", 1);
     ASSERT_NE(nullptr, channel2);
 
-    TransportDescription local_desc(
-        std::vector<std::string>(), kIceUfrag1, kIcePwd1, cricket::ICEMODE_FULL,
-        cricket::CONNECTIONROLE_ACTPASS, nullptr, Candidates());
+    TransportDescription local_desc(std::vector<std::string>(), kIceUfrag1,
+                                    kIcePwd1, ICEMODE_FULL,
+                                    CONNECTIONROLE_ACTPASS, nullptr);
     std::string err;
-    transport_controller_->SetLocalTransportDescription(
-        "audio", local_desc, cricket::CA_OFFER, &err);
-    transport_controller_->SetLocalTransportDescription(
-        "video", local_desc, cricket::CA_OFFER, &err);
+    transport_controller_->SetLocalTransportDescription("audio", local_desc,
+                                                        CA_OFFER, &err);
+    transport_controller_->SetLocalTransportDescription("video", local_desc,
+                                                        CA_OFFER, &err);
     transport_controller_->MaybeStartGathering();
     channel1->SignalCandidateGathered(channel1, CreateCandidate(1));
     channel2->SignalCandidateGathered(channel2, CreateCandidate(1));
@@ -134,11 +130,12 @@ class TransportControllerTest : public testing::Test,
     channel2->SetConnectionCount(1);
   }
 
-  cricket::IceConfig CreateIceConfig(int receiving_timeout_ms,
-                                     bool gather_continually) {
-    cricket::IceConfig config;
-    config.receiving_timeout_ms = receiving_timeout_ms;
-    config.gather_continually = gather_continually;
+  IceConfig CreateIceConfig(
+      int receiving_timeout,
+      ContinualGatheringPolicy continual_gathering_policy) {
+    IceConfig config;
+    config.receiving_timeout = receiving_timeout;
+    config.continual_gathering_policy = continual_gathering_policy;
     return config;
   }
 
@@ -177,13 +174,13 @@ class TransportControllerTest : public testing::Test,
     ++candidates_signal_count_;
   }
 
-  rtc::scoped_ptr<rtc::Thread> worker_thread_;  // Not used for most tests.
-  rtc::scoped_ptr<TransportControllerForTest> transport_controller_;
+  std::unique_ptr<rtc::Thread> network_thread_;  // Not used for most tests.
+  std::unique_ptr<TransportControllerForTest> transport_controller_;
 
   // Information received from signals from transport controller.
-  IceConnectionState connection_state_ = cricket::kIceConnectionConnecting;
+  IceConnectionState connection_state_ = kIceConnectionConnecting;
   bool receiving_ = false;
-  IceGatheringState gathering_state_ = cricket::kIceGatheringNew;
+  IceGatheringState gathering_state_ = kIceGatheringNew;
   // transport_name => candidates
   std::map<std::string, Candidates> candidates_;
   // Counts of each signal emitted.
@@ -201,10 +198,13 @@ TEST_F(TransportControllerTest, TestSetIceConfig) {
   FakeTransportChannel* channel1 = CreateChannel("audio", 1);
   ASSERT_NE(nullptr, channel1);
 
-  transport_controller_->SetIceConfig(CreateIceConfig(1000, true));
+  transport_controller_->SetIceConfig(
+      CreateIceConfig(1000, GATHER_CONTINUALLY));
   EXPECT_EQ(1000, channel1->receiving_timeout());
   EXPECT_TRUE(channel1->gather_continually());
 
+  transport_controller_->SetIceConfig(
+      CreateIceConfig(1000, GATHER_CONTINUALLY_AND_RECOVER));
   // Test that value stored in controller is applied to new channels.
   FakeTransportChannel* channel2 = CreateChannel("video", 1);
   ASSERT_NE(nullptr, channel2);
@@ -229,15 +229,15 @@ TEST_F(TransportControllerTest, TestSetIceRole) {
   FakeTransportChannel* channel1 = CreateChannel("audio", 1);
   ASSERT_NE(nullptr, channel1);
 
-  transport_controller_->SetIceRole(cricket::ICEROLE_CONTROLLING);
-  EXPECT_EQ(cricket::ICEROLE_CONTROLLING, channel1->GetIceRole());
-  transport_controller_->SetIceRole(cricket::ICEROLE_CONTROLLED);
-  EXPECT_EQ(cricket::ICEROLE_CONTROLLED, channel1->GetIceRole());
+  transport_controller_->SetIceRole(ICEROLE_CONTROLLING);
+  EXPECT_EQ(ICEROLE_CONTROLLING, channel1->GetIceRole());
+  transport_controller_->SetIceRole(ICEROLE_CONTROLLED);
+  EXPECT_EQ(ICEROLE_CONTROLLED, channel1->GetIceRole());
 
   // Test that value stored in controller is applied to new channels.
   FakeTransportChannel* channel2 = CreateChannel("video", 1);
   ASSERT_NE(nullptr, channel2);
-  EXPECT_EQ(cricket::ICEROLE_CONTROLLED, channel2->GetIceRole());
+  EXPECT_EQ(ICEROLE_CONTROLLED, channel2->GetIceRole());
 }
 
 // Test that when one channel encounters a role conflict, the ICE role is
@@ -248,13 +248,19 @@ TEST_F(TransportControllerTest, TestIceRoleConflict) {
   FakeTransportChannel* channel2 = CreateChannel("video", 1);
   ASSERT_NE(nullptr, channel2);
 
-  transport_controller_->SetIceRole(cricket::ICEROLE_CONTROLLING);
-  EXPECT_EQ(cricket::ICEROLE_CONTROLLING, channel1->GetIceRole());
-  EXPECT_EQ(cricket::ICEROLE_CONTROLLING, channel2->GetIceRole());
+  transport_controller_->SetIceRole(ICEROLE_CONTROLLING);
+  EXPECT_EQ(ICEROLE_CONTROLLING, channel1->GetIceRole());
+  EXPECT_EQ(ICEROLE_CONTROLLING, channel2->GetIceRole());
 
   channel1->SignalRoleConflict(channel1);
-  EXPECT_EQ(cricket::ICEROLE_CONTROLLED, channel1->GetIceRole());
-  EXPECT_EQ(cricket::ICEROLE_CONTROLLED, channel2->GetIceRole());
+  EXPECT_EQ(ICEROLE_CONTROLLED, channel1->GetIceRole());
+  EXPECT_EQ(ICEROLE_CONTROLLED, channel2->GetIceRole());
+
+  // Should be able to handle a second role conflict. The remote endpoint can
+  // change its role/tie-breaker when it does an ICE restart.
+  channel2->SignalRoleConflict(channel2);
+  EXPECT_EQ(ICEROLE_CONTROLLING, channel1->GetIceRole());
+  EXPECT_EQ(ICEROLE_CONTROLLING, channel2->GetIceRole());
 }
 
 TEST_F(TransportControllerTest, TestGetSslRole) {
@@ -269,10 +275,10 @@ TEST_F(TransportControllerTest, TestGetSslRole) {
 
 TEST_F(TransportControllerTest, TestSetAndGetLocalCertificate) {
   rtc::scoped_refptr<rtc::RTCCertificate> certificate1 =
-      rtc::RTCCertificate::Create(rtc::scoped_ptr<rtc::SSLIdentity>(
+      rtc::RTCCertificate::Create(std::unique_ptr<rtc::SSLIdentity>(
           rtc::SSLIdentity::Generate("session1", rtc::KT_DEFAULT)));
   rtc::scoped_refptr<rtc::RTCCertificate> certificate2 =
-      rtc::RTCCertificate::Create(rtc::scoped_ptr<rtc::SSLIdentity>(
+      rtc::RTCCertificate::Create(std::unique_ptr<rtc::SSLIdentity>(
           rtc::SSLIdentity::Generate("session2", rtc::KT_DEFAULT)));
   rtc::scoped_refptr<rtc::RTCCertificate> returned_certificate;
 
@@ -303,50 +309,49 @@ TEST_F(TransportControllerTest, TestSetAndGetLocalCertificate) {
 
 TEST_F(TransportControllerTest, TestGetRemoteSSLCertificate) {
   rtc::FakeSSLCertificate fake_certificate("fake_data");
-  rtc::scoped_ptr<rtc::SSLCertificate> returned_certificate;
 
   FakeTransportChannel* channel = CreateChannel("audio", 1);
   ASSERT_NE(nullptr, channel);
 
   channel->SetRemoteSSLCertificate(&fake_certificate);
-  EXPECT_TRUE(transport_controller_->GetRemoteSSLCertificate(
-      "audio", returned_certificate.accept()));
+  std::unique_ptr<rtc::SSLCertificate> returned_certificate =
+      transport_controller_->GetRemoteSSLCertificate("audio");
+  EXPECT_TRUE(returned_certificate);
   EXPECT_EQ(fake_certificate.ToPEMString(),
             returned_certificate->ToPEMString());
 
   // Should fail if called for a nonexistant transport.
-  EXPECT_FALSE(transport_controller_->GetRemoteSSLCertificate(
-      "video", returned_certificate.accept()));
+  EXPECT_FALSE(transport_controller_->GetRemoteSSLCertificate("video"));
 }
 
 TEST_F(TransportControllerTest, TestSetLocalTransportDescription) {
   FakeTransportChannel* channel = CreateChannel("audio", 1);
   ASSERT_NE(nullptr, channel);
-  TransportDescription local_desc(
-      std::vector<std::string>(), kIceUfrag1, kIcePwd1, cricket::ICEMODE_FULL,
-      cricket::CONNECTIONROLE_ACTPASS, nullptr, Candidates());
+  TransportDescription local_desc(std::vector<std::string>(), kIceUfrag1,
+                                  kIcePwd1, ICEMODE_FULL,
+                                  CONNECTIONROLE_ACTPASS, nullptr);
   std::string err;
   EXPECT_TRUE(transport_controller_->SetLocalTransportDescription(
-      "audio", local_desc, cricket::CA_OFFER, &err));
+      "audio", local_desc, CA_OFFER, &err));
   // Check that ICE ufrag and pwd were propagated to channel.
   EXPECT_EQ(kIceUfrag1, channel->ice_ufrag());
   EXPECT_EQ(kIcePwd1, channel->ice_pwd());
   // After setting local description, we should be able to start gathering
   // candidates.
   transport_controller_->MaybeStartGathering();
-  EXPECT_EQ_WAIT(cricket::kIceGatheringGathering, gathering_state_, kTimeout);
+  EXPECT_EQ_WAIT(kIceGatheringGathering, gathering_state_, kTimeout);
   EXPECT_EQ(1, gathering_state_signal_count_);
 }
 
 TEST_F(TransportControllerTest, TestSetRemoteTransportDescription) {
   FakeTransportChannel* channel = CreateChannel("audio", 1);
   ASSERT_NE(nullptr, channel);
-  TransportDescription remote_desc(
-      std::vector<std::string>(), kIceUfrag1, kIcePwd1, cricket::ICEMODE_FULL,
-      cricket::CONNECTIONROLE_ACTPASS, nullptr, Candidates());
+  TransportDescription remote_desc(std::vector<std::string>(), kIceUfrag1,
+                                   kIcePwd1, ICEMODE_FULL,
+                                   CONNECTIONROLE_ACTPASS, nullptr);
   std::string err;
   EXPECT_TRUE(transport_controller_->SetRemoteTransportDescription(
-      "audio", remote_desc, cricket::CA_OFFER, &err));
+      "audio", remote_desc, CA_OFFER, &err));
   // Check that ICE ufrag and pwd were propagated to channel.
   EXPECT_EQ(kIceUfrag1, channel->remote_ice_ufrag());
   EXPECT_EQ(kIcePwd1, channel->remote_ice_pwd());
@@ -371,18 +376,18 @@ TEST_F(TransportControllerTest, TestReadyForRemoteCandidates) {
   EXPECT_FALSE(transport_controller_->ReadyForRemoteCandidates("audio"));
 
   std::string err;
-  TransportDescription remote_desc(
-      std::vector<std::string>(), kIceUfrag1, kIcePwd1, cricket::ICEMODE_FULL,
-      cricket::CONNECTIONROLE_ACTPASS, nullptr, Candidates());
+  TransportDescription remote_desc(std::vector<std::string>(), kIceUfrag1,
+                                   kIcePwd1, ICEMODE_FULL,
+                                   CONNECTIONROLE_ACTPASS, nullptr);
   EXPECT_TRUE(transport_controller_->SetRemoteTransportDescription(
-      "audio", remote_desc, cricket::CA_OFFER, &err));
+      "audio", remote_desc, CA_OFFER, &err));
   EXPECT_FALSE(transport_controller_->ReadyForRemoteCandidates("audio"));
 
-  TransportDescription local_desc(
-      std::vector<std::string>(), kIceUfrag2, kIcePwd2, cricket::ICEMODE_FULL,
-      cricket::CONNECTIONROLE_ACTPASS, nullptr, Candidates());
+  TransportDescription local_desc(std::vector<std::string>(), kIceUfrag2,
+                                  kIcePwd2, ICEMODE_FULL,
+                                  CONNECTIONROLE_ACTPASS, nullptr);
   EXPECT_TRUE(transport_controller_->SetLocalTransportDescription(
-      "audio", local_desc, cricket::CA_ANSWER, &err));
+      "audio", local_desc, CA_ANSWER, &err));
   EXPECT_TRUE(transport_controller_->ReadyForRemoteCandidates("audio"));
 }
 
@@ -423,7 +428,7 @@ TEST_F(TransportControllerTest, TestCreateAndDestroyChannel) {
 
 TEST_F(TransportControllerTest, TestSignalConnectionStateFailed) {
   // Need controlling ICE role to get in failed state.
-  transport_controller_->SetIceRole(cricket::ICEROLE_CONTROLLING);
+  transport_controller_->SetIceRole(ICEROLE_CONTROLLING);
   FakeTransportChannel* channel1 = CreateChannel("audio", 1);
   ASSERT_NE(nullptr, channel1);
   FakeTransportChannel* channel2 = CreateChannel("video", 1);
@@ -435,12 +440,12 @@ TEST_F(TransportControllerTest, TestSignalConnectionStateFailed) {
   channel1->SetCandidatesGatheringComplete();
   channel1->SetConnectionCount(1);
   channel1->SetConnectionCount(0);
-  EXPECT_EQ_WAIT(cricket::kIceConnectionFailed, connection_state_, kTimeout);
+  EXPECT_EQ_WAIT(kIceConnectionFailed, connection_state_, kTimeout);
   EXPECT_EQ(1, connection_state_signal_count_);
 }
 
 TEST_F(TransportControllerTest, TestSignalConnectionStateConnected) {
-  transport_controller_->SetIceRole(cricket::ICEROLE_CONTROLLING);
+  transport_controller_->SetIceRole(ICEROLE_CONTROLLING);
   FakeTransportChannel* channel1 = CreateChannel("audio", 1);
   ASSERT_NE(nullptr, channel1);
   FakeTransportChannel* channel2 = CreateChannel("video", 1);
@@ -456,25 +461,24 @@ TEST_F(TransportControllerTest, TestSignalConnectionStateConnected) {
   channel3->SetCandidatesGatheringComplete();
   channel3->SetConnectionCount(1);
   channel3->SetConnectionCount(0);
-  EXPECT_EQ_WAIT(cricket::kIceConnectionFailed, connection_state_, kTimeout);
+  EXPECT_EQ_WAIT(kIceConnectionFailed, connection_state_, kTimeout);
   // Signal count of 1 means that the only signal emitted was "failed".
   EXPECT_EQ(1, connection_state_signal_count_);
 
   // Destroy the failed channel to return to "connecting" state.
   DestroyChannel("video", 2);
-  EXPECT_EQ_WAIT(cricket::kIceConnectionConnecting, connection_state_,
-                 kTimeout);
+  EXPECT_EQ_WAIT(kIceConnectionConnecting, connection_state_, kTimeout);
   EXPECT_EQ(2, connection_state_signal_count_);
 
   // Make the remaining channel reach a connected state.
   channel2->SetConnectionCount(2);
   channel2->SetWritable(true);
-  EXPECT_EQ_WAIT(cricket::kIceConnectionConnected, connection_state_, kTimeout);
+  EXPECT_EQ_WAIT(kIceConnectionConnected, connection_state_, kTimeout);
   EXPECT_EQ(3, connection_state_signal_count_);
 }
 
 TEST_F(TransportControllerTest, TestSignalConnectionStateComplete) {
-  transport_controller_->SetIceRole(cricket::ICEROLE_CONTROLLING);
+  transport_controller_->SetIceRole(ICEROLE_CONTROLLING);
   FakeTransportChannel* channel1 = CreateChannel("audio", 1);
   ASSERT_NE(nullptr, channel1);
   FakeTransportChannel* channel2 = CreateChannel("video", 1);
@@ -490,26 +494,25 @@ TEST_F(TransportControllerTest, TestSignalConnectionStateComplete) {
   channel3->SetCandidatesGatheringComplete();
   channel3->SetConnectionCount(1);
   channel3->SetConnectionCount(0);
-  EXPECT_EQ_WAIT(cricket::kIceConnectionFailed, connection_state_, kTimeout);
+  EXPECT_EQ_WAIT(kIceConnectionFailed, connection_state_, kTimeout);
   // Signal count of 1 means that the only signal emitted was "failed".
   EXPECT_EQ(1, connection_state_signal_count_);
 
   // Destroy the failed channel to return to "connecting" state.
   DestroyChannel("video", 2);
-  EXPECT_EQ_WAIT(cricket::kIceConnectionConnecting, connection_state_,
-                 kTimeout);
+  EXPECT_EQ_WAIT(kIceConnectionConnecting, connection_state_, kTimeout);
   EXPECT_EQ(2, connection_state_signal_count_);
 
   // Make the remaining channel reach a connected state.
   channel2->SetCandidatesGatheringComplete();
   channel2->SetConnectionCount(2);
   channel2->SetWritable(true);
-  EXPECT_EQ_WAIT(cricket::kIceConnectionConnected, connection_state_, kTimeout);
+  EXPECT_EQ_WAIT(kIceConnectionConnected, connection_state_, kTimeout);
   EXPECT_EQ(3, connection_state_signal_count_);
 
   // Finally, transition to completed state.
   channel2->SetConnectionCount(1);
-  EXPECT_EQ_WAIT(cricket::kIceConnectionCompleted, connection_state_, kTimeout);
+  EXPECT_EQ_WAIT(kIceConnectionCompleted, connection_state_, kTimeout);
   EXPECT_EQ(4, connection_state_signal_count_);
 }
 
@@ -527,14 +530,14 @@ TEST_F(TransportControllerTest, TestDestroyTransportAndStayConnected) {
   channel2->SetCandidatesGatheringComplete();
   channel2->SetConnectionCount(2);
   channel2->SetWritable(true);
-  EXPECT_EQ_WAIT(cricket::kIceConnectionConnected, connection_state_, kTimeout);
+  EXPECT_EQ_WAIT(kIceConnectionConnected, connection_state_, kTimeout);
   EXPECT_EQ(1, connection_state_signal_count_);
 
   // Destroy one channel, then "complete" the other one, so we reach
   // a known state.
   DestroyChannel("video", 1);
   channel1->SetConnectionCount(1);
-  EXPECT_EQ_WAIT(cricket::kIceConnectionCompleted, connection_state_, kTimeout);
+  EXPECT_EQ_WAIT(kIceConnectionCompleted, connection_state_, kTimeout);
   // Signal count of 2 means the deletion didn't cause any unexpected signals
   EXPECT_EQ(2, connection_state_signal_count_);
 }
@@ -548,12 +551,11 @@ TEST_F(TransportControllerTest, TestDestroyLastTransportWhileConnected) {
   channel->SetCandidatesGatheringComplete();
   channel->SetConnectionCount(2);
   channel->SetWritable(true);
-  EXPECT_EQ_WAIT(cricket::kIceConnectionConnected, connection_state_, kTimeout);
+  EXPECT_EQ_WAIT(kIceConnectionConnected, connection_state_, kTimeout);
   EXPECT_EQ(1, connection_state_signal_count_);
 
   DestroyChannel("audio", 1);
-  EXPECT_EQ_WAIT(cricket::kIceConnectionConnecting, connection_state_,
-                 kTimeout);
+  EXPECT_EQ_WAIT(kIceConnectionConnecting, connection_state_, kTimeout);
   // Signal count of 2 means the deletion didn't cause any unexpected signals
   EXPECT_EQ(2, connection_state_signal_count_);
 }
@@ -579,10 +581,9 @@ TEST_F(TransportControllerTest, TestSignalReceiving) {
 TEST_F(TransportControllerTest, TestSignalGatheringStateGathering) {
   FakeTransportChannel* channel = CreateChannel("audio", 1);
   ASSERT_NE(nullptr, channel);
-  channel->Connect();
   channel->MaybeStartGathering();
   // Should be in the gathering state as soon as any transport starts gathering.
-  EXPECT_EQ_WAIT(cricket::kIceGatheringGathering, gathering_state_, kTimeout);
+  EXPECT_EQ_WAIT(kIceGatheringGathering, gathering_state_, kTimeout);
   EXPECT_EQ(1, gathering_state_signal_count_);
 }
 
@@ -594,29 +595,26 @@ TEST_F(TransportControllerTest, TestSignalGatheringStateComplete) {
   FakeTransportChannel* channel3 = CreateChannel("data", 1);
   ASSERT_NE(nullptr, channel3);
 
-  channel3->Connect();
   channel3->MaybeStartGathering();
-  EXPECT_EQ_WAIT(cricket::kIceGatheringGathering, gathering_state_, kTimeout);
+  EXPECT_EQ_WAIT(kIceGatheringGathering, gathering_state_, kTimeout);
   EXPECT_EQ(1, gathering_state_signal_count_);
 
   // Have one channel finish gathering, then destroy it, to make sure gathering
   // completion wasn't signalled if only one transport finished gathering.
   channel3->SetCandidatesGatheringComplete();
   DestroyChannel("data", 1);
-  EXPECT_EQ_WAIT(cricket::kIceGatheringNew, gathering_state_, kTimeout);
+  EXPECT_EQ_WAIT(kIceGatheringNew, gathering_state_, kTimeout);
   EXPECT_EQ(2, gathering_state_signal_count_);
 
   // Make remaining channels start and then finish gathering.
-  channel1->Connect();
   channel1->MaybeStartGathering();
-  channel2->Connect();
   channel2->MaybeStartGathering();
-  EXPECT_EQ_WAIT(cricket::kIceGatheringGathering, gathering_state_, kTimeout);
+  EXPECT_EQ_WAIT(kIceGatheringGathering, gathering_state_, kTimeout);
   EXPECT_EQ(3, gathering_state_signal_count_);
 
   channel1->SetCandidatesGatheringComplete();
   channel2->SetCandidatesGatheringComplete();
-  EXPECT_EQ_WAIT(cricket::kIceGatheringComplete, gathering_state_, kTimeout);
+  EXPECT_EQ_WAIT(kIceGatheringComplete, gathering_state_, kTimeout);
   EXPECT_EQ(4, gathering_state_signal_count_);
 }
 
@@ -626,22 +624,22 @@ TEST_F(TransportControllerTest, TestSignalGatheringStateComplete) {
 // transport completes, then we start bundling video on the audio transport.
 TEST_F(TransportControllerTest,
        TestSignalingWhenLastIncompleteTransportDestroyed) {
-  transport_controller_->SetIceRole(cricket::ICEROLE_CONTROLLING);
+  transport_controller_->SetIceRole(ICEROLE_CONTROLLING);
   FakeTransportChannel* channel1 = CreateChannel("audio", 1);
   ASSERT_NE(nullptr, channel1);
   FakeTransportChannel* channel2 = CreateChannel("video", 1);
   ASSERT_NE(nullptr, channel2);
 
   channel1->SetCandidatesGatheringComplete();
-  EXPECT_EQ_WAIT(cricket::kIceGatheringGathering, gathering_state_, kTimeout);
+  EXPECT_EQ_WAIT(kIceGatheringGathering, gathering_state_, kTimeout);
   EXPECT_EQ(1, gathering_state_signal_count_);
 
   channel1->SetConnectionCount(1);
   channel1->SetWritable(true);
   DestroyChannel("video", 1);
-  EXPECT_EQ_WAIT(cricket::kIceConnectionCompleted, connection_state_, kTimeout);
+  EXPECT_EQ_WAIT(kIceConnectionCompleted, connection_state_, kTimeout);
   EXPECT_EQ(1, connection_state_signal_count_);
-  EXPECT_EQ_WAIT(cricket::kIceGatheringComplete, gathering_state_, kTimeout);
+  EXPECT_EQ_WAIT(kIceGatheringComplete, gathering_state_, kTimeout);
   EXPECT_EQ(2, gathering_state_signal_count_);
 }
 
@@ -650,12 +648,12 @@ TEST_F(TransportControllerTest, TestSignalCandidatesGathered) {
   ASSERT_NE(nullptr, channel);
 
   // Transport won't signal candidates until it has a local description.
-  TransportDescription local_desc(
-      std::vector<std::string>(), kIceUfrag1, kIcePwd1, cricket::ICEMODE_FULL,
-      cricket::CONNECTIONROLE_ACTPASS, nullptr, Candidates());
+  TransportDescription local_desc(std::vector<std::string>(), kIceUfrag1,
+                                  kIcePwd1, ICEMODE_FULL,
+                                  CONNECTIONROLE_ACTPASS, nullptr);
   std::string err;
   EXPECT_TRUE(transport_controller_->SetLocalTransportDescription(
-      "audio", local_desc, cricket::CA_OFFER, &err));
+      "audio", local_desc, CA_OFFER, &err));
   transport_controller_->MaybeStartGathering();
 
   channel->SignalCandidateGathered(channel, CreateCandidate(1));
@@ -664,18 +662,18 @@ TEST_F(TransportControllerTest, TestSignalCandidatesGathered) {
 }
 
 TEST_F(TransportControllerTest, TestSignalingOccursOnSignalingThread) {
-  CreateTransportControllerWithWorkerThread();
-  CreateChannelsAndCompleteConnectionOnWorkerThread();
+  CreateTransportControllerWithNetworkThread();
+  CreateChannelsAndCompleteConnectionOnNetworkThread();
 
   // connecting --> connected --> completed
-  EXPECT_EQ_WAIT(cricket::kIceConnectionCompleted, connection_state_, kTimeout);
+  EXPECT_EQ_WAIT(kIceConnectionCompleted, connection_state_, kTimeout);
   EXPECT_EQ(2, connection_state_signal_count_);
 
   EXPECT_TRUE_WAIT(receiving_, kTimeout);
   EXPECT_EQ(1, receiving_signal_count_);
 
   // new --> gathering --> complete
-  EXPECT_EQ_WAIT(cricket::kIceGatheringComplete, gathering_state_, kTimeout);
+  EXPECT_EQ_WAIT(kIceGatheringComplete, gathering_state_, kTimeout);
   EXPECT_EQ(2, gathering_state_signal_count_);
 
   EXPECT_EQ_WAIT(1U, candidates_["audio"].size(), kTimeout);
@@ -684,3 +682,156 @@ TEST_F(TransportControllerTest, TestSignalingOccursOnSignalingThread) {
 
   EXPECT_TRUE(!signaled_on_non_signaling_thread_);
 }
+
+// Older versions of Chrome expect the ICE role to be re-determined when an
+// ICE restart occurs, and also don't perform conflict resolution correctly,
+// so for now we can't safely stop doing this.
+// See: https://bugs.chromium.org/p/chromium/issues/detail?id=628676
+// TODO(deadbeef): Remove this when these old versions of Chrome reach a low
+// enough population.
+TEST_F(TransportControllerTest, IceRoleRedeterminedOnIceRestartByDefault) {
+  FakeTransportChannel* channel = CreateChannel("audio", 1);
+  ASSERT_NE(nullptr, channel);
+  std::string err;
+  // Do an initial offer answer, so that the next offer is an ICE restart.
+  transport_controller_->SetIceRole(ICEROLE_CONTROLLED);
+  TransportDescription remote_desc(std::vector<std::string>(), kIceUfrag1,
+                                   kIcePwd1, ICEMODE_FULL,
+                                   CONNECTIONROLE_ACTPASS, nullptr);
+  EXPECT_TRUE(transport_controller_->SetRemoteTransportDescription(
+      "audio", remote_desc, CA_OFFER, &err));
+  TransportDescription local_desc(std::vector<std::string>(), kIceUfrag2,
+                                  kIcePwd2, ICEMODE_FULL,
+                                  CONNECTIONROLE_ACTPASS, nullptr);
+  EXPECT_TRUE(transport_controller_->SetLocalTransportDescription(
+      "audio", local_desc, CA_ANSWER, &err));
+  EXPECT_EQ(ICEROLE_CONTROLLED, channel->GetIceRole());
+
+  // The endpoint that initiated an ICE restart should take the controlling
+  // role.
+  TransportDescription ice_restart_desc(std::vector<std::string>(), kIceUfrag3,
+                                        kIcePwd3, ICEMODE_FULL,
+                                        CONNECTIONROLE_ACTPASS, nullptr);
+  EXPECT_TRUE(transport_controller_->SetLocalTransportDescription(
+      "audio", ice_restart_desc, CA_OFFER, &err));
+  EXPECT_EQ(ICEROLE_CONTROLLING, channel->GetIceRole());
+}
+
+// Test that if the TransportController was created with the
+// |redetermine_role_on_ice_restart| parameter set to false, the role is *not*
+// redetermined on an ICE restart.
+TEST_F(TransportControllerTest, IceRoleNotRedetermined) {
+  bool redetermine_role = false;
+  transport_controller_.reset(new TransportControllerForTest(redetermine_role));
+  FakeTransportChannel* channel = CreateChannel("audio", 1);
+  ASSERT_NE(nullptr, channel);
+  std::string err;
+  // Do an initial offer answer, so that the next offer is an ICE restart.
+  transport_controller_->SetIceRole(ICEROLE_CONTROLLED);
+  TransportDescription remote_desc(std::vector<std::string>(), kIceUfrag1,
+                                   kIcePwd1, ICEMODE_FULL,
+                                   CONNECTIONROLE_ACTPASS, nullptr);
+  EXPECT_TRUE(transport_controller_->SetRemoteTransportDescription(
+      "audio", remote_desc, CA_OFFER, &err));
+  TransportDescription local_desc(std::vector<std::string>(), kIceUfrag2,
+                                  kIcePwd2, ICEMODE_FULL,
+                                  CONNECTIONROLE_ACTPASS, nullptr);
+  EXPECT_TRUE(transport_controller_->SetLocalTransportDescription(
+      "audio", local_desc, CA_ANSWER, &err));
+  EXPECT_EQ(ICEROLE_CONTROLLED, channel->GetIceRole());
+
+  // The endpoint that initiated an ICE restart should keep the existing role.
+  TransportDescription ice_restart_desc(std::vector<std::string>(), kIceUfrag3,
+                                        kIcePwd3, ICEMODE_FULL,
+                                        CONNECTIONROLE_ACTPASS, nullptr);
+  EXPECT_TRUE(transport_controller_->SetLocalTransportDescription(
+      "audio", ice_restart_desc, CA_OFFER, &err));
+  EXPECT_EQ(ICEROLE_CONTROLLED, channel->GetIceRole());
+}
+
+// Tests channel role is reversed after receiving ice-lite from remote.
+TEST_F(TransportControllerTest, TestSetRemoteIceLiteInOffer) {
+  FakeTransportChannel* channel = CreateChannel("audio", 1);
+  ASSERT_NE(nullptr, channel);
+  std::string err;
+
+  transport_controller_->SetIceRole(ICEROLE_CONTROLLED);
+  TransportDescription remote_desc(std::vector<std::string>(), kIceUfrag1,
+                                   kIcePwd1, ICEMODE_LITE,
+                                   CONNECTIONROLE_ACTPASS, nullptr);
+  EXPECT_TRUE(transport_controller_->SetRemoteTransportDescription(
+      "audio", remote_desc, CA_OFFER, &err));
+  TransportDescription local_desc(kIceUfrag1, kIcePwd1);
+  ASSERT_TRUE(transport_controller_->SetLocalTransportDescription(
+      "audio", local_desc, CA_ANSWER, nullptr));
+
+  EXPECT_EQ(ICEROLE_CONTROLLING, channel->GetIceRole());
+  EXPECT_EQ(ICEMODE_LITE, channel->remote_ice_mode());
+}
+
+// Tests ice-lite in remote answer.
+TEST_F(TransportControllerTest, TestSetRemoteIceLiteInAnswer) {
+  FakeTransportChannel* channel = CreateChannel("audio", 1);
+  ASSERT_NE(nullptr, channel);
+  std::string err;
+
+  transport_controller_->SetIceRole(ICEROLE_CONTROLLING);
+  TransportDescription local_desc(kIceUfrag1, kIcePwd1);
+  ASSERT_TRUE(transport_controller_->SetLocalTransportDescription(
+      "audio", local_desc, CA_OFFER, nullptr));
+  EXPECT_EQ(ICEROLE_CONTROLLING, channel->GetIceRole());
+  // Channels will be created in ICEFULL_MODE.
+  EXPECT_EQ(ICEMODE_FULL, channel->remote_ice_mode());
+  TransportDescription remote_desc(std::vector<std::string>(), kIceUfrag1,
+                                   kIcePwd1, ICEMODE_LITE, CONNECTIONROLE_NONE,
+                                   nullptr);
+  ASSERT_TRUE(transport_controller_->SetRemoteTransportDescription(
+      "audio", remote_desc, CA_ANSWER, nullptr));
+  EXPECT_EQ(ICEROLE_CONTROLLING, channel->GetIceRole());
+  // After receiving remote description with ICEMODE_LITE, channel should
+  // have mode set to ICEMODE_LITE.
+  EXPECT_EQ(ICEMODE_LITE, channel->remote_ice_mode());
+}
+
+// Tests SetNeedsIceRestartFlag and NeedsIceRestart, setting the flag and then
+// initiating an ICE restart for one of the transports.
+TEST_F(TransportControllerTest, NeedsIceRestart) {
+  CreateChannel("audio", 1);
+  CreateChannel("video", 1);
+
+  // Do initial offer/answer so there's something to restart.
+  TransportDescription local_desc(kIceUfrag1, kIcePwd1);
+  TransportDescription remote_desc(kIceUfrag1, kIcePwd1);
+  ASSERT_TRUE(transport_controller_->SetLocalTransportDescription(
+      "audio", local_desc, CA_OFFER, nullptr));
+  ASSERT_TRUE(transport_controller_->SetLocalTransportDescription(
+      "video", local_desc, CA_OFFER, nullptr));
+  ASSERT_TRUE(transport_controller_->SetRemoteTransportDescription(
+      "audio", remote_desc, CA_ANSWER, nullptr));
+  ASSERT_TRUE(transport_controller_->SetRemoteTransportDescription(
+      "video", remote_desc, CA_ANSWER, nullptr));
+
+  // Initially NeedsIceRestart should return false.
+  EXPECT_FALSE(transport_controller_->NeedsIceRestart("audio"));
+  EXPECT_FALSE(transport_controller_->NeedsIceRestart("video"));
+
+  // Set the needs-ice-restart flag and verify NeedsIceRestart starts returning
+  // true.
+  transport_controller_->SetNeedsIceRestartFlag();
+  EXPECT_TRUE(transport_controller_->NeedsIceRestart("audio"));
+  EXPECT_TRUE(transport_controller_->NeedsIceRestart("video"));
+  // For a nonexistent transport, false should be returned.
+  EXPECT_FALSE(transport_controller_->NeedsIceRestart("deadbeef"));
+
+  // Do ICE restart but only for audio.
+  TransportDescription ice_restart_local_desc(kIceUfrag2, kIcePwd2);
+  ASSERT_TRUE(transport_controller_->SetLocalTransportDescription(
+      "audio", ice_restart_local_desc, CA_OFFER, nullptr));
+  ASSERT_TRUE(transport_controller_->SetLocalTransportDescription(
+      "video", local_desc, CA_OFFER, nullptr));
+  // NeedsIceRestart should still be true for video.
+  EXPECT_FALSE(transport_controller_->NeedsIceRestart("audio"));
+  EXPECT_TRUE(transport_controller_->NeedsIceRestart("video"));
+}
+
+}  // namespace cricket {

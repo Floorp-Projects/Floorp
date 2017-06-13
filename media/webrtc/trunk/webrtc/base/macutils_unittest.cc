@@ -16,28 +16,3 @@ TEST(MacUtilsTest, GetOsVersionName) {
   LOG(LS_INFO) << "GetOsVersionName " << ver;
   EXPECT_NE(rtc::kMacOSUnknown, ver);
 }
-
-TEST(MacUtilsTest, GetQuickTimeVersion) {
-  std::string version;
-  EXPECT_TRUE(rtc::GetQuickTimeVersion(&version));
-  LOG(LS_INFO) << "GetQuickTimeVersion " << version;
-}
-
-TEST(MacUtilsTest, RunAppleScriptCompileError) {
-  std::string script("set value to to 5");
-  EXPECT_FALSE(rtc::RunAppleScript(script));
-}
-
-TEST(MacUtilsTest, RunAppleScriptRuntimeError) {
-  std::string script("set value to 5 / 0");
-  EXPECT_FALSE(rtc::RunAppleScript(script));
-}
-
-#ifdef CARBON_DEPRECATED
-TEST(MacUtilsTest, DISABLED_RunAppleScriptSuccess) {
-#else
-TEST(MacUtilsTest, RunAppleScriptSuccess) {
-#endif
-  std::string script("set value to 5");
-  EXPECT_TRUE(rtc::RunAppleScript(script));
-}

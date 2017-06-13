@@ -11,10 +11,9 @@
 #include <assert.h>
 
 #include "webrtc/base/checks.h"
-
+#include "webrtc/base/logging.h"
 #include "webrtc/modules/audio_device/audio_device_config.h"
 #include "webrtc/modules/audio_device/linux/audio_device_pulse_linux.h"
-
 #include "webrtc/system_wrappers/include/event_wrapper.h"
 #include "webrtc/system_wrappers/include/trace.h"
 
@@ -163,60 +162,49 @@ int32_t AudioDeviceLinuxPulse::ActiveAudioLayer(
     return 0;
 }
 
-int32_t AudioDeviceLinuxPulse::Init()
-{
-    RTC_DCHECK(thread_checker_.CalledOnValidThread());
-    if (_initialized)
-    {
-        return 0;
+AudioDeviceGeneric::InitStatus AudioDeviceLinuxPulse::Init() {
+  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  if (_initialized) {
+    return InitStatus::OK;
+  }
+
+  // Initialize PulseAudio
+  if (InitPulseAudio() < 0) {
+    LOG(LS_ERROR) << "failed to initialize PulseAudio";
+    if (TerminatePulseAudio() < 0) {
+      LOG(LS_ERROR) << "failed to terminate PulseAudio";
     }
+    return InitStatus::OTHER_ERROR;
+  }
 
-    // Initialize PulseAudio
-    if (InitPulseAudio() < 0)
-    {
-        WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-                     "  failed to initialize PulseAudio");
+  _playWarning = 0;
+  _playError = 0;
+  _recWarning = 0;
+  _recError = 0;
 
-        if (TerminatePulseAudio() < 0)
-        {
-            WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-                         "  failed to terminate PulseAudio");
-        }
+  // Get X display handle for typing detection
+  _XDisplay = XOpenDisplay(NULL);
+  if (!_XDisplay) {
+    LOG(LS_WARNING)
+        << "failed to open X display, typing detection will not work";
+  }
 
-        return -1;
-    }
+  // RECORDING
+  _ptrThreadRec.reset(new rtc::PlatformThread(
+      RecThreadFunc, this, "webrtc_audio_module_rec_thread"));
 
-    _playWarning = 0;
-    _playError = 0;
-    _recWarning = 0;
-    _recError = 0;
+  _ptrThreadRec->Start();
+  _ptrThreadRec->SetPriority(rtc::kRealtimePriority);
 
-#ifdef USE_X11
-    //Get X display handle for typing detection
-    _XDisplay = XOpenDisplay(NULL);
-    if (!_XDisplay)
-    {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-          "  failed to open X display, typing detection will not work");
-    }
-#endif
+  // PLAYOUT
+  _ptrThreadPlay.reset(new rtc::PlatformThread(
+      PlayThreadFunc, this, "webrtc_audio_module_play_thread"));
+  _ptrThreadPlay->Start();
+  _ptrThreadPlay->SetPriority(rtc::kRealtimePriority);
 
-    // RECORDING
-    _ptrThreadRec.reset(new rtc::PlatformThread(
-        RecThreadFunc, this, "webrtc_audio_module_rec_thread"));
+  _initialized = true;
 
-    _ptrThreadRec->Start();
-    _ptrThreadRec->SetPriority(rtc::kRealtimePriority);
-
-    // PLAYOUT
-    _ptrThreadPlay.reset(new rtc::PlatformThread(
-        PlayThreadFunc, this, "webrtc_audio_module_play_thread"));
-    _ptrThreadPlay->Start();
-    _ptrThreadPlay->SetPriority(rtc::kRealtimePriority);
-
-    _initialized = true;
-
-    return 0;
+  return InitStatus::OK;
 }
 
 int32_t AudioDeviceLinuxPulse::Terminate()
@@ -257,13 +245,11 @@ int32_t AudioDeviceLinuxPulse::Terminate()
         return -1;
     }
 
-#ifdef USE_X11
     if (_XDisplay)
     {
       XCloseDisplay(_XDisplay);
       _XDisplay = NULL;
     }
-#endif
 
     _initialized = false;
     _outputDeviceIsSpecified = false;
@@ -2378,18 +2364,6 @@ void AudioDeviceLinuxPulse::PaStreamReadCallbackHandler()
         return;
     }
 
-    // PulseAudio record streams can have holes (for reasons not entirely clear
-    // to the PA developers themselves). Since version 4 of PA, these are passed
-    // over to the application (us), signaled by a non-zero sample data size
-    // (the size of the hole) and a NULL sample data.
-    // We handle stream holes as recommended by PulseAudio, i.e. by skipping
-    // it, which is done with a stream drop.
-    if (_tempSampleDataSize && !_tempSampleData) {
-        LATE(pa_stream_drop)(_recStream);
-        _tempSampleDataSize = 0; // reset
-        return;
-    }
-
     // Since we consume the data asynchronously on a different thread, we have
     // to temporarily disable the read callback or else Pulse will call it
     // continuously until we consume the data. We re-enable it below.
@@ -3001,7 +2975,6 @@ bool AudioDeviceLinuxPulse::RecThreadProcess()
 
 bool AudioDeviceLinuxPulse::KeyPressed() const{
 
-#ifdef USE_X11
   char szKey[32];
   unsigned int i = 0;
   char state = 0;
@@ -3019,8 +2992,5 @@ bool AudioDeviceLinuxPulse::KeyPressed() const{
   // Save old state
   memcpy((char*)_oldKeyState, (char*)szKey, sizeof(_oldKeyState));
   return (state != 0);
-#else
-  return false;
-#endif
 }
 }

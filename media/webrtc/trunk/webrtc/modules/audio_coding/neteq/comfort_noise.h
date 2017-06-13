@@ -38,16 +38,14 @@ class ComfortNoise {
         first_call_(true),
         overlap_length_(5 * fs_hz_ / 8000),
         decoder_database_(decoder_database),
-        sync_buffer_(sync_buffer),
-        internal_error_code_(0) {
+        sync_buffer_(sync_buffer) {
   }
 
   // Resets the state. Should be called before each new comfort noise period.
   void Reset();
 
   // Update the comfort noise generator with the parameters in |packet|.
-  // Will delete the packet.
-  int UpdateParameters(Packet* packet);
+  int UpdateParameters(const Packet& packet);
 
   // Generates |requested_length| samples of comfort noise and writes to
   // |output|. If this is the first in call after Reset (or first after creating

@@ -8,33 +8,37 @@
 
 import("../../build/webrtc.gni")
 
-source_set("bitrate_controller") {
+rtc_static_library("bitrate_controller") {
+  # TODO(mbonadei): Remove (bugs.webrtc.org/6828)
+  # Errors on cyclic dependency with:
+  # congestion_controller:congestion_controller if enabled.
+  check_includes = false
+
   sources = [
     "bitrate_controller_impl.cc",
     "bitrate_controller_impl.h",
-    "include/bitrate_allocator.h",
     "include/bitrate_controller.h",
     "send_side_bandwidth_estimation.cc",
     "send_side_bandwidth_estimation.h",
   ]
 
-  if (is_win) {
-    cflags = [
-      # TODO(jschuh): Bug 1348: fix this warning.
-      "/wd4267",  # size_t to int truncations
-    ]
+  if (rtc_enable_bwe_test_logging) {
+    defines = [ "BWE_TEST_LOGGING_COMPILE_TIME_ENABLE=1" ]
+  } else {
+    defines = [ "BWE_TEST_LOGGING_COMPILE_TIME_ENABLE=0" ]
   }
 
-  configs += [ "../..:common_config" ]
-  public_configs = [ "../..:common_inherited_config" ]
+  # TODO(jschuh): Bug 1348: fix this warning.
+  configs += [ "//build/config/compiler:no_size_t_to_int_warning" ]
 
-  if (is_clang) {
-    # Suppress warnings from Chrome's Clang plugins.
-    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  if (!build_with_chromium && is_clang) {
+    # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+    suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
 
   deps = [
+    "../../base:rtc_base_approved",
     "../../system_wrappers",
+    "../rtp_rtcp",
   ]
 }

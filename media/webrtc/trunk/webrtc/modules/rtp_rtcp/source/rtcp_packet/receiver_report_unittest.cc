@@ -10,13 +10,15 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/receiver_report.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/test/gmock.h"
+#include "webrtc/test/gtest.h"
+#include "webrtc/test/rtcp_packet_parser.h"
 
-using webrtc::rtcp::RawPacket;
+using testing::ElementsAreArray;
+using testing::IsEmpty;
+using testing::make_tuple;
 using webrtc::rtcp::ReceiverReport;
 using webrtc::rtcp::ReportBlock;
-using webrtc::RTCPUtility::RtcpCommonHeader;
-using webrtc::RTCPUtility::RtcpParseCommonHeader;
 
 namespace webrtc {
 namespace {
@@ -35,32 +37,11 @@ const uint8_t kPacket[] = {0x81, 201,  0x00, 0x07, 0x12, 0x34, 0x56, 0x78,
                            0x23, 0x45, 0x67, 0x89, 55,   0x11, 0x12, 0x13,
                            0x22, 0x23, 0x24, 0x25, 0x33, 0x34, 0x35, 0x36,
                            0x44, 0x45, 0x46, 0x47, 0x55, 0x56, 0x57, 0x58};
-const size_t kPacketLength = sizeof(kPacket);
+}  // namespace
 
-class RtcpPacketReceiverReportTest : public ::testing::Test {
- protected:
-  void BuildPacket() { packet = rr.Build(); }
-  void ParsePacket() {
-    RtcpCommonHeader header;
-    EXPECT_TRUE(
-        RtcpParseCommonHeader(packet->Buffer(), packet->Length(), &header));
-    EXPECT_EQ(header.BlockSize(), packet->Length());
-    EXPECT_TRUE(parsed_.Parse(
-        header, packet->Buffer() + RtcpCommonHeader::kHeaderSizeBytes));
-  }
-
+TEST(RtcpPacketReceiverReportTest, ParseWithOneReportBlock) {
   ReceiverReport rr;
-  rtc::scoped_ptr<RawPacket> packet;
-  const ReceiverReport& parsed() { return parsed_; }
-
- private:
-  ReceiverReport parsed_;
-};
-
-TEST_F(RtcpPacketReceiverReportTest, Parse) {
-  RtcpCommonHeader header;
-  RtcpParseCommonHeader(kPacket, kPacketLength, &header);
-  EXPECT_TRUE(rr.Parse(header, kPacket + RtcpCommonHeader::kHeaderSizeBytes));
+  EXPECT_TRUE(test::ParseSinglePacket(kPacket, &rr));
   const ReceiverReport& parsed = rr;
 
   EXPECT_EQ(kSenderSsrc, parsed.sender_ssrc());
@@ -75,71 +56,75 @@ TEST_F(RtcpPacketReceiverReportTest, Parse) {
   EXPECT_EQ(kDelayLastSr, rb.delay_since_last_sr());
 }
 
-TEST_F(RtcpPacketReceiverReportTest, ParseFailsOnIncorrectSize) {
-  RtcpCommonHeader header;
-  RtcpParseCommonHeader(kPacket, kPacketLength, &header);
-  header.count_or_format++;  // Damage the packet.
-  EXPECT_FALSE(rr.Parse(header, kPacket + RtcpCommonHeader::kHeaderSizeBytes));
+TEST(RtcpPacketReceiverReportTest, ParseFailsOnIncorrectSize) {
+  rtc::Buffer damaged_packet(kPacket);
+  damaged_packet[0]++;  // Damage the packet: increase count field.
+  ReceiverReport rr;
+  EXPECT_FALSE(test::ParseSinglePacket(damaged_packet, &rr));
 }
 
-TEST_F(RtcpPacketReceiverReportTest, Create) {
-  rr.From(kSenderSsrc);
+TEST(RtcpPacketReceiverReportTest, CreateWithOneReportBlock) {
+  ReceiverReport rr;
+  rr.SetSenderSsrc(kSenderSsrc);
   ReportBlock rb;
-  rb.To(kRemoteSsrc);
-  rb.WithFractionLost(kFractionLost);
-  rb.WithCumulativeLost(kCumulativeLost);
-  rb.WithExtHighestSeqNum(kExtHighestSeqNum);
-  rb.WithJitter(kJitter);
-  rb.WithLastSr(kLastSr);
-  rb.WithDelayLastSr(kDelayLastSr);
-  rr.WithReportBlock(rb);
+  rb.SetMediaSsrc(kRemoteSsrc);
+  rb.SetFractionLost(kFractionLost);
+  rb.SetCumulativeLost(kCumulativeLost);
+  rb.SetExtHighestSeqNum(kExtHighestSeqNum);
+  rb.SetJitter(kJitter);
+  rb.SetLastSr(kLastSr);
+  rb.SetDelayLastSr(kDelayLastSr);
+  rr.AddReportBlock(rb);
 
-  BuildPacket();
+  rtc::Buffer raw = rr.Build();
 
-  ASSERT_EQ(kPacketLength, packet->Length());
-  EXPECT_EQ(0, memcmp(kPacket, packet->Buffer(), kPacketLength));
+  EXPECT_THAT(make_tuple(raw.data(), raw.size()), ElementsAreArray(kPacket));
 }
 
-TEST_F(RtcpPacketReceiverReportTest, WithoutReportBlocks) {
-  rr.From(kSenderSsrc);
+TEST(RtcpPacketReceiverReportTest, CreateAndParseWithoutReportBlocks) {
+  ReceiverReport rr;
+  rr.SetSenderSsrc(kSenderSsrc);
 
-  BuildPacket();
-  ParsePacket();
+  rtc::Buffer raw = rr.Build();
+  ReceiverReport parsed;
+  EXPECT_TRUE(test::ParseSinglePacket(raw, &parsed));
 
-  EXPECT_EQ(kSenderSsrc, parsed().sender_ssrc());
-  EXPECT_EQ(0u, parsed().report_blocks().size());
+  EXPECT_EQ(kSenderSsrc, parsed.sender_ssrc());
+  EXPECT_THAT(parsed.report_blocks(), IsEmpty());
 }
 
-TEST_F(RtcpPacketReceiverReportTest, WithTwoReportBlocks) {
+TEST(RtcpPacketReceiverReportTest, CreateAndParseWithTwoReportBlocks) {
+  ReceiverReport rr;
   ReportBlock rb1;
-  rb1.To(kRemoteSsrc);
+  rb1.SetMediaSsrc(kRemoteSsrc);
   ReportBlock rb2;
-  rb2.To(kRemoteSsrc + 1);
+  rb2.SetMediaSsrc(kRemoteSsrc + 1);
 
-  rr.From(kSenderSsrc);
-  EXPECT_TRUE(rr.WithReportBlock(rb1));
-  EXPECT_TRUE(rr.WithReportBlock(rb2));
+  rr.SetSenderSsrc(kSenderSsrc);
+  EXPECT_TRUE(rr.AddReportBlock(rb1));
+  EXPECT_TRUE(rr.AddReportBlock(rb2));
 
-  BuildPacket();
-  ParsePacket();
+  rtc::Buffer raw = rr.Build();
+  ReceiverReport parsed;
+  EXPECT_TRUE(test::ParseSinglePacket(raw, &parsed));
 
-  EXPECT_EQ(kSenderSsrc, parsed().sender_ssrc());
-  EXPECT_EQ(2u, parsed().report_blocks().size());
-  EXPECT_EQ(kRemoteSsrc, parsed().report_blocks()[0].source_ssrc());
-  EXPECT_EQ(kRemoteSsrc + 1, parsed().report_blocks()[1].source_ssrc());
+  EXPECT_EQ(kSenderSsrc, parsed.sender_ssrc());
+  EXPECT_EQ(2u, parsed.report_blocks().size());
+  EXPECT_EQ(kRemoteSsrc, parsed.report_blocks()[0].source_ssrc());
+  EXPECT_EQ(kRemoteSsrc + 1, parsed.report_blocks()[1].source_ssrc());
 }
 
-TEST_F(RtcpPacketReceiverReportTest, WithTooManyReportBlocks) {
-  rr.From(kSenderSsrc);
+TEST(RtcpPacketReceiverReportTest, CreateWithTooManyReportBlocks) {
+  ReceiverReport rr;
+  rr.SetSenderSsrc(kSenderSsrc);
   const size_t kMaxReportBlocks = (1 << 5) - 1;
   ReportBlock rb;
   for (size_t i = 0; i < kMaxReportBlocks; ++i) {
-    rb.To(kRemoteSsrc + i);
-    EXPECT_TRUE(rr.WithReportBlock(rb));
+    rb.SetMediaSsrc(kRemoteSsrc + i);
+    EXPECT_TRUE(rr.AddReportBlock(rb));
   }
-  rb.To(kRemoteSsrc + kMaxReportBlocks);
-  EXPECT_FALSE(rr.WithReportBlock(rb));
+  rb.SetMediaSsrc(kRemoteSsrc + kMaxReportBlocks);
+  EXPECT_FALSE(rr.AddReportBlock(rb));
 }
 
-}  // namespace
 }  // namespace webrtc

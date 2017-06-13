@@ -10,7 +10,6 @@
 
 #include "webrtc/voice_engine/voe_video_sync_impl.h"
 
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/voice_engine/channel.h"
 #include "webrtc/voice_engine/include/voe_errors.h"
@@ -19,19 +18,13 @@
 namespace webrtc {
 
 VoEVideoSync* VoEVideoSync::GetInterface(VoiceEngine* voiceEngine) {
-#ifndef WEBRTC_VOICE_ENGINE_VIDEO_SYNC_API
-  return NULL;
-#else
   if (NULL == voiceEngine) {
     return NULL;
   }
   VoiceEngineImpl* s = static_cast<VoiceEngineImpl*>(voiceEngine);
   s->AddRef();
   return s;
-#endif
 }
-
-#ifdef WEBRTC_VOICE_ENGINE_VIDEO_SYNC_API
 
 VoEVideoSyncImpl::VoEVideoSyncImpl(voe::SharedData* shared) : _shared(shared) {
   WEBRTC_TRACE(kTraceMemory, kTraceVoice, VoEId(_shared->instance_id(), -1),
@@ -116,27 +109,9 @@ int VoEVideoSyncImpl::SetMinimumPlayoutDelay(int channel, int delayMs) {
   return channelPtr->SetMinimumPlayoutDelay(delayMs);
 }
 
-int VoEVideoSyncImpl::SetCurrentSyncOffset(int channel, int offsetMs)
-{
-    WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
-                 "SetCurrentSyncOffset(channel=%d, offsetMs=%d)",
-                 channel, offsetMs);
-    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
-    voe::Channel* channelPtr = ch.channel();
-    if (channelPtr == NULL)
-    {
-        _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
-            "SetCurrentSyncOffset() failed to locate channel");
-        return -1;
-    }
-    channelPtr->SetCurrentSyncOffset(offsetMs);
-    return 0;
-}
-
 int VoEVideoSyncImpl::GetDelayEstimate(int channel,
                                        int* jitter_buffer_delay_ms,
-                                       int* playout_buffer_delay_ms,
-                                       int* avsync_offset_ms) {
+                                       int* playout_buffer_delay_ms) {
   if (!_shared->statistics().Initialized()) {
     _shared->SetLastError(VE_NOT_INITED, kTraceError);
     return -1;
@@ -149,8 +124,7 @@ int VoEVideoSyncImpl::GetDelayEstimate(int channel,
     return -1;
   }
   if (!channelPtr->GetDelayEstimate(jitter_buffer_delay_ms,
-                                    playout_buffer_delay_ms,
-                                    avsync_offset_ms)) {
+                                    playout_buffer_delay_ms)) {
     return -1;
   }
   return 0;
@@ -203,7 +177,5 @@ int VoEVideoSyncImpl::GetLeastRequiredDelayMs(int channel) const {
   }
   return channel_ptr->LeastRequiredDelayMs();
 }
-
-#endif  // #ifdef WEBRTC_VOICE_ENGINE_VIDEO_SYNC_API
 
 }  // namespace webrtc

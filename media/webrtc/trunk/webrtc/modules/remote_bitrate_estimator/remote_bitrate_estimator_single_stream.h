@@ -12,11 +12,13 @@
 #define WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_REMOTE_BITRATE_ESTIMATOR_SINGLE_STREAM_H_
 
 #include <map>
+#include <memory>
 #include <vector>
 
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/base/rate_statistics.h"
 #include "webrtc/modules/remote_bitrate_estimator/aimd_rate_control.h"
 #include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
-#include "webrtc/modules/remote_bitrate_estimator/rate_statistics.h"
 #include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
 namespace webrtc {
@@ -29,37 +31,41 @@ class RemoteBitrateEstimatorSingleStream : public RemoteBitrateEstimator {
 
   void IncomingPacket(int64_t arrival_time_ms,
                       size_t payload_size,
-                      const RTPHeader& header,
-                      bool was_paced) override;
-  int32_t Process() override;
+                      const RTPHeader& header) override;
+  void Process() override;
   int64_t TimeUntilNextProcess() override;
   void OnRttUpdate(int64_t avg_rtt_ms, int64_t max_rtt_ms) override;
-  void RemoveStream(unsigned int ssrc) override;
-  bool LatestEstimate(std::vector<unsigned int>* ssrcs,
-                      unsigned int* bitrate_bps) const override;
-  bool GetStats(ReceiveBandwidthEstimatorStats* output) const override;
+  void RemoveStream(uint32_t ssrc) override;
+  bool LatestEstimate(std::vector<uint32_t>* ssrcs,
+                      uint32_t* bitrate_bps) const override;
   void SetMinBitrate(int min_bitrate_bps) override;
 
  private:
   struct Detector;
 
-  typedef std::map<unsigned int, Detector*> SsrcOveruseEstimatorMap;
+  typedef std::map<uint32_t, Detector*> SsrcOveruseEstimatorMap;
 
   // Triggers a new estimate calculation.
   void UpdateEstimate(int64_t time_now)
       EXCLUSIVE_LOCKS_REQUIRED(crit_sect_.get());
 
-  void GetSsrcs(std::vector<unsigned int>* ssrcs) const
+  void GetSsrcs(std::vector<uint32_t>* ssrcs) const
       SHARED_LOCKS_REQUIRED(crit_sect_.get());
+
+  // Returns |remote_rate_| if the pointed to object exists,
+  // otherwise creates it.
+  AimdRateControl* GetRemoteRate() EXCLUSIVE_LOCKS_REQUIRED(crit_sect_.get());
 
   Clock* clock_;
   SsrcOveruseEstimatorMap overuse_detectors_ GUARDED_BY(crit_sect_.get());
   RateStatistics incoming_bitrate_ GUARDED_BY(crit_sect_.get());
-  rtc::scoped_ptr<AimdRateControl> remote_rate_ GUARDED_BY(crit_sect_.get());
+  uint32_t last_valid_incoming_bitrate_ GUARDED_BY(crit_sect_.get());
+  std::unique_ptr<AimdRateControl> remote_rate_ GUARDED_BY(crit_sect_.get());
   RemoteBitrateObserver* observer_ GUARDED_BY(crit_sect_.get());
-  rtc::scoped_ptr<CriticalSectionWrapper> crit_sect_;
+  std::unique_ptr<CriticalSectionWrapper> crit_sect_;
   int64_t last_process_time_;
   int64_t process_interval_ms_ GUARDED_BY(crit_sect_.get());
+  bool uma_recorded_;
 
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(RemoteBitrateEstimatorSingleStream);
 };
