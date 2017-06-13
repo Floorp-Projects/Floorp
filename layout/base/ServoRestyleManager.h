@@ -128,7 +128,8 @@ private:
   bool ProcessPostTraversal(Element* aElement,
                             nsStyleContext* aParentContext,
                             ServoStyleSet* aStyleSet,
-                            nsStyleChangeList& aChangeList);
+                            nsStyleChangeList& aChangeList,
+                            nsChangeHint aChangesHandledForDescendants);
 
   struct TextPostTraversalState;
   bool ProcessPostTraversalForText(nsIContent* aTextNode,
