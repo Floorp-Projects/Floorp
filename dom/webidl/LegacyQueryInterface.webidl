@@ -82,7 +82,6 @@ Text implements LegacyQueryInterface;
 Touch implements LegacyQueryInterface;
 TouchList implements LegacyQueryInterface;
 TreeColumns implements LegacyQueryInterface;
-TreeContentView implements LegacyQueryInterface;
 TreeWalker implements LegacyQueryInterface;
 ValidityState implements LegacyQueryInterface;
 WebSocket implements LegacyQueryInterface;
