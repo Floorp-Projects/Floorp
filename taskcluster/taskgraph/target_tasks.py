@@ -54,7 +54,7 @@ def target_tasks_try_option_syntax(full_task_graph, parameters):
     parameters['message'] and, for context, the full task graph."""
     options = try_option_syntax.TryOptionSyntax(parameters['message'], full_task_graph)
     target_tasks_labels = [t.label for t in full_task_graph.tasks.itervalues()
-                           if options.task_matches(t.attributes)]
+                           if options.task_matches(t)]
 
     attributes = {
         k: getattr(options, k) for k in [
