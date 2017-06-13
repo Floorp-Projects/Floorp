@@ -197,6 +197,18 @@ PerformanceCounter()
 {
   LARGE_INTEGER pc;
   ::QueryPerformanceCounter(&pc);
+
+  if (!sHasStableTSC) {
+    // This is a simple go-backward protection for faulty hardware
+    AutoCriticalSection lock(&sTimeStampLock);
+
+    static decltype(LARGE_INTEGER::QuadPart) last;
+    if (last > pc.QuadPart) {
+      return last * 1000ULL;
+    }
+    last = pc.QuadPart;
+  }
+
   return pc.QuadPart * 1000ULL;
 }
 
@@ -452,10 +464,12 @@ HasStableTSC()
   } cpuInfo;
 
   __cpuid(cpuInfo.regs, 0);
-  // Only allow Intel CPUs for now
+  // Only allow Intel or AMD CPUs for now.
   // The order of the registers is reg[1], reg[3], reg[2].  We just adjust the
   // string so that we can compare in one go.
   if (_strnicmp(cpuInfo.cpuString, "GenuntelineI",
+                sizeof(cpuInfo.cpuString)) &&
+      _strnicmp(cpuInfo.cpuString, "AuthcAMDenti",
                 sizeof(cpuInfo.cpuString))) {
     return false;
   }
@@ -465,12 +479,14 @@ HasStableTSC()
   // detect if the Advanced Power Management feature is supported
   __cpuid(regs, 0x80000000);
   if (regs[0] < 0x80000007) {
+    // XXX should we return true here?  If there is no APM there may be
+    // no way how TSC can run out of sync among cores.
     return false;
   }
 
   __cpuid(regs, 0x80000007);
   // if bit 8 is set than TSC will run at a constant rate
-  // in all ACPI P-state, C-states and T-states
+  // in all ACPI P-states, C-states and T-states
   return regs[3] & (1 << 8);
 }
 
