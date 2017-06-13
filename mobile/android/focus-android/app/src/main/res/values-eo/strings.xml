@@ -13,9 +13,17 @@
   <string name="menu_about">Pri</string>
   <string name="menu_help">Helpo</string>
   <string name="menu_rights">Viaj rajtoj</string>
+  <string name="menu_trackers_blocked_title">Blokitaj spuriloj</string>
+  <string name="share_dialog_title">Dividi per</string>
+  <string name="notification_erase_text">Forviŝi retuman historion</string>
+  <string name="shortcut_erase_short_label">Forviŝi</string>
+  <string name="shortcut_erase_long_label">Forviŝi retuman historion</string>
+  <string name="text_selection_search_action">Serĉi private</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s igas vin reganto.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Uzu &#285;in kiel privatan retumilon:\n  "<ul>"\n    "<li>Ser&#265;i kaj retumi rekte en la programo</li>"\n    "<li>Bloki spurilojn (a&#365; &#349;an&#285;i agordojn por permesi spurilojn)</li>"\n    "<li>Forigi kuketojn kaj anka&#365; retuman kaj ser&#265;an historion</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s estas farita de Mozilla. Nia misio estas stimuli sanan kaj malfermitan interreton.<br/>\n<a href="%2$s">Pli da informo</a></p>]]></string>
   <string name="preference_category_search">Serĉi</string>
   <string name="preference_search_engine_default">Norma</string>
+  <string name="preference_language">Lingvo</string>
+  <string name="preference_language_systemdefault">Sistema normo</string>
   <string name="preference_dialog_title_search_engine">Norma serĉilo</string>
   <string name="preference_category_privacy">Privateco</string>
   <string name="preference_privacy_block_ads">Bloki reklamajn spurilojn</string>
@@ -23,6 +31,8 @@
   <string name="preference_privacy_block_social">Bloki sociajn spurilojn</string>
   <string name="preference_privacy_block_content">Bloki spurilojn en aliaj enhavoj</string>
   <string name="preference_privacy_block_content_summary">Tio povas misfunkciigi kelkajn filmetojn kaj retpaĝojn</string>
+  <string name="preference_privacy_secure_mode">Kaŝreĝimo</string>
+  <string name="preference_privacy_secure_mode_summary">Malŝaltu kaŝreĝimon por fari ekrankopiojn kaj por vidi retejojn, kiujn vi vizitis per %1$s, en via listo de ĵusaj programoj</string>
   <string name="preference_category_performance">Efikeco</string>
   <string name="preference_performance_block_webfonts">Bloki retajn tiparojn</string>
   <string name="preference_performance_block_webfonts_summary">Tio povus malaperigi emblemojn aŭ bildojn</string>
@@ -43,6 +53,8 @@
   <string name="content_description_reload">Reŝargi retejon</string>
   <string name="content_description_back">Iri reen</string>
   <string name="content_description_stop">Haltigi ŝargadon de retejo</string>
+  <string name="content_description_customtab_exit">Reen al antaŭa programo</string>
+  <string name="content_description_blocking_switch">Bloki spurilojn</string>
   <string name="context_menu_paste_go">Alglui kaj iri</string>
   <string name="your_rights">Viaj rajtoj</string>
   <string name="external_app_prompt_title">Malfermi ligilon en alia programo</string>
@@ -67,4 +79,19 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Tio povus esti problemo kun la agordoj de la servilo, a&#365; iu kiu klopodas trompe &#349;ajnigi esti tiu servilo.</li>"\n  "<li>Se vi konekti&#285;is al tiu servilo en la pasinto, la eraro povas esti momenta, kaj vi povos klopodi denove poste.</li>\n</ul>]]></string>
   <string name="error_generic_title">Fuŝ\'</string>
   <string name="error_generic_message">Ni ne povas ŝargi tiun ĉi paĝon pro iu kialo.</string>
+  <string name="contextmenu_link_share">Dividi ligilon</string>
+  <string name="contextmenu_link_copy">Kopii adreson de ligilo</string>
+  <string name="contextmenu_image_share">Dividi bildon</string>
+  <string name="contextmenu_image_copy">Kopii adreson de bildo</string>
+  <string name="contextmenu_image_save">Konservi bildon</string>
+  <string name="contextmenu_image_warning"><![CDATA["Konservitaj kaj dividitaj bildoj "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne estos forigitaj</b>" kiam vi viŝas la historion de %1$s."]]></string>
+  <string name="firstrun_tracking_title">Retumi kvazaŭ neniu vin vidus</string>
+  <string name="firstrun_tracking_text">Aŭtomate bloki enretajn spurilojn dum retumo. Poste forigi vizititajn paĝojn kaj kuketojn per tuŝeto sur la rubuja emblemo en la programo aŭ en viaj sciigoj.</string>
+  <string name="firstrun_defaultbrowser_title">Plibonigi vian privatecon</string>
+  <string name="firstrun_defaultbrowser_text">Agordu %1$s kiel via norma retumilo kaj havu la avantaĝojn de privata retumo kiam vi iras al la reto el aliaj programoj de Android.</string>
+  <string name="firstrun_breaking_title">Se pro blokado io malfunkcias</string>
+  <string name="firstrun_breaking_text">Kiam pro blokado de enretaj spuriloj iu retpaĝo aspektas difektite, malaktivigu blokadon per tuŝeto sur la ila menuo.</string>
+  <string name="firstrun_close_button">Bone, mi komprenas!</string>
+  <string name="firstrun_skip_button">Ignori</string>
+  <string name="firstrun_next_button">Sekva</string>
 </resources>
