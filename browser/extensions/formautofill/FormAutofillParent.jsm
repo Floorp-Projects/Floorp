@@ -280,7 +280,25 @@ FormAutofillParent.prototype = {
 
     if (address.guid) {
       if (!this.profileStorage.addresses.mergeIfPossible(address.guid, address.record)) {
-        // TODO: Show update doorhanger(bug 1303513) and set probe(bug 990200)
+        FormAutofillDoorhanger.show(target, "update").then((state) => {
+          let changedGUIDs = this.profileStorage.addresses.mergeToStorage(address.record);
+          switch (state) {
+            case "create":
+              if (!changedGUIDs.length) {
+                changedGUIDs.push(this.profileStorage.addresses.add(address.record));
+              }
+              break;
+            case "update":
+              if (!changedGUIDs.length) {
+                this.profileStorage.addresses.update(address.guid, address.record);
+                changedGUIDs.push(address.guid);
+              } else {
+                this.profileStorage.addresses.remove(address.guid);
+              }
+              break;
+          }
+          changedGUIDs.forEach(guid => this.profileStorage.addresses.notifyUsed(guid));
+        });
         return;
       }
       this.profileStorage.addresses.notifyUsed(address.guid);
