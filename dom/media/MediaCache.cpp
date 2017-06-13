@@ -2243,35 +2243,20 @@ MediaCacheStream::SetPlaybackRate(uint32_t aBytesPerSecond)
 }
 
 nsresult
-MediaCacheStream::SeekInternal(int32_t aWhence, int64_t aOffset)
+MediaCacheStream::SeekInternal(int64_t aOffset)
 {
-  mMediaCache->GetReentrantMonitor().AssertCurrentThreadIn();
-
-  if (mClosed)
-    return NS_ERROR_FAILURE;
-
-  int64_t oldOffset = mStreamOffset;
-  int64_t newOffset = mStreamOffset;
-  switch (aWhence) {
-  case PR_SEEK_END:
-    if (mStreamLength < 0)
-      return NS_ERROR_FAILURE;
-    newOffset = mStreamLength + aOffset;
-    break;
-  case PR_SEEK_CUR:
-    newOffset += aOffset;
-    break;
-  case PR_SEEK_SET:
-    newOffset = aOffset;
-    break;
-  default:
-    NS_ERROR("Unknown whence");
+  if (aOffset < 0) {
     return NS_ERROR_FAILURE;
   }
 
-  if (newOffset < 0)
+  mMediaCache->GetReentrantMonitor().AssertCurrentThreadIn();
+
+  if (mClosed) {
     return NS_ERROR_FAILURE;
-  mStreamOffset = newOffset;
+  }
+
+  int64_t oldOffset = mStreamOffset;
+  mStreamOffset = aOffset;
 
   LOG("Stream %p Seek to %" PRId64, this, mStreamOffset);
   mMediaCache->NoteSeek(this, oldOffset);
@@ -2417,7 +2402,7 @@ MediaCacheStream::ReadAt(int64_t aOffset, char* aBuffer,
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
-  nsresult rv = SeekInternal(nsISeekableStream::NS_SEEK_SET, aOffset);
+  nsresult rv = SeekInternal(aOffset);
   if (NS_FAILED(rv)) return rv;
   return ReadInternal(aBuffer, aCount, aBytes);
 }
