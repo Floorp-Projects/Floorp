@@ -258,6 +258,30 @@ TEST_P(TlsConnectGeneric, ConnectWithExpiredTicketAtServer) {
   CheckConnected();
 }
 
+TEST_P(TlsConnectGeneric, ConnectResumeCorruptTicket) {
+  // This causes a ticket resumption.
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  Connect();
+  SendReceive();
+
+  Reset();
+  static const uint8_t kHmacKey1Buf[32] = {0};
+  static const DataBuffer kHmacKey1(kHmacKey1Buf, sizeof(kHmacKey1Buf));
+
+  SECItem key_item = {siBuffer, const_cast<uint8_t*>(kHmacKey1Buf),
+                      sizeof(kHmacKey1Buf)};
+
+  ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+  PK11SymKey* hmac_key =
+      PK11_ImportSymKey(slot.get(), CKM_SHA256_HMAC, PK11_OriginUnwrap,
+                        CKA_SIGN, &key_item, nullptr);
+  ASSERT_NE(nullptr, hmac_key);
+  SSLInt_SetSelfEncryptMacKey(hmac_key);
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  ConnectExpectAlert(server_, illegal_parameter);
+  server_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
+}
+
 // This callback switches out the "server" cert used on the server with
 // the "client" certificate, which should be the same type.
 static int32_t SwitchCertificates(TlsAgent* agent, const SECItem* srvNameArr,
@@ -627,7 +651,7 @@ TEST_F(TlsConnectTest, TestTls13ResumptionDuplicateNST) {
   Connect();
 
   // Clear the session ticket keys to invalidate the old ticket.
-  SSLInt_ClearSessionTicketKey();
+  SSLInt_ClearSelfEncryptKey();
   SSLInt_SendNewSessionTicket(server_->ssl_fd());
 
   SendReceive();  // Need to read so that we absorb the session tickets.

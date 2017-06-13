@@ -91,8 +91,6 @@ LOCAL   bail
         movdqu  [rsp + 1*16], xmm7
         movdqu  [rsp + 2*16], xmm8
 
-        lea     ctx, [48+ctx]
-
 loop8:
         cmp     inputLen, 8*16
         jb      loop1
@@ -555,9 +553,7 @@ LOCAL   bail
         movdqu  [rsp + 1*16], xmm7
         movdqu  [rsp + 2*16], xmm8
 
-        lea     ctx, [48+ctx]
-
-        movdqu  xmm0, [-32+ctx]
+        movdqu  xmm0, [256+ctx]
 
         movdqu  xmm2, [0*16 + ctx]
         movdqu  xmm3, [1*16 + ctx]
@@ -597,7 +593,7 @@ loop1:
         jmp loop1
 
 bail:
-        movdqu  [-32+ctx], xmm0
+        movdqu  [256+ctx], xmm0
 
         xor rax, rax
 
@@ -624,8 +620,6 @@ LOCAL   bail
         movdqu  [rsp + 0*16], xmm6
         movdqu  [rsp + 1*16], xmm7
         movdqu  [rsp + 2*16], xmm8
-
-        lea     ctx, [48+ctx]
 
 loop8:
         cmp     inputLen, 8*16
@@ -657,7 +651,7 @@ loop8:
             ENDM
         aes_dec_last_rnd rnds
 
-        movdqu  xmm8, [-32 + ctx]
+        movdqu  xmm8, [256 + ctx]
         pxor    xmm0, xmm8
         movdqu  xmm8, [0*16 + input]
         pxor    xmm1, xmm8
@@ -683,7 +677,7 @@ loop8:
         movdqu  [5*16 + output], xmm5
         movdqu  [6*16 + output], xmm6
         movdqu  [7*16 + output], xmm7
-        movdqu  [-32 + ctx], xmm8
+        movdqu  [256 + ctx], xmm8
 
         lea input, [8*16 + input]
         lea output, [8*16 + output]
@@ -691,7 +685,7 @@ loop8:
         jmp loop8
 dec1:
 
-        movdqu  xmm3, [-32 + ctx]
+        movdqu  xmm3, [256 + ctx]
 
 loop1:
         cmp     inputLen, 1*16
@@ -721,7 +715,7 @@ loop1:
         jmp loop1
 
 bail:
-        movdqu  [-32 + ctx], xmm3
+        movdqu  [256 + ctx], xmm3
         xor rax, rax
 
         movdqu  xmm6, [rsp + 0*16]
@@ -773,7 +767,6 @@ LOCAL   bail
 
         mov     ctrCtx, ctx
         mov     ctx, [8+ctrCtx]
-        lea     ctx, [48+ctx]
 
         sub     rsp, 3*16
         movdqu  [rsp + 0*16], xmm6
