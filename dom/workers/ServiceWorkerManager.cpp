@@ -1641,17 +1641,16 @@ ServiceWorkerManager::GetOrCreateJobQueue(const nsACString& aKey,
 {
   MOZ_ASSERT(!aKey.IsEmpty());
   ServiceWorkerManager::RegistrationDataPerPrincipal* data;
+  // XXX we could use LookupForAdd here to avoid a hashtable lookup, except that
+  // leads to a false positive assertion, see bug 1370674 comment 7.
   if (!mRegistrationInfos.Get(aKey, &data)) {
     data = new RegistrationDataPerPrincipal();
     mRegistrationInfos.Put(aKey, data);
   }
 
-  RefPtr<ServiceWorkerJobQueue> queue;
-  if (!data->mJobQueues.Get(aScope, getter_AddRefs(queue))) {
-    RefPtr<ServiceWorkerJobQueue> newQueue = new ServiceWorkerJobQueue();
-    queue = newQueue;
-    data->mJobQueues.Put(aScope, newQueue.forget());
-  }
+  RefPtr<ServiceWorkerJobQueue> queue =
+    data->mJobQueues.LookupForAdd(aScope).OrInsert(
+      []() { return new ServiceWorkerJobQueue(); });
 
   return queue.forget();
 }
@@ -2245,11 +2244,9 @@ ServiceWorkerManager::AddScopeAndRegistration(const nsACString& aScope,
 
   MOZ_ASSERT(!scopeKey.IsEmpty());
 
-  RegistrationDataPerPrincipal* data;
-  if (!swm->mRegistrationInfos.Get(scopeKey, &data)) {
-    data = new RegistrationDataPerPrincipal();
-    swm->mRegistrationInfos.Put(scopeKey, data);
-  }
+  RegistrationDataPerPrincipal* data =
+    swm->mRegistrationInfos.LookupForAdd(scopeKey).OrInsert(
+      []() { return new RegistrationDataPerPrincipal(); });
 
   for (uint32_t i = 0; i < data->mOrderedScopes.Length(); ++i) {
     const nsCString& current = data->mOrderedScopes[i];
@@ -2363,9 +2360,7 @@ ServiceWorkerManager::RemoveScopeAndRegistration(ServiceWorkerRegistrationInfo* 
   }
 
   RefPtr<ServiceWorkerRegistrationInfo> info;
-  data->mInfos.Get(aRegistration->mScope, getter_AddRefs(info));
-
-  data->mInfos.Remove(aRegistration->mScope);
+  data->mInfos.Remove(aRegistration->mScope, getter_AddRefs(info));
   data->mOrderedScopes.RemoveElement(aRegistration->mScope);
   swm->NotifyListenersOnUnregister(info);
 
@@ -2376,14 +2371,12 @@ ServiceWorkerManager::RemoveScopeAndRegistration(ServiceWorkerRegistrationInfo* 
 void
 ServiceWorkerManager::MaybeRemoveRegistrationInfo(const nsACString& aScopeKey)
 {
-  RegistrationDataPerPrincipal* data;
-  if (!mRegistrationInfos.Get(aScopeKey, &data)) {
-    return;
-  }
-
-  if (data->mOrderedScopes.IsEmpty() && data->mJobQueues.Count() == 0) {
-    mRegistrationInfos.Remove(aScopeKey);
-  }
+  mRegistrationInfos.LookupRemoveIf(aScopeKey,
+    [] (RegistrationDataPerPrincipal* aData) {
+      bool remove = aData->mOrderedScopes.IsEmpty() &&
+                    aData->mJobQueues.Count() == 0;
+      return remove;
+    });
 }
 
 void
