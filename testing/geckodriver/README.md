@@ -39,13 +39,13 @@ and [specification](https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+i
 problems in our
 [issue tracker](https://github.com/mozilla/geckodriver/issues).
 
-Support is best in Firefox 52.0.3 and onwards,
+Support is best in Firefox 53 and greater,
 although generally the more recent the Firefox version,
 the better the experience as they have more bug fixes and features.
 Some features will only be available in the most recent Firefox versions,
 and we strongly advise using the [latest Firefox Nightly](https://nightly.mozilla.org/) with geckodriver.
-Since Windows XP support in Firefox will be dropped with Firefox 53,
-we do not support this platform.
+Since Windows XP support was dropped with Firefox 53,
+geckodriver is not supported on this platform.
 
 ## WebDriver capabilities
 

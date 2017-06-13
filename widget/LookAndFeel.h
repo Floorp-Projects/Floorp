@@ -537,6 +537,18 @@ public:
     return result;
   }
 
+  static nscolor GetColorUsingStandins(ColorID aID,
+                                       nscolor aDefault = NS_RGB(0, 0, 0))
+  {
+    nscolor result = NS_RGB(0, 0, 0);
+    if (NS_FAILED(GetColor(aID,
+                           true, // aUseStandinsForNativeColors
+                           &result))) {
+      return aDefault;
+    }
+    return result;
+  }
+
   static int32_t GetInt(IntID aID, int32_t aDefault = 0)
   {
     int32_t result;

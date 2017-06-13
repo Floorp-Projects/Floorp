@@ -16,6 +16,7 @@
 #include "PlatformDecoderModule.h"
 #include "ImageContainer.h"
 #include "mozilla/Span.h"
+#include "ReorderQueue.h"
 
 namespace mozilla {
 
@@ -128,6 +129,8 @@ protected:
   void ActorDestroy(ActorDestroyReason aWhy) override;
   bool SendBufferToCDM(uint32_t aSizeInBytes);
 
+  void ReorderAndReturnOutput(RefPtr<VideoData>&& aFrame);
+
   void RejectPromise(uint32_t aPromiseId,
                      nsresult aError,
                      const nsCString& aErrorMessage);
@@ -172,6 +175,15 @@ protected:
   bool mIsShutdown = false;
   bool mVideoDecoderInitialized = false;
   bool mActorDestroyed = false;
+
+  // The H.264 decoder in Widevine CDM versions 970 and later output in decode
+  // order rather than presentation order, so we reorder in presentation order
+  // before presenting. mMaxRefFrames is non-zero if we have an initialized
+  // decoder and we are decoding H.264. If so, it stores the maximum length of
+  // the reorder queue that we need. Note we may have multiple decoders for the
+  // life time of this object, but never more than one active at once.
+  uint32_t mMaxRefFrames = 0;
+  ReorderQueue mReorderQueue;
 };
 
 } // namespace gmp

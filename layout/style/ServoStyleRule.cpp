@@ -262,14 +262,14 @@ ServoStyleRule::GetSelectorCount()
 nsresult
 ServoStyleRule::GetSelectorText(uint32_t aSelectorIndex, nsAString& aText)
 {
-  Servo_StyleRule_GetSelectorTextFromIndex(mRawRule, aSelectorIndex, &aText);
+  Servo_StyleRule_GetSelectorTextAtIndex(mRawRule, aSelectorIndex, &aText);
   return NS_OK;
 }
 
 nsresult
 ServoStyleRule::GetSpecificity(uint32_t aSelectorIndex, uint64_t* aSpecificity)
 {
-  // TODO Bug 1370501
+  Servo_StyleRule_GetSpecificityAtIndex(mRawRule, aSelectorIndex, aSpecificity);
   return NS_OK;
 }
 

@@ -145,6 +145,18 @@ Object.defineProperty(GeckoDriver.prototype, "a11yChecks", {
   }
 });
 
+Object.defineProperty(GeckoDriver.prototype, "currentURL", {
+  get: function () {
+    switch (this.context) {
+      case Context.CHROME:
+        return this.getCurrentWindow().location.href;
+
+      case Context.CONTENT:
+        return this.curBrowser.currentURL;
+    }
+  }
+});
+
 Object.defineProperty(GeckoDriver.prototype, "proxy", {
   get: function () {
     return this.capabilities.get("proxy");
@@ -194,7 +206,7 @@ Object.defineProperty(GeckoDriver.prototype, "windowHandles", {
 });
 
 Object.defineProperty(GeckoDriver.prototype, "chromeWindowHandles", {
-  get : function () {
+  get: function () {
     let hs = [];
     let winEn = Services.wm.getEnumerator(null);
 
@@ -968,21 +980,10 @@ GeckoDriver.prototype.get = function* (cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.getCurrentUrl = function (cmd) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  switch (this.context) {
-    case Context.CHROME:
-      return win.location.href;
-
-    case Context.CONTENT:
-      if (this.curBrowser.contentBrowser) {
-        return this.curBrowser.contentBrowser.currentURI.spec;
-      } else {
-        throw new NoSuchWindowError(
-          "Not a browser window, or no tab currently selected");
-      }
-  }
+  return this.currentURL;
 };
 
 /**
@@ -1059,19 +1060,15 @@ GeckoDriver.prototype.getPageSource = function* (cmd, resp) {
  */
 GeckoDriver.prototype.goBack = function* (cmd, resp) {
   assert.content(this.context);
-  assert.window(this.getCurrentWindow());
+  assert.contentBrowser(this.curBrowser);
   assert.noUserPrompt(this.dialog);
 
-  if (!this.curBrowser.tab) {
-    // Navigation does not work for non-browser windows
-    return;
-  }
-
+  // If there is no history, just return
   if (!this.curBrowser.contentBrowser.webNavigation.canGoBack) {
     return;
   }
 
-  let currentURL = this.getCurrentUrl();
+  let currentURL = this.currentURL;
   let goBack = this.listener.goBack({pageTimeout: this.timeouts.pageLoad});
 
   // If a remoteness update interrupts our page load, this will never return
@@ -1106,19 +1103,15 @@ GeckoDriver.prototype.goBack = function* (cmd, resp) {
  */
 GeckoDriver.prototype.goForward = function* (cmd, resp) {
   assert.content(this.context);
-  assert.window(this.getCurrentWindow());
+  assert.contentBrowser(this.curBrowser);
   assert.noUserPrompt(this.dialog);
 
-  if (!this.curBrowser.tab) {
-    // Navigation does not work for non-browser windows
-    return;
-  }
-
+  // If there is no history, just return
   if (!this.curBrowser.contentBrowser.webNavigation.canGoForward) {
     return;
   }
 
-  let currentURL = this.getCurrentUrl();
+  let currentURL = this.currentURL;
   let goForward = this.listener.goForward({pageTimeout: this.timeouts.pageLoad});
 
   // If a remoteness update interrupts our page load, this will never return
