@@ -369,27 +369,11 @@ GMPAddon.prototype = {
  * into the specified location. (Which typically leties per platform)
  * @param zipPath The path on disk of the zip file to extract
  */
-function GMPExtractor(zipPath, installToDirPath) {
+function GMPExtractor(zipPath, relativeInstallPath) {
     this.zipPath = zipPath;
-    this.installToDirPath = installToDirPath;
+    this.relativeInstallPath = relativeInstallPath;
 }
 GMPExtractor.prototype = {
-  /**
-   * Obtains a list of all the entries in a zipfile in the format of *.*.
-   * This also includes files inside directories.
-   *
-   * @param zipReader the nsIZipReader to check
-   * @return An array of string name entries which can be used
-   *         in nsIZipReader.extract
-   */
-  _getZipEntries(zipReader) {
-    let entries = [];
-    let enumerator = zipReader.findEntries("*.*");
-    while (enumerator.hasMore()) {
-      entries.push(enumerator.getNext());
-    }
-    return entries;
-  },
   /**
    * Installs the this.zipPath contents into the directory used to store GMP
    * addons for the current platform.
@@ -398,70 +382,26 @@ GMPExtractor.prototype = {
    *         See GMPInstallManager.installAddon for resolve/rejected info
    */
   install() {
-    try {
-      let log = getScopedLogger("GMPExtractor.install");
-      this._deferred = Promise.defer();
-      log.info("Installing " + this.zipPath + "...");
-      // Get the input zip file
-      let zipFile = Cc["@mozilla.org/file/local;1"].
-                    createInstance(Ci.nsIFile);
-      zipFile.initWithPath(this.zipPath);
-
-      // Initialize a zipReader and obtain the entries
-      var zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].
-                      createInstance(Ci.nsIZipReader);
-      zipReader.open(zipFile)
-      let entries = this._getZipEntries(zipReader);
-      let extractedPaths = [];
-
-      let destDir = Cc["@mozilla.org/file/local;1"].
-                    createInstance(Ci.nsILocalFile);
-      destDir.initWithPath(this.installToDirPath);
-      // Make sure the destination exists
-      if (!destDir.exists()) {
-        destDir.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0755", 8));
+    this._deferred = Promise.defer();
+    let deferredPromise = this._deferred;
+    let {zipPath, relativeInstallPath} = this;
+    let worker =
+      new ChromeWorker("resource://gre/modules/GMPExtractorWorker.js");
+    worker.onmessage = function(msg) {
+      let log = getScopedLogger("GMPExtractor");
+      worker.terminate();
+      if (msg.data.result != "success") {
+        log.error("Failed to extract zip file: " + zipPath);
+        return deferredPromise.reject({
+          target: this,
+          status: msg.data.exception,
+          type: "exception"
+        });
       }
-
-      // Extract each of the entries
-      entries.forEach(entry => {
-        // We don't need these types of files
-        if (entry.includes("__MACOSX") ||
-            entry == "_metadata/verified_contents.json" ||
-            entry == "imgs/icon-128x128.png") {
-          return;
-        }
-        let outFile = destDir.clone();
-        // Do not extract into directories. Extract all files to the same
-        // directory. DO NOT use |OS.Path.basename()| here, as in Windows it
-        // does not work properly with forward slashes (which we must use here).
-        let outBaseName = entry.slice(entry.lastIndexOf("/") + 1);
-        outFile.appendRelativePath(outBaseName);
-
-        zipReader.extract(entry, outFile);
-        extractedPaths.push(outFile.path);
-        // Ensure files are writable and executable. Otherwise we may be unable to
-        // execute or uninstall them.
-        outFile.permissions |= parseInt("0700", 8);
-        log.info(entry + " was successfully extracted to: " +
-            outFile.path);
-      });
-      zipReader.close();
-      if (!GMPInstallManager.overrideLeaveDownloadedZip) {
-        zipFile.remove(false);
-      }
-
-      log.info(this.zipPath + " was installed successfully");
-      this._deferred.resolve(extractedPaths);
-    } catch (e) {
-      if (zipReader) {
-        zipReader.close();
-      }
-      this._deferred.reject({
-        target: this,
-        status: e,
-        type: "exception"
-      });
+      log.info("Successfully extracted zip file: " + zipPath);
+      return deferredPromise.resolve(msg.data.extractedPaths);
     }
+    worker.postMessage({zipPath, relativeInstallPath});
     return this._deferred.promise;
   }
 };
@@ -496,11 +436,10 @@ GMPDownloader.prototype = {
     }
 
     return ProductAddonChecker.downloadAddon(gmpAddon).then((zipPath) => {
-      let path = OS.Path.join(OS.Constants.Path.profileDir,
-                              gmpAddon.id,
-                              gmpAddon.version);
-      log.info("install to directory path: " + path);
-      let gmpInstaller = new GMPExtractor(zipPath, path);
+      let relativePath = OS.Path.join(gmpAddon.id,
+                                      gmpAddon.version);
+      log.info("install to directory path: " + relativePath);
+      let gmpInstaller = new GMPExtractor(zipPath, relativePath);
       let installPromise = gmpInstaller.install();
       return installPromise.then(extractedPaths => {
         // Success, set the prefs
