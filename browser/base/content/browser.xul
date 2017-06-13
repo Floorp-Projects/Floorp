@@ -102,9 +102,9 @@
                 hidden="true"
                 oncommand="gBrowser.openNonRemoteWindow(TabContextMenu.contextTab);"/>
 #endif
-      <menuseparator id="context_sendTabToDevice_separator" hidden="true"/>
+      <menuseparator id="context_sendTabToDevice_separator"/>
       <menu id="context_sendTabToDevice" label="&sendTabToDevice.label;"
-            accesskey="&sendTabToDevice.accesskey;" hidden="true">
+            accesskey="&sendTabToDevice.accesskey;">
         <menupopup id="context_sendTabToDevicePopupMenu"
                    onpopupshowing="gSync.populateSendTabToDevicesMenu(event.target, TabContextMenu.contextTab.linkedBrowser.currentURI.spec, TabContextMenu.contextTab.linkedBrowser.contentTitle);"/>
       </menu>
@@ -493,6 +493,10 @@
             <toolbarbutton id="page-action-no-devices-button"
                            class="subviewbutton"
                            label="&sendToDevice.noDevices.label;"
+                           disabled="true"/>
+            <toolbarbutton id="page-action-sync-not-ready-button"
+                           class="subviewbutton"
+                           label="&sendToDevice.syncNotReady.label;"
                            disabled="true"/>
           </vbox>
         </panelview>

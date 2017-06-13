@@ -88,10 +88,10 @@ function messages(state = new MessageState(), action, filtersState, prefsState) 
       return state.withMutations(function (record) {
         // Add the new message with a reference to the parent group.
         let parentGroups = getParentGroups(currentGroup, groupsById);
-        const addedMessage = newMessage.withMutations(function (message) {
-          message.set("groupId", currentGroup);
-          message.set("indent", parentGroups.length);
-        });
+        newMessage.groupId = currentGroup;
+        newMessage.indent = parentGroups.length;
+
+        const addedMessage = Object.freeze(newMessage);
         record.set(
           "messagesById",
           messagesById.set(newMessage.id, addedMessage)

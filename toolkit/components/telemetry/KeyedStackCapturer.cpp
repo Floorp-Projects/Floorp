@@ -12,6 +12,8 @@
 
 namespace {
 
+#if defined(MOZ_GECKO_PROFILER)
+
 /** Defines the size of the keyed stack dictionary. */
 const uint8_t kMaxKeyLength = 50;
 
@@ -159,6 +161,7 @@ KeyedStackCapturer::Clear()
   mStackInfos.Clear();
   mStacks.Clear();
 }
+#endif
 
 } // namespace Telemetry
 } // namespace mozilla

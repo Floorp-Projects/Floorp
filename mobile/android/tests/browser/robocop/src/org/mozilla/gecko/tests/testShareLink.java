@@ -40,12 +40,8 @@ public class testShareLink extends AboutHomeTest {
         verifyUrlBarTitle(url); // Waiting for page title to ensure the page is loaded
 
         selectMenuItem(mStringHelper.SHARE_LABEL);
-        if (Build.VERSION.SDK_INT >= 14) {
-            // Check for our own sync in the submenu.
-            waitForText("Sync$");
-        } else {
-            waitForText("Share via");
-        }
+        // Check for our own sync in the submenu.
+        waitForText("Sync$");
 
         // Get list of current available share activities and verify them
         shareOptions = getShareOptions();
@@ -223,11 +219,7 @@ public class testShareLink extends AboutHomeTest {
     }
 
     public ArrayList<String> getShareOptionsList() {
-        if (Build.VERSION.SDK_INT >= 14) {
-            return getShareSubMenuOption();
-        } else {
-            return getSharePopupOption();
-        }
+        return getShareSubMenuOption();
     }
 
     private boolean optionDisplayed(String shareOption, ArrayList<String> displayedOptions) {

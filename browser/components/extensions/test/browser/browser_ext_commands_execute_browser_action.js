@@ -111,12 +111,12 @@ add_task(async function test_execute_browser_action_without_popup() {
 add_task(async function test_execute_browser_action_in_hamburger_menu_with_popup() {
   await testExecuteBrowserActionWithOptions({
     withPopup: true,
-    inArea: CustomizableUI.AREA_PANEL,
+    inArea: getCustomizableUIPanelID(),
   });
 });
 
 add_task(async function test_execute_browser_action_in_hamburger_menu_without_popup() {
   await testExecuteBrowserActionWithOptions({
-    inArea: CustomizableUI.AREA_PANEL,
+    inArea: getCustomizableUIPanelID(),
   });
 });

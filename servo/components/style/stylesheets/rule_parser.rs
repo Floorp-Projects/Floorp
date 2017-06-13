@@ -30,6 +30,7 @@ use stylesheets::keyframes_rule::parse_keyframe_list;
 use stylesheets::loader::NoOpLoader;
 use stylesheets::stylesheet::{Namespaces, Stylesheet};
 use stylesheets::supports_rule::SupportsCondition;
+use stylesheets::viewport_rule;
 use values::CustomIdent;
 use values::KeyframesName;
 use values::specified::url::SpecifiedUrl;
@@ -179,7 +180,7 @@ impl<'a, 'i> AtRuleParser<'i> for TopLevelRuleParser<'a> {
                             media: media,
                             shared_lock: self.shared_lock.clone(),
                             origin: self.context.stylesheet_origin,
-                            url_data: self.context.url_data.clone(),
+                            url_data: RwLock::new(self.context.url_data.clone()),
                             namespaces: RwLock::new(Namespaces::default()),
                             dirty_on_viewport_size_change: AtomicBool::new(false),
                             disabled: AtomicBool::new(false),
@@ -325,17 +326,6 @@ impl<'a, 'b> NestedRuleParser<'a, 'b> {
     }
 }
 
-#[cfg(feature = "servo")]
-fn is_viewport_enabled() -> bool {
-    use servo_config::prefs::PREFS;
-    PREFS.get("layout.viewport.enabled").as_boolean().unwrap_or(false)
-}
-
-#[cfg(not(feature = "servo"))]
-fn is_viewport_enabled() -> bool {
-    false // Gecko doesn't support @viewport.
-}
-
 impl<'a, 'b, 'i> AtRuleParser<'i> for NestedRuleParser<'a, 'b> {
     type Prelude = AtRulePrelude;
     type AtRule = CssRule;
@@ -380,7 +370,7 @@ impl<'a, 'b, 'i> AtRuleParser<'i> for NestedRuleParser<'a, 'b> {
                 Ok(AtRuleType::WithBlock(AtRulePrelude::CounterStyle(name)))
             },
             "viewport" => {
-                if is_viewport_enabled() {
+                if viewport_rule::enabled() {
                     Ok(AtRuleType::WithBlock(AtRulePrelude::Viewport))
                 } else {
                     Err(StyleParseError::UnsupportedAtRule(name.clone()).into())

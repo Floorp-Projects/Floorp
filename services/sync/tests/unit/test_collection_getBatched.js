@@ -15,7 +15,7 @@ function recordRange(lim, offset, total) {
   for (let i = offset; i < Math.min(lim + offset, total); ++i) {
     res.push(JSON.stringify({ id: String(i), payload: "test:" + i }));
   }
-  return res.join("\n") + "\n";
+  return res;
 }
 
 function get_test_collection_info({ totalRecords, batchSize, lastModified,
@@ -25,9 +25,7 @@ function get_test_collection_info({ totalRecords, batchSize, lastModified,
   coll.full = true;
   let requests = [];
   let responses = [];
-  let sawRecord = false;
   coll.get = async function() {
-    ok(!sawRecord); // make sure we call record handler after all requests.
     let limit = +this.limit;
     let offset = 0;
     if (this.offset) {
@@ -44,9 +42,8 @@ function get_test_collection_info({ totalRecords, batchSize, lastModified,
       throw "Some Network Error";
     }
     let body = recordRange(limit, offset, totalRecords);
-    this._onProgress.call({ _data: body });
     let response = {
-      body,
+      obj: body,
       success: true,
       status: 200,
       headers: {}
@@ -64,33 +61,24 @@ function get_test_collection_info({ totalRecords, batchSize, lastModified,
     responses.push(response);
     return response;
   };
-
-  let records = [];
-  coll.recordHandler = function(record) {
-    sawRecord = true;
-    // ensure records are coming in in the right order
-    equal(record.id, String(records.length));
-    equal(record.payload, "test:" + records.length);
-    records.push(record);
-  };
-  return { records, responses, requests, coll };
+  return { responses, requests, coll };
 }
 
 add_task(async function test_success() {
   const totalRecords = 11;
   const batchSize = 2;
   const lastModified = "111111";
-  let { records, responses, requests, coll } = get_test_collection_info({
+  let { responses, requests, coll } = get_test_collection_info({
     totalRecords,
     batchSize,
     lastModified,
   });
-  let response = await coll.getBatched(batchSize);
+  let { response, records } = await coll.getBatched(batchSize);
 
   equal(requests.length, Math.ceil(totalRecords / batchSize));
 
-  // records are mostly checked in recordHandler, we just care about the length
   equal(records.length, totalRecords);
+  checkRecordsOrder(records);
 
   // ensure we're returning the last response
   equal(responses[responses.length - 1], response);
@@ -124,13 +112,14 @@ add_task(async function test_total_limit() {
   const recordLimit = 11;
   const batchSize = 2;
   const lastModified = "111111";
-  let { records, requests, coll } = get_test_collection_info({
+  let { requests, coll } = get_test_collection_info({
     totalRecords,
     batchSize,
     lastModified,
   });
   coll.limit = recordLimit;
-  await coll.getBatched(batchSize);
+  let { records } = await coll.getBatched(batchSize);
+  checkRecordsOrder(records);
 
   equal(requests.length, Math.ceil(recordLimit / batchSize));
   equal(records.length, recordLimit);
@@ -152,16 +141,16 @@ add_task(async function test_412() {
   const totalRecords = 11;
   const batchSize = 2;
   const lastModified = "111111";
-  let { records, responses, requests, coll } = get_test_collection_info({
+  let { responses, requests, coll } = get_test_collection_info({
     totalRecords,
     batchSize,
     lastModified,
     interruptedAfter: 3
   });
-  let response = await coll.getBatched(batchSize);
+  let { response, records } = await coll.getBatched(batchSize);
 
   equal(requests.length, 3);
-  equal(records.length, 0); // record handler shouldn't be called for anything
+  equal(records.length, 0); // we should not get any records
 
   // ensure we're returning the last response
   equal(responses[responses.length - 1], response);
@@ -171,19 +160,26 @@ add_task(async function test_412() {
 });
 
 add_task(async function test_get_throws() {
-  _("We shouldn't record records if get() throws for some reason");
+  _("getBatched() should throw if a get() throws");
   const totalRecords = 11;
   const batchSize = 2;
   const lastModified = "111111";
-  let { records, requests, coll } = get_test_collection_info({
+  let { requests, coll } = get_test_collection_info({
     totalRecords,
     batchSize,
     lastModified,
     throwAfter: 3
   });
 
-  await Assert.rejects(coll.getBatched(batchSize), "Some Network Error");
+  await Assert.rejects(coll.getBatched(batchSize), /Some Network Error/);
 
   equal(requests.length, 3);
-  equal(records.length, 0);
 });
+
+function checkRecordsOrder(records) {
+  ok(records.length > 0)
+  for (let i = 0; i < records.length; i++) {
+    equal(records[i].id, String(i));
+    equal(records[i].payload, "test:" + i);
+  }
+}

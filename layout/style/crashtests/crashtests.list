@@ -171,5 +171,6 @@ HTTP load 1333001-1.html
 pref(dom.animations-api.core.enabled,true) load 1340344.html
 load 1342316-1.html
 load 1356601-1.html
+load 1370793-1.xhtml
 load content-only-on-link-before.html
 load content-only-on-visited-before.html

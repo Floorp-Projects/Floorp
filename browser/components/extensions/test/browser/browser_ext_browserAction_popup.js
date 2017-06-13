@@ -233,5 +233,5 @@ add_task(async function testBrowserActionInToolbar() {
 });
 
 add_task(async function testBrowserActionInPanel() {
-  await testInArea(CustomizableUI.AREA_PANEL);
+  await testInArea(getCustomizableUIPanelID());
 });

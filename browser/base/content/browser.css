@@ -1325,9 +1325,9 @@ toolbarpaletteitem[place="palette"][hidden] {
 }
 
 /* Page action menu */
-#page-action-sendToDeviceView-body[signedin] > #page-action-sendToDevice-fxa-button,
-#page-action-sendToDeviceView-body:not([signedin]) > #page-action-no-devices-button,
-#page-action-sendToDeviceView-body[hasdevices] > #page-action-no-devices-button {
+#page-action-sendToDeviceView-body:not([state="notsignedin"]) > #page-action-sendToDevice-fxa-button,
+#page-action-sendToDeviceView-body:not([state="nodevice"]) > #page-action-no-devices-button,
+#page-action-sendToDeviceView-body:not([state="notready"]) > #page-action-sync-not-ready-button {
   display: none;
 }
 
