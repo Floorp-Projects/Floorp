@@ -6,7 +6,7 @@
   <string name="teaser">Pori preifat awtomatig.\nPori. Dileu. Ailadrodd.</string>
   <string name="feedback_erase">Mae eich hanes pori wedi cael ei ddileu.</string>
   <string name="search_hint">Chwilio am %1$s</string>
-  <string name="menu_share">Rhannu</string>
+  <string name="menu_share">Rhannu…</string>
   <string name="menu_open_with_default_browser">Agor gyda %1$s</string>
   <string name="menu_open_with_a_browser">Agor gyda…</string>
   <string name="menu_settings">Gosodiadau</string>
@@ -68,7 +68,7 @@
   <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n        "<li>Mae\'n bosib fod y wefan yn brysur neu ddim ar gael. Ceisiwch eto cyn bo hir.</li>" \n        "<li>Os nad oes modd i chi lwytho unrhyw dudalennau, gwiriwch gysylltiad data neu ddiwifr eich dyfais symudol.</li>"\n      "</ul>]]></string>
   <string name="error_timeout_title">Daeth cyfnod y cysylltiad i ben</string>
   <string name="error_hostLookup_title">Heb ganfod gweinydd</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Gwiriwch y cyfeiriad am wallau teipio megis\n        "<strong>ww</strong>".example.com yn lle\n        "<strong>www</strong>.example.com</li>"\n        "<li>Os ydych yn gallu llwytho unrhyw dudalennau, gwiriwch eich dyfais data neu wi-fi cysylltiad.</li>"\n     "</ul>]]></string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Gwiriwch y cyfeiriad am wallau teipio megis\n          "<strong>ww</strong>".example.com yn lle\n          "<strong>www</strong>.example.com</li>"\n        "<li>Os ydych yn gallu llwytho unrhyw dudalennau, gwiriwch eich dyfais data neu wi-fi cysylltiad.</li>"\n     "</ul>]]></string>
   <string name="error_malformedURI_title">Nid yw\'r cyfeiriad yn ddilys</string>
   <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n  "<li>"Fel rheol mae cyfeiriadau Gwe\'n cael eu hysgrifennu fel "<strong>http://www.example.com/</strong></li>"\n  "<li>"Gwnewch yn si&#373;r eich bod yn defnyddio blaen slaes (h.y. "<strong>/</strong>).</li>" \n"</ul>]]></string>
   <string name="error_redirectLoop_title">Nid yw\'r dudalen yn ailgyfeirio\'n iawn</string>
@@ -77,8 +77,8 @@
   <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n  "<li>Efallai bydd angen i chi osod meddalwedd arall i agor y cyfeiriad yma.</li>" \n"</ul>]]></string>
   <string name="error_sslhandshake_title">Methodd y cysylltiad diogel</string>
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n  "<li>Gall hwn fod yn anhawster gyda ffurfweddiad y gweinydd neu gall fod \nyn rhywun sy\'n ceisio dynwared y gweinydd.</li>" \n  "<li>Os ydych wedi cysylltu\'n llwyddiannus gyda\'r gweinydd yn y gorffennol, efallai \nmai gwall dros dro ydyw ac i geisio eto.</li>" \n"</ul>]]></string>
-  <string name="error_generic_title">Wps.</string>
-  <string name="error_generic_message">Methu llwytho\'r dudalen am ryw reswm</string>
+  <string name="error_generic_title">Wps</string>
+  <string name="error_generic_message">Methu llwytho\'r dudalen am ryw reswm.</string>
   <string name="contextmenu_link_share">Rhannu dolen</string>
   <string name="contextmenu_link_copy">Copïo cyfeiriad dolen</string>
   <string name="contextmenu_image_share">Rhannu delwedd</string>
