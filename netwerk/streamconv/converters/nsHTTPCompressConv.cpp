@@ -517,7 +517,8 @@ nsHTTPCompressConv::do_OnDataAvailable(nsIRequest* request,
     MutexAutoLock lock(mMutex);
     listener = mListener;
   }
-  nsresult rv = listener->OnDataAvailable(request, context, mStream,
+  nsCOMPtr<nsIInputStream> stream(do_QueryInterface(mStream));
+  nsresult rv = listener->OnDataAvailable(request, context, stream,
                                           offset, count);
 
   // Make sure the stream no longer references |buffer| in case our listener

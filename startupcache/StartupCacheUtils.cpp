@@ -31,7 +31,8 @@ NewObjectInputStreamFromBuffer(UniquePtr<char[]> buffer, uint32_t len,
   NS_ENSURE_TRUE(objectInput, NS_ERROR_FAILURE);
 
   stringStream->AdoptData(buffer.release(), len);
-  objectInput->SetInputStream(stringStream);
+  nsCOMPtr<nsIInputStream> baseStream(do_QueryInterface(stringStream));
+  objectInput->SetInputStream(baseStream);
 
   objectInput.forget(stream);
   return NS_OK;
