@@ -14,7 +14,7 @@
 #include "nsXPIDLString.h"
 #include "nsMimeTypes.h"
 #include "nsMemory.h"
-#include "nsIStringStream.h"
+#include "nsIInputStream.h"
 #include "nsIURL.h"
 #include "nsNetCID.h"
 #include "nsIPipe.h"

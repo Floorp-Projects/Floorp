@@ -375,10 +375,10 @@ CacheCloseHelper(const nsACString& key, const CacheEntry* data,
   MOZ_ASSERT(data); // assert key was found in mTable.
 
   nsresult rv;
-  nsIStringInputStream* stream = holder->stream;
+  nsIStringInputStream* sis = holder->stream;
   nsIZipWriter* writer = holder->writer;
 
-  stream->ShareData(data->data.get(), data->size);
+  sis->ShareData(data->data.get(), data->size);
 
 #ifdef DEBUG
   bool hasEntry;
@@ -386,6 +386,7 @@ CacheCloseHelper(const nsACString& key, const CacheEntry* data,
   NS_ASSERTION(NS_SUCCEEDED(rv) && hasEntry == false, 
                "Existing entry in disk StartupCache.");
 #endif
+  nsCOMPtr<nsIInputStream> stream(do_QueryInterface(sis));
   rv = writer->AddEntryStream(key, holder->time, true, stream, false);
 
   if (NS_FAILED(rv)) {
