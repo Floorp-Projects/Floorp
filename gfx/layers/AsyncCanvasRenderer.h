@@ -14,7 +14,7 @@
 
 class nsICanvasRenderingContextInternal;
 class nsIInputStream;
-class nsIThread;
+class nsISerialEventTarget;
 
 namespace mozilla {
 
@@ -79,8 +79,8 @@ public:
   }
 
   // Active thread means the thread which spawns GLContext.
-  void SetActiveThread();
-  void ResetActiveThread();
+  void SetActiveEventTarget();
+  void ResetActiveEventTarget();
 
   // This will readback surface and return the surface
   // in the DataSourceSurface.
@@ -116,7 +116,7 @@ public:
     return mCanvasClient;
   }
 
-  already_AddRefed<nsIThread> GetActiveThread();
+  already_AddRefed<nsISerialEventTarget> GetActiveEventTarget();
 
   // The lifetime is controllered by HTMLCanvasElement.
   // Only accessed in main thread.
@@ -159,7 +159,7 @@ private:
   Mutex mMutex;
 
   // Can be accessed in any thread, need protect by mutex.
-  nsCOMPtr<nsIThread> mActiveThread;
+  nsCOMPtr<nsISerialEventTarget> mActiveEventTarget;
 };
 
 } // namespace layers

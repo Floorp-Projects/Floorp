@@ -189,7 +189,7 @@ nsRequestObserverProxy::Init(nsIRequestObserver *observer, nsISupports *context)
 nsresult
 nsRequestObserverProxy::FireEvent(nsARequestObserverEvent *event)
 {
-    nsCOMPtr<nsIEventTarget> mainThread(do_GetMainThread());
+    nsCOMPtr<nsIEventTarget> mainThread(GetMainThreadEventTarget());
     return mainThread->Dispatch(event, NS_DISPATCH_NORMAL);
 }
 

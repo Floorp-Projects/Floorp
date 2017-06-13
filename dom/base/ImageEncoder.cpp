@@ -52,9 +52,9 @@ public:
   }
 
   already_AddRefed<gfx::DataSourceSurface> GetDataSurfaceSafe() {
-    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-    MOZ_ASSERT(mainThread);
-    SyncRunnable::DispatchToThread(mainThread, this, false);
+    nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
+    MOZ_ASSERT(mainTarget);
+    SyncRunnable::DispatchToThread(mainTarget, this, false);
 
     return mDataSourceSurface.forget();
   }
@@ -90,9 +90,9 @@ public:
     , mFailed(false)
   {
     if (!NS_IsMainThread() && workers::GetCurrentThreadWorkerPrivate()) {
-      mCreationThread = NS_GetCurrentThread();
+      mCreationEventTarget = GetCurrentThreadEventTarget();
     } else {
-      NS_GetMainThread(getter_AddRefs(mCreationThread));
+      mCreationEventTarget = GetMainThreadEventTarget();
     }
   }
 
@@ -126,16 +126,16 @@ public:
     mFailed = true;
   }
 
-  nsIThread* GetCreationThread()
+  nsIEventTarget* GetCreationThreadEventTarget()
   {
-    return mCreationThread;
+    return mCreationEventTarget;
   }
 
 private:
   uint64_t mImgSize;
   nsAutoString mType;
   void* mImgData;
-  nsCOMPtr<nsIThread> mCreationThread;
+  nsCOMPtr<nsIEventTarget> mCreationEventTarget;
   RefPtr<EncodeCompleteCallback> mEncodeCompleteCallback;
   bool mFailed;
 };
@@ -219,7 +219,7 @@ public:
     } else {
       mEncodingCompleteEvent->SetMembers(imgData, imgSize, mType);
     }
-    rv = mEncodingCompleteEvent->GetCreationThread()->
+    rv = mEncodingCompleteEvent->GetCreationThreadEventTarget()->
       Dispatch(mEncodingCompleteEvent, nsIThread::DISPATCH_NORMAL);
     if (NS_FAILED(rv)) {
       // Better to leak than to crash.

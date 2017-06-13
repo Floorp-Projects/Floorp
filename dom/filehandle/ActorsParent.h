@@ -43,7 +43,7 @@ class FileHandleThreadPool final
   struct StoragesCompleteCallback;
 
   nsCOMPtr<nsIThreadPool> mThreadPool;
-  nsCOMPtr<nsIEventTarget> mOwningThread;
+  nsCOMPtr<nsIEventTarget> mOwningEventTarget;
 
   nsClassHashtable<nsCStringHashKey, DirectoryInfo> mDirectoryInfos;
 

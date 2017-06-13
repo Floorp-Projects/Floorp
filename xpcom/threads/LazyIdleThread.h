@@ -144,7 +144,7 @@ private:
    * Touched on both threads but set before mThread is created. Used to direct
    * timer events to the owning thread.
    */
-  nsCOMPtr<nsIThread> mOwningThread;
+  nsCOMPtr<nsISerialEventTarget> mOwningEventTarget;
 
   /**
    * Only accessed on the owning thread. Set by EnsureThread().

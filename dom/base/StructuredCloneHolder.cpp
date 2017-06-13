@@ -250,7 +250,7 @@ StructuredCloneHolder::StructuredCloneHolder(CloningSupport aSupportsCloning,
   , mSupportsTransferring(aSupportsTransferring == TransferringSupported)
   , mParent(nullptr)
 #ifdef DEBUG
-  , mCreationThread(NS_GetCurrentThread())
+  , mCreationEventTarget(GetCurrentThreadEventTarget())
 #endif
 {}
 
@@ -277,7 +277,7 @@ StructuredCloneHolder::Write(JSContext* aCx,
                              ErrorResult& aRv)
 {
   MOZ_ASSERT_IF(mStructuredCloneScope == StructuredCloneScope::SameProcessSameThread,
-                mCreationThread == NS_GetCurrentThread());
+                mCreationEventTarget->IsOnCurrentThread());
 
   if (!StructuredCloneHolderBase::Write(aCx, aValue, aTransfer, cloneDataPolicy)) {
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
@@ -292,7 +292,7 @@ StructuredCloneHolder::Read(nsISupports* aParent,
                             ErrorResult& aRv)
 {
   MOZ_ASSERT_IF(mStructuredCloneScope == StructuredCloneScope::SameProcessSameThread,
-                mCreationThread == NS_GetCurrentThread());
+                mCreationEventTarget->IsOnCurrentThread());
   MOZ_ASSERT(aParent);
 
   mozilla::AutoRestore<nsISupports*> guard(mParent);
@@ -334,7 +334,7 @@ StructuredCloneHolder::ReadFromBuffer(nsISupports* aParent,
                                       ErrorResult& aRv)
 {
   MOZ_ASSERT_IF(mStructuredCloneScope == StructuredCloneScope::SameProcessSameThread,
-                mCreationThread == NS_GetCurrentThread());
+                mCreationEventTarget->IsOnCurrentThread());
 
   MOZ_ASSERT(!mBuffer, "ReadFromBuffer() must be called without a Write().");
 

@@ -123,11 +123,11 @@ private:
 
 void HRTFDatabaseLoader::ProxyRelease()
 {
-    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-    if (MOZ_LIKELY(mainThread)) {
+    nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
+    if (MOZ_LIKELY(mainTarget)) {
         RefPtr<ProxyReleaseEvent> event = new ProxyReleaseEvent(this);
         DebugOnly<nsresult> rv =
-            mainThread->Dispatch(event, NS_DISPATCH_NORMAL);
+            mainTarget->Dispatch(event, NS_DISPATCH_NORMAL);
         MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed to dispatch release event");
     } else {
         // Should be in XPCOM shutdown.

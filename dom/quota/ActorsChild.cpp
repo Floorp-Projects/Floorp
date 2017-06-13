@@ -22,7 +22,7 @@ namespace quota {
 QuotaChild::QuotaChild(QuotaManagerService* aService)
   : mService(aService)
 #ifdef DEBUG
-  , mOwningThread(NS_GetCurrentThread())
+  , mOwningThread(GetCurrentThreadEventTarget())
 #endif
 {
   AssertIsOnOwningThread();

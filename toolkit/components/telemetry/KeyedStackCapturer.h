@@ -6,6 +6,8 @@
 #ifndef KeyedStackCapturer_h__
 #define KeyedStackCapturer_h__
 
+#ifdef MOZ_GECKO_PROFILER
+
 #include "Telemetry.h"
 #include "nsString.h"
 #include "nsClassHashtable.h"
@@ -71,5 +73,7 @@ private:
 
 } // namespace Telemetry
 } // namespace mozilla
+
+#endif // MOZ_GECKO_PROFILER
 
 #endif // KeyedStackCapturer_h__

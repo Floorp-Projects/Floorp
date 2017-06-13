@@ -22,9 +22,11 @@
 #include "nsIDOMWindow.h"
 #include "nsGlobalWindow.h"
 #include "nsRefreshDriver.h"
+#include "nsThreadUtils.h"
 
 #include "mozilla/Unused.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
@@ -125,13 +127,14 @@ CompartmentName(JSContext* cx, JS::Handle<JSObject*> global, nsAString& name) {
  * Generate a unique-to-the-application identifier for a group.
  */
 void
-GenerateUniqueGroupId(const JSContext* cx, uint64_t uid, uint64_t processId, nsAString& groupId) {
-  uint64_t contextId = reinterpret_cast<uintptr_t>(cx);
+GenerateUniqueGroupId(uint64_t uid, uint64_t processId, nsAString& groupId)
+{
+  uint64_t threadId = reinterpret_cast<uint64_t>(mozilla::GetCurrentPhysicalThread());
 
   groupId.AssignLiteral("process: ");
   groupId.AppendInt(processId);
   groupId.AppendLiteral(", thread: ");
-  groupId.AppendInt(contextId);
+  groupId.AppendInt(threadId);
   groupId.AppendLiteral(", group: ");
   groupId.AppendInt(uid);
 }
@@ -651,10 +654,8 @@ nsPerformanceStatsService::nsPerformanceStatsService()
 #else
   , mProcessId(getpid())
 #endif
-  , mContext(mozilla::dom::danger::GetJSContext())
   , mUIdCounter(0)
-  , mTopGroup(nsPerformanceGroup::Make(mContext,
-                                       this,
+  , mTopGroup(nsPerformanceGroup::Make(this,
                                        NS_LITERAL_STRING("<process>"), // name
                                        0,    // windowId
                                        mProcessId,
@@ -674,7 +675,7 @@ nsPerformanceStatsService::nsPerformanceStatsService()
   mPendingAlertsCollector = new PendingAlertsCollector(this);
 
   nsString groupIdForWindows;
-  GenerateUniqueGroupId(mContext, GetNextId(), mProcessId, groupIdForWindows);
+  GenerateUniqueGroupId(GetNextId(), mProcessId, groupIdForWindows);
   mUniversalTargets.mWindows->
     SetTarget(new nsPerformanceGroupDetails(NS_LITERAL_STRING("<universal window listener>"),
                                             groupIdForWindows,
@@ -714,7 +715,9 @@ nsPerformanceStatsService::Dispose()
   }
 
   // Clear up and disconnect from JSAPI.
-  JSContext* cx = mContext;
+  mozilla::dom::AutoJSAPI jsapi;
+  jsapi.Init();
+  JSContext* cx = jsapi.cx();
   js::DisposePerformanceMonitoring(cx);
 
   mozilla::Unused << js::SetStopwatchIsMonitoringCPOW(cx, false);
@@ -785,7 +788,9 @@ nsPerformanceStatsService::InitInternal()
   }
 
   // Connect to JSAPI.
-  JSContext* cx = mContext;
+  mozilla::dom::AutoJSAPI jsapi;
+  jsapi.Init();
+  JSContext* cx = jsapi.cx();
   if (!js::SetStopwatchStartCallback(cx, StopwatchStartCallback, this)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -1051,7 +1056,7 @@ nsPerformanceStatsService::GetPerformanceGroups(JSContext* cx,
       windowName.AppendInt(windowId);
       windowName.AppendLiteral(")");
       entry->
-        SetGroup(nsPerformanceGroup::Make(mContext, this,
+        SetGroup(nsPerformanceGroup::Make(this,
                                           windowName, windowId,
                                           mProcessId, isSystem,
                                           nsPerformanceGroup::GroupScope::WINDOW)
@@ -1065,7 +1070,7 @@ nsPerformanceStatsService::GetPerformanceGroups(JSContext* cx,
 
   // All compartments have their own group.
   auto group =
-    nsPerformanceGroup::Make(mContext, this,
+    nsPerformanceGroup::Make(this,
                              name, windowId,
                              mProcessId, isSystem,
                              nsPerformanceGroup::GroupScope::COMPARTMENT);
@@ -1421,8 +1426,7 @@ nsPerformanceStatsService::UniversalTargets::UniversalTargets()
  */
 
 /*static*/ nsPerformanceGroup*
-nsPerformanceGroup::Make(JSContext* cx,
-                         nsPerformanceStatsService* service,
+nsPerformanceGroup::Make(nsPerformanceStatsService* service,
                          const nsAString& name,
                          uint64_t windowId,
                          uint64_t processId,
@@ -1430,7 +1434,7 @@ nsPerformanceGroup::Make(JSContext* cx,
                          GroupScope scope)
 {
   nsString groupId;
-  ::GenerateUniqueGroupId(cx, service->GetNextId(), processId, groupId);
+  ::GenerateUniqueGroupId(service->GetNextId(), processId, groupId);
   return new nsPerformanceGroup(service, name, groupId, windowId, processId, isSystem, scope);
 }
 

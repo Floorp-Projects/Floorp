@@ -139,7 +139,7 @@ class FTPEventSinkProxy final : public nsIFTPEventSink
 public:
     explicit FTPEventSinkProxy(nsIFTPEventSink* aTarget)
         : mTarget(aTarget)
-        , mTargetThread(do_GetCurrentThread())
+        , mEventTarget(GetCurrentThreadEventTarget())
     { }
         
     NS_DECL_THREADSAFE_ISUPPORTS
@@ -166,7 +166,7 @@ public:
 
 private:
     nsCOMPtr<nsIFTPEventSink> mTarget;
-    nsCOMPtr<nsIThread> mTargetThread;
+    nsCOMPtr<nsIEventTarget> mEventTarget;
 };
 
 NS_IMPL_ISUPPORTS(FTPEventSinkProxy, nsIFTPEventSink)
@@ -176,7 +176,7 @@ FTPEventSinkProxy::OnFTPControlLog(bool aServer, const char* aMsg)
 {
     RefPtr<OnFTPControlLogRunnable> r =
         new OnFTPControlLogRunnable(mTarget, aServer, aMsg);
-    return mTargetThread->Dispatch(r, NS_DISPATCH_NORMAL);
+    return mEventTarget->Dispatch(r, NS_DISPATCH_NORMAL);
 }
 
 NS_IMETHODIMP

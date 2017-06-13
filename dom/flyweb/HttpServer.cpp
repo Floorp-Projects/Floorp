@@ -327,7 +327,7 @@ HttpServer::Connection::Connection(nsISocketTransport* aTransport,
   if (mServer->mHttps) {
     SetSecurityObserver(true);
   } else {
-    mInput->AsyncWait(this, 0, 0, NS_GetCurrentThread());
+    mInput->AsyncWait(this, 0, 0, GetCurrentThreadEventTarget());
   }
 }
 
@@ -340,7 +340,7 @@ HttpServer::Connection::OnHandshakeDone(nsITLSServerSocket* aServer,
   // XXX Verify connection security
 
   SetSecurityObserver(false);
-  mInput->AsyncWait(this, 0, 0, NS_GetCurrentThread());
+  mInput->AsyncWait(this, 0, 0, GetCurrentThreadEventTarget());
 
   return NS_OK;
 }
@@ -391,7 +391,7 @@ HttpServer::Connection::OnInputStreamReady(nsIAsyncInputStream* aStream)
                             &numRead);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mInput->AsyncWait(this, 0, 0, NS_GetCurrentThread());
+  rv = mInput->AsyncWait(this, 0, 0, GetCurrentThreadEventTarget());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -862,7 +862,7 @@ HttpServer::Connection::HandleWebSocketResponse(InternalResponse* aResponse)
 
   mState = eRequestLine;
   mPendingWebSocketRequest = nullptr;
-  mInput->AsyncWait(this, 0, 0, NS_GetCurrentThread());
+  mInput->AsyncWait(this, 0, 0, GetCurrentThreadEventTarget());
 
   QueueResponse(aResponse);
 }
@@ -1233,7 +1233,7 @@ HttpServer::Connection::OnOutputStreamReady(nsIAsyncOutputStream* aStream)
         buffer.Cut(0, written);
 
         if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-          return mOutput->AsyncWait(this, 0, 0, NS_GetCurrentThread());
+          return mOutput->AsyncWait(this, 0, 0, GetCurrentThreadEventTarget());
         }
 
         if (NS_FAILED(rv)) {

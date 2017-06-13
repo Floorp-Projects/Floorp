@@ -787,7 +787,7 @@ public:
 protected:
     virtual ~DebugDataSender() {}
     void RemoveData() {
-        MOZ_ASSERT(NS_GetCurrentThread() == mThread);
+        MOZ_ASSERT(mThread->SerialEventTarget()->IsOnCurrentThread());
         if (mList.isEmpty())
             return;
 
@@ -1159,7 +1159,7 @@ LayerScopeWebSocketManager::SocketHandler::OpenStream(nsISocketTransport* aTrans
                                 0,
                                 getter_AddRefs(debugInputStream));
     mInputStream = do_QueryInterface(debugInputStream);
-    mInputStream->AsyncWait(this, 0, 0, NS_GetCurrentThread());
+    mInputStream->AsyncWait(this, 0, 0, GetCurrentThreadEventTarget());
 }
 
 bool
@@ -1234,7 +1234,7 @@ LayerScopeWebSocketManager::SocketHandler::OnInputStreamReady(nsIAsyncInputStrea
         if (WebSocketHandshake(protocolString)) {
             mState = HandshakeSuccess;
             mConnected = true;
-            mInputStream->AsyncWait(this, 0, 0, NS_GetCurrentThread());
+            mInputStream->AsyncWait(this, 0, 0, GetCurrentThreadEventTarget());
         } else {
             mState = HandshakeFailed;
         }
@@ -1364,7 +1364,7 @@ LayerScopeWebSocketManager::SocketHandler::HandleSocketMessage(nsIAsyncInputStre
         // TODO: combine packets if we have to read more than once
 
         if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-            mInputStream->AsyncWait(this, 0, 0, NS_GetCurrentThread());
+            mInputStream->AsyncWait(this, 0, 0, GetCurrentThreadEventTarget());
             return NS_OK;
         }
 

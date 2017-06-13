@@ -144,8 +144,8 @@ protected:
   virtual ~PrintTarget();
 
   static already_AddRefed<DrawTarget>
-  CreateRecordingDrawTarget(DrawEventRecorder* aRecorder,
-                            DrawTarget* aDrawTarget);
+  CreateWrapAndRecordDrawTarget(DrawEventRecorder* aRecorder,
+                                DrawTarget* aDrawTarget);
 
   cairo_surface_t* mCairoSurface;
   RefPtr<DrawTarget> mRefDT; // reference DT

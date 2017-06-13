@@ -130,6 +130,12 @@ function removeNonReleaseButtons(areaPanelPlacements) {
   if (isInDevEdition() && areaPanelPlacements.includes("developer-button")) {
     areaPanelPlacements.splice(areaPanelPlacements.indexOf("developer-button"), 1);
   }
+
+  if (AppConstants.RELEASE_OR_BETA && !AppConstants.MOZ_DEV_EDITION) {
+    if (areaPanelPlacements.includes("webcompat-reporter-button")) {
+      areaPanelPlacements.splice(areaPanelPlacements.indexOf("webcompat-reporter-button"), 1);
+    }
+  }
 }
 
 function removeNonOriginalButtons() {

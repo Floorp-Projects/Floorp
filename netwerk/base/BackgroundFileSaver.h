@@ -82,7 +82,7 @@ protected:
   /**
    * Thread that constructed this object.
    */
-  nsCOMPtr<nsIThread> mControlThread;
+  nsCOMPtr<nsIEventTarget> mControlEventTarget;
 
   /**
    * Thread to which the actual input/output is delegated.
