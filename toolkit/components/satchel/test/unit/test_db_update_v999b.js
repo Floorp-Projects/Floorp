@@ -23,9 +23,9 @@ function next_test() {
 }
 
 function* tests() {
-  try {
-    var testnum = 0;
+  var testnum = 0;
 
+  try {
     // ===== test init =====
     var testfile = do_get_file("formhistory_v999b.sqlite");
     var profileDir = dirSvc.get("ProfD", Ci.nsIFile);
