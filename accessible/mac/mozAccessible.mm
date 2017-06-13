@@ -726,6 +726,8 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
   else if (proxy)
     landmark = proxy->LandmarkRole();
 
+  // HTML Elements treated as landmarks
+  // XXX bug 1371712
   if (landmark) {
     if (landmark == nsGkAtoms::application)
       return @"AXLandmarkApplication";
@@ -746,6 +748,13 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
     if (landmark == nsGkAtoms::searchbox)
       return @"AXSearchField";
   }
+
+  // macOS groups the specific landmark types of DPub ARIA into two broad
+  // categories with corresponding subroles: Navigation and region/container.
+  if (mRole == roles::NAVIGATION)
+    return @"AXLandmarkNavigation";
+  if (mRole == roles::LANDMARK)
+    return @"AXLandmarkRegion";
 
   // Now, deal with widget roles
   nsIAtom* roleAtom = nullptr;
@@ -888,6 +897,17 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
 
     case roles::SUMMARY:
       return @"AXSummary";
+
+    case roles::NOTE:
+      return @"AXDocumentNote";
+
+    // macOS added an AXSubrole value to distinguish generic AXGroup objects
+    // from those which are AXGroups as a result of an explicit ARIA role,
+    // such as the non-landmark, non-listitem text containers in DPub ARIA.
+    case roles::SECTION:
+      if (roleAtom)
+        return @"AXApplicationGroup";
+      break;
 
     default:
       break;
