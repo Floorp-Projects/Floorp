@@ -67,7 +67,7 @@ void main(void) {
 #endif
 #endif
 
-    YuvImage image = fetch_yuv_image(prim.prim_index);
+    YuvImage image = fetch_yuv_image(prim.specific_prim_address);
     vStretchSize = image.size;
 
     vHalfTexelY = vec2(0.5) / y_texture_size_normalization_factor;

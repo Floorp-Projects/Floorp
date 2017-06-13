@@ -17,20 +17,20 @@ app_units = "0.4"
 bincode = "1.0.0-alpha6"
 bit-set = "0.4"
 byteorder = "1.0"
-euclid = "0.13"
+euclid = "0.14.4"
 fnv = "1.0"
 gleam = "0.4.3"
 lazy_static = "0.2"
 log = "0.3"
 num-traits = "0.1.32"
-offscreen_gl_context = {version = "0.8.0", features = ["serde", "osmesa"], optional = true}
+offscreen_gl_context = {version = "0.9.0", features = ["serde", "osmesa"], optional = true}
 time = "0.1"
 rayon = {version = "0.7", features = ["unstable"]}
 webrender_traits = {path = "../webrender_traits"}
 bitflags = "0.7"
 gamma-lut = "0.2"
 thread_profiler = "0.1.1"
-plane-split = "0.4"
+plane-split = "0.5"
 
 [dev-dependencies]
 angle = {git = "https://github.com/servo/angle", branch = "servo"}
@@ -46,15 +46,3 @@ dwrote = "0.3"
 [target.'cfg(target_os = "macos")'.dependencies]
 core-graphics = "0.7.0"
 core-text = "4.0"
-
-[[example]]
-name = "basic"
-
-[[example]]
-name = "blob"
-
-[[example]]
-name = "scrolling"
-
-[[example]]
-name = "yuv"

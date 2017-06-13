@@ -15,7 +15,7 @@ use {ImageRendering, LayoutPoint, LayoutRect, LayoutSize, LayoutTransform, MixBl
 use {PipelineId, PropertyBinding, PushStackingContextDisplayItem, RadialGradient};
 use {RadialGradientDisplayItem, RectangleDisplayItem, ScrollPolicy, SpecificDisplayItem};
 use {StackingContext, TextDisplayItem, TransformStyle, WebGLContextId, WebGLDisplayItem};
-use {YuvColorSpace, YuvData, YuvImageDisplayItem};
+use {YuvColorSpace, YuvData, YuvImageDisplayItem, LayoutVector2D};
 use std::marker::PhantomData;
 
 #[repr(C)]
@@ -773,7 +773,7 @@ impl DisplayListBuilder {
                            rect: LayoutRect,
                            _token: ClipRegionToken,
                            box_bounds: LayoutRect,
-                           offset: LayoutPoint,
+                           offset: LayoutVector2D,
                            color: ColorF,
                            blur_radius: f32,
                            spread_radius: f32,
