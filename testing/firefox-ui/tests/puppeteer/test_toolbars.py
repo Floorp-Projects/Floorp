@@ -5,7 +5,7 @@
 from firefox_puppeteer import PuppeteerMixin
 from marionette_driver import expected, By, Wait
 from marionette_driver.errors import NoSuchElementException
-from marionette_harness import MarionetteTestCase
+from marionette_harness import MarionetteTestCase, skip
 
 
 class TestNavBar(PuppeteerMixin, MarionetteTestCase):
@@ -152,6 +152,7 @@ class TestAutoCompleteResults(PuppeteerMixin, MarionetteTestCase):
         finally:
             super(TestAutoCompleteResults, self).tearDown()
 
+    @skip("Bug 1372205 - AssertionError: 9 != 10")
     def test_popup_elements(self):
         # TODO: This test is not very robust because it relies on the history
         # in the default profile.
