@@ -62,7 +62,7 @@ TEST(TestEventTargetQI, ThrottledEventQueue)
   EXPECT_TRUE(thing);
 
   nsCOMPtr<nsISerialEventTarget> serial = do_QueryInterface(thing);
-  EXPECT_FALSE(serial);
+  EXPECT_TRUE(serial);
 
   nsCOMPtr<nsIEventTarget> target = do_QueryInterface(thing);
   EXPECT_TRUE(target);

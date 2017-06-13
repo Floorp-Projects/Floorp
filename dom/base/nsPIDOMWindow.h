@@ -29,10 +29,10 @@ class nsICSSDeclaration;
 class nsIDocShell;
 class nsIDocShellLoadInfo;
 class nsIDocument;
-class nsIEventTarget;
 class nsIIdleObserver;
 class nsIPrincipal;
 class nsIScriptTimeoutHandler;
+class nsISerialEventTarget;
 class nsIURI;
 class nsPIDOMWindowInner;
 class nsPIDOMWindowOuter;
@@ -609,7 +609,7 @@ public:
 
   mozilla::dom::DocGroup* GetDocGroup() const;
 
-  virtual nsIEventTarget*
+  virtual nsISerialEventTarget*
   EventTargetFor(mozilla::TaskCategory aCategory) const = 0;
 
 protected:
