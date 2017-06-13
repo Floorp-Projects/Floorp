@@ -9,6 +9,9 @@ extern crate webrender_traits;
 extern crate euclid;
 extern crate app_units;
 extern crate gleam;
+extern crate rayon;
+extern crate thread_profiler;
 
 #[allow(non_snake_case)]
 pub mod bindings;
+pub mod moz2d_renderer;
