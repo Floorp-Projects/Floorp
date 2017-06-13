@@ -72,6 +72,10 @@ public:
     // Returns the size of an ID3v2.4 footer if present and zero otherwise.
     uint8_t FooterSize() const;
 
+    // The total size of the ID3 tag including header/footer, or zero if
+    // none has been found.
+    uint32_t TotalTagSize() const;
+
     // Returns whether the parsed data is a valid ID3 header up to the given
     // byte position.
     bool IsValid(int aPos) const;
@@ -449,6 +453,9 @@ private:
 
   // MPEG frame parser used to detect frames and extract side info.
   FrameParser mParser;
+
+  // Whether we've locked onto a valid sequence of frames or not.
+  bool mFrameLock;
 
   // Current byte offset in the source stream.
   int64_t mOffset;

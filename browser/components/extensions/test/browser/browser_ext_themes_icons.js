@@ -163,17 +163,19 @@ async function runTestWithIcons(icons) {
 
   checkButtons(icons, ICON_INFO, "toolbar");
 
-  for (let button of ICON_INFO) {
-    if (button[2]) {
-      CustomizableUI.addWidgetToArea(button[2], CustomizableUI.AREA_PANEL);
+  if (!gPhotonStructure) {
+    for (let button of ICON_INFO) {
+      if (button[2]) {
+        CustomizableUI.addWidgetToArea(button[2], CustomizableUI.AREA_PANEL);
+      }
     }
+
+    await PanelUI.show();
+
+    checkButtons(icons, ICON_INFO, "panel");
+
+    await PanelUI.hide();
   }
-
-  await PanelUI.show();
-
-  checkButtons(icons, ICON_INFO, "panel");
-
-  await PanelUI.hide();
 
   await extension.unload();
 

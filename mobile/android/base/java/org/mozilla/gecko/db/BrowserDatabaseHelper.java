@@ -2187,23 +2187,12 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
         // From Honeycomb on, it's possible to run several db
         // commands in parallel using multiple connections.
-        if (Build.VERSION.SDK_INT >= 11) {
-            // Modern Android allows WAL to be enabled through a mode flag.
-            if (Build.VERSION.SDK_INT < 16) {
-                db.enableWriteAheadLogging();
+        // Modern Android allows WAL to be enabled through a mode flag.
+        if (Build.VERSION.SDK_INT < 16) {
+            db.enableWriteAheadLogging();
 
-                // This does nothing on 16+.
-                db.setLockingEnabled(false);
-            }
-        } else {
-            // Pre-Honeycomb, we can do some lesser optimizations.
-            cursor = null;
-            try {
-                cursor = db.rawQuery("PRAGMA journal_mode=PERSIST", null);
-            } finally {
-                if (cursor != null)
-                    cursor.close();
-            }
+            // This does nothing on 16+.
+            db.setLockingEnabled(false);
         }
     }
 

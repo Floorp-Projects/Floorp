@@ -2912,6 +2912,12 @@ PeerConnectionImpl::RecordEndOfCallTelemetry() const
     return;
   }
 
+  // Exit early if no connection information was ever exchanged,
+  // This prevents distortion of telemetry data.
+  if (mLocalRequestedSDP.empty() && mRemoteRequestedSDP.empty()) {
+    return;
+  }
+
   // Bitmask used for WEBRTC/LOOP_CALL_TYPE telemetry reporting
   static const uint32_t kAudioTypeMask = 1;
   static const uint32_t kVideoTypeMask = 2;

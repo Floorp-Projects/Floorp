@@ -118,7 +118,11 @@
   skin/classic/browser/developer.svg                  (../shared/icons/developer.svg)
   skin/classic/browser/device-mobile.svg              (../shared/icons/device-mobile.svg)
   skin/classic/browser/device-desktop.svg             (../shared/icons/device-desktop.svg)
+#ifdef MOZ_PHOTON_THEME
+  skin/classic/browser/download-arrow-with-bar.svg    (../shared/icons/download-arrow-with-bar.svg)
+#else
   skin/classic/browser/download.svg                   (../shared/icons/download.svg)
+#endif
   skin/classic/browser/edit-copy.svg                  (../shared/icons/edit-copy.svg)
   skin/classic/browser/edit-cut.svg                   (../shared/icons/edit-cut.svg)
   skin/classic/browser/edit-paste.svg                 (../shared/icons/edit-paste.svg)

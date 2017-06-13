@@ -1555,7 +1555,7 @@ needs-focus == 568441.html 568441-ref.html
 == 571347-1b.html 571347-1-ref.html
 == 571347-2a.html 571347-2-ref.html
 == 571347-2b.html 571347-2-ref.html
-fails-if(styloVsGecko||stylo) == 571347-2c.html 571347-2-ref.html
+== 571347-2c.html 571347-2-ref.html
 == 571347-2d.html 571347-2-ref.html
 == 571347-3.html 571347-3-ref.html
 == 572598-1.html 572598-ref.html
@@ -1667,7 +1667,7 @@ fuzzy-if(Android,8,500) fuzzy-if(skiaContent,2,1) fuzzy-if(webrender,3,19) == 63
 fuzzy-if(Android,8,500) == 637852-3.html 637852-3-ref.html
 == 641770-1.html 641770-1-ref.html
 == 641856-1.html 641856-1-ref.html
-fails-if(styloVsGecko||stylo) == 645491-1.html 645491-1-ref.html
+== 645491-1.html 645491-1-ref.html
 == 645647-1.html 645647-1-ref.html
 == 645647-2.html 645647-2-ref.html
 == 645768-1.html 645768-1-ref.html

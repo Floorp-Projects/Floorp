@@ -7847,11 +7847,17 @@ var gPageActionButton = {
   },
 
   showSendToDeviceView(subviewButton) {
+    this.setupSendToDeviceView();
+    PanelUI.showSubView("page-action-sendToDeviceView", subviewButton);
+  },
+
+  setupSendToDeviceView() {
     let browser = gBrowser.selectedBrowser;
     let url = browser.currentURI.spec;
     let title = browser.contentTitle;
     let body = this.sendToDeviceBody;
 
+    // This is on top because it also clears the device list between state changes.
     gSync.populateSendTabToDevicesMenu(body, url, title, (clientId, name, clientType) => {
       if (!name) {
         return document.createElement("toolbarseparator");
@@ -7865,19 +7871,31 @@ var gPageActionButton = {
       return item;
     });
 
-    if (gSync.remoteClients.length) {
-      body.setAttribute("hasdevices", "true");
-    } else {
-      body.removeAttribute("hasdevices");
+    if (!gSync.isSignedIn) {
+      // Could be unconfigured or unverified
+      body.setAttribute("state", "notsignedin");
+      return;
     }
 
-    if (UIState.get().status == UIState.STATUS_SIGNED_IN) {
-      body.setAttribute("signedin", "true");
-    } else {
-      body.removeAttribute("signedin");
+    // In the first ~10 sec after startup, Sync may not be loaded and the list
+    // of devices will be empty.
+    if (!gSync.syncReady) {
+      body.setAttribute("state", "notready");
+      // Force a background Sync
+      Services.tm.dispatchToMainThread(() => {
+        Weave.Service.sync([]);  // [] = clients engine only
+        if (!window.closed && gSync.syncReady) {
+          this.setupSendToDeviceView();
+        }
+      });
+      return;
+    }
+    if (!gSync.remoteClients.length) {
+      body.setAttribute("state", "nodevice");
+      return;
     }
 
-    PanelUI.showSubView("page-action-sendToDeviceView", subviewButton);
+    body.setAttribute("state", "signedin");
   },
 
   fxaButtonClicked() {

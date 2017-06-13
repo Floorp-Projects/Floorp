@@ -71,7 +71,11 @@ toolbar:not([brighttext]) #bookmarks-menu-button[cui-areatype="toolbar"][starred
 }
 
 #downloads-button[cui-areatype="toolbar"] {
+%ifdef MOZ_PHOTON_THEME
+  list-style-image: url("chrome://browser/skin/download-arrow-with-bar.svg");
+%else
   list-style-image: url("chrome://browser/skin/download.svg");
+%endif
 }
 
 #add-ons-button[cui-areatype="toolbar"] {

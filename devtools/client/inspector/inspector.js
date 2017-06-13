@@ -181,6 +181,10 @@ Inspector.prototype = {
     return this._target.client.traits.getCssPath;
   },
 
+  get canGetXPath() {
+    return this._target.client.traits.getXPath;
+  },
+
   get canGetUsedFontFaces() {
     return this._target.client.traits.getUsedFontFaces;
   },
@@ -1246,6 +1250,15 @@ Inspector.prototype = {
       click: () => this.copyCssPath(),
     }));
     copySubmenu.append(new MenuItem({
+      id: "node-menu-copyxpath",
+      label: INSPECTOR_L10N.getStr("inspectorCopyXPath.label"),
+      accesskey:
+        INSPECTOR_L10N.getStr("inspectorCopyXPath.accesskey"),
+      disabled: !isSelectionElement,
+      hidden: !this.canGetXPath,
+      click: () => this.copyXPath(),
+    }));
+    copySubmenu.append(new MenuItem({
       id: "node-menu-copyimagedatauri",
       label: INSPECTOR_L10N.getStr("inspectorImageDataUri.label"),
       disabled: !isSelectionElement || !markupContainer ||
@@ -1798,6 +1811,20 @@ Inspector.prototype = {
 
     this.telemetry.toolOpened("copyfullcssselector");
     this.selection.nodeFront.getCssPath().then(path => {
+      clipboardHelper.copyString(path);
+    }).catch(e => console.error);
+  },
+
+  /**
+   * Copy the XPath of the selected Node to the clipboard.
+   */
+  copyXPath: function () {
+    if (!this.selection.isNode()) {
+      return;
+    }
+
+    this.telemetry.toolOpened("copyxpath");
+    this.selection.nodeFront.getXPath().then(path => {
       clipboardHelper.copyString(path);
     }).catch(e => console.error);
   },

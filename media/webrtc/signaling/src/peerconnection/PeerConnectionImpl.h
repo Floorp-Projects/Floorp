@@ -738,7 +738,7 @@ private:
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
 
-  // The SDP sent in from JS - here for debugging.
+  // The SDP sent in from JS
   std::string mLocalRequestedSDP;
   std::string mRemoteRequestedSDP;
 

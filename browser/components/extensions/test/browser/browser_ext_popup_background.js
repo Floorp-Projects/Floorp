@@ -112,7 +112,7 @@ add_task(async function testPopupBackground() {
     info("Test menu panel browserAction popup");
 
     let widget = getBrowserActionWidget(extension);
-    CustomizableUI.addWidgetToArea(widget.id, CustomizableUI.AREA_PANEL);
+    CustomizableUI.addWidgetToArea(widget.id, getCustomizableUIPanelID());
 
     clickBrowserAction(extension);
     let browser = await awaitExtensionPanel(extension);

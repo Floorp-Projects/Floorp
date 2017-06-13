@@ -374,9 +374,14 @@ ServoStyleSet::PrepareAndTraverseSubtree(
     aRestyleBehavior == TraversalRestyleBehavior::ForReconstruct;
   bool forAnimationOnly =
     aRestyleBehavior == TraversalRestyleBehavior::ForAnimationOnly;
+#ifdef DEBUG
+  bool forNewlyBoundElement =
+    aRestyleBehavior == TraversalRestyleBehavior::ForNewlyBoundElement;
+#endif
   bool postTraversalRequired = Servo_TraverseSubtree(
     aRoot, mRawSet.get(), &snapshots, aRootBehavior, aRestyleBehavior);
-  MOZ_ASSERT(!(isInitial || forReconstruct) || !postTraversalRequired);
+  MOZ_ASSERT(!(isInitial || forReconstruct || forNewlyBoundElement) ||
+             !postTraversalRequired);
 
   // Don't need to trigger a second traversal if this restyle only needs
   // animation-only restyle.
@@ -953,6 +958,34 @@ ServoStyleSet::StyleNewChildren(Element* aParent)
                             TraversalRestyleBehavior::Normal);
   // We can't assert that Servo_TraverseSubtree returns false, since aParent
   // or some of its other children might have pending restyles.
+}
+
+void
+ServoStyleSet::StyleNewlyBoundElement(Element* aElement)
+{
+  PreTraverse();
+
+  // In general the element is always styled by the time we're applying XBL
+  // bindings, because we need to style the element to know what the binding
+  // URI is. However, programmatic consumers of the XBL service (like the
+  // XML pretty printer) _can_ apply bindings without having styled the bound
+  // element. We could assert against this and require the callers manually
+  // resolve the style first, but it's easy enough to just handle here.
+  //
+  // Also, when applying XBL bindings to elements within a display:none or
+  // unstyled subtree (for example, when <object> elements are wrapped to be
+  // exposed to JS), we need to tell the traversal that it is OK to
+  // skip restyling, rather than panic when trying to unwrap the styles
+  // it expects to have just computed.
+
+  TraversalRootBehavior rootBehavior =
+    MOZ_UNLIKELY(!aElement->HasServoData())
+      ? TraversalRootBehavior::Normal
+      : TraversalRootBehavior::UnstyledChildrenOnly;
+
+  PrepareAndTraverseSubtree(aElement,
+                            rootBehavior,
+                            TraversalRestyleBehavior::ForNewlyBoundElement);
 }
 
 void

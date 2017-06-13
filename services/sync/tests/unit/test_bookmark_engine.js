@@ -535,23 +535,9 @@ add_task(async function test_misreconciled_root() {
   };
 
   let rec = new FakeRecord(BookmarkFolder, to_apply);
-  let encrypted = encryptPayload(rec.cleartext);
-  encrypted.decrypt = function() {
-    for (let x in rec) {
-      encrypted[x] = rec[x];
-    }
-  };
 
   _("Applying record.");
-  engine._processIncoming({
-    getBatched() {
-      return this.get();
-    },
-    async get() {
-      this.recordHandler(encrypted);
-      return {success: true}
-    },
-  });
+  store.applyIncoming(rec);
 
   // Ensure that afterwards, toolbar is still there.
   // As of 2012-12-05, this only passes because Places doesn't use "toolbar" as

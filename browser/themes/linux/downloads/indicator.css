@@ -22,7 +22,11 @@
 /*** Main indicator icon ***/
 
 #downloads-button {
+%ifdef MOZ_PHOTON_THEME
+  --downloads-indicator-image: url("chrome://browser/skin/download-arrow-with-bar.svg");
+%else
   --downloads-indicator-image: url("chrome://browser/skin/download.svg");
+%endif
 }
 
 #downloads-button[cui-areatype="toolbar"] > #downloads-indicator-anchor > #downloads-indicator-icon {

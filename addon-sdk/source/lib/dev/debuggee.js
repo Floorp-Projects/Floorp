@@ -11,8 +11,7 @@ module.metadata = {
 const { Cu } = require("chrome");
 const { Class } = require("../sdk/core/heritage");
 const { MessagePort, MessageChannel } = require("../sdk/messaging");
-const { require: devtoolsRequire } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const { DebuggerServer } = devtoolsRequire("devtools/server/main");
+const { DevToolsShim } = Cu.import("chrome://devtools-shim/content/DevToolsShim.jsm", {});
 
 const outputs = new WeakMap();
 const inputs = new WeakMap();
@@ -49,12 +48,8 @@ const Debuggee = Class({
     if (target.isLocalTab) {
       // Since a remote protocol connection will be made, let's start the
       // DebuggerServer here, once and for all tools.
-      if (!DebuggerServer.initialized) {
-        DebuggerServer.init();
-        DebuggerServer.addBrowserActors();
-      }
-
-      transports.set(this, DebuggerServer.connectPipe());
+      let transport = DevToolsShim.connectDebuggerServer();
+      transports.set(this, transport);
     }
     // TODO: Implement support for remote connections (See Bug 980421)
     else {
