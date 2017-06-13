@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include "nsIAsyncInputStream.h"
+#include "nsIStringStream.h"
 #include "nsStreamUtils.h"
 #include "snappy/snappy.h"
 
@@ -37,17 +38,22 @@ SnappyUncompressInputStream::SnappyUncompressInputStream(nsIInputStream* aBaseSt
 {
   // This implementation only supports sync base streams.  Verify this in debug
   // builds.  Note, this is a bit complicated because the streams we support
-  // advertise different capabilities:
+  // advertise different capabilities and we have no way to ask for the real
+  // thing we care about: "does this stream ever return
+  // NS_BASE_STREAM_WOULD_BLOCK when read?":
   //  - nsFileInputStream - blocking and sync
-  //  - nsStringInputStream - non-blocking and sync
+  //  - nsStringInputStream - non-blocking and provides async interface
   //  - nsPipeInputStream - can be blocking, but provides async interface
 #ifdef DEBUG
   bool baseNonBlocking;
   nsresult rv = mBaseStream->IsNonBlocking(&baseNonBlocking);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   if (baseNonBlocking) {
-    nsCOMPtr<nsIAsyncInputStream> async = do_QueryInterface(mBaseStream);
-    MOZ_ASSERT(!async);
+    nsCOMPtr<nsIStringInputStream> stringStream = do_QueryInterface(mBaseStream);
+    if (!stringStream) {
+      nsCOMPtr<nsIAsyncInputStream> async = do_QueryInterface(mBaseStream);
+      MOZ_ASSERT(!async);
+    }
   }
 #endif
 }
