@@ -6,6 +6,7 @@
 package org.mozilla.focus.widget;
 
 import android.annotation.TargetApi;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -58,11 +59,24 @@ public class DefaultBrowserPreference extends Preference {
         final Context context = getContext();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            openDefaultAppsSettings(context);
+        } else {
+            openSumoPage(context);
+        }
+    }
+
+    private void openDefaultAppsSettings(Context context) {
+        try {
             Intent intent = new Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS);
             context.startActivity(intent);
-        } else {
-            final Intent intent = InfoActivity.getIntentFor(context, SupportUtils.DEFAULT_BROWSER_URL, getTitle().toString());
-            context.startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            // In some cases, a matching Activity may not exist (according to the Android docs).
+            openSumoPage(context);
         }
+    }
+
+    private void openSumoPage(Context context) {
+        final Intent intent = InfoActivity.getIntentFor(context, SupportUtils.DEFAULT_BROWSER_URL, getTitle().toString());
+        context.startActivity(intent);
     }
 }
