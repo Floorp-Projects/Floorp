@@ -97,6 +97,7 @@ class ReadbackLayer;
 class ReadbackProcessor;
 class RefLayer;
 class HostLayer;
+class FocusTarget;
 class KnowsCompositor;
 class ShadowableLayer;
 class ShadowLayerForwarder;
@@ -598,6 +599,11 @@ public:
    * Flag the next paint as the first for a document.
    */
   virtual void SetIsFirstPaint() {}
+
+  /**
+   * Set the current focus target to be sent with the next paint.
+   */
+  virtual void SetFocusTarget(const FocusTarget& aFocusTarget) {}
 
   /**
    * Make sure that the previous transaction has been entirely

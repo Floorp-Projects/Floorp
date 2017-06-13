@@ -17,6 +17,7 @@
 #include "mozilla/layers/AsyncDragMetrics.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/CompositorTypes.h"
+#include "mozilla/layers/FocusTarget.h"
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/Keyboard.h"
 #include "mozilla/layers/LayerAttributes.h"
@@ -417,6 +418,65 @@ struct ParamTraits<mozilla::layers::EventRegions>
             ReadParam(aMsg, aIter, &aResult->mNoActionRegion) &&
             ReadParam(aMsg, aIter, &aResult->mHorizontalPanRegion) &&
             ReadParam(aMsg, aIter, &aResult->mVerticalPanRegion));
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::layers::FocusTarget::ScrollTargets>
+{
+  typedef mozilla::layers::FocusTarget::ScrollTargets paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mHorizontal);
+    WriteParam(aMsg, aParam.mVertical);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mHorizontal) &&
+           ReadParam(aMsg, aIter, &aResult->mVertical);
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::layers::FocusTarget::FocusTargetType>
+  : public ContiguousEnumSerializer<
+             mozilla::layers::FocusTarget::FocusTargetType,
+             mozilla::layers::FocusTarget::eNone,
+             mozilla::layers::FocusTarget::eSentinel>
+{};
+
+template <>
+struct ParamTraits<mozilla::layers::FocusTarget>
+{
+  typedef mozilla::layers::FocusTarget paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mFocusHasKeyEventListeners);
+    WriteParam(aMsg, aParam.mType);
+    if (aParam.mType == mozilla::layers::FocusTarget::eRefLayer) {
+      WriteParam(aMsg, aParam.mData.mRefLayerId);
+    } else if (aParam.mType == mozilla::layers::FocusTarget::eScrollLayer) {
+      WriteParam(aMsg, aParam.mData.mScrollTargets);
+    }
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &aResult->mFocusHasKeyEventListeners) ||
+        !ReadParam(aMsg, aIter, &aResult->mType)) {
+      return false;
+    }
+
+    if (aResult->mType == mozilla::layers::FocusTarget::eRefLayer) {
+      return ReadParam(aMsg, aIter, &aResult->mData.mRefLayerId);
+    } else if (aResult->mType == mozilla::layers::FocusTarget::eScrollLayer) {
+      return ReadParam(aMsg, aIter, &aResult->mData.mScrollTargets);
+    }
+
+    return true;
   }
 };
 

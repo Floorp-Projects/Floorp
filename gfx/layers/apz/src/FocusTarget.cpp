@@ -129,5 +129,22 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell)
     nsLayoutUtils::FindIDForScrollableFrame(vertical);
 }
 
+bool
+FocusTarget::operator==(const FocusTarget& aRhs) const
+{
+  if (mFocusHasKeyEventListeners != aRhs.mFocusHasKeyEventListeners ||
+      mType != aRhs.mType) {
+    return false;
+  }
+
+  if (mType == FocusTarget::eRefLayer) {
+      return mData.mRefLayerId == aRhs.mData.mRefLayerId;
+  } else if (mType == FocusTarget::eScrollLayer) {
+      return mData.mScrollTargets.mHorizontal == aRhs.mData.mScrollTargets.mHorizontal &&
+             mData.mScrollTargets.mVertical == aRhs.mData.mScrollTargets.mVertical;
+  }
+  return true;
+}
+
 } // namespace layers
 } // namespace mozilla
