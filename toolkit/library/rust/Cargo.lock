@@ -1158,6 +1158,8 @@ dependencies = [
  "app_units 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "euclid 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "gleam 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rayon 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "thread_profiler 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "webrender 0.40.0",
  "webrender_traits 0.40.0",
 ]
