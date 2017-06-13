@@ -32,15 +32,14 @@ function isAutocompleteDisabled(aField) {
  * However, nsFormAutoComplete might call remove() any number of
  * times with the same instance of the client.
  *
- * @param Object with the following properties:
- *
- *        formField (DOM node):
- *          A DOM node that we're requesting form history for.
- *
- *        inputName (string):
- *          The name of the input to do the FormHistory look-up
- *          with. If this is searchbar-history, then formField
- *          needs to be null, otherwise constructing will throw.
+ * @param {Object} clientInfo
+ *        Info required to build the FormHistoryClient
+ * @param {Node} clientInfo.formField
+ *        A DOM node that we're requesting form history for.
+ * @param {string} clientInfo.inputName
+ *        The name of the input to do the FormHistory look-up with.
+ *        If this is searchbar-history, then formField needs to be null,
+ *        otherwise constructing will throw.
  */
 function FormHistoryClient({ formField, inputName }) {
   if (formField && inputName != this.SEARCHBAR_ID) {
@@ -81,13 +80,13 @@ FormHistoryClient.prototype = {
   /**
    * Query FormHistory for some results.
    *
-   * @param searchString (string)
+   * @param {string} searchString
    *        The string to search FormHistory for. See
    *        FormHistory.getAutoCompleteResults.
-   * @param params (object)
+   * @param {Object} params
    *        An Object with search properties. See
    *        FormHistory.getAutoCompleteResults.
-   * @param callback
+   * @param {function} callback
    *        A callback function that will take a single
    *        argument (the found entries).
    */
@@ -114,7 +113,7 @@ FormHistoryClient.prototype = {
   /**
    * Remove an item from FormHistory.
    *
-   * @param value (string)
+   * @param {string} value
    *
    *        The value to remove for this particular
    *        field.

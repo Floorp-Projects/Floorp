@@ -281,6 +281,7 @@ this.AutoCompletePopup = {
    * The real controller's handleEnter is called directly in the content process
    * for other methods of completing a selection (e.g. using the tab or enter
    * keys) since the field with focus is in that process.
+   * @param {boolean} aIsPopupSelection
    */
   handleEnter(aIsPopupSelection) {
     if (this.openedPopup) {
