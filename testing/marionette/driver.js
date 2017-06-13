@@ -36,6 +36,8 @@ Cu.import("chrome://marionette/content/proxy.js");
 Cu.import("chrome://marionette/content/session.js");
 Cu.import("chrome://marionette/content/wait.js");
 
+Cu.importGlobalProperties(["URL"]);
+
 this.EXPORTED_SYMBOLS = ["GeckoDriver", "Context"];
 
 var FRAME_SCRIPT = "chrome://marionette/content/listener.js";
@@ -143,14 +145,22 @@ Object.defineProperty(GeckoDriver.prototype, "a11yChecks", {
   }
 });
 
+/**
+ * Returns the current URL of the ChromeWindow or content browser,
+ * depending on context.
+ *
+ * @return {URL}
+ *     Read-only property containing the currently loaded URL.
+ */
 Object.defineProperty(GeckoDriver.prototype, "currentURL", {
   get: function () {
     switch (this.context) {
       case Context.CHROME:
-        return this.getCurrentWindow().location.href;
+        let chromeWin = this.getCurrentWindow();
+        return new URL(chromeWin.location.href);
 
       case Context.CONTENT:
-        return this.curBrowser.currentURL;
+        return new URL(this.curBrowser.currentURI.spec);
     }
   }
 });
@@ -947,7 +957,7 @@ GeckoDriver.prototype.getCurrentUrl = function (cmd) {
   assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  return this.currentURL;
+  return this.currentURL.toString();
 };
 
 /**
@@ -1032,7 +1042,7 @@ GeckoDriver.prototype.goBack = function* (cmd, resp) {
     return;
   }
 
-  let currentURL = this.currentURL;
+  let lastURL = this.currentURL;
   let goBack = this.listener.goBack({pageTimeout: this.timeouts.pageLoad});
 
   // If a remoteness update interrupts our page load, this will never return
@@ -1042,7 +1052,7 @@ GeckoDriver.prototype.goBack = function* (cmd, resp) {
     let parameters = {
       // TODO(ato): Bug 1242595
       command_id: this.listener.activeMessageId,
-      lastSeenURL: currentURL,
+      lastSeenURL: lastURL.toString(),
       pageTimeout: this.timeouts.pageLoad,
       startTime: new Date().getTime(),
     };
@@ -1075,7 +1085,7 @@ GeckoDriver.prototype.goForward = function* (cmd, resp) {
     return;
   }
 
-  let currentURL = this.currentURL;
+  let lastURL = this.currentURL;
   let goForward = this.listener.goForward({pageTimeout: this.timeouts.pageLoad});
 
   // If a remoteness update interrupts our page load, this will never return
@@ -1085,7 +1095,7 @@ GeckoDriver.prototype.goForward = function* (cmd, resp) {
     let parameters = {
       // TODO(ato): Bug 1242595
       command_id: this.listener.activeMessageId,
-      lastSeenURL: currentURL,
+      lastSeenURL: lastURL.toString(),
       pageTimeout: this.timeouts.pageLoad,
       startTime: new Date().getTime(),
     };
