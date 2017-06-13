@@ -10,11 +10,27 @@ import shutil
 import glob
 from optparse import OptionParser
 from subprocess import check_call
+from subprocess import check_output
 
 nssutil_h = "lib/util/nssutil.h"
 softkver_h = "lib/softoken/softkver.h"
 nss_h = "lib/nss/nss.h"
 nssckbi_h = "lib/ckfw/builtins/nssckbi.h"
+abi_base_version_file = "automation/abi-check/previous-nss-release"
+
+abi_report_files = ['automation/abi-check/expected-report-libfreebl3.so.txt',
+                    'automation/abi-check/expected-report-libfreeblpriv3.so.txt',
+                    'automation/abi-check/expected-report-libnspr4.so.txt',
+                    'automation/abi-check/expected-report-libnss3.so.txt',
+                    'automation/abi-check/expected-report-libnssckbi.so.txt',
+                    'automation/abi-check/expected-report-libnssdbm3.so.txt',
+                    'automation/abi-check/expected-report-libnsssysinit.so.txt',
+                    'automation/abi-check/expected-report-libnssutil3.so.txt',
+                    'automation/abi-check/expected-report-libplc4.so.txt',
+                    'automation/abi-check/expected-report-libplds4.so.txt',
+                    'automation/abi-check/expected-report-libsmime3.so.txt',
+                    'automation/abi-check/expected-report-libsoftokn3.so.txt',
+                    'automation/abi-check/expected-report-libssl3.so.txt']
 
 def check_call_noisy(cmd, *args, **kwargs):
     print "Executing command:", cmd
@@ -132,6 +148,26 @@ def set_root_ca_version():
     sed_inplace('s/^\(#define *NSS_BUILTINS_LIBRARY_VERSION_MINOR *\).*$/\\1' + minor + '/', nssckbi_h)
 
 def set_all_lib_versions(version, major, minor, patch, build):
+    grep_major = check_output(['grep', 'define.*NSS_VMAJOR', nss_h])
+    grep_minor = check_output(['grep', 'define.*NSS_VMINOR', nss_h])
+
+    old_major = int(grep_major.split()[2]);
+    old_minor = int(grep_minor.split()[2]);
+
+    new_major = int(major)
+    new_minor = int(minor)
+
+    if (old_major < new_major or (old_major == new_major and old_minor < new_minor)):
+        print "You're increasing the minor (or major) version:"
+        print "- erasing ABI comparison expectations"
+        new_branch = "NSS_" + str(old_major) + "_" + str(old_minor) + "_BRANCH"
+        print "- setting reference branch to the branch of the previous version: " + new_branch
+        with open(abi_base_version_file, "w") as abi_base:
+            abi_base.write("%s\n" % new_branch)
+        for report_file in abi_report_files:
+            with open(report_file, "w") as report_file_handle:
+                report_file_handle.truncate()
+
     set_full_lib_versions(version)
     set_major_versions(major)
     set_minor_versions(minor)

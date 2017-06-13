@@ -67,14 +67,6 @@ assumptions about the sizes of things, but there is little if any
 reason to change the other parameters, so I would recommend you leave
 them as you found them.
 
-The library comes with a Perl script, 'types.pl', which will scan your
-current Makefile settings, and attempt to find good definitions for
-these types.  It relies on a Unix sort of build environment, so it
-probably won't work under MacOS or Windows, but it can be convenient
-if you're porting to a new flavour of Unix.  Just run 'types.pl' at
-the command line, and it will spit out its results to the standard
-output.
-
 
 Conventions
 -----------
@@ -629,92 +621,6 @@ exptmod.c       Computes arbitrary precision modular exponentiation
 Most of these can be built from the Makefile that comes with the
 library.  Try 'make tools', if your environment supports it.
 
-
-Testing the Library
--------------------
-
-Automatic test vectors are included, in the form of a program called
-'mpi-test'.  To build this program and run all the tests, simply
-invoke the shell script 'all-tests'.  If all the tests pass, you
-should see a message:
-
-        All tests passed
-
-If something went wrong, you'll get:
-
-        One or more tests failed.
-
-If this happens, scan back through the preceding lines, to see which
-test failed.  Any failure indicates a bug in the library, which needs
-to be fixed before it will give accurate results.  If you get any such
-thing, please let me know, and I'll try to fix it.  Please let me know
-what platform and compiler you were using, as well as which test
-failed.  If a reason for failure was given, please send me that text
-as well.
-
-If you're on a system where the standard Unix build tools don't work,
-you can build the 'mpi-test' program manually, and run it by hand.
-This is tedious and obnoxious, sorry.
-
-Further manual testing can be performed by building the manual testing
-programs, whose source is found in the 'tests' subdirectory.  Each
-test is in a source file called 'mptest-X.c'.  The Makefile contains a
-target to build all of them at once:
-
-        make tests
-
-Read the comments at the top of each source file to see what the
-driver is supposed to test.  You probably don't need to do this; these
-programs were only written to help me as I was developing the library.
-
-The relevant files are:
-
-mpi-test.c              The source for the test driver
-
-make-test-arrays        A Perl script to generate some of the internal
-                        data structures used by mpi-test.c
-
-test-arrays.txt         The source file for make-test-arrays
-
-all-tests               A Bourne shell script which runs all the
-                        tests in the mpi-test suite
-
-Running 'make mpi-test' should build the mpi-test program.  If you
-cannot use make, here is what needs to be done:
-
-(1) Use 'make-test-arrays' to generate the file 'test-info.c' from
-    the 'test-arrays.txt' file.  Since Perl can be found everywhere,
-    this should be no trouble.  Under Unix, this looks like:
-
-        make-test-arrays test-arrays.txt > test-info.c
-
-(2) Build the MPI library:
-
-        gcc -ansi -pedantic -Wall -c mpi.c
-
-(3) Build the mpi-test program:
-
-        gcc -ansi -pedantic -Wall -o mpi-test mpi.o mpi-test.c
-
-When you've got mpi-test, you can use 'all-tests' to run all the tests
-made available by mpi-test.  If any of them fail, there should be a
-diagnostic indicating what went wrong.  These are fairly high-level
-diagnostics, and won't really help you debug the problem; they're
-simply intended to help you isolate which function caused the problem.
-If you encounter a problem of this sort, feel free to e-mail me, and I
-will certainly attempt to help you debug it.
-
-Note:   Several of the tests hard-wired into 'mpi-test' operate under
-----    the assumption that you are using at least a 16-bit mp_digit 
-        type.  If that is not true, several tests might fail, because 
-        of range problems with the maximum digit value.
-
-        If you are using an 8-bit digit, you will also need to 
-        modify the code for mp_read_raw(), which assumes that
-        multiplication by 256 can be done with mp_mul_d(), a
-        fact that fails when DIGIT_MAX is 255.  You can replace
-        the call with s_mp_lshd(), which will give you the same
-        effect, and without doing as much work. :)
 
 Acknowledgements:
 ----------------

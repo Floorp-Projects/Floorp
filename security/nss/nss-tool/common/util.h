@@ -27,5 +27,6 @@ bool ChangeSlotPassword(void);
 bool DBLoginIfNeeded(const ScopedPK11SlotInfo &slot);
 std::string StringToHex(const ScopedSECItem &input);
 std::vector<uint8_t> ReadInputData(std::string dataPath);
+std::istream &GetStreamFromFileOrStdin(std::string &path, std::ifstream &ifs);
 
 #endif  // util_h__

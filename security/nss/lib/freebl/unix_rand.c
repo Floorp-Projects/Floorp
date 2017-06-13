@@ -163,8 +163,6 @@ RNG_kstat(PRUint32 *fed)
 #if defined(SCO) || defined(UNIXWARE) || defined(BSDI) || defined(FREEBSD) || defined(NETBSD) || defined(DARWIN) || defined(OPENBSD) || defined(NTO) || defined(__riscos__) || defined(__GNU__) || defined(__FreeBSD_kernel__) || defined(__NetBSD_kernel__)
 #include <sys/times.h>
 
-#define getdtablesize() sysconf(_SC_OPEN_MAX)
-
 static size_t
 GetHighResClock(void *buf, size_t maxbytes)
 {
@@ -197,8 +195,6 @@ GiveSystemInfo(void)
 #if defined(__sun)
 #if defined(__svr4) || defined(SVR4)
 #include <sys/systeminfo.h>
-
-#define getdtablesize() sysconf(_SC_OPEN_MAX)
 
 static void
 GiveSystemInfo(void)
@@ -254,8 +250,6 @@ GiveSystemInfo(void)
 
 #if defined(__hpux)
 #include <sys/unistd.h>
-
-#define getdtablesize() sysconf(_SC_OPEN_MAX)
 
 #if defined(__ia64)
 #include <ia64/sys/inline.h>
@@ -375,8 +369,6 @@ GiveSystemInfo(void)
 
 #include <sys/utsname.h>
 #include <sys/systeminfo.h>
-
-#define getdtablesize() sysconf(_SC_OPEN_MAX)
 
 static size_t
 GetHighResClock(void *buf, size_t maxbytes)
@@ -529,8 +521,6 @@ GetHighResClock(void *buf, size_t maxbuf)
 #if defined(sony)
 #include <sys/systeminfo.h>
 
-#define getdtablesize() sysconf(_SC_OPEN_MAX)
-
 static size_t
 GetHighResClock(void *buf, size_t maxbytes)
 {
@@ -564,8 +554,6 @@ GiveSystemInfo(void)
 
 int gettimeofday(struct timeval *, struct timezone *);
 int gethostname(char *, int);
-
-#define getdtablesize() sysconf(_SC_OPEN_MAX)
 
 static size_t
 GetHighResClock(void *buf, size_t maxbytes)
@@ -633,8 +621,6 @@ GiveSystemInfo(void)
 
 #if defined(nec_ews)
 #include <sys/systeminfo.h>
-
-#define getdtablesize() sysconf(_SC_OPEN_MAX)
 
 static size_t
 GetHighResClock(void *buf, size_t maxbytes)

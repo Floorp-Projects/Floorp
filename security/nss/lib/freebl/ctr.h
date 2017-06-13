@@ -23,8 +23,7 @@ struct CTRContextStr {
 typedef struct CTRContextStr CTRContext;
 
 SECStatus CTR_InitContext(CTRContext *ctr, void *context,
-                          freeblCipherFunc cipher, const unsigned char *param,
-                          unsigned int blocksize);
+                          freeblCipherFunc cipher, const unsigned char *param);
 
 /*
  * The context argument is the inner cipher context to use with cipher. The
@@ -34,7 +33,7 @@ SECStatus CTR_InitContext(CTRContext *ctr, void *context,
  * The cipher argument is a block cipher in the ECB encrypt mode.
  */
 CTRContext *CTR_CreateContext(void *context, freeblCipherFunc cipher,
-                              const unsigned char *param, unsigned int blocksize);
+                              const unsigned char *param);
 
 void CTR_DestroyContext(CTRContext *ctr, PRBool freeit);
 
