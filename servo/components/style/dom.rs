@@ -8,6 +8,7 @@
 #![deny(missing_docs)]
 
 use {Atom, Namespace, LocalName};
+use applicable_declarations::ApplicableDeclarationBlock;
 use atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut};
 #[cfg(feature = "gecko")] use context::UpdateAnimationsTasks;
 use data::ElementData;
@@ -29,7 +30,6 @@ use std::fmt::Debug;
 use std::hash::Hash;
 use std::ops::Deref;
 use stylearc::Arc;
-use stylist::ApplicableDeclarationBlock;
 use thread_state;
 
 pub use style_traits::UnsafeNode;
@@ -375,6 +375,9 @@ pub trait TElement : Eq + PartialEq + Debug + Hash + Sized + Copy + Clone +
 
     /// Whether this element has an attribute with a given namespace.
     fn has_attr(&self, namespace: &Namespace, attr: &LocalName) -> bool;
+
+    /// The ID for this element.
+    fn get_id(&self) -> Option<Atom>;
 
     /// Internal iterator for the classes of this element.
     fn each_class<F>(&self, callback: F) where F: FnMut(&Atom);

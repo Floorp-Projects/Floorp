@@ -61,6 +61,9 @@ public:
   // otherwise defers to MP4Decoder::IsSupportedType().
   static bool IsMP4SupportedType(const MediaContainerType& aType,
                                  DecoderDoctorDiagnostics* aDiagnostics);
+
+  // Returns true if aType is MIME type of hls.
+  static bool IsHttpLiveStreamingType(const MediaContainerType& aType);
 };
 
 } // namespace mozilla

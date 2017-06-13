@@ -464,6 +464,7 @@ mochitest:
             default: mochitest/plain-chunked
     treeherder-symbol: tc-M()
     loopback-video: true
+    docker-image: {"in-tree": "desktop1604-test"}
     instance-size:
         by-test-platform:
             linux64-jsdcov/opt: xlarge

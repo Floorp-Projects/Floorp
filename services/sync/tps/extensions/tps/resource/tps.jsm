@@ -615,17 +615,19 @@ var TPS = {
    */
   ValidateBookmarks() {
 
-    let getServerBookmarkState = () => {
+    let getServerBookmarkState = async () => {
       let bookmarkEngine = Weave.Service.engineManager.get("bookmarks");
       let collection = bookmarkEngine.itemSource();
       let collectionKey = bookmarkEngine.service.collectionKeys.keyForCollection(bookmarkEngine.name);
       collection.full = true;
       let items = [];
-      collection.recordHandler = function(item) {
-        item.decrypt(collectionKey);
-        items.push(item.cleartext);
-      };
-      Async.promiseSpinningly(collection.get());
+      let resp = await collection.get();
+      for (let json of resp.obj) {
+        let record = new collection._recordObj();
+        record.deserialize(json);
+        record.decrypt(collectionKey);
+        items.push(record.cleartext);
+      }
       return items;
     };
     let serverRecordDumpStr;
@@ -634,7 +636,7 @@ var TPS = {
       let clientTree = Async.promiseSpinningly(PlacesUtils.promiseBookmarksTree("", {
         includeItemIds: true
       }));
-      let serverRecords = getServerBookmarkState();
+      let serverRecords = Async.promiseSpinningly(getServerBookmarkState());
       // We can't wait until catch to stringify this, since at that point it will have cycles.
       serverRecordDumpStr = JSON.stringify(serverRecords);
 

@@ -152,6 +152,8 @@ RootActor.prototype = {
     getUniqueSelector: true,
     // Whether the dom node actor implements the getCssPath method
     getCssPath: true,
+    // Whether the dom node actor implements the getXPath method
+    getXPath: true,
     // Whether the director scripts are supported
     directorScripts: true,
     // Whether the debugger server supports

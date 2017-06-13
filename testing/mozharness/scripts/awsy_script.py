@@ -24,9 +24,12 @@ from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
 from mozharness.mozilla.tooltool import TooltoolMixin
 from mozharness.mozilla.structuredlog import StructuredOutputParser
+from mozharness.mozilla.testing.codecoverage import (
+    CodeCoverageMixin,
+    code_coverage_config_options
+)
 
-
-class AWSY(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin):
+class AWSY(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin, CodeCoverageMixin):
     config_options = [
         [["--e10s"],
         {"action": "store_true",
@@ -34,7 +37,8 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin):
          "default": False,
          "help": "Run tests with multiple processes. (Desktop builds only)",
          }]
-    ] + testing_config_options + copy.deepcopy(blobupload_config_options)
+    ] + testing_config_options + copy.deepcopy(blobupload_config_options) \
+                               + copy.deepcopy(code_coverage_config_options)
 
     error_list = [
         {'regex': re.compile(r'''(TEST-UNEXPECTED|PROCESS-CRASH)'''), 'level': ERROR},

@@ -4,11 +4,9 @@
 
 package org.mozilla.mozstumbler.service;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.location.Location;
-import android.os.Build.VERSION;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -82,7 +80,7 @@ public  final class Prefs {
         SharedPreferences.Editor editor = getPrefs().edit();
         editor.putFloat(LAT_PREF, (float) location.getLatitude());
         editor.putFloat(LON_PREF, (float) location.getLongitude());
-        apply(editor);
+        editor.apply();
     }
 
     public synchronized void setMozApiKey(String s) {
@@ -142,7 +140,7 @@ public  final class Prefs {
     public synchronized void setLastAttemptedUploadTime(long time) {
         SharedPreferences.Editor editor = getPrefs().edit();
         editor.putLong(LAST_ATTEMPTED_UPLOAD_TIME, time);
-        apply(editor);
+        editor.apply();
     }
 
     public synchronized void setNickname(String nick) {
@@ -181,22 +179,13 @@ public  final class Prefs {
     private void setBoolPref(String key, Boolean state) {
         SharedPreferences.Editor editor = getPrefs().edit();
         editor.putBoolean(key,state);
-        apply(editor);
+        editor.apply();
     }
 
     private void setStringPref(String key, String value) {
         SharedPreferences.Editor editor = getPrefs().edit();
         editor.putString(key, value);
-        apply(editor);
-    }
-
-    @TargetApi(9)
-    private static void apply(SharedPreferences.Editor editor) {
-        if (VERSION.SDK_INT >= 9) {
-            editor.apply();
-        } else if (!editor.commit()) {
-            Log.e(LOG_TAG, "", new IllegalStateException("commit() failed?!"));
-        }
+        editor.apply();
     }
 
     private SharedPreferences getPrefs() {

@@ -16,12 +16,6 @@ import android.os.Build;
  */
 public class testAdobeFlash extends PixelTest {
     public void testLoad() {
-        // This test only works on ICS and higher
-        if (Build.VERSION.SDK_INT < 15) {
-            blockForGeckoReady();
-            return;
-        }
-
         // Enable plugins
         setPreferenceAndWaitForChange("plugin.enable", "1");
 

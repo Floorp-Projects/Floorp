@@ -161,16 +161,16 @@ describe("PageError component:", () => {
 
   it("can show an error note", () => {
     const origMessage = stubPreparedMessages.get("ReferenceError: asdf is not defined");
-    const message = origMessage.set("notes", [
-      {
+    const message = Object.assign({}, origMessage, {
+      "notes": [{
         "messageBody": "test note",
         "frame": {
           "source": "http://example.com/test.js",
           "line": 2,
           "column": 6
         }
-      }
-    ]);
+      }]
+    });
 
     let wrapper = render(PageError({ message, serviceContainer }));
 
@@ -189,8 +189,8 @@ describe("PageError component:", () => {
 
   it("can show multiple error notes", () => {
     const origMessage = stubPreparedMessages.get("ReferenceError: asdf is not defined");
-    const message = origMessage.set("notes", [
-      {
+    const message = Object.assign({}, origMessage, {
+      "notes": [{
         "messageBody": "test note 1",
         "frame": {
           "source": "http://example.com/test1.js",
@@ -213,8 +213,8 @@ describe("PageError component:", () => {
           "line": 9,
           "column": 4
         }
-      }
-    ]);
+      }]
+    });
 
     let wrapper = render(PageError({ message, serviceContainer }));
 

@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html>
+<style>
+@import url(subdir/sheet.css);
+</style>
+<script>
+document.styleSheets[0].cssRules[0].styleSheet
+  .insertRule("* { background: url(1x1-green-in-subdir.png) red; }", 0);
+</script>

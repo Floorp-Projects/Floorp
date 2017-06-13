@@ -295,28 +295,30 @@ add_task(async function testDetailsObjects() {
     }
 
 
-    // Test icon sizes in the menu panel.
-    CustomizableUI.addWidgetToArea(browserActionWidget.id,
-                                   CustomizableUI.AREA_PANEL);
+    if (!gPhotonStructure) {
+      // Test icon sizes in the menu panel.
+      CustomizableUI.addWidgetToArea(browserActionWidget.id,
+                                     CustomizableUI.AREA_PANEL);
 
-    await showBrowserAction(extension);
-    browserActionButton = browserActionWidget.forWindow(window).node;
+      await showBrowserAction(extension);
+      browserActionButton = browserActionWidget.forWindow(window).node;
 
-    for (let resolution of Object.keys(test.menuResolutions)) {
-      await SpecialPowers.pushPrefEnv({set: [[RESOLUTION_PREF, resolution]]});
+      for (let resolution of Object.keys(test.menuResolutions)) {
+        await SpecialPowers.pushPrefEnv({set: [[RESOLUTION_PREF, resolution]]});
 
-      is(window.devicePixelRatio, +resolution, "window has the required resolution");
+        is(window.devicePixelRatio, +resolution, "window has the required resolution");
 
-      let imageURL = test.menuResolutions[resolution];
-      is(getListStyleImage(browserActionButton), imageURL, `browser action has the correct menu image at ${resolution}x resolution`);
+        let imageURL = test.menuResolutions[resolution];
+        is(getListStyleImage(browserActionButton), imageURL, `browser action has the correct menu image at ${resolution}x resolution`);
 
-      await SpecialPowers.popPrefEnv();
+        await SpecialPowers.popPrefEnv();
+      }
+
+      await closeBrowserAction(extension);
+
+      CustomizableUI.addWidgetToArea(browserActionWidget.id,
+                                     CustomizableUI.AREA_NAVBAR);
     }
-
-    await closeBrowserAction(extension);
-
-    CustomizableUI.addWidgetToArea(browserActionWidget.id,
-                                   CustomizableUI.AREA_NAVBAR);
   }
 
   await extension.unload();
