@@ -13,7 +13,9 @@
 #include "nsStringStream.h"
 #include "nsStreamUtils.h"
 #include "nsReadableUtils.h"
+#include "nsIAsyncInputStream.h"
 #include "nsICloneableInputStream.h"
+#include "nsIEventTarget.h"
 #include "nsISeekableStream.h"
 #include "nsISupportsPrimitives.h"
 #include "nsCRT.h"
@@ -33,8 +35,8 @@ using mozilla::Some;
 //-----------------------------------------------------------------------------
 
 class nsStringInputStream final
-  : public nsIStringInputStream
-  , public nsIInputStream
+  : public nsIAsyncInputStream
+  , public nsIStringInputStream
   , public nsISeekableStream
   , public nsISupportsCString
   , public nsIIPCSerializableInputStream
@@ -49,6 +51,7 @@ public:
   NS_DECL_NSISUPPORTSCSTRING
   NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
   NS_DECL_NSICLONEABLEINPUTSTREAM
+  NS_DECL_NSIASYNCINPUTSTREAM
 
   nsStringInputStream()
     : mOffset(0)
@@ -58,6 +61,7 @@ public:
 
   explicit nsStringInputStream(const nsStringInputStream& aOther)
     : mOffset(aOther.mOffset)
+    // We don't copy the async callback state
     , mStatus(aOther.mStatus)
   {
     // Use Assign() here because we don't want the life of the clone to be
@@ -82,10 +86,11 @@ private:
     return Length() - mOffset;
   }
 
-  void Clear()
+  void Clear(nsresult aStatus = NS_BASE_STREAM_CLOSED)
   {
     mData.SetIsVoid(true);
-    mStatus = NS_BASE_STREAM_CLOSED;
+    mStatus = NS_FAILED(aStatus) ? aStatus : NS_BASE_STREAM_CLOSED;
+    MaybeNotifyAsyncCallback();
   }
 
   bool Closed() const
@@ -101,6 +106,9 @@ private:
     mStatus = mData.IsVoid() ? NS_BASE_STREAM_CLOSED : NS_OK;
   }
 
+  void MaybeNotifyAsyncCallback();
+
+  nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback;
   nsDependentCSubstring mData;
   uint32_t mOffset;
   nsresult mStatus;
@@ -114,13 +122,16 @@ NS_IMPL_RELEASE(nsStringInputStream)
 NS_IMPL_CLASSINFO(nsStringInputStream, nullptr, nsIClassInfo::THREADSAFE,
                   NS_STRINGINPUTSTREAM_CID)
 NS_IMPL_QUERY_INTERFACE_CI(nsStringInputStream,
+                           nsIAsyncInputStream,
                            nsIStringInputStream,
                            nsIInputStream,
                            nsISupportsCString,
                            nsISeekableStream,
                            nsIIPCSerializableInputStream,
                            nsICloneableInputStream)
+
 NS_IMPL_CI_INTERFACE_GETTER(nsStringInputStream,
+                            nsIAsyncInputStream,
                             nsIStringInputStream,
                             nsIInputStream,
                             nsISupportsCString,
@@ -406,6 +417,64 @@ nsStringInputStream::Clone(nsIInputStream** aCloneOut)
   RefPtr<nsIInputStream> ref = new nsStringInputStream(*this);
   ref.forget(aCloneOut);
   return NS_OK;
+}
+
+/////////
+// nsIAsyncInputStream implementation
+/////////
+
+NS_IMETHODIMP
+nsStringInputStream::CloseWithStatus(nsresult aStatus)
+{
+  Clear(aStatus);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStringInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
+                               uint32_t aFlags,
+                               uint32_t aRequestedCount,
+                               nsIEventTarget* aEventTarget)
+{
+  // We're going to ignore aRequestedCount, because we're really not expecting
+  // to get more bytes or anything.  And the interface says it's just a hint
+  // anyway.
+  if (mAsyncWaitCallback && aCallback) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!aCallback) {
+    // They're just clearing a callback; nothing else to do.
+    mAsyncWaitCallback = nullptr;
+    return NS_OK;
+  }
+
+  if (aEventTarget) {
+    mAsyncWaitCallback = NS_NewInputStreamReadyEvent(aCallback, aEventTarget);
+  } else {
+    mAsyncWaitCallback = aCallback;
+  }
+
+  if (Closed() ||
+      !(aFlags & WAIT_CLOSURE_ONLY)) {
+    // If the caller just wants to know when we have data... well, we have it.
+    MaybeNotifyAsyncCallback();
+  }
+  return NS_OK;
+}
+
+void
+nsStringInputStream::MaybeNotifyAsyncCallback()
+{
+  if (!mAsyncWaitCallback) {
+    return;
+  }
+
+  // Callee can call AsyncWait from the notification, so make sure we clear
+  // mAsyncWaitCallback before we do the call.
+  nsCOMPtr<nsIInputStreamCallback> callback;
+  callback.swap(mAsyncWaitCallback);
+  callback->OnInputStreamReady(this);
 }
 
 nsresult
