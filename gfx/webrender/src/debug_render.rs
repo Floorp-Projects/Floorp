@@ -5,7 +5,7 @@
 use debug_font_data;
 use device::{Device, GpuMarker, ProgramId, VAOId, TextureId, VertexFormat};
 use device::{TextureFilter, VertexUsageHint, TextureTarget};
-use euclid::{Matrix4D, Point2D, Size2D, Rect};
+use euclid::{Transform3D, Point2D, Size2D, Rect};
 use internal_types::{ORTHO_NEAR_PLANE, ORTHO_FAR_PLANE, TextureSampler};
 use internal_types::{DebugFontVertex, DebugColorVertex, RenderTargetMode, PackedColor};
 use std::f32;
@@ -166,12 +166,12 @@ impl DebugRenderer {
         device.set_blend(true);
         device.set_blend_mode_alpha();
 
-        let projection = Matrix4D::ortho(0.0,
-                                         viewport_size.width as f32,
-                                         viewport_size.height as f32,
-                                         0.0,
-                                         ORTHO_NEAR_PLANE,
-                                         ORTHO_FAR_PLANE);
+        let projection = Transform3D::ortho(0.0,
+                                            viewport_size.width as f32,
+                                            viewport_size.height as f32,
+                                            0.0,
+                                            ORTHO_NEAR_PLANE,
+                                            ORTHO_FAR_PLANE);
 
         // Triangles
         if !self.tri_vertices.is_empty() {

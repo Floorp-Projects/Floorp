@@ -6,8 +6,7 @@ use app_units::Au;
 use device::TextureFilter;
 use fnv::FnvHasher;
 use frame::FrameId;
-use gpu_cache::GpuCache;
-use internal_types::{FontTemplate, SourceTexture, TextureUpdateList};
+use internal_types::{SourceTexture, TextureUpdateList};
 use profiler::TextureCacheProfileCounters;
 use std::collections::{HashMap, HashSet};
 use std::collections::hash_map::Entry::{self, Occupied, Vacant};
@@ -17,11 +16,12 @@ use std::hash::Hash;
 use std::mem;
 use std::sync::Arc;
 use texture_cache::{TextureCache, TextureCacheItemId};
-use webrender_traits::{Epoch, FontKey, GlyphKey, ImageKey, ImageRendering};
+use webrender_traits::{Epoch, FontKey, FontTemplate, GlyphKey, ImageKey, ImageRendering};
 use webrender_traits::{FontRenderMode, ImageData, GlyphDimensions, WebGLContextId};
 use webrender_traits::{DevicePoint, DeviceIntSize, DeviceUintRect, ImageDescriptor, ColorF};
 use webrender_traits::{GlyphOptions, GlyphInstance, TileOffset, TileSize};
-use webrender_traits::{BlobImageRenderer, BlobImageDescriptor, BlobImageError, BlobImageRequest, BlobImageData, ImageStore};
+use webrender_traits::{BlobImageRenderer, BlobImageDescriptor, BlobImageError, BlobImageRequest, BlobImageData};
+use webrender_traits::BlobImageResources;
 use webrender_traits::{ExternalImageData, ExternalImageType, LayoutPoint};
 use rayon::ThreadPool;
 use glyph_rasterizer::{GlyphRasterizer, GlyphCache, GlyphRequest};
@@ -89,12 +89,6 @@ impl ImageTemplates {
 
     fn get_mut(&mut self, key: ImageKey) -> Option<&mut ImageResource> {
         self.images.get_mut(&key)
-    }
-}
-
-impl ImageStore for ImageTemplates {
-    fn get_image(&self, key: ImageKey) -> Option<(&ImageData, &ImageDescriptor)> {
-        self.images.get(&key).map(|resource|{ (&resource.data, &resource.descriptor) })
     }
 }
 
@@ -186,6 +180,20 @@ struct WebGLTexture {
     size: DeviceIntSize,
 }
 
+struct Resources {
+    font_templates: HashMap<FontKey, FontTemplate, BuildHasherDefault<FnvHasher>>,
+    image_templates: ImageTemplates,
+}
+
+impl BlobImageResources for Resources {
+    fn get_font_data(&self, key: FontKey) -> &FontTemplate {
+        self.font_templates.get(&key).unwrap()
+    }
+    fn get_image(&self, key: ImageKey) -> Option<(&ImageData, &ImageDescriptor)> {
+        self.image_templates.get(key).map(|resource| { (&resource.data, &resource.descriptor) })
+    }
+}
+
 pub struct ResourceCache {
     cached_glyphs: GlyphCache,
     cached_images: ResourceClassCache<ImageRequest, CachedImageInfo>,
@@ -193,13 +201,11 @@ pub struct ResourceCache {
     // TODO(pcwalton): Figure out the lifecycle of these.
     webgl_textures: HashMap<WebGLContextId, WebGLTexture, BuildHasherDefault<FnvHasher>>,
 
-    font_templates: HashMap<FontKey, FontTemplate, BuildHasherDefault<FnvHasher>>,
-    image_templates: ImageTemplates,
+    resources: Resources,
     state: State,
     current_frame_id: FrameId,
 
     texture_cache: TextureCache,
-    pub gpu_cache: GpuCache,
 
     // TODO(gw): We should expire (parts of) this cache semi-regularly!
     cached_glyph_dimensions: HashMap<GlyphKey, Option<GlyphDimensions>, BuildHasherDefault<FnvHasher>>,
@@ -218,11 +224,12 @@ impl ResourceCache {
             cached_glyphs: ResourceClassCache::new(),
             cached_images: ResourceClassCache::new(),
             webgl_textures: HashMap::default(),
-            font_templates: HashMap::default(),
-            image_templates: ImageTemplates::new(),
+            resources: Resources {
+                font_templates: HashMap::default(),
+                image_templates: ImageTemplates::new(),
+            },
             cached_glyph_dimensions: HashMap::default(),
             texture_cache: texture_cache,
-            gpu_cache: GpuCache::new(),
             state: State::Idle,
             current_frame_id: FrameId(0),
             pending_image_requests: Vec::new(),
@@ -254,12 +261,15 @@ impl ResourceCache {
         // Push the new font to the font renderer, and also store
         // it locally for glyph metric requests.
         self.glyph_rasterizer.add_font(font_key, template.clone());
-        self.font_templates.insert(font_key, template);
+        self.resources.font_templates.insert(font_key, template);
     }
 
     pub fn delete_font_template(&mut self, font_key: FontKey) {
         self.glyph_rasterizer.delete_font(font_key);
-        self.font_templates.remove(&font_key);
+        self.resources.font_templates.remove(&font_key);
+        if let Some(ref mut r) = self.blob_image_renderer {
+            r.delete_font(font_key);
+        }
     }
 
     pub fn add_image_template(&mut self,
@@ -289,7 +299,7 @@ impl ResourceCache {
             dirty_rect: None,
         };
 
-        self.image_templates.insert(image_key, resource);
+        self.resources.image_templates.insert(image_key, resource);
     }
 
     pub fn update_image_template(&mut self,
@@ -297,7 +307,7 @@ impl ResourceCache {
                                  descriptor: ImageDescriptor,
                                  mut data: ImageData,
                                  dirty_rect: Option<DeviceUintRect>) {
-        let resource = if let Some(image) = self.image_templates.get(image_key) {
+        let resource = if let Some(image) = self.resources.image_templates.get(image_key) {
             assert_eq!(image.descriptor.width, descriptor.width);
             assert_eq!(image.descriptor.height, descriptor.height);
             assert_eq!(image.descriptor.format, descriptor.format);
@@ -331,11 +341,11 @@ impl ResourceCache {
             panic!("Attempt to update non-existant image (key {:?}).", image_key);
         };
 
-        self.image_templates.insert(image_key, resource);
+        self.resources.image_templates.insert(image_key, resource);
     }
 
     pub fn delete_image_template(&mut self, image_key: ImageKey) {
-        let value = self.image_templates.remove(image_key);
+        let value = self.resources.image_templates.remove(image_key);
 
         match value {
             Some(image) => {
@@ -376,7 +386,7 @@ impl ResourceCache {
             tile: tile,
         };
 
-        let template = self.image_templates.get(key).unwrap();
+        let template = self.resources.image_templates.get(key).unwrap();
         if template.data.uses_texture_cache() {
             self.cached_images.mark_as_needed(&request, self.current_frame_id);
         }
@@ -405,6 +415,7 @@ impl ResourceCache {
                     };
 
                     renderer.request(
+                        &self.resources,
                         request.into(),
                         &BlobImageDescriptor {
                             width: w,
@@ -413,7 +424,6 @@ impl ResourceCache {
                             format: template.descriptor.format,
                         },
                         template.dirty_rect,
-                        &self.image_templates,
                     );
                 }
             }
@@ -519,7 +529,7 @@ impl ResourceCache {
     }
 
     pub fn get_image_properties(&self, image_key: ImageKey) -> ImageProperties {
-        let image_template = &self.image_templates.get(image_key).unwrap();
+        let image_template = &self.resources.image_templates.get(image_key).unwrap();
 
         let external_image = match image_template.data {
             ImageData::External(ext_image) => {
@@ -567,7 +577,6 @@ impl ResourceCache {
         debug_assert_eq!(self.state, State::Idle);
         self.state = State::AddResources;
         self.current_frame_id = frame_id;
-        self.gpu_cache.begin_frame();
     }
 
     pub fn block_until_all_resources_added(&mut self,
@@ -623,7 +632,7 @@ impl ResourceCache {
                             request: &ImageRequest,
                             image_data: Option<ImageData>,
                             texture_cache_profile: &mut TextureCacheProfileCounters) {
-        let image_template = self.image_templates.get_mut(request.key).unwrap();
+        let image_template = self.resources.image_templates.get_mut(request.key).unwrap();
         let image_data = image_data.unwrap_or_else(||{
             image_template.data.clone()
         });
@@ -680,18 +689,15 @@ impl ResourceCache {
                 }
             }
             Vacant(entry) => {
-                let image_id = self.texture_cache.new_item_id();
-
                 let filter = match request.rendering {
                     ImageRendering::Pixelated => TextureFilter::Nearest,
                     ImageRendering::Auto | ImageRendering::CrispEdges => TextureFilter::Linear,
                 };
 
-                self.texture_cache.insert(image_id,
-                                          descriptor,
-                                          filter,
-                                          image_data,
-                                          texture_cache_profile);
+                let image_id = self.texture_cache.insert(descriptor,
+                                                         filter,
+                                                         image_data,
+                                                         texture_cache_profile);
 
                 entry.insert(CachedImageInfo {
                     texture_cache_id: image_id,
@@ -704,7 +710,7 @@ impl ResourceCache {
                               request: ImageRequest,
                               image_data: Option<ImageData>,
                               texture_cache_profile: &mut TextureCacheProfileCounters) {
-        match self.image_templates.get(request.key).unwrap().data {
+        match self.resources.image_templates.get(request.key).unwrap().data {
             ImageData::External(ext_image) => {
                 match ext_image.image_type {
                     ExternalImageType::Texture2DHandle |
