@@ -329,7 +329,7 @@ var SidebarUI = {
       // broadcaster, as it is instead set by openWebPanel. Don't clear out
       // the title in this case.
       if (title) {
-        this._title.value = title;
+        this.title = title;
       }
 
       let url = sidebarBroadcaster.getAttribute("sidebarurl");
@@ -388,7 +388,7 @@ var SidebarUI = {
 
     sidebarBroadcaster.removeAttribute("checked");
     this._box.setAttribute("sidebarcommand", "");
-    this._title.value = "";
+    this.title = "";
     this._box.hidden = this._splitter.hidden = true;
 
     let selBrowser = gBrowser.selectedBrowser;
