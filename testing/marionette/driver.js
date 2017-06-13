@@ -1325,6 +1325,7 @@ GeckoDriver.prototype.setWindowRect = function* (cmd, resp) {
   if (win.windowState == win.STATE_FULLSCREEN) {
     yield new Promise(resolve => {
       win.addEventListener("sizemodechange", resolve, {once: true});
+
       win.fullScreen = false;
     });
   }
@@ -1333,10 +1334,20 @@ GeckoDriver.prototype.setWindowRect = function* (cmd, resp) {
     assert.positiveInteger(height);
     assert.positiveInteger(width);
 
-    if (win.outerWidth != width || win.outerHeight != height) {
+    if (win.outerWidth != width && win.outerHeight != height) {
       yield new Promise(resolve => {
-        const optimisedResize = () => win.requestAnimationFrame(resolve);
-        win.addEventListener("resize", optimisedResize, {once: true});
+        // When the DOM resize event claims that it fires _after_ the document
+        // view has been resized, it is lying.
+        //
+        // Because resize events fire at a high rate, DOM modifications
+        // such as updates to outerWidth/outerHeight are not guaranteed to
+        // have processed.  To overcome this... abomination... of the web
+        // platform, we throttle the event using setTimeout.  If everything
+        // was well in this world we would use requestAnimationFrame, but
+        // it does not seem to like our particular flavour of XUL.
+        const fps15 = 66;
+        const synchronousResize = () => win.setTimeout(resolve, fps15);
+        win.addEventListener("resize", synchronousResize, {once: true});
         win.resizeTo(width, height);
       });
     }
