@@ -8,16 +8,25 @@
 #define mozilla_mscom_ActivationContext_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Move.h"
 
 #include <windows.h>
 
 namespace mozilla {
 namespace mscom {
 
-class MOZ_RAII ActivationContext
+class ActivationContext final
 {
 public:
-  explicit ActivationContext(HMODULE aLoadFromModule);
+  explicit ActivationContext(WORD aResourceId);
+  explicit ActivationContext(HMODULE aLoadFromModule, WORD aResourceId = 2);
+
+  ActivationContext(ActivationContext&& aOther);
+  ActivationContext& operator=(ActivationContext&& aOther);
+
+  ActivationContext(const ActivationContext& aOther);
+  ActivationContext& operator=(const ActivationContext& aOther);
+
   ~ActivationContext();
 
   explicit operator bool() const
@@ -25,14 +34,42 @@ public:
     return mActCtx != INVALID_HANDLE_VALUE;
   }
 
-  ActivationContext(const ActivationContext&) = delete;
-  ActivationContext(ActivationContext&&) = delete;
-  ActivationContext& operator=(const ActivationContext&) = delete;
-  ActivationContext& operator=(ActivationContext&&) = delete;
+private:
+  void Init(ACTCTX& aActCtx);
+  void AddRef();
+  void Release();
 
 private:
-  HANDLE    mActCtx;
-  ULONG_PTR mActivationCookie;
+  HANDLE mActCtx;
+
+  friend class ActivationContextRegion;
+};
+
+class MOZ_NON_TEMPORARY_CLASS ActivationContextRegion final
+{
+public:
+  template <typename... Args>
+  explicit ActivationContextRegion(Args... aArgs)
+    : mActCtx(Forward<Args>(aArgs)...)
+    , mActCookie(0)
+  {
+    Activate();
+  }
+
+  explicit ActivationContextRegion(const ActivationContext& aActCtx);
+  explicit ActivationContextRegion(ActivationContext&& aActCtx);
+  ~ActivationContextRegion();
+
+  ActivationContextRegion(const ActivationContextRegion&) = delete;
+  ActivationContextRegion(ActivationContextRegion&&) = delete;
+  ActivationContextRegion& operator=(const ActivationContextRegion&) = delete;
+  ActivationContextRegion& operator=(ActivationContextRegion&&) = delete;
+
+private:
+  void Activate();
+
+  ActivationContext mActCtx;
+  ULONG_PTR         mActCookie;
 };
 
 } // namespace mscom
