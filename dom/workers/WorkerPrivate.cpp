@@ -4469,7 +4469,7 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
     mOnLine = !NS_IsOffline();
   }
 
-  nsCOMPtr<nsIEventTarget> target;
+  nsCOMPtr<nsISerialEventTarget> target;
 
   // A child worker just inherits the parent workers ThrottledEventQueue
   // and main thread target for now.  This is mainly due to the restriction
@@ -4485,7 +4485,7 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   target = GetWindow() ? GetWindow()->EventTargetFor(TaskCategory::Worker) : nullptr;
 
   if (!target) {
-    target = GetMainThreadEventTarget();
+    target = GetMainThreadSerialEventTarget();
     MOZ_DIAGNOSTIC_ASSERT(target);
   }
 
