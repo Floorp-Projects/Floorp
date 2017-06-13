@@ -318,14 +318,8 @@ var SidebarUI = {
         BrowserUITelemetry.countSidebarEvent(this.currentID, "hide");
       }
 
-      let broadcasters = document.getElementsByAttribute("group", "sidebar");
+      let broadcasters = document.querySelectorAll("broadcaster[group=sidebar]");
       for (let broadcaster of broadcasters) {
-        // skip elements that observe sidebar broadcasters and random
-        // other elements
-        if (broadcaster.localName != "broadcaster") {
-          continue;
-        }
-
         if (broadcaster != sidebarBroadcaster) {
           broadcaster.removeAttribute("checked");
         } else {
