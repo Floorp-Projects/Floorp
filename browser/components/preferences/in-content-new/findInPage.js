@@ -300,8 +300,8 @@ var gSearchResultsPane = {
       // Searching some elements, such as xul:button, buttons to open subdialogs.
       let keywordsResult = this.stringMatchesFilters(nodeObject.getAttribute("searchkeywords"), searchPhrase);
 
-      // Creating tooltips for buttons and menulists.
-      if (keywordsResult && (nodeObject.tagName === "button" || nodeObject.tagName == "menulist")) {
+      // Creating tooltips for buttons
+      if (keywordsResult && nodeObject.tagName === "button") {
         this.listSearchTooltips.push(nodeObject);
       }
 
@@ -315,44 +315,18 @@ var gSearchResultsPane = {
       matchesFound = matchesFound || complexTextNodesResult || labelResult || valueResult || keywordsResult;
     }
 
-    // Should not search unselected child nodes of a <xul:deck> element
-    // except the "historyPane" <xul:deck> element.
-    if (nodeObject.tagName == "deck" && nodeObject.id != "historyPane") {
-      let index = nodeObject.selectedIndex;
-      if (index != -1) {
-        let result = this.searchChildNodeIfVisible(nodeObject, index, searchPhrase);
-        matchesFound = matchesFound || result;
-      }
-    } else {
-      for (let i = 0; i < nodeObject.childNodes.length; i++) {
-        let result = this.searchChildNodeIfVisible(nodeObject, i, searchPhrase);
+    for (let i = 0; i < nodeObject.childNodes.length; i++) {
+      // Search only if child node is not hidden
+      if (!nodeObject.childNodes[i].hidden && nodeObject.getAttribute("data-hidden-from-search") !== "true") {
+        let result = this.searchWithinNode(nodeObject.childNodes[i], searchPhrase);
+        // Creating tooltips for menulist element
+        if (result && nodeObject.tagName === "menulist") {
+          this.listSearchTooltips.push(nodeObject);
+        }
         matchesFound = matchesFound || result;
       }
     }
     return matchesFound;
-  },
-
-  /**
-   * Search for a phrase within a child node if it is visible.
-   *
-   * @param Node nodeObject
-   *    The parent DOM Element
-   * @param Number index
-   *    The index for the childNode
-   * @param String searchPhrase
-   * @returns boolean
-   *    Returns true when found the specific childNode, false otherwise
-   */
-  searchChildNodeIfVisible(nodeObject, index, searchPhrase) {
-    let result = false;
-    if (!nodeObject.childNodes[index].hidden && nodeObject.getAttribute("data-hidden-from-search") !== "true") {
-      result = this.searchWithinNode(nodeObject.childNodes[index], searchPhrase);
-      // Creating tooltips for menulist element
-      if (result && nodeObject.tagName === "menulist") {
-        this.listSearchTooltips.push(nodeObject);
-      }
-    }
-    return result;
   },
 
   /**
