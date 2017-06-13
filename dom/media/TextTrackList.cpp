@@ -257,5 +257,11 @@ bool TextTrackList::AreTextTracksLoaded()
   return true;
 }
 
+nsTArray<RefPtr<TextTrack>>&
+TextTrackList::GetTextTrackArray()
+{
+  return mTextTracks;
+}
+
 } // namespace dom
 } // namespace mozilla
