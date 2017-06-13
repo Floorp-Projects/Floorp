@@ -61,7 +61,7 @@
           "windowId": {"type": "integer", "minimum": 0, "description": "The ID of the window the tab is contained within."},
           "openerTabId": {"unsupported": true, "type": "integer", "minimum": 0, "optional": true, "description": "The ID of the tab that opened this tab, if any. This property is only present if the opener tab still exists."},
           "selected": {"type": "boolean", "description": "Whether the tab is selected.", "deprecated": "Please use $(ref:tabs.Tab.highlighted).", "unsupported": true},
-          "highlighted": {"type": "boolean", "description": "Whether the tab is highlighted."},
+          "highlighted": {"type": "boolean", "description": "Whether the tab is highlighted. Works as an alias of active"},
           "active": {"type": "boolean", "description": "Whether the tab is active in its window. (Does not necessarily mean the window is focused.)"},
           "pinned": {"type": "boolean", "description": "Whether the tab is pinned."},
           "audible": {"type": "boolean", "optional": true, "description": "Whether the tab has produced sound over the past couple of seconds (but it might not be heard if also muted). Equivalent to whether the speaker audio indicator is showing."},
@@ -474,7 +474,7 @@
               "highlighted": {
                 "type": "boolean",
                 "optional": true,
-                "description": "Whether the tabs are highlighted."
+                "description": "Whether the tabs are highlighted.  Works as an alias of active."
               },
               "currentWindow": {
                 "type": "boolean",
@@ -548,6 +548,7 @@
         "type": "function",
         "description": "Highlights the given tabs.",
         "async": "callback",
+        "unsupported": "true",
         "parameters": [
           {
             "type": "object",

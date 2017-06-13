@@ -382,13 +382,6 @@ public class GeckoPreferences
             // all) in the action bar.
             updateActionBarTitle(R.string.settings_title);
 
-            if (Build.VERSION.SDK_INT < 13) {
-                // Affected by Bug 1015209 -- no detach/attach.
-                // If we try rejigging fragments, we'll crash, so don't
-                // enable locale switching at all.
-                localeSwitchingIsEnabled = false;
-                throw new IllegalStateException("foobar");
-            }
         }
 
         // Use setResourceToOpen to specify these extras.

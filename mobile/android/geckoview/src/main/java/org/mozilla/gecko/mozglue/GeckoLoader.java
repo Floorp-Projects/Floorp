@@ -373,17 +373,13 @@ public final class GeckoLoader {
         }
 
         try {
-            if (Build.VERSION.SDK_INT >= 9) {
-                final String nativeLibPath = context.getApplicationInfo().nativeLibraryDir;
-                final boolean nativeLibDirExists = new File(nativeLibPath).exists();
-                final boolean nativeLibLibExists = new File(nativeLibPath + "/lib" + lib + ".so").exists();
+            final String nativeLibPath = context.getApplicationInfo().nativeLibraryDir;
+            final boolean nativeLibDirExists = new File(nativeLibPath).exists();
+            final boolean nativeLibLibExists = new File(nativeLibPath + "/lib" + lib + ".so").exists();
 
-                message.append(", nativeLib: " + nativeLibPath);
-                message.append(", dirx=" + nativeLibDirExists);
-                message.append(", libx=" + nativeLibLibExists);
-            } else {
-                message.append(", <pre-9>");
-            }
+            message.append(", nativeLib: " + nativeLibPath);
+            message.append(", dirx=" + nativeLibDirExists);
+            message.append(", libx=" + nativeLibLibExists);
         } catch (Throwable e) {
             message.append(", nativeLib fail.");
         }
@@ -416,11 +412,6 @@ public final class GeckoLoader {
         } catch (Throwable e) {
             Log.wtf(LOGTAG, "Couldn't load " + lib + ". Trying native library dir.");
 
-            if (Build.VERSION.SDK_INT < 9) {
-                // We can't use nativeLibraryDir.
-                return e;
-            }
-
             // Attempt 2: use nativeLibraryDir, which should also work.
             final String libDir = context.getApplicationInfo().nativeLibraryDir;
             final String libPath = libDir + "/lib" + lib + ".so";
@@ -450,11 +441,9 @@ public final class GeckoLoader {
 
         // If we're in a mismatched UID state (Bug 1042935 Comment 16) there's really
         // nothing we can do.
-        if (Build.VERSION.SDK_INT >= 9) {
-            final String nativeLibPath = context.getApplicationInfo().nativeLibraryDir;
-            if (nativeLibPath.contains("mismatched_uid")) {
-                throw new RuntimeException("Fatal: mismatched UID: cannot load.");
-            }
+        final String nativeLibPath = context.getApplicationInfo().nativeLibraryDir;
+        if (nativeLibPath.contains("mismatched_uid")) {
+            throw new RuntimeException("Fatal: mismatched UID: cannot load.");
         }
 
         // Attempt 3: try finding the path the pseudo-supported way using .dataDir.

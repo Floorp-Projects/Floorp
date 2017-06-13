@@ -24,9 +24,6 @@ public final class GamepadUtils {
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
     private static boolean isGamepadKey(KeyEvent event) {
-        if (Build.VERSION.SDK_INT < 12) {
-            return false;
-        }
         return (event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD;
     }
 
@@ -59,9 +56,6 @@ public final class GamepadUtils {
     }
 
     public static boolean isPanningControl(MotionEvent event) {
-        if (Build.VERSION.SDK_INT < 12) {
-            return false;
-        }
         if ((event.getSource() & InputDevice.SOURCE_CLASS_MASK) != InputDevice.SOURCE_CLASS_JOYSTICK) {
             return false;
         }

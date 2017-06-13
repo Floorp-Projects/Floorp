@@ -1,0 +1,26 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+EXPORTS += [
+    'HLSDecoder.h',
+    'HLSDemuxer.h',
+    'HLSResource.h',
+    'HLSUtils.h',
+]
+
+UNIFIED_SOURCES += [
+    'HLSDecoder.cpp',
+    'HLSDemuxer.cpp',
+    'HLSResource.cpp',
+    'HLSUtils.cpp',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']

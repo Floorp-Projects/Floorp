@@ -4,7 +4,7 @@
 
 var browserAreas = {
   "navbar": CustomizableUI.AREA_NAVBAR,
-  "menupanel": CustomizableUI.AREA_PANEL,
+  "menupanel": getCustomizableUIPanelID(),
   "tabstrip": CustomizableUI.AREA_TABSTRIP,
   "personaltoolbar": CustomizableUI.AREA_BOOKMARKS,
 };

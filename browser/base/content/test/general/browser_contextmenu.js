@@ -906,84 +906,6 @@ add_task(async function test_input_spell_false() {
   */
 });
 
-const remoteClientsFixture = [ { id: 1, name: "Foo"}, { id: 2, name: "Bar"} ];
-
-add_task(async function test_plaintext_sendpagetodevice() {
-  if (!gSync.sendTabToDeviceEnabled) {
-    return;
-  }
-  await ensureSyncReady();
-  const oldGetter = setupRemoteClientsFixture(remoteClientsFixture);
-
-  let plainTextItemsWithSendPage =
-                    ["context-navigation",   null,
-                      ["context-back",         false,
-                        "context-forward",      false,
-                        "context-reload",       true,
-                        "context-bookmarkpage", true], null,
-                    "---",                  null,
-                    "context-savepage",     true,
-                    ...(hasPocket ? ["context-pocket", true] : []),
-                    "---",                  null,
-                    "context-sendpagetodevice", true,
-                      ["*Foo", true,
-                       "*Bar", true,
-                       "---", null,
-                       "*All Devices", true], null,
-                    "---",                  null,
-                    "context-viewbgimage",  false,
-                    "context-selectall",    true,
-                    "---",                  null,
-                    "context-viewsource",   true,
-                    "context-viewinfo",     true
-                   ];
-  await test_contextmenu("#test-text", plainTextItemsWithSendPage, {
-      maybeScreenshotsPresent: true,
-      async onContextMenuShown() {
-        await openMenuItemSubmenu("context-sendpagetodevice");
-      }
-    });
-
-  restoreRemoteClients(oldGetter);
-});
-
-add_task(async function test_link_sendlinktodevice() {
-  if (!gSync.sendTabToDeviceEnabled) {
-    return;
-  }
-  await ensureSyncReady();
-  const oldGetter = setupRemoteClientsFixture(remoteClientsFixture);
-
-  await test_contextmenu("#test-link",
-    ["context-openlinkintab", true,
-     ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
-     // We need a blank entry here because the containers submenu is
-     // dynamically generated with no ids.
-     ...(hasContainers ? ["", null] : []),
-     "context-openlink",      true,
-     "context-openlinkprivate", true,
-     "---",                   null,
-     "context-bookmarklink",  true,
-     "context-savelink",      true,
-     ...(hasPocket ? ["context-savelinktopocket", true] : []),
-     "context-copylink",      true,
-     "context-searchselect",  true,
-     "---",                  null,
-     "context-sendlinktodevice", true,
-      ["*Foo", true,
-       "*Bar", true,
-       "---", null,
-       "*All Devices", true], null,
-    ],
-    {
-      async onContextMenuShown() {
-        await openMenuItemSubmenu("context-sendlinktodevice");
-      }
-    });
-
-  restoreRemoteClients(oldGetter);
-});
-
 add_task(async function test_svg_link() {
   await test_contextmenu("#svg-with-link > a",
     ["context-openlinkintab", true,
@@ -1061,11 +983,4 @@ async function selectText(selector) {
     div.setEndAfter(element);
     win.getSelection().addRange(div);
   });
-}
-
-function ensureSyncReady() {
-  let service = Cc["@mozilla.org/weave/service;1"]
-                  .getService(Components.interfaces.nsISupports)
-                  .wrappedJSObject;
-  return service.whenLoaded();
 }

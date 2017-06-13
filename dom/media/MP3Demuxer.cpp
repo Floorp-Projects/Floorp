@@ -8,6 +8,7 @@
 
 #include <inttypes.h>
 #include <algorithm>
+#include <limits>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/EndianUtils.h"
@@ -106,6 +107,7 @@ MP3Demuxer::NotifyDataRemoved()
 
 MP3TrackDemuxer::MP3TrackDemuxer(MediaResource* aSource)
   : mSource(aSource)
+  , mFrameLock(false)
   , mOffset(0)
   , mFirstFrameOffset(0)
   , mNumParsedFrames(0)
@@ -420,9 +422,12 @@ MP3TrackDemuxer::Duration(int64_t aNumFrames) const
 MediaByteRange
 MP3TrackDemuxer::FindFirstFrame()
 {
-  // Get engough successive frames to avoid invalid frame from cut stream.
-  // However, some website use very short mp3 file so using the same value as Chrome.
+  // We attempt to find multiple successive frames to avoid locking onto a false
+  // positive if we're fed a stream that has been cut mid-frame.
+  // For compatibility reasons we have to use the same frame count as Chrome, since
+  // some web sites actually use a file that short to test our playback capabilities.
   static const int MIN_SUCCESSIVE_FRAMES = 3;
+  mFrameLock = false;
 
   MediaByteRange candidateFrame = FindNextFrame();
   int numSuccFrames = candidateFrame.Length() > 0;
@@ -462,7 +467,8 @@ MP3TrackDemuxer::FindFirstFrame()
 
   if (numSuccFrames >= MIN_SUCCESSIVE_FRAMES) {
     MP3LOG("FindFirst() accepting candidate frame: "
-            "successiveFrames=%d", numSuccFrames);
+           "successiveFrames=%d", numSuccFrames);
+    mFrameLock = true;
   } else {
     MP3LOG("FindFirst() no suitable first frame found");
   }
@@ -491,7 +497,7 @@ MediaByteRange
 MP3TrackDemuxer::FindNextFrame()
 {
   static const int BUFFER_SIZE = 64;
-  static const int MAX_SKIPPED_BYTES = 1024 * BUFFER_SIZE;
+  static const uint32_t MAX_SKIPPABLE_BYTES = 1024 * BUFFER_SIZE;
 
   MP3LOGV("FindNext() Begin mOffset=%" PRIu64 " mNumParsedFrames=%" PRIu64
           " mFrameIndex=%" PRId64 " mTotalFrameLen=%" PRIu64
@@ -504,13 +510,40 @@ MP3TrackDemuxer::FindNextFrame()
 
   bool foundFrame = false;
   int64_t frameHeaderOffset = 0;
+  int64_t startOffset = mOffset;
+  const bool searchingForID3 = !mParser.ID3Header().Size();
 
   // Check whether we've found a valid MPEG frame.
   while (!foundFrame) {
-    if ((!mParser.FirstFrame().Length()
-         && mOffset - mParser.ID3Header().Size() > MAX_SKIPPED_BYTES)
+    // How many bytes we can go without finding a valid MPEG frame
+    // (effectively rounded up to the next full buffer size multiple, as we
+    // only check this before reading the next set of data into the buffer).
+
+    // This default value of 0 will be used during testing whether we're being
+    // fed a valid stream, which shouldn't have any gaps between frames.
+    uint32_t maxSkippableBytes = 0;
+
+    if (!mParser.FirstFrame().Length()) {
+      // We're looking for the first valid frame. A well-formed file should
+      // have its first frame header right at the start (skipping an ID3 tag
+      // if necessary), but in order to support files that might have been
+      // improperly cut, we search the first few kB for a frame header.
+      maxSkippableBytes = MAX_SKIPPABLE_BYTES;
+      // Since we're counting the skipped bytes from the offset we started
+      // this parsing session with, we need to discount the ID3 tag size only
+      // if we were looking for one during the current frame parsing session.
+      if (searchingForID3) {
+        maxSkippableBytes += mParser.ID3Header().TotalTagSize();
+      }
+    } else if (mFrameLock) {
+      // We've found a valid MPEG stream, so don't impose any limits
+      // to allow skipping corrupted data until we hit EOS.
+      maxSkippableBytes = std::numeric_limits<uint32_t>::max();
+    }
+
+    if ((mOffset - startOffset > maxSkippableBytes)
         || (read = Read(buffer, mOffset, BUFFER_SIZE)) == 0) {
-      MP3LOG("FindNext() EOS or exceeded MAX_SKIPPED_BYTES without a frame");
+      MP3LOG("FindNext() EOS or exceeded maxSkippeableBytes without a frame");
       // This is not a valid MPEG audio stream or we've reached EOS, give up.
       break;
     }
@@ -1320,11 +1353,7 @@ ID3Parser::Parse(ByteReader* aReader)
 
   while (aReader->CanRead8() && !mHeader.ParseNext(aReader->ReadU8())) { }
 
-  if (mHeader.IsValid()) {
-    // Header found, return total tag size.
-    return ID3Header::SIZE + Header().Size() + Header().FooterSize();
-  }
-  return 0;
+  return mHeader.TotalTagSize();
 }
 
 void
@@ -1385,6 +1414,16 @@ ID3Parser::ID3Header::FooterSize() const
 {
   if (Flags() & (1 << 4)) {
     return SIZE;
+  }
+  return 0;
+}
+
+uint32_t
+ID3Parser::ID3Header::TotalTagSize() const
+{
+  if (IsValid()) {
+    // Header found, return total tag size.
+    return ID3Header::SIZE + Size() + FooterSize();
   }
   return 0;
 }

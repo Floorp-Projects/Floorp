@@ -176,7 +176,12 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
 void
 ServoStyleSheet::LoadFailed()
 {
-  Inner()->mSheet = Servo_StyleSheet_Empty(mParsingMode).Consume();
+  if (!Inner()->mSheet) {
+    // Only create empty stylesheet if this is a top level stylesheet.
+    // The raw sheet for stylesheet of @import rule is already set in
+    // loader, and we should not touch it.
+    Inner()->mSheet = Servo_StyleSheet_Empty(mParsingMode).Consume();
+  }
   Inner()->mURLData = URLExtraData::Dummy();
 }
 

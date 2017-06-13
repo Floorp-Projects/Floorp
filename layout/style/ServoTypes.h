@@ -63,6 +63,10 @@ enum class TraversalRootBehavior {
 enum class TraversalRestyleBehavior {
   // Normal processing.
   Normal,
+  // Normal processing, but tolerant to calls to restyle elements in unstyled
+  // or display:none subtrees (which can occur when styling elements with
+  // newly applied XBL bindings).
+  ForNewlyBoundElement,
   // Traverses in a mode that doesn't generate any change hints, which is what's
   // required when handling frame reconstruction.  The change hints in this case
   // are unneeded, since the old frames have already been destroyed.
