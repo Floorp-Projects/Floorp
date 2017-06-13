@@ -34,7 +34,8 @@ namespace mozilla {
 namespace net {
 
 FTPChannelChild::FTPChannelChild(nsIURI* uri)
-: mIPCOpen(false)
+: NeckoTargetHolder(nullptr)
+, mIPCOpen(false)
 , mUnknownDecoderInvolved(false)
 , mCanceled(false)
 , mSuspendCount(0)
@@ -241,7 +242,7 @@ FTPChannelChild::OpenContentStream(bool async,
 // FTPChannelChild::PFTPChannelChild
 //-----------------------------------------------------------------------------
 
-class FTPStartRequestEvent : public ChannelEvent
+class FTPStartRequestEvent : public NeckoTargetChannelEvent<FTPChannelChild>
 {
 public:
   FTPStartRequestEvent(FTPChannelChild* aChild,
@@ -251,7 +252,7 @@ public:
                        const PRTime& aLastModified,
                        const nsCString& aEntityID,
                        const URIParams& aURI)
-    : mChild(aChild)
+    : NeckoTargetChannelEvent<FTPChannelChild>(aChild)
     , mChannelStatus(aChannelStatus)
     , mContentLength(aContentLength)
     , mContentType(aContentType)
@@ -266,14 +267,7 @@ public:
                              mLastModified, mEntityID, mURI);
   }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
-  {
-    MOZ_ASSERT(mChild);
-    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
-    return target.forget();
-  }
 private:
-  FTPChannelChild* mChild;
   nsresult mChannelStatus;
   int64_t mContentLength;
   nsCString mContentType;
@@ -358,7 +352,7 @@ FTPChannelChild::DoOnStartRequest(const nsresult& aChannelStatus,
   }
 }
 
-class FTPDataAvailableEvent : public ChannelEvent
+class FTPDataAvailableEvent : public NeckoTargetChannelEvent<FTPChannelChild>
 {
 public:
   FTPDataAvailableEvent(FTPChannelChild* aChild,
@@ -366,7 +360,7 @@ public:
                         const nsCString& aData,
                         const uint64_t& aOffset,
                         const uint32_t& aCount)
-    : mChild(aChild)
+    : NeckoTargetChannelEvent<FTPChannelChild>(aChild)
     , mChannelStatus(aChannelStatus)
     , mData(aData)
     , mOffset(aOffset)
@@ -378,14 +372,7 @@ public:
     mChild->DoOnDataAvailable(mChannelStatus, mData, mOffset, mCount);
   }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
-  {
-    MOZ_ASSERT(mChild);
-    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
-    return target.forget();
-  }
 private:
-  FTPChannelChild* mChild;
   nsresult mChannelStatus;
   nsCString mData;
   uint64_t mOffset;
@@ -410,14 +397,14 @@ FTPChannelChild::RecvOnDataAvailable(const nsresult& channelStatus,
   return IPC_OK();
 }
 
-class MaybeDivertOnDataFTPEvent : public ChannelEvent
+class MaybeDivertOnDataFTPEvent : public NeckoTargetChannelEvent<FTPChannelChild>
 {
  public:
   MaybeDivertOnDataFTPEvent(FTPChannelChild* child,
                             const nsCString& data,
                             const uint64_t& offset,
                             const uint32_t& count)
-  : mChild(child)
+  : NeckoTargetChannelEvent<FTPChannelChild>(child)
   , mData(data)
   , mOffset(offset)
   , mCount(count) {}
@@ -427,14 +414,7 @@ class MaybeDivertOnDataFTPEvent : public ChannelEvent
     mChild->MaybeDivertOnData(mData, mOffset, mCount);
   }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
-  {
-    MOZ_ASSERT(mChild);
-    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
-    return target.forget();
-  }
  private:
-  FTPChannelChild* mChild;
   nsCString mData;
   uint64_t mOffset;
   uint32_t mCount;
@@ -501,14 +481,14 @@ FTPChannelChild::DoOnDataAvailable(const nsresult& channelStatus,
   stringStream->Close();
 }
 
-class FTPStopRequestEvent : public ChannelEvent
+class FTPStopRequestEvent : public NeckoTargetChannelEvent<FTPChannelChild>
 {
 public:
   FTPStopRequestEvent(FTPChannelChild* aChild,
                       const nsresult& aChannelStatus,
                       const nsCString &aErrorMsg,
                       bool aUseUTF8)
-    : mChild(aChild)
+    : NeckoTargetChannelEvent<FTPChannelChild>(aChild)
     , mChannelStatus(aChannelStatus)
     , mErrorMsg(aErrorMsg)
     , mUseUTF8(aUseUTF8)
@@ -519,12 +499,7 @@ public:
     mChild->DoOnStopRequest(mChannelStatus, mErrorMsg, mUseUTF8);
   }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
-  {
-    return do_GetMainThread();
-  }
 private:
-  FTPChannelChild* mChild;
   nsresult mChannelStatus;
   nsCString mErrorMsg;
   bool mUseUTF8;
@@ -572,12 +547,12 @@ private:
   nsString mResponseMsg;
 };
 
-class MaybeDivertOnStopFTPEvent : public ChannelEvent
+class MaybeDivertOnStopFTPEvent : public NeckoTargetChannelEvent<FTPChannelChild>
 {
  public:
   MaybeDivertOnStopFTPEvent(FTPChannelChild* child,
                             const nsresult& aChannelStatus)
-  : mChild(child)
+  : NeckoTargetChannelEvent<FTPChannelChild>(child)
   , mChannelStatus(aChannelStatus) {}
 
   void Run()
@@ -585,14 +560,7 @@ class MaybeDivertOnStopFTPEvent : public ChannelEvent
     mChild->MaybeDivertOnStop(mChannelStatus);
   }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
-  {
-    MOZ_ASSERT(mChild);
-    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
-    return target.forget();
-  }
  private:
-  FTPChannelChild* mChild;
   nsresult mChannelStatus;
 };
 
@@ -671,21 +639,15 @@ FTPChannelChild::DoOnStopRequest(const nsresult& aChannelStatus,
   Send__delete__(this);
 }
 
-class FTPFailedAsyncOpenEvent : public ChannelEvent
+class FTPFailedAsyncOpenEvent : public NeckoTargetChannelEvent<FTPChannelChild>
 {
  public:
   FTPFailedAsyncOpenEvent(FTPChannelChild* aChild, nsresult aStatus)
-  : mChild(aChild), mStatus(aStatus) {}
+  : NeckoTargetChannelEvent<FTPChannelChild>(aChild)
+  , mStatus(aStatus) {}
   void Run() { mChild->DoFailedAsyncOpen(mStatus); }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
-  {
-    MOZ_ASSERT(mChild);
-    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
-    return target.forget();
-  }
  private:
-  FTPChannelChild* mChild;
   nsresult mStatus;
 };
 
@@ -723,11 +685,11 @@ FTPChannelChild::DoFailedAsyncOpen(const nsresult& statusCode)
     Send__delete__(this);
 }
 
-class FTPFlushedForDiversionEvent : public ChannelEvent
+class FTPFlushedForDiversionEvent : public NeckoTargetChannelEvent<FTPChannelChild>
 {
  public:
   explicit FTPFlushedForDiversionEvent(FTPChannelChild* aChild)
-  : mChild(aChild)
+  : NeckoTargetChannelEvent<FTPChannelChild>(aChild)
   {
     MOZ_RELEASE_ASSERT(aChild);
   }
@@ -736,15 +698,6 @@ class FTPFlushedForDiversionEvent : public ChannelEvent
   {
     mChild->FlushedForDiversion();
   }
-
-  already_AddRefed<nsIEventTarget> GetEventTarget()
-  {
-    MOZ_ASSERT(mChild);
-    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
-    return target.forget();
-  }
- private:
-  FTPChannelChild* mChild;
 };
 
 mozilla::ipc::IPCResult
@@ -786,21 +739,12 @@ FTPChannelChild::RecvDivertMessages()
   return IPC_OK();
 }
 
-class FTPDeleteSelfEvent : public ChannelEvent
+class FTPDeleteSelfEvent : public NeckoTargetChannelEvent<FTPChannelChild>
 {
  public:
   explicit FTPDeleteSelfEvent(FTPChannelChild* aChild)
-  : mChild(aChild) {}
+  : NeckoTargetChannelEvent<FTPChannelChild>(aChild) {}
   void Run() { mChild->DoDeleteSelf(); }
-
-  already_AddRefed<nsIEventTarget> GetEventTarget()
-  {
-    MOZ_ASSERT(mChild);
-    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
-    return target.forget();
-  }
- private:
-  FTPChannelChild* mChild;
 };
 
 mozilla::ipc::IPCResult
@@ -1017,17 +961,6 @@ FTPChannelChild::EnsureNeckoTarget()
   }
 
   gNeckoChild->SetEventTargetForActor(this, mNeckoTarget);
-}
-
-already_AddRefed<nsIEventTarget>
-FTPChannelChild::GetNeckoTarget()
-{
-  nsCOMPtr<nsIEventTarget> target = mNeckoTarget;
-
-  if (!target) {
-    target = do_GetMainThread();
-  }
-  return target.forget();
 }
 
 } // namespace net

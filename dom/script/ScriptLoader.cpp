@@ -54,7 +54,6 @@
 #include "nsSandboxFlags.h"
 #include "nsContentTypeParser.h"
 #include "nsINetworkPredictor.h"
-#include "ImportManager.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/ConsoleReportCollector.h"
 
@@ -402,12 +401,6 @@ ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest)
   {
     // Update our current script.
     AutoCurrentScriptUpdater scriptUpdater(this, aRequest->mElement);
-    Maybe<AutoCurrentScriptUpdater> masterScriptUpdater;
-    nsCOMPtr<nsIDocument> master = mDocument->MasterDocument();
-    if (master != mDocument) {
-      masterScriptUpdater.emplace(master->ScriptLoader(),
-                                  aRequest->mElement);
-    }
 
     JSContext* cx = aes.cx();
     JS::Rooted<JSObject*> module(cx);
@@ -864,7 +857,7 @@ ScriptLoader::StartLoad(ScriptLoadRequest* aRequest)
   }
 
   nsCOMPtr<nsILoadGroup> loadGroup = mDocument->GetDocumentLoadGroup();
-  nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->MasterDocument()->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow();
   NS_ENSURE_TRUE(window, NS_ERROR_NULL_POINTER);
   nsIDocShell* docshell = window->GetDocShell();
   nsCOMPtr<nsIInterfaceRequestor> prompter(do_QueryInterface(docshell));
@@ -1696,13 +1689,13 @@ ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest)
 
   // The window may have gone away by this point, in which case there's no point
   // in trying to run the script.
-  nsCOMPtr<nsIDocument> master = mDocument->MasterDocument();
+
   {
     // Try to perform a microtask checkpoint
     nsAutoMicroTask mt;
   }
 
-  nsPIDOMWindowInner* pwin = master->GetInnerWindow();
+  nsPIDOMWindowInner* pwin = mDocument->GetInnerWindow();
   bool runScript = !!pwin;
   if (runScript) {
     nsContentUtils::DispatchTrustedEvent(scriptElem->OwnerDoc(),
@@ -1712,7 +1705,7 @@ ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest)
   }
 
   // Inner window could have gone away after firing beforescriptexecute
-  pwin = master->GetInnerWindow();
+  pwin = mDocument->GetInnerWindow();
   if (!pwin) {
     runScript = false;
   }
@@ -1787,8 +1780,7 @@ ScriptLoader::FireScriptEvaluated(nsresult aResult,
 already_AddRefed<nsIScriptGlobalObject>
 ScriptLoader::GetScriptGlobalObject()
 {
-  nsCOMPtr<nsIDocument> master = mDocument->MasterDocument();
-  nsPIDOMWindowInner* pwin = master->GetInnerWindow();
+  nsPIDOMWindowInner* pwin = mDocument->GetInnerWindow();
   if (!pwin) {
     return nullptr;
   }
@@ -2056,17 +2048,6 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
   {
     // Update our current script.
     AutoCurrentScriptUpdater scriptUpdater(this, aRequest->mElement);
-    Maybe<AutoCurrentScriptUpdater> masterScriptUpdater;
-    nsCOMPtr<nsIDocument> master = mDocument->MasterDocument();
-    if (master != mDocument) {
-      // If this script belongs to an import document, it will be
-      // executed in the context of the master document. During the
-      // execution currentScript of the master should refer to this
-      // script. So let's update the mCurrentScript of the ScriptLoader
-      // of the master document too.
-      masterScriptUpdater.emplace(master->ScriptLoader(),
-                                  aRequest->mElement);
-    }
 
     if (aRequest->IsModuleRequest()) {
       // When a module is already loaded, it is not feched a second time and the
@@ -2442,42 +2423,6 @@ ScriptLoader::ReadyToExecuteParserBlockingScripts()
     if (!ancestor->SelfReadyToExecuteParserBlockingScripts() &&
         ancestor->AddPendingChildLoader(this)) {
       AddParserBlockingScriptExecutionBlocker();
-      return false;
-    }
-  }
-
-  if (mDocument && !mDocument->IsMasterDocument()) {
-    RefPtr<ImportManager> im = mDocument->ImportManager();
-    RefPtr<ImportLoader> loader = im->Find(mDocument);
-    MOZ_ASSERT(loader, "How can we have an import document without a loader?");
-
-    // The referring link that counts in the execution order calculation
-    // (in spec: flagged as branch)
-    nsCOMPtr<nsINode> referrer = loader->GetMainReferrer();
-    MOZ_ASSERT(referrer, "There has to be a main referring link for each imports");
-
-    // Import documents are blocked by their import predecessors. We need to
-    // wait with script execution until all the predecessors are done.
-    // Technically it means we have to wait for the last one to finish,
-    // which is the neares one to us in the order.
-    RefPtr<ImportLoader> lastPred = im->GetNearestPredecessor(referrer);
-    if (!lastPred) {
-      // If there is no predecessor we can run.
-      return true;
-    }
-
-    nsCOMPtr<nsIDocument> doc = lastPred->GetDocument();
-    if (lastPred->IsBlocking() || !doc ||
-        !doc->ScriptLoader()->SelfReadyToExecuteParserBlockingScripts()) {
-      // Document has not been created yet or it was created but not ready.
-      // Either case we are blocked by it. The ImportLoader will take care
-      // of blocking us, and adding the pending child loader to the blocking
-      // ScriptLoader when it's possible (at this point the blocking loader
-      // might not have created the document/ScriptLoader)
-      lastPred->AddBlockedScriptLoader(this);
-      // As more imports are parsed, this can change, let's cache what we
-      // blocked, so it can be later updated if needed (see: ImportLoader::Updater).
-      loader->SetBlockingPredecessor(lastPred);
       return false;
     }
   }

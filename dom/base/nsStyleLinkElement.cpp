@@ -128,23 +128,7 @@ nsStyleLinkElement::GetLineNumber()
   return mLineNumber;
 }
 
-/* static */ bool
-nsStyleLinkElement::IsImportEnabled()
-{
-  static bool sAdded = false;
-  static bool sImportsEnabled;
-  if (!sAdded) {
-    // This part runs only once because of the static flag.
-    Preferences::AddBoolVarCache(&sImportsEnabled,
-                                 "dom.htmlimports.enabled",
-                                 false);
-    sAdded = true;
-  }
-
-  return sImportsEnabled;
-}
-
-static uint32_t ToLinkMask(const nsAString& aLink, nsIPrincipal* aPrincipal)
+static uint32_t ToLinkMask(const nsAString& aLink)
 {
   // Keep this in sync with sRelValues in HTMLLinkElement.cpp
   if (aLink.EqualsLiteral("prefetch"))
@@ -157,9 +141,6 @@ static uint32_t ToLinkMask(const nsAString& aLink, nsIPrincipal* aPrincipal)
     return nsStyleLinkElement::eNEXT;
   else if (aLink.EqualsLiteral("alternate"))
     return nsStyleLinkElement::eALTERNATE;
-  else if (aLink.EqualsLiteral("import") &&
-           nsStyleLinkElement::IsImportEnabled())
-    return nsStyleLinkElement::eHTMLIMPORT;
   else if (aLink.EqualsLiteral("preconnect"))
     return nsStyleLinkElement::ePRECONNECT;
   else if (aLink.EqualsLiteral("prerender"))
@@ -168,7 +149,7 @@ static uint32_t ToLinkMask(const nsAString& aLink, nsIPrincipal* aPrincipal)
     return 0;
 }
 
-uint32_t nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes, nsIPrincipal* aPrincipal)
+uint32_t nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes)
 {
   uint32_t linkMask = 0;
   nsAString::const_iterator start, done;
@@ -180,12 +161,12 @@ uint32_t nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes, nsIPrincipa
   nsAString::const_iterator current(start);
   bool inString = !nsContentUtils::IsHTMLWhitespace(*current);
   nsAutoString subString;
-  
+
   while (current != done) {
     if (nsContentUtils::IsHTMLWhitespace(*current)) {
       if (inString) {
         nsContentUtils::ASCIIToLower(Substring(start, current), subString);
-        linkMask |= ToLinkMask(subString, aPrincipal);
+        linkMask |= ToLinkMask(subString);
         inString = false;
       }
     }
@@ -199,7 +180,7 @@ uint32_t nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes, nsIPrincipa
   }
   if (inString) {
     nsContentUtils::ASCIIToLower(Substring(start, current), subString);
-    linkMask |= ToLinkMask(subString, aPrincipal);
+    linkMask |= ToLinkMask(subString);
   }
   return linkMask;
 }

@@ -12,6 +12,7 @@
 #include "nsAutoPtr.h"
 #include "nsIEventTarget.h"
 #include "nsThreadUtils.h"
+#include "nsXULAppAPI.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/ReentrantMonitor.h"
@@ -32,6 +33,8 @@ class ChannelEvent
   virtual already_AddRefed<nsIEventTarget> GetEventTarget() = 0;
 };
 
+// Note that MainThreadChannelEvent should not be used in child process since
+// GetEventTarget() directly returns an unlabeled event target.
 class MainThreadChannelEvent : public ChannelEvent
 {
  public:
@@ -41,8 +44,40 @@ class MainThreadChannelEvent : public ChannelEvent
   already_AddRefed<nsIEventTarget>
   GetEventTarget() override
   {
+    MOZ_ASSERT(XRE_IsParentProcess());
+
     return do_GetMainThread();
   }
+};
+
+// This event is designed to be only used for e10s child channels.
+// The goal is to force the child channel to implement GetNeckoTarget()
+// which should return a labeled main thread event target so that this
+// channel event can be dispatched correctly.
+template<typename T>
+class NeckoTargetChannelEvent : public ChannelEvent
+{
+public:
+  explicit NeckoTargetChannelEvent(T *aChild)
+    : mChild(aChild)
+  {
+    MOZ_COUNT_CTOR(NeckoTargetChannelEvent);
+  }
+  virtual ~NeckoTargetChannelEvent()
+  {
+    MOZ_COUNT_DTOR(NeckoTargetChannelEvent);
+  }
+
+  already_AddRefed<nsIEventTarget>
+  GetEventTarget() override
+  {
+    MOZ_ASSERT(mChild);
+
+    return mChild->GetNeckoTarget();
+  }
+
+protected:
+  T *mChild;
 };
 
 // Workaround for Necko re-entrancy dangers. We buffer IPDL messages in a

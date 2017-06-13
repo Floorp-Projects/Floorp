@@ -10,6 +10,7 @@
 #include "WyciwygChannelChild.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/net/NeckoChild.h"
 
 #include "nsCharsetSource.h"
 #include "nsContentUtils.h"
@@ -37,8 +38,9 @@ NS_IMPL_ISUPPORTS(WyciwygChannelChild,
                   nsIPrivateBrowsingChannel)
 
 
-WyciwygChannelChild::WyciwygChannelChild()
-  : mStatus(NS_OK)
+WyciwygChannelChild::WyciwygChannelChild(nsIEventTarget *aNeckoTarget)
+  : NeckoTargetHolder(aNeckoTarget)
+  , mStatus(NS_OK)
   , mIsPending(false)
   , mCanceled(false)
   , mLoadFlags(LOAD_NORMAL)
@@ -50,6 +52,14 @@ WyciwygChannelChild::WyciwygChannelChild()
 {
   LOG(("Creating WyciwygChannelChild @%p\n", this));
   mEventQ = new ChannelEventQueue(NS_ISUPPORTS_CAST(nsIWyciwygChannel*, this));
+
+  if (mNeckoTarget) {
+    gNeckoChild->SetEventTargetForActor(this, mNeckoTarget);
+  }
+
+  gNeckoChild->SendPWyciwygChannelConstructor(this);
+  // IPDL holds a reference until IPDL channel gets destroyed
+  AddIPDLReference();
 }
 
 WyciwygChannelChild::~WyciwygChannelChild()
@@ -130,7 +140,8 @@ WyciwygChannelChild::Init(nsIURI* uri)
 // WyciwygChannelChild::PWyciwygChannelChild
 //-----------------------------------------------------------------------------
 
-class WyciwygStartRequestEvent : public MainThreadChannelEvent
+class WyciwygStartRequestEvent
+  : public NeckoTargetChannelEvent<WyciwygChannelChild>
 {
 public:
   WyciwygStartRequestEvent(WyciwygChannelChild* child,
@@ -139,12 +150,15 @@ public:
                            const int32_t& source,
                            const nsCString& charset,
                            const nsCString& securityInfo)
-  : mChild(child), mStatusCode(statusCode), mContentLength(contentLength),
-    mSource(source), mCharset(charset), mSecurityInfo(securityInfo) {}
+  : NeckoTargetChannelEvent<WyciwygChannelChild>(child)
+  , mStatusCode(statusCode)
+  , mContentLength(contentLength)
+  , mSource(source)
+  , mCharset(charset)
+  , mSecurityInfo(securityInfo) {}
   void Run() { mChild->OnStartRequest(mStatusCode, mContentLength, mSource,
                                      mCharset, mSecurityInfo); }
 private:
-  WyciwygChannelChild* mChild;
   nsresult mStatusCode;
   int64_t mContentLength;
   int32_t mSource;
@@ -192,16 +206,18 @@ WyciwygChannelChild::OnStartRequest(const nsresult& statusCode,
     Cancel(rv);
 }
 
-class WyciwygDataAvailableEvent : public MainThreadChannelEvent
+class WyciwygDataAvailableEvent
+  : public NeckoTargetChannelEvent<WyciwygChannelChild>
 {
 public:
   WyciwygDataAvailableEvent(WyciwygChannelChild* child,
                             const nsCString& data,
                             const uint64_t& offset)
-  : mChild(child), mData(data), mOffset(offset) {}
+  : NeckoTargetChannelEvent<WyciwygChannelChild>(child)
+  , mData(data)
+  , mOffset(offset) {}
   void Run() { mChild->OnDataAvailable(mData, mOffset); }
 private:
-  WyciwygChannelChild* mChild;
   nsCString mData;
   uint64_t mOffset;
 };
@@ -253,15 +269,16 @@ WyciwygChannelChild::OnDataAvailable(const nsCString& data,
   }
 }
 
-class WyciwygStopRequestEvent : public MainThreadChannelEvent
+class WyciwygStopRequestEvent
+  : public NeckoTargetChannelEvent<WyciwygChannelChild>
 {
 public:
   WyciwygStopRequestEvent(WyciwygChannelChild* child,
                           const nsresult& statusCode)
-  : mChild(child), mStatusCode(statusCode) {}
+  : NeckoTargetChannelEvent<WyciwygChannelChild>(child)
+  , mStatusCode(statusCode) {}
   void Run() { mChild->OnStopRequest(mStatusCode); }
 private:
-  WyciwygChannelChild* mChild;
   nsresult mStatusCode;
 };
 
@@ -305,16 +322,15 @@ WyciwygChannelChild::OnStopRequest(const nsresult& statusCode)
     PWyciwygChannelChild::Send__delete__(this);
 }
 
-class WyciwygCancelEvent : public MainThreadChannelEvent
+class WyciwygCancelEvent : public NeckoTargetChannelEvent<WyciwygChannelChild>
 {
  public:
   WyciwygCancelEvent(WyciwygChannelChild* child, const nsresult& status)
-  : mChild(child)
+  : NeckoTargetChannelEvent<WyciwygChannelChild>(child)
   , mStatus(status) {}
 
   void Run() { mChild->CancelEarly(mStatus); }
  private:
-  WyciwygChannelChild* mChild;
   nsresult mStatus;
 };
 

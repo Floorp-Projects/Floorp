@@ -60,7 +60,6 @@ user_pref("dom.w3c_touch_events.enabled", 1);
 user_pref("layout.accessiblecaret.enabled_on_touch", false);
 user_pref("dom.webcomponents.enabled", true);
 user_pref("dom.webcomponents.customelements.enabled", true);
-user_pref("dom.htmlimports.enabled", true);
 // Existing tests assume there is no font size inflation.
 user_pref("font.size.inflation.emPerLine", 0);
 user_pref("font.size.inflation.minTwips", 0);

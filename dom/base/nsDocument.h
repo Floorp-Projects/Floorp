@@ -66,7 +66,6 @@
 #include "mozilla/Attributes.h"
 #include "nsIDOMXPathEvaluator.h"
 #include "jsfriendapi.h"
-#include "ImportManager.h"
 #include "mozilla/LinkedList.h"
 #include "CustomElementRegistry.h"
 #include "mozilla/dom/Performance.h"
@@ -1217,63 +1216,6 @@ public:
                                                     const mozilla::dom::ElementCreationOptionsOrString& aOptions,
                                                     mozilla::ErrorResult& rv) override;
 
-  virtual nsIDocument* MasterDocument() override
-  {
-    return mMasterDocument ? mMasterDocument.get()
-                           : this;
-  }
-
-  virtual void SetMasterDocument(nsIDocument* master) override
-  {
-    MOZ_ASSERT(master);
-    mMasterDocument = master;
-  }
-
-  virtual bool IsMasterDocument() override
-  {
-    return !mMasterDocument;
-  }
-
-  virtual mozilla::dom::ImportManager* ImportManager() override
-  {
-    if (mImportManager) {
-      MOZ_ASSERT(!mMasterDocument, "Only the master document has ImportManager set");
-      return mImportManager.get();
-    }
-
-    if (mMasterDocument) {
-      return mMasterDocument->ImportManager();
-    }
-
-    // ImportManager is created lazily.
-    // If the manager is not yet set it has to be the
-    // master document and this is the first import in it.
-    // Let's create a new manager.
-    mImportManager = new mozilla::dom::ImportManager();
-    return mImportManager.get();
-  }
-
-  virtual bool HasSubImportLink(nsINode* aLink) override
-  {
-    return mSubImportLinks.Contains(aLink);
-  }
-
-  virtual uint32_t IndexOfSubImportLink(nsINode* aLink) override
-  {
-    return mSubImportLinks.IndexOf(aLink);
-  }
-
-  virtual void AddSubImportLink(nsINode* aLink) override
-  {
-    mSubImportLinks.AppendElement(aLink);
-  }
-
-  virtual nsINode* GetSubImportLink(uint32_t aIdx) override
-  {
-    return aIdx < mSubImportLinks.Length() ? mSubImportLinks[aIdx].get()
-                                           : nullptr;
-  }
-
   virtual void UnblockDOMContentLoaded() override;
 
 protected:
@@ -1680,10 +1622,6 @@ private:
 
   nsrefcnt mStackRefCnt;
   bool mNeedsReleaseAfterStackRefCntRelease;
-
-  nsCOMPtr<nsIDocument> mMasterDocument;
-  RefPtr<mozilla::dom::ImportManager> mImportManager;
-  nsTArray<nsCOMPtr<nsINode> > mSubImportLinks;
 
   // Set to true when the document is possibly controlled by the ServiceWorker.
   // Used to prevent multiple requests to ServiceWorkerManager.
