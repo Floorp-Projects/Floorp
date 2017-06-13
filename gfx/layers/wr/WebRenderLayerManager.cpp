@@ -219,6 +219,9 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
 
   WebRenderScrollData scrollData;
   if (AsyncPanZoomEnabled()) {
+    scrollData.SetFocusTarget(mFocusTarget);
+    mFocusTarget = FocusTarget();
+
     if (mIsFirstPaint) {
       scrollData.SetIsFirstPaint();
       mIsFirstPaint = false;
@@ -249,6 +252,12 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   ClearMutatedLayers();
 
   return true;
+}
+
+void
+WebRenderLayerManager::SetFocusTarget(const FocusTarget& aFocusTarget)
+{
+  mFocusTarget = aFocusTarget;
 }
 
 bool
