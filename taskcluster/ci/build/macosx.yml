@@ -69,7 +69,7 @@ macosx64-noopt/debug:
         custom-build-variant-cfg: cross-noopt-debug
         tooltool-downloads: internal
         keep-artifacts: false
-    run-on-projects: [ 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
+    run-on-projects: [ 'trunk', 'try' ]
 
 macosx64-add-on-devel/opt:
     description: "MacOS X x64 add-on-devel"
