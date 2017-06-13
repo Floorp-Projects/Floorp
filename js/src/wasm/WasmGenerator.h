@@ -220,6 +220,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     Tier                            tier_;
     CompileMode                     compileMode_;
     UniqueChars*                    error_;
+    mozilla::Atomic<bool>*          cancelled_;
 
     // Data that is moved into the result of finish()
     Assumptions                     assumptions_;
@@ -282,7 +283,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool initWasm(const CompileArgs& args);
 
   public:
-    explicit ModuleGenerator(UniqueChars* error);
+    explicit ModuleGenerator(UniqueChars* error, mozilla::Atomic<bool>* cancelled);
     ~ModuleGenerator();
 
     MOZ_MUST_USE bool init(UniqueModuleEnvironment env, const CompileArgs& args,

@@ -182,15 +182,20 @@ namespace wasm {
 
 struct Tier2GeneratorTask
 {
-    // The module that wants the results of the compilation
+    // The module that wants the results of the compilation.
     SharedModule            module;
 
-    // The arguments for the compilation
+    // The arguments for the compilation.
     SharedCompileArgs       compileArgs;
+
+    // A flag that is set by the cancellation code and checked by any running
+    // module generator to short-circuit compilation.
+    mozilla::Atomic<bool>   cancelled;
 
     Tier2GeneratorTask(Module& module, const CompileArgs& compileArgs)
       : module(&module),
-        compileArgs(&compileArgs)
+        compileArgs(&compileArgs),
+        cancelled(false)
     {}
 };
 
@@ -227,7 +232,7 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
 {
     MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
 
-    ModuleGenerator mg(error);
+    ModuleGenerator mg(error, nullptr);
 
     CompileMode mode = GetInitialCompileMode(args);
     if (!::Compile(mg, bytecode, args, error, mode))
@@ -264,15 +269,30 @@ bool
 wasm::GenerateTier2(Tier2GeneratorTask* task)
 {
     UniqueChars     error;
-    ModuleGenerator mg(&error);
+    ModuleGenerator mg(&error, &task->cancelled);
 
     bool res =
         ::Compile(mg, task->module->bytecode(), *task->compileArgs, &error, CompileMode::Tier2) &&
         mg.finishTier2(task->module->bytecode(), task->module);
 
+    // If the task was cancelled then res will be false.
     task->module->unblockOnTier2GeneratorFinished(res ? CompileMode::Tier2 : CompileMode::Once);
 
     return res;
+}
+
+// This runs on the main thread.  The task will be deleted in the HelperThread
+// system.
+void
+wasm::CancelTier2GeneratorTask(Tier2GeneratorTask* task)
+{
+    task->cancelled = true;
+
+    // GenerateTier2 will also unblock and set the mode to Once, after the
+    // compilation fails, if the compilation gets to run at all.  Do it here in
+    // any case - there's no reason to wait, and we won't be depending on
+    // anything else happening.
+    task->module->unblockOnTier2GeneratorFinished(CompileMode::Once);
 }
 
 void

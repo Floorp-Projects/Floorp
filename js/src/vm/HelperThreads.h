@@ -148,6 +148,9 @@ class GlobalHelperThreadState
     // GC tasks needing to be done in parallel.
     GCParallelTaskVector gcParallelWorklist_;
 
+    // Count of finished Tier2Generator tasks.
+    uint32_t wasmTier2GeneratorsFinished_;
+
     ParseTask* removeFinishedParseTask(ParseTaskKind kind, void* token);
 
   public:
@@ -239,6 +242,14 @@ class GlobalHelperThreadState
 
     wasm::Tier2GeneratorTaskPtrVector& wasmTier2GeneratorWorklist(const AutoLockHelperThreadState&) {
         return wasmTier2GeneratorWorklist_;
+    }
+
+    void incWasmTier2GeneratorsFinished(const AutoLockHelperThreadState&) {
+        wasmTier2GeneratorsFinished_++;
+    }
+
+    uint32_t wasmTier2GeneratorsFinished(const AutoLockHelperThreadState&) const {
+        return wasmTier2GeneratorsFinished_;
     }
 
     PromiseHelperTaskVector& promiseHelperTasks(const AutoLockHelperThreadState&) {
@@ -591,6 +602,9 @@ CompileFunction(CompileTask* task, UniqueChars* error);
 
 MOZ_MUST_USE bool
 GenerateTier2(Tier2GeneratorTask* task);
+
+void
+CancelTier2GeneratorTask(Tier2GeneratorTask* task);
 
 void
 DeleteTier2GeneratorTask(Tier2GeneratorTask* task);
