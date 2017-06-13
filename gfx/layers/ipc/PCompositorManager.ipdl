@@ -1,0 +1,32 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+namespace mozilla {
+namespace layers {
+
+/**
+ * The PCompositorManager protocol is the top-level protocol between the
+ * compositor thread and the creators of compositors. It exists in the
+ * following conditions:
+ * - One PCompositorManager between the GPU process and each content process.
+ *   If the GPU/UI processes are combined, there is one PCompositorManager
+ *   between the combined GPU/UI process and each content process.
+ * - One PCompositorManager between the GPU process and the UI process. If
+ *   they are combined, there is still one PCompositorManager, but both the
+ *   child and parent live in the same process.
+ * The intention for this protocol is to facilitate communication with the
+ * compositor thread for compositor data that is only shared once, rather than
+ * per PCompositorBridge instance.
+ */
+sync protocol PCompositorManager
+{
+parent:
+  async IgnoreTemporarySkeletonMessage();
+};
+
+} // layers
+} // mozilla
