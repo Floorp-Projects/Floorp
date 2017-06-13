@@ -67,7 +67,6 @@ add_task(async function() {
 });
 
 add_task(checkSeparatorInsertion("menuWebDeveloperPopup", "developer-button", "PanelUI-developerItems"));
-add_task(checkSeparatorInsertion("viewSidebarMenu", "sidebar-button", "PanelUI-sidebarItems"));
 
 registerCleanupFunction(function() {
   for (let el of tempElements) {
