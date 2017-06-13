@@ -12,6 +12,7 @@ use length::Length;
 use scale_factor::ScaleFactor;
 use num::*;
 use point::TypedPoint2D;
+use vector::TypedVector2D;
 use size::TypedSize2D;
 
 use heapsize::HeapSizeOf;
@@ -19,10 +20,10 @@ use num_traits::NumCast;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::cmp::PartialOrd;
 use std::fmt;
+use std::hash::{Hash, Hasher};
 use std::ops::{Add, Sub, Mul, Div};
 
 /// A 2d Rectangle optionally tagged with a unit.
-#[derive(RustcDecodable, RustcEncodable)]
 pub struct TypedRect<T, U = UnknownUnit> {
     pub origin: TypedPoint2D<T, U>,
     pub size: TypedSize2D<T, U>,
@@ -54,14 +55,22 @@ impl<T: Serialize, U> Serialize for TypedRect<T, U> {
     }
 }
 
+impl<T: Hash, U> Hash for TypedRect<T, U>
+{
+    fn hash<H: Hasher>(&self, h: &mut H) {
+        self.origin.hash(h);
+        self.size.hash(h);
+    }
+}
+
 impl<T: Copy, U> Copy for TypedRect<T, U> {}
 
 impl<T: Copy, U> Clone for TypedRect<T, U> {
-    fn clone(&self) -> TypedRect<T, U> { *self }
+    fn clone(&self) -> Self { *self }
 }
 
 impl<T: PartialEq, U> PartialEq<TypedRect<T, U>> for TypedRect<T, U> {
-    fn eq(&self, other: &TypedRect<T, U>) -> bool {
+    fn eq(&self, other: &Self) -> bool {
         self.origin.eq(&other.origin) && self.size.eq(&other.size)
     }
 }
@@ -82,7 +91,7 @@ impl<T: fmt::Display, U> fmt::Display for TypedRect<T, U> {
 
 impl<T, U> TypedRect<T, U> {
     /// Constructor.
-    pub fn new(origin: TypedPoint2D<T, U>, size: TypedSize2D<T, U>) -> TypedRect<T, U> {
+    pub fn new(origin: TypedPoint2D<T, U>, size: TypedSize2D<T, U>) -> Self {
         TypedRect {
             origin: origin,
             size: size,
@@ -93,7 +102,7 @@ impl<T, U> TypedRect<T, U> {
 impl<T, U> TypedRect<T, U>
 where T: Copy + Clone + Zero + PartialOrd + PartialEq + Add<T, Output=T> + Sub<T, Output=T> {
     #[inline]
-    pub fn intersects(&self, other: &TypedRect<T, U>) -> bool {
+    pub fn intersects(&self, other: &Self) -> bool {
         self.origin.x < other.origin.x + other.size.width &&
        other.origin.x <  self.origin.x + self.size.width &&
         self.origin.y < other.origin.y + other.size.height &&
@@ -141,7 +150,7 @@ where T: Copy + Clone + Zero + PartialOrd + PartialEq + Add<T, Output=T> + Sub<T
     }
 
     #[inline]
-    pub fn intersection(&self, other: &TypedRect<T, U>) -> Option<TypedRect<T, U>> {
+    pub fn intersection(&self, other: &Self) -> Option<Self> {
         if !self.intersects(other) {
             return None;
         }
@@ -155,13 +164,11 @@ where T: Copy + Clone + Zero + PartialOrd + PartialEq + Add<T, Output=T> + Sub<T
                                                     lower_right_y - upper_left.y)))
     }
 
-    /// Translates the rect by a vector.
+    /// Returns the same rectangle, translated by a vector.
     #[inline]
-    pub fn translate(&self, other: &TypedPoint2D<T, U>) -> TypedRect<T, U> {
-        TypedRect::new(
-            TypedPoint2D::new(self.origin.x + other.x, self.origin.y + other.y),
-            self.size
-        )
+    #[must_use]
+    pub fn translate(&self, by: &TypedVector2D<T, U>) -> Self {
+        Self::new(self.origin + *by, self.size)
     }
 
     /// Returns true if this rectangle contains the point. Points are considered
@@ -177,14 +184,15 @@ where T: Copy + Clone + Zero + PartialOrd + PartialEq + Add<T, Output=T> + Sub<T
     /// returns true if rect is empty, and always returns false if rect is
     /// nonempty but this rectangle is empty.
     #[inline]
-    pub fn contains_rect(&self, rect: &TypedRect<T, U>) -> bool {
+    pub fn contains_rect(&self, rect: &Self) -> bool {
         rect.is_empty() ||
             (self.min_x() <= rect.min_x() && rect.max_x() <= self.max_x() &&
              self.min_y() <= rect.min_y() && rect.max_y() <= self.max_y())
     }
 
     #[inline]
-    pub fn inflate(&self, width: T, height: T) -> TypedRect<T, U> {
+    #[must_use]
+    pub fn inflate(&self, width: T, height: T) -> Self {
         TypedRect::new(
             TypedPoint2D::new(self.origin.x - width, self.origin.y - height),
             TypedSize2D::new(self.size.width + width + width, self.size.height + height + height),
@@ -192,7 +200,8 @@ where T: Copy + Clone + Zero + PartialOrd + PartialEq + Add<T, Output=T> + Sub<T
     }
 
     #[inline]
-    pub fn inflate_typed(&self, width: Length<T, U>, height: Length<T, U>) -> TypedRect<T, U> {
+    #[must_use]
+    pub fn inflate_typed(&self, width: Length<T, U>, height: Length<T, U>) -> Self {
         self.inflate(width.get(), height.get())
     }
 
@@ -212,8 +221,9 @@ where T: Copy + Clone + Zero + PartialOrd + PartialEq + Add<T, Output=T> + Sub<T
     }
 
     #[inline]
-    pub fn translate_by_size(&self, size: &TypedSize2D<T, U>) -> TypedRect<T, U> {
-        self.translate(&TypedPoint2D::new(size.width, size.height))
+    #[must_use]
+    pub fn translate_by_size(&self, size: &TypedSize2D<T, U>) -> Self {
+        self.translate(&size.to_vector())
     }
 
     /// Returns the smallest rectangle containing the four points.
@@ -243,9 +253,23 @@ where T: Copy + Clone + Zero + PartialOrd + PartialEq + Add<T, Output=T> + Sub<T
 }
 
 impl<T, U> TypedRect<T, U>
+where T: Copy + One + Add<Output=T> + Sub<Output=T> + Mul<Output=T> {
+    /// Linearly interpolate between this rectangle and another rectange.
+    ///
+    /// `t` is expected to be between zero and one.
+    #[inline]
+    pub fn lerp(&self, other: Self, t: T) -> Self {
+        Self::new(
+            self.origin.lerp(other.origin, t),
+            self.size.lerp(other.size, t),
+        )
+    }
+}
+
+impl<T, U> TypedRect<T, U>
 where T: Copy + Clone + PartialOrd + Add<T, Output=T> + Sub<T, Output=T> + Zero {
     #[inline]
-    pub fn union(&self, other: &TypedRect<T, U>) -> TypedRect<T, U> {
+    pub fn union(&self, other: &Self) -> Self {
         if self.size == Zero::zero() {
             return *other;
         }
@@ -268,7 +292,7 @@ where T: Copy + Clone + PartialOrd + Add<T, Output=T> + Sub<T, Output=T> + Zero 
 
 impl<T, U> TypedRect<T, U> {
     #[inline]
-    pub fn scale<Scale: Copy>(&self, x: Scale, y: Scale) -> TypedRect<T, U>
+    pub fn scale<Scale: Copy>(&self, x: Scale, y: Scale) -> Self
         where T: Copy + Clone + Mul<Scale, Output=T> {
         TypedRect::new(
             TypedPoint2D::new(self.origin.x * x, self.origin.y * y),
@@ -279,9 +303,9 @@ impl<T, U> TypedRect<T, U> {
 
 impl<T: Copy + PartialEq + Zero, U> TypedRect<T, U> {
     /// Constructor, setting all sides to zero.
-    pub fn zero() -> TypedRect<T, U> {
+    pub fn zero() -> Self {
         TypedRect::new(
-            TypedPoint2D::zero(),
+            TypedPoint2D::origin(),
             TypedSize2D::zero(),
         )
     }
@@ -302,17 +326,17 @@ pub fn max<T: Clone + PartialOrd>(x: T, y: T) -> T {
 }
 
 impl<T: Copy + Mul<T, Output=T>, U> Mul<T> for TypedRect<T, U> {
-    type Output = TypedRect<T, U>;
+    type Output = Self;
     #[inline]
-    fn mul(self, scale: T) -> TypedRect<T, U> {
+    fn mul(self, scale: T) -> Self {
         TypedRect::new(self.origin * scale, self.size * scale)
     }
 }
 
 impl<T: Copy + Div<T, Output=T>, U> Div<T> for TypedRect<T, U> {
-    type Output = TypedRect<T, U>;
+    type Output = Self;
     #[inline]
-    fn div(self, scale: T) -> TypedRect<T, U> {
+    fn div(self, scale: T) -> Self {
         TypedRect::new(self.origin / scale, self.size / scale)
     }
 }
@@ -369,6 +393,7 @@ impl<T: Floor + Ceil + Round + Add<T, Output=T> + Sub<T, Output=T>, U> TypedRect
     /// avoid pixel rounding errors.
     /// Note that this is *not* rounding to nearest integer if the values are negative.
     /// They are always rounding as floor(n + 0.5).
+    #[must_use]
     pub fn round(&self) -> Self {
         let origin = self.origin.round();
         let size = self.origin.add_size(&self.size).round() - origin;
@@ -377,6 +402,7 @@ impl<T: Floor + Ceil + Round + Add<T, Output=T> + Sub<T, Output=T>, U> TypedRect
 
     /// Return a rectangle with edges rounded to integer coordinates, such that
     /// the original rectangle contains the resulting rectangle.
+    #[must_use]
     pub fn round_in(&self) -> Self {
         let origin = self.origin.ceil();
         let size = self.origin.add_size(&self.size).floor() - origin;
@@ -385,6 +411,7 @@ impl<T: Floor + Ceil + Round + Add<T, Output=T> + Sub<T, Output=T>, U> TypedRect
 
     /// Return a rectangle with edges rounded to integer coordinates, such that
     /// the original rectangle is contained in the resulting rectangle.
+    #[must_use]
     pub fn round_out(&self) -> Self {
         let origin = self.origin.floor();
         let size = self.origin.add_size(&self.size).ceil() - origin;
@@ -435,6 +462,7 @@ pub fn rect<T: Copy, U>(x: T, y: T, w: T, h: T) -> TypedRect<T, U> {
 #[cfg(test)]
 mod tests {
     use point::Point2D;
+    use vector::vec2;
     use size::Size2D;
     use super::*;
 
@@ -450,7 +478,7 @@ mod tests {
     #[test]
     fn test_translate() {
         let p = Rect::new(Point2D::new(0u32, 0u32), Size2D::new(50u32, 40u32));
-        let pp = p.translate(&Point2D::new(10,15));
+        let pp = p.translate(&vec2(10,15));
 
         assert!(pp.size.width == 50);
         assert!(pp.size.height == 40);
@@ -459,7 +487,7 @@ mod tests {
 
 
         let r = Rect::new(Point2D::new(-10, -5), Size2D::new(50, 40));
-        let rr = r.translate(&Point2D::new(0,-10));
+        let rr = r.translate(&vec2(0,-10));
 
         assert!(rr.size.width == 50);
         assert!(rr.size.height == 40);
@@ -562,10 +590,10 @@ mod tests {
 
         let r = Rect::new(Point2D::new(-20.0, 15.0), Size2D::new(100.0, 200.0));
         assert!(r.contains_rect(&r));
-        assert!(!r.contains_rect(&r.translate(&Point2D::new( 0.1,  0.0))));
-        assert!(!r.contains_rect(&r.translate(&Point2D::new(-0.1,  0.0))));
-        assert!(!r.contains_rect(&r.translate(&Point2D::new( 0.0,  0.1))));
-        assert!(!r.contains_rect(&r.translate(&Point2D::new( 0.0, -0.1))));
+        assert!(!r.contains_rect(&r.translate(&vec2( 0.1,  0.0))));
+        assert!(!r.contains_rect(&r.translate(&vec2(-0.1,  0.0))));
+        assert!(!r.contains_rect(&r.translate(&vec2( 0.0,  0.1))));
+        assert!(!r.contains_rect(&r.translate(&vec2( 0.0, -0.1))));
         // Empty rectangles are always considered as contained in other rectangles,
         // even if their origin is not.
         let p = Point2D::new(1.0, 1.0);

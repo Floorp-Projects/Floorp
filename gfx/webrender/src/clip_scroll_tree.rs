@@ -10,7 +10,7 @@ use std::hash::BuildHasherDefault;
 use webrender_traits::{ClipId, LayerPoint, LayerRect, LayerToScrollTransform};
 use webrender_traits::{LayerToWorldTransform, PipelineId, ScrollClamping, ScrollEventPhase};
 use webrender_traits::{ScrollLayerRect, ScrollLayerState, ScrollLocation, WorldPoint};
-use webrender_traits::as_scroll_parent_rect;
+use webrender_traits::{as_scroll_parent_rect, LayerVector2D};
 
 pub type ScrollStates = HashMap<ClipId, ScrollingState, BuildHasherDefault<FnvHasher>>;
 
@@ -22,10 +22,10 @@ pub struct ClipScrollTree {
     /// node to scroll even if a touch operation leaves the boundaries of that node.
     pub currently_scrolling_node_id: Option<ClipId>,
 
-    /// The current reference frame id, used for giving a unique id to all new
-    /// reference frames. The ClipScrollTree increments this by one every time a
-    /// reference frame is created.
-    current_reference_frame_id: u64,
+    /// The current frame id, used for giving a unique id to all new dynamically
+    /// added frames and clips. The ClipScrollTree increments this by one every
+    /// time a new dynamic frame is created.
+    current_new_node_item: u64,
 
     /// The root reference frame, which is the true root of the ClipScrollTree. Initially
     /// this ID is not valid, which is indicated by ```node``` being empty.
@@ -49,7 +49,7 @@ impl ClipScrollTree {
             currently_scrolling_node_id: None,
             root_reference_frame_id: ClipId::root_reference_frame(dummy_pipeline),
             topmost_scrolling_node_id: ClipId::root_scroll_node(dummy_pipeline),
-            current_reference_frame_id: 0,
+            current_new_node_item: 1,
             pipelines_to_discard: HashSet::new(),
         }
     }
@@ -72,8 +72,10 @@ impl ClipScrollTree {
                                        -> HashSet<ClipId, BuildHasherDefault<FnvHasher>> {
         let mut nodes_bouncing_back = HashSet::default();
         for (clip_id, node) in self.nodes.iter() {
-            if node.scrolling.bouncing_back {
-                nodes_bouncing_back.insert(*clip_id);
+            if let NodeType::ScrollFrame(ref scrolling) = node.node_type {
+                if scrolling.bouncing_back {
+                    nodes_bouncing_back.insert(*clip_id);
+                }
             }
         }
         nodes_bouncing_back
@@ -85,14 +87,15 @@ impl ClipScrollTree {
                                             -> Option<ClipId> {
         self.nodes.get(&clip_id).and_then(|node| {
             for child_layer_id in node.children.iter().rev() {
-            if let Some(layer_id) =
-                self.find_scrolling_node_at_point_in_node(cursor, *child_layer_id) {
+                if let Some(layer_id) =
+                   self.find_scrolling_node_at_point_in_node(cursor, *child_layer_id) {
                     return Some(layer_id);
                 }
             }
 
-            if clip_id.is_reference_frame() {
-                return None;
+            match node.node_type {
+                NodeType::ScrollFrame(..) => {},
+                _ => return None,
             }
 
             if node.ray_intersects_node(cursor) {
@@ -111,21 +114,24 @@ impl ClipScrollTree {
     pub fn get_scroll_node_state(&self) -> Vec<ScrollLayerState> {
         let mut result = vec![];
         for (id, node) in self.nodes.iter() {
-            match node.scroll_offset() {
-                Some(offset) => result.push(ScrollLayerState { id: *id, scroll_offset: offset }),
-                None => {}
+            if let NodeType::ScrollFrame(scrolling) = node.node_type {
+                result.push(ScrollLayerState { id: *id, scroll_offset: scrolling.offset })
             }
         }
         result
     }
 
     pub fn drain(&mut self) -> ScrollStates {
-        self.current_reference_frame_id = 1;
+        self.current_new_node_item = 1;
 
         let mut scroll_states = HashMap::default();
         for (layer_id, old_node) in &mut self.nodes.drain() {
-            if !self.pipelines_to_discard.contains(&layer_id.pipeline_id()) {
-                scroll_states.insert(layer_id, old_node.scrolling);
+            if self.pipelines_to_discard.contains(&layer_id.pipeline_id()) {
+                continue;
+            }
+
+            if let NodeType::ScrollFrame(scrolling) = old_node.node_type {
+                scroll_states.insert(layer_id, scrolling);
             }
         }
 
@@ -134,11 +140,6 @@ impl ClipScrollTree {
     }
 
     pub fn scroll_node(&mut self, origin: LayerPoint, id: ClipId, clamp: ScrollClamping) -> bool {
-        if id.is_reference_frame() {
-            warn!("Tried to scroll a reference frame.");
-            return false;
-        }
-
         if self.nodes.is_empty() {
             self.pending_scroll_offsets.insert(id, (origin, clamp));
             return false;
@@ -184,37 +185,33 @@ impl ClipScrollTree {
 
         let topmost_scrolling_node_id = self.topmost_scrolling_node_id();
         let non_root_overscroll = if clip_id != topmost_scrolling_node_id {
-            // true if the current node is overscrolling,
-            // and it is not the root scroll node.
-            let child_node = self.nodes.get(&clip_id).unwrap();
-            let overscroll_amount = child_node.overscroll_amount();
-            overscroll_amount.width != 0.0 || overscroll_amount.height != 0.0
+            self.nodes.get(&clip_id).unwrap().is_overscrolling()
         } else {
             false
         };
 
-        let switch_node = match phase {
-            ScrollEventPhase::Start => {
-                // if this is a new gesture, we do not switch node,
-                // however we do save the state of non_root_overscroll,
-                // for use in the subsequent Move phase.
-                let mut current_node = self.nodes.get_mut(&clip_id).unwrap();
-                current_node.scrolling.should_handoff_scroll = non_root_overscroll;
-                false
-            },
-            ScrollEventPhase::Move(_) => {
-                // Switch node if movement originated in a new gesture,
-                // from a non root node in overscroll.
-                let current_node = self.nodes.get_mut(&clip_id).unwrap();
-                current_node.scrolling.should_handoff_scroll && non_root_overscroll
-            },
-            ScrollEventPhase::End => {
-                // clean-up when gesture ends.
-                let mut current_node = self.nodes.get_mut(&clip_id).unwrap();
-                current_node.scrolling.should_handoff_scroll = false;
-                false
-            },
-        };
+        let mut switch_node = false;
+        if let Some(node) = self.nodes.get_mut(&clip_id) {
+            if let NodeType::ScrollFrame(ref mut scrolling) = node.node_type {
+                match phase {
+                    ScrollEventPhase::Start => {
+                        // if this is a new gesture, we do not switch node,
+                        // however we do save the state of non_root_overscroll,
+                        // for use in the subsequent Move phase.
+                        scrolling.should_handoff_scroll = non_root_overscroll;
+                    },
+                    ScrollEventPhase::Move(_) => {
+                        // Switch node if movement originated in a new gesture,
+                        // from a non root node in overscroll.
+                        switch_node = scrolling.should_handoff_scroll && non_root_overscroll
+                    },
+                    ScrollEventPhase::End => {
+                        // clean-up when gesture ends.
+                        scrolling.should_handoff_scroll = false;
+                    }
+                }
+            }
+        }
 
         let clip_id = if switch_node {
             topmost_scrolling_node_id
@@ -235,16 +232,16 @@ impl ClipScrollTree {
         self.update_node_transform(root_reference_frame_id,
                                    &LayerToWorldTransform::create_translation(pan.x, pan.y, 0.0),
                                    &as_scroll_parent_rect(&root_viewport),
-                                   LayerPoint::zero(),
-                                   LayerPoint::zero());
+                                   LayerVector2D::zero(),
+                                   LayerVector2D::zero());
     }
 
     fn update_node_transform(&mut self,
                              layer_id: ClipId,
                              parent_reference_frame_transform: &LayerToWorldTransform,
                              parent_viewport_rect: &ScrollLayerRect,
-                             parent_scroll_offset: LayerPoint,
-                             parent_accumulated_scroll_offset: LayerPoint) {
+                             parent_scroll_offset: LayerVector2D,
+                             parent_accumulated_scroll_offset: LayerVector2D) {
         // TODO(gw): This is an ugly borrow check workaround to clone these.
         //           Restructure this to avoid the clones!
         let (reference_frame_transform,
@@ -265,11 +262,14 @@ impl ClipScrollTree {
                     // we need to reset both these values.
                     let (transform, offset, accumulated_scroll_offset) = match node.node_type {
                         NodeType::ReferenceFrame(..) =>
-                            (node.world_viewport_transform, LayerPoint::zero(), LayerPoint::zero()),
-                        NodeType::Clip(_) => {
+                            (node.world_viewport_transform,
+                             LayerVector2D::zero(),
+                             LayerVector2D::zero()),
+                        _ => {
+                            let scroll_offset = node.scroll_offset();
                             (*parent_reference_frame_transform,
-                             node.scrolling.offset,
-                             node.scrolling.offset + parent_accumulated_scroll_offset)
+                             scroll_offset,
+                             scroll_offset + parent_accumulated_scroll_offset)
                         }
                     };
 
@@ -316,17 +316,19 @@ impl ClipScrollTree {
 
     }
 
+    pub fn generate_new_clip_id(&mut self, pipeline_id: PipelineId) -> ClipId {
+        let new_id = ClipId::DynamicallyAddedNode(self.current_new_node_item, pipeline_id);
+        self.current_new_node_item += 1;
+        new_id
+    }
+
     pub fn add_reference_frame(&mut self,
                                rect: &LayerRect,
                                transform: &LayerToScrollTransform,
                                pipeline_id: PipelineId,
                                parent_id: Option<ClipId>)
                                -> ClipId {
-
-        let reference_frame_id =
-            ClipId::ReferenceFrame(self.current_reference_frame_id, pipeline_id);
-        self.current_reference_frame_id += 1;
-
+        let reference_frame_id = self.generate_new_clip_id(pipeline_id);
         let node = ClipScrollNode::new_reference_frame(parent_id,
                                                        rect,
                                                        rect.size,
@@ -373,10 +375,13 @@ impl ClipScrollTree {
             NodeType::ReferenceFrame(ref transform) => {
                 pt.new_level(format!("ReferenceFrame {:?}", transform));
             }
+            NodeType::ScrollFrame(scrolling_info) => {
+                pt.new_level(format!("ScrollFrame"));
+                pt.add_item(format!("scroll.offset: {:?}", scrolling_info.offset));
+            }
         }
 
         pt.add_item(format!("content_size: {:?}", node.content_size));
-        pt.add_item(format!("scroll.offset: {:?}", node.scrolling.offset));
         pt.add_item(format!("combined_local_viewport_rect: {:?}", node.combined_local_viewport_rect));
         pt.add_item(format!("local_viewport_rect: {:?}", node.local_viewport_rect));
         pt.add_item(format!("local_clip_rect: {:?}", node.local_clip_rect));
