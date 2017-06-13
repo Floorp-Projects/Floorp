@@ -85,7 +85,8 @@ var ParentUtils = {
       } catch (e) {
         return false;
       }
-    }, "Waiting for row count change: " + expectedCount + " First value: " + expectedFirstValue).then(() => {
+    }, "Waiting for row count change: " + expectedCount + " First value: " + expectedFirstValue)
+    .then(() => {
       let results = this.getMenuEntries();
       sendAsyncMessage("gotMenuChange", { results });
     });

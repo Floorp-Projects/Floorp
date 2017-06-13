@@ -174,10 +174,14 @@ function setupFormHistory(aCallback) {
     { op: "add", fieldname: "field8", value: "value" },
     { op: "add", fieldname: "field9", value: "value" },
     { op: "add", fieldname: "field10", value: "42" },
-    { op: "add", fieldname: "field11", value: "2010-10-10" }, // not used, since type=date doesn't have autocomplete currently
-    { op: "add", fieldname: "field12", value: "21:21" }, // not used, since type=time doesn't have autocomplete currently
-    { op: "add", fieldname: "field13", value: "32" },  // not used, since type=range doesn't have a drop down menu
-    { op: "add", fieldname: "field14", value: "#ffffff" }, // not used, since type=color doesn't have autocomplete currently
+    // not used, since type=date doesn't have autocomplete currently
+    { op: "add", fieldname: "field11", value: "2010-10-10" },
+    // not used, since type=time doesn't have autocomplete currently
+    { op: "add", fieldname: "field12", value: "21:21" },
+    // not used, since type=range doesn't have a drop down menu
+    { op: "add", fieldname: "field13", value: "32" },
+    // not used, since type=color doesn't have autocomplete currently
+    { op: "add", fieldname: "field14", value: "#ffffff" },
     { op: "add", fieldname: "field15", value: "2016-08" },
     { op: "add", fieldname: "field16", value: "2016-W32" },
     { op: "add", fieldname: "field17", value: "2016-10-21T10:10" },
@@ -226,8 +230,10 @@ registerPopupShownListener(popupShownListener);
  *
  * This is a bit hacky, as many operations happen asynchronously.
  * Various mechanisms call runTests as a result of operations:
- *   - set expectingPopup to true, and the next test will occur when the autocomplete popup is shown
- *   - call waitForMenuChange(x) to run the next test when the autocomplete popup to have x items in it
+ *   - set expectingPopup to true, and the next test will occur when the autocomplete popup
+ *     is shown
+ *   - call waitForMenuChange(x) to run the next test when the autocomplete popup
+ *     to have x items in it
  *   - addEntry calls runs the test when an entry has been added
  *   - some tests scroll the window. This is because the form fill controller happens to scroll
  *     the field into view near the end of the search, and there isn't any other good notification

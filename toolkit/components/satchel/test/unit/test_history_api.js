@@ -9,7 +9,8 @@ Cu.import("resource://gre/modules/Promise.jsm");
 
 function countDeletedEntries(expected) {
   return new Promise((resolve, reject) => {
-    let stmt = dbConnection.createAsyncStatement("SELECT COUNT(*) AS numEntries FROM moz_deleted_formhistory");
+    let stmt = dbConnection
+               .createAsyncStatement("SELECT COUNT(*) AS numEntries FROM moz_deleted_formhistory");
     stmt.executeAsync({
       handleResult(resultSet) {
         do_check_eq(expected, resultSet.getNextRow().getResultByName("numEntries"));
@@ -28,7 +29,9 @@ function countDeletedEntries(expected) {
 
 function checkTimeDeleted(guid, checkFunction) {
   return new Promise((resolve, reject) => {
-    let stmt = dbConnection.createAsyncStatement("SELECT timeDeleted FROM moz_deleted_formhistory WHERE guid = :guid");
+    let stmt = dbConnection
+               .createAsyncStatement("SELECT timeDeleted FROM moz_deleted_formhistory " +
+                                     "WHERE guid = :guid");
     stmt.params.guid = guid;
     stmt.executeAsync({
       handleResult(resultSet) {
@@ -166,7 +169,8 @@ add_task(async function() {
     await promiseCountEntries("", "value-A", checkNotExists);
     await promiseCountEntries(null, "value-A", checkExists);
 
-    // Cannot use promiseCountEntries when name and value are null because it treats null values as not set
+    // Cannot use promiseCountEntries when name and value are null
+    // because it treats null values as not set
     // and here a search should be done explicity for null.
     deferred = Promise.defer();
     await FormHistory.count({ fieldname: null, value: null },

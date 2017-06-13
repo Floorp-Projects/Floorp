@@ -166,7 +166,9 @@ function checkSubmit(formNum) {
   numSubmittedForms++;
 
   // make sure that the field # numInputFields was saved
-  checkForSave("test" + numInputFields, numInputFields + " changed", "checking saved value " + numInputFields);
+  checkForSave("test" + numInputFields,
+               numInputFields + " changed",
+               "checking saved value " + numInputFields);
 
   checkCountEntries(formNum, 1, checkSubmitCounted);
 
