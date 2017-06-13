@@ -4,13 +4,6 @@ const FORM_URL = "http://mochi.test:8888/browser/browser/extensions/formautofill
 const FTU_PREF = "extensions.formautofill.firstTimeUse";
 const ENABLED_PREF = "extensions.formautofill.addresses.enabled";
 
-registerCleanupFunction(async function() {
-  let addresses = await getAddresses();
-  if (addresses.length) {
-    await removeAddresses(addresses.map(address => address.guid));
-  }
-});
-
 add_task(async function test_first_time_save() {
   let addresses = await getAddresses();
   is(addresses.length, 0, "No profile in storage");
