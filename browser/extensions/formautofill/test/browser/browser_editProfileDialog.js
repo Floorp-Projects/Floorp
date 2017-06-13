@@ -1,12 +1,5 @@
 "use strict";
 
-registerCleanupFunction(async function() {
-  let addresses = await getAddresses();
-  if (addresses.length) {
-    await removeAddresses(addresses.map(address => address.guid));
-  }
-});
-
 add_task(async function test_cancelEditProfileDialog() {
   await new Promise(resolve => {
     let win = window.openDialog(EDIT_PROFILE_DIALOG_URL, null, null, null);
