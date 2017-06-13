@@ -1,4 +1,5 @@
 function test(x) {
+  log("classList: " + root.classList);
   if (!root.classList.contains("reftest-wait")) {
     observer.disconnect();
     marionetteScriptFinished();

@@ -52,7 +52,8 @@ class MediaTestCase(PuppeteerMixin, MarionetteTestCase):
             img_data = self.marionette.screenshot()
         with open(path, 'wb') as f:
             f.write(img_data.decode('base64'))
-        self.logger.info('Screenshot saved in {}'.format(os.path.abspath(path)))
+        self.marionette.log('Screenshot saved in {}'
+                            .format(os.path.abspath(path)))
 
     def log_video_debug_lines(self, video):
         """
@@ -61,7 +62,7 @@ class MediaTestCase(PuppeteerMixin, MarionetteTestCase):
         with self.marionette.using_context(Marionette.CONTEXT_CHROME):
             debug_lines = video.get_debug_lines()
             if debug_lines:
-                self.logger.info('\n'.join(debug_lines))
+                self.marionette.log('\n'.join(debug_lines))
 
     def run_playback(self, video):
         """
