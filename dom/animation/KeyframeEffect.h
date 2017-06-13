@@ -72,12 +72,6 @@ public:
   // GetStyleContext.
   void SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget);
 
-  void GetSpacing(nsString& aRetVal, CallerType aCallerType)
-  {
-    KeyframeEffectReadOnly::GetSpacing(aRetVal);
-  }
-  void SetSpacing(JSContext* aCx, const nsAString& aSpacing,
-                  CallerType aCallerType, ErrorResult& aRv);
   IterationCompositeOperation IterationComposite(CallerType aCallerType)
   {
     return KeyframeEffectReadOnly::IterationComposite();
