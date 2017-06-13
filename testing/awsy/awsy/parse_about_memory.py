@@ -37,8 +37,6 @@ def path_total(data, path):
 
         if match(report["path"]):
             totals[report["process"]] += report["amount"]
-            if report["kind"] == 1:
-                totals_heap[report["process"]] += report["amount"]
         elif report["path"] == "heap-allocated":
             totals_heap_allocated[report["process"]] = report["amount"]
 
@@ -46,6 +44,7 @@ def path_total(data, path):
         for k, v in totals_heap.items():
             if k in totals_heap_allocated:
                 heap_unclassified = totals_heap_allocated[k] - totals_heap[k]
+                assert heap_unclassified > 0
                 totals[k] += heap_unclassified
     elif path == "explicit/heap-unclassified":
         for k, v in totals_heap.items():
