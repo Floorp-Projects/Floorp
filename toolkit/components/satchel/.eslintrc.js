@@ -40,5 +40,6 @@ module.exports = {
     complexity: ["error", {
       max: 20,
     }],
+    "dot-location": ["error", "property"],
   },
 };

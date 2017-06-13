@@ -8,9 +8,9 @@ Cu.import("resource://gre/modules/FormHistory.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://testing-common/ContentTaskUtils.jsm");
 
-var gAutocompletePopup = Services.ww.activeWindow.
-                                   document.
-                                   getElementById("PopupAutoComplete");
+var gAutocompletePopup = Services.ww.activeWindow
+                                    .document
+                                    .getElementById("PopupAutoComplete");
 assert.ok(gAutocompletePopup, "Got autocomplete popup");
 
 var ParentUtils = {
