@@ -67,6 +67,7 @@ class AsyncCompositionManager;
 class Compositor;
 class CompositorAnimationStorage;
 class CompositorBridgeParent;
+class CompositorManagerParent;
 class CompositorVsyncScheduler;
 class HostLayerManager;
 class LayerTransactionParent;
@@ -94,6 +95,8 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
                                    public MetricsSharingController
 {
 public:
+  explicit CompositorBridgeParentBase(CompositorManagerParent* aManager);
+
   virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
                                    const TransactionInfo& aInfo,
                                    bool aHitTestUpdate) = 0;
@@ -121,6 +124,8 @@ public:
   virtual CompositorBridgeParentBase* AsCompositorBridgeParentBase() override { return this; }
 
   virtual mozilla::ipc::IPCResult RecvSyncWithCompositor() override { return IPC_OK(); }
+
+  mozilla::ipc::IPCResult Recv__delete__() override { return IPC_OK(); }
 
   virtual void ObserveLayerUpdate(uint64_t aLayersId, uint64_t aEpoch, bool aActive) = 0;
 
@@ -154,6 +159,14 @@ public:
   virtual bool IsRemote() const {
     return false;
   }
+
+protected:
+  ~CompositorBridgeParentBase() override;
+
+  bool mCanSend;
+
+private:
+  RefPtr<CompositorManagerParent> mCompositorManager;
 };
 
 class CompositorBridgeParent final : public CompositorBridgeParentBase
@@ -169,22 +182,14 @@ public:
   NS_IMETHOD_(MozExternalRefCountType) AddRef() override { return CompositorBridgeParentBase::AddRef(); }
   NS_IMETHOD_(MozExternalRefCountType) Release() override { return CompositorBridgeParentBase::Release(); }
 
-  explicit CompositorBridgeParent(CSSToLayoutDeviceScale aScale,
+  explicit CompositorBridgeParent(CompositorManagerParent* aManager,
+                                  CSSToLayoutDeviceScale aScale,
                                   const TimeDuration& aVsyncRate,
                                   const CompositorOptions& aOptions,
                                   bool aUseExternalSurfaceSize,
                                   const gfx::IntSize& aSurfaceSize);
 
-  // Must only be called by CompositorBridgeChild. After invoking this, the
-  // IPC channel is active and RecvWillStop/ActorDestroy must be called to
-  // free the compositor.
-  void InitSameProcess(widget::CompositorWidget* aWidget,
-                       const uint64_t& aLayerTreeId);
-
-  // Must only be called by GPUParent. After invoking this, the IPC channel
-  // is active and RecvWillStop/ActorDestroy must be called to free the
-  // compositor.
-  bool Bind(Endpoint<PCompositorBridgeParent>&& aEndpoint);
+  void InitSameProcess(widget::CompositorWidget* aWidget, const uint64_t& aLayerTreeId);
 
   virtual mozilla::ipc::IPCResult RecvInitialize(const uint64_t& aRootLayerTreeId) override;
   virtual mozilla::ipc::IPCResult RecvGetFrameUniformity(FrameUniformityData* aOutData) override;
@@ -343,13 +348,6 @@ public:
    */
   static void SetControllerForLayerTree(uint64_t aLayersId,
                                         GeckoContentController* aController);
-
-  /**
-   * A new child process has been configured to push transactions
-   * directly to us.  Transport is to its thread context.
-   */
-  static bool
-  CreateForContent(Endpoint<PCompositorBridgeParent>&& aEndpoint);
 
   struct LayerTreeState {
     LayerTreeState();

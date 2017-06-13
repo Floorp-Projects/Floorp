@@ -11,6 +11,7 @@ include PlatformWidgetTypes;
 include protocol PAPZ;
 include protocol PAPZCTreeManager;
 include protocol PBrowser;
+include protocol PCompositorManager;
 include protocol PCompositorWidget;
 include protocol PLayerTransaction;
 include protocol PTexture;
@@ -72,6 +73,8 @@ namespace layers {
  */
 sync protocol PCompositorBridge
 {
+  manager PCompositorManager;
+
   manages PAPZ;
   manages PAPZCTreeManager;
   // A Compositor manages a single Layer Manager (PLayerTransaction)
@@ -130,6 +133,8 @@ child:
   async ObserveLayerUpdate(uint64_t aLayersId, uint64_t aEpoch, bool aActive);
 
 parent:
+  async __delete__();
+
   // Must be called before Initialize().
   async PCompositorWidget(CompositorWidgetInitData aInitData);
 
