@@ -243,7 +243,13 @@ HTMLTextAreaElement::GetType(nsAString& aType)
 NS_IMETHODIMP 
 HTMLTextAreaElement::GetValue(nsAString& aValue)
 {
-  GetValueInternal(aValue, true);
+  nsAutoString value;
+  GetValueInternal(value, true);
+
+  // Normalize CRLF and CR to LF
+  nsContentUtils::PlatformToDOMLineBreaks(value);
+
+  aValue = value;
   return NS_OK;
 }
 
