@@ -179,11 +179,7 @@ public:
     mIsActive = aActive;
   }
 
-  virtual void SetIsBackground(bool aIsBackground)
-  {
-    MOZ_ASSERT(IsOuterWindow());
-    mIsBackground = aIsBackground;
-  }
+  virtual void SetIsBackground(bool aIsBackground) = 0;
 
   mozilla::dom::EventTarget* GetChromeEventHandler() const
   {
