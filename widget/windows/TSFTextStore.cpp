@@ -6152,16 +6152,6 @@ TSFTextStore::Initialize()
     return;
   }
 
-  RefPtr<ITfMessagePump> messagePump;
-  hr = threadMgr->QueryInterface(IID_ITfMessagePump,
-                                 getter_AddRefs(messagePump));
-  if (FAILED(hr) || !messagePump) {
-    MOZ_LOG(sTextStoreLog, LogLevel::Error,
-      ("  TSFTextStore::Initialize() FAILED to "
-       "QI message pump from the thread manager, hr=0x%08X", hr));
-    return;
-  }
-
   hr = threadMgr->Activate(&sClientId);
   if (FAILED(hr)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
@@ -6194,7 +6184,6 @@ TSFTextStore::Initialize()
   MarkContextAsEmpty(disabledContext);
 
   sThreadMgr = threadMgr;
-  sMessagePump = messagePump;
   sDisabledDocumentMgr = disabledDocumentMgr;
   sDisabledContext = disabledContext;
 
@@ -6211,6 +6200,39 @@ TSFTextStore::GetThreadMgr()
 {
   RefPtr<ITfThreadMgr> threadMgr = sThreadMgr;
   return threadMgr.forget();
+}
+
+// static
+already_AddRefed<ITfMessagePump>
+TSFTextStore::GetMessagePump()
+{
+  static bool sInitialized = false;
+  if (!sThreadMgr) {
+    return nullptr;
+  }
+  if (sMessagePump) {
+    RefPtr<ITfMessagePump> messagePump = sMessagePump;
+    return messagePump.forget();
+  }
+  // If it tried to retrieve ITfMessagePump from sThreadMgr but it failed,
+  // we shouldn't retry it at every message due to performance reason.
+  // Although this shouldn't occur actually.
+  if (sInitialized) {
+    return nullptr;
+  }
+  sInitialized = true;
+
+  RefPtr<ITfMessagePump> messagePump;
+  HRESULT hr = sThreadMgr->QueryInterface(IID_ITfMessagePump,
+                                          getter_AddRefs(messagePump));
+  if (NS_WARN_IF(FAILED(hr)) || NS_WARN_IF(!messagePump)) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("TSFTextStore::GetMessagePump() FAILED to "
+       "QI message pump from the thread manager, hr=0x%08X", hr));
+    return nullptr;
+  }
+  sMessagePump = messagePump;
+  return messagePump.forget();
 }
 
 // static

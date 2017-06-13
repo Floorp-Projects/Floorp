@@ -210,11 +210,6 @@ public:
     }
   }
 
-  static ITfMessagePump* GetMessagePump()
-  {
-    return sMessagePump;
-  }
-
   static void* GetThreadManager()
   {
     return static_cast<void*>(sThreadMgr);
@@ -1007,6 +1002,10 @@ protected:
   static already_AddRefed<ITfThreadMgr> GetThreadMgr();
   // sMessagePump is QI'ed from sThreadMgr
   static StaticRefPtr<ITfMessagePump> sMessagePump;
+public:
+  // Expose GetMessagePump() for WinUtils.
+  static already_AddRefed<ITfMessagePump> GetMessagePump();
+private:
   // sKeystrokeMgr is QI'ed from sThreadMgr
   static StaticRefPtr<ITfKeystrokeMgr> sKeystrokeMgr;
   // TSF display attribute manager
