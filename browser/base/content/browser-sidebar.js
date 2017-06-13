@@ -28,6 +28,11 @@ var SidebarUI = {
     return this._browser = document.getElementById("sidebar");
   },
   POSITION_START_PREF: "sidebar.position_start",
+  DEFAULT_SIDEBAR_ID: "viewBookmarksSidebar",
+
+  // lastOpenedId is set in show() but unlike currentID it's not cleared out on hide
+  // and isn't persisted across windows
+  lastOpenedId: null,
 
   _box: null,
   // The constructor of this label accesses the browser element due to the
@@ -63,6 +68,7 @@ var SidebarUI = {
     enumerator.getNext();
     if (!enumerator.hasMoreElements()) {
       document.persist("sidebar-box", "sidebarcommand");
+      document.persist("sidebar-box", "checked");
       document.persist("sidebar-box", "width");
       document.persist("sidebar-title", "value");
     }
@@ -257,6 +263,14 @@ var SidebarUI = {
     this._title.value = value;
   },
 
+  getBroadcasterById(id) {
+    let sidebarBroadcaster = document.getElementById(id);
+    if (sidebarBroadcaster && sidebarBroadcaster.localName == "broadcaster") {
+      return sidebarBroadcaster;
+    }
+    return null;
+  },
+
   /**
    * Toggle the visibility of the sidebar. If the sidebar is hidden or is open
    * with a different commandID, then the sidebar will be opened using the
@@ -265,7 +279,14 @@ var SidebarUI = {
    * @param {string} commandID ID of the xul:broadcaster element to use.
    * @return {Promise}
    */
-  toggle(commandID = this.currentID) {
+  toggle(commandID = this.lastOpenedId) {
+    // First priority for a default value is this.lastOpenedId which is set during show()
+    // and not reset in hide(), unlike currentID. If show() hasn't been called or the command
+    // doesn't exist anymore, then fallback to a default sidebar.
+    if (!commandID || !this.getBroadcasterById(commandID)) {
+      commandID = this.DEFAULT_SIDEBAR_ID;
+    }
+
     if (this.isOpen && commandID == this.currentID) {
       this.hide();
       return Promise.resolve();
@@ -295,8 +316,8 @@ var SidebarUI = {
    */
   _show(commandID) {
     return new Promise((resolve, reject) => {
-      let sidebarBroadcaster = document.getElementById(commandID);
-      if (!sidebarBroadcaster || sidebarBroadcaster.localName != "broadcaster") {
+      let sidebarBroadcaster = this.getBroadcasterById(commandID);
+      if (!sidebarBroadcaster) {
         reject(new Error("Invalid sidebar broadcaster specified: " + commandID));
         return;
       }
@@ -319,6 +340,7 @@ var SidebarUI = {
 
       this.hideSwitcherPanel();
 
+      this._box.setAttribute("checked", "true");
       this._box.setAttribute("sidebarcommand", sidebarBroadcaster.id);
       this.lastOpenedId = sidebarBroadcaster.id;
 
@@ -388,6 +410,7 @@ var SidebarUI = {
 
     sidebarBroadcaster.removeAttribute("checked");
     this._box.setAttribute("sidebarcommand", "");
+    this._box.removeAttribute("checked");
     this.title = "";
     this._box.hidden = this._splitter.hidden = true;
 
