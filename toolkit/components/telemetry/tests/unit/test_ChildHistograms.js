@@ -38,6 +38,20 @@ function run_child_test() {
   countKeyed.add("a");
   countKeyed.add("b");
   countKeyed.add("b");
+
+  // Test record_in_processes
+  let contentLinear = Telemetry.getHistogramById("TELEMETRY_TEST_CONTENT_PROCESS");
+  contentLinear.add(10);
+  let contentKeyed = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_CONTENT_PROCESS");
+  contentKeyed.add("content", 1);
+  let contentFlag = Telemetry.getHistogramById("TELEMETRY_TEST_FLAG_CONTENT_PROCESS");
+  contentFlag.add(true);
+  let mainFlag = Telemetry.getHistogramById("TELEMETRY_TEST_FLAG_MAIN_PROCESS");
+  mainFlag.add(true);
+  let allLinear = Telemetry.getHistogramById("TELEMETRY_TEST_ALL_PROCESSES");
+  allLinear.add(10);
+  let allChildLinear = Telemetry.getHistogramById("TELEMETRY_TEST_ALL_CHILD_PROCESSES");
+  allChildLinear.add(10);
 }
 
 function check_histogram_values(payload) {
@@ -96,12 +110,55 @@ add_task(async function() {
            "histograms" in payload.processes.content &&
            "TELEMETRY_TEST_COUNT" in payload.processes.content.histograms;
   });
+
+  // Test record_in_processes in main process, too
+  let contentLinear = Telemetry.getHistogramById("TELEMETRY_TEST_CONTENT_PROCESS");
+  contentLinear.add(20);
+  let contentKeyed = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_CONTENT_PROCESS");
+  contentKeyed.add("parent", 1);
+  let contentFlag = Telemetry.getHistogramById("TELEMETRY_TEST_FLAG_CONTENT_PROCESS");
+  contentFlag.add(true);
+  let mainFlag = Telemetry.getHistogramById("TELEMETRY_TEST_FLAG_MAIN_PROCESS");
+  mainFlag.add(true);
+  let allLinear = Telemetry.getHistogramById("TELEMETRY_TEST_ALL_PROCESSES");
+  allLinear.add(20);
+  let allChildLinear = Telemetry.getHistogramById("TELEMETRY_TEST_ALL_CHILD_PROCESSES");
+  allChildLinear.add(20);
+
   const payload = TelemetrySession.getPayload("test-ping");
   Assert.ok("processes" in payload, "Should have processes section");
   Assert.ok("content" in payload.processes, "Should have child process section");
   Assert.ok("histograms" in payload.processes.content, "Child process section should have histograms.");
   Assert.ok("keyedHistograms" in payload.processes.content, "Child process section should have keyed histograms.");
   check_histogram_values(payload.processes.content);
+
+  // Check record_in_processes
+  // Content Process
+  let hs = payload.processes.content.histograms;
+  let khs = payload.processes.content.keyedHistograms;
+  Assert.ok("TELEMETRY_TEST_CONTENT_PROCESS" in hs, "Should have content process histogram");
+  Assert.equal(hs.TELEMETRY_TEST_CONTENT_PROCESS.sum, 10, "Should have correct value");
+  Assert.ok("TELEMETRY_TEST_KEYED_CONTENT_PROCESS" in khs, "Should have keyed content process histogram");
+  Assert.equal(khs.TELEMETRY_TEST_KEYED_CONTENT_PROCESS.content.sum, 1, "Should have correct value");
+  Assert.ok("TELEMETRY_TEST_FLAG_CONTENT_PROCESS" in hs, "Should have content process histogram");
+  Assert.equal(hs.TELEMETRY_TEST_FLAG_CONTENT_PROCESS.sum, 1, "Should have correct value");
+  Assert.ok("TELEMETRY_TEST_ALL_PROCESSES" in hs, "Should have content process histogram");
+  Assert.equal(hs.TELEMETRY_TEST_ALL_PROCESSES.sum, 10, "Should have correct value");
+  Assert.ok("TELEMETRY_TEST_ALL_CHILD_PROCESSES" in hs, "Should have content process histogram");
+  Assert.equal(hs.TELEMETRY_TEST_ALL_CHILD_PROCESSES.sum, 10, "Should have correct value");
+  Assert.ok(!("TELEMETRY_TEST_FLAG_MAIN_PROCESS" in hs), "Should not have main process histogram in child process payload");
+
+  // Main Process
+  let mainHs = payload.histograms;
+  let mainKhs = payload.keyedHistograms;
+  Assert.ok(!("TELEMETRY_TEST_CONTENT_PROCESS" in mainHs), "Should not have content process histogram in main process payload");
+  Assert.ok(!("TELEMETRY_TEST_KEYED_CONTENT_PROCESS" in mainKhs), "Should not have keyed content process histogram in main process payload");
+  Assert.ok(!("TELEMETRY_TEST_FLAG_CONTENT_PROCESS" in mainHs), "Should not have content process histogram in main process payload");
+  Assert.ok("TELEMETRY_TEST_ALL_PROCESSES" in mainHs, "Should have all-process histogram in main process payload");
+  Assert.equal(mainHs.TELEMETRY_TEST_ALL_PROCESSES.sum, 20, "Should have correct value");
+  Assert.ok(!("TELEMETRY_TEST_ALL_CHILD_PROCESSES" in mainHs), "Should not have all-child process histogram in main process payload");
+  Assert.ok("TELEMETRY_TEST_FLAG_MAIN_PROCESS" in mainHs, "Should have main process histogram in main process payload");
+  Assert.equal(mainHs.TELEMETRY_TEST_FLAG_MAIN_PROCESS.sum, 1, "Should have correct value");
 
   do_test_finished();
 });
