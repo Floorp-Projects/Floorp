@@ -68,74 +68,6 @@ public:
    * @param aKey the key to get and remove from the hashtable
    */
   void RemoveAndForget(KeyType aKey, nsAutoPtr<T>& aOut);
-
-  struct EntryPtr {
-  private:
-    typename base_type::EntryType& mEntry;
-    // For debugging purposes
-#ifdef DEBUG
-    base_type& mTable;
-    uint32_t mTableGeneration;
-#endif
-
-  public:
-    EntryPtr(base_type& aTable, typename base_type::EntryType* aEntry)
-      : mEntry(*aEntry)
-#ifdef DEBUG
-      , mTable(aTable)
-      , mTableGeneration(aTable.GetGeneration())
-#endif
-    {
-    }
-    ~EntryPtr()
-    {
-      MOZ_ASSERT(mEntry.mData, "Entry should have been added by now");
-    }
-
-    explicit operator bool() const
-    {
-      // Is there something stored in the table already?
-      MOZ_ASSERT(mTableGeneration == mTable.GetGeneration());
-      return !!mEntry.mData;
-    }
-
-    template <class F>
-    T* OrInsert(F func)
-    {
-      MOZ_ASSERT(mTableGeneration == mTable.GetGeneration());
-      if (!mEntry.mData) {
-        mEntry.mData = func();
-      }
-      return mEntry.mData;
-    }
-  };
-
-  /**
-   * Looks up aKey in the hashtable and returns an object that allows you to
-   * insert a new entry into the hashtable for that key if an existing entry
-   * isn't found for it.
-   *
-   * A typical usage of this API looks like this:
-   *
-   *   auto insertedValue = table.LookupForAdd(key).OrInsert([]() {
-   *     return newValue;
-   *   });
-   *
-   *   auto p = table.LookupForAdd(key);
-   *   if (p) {
-   *     // The entry already existed in the table.
-   *     DoSomething();
-   *   } else {
-   *     // An existing entry wasn't found, store a new entry in the hashtable.
-   *     p.OrInsert([]() { return newValue; });
-   *   }
-   *
-   * We ensure that the hashtable isn't modified before OrInsert() is called.
-   * This is useful for cases where you want to insert a new entry into the
-   * hashtable if one doesn't exist before but would like to avoid two hashtable
-   * lookups.
-   */
-  MOZ_MUST_USE EntryPtr LookupForAdd(KeyType aKey);
 };
 
 //
@@ -148,19 +80,12 @@ T*
 nsClassHashtable<KeyClass, T>::LookupOrAdd(KeyType aKey,
                                            Args&&... aConstructionArgs)
 {
+  auto count = this->Count();
   typename base_type::EntryType* ent = this->PutEntry(aKey);
-  if (!ent->mData) {
+  if (count != this->Count()) {
     ent->mData = new T(mozilla::Forward<Args>(aConstructionArgs)...);
   }
   return ent->mData;
-}
-
-template<class KeyClass, class T>
-typename nsClassHashtable<KeyClass, T>::EntryPtr
-nsClassHashtable<KeyClass, T>::LookupForAdd(KeyType aKey)
-{
-  typename base_type::EntryType* ent = this->PutEntry(aKey);
-  return EntryPtr(*this, ent);
 }
 
 template<class KeyClass, class T>
