@@ -27,10 +27,10 @@ index 8a39b9f..dfc2c62 100644
  celt_sources_sse = [
      'celt/x86/pitch_sse.c',
      'celt/x86/x86_celt_map.c',
-@@ -105,8 +112,6 @@ silk_sources = [
-     'silk/log2lin.c',
+@@ -114,8 +114,6 @@ silk_sources = [
      'silk/LP_variable_cutoff.c',
      'silk/LPC_analysis_filter.c',
+     'silk/LPC_fit.c',
 -    'silk/LPC_inv_pred_gain.c',
 -    'silk/NLSF2A.c',
      'silk/NLSF_decode.c',
