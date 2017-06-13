@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1372371
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1372371</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1372371">Mozilla Bug 1372371</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe></iframe>
+</div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+
+  /** Test for Bug 1372371 **/
+  var list = Object.getOwnPropertyNames(window);
+  // Pick an interface name we would not have resolved here yet.
+  isnot(list.indexOf("WebSocket"), -1, "WebSocket should be a property");
+  is(list.indexOf("0"), 0, "Indexed props should be properties");
+  </script>
+</body>
+</html>
