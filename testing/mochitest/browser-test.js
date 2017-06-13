@@ -805,13 +805,25 @@ Tester.prototype = {
             try {
               yield task();
             } catch (ex) {
-              currentTest.addResult(new testResult({
-                name: "Uncaught exception",
-                pass: this.SimpleTest.isExpectingUncaughtException(),
-                ex,
-                stack: (typeof ex == "object" && "stack" in ex) ? ex.stack : null,
-                allowFailure: currentTest.allowFailure,
-              }));
+              if (currentTest.timedOut) {
+                currentTest.addResult(new testResult({
+                  name: "Uncaught exception received from previously timed out test",
+                  pass: false,
+                  ex,
+                  stack: (typeof ex == "object" && "stack" in ex) ? ex.stack : null,
+                  allowFailure: currentTest.allowFailure,
+                }));
+                // We timed out, so we've already cleaned up for this test, just get outta here.
+                return;
+              } else {
+                currentTest.addResult(new testResult({
+                  name: "Uncaught exception",
+                  pass: this.SimpleTest.isExpectingUncaughtException(),
+                  ex,
+                  stack: (typeof ex == "object" && "stack" in ex) ? ex.stack : null,
+                  allowFailure: currentTest.allowFailure,
+                }));
+              }
             }
             Promise.Debugging.flushUncaughtErrors();
             this.SimpleTest.info("Leaving test " + task.name);
