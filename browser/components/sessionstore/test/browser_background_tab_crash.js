@@ -98,7 +98,7 @@ async function crashBackgroundTabs(tabs) {
   for (let tab of tabs) {
     Assert.ok(!tab.linkedBrowser.isRemoteBrowser, "tab is not remote");
     Assert.ok(!tab.linkedBrowser.hasAttribute("crashed"), "tab is not crashed");
-    Assert.ok(tab.linkedBrowser.hasAttribute("pending"), "tab is pending");
+    Assert.ok(tab.hasAttribute("pending"), "tab is pending");
   }
 }
 

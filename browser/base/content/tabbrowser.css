@@ -91,16 +91,6 @@ tabpanels {
   transition: width .15s ease-out;
 }
 
-/**
- * Optimization for tabs that are restored lazily. We can save a good amount of
- * memory that to-be-restored tabs would otherwise consume simply by setting
- * their browsers to 'display: none' as that will prevent them from having to
- * create a presentation and the like.
- */
-browser[pending] {
-  display: none;
-}
-
 browser[blank],
 browser[pendingpaint] {
   opacity: 0;
