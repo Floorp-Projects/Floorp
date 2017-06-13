@@ -116,7 +116,48 @@ js::StartOffThreadWasmTier2Generator(wasm::Tier2GeneratorTask* task)
 void
 js::CancelOffThreadWasmTier2Generator()
 {
-    // TODO: Implement this
+    AutoLockHelperThreadState lock;
+
+    if (!HelperThreadState().threads)
+        return;
+
+    // Remove pending tasks from the tier2 generator worklist and cancel and
+    // delete them.
+    {
+        wasm::Tier2GeneratorTaskPtrVector& worklist =
+            HelperThreadState().wasmTier2GeneratorWorklist(lock);
+        for (size_t i = 0; i < worklist.length(); i++) {
+            wasm::Tier2GeneratorTask* task = worklist[i];
+            HelperThreadState().remove(worklist, &i);
+            CancelTier2GeneratorTask(task);
+            DeleteTier2GeneratorTask(task);
+        }
+    }
+
+    // There is at most one running Tier2Generator task and we assume that
+    // below.
+    static_assert(GlobalHelperThreadState::MaxTier2GeneratorTasks == 1,
+                  "code must be generalized");
+
+    // If there is a running Tier2 generator task, shut it down in a predictable
+    // way.  The task will be deleted by the normal deletion logic.
+    for (auto& helper : *HelperThreadState().threads) {
+        if (helper.wasmTier2GeneratorTask()) {
+            // Set a flag that causes compilation to shortcut itself.
+            CancelTier2GeneratorTask(helper.wasmTier2GeneratorTask());
+
+            // Wait for the generator task to finish.  This avoids a shutdown race where
+            // the shutdown code is trying to shut down helper threads and the ongoing
+            // tier2 compilation is trying to finish, which requires it to have access
+            // to helper threads.
+            uint32_t oldFinishedCount = HelperThreadState().wasmTier2GeneratorsFinished(lock);
+            while (HelperThreadState().wasmTier2GeneratorsFinished(lock) == oldFinishedCount)
+                HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
+
+            // At most one of these tasks.
+            break;
+        }
+    }
 }
 
 bool
@@ -885,6 +926,7 @@ GlobalHelperThreadState::GlobalHelperThreadState()
    threads(nullptr),
    wasmCompilationInProgress_tier1(false),
    wasmCompilationInProgress_tier2(false),
+   wasmTier2GeneratorsFinished_(0),
    numWasmFailedJobs_tier1(0),
    numWasmFailedJobs_tier2(0),
    helperLock(mutexid::GlobalHelperThreadState)
@@ -1831,13 +1873,15 @@ HelperThread::handleWasmTier2GeneratorWorkload(AutoLockHelperThreadState& locked
         success = wasm::GenerateTier2(task);
     }
 
-    // We silently ignore failures.  Such failures must be resource exhaustion,
-    // because all error checking was performed by the initial compilation.
+    // We silently ignore failures.  Such failures must be resource exhaustion
+    // or cancellation, because all error checking was performed by the initial
+    // compilation.
     mozilla::Unused << success;
 
     // During shutdown the main thread will wait for any ongoing (cancelled)
     // tier-2 generation to shut down normally.  To do so, it waits on the
     // CONSUMER condition for the count of finished generators to rise.
+    HelperThreadState().incWasmTier2GeneratorsFinished(locked);
     HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER, locked);
 
     wasm::DeleteTier2GeneratorTask(task);
