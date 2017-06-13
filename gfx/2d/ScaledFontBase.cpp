@@ -168,7 +168,13 @@ ScaledFontBase::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *a
     return newPath.forget();
   }
 #endif
-  return nullptr;
+#ifdef USE_SKIA
+  RefPtr<PathBuilder> builder = aTarget->CreatePathBuilder();
+  SkPath skPath = GetSkiaPathForGlyphs(aBuffer);
+  RefPtr<Path> path = MakeAndAddRef<PathSkia>(skPath, FillRule::FILL_WINDING);
+  path->StreamToSink(builder);
+  return builder->Finish();
+#endif
 }
 
 void

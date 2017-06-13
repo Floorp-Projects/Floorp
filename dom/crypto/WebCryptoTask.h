@@ -174,7 +174,7 @@ protected:
   virtual ~WebCryptoTask();
 
   bool IsOnOriginalThread() {
-    return !mOriginalThread || NS_GetCurrentThread() == mOriginalThread;
+    return !mOriginalEventTarget || mOriginalEventTarget->IsOnCurrentThread();
   }
 
   // For things that need to happen on the main thread
@@ -212,7 +212,7 @@ private:
 
   class InternalWorkerHolder;
 
-  nsCOMPtr<nsIThread> mOriginalThread;
+  nsCOMPtr<nsISerialEventTarget> mOriginalEventTarget;
   RefPtr<InternalWorkerHolder> mWorkerHolder;
   bool mReleasedNSSResources;
   nsresult mRv;

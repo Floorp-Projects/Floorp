@@ -411,7 +411,7 @@ ProxyAutoConfig::ResolveAddress(const nsCString &aHostName,
   if (NS_FAILED(dns->AsyncResolveNative(aHostName,
                                         nsIDNSService::RESOLVE_PRIORITY_MEDIUM,
                                         helper,
-                                        NS_GetCurrentThread(),
+                                        GetCurrentThreadEventTarget(),
                                         attrs,
                                         getter_AddRefs(helper->mRequest))))
     return false;

@@ -2891,11 +2891,10 @@ WebSocketChannel::DoAdmissionDNS()
     mPort = (mEncrypted ? kDefaultWSSPort : kDefaultWSPort);
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIThread> mainThread;
-  NS_GetMainThread(getter_AddRefs(mainThread));
+  nsCOMPtr<nsIEventTarget> main = GetMainThreadEventTarget();
   MOZ_ASSERT(!mCancelable);
   return dns->AsyncResolveNative(hostName, 0, this,
-                                 mainThread, mLoadInfo->GetOriginAttributes(),
+                                 main, mLoadInfo->GetOriginAttributes(),
                                  getter_AddRefs(mCancelable));
 }
 
@@ -3342,7 +3341,7 @@ WebSocketChannel::AsyncOpen(nsIURI *aURI,
 
   // Ensure target thread is set.
   if (!mTargetThread) {
-    mTargetThread = do_GetMainThread();
+    mTargetThread = GetMainThreadEventTarget();
   }
 
   mSocketThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);

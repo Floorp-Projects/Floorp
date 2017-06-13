@@ -82,7 +82,7 @@ PrintTarget::MakeDrawTarget(const IntSize& aSize,
   }
 
   if (aRecorder) {
-    dt = CreateRecordingDrawTarget(aRecorder, dt);
+    dt = CreateWrapAndRecordDrawTarget(aRecorder, dt);
     if (!dt || !dt->IsValid()) {
       return nullptr;
     }
@@ -138,7 +138,7 @@ PrintTarget::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
 
   if (aRecorder) {
     if (!mRecordingRefDT) {
-      RefPtr<DrawTarget> dt = CreateRecordingDrawTarget(aRecorder, mRefDT);
+      RefPtr<DrawTarget> dt = CreateWrapAndRecordDrawTarget(aRecorder, mRefDT);
       if (!dt || !dt->IsValid()) {
         return nullptr;
       }
@@ -161,7 +161,7 @@ PrintTarget::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
 }
 
 /* static */ already_AddRefed<DrawTarget>
-PrintTarget::CreateRecordingDrawTarget(DrawEventRecorder* aRecorder,
+PrintTarget::CreateWrapAndRecordDrawTarget(DrawEventRecorder* aRecorder,
                                        DrawTarget* aDrawTarget)
 {
   MOZ_ASSERT(aRecorder);
@@ -171,7 +171,7 @@ PrintTarget::CreateRecordingDrawTarget(DrawEventRecorder* aRecorder,
 
   if (aRecorder) {
     // It doesn't really matter what we pass as the DrawTarget here.
-    dt = gfx::Factory::CreateRecordingDrawTarget(aRecorder, aDrawTarget);
+    dt = gfx::Factory::CreateWrapAndRecordDrawTarget(aRecorder, aDrawTarget);
   }
 
   if (!dt || !dt->IsValid()) {

@@ -1498,6 +1498,38 @@ RecordedGradientStopsDestruction::OutputSimpleEventInfo(stringstream &aStringStr
 }
 
 bool
+RecordedIntoLuminanceSource::PlayEvent(Translator *aTranslator) const
+{
+  RefPtr<SourceSurface> src = aTranslator->LookupDrawTarget(mDT)->IntoLuminanceSource(mLuminanceType, mOpacity);
+  aTranslator->AddSourceSurface(mRefPtr, src);
+  return true;
+}
+
+void
+RecordedIntoLuminanceSource::RecordToStream(ostream &aStream) const
+{
+  WriteElement(aStream, mRefPtr);
+  WriteElement(aStream, mDT);
+  WriteElement(aStream, mLuminanceType);
+  WriteElement(aStream, mOpacity);
+}
+
+RecordedIntoLuminanceSource::RecordedIntoLuminanceSource(istream &aStream)
+  : RecordedEvent(SNAPSHOT)
+{
+  ReadElement(aStream, mRefPtr);
+  ReadElement(aStream, mDT);
+  ReadElement(aStream, mLuminanceType);
+  ReadElement(aStream, mOpacity);
+}
+
+void
+RecordedIntoLuminanceSource::OutputSimpleEventInfo(stringstream &aStringStream) const
+{
+  aStringStream << "[" << mRefPtr << "] Into Luminance Source (DT: " << mDT << ")";
+}
+
+bool
 RecordedSnapshot::PlayEvent(Translator *aTranslator) const
 {
   RefPtr<SourceSurface> src = aTranslator->LookupDrawTarget(mDT)->Snapshot();
@@ -1524,7 +1556,6 @@ RecordedSnapshot::OutputSimpleEventInfo(stringstream &aStringStream) const
 {
   aStringStream << "[" << mRefPtr << "] Snapshot Created (DT: " << mDT << ")";
 }
-
 RecordedFontData::~RecordedFontData()
 {
   delete[] mData;

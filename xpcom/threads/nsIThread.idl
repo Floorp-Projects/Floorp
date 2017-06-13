@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIEventTarget.idl"
+#include "nsISerialEventTarget.idl"
 #include "nsIIdlePeriod.idl"
 
 %{C++
@@ -14,6 +14,8 @@
 [ptr] native PRThread(PRThread);
 
 native alreadyAddRefed_nsIIdlePeriod(already_AddRefed<nsIIdlePeriod>);
+native nsIEventTargetPtr(nsIEventTarget*);
+native nsISerialEventTargetPtr(nsISerialEventTarget*);
 
 /**
  * This interface provides a high-level abstraction for an operating system
@@ -24,8 +26,8 @@ native alreadyAddRefed_nsIIdlePeriod(already_AddRefed<nsIIdlePeriod>);
  *
  * See nsIThreadManager for the API used to create and locate threads.
  */
-[scriptable, uuid(5801d193-29d1-4964-a6b7-70eb697ddf2b)]
-interface nsIThread : nsIEventTarget
+[builtinclass, scriptable, uuid(5801d193-29d1-4964-a6b7-70eb697ddf2b)]
+interface nsIThread : nsISerialEventTarget
 {
   /**
    * @returns
@@ -164,4 +166,22 @@ interface nsIThread : nsIEventTarget
    * events, so this event would never run and has not been dispatched.
    */
   [binaryname(IdleDispatchFromScript)] void idleDispatch(in nsIRunnable event);
+
+  /**
+   * Use this attribute to dispatch runnables to the thread. Eventually, the
+   * eventTarget attribute will be the only way to dispatch events to a
+   * thread--nsIThread will no longer inherit from nsIEventTarget.
+   */
+  readonly attribute nsIEventTarget eventTarget;
+
+  /**
+   * A fast C++ getter for the eventTarget.
+   */
+  [noscript,notxpcom] nsIEventTargetPtr EventTarget();
+
+  /**
+   * A fast C++ getter for the eventTarget. It asserts that the thread's event
+   * target is an nsISerialEventTarget and then returns it.
+   */
+  [noscript,notxpcom] nsISerialEventTargetPtr SerialEventTarget();
 };

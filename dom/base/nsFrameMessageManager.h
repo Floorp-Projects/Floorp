@@ -331,7 +331,6 @@ public:
 private:
   nsSameProcessAsyncMessageBase(const nsSameProcessAsyncMessageBase&);
 
-  JS::RootingContext* mRootingCx;
   nsString mMessage;
   StructuredCloneData mData;
   JS::PersistentRooted<JSObject*> mCpows;

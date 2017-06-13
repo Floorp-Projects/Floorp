@@ -152,11 +152,6 @@ protected:
   const uint64_t mProcessId;
 
   /**
-   * The JS Context for the main thread.
-   */
-  JSContext* const mContext;
-
-  /**
    * Generate unique identifiers.
    */
   uint64_t GetNextId();
@@ -611,8 +606,7 @@ public:
    * @param scope the scope of this group.
    */
   static nsPerformanceGroup*
-    Make(JSContext* cx,
-         nsPerformanceStatsService* service,
+    Make(nsPerformanceStatsService* service,
          const nsAString& name,
          uint64_t windowId,
          uint64_t processId,

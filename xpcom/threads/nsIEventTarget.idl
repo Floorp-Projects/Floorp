@@ -13,7 +13,7 @@
 
 native alreadyAddRefed_nsIRunnable(already_AddRefed<nsIRunnable>);
 
-[scriptable, uuid(a03b8b63-af8b-4164-b0e5-c41e8b2b7cfa)]
+[builtinclass, scriptable, uuid(a03b8b63-af8b-4164-b0e5-c41e8b2b7cfa)]
 interface nsIEventTarget : nsISupports
 {
   /* until we can get rid of all uses, keep the non-alreadyAddRefed<> version */
@@ -53,13 +53,51 @@ interface nsIEventTarget : nsISupports
   const unsigned long DISPATCH_AT_END = 2;
 
   /**
-   * Check to see if this event target is associated with the current thread.
+   * IsOnCurrentThread() should return true if events dispatched to this target
+   * can possibly run on the current thread, and false otherwise. In the case
+   * of an nsIEventTarget for a thread pool, it should return true on all
+   * threads in the pool. In the case of a non-thread nsIEventTarget such as
+   * ThrottledEventQueue, it should return true on the thread where events are
+   * expected to be processed, even if no events from the queue are actually
+   * being processed right now.
    *
-   * @returns
-   *   A boolean value that if "true" indicates that events dispatched to this
-   *   event target will run on the current thread (i.e., the thread calling
-   *   this method).
+   * When called on an nsISerialEventTarget, IsOnCurrentThread can be used to
+   * ensure that no other thread has "ownership" of the event target. As such,
+   * it's useful for asserting that an object is only used on a particular
+   * thread. IsOnCurrentThread can't guarantee that the current event has been
+   * dispatched through a particular event target.
+   *
+   * The infallible version of IsOnCurrentThread() is optimized to avoid a
+   * virtual call for non-thread event targets. Thread targets should set
+   * mVirtualThread to their virtual PRThread. Non-thread targets should leave
+   * mVirtualThread null and implement IsOnCurrentThreadInfallible() to
+   * return the correct answer.
+   *
+   * The fallible version of IsOnCurrentThread may return errors, such as during
+   * shutdown. If it does not return an error, it should return the same result
+   * as the infallible version. The infallible method should return the correct
+   * result regardless of whether the fallible method returns an error.
    */
+  %{C++
+public:
+  // Infallible. Defined in nsThreadUtils.cpp. Delegates to
+  // IsOnCurrentThreadInfallible when mVirtualThread is null.
+  bool IsOnCurrentThread();
+
+protected:
+  PRThread* mVirtualThread;
+
+  nsIEventTarget() : mVirtualThread(nullptr) {}
+  %}
+  // Note that this method is protected.  We define it through IDL, rather than
+  // in a %{C++ block, to ensure that the correct method indices are recorded
+  // for XPConnect purposes.
+  [noscript,notxpcom] boolean isOnCurrentThreadInfallible();
+  %{C++
+public:
+  %}
+
+  // Fallible version of IsOnCurrentThread.
   boolean isOnCurrentThread();
 
   /**
@@ -129,6 +167,7 @@ interface nsIEventTarget : nsISupports
 // Convenient NS_DECL variant that includes some C++-only methods.
 #define NS_DECL_NSIEVENTTARGET_FULL                                   \
     NS_DECL_NSIEVENTTARGET                                            \
-    /* Avoid hiding this method */                                    \
-    using nsIEventTarget::Dispatch;
+    /* Avoid hiding these methods */                                  \
+    using nsIEventTarget::Dispatch;                                   \
+    using nsIEventTarget::IsOnCurrentThread;
 %}
