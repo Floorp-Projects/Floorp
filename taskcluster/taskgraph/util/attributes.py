@@ -10,7 +10,7 @@ INTEGRATION_PROJECTS = {
     'autoland',
 }
 
-TRUNK_PROJECTS = INTEGRATION_PROJECTS | {'mozilla-central',}
+TRUNK_PROJECTS = INTEGRATION_PROJECTS | {'mozilla-central', }
 
 RELEASE_PROJECTS = {
     'mozilla-central',
