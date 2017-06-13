@@ -325,6 +325,16 @@ RenderThread::GetRenderTexture(WrExternalImageId aExternalImageId)
   return mRenderTextures.Get(aExternalImageId.mHandle).get();
 }
 
+WebRenderThreadPool::WebRenderThreadPool()
+{
+  mThreadPool = wr_thread_pool_new();
+}
+
+WebRenderThreadPool::~WebRenderThreadPool()
+{
+  wr_thread_pool_delete(mThreadPool);
+}
+
 } // namespace wr
 } // namespace mozilla
 
