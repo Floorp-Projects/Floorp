@@ -48,8 +48,8 @@ function run_test() {
   });
 
   gCheckFunc = check_showUpdateAvailable;
-  let patches = getRemotePatchString("complete");
-  let updates = getRemoteUpdateString(patches, "minor", null, null, "1.0");
+  let patches = getRemotePatchString({});
+  let updates = getRemoteUpdateString({}, patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
   gAUS.notify(null);
 }

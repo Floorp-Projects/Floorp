@@ -37,15 +37,14 @@ function stageUpdateFinished() {
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS, true);
   // Change the active update to an older version to simulate installing a new
   // version of the application while there is an update that has been staged.
-  let channel = gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_CHANNEL);
-  let patches = getLocalPatchString(null, null, null, null, null, "true",
-                                    STATE_AFTER_STAGE);
-  let updates = getLocalUpdateString(patches, null, null, null, "1.0", null,
-                                     null, null, null, null, "true", channel);
+  let patchProps = {state: STATE_AFTER_STAGE};
+  let patches = getLocalPatchString(patchProps);
+  let updateProps = {appVersion: "1.0"};
+  let updates = getLocalUpdateString(updateProps, patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   // Change the version file to an older version to simulate installing a new
   // version of the application while there is an update that has been staged.
-   writeVersionFile("1.0");
+  writeVersionFile("1.0");
   reloadUpdateManagerData();
   // Try to switch the application to the staged application that was updated.
   runUpdateUsingApp(STATE_AFTER_STAGE);
@@ -60,7 +59,7 @@ function runUpdateFinished() {
                "the status file state" + MSG_SHOULD_EQUAL);
   Assert.ok(!gUpdateManager.activeUpdate,
             "the active update should not be defined");
-  Assert.equal(gUpdateManager.updateCount, 2,
+  Assert.equal(gUpdateManager.updateCount, 1,
                "the update manager updateCount attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(gUpdateManager.getUpdateAt(0).state, STATE_AFTER_STAGE,
                "the update state" + MSG_SHOULD_EQUAL);

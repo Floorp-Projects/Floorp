@@ -1,14 +1,12 @@
 add_task(async function testPartialPatchApplyFailureWithCompleteAvailable() {
-  let patches = getLocalPatchString("partial", null, null, null, null, null,
-                                    STATE_PENDING) +
-                getLocalPatchString("complete", null, null, null,
-                                    null, "false");
-
-  let promptWaitTime = "0";
-  let updates = getLocalUpdateString(patches, null, null, null,
-                                     Services.appinfo.version, null,
-                                     null, null, null, null, "false",
-                                     null, null, null, null, promptWaitTime);
+  let patchProps = {type: "partial",
+                    state: STATE_PENDING};
+  let patches = getLocalPatchString(patchProps);
+  patchProps = {selected: "false"};
+  patches += getLocalPatchString(patchProps);
+  let updateProps = {isCompleteUpdate: "false",
+                     promptWaitTime: "0"};
+  let updates = getLocalUpdateString(updateProps, patches);
 
   await runUpdateProcessingTest(updates, [
     {

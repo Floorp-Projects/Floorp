@@ -32,8 +32,8 @@ const TESTS = [ {
 function runTest() {
   debugDump("entering");
 
-  let url = URL_HTTP_UPDATE_XML + "?showDetails=1&showPrompt=1" +
-            getVersionParams();
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_AUTO, false);
+  let url = URL_HTTP_UPDATE_XML + "?showDetails=1" + getVersionParams();
   setUpdateURL(url);
 
   gAUS.checkForBackgroundUpdates();

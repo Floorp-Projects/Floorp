@@ -33,8 +33,7 @@ function runTest() {
   file.fileAttributesWin |= file.WFA_READONLY;
   file.fileAttributesWin &= ~file.WFA_READWRITE;
 
-  let url = URL_HTTP_UPDATE_XML + "?showDetails=1&showPrompt=1" +
-            getVersionParams();
+  let url = URL_HTTP_UPDATE_XML + "?showDetails=1" + getVersionParams();
   setUpdateURL(url);
 
   gAUS.checkForBackgroundUpdates();

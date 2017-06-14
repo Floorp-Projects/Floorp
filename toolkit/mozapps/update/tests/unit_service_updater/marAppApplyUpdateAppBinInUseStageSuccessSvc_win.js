@@ -16,7 +16,7 @@ function run_test() {
 
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
-  setupUpdaterTest(FILE_COMPLETE_MAR, undefined);
+  setupUpdaterTest(FILE_COMPLETE_MAR, false);
 }
 
 /**
