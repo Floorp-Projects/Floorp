@@ -6,13 +6,26 @@
 #include "nsISupports.idl"
 #include "nsIVariant.idl"
 #include "nsIPaymentRequest.idl"
+#include "nsIPaymentActionResponse.idl"
 
 interface nsIArray;
+
+[builtinclass, uuid(3fef5459-b0ea-469b-be9f-b99e8ca75d3d)]
+interface nsIPaymentActionCallback : nsISupports
+{
+  void respondPayment(in nsIPaymentActionResponse aResponse);
+};
 
 [builtinclass, uuid(7ddbe8be-beac-4952-96f6-619981dff7a6)]
 interface nsIPaymentActionRequest : nsISupports
 {
+  const uint32_t UNKNOWN_ACTION = 0;
   const uint32_t CREATE_ACTION = 1;
+  const uint32_t CANMAKE_ACTION = 2;
+  const uint32_t SHOW_ACTION = 3;
+  const uint32_t ABORT_ACTION = 4;
+  const uint32_t COMPLETE_ACTION = 5;
+
   /*
    *  The payment request identifier.
    */
@@ -24,10 +37,16 @@ interface nsIPaymentActionRequest : nsISupports
   readonly attribute uint32_t type;
 
   /*
+   *  The callback for the response from UI module
+   */
+  readonly attribute nsIPaymentActionCallback callback;
+
+  /*
    *  Initialize function for this request.
    */
   void init(in AString aRequestId,
-            in uint32_t aType);
+            in uint32_t aType,
+            in nsIPaymentActionCallback aCallback);
 };
 
 [builtinclass, uuid(1d38dce6-8bcd-441b-aa94-68e300b6e175)]
@@ -57,11 +76,29 @@ interface nsIPaymentCreateActionRequest : nsIPaymentActionRequest
    *  Initialize function the this request.
    */
   void initRequest(in AString aRequestId,
+                   in nsIPaymentActionCallback aCallback,
                    in uint64_t aTabId,
                    in nsIArray aMethodData,
                    in nsIPaymentDetails aDetails,
                    in nsIPaymentOptions aOptions);
 };
+
+[builtinclass, uuid(4429697d-1135-47de-a46e-5196d399ec55)]
+interface nsIPaymentCompleteActionRequest : nsIPaymentActionRequest
+{
+  /*
+   *  The complete status from merchant side.
+   */
+  readonly attribute AString completeStatus;
+
+  /*
+   *  Initialize function for this request.
+   */
+  void initRequest(in AString aRequestId,
+                   in nsIPaymentActionCallback aCallback,
+                   in AString aCompleteStatus);
+};
+
 
 %{C++
 #define NS_PAYMENT_ACTION_REQUEST_CID \
@@ -73,4 +110,10 @@ interface nsIPaymentCreateActionRequest : nsIPaymentActionRequest
   { 0x1d38dce6, 0x8bcd, 0x441b, { 0xaa, 0x94, 0x68, 0xe3, 0x00, 0xb6, 0xe1, 0x75 } }
 #define NS_PAYMENT_CREATE_ACTION_REQUEST_CONTRACT_ID \
   "@mozilla.org/dom/payments/payment-create-action-request;1"
+
+#define NS_PAYMENT_COMPLETE_ACTION_REQUEST_CID \
+  { 0x4429697d, 0x1135, 0x47de, { 0xa4, 0x6e, 0x51, 0x96, 0xd3, 0x99, 0xec, 0x55 } }
+#define NS_PAYMENT_COMPLETE_ACTION_REQUEST_CONTRACT_ID \
+  "@mozilla.org/dom/payments/payment-complete-action-request;1"
+
 %}
