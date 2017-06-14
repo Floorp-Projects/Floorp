@@ -1109,6 +1109,7 @@ inDOMUtils::SetContentState(nsIDOMElement* aElement,
 NS_IMETHODIMP
 inDOMUtils::RemoveContentState(nsIDOMElement* aElement,
                                EventStates::InternalType aState,
+                               bool aClearActiveDocument,
                                bool* aRetVal)
 {
   NS_ENSURE_ARG_POINTER(aElement);
@@ -1118,6 +1119,15 @@ inDOMUtils::RemoveContentState(nsIDOMElement* aElement,
   NS_ENSURE_TRUE(esm, NS_ERROR_INVALID_ARG);
 
   *aRetVal = esm->SetContentState(nullptr, EventStates(aState));
+
+  if (aClearActiveDocument && EventStates(aState) == NS_EVENT_STATE_ACTIVE) {
+    EventStateManager* activeESM = static_cast<EventStateManager*>(
+      EventStateManager::GetActiveEventStateManager());
+    if (activeESM == esm) {
+      EventStateManager::ClearGlobalActiveContent(nullptr);
+    }
+  }
+
   return NS_OK;
 }
 
