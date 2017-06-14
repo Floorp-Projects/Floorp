@@ -424,9 +424,8 @@ FSMultipartFormData::FSMultipartFormData(NotNull<const Encoding*> aEncoding,
                                          nsIContent* aOriginatingElement)
   : EncodingFormSubmission(aEncoding, aOriginatingElement)
 {
-  mPostData =
+  mPostDataStream =
     do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
-  mPostDataStream = do_QueryInterface(mPostData);
   mTotalLength = 0;
 
   mBoundary.AssignLiteral("---------------------------");
@@ -631,7 +630,7 @@ FSMultipartFormData::AddDataChunk(const nsACString& aName,
     // here, since we're about to add the file input stream
     AddPostDataStream();
 
-    mPostData->AppendStream(aInputStream);
+    mPostDataStream->AppendStream(aInputStream);
     mTotalLength += aInputStreamSize;
   }
 
@@ -672,7 +671,7 @@ FSMultipartFormData::AddPostDataStream()
                                 mPostDataChunk);
   NS_ASSERTION(postDataChunkStream, "Could not open a stream for POST!");
   if (postDataChunkStream) {
-    mPostData->AppendStream(postDataChunkStream);
+    mPostDataStream->AppendStream(postDataChunkStream);
     mTotalLength += mPostDataChunk.Length();
   }
 

@@ -25,7 +25,7 @@ using mozilla::DefaultXDisplay;
 #include "GLImages.h"
 #include "nsPluginFrame.h"
 #include "nsIPluginDocument.h"
-#include "nsStringStream.h"
+#include "nsIStringStream.h"
 #include "nsNetUtil.h"
 #include "mozilla/Preferences.h"
 #include "nsILinkHandler.h"
@@ -540,11 +540,13 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL,
     if (!aHeadersDataLen)
       return NS_ERROR_UNEXPECTED;
 
-    rv = NS_NewCStringInputStream(
-      getter_AddRefs(headersDataStream),
-      nsDependentCSubstring(reinterpret_cast<const char*>(aHeadersData),
-                            aHeadersDataLen));
+    nsCOMPtr<nsIStringInputStream> sis = do_CreateInstance("@mozilla.org/io/string-input-stream;1");
+    if (!sis)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = sis->SetData((char *)aHeadersData, aHeadersDataLen);
     NS_ENSURE_SUCCESS(rv, rv);
+    headersDataStream = do_QueryInterface(sis);
   }
 
   int32_t blockPopups =

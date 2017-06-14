@@ -8,7 +8,6 @@
 #include "nsIScriptableUConv.h"
 #include "nsScriptableUConv.h"
 #include "nsIStringStream.h"
-#include "nsIInputStream.h"
 #include "nsComponentManagerUtils.h"
 
 using namespace mozilla;
@@ -234,7 +233,8 @@ nsScriptableUnicodeConverter::ConvertToInputStream(const nsAString& aString,
     return rv;
   }
 
-  return CallQueryInterface(inputStream, _retval);
+  NS_ADDREF(*_retval = inputStream);
+  return rv;
 }
 
 NS_IMETHODIMP

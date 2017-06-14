@@ -622,10 +622,14 @@ NS_NewInputStreamChannelInternal(nsIChannel        **outChannel,
                                  nsILoadInfo        *aLoadInfo,
                                  bool                aIsSrcdocChannel /* = false */)
 {
-  nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = NS_NewCStringInputStream(getter_AddRefs(stream),
-                                         NS_ConvertUTF16toUTF8(aData));
+  nsresult rv;
+  nsCOMPtr<nsIStringInputStream> stream;
+  stream = do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
+
+    uint32_t len;
+    char* utf8Bytes = ToNewUTF8String(aData, &len);
+    rv = stream->AdoptData(utf8Bytes, len);
 
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel),
@@ -1450,8 +1454,12 @@ NS_NewPostDataStream(nsIInputStream  **result,
     }
 
     // otherwise, create a string stream for the data (copies)
-    nsCOMPtr<nsIInputStream> stream;
-    rv = NS_NewCStringInputStream(getter_AddRefs(stream), data);
+    nsCOMPtr<nsIStringInputStream> stream
+        (do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv));
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = stream->SetData(data.BeginReading(), data.Length());
     if (NS_FAILED(rv))
         return rv;
 
