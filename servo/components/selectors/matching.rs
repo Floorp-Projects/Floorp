@@ -66,11 +66,12 @@ pub struct LocalMatchingContext<'a, 'b: 'a, Impl: SelectorImpl> {
     /// been advanced partway through the current compound selector, and the callee may need
     /// the whole thing.
     offset: usize,
-    /// Holds a bool flag to see if LocalMatchingContext is within a functional
-    /// pseudo class argument. This is used for pseudo classes like
-    /// `:-moz-any` or `:not`. If this flag is true, :active and :hover
-    /// quirk shouldn't match.
-    pub within_functional_pseudo_class_argument: bool,
+    /// Holds a bool flag to see whether :active and :hover quirk should try to
+    /// match or not. This flag can only be true in these two cases:
+    /// - LocalMatchingContext is currently within a functional pseudo class
+    /// like `:-moz-any` or `:not`.
+    /// - PseudoElements are encountered when matching mode is ForStatelessPseudoElement.
+    pub hover_active_quirk_disabled: bool,
 }
 
 impl<'a, 'b, Impl> LocalMatchingContext<'a, 'b, Impl>
@@ -83,7 +84,8 @@ impl<'a, 'b, Impl> LocalMatchingContext<'a, 'b, Impl>
             shared: shared,
             selector: selector,
             offset: 0,
-            within_functional_pseudo_class_argument: false,
+            // We flip this off once third sequence is reached.
+            hover_active_quirk_disabled: selector.has_pseudo_element(),
         }
     }
 
@@ -91,6 +93,13 @@ impl<'a, 'b, Impl> LocalMatchingContext<'a, 'b, Impl>
     /// To be able to correctly re-synthesize main SelectorIter.
     pub fn note_next_sequence(&mut self, selector_iter: &SelectorIter<Impl>) {
         if let QuirksMode::Quirks = self.shared.quirks_mode() {
+            if self.selector.has_pseudo_element() && self.offset != 0 {
+                // This is the _second_ call to note_next_sequence,
+                // which means we've moved past the compound
+                // selector adjacent to the pseudo-element.
+                self.hover_active_quirk_disabled = false;
+            }
+
             self.offset = self.selector.len() - selector_iter.selector_length();
         }
     }
@@ -99,7 +108,7 @@ impl<'a, 'b, Impl> LocalMatchingContext<'a, 'b, Impl>
     /// https://quirks.spec.whatwg.org/#the-active-and-hover-quirk
     pub fn active_hover_quirk_matches(&mut self) -> bool {
         if self.shared.quirks_mode() != QuirksMode::Quirks ||
-           self.within_functional_pseudo_class_argument {
+           self.hover_active_quirk_disabled {
             return false;
         }
 
@@ -253,6 +262,10 @@ impl RelevantLinkStatus {
             return false
         }
 
+        if context.visited_handling == VisitedHandlingMode::AllLinksVisitedAndUnvisited {
+            return true;
+        }
+
         // Non-relevant links are always unvisited.
         if *self != RelevantLinkStatus::Found {
             return false
@@ -272,6 +285,10 @@ impl RelevantLinkStatus {
     {
         if !element.is_link() {
             return false
+        }
+
+        if context.visited_handling == VisitedHandlingMode::AllLinksVisitedAndUnvisited {
+            return true;
         }
 
         // Non-relevant links are always unvisited.
@@ -335,9 +352,9 @@ enum SelectorMatchingResult {
 
 /// Matches a selector, fast-rejecting against a bloom filter.
 ///
-/// We accept an offset to allow consumers to represent and match against partial
-/// selectors (indexed from the right). We use this API design, rather than
-/// having the callers pass a SelectorIter, because creating a SelectorIter
+/// We accept an offset to allow consumers to represent and match against
+/// partial selectors (indexed from the right). We use this API design, rather
+/// than having the callers pass a SelectorIter, because creating a SelectorIter
 /// requires dereferencing the selector to get the length, which adds an
 /// unncessary cache miss for cases when we can fast-reject with AncestorHashes
 /// (which the caller can store inline with the selector pointer).
@@ -360,12 +377,74 @@ pub fn matches_selector<E, F>(selector: &Selector<E::Impl>,
     }
 
     let mut local_context = LocalMatchingContext::new(context, selector);
-    matches_complex_selector(&selector, offset, element, &mut local_context, flags_setter)
+    let iter = if offset == 0 {
+        selector.iter()
+    } else {
+        selector.iter_from(offset)
+    };
+    matches_complex_selector(iter, element, &mut local_context, flags_setter)
+}
+
+/// Whether a compound selector matched, and whether it was the rightmost
+/// selector inside the complex selector.
+pub enum CompoundSelectorMatchingResult {
+    /// The compound selector matched, and the next combinator offset is
+    /// `next_combinator_offset`.
+    ///
+    /// If the next combinator offset is zero, it means that it's the rightmost
+    /// selector.
+    Matched { next_combinator_offset: usize, },
+    /// The selector didn't match.
+    NotMatched,
+}
+
+/// Matches a compound selector belonging to `selector`, starting at offset
+/// `from_offset`, matching left to right.
+///
+/// Requires that `from_offset` points to a `Combinator`.
+///
+/// NOTE(emilio): This doesn't allow to match in the leftmost sequence of the
+/// complex selector, but it happens to be the case we don't need it.
+pub fn matches_compound_selector<E>(
+    selector: &Selector<E::Impl>,
+    mut from_offset: usize,
+    context: &mut MatchingContext,
+    element: &E,
+) -> CompoundSelectorMatchingResult
+where
+    E: Element
+{
+    if cfg!(debug_assertions) {
+        selector.combinator_at(from_offset); // This asserts.
+    }
+
+    let mut local_context = LocalMatchingContext::new(context, selector);
+    for component in selector.iter_raw_rev_from(from_offset - 1) {
+        if matches!(*component, Component::Combinator(..)) {
+            return CompoundSelectorMatchingResult::Matched {
+                next_combinator_offset: from_offset - 1,
+            }
+        }
+
+        if !matches_simple_selector(
+            component,
+            element,
+            &mut local_context,
+            &RelevantLinkStatus::NotLooking,
+            &mut |_, _| {}) {
+            return CompoundSelectorMatchingResult::NotMatched;
+        }
+
+        from_offset -= 1;
+    }
+
+    return CompoundSelectorMatchingResult::Matched {
+        next_combinator_offset: 0,
+    }
 }
 
 /// Matches a complex selector.
-pub fn matches_complex_selector<E, F>(complex_selector: &Selector<E::Impl>,
-                                      offset: usize,
+pub fn matches_complex_selector<E, F>(mut iter: SelectorIter<E::Impl>,
                                       element: &E,
                                       mut context: &mut LocalMatchingContext<E::Impl>,
                                       flags_setter: &mut F)
@@ -373,12 +452,6 @@ pub fn matches_complex_selector<E, F>(complex_selector: &Selector<E::Impl>,
     where E: Element,
           F: FnMut(&E, ElementSelectorFlags),
 {
-    let mut iter = if offset == 0 {
-        complex_selector.iter()
-    } else {
-        complex_selector.iter_from(offset)
-    };
-
     if cfg!(debug_assertions) {
         if context.shared.matching_mode == MatchingMode::ForStatelessPseudoElement {
             assert!(iter.clone().any(|c| {
@@ -653,13 +726,13 @@ fn matches_simple_selector<E, F>(
             matches_generic_nth_child(element, 0, 1, true, true, flags_setter)
         }
         Component::Negation(ref negated) => {
-            let old_value = context.within_functional_pseudo_class_argument;
-            context.within_functional_pseudo_class_argument = true;
+            let old_value = context.hover_active_quirk_disabled;
+            context.hover_active_quirk_disabled = true;
             let result = !negated.iter().all(|ss| {
                 matches_simple_selector(ss, element, context,
                                         relevant_link, flags_setter)
             });
-            context.within_functional_pseudo_class_argument = old_value;
+            context.hover_active_quirk_disabled = old_value;
             result
         }
     }

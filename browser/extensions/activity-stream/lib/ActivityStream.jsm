@@ -23,6 +23,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "NewTabInit",
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesFeed",
   "resource://activity-stream/lib/PlacesFeed.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "PrefsFeed",
+  "resource://activity-stream/lib/PrefsFeed.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryFeed",
   "resource://activity-stream/lib/TelemetryFeed.jsm");
 
@@ -54,6 +57,12 @@ const PREFS_CONFIG = [
     init: () => new PlacesFeed()
   },
   {
+    name: "feeds.prefs",
+    title: "Preferences",
+    value: true,
+    init: () => new PrefsFeed(PREFS_CONFIG.map(pref => pref.name))
+  },
+  {
     name: "feeds.telemetry",
     title: "Relays telemetry-related actions to TelemetrySender",
     value: true,
@@ -65,8 +74,16 @@ const PREFS_CONFIG = [
     value: true,
     init: () => new TopSitesFeed()
   },
-  // End feeds
-
+  {
+    name: "showSearch",
+    title: "Show the Search bar on the New Tab page",
+    value: true
+  },
+  {
+    name: "showTopSites",
+    title: "Show the Top Sites section on the New Tab page",
+    value: true
+  },
   {
     name: "telemetry",
     title: "Enable system error and usage data collection",
@@ -133,4 +150,5 @@ this.ActivityStream = class ActivityStream {
   }
 };
 
+this.PREFS_CONFIG = PREFS_CONFIG;
 this.EXPORTED_SYMBOLS = ["ActivityStream"];

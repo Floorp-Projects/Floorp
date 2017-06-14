@@ -13,12 +13,12 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public final class GeckoHlsSample {
-    public static final GeckoHlsSample EOS;
+public final class GeckoHLSSample {
+    public static final GeckoHLSSample EOS;
     static {
         BufferInfo eosInfo = new BufferInfo();
         eosInfo.set(0, 0, Long.MIN_VALUE, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
-        EOS = new GeckoHlsSample(null, eosInfo, null, 0);
+        EOS = new GeckoHLSSample(null, eosInfo, null, 0);
     }
 
     // Indicate the index of format which is used by this sample.
@@ -53,12 +53,12 @@ public final class GeckoHlsSample {
         return (info.flags & MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0;
     }
 
-    public static GeckoHlsSample create(ByteBuffer src, BufferInfo info, CryptoInfo cryptoInfo,
+    public static GeckoHLSSample create(ByteBuffer src, BufferInfo info, CryptoInfo cryptoInfo,
                                         int formatIndex) {
-        return new GeckoHlsSample(src, info, cryptoInfo, formatIndex);
+        return new GeckoHLSSample(src, info, cryptoInfo, formatIndex);
     }
 
-    private GeckoHlsSample(ByteBuffer buffer, BufferInfo info, CryptoInfo cryptoInfo,
+    private GeckoHLSSample(ByteBuffer buffer, BufferInfo info, CryptoInfo cryptoInfo,
                            int formatIndex) {
         this.formatIndex = formatIndex;
         duration = Long.MAX_VALUE;
@@ -70,7 +70,7 @@ public final class GeckoHlsSample {
     @Override
     public String toString() {
         if (isEOS()) {
-            return "EOS GeckoHlsSample";
+            return "EOS GeckoHLSSample";
         }
 
         StringBuilder str = new StringBuilder();

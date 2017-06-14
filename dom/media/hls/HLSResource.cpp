@@ -11,21 +11,21 @@ using namespace mozilla::java;
 
 namespace mozilla {
 
-HlsResourceCallbacksSupport::HlsResourceCallbacksSupport(HLSResource* aResource)
+HLSResourceCallbacksSupport::HLSResourceCallbacksSupport(HLSResource* aResource)
 {
   MOZ_ASSERT(aResource);
   mResource = aResource;
 }
 
 void
-HlsResourceCallbacksSupport::OnDataArrived()
+HLSResourceCallbacksSupport::OnDataArrived()
 {
   MOZ_ASSERT(mResource);
   mResource->onDataAvailable();
 }
 
 void
-HlsResourceCallbacksSupport::OnError(int aErrorCode)
+HLSResourceCallbacksSupport::OnError(int aErrorCode)
 {
   MOZ_ASSERT(mResource);
 }
@@ -39,13 +39,13 @@ HLSResource::HLSResource(MediaResourceCallback* aCallback,
   nsCString spec;
   nsresult rv = aURI->GetSpec(spec);
   (void)rv;
-  HlsResourceCallbacksSupport::Init();
-  mJavaCallbacks = GeckoHlsResourceWrapper::HlsResourceCallbacks::New();
-  HlsResourceCallbacksSupport::AttachNative(mJavaCallbacks,
-                                            mozilla::MakeUnique<HlsResourceCallbacksSupport>(this));
-  mHlsResourceWrapper = java::GeckoHlsResourceWrapper::Create(NS_ConvertUTF8toUTF16(spec),
+  HLSResourceCallbacksSupport::Init();
+  mJavaCallbacks = GeckoHLSResourceWrapper::Callbacks::New();
+  HLSResourceCallbacksSupport::AttachNative(mJavaCallbacks,
+                                            mozilla::MakeUnique<HLSResourceCallbacksSupport>(this));
+  mHLSResourceWrapper = java::GeckoHLSResourceWrapper::Create(NS_ConvertUTF8toUTF16(spec),
                                                               mJavaCallbacks);
-  MOZ_ASSERT(mHlsResourceWrapper);
+  MOZ_ASSERT(mHLSResourceWrapper);
 }
 
 void
@@ -59,12 +59,12 @@ HLSResource::onDataAvailable()
 HLSResource::~HLSResource()
 {
   if (mJavaCallbacks) {
-    HlsResourceCallbacksSupport::DisposeNative(mJavaCallbacks);
+    HLSResourceCallbacksSupport::DisposeNative(mJavaCallbacks);
     mJavaCallbacks = nullptr;
   }
-  if (mHlsResourceWrapper) {
-    mHlsResourceWrapper->Destroy();
-    mHlsResourceWrapper = nullptr;
+  if (mHLSResourceWrapper) {
+    mHLSResourceWrapper->Destroy();
+    mHLSResourceWrapper = nullptr;
   }
   HLS_DEBUG("HLSResource", "Destroy");
 }

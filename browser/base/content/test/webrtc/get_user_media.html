@@ -24,7 +24,7 @@ function message(m) {
 
 var gStreams = [];
 
-function requestDevice(aAudio, aVideo, aShare) {
+function requestDevice(aAudio, aVideo, aShare, aBadDevice = false) {
   var opts = {video: aVideo, audio: aAudio};
   if (aShare) {
     opts.video = {
@@ -32,6 +32,20 @@ function requestDevice(aAudio, aVideo, aShare) {
       mediaSource: aShare
     }
   } else if (useFakeStreams) {
+    opts.fake = true;
+  }
+
+  if (aVideo && aBadDevice) {
+    opts.video = {
+      deviceId: "bad device"
+    }
+    opts.fake = true;
+  }
+
+  if (aAudio && aBadDevice) {
+    opts.audio = {
+      deviceId: "bad device"
+    }
     opts.fake = true;
   }
 

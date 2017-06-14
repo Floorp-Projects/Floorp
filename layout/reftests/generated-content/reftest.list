@@ -17,3 +17,4 @@ fuzzy-if(OSX==1010,1,10) == quotes-001.xml quotes-001-ref.xml
 fuzzy-if(OSX==1010,1,10) == table-ignoring-whitespace-01.html table-ignoring-whitespace-01-ref.html
 fuzzy-if(OSX==1010,1,10) == table-parts-01.html table-parts-01-ref.html
 == before-style-sharing.html before-style-sharing-ref.html
+== transitive-style-invalidation.html transitive-style-invalidation-ref.html

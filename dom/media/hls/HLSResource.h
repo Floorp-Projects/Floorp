@@ -20,15 +20,15 @@ namespace mozilla {
 
 class HLSResource;
 
-class HlsResourceCallbacksSupport
-  : public GeckoHlsResourceWrapper::HlsResourceCallbacks::Natives<HlsResourceCallbacksSupport>
+class HLSResourceCallbacksSupport
+  : public GeckoHLSResourceWrapper::Callbacks::Natives<HLSResourceCallbacksSupport>
 {
 public:
-  typedef GeckoHlsResourceWrapper::HlsResourceCallbacks::Natives<HlsResourceCallbacksSupport> NativeCallbacks;
+  typedef GeckoHLSResourceWrapper::Callbacks::Natives<HLSResourceCallbacksSupport> NativeCallbacks;
   using NativeCallbacks::DisposeNative;
   using NativeCallbacks::AttachNative;
 
-  HlsResourceCallbacksSupport(HLSResource* aResource);
+  HLSResourceCallbacksSupport(HLSResource* aResource);
   void OnDataArrived();
   void OnError(int aErrorCode);
 
@@ -98,12 +98,12 @@ public:
     return false;
   }
 
-  java::GeckoHlsResourceWrapper::GlobalRef GetResourceWrapper() {
-    return mHlsResourceWrapper;
+  java::GeckoHLSResourceWrapper::GlobalRef GetResourceWrapper() {
+    return mHLSResourceWrapper;
   }
 
 private:
-  friend class HlsResourceCallbacksSupport;
+  friend class HLSResourceCallbacksSupport;
 
   void onDataAvailable();
 
@@ -120,8 +120,8 @@ private:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  java::GeckoHlsResourceWrapper::GlobalRef mHlsResourceWrapper;
-  java::GeckoHlsResourceWrapper::HlsResourceCallbacks::GlobalRef mJavaCallbacks;
+  java::GeckoHLSResourceWrapper::GlobalRef mHLSResourceWrapper;
+  java::GeckoHLSResourceWrapper::Callbacks::GlobalRef mJavaCallbacks;
 };
 
 } // namespace mozilla
