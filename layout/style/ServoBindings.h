@@ -289,7 +289,8 @@ void Gecko_CopyImageOrientationFrom(nsStyleVisibility* aDst,
 
 // Counter style.
 // This function takes an already addrefed nsIAtom
-void Gecko_SetCounterStyleToName(mozilla::CounterStylePtr* ptr, nsIAtom* name);
+void Gecko_SetCounterStyleToName(mozilla::CounterStylePtr* ptr, nsIAtom* name,
+                                 RawGeckoPresContextBorrowed pres_context);
 void Gecko_SetCounterStyleToSymbols(mozilla::CounterStylePtr* ptr,
                                     uint8_t symbols_type,
                                     nsACString const* const* symbols,
