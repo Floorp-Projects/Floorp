@@ -35,7 +35,7 @@ const BRAND_SHORT_NAME = Services.strings
  *   // Return a div appended with elements for this tours.
  *   // Each tour should contain the following 3 sections in the div:
  *   // .onboarding-tour-description, .onboarding-tour-content, .onboarding-tour-button.
- *   // Add no-button css class in the div if this tour does not need a button.
+ *   // Add onboarding-no-button css class in the div if this tour does not need a button.
  *   // The overlay layout will responsively position and distribute space for these 3 sections based on viewport size
  *   getPage() {},
  * },
@@ -175,6 +175,39 @@ var onboardingTours = [
           <button id="onboarding-tour-default-browser-button" data-l10n-id="${defaultBrowserButtonId}"></button>
         </aside>
       `;
+      return div;
+    },
+  },
+  {
+    id: "onboarding-tour-sync",
+    tourNameId: "onboarding.tour-sync",
+    getNotificationStrings(bundle) {
+      return {
+        title: bundle.GetStringFromName("onboarding.notification.onboarding-tour-sync.title"),
+        message: bundle.GetStringFromName("onboarding.notification.onboarding-tour-sync.message"),
+        button: bundle.GetStringFromName("onboarding.button.learnMore"),
+      };
+    },
+    getPage(win, bundle) {
+      let div = win.document.createElement("div");
+      div.classList.add("onboarding-no-button");
+      div.innerHTML = `
+        <section class="onboarding-tour-description">
+          <h1 data-l10n-id="onboarding.tour-sync.title"></h1>
+          <p data-l10n-id="onboarding.tour-sync.description"></p>
+        </section>
+        <section class="onboarding-tour-content">
+          <form>
+            <h3 data-l10n-id="onboarding.tour-sync.form.title"></h3>
+            <p data-l10n-id="onboarding.tour-sync.form.description"></p>
+            <input id="onboarding-tour-sync-email-input" type="text"></input><br />
+            <button id="onboarding-tour-sync-button" data-l10n-id="onboarding.tour-sync.button"></button>
+          </form>
+          <img src="resource://onboarding/img/figure_sync.svg" />
+        </section>
+      `;
+      div.querySelector("#onboarding-tour-sync-email-input").placeholder =
+        bundle.GetStringFromName("onboarding.tour-sync.email-input.placeholder");
       return div;
     },
   },
@@ -490,7 +523,7 @@ class Onboarding {
       li.className = "onboarding-tour-item";
       itemsFrag.appendChild(li);
       // Dynamically create tour pages
-      let div = tour.getPage(this._window);
+      let div = tour.getPage(this._window, this._bundle);
 
       // Do a traverse for elements in the page that need to be localized.
       let l10nElements = div.querySelectorAll("[data-l10n-id]");
