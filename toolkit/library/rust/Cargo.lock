@@ -313,18 +313,6 @@ dependencies = [
 
 [[package]]
 name = "euclid"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "heapsize 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "log 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "num-traits 0.1.37 (registry+https://github.com/rust-lang/crates.io-index)",
- "rustc-serialize 0.3.22 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 0.9.9 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "euclid"
 version = "0.14.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
@@ -890,7 +878,7 @@ dependencies = [
  "byteorder 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cfg-if 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cssparser 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "euclid 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "euclid 0.14.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "fnv 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "itoa 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "kernel32-sys 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -935,7 +923,7 @@ dependencies = [
  "app_units 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "bitflags 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cssparser 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "euclid 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "euclid 0.14.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "selectors 0.19.0",
 ]
 
@@ -1245,7 +1233,6 @@ dependencies = [
 "checksum encoding_c 0.7.4 (registry+https://github.com/rust-lang/crates.io-index)" = "45ef700aebe8c5fb44f081a54ab400f4f6b002a426bc5332381c108f49713432"
 "checksum encoding_rs 0.6.11 (registry+https://github.com/rust-lang/crates.io-index)" = "e00a1b1e95eb46988805ceee6f34cd95c46a6753e290cb3ff0486931989d4a4c"
 "checksum env_logger 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "ed39959122ea027670b704fb70539f4286ddf4a49eefede23bf0b4b2a069ec03"
-"checksum euclid 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)" = "6083f113c422ff9cd855a1cf6cc8ec0903606c0eb43a0c6a0ced3bdc9731e4c1"
 "checksum euclid 0.14.4 (registry+https://github.com/rust-lang/crates.io-index)" = "995b21c36b37e0f18ed9ba1714378a337e3ff19a6e5e952ea94b0f3dd4e12fbc"
 "checksum fnv 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)" = "6cc484842f1e2884faf56f529f960cc12ad8c71ce96cc7abba0a067c98fee344"
 "checksum freetype 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fde23272c687e4570aefec06cb71174ec0f5284b725deac4e77ba2665d635faf"
