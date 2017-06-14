@@ -157,6 +157,8 @@ NS_NewSVGAFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
+NS_NewSVGSymbolFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+nsIFrame*
 NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGContainerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -5578,6 +5580,7 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
     SIMPLE_SVG_CREATE(svg, NS_NewSVGInnerSVGFrame),
     SIMPLE_SVG_CREATE(g, NS_NewSVGGFrame),
     SIMPLE_SVG_CREATE(svgSwitch, NS_NewSVGSwitchFrame),
+    SIMPLE_SVG_CREATE(symbol, NS_NewSVGSymbolFrame),
     SIMPLE_SVG_CREATE(polygon, NS_NewSVGGeometryFrame),
     SIMPLE_SVG_CREATE(polyline, NS_NewSVGGeometryFrame),
     SIMPLE_SVG_CREATE(circle, NS_NewSVGGeometryFrame),
