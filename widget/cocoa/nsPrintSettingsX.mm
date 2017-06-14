@@ -311,6 +311,23 @@ nsPrintSettingsX::SetScaling(double aScaling)
 }
 
 NS_IMETHODIMP
+nsPrintSettingsX::GetScaling(double *aScaling)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  NSDictionary* printInfoDict = [mPrintInfo dictionary];
+
+  *aScaling = [[printInfoDict objectForKey: NSPrintScalingFactor] doubleValue];
+
+  // Limit scaling precision to whole number percent values
+  *aScaling = round(*aScaling * 100.0) / 100.0;
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+NS_IMETHODIMP
 nsPrintSettingsX::SetToFileName(const char16_t *aToFileName)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
