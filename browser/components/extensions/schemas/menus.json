@@ -154,6 +154,13 @@
                 "optional": true,
                 "description": "The unique ID to assign to this item. Mandatory for event pages. Cannot be the same as another ID for this extension."
               },
+              "icons": {
+                "type": "object",
+                "optional" : true,
+                "patternProperties" : {
+                  "^[1-9]\\d*$": { "type" : "string" }
+                }
+              },
               "title": {
                 "type": "string",
                 "optional": true,
