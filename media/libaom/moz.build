@@ -98,13 +98,6 @@ if CONFIG['CLANG_CL'] or not CONFIG['_MSC_VER']:
         elif f.endswith('avx2.c'):
             SOURCES[f].flags += ['-mavx2']
 
-if CONFIG['_MSC_VER'] and not config['CLANG_CL']:
-    for f in SOURCES:
-        if f.endswith('avx.c'):
-            SOURCES[f].flags += ['-arch:AVX']
-        if f.endswith('avx2.c'):
-            SOURCES[f].flags += ['-arch:AVX2']
-
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
     CFLAGS += [
