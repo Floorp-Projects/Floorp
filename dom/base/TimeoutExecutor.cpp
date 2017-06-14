@@ -40,11 +40,13 @@ TimeoutExecutor::ScheduleImmediate(const TimeStamp& aDeadline,
 
 nsresult
 TimeoutExecutor::ScheduleDelayed(const TimeStamp& aDeadline,
-                                 const TimeStamp& aNow)
+                                 const TimeStamp& aNow,
+                                 const TimeDuration& aMinDelay)
 {
   MOZ_DIAGNOSTIC_ASSERT(mDeadline.IsNull());
   MOZ_DIAGNOSTIC_ASSERT(mMode == Mode::None);
-  MOZ_DIAGNOSTIC_ASSERT(aDeadline > (aNow + mAllowedEarlyFiringTime));
+  MOZ_DIAGNOSTIC_ASSERT(!aMinDelay.IsZero() ||
+                        aDeadline > (aNow + mAllowedEarlyFiringTime));
 
   nsresult rv = NS_OK;
 
@@ -65,6 +67,15 @@ TimeoutExecutor::ScheduleDelayed(const TimeStamp& aDeadline,
   rv = mTimer->SetTarget(mOwner->EventTarget());
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Calculate the delay based on the deadline and current time.  If we have
+  // a minimum delay set then clamp to that value.
+  //
+  // Note, we don't actually adjust our mDeadline for the minimum delay, just
+  // the nsITimer value.  This is necessary to avoid lots of needless
+  // rescheduling if more deadlines come in between now and the minimum delay
+  // firing time.
+  TimeDuration delay = TimeDuration::Max(aMinDelay, aDeadline - aNow);
+
   // Note, we cannot use the normal nsITimer init methods that take
   // integer milliseconds.  We need higher precision.  Consider this
   // situation:
@@ -83,7 +94,7 @@ TimeoutExecutor::ScheduleDelayed(const TimeStamp& aDeadline,
   // schedule a new nsITimer for g().  Its only 500us in the future, though.  We
   // must be able to pass this fractional value to nsITimer in order to get an
   // accurate wakeup time.
-  rv = mTimer->InitHighResolutionWithCallback(this, aDeadline - aNow,
+  rv = mTimer->InitHighResolutionWithCallback(this, delay,
                                               nsITimer::TYPE_ONE_SHOT);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -94,22 +105,24 @@ TimeoutExecutor::ScheduleDelayed(const TimeStamp& aDeadline,
 }
 
 nsresult
-TimeoutExecutor::Schedule(const TimeStamp& aDeadline)
+TimeoutExecutor::Schedule(const TimeStamp& aDeadline,
+                          const TimeDuration& aMinDelay)
 {
   TimeStamp now(TimeStamp::Now());
 
   // Schedule an immediate runnable if the desired deadline has passed
   // or is slightly in the future.  This is similar to how nsITimer will
   // fire timers early based on the interval resolution.
-  if (aDeadline <= (now + mAllowedEarlyFiringTime)) {
+  if (aMinDelay.IsZero() && aDeadline <= (now + mAllowedEarlyFiringTime)) {
     return ScheduleImmediate(aDeadline, now);
   }
 
-  return ScheduleDelayed(aDeadline, now);
+  return ScheduleDelayed(aDeadline, now, aMinDelay);
 }
 
 nsresult
-TimeoutExecutor::MaybeReschedule(const TimeStamp& aDeadline)
+TimeoutExecutor::MaybeReschedule(const TimeStamp& aDeadline,
+                                 const TimeDuration& aMinDelay)
 {
   MOZ_DIAGNOSTIC_ASSERT(!mDeadline.IsNull());
   MOZ_DIAGNOSTIC_ASSERT(mMode == Mode::Immediate ||
@@ -127,7 +140,7 @@ TimeoutExecutor::MaybeReschedule(const TimeStamp& aDeadline)
   }
 
   Cancel();
-  return Schedule(aDeadline);
+  return Schedule(aDeadline, aMinDelay);
 }
 
 void
@@ -176,7 +189,8 @@ TimeoutExecutor::Shutdown()
 }
 
 nsresult
-TimeoutExecutor::MaybeSchedule(const TimeStamp& aDeadline)
+TimeoutExecutor::MaybeSchedule(const TimeStamp& aDeadline,
+                               const TimeDuration& aMinDelay)
 {
   MOZ_DIAGNOSTIC_ASSERT(!aDeadline.IsNull());
 
@@ -185,10 +199,10 @@ TimeoutExecutor::MaybeSchedule(const TimeStamp& aDeadline)
   }
 
   if (mMode == Mode::Immediate || mMode == Mode::Delayed) {
-    return MaybeReschedule(aDeadline);
+    return MaybeReschedule(aDeadline, aMinDelay);
   }
 
-  return Schedule(aDeadline);
+  return Schedule(aDeadline, aMinDelay);
 }
 
 void
