@@ -11,6 +11,10 @@ style, script, symbol {
  display: none;
 }
 
+symbol:-moz-use-shadow-tree-root {
+  display: inline !important;
+}
+
 switch {
  -moz-binding: none !important;
 }

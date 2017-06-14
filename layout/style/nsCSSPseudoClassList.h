@@ -98,6 +98,9 @@ CSS_PSEUDO_CLASS(mozIsHTML, ":-moz-is-html", 0, "")
 CSS_PSEUDO_CLASS(mozNativeAnonymous, ":-moz-native-anonymous",
                  CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS, "")
 
+CSS_PSEUDO_CLASS(mozUseShadowTreeRoot, ":-moz-use-shadow-tree-root",
+                 CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS, "")
+
 // Matches anything when the specified look-and-feel metric is set
 CSS_PSEUDO_CLASS(mozSystemMetric, ":-moz-system-metric", 0, "")
 
