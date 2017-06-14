@@ -218,6 +218,7 @@ public:
 
     ////
 
+    bool HasDuplicateAttachments() const;
     bool HasDefinedAttachments() const;
     bool HasIncompleteAttachments(nsCString* const out_info) const;
     bool AllImageRectsMatch() const;
