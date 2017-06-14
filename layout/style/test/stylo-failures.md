@@ -62,11 +62,10 @@ to mochitest command.
   * test_property_syntax_errors.html `grid`: actually there are issues with this [8]
   * test_value_storage.html `'grid` [195]
 * Unimplemented CSS properties:
-  * font-variant shorthand bug 1356134
-    * test_value_storage.html `'font-variant'` [65]
   * font-variant-alternates property bug 1355721
     * test_property_syntax_errors.html `font-variant-alternates` [2]
-    * test_value_storage.html `font-variant-alternates` [22]
+    * test_value_storage.html `'font-variant'` [14]
+    * ... `font-variant-alternates` [22]
     * test_specified_value_serialization.html `bug-721136` [1]
 * Unsupported prefixed values
   * moz-prefixed gradient functions bug 1337655

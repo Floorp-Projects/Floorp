@@ -377,11 +377,15 @@ function clear_sts_data() {
   }
 }
 
+var oldCanRecord = Services.telemetry.canRecordExtended;
+
 function do_cleanup() {
   clear_sts_data();
 
   Services.obs.removeObserver(Observer, "console-api-log-event");
   Services.obs.removeObserver(Observer, "http-on-examine-response");
+
+  Services.telemetry.canRecordExtended = oldCanRecord;
 
   Observer.cleanup();
 }
@@ -404,6 +408,7 @@ function SetupPrefTestEnvironment(which, additional_prefs) {
                 settings.use_hsts],
                ["security.mixed_content.send_hsts_priming",
                 settings.send_hsts_priming],
+               ["toolkit.telemetry.enabled", true],
   ];
 
   if (additional_prefs) {
@@ -411,6 +416,8 @@ function SetupPrefTestEnvironment(which, additional_prefs) {
       prefs.push(additional_prefs[idx]);
     }
   }
+
+  Services.telemetry.canRecordExtended = true;
 
   SpecialPowers.pushPrefEnv({'set': prefs});
 }
@@ -432,4 +439,89 @@ async function execute_test(test, mimetype) {
       test_settings[which_test].timeout);
 
   await BrowserTestUtils.withNewTab(src, () => {});
+}
+
+/* Expected should look something like this:
+ * The numbers are the sum of all telemetry values.
+  var expected_telemetry = {
+    "histograms": {
+      "MIXED_CONTENT_HSTS_PRIMING_RESULT": 6,
+      "HSTS_PRIMING_REQUESTS": 10,
+    },
+    "keyed-histograms": {
+      "HSTS_PRIMING_REQUEST_DURATION": {
+        "success": 1,
+        "failure": 2,
+      },
+    }
+  };
+ */
+function test_telemetry(expected) {
+  for (let key in expected['histograms']) {
+    let hs = undefined;
+    try {
+      let hist = Services.telemetry.getHistogramById(key);
+      hs = hist.snapshot();
+      hist.clear();
+    } catch(e) {
+      ok(false, "Caught exception trying to get histogram for key " + key + ":" + e);
+      continue;
+    }
+
+    if (!hs) {
+      ok(false, "No histogram found for key " + key);
+      continue;
+    }
+
+    // there may have been other background requests processed
+    ok(hs.counts.reduce(sum) >= expected['histograms'][key], "Histogram counts match expected, got " + hs.counts.reduce(sum) + ", expected at least " + expected['histograms'][key]);
+  }
+
+  for (let key in expected['keyed-histograms']) {
+    let hs = undefined;
+    try {
+      let hist = Services.telemetry.getKeyedHistogramById(key);
+      hs = hist.snapshot();
+      hist.clear();
+    } catch(e) {
+      ok(false, "Caught exception trying to get histogram for key " + key + " :" + e);
+      continue;
+    }
+
+    if (!hs) {
+      ok(false, "No keyed histogram found for key " + key);
+      continue;
+    }
+
+    for (let hist_key in expected['keyed-histograms'][key]) {
+      ok(hist_key in hs, "Keyed histogram exists with key");
+      if (hist_key in hs) {
+        ok(hs[hist_key].counts.reduce(sum) >= expected['keyed-histograms'][key][hist_key], "Keyed histogram counts match expected got " + hs[hist_key].counts.reduce(sum) + ", expected at least " + expected['keyed-histograms'][key][hist_key])
+      }
+    }
+  }
+}
+
+function sum(a, b) {
+  return a+b;
+}
+
+function clear_hists(hists) {
+  for (let key in hists['histograms']) {
+    try {
+      let hist = Services.telemetry.getHistogramById(key);
+      hist.clear();
+    } catch(e) {
+      continue;
+    }
+  }
+
+  for (let key in hists['keyed-histograms']) {
+    try {
+      let hist = Services.telemetry.getKeyedHistogramById(key);
+      hist.clear();
+    } catch(e) {
+      continue;
+    }
+  }
 }

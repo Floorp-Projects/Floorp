@@ -63,6 +63,8 @@ struct LoadInfoArgs
   bool                        isPreflight;
   bool                        forceHSTSPriming;
   bool                        mixedContentWouldBlock;
+  bool                        isHSTSPriming;
+  bool                        isHSTSPrimingUpgrade;
 };
 
 /**

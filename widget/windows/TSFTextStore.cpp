@@ -1096,9 +1096,8 @@ public:
   DECL_AND_IMPL_IS_TIP_ACTIVE(IsATOK2016Active)
 
   DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSChangJieActive)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSQuickQuickActive)
+  DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSQuickActive)
   DECL_AND_IMPL_IS_TIP_ACTIVE(IsFreeChangJieActive)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsEasyChangjeiActive)
 
   DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSPinyinActive)
   DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSWubiActive)
@@ -1130,20 +1129,17 @@ private:
 
   // Note that TIP name may depend on the language of the environment.
   // For example, some TIP may use localized name for its target language
-  // environment but English name for the others.
+  // environment but English name for the others.  Therefore, we should
+  // compare GUID as far as possible.
 
   bool IsMSJapaneseIMEActiveInternal() const
   {
-    // FYI: Name of MS-IME for Japanese is same as MS-IME for Korean.
-    //      Therefore, we need to check the langid too.
-    return mLangID == 0x411 &&
-      (mActiveTIPKeyboardDescription.EqualsLiteral("Microsoft IME") ||
-       mActiveTIPKeyboardDescription.Equals(
-         NS_LITERAL_STRING(u"Microsoft \xC785\xB825\xAE30")) ||
-       mActiveTIPKeyboardDescription.Equals(
-         NS_LITERAL_STRING(u"\x5FAE\x8F6F\x8F93\x5165\x6CD5")) ||
-       mActiveTIPKeyboardDescription.Equals(
-         NS_LITERAL_STRING(u"\x5FAE\x8EDF\x8F38\x5165\x6CD5")));
+    // {A76C93D9-5523-4E90-AAFA-4DB112F9AC76} (Win7, Win8.1, Win10)
+    static const GUID kGUID = {
+      0xA76C93D9, 0x5523, 0x4E90,
+        { 0xAA, 0xFA, 0x4D, 0xB1, 0x12, 0xF9, 0xAC, 0x76 }
+    };
+    return mActiveTIPGUID == kGUID;
   }
 
   bool IsMSOfficeJapaneseIME2010ActiveInternal() const
@@ -1223,40 +1219,59 @@ private:
     return mActiveTIPGUID == kGUID;
   }
 
+  // * ATOK 2017
+  //   - {6DBFD8F5-701D-11E6-920F-782BCBA6348F}
+  // * Google Japanese Input
+  //   - {773EB24E-CA1D-4B1B-B420-FA985BB0B80D}
+
   /****************************************************************************
    * Traditional Chinese TIP
    ****************************************************************************/
 
   bool IsMSChangJieActiveInternal() const
   {
-    return mActiveTIPKeyboardDescription.EqualsLiteral("Microsoft ChangJie") ||
-      mActiveTIPKeyboardDescription.Equals(
-        NS_LITERAL_STRING(u"\x5FAE\x8F6F\x4ED3\x9889")) ||
-      mActiveTIPKeyboardDescription.Equals(
-        NS_LITERAL_STRING(u"\x5FAE\x8EDF\x5009\x9821"));
+    // {4BDF9F03-C7D3-11D4-B2AB-0080C882687E} (Win7, Win8.1, Win10)
+    static const GUID kGUID = {
+      0x4BDF9F03, 0xC7D3, 0x11D4,
+        { 0xB2, 0xAB, 0x00, 0x80, 0xC8, 0x82, 0x68, 0x7E }
+    };
+    return mActiveTIPGUID == kGUID;
   }
 
-  bool IsMSQuickQuickActiveInternal() const
+  bool IsMSQuickActiveInternal() const
   {
-    return mActiveTIPKeyboardDescription.EqualsLiteral("Microsoft Quick") ||
-      mActiveTIPKeyboardDescription.Equals(
-        NS_LITERAL_STRING(u"\x5FAE\x8F6F\x901F\x6210")) ||
-      mActiveTIPKeyboardDescription.Equals(
-        NS_LITERAL_STRING(u"\x5FAE\x8EDF\x901F\x6210"));
+    // {6024B45F-5C54-11D4-B921-0080C882687E} (Win7, Win8.1, Win10)
+    static const GUID kGUID = {
+      0x6024B45F, 0x5C54, 0x11D4,
+        { 0xB9, 0x21, 0x00, 0x80, 0xC8, 0x82, 0x68, 0x7E }
+    };
+    return mActiveTIPGUID == kGUID;
   }
+
+  // NOTE: There are some other Traditional Chinese TIPs installed in Windows:
+  // * Microsoft Bopomofo
+  //   - {B2F9C502-1742-11D4-9790-0080C882687E} (Win8.1, Win10)
+  // * Chinese Traditional Array (version 6.0)
+  //   - {D38EFF65-AA46-4FD5-91A7-67845FB02F5B} (Win7, Win8.1)
+  // * Chinese Traditional DaYi (version 6.0)
+  //   - {037B2C25-480C-4D7F-B027-D6CA6B69788A} (Win7, Win8.1)
+  // * Phonetic
+  //   - {761309DE-317A-11D4-9B5D-0080C882687E} (Win7)
+  // * New ChangJie
+  //   - {F3BA907A-6C7E-11D4-97FA-0080C882687E} (Win7)
+  // * New Phonetic
+  //   - {B2F9C502-1742-11D4-9790-0080C882687E} (Win7)
+  // * New Quick
+  //   - {0B883BA0-C1C7-11D4-87F9-0080C882687E} (Win7)
 
   bool IsFreeChangJieActiveInternal() const
   {
-    // FYI: The TIP name is misspelled...
-    return mActiveTIPKeyboardDescription.EqualsLiteral("Free CangJie IME 10");
-  }
-
-  bool IsEasyChangjeiActiveInternal() const
-  {
-    return
-      mActiveTIPKeyboardDescription.Equals(
-        NS_LITERAL_STRING(
-          u"\x4E2D\x6587 (\x7E41\x9AD4) - \x6613\x9821\x8F38\x5165\x6CD5"));
+    // {B58630B5-0ED3-4335-BBC9-E77BBCB43CAD}
+    static const GUID kGUID = {
+      0xB58630B5, 0x0ED3, 0x4335,
+        { 0xBB, 0xC9, 0xE7, 0x7B, 0xBC, 0xB4, 0x3C, 0xAD }
+    };
+    return mActiveTIPGUID == kGUID;
   }
 
   /****************************************************************************
@@ -1265,21 +1280,38 @@ private:
 
   bool IsMSPinyinActiveInternal() const
   {
-    return mActiveTIPKeyboardDescription.EqualsLiteral("Microsoft Pinyin") ||
-      mActiveTIPKeyboardDescription.Equals(
-        NS_LITERAL_STRING(u"\x5FAE\x8F6F\x62FC\x97F3")) ||
-      mActiveTIPKeyboardDescription.Equals(
-        NS_LITERAL_STRING(u"\x5FAE\x8EDF\x62FC\x97F3"));
+    // FYI: This matches with neither "Microsoft Pinyin ABC Input Style" nor
+    //      "Microsoft Pinyin New Experience Input Style" on Win7.
+
+    // {FA550B04-5AD7-411F-A5AC-CA038EC515D7} (Win8.1, Win10)
+    static const GUID kGUID = {
+      0xFA550B04, 0x5AD7, 0x411F,
+        { 0xA5, 0xAC, 0xCA, 0x03, 0x8E, 0xC5, 0x15, 0xD7 }
+    };
+    return mActiveTIPGUID == kGUID;
   }
 
   bool IsMSWubiActiveInternal() const
   {
-    return mActiveTIPKeyboardDescription.EqualsLiteral("Microsoft Wubi") ||
-      mActiveTIPKeyboardDescription.Equals(
-        NS_LITERAL_STRING(u"\x5FAE\x8F6F\x4E94\x7B14")) ||
-      mActiveTIPKeyboardDescription.Equals(
-        NS_LITERAL_STRING(u"\x5FAE\x8EDF\x4E94\x7B46"));
+    // {82590C13-F4DD-44F4-BA1D-8667246FDF8E} (Win8.1, Win10)
+    static const GUID kGUID = {
+      0x82590C13, 0xF4DD, 0x44F4,
+        { 0xBA, 0x1D, 0x86, 0x67, 0x24, 0x6F, 0xDF, 0x8E }
+    };
+    return mActiveTIPGUID == kGUID;
   }
+
+  // NOTE: There are some other Simplified Chinese TIPs installed in Windows:
+  // * Chinese Simplified QuanPin (version 6.0)
+  //   - {54FC610E-6ABD-4685-9DDD-A130BDF1B170} (Win8.1)
+  // * Chinese Simplified ZhengMa (version 6.0)
+  //   - {733B4D81-3BC3-4132-B91A-E9CDD5E2BFC9} (Win8.1)
+  // * Chinese Simplified ShuangPin (version 6.0)
+  //   - {EF63706D-31C4-490E-9DBB-BD150ADC454B} (Win8.1)
+  // * Microsoft Pinyin ABC Input Style
+  //   - {FCA121D2-8C6D-41FB-B2DE-A2AD110D4820} (Win7)
+  // * Microsoft Pinyin New Experience Input Style
+  //   - {F3BA9077-6C7E-11D4-97FA-0080C882687E} (Win7)
 
 public: // ITfInputProcessorProfileActivationSink
   STDMETHODIMP OnActivated(DWORD, LANGID, REFCLSID, REFGUID, REFGUID,
@@ -1577,9 +1609,6 @@ public:
   DECL_AND_IMPL_BOOL_PREF(
     "intl.tsf.hack.free_chang_jie.do_not_return_no_layout_error",
     DoNotReturnNoLayoutErrorToFreeChangJie, true)
-  DECL_AND_IMPL_BOOL_PREF(
-    "intl.tsf.hack.easy_changjei.do_not_return_no_layout_error",
-    DoNotReturnNoLayoutErrorToEasyChangjei, true)
   DECL_AND_IMPL_BOOL_PREF(
     "intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_first_char",
     DoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar, true)
@@ -2397,7 +2426,7 @@ TSFTextStore::QueryInsert(LONG acpTestStart,
   if (IsWin8OrLater() && !mComposition.IsComposing() &&
       ((TSFPrefs::NeedToHackQueryInsertForMSTraditionalTIP() &&
          (TSFStaticSink::IsMSChangJieActive() ||
-          TSFStaticSink::IsMSQuickQuickActive())) ||
+          TSFStaticSink::IsMSQuickActive())) ||
        (TSFPrefs::NeedToHackQueryInsertForMSSimplifiedTIP() &&
          (TSFStaticSink::IsMSPinyinActive() ||
           TSFStaticSink::IsMSWubiActive())))) {
@@ -4147,14 +4176,11 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
              mComposition.EndOffset() == acpEnd) {
       dontReturnNoLayoutError = true;
     }
-    // Free ChangJie 2010 and Easy Changjei 1.0.12.0 doesn't handle
-    // ITfContextView::GetTextExt() properly.  Prehaps, it's due to the bug of
-    // TSF.  We need to check if this is necessary on Windows 10 before
-    // disabling this on Windows 10.
-    else if ((TSFPrefs::DoNotReturnNoLayoutErrorToFreeChangJie() &&
-              TSFStaticSink::IsFreeChangJieActive()) ||
-             (TSFPrefs::DoNotReturnNoLayoutErrorToEasyChangjei() &&
-              TSFStaticSink::IsEasyChangjeiActive())) {
+    // Free ChangJie 2010 doesn't handle ITfContextView::GetTextExt() properly.
+    // Prehaps, it's due to the bug of TSF.  We need to check if this is
+    // necessary on Windows 10 before disabling this on Windows 10.
+    else if (TSFPrefs::DoNotReturnNoLayoutErrorToFreeChangJie() &&
+             TSFStaticSink::IsFreeChangJieActive()) {
       acpEnd = mComposition.mStart;
       acpStart = std::min(acpStart, acpEnd);
       dontReturnNoLayoutError = true;
@@ -4165,7 +4191,7 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
       IsWin8OrLater() &&
       ((TSFPrefs::DoNotReturnNoLayoutErrorToMSTraditionalTIP() &&
         (TSFStaticSink::IsMSChangJieActive() ||
-         TSFStaticSink::IsMSQuickQuickActive())) ||
+         TSFStaticSink::IsMSQuickActive())) ||
        (TSFPrefs::DoNotReturnNoLayoutErrorToMSSimplifiedTIP() &&
          (TSFStaticSink::IsMSPinyinActive() ||
           TSFStaticSink::IsMSWubiActive())))) {

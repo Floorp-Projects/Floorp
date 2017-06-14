@@ -13,7 +13,7 @@
 #define mozilla_ServoSpecifiedValues_h
 
 #include "mozilla/GenericSpecifiedValues.h"
-#include "mozilla/ServoBindings.h"
+#include "mozilla/ServoBindingTypes.h"
 
 namespace mozilla {
 

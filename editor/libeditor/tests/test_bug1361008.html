@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi=id=1361008
+-->
+<html>
+  <head>
+    <title>Bug 1361008</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  </head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1361008">Mozilla Bug 1361008</a>
+<p id="display"></p>
+<div contenteditable="true" id="edit1">
+  <br>
+</div>
+<div contenteditable="true" id="edit2">
+  <br>
+</div>
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  document.execCommand("defaultparagraphseparator", false, "div")
+  let edit1 = document.getElementById("edit1");
+  edit1.focus();
+  let selection = window.getSelection();
+  // Insert text before BR element
+  selection.collapse(edit1, 0);
+  synthesizeKey("A", {});
+  synthesizeKey("B", {});
+  synthesizeKey("VK_RETURN", {});
+  // count <div> element into contenteidable
+  is(edit1.getElementsByTagName('div').length, 2,
+     "DIV element should be 2 children");
+  is(edit1.getElementsByTagName('div')[0].innerText,
+     "AB", "AB should be in 1st DIV element");
+  is(edit1.getElementsByTagName('div')[1].innerHTML,
+     "<br>", "BR element should be in 2nd DIV element");
+
+  document.execCommand("defaultparagraphseparator", false, "p")
+  let edit2 = document.getElementById("edit2");
+  edit2.focus();
+  selection.collapse(edit2, 0);
+  // Insert text before BR element
+  synthesizeKey("A", {});
+  synthesizeKey("B", {});
+  synthesizeKey("VK_RETURN", {});
+
+  is(edit2.getElementsByTagName('p').length, 2,
+     "P element should be 2 children");
+  is(edit2.getElementsByTagName('p')[0].innerText,
+     "AB", "AB should be in 1st P element");
+  is(edit2.getElementsByTagName('p')[1].innerHTML,
+     "<br>", "BR element should be into 2nd P element");
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

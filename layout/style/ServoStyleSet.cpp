@@ -8,6 +8,7 @@
 
 #include "gfxPlatformFontList.h"
 #include "mozilla/DocumentStyleRootIterator.h"
+#include "mozilla/ServoBindings.h"
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/dom/AnonymousContent.h"
 #include "mozilla/dom/ChildIterator.h"

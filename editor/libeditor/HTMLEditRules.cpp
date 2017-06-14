@@ -5856,6 +5856,18 @@ HTMLEditRules::GetNodesForOperation(
         GetInnerContent(*node, aOutArrayOfNodes, &j);
       }
     }
+    // Empty text node shouldn't be selected if unnecessary
+    for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
+      OwningNonNull<nsINode> node = aOutArrayOfNodes[i];
+      if (EditorBase::IsTextNode(node)) {
+        // Don't select empty text except to empty block
+        bool isEmpty = false;
+        htmlEditor->IsVisTextNode(node->AsContent(), &isEmpty, false);
+        if (isEmpty) {
+          aOutArrayOfNodes.RemoveElementAt(i);
+        }
+      }
+    }
   }
   // Indent/outdent already do something special for list items, but we still
   // need to make sure we don't act on table elements

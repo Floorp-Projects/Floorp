@@ -483,6 +483,11 @@ nsresult
 nsHttpChannel::TryHSTSPriming()
 {
     if (mLoadInfo) {
+        if (mLoadInfo->GetIsHSTSPriming()) {
+            // shortcut priming requests so they don't get counted
+            return ContinueConnect();
+        }
+
         // HSTS priming requires the LoadInfo provided with AsyncOpen2
         bool requireHSTSPriming =
             mLoadInfo->GetForceHSTSPriming();
@@ -498,18 +503,38 @@ nsHttpChannel::TryHSTSPriming()
 
                 if (NS_FAILED(rv)) {
                     CloseCacheEntry(false);
+                    Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_REQUESTS,
+                                      HSTSPrimingRequest::eHSTS_PRIMING_REQUEST_ERROR);
                     return rv;
                 }
 
                 return NS_OK;
             }
 
-            // The request was already upgraded, for example by
-            // upgrade-insecure-requests or a prior successful priming request
-            Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_RESULT,
-                    HSTSPrimingResult::eHSTS_PRIMING_ALREADY_UPGRADED);
+            if (!mLoadInfo->GetIsHSTSPrimingUpgrade()) {
+                // The request was already upgraded, for example by a prior
+                // successful priming request
+                LOG(("HSTS Priming: request already upgraded"));
+                Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_RESULT,
+                              HSTSPrimingResult::eHSTS_PRIMING_ALREADY_UPGRADED);
+
+                // No HSTS Priming request was sent.
+                Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_REQUESTS,
+                              HSTSPrimingRequest::eHSTS_PRIMING_REQUEST_ALREADY_UPGRADED);
+            }
+
             mLoadInfo->ClearHSTSPriming();
+            return ContinueConnect();
         }
+
+        if (!mLoadInfo->GetIsHSTSPrimingUpgrade()) {
+            // No HSTS Priming request was sent, and we didn't already record this request
+            Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_REQUESTS,
+                                  HSTSPrimingRequest::eHSTS_PRIMING_NO_REQUEST);
+        }
+    } else {
+        Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_REQUESTS,
+                          HSTSPrimingRequest::eHSTS_PRIMING_REQUEST_NO_LOAD_INFO);
     }
 
     return ContinueConnect();
@@ -8610,6 +8635,14 @@ nsHttpChannel::OnPreflightFailed(nsresult aError)
 nsresult
 nsHttpChannel::OnHSTSPrimingSucceeded(bool aCached)
 {
+    // If "security.mixed_content.use_hsts" is false, record the result of
+    // HSTS priming and block or proceed with the load as required by
+    // mixed-content blocking
+    bool wouldBlock = mLoadInfo->GetMixedContentWouldBlock();
+    // Clear out the HSTS priming flags on the LoadInfo to simplify the logic in
+    // TryHSTSPriming()
+    mLoadInfo->ClearHSTSPriming();
+
     if (nsMixedContentBlocker::sUseHSTS) {
         // redirect the channel to HTTPS if the pref
         // "security.mixed_content.use_hsts" is true
@@ -8617,13 +8650,11 @@ nsHttpChannel::OnHSTSPrimingSucceeded(bool aCached)
         Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_RESULT,
                 (aCached) ? HSTSPrimingResult::eHSTS_PRIMING_CACHED_DO_UPGRADE :
                             HSTSPrimingResult::eHSTS_PRIMING_SUCCEEDED);
+        // we have to record this upgrade here
+        Telemetry::Accumulate(Telemetry::HTTP_SCHEME_UPGRADE, 3);
+        mLoadInfo->SetIsHSTSPrimingUpgrade(true);
         return AsyncCall(&nsHttpChannel::HandleAsyncRedirectChannelToHttps);
     }
-
-    // If "security.mixed_content.use_hsts" is false, record the result of
-    // HSTS priming and block or proceed with the load as required by
-    // mixed-content blocking
-    bool wouldBlock = mLoadInfo->GetMixedContentWouldBlock();
 
     // preserve the mixed-content-before-hsts order and block if required
     if (wouldBlock) {
@@ -8638,6 +8669,9 @@ nsHttpChannel::OnHSTSPrimingSucceeded(bool aCached)
     LOG(("HSTS Priming succeeded, loading insecure: [this=%p]", this));
     Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_RESULT,
                           HSTSPrimingResult::eHSTS_PRIMING_SUCCEEDED_HTTP);
+
+    // log HTTP_SCHEME_UPGRADE telemetry
+    Telemetry::Accumulate(Telemetry::HTTP_SCHEME_UPGRADE, 0);
 
     nsresult rv = ContinueConnect();
     if (NS_FAILED(rv)) {
@@ -8656,6 +8690,9 @@ nsresult
 nsHttpChannel::OnHSTSPrimingFailed(nsresult aError, bool aCached)
 {
     bool wouldBlock = mLoadInfo->GetMixedContentWouldBlock();
+    // Clear out the HSTS priming flags on the LoadInfo to simplify the logic in
+    // TryHSTSPriming()
+    mLoadInfo->ClearHSTSPriming();
 
     LOG(("HSTS Priming Failed [this=%p], %s the load", this,
                 (wouldBlock) ? "blocking" : "allowing"));
@@ -8696,6 +8733,9 @@ nsHttpChannel::OnHSTSPrimingFailed(nsresult aError, bool aCached)
         CloseCacheEntry(false);
         return AsyncAbort(aError);
     }
+
+    // log HTTP_SCHEME_UPGRADE telemetry
+    Telemetry::Accumulate(Telemetry::HTTP_SCHEME_UPGRADE, 0);
 
     // we can continue the load and the UI has been updated as mixed content
     rv = ContinueConnect();

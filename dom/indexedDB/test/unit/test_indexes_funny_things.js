@@ -95,8 +95,7 @@ function* testSteps()
     is(index.name, indexData[i].name, "Correct name");
     is(index.objectStore.name, objectStore.name, "Correct store name");
     is(index.keyPath, indexData[i].keyPath, "Correct keyPath");
-    is(index.unique, indexData[i].options.unique ? true : false,
-       "Correct unique value");
+    is(index.unique, !!indexData[i].options.unique, "Correct unique value");
   }
 
   ok(true, "Test group 1");

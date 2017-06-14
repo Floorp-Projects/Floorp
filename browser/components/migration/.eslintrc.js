@@ -17,7 +17,6 @@ module.exports = {
     "no-sequences": "error",
     "no-shadow": "error",
     "no-throw-literal": "error",
-    "no-unneeded-ternary": "error",
     "no-unused-vars": ["error", { "varsIgnorePattern": "^C[ciur]$" }],
     "padded-blocks": ["error", "never"],
     "semi": ["error", "always", {"omitLastInOneLineBlock": true }],

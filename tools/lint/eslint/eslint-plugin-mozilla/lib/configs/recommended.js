@@ -278,6 +278,9 @@ module.exports = {
     // Error on newline where a semicolon is needed
     "no-unexpected-multiline": "error",
 
+    // Disallow the use of Boolean literals in conditional expressions.
+    "no-unneeded-ternary": "error",
+
     // No unreachable statements
     "no-unreachable": "error",
 

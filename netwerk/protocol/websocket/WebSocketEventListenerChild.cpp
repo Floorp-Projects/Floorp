@@ -12,8 +12,10 @@
 namespace mozilla {
 namespace net {
 
-WebSocketEventListenerChild::WebSocketEventListenerChild(uint64_t aInnerWindowID)
-  : mService(WebSocketEventService::GetOrCreate())
+WebSocketEventListenerChild::WebSocketEventListenerChild(uint64_t aInnerWindowID,
+                                                         nsIEventTarget* aTarget)
+  : NeckoTargetHolder(aTarget)
+  , mService(WebSocketEventService::GetOrCreate())
   , mInnerWindowID(aInnerWindowID)
 {}
 
@@ -28,8 +30,9 @@ WebSocketEventListenerChild::RecvWebSocketCreated(const uint32_t& aWebSocketSeri
                                                   const nsCString& aProtocols)
 {
   if (mService) {
+    nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
     mService->WebSocketCreated(aWebSocketSerialID, mInnerWindowID, aURI,
-                               aProtocols);
+                               aProtocols, target);
   }
 
   return IPC_OK();
@@ -42,8 +45,9 @@ WebSocketEventListenerChild::RecvWebSocketOpened(const uint32_t& aWebSocketSeria
                                                  const nsCString& aExtensions)
 {
   if (mService) {
+    nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
     mService->WebSocketOpened(aWebSocketSerialID, mInnerWindowID,
-                              aEffectiveURI, aProtocols, aExtensions);
+                              aEffectiveURI, aProtocols, aExtensions, target);
   }
 
   return IPC_OK();
@@ -55,8 +59,9 @@ WebSocketEventListenerChild::RecvWebSocketMessageAvailable(const uint32_t& aWebS
                                                            const uint16_t& aMessageType)
 {
   if (mService) {
+    nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
     mService->WebSocketMessageAvailable(aWebSocketSerialID, mInnerWindowID,
-                                        aData, aMessageType);
+                                        aData, aMessageType, target);
   }
 
   return IPC_OK();
@@ -69,8 +74,9 @@ WebSocketEventListenerChild::RecvWebSocketClosed(const uint32_t& aWebSocketSeria
                                                  const nsString& aReason)
 {
   if (mService) {
+    nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
     mService->WebSocketClosed(aWebSocketSerialID, mInnerWindowID,
-                              aWasClean, aCode, aReason);
+                              aWasClean, aCode, aReason, target);
   }
 
   return IPC_OK();
@@ -81,8 +87,10 @@ WebSocketEventListenerChild::RecvFrameReceived(const uint32_t& aWebSocketSerialI
                                                const WebSocketFrameData& aFrameData)
 {
   if (mService) {
+    nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
     RefPtr<WebSocketFrame> frame = new WebSocketFrame(aFrameData);
-    mService->FrameReceived(aWebSocketSerialID, mInnerWindowID, frame.forget());
+    mService->FrameReceived(aWebSocketSerialID, mInnerWindowID,
+                            frame.forget(), target);
   }
 
   return IPC_OK();
@@ -93,8 +101,10 @@ WebSocketEventListenerChild::RecvFrameSent(const uint32_t& aWebSocketSerialID,
                                            const WebSocketFrameData& aFrameData)
 {
   if (mService) {
+    nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
     RefPtr<WebSocketFrame> frame = new WebSocketFrame(aFrameData);
-    mService->FrameSent(aWebSocketSerialID, mInnerWindowID, frame.forget());
+    mService->FrameSent(aWebSocketSerialID, mInnerWindowID,
+                        frame.forget(), target);
   }
 
   return IPC_OK();
