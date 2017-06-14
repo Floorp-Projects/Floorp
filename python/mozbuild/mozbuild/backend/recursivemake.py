@@ -615,6 +615,10 @@ class RecursiveMakeBackend(CommonBackend):
             # No need to call _process_linked_libraries, because Rust
             # libraries are self-contained objects at this point.
 
+            # Hook the library into the compile graph.
+            build_target = self._build_target_for_obj(obj)
+            self._compile_graph[build_target]
+
         elif isinstance(obj, SharedLibrary):
             self._process_shared_library(obj, backend_file)
             self._process_linked_libraries(obj, backend_file)
