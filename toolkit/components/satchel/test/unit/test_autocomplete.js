@@ -145,7 +145,7 @@ add_test(function test6() {
   fac.autoCompleteSearchAsync("field2", "", null, null, null, {
     onSearchCompletion(aResults) {
       for (let i = 0; i < timesUsedSamples; i++) {
-        do_check_eq(parseInt(aResults.getValueAt(i).substr(5)), --lastFound);
+        do_check_eq(parseInt(aResults.getValueAt(i).substr(5), 10), --lastFound);
       }
       run_next_test();
     }
@@ -159,7 +159,7 @@ add_test(function test7() {
   fac.autoCompleteSearchAsync("field2", "v", null, null, null, {
     onSearchCompletion(aResults) {
       for (let i = 0; i < timesUsedSamples; i++) {
-        do_check_eq(parseInt(aResults.getValueAt(i).substr(5)), --lastFound);
+        do_check_eq(parseInt(aResults.getValueAt(i).substr(5), 10), --lastFound);
       }
       run_next_test();
     }
