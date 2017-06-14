@@ -179,7 +179,14 @@ public:
     // not changed the cursor won't move.
     eSetValue_MoveCursorToEndIfValueChanged = 1 << 3,
   };
-  MOZ_MUST_USE bool SetValue(const nsAString& aValue, uint32_t aFlags);
+  MOZ_MUST_USE bool SetValue(const nsAString& aValue,
+                             const nsAString* aOldValue,
+                             uint32_t aFlags);
+  MOZ_MUST_USE bool SetValue(const nsAString& aValue,
+                             uint32_t aFlags)
+  {
+    return SetValue(aValue, nullptr, aFlags);
+  }
   void GetValue(nsAString& aValue, bool aIgnoreWrap) const;
   bool HasNonEmptyValue();
   // The following methods are for textarea element to use whether default
