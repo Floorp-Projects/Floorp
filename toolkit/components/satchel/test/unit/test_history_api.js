@@ -452,7 +452,7 @@ add_task(async function() {
     Services.prefs.clearUserPref("browser.formfill.enable");
 
   } catch (e) {
-    throw "FAILED in test #" + testnum + " -- " + e;
+    throw new Error(`FAILED in test #${testnum} -- ${e}`);
   } finally {
     FormHistory._supportsDeletedTable = oldSupportsDeletedTable;
     dbConnection.asyncClose(do_test_finished);

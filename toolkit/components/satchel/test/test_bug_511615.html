@@ -92,7 +92,7 @@ function doKeyUnprivileged(key) {
   } else {
     keycode = KeyEvent[keyName];
     if (!keycode) {
-      throw "invalid keyname in test";
+      throw new Error("invalid keyname in test");
     }
     charcode = 0;
     alwaysval = keycode;
