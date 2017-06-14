@@ -1,6 +1,8 @@
 mod codegen {
     extern crate quasi_codegen;
     use std::env;
+    use std::fs::File;
+    use std::io::Write;
     use std::path::{Path, PathBuf};
 
     pub fn main() {
@@ -13,6 +15,10 @@ mod codegen {
         println!("cargo:rerun-if-changed=src/codegen/error.rs");
         println!("cargo:rerun-if-changed=src/codegen/helpers.rs");
         println!("cargo:rerun-if-changed=src/codegen/struct_layout.rs");
+
+        let mut dst =
+            File::create(Path::new(&out_dir).join("host-target.txt")).unwrap();
+        dst.write_all(env::var("TARGET").unwrap().as_bytes()).unwrap();
     }
 }
 
