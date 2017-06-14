@@ -18,6 +18,7 @@
 #include "nsElementTable.h"
 
 using mozilla::DebugOnly;
+using mozilla::Move;
 using mozilla::RawRangeBoundary;
 
 // couple of utility static functs
