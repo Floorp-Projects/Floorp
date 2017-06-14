@@ -145,7 +145,7 @@ ScreenHelperGTK::GetGTKMonitorScaleFactor()
 static float
 GetDefaultCssScale()
 {
-  return ScreenHelperGTK::GetGTKMonitorScaleFactor() * gfxPlatformGtk::GetDPIScale();
+  return ScreenHelperGTK::GetGTKMonitorScaleFactor() * gfxPlatformGtk::GetFontScaleFactor();
 }
 
 static uint32_t
