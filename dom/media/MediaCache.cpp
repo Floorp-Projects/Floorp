@@ -276,9 +276,9 @@ protected:
     NS_ASSERTION(mStreams.IsEmpty(), "Stream(s) still open!");
     Truncate();
     NS_ASSERTION(mIndex.Length() == 0, "Blocks leaked?");
-    if (mFileCache) {
-      mFileCache->Close();
-      mFileCache = nullptr;
+    if (mBlockCache) {
+      mBlockCache->Close();
+      mBlockCache = nullptr;
     }
     LOG("MediaCache::~MediaCache(this=%p) MEDIACACHE_WATERMARK_KB=%u",
         this,
@@ -416,7 +416,7 @@ protected:
   // Keep track for highest number of blocks owners, for telemetry purposes.
   uint32_t mBlockOwnersWatermark = 0;
   // Writer which performs IO, asynchronously writing cache blocks.
-  RefPtr<MediaBlockCacheBase> mFileCache;
+  RefPtr<MediaBlockCacheBase> mBlockCache;
   // The list of free blocks; they are not ordered.
   BlockList       mFreeBlocks;
   // True if an event to run Update() has been queued but not processed
@@ -663,10 +663,10 @@ nsresult
 MediaCache::Init()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-  NS_ASSERTION(!mFileCache, "Cache file already open?");
+  NS_ASSERTION(!mBlockCache, "Block cache already open?");
 
-  mFileCache = new FileBlockCache();
-  nsresult rv = mFileCache->Init();
+  mBlockCache = new FileBlockCache();
+  nsresult rv = mBlockCache->Init();
   NS_ENSURE_SUCCESS(rv,rv);
 
   return NS_OK;
@@ -685,9 +685,9 @@ MediaCache::Flush()
   // Truncate file, close it, and reopen
   Truncate();
   NS_ASSERTION(mIndex.Length() == 0, "Blocks leaked?");
-  if (mFileCache) {
-    mFileCache->Close();
-    mFileCache = nullptr;
+  if (mBlockCache) {
+    mBlockCache->Close();
+    mBlockCache = nullptr;
   }
   Init();
 }
@@ -776,16 +776,16 @@ MediaCache::ReadCacheFile(
   int64_t aOffset, void* aData, int32_t aLength, int32_t* aBytes)
 {
   mReentrantMonitor.AssertCurrentThreadIn();
-  RefPtr<MediaBlockCacheBase> fileCache = mFileCache;
-  if (!fileCache) {
+  RefPtr<MediaBlockCacheBase> blockCache = mBlockCache;
+  if (!blockCache) {
     return NS_ERROR_FAILURE;
   }
   {
     // Since the monitor might be acquired on the main thread, we need to drop
     // the monitor while doing IO in order not to block the main thread.
     ReentrantMonitorAutoExit unlock(mReentrantMonitor);
-    return fileCache->Read(aOffset,
-      reinterpret_cast<uint8_t*>(aData), aLength, aBytes);
+    return blockCache->Read(
+      aOffset, reinterpret_cast<uint8_t*>(aData), aLength, aBytes);
   }
 }
 
@@ -1225,7 +1225,7 @@ MediaCache::Update()
         // Reuse blocks in the main part of the cache that are less useful than
         // the least useful overflow blocks
 
-        nsresult rv = mFileCache->MoveBlock(blockIndex, destinationBlockIndex);
+        nsresult rv = mBlockCache->MoveBlock(blockIndex, destinationBlockIndex);
 
         if (NS_SUCCEEDED(rv)) {
           // We successfully copied the file data.
@@ -1685,7 +1685,7 @@ MediaCache::AllocateAndWriteBlock(
     MOZ_DIAGNOSTIC_ASSERT(!block->mOwners.IsEmpty());
     mFreeBlocks.RemoveBlock(blockIndex);
 
-    nsresult rv = mFileCache->WriteBlock(blockIndex, aData1, aData2);
+    nsresult rv = mBlockCache->WriteBlock(blockIndex, aData1, aData2);
     if (NS_FAILED(rv)) {
       LOG("Released block %d from stream %p block %d(%" PRId64 ")",
           blockIndex, aStream, streamBlockIndex, streamBlockIndex*BLOCK_SIZE);
