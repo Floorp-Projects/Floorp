@@ -25,8 +25,8 @@ class FakeTryOptionSyntax(object):
         self.tag = None
         self.no_retry = False
 
-    def task_matches(self, attributes):
-        return 'at-at' in attributes
+    def task_matches(self, task):
+        return 'at-at' in task.attributes
 
 
 class TestTargetTasks(unittest.TestCase):

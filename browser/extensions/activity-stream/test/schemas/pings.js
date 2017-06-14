@@ -33,6 +33,8 @@ const UserEventAction = Joi.object().keys({
       "DELETE",
       "OPEN_NEW_WINDOW",
       "OPEN_PRIVATE_WINDOW",
+      "OPEN_NEWTAB_PREFS",
+      "CLOSE_NEWTAB_PREFS",
       "BOOKMARK_DELETE",
       "BOOKMARK_ADD"
     ]).required(),

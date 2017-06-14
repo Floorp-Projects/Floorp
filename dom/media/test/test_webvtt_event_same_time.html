@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset='utf-8'>
+  <title>WebVTT : cue's onenter/onexit event order </title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div id="content">
+</div>
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var c1exit = false;
+var c3enter = false;
+
+function runTest() {
+  info("--- create video ---");
+  var video = document.createElement("video");
+  video.src = "seek.webm";
+  video.autoplay = true;
+  document.getElementById("content").appendChild(video);
+
+  var track = video.addTextTrack("subtitles", "A", "en");
+  track.mode = "showing";
+
+  var cue1 = new VTTCue(1, 2, "Test cue1");
+  var cue2 = new VTTCue(2, 3, "Test cue2");
+  track.addCue(cue1);
+  track.addCue(cue2);
+
+  cue1.onexit = function () {
+    cue1.onexit = null;
+    c1exit = true;
+  }
+  cue2.onenter = function () {
+    cue2.onenter = null;
+    ok(c1exit, "cue1 onexit event before than cue2 onenter");
+    video.pause();
+    SimpleTest.finish();
+  }
+
+  var cue3 = new VTTCue(1, 2, "Test cue3");
+  var cue4 = new VTTCue(1, 2, "Test cue4");
+  track.addCue(cue3);
+  track.addCue(cue4);
+
+  cue3.onenter = function () {
+    cue3.onenter = null;
+    c3enter = true;
+  }
+  cue4.onenter = function () {
+    cue4.onenter = null;
+    ok(c3enter, "cue3 onenter event before than cue4 onenter");
+  }
+}
+
+onload = runTest;
+</script>
+</body>
+</html>

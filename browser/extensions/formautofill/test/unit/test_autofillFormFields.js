@@ -273,7 +273,7 @@ function do_test(testcases, testFn) {
             // be filled.
             return;
           }
-          promises.push(testFn(testcase, element));
+          promises.push(...testFn(testcase, element));
         });
 
         handler.autofillFormFields(testcase.profileData);
@@ -286,33 +286,44 @@ function do_test(testcases, testFn) {
 }
 
 do_test(TESTCASES, (testcase, element) => {
-  return new Promise(resolve => {
-    element.addEventListener("change", () => {
-      let id = element.id;
-      Assert.equal(element.value, testcase.expectedResult[id],
-                  "Check the " + id + " field was filled with correct data");
-      resolve();
-    }, {once: true});
-  });
+  let id = element.id;
+  return [
+    new Promise(resolve => {
+      element.addEventListener("input", () => {
+        Assert.ok(true, "Checking " + id + " field fires input event");
+        resolve();
+      }, {once: true});
+    }),
+    new Promise(resolve => {
+      element.addEventListener("change", () => {
+        Assert.ok(true, "Checking " + id + " field fires change event");
+        Assert.equal(element.value, testcase.expectedResult[id],
+                    "Check the " + id + " field was filled with correct data");
+        resolve();
+      }, {once: true});
+    }),
+  ];
 });
 
 do_test(TESTCASES_INPUT_UNCHANGED, (testcase, element) => {
-  return new Promise((resolve, reject) => {
-    // Make sure no change or input event is fired when no change occurs.
-    let cleaner;
-    let timer = setTimeout(() => {
-      let id = element.id;
-      element.removeEventListener("change", cleaner);
-      element.removeEventListener("input", cleaner);
-      Assert.equal(element.value, testcase.expectedResult[id],
-                  "Check no value is changed on the " + id + " field");
-      resolve();
-    }, 1000);
-    cleaner = event => {
-      clearTimeout(timer);
-      reject(`${event.type} event should not fire`);
-    };
-    element.addEventListener("change", cleaner);
-    element.addEventListener("input", cleaner);
-  });
+  return [
+    new Promise((resolve, reject) => {
+      // Make sure no change or input event is fired when no change occurs.
+      let cleaner;
+      let timer = setTimeout(() => {
+        let id = element.id;
+        element.removeEventListener("change", cleaner);
+        element.removeEventListener("input", cleaner);
+        Assert.equal(element.value, testcase.expectedResult[id],
+                    "Check no value is changed on the " + id + " field");
+        resolve();
+      }, 1000);
+      cleaner = event => {
+        clearTimeout(timer);
+        reject(`${event.type} event should not fire`);
+      };
+      element.addEventListener("change", cleaner);
+      element.addEventListener("input", cleaner);
+    }),
+  ];
 });

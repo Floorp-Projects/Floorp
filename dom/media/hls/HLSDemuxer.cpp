@@ -59,23 +59,23 @@ mozilla::StereoMode getStereoMode(int aMode)
   }
 }
 
-// HlsDemuxerCallbacksSupport is a native implemented callback class for
-// HlsDemuxerCallbacks in GeckoHlsDemuxerWrapper.java.
+// HLSDemuxerCallbacksSupport is a native implemented callback class for
+// Callbacks in GeckoHLSDemuxerWrapper.java.
 // The callback functions will be invoked by JAVA-side thread.
 // Should dispatch the task to the demuxer's task queue.
 // We ensure the callback will never be invoked after
-// HlsDemuxerCallbacksSupport::DisposeNative has been called in ~HLSDemuxer.
-class HLSDemuxer::HlsDemuxerCallbacksSupport
- : public GeckoHlsDemuxerWrapper::HlsDemuxerCallbacks::Natives<HlsDemuxerCallbacksSupport>
+// HLSDemuxerCallbacksSupport::DisposeNative has been called in ~HLSDemuxer.
+class HLSDemuxer::HLSDemuxerCallbacksSupport
+ : public GeckoHLSDemuxerWrapper::Callbacks::Natives<HLSDemuxerCallbacksSupport>
 {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(HlsDemuxerCallbacksSupport)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(HLSDemuxerCallbacksSupport)
 public:
-  typedef GeckoHlsDemuxerWrapper::HlsDemuxerCallbacks::Natives<HlsDemuxerCallbacksSupport> NativeCallbacks;
+  typedef GeckoHLSDemuxerWrapper::Callbacks::Natives<HLSDemuxerCallbacksSupport> NativeCallbacks;
   using NativeCallbacks::DisposeNative;
   using NativeCallbacks::AttachNative;
 
-  HlsDemuxerCallbacksSupport(HLSDemuxer* aDemuxer)
-    : mMutex("HlsDemuxerCallbacksSupport")
+  HLSDemuxerCallbacksSupport(HLSDemuxer* aDemuxer)
+    : mMutex("HLSDemuxerCallbacksSupport")
     , mDemuxer(aDemuxer)
   {
     MOZ_ASSERT(mDemuxer);
@@ -83,11 +83,11 @@ public:
 
   void OnInitialized(bool aHasAudio, bool aHasVideo)
   {
-    HLS_DEBUG("HlsDemuxerCallbacksSupport",
+    HLS_DEBUG("HLSDemuxerCallbacksSupport",
               "OnInitialized");
     MutexAutoLock lock(mMutex);
     if (!mDemuxer) { return; }
-    RefPtr<HlsDemuxerCallbacksSupport> self = this;
+    RefPtr<HLSDemuxerCallbacksSupport> self = this;
     mDemuxer->GetTaskQueue()->Dispatch(NS_NewRunnableFunction(
      [=] () {
        MutexAutoLock lock(self->mMutex);
@@ -101,7 +101,7 @@ public:
   // in bug 1368904.
   void OnError(int aErrorCode)
   {
-    HLS_DEBUG("HlsDemuxerCallbacksSupport",
+    HLS_DEBUG("HLSDemuxerCallbacksSupport",
               "Got error(%d) from java side",
               aErrorCode);
   }
@@ -113,7 +113,7 @@ public:
 
   Mutex mMutex;
 private:
-  ~HlsDemuxerCallbacksSupport() { }
+  ~HLSDemuxerCallbacksSupport() { }
   HLSDemuxer* mDemuxer;
 
 };
@@ -126,17 +126,17 @@ HLSDemuxer::HLSDemuxer(MediaResource* aResource)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aResource);
-  HlsDemuxerCallbacksSupport::Init();
-  mJavaCallbacks = GeckoHlsDemuxerWrapper::HlsDemuxerCallbacks::New();
+  HLSDemuxerCallbacksSupport::Init();
+  mJavaCallbacks = GeckoHLSDemuxerWrapper::Callbacks::New();
   MOZ_ASSERT(mJavaCallbacks);
 
-  mCallbackSupport = new HlsDemuxerCallbacksSupport(this);
-  HlsDemuxerCallbacksSupport::AttachNative(mJavaCallbacks,
+  mCallbackSupport = new HLSDemuxerCallbacksSupport(this);
+  HLSDemuxerCallbacksSupport::AttachNative(mJavaCallbacks,
                                            mCallbackSupport);
 
   auto resourceWrapper = static_cast<HLSResource*>(aResource)->GetResourceWrapper();
-  mHlsDemuxerWrapper = GeckoHlsDemuxerWrapper::Create(resourceWrapper->GetPlayer(), mJavaCallbacks);
-  MOZ_ASSERT(mHlsDemuxerWrapper);
+  mHLSDemuxerWrapper = GeckoHLSDemuxerWrapper::Create(resourceWrapper->GetPlayer(), mJavaCallbacks);
+  MOZ_ASSERT(mHLSDemuxerWrapper);
 }
 
 void
@@ -190,9 +190,9 @@ HLSDemuxer::GetNumberTracks(TrackType aType) const
 {
   switch (aType) {
     case TrackType::kAudioTrack:
-      return mHlsDemuxerWrapper->GetNumberOfTracks(TrackType::kAudioTrack);
+      return mHLSDemuxerWrapper->GetNumberOfTracks(TrackType::kAudioTrack);
     case TrackType::kVideoTrack:
-      return mHlsDemuxerWrapper->GetNumberOfTracks(TrackType::kVideoTrack);
+      return mHLSDemuxerWrapper->GetNumberOfTracks(TrackType::kVideoTrack);
     default:
       return 0;
   }
@@ -209,7 +209,7 @@ HLSDemuxer::GetTrackDemuxer(TrackType aType, uint32_t aTrackNumber)
 bool
 HLSDemuxer::IsSeekable() const
 {
-  return !mHlsDemuxerWrapper->IsLiveStream();
+  return !mHLSDemuxerWrapper->IsLiveStream();
 }
 
 UniquePtr<EncryptionInfo>
@@ -239,18 +239,18 @@ HLSDemuxer::GetTrackInfo(TrackType aTrack)
 TimeUnit
 HLSDemuxer::GetNextKeyFrameTime()
 {
-  MOZ_ASSERT(mHlsDemuxerWrapper);
-  return TimeUnit::FromMicroseconds(mHlsDemuxerWrapper->GetNextKeyFrameTime());
+  MOZ_ASSERT(mHLSDemuxerWrapper);
+  return TimeUnit::FromMicroseconds(mHLSDemuxerWrapper->GetNextKeyFrameTime());
 }
 
 void
 HLSDemuxer::UpdateAudioInfo(int index)
 {
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mHlsDemuxerWrapper);
+  MOZ_ASSERT(mHLSDemuxerWrapper);
   HLS_DEBUG("HLSDemuxer", "UpdateAudioInfo (%d)", index);
   MutexAutoLock lock(mMutex);
-  jni::Object::LocalRef infoObj = mHlsDemuxerWrapper->GetAudioInfo(index);
+  jni::Object::LocalRef infoObj = mHLSDemuxerWrapper->GetAudioInfo(index);
   if (infoObj) {
     java::GeckoAudioInfo::LocalRef audioInfo(Move(infoObj));
     mInfo.mAudio.mRate = audioInfo->Rate();
@@ -270,9 +270,9 @@ void
 HLSDemuxer::UpdateVideoInfo(int index)
 {
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mHlsDemuxerWrapper);
+  MOZ_ASSERT(mHLSDemuxerWrapper);
   MutexAutoLock lock(mMutex);
-  jni::Object::LocalRef infoObj = mHlsDemuxerWrapper->GetVideoInfo(index);
+  jni::Object::LocalRef infoObj = mHLSDemuxerWrapper->GetVideoInfo(index);
   if (infoObj) {
     java::GeckoVideoInfo::LocalRef videoInfo(Move(infoObj));
     mInfo.mVideo.mStereoMode = getStereoMode(videoInfo->StereoMode());
@@ -300,12 +300,12 @@ HLSDemuxer::~HLSDemuxer()
   HLS_DEBUG("HLSDemuxer", "~HLSDemuxer()");
   mCallbackSupport->Detach();
   if (mJavaCallbacks) {
-    HlsDemuxerCallbacksSupport::DisposeNative(mJavaCallbacks);
+    HLSDemuxerCallbacksSupport::DisposeNative(mJavaCallbacks);
     mJavaCallbacks = nullptr;
   }
-  if (mHlsDemuxerWrapper) {
-    mHlsDemuxerWrapper->Destroy();
-    mHlsDemuxerWrapper = nullptr;
+  if (mHLSDemuxerWrapper) {
+    mHLSDemuxerWrapper->Destroy();
+    mHLSDemuxerWrapper = nullptr;
   }
   mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
 }
@@ -340,7 +340,7 @@ HLSTrackDemuxer::DoSeek(const TimeUnit& aTime)
   MOZ_ASSERT(mParent->OnTaskQueue());
   mQueuedSample = nullptr;
   int64_t seekTimeUs = aTime.ToMicroseconds();
-  bool result = mParent->mHlsDemuxerWrapper->Seek(seekTimeUs);
+  bool result = mParent->mHLSDemuxerWrapper->Seek(seekTimeUs);
   if (!result) {
     return SeekPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA,
                                         __func__);
@@ -384,8 +384,8 @@ HLSTrackDemuxer::DoGetSamples(int32_t aNumSamples)
   }
   mozilla::jni::ObjectArray::LocalRef demuxedSamples =
     (mType == TrackInfo::kAudioTrack)
-    ? mParent->mHlsDemuxerWrapper->GetSamples(TrackInfo::kAudioTrack, aNumSamples)
-    : mParent->mHlsDemuxerWrapper->GetSamples(TrackInfo::kVideoTrack, aNumSamples);
+    ? mParent->mHLSDemuxerWrapper->GetSamples(TrackInfo::kAudioTrack, aNumSamples)
+    : mParent->mHLSDemuxerWrapper->GetSamples(TrackInfo::kVideoTrack, aNumSamples);
   nsTArray<jni::Object::LocalRef> sampleObjectArray(demuxedSamples->GetElements());
 
   if (sampleObjectArray.IsEmpty()) {
@@ -393,7 +393,7 @@ HLSTrackDemuxer::DoGetSamples(int32_t aNumSamples)
   }
 
   for (auto&& demuxedSample : sampleObjectArray) {
-    java::GeckoHlsSample::LocalRef sample(Move(demuxedSample));
+    java::GeckoHLSSample::LocalRef sample(Move(demuxedSample));
     if (sample->IsEOS()) {
       HLS_DEBUG("HLSTrackDemuxer", "Met BUFFER_FLAG_END_OF_STREAM.");
       if (samples->mSamples.IsEmpty()) {
@@ -496,7 +496,7 @@ HLSTrackDemuxer::ExtractCryptoSample(size_t aSampleSize,
 }
 
 RefPtr<MediaRawData>
-HLSTrackDemuxer::ConvertToMediaRawData(java::GeckoHlsSample::LocalRef aSample)
+HLSTrackDemuxer::ConvertToMediaRawData(java::GeckoHLSSample::LocalRef aSample)
 {
   java::sdk::BufferInfo::LocalRef info = aSample->Info();
   // Currently extract PTS, Size and Data without Crypto information.
@@ -596,14 +596,14 @@ HLSTrackDemuxer::DoSkipToNextRandomAccessPoint(
   MediaResult result = NS_ERROR_DOM_MEDIA_END_OF_STREAM;
   do {
     mozilla::jni::ObjectArray::LocalRef demuxedSamples =
-      mParent->mHlsDemuxerWrapper->GetSamples(mType, 1);
+      mParent->mHLSDemuxerWrapper->GetSamples(mType, 1);
     nsTArray<jni::Object::LocalRef> sampleObjectArray(demuxedSamples->GetElements());
     if (sampleObjectArray.IsEmpty()) {
       result = NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA;
       break;
     }
     parsed++;
-    java::GeckoHlsSample::LocalRef sample(Move(sampleObjectArray[0]));
+    java::GeckoHLSSample::LocalRef sample(Move(sampleObjectArray[0]));
     if (sample->IsEOS()) {
       result = NS_ERROR_DOM_MEDIA_END_OF_STREAM;
       break;
@@ -632,7 +632,7 @@ TimeIntervals
 HLSTrackDemuxer::GetBuffered()
 {
   MOZ_ASSERT(mParent, "Called after BreackCycle()");
-  int64_t bufferedTime = mParent->mHlsDemuxerWrapper->GetBuffered(); //us
+  int64_t bufferedTime = mParent->mHLSDemuxerWrapper->GetBuffered(); //us
   return TimeIntervals(TimeInterval(TimeUnit(),
                                     TimeUnit::FromMicroseconds(bufferedTime)));
 }
