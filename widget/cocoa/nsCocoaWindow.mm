@@ -2164,6 +2164,20 @@ nsCocoaWindow::SetWindowShadowStyle(int32_t aStyle)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+void
+nsCocoaWindow::SetWindowOpacity(float aOpacity)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (!mWindow) {
+    return;
+  }
+
+  [mWindow setAlphaValue:(CGFloat)aOpacity];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 void nsCocoaWindow::SetShowsToolbarButton(bool aShow)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
