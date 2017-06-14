@@ -220,6 +220,9 @@
 #include "mozilla/ipc/CrashReporterClient.h"
 #endif
 
+#ifdef MOZ_CODE_COVERAGE
+#include "mozilla/CodeCoverageHandler.h"
+#endif
 
 using namespace mozilla;
 using namespace mozilla::docshell;
@@ -3416,6 +3419,18 @@ ContentChild::RecvSetPluginList(const uint32_t& aPluginEpoch,
   RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
   host->SetPluginsInContent(aPluginEpoch, aPluginTags, aFakePluginTags);
   return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentChild::RecvShareCodeCoverageMutex(const CrossProcessMutexHandle& aHandle)
+{
+#ifdef MOZ_CODE_COVERAGE
+  CodeCoverageHandler::Init(aHandle);
+  return IPC_OK();
+#else
+  NS_RUNTIMEABORT("Shouldn't receive this message in non-code coverage builds!");
+  return IPC_FAIL_NO_REASON(this);
+#endif
 }
 
 } // namespace dom

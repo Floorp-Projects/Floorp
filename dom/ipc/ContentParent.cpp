@@ -259,6 +259,10 @@
 #include "ProfilerParent.h"
 #endif
 
+#ifdef MOZ_CODE_COVERAGE
+#include "mozilla/CodeCoverageHandler.h"
+#endif
+
 // For VP9Benchmark::sBenchmarkFpsPref
 #include "Benchmark.h"
 
@@ -2060,8 +2064,13 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
     return false;
   }
 
-  Open(mSubprocess->GetChannel(),
-     base::GetProcId(mSubprocess->GetChildProcessHandle()));
+  base::ProcessId procId = base::GetProcId(mSubprocess->GetChildProcessHandle());
+
+  Open(mSubprocess->GetChannel(), procId);
+
+#ifdef MOZ_CODE_COVERAGE
+  Unused << SendShareCodeCoverageMutex(CodeCoverageHandler::Get()->GetMutexHandle(procId));
+#endif
 
   InitInternal(aInitialPriority,
                true, /* Setup off-main thread compositing */

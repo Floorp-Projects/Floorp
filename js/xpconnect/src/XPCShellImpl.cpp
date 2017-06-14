@@ -49,6 +49,10 @@
 #endif
 #endif
 
+#ifdef MOZ_CODE_COVERAGE
+#include "mozilla/CodeCoverageHandler.h"
+#endif
+
 // all this crap is needed to do the interactive shell stuff
 #include <stdlib.h>
 #include <errno.h>
@@ -1468,6 +1472,10 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
                      "processes will fail to start.");
         }
 #endif
+#endif
+
+#ifdef MOZ_CODE_COVERAGE
+        CodeCoverageHandler::Init();
 #endif
 
         {
