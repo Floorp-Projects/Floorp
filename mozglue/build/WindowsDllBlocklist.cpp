@@ -781,6 +781,37 @@ continue_loading:
   return stub_LdrLoadDll(filePath, flags, moduleFileName, handle);
 }
 
+#ifdef _M_AMD64
+typedef NTSTATUS (NTAPI *LdrUnloadDll_func)(HMODULE module);
+static LdrUnloadDll_func stub_LdrUnloadDll;
+
+static NTSTATUS NTAPI
+patched_LdrUnloadDll(HMODULE module)
+{
+  // Prevent the stack walker from suspending this thread when LdrUnloadDll
+  // holds the RtlLookupFunctionEntry lock.
+  AutoSuppressStackWalking suppress;
+  return stub_LdrUnloadDll(module);
+}
+
+// These pointers are disguised as PVOID to avoid pulling in obscure headers
+typedef PVOID (WINAPI *LdrResolveDelayLoadedAPI_func)(PVOID ParentModuleBase,
+  PVOID DelayloadDescriptor, PVOID FailureDllHook, PVOID FailureSystemHook,
+  PVOID ThunkAddress, ULONG Flags);
+static LdrResolveDelayLoadedAPI_func stub_LdrResolveDelayLoadedAPI;
+
+static PVOID WINAPI patched_LdrResolveDelayLoadedAPI(PVOID ParentModuleBase,
+  PVOID DelayloadDescriptor, PVOID FailureDllHook, PVOID FailureSystemHook,
+  PVOID ThunkAddress, ULONG Flags)
+{
+  // Prevent the stack walker from suspending this thread when
+  // LdrResolveDelayLoadAPI holds the RtlLookupFunctionEntry lock.
+  AutoSuppressStackWalking suppress;
+  return stub_LdrResolveDelayLoadedAPI(ParentModuleBase, DelayloadDescriptor,
+                                       FailureDllHook, FailureSystemHook,
+                                       ThunkAddress, Flags);
+}
+#endif
 
 #ifdef _M_IX86
 static bool
@@ -861,6 +892,14 @@ DllBlocklist_Initialize(uint32_t aInitFlags)
   Kernel32Intercept.Init("kernel32.dll");
 
 #ifdef _M_AMD64
+  NtDllIntercept.AddHook("LdrUnloadDll",
+                         reinterpret_cast<intptr_t>(patched_LdrUnloadDll),
+                         (void**)&stub_LdrUnloadDll);
+  if (IsWin8OrLater()) { // LdrResolveDelayLoadedAPI was introduced in Win8
+    NtDllIntercept.AddHook("LdrResolveDelayLoadedAPI",
+                           reinterpret_cast<intptr_t>(patched_LdrResolveDelayLoadedAPI),
+                           (void**)&stub_LdrResolveDelayLoadedAPI);
+  }
   if (!IsWin8OrLater()) {
     // The crash that this hook works around is only seen on Win7.
     Kernel32Intercept.AddHook("RtlInstallFunctionTableCallback",

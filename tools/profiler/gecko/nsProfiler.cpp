@@ -20,6 +20,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "shared-libraries.h"
 #include "js/Value.h"
+#include "mozilla/AbstractThread.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/TypedArray.h"

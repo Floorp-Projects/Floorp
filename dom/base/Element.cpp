@@ -4084,42 +4084,33 @@ enum nsPreviousIntersectionThreshold {
 void
 Element::RegisterIntersectionObserver(DOMIntersectionObserver* aObserver)
 {
-  nsDataHashtable<nsRefPtrHashKey<DOMIntersectionObserver>, int32_t>* observers =
-    RegisteredIntersectionObservers();
-  if (observers->Contains(aObserver)) {
-    return;
-  }
-
-  // Value can be:
-  //   -2:   Makes sure next calculated threshold always differs, leading to a
-  //         notification task being scheduled.
-  //   -1:   Non-intersecting.
-  //   >= 0: Intersecting, valid index of aObserver->mThresholds.
-  RegisteredIntersectionObservers()->Put(aObserver, eUninitialized);
+  RegisteredIntersectionObservers()->LookupForAdd(aObserver).OrInsert([]() {
+    // Value can be:
+    //   -2:   Makes sure next calculated threshold always differs, leading to a
+    //         notification task being scheduled.
+    //   -1:   Non-intersecting.
+    //   >= 0: Intersecting, valid index of aObserver->mThresholds.
+    return eUninitialized;
+  });
 }
 
 void
 Element::UnregisterIntersectionObserver(DOMIntersectionObserver* aObserver)
 {
-  nsDataHashtable<nsRefPtrHashKey<DOMIntersectionObserver>, int32_t>* observers =
-    RegisteredIntersectionObservers();
-  observers->Remove(aObserver);
+  RegisteredIntersectionObservers()->Remove(aObserver);
 }
 
 bool
 Element::UpdateIntersectionObservation(DOMIntersectionObserver* aObserver, int32_t aThreshold)
 {
-  nsDataHashtable<nsRefPtrHashKey<DOMIntersectionObserver>, int32_t>* observers =
-    RegisteredIntersectionObservers();
-  if (!observers->Contains(aObserver)) {
-    return false;
-  }
-  int32_t previousThreshold = observers->Get(aObserver);
-  if (previousThreshold != aThreshold) {
-    observers->Put(aObserver, aThreshold);
-    return true;
-  }
-  return false;
+  bool updated = false;
+  RegisteredIntersectionObservers()->LookupRemoveIf(aObserver,
+    [&updated, aThreshold] (int32_t& aValue) {
+      updated = aValue != aThreshold;
+      aValue = aThreshold;
+      return false; // don't remove the entry
+    });
+  return updated;
 }
 
 void

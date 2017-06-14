@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>XML roles tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../attributes.js"></script>
+
+  <script type="application/javascript">
+
+    function doTest()
+    {
+      // DPub ARIA roles should be exposed via the xml-roles object attribute.
+      let dpub_attrs = [
+        'doc-abstract',
+        'doc-acknowledgments',
+        'doc-afterword',
+        'doc-appendix',
+        'doc-backlink',
+        'doc-biblioentry',
+        'doc-bibliography',
+        'doc-biblioref',
+        'doc-chapter',
+        'doc-colophon',
+        'doc-conclusion',
+        'doc-cover',
+        'doc-credit',
+        'doc-credits',
+        'doc-dedication',
+        'doc-endnote',
+        'doc-endnotes',
+        'doc-epigraph',
+        'doc-epilogue',
+        'doc-errata',
+        'doc-example',
+        'doc-footnote',
+        'doc-foreword',
+        'doc-glossary',
+        'doc-glossref',
+        'doc-index',
+        'doc-introduction',
+        'doc-noteref',
+        'doc-notice',
+        'doc-pagebreak',
+        'doc-pagelist',
+        'doc-part',
+        'doc-preface',
+        'doc-prologue',
+        'doc-pullquote',
+        'doc-qna',
+        'doc-subtitle',
+        'doc-tip',
+        'doc-toc'
+      ];
+      for (let attr of dpub_attrs) {
+        testAttrs(attr, {"xml-roles" : attr}, true);
+      }
+      SimpleTest.finish();
+    }
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1343537"
+     title="implement ARIA DPUB extension">
+    Bug 1343537
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+  <div id="doc-abstract" role="doc-abstract">abstract</div>
+  <div id="doc-acknowledgments" role="doc-acknowledgments">acknowledgments</div>
+  <div id="doc-afterword" role="doc-afterword">afterword</div>
+  <div id="doc-appendix" role="doc-appendix">appendix</div>
+  <div id="doc-backlink" role="doc-backlink">backlink</div>
+  <div id="doc-biblioentry" role="doc-biblioentry">biblioentry</div>
+  <div id="doc-bibliography" role="doc-bibliography">bibliography</div>
+  <div id="doc-biblioref" role="doc-biblioref">biblioref</div>
+  <div id="doc-chapter" role="doc-chapter">chapter</div>
+  <div id="doc-colophon" role="doc-colophon">colophon</div>
+  <div id="doc-conclusion" role="doc-conclusion">conclusion</div>
+  <div id="doc-cover" role="doc-cover">cover</div>
+  <div id="doc-credit" role="doc-credit">credit</div>
+  <div id="doc-credits" role="doc-credits">credits</div>
+  <div id="doc-dedication" role="doc-dedication">dedication</div>
+  <div id="doc-endnote" role="doc-endnote">endnote</div>
+  <div id="doc-endnotes" role="doc-endnotes">endnotes</div>
+  <div id="doc-epigraph" role="doc-epigraph">epigraph</div>
+  <div id="doc-epilogue" role="doc-epilogue">epilogue</div>
+  <div id="doc-errata" role="doc-errata">errata</div>
+  <div id="doc-example" role="doc-example">example</div>
+  <div id="doc-footnote" role="doc-footnote">footnote</div>
+  <div id="doc-foreword" role="doc-foreword">foreword</div>
+  <div id="doc-glossary" role="doc-glossary">glossary</div>
+  <div id="doc-glossref" role="doc-glossref">glossref</div>
+  <div id="doc-index" role="doc-index">index</div>
+  <div id="doc-introduction" role="doc-introduction">introduction</div>
+  <div id="doc-noteref" role="doc-noteref">noteref</div>
+  <div id="doc-notice" role="doc-notice">notice</div>
+  <div id="doc-pagebreak" role="doc-pagebreak">pagebreak</div>
+  <div id="doc-pagelist" role="doc-pagelist">pagelist</div>
+  <div id="doc-part" role="doc-part">part</div>
+  <div id="doc-preface" role="doc-preface">preface</div>
+  <div id="doc-prologue" role="doc-prologue">prologue</div>
+  <div id="doc-pullquote" role="doc-pullquote">pullquote</div>
+  <div id="doc-qna" role="doc-qna">qna</div>
+  <div id="doc-subtitle" role="doc-subtitle">subtitle</div>
+  <div id="doc-tip" role="doc-tip">tip</div>
+  <div id="doc-toc" role="doc-toc">toc</div>
+</body>
+</html>

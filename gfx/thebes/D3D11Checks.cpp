@@ -159,7 +159,8 @@ D3D11Checks::DoesDeviceWork()
           return false;
         }
         if (displayLinkModuleVersion <= V(8,6,1,36484)) {
-          gfxCriticalError(CriticalLog::DefaultOptions(false)) << "DisplayLink: too old version " << displayLinkModuleVersionString.get();
+          NS_ConvertUTF16toUTF8 version(displayLinkModuleVersionString);
+          gfxCriticalError(CriticalLog::DefaultOptions(false)) << "DisplayLink: too old version " << version.get();
           return false;
         }
       }

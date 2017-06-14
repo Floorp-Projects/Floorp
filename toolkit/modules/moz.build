@@ -196,6 +196,7 @@ EXTRA_JS_MODULES += [
     'FinderIterator.jsm',
     'FormLikeFactory.jsm',
     'Geometry.jsm',
+    'GMPExtractorWorker.js',
     'GMPInstallManager.jsm',
     'GMPUtils.jsm',
     'HiddenFrame.jsm',

@@ -305,6 +305,7 @@ public:
    *     Each layer accumulates into |aVisibleRegion| its post-transform
    *     (including async transforms) visible region.
    */
+  void PostProcessLayers(nsIntRegion& aOpaqueRegion);
   void PostProcessLayers(Layer* aLayer,
                          nsIntRegion& aOpaqueRegion,
                          LayerIntRegion& aVisibleRegion,
