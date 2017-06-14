@@ -114,7 +114,7 @@ public class LocalBrowserDBTest {
         final Uri parentUri = db.addBookmarkFolder(cr, FOLDER_NAME, rootId);
         assertNotNull(parentUri);
         // Get id from Uri
-        final long parentId = Long.valueOf(parentUri.getLastPathSegment());
+        final long parentId = Long.parseLong(parentUri.getLastPathSegment());
 
         // Create nested child bookmarks and folders
         // parent / bookmark-1
@@ -125,7 +125,7 @@ public class LocalBrowserDBTest {
 
         final Uri folderUri = insertBookmark("folder-2", null, "guid-folder-2", parentId, BrowserContract.Bookmarks.TYPE_FOLDER);
         assertNotNull(folderUri);
-        final long folderId = Long.valueOf(folderUri.getLastPathSegment());
+        final long folderId = Long.parseLong(folderUri.getLastPathSegment());
         insertBookmark("bookmark-2", null, "guid-bookmark-2", folderId, BrowserContract.Bookmarks.TYPE_BOOKMARK);
 
         final String selection = BrowserContract.Bookmarks.PARENT + " = ? OR " +
@@ -152,7 +152,7 @@ public class LocalBrowserDBTest {
         final Uri parentUri = db.addBookmarkFolder(cr, FOLDER_NAME, rootId);
         assertNotNull(parentUri);
         // Get id from Uri
-        final long parentId = Long.valueOf(parentUri.getLastPathSegment());
+        final long parentId = Long.parseLong(parentUri.getLastPathSegment());
 
         // Create more than DBUtils.SQLITE_MAX_VARIABLE_NUMBER child bookmarks/folders.
         for (int i = 0; i < DBUtils.SQLITE_MAX_VARIABLE_NUMBER; ++i) {
@@ -307,7 +307,7 @@ public class LocalBrowserDBTest {
         // Create a folder
         final Uri newFolderUri = db.addBookmarkFolder(cr, FOLDER_NAME, originalParentId);
         // Get id from Uri
-        final long newParentId = Long.valueOf(newFolderUri.getLastPathSegment());
+        final long newParentId = Long.parseLong(newFolderUri.getLastPathSegment());
 
         final long originalParentLastModifiedBeforeUpdate = getModifiedDate(originalParentId);
         final long newParentLastModifiedBeforeUpdate = getModifiedDate(newParentId);
@@ -349,7 +349,7 @@ public class LocalBrowserDBTest {
         final long lastModifiedBeforeAdd = getModifiedDate(rootFolderId);
         final Uri folderUri = db.addBookmarkFolder(cr, FOLDER_NAME, rootFolderId);
         // Get id from Uri
-        long folderId = Long.valueOf(folderUri.getLastPathSegment());
+        long folderId = Long.parseLong(folderUri.getLastPathSegment());
 
         final Cursor cursor = db.getBookmarkById(cr, folderId);
         assertNotNull(cursor);
@@ -585,7 +585,7 @@ public class LocalBrowserDBTest {
         final Uri parentUri = db.addBookmarkFolder(cr, FOLDER_NAME, rootId);
         assertNotNull(parentUri);
         // Get id from Uri
-        final long parentId = Long.valueOf(parentUri.getLastPathSegment());
+        final long parentId = Long.parseLong(parentUri.getLastPathSegment());
 
         // Create more than DBUtils.SQLITE_MAX_VARIABLE_NUMBER child bookmarks/folders.
         for (int i = 0; i < size; ++i) {
