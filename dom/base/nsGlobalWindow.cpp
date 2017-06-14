@@ -10671,13 +10671,16 @@ void nsGlobalWindow::SetIsBackground(bool aIsBackground)
 {
   MOZ_ASSERT(IsOuterWindow());
 
-  bool resetTimers = (!aIsBackground && AsOuter()->IsBackground());
+  bool changed = aIsBackground != AsOuter()->IsBackground();
   SetIsBackgroundInternal(aIsBackground);
 
   nsGlobalWindow* inner = GetCurrentInnerWindowInternal();
 
+  if (inner && changed) {
+    inner->mTimeoutManager->UpdateBackgroundState();
+  }
+
   if (aIsBackground) {
-    MOZ_ASSERT(!resetTimers);
     // Notify gamepadManager we are at the background window,
     // we need to stop vibrate.
     if (inner) {
@@ -10685,9 +10688,6 @@ void nsGlobalWindow::SetIsBackground(bool aIsBackground)
     }
     return;
   } else if (inner) {
-    if (resetTimers) {
-      inner->mTimeoutManager->ResetTimersForThrottleReduction();
-    }
     inner->SyncGamepadState();
   }
 }
