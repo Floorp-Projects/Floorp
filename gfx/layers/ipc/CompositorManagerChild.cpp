@@ -66,6 +66,31 @@ CompositorManagerChild::Shutdown()
   sInstance = nullptr;
 }
 
+/* static */ bool
+CompositorManagerChild::CreateContentCompositorBridge(uint32_t aNamespace)
+{
+  return false;
+}
+
+/* static */ already_AddRefed<CompositorBridgeChild>
+CompositorManagerChild::CreateWidgetCompositorBridge(uint64_t aProcessToken,
+                                                     LayerManager* aLayerManager,
+                                                     uint32_t aNamespace,
+                                                     CSSToLayoutDeviceScale aScale,
+                                                     const CompositorOptions& aOptions,
+                                                     bool aUseExternalSurfaceSize,
+                                                     const gfx::IntSize& aSurfaceSize)
+{
+  return nullptr;
+}
+
+/* static */ already_AddRefed<CompositorBridgeChild>
+CompositorManagerChild::CreateSameProcessWidgetCompositorBridge(LayerManager* aLayerManager,
+                                                                uint32_t aNamespace)
+{
+  return nullptr;
+}
+
 CompositorManagerChild::CompositorManagerChild(CompositorManagerParent* aParent,
                                                uint32_t aNamespace)
   : mCanSend(false)

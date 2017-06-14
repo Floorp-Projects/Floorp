@@ -24,6 +24,7 @@
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/CompositorManagerParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
@@ -215,6 +216,13 @@ GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
 }
 
 mozilla::ipc::IPCResult
+GPUParent::RecvInitCompositorManager(Endpoint<PCompositorManagerParent>&& aEndpoint)
+{
+  CompositorManagerParent::Create(Move(aEndpoint));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 GPUParent::RecvInitVsyncBridge(Endpoint<PVsyncBridgeParent>&& aVsyncEndpoint)
 {
   mVsyncBridge = VsyncBridgeParent::Start(Move(aVsyncEndpoint));
@@ -306,37 +314,10 @@ GPUParent::RecvGetDeviceStatus(GPUDeviceData* aOut)
   return IPC_OK();
 }
 
-static void
-OpenParent(RefPtr<CompositorBridgeParent> aParent,
-           Endpoint<PCompositorBridgeParent>&& aEndpoint)
-{
-  if (!aParent->Bind(Move(aEndpoint))) {
-    MOZ_CRASH("Failed to bind compositor");
-  }
-}
-
 mozilla::ipc::IPCResult
-GPUParent::RecvNewWidgetCompositor(Endpoint<layers::PCompositorBridgeParent>&& aEndpoint,
-                                   const CSSToLayoutDeviceScale& aScale,
-                                   const TimeDuration& aVsyncRate,
-                                   const CompositorOptions& aOptions,
-                                   const bool& aUseExternalSurfaceSize,
-                                   const IntSize& aSurfaceSize)
+GPUParent::RecvNewContentCompositorManager(Endpoint<PCompositorManagerParent>&& aEndpoint)
 {
-  RefPtr<CompositorBridgeParent> cbp =
-    new CompositorBridgeParent(aScale, aVsyncRate, aOptions, aUseExternalSurfaceSize, aSurfaceSize);
-
-  MessageLoop* loop = CompositorThreadHolder::Loop();
-  loop->PostTask(NewRunnableFunction(OpenParent, cbp, Move(aEndpoint)));
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-GPUParent::RecvNewContentCompositorBridge(Endpoint<PCompositorBridgeParent>&& aEndpoint)
-{
-  if (!CompositorBridgeParent::CreateForContent(Move(aEndpoint))) {
-    return IPC_FAIL_NO_REASON(this);
-  }
+  CompositorManagerParent::Create(Move(aEndpoint));
   return IPC_OK();
 }
 
