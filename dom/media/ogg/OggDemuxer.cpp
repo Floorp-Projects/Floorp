@@ -402,7 +402,7 @@ OggDemuxer::SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials)
     OggCodecState* codecState = mCodecStore.Get(serial);
 
     MessageField* msgInfo = nullptr;
-    if (mSkeletonState && mSkeletonState->mMsgFieldStore.Contains(serial)) {
+    if (mSkeletonState) {
       mSkeletonState->mMsgFieldStore.Get(serial, &msgInfo);
     }
 
@@ -660,7 +660,7 @@ OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime)
   }
 
   MessageField* msgInfo = nullptr;
-  if (mSkeletonState && mSkeletonState->mMsgFieldStore.Contains(serial)) {
+  if (mSkeletonState) {
     mSkeletonState->mMsgFieldStore.Get(serial, &msgInfo);
   }
 
