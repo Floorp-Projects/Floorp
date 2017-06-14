@@ -52,7 +52,8 @@ add_task(async function test_ui_state_syncing() {
 
   gSync.updateAllUI(state);
 
-  checkSyncNowButton("PanelUI-fxa-icon", true);
+  let prefix = gPhotonStructure ? "appMenu" : "PanelUI";
+  checkSyncNowButton(`${prefix}-fxa-icon`, true);
   checkSyncNowButton("PanelUI-remotetabs-syncnow", true);
 
   // Be good citizens and remove the "syncing" state.
@@ -193,7 +194,7 @@ function checkSyncNowButton(buttonId, syncing, tooltip = null) {
     is(remoteTabsButton.getAttribute("tooltiptext"), tooltip, "button tooltiptext is set to the right value");
   }
 
-  if (buttonId == "PanelUI-fxa-icon") {
+  if (buttonId.endsWith("-fxa-icon")) {
     return;
   }
 
