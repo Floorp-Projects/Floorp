@@ -56,13 +56,14 @@ class TimeoutExecutor final : public nsIRunnable
   ScheduleImmediate(const TimeStamp& aDeadline, const TimeStamp& aNow);
 
   nsresult
-  ScheduleDelayed(const TimeStamp& aDeadline, const TimeStamp& aNow);
+  ScheduleDelayed(const TimeStamp& aDeadline, const TimeStamp& aNow,
+                  const TimeDuration& aMinDelay);
 
   nsresult
-  Schedule(const TimeStamp& aDeadline);
+  Schedule(const TimeStamp& aDeadline, const TimeDuration& aMinDelay);
 
   nsresult
-  MaybeReschedule(const TimeStamp& aDeadline);
+  MaybeReschedule(const TimeStamp& aDeadline, const TimeDuration& aMinDelay);
 
   void
   MaybeExecute();
@@ -74,7 +75,7 @@ public:
   Shutdown();
 
   nsresult
-  MaybeSchedule(const TimeStamp& aDeadline);
+  MaybeSchedule(const TimeStamp& aDeadline, const TimeDuration& aMinDelay);
 
   void
   Cancel();

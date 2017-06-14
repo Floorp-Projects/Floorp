@@ -574,14 +574,14 @@ MediaCacheStream::BlockList::NotifyBlockSwapped(int32_t aBlockIndex1,
   if (e1) {
     e1Prev = e1->mPrevBlock;
     e1Next = e1->mNextBlock;
-    mEntries.RemoveEntry(aBlockIndex1);
+    mEntries.RemoveEntry(e1);
     // Refresh pointer after hashtable mutation.
     e2 = mEntries.GetEntry(aBlockIndex2);
   }
   if (e2) {
     e2Prev = e2->mPrevBlock;
     e2Next = e2->mNextBlock;
-    mEntries.RemoveEntry(aBlockIndex2);
+    mEntries.RemoveEntry(e2);
   }
   // Put new entries back.
   if (e1) {

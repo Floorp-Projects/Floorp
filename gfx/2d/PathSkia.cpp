@@ -175,7 +175,7 @@ PathSkia::GetBounds(const Matrix &aTransform) const
     return Rect();
   }
 
-  Rect bounds = SkRectToRect(mPath.getBounds());
+  Rect bounds = SkRectToRect(mPath.computeTightBounds());
   return aTransform.TransformBounds(bounds);
 }
 
@@ -195,7 +195,7 @@ PathSkia::GetStrokedBounds(const StrokeOptions &aStrokeOptions,
   SkPath result;
   paint.getFillPath(mPath, &result);
 
-  Rect bounds = SkRectToRect(result.getBounds());
+  Rect bounds = SkRectToRect(result.computeTightBounds());
   return aTransform.TransformBounds(bounds);
 }
 

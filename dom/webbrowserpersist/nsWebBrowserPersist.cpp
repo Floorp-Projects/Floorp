@@ -2727,9 +2727,8 @@ nsWebBrowserPersist::MakeAndStoreLocalFilenameInURIMap(
 
     // Create a sensibly named filename for the URI and store in the URI map
     URIData *data;
-    if (mURIMap.Contains(spec))
+    if (mURIMap.Get(spec, &data))
     {
-        data = mURIMap.Get(spec);
         if (aNeedsPersisting)
         {
           data->mNeedsPersisting = true;

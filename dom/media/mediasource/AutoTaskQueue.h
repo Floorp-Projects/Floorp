@@ -42,6 +42,9 @@ public:
     mTaskQueue->Dispatch(Move(aRunnable), aFailureHandling, aReason);
   }
 
+  // Prevent a GCC warning about the other overload of Dispatch being hidden.
+  using AbstractThread::Dispatch;
+
   // Blocks until all tasks finish executing.
   void AwaitIdle() { mTaskQueue->AwaitIdle(); }
 

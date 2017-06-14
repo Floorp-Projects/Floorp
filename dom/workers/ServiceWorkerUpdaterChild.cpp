@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ServiceWorkerUpdaterChild.h"
+#include "mozilla/AbstractThread.h"
 
 namespace mozilla {
 namespace dom {

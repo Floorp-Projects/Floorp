@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test DPub ARIA roles</title>
+
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+
+    function doTest()
+    {
+      // DPub ARIA role map.
+      testRole("doc-abstract", ROLE_SECTION);
+      testRole("doc-acknowledgments", ROLE_LANDMARK);
+      testRole("doc-afterword", ROLE_LANDMARK);
+      testRole("doc-appendix", ROLE_LANDMARK);
+      testRole("doc-backlink", ROLE_LINK);
+      testRole("doc-biblioentry", ROLE_LISTITEM);
+      testRole("doc-bibliography", ROLE_LANDMARK);
+      testRole("doc-biblioref", ROLE_LINK);
+      testRole("doc-chapter", ROLE_LANDMARK);
+      testRole("doc-colophon", ROLE_SECTION);
+      testRole("doc-conclusion", ROLE_LANDMARK);
+      testRole("doc-cover", ROLE_GRAPHIC);
+      testRole("doc-credit", ROLE_SECTION);
+      testRole("doc-credits", ROLE_LANDMARK);
+      testRole("doc-dedication", ROLE_SECTION);
+      testRole("doc-endnote", ROLE_LISTITEM);
+      testRole("doc-endnotes", ROLE_LANDMARK);
+      testRole("doc-epigraph", ROLE_SECTION);
+      testRole("doc-epilogue", ROLE_LANDMARK);
+      testRole("doc-errata", ROLE_LANDMARK);
+      testRole("doc-example", ROLE_SECTION);
+      testRole("doc-footnote", ROLE_FOOTNOTE);
+      testRole("doc-foreword", ROLE_LANDMARK);
+      testRole("doc-glossary", ROLE_LANDMARK);
+      testRole("doc-glossref", ROLE_LINK);
+      testRole("doc-index", ROLE_NAVIGATION);
+      testRole("doc-introduction", ROLE_LANDMARK);
+      testRole("doc-noteref", ROLE_LINK);
+      testRole("doc-notice", ROLE_NOTE);
+      testRole("doc-pagebreak", ROLE_SEPARATOR);
+      testRole("doc-pagelist", ROLE_NAVIGATION);
+      testRole("doc-part", ROLE_LANDMARK);
+      testRole("doc-preface", ROLE_LANDMARK);
+      testRole("doc-prologue", ROLE_LANDMARK);
+      testRole("doc-pullquote", ROLE_SECTION);
+      testRole("doc-qna", ROLE_SECTION);
+      testRole("doc-subtitle", ROLE_HEADING);
+      testRole("doc-tip", ROLE_NOTE);
+      testRole("doc-toc", ROLE_NAVIGATION);
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1343537"
+     title="implement ARIA DPUB extension">
+    Bug 1343537
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+  <div id="doc-abstract" role="doc-abstract">abstract</div>
+  <div id="doc-acknowledgments" role="doc-acknowledgments">acknowledgments</div>
+  <div id="doc-afterword" role="doc-afterword">afterword</div>
+  <div id="doc-appendix" role="doc-appendix">appendix</div>
+  <div id="doc-backlink" role="doc-backlink">backlink</div>
+  <div id="doc-biblioentry" role="doc-biblioentry">biblioentry</div>
+  <div id="doc-bibliography" role="doc-bibliography">bibliography</div>
+  <div id="doc-biblioref" role="doc-biblioref">biblioref</div>
+  <div id="doc-chapter" role="doc-chapter">chapter</div>
+  <div id="doc-colophon" role="doc-colophon">colophon</div>
+  <div id="doc-conclusion" role="doc-conclusion">conclusion</div>
+  <div id="doc-cover" role="doc-cover">cover</div>
+  <div id="doc-credit" role="doc-credit">credit</div>
+  <div id="doc-credits" role="doc-credits">credits</div>
+  <div id="doc-dedication" role="doc-dedication">dedication</div>
+  <div id="doc-endnote" role="doc-endnote">endnote</div>
+  <div id="doc-endnotes" role="doc-endnotes">endnotes</div>
+  <div id="doc-epigraph" role="doc-epigraph">epigraph</div>
+  <div id="doc-epilogue" role="doc-epilogue">epilogue</div>
+  <div id="doc-errata" role="doc-errata">errata</div>
+  <div id="doc-example" role="doc-example">example</div>
+  <div id="doc-footnote" role="doc-footnote">footnote</div>
+  <div id="doc-foreword" role="doc-foreword">foreword</div>
+  <div id="doc-glossary" role="doc-glossary">glossary</div>
+  <div id="doc-glossref" role="doc-glossref">glossref</div>
+  <div id="doc-index" role="doc-index">index</div>
+  <div id="doc-introduction" role="doc-introduction">introduction</div>
+  <div id="doc-noteref" role="doc-noteref">noteref</div>
+  <div id="doc-notice" role="doc-notice">notice</div>
+  <div id="doc-pagebreak" role="doc-pagebreak">pagebreak</div>
+  <div id="doc-pagelist" role="doc-pagelist">pagelist</div>
+  <div id="doc-part" role="doc-part">part</div>
+  <div id="doc-preface" role="doc-preface">preface</div>
+  <div id="doc-prologue" role="doc-prologue">prologue</div>
+  <div id="doc-pullquote" role="doc-pullquote">pullquote</div>
+  <div id="doc-qna" role="doc-qna">qna</div>
+  <div id="doc-subtitle" role="doc-subtitle">subtitle</div>
+  <div id="doc-tip" role="doc-tip">tip</div>
+  <div id="doc-toc" role="doc-toc">toc</div>
+</body>
+</html>
