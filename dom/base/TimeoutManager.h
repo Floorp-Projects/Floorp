@@ -137,6 +137,9 @@ private:
   bool
   IsInvalidFiringId(uint32_t aFiringId) const;
 
+  TimeDuration
+  MinSchedulingDelay() const;
+
 private:
   struct Timeouts {
     explicit Timeouts(const TimeoutManager& aManager)
