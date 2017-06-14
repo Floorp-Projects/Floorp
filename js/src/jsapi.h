@@ -1494,9 +1494,10 @@ JS_InitStandardClasses(JSContext* cx, JS::Handle<JSObject*> obj);
  * as usual for bool result-typed API entry points.
  *
  * This API can be called directly from a global object class's resolve op,
- * to define standard classes lazily.  The class's enumerate op should call
- * JS_EnumerateStandardClasses(cx, obj), to define eagerly during for..in
- * loops any classes not yet resolved lazily.
+ * to define standard classes lazily. The class should either have an enumerate
+ * hook that calls JS_EnumerateStandardClasses, or a newEnumerate hook that
+ * calls JS_NewEnumerateStandardClasses. newEnumerate is preferred because it's
+ * faster (does not define all standard classes).
  */
 extern JS_PUBLIC_API(bool)
 JS_ResolveStandardClass(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* resolved);
@@ -1506,6 +1507,10 @@ JS_MayResolveStandardClass(const JSAtomState& names, jsid id, JSObject* maybeObj
 
 extern JS_PUBLIC_API(bool)
 JS_EnumerateStandardClasses(JSContext* cx, JS::HandleObject obj);
+
+extern JS_PUBLIC_API(bool)
+JS_NewEnumerateStandardClasses(JSContext* cx, JS::HandleObject obj, JS::AutoIdVector& properties,
+                               bool enumerableOnly);
 
 extern JS_PUBLIC_API(bool)
 JS_GetClassObject(JSContext* cx, JSProtoKey key, JS::MutableHandle<JSObject*> objp);
