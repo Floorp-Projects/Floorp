@@ -2026,12 +2026,11 @@ Console::StartTimer(JSContext* aCx, const JS::Value& aName,
 
   aTimerLabel = label;
 
-  DOMHighResTimeStamp entry = 0;
-  if (mTimerRegistry.Get(label, &entry)) {
+  auto entry = mTimerRegistry.LookupForAdd(label);
+  if (entry) {
     return eTimerAlreadyExists;
   }
-
-  mTimerRegistry.Put(label, aTimestamp);
+  entry.OrInsert([&aTimestamp](){ return aTimestamp; });
 
   *aTimerValue = aTimestamp;
   return eTimerDone;
@@ -2084,11 +2083,17 @@ Console::StopTimer(JSContext* aCx, const JS::Value& aName,
   aTimerLabel = key;
 
   DOMHighResTimeStamp entry = 0;
-  if (NS_WARN_IF(!mTimerRegistry.Get(key, &entry))) {
+  bool found = false;
+  mTimerRegistry.LookupRemoveIf(key,
+    [&found, &entry] (const DOMHighResTimeStamp& aValue) {
+      entry = aValue;
+      found = true;
+      return true;  // remove it
+    });
+
+  if (NS_WARN_IF(!found)) {
     return eTimerDoesntExist;
   }
-
-  mTimerRegistry.Remove(key);
 
   *aTimerDuration = aTimestamp - entry;
   return eTimerDone;
