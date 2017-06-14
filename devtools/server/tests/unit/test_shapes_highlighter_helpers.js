@@ -12,7 +12,8 @@ const {
   coordToPercent,
   evalCalcExpression,
   shapeModeToCssPropertyName,
-  getCirclePath
+  getCirclePath,
+  getUnit
 } = require("devtools/server/actors/highlighters/shapes");
 
 function run_test() {
@@ -21,6 +22,7 @@ function run_test() {
   test_eval_calc_expression();
   test_shape_mode_to_css_property_name();
   test_get_circle_path();
+  test_get_unit();
   run_next_test();
 }
 
@@ -32,7 +34,7 @@ function test_split_coords() {
   }, {
     desc: "splitCoords for coord pair with calc()",
     expr: "calc(50px + 20%) 30%",
-    expected: ["calc(50px+20%)", "30%"]
+    expected: ["calc(50px\u00a0+\u00a020%)", "30%"]
   }];
 
   for (let { desc, expr, expected } of tests) {
@@ -123,5 +125,43 @@ function test_get_circle_path() {
 
   for (let { desc, cx, cy, width, height, zoom, expected } of tests) {
     equal(getCirclePath(cx, cy, width, height, zoom), expected, desc);
+  }
+}
+
+function test_get_unit() {
+  const tests = [{
+    desc: "getUnit with %",
+    expr: "30%", expected: "%"
+  }, {
+    desc: "getUnit with px",
+    expr: "400px", expected: "px"
+  }, {
+    desc: "getUnit with em",
+    expr: "4em", expected: "em"
+  }, {
+    desc: "getUnit with 0",
+    expr: "0", expected: "px"
+  }, {
+    desc: "getUnit with 0%",
+    expr: "0%", expected: "px"
+  }, {
+    desc: "getUnit with no unit",
+    expr: "30", expected: "px"
+  }, {
+    desc: "getUnit with calc",
+    expr: "calc(30px + 5%)", expected: "px"
+  }, {
+    desc: "getUnit with var",
+    expr: "var(--variable)", expected: "px"
+  }, {
+    desc: "getUnit with closest-side",
+    expr: "closest-side", expected: "px"
+  }, {
+    desc: "getUnit with farthest-side",
+    expr: "farthest-side", expected: "px"
+  }];
+
+  for (let { desc, expr, expected } of tests) {
+    equal(getUnit(expr), expected, desc);
   }
 }
