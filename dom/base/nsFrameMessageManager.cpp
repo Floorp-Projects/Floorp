@@ -37,6 +37,9 @@
 #include "mozilla/ScriptPreloader.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/DOMPrefs.h"
+#include "mozilla/dom/ChildProcessMessageManager.h"
+#include "mozilla/dom/ChromeMessageBroadcaster.h"
+#include "mozilla/dom/ChromeMessageSender.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/ContentParent.h"
@@ -71,33 +74,20 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::ipc;
 
-nsFrameMessageManager::nsFrameMessageManager(mozilla::dom::ipc::MessageManagerCallback* aCallback,
-                                             nsFrameMessageManager* aParentManager,
-                                             /* mozilla::dom::ipc::MessageManagerFlags */ uint32_t aFlags)
- : mChrome(!!(aFlags & mozilla::dom::ipc::MM_CHROME)),
-   mGlobal(!!(aFlags & mozilla::dom::ipc::MM_GLOBAL)),
-   mIsProcessManager(!!(aFlags & mozilla::dom::ipc::MM_PROCESSMANAGER)),
-   mIsBroadcaster(!!(aFlags & mozilla::dom::ipc::MM_BROADCASTER)),
-   mOwnsCallback(!!(aFlags & mozilla::dom::ipc::MM_OWNSCALLBACK)),
+nsFrameMessageManager::nsFrameMessageManager(MessageManagerCallback* aCallback,
+                                             MessageManagerFlags aFlags)
+ : mChrome(aFlags & MessageManagerFlags::MM_CHROME),
+   mGlobal(aFlags & MessageManagerFlags::MM_GLOBAL),
+   mIsProcessManager(aFlags & MessageManagerFlags::MM_PROCESSMANAGER),
+   mIsBroadcaster(aFlags & MessageManagerFlags::MM_BROADCASTER),
+   mOwnsCallback(aFlags & MessageManagerFlags::MM_OWNSCALLBACK),
   mHandlingMessage(false),
   mClosed(false),
   mDisconnected(false),
-  mCallback(aCallback),
-  mParentManager(aParentManager)
+  mCallback(aCallback)
 {
-  NS_ASSERTION(mChrome || !aParentManager, "Should not set parent manager!");
   NS_ASSERTION(!mIsBroadcaster || !mCallback,
                "Broadcasters cannot have callbacks!");
-  if (mIsProcessManager && (!mChrome || IsBroadcaster())) {
-    mozilla::HoldJSObjects(this);
-  }
-  // This is a bit hackish. When parent manager is global, we want
-  // to attach the message manager to it immediately.
-  // Is it just the frame message manager which waits until the
-  // content process is running.
-  if (mParentManager && (mCallback || IsBroadcaster())) {
-    mParentManager->AddChildManager(this);
-  }
   if (mOwnsCallback) {
     mOwnedCallback = aCallback;
   }
@@ -105,9 +95,6 @@ nsFrameMessageManager::nsFrameMessageManager(mozilla::dom::ipc::MessageManagerCa
 
 nsFrameMessageManager::~nsFrameMessageManager()
 {
-  if (mIsProcessManager && (!mChrome || IsBroadcaster())) {
-    mozilla::DropJSObjects(this);
-  }
   for (int32_t i = mChildManagers.Count(); i > 0; --i) {
     static_cast<nsFrameMessageManager*>(mChildManagers[i - 1])->
       Disconnect(false);
@@ -138,7 +125,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFrameMessageManager)
     }
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildManagers)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParentManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsFrameMessageManager)
@@ -152,7 +138,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFrameMessageManager)
       Disconnect(false);
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChildManagers)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParentManager)
   tmp->mInitialProcessData.setNull();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -606,7 +591,6 @@ nsFrameMessageManager::SendMessage(const nsAString& aMessageName,
 
   NS_ASSERTION(!IsGlobal(), "Should not call SendSyncMessage in chrome");
   NS_ASSERTION(!IsBroadcaster(), "Should not call SendSyncMessage in chrome");
-  NS_ASSERTION(!mParentManager, "Should not have parent manager in content!");
 
   aRetval.setUndefined();
   NS_ENSURE_TRUE(mCallback, NS_ERROR_NOT_INITIALIZED);
@@ -1123,7 +1107,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
     }
   }
 
-  RefPtr<nsFrameMessageManager> kungFuDeathGrip = mParentManager;
+  RefPtr<nsFrameMessageManager> kungFuDeathGrip = GetParentManager();
   if (kungFuDeathGrip) {
     return kungFuDeathGrip->ReceiveMessage(aTarget, aTargetFrameLoader,
                                            aTargetClosed, aMessage,
@@ -1153,8 +1137,9 @@ nsFrameMessageManager::LoadPendingScripts(nsFrameMessageManager* aManager,
   // In that case we want to load the pending scripts from all parent
   // message managers in the hierarchy. Process the parent first so
   // that pending scripts higher up in the hierarchy are loaded before others.
-  if (aManager->mParentManager) {
-    LoadPendingScripts(aManager->mParentManager, aChildMM);
+  nsFrameMessageManager* parentManager = aManager->GetParentManager();
+  if (parentManager) {
+    LoadPendingScripts(parentManager, aChildMM);
   }
 
   for (uint32_t i = 0; i < aManager->mPendingScripts.Length(); ++i) {
@@ -1185,37 +1170,6 @@ nsFrameMessageManager::SetCallback(MessageManagerCallback* aCallback)
 }
 
 void
-nsFrameMessageManager::InitWithCallback(MessageManagerCallback* aCallback)
-{
-  if (mCallback) {
-    // Initialization should only happen once.
-    return;
-  }
-
-  SetCallback(aCallback);
-
-  // First load parent scripts by adding this to parent manager.
-  if (mParentManager) {
-    mParentManager->AddChildManager(this);
-  }
-
-  for (uint32_t i = 0; i < mPendingScripts.Length(); ++i) {
-    LoadFrameScript(mPendingScripts[i], false, mPendingScriptsGlobalStates[i]);
-  }
-}
-
-void
-nsFrameMessageManager::RemoveFromParent()
-{
-  if (mParentManager) {
-    mParentManager->RemoveChildManager(this);
-  }
-  mParentManager = nullptr;
-  mCallback = nullptr;
-  mOwnedCallback = nullptr;
-}
-
-void
 nsFrameMessageManager::Close()
 {
   if (!mClosed) {
@@ -1243,11 +1197,10 @@ nsFrameMessageManager::Disconnect(bool aRemoveFromParent)
                             "message-manager-disconnect", nullptr);
     }
   }
-  if (mParentManager && aRemoveFromParent) {
-    mParentManager->RemoveChildManager(this);
-  }
+
+  ClearParentManager(aRemoveFromParent);
+
   mDisconnected = true;
-  mParentManager = nullptr;
   if (!mHandlingMessage) {
     mListeners.Clear();
   }
@@ -1484,9 +1437,8 @@ NS_NewGlobalMessageManager(nsIMessageBroadcaster** aResult)
 {
   NS_ENSURE_TRUE(XRE_IsParentProcess(),
                  NS_ERROR_NOT_AVAILABLE);
-  RefPtr<nsFrameMessageManager> mm = new nsFrameMessageManager(nullptr,
-                                                                 nullptr,
-                                                                 MM_CHROME | MM_GLOBAL | MM_BROADCASTER);
+  RefPtr<nsFrameMessageManager> mm =
+    new ChromeMessageBroadcaster(MessageManagerFlags::MM_GLOBAL);
   RegisterStrongMemoryReporter(new MessageManagerReporter());
   mm.forget(aResult);
   return NS_OK;
@@ -1747,7 +1699,7 @@ nsMessageManagerScriptExecutor::MarkScopesForCC()
 
 NS_IMPL_ISUPPORTS(nsScriptCacheCleaner, nsIObserver)
 
-nsFrameMessageManager* nsFrameMessageManager::sChildProcessManager = nullptr;
+ChildProcessMessageManager* nsFrameMessageManager::sChildProcessManager = nullptr;
 nsFrameMessageManager* nsFrameMessageManager::sParentProcessManager = nullptr;
 nsFrameMessageManager* nsFrameMessageManager::sSameProcessParentManager = nullptr;
 
@@ -1968,9 +1920,8 @@ NS_NewParentProcessMessageManager(nsIMessageBroadcaster** aResult)
 {
   NS_ASSERTION(!nsFrameMessageManager::sParentProcessManager,
                "Re-creating sParentProcessManager");
-  RefPtr<nsFrameMessageManager> mm = new nsFrameMessageManager(nullptr,
-                                                                 nullptr,
-                                                                 MM_CHROME | MM_PROCESSMANAGER | MM_BROADCASTER);
+  RefPtr<nsFrameMessageManager> mm =
+    new ChromeMessageBroadcaster(MessageManagerFlags::MM_PROCESSMANAGER);
   nsFrameMessageManager::sParentProcessManager = mm;
   nsFrameMessageManager::NewProcessMessageManager(false); // Create same process message manager.
   mm.forget(aResult);
@@ -1978,7 +1929,7 @@ NS_NewParentProcessMessageManager(nsIMessageBroadcaster** aResult)
 }
 
 
-nsFrameMessageManager*
+ChromeMessageSender*
 nsFrameMessageManager::NewProcessMessageManager(bool aIsRemote)
 {
   if (!nsFrameMessageManager::sParentProcessManager) {
@@ -1988,17 +1939,18 @@ nsFrameMessageManager::NewProcessMessageManager(bool aIsRemote)
 
   MOZ_ASSERT(nsFrameMessageManager::sParentProcessManager,
              "parent process manager not created");
-  nsFrameMessageManager* mm;
+  ChromeMessageSender* mm;
   if (aIsRemote) {
     // Callback is set in ContentParent::InitInternal so that the process has
     // already started when we send pending scripts.
-    mm = new nsFrameMessageManager(nullptr,
-                                   nsFrameMessageManager::sParentProcessManager,
-                                   MM_CHROME | MM_PROCESSMANAGER);
+    mm = new ChromeMessageSender(nullptr,
+                                 nsFrameMessageManager::sParentProcessManager,
+                                 MessageManagerFlags::MM_PROCESSMANAGER);
   } else {
-    mm = new nsFrameMessageManager(new SameParentProcessMessageManagerCallback(),
-                                   nsFrameMessageManager::sParentProcessManager,
-                                   MM_CHROME | MM_PROCESSMANAGER | MM_OWNSCALLBACK);
+    mm = new ChromeMessageSender(new SameParentProcessMessageManagerCallback(),
+                                 nsFrameMessageManager::sParentProcessManager,
+                                 MessageManagerFlags::MM_PROCESSMANAGER |
+                                 MessageManagerFlags::MM_OWNSCALLBACK);
     sSameProcessParentManager = mm;
   }
   return mm;
@@ -2017,8 +1969,7 @@ NS_NewChildProcessMessageManager(nsISyncMessageSender** aResult)
     cb = new ChildProcessMessageManagerCallback();
     RegisterStrongMemoryReporter(new MessageManagerReporter());
   }
-  auto* mm = new nsFrameMessageManager(cb, nullptr,
-                                       MM_PROCESSMANAGER | MM_OWNSCALLBACK);
+  auto* mm = new ChildProcessMessageManager(cb);
   nsFrameMessageManager::SetChildProcessManager(mm);
   RefPtr<ProcessGlobal> global = new ProcessGlobal(mm);
   NS_ENSURE_TRUE(global->Init(), NS_ERROR_UNEXPECTED);
