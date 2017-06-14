@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ContentBridgeParent.h"
+#include "mozilla/dom/ChromeMessageSender.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "nsXULAppAPI.h"
