@@ -91,7 +91,7 @@ public:
 
   // Handles calling OnStart/Stop if there are errors during diversion.
   // Called asynchronously from FailDiversion.
-  void NotifyDiversionFailed(nsresult aErrorCode, bool aSkipResume = true);
+  void NotifyDiversionFailed(nsresult aErrorCode);
 
   // Forwarded to nsHttpChannel::SetApplyConversion.
   void SetApplyConversion(bool aApplyConversion) {
@@ -206,7 +206,7 @@ protected:
   MOZ_MUST_USE nsresult ResumeForDiversion();
 
   // Asynchronously calls NotifyDiversionFailed.
-  void FailDiversion(nsresult aErrorCode, bool aSkipResume = true);
+  void FailDiversion(nsresult aErrorCode);
 
   friend class HttpChannelParentListener;
   RefPtr<mozilla::dom::TabParent> mTabParent;
