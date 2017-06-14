@@ -219,6 +219,26 @@ EvalScript(JSContext* cx,
 
         nsCString uriStr;
         if (preloadCache && NS_SUCCEEDED(uri->GetSpec(uriStr))) {
+            // Note that, when called during startup, this will keep the
+            // original JSScript object alive for an indefinite amount of time.
+            // This has the side-effect of keeping the global that the script
+            // was compiled for alive, too.
+            //
+            // For most startups, the global in question will be the
+            // CompilationScope, since we pre-compile any scripts that were
+            // needed during the last startup in that scope. But for startups
+            // when a non-cached script is used (e.g., after add-on
+            // installation), this may be a Sandbox global, which may be
+            // nuked but held alive by the JSScript.
+            //
+            // In general, this isn't a problem, since add-on Sandboxes which
+            // use the script preloader are not destroyed until add-on shutdown,
+            // and when add-ons are uninstalled or upgraded, the preloader cache
+            // is immediately flushed after shutdown. But it's possible to
+            // disable and reenable an add-on without uninstalling it, leading
+            // to cached scripts being held alive, and tied to nuked Sandbox
+            // globals. Given the unusual circumstances required to trigger
+            // this, it's not a major concern. But it should be kept in mind.
             ScriptPreloader::GetSingleton().NoteScript(uriStr, cachePath, script);
         }
 
