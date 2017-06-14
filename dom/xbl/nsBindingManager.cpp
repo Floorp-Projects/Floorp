@@ -351,11 +351,15 @@ nsBindingManager::AddToAttachedQueue(nsXBLBinding* aBinding)
 void
 nsBindingManager::PostProcessAttachedQueueEvent()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mDocument) {
+    return;
+  }
   mProcessAttachedQueueEvent =
     NewRunnableMethod("nsBindingManager::DoProcessAttachedQueue",
                       this, &nsBindingManager::DoProcessAttachedQueue);
-  nsresult rv = NS_DispatchToCurrentThread(mProcessAttachedQueueEvent);
-  if (NS_SUCCEEDED(rv) && mDocument) {
+  nsresult rv = mDocument->EventTargetFor(TaskCategory::Other)->Dispatch(do_AddRef(mProcessAttachedQueueEvent));
+  if (NS_SUCCEEDED(rv)) {
     mDocument->BlockOnload();
   }
 }
