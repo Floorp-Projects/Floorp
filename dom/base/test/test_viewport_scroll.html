@@ -20,9 +20,9 @@ var quirks = document.getElementById("quirks");
 var standards = document.getElementById("standards");
 var xml = document.getElementById("xml");
 
-quirks.src = "data:text/html,<html><body style='height:2000px; width:2000px;'>";
-standards.src = "data:text/html,<!DOCTYPE HTML><html><body style='height:2000px; width:2000px;'>";
-xml.src = "data:text/xml,<?xml-stylesheet href='data:text/css,html { display:block; height:2000px; width:2000px; }'?><foo><html></html></foo>";
+quirks.src = "file_viewport_scroll_quirks.html";
+standards.srcdoc = "<!DOCTYPE HTML><html><body style='height:2000px; width:2000px;'>";
+xml.src = "file_viewport_scroll_xml.xml";
 
 function subtest(winProp, elemProp, win, correctElement, elemToSet, otherElem1, otherElem2) {
   win.scrollTo(50, 50);
