@@ -9,6 +9,7 @@
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "WebSocketChannelChild.h"
+#include "nsContentUtils.h"
 #include "nsITabChild.h"
 #include "nsNetUtil.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
@@ -51,7 +52,8 @@ NS_INTERFACE_MAP_BEGIN(WebSocketChannelChild)
 NS_INTERFACE_MAP_END
 
 WebSocketChannelChild::WebSocketChannelChild(bool aEncrypted)
- : mIPCState(Closed)
+ : NeckoTargetHolder(nullptr)
+ , mIPCState(Closed)
  , mMutex("WebSocketChannelChild::mMutex")
 {
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");
@@ -107,9 +109,11 @@ WebSocketChannelChild::MaybeReleaseIPCObject()
   }
 
   if (!NS_IsMainThread()) {
+    nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
     MOZ_ALWAYS_SUCCEEDS(
-      NS_DispatchToMainThread(NewRunnableMethod(this,
-                                                &WebSocketChannelChild::MaybeReleaseIPCObject)));
+      target->Dispatch(NewRunnableMethod(this,
+                                         &WebSocketChannelChild::MaybeReleaseIPCObject),
+                       NS_DISPATCH_NORMAL));
     return;
   }
 
@@ -496,6 +500,17 @@ WebSocketChannelChild::OnServerClose(const uint16_t& aCode,
   }
 }
 
+void
+WebSocketChannelChild::SetupNeckoTarget()
+{
+  mNeckoTarget = nsContentUtils::GetEventTargetByLoadInfo(mLoadInfo, TaskCategory::Network);
+  if (!mNeckoTarget) {
+    return;
+  }
+
+  gNeckoChild->SetEventTargetForActor(this, mNeckoTarget);
+}
+
 NS_IMETHODIMP
 WebSocketChannelChild::AsyncOpen(nsIURI *aURI,
                                  const nsACString &aOrigin,
@@ -554,6 +569,9 @@ WebSocketChannelChild::AsyncOpen(nsIURI *aURI,
     transportProvider = ipcChild;
   }
 
+  // This must be called before sending constructor message.
+  SetupNeckoTarget();
+
   gNeckoChild->SendPWebSocketConstructor(this, tabChild,
                                          IPC::SerializedLoadContext(this),
                                          mSerial);
@@ -607,7 +625,9 @@ WebSocketChannelChild::Close(uint16_t code, const nsACString & reason)
 {
   if (!NS_IsMainThread()) {
     MOZ_RELEASE_ASSERT(mTargetThread->IsOnCurrentThread());
-    return NS_DispatchToMainThread(new CloseEvent(this, code, reason));
+    nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
+    return target->Dispatch(new CloseEvent(this, code, reason),
+                            NS_DISPATCH_NORMAL);
   }
   LOG(("WebSocketChannelChild::Close() %p\n", this));
 
@@ -659,7 +679,9 @@ WebSocketChannelChild::SendMsg(const nsACString &aMsg)
 {
   if (!NS_IsMainThread()) {
     MOZ_RELEASE_ASSERT(IsOnTargetThread());
-    return NS_DispatchToMainThread(new MsgEvent(this, aMsg, false));
+    nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
+    return target->Dispatch(new MsgEvent(this, aMsg, false),
+                            NS_DISPATCH_NORMAL);
   }
   LOG(("WebSocketChannelChild::SendMsg() %p\n", this));
 
@@ -682,7 +704,9 @@ WebSocketChannelChild::SendBinaryMsg(const nsACString &aMsg)
 {
   if (!NS_IsMainThread()) {
     MOZ_RELEASE_ASSERT(IsOnTargetThread());
-    return NS_DispatchToMainThread(new MsgEvent(this, aMsg, true));
+    nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
+    return target->Dispatch(new MsgEvent(this, aMsg, true),
+                            NS_DISPATCH_NORMAL);
   }
   LOG(("WebSocketChannelChild::SendBinaryMsg() %p\n", this));
 
@@ -735,7 +759,9 @@ WebSocketChannelChild::SendBinaryStream(nsIInputStream *aStream,
 {
   if (!NS_IsMainThread()) {
     MOZ_RELEASE_ASSERT(mTargetThread->IsOnCurrentThread());
-    return NS_DispatchToMainThread(new BinaryStreamEvent(this, aStream, aLength));
+    nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
+    return target->Dispatch(new BinaryStreamEvent(this, aStream, aLength),
+                            NS_DISPATCH_NORMAL);
   }
 
   LOG(("WebSocketChannelChild::SendBinaryStream() %p\n", this));
