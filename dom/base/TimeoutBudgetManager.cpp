@@ -33,7 +33,7 @@ TimeoutBudgetManager::StopRecording()
   mStart = TimeStamp();
 }
 
-void
+TimeDuration
 TimeoutBudgetManager::RecordExecution(const TimeStamp& aNow,
                                       const Timeout* aTimeout,
                                       bool aIsBackground)
@@ -41,7 +41,7 @@ TimeoutBudgetManager::RecordExecution(const TimeStamp& aNow,
   if (!mStart) {
     // If we've started a sync operation mStart might be null, in
     // which case we should not record this piece of execution.
-    return;
+    return TimeDuration();
   }
 
   TimeDuration duration = aNow - mStart;
@@ -59,6 +59,8 @@ TimeoutBudgetManager::RecordExecution(const TimeStamp& aNow,
       mTelemetryData.mForegroundNonTracking += duration;
     }
   }
+
+  return duration;
 }
 
 void
