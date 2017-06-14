@@ -77,6 +77,10 @@ public:
   void Freeze();
   void Thaw();
 
+  // This should be called by nsGlobalWindow when the window might have moved
+  // to the background or foreground.
+  void UpdateBackgroundState();
+
   // Initialize TimeoutManager before the first time it is accessed.
   static void Initialize();
 

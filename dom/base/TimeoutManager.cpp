@@ -1152,6 +1152,14 @@ TimeoutManager::Thaw()
   });
 }
 
+void
+TimeoutManager::UpdateBackgroundState()
+{
+  if (!IsBackground()) {
+    ResetTimersForThrottleReduction();
+  }
+}
+
 bool
 TimeoutManager::IsTimeoutTracking(uint32_t aTimeoutId)
 {
