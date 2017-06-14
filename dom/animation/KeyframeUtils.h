@@ -158,9 +158,12 @@ public:
    * its subproperties, is animatable.
    *
    * @param aProperty The property to check.
+   * @param aBackend  The style backend, Servo or Gecko, that should determine
+   *                  if the property is animatable or not.
    * @return true if |aProperty| is animatable.
    */
-  static bool IsAnimatableProperty(nsCSSPropertyID aProperty);
+  static bool IsAnimatableProperty(nsCSSPropertyID aProperty,
+                                   StyleBackendType aBackend);
 
   /**
    * Parse a string representing a CSS property value into a
