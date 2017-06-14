@@ -190,25 +190,7 @@ SVGSVGElement::SVGSVGElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-// From NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGSVGElement)
-nsresult
-SVGSVGElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                     bool aPreallocateChildren) const
-{
-  *aResult = nullptr;
-  already_AddRefed<mozilla::dom::NodeInfo> ni = RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
-  SVGSVGElement *it = new SVGSVGElement(ni, NOT_FROM_PARSER);
-
-  nsCOMPtr<nsINode> kungFuDeathGrip = it;
-  nsresult rv1 = it->Init();
-  nsresult rv2 = const_cast<SVGSVGElement*>(this)->CopyInnerTo(it, aPreallocateChildren);
-  if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2)) {
-    kungFuDeathGrip.swap(*aResult);
-  }
-
-  return NS_FAILED(rv1) ? rv1 : rv2;
-}
-
+NS_IMPL_ELEMENT_CLONE_WITH_INIT_AND_PARSER(SVGSVGElement)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGSVGElement methods:
