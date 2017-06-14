@@ -75,8 +75,6 @@ public:
                                 const LayerRect& aScBounds,
                                 const gfx::Matrix4x4& aScTransform,
                                 const gfx::MaybeIntSize& aScaleToSize,
-                                const MaybeLayerRect& aClipRect,
-                                const MaybeImageMask& aMask,
                                 const WrImageRendering& aFilter,
                                 const WrMixBlendMode& aMixBlendMode);
   void ApplyAsyncImages(wr::WebRenderAPI* aApi);
@@ -119,8 +117,6 @@ private:
     LayerRect mScBounds;
     gfx::Matrix4x4 mScTransform;
     gfx::MaybeIntSize mScaleToSize;
-    MaybeLayerRect mClipRect;
-    MaybeImageMask mMask;
     WrImageRendering mFilter;
     WrMixBlendMode mMixBlendMode;
     RefPtr<WebRenderImageHost> mImageHost;

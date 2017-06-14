@@ -501,8 +501,6 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
                                                       op.scBounds(),
                                                       op.scTransform(),
                                                       op.scaleToSize(),
-                                                      op.clipRect(),
-                                                      op.mask(),
                                                       op.filter(),
                                                       op.mixBlendMode());
         break;
