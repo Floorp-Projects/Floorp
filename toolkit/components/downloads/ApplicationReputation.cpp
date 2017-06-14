@@ -1363,9 +1363,6 @@ PendingLookup::SendRemoteQueryInternal()
   rv = sstream->SetData(serialized.c_str(), serialized.length());
   NS_ENSURE_SUCCESS(rv, rv);
 
-
-  nsCOMPtr<nsIInputStream> stream(do_QueryInterface(sstream));
-
   // Set up the channel to transmit the request to the service.
   nsCOMPtr<nsIIOService> ios = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
   rv = ios->NewChannel2(serviceUrl,
@@ -1394,7 +1391,7 @@ PendingLookup::SendRemoteQueryInternal()
   nsCOMPtr<nsIUploadChannel2> uploadChannel = do_QueryInterface(mChannel, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = uploadChannel->ExplicitSetUploadStream(stream,
+  rv = uploadChannel->ExplicitSetUploadStream(sstream,
     NS_LITERAL_CSTRING("application/octet-stream"), serialized.size(),
     NS_LITERAL_CSTRING("POST"), false);
   NS_ENSURE_SUCCESS(rv, rv);

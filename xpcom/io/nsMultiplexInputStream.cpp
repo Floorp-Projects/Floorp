@@ -54,7 +54,6 @@ public:
   NS_DECL_NSIASYNCINPUTSTREAM
 
   void AsyncWaitCompleted();
-  void AsyncWaitCanceled();
 
 private:
   ~nsMultiplexInputStream()
@@ -95,7 +94,7 @@ NS_IMPL_CLASSINFO(nsMultiplexInputStream, nullptr, nsIClassInfo::THREADSAFE,
 
 NS_INTERFACE_MAP_BEGIN(nsMultiplexInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIMultiplexInputStream)
-  NS_INTERFACE_MAP_ENTRY(nsIInputStream)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIInputStream, nsIMultiplexInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream, IsSeekable())
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream,
                                      IsIPCSerializable())
@@ -322,7 +321,7 @@ nsMultiplexInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
 
   nsresult rv = NS_OK;
   ReadSegmentsState state;
-  state.mThisStream = this;
+  state.mThisStream = static_cast<nsIMultiplexInputStream*>(this);
   state.mOffset = 0;
   state.mWriter = aWriter;
   state.mClosure = aClosure;
@@ -702,13 +701,13 @@ nsMultiplexInputStream::CloseWithStatus(nsresult aStatus)
 
 // This class is used to inform nsMultiplexInputStream that it's time to execute
 // the asyncWait callback.
-class AsyncWaitRunnable final : public CancelableRunnable
+class AsyncWaitRunnable final : public Runnable
 {
   RefPtr<nsMultiplexInputStream> mStream;
 
 public:
   explicit AsyncWaitRunnable(nsMultiplexInputStream* aStream)
-    : CancelableRunnable("AsyncWaitRunnable")
+    : Runnable("AsyncWaitRunnable")
     , mStream(aStream)
   {
     MOZ_ASSERT(aStream);
@@ -718,12 +717,6 @@ public:
   Run() override
   {
     mStream->AsyncWaitCompleted();
-    return NS_OK;
-  }
-
-  nsresult Cancel() override
-  {
-    mStream->AsyncWaitCanceled();
     return NS_OK;
   }
 };
@@ -884,21 +877,6 @@ nsMultiplexInputStream::AsyncWaitCompleted()
   callback->OnInputStreamReady(this);
 }
 
-void
-nsMultiplexInputStream::AsyncWaitCanceled()
-{
-  // The event target for our asyncwait decided to not process our event.  Go
-  // ahead and just notify our consumer that they should stop waiting for us,
-  // but that they can't get any data.  Let's hope that our AsyncWaitRunnables
-  // are always canceled on the thread we expect them to run on!  I don't see a
-  // way of checking for that, unfortunately.
-  {
-    MutexAutoLock lock(mLock);
-    mStatus = NS_BINDING_ABORTED;
-  }
-  AsyncWaitCompleted();
-}
-
 nsresult
 nsMultiplexInputStreamConstructor(nsISupports* aOuter,
                                   REFNSIID aIID,
@@ -1042,7 +1020,7 @@ nsMultiplexInputStream::Clone(nsIInputStream** aClone)
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<nsMultiplexInputStream> clone = new nsMultiplexInputStream();
+  nsCOMPtr<nsIMultiplexInputStream> clone = new nsMultiplexInputStream();
 
   nsresult rv;
   uint32_t len = mStreams.Length();

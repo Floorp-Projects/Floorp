@@ -21,11 +21,8 @@ class SnappyUncompressInputStream final : public nsIInputStream
 {
 public:
   // Construct a new blocking stream to uncompress the given base stream.  The
-  // base stream must be readable in its entirety without having to wait for it
-  // to have more data (e.g. must be blocking, or must have all its data
-  // already).  Specifically, the base stream must never return
-  // NS_BASE_STREAM_WOULD_BLOCK when it's read.  The base stream does not have
-  // to be buffered.
+  // base stream must also be blocking.  The base stream does not have to be
+  // buffered.
   explicit SnappyUncompressInputStream(nsIInputStream* aBaseStream);
 
 private:

@@ -85,7 +85,7 @@ MultipartBlobImpl::GetInternalStream(nsIInputStream** aStream,
     }
   }
 
-  CallQueryInterface(stream, aStream);
+  stream.forget(aStream);
 }
 
 already_AddRefed<BlobImpl>

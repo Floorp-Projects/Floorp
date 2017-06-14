@@ -372,7 +372,7 @@ UDPSocket::Send(const StringOrBlobOrArrayBufferOrArrayBufferView& aData,
       return false;
     }
 
-    stream = do_QueryInterface(strStream);
+    stream = strStream;
   }
 
   if (mSocket) {

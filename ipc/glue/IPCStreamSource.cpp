@@ -190,7 +190,7 @@ void
 IPCStreamSource::Start()
 {
   NS_ASSERT_OWNINGTHREAD(IPCStreamSource);
-  DoRead(ReadReason::Starting);
+  DoRead();
 }
 
 void
@@ -201,7 +201,7 @@ IPCStreamSource::StartDestroy()
 }
 
 void
-IPCStreamSource::DoRead(ReadReason aReadReason)
+IPCStreamSource::DoRead()
 {
   NS_ASSERT_OWNINGTHREAD(IPCStreamSource);
   MOZ_ASSERT(mState == eActorConstructed);
@@ -215,15 +215,6 @@ IPCStreamSource::DoRead(ReadReason aReadReason)
   static_assert(kMaxBytesPerMessage <= static_cast<uint64_t>(UINT32_MAX),
                 "kMaxBytesPerMessage must cleanly cast to uint32_t");
 
-  // Per the nsIInputStream API, having 0 bytes available in a stream is
-  // ambiguous.  It could mean "no data yet, but some coming later" or it could
-  // mean "EOF" (end of stream).
-  //
-  // If we're just starting up, we can't distinguish between those two options.
-  // But if we're being notified that an async stream is ready, then the
-  // first Available() call returning 0 should really mean end of stream.
-  // Subsequent Available() calls, after we read some data, could mean anything.
-  bool noDataMeansEOF = (aReadReason == ReadReason::Notified);
   while (true) {
     // It should not be possible to transition to closed state without
     // this loop terminating via a return.
@@ -243,11 +234,7 @@ IPCStreamSource::DoRead(ReadReason aReadReason)
     }
 
     if (available == 0) {
-      if (noDataMeansEOF) {
-        OnEnd(rv);
-      } else {
-        Wait();
-      }
+      Wait();
       return;
     }
 
@@ -260,9 +247,6 @@ IPCStreamSource::DoRead(ReadReason aReadReason)
     rv = mStream->Read(buffer.BeginWriting(), buffer.Length(), &bytesRead);
     MOZ_ASSERT_IF(NS_FAILED(rv), bytesRead == 0);
     buffer.SetLength(bytesRead);
-
-    // After this point, having no data tells us nothing about EOF.
-    noDataMeansEOF = false;
 
     // If we read any data from the stream, send it across.
     if (!buffer.IsEmpty()) {
@@ -307,7 +291,7 @@ IPCStreamSource::OnStreamReady(Callback* aCallback)
   MOZ_ASSERT(aCallback == mCallback);
   mCallback->ClearSource();
   mCallback = nullptr;
-  DoRead(ReadReason::Notified);
+  DoRead();
 }
 
 void

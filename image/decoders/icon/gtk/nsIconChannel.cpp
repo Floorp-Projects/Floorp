@@ -24,7 +24,6 @@
 #include "nsNetUtil.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIStringStream.h"
-#include "nsIInputStream.h"
 #include "nsServiceManagerUtils.h"
 #include "NullPrincipal.h"
 #include "nsIURL.h"
@@ -87,7 +86,7 @@ moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI* aURI,
   NS_ASSERTION(out == buf + buf_size, "size miscalculation");
 
   nsresult rv;
-  nsCOMPtr<nsIStringInputStream> sis =
+  nsCOMPtr<nsIStringInputStream> stream =
     do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv);
 
   // Prevent the leaking of buf
@@ -98,13 +97,11 @@ moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI* aURI,
 
   // stream takes ownership of buf and will free it on destruction.
   // This function cannot fail.
-  rv = sis->AdoptData((char*)buf, buf_size);
+  rv = stream->AdoptData((char*)buf, buf_size);
 
   // If this no longer holds then re-examine buf's lifetime.
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIInputStream> stream(do_QueryInterface(sis));
 
   // nsIconProtocolHandler::NewChannel2 will provide the correct loadInfo for
   // this iconChannel. Use the most restrictive security settings for the
