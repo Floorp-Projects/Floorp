@@ -931,7 +931,7 @@ JS::IsProfilingEnabledForContext(JSContext* cx)
 }
 
 JS_PUBLIC_API(void)
-JS::shadow::RegisterWeakCache(JSRuntime* rt, WeakCache<void*>* cachep)
+JS::shadow::RegisterWeakCache(JSRuntime* rt, detail::WeakCacheBase* cachep)
 {
     rt->registerWeakCache(cachep);
 }

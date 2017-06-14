@@ -1022,7 +1022,7 @@ WasmInstanceObject::create(JSContext* cx,
         return nullptr;
     }
 
-    UniquePtr<WeakScopeMap> scopes = js::MakeUnique<WeakScopeMap>(cx->zone(), ScopeMap());
+    UniquePtr<WeakScopeMap> scopes = js::MakeUnique<WeakScopeMap>(cx->zone());
     if (!scopes || !scopes->init()) {
         ReportOutOfMemory(cx);
         return nullptr;
@@ -1451,7 +1451,7 @@ WasmMemoryObject::WeakInstanceSet*
 WasmMemoryObject::getOrCreateObservers(JSContext* cx)
 {
     if (!hasObservers()) {
-        auto observers = MakeUnique<WeakInstanceSet>(cx->zone(), InstanceSet());
+        auto observers = MakeUnique<WeakInstanceSet>(cx->zone());
         if (!observers || !observers->init()) {
             ReportOutOfMemory(cx);
             return nullptr;
