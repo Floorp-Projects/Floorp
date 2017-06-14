@@ -144,7 +144,7 @@ public:
   void AppendAllChildSheets(nsTArray<StyleSheet*>& aArray);
 
   // style sheet owner info
-  enum DocumentAssociationMode {
+  enum DocumentAssociationMode : uint8_t {
     // OwnedByDocument means mDocument owns us (possibly via a chain of other
     // stylesheets).
     OwnedByDocument,
@@ -337,6 +337,8 @@ protected:
   const StyleBackendType mType;
   bool                  mDisabled;
 
+  bool mDirty; // has been modified
+
   // mDocumentAssociationMode determines whether mDocument directly owns us (in
   // the sense that if it's known-live then we're known-live).  Always
   // NotOwnedByDocument when mDocument is null.
@@ -345,8 +347,6 @@ protected:
   // Core information we get from parsed sheets, which are shared amongst
   // StyleSheet clones.
   StyleSheetInfo* mInner;
-
-  bool mDirty; // has been modified
 
   nsTArray<StyleSetHandle> mStyleSets;
 
