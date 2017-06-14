@@ -30,6 +30,10 @@ let gWhitelist = [{
     type: "single-quote"
   }, {
     file: "phishing-afterload-warning-message.dtd",
+    key: "safeb.palm.advisory.desc",
+    type: "single-quote"
+  }, {
+    file: "phishing-afterload-warning-message.dtd",
     key: "safeb.blocked.malwarePage.shortDesc",
     type: "single-quote"
   }, {
