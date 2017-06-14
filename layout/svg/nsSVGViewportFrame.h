@@ -25,6 +25,7 @@ protected:
   {
   }
 public:
+  NS_DECL_ABSTRACT_FRAME(nsSVGViewportFrame)
 
   virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,
                                      nsIAtom*        aAttribute,
