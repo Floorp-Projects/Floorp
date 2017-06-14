@@ -25,13 +25,13 @@ namespace detail {
 class WeakCacheBase : public mozilla::LinkedListElement<WeakCacheBase>
 {
     WeakCacheBase() = delete;
-    WeakCacheBase(const WeakCacheBase&) = delete;
+    explicit WeakCacheBase(const WeakCacheBase&) = delete;
 
   public:
-    WeakCacheBase(Zone* zone) {
+    explicit WeakCacheBase(Zone* zone) {
         shadow::RegisterWeakCache(zone, this);
     }
-    WeakCacheBase(JSRuntime* rt) {
+    explicit WeakCacheBase(JSRuntime* rt) {
         shadow::RegisterWeakCache(rt, this);
     }
     WeakCacheBase(WeakCacheBase&& other) = default;
@@ -55,11 +55,11 @@ class WeakCache : protected detail::WeakCacheBase,
     using Type = T;
 
     template <typename... Args>
-    WeakCache(Zone* zone, Args&&... args)
+    explicit WeakCache(Zone* zone, Args&&... args)
       : WeakCacheBase(zone), cache(mozilla::Forward<Args>(args)...)
     {}
     template <typename... Args>
-    WeakCache(JSRuntime* rt, Args&&... args)
+    explicit WeakCache(JSRuntime* rt, Args&&... args)
       : WeakCacheBase(rt), cache(mozilla::Forward<Args>(args)...)
     {}
 
