@@ -46,6 +46,9 @@ using namespace mozilla::gfx;
 // an insignificant dot
 static const int32_t kMinBidiIndicatorPixels = 2;
 
+// The default caret blinking rate (in ms of blinking interval)
+static const uint32_t kDefaultCaretBlinkRate = 500;
+
 /**
  * Find the first frame in an in-order traversal of the frame subtree rooted
  * at aFrame which is either a text frame logically at the end of a line,
@@ -120,6 +123,7 @@ IsBidiUI()
 nsCaret::nsCaret()
 : mOverrideOffset(0)
 , mBlinkCount(-1)
+, mBlinkRate(0)
 , mHideCount(0)
 , mIsBlinkOn(false)
 , mVisible(false)
@@ -636,6 +640,15 @@ void nsCaret::ResetBlinking()
     return;
   }
 
+  uint32_t blinkRate = static_cast<uint32_t>(
+    LookAndFeel::GetInt(LookAndFeel::eIntID_CaretBlinkTime,
+                        kDefaultCaretBlinkRate));
+  if (mBlinkRate == blinkRate) {
+    // If the rate hasn't changed, then there is nothing to do.
+    return;
+  }
+  mBlinkRate = blinkRate;
+
   if (mBlinkTimer) {
     mBlinkTimer->Cancel();
   } else {
@@ -645,8 +658,6 @@ void nsCaret::ResetBlinking()
       return;
   }
 
-  uint32_t blinkRate = static_cast<uint32_t>(
-    LookAndFeel::GetInt(LookAndFeel::eIntID_CaretBlinkTime, 500));
   if (blinkRate > 0) {
     mBlinkCount = Preferences::GetInt("ui.caretBlinkCount", -1);
     mBlinkTimer->InitWithNamedFuncCallback(CaretBlinkCallback, this, blinkRate,
