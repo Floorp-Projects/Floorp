@@ -20,9 +20,12 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
                                              const StackingContextHelper& aStackingContext)
   : mLayer(aLayer)
   , mBuilder(&aBuilder)
+  , mPushedLayerLocalClip(false)
 {
   if (!mLayer->WrManager()->AsyncPanZoomEnabled()) {
-    // If APZ is disabled then we don't need to push the scrolling clips
+    // If APZ is disabled then we don't need to push the scrolling clips. We
+    // still want to push the layer's local clip though.
+    PushLayerLocalClip(aStackingContext);
     return;
   }
 
@@ -86,15 +89,40 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
     // Default to 0 if there is no ancestor, because 0 refers to the root scrollframe.
     mBuilder->PushClipAndScrollInfo(scrollsWith.valueOr(0), clipId.ptrOr(nullptr));
   }
+
+  PushLayerLocalClip(aStackingContext);
+}
+
+void
+ScrollingLayersHelper::PushLayerLocalClip(const StackingContextHelper& aStackingContext)
+{
+  Layer* layer = mLayer->GetLayer();
+  Maybe<ParentLayerRect> clip;
+  if (const Maybe<ParentLayerIntRect>& rect = layer->GetClipRect()) {
+    clip = Some(IntRectToRect(rect.ref()));
+  } else if (layer->GetMaskLayer()) {
+    // this layer has a mask, but no clip rect. so let's use the transformed
+    // visible bounds as the clip rect.
+    clip = Some(layer->GetLocalTransformTyped().TransformBounds(mLayer->Bounds()));
+  }
+  if (clip) {
+    Maybe<WrImageMask> mask = mLayer->BuildWrMaskLayer(nullptr);
+    LayerRect clipRect = ViewAs<LayerPixel>(clip.ref(),
+        PixelCastJustification::MovingDownToChildren);
+    mBuilder->PushClip(aStackingContext.ToRelativeWrRect(clipRect), mask.ptrOr(nullptr));
+    mPushedLayerLocalClip = true;
+  }
 }
 
 ScrollingLayersHelper::~ScrollingLayersHelper()
 {
+  Layer* layer = mLayer->GetLayer();
+  if (mPushedLayerLocalClip) {
+    mBuilder->PopClip();
+  }
   if (!mLayer->WrManager()->AsyncPanZoomEnabled()) {
     return;
   }
-
-  Layer* layer = mLayer->GetLayer();
   if (layer->GetIsFixedPosition()) {
     mBuilder->PopClipAndScrollInfo();
   }

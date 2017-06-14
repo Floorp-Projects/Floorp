@@ -44,9 +44,6 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   WrImageMask* imageMask = mask.ptrOr(nullptr);
 
   ParentLayerRect clip = GetLocalTransformTyped().TransformBounds(Bounds());
-  if (GetClipRect()) {
-    clip = ParentLayerRect(GetClipRect().ref());
-  }
 
   // As with WebRenderTextLayer, I'm not 100% sure this is correct, but I
   // think it is. Because we don't push a stacking context for this layer,
