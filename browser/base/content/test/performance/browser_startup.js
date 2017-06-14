@@ -105,7 +105,7 @@ function test() {
     return;
   }
 
-  let data = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject.data;
+  let data = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject.data.code;
   // Keep only the file name for components, as the path is an absolute file
   // URL rather than a resource:// URL like for modules.
   for (let phase in data) {
