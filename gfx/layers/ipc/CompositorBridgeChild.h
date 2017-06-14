@@ -132,8 +132,6 @@ public:
                                        wr::MaybeExternalImageId& aExternalImageId,
                                        nsIEventTarget* aTarget) override;
 
-  virtual void HandleFatalError(const char* aName, const char* aMsg) const override;
-
   /**
    * Request that the parent tell us when graphics are ready on GPU.
    * When we get that message, we bounce it to the TabParent via
@@ -219,8 +217,6 @@ public:
   PAPZChild* AllocPAPZChild(const uint64_t& aLayersId) override;
   bool DeallocPAPZChild(PAPZChild* aActor) override;
 
-  void ProcessingError(Result aCode, const char* aReason) override;
-
   void WillEndTransaction();
 
   PWebRenderBridgeChild* AllocPWebRenderBridgeChild(const wr::PipelineId& aPipelineId,
@@ -266,9 +262,6 @@ private:
   mozilla::ipc::IPCResult RecvObserveLayerUpdate(const uint64_t& aLayersId,
                                                  const uint64_t& aEpoch,
                                                  const bool& aActive) override;
-
-  already_AddRefed<nsIEventTarget>
-  GetSpecificMessageEventTarget(const Message& aMsg) override;
 
   uint64_t GetNextResourceId();
 

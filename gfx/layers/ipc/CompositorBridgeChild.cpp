@@ -907,27 +907,6 @@ CompositorBridgeChild::RecvObserveLayerUpdate(const uint64_t& aLayersId,
   return IPC_OK();
 }
 
-already_AddRefed<nsIEventTarget>
-CompositorBridgeChild::GetSpecificMessageEventTarget(const Message& aMsg)
-{
-  if (aMsg.type() != PCompositorBridge::Msg_DidComposite__ID) {
-    return nullptr;
-  }
-
-  uint64_t layersId;
-  PickleIterator iter(aMsg);
-  if (!IPC::ReadParam(&aMsg, &iter, &layersId)) {
-    return nullptr;
-  }
-
-  TabChild* tabChild = TabChild::GetFrom(layersId);
-  if (!tabChild) {
-    return nullptr;
-  }
-
-  return do_AddRef(tabChild->TabGroup()->EventTargetFor(TaskCategory::Other));
-}
-
 void
 CompositorBridgeChild::HoldUntilCompositableRefReleasedIfNecessary(TextureClient* aClient)
 {
@@ -1132,23 +1111,9 @@ CompositorBridgeChild::DeallocPAPZCTreeManagerChild(PAPZCTreeManagerChild* aActo
 }
 
 void
-CompositorBridgeChild::ProcessingError(Result aCode, const char* aReason)
-{
-  if (aCode != MsgDropped) {
-    gfxDevCrash(gfx::LogReason::ProcessingError) << "Processing error in CompositorBridgeChild: " << int(aCode);
-  }
-}
-
-void
 CompositorBridgeChild::WillEndTransaction()
 {
   ResetShmemCounter();
-}
-
-void
-CompositorBridgeChild::HandleFatalError(const char* aName, const char* aMsg) const
-{
-  dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
 }
 
 PWebRenderBridgeChild*
