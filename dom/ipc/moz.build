@@ -163,6 +163,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2'):
 if CONFIG['MOZ_TOOLKIT_SEARCH']:
     DEFINES['MOZ_TOOLKIT_SEARCH'] = True
 
+if CONFIG['MOZ_CODE_COVERAGE']:
+    DEFINES['MOZ_CODE_COVERAGE'] = True
+
 JAR_MANIFESTS += ['jar.mn']
 
 BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
