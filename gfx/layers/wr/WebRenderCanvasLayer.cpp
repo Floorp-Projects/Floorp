@@ -69,11 +69,7 @@ WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   LayerRect rect(0, 0, mBounds.width, mBounds.height);
   DumpLayerInfo("CanvasLayer", rect);
 
-  LayerRect clipRect = ClipRect().valueOr(rect);
-  Maybe<WrImageMask> mask = BuildWrMaskLayer(&sc);
-  WrClipRegionToken clip = aBuilder.PushClipRegion(
-      sc.ToRelativeWrRect(clipRect),
-      mask.ptrOr(nullptr));
+  WrClipRegionToken clip = aBuilder.PushClipRegion(sc.ToRelativeWrRect(rect));
 
   wr::ImageRendering filter = wr::ToImageRendering(mSamplingFilter);
 
