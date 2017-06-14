@@ -13,6 +13,7 @@
 #include <limits>
 
 #include "webrtc/base/common.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/estimators/nada.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/estimators/remb.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/estimators/send_side.h"
@@ -67,7 +68,7 @@ class NullBweSender : public BweSender {
   int64_t TimeUntilNextProcess() override {
     return std::numeric_limits<int64_t>::max();
   }
-  int Process() override { return 0; }
+  void Process() override {}
 
  private:
   RTC_DISALLOW_COPY_AND_ASSIGN(NullBweSender);
@@ -89,8 +90,8 @@ BweSender* CreateBweSender(BandwidthEstimatorType estimator,
   switch (estimator) {
     case kRembEstimator:
       return new RembBweSender(kbps, observer, clock);
-    case kFullSendSideEstimator:
-      return new FullBweSender(kbps, observer, clock);
+    case kSendSideEstimator:
+      return new SendSideBweSender(kbps, observer, clock);
     case kNadaEstimator:
       return new NadaBweSender(kbps, observer, clock);
     case kTcpEstimator:
@@ -108,7 +109,7 @@ BweReceiver* CreateBweReceiver(BandwidthEstimatorType type,
   switch (type) {
     case kRembEstimator:
       return new RembReceiver(flow_id, plot);
-    case kFullSendSideEstimator:
+    case kSendSideEstimator:
       return new SendSideBweReceiver(flow_id);
     case kNadaEstimator:
       return new NadaBweReceiver(flow_id);

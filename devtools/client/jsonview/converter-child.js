@@ -12,8 +12,10 @@ const Services = require("Services");
 
 loader.lazyRequireGetter(this, "NetworkHelper",
                                "devtools/shared/webconsole/network-helper");
-loader.lazyRequireGetter(this, "JsonViewUtils",
-                               "devtools/client/jsonview/utils");
+loader.lazyGetter(this, "debug", function () {
+  let {AppConstants} = require("resource://gre/modules/AppConstants.jsm");
+  return !!(AppConstants.DEBUG || AppConstants.DEBUG_JS_MODULES);
+});
 
 const childProcessMessageManager =
   Cc["@mozilla.org/childprocessmessagemanager;1"]
@@ -138,6 +140,12 @@ function fixSave(request) {
 
 // Exports variables that will be accessed by the non-privileged scripts.
 function exportData(win, request) {
+  let data = Cu.createObjectIn(win, {
+    defineAs: "JSONView"
+  });
+
+  data.debug = debug;
+
   let Locale = {
     $STR: key => {
       try {
@@ -148,7 +156,7 @@ function exportData(win, request) {
       }
     }
   };
-  JsonViewUtils.exportIntoContentScope(win, Locale, "Locale");
+  data.Locale = Cu.cloneInto(Locale, win, {cloneFunctions: true});
 
   let headers = {
     response: [],
@@ -168,7 +176,7 @@ function exportData(win, request) {
       }
     });
   }
-  JsonViewUtils.exportIntoContentScope(win, headers, "headers");
+  data.headers = Cu.cloneInto(headers, win);
 }
 
 // Serializes a qualifiedName and an optional set of attributes into an HTML
@@ -217,7 +225,7 @@ function initialHTML(doc) {
   return "<!DOCTYPE html>\n" +
     startTag("html", {
       "platform": os,
-      "class": "theme-" + JsonViewUtils.getCurrentTheme(),
+      "class": "theme-" + Services.prefs.getCharPref("devtools.theme"),
       "dir": Services.locale.isAppLocaleRTL ? "rtl" : "ltr"
     }) +
     head.outerHTML +

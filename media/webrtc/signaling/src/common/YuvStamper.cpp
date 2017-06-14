@@ -9,6 +9,7 @@
 #endif
 #include <string.h>
 
+#include "plarena.h"
 #include "nspr.h"
 #include "YuvStamper.h"
 #include "mozilla/Sprintf.h"

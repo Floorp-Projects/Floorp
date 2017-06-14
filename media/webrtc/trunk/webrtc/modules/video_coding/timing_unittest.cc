@@ -12,14 +12,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "testing/gtest/include/gtest/gtest.h"
-
 #include "webrtc/modules/video_coding/include/video_coding.h"
 #include "webrtc/modules/video_coding/internal_defines.h"
-#include "webrtc/modules/video_coding/timing.h"
 #include "webrtc/modules/video_coding/test/test_util.h"
+#include "webrtc/modules/video_coding/timing.h"
 #include "webrtc/system_wrappers/include/clock.h"
 #include "webrtc/system_wrappers/include/trace.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
@@ -29,7 +28,7 @@ TEST(ReceiverTiming, Tests) {
   VCMTiming timing(&clock);
   uint32_t waitTime = 0;
   uint32_t jitterDelayMs = 0;
-  uint32_t maxDecodeTimeMs = 0;
+  uint32_t requiredDecodeTimeMs = 0;
   uint32_t timeStamp = 0;
 
   timing.Reset();
@@ -94,7 +93,7 @@ TEST(ReceiverTiming, Tests) {
     clock.AdvanceTimeMilliseconds(1000 / 25 - 10);
     timing.IncomingTimestamp(timeStamp, clock.TimeInMilliseconds());
   }
-  maxDecodeTimeMs = 10;
+  requiredDecodeTimeMs = 10;
   timing.SetJitterDelay(jitterDelayMs);
   clock.AdvanceTimeMilliseconds(1000);
   timeStamp += 90000;
@@ -104,7 +103,7 @@ TEST(ReceiverTiming, Tests) {
       clock.TimeInMilliseconds());
   EXPECT_EQ(waitTime, jitterDelayMs);
 
-  uint32_t minTotalDelayMs = 200;
+  int minTotalDelayMs = 200;
   timing.set_min_playout_delay(minTotalDelayMs);
   clock.AdvanceTimeMilliseconds(5000);
   timeStamp += 5 * 90000;
@@ -116,7 +115,7 @@ TEST(ReceiverTiming, Tests) {
       clock.TimeInMilliseconds());
   // We should at least have minTotalDelayMs - decodeTime (10) - renderTime
   // (10) to wait.
-  EXPECT_EQ(waitTime, minTotalDelayMs - maxDecodeTimeMs - kRenderDelayMs);
+  EXPECT_EQ(waitTime, minTotalDelayMs - requiredDecodeTimeMs - kRenderDelayMs);
   // The total video delay should be equal to the min total delay.
   EXPECT_EQ(minTotalDelayMs, timing.TargetVideoDelay());
 

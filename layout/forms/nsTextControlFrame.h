@@ -44,11 +44,11 @@ public:
     return do_QueryFrame(PrincipalChildList().FirstChild());
   }
 
-  virtual nscoord GetMinISize(nsRenderingContext* aRenderingContext) override;
-  virtual nscoord GetPrefISize(nsRenderingContext* aRenderingContext) override;
+  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
   virtual mozilla::LogicalSize
-  ComputeAutoSize(nsRenderingContext*         aRenderingContext,
+  ComputeAutoSize(gfxContext*                 aRenderingContext,
                   mozilla::WritingMode        aWM,
                   const mozilla::LogicalSize& aCBSize,
                   nscoord                     aAvailableISize,
@@ -300,7 +300,7 @@ protected:
   // Compute our intrinsic size.  This does not include any borders, paddings,
   // etc.  Just the size of our actual area for the text (and the scrollbars,
   // for <textarea>).
-  mozilla::LogicalSize CalcIntrinsicSize(nsRenderingContext* aRenderingContext,
+  mozilla::LogicalSize CalcIntrinsicSize(gfxContext* aRenderingContext,
                                          mozilla::WritingMode aWM,
                                          float aFontSizeInflation) const;
 

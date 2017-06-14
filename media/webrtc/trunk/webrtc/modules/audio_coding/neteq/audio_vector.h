@@ -12,9 +12,9 @@
 #define WEBRTC_MODULES_AUDIO_CODING_NETEQ_AUDIO_VECTOR_H_
 
 #include <string.h>  // Access to size_t.
+#include <memory>
 
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -37,6 +37,9 @@ class AudioVector {
   // |copy_to| will be an exact replica of this object.
   virtual void CopyTo(AudioVector* copy_to) const;
 
+  // Copies |length| values from |position| in this vector to |copy_to|.
+  virtual void CopyTo(size_t length, size_t position, int16_t* copy_to) const;
+
   // Prepends the contents of AudioVector |prepend_this| to this object. The
   // length of this object is increased with the length of |prepend_this|.
   virtual void PushFront(const AudioVector& prepend_this);
@@ -47,6 +50,12 @@ class AudioVector {
 
   // Same as PushFront but will append to the end of this object.
   virtual void PushBack(const AudioVector& append_this);
+
+  // Appends a segment of |append_this| to the end of this object. The segment
+  // starts from |position| and has |length| samples.
+  virtual void PushBack(const AudioVector& append_this,
+                        size_t length,
+                        size_t position);
 
   // Same as PushFront but will append to the end of this object.
   virtual void PushBack(const int16_t* append_this, size_t length);
@@ -70,6 +79,15 @@ class AudioVector {
 
   // Like InsertAt, but inserts |length| zero elements at |position|.
   virtual void InsertZerosAt(size_t length, size_t position);
+
+  // Overwrites |length| elements of this AudioVector starting from |position|
+  // with first values in |AudioVector|. The definition of |position|
+  // is the same as for InsertAt(). If |length| and |position| are selected
+  // such that the new data extends beyond the end of the current AudioVector,
+  // the vector is extended to accommodate the new data.
+  virtual void OverwriteAt(const AudioVector& insert_this,
+                           size_t length,
+                           size_t position);
 
   // Overwrites |length| elements of this AudioVector with values taken from the
   // array |insert_this|, starting at |position|. The definition of |position|
@@ -100,10 +118,26 @@ class AudioVector {
 
   void Reserve(size_t n);
 
-  rtc::scoped_ptr<int16_t[]> array_;
-  size_t first_free_ix_;  // The first index after the last sample in array_.
-                          // Note that this index may point outside of array_.
+  void InsertByPushBack(const int16_t* insert_this, size_t length,
+                        size_t position);
+
+  void InsertByPushFront(const int16_t* insert_this, size_t length,
+                         size_t position);
+
+  void InsertZerosByPushBack(size_t length, size_t position);
+
+  void InsertZerosByPushFront(size_t length, size_t position);
+
+  std::unique_ptr<int16_t[]> array_;
+
   size_t capacity_;  // Allocated number of samples in the array.
+
+  // The index of the first sample in |array_|, except when
+  // |begin_index_ == end_index_|, which indicates an empty buffer.
+  size_t begin_index_;
+
+  // The index of the sample after the last sample in |array_|.
+  size_t end_index_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(AudioVector);
 };

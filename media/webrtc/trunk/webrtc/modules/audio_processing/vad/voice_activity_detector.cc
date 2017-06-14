@@ -31,13 +31,15 @@ VoiceActivityDetector::VoiceActivityDetector()
       standalone_vad_(StandaloneVad::Create()) {
 }
 
+VoiceActivityDetector::~VoiceActivityDetector() = default;
+
 // Because ISAC has a different chunk length, it updates
 // |chunkwise_voice_probabilities_| and |chunkwise_rms_| when there is new data.
 // Otherwise it clears them.
 void VoiceActivityDetector::ProcessChunk(const int16_t* audio,
                                          size_t length,
                                          int sample_rate_hz) {
-  RTC_DCHECK_EQ(static_cast<int>(length), sample_rate_hz / 100);
+  RTC_DCHECK_EQ(length, sample_rate_hz / 100);
   RTC_DCHECK_LE(length, kMaxLength);
   // Resample to the required rate.
   const int16_t* resampled_ptr = audio;

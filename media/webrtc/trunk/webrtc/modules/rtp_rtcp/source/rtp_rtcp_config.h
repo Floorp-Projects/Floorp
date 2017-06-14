@@ -40,8 +40,6 @@ enum { BW_HISTORY_SIZE = 35 };
 #define MIN_AUDIO_BW_MANAGEMENT_BITRATE 6
 #define MIN_VIDEO_BW_MANAGEMENT_BITRATE 30
 
-enum { DTMF_OUTBAND_MAX = 20 };
-
 enum { RTP_MAX_BURST_SLEEP_TIME = 500 };
 enum { RTP_AUDIO_LEVEL_UNIQUE_ID = 0xbede };
 enum { RTP_MAX_PACKETS_PER_FRAME = 512 };  // must be multiple of 32

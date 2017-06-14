@@ -19,6 +19,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-s
 XPCOMUtils.defineLazyGetter(this, "WeaveService", () =>
   Cc["@mozilla.org/weave/service;1"].getService().wrappedJSObject
 );
+XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
+                                  "resource://gre/modules/ContextualIdentityService.jsm");
 
 // lazy module getters
 
@@ -601,7 +603,6 @@ BrowserGlue.prototype = {
   // runs on startup, before the first command line handler is invoked
   // (i.e. before the first window is opened)
   _finalUIStartup: function BG__finalUIStartup() {
-    this._sanitizer.onStartup();
     // check if we're in safe mode
     if (Services.appinfo.inSafeMode) {
       Services.ww.openWindow(null, "chrome://browser/content/safeMode.xul",
@@ -616,13 +617,6 @@ BrowserGlue.prototype = {
     this._migrateUI();
 
     listeners.init();
-
-    PageThumbs.init();
-
-    DirectoryLinksProvider.init();
-    NewTabUtils.init();
-    NewTabUtils.links.addProvider(DirectoryLinksProvider);
-    AboutNewTab.init();
 
     SessionStore.init();
     BrowserUsageTelemetry.init();
@@ -974,6 +968,13 @@ BrowserGlue.prototype = {
       WeaveService.init();
     }
 
+    PageThumbs.init();
+
+    DirectoryLinksProvider.init();
+    NewTabUtils.init();
+    NewTabUtils.links.addProvider(DirectoryLinksProvider);
+    AboutNewTab.init();
+
     this._firstWindowTelemetry(aWindow);
     this._firstWindowLoaded();
 
@@ -1180,6 +1181,12 @@ BrowserGlue.prototype = {
       }
     }
 
+    // Let's load the contextual identities.
+    Services.tm.mainThread.idleDispatch(() => {
+      ContextualIdentityService.load();
+    });
+
+    this._sanitizer.onStartup();
     E10SAccessibilityCheck.onWindowsRestored();
   },
 

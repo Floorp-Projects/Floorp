@@ -67,8 +67,6 @@
             '$(NSPR_CFLAGS)',
           ],
           'conditions': [
-            ['OS!="android"', {
-            }],
             ['include_v4l2_video_capture==1', {
               'sources': [
                 'linux/device_info_linux.cc',
@@ -77,28 +75,6 @@
                 'linux/video_capture_linux.h',
               ],
             }],
-            ['OS=="mac"', {
-              'sources': [
-                'mac/avfoundation/video_capture_avfoundation.h',
-                'mac/avfoundation/video_capture_avfoundation.mm',
-                'mac/avfoundation/video_capture_avfoundation_info.h',
-                'mac/avfoundation/video_capture_avfoundation_info.mm',
-                'mac/avfoundation/video_capture_avfoundation_info_objc.h',
-                'mac/avfoundation/video_capture_avfoundation_info_objc.mm',
-                'mac/avfoundation/video_capture_avfoundation_objc.h',
-                'mac/avfoundation/video_capture_avfoundation_objc.mm',
-                'mac/avfoundation/video_capture_avfoundation_utility.h',
-                'mac/video_capture_mac.mm',
-              ],
-              'link_settings': {
-                'xcode_settings': {
-                  'OTHER_LDFLAGS': [
-                    '-framework Cocoa',
-                    '-framework CoreVideo',
-                  ],
-                },
-              },
-            }],  # mac
             ['OS=="win"', {
               'conditions': [
                 ['build_with_mozilla==0', {
@@ -121,7 +97,7 @@
                 'windows/video_capture_factory_windows.cc',
                 'windows/video_capture_mf.cc',
                 'windows/video_capture_mf.h',
-		'windows/BasePin.cpp',
+                'windows/BasePin.cpp',
                 'windows/BaseFilter.cpp',
                 'windows/BaseInputPin.cpp',
                 'windows/MediaType.cpp',
@@ -157,16 +133,16 @@
                 'android/video_capture_android.h',
               ],
             }],  # android
-            ['OS=="ios"', {
+            ['OS=="ios" or OS=="mac"', {
               'sources': [
-                'ios/device_info_ios.h',
-                'ios/device_info_ios.mm',
-                'ios/device_info_ios_objc.h',
-                'ios/device_info_ios_objc.mm',
-                'ios/rtc_video_capture_ios_objc.h',
-                'ios/rtc_video_capture_ios_objc.mm',
-                'ios/video_capture_ios.h',
-                'ios/video_capture_ios.mm',
+                'objc/device_info.h',
+                'objc/device_info.mm',
+                'objc/device_info_objc.h',
+                'objc/device_info_objc.mm',
+                'objc/rtc_video_capture_objc.h',
+                'objc/rtc_video_capture_objc.mm',
+                'objc/video_capture.h',
+                'objc/video_capture.mm',
               ],
               'xcode_settings': {
                 'CLANG_ENABLE_OBJC_ARC': 'YES',
@@ -180,6 +156,14 @@
                     '-framework AVFoundation',
                     '-framework CoreMedia',
                     '-framework CoreVideo',
+                  ],
+                },
+              },
+            }],  # ios
+            ['OS=="ios"', {
+              'all_dependent_settings': {
+                'xcode_settings': {
+                  'OTHER_LDFLAGS': [
                     '-framework UIKit',
                   ],
                 },
@@ -189,64 +173,6 @@
         },
       ],
     }], # build_with_chromium==0
-    ['include_tests==1 and OS!="android"', {
-      'targets': [
-        {
-          'target_name': 'video_capture_tests',
-          'type': '<(gtest_target_type)',
-          'dependencies': [
-            'video_capture_module',
-            'video_capture_module_internal_impl',
-            'webrtc_utility',
-            '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
-            '<(DEPTH)/testing/gtest.gyp:gtest',
-          ],
-          'sources': [
-            'test/video_capture_unittest.cc',
-            'test/video_capture_main_mac.mm',
-          ],
-          'conditions': [
-            ['OS!="win" and OS!="android"', {
-              'cflags': [
-                '-Wno-write-strings',
-              ],
-              'ldflags': [
-                '-lpthread -lm',
-              ],
-            }],
-            ['include_v4l2_video_capture==1', {
-              'libraries': [
-                '-lXext',
-                '-lX11',
-              ],
-            }],
-            ['OS=="linux"', {
-              'libraries': [
-                '-lrt',
-              ],
-            }],
-            ['OS=="mac"', {
-              'dependencies': [
-                # Link with a special main for mac so we can use the webcam.
-                '<(webrtc_root)/test/test.gyp:test_support_main_threaded_mac',
-              ],
-              'xcode_settings': {
-                # TODO(andrew): CoreAudio and AudioToolbox shouldn't be needed.
-                'OTHER_LDFLAGS': [
-                  '-framework Foundation -framework AppKit -framework Cocoa -framework OpenGL -framework CoreVideo -framework CoreAudio -framework AudioToolbox',
-                ],
-              },
-            }], # OS=="mac"
-            ['OS!="mac"', {
-              'dependencies': [
-                # Otherwise, use the regular main.
-                '<(webrtc_root)/test/test.gyp:test_support_main',
-              ],
-            }], # OS!="mac"
-          ] # conditions
-        },
-      ], # targets
-    }],
   ],
 }
 

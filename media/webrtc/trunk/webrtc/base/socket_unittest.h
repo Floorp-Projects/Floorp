@@ -57,10 +57,16 @@ class SocketTest : public testing::Test {
   void TestUdpReadyToSendIPv6();
   void TestGetSetOptionsIPv4();
   void TestGetSetOptionsIPv6();
+  void TestSocketRecvTimestampIPv4();
+  void TestSocketRecvTimestampIPv6();
 
   static const int kTimeout = 5000;  // ms
   const IPAddress kIPv4Loopback;
   const IPAddress kIPv6Loopback;
+
+ protected:
+  void TcpInternal(const IPAddress& loopback, size_t data_size,
+      ptrdiff_t max_send_size);
 
  private:
   void ConnectInternal(const IPAddress& loopback);
@@ -76,11 +82,11 @@ class SocketTest : public testing::Test {
   void ServerCloseInternal(const IPAddress& loopback);
   void CloseInClosedCallbackInternal(const IPAddress& loopback);
   void SocketServerWaitInternal(const IPAddress& loopback);
-  void TcpInternal(const IPAddress& loopback);
   void SingleFlowControlCallbackInternal(const IPAddress& loopback);
   void UdpInternal(const IPAddress& loopback);
   void UdpReadyToSend(const IPAddress& loopback);
   void GetSetOptionsInternal(const IPAddress& loopback);
+  void SocketRecvTimestamp(const IPAddress& loopback);
 
   SocketServer* ss_;
 };

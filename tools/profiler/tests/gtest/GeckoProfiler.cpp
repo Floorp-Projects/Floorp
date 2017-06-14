@@ -23,7 +23,7 @@
 #include <string.h>
 
 // Note: profiler_init() has already been called in XRE_main(), so we can't
-// test it here. Likewise for profiler_shutdown(), and GeckoProfilerInitRAII
+// test it here. Likewise for profiler_shutdown(), and AutoProfilerInit
 // (which is just an RAII wrapper for profiler_init() and profiler_shutdown()).
 
 using namespace mozilla;
@@ -375,7 +375,7 @@ TEST(GeckoProfiler, Markers)
   profiler_tracing("B", "A", Move(bt), TRACING_EVENT);
 
   {
-    GeckoProfilerTracingRAII tracing("C", "A");
+    AutoProfilerTracing tracing("C", "A");
 
     profiler_log("X");  // Just a specialized form of profiler_tracing().
   }
@@ -583,10 +583,10 @@ TEST(GeckoProfiler, PseudoStack)
   }
 
 #if defined(MOZ_GECKO_PROFILER)
-  ProfilerStackFrameRAII raii1("A", nullptr, 888,
-                               js::ProfileEntry::Category::STORAGE);
-  ProfilerStackFrameRAII raii2("A", dynamic.get(), 888,
-                               js::ProfileEntry::Category::NETWORK);
+  AutoProfilerLabel label1("A", nullptr, 888,
+                           js::ProfileEntry::Category::STORAGE);
+  AutoProfilerLabel label2("A", dynamic.get(), 888,
+                           js::ProfileEntry::Category::NETWORK);
   ASSERT_TRUE(profiler_get_backtrace());
 #endif
 

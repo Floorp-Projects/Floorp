@@ -10,16 +10,20 @@
 
 #include <string.h>
 
-#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
-#include "webrtc/modules/video_processing/include/video_processing.h"
-#include "webrtc/modules/video_processing/test/video_processing_unittest.h"
+#include <memory>
+
+#include "webrtc/common_video/include/i420_buffer_pool.h"
 #include "webrtc/modules/video_processing/video_denoiser.h"
+#include "webrtc/test/gtest.h"
+#include "webrtc/test/frame_utils.h"
+#include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
 
-TEST_F(VideoProcessingTest, CopyMem) {
-  rtc::scoped_ptr<DenoiserFilter> df_c(DenoiserFilter::Create(false));
-  rtc::scoped_ptr<DenoiserFilter> df_sse_neon(DenoiserFilter::Create(true));
+TEST(VideoDenoiserTest, CopyMem) {
+  std::unique_ptr<DenoiserFilter> df_c(DenoiserFilter::Create(false, nullptr));
+  std::unique_ptr<DenoiserFilter> df_sse_neon(
+      DenoiserFilter::Create(true, nullptr));
   uint8_t src[16 * 16], dst[16 * 16];
   for (int i = 0; i < 16; ++i) {
     for (int j = 0; j < 16; ++j) {
@@ -27,26 +31,19 @@ TEST_F(VideoProcessingTest, CopyMem) {
     }
   }
 
-  memset(dst, 0, 8 * 8);
-  df_c->CopyMem8x8(src, 8, dst, 8);
-  EXPECT_EQ(0, memcmp(src, dst, 8 * 8));
-
   memset(dst, 0, 16 * 16);
   df_c->CopyMem16x16(src, 16, dst, 16);
   EXPECT_EQ(0, memcmp(src, dst, 16 * 16));
-
-  memset(dst, 0, 8 * 8);
-  df_sse_neon->CopyMem16x16(src, 8, dst, 8);
-  EXPECT_EQ(0, memcmp(src, dst, 8 * 8));
 
   memset(dst, 0, 16 * 16);
   df_sse_neon->CopyMem16x16(src, 16, dst, 16);
   EXPECT_EQ(0, memcmp(src, dst, 16 * 16));
 }
 
-TEST_F(VideoProcessingTest, Variance) {
-  rtc::scoped_ptr<DenoiserFilter> df_c(DenoiserFilter::Create(false));
-  rtc::scoped_ptr<DenoiserFilter> df_sse_neon(DenoiserFilter::Create(true));
+TEST(VideoDenoiserTest, Variance) {
+  std::unique_ptr<DenoiserFilter> df_c(DenoiserFilter::Create(false, nullptr));
+  std::unique_ptr<DenoiserFilter> df_sse_neon(
+      DenoiserFilter::Create(true, nullptr));
   uint8_t src[16 * 16], dst[16 * 16];
   uint32_t sum = 0, sse = 0, var;
   for (int i = 0; i < 16; ++i) {
@@ -67,52 +64,51 @@ TEST_F(VideoProcessingTest, Variance) {
   EXPECT_EQ(var, df_sse_neon->Variance16x8(src, 16, dst, 16, &sse));
 }
 
-TEST_F(VideoProcessingTest, MbDenoise) {
-  rtc::scoped_ptr<DenoiserFilter> df_c(DenoiserFilter::Create(false));
-  rtc::scoped_ptr<DenoiserFilter> df_sse_neon(DenoiserFilter::Create(true));
-  uint8_t running_src[16 * 16], src[16 * 16], dst[16 * 16], dst_ref[16 * 16];
+TEST(VideoDenoiserTest, MbDenoise) {
+  std::unique_ptr<DenoiserFilter> df_c(DenoiserFilter::Create(false, nullptr));
+  std::unique_ptr<DenoiserFilter> df_sse_neon(
+      DenoiserFilter::Create(true, nullptr));
+  uint8_t running_src[16 * 16], src[16 * 16];
+  uint8_t dst[16 * 16], dst_sse_neon[16 * 16];
 
   // Test case: |diff| <= |3 + shift_inc1|
   for (int i = 0; i < 16; ++i) {
     for (int j = 0; j < 16; ++j) {
       running_src[i * 16 + j] = i * 11 + j;
       src[i * 16 + j] = i * 11 + j + 2;
-      dst_ref[i * 16 + j] = running_src[i * 16 + j];
     }
   }
   memset(dst, 0, 16 * 16);
   df_c->MbDenoise(running_src, 16, dst, 16, src, 16, 0, 1);
-  EXPECT_EQ(0, memcmp(dst, dst_ref, 16 * 16));
+  memset(dst_sse_neon, 0, 16 * 16);
+  df_sse_neon->MbDenoise(running_src, 16, dst_sse_neon, 16, src, 16, 0, 1);
+  EXPECT_EQ(0, memcmp(dst, dst_sse_neon, 16 * 16));
 
   // Test case: |diff| >= |4 + shift_inc1|
   for (int i = 0; i < 16; ++i) {
     for (int j = 0; j < 16; ++j) {
       running_src[i * 16 + j] = i * 11 + j;
       src[i * 16 + j] = i * 11 + j + 5;
-      dst_ref[i * 16 + j] = src[i * 16 + j] - 2;
     }
   }
   memset(dst, 0, 16 * 16);
   df_c->MbDenoise(running_src, 16, dst, 16, src, 16, 0, 1);
-  EXPECT_EQ(0, memcmp(dst, dst_ref, 16 * 16));
-  memset(dst, 0, 16 * 16);
-  df_sse_neon->MbDenoise(running_src, 16, dst, 16, src, 16, 0, 1);
-  EXPECT_EQ(0, memcmp(dst, dst_ref, 16 * 16));
+  memset(dst_sse_neon, 0, 16 * 16);
+  df_sse_neon->MbDenoise(running_src, 16, dst_sse_neon, 16, src, 16, 0, 1);
+  EXPECT_EQ(0, memcmp(dst, dst_sse_neon, 16 * 16));
 
   // Test case: |diff| >= 8
   for (int i = 0; i < 16; ++i) {
     for (int j = 0; j < 16; ++j) {
       running_src[i * 16 + j] = i * 11 + j;
       src[i * 16 + j] = i * 11 + j + 8;
-      dst_ref[i * 16 + j] = src[i * 16 + j] - 6;
     }
   }
   memset(dst, 0, 16 * 16);
   df_c->MbDenoise(running_src, 16, dst, 16, src, 16, 0, 1);
-  EXPECT_EQ(0, memcmp(dst, dst_ref, 16 * 16));
-  memset(dst, 0, 16 * 16);
-  df_sse_neon->MbDenoise(running_src, 16, dst, 16, src, 16, 0, 1);
-  EXPECT_EQ(0, memcmp(dst, dst_ref, 16 * 16));
+  memset(dst_sse_neon, 0, 16 * 16);
+  df_sse_neon->MbDenoise(running_src, 16, dst_sse_neon, 16, src, 16, 0, 1);
+  EXPECT_EQ(0, memcmp(dst, dst_sse_neon, 16 * 16));
 
   // Test case: |diff| > 15
   for (int i = 0; i < 16; ++i) {
@@ -129,28 +125,37 @@ TEST_F(VideoProcessingTest, MbDenoise) {
   EXPECT_EQ(COPY_BLOCK, decision);
 }
 
-TEST_F(VideoProcessingTest, Denoiser) {
+TEST(VideoDenoiserTest, Denoiser) {
+  const int kWidth = 352;
+  const int kHeight = 288;
+
+  const std::string video_file =
+      webrtc::test::ResourcePath("foreman_cif", "yuv");
+  FILE* source_file = fopen(video_file.c_str(), "rb");
+  ASSERT_TRUE(source_file != nullptr)
+      << "Cannot open source file: " << video_file;
+
   // Create pure C denoiser.
   VideoDenoiser denoiser_c(false);
   // Create SSE or NEON denoiser.
   VideoDenoiser denoiser_sse_neon(true);
-  VideoFrame denoised_frame_c;
-  VideoFrame denoised_frame_sse_neon;
 
-  rtc::scoped_ptr<uint8_t[]> video_buffer(new uint8_t[frame_length_]);
-  while (fread(video_buffer.get(), 1, frame_length_, source_file_) ==
-         frame_length_) {
-    // Using ConvertToI420 to add stride to the image.
-    EXPECT_EQ(0, ConvertToI420(kI420, video_buffer.get(), 0, 0, width_, height_,
-                               0, kVideoRotation_0, &video_frame_));
+  for (;;) {
+    rtc::scoped_refptr<VideoFrameBuffer> video_frame_buffer(
+        test::ReadI420Buffer(kWidth, kHeight, source_file));
+    if (!video_frame_buffer)
+      break;
 
-    denoiser_c.DenoiseFrame(video_frame_, &denoised_frame_c);
-    denoiser_sse_neon.DenoiseFrame(video_frame_, &denoised_frame_sse_neon);
+    rtc::scoped_refptr<VideoFrameBuffer> denoised_frame_c(
+        denoiser_c.DenoiseFrame(video_frame_buffer, false));
+    rtc::scoped_refptr<VideoFrameBuffer> denoised_frame_sse_neon(
+        denoiser_sse_neon.DenoiseFrame(video_frame_buffer, false));
 
     // Denoising results should be the same for C and SSE/NEON denoiser.
-    ASSERT_EQ(true, denoised_frame_c.EqualsFrame(denoised_frame_sse_neon));
+    ASSERT_TRUE(
+        test::FrameBufsEqual(denoised_frame_c, denoised_frame_sse_neon));
   }
-  ASSERT_NE(0, feof(source_file_)) << "Error reading source file";
+  ASSERT_NE(0, feof(source_file)) << "Error reading source file";
 }
 
 }  // namespace webrtc

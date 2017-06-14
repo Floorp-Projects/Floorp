@@ -12,6 +12,8 @@
 #define WEBRTC_BASE_HTTPSERVER_H__
 
 #include <map>
+#include <memory>
+
 #include "webrtc/base/httpbase.h"
 
 namespace rtc {
@@ -127,7 +129,7 @@ private:
   void OnConnectionClosed(HttpServer* server, int connection_id,
                           StreamInterface* stream);
 
-  scoped_ptr<AsyncSocket> listener_;
+  std::unique_ptr<AsyncSocket> listener_;
 };
 
 //////////////////////////////////////////////////////////////////////

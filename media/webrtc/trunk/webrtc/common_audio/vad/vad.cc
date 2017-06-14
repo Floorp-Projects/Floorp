@@ -10,6 +10,8 @@
 
 #include "webrtc/common_audio/vad/include/vad.h"
 
+#include <memory>
+
 #include "webrtc/base/checks.h"
 
 namespace webrtc {
@@ -35,7 +37,7 @@ class VadImpl final : public Vad {
       case 1:
         return kActive;
       default:
-        RTC_DCHECK(false) << "WebRtcVad_Process returned an error.";
+        RTC_NOTREACHED() << "WebRtcVad_Process returned an error.";
         return kError;
     }
   }
@@ -56,8 +58,8 @@ class VadImpl final : public Vad {
 
 }  // namespace
 
-rtc::scoped_ptr<Vad> CreateVad(Vad::Aggressiveness aggressiveness) {
-  return rtc::scoped_ptr<Vad>(new VadImpl(aggressiveness));
+std::unique_ptr<Vad> CreateVad(Vad::Aggressiveness aggressiveness) {
+  return std::unique_ptr<Vad>(new VadImpl(aggressiveness));
 }
 
 }  // namespace webrtc

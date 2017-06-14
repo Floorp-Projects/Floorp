@@ -11,6 +11,7 @@
 
 #include <inttypes.h>
 
+#include <string>
 #include <vector>
 
 #include "webrtc/base/checks.h"
@@ -18,8 +19,13 @@
 #include "webrtc/base/event.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/platform_thread.h"
+#include "webrtc/base/stringutils.h"
 #include "webrtc/base/timeutils.h"
 #include "webrtc/base/trace_event.h"
+
+// This is a guesstimate that should be enough in most cases.
+static const size_t kEventLoggerArgsStrBufferInitialSize = 256;
+static const size_t kTraceArgBufferLength = 32;
 
 namespace webrtc {
 
@@ -90,12 +96,32 @@ class EventLogger final {
   void AddTraceEvent(const char* name,
                      const unsigned char* category_enabled,
                      char phase,
+                     int num_args,
+                     const char** arg_names,
+                     const unsigned char* arg_types,
+                     const unsigned long long* arg_values,
                      uint64_t timestamp,
                      int pid,
                      rtc::PlatformThreadId thread_id) {
+    std::vector<TraceArg> args(num_args);
+    for (int i = 0; i < num_args; ++i) {
+      TraceArg& arg = args[i];
+      arg.name = arg_names[i];
+      arg.type = arg_types[i];
+      arg.value.as_uint = arg_values[i];
+
+      // Value is a pointer to a temporary string, so we have to make a copy.
+      if (arg.type == TRACE_VALUE_TYPE_COPY_STRING) {
+        // Space for the string and for the terminating null character.
+        size_t str_length = strlen(arg.value.as_string) + 1;
+        char* str_copy = new char[str_length];
+        memcpy(str_copy, arg.value.as_string, str_length);
+        arg.value.as_string = str_copy;
+      }
+    }
     rtc::CritScope lock(&crit_);
     trace_events_.push_back(
-        {name, category_enabled, phase, timestamp, 1, thread_id});
+        {name, category_enabled, phase, args, timestamp, 1, thread_id});
   }
 
 // The TraceEvent format is documented here:
@@ -112,7 +138,30 @@ class EventLogger final {
         rtc::CritScope lock(&crit_);
         trace_events_.swap(events);
       }
-      for (const TraceEvent& e : events) {
+      std::string args_str;
+      args_str.reserve(kEventLoggerArgsStrBufferInitialSize);
+      for (TraceEvent& e : events) {
+        args_str.clear();
+        if (!e.args.empty()) {
+          args_str += ", \"args\": {";
+          bool is_first_argument = true;
+          for (TraceArg& arg : e.args) {
+            if (!is_first_argument)
+              args_str += ",";
+            is_first_argument = false;
+            args_str += " \"";
+            args_str += arg.name;
+            args_str += "\": ";
+            args_str += TraceArgValueAsString(arg);
+
+            // Delete our copy of the string.
+            if (arg.type == TRACE_VALUE_TYPE_COPY_STRING) {
+              delete[] arg.value.as_string;
+              arg.value.as_string = nullptr;
+            }
+          }
+          args_str += " }";
+        }
         fprintf(output_file_,
                 "%s{ \"name\": \"%s\""
                 ", \"cat\": \"%s\""
@@ -124,9 +173,10 @@ class EventLogger final {
 #else
                 ", \"tid\": %d"
 #endif  // defined(WEBRTC_WIN)
+                "%s"
                 "}\n",
                 has_logged_event ? "," : " ", e.name, e.category_enabled,
-                e.phase, e.timestamp, e.pid, e.tid);
+                e.phase, e.timestamp, e.pid, e.tid, args_str.c_str());
         has_logged_event = true;
       }
       if (shutting_down)
@@ -139,6 +189,7 @@ class EventLogger final {
   }
 
   void Start(FILE* file, bool owned) {
+    RTC_DCHECK(thread_checker_.CalledOnValidThread());
     RTC_DCHECK(file);
     RTC_DCHECK(!output_file_);
     output_file_ = file;
@@ -158,9 +209,13 @@ class EventLogger final {
 
     // Finally start, everything should be set up now.
     logging_thread_.Start();
+    TRACE_EVENT_INSTANT0("webrtc", "EventLogger::Start");
+    logging_thread_.SetPriority(kLowPriority);
   }
 
   void Stop() {
+    RTC_DCHECK(thread_checker_.CalledOnValidThread());
+    TRACE_EVENT_INSTANT0("webrtc", "EventLogger::Stop");
     // Try to stop. Abort if we're not currently logging.
     if (rtc::AtomicOps::CompareAndSwap(&g_event_logging_active, 1, 0) == 0)
       return;
@@ -172,14 +227,95 @@ class EventLogger final {
   }
 
  private:
+  struct TraceArg {
+    const char* name;
+    unsigned char type;
+    // Copied from webrtc/base/trace_event.h TraceValueUnion.
+    union TraceArgValue {
+      bool as_bool;
+      unsigned long long as_uint;
+      long long as_int;
+      double as_double;
+      const void* as_pointer;
+      const char* as_string;
+    } value;
+
+    // Assert that the size of the union is equal to the size of the as_uint
+    // field since we are assigning to arbitrary types using it.
+    static_assert(sizeof(TraceArgValue) == sizeof(unsigned long long),
+                  "Size of TraceArg value union is not equal to the size of "
+                  "the uint field of that union.");
+  };
+
   struct TraceEvent {
     const char* name;
     const unsigned char* category_enabled;
     char phase;
+    std::vector<TraceArg> args;
     uint64_t timestamp;
     int pid;
     rtc::PlatformThreadId tid;
   };
+
+  static std::string TraceArgValueAsString(TraceArg arg) {
+    std::string output;
+
+    if (arg.type == TRACE_VALUE_TYPE_STRING ||
+        arg.type == TRACE_VALUE_TYPE_COPY_STRING) {
+      // Space for every character to be an espaced character + two for
+      // quatation marks.
+      output.reserve(strlen(arg.value.as_string) * 2 + 2);
+      output += '\"';
+      const char* c = arg.value.as_string;
+      do {
+        if (*c == '"' || *c == '\\') {
+          output += '\\';
+          output += *c;
+        } else {
+          output += *c;
+        }
+      } while (*++c);
+      output += '\"';
+    } else {
+      output.resize(kTraceArgBufferLength);
+      size_t print_length = 0;
+      switch (arg.type) {
+        case TRACE_VALUE_TYPE_BOOL:
+          if (arg.value.as_bool) {
+            strcpy(&output[0], "true");
+            print_length = 4;
+          } else {
+            strcpy(&output[0], "false");
+            print_length = 5;
+          }
+          break;
+        case TRACE_VALUE_TYPE_UINT:
+          print_length = sprintfn(&output[0], kTraceArgBufferLength, "%llu",
+                                  arg.value.as_uint);
+          break;
+        case TRACE_VALUE_TYPE_INT:
+          print_length = sprintfn(&output[0], kTraceArgBufferLength, "%lld",
+                                  arg.value.as_int);
+          break;
+        case TRACE_VALUE_TYPE_DOUBLE:
+          print_length = sprintfn(&output[0], kTraceArgBufferLength, "%f",
+                                  arg.value.as_double);
+          break;
+        case TRACE_VALUE_TYPE_POINTER:
+          print_length = sprintfn(&output[0], kTraceArgBufferLength, "\"%p\"",
+                                  arg.value.as_pointer);
+          break;
+      }
+      size_t output_length = print_length < kTraceArgBufferLength
+                                 ? print_length
+                                 : kTraceArgBufferLength - 1;
+      // This will hopefully be very close to nop. On most implementations, it
+      // just writes null byte and sets the length field of the string.
+      output.resize(output_length);
+    }
+
+    return output;
+  }
 
   rtc::CriticalSection crit_;
   std::vector<TraceEvent> trace_events_ GUARDED_BY(crit_);
@@ -192,7 +328,9 @@ class EventLogger final {
 
 static bool EventTracingThreadFunc(void* params) {
   static_cast<EventLogger*>(params)->Log();
-  return true;
+  // False indicates that the thread function has done its job and doesn't need
+  // to be restarted again. Log() runs its own internal loop.
+  return false;
 }
 
 static EventLogger* volatile g_event_logger = nullptr;
@@ -222,7 +360,8 @@ void InternalAddTraceEvent(char phase,
   if (rtc::AtomicOps::AcquireLoad(&g_event_logging_active) == 0)
     return;
 
-  g_event_logger->AddTraceEvent(name, category_enabled, phase,
+  g_event_logger->AddTraceEvent(name, category_enabled, phase, num_args,
+                                arg_names, arg_types, arg_values,
                                 rtc::TimeMicros(), 1, rtc::CurrentThreadId());
 }
 
@@ -232,7 +371,6 @@ void SetupInternalTracer() {
   RTC_CHECK(rtc::AtomicOps::CompareAndSwapPtr(
                 &g_event_logger, static_cast<EventLogger*>(nullptr),
                 new EventLogger()) == nullptr);
-  g_event_logger = new EventLogger();
   webrtc::SetupEventTracer(InternalGetCategoryEnabled, InternalAddTraceEvent);
 }
 

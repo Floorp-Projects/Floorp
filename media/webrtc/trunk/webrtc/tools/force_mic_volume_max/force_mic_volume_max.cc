@@ -12,34 +12,45 @@
 
 #include <stdio.h>
 
-#include "webrtc/base/scoped_ptr.h"
-#include "webrtc/test/channel_transport/channel_transport.h"
-#include "webrtc/voice_engine/include/voe_audio_processing.h"
-#include "webrtc/voice_engine/include/voe_base.h"
-#include "webrtc/voice_engine/include/voe_volume_control.h"
+#include "webrtc/modules/audio_device/include/audio_device.h"
 
-int main(int argc, char** argv) {
-  webrtc::VoiceEngine* voe = webrtc::VoiceEngine::Create();
-  if (voe == NULL) {
-    fprintf(stderr, "Failed to initialize voice engine.\n");
+using webrtc::AudioDeviceModule;
+
+#if defined(_WIN32)
+#define DEFAULT_INPUT_DEVICE (AudioDeviceModule::kDefaultCommunicationDevice)
+#else
+#define DEFAULT_INPUT_DEVICE (0)
+#endif
+
+int main(int /*argc*/, char** /*argv*/) {
+  // Create and initialize the ADM.
+  rtc::scoped_refptr<AudioDeviceModule> adm(
+      AudioDeviceModule::Create(1, AudioDeviceModule::kPlatformDefaultAudio));
+  if (!adm.get()) {
+    fprintf(stderr, "Failed to create Audio Device Module.\n");
+    return 1;
+  }
+  if (adm->Init() != 0) {
+    fprintf(stderr, "Failed to initialize Audio Device Module.\n");
+    return 1;
+  }
+  if (adm->SetRecordingDevice(DEFAULT_INPUT_DEVICE) != 0) {
+    fprintf(stderr, "Failed to set the default input device.\n");
+    return 1;
+  }
+  if (adm->InitMicrophone() != 0) {
+    fprintf(stderr, "Failed to to initialize the microphone.\n");
     return 1;
   }
 
-  webrtc::VoEBase* base = webrtc::VoEBase::GetInterface(voe);
-  webrtc::VoEVolumeControl* volume_control =
-      webrtc::VoEVolumeControl::GetInterface(voe);
-
-  if (base->Init() != 0) {
-    fprintf(stderr, "Failed to initialize voice engine base.\n");
+  // Set mic volume to max.
+  uint32_t max_vol = 0;
+  if (adm->MaxMicrophoneVolume(&max_vol) != 0) {
+    fprintf(stderr, "Failed to get max volume.\n");
     return 1;
   }
-  // Set to 0 first in case the mic is above 100%.
-  if (volume_control->SetMicVolume(0) != 0) {
-    fprintf(stderr, "Failed set volume to 0.\n");
-    return 1;
-  }
-  if (volume_control->SetMicVolume(255) != 0) {
-    fprintf(stderr, "Failed set volume to 255.\n");
+  if (adm->SetMicrophoneVolume(max_vol) != 0) {
+    fprintf(stderr, "Failed to set mic volume.\n");
     return 1;
   }
 

@@ -23,8 +23,8 @@ namespace webrtc
 {
 namespace videocapturemodule
 {
-DeviceInfoImpl::DeviceInfoImpl(const int32_t id)
-    : _id(id), _apiLock(*RWLockWrapper::CreateRWLock()), _lastUsedDeviceName(NULL),
+DeviceInfoImpl::DeviceInfoImpl()
+    : _apiLock(*RWLockWrapper::CreateRWLock()), _lastUsedDeviceName(NULL),
       _lastUsedDeviceNameLength(0)
 {
 }

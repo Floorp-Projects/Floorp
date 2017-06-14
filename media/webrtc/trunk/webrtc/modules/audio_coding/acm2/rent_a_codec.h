@@ -13,28 +13,23 @@
 
 #include <stddef.h>
 #include <map>
+#include <memory>
 
 #include "webrtc/base/array_view.h"
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/base/optional.h"
-#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/base/scoped_ref_ptr.h"
 #include "webrtc/modules/audio_coding/codecs/audio_decoder.h"
+#include "webrtc/modules/audio_coding/codecs/audio_format.h"
 #include "webrtc/modules/audio_coding/codecs/audio_encoder.h"
 #include "webrtc/modules/audio_coding/include/audio_coding_module_typedefs.h"
+#include "webrtc/modules/audio_coding/codecs/isac/main/include/audio_encoder_isac.h"
 #include "webrtc/typedefs.h"
-
-#if defined(WEBRTC_CODEC_ISAC) || defined(WEBRTC_CODEC_ISACFX)
-#include "webrtc/modules/audio_coding/codecs/isac/locked_bandwidth_info.h"
-#else
-// Dummy implementation, for when we don't have iSAC.
-namespace webrtc {
-class LockedIsacBandwidthInfo {};
-}
-#endif
 
 namespace webrtc {
 
 struct CodecInst;
+class LockedIsacBandwidthInfo;
 
 namespace acm2 {
 
@@ -78,6 +73,9 @@ class RentACodec {
     kCNFB,
 #endif
     kAVT,
+    kAVT16kHz,
+    kAVT32kHz,
+    kAVT48kHz,
 #ifdef WEBRTC_CODEC_RED
     kRED,
 #endif
@@ -133,6 +131,9 @@ class RentACodec {
     kDecoderG722_2ch,
     kDecoderRED,
     kDecoderAVT,
+    kDecoderAVT16kHz,
+    kDecoderAVT32kHz,
+    kDecoderAVT48kHz,
     kDecoderCNGnb,
     kDecoderCNGwb,
     kDecoderCNGswb32kHz,
@@ -141,6 +142,9 @@ class RentACodec {
     kDecoderOpus,
     kDecoderOpus_2ch,
   };
+
+  static rtc::Optional<SdpAudioFormat> NetEqDecoderToSdpAudioFormat(
+      NetEqDecoder nd);
 
   static inline size_t NumberOfCodecs() {
     return static_cast<size_t>(CodecId::kNumCodecs);
@@ -197,15 +201,15 @@ class RentACodec {
   ~RentACodec();
 
   // Creates and returns an audio encoder built to the given specification.
-  // Returns null in case of error. The returned encoder is live until the next
-  // successful call to this function, or until the Rent-A-Codec is destroyed.
-  AudioEncoder* RentEncoder(const CodecInst& codec_inst);
+  // Returns null in case of error.
+  std::unique_ptr<AudioEncoder> RentEncoder(const CodecInst& codec_inst);
 
   struct StackParameters {
     StackParameters();
     ~StackParameters();
 
-    AudioEncoder* speech_encoder = nullptr;
+    std::unique_ptr<AudioEncoder> speech_encoder;
+
     bool use_codec_fec = false;
     bool use_red = false;
     bool use_cng = false;
@@ -218,27 +222,18 @@ class RentACodec {
 
   // Creates and returns an audio encoder stack constructed to the given
   // specification. If the specification isn't compatible with the encoder, it
-  // will be changed to match (things will be switched off). The returned
-  // encoder is live until the next successful call to this function, or until
-  // the Rent-A-Codec is destroyed.
-  AudioEncoder* RentEncoderStack(StackParameters* param);
+  // will be changed to match (things will be switched off). The speech encoder
+  // will be stolen. If the specification isn't complete, returns nullptr.
+  std::unique_ptr<AudioEncoder> RentEncoderStack(StackParameters* param);
 
-  // The last return value of RentEncoderStack, or null if it hasn't been
-  // called.
-  AudioEncoder* GetEncoderStack() const { return encoder_stack_; }
-
-  // Creates and returns an iSAC decoder, which will remain live until the
-  // Rent-A-Codec is destroyed. Subsequent calls will simply return the same
-  // object.
-  AudioDecoder* RentIsacDecoder();
+  // Creates and returns an iSAC decoder.
+  std::unique_ptr<AudioDecoder> RentIsacDecoder(int sample_rate_hz);
 
  private:
-  rtc::scoped_ptr<AudioEncoder> speech_encoder_;
-  rtc::scoped_ptr<AudioEncoder> cng_encoder_;
-  rtc::scoped_ptr<AudioEncoder> red_encoder_;
-  rtc::scoped_ptr<AudioDecoder> isac_decoder_;
-  AudioEncoder* encoder_stack_ = nullptr;
-  LockedIsacBandwidthInfo isac_bandwidth_info_;
+  std::unique_ptr<AudioEncoder> speech_encoder_;
+  std::unique_ptr<AudioEncoder> cng_encoder_;
+  std::unique_ptr<AudioEncoder> red_encoder_;
+  rtc::scoped_refptr<LockedIsacBandwidthInfo> isac_bandwidth_info_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(RentACodec);
 };

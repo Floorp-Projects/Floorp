@@ -11,6 +11,8 @@
 #define WEBRTC_COMMON_AUDIO_AUDIO_RING_BUFFER_H_
 
 #include <stddef.h>
+
+#include <memory>
 #include <vector>
 
 struct RingBuffer;
@@ -46,8 +48,7 @@ class AudioRingBuffer final {
   void MoveReadPositionBackward(size_t frames);
 
  private:
-  // We don't use a ScopedVector because it doesn't support a specialized
-  // deleter (like scoped_ptr for instance.)
+  // TODO(kwiberg): Use std::vector<std::unique_ptr<RingBuffer>> instead.
   std::vector<RingBuffer*> buffers_;
 };
 

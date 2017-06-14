@@ -20,12 +20,5 @@
         'typedefs.h',
       ],
     },
-    {
-      'target_name': 'gtest_prod',
-      'type': 'static_library',
-      'sources': [
-        'test/testsupport/gtest_prod_util.h',
-      ],
-    },
   ],
 }

@@ -10,6 +10,7 @@
 
 #include "webrtc/common_audio/vad/vad_core.h"
 
+#include "webrtc/base/sanitizer.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/common_audio/vad/vad_filterbank.h"
 #include "webrtc/common_audio/vad/vad_gmm.h"
@@ -108,6 +109,15 @@ static int32_t WeightedAverage(int16_t* data, int16_t offset,
     weighted_average += data[k * kNumChannels] * weights[k * kNumChannels];
   }
   return weighted_average;
+}
+
+// An s16 x s32 -> s32 multiplication that's allowed to overflow. (It's still
+// undefined behavior, so not a good idea; this just makes UBSan ignore the
+// violation, so that our old code can continue to do what it's always been
+// doing.)
+static inline int32_t OverflowingMulS16ByS32ToS32(int16_t a, int32_t b)
+    RTC_NO_SANITIZE("signed-integer-overflow") {
+  return a * b;
 }
 
 // Calculates the probabilities for both speech and background noise using
@@ -378,7 +388,7 @@ static int16_t GmmProbability(VadInstT* self, int16_t* features,
 
           // (Q14 >> 2) * Q12 = Q24.
           tmp_s16 = (ngprvec[gaussian] + 2) >> 2;
-          tmp2_s32 = tmp_s16 * tmp1_s32;
+          tmp2_s32 = OverflowingMulS16ByS32ToS32(tmp_s16, tmp1_s32);
           // Q20  * approx 0.001 (2^-10=0.0009766), hence,
           // (Q24 >> 14) = (Q24 >> 4) / 2^10 = Q20.
           tmp1_s32 = tmp2_s32 >> 14;

@@ -15,7 +15,10 @@
 #endif
 
 #include <algorithm>
+#include <memory>
+
 #include "webrtc/base/arraysize.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/diskcache.h"
 #include "webrtc/base/fileutils.h"
@@ -63,7 +66,7 @@ DiskCache::DiskCache() : max_cache_(0), total_size_(0), total_accessors_(0) {
 }
 
 DiskCache::~DiskCache() {
-  ASSERT(0 == total_accessors_);
+  RTC_DCHECK(0 == total_accessors_);
 }
 
 bool DiskCache::Initialize(const std::string& folder, size_t size) {
@@ -72,7 +75,7 @@ bool DiskCache::Initialize(const std::string& folder, size_t size) {
 
   folder_ = folder;
   max_cache_ = size;
-  ASSERT(0 == total_size_);
+  RTC_DCHECK(0 == total_size_);
 
   if (!InitializeEntries())
     return false;
@@ -118,12 +121,12 @@ StreamInterface* DiskCache::WriteResource(const std::string& id, size_t index) {
   size_t previous_size = 0;
   std::string filename(IdToFilename(id, index));
   FileStream::GetSize(filename, &previous_size);
-  ASSERT(previous_size <= entry->size);
+  RTC_DCHECK(previous_size <= entry->size);
   if (previous_size > entry->size) {
     previous_size = entry->size;
   }
 
-  scoped_ptr<FileStream> file(new FileStream);
+  std::unique_ptr<FileStream> file(new FileStream);
   if (!file->Open(filename, "wb", NULL)) {
     LOG_F(LS_ERROR) << "Couldn't create cache file";
     return NULL;
@@ -161,7 +164,7 @@ StreamInterface* DiskCache::ReadResource(const std::string& id,
   if (index >= entry->streams)
     return NULL;
 
-  scoped_ptr<FileStream> file(new FileStream);
+  std::unique_ptr<FileStream> file(new FileStream);
   if (!file->Open(IdToFilename(id, index), "rb", NULL))
     return NULL;
 
@@ -218,7 +221,7 @@ bool DiskCache::CheckLimit() {
   for (EntryMap::iterator it = map_.begin(); it != map_.end(); ++it) {
     cache_size += it->second.size;
   }
-  ASSERT(cache_size == total_size_);
+  RTC_DCHECK(cache_size == total_size_);
 #endif
 
   // TODO: Replace this with a non-brain-dead algorithm for clearing out the
@@ -256,11 +259,11 @@ std::string DiskCache::IdToFilename(const std::string& id, size_t index) const {
   char* buffer = new char[buffer_size];
   encode(buffer, buffer_size, id.data(), id.length(),
          unsafe_filename_characters(), '%');
-  // TODO: ASSERT(strlen(buffer) < FileSystem::MaxBasenameLength());
+  // TODO(nisse): RTC_DCHECK(strlen(buffer) < FileSystem::MaxBasenameLength());
 #else  // !TRANSPARENT_CACHE_NAMES
   // We might want to just use a hash of the filename at some point, both for
   // obfuscation, and to avoid both filename length and escaping issues.
-  ASSERT(false);
+  RTC_NOTREACHED();
 #endif  // !TRANSPARENT_CACHE_NAMES
 
   char extension[32];
@@ -317,7 +320,7 @@ void DiskCache::ReleaseResource(const std::string& id, size_t index) const {
   const Entry* entry = GetEntry(id);
   if (!entry) {
     LOG_F(LS_WARNING) << "Missing cache entry";
-    ASSERT(false);
+    RTC_NOTREACHED();
     return;
   }
 

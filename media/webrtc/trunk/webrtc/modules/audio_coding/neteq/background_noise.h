@@ -12,9 +12,9 @@
 #define WEBRTC_MODULES_AUDIO_CODING_NETEQ_BACKGROUND_NOISE_H_
 
 #include <string.h>  // size_t
+#include <memory>
 
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_coding/neteq/audio_multi_vector.h"
 #include "webrtc/modules/audio_coding/neteq/include/neteq.h"
 #include "webrtc/typedefs.h"
@@ -126,7 +126,7 @@ class BackgroundNoise {
                       int32_t residual_energy);
 
   size_t num_channels_;
-  rtc::scoped_ptr<ChannelParameters[]> channel_parameters_;
+  std::unique_ptr<ChannelParameters[]> channel_parameters_;
   bool initialized_;
   NetEq::BackgroundNoiseMode mode_;
 

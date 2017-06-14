@@ -10,7 +10,7 @@
 
 #include "webrtc/voice_engine/include/voe_audio_processing.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/voice_engine/include/voe_base.h"
 
 namespace webrtc {

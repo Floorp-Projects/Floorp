@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_VAD_VAD_CIRCULAR_BUFFER_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_VAD_VAD_CIRCULAR_BUFFER_H_
 
-#include "webrtc/base/scoped_ptr.h"
+#include <memory>
 
 namespace webrtc {
 
@@ -58,7 +58,7 @@ class VadCircularBuffer {
   // corresponding linear index.
   int ConvertToLinearIndex(int* index) const;
 
-  rtc::scoped_ptr<double[]> buffer_;
+  std::unique_ptr<double[]> buffer_;
   bool is_full_;
   int index_;
   int buffer_size_;

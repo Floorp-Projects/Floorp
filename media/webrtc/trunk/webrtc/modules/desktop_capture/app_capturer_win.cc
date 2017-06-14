@@ -8,9 +8,7 @@
 *  be found in the AUTHORS file in the root of the source tree.
 */
 
-#include "webrtc/modules/desktop_capture/window_capturer.h"
 #include "webrtc/modules/desktop_capture/app_capturer.h"
-#include "webrtc/modules/desktop_capture/screen_capturer.h"
 #include "webrtc/modules/desktop_capture/shared_desktop_frame.h"
 #include "webrtc/modules/desktop_capture/win/win_shared.h"
 
@@ -18,9 +16,10 @@
 #include <vector>
 #include <cassert>
 
+#include "webrtc/modules/desktop_capture/desktop_capturer.h"
+#include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame_win.h"
 #include "webrtc/system_wrappers/include/logging.h"
-#include "webrtc/base/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -31,41 +30,47 @@ namespace {
 class WindowsCapturerProxy : DesktopCapturer::Callback {
 public:
   WindowsCapturerProxy() :
-      window_capturer_(WindowCapturer::Create()) {
+      window_capturer_(DesktopCapturer::CreateWindowCapturer(DesktopCaptureOptions::CreateDefault())) {
     window_capturer_->Start(this);
   }
   ~WindowsCapturerProxy(){}
 
-  void SelectWindow(HWND hwnd) { window_capturer_->SelectWindow(reinterpret_cast<WindowId>(hwnd)); }
-  rtc::scoped_ptr<DesktopFrame>& GetFrame() { return frame_; }
-  void Capture(const DesktopRegion& region) { window_capturer_->Capture(region); }
+  void SelectSource(DesktopCapturer::SourceId id) { window_capturer_->SelectSource(id); }
+  void CaptureFrame() { window_capturer_->CaptureFrame(); }
+  std::unique_ptr<DesktopFrame> GetFrame() { return std::move(frame_); }
 
   // Callback interface
-  virtual SharedMemory *CreateSharedMemory(size_t) override { return NULL; }
-  virtual void OnCaptureCompleted(DesktopFrame *frame) override { frame_.reset(frame); }
+  virtual void OnCaptureResult(DesktopCapturer::Result result,
+                               std::unique_ptr<DesktopFrame> frame) {
+    frame_ = std::move(frame);
+  }
+
 private:
-  rtc::scoped_ptr<WindowCapturer> window_capturer_;
-  rtc::scoped_ptr<DesktopFrame> frame_;
+  std::unique_ptr<DesktopCapturer> window_capturer_;
+  std::unique_ptr<DesktopFrame> frame_;
 };
 
 // Proxy over the WebRTC screen capturer, to allow post-processing
 // of the frame to mask out non-application windows
 class ScreenCapturerProxy : DesktopCapturer::Callback {
 public:
-  ScreenCapturerProxy(const DesktopCaptureOptions& options) :
-      screen_capturer_(ScreenCapturer::Create(options)) {
-    screen_capturer_->SelectScreen(kFullDesktopScreenId);
+  ScreenCapturerProxy()
+    : screen_capturer_(DesktopCapturer::CreateScreenCapturer(DesktopCaptureOptions::CreateDefault())) {
+    screen_capturer_->SelectSource(kFullDesktopScreenId);
     screen_capturer_->Start(this);
   }
-  void Capture(const DesktopRegion& region) { screen_capturer_->Capture(region); }
-  rtc::scoped_ptr<DesktopFrame>& GetFrame() { return frame_; }
+  void CaptureFrame() { screen_capturer_->CaptureFrame(); }
+  std::unique_ptr<DesktopFrame> GetFrame() { return std::move(frame_); }
 
-  // Callback interface
-  virtual SharedMemory *CreateSharedMemory(size_t) override { return NULL; }
-  virtual void OnCaptureCompleted(DesktopFrame *frame) override { frame_.reset(frame); }
+   // Callback interface
+  virtual void OnCaptureResult(DesktopCapturer::Result result,
+                               std::unique_ptr<DesktopFrame> frame) {
+    frame_ = std::move(frame);
+  }
+
 protected:
-  rtc::scoped_ptr<ScreenCapturer> screen_capturer_;
-  rtc::scoped_ptr<DesktopFrame> frame_;
+  std::unique_ptr<DesktopCapturer> screen_capturer_;
+  std::unique_ptr<DesktopFrame> frame_;
 };
 
 class AppCapturerWin : public AppCapturer {
@@ -81,7 +86,11 @@ public:
   // DesktopCapturer interface.
   virtual void Start(Callback* callback) override;
   virtual void Stop() override;
-  virtual void Capture(const DesktopRegion& region) override;
+  virtual void CaptureFrame() override;
+  virtual bool SelectSource(SourceId id) override
+  {
+    return SelectApp(static_cast<ProcessId>(id));
+  }
 
   struct WindowItem {
     HWND handle;
@@ -97,8 +106,8 @@ public:
 
   static BOOL CALLBACK EnumWindowsProc(HWND handle, LPARAM lParam);
 protected:
-  void CaptureByWebRTC(const DesktopRegion& region);
-  void CaptureBySample(const DesktopRegion& region);
+  void CaptureByWebRTC();
+  void CaptureBySample();
 private:
   Callback* callback_;
 
@@ -122,9 +131,8 @@ private:
 };
 
 AppCapturerWin::AppCapturerWin(const DesktopCaptureOptions& options)
-  : callback_(NULL),
-    screen_capturer_proxy_(options),
-    processId_(NULL) {
+  : callback_(nullptr),
+    processId_(0) {
   // Initialize regions to zero
   hrgn_foreground_ = CreateRectRgn(0, 0, 0, 0);
   hrgn_background_ = CreateRectRgn(0, 0, 0, 0);
@@ -167,11 +175,11 @@ void AppCapturerWin::Start(Callback* callback) {
   callback_ = callback;
 }
 void AppCapturerWin::Stop() {
-  callback_ = NULL;
+  callback_ = nullptr;
 }
-void AppCapturerWin::Capture(const DesktopRegion& region) {
+void AppCapturerWin::CaptureFrame() {
   assert(IsGUIThread(false));
-  CaptureBySample(region);
+  CaptureBySample();
 }
 
 BOOL CALLBACK AppCapturerWin::EnumWindowsProc(HWND handle, LPARAM lParam) {
@@ -198,7 +206,7 @@ BOOL CALLBACK AppCapturerWin::EnumWindowsProc(HWND handle, LPARAM lParam) {
   return TRUE;
 }
 
-void AppCapturerWin::CaptureByWebRTC(const DesktopRegion& region) {
+void AppCapturerWin::CaptureByWebRTC() {
   assert(IsGUIThread(false));
   // List Windows of selected application
   EnumWindowsCtx lParamEnumWindows;
@@ -215,15 +223,15 @@ void AppCapturerWin::CaptureByWebRTC(const DesktopRegion& region) {
       GetSystemMetrics(SM_CYVIRTUALSCREEN)
   ));
 
-  HDC dcScreen = GetDC(NULL);
+  HDC dcScreen = GetDC(nullptr);
   HDC memDcCapture = CreateCompatibleDC(dcScreen);
   if (dcScreen) {
-    ReleaseDC(NULL, dcScreen);
+    ReleaseDC(nullptr, dcScreen);
   }
 
-  rtc::scoped_ptr<DesktopFrameWin> frameCapture(DesktopFrameWin::Create(
+  std::unique_ptr<DesktopFrameWin> frameCapture(DesktopFrameWin::Create(
       DesktopSize(rcDesktop.width(), rcDesktop.height()),
-      NULL, memDcCapture));
+      nullptr, memDcCapture));
   HBITMAP bmpOrigin = static_cast<HBITMAP>(SelectObject(memDcCapture, frameCapture->bitmap()));
   BOOL bCaptureAppResult = false;
   // Capture and Combine all windows into memDcCapture
@@ -235,13 +243,13 @@ void AppCapturerWin::CaptureByWebRTC(const DesktopRegion& region) {
       continue;
     }
 
-    HDC memDcWin = NULL;
-    HBITMAP bmpOriginWin = NULL;
-    HBITMAP hBitmapFrame = NULL;
-    HDC dcWin = NULL;
+    HDC memDcWin = nullptr;
+    HBITMAP bmpOriginWin = nullptr;
+    HBITMAP hBitmapFrame = nullptr;
+    HDC dcWin = nullptr;
     RECT rcWin = window_item.bounds;
     bool bCaptureResult = false;
-    rtc::scoped_ptr<DesktopFrameWin> frame;
+    std::unique_ptr<DesktopFrameWin> frame;
     do {
       if (rcWin.left == rcWin.right || rcWin.top == rcWin.bottom) {
         break;
@@ -254,16 +262,16 @@ void AppCapturerWin::CaptureByWebRTC(const DesktopRegion& region) {
       memDcWin = CreateCompatibleDC(dcWin);
 
       // Capture
-      window_capturer_proxy_.SelectWindow(hWndCapturer);
-      window_capturer_proxy_.Capture(region);
-      if (window_capturer_proxy_.GetFrame() != NULL) {
+      window_capturer_proxy_.SelectSource((SourceId) hWndCapturer);
+      window_capturer_proxy_.CaptureFrame();
+      if (window_capturer_proxy_.GetFrame() != nullptr) {
         DesktopFrameWin *pDesktopFrameWin = reinterpret_cast<DesktopFrameWin *>(
             window_capturer_proxy_.GetFrame().get());
         if (pDesktopFrameWin) {
           hBitmapFrame = pDesktopFrameWin->bitmap();
         }
         if (GetObjectType(hBitmapFrame) != OBJ_BITMAP) {
-          hBitmapFrame = NULL;
+          hBitmapFrame = nullptr;
         }
       }
       if (!hBitmapFrame) {
@@ -298,18 +306,18 @@ void AppCapturerWin::CaptureByWebRTC(const DesktopRegion& region) {
 
   // trigger event
   if (bCaptureAppResult) {
-    callback_->OnCaptureCompleted(frameCapture.release());
+    callback_->OnCaptureResult(DesktopCapturer::Result::SUCCESS, std::move(frameCapture));
   }
 }
 
 // Application Capturer by sample and region
-void AppCapturerWin::CaptureBySample(const DesktopRegion& region){
+void AppCapturerWin::CaptureBySample(){
   assert(IsGUIThread(false));
   // capture entire screen
-  screen_capturer_proxy_.Capture(region);
+  screen_capturer_proxy_.CaptureFrame();
 
-  HBITMAP hBitmapFrame = NULL;
-  if (screen_capturer_proxy_.GetFrame() != NULL) {
+  HBITMAP hBitmapFrame = nullptr;
+  if (screen_capturer_proxy_.GetFrame() != nullptr) {
     SharedDesktopFrame* pSharedDesktopFrame = reinterpret_cast<SharedDesktopFrame*>(
         screen_capturer_proxy_.GetFrame().get());
     if (pSharedDesktopFrame) {
@@ -319,7 +327,7 @@ void AppCapturerWin::CaptureBySample(const DesktopRegion& region){
         hBitmapFrame = pDesktopFrameWin->bitmap();
       }
       if (GetObjectType(hBitmapFrame) != OBJ_BITMAP) {
-        hBitmapFrame = NULL;
+        hBitmapFrame = nullptr;
       }
     }
   }
@@ -327,7 +335,7 @@ void AppCapturerWin::CaptureBySample(const DesktopRegion& region){
     // calculate app visual/foreground region
     UpdateRegions();
 
-    HDC dcScreen = GetDC(NULL);
+    HDC dcScreen = GetDC(nullptr);
     HDC memDcCapture = CreateCompatibleDC(dcScreen);
 
     RECT rcScreen = {0, 0,
@@ -351,7 +359,7 @@ void AppCapturerWin::CaptureBySample(const DesktopRegion& region){
     FillRect(memDcCapture, &rcScreen, (HBRUSH)GetStockObject(DC_BRUSH));
 
     if (dcScreen) {
-      ReleaseDC(NULL, dcScreen);
+      ReleaseDC(nullptr, dcScreen);
     }
     SelectObject(memDcCapture, bmpOriginCapture);
     DeleteDC(memDcCapture);
@@ -359,7 +367,7 @@ void AppCapturerWin::CaptureBySample(const DesktopRegion& region){
 
   // trigger event
   if (callback_) {
-    callback_->OnCaptureCompleted(screen_capturer_proxy_.GetFrame().release());
+    callback_->OnCaptureResult(DesktopCapturer::Result::SUCCESS, std::move(screen_capturer_proxy_.GetFrame()));
   }
 }
 
@@ -419,6 +427,15 @@ void AppCapturerWin::UpdateRegions() {
 // static
 AppCapturer* AppCapturer::Create(const DesktopCaptureOptions& options) {
   return new AppCapturerWin(options);
+}
+
+// static
+std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawAppCapturer(
+    const DesktopCaptureOptions& options) {
+
+  std::unique_ptr<AppCapturerWin> capturer(new AppCapturerWin(options));
+
+  return std::unique_ptr<DesktopCapturer>(std::move(capturer));
 }
 
 }  // namespace webrtc

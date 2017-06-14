@@ -19,7 +19,6 @@
 #include "webrtc/modules/rtp_rtcp/include/rtp_rtcp.h"
 #include "webrtc/modules/video_coding/include/video_coding.h"
 #include "webrtc/modules/video_coding/test/test_util.h"
-#include "webrtc/modules/video_coding/test/video_source.h"
 #include "webrtc/typedefs.h"
 
 class RtpDataCallback : public webrtc::NullRtpData {
@@ -29,7 +28,7 @@ class RtpDataCallback : public webrtc::NullRtpData {
 
   int32_t OnReceivedPayloadData(
       const uint8_t* payload_data,
-      const size_t payload_size,
+      size_t payload_size,
       const webrtc::WebRtcRTPHeader* rtp_header) override {
     return vcm_->IncomingPacket(payload_data, payload_size, *rtp_header);
   }

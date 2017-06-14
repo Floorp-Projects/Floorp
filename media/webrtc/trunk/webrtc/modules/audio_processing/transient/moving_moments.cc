@@ -13,7 +13,7 @@
 #include <math.h>
 #include <string.h>
 
-#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/base/checks.h"
 
 namespace webrtc {
 
@@ -22,7 +22,7 @@ MovingMoments::MovingMoments(size_t length)
       queue_(),
       sum_(0.0),
       sum_of_squares_(0.0) {
-  assert(length > 0);
+  RTC_DCHECK_GT(length, 0);
   for (size_t i = 0; i < length; ++i) {
     queue_.push(0.0);
   }
@@ -32,7 +32,7 @@ MovingMoments::~MovingMoments() {}
 
 void MovingMoments::CalculateMoments(const float* in, size_t in_length,
                                      float* first, float* second) {
-  assert(in && in_length > 0 && first && second);
+  RTC_DCHECK(in && in_length > 0 && first && second);
 
   for (size_t i = 0; i < in_length; ++i) {
     const float old_value = queue_.front();

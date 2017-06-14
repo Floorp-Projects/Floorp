@@ -10,13 +10,14 @@
 
 #include "webrtc/modules/desktop_capture/win/screen_capture_utils.h"
 
-#include <assert.h>
 #include <windows.h>
+
+#include "webrtc/base/checks.h"
 
 namespace webrtc {
 
-bool GetScreenList(ScreenCapturer::ScreenList* screens) {
-  assert(screens->size() == 0);
+bool GetScreenList(DesktopCapturer::SourceList* screens) {
+  RTC_DCHECK(screens->size() == 0);
 
   BOOL enum_result = TRUE;
   for (int device_index = 0;; ++device_index) {
@@ -32,14 +33,14 @@ bool GetScreenList(ScreenCapturer::ScreenList* screens) {
     if (!(device.StateFlags & DISPLAY_DEVICE_ACTIVE))
       continue;
 
-    ScreenCapturer::Screen screen;
+    DesktopCapturer::Source screen;
     screen.id = device_index;
     screens->push_back(screen);
   }
   return true;
 }
 
-bool IsScreenValid(ScreenId screen, std::wstring* device_key) {
+bool IsScreenValid(DesktopCapturer::SourceId screen, std::wstring* device_key) {
   if (screen == kFullDesktopScreenId) {
     *device_key = L"";
     return true;
@@ -54,8 +55,9 @@ bool IsScreenValid(ScreenId screen, std::wstring* device_key) {
   return !!enum_result;
 }
 
-DesktopRect GetScreenRect(ScreenId screen, const std::wstring& device_key) {
-  assert(IsGUIThread(false));
+DesktopRect GetScreenRect(DesktopCapturer::SourceId screen,
+                          const std::wstring& device_key) {
+  RTC_DCHECK(IsGUIThread(false));
   if (screen == kFullDesktopScreenId) {
     return DesktopRect::MakeXYWH(GetSystemMetrics(SM_XVIRTUALSCREEN),
                                  GetSystemMetrics(SM_YVIRTUALSCREEN),

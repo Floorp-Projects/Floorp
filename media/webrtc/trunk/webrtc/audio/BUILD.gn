@@ -8,31 +8,74 @@
 
 import("../build/webrtc.gni")
 
-source_set("audio") {
+rtc_static_library("audio") {
   sources = [
     "audio_receive_stream.cc",
     "audio_receive_stream.h",
     "audio_send_stream.cc",
     "audio_send_stream.h",
-    "audio_sink.h",
     "audio_state.cc",
     "audio_state.h",
+    "audio_transport_proxy.cc",
+    "audio_transport_proxy.h",
     "conversion.h",
     "scoped_voe_interface.h",
   ]
 
-  configs += [ "..:common_config" ]
-  public_configs = [ "..:common_inherited_config" ]
-
-  if (is_clang) {
-    # Suppress warnings from Chrome's Clang plugins.
-    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  if (!build_with_chromium && is_clang) {
+    # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+    suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
 
   deps = [
     "..:webrtc_common",
+    "../api:audio_mixer_api",
+    "../api:call_api",
+    "../base:rtc_base_approved",
+    "../base:rtc_task_queue",
+    "../call:call_interfaces",
+    "../common_audio",
+    "../modules/audio_device",
+    "../modules/audio_processing",
+    "../modules/congestion_controller:congestion_controller",
+    "../modules/pacing:pacing",
+    "../modules/remote_bitrate_estimator:remote_bitrate_estimator",
+    "../modules/rtp_rtcp:rtp_rtcp",
     "../system_wrappers",
     "../voice_engine",
   ]
+}
+if (rtc_include_tests) {
+  rtc_source_set("audio_tests") {
+    testonly = true
+
+    # TODO(kjellander): Remove (bugs.webrtc.org/6828)
+    # This needs remote_bitrate_estimator to be moved to webrtc/api first.
+    check_includes = false
+
+    sources = [
+      "audio_receive_stream_unittest.cc",
+      "audio_send_stream_unittest.cc",
+      "audio_state_unittest.cc",
+    ]
+    deps = [
+      ":audio",
+      "../api:mock_audio_mixer",
+      "../base:rtc_base_approved",
+      "../base:rtc_task_queue",
+      "../modules/audio_device:mock_audio_device",
+      "../modules/audio_mixer:audio_mixer_impl",
+      "../modules/congestion_controller:congestion_controller",
+      "../modules/pacing:pacing",
+      "../test:test_common",
+      "../test:test_support",
+      "utility:utility_tests",
+      "//testing/gmock",
+      "//testing/gtest",
+    ]
+    if (!build_with_chromium && is_clang) {
+      # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
+  }
 }

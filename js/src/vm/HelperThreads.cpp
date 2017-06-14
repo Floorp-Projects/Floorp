@@ -1037,11 +1037,15 @@ GlobalHelperThreadState::maxGCParallelThreads() const
 }
 
 bool
-GlobalHelperThreadState::canStartWasmCompile(const AutoLockHelperThreadState& lock)
+GlobalHelperThreadState::canStartWasmCompile(const AutoLockHelperThreadState& lock,
+                                             bool assumeThreadAvailable)
 {
     // Don't execute an wasm job if an earlier one failed.
     if (wasmWorklist(lock).empty() || numWasmFailedJobs)
         return false;
+
+    if (assumeThreadAvailable)
+        return true;
 
     // Honor the maximum allowed threads to compile wasm jobs at once,
     // to avoid oversaturating the machine.
@@ -1636,9 +1640,9 @@ HelperThread::ThreadMain(void* arg)
 }
 
 void
-HelperThread::handleWasmWorkload(AutoLockHelperThreadState& locked)
+HelperThread::handleWasmWorkload(AutoLockHelperThreadState& locked, bool assumeThreadAvailable)
 {
-    MOZ_ASSERT(HelperThreadState().canStartWasmCompile(locked));
+    MOZ_ASSERT(HelperThreadState().canStartWasmCompile(locked, assumeThreadAvailable));
     MOZ_ASSERT(idle());
 
     currentTask.emplace(HelperThreadState().wasmWorklist(locked).popCopy());
@@ -1664,6 +1668,33 @@ HelperThread::handleWasmWorkload(AutoLockHelperThreadState& locked)
     // Notify the active thread in case it's waiting.
     HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER, locked);
     currentTask.reset();
+}
+
+bool
+HelperThread::handleWasmIdleWorkload(AutoLockHelperThreadState& locked)
+{
+    // Perform wasm compilation work on a HelperThread that is running
+    // ModuleGenerator instead of blocking while other compilation threads
+    // finish.  This removes a source of deadlocks, as putting all threads to
+    // work guarantees forward progress for compilation.
+
+    // The current thread has already been accounted for, so don't guard on
+    // thread subscription when checking whether we can do work.
+
+    if (HelperThreadState().canStartWasmCompile(locked, /*assumeThreadAvailable=*/ true)) {
+        HelperTaskUnion oldTask = currentTask.value();
+        currentTask.reset();
+        js::oom::ThreadType oldType = (js::oom::ThreadType)js::oom::GetThreadType();
+
+        js::oom::SetThreadType(js::oom::THREAD_TYPE_WASM);
+        handleWasmWorkload(locked, /*assumeThreadAvailable=*/ true);
+
+        js::oom::SetThreadType(oldType);
+        currentTask.emplace(oldTask);
+        return true;
+    }
+
+    return false;
 }
 
 void

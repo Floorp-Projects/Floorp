@@ -15,8 +15,8 @@
 
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/base/criticalsection.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/thread_annotations.h"
+#include "webrtc/base/thread_checker.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/pacing/paced_sender.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
@@ -30,7 +30,7 @@ class TransportFeedback;
 
 // PacketRouter routes outgoing data to the correct sending RTP module, based
 // on the simulcast layer in RTPVideoHeader.
-class PacketRouter : public PacedSender::Callback,
+class PacketRouter : public PacedSender::PacketSender,
                      public TransportSequenceNumberAllocator {
  public:
   PacketRouter();
@@ -43,9 +43,10 @@ class PacketRouter : public PacedSender::Callback,
   bool TimeToSendPacket(uint32_t ssrc,
                         uint16_t sequence_number,
                         int64_t capture_timestamp,
-                        bool retransmission) override;
+                        bool retransmission,
+                        int probe_cluster_id) override;
 
-  size_t TimeToSendPadding(size_t bytes) override;
+  size_t TimeToSendPadding(size_t bytes, int probe_cluster_id) override;
 
   void SetTransportWideSequenceNumber(uint16_t sequence_number);
   uint16_t AllocateSequenceNumber() override;
@@ -54,9 +55,9 @@ class PacketRouter : public PacedSender::Callback,
   virtual bool SendFeedback(rtcp::TransportFeedback* packet);
 
  private:
-  rtc::CriticalSection modules_lock_;
-  // Map from ssrc to sending rtp module.
-  std::list<RtpRtcp*> rtp_modules_ GUARDED_BY(modules_lock_);
+  rtc::ThreadChecker pacer_thread_checker_;
+  rtc::CriticalSection modules_crit_;
+  std::list<RtpRtcp*> rtp_modules_ GUARDED_BY(modules_crit_);
 
   volatile int transport_seq_;
 

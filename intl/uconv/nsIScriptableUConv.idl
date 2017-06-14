@@ -68,16 +68,10 @@ interface nsIScriptableUnicodeConverter : nsISupports
    * @throw NS_ERROR_UCONV_NOCONV
    *        The requested charset is not supported.
    */
-  attribute string charset;
+  attribute ACString charset;
 
   /**
-   * Internal use
-   *
-   * When this attribute is set, all encodings may be accessed. Alias
-   * resolution is not performed for non-Encoding Standard encodings.
-   * MailNews callers should perform alias resolution first (e.g. using
-   * nsICharsetConverterManager::getCharsetAlias()) and use the result
-   * with this API.
+   * Meaningless
    */
   attribute boolean isInternal;
 };

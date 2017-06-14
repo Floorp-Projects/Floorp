@@ -9,6 +9,7 @@
  */
 
 #include "webrtc/base/asyncsocket.h"
+#include "webrtc/base/checks.h"
 
 namespace rtc {
 
@@ -27,7 +28,7 @@ AsyncSocketAdapter::~AsyncSocketAdapter() {
 }
 
 void AsyncSocketAdapter::Attach(AsyncSocket* socket) {
-  ASSERT(!socket_);
+  RTC_DCHECK(!socket_);
   socket_ = socket;
   if (socket_) {
     socket_->SignalConnectEvent.connect(this,
@@ -64,12 +65,15 @@ int AsyncSocketAdapter::SendTo(const void* pv,
   return socket_->SendTo(pv, cb, addr);
 }
 
-int AsyncSocketAdapter::Recv(void* pv, size_t cb) {
-  return socket_->Recv(pv, cb);
+int AsyncSocketAdapter::Recv(void* pv, size_t cb, int64_t* timestamp) {
+  return socket_->Recv(pv, cb, timestamp);
 }
 
-int AsyncSocketAdapter::RecvFrom(void* pv, size_t cb, SocketAddress* paddr) {
-  return socket_->RecvFrom(pv, cb, paddr);
+int AsyncSocketAdapter::RecvFrom(void* pv,
+                                 size_t cb,
+                                 SocketAddress* paddr,
+                                 int64_t* timestamp) {
+  return socket_->RecvFrom(pv, cb, paddr, timestamp);
 }
 
 int AsyncSocketAdapter::Listen(int backlog) {

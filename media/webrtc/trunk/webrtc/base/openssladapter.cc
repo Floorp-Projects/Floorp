@@ -27,11 +27,8 @@
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 
-#if HAVE_CONFIG_H
-#include "config.h"
-#endif  // HAVE_CONFIG_H
-
 #include "webrtc/base/arraysize.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/openssl.h"
@@ -123,7 +120,7 @@ static int socket_read(BIO* b, char* out, int outl) {
     return -1;
   rtc::AsyncSocket* socket = static_cast<rtc::AsyncSocket*>(b->ptr);
   BIO_clear_retry_flags(b);
-  int result = socket->Recv(out, outl);
+  int result = socket->Recv(out, outl, nullptr);
   if (result > 0) {
     return result;
   } else if (result == 0) {
@@ -293,7 +290,7 @@ OpenSSLAdapter::~OpenSSLAdapter() {
 
 void
 OpenSSLAdapter::SetMode(SSLMode mode) {
-  ASSERT(state_ == SSL_NONE);
+  RTC_DCHECK(state_ == SSL_NONE);
   ssl_mode_ = mode;
 }
 
@@ -322,7 +319,7 @@ OpenSSLAdapter::StartSSL(const char* hostname, bool restartable) {
 int
 OpenSSLAdapter::BeginSSL() {
   LOG(LS_INFO) << "BeginSSL: " << ssl_host_name_;
-  ASSERT(state_ == SSL_CONNECTING);
+  RTC_DCHECK(state_ == SSL_CONNECTING);
 
   int err = 0;
   BIO* bio = NULL;
@@ -336,7 +333,7 @@ OpenSSLAdapter::BeginSSL() {
     goto ssl_error;
   }
 
-  bio = BIO_new_socket(static_cast<AsyncSocketAdapter*>(socket_));
+  bio = BIO_new_socket(socket_);
   if (!bio) {
     err = -1;
     goto ssl_error;
@@ -374,7 +371,7 @@ ssl_error:
 
 int
 OpenSSLAdapter::ContinueSSL() {
-  ASSERT(state_ == SSL_CONNECTING);
+  RTC_DCHECK(state_ == SSL_CONNECTING);
 
   // Clear the DTLS timer
   Thread::Current()->Clear(this, MSG_TIMEOUT);
@@ -408,7 +405,8 @@ OpenSSLAdapter::ContinueSSL() {
     if (DTLSv1_get_timeout(ssl_, &timeout)) {
       int delay = timeout.tv_sec * 1000 + timeout.tv_usec/1000;
 
-      Thread::Current()->PostDelayed(delay, this, MSG_TIMEOUT, 0);
+      Thread::Current()->PostDelayed(RTC_FROM_HERE, delay, this, MSG_TIMEOUT,
+                                     0);
     }
     break;
 
@@ -471,7 +469,7 @@ OpenSSLAdapter::Send(const void* pv, size_t cb) {
 
   case SSL_WAIT:
   case SSL_CONNECTING:
-    SetError(EWOULDBLOCK);
+    SetError(ENOTCONN);
     return SOCKET_ERROR;
 
   case SSL_CONNECTED:
@@ -528,17 +526,16 @@ OpenSSLAdapter::SendTo(const void* pv, size_t cb, const SocketAddress& addr) {
   return SOCKET_ERROR;
 }
 
-int
-OpenSSLAdapter::Recv(void* pv, size_t cb) {
+int OpenSSLAdapter::Recv(void* pv, size_t cb, int64_t* timestamp) {
   //LOG(LS_INFO) << "OpenSSLAdapter::Recv(" << cb << ")";
   switch (state_) {
 
   case SSL_NONE:
-    return AsyncSocketAdapter::Recv(pv, cb);
+    return AsyncSocketAdapter::Recv(pv, cb, timestamp);
 
   case SSL_WAIT:
   case SSL_CONNECTING:
-    SetError(EWOULDBLOCK);
+    SetError(ENOTCONN);
     return SOCKET_ERROR;
 
   case SSL_CONNECTED:
@@ -583,10 +580,12 @@ OpenSSLAdapter::Recv(void* pv, size_t cb) {
   return SOCKET_ERROR;
 }
 
-int
-OpenSSLAdapter::RecvFrom(void* pv, size_t cb, SocketAddress* paddr) {
+int OpenSSLAdapter::RecvFrom(void* pv,
+                             size_t cb,
+                             SocketAddress* paddr,
+                             int64_t* timestamp) {
   if (socket_->GetState() == Socket::CS_CONNECTED) {
-    int ret = Recv(pv, cb);
+    int ret = Recv(pv, cb, timestamp);
 
     *paddr = GetRemoteAddress();
 
@@ -629,7 +628,7 @@ void
 OpenSSLAdapter::OnConnectEvent(AsyncSocket* socket) {
   LOG(LS_INFO) << "OpenSSLAdapter::OnConnectEvent";
   if (state_ != SSL_WAIT) {
-    ASSERT(state_ == SSL_NONE);
+    RTC_DCHECK(state_ == SSL_NONE);
     AsyncSocketAdapter::OnConnectEvent(socket);
     return;
   }

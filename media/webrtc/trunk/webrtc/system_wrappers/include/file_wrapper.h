@@ -14,6 +14,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#include "webrtc/base/criticalsection.h"
 #include "webrtc/common_types.h"
 #include "webrtc/typedefs.h"
 
@@ -22,55 +23,64 @@
 
 namespace webrtc {
 
+// TODO(tommi): Remove the base classes, rename to rtc::File and move to base.
 class FileWrapper : public InStream, public OutStream {
  public:
   static const size_t kMaxFileNameSize = 1024;
 
-  // Factory method. Constructor disabled.
+  // Factory methods.
+  // TODO(tommi): Remove Create().
   static FileWrapper* Create();
+  static FileWrapper Open(const char* file_name_utf8, bool read_only);
+
+  FileWrapper(FILE* file, size_t max_size);
+  ~FileWrapper() override;
+
+  // Support for move semantics.
+  FileWrapper(FileWrapper&& other);
+  FileWrapper& operator=(FileWrapper&& other);
 
   // Returns true if a file has been opened.
-  virtual bool Open() const = 0;
+  bool is_open() const { return file_ != nullptr; }
 
   // Opens a file in read or write mode, decided by the read_only parameter.
-  virtual int OpenFile(const char* file_name_utf8,
-                       bool read_only,
-                       bool loop = false,
-                       bool text = false) = 0;
+  bool OpenFile(const char* file_name_utf8, bool read_only);
 
-  // Initializes the wrapper from an existing handle. |read_only| must match in
-  // the mode the file was opened in. If |manage_file| is true, the wrapper
+  // Initializes the wrapper from an existing handle.  The wrapper
   // takes ownership of |handle| and closes it in CloseFile().
-  virtual int OpenFromFileHandle(FILE* handle,
-                                 bool manage_file,
-                                 bool read_only,
-                                 bool loop = false) = 0;
+  bool OpenFromFileHandle(FILE* handle);
 
-  virtual int CloseFile() = 0;
+  void CloseFile();
 
   // Limits the file size to |bytes|. Writing will fail after the cap
   // is hit. Pass zero to use an unlimited size.
-  virtual int SetMaxFileSize(size_t bytes)  = 0;
+  // TODO(tommi): Could we move this out into a separate class?
+  void SetMaxFileSize(size_t bytes);
 
-  // Flush any pending writes.
-  virtual int Flush() = 0;
+  // Flush any pending writes.  Note: Flushing when closing, is not required.
+  int Flush();
 
-  // Returns the opened file's name in |file_name_utf8|. Provide the size of
-  // the buffer in bytes in |size|. The name will be truncated if |size| is
-  // too small.
-  virtual int FileName(char* file_name_utf8,
-                       size_t size) const = 0;
-
-  // Write |format| to the opened file. Arguments are taken in the same manner
-  // as printf. That is, supply a format string containing text and
-  // specifiers. Returns the number of characters written or -1 on error.
-  virtual int WriteText(const char* format, ...) = 0;
-
-  // Inherited from both Instream and OutStream.
-  // Rewinds the file to the start. Only available when OpenFile() has been
-  // called with |loop| == true or |readOnly| == true.
-  // virtual int Rewind() = 0;
+  // Rewinds the file to the start.
   int Rewind() override;
+  int Read(void* buf, size_t length) override;
+  bool Write(const void* buf, size_t length) override;
+
+ private:
+  FileWrapper();
+
+  void CloseFileImpl();
+  int FlushImpl();
+
+  // TODO(tommi): Remove the lock.
+  rtc::CriticalSection lock_;
+
+  FILE* file_ = nullptr;
+  size_t position_ = 0;
+  size_t max_size_in_bytes_ = 0;
+
+  // Copying is not supported.
+  FileWrapper(const FileWrapper&) = delete;
+  FileWrapper& operator=(const FileWrapper&) = delete;
 };
 
 }  // namespace webrtc

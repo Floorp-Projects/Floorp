@@ -18,7 +18,6 @@
 
 #include "webrtc/base/checks.h"
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/base/scoped_ptr.h"
 
 namespace {
 

@@ -47,6 +47,8 @@ class DesktopRegion {
   // Row represents a single row of a region. A row is set of rectangles that
   // have the same vertical position.
   struct Row {
+    Row(const Row&);
+    Row(Row&&);
     Row(int32_t top, int32_t bottom);
     ~Row();
 

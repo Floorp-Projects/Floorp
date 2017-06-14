@@ -19,6 +19,7 @@
 #include "GeckoProfiler.h"
 #include "GeckoProfilerReporter.h"
 #include "ProfilerIOInterposeObserver.h"
+#include "mozilla/AutoProfilerLabel.h"
 #include "mozilla/StackWalk.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ThreadLocal.h"
@@ -586,16 +587,16 @@ MOZ_THREAD_LOCAL(ThreadInfo*) TLSInfo::sThreadInfo;
 // also have a second TLS pointer directly to the PseudoStack. Here's why.
 //
 // - We need to be able to push to and pop from the PseudoStack in
-//   ProfilerStackFrameRAII.
+//   AutoProfilerLabel.
 //
-// - Those two functions are hot and must be defined in GeckoProfiler.h so they
+// - The class functions are hot and must be defined in GeckoProfiler.h so they
 //   can be inlined.
 //
 // - We don't want to expose TLSInfo (and ThreadInfo) in GeckoProfiler.h.
 //
 // This second pointer isn't ideal, but does provide a way to satisfy those
 // constraints. TLSInfo manages it, except for the uses in
-// ProfilerStackFrameRAII.
+// AutoProfilerLabel.
 MOZ_THREAD_LOCAL(PseudoStack*) sPseudoStack;
 
 // The name of the main thread.
@@ -2073,6 +2074,29 @@ locked_profiler_start(PSLockRef aLock, const int aEntries, double aInterval,
                       uint32_t aFeatures,
                       const char** aFilters, uint32_t aFilterCount);
 
+// This basically duplicates AutoProfilerLabel's constructor.
+PseudoStack*
+MozGlueLabelEnter(const char* aLabel, const char* aDynamicString, void* aSp,
+                  uint32_t aLine)
+{
+  PseudoStack* pseudoStack = sPseudoStack.get();
+  if (pseudoStack) {
+    pseudoStack->pushCppFrame(aLabel, aDynamicString, aSp, aLine,
+                              js::ProfileEntry::Kind::CPP_NORMAL,
+                              js::ProfileEntry::Category::OTHER);
+  }
+  return pseudoStack;
+}
+
+// This basically duplicates AutoProfilerLabel's destructor.
+void
+MozGlueLabelExit(PseudoStack* aPseudoStack)
+{
+  if (aPseudoStack) {
+    aPseudoStack->pop();
+  }
+}
+
 void
 profiler_init(void* aStackTop)
 {
@@ -2119,6 +2143,9 @@ profiler_init(void* aStackTop)
       GeckoJavaSampler::Init();
     }
 #endif
+
+    // Setup support for pushing/popping labels in mozglue.
+    RegisterProfilerLabelEnterExit(MozGlueLabelEnter, MozGlueLabelExit);
 
     // (Linux-only) We could create CorePS::mLul and read unwind info into it
     // at this point. That would match the lifetime implied by destruction of

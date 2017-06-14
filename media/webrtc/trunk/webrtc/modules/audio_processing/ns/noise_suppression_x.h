@@ -11,6 +11,8 @@
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_NS_NOISE_SUPPRESSION_X_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_NS_NOISE_SUPPRESSION_X_H_
 
+#include <stddef.h>
+
 #include "webrtc/typedefs.h"
 
 typedef struct NsxHandleT NsxHandle;
@@ -80,6 +82,29 @@ void WebRtcNsx_Process(NsxHandle* nsxInst,
                        const short* const* speechFrame,
                        int num_bands,
                        short* const* outFrame);
+
+/* Returns a pointer to the noise estimate per frequency bin. The number of
+ * frequency bins can be provided using WebRtcNsx_num_freq().
+ *
+ * Input
+ *      - nsxInst       : NSx instance. Needs to be initiated before call.
+ *      - q_noise       : Q value of the noise estimate, which is the number of
+ *                        bits that it needs to be right-shifted to be
+ *                        normalized.
+ *
+ * Return value         : Pointer to the noise estimate per frequency bin.
+ *                        Returns NULL if the input is a NULL pointer or an
+ *                        uninitialized instance.
+ */
+const uint32_t* WebRtcNsx_noise_estimate(const NsxHandle* nsxInst,
+                                         int* q_noise);
+
+/* Returns the number of frequency bins, which is the length of the noise
+ * estimate for example.
+ *
+ * Return value         : Number of frequency bins.
+ */
+size_t WebRtcNsx_num_freq();
 
 #ifdef __cplusplus
 }

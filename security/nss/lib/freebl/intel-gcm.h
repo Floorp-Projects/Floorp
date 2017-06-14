@@ -27,7 +27,7 @@
 typedef struct intel_AES_GCMContextStr intel_AES_GCMContext;
 
 intel_AES_GCMContext *intel_AES_GCM_CreateContext(void *context, freeblCipherFunc cipher,
-                                                  const unsigned char *params, unsigned int blocksize);
+                                                  const unsigned char *params);
 
 void intel_AES_GCM_DestroyContext(intel_AES_GCMContext *gcm, PRBool freeit);
 

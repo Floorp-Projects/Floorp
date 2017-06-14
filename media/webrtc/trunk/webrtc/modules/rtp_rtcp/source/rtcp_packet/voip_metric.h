@@ -35,8 +35,8 @@ class VoipMetric {
   // Consumes VoipMetric::kLength bytes.
   void Create(uint8_t* buffer) const;
 
-  void To(uint32_t ssrc) { ssrc_ = ssrc; }
-  void WithVoipMetric(const RTCPVoIPMetric& voip_metric) {
+  void SetMediaSsrc(uint32_t ssrc) { ssrc_ = ssrc; }
+  void SetVoipMetric(const RTCPVoIPMetric& voip_metric) {
     voip_metric_ = voip_metric;
   }
 

@@ -21,10 +21,8 @@
 #include "Latency.h"
 #include "mozilla/Telemetry.h"
 
-#include "webrtc/common.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_rtcp.h"
-#include "webrtc/voice_engine/include/voe_dtmf.h"
 #include "webrtc/voice_engine/include/voe_errors.h"
 #include "webrtc/voice_engine/voice_engine_impl.h"
 #include "webrtc/system_wrappers/include/clock.h"
@@ -90,6 +88,7 @@ WebrtcAudioConduit::~WebrtcAudioConduit()
     mPtrVoEBase->StopPlayout(mChannel);
     mPtrVoEBase->StopSend(mChannel);
     mPtrVoEBase->StopReceive(mChannel);
+    mChannelProxy = nullptr;
     mPtrVoEBase->DeleteChannel(mChannel);
     // We don't Terminate() the VoEBase here, because the Call (owned by
     // PeerConnectionMedia) actually owns the (shared) VoEBase/VoiceEngine
@@ -214,23 +213,26 @@ bool WebrtcAudioConduit::GetRTCPReceiverReport(DOMHighResTimeStamp* timestamp,
                                                uint64_t* bytesReceived,
                                                uint32_t* cumulativeLost,
                                                int32_t* rttMs) {
-  uint32_t ntpHigh, ntpLow;
-  uint16_t fractionLost;
-  bool result = !mPtrRTP->GetRemoteRTCPReceiverInfo(mChannel, ntpHigh, ntpLow,
-                                                    *packetsReceived,
-                                                    *bytesReceived,
-                                                    *jitterMs,
-                                                    fractionLost,
-                                                    *cumulativeLost,
-                                                    *rttMs);
-  // Note: rrtMs is 0 when unavailable before the VoE rework. It is likely
-  // that after the audio moves to the new Call API that rttMs will be -1
-  // when unavailable.
-  if (!result) {
-    return false;
-  }
-  // Note: timestamp is not correct per the spec... should be time the rtcp
-  // was received (remote) or sent (local)
+
+  // We get called on STS thread... the proxy thread-checks to MainThread
+  // I removed the check, since GetRTCPStatistics ends up going down to
+  // methods (rtp_receiver_->SSRC() and rtp_receive_statistics_->GetStatistician()
+  // and GetStatistics that internally lock, so we're ok here without a thread-check.
+  webrtc::CallStatistics call_stats = mChannelProxy->GetRTCPStatistics();
+  *bytesReceived = call_stats.bytesReceived;
+  *packetsReceived = call_stats.packetsReceived;
+  *cumulativeLost = call_stats.cumulativeLost;
+  *rttMs = call_stats.rttMs;
+
+  unsigned int averageJitterMs;
+  unsigned int maxJitterMs;
+  unsigned int discardedPackets;
+  unsigned int cumulative;
+  mChannelProxy->GetRTPStatistics(averageJitterMs, maxJitterMs, discardedPackets, cumulative);
+  *jitterMs = averageJitterMs;
+
+  // XXX Note: timestamp is not correct per the spec... should be time the
+  // rtcp was received (remote) or sent (local)
   *timestamp = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
   return true;
 }
@@ -253,20 +255,13 @@ bool WebrtcAudioConduit::GetRTCPSenderReport(DOMHighResTimeStamp* timestamp,
    return result;
  }
 
-bool WebrtcAudioConduit::SetDtmfPayloadType(unsigned char type) {
+bool WebrtcAudioConduit::SetDtmfPayloadType(unsigned char type, int freq) {
   CSFLogInfo(logTag, "%s : setting dtmf payload %d", __FUNCTION__, (int)type);
 
-  ScopedCustomReleasePtr<webrtc::VoEDtmf> mPtrVoEDtmf;
-  mPtrVoEDtmf = webrtc::VoEDtmf::GetInterface(mVoiceEngine);
-  if (!mPtrVoEDtmf) {
-    CSFLogError(logTag, "%s Unable to initialize VoEDtmf", __FUNCTION__);
-    return false;
-  }
-
-  int result = mPtrVoEDtmf->SetSendTelephoneEventPayloadType(mChannel, type);
+  int result = mChannelProxy->SetSendTelephoneEventPayloadType(type, freq);
   if (result == -1) {
-    CSFLogError(logTag, "%s Failed call to SetSendTelephoneEventPayloadType",
-                        __FUNCTION__);
+    CSFLogError(logTag, "%s Failed call to SetSendTelephoneEventPayloadType(%u, %d)",
+                __FUNCTION__, type, freq);
   }
   return result != -1;
 }
@@ -280,8 +275,10 @@ bool WebrtcAudioConduit::InsertDTMFTone(int channel, int eventCode,
     return false;
   }
 
-  webrtc::VoiceEngineImpl* s = static_cast<webrtc::VoiceEngineImpl*>(mVoiceEngine);
-  int result = s->SendTelephoneEvent(channel, eventCode, outOfBand, lengthMs, attenuationDb);
+  int result = 0;
+  if (outOfBand){
+    result = mChannelProxy->SendTelephoneEventOutband(eventCode, lengthMs);
+  }
   return result != -1;
 }
 
@@ -368,6 +365,10 @@ MediaConduitErrorCode WebrtcAudioConduit::Init()
     CSFLogError(logTag, "%s VoiceEngine Channel creation failed",__FUNCTION__);
     return kMediaConduitChannelError;
   }
+  // Needed to access TelephoneEvent APIs in 57 if we're not using Call/audio_send_stream/etc
+  webrtc::VoiceEngineImpl* s = static_cast<webrtc::VoiceEngineImpl*>(mVoiceEngine);
+  mChannelProxy = s->GetChannelProxy(mChannel);
+  MOZ_ASSERT(mChannelProxy);
 
   CSFLogDebug(logTag, "%s Channel Created %d ",__FUNCTION__, mChannel);
 

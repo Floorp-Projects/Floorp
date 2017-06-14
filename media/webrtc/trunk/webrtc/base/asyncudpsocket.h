@@ -11,8 +11,9 @@
 #ifndef WEBRTC_BASE_ASYNCUDPSOCKET_H_
 #define WEBRTC_BASE_ASYNCUDPSOCKET_H_
 
+#include <memory>
+
 #include "webrtc/base/asyncpacketsocket.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/socketfactory.h"
 
 namespace rtc {
@@ -56,7 +57,7 @@ class AsyncUDPSocket : public AsyncPacketSocket {
   // Called when the underlying socket is ready to send.
   void OnWriteEvent(AsyncSocket* socket);
 
-  scoped_ptr<AsyncSocket> socket_;
+  std::unique_ptr<AsyncSocket> socket_;
   char* buf_;
   size_t size_;
 };

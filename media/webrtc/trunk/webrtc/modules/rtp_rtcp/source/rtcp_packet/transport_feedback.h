@@ -11,30 +11,33 @@
 #ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_TRANSPORT_FEEDBACK_H_
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_TRANSPORT_FEEDBACK_H_
 
-#include <deque>
+#include <memory>
 #include <vector>
 
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/modules/include/module_common_types.h"
-#include "webrtc/modules/rtp_rtcp/source/rtcp_packet.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/rtpfb.h"
 
 namespace webrtc {
 namespace rtcp {
+class CommonHeader;
 
-class PacketStatusChunk;
-
-class TransportFeedback : public RtcpPacket {
+class TransportFeedback : public Rtpfb {
  public:
-  TransportFeedback();
-  virtual ~TransportFeedback();
+  // TODO(sprang): IANA reg?
+  static constexpr uint8_t kFeedbackMessageType = 15;
+  // Convert to multiples of 0.25ms.
+  static constexpr int kDeltaScaleFactor = 250;
+  // Maximum number of packets (including missing) TransportFeedback can report.
+  static constexpr size_t kMaxReportedPackets = 0xffff;
 
-  void WithPacketSenderSsrc(uint32_t ssrc);
-  void WithMediaSourceSsrc(uint32_t ssrc);
-  void WithBase(uint16_t base_sequence,     // Seq# of first packet in this msg.
-                int64_t ref_timestamp_us);  // Reference timestamp for this msg.
-  void WithFeedbackSequenceNumber(uint8_t feedback_sequence);
+  TransportFeedback();
+  ~TransportFeedback() override;
+
+  void SetBase(uint16_t base_sequence,     // Seq# of first packet in this msg.
+               int64_t ref_timestamp_us);  // Reference timestamp for this msg.
+  void SetFeedbackSequenceNumber(uint8_t feedback_sequence);
   // NOTE: This method requires increasing sequence numbers (excepting wraps).
-  bool WithReceivedPacket(uint16_t sequence_number, int64_t timestamp_us);
+  bool AddReceivedPacket(uint16_t sequence_number, int64_t timestamp_us);
 
   enum class StatusSymbol {
     kNotReceived,
@@ -52,14 +55,12 @@ class TransportFeedback : public RtcpPacket {
   // is relative the base time.
   std::vector<int64_t> GetReceiveDeltasUs() const;
 
-  uint32_t GetPacketSenderSsrc() const;
-  uint32_t GetMediaSourceSsrc() const;
-  static const int kDeltaScaleFactor = 250;  // Convert to multiples of 0.25ms.
-  static const uint8_t kFeedbackMessageType = 15;  // TODO(sprang): IANA reg?
-  static const uint8_t kPayloadType = 205;         // RTPFB, see RFC4585.
-
-  static rtc::scoped_ptr<TransportFeedback> ParseFrom(const uint8_t* buffer,
+  bool Parse(const CommonHeader& packet);
+  static std::unique_ptr<TransportFeedback> ParseFrom(const uint8_t* buffer,
                                                       size_t length);
+  // Pre and postcondition for all public methods. Should always return true.
+  // This function is for tests.
+  bool IsConsistent() const;
 
  protected:
   bool Create(uint8_t* packet,
@@ -70,32 +71,34 @@ class TransportFeedback : public RtcpPacket {
   size_t BlockLength() const override;
 
  private:
-  static PacketStatusChunk* ParseChunk(const uint8_t* buffer, size_t max_size);
+  // Size in bytes of a delta time in rtcp packet.
+  // Valid values are 0 (packet wasn't received), 1 or 2.
+  using DeltaSize = uint8_t;
+  // Keeps DeltaSizes that can be encoded into single chunk if it is last chunk.
+  class LastChunk;
+  struct ReceivedPacket {
+    ReceivedPacket(uint16_t sequence_number, int16_t delta_ticks)
+        : sequence_number(sequence_number), delta_ticks(delta_ticks) {}
+    uint16_t sequence_number;
+    int16_t delta_ticks;
+  };
 
-  int64_t Unwrap(uint16_t sequence_number);
-  bool AddSymbol(StatusSymbol symbol, int64_t seq);
-  bool Encode(StatusSymbol symbol);
-  bool HandleRleCandidate(StatusSymbol symbol,
-                          int current_capacity,
-                          int delta_size);
-  void EmitRemaining();
-  void EmitVectorChunk();
-  void EmitRunLengthChunk();
+  // Reset packet to consistent empty state.
+  void Clear();
 
-  uint32_t packet_sender_ssrc_;
-  uint32_t media_source_ssrc_;
-  int32_t base_seq_;
-  int64_t base_time_;
+  bool AddDeltaSize(DeltaSize delta_size);
+
+  uint16_t base_seq_no_;
+  uint16_t num_seq_no_;
+  int32_t base_time_ticks_;
   uint8_t feedback_seq_;
-  std::vector<PacketStatusChunk*> status_chunks_;
-  std::vector<int16_t> receive_deltas_;
 
-  int64_t last_seq_;
-  int64_t last_timestamp_;
-  std::deque<StatusSymbol> symbol_vec_;
-  uint16_t first_symbol_cardinality_;
-  bool vec_needs_two_bit_symbols_;
-  uint32_t size_bytes_;
+  int64_t last_timestamp_us_;
+  std::vector<ReceivedPacket> packets_;
+  // All but last encoded packet chunks.
+  std::vector<uint16_t> encoded_chunks_;
+  const std::unique_ptr<LastChunk> last_chunk_;
+  size_t size_bytes_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(TransportFeedback);
 };

@@ -23,18 +23,17 @@
 
 #include "webrtc/base/arraysize.h"
 #include "webrtc/base/platform_file.h"
-#include "webrtc/common.h"
 #include "webrtc/modules/audio_processing/beamformer/array_util.h"
+#include "webrtc/modules/audio_processing/include/config.h"
 #include "webrtc/typedefs.h"
-
-struct AecCore;
 
 namespace webrtc {
 
+struct AecCore;
+
 class AudioFrame;
 
-template<typename T>
-class Beamformer;
+class NonlinearBeamformer;
 
 class StreamConfig;
 class ProcessingConfig;
@@ -71,6 +70,18 @@ struct ExtendedFilter {
   bool enabled;
 };
 
+// Enables the refined linear filter adaptation in the echo canceller.
+// This configuration only applies to EchoCancellation and not
+// EchoControlMobile. It can be set in the constructor
+// or using AudioProcessing::SetExtraOptions().
+struct RefinedAdaptiveFilter {
+  RefinedAdaptiveFilter() : enabled(false) {}
+  explicit RefinedAdaptiveFilter(bool enabled) : enabled(enabled) {}
+  static const ConfigOptionID identifier =
+      ConfigOptionID::kAecRefinedAdaptiveFilter;
+  bool enabled;
+};
+
 // Enables delay-agnostic echo cancellation. This feature relies on internally
 // estimated delays between the process and reverse streams, thus not relying
 // on reported system delays. This configuration only applies to
@@ -94,15 +105,21 @@ static const int kAgcStartupMinVolume = 85;
 #else
 static const int kAgcStartupMinVolume = 0;
 #endif  // defined(WEBRTC_CHROMIUM_BUILD)
+static constexpr int kClippedLevelMin = 170;
 struct ExperimentalAgc {
-  ExperimentalAgc() : enabled(true), startup_min_volume(kAgcStartupMinVolume) {}
-  explicit ExperimentalAgc(bool enabled)
-      : enabled(enabled), startup_min_volume(kAgcStartupMinVolume) {}
+  ExperimentalAgc() = default;
+  explicit ExperimentalAgc(bool enabled) : enabled(enabled) {}
   ExperimentalAgc(bool enabled, int startup_min_volume)
       : enabled(enabled), startup_min_volume(startup_min_volume) {}
+  ExperimentalAgc(bool enabled, int startup_min_volume, int clipped_level_min)
+      : enabled(enabled),
+        startup_min_volume(startup_min_volume),
+        clipped_level_min(clipped_level_min) {}
   static const ConfigOptionID identifier = ConfigOptionID::kExperimentalAgc;
-  bool enabled;
-  int startup_min_volume;
+  bool enabled = true;
+  int startup_min_volume = kAgcStartupMinVolume;
+  // Lowest microphone level that will be applied in response to clipping.
+  int clipped_level_min = kClippedLevelMin;
 };
 
 // Use to enable experimental noise suppression. It can be set in the
@@ -117,31 +134,20 @@ struct ExperimentalNs {
 // Use to enable beamforming. Must be provided through the constructor. It will
 // have no impact if used with AudioProcessing::SetExtraOptions().
 struct Beamforming {
-  Beamforming()
-      : enabled(false),
-        array_geometry(),
-        target_direction(
-            SphericalPointf(static_cast<float>(M_PI) / 2.f, 0.f, 1.f)) {}
-  Beamforming(bool enabled, const std::vector<Point>& array_geometry)
-      : Beamforming(enabled,
-                    array_geometry,
-                    SphericalPointf(static_cast<float>(M_PI) / 2.f, 0.f, 1.f)) {
-  }
+  Beamforming();
+  Beamforming(bool enabled, const std::vector<Point>& array_geometry);
   Beamforming(bool enabled,
               const std::vector<Point>& array_geometry,
-              SphericalPointf target_direction)
-      : enabled(enabled),
-        array_geometry(array_geometry),
-        target_direction(target_direction) {}
+              SphericalPointf target_direction);
+  ~Beamforming();
+
   static const ConfigOptionID identifier = ConfigOptionID::kBeamforming;
   const bool enabled;
   const std::vector<Point> array_geometry;
   const SphericalPointf target_direction;
 };
 
-// Use to enable intelligibility enhancer in audio processing. Must be provided
-// though the constructor. It will have no impact if used with
-// AudioProcessing::SetExtraOptions().
+// Use to enable intelligibility enhancer in audio processing.
 //
 // Note: If enabled and the reverse stream has more than one output channel,
 // the reverse stream will become an upmixed mono signal.
@@ -157,11 +163,11 @@ struct Intelligibility {
 //
 // APM operates on two audio streams on a frame-by-frame basis. Frames of the
 // primary stream, on which all processing is applied, are passed to
-// |ProcessStream()|. Frames of the reverse direction stream, which are used for
-// analysis by some components, are passed to |AnalyzeReverseStream()|. On the
-// client-side, this will typically be the near-end (capture) and far-end
-// (render) streams, respectively. APM should be placed in the signal chain as
-// close to the audio hardware abstraction layer (HAL) as possible.
+// |ProcessStream()|. Frames of the reverse direction stream are passed to
+// |ProcessReverseStream()|. On the client-side, this will typically be the
+// near-end (capture) and far-end (render) streams, respectively. APM should be
+// placed in the signal chain as close to the audio hardware abstraction layer
+// (HAL) as possible.
 //
 // On the server-side, the reverse stream will normally not be used, with
 // processing occurring on each incoming stream.
@@ -188,7 +194,10 @@ struct Intelligibility {
 // Usage example, omitting error checking:
 // AudioProcessing* apm = AudioProcessing::Create(0);
 //
-// apm->high_pass_filter()->Enable(true);
+// AudioProcessing::Config config;
+// config.level_controller.enabled = true;
+// config.high_pass_filter.enabled = true;
+// apm->ApplyConfig(config)
 //
 // apm->echo_cancellation()->enable_drift_compensation(false);
 // apm->echo_cancellation()->Enable(true);
@@ -205,7 +214,7 @@ struct Intelligibility {
 // // Start a voice call...
 //
 // // ... Render frame arrives bound for the audio HAL ...
-// apm->AnalyzeReverseStream(render_frame);
+// apm->ProcessReverseStream(render_frame);
 //
 // // ... Capture frame arrives from the audio HAL ...
 // // Call required set_stream_ functions.
@@ -227,14 +236,49 @@ struct Intelligibility {
 //
 class AudioProcessing {
  public:
+  // The struct below constitutes the new parameter scheme for the audio
+  // processing. It is being introduced gradually and until it is fully
+  // introduced, it is prone to change.
+  // TODO(peah): Remove this comment once the new config scheme is fully rolled
+  // out.
+  //
+  // The parameters and behavior of the audio processing module are controlled
+  // by changing the default values in the AudioProcessing::Config struct.
+  // The config is applied by passing the struct to the ApplyConfig method.
+  struct Config {
+    struct LevelController {
+      bool enabled = false;
+
+      // Sets the initial peak level to use inside the level controller in order
+      // to compute the signal gain. The unit for the peak level is dBFS and
+      // the allowed range is [-100, 0].
+      float initial_peak_level_dbfs = -6.0206f;
+    } level_controller;
+    struct ResidualEchoDetector {
+      bool enabled = true;
+    } residual_echo_detector;
+
+    struct HighPassFilter {
+      bool enabled = false;
+    } high_pass_filter;
+
+    // Enables the next generation AEC functionality. This feature replaces the
+    // standard methods for echo removal in the AEC.
+    // The functionality is not yet activated in the code and turning this on
+    // does not yet have the desired behavior.
+    struct EchoCanceller3 {
+      bool enabled = false;
+    } echo_canceller3;
+  };
+
   // TODO(mgraczyk): Remove once all methods that use ChannelLayout are gone.
   enum ChannelLayout {
     kMono,
     // Left, right.
     kStereo,
-    // Mono, keyboard mic.
+    // Mono, keyboard, and mic.
     kMonoAndKeyboard,
-    // Left, right, keyboard mic.
+    // Left, right, keyboard, and mic.
     kStereoAndKeyboard
   };
 
@@ -245,10 +289,10 @@ class AudioProcessing {
   // be one instance for every incoming stream.
   static AudioProcessing* Create();
   // Allows passing in an optional configuration at create-time.
-  static AudioProcessing* Create(const Config& config);
+  static AudioProcessing* Create(const webrtc::Config& config);
   // Only for testing.
-  static AudioProcessing* Create(const Config& config,
-                                 Beamformer<float>* beamformer);
+  static AudioProcessing* Create(const webrtc::Config& config,
+                                 NonlinearBeamformer* beamformer);
   virtual ~AudioProcessing() {}
 
   // Initializes internal states, while retaining all user settings. This
@@ -258,7 +302,7 @@ class AudioProcessing {
   //
   // It is also not necessary to call if the audio parameters (sample
   // rate and number of channels) have changed. Passing updated parameters
-  // directly to |ProcessStream()| and |AnalyzeReverseStream()| is permissible.
+  // directly to |ProcessStream()| and |ProcessReverseStream()| is permissible.
   // If the parameters are known at init-time though, they may be provided.
   virtual int Initialize() = 0;
 
@@ -276,20 +320,20 @@ class AudioProcessing {
   // Initialize with unpacked parameters. See Initialize() above for details.
   //
   // TODO(mgraczyk): Remove once clients are updated to use the new interface.
-  virtual int Initialize(int input_sample_rate_hz,
-                         int output_sample_rate_hz,
-                         int reverse_sample_rate_hz,
-                         ChannelLayout input_layout,
-                         ChannelLayout output_layout,
-                         ChannelLayout reverse_layout) = 0;
+  virtual int Initialize(int capture_input_sample_rate_hz,
+                         int capture_output_sample_rate_hz,
+                         int render_sample_rate_hz,
+                         ChannelLayout capture_input_layout,
+                         ChannelLayout capture_output_layout,
+                         ChannelLayout render_input_layout) = 0;
+
+  // TODO(peah): This method is a temporary solution used to take control
+  // over the parameters in the audio processing module and is likely to change.
+  virtual void ApplyConfig(const Config& config) = 0;
 
   // Pass down additional options which don't have explicit setters. This
   // ensures the options are applied immediately.
-  virtual void SetExtraOptions(const Config& config) = 0;
-
-  // TODO(peah): Remove after voice engine no longer requires it to resample
-  // the reverse stream to the forward rate.
-  virtual int input_sample_rate_hz() const = 0;
+  virtual void SetExtraOptions(const webrtc::Config& config) = 0;
 
   // TODO(ajm): Only intended for internal use. Make private and friend the
   // necessary classes?
@@ -347,27 +391,18 @@ class AudioProcessing {
                             const StreamConfig& output_config,
                             float* const* dest) = 0;
 
-  // Analyzes a 10 ms |frame| of the reverse direction audio stream. The frame
-  // will not be modified. On the client-side, this is the far-end (or to be
+  // Processes a 10 ms |frame| of the reverse direction audio stream. The frame
+  // may be modified. On the client-side, this is the far-end (or to be
   // rendered) audio.
   //
-  // It is only necessary to provide this if echo processing is enabled, as the
+  // It is necessary to provide this if echo processing is enabled, as the
   // reverse stream forms the echo reference signal. It is recommended, but not
   // necessary, to provide if gain control is enabled. On the server-side this
   // typically will not be used. If you're not sure what to pass in here,
   // chances are you don't need to use it.
   //
   // The |sample_rate_hz_|, |num_channels_|, and |samples_per_channel_|
-  // members of |frame| must be valid. |sample_rate_hz_| must correspond to
-  // |input_sample_rate_hz()|
-  //
-  // TODO(ajm): add const to input; requires an implementation fix.
-  // DEPRECATED: Use |ProcessReverseStream| instead.
-  // TODO(ekm): Remove once all users have updated to |ProcessReverseStream|.
-  virtual int AnalyzeReverseStream(AudioFrame* frame) = 0;
-
-  // Same as |AnalyzeReverseStream|, but may modify |frame| if intelligibility
-  // is enabled.
+  // members of |frame| must be valid.
   virtual int ProcessReverseStream(AudioFrame* frame) = 0;
 
   // Accepts deinterleaved float audio with the range [-1, 1]. Each element
@@ -375,24 +410,24 @@ class AudioProcessing {
   // TODO(mgraczyk): Remove once clients are updated to use the new interface.
   virtual int AnalyzeReverseStream(const float* const* data,
                                    size_t samples_per_channel,
-                                   int rev_sample_rate_hz,
+                                   int sample_rate_hz,
                                    ChannelLayout layout) = 0;
 
   // Accepts deinterleaved float audio with the range [-1, 1]. Each element of
   // |data| points to a channel buffer, arranged according to |reverse_config|.
   virtual int ProcessReverseStream(const float* const* src,
-                                   const StreamConfig& reverse_input_config,
-                                   const StreamConfig& reverse_output_config,
+                                   const StreamConfig& input_config,
+                                   const StreamConfig& output_config,
                                    float* const* dest) = 0;
 
   // This must be called if and only if echo processing is enabled.
   //
-  // Sets the |delay| in ms between AnalyzeReverseStream() receiving a far-end
+  // Sets the |delay| in ms between ProcessReverseStream() receiving a far-end
   // frame and ProcessStream() receiving a near-end frame containing the
   // corresponding echo. On the client-side this can be expressed as
   //   delay = (t_render - t_analyze) + (t_process - t_capture)
   // where,
-  //   - t_analyze is the time a frame is passed to AnalyzeReverseStream() and
+  //   - t_analyze is the time a frame is passed to ProcessReverseStream() and
   //     t_render is the time the first sample of the same frame is rendered by
   //     the audio hardware.
   //   - t_capture is the time the first sample of a frame is captured by the
@@ -417,20 +452,25 @@ class AudioProcessing {
   // Starts recording debugging information to a file specified by |filename|,
   // a NULL-terminated string. If there is an ongoing recording, the old file
   // will be closed, and recording will continue in the newly specified file.
-  // An already existing file will be overwritten without warning.
+  // An already existing file will be overwritten without warning. A maximum
+  // file size (in bytes) for the log can be specified. The logging is stopped
+  // once the limit has been reached. If max_log_size_bytes is set to a value
+  // <= 0, no limit will be used.
   static const size_t kMaxFilenameSize = 1024;
-  virtual int StartDebugRecording(const char filename[kMaxFilenameSize]) = 0;
+  virtual int StartDebugRecording(const char filename[kMaxFilenameSize],
+                                  int64_t max_log_size_bytes) = 0;
 
   // Same as above but uses an existing file handle. Takes ownership
   // of |handle| and closes it at StopDebugRecording().
+  virtual int StartDebugRecording(FILE* handle, int64_t max_log_size_bytes) = 0;
+
+  // TODO(ivoc): Remove this function after Chrome stops using it.
   virtual int StartDebugRecording(FILE* handle) = 0;
 
   // Same as above but uses an existing PlatformFile handle. Takes ownership
   // of |handle| and closes it at StopDebugRecording().
   // TODO(xians): Make this interface pure virtual.
-  virtual int StartDebugRecordingForPlatformFile(rtc::PlatformFile handle) {
-      return -1;
-  }
+  virtual int StartDebugRecordingForPlatformFile(rtc::PlatformFile handle) = 0;
 
   // Stops recording debugging information, and closes the file. Recording
   // cannot be resumed in the same file (without overwriting it).
@@ -440,23 +480,86 @@ class AudioProcessing {
   // specific member variables are reset.
   virtual void UpdateHistogramsOnCallEnd() = 0;
 
+  // TODO(ivoc): Remove when the calling code no longer uses the old Statistics
+  //             API.
+  struct Statistic {
+    int instant = 0;  // Instantaneous value.
+    int average = 0;  // Long-term average.
+    int maximum = 0;  // Long-term maximum.
+    int minimum = 0;  // Long-term minimum.
+  };
+
+  struct Stat {
+    void Set(const Statistic& other) {
+      Set(other.instant, other.average, other.maximum, other.minimum);
+    }
+    void Set(float instant, float average, float maximum, float minimum) {
+      instant_ = instant;
+      average_ = average;
+      maximum_ = maximum;
+      minimum_ = minimum;
+    }
+    float instant() const { return instant_; }
+    float average() const { return average_; }
+    float maximum() const { return maximum_; }
+    float minimum() const { return minimum_; }
+
+   private:
+    float instant_ = 0.0f;  // Instantaneous value.
+    float average_ = 0.0f;  // Long-term average.
+    float maximum_ = 0.0f;  // Long-term maximum.
+    float minimum_ = 0.0f;  // Long-term minimum.
+  };
+
+  struct AudioProcessingStatistics {
+    AudioProcessingStatistics();
+    AudioProcessingStatistics(const AudioProcessingStatistics& other);
+    ~AudioProcessingStatistics();
+
+    // AEC Statistics.
+    // RERL = ERL + ERLE
+    Stat residual_echo_return_loss;
+    // ERL = 10log_10(P_far / P_echo)
+    Stat echo_return_loss;
+    // ERLE = 10log_10(P_echo / P_out)
+    Stat echo_return_loss_enhancement;
+    // (Pre non-linear processing suppression) A_NLP = 10log_10(P_echo / P_a)
+    Stat a_nlp;
+    // Fraction of time that the AEC linear filter is divergent, in a 1-second
+    // non-overlapped aggregation window.
+    float divergent_filter_fraction = -1.0f;
+
+    // The delay metrics consists of the delay median and standard deviation. It
+    // also consists of the fraction of delay estimates that can make the echo
+    // cancellation perform poorly. The values are aggregated until the first
+    // call to |GetStatistics()| and afterwards aggregated and updated every
+    // second. Note that if there are several clients pulling metrics from
+    // |GetStatistics()| during a session the first call from any of them will
+    // change to one second aggregation window for all.
+    int delay_median = -1;
+    int delay_standard_deviation = -1;
+    float fraction_poor_delays = -1.0f;
+
+    // Residual echo detector likelihood.
+    float residual_echo_likelihood = -1.0f;
+    // Maximum residual echo likelihood from the last time period.
+    float residual_echo_likelihood_recent_max = -1.0f;
+  };
+
+  // TODO(ivoc): Make this pure virtual when all subclasses have been updated.
+  virtual AudioProcessingStatistics GetStatistics() const;
+
   // These provide access to the component interfaces and should never return
   // NULL. The pointers will be valid for the lifetime of the APM instance.
   // The memory for these objects is entirely managed internally.
   virtual EchoCancellation* echo_cancellation() const = 0;
   virtual EchoControlMobile* echo_control_mobile() const = 0;
   virtual GainControl* gain_control() const = 0;
+  // TODO(peah): Deprecate this API call.
   virtual HighPassFilter* high_pass_filter() const = 0;
   virtual LevelEstimator* level_estimator() const = 0;
   virtual NoiseSuppression* noise_suppression() const = 0;
   virtual VoiceDetection* voice_detection() const = 0;
-
-  struct Statistic {
-    int instant;  // Instantaneous value.
-    int average;  // Long-term average.
-    int maximum;  // Long-term maximum.
-    int minimum;  // Long-term minimum.
-  };
 
   enum Error {
     // Fatal errors.
@@ -484,13 +587,19 @@ class AudioProcessing {
     kSampleRate8kHz = 8000,
     kSampleRate16kHz = 16000,
     kSampleRate32kHz = 32000,
+    kSampleRate44_1kHz = 44100,
     kSampleRate48kHz = 48000
   };
 
-  static const int kNativeSampleRatesHz[];
-  static const size_t kNumNativeSampleRates;
-  static const int kMaxNativeSampleRateHz;
-  static const int kMaxAECMSampleRateHz;
+  // TODO(kwiberg): We currently need to support a compiler (Visual C++) that
+  // complains if we don't explicitly state the size of the array here. Remove
+  // the size when that's no longer the case.
+  static constexpr int kNativeSampleRatesHz[4] = {
+      kSampleRate8kHz, kSampleRate16kHz, kSampleRate32kHz, kSampleRate48kHz};
+  static constexpr size_t kNumNativeSampleRates =
+      arraysize(kNativeSampleRatesHz);
+  static constexpr int kMaxNativeSampleRateHz =
+      kNativeSampleRatesHz[kNumNativeSampleRates - 1];
 
   static const int kChunkSizeMs = 10;
 };
@@ -668,8 +777,13 @@ class EchoCancellation {
 
     // (Pre non-linear processing suppression) A_NLP = 10log_10(P_echo / P_a)
     AudioProcessing::Statistic a_nlp;
+
+    // Fraction of time that the AEC linear filter is divergent, in a 1-second
+    // non-overlapped aggregation window.
+    float divergent_filter_fraction;
   };
 
+  // Deprecated. Use GetStatistics on the AudioProcessing interface instead.
   // TODO(ajm): discuss the metrics update period.
   virtual int GetMetrics(Metrics* metrics) = 0;
 
@@ -686,8 +800,9 @@ class EchoCancellation {
   // Note that if there are several clients pulling metrics from
   // |GetDelayMetrics()| during a session the first call from any of them will
   // change to one second aggregation window for all.
-  // TODO(bjornv): Deprecated, remove.
+  // Deprecated. Use GetStatistics on the AudioProcessing interface instead.
   virtual int GetDelayMetrics(int* median, int* std) = 0;
+  // Deprecated. Use GetStatistics on the AudioProcessing interface instead.
   virtual int GetDelayMetrics(int* median, int* std,
                               float* fraction_poor_delays) = 0;
 
@@ -848,7 +963,7 @@ class GainControl {
  protected:
   virtual ~GainControl() {}
 };
-
+// TODO(peah): Remove this interface.
 // A filtering component which removes DC offset and low-frequency noise.
 // Recommended to be enabled on the client-side.
 class HighPassFilter {
@@ -856,7 +971,6 @@ class HighPassFilter {
   virtual int Enable(bool enable) = 0;
   virtual bool is_enabled() const = 0;
 
- protected:
   virtual ~HighPassFilter() {}
 };
 
@@ -907,6 +1021,9 @@ class NoiseSuppression {
   // averaged over output channels. This is not supported in fixed point, for
   // which |kUnsupportedFunctionError| is returned.
   virtual float speech_probability() const = 0;
+
+  // Returns the noise estimate per frequency bin averaged over all channels.
+  virtual std::vector<float> NoiseEstimate() = 0;
 
  protected:
   virtual ~NoiseSuppression() {}

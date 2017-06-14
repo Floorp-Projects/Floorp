@@ -11,6 +11,7 @@
 #ifndef WEBRTC_BASE_ASYNCPACKETSOCKET_H_
 #define WEBRTC_BASE_ASYNCPACKETSOCKET_H_
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/dscp.h"
 #include "webrtc/base/sigslot.h"
 #include "webrtc/base/socket.h"

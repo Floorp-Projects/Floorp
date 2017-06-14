@@ -12,8 +12,8 @@
 
 #include <limits>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/random.h"
+#include "webrtc/test/gtest.h"
 
 using webrtc::rtcp::ReportBlock;
 
@@ -52,13 +52,13 @@ TEST(RtcpPacketReportBlockTest, ParseAnyData) {
 
 TEST(RtcpPacketReportBlockTest, ParseMatchCreate) {
   ReportBlock rb;
-  rb.To(kRemoteSsrc);
-  rb.WithFractionLost(kFractionLost);
-  rb.WithCumulativeLost(kCumulativeLost);
-  rb.WithExtHighestSeqNum(kExtHighestSeqNum);
-  rb.WithJitter(kJitter);
-  rb.WithLastSr(kLastSr);
-  rb.WithDelayLastSr(kDelayLastSr);
+  rb.SetMediaSsrc(kRemoteSsrc);
+  rb.SetFractionLost(kFractionLost);
+  rb.SetCumulativeLost(kCumulativeLost);
+  rb.SetExtHighestSeqNum(kExtHighestSeqNum);
+  rb.SetJitter(kJitter);
+  rb.SetLastSr(kLastSr);
+  rb.SetDelayLastSr(kDelayLastSr);
 
   uint8_t buffer[kBufferLength];
   rb.Create(buffer);
@@ -78,8 +78,8 @@ TEST(RtcpPacketReportBlockTest, ParseMatchCreate) {
 TEST(RtcpPacketReportBlockTest, ValidateCumulativeLost) {
   const uint32_t kMaxCumulativeLost = 0xffffff;
   ReportBlock rb;
-  EXPECT_FALSE(rb.WithCumulativeLost(kMaxCumulativeLost + 1));
-  EXPECT_TRUE(rb.WithCumulativeLost(kMaxCumulativeLost));
+  EXPECT_FALSE(rb.SetCumulativeLost(kMaxCumulativeLost + 1));
+  EXPECT_TRUE(rb.SetCumulativeLost(kMaxCumulativeLost));
 }
 
 }  // namespace

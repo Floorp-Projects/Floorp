@@ -12,10 +12,10 @@
 #define WEBRTC_MODULES_AUDIO_PROCESSING_THREE_BAND_FILTER_BANK_H_
 
 #include <cstring>
+#include <memory>
 #include <vector>
 
 #include "webrtc/common_audio/sparse_fir_filter.h"
-#include "webrtc/system_wrappers/include/scoped_vector.h"
 
 namespace webrtc {
 
@@ -35,6 +35,7 @@ namespace webrtc {
 class ThreeBandFilterBank final {
  public:
   explicit ThreeBandFilterBank(size_t length);
+  ~ThreeBandFilterBank();
 
   // Splits |in| into 3 downsampled frequency bands in |out|.
   // |length| is the |in| length. Each of the 3 bands of |out| has to have a
@@ -58,8 +59,8 @@ class ThreeBandFilterBank final {
 
   std::vector<float> in_buffer_;
   std::vector<float> out_buffer_;
-  ScopedVector<SparseFIRFilter> analysis_filters_;
-  ScopedVector<SparseFIRFilter> synthesis_filters_;
+  std::vector<std::unique_ptr<SparseFIRFilter>> analysis_filters_;
+  std::vector<std::unique_ptr<SparseFIRFilter>> synthesis_filters_;
   std::vector<std::vector<float>> dct_modulation_;
 };
 

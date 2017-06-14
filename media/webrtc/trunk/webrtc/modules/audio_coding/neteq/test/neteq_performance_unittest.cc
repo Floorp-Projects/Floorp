@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/modules/audio_coding/neteq/tools/neteq_performance_test.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/perf_test.h"
 #include "webrtc/typedefs.h"
 

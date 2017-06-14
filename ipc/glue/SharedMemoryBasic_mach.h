@@ -13,6 +13,10 @@
 #include "SharedMemory.h"
 #include <mach/port.h>
 
+#ifdef FUZZING
+#include "SharedMemoryFuzzer.h"
+#endif
+
 //
 // This is a low-level wrapper around platform shared memory.  Don't
 // use it directly; use Shmem allocated through IPDL interfaces.
@@ -50,7 +54,11 @@ public:
 
   virtual void* memory() const override
   {
+#ifdef FUZZING
+    return SharedMemoryFuzzer::MutateSharedMemory(mMemory, mAllocSize);
+#else
     return mMemory;
+#endif
   }
 
   virtual SharedMemoryType Type() const override

@@ -11,9 +11,10 @@
 #ifndef WEBRTC_P2P_BASE_TESTRELAYSERVER_H_
 #define WEBRTC_P2P_BASE_TESTRELAYSERVER_H_
 
+#include <memory>
+
 #include "webrtc/p2p/base/relayserver.h"
 #include "webrtc/base/asynctcpsocket.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/sigslot.h"
 #include "webrtc/base/socketadapters.h"
 #include "webrtc/base/thread.h"
@@ -90,10 +91,10 @@ class TestRelayServer : public sigslot::has_slots<> {
   }
  private:
   cricket::RelayServer server_;
-  rtc::scoped_ptr<rtc::AsyncSocket> tcp_int_socket_;
-  rtc::scoped_ptr<rtc::AsyncSocket> tcp_ext_socket_;
-  rtc::scoped_ptr<rtc::AsyncSocket> ssl_int_socket_;
-  rtc::scoped_ptr<rtc::AsyncSocket> ssl_ext_socket_;
+  std::unique_ptr<rtc::AsyncSocket> tcp_int_socket_;
+  std::unique_ptr<rtc::AsyncSocket> tcp_ext_socket_;
+  std::unique_ptr<rtc::AsyncSocket> ssl_int_socket_;
+  std::unique_ptr<rtc::AsyncSocket> ssl_ext_socket_;
 };
 
 }  // namespace cricket

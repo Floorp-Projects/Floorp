@@ -22,7 +22,6 @@
 #include "nsStyleContext.h"
 #include "nsCSSColorUtils.h"
 #include "gfxContext.h"
-#include "nsRenderingContext.h"
 #include "nsStyleStructInlines.h"
 #include "nsCSSProps.h"
 #include "mozilla/Telemetry.h"

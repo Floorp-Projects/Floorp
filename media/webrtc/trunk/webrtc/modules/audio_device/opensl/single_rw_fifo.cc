@@ -73,11 +73,12 @@ inline void MemoryBarrier() {
 }  // namespace subtle
 
 SingleRwFifo::SingleRwFifo(int capacity)
-    : capacity_(capacity),
+    : queue_(new int8_t*[capacity]),
+      capacity_(capacity),
       size_(0),
       read_pos_(0),
-      write_pos_(0) {
-  queue_.reset(new int8_t*[capacity_]);
+      write_pos_(0)
+{
 }
 
 SingleRwFifo::~SingleRwFifo() {
@@ -96,7 +97,7 @@ void SingleRwFifo::Push(int8_t* mem) {
     assert(false);
     return;
   }
-  queue_[write_pos_] = mem;
+  queue_.get()[write_pos_] = mem;
   // Memory barrier ensures that |size_| is updated after the size has changed.
   subtle::MemoryBarrier();
   ++size_;
@@ -111,7 +112,7 @@ int8_t* SingleRwFifo::Pop() {
     assert(false);
     return ret_val;
   }
-  ret_val = queue_[read_pos_];
+  ret_val = queue_.get()[read_pos_];
   // Memory barrier ensures that |size_| is updated after the size has changed.
   subtle::MemoryBarrier();
   --size_;

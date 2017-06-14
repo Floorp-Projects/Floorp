@@ -10,12 +10,13 @@
 
 #include "webrtc/voice_engine/utility.h"
 
+#include "webrtc/audio/utility/audio_frame_operations.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/common_audio/resampler/include/push_resampler.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/include/module_common_types.h"
-#include "webrtc/modules/utility/include/audio_frame_operations.h"
 #include "webrtc/voice_engine/voice_engine_defines.h"
 
 namespace webrtc {
@@ -52,21 +53,18 @@ void RemixAndResample(const int16_t* src_data,
 
   if (resampler->InitializeIfNeeded(sample_rate_hz, dst_frame->sample_rate_hz_,
                                     audio_ptr_num_channels) == -1) {
-    LOG(LS_ERROR) << "InitializeIfNeeded failed: sample_rate_hz = "
-                  << sample_rate_hz << ", dst_frame->sample_rate_hz_ = "
-                  << dst_frame->sample_rate_hz_
-                  << ", audio_ptr_num_channels = " << audio_ptr_num_channels;
-    assert(false);
+    FATAL() << "InitializeIfNeeded failed: sample_rate_hz = " << sample_rate_hz
+            << ", dst_frame->sample_rate_hz_ = " << dst_frame->sample_rate_hz_
+            << ", audio_ptr_num_channels = " << audio_ptr_num_channels;
   }
 
   const size_t src_length = samples_per_channel * audio_ptr_num_channels;
   int out_length = resampler->Resample(audio_ptr, src_length, dst_frame->data_,
                                        AudioFrame::kMaxDataSizeSamples);
   if (out_length == -1) {
-    LOG(LS_ERROR) << "Resample failed: audio_ptr = " << audio_ptr
-                  << ", src_length = " << src_length
-                  << ", dst_frame->data_ = " << dst_frame->data_;
-    assert(false);
+    FATAL() << "Resample failed: audio_ptr = " << audio_ptr
+            << ", src_length = " << src_length
+            << ", dst_frame->data_ = " << dst_frame->data_;
   }
   dst_frame->samples_per_channel_ = out_length / audio_ptr_num_channels;
 
@@ -84,8 +82,10 @@ void MixWithSat(int16_t target[],
                 const int16_t source[],
                 size_t source_channel,
                 size_t source_len) {
-  assert(target_channel == 1 || target_channel == 2);
-  assert(source_channel == 1 || source_channel == 2);
+  RTC_DCHECK_GE(target_channel, 1);
+  RTC_DCHECK_LE(target_channel, 2);
+  RTC_DCHECK_GE(source_channel, 1);
+  RTC_DCHECK_LE(source_channel, 2);
 
   if (target_channel == 2 && source_channel == 1) {
     // Convert source from mono to stereo.

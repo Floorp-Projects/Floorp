@@ -8,10 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "webrtc/base/network.h"
 
 #if defined(WEBRTC_POSIX)
@@ -36,10 +32,11 @@
 #include <stdio.h>
 
 #include <algorithm>
+#include <memory>
 
+#include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/networkmonitor.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/socket.h"  // includes something that makes windows happy
 #include "webrtc/base/stream.h"
 #include "webrtc/base/stringencode.h"
@@ -114,7 +111,7 @@ std::string AdapterTypeToString(AdapterType type) {
     case ADAPTER_TYPE_LOOPBACK:
       return "Loopback";
     default:
-      RTC_DCHECK(false) << "Invalid type " << type;
+      RTC_NOTREACHED() << "Invalid type " << type;
       return std::string();
   }
 }
@@ -269,7 +266,7 @@ void NetworkManagerBase::MergeNetworkList(const NetworkList& new_networks,
       if (current_list.ips[0].family() == AF_INET) {
         stats->ipv4_network_count++;
       } else {
-        ASSERT(current_list.ips[0].family() == AF_INET6);
+        RTC_DCHECK(current_list.ips[0].family() == AF_INET6);
         stats->ipv6_network_count++;
       }
     }
@@ -286,6 +283,7 @@ void NetworkManagerBase::MergeNetworkList(const NetworkList& new_networks,
       // This network is new. Place it in the network map.
       merged_list.push_back(net);
       networks_map_[key] = net;
+      net->set_id(next_available_network_id_++);
       // Also, we might have accumulated IPAddresses from the first
       // step, set it here.
       net->SetIPs(kv.second.ips, true);
@@ -295,11 +293,16 @@ void NetworkManagerBase::MergeNetworkList(const NetworkList& new_networks,
       Network* existing_net = existing->second;
       *changed = existing_net->SetIPs(kv.second.ips, *changed);
       merged_list.push_back(existing_net);
+      if (net->type() != ADAPTER_TYPE_UNKNOWN &&
+          net->type() != existing_net->type()) {
+        existing_net->set_type(net->type());
+        *changed = true;
+      }
       // If the existing network was not active, networks have changed.
       if (!existing_net->active()) {
         *changed = true;
       }
-      ASSERT(net->active());
+      RTC_DCHECK(net->active());
       if (existing_net != net) {
         delete net;
       }
@@ -317,10 +320,11 @@ void NetworkManagerBase::MergeNetworkList(const NetworkList& new_networks,
     networks_ = merged_list;
     // Reset the active states of all networks.
     for (const auto& kv : networks_map_) {
-      kv.second->set_active(false);
-    }
-    for (Network* network : networks_) {
-      network->set_active(true);
+      Network* network = kv.second;
+      // If |network| is in the newly generated |networks_|, it is active.
+      bool found = std::find(networks_.begin(), networks_.end(), network) !=
+                   networks_.end();
+      network->set_active(found);
     }
     std::sort(networks_.begin(), networks_.end(), SortNetworks);
     // Now network interfaces are sorted, we should set the preference value
@@ -359,10 +363,32 @@ bool NetworkManagerBase::GetDefaultLocalAddress(int family,
     *ipaddr = default_local_ipv4_address_;
     return true;
   } else if (family == AF_INET6 && !default_local_ipv6_address_.IsNil()) {
-    *ipaddr = default_local_ipv6_address_;
+    Network* ipv6_network = GetNetworkFromAddress(default_local_ipv6_address_);
+    if (ipv6_network) {
+      // If the default ipv6 network's BestIP is different than
+      // default_local_ipv6_address_, use it instead.
+      // This is to prevent potential IP address leakage. See WebRTC bug 5376.
+      *ipaddr = ipv6_network->GetBestIP();
+    } else {
+      *ipaddr = default_local_ipv6_address_;
+    }
     return true;
   }
   return false;
+}
+
+Network* NetworkManagerBase::GetNetworkFromAddress(
+    const rtc::IPAddress& ip) const {
+  for (Network* network : networks_) {
+    const auto& ips = network->GetIPs();
+    if (std::find_if(ips.begin(), ips.end(),
+                     [ip](const InterfaceAddress& existing_ip) {
+                       return ip == static_cast<rtc::IPAddress>(existing_ip);
+                     }) != ips.end()) {
+      return network;
+    }
+  }
+  return nullptr;
 }
 
 BasicNetworkManager::BasicNetworkManager()
@@ -374,7 +400,7 @@ BasicNetworkManager::~BasicNetworkManager() {
 }
 
 void BasicNetworkManager::OnNetworksChanged() {
-  LOG(LS_VERBOSE) << "Network change was observed at the network manager";
+  LOG(LS_INFO) << "Network change was observed";
   UpdateNetworksOnce();
 }
 
@@ -382,7 +408,7 @@ void BasicNetworkManager::OnNetworksChanged() {
 
 bool BasicNetworkManager::CreateNetworks(bool include_ignored,
                                          NetworkList* networks) const {
-  ASSERT(false);
+  RTC_NOTREACHED();
   LOG(LS_WARNING) << "BasicNetworkManager doesn't work on NaCl yet";
   return false;
 }
@@ -432,26 +458,22 @@ void BasicNetworkManager::ConvertIfAddrs(struct ifaddrs* interfaces,
           reinterpret_cast<sockaddr_in6*>(cursor->ifa_addr)->sin6_scope_id;
     }
 
+    AdapterType adapter_type = ADAPTER_TYPE_UNKNOWN;
+    if (cursor->ifa_flags & IFF_LOOPBACK) {
+      adapter_type = ADAPTER_TYPE_LOOPBACK;
+    } else {
+      adapter_type = GetAdapterTypeFromName(cursor->ifa_name);
+    }
     int prefix_length = CountIPMaskBits(mask);
     prefix = TruncateIP(ip, prefix_length);
     std::string key = MakeNetworkKey(std::string(cursor->ifa_name),
                                      prefix, prefix_length);
-    auto existing_network = current_networks.find(key);
-    if (existing_network == current_networks.end()) {
-      AdapterType adapter_type = ADAPTER_TYPE_UNKNOWN;
-      if (cursor->ifa_flags & IFF_LOOPBACK) {
-        adapter_type = ADAPTER_TYPE_LOOPBACK;
-      }
-#if defined(WEBRTC_IOS)
-      // Cell networks are pdp_ipN on iOS.
-      if (strncmp(cursor->ifa_name, "pdp_ip", 6) == 0) {
-        adapter_type = ADAPTER_TYPE_CELLULAR;
-      }
-#endif
+    auto iter = current_networks.find(key);
+    if (iter == current_networks.end()) {
       // TODO(phoglund): Need to recognize other types as well.
-      scoped_ptr<Network> network(new Network(cursor->ifa_name,
-                                              cursor->ifa_name, prefix,
-                                              prefix_length, adapter_type));
+      std::unique_ptr<Network> network(
+          new Network(cursor->ifa_name, cursor->ifa_name, prefix, prefix_length,
+                      adapter_type));
       network->set_default_local_address_provider(this);
       network->set_scope_id(scope_id);
       network->AddIP(ip);
@@ -461,7 +483,11 @@ void BasicNetworkManager::ConvertIfAddrs(struct ifaddrs* interfaces,
         networks->push_back(network.release());
       }
     } else {
-      (*existing_network).second->AddIP(ip);
+      Network* existing_network = iter->second;
+      existing_network->AddIP(ip);
+      if (adapter_type != ADAPTER_TYPE_UNKNOWN) {
+        existing_network->set_type(adapter_type);
+      }
     }
   }
 }
@@ -475,7 +501,7 @@ bool BasicNetworkManager::CreateNetworks(bool include_ignored,
     return false;
   }
 
-  rtc::scoped_ptr<IfAddrsConverter> ifaddrs_converter(CreateIfAddrsConverter());
+  std::unique_ptr<IfAddrsConverter> ifaddrs_converter(CreateIfAddrsConverter());
   ConvertIfAddrs(interfaces, ifaddrs_converter.get(), include_ignored,
                  networks);
 
@@ -531,7 +557,7 @@ bool BasicNetworkManager::CreateNetworks(bool include_ignored,
   NetworkMap current_networks;
   // MSDN recommends a 15KB buffer for the first try at GetAdaptersAddresses.
   size_t buffer_size = 16384;
-  scoped_ptr<char[]> adapter_info(new char[buffer_size]);
+  std::unique_ptr<char[]> adapter_info(new char[buffer_size]);
   PIP_ADAPTER_ADDRESSES adapter_addrs =
       reinterpret_cast<PIP_ADAPTER_ADDRESSES>(adapter_info.get());
   int adapter_flags = (GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_ANYCAST |
@@ -567,7 +593,7 @@ bool BasicNetworkManager::CreateNetworks(bool include_ignored,
 
         IPAddress ip;
         int scope_id = 0;
-        scoped_ptr<Network> network;
+        std::unique_ptr<Network> network;
         switch (address->Address.lpSockaddr->sa_family) {
           case AF_INET: {
             sockaddr_in* v4_addr =
@@ -606,8 +632,8 @@ bool BasicNetworkManager::CreateNetworks(bool include_ignored,
             // TODO(phoglund): Need to recognize other types as well.
             adapter_type = ADAPTER_TYPE_LOOPBACK;
           }
-          scoped_ptr<Network> network(new Network(name, description, prefix,
-                                                  prefix_length, adapter_type));
+          std::unique_ptr<Network> network(new Network(
+              name, description, prefix, prefix_length, adapter_type));
           network->set_default_local_address_provider(this);
           network->set_scope_id(scope_id);
           network->AddIP(ip);
@@ -705,16 +731,16 @@ void BasicNetworkManager::StartUpdating() {
     // we should trigger network signal immediately for the new clients
     // to start allocating ports.
     if (sent_first_update_)
-      thread_->Post(this, kSignalNetworksMessage);
+      thread_->Post(RTC_FROM_HERE, this, kSignalNetworksMessage);
   } else {
-    thread_->Post(this, kUpdateNetworksMessage);
+    thread_->Post(RTC_FROM_HERE, this, kUpdateNetworksMessage);
     StartNetworkMonitor();
   }
   ++start_count_;
 }
 
 void BasicNetworkManager::StopUpdating() {
-  ASSERT(Thread::Current() == thread_);
+  RTC_DCHECK(Thread::Current() == thread_);
   if (!start_count_)
     return;
 
@@ -731,12 +757,14 @@ void BasicNetworkManager::StartNetworkMonitor() {
   if (factory == nullptr) {
     return;
   }
-  network_monitor_.reset(factory->CreateNetworkMonitor());
   if (!network_monitor_) {
-    return;
+    network_monitor_.reset(factory->CreateNetworkMonitor());
+    if (!network_monitor_) {
+      return;
+    }
+    network_monitor_->SignalNetworksChanged.connect(
+        this, &BasicNetworkManager::OnNetworksChanged);
   }
-  network_monitor_->SignalNetworksChanged.connect(
-      this, &BasicNetworkManager::OnNetworksChanged);
   network_monitor_->Start();
 }
 
@@ -745,7 +773,6 @@ void BasicNetworkManager::StopNetworkMonitor() {
     return;
   }
   network_monitor_->Stop();
-  network_monitor_.reset();
 }
 
 void BasicNetworkManager::OnMessage(Message* msg) {
@@ -759,24 +786,66 @@ void BasicNetworkManager::OnMessage(Message* msg) {
       break;
     }
     default:
-      ASSERT(false);
+      RTC_NOTREACHED();
   }
 }
 
-IPAddress BasicNetworkManager::QueryDefaultLocalAddress(int family) const {
-  ASSERT(thread_ == Thread::Current());
-  ASSERT(thread_->socketserver() != nullptr);
-  ASSERT(family == AF_INET || family == AF_INET6);
+AdapterType BasicNetworkManager::GetAdapterTypeFromName(
+    const char* network_name) const {
+  // If there is a network_monitor, use it to get the adapter type.
+  // Otherwise, get the adapter type based on a few name matching rules.
+  if (network_monitor_) {
+    AdapterType type = network_monitor_->GetAdapterType(network_name);
+    if (type != ADAPTER_TYPE_UNKNOWN) {
+      return type;
+    }
+  }
+#if defined(WEBRTC_IOS)
+  // Cell networks are pdp_ipN on iOS.
+  if (strncmp(network_name, "pdp_ip", 6) == 0) {
+    return ADAPTER_TYPE_CELLULAR;
+  }
+  if (strncmp(network_name, "en", 2) == 0) {
+    // This may not be most accurate because sometimes Ethernet interface
+    // name also starts with "en" but it is better than showing it as
+    // "unknown" type.
+    // TODO(honghaiz): Write a proper IOS network manager.
+    return ADAPTER_TYPE_WIFI;
+  }
+#elif defined(WEBRTC_ANDROID)
+  if (strncmp(network_name, "rmnet", 5) == 0 ||
+      strncmp(network_name, "v4-rmnet", 8) == 0) {
+    return ADAPTER_TYPE_CELLULAR;
+  }
+  if (strncmp(network_name, "wlan", 4) == 0) {
+    return ADAPTER_TYPE_WIFI;
+  }
+#endif
 
-  scoped_ptr<AsyncSocket> socket(
+  return ADAPTER_TYPE_UNKNOWN;
+}
+
+IPAddress BasicNetworkManager::QueryDefaultLocalAddress(int family) const {
+  RTC_DCHECK(thread_ == Thread::Current());
+  RTC_DCHECK(thread_->socketserver() != nullptr);
+  RTC_DCHECK(family == AF_INET || family == AF_INET6);
+
+  std::unique_ptr<AsyncSocket> socket(
       thread_->socketserver()->CreateAsyncSocket(family, SOCK_DGRAM));
   if (!socket) {
+    LOG_ERR(LERROR) << "Socket creation failed";
     return IPAddress();
   }
 
-  if (!socket->Connect(
-          SocketAddress(family == AF_INET ? kPublicIPv4Host : kPublicIPv6Host,
-                        kPublicPort))) {
+  if (socket->Connect(SocketAddress(
+          family == AF_INET ? kPublicIPv4Host : kPublicIPv6Host, kPublicPort)) <
+      0) {
+    if (socket->GetError() != ENETUNREACH
+        && socket->GetError() != EHOSTUNREACH) {
+      // Ignore the expected case of "host/net unreachable" - which happens if
+      // the network is V4- or V6-only.
+      LOG(LS_INFO) << "Connect failed with " << socket->GetError();
+    }
     return IPAddress();
   }
   return socket->GetLocalAddress().ipaddr();
@@ -786,7 +855,7 @@ void BasicNetworkManager::UpdateNetworksOnce() {
   if (!start_count_)
     return;
 
-  ASSERT(Thread::Current() == thread_);
+  RTC_DCHECK(Thread::Current() == thread_);
 
   NetworkList list;
   if (!CreateNetworks(false, &list)) {
@@ -806,7 +875,8 @@ void BasicNetworkManager::UpdateNetworksOnce() {
 
 void BasicNetworkManager::UpdateNetworksContinually() {
   UpdateNetworksOnce();
-  thread_->PostDelayed(kNetworksUpdateIntervalMs, this, kUpdateNetworksMessage);
+  thread_->PostDelayed(RTC_FROM_HERE, kNetworksUpdateIntervalMs, this,
+                       kUpdateNetworksMessage);
 }
 
 void BasicNetworkManager::DumpNetworks() {

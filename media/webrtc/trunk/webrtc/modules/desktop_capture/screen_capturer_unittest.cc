@@ -8,19 +8,23 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/desktop_capture/screen_capturer.h"
+#include <memory>
 
-#include "testing/gmock/include/gmock/gmock.h"
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/base/logging.h"
+#include "webrtc/modules/desktop_capture/desktop_capturer.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/desktop_region.h"
-#include "webrtc/modules/desktop_capture/screen_capturer_mock_objects.h"
+#include "webrtc/modules/desktop_capture/mock_desktop_capturer_callback.h"
+#include "webrtc/test/gmock.h"
+#include "webrtc/test/gtest.h"
+
+#if defined(WEBRTC_WIN)
+#include "webrtc/modules/desktop_capture/win/screen_capturer_win_directx.h"
+#endif  // defined(WEBRTC_WIN)
 
 using ::testing::_;
-using ::testing::AnyNumber;
-using ::testing::Return;
-using ::testing::SaveArg;
 
 const int kTestSharedMemoryId = 123;
 
@@ -28,16 +32,41 @@ namespace webrtc {
 
 class ScreenCapturerTest : public testing::Test {
  public:
-  SharedMemory* CreateSharedMemory(size_t size);
-
   void SetUp() override {
-    capturer_.reset(
-        ScreenCapturer::Create(DesktopCaptureOptions::CreateDefault()));
+    capturer_ = DesktopCapturer::CreateScreenCapturer(
+        DesktopCaptureOptions::CreateDefault());
   }
 
  protected:
-  rtc::scoped_ptr<ScreenCapturer> capturer_;
-  MockScreenCapturerCallback callback_;
+#if defined(WEBRTC_WIN)
+  // Enable allow_directx_capturer in DesktopCaptureOptions, but let
+  // DesktopCapturer::CreateScreenCapturer to decide whether a DirectX capturer
+  // should be used.
+  void MaybeCreateDirectxCapturer() {
+    DesktopCaptureOptions options(DesktopCaptureOptions::CreateDefault());
+    options.set_allow_directx_capturer(true);
+    capturer_ = DesktopCapturer::CreateScreenCapturer(options);
+  }
+
+  bool CreateDirectxCapturer() {
+    if (!ScreenCapturerWinDirectx::IsSupported()) {
+      LOG(LS_WARNING) << "Directx capturer is not supported";
+      return false;
+    }
+
+    MaybeCreateDirectxCapturer();
+    return true;
+  }
+
+  void CreateMagnifierCapturer() {
+    DesktopCaptureOptions options(DesktopCaptureOptions::CreateDefault());
+    options.set_allow_use_magnification_api(true);
+    capturer_ = DesktopCapturer::CreateScreenCapturer(options);
+  }
+#endif  // defined(WEBRTC_WIN)
+
+  std::unique_ptr<DesktopCapturer> capturer_;
+  MockDesktopCapturerCallback callback_;
 };
 
 class FakeSharedMemory : public SharedMemory {
@@ -54,16 +83,29 @@ class FakeSharedMemory : public SharedMemory {
   RTC_DISALLOW_COPY_AND_ASSIGN(FakeSharedMemory);
 };
 
-SharedMemory* ScreenCapturerTest::CreateSharedMemory(size_t size) {
-  return new FakeSharedMemory(new char[size], size);
+class FakeSharedMemoryFactory : public SharedMemoryFactory {
+ public:
+  FakeSharedMemoryFactory() {}
+  ~FakeSharedMemoryFactory() override {}
+
+  std::unique_ptr<SharedMemory> CreateSharedMemory(size_t size) override {
+    return std::unique_ptr<SharedMemory>(
+        new FakeSharedMemory(new char[size], size));
+  }
+
+ private:
+  RTC_DISALLOW_COPY_AND_ASSIGN(FakeSharedMemoryFactory);
+};
+
+ACTION_P(SaveUniquePtrArg, dest) {
+  *dest = std::move(*arg1);
 }
 
 TEST_F(ScreenCapturerTest, GetScreenListAndSelectScreen) {
-  webrtc::ScreenCapturer::ScreenList screens;
-  EXPECT_TRUE(capturer_->GetScreenList(&screens));
-  for(webrtc::ScreenCapturer::ScreenList::iterator it = screens.begin();
-      it != screens.end(); ++it) {
-    EXPECT_TRUE(capturer_->SelectScreen(it->id));
+  webrtc::DesktopCapturer::SourceList screens;
+  EXPECT_TRUE(capturer_->GetSourceList(&screens));
+  for (const auto& screen : screens) {
+    EXPECT_TRUE(capturer_->SelectSource(screen.id));
   }
 }
 
@@ -73,16 +115,13 @@ TEST_F(ScreenCapturerTest, StartCapturer) {
 
 TEST_F(ScreenCapturerTest, Capture) {
   // Assume that Start() treats the screen as invalid initially.
-  DesktopFrame* frame = NULL;
-  EXPECT_CALL(callback_, OnCaptureCompleted(_))
-      .WillOnce(SaveArg<0>(&frame));
-
-  EXPECT_CALL(callback_, CreateSharedMemory(_))
-      .Times(AnyNumber())
-      .WillRepeatedly(Return(static_cast<SharedMemory*>(NULL)));
+  std::unique_ptr<DesktopFrame> frame;
+  EXPECT_CALL(callback_,
+              OnCaptureResultPtr(DesktopCapturer::Result::SUCCESS, _))
+      .WillOnce(SaveUniquePtrArg(&frame));
 
   capturer_->Start(&callback_);
-  capturer_->Capture(DesktopRegion());
+  capturer_->CaptureFrame();
 
   ASSERT_TRUE(frame);
   EXPECT_GT(frame->size().width(), 0);
@@ -98,43 +137,70 @@ TEST_F(ScreenCapturerTest, Capture) {
   EXPECT_TRUE(it.rect().equals(DesktopRect::MakeSize(frame->size())));
   it.Advance();
   EXPECT_TRUE(it.IsAtEnd());
-
-  delete frame;
 }
 
 #if defined(WEBRTC_WIN)
 
 TEST_F(ScreenCapturerTest, UseSharedBuffers) {
-  DesktopFrame* frame = NULL;
-  EXPECT_CALL(callback_, OnCaptureCompleted(_))
-      .WillOnce(SaveArg<0>(&frame));
-
-  EXPECT_CALL(callback_, CreateSharedMemory(_))
-      .Times(AnyNumber())
-      .WillRepeatedly(Invoke(this, &ScreenCapturerTest::CreateSharedMemory));
+  std::unique_ptr<DesktopFrame> frame;
+  EXPECT_CALL(callback_,
+              OnCaptureResultPtr(DesktopCapturer::Result::SUCCESS, _))
+      .WillOnce(SaveUniquePtrArg(&frame));
 
   capturer_->Start(&callback_);
-  capturer_->Capture(DesktopRegion());
+  capturer_->SetSharedMemoryFactory(
+      std::unique_ptr<SharedMemoryFactory>(new FakeSharedMemoryFactory()));
+  capturer_->CaptureFrame();
 
   ASSERT_TRUE(frame);
   ASSERT_TRUE(frame->shared_memory());
   EXPECT_EQ(frame->shared_memory()->id(), kTestSharedMemoryId);
-
-  delete frame;
 }
 
 TEST_F(ScreenCapturerTest, UseMagnifier) {
-  DesktopCaptureOptions options(DesktopCaptureOptions::CreateDefault());
-  options.set_allow_use_magnification_api(true);
-  capturer_.reset(ScreenCapturer::Create(options));
-
-  DesktopFrame* frame = NULL;
-  EXPECT_CALL(callback_, OnCaptureCompleted(_)).WillOnce(SaveArg<0>(&frame));
+  CreateMagnifierCapturer();
+  std::unique_ptr<DesktopFrame> frame;
+  EXPECT_CALL(callback_,
+              OnCaptureResultPtr(DesktopCapturer::Result::SUCCESS, _))
+      .WillOnce(SaveUniquePtrArg(&frame));
 
   capturer_->Start(&callback_);
-  capturer_->Capture(DesktopRegion());
+  capturer_->CaptureFrame();
   ASSERT_TRUE(frame);
-  delete frame;
+}
+
+TEST_F(ScreenCapturerTest, UseDirectxCapturer) {
+  if (!CreateDirectxCapturer()) {
+    return;
+  }
+
+  std::unique_ptr<DesktopFrame> frame;
+  EXPECT_CALL(callback_,
+              OnCaptureResultPtr(DesktopCapturer::Result::SUCCESS, _))
+      .WillOnce(SaveUniquePtrArg(&frame));
+
+  capturer_->Start(&callback_);
+  capturer_->CaptureFrame();
+  ASSERT_TRUE(frame);
+}
+
+TEST_F(ScreenCapturerTest, UseDirectxCapturerWithSharedBuffers) {
+  if (!CreateDirectxCapturer()) {
+    return;
+  }
+
+  std::unique_ptr<DesktopFrame> frame;
+  EXPECT_CALL(callback_,
+              OnCaptureResultPtr(DesktopCapturer::Result::SUCCESS, _))
+      .WillOnce(SaveUniquePtrArg(&frame));
+
+  capturer_->Start(&callback_);
+  capturer_->SetSharedMemoryFactory(
+      std::unique_ptr<SharedMemoryFactory>(new FakeSharedMemoryFactory()));
+  capturer_->CaptureFrame();
+  ASSERT_TRUE(frame);
+  ASSERT_TRUE(frame->shared_memory());
+  EXPECT_EQ(frame->shared_memory()->id(), kTestSharedMemoryId);
 }
 
 #endif  // defined(WEBRTC_WIN)

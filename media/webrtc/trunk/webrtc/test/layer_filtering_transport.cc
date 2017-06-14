@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
 #include "webrtc/base/checks.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "webrtc/modules/rtp_rtcp/source/byte_io.h"
@@ -49,7 +51,7 @@ bool LayerFilteringTransport::SendRtp(const uint8_t* packet,
   RTPHeader header;
   parser.Parse(&header);
 
-  RTC_DCHECK_LE(length, static_cast<size_t>(IP_PACKET_SIZE));
+  RTC_DCHECK_LE(length, IP_PACKET_SIZE);
   uint8_t temp_buffer[IP_PACKET_SIZE];
   memcpy(temp_buffer, packet, length);
 
@@ -62,7 +64,7 @@ bool LayerFilteringTransport::SendRtp(const uint8_t* packet,
     const size_t payload_data_length = payload_length - header.paddingLength;
 
     const bool is_vp8 = header.payloadType == vp8_video_payload_type_;
-    rtc::scoped_ptr<RtpDepacketizer> depacketizer(
+    std::unique_ptr<RtpDepacketizer> depacketizer(
         RtpDepacketizer::Create(is_vp8 ? kRtpVideoVp8 : kRtpVideoVp9));
     RtpDepacketizer::ParsedPayload parsed_payload;
     if (depacketizer->Parse(&parsed_payload, payload, payload_data_length)) {

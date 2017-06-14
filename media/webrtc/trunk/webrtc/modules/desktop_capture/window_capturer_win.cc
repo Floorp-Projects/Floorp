@@ -8,13 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/desktop_capture/window_capturer.h"
-
 #include <assert.h>
 
-#include "webrtc/base/scoped_ptr.h"
+#include <memory>
+
 #include "webrtc/base/checks.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/win32.h"
+#include "webrtc/modules/desktop_capture/desktop_capturer.h"
 #include "webrtc/modules/desktop_capture/desktop_frame_win.h"
 #include "webrtc/modules/desktop_capture/win/window_capture_utils.h"
 #include "webrtc/system_wrappers/include/logging.h"
@@ -26,8 +27,8 @@ namespace {
 
 BOOL CALLBACK WindowsEnumerationHandler(HWND hwnd, LPARAM param) {
   assert(IsGUIThread(false));
-  WindowCapturer::WindowList* list =
-      reinterpret_cast<WindowCapturer::WindowList*>(param);
+  DesktopCapturer::SourceList* list =
+      reinterpret_cast<DesktopCapturer::SourceList*>(param);
 
   // Skip windows that are invisible, minimized, have no title, or are owned,
   // unless they have the app window style set.
@@ -62,16 +63,8 @@ BOOL CALLBACK WindowsEnumerationHandler(HWND hwnd, LPARAM param) {
     return TRUE;
   }
 
-  // Win8 introduced "Modern Apps" whose associated window is
-  // non-shareable. We want to filter them out.
-  if (IsWindows8OrGreater() &&
-      (wcscmp(class_name, L"ApplicationFrameWindow") == 0 ||
-       wcscmp(class_name, L"Windows.UI.Core.CoreWindow") == 0)) {
-    return TRUE;
-  }
-
-  WindowCapturer::Window window;
-  window.id = reinterpret_cast<WindowCapturer::WindowId>(hwnd);
+  DesktopCapturer::Source window;
+  window.id = reinterpret_cast<WindowId>(hwnd);
 
   DWORD pid;
   GetWindowThreadProcessId(hwnd, &pid);
@@ -98,64 +91,71 @@ BOOL CALLBACK WindowsEnumerationHandler(HWND hwnd, LPARAM param) {
   return TRUE;
 }
 
-class WindowCapturerWin : public WindowCapturer {
+class WindowCapturerWin : public DesktopCapturer {
  public:
   WindowCapturerWin();
-  virtual ~WindowCapturerWin();
-
-  // WindowCapturer interface.
-  bool GetWindowList(WindowList* windows) override;
-  bool SelectWindow(WindowId id) override;
-  bool BringSelectedWindowToFront() override;
+  ~WindowCapturerWin() override;
 
   // DesktopCapturer interface.
   void Start(Callback* callback) override;
   void Stop() override;
-  void Capture(const DesktopRegion& region) override;
+  void CaptureFrame() override;
+  bool GetSourceList(SourceList* sources) override;
+  bool SelectSource(SourceId id) override;
+  bool FocusOnSelectedSource() override;
 
  private:
-  Callback* callback_;
+  Callback* callback_ = nullptr;
 
-  // HWND and HDC for the currently selected window or NULL if window is not
+  // HWND and HDC for the currently selected window or nullptr if window is not
   // selected.
-  HWND window_;
+  HWND window_ = nullptr;
 
   DesktopSize previous_size_;
 
   AeroChecker aero_checker_;
 
+  // This map is used to avoid flickering for the case when SelectWindow() calls
+  // are interleaved with Capture() calls.
+  std::map<HWND, DesktopSize> window_size_map_;
+
   RTC_DISALLOW_COPY_AND_ASSIGN(WindowCapturerWin);
 };
 
-WindowCapturerWin::WindowCapturerWin()
-    : callback_(NULL),
-      window_(NULL) {
-}
+WindowCapturerWin::WindowCapturerWin() {}
+WindowCapturerWin::~WindowCapturerWin() {}
 
-WindowCapturerWin::~WindowCapturerWin() {
-}
-
-bool WindowCapturerWin::GetWindowList(WindowList* windows) {
+bool WindowCapturerWin::GetSourceList(SourceList* sources) {
   assert(IsGUIThread(false));
-  WindowList result;
+  SourceList result;
   LPARAM param = reinterpret_cast<LPARAM>(&result);
   if (!EnumWindows(&WindowsEnumerationHandler, param))
     return false;
-  windows->swap(result);
+  sources->swap(result);
+
+  std::map<HWND, DesktopSize> new_map;
+  for (const auto& item : *sources) {
+    HWND hwnd = reinterpret_cast<HWND>(item.id);
+    new_map[hwnd] = window_size_map_[hwnd];
+  }
+  window_size_map_.swap(new_map);
+
   return true;
 }
 
-bool WindowCapturerWin::SelectWindow(WindowId id) {
+bool WindowCapturerWin::SelectSource(SourceId id) {
   assert(IsGUIThread(false));
   HWND window = reinterpret_cast<HWND>(id);
   if (!IsWindow(window) || !IsWindowVisible(window) || IsIconic(window))
     return false;
   window_ = window;
-  previous_size_.set(0, 0);
+  // When a window is not in the map, window_size_map_[window] will create an
+  // item with DesktopSize (0, 0).
+  previous_size_ = window_size_map_[window];
   return true;
 }
 
-bool WindowCapturerWin::BringSelectedWindowToFront() {
+bool WindowCapturerWin::FocusOnSelectedSource() {
   assert(IsGUIThread(false));
   if (!window_)
     return false;
@@ -163,7 +163,8 @@ bool WindowCapturerWin::BringSelectedWindowToFront() {
   if (!IsWindow(window_) || !IsWindowVisible(window_) || IsIconic(window_))
     return false;
 
-  return SetForegroundWindow(window_) != 0;
+  return BringWindowToTop(window_) != FALSE &&
+         SetForegroundWindow(window_) != FALSE;
 }
 
 void WindowCapturerWin::Start(Callback* callback) {
@@ -177,17 +178,17 @@ void WindowCapturerWin::Stop() {
   callback_ = NULL;
 }
 
-void WindowCapturerWin::Capture(const DesktopRegion& region) {
+void WindowCapturerWin::CaptureFrame() {
   assert(IsGUIThread(false));
   if (!window_) {
     LOG(LS_ERROR) << "Window hasn't been selected: " << GetLastError();
-    callback_->OnCaptureCompleted(NULL);
+    callback_->OnCaptureResult(Result::ERROR_PERMANENT, nullptr);
     return;
   }
 
   // Stop capturing if the window has been closed.
   if (!IsWindow(window_)) {
-    callback_->OnCaptureCompleted(NULL);
+    callback_->OnCaptureResult(Result::ERROR_PERMANENT, nullptr);
     return;
   }
 
@@ -195,11 +196,13 @@ void WindowCapturerWin::Capture(const DesktopRegion& region) {
   // behavior on mace. Window can be temporarily invisible during the
   // transition of full screen mode on/off.
   if (IsIconic(window_) || !IsWindowVisible(window_)) {
-    BasicDesktopFrame* frame = new BasicDesktopFrame(DesktopSize(1, 1));
+    std::unique_ptr<DesktopFrame> frame(
+        new BasicDesktopFrame(DesktopSize(1, 1)));
     memset(frame->data(), 0, frame->stride() * frame->size().height());
 
     previous_size_ = frame->size();
-    callback_->OnCaptureCompleted(frame);
+    window_size_map_[window_] = previous_size_;
+    callback_->OnCaptureResult(Result::SUCCESS, std::move(frame));
     return;
   }
 
@@ -207,22 +210,22 @@ void WindowCapturerWin::Capture(const DesktopRegion& region) {
   DesktopRect cropped_rect;
   if (!GetCroppedWindowRect(window_, &cropped_rect, &original_rect)) {
     LOG(LS_WARNING) << "Failed to get window info: " << GetLastError();
-    callback_->OnCaptureCompleted(NULL);
+    callback_->OnCaptureResult(Result::ERROR_TEMPORARY, nullptr);
     return;
   }
 
   HDC window_dc = GetWindowDC(window_);
   if (!window_dc) {
     LOG(LS_WARNING) << "Failed to get window DC: " << GetLastError();
-    callback_->OnCaptureCompleted(NULL);
+    callback_->OnCaptureResult(Result::ERROR_TEMPORARY, nullptr);
     return;
   }
 
-  rtc::scoped_ptr<DesktopFrameWin> frame(
-      DesktopFrameWin::Create(cropped_rect.size(), NULL, window_dc));
+  std::unique_ptr<DesktopFrameWin> frame(
+      DesktopFrameWin::Create(cropped_rect.size(), nullptr, window_dc));
   if (!frame.get()) {
     ReleaseDC(window_, window_dc);
-    callback_->OnCaptureCompleted(NULL);
+    callback_->OnCaptureResult(Result::ERROR_TEMPORARY, nullptr);
     return;
   }
 
@@ -265,6 +268,7 @@ void WindowCapturerWin::Capture(const DesktopRegion& region) {
   ReleaseDC(window_, window_dc);
 
   previous_size_ = frame->size();
+  window_size_map_[window_] = previous_size_;
 
   frame->mutable_updated_region()->SetRect(
       DesktopRect::MakeSize(frame->size()));
@@ -274,14 +278,15 @@ void WindowCapturerWin::Capture(const DesktopRegion& region) {
     frame.reset();
   }
 
-  callback_->OnCaptureCompleted(frame.release());
+  callback_->OnCaptureResult(Result::SUCCESS, std::move(frame));
 }
 
 }  // namespace
 
 // static
-WindowCapturer* WindowCapturer::Create(const DesktopCaptureOptions& options) {
-  return new WindowCapturerWin();
+std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawWindowCapturer(
+    const DesktopCaptureOptions& options) {
+  return std::unique_ptr<DesktopCapturer>(new WindowCapturerWin());
 }
 
 }  // namespace webrtc

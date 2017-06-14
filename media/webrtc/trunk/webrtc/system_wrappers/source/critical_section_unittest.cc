@@ -10,10 +10,10 @@
 
 #include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/system_wrappers/include/sleep.h"
 #include "webrtc/base/platform_thread.h"
+#include "webrtc/system_wrappers/include/sleep.h"
 #include "webrtc/system_wrappers/include/trace.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 

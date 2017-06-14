@@ -14,8 +14,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 
@@ -44,6 +44,12 @@ PCMFile::PCMFile(uint32_t timestamp)
       read_stereo_(false),
       save_stereo_(false) {
   timestamp_ = timestamp;
+}
+
+PCMFile::~PCMFile() {
+  if (pcm_file_) {
+    fclose(pcm_file_);
+  }
 }
 
 int16_t PCMFile::ChooseFile(std::string* file_name, int16_t max_len,

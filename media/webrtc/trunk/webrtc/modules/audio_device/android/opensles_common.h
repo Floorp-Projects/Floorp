@@ -11,13 +11,19 @@
 #ifndef WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_OPENSLES_COMMON_H_
 #define WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_OPENSLES_COMMON_H_
 
+#include <stddef.h>
 #include <SLES/OpenSLES.h>
-
-#include "webrtc/base/checks.h"
 
 namespace webrtc {
 
-SLDataFormat_PCM CreatePcmConfiguration(int sample_rate);
+// Returns a string representation given an integer SL_RESULT_XXX code.
+// The mapping can be found in <SLES/OpenSLES.h>.
+const char* GetSLErrorString(size_t code);
+
+// Configures an SL_DATAFORMAT_PCM structure based on native audio parameters.
+SLDataFormat_PCM CreatePCMConfiguration(size_t channels,
+                                        int sample_rate,
+                                        size_t bits_per_sample);
 
 // Helper class for using SLObjectItf interfaces.
 template <typename SLType, typename SLDerefType>
@@ -49,6 +55,6 @@ class ScopedSLObject {
 
 typedef ScopedSLObject<SLObjectItf, const SLObjectItf_*> ScopedSLObjectItf;
 
-}  // namespace webrtc_opensl
+}  // namespace webrtc
 
 #endif  // WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_OPENSLES_COMMON_H_

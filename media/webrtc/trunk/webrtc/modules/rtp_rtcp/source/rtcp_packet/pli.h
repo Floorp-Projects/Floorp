@@ -6,29 +6,26 @@
  *  tree. An additional intellectual property rights grant can be found
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
- *
  */
-
 #ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_PLI_H_
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_PLI_H_
 
 #include "webrtc/base/basictypes.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/psfb.h"
 
 namespace webrtc {
 namespace rtcp {
-
+class CommonHeader;
 // Picture loss indication (PLI) (RFC 4585).
 class Pli : public Psfb {
  public:
-  static const uint8_t kFeedbackMessageType = 1;
+  static constexpr uint8_t kFeedbackMessageType = 1;
 
   Pli() {}
-  virtual ~Pli() {}
+  ~Pli() override {}
 
-  // Parse assumes header is already parsed and validated.
-  bool Parse(const RTCPUtility::RtcpCommonHeader& header,
-             const uint8_t* payload);  // Size of the payload is in the header.
+  bool Parse(const CommonHeader& packet);
 
  protected:
   bool Create(uint8_t* packet,

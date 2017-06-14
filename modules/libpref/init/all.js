@@ -466,20 +466,6 @@ pref("media.webrtc.debug.aec_log_dir", "");
 pref("media.webrtc.debug.log_file", "");
 pref("media.webrtc.debug.aec_dump_max_size", 4194304); // 4MB
 
-#ifdef MOZ_WIDGET_GONK
-pref("media.navigator.video.default_width", 320);
-pref("media.navigator.video.default_height", 240);
-pref("media.peerconnection.enabled", true);
-pref("media.peerconnection.video.enabled", true);
-pref("media.navigator.video.max_fs", 1200); // 640x480 == 1200mb
-pref("media.navigator.video.max_fr", 30);
-pref("media.navigator.video.h264.level", 12); // 0x42E00C - level 1.2
-pref("media.navigator.video.h264.max_br", 700); // 8x10
-pref("media.navigator.video.h264.max_mbps", 11880); // CIF@30fps
-pref("media.peerconnection.video.h264_enabled", false);
-pref("media.peerconnection.video.vp9_enabled", false);
-pref("media.getusermedia.aec", 4);
-#else
 pref("media.navigator.video.default_width",0);  // adaptive default
 pref("media.navigator.video.default_height",0); // adaptive default
 pref("media.peerconnection.enabled", true);
@@ -493,15 +479,13 @@ pref("media.peerconnection.video.h264_enabled", false);
 pref("media.peerconnection.video.vp9_enabled", true);
 pref("media.getusermedia.aec", 1);
 pref("media.getusermedia.browser.enabled", false);
-#endif
-// Gonk typically captures at QVGA, and so min resolution is QQVGA or
-// 160x120; 100Kbps is plenty for that.
 // Desktop is typically VGA capture or more; and qm_select will not drop resolution
 // below 1/2 in each dimension (or so), so QVGA (320x200) is the lowest here usually.
 pref("media.peerconnection.video.min_bitrate", 0);
 pref("media.peerconnection.video.start_bitrate", 0);
 pref("media.peerconnection.video.max_bitrate", 0);
 pref("media.peerconnection.video.min_bitrate_estimate", 0);
+pref("media.peerconnection.video.denoising", false);
 pref("media.navigator.audio.fake_frequency", 1000);
 pref("media.navigator.permission.disabled", false);
 pref("media.peerconnection.simulcast", true);

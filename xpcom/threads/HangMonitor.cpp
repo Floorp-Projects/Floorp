@@ -345,6 +345,12 @@ IsUIMessageWaiting()
 #ifndef XP_WIN
   return false;
 #else
+  // There should never be mouse, keyboard, or IME messages in a message queue
+  // in the content process, so don't waste time making multiple PeekMessage
+  // calls.
+  if (GeckoProcessType_Content == XRE_GetProcessType()) {
+    return false;
+  }
 #define NS_WM_IMEFIRST WM_IME_SETCONTEXT
 #define NS_WM_IMELAST  WM_IME_KEYUP
   BOOL haveUIMessageWaiting = FALSE;

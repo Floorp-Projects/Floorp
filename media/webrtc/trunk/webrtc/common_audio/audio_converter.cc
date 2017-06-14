@@ -11,13 +11,14 @@
 #include "webrtc/common_audio/audio_converter.h"
 
 #include <cstring>
+#include <memory>
 #include <utility>
+#include <vector>
 
 #include "webrtc/base/checks.h"
 #include "webrtc/base/safe_conversions.h"
 #include "webrtc/common_audio/channel_buffer.h"
 #include "webrtc/common_audio/resampler/push_sinc_resampler.h"
-#include "webrtc/system_wrappers/include/scoped_vector.h"
 
 using rtc::checked_cast;
 
@@ -86,7 +87,8 @@ class ResampleConverter : public AudioConverter {
       : AudioConverter(src_channels, src_frames, dst_channels, dst_frames) {
     resamplers_.reserve(src_channels);
     for (size_t i = 0; i < src_channels; ++i)
-      resamplers_.push_back(new PushSincResampler(src_frames, dst_frames));
+      resamplers_.push_back(std::unique_ptr<PushSincResampler>(
+          new PushSincResampler(src_frames, dst_frames)));
   }
   ~ResampleConverter() override {};
 
@@ -98,20 +100,21 @@ class ResampleConverter : public AudioConverter {
   }
 
  private:
-  ScopedVector<PushSincResampler> resamplers_;
+  std::vector<std::unique_ptr<PushSincResampler>> resamplers_;
 };
 
 // Apply a vector of converters in serial, in the order given. At least two
 // converters must be provided.
 class CompositionConverter : public AudioConverter {
  public:
-  CompositionConverter(ScopedVector<AudioConverter> converters)
+  CompositionConverter(std::vector<std::unique_ptr<AudioConverter>> converters)
       : converters_(std::move(converters)) {
-    RTC_CHECK_GE(converters_.size(), 2u);
+    RTC_CHECK_GE(converters_.size(), 2);
     // We need an intermediate buffer after every converter.
     for (auto it = converters_.begin(); it != converters_.end() - 1; ++it)
-      buffers_.push_back(new ChannelBuffer<float>((*it)->dst_frames(),
-                                                  (*it)->dst_channels()));
+      buffers_.push_back(
+          std::unique_ptr<ChannelBuffer<float>>(new ChannelBuffer<float>(
+              (*it)->dst_frames(), (*it)->dst_channels())));
   }
   ~CompositionConverter() override {};
 
@@ -120,8 +123,8 @@ class CompositionConverter : public AudioConverter {
     converters_.front()->Convert(src, src_size, buffers_.front()->channels(),
                                  buffers_.front()->size());
     for (size_t i = 2; i < converters_.size(); ++i) {
-      auto src_buffer = buffers_[i - 2];
-      auto dst_buffer = buffers_[i - 1];
+      auto& src_buffer = buffers_[i - 2];
+      auto& dst_buffer = buffers_[i - 1];
       converters_[i]->Convert(src_buffer->channels(),
                               src_buffer->size(),
                               dst_buffer->channels(),
@@ -132,22 +135,23 @@ class CompositionConverter : public AudioConverter {
   }
 
  private:
-  ScopedVector<AudioConverter> converters_;
-  ScopedVector<ChannelBuffer<float>> buffers_;
+  std::vector<std::unique_ptr<AudioConverter>> converters_;
+  std::vector<std::unique_ptr<ChannelBuffer<float>>> buffers_;
 };
 
-rtc::scoped_ptr<AudioConverter> AudioConverter::Create(size_t src_channels,
+std::unique_ptr<AudioConverter> AudioConverter::Create(size_t src_channels,
                                                        size_t src_frames,
                                                        size_t dst_channels,
                                                        size_t dst_frames) {
-  rtc::scoped_ptr<AudioConverter> sp;
+  std::unique_ptr<AudioConverter> sp;
   if (src_channels > dst_channels) {
     if (src_frames != dst_frames) {
-      ScopedVector<AudioConverter> converters;
-      converters.push_back(new DownmixConverter(src_channels, src_frames,
-                                                dst_channels, src_frames));
-      converters.push_back(new ResampleConverter(dst_channels, src_frames,
-                                                 dst_channels, dst_frames));
+      std::vector<std::unique_ptr<AudioConverter>> converters;
+      converters.push_back(std::unique_ptr<AudioConverter>(new DownmixConverter(
+          src_channels, src_frames, dst_channels, src_frames)));
+      converters.push_back(
+          std::unique_ptr<AudioConverter>(new ResampleConverter(
+              dst_channels, src_frames, dst_channels, dst_frames)));
       sp.reset(new CompositionConverter(std::move(converters)));
     } else {
       sp.reset(new DownmixConverter(src_channels, src_frames, dst_channels,
@@ -155,11 +159,12 @@ rtc::scoped_ptr<AudioConverter> AudioConverter::Create(size_t src_channels,
     }
   } else if (src_channels < dst_channels) {
     if (src_frames != dst_frames) {
-      ScopedVector<AudioConverter> converters;
-      converters.push_back(new ResampleConverter(src_channels, src_frames,
-                                                 src_channels, dst_frames));
-      converters.push_back(new UpmixConverter(src_channels, dst_frames,
-                                              dst_channels, dst_frames));
+      std::vector<std::unique_ptr<AudioConverter>> converters;
+      converters.push_back(
+          std::unique_ptr<AudioConverter>(new ResampleConverter(
+              src_channels, src_frames, src_channels, dst_frames)));
+      converters.push_back(std::unique_ptr<AudioConverter>(new UpmixConverter(
+          src_channels, dst_frames, dst_channels, dst_frames)));
       sp.reset(new CompositionConverter(std::move(converters)));
     } else {
       sp.reset(new UpmixConverter(src_channels, src_frames, dst_channels,

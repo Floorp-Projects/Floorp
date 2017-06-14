@@ -8,14 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/random.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/timeutils.h"
 #include "webrtc/system_wrappers/include/sleep.h"
-#include "webrtc/test/channel_transport/channel_transport.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/voice_engine/test/auto_test/voe_standard_test.h"
+#include "webrtc/voice_engine/test/channel_transport/channel_transport.h"
 
 namespace {
 
@@ -184,7 +183,7 @@ TEST(OutputTest, DISABLED_OpusDtxHasNoNoisePump) {
   OutputTest test(-kDtxBoundForSilence, kDtxBoundForSilence);
   Random random(1234ull);
 
-  uint32_t start_time = rtc::Time();
+  int64_t start_time = rtc::TimeMillis();
   test.Start();
   while (rtc::TimeSince(start_time) < kRuntimeMs) {
     webrtc::SleepMs(random.Rand(kUnmuteTimeMs - kUnmuteTimeMs / 10,

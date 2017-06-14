@@ -71,9 +71,6 @@ class Trace {
   static int32_t SetTraceFile(const char* file_name,
                               const bool add_file_counter = false);
 
-  // Returns the name of the file that the trace is currently writing to.
-  static int32_t TraceFile(char file_name[1024]);
-
   // Registers callback to receive trace messages.
   // TODO(hellner): Why not use OutStream instead? Why is TraceCallback not
   // defined in this file?

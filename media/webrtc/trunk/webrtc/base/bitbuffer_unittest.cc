@@ -168,7 +168,7 @@ TEST(BitBufferTest, SetOffsetValues) {
 
   // Disable death test on Android because it relies on fork() and doesn't play
   // nicely.
-#if defined(GTEST_HAS_DEATH_TEST)
+#if GTEST_HAS_DEATH_TEST
 #if !defined(WEBRTC_ANDROID)
   // Passing a NULL out parameter is death.
   EXPECT_DEATH(buffer.GetCurrentOffset(&byte_offset, NULL), "");
@@ -188,7 +188,7 @@ uint64_t GolombEncoded(uint32_t val) {
 }
 
 TEST(BitBufferTest, GolombUint32Values) {
-  ByteBuffer byteBuffer;
+  ByteBufferWriter byteBuffer;
   byteBuffer.Resize(16);
   BitBuffer buffer(reinterpret_cast<const uint8_t*>(byteBuffer.Data()),
                    byteBuffer.Capacity());

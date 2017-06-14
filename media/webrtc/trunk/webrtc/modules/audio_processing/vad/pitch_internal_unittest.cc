@@ -12,7 +12,7 @@
 
 #include <math.h>
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/test/gtest.h"
 
 TEST(PitchInternalTest, test) {
   const int kSamplingRateHz = 8000;

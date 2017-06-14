@@ -13,6 +13,7 @@
 
 #include "webrtc/base/asyncinvoker-inl.h"
 #include "webrtc/base/bind.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/sigslot.h"
 #include "webrtc/base/scopedptrcollection.h"
 #include "webrtc/base/thread.h"
@@ -44,13 +45,13 @@ namespace rtc {
 //    public:
 //     void FireAsyncTaskWithResult(Thread* thread, int x) {
 //       // Specify a callback to get the result upon completion.
-//       invoker_.AsyncInvoke<int>(
+//       invoker_.AsyncInvoke<int>(RTC_FROM_HERE,
 //           thread, Bind(&MyClass::AsyncTaskWithResult, this, x),
 //           &MyClass::OnTaskComplete, this);
 //     }
 //     void FireAnotherAsyncTask(Thread* thread) {
 //       // No callback specified means fire-and-forget.
-//       invoker_.AsyncInvoke<void>(
+//       invoker_.AsyncInvoke<void>(RTC_FROM_HERE,
 //           thread, Bind(&MyClass::AnotherAsyncTask, this));
 //
 //    private:
@@ -74,49 +75,63 @@ class AsyncInvoker : public MessageHandler {
   // Call |functor| asynchronously on |thread|, with no callback upon
   // completion. Returns immediately.
   template <class ReturnT, class FunctorT>
-  void AsyncInvoke(Thread* thread, const FunctorT& functor, uint32_t id = 0) {
+  void AsyncInvoke(const Location& posted_from,
+                   Thread* thread,
+                   const FunctorT& functor,
+                   uint32_t id = 0) {
     scoped_refptr<AsyncClosure> closure(
         new RefCountedObject<FireAndForgetAsyncClosure<FunctorT> >(functor));
-    DoInvoke(thread, closure, id);
+    DoInvoke(posted_from, thread, closure, id);
   }
 
   // Call |functor| asynchronously on |thread| with |delay_ms|, with no callback
   // upon completion. Returns immediately.
   template <class ReturnT, class FunctorT>
-  void AsyncInvokeDelayed(Thread* thread,
+  void AsyncInvokeDelayed(const Location& posted_from,
+                          Thread* thread,
                           const FunctorT& functor,
                           uint32_t delay_ms,
                           uint32_t id = 0) {
     scoped_refptr<AsyncClosure> closure(
         new RefCountedObject<FireAndForgetAsyncClosure<FunctorT> >(functor));
-    DoInvokeDelayed(thread, closure, delay_ms, id);
+    DoInvokeDelayed(posted_from, thread, closure, delay_ms, id);
   }
 
   // Call |functor| asynchronously on |thread|, calling |callback| when done.
+  // Uses a separate Location for |callback_posted_from| so that the functor
+  // invoke and the callback invoke can be differentiated.
   template <class ReturnT, class FunctorT, class HostT>
-  void AsyncInvoke(Thread* thread,
+  void AsyncInvoke(const Location& posted_from,
+                   const Location& callback_posted_from,
+                   Thread* thread,
                    const FunctorT& functor,
                    void (HostT::*callback)(ReturnT),
                    HostT* callback_host,
                    uint32_t id = 0) {
     scoped_refptr<AsyncClosure> closure(
         new RefCountedObject<NotifyingAsyncClosure<ReturnT, FunctorT, HostT> >(
-            this, Thread::Current(), functor, callback, callback_host));
-    DoInvoke(thread, closure, id);
+            this, callback_posted_from, Thread::Current(), functor, callback,
+            callback_host));
+    DoInvoke(posted_from, thread, closure, id);
   }
 
   // Call |functor| asynchronously on |thread|, calling |callback| when done.
+  // Uses a separate Location for |callback_posted_from| so that the functor
+  // invoke and the callback invoke can be differentiated.
   // Overloaded for void return.
   template <class ReturnT, class FunctorT, class HostT>
-  void AsyncInvoke(Thread* thread,
+  void AsyncInvoke(const Location& posted_from,
+                   const Location& callback_posted_from,
+                   Thread* thread,
                    const FunctorT& functor,
                    void (HostT::*callback)(),
                    HostT* callback_host,
                    uint32_t id = 0) {
     scoped_refptr<AsyncClosure> closure(
         new RefCountedObject<NotifyingAsyncClosure<void, FunctorT, HostT> >(
-            this, Thread::Current(), functor, callback, callback_host));
-    DoInvoke(thread, closure, id);
+            this, callback_posted_from, Thread::Current(), functor, callback,
+            callback_host));
+    DoInvoke(posted_from, thread, closure, id);
   }
 
   // Synchronously execute on |thread| all outstanding calls we own
@@ -131,10 +146,12 @@ class AsyncInvoker : public MessageHandler {
 
  private:
   void OnMessage(Message* msg) override;
-  void DoInvoke(Thread* thread,
+  void DoInvoke(const Location& posted_from,
+                Thread* thread,
                 const scoped_refptr<AsyncClosure>& closure,
                 uint32_t id);
-  void DoInvokeDelayed(Thread* thread,
+  void DoInvokeDelayed(const Location& posted_from,
+                       Thread* thread,
                        const scoped_refptr<AsyncClosure>& closure,
                        uint32_t delay_ms,
                        uint32_t id);
@@ -163,55 +180,64 @@ class GuardedAsyncInvoker : public sigslot::has_slots<> {
   // Call |functor| asynchronously with no callback upon completion. Returns
   // immediately. Returns false if the thread has died.
   template <class ReturnT, class FunctorT>
-  bool AsyncInvoke(const FunctorT& functor, uint32_t id = 0) {
+  bool AsyncInvoke(const Location& posted_from,
+                   const FunctorT& functor,
+                   uint32_t id = 0) {
     rtc::CritScope cs(&crit_);
     if (thread_ == nullptr)
       return false;
-    invoker_.AsyncInvoke<ReturnT, FunctorT>(thread_, functor, id);
+    invoker_.AsyncInvoke<ReturnT, FunctorT>(posted_from, thread_, functor, id);
     return true;
   }
 
   // Call |functor| asynchronously with |delay_ms|, with no callback upon
   // completion. Returns immediately. Returns false if the thread has died.
   template <class ReturnT, class FunctorT>
-  bool AsyncInvokeDelayed(const FunctorT& functor,
+  bool AsyncInvokeDelayed(const Location& posted_from,
+                          const FunctorT& functor,
                           uint32_t delay_ms,
                           uint32_t id = 0) {
     rtc::CritScope cs(&crit_);
     if (thread_ == nullptr)
       return false;
-    invoker_.AsyncInvokeDelayed<ReturnT, FunctorT>(thread_, functor, delay_ms,
-                                                   id);
+    invoker_.AsyncInvokeDelayed<ReturnT, FunctorT>(posted_from, thread_,
+                                                   functor, delay_ms, id);
     return true;
   }
 
   // Call |functor| asynchronously, calling |callback| when done. Returns false
   // if the thread has died.
   template <class ReturnT, class FunctorT, class HostT>
-  bool AsyncInvoke(const FunctorT& functor,
+  bool AsyncInvoke(const Location& posted_from,
+                   const Location& callback_posted_from,
+                   const FunctorT& functor,
                    void (HostT::*callback)(ReturnT),
                    HostT* callback_host,
                    uint32_t id = 0) {
     rtc::CritScope cs(&crit_);
     if (thread_ == nullptr)
       return false;
-    invoker_.AsyncInvoke<ReturnT, FunctorT, HostT>(thread_, functor, callback,
-                                                   callback_host, id);
+    invoker_.AsyncInvoke<ReturnT, FunctorT, HostT>(
+        posted_from, callback_posted_from, thread_, functor, callback,
+        callback_host, id);
     return true;
   }
 
   // Call |functor| asynchronously calling |callback| when done. Overloaded for
   // void return. Returns false if the thread has died.
   template <class ReturnT, class FunctorT, class HostT>
-  bool AsyncInvoke(const FunctorT& functor,
+  bool AsyncInvoke(const Location& posted_from,
+                   const Location& callback_posted_from,
+                   const FunctorT& functor,
                    void (HostT::*callback)(),
                    HostT* callback_host,
                    uint32_t id = 0) {
     rtc::CritScope cs(&crit_);
     if (thread_ == nullptr)
       return false;
-    invoker_.AsyncInvoke<ReturnT, FunctorT, HostT>(thread_, functor, callback,
-                                                   callback_host, id);
+    invoker_.AsyncInvoke<ReturnT, FunctorT, HostT>(
+        posted_from, callback_posted_from, thread_, functor, callback,
+        callback_host, id);
     return true;
   }
 

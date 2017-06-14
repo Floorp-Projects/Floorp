@@ -47,6 +47,7 @@
           emitter = new VideoFrameEmitter();
           helper = new VideoStreamHelper();
           test.pcRemote.attachLocalStream(emitter.stream());
+          emitter.start();
         }
       ]);
 

@@ -12,9 +12,9 @@
 
 #include "webrtc/modules/audio_coding/neteq/comfort_noise.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/modules/audio_coding/neteq/mock/mock_decoder_database.h"
 #include "webrtc/modules/audio_coding/neteq/sync_buffer.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 

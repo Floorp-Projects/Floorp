@@ -21,8 +21,8 @@ namespace videocapturemodule {
 
 class VideoCaptureAndroid : public VideoCaptureImpl {
  public:
-  VideoCaptureAndroid(const int32_t id);
-  virtual int32_t Init(const int32_t id, const char* deviceUniqueIdUTF8);
+  VideoCaptureAndroid();
+  virtual int32_t Init(const char* deviceUniqueIdUTF8);
 
   virtual int32_t StartCapture(const VideoCaptureCapability& capability);
   virtual int32_t StopCapture();

@@ -11,7 +11,7 @@
 
 struct nsPresentationData;
 struct nsEmbellishData;
-class nsRenderingContext;
+class gfxContext;
 class nsIFrame;
 namespace mozilla {
 class ReflowOutput;

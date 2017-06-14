@@ -9,8 +9,7 @@
 
 #include "nsIScriptableUConv.h"
 #include "nsCOMPtr.h"
-#include "nsIUnicodeDecoder.h"
-#include "nsIUnicodeEncoder.h"
+#include "mozilla/Encoding.h"
 
 class nsScriptableUnicodeConverter : public nsIScriptableUnicodeConverter
 {
@@ -23,9 +22,8 @@ public:
 protected:
   virtual ~nsScriptableUnicodeConverter();
 
-  nsCString mCharset;
-  nsCOMPtr<nsIUnicodeEncoder> mEncoder;
-  nsCOMPtr<nsIUnicodeDecoder> mDecoder;
+  mozilla::UniquePtr<mozilla::Encoder> mEncoder;
+  mozilla::UniquePtr<mozilla::Decoder> mDecoder;
   bool mIsInternal;
 
   nsresult FinishWithLength(char **_retval, int32_t* aLength);
@@ -33,8 +31,7 @@ protected:
                                         int32_t* aOutLen,
                                         char **_retval);
 
-
-  nsresult InitConverter();
+  nsresult InitConverter(const nsACString& aCharset);
 };
 
 #endif

@@ -56,6 +56,12 @@ const startupPhases = {
     components: new Set([
       "nsSearchService.js",
       "UnifiedComplete.js",
+    ]),
+    modules: new Set([
+     "resource://gre/modules/ContextualIdentityService.jsm"
+    ]),
+    services: new Set([
+      "@mozilla.org/browser/search-service;1",
     ])
   }},
 
@@ -102,7 +108,7 @@ function test() {
     let loadedList = data[phase];
     let whitelist = startupPhases[phase].whitelist || null;
     if (whitelist) {
-      for (let scriptType in loadedList) {
+      for (let scriptType in whitelist) {
         loadedList[scriptType] = loadedList[scriptType].filter(c => {
           if (!whitelist[scriptType].has(c))
             return true;

@@ -34,7 +34,7 @@ class RefCountedBindTester : public RefCountInterface {
   int AddRef() const override {
     return ++count_;
   }
-  int Release() const {
+  int Release() const override {
     return --count_;
   }
   int RefCount() const { return count_; }

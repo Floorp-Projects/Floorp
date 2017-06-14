@@ -63,7 +63,7 @@
 #ifndef WEBRTC_BASE_SCOPED_REF_PTR_H_
 #define WEBRTC_BASE_SCOPED_REF_PTR_H_
 
-#include <stddef.h>
+#include <memory>
 
 namespace rtc {
 
@@ -88,6 +88,12 @@ class scoped_refptr {
     if (ptr_)
       ptr_->AddRef();
   }
+
+  // Move constructors.
+  scoped_refptr(scoped_refptr<T>&& r) : ptr_(r.release()) {}
+
+  template <typename U>
+  scoped_refptr(scoped_refptr<U>&& r) : ptr_(r.release()) {}
 
   ~scoped_refptr() {
     if (ptr_)
@@ -126,6 +132,17 @@ class scoped_refptr {
   template <typename U>
   scoped_refptr<T>& operator=(const scoped_refptr<U>& r) {
     return *this = r.get();
+  }
+
+  scoped_refptr<T>& operator=(scoped_refptr<T>&& r) {
+    scoped_refptr<T>(std::move(r)).swap(*this);
+    return *this;
+  }
+
+  template <typename U>
+  scoped_refptr<T>& operator=(scoped_refptr<U>&& r) {
+    scoped_refptr<T>(std::move(r)).swap(*this);
+    return *this;
   }
 
   void swap(T** pp) {

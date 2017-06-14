@@ -196,8 +196,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "ConstantSourceNode",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "Controllers",
-// IMPORTANT: Do not change this list without review from a DOM peer!
     "ConvolverNode",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Crypto",
@@ -1157,8 +1155,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "TreeContentView", xbl: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "TreeSelection", xbl: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
     "TreeWalker",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "U2F", disabled: true},
@@ -1273,13 +1269,9 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "XULCheckboxElement", xbl: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "XULCommandDispatcher", xbl: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "XULCommandEvent", xbl: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "XULControlElement", xbl: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "XULControllers", xbl: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "XULDocument", xbl: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -1292,6 +1284,8 @@ var interfaceNamesInGlobalScope =
     {name: "XULTemplateBuilder", xbl: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "XULTreeBuilder", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "XULTreeBuilderObserver", xbl: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
   ];
 // IMPORTANT: Do not change the list above without review from a DOM peer!

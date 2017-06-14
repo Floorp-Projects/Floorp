@@ -12,10 +12,9 @@
 
 #include "webrtc/modules/audio_coding/neteq/normal.h"
 
+#include <memory>
 #include <vector>
 
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/modules/audio_coding/neteq/audio_multi_vector.h"
 #include "webrtc/modules/audio_coding/neteq/background_noise.h"
@@ -25,10 +24,22 @@
 #include "webrtc/modules/audio_coding/neteq/random_vector.h"
 #include "webrtc/modules/audio_coding/neteq/statistics_calculator.h"
 #include "webrtc/modules/audio_coding/neteq/sync_buffer.h"
+#include "webrtc/test/gtest.h"
 
 using ::testing::_;
+using ::testing::Invoke;
 
 namespace webrtc {
+
+namespace {
+
+int ExpandProcess120ms(AudioMultiVector* output) {
+  AudioMultiVector dummy_audio(1, 11520u);
+  dummy_audio.CopyTo(output);
+  return 0;
+}
+
+} // namespace
 
 TEST(Normal, CreateAndDestroy) {
   MockDecoderDatabase db;
@@ -57,7 +68,7 @@ TEST(Normal, AvoidDivideByZero) {
   Normal normal(fs, &db, bgn, &expand);
 
   int16_t input[1000] = {0};
-  rtc::scoped_ptr<int16_t[]> mute_factor_array(new int16_t[channels]);
+  std::unique_ptr<int16_t[]> mute_factor_array(new int16_t[channels]);
   for (size_t i = 0; i < channels; ++i) {
     mute_factor_array[i] = 16384;
   }
@@ -103,7 +114,7 @@ TEST(Normal, InputLengthAndChannelsDoNotMatch) {
   Normal normal(fs, &db, bgn, &expand);
 
   int16_t input[1000] = {0};
-  rtc::scoped_ptr<int16_t[]> mute_factor_array(new int16_t[channels]);
+  std::unique_ptr<int16_t[]> mute_factor_array(new int16_t[channels]);
   for (size_t i = 0; i < channels; ++i) {
     mute_factor_array[i] = 16384;
   }
@@ -116,6 +127,45 @@ TEST(Normal, InputLengthAndChannelsDoNotMatch) {
       normal.Process(
           input, input_len, kModeExpand, mute_factor_array.get(), &output));
   EXPECT_EQ(0u, output.Size());
+
+  EXPECT_CALL(db, Die());      // Called when |db| goes out of scope.
+  EXPECT_CALL(expand, Die());  // Called when |expand| goes out of scope.
+}
+
+TEST(Normal, LastModeExpand120msPacket) {
+  WebRtcSpl_Init();
+  MockDecoderDatabase db;
+  const int kFs = 48000;
+  const size_t kPacketsizeBytes = 11520u;
+  const size_t kChannels = 1;
+  BackgroundNoise bgn(kChannels);
+  SyncBuffer sync_buffer(kChannels, 1000);
+  RandomVector random_vector;
+  StatisticsCalculator statistics;
+  MockExpand expand(&bgn, &sync_buffer, &random_vector, &statistics, kFs,
+                    kChannels);
+  Normal normal(kFs, &db, bgn, &expand);
+
+  int16_t input[kPacketsizeBytes] = {0};
+
+  std::unique_ptr<int16_t[]> mute_factor_array(new int16_t[kChannels]);
+  for (size_t i = 0; i < kChannels; ++i) {
+    mute_factor_array[i] = 16384;
+  }
+
+  AudioMultiVector output(kChannels);
+
+  EXPECT_CALL(expand, SetParametersForNormalAfterExpand());
+  EXPECT_CALL(expand, Process(_)).WillOnce(Invoke(ExpandProcess120ms));
+  EXPECT_CALL(expand, Reset());
+  EXPECT_EQ(static_cast<int>(kPacketsizeBytes),
+            normal.Process(input,
+                           kPacketsizeBytes,
+                           kModeExpand,
+                           mute_factor_array.get(),
+                           &output));
+
+  EXPECT_EQ(kPacketsizeBytes, output.Size());
 
   EXPECT_CALL(db, Die());      // Called when |db| goes out of scope.
   EXPECT_CALL(expand, Die());  // Called when |expand| goes out of scope.

@@ -10,14 +10,18 @@
 
 #include "webrtc/modules/audio_coding/acm2/call_statistics.h"
 
-#include <assert.h>
+#include "webrtc/base/checks.h"
 
 namespace webrtc {
 
 namespace acm2 {
 
-void CallStatistics::DecodedByNetEq(AudioFrame::SpeechType speech_type) {
+void CallStatistics::DecodedByNetEq(AudioFrame::SpeechType speech_type,
+                                    bool muted) {
   ++decoding_stat_.calls_to_neteq;
+  if (muted) {
+    ++decoding_stat_.decoded_muted_output;
+  }
   switch (speech_type) {
     case AudioFrame::kNormalSpeech: {
       ++decoding_stat_.decoded_normal;
@@ -37,7 +41,7 @@ void CallStatistics::DecodedByNetEq(AudioFrame::SpeechType speech_type) {
     }
     case AudioFrame::kUndefined: {
       // If the audio is decoded by NetEq, |kUndefined| is not an option.
-      assert(false);
+      RTC_NOTREACHED();
     }
   }
 }

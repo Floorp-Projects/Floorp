@@ -191,21 +191,19 @@ FocusManager::ActiveItemChanged(Accessible* aItem, bool aCheckIfActive)
   }
   mActiveItem = aItem;
 
-  // If mActiveItem is null, we might need to shift a11y focus to a remote
-  // element.
+  // If mActiveItem is null we may need to shift a11y focus back to a tab
+  // document. For example, when combobox popup is closed, then
+  // the focus should be moved back to the combobox.
   if (!mActiveItem && XRE_IsParentProcess()) {
     nsFocusManager* domfm = nsFocusManager::GetFocusManager();
     if (domfm) {
       nsIContent* focusedElm = domfm->GetFocusedContent();
-      if (focusedElm) {
-        bool remote = EventStateManager::IsRemoteTarget(focusedElm);
-        if (remote) {
-          dom::TabParent* tab = dom::TabParent::GetFrom(focusedElm);
-          if (tab) {
-            a11y::DocAccessibleParent* dap = tab->GetTopLevelDocAccessible();
-            if (dap) {
-              Unused << dap->SendRestoreFocus();
-            }
+      if (EventStateManager::IsRemoteTarget(focusedElm)) {
+        dom::TabParent* tab = dom::TabParent::GetFrom(focusedElm);
+        if (tab) {
+          a11y::DocAccessibleParent* dap = tab->GetTopLevelDocAccessible();
+          if (dap) {
+            Unused << dap->SendRestoreFocus();
           }
         }
       }

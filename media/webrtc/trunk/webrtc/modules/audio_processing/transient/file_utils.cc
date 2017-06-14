@@ -10,7 +10,8 @@
 
 #include "webrtc/modules/audio_processing/transient/file_utils.h"
 
-#include "webrtc/base/scoped_ptr.h"
+#include <memory>
+
 #include "webrtc/system_wrappers/include/file_wrapper.h"
 #include "webrtc/typedefs.h"
 
@@ -79,11 +80,11 @@ int ConvertDoubleToByteArray(double value, uint8_t out_bytes[8]) {
 size_t ReadInt16BufferFromFile(FileWrapper* file,
                                size_t length,
                                int16_t* buffer) {
-  if (!file || !file->Open() || !buffer || length <= 0) {
+  if (!file || !file->is_open() || !buffer || length <= 0) {
     return 0;
   }
 
-  rtc::scoped_ptr<uint8_t[]> byte_array(new uint8_t[2]);
+  std::unique_ptr<uint8_t[]> byte_array(new uint8_t[2]);
 
   size_t int16s_read = 0;
 
@@ -105,11 +106,11 @@ size_t ReadInt16BufferFromFile(FileWrapper* file,
 size_t ReadInt16FromFileToFloatBuffer(FileWrapper* file,
                                       size_t length,
                                       float* buffer) {
-  if (!file || !file->Open() || !buffer || length <= 0) {
+  if (!file || !file->is_open() || !buffer || length <= 0) {
     return 0;
   }
 
-  rtc::scoped_ptr<int16_t[]> buffer16(new int16_t[length]);
+  std::unique_ptr<int16_t[]> buffer16(new int16_t[length]);
 
   size_t int16s_read = ReadInt16BufferFromFile(file, length, buffer16.get());
 
@@ -123,11 +124,11 @@ size_t ReadInt16FromFileToFloatBuffer(FileWrapper* file,
 size_t ReadInt16FromFileToDoubleBuffer(FileWrapper* file,
                                        size_t length,
                                        double* buffer) {
-  if (!file || !file->Open() || !buffer || length <= 0) {
+  if (!file || !file->is_open() || !buffer || length <= 0) {
     return 0;
   }
 
-  rtc::scoped_ptr<int16_t[]> buffer16(new int16_t[length]);
+  std::unique_ptr<int16_t[]> buffer16(new int16_t[length]);
 
   size_t int16s_read = ReadInt16BufferFromFile(file, length, buffer16.get());
 
@@ -141,11 +142,11 @@ size_t ReadInt16FromFileToDoubleBuffer(FileWrapper* file,
 size_t ReadFloatBufferFromFile(FileWrapper* file,
                                size_t length,
                                float* buffer) {
-  if (!file || !file->Open() || !buffer || length <= 0) {
+  if (!file || !file->is_open() || !buffer || length <= 0) {
     return 0;
   }
 
-  rtc::scoped_ptr<uint8_t[]> byte_array(new uint8_t[4]);
+  std::unique_ptr<uint8_t[]> byte_array(new uint8_t[4]);
 
   size_t floats_read = 0;
 
@@ -164,11 +165,11 @@ size_t ReadFloatBufferFromFile(FileWrapper* file,
 size_t ReadDoubleBufferFromFile(FileWrapper* file,
                                 size_t length,
                                 double* buffer) {
-  if (!file || !file->Open() || !buffer || length <= 0) {
+  if (!file || !file->is_open() || !buffer || length <= 0) {
     return 0;
   }
 
-  rtc::scoped_ptr<uint8_t[]> byte_array(new uint8_t[8]);
+  std::unique_ptr<uint8_t[]> byte_array(new uint8_t[8]);
 
   size_t doubles_read = 0;
 
@@ -187,11 +188,11 @@ size_t ReadDoubleBufferFromFile(FileWrapper* file,
 size_t WriteInt16BufferToFile(FileWrapper* file,
                               size_t length,
                               const int16_t* buffer) {
-  if (!file || !file->Open() || !buffer || length <= 0) {
+  if (!file || !file->is_open() || !buffer || length <= 0) {
     return 0;
   }
 
-  rtc::scoped_ptr<uint8_t[]> byte_array(new uint8_t[2]);
+  std::unique_ptr<uint8_t[]> byte_array(new uint8_t[2]);
 
   size_t int16s_written = 0;
 
@@ -211,11 +212,11 @@ size_t WriteInt16BufferToFile(FileWrapper* file,
 size_t WriteFloatBufferToFile(FileWrapper* file,
                               size_t length,
                               const float* buffer) {
-  if (!file || !file->Open() || !buffer || length <= 0) {
+  if (!file || !file->is_open() || !buffer || length <= 0) {
     return 0;
   }
 
-  rtc::scoped_ptr<uint8_t[]> byte_array(new uint8_t[4]);
+  std::unique_ptr<uint8_t[]> byte_array(new uint8_t[4]);
 
   size_t floats_written = 0;
 
@@ -234,11 +235,11 @@ size_t WriteFloatBufferToFile(FileWrapper* file,
 size_t WriteDoubleBufferToFile(FileWrapper* file,
                                size_t length,
                                const double* buffer) {
-  if (!file || !file->Open() || !buffer || length <= 0) {
+  if (!file || !file->is_open() || !buffer || length <= 0) {
     return 0;
   }
 
-  rtc::scoped_ptr<uint8_t[]> byte_array(new uint8_t[8]);
+  std::unique_ptr<uint8_t[]> byte_array(new uint8_t[8]);
 
   size_t doubles_written = 0;
 

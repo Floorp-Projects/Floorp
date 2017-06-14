@@ -12,12 +12,11 @@
 
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
-
-using webrtc::RTCPUtility::RtcpCommonHeader;
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/common_header.h"
 
 namespace webrtc {
 namespace rtcp {
-
+constexpr uint8_t Pli::kFeedbackMessageType;
 // RFC 4585: Feedback format.
 //
 // Common packet format:
@@ -37,16 +36,16 @@ namespace rtcp {
 //
 // Picture loss indication (PLI) (RFC 4585).
 // FCI: no feedback control information.
-bool Pli::Parse(const RtcpCommonHeader& header, const uint8_t* payload) {
-  RTC_DCHECK(header.packet_type == kPacketType);
-  RTC_DCHECK(header.count_or_format == kFeedbackMessageType);
+bool Pli::Parse(const CommonHeader& packet) {
+  RTC_DCHECK_EQ(packet.type(), kPacketType);
+  RTC_DCHECK_EQ(packet.fmt(), kFeedbackMessageType);
 
-  if (header.payload_size_bytes < kCommonFeedbackLength) {
+  if (packet.payload_size_bytes() < kCommonFeedbackLength) {
     LOG(LS_WARNING) << "Packet is too small to be a valid PLI packet";
     return false;
   }
 
-  ParseCommonFeedback(payload);
+  ParseCommonFeedback(packet.payload());
   return true;
 }
 

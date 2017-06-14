@@ -16,6 +16,8 @@
 #include <string>
 
 #include "webrtc/base/constructormagic.h"
+#include "webrtc/base/optional.h"
+#include "webrtc/base/scoped_ref_ptr.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/audio_coding/neteq/audio_decoder_impl.h"
 #include "webrtc/typedefs.h"
@@ -23,7 +25,9 @@
 namespace webrtc {
 
 // Forward declarations.
+class AudioFrame;
 struct WebRtcRTPHeader;
+class AudioDecoderFactory;
 
 struct NetEqNetworkStatistics {
   uint16_t current_buffer_size_ms;  // Current jitter buffer size in ms.
@@ -53,14 +57,6 @@ struct NetEqNetworkStatistics {
   int max_waiting_time_ms;
 };
 
-enum NetEqOutputType {
-  kOutputNormal,
-  kOutputPLC,
-  kOutputCNG,
-  kOutputPLCtoCNG,
-  kOutputVADPassive
-};
-
 enum NetEqPlayoutMode {
   kPlayoutOn,
   kPlayoutOff,
@@ -80,7 +76,6 @@ class NetEq {
   struct Config {
     Config()
         : sample_rate_hz(16000),
-          enable_audio_classifier(false),
           enable_post_decode_vad(false),
           max_packets_in_buffer(50),
           // |max_delay_ms| has the same effect as calling SetMaximumDelay().
@@ -92,13 +87,13 @@ class NetEq {
     std::string ToString() const;
 
     int sample_rate_hz;  // Initial value. Will change with input data.
-    bool enable_audio_classifier;
     bool enable_post_decode_vad;
     size_t max_packets_in_buffer;
     int max_delay_ms;
     BackgroundNoiseMode background_noise_mode;
     NetEqPlayoutMode playout_mode;
     bool enable_fast_accelerate;
+    bool enable_muted_state = false;
   };
 
   enum ReturnCodes {
@@ -129,16 +124,16 @@ class NetEq {
     kStereoNotSupported,
     kSampleUnderrun,
     kDecodedTooMuch,
-    kFrameSplitError,
     kRedundancySplitError,
-    kPacketBufferCorruption,
-    kSyncPacketNotAccepted
+    kPacketBufferCorruption
   };
 
   // Creates a new NetEq object, with parameters set in |config|. The |config|
   // object will only have to be valid for the duration of the call to this
   // method.
-  static NetEq* Create(const NetEq::Config& config);
+  static NetEq* Create(
+      const NetEq::Config& config,
+      const rtc::scoped_refptr<AudioDecoderFactory>& decoder_factory);
 
   virtual ~NetEq() {}
 
@@ -150,29 +145,17 @@ class NetEq {
                            rtc::ArrayView<const uint8_t> payload,
                            uint32_t receive_timestamp) = 0;
 
-  // Inserts a sync-packet into packet queue. Sync-packets are decoded to
-  // silence and are intended to keep AV-sync intact in an event of long packet
-  // losses when Video NACK is enabled but Audio NACK is not. Clients of NetEq
-  // might insert sync-packet when they observe that buffer level of NetEq is
-  // decreasing below a certain threshold, defined by the application.
-  // Sync-packets should have the same payload type as the last audio payload
-  // type, i.e. they cannot have DTMF or CNG payload type, nor a codec change
-  // can be implied by inserting a sync-packet.
-  // Returns kOk on success, kFail on failure.
-  virtual int InsertSyncPacket(const WebRtcRTPHeader& rtp_header,
-                               uint32_t receive_timestamp) = 0;
-
   // Instructs NetEq to deliver 10 ms of audio data. The data is written to
-  // |output_audio|, which can hold (at least) |max_length| elements.
-  // The number of channels that were written to the output is provided in
-  // the output variable |num_channels|, and each channel contains
-  // |samples_per_channel| elements. If more than one channel is written,
-  // the samples are interleaved.
-  // The speech type is written to |type|, if |type| is not NULL.
+  // |audio_frame|. All data in |audio_frame| is wiped; |data_|, |speech_type_|,
+  // |num_channels_|, |sample_rate_hz_|, |samples_per_channel_|, and
+  // |vad_activity_| are updated upon success. If an error is returned, some
+  // fields may not have been updated, or may contain inconsistent values.
+  // If muted state is enabled (through Config::enable_muted_state), |muted|
+  // may be set to true after a prolonged expand period. When this happens, the
+  // |data_| in |audio_frame| is not written, but should be interpreted as being
+  // all zeros.
   // Returns kOK on success, or kFail in case of an error.
-  virtual int GetAudio(size_t max_length, int16_t* output_audio,
-                       size_t* samples_per_channel, size_t* num_channels,
-                       NetEqOutputType* type) = 0;
+  virtual int GetAudio(AudioFrame* audio_frame, bool* muted) = 0;
 
   // Associates |rtp_payload_type| with |codec| and |codec_name|, and stores the
   // information in the codec database. Returns 0 on success, -1 on failure.
@@ -184,20 +167,26 @@ class NetEq {
 
   // Provides an externally created decoder object |decoder| to insert in the
   // decoder database. The decoder implements a decoder of type |codec| and
-  // associates it with |rtp_payload_type| and |codec_name|. The decoder will
-  // produce samples at the rate |sample_rate_hz|. Returns kOK on success, kFail
-  // on failure.
-  // The name is only used to provide information back to the caller about the
-  // decoders. Hence, the name is arbitrary, and may be empty.
+  // associates it with |rtp_payload_type| and |codec_name|. Returns kOK on
+  // success, kFail on failure. The name is only used to provide information
+  // back to the caller about the decoders. Hence, the name is arbitrary, and
+  // may be empty.
   virtual int RegisterExternalDecoder(AudioDecoder* decoder,
                                       NetEqDecoder codec,
                                       const std::string& codec_name,
-                                      uint8_t rtp_payload_type,
-                                      int sample_rate_hz) = 0;
+                                      uint8_t rtp_payload_type) = 0;
+
+  // Associates |rtp_payload_type| with the given codec, which NetEq will
+  // instantiate when it needs it. Returns true iff successful.
+  virtual bool RegisterPayloadType(int rtp_payload_type,
+                                   const SdpAudioFormat& audio_format) = 0;
 
   // Removes |rtp_payload_type| from the codec database. Returns 0 on success,
   // -1 on failure.
   virtual int RemovePayloadType(uint8_t rtp_payload_type) = 0;
+
+  // Removes all payload types from the codec database.
+  virtual void RemoveAllPayloadTypes() = 0;
 
   // Sets a minimum delay in millisecond for packet buffer. The minimum is
   // maintained unless a higher latency is dictated by channel condition.
@@ -225,6 +214,11 @@ class NetEq {
 
   // Returns the current total delay (packet buffer and sync buffer) in ms.
   virtual int CurrentDelayMs() const = 0;
+
+  // Returns the current total delay (packet buffer and sync buffer) in ms,
+  // with smoothing applied to even out short-time fluctuations due to jitter.
+  // The packet buffer part of the delay is not updated during DTX/CNG periods.
+  virtual int FilteredCurrentDelayMs() const = 0;
 
   // Sets the playout mode to |mode|.
   // Deprecated. Set the mode in the Config struct passed to the constructor.
@@ -254,14 +248,23 @@ class NetEq {
   // Disables post-decode VAD.
   virtual void DisableVad() = 0;
 
-  // Gets the RTP timestamp for the last sample delivered by GetAudio().
-  // Returns true if the RTP timestamp is valid, otherwise false.
-  virtual bool GetPlayoutTimestamp(uint32_t* timestamp) = 0;
+  // Returns the RTP timestamp for the last sample delivered by GetAudio().
+  // The return value will be empty if no valid timestamp is available.
+  virtual rtc::Optional<uint32_t> GetPlayoutTimestamp() const = 0;
 
   // Returns the sample rate in Hz of the audio produced in the last GetAudio
   // call. If GetAudio has not been called yet, the configured sample rate
   // (Config::sample_rate_hz) is returned.
   virtual int last_output_sample_rate_hz() const = 0;
+
+  // Returns info about the decoder for the given payload type, or an empty
+  // value if we have no decoder for that payload type.
+  virtual rtc::Optional<CodecInst> GetDecoder(int payload_type) const = 0;
+
+  // Returns the decoder format for the given payload type. Returns empty if no
+  // such payload type was registered.
+  virtual rtc::Optional<SdpAudioFormat> GetDecoderFormat(
+      int payload_type) const = 0;
 
   // Not implemented.
   virtual int SetTargetNumberOfChannels() = 0;

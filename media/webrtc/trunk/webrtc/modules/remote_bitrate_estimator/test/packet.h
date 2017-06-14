@@ -42,8 +42,6 @@ class Packet {
   virtual void set_sender_timestamp_us(int64_t sender_timestamp_us) {
     sender_timestamp_us_ = sender_timestamp_us;
   }
-  virtual void set_paced(bool paced) { paced_ = paced; }
-  virtual bool paced() const { return paced_; }
   virtual int64_t creation_time_ms() const {
     return (creation_time_us_ + 500) / 1000;
   }
@@ -58,7 +56,6 @@ class Packet {
   int64_t send_time_us_;  // Time the packet left last processor touching it.
   int64_t sender_timestamp_us_;  // Time the packet left the Sender.
   size_t payload_size_;  // Size of the (non-existent, simulated) payload.
-  bool paced_;           // True if sent through paced sender.
 };
 
 class MediaPacket : public Packet {

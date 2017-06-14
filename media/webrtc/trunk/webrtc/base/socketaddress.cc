@@ -28,6 +28,7 @@
 #include <sstream>
 
 #include "webrtc/base/byteorder.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/nethelpers.h"
@@ -120,7 +121,7 @@ void SocketAddress::SetResolvedIP(const IPAddress& ip) {
 }
 
 void SocketAddress::SetPort(int port) {
-  ASSERT((0 <= port) && (port < 65536));
+  RTC_DCHECK((0 <= port) && (port < 65536));
   port_ = static_cast<uint16_t>(port);
 }
 

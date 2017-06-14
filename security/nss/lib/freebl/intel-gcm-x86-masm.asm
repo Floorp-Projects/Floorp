@@ -390,7 +390,7 @@ Htbl    textequ <edx>
 Gctx    textequ <edx>
 len     textequ <DWORD PTR[ebp + 5*4 + 3*4]>
 KS      textequ <esi>
-NR      textequ <DWORD PTR[-40 + KS]>
+NR      textequ <DWORD PTR[244+KS]>
 
 aluCTR  textequ <ebx>
 aluTMP  textequ <edi>
@@ -463,7 +463,6 @@ LbeginENC:
     mov Gctx, [ebp + 5*4 + 2*4]
 
     mov     KS, [16*16 + 3*16 + Gctx]
-    lea     KS, [44 + KS]
 
     mov     aluCTR, [16*16 + 2*16 + 3*4 + Gctx]
     bswap   aluCTR
@@ -931,7 +930,6 @@ LbeginDEC:
     mov Gctx, [ebp + 5*4 + 2*4]
 
     mov     KS, [16*16 + 3*16 + Gctx]
-    lea     KS, [44 + KS]
 
     mov     aluCTR, [16*16 + 2*16 + 3*4 + Gctx]
     bswap   aluCTR

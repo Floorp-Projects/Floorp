@@ -11,6 +11,9 @@
 #include "webrtc/p2p/base/stunrequest.h"
 
 #include <algorithm>
+#include <memory>
+
+#include "webrtc/base/checks.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/helpers.h"
 #include "webrtc/base/logging.h"
@@ -42,14 +45,14 @@ void StunRequestManager::Send(StunRequest* request) {
 
 void StunRequestManager::SendDelayed(StunRequest* request, int delay) {
   request->set_manager(this);
-  ASSERT(requests_.find(request->id()) == requests_.end());
+  RTC_DCHECK(requests_.find(request->id()) == requests_.end());
   request->set_origin(origin_);
   request->Construct();
   requests_[request->id()] = request;
   if (delay > 0) {
-    thread_->PostDelayed(delay, request, MSG_STUN_SEND, NULL);
+    thread_->PostDelayed(RTC_FROM_HERE, delay, request, MSG_STUN_SEND, NULL);
   } else {
-    thread_->Send(request, MSG_STUN_SEND, NULL);
+    thread_->Send(RTC_FROM_HERE, request, MSG_STUN_SEND, NULL);
   }
 }
 
@@ -58,16 +61,26 @@ void StunRequestManager::Flush(int msg_type) {
     StunRequest* request = kv.second;
     if (msg_type == kAllRequests || msg_type == request->type()) {
       thread_->Clear(request, MSG_STUN_SEND);
-      thread_->Send(request, MSG_STUN_SEND, NULL);
+      thread_->Send(RTC_FROM_HERE, request, MSG_STUN_SEND, NULL);
     }
   }
 }
 
+bool StunRequestManager::HasRequest(int msg_type) {
+  for (const auto kv : requests_) {
+    StunRequest* request = kv.second;
+    if (msg_type == kAllRequests || msg_type == request->type()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void StunRequestManager::Remove(StunRequest* request) {
-  ASSERT(request->manager() == this);
+  RTC_DCHECK(request->manager() == this);
   RequestMap::iterator iter = requests_.find(request->id());
   if (iter != requests_.end()) {
-    ASSERT(iter->second == request);
+    RTC_DCHECK(iter->second == request);
     requests_.erase(iter);
     thread_->Clear(request);
   }
@@ -128,8 +141,8 @@ bool StunRequestManager::CheckResponse(const char* data, size_t size) {
 
   // Parse the STUN message and continue processing as usual.
 
-  rtc::ByteBuffer buf(data, size);
-  rtc::scoped_ptr<StunMessage> response(iter->second->msg_->CreateNew());
+  rtc::ByteBufferReader buf(data, size);
+  std::unique_ptr<StunMessage> response(iter->second->msg_->CreateNew());
   if (!response->Read(&buf)) {
     LOG(LS_WARNING) << "Failed to read STUN response " << rtc::hex_encode(id);
     return false;
@@ -153,7 +166,7 @@ StunRequest::StunRequest(StunMessage* request)
 }
 
 StunRequest::~StunRequest() {
-  ASSERT(manager_ != NULL);
+  RTC_DCHECK(manager_ != NULL);
   if (manager_) {
     manager_->Remove(this);
     manager_->thread_->Clear(this);
@@ -168,12 +181,12 @@ void StunRequest::Construct() {
           origin_));
     }
     Prepare(msg_);
-    ASSERT(msg_->type() != 0);
+    RTC_DCHECK(msg_->type() != 0);
   }
 }
 
 int StunRequest::type() {
-  ASSERT(msg_ != NULL);
+  RTC_DCHECK(msg_ != NULL);
   return msg_->type();
 }
 
@@ -181,19 +194,19 @@ const StunMessage* StunRequest::msg() const {
   return msg_;
 }
 
-uint32_t StunRequest::Elapsed() const {
-  return rtc::TimeSince(tstamp_);
+int StunRequest::Elapsed() const {
+  return static_cast<int>(rtc::TimeMillis() - tstamp_);
 }
 
 
 void StunRequest::set_manager(StunRequestManager* manager) {
-  ASSERT(!manager_);
+  RTC_DCHECK(!manager_);
   manager_ = manager;
 }
 
 void StunRequest::OnMessage(rtc::Message* pmsg) {
-  ASSERT(manager_ != NULL);
-  ASSERT(pmsg->message_id == MSG_STUN_SEND);
+  RTC_DCHECK(manager_ != NULL);
+  RTC_DCHECK(pmsg->message_id == MSG_STUN_SEND);
 
   if (timeout_) {
     OnTimeout();
@@ -201,20 +214,24 @@ void StunRequest::OnMessage(rtc::Message* pmsg) {
     return;
   }
 
-  tstamp_ = rtc::Time();
+  tstamp_ = rtc::TimeMillis();
 
-  rtc::ByteBuffer buf;
+  rtc::ByteBufferWriter buf;
   msg_->Write(&buf);
   manager_->SignalSendPacket(buf.Data(), buf.Length(), this);
 
   OnSent();
-  manager_->thread_->PostDelayed(resend_delay(), this, MSG_STUN_SEND, NULL);
+  manager_->thread_->PostDelayed(RTC_FROM_HERE, resend_delay(), this,
+                                 MSG_STUN_SEND, NULL);
 }
 
 void StunRequest::OnSent() {
   count_ += 1;
-  if (count_ == MAX_SENDS)
+  if (count_ == MAX_SENDS) {
     timeout_ = true;
+  }
+  LOG(LS_VERBOSE) << "Sent STUN request " << count_
+                  << "; resend delay = " << resend_delay();
 }
 
 int StunRequest::resend_delay() {

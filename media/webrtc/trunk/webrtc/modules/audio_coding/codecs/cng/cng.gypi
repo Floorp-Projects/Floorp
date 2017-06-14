@@ -18,9 +18,7 @@
       'sources': [
         'audio_encoder_cng.cc',
         'audio_encoder_cng.h',
-        'cng_helpfuns.c',
-        'cng_helpfuns.h',
-        'webrtc_cng.c',
+        'webrtc_cng.cc',
         'webrtc_cng.h',
       ],
     },

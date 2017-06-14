@@ -17,14 +17,29 @@
       'conditions': [
         ['build_libvpx==1', {
           'dependencies': [
-            '<(libvpx_dir)/libvpx.gyp:libvpx_new',
+            '<(libvpx_dir)/libvpx.gyp:libvpx',
           ],
         }, {
           'include_dirs': [
             '$(MOZ_LIBVPX_CFLAGS)',
             '<(libvpx_dir)',
           ],
-	}],
+        }],
+        ['libvpx_build_vp9==1', {
+          'sources': [
+            'screenshare_layers.cc',
+            'screenshare_layers.h',
+            'vp9_frame_buffer_pool.cc',
+            'vp9_frame_buffer_pool.h',
+            'vp9_impl.cc',
+            'vp9_impl.h',
+          ],
+        }, {
+          'sources': [
+            'vp9_noop.cc',
+          ],
+        }
+        ],
       ],
       'dependencies': [
         '<(webrtc_root)/common_video/common_video.gyp:common_video',
@@ -33,12 +48,6 @@
       ],
       'sources': [
         'include/vp9.h',
-        'screenshare_layers.cc',
-        'screenshare_layers.h',
-        'vp9_frame_buffer_pool.cc',
-        'vp9_frame_buffer_pool.h',
-        'vp9_impl.cc',
-        'vp9_impl.h',
       ],
     },
   ],

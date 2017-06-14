@@ -84,11 +84,6 @@ class VCMGenericDecoder {
   int32_t Release();
 
   /**
-  * Reset the decoder state, prepare for a new call
-  */
-  int32_t Reset();
-
-  /**
   * Set decode callback. Deregistering while decoding is illegal.
   */
   int32_t RegisterDecodeCompleteCallback(VCMDecodedFrameCallback* callback);

@@ -9,26 +9,24 @@
  */
 
 #include <stddef.h>  // size_t
+
+#include <memory>
 #include <string>
 #include <vector>
 
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/audio_processing/debug.pb.h"
-#include "webrtc/base/checks.h"
-#include "webrtc/base/scoped_ptr.h"
-#include "webrtc/common_audio/channel_buffer.h"
 #include "webrtc/modules/audio_coding/neteq/tools/resample_input_audio_file.h"
-#include "webrtc/modules/audio_processing/include/audio_processing.h"
-#include "webrtc/modules/audio_processing/test/protobuf_utils.h"
+#include "webrtc/modules/audio_processing/test/debug_dump_replayer.h"
 #include "webrtc/modules/audio_processing/test/test_utils.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
+
 
 namespace webrtc {
 namespace test {
 
 namespace {
 
-void MaybeResetBuffer(rtc::scoped_ptr<ChannelBuffer<float>>* buffer,
+void MaybeResetBuffer(std::unique_ptr<ChannelBuffer<float>>* buffer,
                       const StreamConfig& config) {
   auto& buffer_ref = *buffer;
   if (!buffer_ref.get() || buffer_ref->num_frames() != config.num_frames() ||
@@ -50,7 +48,8 @@ class DebugDumpGenerator {
                      const std::string& dump_file_name);
 
   // Constructor that uses default input files.
-  explicit DebugDumpGenerator(const Config& config);
+  explicit DebugDumpGenerator(const Config& config,
+                              const AudioProcessing::Config& apm_config);
 
   ~DebugDumpGenerator();
 
@@ -101,11 +100,11 @@ class DebugDumpGenerator {
   const int reverse_file_channels_;
 
   // Buffer for APM input/output.
-  rtc::scoped_ptr<ChannelBuffer<float>> input_;
-  rtc::scoped_ptr<ChannelBuffer<float>> reverse_;
-  rtc::scoped_ptr<ChannelBuffer<float>> output_;
+  std::unique_ptr<ChannelBuffer<float>> input_;
+  std::unique_ptr<ChannelBuffer<float>> reverse_;
+  std::unique_ptr<ChannelBuffer<float>> output_;
 
-  rtc::scoped_ptr<AudioProcessing> apm_;
+  std::unique_ptr<AudioProcessing> apm_;
 
   const std::string dump_file_name_;
 };
@@ -135,11 +134,18 @@ DebugDumpGenerator::DebugDumpGenerator(const std::string& input_file_name,
       dump_file_name_(dump_file_name) {
 }
 
-DebugDumpGenerator::DebugDumpGenerator(const Config& config)
-  : DebugDumpGenerator(ResourcePath("near32_stereo", "pcm"), 32000, 2,
-                       ResourcePath("far32_stereo", "pcm"), 32000, 2,
-                       config,
-                       TempFilename(OutputPath(), "debug_aec")) {
+DebugDumpGenerator::DebugDumpGenerator(
+    const Config& config,
+    const AudioProcessing::Config& apm_config)
+    : DebugDumpGenerator(ResourcePath("near32_stereo", "pcm"),
+                         32000,
+                         2,
+                         ResourcePath("far32_stereo", "pcm"),
+                         32000,
+                         2,
+                         config,
+                         TempFilename(OutputPath(), "debug_aec")) {
+  apm_->ApplyConfig(apm_config);
 }
 
 DebugDumpGenerator::~DebugDumpGenerator() {
@@ -181,7 +187,7 @@ void DebugDumpGenerator::SetOutputChannels(int channels) {
 }
 
 void DebugDumpGenerator::StartRecording() {
-  apm_->StartDebugRecording(dump_file_name_.c_str());
+  apm_->StartDebugRecording(dump_file_name_.c_str(), -1);
 }
 
 void DebugDumpGenerator::Process(size_t num_blocks) {
@@ -232,245 +238,42 @@ void DebugDumpGenerator::ReadAndDeinterleave(ResampleInputAudioFile* audio,
 
 class DebugDumpTest : public ::testing::Test {
  public:
-  DebugDumpTest();
-
   // VerifyDebugDump replays a debug dump using APM and verifies that the result
   // is bit-exact-identical to the output channel in the dump. This is only
   // guaranteed if the debug dump is started on the first frame.
   void VerifyDebugDump(const std::string& dump_file_name);
 
  private:
-  // Following functions are facilities for replaying debug dumps.
-  void OnInitEvent(const audioproc::Init& msg);
-  void OnStreamEvent(const audioproc::Stream& msg);
-  void OnReverseStreamEvent(const audioproc::ReverseStream& msg);
-  void OnConfigEvent(const audioproc::Config& msg);
-
-  void MaybeRecreateApm(const audioproc::Config& msg);
-  void ConfigureApm(const audioproc::Config& msg);
-
-  // Buffer for APM input/output.
-  rtc::scoped_ptr<ChannelBuffer<float>> input_;
-  rtc::scoped_ptr<ChannelBuffer<float>> reverse_;
-  rtc::scoped_ptr<ChannelBuffer<float>> output_;
-
-  rtc::scoped_ptr<AudioProcessing> apm_;
-
-  StreamConfig input_config_;
-  StreamConfig reverse_config_;
-  StreamConfig output_config_;
+  DebugDumpReplayer debug_dump_replayer_;
 };
 
-DebugDumpTest::DebugDumpTest()
-    : input_(nullptr),  // will be created upon usage.
-      reverse_(nullptr),
-      output_(nullptr),
-      apm_(nullptr) {
-}
-
 void DebugDumpTest::VerifyDebugDump(const std::string& in_filename) {
-  FILE* in_file = fopen(in_filename.c_str(), "rb");
-  ASSERT_TRUE(in_file);
-  audioproc::Event event_msg;
+  ASSERT_TRUE(debug_dump_replayer_.SetDumpFile(in_filename));
 
-  while (ReadMessageFromFile(in_file, &event_msg)) {
-    switch (event_msg.type()) {
-      case audioproc::Event::INIT:
-        OnInitEvent(event_msg.init());
-        break;
-      case audioproc::Event::STREAM:
-        OnStreamEvent(event_msg.stream());
-        break;
-      case audioproc::Event::REVERSE_STREAM:
-        OnReverseStreamEvent(event_msg.reverse_stream());
-        break;
-      case audioproc::Event::CONFIG:
-        OnConfigEvent(event_msg.config());
-        break;
-      case audioproc::Event::UNKNOWN_EVENT:
-        // We do not expect receive UNKNOWN event currently.
-        FAIL();
+  while (const rtc::Optional<audioproc::Event> event =
+      debug_dump_replayer_.GetNextEvent()) {
+    debug_dump_replayer_.RunNextEvent();
+    if (event->type() == audioproc::Event::STREAM) {
+      const audioproc::Stream* msg = &event->stream();
+      const StreamConfig output_config = debug_dump_replayer_.GetOutputConfig();
+      const ChannelBuffer<float>* output = debug_dump_replayer_.GetOutput();
+      // Check that output of APM is bit-exact to the output in the dump.
+      ASSERT_EQ(output_config.num_channels(),
+                static_cast<size_t>(msg->output_channel_size()));
+      ASSERT_EQ(output_config.num_frames() * sizeof(float),
+                msg->output_channel(0).size());
+      for (int i = 0; i < msg->output_channel_size(); ++i) {
+        ASSERT_EQ(0, memcmp(output->channels()[i],
+                            msg->output_channel(i).data(),
+                            msg->output_channel(i).size()));
+      }
     }
   }
-  fclose(in_file);
-}
-
-// OnInitEvent reset the input/output/reserve channel format.
-void DebugDumpTest::OnInitEvent(const audioproc::Init& msg) {
-  ASSERT_TRUE(msg.has_num_input_channels());
-  ASSERT_TRUE(msg.has_output_sample_rate());
-  ASSERT_TRUE(msg.has_num_output_channels());
-  ASSERT_TRUE(msg.has_reverse_sample_rate());
-  ASSERT_TRUE(msg.has_num_reverse_channels());
-
-  input_config_ = StreamConfig(msg.sample_rate(), msg.num_input_channels());
-  output_config_ =
-      StreamConfig(msg.output_sample_rate(), msg.num_output_channels());
-  reverse_config_ =
-      StreamConfig(msg.reverse_sample_rate(), msg.num_reverse_channels());
-
-  MaybeResetBuffer(&input_, input_config_);
-  MaybeResetBuffer(&output_, output_config_);
-  MaybeResetBuffer(&reverse_, reverse_config_);
-}
-
-// OnStreamEvent replays an input signal and verifies the output.
-void DebugDumpTest::OnStreamEvent(const audioproc::Stream& msg) {
-  // APM should have been created.
-  ASSERT_TRUE(apm_.get());
-
-  EXPECT_NOERR(apm_->gain_control()->set_stream_analog_level(msg.level()));
-  EXPECT_NOERR(apm_->set_stream_delay_ms(msg.delay()));
-  apm_->echo_cancellation()->set_stream_drift_samples(msg.drift());
-  if (msg.has_keypress())
-    apm_->set_stream_key_pressed(msg.keypress());
-  else
-    apm_->set_stream_key_pressed(true);
-
-  ASSERT_EQ(input_config_.num_channels(),
-            static_cast<size_t>(msg.input_channel_size()));
-  ASSERT_EQ(input_config_.num_frames() * sizeof(float),
-            msg.input_channel(0).size());
-
-  for (int i = 0; i < msg.input_channel_size(); ++i) {
-     memcpy(input_->channels()[i], msg.input_channel(i).data(),
-            msg.input_channel(i).size());
-  }
-
-  ASSERT_EQ(AudioProcessing::kNoError,
-            apm_->ProcessStream(input_->channels(), input_config_,
-                                output_config_, output_->channels()));
-
-  // Check that output of APM is bit-exact to the output in the dump.
-  ASSERT_EQ(output_config_.num_channels(),
-            static_cast<size_t>(msg.output_channel_size()));
-  ASSERT_EQ(output_config_.num_frames() * sizeof(float),
-            msg.output_channel(0).size());
-  for (int i = 0; i < msg.output_channel_size(); ++i) {
-    ASSERT_EQ(0, memcmp(output_->channels()[i], msg.output_channel(i).data(),
-                        msg.output_channel(i).size()));
-  }
-}
-
-void DebugDumpTest::OnReverseStreamEvent(const audioproc::ReverseStream& msg) {
-  // APM should have been created.
-  ASSERT_TRUE(apm_.get());
-
-  ASSERT_GT(msg.channel_size(), 0);
-  ASSERT_EQ(reverse_config_.num_channels(),
-            static_cast<size_t>(msg.channel_size()));
-  ASSERT_EQ(reverse_config_.num_frames() * sizeof(float),
-            msg.channel(0).size());
-
-  for (int i = 0; i < msg.channel_size(); ++i) {
-     memcpy(reverse_->channels()[i], msg.channel(i).data(),
-            msg.channel(i).size());
-  }
-
-  ASSERT_EQ(AudioProcessing::kNoError,
-            apm_->ProcessReverseStream(reverse_->channels(),
-                                       reverse_config_,
-                                       reverse_config_,
-                                       reverse_->channels()));
-}
-
-void DebugDumpTest::OnConfigEvent(const audioproc::Config& msg) {
-  MaybeRecreateApm(msg);
-  ConfigureApm(msg);
-}
-
-void DebugDumpTest::MaybeRecreateApm(const audioproc::Config& msg) {
-  // These configurations cannot be changed on the fly.
-  Config config;
-  ASSERT_TRUE(msg.has_aec_delay_agnostic_enabled());
-  config.Set<DelayAgnostic>(
-      new DelayAgnostic(msg.aec_delay_agnostic_enabled()));
-
-  ASSERT_TRUE(msg.has_noise_robust_agc_enabled());
-  config.Set<ExperimentalAgc>(
-       new ExperimentalAgc(msg.noise_robust_agc_enabled()));
-
-  ASSERT_TRUE(msg.has_transient_suppression_enabled());
-  config.Set<ExperimentalNs>(
-      new ExperimentalNs(msg.transient_suppression_enabled()));
-
-  ASSERT_TRUE(msg.has_aec_extended_filter_enabled());
-  config.Set<ExtendedFilter>(new ExtendedFilter(
-      msg.aec_extended_filter_enabled()));
-
-  // We only create APM once, since changes on these fields should not
-  // happen in current implementation.
-  if (!apm_.get()) {
-    apm_.reset(AudioProcessing::Create(config));
-  }
-}
-
-void DebugDumpTest::ConfigureApm(const audioproc::Config& msg) {
-  // AEC configs.
-  ASSERT_TRUE(msg.has_aec_enabled());
-  EXPECT_EQ(AudioProcessing::kNoError,
-            apm_->echo_cancellation()->Enable(msg.aec_enabled()));
-
-  ASSERT_TRUE(msg.has_aec_drift_compensation_enabled());
-  EXPECT_EQ(AudioProcessing::kNoError,
-            apm_->echo_cancellation()->enable_drift_compensation(
-                msg.aec_drift_compensation_enabled()));
-
-  ASSERT_TRUE(msg.has_aec_suppression_level());
-  EXPECT_EQ(AudioProcessing::kNoError,
-            apm_->echo_cancellation()->set_suppression_level(
-                static_cast<EchoCancellation::SuppressionLevel>(
-                    msg.aec_suppression_level())));
-
-  // AECM configs.
-  ASSERT_TRUE(msg.has_aecm_enabled());
-  EXPECT_EQ(AudioProcessing::kNoError,
-            apm_->echo_control_mobile()->Enable(msg.aecm_enabled()));
-
-  ASSERT_TRUE(msg.has_aecm_comfort_noise_enabled());
-  EXPECT_EQ(AudioProcessing::kNoError,
-            apm_->echo_control_mobile()->enable_comfort_noise(
-                msg.aecm_comfort_noise_enabled()));
-
-  ASSERT_TRUE(msg.has_aecm_routing_mode());
-  EXPECT_EQ(AudioProcessing::kNoError,
-            apm_->echo_control_mobile()->set_routing_mode(
-                static_cast<EchoControlMobile::RoutingMode>(
-                    msg.aecm_routing_mode())));
-
-  // AGC configs.
-  ASSERT_TRUE(msg.has_agc_enabled());
-  EXPECT_EQ(AudioProcessing::kNoError,
-            apm_->gain_control()->Enable(msg.agc_enabled()));
-
-  ASSERT_TRUE(msg.has_agc_mode());
-  EXPECT_EQ(AudioProcessing::kNoError,
-            apm_->gain_control()->set_mode(
-                static_cast<GainControl::Mode>(msg.agc_mode())));
-
-  ASSERT_TRUE(msg.has_agc_limiter_enabled());
-  EXPECT_EQ(AudioProcessing::kNoError,
-            apm_->gain_control()->enable_limiter(msg.agc_limiter_enabled()));
-
-  // HPF configs.
-  ASSERT_TRUE(msg.has_hpf_enabled());
-  EXPECT_EQ(AudioProcessing::kNoError,
-            apm_->high_pass_filter()->Enable(msg.hpf_enabled()));
-
-  // NS configs.
-  ASSERT_TRUE(msg.has_ns_enabled());
-  EXPECT_EQ(AudioProcessing::kNoError,
-            apm_->noise_suppression()->Enable(msg.ns_enabled()));
-
-  ASSERT_TRUE(msg.has_ns_level());
-  EXPECT_EQ(AudioProcessing::kNoError,
-            apm_->noise_suppression()->set_level(
-                static_cast<NoiseSuppression::Level>(msg.ns_level())));
 }
 
 TEST_F(DebugDumpTest, SimpleCase) {
   Config config;
-  DebugDumpGenerator generator(config);
+  DebugDumpGenerator generator(config, AudioProcessing::Config());
   generator.StartRecording();
   generator.Process(100);
   generator.StopRecording();
@@ -479,7 +282,8 @@ TEST_F(DebugDumpTest, SimpleCase) {
 
 TEST_F(DebugDumpTest, ChangeInputFormat) {
   Config config;
-  DebugDumpGenerator generator(config);
+  DebugDumpGenerator generator(config, AudioProcessing::Config());
+
   generator.StartRecording();
   generator.Process(100);
   generator.SetInputRate(48000);
@@ -496,7 +300,7 @@ TEST_F(DebugDumpTest, ChangeInputFormat) {
 
 TEST_F(DebugDumpTest, ChangeReverseFormat) {
   Config config;
-  DebugDumpGenerator generator(config);
+  DebugDumpGenerator generator(config, AudioProcessing::Config());
   generator.StartRecording();
   generator.Process(100);
   generator.SetReverseRate(48000);
@@ -508,7 +312,7 @@ TEST_F(DebugDumpTest, ChangeReverseFormat) {
 
 TEST_F(DebugDumpTest, ChangeOutputFormat) {
   Config config;
-  DebugDumpGenerator generator(config);
+  DebugDumpGenerator generator(config, AudioProcessing::Config());
   generator.StartRecording();
   generator.Process(100);
   generator.SetOutputRate(48000);
@@ -520,7 +324,7 @@ TEST_F(DebugDumpTest, ChangeOutputFormat) {
 
 TEST_F(DebugDumpTest, ToggleAec) {
   Config config;
-  DebugDumpGenerator generator(config);
+  DebugDumpGenerator generator(config, AudioProcessing::Config());
   generator.StartRecording();
   generator.Process(100);
 
@@ -535,7 +339,7 @@ TEST_F(DebugDumpTest, ToggleAec) {
 TEST_F(DebugDumpTest, ToggleDelayAgnosticAec) {
   Config config;
   config.Set<DelayAgnostic>(new DelayAgnostic(true));
-  DebugDumpGenerator generator(config);
+  DebugDumpGenerator generator(config, AudioProcessing::Config());
   generator.StartRecording();
   generator.Process(100);
 
@@ -547,9 +351,190 @@ TEST_F(DebugDumpTest, ToggleDelayAgnosticAec) {
   VerifyDebugDump(generator.dump_file_name());
 }
 
+TEST_F(DebugDumpTest, VerifyRefinedAdaptiveFilterExperimentalString) {
+  Config config;
+  config.Set<RefinedAdaptiveFilter>(new RefinedAdaptiveFilter(true));
+  DebugDumpGenerator generator(config, AudioProcessing::Config());
+  generator.StartRecording();
+  generator.Process(100);
+  generator.StopRecording();
+
+  DebugDumpReplayer debug_dump_replayer_;
+
+  ASSERT_TRUE(debug_dump_replayer_.SetDumpFile(generator.dump_file_name()));
+
+  while (const rtc::Optional<audioproc::Event> event =
+             debug_dump_replayer_.GetNextEvent()) {
+    debug_dump_replayer_.RunNextEvent();
+    if (event->type() == audioproc::Event::CONFIG) {
+      const audioproc::Config* msg = &event->config();
+      ASSERT_TRUE(msg->has_experiments_description());
+      EXPECT_PRED_FORMAT2(testing::IsSubstring, "RefinedAdaptiveFilter",
+                          msg->experiments_description().c_str());
+    }
+  }
+}
+
+TEST_F(DebugDumpTest, VerifyCombinedExperimentalStringInclusive) {
+  Config config;
+  AudioProcessing::Config apm_config;
+  config.Set<RefinedAdaptiveFilter>(new RefinedAdaptiveFilter(true));
+  // Arbitrarily set clipping gain to 17, which will never be the default.
+  config.Set<ExperimentalAgc>(new ExperimentalAgc(true, 0, 17));
+  apm_config.echo_canceller3.enabled = true;
+  DebugDumpGenerator generator(config, apm_config);
+  generator.StartRecording();
+  generator.Process(100);
+  generator.StopRecording();
+
+  DebugDumpReplayer debug_dump_replayer_;
+
+  ASSERT_TRUE(debug_dump_replayer_.SetDumpFile(generator.dump_file_name()));
+
+  while (const rtc::Optional<audioproc::Event> event =
+             debug_dump_replayer_.GetNextEvent()) {
+    debug_dump_replayer_.RunNextEvent();
+    if (event->type() == audioproc::Event::CONFIG) {
+      const audioproc::Config* msg = &event->config();
+      ASSERT_TRUE(msg->has_experiments_description());
+      EXPECT_PRED_FORMAT2(testing::IsSubstring, "RefinedAdaptiveFilter",
+                          msg->experiments_description().c_str());
+      EXPECT_PRED_FORMAT2(testing::IsSubstring, "EchoCanceller3",
+                          msg->experiments_description().c_str());
+      EXPECT_PRED_FORMAT2(testing::IsSubstring, "AgcClippingLevelExperiment",
+                          msg->experiments_description().c_str());
+    }
+  }
+}
+
+TEST_F(DebugDumpTest, VerifyCombinedExperimentalStringExclusive) {
+  Config config;
+  config.Set<RefinedAdaptiveFilter>(new RefinedAdaptiveFilter(true));
+  DebugDumpGenerator generator(config, AudioProcessing::Config());
+  generator.StartRecording();
+  generator.Process(100);
+  generator.StopRecording();
+
+  DebugDumpReplayer debug_dump_replayer_;
+
+  ASSERT_TRUE(debug_dump_replayer_.SetDumpFile(generator.dump_file_name()));
+
+  while (const rtc::Optional<audioproc::Event> event =
+             debug_dump_replayer_.GetNextEvent()) {
+    debug_dump_replayer_.RunNextEvent();
+    if (event->type() == audioproc::Event::CONFIG) {
+      const audioproc::Config* msg = &event->config();
+      ASSERT_TRUE(msg->has_experiments_description());
+      EXPECT_PRED_FORMAT2(testing::IsSubstring, "RefinedAdaptiveFilter",
+                          msg->experiments_description().c_str());
+      EXPECT_PRED_FORMAT2(testing::IsNotSubstring, "AEC3",
+                          msg->experiments_description().c_str());
+      EXPECT_PRED_FORMAT2(testing::IsNotSubstring, "AgcClippingLevelExperiment",
+                          msg->experiments_description().c_str());
+    }
+  }
+}
+
+TEST_F(DebugDumpTest, VerifyAec3ExperimentalString) {
+  Config config;
+  AudioProcessing::Config apm_config;
+  apm_config.echo_canceller3.enabled = true;
+  DebugDumpGenerator generator(config, apm_config);
+  generator.StartRecording();
+  generator.Process(100);
+  generator.StopRecording();
+
+  DebugDumpReplayer debug_dump_replayer_;
+
+  ASSERT_TRUE(debug_dump_replayer_.SetDumpFile(generator.dump_file_name()));
+
+  while (const rtc::Optional<audioproc::Event> event =
+             debug_dump_replayer_.GetNextEvent()) {
+    debug_dump_replayer_.RunNextEvent();
+    if (event->type() == audioproc::Event::CONFIG) {
+      const audioproc::Config* msg = &event->config();
+      ASSERT_TRUE(msg->has_experiments_description());
+      EXPECT_PRED_FORMAT2(testing::IsSubstring, "EchoCanceller3",
+                          msg->experiments_description().c_str());
+    }
+  }
+}
+
+TEST_F(DebugDumpTest, VerifyLevelControllerExperimentalString) {
+  Config config;
+  AudioProcessing::Config apm_config;
+  apm_config.level_controller.enabled = true;
+  DebugDumpGenerator generator(config, apm_config);
+  generator.StartRecording();
+  generator.Process(100);
+  generator.StopRecording();
+
+  DebugDumpReplayer debug_dump_replayer_;
+
+  ASSERT_TRUE(debug_dump_replayer_.SetDumpFile(generator.dump_file_name()));
+
+  while (const rtc::Optional<audioproc::Event> event =
+             debug_dump_replayer_.GetNextEvent()) {
+    debug_dump_replayer_.RunNextEvent();
+    if (event->type() == audioproc::Event::CONFIG) {
+      const audioproc::Config* msg = &event->config();
+      ASSERT_TRUE(msg->has_experiments_description());
+      EXPECT_PRED_FORMAT2(testing::IsSubstring, "LevelController",
+                          msg->experiments_description().c_str());
+    }
+  }
+}
+
+TEST_F(DebugDumpTest, VerifyAgcClippingLevelExperimentalString) {
+  Config config;
+  // Arbitrarily set clipping gain to 17, which will never be the default.
+  config.Set<ExperimentalAgc>(new ExperimentalAgc(true, 0, 17));
+  DebugDumpGenerator generator(config, AudioProcessing::Config());
+  generator.StartRecording();
+  generator.Process(100);
+  generator.StopRecording();
+
+  DebugDumpReplayer debug_dump_replayer_;
+
+  ASSERT_TRUE(debug_dump_replayer_.SetDumpFile(generator.dump_file_name()));
+
+  while (const rtc::Optional<audioproc::Event> event =
+             debug_dump_replayer_.GetNextEvent()) {
+    debug_dump_replayer_.RunNextEvent();
+    if (event->type() == audioproc::Event::CONFIG) {
+      const audioproc::Config* msg = &event->config();
+      ASSERT_TRUE(msg->has_experiments_description());
+      EXPECT_PRED_FORMAT2(testing::IsSubstring, "AgcClippingLevelExperiment",
+                          msg->experiments_description().c_str());
+    }
+  }
+}
+
+TEST_F(DebugDumpTest, VerifyEmptyExperimentalString) {
+  Config config;
+  DebugDumpGenerator generator(config, AudioProcessing::Config());
+  generator.StartRecording();
+  generator.Process(100);
+  generator.StopRecording();
+
+  DebugDumpReplayer debug_dump_replayer_;
+
+  ASSERT_TRUE(debug_dump_replayer_.SetDumpFile(generator.dump_file_name()));
+
+  while (const rtc::Optional<audioproc::Event> event =
+             debug_dump_replayer_.GetNextEvent()) {
+    debug_dump_replayer_.RunNextEvent();
+    if (event->type() == audioproc::Event::CONFIG) {
+      const audioproc::Config* msg = &event->config();
+      ASSERT_TRUE(msg->has_experiments_description());
+      EXPECT_EQ(0u, msg->experiments_description().size());
+    }
+  }
+}
+
 TEST_F(DebugDumpTest, ToggleAecLevel) {
   Config config;
-  DebugDumpGenerator generator(config);
+  DebugDumpGenerator generator(config, AudioProcessing::Config());
   EchoCancellation* aec = generator.apm()->echo_cancellation();
   EXPECT_EQ(AudioProcessing::kNoError, aec->Enable(true));
   EXPECT_EQ(AudioProcessing::kNoError,
@@ -564,15 +549,15 @@ TEST_F(DebugDumpTest, ToggleAecLevel) {
   VerifyDebugDump(generator.dump_file_name());
 }
 
-#if defined(WEBRTC_ANDROID)
-// AGC may not be supported on Android.
+// AGC is not supported on Android or iOS.
+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
 #define MAYBE_ToggleAgc DISABLED_ToggleAgc
 #else
 #define MAYBE_ToggleAgc ToggleAgc
 #endif
 TEST_F(DebugDumpTest, MAYBE_ToggleAgc) {
   Config config;
-  DebugDumpGenerator generator(config);
+  DebugDumpGenerator generator(config, AudioProcessing::Config());
   generator.StartRecording();
   generator.Process(100);
 
@@ -586,7 +571,7 @@ TEST_F(DebugDumpTest, MAYBE_ToggleAgc) {
 
 TEST_F(DebugDumpTest, ToggleNs) {
   Config config;
-  DebugDumpGenerator generator(config);
+  DebugDumpGenerator generator(config, AudioProcessing::Config());
   generator.StartRecording();
   generator.Process(100);
 
@@ -601,7 +586,7 @@ TEST_F(DebugDumpTest, ToggleNs) {
 TEST_F(DebugDumpTest, TransientSuppressionOn) {
   Config config;
   config.Set<ExperimentalNs>(new ExperimentalNs(true));
-  DebugDumpGenerator generator(config);
+  DebugDumpGenerator generator(config, AudioProcessing::Config());
   generator.StartRecording();
   generator.Process(100);
   generator.StopRecording();

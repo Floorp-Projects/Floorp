@@ -14,6 +14,8 @@
 
 namespace webrtc {
 
+const int kSumDiffThresholdHighNeon = 600;
+
 static int HorizontalAddS16x8(const int16x8_t v_16x8) {
   const int32x4_t a = vpaddlq_s16(v_16x8);
   const int64x2_t b = vpaddlq_s32(a);
@@ -75,20 +77,6 @@ void DenoiserFilterNEON::CopyMem16x16(const uint8_t* src,
   }
 }
 
-void DenoiserFilterNEON::CopyMem8x8(const uint8_t* src,
-                                    int src_stride,
-                                    uint8_t* dst,
-                                    int dst_stride) {
-  uint8x8_t vtmp;
-
-  for (int r = 0; r < 8; r++) {
-    vtmp = vld1_u8(src);
-    vst1_u8(dst, vtmp);
-    src += src_stride;
-    dst += dst_stride;
-  }
-}
-
 uint32_t DenoiserFilterNEON::Variance16x8(const uint8_t* a,
                                           int a_stride,
                                           const uint8_t* b,
@@ -99,7 +87,7 @@ uint32_t DenoiserFilterNEON::Variance16x8(const uint8_t* a,
   return *sse - ((sum * sum) >> 7);
 }
 
-DenoiserDecision DenoiserFilterNEON::MbDenoise(uint8_t* mc_running_avg_y,
+DenoiserDecision DenoiserFilterNEON::MbDenoise(const uint8_t* mc_running_avg_y,
                                                int mc_running_avg_y_stride,
                                                uint8_t* running_avg_y,
                                                int running_avg_y_stride,
@@ -113,6 +101,7 @@ DenoiserDecision DenoiserFilterNEON::MbDenoise(uint8_t* mc_running_avg_y,
   int shift_inc =
       (increase_denoising && motion_magnitude <= kMotionMagnitudeThreshold) ? 1
                                                                             : 0;
+  int sum_diff_thresh = 0;
   const uint8x16_t v_level1_adjustment = vmovq_n_u8(
       (motion_magnitude <= kMotionMagnitudeThreshold) ? 4 + shift_inc : 3);
   const uint8x16_t v_delta_level_1_and_2 = vdupq_n_u8(1);
@@ -188,90 +177,13 @@ DenoiserDecision DenoiserFilterNEON::MbDenoise(uint8_t* mc_running_avg_y,
   }
 
   // Too much adjustments => copy block.
-  {
-    int64x1_t x = vqadd_s64(vget_high_s64(v_sum_diff_total),
-                            vget_low_s64(v_sum_diff_total));
-    int sum_diff = vget_lane_s32(vabs_s32(vreinterpret_s32_s64(x)), 0);
-    int sum_diff_thresh = kSumDiffThreshold;
-
-    if (increase_denoising)
-      sum_diff_thresh = kSumDiffThresholdHigh;
-    if (sum_diff > sum_diff_thresh) {
-      // Before returning to copy the block (i.e., apply no denoising),
-      // checK if we can still apply some (weaker) temporal filtering to
-      // this block, that would otherwise not be denoised at all. Simplest
-      // is to apply an additional adjustment to running_avg_y to bring it
-      // closer to sig. The adjustment is capped by a maximum delta, and
-      // chosen such that in most cases the resulting sum_diff will be
-      // within the accceptable range given by sum_diff_thresh.
-
-      // The delta is set by the excess of absolute pixel diff over the
-      // threshold.
-      int delta = ((sum_diff - sum_diff_thresh) >> 8) + 1;
-      // Only apply the adjustment for max delta up to 3.
-      if (delta < 4) {
-        const uint8x16_t k_delta = vmovq_n_u8(delta);
-        sig -= sig_stride * 16;
-        mc_running_avg_y -= mc_running_avg_y_stride * 16;
-        running_avg_y -= running_avg_y_stride * 16;
-        for (int r = 0; r < 16; ++r) {
-          uint8x16_t v_running_avg_y = vld1q_u8(running_avg_y);
-          const uint8x16_t v_sig = vld1q_u8(sig);
-          const uint8x16_t v_mc_running_avg_y = vld1q_u8(mc_running_avg_y);
-
-          // Calculate absolute difference and sign masks.
-          const uint8x16_t v_abs_diff = vabdq_u8(v_sig, v_mc_running_avg_y);
-          const uint8x16_t v_diff_pos_mask =
-              vcltq_u8(v_sig, v_mc_running_avg_y);
-          const uint8x16_t v_diff_neg_mask =
-              vcgtq_u8(v_sig, v_mc_running_avg_y);
-          // Clamp absolute difference to delta to get the adjustment.
-          const uint8x16_t v_abs_adjustment = vminq_u8(v_abs_diff, (k_delta));
-
-          const uint8x16_t v_pos_adjustment =
-              vandq_u8(v_diff_pos_mask, v_abs_adjustment);
-          const uint8x16_t v_neg_adjustment =
-              vandq_u8(v_diff_neg_mask, v_abs_adjustment);
-
-          v_running_avg_y = vqsubq_u8(v_running_avg_y, v_pos_adjustment);
-          v_running_avg_y = vqaddq_u8(v_running_avg_y, v_neg_adjustment);
-
-          // Store results.
-          vst1q_u8(running_avg_y, v_running_avg_y);
-
-          {
-            const int8x16_t v_sum_diff =
-                vqsubq_s8(vreinterpretq_s8_u8(v_neg_adjustment),
-                          vreinterpretq_s8_u8(v_pos_adjustment));
-
-            const int16x8_t fe_dc_ba_98_76_54_32_10 = vpaddlq_s8(v_sum_diff);
-            const int32x4_t fedc_ba98_7654_3210 =
-                vpaddlq_s16(fe_dc_ba_98_76_54_32_10);
-            const int64x2_t fedcba98_76543210 =
-                vpaddlq_s32(fedc_ba98_7654_3210);
-
-            v_sum_diff_total = vqaddq_s64(v_sum_diff_total, fedcba98_76543210);
-          }
-          // Update pointers for next iteration.
-          sig += sig_stride;
-          mc_running_avg_y += mc_running_avg_y_stride;
-          running_avg_y += running_avg_y_stride;
-        }
-        {
-          // Update the sum of all pixel differences of this MB.
-          x = vqadd_s64(vget_high_s64(v_sum_diff_total),
-                        vget_low_s64(v_sum_diff_total));
-          sum_diff = vget_lane_s32(vabs_s32(vreinterpret_s32_s64(x)), 0);
-
-          if (sum_diff > sum_diff_thresh) {
-            return COPY_BLOCK;
-          }
-        }
-      } else {
-        return COPY_BLOCK;
-      }
-    }
-  }
+  int64x1_t x = vqadd_s64(vget_high_s64(v_sum_diff_total),
+                          vget_low_s64(v_sum_diff_total));
+  int sum_diff = vget_lane_s32(vabs_s32(vreinterpret_s32_s64(x)), 0);
+  sum_diff_thresh =
+      increase_denoising ? kSumDiffThresholdHighNeon : kSumDiffThreshold;
+  if (sum_diff > sum_diff_thresh)
+    return COPY_BLOCK;
 
   // Tell above level that block was filtered.
   running_avg_y -= running_avg_y_stride * 16;

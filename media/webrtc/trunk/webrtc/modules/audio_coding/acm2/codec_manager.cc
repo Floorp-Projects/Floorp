@@ -12,9 +12,9 @@
 
 #include "webrtc/base/checks.h"
 #include "webrtc/base/format_macros.h"
-#include "webrtc/engine_configurations.h"
 #include "webrtc/modules/audio_coding/acm2/rent_a_codec.h"
 #include "webrtc/system_wrappers/include/trace.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 namespace acm2 {
@@ -113,7 +113,7 @@ bool CodecManager::RegisterEncoder(const CodecInst& send_codec) {
   }
 
   send_codec_inst_ = rtc::Optional<CodecInst>(send_codec);
-  codec_stack_params_.speech_encoder = nullptr;  // Caller must recreate it.
+  recreate_encoder_ = true;  // Caller must recreate it.
   return true;
 }
 
@@ -187,6 +187,68 @@ bool CodecManager::SetCodecFEC(bool enable_codec_fec) {
   }
 
   codec_stack_params_.use_codec_fec = enable_codec_fec;
+  return true;
+}
+
+bool CodecManager::MakeEncoder(RentACodec* rac, AudioCodingModule* acm) {
+  RTC_DCHECK(rac);
+  RTC_DCHECK(acm);
+
+  if (!recreate_encoder_) {
+    bool error = false;
+    // Try to re-use the speech encoder we've given to the ACM.
+    acm->ModifyEncoder([&](std::unique_ptr<AudioEncoder>* encoder) {
+      if (!*encoder) {
+        // There is no existing encoder.
+        recreate_encoder_ = true;
+        return;
+      }
+
+      // Extract the speech encoder from the ACM.
+      std::unique_ptr<AudioEncoder> enc = std::move(*encoder);
+      while (true) {
+        auto sub_enc = enc->ReclaimContainedEncoders();
+        if (sub_enc.empty()) {
+          break;
+        }
+        RTC_CHECK_EQ(1, sub_enc.size());
+
+        // Replace enc with its sub encoder. We need to put the sub encoder in
+        // a temporary first, since otherwise the old value of enc would be
+        // destroyed before the new value got assigned, which would be bad
+        // since the new value is a part of the old value.
+        auto tmp_enc = std::move(sub_enc[0]);
+        enc = std::move(tmp_enc);
+      }
+
+      // Wrap it in a new encoder stack and put it back.
+      codec_stack_params_.speech_encoder = std::move(enc);
+      *encoder = rac->RentEncoderStack(&codec_stack_params_);
+      if (!*encoder) {
+        error = true;
+      }
+    });
+    if (error) {
+      return false;
+    }
+    if (!recreate_encoder_) {
+      return true;
+    }
+  }
+
+  if (!send_codec_inst_) {
+    // We don't have the information we need to create a new speech encoder.
+    // (This is not an error.)
+    return true;
+  }
+
+  codec_stack_params_.speech_encoder = rac->RentEncoder(*send_codec_inst_);
+  auto stack = rac->RentEncoderStack(&codec_stack_params_);
+  if (!stack) {
+    return false;
+  }
+  acm->SetEncoder(std::move(stack));
+  recreate_encoder_ = false;
   return true;
 }
 

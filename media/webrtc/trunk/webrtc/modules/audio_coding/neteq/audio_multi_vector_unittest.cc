@@ -15,7 +15,7 @@
 
 #include <string>
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -206,16 +206,6 @@ TEST_P(AudioMultiVectorTest, ReadInterleaved) {
             memcmp(array_interleaved_, output, read_samples * sizeof(int16_t)));
 
   delete [] output;
-}
-
-// Try to read to a NULL pointer. Expected to return 0.
-TEST_P(AudioMultiVectorTest, ReadInterleavedToNull) {
-  AudioMultiVector vec(num_channels_);
-  vec.PushBackInterleaved(array_interleaved_, interleaved_length_);
-  int16_t* output = NULL;
-  // Read 5 samples.
-  size_t read_samples = 5;
-  EXPECT_EQ(0u, vec.ReadInterleaved(read_samples, output));
 }
 
 // Test the PopFront method.

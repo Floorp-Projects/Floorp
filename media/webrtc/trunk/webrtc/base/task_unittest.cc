@@ -22,6 +22,7 @@
 
 #include "webrtc/base/arraysize.h"
 #include "webrtc/base/common.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/task.h"
@@ -32,7 +33,7 @@
 namespace rtc {
 
 static int64_t GetCurrentTime() {
-  return static_cast<int64_t>(Time()) * 10000;
+  return TimeMillis() * 10000;
 }
 
 // feel free to change these numbers.  Note that '0' won't work, though

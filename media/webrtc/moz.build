@@ -27,25 +27,29 @@ webrtc_non_unified_sources = [
     'trunk/webrtc/modules/audio_device/android/opensles_player.cc',              # Because of TAG redefinition
     'trunk/webrtc/modules/audio_device/linux/audio_device_pulse_linux.cc',       # Because of LATE()
     'trunk/webrtc/modules/audio_device/linux/audio_mixer_manager_pulse_linux.cc',# Because of LATE()
-    'trunk/webrtc/modules/audio_device/opensl/single_rw_fifo.cc',                # Because of name clash with #define FF
     'trunk/webrtc/modules/audio_device/win/audio_device_core_win.cc',            # Because of ordering assumptions in strsafe.h
-    'trunk/webrtc/modules/audio_processing/aec/aec_core.c',                      # Because of name clash in the ComfortNoise function
-    'trunk/webrtc/modules/audio_processing/aecm/aecm_core.c',                    # Because of name clash in the ComfortNoise function
-    'trunk/webrtc/modules/audio_processing/aecm/echo_control_mobile.c',          # Because of name clash in the kInitCheck variable
-    'trunk/webrtc/modules/audio_processing/agc/histogram.cc',                    # Because of duplicate definition of static consts with pitch_based_vad.cc
+    'trunk/webrtc/modules/audio_processing/aec/echo_cancellation.cc',            # Because of conflicts over 'near' on windows
+    'trunk/webrtc/modules/audio_processing/aecm/aecm_core.cc',                   # Because of the PART_LEN2 define
+    'trunk/webrtc/modules/audio_processing/aecm/aecm_core_c.cc',                 # Because of the PART_LEN2 define
+    'trunk/webrtc/modules/audio_processing/aecm/echo_control_mobile.cc',         # Because of the PART_LEN2 define
     'trunk/webrtc/modules/audio_processing/agc/legacy/analog_agc.c',             # Because of name clash in the kInitCheck variable
     'trunk/webrtc/modules/audio_processing/beamformer/covariance_matrix_generator.cc', # Because of needing to define _USE_MATH_DEFINES before including <cmath>
+    'trunk/webrtc/modules/audio_processing/beamformer/covariance_matrix_generator.cc',  # Because of needing to define _USE_MATH_DEFINES before including <cmath>
     'trunk/webrtc/modules/audio_processing/beamformer/nonlinear_beamformer.cc',  # Because of needing to define _USE_MATH_DEFINES before including <cmath>
     'trunk/webrtc/modules/audio_processing/echo_cancellation_impl.cc',           # Because of name clash in the MapError function
     'trunk/webrtc/modules/audio_processing/echo_control_mobile_impl.cc',         # Because of name clash in the MapError function
+    'trunk/webrtc/modules/audio_processing/echo_detector/normalized_covariance_estimator.cc', # Because of kAlpha
     'trunk/webrtc/modules/audio_processing/gain_control_impl.cc',                # Because of name clash in the Handle typedef
-    'trunk/webrtc/modules/audio_processing/high_pass_filter_impl.cc',            # Because of name clash in the Handle typedef
     'trunk/webrtc/modules/audio_processing/noise_suppression_impl.cc',           # Because of name clash in the Handle typedef
+    'trunk/webrtc/modules/audio_processing/rms_level.cc',                        # Because of name clash in the kMinLevel variable
+    'trunk/webrtc/modules/congestion_controller/trendline_estimator.cc',         # Because of name clash in kDeltaCounterMax
+    'trunk/webrtc/modules/desktop_capture/win/screen_capturer_win_gdi.cc',       # Because base/logging.h uses #ifndef LOG before defining anything
     'trunk/webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_single_stream.cc', # Because of duplicate definitions of static consts against remote_bitrate_estimator_abs_send_time.cc
-    'trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/tmmbn.cc',                  # Because of identically named functions and vars between tmmbr.cc and tmmbn.cc in an anonymous namespaces
-    'trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/tmmbr.cc',                  # Because of identically named functions and vars between tmmbr.cc and tmmbn.cc in an anonymous namespaces
-    'trunk/webrtc/modules/video_capture/android/device_info_android.cc',         # Because of duplicate module static variable names
-    'trunk/webrtc/modules/video_capture/android/video_capture_android.cc',       # Because of duplicate module static variable names
+    'trunk/webrtc/modules/rtp_rtcp/source/flexfec_receiver.cc',                  # Because of identically named functions and vars between flexfec_receiver.cc and flexfec_sender.cc in an anonymous namespaces
+    'trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/tmmbn.cc',                 # Because of identically named functions and vars between tmmbr.cc and tmmbn.cc in an anonymous namespaces
+    'trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/tmmbr.cc',                 # Because of identically named functions and vars between tmmbr.cc and tmmbn.cc in an anonymous namespaces
+    'trunk/webrtc/modules/rtp_rtcp/source/ulpfec_generator.cc',                  # Because of identically named constant kRedForFecHeaderLength in an anonymous namespace
+    'trunk/webrtc/modules/video_capture/windows/BaseFilter.cpp',                 # Because it locally defines NS_IF_ADDREF/RELEASE
     'trunk/webrtc/modules/video_capture/windows/device_info_ds.cc',              # Because of the MEDIASUBTYPE_HDYC variable
     'trunk/webrtc/modules/video_capture/windows/help_functions_ds.cc',           # Because of initguid.h
     'trunk/webrtc/modules/video_capture/windows/sink_filter_ds.cc',              # Because of the MEDIASUBTYPE_HDYC variable and initguid.h
@@ -73,7 +77,7 @@ GYP_DIRS['trunk'].non_unified_sources += webrtc_non_unified_sources
 
 if CONFIG['ENABLE_TESTS']:
     TEST_DIRS += [
-        'trunk/gtest',
+#        'trunk/gtest',
     ]
 
 if CONFIG['MOZ_WEBRTC_SIGNALING']:
@@ -132,4 +136,5 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
         TEST_DIRS += [
             'signaling/fuzztest',
             'signaling/gtest',
+            'trunk/gtest',
         ]

@@ -16,9 +16,6 @@
         '<(webrtc_root)/base/base.gyp:rtc_base',
         '<(webrtc_root)/common.gyp:webrtc_common',
       ],
-      'cflags_cc!': [
-        '-Wnon-virtual-dtor',
-      ],
       'sources': [
         'base/asyncstuntcpsocket.cc',
         'base/asyncstuntcpsocket.h',
@@ -26,10 +23,11 @@
         'base/basicpacketsocketfactory.h',
         'base/candidate.h',
         'base/common.h',
-        'base/constants.cc',
-        'base/constants.h',
+        'base/dtlstransport.h',
         'base/dtlstransportchannel.cc',
         'base/dtlstransportchannel.h',
+        'base/p2pconstants.cc',
+        'base/p2pconstants.h',
         'base/p2ptransport.cc',
         'base/p2ptransport.h',
         'base/p2ptransportchannel.cc',
@@ -44,19 +42,16 @@
         'base/pseudotcp.h',
         'base/relayport.cc',
         'base/relayport.h',
-        'base/relayserver.cc',
-        'base/relayserver.h',
+        'base/session.cc',
+        'base/session.h',
         'base/sessiondescription.cc',
         'base/sessiondescription.h',
-        'base/sessionid.h',
         'base/stun.cc',
         'base/stun.h',
         'base/stunport.cc',
         'base/stunport.h',
         'base/stunrequest.cc',
         'base/stunrequest.h',
-        'base/stunserver.cc',
-        'base/stunserver.h',
         'base/tcpport.cc',
         'base/tcpport.h',
         'base/transport.cc',
@@ -73,8 +68,6 @@
         'base/transportinfo.h',
         'base/turnport.cc',
         'base/turnport.h',
-        'base/turnserver.cc',
-        'base/turnserver.h',
         'base/udpport.h',
         'client/basicportallocator.cc',
         'client/basicportallocator.h',
@@ -84,19 +77,44 @@
         'client/socketmonitor.h',
       ],
       'direct_dependent_settings': {
-        'cflags_cc!': [
-          '-Wnon-virtual-dtor',
-        ],
         'defines': [
           'FEATURE_ENABLE_VOICEMAIL',
         ],
       },
       'conditions': [
         ['build_with_chromium==0', {
+          'sources': [
+            'base/relayserver.cc',
+            'base/relayserver.h',
+            'base/stunserver.cc',
+            'base/stunserver.h',
+            'base/turnserver.cc',
+            'base/turnserver.h',
+          ],
           'defines': [
             'FEATURE_ENABLE_VOICEMAIL',
             'FEATURE_ENABLE_PSTN',
           ],
+        }],
+        ['use_quic==1', {
+      	  'dependencies': [
+      	    '<(DEPTH)/third_party/libquic/libquic.gyp:libquic',
+      	  ],
+          'sources': [
+            'quic/quicconnectionhelper.cc',
+            'quic/quicconnectionhelper.h',
+            'quic/quicsession.cc',
+            'quic/quicsession.h',
+            'quic/quictransport.cc',
+            'quic/quictransport.h',
+            'quic/quictransportchannel.cc',
+            'quic/quictransportchannel.h',
+            'quic/reliablequicstream.cc',
+            'quic/reliablequicstream.h',
+          ],
+      	  'export_dependent_settings': [
+      	    '<(DEPTH)/third_party/libquic/libquic.gyp:libquic',
+      	  ],
         }],
       ],
     },
@@ -106,9 +124,6 @@
       'dependencies': [
         '<(webrtc_root)/base/base.gyp:rtc_base',
         '<(webrtc_root)/common.gyp:webrtc_common',
-      ],
-      'cflags_cc!': [
-        '-Wnon-virtual-dtor',
       ],
       'sources': [
         'stunprober/stunprober.cc',
@@ -121,12 +136,10 @@
         'libstunprober',
         'rtc_p2p'
       ],
-      'cflags_cc!': [
-        '-Wnon-virtual-dtor',
-      ],
       'sources': [
         'stunprober/main.cc',
       ],
-    }],
+    },
+  ],  # targets
 }
 

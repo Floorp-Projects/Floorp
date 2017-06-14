@@ -30,17 +30,17 @@ class ReportBlock {
   // Consumes ReportBlock::kLength bytes.
   void Create(uint8_t* buffer) const;
 
-  void To(uint32_t ssrc) { source_ssrc_ = ssrc; }
-  void WithFractionLost(uint8_t fraction_lost) {
+  void SetMediaSsrc(uint32_t ssrc) { source_ssrc_ = ssrc; }
+  void SetFractionLost(uint8_t fraction_lost) {
     fraction_lost_ = fraction_lost;
   }
-  bool WithCumulativeLost(uint32_t cumulative_lost);
-  void WithExtHighestSeqNum(uint32_t ext_highest_seq_num) {
+  bool SetCumulativeLost(uint32_t cumulative_lost);
+  void SetExtHighestSeqNum(uint32_t ext_highest_seq_num) {
     extended_high_seq_num_ = ext_highest_seq_num;
   }
-  void WithJitter(uint32_t jitter) { jitter_ = jitter; }
-  void WithLastSr(uint32_t last_sr) { last_sr_ = last_sr; }
-  void WithDelayLastSr(uint32_t delay_last_sr) {
+  void SetJitter(uint32_t jitter) { jitter_ = jitter; }
+  void SetLastSr(uint32_t last_sr) { last_sr_ = last_sr; }
+  void SetDelayLastSr(uint32_t delay_last_sr) {
     delay_since_last_sr_ = delay_last_sr;
   }
 
@@ -52,7 +52,7 @@ class ReportBlock {
   uint32_t last_sr() const { return last_sr_; }
   uint32_t delay_since_last_sr() const { return delay_since_last_sr_; }
 
- private:
+private:
   uint32_t source_ssrc_;
   uint8_t fraction_lost_;
   uint32_t cumulative_lost_;

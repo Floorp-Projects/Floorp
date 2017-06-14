@@ -3,8 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "webrtc/modules/desktop_capture/desktop_device_info.h"
-#include "webrtc/modules/desktop_capture/window_capturer.h"
-#include "webrtc/base/scoped_ptr.h"
 
 #include <cstddef>
 #include <cstdlib>
@@ -269,10 +267,10 @@ void DesktopDeviceInfoImpl::CleanUpWindowList() {
   desktop_window_list_.clear();
 }
 void DesktopDeviceInfoImpl::InitializeWindowList() {
-  rtc::scoped_ptr<WindowCapturer> pWinCap(WindowCapturer::Create());
-  WindowCapturer::WindowList list;
-  if (pWinCap && pWinCap->GetWindowList(&list)) {
-    WindowCapturer::WindowList::iterator itr;
+  std::unique_ptr<DesktopCapturer> pWinCap = DesktopCapturer::CreateWindowCapturer(DesktopCaptureOptions::CreateDefault());
+  DesktopCapturer::SourceList list;
+  if (pWinCap && pWinCap->GetSourceList(&list)) {
+    DesktopCapturer::SourceList::iterator itr;
     for (itr = list.begin(); itr != list.end(); itr++) {
       DesktopDisplayDevice *pWinDevice = new DesktopDisplayDevice;
       if (!pWinDevice) {

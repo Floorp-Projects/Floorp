@@ -25,7 +25,7 @@
   <prefpane id="FontsDialogPane"
             class="largeDialogContainer"
             helpTopic="prefs-fonts-and-colors">
-  
+
     <preferences id="fontPreferences">
       <preference id="font.language.group"  name="font.language.group"  type="wstring"/>
       <preference id="browser.display.use_document_fonts"
@@ -33,7 +33,7 @@
                   type="int"/>
       <preference id="intl.charset.fallback.override" name="intl.charset.fallback.override" type="string"/>
     </preferences>
-    
+
     <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
     <script type="application/javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
     <script type="application/javascript" src="chrome://browser/content/preferences/fonts.js"/>
@@ -79,7 +79,7 @@
           </menupopup>
         </menulist>
       </caption>
-      
+
       <grid>
         <columns>
           <column/>
@@ -87,7 +87,7 @@
           <column/>
           <column/>
         </columns>
-        
+
         <rows>
           <row>
             <separator class="thin"/>
@@ -107,7 +107,7 @@
               <label value="&size.label;"
                      accesskey="&sizeProportional.accesskey;"
                      control="sizeVar"/>
-            </hbox>  
+            </hbox>
             <menulist id="sizeVar" delayprefsave="true">
               <menupopup>
                 <menuitem value="9" label="9"/>
@@ -164,7 +164,7 @@
               <label value="&size.label;"
                      accesskey="&sizeMonospace.accesskey;"
                      control="sizeMono"/>
-            </hbox>  
+            </hbox>
             <menulist id="sizeMono" delayprefsave="true">
               <menupopup>
                 <menuitem value="9" label="9"/>
@@ -237,7 +237,7 @@
       <separator/>
       <separator class="groove"/>
       <hbox>
-        <checkbox id="useDocumentFonts" 
+        <checkbox id="useDocumentFonts"
                   label="&allowPagesToUseOwn.label;" accesskey="&allowPagesToUseOwn.accesskey;"
                   preference="browser.display.use_document_fonts"
                   onsyncfrompreference="return gFontsDialog.readUseDocumentFonts();"
@@ -260,6 +260,8 @@
             <menuitem label="&languages.customize.Fallback.baltic;"      value="windows-1257"/>
             <menuitem label="&languages.customize.Fallback.ceiso;"       value="ISO-8859-2"/>
             <menuitem label="&languages.customize.Fallback.cewindows;"   value="windows-1250"/>
+            <!-- Using gbk instead of GBK for compat with previously-stored prefs.
+                 The value gets normalized in dom/encoding/FallbackEncoding.cpp. -->
             <menuitem label="&languages.customize.Fallback.simplified;"  value="gbk"/>
             <menuitem label="&languages.customize.Fallback.traditional;" value="Big5"/>
             <menuitem label="&languages.customize.Fallback.cyrillic;"    value="windows-1251"/>

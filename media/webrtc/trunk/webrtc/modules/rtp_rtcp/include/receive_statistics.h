@@ -46,7 +46,7 @@ class StreamStatistician {
 
 typedef std::map<uint32_t, StreamStatistician*> StatisticianMap;
 
-class ReceiveStatistics : public Module {
+class ReceiveStatistics {
  public:
   virtual ~ReceiveStatistics() {}
 
@@ -89,8 +89,6 @@ class NullReceiveStatistics : public ReceiveStatistics {
                          size_t packet_length) override;
   StatisticianMap GetActiveStatisticians() const override;
   StreamStatistician* GetStatistician(uint32_t ssrc) const override;
-  int64_t TimeUntilNextProcess() override;
-  int32_t Process() override;
   void SetMaxReorderingThreshold(int max_reordering_threshold) override;
   void RegisterRtcpStatisticsCallback(
       RtcpStatisticsCallback* callback) override;

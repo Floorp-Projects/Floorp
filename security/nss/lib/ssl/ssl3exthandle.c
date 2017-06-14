@@ -12,63 +12,11 @@
 #include "pk11pub.h"
 #include "blapit.h"
 #include "prinit.h"
+#include "selfencrypt.h"
+#include "ssl3encode.h"
 #include "ssl3ext.h"
 #include "ssl3exthandle.h"
 #include "tls13exthandle.h" /* For tls13_ServerSendStatusRequestXtn. */
-
-static SECStatus ssl3_AppendToItem(SECItem *item, const unsigned char *buf,
-                                   PRUint32 bytes);
-static SECStatus ssl3_ConsumeFromItem(SECItem *item, unsigned char **buf,
-                                      PRUint32 bytes);
-static SECStatus ssl3_AppendNumberToItem(SECItem *item, PRUint32 num,
-                                         PRInt32 lenSize);
-
-PRUint32 ssl_ticket_lifetime = 2 * 24 * 60 * 60; /* 2 days in seconds */
-#define TLS_EX_SESS_TICKET_VERSION (0x0105)
-#define TLS_EX_SESS_TICKET_MAC_LENGTH 32
-
-/*
- * Write bytes.  Using this function means the SECItem structure
- * cannot be freed.  The caller is expected to call this function
- * on a shallow copy of the structure.
- */
-static SECStatus
-ssl3_AppendToItem(SECItem *item, const unsigned char *buf, PRUint32 bytes)
-{
-    if (bytes > item->len)
-        return SECFailure;
-
-    PORT_Memcpy(item->data, buf, bytes);
-    item->data += bytes;
-    item->len -= bytes;
-    return SECSuccess;
-}
-
-/*
- * Write a number in network byte order. Using this function means the
- * SECItem structure cannot be freed.  The caller is expected to call
- * this function on a shallow copy of the structure.
- */
-static SECStatus
-ssl3_AppendNumberToItem(SECItem *item, PRUint32 num, PRInt32 lenSize)
-{
-    SECStatus rv;
-    PRUint8 b[4];
-    PRUint8 *p = b;
-
-    switch (lenSize) {
-        case 4:
-            *p++ = (PRUint8)(num >> 24);
-        case 3:
-            *p++ = (PRUint8)(num >> 16);
-        case 2:
-            *p++ = (PRUint8)(num >> 8);
-        case 1:
-            *p = (PRUint8)num;
-    }
-    rv = ssl3_AppendToItem(item, &b[0], lenSize);
-    return rv;
-}
 
 /* Format an SNI extension, using the name from the socket's URL,
  * unless that name is a dotted decimal string.
@@ -328,34 +276,6 @@ ssl3_SendSessionTicketXtn(
 loser:
     xtnData->ticketTimestampVerified = PR_FALSE;
     return -1;
-}
-
-static SECStatus
-ssl3_ParseEncryptedSessionTicket(sslSocket *ss, const SECItem *data,
-                                 EncryptedSessionTicket *encryptedTicket)
-{
-    SECItem copy = *data;
-
-    if (ssl3_ConsumeFromItem(&copy, &encryptedTicket->key_name,
-                             SESS_TICKET_KEY_NAME_LEN) !=
-        SECSuccess)
-        return SECFailure;
-    if (ssl3_ConsumeFromItem(&copy, &encryptedTicket->iv,
-                             AES_BLOCK_SIZE) !=
-        SECSuccess)
-        return SECFailure;
-    if (ssl3_ConsumeHandshakeVariable(ss, &encryptedTicket->encrypted_state,
-                                      2, &copy.data, &copy.len) !=
-        SECSuccess)
-        return SECFailure;
-    if (ssl3_ConsumeFromItem(&copy, &encryptedTicket->mac,
-                             TLS_EX_SESS_TICKET_MAC_LENGTH) !=
-        SECSuccess)
-        return SECFailure;
-    if (copy.len != 0) /* Make sure that we have consumed all bytes. */
-        return SECFailure;
-
-    return SECSuccess;
 }
 
 PRBool
@@ -881,6 +801,9 @@ ssl3_ClientHandleStatusRequestXtn(const sslSocket *ss, TLSExtensionData *xtnData
     return SECSuccess;
 }
 
+PRUint32 ssl_ticket_lifetime = 2 * 24 * 60 * 60; /* 2 days in seconds */
+#define TLS_EX_SESS_TICKET_VERSION (0x0105)
+
 /*
  * Called from ssl3_SendNewSessionTicket, tls13_SendNewSessionTicket
  */
@@ -889,32 +812,16 @@ ssl3_EncodeSessionTicket(sslSocket *ss,
                          const NewSessionTicket *ticket,
                          SECItem *ticket_data)
 {
-    PRUint32 i;
     SECStatus rv;
     SECItem plaintext;
     SECItem plaintext_item = { 0, NULL, 0 };
-    SECItem ciphertext = { 0, NULL, 0 };
-    PRUint32 ciphertext_length;
+    PRUint32 plaintext_length;
     SECItem ticket_buf = { 0, NULL, 0 };
-    SECItem ticket_tmp = { 0, NULL, 0 };
-    SECItem macParam = { 0, NULL, 0 };
     PRBool ms_is_wrapped;
     unsigned char wrapped_ms[SSL3_MASTER_SECRET_LENGTH];
     SECItem ms_item = { 0, NULL, 0 };
-    PRUint32 padding_length;
-    PRUint32 ticket_length;
     PRUint32 cert_length = 0;
-    PRUint8 length_buf[4];
     PRUint32 now;
-    unsigned char key_name[SESS_TICKET_KEY_NAME_LEN];
-    PK11SymKey *aes_key = NULL;
-    PK11SymKey *mac_key = NULL;
-    PK11Context *aes_ctx;
-    PK11Context *hmac_ctx = NULL;
-    unsigned char computed_mac[TLS_EX_SESS_TICKET_MAC_LENGTH];
-    unsigned int computed_mac_length;
-    unsigned char iv[AES_BLOCK_SIZE];
-    SECItem ivItem;
     SECItem *srvName = NULL;
     CK_MECHANISM_TYPE msWrapMech = 0; /* dummy default value,
                                           * must be >= 0 */
@@ -930,17 +837,6 @@ ssl3_EncodeSessionTicket(sslSocket *ss,
     if (ss->opt.requestCertificate && ss->sec.ci.sid->peerCert) {
         cert_length = 2 + ss->sec.ci.sid->peerCert->derCert.len;
     }
-
-    /* Get IV and encryption keys */
-    ivItem.data = iv;
-    ivItem.len = sizeof(iv);
-    rv = PK11_GenerateRandom(iv, sizeof(iv));
-    if (rv != SECSuccess)
-        goto loser;
-
-    rv = ssl_GetSessionTicketKeys(ss, key_name, &aes_key, &mac_key);
-    if (rv != SECSuccess)
-        goto loser;
 
     if (ss->version >= SSL_LIBRARY_VERSION_TLS_1_3) {
         spec = ss->ssl3.cwSpec;
@@ -980,7 +876,7 @@ ssl3_EncodeSessionTicket(sslSocket *ss,
                 ss->xtnData.nextProto.len == 0);
     alpnSelection = &ss->xtnData.nextProto;
 
-    ciphertext_length =
+    plaintext_length =
         sizeof(PRUint16)                       /* ticket version */
         + sizeof(SSL3ProtocolVersion)          /* ssl_version */
         + sizeof(ssl3CipherSuite)              /* ciphersuite */
@@ -999,16 +895,8 @@ ssl3_EncodeSessionTicket(sslSocket *ss,
         + sizeof(ticket->flags)                /* ticket flags */
         + 1 + alpnSelection->len               /* alpn value + length field */
         + 4;                                   /* maxEarlyData */
-#ifdef UNSAFE_FUZZER_MODE
-    padding_length = 0;
-#else
-    padding_length = AES_BLOCK_SIZE -
-                     (ciphertext_length %
-                      AES_BLOCK_SIZE);
-#endif
-    ciphertext_length += padding_length;
 
-    if (SECITEM_AllocItem(NULL, &plaintext_item, ciphertext_length) == NULL)
+    if (SECITEM_AllocItem(NULL, &plaintext_item, plaintext_length) == NULL)
         goto loser;
 
     plaintext = plaintext_item;
@@ -1143,117 +1031,36 @@ ssl3_EncodeSessionTicket(sslSocket *ss,
     if (rv != SECSuccess)
         goto loser;
 
-    PORT_Assert(plaintext.len == padding_length);
-    for (i = 0; i < padding_length; i++)
-        plaintext.data[i] = (unsigned char)padding_length;
+    /* Check that we are totally full. */
+    PORT_Assert(plaintext.len == 0);
 
-    if (SECITEM_AllocItem(NULL, &ciphertext, ciphertext_length) == NULL) {
-        rv = SECFailure;
+    /* 128 just gives us enough room for overhead. */
+    if (SECITEM_AllocItem(NULL, &ticket_buf, plaintext_length + 128) == NULL) {
         goto loser;
     }
 
-    /* Generate encrypted portion of ticket. */
-    PORT_Assert(aes_key);
-#ifdef UNSAFE_FUZZER_MODE
-    ciphertext.len = plaintext_item.len;
-    PORT_Memcpy(ciphertext.data, plaintext_item.data, plaintext_item.len);
-#else
-    aes_ctx = PK11_CreateContextBySymKey(CKM_AES_CBC, CKA_ENCRYPT, aes_key, &ivItem);
-    if (!aes_ctx)
-        goto loser;
-
-    rv = PK11_CipherOp(aes_ctx, ciphertext.data,
-                       (int *)&ciphertext.len, ciphertext.len,
-                       plaintext_item.data, plaintext_item.len);
-    PK11_Finalize(aes_ctx);
-    PK11_DestroyContext(aes_ctx, PR_TRUE);
-    if (rv != SECSuccess)
-        goto loser;
-#endif
-
-    /* Convert ciphertext length to network order. */
-    (void)ssl_EncodeUintX(ciphertext.len, 2, length_buf);
-
-    /* Compute MAC. */
-    PORT_Assert(mac_key);
-    hmac_ctx = PK11_CreateContextBySymKey(CKM_SHA256_HMAC, CKA_SIGN, mac_key,
-                                          &macParam);
-    if (!hmac_ctx)
-        goto loser;
-
-    rv = PK11_DigestBegin(hmac_ctx);
-    if (rv != SECSuccess)
-        goto loser;
-    rv = PK11_DigestOp(hmac_ctx, key_name, SESS_TICKET_KEY_NAME_LEN);
-    if (rv != SECSuccess)
-        goto loser;
-    rv = PK11_DigestOp(hmac_ctx, iv, sizeof(iv));
-    if (rv != SECSuccess)
-        goto loser;
-    rv = PK11_DigestOp(hmac_ctx, (unsigned char *)length_buf, 2);
-    if (rv != SECSuccess)
-        goto loser;
-    rv = PK11_DigestOp(hmac_ctx, ciphertext.data, ciphertext.len);
-    if (rv != SECSuccess)
-        goto loser;
-    rv = PK11_DigestFinal(hmac_ctx, computed_mac,
-                          &computed_mac_length, sizeof(computed_mac));
-    if (rv != SECSuccess)
-        goto loser;
-
-    ticket_length =
-        +SESS_TICKET_KEY_NAME_LEN        /* key_name */
-        + AES_BLOCK_SIZE                 /* iv */
-        + 2                              /* length field for NewSessionTicket.ticket.encrypted_state */
-        + ciphertext_length              /* encrypted_state */
-        + TLS_EX_SESS_TICKET_MAC_LENGTH; /* mac */
-
-    if (SECITEM_AllocItem(NULL, &ticket_buf, ticket_length) == NULL) {
-        rv = SECFailure;
+    /* Finally, encrypt the ticket. */
+    rv = ssl_SelfEncryptProtect(ss, plaintext_item.data, plaintext_item.len,
+                                ticket_buf.data, &ticket_buf.len, ticket_buf.len);
+    if (rv != SECSuccess) {
         goto loser;
     }
-    ticket_tmp = ticket_buf; /* Shallow copy because AppendToItem is
-                              * destructive. */
-
-    rv = ssl3_AppendToItem(&ticket_tmp, key_name, SESS_TICKET_KEY_NAME_LEN);
-    if (rv != SECSuccess)
-        goto loser;
-
-    rv = ssl3_AppendToItem(&ticket_tmp, iv, sizeof(iv));
-    if (rv != SECSuccess)
-        goto loser;
-
-    rv = ssl3_AppendNumberToItem(&ticket_tmp, ciphertext.len, 2);
-    if (rv != SECSuccess)
-        goto loser;
-
-    rv = ssl3_AppendToItem(&ticket_tmp, ciphertext.data, ciphertext.len);
-    if (rv != SECSuccess)
-        goto loser;
-
-    rv = ssl3_AppendToItem(&ticket_tmp, computed_mac, computed_mac_length);
-    if (rv != SECSuccess)
-        goto loser;
 
     /* Give ownership of memory to caller. */
     *ticket_data = ticket_buf;
-    ticket_buf.data = NULL;
+
+    SECITEM_FreeItem(&plaintext_item, PR_FALSE);
+    return SECSuccess;
 
 loser:
-    if (hmac_ctx) {
-        PK11_DestroyContext(hmac_ctx, PR_TRUE);
-    }
     if (plaintext_item.data) {
         SECITEM_FreeItem(&plaintext_item, PR_FALSE);
-    }
-    if (ciphertext.data) {
-        SECITEM_FreeItem(&ciphertext, PR_FALSE);
     }
     if (ticket_buf.data) {
         SECITEM_FreeItem(&ticket_buf, PR_FALSE);
     }
 
-    return rv;
+    return SECFailure;
 }
 
 /* When a client receives a SessionTicket extension a NewSessionTicket
@@ -1273,172 +1080,13 @@ ssl3_ClientHandleSessionTicketXtn(const sslSocket *ss, TLSExtensionData *xtnData
 }
 
 static SECStatus
-ssl_DecryptSessionTicket(sslSocket *ss, const SECItem *rawTicket,
-                         const EncryptedSessionTicket *encryptedTicket,
-                         SECItem *decryptedTicket)
-{
-    SECStatus rv;
-    unsigned char keyName[SESS_TICKET_KEY_NAME_LEN];
-
-    PK11SymKey *macKey = NULL;
-    PK11Context *hmacCtx;
-    unsigned char computedMac[TLS_EX_SESS_TICKET_MAC_LENGTH];
-    unsigned int computedMacLength;
-    SECItem macParam = { siBuffer, NULL, 0 };
-
-    PK11SymKey *aesKey = NULL;
-#ifndef UNSAFE_FUZZER_MODE
-    PK11Context *aesCtx;
-    SECItem ivItem;
-
-    unsigned int i;
-    SSL3Opaque *padding;
-    SSL3Opaque paddingLength;
-#endif
-
-    PORT_Assert(!decryptedTicket->data);
-    PORT_Assert(!decryptedTicket->len);
-    if (rawTicket->len < TLS_EX_SESS_TICKET_MAC_LENGTH) {
-        PORT_SetError(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
-        return SECFailure;
-    }
-
-    /* Get session ticket keys. */
-    rv = ssl_GetSessionTicketKeys(ss, keyName, &aesKey, &macKey);
-    if (rv != SECSuccess) {
-        SSL_DBG(("%d: SSL[%d]: Unable to get/generate session ticket keys.",
-                 SSL_GETPID(), ss->fd));
-        return SECFailure; /* code already set */
-    }
-
-    /* If the ticket sent by the client was generated under a key different from
-     * the one we have, bypass ticket processing.  This reports success, meaning
-     * that the handshake completes, but doesn't resume.
-     */
-    if (PORT_Memcmp(encryptedTicket->key_name, keyName,
-                    SESS_TICKET_KEY_NAME_LEN) != 0) {
-#ifndef UNSAFE_FUZZER_MODE
-        SSL_DBG(("%d: SSL[%d]: Session ticket key_name sent mismatch.",
-                 SSL_GETPID(), ss->fd));
-        return SECSuccess;
-#endif
-    }
-
-    /* Verify the MAC on the ticket. */
-    PORT_Assert(macKey);
-    hmacCtx = PK11_CreateContextBySymKey(CKM_SHA256_HMAC, CKA_SIGN, macKey,
-                                         &macParam);
-    if (!hmacCtx) {
-        SSL_DBG(("%d: SSL[%d]: Unable to create HMAC context: %d.",
-                 SSL_GETPID(), ss->fd, PORT_GetError()));
-        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-        return SECFailure;
-    }
-
-    SSL_DBG(("%d: SSL[%d]: Successfully created HMAC context.",
-             SSL_GETPID(), ss->fd));
-    do {
-        rv = PK11_DigestBegin(hmacCtx);
-        if (rv != SECSuccess) {
-            break;
-        }
-        rv = PK11_DigestOp(hmacCtx, rawTicket->data,
-                           rawTicket->len - TLS_EX_SESS_TICKET_MAC_LENGTH);
-        if (rv != SECSuccess) {
-            break;
-        }
-        rv = PK11_DigestFinal(hmacCtx, computedMac, &computedMacLength,
-                              sizeof(computedMac));
-    } while (0);
-    PK11_DestroyContext(hmacCtx, PR_TRUE);
-    if (rv != SECSuccess) {
-        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-        return SECFailure;
-    }
-
-    if (NSS_SecureMemcmp(computedMac, encryptedTicket->mac,
-                         computedMacLength) != 0) {
-#ifndef UNSAFE_FUZZER_MODE
-        SSL_DBG(("%d: SSL[%d]: Session ticket MAC mismatch.",
-                 SSL_GETPID(), ss->fd));
-        PORT_SetError(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
-        return SECFailure;
-#endif
-    }
-
-    /* Decrypt the ticket. */
-
-    /* Plaintext is shorter than the ciphertext due to padding. */
-    if (!SECITEM_AllocItem(NULL, decryptedTicket,
-                           encryptedTicket->encrypted_state.len)) {
-        return SECFailure; /* code already set */
-    }
-
-    PORT_Assert(aesKey);
-#ifdef UNSAFE_FUZZER_MODE
-    decryptedTicket->len = encryptedTicket->encrypted_state.len;
-    PORT_Memcpy(decryptedTicket->data,
-                encryptedTicket->encrypted_state.data,
-                encryptedTicket->encrypted_state.len);
-#else
-    ivItem.data = encryptedTicket->iv;
-    ivItem.len = AES_BLOCK_SIZE;
-    aesCtx = PK11_CreateContextBySymKey(CKM_AES_CBC, CKA_DECRYPT, aesKey,
-                                        &ivItem);
-    if (!aesCtx) {
-        SSL_DBG(("%d: SSL[%d]: Unable to create AES context.",
-                 SSL_GETPID(), ss->fd));
-        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-        return SECFailure;
-    }
-
-    do {
-        rv = PK11_CipherOp(aesCtx, decryptedTicket->data,
-                           (int *)&decryptedTicket->len, decryptedTicket->len,
-                           encryptedTicket->encrypted_state.data,
-                           encryptedTicket->encrypted_state.len);
-        if (rv != SECSuccess) {
-            break;
-        }
-        rv = PK11_Finalize(aesCtx);
-        if (rv != SECSuccess) {
-            break;
-        }
-    } while (0);
-    PK11_DestroyContext(aesCtx, PR_TRUE);
-    if (rv != SECSuccess) {
-        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-        return SECFailure;
-    }
-
-    /* Check padding. */
-    paddingLength = decryptedTicket->data[decryptedTicket->len - 1];
-    if (paddingLength == 0 || paddingLength > AES_BLOCK_SIZE) {
-        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-        return SECFailure;
-    }
-
-    padding = &decryptedTicket->data[decryptedTicket->len - paddingLength];
-    for (i = 0; i < paddingLength; i++, padding++) {
-        if (paddingLength != *padding) {
-            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-            return SECFailure;
-        }
-    }
-    decryptedTicket->len -= paddingLength;
-#endif /* UNSAFE_FUZZER_MODE */
-
-    return SECSuccess;
-}
-
-static SECStatus
 ssl_ParseSessionTicket(sslSocket *ss, const SECItem *decryptedTicket,
                        SessionTicket *parsedTicket)
 {
     PRUint32 temp;
     SECStatus rv;
 
-    SSL3Opaque *buffer = decryptedTicket->data;
+    PRUint8 *buffer = decryptedTicket->data;
     unsigned int len = decryptedTicket->len;
 
     PORT_Memset(parsedTicket, 0, sizeof(*parsedTicket));
@@ -1735,7 +1383,6 @@ loser:
 SECStatus
 ssl3_ProcessSessionTicketCommon(sslSocket *ss, SECItem *data)
 {
-    EncryptedSessionTicket encryptedTicket;
     SECItem decryptedTicket = { siBuffer, NULL, 0 };
     SessionTicket parsedTicket;
     SECStatus rv;
@@ -1746,17 +1393,27 @@ ssl3_ProcessSessionTicketCommon(sslSocket *ss, SECItem *data)
         ss->sec.ci.sid = NULL;
     }
 
-    rv = ssl3_ParseEncryptedSessionTicket(ss, data, &encryptedTicket);
-    if (rv != SECSuccess) {
-        PORT_SetError(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
+    if (!SECITEM_AllocItem(NULL, &decryptedTicket, data->len)) {
         return SECFailure;
     }
 
-    rv = ssl_DecryptSessionTicket(ss, data, &encryptedTicket,
-                                  &decryptedTicket);
+    /* Decrypt the ticket. */
+    rv = ssl_SelfEncryptUnprotect(ss, data->data, data->len,
+                                  decryptedTicket.data,
+                                  &decryptedTicket.len,
+                                  decryptedTicket.len);
     if (rv != SECSuccess) {
-        PORT_SetError(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
-        return SECFailure;
+        SECITEM_ZfreeItem(&decryptedTicket, PR_FALSE);
+
+        /* Fail with no ticket if we're not a recipient. Otherwise
+         * it's a hard failure. */
+        if (PORT_GetError() != SEC_ERROR_NOT_A_RECIPIENT) {
+            SSL3_SendAlert(ss, alert_fatal, illegal_parameter);
+            return SECFailure;
+        }
+
+        /* We didn't have the right key, so pretend we don't have a
+         * ticket. */
     }
 
     rv = ssl_ParseSessionTicket(ss, &decryptedTicket, &parsedTicket);
@@ -1821,23 +1478,6 @@ ssl3_ServerHandleSessionTicketXtn(const sslSocket *ss, TLSExtensionData *xtnData
     }
 
     return ssl3_ProcessSessionTicketCommon(CONST_CAST(sslSocket, ss), data);
-}
-
-/*
- * Read bytes.  Using this function means the SECItem structure
- * cannot be freed.  The caller is expected to call this function
- * on a shallow copy of the structure.
- */
-static SECStatus
-ssl3_ConsumeFromItem(SECItem *item, unsigned char **buf, PRUint32 bytes)
-{
-    if (bytes > item->len)
-        return SECFailure;
-
-    *buf = item->data;
-    item->data += bytes;
-    item->len -= bytes;
-    return SECSuccess;
 }
 
 /* Extension format:
@@ -2365,6 +2005,7 @@ ssl3_HandleExtendedMasterSecretXtn(const sslSocket *ss, TLSExtensionData *xtnDat
     if (data->len != 0) {
         SSL_TRC(30, ("%d: SSL3[%d]: Bogus extended master secret extension",
                      SSL_GETPID(), ss->fd));
+        ssl3_ExtSendAlert(ss, alert_fatal, decode_error);
         return SECFailure;
     }
 
@@ -2489,6 +2130,12 @@ ssl3_ServerHandleSignedCertTimestampXtn(const sslSocket *ss,
                                         PRUint16 ex_type,
                                         SECItem *data)
 {
+    if (data->len != 0) {
+        ssl3_ExtSendAlert(ss, alert_fatal, decode_error);
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
+        return SECFailure;
+    }
+
     xtnData->negotiated[xtnData->numNegotiated++] = ex_type;
     PORT_Assert(ss->sec.isServer);
     return ssl3_RegisterExtensionSender(

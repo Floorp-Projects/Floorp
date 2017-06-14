@@ -12,6 +12,7 @@
 #define WEBRTC_BASE_FAKESSLIDENTITY_H_
 
 #include <algorithm>
+#include <memory>
 #include <vector>
 
 #include "webrtc/base/common.h"
@@ -36,13 +37,13 @@ class FakeSSLCertificate : public rtc::SSLCertificate {
       certs_.push_back(FakeSSLCertificate(*it));
     }
   }
-  virtual FakeSSLCertificate* GetReference() const {
+  FakeSSLCertificate* GetReference() const override {
     return new FakeSSLCertificate(*this);
   }
-  virtual std::string ToPEMString() const {
+  std::string ToPEMString() const override {
     return data_;
   }
-  virtual void ToDER(Buffer* der_buffer) const {
+  void ToDER(Buffer* der_buffer) const override {
     std::string der_string;
     VERIFY(SSLIdentity::PemToDer(kPemTypeCertificate, data_, &der_string));
     der_buffer->SetData(der_string.c_str(), der_string.size());
@@ -56,26 +57,26 @@ class FakeSSLCertificate : public rtc::SSLCertificate {
   void set_digest_algorithm(const std::string& algorithm) {
     digest_algorithm_ = algorithm;
   }
-  virtual bool GetSignatureDigestAlgorithm(std::string* algorithm) const {
+  bool GetSignatureDigestAlgorithm(std::string* algorithm) const override {
     *algorithm = digest_algorithm_;
     return true;
   }
-  virtual bool ComputeDigest(const std::string& algorithm,
-                             unsigned char* digest,
-                             size_t size,
-                             size_t* length) const {
+  bool ComputeDigest(const std::string& algorithm,
+                     unsigned char* digest,
+                     size_t size,
+                     size_t* length) const override {
     *length = rtc::ComputeDigest(algorithm, data_.c_str(), data_.size(),
                                        digest, size);
     return (*length != 0);
   }
-  virtual bool GetChain(SSLCertChain** chain) const {
+  std::unique_ptr<SSLCertChain> GetChain() const override {
     if (certs_.empty())
-      return false;
+      return nullptr;
     std::vector<SSLCertificate*> new_certs(certs_.size());
     std::transform(certs_.begin(), certs_.end(), new_certs.begin(), DupCert);
-    *chain = new SSLCertChain(new_certs);
+    std::unique_ptr<SSLCertChain> chain(new SSLCertChain(new_certs));
     std::for_each(new_certs.begin(), new_certs.end(), DeleteCert);
-    return true;
+    return chain;
   }
 
  private:
@@ -98,6 +99,18 @@ class FakeSSLIdentity : public rtc::SSLIdentity {
     return new FakeSSLIdentity(*this);
   }
   virtual const FakeSSLCertificate& certificate() const { return cert_; }
+  virtual std::string PrivateKeyToPEMString() const {
+    RTC_NOTREACHED();  // Not implemented.
+    return "";
+  }
+  virtual std::string PublicKeyToPEMString() const {
+    RTC_NOTREACHED();  // Not implemented.
+    return "";
+  }
+  virtual bool operator==(const SSLIdentity& other) const {
+    RTC_NOTREACHED();  // Not implemented.
+    return false;
+  }
  private:
   FakeSSLCertificate cert_;
 };

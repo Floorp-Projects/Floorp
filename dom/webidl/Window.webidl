@@ -24,6 +24,7 @@ interface IID;
 interface nsIBrowserDOMWindow;
 interface nsIMessageBroadcaster;
 interface nsIDOMCrypto;
+interface XULControllers;
 
 // http://www.whatwg.org/specs/web-apps/current-work/
 [PrimaryGlobal, LegacyUnenumerableNamedProperties, NeedResolve]
@@ -263,7 +264,7 @@ partial interface Window {
   [Throws, UnsafeInPrerendering, NeedsCallerType] void sizeToContent();
 
   // XXX Shouldn't this be in nsIDOMChromeWindow?
-  [ChromeOnly, Replaceable, Throws] readonly attribute MozControllers controllers;
+  [ChromeOnly, Replaceable, Throws] readonly attribute XULControllers controllers;
 
   [ChromeOnly, Throws] readonly attribute Element? realFrameElement;
 

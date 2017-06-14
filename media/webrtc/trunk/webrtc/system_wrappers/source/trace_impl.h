@@ -11,8 +11,9 @@
 #ifndef WEBRTC_SYSTEM_WRAPPERS_SOURCE_TRACE_IMPL_H_
 #define WEBRTC_SYSTEM_WRAPPERS_SOURCE_TRACE_IMPL_H_
 
+#include <memory>
+
 #include "webrtc/base/criticalsection.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/system_wrappers/include/event_wrapper.h"
 #include "webrtc/system_wrappers/include/file_wrapper.h"
 #include "webrtc/system_wrappers/include/static_instance.h"
@@ -39,8 +40,6 @@ class TraceImpl : public Trace {
   static TraceImpl* GetTrace(const TraceLevel level = kTraceAll);
 
   int32_t SetTraceFileImpl(const char* file_name, const bool add_file_counter);
-  int32_t TraceFileImpl(char file_name[FileWrapper::kMaxFileNameSize]);
-
   int32_t SetTraceCallbackImpl(TraceCallback* callback);
 
   void AddImpl(const TraceLevel level, const TraceModule module,
@@ -80,9 +79,8 @@ class TraceImpl : public Trace {
     const TraceLevel level);
 
   bool UpdateFileName(
-    const char file_name_utf8[FileWrapper::kMaxFileNameSize],
-    char file_name_with_counter_utf8[FileWrapper::kMaxFileNameSize],
-    const uint32_t new_count) const;
+      char file_name_with_counter_utf8[FileWrapper::kMaxFileNameSize],
+      const uint32_t new_count) const EXCLUSIVE_LOCKS_REQUIRED(crit_);
 
   bool CreateFileName(
     const char file_name_utf8[FileWrapper::kMaxFileNameSize],
@@ -96,7 +94,8 @@ class TraceImpl : public Trace {
   uint32_t row_count_text_ GUARDED_BY(crit_);
   uint32_t file_count_text_ GUARDED_BY(crit_);
 
-  const rtc::scoped_ptr<FileWrapper> trace_file_ GUARDED_BY(crit_);
+  const std::unique_ptr<FileWrapper> trace_file_ GUARDED_BY(crit_);
+  std::string trace_file_path_ GUARDED_BY(crit_);
   rtc::CriticalSection crit_;
 };
 

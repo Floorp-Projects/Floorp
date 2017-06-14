@@ -13,11 +13,11 @@
 
 #include <string.h>
 
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "webrtc/base/linked_ptr.h"
-#include "webrtc/base/scoped_ptr.h"
 
 namespace rtc {
 
@@ -42,8 +42,8 @@ public:
 };
 
 class CryptString {
-public:
- CryptString();
+ public:
+  CryptString();
   size_t GetLength() const { return impl_->GetLength(); }
   void CopyTo(char * dest, bool nullterminate) const { impl_->CopyTo(dest, nullterminate); }
   CryptString(const CryptString& other);
@@ -60,9 +60,9 @@ public:
   void CopyRawTo(std::vector<unsigned char> * dest) const {
     return impl_->CopyRawTo(dest);
   }
-  
-private:
-  scoped_ptr<const CryptStringImpl> impl_;
+
+ private:
+  std::unique_ptr<const CryptStringImpl> impl_;
 };
 
 

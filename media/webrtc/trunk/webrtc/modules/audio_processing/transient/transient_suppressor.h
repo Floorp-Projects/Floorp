@@ -12,10 +12,10 @@
 #define WEBRTC_MODULES_AUDIO_PROCESSING_TRANSIENT_TRANSIENT_SUPPRESSOR_H_
 
 #include <deque>
+#include <memory>
 #include <set>
 
-#include "webrtc/base/scoped_ptr.h"
-#include "webrtc/test/testsupport/gtest_prod_util.h"
+#include "webrtc/base/gtest_prod_util.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -71,7 +71,7 @@ class TransientSuppressor {
   void HardRestoration(float* spectral_mean);
   void SoftRestoration(float* spectral_mean);
 
-  rtc::scoped_ptr<TransientDetector> detector_;
+  std::unique_ptr<TransientDetector> detector_;
 
   size_t data_length_;
   size_t detection_length_;
@@ -80,25 +80,25 @@ class TransientSuppressor {
   size_t complex_analysis_length_;
   int num_channels_;
   // Input buffer where the original samples are stored.
-  rtc::scoped_ptr<float[]> in_buffer_;
-  rtc::scoped_ptr<float[]> detection_buffer_;
+  std::unique_ptr<float[]> in_buffer_;
+  std::unique_ptr<float[]> detection_buffer_;
   // Output buffer where the restored samples are stored.
-  rtc::scoped_ptr<float[]> out_buffer_;
+  std::unique_ptr<float[]> out_buffer_;
 
   // Arrays for fft.
-  rtc::scoped_ptr<size_t[]> ip_;
-  rtc::scoped_ptr<float[]> wfft_;
+  std::unique_ptr<size_t[]> ip_;
+  std::unique_ptr<float[]> wfft_;
 
-  rtc::scoped_ptr<float[]> spectral_mean_;
+  std::unique_ptr<float[]> spectral_mean_;
 
   // Stores the data for the fft.
-  rtc::scoped_ptr<float[]> fft_buffer_;
+  std::unique_ptr<float[]> fft_buffer_;
 
-  rtc::scoped_ptr<float[]> magnitudes_;
+  std::unique_ptr<float[]> magnitudes_;
 
   const float* window_;
 
-  rtc::scoped_ptr<float[]> mean_factor_;
+  std::unique_ptr<float[]> mean_factor_;
 
   float detector_smoothed_;
 

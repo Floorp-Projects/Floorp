@@ -13,8 +13,9 @@
 #include <limits>
 #include <vector>
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/mathutils.h"  // unsigned difference
 #include "webrtc/base/random.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 
@@ -22,7 +23,7 @@ namespace {
 // Computes the positive remainder of x/n.
 template <typename T>
 T fdiv_remainder(T x, T n) {
-  RTC_CHECK_GE(n, static_cast<T>(0));
+  RTC_CHECK_GE(n, 0);
   T remainder = x % n;
   if (remainder < 0)
     remainder += n;
@@ -118,7 +119,7 @@ void BucketTestSignedInterval(unsigned int bucket_count,
 
   ASSERT_GE(high, low);
   ASSERT_GE(bucket_count, 2u);
-  uint32_t interval = static_cast<uint32_t>(high - low + 1);
+  uint32_t interval = unsigned_difference<int32_t>(high, low) + 1;
   uint32_t numbers_per_bucket;
   if (interval == 0) {
     // The computation high - low + 1 should be 2^32 but overflowed
@@ -134,7 +135,7 @@ void BucketTestSignedInterval(unsigned int bucket_count,
     int32_t sample = prng->Rand(low, high);
     EXPECT_LE(low, sample);
     EXPECT_GE(high, sample);
-    buckets[static_cast<uint32_t>(sample - low) / numbers_per_bucket]++;
+    buckets[unsigned_difference<int32_t>(sample, low) / numbers_per_bucket]++;
   }
 
   for (unsigned int i = 0; i < bucket_count; i++) {
@@ -158,7 +159,7 @@ void BucketTestUnsignedInterval(unsigned int bucket_count,
 
   ASSERT_GE(high, low);
   ASSERT_GE(bucket_count, 2u);
-  uint32_t interval = static_cast<uint32_t>(high - low + 1);
+  uint32_t interval = high - low + 1;
   uint32_t numbers_per_bucket;
   if (interval == 0) {
     // The computation high - low + 1 should be 2^32 but overflowed
@@ -174,7 +175,7 @@ void BucketTestUnsignedInterval(unsigned int bucket_count,
     uint32_t sample = prng->Rand(low, high);
     EXPECT_LE(low, sample);
     EXPECT_GE(high, sample);
-    buckets[static_cast<uint32_t>(sample - low) / numbers_per_bucket]++;
+    buckets[(sample - low) / numbers_per_bucket]++;
   }
 
   for (unsigned int i = 0; i < bucket_count; i++) {
@@ -198,7 +199,13 @@ TEST(RandomNumberGeneratorTest, UniformUnsignedInterval) {
   BucketTestUnsignedInterval(1000, 1000000, 0, 2147483999, 4, &prng);
 }
 
-TEST(RandomNumberGeneratorTest, UniformSignedInterval) {
+// Disabled for UBSan: https://bugs.chromium.org/p/webrtc/issues/detail?id=5491
+#ifdef UNDEFINED_SANITIZER
+#define MAYBE_UniformSignedInterval DISABLED_UniformSignedInterval
+#else
+#define MAYBE_UniformSignedInterval UniformSignedInterval
+#endif
+TEST(RandomNumberGeneratorTest, MAYBE_UniformSignedInterval) {
   Random prng(66260695729ull);
   BucketTestSignedInterval(2, 100000, 0, 1, 3, &prng);
   BucketTestSignedInterval(7, 100000, -2, 4, 3, &prng);

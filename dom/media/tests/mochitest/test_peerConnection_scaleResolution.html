@@ -12,6 +12,8 @@
     visible: true
   });
 
+  const pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
+
   var mustRejectWith = (msg, reason, f) =>
     f().then(() => ok(false, msg),
              e => is(e.name, reason, msg));
@@ -77,13 +79,15 @@
     .catch(generateErrorCallback());
   }
 
-  if (!navigator.appVersion.includes("Android")) {
-    runNetworkTest(() => testScale("VP8").then(() => testScale("H264"))
-                   .then(networkTestFinished));
-  } else {
-    // No support for H.264 on Android in automation, see Bug 1355786
-    runNetworkTest(() => testScale("VP8").then(networkTestFinished));
-  }
+  pushPrefs(['media.peerconnection.video.lock_scaling', true]).then(() => {
+    if (!navigator.appVersion.includes("Android")) {
+      runNetworkTest(() => testScale("VP8").then(() => testScale("H264"))
+                    .then(networkTestFinished));
+    } else {
+      // No support for H.264 on Android in automation, see Bug 1355786
+      runNetworkTest(() => testScale("VP8").then(networkTestFinished));
+    }
+  });
 </script>
 </pre>
 </body>

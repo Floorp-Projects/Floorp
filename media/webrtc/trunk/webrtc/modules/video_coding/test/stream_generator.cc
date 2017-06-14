@@ -14,10 +14,10 @@
 
 #include <list>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/modules/video_coding/packet.h"
 #include "webrtc/modules/video_coding/test/test_util.h"
 #include "webrtc/system_wrappers/include/clock.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 
@@ -62,11 +62,11 @@ VCMPacket StreamGenerator::GeneratePacket(uint16_t sequence_number,
   packet.seqNum = sequence_number;
   packet.timestamp = timestamp;
   packet.frameType = type;
-  packet.isFirstPacket = first_packet;
+  packet.is_first_packet_in_frame = first_packet;
   packet.markerBit = marker_bit;
   packet.sizeBytes = size;
   packet.dataPtr = packet_buffer_;
-  if (packet.isFirstPacket)
+  if (packet.is_first_packet_in_frame)
     packet.completeNALU = kNaluStart;
   else if (packet.markerBit)
     packet.completeNALU = kNaluEnd;

@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
 #include "webrtc/base/rtccertificate.h"
 
 #include "webrtc/base/checks.h"
@@ -15,7 +17,7 @@
 namespace rtc {
 
 scoped_refptr<RTCCertificate> RTCCertificate::Create(
-    scoped_ptr<SSLIdentity> identity) {
+    std::unique_ptr<SSLIdentity> identity) {
   return new RefCountedObject<RTCCertificate>(identity.release());
 }
 
@@ -41,6 +43,28 @@ bool RTCCertificate::HasExpired(uint64_t now) const {
 
 const SSLCertificate& RTCCertificate::ssl_certificate() const {
   return identity_->certificate();
+}
+
+RTCCertificatePEM RTCCertificate::ToPEM() const {
+  return RTCCertificatePEM(identity_->PrivateKeyToPEMString(),
+                           ssl_certificate().ToPEMString());
+}
+
+scoped_refptr<RTCCertificate> RTCCertificate::FromPEM(
+    const RTCCertificatePEM& pem) {
+  std::unique_ptr<SSLIdentity> identity(SSLIdentity::FromPEMStrings(
+      pem.private_key(), pem.certificate()));
+  if (!identity)
+    return nullptr;
+  return new RefCountedObject<RTCCertificate>(identity.release());
+}
+
+bool RTCCertificate::operator==(const RTCCertificate& certificate) const {
+  return *this->identity_ == *certificate.identity_;
+}
+
+bool RTCCertificate::operator!=(const RTCCertificate& certificate) const {
+  return !(*this == certificate);
 }
 
 }  // namespace rtc

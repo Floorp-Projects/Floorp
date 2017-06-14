@@ -677,7 +677,7 @@ protected:
   void PaintItems(nsTArray<ClippedDisplayItem>& aItems,
                   const nsIntRect& aRect,
                   gfxContext* aContext,
-                  nsRenderingContext* aRC,
+                  gfxContext* aRC,
                   nsDisplayListBuilder* aBuilder,
                   nsPresContext* aPresContext,
                   const nsIntPoint& aOffset,

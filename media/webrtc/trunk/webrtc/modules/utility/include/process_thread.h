@@ -11,25 +11,32 @@
 #ifndef WEBRTC_MODULES_UTILITY_INCLUDE_PROCESS_THREAD_H_
 #define WEBRTC_MODULES_UTILITY_INCLUDE_PROCESS_THREAD_H_
 
+#include <memory>
+
 #include "webrtc/typedefs.h"
-#include "webrtc/base/scoped_ptr.h"
+
+#if defined(WEBRTC_WIN)
+// Due to a bug in the std::unique_ptr implementation that ships with MSVS,
+// we need the full definition of QueuedTask, on Windows.
+#include "webrtc/base/task_queue.h"
+#else
+namespace rtc {
+class QueuedTask;
+}
+#endif
 
 namespace webrtc {
 class Module;
 
-class ProcessTask {
- public:
-  ProcessTask() {}
-  virtual ~ProcessTask() {}
-
-  virtual void Run() = 0;
-};
-
+// TODO(tommi): ProcessThread probably doesn't need to be a virtual
+// interface.  There exists one override besides ProcessThreadImpl,
+// MockProcessThread, but when looking at how it is used, it seems
+// a nullptr might suffice (or simply an actual ProcessThread instance).
 class ProcessThread {
  public:
   virtual ~ProcessThread();
 
-  static rtc::scoped_ptr<ProcessThread> Create(const char* thread_name);
+  static std::unique_ptr<ProcessThread> Create(const char* thread_name);
 
   // Starts the worker thread.  Must be called from the construction thread.
   virtual void Start() = 0;
@@ -50,7 +57,7 @@ class ProcessThread {
   // construction thread of the ProcessThread instance, if the task did not
   // get a chance to run (e.g. posting the task while shutting down or when
   // the thread never runs).
-  virtual void PostTask(rtc::scoped_ptr<ProcessTask> task) = 0;
+  virtual void PostTask(std::unique_ptr<rtc::QueuedTask> task) = 0;
 
   // Adds a module that will start to receive callbacks on the worker thread.
   // Can be called from any thread.

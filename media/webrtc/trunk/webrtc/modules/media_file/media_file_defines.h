@@ -11,7 +11,6 @@
 #ifndef WEBRTC_MODULES_MEDIA_FILE_MEDIA_FILE_DEFINES_H_
 #define WEBRTC_MODULES_MEDIA_FILE_MEDIA_FILE_DEFINES_H_
 
-#include "webrtc/engine_configurations.h"
 #include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/typedefs.h"
 

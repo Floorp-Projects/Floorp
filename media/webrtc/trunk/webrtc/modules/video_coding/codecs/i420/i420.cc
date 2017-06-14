@@ -13,6 +13,7 @@
 #include <limits>
 #include <string>
 
+#include "webrtc/api/video/i420_buffer.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 
 namespace {
@@ -116,7 +117,8 @@ int I420Encoder::Encode(const VideoFrame& inputImage,
     return WEBRTC_VIDEO_CODEC_MEMORY;
   _encodedImage._length = ret_length + kI420HeaderSize;
 
-  _encodedCompleteCallback->Encoded(_encodedImage, NULL, NULL);
+  _encodedCompleteCallback->OnEncodedImage(_encodedImage, nullptr, nullptr);
+
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -137,18 +139,13 @@ int I420Encoder::RegisterEncodeCompleteCallback(
 }
 
 I420Decoder::I420Decoder()
-    : _decodedImage(),
-      _width(0),
+    : _width(0),
       _height(0),
       _inited(false),
       _decodeCompleteCallback(NULL) {}
 
 I420Decoder::~I420Decoder() {
   Release();
-}
-
-int I420Decoder::Reset() {
-  return WEBRTC_VIDEO_CODEC_OK;
 }
 
 int I420Decoder::InitDecode(const VideoCodec* codecSettings,
@@ -203,17 +200,19 @@ int I420Decoder::Decode(const EncodedImage& inputImage,
   }
   // Set decoded image parameters.
   int half_width = (_width + 1) / 2;
-  _decodedImage.CreateEmptyFrame(_width, _height, _width, half_width,
-                                 half_width);
-  // Converting from buffer to plane representation.
+  rtc::scoped_refptr<webrtc::I420Buffer> frame_buffer =
+      I420Buffer::Create(_width, _height, _width, half_width, half_width);
+
+  // Converting from raw buffer I420Buffer.
   int ret = ConvertToI420(kI420, buffer, 0, 0, _width, _height, 0,
-                          kVideoRotation_0, &_decodedImage);
+                          kVideoRotation_0, frame_buffer.get());
   if (ret < 0) {
     return WEBRTC_VIDEO_CODEC_MEMORY;
   }
-  _decodedImage.set_timestamp(inputImage._timeStamp);
 
-  _decodeCompleteCallback->Decoded(_decodedImage);
+  VideoFrame decoded_image(frame_buffer, inputImage._timeStamp, 0,
+                           webrtc::kVideoRotation_0);
+  _decodeCompleteCallback->Decoded(decoded_image);
   return WEBRTC_VIDEO_CODEC_OK;
 }
 

@@ -1341,7 +1341,8 @@ ParserWriteFunc(nsIInputStream* in,
     // declaration to be entirely in the first network buffer. -- hsivonen
     if (nsContentUtils::CheckForBOM(buf, count, maybePrefer)) {
       // The decoder will swallow the BOM. The UTF-16 will re-sniff for
-      // endianness. The value of preferred is now either "UTF-8" or "UTF-16".
+      // endianness. The value of preferred is now "UTF-8", "UTF-16LE"
+      // or "UTF-16BE".
       preferred.Assign(maybePrefer);
       source = kCharsetFromByteOrderMark;
     } else if (source < kCharsetFromChannel) {

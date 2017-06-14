@@ -467,8 +467,8 @@ intel_aes_gcmENC:
     vmovdqu  288(Gctx), CTR
     vmovdqu  272(Gctx), T
     mov  304(Gctx), KS
-    mov  4(KS), NR
-    lea  48(KS), KS
+# AESContext->Nr
+    mov  244(KS), NR
 
     vpshufb  .Lbswap_mask(%rip), CTR, CTR
     vpshufb  .Lbswap_mask(%rip), T, T
@@ -1001,8 +1001,8 @@ intel_aes_gcmDEC:
     vmovdqu 288(Gctx), CTR
     vmovdqu 272(Gctx), T
     mov     304(Gctx), KS
-    mov     4(KS), NR
-    lea     48(KS), KS
+# AESContext->Nr
+    mov     244(KS), NR
 
     vpshufb .Lbswap_mask(%rip), CTR, CTR
     vpshufb .Lbswap_mask(%rip), T, T

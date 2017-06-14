@@ -8,13 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/desktop_capture/screen_capturer.h"
+#include "webrtc/modules/desktop_capture/desktop_capturer.h"
 
 namespace webrtc {
 
 // static
-ScreenCapturer* ScreenCapturer::Create(const DesktopCaptureOptions& options) {
-  return NULL;
+std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawScreenCapturer(
+    const DesktopCaptureOptions& options) {
+  return nullptr;
 }
 
 }  // namespace webrtc

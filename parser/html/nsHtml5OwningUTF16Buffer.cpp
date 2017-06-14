@@ -53,6 +53,18 @@ nsHtml5OwningUTF16Buffer::Swap(nsHtml5OwningUTF16Buffer* aOther)
   nsHtml5UTF16Buffer::Swap(aOther);
 }
 
+Span<char16_t>
+nsHtml5OwningUTF16Buffer::TailAsSpan(int32_t aBufferSize)
+{
+  MOZ_ASSERT(aBufferSize >= getEnd());
+  return MakeSpan(getBuffer() + getEnd(), aBufferSize - getEnd());
+}
+
+void
+nsHtml5OwningUTF16Buffer::AdvanceEnd(int32_t aNumberOfCodeUnits)
+{
+  setEnd(getEnd() + aNumberOfCodeUnits);
+}
 
 // Not using macros for AddRef and Release in order to be able to refcount on
 // and create on different threads.

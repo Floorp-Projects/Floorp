@@ -10,6 +10,7 @@
 
 #include <assert.h>
 
+#include "webrtc/base/logging.h"
 #include "webrtc/modules/audio_device/audio_device_config.h"
 #include "webrtc/modules/audio_device/linux/audio_device_alsa_linux.h"
 
@@ -164,32 +165,25 @@ int32_t AudioDeviceLinuxALSA::ActiveAudioLayer(
     return 0;
 }
 
-int32_t AudioDeviceLinuxALSA::Init()
-{
+AudioDeviceGeneric::InitStatus AudioDeviceLinuxALSA::Init() {
+  CriticalSectionScoped lock(&_critSect);
 
-    CriticalSectionScoped lock(&_critSect);
+  // Load libasound
+  if (!AlsaSymbolTable.Load()) {
+    // Alsa is not installed on this system
+    LOG(LS_ERROR) << "failed to load symbol table";
+    return InitStatus::OTHER_ERROR;
+  }
 
-    // Load libasound
-    if (!AlsaSymbolTable.Load())
-    {
-        // Alsa is not installed on
-        // this system
-        WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-                   "  failed to load symbol table");
-        return -1;
-    }
-
-    if (_initialized)
-    {
-        return 0;
-    }
+  if (_initialized) {
+    return InitStatus::OK;
+  }
 #if defined(USE_X11)
     //Get X display handle for typing detection
     _XDisplay = XOpenDisplay(NULL);
-    if (!_XDisplay)
-    {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-          "  failed to open X display, typing detection will not work");
+    if (!_XDisplay) {
+      LOG(LS_WARNING)
+          << "failed to open X display, typing detection will not work";
     }
 #endif
     _playWarning = 0;
@@ -199,7 +193,7 @@ int32_t AudioDeviceLinuxALSA::Init()
 
     _initialized = true;
 
-    return 0;
+    return InitStatus::OK;
 }
 
 int32_t AudioDeviceLinuxALSA::Terminate()

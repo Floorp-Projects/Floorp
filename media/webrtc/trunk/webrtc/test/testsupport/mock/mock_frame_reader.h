@@ -13,7 +13,7 @@
 
 #include "webrtc/test/testsupport/frame_reader.h"
 
-#include "testing/gmock/include/gmock/gmock.h"
+#include "webrtc/test/gmock.h"
 
 namespace webrtc {
 namespace test {
@@ -21,7 +21,7 @@ namespace test {
 class MockFrameReader : public FrameReader {
  public:
   MOCK_METHOD0(Init, bool());
-  MOCK_METHOD1(ReadFrame, bool(uint8_t* source_buffer));
+  MOCK_METHOD0(ReadFrame, rtc::scoped_refptr<I420Buffer>());
   MOCK_METHOD0(Close, void());
   MOCK_METHOD0(FrameLength, size_t());
   MOCK_METHOD0(NumberOfFrames, int());

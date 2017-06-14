@@ -70,7 +70,7 @@ public:
   class MOZ_STACK_CLASS ExecutionContext {
 #ifdef MOZ_GECKO_PROFILER
     // Register stack annotations for the Gecko profiler.
-    mozilla::ProfilerStackFrameRAII mProfilerRAII;
+    mozilla::AutoProfilerLabel mAutoProfilerLabel;
 #endif
 
     JSContext* mCx;

@@ -6,6 +6,8 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
+import("../../build/webrtc.gni")
+
 config("audio_conference_mixer_config") {
   visibility = [ ":*" ]  # Only targets in this file can depend on this.
   include_dirs = [
@@ -14,7 +16,7 @@ config("audio_conference_mixer_config") {
   ]
 }
 
-source_set("audio_conference_mixer") {
+rtc_static_library("audio_conference_mixer") {
   sources = [
     "include/audio_conference_mixer.h",
     "include/audio_conference_mixer_defines.h",
@@ -29,22 +31,18 @@ source_set("audio_conference_mixer") {
     "source/time_scheduler.h",
   ]
 
-  configs += [ "../..:common_config" ]
+  public_configs = [ ":audio_conference_mixer_config" ]
 
-  public_configs = [
-    "../..:common_inherited_config",
-    ":audio_conference_mixer_config",
-  ]
-
-  if (is_clang) {
-    # Suppress warnings from Chrome's Clang plugins.
-    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  if (!build_with_chromium && is_clang) {
+    # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+    suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
 
   deps = [
+    "../..:webrtc_common",
+    "../../audio/utility:audio_frame_operations",
+    "../../base:rtc_base_approved",
     "../../system_wrappers",
     "../audio_processing",
-    "../utility",
   ]
 }
