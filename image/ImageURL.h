@@ -34,7 +34,7 @@ class ImageURL
 {
 public:
   explicit ImageURL(nsIURI* aURI, nsresult& aRv)
-    : mURI(new nsMainThreadPtrHolder<nsIURI>(aURI))
+    : mURI(new nsMainThreadPtrHolder<nsIURI>("ImageURL::mURI", aURI))
   {
     MOZ_ASSERT(NS_IsMainThread(), "Cannot use nsIURI off main thread!");
 

@@ -677,7 +677,8 @@ _OldCacheLoad::_OldCacheLoad(nsCSubstring const& aScheme,
 
 _OldCacheLoad::~_OldCacheLoad()
 {
-  ProxyReleaseMainThread(mAppCache);
+  ProxyReleaseMainThread(
+    "_OldCacheLoad::mAppCache", mAppCache);
 }
 
 nsresult _OldCacheLoad::Start()

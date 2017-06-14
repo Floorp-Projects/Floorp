@@ -124,7 +124,9 @@ public:
 private:
   ~FetchSignalProxy()
   {
-    NS_ProxyRelease(mMainThreadEventTarget, mSignalMainThread.forget());
+    NS_ProxyRelease(
+      "FetchSignalProxy::mSignalMainThread",
+      mMainThreadEventTarget, mSignalMainThread.forget());
   }
 };
 
@@ -1304,7 +1306,8 @@ FetchBody<Derived>::BeginConsumeBodyMainThread()
   // Now that everything succeeded, we can assign the pump to a pointer that
   // stays alive for the lifetime of the FetchBody.
   mConsumeBodyPump =
-    new nsMainThreadPtrHolder<nsIInputStreamPump>(pump, mMainThreadEventTarget);
+    new nsMainThreadPtrHolder<nsIInputStreamPump>(
+      "FetchBody::mConsumeBodyPump", pump, mMainThreadEventTarget);
   // It is ok for retargeting to fail and reads to happen on the main thread.
   autoReject.DontFail();
 
