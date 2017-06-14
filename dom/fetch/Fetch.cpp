@@ -1422,7 +1422,7 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
     case CONSUME_ARRAYBUFFER: {
       JS::Rooted<JSObject*> arrayBuffer(cx);
       BodyUtil::ConsumeArrayBuffer(cx, &arrayBuffer, aResultLength, aResult,
-                                    error);
+                                   error);
 
       if (!error.Failed()) {
         JS::Rooted<JS::Value> val(cx);
@@ -1514,12 +1514,12 @@ template <class Derived>
 already_AddRefed<Promise>
 FetchBody<Derived>::ConsumeBody(ConsumeType aType, ErrorResult& aRv)
 {
-  mConsumeType = aType;
   if (BodyUsed()) {
     aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
     return nullptr;
   }
 
+  mConsumeType = aType;
   SetBodyUsed();
 
   mConsumePromise = Promise::Create(DerivedClass()->GetParentObject(), aRv);
