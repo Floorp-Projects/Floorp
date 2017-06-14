@@ -92,6 +92,18 @@ ImageFactory::CreateImage(nsIRequest* aRequest,
   // Compute the image's initialization flags.
   uint32_t imageFlags = ComputeImageFlags(aURI, aMimeType, aIsMultiPart);
 
+#ifdef DEBUG
+  // Record the image load for startup performance testing.
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    if (NS_WARN_IF(obs)) {
+      nsAutoCString spec;
+      aURI->GetSpec(spec);
+      obs->NotifyObservers(nullptr, "image-loading", NS_ConvertUTF8toUTF16(spec).get());
+    }
+  }
+#endif
+
   // Select the type of image to create based on MIME type.
   if (aMimeType.EqualsLiteral(IMAGE_SVG_XML)) {
     return CreateVectorImage(aRequest, aProgressTracker, aMimeType,
