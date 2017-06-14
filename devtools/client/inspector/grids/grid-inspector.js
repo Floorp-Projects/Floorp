@@ -23,6 +23,8 @@ const {
 const SHOW_GRID_AREAS = "devtools.gridinspector.showGridAreas";
 const SHOW_GRID_LINE_NUMBERS = "devtools.gridinspector.showGridLineNumbers";
 const SHOW_INFINITE_LINES_PREF = "devtools.gridinspector.showInfiniteLines";
+// @remove after release 56 (See Bug 1355747)
+const PROMOTE_COUNT_PREF = "devtools.promote.layoutview";
 
 // Default grid colors.
 const GRID_COLORS = [
@@ -479,6 +481,9 @@ GridInspector.prototype = {
       this.inspector.reflowTracker.untrackReflows(this, this.onReflow);
       return;
     }
+
+    // @remove after release 56 (See Bug 1355747)
+    Services.prefs.setIntPref(PROMOTE_COUNT_PREF, 0);
 
     this.inspector.reflowTracker.trackReflows(this, this.onReflow);
     this.layoutInspector.on("grid-layout-changed", this.onGridLayoutChange);
