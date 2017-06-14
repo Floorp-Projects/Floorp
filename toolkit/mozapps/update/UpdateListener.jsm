@@ -191,8 +191,8 @@ var UpdateListener = {
   handleUpdateAvailable(update, status) {
     switch (status) {
       case "show-prompt":
-        // If an update is available and had the showPrompt flag set, then
-        // show an update available doorhanger.
+        // If an update is available and the app.update.auto preference is
+        // false, then show an update available doorhanger.
         this.clearCallbacks();
         this.showUpdateAvailableNotification(update, false);
         break;

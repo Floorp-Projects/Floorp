@@ -50,8 +50,6 @@ const PREF_APP_UPDATE_STAGING_ENABLED      = "app.update.staging.enabled";
 const PREF_APP_UPDATE_URL                  = "app.update.url";
 const PREF_APP_UPDATE_URL_DETAILS          = "app.update.url.details";
 
-const PREFBRANCH_APP_UPDATE_NEVER = "app.update.never.";
-
 const URI_BRAND_PROPERTIES      = "chrome://branding/locale/brand.properties";
 const URI_UPDATE_HISTORY_DIALOG = "chrome://mozapps/content/update/history.xul";
 const URI_UPDATE_NS             = "http://www.mozilla.org/2005/app-update";
@@ -1257,8 +1255,6 @@ function Update(update) {
   this._properties = {};
   this._patches = [];
   this.isCompleteUpdate = false;
-  this.showPrompt = false;
-  this.showNeverForVersion = false;
   this.unsupported = false;
   this.channel = "default";
   this.promptWaitTime = getPref("getIntPref", PREF_APP_UPDATE_PROMPTWAITTIME, 43200);
@@ -1312,12 +1308,6 @@ function Update(update) {
       }
     } else if (attr.name == "isCompleteUpdate") {
       this.isCompleteUpdate = attr.value == "true";
-    } else if (attr.name == "isSecurityUpdate") {
-      this.isSecurityUpdate = attr.value == "true";
-    } else if (attr.name == "showNeverForVersion") {
-      this.showNeverForVersion = attr.value == "true";
-    } else if (attr.name == "showPrompt") {
-      this.showPrompt = attr.value == "true";
     } else if (attr.name == "promptWaitTime") {
       if (!isNaN(attr.value)) {
         this.promptWaitTime = parseInt(attr.value);
@@ -1457,8 +1447,6 @@ Update.prototype = {
     update.setAttribute("isCompleteUpdate", this.isCompleteUpdate);
     update.setAttribute("name", this.name);
     update.setAttribute("serviceURL", this.serviceURL);
-    update.setAttribute("showNeverForVersion", this.showNeverForVersion);
-    update.setAttribute("showPrompt", this.showPrompt);
     update.setAttribute("promptWaitTime", this.promptWaitTime);
     update.setAttribute("backgroundInterval", this.backgroundInterval);
     update.setAttribute("type", this.type);
@@ -2110,18 +2098,6 @@ UpdateService.prototype = {
         return;
       }
 
-      // Skip the update if the user responded with "never" to this update's
-      // application version and the update specifies showNeverForVersion
-      // (see bug 350636).
-      let neverPrefName = PREFBRANCH_APP_UPDATE_NEVER + aUpdate.appVersion;
-      if (aUpdate.showNeverForVersion &&
-          getPref("getBoolPref", neverPrefName, false)) {
-        LOG("UpdateService:selectUpdate - skipping update because the " +
-            "preference " + neverPrefName + " is true");
-        lastCheckCode = AUSTLMY.CHK_UPDATE_NEVER_PREF;
-        return;
-      }
-
       switch (aUpdate.type) {
         case "major":
           if (!majorUpdate)
@@ -2271,7 +2247,6 @@ UpdateService.prototype = {
      * Notes:
      * a) if the app.update.auto preference is false then automatic download and
      *    install is disabled and the user will be notified.
-     * b) if the update has a showPrompt attribute the user will be notified.
      *
      * If the update when it is first read does not have an appVersion attribute
      * the following deprecated behavior will occur:
@@ -2279,17 +2254,6 @@ UpdateService.prototype = {
      * Major         Notify
      * Minor         Auto Install
      */
-    if (update.showPrompt) {
-      LOG("UpdateService:_selectAndInstallUpdate - prompting because the " +
-          "update snippet specified showPrompt. Notifying observers. " +
-          "topic: update-available, status: showPrompt");
-      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_SHOWPROMPT_SNIPPET);
-
-      Services.obs.notifyObservers(update, "update-available", "show-prompt");
-      this._showPrompt(update);
-      return;
-    }
-
     if (!getPref("getBoolPref", PREF_APP_UPDATE_AUTO, true)) {
       LOG("UpdateService:_selectAndInstallUpdate - prompting because silent " +
           "install is disabled. Notifying observers. topic: update-available, " +
