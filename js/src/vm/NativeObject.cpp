@@ -286,24 +286,6 @@ js::NativeObject::numFixedSlotsForCompilation() const
     return gc::GetGCKindSlots(kind, getClass());
 }
 
-uint32_t
-js::NativeObject::dynamicSlotsCount(uint32_t nfixed, uint32_t span, const Class* clasp)
-{
-    if (span <= nfixed)
-        return 0;
-    span -= nfixed;
-
-    // Increase the slots to SLOT_CAPACITY_MIN to decrease the likelihood
-    // the dynamic slots need to get increased again. ArrayObjects ignore
-    // this because slots are uncommon in that case.
-    if (clasp != &ArrayObject::class_ && span <= SLOT_CAPACITY_MIN)
-        return SLOT_CAPACITY_MIN;
-
-    uint32_t slots = mozilla::RoundUpPow2(span);
-    MOZ_ASSERT(slots >= span);
-    return slots;
-}
-
 void
 NativeObject::setLastPropertyShrinkFixedSlots(Shape* shape)
 {
