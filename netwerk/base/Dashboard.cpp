@@ -373,7 +373,8 @@ Dashboard::RequestSockets(NetDashboardCallback *aCallback)
 {
     RefPtr<SocketData> socketData = new SocketData();
     socketData->mCallback =
-        new nsMainThreadPtrHolder<NetDashboardCallback>(aCallback, true);
+        new nsMainThreadPtrHolder<NetDashboardCallback>(
+          "NetDashboardCallback", aCallback, true);
     socketData->mEventTarget = GetCurrentThreadEventTarget();
     gSocketTransportService->Dispatch(NewRunnableMethod<RefPtr<SocketData>>
 				      (this, &Dashboard::GetSocketsDispatch, socketData),
@@ -442,7 +443,8 @@ Dashboard::RequestHttpConnections(NetDashboardCallback *aCallback)
 {
     RefPtr<HttpData> httpData = new HttpData();
     httpData->mCallback =
-        new nsMainThreadPtrHolder<NetDashboardCallback>(aCallback, true);
+        new nsMainThreadPtrHolder<NetDashboardCallback>(
+          "NetDashboardCallback", aCallback, true);
     httpData->mEventTarget = GetCurrentThreadEventTarget();
 
     gSocketTransportService->Dispatch(NewRunnableMethod<RefPtr<HttpData>>
@@ -618,7 +620,8 @@ Dashboard::RequestWebsocketConnections(NetDashboardCallback *aCallback)
 {
     RefPtr<WebSocketRequest> wsRequest = new WebSocketRequest();
     wsRequest->mCallback =
-        new nsMainThreadPtrHolder<NetDashboardCallback>(aCallback, true);
+        new nsMainThreadPtrHolder<NetDashboardCallback>(
+          "NetDashboardCallback", aCallback, true);
     wsRequest->mEventTarget = GetCurrentThreadEventTarget();
 
     wsRequest->mEventTarget->Dispatch(NewRunnableMethod<RefPtr<WebSocketRequest>>
@@ -669,7 +672,8 @@ Dashboard::RequestDNSInfo(NetDashboardCallback *aCallback)
 {
     RefPtr<DnsData> dnsData = new DnsData();
     dnsData->mCallback =
-        new nsMainThreadPtrHolder<NetDashboardCallback>(aCallback, true);
+        new nsMainThreadPtrHolder<NetDashboardCallback>(
+          "NetDashboardCallback", aCallback, true);
 
     nsresult rv;
     dnsData->mData.Clear();
@@ -769,7 +773,8 @@ Dashboard::RequestDNSLookup(const nsACString &aHost,
 
     RefPtr<LookupHelper> helper = new LookupHelper();
     helper->mCallback =
-        new nsMainThreadPtrHolder<NetDashboardCallback>(aCallback, true);
+        new nsMainThreadPtrHolder<NetDashboardCallback>(
+          "NetDashboardCallback", aCallback, true);
     helper->mEventTarget = GetCurrentThreadEventTarget();
     OriginAttributes attrs;
     rv = mDnsService->AsyncResolveNative(aHost, 0, helper.get(),
@@ -784,7 +789,8 @@ Dashboard::RequestRcwnStats(NetDashboardCallback *aCallback)
     RefPtr<RcwnData> rcwnData = new RcwnData();
     rcwnData->mEventTarget = GetCurrentThreadEventTarget();
     rcwnData->mCallback =
-        new nsMainThreadPtrHolder<NetDashboardCallback>(aCallback, true);
+        new nsMainThreadPtrHolder<NetDashboardCallback>(
+          "NetDashboardCallback", aCallback, true);
 
     return rcwnData->mEventTarget->Dispatch(
         NewRunnableMethod<RefPtr<RcwnData>>(this, &Dashboard::GetRcwnData, rcwnData),
@@ -861,7 +867,8 @@ Dashboard::RequestConnection(const nsACString& aHost, uint32_t aPort,
     connectionData->mTimeout = aTimeout;
 
     connectionData->mCallback =
-        new nsMainThreadPtrHolder<NetDashboardCallback>(aCallback, true);
+        new nsMainThreadPtrHolder<NetDashboardCallback>(
+          "NetDashboardCallback", aCallback, true);
     connectionData->mEventTarget = GetCurrentThreadEventTarget();
 
     rv = TestNewConnection(connectionData);

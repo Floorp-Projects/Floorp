@@ -251,8 +251,12 @@ FileSystemTaskParentBase::~FileSystemTaskParentBase()
 {
   // This task can be released on different threads because we dispatch it (as
   // runnable) to main-thread, I/O and then back to the PBackground thread.
-  NS_ProxyRelease(mBackgroundEventTarget, mFileSystem.forget());
-  NS_ProxyRelease(mBackgroundEventTarget, mRequestParent.forget());
+  NS_ProxyRelease(
+    "FileSystemTaskParentBase::mFileSystem",
+    mBackgroundEventTarget, mFileSystem.forget());
+  NS_ProxyRelease(
+    "FileSystemTaskParentBase::mRequestParent",
+    mBackgroundEventTarget, mRequestParent.forget());
 }
 
 void

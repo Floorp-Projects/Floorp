@@ -97,7 +97,8 @@ public:
   LocalCertGetTask(const nsACString& aNickname,
                    nsILocalCertGetCallback* aCallback)
     : LocalCertTask(aNickname)
-    , mCallback(new nsMainThreadPtrHolder<nsILocalCertGetCallback>(aCallback))
+    , mCallback(new nsMainThreadPtrHolder<nsILocalCertGetCallback>(
+        "LocalCertGetTask::mCallback", aCallback))
     , mCert(nullptr)
   {
   }
@@ -354,7 +355,8 @@ public:
   LocalCertRemoveTask(const nsACString& aNickname,
                       nsILocalCertCallback* aCallback)
     : LocalCertTask(aNickname)
-    , mCallback(new nsMainThreadPtrHolder<nsILocalCertCallback>(aCallback))
+    , mCallback(new nsMainThreadPtrHolder<nsILocalCertCallback>(
+        "LocalCertRemoveTask::mCallback", aCallback))
   {
   }
 

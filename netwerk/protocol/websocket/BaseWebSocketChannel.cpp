@@ -373,8 +373,12 @@ BaseWebSocketChannel::ListenerAndContextContainer::~ListenerAndContextContainer(
 {
   MOZ_ASSERT(mListener);
 
-  NS_ReleaseOnMainThread(mListener.forget());
-  NS_ReleaseOnMainThread(mContext.forget());
+  NS_ReleaseOnMainThread(
+    "BaseWebSocketChannel::ListenerAndContextContainer::mListener",
+    mListener.forget());
+  NS_ReleaseOnMainThread(
+    "BaseWebSocketChannel::ListenerAndContextContainer::mContext",
+    mContext.forget());
 }
 
 } // namespace net
