@@ -144,7 +144,7 @@ class ts_paint(TsBase):
 
 @register_test()
 class ts_paint_webext(ts_paint):
-    webextensions = '${talos}/webextensions/dummy/dummy.xpi'
+    webextensions = '${talos}/webextensions/dummy/dummy-signed.xpi'
     preferences = {'xpinstall.signatures.required': False}
 
 
