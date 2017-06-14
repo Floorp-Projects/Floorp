@@ -125,15 +125,12 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   LayerRect rect = Bounds();
   DumpLayerInfo("ContainerLayer", rect);
 
-  aBuilder.PushClip(sc.ToRelativeWrRect(rect), nullptr);
-
   for (LayerPolygon& child : children) {
     if (child.layer->IsBackfaceHidden()) {
       continue;
     }
     ToWebRenderLayer(child.layer)->RenderLayer(aBuilder, sc);
   }
-  aBuilder.PopClip();
 }
 
 void
