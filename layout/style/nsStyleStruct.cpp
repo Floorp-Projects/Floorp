@@ -690,7 +690,8 @@ nsStyleList::GetQuotePairs() const
 }
 
 nsChangeHint
-nsStyleList::CalcDifference(const nsStyleList& aNewData) const
+nsStyleList::CalcDifference(const nsStyleList& aNewData,
+                            const nsStyleDisplay* aOldDisplay) const
 {
   // If the quotes implementation is ever going to change we might not need
   // a framechange here and a reflow should be sufficient.  See bug 35768.
@@ -699,20 +700,37 @@ nsStyleList::CalcDifference(const nsStyleList& aNewData) const
       GetQuotePairs() != aNewData.GetQuotePairs()) {
     return nsChangeHint_ReconstructFrame;
   }
-  if (mListStylePosition != aNewData.mListStylePosition) {
-    return nsChangeHint_ReconstructFrame;
-  }
-  if (DefinitelyEqualImages(mListStyleImage, aNewData.mListStyleImage) &&
-      mCounterStyle == aNewData.mCounterStyle) {
-    if (mImageRegion.IsEqualInterior(aNewData.mImageRegion)) {
-      return nsChangeHint(0);
+  nsChangeHint hint = nsChangeHint(0);
+  // Only elements whose display value is list-item can be affected by
+  // list-style-position and list-style-type. If the old display struct
+  // doesn't exist, assume it isn't affected by display value at all,
+  // and thus these properties should not affect it either. This also
+  // relies on that when the display value changes from something else
+  // to list-item, that change itself would cause ReconstructFrame.
+  if (aOldDisplay && aOldDisplay->mDisplay == StyleDisplay::ListItem) {
+    if (mListStylePosition != aNewData.mListStylePosition) {
+      return nsChangeHint_ReconstructFrame;
     }
-    if (mImageRegion.width == aNewData.mImageRegion.width &&
-        mImageRegion.height == aNewData.mImageRegion.height) {
-      return NS_STYLE_HINT_VISUAL;
+    if (mCounterStyle != aNewData.mCounterStyle) {
+      return NS_STYLE_HINT_REFLOW;
     }
+  } else if (mListStylePosition != aNewData.mListStylePosition ||
+             mCounterStyle != aNewData.mCounterStyle) {
+    hint = nsChangeHint_NeutralChange;
   }
-  return NS_STYLE_HINT_REFLOW;
+  // list-style-image and -moz-image-region may affect some XUL elements
+  // regardless of display value, so we still need to check them.
+  if (!DefinitelyEqualImages(mListStyleImage, aNewData.mListStyleImage)) {
+    return NS_STYLE_HINT_REFLOW;
+  }
+  if (!mImageRegion.IsEqualInterior(aNewData.mImageRegion)) {
+    if (mImageRegion.width != aNewData.mImageRegion.width ||
+        mImageRegion.height != aNewData.mImageRegion.height) {
+      return NS_STYLE_HINT_REFLOW;
+    }
+    return NS_STYLE_HINT_VISUAL;
+  }
+  return hint;
 }
 
 already_AddRefed<nsIURI>

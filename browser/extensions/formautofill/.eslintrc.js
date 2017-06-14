@@ -110,9 +110,6 @@ module.exports = {
     // throw new Error("error")).
     "no-throw-literal": "error",
 
-    // Disallow the use of Boolean literals in conditional expressions.
-    "no-unneeded-ternary": "error",
-
     // Disallow padding within blocks.
     "padded-blocks": ["warn", "never"],
 

@@ -165,7 +165,7 @@ add_task(async function test_disable() {
     do_check_eq(addon3.appDisabled, false);
 
     // Flip the allow-non-mpc preference
-    let newValue = (initialAllow === true) ? false : true;
+    let newValue = !(initialAllow === true);
     Services.prefs.setBoolPref(NON_MPC_PREF, newValue);
 
     // the mpc extension should never become appDisabled

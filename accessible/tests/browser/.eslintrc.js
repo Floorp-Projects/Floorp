@@ -67,7 +67,6 @@ module.exports = {
     "no-throw-literal": "error",
     "no-underscore-dangle": "off",
     "no-undefined": "off",
-    "no-unneeded-ternary": "error",
     "no-unused-vars": ["error", {"vars": "all", "args": "none"}],
     "no-use-before-define": "off",
     "no-var": "off",

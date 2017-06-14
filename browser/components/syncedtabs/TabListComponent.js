@@ -128,7 +128,7 @@ TabListComponent.prototype = {
       this._window.openDialog(this._window.getBrowserURL(), "_blank",
                               "chrome,dialog=no,all", urls.join("|"));
     } else {
-      let loadInBackground = where == "tabshifted" ? true : false;
+      let loadInBackground = where == "tabshifted";
       this._getChromeWindow(this._window).gBrowser.loadTabs(urls, {
         inBackground: loadInBackground,
         replace: false,

@@ -10,6 +10,18 @@
  */
 'use strict';
 
+var expected_telemetry = {
+  "histograms": {
+    "MIXED_CONTENT_HSTS_PRIMING_RESULT": 2,
+    "MIXED_CONTENT_HSTS_PRIMING_REQUESTS": 4,
+  },
+  "keyed-histograms": {
+    "HSTS_PRIMING_REQUEST_DURATION": {
+      "success": 2,
+    },
+  }
+};
+
 //jscs:disable
 add_task(function*() {
   //jscs:enable
@@ -27,6 +39,7 @@ add_task(function*() {
   let which = "block_active";
 
   SetupPrefTestEnvironment(which);
+  clear_hists(expected_telemetry);
 
   yield execute_test("top-level", test_settings[which].mimetype);
 
@@ -34,6 +47,8 @@ add_task(function*() {
 
   ok("prime-hsts" in test_settings[which].priming,
      "HSTS priming on a subdomain when top-level does not includeSubDomains");
+
+  test_telemetry(expected_telemetry);
 
   SpecialPowers.popPrefEnv();
 });

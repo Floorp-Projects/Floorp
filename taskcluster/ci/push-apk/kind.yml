@@ -30,8 +30,5 @@ jobs:
             platform: Android/opt
             tier: 2
             kind: other
-        run-on-projects:
-            - mozilla-central
-            - mozilla-beta
-            - mozilla-release
+        run-on-projects: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
         deadline-after: 5 days

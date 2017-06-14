@@ -58,6 +58,8 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mIsPreflight(false)
   , mForceHSTSPriming(false)
   , mMixedContentWouldBlock(false)
+  , mIsHSTSPriming(false)
+  , mIsHSTSPrimingUpgrade(false)
 {
   MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
@@ -231,6 +233,8 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   , mIsPreflight(false)
   , mForceHSTSPriming(false)
   , mMixedContentWouldBlock(false)
+  , mIsHSTSPriming(false)
+  , mIsHSTSPrimingUpgrade(false)
 {
   // Top-level loads are never third-party
   // Grab the information we can out of the window.
@@ -294,6 +298,8 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mIsPreflight(rhs.mIsPreflight)
   , mForceHSTSPriming(rhs.mForceHSTSPriming)
   , mMixedContentWouldBlock(rhs.mMixedContentWouldBlock)
+  , mIsHSTSPriming(rhs.mIsHSTSPriming)
+  , mIsHSTSPrimingUpgrade(rhs.mIsHSTSPrimingUpgrade)
 {
 }
 
@@ -322,7 +328,9 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    bool aForcePreflight,
                    bool aIsPreflight,
                    bool aForceHSTSPriming,
-                   bool aMixedContentWouldBlock)
+                   bool aMixedContentWouldBlock,
+                   bool aIsHSTSPriming,
+                   bool aIsHSTSPrimingUpgrade)
   : mLoadingPrincipal(aLoadingPrincipal)
   , mTriggeringPrincipal(aTriggeringPrincipal)
   , mPrincipalToInherit(aPrincipalToInherit)
@@ -346,6 +354,8 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mIsPreflight(aIsPreflight)
   , mForceHSTSPriming (aForceHSTSPriming)
   , mMixedContentWouldBlock(aMixedContentWouldBlock)
+  , mIsHSTSPriming(aIsHSTSPriming)
+  , mIsHSTSPrimingUpgrade(aIsHSTSPrimingUpgrade)
 {
   // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
   MOZ_ASSERT(mLoadingPrincipal || aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT);
@@ -931,6 +941,38 @@ LoadInfo::ClearHSTSPriming()
 {
   mForceHSTSPriming = false;
   mMixedContentWouldBlock = false;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetIsHSTSPriming(bool aIsHSTSPriming)
+{
+  MOZ_ASSERT(aIsHSTSPriming);
+  mIsHSTSPriming = aIsHSTSPriming;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetIsHSTSPriming(bool* aIsHSTSPriming)
+{
+  MOZ_ASSERT(aIsHSTSPriming);
+  *aIsHSTSPriming = mIsHSTSPriming;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetIsHSTSPrimingUpgrade(bool aIsHSTSPrimingUpgrade)
+{
+  MOZ_ASSERT(aIsHSTSPrimingUpgrade);
+  mIsHSTSPrimingUpgrade = aIsHSTSPrimingUpgrade;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetIsHSTSPrimingUpgrade(bool* aIsHSTSPrimingUpgrade)
+{
+  MOZ_ASSERT(aIsHSTSPrimingUpgrade);
+  *aIsHSTSPrimingUpgrade = mIsHSTSPrimingUpgrade;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

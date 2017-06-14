@@ -389,7 +389,10 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
       aLoadInfo->GetForcePreflight(),
       aLoadInfo->GetIsPreflight(),
       aLoadInfo->GetForceHSTSPriming(),
-      aLoadInfo->GetMixedContentWouldBlock());
+      aLoadInfo->GetMixedContentWouldBlock(),
+      aLoadInfo->GetIsHSTSPriming(),
+      aLoadInfo->GetIsHSTSPrimingUpgrade()
+      );
 
   return NS_OK;
 }
@@ -474,7 +477,9 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
                           loadInfoArgs.forcePreflight(),
                           loadInfoArgs.isPreflight(),
                           loadInfoArgs.forceHSTSPriming(),
-                          loadInfoArgs.mixedContentWouldBlock()
+                          loadInfoArgs.mixedContentWouldBlock(),
+                          loadInfoArgs.isHSTSPriming(),
+                          loadInfoArgs.isHSTSPrimingUpgrade()
                           );
 
    loadInfo.forget(outLoadInfo);

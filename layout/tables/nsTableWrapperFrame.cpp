@@ -1036,9 +1036,12 @@ nsTableWrapperFrame::Reflow(nsPresContext*           aPresContext,
                     wm, innerOrigin, containerSize, 0);
   innerRI.reset();
 
-  nsTableFrame::InvalidateTableFrame(InnerTableFrame(), origInnerRect,
-                                     origInnerVisualOverflow,
-                                     innerFirstReflow);
+  if (InnerTableFrame()->IsBorderCollapse()) {
+    nsTableFrame::InvalidateTableFrame(InnerTableFrame(), origInnerRect,
+                                       origInnerVisualOverflow,
+                                       innerFirstReflow);
+  }
+
   if (mCaptionFrames.NotEmpty()) {
     nsTableFrame::InvalidateTableFrame(mCaptionFrames.FirstChild(),
                                        origCaptionRect,

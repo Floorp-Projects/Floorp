@@ -8,7 +8,7 @@
 #define mozilla_dom_ElementInlines_h
 
 #include "mozilla/dom/Element.h"
-#include "mozilla/ServoBindings.h"
+#include "mozilla/ServoBindingTypes.h"
 #include "nsIContentInlines.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"

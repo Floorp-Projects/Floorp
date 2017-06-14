@@ -3,47 +3,19 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-if CONFIG['OS_TARGET'] == 'Linux' or CONFIG['OS_TARGET'] == 'Darwin':
-    DISABLE_STL_WRAPPING = True
-    DEFINES['CPR_STRING_USE_FALLIBLE_MALLOC'] = True
-    DEFINES['MOZ_NO_MOZALLOC'] = True
 
-    if CONFIG['OS_TARGET'] == 'Darwin':
-        DEFINES['SIP_OS_OSX'] = True
-    else:
-        DEFINES['SIP_OS_LINUX'] = True
+Library('FuzzingSdp')
 
-    LOCAL_INCLUDES += [
-        '../..',
-        '/media/mtransport',
-        '/media/webrtc/signaling/src/common/browser_logging',
-    ]
+LOCAL_INCLUDES += [
+  '/ipc/chromium/src',
+  '/media/mtransport',
+  '/media/webrtc/',
+  '/media/webrtc/signaling/src/common/time_profiling',
+  '/media/webrtc/signaling/src/peerconnection',
+]
 
-    USE_LIBS += [
-        '/testing/gtest/gtest',
-        'mozglue',
-        'nspr',
-    ]
+SOURCES += [
+    'sdp_parser_libfuzz.cpp',
+]
 
-    SOURCES = [
-      '/media/webrtc/signaling/src/sdp/SdpAttribute.cpp',
-      '/media/webrtc/signaling/src/sdp/SdpHelper.cpp',
-      '/media/webrtc/signaling/src/sdp/SdpMediaSection.cpp',
-      '/media/webrtc/signaling/src/sdp/sipcc/cpr_string.c',
-      '/media/webrtc/signaling/src/sdp/sipcc/sdp_access.c',
-      '/media/webrtc/signaling/src/sdp/sipcc/sdp_attr.c',
-      '/media/webrtc/signaling/src/sdp/sipcc/sdp_attr_access.c',
-      '/media/webrtc/signaling/src/sdp/sipcc/sdp_base64.c',
-      '/media/webrtc/signaling/src/sdp/sipcc/sdp_config.c',
-      '/media/webrtc/signaling/src/sdp/sipcc/sdp_main.c',
-      '/media/webrtc/signaling/src/sdp/sipcc/sdp_services_unix.c',
-      '/media/webrtc/signaling/src/sdp/sipcc/sdp_token.c',
-      '/media/webrtc/signaling/src/sdp/sipcc/sdp_utils.c',
-      '/media/webrtc/signaling/src/sdp/SipccSdp.cpp',
-      '/media/webrtc/signaling/src/sdp/SipccSdpAttributeList.cpp',
-      '/media/webrtc/signaling/src/sdp/SipccSdpMediaSection.cpp',
-      '/media/webrtc/signaling/src/sdp/SipccSdpParser.cpp',
-      'sdp_file_parser.cpp',
-    ]
-
-    Program('sdp_file_parser')
+FINAL_LIBRARY = 'xul-gtest'

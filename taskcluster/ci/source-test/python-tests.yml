@@ -12,9 +12,6 @@ taskgraph-tests:
     run:
         using: mach
         mach: taskgraph python-tests
-    run-on-projects:
-        - integration
-        - release
     when:
         files-changed:
             - 'taskcluster/**/*.py'
@@ -39,9 +36,6 @@ marionette-harness:
     run:
         using: mach
         mach: python-test --subsuite marionette-harness
-    run-on-projects:
-        - integration
-        - release
     when:
         files-changed:
           - 'testing/marionette/harness/**'
@@ -73,9 +67,6 @@ mochitest-harness:
             start_xvfb '1600x1200x24' 0 &&
             cd /home/worker/checkouts/gecko &&
             ./mach python-test --subsuite mochitest
-    run-on-projects:
-        - integration
-        - release
     when:
         files-changed:
             - 'config/mozunit.py'
@@ -105,9 +96,6 @@ mozbase:
     run:
         using: mach
         mach: python-test --subsuite mozbase
-    run-on-projects:
-        - integration
-        - release
     when:
         files-changed:
             - 'testing/mozbase/**'
@@ -131,9 +119,6 @@ mozharness:
         command: >
             cd /home/worker/checkouts/gecko/testing/mozharness &&
             /usr/local/bin/tox -e py27-hg4.1
-    run-on-projects:
-        - integration
-        - release
     when:
         files-changed:
             - 'testing/mozharness/**'
@@ -156,9 +141,6 @@ mozlint:
     run:
         using: mach
         mach: python-test --subsuite mozlint
-    run-on-projects:
-        - integration
-        - release
     when:
         files-changed:
             - 'python/mozlint/**'

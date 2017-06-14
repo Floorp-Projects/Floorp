@@ -7,6 +7,7 @@
 #ifndef mozilla_net_WebSocketChannelChild_h
 #define mozilla_net_WebSocketChannelChild_h
 
+#include "mozilla/net/NeckoTargetHolder.h"
 #include "mozilla/net/PWebSocketChild.h"
 #include "mozilla/net/BaseWebSocketChannel.h"
 #include "nsString.h"
@@ -19,7 +20,8 @@ class ChannelEvent;
 class ChannelEventQueue;
 
 class WebSocketChannelChild final : public BaseWebSocketChannel,
-                                    public PWebSocketChild
+                                    public PWebSocketChild,
+                                    public NeckoTargetHolder
 {
  public:
   explicit WebSocketChannelChild(bool aSecure);
@@ -63,12 +65,15 @@ class WebSocketChannelChild final : public BaseWebSocketChannel,
   void OnBinaryMessageAvailable(const nsCString& aMsg);
   void OnAcknowledge(const uint32_t& aSize);
   void OnServerClose(const uint16_t& aCode, const nsCString& aReason);
-  void AsyncOpenFailed();  
+  void AsyncOpenFailed();
 
   void DispatchToTargetThread(ChannelEvent *aChannelEvent);
   bool IsOnTargetThread();
 
   void MaybeReleaseIPCObject();
+
+  // This function tries to get a labeled event target for |mNeckoTarget|.
+  void SetupNeckoTarget();
 
   RefPtr<ChannelEventQueue> mEventQ;
   nsString mEffectiveURL;

@@ -32,6 +32,7 @@
 #include "mozilla/net/RtspChannelChild.h"
 #endif
 #include "SerializedLoadContext.h"
+#include "nsGlobalWindow.h"
 #include "nsIOService.h"
 #include "nsINetworkPredictor.h"
 #include "nsINetworkPredictorVerifier.h"
@@ -208,8 +209,18 @@ NeckoChild::DeallocPWebSocketChild(PWebSocketChild* child)
 PWebSocketEventListenerChild*
 NeckoChild::AllocPWebSocketEventListenerChild(const uint64_t& aInnerWindowID)
 {
+  nsCOMPtr<nsIEventTarget> target;
+  if (nsGlobalWindow* win = nsGlobalWindow::GetInnerWindowWithId(aInnerWindowID)) {
+    target = win->EventTargetFor(TaskCategory::Other);
+  }
+
   RefPtr<WebSocketEventListenerChild> c =
-    new WebSocketEventListenerChild(aInnerWindowID);
+    new WebSocketEventListenerChild(aInnerWindowID, target);
+
+  if (target) {
+    gNeckoChild->SetEventTargetForActor(c, target);
+  }
+
   return c.forget().take();
 }
 

@@ -313,9 +313,8 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIf)
  */
 function isAccessible(aAccOrElmOrID, aInterfaces)
 {
-  return getAccessible(aAccOrElmOrID, aInterfaces, null,
-                       DONOTFAIL_IF_NO_ACC | DONOTFAIL_IF_NO_INTERFACE) ?
-    true : false;
+  return !!getAccessible(aAccOrElmOrID, aInterfaces, null,
+                         DONOTFAIL_IF_NO_ACC | DONOTFAIL_IF_NO_INTERFACE);
 }
 
 /**
@@ -584,7 +583,7 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags)
 function isAccessibleInCache(aNodeOrId)
 {
   var node = getNode(aNodeOrId);
-  return gAccService.getAccessibleFromCache(node) ? true : false;
+  return !!gAccService.getAccessibleFromCache(node);
 }
 
 /**
