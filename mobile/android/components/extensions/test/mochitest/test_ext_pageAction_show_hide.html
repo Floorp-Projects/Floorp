@@ -1,0 +1,142 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>PageAction Test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+var {ContentTaskUtils} = SpecialPowers.Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
+var {PageActions} = SpecialPowers.Cu.import("resource://gre/modules/PageActions.jsm", {});
+
+let dataURI = "iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAC4klEQVRYhdWXLWzbQBSADQtDAwsHC1tUhUxqfL67lk2tdn+OJg0ODU0rLByqgqINBY6tmlbn7LMTJ5FaFVVBk1G0oUGjG2jT2Y7jxmmcbU/6iJ+f36fz+e5sGP9riCGm9hB37RG+scd4Yo/wsDXCZyIE2xuXsce4bY+wXkAsQtzYmExrfFgvkJkRbkzo1ehoxx5iXcgI/9iYUGt8WH9MqDXEcmNChmEYrRCf2SHWeYgQx3x0tLNRIeKQLTtEFyJEep4NTuhk8BC+yMrwEE3+iozo42d8gK7FAOkMsRiiN8QhW2ttSK5QTfRRV4QoymVeJMvPvDp7gCZigD613MN6yRFA3SWarow9QB9LCfG+NeF9qCtjAKOSQjCqVKhfVsiHEQ+grgx/lRGqUihAc1uL8EFD+KCRO+GrF4J61phcoRoPoEzkYhZYpykh5sMb7kOdIeY+jHKur4QI4Feh4AFX1nVeLxrAvQchGsBz5ls6wa2QdwcvIcE2863bTH79KOvsz/uUYJsp+J0pSzNlDckVqqVGUAF+n6uS7txcOl6wot4JVy70ufDLy4pWLUQVPE81pRI0mGe9oxLMHSeohHvMs/STUNaUK6vDPCvOyxMFDx4achehRDJmHnydnkPww5OFfLxrGIZBFDyYl4LpMzlTQFIP6AQx86w2UeYBccFpJrcKv5L9eGDtUAU6RIELqsB74uynjy/UBRF1gS5BTFxwQT1wTiXoUg9MH7m/3NZRRoi5IJytUbMgzv4Wc832+oQkiKgEehmyMkkpKsFkQV11QsRJL5rJYBLItQgRaUZEmnoZXsomz3vGiWw+I9KMF9SVFOqZEemZekli1jN3U/UOqhHHvC6oWWGElhfSpGdOk6+O9prdwvtLj5BjRsQxdRnot+Zeifpy/2/0stktKTRNLmbk0mwXyl8253fyojj+8rxOHNAhjjm5n0/5OOCGOKBzkrMO0Z75lvSAzKlrF32Z/3z8BqLAn+yMV7VhAAAAAElFTkSuQmCC";
+
+let image = atob(dataURI);
+const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte => byte.charCodeAt(0)).buffer;
+
+add_task(async function test_pageAction() {
+  async function background() {
+    let tabCreatedPromise = new Promise(resolve => {
+      let onTabCreated = tab => {
+        browser.tabs.onCreated.removeListener(onTabCreated);
+        resolve();
+      };
+      browser.tabs.onCreated.addListener(onTabCreated);
+    });
+
+    async function createNewTab(url) {
+      let [tab] = await Promise.all([
+        browser.tabs.create({url}),
+        tabCreatedPromise,
+      ]);
+      return tab;
+    }
+
+    let tab1 = await createNewTab("about:blank");
+    let tab2 = await createNewTab("about:blank");
+
+    browser.test.onMessage.addListener(async (msg, data) => {
+      if (msg === "select-tab") {
+        await browser.tabs.update(data, {active: true});
+        browser.test.sendMessage("tab-selected");
+      } else if (msg === "pageAction-show") {
+        browser.pageAction.show(data).then(() => {
+          browser.test.sendMessage("page-action-shown");
+        });
+      } else if (msg === "pageAction-hide") {
+        browser.pageAction.hide(data).then(() => {
+          browser.test.sendMessage("page-action-hidden");
+        });
+      } else if (msg === "finish") {
+        await browser.tabs.remove([tab1.id, tab2.id]);
+        browser.test.notifyPass("pageAction");
+      }
+    });
+
+    browser.pageAction.onClicked.addListener(tab => {
+      browser.test.sendMessage("page-action-clicked", tab);
+    });
+
+    browser.test.sendMessage("tabs", {tab1, tab2});
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      "name": "PageAction Extension",
+      "page_action": {
+        "default_title": "Page Action",
+        "default_icon": {
+          "18": "extension.png",
+        },
+      },
+      "applications": {
+        "gecko": {
+          "id": "foo@bar.com",
+        },
+      },
+    },
+    files: {
+      "extension.png": IMAGE_ARRAYBUFFER,
+    },
+  });
+
+  await extension.startup();
+
+  async function checkTab(tabId, uuid, showAfterSelecting) {
+    ok(!PageActions.isShown(uuid), "The PageAction should not be shown");
+
+    if (showAfterSelecting) {
+      extension.sendMessage("select-tab", tabId);
+      await extension.awaitMessage("tab-selected");
+      ok(!PageActions.isShown(uuid), "The PageAction should still not be shown");
+      extension.sendMessage("pageAction-show", tabId);
+      await extension.awaitMessage("page-action-shown");
+      ok(PageActions.isShown(uuid), "The PageAction should be shown");
+    } else {
+      extension.sendMessage("pageAction-show", tabId);
+      await extension.awaitMessage("page-action-shown");
+      ok(!PageActions.isShown(uuid), "The PageAction should still not be shown");
+      extension.sendMessage("select-tab", tabId);
+      await extension.awaitMessage("tab-selected");
+      // Wait until the page action is shown.
+      await ContentTaskUtils.waitForCondition(() => PageActions.isShown(uuid));
+    }
+
+    PageActions.synthesizeClick(uuid);
+    const clickedTab = await extension.awaitMessage("page-action-clicked");
+    is(clickedTab.id, tabId, "Got the expected tab id in the pageAction.onClicked event");
+
+    ok(PageActions.isShown(uuid), "The PageAction should be shown");
+    extension.sendMessage("pageAction-hide", tabId);
+    await extension.awaitMessage("page-action-hidden");
+  }
+
+  const tabs = await extension.awaitMessage("tabs");
+  const uuid = `{${extension.uuid}}`;
+
+  await checkTab(tabs.tab1.id, uuid, true /* showAfterSelecting */);
+  await checkTab(tabs.tab2.id, uuid, false /* showAfterSelecting */);
+
+  // Show the page action for the active tab.
+  extension.sendMessage("pageAction-show", tabs.tab2.id);
+  await extension.awaitMessage("page-action-shown");
+  ok(PageActions.isShown(uuid), "The PageAction should be shown");
+
+  extension.sendMessage("finish");
+  await extension.awaitFinish("pageAction");
+
+  await extension.unload();
+  ok(!PageActions.isShown(uuid), "The PageAction should be removed after unload");
+});
+</script>
+
+</body>
+</html>
