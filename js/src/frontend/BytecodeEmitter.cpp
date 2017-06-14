@@ -7239,8 +7239,10 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
         allowSelfHostedIter = true;
     }
 
-    // Evaluate the expression being iterated.
-    if (!emitTree(forHeadExpr))                           // ITERABLE
+    // Evaluate the expression being iterated. The forHeadExpr should use a
+    // distinct TDZCheckCache to evaluate since (abstractly) it runs in its own
+    // LexicalEnvironment.
+    if (!emitTreeInBranch(forHeadExpr))                   // ITERABLE
         return false;
     if (iterKind == IteratorKind::Async) {
         if (!emitAsyncIterator())                         // ITER
@@ -7439,7 +7441,7 @@ BytecodeEmitter::emitForIn(ParseNode* forInLoop, EmitterScope* headLexicalEmitte
 
     // Evaluate the expression being iterated.
     ParseNode* expr = forInHead->pn_kid3;
-    if (!emitTree(expr))                                  // EXPR
+    if (!emitTreeInBranch(expr))                          // EXPR
         return false;
 
     // Convert the value to the appropriate sort of iterator object for the
