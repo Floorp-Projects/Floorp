@@ -11,12 +11,13 @@
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_AUDIO_BUFFER_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_AUDIO_BUFFER_H_
 
-#include "webrtc/base/scoped_ptr.h"
+#include <memory>
+#include <vector>
+
 #include "webrtc/common_audio/channel_buffer.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/modules/audio_processing/splitting_filter.h"
 #include "webrtc/modules/include/module_common_types.h"
-#include "webrtc/system_wrappers/include/scoped_vector.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -122,6 +123,8 @@ class AudioBuffer {
   void MergeFrequencyBands();
 
  private:
+  FRIEND_TEST_ALL_PREFIXES(AudioBufferTest,
+                           SetNumChannelsSetsChannelBuffersNumChannels);
   // Called from DeinterleaveFrom() and CopyFrom().
   void InitForNewData();
 
@@ -146,16 +149,16 @@ class AudioBuffer {
   AudioFrame::VADActivity activity_;
 
   const float* keyboard_data_;
-  rtc::scoped_ptr<IFChannelBuffer> data_;
-  rtc::scoped_ptr<IFChannelBuffer> split_data_;
-  rtc::scoped_ptr<SplittingFilter> splitting_filter_;
-  rtc::scoped_ptr<ChannelBuffer<int16_t> > mixed_low_pass_channels_;
-  rtc::scoped_ptr<ChannelBuffer<int16_t> > low_pass_reference_channels_;
-  rtc::scoped_ptr<IFChannelBuffer> input_buffer_;
-  rtc::scoped_ptr<IFChannelBuffer> output_buffer_;
-  rtc::scoped_ptr<ChannelBuffer<float> > process_buffer_;
-  ScopedVector<PushSincResampler> input_resamplers_;
-  ScopedVector<PushSincResampler> output_resamplers_;
+  std::unique_ptr<IFChannelBuffer> data_;
+  std::unique_ptr<IFChannelBuffer> split_data_;
+  std::unique_ptr<SplittingFilter> splitting_filter_;
+  std::unique_ptr<ChannelBuffer<int16_t> > mixed_low_pass_channels_;
+  std::unique_ptr<ChannelBuffer<int16_t> > low_pass_reference_channels_;
+  std::unique_ptr<IFChannelBuffer> input_buffer_;
+  std::unique_ptr<IFChannelBuffer> output_buffer_;
+  std::unique_ptr<ChannelBuffer<float> > process_buffer_;
+  std::vector<std::unique_ptr<PushSincResampler>> input_resamplers_;
+  std::vector<std::unique_ptr<PushSincResampler>> output_resamplers_;
 };
 
 }  // namespace webrtc

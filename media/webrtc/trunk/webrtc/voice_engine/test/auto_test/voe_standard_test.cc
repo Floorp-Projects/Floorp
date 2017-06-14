@@ -14,8 +14,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "webrtc/engine_configurations.h"
 #include "webrtc/system_wrappers/include/event_wrapper.h"
+#include "webrtc/typedefs.h"
 #include "webrtc/voice_engine/include/voe_neteq_stats.h"
 #include "webrtc/voice_engine/test/auto_test/automated_mode.h"
 #include "webrtc/voice_engine/test/auto_test/voe_cpu_test.h"
@@ -42,8 +42,6 @@ void SubAPIManager::DisplayStatus() const {
     TEST_LOG("  Base\n");
   if (_codec)
     TEST_LOG("  Codec\n");
-  if (_dtmf)
-    TEST_LOG("  Dtmf\n");
   if (_externalMedia)
     TEST_LOG("  ExternalMedia\n");
   if (_file)
@@ -68,8 +66,6 @@ void SubAPIManager::DisplayStatus() const {
     TEST_LOG("  Base\n");
   if (!_codec)
     TEST_LOG("  Codec\n");
-  if (!_dtmf)
-    TEST_LOG("  Dtmf\n");
   if (!_externalMedia)
     TEST_LOG("  ExternamMedia\n");
   if (!_file)
@@ -96,14 +92,11 @@ VoETestManager::VoETestManager()
       voice_engine_(NULL),
       voe_base_(0),
       voe_codec_(0),
-      voe_dtmf_(0),
       voe_xmedia_(0),
       voe_file_(0),
       voe_hardware_(0),
       voe_network_(0),
-#ifdef WEBRTC_VOICE_ENGINE_NETEQ_STATS_API
       voe_neteq_stats_(NULL),
-#endif
       voe_rtp_rtcp_(0),
       voe_vsync_(0),
       voe_volume_control_(0),
@@ -131,7 +124,6 @@ void VoETestManager::GetInterfaces() {
     voe_base_ = VoEBase::GetInterface(voice_engine_);
     voe_codec_ = VoECodec::GetInterface(voice_engine_);
     voe_volume_control_ = VoEVolumeControl::GetInterface(voice_engine_);
-    voe_dtmf_ = VoEDtmf::GetInterface(voice_engine_);
     voe_rtp_rtcp_ = VoERTP_RTCP::GetInterface(voice_engine_);
     voe_apm_ = VoEAudioProcessing::GetInterface(voice_engine_);
     voe_network_ = VoENetwork::GetInterface(voice_engine_);
@@ -154,9 +146,7 @@ void VoETestManager::GetInterfaces() {
 #ifdef _TEST_XMEDIA_
     voe_xmedia_ = VoEExternalMedia::GetInterface(voice_engine_);
 #endif
-#ifdef WEBRTC_VOICE_ENGINE_NETEQ_STATS_API
     voe_neteq_stats_ = VoENetEqStats::GetInterface(voice_engine_);
-#endif
   }
 }
 
@@ -174,10 +164,6 @@ int VoETestManager::ReleaseInterfaces() {
   if (voe_volume_control_) {
     voe_volume_control_->Release();
     voe_volume_control_ = NULL;
-  }
-  if (voe_dtmf_) {
-    voe_dtmf_->Release();
-    voe_dtmf_ = NULL;
   }
   if (voe_rtp_rtcp_) {
     voe_rtp_rtcp_->Release();
@@ -211,12 +197,10 @@ int VoETestManager::ReleaseInterfaces() {
     voe_xmedia_ = NULL;
   }
 #endif
-#ifdef WEBRTC_VOICE_ENGINE_NETEQ_STATS_API
   if (voe_neteq_stats_) {
     voe_neteq_stats_->Release();
     voe_neteq_stats_ = NULL;
   }
-#endif
   if (false == VoiceEngine::Delete(voice_engine_)) {
     TEST_LOG("\n\nVoiceEngine::Delete() failed. \n");
     releaseOK = false;

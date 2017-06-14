@@ -48,7 +48,7 @@ public:
   // user's settings
   virtual bool HonorPrintBackgroundSettings() override { return false; }
 
-  void PaintHeaderFooter(nsRenderingContext& aRenderingContext,
+  void PaintHeaderFooter(gfxContext& aRenderingContext,
                          nsPoint aPt, bool aSubpixelAA);
 
 protected:
@@ -60,13 +60,13 @@ protected:
     eFooter
   } nsHeaderFooterEnum;
 
-  nscoord GetXPosition(nsRenderingContext& aRenderingContext,
+  nscoord GetXPosition(gfxContext&          aRenderingContext,
                        nsFontMetrics&       aFontMetrics,
                        const nsRect&        aRect, 
                        int32_t              aJust,
                        const nsString&      aStr);
 
-  void DrawHeaderFooter(nsRenderingContext& aRenderingContext,
+  void DrawHeaderFooter(gfxContext&          aRenderingContext,
                         nsFontMetrics&       aFontMetrics,
                         nsHeaderFooterEnum   aHeaderFooter,
                         int32_t              aJust,
@@ -76,7 +76,7 @@ protected:
                         nscoord              aAscent,
                         nscoord              aWidth);
 
-  void DrawHeaderFooter(nsRenderingContext& aRenderingContext,
+  void DrawHeaderFooter(gfxContext&          aRenderingContext,
                         nsFontMetrics&       aFontMetrics,
                         nsHeaderFooterEnum   aHeaderFooter,
                         const nsString&      aStrLeft,

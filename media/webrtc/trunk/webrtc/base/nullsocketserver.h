@@ -12,48 +12,25 @@
 #define WEBRTC_BASE_NULLSOCKETSERVER_H_
 
 #include "webrtc/base/event.h"
-#include "webrtc/base/physicalsocketserver.h"
+#include "webrtc/base/socketserver.h"
 
 namespace rtc {
 
-// NullSocketServer
-
-class NullSocketServer : public rtc::SocketServer {
+class NullSocketServer : public SocketServer {
  public:
-  NullSocketServer() : event_(false, false) {}
+  NullSocketServer();
+  ~NullSocketServer() override;
 
-  virtual bool Wait(int cms, bool process_io) {
-    event_.Wait(cms);
-    return true;
-  }
+  bool Wait(int cms, bool process_io) override;
+  void WakeUp() override;
 
-  virtual void WakeUp() {
-    event_.Set();
-  }
-
-  virtual rtc::Socket* CreateSocket(int type) {
-    ASSERT(false);
-    return NULL;
-  }
-
-  virtual rtc::Socket* CreateSocket(int family, int type) {
-    ASSERT(false);
-    return NULL;
-  }
-
-  virtual rtc::AsyncSocket* CreateAsyncSocket(int type) {
-    ASSERT(false);
-    return NULL;
-  }
-
-  virtual rtc::AsyncSocket* CreateAsyncSocket(int family, int type) {
-    ASSERT(false);
-    return NULL;
-  }
-
+  Socket* CreateSocket(int type) override;
+  Socket* CreateSocket(int family, int type) override;
+  AsyncSocket* CreateAsyncSocket(int type) override;
+  AsyncSocket* CreateAsyncSocket(int family, int type) override;
 
  private:
-  rtc::Event event_;
+  Event event_;
 };
 
 }  // namespace rtc

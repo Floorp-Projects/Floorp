@@ -162,9 +162,9 @@ static void FindInvArSpec(const int16_t* ARCoefQ12,
   }
 
   for (k = 0; k < FRAMESAMPLES / 8; k++) {
-    CurveQ16[FRAMESAMPLES_QUARTER - 1 - k] = CurveQ16[k] -
-        (diffQ16[k] << shftVal);
-    CurveQ16[k] += diffQ16[k] << shftVal;
+    int32_t diff_q16_shifted = (int32_t)((uint32_t)(diffQ16[k]) << shftVal);
+    CurveQ16[FRAMESAMPLES_QUARTER - 1 - k] = CurveQ16[k] - diff_q16_shifted;
+    CurveQ16[k] += diff_q16_shifted;
   }
 }
 
@@ -182,13 +182,13 @@ static void GenerateDitherQ7Lb(int16_t* bufQ7, uint32_t seed,
 
       /* Fixed-point dither sample between -64 and 64 (Q7). */
       /* dither = seed * 128 / 4294967295 */
-      dither1_Q7 = (int16_t)(((int)seed + 16777216) >> 25);
+      dither1_Q7 = (int16_t)(((int32_t)(seed + 16777216)) >> 25);
 
       /* New random unsigned int. */
       seed = (seed * 196314165) + 907633515;
 
       /* Fixed-point dither sample between -64 and 64. */
-      dither2_Q7 = (int16_t)(((int)seed + 16777216) >> 25);
+      dither2_Q7 = (int16_t)(((int32_t)(seed + 16777216)) >> 25);
 
       shft = (seed >> 25) & 15;
       if (shft < 5) {
@@ -214,7 +214,7 @@ static void GenerateDitherQ7Lb(int16_t* bufQ7, uint32_t seed,
       seed = (seed * 196314165) + 907633515;
 
       /* Fixed-point dither sample between -64 and 64. */
-      dither1_Q7 = (int16_t)(((int)seed + 16777216) >> 25);
+      dither1_Q7 = (int16_t)(((int32_t)(seed + 16777216)) >> 25);
 
       /* Dither sample is placed in either even or odd index. */
       shft = (seed >> 25) & 1;     /* Either 0 or 1 */
@@ -254,7 +254,7 @@ static void GenerateDitherQ7LbUB(
 
     /* Fixed-point dither sample between -64 and 64 (Q7). */
     /* bufQ7 = seed * 128 / 4294967295 */
-    bufQ7[k] = (int16_t)(((int)seed + 16777216) >> 25);
+    bufQ7[k] = (int16_t)(((int32_t)(seed + 16777216)) >> 25);
 
     /* Scale by 0.35. */
     bufQ7[k] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(bufQ7[k], 2048, 13);

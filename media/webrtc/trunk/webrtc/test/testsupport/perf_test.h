@@ -15,6 +15,7 @@
 #ifndef WEBRTC_TEST_TESTSUPPORT_PERF_TEST_H_
 #define WEBRTC_TEST_TESTSUPPORT_PERF_TEST_H_
 
+#include <sstream>
 #include <string>
 
 namespace webrtc {
@@ -115,6 +116,23 @@ void PrintSystemCommitCharge(FILE* target,
 std::string SystemCommitChargeToString(const std::string& test_name,
                                        size_t charge,
                                        bool important);
+
+// Converts list of values into comma-separated string for PrintResultList.
+template <typename Container>
+std::string ValuesToString(const Container& container) {
+  if (container.empty())
+    return "";
+
+  std::stringstream ss;
+  auto it = container.begin();
+  while (true) {
+    ss << *it;
+    if (++it == container.end())
+      break;
+    ss << ',';
+  }
+  return ss.str();
+}
 
 }  // namespace test
 }  // namespace webrtc

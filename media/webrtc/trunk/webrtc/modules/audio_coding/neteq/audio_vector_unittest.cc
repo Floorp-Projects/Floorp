@@ -15,7 +15,7 @@
 
 #include <string>
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -80,14 +80,6 @@ TEST_F(AudioVectorTest, PushBackAndCopy) {
   // Now copy the empty vector and verify that the copy becomes empty too.
   vec.CopyTo(&vec_copy);
   EXPECT_TRUE(vec_copy.Empty());
-}
-
-// Try to copy to a NULL pointer. Nothing should happen.
-TEST_F(AudioVectorTest, CopyToNull) {
-  AudioVector vec;
-  AudioVector* vec_copy = NULL;
-  vec.PushBack(array_, array_length());
-  vec.CopyTo(vec_copy);
 }
 
 // Test the PushBack method with another AudioVector as input argument.

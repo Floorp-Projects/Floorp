@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include <memory>
 
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/remote_bitrate_estimator/inter_arrival.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 namespace testing {
@@ -33,6 +33,8 @@ const double kAstToMs = 1000.0 / static_cast<double>(1 << kInterArrivalShift);
 class InterArrivalTest : public ::testing::Test {
  protected:
   virtual void SetUp() {
+    inter_arrival_.reset(
+        new InterArrival(kTimestampGroupLengthUs / 1000, 1.0, true));
     inter_arrival_rtp_.reset(new InterArrival(
         MakeRtpTimestamp(kTimestampGroupLengthUs),
         kRtpTimestampToMs,
@@ -148,6 +150,8 @@ class InterArrivalTest : public ::testing::Test {
                timestamp_near);
   }
 
+  std::unique_ptr<InterArrival> inter_arrival_;
+
  private:
   static uint32_t MakeRtpTimestamp(int64_t us) {
     return static_cast<uint32_t>(static_cast<uint64_t>(us * 90 + 500) / 1000);
@@ -165,12 +169,9 @@ class InterArrivalTest : public ::testing::Test {
     uint32_t dummy_timestamp = 101;
     int64_t dummy_arrival_time_ms = 303;
     int dummy_packet_size = 909;
-    bool computed = inter_arrival->ComputeDeltas(timestamp,
-                                                 arrival_time_ms,
-                                                 packet_size,
-                                                 &dummy_timestamp,
-                                                 &dummy_arrival_time_ms,
-                                                 &dummy_packet_size);
+    bool computed = inter_arrival->ComputeDeltas(
+        timestamp, arrival_time_ms, arrival_time_ms, packet_size,
+        &dummy_timestamp, &dummy_arrival_time_ms, &dummy_packet_size);
     EXPECT_EQ(computed, false);
     EXPECT_EQ(101ul, dummy_timestamp);
     EXPECT_EQ(303, dummy_arrival_time_ms);
@@ -187,20 +188,17 @@ class InterArrivalTest : public ::testing::Test {
     uint32_t delta_timestamp = 101;
     int64_t delta_arrival_time_ms = 303;
     int delta_packet_size = 909;
-    bool computed = inter_arrival->ComputeDeltas(timestamp,
-                                                 arrival_time_ms,
-                                                 packet_size,
-                                                 &delta_timestamp,
-                                                 &delta_arrival_time_ms,
-                                                 &delta_packet_size);
+    bool computed = inter_arrival->ComputeDeltas(
+        timestamp, arrival_time_ms, arrival_time_ms, packet_size,
+        &delta_timestamp, &delta_arrival_time_ms, &delta_packet_size);
     EXPECT_EQ(true, computed);
     EXPECT_NEAR(expected_timestamp_delta, delta_timestamp, timestamp_near);
     EXPECT_EQ(expected_arrival_time_delta_ms, delta_arrival_time_ms);
     EXPECT_EQ(expected_packet_size_delta, delta_packet_size);
   }
 
-  rtc::scoped_ptr<InterArrival> inter_arrival_rtp_;
-  rtc::scoped_ptr<InterArrival> inter_arrival_ast_;
+  std::unique_ptr<InterArrival> inter_arrival_rtp_;
+  std::unique_ptr<InterArrival> inter_arrival_ast_;
 };
 
 TEST_F(InterArrivalTest, FirstPacket) {
@@ -417,6 +415,122 @@ TEST_F(InterArrivalTest, RtpTimestampWrapOutOfOrderWithinGroup) {
 
 TEST_F(InterArrivalTest, AbsSendTimeWrapOutOfOrderWithinGroup) {
   WrapTestHelper(kStartAbsSendTimeWrapUs, 1, true);
+}
+
+TEST_F(InterArrivalTest, PositiveArrivalTimeJump) {
+  const size_t kPacketSize = 1000;
+  uint32_t send_time_ms = 10000;
+  int64_t arrival_time_ms = 20000;
+  int64_t system_time_ms = 30000;
+
+  uint32_t send_delta;
+  int64_t arrival_delta;
+  int size_delta;
+  EXPECT_FALSE(inter_arrival_->ComputeDeltas(
+      send_time_ms, arrival_time_ms, system_time_ms, kPacketSize, &send_delta,
+      &arrival_delta, &size_delta));
+
+  const int kTimeDeltaMs = 30;
+  send_time_ms += kTimeDeltaMs;
+  arrival_time_ms += kTimeDeltaMs;
+  system_time_ms += kTimeDeltaMs;
+  EXPECT_FALSE(inter_arrival_->ComputeDeltas(
+      send_time_ms, arrival_time_ms, system_time_ms, kPacketSize, &send_delta,
+      &arrival_delta, &size_delta));
+
+  send_time_ms += kTimeDeltaMs;
+  arrival_time_ms += kTimeDeltaMs + InterArrival::kArrivalTimeOffsetThresholdMs;
+  system_time_ms += kTimeDeltaMs;
+  EXPECT_TRUE(inter_arrival_->ComputeDeltas(
+      send_time_ms, arrival_time_ms, system_time_ms, kPacketSize, &send_delta,
+      &arrival_delta, &size_delta));
+  EXPECT_EQ(kTimeDeltaMs, static_cast<int>(send_delta));
+  EXPECT_EQ(kTimeDeltaMs, arrival_delta);
+  EXPECT_EQ(size_delta, 0);
+
+  send_time_ms += kTimeDeltaMs;
+  arrival_time_ms += kTimeDeltaMs;
+  system_time_ms += kTimeDeltaMs;
+  // The previous arrival time jump should now be detected and cause a reset.
+  EXPECT_FALSE(inter_arrival_->ComputeDeltas(
+      send_time_ms, arrival_time_ms, system_time_ms, kPacketSize, &send_delta,
+      &arrival_delta, &size_delta));
+
+  // The two next packets will not give a valid delta since we're in the initial
+  // state.
+  for (int i = 0; i < 2; ++i) {
+    send_time_ms += kTimeDeltaMs;
+    arrival_time_ms += kTimeDeltaMs;
+    system_time_ms += kTimeDeltaMs;
+    EXPECT_FALSE(inter_arrival_->ComputeDeltas(
+        send_time_ms, arrival_time_ms, system_time_ms, kPacketSize, &send_delta,
+        &arrival_delta, &size_delta));
+  }
+
+  send_time_ms += kTimeDeltaMs;
+  arrival_time_ms += kTimeDeltaMs;
+  system_time_ms += kTimeDeltaMs;
+  EXPECT_TRUE(inter_arrival_->ComputeDeltas(
+      send_time_ms, arrival_time_ms, system_time_ms, kPacketSize, &send_delta,
+      &arrival_delta, &size_delta));
+  EXPECT_EQ(kTimeDeltaMs, static_cast<int>(send_delta));
+  EXPECT_EQ(kTimeDeltaMs, arrival_delta);
+  EXPECT_EQ(size_delta, 0);
+}
+
+TEST_F(InterArrivalTest, NegativeArrivalTimeJump) {
+  const size_t kPacketSize = 1000;
+  uint32_t send_time_ms = 10000;
+  int64_t arrival_time_ms = 20000;
+  int64_t system_time_ms = 30000;
+
+  uint32_t send_delta;
+  int64_t arrival_delta;
+  int size_delta;
+  EXPECT_FALSE(inter_arrival_->ComputeDeltas(
+      send_time_ms, arrival_time_ms, system_time_ms, kPacketSize, &send_delta,
+      &arrival_delta, &size_delta));
+
+  const int kTimeDeltaMs = 30;
+  send_time_ms += kTimeDeltaMs;
+  arrival_time_ms += kTimeDeltaMs;
+  system_time_ms += kTimeDeltaMs;
+  EXPECT_FALSE(inter_arrival_->ComputeDeltas(
+      send_time_ms, arrival_time_ms, system_time_ms, kPacketSize, &send_delta,
+      &arrival_delta, &size_delta));
+
+  send_time_ms += kTimeDeltaMs;
+  arrival_time_ms += kTimeDeltaMs;
+  system_time_ms += kTimeDeltaMs;
+  EXPECT_TRUE(inter_arrival_->ComputeDeltas(
+      send_time_ms, arrival_time_ms, system_time_ms, kPacketSize, &send_delta,
+      &arrival_delta, &size_delta));
+  EXPECT_EQ(kTimeDeltaMs, static_cast<int>(send_delta));
+  EXPECT_EQ(kTimeDeltaMs, arrival_delta);
+  EXPECT_EQ(size_delta, 0);
+
+  // Three out of order will fail, after that we will be reset and two more will
+  // fail before we get our first valid delta after the reset.
+  arrival_time_ms -= 1000;
+  for (int i = 0; i < InterArrival::kReorderedResetThreshold + 3; ++i) {
+    send_time_ms += kTimeDeltaMs;
+    arrival_time_ms += kTimeDeltaMs;
+    system_time_ms += kTimeDeltaMs;
+    // The previous arrival time jump should now be detected and cause a reset.
+    EXPECT_FALSE(inter_arrival_->ComputeDeltas(
+        send_time_ms, arrival_time_ms, system_time_ms, kPacketSize, &send_delta,
+        &arrival_delta, &size_delta));
+  }
+
+  send_time_ms += kTimeDeltaMs;
+  arrival_time_ms += kTimeDeltaMs;
+  system_time_ms += kTimeDeltaMs;
+  EXPECT_TRUE(inter_arrival_->ComputeDeltas(
+      send_time_ms, arrival_time_ms, system_time_ms, kPacketSize, &send_delta,
+      &arrival_delta, &size_delta));
+  EXPECT_EQ(kTimeDeltaMs, static_cast<int>(send_delta));
+  EXPECT_EQ(kTimeDeltaMs, arrival_delta);
+  EXPECT_EQ(size_delta, 0);
 }
 }  // namespace testing
 }  // namespace webrtc

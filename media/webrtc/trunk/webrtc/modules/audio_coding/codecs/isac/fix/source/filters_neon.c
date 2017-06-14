@@ -9,8 +9,8 @@
  */
 
 #include <arm_neon.h>
-#include <assert.h>
 
+#include "webrtc/base/checks.h"
 #include "webrtc/modules/audio_coding/codecs/isac/fix/source/codec.h"
 
 // Autocorrelation function in fixed point.
@@ -26,8 +26,8 @@ int WebRtcIsacfix_AutocorrNeon(int32_t* __restrict r,
   int64_t prod = 0;
   int64_t prod_tail = 0;
 
-  assert(n % 4 == 0);
-  assert(n >= 8);
+  RTC_DCHECK_EQ(0, n % 4);
+  RTC_DCHECK_GE(n, 8);
 
   // Calculate r[0].
   int16x4_t x0_v;

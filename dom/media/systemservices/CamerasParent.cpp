@@ -254,8 +254,8 @@ CamerasParent::GetBuffer(size_t aSize)
   return mShmemPool.GetIfAvailable(aSize);
 }
 
-int32_t
-CallbackHelper::RenderFrame(uint32_t aStreamId, const webrtc::VideoFrame& aVideoFrame)
+void
+CallbackHelper::OnFrame(const webrtc::VideoFrame& aVideoFrame)
 {
   LOG_VERBOSE((__PRETTY_FUNCTION__));
   RefPtr<DeliverFrameRunnable> runnable = nullptr;
@@ -284,20 +284,6 @@ CallbackHelper::RenderFrame(uint32_t aStreamId, const webrtc::VideoFrame& aVideo
   nsIEventTarget* target = mParent->GetBackgroundEventTarget();
   MOZ_ASSERT(target != nullptr);
   target->Dispatch(runnable, NS_DISPATCH_NORMAL);
-  return 0;
-}
-
-void
-CallbackHelper::OnIncomingCapturedFrame(const int32_t id, const webrtc::VideoFrame& aVideoFrame)
-{
- LOG_VERBOSE((__PRETTY_FUNCTION__));
- RenderFrame(id,aVideoFrame);
-}
-
-void
-CallbackHelper::OnCaptureDelayChanged(const int32_t id, const int32_t delay)
-{
-  LOG((__PRETTY_FUNCTION__));
 }
 
 mozilla::ipc::IPCResult
@@ -718,11 +704,7 @@ CamerasParent::RecvAllocateCaptureDevice(const CaptureEngine& aCapEngine,
           engine->CreateVideoCapture(numdev, unique_id.get());
           engine->WithEntry(numdev, [&error](VideoEngine::CaptureEntry& cap) {
             if (cap.VideoCapture()) {
-              if (!cap.VideoRenderer()) {
-                LOG(("VideoEngine::VideoRenderer() failed"));
-              } else {
-                error = 0;
-              }
+              error = 0;
             }
           });
         }
@@ -807,22 +789,15 @@ CamerasParent::RecvStartCapture(const CaptureEngine& aCapEngine,
     media::NewRunnableFrom([self, aCapEngine, capnum, ipcCaps]() -> nsresult {
       LOG((__PRETTY_FUNCTION__));
       CallbackHelper** cbh;
-      webrtc::VideoRenderCallback* render;
       VideoEngine* engine = nullptr;
       int error = -1;
       if (self->EnsureInitialized(aCapEngine)) {
         cbh = self->mCallbacks.AppendElement(
           new CallbackHelper(static_cast<CaptureEngine>(aCapEngine), capnum, self));
-        render = static_cast<webrtc::VideoRenderCallback*>(*cbh);
 
         engine = self->mEngines[aCapEngine];
-        engine->WithEntry(capnum, [capnum, &render, &engine, &error, &ipcCaps, &cbh](VideoEngine::CaptureEntry& cap) {
-          cap.VideoRenderer()->AddIncomingRenderStream(capnum,0, 0., 0., 1., 1.);
-          error = cap.VideoRenderer()->AddExternalRenderCallback(capnum, render);
-          if (!error) {
-            error = cap.VideoRenderer()->StartRender(capnum);
-          }
-
+        engine->WithEntry(capnum, [capnum, &engine, &error, &ipcCaps, &cbh](VideoEngine::CaptureEntry& cap) {
+          error = 0;
           webrtc::VideoCaptureCapability capability;
           capability.width = ipcCaps.width();
           capability.height = ipcCaps.height();
@@ -837,7 +812,7 @@ CamerasParent::RecvStartCapture(const CaptureEngine& aCapEngine,
           }
           if (!error) {
             engine->Startup();
-            cap.VideoCapture()->RegisterCaptureDataCallback(*static_cast<webrtc::VideoCaptureDataCallback*>(*cbh));
+            cap.VideoCapture()->RegisterCaptureDataCallback(static_cast<rtc::VideoSinkInterface<webrtc::VideoFrame>*>(*cbh));
           }
         });
       }
@@ -871,9 +846,6 @@ CamerasParent::StopCapture(const CaptureEngine& aCapEngine,
         cap.VideoCapture()->StopCapture();
         cap.VideoCapture()->DeRegisterCaptureDataCallback();
       }
-      if (cap.VideoRenderer()) {
-        cap.VideoRenderer()->StopRender(capnum);
-      }
     });
     // we're removing elements, iterate backwards
     for (size_t i = mCallbacks.Length(); i > 0; i--) {
@@ -884,7 +856,6 @@ CamerasParent::StopCapture(const CaptureEngine& aCapEngine,
         break;
       }
     }
-    engine->RemoveRenderer(capnum);
     engine->Shutdown();
   }
 }

@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {classes: Cc, utils: Cu, interfaces: Ci} = Components;
+const {classes: Cc, utils: Cu, interfaces: Ci, manager: Cm} = Components;
+Cm.QueryInterface(Ci.nsIServiceManager);
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -35,7 +36,15 @@ startupRecorder.prototype = {
   record(name) {
     this.data[name] = {
       components: this.loader.loadedComponents(),
-      modules: this.loader.loadedModules()
+      modules: this.loader.loadedModules(),
+      services: Object.keys(Cc).filter(c => {
+        try {
+          Cm.isServiceInstantiatedByContractID(c, Ci.nsISupports);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      })
     };
   },
 

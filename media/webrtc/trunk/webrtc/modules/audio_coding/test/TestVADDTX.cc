@@ -12,10 +12,11 @@
 
 #include <string>
 
-#include "webrtc/engine_configurations.h"
+#include "webrtc/modules/audio_coding/codecs/audio_format_conversion.h"
 #include "webrtc/modules/audio_coding/test/PCMFile.h"
 #include "webrtc/modules/audio_coding/test/utility.h"
 #include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -73,7 +74,8 @@ TestVadDtx::TestVadDtx()
 void TestVadDtx::RegisterCodec(CodecInst codec_param) {
   // Set the codec for sending and receiving.
   EXPECT_EQ(0, acm_send_->RegisterSendCodec(codec_param));
-  EXPECT_EQ(0, acm_receive_->RegisterReceiveCodec(codec_param));
+  EXPECT_EQ(true, acm_receive_->RegisterReceiveCodec(
+                      codec_param.pltype, CodecInstToSdp(codec_param)));
   channel_->SetIsStereo(codec_param.channels > 1);
 }
 
@@ -101,14 +103,15 @@ void TestVadDtx::Run(std::string in_filename, int frequency, int channels,
   }
 
   uint16_t frame_size_samples = in_file.PayloadLength10Ms();
-  uint32_t time_stamp = 0x12345678;
   AudioFrame audio_frame;
   while (!in_file.EndOfFile()) {
     in_file.Read10MsData(audio_frame);
-    audio_frame.timestamp_ = time_stamp;
-    time_stamp += frame_size_samples;
+    audio_frame.timestamp_ = time_stamp_;
+    time_stamp_ += frame_size_samples;
     EXPECT_GE(acm_send_->Add10MsData(audio_frame), 0);
-    acm_receive_->PlayoutData10Ms(kOutputFreqHz, &audio_frame);
+    bool muted;
+    acm_receive_->PlayoutData10Ms(kOutputFreqHz, &audio_frame, &muted);
+    ASSERT_FALSE(muted);
     out_file.Write10MsData(audio_frame);
   }
 

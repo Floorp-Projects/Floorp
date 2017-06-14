@@ -198,8 +198,10 @@ TEST_P(TlsConnectGeneric, ConnectSendReceive) {
 TEST_P(TlsConnectDatagram, ShortRead) {
   Connect();
   client_->ExpectReadWriteError();
-  server_->SendData(1200, 1200);
-  client_->WaitForErrorCode(SSL_ERROR_RX_SHORT_DTLS_READ, 2000);
+  server_->SendData(50, 50);
+  client_->ReadBytes(20);
+  EXPECT_EQ(0U, client_->received_bytes());
+  EXPECT_EQ(SSL_ERROR_RX_SHORT_DTLS_READ, PORT_GetError());
 
   // Now send and receive another packet.
   server_->ResetSentBytes();  // Reset the counter.
@@ -213,13 +215,13 @@ TEST_P(TlsConnectStream, ShortRead) {
   if (version_ < SSL_LIBRARY_VERSION_TLS_1_1) return;
 
   Connect();
-  server_->SendData(1200, 1200);
+  server_->SendData(50, 50);
   // Read the first tranche.
-  WAIT_(client_->received_bytes() == 1024, 2000);
-  ASSERT_EQ(1024U, client_->received_bytes());
+  client_->ReadBytes(20);
+  ASSERT_EQ(20U, client_->received_bytes());
   // The second tranche should now immediately be available.
   client_->ReadBytes();
-  ASSERT_EQ(1200U, client_->received_bytes());
+  ASSERT_EQ(50U, client_->received_bytes());
 }
 
 TEST_P(TlsConnectGeneric, ConnectWithCompressionMaybe) {

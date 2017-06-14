@@ -19,8 +19,6 @@
 #error "Must define either WEBRTC_WIN or WEBRTC_POSIX."
 #endif
 
-#include "webrtc/base/basictypes.h"
-
 namespace rtc {
 
 class Event {

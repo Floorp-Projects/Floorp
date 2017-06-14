@@ -10,6 +10,7 @@
 
 #include "webrtc/base/networkmonitor.h"
 
+#include "webrtc/base/checks.h"
 #include "webrtc/base/common.h"
 
 namespace {
@@ -26,16 +27,16 @@ NetworkMonitorInterface::NetworkMonitorInterface() {}
 
 NetworkMonitorInterface::~NetworkMonitorInterface() {}
 
-NetworkMonitorBase::NetworkMonitorBase() : thread_(Thread::Current()) {}
+NetworkMonitorBase::NetworkMonitorBase() : worker_thread_(Thread::Current()) {}
 NetworkMonitorBase::~NetworkMonitorBase() {}
 
 void NetworkMonitorBase::OnNetworksChanged() {
   LOG(LS_VERBOSE) << "Network change is received at the network monitor";
-  thread_->Post(this, UPDATE_NETWORKS_MESSAGE);
+  worker_thread_->Post(RTC_FROM_HERE, this, UPDATE_NETWORKS_MESSAGE);
 }
 
 void NetworkMonitorBase::OnMessage(Message* msg) {
-  ASSERT(msg->message_id == UPDATE_NETWORKS_MESSAGE);
+  RTC_DCHECK(msg->message_id == UPDATE_NETWORKS_MESSAGE);
   SignalNetworksChanged();
 }
 

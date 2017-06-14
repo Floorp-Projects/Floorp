@@ -11,61 +11,25 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_UTILITY_MOVING_AVERAGE_H_
 #define WEBRTC_MODULES_VIDEO_CODING_UTILITY_MOVING_AVERAGE_H_
 
-#include <list>
+#include <vector>
 
-#include "webrtc/typedefs.h"
+#include "webrtc/base/optional.h"
 
 namespace webrtc {
-template <class T>
 class MovingAverage {
  public:
-  MovingAverage();
-  void AddSample(T sample);
-  bool GetAverage(size_t num_samples, T* average);
+  explicit MovingAverage(size_t s);
+  void AddSample(int sample);
+  rtc::Optional<int> GetAverage() const;
+  rtc::Optional<int> GetAverage(size_t num_samples) const;
   void Reset();
-  int size();
+  size_t size() const;
 
  private:
-  T sum_;
-  std::list<T> samples_;
+  size_t count_ = 0;
+  int sum_ = 0;
+  std::vector<int> sum_history_;
 };
-
-template <class T>
-MovingAverage<T>::MovingAverage()
-    : sum_(static_cast<T>(0)) {}
-
-template <class T>
-void MovingAverage<T>::AddSample(T sample) {
-  samples_.push_back(sample);
-  sum_ += sample;
-}
-
-template <class T>
-bool MovingAverage<T>::GetAverage(size_t num_samples, T* avg) {
-  if (num_samples > samples_.size())
-    return false;
-
-  // Remove old samples.
-  while (num_samples < samples_.size()) {
-    sum_ -= samples_.front();
-    samples_.pop_front();
-  }
-
-  *avg = sum_ / static_cast<T>(num_samples);
-  return true;
-}
-
-template <class T>
-void MovingAverage<T>::Reset() {
-  sum_ = static_cast<T>(0);
-  samples_.clear();
-}
-
-template <class T>
-int MovingAverage<T>::size() {
-  return samples_.size();
-}
-
 }  // namespace webrtc
 
 #endif  // WEBRTC_MODULES_VIDEO_CODING_UTILITY_MOVING_AVERAGE_H_

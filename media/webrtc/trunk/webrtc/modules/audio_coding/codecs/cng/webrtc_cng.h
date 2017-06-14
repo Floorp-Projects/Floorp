@@ -12,152 +12,88 @@
 #ifndef WEBRTC_MODULES_AUDIO_CODING_CODECS_CNG_WEBRTC_CNG_H_
 #define WEBRTC_MODULES_AUDIO_CODING_CODECS_CNG_WEBRTC_CNG_H_
 
-#include <stddef.h>
+#include <cstddef>
+
+#include "webrtc/base/array_view.h"
+#include "webrtc/base/buffer.h"
 #include "webrtc/typedefs.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define WEBRTC_CNG_MAX_LPC_ORDER 12
-#define WEBRTC_CNG_MAX_OUTSIZE_ORDER 640
 
-/* Define Error codes. */
+namespace webrtc {
 
-/* 6100 Encoder */
-#define CNG_ENCODER_NOT_INITIATED               6120
-#define CNG_DISALLOWED_LPC_ORDER                6130
-#define CNG_DISALLOWED_FRAME_SIZE               6140
-#define CNG_DISALLOWED_SAMPLING_FREQUENCY       6150
-/* 6200 Decoder */
-#define CNG_DECODER_NOT_INITIATED               6220
+class ComfortNoiseDecoder {
+ public:
+  ComfortNoiseDecoder();
+  ~ComfortNoiseDecoder() = default;
 
-typedef struct WebRtcCngEncInst CNG_enc_inst;
-typedef struct WebRtcCngDecInst CNG_dec_inst;
+  ComfortNoiseDecoder(const ComfortNoiseDecoder&) = delete;
+  ComfortNoiseDecoder& operator=(const ComfortNoiseDecoder&) = delete;
 
-/****************************************************************************
- * WebRtcCng_CreateEnc/Dec(...)
- *
- * These functions create an instance to the specified structure
- *
- * Input:
- *    - XXX_inst      : Pointer to created instance that should be created
- *
- * Return value       :  0 - Ok
- *                      -1 - Error
- */
-int16_t WebRtcCng_CreateEnc(CNG_enc_inst** cng_inst);
-int16_t WebRtcCng_CreateDec(CNG_dec_inst** cng_inst);
+  void Reset();
 
-/****************************************************************************
- * WebRtcCng_InitEnc/Dec(...)
- *
- * This function initializes a instance
- *
- * Input:
- *    - cng_inst      : Instance that should be initialized
- *
- *    - fs            : 8000 for narrowband and 16000 for wideband
- *    - interval      : generate SID data every interval ms
- *    - quality       : Number of refl. coefs, maximum allowed is 12
- *
- * Output:
- *    - cng_inst      : Initialized instance
- *
- * Return value       :  0 - Ok
- *                      -1 - Error
- */
+  // Updates the CN state when a new SID packet arrives.
+  // |sid| is a view of the SID packet without the headers.
+  void UpdateSid(rtc::ArrayView<const uint8_t> sid);
 
-int WebRtcCng_InitEnc(CNG_enc_inst* cng_inst, int fs, int16_t interval,
-                      int16_t quality);
-void WebRtcCng_InitDec(CNG_dec_inst* cng_inst);
+  // Generates comfort noise.
+  // |out_data| will be filled with samples - its size determines the number of
+  // samples generated. When |new_period| is true, CNG history will be reset
+  // before any audio is generated.  Returns |false| if outData is too large -
+  // currently 640 bytes (equalling 10ms at 64kHz).
+  // TODO(ossu): Specify better limits for the size of out_data. Either let it
+  //             be unbounded or limit to 10ms in the current sample rate.
+  bool Generate(rtc::ArrayView<int16_t> out_data, bool new_period);
 
-/****************************************************************************
- * WebRtcCng_FreeEnc/Dec(...)
- *
- * These functions frees the dynamic memory of a specified instance
- *
- * Input:
- *    - cng_inst      : Pointer to created instance that should be freed
- *
- * Return value       :  0 - Ok
- *                      -1 - Error
- */
-int16_t WebRtcCng_FreeEnc(CNG_enc_inst* cng_inst);
-int16_t WebRtcCng_FreeDec(CNG_dec_inst* cng_inst);
+ private:
+  uint32_t dec_seed_;
+  int32_t dec_target_energy_;
+  int32_t dec_used_energy_;
+  int16_t dec_target_reflCoefs_[WEBRTC_CNG_MAX_LPC_ORDER + 1];
+  int16_t dec_used_reflCoefs_[WEBRTC_CNG_MAX_LPC_ORDER + 1];
+  int16_t dec_filtstate_[WEBRTC_CNG_MAX_LPC_ORDER + 1];
+  int16_t dec_filtstateLow_[WEBRTC_CNG_MAX_LPC_ORDER + 1];
+  uint16_t dec_order_;
+  int16_t dec_target_scale_factor_;  /* Q29 */
+  int16_t dec_used_scale_factor_;  /* Q29 */
+};
 
-/****************************************************************************
- * WebRtcCng_Encode(...)
- *
- * These functions analyzes background noise
- *
- * Input:
- *    - cng_inst      : Pointer to created instance
- *    - speech        : Signal to be analyzed
- *    - nrOfSamples   : Size of speech vector
- *    - forceSID      : not zero to force SID frame and reset
- *
- * Output:
- *    - bytesOut      : Nr of bytes to transmit, might be 0
- *
- * Return value       :  0 - Ok
- *                      -1 - Error
- */
-int WebRtcCng_Encode(CNG_enc_inst* cng_inst, int16_t* speech,
-                     size_t nrOfSamples, uint8_t* SIDdata,
-                     size_t* bytesOut, int16_t forceSID);
+class ComfortNoiseEncoder {
+ public:
+  // Creates a comfort noise encoder.
+  // |fs| selects sample rate: 8000 for narrowband or 16000 for wideband.
+  // |interval| sets the interval at which to generate SID data (in ms).
+  // |quality| selects the number of refl. coeffs. Maximum allowed is 12.
+  ComfortNoiseEncoder(int fs, int interval, int quality);
+  ~ComfortNoiseEncoder() = default;
 
-/****************************************************************************
- * WebRtcCng_UpdateSid(...)
- *
- * These functions updates the CN state, when a new SID packet arrives
- *
- * Input:
- *    - cng_inst      : Pointer to created instance that should be freed
- *    - SID           : SID packet, all headers removed
- *    - length        : Length in bytes of SID packet
- *
- * Return value       :  0 - Ok
- *                      -1 - Error
- */
-int16_t WebRtcCng_UpdateSid(CNG_dec_inst* cng_inst, uint8_t* SID,
-                            size_t length);
+  ComfortNoiseEncoder(const ComfortNoiseEncoder&) = delete;
+  ComfortNoiseEncoder& operator=(const ComfortNoiseEncoder&) = delete;
 
-/****************************************************************************
- * WebRtcCng_Generate(...)
- *
- * These functions generates CN data when needed
- *
- * Input:
- *    - cng_inst      : Pointer to created instance that should be freed
- *    - outData       : pointer to area to write CN data
- *    - nrOfSamples   : How much data to generate
- *    - new_period    : >0 if a new period of CNG, will reset history
- *
- * Return value       :  0 - Ok
- *                      -1 - Error
- */
-int16_t WebRtcCng_Generate(CNG_dec_inst* cng_inst, int16_t* outData,
-                           size_t nrOfSamples, int16_t new_period);
+  // Resets the comfort noise encoder to its initial state.
+  // Parameters are set as during construction.
+  void Reset(int fs, int interval, int quality);
 
-/*****************************************************************************
- * WebRtcCng_GetErrorCodeEnc/Dec(...)
- *
- * This functions can be used to check the error code of a CNG instance. When
- * a function returns -1 a error code will be set for that instance. The
- * function below extract the code of the last error that occurred in the
- * specified instance.
- *
- * Input:
- *    - CNG_inst    : CNG enc/dec instance
- *
- * Return value     : Error code
- */
-int16_t WebRtcCng_GetErrorCodeEnc(CNG_enc_inst* cng_inst);
-int16_t WebRtcCng_GetErrorCodeDec(CNG_dec_inst* cng_inst);
+  // Analyzes background noise from |speech| and appends coefficients to
+  // |output|.  Returns the number of coefficients generated.  If |force_sid| is
+  // true, a SID frame is forced and the internal sid interval counter is reset.
+  // Will fail if the input size is too large (> 640 samples, see
+  // ComfortNoiseDecoder::Generate).
+  size_t Encode(rtc::ArrayView<const int16_t> speech,
+                bool force_sid,
+                rtc::Buffer* output);
 
-#ifdef __cplusplus
-}
-#endif
+ private:
+  size_t enc_nrOfCoefs_;
+  int enc_sampfreq_;
+  int16_t enc_interval_;
+  int16_t enc_msSinceSid_;
+  int32_t enc_Energy_;
+  int16_t enc_reflCoefs_[WEBRTC_CNG_MAX_LPC_ORDER + 1];
+  int32_t enc_corrVector_[WEBRTC_CNG_MAX_LPC_ORDER + 1];
+  uint32_t enc_seed_;
+};
+
+}  // namespace webrtc
 
 #endif  // WEBRTC_MODULES_AUDIO_CODING_CODECS_CNG_WEBRTC_CNG_H_

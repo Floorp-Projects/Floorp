@@ -12,13 +12,13 @@
 #define SRC_VOICE_ENGINE_MAIN_TEST_AUTO_TEST_STANDARD_TEST_BASE_AFTER_INIT_H_
 
 #include <deque>
+#include <memory>
 
+#include "webrtc/base/criticalsection.h"
 #include "webrtc/base/platform_thread.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/rtp_rtcp/source/byte_io.h"
 #include "webrtc/system_wrappers/include/atomic32.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/include/event_wrapper.h"
 #include "webrtc/system_wrappers/include/sleep.h"
 #include "webrtc/voice_engine/test/auto_test/fixtures/before_initialization_fixture.h"
@@ -28,8 +28,7 @@ class TestErrorObserver;
 class LoopBackTransport : public webrtc::Transport {
  public:
   LoopBackTransport(webrtc::VoENetwork* voe_network, int channel)
-      : crit_(webrtc::CriticalSectionWrapper::CreateCriticalSection()),
-        packet_event_(webrtc::EventWrapper::Create()),
+      : packet_event_(webrtc::EventWrapper::Create()),
         thread_(NetworkProcess, this, "LoopBackTransport"),
         channel_(channel),
         voe_network_(voe_network),
@@ -62,7 +61,7 @@ class LoopBackTransport : public webrtc::Transport {
   }
 
   void AddChannel(uint32_t ssrc, int channel) {
-    webrtc::CriticalSectionScoped lock(crit_.get());
+    rtc::CritScope lock(&crit_);
     channels_[ssrc] = channel;
   }
 
@@ -85,7 +84,7 @@ class LoopBackTransport : public webrtc::Transport {
                    const void* data,
                    size_t len) {
     {
-      webrtc::CriticalSectionScoped lock(crit_.get());
+      rtc::CritScope lock(&crit_);
       packet_queue_.push_back(Packet(type, data, len));
     }
     packet_event_->Set();
@@ -110,7 +109,7 @@ class LoopBackTransport : public webrtc::Transport {
       Packet p;
       int channel = channel_;
       {
-        webrtc::CriticalSectionScoped lock(crit_.get());
+        rtc::CritScope lock(&crit_);
         if (packet_queue_.empty())
           break;
         p = packet_queue_.front();
@@ -143,12 +142,12 @@ class LoopBackTransport : public webrtc::Transport {
     return true;
   }
 
-  const rtc::scoped_ptr<webrtc::CriticalSectionWrapper> crit_;
-  const rtc::scoped_ptr<webrtc::EventWrapper> packet_event_;
+  rtc::CriticalSection crit_;
+  const std::unique_ptr<webrtc::EventWrapper> packet_event_;
   rtc::PlatformThread thread_;
-  std::deque<Packet> packet_queue_ GUARDED_BY(crit_.get());
+  std::deque<Packet> packet_queue_ GUARDED_BY(crit_);
   const int channel_;
-  std::map<uint32_t, int> channels_ GUARDED_BY(crit_.get());
+  std::map<uint32_t, int> channels_ GUARDED_BY(crit_);
   webrtc::VoENetwork* const voe_network_;
   webrtc::Atomic32 transmitted_packets_;
 };
@@ -164,7 +163,7 @@ class AfterInitializationFixture : public BeforeInitializationFixture {
   virtual ~AfterInitializationFixture();
 
  protected:
-  rtc::scoped_ptr<TestErrorObserver> error_observer_;
+  std::unique_ptr<TestErrorObserver> error_observer_;
 };
 
 #endif  // SRC_VOICE_ENGINE_MAIN_TEST_AUTO_TEST_STANDARD_TEST_BASE_AFTER_INIT_H_

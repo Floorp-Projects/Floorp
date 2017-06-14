@@ -133,16 +133,6 @@ class WEBRTC_DLLEXPORT VoERTP_RTCP {
     return 0;
   }
 
-  // Sets the status of sending absolute sender time on a specific |channel|.
-  virtual int SetSendAbsoluteSenderTimeStatus(int channel,
-                                              bool enable,
-                                              unsigned char id) = 0;
-
-  // Sets status of receiving absolute sender time on a specific |channel|.
-  virtual int SetReceiveAbsoluteSenderTimeStatus(int channel,
-                                                 bool enable,
-                                                 unsigned char id) = 0;
-
   // Sets the RTCP status on a specific |channel|.
   virtual int SetRTCPStatus(int channel, bool enable) = 0;
 
@@ -160,14 +150,6 @@ class WEBRTC_DLLEXPORT VoERTP_RTCP {
   // Gets the canonical name (CNAME) parameter for incoming RTCP reports
   // on a specific channel.
   virtual int GetRemoteRTCP_CNAME(int channel, char cName[256]) = 0;
-
-  // Gets RTCP data from incoming RTCP Sender Reports.
-  virtual int GetRemoteRTCPReceiverInfo(
-      int channel, uint32_t& NTPHigh, uint32_t& NTPLow,
-      uint32_t& receivedPacketCount, uint64_t& receivedOctetCount,
-      uint32_t& jitter, uint16_t& fractionLost,
-      uint32_t& cumulativeLost,
-      int32_t& rttMs) = 0;
 
   // Gets RTP statistics for a specific |channel|.
   virtual int GetRTPStatistics(int channel,
@@ -190,20 +172,6 @@ class WEBRTC_DLLEXPORT VoERTP_RTCP {
   virtual int GetRemoteRTCPReportBlocks(
       int channel,
       std::vector<ReportBlock>* receive_blocks) = 0;
-
-  // Sets the Redundant Coding (RED) status on a specific |channel|.
-  // TODO(minyue): Make SetREDStatus() pure virtual when fakewebrtcvoiceengine
-  // in talk is ready.
-  virtual int SetREDStatus(int channel, bool enable, int redPayloadtype = -1) {
-    return -1;
-  }
-
-  // Gets the RED status on a specific |channel|.
-  // TODO(minyue): Make GetREDStatus() pure virtual when fakewebrtcvoiceengine
-  // in talk is ready.
-  virtual int GetREDStatus(int channel, bool& enabled, int& redPayloadtype) {
-    return -1;
-  }
 
   // This function enables Negative Acknowledgment (NACK) using RTCP,
   // implemented based on RFC 4585. NACK retransmits RTP packets if lost on

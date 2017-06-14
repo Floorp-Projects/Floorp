@@ -27,7 +27,7 @@ class AudioDeviceDummy : public AudioDeviceGeneric {
       AudioDeviceModule::AudioLayer& audioLayer) const override;
 
   // Main initializaton and termination
-  int32_t Init() override;
+  InitStatus Init() override;
   int32_t Terminate() override;
   bool Initialized() const override;
 

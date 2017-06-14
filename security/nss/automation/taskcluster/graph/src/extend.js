@@ -746,7 +746,7 @@ async function scheduleTools() {
     command: [
       "/bin/bash",
       "-c",
-      "bin/checkout.sh && nss/automation/taskcluster/scripts/run_clang_format.sh"
+      "bin/checkout.sh && nss/automation/clang-format/run_clang_format.sh"
     ]
   }));
 

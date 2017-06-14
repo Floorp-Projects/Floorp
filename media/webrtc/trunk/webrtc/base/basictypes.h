@@ -15,10 +15,6 @@
 #include <stddef.h>  // for NULL, size_t
 #include <stdint.h>  // for uintptr_t and (u)int_t types.
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"  // NOLINT
-#endif
-
 // Detect compiler is for x86 or x64.
 #if defined(__x86_64__) || defined(_M_X64) || \
     defined(__i386__) || defined(_M_IX86)
@@ -36,7 +32,7 @@
 
 #if !defined(RTC_ARCH_CPU_BIG_ENDIAN) && !defined(RTC_ARCH_CPU_LITTLE_ENDIAN)
 // x86, arm or GCC provided __BYTE_ORDER__ macros
-#if CPU_X86 || CPU_ARM ||  \
+#if defined(CPU_X86) || defined(CPU_ARM) ||                             \
   (defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
 #define RTC_ARCH_CPU_LITTLE_ENDIAN
 #elif defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__

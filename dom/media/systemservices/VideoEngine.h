@@ -10,9 +10,7 @@
 #include "MediaEngine.h"
 #include "VideoFrameUtils.h"
 #include "mozilla/media/MediaUtils.h"
-#include "webrtc/common.h"
 #include "webrtc/modules/video_capture/video_capture_impl.h"
-#include "webrtc/modules/video_render/video_render.h"
 #include "webrtc/modules/video_capture/video_capture_defines.h"
 #include "webrtc/modules/video_capture/video_capture_factory.h"
 #include "webrtc/video_engine/desktop_capture_impl.h"
@@ -53,8 +51,6 @@ public:
   */
   std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo> GetOrCreateVideoCaptureDeviceInfo();
 
-  void RemoveRenderer(int capnum);
-
   const UniquePtr<const webrtc::Config>& GetConfiguration();
 
   void Startup() {
@@ -72,15 +68,12 @@ public:
   class CaptureEntry {
   public:
     CaptureEntry(int32_t aCapnum,
-                 rtc::scoped_refptr<webrtc::VideoCaptureModule> aCapture,
-                 webrtc::VideoRender* aRenderer);
+                 rtc::scoped_refptr<webrtc::VideoCaptureModule> aCapture);
     int32_t Capnum() const;
     rtc::scoped_refptr<webrtc::VideoCaptureModule> VideoCapture();
-    const UniquePtr<webrtc::VideoRender> & VideoRenderer();
   private:
     int32_t mCapnum;
     rtc::scoped_refptr<webrtc::VideoCaptureModule> mVideoCaptureModule;
-    UniquePtr<webrtc::VideoRender> mVideoRender;
     friend class VideoEngine;
   };
 

@@ -17,8 +17,8 @@
 #define WEBRTC_VOICE_ENGINE_VOICE_ENGINE_DEFINES_H
 
 #include "webrtc/common_types.h"
-#include "webrtc/engine_configurations.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
+#include "webrtc/typedefs.h"
 
 // ----------------------------------------------------------------------------
 //  Enumerators

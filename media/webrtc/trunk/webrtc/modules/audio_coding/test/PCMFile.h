@@ -26,11 +26,7 @@ class PCMFile {
  public:
   PCMFile();
   PCMFile(uint32_t timestamp);
-  ~PCMFile() {
-    if (pcm_file_ != NULL) {
-      fclose(pcm_file_);
-    }
-  }
+  ~PCMFile();
 
   void Open(const std::string& filename, uint16_t frequency, const char* mode,
             bool auto_rewind = false);

@@ -28,6 +28,7 @@
 #include "decode_residual.h"
 #include "unpack_bits.h"
 #include "hp_output.h"
+#include "init_decode.h"
 #ifndef WEBRTC_ARCH_BIG_ENDIAN
 #include "swap_bytes.h"
 #endif
@@ -36,7 +37,7 @@
  *  main decoder function
  *---------------------------------------------------------------*/
 
-void WebRtcIlbcfix_DecodeImpl(
+int WebRtcIlbcfix_DecodeImpl(
     int16_t *decblock,    /* (o) decoded signal block */
     const uint16_t *bytes, /* (i) encoded signal bits */
     IlbcDecoder *iLBCdec_inst, /* (i/o) the decoder state
@@ -44,6 +45,9 @@ void WebRtcIlbcfix_DecodeImpl(
     int16_t mode      /* (i) 0: bad packet, PLC,
                                                                    1: normal */
                            ) {
+  const int old_mode = iLBCdec_inst->mode;
+  const int old_use_enhancer = iLBCdec_inst->use_enhancer;
+
   size_t i;
   int16_t order_plus_one;
 
@@ -100,7 +104,9 @@ void WebRtcIlbcfix_DecodeImpl(
                                           lsfdeq, LPC_FILTERORDER, iLBCdec_inst);
 
       /* Decode the residual using the cb and gain indexes */
-      WebRtcIlbcfix_DecodeResidual(iLBCdec_inst, iLBCbits_inst, decresidual, syntdenum);
+      if (!WebRtcIlbcfix_DecodeResidual(iLBCdec_inst, iLBCbits_inst,
+                                        decresidual, syntdenum))
+        goto error;
 
       /* preparing the plc for a future loss! */
       WebRtcIlbcfix_DoThePlc(
@@ -241,4 +247,11 @@ void WebRtcIlbcfix_DecodeImpl(
   if (mode==0) { /* PLC was used */
     iLBCdec_inst->prev_enh_pl=1;
   }
+
+  return 0;  // Success.
+
+error:
+  // The decoder got sick from eating that data. Reset it and return.
+  WebRtcIlbcfix_InitDecode(iLBCdec_inst, old_mode, old_use_enhancer);
+  return -1;  // Error
 }

@@ -68,8 +68,7 @@
 #include "nsCOMArray.h"
 #include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
-#include "nsIUnicodeEncoder.h"
-#include "nsIUnicodeDecoder.h"
+#include "mozilla/Encoding.h"
 #include "nsInterfaceHashtable.h"
 #include "nsWeakReference.h"
 #include "nsCycleCollectionParticipant.h"
@@ -107,8 +106,8 @@ protected:
   virtual ~mozHunspell();
 
   nsCOMPtr<mozIPersonalDictionary> mPersonalDictionary;
-  nsCOMPtr<nsIUnicodeEncoder>      mEncoder;
-  nsCOMPtr<nsIUnicodeDecoder>      mDecoder;
+  mozilla::UniquePtr<mozilla::Encoder> mEncoder;
+  mozilla::UniquePtr<mozilla::Decoder> mDecoder;
 
   // Hashtable matches dictionary name to .aff file
   nsInterfaceHashtable<nsStringHashKey, nsIFile> mDictionaries;

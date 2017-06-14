@@ -79,15 +79,14 @@ void Event::Reset() {
 }
 
 bool Event::Wait(int milliseconds) {
-  pthread_mutex_lock(&event_mutex_);
   int error = 0;
 
+  struct timespec ts;
   if (milliseconds != kForever) {
     // Converting from seconds and microseconds (1e-6) plus
     // milliseconds (1e-3) to seconds and nanoseconds (1e-9).
 
-    struct timespec ts;
-#if HAVE_PTHREAD_COND_TIMEDWAIT_RELATIVE
+#ifdef HAVE_PTHREAD_COND_TIMEDWAIT_RELATIVE
     // Use relative time version, which tends to be more efficient for
     // pthread implementations where provided (like on Android).
     ts.tv_sec = milliseconds / 1000;
@@ -105,9 +104,12 @@ bool Event::Wait(int milliseconds) {
       ts.tv_nsec -= 1000000000;
     }
 #endif
+  }
 
+  pthread_mutex_lock(&event_mutex_);
+  if (milliseconds != kForever) {
     while (!event_status_ && error == 0) {
-#if HAVE_PTHREAD_COND_TIMEDWAIT_RELATIVE
+#ifdef HAVE_PTHREAD_COND_TIMEDWAIT_RELATIVE
       error = pthread_cond_timedwait_relative_np(
           &event_cond_, &event_mutex_, &ts);
 #else

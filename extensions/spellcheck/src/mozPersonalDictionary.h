@@ -9,7 +9,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "mozIPersonalDictionary.h"
-#include "nsIUnicodeEncoder.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsTHashtable.h"
@@ -32,10 +31,9 @@ class mozPersonalDictionary final : public mozIPersonalDictionary,
                                     public nsSupportsWeakReference
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_MOZIPERSONALDICTIONARY
   NS_DECL_NSIOBSERVER
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(mozPersonalDictionary, mozIPersonalDictionary)
 
   mozPersonalDictionary();
 
@@ -55,9 +53,6 @@ protected:
   mozilla::Monitor mMonitorSave;
   nsTHashtable<nsUnicharPtrHashKey> mDictionaryTable;
   nsTHashtable<nsUnicharPtrHashKey> mIgnoreTable;
-
-  /*Encoder to use to compare with spellchecker word */
-  nsCOMPtr<nsIUnicodeEncoder>  mEncoder;
 
 private:
   /* wait for the asynchronous load of the dictionary to be completed */

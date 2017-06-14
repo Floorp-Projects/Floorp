@@ -12,54 +12,141 @@
 #define WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_CAPTURER_H_
 
 #include <stddef.h>
+#include <stdint.h>
 
+#include <memory>
+#include <string>
+#include <type_traits>
+#include <vector>
+
+#include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_types.h"
+#include "webrtc/modules/desktop_capture/shared_memory.h"
 
 namespace webrtc {
 
+class DesktopCaptureOptions;
 class DesktopFrame;
-class DesktopRegion;
-class SharedMemory;
 
 // Abstract interface for screen and window capturers.
 class DesktopCapturer {
  public:
+  enum class Result {
+    // The frame was captured successfully.
+    SUCCESS,
+
+    // There was a temporary error. The caller should continue calling
+    // CaptureFrame(), in the expectation that it will eventually recover.
+    ERROR_TEMPORARY,
+
+    // Capture has failed and will keep failing if the caller tries calling
+    // CaptureFrame() again.
+    ERROR_PERMANENT,
+
+    MAX_VALUE = ERROR_PERMANENT
+  };
+
   // Interface that must be implemented by the DesktopCapturer consumers.
   class Callback {
    public:
-    // Creates a new shared memory buffer for a frame create by the capturer.
-    // Should return null shared memory is not used for captured frames (in that
-    // case the capturer will allocate memory on the heap).
-    virtual SharedMemory* CreateSharedMemory(size_t size) = 0;
-
-    // Called after a frame has been captured. Handler must take ownership of
-    // |frame|. If capture has failed for any reason |frame| is set to NULL
-    // (e.g. the window has been closed).
-    virtual void OnCaptureCompleted(DesktopFrame* frame) = 0;
+    // Called after a frame has been captured. |frame| is not nullptr if and
+    // only if |result| is SUCCESS.
+    virtual void OnCaptureResult(Result result,
+                                 std::unique_ptr<DesktopFrame> frame) = 0;
 
    protected:
     virtual ~Callback() {}
   };
 
-  virtual ~DesktopCapturer() {}
+  typedef intptr_t SourceId;
+
+  static_assert(std::is_same<SourceId, ScreenId>::value,
+                "SourceId should be a same type as ScreenId.");
+
+  struct Source {
+    // The unique id to represent a Source of current DesktopCapturer.
+    SourceId id;
+    pid_t pid;
+
+    // Title of the window or screen in UTF-8 encoding, maybe empty. This field
+    // should not be used to identify a source.
+    std::string title;
+  };
+
+  typedef std::vector<Source> SourceList;
+
+  virtual ~DesktopCapturer();
 
   // Called at the beginning of a capturing session. |callback| must remain
   // valid until capturer is destroyed or until Stop() is called
   virtual void Start(Callback* callback) = 0;
   virtual void Stop() = 0;
 
-  // Captures next frame. |region| specifies region of the capture target that
-  // should be fresh in the resulting frame. The frame may also include fresh
-  // data for areas outside |region|. In that case capturer will include these
-  // areas in updated_region() of the frame. |region| is specified relative to
-  // the top left corner of the capture target. Pending capture operations are
-  // canceled when DesktopCapturer is deleted.
-  virtual void Capture(const DesktopRegion& region) = 0;
+  // Sets SharedMemoryFactory that will be used to create buffers for the
+  // captured frames. The factory can be invoked on a thread other than the one
+  // where CaptureFrame() is called. It will be destroyed on the same thread.
+  // Shared memory is currently supported only by some DesktopCapturer
+  // implementations.
+  virtual void SetSharedMemoryFactory(
+      std::unique_ptr<SharedMemoryFactory> shared_memory_factory);
+
+  // Captures next frame, and involve callback provided by Start() function.
+  // Pending capture requests are canceled when DesktopCapturer is deleted.
+  virtual void CaptureFrame() = 0;
 
   // Sets the window to be excluded from the captured image in the future
   // Capture calls. Used to exclude the screenshare notification window for
   // screen capturing.
-  virtual void SetExcludedWindow(WindowId window) {}
+  virtual void SetExcludedWindow(WindowId window);
+
+  // TODO(zijiehe): Following functions should be pure virtual. The default
+  // implementations are for backward compatibility only. Remove default
+  // implementations once all DesktopCapturer implementations in Chromium have
+  // implemented these functions.
+
+  // Gets a list of sources current capturer supports. Returns false in case of
+  // a failure.
+  virtual bool GetSourceList(SourceList* sources);
+
+  // Selects a source to be captured. Returns false in case of a failure (e.g.
+  // if there is no source with the specified type and id.)
+  virtual bool SelectSource(SourceId id);
+
+  // Brings the selected source to the front and sets the input focus on it.
+  // Returns false in case of a failure or no source has been selected or the
+  // implementation does not support this functionality.
+  virtual bool FocusOnSelectedSource();
+
+  // Creates a DesktopCapturer instance which targets to capture windows.
+  static std::unique_ptr<DesktopCapturer> CreateWindowCapturer(
+      const DesktopCaptureOptions& options);
+
+  // Creates a DesktopCapturer instance which targets to capture screens.
+  static std::unique_ptr<DesktopCapturer> CreateScreenCapturer(
+      const DesktopCaptureOptions& options);
+
+  // Creates a DesktopCapturer instance which targets to capture apps.
+  static std::unique_ptr<DesktopCapturer> CreateAppCapturer(
+      const DesktopCaptureOptions& options);
+
+ protected:
+  // CroppingWindowCapturer needs to create raw capturers without wrappers, so
+  // the following two functions are protected.
+
+  // Creates a platform specific DesktopCapturer instance which targets to
+  // capture windows.
+  static std::unique_ptr<DesktopCapturer> CreateRawWindowCapturer(
+      const DesktopCaptureOptions& options);
+
+  // Creates a platform specific DesktopCapturer instance which targets to
+  // capture screens.
+  static std::unique_ptr<DesktopCapturer> CreateRawScreenCapturer(
+      const DesktopCaptureOptions& options);
+
+  // Creates a platform specific DesktopCapturer instance which targets to
+  // capture apps.
+  static std::unique_ptr<DesktopCapturer> CreateRawAppCapturer(
+      const DesktopCaptureOptions& options);
 };
 
 }  // namespace webrtc

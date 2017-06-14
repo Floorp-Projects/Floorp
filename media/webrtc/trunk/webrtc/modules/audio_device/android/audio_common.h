@@ -14,10 +14,6 @@
 namespace webrtc {
 
 const int kDefaultSampleRate = 44100;
-const int kNumChannels = 1;
-// Number of bytes per audio frame.
-// Example: 16-bit PCM in mono => 1*(16/8)=2 [bytes/frame]
-const size_t kBytesPerFrame = kNumChannels * (16 / 8);
 // Delay estimates for the two different supported modes. These values are based
 // on real-time round-trip delay estimates on a large set of devices and they
 // are lower bounds since the filter length is 128 ms, so the AEC works for

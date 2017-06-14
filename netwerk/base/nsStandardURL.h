@@ -10,7 +10,7 @@
 #include "nsISerializable.h"
 #include "nsIFileURL.h"
 #include "nsIStandardURL.h"
-#include "nsNCRFallbackEncoderWrapper.h"
+#include "mozilla/Encoding.h"
 #include "nsIObserver.h"
 #include "nsCOMPtr.h"
 #include "nsURLHelper.h"
@@ -141,11 +141,7 @@ public: /* internal -- HPUX compiler can't handle this being private */
                                         int16_t mask,
                                         nsAFlatCString &buf);
     private:
-        bool InitUnicodeEncoder();
-
-        const char* mCharset;  // Caller should keep this alive for
-                               // the life of the segment encoder
-        mozilla::UniquePtr<nsNCRFallbackEncoderWrapper> mEncoder;
+      const Encoding* mEncoding;
     };
     friend class nsSegmentEncoder;
 

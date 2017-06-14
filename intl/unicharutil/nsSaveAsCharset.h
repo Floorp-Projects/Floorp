@@ -9,7 +9,7 @@
 #include "nsStringFwd.h"
 #include "nsISaveAsCharset.h"
 #include "nsAutoPtr.h"
-#include "nsNCRFallbackEncoderWrapper.h"
+#include "mozilla/Encoding.h"
 #include "nsString.h"
 
 class nsSaveAsCharset : public nsISaveAsCharset
@@ -30,8 +30,7 @@ private:
 
   virtual ~nsSaveAsCharset();
 
-  nsAutoPtr<nsNCRFallbackEncoderWrapper> mEncoder;
-  nsCString mCharset;
+  const mozilla::Encoding* mEncoding;
 };
 
 #endif

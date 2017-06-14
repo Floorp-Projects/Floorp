@@ -11,47 +11,72 @@
 #ifndef WEBRTC_AUDIO_AUDIO_SEND_STREAM_H_
 #define WEBRTC_AUDIO_AUDIO_SEND_STREAM_H_
 
-#include "webrtc/audio_send_stream.h"
-#include "webrtc/audio_state.h"
+#include <memory>
+
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/thread_checker.h"
-#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/call/audio_send_stream.h"
+#include "webrtc/call/audio_state.h"
+#include "webrtc/call/bitrate_allocator.h"
 
 namespace webrtc {
 class CongestionController;
 class VoiceEngine;
+class RtcEventLog;
+class RtcpRttStats;
+class PacketRouter;
 
 namespace voe {
 class ChannelProxy;
 }  // namespace voe
 
 namespace internal {
-class AudioSendStream final : public webrtc::AudioSendStream {
+class AudioSendStream final : public webrtc::AudioSendStream,
+                              public webrtc::BitrateAllocatorObserver {
  public:
   AudioSendStream(const webrtc::AudioSendStream::Config& config,
                   const rtc::scoped_refptr<webrtc::AudioState>& audio_state,
-                  CongestionController* congestion_controller);
+                  rtc::TaskQueue* worker_queue,
+                  PacketRouter* packet_router,
+                  CongestionController* congestion_controller,
+                  BitrateAllocator* bitrate_allocator,
+                  RtcEventLog* event_log,
+                  RtcpRttStats* rtcp_rtt_stats);
   ~AudioSendStream() override;
 
-  // webrtc::SendStream implementation.
+  // webrtc::AudioSendStream implementation.
   void Start() override;
   void Stop() override;
-  void SignalNetworkState(NetworkState state) override;
-  bool DeliverRtcp(const uint8_t* packet, size_t length) override;
-
-  // webrtc::AudioSendStream implementation.
-  bool SendTelephoneEvent(int payload_type, uint8_t event,
-                          uint32_t duration_ms) override;
+  bool SendTelephoneEvent(int payload_type, int payload_frequency, int event,
+                          int duration_ms) override;
+  void SetMuted(bool muted) override;
   webrtc::AudioSendStream::Stats GetStats() const override;
 
+  void SignalNetworkState(NetworkState state);
+  bool DeliverRtcp(const uint8_t* packet, size_t length);
+
+  // Implements BitrateAllocatorObserver.
+  uint32_t OnBitrateUpdated(uint32_t bitrate_bps,
+                            uint8_t fraction_loss,
+                            int64_t rtt,
+                            int64_t probing_interval_ms) override;
+
   const webrtc::AudioSendStream::Config& config() const;
+  void SetTransportOverhead(int transport_overhead_per_packet);
 
  private:
   VoiceEngine* voice_engine() const;
 
+  bool SetupSendCodec();
+
   rtc::ThreadChecker thread_checker_;
+  rtc::TaskQueue* worker_queue_;
   const webrtc::AudioSendStream::Config config_;
   rtc::scoped_refptr<webrtc::AudioState> audio_state_;
-  rtc::scoped_ptr<voe::ChannelProxy> channel_proxy_;
+  std::unique_ptr<voe::ChannelProxy> channel_proxy_;
+
+  BitrateAllocator* const bitrate_allocator_;
+  CongestionController* const congestion_controller_;
 
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(AudioSendStream);
 };

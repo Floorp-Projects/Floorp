@@ -21,19 +21,19 @@ namespace rtc {
 // that over each bucket the rate was constant.
 class RateTracker {
  public:
-  RateTracker(uint32_t bucket_milliseconds, size_t bucket_count);
+  RateTracker(int64_t bucket_milliseconds, size_t bucket_count);
   virtual ~RateTracker();
 
   // Computes the average rate over the most recent interval_milliseconds,
   // or if the first sample was added within this period, computes the rate
   // since the first sample was added.
-  double ComputeRateForInterval(uint32_t interval_milliseconds) const;
+  double ComputeRateForInterval(int64_t interval_milliseconds) const;
 
   // Computes the average rate over the rate tracker's recording interval
   // of bucket_milliseconds * bucket_count.
   double ComputeRate() const {
     return ComputeRateForInterval(bucket_milliseconds_ *
-                                  static_cast<uint32_t>(bucket_count_));
+                                  static_cast<int64_t>(bucket_count_));
   }
 
   // Computes the average rate since the first sample was added to the
@@ -49,19 +49,19 @@ class RateTracker {
 
  protected:
   // overrideable for tests
-  virtual uint32_t Time() const;
+  virtual int64_t Time() const;
 
  private:
   void EnsureInitialized();
   size_t NextBucketIndex(size_t bucket_index) const;
 
-  const uint32_t bucket_milliseconds_;
+  const int64_t bucket_milliseconds_;
   const size_t bucket_count_;
   size_t* sample_buckets_;
   size_t total_sample_count_;
   size_t current_bucket_;
-  uint32_t bucket_start_time_milliseconds_;
-  uint32_t initialization_time_milliseconds_;
+  int64_t bucket_start_time_milliseconds_;
+  int64_t initialization_time_milliseconds_;
 };
 
 }  // namespace rtc

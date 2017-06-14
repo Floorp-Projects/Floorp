@@ -22,7 +22,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIParser.h"
-#include "nsIUnicodeDecoder.h"
+#include "mozilla/Encoding.h"
 #include "nsScannerString.h"
 #include "mozilla/CheckedInt.h"
 
@@ -179,9 +179,9 @@ class nsScanner {
       bool            mIncremental;
       int32_t         mCharsetSource;
       nsCString       mCharset;
-      nsCOMPtr<nsIUnicodeDecoder> mUnicodeDecoder;
+      mozilla::UniquePtr<mozilla::Decoder> mUnicodeDecoder;
 
-  private:
+    private:
       nsScanner &operator =(const nsScanner &); // Not implemented.
 };
 

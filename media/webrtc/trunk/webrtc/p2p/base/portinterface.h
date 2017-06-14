@@ -13,9 +13,9 @@
 
 #include <string>
 
-#include "webrtc/p2p/base/transport.h"
 #include "webrtc/base/asyncpacketsocket.h"
 #include "webrtc/base/socketaddress.h"
+#include "webrtc/p2p/base/jseptransport.h"
 
 namespace rtc {
 class Network;
@@ -30,8 +30,9 @@ class StunMessage;
 enum ProtocolType {
   PROTO_UDP,
   PROTO_TCP,
-  PROTO_SSLTCP,
-  PROTO_LAST = PROTO_SSLTCP
+  PROTO_SSLTCP,  // Pseudo-TLS.
+  PROTO_TLS,
+  PROTO_LAST = PROTO_TLS
 };
 
 // Defines the interface for a port, which represents a local communication
@@ -75,6 +76,8 @@ class PortInterface {
   virtual int SetOption(rtc::Socket::Option opt, int value) = 0;
   virtual int GetOption(rtc::Socket::Option opt, int* value) = 0;
   virtual int GetError() = 0;
+
+  virtual ProtocolType GetProtocol() const = 0;
 
   virtual const std::vector<Candidate>& Candidates() const = 0;
 

@@ -11,6 +11,9 @@ gyp_vars.update({
     'asan': 0,
     'build_with_mozilla': 1,
     'build_with_chromium': 0,
+    # 10.9 once we move to TC cross-compiles - bug 1270217
+    'mac_sdk_min': '10.7',
+    'mac_deployment_target': '10.7',
     'use_official_google_api_keys': 0,
     'have_clock_monotonic': 1 if CONFIG['HAVE_CLOCK_MONOTONIC'] else 0,
     'have_ethtool_cmd_speed_hi': 1 if CONFIG['MOZ_WEBRTC_HAVE_ETHTOOL_SPEED_HI'] else 0,
@@ -31,14 +34,18 @@ gyp_vars.update({
     'build_libjpeg': 0,
     'build_libyuv': 0,
     'build_libvpx': 0,
+    'build_libevent': 0,
     'build_ssl': 0,
     'build_json': 0,
     'build_icu': 0,
     'build_opus': 0,
     'libyuv_dir': '/media/libyuv/libyuv',
+    'libevent_dir': '/ipc/chromium/src/third_party/libevent',
     'yuv_disable_avx2': 0 if CONFIG['HAVE_X86_AVX2'] else 1,
     # don't use openssl
     'use_openssl': 0,
+    # Must match build/gyp.mozbuild WEBRTC_BUILD_LIBEVENT
+    #'enable_libevent': 0, default according to OS
 
     'debug': 1 if CONFIG['DEBUG'] else 0,
 
@@ -74,6 +81,8 @@ gyp_vars.update({
     # linker to throw away uneeded bits.
     'include_isac': 1,
     'include_pcm16b': 1,
+
+    #'rtc_opus_variable_complexity': 1,
 })
 
 if os == 'Android':
@@ -89,6 +98,8 @@ if CONFIG['ARM_ARCH']:
         gyp_vars['arm_neon_optional'] = 0
     elif os == 'Android':
         gyp_vars['armv7'] = 1
+        gyp_vars['arm_neon'] = 1
+        gyp_vars['build_with_neon'] = 1
     else:
         # CPU detection for ARM works on Android only.  armv7 always uses CPU
         # detection, so we have to set armv7=0 for non-Android target

@@ -11,14 +11,13 @@
 #include <cfloat>
 #include <cstdio>
 #include <cstdlib>
+#include <memory>
 #include <vector>
 
 #include "webrtc/modules/audio_processing/transient/transient_detector.h"
 #include "webrtc/modules/audio_processing/transient/file_utils.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/system_wrappers/include/file_wrapper.h"
 
-using rtc::scoped_ptr;
 using webrtc::FileWrapper;
 using webrtc::TransientDetector;
 
@@ -40,16 +39,16 @@ int main(int argc, char* argv[]) {
     return 0;
   }
 
-  scoped_ptr<FileWrapper> pcm_file(FileWrapper::Create());
-  pcm_file->OpenFile(argv[1], true, false, false);
-  if (!pcm_file->Open()) {
+  std::unique_ptr<FileWrapper> pcm_file(FileWrapper::Create());
+  pcm_file->OpenFile(argv[1], true);
+  if (!pcm_file->is_open()) {
     printf("\nThe %s could not be opened.\n\n", argv[1]);
     return -1;
   }
 
-  scoped_ptr<FileWrapper> dat_file(FileWrapper::Create());
-  dat_file->OpenFile(argv[2], false, false, false);
-  if (!dat_file->Open()) {
+  std::unique_ptr<FileWrapper> dat_file(FileWrapper::Create());
+  dat_file->OpenFile(argv[2], false);
+  if (!dat_file->is_open()) {
     printf("\nThe %s could not be opened.\n\n", argv[2]);
     return -1;
   }
@@ -69,7 +68,7 @@ int main(int argc, char* argv[]) {
   TransientDetector detector(sample_rate_hz);
   int lost_packets = 0;
   size_t audio_buffer_length = chunk_size_ms * sample_rate_hz / 1000;
-  scoped_ptr<float[]> audio_buffer(new float[audio_buffer_length]);
+  std::unique_ptr<float[]> audio_buffer(new float[audio_buffer_length]);
   std::vector<float> send_times;
 
   // Read first buffer from the PCM test file.

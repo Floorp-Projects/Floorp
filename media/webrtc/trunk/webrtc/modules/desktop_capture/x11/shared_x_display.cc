@@ -10,19 +10,22 @@
 
 #include "webrtc/modules/desktop_capture/x11/shared_x_display.h"
 
+#include <X11/Xlib.h>
+
 #include <algorithm>
 
+#include "webrtc/base/checks.h"
 #include "webrtc/system_wrappers/include/logging.h"
 
 namespace webrtc {
 
 SharedXDisplay::SharedXDisplay(Display* display)
   : display_(display) {
-  assert(display_);
+  RTC_DCHECK(display_);
 }
 
 SharedXDisplay::~SharedXDisplay() {
-  assert(event_handlers_.empty());
+  RTC_DCHECK(event_handlers_.empty());
   XCloseDisplay(display_);
 }
 

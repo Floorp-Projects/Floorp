@@ -27,6 +27,7 @@
 #include "mozilla/css/Declaration.h"
 #include "mozilla/TypeTraits.h"
 
+#include "gfxContext.h"
 #include "nsAlgorithm.h" // for clamped()
 #include "nscore.h"
 #include "nsCRT.h" // for IsAscii()
@@ -51,7 +52,6 @@
 #include "nsContentUtils.h"
 #include "CSSCalc.h"
 #include "nsPrintfCString.h"
-#include "nsRenderingContext.h"
 #include "nsStyleUtil.h"
 #include "nsIDocument.h"
 #include "prtime.h"
@@ -490,9 +490,9 @@ static nsSize CalcViewportUnitsScale(nsPresContext* aPresContext)
     if (styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL ||
         styles.mVertical == NS_STYLE_OVERFLOW_SCROLL) {
       // Gather scrollbar size information.
-      nsRenderingContext context(
-        aPresContext->PresShell()->CreateReferenceRenderingContext());
-      nsMargin sizes(scrollFrame->GetDesiredScrollbarSizes(aPresContext, &context));
+      RefPtr<gfxContext> context =
+        aPresContext->PresShell()->CreateReferenceRenderingContext();
+      nsMargin sizes(scrollFrame->GetDesiredScrollbarSizes(aPresContext, context));
 
       if (styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL) {
         // 'overflow-x: scroll' means we must consider the horizontal scrollbar,

@@ -10,19 +10,19 @@
 
 #include <cmath>
 #include <algorithm>
+#include <memory>
 #include <vector>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/arraysize.h"
 #include "webrtc/base/format_macros.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_audio/audio_converter.h"
 #include "webrtc/common_audio/channel_buffer.h"
 #include "webrtc/common_audio/resampler/push_sinc_resampler.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 
-typedef rtc::scoped_ptr<ChannelBuffer<float>> ScopedBuffer;
+typedef std::unique_ptr<ChannelBuffer<float>> ScopedBuffer;
 
 // Sets the signal value to increase by |data| with every sample.
 ScopedBuffer CreateBuffer(const std::vector<float>& data, size_t frames) {
@@ -132,7 +132,7 @@ void RunAudioConverterTest(size_t src_channels,
   printf("(%" PRIuS ", %d Hz) -> (%" PRIuS ", %d Hz) ",
          src_channels, src_sample_rate_hz, dst_channels, dst_sample_rate_hz);
 
-  rtc::scoped_ptr<AudioConverter> converter = AudioConverter::Create(
+  std::unique_ptr<AudioConverter> converter = AudioConverter::Create(
       src_channels, src_frames, dst_channels, dst_frames);
   converter->Convert(src_buffer->channels(), src_buffer->size(),
                      dst_buffer->channels(), dst_buffer->size());

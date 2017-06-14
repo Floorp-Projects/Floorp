@@ -7,11 +7,12 @@
 #include <stdint.h>
 
 #include "gtest/gtest.h"
-#include "scoped_ptrs.h"
+#include "scoped_ptrs_util.h"
 
 #include "nss.h"
 #include "prerror.h"
 #include "secasn1.h"
+#include "secder.h"
 #include "secerr.h"
 #include "secitem.h"
 

@@ -13,12 +13,13 @@
 
 #include <stdio.h>
 
+#include <memory>
 #include <string>
 
+#include "webrtc/base/timeutils.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
 #include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/include/file_wrapper.h"
-#include "webrtc/system_wrappers/include/clock.h"
 
 namespace rtc {
 class PlatformThread;
@@ -47,7 +48,7 @@ class FileAudioDevice : public AudioDeviceGeneric {
       AudioDeviceModule::AudioLayer& audioLayer) const override;
 
   // Main initializaton and termination
-  int32_t Init() override;
+  InitStatus Init() override;
   int32_t Terminate() override;
   bool Initialized() const override;
 
@@ -182,20 +183,18 @@ class FileAudioDevice : public AudioDeviceGeneric {
   size_t _playoutFramesIn10MS;
 
   // TODO(pbos): Make plain members instead of pointers and stop resetting them.
-  rtc::scoped_ptr<rtc::PlatformThread> _ptrThreadRec;
-  rtc::scoped_ptr<rtc::PlatformThread> _ptrThreadPlay;
+  std::unique_ptr<rtc::PlatformThread> _ptrThreadRec;
+  std::unique_ptr<rtc::PlatformThread> _ptrThreadPlay;
 
   bool _playing;
   bool _recording;
-  uint64_t _lastCallPlayoutMillis;
-  uint64_t _lastCallRecordMillis;
+  int64_t _lastCallPlayoutMillis;
+  int64_t _lastCallRecordMillis;
 
   FileWrapper& _outputFile;
   FileWrapper& _inputFile;
   std::string _outputFilename;
   std::string _inputFilename;
-
-  Clock* _clock;
 };
 
 }  // namespace webrtc

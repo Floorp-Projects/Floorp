@@ -5,6 +5,7 @@
 
 #include "nsMathMLContainerFrame.h"
 
+#include "gfxContext.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "nsLayoutUtils.h"
@@ -12,7 +13,6 @@
 #include "nsIPresShell.h"
 #include "nsStyleContext.h"
 #include "nsNameSpaceManager.h"
-#include "nsRenderingContext.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsGkAtoms.h"
 #include "nsDisplayList.h"
@@ -82,12 +82,12 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) override;
+                     gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("MathMLError", TYPE_MATHML_ERROR)
 };
 
 void nsDisplayMathMLError::Paint(nsDisplayListBuilder* aBuilder,
-                                 nsRenderingContext* aCtx)
+                                 gfxContext* aCtx)
 {
   // Set color and font ...
   RefPtr<nsFontMetrics> fm =
@@ -102,7 +102,7 @@ void nsDisplayMathMLError::Paint(nsDisplayListBuilder* aBuilder,
   ColorPattern red(ToDeviceColor(Color(1.f, 0.f, 0.f, 1.f)));
   drawTarget->FillRect(rect, red);
 
-  aCtx->ThebesContext()->SetColor(Color(1.f, 1.f, 1.f));
+  aCtx->SetColor(Color(1.f, 1.f, 1.f));
   nscoord ascent = fm->MaxAscent();
   NS_NAMED_LITERAL_STRING(errorMsg, "invalid-markup");
   nsLayoutUtils::DrawUniDirString(errorMsg.get(), uint32_t(errorMsg.Length()),
@@ -962,7 +962,7 @@ nsMathMLContainerFrame::MarkIntrinsicISizesDirty()
 }
 
 void
-nsMathMLContainerFrame::UpdateIntrinsicWidth(nsRenderingContext* aRenderingContext)
+nsMathMLContainerFrame::UpdateIntrinsicWidth(gfxContext* aRenderingContext)
 {
   if (mIntrinsicWidth == NS_INTRINSIC_WIDTH_UNKNOWN) {
     ReflowOutput desiredSize(GetWritingMode());
@@ -976,7 +976,7 @@ nsMathMLContainerFrame::UpdateIntrinsicWidth(nsRenderingContext* aRenderingConte
 }
 
 /* virtual */ nscoord
-nsMathMLContainerFrame::GetMinISize(nsRenderingContext* aRenderingContext)
+nsMathMLContainerFrame::GetMinISize(gfxContext* aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -986,7 +986,7 @@ nsMathMLContainerFrame::GetMinISize(nsRenderingContext* aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsMathMLContainerFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
+nsMathMLContainerFrame::GetPrefISize(gfxContext* aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
@@ -996,7 +996,7 @@ nsMathMLContainerFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
 }
 
 /* virtual */ void
-nsMathMLContainerFrame::GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingContext,
+nsMathMLContainerFrame::GetIntrinsicISizeMetrics(gfxContext* aRenderingContext,
                                                  ReflowOutput& aDesiredSize)
 {
   // Get child widths

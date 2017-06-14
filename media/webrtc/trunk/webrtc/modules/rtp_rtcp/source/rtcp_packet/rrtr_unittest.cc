@@ -10,7 +10,7 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/rrtr.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/test/gtest.h"
 
 using webrtc::rtcp::Rrtr;
 
@@ -30,7 +30,7 @@ static_assert(
 TEST(RtcpPacketRrtrTest, Create) {
   uint8_t buffer[Rrtr::kLength];
   Rrtr rrtr;
-  rrtr.WithNtp(NtpTime(kNtpSec, kNtpFrac));
+  rrtr.SetNtp(NtpTime(kNtpSec, kNtpFrac));
 
   rrtr.Create(buffer);
   EXPECT_EQ(0, memcmp(buffer, kBlock, kBlockSizeBytes));

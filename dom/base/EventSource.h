@@ -24,7 +24,6 @@
 #include "nsIHttpChannel.h"
 #include "nsWeakReference.h"
 #include "nsDeque.h"
-#include "nsIUnicodeDecoder.h"
 
 class nsPIDOMWindowInner;
 

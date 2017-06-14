@@ -85,7 +85,6 @@ TraceImpl::TraceImpl()
 }
 
 TraceImpl::~TraceImpl() {
-  trace_file_->Flush();
   trace_file_->CloseFile();
 }
 
@@ -300,8 +299,8 @@ int32_t TraceImpl::SetTraceFileImpl(const char* file_name_utf8,
                                     const bool add_file_counter) {
   rtc::CritScope lock(&crit_);
 
-  trace_file_->Flush();
   trace_file_->CloseFile();
+  trace_file_path_.clear();
 
   if (file_name_utf8) {
     if (add_file_counter) {
@@ -310,25 +309,20 @@ int32_t TraceImpl::SetTraceFileImpl(const char* file_name_utf8,
       char file_name_with_counter_utf8[FileWrapper::kMaxFileNameSize];
       CreateFileName(file_name_utf8, file_name_with_counter_utf8,
                      file_count_text_);
-      if (trace_file_->OpenFile(file_name_with_counter_utf8, false, false,
-                               true) == -1) {
+      if (!trace_file_->OpenFile(file_name_with_counter_utf8, false)) {
         return -1;
       }
+      trace_file_path_ = file_name_with_counter_utf8;
     } else {
       file_count_text_ = 0;
-      if (trace_file_->OpenFile(file_name_utf8, false, false, true) == -1) {
+      if (!trace_file_->OpenFile(file_name_utf8, false)) {
         return -1;
       }
+      trace_file_path_ = file_name_utf8;
     }
   }
   row_count_text_ = 0;
   return 0;
-}
-
-int32_t TraceImpl::TraceFileImpl(
-    char file_name_utf8[FileWrapper::kMaxFileNameSize]) {
-  rtc::CritScope lock(&crit_);
-  return trace_file_->FileName(file_name_utf8, FileWrapper::kMaxFileNameSize);
 }
 
 int32_t TraceImpl::SetTraceCallbackImpl(TraceCallback* callback) {
@@ -378,7 +372,7 @@ void TraceImpl::AddMessageToList(
 }
 
 void TraceImpl::WriteToFile(const char* msg, uint16_t length) {
-  if (!trace_file_->Open())
+  if (!trace_file_->is_open())
     return;
 
   if (row_count_text_ > WEBRTC_TRACE_MAX_FILE_SIZE) {
@@ -389,20 +383,19 @@ void TraceImpl::WriteToFile(const char* msg, uint16_t length) {
     if (file_count_text_ == 0) {
       trace_file_->Rewind();
     } else {
-      char old_file_name[FileWrapper::kMaxFileNameSize];
       char new_file_name[FileWrapper::kMaxFileNameSize];
 
       // get current name
-      trace_file_->FileName(old_file_name, FileWrapper::kMaxFileNameSize);
-      trace_file_->CloseFile();
-
       file_count_text_++;
+      UpdateFileName(new_file_name, file_count_text_);
 
-      UpdateFileName(old_file_name, new_file_name, file_count_text_);
+      trace_file_->CloseFile();
+      trace_file_path_.clear();
 
-      if (trace_file_->OpenFile(new_file_name, false, false, true) == -1) {
+      if (!trace_file_->OpenFile(new_file_name, false)) {
         return;
       }
+      trace_file_path_ = new_file_name;
     }
   }
   if (row_count_text_ == 0) {
@@ -474,17 +467,13 @@ bool TraceImpl::TraceCheck(const TraceLevel level) const {
 }
 
 bool TraceImpl::UpdateFileName(
-    const char file_name_utf8[FileWrapper::kMaxFileNameSize],
     char file_name_with_counter_utf8[FileWrapper::kMaxFileNameSize],
     const uint32_t new_count) const {
-  int32_t length = (int32_t)strlen(file_name_utf8);
-  if (length < 0) {
-    return false;
-  }
+  int32_t length = static_cast<int32_t>(trace_file_path_.length());
 
   int32_t length_without_file_ending = length - 1;
   while (length_without_file_ending > 0) {
-    if (file_name_utf8[length_without_file_ending] == '.') {
+    if (trace_file_path_[length_without_file_ending] == '.') {
       break;
     } else {
       length_without_file_ending--;
@@ -495,17 +484,17 @@ bool TraceImpl::UpdateFileName(
   }
   int32_t length_to_ = length_without_file_ending - 1;
   while (length_to_ > 0) {
-    if (file_name_utf8[length_to_] == '_') {
+    if (trace_file_path_[length_to_] == '_') {
       break;
     } else {
       length_to_--;
     }
   }
 
-  memcpy(file_name_with_counter_utf8, file_name_utf8, length_to_);
+  memcpy(file_name_with_counter_utf8, &trace_file_path_[0], length_to_);
   sprintf(file_name_with_counter_utf8 + length_to_, "_%lu%s",
           static_cast<long unsigned int>(new_count),
-          file_name_utf8 + length_without_file_ending);
+          &trace_file_path_[length_without_file_ending]);
   return true;
 }
 
@@ -545,17 +534,6 @@ void Trace::CreateTrace() {
 // static
 void Trace::ReturnTrace() {
   TraceImpl::StaticInstance(kRelease);
-}
-
-// static
-int32_t Trace::TraceFile(char file_name[FileWrapper::kMaxFileNameSize]) {
-  TraceImpl* trace = TraceImpl::GetTrace();
-  if (trace) {
-    int ret_val = trace->TraceFileImpl(file_name);
-    ReturnTrace();
-    return ret_val;
-  }
-  return -1;
 }
 
 // static

@@ -257,26 +257,6 @@ public:
   }
 };
 
-class nsNonDOMObjectSH : public nsDOMGenericSH
-{
-protected:
-  explicit nsNonDOMObjectSH(nsDOMClassInfoData* aData) : nsDOMGenericSH(aData)
-  {
-  }
-
-  virtual ~nsNonDOMObjectSH()
-  {
-  }
-
-public:
-  NS_IMETHOD GetFlags(uint32_t *aFlags) override;
-
-  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
-  {
-    return new nsNonDOMObjectSH(aData);
-  }
-};
-
 template<typename Super>
 class nsMessageManagerSH : public Super
 {

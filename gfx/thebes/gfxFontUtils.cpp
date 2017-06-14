@@ -18,7 +18,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIUUIDGenerator.h"
-#include "nsIUnicodeDecoder.h"
+#include "mozilla/Encoding.h"
 
 #include "harfbuzz/hb.h"
 
@@ -1438,6 +1438,16 @@ gfxFontUtils::GetCharsetForFontName(uint16_t aPlatform, uint16_t aScript, uint16
     return nullptr;
 }
 
+template<int N>
+static bool
+StartsWith(const nsACString& string, const char (&prefix)[N])
+{
+  if (N - 1 > string.Length()) {
+    return false;
+  }
+  return memcmp(string.Data(), prefix, N - 1) == 0;
+}
+
 // convert a raw name from the name table to an nsString, if possible;
 // return value indicates whether conversion succeeded
 bool
@@ -1479,12 +1489,12 @@ gfxFontUtils::DecodeFontName(const char *aNameData, int32_t aByteLen,
         return true;
     }
 
-    nsCOMPtr<nsIUnicodeDecoder> decoder =
-        mozilla::dom::EncodingUtils::DecoderForEncoding(csName);
-    if (!decoder) {
+    nsDependentCString encodingName(csName);
+    if (StartsWith(encodingName, "x-mac-") &&
+        !encodingName.EqualsLiteral("x-mac-cyrillic")) {
 #ifdef XP_MACOSX
         // Special case for macOS only: support legacy Mac encodings
-        // that DecoderForEncoding didn't handle.
+        // that aren't part of the Encoding Standard.
         if (aPlatformCode == PLATFORM_ID_MAC) {
             CFStringRef str =
                 CFStringCreateWithBytes(kCFAllocatorDefault,
@@ -1504,24 +1514,10 @@ gfxFontUtils::DecodeFontName(const char *aNameData, int32_t aByteLen,
         return false;
     }
 
-    int32_t destLength;
-    nsresult rv = decoder->GetMaxLength(aNameData, aByteLen, &destLength);
-    if (NS_FAILED(rv)) {
-        NS_WARNING("decoder->GetMaxLength failed, invalid font name?");
-        return false;
-    }
-
-    // make space for the converted string
-    aName.SetLength(destLength);
-    rv = decoder->Convert(aNameData, &aByteLen,
-                          aName.BeginWriting(), &destLength);
-    if (NS_FAILED(rv)) {
-        NS_WARNING("decoder->Convert failed, invalid font name?");
-        return false;
-    }
-    aName.Truncate(destLength); // set the actual length
-
-    return true;
+    auto encoding = Encoding::ForName(encodingName);
+    auto rv = encoding->DecodeWithoutBOMHandling(
+      AsBytes(MakeSpan(aNameData, aByteLen)), aName);
+    return NS_SUCCEEDED(rv);
 }
 
 nsresult

@@ -12,6 +12,7 @@
       'target_name': 'ilbc',
       'type': 'static_library',
       'dependencies': [
+        '<(webrtc_root)/base/base.gyp:rtc_base_approved',
         '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
         'audio_encoder_interface',
       ],
@@ -162,20 +163,4 @@
      ], # sources
     }, # ilbc
   ], # targets
-  'conditions': [
-    ['include_tests==1', {
-      'targets': [
-        {
-          'target_name': 'ilbc_test',
-          'type': 'executable',
-          'dependencies': [
-            'ilbc',
-          ],
-          'sources': [
-            'test/iLBC_test.c',
-          ],
-        }, # ilbc_test
-      ], # targets
-    }], # include_tests
-  ], # conditions
 }

@@ -18,7 +18,6 @@
 #include "webrtc/modules/utility/include/helpers_android.h"
 #include "webrtc/modules/video_capture/android/video_capture_android.h"
 #include "webrtc/system_wrappers/include/logging.h"
-#include "webrtc/system_wrappers/include/ref_count.h"
 #include "webrtc/system_wrappers/include/trace.h"
 
 #include "AndroidJNIWrapper.h"
@@ -203,13 +202,12 @@ int32_t DeviceInfoAndroid::Refresh() {
   return 0;
 }
 
-VideoCaptureModule::DeviceInfo* VideoCaptureImpl::CreateDeviceInfo(
-    const int32_t id) {
-  return new videocapturemodule::DeviceInfoAndroid(id);
+VideoCaptureModule::DeviceInfo* VideoCaptureImpl::CreateDeviceInfo() {
+  return new videocapturemodule::DeviceInfoAndroid();
 }
 
-DeviceInfoAndroid::DeviceInfoAndroid(const int32_t id) :
-    DeviceInfoImpl(id) {
+DeviceInfoAndroid::DeviceInfoAndroid() :
+    DeviceInfoImpl() {
 }
 
 DeviceInfoAndroid::~DeviceInfoAndroid() {

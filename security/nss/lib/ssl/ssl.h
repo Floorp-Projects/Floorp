@@ -942,6 +942,9 @@ SSL_ConfigSecureServerWithCertChain(PRFileDesc *fd, CERTCertificate *cert,
 ** associated with a configured certificate to perform session ticket
 ** encryption.  If this function isn't used, the keys provided with a configured
 ** RSA certificate are used for wrapping session ticket keys.
+**
+** NOTE: This key is used for all self-encryption but is named for
+** session tickets for historical reasons.
 */
 SSL_IMPORT SECStatus
 SSL_SetSessionTicketKeyPair(SECKEYPublicKey *pubKey, SECKEYPrivateKey *privKey);

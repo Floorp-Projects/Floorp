@@ -90,7 +90,7 @@ void WebRtcIsacfix_Spec2TimeC(int16_t* inreQ7,
                               int32_t* outre1Q16,
                               int32_t* outre2Q16);
 
-#if (defined WEBRTC_DETECT_NEON) || (defined WEBRTC_HAS_NEON)
+#if defined(WEBRTC_HAS_NEON)
 void WebRtcIsacfix_Time2SpecNeon(int16_t* inre1Q9,
                                  int16_t* inre2Q9,
                                  int16_t* outre,
@@ -174,7 +174,7 @@ void WebRtcIsacfix_FilterMaLoopC(int16_t input0,
                                  int32_t* ptr1,
                                  int32_t* ptr2);
 
-#if (defined WEBRTC_DETECT_NEON) || (defined WEBRTC_HAS_NEON)
+#if defined(WEBRTC_HAS_NEON)
 int WebRtcIsacfix_AutocorrNeon(int32_t* __restrict r,
                                const int16_t* __restrict x,
                                int16_t N,

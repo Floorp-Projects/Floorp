@@ -48,7 +48,7 @@
 //     void Test() {}
 //     void BindThis() {
 //       // The functor passed to AsyncInvoke() will keep this object alive.
-//       invoker.AsyncInvoke(rtc::Bind(&Bar::Test, this));
+//       invoker.AsyncInvoke(RTC_FROM_HERE,rtc::Bind(&Bar::Test, this));
 //     }
 //   };
 //

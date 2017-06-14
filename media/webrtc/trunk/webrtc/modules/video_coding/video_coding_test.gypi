@@ -15,7 +15,7 @@
          'webrtc_video_coding',
          '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
          '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers_default',
-         '<(webrtc_root)/test/webrtc_test_common.gyp:webrtc_test_common',
+         '<(webrtc_root)/test/test.gyp:test_common',
       ],
       'sources': [
         # headers

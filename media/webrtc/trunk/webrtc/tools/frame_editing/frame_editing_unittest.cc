@@ -12,10 +12,10 @@
 #include <stdlib.h>
 
 #include <fstream>
+#include <memory>
 
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/tools/frame_editing/frame_editing_lib.h"
 
@@ -56,8 +56,8 @@ class FrameEditingTest : public ::testing::Test {
   // Compares the frames in both streams to the end of one of the streams.
   void CompareToTheEnd(FILE* test_video_fid,
                        FILE* ref_video_fid,
-                       rtc::scoped_ptr<int[]>* ref_buffer,
-                       rtc::scoped_ptr<int[]>* test_buffer) {
+                       std::unique_ptr<int[]>* ref_buffer,
+                       std::unique_ptr<int[]>* test_buffer) {
     while (!feof(test_video_fid) && !feof(ref_video_fid)) {
       num_bytes_read_ = fread(ref_buffer->get(), 1, kFrameSize, ref_video_fid);
       if (!feof(ref_video_fid)) {
@@ -81,8 +81,8 @@ class FrameEditingTest : public ::testing::Test {
   FILE* original_fid_;
   FILE* edited_fid_;
   size_t num_bytes_read_;
-  rtc::scoped_ptr<int[]> original_buffer_;
-  rtc::scoped_ptr<int[]> edited_buffer_;
+  std::unique_ptr<int[]> original_buffer_;
+  std::unique_ptr<int[]> edited_buffer_;
   int num_frames_read_;
 };
 

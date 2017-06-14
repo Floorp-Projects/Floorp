@@ -9,6 +9,7 @@
  */
 
 #include "webrtc/base/asyncudpsocket.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 
 namespace rtc {
@@ -18,7 +19,7 @@ static const int BUF_SIZE = 64 * 1024;
 AsyncUDPSocket* AsyncUDPSocket::Create(
     AsyncSocket* socket,
     const SocketAddress& bind_address) {
-  scoped_ptr<AsyncSocket> owned_socket(socket);
+  std::unique_ptr<AsyncSocket> owned_socket(socket);
   if (socket->Bind(bind_address) < 0) {
     LOG(LS_ERROR) << "Bind() failed with error " << socket->GetError();
     return NULL;
@@ -37,7 +38,6 @@ AsyncUDPSocket* AsyncUDPSocket::Create(SocketFactory* factory,
 
 AsyncUDPSocket::AsyncUDPSocket(AsyncSocket* socket)
     : socket_(socket) {
-  ASSERT(socket_);
   size_ = BUF_SIZE;
   buf_ = new char[size_];
 
@@ -60,7 +60,7 @@ SocketAddress AsyncUDPSocket::GetRemoteAddress() const {
 
 int AsyncUDPSocket::Send(const void *pv, size_t cb,
                          const rtc::PacketOptions& options) {
-  rtc::SentPacket sent_packet(options.packet_id, rtc::Time());
+  rtc::SentPacket sent_packet(options.packet_id, rtc::TimeMillis());
   int ret = socket_->Send(pv, cb);
   SignalSentPacket(this, sent_packet);
   return ret;
@@ -69,7 +69,7 @@ int AsyncUDPSocket::Send(const void *pv, size_t cb,
 int AsyncUDPSocket::SendTo(const void *pv, size_t cb,
                            const SocketAddress& addr,
                            const rtc::PacketOptions& options) {
-  rtc::SentPacket sent_packet(options.packet_id, rtc::Time());
+  rtc::SentPacket sent_packet(options.packet_id, rtc::TimeMillis());
   int ret = socket_->SendTo(pv, cb, addr);
   SignalSentPacket(this, sent_packet);
   return ret;
@@ -100,10 +100,11 @@ void AsyncUDPSocket::SetError(int error) {
 }
 
 void AsyncUDPSocket::OnReadEvent(AsyncSocket* socket) {
-  ASSERT(socket_.get() == socket);
+  RTC_DCHECK(socket_.get() == socket);
 
   SocketAddress remote_addr;
-  int len = socket_->RecvFrom(buf_, size_, &remote_addr);
+  int64_t timestamp;
+  int len = socket_->RecvFrom(buf_, size_, &remote_addr, &timestamp);
   if (len < 0) {
     // An error here typically means we got an ICMP error in response to our
     // send datagram, indicating the remote address was unreachable.
@@ -117,8 +118,9 @@ void AsyncUDPSocket::OnReadEvent(AsyncSocket* socket) {
 
   // TODO: Make sure that we got all of the packet.
   // If we did not, then we should resize our buffer to be large enough.
-  SignalReadPacket(this, buf_, static_cast<size_t>(len), remote_addr,
-                   CreatePacketTime(0));
+  SignalReadPacket(
+      this, buf_, static_cast<size_t>(len), remote_addr,
+      (timestamp > -1 ? PacketTime(timestamp, 0) : CreatePacketTime(0)));
 }
 
 void AsyncUDPSocket::OnWriteEvent(AsyncSocket* socket) {

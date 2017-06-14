@@ -11,11 +11,13 @@
 #ifndef WEBRTC_BASE_SOCKETSERVER_H_
 #define WEBRTC_BASE_SOCKETSERVER_H_
 
+#include <memory>
 #include "webrtc/base/socketfactory.h"
 
 namespace rtc {
 
 class MessageQueue;
+class NetworkBinderInterface;
 
 // Provides the ability to wait for activity on a set of sockets.  The Thread
 // class provides a nice wrapper on a socket server.
@@ -26,6 +28,7 @@ class SocketServer : public SocketFactory {
  public:
   static const int kForever = -1;
 
+  static std::unique_ptr<SocketServer> CreateDefault();
   // When the socket server is installed into a Thread, this function is
   // called to allow the socket server to use the thread's message queue for
   // any messaging that it might need to perform.
@@ -39,6 +42,16 @@ class SocketServer : public SocketFactory {
 
   // Causes the current wait (if one is in progress) to wake up.
   virtual void WakeUp() = 0;
+
+  // A network binder will bind the created sockets to a network.
+  // It is only used in PhysicalSocketServer.
+  void set_network_binder(NetworkBinderInterface* binder) {
+    network_binder_ = binder;
+  }
+  NetworkBinderInterface* network_binder() const { return network_binder_; }
+
+ private:
+  NetworkBinderInterface* network_binder_ = nullptr;
 };
 
 }  // namespace rtc

@@ -70,7 +70,8 @@ T RandomFloatingPointRange(T min, T max)
 }
 
 /**
- * RandomFloatingPoint returns a random floating-point number in x^2 increments.
+ * RandomFloatingPoint returns a random floating-point number in 2**n
+ * increments.
  */
 template <typename T>
 T RandomFloatingPoint()
@@ -88,6 +89,12 @@ class FuzzingTraits
 public:
   static unsigned int Random(unsigned int aMax);
   static bool Sometimes(unsigned int aProbability);
+  /**
+   * Frequency() defines how many mutations of a kind shall be applied to a
+   * target buffer by using a user definable factor. The higher the factor,
+   * the less mutations are being made.
+   */
+  static size_t Frequency(const size_t aSize, const uint64_t aFactor);
 };
 
 } // namespace fuzzing

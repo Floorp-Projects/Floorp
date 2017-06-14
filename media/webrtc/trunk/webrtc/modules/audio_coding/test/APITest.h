@@ -11,7 +11,8 @@
 #ifndef WEBRTC_MODULES_AUDIO_CODING_TEST_APITEST_H_
 #define WEBRTC_MODULES_AUDIO_CODING_TEST_APITEST_H_
 
-#include "webrtc/base/scoped_ptr.h"
+#include <memory>
+
 #include "webrtc/modules/audio_coding/include/audio_coding_module.h"
 #include "webrtc/modules/audio_coding/test/ACMTest.h"
 #include "webrtc/modules/audio_coding/test/Channel.h"
@@ -22,8 +23,6 @@
 
 namespace webrtc {
 
-class Config;
-
 enum APITESTAction {
   TEST_CHANGE_CODEC_ONLY = 0,
   DTX_TEST = 1
@@ -31,7 +30,7 @@ enum APITESTAction {
 
 class APITest : public ACMTest {
  public:
-  explicit APITest(const Config& config);
+  APITest();
   ~APITest();
 
   void Perform();
@@ -82,8 +81,8 @@ class APITest : public ACMTest {
   bool APIRunB();
 
   //--- ACMs
-  rtc::scoped_ptr<AudioCodingModule> _acmA;
-  rtc::scoped_ptr<AudioCodingModule> _acmB;
+  std::unique_ptr<AudioCodingModule> _acmA;
+  std::unique_ptr<AudioCodingModule> _acmB;
 
   //--- Channels
   Channel* _channel_A2B;

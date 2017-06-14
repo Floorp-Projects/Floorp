@@ -16,6 +16,7 @@ include protocol PLayerTransaction;
 include protocol PTexture;
 include protocol PWebRenderBridge;
 include "mozilla/GfxMessageUtils.h";
+include "mozilla/layers/LayersMessageUtils.h";
 include "mozilla/layers/WebRenderMessageUtils.h";
 
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";

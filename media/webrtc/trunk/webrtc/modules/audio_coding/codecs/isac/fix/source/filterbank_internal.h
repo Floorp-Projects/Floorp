@@ -60,7 +60,7 @@ void WebRtcIsacfix_AllpassFilter2FixDec16C(
    int32_t *filter_state_ch1,
    int32_t *filter_state_ch2);
 
-#if (defined WEBRTC_DETECT_NEON) || (defined WEBRTC_HAS_NEON)
+#if defined(WEBRTC_HAS_NEON)
 void WebRtcIsacfix_AllpassFilter2FixDec16Neon(
    int16_t *data_ch1,
    int16_t *data_ch2,

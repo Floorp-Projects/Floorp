@@ -10,6 +10,8 @@
 
 #include "webrtc/modules/desktop_capture/desktop_frame_win.h"
 
+#include <utility>
+
 #include "webrtc/system_wrappers/include/logging.h"
 
 namespace webrtc {
@@ -17,22 +19,23 @@ namespace webrtc {
 DesktopFrameWin::DesktopFrameWin(DesktopSize size,
                                  int stride,
                                  uint8_t* data,
-                                 SharedMemory* shared_memory,
+                                 std::unique_ptr<SharedMemory> shared_memory,
                                  HBITMAP bitmap)
-    : DesktopFrame(size, stride, data, shared_memory),
+    : DesktopFrame(size, stride, data, shared_memory.get()),
       bitmap_(bitmap),
-      owned_shared_memory_(shared_memory_) {
-}
+      owned_shared_memory_(std::move(shared_memory)) {}
 
 DesktopFrameWin::~DesktopFrameWin() {
   DeleteObject(bitmap_);
 }
 
 // static
-DesktopFrameWin* DesktopFrameWin::Create(DesktopSize size,
-                                         SharedMemory* shared_memory,
-                                         HDC hdc) {
+std::unique_ptr<DesktopFrameWin> DesktopFrameWin::Create(
+    DesktopSize size,
+    SharedMemoryFactory* shared_memory_factory,
+    HDC hdc) {
   int bytes_per_row = size.width() * kBytesPerPixel;
+  int buffer_size = bytes_per_row * size.height();
 
   // Describe a device independent bitmap (DIB) that is the size of the desktop.
   BITMAPINFO bmi = {};
@@ -43,21 +46,23 @@ DesktopFrameWin* DesktopFrameWin::Create(DesktopSize size,
   bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
   bmi.bmiHeader.biSizeImage = bytes_per_row * size.height();
 
-  HANDLE section_handle = NULL;
-  if (shared_memory)
+  std::unique_ptr<SharedMemory> shared_memory;
+  HANDLE section_handle = nullptr;
+  if (shared_memory_factory) {
+    shared_memory = shared_memory_factory->CreateSharedMemory(buffer_size);
     section_handle = shared_memory->handle();
-  void* data = NULL;
+  }
+  void* data = nullptr;
   HBITMAP bitmap = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &data,
                                     section_handle, 0);
   if (!bitmap) {
     LOG(LS_WARNING) << "Failed to allocate new window frame " << GetLastError();
-    delete shared_memory;
-    return NULL;
+    return nullptr;
   }
 
-  return new DesktopFrameWin(size, bytes_per_row,
-                             reinterpret_cast<uint8_t*>(data),
-                             shared_memory, bitmap);
+  return std::unique_ptr<DesktopFrameWin>(
+      new DesktopFrameWin(size, bytes_per_row, reinterpret_cast<uint8_t*>(data),
+                          std::move(shared_memory), bitmap));
 }
 
 }  // namespace webrtc

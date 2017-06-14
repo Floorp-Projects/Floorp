@@ -14,13 +14,13 @@
 #pragma message("WARNING: video_coding/codecs/interface is DEPRECATED; use video_coding/include")
 #include <vector>
 
+#include "webrtc/api/video/video_frame.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/modules/video_coding/include/video_error_codes.h"
 #include "webrtc/typedefs.h"
 #include "webrtc/video_decoder.h"
 #include "webrtc/video_encoder.h"
-#include "webrtc/video_frame.h"
 
 namespace webrtc {
 

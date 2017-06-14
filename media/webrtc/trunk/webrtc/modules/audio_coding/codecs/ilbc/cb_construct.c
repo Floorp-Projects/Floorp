@@ -16,6 +16,8 @@
 
 ******************************************************************/
 
+#include "cb_construct.h"
+
 #include "defines.h"
 #include "gain_dequant.h"
 #include "get_cd_vec.h"
@@ -24,14 +26,13 @@
  *  Construct decoded vector from codebook and gains.
  *---------------------------------------------------------------*/
 
-void WebRtcIlbcfix_CbConstruct(
-    int16_t *decvector,  /* (o) Decoded vector */
-    int16_t *index,   /* (i) Codebook indices */
-    int16_t *gain_index,  /* (i) Gain quantization indices */
-    int16_t *mem,   /* (i) Buffer for codevector construction */
-    size_t lMem,   /* (i) Length of buffer */
-    size_t veclen   /* (i) Length of vector */
-                               ){
+bool WebRtcIlbcfix_CbConstruct(
+    int16_t* decvector,        /* (o) Decoded vector */
+    const int16_t* index,      /* (i) Codebook indices */
+    const int16_t* gain_index, /* (i) Gain quantization indices */
+    int16_t* mem,              /* (i) Buffer for codevector construction */
+    size_t lMem,               /* (i) Length of buffer */
+    size_t veclen) {           /* (i) Length of vector */
   size_t j;
   int16_t gain[CB_NSTAGES];
   /* Stack based */
@@ -50,9 +51,12 @@ void WebRtcIlbcfix_CbConstruct(
   /* codebook vector construction and construction of total vector */
 
   /* Stack based */
-  WebRtcIlbcfix_GetCbVec(cbvec0, mem, (size_t)index[0], lMem, veclen);
-  WebRtcIlbcfix_GetCbVec(cbvec1, mem, (size_t)index[1], lMem, veclen);
-  WebRtcIlbcfix_GetCbVec(cbvec2, mem, (size_t)index[2], lMem, veclen);
+  if (!WebRtcIlbcfix_GetCbVec(cbvec0, mem, (size_t)index[0], lMem, veclen))
+    return false;  // Failure.
+  if (!WebRtcIlbcfix_GetCbVec(cbvec1, mem, (size_t)index[1], lMem, veclen))
+    return false;  // Failure.
+  if (!WebRtcIlbcfix_GetCbVec(cbvec2, mem, (size_t)index[2], lMem, veclen))
+    return false;  // Failure.
 
   gainPtr = &gain[0];
   for (j=0;j<veclen;j++) {
@@ -63,5 +67,5 @@ void WebRtcIlbcfix_CbConstruct(
     decvector[j] = (int16_t)((a32 + 8192) >> 14);
   }
 
-  return;
+  return true;  // Success.
 }

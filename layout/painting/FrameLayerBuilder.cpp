@@ -7,6 +7,7 @@
 
 #include "FrameLayerBuilder.h"
 
+#include "gfxContext.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
@@ -33,7 +34,6 @@
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsPrintfCString.h"
-#include "nsRenderingContext.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsTransitionManager.h"
 #include "mozilla/LayerTimelineMarker.h"
@@ -3669,7 +3669,7 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
                    LayerManager* aManager,
                    nsDisplayItem* aItem,
                    gfxContext* aContext,
-                   nsRenderingContext* aCtx)
+                   gfxContext* aCtx)
 {
   // This item has an inactive layer. Render it to a PaintedLayer
   // using a temporary BasicLayerManager.
@@ -5913,9 +5913,8 @@ static void DebugPaintItem(DrawTarget& aDrawTarget,
     return;
   }
   context->SetMatrix(gfxMatrix::Translation(-bounds.x, -bounds.y));
-  nsRenderingContext ctx(context);
 
-  aItem->Paint(aBuilder, &ctx);
+  aItem->Paint(aBuilder, context);
   RefPtr<SourceSurface> surface = tempDT->Snapshot();
   DumpPaintedImage(aItem, surface);
 
@@ -5982,7 +5981,7 @@ void
 FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
                               const nsIntRect& aRect,
                               gfxContext *aContext,
-                              nsRenderingContext *aRC,
+                              gfxContext *aRC,
                               nsDisplayListBuilder* aBuilder,
                               nsPresContext* aPresContext,
                               const nsIntPoint& aOffset,
@@ -6196,8 +6195,6 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
     userData->mVisibilityComputedRegion = aDirtyRegion;
   }
 
-  nsRenderingContext rc(aContext);
-
   if (shouldDrawRectsSeparately) {
     for (auto iter = aRegionToDraw.RectIter(); !iter.Done(); iter.Next()) {
       const nsIntRect& iterRect = iter.Get();
@@ -6216,7 +6213,7 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
         aContext->CurrentMatrix().Translate(aLayer->GetResidualTranslation() - gfxPoint(offset.x, offset.y)).
                                   Scale(userData->mXScale, userData->mYScale));
 
-      layerBuilder->PaintItems(entry->mItems, iterRect, aContext, &rc,
+      layerBuilder->PaintItems(entry->mItems, iterRect, aContext, aContext,
                                builder, presContext,
                                offset, userData->mXScale, userData->mYScale,
                                entry->mCommonClipCount);
@@ -6232,7 +6229,7 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
       aContext->CurrentMatrix().Translate(aLayer->GetResidualTranslation() - gfxPoint(offset.x, offset.y)).
                                 Scale(userData->mXScale,userData->mYScale));
 
-    layerBuilder->PaintItems(entry->mItems, aRegionToDraw.GetBounds(), aContext, &rc,
+    layerBuilder->PaintItems(entry->mItems, aRegionToDraw.GetBounds(), aContext, aContext,
                              builder, presContext,
                              offset, userData->mXScale, userData->mYScale,
                              entry->mCommonClipCount);

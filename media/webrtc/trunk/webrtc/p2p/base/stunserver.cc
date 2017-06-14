@@ -28,7 +28,7 @@ void StunServer::OnPacket(
     const rtc::SocketAddress& remote_addr,
     const rtc::PacketTime& packet_time) {
   // Parse the STUN message; eat any messages that fail to parse.
-  rtc::ByteBuffer bbuf(buf, size);
+  rtc::ByteBufferReader bbuf(buf, size);
   StunMessage msg;
   if (!msg.Read(&bbuf)) {
     return;
@@ -72,7 +72,7 @@ void StunServer::SendErrorResponse(
 
 void StunServer::SendResponse(
     const StunMessage& msg, const rtc::SocketAddress& addr) {
-  rtc::ByteBuffer buf;
+  rtc::ByteBufferWriter buf;
   msg.Write(&buf);
   rtc::PacketOptions options;
   if (socket_->SendTo(buf.Data(), buf.Length(), addr, options) < 0)

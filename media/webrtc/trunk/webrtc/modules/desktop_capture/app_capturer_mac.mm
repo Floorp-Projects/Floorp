@@ -15,7 +15,6 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <AppKit/AppKit.h>
 
-#include "webrtc/modules/desktop_capture/window_capturer.h"
 #include "webrtc/modules/desktop_capture/app_capturer.h"
 
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
@@ -39,7 +38,11 @@ class AppCapturerMac : public AppCapturer {
   // DesktopCapturer interface.
   virtual void Start(Callback* callback) override;
   virtual void Stop() override;
-  virtual void Capture(const DesktopRegion& region) override;
+  virtual void CaptureFrame() override;
+  virtual bool SelectSource(SourceId id) override
+  {
+    return SelectApp(static_cast<ProcessId>(id));
+  }
 
  private:
   Callback* callback_;
@@ -84,11 +87,11 @@ void AppCapturerMac::Stop() {
   callback_ = NULL;
 }
 
-void AppCapturerMac::Capture(const DesktopRegion& region) {
+void AppCapturerMac::CaptureFrame() {
   // Check that selected process exists
   NSRunningApplication *ra = [NSRunningApplication runningApplicationWithProcessIdentifier:process_id_];
   if (!ra) {
-    callback_->OnCaptureCompleted(NULL);
+    callback_->OnCaptureResult(DesktopCapturer::Result::ERROR_TEMPORARY, nullptr);
     return;
   }
 
@@ -128,7 +131,7 @@ void AppCapturerMac::Capture(const DesktopRegion& region) {
   // Check that window list is not empty
   if (captureWindowListCount <= 0) {
     delete [] captureWindowList;
-    callback_->OnCaptureCompleted(NULL);
+    callback_->OnCaptureResult(DesktopCapturer::Result::ERROR_TEMPORARY, nullptr);
     return;
   }
 
@@ -149,7 +152,7 @@ void AppCapturerMac::Capture(const DesktopRegion& region) {
   // Wrap raw data into DesktopFrame
   if (!app_image) {
     CFRelease(app_image);
-    callback_->OnCaptureCompleted(NULL);
+    callback_->OnCaptureResult(DesktopCapturer::Result::ERROR_TEMPORARY, nullptr);
     return;
   }
 
@@ -157,13 +160,13 @@ void AppCapturerMac::Capture(const DesktopRegion& region) {
   if (bits_per_pixel != 32) {
       LOG(LS_ERROR) << "Unsupported window image depth: " << bits_per_pixel;
       CFRelease(app_image);
-      callback_->OnCaptureCompleted(NULL);
+      callback_->OnCaptureResult(DesktopCapturer::Result::ERROR_TEMPORARY, nullptr);
       return;
   }
 
   int width = CGImageGetWidth(app_image);
   int height = CGImageGetHeight(app_image);
-  DesktopFrame* frame = new BasicDesktopFrame(DesktopSize(width, height));
+  std::unique_ptr<DesktopFrame> frame(new BasicDesktopFrame(DesktopSize(width, height)));
 
   CGDataProviderRef provider = CGImageGetDataProvider(app_image);
   CFDataRef cf_data = CGDataProviderCopyData(provider);
@@ -177,7 +180,7 @@ void AppCapturerMac::Capture(const DesktopRegion& region) {
   CFRelease(cf_data);
   CFRelease(app_image);
 
-  callback_->OnCaptureCompleted(frame);
+  callback_->OnCaptureResult(DesktopCapturer::Result::SUCCESS, std::move(frame));
 }
 
 }  // namespace
@@ -185,6 +188,15 @@ void AppCapturerMac::Capture(const DesktopRegion& region) {
 // static
 AppCapturer* AppCapturer::Create(const DesktopCaptureOptions& options) {
   return new AppCapturerMac();
+}
+
+// static
+std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawAppCapturer(
+    const DesktopCaptureOptions& options) {
+
+  std::unique_ptr<AppCapturerMac> capturer(new AppCapturerMac());
+
+  return std::unique_ptr<DesktopCapturer>(capturer.release());
 }
 
 }  // namespace webrtc

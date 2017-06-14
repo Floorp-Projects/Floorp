@@ -8,18 +8,12 @@ if CONFIG['MOZ_WEBRTC']:
     EXPORTS += [
         'CamerasChild.h',
         'CamerasParent.h',
-        'LoadManager.h',
-        'LoadManagerFactory.h',
-        'LoadMonitor.h',
         'VideoEngine.h',
         'VideoFrameUtils.h'
     ]
     UNIFIED_SOURCES += [
         'CamerasChild.cpp',
         'CamerasParent.cpp',
-        'LoadManager.cpp',
-        'LoadManagerFactory.cpp',
-        'LoadMonitor.cpp',
         'ShmemPool.cpp',
         'VideoEngine.cpp',
         'VideoFrameUtils.cpp'
@@ -32,6 +26,8 @@ if CONFIG['OS_TARGET'] == 'WINNT':
     DEFINES['WEBRTC_WIN'] = True
 else:
     DEFINES['WEBRTC_POSIX'] = True
+    # Must match build/gyp.mozbuild: enable_libevent
+    DEFINES['WEBRTC_BUILD_LIBEVENT'] = True
 
 if CONFIG['OS_TARGET'] == 'Android':
     DEFINES['WEBRTC_ANDROID'] = True

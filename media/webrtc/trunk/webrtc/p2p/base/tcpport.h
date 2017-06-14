@@ -12,7 +12,9 @@
 #define WEBRTC_P2P_BASE_TCPPORT_H_
 
 #include <list>
+#include <memory>
 #include <string>
+
 #include "webrtc/p2p/base/port.h"
 #include "webrtc/base/asyncpacketsocket.h"
 
@@ -58,6 +60,8 @@ class TCPPort : public Port {
   bool SupportsProtocol(const std::string& protocol) const override {
     return protocol == TCP_PROTOCOL_NAME || protocol == SSLTCP_PROTOCOL_NAME;
   }
+
+  ProtocolType GetProtocol() const override { return PROTO_TCP; }
 
  protected:
   TCPPort(rtc::Thread* thread,
@@ -164,7 +168,7 @@ class TCPConnection : public Connection {
                     const rtc::PacketTime& packet_time);
   void OnReadyToSend(rtc::AsyncPacketSocket* socket);
 
-  rtc::scoped_ptr<rtc::AsyncPacketSocket> socket_;
+  std::unique_ptr<rtc::AsyncPacketSocket> socket_;
   int error_;
   bool outgoing_;
 

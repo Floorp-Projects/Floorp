@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
 #include "webrtc/base/fileutils.h"
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/optionsfile.h"
@@ -33,13 +35,24 @@ static int kTestInt2 = 67890;
 static int kNegInt = -634;
 static int kZero = 0;
 
-class OptionsFileTest : public testing::Test {
+#if defined (WEBRTC_ANDROID)
+// Fails on Android: https://bugs.chromium.org/p/webrtc/issues/detail?id=4364.
+#define MAYBE_OptionsFileTest DISABLED_OptionsFileTest
+#else
+#define MAYBE_OptionsFileTest OptionsFileTest
+#endif
+
+class MAYBE_OptionsFileTest : public testing::Test {
  public:
-  OptionsFileTest() {
+  MAYBE_OptionsFileTest() {
     Pathname dir;
     ASSERT(Filesystem::GetTemporaryFolder(dir, true, NULL));
     test_file_ = Filesystem::TempFilename(dir, ".testfile");
     OpenStore();
+  }
+
+  ~MAYBE_OptionsFileTest() override {
+    remove(test_file_.c_str());
   }
 
  protected:
@@ -47,13 +60,13 @@ class OptionsFileTest : public testing::Test {
     store_.reset(new OptionsFile(test_file_));
   }
 
-  rtc::scoped_ptr<OptionsFile> store_;
+  std::unique_ptr<OptionsFile> store_;
 
  private:
   std::string test_file_;
 };
 
-TEST_F(OptionsFileTest, GetSetString) {
+TEST_F(MAYBE_OptionsFileTest, GetSetString) {
   // Clear contents of the file on disk.
   EXPECT_TRUE(store_->Save());
   std::string out1, out2;
@@ -79,7 +92,7 @@ TEST_F(OptionsFileTest, GetSetString) {
   EXPECT_FALSE(store_->GetStringValue(kTestOptionB, &out2));
 }
 
-TEST_F(OptionsFileTest, GetSetInt) {
+TEST_F(MAYBE_OptionsFileTest, GetSetInt) {
   // Clear contents of the file on disk.
   EXPECT_TRUE(store_->Save());
   int out1, out2;
@@ -111,7 +124,7 @@ TEST_F(OptionsFileTest, GetSetInt) {
   EXPECT_EQ(kZero, out1);
 }
 
-TEST_F(OptionsFileTest, Persist) {
+TEST_F(MAYBE_OptionsFileTest, Persist) {
   // Clear contents of the file on disk.
   EXPECT_TRUE(store_->Save());
   EXPECT_TRUE(store_->SetStringValue(kTestOptionA, kTestString1));
@@ -129,7 +142,7 @@ TEST_F(OptionsFileTest, Persist) {
   EXPECT_EQ(kNegInt, out2);
 }
 
-TEST_F(OptionsFileTest, SpecialCharacters) {
+TEST_F(MAYBE_OptionsFileTest, SpecialCharacters) {
   // Clear contents of the file on disk.
   EXPECT_TRUE(store_->Save());
   std::string out;

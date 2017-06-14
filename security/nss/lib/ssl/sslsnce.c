@@ -35,7 +35,7 @@
  *     sidCacheEntry            sidCacheData[ numSIDCacheEntries];
  *     certCacheEntry           certCacheData[numCertCacheEntries];
  *     SSLWrappedSymWrappingKey keyCacheData[SSL_NUM_WRAP_KEYS][SSL_NUM_WRAP_MECHS];
- *     PRUint8                  keyNameSuffix[SESS_TICKET_KEY_VAR_NAME_LEN]
+ *     PRUint8                  keyNameSuffix[SELF_ENCRYPT_KEY_VAR_NAME_LEN]
  *     encKeyCacheEntry         ticketEncKey; // Wrapped
  *     encKeyCacheEntry         ticketMacKey; // Wrapped
  *     PRBool                   ticketKeysValid;
@@ -57,7 +57,7 @@
 #include "blapit.h"
 #include "nss.h" /* for NSS_RegisterShutdown */
 #include "sechash.h"
-
+#include "selfencrypt.h"
 #include <stdio.h>
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
@@ -983,7 +983,7 @@ InitCache(cacheDesc *cache, int maxCacheEntries, int maxCertCacheEntries,
 
     cache->ticketKeyNameSuffix = (PRUint8 *)ptr;
     ptr = (ptrdiff_t)(cache->ticketKeyNameSuffix +
-                      SESS_TICKET_KEY_VAR_NAME_LEN);
+                      SELF_ENCRYPT_KEY_VAR_NAME_LEN);
     ptr = SID_ROUNDUP(ptr, SID_ALIGNMENT);
 
     cache->ticketEncKey = (encKeyCacheEntry *)ptr;
@@ -1600,7 +1600,7 @@ StopLockPoller(cacheDesc *cache)
  *  Code dealing with shared wrapped symmetric wrapping keys below      *
  ************************************************************************/
 
-/* The asymmetric key we use for wrapping the symmetric ticket keys. This is a
+/* The asymmetric key we use for wrapping the self-encryption keys. This is a
  * global structure that can be initialized without a socket. Access is
  * synchronized on the reader-writer lock. This is setup either by calling
  * SSL_SetSessionTicketKeyPair() or by configuring a certificate of the
@@ -1611,77 +1611,80 @@ static struct {
     SECKEYPublicKey *pubKey;
     SECKEYPrivateKey *privKey;
     PRBool configured;
-} ssl_session_ticket_key_pair;
+} ssl_self_encrypt_key_pair;
 
-/* The symmetric ticket keys. This requires a socket to construct and requires
- * that the global structure be initialized before use. */
-static struct {
-    PRCallOnceType setup;
-    unsigned char keyName[SESS_TICKET_KEY_NAME_LEN];
-    PK11SymKey *encKey;
-    PK11SymKey *macKey;
-} ssl_session_ticket_keys;
+/* The symmetric self-encryption keys. This requires a socket to construct
+ * and requires that the global structure be initialized before use.
+ */
+static sslSelfEncryptKeys ssl_self_encrypt_keys;
+
+/* Externalize the self encrypt keys. Purely used for testing. */
+sslSelfEncryptKeys *
+ssl_GetSelfEncryptKeysInt()
+{
+    return &ssl_self_encrypt_keys;
+}
 
 static void
-ssl_CleanupSessionTicketKeyPair()
+ssl_CleanupSelfEncryptKeyPair()
 {
-    if (ssl_session_ticket_key_pair.pubKey) {
-        PORT_Assert(ssl_session_ticket_key_pair.privKey);
-        SECKEY_DestroyPublicKey(ssl_session_ticket_key_pair.pubKey);
-        SECKEY_DestroyPrivateKey(ssl_session_ticket_key_pair.privKey);
+    if (ssl_self_encrypt_key_pair.pubKey) {
+        PORT_Assert(ssl_self_encrypt_key_pair.privKey);
+        SECKEY_DestroyPublicKey(ssl_self_encrypt_key_pair.pubKey);
+        SECKEY_DestroyPrivateKey(ssl_self_encrypt_key_pair.privKey);
     }
 }
 
 void
-ssl_ResetSessionTicketKeys()
+ssl_ResetSelfEncryptKeys()
 {
-    if (ssl_session_ticket_keys.encKey) {
-        PORT_Assert(ssl_session_ticket_keys.macKey);
-        PK11_FreeSymKey(ssl_session_ticket_keys.encKey);
-        PK11_FreeSymKey(ssl_session_ticket_keys.macKey);
+    if (ssl_self_encrypt_keys.encKey) {
+        PORT_Assert(ssl_self_encrypt_keys.macKey);
+        PK11_FreeSymKey(ssl_self_encrypt_keys.encKey);
+        PK11_FreeSymKey(ssl_self_encrypt_keys.macKey);
     }
-    PORT_Memset(&ssl_session_ticket_keys, 0,
-                sizeof(ssl_session_ticket_keys));
+    PORT_Memset(&ssl_self_encrypt_keys, 0,
+                sizeof(ssl_self_encrypt_keys));
 }
 
 static SECStatus
-ssl_SessionTicketShutdown(void *appData, void *nssData)
+ssl_SelfEncryptShutdown(void *appData, void *nssData)
 {
-    ssl_CleanupSessionTicketKeyPair();
-    PR_DestroyRWLock(ssl_session_ticket_key_pair.lock);
-    PORT_Memset(&ssl_session_ticket_key_pair, 0,
-                sizeof(ssl_session_ticket_key_pair));
+    ssl_CleanupSelfEncryptKeyPair();
+    PR_DestroyRWLock(ssl_self_encrypt_key_pair.lock);
+    PORT_Memset(&ssl_self_encrypt_key_pair, 0,
+                sizeof(ssl_self_encrypt_key_pair));
 
-    ssl_ResetSessionTicketKeys();
+    ssl_ResetSelfEncryptKeys();
     return SECSuccess;
 }
 
 static PRStatus
-ssl_SessionTicketSetup(void)
+ssl_SelfEncryptSetup(void)
 {
-    SECStatus rv = NSS_RegisterShutdown(ssl_SessionTicketShutdown, NULL);
+    SECStatus rv = NSS_RegisterShutdown(ssl_SelfEncryptShutdown, NULL);
     if (rv != SECSuccess) {
         return PR_FAILURE;
     }
-    ssl_session_ticket_key_pair.lock = PR_NewRWLock(PR_RWLOCK_RANK_NONE, NULL);
-    if (!ssl_session_ticket_key_pair.lock) {
+    ssl_self_encrypt_key_pair.lock = PR_NewRWLock(PR_RWLOCK_RANK_NONE, NULL);
+    if (!ssl_self_encrypt_key_pair.lock) {
         return PR_FAILURE;
     }
     return PR_SUCCESS;
 }
 
-/* Configure a session ticket key pair.  |explicitConfig| is set to true for
+/* Configure a self encryption key pair.  |explicitConfig| is set to true for
  * calls to SSL_SetSessionTicketKeyPair(), false for implicit configuration.
  * This assumes that the setup has been run. */
 static SECStatus
-ssl_SetSessionTicketKeyPair(SECKEYPublicKey *pubKey,
-                            SECKEYPrivateKey *privKey,
-                            PRBool explicitConfig)
+ssl_SetSelfEncryptKeyPair(SECKEYPublicKey *pubKey,
+                          SECKEYPrivateKey *privKey,
+                          PRBool explicitConfig)
 {
     SECKEYPublicKey *pubKeyCopy;
     SECKEYPrivateKey *privKeyCopy;
 
-    PORT_Assert(ssl_session_ticket_key_pair.lock);
+    PORT_Assert(ssl_self_encrypt_key_pair.lock);
 
     pubKeyCopy = SECKEY_CopyPublicKey(pubKey);
     if (!pubKeyCopy) {
@@ -1696,15 +1699,17 @@ ssl_SetSessionTicketKeyPair(SECKEYPublicKey *pubKey,
         return SECFailure;
     }
 
-    PR_RWLock_Wlock(ssl_session_ticket_key_pair.lock);
-    ssl_CleanupSessionTicketKeyPair();
-    ssl_session_ticket_key_pair.pubKey = pubKeyCopy;
-    ssl_session_ticket_key_pair.privKey = privKeyCopy;
-    ssl_session_ticket_key_pair.configured = explicitConfig;
-    PR_RWLock_Unlock(ssl_session_ticket_key_pair.lock);
+    PR_RWLock_Wlock(ssl_self_encrypt_key_pair.lock);
+    ssl_CleanupSelfEncryptKeyPair();
+    ssl_self_encrypt_key_pair.pubKey = pubKeyCopy;
+    ssl_self_encrypt_key_pair.privKey = privKeyCopy;
+    ssl_self_encrypt_key_pair.configured = explicitConfig;
+    PR_RWLock_Unlock(ssl_self_encrypt_key_pair.lock);
     return SECSuccess;
 }
 
+/* This is really the self-encryption keys but it has the
+ * wrong name for historical API stability reasons. */
 SECStatus
 SSL_SetSessionTicketKeyPair(SECKEYPublicKey *pubKey,
                             SECKEYPrivateKey *privKey)
@@ -1715,53 +1720,53 @@ SSL_SetSessionTicketKeyPair(SECKEYPublicKey *pubKey,
         return SECFailure;
     }
 
-    if (PR_SUCCESS != PR_CallOnce(&ssl_session_ticket_key_pair.setup,
-                                  &ssl_SessionTicketSetup)) {
+    if (PR_SUCCESS != PR_CallOnce(&ssl_self_encrypt_key_pair.setup,
+                                  &ssl_SelfEncryptSetup)) {
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
 
-    return ssl_SetSessionTicketKeyPair(pubKey, privKey, PR_TRUE);
+    return ssl_SetSelfEncryptKeyPair(pubKey, privKey, PR_TRUE);
 }
 
 /* When configuring a server cert, we should save the RSA key in case it is
- * needed for ticket encryption. This saves the latest copy, unless there has
+ * needed for self-encryption. This saves the latest copy, unless there has
  * been an explicit call to SSL_SetSessionTicketKeyPair(). */
 SECStatus
-ssl_MaybeSetSessionTicketKeyPair(const sslKeyPair *keyPair)
+ssl_MaybeSetSelfEncryptKeyPair(const sslKeyPair *keyPair)
 {
     PRBool configured;
 
-    if (PR_SUCCESS != PR_CallOnce(&ssl_session_ticket_key_pair.setup,
-                                  &ssl_SessionTicketSetup)) {
+    if (PR_SUCCESS != PR_CallOnce(&ssl_self_encrypt_key_pair.setup,
+                                  &ssl_SelfEncryptSetup)) {
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
 
-    PR_RWLock_Rlock(ssl_session_ticket_key_pair.lock);
-    configured = ssl_session_ticket_key_pair.configured;
-    PR_RWLock_Unlock(ssl_session_ticket_key_pair.lock);
+    PR_RWLock_Rlock(ssl_self_encrypt_key_pair.lock);
+    configured = ssl_self_encrypt_key_pair.configured;
+    PR_RWLock_Unlock(ssl_self_encrypt_key_pair.lock);
     if (configured) {
         return SECSuccess;
     }
-    return ssl_SetSessionTicketKeyPair(keyPair->pubKey,
-                                       keyPair->privKey, PR_FALSE);
+    return ssl_SetSelfEncryptKeyPair(keyPair->pubKey,
+                                     keyPair->privKey, PR_FALSE);
 }
 
 static SECStatus
-ssl_GetSessionTicketKeyPair(SECKEYPublicKey **pubKey,
-                            SECKEYPrivateKey **privKey)
+ssl_GetSelfEncryptKeyPair(SECKEYPublicKey **pubKey,
+                          SECKEYPrivateKey **privKey)
 {
-    if (PR_SUCCESS != PR_CallOnce(&ssl_session_ticket_key_pair.setup,
-                                  &ssl_SessionTicketSetup)) {
+    if (PR_SUCCESS != PR_CallOnce(&ssl_self_encrypt_key_pair.setup,
+                                  &ssl_SelfEncryptSetup)) {
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
 
-    PR_RWLock_Rlock(ssl_session_ticket_key_pair.lock);
-    *pubKey = ssl_session_ticket_key_pair.pubKey;
-    *privKey = ssl_session_ticket_key_pair.privKey;
-    PR_RWLock_Unlock(ssl_session_ticket_key_pair.lock);
+    PR_RWLock_Rlock(ssl_self_encrypt_key_pair.lock);
+    *pubKey = ssl_self_encrypt_key_pair.pubKey;
+    *privKey = ssl_self_encrypt_key_pair.privKey;
+    PR_RWLock_Unlock(ssl_self_encrypt_key_pair.lock);
     if (!*pubKey) {
         PORT_Assert(!*privKey);
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
@@ -1772,23 +1777,23 @@ ssl_GetSessionTicketKeyPair(SECKEYPublicKey **pubKey,
 }
 
 static PRBool
-ssl_GenerateSessionTicketKeys(void *pwArg, unsigned char *keyName,
-                              PK11SymKey **aesKey, PK11SymKey **macKey);
+ssl_GenerateSelfEncryptKeys(void *pwArg, PRUint8 *keyName,
+                            PK11SymKey **aesKey, PK11SymKey **macKey);
 
 static PRStatus
-ssl_GenerateSessionTicketKeysOnce(void *arg)
+ssl_GenerateSelfEncryptKeysOnce(void *arg)
 {
     SECStatus rv;
 
     /* Get a copy of the session keys from shared memory. */
-    PORT_Memcpy(ssl_session_ticket_keys.keyName,
-                SESS_TICKET_KEY_NAME_PREFIX,
-                sizeof(SESS_TICKET_KEY_NAME_PREFIX));
-    /* This function calls ssl_GetSessionTicketKeyPair(), which initializes the
+    PORT_Memcpy(ssl_self_encrypt_keys.keyName,
+                SELF_ENCRYPT_KEY_NAME_PREFIX,
+                sizeof(SELF_ENCRYPT_KEY_NAME_PREFIX));
+    /* This function calls ssl_GetSelfEncryptKeyPair(), which initializes the
      * key pair stuff.  That allows this to use the same shutdown function. */
-    rv = ssl_GenerateSessionTicketKeys(arg, ssl_session_ticket_keys.keyName,
-                                       &ssl_session_ticket_keys.encKey,
-                                       &ssl_session_ticket_keys.macKey);
+    rv = ssl_GenerateSelfEncryptKeys(arg, ssl_self_encrypt_keys.keyName,
+                                     &ssl_self_encrypt_keys.encKey,
+                                     &ssl_self_encrypt_keys.macKey);
     if (rv != SECSuccess) {
         return PR_FAILURE;
     }
@@ -1797,25 +1802,25 @@ ssl_GenerateSessionTicketKeysOnce(void *arg)
 }
 
 SECStatus
-ssl_GetSessionTicketKeys(sslSocket *ss, unsigned char *keyName,
-                         PK11SymKey **encKey, PK11SymKey **macKey)
+ssl_GetSelfEncryptKeys(sslSocket *ss, PRUint8 *keyName,
+                       PK11SymKey **encKey, PK11SymKey **macKey)
 {
-    if (PR_SUCCESS != PR_CallOnceWithArg(&ssl_session_ticket_keys.setup,
-                                         &ssl_GenerateSessionTicketKeysOnce,
+    if (PR_SUCCESS != PR_CallOnceWithArg(&ssl_self_encrypt_keys.setup,
+                                         &ssl_GenerateSelfEncryptKeysOnce,
                                          ss->pkcs11PinArg)) {
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
 
-    if (!ssl_session_ticket_keys.encKey || !ssl_session_ticket_keys.macKey) {
+    if (!ssl_self_encrypt_keys.encKey || !ssl_self_encrypt_keys.macKey) {
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
 
-    PORT_Memcpy(keyName, ssl_session_ticket_keys.keyName,
-                sizeof(ssl_session_ticket_keys.keyName));
-    *encKey = ssl_session_ticket_keys.encKey;
-    *macKey = ssl_session_ticket_keys.macKey;
+    PORT_Memcpy(keyName, ssl_self_encrypt_keys.keyName,
+                sizeof(ssl_self_encrypt_keys.keyName));
+    *encKey = ssl_self_encrypt_keys.encKey;
+    *macKey = ssl_self_encrypt_keys.macKey;
     return SECSuccess;
 }
 
@@ -1875,8 +1880,8 @@ ssl_GetWrappingKey(unsigned int wrapMechIndex,
 
 /* Wrap and cache a session ticket key. */
 static SECStatus
-WrapTicketKey(SECKEYPublicKey *svrPubKey, PK11SymKey *symKey,
-              const char *keyName, encKeyCacheEntry *cacheEntry)
+WrapSelfEncryptKey(SECKEYPublicKey *svrPubKey, PK11SymKey *symKey,
+                   const char *keyName, encKeyCacheEntry *cacheEntry)
 {
     SECItem wrappedKey = { siBuffer, NULL, 0 };
 
@@ -1888,7 +1893,7 @@ WrapTicketKey(SECKEYPublicKey *svrPubKey, PK11SymKey *symKey,
 
     if (PK11_PubWrapSymKey(CKM_RSA_PKCS, svrPubKey, symKey, &wrappedKey) !=
         SECSuccess) {
-        SSL_DBG(("%d: SSL[%s]: Unable to wrap session ticket %s.",
+        SSL_DBG(("%d: SSL[%s]: Unable to wrap self encrypt key %s.",
                  SSL_GETPID(), "unknown", keyName));
         return SECFailure;
     }
@@ -1897,15 +1902,15 @@ WrapTicketKey(SECKEYPublicKey *svrPubKey, PK11SymKey *symKey,
 }
 
 static SECStatus
-GenerateTicketKeys(void *pwArg, unsigned char *keyName, PK11SymKey **aesKey,
-                   PK11SymKey **macKey)
+GenerateSelfEncryptKeys(void *pwArg, PRUint8 *keyName, PK11SymKey **aesKey,
+                        PK11SymKey **macKey)
 {
     PK11SlotInfo *slot;
     CK_MECHANISM_TYPE mechanismArray[2];
     PK11SymKey *aesKeyTmp = NULL;
     PK11SymKey *macKeyTmp = NULL;
     cacheDesc *cache = &globalCache;
-    PRUint8 ticketKeyNameSuffixLocal[SESS_TICKET_KEY_VAR_NAME_LEN];
+    PRUint8 ticketKeyNameSuffixLocal[SELF_ENCRYPT_KEY_VAR_NAME_LEN];
     PRUint8 *ticketKeyNameSuffix;
 
     if (!cache->cacheMem) {
@@ -1916,7 +1921,7 @@ GenerateTicketKeys(void *pwArg, unsigned char *keyName, PK11SymKey **aesKey,
     }
 
     if (PK11_GenerateRandom(ticketKeyNameSuffix,
-                            SESS_TICKET_KEY_VAR_NAME_LEN) !=
+                            SELF_ENCRYPT_KEY_VAR_NAME_LEN) !=
         SECSuccess) {
         SSL_DBG(("%d: SSL[%s]: Unable to generate random key name bytes.",
                  SSL_GETPID(), "unknown"));
@@ -1940,7 +1945,7 @@ GenerateTicketKeys(void *pwArg, unsigned char *keyName, PK11SymKey **aesKey,
                  SSL_GETPID(), "unknown"));
         goto loser;
     }
-    PORT_Memcpy(keyName, ticketKeyNameSuffix, SESS_TICKET_KEY_VAR_NAME_LEN);
+    PORT_Memcpy(keyName, ticketKeyNameSuffix, SELF_ENCRYPT_KEY_VAR_NAME_LEN);
     *aesKey = aesKeyTmp;
     *macKey = macKeyTmp;
     return SECSuccess;
@@ -1954,27 +1959,27 @@ loser:
 }
 
 static SECStatus
-GenerateAndWrapTicketKeys(SECKEYPublicKey *svrPubKey, void *pwArg,
-                          unsigned char *keyName, PK11SymKey **aesKey,
-                          PK11SymKey **macKey)
+GenerateAndWrapSelfEncryptKeys(SECKEYPublicKey *svrPubKey, void *pwArg,
+                               PRUint8 *keyName, PK11SymKey **aesKey,
+                               PK11SymKey **macKey)
 {
     PK11SymKey *aesKeyTmp = NULL;
     PK11SymKey *macKeyTmp = NULL;
     cacheDesc *cache = &globalCache;
     SECStatus rv;
 
-    rv = GenerateTicketKeys(pwArg, keyName, &aesKeyTmp, &macKeyTmp);
+    rv = GenerateSelfEncryptKeys(pwArg, keyName, &aesKeyTmp, &macKeyTmp);
     if (rv != SECSuccess) {
         return SECFailure;
     }
 
     if (cache->cacheMem) {
         /* Export the keys to the shared cache in wrapped form. */
-        rv = WrapTicketKey(svrPubKey, aesKeyTmp, "enc key", cache->ticketEncKey);
+        rv = WrapSelfEncryptKey(svrPubKey, aesKeyTmp, "enc key", cache->ticketEncKey);
         if (rv != SECSuccess) {
             goto loser;
         }
-        rv = WrapTicketKey(svrPubKey, macKeyTmp, "mac key", cache->ticketMacKey);
+        rv = WrapSelfEncryptKey(svrPubKey, macKeyTmp, "mac key", cache->ticketMacKey);
         if (rv != SECSuccess) {
             goto loser;
         }
@@ -1990,8 +1995,8 @@ loser:
 }
 
 static SECStatus
-UnwrapCachedTicketKeys(SECKEYPrivateKey *svrPrivKey, unsigned char *keyName,
-                       PK11SymKey **aesKey, PK11SymKey **macKey)
+UnwrapCachedSelfEncryptKeys(SECKEYPrivateKey *svrPrivKey, PRUint8 *keyName,
+                            PK11SymKey **aesKey, PK11SymKey **macKey)
 {
     SECItem wrappedKey = { siBuffer, NULL, 0 };
     PK11SymKey *aesKeyTmp = NULL;
@@ -2019,7 +2024,7 @@ UnwrapCachedTicketKeys(SECKEYPrivateKey *svrPrivKey, unsigned char *keyName,
              SSL_GETPID(), "unknown"));
 
     PORT_Memcpy(keyName, cache->ticketKeyNameSuffix,
-                SESS_TICKET_KEY_VAR_NAME_LEN);
+                SELF_ENCRYPT_KEY_VAR_NAME_LEN);
     *aesKey = aesKeyTmp;
     *macKey = macKeyTmp;
     return SECSuccess;
@@ -2033,8 +2038,8 @@ loser:
 }
 
 static SECStatus
-ssl_GenerateSessionTicketKeys(void *pwArg, unsigned char *keyName,
-                              PK11SymKey **encKey, PK11SymKey **macKey)
+ssl_GenerateSelfEncryptKeys(void *pwArg, PRUint8 *keyName,
+                            PK11SymKey **encKey, PK11SymKey **macKey)
 {
     SECKEYPrivateKey *svrPrivKey;
     SECKEYPublicKey *svrPubKey;
@@ -2042,11 +2047,11 @@ ssl_GenerateSessionTicketKeys(void *pwArg, unsigned char *keyName,
     SECStatus rv;
     cacheDesc *cache = &globalCache;
 
-    rv = ssl_GetSessionTicketKeyPair(&svrPubKey, &svrPrivKey);
+    rv = ssl_GetSelfEncryptKeyPair(&svrPubKey, &svrPrivKey);
     if (rv != SECSuccess || !cache->cacheMem) {
         /* No key pair for wrapping, or the cache is uninitialized. Generate
          * keys and return them without caching. */
-        return GenerateTicketKeys(pwArg, keyName, encKey, macKey);
+        return GenerateSelfEncryptKeys(pwArg, keyName, encKey, macKey);
     }
 
     now = LockSidCacheLock(cache->keyCacheLock, 0);
@@ -2054,11 +2059,11 @@ ssl_GenerateSessionTicketKeys(void *pwArg, unsigned char *keyName,
         return SECFailure;
 
     if (*(cache->ticketKeysValid)) {
-        rv = UnwrapCachedTicketKeys(svrPrivKey, keyName, encKey, macKey);
+        rv = UnwrapCachedSelfEncryptKeys(svrPrivKey, keyName, encKey, macKey);
     } else {
         /* Keys do not exist, create them. */
-        rv = GenerateAndWrapTicketKeys(svrPubKey, pwArg, keyName,
-                                       encKey, macKey);
+        rv = GenerateAndWrapSelfEncryptKeys(svrPubKey, pwArg, keyName,
+                                            encKey, macKey);
         if (rv == SECSuccess) {
             *(cache->ticketKeysValid) = 1;
         }

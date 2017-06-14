@@ -13,6 +13,7 @@
 
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/audio_coding/neteq/audio_multi_vector.h"
+#include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -65,8 +66,9 @@ class SyncBuffer : public AudioMultiVector {
 
   // Reads |requested_len| samples from each channel and writes them interleaved
   // into |output|. The |next_index_| is updated to point to the sample to read
-  // next time.
-  size_t GetNextAudioInterleaved(size_t requested_len, int16_t* output);
+  // next time. The AudioFrame |output| is first reset, and the |data_|,
+  // |num_channels_|, and |samples_per_channel_| fields are updated.
+  void GetNextAudioInterleaved(size_t requested_len, AudioFrame* output);
 
   // Adds |increment| to |end_timestamp_|.
   void IncreaseEndTimestamp(uint32_t increment);

@@ -13,14 +13,13 @@
 #include <shellapi.h>
 #include <shlobj.h>
 #include <tchar.h>
-#endif  // WEBRTC_WIN 
+#endif  // WEBRTC_WIN
 
-#include "webrtc/base/common.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/fileutils.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/pathutils.h"
 #include "webrtc/base/stringutils.h"
-#include "webrtc/base/urlencode.h"
 
 namespace rtc {
 
@@ -33,11 +32,11 @@ const char EXT_DELIM = '.';
 const char* const FOLDER_DELIMS = "/\\";
 
 // DEFAULT_FOLDER_DELIM is the preferred delimiter for this platform
-#if WEBRTC_WIN
+#ifdef WEBRTC_WIN
 const char DEFAULT_FOLDER_DELIM = '\\';
-#else  // !WEBRTC_WIN 
+#else  // !WEBRTC_WIN
 const char DEFAULT_FOLDER_DELIM = '/';
-#endif  // !WEBRTC_WIN 
+#endif  // !WEBRTC_WIN
 
 ///////////////////////////////////////////////////////////////////////////////
 // Pathname - parsing of pathnames into components, and vice versa
@@ -55,6 +54,9 @@ Pathname::Pathname()
     : folder_delimiter_(DEFAULT_FOLDER_DELIM) {
 }
 
+Pathname::Pathname(const Pathname&) = default;
+Pathname::Pathname(Pathname&&) = default;
+
 Pathname::Pathname(const std::string& pathname)
     : folder_delimiter_(DEFAULT_FOLDER_DELIM) {
   SetPathname(pathname);
@@ -65,8 +67,11 @@ Pathname::Pathname(const std::string& folder, const std::string& filename)
   SetPathname(folder, filename);
 }
 
+Pathname& Pathname::operator=(const Pathname&) = default;
+Pathname& Pathname::operator=(Pathname&&) = default;
+
 void Pathname::SetFolderDelimiter(char delimiter) {
-  ASSERT(IsFolderDelimiter(delimiter));
+  RTC_DCHECK(IsFolderDelimiter(delimiter));
   folder_delimiter_ = delimiter;
 }
 
@@ -98,19 +103,6 @@ std::string Pathname::pathname() const {
     pathname.push_back(folder_delimiter_);
   }
   return pathname;
-}
-
-std::string Pathname::url() const {
-  std::string s = "file:///";
-  for (size_t i=0; i<folder_.length(); ++i) {
-    if (IsFolderDelimiter(folder_[i]))
-      s += '/';
-    else
-      s += folder_[i];
-  }
-  s += basename_;
-  s += extension_;
-  return UrlEncodeStringForOnlyUnsafeChars(s);
 }
 
 void Pathname::SetPathname(const std::string& pathname) {

@@ -12,11 +12,13 @@
 
 #include <stddef.h>
 
-#include "webrtc/video_renderer.h"
+#include "webrtc/media/base/videosinkinterface.h"
 
 namespace webrtc {
+class VideoFrame;
+
 namespace test {
-class VideoRenderer : public webrtc::VideoRenderer {
+class VideoRenderer : public rtc::VideoSinkInterface<VideoFrame> {
  public:
   // Creates a platform-specific renderer if possible, or a null implementation
   // if failing.

@@ -32,102 +32,101 @@
  * of our measure Rxx160_LP. Remember that the levels are in blocks of 16 in
  * Q(-7). (Example matlab code: round(db2pow(-21.2)*16/2^7) )
  */
-#define RXX_BUFFER_LEN  10
+#define RXX_BUFFER_LEN 10
 
 static const int16_t kMsecSpeechInner = 520;
 static const int16_t kMsecSpeechOuter = 340;
 
 static const int16_t kNormalVadThreshold = 400;
 
-static const int16_t kAlphaShortTerm = 6; // 1 >> 6 = 0.0156
-static const int16_t kAlphaLongTerm = 10; // 1 >> 10 = 0.000977
+static const int16_t kAlphaShortTerm = 6;  // 1 >> 6 = 0.0156
+static const int16_t kAlphaLongTerm = 10;  // 1 >> 10 = 0.000977
 
-typedef struct
-{
-    // Configurable parameters/variables
-    uint32_t            fs;                 // Sampling frequency
-    int16_t             compressionGaindB;  // Fixed gain level in dB
-    int16_t             targetLevelDbfs;    // Target level in -dBfs of envelope (default -3)
-    int16_t             agcMode;            // Hard coded mode (adaptAna/adaptDig/fixedDig)
-    uint8_t             limiterEnable;      // Enabling limiter (on/off (default off))
-    WebRtcAgcConfig defaultConfig;
-    WebRtcAgcConfig usedConfig;
+typedef struct {
+  // Configurable parameters/variables
+  uint32_t fs;                // Sampling frequency
+  int16_t compressionGaindB;  // Fixed gain level in dB
+  int16_t targetLevelDbfs;    // Target level in -dBfs of envelope (default -3)
+  int16_t agcMode;            // Hard coded mode (adaptAna/adaptDig/fixedDig)
+  uint8_t limiterEnable;      // Enabling limiter (on/off (default off))
+  WebRtcAgcConfig defaultConfig;
+  WebRtcAgcConfig usedConfig;
 
-    // General variables
-    int16_t             initFlag;
-    int16_t             lastError;
+  // General variables
+  int16_t initFlag;
+  int16_t lastError;
 
-    // Target level parameters
-    // Based on the above: analogTargetLevel = round((32767*10^(-22/20))^2*16/2^7)
-    int32_t             analogTargetLevel;  // = RXX_BUFFER_LEN * 846805;       -22 dBfs
-    int32_t             startUpperLimit;    // = RXX_BUFFER_LEN * 1066064;      -21 dBfs
-    int32_t             startLowerLimit;    // = RXX_BUFFER_LEN * 672641;       -23 dBfs
-    int32_t             upperPrimaryLimit;  // = RXX_BUFFER_LEN * 1342095;      -20 dBfs
-    int32_t             lowerPrimaryLimit;  // = RXX_BUFFER_LEN * 534298;       -24 dBfs
-    int32_t             upperSecondaryLimit;// = RXX_BUFFER_LEN * 2677832;      -17 dBfs
-    int32_t             lowerSecondaryLimit;// = RXX_BUFFER_LEN * 267783;       -27 dBfs
-    uint16_t            targetIdx;          // Table index for corresponding target level
+  // Target level parameters
+  // Based on the above: analogTargetLevel = round((32767*10^(-22/20))^2*16/2^7)
+  int32_t analogTargetLevel;    // = RXX_BUFFER_LEN * 846805;       -22 dBfs
+  int32_t startUpperLimit;      // = RXX_BUFFER_LEN * 1066064;      -21 dBfs
+  int32_t startLowerLimit;      // = RXX_BUFFER_LEN * 672641;       -23 dBfs
+  int32_t upperPrimaryLimit;    // = RXX_BUFFER_LEN * 1342095;      -20 dBfs
+  int32_t lowerPrimaryLimit;    // = RXX_BUFFER_LEN * 534298;       -24 dBfs
+  int32_t upperSecondaryLimit;  // = RXX_BUFFER_LEN * 2677832;      -17 dBfs
+  int32_t lowerSecondaryLimit;  // = RXX_BUFFER_LEN * 267783;       -27 dBfs
+  uint16_t targetIdx;           // Table index for corresponding target level
 #ifdef MIC_LEVEL_FEEDBACK
-    uint16_t            targetIdxOffset;    // Table index offset for level compensation
+  uint16_t targetIdxOffset;  // Table index offset for level compensation
 #endif
-    int16_t             analogTarget;       // Digital reference level in ENV scale
+  int16_t analogTarget;  // Digital reference level in ENV scale
 
-    // Analog AGC specific variables
-    int32_t             filterState[8];     // For downsampling wb to nb
-    int32_t             upperLimit;         // Upper limit for mic energy
-    int32_t             lowerLimit;         // Lower limit for mic energy
-    int32_t             Rxx160w32;          // Average energy for one frame
-    int32_t             Rxx16_LPw32;        // Low pass filtered subframe energies
-    int32_t             Rxx160_LPw32;       // Low pass filtered frame energies
-    int32_t             Rxx16_LPw32Max;     // Keeps track of largest energy subframe
-    int32_t             Rxx16_vectorw32[RXX_BUFFER_LEN];// Array with subframe energies
-    int32_t             Rxx16w32_array[2][5];// Energy values of microphone signal
-    int32_t             env[2][10];         // Envelope values of subframes
+  // Analog AGC specific variables
+  int32_t filterState[8];  // For downsampling wb to nb
+  int32_t upperLimit;      // Upper limit for mic energy
+  int32_t lowerLimit;      // Lower limit for mic energy
+  int32_t Rxx160w32;       // Average energy for one frame
+  int32_t Rxx16_LPw32;     // Low pass filtered subframe energies
+  int32_t Rxx160_LPw32;    // Low pass filtered frame energies
+  int32_t Rxx16_LPw32Max;  // Keeps track of largest energy subframe
+  int32_t Rxx16_vectorw32[RXX_BUFFER_LEN];  // Array with subframe energies
+  int32_t Rxx16w32_array[2][5];  // Energy values of microphone signal
+  int32_t env[2][10];            // Envelope values of subframes
 
-    int16_t             Rxx16pos;           // Current position in the Rxx16_vectorw32
-    int16_t             envSum;             // Filtered scaled envelope in subframes
-    int16_t             vadThreshold;       // Threshold for VAD decision
-    int16_t             inActive;           // Inactive time in milliseconds
-    int16_t             msTooLow;           // Milliseconds of speech at a too low level
-    int16_t             msTooHigh;          // Milliseconds of speech at a too high level
-    int16_t             changeToSlowMode;   // Change to slow mode after some time at target
-    int16_t             firstCall;          // First call to the process-function
-    int16_t             msZero;             // Milliseconds of zero input
-    int16_t             msecSpeechOuterChange;// Min ms of speech between volume changes
-    int16_t             msecSpeechInnerChange;// Min ms of speech between volume changes
-    int16_t             activeSpeech;       // Milliseconds of active speech
-    int16_t             muteGuardMs;        // Counter to prevent mute action
-    int16_t             inQueue;            // 10 ms batch indicator
+  int16_t Rxx16pos;          // Current position in the Rxx16_vectorw32
+  int16_t envSum;            // Filtered scaled envelope in subframes
+  int16_t vadThreshold;      // Threshold for VAD decision
+  int16_t inActive;          // Inactive time in milliseconds
+  int16_t msTooLow;          // Milliseconds of speech at a too low level
+  int16_t msTooHigh;         // Milliseconds of speech at a too high level
+  int16_t changeToSlowMode;  // Change to slow mode after some time at target
+  int16_t firstCall;         // First call to the process-function
+  int16_t msZero;            // Milliseconds of zero input
+  int16_t msecSpeechOuterChange;  // Min ms of speech between volume changes
+  int16_t msecSpeechInnerChange;  // Min ms of speech between volume changes
+  int16_t activeSpeech;           // Milliseconds of active speech
+  int16_t muteGuardMs;            // Counter to prevent mute action
+  int16_t inQueue;                // 10 ms batch indicator
 
-    // Microphone level variables
-    int32_t             micRef;             // Remember ref. mic level for virtual mic
-    uint16_t            gainTableIdx;       // Current position in virtual gain table
-    int32_t             micGainIdx;         // Gain index of mic level to increase slowly
-    int32_t             micVol;             // Remember volume between frames
-    int32_t             maxLevel;           // Max possible vol level, incl dig gain
-    int32_t             maxAnalog;          // Maximum possible analog volume level
-    int32_t             maxInit;            // Initial value of "max"
-    int32_t             minLevel;           // Minimum possible volume level
-    int32_t             minOutput;          // Minimum output volume level
-    int32_t             zeroCtrlMax;        // Remember max gain => don't amp low input
-    int32_t             lastInMicLevel;
+  // Microphone level variables
+  int32_t micRef;         // Remember ref. mic level for virtual mic
+  uint16_t gainTableIdx;  // Current position in virtual gain table
+  int32_t micGainIdx;     // Gain index of mic level to increase slowly
+  int32_t micVol;         // Remember volume between frames
+  int32_t maxLevel;       // Max possible vol level, incl dig gain
+  int32_t maxAnalog;      // Maximum possible analog volume level
+  int32_t maxInit;        // Initial value of "max"
+  int32_t minLevel;       // Minimum possible volume level
+  int32_t minOutput;      // Minimum output volume level
+  int32_t zeroCtrlMax;    // Remember max gain => don't amp low input
+  int32_t lastInMicLevel;
 
-    int16_t             scale;              // Scale factor for internal volume levels
+  int16_t scale;  // Scale factor for internal volume levels
 #ifdef MIC_LEVEL_FEEDBACK
-    int16_t             numBlocksMicLvlSat;
-    uint8_t             micLvlSat;
+  int16_t numBlocksMicLvlSat;
+  uint8_t micLvlSat;
 #endif
-    // Structs for VAD and digital_agc
-    AgcVad vadMic;
-    DigitalAgc digitalAgc;
+  // Structs for VAD and digital_agc
+  AgcVad vadMic;
+  DigitalAgc digitalAgc;
 
 #ifdef WEBRTC_AGC_DEBUG_DUMP
-    FILE* fpt;
-    FILE* agcLog;
-    int32_t fcount;
+  FILE* fpt;
+  FILE* agcLog;
+  int32_t fcount;
 #endif
 
-    int16_t             lowLevelSignal;
+  int16_t lowLevelSignal;
 } LegacyAgc;
 
-#endif // WEBRTC_MODULES_AUDIO_PROCESSING_AGC_LEGACY_ANALOG_AGC_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_AGC_LEGACY_ANALOG_AGC_H_

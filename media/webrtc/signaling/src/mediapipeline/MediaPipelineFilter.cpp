@@ -10,6 +10,10 @@
 #include "MediaPipelineFilter.h"
 
 #include "webrtc/common_types.h"
+#include "logging.h"
+
+// Logging context
+MOZ_MTLOG_MODULE("mediapipeline")
 
 namespace mozilla {
 
@@ -35,6 +39,10 @@ bool MediaPipelineFilter::Filter(const webrtc::RTPHeader& header,
       remote_rid_set_.size() &&
       remote_rid_set_.count(header.extension.rid.get())) {
     return true;
+  }
+  if (header.extension.hasRID) {
+    MOZ_MTLOG(ML_DEBUG, "MediaPipelineFilter ignoring seq# " << header.sequenceNumber <<
+              " ssrc: " << header.ssrc << " RID: " << header.extension.rid.get());
   }
 
   if (remote_ssrc_set_.count(header.ssrc)) {

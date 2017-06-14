@@ -4,14 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "secder.h"
+#include "secerr.h"
+
 #include <climits>
 #include <memory>
-#include "nss.h"
-#include "pk11pub.h"
-#include "secutil.h"
 
 #include "gtest/gtest.h"
-#include "scoped_ptrs.h"
 
 namespace nss_test {
 

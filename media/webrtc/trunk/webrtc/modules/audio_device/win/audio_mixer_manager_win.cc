@@ -2709,7 +2709,7 @@ char* AudioMixerManager::WideToUTF8(const TCHAR* src) const {
     const size_t kStrLen = sizeof(_str);
     memset(_str, 0, kStrLen);
     // Get required size (in bytes) to be able to complete the conversion.
-    int required_size = WideCharToMultiByte(CP_UTF8, 0, src, -1, _str, 0, 0, 0);
+    unsigned int required_size = (unsigned int)WideCharToMultiByte(CP_UTF8, 0, src, -1, _str, 0, 0, 0);
     if (required_size <= kStrLen)
     {
         // Process the entire input string, including the terminating null char.

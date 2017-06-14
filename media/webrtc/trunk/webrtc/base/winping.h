@@ -15,7 +15,7 @@
 
 #include "webrtc/base/win32.h"
 #include "webrtc/base/basictypes.h"
-#include "webrtc/base/IPAddress.h"
+#include "webrtc/base/ipaddress.h"
 
 namespace rtc {
 

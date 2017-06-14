@@ -310,12 +310,19 @@ class ByteReader<T, 4, false> {
  public:
   static T ReadBigEndian(const uint8_t* data) {
     static_assert(sizeof(T) >= 4, kSizeErrorMsg);
-    return (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
+    return (Get(data, 0) << 24) | (Get(data, 1) << 16) | (Get(data, 2) << 8) |
+           Get(data, 3);
   }
 
   static T ReadLittleEndian(const uint8_t* data) {
     static_assert(sizeof(T) >= 4, kSizeErrorMsg);
-    return data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
+    return Get(data, 0) | (Get(data, 1) << 8) | (Get(data, 2) << 16) |
+           (Get(data, 3) << 24);
+  }
+
+ private:
+  inline static T Get(const uint8_t* data, unsigned int index) {
+    return static_cast<T>(data[index]);
   }
 };
 

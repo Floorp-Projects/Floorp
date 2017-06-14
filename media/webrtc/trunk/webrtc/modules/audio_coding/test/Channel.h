@@ -13,13 +13,12 @@
 
 #include <stdio.h>
 
+#include "webrtc/base/criticalsection.h"
 #include "webrtc/modules/audio_coding/include/audio_coding_module.h"
 #include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
-
-class CriticalSectionWrapper;
 
 #define MAX_NUM_PAYLOADS   50
 #define MAX_NUM_FRAMESIZES  6
@@ -48,7 +47,7 @@ class Channel : public AudioPacketizationCallback {
  public:
 
   Channel(int16_t chID = -1);
-  ~Channel();
+  ~Channel() override;
 
   int32_t SendData(FrameType frameType,
                    uint8_t payloadType,
@@ -101,7 +100,7 @@ class Channel : public AudioPacketizationCallback {
   // 60msec * 32 sample(max)/msec * 2 description (maybe) * 2 bytes/sample
   uint8_t _payloadData[60 * 32 * 2 * 2];
 
-  CriticalSectionWrapper* _channelCritSect;
+  rtc::CriticalSection _channelCritSect;
   FILE* _bitStreamFile;
   bool _saveBitStream;
   int16_t _lastPayloadType;

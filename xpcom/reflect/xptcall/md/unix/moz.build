@@ -52,17 +52,17 @@ if CONFIG['OS_ARCH'] in ('Linux', 'FreeBSD'):
         ]
 
 if CONFIG['OS_ARCH'] == 'SunOS' and '86' in CONFIG['OS_TEST']:
-    GENERATED_FILES = [
-        'xptcstubsdef_asm.solx86',
-    ]
     if CONFIG['OS_TEST'] == 'x86_64':
         if CONFIG['GNU_CC']:
             SOURCES += [
-            'xptcinvoke_asm_x86_64_unix.S',
+                'xptcinvoke_asm_x86_64_unix.S',
                 'xptcinvoke_x86_64_unix.cpp',
                 'xptcstubs_x86_64_linux.cpp'
             ]
         else:
+            GENERATED_FILES = [
+                'xptcstubsdef_asm.solx86',
+            ]
             ASFLAGS += ['-xarch=amd64']
             SOURCES += [
                 'xptcinvoke_x86_64_solaris.cpp',
@@ -76,6 +76,9 @@ if CONFIG['OS_ARCH'] == 'SunOS' and '86' in CONFIG['OS_TEST']:
                 'xptcstubs_gcc_x86_unix.cpp'
             ]
         else:
+            GENERATED_FILES = [
+                'xptcstubsdef_asm.solx86',
+            ]
             SOURCES += [
                 'xptcinvoke_asm_x86_solaris_SUNW.s',
                 'xptcinvoke_x86_solaris.cpp',

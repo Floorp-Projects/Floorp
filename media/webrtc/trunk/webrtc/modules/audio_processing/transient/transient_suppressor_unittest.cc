@@ -10,8 +10,8 @@
 
 #include "webrtc/modules/audio_processing/transient/transient_suppressor.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/modules/audio_processing/transient/common.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 

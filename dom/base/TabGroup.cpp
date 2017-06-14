@@ -27,6 +27,7 @@ TabGroup::TabGroup(bool aIsChrome)
  : mLastWindowLeft(false)
  , mThrottledQueuesInitialized(false)
  , mIsChrome(aIsChrome)
+ , mForegroundCount(0)
 {
   CreateEventTargets(/* aNeedValidation = */ !aIsChrome);
 
@@ -159,6 +160,11 @@ TabGroup::Join(nsPIDOMWindowOuter* aWindow, TabGroup* aTabGroup)
   MOZ_RELEASE_ASSERT(!tabGroup->mLastWindowLeft);
   MOZ_ASSERT(!tabGroup->mWindows.Contains(aWindow));
   tabGroup->mWindows.AppendElement(aWindow);
+
+  if (!aWindow->IsBackground()) {
+    tabGroup->mForegroundCount++;
+  }
+
   return tabGroup.forget();
 }
 
@@ -168,6 +174,11 @@ TabGroup::Leave(nsPIDOMWindowOuter* aWindow)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mWindows.Contains(aWindow));
   mWindows.RemoveElement(aWindow);
+
+  if (!aWindow->IsBackground()) {
+    MOZ_DIAGNOSTIC_ASSERT(mForegroundCount > 0);
+    mForegroundCount--;
+  }
 
   // The Chrome TabGroup doesn't have cyclical references through mEventTargets
   // to itself, meaning that we don't have to worry about nulling mEventTargets
@@ -262,17 +273,36 @@ TabGroup::AbstractMainThreadForImpl(TaskCategory aCategory)
   return SchedulerGroup::AbstractMainThreadForImpl(aCategory);
 }
 
+void
+TabGroup::WindowChangedBackgroundStatus(bool aIsNowBackground)
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (aIsNowBackground) {
+    MOZ_DIAGNOSTIC_ASSERT(mForegroundCount > 0);
+    mForegroundCount -= 1;
+  } else {
+    mForegroundCount += 1;
+  }
+}
+
 bool
 TabGroup::IsBackground() const
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  for (nsPIDOMWindowOuter* outerWindow : GetTopLevelWindows()) {
-    if (!outerWindow->IsBackground()) {
-      return false;
+#ifdef DEBUG
+  uint32_t foregrounded = 0;
+  for (auto& window : mWindows) {
+    if (!window->IsBackground()) {
+      foregrounded++;
     }
   }
-  return true;
+  MOZ_ASSERT(foregrounded == mForegroundCount);
+#endif
+
+  return mForegroundCount == 0;
 }
+
 } // namespace dom
 } // namespace mozilla

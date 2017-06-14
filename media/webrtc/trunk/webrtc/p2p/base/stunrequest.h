@@ -39,6 +39,10 @@ class StunRequestManager {
   // Only for testing.
   void Flush(int msg_type);
 
+  // Returns true if at least one request with |msg_type| is scheduled for
+  // transmission. For testing only.
+  bool HasRequest(int msg_type);
+
   // Removes a stun request that was added previously.  This will happen
   // automatically when a request succeeds, fails, or times out.
   void Remove(StunRequest* request);
@@ -97,7 +101,7 @@ class StunRequest : public rtc::MessageHandler {
   const StunMessage* msg() const;
 
   // Time elapsed since last send (in ms)
-  uint32_t Elapsed() const;
+  int Elapsed() const;
 
  protected:
   int count_;
@@ -125,7 +129,7 @@ class StunRequest : public rtc::MessageHandler {
 
   StunRequestManager* manager_;
   StunMessage* msg_;
-  uint32_t tstamp_;
+  int64_t tstamp_;
 
   friend class StunRequestManager;
 };

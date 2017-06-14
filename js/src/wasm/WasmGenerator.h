@@ -244,6 +244,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     UniqueFuncBytesVector           freeFuncBytes_;
     CompileTask*                    currentTask_;
     uint32_t                        batchedBytecode_;
+    HelperThread*                   maybeHelperThread_;
 
     // Assertions
     DebugOnly<FunctionGenerator*>   activeFuncDef_;

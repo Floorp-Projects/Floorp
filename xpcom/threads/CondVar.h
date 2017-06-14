@@ -62,7 +62,7 @@ public:
   {
 
 #ifdef MOZILLA_INTERNAL_API
-    GeckoProfilerThreadSleepRAII sleep;
+    AutoProfilerThreadSleep sleep;
 #endif //MOZILLA_INTERNAL_API
     if (aInterval == PR_INTERVAL_NO_TIMEOUT) {
       mImpl.wait(*mLock);

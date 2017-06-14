@@ -8,10 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
 #include "webrtc/common_audio/audio_ring_buffer.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/common_audio/channel_buffer.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 
@@ -27,7 +29,7 @@ void ReadAndWriteTest(const ChannelBuffer<float>& input,
   const size_t num_channels = input.num_channels();
   const size_t total_frames = input.num_frames();
   AudioRingBuffer buf(num_channels, buffer_frames);
-  rtc::scoped_ptr<float* []> slice(new float* [num_channels]);
+  std::unique_ptr<float* []> slice(new float*[num_channels]);
 
   size_t input_pos = 0;
   size_t output_pos = 0;

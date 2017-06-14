@@ -115,10 +115,12 @@ ThreeBandFilterBank::ThreeBandFilterBank(size_t length)
       out_buffer_(in_buffer_.size()) {
   for (size_t i = 0; i < kSparsity; ++i) {
     for (size_t j = 0; j < kNumBands; ++j) {
-      analysis_filters_.push_back(new SparseFIRFilter(
-          kLowpassCoeffs[i * kNumBands + j], kNumCoeffs, kSparsity, i));
-      synthesis_filters_.push_back(new SparseFIRFilter(
-          kLowpassCoeffs[i * kNumBands + j], kNumCoeffs, kSparsity, i));
+      analysis_filters_.push_back(
+          std::unique_ptr<SparseFIRFilter>(new SparseFIRFilter(
+              kLowpassCoeffs[i * kNumBands + j], kNumCoeffs, kSparsity, i)));
+      synthesis_filters_.push_back(
+          std::unique_ptr<SparseFIRFilter>(new SparseFIRFilter(
+              kLowpassCoeffs[i * kNumBands + j], kNumCoeffs, kSparsity, i)));
     }
   }
   dct_modulation_.resize(kNumBands * kSparsity);
@@ -130,6 +132,8 @@ ThreeBandFilterBank::ThreeBandFilterBank(size_t length)
     }
   }
 }
+
+ThreeBandFilterBank::~ThreeBandFilterBank() = default;
 
 // The analysis can be separated in these steps:
 //   1. Serial to parallel downsampling by a factor of |kNumBands|.

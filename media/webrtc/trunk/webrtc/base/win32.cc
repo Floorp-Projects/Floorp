@@ -17,6 +17,7 @@
 #include "webrtc/base/arraysize.h"
 #include "webrtc/base/basictypes.h"
 #include "webrtc/base/byteorder.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/logging.h"
 
@@ -318,7 +319,7 @@ int inet_pton_v6(const char* src, void* dst) {
 //
 
 void FileTimeToUnixTime(const FILETIME& ft, time_t* ut) {
-  ASSERT(NULL != ut);
+  RTC_DCHECK(NULL != ut);
 
   // FILETIME has an earlier date base than time_t (1/1/1970), so subtract off
   // the difference.
@@ -342,7 +343,7 @@ void FileTimeToUnixTime(const FILETIME& ft, time_t* ut) {
 }
 
 void UnixTimeToFileTime(const time_t& ut, FILETIME* ft) {
-  ASSERT(NULL != ft);
+  RTC_DCHECK(NULL != ft);
 
   // FILETIME has an earlier date base than time_t (1/1/1970), so add in
   // the difference.
@@ -404,13 +405,13 @@ bool Utf8ToWindowsFilename(const std::string& utf8, std::wstring* filename) {
     // Non-unc path:     <pathname>
     //      Becomes: \\?\<pathname>
     start -= 4;
-    ASSERT(start >= full_filename);
+    RTC_DCHECK(start >= full_filename);
     memcpy(start, kLongPathPrefix, 4 * sizeof(wchar_t));
   } else if (start[2] != L'?') {
     // Unc path:       \\<server>\<pathname>
     //  Becomes: \\?\UNC\<server>\<pathname>
     start -= 6;
-    ASSERT(start >= full_filename);
+    RTC_DCHECK(start >= full_filename);
     memcpy(start, kLongPathPrefix, 7 * sizeof(wchar_t));
   } else {
     // Already in long-path form.

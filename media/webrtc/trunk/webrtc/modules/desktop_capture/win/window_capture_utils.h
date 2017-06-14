@@ -13,6 +13,7 @@
 #include <windows.h>
 #include <dwmapi.h>
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/desktop_capture/desktop_geometry.h"
 
 namespace webrtc {
@@ -25,7 +26,7 @@ bool GetCroppedWindowRect(HWND window,
                           DesktopRect* cropped_rect,
                           DesktopRect* original_rect);
 
- typedef HRESULT (WINAPI *DwmIsCompositionEnabledFunc)(BOOL*);
+typedef HRESULT (WINAPI *DwmIsCompositionEnabledFunc)(BOOL*);
 
 class AeroChecker {
  public:

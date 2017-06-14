@@ -40,6 +40,7 @@ bool AudioLoop::Init(const std::string file_name,
 
   loop_length_samples_ = samples_read;
   block_length_samples_ = block_length_samples;
+  next_index_ = 0;
   return true;
 }
 

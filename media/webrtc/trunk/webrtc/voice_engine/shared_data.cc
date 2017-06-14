@@ -11,7 +11,6 @@
 #include "webrtc/voice_engine/shared_data.h"
 
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/voice_engine/channel.h"
 #include "webrtc/voice_engine/output_mixer.h"
@@ -23,13 +22,13 @@ namespace voe {
 
 static int32_t _gInstanceCounter = 0;
 
-SharedData::SharedData(const Config& config)
+SharedData::SharedData()
     : _instanceId(++_gInstanceCounter),
-      _apiCritPtr(CriticalSectionWrapper::CreateCriticalSection()),
-      _channelManager(_gInstanceCounter, config),
+      _channelManager(_gInstanceCounter),
       _engineStatistics(_gInstanceCounter),
       _audioDevicePtr(NULL),
-      _moduleProcessThreadPtr(ProcessThread::Create("VoiceProcessThread")),
+      _moduleProcessThreadPtr(
+          ProcessThread::Create("VoiceProcessThread")),
       _externalRecording(false),
       _externalPlayout(false) {
     Trace::CreateTrace();
@@ -53,19 +52,13 @@ SharedData::~SharedData()
     if (_audioDevicePtr) {
         _audioDevicePtr->Release();
     }
-    delete _apiCritPtr;
     _moduleProcessThreadPtr->Stop();
     Trace::ReturnTrace();
 }
 
-void SharedData::set_audio_device(AudioDeviceModule* audio_device)
-{
-    // AddRef first in case the pointers are equal.
-    if (audio_device)
-      audio_device->AddRef();
-    if (_audioDevicePtr)
-      _audioDevicePtr->Release();
-    _audioDevicePtr = audio_device;
+void SharedData::set_audio_device(
+    const rtc::scoped_refptr<AudioDeviceModule>& audio_device) {
+  _audioDevicePtr = audio_device;
 }
 
 void SharedData::set_audio_processing(AudioProcessing* audioproc) {

@@ -10,9 +10,59 @@
 
 #include "webrtc/modules/audio_coding/codecs/opus/audio_decoder_opus.h"
 
+#include <utility>
+
 #include "webrtc/base/checks.h"
 
 namespace webrtc {
+
+namespace {
+class OpusFrame : public AudioDecoder::EncodedAudioFrame {
+ public:
+  OpusFrame(AudioDecoderOpus* decoder,
+            rtc::Buffer&& payload,
+            bool is_primary_payload)
+      : decoder_(decoder),
+        payload_(std::move(payload)),
+        is_primary_payload_(is_primary_payload) {}
+
+  size_t Duration() const override {
+    int ret;
+    if (is_primary_payload_) {
+      ret = decoder_->PacketDuration(payload_.data(), payload_.size());
+    } else {
+      ret = decoder_->PacketDurationRedundant(payload_.data(), payload_.size());
+    }
+    return (ret < 0) ? 0 : static_cast<size_t>(ret);
+  }
+
+  rtc::Optional<DecodeResult> Decode(
+      rtc::ArrayView<int16_t> decoded) const override {
+    AudioDecoder::SpeechType speech_type = AudioDecoder::kSpeech;
+    int ret;
+    if (is_primary_payload_) {
+      ret = decoder_->Decode(
+          payload_.data(), payload_.size(), decoder_->SampleRateHz(),
+          decoded.size() * sizeof(int16_t), decoded.data(), &speech_type);
+    } else {
+      ret = decoder_->DecodeRedundant(
+          payload_.data(), payload_.size(), decoder_->SampleRateHz(),
+          decoded.size() * sizeof(int16_t), decoded.data(), &speech_type);
+    }
+
+    if (ret < 0)
+      return rtc::Optional<DecodeResult>();
+
+    return rtc::Optional<DecodeResult>({static_cast<size_t>(ret), speech_type});
+  }
+
+ private:
+  AudioDecoderOpus* const decoder_;
+  const rtc::Buffer payload_;
+  const bool is_primary_payload_;
+};
+
+}  // namespace
 
 AudioDecoderOpus::AudioDecoderOpus(size_t num_channels)
     : channels_(num_channels) {
@@ -23,6 +73,26 @@ AudioDecoderOpus::AudioDecoderOpus(size_t num_channels)
 
 AudioDecoderOpus::~AudioDecoderOpus() {
   WebRtcOpus_DecoderFree(dec_state_);
+}
+
+std::vector<AudioDecoder::ParseResult> AudioDecoderOpus::ParsePayload(
+    rtc::Buffer&& payload,
+    uint32_t timestamp) {
+  std::vector<ParseResult> results;
+
+  if (PacketHasFec(payload.data(), payload.size())) {
+    const int duration =
+        PacketDurationRedundant(payload.data(), payload.size());
+    RTC_DCHECK_GE(duration, 0);
+    rtc::Buffer payload_copy(payload.data(), payload.size());
+    std::unique_ptr<EncodedAudioFrame> fec_frame(
+        new OpusFrame(this, std::move(payload_copy), false));
+    results.emplace_back(timestamp - duration, 1, std::move(fec_frame));
+  }
+  std::unique_ptr<EncodedAudioFrame> frame(
+      new OpusFrame(this, std::move(payload), true));
+  results.emplace_back(timestamp, 0, std::move(frame));
+  return results;
 }
 
 int AudioDecoderOpus::DecodeInternal(const uint8_t* encoded,
@@ -85,6 +155,10 @@ bool AudioDecoderOpus::PacketHasFec(const uint8_t* encoded,
   int fec;
   fec = WebRtcOpus_PacketHasFec(encoded, encoded_len);
   return (fec == 1);
+}
+
+int AudioDecoderOpus::SampleRateHz() const {
+  return 48000;
 }
 
 size_t AudioDecoderOpus::Channels() const {

@@ -16,7 +16,6 @@
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/base/event.h"
 #include "webrtc/base/platform_thread_types.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/thread_checker.h"
 
 namespace rtc {
@@ -59,11 +58,17 @@ class PlatformThread {
   PlatformThread(ThreadRunFunction func, void* obj, const char* thread_name);
   virtual ~PlatformThread();
 
+  const std::string& name() const { return name_; }
+
   // Spawns a thread and tries to set thread priority according to the priority
   // from when CreateThread was called.
   void Start();
 
   bool IsRunning() const;
+
+  // Returns an identifier for the worker thread that can be used to do
+  // thread checks.
+  PlatformThreadRef GetThreadRef() const;
 
   // Stops (joins) the spawned thread.
   virtual void Stop();
@@ -72,6 +77,11 @@ class PlatformThread {
   bool SetPriority(ThreadPriority priority);
 
  protected:
+#if defined(WEBRTC_WIN)
+  // Exposed to derived classes to allow for special cases specific to Windows.
+  bool QueueAPC(PAPCFUNC apc_function, ULONG_PTR data);
+#endif
+
   virtual void Run();
 
   ThreadRunFunction const run_function_;
@@ -85,6 +95,7 @@ class PlatformThread {
 
   bool stop_;
   HANDLE thread_;
+  DWORD thread_id_;
 #else
   static void* StartThread(void* param);
 

@@ -12,15 +12,17 @@
 
 #include <assert.h>
 
+#include "webrtc/api/video/i420_buffer.h"
+#include "webrtc/test/frame_utils.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
 namespace test {
 
 FrameReaderImpl::FrameReaderImpl(std::string input_filename,
-                                 size_t frame_length_in_bytes)
+                                 int width, int height)
     : input_filename_(input_filename),
-      frame_length_in_bytes_(frame_length_in_bytes),
+      width_(width), height_(height),
       input_file_(NULL) {
 }
 
@@ -29,11 +31,14 @@ FrameReaderImpl::~FrameReaderImpl() {
 }
 
 bool FrameReaderImpl::Init() {
-  if (frame_length_in_bytes_ <= 0) {
-    fprintf(stderr, "Frame length must be >0, was %zu\n",
-            frame_length_in_bytes_);
+  if (width_ <= 0 || height_ <= 0) {
+    fprintf(stderr, "Frame width and height must be >0, was %d x %d\n",
+            width_, height_);
     return false;
   }
+  frame_length_in_bytes_ =
+      width_ * height_ + 2 * ((width_ + 1) / 2) * ((height_ + 1) / 2);
+
   input_file_ = fopen(input_filename_.c_str(), "rb");
   if (input_file_ == NULL) {
     fprintf(stderr, "Couldn't open input file for reading: %s\n",
@@ -58,24 +63,18 @@ void FrameReaderImpl::Close() {
   }
 }
 
-bool FrameReaderImpl::ReadFrame(uint8_t* source_buffer) {
-  assert(source_buffer);
+rtc::scoped_refptr<I420Buffer> FrameReaderImpl::ReadFrame() {
   if (input_file_ == NULL) {
     fprintf(stderr, "FrameReader is not initialized (input file is NULL)\n");
-    return false;
+    return nullptr;
   }
-  size_t nbr_read = fread(source_buffer, 1, frame_length_in_bytes_,
-                          input_file_);
-  if (nbr_read != static_cast<unsigned int>(frame_length_in_bytes_) &&
-      ferror(input_file_)) {
+  rtc::scoped_refptr<I420Buffer> buffer(
+      ReadI420Buffer(width_, height_, input_file_));
+  if (!buffer && ferror(input_file_)) {
     fprintf(stderr, "Error reading from input file: %s\n",
             input_filename_.c_str());
-    return false;
   }
-  if (feof(input_file_) != 0) {
-    return false;  // No more frames to process.
-  }
-  return true;
+  return buffer;
 }
 
 size_t FrameReaderImpl::FrameLength() { return frame_length_in_bytes_; }

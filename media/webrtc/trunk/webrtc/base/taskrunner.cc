@@ -12,23 +12,15 @@
 
 #include "webrtc/base/taskrunner.h"
 
+#include "webrtc/base/checks.h"
 #include "webrtc/base/common.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/task.h"
 #include "webrtc/base/logging.h"
 
 namespace rtc {
 
 TaskRunner::TaskRunner()
-  : TaskParent(this),
-    next_timeout_task_(NULL),
-    tasks_running_(false)
-#if !defined(NDEBUG)
-    , abort_count_(0),
-    deleting_task_(NULL)
-#endif
-{
-}
+    : TaskParent(this) {}
 
 TaskRunner::~TaskRunner() {
   // this kills and deletes children silently!
@@ -55,8 +47,10 @@ void TaskRunner::InternalRunTasks(bool in_destructor) {
   // If that occurs, then tasks may be deleted in this method,
   // but pointers to them will still be in the
   // "ChildSet copy" in TaskParent::AbortAllChildren.
-  // Subsequent use of those task may cause data corruption or crashes.  
-  ASSERT(!abort_count_);
+  // Subsequent use of those task may cause data corruption or crashes.
+#if RTC_DCHECK_IS_ON
+  RTC_DCHECK(!abort_count_);
+#endif
   // Running continues until all tasks are Blocked (ok for a small # of tasks)
   if (tasks_running_) {
     return;  // don't reenter
@@ -88,11 +82,11 @@ void TaskRunner::InternalRunTasks(bool in_destructor) {
         need_timeout_recalc = true;
       }
 
-#if !defined(NDEBUG)
+#if RTC_DCHECK_IS_ON
       deleting_task_ = task;
 #endif
       delete task;
-#if !defined(NDEBUG)
+#if RTC_DCHECK_IS_ON
       deleting_task_ = NULL;
 #endif
       tasks_[i] = NULL;
@@ -151,7 +145,7 @@ int64_t TaskRunner::next_task_timeout() const {
 
 void TaskRunner::UpdateTaskTimeout(Task* task,
                                    int64_t previous_task_timeout_time) {
-  ASSERT(task != NULL);
+  RTC_DCHECK(task != NULL);
   int64_t previous_timeout_time = next_task_timeout();
   bool task_is_timeout_task = next_timeout_task_ != NULL &&
       task->unique_id() == next_timeout_task_->unique_id();

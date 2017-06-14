@@ -1707,7 +1707,7 @@ BL_FIPSEntryOK(PRBool freebl_only)
         return SECSuccess;
     }
     /* standalone freebl can initialize */
-    if (freebl_only & self_tests_freebl_success) {
+    if (freebl_only && self_tests_freebl_success) {
         return SECSuccess;
     }
     PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);

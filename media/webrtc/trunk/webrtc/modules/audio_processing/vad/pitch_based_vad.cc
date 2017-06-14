@@ -10,7 +10,6 @@
 
 #include "webrtc/modules/audio_processing/vad/pitch_based_vad.h"
 
-#include <assert.h>
 #include <math.h>
 #include <string.h>
 

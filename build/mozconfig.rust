@@ -5,3 +5,5 @@ TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
 # Tell configure to use the tooltool rustc.
 RUSTC="$TOOLTOOL_DIR/rustc/bin/rustc"
 CARGO="$TOOLTOOL_DIR/rustc/bin/cargo"
+
+ac_add_options --enable-rust-simd
