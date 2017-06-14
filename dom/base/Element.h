@@ -1815,15 +1815,16 @@ _elementName::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,   \
   return rv;                                                                \
 }
 
-#define NS_IMPL_ELEMENT_CLONE_WITH_INIT(_elementName)                       \
+#define EXPAND(...) __VA_ARGS__
+#define NS_IMPL_ELEMENT_CLONE_WITH_INIT_HELPER(_elementName, extra_args_)   \
 nsresult                                                                    \
 _elementName::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,   \
                     bool aPreallocateChildren) const                        \
 {                                                                           \
   *aResult = nullptr;                                                       \
   already_AddRefed<mozilla::dom::NodeInfo> ni =                             \
-    RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();                   \
-  _elementName *it = new _elementName(ni);                                  \
+    RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();                     \
+  _elementName *it = new _elementName(ni EXPAND extra_args_);               \
   if (!it) {                                                                \
     return NS_ERROR_OUT_OF_MEMORY;                                          \
   }                                                                         \
@@ -1840,6 +1841,11 @@ _elementName::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,   \
                                                                             \
   return rv;                                                                \
 }
+
+#define NS_IMPL_ELEMENT_CLONE_WITH_INIT(_elementName) \
+  NS_IMPL_ELEMENT_CLONE_WITH_INIT_HELPER(_elementName, ())
+#define NS_IMPL_ELEMENT_CLONE_WITH_INIT_AND_PARSER(_elementName) \
+  NS_IMPL_ELEMENT_CLONE_WITH_INIT_HELPER(_elementName, (, NOT_FROM_PARSER))
 
 /**
  * A macro to implement the getter and setter for a given string
