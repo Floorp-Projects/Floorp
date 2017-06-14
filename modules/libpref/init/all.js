@@ -3721,8 +3721,6 @@ pref("intl.tsf.hack.free_chang_jie.do_not_return_no_layout_error", true);
 pref("intl.tsf.hack.ms_simplified_chinese.do_not_return_no_layout_error", true);
 // For Microsoft ChangJie and Microsoft Quick
 pref("intl.tsf.hack.ms_traditional_chinese.do_not_return_no_layout_error", true);
-// For Easy Changjei
-pref("intl.tsf.hack.easy_changjei.do_not_return_no_layout_error", true);
 // Whether use previous character rect for the result of
 // ITfContextView::GetTextExt() if the specified range is the first character
 // of selected clause of composition string.
