@@ -23,7 +23,7 @@ BEGIN_TEST(testRedefineGlobalEval)
 {
     static const JSClassOps clsOps = {
         nullptr, nullptr, nullptr, nullptr,
-        GlobalEnumerate, GlobalResolve, nullptr, nullptr,
+        GlobalEnumerate, nullptr, GlobalResolve, nullptr, nullptr,
         nullptr, nullptr, nullptr,
         JS_GlobalObjectTraceHook
     };

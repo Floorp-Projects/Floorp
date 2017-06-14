@@ -88,6 +88,7 @@ const ClassOps DebuggerFrame::classOps_ = {
     nullptr,    /* getProperty */
     nullptr,    /* setProperty */
     nullptr,    /* enumerate   */
+    nullptr,    /* newEnumerate */
     nullptr,    /* resolve     */
     nullptr,    /* mayResolve  */
     DebuggerFrame_finalize,
@@ -121,6 +122,7 @@ const ClassOps DebuggerEnvironment::classOps_ = {
     nullptr,    /* getProperty */
     nullptr,    /* setProperty */
     nullptr,    /* enumerate   */
+    nullptr,    /* newEnumerate */
     nullptr,    /* resolve     */
     nullptr,    /* mayResolve  */
     nullptr,    /* finalize    */
@@ -148,6 +150,7 @@ const ClassOps DebuggerObject::classOps_ = {
     nullptr,    /* getProperty */
     nullptr,    /* setProperty */
     nullptr,    /* enumerate   */
+    nullptr,    /* newEnumerate */
     nullptr,    /* resolve     */
     nullptr,    /* mayResolve  */
     nullptr,    /* finalize    */
@@ -175,6 +178,7 @@ static const ClassOps DebuggerScript_classOps = {
     nullptr,    /* getProperty */
     nullptr,    /* setProperty */
     nullptr,    /* enumerate   */
+    nullptr,    /* newEnumerate */
     nullptr,    /* resolve     */
     nullptr,    /* mayResolve  */
     nullptr,    /* finalize    */
@@ -203,6 +207,7 @@ static const ClassOps DebuggerSource_classOps = {
     nullptr,    /* getProperty */
     nullptr,    /* setProperty */
     nullptr,    /* enumerate   */
+    nullptr,    /* newEnumerate */
     nullptr,    /* resolve     */
     nullptr,    /* mayResolve  */
     nullptr,    /* finalize    */
@@ -3287,6 +3292,7 @@ const ClassOps Debugger::classOps_ = {
     nullptr,    /* getProperty */
     nullptr,    /* setProperty */
     nullptr,    /* enumerate   */
+    nullptr,    /* newEnumerate */
     nullptr,    /* resolve     */
     nullptr,    /* mayResolve  */
     nullptr,    /* finalize    */
