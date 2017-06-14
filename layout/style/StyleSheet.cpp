@@ -27,9 +27,9 @@ StyleSheet::StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMod
   , mParsingMode(aParsingMode)
   , mType(aType)
   , mDisabled(false)
-  , mDirty(false)
   , mDocumentAssociationMode(NotOwnedByDocument)
   , mInner(nullptr)
+  , mDirty(false)
 {
 }
 
@@ -46,11 +46,11 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy,
   , mParsingMode(aCopy.mParsingMode)
   , mType(aCopy.mType)
   , mDisabled(aCopy.mDisabled)
-  , mDirty(aCopy.mDirty)
   // We only use this constructor during cloning.  It's the cloner's
   // responsibility to notify us if we end up being owned by a document.
   , mDocumentAssociationMode(NotOwnedByDocument)
   , mInner(aCopy.mInner) // Shallow copy, but concrete subclasses will fix up.
+  , mDirty(aCopy.mDirty)
 {
   MOZ_ASSERT(mInner, "Should only copy StyleSheets with an mInner.");
   mInner->AddSheet(this);
