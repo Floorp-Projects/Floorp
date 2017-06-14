@@ -10,7 +10,6 @@
 use super::UnknownUnit;
 use length::Length;
 use scale_factor::ScaleFactor;
-use vector::{TypedVector2D, vec2};
 use num::*;
 
 use num_traits::NumCast;
@@ -20,6 +19,7 @@ use std::marker::PhantomData;
 
 /// A 2d size tagged with a unit.
 define_matrix! {
+    #[derive(RustcDecodable, RustcEncodable)]
     pub struct TypedSize2D<T, U> {
         pub width: T,
         pub height: T,
@@ -45,7 +45,7 @@ impl<T: fmt::Display, U> fmt::Display for TypedSize2D<T, U> {
 
 impl<T, U> TypedSize2D<T, U> {
     /// Constructor taking scalar values.
-    pub fn new(width: T, height: T) -> Self {
+    pub fn new(width: T, height: T) -> TypedSize2D<T, U> {
         TypedSize2D {
             width: width,
             height: height,
@@ -56,7 +56,7 @@ impl<T, U> TypedSize2D<T, U> {
 
 impl<T: Clone, U> TypedSize2D<T, U> {
     /// Constructor taking scalar strongly typed lengths.
-    pub fn from_lengths(width: Length<T, U>, height: Length<T, U>) -> Self {
+    pub fn from_lengths(width: Length<T, U>, height: Length<T, U>) -> TypedSize2D<T, U> {
         TypedSize2D::new(width.get(), height.get())
     }
 }
@@ -89,15 +89,15 @@ impl<T: Floor, U> TypedSize2D<T, U> {
 }
 
 impl<T: Copy + Add<T, Output=T>, U> Add for TypedSize2D<T, U> {
-    type Output = Self;
-    fn add(self, other: Self) -> Self {
+    type Output = TypedSize2D<T, U>;
+    fn add(self, other: TypedSize2D<T, U>) -> TypedSize2D<T, U> {
         TypedSize2D::new(self.width + other.width, self.height + other.height)
     }
 }
 
 impl<T: Copy + Sub<T, Output=T>, U> Sub for TypedSize2D<T, U> {
-    type Output = Self;
-    fn sub(self, other: Self) -> Self {
+    type Output = TypedSize2D<T, U>;
+    fn sub(self, other: TypedSize2D<T, U>) -> TypedSize2D<T, U> {
         TypedSize2D::new(self.width - other.width, self.height - other.height)
     }
 }
@@ -106,23 +106,8 @@ impl<T: Copy + Clone + Mul<T, Output=U>, U> TypedSize2D<T, U> {
     pub fn area(&self) -> U { self.width * self.height }
 }
 
-impl<T, U> TypedSize2D<T, U>
-where T: Copy + One + Add<Output=T> + Sub<Output=T> + Mul<Output=T> {
-    /// Linearly interpolate between this size and another size.
-    ///
-    /// `t` is expected to be between zero and one.
-    #[inline]
-    pub fn lerp(&self, other: Self, t: T) -> Self {
-        let one_t = T::one() - t;
-        size2(
-            one_t * self.width + t * other.width,
-            one_t * self.height + t * other.height,
-        )
-    }
-}
-
 impl<T: Zero, U> TypedSize2D<T, U> {
-    pub fn zero() -> Self {
+    pub fn zero() -> TypedSize2D<T, U> {
         TypedSize2D::new(
             Zero::zero(),
             Zero::zero(),
@@ -131,7 +116,7 @@ impl<T: Zero, U> TypedSize2D<T, U> {
 }
 
 impl<T: Zero, U> Zero for TypedSize2D<T, U> {
-    fn zero() -> Self {
+    fn zero() -> TypedSize2D<T, U> {
         TypedSize2D::new(
             Zero::zero(),
             Zero::zero(),
@@ -140,17 +125,17 @@ impl<T: Zero, U> Zero for TypedSize2D<T, U> {
 }
 
 impl<T: Copy + Mul<T, Output=T>, U> Mul<T> for TypedSize2D<T, U> {
-    type Output = Self;
+    type Output = TypedSize2D<T, U>;
     #[inline]
-    fn mul(self, scale: T) -> Self {
+    fn mul(self, scale: T) -> TypedSize2D<T, U> {
         TypedSize2D::new(self.width * scale, self.height * scale)
     }
 }
 
 impl<T: Copy + Div<T, Output=T>, U> Div<T> for TypedSize2D<T, U> {
-    type Output = Self;
+    type Output = TypedSize2D<T, U>;
     #[inline]
-    fn div(self, scale: T) -> Self {
+    fn div(self, scale: T) -> TypedSize2D<T, U> {
         TypedSize2D::new(self.width / scale, self.height / scale)
     }
 }
@@ -183,16 +168,13 @@ impl<T: Copy, U> TypedSize2D<T, U> {
     #[inline]
     pub fn to_array(&self) -> [T; 2] { [self.width, self.height] }
 
-    #[inline]
-    pub fn to_vector(&self) -> TypedVector2D<T, U> { vec2(self.width, self.height) }
-
     /// Drop the units, preserving only the numeric value.
     pub fn to_untyped(&self) -> Size2D<T> {
         TypedSize2D::new(self.width, self.height)
     }
 
     /// Tag a unitless value with units.
-    pub fn from_untyped(p: &Size2D<T>) -> Self {
+    pub fn from_untyped(p: &Size2D<T>) -> TypedSize2D<T, U> {
         TypedSize2D::new(p.width, p.height)
     }
 }

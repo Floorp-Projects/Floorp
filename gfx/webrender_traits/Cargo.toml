@@ -14,11 +14,11 @@ webgl = ["offscreen_gl_context"]
 app_units = "0.4"
 bincode = "1.0.0-alpha2"
 byteorder = "1.0"
-euclid = "0.14.4"
+euclid = "0.13"
 gleam = "0.4.5"
 heapsize = ">= 0.3.6, < 0.5"
 ipc-channel = {version = "0.7.2", optional = true}
-offscreen_gl_context = {version = "0.9", features = ["serde"], optional = true}
+offscreen_gl_context = {version = "0.8", features = ["serde"], optional = true}
 serde = "0.9"
 serde_derive = "0.9"
 time = "0.1"

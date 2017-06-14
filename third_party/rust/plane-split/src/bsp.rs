@@ -1,5 +1,5 @@
 use binary_space_partition::{BspNode, Plane, PlaneCut};
-use euclid::{TypedPoint3D, TypedVector3D};
+use euclid::TypedPoint3D;
 use euclid::approxeq::ApproxEq;
 use num_traits::{Float, One, Zero};
 use std::{fmt, ops};
@@ -96,10 +96,10 @@ impl<T, U> Splitter<T, U> for BspSplitter<T, U> where
         self.tree.insert(poly);
     }
 
-    fn sort(&mut self, view: TypedVector3D<T, U>) -> &[Polygon<T, U>] {
+    fn sort(&mut self, view: TypedPoint3D<T, U>) -> &[Polygon<T, U>] {
         //debug!("\t\ttree before sorting {:?}", self.tree);
         let poly = Polygon {
-            points: [TypedPoint3D::origin(); 4],
+            points: [TypedPoint3D::zero(); 4],
             normal: -view, //Note: BSP `order()` is back to front
             offset: T::zero(),
             anchor: 0,

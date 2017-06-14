@@ -41,8 +41,10 @@ pub fn ray_intersects_rect(ray_origin: Point3D<f32>,
     ];
 
     let parameters = [
-        rect.origin.to_3d(),
-        rect.bottom_right().to_3d(),
+        Point3D::new(rect.origin.x, rect.origin.y, 0.0),
+        Point3D::new(rect.origin.x + rect.size.width,
+                     rect.origin.y + rect.size.height,
+                     0.0),
     ];
 
     let mut tmin = (parameters[sign[0]].x - ray_origin.x) * inv_direction.x;

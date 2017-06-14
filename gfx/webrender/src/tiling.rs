@@ -6,13 +6,13 @@ use app_units::Au;
 use border::{BorderCornerInstance, BorderCornerSide};
 use device::TextureId;
 use fnv::FnvHasher;
-use gpu_cache::{GpuCache, GpuCacheUpdateList};
+use gpu_cache::GpuCacheUpdateList;
 use gpu_store::GpuStoreAddress;
 use internal_types::{ANGLE_FLOAT_TO_FIXED, BatchTextures, CacheTextureId, LowLevelFilterOp};
 use internal_types::SourceTexture;
 use mask_cache::MaskCacheInfo;
-use prim_store::{CLIP_DATA_GPU_SIZE, DeferredResolve, GpuBlock32};
-use prim_store::PrimitiveCacheKey;
+use prim_store::{CLIP_DATA_GPU_SIZE, DeferredResolve, GpuBlock16, GpuBlock32};
+use prim_store::{GradientData, SplitGeometry, PrimitiveCacheKey, PrimitiveGeometry};
 use prim_store::{PrimitiveIndex, PrimitiveKind, PrimitiveMetadata, PrimitiveStore, TexelRect};
 use profiler::FrameProfileCounters;
 use render_task::{AlphaRenderItem, MaskGeometryKind, MaskSegment, RenderTask, RenderTaskData};
@@ -28,9 +28,9 @@ use texture_cache::TexturePage;
 use util::{TransformedRect, TransformedRectKind};
 use webrender_traits::{BuiltDisplayList, ClipAndScrollInfo, ClipId, ColorF, DeviceIntPoint};
 use webrender_traits::{DeviceIntRect, DeviceIntSize, DeviceUintPoint, DeviceUintSize};
-use webrender_traits::{ExternalImageType, FontRenderMode, ImageRendering, LayerRect};
+use webrender_traits::{ExternalImageType, FontRenderMode, ImageRendering, LayerPoint, LayerRect};
 use webrender_traits::{LayerToWorldTransform, MixBlendMode, PipelineId, TransformStyle};
-use webrender_traits::{WorldToLayerTransform, YuvColorSpace, YuvFormat, LayerVector2D};
+use webrender_traits::{WorldToLayerTransform, YuvColorSpace, YuvFormat};
 
 // Special sentinel value recognized by the shader. It is considered to be
 // a dummy task that doesn't mask out anything.
@@ -425,9 +425,10 @@ impl AlphaRenderItem {
                 let blend_mode = ctx.prim_store.get_blend_mode(needs_blending, prim_metadata);
 
                 let prim_cache_address = prim_metadata.gpu_location
-                                                      .as_int(&ctx.gpu_cache);
+                                                      .as_int(&ctx.resource_cache.gpu_cache);
 
-                let base_instance = SimplePrimitiveInstance::new(prim_cache_address,
+                let base_instance = SimplePrimitiveInstance::new(prim_index,
+                                                                 prim_cache_address,
                                                                  task_index,
                                                                  clip_task_index,
                                                                  packed_layer_index,
@@ -516,33 +517,38 @@ impl AlphaRenderItem {
                             None => 0,
                         };
 
-                        let user_data1 = match batch_kind {
-                            AlphaBatchKind::TextRun => text_cpu.resource_address.0,
-                            AlphaBatchKind::CacheImage => cache_task_index,
-                            _ => unreachable!(),
-                        };
+                        for glyph_index in 0..text_cpu.gpu_data_count {
+                            let user_data1 = match batch_kind {
+                                AlphaBatchKind::TextRun => text_cpu.resource_address.0 + glyph_index,
+                                AlphaBatchKind::CacheImage => cache_task_index,
+                                _ => unreachable!(),
+                            };
 
-                        for glyph_index in 0..text_cpu.glyph_instances.len() {
-                            batch.add_instance(base_instance.build(glyph_index as i32, user_data1));
+                            batch.add_instance(base_instance.build(text_cpu.gpu_data_address.0 + glyph_index,
+                                                                   user_data1));
                         }
                     }
                     PrimitiveKind::AlignedGradient => {
                         let gradient_cpu = &ctx.prim_store.cpu_gradients[prim_metadata.cpu_prim_index.0];
                         let key = AlphaBatchKey::new(AlphaBatchKind::AlignedGradient, flags, blend_mode, textures);
                         let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
-                        for part_index in 0..(gradient_cpu.stops_count - 1) {
-                            batch.add_instance(base_instance.build(part_index as i32, 0));
+                        for part_index in 0..(gradient_cpu.gpu_data_count - 1) {
+                            batch.add_instance(base_instance.build(gradient_cpu.gpu_data_address.0 + part_index, 0));
                         }
                     }
                     PrimitiveKind::AngleGradient => {
+                        let gradient_cpu = &ctx.prim_store.cpu_gradients[prim_metadata.cpu_prim_index.0];
                         let key = AlphaBatchKey::new(AlphaBatchKind::AngleGradient, flags, blend_mode, textures);
                         let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
-                        batch.add_instance(base_instance.build(0, 0));
+                        batch.add_instance(base_instance.build(gradient_cpu.gpu_data_address.0,
+                                                               0));
                     }
                     PrimitiveKind::RadialGradient => {
+                        let gradient_cpu = &ctx.prim_store.cpu_radial_gradients[prim_metadata.cpu_prim_index.0];
                         let key = AlphaBatchKey::new(AlphaBatchKind::RadialGradient, flags, blend_mode, textures);
                         let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
-                        batch.add_instance(base_instance.build(0, 0));
+                        batch.add_instance(base_instance.build(gradient_cpu.gpu_data_address.0,
+                                                               0));
                     }
                     PrimitiveKind::YuvImage => {
                         let image_yuv_cpu = &ctx.prim_store.cpu_yuv_images[prim_metadata.cpu_prim_index.0];
@@ -598,7 +604,7 @@ impl AlphaRenderItem {
                     }
                 }
             }
-            AlphaRenderItem::SplitComposite(sc_index, task_id, gpu_handle, z) => {
+            AlphaRenderItem::SplitComposite(sc_index, task_id, gpu_address, z) => {
                 let key = AlphaBatchKey::new(AlphaBatchKind::SplitComposite,
                                              AlphaBatchKeyFlags::empty(),
                                              BlendMode::PremultipliedAlpha,
@@ -606,12 +612,11 @@ impl AlphaRenderItem {
                 let stacking_context = &ctx.stacking_context_store[sc_index.0];
                 let batch = batch_list.get_suitable_batch(&key, &stacking_context.screen_bounds);
                 let source_task = render_tasks.get_task_index(&task_id, child_pass_index);
-                let gpu_address = gpu_handle.as_int(ctx.gpu_cache);
 
                 let instance = CompositePrimitiveInstance::new(task_index,
                                                                source_task,
                                                                RenderTaskIndex(0),
-                                                               gpu_address,
+                                                               gpu_address.0,
                                                                0,
                                                                z);
 
@@ -757,7 +762,6 @@ pub struct RenderTargetContext<'a> {
     pub clip_scroll_group_store: &'a [ClipScrollGroup],
     pub prim_store: &'a PrimitiveStore,
     pub resource_cache: &'a ResourceCache,
-    pub gpu_cache: &'a GpuCache,
 }
 
 struct TextureAllocator {
@@ -977,11 +981,12 @@ impl RenderTarget for ColorRenderTarget {
                 let prim_metadata = ctx.prim_store.get_metadata(prim_index);
 
                 let prim_address = prim_metadata.gpu_location
-                                                .as_int(&ctx.gpu_cache);
+                                                .as_int(&ctx.resource_cache.gpu_cache);
 
                 match prim_metadata.prim_kind {
                     PrimitiveKind::BoxShadow => {
-                        let instance = SimplePrimitiveInstance::new(prim_address,
+                        let instance = SimplePrimitiveInstance::new(prim_index,
+                                                                    prim_address,
                                                                     render_tasks.get_task_index(&task.id, pass_index),
                                                                     RenderTaskIndex(0),
                                                                     PackedLayerIndex(0),
@@ -1005,15 +1010,16 @@ impl RenderTarget for ColorRenderTarget {
                                       self.text_run_textures.colors[0] == textures.colors[0]);
                         self.text_run_textures = textures;
 
-                        let instance = SimplePrimitiveInstance::new(prim_address,
+                        let instance = SimplePrimitiveInstance::new(prim_index,
+                                                                    prim_address,
                                                                     render_tasks.get_task_index(&task.id, pass_index),
                                                                     RenderTaskIndex(0),
                                                                     PackedLayerIndex(0),
                                                                     0);     // z is disabled for rendering cache primitives
 
-                        for glyph_index in 0..text.glyph_instances.len() {
-                            self.text_run_cache_prims.push(instance.build(glyph_index as i32,
-                                                                          text.resource_address.0));
+                        for glyph_index in 0..text.gpu_data_count {
+                            self.text_run_cache_prims.push(instance.build(text.gpu_data_address.0 + glyph_index,
+                                                                          text.resource_address.0 + glyph_index));
                         }
                     }
                     _ => {
@@ -1301,6 +1307,7 @@ pub struct PrimitiveInstance {
 }
 
 struct SimplePrimitiveInstance {
+    pub global_prim_index: i32,
     // TODO(gw): specific_prim_address is encoded as an i32, since
     //           some primitives use GPU Cache and some still use
     //           GPU Store. Once everything is converted to use the
@@ -1315,12 +1322,14 @@ struct SimplePrimitiveInstance {
 }
 
 impl SimplePrimitiveInstance {
-    fn new(specific_prim_address: i32,
+    fn new(prim_index: PrimitiveIndex,
+           specific_prim_address: i32,
            task_index: RenderTaskIndex,
            clip_task_index: RenderTaskIndex,
            layer_index: PackedLayerIndex,
            z_sort_index: i32) -> SimplePrimitiveInstance {
         SimplePrimitiveInstance {
+            global_prim_index: prim_index.0 as i32,
             specific_prim_address: specific_prim_address,
             task_index: task_index.0 as i32,
             clip_task_index: clip_task_index.0 as i32,
@@ -1332,6 +1341,7 @@ impl SimplePrimitiveInstance {
     fn build(&self, data0: i32, data1: i32) -> PrimitiveInstance {
         PrimitiveInstance {
             data: [
+                self.global_prim_index,
                 self.specific_prim_address,
                 self.task_index,
                 self.clip_task_index,
@@ -1339,7 +1349,6 @@ impl SimplePrimitiveInstance {
                 self.z_sort_index,
                 data0,
                 data1,
-                0,
             ]
         }
     }
@@ -1446,7 +1455,7 @@ pub struct StackingContext {
 
     /// Offset in the parent reference frame to the origin of this stacking
     /// context's coordinate system.
-    pub reference_frame_offset: LayerVector2D,
+    pub reference_frame_offset: LayerPoint,
 
     /// The `ClipId` of the owning reference frame.
     pub reference_frame_id: ClipId,
@@ -1475,7 +1484,7 @@ pub struct StackingContext {
 
 impl StackingContext {
     pub fn new(pipeline_id: PipelineId,
-               reference_frame_offset: LayerVector2D,
+               reference_frame_offset: LayerPoint,
                is_page_root: bool,
                reference_frame_id: ClipId,
                local_bounds: LayerRect,
@@ -1603,8 +1612,9 @@ impl CompositeOps {
 
     pub fn will_make_invisible(&self) -> bool {
         for op in &self.filters {
-            if op == &LowLevelFilterOp::Opacity(Au(0)) {
-                return true;
+            match op {
+                &LowLevelFilterOp::Opacity(Au(0)) => return true,
+                _ => {}
             }
         }
         false
@@ -1632,7 +1642,11 @@ pub struct Frame {
 
     pub layer_texture_data: Vec<PackedLayer>,
     pub render_task_data: Vec<RenderTaskData>,
+    pub gpu_data16: Vec<GpuBlock16>,
     pub gpu_data32: Vec<GpuBlock32>,
+    pub gpu_geometry: Vec<PrimitiveGeometry>,
+    pub gpu_gradient_data: Vec<GradientData>,
+    pub gpu_split_geometry: Vec<SplitGeometry>,
     pub gpu_resource_rects: Vec<TexelRect>,
 
     // List of updates that need to be pushed to the

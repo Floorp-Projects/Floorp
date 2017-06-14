@@ -3,16 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+uniform sampler2D sSplitGeometry;
+
 struct SplitGeometry {
     vec3 points[4];
 };
 
-SplitGeometry fetch_split_geometry(int address) {
-    ivec2 uv = get_resource_cache_uv(address);
+SplitGeometry fetch_split_geometry(int index) {
+    ivec2 uv = get_fetch_uv(index, VECS_PER_SPLIT_GEOM);
 
-    vec4 data0 = texelFetchOffset(sResourceCache, uv, 0, ivec2(0, 0));
-    vec4 data1 = texelFetchOffset(sResourceCache, uv, 0, ivec2(1, 0));
-    vec4 data2 = texelFetchOffset(sResourceCache, uv, 0, ivec2(2, 0));
+    vec4 data0 = texelFetchOffset(sSplitGeometry, uv, 0, ivec2(0, 0));
+    vec4 data1 = texelFetchOffset(sSplitGeometry, uv, 0, ivec2(1, 0));
+    vec4 data2 = texelFetchOffset(sSplitGeometry, uv, 0, ivec2(2, 0));
 
     SplitGeometry geo;
     geo.points = vec3[4](

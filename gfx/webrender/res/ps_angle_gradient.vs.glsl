@@ -5,7 +5,7 @@
 
 void main(void) {
     Primitive prim = load_primitive();
-    Gradient gradient = fetch_gradient(prim.specific_prim_address);
+    Gradient gradient = fetch_gradient(prim.prim_index);
 
     VertexInfo vi = write_vertex(prim.local_rect,
                                  prim.local_clip_rect,
@@ -26,7 +26,11 @@ void main(void) {
     vTileSize = gradient.tile_size_repeat.xy;
     vTileRepeat = gradient.tile_size_repeat.zw;
 
-    vGradientAddress = prim.specific_prim_address + VECS_PER_GRADIENT;
+    // V coordinate of gradient row in lookup texture.
+    vGradientIndex = float(prim.user_data0);
+
+    // The texture size of the lookup texture
+    vGradientTextureSize = vec2(textureSize(sGradients, 0));
 
     // Whether to repeat the gradient instead of clamping.
     vGradientRepeat = float(int(gradient.extend_mode.x) == EXTEND_MODE_REPEAT);

@@ -49,7 +49,8 @@ void main(void) {
         }
     }
 
-    oFragColor = sample_gradient(vGradientAddress,
-                                 offset,
-                                 vGradientRepeat);
+    oFragColor = sample_gradient(offset,
+                                 vGradientRepeat,
+                                 vGradientIndex,
+                                 vGradientTextureSize);
 }

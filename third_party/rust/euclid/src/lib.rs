@@ -59,6 +59,7 @@ extern crate heapsize;
 
 #[cfg_attr(test, macro_use)]
 extern crate log;
+extern crate rustc_serialize;
 extern crate serde;
 
 #[cfg(test)]
@@ -69,40 +70,34 @@ extern crate num_traits;
 
 pub use length::Length;
 pub use scale_factor::ScaleFactor;
-pub use transform2d::{Transform2D, TypedTransform2D};
-pub use transform3d::{Transform3D, TypedTransform3D};
+pub use matrix2d::{Matrix2D, TypedMatrix2D};
+pub use matrix4d::{Matrix4D, TypedMatrix4D};
 pub use point::{
-    Point2D, TypedPoint2D, point2,
-    Point3D, TypedPoint3D, point3,
+    Point2D, TypedPoint2D,
+    Point3D, TypedPoint3D,
+    Point4D, TypedPoint4D,
 };
-pub use vector::{
-    Vector2D, TypedVector2D, vec2,
-    Vector3D, TypedVector3D, vec3,
-};
-
-pub use rect::{Rect, TypedRect, rect};
+pub use rect::{Rect, TypedRect};
 pub use side_offsets::{SideOffsets2D, TypedSideOffsets2D};
 #[cfg(feature = "unstable")] pub use side_offsets::SideOffsets2DSimdI32;
-pub use size::{Size2D, TypedSize2D, size2};
-pub use trig::Trig;
+pub use size::{Size2D, TypedSize2D};
 
 pub mod approxeq;
-pub mod num;
-mod length;
+pub mod length;
 #[macro_use]
 mod macros;
-mod transform2d;
-mod transform3d;
-mod point;
-mod rect;
-mod scale_factor;
-mod side_offsets;
-mod size;
-mod trig;
-mod vector;
+pub mod matrix2d;
+pub mod matrix4d;
+pub mod num;
+pub mod point;
+pub mod rect;
+pub mod scale_factor;
+pub mod side_offsets;
+pub mod size;
+pub mod trig;
 
 /// The default unit.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, RustcDecodable, RustcEncodable)]
 pub struct UnknownUnit;
 
 /// Unit for angles in radians.
@@ -116,20 +111,3 @@ pub type Radians<T> = Length<T, Rad>;
 
 /// A value in Degrees.
 pub type Degrees<T> = Length<T, Deg>;
-
-/// Temporary alias to facilitate the transition to the new naming scheme
-#[deprecated]
-pub type Matrix2D<T> = Transform2D<T>;
-
-/// Temporary alias to facilitate the transition to the new naming scheme
-#[deprecated]
-pub type TypedMatrix2D<T, Src, Dst> = TypedTransform2D<T, Src, Dst>;
-
-/// Temporary alias to facilitate the transition to the new naming scheme
-#[deprecated]
-pub type Matrix4D<T> = Transform3D<T>;
-
-/// Temporary alias to facilitate the transition to the new naming scheme
-#[deprecated]
-pub type TypedMatrix4D<T, Src, Dst> = TypedTransform3D<T, Src, Dst>;
-
