@@ -748,6 +748,7 @@ Preferences::Init()
   if (!observerService)
     return NS_ERROR_FAILURE;
 
+  observerService->AddObserver(this, "profile-before-change-telemetry", true);
   rv = observerService->AddObserver(this, "profile-before-change", true);
 
   observerService->AddObserver(this, "load-extension-defaults", true);
@@ -776,6 +777,10 @@ Preferences::Observe(nsISupports *aSubject, const char *aTopic,
 
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     rv = SavePrefFile(nullptr);
+  } else if (!nsCRT::strcmp(aTopic, "profile-before-change-telemetry")) {
+    if (AllowOffMainThreadSave()) {
+      PreferencesWriter::Flush();
+    }
   } else if (!strcmp(aTopic, "load-extension-defaults")) {
     pref_LoadPrefsInDirList(NS_EXT_PREFS_DEFAULTS_DIR_LIST);
   } else if (!nsCRT::strcmp(aTopic, "reload-default-prefs")) {
@@ -785,7 +790,7 @@ Preferences::Observe(nsISupports *aSubject, const char *aTopic,
     // Our process is being suspended. The OS may wake our process later,
     // or it may kill the process. In case our process is going to be killed
     // from the suspended state, we save preferences before suspending.
-    rv = SavePrefFile(nullptr);
+    rv = SavePrefFileBlocking();
   }
   return rv;
 }
@@ -802,6 +807,12 @@ Preferences::ReadUserPrefs(nsIFile *aFile)
   nsresult rv;
 
   if (nullptr == aFile) {
+    // We should not be re-reading the user preferences, but if we
+    // are going to try, make sure there are no outstanding saves
+    if (AllowOffMainThreadSave()) {
+      PreferencesWriter::Flush();
+    }
+
     rv = UseDefaultPrefFile();
     // A user pref file is optional.
     // Ignore all errors related to it, so we retain 'rv' value :-|
@@ -1123,6 +1134,13 @@ Preferences::ReadAndOwnUserPrefFile(nsIFile *aFile)
   
   if (mCurrentFile == aFile)
     return NS_OK;
+
+  // Since we're changing the pref file, we may have to make
+  // sure the outstanding writes are handled first.
+  if (AllowOffMainThreadSave()) {
+    PreferencesWriter::Flush();
+  }
+
   mCurrentFile = aFile;
 
   nsresult rv = NS_OK;
