@@ -8,6 +8,8 @@ package org.mozilla.gecko.home;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.support.annotation.DrawableRes;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.TextViewCompat;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -143,8 +145,7 @@ public class TopSitesGridItemView extends RelativeLayout implements IconCallback
         updateTitleView();
         cancelIconLoading();
         ImageLoader.with(getContext()).cancelRequest(mThumbnailView);
-        displayThumbnail(R.drawable.top_site_add);
-
+        displayThumbnail(R.drawable.top_site_add, ContextCompat.getColor(getContext(), R.color.about_page_header_grey));
     }
 
     public void markAsDirty() {
@@ -222,11 +223,13 @@ public class TopSitesGridItemView extends RelativeLayout implements IconCallback
      * Display the thumbnail from a resource.
      *
      * @param resId Resource ID of the drawable to show.
+     * @param bgColor background color
      */
-    public void displayThumbnail(int resId) {
+    public void displayThumbnail(@DrawableRes int resId, int bgColor) {
         mThumbnailView.setScaleType(SCALE_TYPE_RESOURCE);
         mThumbnailView.setImageResource(resId);
-        mThumbnailView.setBackgroundColor(0x0);
+        mThumbnailView.setBackgroundColor(bgColor);
+        mThumbnailView.setDrawDefaultBorder(true);
         mThumbnailSet = false;
     }
 
@@ -248,6 +251,7 @@ public class TopSitesGridItemView extends RelativeLayout implements IconCallback
         mThumbnailView.setScaleType(SCALE_TYPE_THUMBNAIL);
         mThumbnailView.setImageBitmap(thumbnail, true);
         mThumbnailView.setBackgroundDrawable(null);
+        mThumbnailView.setDrawDefaultBorder(true);
     }
 
     /**
@@ -259,6 +263,7 @@ public class TopSitesGridItemView extends RelativeLayout implements IconCallback
     public void displayThumbnail(final String imageUrl, final int bgColor) {
         mThumbnailView.setScaleType(SCALE_TYPE_URL);
         mThumbnailView.setBackgroundColor(bgColor);
+        mThumbnailView.setDrawDefaultBorder(false);
         mThumbnailSet = true;
 
         ImageLoader.with(getContext())
