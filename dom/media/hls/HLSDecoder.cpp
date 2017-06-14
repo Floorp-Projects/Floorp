@@ -8,6 +8,7 @@
 #include "AndroidBridge.h"
 #include "DecoderTraits.h"
 #include "HLSDemuxer.h"
+#include "HLSResource.h"
 #include "HLSUtils.h"
 #include "MediaContainerType.h"
 #include "MediaDecoderStateMachine.h"
@@ -21,9 +22,13 @@ HLSDecoder::CreateStateMachine()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  MediaResource* resource = GetResource();
+  MOZ_ASSERT(resource);
+  auto resourceWrapper = static_cast<HLSResource*>(resource)->GetResourceWrapper();
+  MOZ_ASSERT(resourceWrapper);
   mReader =
     new MediaFormatReader(this,
-                          new HLSDemuxer(GetResource()),
+                          new HLSDemuxer(resourceWrapper->GetPlayerId()),
                           GetVideoFrameContainer());
 
   return new MediaDecoderStateMachine(this, mReader);
