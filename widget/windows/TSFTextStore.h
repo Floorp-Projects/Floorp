@@ -1014,6 +1014,9 @@ private:
   // TSF category manager
   static StaticRefPtr<ITfCategoryMgr> sCategoryMgr;
   static already_AddRefed<ITfCategoryMgr> GetCategoryMgr();
+  // Compartment for (Get|Set)IMEOpenState()
+  static StaticRefPtr<ITfCompartment> sCompartmentForOpenClose;
+  static already_AddRefed<ITfCompartment> GetCompartmentForOpenClose();
 
   // Current text store which is managing a keyboard enabled editor (i.e.,
   // editable editor).  Currently only ONE TSFTextStore instance is ever used,

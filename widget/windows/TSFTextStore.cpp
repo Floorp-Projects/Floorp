@@ -1634,6 +1634,7 @@ StaticRefPtr<ITfMessagePump> TSFTextStore::sMessagePump;
 StaticRefPtr<ITfKeystrokeMgr> TSFTextStore::sKeystrokeMgr;
 StaticRefPtr<ITfDisplayAttributeMgr> TSFTextStore::sDisplayAttrMgr;
 StaticRefPtr<ITfCategoryMgr> TSFTextStore::sCategoryMgr;
+StaticRefPtr<ITfCompartment> TSFTextStore::sCompartmentForOpenClose;
 StaticRefPtr<ITfDocumentMgr> TSFTextStore::sDisabledDocumentMgr;
 StaticRefPtr<ITfContext> TSFTextStore::sDisabledContext;
 StaticRefPtr<ITfInputProcessorProfiles> TSFTextStore::sInputProcessorProfiles;
@@ -5992,10 +5993,12 @@ TSFTextStore::SetIMEOpenState(bool aState)
     ("TSFTextStore::SetIMEOpenState(aState=%s)",
      GetBoolName(aState)));
 
-  RefPtr<ITfCompartment> comp;
-  if (!GetCompartment(sThreadMgr,
-                      GUID_COMPARTMENT_KEYBOARD_OPENCLOSE,
-                      getter_AddRefs(comp))) {
+  if (!sThreadMgr) {
+    return;
+  }
+
+  RefPtr<ITfCompartment> comp = GetCompartmentForOpenClose();
+  if (NS_WARN_IF(!comp)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Debug,
       ("  TSFTextStore::SetIMEOpenState() FAILED due to"
        "no compartment available"));
@@ -6005,30 +6008,54 @@ TSFTextStore::SetIMEOpenState(bool aState)
   VARIANT variant;
   variant.vt = VT_I4;
   variant.lVal = aState;
+  HRESULT hr = comp->SetValue(sClientId, &variant);
+  if (NS_WARN_IF(FAILED(hr))) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("  TSFTextStore::SetIMEOpenState() FAILED due to "
+       "ITfCompartment::SetValue() failure, hr=0x%08X", hr));
+    return;
+  }
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
     ("  TSFTextStore::SetIMEOpenState(), setting "
      "0x%04X to GUID_COMPARTMENT_KEYBOARD_OPENCLOSE...",
      variant.lVal));
-  comp->SetValue(sClientId, &variant);
 }
 
 // static
 bool
 TSFTextStore::GetIMEOpenState()
 {
-  RefPtr<ITfCompartment> comp;
-  if (!GetCompartment(sThreadMgr,
-                      GUID_COMPARTMENT_KEYBOARD_OPENCLOSE,
-                      getter_AddRefs(comp)))
+  if (!sThreadMgr) {
     return false;
+  }
+
+  RefPtr<ITfCompartment> comp = GetCompartmentForOpenClose();
+  if (NS_WARN_IF(!comp)) {
+    return false;
+  }
 
   VARIANT variant;
   ::VariantInit(&variant);
-  if (SUCCEEDED(comp->GetValue(&variant)) && variant.vt == VT_I4)
-    return variant.lVal != 0;
+  HRESULT hr = comp->GetValue(&variant);
+  if (NS_WARN_IF(FAILED(hr))) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("TSFTextStore::GetIMEOpenState() FAILED due to "
+       "ITfCompartment::GetValue() failure, hr=0x%08X", hr));
+    return false;
+  }
+  // Until IME is open in this process, the result may be empty.
+  if (variant.vt == VT_EMPTY) {
+    return false;
+  }
+  if (NS_WARN_IF(variant.vt != VT_I4)) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("TSFTextStore::GetIMEOpenState() FAILED due to "
+       "invalid result of ITfCompartment::GetValue()"));
+    ::VariantClear(&variant);
+    return false;
+  }
 
-  ::VariantClear(&variant); // clear up in case variant.vt != VT_I4
-  return false;
+  return variant.lVal != 0;
 }
 
 // static
@@ -6283,6 +6310,43 @@ TSFTextStore::GetCategoryMgr()
 }
 
 // static
+already_AddRefed<ITfCompartment>
+TSFTextStore::GetCompartmentForOpenClose()
+{
+  if (sCompartmentForOpenClose) {
+    RefPtr<ITfCompartment> compartment = sCompartmentForOpenClose;
+    return compartment.forget();
+  }
+
+  if (!sThreadMgr) {
+    return nullptr;
+  }
+
+  RefPtr<ITfCompartmentMgr> compartmentMgr;
+  HRESULT hr = sThreadMgr->QueryInterface(IID_ITfCompartmentMgr,
+                                          getter_AddRefs(compartmentMgr));
+  if (NS_WARN_IF(FAILED(hr)) || NS_WARN_IF(!compartmentMgr)) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("TSFTextStore::GetCompartmentForOpenClose() FAILED due to"
+       "sThreadMgr not having ITfCompartmentMgr, hr=0x%08X", hr));
+    return nullptr;
+  }
+
+  RefPtr<ITfCompartment> compartment;
+  hr = compartmentMgr->GetCompartment(GUID_COMPARTMENT_KEYBOARD_OPENCLOSE,
+                                      getter_AddRefs(compartment));
+  if (NS_WARN_IF(FAILED(hr)) || NS_WARN_IF(!compartment)) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("TSFTextStore::GetCompartmentForOpenClose() FAILED due to"
+       "ITfCompartmentMgr::GetCompartment() failuere, hr=0x%08X", hr));
+    return nullptr;
+  }
+
+  sCompartmentForOpenClose = compartment;
+  return compartment.forget();
+}
+
+// static
 already_AddRefed<ITfInputProcessorProfiles>
 TSFTextStore::GetInputProcessorProfiles()
 {
@@ -6323,6 +6387,7 @@ TSFTextStore::Terminate()
   sEnabledTextStore = nullptr;
   sDisabledDocumentMgr = nullptr;
   sDisabledContext = nullptr;
+  sCompartmentForOpenClose = nullptr;
   sInputProcessorProfiles = nullptr;
   sClientId = 0;
   if (sThreadMgr) {
