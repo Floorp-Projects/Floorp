@@ -68,6 +68,9 @@ scheme host and port.""")
     mode_group.add_argument("--list-disabled", action="store_true",
                             default=False,
                             help="List the tests that are disabled on the current platform")
+    mode_group.add_argument("--list-tests", action="store_true",
+                            default=False,
+                            help="List all tests that will run")
 
     test_selection_group = parser.add_argument_group("Test Selection")
     test_selection_group.add_argument("--test-types", action="store",
