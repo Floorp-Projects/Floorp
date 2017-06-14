@@ -1392,7 +1392,8 @@ nsIFrame::Combines3DTransformWithAncestors(const nsStyleDisplay* aStyleDisplay,
                                            EffectSet* aEffectSet) const
 {
   MOZ_ASSERT(aStyleDisplay == StyleDisplay());
-  if (!GetParent() || !GetParent()->Extend3DContext(aEffectSet)) {
+  nsIFrame* parent = GetFlattenedTreeParentPrimaryFrame();
+  if (!parent || !parent->Extend3DContext()) {
     return false;
   }
   return IsTransformed(aStyleDisplay,aEffectSet) ||
@@ -2320,9 +2321,9 @@ FrameParticipatesIn3DContext(nsIFrame* aAncestor, nsIFrame* aDescendant) {
   MOZ_ASSERT(aAncestor != aDescendant);
   MOZ_ASSERT(aAncestor->Extend3DContext());
   nsIFrame* frame;
-  for (frame = nsLayoutUtils::GetCrossDocParentFrame(aDescendant);
+  for (frame = aDescendant->GetFlattenedTreeParentPrimaryFrame();
        frame && aAncestor != frame;
-       frame = nsLayoutUtils::GetCrossDocParentFrame(frame)) {
+       frame = frame->GetFlattenedTreeParentPrimaryFrame()) {
     if (!frame->Extend3DContext()) {
       return false;
     }
@@ -6275,6 +6276,16 @@ nsIFrame::GetNearestWidget(nsPoint& aOffset) const
     GetClosestView(&offsetToView)->GetNearestWidget(&offsetToWidget);
   aOffset = offsetToView + offsetToWidget;
   return widget;
+}
+
+nsIFrame*
+nsIFrame::GetFlattenedTreeParentPrimaryFrame() const
+{
+  if (!GetContent()) {
+    return nullptr;
+  }
+  nsIContent* parent = GetContent()->GetFlattenedTreeParent();
+  return parent ? parent->GetPrimaryFrame() : nullptr;
 }
 
 Matrix4x4
