@@ -450,8 +450,7 @@ nsStringInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
   }
 
   if (aEventTarget) {
-    mAsyncWaitCallback = NS_NewInputStreamReadyEvent("nsStringInputStream::AsyncWait",
-                                                     aCallback, aEventTarget);
+    mAsyncWaitCallback = NS_NewInputStreamReadyEvent(aCallback, aEventTarget);
   } else {
     mAsyncWaitCallback = aCallback;
   }

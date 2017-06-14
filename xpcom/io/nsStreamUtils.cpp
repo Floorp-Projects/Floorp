@@ -36,10 +36,9 @@ class nsInputStreamReadyEvent final
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-    nsInputStreamReadyEvent(const char* aName,
-                            nsIInputStreamCallback* aCallback,
-                            nsIEventTarget* aTarget)
-    : CancelableRunnable(aName)
+  nsInputStreamReadyEvent(nsIInputStreamCallback* aCallback,
+                          nsIEventTarget* aTarget)
+    : CancelableRunnable("nsInputStreamReadyEvent")
     , mCallback(aCallback)
     , mTarget(aTarget)
   {
@@ -62,7 +61,7 @@ private:
     nsresult rv = mTarget->IsOnCurrentThread(&val);
     if (NS_FAILED(rv) || !val) {
       nsCOMPtr<nsIInputStreamCallback> event =
-        NS_NewInputStreamReadyEvent("~nsInputStreamReadyEvent", mCallback, mTarget);
+        NS_NewInputStreamReadyEvent(mCallback, mTarget);
       mCallback = nullptr;
       if (event) {
         rv = event->OnInputStreamReady(nullptr);
@@ -210,14 +209,13 @@ NS_IMPL_ISUPPORTS_INHERITED(nsOutputStreamReadyEvent, CancelableRunnable,
 //-----------------------------------------------------------------------------
 
 already_AddRefed<nsIInputStreamCallback>
-NS_NewInputStreamReadyEvent(const char* aName,
-                            nsIInputStreamCallback* aCallback,
+NS_NewInputStreamReadyEvent(nsIInputStreamCallback* aCallback,
                             nsIEventTarget* aTarget)
 {
   NS_ASSERTION(aCallback, "null callback");
   NS_ASSERTION(aTarget, "null target");
   RefPtr<nsInputStreamReadyEvent> ev =
-    new nsInputStreamReadyEvent(aName, aCallback, aTarget);
+    new nsInputStreamReadyEvent(aCallback, aTarget);
   return ev.forget();
 }
 
