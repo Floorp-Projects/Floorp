@@ -15,6 +15,7 @@
 #include "mozilla/RuleNodeCacheConditions.h"
 #include "mozilla/ServoCSSParser.h"
 #include "nsCSSParser.h"
+#include "nsGlobalWindowInner.h"
 #include "nsStyleTransformMatrix.h"
 #include "nsGlobalWindowInner.h"
 
