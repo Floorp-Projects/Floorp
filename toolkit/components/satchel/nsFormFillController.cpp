@@ -6,6 +6,7 @@
 
 #include "nsFormFillController.h"
 
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
@@ -45,6 +46,25 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using mozilla::ErrorResult;
+
+static nsIFormAutoComplete*
+GetFormAutoComplete()
+{
+  static nsCOMPtr<nsIFormAutoComplete> sInstance;
+  static bool sInitialized = false;
+  if (!sInitialized) {
+    nsresult rv;
+    sInstance =
+      do_GetService("@mozilla.org/satchel/form-autocomplete;1",
+                    &rv);
+
+    if (NS_SUCCEEDED(rv)) {
+      ClearOnShutdown(&sInstance);
+      sInitialized = true;
+    }
+  }
+  return sInstance;
+}
 
 NS_IMPL_CYCLE_COLLECTION(nsFormFillController,
                          mController, mLoginManager, mFocusedPopup, mDocShells,
@@ -777,9 +797,8 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    nsCOMPtr <nsIFormAutoComplete> formAutoComplete =
-      do_GetService("@mozilla.org/satchel/form-autocomplete;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    auto formAutoComplete = GetFormAutoComplete();
+    NS_ENSURE_TRUE(formAutoComplete, NS_ERROR_FAILURE);
 
     formAutoComplete->AutoCompleteSearchAsync(aSearchParam,
                                               aSearchString,
@@ -1365,9 +1384,7 @@ nsFormFillController::StopControllingInput()
   if (mFocusedInputNode) {
     MaybeRemoveMutationObserver(mFocusedInputNode);
 
-    nsresult rv;
-    nsCOMPtr <nsIFormAutoComplete> formAutoComplete =
-      do_GetService("@mozilla.org/satchel/form-autocomplete;1", &rv);
+    auto formAutoComplete = GetFormAutoComplete();
     if (formAutoComplete) {
       formAutoComplete->StopControllingInput(mFocusedInput);
     }
