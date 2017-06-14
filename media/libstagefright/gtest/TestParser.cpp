@@ -217,15 +217,15 @@ static const TestFileData testFiles[] = {
 
 static const TestFileData rustTestFiles[] = {
   // filename                      #V dur   w    h  #A dur  crypt        off   moof  headr  audio_profile
-  { "test_case_1156505.mp4",        E, -1,   0,   0, E, -1, false, 152, false, false, 0 },
+  { "test_case_1156505.mp4",        0, -1,   0,   0, 0, -1, false, 152, false, false, 0 },
   { "test_case_1181213.mp4",        1, 416666,
                                            320, 240, 1, 477460,
                                                              true,   0, false, false, 2 },
   { "test_case_1181215.mp4",        1, 4966666,   190,   240, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1181220.mp4",        E, -1,   0,   0, E, -1, false,   0, false, false, 0 },
-  { "test_case_1181223.mp4",        1, 416666,
+  { "test_case_1181220.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1181223.mp4",        0, 416666,
                                            320, 240, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1181719.mp4",        E, -1,   0,   0, E, -1, false,   0, false, false, 0 },
+  { "test_case_1181719.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
   { "test_case_1185230.mp4",        2, 416666,
                                            320, 240, 2,  5, false,   0, false, false, 2 },
   { "test_case_1187067.mp4",        1, 80000,
@@ -233,7 +233,7 @@ static const TestFileData rustTestFiles[] = {
   { "test_case_1200326.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
   { "test_case_1204580.mp4",        1, 502500,
                                            320, 180, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1216748.mp4",        E, -1,   0,   0, E, -1, false, 152, false, false, 0 },
+  { "test_case_1216748.mp4",        0, -1,   0,   0, 0, -1, false, 152, false, false, 0 },
   { "test_case_1296473.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
   { "test_case_1296532.mp4",        1, 5589333,
                                            560, 320, 1, 5589333,
