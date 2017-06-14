@@ -74,7 +74,7 @@ function* ellipseHasCorrectAttrs(testActor, inspector, highlighterFront) {
   is(rx, 40, "Ellipse highlighter has correct rx");
   is(ry, 30, "Ellipse highlighter has correct ry");
   is(cx, 25, "Ellipse highlighter has correct cx");
-  is(cy, 75, "Ellipse highlighter has correct cy");
+  is(cy, 30, "Ellipse highlighter has correct cy");
 }
 
 function* insetHasCorrectAttrs(testActor, inspector, highlighterFront) {
