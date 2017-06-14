@@ -1346,13 +1346,6 @@ protected:
   // True when the unitless length quirk applies.
   bool mUnitlessLengthQuirk : 1;
 
-  // Controls access to nonstandard style constructs that are not safe
-  // for use on the public Web but necessary in UA sheets and/or
-  // useful in user sheets.  The only values stored in this field are
-  // 0, 1, and 2; three bits are allocated to avoid issues should the
-  // enum type be signed.
-  css::SheetParsingMode mParsingMode : 3;
-
   // True if we are in parsing rules for the chrome.
   bool mIsChrome : 1;
 
@@ -1389,6 +1382,11 @@ protected:
   // not be set to false if any nsCSSValues created during parsing can escape
   // out of the parser.
   bool mSheetPrincipalRequired;
+
+  // Controls access to nonstandard style constructs that are not safe
+  // for use on the public Web but necessary in UA sheets and/or
+  // useful in user sheets.
+  css::SheetParsingMode mParsingMode;
 
   // This enum helps us track whether we've unprefixed "display: -webkit-box"
   // (treating it as "display: flex") in an earlier declaration within a series
@@ -1480,7 +1478,6 @@ CSSParserImpl::CSSParserImpl()
     mNavQuirkMode(false),
     mHashlessColorQuirk(false),
     mUnitlessLengthQuirk(false),
-    mParsingMode(css::eAuthorSheetFeatures),
     mIsChrome(false),
     mIsSVGMode(false),
     mViewportUnitsEnabled(true),
@@ -1489,6 +1486,7 @@ CSSParserImpl::CSSParserImpl()
     mInFailingSupportsRule(false),
     mSuppressErrors(false),
     mSheetPrincipalRequired(true),
+    mParsingMode(css::eAuthorSheetFeatures),
     mWebkitBoxUnprefixState(eNotParsingDecls),
     mNextFree(nullptr)
 {

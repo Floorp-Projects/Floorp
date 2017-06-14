@@ -7,6 +7,8 @@
 #ifndef mozilla_css_SheetParsingMode_h
 #define mozilla_css_SheetParsingMode_h
 
+#include <stdint.h>
+
 namespace mozilla {
 namespace css {
 
@@ -40,7 +42,7 @@ namespace css {
  * Servo backend to recognize the sheets as the agent level, but Gecko
  * backend will parse it under _author_ level.
  */
-enum SheetParsingMode {
+enum SheetParsingMode : uint8_t {
   eAuthorSheetFeatures = 0,
   eUserSheetFeatures,
   eAgentSheetFeatures,
