@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use euclid::Transform3D;
+use euclid::Matrix4D;
 use fnv::FnvHasher;
 use gleam::gl;
 use internal_types::{PackedVertex, RenderTargetMode, TextureSampler, DEFAULT_TEXTURE};
@@ -1059,7 +1059,7 @@ impl Device {
 
     pub fn bind_program(&mut self,
                         program_id: ProgramId,
-                        projection: &Transform3D<f32>) {
+                        projection: &Matrix4D<f32>) {
         debug_assert!(self.inside_frame);
 
         if self.bound_program != program_id {
@@ -1554,6 +1554,16 @@ impl Device {
             self.gl.uniform_1i(u_tasks, TextureSampler::RenderTasks as i32);
         }
 
+        let u_prim_geom = self.gl.get_uniform_location(program.id, "sPrimGeometry");
+        if u_prim_geom != -1 {
+            self.gl.uniform_1i(u_prim_geom, TextureSampler::Geometry as i32);
+        }
+
+        let u_data16 = self.gl.get_uniform_location(program.id, "sData16");
+        if u_data16 != -1 {
+            self.gl.uniform_1i(u_data16, TextureSampler::Data16 as i32);
+        }
+
         let u_data32 = self.gl.get_uniform_location(program.id, "sData32");
         if u_data32 != -1 {
             self.gl.uniform_1i(u_data32, TextureSampler::Data32 as i32);
@@ -1567,6 +1577,16 @@ impl Device {
         let u_resource_rects = self.gl.get_uniform_location(program.id, "sResourceRects");
         if u_resource_rects != -1 {
             self.gl.uniform_1i(u_resource_rects, TextureSampler::ResourceRects as i32);
+        }
+
+        let u_gradients = self.gl.get_uniform_location(program.id, "sGradients");
+        if u_gradients != -1 {
+            self.gl.uniform_1i(u_gradients, TextureSampler::Gradients as i32);
+        }
+
+        let u_split_geometry = self.gl.get_uniform_location(program.id, "sSplitGeometry");
+        if u_split_geometry != -1 {
+            self.gl.uniform_1i(u_split_geometry, TextureSampler::SplitGeometry as i32);
         }
 
         Ok(())
@@ -1622,7 +1642,7 @@ impl Device {
 
     fn set_uniforms(&self,
                     program: &Program,
-                    transform: &Transform3D<f32>,
+                    transform: &Matrix4D<f32>,
                     device_pixel_ratio: f32) {
         debug_assert!(self.inside_frame);
         self.gl.uniform_matrix_4fv(program.u_transform,

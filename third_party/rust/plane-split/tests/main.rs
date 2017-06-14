@@ -1,7 +1,7 @@
 extern crate euclid;
 extern crate plane_split;
 
-use euclid::{Radians, TypedRect, TypedSize2D, TypedTransform3D, point2, point3, vec3};
+use euclid::{Point2D, Radians, TypedPoint2D, TypedPoint3D, TypedRect, TypedSize2D, TypedMatrix4D};
 use euclid::approxeq::ApproxEq;
 use plane_split::{Intersection, Line, LineProjection, Polygon};
 
@@ -16,36 +16,36 @@ fn line_proj_bounds() {
 fn valid() {
     let poly_a: Polygon<f32, ()> = Polygon {
         points: [
-            point3(0.0, 0.0, 0.0),
-            point3(1.0, 1.0, 1.0),
-            point3(1.0, 1.0, 0.0),
-            point3(0.0, 1.0, 1.0),
+            TypedPoint3D::new(0.0, 0.0, 0.0),
+            TypedPoint3D::new(1.0, 1.0, 1.0),
+            TypedPoint3D::new(1.0, 1.0, 0.0),
+            TypedPoint3D::new(0.0, 1.0, 1.0),
         ],
-        normal: vec3(0.0, 1.0, 0.0),
+        normal: TypedPoint3D::new(0.0, 1.0, 0.0),
         offset: -1.0,
         anchor: 0,
     };
     assert!(!poly_a.is_valid()); // points[0] is outside
     let poly_b: Polygon<f32, ()> = Polygon {
         points: [
-            point3(0.0, 1.0, 0.0),
-            point3(1.0, 1.0, 1.0),
-            point3(1.0, 1.0, 0.0),
-            point3(0.0, 1.0, 1.0),
+            TypedPoint3D::new(0.0, 1.0, 0.0),
+            TypedPoint3D::new(1.0, 1.0, 1.0),
+            TypedPoint3D::new(1.0, 1.0, 0.0),
+            TypedPoint3D::new(0.0, 1.0, 1.0),
         ],
-        normal: vec3(0.0, 1.0, 0.0),
+        normal: TypedPoint3D::new(0.0, 1.0, 0.0),
         offset: -1.0,
         anchor: 0,
     };
     assert!(!poly_b.is_valid()); // winding is incorrect
     let poly_c: Polygon<f32, ()> = Polygon {
         points: [
-            point3(0.0, 0.0, 1.0),
-            point3(1.0, 0.0, 1.0),
-            point3(1.0, 1.0, 1.0),
-            point3(0.0, 1.0, 1.0),
+            TypedPoint3D::new(0.0, 0.0, 1.0),
+            TypedPoint3D::new(1.0, 0.0, 1.0),
+            TypedPoint3D::new(1.0, 1.0, 1.0),
+            TypedPoint3D::new(0.0, 1.0, 1.0),
         ],
-        normal: vec3(0.0, 0.0, 1.0),
+        normal: TypedPoint3D::new(0.0, 0.0, 1.0),
         offset: -1.0,
         anchor: 0,
     };
@@ -54,10 +54,10 @@ fn valid() {
 
 #[test]
 fn from_transformed_rect() {
-    let rect: TypedRect<f32, ()> = TypedRect::new(point2(10.0, 10.0), TypedSize2D::new(20.0, 30.0));
-    let transform: TypedTransform3D<f32, (), ()> =
-        TypedTransform3D::create_rotation(0.5f32.sqrt(), 0.0, 0.5f32.sqrt(), Radians::new(5.0))
-        .pre_translate(vec3(0.0, 0.0, 10.0));
+    let rect: TypedRect<f32, ()> = TypedRect::new(TypedPoint2D::new(10.0, 10.0), TypedSize2D::new(20.0, 30.0));
+    let transform: TypedMatrix4D<f32, (), ()> =
+        TypedMatrix4D::create_rotation(0.5f32.sqrt(), 0.0, 0.5f32.sqrt(), Radians::new(5.0))
+        .pre_translated(0.0, 0.0, 10.0);
     let poly = Polygon::from_transformed_rect(rect, transform, 0);
     assert!(poly.is_valid());
 }
@@ -66,45 +66,45 @@ fn from_transformed_rect() {
 fn untransform_point() {
     let poly: Polygon<f32, ()> = Polygon {
         points: [
-            point3(0.0, 0.0, 0.0),
-            point3(0.5, 1.0, 0.0),
-            point3(1.5, 1.0, 0.0),
-            point3(1.0, 0.0, 0.0),
+            TypedPoint3D::new(0.0, 0.0, 0.0),
+            TypedPoint3D::new(0.5, 1.0, 0.0),
+            TypedPoint3D::new(1.5, 1.0, 0.0),
+            TypedPoint3D::new(1.0, 0.0, 0.0),
         ],
-        normal: vec3(0.0, 1.0, 0.0),
+        normal: TypedPoint3D::new(0.0, 1.0, 0.0),
         offset: 0.0,
         anchor: 0,
     };
-    assert_eq!(poly.untransform_point(poly.points[0]), point2(0.0, 0.0));
-    assert_eq!(poly.untransform_point(poly.points[1]), point2(1.0, 0.0));
-    assert_eq!(poly.untransform_point(poly.points[2]), point2(1.0, 1.0));
-    assert_eq!(poly.untransform_point(poly.points[3]), point2(0.0, 1.0));
+    assert_eq!(poly.untransform_point(poly.points[0]), Point2D::new(0.0, 0.0));
+    assert_eq!(poly.untransform_point(poly.points[1]), Point2D::new(1.0, 0.0));
+    assert_eq!(poly.untransform_point(poly.points[2]), Point2D::new(1.0, 1.0));
+    assert_eq!(poly.untransform_point(poly.points[3]), Point2D::new(0.0, 1.0));
 }
 
 #[test]
 fn are_outside() {
     let poly: Polygon<f32, ()> = Polygon {
         points: [
-            point3(0.0, 0.0, 1.0),
-            point3(1.0, 0.0, 1.0),
-            point3(1.0, 1.0, 1.0),
-            point3(0.0, 1.0, 1.0),
+            TypedPoint3D::new(0.0, 0.0, 1.0),
+            TypedPoint3D::new(1.0, 0.0, 1.0),
+            TypedPoint3D::new(1.0, 1.0, 1.0),
+            TypedPoint3D::new(0.0, 1.0, 1.0),
         ],
-        normal: vec3(0.0, 0.0, 1.0),
+        normal: TypedPoint3D::new(0.0, 0.0, 1.0),
         offset: -1.0,
         anchor: 0,
     };
     assert!(poly.is_valid());
     assert!(poly.are_outside(&[
-        point3(0.0, 0.0, 1.1),
-        point3(1.0, 1.0, 2.0),
+        TypedPoint3D::new(0.0, 0.0, 1.1),
+        TypedPoint3D::new(1.0, 1.0, 2.0),
     ]));
     assert!(poly.are_outside(&[
-        point3(0.5, 0.5, 1.0),
+        TypedPoint3D::new(0.5, 0.5, 1.0),
     ]));
     assert!(!poly.are_outside(&[
-        point3(0.0, 0.0, 1.0),
-        point3(0.0, 0.0, -1.0),
+        TypedPoint3D::new(0.0, 0.0, 1.0),
+        TypedPoint3D::new(0.0, 0.0, -1.0),
     ]));
 }
 
@@ -112,24 +112,24 @@ fn are_outside() {
 fn intersect() {
     let poly_a: Polygon<f32, ()> = Polygon {
         points: [
-            point3(0.0, 0.0, 1.0),
-            point3(1.0, 0.0, 1.0),
-            point3(1.0, 1.0, 1.0),
-            point3(0.0, 1.0, 1.0),
+            TypedPoint3D::new(0.0, 0.0, 1.0),
+            TypedPoint3D::new(1.0, 0.0, 1.0),
+            TypedPoint3D::new(1.0, 1.0, 1.0),
+            TypedPoint3D::new(0.0, 1.0, 1.0),
         ],
-        normal: vec3(0.0, 0.0, 1.0),
+        normal: TypedPoint3D::new(0.0, 0.0, 1.0),
         offset: -1.0,
         anchor: 0,
     };
     assert!(poly_a.is_valid());
     let poly_b: Polygon<f32, ()> = Polygon {
         points: [
-            point3(0.5, 0.0, 2.0),
-            point3(0.5, 1.0, 2.0),
-            point3(0.5, 1.0, 0.0),
-            point3(0.5, 0.0, 0.0),
+            TypedPoint3D::new(0.5, 0.0, 2.0),
+            TypedPoint3D::new(0.5, 1.0, 2.0),
+            TypedPoint3D::new(0.5, 1.0, 0.0),
+            TypedPoint3D::new(0.5, 0.0, 0.0),
         ],
-        normal: vec3(1.0, 0.0, 0.0),
+        normal: TypedPoint3D::new(1.0, 0.0, 0.0),
         offset: -0.5,
         anchor: 0,
     };
@@ -149,24 +149,24 @@ fn intersect() {
 
     let poly_c: Polygon<f32, ()> = Polygon {
         points: [
-            point3(0.0, -1.0, 2.0),
-            point3(0.0, -1.0, 0.0),
-            point3(0.0, 0.0, 0.0),
-            point3(0.0, 0.0, 2.0),
+            TypedPoint3D::new(0.0, -1.0, 2.0),
+            TypedPoint3D::new(0.0, -1.0, 0.0),
+            TypedPoint3D::new(0.0, 0.0, 0.0),
+            TypedPoint3D::new(0.0, 0.0, 2.0),
         ],
-        normal: vec3(1.0, 0.0, 0.0),
+        normal: TypedPoint3D::new(1.0, 0.0, 0.0),
         offset: 0.0,
         anchor: 0,
     };
     assert!(poly_c.is_valid());
     let poly_d: Polygon<f32, ()> = Polygon {
         points: [
-            point3(0.0, 0.0, 0.5),
-            point3(1.0, 0.0, 0.5),
-            point3(1.0, 1.0, 0.5),
-            point3(0.0, 1.0, 0.5),
+            TypedPoint3D::new(0.0, 0.0, 0.5),
+            TypedPoint3D::new(1.0, 0.0, 0.5),
+            TypedPoint3D::new(1.0, 1.0, 0.5),
+            TypedPoint3D::new(0.0, 1.0, 0.5),
         ],
-        normal: vec3(0.0, 0.0, 1.0),
+        normal: TypedPoint3D::new(0.0, 0.0, 1.0),
         offset: -0.5,
         anchor: 0,
     };
@@ -195,43 +195,43 @@ fn test_cut(poly_base: &Polygon<f32, ()>, extra_count: u8, line: Line<f32, ()>) 
 fn split() {
     let poly: Polygon<f32, ()> = Polygon {
         points: [
-            point3(0.0, 1.0, 0.0),
-            point3(1.0, 1.0, 0.0),
-            point3(1.0, 1.0, 1.0),
-            point3(0.0, 1.0, 1.0),
+            TypedPoint3D::new(0.0, 1.0, 0.0),
+            TypedPoint3D::new(1.0, 1.0, 0.0),
+            TypedPoint3D::new(1.0, 1.0, 1.0),
+            TypedPoint3D::new(0.0, 1.0, 1.0),
         ],
-        normal: vec3(0.0, 1.0, 0.0),
+        normal: TypedPoint3D::new(0.0, 1.0, 0.0),
         offset: -1.0,
         anchor: 0,
     };
 
     // non-intersecting line
     test_cut(&poly, 0, Line {
-        origin: point3(0.0, 1.0, 0.5),
-        dir: vec3(0.0, 1.0, 0.0),
+        origin: TypedPoint3D::new(0.0, 1.0, 0.5),
+        dir: TypedPoint3D::new(0.0, 1.0, 0.0),
     });
 
     // simple cut (diff=2)
     test_cut(&poly, 1, Line {
-        origin: point3(0.0, 1.0, 0.5),
-        dir: vec3(1.0, 0.0, 0.0),
+        origin: TypedPoint3D::new(0.0, 1.0, 0.5),
+        dir: TypedPoint3D::new(1.0, 0.0, 0.0),
     });
 
     // complex cut (diff=1, wrapped)
     test_cut(&poly, 2, Line {
-        origin: point3(0.0, 1.0, 0.5),
-        dir: vec3(0.5f32.sqrt(), 0.0, -0.5f32.sqrt()),
+        origin: TypedPoint3D::new(0.0, 1.0, 0.5),
+        dir: TypedPoint3D::new(0.5f32.sqrt(), 0.0, -0.5f32.sqrt()),
     });
 
     // complex cut (diff=1, non-wrapped)
     test_cut(&poly, 2, Line {
-        origin: point3(0.5, 1.0, 0.0),
-        dir: vec3(0.5f32.sqrt(), 0.0, 0.5f32.sqrt()),
+        origin: TypedPoint3D::new(0.5, 1.0, 0.0),
+        dir: TypedPoint3D::new(0.5f32.sqrt(), 0.0, 0.5f32.sqrt()),
     });
 
     // complex cut (diff=3)
     test_cut(&poly, 2, Line {
-        origin: point3(0.5, 1.0, 0.0),
-        dir: vec3(-0.5f32.sqrt(), 0.0, 0.5f32.sqrt()),
+        origin: TypedPoint3D::new(0.5, 1.0, 0.0),
+        dir: TypedPoint3D::new(-0.5f32.sqrt(), 0.0, 0.5f32.sqrt()),
     });
 }

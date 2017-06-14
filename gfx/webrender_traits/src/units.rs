@@ -12,8 +12,8 @@
 //! The terms "layer" and "stacking context" can be used interchangeably
 //! in the context of coordinate systems.
 
-use euclid::{Length, TypedTransform3D, TypedRect, TypedSize2D};
-use euclid::{TypedPoint2D, TypedPoint3D, TypedVector2D, TypedVector3D};
+use euclid::{Length, TypedMatrix4D, TypedRect, TypedSize2D};
+use euclid::{TypedPoint2D, TypedPoint3D, TypedPoint4D};
 
 /// Geometry in the coordinate system of the render target (screen or intermediate
 /// surface) in physical pixels.
@@ -31,7 +31,6 @@ pub type DeviceUintSize = TypedSize2D<u32, DevicePixel>;
 
 pub type DeviceRect = TypedRect<f32, DevicePixel>;
 pub type DevicePoint = TypedPoint2D<f32, DevicePixel>;
-pub type DeviceVector2D = TypedVector2D<f32, DevicePixel>;
 pub type DeviceSize = TypedSize2D<f32, DevicePixel>;
 
 /// Geometry in a stacking context's local coordinate space (logical pixels).
@@ -41,8 +40,6 @@ pub type LayoutPixel = LayerPixel;
 
 pub type LayoutRect = LayerRect;
 pub type LayoutPoint = LayerPoint;
-pub type LayoutVector2D = LayerVector2D;
-pub type LayoutVector3D = LayerVector3D;
 pub type LayoutSize = LayerSize;
 
 /// Geometry in a layer's local coordinate space (logical pixels).
@@ -51,10 +48,8 @@ pub struct LayerPixel;
 
 pub type LayerRect = TypedRect<f32, LayerPixel>;
 pub type LayerPoint = TypedPoint2D<f32, LayerPixel>;
-pub type LayerPoint3D = TypedPoint3D<f32, LayerPixel>;
-pub type LayerVector2D = TypedVector2D<f32, LayerPixel>;
-pub type LayerVector3D = TypedVector3D<f32, LayerPixel>;
 pub type LayerSize = TypedSize2D<f32, LayerPixel>;
+pub type LayerPoint4D = TypedPoint4D<f32, LayerPixel>;
 
 /// Geometry in a layer's scrollable parent coordinate space (logical pixels).
 ///
@@ -68,7 +63,6 @@ pub struct ScrollLayerPixel;
 
 pub type ScrollLayerRect = TypedRect<f32, ScrollLayerPixel>;
 pub type ScrollLayerPoint = TypedPoint2D<f32, ScrollLayerPixel>;
-pub type ScrollLayerVector2D = TypedVector2D<f32, ScrollLayerPixel>;
 pub type ScrollLayerSize = TypedSize2D<f32, ScrollLayerPixel>;
 
 /// Geometry in the document's coordinate space (logical pixels).
@@ -79,21 +73,20 @@ pub type WorldRect = TypedRect<f32, WorldPixel>;
 pub type WorldPoint = TypedPoint2D<f32, WorldPixel>;
 pub type WorldSize = TypedSize2D<f32, WorldPixel>;
 pub type WorldPoint3D = TypedPoint3D<f32, WorldPixel>;
-pub type WorldVector2D = TypedVector2D<f32, WorldPixel>;
-pub type WorldVector3D = TypedVector3D<f32, WorldPixel>;
+pub type WorldPoint4D = TypedPoint4D<f32, WorldPixel>;
 
 /// Offset in number of tiles.
 #[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Tiles;
 pub type TileOffset = TypedPoint2D<u16, Tiles>;
 
-pub type LayoutTransform = TypedTransform3D<f32, LayoutPixel, LayoutPixel>;
-pub type LayerTransform = TypedTransform3D<f32, LayerPixel, LayerPixel>;
-pub type LayerToScrollTransform = TypedTransform3D<f32, LayerPixel, ScrollLayerPixel>;
-pub type ScrollToLayerTransform = TypedTransform3D<f32, ScrollLayerPixel, LayerPixel>;
-pub type LayerToWorldTransform = TypedTransform3D<f32, LayerPixel, WorldPixel>;
-pub type WorldToLayerTransform = TypedTransform3D<f32, WorldPixel, LayerPixel>;
-pub type ScrollToWorldTransform = TypedTransform3D<f32, ScrollLayerPixel, WorldPixel>;
+pub type LayoutTransform = TypedMatrix4D<f32, LayoutPixel, LayoutPixel>;
+pub type LayerTransform = TypedMatrix4D<f32, LayerPixel, LayerPixel>;
+pub type LayerToScrollTransform = TypedMatrix4D<f32, LayerPixel, ScrollLayerPixel>;
+pub type ScrollToLayerTransform = TypedMatrix4D<f32, ScrollLayerPixel, LayerPixel>;
+pub type LayerToWorldTransform = TypedMatrix4D<f32, LayerPixel, WorldPixel>;
+pub type WorldToLayerTransform = TypedMatrix4D<f32, WorldPixel, LayerPixel>;
+pub type ScrollToWorldTransform = TypedMatrix4D<f32, ScrollLayerPixel, WorldPixel>;
 
 
 pub fn device_length(value: f32, device_pixel_ratio: f32) -> DeviceIntLength {
@@ -102,9 +95,5 @@ pub fn device_length(value: f32, device_pixel_ratio: f32) -> DeviceIntLength {
 
 pub fn as_scroll_parent_rect(rect: &LayerRect) -> ScrollLayerRect {
     ScrollLayerRect::from_untyped(&rect.to_untyped())
-}
-
-pub fn as_scroll_parent_vector(vector: &LayerVector2D) -> ScrollLayerVector2D {
-    ScrollLayerVector2D::from_untyped(&vector.to_untyped())
 }
 

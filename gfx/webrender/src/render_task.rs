@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use gpu_cache::GpuCacheHandle;
+use gpu_store::GpuStoreAddress;
 use internal_types::{HardwareCompositeOp, LowLevelFilterOp};
 use mask_cache::{MaskBounds, MaskCacheInfo};
 use prim_store::{PrimitiveCacheKey, PrimitiveIndex};
@@ -55,7 +55,7 @@ pub enum AlphaRenderItem {
     Primitive(Option<ClipScrollGroupIndex>, PrimitiveIndex, i32),
     Blend(StackingContextIndex, RenderTaskId, LowLevelFilterOp, i32),
     Composite(StackingContextIndex, RenderTaskId, RenderTaskId, MixBlendMode, i32),
-    SplitComposite(StackingContextIndex, RenderTaskId, GpuCacheHandle, i32),
+    SplitComposite(StackingContextIndex, RenderTaskId, GpuStoreAddress, i32),
     HardwareComposite(StackingContextIndex, RenderTaskId, HardwareCompositeOp, i32),
 }
 

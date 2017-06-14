@@ -1,5 +1,3 @@
-#line 1
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,7 +12,8 @@ void main(void) {
 
     float offset = dot(pos - vStartPoint, vScaledDir);
 
-    oFragColor = sample_gradient(vGradientAddress,
-                                 offset,
-                                 vGradientRepeat);
+    oFragColor = sample_gradient(offset,
+                                 vGradientRepeat,
+                                 vGradientIndex,
+                                 vGradientTextureSize);
 }

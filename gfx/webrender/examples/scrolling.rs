@@ -7,22 +7,103 @@ extern crate glutin;
 extern crate webrender;
 extern crate webrender_traits;
 
-#[macro_use]
-extern crate lazy_static;
+use gleam::gl;
+use std::env;
+use std::path::PathBuf;
+use webrender_traits::{ClipId, ColorF, DeviceUintSize, Epoch, LayoutPoint, LayoutRect};
+use webrender_traits::{LayoutSize, PipelineId, ScrollEventPhase, ScrollLocation, TransformStyle};
+use webrender_traits::WorldPoint;
 
-#[path="common/boilerplate.rs"]
-mod boilerplate;
+struct Notifier {
+    window_proxy: glutin::WindowProxy,
+}
 
-use boilerplate::HandyDandyRectBuilder;
-use std::sync::Mutex;
-use webrender_traits::*;
+impl Notifier {
+    fn new(window_proxy: glutin::WindowProxy) -> Notifier {
+        Notifier {
+            window_proxy: window_proxy,
+        }
+    }
+}
 
-fn body(_api: &RenderApi,
-        builder: &mut DisplayListBuilder,
-        pipeline_id: &PipelineId,
-        layout_size: &LayoutSize)
-{
-    let bounds = LayoutRect::new(LayoutPoint::zero(), *layout_size);
+impl webrender_traits::RenderNotifier for Notifier {
+    fn new_frame_ready(&mut self) {
+        #[cfg(not(target_os = "android"))]
+        self.window_proxy.wakeup_event_loop();
+    }
+
+    fn new_scroll_frame_ready(&mut self, _composite_needed: bool) {
+        #[cfg(not(target_os = "android"))]
+        self.window_proxy.wakeup_event_loop();
+    }
+}
+
+trait HandyDandyRectBuilder {
+    fn to(&self, x2: i32, y2: i32) -> LayoutRect;
+}
+// Allows doing `(x, y).to(x2, y2)` to build a LayoutRect
+impl HandyDandyRectBuilder for (i32, i32) {
+    fn to(&self, x2: i32, y2: i32) -> LayoutRect {
+        LayoutRect::new(LayoutPoint::new(self.0 as f32, self.1 as f32),
+                        LayoutSize::new((x2 - self.0) as f32, (y2 - self.1) as f32))
+    }
+}
+
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+    let res_path = if args.len() > 1 {
+        Some(PathBuf::from(&args[1]))
+    } else {
+        None
+    };
+
+    let window = glutin::WindowBuilder::new()
+                .with_title("WebRender Scrolling Sample")
+                .with_gl(glutin::GlRequest::GlThenGles {
+                    opengl_version: (3, 2),
+                    opengles_version: (3, 0)
+                })
+                .build()
+                .unwrap();
+
+    unsafe {
+        window.make_current().ok();
+    }
+
+    let gl = match gl::GlType::default() {
+        gl::GlType::Gl => unsafe { gl::GlFns::load_with(|symbol| window.get_proc_address(symbol) as *const _) },
+        gl::GlType::Gles => unsafe { gl::GlesFns::load_with(|symbol| window.get_proc_address(symbol) as *const _) },
+    };
+
+    println!("OpenGL version {}", gl.get_string(gl::VERSION));
+    println!("Shader resource path: {:?}", res_path);
+
+    let (width, height) = window.get_inner_size_pixels().unwrap();
+
+    let opts = webrender::RendererOptions {
+        resource_override_path: res_path,
+        debug: true,
+        precache_shaders: true,
+        device_pixel_ratio: window.hidpi_factor(),
+        .. Default::default()
+    };
+
+    let size = DeviceUintSize::new(width, height);
+    let (mut renderer, sender) = webrender::renderer::Renderer::new(gl, opts, size).unwrap();
+    let api = sender.create_api();
+
+    let notifier = Box::new(Notifier::new(window.create_window_proxy()));
+    renderer.set_render_notifier(notifier);
+
+    let epoch = Epoch(0);
+    let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
+
+    let pipeline_id = PipelineId(0, 0);
+    let layout_size = LayoutSize::new(width as f32, height as f32);
+    let mut builder = webrender_traits::DisplayListBuilder::new(pipeline_id, layout_size);
+
+    let bounds = LayoutRect::new(LayoutPoint::zero(), layout_size);
     builder.push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                   bounds,
                                   None,
@@ -46,7 +127,7 @@ fn body(_api: &RenderApi,
         let clip = builder.push_clip_region(&scrollbox, vec![], None);
         let clip_id = builder.define_clip((0, 0).to(1000, 1000),
                                           clip,
-                                          Some(ClipId::new(42, *pipeline_id)));
+                                          Some(ClipId::new(42, pipeline_id)));
         builder.push_clip_id(clip_id);
         // now put some content into it.
         // start with a white background
@@ -72,7 +153,7 @@ fn body(_api: &RenderApi,
         let clip = builder.push_clip_region(&(0, 100).to(200, 300), vec![], None);
         let nested_clip_id = builder.define_clip((0, 100).to(300, 400),
                                                  clip,
-                                                 Some(ClipId::new(43, *pipeline_id)));
+                                                 Some(ClipId::new(43, pipeline_id)));
         builder.push_clip_id(nested_clip_id);
         // give it a giant gray background just to distinguish it and to easily
         // visually identify the nested scrollbox
@@ -100,51 +181,68 @@ fn body(_api: &RenderApi,
     }
 
     builder.pop_stacking_context();
-}
 
-lazy_static! {
-    static ref CURSOR_POSITION: Mutex<WorldPoint> = Mutex::new(WorldPoint::zero());
-}
+    api.set_display_list(
+        Some(root_background_color),
+        epoch,
+        LayoutSize::new(width as f32, height as f32),
+        builder.finalize(),
+        true);
+    api.set_root_pipeline(pipeline_id);
+    api.generate_frame(None);
 
-fn event_handler(event: &glutin::Event,
-                 api: &RenderApi)
-{
-    match *event {
-        glutin::Event::KeyboardInput(glutin::ElementState::Pressed, _, Some(key)) => {
-            let offset = match key {
-                 glutin::VirtualKeyCode::Down => (0.0, -10.0),
-                 glutin::VirtualKeyCode::Up => (0.0, 10.0),
-                 glutin::VirtualKeyCode::Right => (-10.0, 0.0),
-                 glutin::VirtualKeyCode::Left => (10.0, 0.0),
-                 _ => return,
-            };
+    let mut cursor_position = WorldPoint::zero();
 
-            api.scroll(ScrollLocation::Delta(LayoutVector2D::new(offset.0, offset.1)),
-                       *CURSOR_POSITION.lock().unwrap(),
-                       ScrollEventPhase::Start);
+    'outer: for event in window.wait_events() {
+        let mut events = Vec::new();
+        events.push(event);
+
+        for event in window.poll_events() {
+            events.push(event);
         }
-        glutin::Event::MouseMoved(x, y) => {
-            *CURSOR_POSITION.lock().unwrap() = WorldPoint::new(x as f32, y as f32);
-        }
-        glutin::Event::MouseWheel(delta, _, event_cursor_position) => {
-            if let Some((x, y)) = event_cursor_position {
-                *CURSOR_POSITION.lock().unwrap() = WorldPoint::new(x as f32, y as f32);
+
+        for event in events {
+            match event {
+                glutin::Event::Closed |
+                glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) |
+                glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Q)) => break 'outer,
+                glutin::Event::KeyboardInput(glutin::ElementState::Pressed, _, Some(key)) => {
+                    let offset = match key {
+                         glutin::VirtualKeyCode::Down => (0.0, -10.0),
+                         glutin::VirtualKeyCode::Up => (0.0, 10.0),
+                         glutin::VirtualKeyCode::Right => (-10.0, 0.0),
+                         glutin::VirtualKeyCode::Left => (10.0, 0.0),
+                         _ => continue,
+                    };
+
+                    api.scroll(ScrollLocation::Delta(LayoutPoint::new(offset.0, offset.1)),
+                               cursor_position,
+                               ScrollEventPhase::Start);
+                }
+                glutin::Event::MouseMoved(x, y) => {
+                    cursor_position = WorldPoint::new(x as f32, y as f32);
+                }
+                glutin::Event::MouseWheel(delta, _, event_cursor_position) => {
+                    if let Some((x, y)) = event_cursor_position {
+                        cursor_position = WorldPoint::new(x as f32, y as f32);
+                    }
+
+                    const LINE_HEIGHT: f32 = 38.0;
+                    let (dx, dy) = match delta {
+                        glutin::MouseScrollDelta::LineDelta(dx, dy) => (dx, dy * LINE_HEIGHT),
+                        glutin::MouseScrollDelta::PixelDelta(dx, dy) => (dx, dy),
+                    };
+
+                    api.scroll(ScrollLocation::Delta(LayoutPoint::new(dx, dy)),
+                               cursor_position,
+                               ScrollEventPhase::Start);
+                }
+                _ => ()
             }
-
-            const LINE_HEIGHT: f32 = 38.0;
-            let (dx, dy) = match delta {
-                glutin::MouseScrollDelta::LineDelta(dx, dy) => (dx, dy * LINE_HEIGHT),
-                glutin::MouseScrollDelta::PixelDelta(dx, dy) => (dx, dy),
-            };
-
-            api.scroll(ScrollLocation::Delta(LayoutVector2D::new(dx, dy)),
-                       *CURSOR_POSITION.lock().unwrap(),
-                       ScrollEventPhase::Start);
         }
-        _ => ()
-    }
-}
 
-fn main() {
-    boilerplate::main_wrapper(body, event_handler, None);
+        renderer.update();
+        renderer.render(DeviceUintSize::new(width, height));
+        window.swap_buffers().ok();
+    }
 }

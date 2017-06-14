@@ -8,19 +8,18 @@
 // as text-shadow.
 
 void main(void) {
-    Primitive prim = load_primitive();
-    TextRun text = fetch_text_run(prim.specific_prim_address);
-
-    int glyph_index = prim.user_data0;
-    int resource_address = prim.user_data1;
-    Glyph glyph = fetch_glyph(prim.specific_prim_address, glyph_index);
-    ResourceRect res = fetch_resource_rect(resource_address + glyph_index);
+    PrimitiveInstance pi = fetch_prim_instance();
+    RenderTaskData task = fetch_render_task(pi.render_task_index);
+    TextRun text = fetch_text_run(pi.specific_prim_address);
+    Glyph glyph = fetch_glyph(pi.user_data0);
+    PrimitiveGeometry pg = fetch_prim_geometry(pi.global_prim_index);
+    ResourceRect res = fetch_resource_rect(pi.user_data1);
 
     // Glyphs size is already in device-pixels.
     // The render task origin is in device-pixels. Offset that by
     // the glyph offset, relative to its primitive bounding rect.
     vec2 size = res.uv_rect.zw - res.uv_rect.xy;
-    vec2 origin = prim.task.screen_space_origin + uDevicePixelRatio * (glyph.offset - prim.local_rect.p0);
+    vec2 origin = task.data0.xy + uDevicePixelRatio * (glyph.offset.xy - pg.local_rect.p0);
     vec4 local_rect = vec4(origin, size);
 
     vec2 texture_size = vec2(textureSize(sColor0, 0));
