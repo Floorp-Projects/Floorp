@@ -5189,9 +5189,13 @@ QuotaManager::EnsureOriginIsInitializedInternal(
       return rv;
     }
 
-    rv = InitializeOrigin(aPersistenceType, aGroup, aOrigin, timestamp,
-                          /* aPersisted */ false, directory);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // Don't need to traverse the directory, since it's empty.
+    InitQuotaForOrigin(aPersistenceType,
+                       aGroup,
+                       aOrigin,
+                       /* aUsageBytes */ 0,
+                       timestamp,
+                       /* aPersisted */ false);
   }
 
   directory.forget(aDirectory);
