@@ -220,12 +220,8 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     rect = LayerRect(0, 0, mScaleToSize.width, mScaleToSize.height);
   }
 
-  LayerRect clipRect = ClipRect().valueOr(rect);
-  Maybe<WrImageMask> mask = BuildWrMaskLayer(&sc);
   WrClipRegionToken clip = aBuilder.PushClipRegion(
-      sc.ToRelativeWrRect(clipRect),
-      mask.ptrOr(nullptr));
-
+      sc.ToRelativeWrRect(rect));
   wr::ImageRendering filter = wr::ToImageRendering(mSamplingFilter);
 
   DumpLayerInfo("Image Layer", rect);

@@ -154,7 +154,7 @@ WebRenderLayer::DumpLayerInfo(const char* aLayerType, const LayerRect& aRect)
                 Stringify(bounds).c_str(),
                 Stringify(transform).c_str(),
                 Stringify(aRect).c_str(),
-                Stringify(ClipRect().valueOr(aRect)).c_str(),
+                ClipRect() ? Stringify(ClipRect().value()).c_str() : "none",
                 Stringify(mixBlendMode).c_str());
 }
 
