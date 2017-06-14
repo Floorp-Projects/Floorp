@@ -8,11 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
 #include <utility>
 
 #include "webrtc/p2p/base/dtlstransportchannel.h"
 
 #include "webrtc/p2p/base/common.h"
+#include "webrtc/p2p/base/packettransportinterface.h"
 #include "webrtc/base/buffer.h"
 #include "webrtc/base/checks.h"
 #include "webrtc/base/dscp.h"
@@ -36,16 +38,22 @@ static bool IsDtlsPacket(const char* data, size_t len) {
   const uint8_t* u = reinterpret_cast<const uint8_t*>(data);
   return (len >= kDtlsRecordHeaderLen && (u[0] > 19 && u[0] < 64));
 }
+static bool IsDtlsClientHelloPacket(const char* data, size_t len) {
+  if (!IsDtlsPacket(data, len)) {
+    return false;
+  }
+  const uint8_t* u = reinterpret_cast<const uint8_t*>(data);
+  return len > 17 && u[0] == 22 && u[13] == 1;
+}
 static bool IsRtpPacket(const char* data, size_t len) {
   const uint8_t* u = reinterpret_cast<const uint8_t*>(data);
   return (len >= kMinRtpPacketLen && (u[0] & 0xC0) == 0x80);
 }
 
-StreamInterfaceChannel::StreamInterfaceChannel(TransportChannel* channel)
+StreamInterfaceChannel::StreamInterfaceChannel(IceTransportInternal* channel)
     : channel_(channel),
       state_(rtc::SS_OPEN),
-      packets_(kMaxPendingPackets, kMaxDtlsPacketLen) {
-}
+      packets_(kMaxPendingPackets, kMaxDtlsPacketLen) {}
 
 rtc::StreamResult StreamInterfaceChannel::Read(void* buffer,
                                                      size_t buffer_len,
@@ -88,12 +96,15 @@ bool StreamInterfaceChannel::OnPacketReceived(const char* data, size_t size) {
   return ret;
 }
 
+void StreamInterfaceChannel::Close() {
+  packets_.Clear();
+  state_ = rtc::SS_CLOSED;
+}
+
 DtlsTransportChannelWrapper::DtlsTransportChannelWrapper(
-    Transport* transport,
-    TransportChannelImpl* channel)
+    IceTransportInternal* channel)
     : TransportChannelImpl(channel->transport_name(), channel->component()),
-      transport_(transport),
-      worker_thread_(rtc::Thread::Current()),
+      network_thread_(rtc::Thread::Current()),
       channel_(channel),
       downward_(NULL),
       ssl_role_(rtc::SSL_CLIENT),
@@ -110,23 +121,21 @@ DtlsTransportChannelWrapper::DtlsTransportChannelWrapper(
       this, &DtlsTransportChannelWrapper::OnGatheringState);
   channel_->SignalCandidateGathered.connect(
       this, &DtlsTransportChannelWrapper::OnCandidateGathered);
+  channel_->SignalCandidatesRemoved.connect(
+      this, &DtlsTransportChannelWrapper::OnCandidatesRemoved);
   channel_->SignalRoleConflict.connect(this,
       &DtlsTransportChannelWrapper::OnRoleConflict);
   channel_->SignalRouteChange.connect(this,
       &DtlsTransportChannelWrapper::OnRouteChange);
-  channel_->SignalConnectionRemoved.connect(this,
-      &DtlsTransportChannelWrapper::OnConnectionRemoved);
+  channel_->SignalSelectedCandidatePairChanged.connect(
+      this, &DtlsTransportChannelWrapper::OnSelectedCandidatePairChanged);
+  channel_->SignalStateChanged.connect(
+      this, &DtlsTransportChannelWrapper::OnChannelStateChanged);
   channel_->SignalReceivingState.connect(this,
       &DtlsTransportChannelWrapper::OnReceivingState);
 }
 
 DtlsTransportChannelWrapper::~DtlsTransportChannelWrapper() {
-}
-
-void DtlsTransportChannelWrapper::Connect() {
-  // We should only get a single call to Connect.
-  ASSERT(dtls_state() == DTLS_TRANSPORT_NEW);
-  channel_->Connect();
 }
 
 bool DtlsTransportChannelWrapper::SetLocalCertificate(
@@ -170,7 +179,7 @@ bool DtlsTransportChannelWrapper::SetSslMaxProtocolVersion(
 }
 
 bool DtlsTransportChannelWrapper::SetSslRole(rtc::SSLRole role) {
-  if (dtls_state() == DTLS_TRANSPORT_CONNECTED) {
+  if (dtls_) {
     if (ssl_role_ != role) {
       LOG(LS_ERROR) << "SSL Role can't be reversed after the session is setup.";
       return false;
@@ -226,30 +235,53 @@ bool DtlsTransportChannelWrapper::SetRemoteFingerprint(
   }
 
   // At this point we know we are doing DTLS
+  bool fingerprint_changing = remote_fingerprint_value_.size() > 0u;
   remote_fingerprint_value_ = std::move(remote_fingerprint_value);
   remote_fingerprint_algorithm_ = digest_alg;
 
-  bool reconnect = dtls_;
+  if (dtls_ && !fingerprint_changing) {
+    // This can occur if DTLS is set up before a remote fingerprint is
+    // received. For instance, if we set up DTLS due to receiving an early
+    // ClientHello.
+    rtc::SSLPeerCertificateDigestError err;
+    if (!dtls_->SetPeerCertificateDigest(
+            remote_fingerprint_algorithm_,
+            reinterpret_cast<unsigned char*>(remote_fingerprint_value_.data()),
+            remote_fingerprint_value_.size(), &err)) {
+      LOG_J(LS_ERROR, this) << "Couldn't set DTLS certificate digest.";
+      set_dtls_state(DTLS_TRANSPORT_FAILED);
+      // If the error is "verification failed", don't return false, because
+      // this means the fingerprint was formatted correctly but didn't match
+      // the certificate from the DTLS handshake. Thus the DTLS state should go
+      // to "failed", but SetRemoteDescription shouldn't fail.
+      return err == rtc::SSLPeerCertificateDigestError::VERIFICATION_FAILED;
+    }
+    return true;
+  }
+
+  // If the fingerprint is changing, we'll tear down the DTLS association and
+  // create a new one, resetting our state.
+  if (dtls_ && fingerprint_changing) {
+    dtls_.reset(nullptr);
+    set_dtls_state(DTLS_TRANSPORT_NEW);
+    set_writable(false);
+  }
 
   if (!SetupDtls()) {
     set_dtls_state(DTLS_TRANSPORT_FAILED);
     return false;
   }
 
-  if (reconnect) {
-    Reconnect();
-  }
-
   return true;
 }
 
-bool DtlsTransportChannelWrapper::GetRemoteSSLCertificate(
-    rtc::SSLCertificate** cert) const {
+std::unique_ptr<rtc::SSLCertificate>
+DtlsTransportChannelWrapper::GetRemoteSSLCertificate() const {
   if (!dtls_) {
-    return false;
+    return nullptr;
   }
 
-  return dtls_->GetPeerCertificate(cert);
+  return dtls_->GetPeerCertificate();
 }
 
 bool DtlsTransportChannelWrapper::SetupDtls() {
@@ -269,7 +301,10 @@ bool DtlsTransportChannelWrapper::SetupDtls() {
   dtls_->SetMaxProtocolVersion(ssl_max_version_);
   dtls_->SetServerRole(ssl_role_);
   dtls_->SignalEvent.connect(this, &DtlsTransportChannelWrapper::OnDtlsEvent);
-  if (!dtls_->SetPeerCertificateDigest(
+  dtls_->SignalSSLHandshakeError.connect(
+      this, &DtlsTransportChannelWrapper::OnDtlsHandshakeError);
+  if (remote_fingerprint_value_.size() &&
+      !dtls_->SetPeerCertificateDigest(
           remote_fingerprint_algorithm_,
           reinterpret_cast<unsigned char*>(remote_fingerprint_value_.data()),
           remote_fingerprint_value_.size())) {
@@ -288,6 +323,10 @@ bool DtlsTransportChannelWrapper::SetupDtls() {
   }
 
   LOG_J(LS_INFO, this) << "DTLS setup complete.";
+
+  // If the underlying channel is already writable at this point, we may be
+  // able to start DTLS right away.
+  MaybeStartDtls();
   return true;
 }
 
@@ -363,7 +402,7 @@ int DtlsTransportChannelWrapper::SendPacket(
       return -1;
     case DTLS_TRANSPORT_CONNECTED:
       if (flags & PF_SRTP_BYPASS) {
-        ASSERT(!srtp_ciphers_.empty());
+        RTC_DCHECK(!srtp_ciphers_.empty());
         if (!IsRtpPacket(data, size)) {
           return -1;
         }
@@ -379,9 +418,13 @@ int DtlsTransportChannelWrapper::SendPacket(
       // Can't send anything when we're closed.
       return -1;
     default:
-      ASSERT(false);
+      RTC_NOTREACHED();
       return -1;
   }
+}
+
+bool DtlsTransportChannelWrapper::IsDtlsConnected() {
+  return dtls_ && dtls_->IsTlsConnected();
 }
 
 // The state transition logic here is as follows:
@@ -394,9 +437,10 @@ int DtlsTransportChannelWrapper::SendPacket(
 //       start the DTLS handshake
 //     - Once the DTLS handshake completes, the state is that of the
 //       impl again
-void DtlsTransportChannelWrapper::OnWritableState(TransportChannel* channel) {
-  ASSERT(rtc::Thread::Current() == worker_thread_);
-  ASSERT(channel == channel_);
+void DtlsTransportChannelWrapper::OnWritableState(
+    rtc::PacketTransportInterface* transport) {
+  RTC_DCHECK(rtc::Thread::Current() == network_thread_);
+  RTC_DCHECK(transport == channel_);
   LOG_J(LS_VERBOSE, this)
       << "DTLSTransportChannelWrapper: channel writable state changed to "
       << channel_->writable();
@@ -410,15 +454,7 @@ void DtlsTransportChannelWrapper::OnWritableState(TransportChannel* channel) {
 
   switch (dtls_state()) {
     case DTLS_TRANSPORT_NEW:
-      // This should never fail:
-      // Because we are operating in a nonblocking mode and all
-      // incoming packets come in via OnReadPacket(), which rejects
-      // packets in this state, the incoming queue must be empty. We
-      // ignore write errors, thus any errors must be because of
-      // configuration and therefore are our fault.
-      // Note that in non-debug configurations, failure in
-      // MaybeStartDtls() changes the state to DTLS_TRANSPORT_FAILED.
-      VERIFY(MaybeStartDtls());
+      MaybeStartDtls();
       break;
     case DTLS_TRANSPORT_CONNECTED:
       // Note: SignalWritableState fired by set_writable.
@@ -434,9 +470,10 @@ void DtlsTransportChannelWrapper::OnWritableState(TransportChannel* channel) {
   }
 }
 
-void DtlsTransportChannelWrapper::OnReceivingState(TransportChannel* channel) {
-  ASSERT(rtc::Thread::Current() == worker_thread_);
-  ASSERT(channel == channel_);
+void DtlsTransportChannelWrapper::OnReceivingState(
+    rtc::PacketTransportInterface* transport) {
+  RTC_DCHECK(rtc::Thread::Current() == network_thread_);
+  RTC_DCHECK(transport == channel_);
   LOG_J(LS_VERBOSE, this)
       << "DTLSTransportChannelWrapper: channel receiving state changed to "
       << channel_->receiving();
@@ -447,11 +484,14 @@ void DtlsTransportChannelWrapper::OnReceivingState(TransportChannel* channel) {
 }
 
 void DtlsTransportChannelWrapper::OnReadPacket(
-    TransportChannel* channel, const char* data, size_t size,
-    const rtc::PacketTime& packet_time, int flags) {
-  ASSERT(rtc::Thread::Current() == worker_thread_);
-  ASSERT(channel == channel_);
-  ASSERT(flags == 0);
+    rtc::PacketTransportInterface* transport,
+    const char* data,
+    size_t size,
+    const rtc::PacketTime& packet_time,
+    int flags) {
+  RTC_DCHECK(rtc::Thread::Current() == network_thread_);
+  RTC_DCHECK(transport == channel_);
+  RTC_DCHECK(flags == 0);
 
   if (!dtls_active_) {
     // Not doing DTLS.
@@ -462,15 +502,26 @@ void DtlsTransportChannelWrapper::OnReadPacket(
   switch (dtls_state()) {
     case DTLS_TRANSPORT_NEW:
       if (dtls_) {
-        // Drop packets received before DTLS has actually started.
-        LOG_J(LS_INFO, this) << "Dropping packet received before DTLS started.";
+        LOG_J(LS_INFO, this) << "Packet received before DTLS started.";
       } else {
-        // Currently drop the packet, but we might in future
-        // decide to take this as evidence that the other
-        // side is ready to do DTLS and start the handshake
-        // on our end.
-        LOG_J(LS_WARNING, this) << "Received packet before we know if we are "
-                                << "doing DTLS or not; dropping.";
+        LOG_J(LS_WARNING, this) << "Packet received before we know if we are "
+                                << "doing DTLS or not.";
+      }
+      // Cache a client hello packet received before DTLS has actually started.
+      if (IsDtlsClientHelloPacket(data, size)) {
+        LOG_J(LS_INFO, this) << "Caching DTLS ClientHello packet until DTLS is "
+                             << "started.";
+        cached_client_hello_.SetData(data, size);
+        // If we haven't started setting up DTLS yet (because we don't have a
+        // remote fingerprint/role), we can use the client hello as a clue that
+        // the peer has chosen the client role, and proceed with the handshake.
+        // The fingerprint will be verified when it's set.
+        if (!dtls_ && local_certificate_) {
+          SetSslRole(rtc::SSL_SERVER);
+          SetupDtls();
+        }
+      } else {
+        LOG_J(LS_INFO, this) << "Not a DTLS ClientHello packet; dropping.";
       }
       break;
 
@@ -498,7 +549,7 @@ void DtlsTransportChannelWrapper::OnReadPacket(
         }
 
         // Sanity check.
-        ASSERT(!srtp_ciphers_.empty());
+        RTC_DCHECK(!srtp_ciphers_.empty());
 
         // Signal this upwards as a bypass packet.
         SignalReadPacket(this, data, size, packet_time, PF_SRTP_BYPASS);
@@ -512,14 +563,15 @@ void DtlsTransportChannelWrapper::OnReadPacket(
 }
 
 void DtlsTransportChannelWrapper::OnSentPacket(
-    TransportChannel* channel,
+    rtc::PacketTransportInterface* transport,
     const rtc::SentPacket& sent_packet) {
-  ASSERT(rtc::Thread::Current() == worker_thread_);
+  RTC_DCHECK(rtc::Thread::Current() == network_thread_);
 
   SignalSentPacket(this, sent_packet);
 }
 
-void DtlsTransportChannelWrapper::OnReadyToSend(TransportChannel* channel) {
+void DtlsTransportChannelWrapper::OnReadyToSend(
+    rtc::PacketTransportInterface* transport) {
   if (writable()) {
     SignalReadyToSend(this);
   }
@@ -527,8 +579,8 @@ void DtlsTransportChannelWrapper::OnReadyToSend(TransportChannel* channel) {
 
 void DtlsTransportChannelWrapper::OnDtlsEvent(rtc::StreamInterface* dtls,
                                               int sig, int err) {
-  ASSERT(rtc::Thread::Current() == worker_thread_);
-  ASSERT(dtls == dtls_.get());
+  RTC_DCHECK(rtc::Thread::Current() == network_thread_);
+  RTC_DCHECK(dtls == dtls_.get());
   if (sig & rtc::SE_OPEN) {
     // This is the first time.
     LOG_J(LS_INFO, this) << "DTLS handshake complete.";
@@ -542,12 +594,24 @@ void DtlsTransportChannelWrapper::OnDtlsEvent(rtc::StreamInterface* dtls,
   if (sig & rtc::SE_READ) {
     char buf[kMaxDtlsPacketLen];
     size_t read;
-    if (dtls_->Read(buf, sizeof(buf), &read, NULL) == rtc::SR_SUCCESS) {
+    int read_error;
+    rtc::StreamResult ret = dtls_->Read(buf, sizeof(buf), &read, &read_error);
+    if (ret == rtc::SR_SUCCESS) {
       SignalReadPacket(this, buf, read, rtc::CreatePacketTime(0), 0);
+    } else if (ret == rtc::SR_EOS) {
+      // Remote peer shut down the association with no error.
+      LOG_J(LS_INFO, this) << "DTLS channel closed";
+      set_writable(false);
+      set_dtls_state(DTLS_TRANSPORT_CLOSED);
+    } else if (ret == rtc::SR_ERROR) {
+      // Remote peer shut down the association with an error.
+      LOG_J(LS_INFO, this) << "DTLS channel error, code=" << read_error;
+      set_writable(false);
+      set_dtls_state(DTLS_TRANSPORT_FAILED);
     }
   }
   if (sig & rtc::SE_CLOSE) {
-    ASSERT(sig == rtc::SE_CLOSE);  // SE_CLOSE should be by itself.
+    RTC_DCHECK(sig == rtc::SE_CLOSE);  // SE_CLOSE should be by itself.
     set_writable(false);
     if (!err) {
       LOG_J(LS_INFO, this) << "DTLS channel closed";
@@ -559,18 +623,39 @@ void DtlsTransportChannelWrapper::OnDtlsEvent(rtc::StreamInterface* dtls,
   }
 }
 
-bool DtlsTransportChannelWrapper::MaybeStartDtls() {
+void DtlsTransportChannelWrapper::MaybeStartDtls() {
   if (dtls_ && channel_->writable()) {
-    if (dtls_->StartSSLWithPeer()) {
+    if (dtls_->StartSSL()) {
+      // This should never fail:
+      // Because we are operating in a nonblocking mode and all
+      // incoming packets come in via OnReadPacket(), which rejects
+      // packets in this state, the incoming queue must be empty. We
+      // ignore write errors, thus any errors must be because of
+      // configuration and therefore are our fault.
+      RTC_NOTREACHED() << "StartSSL failed.";
       LOG_J(LS_ERROR, this) << "Couldn't start DTLS handshake";
       set_dtls_state(DTLS_TRANSPORT_FAILED);
-      return false;
+      return;
     }
     LOG_J(LS_INFO, this)
       << "DtlsTransportChannelWrapper: Started DTLS handshake";
     set_dtls_state(DTLS_TRANSPORT_CONNECTING);
+    // Now that the handshake has started, we can process a cached ClientHello
+    // (if one exists).
+    if (cached_client_hello_.size()) {
+      if (ssl_role_ == rtc::SSL_SERVER) {
+        LOG_J(LS_INFO, this) << "Handling cached DTLS ClientHello packet.";
+        if (!HandleDtlsPacket(cached_client_hello_.data<char>(),
+                              cached_client_hello_.size())) {
+          LOG_J(LS_ERROR, this) << "Failed to handle DTLS packet.";
+        }
+      } else {
+        LOG_J(LS_WARNING, this) << "Discarding cached DTLS ClientHello packet "
+                                << "because we don't have the server role.";
+      }
+      cached_client_hello_.Clear();
+    }
   }
-  return true;
 }
 
 // Called from OnReadPacket when a DTLS packet is received.
@@ -598,42 +683,56 @@ bool DtlsTransportChannelWrapper::HandleDtlsPacket(const char* data,
 }
 
 void DtlsTransportChannelWrapper::OnGatheringState(
-    TransportChannelImpl* channel) {
-  ASSERT(channel == channel_);
+    IceTransportInternal* channel) {
+  RTC_DCHECK(channel == channel_);
   SignalGatheringState(this);
 }
 
 void DtlsTransportChannelWrapper::OnCandidateGathered(
-    TransportChannelImpl* channel,
+    IceTransportInternal* channel,
     const Candidate& c) {
-  ASSERT(channel == channel_);
+  RTC_DCHECK(channel == channel_);
   SignalCandidateGathered(this, c);
 }
 
+void DtlsTransportChannelWrapper::OnCandidatesRemoved(
+    IceTransportInternal* channel,
+    const Candidates& candidates) {
+  RTC_DCHECK(channel == channel_);
+  SignalCandidatesRemoved(this, candidates);
+}
+
 void DtlsTransportChannelWrapper::OnRoleConflict(
-    TransportChannelImpl* channel) {
-  ASSERT(channel == channel_);
+    IceTransportInternal* channel) {
+  RTC_DCHECK(channel == channel_);
   SignalRoleConflict(this);
 }
 
-void DtlsTransportChannelWrapper::OnRouteChange(
-    TransportChannel* channel, const Candidate& candidate) {
-  ASSERT(channel == channel_);
+void DtlsTransportChannelWrapper::OnRouteChange(IceTransportInternal* channel,
+                                                const Candidate& candidate) {
+  RTC_DCHECK(channel == channel_);
   SignalRouteChange(this, candidate);
 }
 
-void DtlsTransportChannelWrapper::OnConnectionRemoved(
-    TransportChannelImpl* channel) {
-  ASSERT(channel == channel_);
-  SignalConnectionRemoved(this);
+void DtlsTransportChannelWrapper::OnSelectedCandidatePairChanged(
+    IceTransportInternal* channel,
+    CandidatePairInterface* selected_candidate_pair,
+    int last_sent_packet_id,
+    bool ready_to_send) {
+  RTC_DCHECK(channel == channel_);
+  SignalSelectedCandidatePairChanged(this, selected_candidate_pair,
+                                     last_sent_packet_id, ready_to_send);
 }
 
-void DtlsTransportChannelWrapper::Reconnect() {
-  set_dtls_state(DTLS_TRANSPORT_NEW);
-  set_writable(false);
-  if (channel_->writable()) {
-    OnWritableState(channel_);
-  }
+void DtlsTransportChannelWrapper::OnChannelStateChanged(
+    IceTransportInternal* channel) {
+  RTC_DCHECK(channel == channel_);
+  SignalStateChanged(this);
+}
+
+void DtlsTransportChannelWrapper::OnDtlsHandshakeError(
+    rtc::SSLHandshakeError error) {
+  SignalDtlsHandshakeError(error);
 }
 
 }  // namespace cricket

@@ -13,21 +13,17 @@
 #include <stdlib.h>
 #include <string>
 
-#include "webrtc/common_video/libyuv/include/scaler.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/modules/video_capture/video_capture_config.h"
 #include "webrtc/system_wrappers/include/clock.h"
 #include "webrtc/system_wrappers/include/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/include/ref_count.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
 #include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/base/trace_event.h"
 #include "webrtc/video_engine/desktop_capture_impl.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/desktop_device_info.h"
 #include "webrtc/modules/desktop_capture/app_capturer.h"
-#include "webrtc/modules/desktop_capture/window_capturer.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/video_capture/video_capture.h"
 
@@ -40,7 +36,7 @@ ScreenDeviceInfoImpl::~ScreenDeviceInfoImpl(void) {
 }
 
 int32_t ScreenDeviceInfoImpl::Init() {
-  desktop_device_info_.reset(DesktopDeviceInfoImpl::Create());
+  desktop_device_info_ = std::unique_ptr<DesktopDeviceInfo>(DesktopDeviceInfoImpl::Create());
   return 0;
 }
 
@@ -137,7 +133,7 @@ AppDeviceInfoImpl::~AppDeviceInfoImpl(void) {
 }
 
 int32_t AppDeviceInfoImpl::Init() {
-  desktop_device_info_.reset(DesktopDeviceInfoImpl::Create());
+  desktop_device_info_ = std::unique_ptr<DesktopDeviceInfo>(DesktopDeviceInfoImpl::Create());
   return 0;
 }
 
@@ -229,19 +225,20 @@ int32_t AppDeviceInfoImpl::GetOrientation(const char* deviceUniqueIdUTF8,
 VideoCaptureModule* DesktopCaptureImpl::Create(const int32_t id,
                                                const char* uniqueId,
                                                const CaptureDeviceType type) {
-  RefCountImpl<DesktopCaptureImpl>* capture = new RefCountImpl<DesktopCaptureImpl>(id);
+
+  rtc::RefCountedObject<DesktopCaptureImpl>* capture = new rtc::RefCountedObject<DesktopCaptureImpl>(id);
 
   //create real screen capturer.
   if (capture->Init(uniqueId, type)) {
-    delete capture;
-    return NULL;
+    capture->Release();
+    return nullptr;
   }
 
   return capture;
 }
 
 int32_t WindowDeviceInfoImpl::Init() {
-  desktop_device_info_.reset(DesktopDeviceInfoImpl::Create());
+  desktop_device_info_ = std::unique_ptr<DesktopDeviceInfo>(DesktopDeviceInfoImpl::Create());
   return 0;
 }
 
@@ -394,89 +391,43 @@ int32_t DesktopCaptureImpl::Init(const char* uniqueId,
   options.set_disable_effects(false);
 
   if (type == CaptureDeviceType::Application) {
-    AppCapturer *pAppCapturer = AppCapturer::Create(options);
+    std::unique_ptr<DesktopCapturer> pAppCapturer = DesktopCapturer::CreateAppCapturer(options);
     if (!pAppCapturer) {
       return -1;
     }
 
-    ProcessId pid = atoi(uniqueId);
-    pAppCapturer->SelectApp(pid);
+    DesktopCapturer::SourceId sourceId = atoi(uniqueId);
+    pAppCapturer->SelectSource(sourceId);
 
     MouseCursorMonitor *pMouseCursorMonitor = MouseCursorMonitor::CreateForScreen(options, webrtc::kFullDesktopScreenId);
-    desktop_capturer_cursor_composer_.reset(new DesktopAndCursorComposer(pAppCapturer, pMouseCursorMonitor));
+    desktop_capturer_cursor_composer_ = std::unique_ptr<DesktopAndCursorComposer>(new DesktopAndCursorComposer(pAppCapturer.release(), pMouseCursorMonitor));
   } else if (type == CaptureDeviceType::Screen) {
-    ScreenCapturer *pScreenCapturer = ScreenCapturer::Create(options);
-    if (!pScreenCapturer) {
+    std::unique_ptr<DesktopCapturer> pScreenCapturer = DesktopCapturer::CreateScreenCapturer(options);
+    if (!pScreenCapturer.get()) {
       return -1;
     }
 
-    ScreenId screenid = atoi(uniqueId);
-    pScreenCapturer->SelectScreen(screenid);
-    pScreenCapturer->SetMouseShapeObserver(this);
+    DesktopCapturer::SourceId sourceId = atoi(uniqueId);
+    pScreenCapturer->SelectSource(sourceId);
 
-    MouseCursorMonitor *pMouseCursorMonitor = MouseCursorMonitor::CreateForScreen(options, screenid);
-    desktop_capturer_cursor_composer_.reset(new DesktopAndCursorComposer(pScreenCapturer, pMouseCursorMonitor));
+    // Upstream removed the ShapeObserver
+    //pScreenCapturer->SetMouseShapeObserver(this);
+
+    MouseCursorMonitor *pMouseCursorMonitor = MouseCursorMonitor::CreateForScreen(options, sourceId);
+    desktop_capturer_cursor_composer_ = std::unique_ptr<DesktopAndCursorComposer>(new DesktopAndCursorComposer(pScreenCapturer.release(), pMouseCursorMonitor));
   } else if (type == CaptureDeviceType::Window) {
-    WindowCapturer *pWindowCapturer = WindowCapturer::Create();
-    if (!pWindowCapturer) {
+    std::unique_ptr<DesktopCapturer> pWindowCapturer = DesktopCapturer::CreateWindowCapturer(options);
+    if (!pWindowCapturer.get()) {
       return -1;
     }
 
-    WindowId winId = atoi(uniqueId);
-    pWindowCapturer->SelectWindow(winId);
+    DesktopCapturer::SourceId sourceId = atoi(uniqueId);
+    pWindowCapturer->SelectSource(sourceId);
 
-    MouseCursorMonitor *pMouseCursorMonitor = MouseCursorMonitor::CreateForWindow(webrtc::DesktopCaptureOptions::CreateDefault(), winId);
-    desktop_capturer_cursor_composer_.reset(new DesktopAndCursorComposer(pWindowCapturer, pMouseCursorMonitor));
+    MouseCursorMonitor *pMouseCursorMonitor = MouseCursorMonitor::CreateForWindow(webrtc::DesktopCaptureOptions::CreateDefault(), sourceId);
+    desktop_capturer_cursor_composer_ = std::unique_ptr<DesktopAndCursorComposer>(new DesktopAndCursorComposer(pWindowCapturer.release(), pMouseCursorMonitor));
   }
   _deviceUniqueId = uniqueId;
-
-  return 0;
-}
-
-// returns the number of milliseconds until the module want a worker thread to call Process
-int64_t DesktopCaptureImpl::TimeUntilNextProcess() {
-  CriticalSectionScoped cs(&_callBackCs);
-
-  int64_t timeToNormalProcess = 300
-    - (int64_t)((TickTime::Now() - _lastProcessTime).Milliseconds());
-
-  return timeToNormalProcess;
-}
-
-// Process any pending tasks such as timeouts
-int32_t DesktopCaptureImpl::Process() {
-  CriticalSectionScoped cs(&_callBackCs);
-
-  const TickTime now = TickTime::Now();
-  _lastProcessTime = TickTime::Now();
-
-  // Handle No picture alarm
-  if (_lastProcessFrameCount.Ticks() == _incomingFrameTimes[0].Ticks() &&
-      _captureAlarm != Raised) {
-    if (_noPictureAlarmCallBack && _captureCallBack) {
-      _captureAlarm = Raised;
-      _captureCallBack->OnNoPictureAlarm(_id, _captureAlarm);
-    }
-  } else if (_lastProcessFrameCount.Ticks() != _incomingFrameTimes[0].Ticks() &&
-             _captureAlarm != Cleared) {
-    if (_noPictureAlarmCallBack && _captureCallBack) {
-      _captureAlarm = Cleared;
-      _captureCallBack->OnNoPictureAlarm(_id, _captureAlarm);
-    }
-  }
-
-  // Handle frame rate callback
-  if ((now - _lastFrameRateCallbackTime).Milliseconds()
-      > kFrameRateCallbackInterval) {
-    if (_frameRateCallBack && _captureCallBack) {
-      const uint32_t frameRate = CalculateFrameRate(now);
-      _captureCallBack->OnCaptureFrameRate(_id, frameRate);
-    }
-    _lastFrameRateCallbackTime = now; // Can be set by EnableFrameRateCallback
-
-  }
-
-  _lastProcessFrameCount = _incomingFrameTimes[0];
 
   return 0;
 }
@@ -485,31 +436,22 @@ DesktopCaptureImpl::DesktopCaptureImpl(const int32_t id)
   : _id(id),
     _deviceUniqueId(""),
     _apiCs(*CriticalSectionWrapper::CreateCriticalSection()),
-    _captureDelay(0),
     _requestedCapability(),
     _callBackCs(*CriticalSectionWrapper::CreateCriticalSection()),
-    _lastProcessTime(TickTime::Now()),
-    _lastFrameRateCallbackTime(TickTime::Now()),
-    _frameRateCallBack(false),
-    _noPictureAlarmCallBack(false),
-    _captureAlarm(Cleared),
-    _setCaptureDelay(0),
     _dataCallBack(NULL),
-    _captureCallBack(NULL),
-    _lastProcessFrameCount(TickTime::Now()),
     _rotateFrame(kVideoRotation_0),
-  last_capture_time_(TickTime::MillisecondTimestamp()),
-  delta_ntp_internal_ms_(
-                         Clock::GetRealTimeClock()->CurrentNtpInMilliseconds() -
-                         TickTime::MillisecondTimestamp()),
-  time_event_(EventWrapper::Create()),
-  mRefCount(0),
+    last_capture_time_(rtc::TimeNanos()/rtc::kNumNanosecsPerMillisec),
+    // XXX Note that this won't capture drift!
+    delta_ntp_internal_ms_(Clock::GetRealTimeClock()->CurrentNtpInMilliseconds() -
+                           last_capture_time_),
+    time_event_(EventWrapper::Create()),
+    mRefCount(0),
 #if defined(_WIN32)
-  capturer_thread_(new rtc::PlatformUIThread(Run, this, "ScreenCaptureThread")),
+    capturer_thread_(new rtc::PlatformUIThread(Run, this, "ScreenCaptureThread")),
 #else
-  capturer_thread_(new rtc::PlatformThread(Run, this, "ScreenCaptureThread")),
+    capturer_thread_(new rtc::PlatformThread(Run, this, "ScreenCaptureThread")),
 #endif
-  started_(false) {
+    started_(false) {
   //-> TODO @@NG why is this crashing (seen on Linux)
   //-> capturer_thread_->SetPriority(rtc::kHighPriority);
   _requestedCapability.width = kDefaultWidth;
@@ -517,7 +459,7 @@ DesktopCaptureImpl::DesktopCaptureImpl(const int32_t id)
   _requestedCapability.maxFPS = 30;
   _requestedCapability.rawType = kVideoI420;
   _requestedCapability.codecType = kVideoCodecUnknown;
-  memset(_incomingFrameTimes, 0, sizeof(_incomingFrameTimes));
+  memset(_incomingFrameTimesNanos, 0, sizeof(_incomingFrameTimesNanos));
 }
 
 DesktopCaptureImpl::~DesktopCaptureImpl() {
@@ -525,69 +467,33 @@ DesktopCaptureImpl::~DesktopCaptureImpl() {
   capturer_thread_->Stop();
 
   DeRegisterCaptureDataCallback();
-  DeRegisterCaptureCallback();
   delete &_callBackCs;
   delete &_apiCs;
 }
 
-void DesktopCaptureImpl::RegisterCaptureDataCallback(
-                                                     VideoCaptureDataCallback& dataCallBack)
+void DesktopCaptureImpl::RegisterCaptureDataCallback(rtc::VideoSinkInterface<VideoFrame> *dataCallback)
 {
   CriticalSectionScoped cs(&_apiCs);
   CriticalSectionScoped cs2(&_callBackCs);
-  _dataCallBack = &dataCallBack;
+  _dataCallBack = dataCallback;
 }
 
 void DesktopCaptureImpl::DeRegisterCaptureDataCallback()
 {
   CriticalSectionScoped cs(&_apiCs);
   CriticalSectionScoped cs2(&_callBackCs);
-  _dataCallBack = NULL;
-}
-
-void DesktopCaptureImpl::RegisterCaptureCallback(VideoCaptureFeedBack& callBack)
-{
-
-  CriticalSectionScoped cs(&_apiCs);
-  CriticalSectionScoped cs2(&_callBackCs);
-  _captureCallBack = &callBack;
-}
-
-void DesktopCaptureImpl::DeRegisterCaptureCallback()
-{
-
-  CriticalSectionScoped cs(&_apiCs);
-  CriticalSectionScoped cs2(&_callBackCs);
-  _captureCallBack = NULL;
-}
-
-void DesktopCaptureImpl::SetCaptureDelay(int32_t delayMS)
-{
-  CriticalSectionScoped cs(&_apiCs);
-  _captureDelay = delayMS;
-}
-
-int32_t DesktopCaptureImpl::CaptureDelay()
-{
-  CriticalSectionScoped cs(&_apiCs);
-  return _setCaptureDelay;
+  _dataCallBack = nullptr;
 }
 
 int32_t DesktopCaptureImpl::DeliverCapturedFrame(webrtc::VideoFrame& captureFrame,
                                                  int64_t capture_time) {
   UpdateFrameCount();  // frame count used for local frame rate callback.
 
-  const bool callOnCaptureDelayChanged = _setCaptureDelay != _captureDelay;
-  // Capture delay changed
-  if (_setCaptureDelay != _captureDelay) {
-    _setCaptureDelay = _captureDelay;
-  }
-
   // Set the capture time
   if (capture_time != 0) {
     captureFrame.set_render_time_ms(capture_time - delta_ntp_internal_ms_);
   } else {
-    captureFrame.set_render_time_ms(TickTime::MillisecondTimestamp());
+    captureFrame.set_render_time_ms(rtc::TimeNanos()/rtc::kNumNanosecsPerMillisec);
   }
 
   if (captureFrame.render_time_ms() == last_capture_time_) {
@@ -597,10 +503,7 @@ int32_t DesktopCaptureImpl::DeliverCapturedFrame(webrtc::VideoFrame& captureFram
   last_capture_time_ = captureFrame.render_time_ms();
 
   if (_dataCallBack) {
-    if (callOnCaptureDelayChanged) {
-      _dataCallBack->OnCaptureDelayChanged(_id, _captureDelay);
-    }
-    _dataCallBack->OnIncomingCapturedFrame(_id, captureFrame);
+    _dataCallBack->OnFrame(captureFrame);
   }
 
   return 0;
@@ -616,7 +519,7 @@ int32_t DesktopCaptureImpl::IncomingFrame(uint8_t* videoFrame,
                "IncomingFrame width %d, height %d", (int) frameInfo.width,
                (int) frameInfo.height);
 
-  TickTime startProcessTime = TickTime::Now();
+  int64_t startProcessTime = rtc::TimeNanos();
 
   CriticalSectionScoped cs(&_callBackCs);
 
@@ -651,22 +554,17 @@ int32_t DesktopCaptureImpl::IncomingFrame(uint8_t* videoFrame,
     // Setting absolute height (in case it was negative).
     // In Windows, the image starts bottom left, instead of top left.
     // Setting a negative source height, inverts the image (within LibYuv).
-    int ret = _captureFrame.CreateEmptyFrame(target_width,
-                                             target_height,
-                                             stride_y,
-                                             stride_uv, stride_uv);
-    if (ret < 0) {
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
-                   "Failed to allocate I420 frame.");
-      return -1;
-    }
+    rtc::scoped_refptr<webrtc::I420Buffer> buffer;
+    buffer = I420Buffer::Create(target_width, target_height, stride_y,
+                                stride_uv, stride_uv);
     const int conversionResult = ConvertToI420(commonVideoType,
                                                videoFrame,
                                                0, 0,  // No cropping
                                                width, height,
                                                videoFrameLength,
                                                _rotateFrame,
-                                               &_captureFrame);
+                                               buffer.get());
+    webrtc::VideoFrame captureFrame(buffer, 0, 0, kVideoRotation_0);
     if (conversionResult < 0) {
       WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
                    "Failed to convert capture frame from type %d to I420",
@@ -701,43 +599,23 @@ int32_t DesktopCaptureImpl::IncomingFrame(uint8_t* videoFrame,
     }
 
     if (dst_width == target_width && dst_height == target_height) {
-      DeliverCapturedFrame(_captureFrame, captureTime);
+      DeliverCapturedFrame(captureFrame, captureTime);
     } else {
+      rtc::scoped_refptr<webrtc::I420Buffer> buffer;
+      buffer = I420Buffer::Create(dst_width, dst_height, stride_y,
+                                  stride_uv, stride_uv);
 
-      webrtc::VideoFrame scaledFrame;
-      ret = scaledFrame.CreateEmptyFrame(dst_width,
-                                         dst_height,
-                                         stride_y,
-                                         stride_uv, stride_uv);
-      if (ret < 0) {
-        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
-                     "Failed to allocate I420 frame.");
-        return -1;
-      }
-
-      webrtc::Scaler s;
-      s.Set(target_width, target_height, dst_width, dst_height, kI420, kI420, kScaleBox);
-      const int scaleResult = s.Scale(_captureFrame, &scaledFrame);
-
-      if (scaleResult != 0) {
-        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
-                     "Failed to scale capture frame from type %d",
-                     frameInfo.rawType);
-        return -1;
-      }
-
+      buffer->ScaleFrom(*captureFrame.video_frame_buffer().get());
+      webrtc::VideoFrame scaledFrame(buffer, 0, 0, kVideoRotation_0);
       DeliverCapturedFrame(scaledFrame, captureTime);
     }
-
-
-
   } else {
     assert(false);
     return -1;
   }
 
-  const uint32_t processTime =
-    (uint32_t)(TickTime::Now() - startProcessTime).Milliseconds();
+  const int64_t processTime =
+    (rtc::TimeNanos() - startProcessTime)/rtc::kNumNanosecsPerMillisec;
 
   if (processTime > 10) {
     WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCapture, _id,
@@ -759,54 +637,47 @@ bool DesktopCaptureImpl::SetApplyRotation(bool enable) {
   return true;
 }
 
-void DesktopCaptureImpl::EnableFrameRateCallback(const bool enable) {
-  CriticalSectionScoped cs(&_apiCs);
-  CriticalSectionScoped cs2(&_callBackCs);
-  _frameRateCallBack = enable;
-  if (enable) {
-    _lastFrameRateCallbackTime = TickTime::Now();
-  }
-}
-
-void DesktopCaptureImpl::EnableNoPictureAlarm(const bool enable) {
-  CriticalSectionScoped cs(&_apiCs);
-  CriticalSectionScoped cs2(&_callBackCs);
-  _noPictureAlarmCallBack = enable;
-}
-
 void DesktopCaptureImpl::UpdateFrameCount() {
-  if (_incomingFrameTimes[0].MicrosecondTimestamp() == 0) {
+  if (_incomingFrameTimesNanos[0] == 0) {
     // first no shift
   } else {
     // shift
     for (int i = (kFrameRateCountHistorySize - 2); i >= 0; i--) {
-      _incomingFrameTimes[i + 1] = _incomingFrameTimes[i];
+      _incomingFrameTimesNanos[i + 1] = _incomingFrameTimesNanos[i];
     }
   }
-  _incomingFrameTimes[0] = TickTime::Now();
+  _incomingFrameTimesNanos[0] = rtc::TimeNanos();
 }
 
-uint32_t DesktopCaptureImpl::CalculateFrameRate(const TickTime& now) {
-  int32_t num = 0;
-  int32_t nrOfFrames = 0;
-  for (num = 1; num < (kFrameRateCountHistorySize - 1); num++) {
-    // don't use data older than 2sec
-    if (_incomingFrameTimes[num].Ticks() <= 0
-        || (now - _incomingFrameTimes[num]).Milliseconds() > kFrameRateHistoryWindowMs) {
-      break;
-    } else {
-      nrOfFrames++;
+uint32_t DesktopCaptureImpl::CalculateFrameRate(int64_t now_ns)
+{
+    int32_t num = 0;
+    int32_t nrOfFrames = 0;
+    for (num = 1; num < (kFrameRateCountHistorySize - 1); num++)
+    {
+        if (_incomingFrameTimesNanos[num] <= 0 ||
+            (now_ns - _incomingFrameTimesNanos[num]) /
+            rtc::kNumNanosecsPerMillisec >
+                kFrameRateHistoryWindowMs) // don't use data older than 2sec
+        {
+            break;
+        }
+        else
+        {
+            nrOfFrames++;
+        }
     }
-  }
-  if (num > 1) {
-    int64_t diff = (now - _incomingFrameTimes[num - 1]).Milliseconds();
-    if (diff > 0) {
-      // round to nearest value rather than return minimumid_
-      return uint32_t((nrOfFrames * 1000.0f / diff) + 0.5f);
+    if (num > 1)
+    {
+        int64_t diff = (now_ns - _incomingFrameTimesNanos[num - 1]) /
+                       rtc::kNumNanosecsPerMillisec;
+        if (diff > 0)
+        {
+            return uint32_t((nrOfFrames * 1000.0f / diff) + 0.5f);
+        }
     }
-  }
 
-  return nrOfFrames;
+    return nrOfFrames;
 }
 
 int32_t DesktopCaptureImpl::StartCapture(const VideoCaptureCapability& capability) {
@@ -841,8 +712,9 @@ int32_t DesktopCaptureImpl::CaptureSettings(VideoCaptureCapability& settings) {
   return -1;
 }
 
-void DesktopCaptureImpl::OnCaptureCompleted(DesktopFrame* frame) {
-  if (frame == NULL) return;
+void DesktopCaptureImpl::OnCaptureResult(DesktopCapturer::Result result,
+                                         std::unique_ptr<DesktopFrame> frame) {
+  if (frame.get() == nullptr) return;
   uint8_t * videoFrame = frame->data();
   VideoCaptureCapability frameInfo;
   frameInfo.width = frame->size().width();
@@ -854,11 +726,6 @@ void DesktopCaptureImpl::OnCaptureCompleted(DesktopFrame* frame) {
 
   size_t videoFrameLength = frameInfo.width * frameInfo.height * DesktopFrame::kBytesPerPixel;
   IncomingFrame(videoFrame, videoFrameLength, frameInfo);
-  delete frame; //handled it, so we need delete it
-}
-
-SharedMemory* DesktopCaptureImpl::CreateSharedMemory(size_t size) {
-  return NULL;
 }
 
 void DesktopCaptureImpl::process() {
@@ -866,14 +733,14 @@ void DesktopCaptureImpl::process() {
   DesktopRegion desktop_region;
 
 #if !defined(_WIN32)
-  TickTime startProcessTime = TickTime::Now();
+  int64_t startProcessTime = rtc::TimeNanos();
 #endif
 
-  desktop_capturer_cursor_composer_->Capture(DesktopRegion());
+  desktop_capturer_cursor_composer_->CaptureFrame();
 
 #if !defined(_WIN32)
   const uint32_t processTime =
-      (uint32_t)(TickTime::Now() - startProcessTime).Milliseconds();
+    ((uint32_t)(rtc::TimeNanos() - startProcessTime))/rtc::kNumNanosecsPerMillisec;
   // Use at most x% CPU or limit framerate
   const uint32_t maxFPSNeeded = 1000/_requestedCapability.maxFPS;
   const float sleepTimeFactor = (100.0f / kMaxDesktopCaptureCpuUsage) - 1.0f;

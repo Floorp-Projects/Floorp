@@ -13,9 +13,15 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <memory>
+
+#include "webrtc/api/video/i420_buffer.h"
 #include "webrtc/base/checks.h"
+#include "webrtc/base/keep_ref_until_done.h"
+#include "webrtc/common_video/include/video_frame_buffer.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/system_wrappers/include/clock.h"
+#include "webrtc/test/frame_utils.h"
 
 namespace webrtc {
 namespace test {
@@ -23,33 +29,50 @@ namespace {
 
 class ChromaGenerator : public FrameGenerator {
  public:
-  ChromaGenerator(size_t width, size_t height)
-      : angle_(0.0), width_(width), height_(height) {
-    assert(width > 0);
-    assert(height > 0);
+  ChromaGenerator(size_t width, size_t height) : angle_(0.0) {
+    ChangeResolution(width, height);
+  }
+
+  void ChangeResolution(size_t width, size_t height) override {
+    rtc::CritScope lock(&crit_);
+    width_ = width;
+    height_ = height;
+    RTC_CHECK(width_ > 0);
+    RTC_CHECK(height_ > 0);
+    half_width_ = (width_ + 1) / 2;
+    y_size_ = width_ * height_;
+    uv_size_ = half_width_ * ((height_ + 1) / 2);
   }
 
   VideoFrame* NextFrame() override {
-    frame_.CreateEmptyFrame(static_cast<int>(width_),
-                            static_cast<int>(height_),
-                            static_cast<int>(width_),
-                            static_cast<int>((width_ + 1) / 2),
-                            static_cast<int>((width_ + 1) / 2));
+    rtc::CritScope lock(&crit_);
     angle_ += 30.0;
     uint8_t u = fabs(sin(angle_)) * 0xFF;
     uint8_t v = fabs(cos(angle_)) * 0xFF;
 
-    memset(frame_.buffer(kYPlane), 0x80, frame_.allocated_size(kYPlane));
-    memset(frame_.buffer(kUPlane), u, frame_.allocated_size(kUPlane));
-    memset(frame_.buffer(kVPlane), v, frame_.allocated_size(kVPlane));
-    return &frame_;
+    // Ensure stride == width.
+    rtc::scoped_refptr<I420Buffer> buffer(I420Buffer::Create(
+        static_cast<int>(width_), static_cast<int>(height_),
+        static_cast<int>(width_), static_cast<int>(half_width_),
+        static_cast<int>(half_width_)));
+
+    memset(buffer->MutableDataY(), 0x80, y_size_);
+    memset(buffer->MutableDataU(), u, uv_size_);
+    memset(buffer->MutableDataV(), v, uv_size_);
+
+    frame_.reset(new VideoFrame(buffer, 0, 0, webrtc::kVideoRotation_0));
+    return frame_.get();
   }
 
  private:
-  double angle_;
-  size_t width_;
-  size_t height_;
-  VideoFrame frame_;
+  rtc::CriticalSection crit_;
+  double angle_ GUARDED_BY(&crit_);
+  size_t width_ GUARDED_BY(&crit_);
+  size_t height_ GUARDED_BY(&crit_);
+  size_t half_width_ GUARDED_BY(&crit_);
+  size_t y_size_ GUARDED_BY(&crit_);
+  size_t uv_size_ GUARDED_BY(&crit_);
+  std::unique_ptr<VideoFrame> frame_ GUARDED_BY(&crit_);
 };
 
 class YuvFileGenerator : public FrameGenerator {
@@ -68,9 +91,9 @@ class YuvFileGenerator : public FrameGenerator {
         frame_buffer_(new uint8_t[frame_size_]),
         frame_display_count_(frame_repeat_count),
         current_display_count_(0) {
-    assert(width > 0);
-    assert(height > 0);
-    assert(frame_repeat_count > 0);
+    RTC_DCHECK_GT(width, 0);
+    RTC_DCHECK_GT(height, 0);
+    RTC_DCHECK_GT(frame_repeat_count, 0);
   }
 
   virtual ~YuvFileGenerator() {
@@ -84,35 +107,26 @@ class YuvFileGenerator : public FrameGenerator {
     if (++current_display_count_ >= frame_display_count_)
       current_display_count_ = 0;
 
-    // If this is the last repeatition of this frame, it's OK to use the
-    // original instance, otherwise use a copy.
-    if (current_display_count_ == frame_display_count_)
-      return &last_read_frame_;
-
-    temp_frame_copy_.CopyFrame(last_read_frame_);
-    return &temp_frame_copy_;
+    temp_frame_.reset(
+        new VideoFrame(last_read_buffer_, 0, 0, webrtc::kVideoRotation_0));
+    return temp_frame_.get();
   }
 
   void ReadNextFrame() {
-    size_t bytes_read =
-        fread(frame_buffer_.get(), 1, frame_size_, files_[file_index_]);
-    if (bytes_read < frame_size_) {
+    last_read_buffer_ =
+        test::ReadI420Buffer(static_cast<int>(width_),
+                             static_cast<int>(height_),
+                             files_[file_index_]);
+    if (!last_read_buffer_) {
       // No more frames to read in this file, rewind and move to next file.
       rewind(files_[file_index_]);
       file_index_ = (file_index_ + 1) % files_.size();
-      bytes_read = fread(frame_buffer_.get(), 1, frame_size_,
-          files_[file_index_]);
-      assert(bytes_read >= frame_size_);
+      last_read_buffer_ =
+          test::ReadI420Buffer(static_cast<int>(width_),
+                               static_cast<int>(height_),
+                               files_[file_index_]);
+      RTC_CHECK(last_read_buffer_);
     }
-
-    last_read_frame_.CreateEmptyFrame(
-        static_cast<int>(width_), static_cast<int>(height_),
-        static_cast<int>(width_), static_cast<int>((width_ + 1) / 2),
-        static_cast<int>((width_ + 1) / 2));
-
-    ConvertToI420(kI420, frame_buffer_.get(), 0, 0, static_cast<int>(width_),
-                  static_cast<int>(height_), 0, kVideoRotation_0,
-                  &last_read_frame_);
   }
 
  private:
@@ -121,11 +135,11 @@ class YuvFileGenerator : public FrameGenerator {
   const size_t width_;
   const size_t height_;
   const size_t frame_size_;
-  const rtc::scoped_ptr<uint8_t[]> frame_buffer_;
+  const std::unique_ptr<uint8_t[]> frame_buffer_;
   const int frame_display_count_;
   int current_display_count_;
-  VideoFrame last_read_frame_;
-  VideoFrame temp_frame_copy_;
+  rtc::scoped_refptr<I420Buffer> last_read_buffer_;
+  std::unique_ptr<VideoFrame> temp_frame_;
 };
 
 class ScrollingImageFrameGenerator : public FrameGenerator {
@@ -143,21 +157,18 @@ class ScrollingImageFrameGenerator : public FrameGenerator {
         scroll_time_(scroll_time_ms),
         pause_time_(pause_time_ms),
         num_frames_(files.size()),
+        target_width_(static_cast<int>(target_width)),
+        target_height_(static_cast<int>(target_height)),
         current_frame_num_(num_frames_ - 1),
         current_source_frame_(nullptr),
         file_generator_(files, source_width, source_height, 1) {
     RTC_DCHECK(clock_ != nullptr);
-    RTC_DCHECK_GT(num_frames_, 0u);
+    RTC_DCHECK_GT(num_frames_, 0);
     RTC_DCHECK_GE(source_height, target_height);
     RTC_DCHECK_GE(source_width, target_width);
     RTC_DCHECK_GE(scroll_time_ms, 0);
     RTC_DCHECK_GE(pause_time_ms, 0);
     RTC_DCHECK_GT(scroll_time_ms + pause_time_ms, 0);
-    current_frame_.CreateEmptyFrame(static_cast<int>(target_width),
-                                    static_cast<int>(target_height),
-                                    static_cast<int>(target_width),
-                                    static_cast<int>((target_width + 1) / 2),
-                                    static_cast<int>((target_width + 1) / 2));
   }
 
   virtual ~ScrollingImageFrameGenerator() {}
@@ -179,7 +190,7 @@ class ScrollingImageFrameGenerator : public FrameGenerator {
     }
     CropSourceToScrolledImage(scroll_factor);
 
-    return &current_frame_;
+    return current_frame_ ? &*current_frame_ : nullptr;
   }
 
   void UpdateSourceFrame(size_t frame_num) {
@@ -191,33 +202,33 @@ class ScrollingImageFrameGenerator : public FrameGenerator {
   }
 
   void CropSourceToScrolledImage(double scroll_factor) {
-    const int kTargetWidth = current_frame_.width();
-    const int kTargetHeight = current_frame_.height();
-    int scroll_margin_x = current_source_frame_->width() - kTargetWidth;
+    int scroll_margin_x = current_source_frame_->width() - target_width_;
     int pixels_scrolled_x =
         static_cast<int>(scroll_margin_x * scroll_factor + 0.5);
-    int scroll_margin_y = current_source_frame_->height() - kTargetHeight;
+    int scroll_margin_y = current_source_frame_->height() - target_height_;
     int pixels_scrolled_y =
         static_cast<int>(scroll_margin_y * scroll_factor + 0.5);
 
-    int offset_y = (current_source_frame_->stride(PlaneType::kYPlane) *
+    int offset_y = (current_source_frame_->video_frame_buffer()->StrideY() *
                     pixels_scrolled_y) +
                    pixels_scrolled_x;
-    int offset_u = (current_source_frame_->stride(PlaneType::kUPlane) *
+    int offset_u = (current_source_frame_->video_frame_buffer()->StrideU() *
                     (pixels_scrolled_y / 2)) +
                    (pixels_scrolled_x / 2);
-    int offset_v = (current_source_frame_->stride(PlaneType::kVPlane) *
+    int offset_v = (current_source_frame_->video_frame_buffer()->StrideV() *
                     (pixels_scrolled_y / 2)) +
                    (pixels_scrolled_x / 2);
 
-    current_frame_.CreateFrame(
-        &current_source_frame_->buffer(PlaneType::kYPlane)[offset_y],
-        &current_source_frame_->buffer(PlaneType::kUPlane)[offset_u],
-        &current_source_frame_->buffer(PlaneType::kVPlane)[offset_v],
-        kTargetWidth, kTargetHeight,
-        current_source_frame_->stride(PlaneType::kYPlane),
-        current_source_frame_->stride(PlaneType::kUPlane),
-        current_source_frame_->stride(PlaneType::kVPlane));
+    rtc::scoped_refptr<VideoFrameBuffer> frame_buffer(
+        current_source_frame_->video_frame_buffer());
+    current_frame_ = rtc::Optional<webrtc::VideoFrame>(webrtc::VideoFrame(
+        new rtc::RefCountedObject<webrtc::WrappedI420Buffer>(
+            target_width_, target_height_,
+            &frame_buffer->DataY()[offset_y], frame_buffer->StrideY(),
+            &frame_buffer->DataU()[offset_u], frame_buffer->StrideU(),
+            &frame_buffer->DataV()[offset_v], frame_buffer->StrideV(),
+            KeepRefUntilDone(frame_buffer)),
+        kVideoRotation_0, 0));
   }
 
   Clock* const clock_;
@@ -225,13 +236,48 @@ class ScrollingImageFrameGenerator : public FrameGenerator {
   const int64_t scroll_time_;
   const int64_t pause_time_;
   const size_t num_frames_;
+  const int target_width_;
+  const int target_height_;
+
   size_t current_frame_num_;
   VideoFrame* current_source_frame_;
-  VideoFrame current_frame_;
+  rtc::Optional<VideoFrame> current_frame_;
   YuvFileGenerator file_generator_;
 };
 
 }  // namespace
+
+FrameForwarder::FrameForwarder() : sink_(nullptr) {}
+
+void FrameForwarder::IncomingCapturedFrame(const VideoFrame& video_frame) {
+  rtc::CritScope lock(&crit_);
+  if (sink_)
+    sink_->OnFrame(video_frame);
+}
+
+void FrameForwarder::AddOrUpdateSink(rtc::VideoSinkInterface<VideoFrame>* sink,
+                                     const rtc::VideoSinkWants& wants) {
+  rtc::CritScope lock(&crit_);
+  RTC_DCHECK(!sink_ || sink_ == sink);
+  sink_ = sink;
+  sink_wants_ = wants;
+}
+
+void FrameForwarder::RemoveSink(rtc::VideoSinkInterface<VideoFrame>* sink) {
+  rtc::CritScope lock(&crit_);
+  RTC_DCHECK_EQ(sink, sink_);
+  sink_ = nullptr;
+}
+
+rtc::VideoSinkWants FrameForwarder::sink_wants() const {
+  rtc::CritScope lock(&crit_);
+  return sink_wants_;
+}
+
+bool FrameForwarder::has_sinks() const {
+  rtc::CritScope lock(&crit_);
+  return sink_ != nullptr;
+}
 
 FrameGenerator* FrameGenerator::CreateChromaGenerator(size_t width,
                                                       size_t height) {
@@ -243,7 +289,7 @@ FrameGenerator* FrameGenerator::CreateFromYuvFile(
     size_t width,
     size_t height,
     int frame_repeat_count) {
-  assert(!filenames.empty());
+  RTC_DCHECK(!filenames.empty());
   std::vector<FILE*> files;
   for (const std::string& filename : filenames) {
     FILE* file = fopen(filename.c_str(), "rb");
@@ -263,7 +309,7 @@ FrameGenerator* FrameGenerator::CreateScrollingInputFromYuvFiles(
     size_t target_height,
     int64_t scroll_time_ms,
     int64_t pause_time_ms) {
-  assert(!filenames.empty());
+  RTC_DCHECK(!filenames.empty());
   std::vector<FILE*> files;
   for (const std::string& filename : filenames) {
     FILE* file = fopen(filename.c_str(), "rb");

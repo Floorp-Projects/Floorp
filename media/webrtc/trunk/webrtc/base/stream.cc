@@ -19,6 +19,7 @@
 #include <string>
 
 #include "webrtc/base/basictypes.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/messagequeue.h"
@@ -94,7 +95,8 @@ StreamResult StreamInterface::ReadLine(std::string* line) {
 }
 
 void StreamInterface::PostEvent(Thread* t, int events, int err) {
-  t->Post(this, MSG_POST_EVENT, new StreamEventData(events, err));
+  t->Post(RTC_FROM_HERE, this, MSG_POST_EVENT,
+          new StreamEventData(events, err));
 }
 
 void StreamInterface::PostEvent(int events, int err) {
@@ -432,7 +434,7 @@ bool FileStream::SetPosition(size_t position) {
 }
 
 bool FileStream::GetPosition(size_t* position) const {
-  ASSERT(NULL != position);
+  RTC_DCHECK(NULL != position);
   if (!file_)
     return false;
   long result = ftell(file_);
@@ -444,7 +446,7 @@ bool FileStream::GetPosition(size_t* position) const {
 }
 
 bool FileStream::GetSize(size_t* size) const {
-  ASSERT(NULL != size);
+  RTC_DCHECK(NULL != size);
   if (!file_)
     return false;
   struct stat file_stats;
@@ -456,7 +458,7 @@ bool FileStream::GetSize(size_t* size) const {
 }
 
 bool FileStream::GetAvailable(size_t* size) const {
-  ASSERT(NULL != size);
+  RTC_DCHECK(NULL != size);
   if (!GetSize(size))
     return false;
   long result = ftell(file_);
@@ -485,7 +487,7 @@ bool FileStream::Flush() {
     return (0 == fflush(file_));
   }
   // try to flush empty file?
-  ASSERT(false);
+  RTC_NOTREACHED();
   return false;
 }
 
@@ -494,7 +496,7 @@ bool FileStream::Flush() {
 bool FileStream::TryLock() {
   if (file_ == NULL) {
     // Stream not open.
-    ASSERT(false);
+    RTC_NOTREACHED();
     return false;
   }
 
@@ -504,7 +506,7 @@ bool FileStream::TryLock() {
 bool FileStream::Unlock() {
   if (file_ == NULL) {
     // Stream not open.
-    ASSERT(false);
+    RTC_NOTREACHED();
     return false;
   }
 
@@ -561,7 +563,7 @@ StreamResult MemoryStreamBase::Write(const void* buffer, size_t bytes,
     if (SR_SUCCESS != result) {
       return result;
     }
-    ASSERT(buffer_length_ >= new_buffer_length);
+    RTC_DCHECK(buffer_length_ >= new_buffer_length);
     available = buffer_length_ - seek_position_;
   }
 
@@ -741,6 +743,7 @@ StreamResult FifoBuffer::WriteOffset(const void* buffer, size_t bytes,
 }
 
 StreamState FifoBuffer::GetState() const {
+  CritScope cs(&crit_);
   return state_;
 }
 
@@ -805,7 +808,7 @@ const void* FifoBuffer::GetReadData(size_t* size) {
 
 void FifoBuffer::ConsumeReadData(size_t size) {
   CritScope cs(&crit_);
-  ASSERT(size <= data_length_);
+  RTC_DCHECK(size <= data_length_);
   const bool was_writable = data_length_ < buffer_length_;
   read_position_ = (read_position_ + size) % buffer_length_;
   data_length_ -= size;
@@ -835,7 +838,7 @@ void* FifoBuffer::GetWriteBuffer(size_t* size) {
 
 void FifoBuffer::ConsumeWriteBuffer(size_t size) {
   CritScope cs(&crit_);
-  ASSERT(size <= buffer_length_ - data_length_);
+  RTC_DCHECK(size <= buffer_length_ - data_length_);
   const bool was_readable = (data_length_ > 0);
   data_length_ += size;
   if (!was_readable && size > 0) {
@@ -1067,7 +1070,7 @@ StreamResult Flow(StreamInterface* source,
                   char* buffer, size_t buffer_len,
                   StreamInterface* sink,
                   size_t* data_len /* = NULL */) {
-  ASSERT(buffer_len > 0);
+  RTC_DCHECK(buffer_len > 0);
 
   StreamResult result;
   size_t count, read_pos, write_pos;

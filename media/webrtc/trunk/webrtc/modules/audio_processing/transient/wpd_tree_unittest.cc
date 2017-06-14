@@ -10,14 +10,14 @@
 
 #include "webrtc/modules/audio_processing/transient/wpd_tree.h"
 
+#include <memory>
 #include <sstream>
 #include <string>
 
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_processing/transient/daubechies_8_wavelet_coeffs.h"
 #include "webrtc/modules/audio_processing/transient/file_utils.h"
 #include "webrtc/system_wrappers/include/file_wrapper.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
@@ -85,8 +85,8 @@ TEST(WPDTreeTest, CorrectnessBasedOnMatlabFiles) {
                kDaubechies8CoefficientsLength,
                kLevels);
   // Allocate and open all matlab and out files.
-  rtc::scoped_ptr<FileWrapper> matlab_files_data[kLeaves];
-  rtc::scoped_ptr<FileWrapper> out_files_data[kLeaves];
+  std::unique_ptr<FileWrapper> matlab_files_data[kLeaves];
+  std::unique_ptr<FileWrapper> out_files_data[kLeaves];
 
   for (int i = 0; i < kLeaves; ++i) {
     // Matlab files.
@@ -95,12 +95,9 @@ TEST(WPDTreeTest, CorrectnessBasedOnMatlabFiles) {
     std::ostringstream matlab_stream;
     matlab_stream << "audio_processing/transient/wpd" << i;
     std::string matlab_string = test::ResourcePath(matlab_stream.str(), "dat");
-    matlab_files_data[i]->OpenFile(matlab_string.c_str(),
-                                   true,    // Read only.
-                                   false,   // No loop.
-                                   false);  // No text.
+    matlab_files_data[i]->OpenFile(matlab_string.c_str(), true);  // Read only.
 
-    bool file_opened = matlab_files_data[i]->Open();
+    bool file_opened = matlab_files_data[i]->is_open();
     ASSERT_TRUE(file_opened) << "File could not be opened.\n" << matlab_string;
 
     // Out files.
@@ -110,12 +107,9 @@ TEST(WPDTreeTest, CorrectnessBasedOnMatlabFiles) {
     out_stream << test::OutputPath() << "wpd_" << i << ".out";
     std::string out_string = out_stream.str();
 
-    out_files_data[i]->OpenFile(out_string.c_str(),
-                                false,    // Write mode.
-                                false,    // No loop.
-                                false);   // No text.
+    out_files_data[i]->OpenFile(out_string.c_str(), false);  // Write mode.
 
-    file_opened = out_files_data[i]->Open();
+    file_opened = out_files_data[i]->is_open();
     ASSERT_TRUE(file_opened) << "File could not be opened.\n" << out_string;
   }
 
@@ -123,14 +117,11 @@ TEST(WPDTreeTest, CorrectnessBasedOnMatlabFiles) {
   std::string test_file_name = test::ResourcePath(
       "audio_processing/transient/ajm-macbook-1-spke16m", "pcm");
 
-  rtc::scoped_ptr<FileWrapper> test_file(FileWrapper::Create());
+  std::unique_ptr<FileWrapper> test_file(FileWrapper::Create());
 
-  test_file->OpenFile(test_file_name.c_str(),
-                      true,    // Read only.
-                      false,   // No loop.
-                      false);  // No text.
+  test_file->OpenFile(test_file_name.c_str(), true);  // Read only.
 
-  bool file_opened = test_file->Open();
+  bool file_opened = test_file->is_open();
   ASSERT_TRUE(file_opened) << "File could not be opened.\n" << test_file_name;
 
   float test_buffer[kTestBufferSize];

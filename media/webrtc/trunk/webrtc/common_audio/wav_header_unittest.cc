@@ -10,8 +10,8 @@
 
 #include <limits>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/common_audio/wav_header.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 

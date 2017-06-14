@@ -13,7 +13,6 @@
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/stringutils.h"
-#include "webrtc/base/stream.h"
 
 #include "webrtc/base/testbase64.h"
 

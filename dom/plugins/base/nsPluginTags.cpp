@@ -11,7 +11,6 @@
 #include "nsPluginsDir.h"
 #include "nsPluginHost.h"
 #include "nsIBlocklistService.h"
-#include "nsIUnicodeDecoder.h"
 #include "nsIPlatformCharset.h"
 #include "nsPluginLogging.h"
 #include "nsNPAPIPlugin.h"
@@ -20,11 +19,10 @@
 #include "mozilla/Unused.h"
 #include "nsNetUtil.h"
 #include <cctype>
-#include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/Encoding.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/FakePluginTagInitBinding.h"
 
-using mozilla::dom::EncodingUtils;
 using mozilla::dom::FakePluginTagInit;
 using namespace mozilla;
 
@@ -445,24 +443,10 @@ nsPluginTag::InitSandboxLevel()
 }
 
 #if !defined(XP_WIN) && !defined(XP_MACOSX)
-static nsresult ConvertToUTF8(nsIUnicodeDecoder *aUnicodeDecoder,
-                              nsAFlatCString& aString)
+static void
+ConvertToUTF8(nsAFlatCString& aString)
 {
-  int32_t numberOfBytes = aString.Length();
-  int32_t outUnicodeLen;
-  nsAutoString buffer;
-  nsresult rv = aUnicodeDecoder->GetMaxLength(aString.get(), numberOfBytes,
-                                              &outUnicodeLen);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!buffer.SetLength(outUnicodeLen, fallible))
-    return NS_ERROR_OUT_OF_MEMORY;
-  rv = aUnicodeDecoder->Convert(aString.get(), &numberOfBytes,
-                                buffer.BeginWriting(), &outUnicodeLen);
-  NS_ENSURE_SUCCESS(rv, rv);
-  buffer.SetLength(outUnicodeLen);
-  CopyUTF16toUTF8(buffer, aString);
-
-  return NS_OK;
+  Unused << UTF_8_ENCODING->DecodeWithoutBOMHandling(aString, aString);
 }
 #endif
 
@@ -471,34 +455,12 @@ nsresult nsPluginTag::EnsureMembersAreUTF8()
 #if defined(XP_WIN) || defined(XP_MACOSX)
   return NS_OK;
 #else
-  nsresult rv;
-
-  nsCOMPtr<nsIPlatformCharset> pcs =
-  do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIUnicodeDecoder> decoder;
-
-  nsAutoCString charset;
-  rv = pcs->GetCharset(kPlatformCharsetSel_FileName, charset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!charset.LowerCaseEqualsLiteral("utf-8")) {
-    decoder = EncodingUtils::DecoderForEncoding(charset);
-    ConvertToUTF8(decoder, mFileName);
-    ConvertToUTF8(decoder, mFullPath);
-  }
-
-  // The description of the plug-in and the various MIME type descriptions
-  // should be encoded in the standard plain text file encoding for this system.
-  // XXX should we add kPlatformCharsetSel_PluginResource?
-  rv = pcs->GetCharset(kPlatformCharsetSel_PlainTextInFile, charset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!charset.LowerCaseEqualsLiteral("utf-8")) {
-    decoder = EncodingUtils::DecoderForEncoding(charset);
-    ConvertToUTF8(decoder, mName);
-    ConvertToUTF8(decoder, mDescription);
-    for (uint32_t i = 0; i < mMimeDescriptions.Length(); ++i) {
-      ConvertToUTF8(decoder, mMimeDescriptions[i]);
-    }
+  ConvertToUTF8(mFileName);
+  ConvertToUTF8(mFullPath);
+  ConvertToUTF8(mName);
+  ConvertToUTF8(mDescription);
+  for (uint32_t i = 0; i < mMimeDescriptions.Length(); ++i) {
+    ConvertToUTF8(mMimeDescriptions[i]);
   }
   return NS_OK;
 #endif

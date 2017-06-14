@@ -9,11 +9,12 @@
  */
 
 #include <stdio.h>
+
+#include <memory>
 #include <string>
 
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/test/frame_generator.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
@@ -46,7 +47,7 @@ class FrameGeneratorTest : public ::testing::Test {
  protected:
   void WriteYuvFile(FILE* file, uint8_t y, uint8_t u, uint8_t v) {
     assert(file);
-    rtc::scoped_ptr<uint8_t[]> plane_buffer(new uint8_t[y_size]);
+    std::unique_ptr<uint8_t[]> plane_buffer(new uint8_t[y_size]);
     memset(plane_buffer.get(), y, y_size);
     fwrite(plane_buffer.get(), 1, y_size, file);
     memset(plane_buffer.get(), u, uv_size);
@@ -58,17 +59,14 @@ class FrameGeneratorTest : public ::testing::Test {
   void CheckFrameAndMutate(VideoFrame* frame, uint8_t y, uint8_t u, uint8_t v) {
     // Check that frame is valid, has the correct color and timestamp are clean.
     ASSERT_NE(nullptr, frame);
-    uint8_t* buffer;
-    ASSERT_EQ(y_size, frame->allocated_size(PlaneType::kYPlane));
-    buffer = frame->buffer(PlaneType::kYPlane);
+    const uint8_t* buffer;
+    buffer = frame->video_frame_buffer()->DataY();
     for (int i = 0; i < y_size; ++i)
       ASSERT_EQ(y, buffer[i]);
-    ASSERT_EQ(uv_size, frame->allocated_size(PlaneType::kUPlane));
-    buffer = frame->buffer(PlaneType::kUPlane);
+    buffer = frame->video_frame_buffer()->DataU();
     for (int i = 0; i < uv_size; ++i)
       ASSERT_EQ(u, buffer[i]);
-    ASSERT_EQ(uv_size, frame->allocated_size(PlaneType::kVPlane));
-    buffer = frame->buffer(PlaneType::kVPlane);
+    buffer = frame->video_frame_buffer()->DataV();
     for (int i = 0; i < uv_size; ++i)
       ASSERT_EQ(v, buffer[i]);
     EXPECT_EQ(0, frame->ntp_time_ms());
@@ -88,7 +86,7 @@ class FrameGeneratorTest : public ::testing::Test {
 };
 
 TEST_F(FrameGeneratorTest, SingleFrameFile) {
-  rtc::scoped_ptr<FrameGenerator> generator(FrameGenerator::CreateFromYuvFile(
+  std::unique_ptr<FrameGenerator> generator(FrameGenerator::CreateFromYuvFile(
       std::vector<std::string>(1, one_frame_filename_), kFrameWidth,
       kFrameHeight, 1));
   CheckFrameAndMutate(generator->NextFrame(), 255, 255, 255);
@@ -96,7 +94,7 @@ TEST_F(FrameGeneratorTest, SingleFrameFile) {
 }
 
 TEST_F(FrameGeneratorTest, TwoFrameFile) {
-  rtc::scoped_ptr<FrameGenerator> generator(FrameGenerator::CreateFromYuvFile(
+  std::unique_ptr<FrameGenerator> generator(FrameGenerator::CreateFromYuvFile(
       std::vector<std::string>(1, two_frame_filename_), kFrameWidth,
       kFrameHeight, 1));
   CheckFrameAndMutate(generator->NextFrame(), 0, 0, 0);
@@ -109,7 +107,7 @@ TEST_F(FrameGeneratorTest, MultipleFrameFiles) {
   files.push_back(two_frame_filename_);
   files.push_back(one_frame_filename_);
 
-  rtc::scoped_ptr<FrameGenerator> generator(
+  std::unique_ptr<FrameGenerator> generator(
       FrameGenerator::CreateFromYuvFile(files, kFrameWidth, kFrameHeight, 1));
   CheckFrameAndMutate(generator->NextFrame(), 0, 0, 0);
   CheckFrameAndMutate(generator->NextFrame(), 127, 127, 127);
@@ -119,7 +117,7 @@ TEST_F(FrameGeneratorTest, MultipleFrameFiles) {
 
 TEST_F(FrameGeneratorTest, TwoFrameFileWithRepeat) {
   const int kRepeatCount = 3;
-  rtc::scoped_ptr<FrameGenerator> generator(FrameGenerator::CreateFromYuvFile(
+  std::unique_ptr<FrameGenerator> generator(FrameGenerator::CreateFromYuvFile(
       std::vector<std::string>(1, two_frame_filename_), kFrameWidth,
       kFrameHeight, kRepeatCount));
   for (int i = 0; i < kRepeatCount; ++i)
@@ -134,7 +132,7 @@ TEST_F(FrameGeneratorTest, MultipleFrameFilesWithRepeat) {
   std::vector<std::string> files;
   files.push_back(two_frame_filename_);
   files.push_back(one_frame_filename_);
-  rtc::scoped_ptr<FrameGenerator> generator(FrameGenerator::CreateFromYuvFile(
+  std::unique_ptr<FrameGenerator> generator(FrameGenerator::CreateFromYuvFile(
       files, kFrameWidth, kFrameHeight, kRepeatCount));
   for (int i = 0; i < kRepeatCount; ++i)
     CheckFrameAndMutate(generator->NextFrame(), 0, 0, 0);

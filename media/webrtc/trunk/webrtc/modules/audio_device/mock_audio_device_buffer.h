@@ -11,8 +11,8 @@
 #ifndef WEBRTC_MODULES_AUDIO_DEVICE_MOCK_AUDIO_DEVICE_BUFFER_H_
 #define WEBRTC_MODULES_AUDIO_DEVICE_MOCK_AUDIO_DEVICE_BUFFER_H_
 
-#include "testing/gmock/include/gmock/gmock.h"
 #include "webrtc/modules/audio_device/audio_device_buffer.h"
+#include "webrtc/test/gmock.h"
 
 namespace webrtc {
 

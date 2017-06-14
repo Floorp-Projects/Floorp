@@ -11,14 +11,19 @@
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_TEST_PROTOBUF_UTILS_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_TEST_PROTOBUF_UTILS_H_
 
-#include "webrtc/audio_processing/debug.pb.h"
-#include "webrtc/base/scoped_ptr.h"
+#include <memory>
+
+#include "webrtc/base/ignore_wundef.h"
+
+RTC_PUSH_IGNORING_WUNDEF()
+#include "webrtc/modules/audio_processing/debug.pb.h"
+RTC_POP_IGNORING_WUNDEF()
 
 namespace webrtc {
 
-// Allocates new memory in the scoped_ptr to fit the raw message and returns the
+// Allocates new memory in the unique_ptr to fit the raw message and returns the
 // number of bytes read.
-size_t ReadMessageBytesFromFile(FILE* file, rtc::scoped_ptr<uint8_t[]>* bytes);
+size_t ReadMessageBytesFromFile(FILE* file, std::unique_ptr<uint8_t[]>* bytes);
 
 // Returns true on success, false on error or end-of-file.
 bool ReadMessageFromFile(FILE* file, ::google::protobuf::MessageLite* msg);

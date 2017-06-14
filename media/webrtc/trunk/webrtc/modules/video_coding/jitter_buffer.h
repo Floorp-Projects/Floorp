@@ -13,18 +13,21 @@
 
 #include <list>
 #include <map>
+#include <memory>
 #include <set>
 #include <vector>
 
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/base/thread_annotations.h"
 #include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/modules/utility/include/process_thread.h"
 #include "webrtc/modules/video_coding/include/video_coding.h"
 #include "webrtc/modules/video_coding/include/video_coding_defines.h"
 #include "webrtc/modules/video_coding/decoding_state.h"
 #include "webrtc/modules/video_coding/inter_frame_delay.h"
 #include "webrtc/modules/video_coding/jitter_buffer_common.h"
 #include "webrtc/modules/video_coding/jitter_estimator.h"
+#include "webrtc/modules/video_coding/nack_module.h"
 #include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/typedefs.h"
 
@@ -104,7 +107,10 @@ class Vp9SsMap {
 
 class VCMJitterBuffer {
  public:
-  VCMJitterBuffer(Clock* clock, rtc::scoped_ptr<EventWrapper> event);
+  VCMJitterBuffer(Clock* clock,
+                  std::unique_ptr<EventWrapper> event,
+                  NackSender* nack_sender = nullptr,
+                  KeyFrameRequestSender* keyframe_request_sender = nullptr);
 
   ~VCMJitterBuffer();
 
@@ -124,10 +130,6 @@ class VCMJitterBuffer {
   // was started.
   FrameCounts FrameStatistics() const;
 
-  // The number of packets discarded by the jitter buffer because the decoder
-  // won't be able to decode them.
-  int num_not_decodable_packets() const;
-
   // Gets number of packets received.
   int num_packets() const;
 
@@ -140,16 +142,9 @@ class VCMJitterBuffer {
   // Statistics, Calculate frame and bit rates.
   void IncomingRateStatistics(unsigned int* framerate, unsigned int* bitrate);
 
-  // Checks if the packet sequence will be complete if the next frame would be
-  // grabbed for decoding. That is, if a frame has been lost between the
-  // last decoded frame and the next, or if the next frame is missing one
-  // or more packets.
-  bool CompleteSequenceWithNextFrame();
-
   // Wait |max_wait_time_ms| for a complete frame to arrive.
-  // The function returns true once such a frame is found, its corresponding
-  // timestamp is returned. Otherwise, returns false.
-  bool NextCompleteTimestamp(uint32_t max_wait_time_ms, uint32_t* timestamp);
+  // If found, a pointer to the frame is returned. Returns nullptr otherwise.
+  VCMEncodedFrame* NextCompleteFrame(uint32_t max_wait_time_ms);
 
   // Locates a frame for decoding (even an incomplete) without delay.
   // The function returns true once such a frame is found, its corresponding
@@ -204,12 +199,7 @@ class VCMJitterBuffer {
   // Set decode error mode - Should not be changed in the middle of the
   // session. Changes will not influence frames already in the buffer.
   void SetDecodeErrorMode(VCMDecodeErrorMode error_mode);
-  int64_t LastDecodedTimestamp() const;
   VCMDecodeErrorMode decode_error_mode() const { return decode_error_mode_; }
-
-  // Used to compute time of complete continuous frames. Returns the timestamps
-  // corresponding to the start and end of the continuous complete buffer.
-  void RenderBufferSize(uint32_t* timestamp_start, uint32_t* timestamp_end);
 
   void RegisterStatsCallback(VCMReceiveStatisticsCallback* callback);
 
@@ -272,8 +262,6 @@ class VCMJitterBuffer {
   // Drops all packets in the NACK list up until |last_decoded_sequence_number|.
   void DropPacketsFromNackList(uint16_t last_decoded_sequence_number);
 
-  void ReleaseFrameIfNotDecoding(VCMFrameBuffer* frame);
-
   // Gets an empty frame, creating a new frame if necessary (i.e. increases
   // jitter buffer size).
   VCMFrameBuffer* GetEmptyFrame() EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
@@ -321,12 +309,16 @@ class VCMJitterBuffer {
 
   void UpdateHistograms() EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
 
+  // Reset frame buffer and return it to free_frames_.
+  void RecycleFrameBuffer(VCMFrameBuffer* frame)
+      EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
+
   Clock* clock_;
   // If we are running (have started) or not.
   bool running_;
   CriticalSectionWrapper* crit_sect_;
   // Event to signal when we have a frame ready for decoder.
-  rtc::scoped_ptr<EventWrapper> frame_event_;
+  std::unique_ptr<EventWrapper> frame_event_;
   // Number of allocated frames.
   int max_number_of_frames_;
   UnorderedFrameList free_frames_ GUARDED_BY(crit_sect_);
@@ -345,8 +337,6 @@ class VCMJitterBuffer {
   int64_t time_last_incoming_frame_count_;
   unsigned int incoming_bit_count_;
   unsigned int incoming_bit_rate_;
-  // Number of frames in a row that have been too old.
-  int num_consecutive_old_frames_;
   // Number of packets in a row that have been too old.
   int num_consecutive_old_packets_;
   // Number of packets received.
@@ -383,6 +373,7 @@ class VCMJitterBuffer {
   // average_packets_per_frame converges fast if we have fewer than this many
   // frames.
   int frame_counter_;
+
   RTC_DISALLOW_COPY_AND_ASSIGN(VCMJitterBuffer);
 };
 }  // namespace webrtc

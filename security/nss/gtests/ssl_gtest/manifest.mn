@@ -12,9 +12,6 @@ CSRCS = \
       $(NULL)
 
 CPPSRCS = \
-      $(CORE_DEPTH)/cpputil/dummy_io.cc \
-      $(CORE_DEPTH)/cpputil/dummy_io_fwd.cc \
-      $(CORE_DEPTH)/cpputil/tls_parser.cc \
       ssl_0rtt_unittest.cc \
       ssl_agent_unittest.cc \
       ssl_auth_unittest.cc \
@@ -40,6 +37,7 @@ CPPSRCS = \
       ssl_v2_client_hello_unittest.cc \
       ssl_version_unittest.cc \
       ssl_versionpolicy_unittest.cc \
+      selfencrypt_unittest.cc \
       test_io.cc \
       tls_agent.cc \
       tls_connect.cc \
@@ -52,9 +50,12 @@ INCLUDES += -I$(CORE_DEPTH)/gtests/google_test/gtest/include \
             -I$(CORE_DEPTH)/gtests/common \
             -I$(CORE_DEPTH)/cpputil
 
-REQUIRES = nspr nss libdbm gtest
+REQUIRES = nspr nss libdbm gtest cpputil
 
 PROGRAM = ssl_gtest
-EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX)
+EXTRA_LIBS += \
+      $(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX) \
+      $(DIST)/lib/$(LIB_PREFIX)cpputil.$(LIB_SUFFIX) \
+      $(NULL)
 
 USE_STATIC_LIBS = 1

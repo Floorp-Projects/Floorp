@@ -12,8 +12,8 @@
 #define WEBRTC_COMMON_AUDIO_LAPPED_TRANSFORM_H_
 
 #include <complex>
+#include <memory>
 
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_audio/blocker.h"
 #include "webrtc/common_audio/real_fourier.h"
 #include "webrtc/system_wrappers/include/aligned_array.h"
@@ -53,7 +53,7 @@ class LappedTransform {
                   size_t block_length,
                   size_t shift_amount,
                   Callback* callback);
-  ~LappedTransform() {}
+  ~LappedTransform();
 
   // Main audio processing helper method. Internally slices |in_chunk| into
   // blocks, transforms them to frequency domain, calls the callback for each
@@ -86,6 +86,12 @@ class LappedTransform {
   // constructor.
   size_t num_out_channels() const { return num_out_channels_; }
 
+  // Returns the initial delay.
+  //
+  // This is the delay introduced by the |blocker_| to be able to get and return
+  // chunks of |chunk_length|, but process blocks of |block_length|.
+  size_t initial_delay() const { return blocker_.initial_delay(); }
+
  private:
   // Internal middleware callback, given to the blocker. Transforms each block
   // and hands it over to the processing method given at construction time.
@@ -93,11 +99,11 @@ class LappedTransform {
    public:
     explicit BlockThunk(LappedTransform* parent) : parent_(parent) {}
 
-    virtual void ProcessBlock(const float* const* input,
+ void ProcessBlock(const float* const* input,
                               size_t num_frames,
                               size_t num_input_channels,
                               size_t num_output_channels,
-                              float* const* output);
+                              float* const* output) override;
 
    private:
     LappedTransform* const parent_;
@@ -112,7 +118,7 @@ class LappedTransform {
   Callback* const block_processor_;
   Blocker blocker_;
 
-  rtc::scoped_ptr<RealFourier> fft_;
+  std::unique_ptr<RealFourier> fft_;
   const size_t cplx_length_;
   AlignedArray<float> real_buf_;
   AlignedArray<std::complex<float> > cplx_pre_;

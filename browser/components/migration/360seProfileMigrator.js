@@ -234,7 +234,7 @@ Object.defineProperty(Qihoo360seProfileMigrator.prototype, "sourceProfiles", {
         throw new Error("360 Secure Browser's 'login.ini' file could not be read.");
       }
 
-      let loginIniInUtf8 = copyToTempUTF8File(loginIni, "gbk");
+      let loginIniInUtf8 = copyToTempUTF8File(loginIni, "GBK");
       let loginIniObj = parseINIStrings(loginIniInUtf8);
       try {
         loginIniInUtf8.remove(false);

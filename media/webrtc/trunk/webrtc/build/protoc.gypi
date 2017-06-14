@@ -12,6 +12,11 @@
 # build/common.gypi is different for the standalone and Chromium builds. Gyp
 # doesn't permit conditional inclusion or variable expansion in include paths.
 # http://code.google.com/p/gyp/wiki/InputFormatReference#Including_Other_Files
+#
+# Local changes:
+# * Removed <(DEPTH) from include_dir due to difficulties with generated
+#   downstream code.
+
 
 # This file is meant to be included into a target to provide a rule
 # to invoke protoc in a consistent manner. For Java-targets, see
@@ -89,21 +94,16 @@
       'action': [
         'python',
         '<(protoc_wrapper)',
-        '--include',
-        '<(cc_include)',
-        '--protobuf',
-        '<(cc_dir)/<(RULE_INPUT_ROOT).pb.h',
+        '--protoc',
+        '<(protoc)',
         # Using the --arg val form (instead of --arg=val) allows gyp's msvs rule
         # generation to correct 'val' which is a path.
         '--proto-in-dir','<(proto_in_dir)',
         # Naively you'd use <(RULE_INPUT_PATH) here, but protoc requires
         # --proto_path is a strict prefix of the path given as an argument.
-        '--proto-in-file','<(RULE_INPUT_ROOT)<(RULE_INPUT_EXT)',
-        '--use-system-protobuf=<(use_system_protobuf)',
-        '--',
-        '<(protoc)',
-        '--cpp_out', '<(cc_generator_options)<(cc_dir)',
-        '--python_out', '<(py_dir)',
+        '--cc-out-dir', '<(cc_generator_options)<(cc_dir)',
+        '--py-out-dir', '<(py_dir)',
+        '<(RULE_INPUT_ROOT)<(RULE_INPUT_EXT)',
       ],
       'message': 'Generating C++ and Python code from <(RULE_INPUT_PATH)',
       'process_outputs_as_sources': 1,
@@ -111,12 +111,10 @@
   ],
   'include_dirs': [
     '<(SHARED_INTERMEDIATE_DIR)/protoc_out',
-    '<(DEPTH)',
   ],
   'direct_dependent_settings': {
     'include_dirs': [
       '<(SHARED_INTERMEDIATE_DIR)/protoc_out',
-      '<(DEPTH)',
     ]
   },
   # This target exports a hard dependency because it generates header

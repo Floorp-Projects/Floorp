@@ -8,8 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include <algorithm>
+#include <sstream>
+
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/test/gtest.h"
 
 static const size_t kVector16Size = 9;
 static const int16_t vector16[kVector16Size] = {1, -15511, 4323, 1963,
@@ -118,26 +121,51 @@ TEST_F(SplTest, InlineTest) {
 
     EXPECT_EQ(104, WebRtcSpl_AddSatW16(a16, b16));
     EXPECT_EQ(138, WebRtcSpl_SubSatW16(a16, b16));
+}
 
-    EXPECT_EQ(109410, WebRtcSpl_AddSatW32(a32, b32));
-    EXPECT_EQ(112832, WebRtcSpl_SubSatW32(a32, b32));
+TEST_F(SplTest, AddSubSatW32) {
+  static constexpr int32_t kAddSubArgs[] = {
+      INT32_MIN, INT32_MIN + 1, -3,       -2, -1, 0, 1, -1, 2,
+      3,         INT32_MAX - 1, INT32_MAX};
+  for (int32_t a : kAddSubArgs) {
+    for (int32_t b : kAddSubArgs) {
+      const int64_t sum = std::max<int64_t>(
+          INT32_MIN, std::min<int64_t>(INT32_MAX, static_cast<int64_t>(a) + b));
+      const int64_t diff = std::max<int64_t>(
+          INT32_MIN, std::min<int64_t>(INT32_MAX, static_cast<int64_t>(a) - b));
+      std::ostringstream ss;
+      ss << a << " +/- " << b << ": sum " << sum << ", diff " << diff;
+      SCOPED_TRACE(ss.str());
+      EXPECT_EQ(sum, WebRtcSpl_AddSatW32(a, b));
+      EXPECT_EQ(diff, WebRtcSpl_SubSatW32(a, b));
+    }
+  }
+}
 
-    a32 = 0x80000000;
-    b32 = 0x80000000;
-    // Cast to signed int to avoid compiler complaint on gtest.h.
-    EXPECT_EQ(static_cast<int>(0x80000000), WebRtcSpl_AddSatW32(a32, b32));
-    a32 = 0x7fffffff;
-    b32 = 0x7fffffff;
-    EXPECT_EQ(0x7fffffff, WebRtcSpl_AddSatW32(a32, b32));
-    a32 = 0;
-    b32 = 0x80000000;
-    EXPECT_EQ(0x7fffffff, WebRtcSpl_SubSatW32(a32, b32));
-    a32 = 0x7fffffff;
-    b32 = 0x80000000;
-    EXPECT_EQ(0x7fffffff, WebRtcSpl_SubSatW32(a32, b32));
-    a32 = 0x80000000;
-    b32 = 0x7fffffff;
-    EXPECT_EQ(static_cast<int>(0x80000000), WebRtcSpl_SubSatW32(a32, b32));
+TEST_F(SplTest, CountLeadingZeros32) {
+  EXPECT_EQ(32, WebRtcSpl_CountLeadingZeros32(0));
+  EXPECT_EQ(32, WebRtcSpl_CountLeadingZeros32_NotBuiltin(0));
+  for (int i = 0; i < 32; ++i) {
+    const uint32_t single_one = uint32_t{1} << i;
+    const uint32_t all_ones = 2 * single_one - 1;
+    EXPECT_EQ(31 - i, WebRtcSpl_CountLeadingZeros32(single_one));
+    EXPECT_EQ(31 - i, WebRtcSpl_CountLeadingZeros32_NotBuiltin(single_one));
+    EXPECT_EQ(31 - i, WebRtcSpl_CountLeadingZeros32(all_ones));
+    EXPECT_EQ(31 - i, WebRtcSpl_CountLeadingZeros32_NotBuiltin(all_ones));
+  }
+}
+
+TEST_F(SplTest, CountLeadingZeros64) {
+  EXPECT_EQ(64, WebRtcSpl_CountLeadingZeros64(0));
+  EXPECT_EQ(64, WebRtcSpl_CountLeadingZeros64_NotBuiltin(0));
+  for (int i = 0; i < 64; ++i) {
+    const uint64_t single_one = uint64_t{1} << i;
+    const uint64_t all_ones = 2 * single_one - 1;
+    EXPECT_EQ(63 - i, WebRtcSpl_CountLeadingZeros64(single_one));
+    EXPECT_EQ(63 - i, WebRtcSpl_CountLeadingZeros64_NotBuiltin(single_one));
+    EXPECT_EQ(63 - i, WebRtcSpl_CountLeadingZeros64(all_ones));
+    EXPECT_EQ(63 - i, WebRtcSpl_CountLeadingZeros64_NotBuiltin(all_ones));
+  }
 }
 
 TEST_F(SplTest, MathOperationsTest) {

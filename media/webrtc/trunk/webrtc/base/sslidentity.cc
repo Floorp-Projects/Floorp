@@ -9,10 +9,6 @@
  */
 
 // Handling of certificates and keypairs for SSLStreamAdapter's peer mode.
-#if HAVE_CONFIG_H
-#include "config.h"
-#endif  // HAVE_CONFIG_H
-
 #include "webrtc/base/sslidentity.h"
 
 #include <ctime>
@@ -22,6 +18,7 @@
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/sslconfig.h"
+#include "webrtc/base/sslfingerprint.h"
 
 #if SSL_USE_OPENSSL
 
@@ -34,6 +31,70 @@ namespace rtc {
 const char kPemTypeCertificate[] = "CERTIFICATE";
 const char kPemTypeRsaPrivateKey[] = "RSA PRIVATE KEY";
 const char kPemTypeEcPrivateKey[] = "EC PRIVATE KEY";
+
+SSLCertificateStats::SSLCertificateStats(
+    std::string&& fingerprint,
+    std::string&& fingerprint_algorithm,
+    std::string&& base64_certificate,
+    std::unique_ptr<SSLCertificateStats>&& issuer)
+    : fingerprint(std::move(fingerprint)),
+      fingerprint_algorithm(std::move(fingerprint_algorithm)),
+      base64_certificate(std::move(base64_certificate)),
+      issuer(std::move(issuer)) {
+}
+
+SSLCertificateStats::~SSLCertificateStats() {
+}
+
+std::unique_ptr<SSLCertificateStats> SSLCertificate::GetStats() const {
+  // We have a certificate and optionally a chain of certificates. This forms a
+  // linked list, starting with |this|, then the first element of |chain| and
+  // ending with the last element of |chain|. The "issuer" of a certificate is
+  // the next certificate in the chain. Stats are produced for each certificate
+  // in the list. Here, the "issuer" is the issuer's stats.
+  std::unique_ptr<SSLCertChain> chain = GetChain();
+  std::unique_ptr<SSLCertificateStats> issuer;
+  if (chain) {
+    // The loop runs in reverse so that the |issuer| is known before the
+    // |cert|'s stats.
+    for (ptrdiff_t i = chain->GetSize() - 1; i >= 0; --i) {
+      const SSLCertificate* cert = &chain->Get(i);
+      issuer = cert->GetStats(std::move(issuer));
+    }
+  }
+  return GetStats(std::move(issuer));
+}
+
+std::unique_ptr<SSLCertificateStats> SSLCertificate::GetStats(
+    std::unique_ptr<SSLCertificateStats> issuer) const {
+  // TODO(bemasc): Move this computation to a helper class that caches these
+  // values to reduce CPU use in |StatsCollector::GetStats|. This will require
+  // adding a fast |SSLCertificate::Equals| to detect certificate changes.
+  std::string digest_algorithm;
+  if (!GetSignatureDigestAlgorithm(&digest_algorithm))
+    return nullptr;
+
+  // |SSLFingerprint::Create| can fail if the algorithm returned by
+  // |SSLCertificate::GetSignatureDigestAlgorithm| is not supported by the
+  // implementation of |SSLCertificate::ComputeDigest|. This currently happens
+  // with MD5- and SHA-224-signed certificates when linked to libNSS.
+  std::unique_ptr<SSLFingerprint> ssl_fingerprint(
+      SSLFingerprint::Create(digest_algorithm, this));
+  if (!ssl_fingerprint)
+    return nullptr;
+  std::string fingerprint = ssl_fingerprint->GetRfc4572Fingerprint();
+
+  Buffer der_buffer;
+  ToDER(&der_buffer);
+  std::string der_base64;
+  Base64::EncodeFromArray(der_buffer.data(), der_buffer.size(), &der_base64);
+
+  return std::unique_ptr<SSLCertificateStats>(new SSLCertificateStats(
+      std::move(fingerprint),
+      std::move(digest_algorithm),
+      std::move(der_base64),
+      std::move(issuer)));
+}
 
 KeyParams::KeyParams(KeyType key_type) {
   if (key_type == KT_ECDSA) {
@@ -139,7 +200,7 @@ std::string SSLIdentity::DerToPem(const std::string& pem_type,
 }
 
 SSLCertChain::SSLCertChain(const std::vector<SSLCertificate*>& certs) {
-  ASSERT(!certs.empty());
+  RTC_DCHECK(!certs.empty());
   certs_.resize(certs.size());
   std::transform(certs.begin(), certs.end(), certs_.begin(), DupCert);
 }
@@ -154,22 +215,49 @@ SSLCertChain::~SSLCertChain() {
 
 #if SSL_USE_OPENSSL
 
+// static
 SSLCertificate* SSLCertificate::FromPEMString(const std::string& pem_string) {
   return OpenSSLCertificate::FromPEMString(pem_string);
 }
 
+// static
+SSLIdentity* SSLIdentity::GenerateWithExpiration(const std::string& common_name,
+                                                 const KeyParams& key_params,
+                                                 time_t certificate_lifetime) {
+  return OpenSSLIdentity::GenerateWithExpiration(common_name, key_params,
+                                                 certificate_lifetime);
+}
+
+// static
 SSLIdentity* SSLIdentity::Generate(const std::string& common_name,
                                    const KeyParams& key_params) {
-  return OpenSSLIdentity::Generate(common_name, key_params);
+  return OpenSSLIdentity::GenerateWithExpiration(
+      common_name, key_params, kDefaultCertificateLifetimeInSeconds);
+}
+
+// static
+SSLIdentity* SSLIdentity::Generate(const std::string& common_name,
+                                   KeyType key_type) {
+  return OpenSSLIdentity::GenerateWithExpiration(
+      common_name, KeyParams(key_type), kDefaultCertificateLifetimeInSeconds);
 }
 
 SSLIdentity* SSLIdentity::GenerateForTest(const SSLIdentityParams& params) {
   return OpenSSLIdentity::GenerateForTest(params);
 }
 
+// static
 SSLIdentity* SSLIdentity::FromPEMStrings(const std::string& private_key,
                                          const std::string& certificate) {
   return OpenSSLIdentity::FromPEMStrings(private_key, certificate);
+}
+
+bool operator==(const SSLIdentity& a, const SSLIdentity& b) {
+  return static_cast<const OpenSSLIdentity&>(a) ==
+         static_cast<const OpenSSLIdentity&>(b);
+}
+bool operator!=(const SSLIdentity& a, const SSLIdentity& b) {
+  return !(a == b);
 }
 
 #else  // !SSL_USE_OPENSSL

@@ -60,8 +60,7 @@ public:
     RefPtr<gfxContext> context = gfxContext::CreateOrNull(aDT, aDeviceOffset);
     context->SetMatrix(ThebesMatrix(transform));
 
-    nsRenderingContext ctx(context);
-    mItem->Paint(mBuilder, &ctx);
+    mItem->Paint(mBuilder, context);
   }
 
 protected:

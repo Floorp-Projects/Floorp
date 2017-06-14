@@ -19,20 +19,22 @@
 #ifndef WEBRTC_MODULES_AUDIO_CODING_CODECS_ILBC_MAIN_SOURCE_DECODE_RESIDUAL_H_
 #define WEBRTC_MODULES_AUDIO_CODING_CODECS_ILBC_MAIN_SOURCE_DECODE_RESIDUAL_H_
 
+#include <stdbool.h>
 #include "defines.h"
 
 /*----------------------------------------------------------------*
  *  frame residual decoder function (subrutine to iLBC_decode)
  *---------------------------------------------------------------*/
 
-void WebRtcIlbcfix_DecodeResidual(
-    IlbcDecoder *iLBCdec_inst,
-    /* (i/o) the decoder state structure */
-    iLBC_bits *iLBC_encbits, /* (i/o) Encoded bits, which are used
-                                   for the decoding  */
-    int16_t *decresidual,  /* (o) decoded residual frame */
-    int16_t *syntdenum   /* (i) the decoded synthesis filter
-                                                   coefficients */
-                                  );
+// Returns true on success, false on failure. In case of failure, the decoder
+// state may be corrupted and needs resetting.
+bool WebRtcIlbcfix_DecodeResidual(
+    IlbcDecoder* iLBCdec_inst, /* (i/o) the decoder state structure */
+    iLBC_bits* iLBC_encbits,   /* (i/o) Encoded bits, which are used
+                                        for the decoding  */
+    int16_t* decresidual,      /* (o) decoded residual frame */
+    int16_t* syntdenum         /* (i) the decoded synthesis filter
+                                                         coefficients */
+    ) WARN_UNUSED_RESULT;
 
 #endif

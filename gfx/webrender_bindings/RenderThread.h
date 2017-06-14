@@ -25,6 +25,20 @@ class RendererOGL;
 class RenderTextureHost;
 class RenderThread;
 
+/// A rayon thread pool that is shared by all WebRender instances within a process.
+class WebRenderThreadPool {
+public:
+  WebRenderThreadPool();
+
+  ~WebRenderThreadPool();
+
+  WrThreadPool* Raw() { return mThreadPool; }
+
+protected:
+  WrThreadPool* mThreadPool;
+};
+
+
 /// Base class for an event that can be scheduled to run on the render thread.
 ///
 /// The event can be passed through the same channels as regular WebRender messages
@@ -121,6 +135,9 @@ public:
   /// Can be called from any thread.
   void DecPendingFrameCount(wr::WindowId aWindowId);
 
+  /// Can be called from any thread.
+  WebRenderThreadPool& ThreadPool() { return mThreadPool; }
+
 private:
   explicit RenderThread(base::Thread* aThread);
 
@@ -129,6 +146,8 @@ private:
   ~RenderThread();
 
   base::Thread* const mThread;
+
+  WebRenderThreadPool mThreadPool;
 
   std::map<wr::WindowId, UniquePtr<RendererOGL>> mRenderers;
 

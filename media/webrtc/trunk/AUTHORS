@@ -1,16 +1,20 @@
-# Names should be added to this file like so:
+﻿# Names should be added to this file like so:
 # Name or Organization <email address>
 
+Adam Fedor <adam.fedor@gmail.com>
+Alexander Brauckmann <a.brauckmann@gmail.com>
 Andrew MacDonald <andrew@webrtc.org>
 Anil Kumar <an1kumar@gmail.com>
 Ben Strong <bstrong@gmail.com>
 Bob Withers <bwit@pobox.com>
 Bridger Maxwell <bridgeyman@gmail.com>
 Christophe Dumez <ch.dumez@samsung.com>
+Cody Barnes <conceptgenesis@gmail.com>
 Colin Plumb
 Eric Rescorla, RTFM Inc. <ekr@rtfm.com>
 Giji Gangadharan <giji.g@samsung.com>
 Graham Yoakum <gyoakum@skobalt.com>
+Hugues Ekra <hekra01@gmail.com>
 Jake Hilton <jakehilton@gmail.com>
 James H. Brown <jbrown@burgoyne.com>
 Jiawei Ou <jiawei.ou@gmail.com>
@@ -19,32 +23,37 @@ Luke Weber <luke.weber@gmail.com>
 Manish Jethani <manish.jethani@gmail.com>
 Martin Storsjo <martin@martin.st>
 Matthias Liebig <matthias.gcode@gmail.com>
+Maxim Potapov <vopatop.skam@gmail.com>
 Pali Rohar
 Paul Kapustin <pkapustin@gmail.com>
+Philipp Hancke <philipp.hancke@googlemail.com>
 Rafael Lopez Diez <rafalopezdiez@gmail.com>
 Ralph Giles <giles@ghostscript.com>
 Riku Voipio <riku.voipio@linaro.org>
 Robert Nagy <robert.nagy@gmail.com>
 Ryan Yoakum <ryoakum@skobalt.com>
+Satender Saroha <ssaroha@yahoo.com>
 Sarah Thompson <sarah@telergy.com>
 Saul Kravitz <Saul.Kravitz@celera.com>
 Silviu Caragea <silviu.cpp@gmail.com>
 Steve Reid <sreid@sea-to-sky.net>
+Vladimir Beloborodov <VladimirTechMan@gmail.com>
 Vicken Simonian <vsimon@gmail.com>
 Victor Costan <costan@gmail.com>
-Alexander Brauckmann <a.brauckmann@gmail.com>
 
-&yet LLC
-Agora IO
-ARM Holdings
-BroadSoft Inc.
-Google Inc.
-Intel Corporation
-MIPS Technologies
-Mozilla Foundation
-Opera Software ASA
-Sinch AB
-struktur AG
-Telenor Digital AS
-Temasys Communications
-Vonage Holdings Corp.
+&yet LLC <*@andyet.com>
+Agora IO <*@agora.io>
+ARM Holdings <*@arm.com>
+BroadSoft Inc. <*@broadsoft.com>
+Google Inc. <*@google.com>
+Intel Corporation <*@intel.com>
+MIPS Technologies <*@mips.com>
+Mozilla Foundation <*@mozilla.com>
+Opera Software ASA <*@opera.com>
+Sinch AB <*@sinch.com>
+struktur AG <*@struktur.de>
+Telenor Digital AS <*@telenor.com>
+Temasys Communications <*@temasys.io>
+The Chromium Authors <*@chromium.org>
+The WebRTC Authors <*@webrtc.org>
+Vonage Holdings Corp. <*@vonage.com>

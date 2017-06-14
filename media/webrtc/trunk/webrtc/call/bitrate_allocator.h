@@ -6,97 +6,165 @@
  *  tree. An additional intellectual property rights grant can be found
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
- *
- *  Usage: this class will register multiple RtcpBitrateObserver's one at each
- *  RTCP module. It will aggregate the results and run one bandwidth estimation
- *  and push the result to the encoders via BitrateObserver(s).
  */
 
 #ifndef WEBRTC_CALL_BITRATE_ALLOCATOR_H_
 #define WEBRTC_CALL_BITRATE_ALLOCATOR_H_
 
-#include <list>
+#include <stdint.h>
+
 #include <map>
 #include <utility>
+#include <vector>
 
-#include "webrtc/base/scoped_ptr.h"
-#include "webrtc/base/thread_annotations.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/base/sequenced_task_checker.h"
 
 namespace webrtc {
 
-class BitrateObserver;
+class Clock;
 
+// Used by all send streams with adaptive bitrate, to get the currently
+// allocated bitrate for the send stream. The current network properties are
+// given at the same time, to let the send stream decide about possible loss
+// protection.
+class BitrateAllocatorObserver {
+ public:
+  // Returns the amount of protection used by the BitrateAllocatorObserver
+  // implementation, as bitrate in bps.
+  virtual uint32_t OnBitrateUpdated(uint32_t bitrate_bps,
+                                    uint8_t fraction_loss,
+                                    int64_t rtt,
+                                    int64_t probing_interval_ms) = 0;
+
+ protected:
+  virtual ~BitrateAllocatorObserver() {}
+};
+
+// Usage: this class will register multiple RtcpBitrateObserver's one at each
+// RTCP module. It will aggregate the results and run one bandwidth estimation
+// and push the result to the encoders via BitrateAllocatorObserver(s).
 class BitrateAllocator {
  public:
-  BitrateAllocator();
+  // Used to get notified when send stream limits such as the minimum send
+  // bitrate and max padding bitrate is changed.
+  class LimitObserver {
+   public:
+    virtual void OnAllocationLimitsChanged(
+        uint32_t min_send_bitrate_bps,
+        uint32_t max_padding_bitrate_bps) = 0;
 
-  // Allocate target_bitrate across the registered BitrateObservers.
-  // Returns actual bitrate allocated (might be higher than target_bitrate if
-  // for instance EnforceMinBitrate() is enabled.
-  uint32_t OnNetworkChanged(uint32_t target_bitrate,
-                            uint8_t fraction_loss,
-                            int64_t rtt);
+   protected:
+    virtual ~LimitObserver() {}
+  };
+
+  explicit BitrateAllocator(LimitObserver* limit_observer);
+  ~BitrateAllocator();
+
+  // Allocate target_bitrate across the registered BitrateAllocatorObservers.
+  void OnNetworkChanged(uint32_t target_bitrate_bps,
+                        uint8_t fraction_loss,
+                        int64_t rtt,
+                        int64_t probing_interval_ms);
 
   // Set the start and max send bitrate used by the bandwidth management.
   //
   // |observer| updates bitrates if already in use.
   // |min_bitrate_bps| = 0 equals no min bitrate.
   // |max_bitrate_bps| = 0 equals no max bitrate.
-  // Returns bitrate allocated for the bitrate observer.
-  int AddBitrateObserver(BitrateObserver* observer,
-                         uint32_t min_bitrate_bps,
-                         uint32_t max_bitrate_bps);
+  // |enforce_min_bitrate| = 'true' will allocate at least |min_bitrate_bps| for
+  //    this observer, even if the BWE is too low, 'false' will allocate 0 to
+  //    the observer if BWE doesn't allow |min_bitrate_bps|.
+  // Note that |observer|->OnBitrateUpdated() will be called within the scope of
+  // this method with the current rtt, fraction_loss and available bitrate and
+  // that the bitrate in OnBitrateUpdated will be zero if the |observer| is
+  // currently not allowed to send data.
+  void AddObserver(BitrateAllocatorObserver* observer,
+                   uint32_t min_bitrate_bps,
+                   uint32_t max_bitrate_bps,
+                   uint32_t pad_up_bitrate_bps,
+                   bool enforce_min_bitrate);
 
-  void RemoveBitrateObserver(BitrateObserver* observer);
+  // Removes a previously added observer, but will not trigger a new bitrate
+  // allocation.
+  void RemoveObserver(BitrateAllocatorObserver* observer);
 
-  void GetMinMaxBitrateSumBps(int* min_bitrate_sum_bps,
-                              int* max_bitrate_sum_bps) const;
-
-  // This method controls the behavior when the available bitrate is lower than
-  // the minimum bitrate, or the sum of minimum bitrates.
-  // When true, the bitrate will never be set lower than the minimum bitrate(s).
-  // When false, the bitrate observers will be allocated rates up to their
-  // respective minimum bitrate, satisfying one observer after the other.
-  void EnforceMinBitrate(bool enforce_min_bitrate);
+  // Returns initial bitrate allocated for |observer|. If |observer| is not in
+  // the list of added observers, a best guess is returned.
+  int GetStartBitrate(BitrateAllocatorObserver* observer);
 
  private:
-  struct BitrateConfiguration {
-    BitrateConfiguration(uint32_t min_bitrate, uint32_t max_bitrate)
-        : min_bitrate(min_bitrate), max_bitrate(max_bitrate) {}
-    uint32_t min_bitrate;
-    uint32_t max_bitrate;
+  // Note: All bitrates for member variables and methods are in bps.
+  struct ObserverConfig {
+    ObserverConfig(BitrateAllocatorObserver* observer,
+                   uint32_t min_bitrate_bps,
+                   uint32_t max_bitrate_bps,
+                   uint32_t pad_up_bitrate_bps,
+                   bool enforce_min_bitrate)
+        : observer(observer),
+          min_bitrate_bps(min_bitrate_bps),
+          max_bitrate_bps(max_bitrate_bps),
+          pad_up_bitrate_bps(pad_up_bitrate_bps),
+          enforce_min_bitrate(enforce_min_bitrate),
+          allocated_bitrate_bps(-1),
+          media_ratio(1.0) {}
+
+    BitrateAllocatorObserver* observer;
+    uint32_t min_bitrate_bps;
+    uint32_t max_bitrate_bps;
+    uint32_t pad_up_bitrate_bps;
+    bool enforce_min_bitrate;
+    int64_t allocated_bitrate_bps;
+    double media_ratio;  // Part of the total bitrate used for media [0.0, 1.0].
   };
-  struct ObserverConfiguration {
-    ObserverConfiguration(BitrateObserver* observer, uint32_t bitrate)
-        : observer(observer), min_bitrate(bitrate) {}
-    BitrateObserver* const observer;
-    uint32_t min_bitrate;
-  };
-  typedef std::pair<BitrateObserver*, BitrateConfiguration>
-      BitrateObserverConfiguration;
-  typedef std::list<BitrateObserverConfiguration> BitrateObserverConfList;
-  typedef std::multimap<uint32_t, ObserverConfiguration> ObserverSortingMap;
-  typedef std::map<BitrateObserver*, int> ObserverBitrateMap;
 
-  BitrateObserverConfList::iterator FindObserverConfigurationPair(
-      const BitrateObserver* observer) EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
-  ObserverBitrateMap AllocateBitrates() EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
-  ObserverBitrateMap NormalRateAllocation(uint32_t bitrate,
-                                          uint32_t sum_min_bitrates)
-      EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
+  // Calculates the minimum requested send bitrate and max padding bitrate and
+  // calls LimitObserver::OnAllocationLimitsChanged.
+  void UpdateAllocationLimits();
 
-  ObserverBitrateMap LowRateAllocation(uint32_t bitrate)
-      EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
+  typedef std::vector<ObserverConfig> ObserverConfigs;
+  ObserverConfigs::iterator FindObserverConfig(
+      const BitrateAllocatorObserver* observer);
 
-  rtc::scoped_ptr<CriticalSectionWrapper> crit_sect_;
+  typedef std::multimap<uint32_t, const ObserverConfig*> ObserverSortingMap;
+  typedef std::map<BitrateAllocatorObserver*, int> ObserverAllocation;
+
+  ObserverAllocation AllocateBitrates(uint32_t bitrate);
+
+  ObserverAllocation ZeroRateAllocation();
+  ObserverAllocation LowRateAllocation(uint32_t bitrate);
+  ObserverAllocation NormalRateAllocation(uint32_t bitrate,
+                                          uint32_t sum_min_bitrates);
+  ObserverAllocation MaxRateAllocation(uint32_t bitrate,
+                                       uint32_t sum_max_bitrates);
+
+  uint32_t LastAllocatedBitrate(const ObserverConfig& observer_config);
+  // The minimum bitrate required by this observer, including enable-hysteresis
+  // if the observer is in a paused state.
+  uint32_t MinBitrateWithHysteresis(const ObserverConfig& observer_config);
+  // Splits |bitrate| evenly to observers already in |allocation|.
+  // |include_zero_allocations| decides if zero allocations should be part of
+  // the distribution or not. The allowed max bitrate is |max_multiplier| x
+  // observer max bitrate.
+  void DistributeBitrateEvenly(uint32_t bitrate,
+                               bool include_zero_allocations,
+                               int max_multiplier,
+                               ObserverAllocation* allocation);
+  bool EnoughBitrateForAllObservers(uint32_t bitrate,
+                                    uint32_t sum_min_bitrates);
+
+  rtc::SequencedTaskChecker sequenced_checker_;
+  LimitObserver* const limit_observer_ GUARDED_BY(&sequenced_checker_);
   // Stored in a list to keep track of the insertion order.
-  BitrateObserverConfList bitrate_observers_ GUARDED_BY(crit_sect_);
-  bool bitrate_observers_modified_ GUARDED_BY(crit_sect_);
-  bool enforce_min_bitrate_ GUARDED_BY(crit_sect_);
-  uint32_t last_bitrate_bps_ GUARDED_BY(crit_sect_);
-  uint8_t last_fraction_loss_ GUARDED_BY(crit_sect_);
-  int64_t last_rtt_ GUARDED_BY(crit_sect_);
+  ObserverConfigs bitrate_observer_configs_ GUARDED_BY(&sequenced_checker_);
+  uint32_t last_bitrate_bps_ GUARDED_BY(&sequenced_checker_);
+  uint32_t last_non_zero_bitrate_bps_ GUARDED_BY(&sequenced_checker_);
+  uint8_t last_fraction_loss_ GUARDED_BY(&sequenced_checker_);
+  int64_t last_rtt_ GUARDED_BY(&sequenced_checker_);
+  int64_t last_probing_interval_ms_ GUARDED_BY(&sequenced_checker_);
+  // Number of mute events based on too low BWE, not network up/down.
+  int num_pause_events_ GUARDED_BY(&sequenced_checker_);
+  Clock* const clock_ GUARDED_BY(&sequenced_checker_);
+  int64_t last_bwe_log_time_ GUARDED_BY(&sequenced_checker_);
 };
 }  // namespace webrtc
 #endif  // WEBRTC_CALL_BITRATE_ALLOCATOR_H_

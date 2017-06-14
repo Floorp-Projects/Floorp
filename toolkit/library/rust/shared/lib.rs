@@ -13,6 +13,8 @@ extern crate rust_url_capi;
 extern crate webrender_bindings;
 #[cfg(feature = "cubeb_pulse_rust")]
 extern crate cubeb_pulse;
+extern crate encoding_c;
+extern crate encoding_glue;
 
 use std::boxed::Box;
 use std::ffi::CStr;

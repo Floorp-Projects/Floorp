@@ -25,5 +25,5 @@ PROGRAM = util_gtest
 EXTRA_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)nssutil.$(LIB_SUFFIX) \
-	../common/$(OBJDIR)/gtests$(OBJ_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)gtestutil.$(LIB_SUFFIX) \
 	$(NULL)

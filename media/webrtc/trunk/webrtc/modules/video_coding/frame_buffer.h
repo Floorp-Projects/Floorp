@@ -11,6 +11,8 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_FRAME_BUFFER_H_
 #define WEBRTC_MODULES_VIDEO_CODING_FRAME_BUFFER_H_
 
+#include <vector>
+
 #include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/modules/video_coding/include/video_coding.h"
 #include "webrtc/modules/video_coding/encoded_frame.h"
@@ -60,6 +62,8 @@ class VCMFrameBuffer : public VCMEncodedFrame {
   bool LayerSync() const;
   int Tl0PicId() const;
   bool NonReference() const;
+
+  std::vector<NaluInfo> GetNaluInfos() const;
 
   void SetGofInfo(const GofInfoVP9& gof_info, size_t idx);
 

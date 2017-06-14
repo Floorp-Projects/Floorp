@@ -11,6 +11,8 @@
 #ifndef WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_AUDIO_TRACK_JNI_H_
 #define WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_AUDIO_TRACK_JNI_H_
 
+#include <memory>
+
 #include <jni.h>
 
 #include "webrtc/base/thread_checker.h"
@@ -42,10 +44,10 @@ class AudioTrackJni {
   class JavaAudioTrack {
    public:
     JavaAudioTrack(NativeRegistration* native_registration,
-                   rtc::scoped_ptr<GlobalRef> audio_track);
+                   std::unique_ptr<GlobalRef> audio_track);
     ~JavaAudioTrack();
 
-    void InitPlayout(int sample_rate, int channels);
+    bool InitPlayout(int sample_rate, int channels);
     bool StartPlayout();
     bool StopPlayout();
     bool SetStreamVolume(int volume);
@@ -53,7 +55,7 @@ class AudioTrackJni {
     int GetStreamVolume();
 
    private:
-    rtc::scoped_ptr<GlobalRef> audio_track_;
+    std::unique_ptr<GlobalRef> audio_track_;
     jmethodID init_playout_;
     jmethodID start_playout_;
     jmethodID stop_playout_;
@@ -117,13 +119,13 @@ class AudioTrackJni {
   AttachCurrentThreadIfNeeded attach_thread_if_needed_;
 
   // Wraps the JNI interface pointer and methods associated with it.
-  rtc::scoped_ptr<JNIEnvironment> j_environment_;
+  std::unique_ptr<JNIEnvironment> j_environment_;
 
   // Contains factory method for creating the Java object.
-  rtc::scoped_ptr<NativeRegistration> j_native_registration_;
+  std::unique_ptr<NativeRegistration> j_native_registration_;
 
   // Wraps the Java specific parts of the AudioTrackJni class.
-  rtc::scoped_ptr<AudioTrackJni::JavaAudioTrack> j_audio_track_;
+  std::unique_ptr<AudioTrackJni::JavaAudioTrack> j_audio_track_;
 
   // Contains audio parameters provided to this class at construction by the
   // AudioManager.
@@ -146,7 +148,7 @@ class AudioTrackJni {
   bool playing_;
 
   // Raw pointer handle provided to us in AttachAudioBuffer(). Owned by the
-  // AudioDeviceModuleImpl class and called by AudioDeviceModuleImpl::Create().
+  // AudioDeviceModuleImpl class and called by AudioDeviceModule::Create().
   // The AudioDeviceBuffer is a member of the AudioDeviceModuleImpl instance
   // and therefore outlives this object.
   AudioDeviceBuffer* audio_device_buffer_;

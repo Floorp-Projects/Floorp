@@ -281,13 +281,8 @@ FUZZ_P(TlsConnectGeneric, UnencryptedSessionTickets) {
     offset += 1 + 1 + /* ke_modes */
               1 + 1;  /* auth_modes */
   }
-
-  offset += 2 +  /* ticket length */
-            16 + /* SESS_TICKET_KEY_NAME_LEN */
-            16 + /* AES-128 IV */
-            2 +  /* ciphertext length */
-            2;   /* TLS_EX_SESS_TICKET_VERSION */
-
+  offset += 2 + /* ticket length */
+            2;  /* TLS_EX_SESS_TICKET_VERSION */
   // Check the protocol version number.
   uint32_t tls_version = 0;
   EXPECT_TRUE(i1->buffer().Read(offset, sizeof(version_), &tls_version));

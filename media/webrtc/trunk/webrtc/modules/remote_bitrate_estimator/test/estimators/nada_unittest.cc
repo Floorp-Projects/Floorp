@@ -11,16 +11,16 @@
 #include "webrtc/modules/remote_bitrate_estimator/test/estimators/nada.h"
 
 #include <algorithm>
+#include <memory>
 #include <numeric>
 
 #include "webrtc/base/arraysize.h"
 #include "webrtc/base/common.h"
-#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/bwe_test_framework.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/packet.h"
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/packet_sender.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
@@ -170,7 +170,7 @@ class NadaFbGenerator {
 TEST_F(NadaSenderSideTest, AcceleratedRampUp) {
   const int64_t kRefSignalMs = 1;
   const int64_t kOneWayDelayMs = 50;
-  int original_bitrate = 2 * kMinBitrateKbps;
+  int original_bitrate = 2 * NadaBweSender::kMinNadaBitrateKbps;
   size_t receiving_rate = static_cast<size_t>(original_bitrate);
   int64_t send_time_ms = nada_sender_.NowMs() - kOneWayDelayMs;
 
@@ -202,7 +202,7 @@ TEST_F(NadaSenderSideTest, AcceleratedRampUp) {
 // Verify if AcceleratedRampDown is called and if bitrate decreases.
 TEST_F(NadaSenderSideTest, AcceleratedRampDown) {
   const int64_t kOneWayDelayMs = 50;
-  int original_bitrate = 3 * kMinBitrateKbps;
+  int original_bitrate = 3 * NadaBweSender::kMinNadaBitrateKbps;
   size_t receiving_rate = static_cast<size_t>(original_bitrate);
   int64_t send_time_ms = nada_sender_.NowMs() - kOneWayDelayMs;
 
@@ -219,7 +219,8 @@ TEST_F(NadaSenderSideTest, AcceleratedRampDown) {
   // Updates the bitrate according to the receiving rate and other constant
   // parameters.
   nada_sender_.AcceleratedRampDown(congested_fb);
-  int bitrate_2_kbps = std::max(nada_sender_.bitrate_kbps(), kMinBitrateKbps);
+  int bitrate_2_kbps =
+      std::max(nada_sender_.bitrate_kbps(), NadaBweSender::kMinNadaBitrateKbps);
   EXPECT_EQ(bitrate_2_kbps, bitrate_1_kbps);
 }
 
@@ -227,7 +228,7 @@ TEST_F(NadaSenderSideTest, GradualRateUpdate) {
   const int64_t kDeltaSMs = 20;
   const int64_t kRefSignalMs = 20;
   const int64_t kOneWayDelayMs = 50;
-  int original_bitrate = 2 * kMinBitrateKbps;
+  int original_bitrate = 5 * NadaBweSender::kMinNadaBitrateKbps;
   size_t receiving_rate = static_cast<size_t>(original_bitrate);
   int64_t send_time_ms = nada_sender_.NowMs() - kOneWayDelayMs;
 
@@ -254,7 +255,8 @@ TEST_F(NadaSenderSideTest, GradualRateUpdate) {
 TEST_F(NadaSenderSideTest, VeryLowBandwith) {
   const int64_t kOneWayDelayMs = 50;
 
-  size_t receiving_rate = static_cast<size_t>(kMinBitrateKbps);
+  size_t receiving_rate =
+      static_cast<size_t>(NadaBweSender::kMinNadaBitrateKbps);
   int64_t send_time_ms = nada_sender_.NowMs() - kOneWayDelayMs;
 
   NadaFeedback extremely_congested_fb =
@@ -262,7 +264,7 @@ TEST_F(NadaSenderSideTest, VeryLowBandwith) {
   NadaFeedback congested_fb =
       NadaFbGenerator::CongestedFb(receiving_rate, send_time_ms);
 
-  nada_sender_.set_bitrate_kbps(5 * kMinBitrateKbps);
+  nada_sender_.set_bitrate_kbps(5 * NadaBweSender::kMinNadaBitrateKbps);
   nada_sender_.set_original_operating_mode(true);
   for (int i = 0; i < 100; ++i) {
     // Trigger GradualRateUpdate mode.
@@ -270,10 +272,10 @@ TEST_F(NadaSenderSideTest, VeryLowBandwith) {
   }
   // The original implementation doesn't allow the bitrate to stay at kMin,
   // even if the congestion signal is very high.
-  EXPECT_GE(nada_sender_.bitrate_kbps(), kMinBitrateKbps);
+  EXPECT_GE(nada_sender_.bitrate_kbps(), NadaBweSender::kMinNadaBitrateKbps);
 
   nada_sender_.set_original_operating_mode(false);
-  nada_sender_.set_bitrate_kbps(5 * kMinBitrateKbps);
+  nada_sender_.set_bitrate_kbps(5 * NadaBweSender::kMinNadaBitrateKbps);
 
   for (int i = 0; i < 1000; ++i) {
     int previous_bitrate = nada_sender_.bitrate_kbps();
@@ -281,7 +283,7 @@ TEST_F(NadaSenderSideTest, VeryLowBandwith) {
     nada_sender_.GiveFeedback(congested_fb);
     EXPECT_LE(nada_sender_.bitrate_kbps(), previous_bitrate);
   }
-  EXPECT_EQ(nada_sender_.bitrate_kbps(), kMinBitrateKbps);
+  EXPECT_EQ(nada_sender_.bitrate_kbps(), NadaBweSender::kMinNadaBitrateKbps);
 }
 
 // Sending bitrate should increase and reach its Max bound.
@@ -303,7 +305,7 @@ TEST_F(NadaSenderSideTest, VeryHighBandwith) {
   EXPECT_EQ(nada_sender_.bitrate_kbps(), kMaxBitrateKbps);
 
   nada_sender_.set_original_operating_mode(false);
-  nada_sender_.set_bitrate_kbps(kMinBitrateKbps);
+  nada_sender_.set_bitrate_kbps(NadaBweSender::kMinNadaBitrateKbps);
 
   for (int i = 0; i < 100; ++i) {
     int previous_bitrate = nada_sender_.bitrate_kbps();
@@ -314,7 +316,7 @@ TEST_F(NadaSenderSideTest, VeryHighBandwith) {
 }
 
 TEST_F(NadaReceiverSideTest, FeedbackInitialCases) {
-  rtc::scoped_ptr<NadaFeedback> nada_feedback(
+  std::unique_ptr<NadaFeedback> nada_feedback(
       static_cast<NadaFeedback*>(nada_receiver_.GetFeedback(0)));
   EXPECT_EQ(nada_feedback, nullptr);
 
@@ -342,7 +344,7 @@ TEST_F(NadaReceiverSideTest, FeedbackEmptyQueues) {
   }
 
   // Baseline delay will be equal kOneWayDelayMs.
-  rtc::scoped_ptr<NadaFeedback> nada_feedback(
+  std::unique_ptr<NadaFeedback> nada_feedback(
       static_cast<NadaFeedback*>(nada_receiver_.GetFeedback(500)));
   EXPECT_EQ(nada_feedback->exp_smoothed_delay_ms(), 0L);
   EXPECT_EQ(nada_feedback->est_queuing_delay_signal_ms(), 0L);
@@ -378,7 +380,7 @@ TEST_F(NadaReceiverSideTest, FeedbackIncreasingDelay) {
     const MediaPacket media_packet(kFlowId, send_time_us, 0, sequence_number);
     nada_receiver_.ReceivePacket(arrival_time_ms, media_packet);
 
-    rtc::scoped_ptr<NadaFeedback> nada_feedback(static_cast<NadaFeedback*>(
+    std::unique_ptr<NadaFeedback> nada_feedback(static_cast<NadaFeedback*>(
         nada_receiver_.GetFeedback(arrival_time_ms)));
     EXPECT_EQ(nada_feedback->exp_smoothed_delay_ms(),
               exp_smoothed_delays_ms[i]);
@@ -447,7 +449,7 @@ TEST_F(NadaReceiverSideTest, FeedbackWarpedDelay) {
     const MediaPacket media_packet(kFlowId, send_time_us, 0, sequence_number);
     nada_receiver_.ReceivePacket(arrival_time_ms, media_packet);
 
-    rtc::scoped_ptr<NadaFeedback> nada_feedback(static_cast<NadaFeedback*>(
+    std::unique_ptr<NadaFeedback> nada_feedback(static_cast<NadaFeedback*>(
         nada_receiver_.GetFeedback(arrival_time_ms)));
     EXPECT_EQ(nada_feedback->exp_smoothed_delay_ms(),
               exp_smoothed_delays_ms[i]);

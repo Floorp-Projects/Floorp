@@ -46,14 +46,16 @@
 #ifndef WEBRTC_BASE_LOGGING_H_
 #define WEBRTC_BASE_LOGGING_H_
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"  // NOLINT
-#endif
+#include <errno.h>
 
 #include <list>
 #include <sstream>
 #include <string>
 #include <utility>
+
+#if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
+#include <CoreServices/CoreServices.h>
+#endif
 
 #include "webrtc/base/basictypes.h"
 #include "webrtc/base/constructormagic.h"
@@ -83,6 +85,11 @@ struct ConstantLabel { int value; const char * label; };
 
 const char* FindLabel(int value, const ConstantLabel entries[]);
 std::string ErrorName(int err, const ConstantLabel* err_table);
+
+#if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
+// Returns a UTF8 description from an OS X Status error.
+std::string DescriptionFromOSStatus(OSStatus err);
+#endif
 
 //////////////////////////////////////////////////////////////////////
 
@@ -151,7 +158,7 @@ class LogMessage {
   // If this is not called externally, the LogMessage ctor also calls it, in
   // which case the logging start time will be the time of the first LogMessage
   // instance is created.
-  static uint32_t LogStartTime();
+  static int64_t LogStartTime();
 
   // Returns the wall clock equivalent of |LogStartTime|, in seconds from the
   // epoch.
@@ -328,7 +335,7 @@ inline bool LogCheckLevel(LoggingSeverity sev) {
   LOG_GLE(sev)
 #define LAST_SYSTEM_ERROR \
   (::GetLastError())
-#elif __native_client__
+#elif defined(__native_client__) && __native_client__
 #define LOG_ERR_EX(sev, err) \
   LOG(sev)
 #define LOG_ERR(sev) \

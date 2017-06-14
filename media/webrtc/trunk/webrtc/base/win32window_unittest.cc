@@ -45,9 +45,9 @@ TEST(Win32WindowTest, Basics) {
   EXPECT_TRUE(wnd.Create(0, L"Test", 0, 0, 0, 0, 100, 100));
   EXPECT_TRUE(wnd.handle() != NULL);
   EXPECT_EQ(kDummyResult, ::SendMessage(wnd.handle(), WM_USER, 1, 2));
-  EXPECT_EQ(WM_USER, wnd.msg().message);
-  EXPECT_EQ(1, wnd.msg().wParam);
-  EXPECT_EQ(2, wnd.msg().lParam);
+  EXPECT_EQ(static_cast<UINT>(WM_USER), wnd.msg().message);
+  EXPECT_EQ(1u, wnd.msg().wParam);
+  EXPECT_EQ(2l, wnd.msg().lParam);
   wnd.Destroy();
   EXPECT_TRUE(wnd.handle() == NULL);
   EXPECT_TRUE(wnd.destroyed());

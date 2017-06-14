@@ -25,10 +25,10 @@
  * interface for enhancer
  *---------------------------------------------------------------*/
 
-size_t WebRtcIlbcfix_EnhancerInterface( /* (o) Estimated lag in end of in[] */
-    int16_t *out,     /* (o) enhanced signal */
-    int16_t *in,      /* (i) unenhanced signal */
-    IlbcDecoder *iLBCdec_inst /* (i) buffers etc */
-                                        );
+size_t  // (o) Estimated lag in end of in[]
+    WebRtcIlbcfix_EnhancerInterface(
+        int16_t* out,                // (o) enhanced signal
+        const int16_t* in,           // (i) unenhanced signal
+        IlbcDecoder* iLBCdec_inst);  // (i) buffers etc
 
 #endif

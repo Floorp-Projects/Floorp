@@ -1,0 +1,154 @@
+#!/usr/bin/env python
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+################################################################################
+#
+# This is a collection of helper tools to get stuff done in NSS.
+#
+
+import sys
+import argparse
+import subprocess
+import os
+import platform
+from hashlib import sha256
+
+cwd = os.path.dirname(os.path.abspath(__file__))
+
+
+class cfAction(argparse.Action):
+    docker_command = ["docker"]
+
+    def __call__(self, parser, args, values, option_string=None):
+        if "noroot" not in values:
+            self.setDockerCommand()
+        else:
+            values.remove("noroot")
+
+        # First check if we can run docker.
+        try:
+            with open(os.devnull, "w") as f:
+                subprocess.check_call(
+                    self.docker_command + ["images"], stdout=f)
+        except:
+            print("Please install docker and start the docker daemon.")
+            sys.exit(1)
+
+        docker_image = 'clang-format-service:latest'
+        cf_docker_folder = cwd + "/automation/clang-format"
+
+        # Build the image if necessary.
+        if self.filesChanged(cf_docker_folder):
+            self.buildImage(docker_image, cf_docker_folder)
+
+        # Check if we have the docker image.
+        try:
+            command = self.docker_command + [
+                "image", "inspect", "clang-format-service:latest"
+            ]
+            with open(os.devnull, "w") as f:
+                subprocess.check_call(command, stdout=f)
+        except:
+            print("I have to build the docker image first.")
+            self.buildImage(docker_image, cf_docker_folder)
+
+        command = self.docker_command + [
+            'run', '-v', cwd + ':/home/worker/nss', '--rm', '-ti', docker_image
+        ]
+        # The clang format script returns 1 if something's to do. We don't care.
+        subprocess.call(command + values)
+
+    def filesChanged(self, path):
+        hash = sha256()
+        for dirname, dirnames, files in os.walk(path):
+            for file in files:
+                with open(os.path.join(dirname, file), "rb") as f:
+                    hash.update(f.read())
+        chk_file = cwd + "/out/.chk"
+        old_chk = ""
+        new_chk = hash.hexdigest()
+        if os.path.exists(chk_file):
+            with open(chk_file) as f:
+                old_chk = f.readline()
+        if old_chk != new_chk:
+            with open(chk_file, "w+") as f:
+                f.write(new_chk)
+            return True
+        return False
+
+    def buildImage(self, docker_image, cf_docker_folder):
+        command = self.docker_command + [
+            "build", "-t", docker_image, cf_docker_folder
+        ]
+        subprocess.check_call(command)
+        return
+
+    def setDockerCommand(self):
+        if platform.system() == "Linux":
+            self.docker_command = ["sudo"] + self.docker_command
+
+
+class buildAction(argparse.Action):
+    def __call__(self, parser, args, values, option_string=None):
+        cwd = os.path.dirname(os.path.abspath(__file__))
+        subprocess.check_call([cwd + "/build.sh"] + values)
+
+
+class testAction(argparse.Action):
+    def runTest(self, test, cycles="standard"):
+        cwd = os.path.dirname(os.path.abspath(__file__))
+        domsuf = os.getenv('DOMSUF', "localdomain")
+        host = os.getenv('HOST', "localhost")
+        env = {
+            "NSS_TESTS": test,
+            "NSS_CYCLES": cycles,
+            "DOMSUF": domsuf,
+            "HOST": host
+        }
+        command = cwd + "/tests/all.sh"
+        subprocess.check_call(command, env=env)
+
+    def __call__(self, parser, args, values, option_string=None):
+        self.runTest(values)
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(
+        description='NSS helper script. ' +
+        'Make sure to separate sub-command arguments with --.')
+    subparsers = parser.add_subparsers()
+
+    parser_build = subparsers.add_parser(
+        'build', help='All arguments are passed to build.sh')
+    parser_build.add_argument(
+        'build_args', nargs='*', help="build arguments", action=buildAction)
+
+    parser_cf = subparsers.add_parser(
+        'clang-format',
+        help='Run clang-format on all folders or provide a folder to format.')
+    parser_cf.add_argument(
+        'cf_args',
+        nargs='*',
+        help="clang-format folders and noroot if you don't want to use sudo",
+        action=cfAction)
+
+    parser_test = subparsers.add_parser(
+        'tests', help='Run tests through tests/all.sh.')
+    tests = [
+        "cipher", "lowhash", "chains", "cert", "dbtests", "tools", "fips",
+        "sdr", "crmf", "smime", "ssl", "ocsp", "merge", "pkits", "ec",
+        "gtests", "ssl_gtests"
+    ]
+    parser_test.add_argument(
+        'test', choices=tests, help="Available tests", action=testAction)
+    return parser.parse_args()
+
+
+def main():
+    parse_arguments()
+
+
+if __name__ == '__main__':
+    main()

@@ -23,21 +23,22 @@ Operations DecisionLogicFax::GetDecisionSpecialized(
     const SyncBuffer& sync_buffer,
     const Expand& expand,
     size_t decoder_frame_length,
-    const RTPHeader* packet_header,
+    const Packet* next_packet,
     Modes prev_mode,
     bool play_dtmf,
-    bool* reset_decoder) {
+    bool* reset_decoder,
+    size_t generated_noise_samples) {
   assert(playout_mode_ == kPlayoutFax || playout_mode_ == kPlayoutOff);
   uint32_t target_timestamp = sync_buffer.end_timestamp();
   uint32_t available_timestamp = 0;
   int is_cng_packet = 0;
-  if (packet_header) {
-    available_timestamp = packet_header->timestamp;
+  if (next_packet) {
+    available_timestamp = next_packet->timestamp;
     is_cng_packet =
-        decoder_database_->IsComfortNoise(packet_header->payloadType);
+        decoder_database_->IsComfortNoise(next_packet->payload_type);
   }
   if (is_cng_packet) {
-    if (static_cast<int32_t>((generated_noise_samples_ + target_timestamp)
+    if (static_cast<int32_t>((generated_noise_samples + target_timestamp)
         - available_timestamp) >= 0) {
       // Time to play this packet now.
       return kRfc3389Cng;
@@ -46,7 +47,7 @@ Operations DecisionLogicFax::GetDecisionSpecialized(
       return kRfc3389CngNoPacket;
     }
   }
-  if (!packet_header) {
+  if (!next_packet) {
     // No packet. If in CNG mode, play as usual. Otherwise, use other method to
     // generate data.
     if (cng_state_ == kCngRfc3389On) {
@@ -70,13 +71,13 @@ Operations DecisionLogicFax::GetDecisionSpecialized(
   } else if (target_timestamp == available_timestamp) {
     return kNormal;
   } else {
-    if (static_cast<int32_t>((generated_noise_samples_ + target_timestamp)
+    if (static_cast<int32_t>((generated_noise_samples + target_timestamp)
         - available_timestamp) >= 0) {
       return kNormal;
     } else {
       // If currently playing comfort noise, continue with that. Do not
-      // increase the timestamp counter since generated_noise_samples_ will
-      // be increased.
+      // increase the timestamp counter since generated_noise_stopwatch_ in
+      // NetEqImpl will take care of the time-keeping.
       if (cng_state_ == kCngRfc3389On) {
         return kRfc3389CngNoPacket;
       } else if (cng_state_ == kCngInternalOn) {

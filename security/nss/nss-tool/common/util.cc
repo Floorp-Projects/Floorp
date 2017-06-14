@@ -199,3 +199,18 @@ std::vector<uint8_t> ReadInputData(std::string dataPath) {
 
   return data;
 }
+
+std::istream &GetStreamFromFileOrStdin(std::string &path, std::ifstream &ifs) {
+  if (path.empty()) {
+    return std::cin;
+  }
+
+  ifs.open(path, std::ifstream::binary);
+  if (!ifs.good()) {
+    std::cerr << "IO Error when opening " << path << std::endl;
+    std::cerr << "Input file does not exist or you don't have permissions."
+              << std::endl;
+  }
+
+  return ifs;
+}

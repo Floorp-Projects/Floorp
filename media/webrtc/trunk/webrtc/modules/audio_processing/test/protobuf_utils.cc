@@ -9,10 +9,11 @@
  */
 
 #include "webrtc/modules/audio_processing/test/protobuf_utils.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
-size_t ReadMessageBytesFromFile(FILE* file, rtc::scoped_ptr<uint8_t[]>* bytes) {
+size_t ReadMessageBytesFromFile(FILE* file, std::unique_ptr<uint8_t[]>* bytes) {
   // The "wire format" for the size is little-endian. Assume we're running on
   // a little-endian machine.
 #ifndef WEBRTC_ARCH_LITTLE_ENDIAN
@@ -30,7 +31,7 @@ size_t ReadMessageBytesFromFile(FILE* file, rtc::scoped_ptr<uint8_t[]>* bytes) {
 
 // Returns true on success, false on error or end-of-file.
 bool ReadMessageFromFile(FILE* file, ::google::protobuf::MessageLite* msg) {
-  rtc::scoped_ptr<uint8_t[]> bytes;
+  std::unique_ptr<uint8_t[]> bytes;
   size_t size = ReadMessageBytesFromFile(file, &bytes);
   if (!size)
     return false;

@@ -17,6 +17,7 @@
 
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/modules/audio_coding/neteq/audio_multi_vector.h"
+#include "webrtc/modules/audio_coding/neteq/cross_correlation.h"
 #include "webrtc/modules/audio_coding/neteq/post_decode_vad.h"
 
 namespace webrtc {
@@ -58,10 +59,7 @@ void BackgroundNoise::Update(const AudioMultiVector& input,
     ChannelParameters& parameters = channel_parameters_[channel_ix];
     int16_t temp_signal_array[kVecLen + kMaxLpcOrder] = {0};
     int16_t* temp_signal = &temp_signal_array[kMaxLpcOrder];
-    memcpy(temp_signal,
-           &input[channel_ix][input.Size() - kVecLen],
-           sizeof(int16_t) * kVecLen);
-
+    input[channel_ix].CopyTo(kVecLen, input.Size() - kVecLen, temp_signal);
     int32_t sample_energy = CalculateAutoCorrelation(temp_signal, kVecLen,
                                                      auto_correlation);
 
@@ -169,15 +167,10 @@ int16_t BackgroundNoise::ScaleShift(size_t channel) const {
 
 int32_t BackgroundNoise::CalculateAutoCorrelation(
     const int16_t* signal, size_t length, int32_t* auto_correlation) const {
-  int16_t signal_max = WebRtcSpl_MaxAbsValueW16(signal, length);
-  int correlation_scale = kLogVecLen -
-      WebRtcSpl_NormW32(signal_max * signal_max);
-  correlation_scale = std::max(0, correlation_scale);
-
   static const int kCorrelationStep = -1;
-  WebRtcSpl_CrossCorrelation(auto_correlation, signal, signal, length,
-                             kMaxLpcOrder + 1, correlation_scale,
-                             kCorrelationStep);
+  const int correlation_scale =
+      CrossCorrelationWithAutoShift(signal, signal, length, kMaxLpcOrder + 1,
+                                    kCorrelationStep, auto_correlation);
 
   // Number of shifts to normalize energy to energy/sample.
   int energy_sample_shift = kLogVecLen - correlation_scale;

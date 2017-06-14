@@ -215,8 +215,7 @@ int HandleCommandLineFlags(webrtc::test::TestConfig* config) {
             FLAGS_temporal_layers);
     return 13;
   }
-  config->codec_settings->codecSpecific.VP8.numberOfTemporalLayers =
-      FLAGS_temporal_layers;
+  config->codec_settings->VP8()->numberOfTemporalLayers = FLAGS_temporal_layers;
 
   // Check the bit rate.
   if (FLAGS_bitrate <= 0) {
@@ -413,7 +412,8 @@ void PrintPythonOutput(const webrtc::test::TestConfig& config,
       ExcludeFrameTypesToStr(config.exclude_frame_types),
       config.frame_length_in_bytes, config.use_single_core ? "True " : "False",
       config.keyframe_interval,
-      webrtc::test::VideoCodecTypeToStr(config.codec_settings->codecType),
+      CodecTypeToPayloadName(config.codec_settings->codecType)
+          .value_or("Unknown"),
       config.codec_settings->width, config.codec_settings->height,
       config.codec_settings->startBitrate);
   printf(

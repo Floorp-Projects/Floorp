@@ -59,11 +59,7 @@ bool IsXImageRGBFormat(XImage* image) {
 
 namespace webrtc {
 
-XServerPixelBuffer::XServerPixelBuffer()
-    : display_(NULL), window_(0),
-      x_image_(NULL),
-      shm_segment_info_(NULL), shm_pixmap_(0), shm_gc_(NULL) {
-}
+XServerPixelBuffer::XServerPixelBuffer() {}
 
 XServerPixelBuffer::~XServerPixelBuffer() {
   Release();
@@ -229,18 +225,20 @@ void XServerPixelBuffer::Synchronize() {
   if (shm_segment_info_ && !shm_pixmap_) {
     // XShmGetImage can fail if the display is being reconfigured.
     XErrorTrap error_trap(display_);
-    XShmGetImage(display_, window_, x_image_, 0, 0, AllPlanes);
+    // XShmGetImage fails if the window is partially out of screen.
+    xshm_get_image_succeeded_ =
+        XShmGetImage(display_, window_, x_image_, 0, 0, AllPlanes);
   }
 }
 
-void XServerPixelBuffer::CaptureRect(const DesktopRect& rect,
+bool XServerPixelBuffer::CaptureRect(const DesktopRect& rect,
                                      DesktopFrame* frame) {
   assert(rect.right() <= window_size_.width());
   assert(rect.bottom() <= window_size_.height());
 
   uint8_t* data;
 
-  if (shm_segment_info_) {
+  if (shm_segment_info_ && (shm_pixmap_ || xshm_get_image_succeeded_)) {
     if (shm_pixmap_) {
       XCopyArea(display_, window_, shm_pixmap_, shm_gc_,
                 rect.left(), rect.top(), rect.width(), rect.height(),
@@ -255,6 +253,9 @@ void XServerPixelBuffer::CaptureRect(const DesktopRect& rect,
       XDestroyImage(x_image_);
     x_image_ = XGetImage(display_, window_, rect.left(), rect.top(),
                          rect.width(), rect.height(), AllPlanes, ZPixmap);
+    if (!x_image_)
+      return false;
+
     data = reinterpret_cast<uint8_t*>(x_image_->data);
   }
 
@@ -263,6 +264,8 @@ void XServerPixelBuffer::CaptureRect(const DesktopRect& rect,
   } else {
     SlowBlit(data, rect, frame);
   }
+
+  return true;
 }
 
 void XServerPixelBuffer::FastBlit(uint8_t* image,

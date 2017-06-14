@@ -11,188 +11,241 @@
 #ifndef WEBRTC_VIDEO_VIE_ENCODER_H_
 #define WEBRTC_VIDEO_VIE_ENCODER_H_
 
-#include <map>
+#include <memory>
+#include <string>
 #include <vector>
 
-#include "webrtc/base/scoped_ptr.h"
-#include "webrtc/base/scoped_ref_ptr.h"
-#include "webrtc/base/thread_annotations.h"
-#include "webrtc/call/bitrate_allocator.h"
+#include "webrtc/api/video/video_rotation.h"
+#include "webrtc/base/criticalsection.h"
+#include "webrtc/base/event.h"
+#include "webrtc/base/sequenced_task_checker.h"
+#include "webrtc/base/task_queue.h"
+#include "webrtc/call/call.h"
 #include "webrtc/common_types.h"
-#include "webrtc/frame_callback.h"
-#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "webrtc/common_video/include/video_bitrate_allocator.h"
+#include "webrtc/media/base/videosinkinterface.h"
 #include "webrtc/modules/video_coding/include/video_coding_defines.h"
-#include "webrtc/modules/video_processing/include/video_processing.h"
+#include "webrtc/modules/video_coding/utility/quality_scaler.h"
+#include "webrtc/modules/video_coding/video_coding_impl.h"
+#include "webrtc/system_wrappers/include/atomic32.h"
 #include "webrtc/typedefs.h"
-#include "webrtc/video/video_capture_input.h"
+#include "webrtc/video/overuse_frame_detector.h"
+#include "webrtc/video_encoder.h"
+#include "webrtc/video_send_stream.h"
 
 namespace webrtc {
 
-class BitrateAllocator;
-class BitrateObserver;
-class Config;
-class CriticalSectionWrapper;
-class EncodedImageCallback;
-class PacedSender;
-class PayloadRouter;
 class ProcessThread;
-class QMVideoSettingsCallback;
 class SendStatisticsProxy;
-class ViEBitrateObserver;
-class ViEEffectFilter;
-class VideoCodingModule;
+class VideoBitrateAllocationObserver;
 
-class ViEEncoder : public RtcpIntraFrameObserver,
-                   public VideoEncoderRateObserver,
-                   public VCMPacketizationCallback,
+// VieEncoder represent a video encoder that accepts raw video frames as input
+// and produces an encoded bit stream.
+// Usage:
+//  Instantiate.
+//  Call SetSink.
+//  Call SetSource.
+//  Call ConfigureEncoder with the codec settings.
+//  Call Stop() when done.
+class ViEEncoder : public rtc::VideoSinkInterface<VideoFrame>,
+                   public EncodedImageCallback,
                    public VCMSendStatisticsCallback,
                    public CPULoadStateObserver,
-                   public VideoCaptureCallback {
+                   public ScalingObserverInterface {
  public:
-  friend class ViEBitrateObserver;
+  // Interface for receiving encoded video frames and notifications about
+  // configuration changes.
+  class EncoderSink : public EncodedImageCallback {
+   public:
+    virtual void OnEncoderConfigurationChanged(
+        std::vector<VideoStream> streams,
+        int min_transmit_bitrate_bps) = 0;
+  };
+
+  // Downscale resolution at most 2 times for CPU reasons.
+  static const int kMaxCpuDowngrades = 2;
 
   ViEEncoder(uint32_t number_of_cores,
-             ProcessThread* module_process_thread,
              SendStatisticsProxy* stats_proxy,
-             I420FrameCallback* pre_encode_callback,
-             PacedSender* pacer,
-             BitrateAllocator* bitrate_allocator);
+             const VideoSendStream::Config::EncoderSettings& settings,
+             rtc::VideoSinkInterface<VideoFrame>* pre_encode_callback,
+             EncodedFrameObserver* encoder_timing);
   ~ViEEncoder();
+  // RegisterProcessThread register |module_process_thread| with those objects
+  // that use it. Registration has to happen on the thread where
+  // |module_process_thread| was created (libjingle's worker thread).
+  // TODO(perkj): Replace the use of |module_process_thread| with a TaskQueue.
+  void RegisterProcessThread(ProcessThread* module_process_thread);
+  void DeRegisterProcessThread();
 
-  bool Init();
+  // Sets the source that will provide I420 video frames.
+  // |degradation_preference| control whether or not resolution or frame rate
+  // may be reduced.
+  void SetSource(
+      rtc::VideoSourceInterface<VideoFrame>* source,
+      const VideoSendStream::DegradationPreference& degradation_preference);
 
-  // This function is assumed to be called before any frames are delivered and
-  // only once.
-  // Ideally this would be done in Init, but the dependencies between ViEEncoder
-  // and ViEChannel makes it really hard to do in a good way.
-  void StartThreadsAndSetSharedMembers(
-      rtc::scoped_refptr<PayloadRouter> send_payload_router,
-      VCMProtectionCallback* vcm_protection_callback);
+  // Sets the |sink| that gets the encoded frames. |rotation_applied| means
+  // that the source must support rotation. Only set |rotation_applied| if the
+  // remote side does not support the rotation extension.
+  void SetSink(EncoderSink* sink, bool rotation_applied);
 
-  // This function must be called before the corresponding ViEChannel is
-  // deleted.
-  void StopThreadsAndRemoveSharedMembers();
+  // TODO(perkj): Can we remove VideoCodec.startBitrate ?
+  void SetStartBitrate(int start_bitrate_bps);
 
-  void SetNetworkTransmissionState(bool is_transmitting);
+  void SetBitrateObserver(VideoBitrateAllocationObserver* bitrate_observer);
 
-  // Returns the id of the owning channel.
-  int Owner() const;
+  void ConfigureEncoder(VideoEncoderConfig config,
+                        size_t max_data_payload_length,
+                        bool nack_enabled);
+
+  // Permanently stop encoding. After this method has returned, it is
+  // guaranteed that no encoded frames will be delivered to the sink.
+  void Stop();
+
+  void SendKeyFrame();
+
+  // virtual to test EncoderStateFeedback with mocks.
+  virtual void OnReceivedIntraFrameRequest(size_t stream_index);
+  virtual void OnReceivedSLI(uint8_t picture_id);
+  virtual void OnReceivedRPSI(uint64_t picture_id);
+
+  void OnBitrateUpdated(uint32_t bitrate_bps,
+                        uint8_t fraction_lost,
+                        int64_t round_trip_time_ms);
 
   // CPULoadStateObserver interface
   void onLoadStateChanged(CPULoadState state) override;
 
-  // Drops incoming packets before they get to the encoder.
-  void Pause();
-  void Restart();
-
-  // Codec settings.
-  int32_t RegisterExternalEncoder(VideoEncoder* encoder,
-                                  uint8_t pl_type,
-                                  bool internal_source);
-  int32_t DeRegisterExternalEncoder(uint8_t pl_type);
-  int32_t SetEncoder(const VideoCodec& video_codec);
-
-  // Implementing VideoCaptureCallback.
-  void DeliverFrame(VideoFrame video_frame) override;
-
-  int32_t SendKeyFrame();
-
-  uint32_t LastObservedBitrateBps() const;
-  int CodecTargetBitrate(uint32_t* bitrate) const;
-  // Loss protection. Must be called before SetEncoder() to have max packet size
-  // updated according to protection.
-  // TODO(pbos): Set protection method on construction or extract vcm_ outside
-  // this class and set it on construction there.
-  void SetProtectionMethod(bool nack, bool fec);
-
-  // Buffering mode.
-  void SetSenderBufferingMode(int target_delay_ms);
-
-  // Implements VideoEncoderRateObserver.
-  void OnSetRates(uint32_t bitrate_bps, int framerate) override;
-
-  // Implements VCMPacketizationCallback.
-  int32_t SendData(uint8_t payload_type,
-                   const EncodedImage& encoded_image,
-                   const RTPFragmentationHeader& fragmentation_header,
-                   const RTPVideoHeader* rtp_video_hdr) override;
-  void OnEncoderImplementationName(const char* implementation_name) override;
-
-  // Implements VideoSendStatisticsCallback.
-  int32_t SendStatistics(const uint32_t bit_rate,
-                         const uint32_t frame_rate) override;
-
-  // Implements RtcpIntraFrameObserver.
-  void OnReceivedIntraFrameRequest(uint32_t ssrc) override;
-  void OnReceivedSLI(uint32_t ssrc, uint8_t picture_id) override;
-  void OnReceivedRPSI(uint32_t ssrc, uint64_t picture_id) override;
-  void OnLocalSsrcChanged(uint32_t old_ssrc, uint32_t new_ssrc) override;
-
-  // Sets SSRCs for all streams.
-  void SetSsrcs(const std::vector<uint32_t>& ssrcs);
-
-  void SetMinTransmitBitrate(int min_transmit_bitrate_kbps);
-
-  // Lets the sender suspend video when the rate drops below
-  // |threshold_bps|, and turns back on when the rate goes back up above
-  // |threshold_bps| + |window_bps|.
-  void SuspendBelowMinBitrate();
-
-  // New-style callbacks, used by VideoSendStream.
-  void RegisterPostEncodeImageCallback(
-        EncodedImageCallback* post_encode_callback);
-
-  int GetPaddingNeededBps() const;
-
  protected:
-  // Called by BitrateObserver.
-  void OnNetworkChanged(uint32_t bitrate_bps,
-                        uint8_t fraction_lost,
-                        int64_t round_trip_time_ms);
+  // Used for testing. For example the |ScalingObserverInterface| methods must
+  // be called on |encoder_queue_|.
+  rtc::TaskQueue* encoder_queue() { return &encoder_queue_; }
+
+  // webrtc::ScalingObserverInterface implementation.
+  // These methods are protected for easier testing.
+  void ScaleUp(ScaleReason reason) override;
+  void ScaleDown(ScaleReason reason) override;
 
  private:
-  bool EncoderPaused() const EXCLUSIVE_LOCKS_REQUIRED(data_cs_);
-  void TraceFrameDropStart() EXCLUSIVE_LOCKS_REQUIRED(data_cs_);
-  void TraceFrameDropEnd() EXCLUSIVE_LOCKS_REQUIRED(data_cs_);
+  class ConfigureEncoderTask;
+  class EncodeTask;
+  class VideoSourceProxy;
+
+  class VideoFrameInfo {
+   public:
+    VideoFrameInfo(int width,
+                   int height,
+                   VideoRotation rotation,
+                   bool is_texture)
+        : width(width),
+          height(height),
+          rotation(rotation),
+          is_texture(is_texture) {}
+    int width;
+    int height;
+    VideoRotation rotation;
+    bool is_texture;
+    int pixel_count() const { return width * height; }
+  };
+
+  void ConfigureEncoderOnTaskQueue(VideoEncoderConfig config,
+                                   size_t max_data_payload_length,
+                                   bool nack_enabled);
+  void ReconfigureEncoder();
+
+  // Implements VideoSinkInterface.
+  void OnFrame(const VideoFrame& video_frame) override;
+
+  // Implements VideoSendStatisticsCallback.
+  void SendStatistics(uint32_t bit_rate,
+                      uint32_t frame_rate) override;
+
+  void EncodeVideoFrame(const VideoFrame& frame,
+                        int64_t time_when_posted_in_ms);
+
+  // Implements EncodedImageCallback.
+  EncodedImageCallback::Result OnEncodedImage(
+      const EncodedImage& encoded_image,
+      const CodecSpecificInfo* codec_specific_info,
+      const RTPFragmentationHeader* fragmentation) override;
+
+  void OnDroppedFrame() override;
+
+  bool EncoderPaused() const;
+  void TraceFrameDropStart();
+  void TraceFrameDropEnd();
+
+  rtc::Event shutdown_event_;
 
   const uint32_t number_of_cores_;
 
-  const rtc::scoped_ptr<VideoProcessing> vp_;
-  const rtc::scoped_ptr<QMVideoSettingsCallback> qm_callback_;
-  const rtc::scoped_ptr<VideoCodingModule> vcm_;
-  rtc::scoped_refptr<PayloadRouter> send_payload_router_;
+  const std::unique_ptr<VideoSourceProxy> source_proxy_;
+  EncoderSink* sink_;
+  const VideoSendStream::Config::EncoderSettings settings_;
+  const VideoCodecType codec_type_;
 
-  rtc::scoped_ptr<CriticalSectionWrapper> data_cs_;
-  rtc::scoped_ptr<BitrateObserver> bitrate_observer_;
+  vcm::VideoSender video_sender_ ACCESS_ON(&encoder_queue_);
+  OveruseFrameDetector overuse_detector_ ACCESS_ON(&encoder_queue_);
+  std::unique_ptr<QualityScaler> quality_scaler_ ACCESS_ON(&encoder_queue_);
 
   SendStatisticsProxy* const stats_proxy_;
-  I420FrameCallback* const pre_encode_callback_;
-  PacedSender* const pacer_;
-  BitrateAllocator* const bitrate_allocator_;
-
-  // The time we last received an input frame or encoded frame. This is used to
-  // track when video is stopped long enough that we also want to stop sending
-  // padding.
-  int64_t time_of_last_frame_activity_ms_ GUARDED_BY(data_cs_);
-  VideoCodec encoder_config_ GUARDED_BY(data_cs_);
-  int min_transmit_bitrate_kbps_ GUARDED_BY(data_cs_);
-  uint32_t last_observed_bitrate_bps_ GUARDED_BY(data_cs_);
-  int target_delay_ms_ GUARDED_BY(data_cs_);
-  bool network_is_transmitting_ GUARDED_BY(data_cs_);
-  bool encoder_paused_ GUARDED_BY(data_cs_);
-  bool encoder_paused_and_dropped_frame_ GUARDED_BY(data_cs_);
-  std::map<unsigned int, int64_t> time_last_intra_request_ms_
-      GUARDED_BY(data_cs_);
-
+  rtc::VideoSinkInterface<VideoFrame>* const pre_encode_callback_;
   ProcessThread* module_process_thread_;
+  rtc::ThreadChecker module_process_thread_checker_;
+  // |thread_checker_| checks that public methods that are related to lifetime
+  // of ViEEncoder are called on the same thread.
+  rtc::ThreadChecker thread_checker_;
 
-  bool has_received_sli_ GUARDED_BY(data_cs_);
-  uint8_t picture_id_sli_ GUARDED_BY(data_cs_);
-  bool has_received_rpsi_ GUARDED_BY(data_cs_);
-  uint64_t picture_id_rpsi_ GUARDED_BY(data_cs_);
-  std::map<uint32_t, int> ssrc_streams_ GUARDED_BY(data_cs_);
+  VideoEncoderConfig encoder_config_ ACCESS_ON(&encoder_queue_);
+  std::unique_ptr<VideoBitrateAllocator> rate_allocator_
+      ACCESS_ON(&encoder_queue_);
 
-  bool video_suspended_ GUARDED_BY(data_cs_);
+  // Set when ConfigureEncoder has been called in order to lazy reconfigure the
+  // encoder on the next frame.
+  bool pending_encoder_reconfiguration_ ACCESS_ON(&encoder_queue_);
+  rtc::Optional<VideoFrameInfo> last_frame_info_ ACCESS_ON(&encoder_queue_);
+  uint32_t encoder_start_bitrate_bps_ ACCESS_ON(&encoder_queue_);
+  size_t max_data_payload_length_ ACCESS_ON(&encoder_queue_);
+  bool nack_enabled_ ACCESS_ON(&encoder_queue_);
+  uint32_t last_observed_bitrate_bps_ ACCESS_ON(&encoder_queue_);
+  bool encoder_paused_and_dropped_frame_ ACCESS_ON(&encoder_queue_);
+  bool has_received_sli_ ACCESS_ON(&encoder_queue_);
+  uint8_t picture_id_sli_ ACCESS_ON(&encoder_queue_);
+  bool has_received_rpsi_ ACCESS_ON(&encoder_queue_);
+  uint64_t picture_id_rpsi_ ACCESS_ON(&encoder_queue_);
+  Clock* const clock_;
+  // Counters used for deciding if the video resolution is currently
+  // restricted, and if so, why.
+  std::vector<int> scale_counter_ ACCESS_ON(&encoder_queue_);
+  // Set depending on degradation preferences
+  bool scaling_enabled_ ACCESS_ON(&encoder_queue_) = false;
+
+  // Pixel count last time the resolution was requested to be changed down.
+  rtc::Optional<int> max_pixel_count_ ACCESS_ON(&encoder_queue_);
+  // Pixel count last time the resolution was requested to be changed up.
+  rtc::Optional<int> max_pixel_count_step_up_ ACCESS_ON(&encoder_queue_);
+
+  rtc::RaceChecker incoming_frame_race_checker_
+      GUARDED_BY(incoming_frame_race_checker_);
+  Atomic32 posted_frames_waiting_for_encode_;
+  // Used to make sure incoming time stamp is increasing for every frame.
+  int64_t last_captured_timestamp_ GUARDED_BY(incoming_frame_race_checker_);
+  // Delta used for translating between NTP and internal timestamps.
+  const int64_t delta_ntp_internal_ms_ GUARDED_BY(incoming_frame_race_checker_);
+
+  int64_t last_frame_log_ms_ GUARDED_BY(incoming_frame_race_checker_);
+  int captured_frame_count_ ACCESS_ON(&encoder_queue_);
+  int dropped_frame_count_ ACCESS_ON(&encoder_queue_);
+
+  VideoBitrateAllocationObserver* bitrate_observer_ ACCESS_ON(&encoder_queue_);
+  rtc::Optional<int64_t> last_parameters_update_ms_ ACCESS_ON(&encoder_queue_);
+
+  // All public methods are proxied to |encoder_queue_|. It must must be
+  // destroyed first to make sure no tasks are run that use other members.
+  rtc::TaskQueue encoder_queue_;
+
+  RTC_DISALLOW_COPY_AND_ASSIGN(ViEEncoder);
 };
 
 }  // namespace webrtc

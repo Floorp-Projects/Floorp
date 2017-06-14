@@ -96,6 +96,8 @@
 #include "xpcpublic.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
+#include "nsXULTemplateBuilder.h"
+#include "nsXULTreeBuilder.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3658,7 +3660,7 @@ XULDocument::CheckTemplateBuilderHookup(nsIContent* aElement,
 }
 
 /* static */ nsresult
-XULDocument::CreateTemplateBuilder(nsIContent* aElement)
+XULDocument::CreateTemplateBuilder(Element* aElement)
 {
     // Check if need to construct a tree builder or content builder.
     bool isTreeBuilder = false;
@@ -3687,13 +3689,9 @@ XULDocument::CreateTemplateBuilder(nsIContent* aElement)
 
     if (isTreeBuilder) {
         // Create and initialize a tree builder.
-        nsCOMPtr<nsIXULTemplateBuilder> builder =
-            do_CreateInstance("@mozilla.org/xul/xul-tree-builder;1");
-
-        if (! builder)
-            return NS_ERROR_FAILURE;
-
-        builder->Init(aElement);
+        RefPtr<nsXULTreeBuilder> builder = new nsXULTreeBuilder(aElement);
+        nsresult rv = builder->Init();
+        NS_ENSURE_SUCCESS(rv, rv);
 
         // Create a <treechildren> if one isn't there already.
         // XXXvarga what about attributes?
@@ -3712,13 +3710,10 @@ XULDocument::CreateTemplateBuilder(nsIContent* aElement)
     }
     else {
         // Create and initialize a content builder.
-        nsCOMPtr<nsIXULTemplateBuilder> builder
-            = do_CreateInstance("@mozilla.org/xul/xul-template-builder;1");
+        nsCOMPtr<nsIXULTemplateBuilder> builder;
+        nsresult rv = NS_NewXULContentBuilder(aElement, getter_AddRefs(builder));
+        NS_ENSURE_SUCCESS(rv, rv);
 
-        if (! builder)
-            return NS_ERROR_FAILURE;
-
-        builder->Init(aElement);
         builder->CreateContents(aElement, false);
     }
 

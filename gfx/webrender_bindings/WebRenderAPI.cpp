@@ -72,6 +72,7 @@ public:
 
     WrRenderer* wrRenderer = nullptr;
     if (!wr_window_new(aWindowId, mSize.width, mSize.height, gl.get(),
+                       aRenderThread.ThreadPool().Raw(),
                        this->mEnableProfiler, mWrApi, &wrRenderer)) {
       // wr_window_new puts a message into gfxCriticalNote if it returns false
       return;

@@ -20,6 +20,9 @@ DesktopRegion::RowSpan::RowSpan(int32_t left, int32_t right)
     : left(left), right(right) {
 }
 
+DesktopRegion::Row::Row(const Row&) = default;
+DesktopRegion::Row::Row(Row&&) = default;
+
 DesktopRegion::Row::Row(int32_t top, int32_t bottom)
     : top(top), bottom(bottom) {
 }

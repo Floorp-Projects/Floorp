@@ -12,8 +12,7 @@
 
 namespace webrtc {
 
-LockedIsacBandwidthInfo::LockedIsacBandwidthInfo()
-      : lock_(CriticalSectionWrapper::CreateCriticalSection()) {
+LockedIsacBandwidthInfo::LockedIsacBandwidthInfo() : ref_count_(0) {
   bwinfo_.in_use = 0;
 }
 

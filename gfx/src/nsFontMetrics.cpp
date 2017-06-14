@@ -6,6 +6,7 @@
 #include "nsFontMetrics.h"
 #include <math.h>                       // for floor, ceil
 #include <algorithm>                    // for max
+#include "gfxContext.h"                 // for gfxContext
 #include "gfxFontConstants.h"           // for NS_FONT_SYNTHESIS_*
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxPoint.h"                   // for gfxPoint
@@ -16,7 +17,6 @@
 #include "nsDeviceContext.h"            // for nsDeviceContext
 #include "nsIAtom.h"                    // for nsIAtom
 #include "nsMathUtils.h"                // for NS_round
-#include "nsRenderingContext.h"         // for nsRenderingContext
 #include "nsString.h"                   // for nsString
 #include "nsStyleConsts.h"              // for StyleHyphens::None
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT
@@ -354,7 +354,7 @@ nsFontMetrics::GetWidth(const char16_t* aString, uint32_t aLength,
 void
 nsFontMetrics::DrawString(const char *aString, uint32_t aLength,
                           nscoord aX, nscoord aY,
-                          nsRenderingContext *aContext)
+                          gfxContext *aContext)
 {
     if (aLength == 0)
         return;
@@ -373,7 +373,7 @@ nsFontMetrics::DrawString(const char *aString, uint32_t aLength,
             pt.x += textRun->GetAdvanceWidth(range, &provider);
         }
     }
-    gfxTextRun::DrawParams params(aContext->ThebesContext());
+    gfxTextRun::DrawParams params(aContext);
     params.provider = &provider;
     textRun->Draw(range, pt, params);
 }
@@ -381,7 +381,7 @@ nsFontMetrics::DrawString(const char *aString, uint32_t aLength,
 void
 nsFontMetrics::DrawString(const char16_t* aString, uint32_t aLength,
                           nscoord aX, nscoord aY,
-                          nsRenderingContext *aContext,
+                          gfxContext *aContext,
                           DrawTarget* aTextRunConstructionDrawTarget)
 {
     if (aLength == 0)
@@ -401,7 +401,7 @@ nsFontMetrics::DrawString(const char16_t* aString, uint32_t aLength,
             pt.x += textRun->GetAdvanceWidth(range, &provider);
         }
     }
-    gfxTextRun::DrawParams params(aContext->ThebesContext());
+    gfxTextRun::DrawParams params(aContext);
     params.provider = &provider;
     textRun->Draw(range, pt, params);
 }

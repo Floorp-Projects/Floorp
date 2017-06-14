@@ -57,10 +57,10 @@ SECStatus tls13_HandleClientHelloPart2(sslSocket *ss,
                                        const SECItem *suites,
                                        sslSessionID *sid);
 SECStatus tls13_HandleServerHelloPart2(sslSocket *ss);
-SECStatus tls13_HandlePostHelloHandshakeMessage(sslSocket *ss, SSL3Opaque *b,
+SECStatus tls13_HandlePostHelloHandshakeMessage(sslSocket *ss, PRUint8 *b,
                                                 PRUint32 length,
                                                 SSL3Hashes *hashesPtr);
-SECStatus tls13_HandleHelloRetryRequest(sslSocket *ss, SSL3Opaque *b,
+SECStatus tls13_HandleHelloRetryRequest(sslSocket *ss, PRUint8 *b,
                                         PRUint32 length);
 void tls13_DestroyKeyShareEntry(TLS13KeyShareEntry *entry);
 void tls13_DestroyKeyShares(PRCList *list);
@@ -73,7 +73,7 @@ PRBool tls13_ExtensionAllowed(PRUint16 extension, SSL3HandshakeType message);
 SECStatus tls13_ProtectRecord(sslSocket *ss,
                               ssl3CipherSpec *cwSpec,
                               SSL3ContentType type,
-                              const SSL3Opaque *pIn,
+                              const PRUint8 *pIn,
                               PRUint32 contentLen,
                               sslBuffer *wrBuf);
 PRInt32 tls13_Read0RttData(sslSocket *ss, void *buf, PRInt32 len);

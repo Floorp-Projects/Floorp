@@ -19,17 +19,17 @@
 #include <ostream>
 #include <string>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/platform_thread.h"
-#include "webrtc/common.h"
+#include "webrtc/base/timeutils.h"
 #include "webrtc/common_types.h"
-#include "webrtc/engine_configurations.h"
 #include "webrtc/modules/audio_coding/acm2/acm_common_defs.h"
+#include "webrtc/modules/audio_coding/codecs/audio_format_conversion.h"
 #include "webrtc/modules/audio_coding/test/utility.h"
 #include "webrtc/system_wrappers/include/event_wrapper.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
 #include "webrtc/system_wrappers/include/trace.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -48,7 +48,7 @@ void APITest::Wait(uint32_t waitLengthMs) {
   }
 }
 
-APITest::APITest(const Config& config)
+APITest::APITest()
     : _acmA(AudioCodingModule::Create(1)),
       _acmB(AudioCodingModule::Create(2)),
       _channel_A2B(NULL),
@@ -142,7 +142,8 @@ int16_t APITest::SetUp() {
       // Check registration with an already occupied payload type
       int currentPayloadType = dummyCodec.pltype;
       dummyCodec.pltype = 97;  //lastPayloadType;
-      CHECK_ERROR(_acmB->RegisterReceiveCodec(dummyCodec));
+      EXPECT_EQ(true, _acmB->RegisterReceiveCodec(dummyCodec.pltype,
+                                                  CodecInstToSdp(dummyCodec)));
       dummyCodec.pltype = currentPayloadType;
     }
 
@@ -153,7 +154,8 @@ int16_t APITest::SetUp() {
       AudioCodingModule::Codec(n + 1, &nextCodec);
       dummyCodec.pltype = nextCodec.pltype;
       if (!FixedPayloadTypeCodec(nextCodec.plname)) {
-        _acmB->RegisterReceiveCodec(dummyCodec);
+        _acmB->RegisterReceiveCodec(dummyCodec.pltype,
+                                    CodecInstToSdp(dummyCodec));
       }
       dummyCodec.pltype = currentPayloadType;
     }
@@ -164,14 +166,17 @@ int16_t APITest::SetUp() {
       AudioCodingModule::Codec(n + 1, &nextCodec);
       nextCodec.pltype = dummyCodec.pltype;
       if (!FixedPayloadTypeCodec(nextCodec.plname)) {
-        CHECK_ERROR_MT(_acmA->RegisterReceiveCodec(nextCodec));
+        EXPECT_EQ(true, _acmA->RegisterReceiveCodec(nextCodec.pltype,
+                                                    CodecInstToSdp(nextCodec)));
         CHECK_ERROR_MT(_acmA->UnregisterReceiveCodec(nextCodec.pltype));
       }
     }
 
-    CHECK_ERROR_MT(_acmA->RegisterReceiveCodec(dummyCodec));
+    EXPECT_EQ(true, _acmA->RegisterReceiveCodec(dummyCodec.pltype,
+                                                CodecInstToSdp(dummyCodec)));
     printf("   side A done!");
-    CHECK_ERROR_MT(_acmB->RegisterReceiveCodec(dummyCodec));
+    EXPECT_EQ(true, _acmB->RegisterReceiveCodec(dummyCodec.pltype,
+                                                CodecInstToSdp(dummyCodec)));
     printf("   side B done!\n");
 
     if (!strcmp(dummyCodec.plname, "CN")) {
@@ -323,7 +328,8 @@ bool APITest::APIThreadB(void* obj) {
 bool APITest::PullAudioRunA() {
   _pullEventA->Wait(100);
   AudioFrame audioFrame;
-  if (_acmA->PlayoutData10Ms(_outFreqHzA, &audioFrame) < 0) {
+  bool muted;
+  if (_acmA->PlayoutData10Ms(_outFreqHzA, &audioFrame, &muted) < 0) {
     bool thereIsDecoder;
     {
       ReadLockScoped rl(_apiTestRWLock);
@@ -343,7 +349,8 @@ bool APITest::PullAudioRunA() {
 bool APITest::PullAudioRunB() {
   _pullEventB->Wait(100);
   AudioFrame audioFrame;
-  if (_acmB->PlayoutData10Ms(_outFreqHzB, &audioFrame) < 0) {
+  bool muted;
+  if (_acmB->PlayoutData10Ms(_outFreqHzB, &audioFrame, &muted) < 0) {
     bool thereIsDecoder;
     {
       ReadLockScoped rl(_apiTestRWLock);
@@ -560,7 +567,7 @@ void APITest::Perform() {
   // Keep main thread waiting for sender/receiver
   // threads to complete
   EventWrapper* completeEvent = EventWrapper::Create();
-  uint64_t startTime = TickTime::MillisecondTimestamp();
+  uint64_t startTime = rtc::TimeMillis();
   uint64_t currentTime;
   // Run test in 2 minutes (120000 ms).
   do {
@@ -570,7 +577,7 @@ void APITest::Perform() {
     }
     //fflush(stderr);
     completeEvent->Wait(50);
-    currentTime = TickTime::MillisecondTimestamp();
+    currentTime = rtc::TimeMillis();
   } while ((currentTime - startTime) < 120000);
 
   //completeEvent->Wait(0xFFFFFFFF);
@@ -666,7 +673,6 @@ void APITest::TestDelay(char side) {
   EventTimerWrapper* myEvent = EventTimerWrapper::Create();
 
   uint32_t inTimestamp = 0;
-  uint32_t outTimestamp = 0;
   double estimDelay = 0;
 
   double averageEstimDelay = 0;
@@ -688,7 +694,8 @@ void APITest::TestDelay(char side) {
   CHECK_ERROR_MT(myACM->SetMinimumPlayoutDelay(*myMinDelay));
 
   inTimestamp = myChannel->LastInTimestamp();
-  CHECK_ERROR_MT(myACM->PlayoutTimestamp(&outTimestamp));
+  rtc::Optional<uint32_t> outTimestamp = myACM->PlayoutTimestamp();
+  CHECK_ERROR_MT(outTimestamp ? 0 : -1);
 
   if (!_randomTest) {
     myEvent->StartTimer(true, 30);
@@ -698,11 +705,12 @@ void APITest::TestDelay(char side) {
       myEvent->Wait(1000);
 
       inTimestamp = myChannel->LastInTimestamp();
-      CHECK_ERROR_MT(myACM->PlayoutTimestamp(&outTimestamp));
+      outTimestamp = myACM->PlayoutTimestamp();
+      CHECK_ERROR_MT(outTimestamp ? 0 : -1);
 
       //std::cout << outTimestamp << std::endl << std::flush;
-      estimDelay = (double) ((uint32_t)(inTimestamp - outTimestamp))
-          / ((double) myACM->ReceiveFrequency() / 1000.0);
+      estimDelay = (double)((uint32_t)(inTimestamp - *outTimestamp)) /
+                   ((double)myACM->ReceiveFrequency() / 1000.0);
 
       estimDelayCB.Update(estimDelay);
 
@@ -869,7 +877,8 @@ void APITest::TestRegisteration(char sendSide) {
                   "Register receive codec with default Payload, AUDIO BACK.\n");
           fflush (stdout);
         }
-        CHECK_ERROR_MT(receiveACM->RegisterReceiveCodec(*myCodec));
+        EXPECT_EQ(true, receiveACM->RegisterReceiveCodec(
+                            myCodec->pltype, CodecInstToSdp(*myCodec)));
         //CHECK_ERROR_MT(sendACM->RegisterSendCodec(*myCodec));
         myEvent->Wait(20);
         {
@@ -882,7 +891,8 @@ void APITest::TestRegisteration(char sendSide) {
       }
     }
     if (i == 32) {
-      CHECK_ERROR_MT(receiveACM->RegisterReceiveCodec(*myCodec));
+      EXPECT_EQ(true, receiveACM->RegisterReceiveCodec(
+                          myCodec->pltype, CodecInstToSdp(*myCodec)));
       {
         WriteLockScoped wl(_apiTestRWLock);
         *thereIsDecoder = true;
@@ -894,7 +904,8 @@ void APITest::TestRegisteration(char sendSide) {
               "Register receive codec with fixed Payload, AUDIO BACK.\n");
       fflush (stdout);
     }
-    CHECK_ERROR_MT(receiveACM->RegisterReceiveCodec(*myCodec));
+    EXPECT_EQ(true, receiveACM->RegisterReceiveCodec(myCodec->pltype,
+                                                     CodecInstToSdp(*myCodec)));
     //CHECK_ERROR_MT(receiveACM->UnregisterReceiveCodec(myCodec->pltype));
     //CHECK_ERROR_MT(receiveACM->RegisterReceiveCodec(*myCodec));
     myEvent->Wait(20);

@@ -10,7 +10,6 @@
 #include "nsTArray.h"
 #include "nsStubDocumentObserver.h"
 #include "nsITreeBoxObject.h"
-#include "nsITreeColumns.h"
 #include "nsITreeView.h"
 #include "nsITreeContentView.h"
 #include "nsITreeSelection.h"
@@ -18,20 +17,105 @@
 #include "mozilla/UniquePtr.h"
 
 class nsIDocument;
+class nsSelection;
+class nsTreeColumn;
 class Row;
+
+namespace mozilla {
+namespace dom {
+class DataTransfer;
+class TreeBoxObject;
+} // namespace dom
+} // namespace mozilla
 
 nsresult NS_NewTreeContentView(nsITreeView** aResult);
 
 class nsTreeContentView final : public nsINativeTreeView,
                                 public nsITreeContentView,
-                                public nsStubDocumentObserver
+                                public nsStubDocumentObserver,
+                                public nsWrapperCache
 {
   public:
     nsTreeContentView(void);
 
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsTreeContentView,
-                                             nsINativeTreeView)
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsTreeContentView,
+                                                           nsINativeTreeView)
+
+    virtual JSObject* WrapObject(JSContext* aCx,
+                                 JS::Handle<JSObject*> aGivenProto) override;
+    nsISupports* GetParentObject();
+
+    int32_t RowCount()
+    {
+        return mRows.Length();
+    }
+    nsITreeSelection* GetSelection()
+    {
+        return mSelection;
+    }
+    void SetSelection(nsITreeSelection* aSelection,
+                      mozilla::ErrorResult& aError);
+    void GetRowProperties(int32_t aRow, nsAString& aProperties,
+                          mozilla::ErrorResult& aError);
+    void GetCellProperties(int32_t aRow, nsTreeColumn& aColumn,
+                           nsAString& aProperies, mozilla::ErrorResult& aError);
+    void GetColumnProperties(nsTreeColumn& aColumn, nsAString& aProperies);
+    bool IsContainer(int32_t aRow, mozilla::ErrorResult& aError);
+    bool IsContainerOpen(int32_t aRow, mozilla::ErrorResult& aError);
+    bool IsContainerEmpty(int32_t aRow, mozilla::ErrorResult& aError);
+    bool IsSeparator(int32_t aRow, mozilla::ErrorResult& aError);
+    bool IsSorted()
+    {
+        return false;
+    }
+    bool CanDrop(int32_t aRow, int32_t aOrientation,
+                 mozilla::dom::DataTransfer* aDataTransfer,
+                 mozilla::ErrorResult& aError);
+    void Drop(int32_t aRow, int32_t aOrientation,
+              mozilla::dom::DataTransfer* aDataTransfer,
+              mozilla::ErrorResult& aError);
+    int32_t GetParentIndex(int32_t aRow, mozilla::ErrorResult& aError);
+    bool HasNextSibling(int32_t aRow, int32_t aAfterIndex,
+                        mozilla::ErrorResult& aError);
+    int32_t GetLevel(int32_t aRow, mozilla::ErrorResult& aError);
+    void GetImageSrc(int32_t aRow, nsTreeColumn& aColumn, nsAString& aSrc,
+                     mozilla::ErrorResult& aError);
+    int32_t GetProgressMode(int32_t aRow, nsTreeColumn& aColumn,
+                            mozilla::ErrorResult& aError);
+    void GetCellValue(int32_t aRow, nsTreeColumn& aColumn, nsAString& aValue,
+                      mozilla::ErrorResult& aError);
+    void GetCellText(int32_t aRow, nsTreeColumn& aColumn, nsAString& aText,
+                     mozilla::ErrorResult& aError);
+    void SetTree(mozilla::dom::TreeBoxObject* aTree,
+                 mozilla::ErrorResult& aError);
+    void ToggleOpenState(int32_t aRow, mozilla::ErrorResult& aError);
+    void CycleHeader(nsTreeColumn& aColumn, mozilla::ErrorResult& aError);
+    // XPCOM SelectionChanged() is OK
+    void CycleCell(int32_t aRow, nsTreeColumn& aColumn)
+    {
+    }
+    bool IsEditable(int32_t aRow, nsTreeColumn& aColumn,
+                    mozilla::ErrorResult& aError);
+    bool IsSelectable(int32_t aRow, nsTreeColumn& aColumn,
+                      mozilla::ErrorResult& aError);
+    void SetCellValue(int32_t aRow, nsTreeColumn& aColumn,
+                      const nsAString& aValue, mozilla::ErrorResult& aError);
+    void SetCellText(int32_t aRow, nsTreeColumn& aColumn,
+                      const nsAString& aText, mozilla::ErrorResult& aError);
+    void PerformAction(const nsAString& aAction)
+    {
+    }
+    void PerformActionOnRow(const nsAString& aAction, int32_t aRow)
+    {
+    }
+    void PerformActionOnCell(const nsAString& aAction, int32_t aRow,
+                             nsTreeColumn& aColumn)
+    {
+    }
+    mozilla::dom::Element* GetItemAtIndex(int32_t aRow,
+                                          mozilla::ErrorResult& aError);
+    int32_t GetIndexOfItem(mozilla::dom::Element* aItem);
 
     NS_DECL_NSITREEVIEW
     // nsINativeTreeView: Untrusted code can use us
@@ -55,10 +139,10 @@ class nsTreeContentView final : public nsINativeTreeView,
     void Serialize(nsIContent* aContent, int32_t aParentIndex, int32_t* aIndex,
                    nsTArray<mozilla::UniquePtr<Row>>& aRows);
 
-    void SerializeItem(nsIContent* aContent, int32_t aParentIndex,
+    void SerializeItem(Element* aContent, int32_t aParentIndex,
                        int32_t* aIndex, nsTArray<mozilla::UniquePtr<Row>>& aRows);
 
-    void SerializeSeparator(nsIContent* aContent, int32_t aParentIndex,
+    void SerializeSeparator(Element* aContent, int32_t aParentIndex,
                             int32_t* aIndex, nsTArray<mozilla::UniquePtr<Row>>& aRows);
 
     void GetIndexInSubtree(nsIContent* aContainer, nsIContent* aContent, int32_t* aResult);
@@ -87,9 +171,11 @@ class nsTreeContentView final : public nsINativeTreeView,
     void UpdateParentIndexes(int32_t aIndex, int32_t aSkip, int32_t aCount);
 
     // Content helpers.
-    nsIContent* GetCell(nsIContent* aContainer, nsITreeColumn* aCol);
+    nsIContent* GetCell(nsIContent* aContainer, nsTreeColumn& aCol);
 
   private:
+    bool IsValidRowIndex(int32_t aRowIndex);
+
     nsCOMPtr<nsITreeBoxObject>          mBoxObject;
     nsCOMPtr<nsITreeSelection>          mSelection;
     nsCOMPtr<nsIContent>                mRoot;

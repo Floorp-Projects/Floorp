@@ -1445,6 +1445,7 @@ PeerConnectionWrapper.prototype = {
    *        Returns a promise which yields a StatsReport object with RTP stats.
    */
   async waitForRtpFlow(track) {
+    info("waitForRtpFlow("+track.id+")");
     let hasFlow = (stats, retries) => {
       info("Checking for stats in " + JSON.stringify(stats) + " for " + track.kind
         + " track " + track.id + ", retry number " + retries);

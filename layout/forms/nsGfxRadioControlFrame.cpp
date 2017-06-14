@@ -6,11 +6,11 @@
 #include "nsGfxRadioControlFrame.h"
 
 #include "gfx2DGlue.h"
+#include "gfxContext.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "nsLayoutUtils.h"
-#include "nsRenderingContext.h"
 #include "nsDisplayList.h"
 
 using namespace mozilla;

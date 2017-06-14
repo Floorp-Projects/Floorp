@@ -18,7 +18,6 @@
 #include "nsDisplayList.h"
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
-#include "nsRenderingContext.h"
 #include "nsSVGEffects.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGMarkerFrame.h"
@@ -79,7 +78,7 @@ public:
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) override;
+                     gfxContext* aCtx) override;
 
   nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override
   {
@@ -110,7 +109,7 @@ nsDisplaySVGGeometry::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRec
 
 void
 nsDisplaySVGGeometry::Paint(nsDisplayListBuilder* aBuilder,
-                            nsRenderingContext* aCtx)
+                            gfxContext* aCtx)
 {
   uint32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
 
@@ -128,7 +127,7 @@ nsDisplaySVGGeometry::Paint(nsDisplayListBuilder* aBuilder,
                              ? imgIContainer::FLAG_SYNC_DECODE
                              : imgIContainer::FLAG_SYNC_DECODE_IF_FAST);
 
-  static_cast<SVGGeometryFrame*>(mFrame)->PaintSVG(*aCtx->ThebesContext(),
+  static_cast<SVGGeometryFrame*>(mFrame)->PaintSVG(*aCtx,
                                                    tm, imgParams);
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, imgParams.result);

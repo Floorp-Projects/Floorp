@@ -26,15 +26,15 @@ class VoEExternalMediaImpl : public VoEExternalMedia {
   int DeRegisterExternalMediaProcessing(int channel,
                                         ProcessingTypes type) override;
 
-  virtual int SetExternalRecordingStatus(bool enable);
+  virtual int SetExternalRecordingStatus(bool enable) override;
 
-  virtual int SetExternalPlayoutStatus(bool enable);
+  virtual int SetExternalPlayoutStatus(bool enable) override;
 
   virtual int ExternalRecordingInsertData(
         const int16_t speechData10ms[],
         int lengthSamples,
         int samplingFreqHz,
-        int current_delay_ms);
+        int current_delay_ms) override;
 
   // Insertion of far-end data as actually played out to the OS audio driver
   virtual int ExternalPlayoutData(
@@ -42,12 +42,12 @@ class VoEExternalMediaImpl : public VoEExternalMedia {
         int samplingFreqHz,
         int num_channels,
         int current_delay_ms,
-        int& lengthSamples);
+        int& lengthSamples) override;
 
   virtual int ExternalPlayoutGetData(int16_t speechData10ms[],
                                      int samplingFreqHz,
                                      int current_delay_ms,
-                                     int& lengthSamples);
+                                     int& lengthSamples) override;
 
   int GetAudioFrame(int channel,
                     int desired_sample_rate_hz,

@@ -46,8 +46,8 @@ T* AlignedMalloc(size_t size, size_t alignment) {
   return reinterpret_cast<T*>(AlignedMalloc(size, alignment));
 }
 
-// Deleter for use with scoped_ptr. E.g., use as
-//   scoped_ptr<Foo, AlignedFreeDeleter> foo;
+// Deleter for use with unique_ptr. E.g., use as
+//   std::unique_ptr<Foo, AlignedFreeDeleter> foo;
 struct AlignedFreeDeleter {
   inline void operator()(void* ptr) const {
     AlignedFree(ptr);

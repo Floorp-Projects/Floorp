@@ -54,8 +54,6 @@ class VoEHardwareImpl : public VoEHardware {
 
   int GetLoudspeakerStatus(bool& enabled) override;
 
-  bool BuiltInAECIsEnabled() const override;
-
   int GetAudioDeviceLayer(AudioLayers& audioLayer) override;
 
   int SetRecordingSampleRate(unsigned int samples_per_sec) override;

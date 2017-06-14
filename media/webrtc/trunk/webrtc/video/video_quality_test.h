@@ -10,6 +10,7 @@
 #ifndef WEBRTC_VIDEO_VIDEO_QUALITY_TEST_H_
 #define WEBRTC_VIDEO_VIDEO_QUALITY_TEST_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -26,30 +27,40 @@ class VideoQualityTest : public test::CallTest {
   // Unfortunately, C++11 (as opposed to C11) doesn't support unnamed structs,
   // which makes the implementation of VideoQualityTest a bit uglier.
   struct Params {
+    Params();
+    ~Params();
     struct {
+      bool send_side_bwe;
+      Call::Config::BitrateConfig call_bitrate_config;
+    } call;
+    struct {
+      bool enabled;
       size_t width;
       size_t height;
       int32_t fps;
       int min_bitrate_bps;
       int target_bitrate_bps;
       int max_bitrate_bps;
+      bool suspend_below_min_bitrate;
       std::string codec;
       int num_temporal_layers;
       int selected_tl;
       int min_transmit_bps;
-
-      Call::Config::BitrateConfig call_bitrate_config;
-      bool send_side_bwe;
-    } common;
-    struct {  // Video-specific settings.
+      bool ulpfec;
+      bool flexfec;
+      std::string encoded_frame_base_path;
       std::string clip_name;
     } video;
-    struct {  // Screenshare-specific settings.
+    struct {
+      bool enabled;
+      bool sync_video;
+    } audio;
+    struct {
       bool enabled;
       int32_t slide_change_interval;
       int32_t scroll_duration;
     } screenshare;
-    struct {  // Analyzer settings.
+    struct {
       std::string test_label;
       double avg_psnr_threshold;  // (*)
       double avg_ssim_threshold;  // (*)
@@ -59,7 +70,7 @@ class VideoQualityTest : public test::CallTest {
     } analyzer;
     FakeNetworkPipe::Config pipe;
     bool logs;
-    struct {                             // Spatial scalability.
+    struct {  // Spatial scalability.
       std::vector<VideoStream> streams;  // If empty, one stream is assumed.
       size_t selected_stream;
       int num_spatial_layers;
@@ -74,7 +85,7 @@ class VideoQualityTest : public test::CallTest {
 
   VideoQualityTest();
   void RunWithAnalyzer(const Params& params);
-  void RunWithVideoRenderer(const Params& params);
+  void RunWithRenderers(const Params& params);
 
   static void FillScalabilitySettings(
       Params* params,
@@ -98,17 +109,27 @@ class VideoQualityTest : public test::CallTest {
   static std::vector<int> ParseCSV(const std::string& str);
 
   // Helper methods for setting up the call.
-  void CreateCapturer(VideoCaptureInput* input);
-  void SetupCommon(Transport* send_transport, Transport* recv_transport);
+  void CreateCapturer();
+  void SetupVideo(Transport* send_transport, Transport* recv_transport);
   void SetupScreenshare();
+  void SetupAudio(int send_channel_id,
+                  int receive_channel_id,
+                  Call* call,
+                  Transport* transport,
+                  AudioReceiveStream** audio_receive_stream);
+
+  void StartEncodedFrameLogs(VideoSendStream* stream);
+  void StartEncodedFrameLogs(VideoReceiveStream* stream);
 
   // We need a more general capturer than the FrameGeneratorCapturer.
-  rtc::scoped_ptr<test::VideoCapturer> capturer_;
-  rtc::scoped_ptr<test::TraceToStderr> trace_to_stderr_;
-  rtc::scoped_ptr<test::FrameGenerator> frame_generator_;
-  rtc::scoped_ptr<VideoEncoder> encoder_;
-  VideoCodecUnion codec_settings_;
+  std::unique_ptr<test::VideoCapturer> video_capturer_;
+  std::unique_ptr<test::TraceToStderr> trace_to_stderr_;
+  std::unique_ptr<test::FrameGenerator> frame_generator_;
+  std::unique_ptr<VideoEncoder> video_encoder_;
   Clock* const clock_;
+
+  int receive_logs_;
+  int send_logs_;
 
   Params params_;
 };

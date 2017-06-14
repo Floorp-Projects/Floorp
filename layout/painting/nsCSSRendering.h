@@ -20,9 +20,9 @@
 #include "nsImageRenderer.h"
 #include "nsCSSRenderingBorders.h"
 
+class gfxContext;
 class nsStyleContext;
 class nsPresContext;
-class nsRenderingContext;
 
 namespace mozilla {
 
@@ -127,7 +127,7 @@ struct nsCSSRendering {
                                              const nsRect& aFrameArea);
   static bool ShouldPaintBoxShadowInner(nsIFrame* aFrame);
   static void PaintBoxShadowInner(nsPresContext* aPresContext,
-                                  nsRenderingContext& aRenderingContext,
+                                  gfxContext& aRenderingContext,
                                   nsIFrame* aForFrame,
                                   const nsRect& aFrameArea);
 
@@ -147,7 +147,7 @@ struct nsCSSRendering {
   static bool HasBoxShadowNativeTheme(nsIFrame* aFrame,
                                       bool& aMaybeHasBorderRadius);
   static void PaintBoxShadowOuter(nsPresContext* aPresContext,
-                                  nsRenderingContext& aRenderingContext,
+                                  gfxContext& aRenderingContext,
                                   nsIFrame* aForFrame,
                                   const nsRect& aFrameArea,
                                   const nsRect& aDirtyRect,
@@ -163,7 +163,7 @@ struct nsCSSRendering {
    * when rendering, the default is to skip none.
    */
   static DrawResult PaintBorder(nsPresContext* aPresContext,
-                                nsRenderingContext& aRenderingContext,
+                                gfxContext& aRenderingContext,
                                 nsIFrame* aForFrame,
                                 const nsRect& aDirtyRect,
                                 const nsRect& aBorderArea,
@@ -177,7 +177,7 @@ struct nsCSSRendering {
    * when rendering, the default is to skip none.
    */
   static DrawResult PaintBorderWithStyleBorder(nsPresContext* aPresContext,
-                                               nsRenderingContext& aRenderingContext,
+                                               gfxContext& aRenderingContext,
                                                nsIFrame* aForFrame,
                                                const nsRect& aDirtyRect,
                                                const nsRect& aBorderArea,
@@ -207,7 +207,7 @@ struct nsCSSRendering {
 
   static mozilla::Maybe<nsCSSBorderRenderer>
   CreateBorderRendererForOutline(nsPresContext* aPresContext,
-                                 nsRenderingContext* aRenderingContext,
+                                 gfxContext* aRenderingContext,
                                  nsIFrame* aForFrame,
                                  const nsRect& aDirtyRect,
                                  const nsRect& aBorderArea,
@@ -218,7 +218,7 @@ struct nsCSSRendering {
    * for borders.
    */
   static void PaintOutline(nsPresContext* aPresContext,
-                          nsRenderingContext& aRenderingContext,
+                          gfxContext& aRenderingContext,
                           nsIFrame* aForFrame,
                           const nsRect& aDirtyRect,
                           const nsRect& aBorderArea,
@@ -474,7 +474,7 @@ struct nsCSSRendering {
   };
 
   static DrawResult PaintStyleImageLayer(const PaintBGParams& aParams,
-                                         nsRenderingContext& aRenderingCtx);
+                                         gfxContext& aRenderingCtx);
 
   /**
    * Same as |PaintStyleImageLayer|, except using the provided style structs.
@@ -490,7 +490,7 @@ struct nsCSSRendering {
    * layer's composition mode) will be used.
    */
   static DrawResult PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
-                                               nsRenderingContext& aRenderingCtx,
+                                               gfxContext& aRenderingCtx,
                                                nsStyleContext *mBackgroundSC,
                                                const nsStyleBorder& aBorder);
 

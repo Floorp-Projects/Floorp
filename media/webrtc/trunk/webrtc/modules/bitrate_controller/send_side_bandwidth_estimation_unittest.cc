@@ -11,13 +11,15 @@
 #include <algorithm>
 #include <vector>
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/logging/rtc_event_log/mock/mock_rtc_event_log.h"
 #include "webrtc/modules/bitrate_controller/send_side_bandwidth_estimation.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 
-TEST(SendSideBweTest, InitialRembWithProbing) {
-  SendSideBandwidthEstimation bwe;
+void TestProbing(bool use_delay_based) {
+  MockRtcEventLog event_log;
+  SendSideBandwidthEstimation bwe(&event_log);
   bwe.SetMinMaxBitrate(100000, 1500000);
   bwe.SetSendBitrate(200000);
 
@@ -28,7 +30,11 @@ TEST(SendSideBweTest, InitialRembWithProbing) {
   bwe.UpdateReceiverBlock(0, 50, 1, now_ms);
 
   // Initial REMB applies immediately.
-  bwe.UpdateReceiverEstimate(now_ms, kRembBps);
+  if (use_delay_based) {
+    bwe.UpdateDelayBasedEstimate(now_ms, kRembBps);
+  } else {
+    bwe.UpdateReceiverEstimate(now_ms, kRembBps);
+  }
   bwe.UpdateEstimate(now_ms);
   int bitrate;
   uint8_t fraction_loss;
@@ -38,15 +44,31 @@ TEST(SendSideBweTest, InitialRembWithProbing) {
 
   // Second REMB doesn't apply immediately.
   now_ms += 2001;
-  bwe.UpdateReceiverEstimate(now_ms, kSecondRembBps);
+  if (use_delay_based) {
+    bwe.UpdateDelayBasedEstimate(now_ms, kSecondRembBps);
+  } else {
+    bwe.UpdateReceiverEstimate(now_ms, kSecondRembBps);
+  }
   bwe.UpdateEstimate(now_ms);
   bitrate = 0;
   bwe.CurrentEstimate(&bitrate, &fraction_loss, &rtt);
   EXPECT_EQ(kRembBps, bitrate);
 }
 
+TEST(SendSideBweTest, InitialRembWithProbing) {
+  TestProbing(false);
+}
+
+TEST(SendSideBweTest, InitialDelayBasedBweWithProbing) {
+  TestProbing(true);
+}
+
 TEST(SendSideBweTest, DoesntReapplyBitrateDecreaseWithoutFollowingRemb) {
-  SendSideBandwidthEstimation bwe;
+  MockRtcEventLog event_log;
+  EXPECT_CALL(event_log,
+              LogBwePacketLossEvent(testing::Gt(0), testing::Gt(0), 0))
+      .Times(1);
+  SendSideBandwidthEstimation bwe(&event_log);
   static const int kMinBitrateBps = 100000;
   static const int kInitialBitrateBps = 1000000;
   bwe.SetMinMaxBitrate(kMinBitrateBps, 1500000);
@@ -67,7 +89,7 @@ TEST(SendSideBweTest, DoesntReapplyBitrateDecreaseWithoutFollowingRemb) {
   // Signal heavy loss to go down in bitrate.
   bwe.UpdateReceiverBlock(kFractionLoss, kRttMs, 100, now_ms);
   // Trigger an update 2 seconds later to not be rate limited.
-  now_ms += 2000;
+  now_ms += 1000;
   bwe.UpdateEstimate(now_ms);
 
   bwe.CurrentEstimate(&bitrate_bps, &fraction_loss, &rtt_ms);
@@ -85,7 +107,7 @@ TEST(SendSideBweTest, DoesntReapplyBitrateDecreaseWithoutFollowingRemb) {
   int last_bitrate_bps = bitrate_bps;
   // Trigger an update 2 seconds later to not be rate limited (but it still
   // shouldn't update).
-  now_ms += 2000;
+  now_ms += 1000;
   bwe.UpdateEstimate(now_ms);
   bwe.CurrentEstimate(&bitrate_bps, &fraction_loss, &rtt_ms);
 

@@ -10,6 +10,8 @@
 
 #include "webrtc/p2p/base/transportdescriptionfactory.h"
 
+#include <memory>
+
 #include "webrtc/p2p/base/transportdescription.h"
 #include "webrtc/base/helpers.h"
 #include "webrtc/base/logging.h"
@@ -25,7 +27,7 @@ TransportDescriptionFactory::TransportDescriptionFactory()
 TransportDescription* TransportDescriptionFactory::CreateOffer(
     const TransportOptions& options,
     const TransportDescription* current_description) const {
-  rtc::scoped_ptr<TransportDescription> desc(new TransportDescription());
+  std::unique_ptr<TransportDescription> desc(new TransportDescription());
 
   // Generate the ICE credentials if we don't already have them.
   if (!current_description || options.ice_restart) {
@@ -34,6 +36,9 @@ TransportDescription* TransportDescriptionFactory::CreateOffer(
   } else {
     desc->ice_ufrag = current_description->ice_ufrag;
     desc->ice_pwd = current_description->ice_pwd;
+  }
+  if (options.enable_ice_renomination) {
+    desc->AddOption(ICE_RENOMINATION_STR);
   }
 
   // If we are trying to establish a secure transport, add a fingerprint.
@@ -59,7 +64,7 @@ TransportDescription* TransportDescriptionFactory::CreateAnswer(
     return NULL;
   }
 
-  rtc::scoped_ptr<TransportDescription> desc(new TransportDescription());
+  std::unique_ptr<TransportDescription> desc(new TransportDescription());
   // Generate the ICE credentials if we don't already have them or ice is
   // being restarted.
   if (!current_description || options.ice_restart) {
@@ -68,6 +73,9 @@ TransportDescription* TransportDescriptionFactory::CreateAnswer(
   } else {
     desc->ice_ufrag = current_description->ice_ufrag;
     desc->ice_pwd = current_description->ice_pwd;
+  }
+  if (options.enable_ice_renomination) {
+    desc->AddOption(ICE_RENOMINATION_STR);
   }
 
   // Negotiate security params.
@@ -102,7 +110,12 @@ bool TransportDescriptionFactory::SetSecurityInfo(
 
   // This digest algorithm is used to produce the a=fingerprint lines in SDP.
   // RFC 4572 Section 5 requires that those lines use the same hash function as
-  // the certificate's signature.
+  // the certificate's signature, which is what CreateFromCertificate does.
+  desc->identity_fingerprint.reset(
+      rtc::SSLFingerprint::CreateFromCertificate(certificate_));
+  if (!desc->identity_fingerprint) {
+    return false;
+  }
   std::string digest_alg;
   if (!certificate_->ssl_certificate().GetSignatureDigestAlgorithm(
           &digest_alg)) {

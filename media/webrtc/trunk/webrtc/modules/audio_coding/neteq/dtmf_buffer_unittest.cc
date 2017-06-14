@@ -18,7 +18,7 @@
 
 #include <iostream>
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/test/gtest.h"
 
 // Modify the tests so that they pass with the modifications done to DtmfBuffer
 // for backwards bit-exactness. Once bit-exactness is no longer required, this
@@ -282,7 +282,7 @@ TEST(DtmfBuffer, InvalidEvents) {
   // Invalid volume.
   event.volume = -1;
   EXPECT_EQ(DtmfBuffer::kInvalidEventParameters, buffer.InsertEvent(event));
-  event.volume = 37;
+  event.volume = 64;
   EXPECT_EQ(DtmfBuffer::kInvalidEventParameters, buffer.InsertEvent(event));
   event.volume = 0;  // Valid value;
 

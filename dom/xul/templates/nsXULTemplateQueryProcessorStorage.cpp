@@ -27,6 +27,7 @@
 #include "nsIChannel.h"
 #include "nsIDocument.h"
 #include "nsNetUtil.h"
+#include "nsTemplateMatch.h"
 
 //----------------------------------------------------------------------
 //

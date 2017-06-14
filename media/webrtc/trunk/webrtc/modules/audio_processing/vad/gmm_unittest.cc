@@ -12,9 +12,9 @@
 
 #include <math.h>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/modules/audio_processing/vad/noise_gmm_tables.h"
 #include "webrtc/modules/audio_processing/vad/voice_gmm_tables.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 

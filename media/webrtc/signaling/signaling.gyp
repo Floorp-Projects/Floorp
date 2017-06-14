@@ -303,6 +303,7 @@
             'LINUX',
             'GIPS_VER=3510',
             'SECLIB_OPENSSL',
+            'WEBRTC_BUILD_LIBEVENT',
           ],
 
           'cflags_mozilla': [
@@ -350,6 +351,7 @@
           ],
           'defines': [
             'WEBRTC_POSIX',
+            'WEBRTC_MAC',
             'OS_MACOSX',
             'SIP_OS_OSX',
             'OSX',

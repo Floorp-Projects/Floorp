@@ -239,16 +239,15 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr, int32_t aLineLen)
       nsAutoString entryuri;
       
       if (gTextToSubURI) {
-        char16_t   *result = nullptr;
-        if (NS_SUCCEEDED(rv = gTextToSubURI->UnEscapeAndConvert(mEncoding.get(), filename.get(),
-                                                                &result)) && (result)) {
-          if (*result) {
+        nsAutoString result;
+        if (NS_SUCCEEDED(rv = gTextToSubURI->UnEscapeAndConvert(
+                           mEncoding, filename, result))) {
+          if (!result.IsEmpty()) {
             aIdx->SetLocation(filename.get());
             if (!mHasDescription)
-              aIdx->SetDescription(result);
+              aIdx->SetDescription(result.get());
             success = true;
           }
-          free(result);
         } else {
           NS_WARNING("UnEscapeAndConvert error");
         }

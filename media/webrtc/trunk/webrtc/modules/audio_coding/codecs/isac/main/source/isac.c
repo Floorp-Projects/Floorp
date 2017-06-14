@@ -17,12 +17,12 @@
 
 #include "webrtc/modules/audio_coding/codecs/isac/main/include/isac.h"
 
-#include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "webrtc/base/checks.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/modules/audio_coding/codecs/isac/main/source/bandwidth_estimator.h"
 #include "webrtc/modules/audio_coding/codecs/isac/main/source/codec.h"
@@ -1253,6 +1253,17 @@ static int Decode(ISACStruct* ISAC_main_inst,
             return -1;
         }
 
+        if (numDecodedBytesUB < 0) {
+          instISAC->errorCode = numDecodedBytesUB;
+          return -1;
+        }
+        if (numDecodedBytesLB + numDecodedBytesUB > lenEncodedBytes) {
+          // We have supposedly decoded more bytes than we were given. Likely
+          // caused by bad input data.
+          instISAC->errorCode = ISAC_LENGTH_MISMATCH;
+          return -1;
+        }
+
         /* It might be less due to garbage. */
         if ((numDecodedBytesUB != lenNextStream) &&
             (numDecodedBytesUB != (lenNextStream -
@@ -1539,8 +1550,8 @@ int16_t WebRtcIsac_Control(ISACStruct* ISAC_main_inst,
 void WebRtcIsac_SetInitialBweBottleneck(ISACStruct* ISAC_main_inst,
                                         int bottleneck_bits_per_second) {
   ISACMainStruct* instISAC = (ISACMainStruct*)ISAC_main_inst;
-  assert(bottleneck_bits_per_second >= 10000 &&
-         bottleneck_bits_per_second <= 32000);
+  RTC_DCHECK_GE(bottleneck_bits_per_second, 10000);
+  RTC_DCHECK_LE(bottleneck_bits_per_second, 32000);
   instISAC->bwestimator_obj.send_bw_avg = (float)bottleneck_bits_per_second;
 }
 
@@ -2341,7 +2352,7 @@ uint16_t WebRtcIsac_DecSampRate(ISACStruct* ISAC_main_inst) {
 void WebRtcIsac_GetBandwidthInfo(ISACStruct* inst,
                                  IsacBandwidthInfo* bwinfo) {
   ISACMainStruct* instISAC = (ISACMainStruct*)inst;
-  assert(instISAC->initFlag & BIT_MASK_DEC_INIT);
+  RTC_DCHECK_NE(0, instISAC->initFlag & BIT_MASK_DEC_INIT);
   WebRtcIsacBw_GetBandwidthInfo(&instISAC->bwestimator_obj,
                                 instISAC->decoderSamplingRateKHz, bwinfo);
 }
@@ -2349,15 +2360,15 @@ void WebRtcIsac_GetBandwidthInfo(ISACStruct* inst,
 void WebRtcIsac_SetBandwidthInfo(ISACStruct* inst,
                                  const IsacBandwidthInfo* bwinfo) {
   ISACMainStruct* instISAC = (ISACMainStruct*)inst;
-  assert(instISAC->initFlag & BIT_MASK_ENC_INIT);
+  RTC_DCHECK_NE(0, instISAC->initFlag & BIT_MASK_ENC_INIT);
   WebRtcIsacBw_SetBandwidthInfo(&instISAC->bwestimator_obj, bwinfo);
 }
 
 void WebRtcIsac_SetEncSampRateInDecoder(ISACStruct* inst,
                                         int sample_rate_hz) {
   ISACMainStruct* instISAC = (ISACMainStruct*)inst;
-  assert(instISAC->initFlag & BIT_MASK_DEC_INIT);
-  assert(!(instISAC->initFlag & BIT_MASK_ENC_INIT));
-  assert(sample_rate_hz == 16000 || sample_rate_hz == 32000);
+  RTC_DCHECK_NE(0, instISAC->initFlag & BIT_MASK_DEC_INIT);
+  RTC_DCHECK(!(instISAC->initFlag & BIT_MASK_ENC_INIT));
+  RTC_DCHECK(sample_rate_hz == 16000 || sample_rate_hz == 32000);
   instISAC->encoderSamplingRateKHz = sample_rate_hz / 1000;
 }

@@ -31,22 +31,6 @@ class VoEAudioProcessingImpl : public VoEAudioProcessing {
 
   int GetAgcConfig(AgcConfig& config) override;
 
-  int SetRxNsStatus(int channel,
-                    bool enable,
-                    NsModes mode = kNsUnchanged) override;
-
-  int GetRxNsStatus(int channel, bool& enabled, NsModes& mode) override;
-
-  int SetRxAgcStatus(int channel,
-                     bool enable,
-                     AgcModes mode = kAgcUnchanged) override;
-
-  int GetRxAgcStatus(int channel, bool& enabled, AgcModes& mode) override;
-
-  int SetRxAgcConfig(int channel, AgcConfig config) override;
-
-  int GetRxAgcConfig(int channel, AgcConfig& config) override;
-
   int SetEcStatus(bool enable, EcModes mode = kEcUnchanged) override;
   int GetEcStatus(bool& enabled, EcModes& mode) override;
   int EnableDriftCompensation(bool enable) override;
@@ -62,10 +46,6 @@ class VoEAudioProcessingImpl : public VoEAudioProcessing {
 
   int EnableHighPassFilter(bool enable) override;
   bool IsHighPassFilterEnabled() override;
-
-  int RegisterRxVadObserver(int channel, VoERxVadCallback& observer) override;
-
-  int DeRegisterRxVadObserver(int channel) override;
 
   int VoiceActivityIndicator(int channel) override;
 

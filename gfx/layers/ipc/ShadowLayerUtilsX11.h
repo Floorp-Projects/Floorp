@@ -9,7 +9,7 @@
 #define mozilla_layers_ShadowLayerUtilsX11_h
 
 #include "ipc/IPCMessageUtils.h"
-#include "mozilla/GfxMessageUtils.h"
+#include "mozilla/layers/LayersMessageUtils.h"
 #include "nsCOMPtr.h"                   // for already_AddRefed
 
 #define MOZ_HAVE_SURFACEDESCRIPTORX11

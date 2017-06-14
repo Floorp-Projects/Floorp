@@ -294,7 +294,7 @@ bool IPIsAny(const IPAddress& ip) {
 bool IPIsLoopback(const IPAddress& ip) {
   switch (ip.family()) {
     case AF_INET: {
-      return ip == IPAddress(INADDR_LOOPBACK);
+      return (ip.v4AddressAsHostOrderInteger() >> 24) == 127;
     }
     case AF_INET6: {
       return ip == IPAddress(in6addr_loopback);
@@ -412,7 +412,9 @@ int CountIPMaskBits(IPAddress mask) {
   // http://graphics.stanford.edu/~seander/bithacks.html
   // Counts the trailing 0s in the word.
   unsigned int zeroes = 32;
-  word_to_count &= -static_cast<int32_t>(word_to_count);
+  // This could also be written word_to_count &= -word_to_count, but
+  // MSVC emits warning C4146 when negating an unsigned number.
+  word_to_count &= ~word_to_count + 1;  // Isolate lowest set bit.
   if (word_to_count) zeroes--;
   if (word_to_count & 0x0000FFFF) zeroes -= 16;
   if (word_to_count & 0x00FF00FF) zeroes -= 8;
@@ -522,4 +524,4 @@ IPAddress GetAnyIP(int family) {
   return rtc::IPAddress();
 }
 
-}  // Namespace rtc
+}  // namespace rtc

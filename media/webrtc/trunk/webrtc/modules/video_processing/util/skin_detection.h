@@ -13,6 +13,8 @@
 
 namespace webrtc {
 
+#define MODEL_MODE 0
+
 typedef unsigned char uint8_t;
 bool MbHasSkinColor(const uint8_t* y_src,
                     const uint8_t* u_src,

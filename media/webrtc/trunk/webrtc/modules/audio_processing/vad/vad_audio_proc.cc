@@ -13,6 +13,7 @@
 #include <math.h>
 #include <stdio.h>
 
+#include "webrtc/base/checks.h"
 #include "webrtc/common_audio/fft4g.h"
 #include "webrtc/modules/audio_processing/vad/vad_audio_proc_internal.h"
 #include "webrtc/modules/audio_processing/vad/pitch_internal.h"
@@ -95,7 +96,7 @@ int VadAudioProc::ExtractFeatures(const int16_t* frame,
   if (num_buffer_samples_ < kBufferLength) {
     return 0;
   }
-  assert(num_buffer_samples_ == kBufferLength);
+  RTC_DCHECK_EQ(num_buffer_samples_, kBufferLength);
   features->num_frames = kNum10msSubframes;
   features->silence = false;
 
@@ -121,7 +122,7 @@ int VadAudioProc::ExtractFeatures(const int16_t* frame,
 void VadAudioProc::SubframeCorrelation(double* corr,
                                        size_t length_corr,
                                        size_t subframe_index) {
-  assert(length_corr >= kLpcOrder + 1);
+  RTC_DCHECK_GE(length_corr, kLpcOrder + 1);
   double windowed_audio[kNumSubframeSamples + kNumPastSignalSamples];
   size_t buffer_index = subframe_index * kNumSubframeSamples;
 
@@ -137,7 +138,7 @@ void VadAudioProc::SubframeCorrelation(double* corr,
 // each 10ms sub-frame. This is equivalent to computing LPC coefficients for the
 // first half of each 10 ms subframe.
 void VadAudioProc::GetLpcPolynomials(double* lpc, size_t length_lpc) {
-  assert(length_lpc >= kNum10msSubframes * (kLpcOrder + 1));
+  RTC_DCHECK_GE(length_lpc, kNum10msSubframes * (kLpcOrder + 1));
   double corr[kLpcOrder + 1];
   double reflec_coeff[kLpcOrder];
   for (size_t i = 0, offset_lpc = 0; i < kNum10msSubframes;
@@ -165,7 +166,7 @@ static float QuadraticInterpolation(float prev_val,
 
   fractional_index =
       -(next_val - prev_val) * 0.5f / (next_val + prev_val - 2.f * curr_val);
-  assert(fabs(fractional_index) < 1);
+  RTC_DCHECK_LT(fabs(fractional_index), 1);
   return fractional_index;
 }
 
@@ -176,7 +177,7 @@ static float QuadraticInterpolation(float prev_val,
 // to save on one square root.
 void VadAudioProc::FindFirstSpectralPeaks(double* f_peak,
                                           size_t length_f_peak) {
-  assert(length_f_peak >= kNum10msSubframes);
+  RTC_DCHECK_GE(length_f_peak, kNum10msSubframes);
   double lpc[kNum10msSubframes * (kLpcOrder + 1)];
   // For all sub-frames.
   GetLpcPolynomials(lpc, kNum10msSubframes * (kLpcOrder + 1));
@@ -232,7 +233,7 @@ void VadAudioProc::PitchAnalysis(double* log_pitch_gains,
                                  size_t length) {
   // TODO(turajs): This can be "imported" from iSAC & and the next two
   // constants.
-  assert(length >= kNum10msSubframes);
+  RTC_DCHECK_GE(length, kNum10msSubframes);
   const int kNumPitchSubframes = 4;
   double gains[kNumPitchSubframes];
   double lags[kNumPitchSubframes];
@@ -262,7 +263,7 @@ void VadAudioProc::PitchAnalysis(double* log_pitch_gains,
 }
 
 void VadAudioProc::Rms(double* rms, size_t length_rms) {
-  assert(length_rms >= kNum10msSubframes);
+  RTC_DCHECK_GE(length_rms, kNum10msSubframes);
   size_t offset = kNumPastSignalSamples;
   for (size_t i = 0; i < kNum10msSubframes; i++) {
     rms[i] = 0;

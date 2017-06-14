@@ -223,7 +223,7 @@ add_task(async function sendToDevice_syncNotReady() {
         expectedItems.push(
           null,
           {
-            label: "All Devices",
+            label: "Send to All Devices",
           }
         );
         checkSendToDeviceItems(expectedItems);
@@ -393,7 +393,7 @@ add_task(async function sendToDevice_devices() {
     expectedItems.push(
       null,
       {
-        label: "All Devices",
+        label: "Send to All Devices",
       }
     );
     checkSendToDeviceItems(expectedItems);

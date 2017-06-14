@@ -2804,4 +2804,8 @@ namespace sigslot {
 }; // namespace sigslot
 
 #endif // TALK_BASE_SIGSLOT_H__
+#endif // TALK_BASE_SIGSLOT_H__
+#endif // TALK_BASE_SIGSLOT_H__
+#endif // TALK_BASE_SIGSLOT_H__
+#endif // TALK_BASE_SIGSLOT_H__
 #endif // WEBRTC_BASE_SIGSLOT_H__

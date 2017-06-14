@@ -144,20 +144,3 @@ TEST_F(ExternalMediaTest,
   EXPECT_EQ(0, voe_xmedia_->SetExternalMixing(channel_, false));
   ResumePlaying();
 }
-
-TEST_F(ExternalMediaTest,
-       ExternalMixingResamplingToInvalidFrequenciesFails) {
-  const int kInvalidFrequencies[] = {-8000, -1};
-  webrtc::AudioFrame frame;
-  PausePlaying();
-  EXPECT_EQ(0, voe_xmedia_->SetExternalMixing(channel_, true));
-  ResumePlaying();
-  for (size_t i = 0; i < arraysize(kInvalidFrequencies); i++) {
-    int f = kInvalidFrequencies[i];
-    EXPECT_EQ(-1, voe_xmedia_->GetAudioFrame(channel_, f, &frame))
-        << "Resampling fails for freq=" << f;
-  }
-  PausePlaying();
-  EXPECT_EQ(0, voe_xmedia_->SetExternalMixing(channel_, false));
-  ResumePlaying();
-}

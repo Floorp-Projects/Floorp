@@ -13,10 +13,6 @@
 
 #include "webrtc/base/proxyinfo.h"
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 namespace rtc {
 // Auto-detect the proxy server.  Returns true if a proxy is configured,
 // although hostname may be empty if the proxy is not required for

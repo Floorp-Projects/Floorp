@@ -1,0 +1,41 @@
+<html class="reftest-wait">
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  let n=document.getElementById('a');
+  n.parentNode.removeChild(n);
+  let o=document.getElementById('b');
+  let p=document.getElementById('c');
+  p.id=[o.id, o.id=p.id][0];
+  let l=['d'];
+  let s=window.getSelection();
+  for(let i=0; i<l.length; i++){
+    let e=document.getElementById(l[i]);
+    let r=document.createRange();
+    r.selectNode(e);
+    s.addRange(r);
+  }
+  n=document.getElementById('b');
+  n.parentNode.removeChild(n);
+  window.getSelection().modify('extend','right','word');
+  n.setAttribute('id','e');
+  document.getElementById('f').appendChild(n);
+  l=['e'];
+  for(let i=0; i<l.length; i++){
+    let e=document.getElementById(l[i]);
+    let r=document.createRange();
+    r.selectNode(e);
+    s.addRange(r);
+  }
+  document.documentElement.removeAttribute("class");
+});
+</script>
+<table>
+<tbody hidden>
+<th id='c'>
+<i id='d'>
+<bdo id='b'></bdo>
+<td></td>
+<tbody id='f'>
+<td id='a' contenteditable='true'>
+<td>
+</html>

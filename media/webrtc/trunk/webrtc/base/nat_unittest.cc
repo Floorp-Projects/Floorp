@@ -9,6 +9,7 @@
  */
 
 #include <algorithm>
+#include <memory>
 #include <string>
 
 #include "webrtc/base/gunit.h"
@@ -178,11 +179,11 @@ bool TestConnectivity(const SocketAddress& src, const IPAddress& dst) {
   // The physical NAT tests require connectivity to the selected ip from the
   // internal address used for the NAT. Things like firewalls can break that, so
   // check to see if it's worth even trying with this ip.
-  scoped_ptr<PhysicalSocketServer> pss(new PhysicalSocketServer());
-  scoped_ptr<AsyncSocket> client(pss->CreateAsyncSocket(src.family(),
-                                                        SOCK_DGRAM));
-  scoped_ptr<AsyncSocket> server(pss->CreateAsyncSocket(src.family(),
-                                                        SOCK_DGRAM));
+  std::unique_ptr<PhysicalSocketServer> pss(new PhysicalSocketServer());
+  std::unique_ptr<AsyncSocket> client(
+      pss->CreateAsyncSocket(src.family(), SOCK_DGRAM));
+  std::unique_ptr<AsyncSocket> server(
+      pss->CreateAsyncSocket(src.family(), SOCK_DGRAM));
   if (client->Bind(SocketAddress(src.ipaddr(), 0)) != 0 ||
       server->Bind(SocketAddress(dst, 0)) != 0) {
     return false;
@@ -194,7 +195,7 @@ bool TestConnectivity(const SocketAddress& src, const IPAddress& dst) {
   const size_t kRecvBufSize = 64;
   char recvbuf[kRecvBufSize];
   Thread::Current()->SleepMs(100);
-  int received = server->RecvFrom(recvbuf, kRecvBufSize, &addr);
+  int received = server->RecvFrom(recvbuf, kRecvBufSize, &addr, nullptr);
   return received == sent && ::memcmp(buf, recvbuf, len) == 0;
 }
 
@@ -244,8 +245,8 @@ void TestPhysicalInternal(const SocketAddress& int_addr) {
       SocketAddress(ext_addr2)
   };
 
-  scoped_ptr<PhysicalSocketServer> int_pss(new PhysicalSocketServer());
-  scoped_ptr<PhysicalSocketServer> ext_pss(new PhysicalSocketServer());
+  std::unique_ptr<PhysicalSocketServer> int_pss(new PhysicalSocketServer());
+  std::unique_ptr<PhysicalSocketServer> ext_pss(new PhysicalSocketServer());
 
   TestBindings(int_pss.get(), int_addr, ext_pss.get(), ext_addrs);
   TestFilters(int_pss.get(), int_addr, ext_pss.get(), ext_addrs);
@@ -274,16 +275,16 @@ class TestVirtualSocketServer : public VirtualSocketServer {
   IPAddress GetNextIP(int af) { return VirtualSocketServer::GetNextIP(af); }
 
  private:
-  scoped_ptr<SocketServer> ss_;
+  std::unique_ptr<SocketServer> ss_;
 };
 
 }  // namespace
 
 void TestVirtualInternal(int family) {
-  scoped_ptr<TestVirtualSocketServer> int_vss(new TestVirtualSocketServer(
-      new PhysicalSocketServer()));
-  scoped_ptr<TestVirtualSocketServer> ext_vss(new TestVirtualSocketServer(
-      new PhysicalSocketServer()));
+  std::unique_ptr<TestVirtualSocketServer> int_vss(
+      new TestVirtualSocketServer(new PhysicalSocketServer()));
+  std::unique_ptr<TestVirtualSocketServer> ext_vss(
+      new TestVirtualSocketServer(new PhysicalSocketServer()));
 
   SocketAddress int_addr;
   SocketAddress ext_addrs[4];
@@ -351,15 +352,15 @@ class NatTcpTest : public testing::Test, public sigslot::has_slots<> {
   bool connected_;
   PhysicalSocketServer* int_pss_;
   PhysicalSocketServer* ext_pss_;
-  rtc::scoped_ptr<TestVirtualSocketServer> int_vss_;
-  rtc::scoped_ptr<TestVirtualSocketServer> ext_vss_;
-  rtc::scoped_ptr<Thread> int_thread_;
-  rtc::scoped_ptr<Thread> ext_thread_;
-  rtc::scoped_ptr<NATServer> nat_;
-  rtc::scoped_ptr<NATSocketFactory> natsf_;
-  rtc::scoped_ptr<AsyncSocket> client_;
-  rtc::scoped_ptr<AsyncSocket> server_;
-  rtc::scoped_ptr<AsyncSocket> accepted_;
+  std::unique_ptr<TestVirtualSocketServer> int_vss_;
+  std::unique_ptr<TestVirtualSocketServer> ext_vss_;
+  std::unique_ptr<Thread> int_thread_;
+  std::unique_ptr<Thread> ext_thread_;
+  std::unique_ptr<NATServer> nat_;
+  std::unique_ptr<NATSocketFactory> natsf_;
+  std::unique_ptr<AsyncSocket> client_;
+  std::unique_ptr<AsyncSocket> server_;
+  std::unique_ptr<AsyncSocket> accepted_;
 };
 
 TEST_F(NatTcpTest, DISABLED_TestConnectOut) {
@@ -377,8 +378,8 @@ TEST_F(NatTcpTest, DISABLED_TestConnectOut) {
   EXPECT_EQ(client_->GetRemoteAddress(), server_->GetLocalAddress());
   EXPECT_EQ(accepted_->GetRemoteAddress().ipaddr(), ext_addr_.ipaddr());
 
-  rtc::scoped_ptr<rtc::TestClient> in(CreateTCPTestClient(client_.release()));
-  rtc::scoped_ptr<rtc::TestClient> out(
+  std::unique_ptr<rtc::TestClient> in(CreateTCPTestClient(client_.release()));
+  std::unique_ptr<rtc::TestClient> out(
       CreateTCPTestClient(accepted_.release()));
 
   const char* buf = "test_packet";

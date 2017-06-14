@@ -11,8 +11,9 @@
 #ifndef WEBRTC_COMMON_AUDIO_AUDIO_CONVERTER_H_
 #define WEBRTC_COMMON_AUDIO_AUDIO_CONVERTER_H_
 
+#include <memory>
+
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/base/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -26,7 +27,7 @@ class AudioConverter {
  public:
   // Returns a new AudioConverter, which will use the supplied format for its
   // lifetime. Caller is responsible for the memory.
-  static rtc::scoped_ptr<AudioConverter> Create(size_t src_channels,
+  static std::unique_ptr<AudioConverter> Create(size_t src_channels,
                                                 size_t src_frames,
                                                 size_t dst_channels,
                                                 size_t dst_frames);

@@ -30,17 +30,27 @@ runNetworkTest(() => {
 
   test.setMediaConstraints([{video: true}, {video: true}], []);
   test.chain.replace("PC_LOCAL_GUM", [
-    function DRAW_INITIAL_LOCAL1_GREEN(test) {
-      h.drawColor(canvas1, h.green);
-    },
-    function DRAW_INITIAL_LOCAL2_BLUE(test) {
-      h.drawColor(canvas2, h.blue);
-    },
     function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
+      h.drawColor(canvas1, h.green);
+      h.drawColor(canvas2, h.blue);
       stream1 = canvas1.captureStream(0); // fps = 0 to capture single frame
       test.pcLocal.attachLocalStream(stream1);
       stream2 = canvas2.captureStream(0); // fps = 0 to capture single frame
       test.pcLocal.attachLocalStream(stream2);
+      var i = 0;
+      return setInterval(function() {
+        try {
+          info("draw " + i ? "green" : "red/blue");
+          h.drawColor(canvas1, i ? h.green : h.red);
+          h.drawColor(canvas2, i ? h.green : h.blue);
+          i = 1 - i;
+          stream1.requestFrame();
+          stream2.requestFrame();
+        } catch (e) {
+          // ignore; stream might have shut down, and we don't bother clearing
+          // the setInterval.
+        }
+      }, 500);
     }
   ]);
 
@@ -51,68 +61,31 @@ runNetworkTest(() => {
       vremote2 = test.pcRemote.remoteMediaElements[1];
 
       // since we don't know which remote video is created first, we don't know
-      // which should be blue or green, but this will make sure that one is
+      // which should be blue or red, but this will make sure that one is
       // green and one is blue
       return Promise.race([
                Promise.all([
-                 h.waitForPixelColor(vremote1, h.green, 128,
-                                     "pcRemote's remote1 should become green"),
+                 h.waitForPixelColor(vremote1, h.red, 128,
+                                     "pcRemote's remote1 should become red"),
                  h.waitForPixelColor(vremote2, h.blue, 128,
                                      "pcRemote's remote2 should become blue")
                ]),
                Promise.all([
-                 h.waitForPixelColor(vremote2, h.green, 128,
-                                     "pcRemote's remote2 should become green"),
+                 h.waitForPixelColor(vremote2, h.red, 128,
+                                     "pcRemote's remote2 should become red"),
                  h.waitForPixelColor(vremote1, h.blue, 128,
                                      "pcRemote's remote1 should become blue")
                ])
              ]);
     },
-    function DRAW_LOCAL1_RED() {
-      // After requesting a frame it will be captured at the time of next render.
-      // Next render will happen at next stable state, at the earliest,
-      // i.e., this order of `requestFrame(); draw();` should work.
-      h.drawColor(canvas1, h.red);
-      stream1.requestFrame();
-      var i = 0;
-      return setInterval(function() {
-        try {
-          info("draw " + i ? "green" : "red");
-          h.drawColor(canvas1, i ? h.green : h.red);
-          i = 1 - i;
-          stream1.requestFrame();
-        } catch (e) {
-          // ignore; stream might have shut down, and we don't bother clearing
-          // the setInterval.
-        }
-      }, 500);
+    function WAIT_FOR_REMOTE_BOTH_GREEN() {
+      return Promise.all([
+               h.waitForPixelColor(vremote1, h.green, 128,
+                                   "pcRemote's remote1 should become green"),
+               h.waitForPixelColor(vremote2, h.green, 128,
+                                 "pcRemote's remote2 should become green")
+             ])
     },
-    function DRAW_LOCAL2_RED() {
-      // After requesting a frame it will be captured at the time of next render.
-      // Next render will happen at next stable state, at the earliest,
-      // i.e., this order of `requestFrame(); draw();` should work.
-      h.drawColor(canvas2, h.red);
-      stream2.requestFrame();
-      return setInterval(function() {
-        try {
-          info("draw");
-          h.drawColor(canvas2, i ? h.green : h.red);
-          i = 1 - i;
-          stream2.requestFrame();
-        } catch (e) {
-          // ignore; stream might have shut down, and we don't bother clearing
-          // the setInterval.
-        }
-      }, 500);
-    },
-    function WAIT_FOR_REMOTE1_RED() {
-      return h.waitForPixelColor(vremote1, h.red, 128,
-                                 "pcRemote's remote1 should become red");
-    },
-    function WAIT_FOR_REMOTE2_RED() {
-      return h.waitForPixelColor(vremote2, h.red, 128,
-                                 "pcRemote's remote2 should become red");
-    }
   ]);
   test.run();
 });

@@ -7,12 +7,12 @@
 #include "nsSVGOuterSVGFrame.h"
 
 // Keep others in (case-insensitive) order:
+#include "gfxContext.h"
 #include "nsDisplayList.h"
 #include "nsIDocument.h"
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIObjectLoadingContent.h"
-#include "nsRenderingContext.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGForeignObjectFrame.h"
 #include "mozilla/dom/SVGSVGElement.h"
@@ -152,7 +152,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsSVGDisplayContainerFrame)
 // reflowing
 
 /* virtual */ nscoord
-nsSVGOuterSVGFrame::GetMinISize(nsRenderingContext *aRenderingContext)
+nsSVGOuterSVGFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -163,7 +163,7 @@ nsSVGOuterSVGFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsSVGOuterSVGFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
+nsSVGOuterSVGFrame::GetPrefISize(gfxContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
@@ -283,7 +283,7 @@ nsSVGOuterSVGFrame::GetIntrinsicRatio()
 
 /* virtual */
 LogicalSize
-nsSVGOuterSVGFrame::ComputeSize(nsRenderingContext *aRenderingContext,
+nsSVGOuterSVGFrame::ComputeSize(gfxContext *aRenderingContext,
                                 WritingMode aWM,
                                 const LogicalSize& aCBSize,
                                 nscoord aAvailableISize,
@@ -553,7 +553,7 @@ public:
                        HitTestState* aState,
                        nsTArray<nsIFrame*> *aOutFrames) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) override;
+                     gfxContext* aCtx) override;
 
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
@@ -597,7 +597,7 @@ nsDisplayOuterSVG::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
 
 void
 nsDisplayOuterSVG::Paint(nsDisplayListBuilder* aBuilder,
-                         nsRenderingContext* aContext)
+                         gfxContext* aContext)
 {
 #if defined(DEBUG) && defined(SVG_DEBUG_PAINT_TIMING)
   PRTime start = PR_Now();
@@ -624,7 +624,7 @@ nsDisplayOuterSVG::Paint(nsDisplayListBuilder* aBuilder,
   gfxPoint devPixelOffset =
     nsLayoutUtils::PointToGfxPoint(viewportRect.TopLeft(), appUnitsPerDevPixel);
 
-  aContext->ThebesContext()->Save();
+  aContext->Save();
   imgDrawingParams imgParams(aBuilder->ShouldSyncDecodeImages()
                              ? imgIContainer::FLAG_SYNC_DECODE
                              : imgIContainer::FLAG_SYNC_DECODE_IF_FAST);
@@ -632,10 +632,10 @@ nsDisplayOuterSVG::Paint(nsDisplayListBuilder* aBuilder,
   // units (i.e. CSS px) in the matrix that we pass to our children):
   gfxMatrix tm = nsSVGUtils::GetCSSPxToDevPxMatrix(mFrame) *
                    gfxMatrix::Translation(devPixelOffset);
-  nsSVGUtils::PaintFrameWithEffects(mFrame, *aContext->ThebesContext(), tm,
+  nsSVGUtils::PaintFrameWithEffects(mFrame, *aContext, tm,
                                     imgParams, &contentAreaDirtyRect);
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, imgParams.result);
-  aContext->ThebesContext()->Restore();
+  aContext->Restore();
 
 #if defined(DEBUG) && defined(SVG_DEBUG_PAINT_TIMING)
   PRTime end = PR_Now();

@@ -17,7 +17,7 @@ typedef struct CTSContextStr CTSContext;
  * The cipher argument is a block cipher in the CBC mode.
  */
 CTSContext *CTS_CreateContext(void *context, freeblCipherFunc cipher,
-                              const unsigned char *iv, unsigned int blocksize);
+                              const unsigned char *iv);
 
 void CTS_DestroyContext(CTSContext *cts, PRBool freeit);
 

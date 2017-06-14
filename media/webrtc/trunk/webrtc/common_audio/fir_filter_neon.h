@@ -11,7 +11,8 @@
 #ifndef WEBRTC_COMMON_AUDIO_FIR_FILTER_NEON_H_
 #define WEBRTC_COMMON_AUDIO_FIR_FILTER_NEON_H_
 
-#include "webrtc/base/scoped_ptr.h"
+#include <memory>
+
 #include "webrtc/common_audio/fir_filter.h"
 #include "webrtc/system_wrappers/include/aligned_malloc.h"
 
@@ -28,8 +29,8 @@ class FIRFilterNEON : public FIRFilter {
  private:
   size_t coefficients_length_;
   size_t state_length_;
-  rtc::scoped_ptr<float[], AlignedFreeDeleter> coefficients_;
-  rtc::scoped_ptr<float[], AlignedFreeDeleter> state_;
+  std::unique_ptr<float[], AlignedFreeDeleter> coefficients_;
+  std::unique_ptr<float[], AlignedFreeDeleter> state_;
 };
 
 }  // namespace webrtc

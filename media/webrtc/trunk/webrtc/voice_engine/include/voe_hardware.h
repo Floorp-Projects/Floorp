@@ -117,7 +117,6 @@ class WEBRTC_DLLEXPORT VoEHardware {
   // Queries and controls platform audio effects on Android devices.
   virtual bool BuiltInAECIsAvailable() const = 0;
   virtual int EnableBuiltInAEC(bool enable) = 0;
-  virtual bool BuiltInAECIsEnabled() const = 0;
   virtual bool BuiltInAGCIsAvailable() const = 0;
   virtual int EnableBuiltInAGC(bool enable) = 0;
   virtual bool BuiltInNSIsAvailable() const = 0;

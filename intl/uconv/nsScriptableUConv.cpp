@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,11 +9,8 @@
 #include "nsScriptableUConv.h"
 #include "nsIStringStream.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIUnicodeDecoder.h"
-#include "nsIUnicodeEncoder.h"
-#include "mozilla/dom/EncodingUtils.h"
 
-using mozilla::dom::EncodingUtils;
+using namespace mozilla;
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS(nsScriptableUnicodeConverter, nsIScriptableUnicodeConverter)
@@ -26,72 +24,55 @@ nsScriptableUnicodeConverter::~nsScriptableUnicodeConverter()
 {
 }
 
-nsresult
-nsScriptableUnicodeConverter::ConvertFromUnicodeWithLength(const nsAString& aSrc,
-                                                           int32_t* aOutLen,
-                                                           char **_retval)
-{
-  if (!mEncoder)
-    return NS_ERROR_FAILURE;
-
-  nsresult rv = NS_OK;
-  int32_t inLength = aSrc.Length();
-  const nsAFlatString& flatSrc = PromiseFlatString(aSrc);
-  rv = mEncoder->GetMaxLength(flatSrc.get(), inLength, aOutLen);
-  if (NS_SUCCEEDED(rv)) {
-    *_retval = (char*)malloc(*aOutLen+1);
-    if (!*_retval)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = mEncoder->Convert(flatSrc.get(), &inLength, *_retval, aOutLen);
-    if (NS_SUCCEEDED(rv))
-    {
-      (*_retval)[*aOutLen] = '\0';
-      return NS_OK;
-    }
-    free(*_retval);
-  }
-  *_retval = nullptr;
-  return NS_ERROR_FAILURE;
-}
-
 NS_IMETHODIMP
 nsScriptableUnicodeConverter::ConvertFromUnicode(const nsAString& aSrc,
                                                  nsACString& _retval)
 {
-  int32_t len;
-  char* str;
-  nsresult rv = ConvertFromUnicodeWithLength(aSrc, &len, &str);
-  if (NS_SUCCEEDED(rv)) {
-    // No Adopt on nsACString :(
-    if (!_retval.Assign(str, len, mozilla::fallible)) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-    free(str);
-  }
-  return rv;
-}
-
-nsresult
-nsScriptableUnicodeConverter::FinishWithLength(char **_retval, int32_t* aLength)
-{
   if (!mEncoder)
     return NS_ERROR_FAILURE;
 
-  int32_t finLength = 32;
-
-  *_retval = (char *)malloc(finLength);
-  if (!*_retval)
+  // We can compute the length without replacement, because the
+  // the replacement is only one byte long and a mappable character
+  // would always output something, i.e. at least one byte.
+  // When encoding to ISO-2022-JP, unmappables shouldn't be able
+  // to cause more escape sequences to be emitted than the mappable
+  // worst case where every input character causes an escape into
+  // a different state.
+  CheckedInt<size_t> needed =
+    mEncoder->MaxBufferLengthFromUTF16WithoutReplacement(aSrc.Length());
+  if (!needed.isValid() || needed.value() > UINT32_MAX) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  nsresult rv = mEncoder->Finish(*_retval, &finLength);
-  if (NS_SUCCEEDED(rv))
-    *aLength = finLength;
-  else
-    free(*_retval);
+  if (!_retval.SetLength(needed.value(), fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  return rv;
-
+  auto src = MakeSpan(aSrc);
+  auto dst = AsWritableBytes(MakeSpan(_retval));
+  size_t totalWritten = 0;
+  for (;;) {
+    uint32_t result;
+    size_t read;
+    size_t written;
+    Tie(result, read, written) =
+      mEncoder->EncodeFromUTF16WithoutReplacement(src, dst, false);
+    if (result != kInputEmpty && result != kOutputFull) {
+      MOZ_RELEASE_ASSERT(written < dst.Length(),
+        "Unmappables with one-byte replacement should not exceed mappable worst case.");
+      dst[written++] = '?';
+    }
+    totalWritten += written;
+    if (result == kInputEmpty) {
+      MOZ_ASSERT(totalWritten <= UINT32_MAX);
+      if (!_retval.SetLength(totalWritten, fallible)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      return NS_OK;
+    }
+    src = src.From(read);
+    dst = dst.From(written);
+  }
 }
 
 NS_IMETHODIMP
@@ -105,29 +86,38 @@ nsScriptableUnicodeConverter::Finish(nsACString& _retval)
   // error for this class to handle conversions in both directions.
   if (!mEncoder) {
     _retval.Truncate();
+    mDecoder->Encoding()->NewDecoderWithBOMRemovalInto(*mDecoder);
     return NS_OK;
   }
-  int32_t len;
-  char* str;
-  nsresult rv = FinishWithLength(&str, &len);
-  if (NS_SUCCEEDED(rv)) {
-    // No Adopt on nsACString :(
-    if (!_retval.Assign(str, len, mozilla::fallible)) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-    free(str);
-  }
-  return rv;
+  // If we are encoding to ISO-2022-JP, potentially
+  // transition back to the ASCII state. The buffer
+  // needs to be large enough for an additional NCR,
+  // though.
+  _retval.SetLength(13);
+  Span<char16_t> src(nullptr);
+  uint32_t result;
+  size_t read;
+  size_t written;
+  bool hadErrors;
+  Tie(result, read, written, hadErrors) =
+    mEncoder->EncodeFromUTF16(src, _retval, true);
+  Unused << hadErrors;
+  MOZ_ASSERT(!read);
+  MOZ_ASSERT(result == kInputEmpty);
+  _retval.SetLength(written);
+
+  mDecoder->Encoding()->NewDecoderWithBOMRemovalInto(*mDecoder);
+  mEncoder->Encoding()->NewEncoderInto(*mEncoder);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsScriptableUnicodeConverter::ConvertToUnicode(const nsACString& aSrc, nsAString& _retval)
 {
-  nsACString::const_iterator i;
-  aSrc.BeginReading(i);
-  return ConvertFromByteArray(reinterpret_cast<const uint8_t*>(i.get()),
-                              aSrc.Length(),
-                              _retval);
+  return ConvertFromByteArray(
+    reinterpret_cast<const uint8_t*>(aSrc.BeginReading()),
+    aSrc.Length(),
+    _retval);
 }
 
 NS_IMETHODIMP
@@ -138,31 +128,42 @@ nsScriptableUnicodeConverter::ConvertFromByteArray(const uint8_t* aData,
   if (!mDecoder)
     return NS_ERROR_FAILURE;
 
-  nsresult rv = NS_OK;
-  int32_t inLength = aCount;
-  int32_t outLength;
-  rv = mDecoder->GetMaxLength(reinterpret_cast<const char*>(aData),
-                              inLength, &outLength);
-  if (NS_SUCCEEDED(rv))
-  {
-    char16_t* buf = (char16_t*)malloc((outLength+1) * sizeof(char16_t));
-    if (!buf)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = mDecoder->Convert(reinterpret_cast<const char*>(aData),
-                           &inLength, buf, &outLength);
-    if (NS_SUCCEEDED(rv))
-    {
-      buf[outLength] = 0;
-      if (!_retval.Assign(buf, outLength, mozilla::fallible)) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
-    free(buf);
-    return rv;
+  CheckedInt<size_t> needed = mDecoder->MaxUTF16BufferLength(aCount);
+  if (!needed.isValid() || needed.value() > UINT32_MAX) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
-  return NS_ERROR_FAILURE;
 
+  if (!_retval.SetLength(needed.value(), fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  auto src = MakeSpan(aData, aCount);
+  uint32_t result;
+  size_t read;
+  size_t written;
+  bool hadErrors;
+  // The UTF-8 decoder used to throw regardless of the error behavior.
+  // Simulating the old behavior for compatibility with legacy callers.
+  // If callers want control over the behavior, they should switch to
+  // TextDecoder.
+  if (mDecoder->Encoding() == UTF_8_ENCODING) {
+    Tie(result, read, written) =
+      mDecoder->DecodeToUTF16WithoutReplacement(src, _retval, false);
+    if (result != kInputEmpty) {
+      return NS_ERROR_UDEC_ILLEGALINPUT;
+    }
+  } else {
+    Tie(result, read, written, hadErrors) =
+      mDecoder->DecodeToUTF16(src, _retval, false);
+  }
+  MOZ_ASSERT(result == kInputEmpty);
+  MOZ_ASSERT(read == aCount);
+  MOZ_ASSERT(written <= needed.value());
+  Unused << hadErrors;
+  if (!_retval.SetLength(written, fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -170,27 +171,44 @@ nsScriptableUnicodeConverter::ConvertToByteArray(const nsAString& aString,
                                                  uint32_t* aLen,
                                                  uint8_t** _aData)
 {
-  char* data;
-  int32_t len;
-  nsresult rv = ConvertFromUnicodeWithLength(aString, &len, &data);
-  if (NS_FAILED(rv))
-    return rv;
-  nsXPIDLCString str;
-  str.Adopt(data, len); // NOTE: This uses the XPIDLCString as a byte array
+  if (!mEncoder)
+    return NS_ERROR_FAILURE;
 
-  rv = FinishWithLength(&data, &len);
-  if (NS_FAILED(rv))
-    return rv;
-
-  str.Append(data, len);
-  free(data);
-  // NOTE: this being a byte array, it needs no null termination
-  *_aData = reinterpret_cast<uint8_t*>(malloc(str.Length()));
-  if (!*_aData)
+  CheckedInt<size_t> needed =
+    mEncoder->MaxBufferLengthFromUTF16WithoutReplacement(aString.Length());
+  if (!needed.isValid() || needed.value() > UINT32_MAX) {
     return NS_ERROR_OUT_OF_MEMORY;
-  memcpy(*_aData, str.get(), str.Length());
-  *aLen = str.Length();
-  return NS_OK;
+  }
+
+  uint8_t* data = (uint8_t*)malloc(needed.value());
+  if (!data) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  auto src = MakeSpan(aString);
+  auto dst = MakeSpan(data, needed.value());
+  size_t totalWritten = 0;
+  for (;;) {
+    uint32_t result;
+    size_t read;
+    size_t written;
+    Tie(result, read, written) =
+      mEncoder->EncodeFromUTF16WithoutReplacement(src, dst, true);
+    if (result != kInputEmpty && result != kOutputFull) {
+      // There's always room for one byte in the case of
+      // an unmappable character, because otherwise
+      // we'd have gotten `kOutputFull`.
+      dst[written++] = '?';
+    }
+    totalWritten += written;
+    if (result == kInputEmpty) {
+      *_aData = data;
+      MOZ_ASSERT(totalWritten <= UINT32_MAX);
+      *aLen = totalWritten;
+      return NS_OK;
+    }
+    src = src.From(read);
+    dst = dst.From(written);
+  }
 }
 
 NS_IMETHODIMP
@@ -220,20 +238,20 @@ nsScriptableUnicodeConverter::ConvertToInputStream(const nsAString& aString,
 }
 
 NS_IMETHODIMP
-nsScriptableUnicodeConverter::GetCharset(char * *aCharset)
+nsScriptableUnicodeConverter::GetCharset(nsACString& aCharset)
 {
-  *aCharset = ToNewCString(mCharset);
-  if (!*aCharset)
-    return NS_ERROR_OUT_OF_MEMORY;
-
+  if (!mDecoder) {
+    aCharset.Truncate();
+  } else {
+    mDecoder->Encoding()->Name(aCharset);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptableUnicodeConverter::SetCharset(const char * aCharset)
+nsScriptableUnicodeConverter::SetCharset(const nsACString& aCharset)
 {
-  mCharset.Assign(aCharset);
-  return InitConverter();
+  return InitConverter(aCharset);
 }
 
 NS_IMETHODIMP
@@ -251,70 +269,18 @@ nsScriptableUnicodeConverter::SetIsInternal(const bool aIsInternal)
 }
 
 nsresult
-nsScriptableUnicodeConverter::InitConverter()
+nsScriptableUnicodeConverter::InitConverter(const nsACString& aCharset)
 {
   mEncoder = nullptr;
   mDecoder = nullptr;
 
-  nsAutoCString encoding;
-  if (mIsInternal) {
-    // For compatibility with legacy extensions, let's try to see if the label
-    // happens to be ASCII-case-insensitively an encoding. This should allow
-    // for things like "utf-7" and "x-Mac-Hebrew".
-    nsAutoCString contractId;
-    nsAutoCString label(mCharset);
-    EncodingUtils::TrimSpaceCharacters(label);
-    // Let's try in lower case if we didn't get an decoder. E.g. x-mac-ce
-    // and x-imap4-modified-utf7 are all lower case.
-    ToLowerCase(label);
-    if (label.EqualsLiteral("replacement")) {
-      // reject "replacement"
-      return NS_ERROR_UCONV_NOCONV;
-    }
-    contractId.AssignLiteral(NS_UNICODEENCODER_CONTRACTID_BASE);
-    contractId.Append(label);
-    mEncoder = do_CreateInstance(contractId.get());
-    contractId.AssignLiteral(NS_UNICODEDECODER_CONTRACTID_BASE);
-    contractId.Append(label);
-    mDecoder = do_CreateInstance(contractId.get());
-    if (!mDecoder) {
-      // The old code seemed to want both a decoder and an encoder. Since some
-      // internal encodings will be decoder-only in the future, let's relax
-      // this. Note that the other methods check mEncoder for null anyway.
-      // Let's try the upper case. E.g. UTF-7 and ISO-2022-CN have upper
-      // case Gecko-canonical names.
-      ToUpperCase(label);
-      contractId.AssignLiteral(NS_UNICODEENCODER_CONTRACTID_BASE);
-      contractId.Append(label);
-      mEncoder = do_CreateInstance(contractId.get());
-      contractId.AssignLiteral(NS_UNICODEDECODER_CONTRACTID_BASE);
-      contractId.Append(label);
-      mDecoder = do_CreateInstance(contractId.get());
-      // If still no decoder, use the normal non-internal case below.
-    }
+  auto encoding = Encoding::ForLabelNoReplacement(aCharset);
+  if (!encoding) {
+    return NS_ERROR_UCONV_NOCONV;
   }
-
-  if (!mDecoder) {
-    if (!EncodingUtils::FindEncodingForLabelNoReplacement(mCharset, encoding)) {
-      return NS_ERROR_UCONV_NOCONV;
-    }
-    mEncoder = EncodingUtils::EncoderForEncoding(encoding);
-    mDecoder = EncodingUtils::DecoderForEncoding(encoding);
+  if (!(encoding == UTF_16LE_ENCODING || encoding == UTF_16BE_ENCODING)) {
+    mEncoder = encoding->NewEncoder();
   }
-
-  // The UTF-8 decoder used to throw regardless of the error behavior.
-  // Simulating the old behavior for compatibility with legacy callers
-  // (including addons). If callers want a control over the behavior,
-  // they should switch to TextDecoder.
-  if (encoding.EqualsLiteral("UTF-8")) {
-    mDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Signal);
-  }
-
-  if (!mEncoder) {
-    return NS_OK;
-  }
-
-  return mEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace,
-                                          nullptr,
-                                          (char16_t)'?');
+  mDecoder = encoding->NewDecoderWithBOMRemoval();
+  return NS_OK;
 }

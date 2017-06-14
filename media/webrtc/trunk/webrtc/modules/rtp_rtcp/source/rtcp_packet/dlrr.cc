@@ -32,6 +32,7 @@ namespace rtcp {
 //  |                 SSRC_2 (SSRC of second receiver)              | sub-
 //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ block
 //  :                               ...                             :   2
+
 bool Dlrr::Parse(const uint8_t* buffer, uint16_t block_length_32bits) {
   RTC_DCHECK(buffer[0] == kBlockType);
   // kReserved = buffer[1];
@@ -45,7 +46,7 @@ bool Dlrr::Parse(const uint8_t* buffer, uint16_t block_length_32bits) {
   size_t blocks_count = block_length_32bits / 3;
   const uint8_t* read_at = buffer + kBlockHeaderLength;
   sub_blocks_.resize(blocks_count);
-  for (SubBlock& sub_block : sub_blocks_) {
+  for (ReceiveTimeInfo& sub_block : sub_blocks_) {
     sub_block.ssrc = ByteReader<uint32_t>::ReadBigEndian(&read_at[0]);
     sub_block.last_rr = ByteReader<uint32_t>::ReadBigEndian(&read_at[4]);
     sub_block.delay_since_last_rr =
@@ -71,7 +72,7 @@ void Dlrr::Create(uint8_t* buffer) const {
   ByteWriter<uint16_t>::WriteBigEndian(&buffer[2], 3 * sub_blocks_.size());
   // Create sub blocks.
   uint8_t* write_at = buffer + kBlockHeaderLength;
-  for (const SubBlock& sub_block : sub_blocks_) {
+  for (const ReceiveTimeInfo& sub_block : sub_blocks_) {
     ByteWriter<uint32_t>::WriteBigEndian(&write_at[0], sub_block.ssrc);
     ByteWriter<uint32_t>::WriteBigEndian(&write_at[4], sub_block.last_rr);
     ByteWriter<uint32_t>::WriteBigEndian(&write_at[8],
@@ -79,21 +80,6 @@ void Dlrr::Create(uint8_t* buffer) const {
     write_at += kSubBlockLength;
   }
   RTC_DCHECK_EQ(buffer + BlockLength(), write_at);
-}
-
-bool Dlrr::WithDlrrItem(uint32_t ssrc,
-                        uint32_t last_rr,
-                        uint32_t delay_last_rr) {
-  if (sub_blocks_.size() >= kMaxNumberOfDlrrItems) {
-    LOG(LS_WARNING) << "Max DLRR items reached.";
-    return false;
-  }
-  SubBlock block;
-  block.ssrc = ssrc;
-  block.last_rr = last_rr;
-  block.delay_since_last_rr = delay_last_rr;
-  sub_blocks_.push_back(block);
-  return true;
 }
 
 }  // namespace rtcp

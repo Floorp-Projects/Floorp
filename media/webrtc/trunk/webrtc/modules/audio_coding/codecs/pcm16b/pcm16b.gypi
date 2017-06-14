@@ -13,6 +13,7 @@
       'type': 'static_library',
       'dependencies': [
         'audio_encoder_interface',
+        'audio_decoder_interface',
         'g711',
       ],
       'sources': [

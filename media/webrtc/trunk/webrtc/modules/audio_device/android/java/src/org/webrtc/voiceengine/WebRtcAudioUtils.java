@@ -10,19 +10,14 @@
 
 package org.webrtc.voiceengine;
 
+import android.util.Log;
+
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.media.audiofx.AcousticEchoCanceler;
-import android.media.audiofx.AudioEffect;
-import android.media.audiofx.AudioEffect.Descriptor;
-import android.media.AudioManager;
 import android.os.Build;
 import android.os.Process;
 
-import android.util.Log;
-
 import java.lang.Thread;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -33,26 +28,20 @@ public final class WebRtcAudioUtils {
   // the low latency output mode in combination with OpenSL ES.
   // The device name is given by Build.MODEL.
   private static final String[] BLACKLISTED_OPEN_SL_ES_MODELS = new String[] {
-    // This list is currently empty ;-)
+      // This list is currently empty ;-)
   };
 
   // List of devices where it has been verified that the built-in effect
   // bad and where it makes sense to avoid using it and instead rely on the
   // native WebRTC version instead. The device name is given by Build.MODEL.
   private static final String[] BLACKLISTED_AEC_MODELS = new String[] {
-      "Nexus 5",
-      "D6503",      // Sony Xperia Z2 D6503
-      "ONE A2005",  // OnePlus 2
-  };
-  private static final String[] BLACKLISTED_AGC_MODELS = new String[] {
-      "Nexus 10",
-      "Nexus 9",
+      "D6503", // Sony Xperia Z2 D6503
+      "ONE A2005", // OnePlus 2
+      "MotoG3", // Moto G (3rd Generation)
   };
   private static final String[] BLACKLISTED_NS_MODELS = new String[] {
-      "Nexus 10",
-      "Nexus 9",
-      "Nexus 5",
-      "ONE A2005",  // OnePlus 2
+      "Nexus 10", "Nexus 9",
+      "ONE A2005", // OnePlus 2
   };
 
   // Use 16kHz as the default sample rate. A higher sample rate might prevent
@@ -62,24 +51,22 @@ public final class WebRtcAudioUtils {
   // Set to true if setDefaultSampleRateHz() has been called.
   private static boolean isDefaultSampleRateOverridden = false;
 
-  // By default, utilize hardware based audio effects when available.
+  // By default, utilize hardware based audio effects for AEC and NS when
+  // available.
   private static boolean useWebRtcBasedAcousticEchoCanceler = false;
-  private static boolean useWebRtcBasedAutomaticGainControl = false;
   private static boolean useWebRtcBasedNoiseSuppressor = false;
 
   // Call these methods if any hardware based effect shall be replaced by a
   // software based version provided by the WebRTC stack instead.
-  public static synchronized void setWebRtcBasedAcousticEchoCanceler(
-      boolean enable) {
+  public static synchronized void setWebRtcBasedAcousticEchoCanceler(boolean enable) {
     useWebRtcBasedAcousticEchoCanceler = enable;
   }
-  public static synchronized void setWebRtcBasedAutomaticGainControl(
-      boolean enable) {
-    useWebRtcBasedAutomaticGainControl = enable;
-  }
-  public static synchronized void setWebRtcBasedNoiseSuppressor(
-      boolean enable) {
+  public static synchronized void setWebRtcBasedNoiseSuppressor(boolean enable) {
     useWebRtcBasedNoiseSuppressor = enable;
+  }
+  public static synchronized void setWebRtcBasedAutomaticGainControl(boolean enable) {
+    // TODO(henrika): deprecated; remove when no longer used by any client.
+    Log.w(TAG, "setWebRtcBasedAutomaticGainControl() is deprecated");
   }
 
   public static synchronized boolean useWebRtcBasedAcousticEchoCanceler() {
@@ -88,17 +75,34 @@ public final class WebRtcAudioUtils {
     }
     return useWebRtcBasedAcousticEchoCanceler;
   }
-  public static synchronized boolean useWebRtcBasedAutomaticGainControl() {
-    if (useWebRtcBasedAutomaticGainControl) {
-      Log.w(TAG, "Overriding default behavior; now using WebRTC AGC!");
-    }
-    return useWebRtcBasedAutomaticGainControl;
-  }
   public static synchronized boolean useWebRtcBasedNoiseSuppressor() {
     if (useWebRtcBasedNoiseSuppressor) {
       Log.w(TAG, "Overriding default behavior; now using WebRTC NS!");
     }
     return useWebRtcBasedNoiseSuppressor;
+  }
+  // TODO(henrika): deprecated; remove when no longer used by any client.
+  public static synchronized boolean useWebRtcBasedAutomaticGainControl() {
+    // Always return true here to avoid trying to use any built-in AGC.
+    return true;
+  }
+
+  // Returns true if the device supports an audio effect (AEC or NS).
+  // Four conditions must be fulfilled if functions are to return true:
+  // 1) the platform must support the built-in (HW) effect,
+  // 2) explicit use (override) of a WebRTC based version must not be set,
+  // 3) the device must not be blacklisted for use of the effect, and
+  // 4) the UUID of the effect must be approved (some UUIDs can be excluded).
+  public static boolean isAcousticEchoCancelerSupported() {
+    return WebRtcAudioEffects.canUseAcousticEchoCanceler();
+  }
+  public static boolean isNoiseSuppressorSupported() {
+    return WebRtcAudioEffects.canUseNoiseSuppressor();
+  }
+  // TODO(henrika): deprecated; remove when no longer used by any client.
+  public static boolean isAutomaticGainControlSupported() {
+    // Always return false here to avoid trying to use any built-in AGC.
+    return false;
   }
 
   // Call this method if the default handling of querying the native sample
@@ -119,10 +123,6 @@ public final class WebRtcAudioUtils {
 
   public static List<String> getBlackListedModelsForAecUsage() {
     return Arrays.asList(WebRtcAudioUtils.BLACKLISTED_AEC_MODELS);
-  }
-
-  public static List<String> getBlackListedModelsForAgcUsage() {
-    return Arrays.asList(WebRtcAudioUtils.BLACKLISTED_AGC_MODELS);
   }
 
   public static List<String> getBlackListedModelsForNsUsage() {
@@ -154,49 +154,52 @@ public final class WebRtcAudioUtils {
     return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
   }
 
-  // TODO(phoglund): enable when all downstream users use M.
-  // public static boolean runningOnMOrHigher() {
+  public static boolean runningOnMarshmallowOrHigher() {
     // API Level 23.
-    // return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
-  //}
+    return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
+  }
+
+  public static boolean runningOnNougatOrHigher() {
+    /* Mozilla: This requires API Level 24, but we build for 23
+    // API Level 24.
+    return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
+    */
+    return false;
+  }
 
   // Helper method for building a string of thread information.
   public static String getThreadInfo() {
-    return "@[name=" + Thread.currentThread().getName()
-        + ", id=" + Thread.currentThread().getId() + "]";
+    return "@[name=" + Thread.currentThread().getName() + ", id=" + Thread.currentThread().getId()
+        + "]";
   }
 
   // Returns true if we're running on emulator.
   public static boolean runningOnEmulator() {
-    return Build.HARDWARE.equals("goldfish") &&
-        Build.BRAND.startsWith("generic_");
+    return Build.HARDWARE.equals("goldfish") && Build.BRAND.startsWith("generic_");
   }
 
   // Returns true if the device is blacklisted for OpenSL ES usage.
   public static boolean deviceIsBlacklistedForOpenSLESUsage() {
-    List<String> blackListedModels =
-        Arrays.asList(BLACKLISTED_OPEN_SL_ES_MODELS);
+    List<String> blackListedModels = Arrays.asList(BLACKLISTED_OPEN_SL_ES_MODELS);
     return blackListedModels.contains(Build.MODEL);
   }
 
   // Information about the current build, taken from system properties.
   public static void logDeviceInfo(String tag) {
     Log.d(tag, "Android SDK: " + Build.VERSION.SDK_INT + ", "
-        + "Release: " + Build.VERSION.RELEASE + ", "
-        + "Brand: " + Build.BRAND + ", "
-        + "Device: " + Build.DEVICE + ", "
-        + "Id: " + Build.ID + ", "
-        + "Hardware: " + Build.HARDWARE + ", "
-        + "Manufacturer: " + Build.MANUFACTURER + ", "
-        + "Model: " + Build.MODEL + ", "
-        + "Product: " + Build.PRODUCT);
+            + "Release: " + Build.VERSION.RELEASE + ", "
+            + "Brand: " + Build.BRAND + ", "
+            + "Device: " + Build.DEVICE + ", "
+            + "Id: " + Build.ID + ", "
+            + "Hardware: " + Build.HARDWARE + ", "
+            + "Manufacturer: " + Build.MANUFACTURER + ", "
+            + "Model: " + Build.MODEL + ", "
+            + "Product: " + Build.PRODUCT);
   }
 
   // Checks if the process has as specified permission or not.
   public static boolean hasPermission(Context context, String permission) {
-    return context.checkPermission(
-        permission,
-        Process.myPid(),
-        Process.myUid()) == PackageManager.PERMISSION_GRANTED;
-    }
+    return context.checkPermission(permission, Process.myPid(), Process.myUid())
+        == PackageManager.PERMISSION_GRANTED;
+  }
 }

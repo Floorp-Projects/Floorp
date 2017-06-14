@@ -194,7 +194,7 @@ public:
    * @see nsLayoutUtils::DrawImage() for parameters.
    */
   DrawResult DrawLayer(nsPresContext*       aPresContext,
-                       nsRenderingContext&  aRenderingContext,
+                       gfxContext&          aRenderingContext,
                        const nsRect&        aDest,
                        const nsRect&        aFill,
                        const nsPoint&       aAnchor,
@@ -240,7 +240,7 @@ public:
    */
   DrawResult
   DrawBorderImageComponent(nsPresContext*       aPresContext,
-                           nsRenderingContext&  aRenderingContext,
+                           gfxContext&          aRenderingContext,
                            const nsRect&        aDirtyRect,
                            const nsRect&        aFill,
                            const mozilla::CSSIntRect& aSrc,
@@ -276,7 +276,7 @@ private:
    * @see nsLayoutUtils::DrawImage() for other parameters.
    */
   DrawResult Draw(nsPresContext*       aPresContext,
-                  nsRenderingContext&  aRenderingContext,
+                  gfxContext&          aRenderingContext,
                   const nsRect&        aDirtyRect,
                   const nsRect&        aDest,
                   const nsRect&        aFill,

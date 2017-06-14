@@ -44,40 +44,49 @@ TextDecoder::InitWithEncoding(const nsACString& aEncoding, const bool aFatal)
 
   // Create a decoder object for mEncoding.
   mDecoder = EncodingUtils::DecoderForEncoding(mEncoding);
-
-  if (mFatal) {
-    mDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Signal);
-  }
 }
 
 void
-TextDecoder::Decode(const char* aInput, const int32_t aLength,
-                    const bool aStream, nsAString& aOutDecodedString,
+TextDecoder::Decode(Span<const uint8_t> aInput,
+                    const bool aStream,
+                    nsAString& aOutDecodedString,
                     ErrorResult& aRv)
 {
   aOutDecodedString.Truncate();
 
-  // Run or resume the decoder algorithm of the decoder object's encoder.
-  int32_t outLen;
-  nsresult rv = mDecoder->GetMaxLength(aInput, aLength, &outLen);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return;
-  }
-  // Need a fallible allocator because the caller may be a content
-  // and the content can specify the length of the string.
-  auto buf = MakeUniqueFallible<char16_t[]>(outLen + 1);
-  if (!buf) {
+  CheckedInt<size_t> needed = mDecoder->MaxUTF16BufferLength(aInput.Length());
+  if (!needed.isValid() ||
+      needed.value() > MaxValue<nsAString::size_type>::value) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
 
-  int32_t length = aLength;
-  rv = mDecoder->Convert(aInput, &length, buf.get(), &outLen);
-  MOZ_ASSERT(mFatal || rv != NS_ERROR_ILLEGAL_INPUT);
-  buf[outLen] = 0;
+  if (!aOutDecodedString.SetLength(needed.value(), fallible)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
 
-  if (!aOutDecodedString.Append(buf.get(), outLen, fallible)) {
+  uint32_t result;
+  size_t read;
+  size_t written;
+  bool hadErrors;
+  if (mFatal) {
+    Tie(result, read, written) = mDecoder->DecodeToUTF16WithoutReplacement(
+      aInput, aOutDecodedString, !aStream);
+    if (result != kInputEmpty) {
+      aRv.ThrowTypeError<MSG_DOM_DECODING_FAILED>();
+      return;
+    }
+  } else {
+    Tie(result, read, written, hadErrors) =
+      mDecoder->DecodeToUTF16(aInput, aOutDecodedString, !aStream);
+  }
+  MOZ_ASSERT(result == kInputEmpty);
+  MOZ_ASSERT(read == aInput.Length());
+  MOZ_ASSERT(written <= aOutDecodedString.Length());
+  Unused << hadErrors;
+
+  if (!aOutDecodedString.SetLength(written, fallible)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
@@ -85,20 +94,7 @@ TextDecoder::Decode(const char* aInput, const int32_t aLength,
   // If the internal streaming flag of the decoder object is not set,
   // then reset the encoding algorithm state to the default values
   if (!aStream) {
-    mDecoder->Reset();
-    if (rv == NS_OK_UDEC_MOREINPUT) {
-      if (mFatal) {
-        aRv.ThrowTypeError<MSG_DOM_DECODING_FAILED>();
-      } else {
-        // Need to emit a decode error manually
-        // to simulate the EOF handling of the Encoding spec.
-        aOutDecodedString.Append(kReplacementChar);
-      }
-    }
-  }
-
-  if (NS_FAILED(rv)) {
-    aRv.ThrowTypeError<MSG_DOM_DECODING_FAILED>();
+    mDecoder->Encoding()->NewDecoderWithBOMRemovalInto(*mDecoder);
   }
 }
 
@@ -109,7 +105,7 @@ TextDecoder::Decode(const Optional<ArrayBufferViewOrArrayBuffer>& aBuffer,
                     ErrorResult& aRv)
 {
   if (!aBuffer.WasPassed()) {
-    Decode(nullptr, 0, aOptions.mStream, aOutDecodedString, aRv);
+    Decode(nullptr, aOptions.mStream, aOutDecodedString, aRv);
     return;
   }
   const ArrayBufferViewOrArrayBuffer& buf = aBuffer.Value();
@@ -125,15 +121,7 @@ TextDecoder::Decode(const Optional<ArrayBufferViewOrArrayBuffer>& aBuffer,
     data = buf.GetAsArrayBuffer().Data();
     length = buf.GetAsArrayBuffer().Length();
   }
-  // The other Decode signature takes a signed int, because that's
-  // what nsIUnicodeDecoder::Convert takes as the length.  Throw if
-  // our length is too big.
-  if (length > INT32_MAX) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return;
-  }
-  Decode(reinterpret_cast<char*>(data), length, aOptions.mStream,
-         aOutDecodedString, aRv);
+  Decode(MakeSpan(data, length), aOptions.mStream, aOutDecodedString, aRv);
 }
 
 void

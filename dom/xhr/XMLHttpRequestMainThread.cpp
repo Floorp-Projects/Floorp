@@ -77,7 +77,6 @@
 #include "jsfriendapi.h"
 #include "GeckoProfiler.h"
 #include "mozilla/dom/EncodingUtils.h"
-#include "nsIUnicodeDecoder.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "mozilla/Attributes.h"
 #include "MultipartBlobImpl.h"
@@ -529,35 +528,38 @@ XMLHttpRequestMainThread::AppendToResponseText(const char * aSrcBuffer,
 {
   NS_ENSURE_STATE(mDecoder);
 
-  int32_t destBufferLen;
-  nsresult rv = mDecoder->GetMaxLength(aSrcBuffer, aSrcBufferLen,
-                                       &destBufferLen);
-  NS_ENSURE_SUCCESS(rv, rv);
+  CheckedInt<size_t> destBufferLen =
+    mDecoder->MaxUTF16BufferLength(aSrcBufferLen);
+  if (!destBufferLen.isValid()) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   CheckedInt32 size = mResponseText.Length();
-  size += destBufferLen;
+  size += destBufferLen.value();
   if (!size.isValid()) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   XMLHttpRequestStringWriterHelper helper(mResponseText);
 
-  if (!helper.AddCapacity(destBufferLen)) {
+  if (!helper.AddCapacity(destBufferLen.value())) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // This code here is basically a copy of a similar thing in
-  // nsScanner::Append(const char* aBuffer, uint32_t aLen).
-  int32_t srclen = (int32_t)aSrcBufferLen;
-  int32_t destlen = (int32_t)destBufferLen;
-  rv = mDecoder->Convert(aSrcBuffer,
-                         &srclen,
-                         helper.EndOfExistingData(),
-                         &destlen);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  MOZ_ASSERT(destlen <= destBufferLen);
-
-  helper.AddLength(destlen);
+  // XXX there's no handling for incomplete byte sequences on EOF!
+  uint32_t result;
+  size_t read;
+  size_t written;
+  bool hadErrors;
+  Tie(result, read, written, hadErrors) = mDecoder->DecodeToUTF16(
+    AsBytes(MakeSpan(aSrcBuffer, aSrcBufferLen)),
+    MakeSpan(helper.EndOfExistingData(), destBufferLen.value()),
+    false);
+  MOZ_ASSERT(result == kInputEmpty);
+  MOZ_ASSERT(read == aSrcBufferLen);
+  MOZ_ASSERT(written <= destBufferLen.value());
+  Unused << hadErrors;
+  helper.AddLength(written);
   return NS_OK;
 }
 

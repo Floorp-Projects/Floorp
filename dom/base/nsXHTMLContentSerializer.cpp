@@ -58,9 +58,12 @@ nsXHTMLContentSerializer::~nsXHTMLContentSerializer()
 }
 
 NS_IMETHODIMP
-nsXHTMLContentSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
-                              const char* aCharSet, bool aIsCopying,
-                              bool aRewriteEncodingDeclaration)
+nsXHTMLContentSerializer::Init(uint32_t aFlags,
+                               uint32_t aWrapColumn,
+                               const mozilla::Encoding* aEncoding,
+                               bool aIsCopying,
+                               bool aRewriteEncodingDeclaration,
+                               bool* aNeedsPreformatScanning)
 {
   // The previous version of the HTML serializer did implicit wrapping
   // when there is no flags, so we keep wrapping in order to keep
@@ -71,7 +74,8 @@ nsXHTMLContentSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
   }
 
   nsresult rv;
-  rv = nsXMLContentSerializer::Init(aFlags, aWrapColumn, aCharSet, aIsCopying, aRewriteEncodingDeclaration);
+  rv = nsXMLContentSerializer::Init(
+    aFlags, aWrapColumn, aEncoding, aIsCopying, aRewriteEncodingDeclaration, aNeedsPreformatScanning);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mRewriteEncodingDeclaration = aRewriteEncodingDeclaration;

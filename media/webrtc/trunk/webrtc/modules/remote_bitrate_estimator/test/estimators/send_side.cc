@@ -10,8 +10,10 @@
 
 #include "webrtc/modules/remote_bitrate_estimator/test/estimators/send_side.h"
 
+#include <algorithm>
+
 #include "webrtc/base/logging.h"
-#include "webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_abs_send_time.h"
+#include "webrtc/modules/congestion_controller/delay_based_bwe.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/bwe_test_logging.h"
 
 namespace webrtc {
@@ -20,31 +22,35 @@ namespace bwe {
 
 const int kFeedbackIntervalMs = 50;
 
-FullBweSender::FullBweSender(int kbps, BitrateObserver* observer, Clock* clock)
+SendSideBweSender::SendSideBweSender(int kbps,
+                                     BitrateObserver* observer,
+                                     Clock* clock)
     : bitrate_controller_(
-          BitrateController::CreateBitrateController(clock, observer)),
-      rbe_(new RemoteBitrateEstimatorAbsSendTime(this, clock)),
+          BitrateController::CreateBitrateController(clock,
+                                                     observer,
+                                                     &event_log_)),
+      bwe_(new DelayBasedBwe(clock)),
       feedback_observer_(bitrate_controller_->CreateRtcpBandwidthObserver()),
       clock_(clock),
       send_time_history_(clock_, 10000),
       has_received_ack_(false),
-      last_acked_seq_num_(0) {
+      last_acked_seq_num_(0),
+      last_log_time_ms_(0) {
   assert(kbps >= kMinBitrateKbps);
   assert(kbps <= kMaxBitrateKbps);
   bitrate_controller_->SetStartBitrate(1000 * kbps);
   bitrate_controller_->SetMinMaxBitrate(1000 * kMinBitrateKbps,
                                         1000 * kMaxBitrateKbps);
-  rbe_->SetMinBitrate(1000 * kMinBitrateKbps);
+  bwe_->SetMinBitrate(1000 * kMinBitrateKbps);
 }
 
-FullBweSender::~FullBweSender() {
-}
+SendSideBweSender::~SendSideBweSender() {}
 
-int FullBweSender::GetFeedbackIntervalMs() const {
+int SendSideBweSender::GetFeedbackIntervalMs() const {
   return kFeedbackIntervalMs;
 }
 
-void FullBweSender::GiveFeedback(const FeedbackPacket& feedback) {
+void SendSideBweSender::GiveFeedback(const FeedbackPacket& feedback) {
   const SendSideBweFeedback& fb =
       static_cast<const SendSideBweFeedback&>(feedback);
   if (fb.packet_feedback_vector().empty())
@@ -52,16 +58,24 @@ void FullBweSender::GiveFeedback(const FeedbackPacket& feedback) {
   std::vector<PacketInfo> packet_feedback_vector(fb.packet_feedback_vector());
   for (PacketInfo& packet_info : packet_feedback_vector) {
     if (!send_time_history_.GetInfo(&packet_info, true)) {
-      LOG(LS_WARNING) << "Ack arrived too late.";
+      int64_t now_ms = clock_->TimeInMilliseconds();
+      if (now_ms - last_log_time_ms_ > 5000) {
+        LOG(LS_WARNING) << "Ack arrived too late.";
+        last_log_time_ms_ = now_ms;
+      }
     }
   }
 
   int64_t rtt_ms =
       clock_->TimeInMilliseconds() - feedback.latest_send_time_ms();
-  rbe_->OnRttUpdate(rtt_ms, rtt_ms);
+  bwe_->OnRttUpdate(rtt_ms, rtt_ms);
   BWE_TEST_LOGGING_PLOT(1, "RTT", clock_->TimeInMilliseconds(), rtt_ms);
 
-  rbe_->IncomingPacketFeedbackVector(packet_feedback_vector);
+  DelayBasedBwe::Result result =
+      bwe_->IncomingPacketFeedbackVector(packet_feedback_vector);
+  if (result.updated)
+    bitrate_controller_->OnDelayBasedBweResult(result);
+
   if (has_received_ack_) {
     int expected_packets = fb.packet_feedback_vector().back().sequence_number -
                            last_acked_seq_num_;
@@ -71,8 +85,10 @@ void FullBweSender::GiveFeedback(const FeedbackPacket& feedback) {
                          static_cast<int>(fb.packet_feedback_vector().size());
       report_block_.fractionLost = (lost_packets << 8) / expected_packets;
       report_block_.cumulativeLost += lost_packets;
+      uint32_t unwrapped = seq_num_unwrapper_.Unwrap(
+          packet_feedback_vector.back().sequence_number);
       report_block_.extendedHighSeqNum =
-          packet_feedback_vector.back().sequence_number;
+          std::max(unwrapped, report_block_.extendedHighSeqNum);
       ReportBlockList report_blocks;
       report_blocks.push_back(report_block_);
       feedback_observer_->OnReceivedRtcpReceiverReport(
@@ -88,32 +104,33 @@ void FullBweSender::GiveFeedback(const FeedbackPacket& feedback) {
   }
 }
 
-void FullBweSender::OnPacketsSent(const Packets& packets) {
+void SendSideBweSender::OnPacketsSent(const Packets& packets) {
   for (Packet* packet : packets) {
     if (packet->GetPacketType() == Packet::kMedia) {
       MediaPacket* media_packet = static_cast<MediaPacket*>(packet);
+      // TODO(philipel): Add probe_cluster_id to Packet class in order
+      //                 to create tests for probing using cluster ids.
       send_time_history_.AddAndRemoveOld(media_packet->header().sequenceNumber,
                                          media_packet->payload_size(),
-                                         packet->paced());
+                                         PacketInfo::kNotAProbe);
       send_time_history_.OnSentPacket(media_packet->header().sequenceNumber,
                                       media_packet->sender_timestamp_ms());
     }
   }
 }
 
-void FullBweSender::OnReceiveBitrateChanged(
-    const std::vector<unsigned int>& ssrcs,
-    unsigned int bitrate) {
+void SendSideBweSender::OnReceiveBitrateChanged(
+    const std::vector<uint32_t>& ssrcs,
+    uint32_t bitrate) {
   feedback_observer_->OnReceivedEstimatedBitrate(bitrate);
 }
 
-int64_t FullBweSender::TimeUntilNextProcess() {
+int64_t SendSideBweSender::TimeUntilNextProcess() {
   return bitrate_controller_->TimeUntilNextProcess();
 }
 
-int FullBweSender::Process() {
-  rbe_->Process();
-  return bitrate_controller_->Process();
+void SendSideBweSender::Process() {
+  bitrate_controller_->Process();
 }
 
 SendSideBweReceiver::SendSideBweReceiver(int flow_id)

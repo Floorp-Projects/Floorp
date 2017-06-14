@@ -12,77 +12,113 @@
 #define WEBRTC_MODULES_AUDIO_CODING_NETEQ_PACKET_H_
 
 #include <list>
+#include <memory>
 
-#include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/base/buffer.h"
+#include "webrtc/modules/audio_coding/codecs/audio_decoder.h"
+#include "webrtc/modules/audio_coding/neteq/tick_timer.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
 
 // Struct for holding RTP packets.
 struct Packet {
-  RTPHeader header;
-  uint8_t* payload;  // Datagram excluding RTP header and header extension.
-  size_t payload_length;
-  bool primary;  // Primary, i.e., not redundant payload.
-  int waiting_time;
-  bool sync_packet;
+  struct Priority {
+    Priority() : codec_level(0), red_level(0) {}
+    Priority(int codec_level, int red_level)
+        : codec_level(codec_level), red_level(red_level) {
+      CheckInvariant();
+    }
 
-  // Constructor.
-  Packet()
-      : payload(NULL),
-        payload_length(0),
-        primary(true),
-        waiting_time(0),
-        sync_packet(false) {
-  }
+    int codec_level;
+    int red_level;
+
+    // Priorities are sorted low-to-high, first on the level the codec
+    // prioritizes it, then on the level of RED packet it is; i.e. if it is a
+    // primary or secondary payload of a RED packet. For example: with Opus, an
+    // Fec packet (which the decoder prioritizes lower than a regular packet)
+    // will not be used if there is _any_ RED payload for the same
+    // timeframe. The highest priority packet will have levels {0, 0}. Negative
+    // priorities are not allowed.
+    bool operator<(const Priority& b) const {
+      CheckInvariant();
+      b.CheckInvariant();
+      if (codec_level == b.codec_level)
+        return red_level < b.red_level;
+
+      return codec_level < b.codec_level;
+    }
+    bool operator==(const Priority& b) const {
+      CheckInvariant();
+      b.CheckInvariant();
+      return codec_level == b.codec_level && red_level == b.red_level;
+    }
+    bool operator!=(const Priority& b) const { return !(*this == b); }
+    bool operator>(const Priority& b) const { return b < *this; }
+    bool operator<=(const Priority& b) const { return !(b > *this); }
+    bool operator>=(const Priority& b) const { return !(b < *this); }
+
+   private:
+    void CheckInvariant() const {
+      RTC_DCHECK_GE(codec_level, 0);
+      RTC_DCHECK_GE(red_level, 0);
+    }
+  };
+
+  uint32_t timestamp;
+  uint16_t sequence_number;
+  uint8_t payload_type;
+  // Datagram excluding RTP header and header extension.
+  rtc::Buffer payload;
+  Priority priority;
+  std::unique_ptr<TickTimer::Stopwatch> waiting_time;
+  std::unique_ptr<AudioDecoder::EncodedAudioFrame> frame;
+
+  Packet();
+  Packet(Packet&& b);
+  ~Packet();
+
+  // Packets should generally be moved around but sometimes it's useful to make
+  // a copy, for example for testing purposes. NOTE: Will only work for
+  // un-parsed packets, i.e. |frame| must be unset. The payload will, however,
+  // be copied. |waiting_time| will also not be copied.
+  Packet Clone() const;
+
+  Packet& operator=(Packet&& b);
 
   // Comparison operators. Establish a packet ordering based on (1) timestamp,
-  // (2) sequence number, (3) regular packet vs sync-packet and (4) redundancy.
+  // (2) sequence number and (3) redundancy.
   // Timestamp and sequence numbers are compared taking wrap-around into
-  // account. If both timestamp and sequence numbers are identical and one of
-  // the packets is sync-packet, the regular packet is considered earlier. For
-  // two regular packets with the same sequence number and timestamp a primary
-  // payload is considered "smaller" than a secondary.
+  // account. For two packets with the same sequence number and timestamp a
+  // primary payload is considered "smaller" than a secondary.
   bool operator==(const Packet& rhs) const {
-    return (this->header.timestamp == rhs.header.timestamp &&
-        this->header.sequenceNumber == rhs.header.sequenceNumber &&
-        this->primary == rhs.primary &&
-        this->sync_packet == rhs.sync_packet);
+    return (this->timestamp == rhs.timestamp &&
+            this->sequence_number == rhs.sequence_number &&
+            this->priority == rhs.priority);
   }
   bool operator!=(const Packet& rhs) const { return !operator==(rhs); }
   bool operator<(const Packet& rhs) const {
-    if (this->header.timestamp == rhs.header.timestamp) {
-      if (this->header.sequenceNumber == rhs.header.sequenceNumber) {
-        // Timestamp and sequence numbers are identical. A sync packet should
-        // be recognized "larger" (i.e. "later") compared to a "network packet"
-        // (regular packet from network not sync-packet). If none of the packets
-        // are sync-packets, then deem the left hand side to be "smaller"
-        // (i.e., "earlier") if it is  primary, and right hand side is not.
-        //
-        // The condition on sync packets to be larger than "network packets,"
-        // given same RTP sequence number and timestamp, guarantees that a
-        // "network packet" to be inserted in an earlier position into
-        // |packet_buffer_| compared to a sync packet of same timestamp and
-        // sequence number.
-        if (rhs.sync_packet)
-          return true;
-        if (this->sync_packet)
-          return false;
-        return (this->primary && !rhs.primary);
+    if (this->timestamp == rhs.timestamp) {
+      if (this->sequence_number == rhs.sequence_number) {
+        // Timestamp and sequence numbers are identical - deem the left hand
+        // side to be "smaller" (i.e., "earlier") if it has higher priority.
+        return this->priority < rhs.priority;
       }
-      return (static_cast<uint16_t>(rhs.header.sequenceNumber
-          - this->header.sequenceNumber) < 0xFFFF / 2);
+      return (static_cast<uint16_t>(rhs.sequence_number -
+                                    this->sequence_number) < 0xFFFF / 2);
     }
-    return (static_cast<uint32_t>(rhs.header.timestamp
-        - this->header.timestamp) < 0xFFFFFFFF / 2);
+    return (static_cast<uint32_t>(rhs.timestamp - this->timestamp) <
+            0xFFFFFFFF / 2);
   }
   bool operator>(const Packet& rhs) const { return rhs.operator<(*this); }
   bool operator<=(const Packet& rhs) const { return !operator>(rhs); }
   bool operator>=(const Packet& rhs) const { return !operator<(rhs); }
+
+  bool empty() const { return !frame && payload.empty(); }
 };
 
 // A list of packets.
-typedef std::list<Packet*> PacketList;
+typedef std::list<Packet> PacketList;
 
 }  // namespace webrtc
 #endif  // WEBRTC_MODULES_AUDIO_CODING_NETEQ_PACKET_H_

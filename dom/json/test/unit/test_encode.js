@@ -43,7 +43,7 @@ function testToJSON() {
   var obj2 = {foo:"bar"};
   do_check_eq(nativeJSON.encode({toJSON: () => obj1}), '{"a":1}');
   do_check_eq(nativeJSON.encode({toJSON: () => obj2}), '{"foo":"bar"}');
-  
+
   do_check_eq(nativeJSON.encode({toJSON: () => null}), null);
   do_check_eq(nativeJSON.encode({toJSON: () => ""}), null);
   do_check_eq(nativeJSON.encode({toJSON: () => undefined }), null);
@@ -111,12 +111,9 @@ function testOutputStreams() {
     var pair = pairs[i];
     if (pair[1] && (typeof pair[1] == "object")) {
       var utf8File = writeToFile(pair[1], "UTF-8", false);
-      var utf16LEFile = writeToFile(pair[1], "UTF-16LE", false);
-      var utf16BEFile = writeToFile(pair[1], "UTF-16BE", false);
 
       // all ascii with no BOMs, so this will work
-      do_check_eq(utf16LEFile.fileSize / 2, utf8File.fileSize);
-      do_check_eq(utf16LEFile.fileSize, utf16BEFile.fileSize);
+      do_check_eq(utf8File.fileSize, pair[0].length);
     }
   }
 
@@ -124,11 +121,7 @@ function testOutputStreams() {
   // the clone() calls are there to work around -- bug 410005
   var f = writeToFile({},"UTF-8", true).clone();
   do_check_eq(f.fileSize, 5);
-  var f = writeToFile({},"UTF-16LE", true).clone();
-  do_check_eq(f.fileSize, 6);
-  var f = writeToFile({},"UTF-16BE", true).clone();
-  do_check_eq(f.fileSize, 6);
-  
+
   outputDir.remove(true);
 }
 
@@ -137,7 +130,7 @@ function run_test()
   testStringEncode();
   testToJSON();
   testThrowingToJSON();
-  
+
   testOutputStreams();
-  
+
 }

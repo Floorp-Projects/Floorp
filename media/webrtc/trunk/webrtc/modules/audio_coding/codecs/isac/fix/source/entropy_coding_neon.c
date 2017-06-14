@@ -17,10 +17,10 @@
 #include "entropy_coding.h"
 
 #include <arm_neon.h>
-#include <assert.h>
 #include <stddef.h>
 
 #include "signal_processing_library.h"
+#include "webrtc/base/checks.h"
 
 void WebRtcIsacfix_MatrixProduct1Neon(const int16_t matrix0[],
                                       const int32_t matrix1[],
@@ -46,8 +46,8 @@ void WebRtcIsacfix_MatrixProduct1Neon(const int16_t matrix0[],
   int32x4_t sum_32x4 =  vdupq_n_s32(0);
   int32x2_t sum_32x2 =  vdup_n_s32(0);
 
-  assert(inner_loop_count % 2 == 0);
-  assert(mid_loop_count % 2 == 0);
+  RTC_DCHECK_EQ(0, inner_loop_count % 2);
+  RTC_DCHECK_EQ(0, mid_loop_count % 2);
 
   if (matrix1_index_init_case != 0 && matrix1_index_factor1 == 1) {
     for (j = 0; j < SUBFRAMES; j++) {

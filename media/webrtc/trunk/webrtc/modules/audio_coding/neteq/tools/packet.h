@@ -12,9 +12,9 @@
 #define WEBRTC_MODULES_AUDIO_CODING_NETEQ_TOOLS_PACKET_H_
 
 #include <list>
+#include <memory>
 
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_types.h"
 #include "webrtc/typedefs.h"
 
@@ -62,7 +62,7 @@ class Packet {
          size_t virtual_packet_length_bytes,
          double time_ms);
 
-  virtual ~Packet() {}
+  virtual ~Packet();
 
   // Parses the first bytes of the RTP payload, interpreting them as RED headers
   // according to RFC 2198. The headers will be inserted into |headers|. The
@@ -103,7 +103,7 @@ class Packet {
   void CopyToHeader(RTPHeader* destination) const;
 
   RTPHeader header_;
-  rtc::scoped_ptr<uint8_t[]> payload_memory_;
+  std::unique_ptr<uint8_t[]> payload_memory_;
   const uint8_t* payload_;            // First byte after header.
   const size_t packet_length_bytes_;  // Total length of packet.
   size_t payload_length_bytes_;  // Length of the payload, after RTP header.

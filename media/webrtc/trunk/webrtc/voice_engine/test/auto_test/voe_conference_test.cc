@@ -10,10 +10,10 @@
 
 #include <queue>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/format_macros.h"
 #include "webrtc/base/timeutils.h"
 #include "webrtc/system_wrappers/include/sleep.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/voice_engine/test/auto_test/fakes/conference_transport.h"
 
@@ -72,15 +72,15 @@ TEST(VoeConferenceTest, RttAndStartNtpTime) {
   const int kStatsRequestIntervalMs = 1000;
   const int kStatsBufferSize = 3;
 
-  uint32_t deadline = rtc::TimeAfter(kMaxRunTimeMs);
+  int64_t deadline = rtc::TimeAfter(kMaxRunTimeMs);
   // Run the following up to |kMaxRunTimeMs| milliseconds.
   int successive_pass = 0;
   webrtc::CallStatistics stats_1;
   webrtc::CallStatistics stats_2;
   std::queue<Stats> stats_buffer;
 
-  while (rtc::TimeIsLater(rtc::Time(), deadline) &&
-      successive_pass < kNeedSuccessivePass) {
+  while (rtc::TimeMillis() < deadline &&
+         successive_pass < kNeedSuccessivePass) {
     webrtc::SleepMs(kStatsRequestIntervalMs);
 
     EXPECT_TRUE(trans.GetReceiverStatistics(id_1, &stats_1));

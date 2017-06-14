@@ -6,34 +6,37 @@
  *  tree. An additional intellectual property rights grant can be found
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
- *
  */
 
 #ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_TMMBN_H_
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_TMMBN_H_
 
 #include <vector>
+
 #include "webrtc/base/basictypes.h"
-#include "webrtc/modules/rtp_rtcp/source/rtcp_packet.h"
-#include "webrtc/modules/rtp_rtcp/source/rtcp_utility.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/rtpfb.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/tmmb_item.h"
 
 namespace webrtc {
 namespace rtcp {
+class CommonHeader;
 
-// Temporary Maximum Media Stream Bit Rate Notification (TMMBN) (RFC 5104).
-class Tmmbn : public RtcpPacket {
+// Temporary Maximum Media Stream Bit Rate Notification (TMMBN).
+// RFC 5104, Section 4.2.2.
+class Tmmbn : public Rtpfb {
  public:
-  Tmmbn() : RtcpPacket() {
-    memset(&tmmbn_, 0, sizeof(tmmbn_));
-  }
+  static constexpr uint8_t kFeedbackMessageType = 4;
 
-  virtual ~Tmmbn() {}
+  Tmmbn() {}
+  ~Tmmbn() override {}
 
-  void From(uint32_t ssrc) {
-    tmmbn_.SenderSSRC = ssrc;
-  }
-  // Max 50 TMMBR can be added per TMMBN.
-  bool WithTmmbr(uint32_t ssrc, uint32_t bitrate_kbps, uint16_t overhead);
+  // Parse assumes header is already parsed and validated.
+  bool Parse(const CommonHeader& packet);
+
+  void AddTmmbr(const TmmbItem& item);
+
+  const std::vector<TmmbItem>& items() const { return items_; }
 
  protected:
   bool Create(uint8_t* packet,
@@ -42,19 +45,19 @@ class Tmmbn : public RtcpPacket {
               RtcpPacket::PacketReadyCallback* callback) const override;
 
  private:
-  static const int kMaxNumberOfTmmbrs = 50;
-
-  size_t BlockLength() const {
-    const size_t kFciLen = 8;
-    return kCommonFbFmtLength + kFciLen * tmmbn_items_.size();
+  size_t BlockLength() const override {
+    return kHeaderLength + kCommonFeedbackLength +
+           TmmbItem::kLength * items_.size();
   }
 
-  RTCPUtility::RTCPPacketRTPFBTMMBN tmmbn_;
-  std::vector<RTCPUtility::RTCPPacketRTPFBTMMBRItem> tmmbn_items_;
+  // Media ssrc is unused, shadow base class setter and getter.
+  void SetMediaSsrc(uint32_t ssrc);
+  uint32_t media_ssrc() const;
+
+  std::vector<TmmbItem> items_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(Tmmbn);
 };
-
 }  // namespace rtcp
 }  // namespace webrtc
 #endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_TMMBN_H_

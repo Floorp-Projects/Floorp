@@ -19,7 +19,9 @@
 
 #include <list>
 #include <map>
+#include <memory>
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/bwe.h"
 #include "webrtc/voice_engine/channel.h"
@@ -50,7 +52,7 @@ class NadaBweReceiver : public BweReceiver {
  private:
   SimulatedClock clock_;
   int64_t last_feedback_ms_;
-  rtc::scoped_ptr<ReceiveStatistics> recv_stats_;
+  std::unique_ptr<ReceiveStatistics> recv_stats_;
   int64_t baseline_delay_ms_;  // Referred as d_f.
   int64_t delay_signal_ms_;    // Referred as d_n.
   int64_t last_congestion_signal_ms_;
@@ -62,6 +64,8 @@ class NadaBweReceiver : public BweReceiver {
 
 class NadaBweSender : public BweSender {
  public:
+  static const int kMinNadaBitrateKbps;
+
   NadaBweSender(int kbps, BitrateObserver* observer, Clock* clock);
   NadaBweSender(BitrateObserver* observer, Clock* clock);
   virtual ~NadaBweSender();
@@ -71,7 +75,7 @@ class NadaBweSender : public BweSender {
   void GiveFeedback(const FeedbackPacket& feedback) override;
   void OnPacketsSent(const Packets& packets) override {}
   int64_t TimeUntilNextProcess() override;
-  int Process() override;
+  void Process() override;
   void AcceleratedRampUp(const NadaFeedback& fb);
   void AcceleratedRampDown(const NadaFeedback& fb);
   void GradualRateUpdate(const NadaFeedback& fb,
@@ -89,8 +93,6 @@ class NadaBweSender : public BweSender {
  private:
   Clock* const clock_;
   BitrateObserver* const observer_;
-  // Used as an upper bound for calling AcceleratedRampDown.
-  const float kMaxCongestionSignalMs = 40.0f + kMinBitrateKbps / 15;
   // Referred as R_min, default initialization for bitrate R_n.
   int64_t last_feedback_ms_ = 0;
   // Referred as delta_0, initialized as an upper bound.

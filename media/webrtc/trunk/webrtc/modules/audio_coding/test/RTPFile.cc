@@ -20,10 +20,10 @@
 #endif
 
 #include "audio_coding_module.h"
-#include "engine_configurations.h"
 #include "webrtc/system_wrappers/include/rw_lock_wrapper.h"
 // TODO(tlegrand): Consider removing usage of gtest.
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/test/gtest.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 

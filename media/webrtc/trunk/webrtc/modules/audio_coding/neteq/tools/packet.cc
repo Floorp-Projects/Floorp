@@ -12,6 +12,9 @@
 
 #include <string.h>
 
+#include <memory>
+
+#include "webrtc/base/checks.h"
 #include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_header_parser.h"
 
@@ -55,7 +58,7 @@ Packet::Packet(uint8_t* packet_memory, size_t allocated_bytes, double time_ms)
       virtual_packet_length_bytes_(allocated_bytes),
       virtual_payload_length_bytes_(0),
       time_ms_(time_ms) {
-  rtc::scoped_ptr<RtpHeaderParser> parser(RtpHeaderParser::Create());
+  std::unique_ptr<RtpHeaderParser> parser(RtpHeaderParser::Create());
   valid_header_ = ParseHeader(*parser);
 }
 
@@ -70,9 +73,11 @@ Packet::Packet(uint8_t* packet_memory,
       virtual_packet_length_bytes_(virtual_packet_length_bytes),
       virtual_payload_length_bytes_(0),
       time_ms_(time_ms) {
-  rtc::scoped_ptr<RtpHeaderParser> parser(RtpHeaderParser::Create());
+  std::unique_ptr<RtpHeaderParser> parser(RtpHeaderParser::Create());
   valid_header_ = ParseHeader(*parser);
 }
+
+Packet::~Packet() = default;
 
 bool Packet::ExtractRedHeaders(std::list<RTPHeader*>* headers) const {
   //
@@ -140,6 +145,7 @@ bool Packet::ParseHeader(const RtpHeaderParser& parser) {
   payload_ = &payload_memory_[header_.headerLength];
   assert(packet_length_bytes_ >= header_.headerLength);
   payload_length_bytes_ = packet_length_bytes_ - header_.headerLength;
+  RTC_CHECK_GE(virtual_packet_length_bytes_, packet_length_bytes_);
   assert(virtual_packet_length_bytes_ >= header_.headerLength);
   virtual_payload_length_bytes_ =
       virtual_packet_length_bytes_ - header_.headerLength;

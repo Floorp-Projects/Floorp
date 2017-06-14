@@ -18,8 +18,20 @@ typedef struct AVATestValuesStr {
   bool expectedResult;
 } AVATestValues;
 
-class Alg1485Test : public ::testing::Test,
-                    public ::testing::WithParamInterface<AVATestValues> {};
+typedef struct AVACompareValuesStr {
+  std::string avaString1;
+  std::string avaString2;
+  SECComparison expectedResult;
+} AVACompareValues;
+
+class Alg1485Test : public ::testing::Test {};
+
+class Alg1485ParseTest : public Alg1485Test,
+                         public ::testing::WithParamInterface<AVATestValues> {};
+
+class Alg1485CompareTest
+    : public Alg1485Test,
+      public ::testing::WithParamInterface<AVACompareValues> {};
 
 static const AVATestValues kAVATestStrings[] = {
     {"CN=Marshall T. Rose, O=Dover Beach Consulting, L=Santa Clara, "
@@ -45,13 +57,36 @@ static const AVATestValues kAVATestStrings[] = {
     // { "CN=Somebody,L=Set,O=Up,C=US,01=The,02=Bomb", false },
 };
 
-TEST_P(Alg1485Test, TryParsingAVAStrings) {
+static const AVACompareValues kAVACompareStrings[] = {
+    {"CN=Max, O=Mozilla, ST=Berlin", "CN=Max, O=Mozilla, ST=Berlin, C=DE",
+     SECLessThan},
+    {"CN=Max, O=Mozilla, ST=Berlin, C=DE", "CN=Max, O=Mozilla, ST=Berlin",
+     SECGreaterThan},
+    {"CN=Max, O=Mozilla, ST=Berlin, C=DE", "CN=Max, O=Mozilla, ST=Berlin, C=DE",
+     SECEqual},
+    {"CN=Max1, O=Mozilla, ST=Berlin, C=DE",
+     "CN=Max2, O=Mozilla, ST=Berlin, C=DE", SECLessThan},
+    {"CN=Max, O=Mozilla, ST=Berlin, C=DE", "CN=Max, O=Mozilla, ST=Berlin, C=US",
+     SECLessThan},
+};
+
+TEST_P(Alg1485ParseTest, TryParsingAVAStrings) {
   const AVATestValues& param(GetParam());
 
   ScopedCERTName certName(CERT_AsciiToName(param.avaString.c_str()));
   ASSERT_EQ(certName != nullptr, param.expectedResult);
 }
 
-INSTANTIATE_TEST_CASE_P(ParseAVAStrings, Alg1485Test,
+TEST_P(Alg1485CompareTest, CompareAVAStrings) {
+  const AVACompareValues& param(GetParam());
+  ScopedCERTName a(CERT_AsciiToName(param.avaString1.c_str()));
+  ScopedCERTName b(CERT_AsciiToName(param.avaString2.c_str()));
+  ASSERT_TRUE(a && b);
+  EXPECT_EQ(param.expectedResult, CERT_CompareName(a.get(), b.get()));
+}
+
+INSTANTIATE_TEST_CASE_P(ParseAVAStrings, Alg1485ParseTest,
                         ::testing::ValuesIn(kAVATestStrings));
+INSTANTIATE_TEST_CASE_P(CompareAVAStrings, Alg1485CompareTest,
+                        ::testing::ValuesIn(kAVACompareStrings));
 }

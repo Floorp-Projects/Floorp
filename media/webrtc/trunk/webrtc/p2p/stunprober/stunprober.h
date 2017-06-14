@@ -19,9 +19,9 @@
 #include "webrtc/base/basictypes.h"
 #include "webrtc/base/bytebuffer.h"
 #include "webrtc/base/callback.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/ipaddress.h"
 #include "webrtc/base/network.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/socketaddress.h"
 #include "webrtc/base/thread.h"
 #include "webrtc/base/thread_checker.h"
@@ -184,7 +184,7 @@ class StunProber : public sigslot::has_slots<> {
            requests_per_ip_;
   }
 
-  bool should_send_next_request(uint32_t now);
+  bool should_send_next_request(int64_t now);
   int get_wake_up_interval_ms();
 
   bool SendNextRequest();
@@ -201,7 +201,7 @@ class StunProber : public sigslot::has_slots<> {
   Requester* current_requester_ = nullptr;
 
   // The time when the next request should go out.
-  uint64_t next_request_time_ms_ = 0;
+  int64_t next_request_time_ms_ = 0;
 
   // Total requests sent so far.
   uint32_t num_request_sent_ = 0;
