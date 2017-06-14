@@ -174,6 +174,7 @@
                 'audio_coding/codecs/opus/audio_encoder_opus_unittest.cc',
                 'audio_coding/codecs/opus/opus_unittest.cc',
                 'audio_coding/codecs/red/audio_encoder_copy_red_unittest.cc',
+                'audio_coding/neteq/audio_classifier_unittest.cc',
                 'audio_coding/neteq/audio_multi_vector_unittest.cc',
                 'audio_coding/neteq/audio_vector_unittest.cc',
                 'audio_coding/neteq/background_noise_unittest.cc',
