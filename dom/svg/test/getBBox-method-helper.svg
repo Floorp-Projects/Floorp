@@ -228,6 +228,11 @@
         stroke="black" stroke-width="8" stroke-linejoin="round" fill="lightcyan"
         clip-path="url('#circle7')" marker-mid="url(#m_atr)"/>
 
+  <path id="path13" d="M50,0 C 130,0 50,0 100,50
+                       C 100,130 100,50 50,100
+                       C -30,100 50,100 0,50
+                       C 0,-30 0,50 50,0Z" />
+
   <!-- use -->
   <use id="use1" xlink:href="#rect-10" x="50" y="50" clip-path="url('#circle8')"/>
   <use id="use2" xlink:href="#rect-11" x="50" y="50" clip-path="url('#circle9')"/>
