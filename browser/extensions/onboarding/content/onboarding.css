@@ -66,7 +66,7 @@
   margin: 0 calc(50% - 480px);
   top: calc(50% - 255px);
   display: grid;
-  grid-template-rows: [dialog-start] 76px [page-start] 1fr [footer-start] 30px [dialog-end];
+  grid-template-rows: [dialog-start] 70px [page-start] 1fr [footer-start] 30px [dialog-end];
   grid-template-columns: [dialog-start] 230px [page-start] 1fr [dialog-end];
 }
 
@@ -79,7 +79,7 @@
 #onboarding-overlay-dialog > header {
   grid-row: dialog-start / page-start;
   grid-column: dialog-start / tour-end;
-  margin-top: 24px;
+  margin-top: 22px;
   margin-bottom: 0;
   margin-inline-end: 0;
   margin-inline-start: 36px;
@@ -149,6 +149,47 @@
 #onboarding-tour-list > li:hover {
   border-inline-start-color: #5ce6e6;
   background-color: #fff;
+}
+
+/* Sync tour */
+#onboarding-tour-sync-page form {
+  text-align: center;
+}
+
+#onboarding-tour-sync-page form > h3 {
+  text-align: center;
+  margin: 0;
+  font-size: 22px;
+  font-weight: normal;
+}
+
+#onboarding-tour-sync-page form > p {
+  text-align: center;
+  margin: 3px 0 0 0;
+  font-size: 15px;
+  font-weight: normal;
+}
+
+#onboarding-tour-sync-page form > input {
+  margin-top: 10px;
+  height: 40px;
+  width: 80%;
+  padding: 7px;
+}
+
+#onboarding-tour-sync-page form > button {
+  padding: 10px 20px;
+  min-width: 40%;
+  font-size: 15px;
+  font-weight: normal;
+  line-height: 20px;
+  background: #0d96ff;
+  border: none;
+  border-radius: 3px;
+  color: #fff;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.23);
+  cursor: pointer;
+  margin: 15px 0;
 }
 
 /* Onboarding tour pages */
@@ -283,6 +324,15 @@
   background-image: url("img/icons_default-colored.svg");
 }
 
+#onboarding-tour-sync {
+  background-image: url("img/icons_sync.svg");
+}
+
+#onboarding-tour-sync.onboarding-active,
+#onboarding-tour-sync:hover,
+#onboarding-notification-bar[data-target-tour-id=onboarding-tour-sync] #onboarding-notification-tour-icon {
+  background-image: url("img/icons_sync-colored.svg");
+}
 
 /* Tour Notifications */
 #onboarding-notification-bar {
