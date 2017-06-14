@@ -1493,8 +1493,7 @@ nsPipeInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
 
     nsCOMPtr<nsIInputStreamCallback> proxy;
     if (aTarget) {
-      proxy = NS_NewInputStreamReadyEvent("nsPipeInputStream::AsyncWait",
-                                          aCallback, aTarget);
+      proxy = NS_NewInputStreamReadyEvent(aCallback, aTarget);
       aCallback = proxy;
     }
 
