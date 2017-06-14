@@ -50,7 +50,7 @@ var satchelFormListener = {
 
     let total = 0;
     for (let i = 0; i < len; i++) {
-      let ch = parseInt(ccNumber[len - i - 1]);
+      let ch = parseInt(ccNumber[len - i - 1], 10);
       if (i % 2 == 1) {
         // Double it, add digits together if > 10
         ch *= 2;
