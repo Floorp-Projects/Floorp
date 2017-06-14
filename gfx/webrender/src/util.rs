@@ -4,9 +4,9 @@
 
 use std::f32::consts::{FRAC_1_SQRT_2};
 use euclid::{Point2D, Rect, Size2D};
-use euclid::{TypedRect, TypedPoint2D, TypedSize2D, TypedTransform3D};
+use euclid::{TypedRect, TypedPoint2D, TypedSize2D, TypedMatrix4D};
 use webrender_traits::{DeviceIntRect, DeviceIntPoint, DeviceIntSize};
-use webrender_traits::{LayerRect, WorldPoint3D, LayerToWorldTransform};
+use webrender_traits::{LayerRect, WorldPoint4D, LayerPoint4D, LayerToWorldTransform};
 use webrender_traits::{BorderRadius, ComplexClipRegion, LayoutRect};
 use num_traits::Zero;
 
@@ -20,17 +20,17 @@ pub trait MatrixHelpers<Src, Dst> {
     fn preserves_2d_axis_alignment(&self) -> bool;
 }
 
-impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
+impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedMatrix4D<f32, Src, Dst> {
     fn transform_rect(&self, rect: &TypedRect<f32, Src>) -> TypedRect<f32, Dst> {
-        let top_left = self.transform_point2d(&rect.origin);
-        let top_right = self.transform_point2d(&rect.top_right());
-        let bottom_left = self.transform_point2d(&rect.bottom_left());
-        let bottom_right = self.transform_point2d(&rect.bottom_right());
+        let top_left = self.transform_point(&rect.origin);
+        let top_right = self.transform_point(&rect.top_right());
+        let bottom_left = self.transform_point(&rect.bottom_left());
+        let bottom_right = self.transform_point(&rect.bottom_right());
         TypedRect::from_points(&[top_left, top_right, bottom_right, bottom_left])
     }
 
     fn is_identity(&self) -> bool {
-        *self == TypedTransform3D::identity()
+        *self == TypedMatrix4D::identity()
     }
 
     // A port of the preserves2dAxisAlignment function in Skia.
@@ -171,7 +171,7 @@ pub struct TransformedRect {
     pub local_rect: LayerRect,
     pub bounding_rect: DeviceIntRect,
     pub inner_rect: DeviceIntRect,
-    pub vertices: [WorldPoint3D; 4],
+    pub vertices: [WorldPoint4D; 4],
     pub kind: TransformedRectKind,
 }
 
@@ -221,17 +221,30 @@ impl TransformedRect {
             TransformedRectKind::Complex => {
                 */
                 let vertices = [
-                    transform.transform_point3d(&rect.origin.to_3d()),
-                    transform.transform_point3d(&rect.bottom_left().to_3d()),
-                    transform.transform_point3d(&rect.bottom_right().to_3d()),
-                    transform.transform_point3d(&rect.top_right().to_3d()),
+                    transform.transform_point4d(&LayerPoint4D::new(rect.origin.x,
+                                                                   rect.origin.y,
+                                                                   0.0,
+                                                                   1.0)),
+                    transform.transform_point4d(&LayerPoint4D::new(rect.bottom_left().x,
+                                                                   rect.bottom_left().y,
+                                                                   0.0,
+                                                                   1.0)),
+                    transform.transform_point4d(&LayerPoint4D::new(rect.bottom_right().x,
+                                                                   rect.bottom_right().y,
+                                                                   0.0,
+                                                                   1.0)),
+                    transform.transform_point4d(&LayerPoint4D::new(rect.top_right().x,
+                                                                   rect.top_right().y,
+                                                                   0.0,
+                                                                   1.0)),
                 ];
 
                 let (mut xs, mut ys) = ([0.0; 4], [0.0; 4]);
 
                 for (vertex, (x, y)) in vertices.iter().zip(xs.iter_mut().zip(ys.iter_mut())) {
-                    *x = get_normal(vertex.x).unwrap_or(0.0);
-                    *y = get_normal(vertex.y).unwrap_or(0.0);
+                    let inv_w = 1.0 / vertex.w;
+                    *x = get_normal(vertex.x * inv_w).unwrap_or(0.0);
+                    *y = get_normal(vertex.y * inv_w).unwrap_or(0.0);
                 }
 
                 xs.sort_by(|a, b| a.partial_cmp(b).unwrap());

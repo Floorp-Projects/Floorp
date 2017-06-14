@@ -4,7 +4,7 @@
 
 use debug_render::DebugRenderer;
 use device::{Device, GpuMarker, GpuSample, NamedTag};
-use euclid::{Point2D, Size2D, Rect, vec2};
+use euclid::{Point2D, Size2D, Rect};
 use std::collections::vec_deque::VecDeque;
 use std::f32;
 use std::mem;
@@ -469,7 +469,7 @@ impl ProfileGraph {
         let stats = self.stats();
 
         let text_color = ColorF::new(1.0, 1.0, 0.0, 1.0);
-        let text_origin = rect.origin + vec2(rect.size.width, 20.0);
+        let text_origin = rect.origin + Point2D::new(rect.size.width, 20.0);
         debug_renderer.add_text(text_origin.x,
                                 text_origin.y,
                                 description,

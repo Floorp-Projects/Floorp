@@ -13,8 +13,7 @@ use webrender::{ApiRecordingReceiver, BinaryRecorder};
 use thread_profiler::register_thread_with_profiler;
 use moz2d_renderer::Moz2dImageRenderer;
 use app_units::Au;
-use euclid::{TypedPoint2D, TypedSize2D, TypedRect, TypedTransform3D, SideOffsets2D};
-use euclid::TypedVector2D;
+use euclid::{TypedPoint2D, TypedSize2D, TypedRect, TypedMatrix4D, SideOffsets2D};
 use rayon;
 
 extern crate webrender_traits;
@@ -178,12 +177,6 @@ impl<U> Into<TypedPoint2D<f32, U>> for WrPoint {
     }
 }
 
-impl<U> Into<TypedVector2D<f32, U>> for WrPoint {
-    fn into(self) -> TypedVector2D<f32, U> {
-        TypedVector2D::new(self.x, self.y)
-    }
-}
-
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct WrSize {
@@ -239,44 +232,44 @@ pub struct WrMatrix {
     values: [f32; 16],
 }
 
-impl<'a, U, E> Into<TypedTransform3D<f32, U, E>> for &'a WrMatrix {
-    fn into(self) -> TypedTransform3D<f32, U, E> {
-        TypedTransform3D::row_major(self.values[0],
-                                    self.values[1],
-                                    self.values[2],
-                                    self.values[3],
-                                    self.values[4],
-                                    self.values[5],
-                                    self.values[6],
-                                    self.values[7],
-                                    self.values[8],
-                                    self.values[9],
-                                    self.values[10],
-                                    self.values[11],
-                                    self.values[12],
-                                    self.values[13],
-                                    self.values[14],
-                                    self.values[15])
+impl<'a, U, E> Into<TypedMatrix4D<f32, U, E>> for &'a WrMatrix {
+    fn into(self) -> TypedMatrix4D<f32, U, E> {
+        TypedMatrix4D::row_major(self.values[0],
+                                 self.values[1],
+                                 self.values[2],
+                                 self.values[3],
+                                 self.values[4],
+                                 self.values[5],
+                                 self.values[6],
+                                 self.values[7],
+                                 self.values[8],
+                                 self.values[9],
+                                 self.values[10],
+                                 self.values[11],
+                                 self.values[12],
+                                 self.values[13],
+                                 self.values[14],
+                                 self.values[15])
     }
 }
-impl<U, E> Into<TypedTransform3D<f32, U, E>> for WrMatrix {
-    fn into(self) -> TypedTransform3D<f32, U, E> {
-        TypedTransform3D::row_major(self.values[0],
-                                    self.values[1],
-                                    self.values[2],
-                                    self.values[3],
-                                    self.values[4],
-                                    self.values[5],
-                                    self.values[6],
-                                    self.values[7],
-                                    self.values[8],
-                                    self.values[9],
-                                    self.values[10],
-                                    self.values[11],
-                                    self.values[12],
-                                    self.values[13],
-                                    self.values[14],
-                                    self.values[15])
+impl<U, E> Into<TypedMatrix4D<f32, U, E>> for WrMatrix {
+    fn into(self) -> TypedMatrix4D<f32, U, E> {
+        TypedMatrix4D::row_major(self.values[0],
+                                 self.values[1],
+                                 self.values[2],
+                                 self.values[3],
+                                 self.values[4],
+                                 self.values[5],
+                                 self.values[6],
+                                 self.values[7],
+                                 self.values[8],
+                                 self.values[9],
+                                 self.values[10],
+                                 self.values[11],
+                                 self.values[12],
+                                 self.values[13],
+                                 self.values[14],
+                                 self.values[15])
     }
 }
 

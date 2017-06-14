@@ -3,9 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use app_units::Au;
-use euclid::rect;
+use euclid::rect::rect;
 use fnv::FnvHasher;
-use gpu_cache::GpuCache;
 use internal_types::{ANGLE_FLOAT_TO_FIXED, AxisDirection};
 use internal_types::{LowLevelFilterOp};
 use internal_types::{RendererFrame};
@@ -22,7 +21,7 @@ use util::{ComplexClipRegionHelpers, subtract_rect};
 use webrender_traits::{BuiltDisplayList, BuiltDisplayListIter, ClipAndScrollInfo, ClipDisplayItem};
 use webrender_traits::{ClipId, ClipRegion, ColorF, DeviceUintRect, DeviceUintSize, DisplayItemRef};
 use webrender_traits::{Epoch, FilterOp, ImageDisplayItem, ItemRange, LayerPoint, LayerRect};
-use webrender_traits::{LayerSize, LayerToScrollTransform, LayoutSize, LayoutTransform, LayerVector2D};
+use webrender_traits::{LayerSize, LayerToScrollTransform, LayoutSize, LayoutTransform};
 use webrender_traits::{MixBlendMode, PipelineId, ScrollClamping, ScrollEventPhase};
 use webrender_traits::{ScrollLayerState, ScrollLocation, ScrollPolicy, SpecificDisplayItem};
 use webrender_traits::{StackingContext, TileOffset, TransformStyle, WorldPoint};
@@ -91,23 +90,26 @@ impl StackingContextHelpers for StackingContext {
                                   properties: &SceneProperties) -> Vec<LowLevelFilterOp> {
         let mut filters = vec![];
         for filter in display_list.get(input_filters) {
-            if filter.is_noop() {
-                continue;
-            }
-
             match filter {
                 FilterOp::Blur(radius) => {
-                    filters.push(LowLevelFilterOp::Blur(radius, AxisDirection::Horizontal));
-                    filters.push(LowLevelFilterOp::Blur(radius, AxisDirection::Vertical));
+                    filters.push(LowLevelFilterOp::Blur(
+                        radius,
+                        AxisDirection::Horizontal));
+                    filters.push(LowLevelFilterOp::Blur(
+                        radius,
+                        AxisDirection::Vertical));
                 }
                 FilterOp::Brightness(amount) => {
-                    filters.push(LowLevelFilterOp::Brightness(Au::from_f32_px(amount)));
+                    filters.push(
+                            LowLevelFilterOp::Brightness(Au::from_f32_px(amount)));
                 }
                 FilterOp::Contrast(amount) => {
-                    filters.push(LowLevelFilterOp::Contrast(Au::from_f32_px(amount)));
+                    filters.push(
+                            LowLevelFilterOp::Contrast(Au::from_f32_px(amount)));
                 }
                 FilterOp::Grayscale(amount) => {
-                    filters.push(LowLevelFilterOp::Grayscale(Au::from_f32_px(amount)));
+                    filters.push(
+                            LowLevelFilterOp::Grayscale(Au::from_f32_px(amount)));
                 }
                 FilterOp::HueRotate(angle) => {
                     filters.push(
@@ -115,17 +117,21 @@ impl StackingContextHelpers for StackingContext {
                                     angle * ANGLE_FLOAT_TO_FIXED) as i32));
                 }
                 FilterOp::Invert(amount) => {
-                    filters.push(LowLevelFilterOp::Invert(Au::from_f32_px(amount)));
+                    filters.push(
+                            LowLevelFilterOp::Invert(Au::from_f32_px(amount)));
                 }
                 FilterOp::Opacity(ref value) => {
                     let amount = properties.resolve_float(value, 1.0);
-                    filters.push(LowLevelFilterOp::Opacity(Au::from_f32_px(amount)));
+                    filters.push(
+                            LowLevelFilterOp::Opacity(Au::from_f32_px(amount)));
                 }
                 FilterOp::Saturate(amount) => {
-                    filters.push(LowLevelFilterOp::Saturate(Au::from_f32_px(amount)));
+                    filters.push(
+                            LowLevelFilterOp::Saturate(Au::from_f32_px(amount)));
                 }
                 FilterOp::Sepia(amount) => {
-                    filters.push(LowLevelFilterOp::Sepia(Au::from_f32_px(amount)));
+                    filters.push(
+                            LowLevelFilterOp::Sepia(Au::from_f32_px(amount)));
                 }
             }
         }
@@ -211,7 +217,8 @@ impl Frame {
             None => return,
         };
 
-        let display_list = match scene.display_lists.get(&root_pipeline_id) {
+        let display_list = scene.display_lists.get(&root_pipeline_id);
+        let display_list = match display_list {
             Some(display_list) => display_list,
             None => return,
         };
@@ -267,20 +274,12 @@ impl Frame {
                         item: &ClipDisplayItem,
                         content_rect: &LayerRect,
                         clip: &ClipRegion) {
-        let clip_viewport = LayerRect::new(content_rect.origin, clip.main.size);
-        let new_clip_id = self.clip_scroll_tree.generate_new_clip_id(pipeline_id);
-        context.builder.add_clip_scroll_node(new_clip_id,
+        context.builder.add_clip_scroll_node(item.id,
                                              parent_id,
                                              pipeline_id,
-                                             &clip_viewport,
+                                             &content_rect,
                                              clip,
                                              &mut self.clip_scroll_tree);
-        context.builder.add_scroll_frame(item.id,
-                                         new_clip_id,
-                                         pipeline_id,
-                                         &content_rect,
-                                         &clip_viewport,
-                                         &mut self.clip_scroll_tree);
 
     }
 
@@ -289,7 +288,7 @@ impl Frame {
                                     pipeline_id: PipelineId,
                                     context: &mut FlattenContext,
                                     context_scroll_node_id: ClipId,
-                                    mut reference_frame_relative_offset: LayerVector2D,
+                                    mut reference_frame_relative_offset: LayerPoint,
                                     bounds: &LayerRect,
                                     stacking_context: &StackingContext,
                                     filters: ItemRange<FilterOp>) {
@@ -334,7 +333,7 @@ impl Frame {
                 LayerToScrollTransform::create_translation(reference_frame_relative_offset.x,
                                                            reference_frame_relative_offset.y,
                                                            0.0)
-                                        .pre_translate(bounds.origin.to_vector().to_3d())
+                                        .pre_translated(bounds.origin.x, bounds.origin.y, 0.0)
                                         .pre_mul(&transform)
                                         .pre_mul(&perspective);
 
@@ -345,9 +344,9 @@ impl Frame {
                                                            &transform,
                                                            &mut self.clip_scroll_tree);
             context.replacements.push((context_scroll_node_id, clip_id));
-            reference_frame_relative_offset = LayerVector2D::zero();
+            reference_frame_relative_offset = LayerPoint::zero();
         } else {
-            reference_frame_relative_offset = LayerVector2D::new(
+            reference_frame_relative_offset = LayerPoint::new(
                 reference_frame_relative_offset.x + bounds.origin.x,
                 reference_frame_relative_offset.y + bounds.origin.y);
         }
@@ -379,15 +378,15 @@ impl Frame {
                           pipeline_id: PipelineId,
                           parent_id: ClipId,
                           bounds: &LayerRect,
-                          clip_region: &ClipRegion,
                           context: &mut FlattenContext,
-                          reference_frame_relative_offset: LayerVector2D) {
+                          reference_frame_relative_offset: LayerPoint) {
         let pipeline = match context.scene.pipeline_map.get(&pipeline_id) {
             Some(pipeline) => pipeline,
             None => return,
         };
 
-        let display_list = match context.scene.display_lists.get(&pipeline_id) {
+        let display_list = context.scene.display_lists.get(&pipeline_id);
+        let display_list = match display_list {
             Some(display_list) => display_list,
             None => return,
         };
@@ -400,27 +399,19 @@ impl Frame {
             reference_frame_relative_offset.y + bounds.origin.y,
             0.0);
 
-        let new_clip_id = self.clip_scroll_tree.generate_new_clip_id(pipeline_id);
-        context.builder.add_clip_scroll_node(new_clip_id,
-                                             parent_id,
-                                             parent_id.pipeline_id(),
-                                             bounds,
-                                             clip_region,
-                                             &mut self.clip_scroll_tree);
-
         let iframe_reference_frame_id =
-            context.builder.push_reference_frame(Some(new_clip_id),
+            context.builder.push_reference_frame(Some(parent_id),
                                                  pipeline_id,
                                                  &iframe_rect,
                                                  &transform,
                                                  &mut self.clip_scroll_tree);
 
-        context.builder.add_scroll_frame(
+        context.builder.add_clip_scroll_node(
             ClipId::root_scroll_node(pipeline_id),
             iframe_reference_frame_id,
             pipeline_id,
             &LayerRect::new(LayerPoint::zero(), pipeline.content_size),
-            &iframe_rect,
+            &ClipRegion::simple(&iframe_rect),
             &mut self.clip_scroll_tree);
 
         self.flatten_root(&mut display_list.iter(), pipeline_id, context, &pipeline.content_size);
@@ -432,7 +423,7 @@ impl Frame {
                             item: DisplayItemRef<'a, 'b>,
                             pipeline_id: PipelineId,
                             context: &mut FlattenContext,
-                            reference_frame_relative_offset: LayerVector2D)
+                            reference_frame_relative_offset: LayerPoint)
                             -> Option<BuiltDisplayListIter<'a>> {
         let mut clip_and_scroll = item.clip_and_scroll();
         clip_and_scroll.scroll_node_id =
@@ -492,10 +483,13 @@ impl Frame {
                                          text_info.glyph_options);
             }
             SpecificDisplayItem::Rectangle(ref info) => {
+                let display_list = context.scene.display_lists
+                                          .get(&pipeline_id)
+                                          .expect("No display list?!");
                 // Try to extract the opaque inner rectangle out of the clipped primitive.
                 if let Some(opaque_rect) = clip_intersection(&item.rect(),
                                                              item.clip_region(),
-                                                             item.display_list()) {
+                                                             display_list) {
                     let mut results = Vec::new();
                     subtract_rect(&item.rect(), &opaque_rect, &mut results);
                     // The inner rectangle is considered opaque within this layer.
@@ -583,7 +577,6 @@ impl Frame {
                 self.flatten_iframe(info.pipeline_id,
                                     clip_and_scroll.scroll_node_id,
                                     &item.rect(),
-                                    &item.clip_region(),
                                     context,
                                     reference_frame_relative_offset);
             }
@@ -612,7 +605,7 @@ impl Frame {
                         context: &mut FlattenContext,
                         content_size: &LayoutSize) {
         let root_bounds = LayerRect::new(LayerPoint::zero(), *content_size);
-        context.builder.push_stacking_context(&LayerVector2D::zero(),
+        context.builder.push_stacking_context(&LayerPoint::zero(),
                                               pipeline_id,
                                               CompositeOps::default(),
                                               root_bounds,
@@ -627,7 +620,7 @@ impl Frame {
         // For the root pipeline, there's no need to add a full screen rectangle
         // here, as it's handled by the framebuffer clear.
         let clip_id = ClipId::root_scroll_node(pipeline_id);
-        if context.scene.root_pipeline_id != Some(pipeline_id) {
+        if context.scene.root_pipeline_id.unwrap() != pipeline_id {
             if let Some(pipeline) = context.scene.pipeline_map.get(&pipeline_id) {
                 if let Some(bg_color) = pipeline.background_color {
                     context.builder.add_solid_rectangle(ClipAndScrollInfo::simple(clip_id),
@@ -640,7 +633,7 @@ impl Frame {
         }
 
 
-        self.flatten_items(traversal, pipeline_id, context, LayerVector2D::zero());
+        self.flatten_items(traversal, pipeline_id, context, LayerPoint::zero());
 
         if self.frame_builder_config.enable_scrollbars {
             let scrollbar_rect = LayerRect::new(LayerPoint::zero(), LayerSize::new(10.0, 70.0));
@@ -659,7 +652,7 @@ impl Frame {
                          traversal: &mut BuiltDisplayListIter<'a>,
                          pipeline_id: PipelineId,
                          context: &mut FlattenContext,
-                         reference_frame_relative_offset: LayerVector2D) {
+                         reference_frame_relative_offset: LayerPoint) {
         loop {
             let subtraversal = {
                 let item = match traversal.next() {
@@ -942,7 +935,7 @@ impl Frame {
         );
 
         let mut prim_rect = LayerRect::new(
-            item_rect.origin + LayerVector2D::new(
+            item_rect.origin + LayerPoint::new(
                 tile_offset.x as f32 * stretched_tile_size.width,
                 tile_offset.y as f32 * stretched_tile_size.height,
             ),
@@ -975,7 +968,6 @@ impl Frame {
 
     pub fn build(&mut self,
                  resource_cache: &mut ResourceCache,
-                 gpu_cache: &mut GpuCache,
                  display_lists: &DisplayListMap,
                  device_pixel_ratio: f32,
                  pan: LayerPoint,
@@ -984,7 +976,6 @@ impl Frame {
                  -> RendererFrame {
         self.clip_scroll_tree.update_all_node_transforms(pan);
         let frame = self.build_frame(resource_cache,
-                                     gpu_cache,
                                      display_lists,
                                      device_pixel_ratio,
                                      texture_cache_profile,
@@ -998,7 +989,6 @@ impl Frame {
 
     fn build_frame(&mut self,
                    resource_cache: &mut ResourceCache,
-                   gpu_cache: &mut GpuCache,
                    display_lists: &DisplayListMap,
                    device_pixel_ratio: f32,
                    texture_cache_profile: &mut TextureCacheProfileCounters,
@@ -1007,7 +997,6 @@ impl Frame {
         let mut frame_builder = self.frame_builder.take();
         let frame = frame_builder.as_mut().map(|builder|
             builder.build(resource_cache,
-                          gpu_cache,
                           self.id,
                           &mut self.clip_scroll_tree,
                           display_lists,
