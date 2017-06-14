@@ -1181,7 +1181,7 @@ BrowserGlue.prototype = {
     }
 
     // Let's load the contextual identities.
-    Services.tm.mainThread.idleDispatch(() => {
+    Services.tm.idleDispatchToMainThread(() => {
       ContextualIdentityService.load();
     });
 
