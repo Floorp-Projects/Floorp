@@ -16,7 +16,6 @@
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/messagedigest.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/socketaddress.h"
 
 namespace cricket {
@@ -62,7 +61,7 @@ class StunTest : public ::testing::Test {
                                  const unsigned char* testcase,
                                  size_t size) {
     const char* input = reinterpret_cast<const char*>(testcase);
-    rtc::ByteBuffer buf(input, size);
+    rtc::ByteBufferReader buf(input, size);
     if (msg->Read(&buf)) {
       // Returns the size the stun message should report itself as being
       return (size - 20);
@@ -242,6 +241,19 @@ static const unsigned char kStunMessageWithSmallLength[] = {
   0x00, 0x20, 0x00, 0x08,  // xor mapped address
   0x00, 0x01, 0x21, 0x1F,
   0x21, 0x12, 0xA4, 0x53,
+};
+
+static const unsigned char kStunMessageWithBadHmacAtEnd[] = {
+  0x00, 0x01, 0x00, 0x14,  // message length exactly 20
+  0x21, 0x12, 0xA4, 0x42,  // magic cookie
+  '0', '1', '2', '3',      // transaction ID
+  '4', '5', '6', '7',
+  '8', '9', 'a', 'b',
+  0x00, 0x08, 0x00, 0x14,  // type=STUN_ATTR_MESSAGE_INTEGRITY, length=20
+  '0', '0', '0', '0',      // We lied, there are only 16 bytes of HMAC.
+  '0', '0', '0', '0',
+  '0', '0', '0', '0',
+  '0', '0', '0', '0',
 };
 
 // RTCP packet, for testing we correctly ignore non stun packet types.
@@ -482,7 +494,7 @@ const in6_addr kIPv6TestAddress2 = { { { 0x24, 0x01, 0xfa, 0x00,
 const in_addr kIPv4TestAddress1 =  { 0xe64417ac };
 #elif defined WEBRTC_WIN
 // Windows in_addr has a union with a uchar[] array first.
-const in_addr kIPv4TestAddress1 =  { { 0x0ac, 0x017, 0x044, 0x0e6 } };
+const in_addr kIPv4TestAddress1 =  { { { 0x0ac, 0x017, 0x044, 0x0e6 } } };
 #endif
 const char kTestUserName1[] = "abcdefgh";
 const char kTestUserName2[] = "abc";
@@ -739,22 +751,23 @@ TEST_F(StunTest, SetIPv6XorAddressAttributeOwner) {
   // The internal IP address shouldn't change.
   ASSERT_EQ(addr2.ipaddr(), addr->ipaddr());
 
-  rtc::ByteBuffer correct_buf;
-  rtc::ByteBuffer wrong_buf;
+  rtc::ByteBufferWriter correct_buf;
+  rtc::ByteBufferWriter wrong_buf;
   EXPECT_TRUE(addr->Write(&correct_buf));
   EXPECT_TRUE(addr2.Write(&wrong_buf));
   // But when written out, the buffers should look different.
   ASSERT_NE(0,
             memcmp(correct_buf.Data(), wrong_buf.Data(), wrong_buf.Length()));
   // And when reading a known good value, the address should be wrong.
-  addr2.Read(&correct_buf);
+  rtc::ByteBufferReader read_buf(correct_buf);
+  addr2.Read(&read_buf);
   ASSERT_NE(addr->ipaddr(), addr2.ipaddr());
   addr2.SetIP(addr->ipaddr());
   addr2.SetPort(addr->port());
   // Try writing with no owner at all, should fail and write nothing.
   addr2.SetOwner(NULL);
   ASSERT_EQ(addr2.ipaddr(), addr->ipaddr());
-  wrong_buf.Consume(wrong_buf.Length());
+  wrong_buf.Clear();
   EXPECT_FALSE(addr2.Write(&wrong_buf));
   ASSERT_EQ(0U, wrong_buf.Length());
 }
@@ -786,8 +799,8 @@ TEST_F(StunTest, SetIPv4XorAddressAttributeOwner) {
   // The internal IP address shouldn't change.
   ASSERT_EQ(addr2.ipaddr(), addr->ipaddr());
 
-  rtc::ByteBuffer correct_buf;
-  rtc::ByteBuffer wrong_buf;
+  rtc::ByteBufferWriter correct_buf;
+  rtc::ByteBufferWriter wrong_buf;
   EXPECT_TRUE(addr->Write(&correct_buf));
   EXPECT_TRUE(addr2.Write(&wrong_buf));
   // The same address data should be written.
@@ -795,13 +808,14 @@ TEST_F(StunTest, SetIPv4XorAddressAttributeOwner) {
             memcmp(correct_buf.Data(), wrong_buf.Data(), wrong_buf.Length()));
   // And an attribute should be able to un-XOR an address belonging to a message
   // with a different transaction ID.
-  EXPECT_TRUE(addr2.Read(&correct_buf));
+  rtc::ByteBufferReader read_buf(correct_buf);
+  EXPECT_TRUE(addr2.Read(&read_buf));
   ASSERT_EQ(addr->ipaddr(), addr2.ipaddr());
 
   // However, no owner is still an error, should fail and write nothing.
   addr2.SetOwner(NULL);
   ASSERT_EQ(addr2.ipaddr(), addr->ipaddr());
-  wrong_buf.Consume(wrong_buf.Length());
+  wrong_buf.Clear();
   EXPECT_FALSE(addr2.Write(&wrong_buf));
 }
 
@@ -875,12 +889,13 @@ TEST_F(StunTest, WriteMessageWithIPv6AddressAttribute) {
 
   CheckStunHeader(msg, STUN_BINDING_REQUEST, (size - 20));
 
-  rtc::ByteBuffer out;
+  rtc::ByteBufferWriter out;
   EXPECT_TRUE(msg.Write(&out));
   ASSERT_EQ(out.Length(), sizeof(kStunMessageWithIPv6MappedAddress));
   int len1 = static_cast<int>(out.Length());
+  rtc::ByteBufferReader read_buf(out);
   std::string bytes;
-  out.ReadString(&bytes, len1);
+  read_buf.ReadString(&bytes, len1);
   ASSERT_EQ(0, memcmp(bytes.c_str(), kStunMessageWithIPv6MappedAddress, len1));
 }
 
@@ -904,12 +919,13 @@ TEST_F(StunTest, WriteMessageWithIPv4AddressAttribute) {
 
   CheckStunHeader(msg, STUN_BINDING_RESPONSE, (size - 20));
 
-  rtc::ByteBuffer out;
+  rtc::ByteBufferWriter out;
   EXPECT_TRUE(msg.Write(&out));
   ASSERT_EQ(out.Length(), sizeof(kStunMessageWithIPv4MappedAddress));
   int len1 = static_cast<int>(out.Length());
+  rtc::ByteBufferReader read_buf(out);
   std::string bytes;
-  out.ReadString(&bytes, len1);
+  read_buf.ReadString(&bytes, len1);
   ASSERT_EQ(0, memcmp(bytes.c_str(), kStunMessageWithIPv4MappedAddress, len1));
 }
 
@@ -933,12 +949,13 @@ TEST_F(StunTest, WriteMessageWithIPv6XorAddressAttribute) {
 
   CheckStunHeader(msg, STUN_BINDING_RESPONSE, (size - 20));
 
-  rtc::ByteBuffer out;
+  rtc::ByteBufferWriter out;
   EXPECT_TRUE(msg.Write(&out));
   ASSERT_EQ(out.Length(), sizeof(kStunMessageWithIPv6XorMappedAddress));
   int len1 = static_cast<int>(out.Length());
+  rtc::ByteBufferReader read_buf(out);
   std::string bytes;
-  out.ReadString(&bytes, len1);
+  read_buf.ReadString(&bytes, len1);
   ASSERT_EQ(0,
             memcmp(bytes.c_str(), kStunMessageWithIPv6XorMappedAddress, len1));
 }
@@ -963,12 +980,13 @@ TEST_F(StunTest, WriteMessageWithIPv4XoreAddressAttribute) {
 
   CheckStunHeader(msg, STUN_BINDING_RESPONSE, (size - 20));
 
-  rtc::ByteBuffer out;
+  rtc::ByteBufferWriter out;
   EXPECT_TRUE(msg.Write(&out));
   ASSERT_EQ(out.Length(), sizeof(kStunMessageWithIPv4XorMappedAddress));
   int len1 = static_cast<int>(out.Length());
+  rtc::ByteBufferReader read_buf(out);
   std::string bytes;
-  out.ReadString(&bytes, len1);
+  read_buf.ReadString(&bytes, len1);
   ASSERT_EQ(0,
             memcmp(bytes.c_str(), kStunMessageWithIPv4XorMappedAddress, len1));
 }
@@ -1061,7 +1079,7 @@ TEST_F(StunTest, WriteMessageWithAnErrorCodeAttribute) {
   EXPECT_TRUE(msg.AddAttribute(errorcode));
   CheckStunHeader(msg, STUN_BINDING_ERROR_RESPONSE, (size - 20));
 
-  rtc::ByteBuffer out;
+  rtc::ByteBufferWriter out;
   EXPECT_TRUE(msg.Write(&out));
   ASSERT_EQ(size, out.Length());
   // No padding.
@@ -1084,7 +1102,7 @@ TEST_F(StunTest, WriteMessageWithAUInt16ListAttribute) {
   EXPECT_TRUE(msg.AddAttribute(list));
   CheckStunHeader(msg, STUN_BINDING_REQUEST, (size - 20));
 
-  rtc::ByteBuffer out;
+  rtc::ByteBufferWriter out;
   EXPECT_TRUE(msg.Write(&out));
   ASSERT_EQ(size, out.Length());
   // Check everything up to the padding.
@@ -1104,7 +1122,7 @@ TEST_F(StunTest, WriteMessageWithOriginAttribute) {
       new StunByteStringAttribute(STUN_ATTR_ORIGIN, kTestOrigin);
   EXPECT_TRUE(msg.AddAttribute(origin));
 
-  rtc::ByteBuffer out;
+  rtc::ByteBufferWriter out;
   EXPECT_TRUE(msg.Write(&out));
   ASSERT_EQ(size, out.Length());
   // Check everything up to the padding
@@ -1115,7 +1133,7 @@ TEST_F(StunTest, WriteMessageWithOriginAttribute) {
 void CheckFailureToRead(const unsigned char* testcase, size_t length) {
   StunMessage msg;
   const char* input = reinterpret_cast<const char*>(testcase);
-  rtc::ByteBuffer buf(input, length);
+  rtc::ByteBufferReader buf(input, length);
   ASSERT_FALSE(msg.Read(&buf));
 }
 
@@ -1189,6 +1207,26 @@ TEST_F(StunTest, ValidateMessageIntegrity) {
       sizeof(kStunMessageWithSmallLength),
       kRfc5769SampleMsgPassword));
 
+  // Again, but with the lengths matching what is claimed in the headers.
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity(
+      reinterpret_cast<const char*>(kStunMessageWithZeroLength),
+      kStunHeaderSize + rtc::GetBE16(&kStunMessageWithZeroLength[2]),
+      kRfc5769SampleMsgPassword));
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity(
+      reinterpret_cast<const char*>(kStunMessageWithExcessLength),
+      kStunHeaderSize + rtc::GetBE16(&kStunMessageWithExcessLength[2]),
+      kRfc5769SampleMsgPassword));
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity(
+      reinterpret_cast<const char*>(kStunMessageWithSmallLength),
+      kStunHeaderSize + rtc::GetBE16(&kStunMessageWithSmallLength[2]),
+      kRfc5769SampleMsgPassword));
+
+  // Check that a too-short HMAC doesn't cause buffer overflow.
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity(
+      reinterpret_cast<const char*>(kStunMessageWithBadHmacAtEnd),
+      sizeof(kStunMessageWithBadHmacAtEnd),
+      kRfc5769SampleMsgPassword));
+
   // Test that munging a single bit anywhere in the message causes the
   // message-integrity check to fail, unless it is after the M-I attribute.
   char buf[sizeof(kRfc5769SampleRequest)];
@@ -1207,7 +1245,7 @@ TEST_F(StunTest, ValidateMessageIntegrity) {
 // the RFC5769 test messages used include attributes not found in basic STUN.
 TEST_F(StunTest, AddMessageIntegrity) {
   IceMessage msg;
-  rtc::ByteBuffer buf(
+  rtc::ByteBufferReader buf(
       reinterpret_cast<const char*>(kRfc5769SampleRequestWithoutMI),
       sizeof(kRfc5769SampleRequestWithoutMI));
   EXPECT_TRUE(msg.Read(&buf));
@@ -1218,14 +1256,14 @@ TEST_F(StunTest, AddMessageIntegrity) {
   EXPECT_EQ(0, memcmp(
       mi_attr->bytes(), kCalculatedHmac1, sizeof(kCalculatedHmac1)));
 
-  rtc::ByteBuffer buf1;
+  rtc::ByteBufferWriter buf1;
   EXPECT_TRUE(msg.Write(&buf1));
   EXPECT_TRUE(StunMessage::ValidateMessageIntegrity(
         reinterpret_cast<const char*>(buf1.Data()), buf1.Length(),
         kRfc5769SampleMsgPassword));
 
   IceMessage msg2;
-  rtc::ByteBuffer buf2(
+  rtc::ByteBufferReader buf2(
       reinterpret_cast<const char*>(kRfc5769SampleResponseWithoutMI),
       sizeof(kRfc5769SampleResponseWithoutMI));
   EXPECT_TRUE(msg2.Read(&buf2));
@@ -1236,7 +1274,7 @@ TEST_F(StunTest, AddMessageIntegrity) {
   EXPECT_EQ(
       0, memcmp(mi_attr2->bytes(), kCalculatedHmac2, sizeof(kCalculatedHmac2)));
 
-  rtc::ByteBuffer buf3;
+  rtc::ByteBufferWriter buf3;
   EXPECT_TRUE(msg2.Write(&buf3));
   EXPECT_TRUE(StunMessage::ValidateMessageIntegrity(
         reinterpret_cast<const char*>(buf3.Data()), buf3.Length(),
@@ -1282,13 +1320,13 @@ TEST_F(StunTest, ValidateFingerprint) {
 
 TEST_F(StunTest, AddFingerprint) {
   IceMessage msg;
-  rtc::ByteBuffer buf(
+  rtc::ByteBufferReader buf(
       reinterpret_cast<const char*>(kRfc5769SampleRequestWithoutMI),
       sizeof(kRfc5769SampleRequestWithoutMI));
   EXPECT_TRUE(msg.Read(&buf));
   EXPECT_TRUE(msg.AddFingerprint());
 
-  rtc::ByteBuffer buf1;
+  rtc::ByteBufferWriter buf1;
   EXPECT_TRUE(msg.Write(&buf1));
   EXPECT_TRUE(StunMessage::ValidateFingerprint(
       reinterpret_cast<const char*>(buf1.Data()), buf1.Length()));
@@ -1331,7 +1369,7 @@ TEST_F(StunTest, ReadRelayMessage) {
 
   const char* input = reinterpret_cast<const char*>(kRelayMessage);
   size_t size = sizeof(kRelayMessage);
-  rtc::ByteBuffer buf(input, size);
+  rtc::ByteBufferReader buf(input, size);
   EXPECT_TRUE(msg.Read(&buf));
 
   EXPECT_EQ(STUN_BINDING_REQUEST, msg.type());
@@ -1427,20 +1465,22 @@ TEST_F(StunTest, ReadRelayMessage) {
   bytes2->CopyBytes("abcdefg");
   EXPECT_TRUE(msg2.AddAttribute(bytes2));
 
-  rtc::ByteBuffer out;
+  rtc::ByteBufferWriter out;
   EXPECT_TRUE(msg.Write(&out));
   EXPECT_EQ(size, out.Length());
   size_t len1 = out.Length();
+  rtc::ByteBufferReader read_buf(out);
   std::string outstring;
-  out.ReadString(&outstring, len1);
+  read_buf.ReadString(&outstring, len1);
   EXPECT_EQ(0, memcmp(outstring.c_str(), input, len1));
 
-  rtc::ByteBuffer out2;
+  rtc::ByteBufferWriter out2;
   EXPECT_TRUE(msg2.Write(&out2));
   EXPECT_EQ(size, out2.Length());
   size_t len2 = out2.Length();
+  rtc::ByteBufferReader read_buf2(out2);
   std::string outstring2;
-  out2.ReadString(&outstring2, len2);
+  read_buf2.ReadString(&outstring2, len2);
   EXPECT_EQ(0, memcmp(outstring2.c_str(), input, len2));
 }
 

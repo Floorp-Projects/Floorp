@@ -13,35 +13,42 @@
 
 #include <map>
 
-#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/basictypes.h"
-#include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/modules/include/module_common_types.h"
 
 namespace webrtc {
+class Clock;
+struct PacketInfo;
 
 class SendTimeHistory {
  public:
-  SendTimeHistory(Clock* clock, int64_t packet_age_limit);
-  virtual ~SendTimeHistory();
+  SendTimeHistory(Clock* clock, int64_t packet_age_limit_ms);
+  ~SendTimeHistory();
 
-  void AddAndRemoveOld(uint16_t sequence_number, size_t length, bool was_paced);
-  bool OnSentPacket(uint16_t sequence_number, int64_t timestamp);
-  // Look up PacketInfo for a sent packet, based on the sequence number, and
-  // populate all fields except for receive_time. The packet parameter must
-  // thus be non-null and have the sequence_number field set.
-  bool GetInfo(PacketInfo* packet, bool remove);
   void Clear();
 
+  // Cleanup old entries, then add new packet info with provided parameters.
+  void AddAndRemoveOld(uint16_t sequence_number,
+                       size_t payload_size,
+                       int probe_cluster_id);
+
+  // Updates packet info identified by |sequence_number| with |send_time_ms|.
+  // Return false if not found.
+  bool OnSentPacket(uint16_t sequence_number, int64_t send_time_ms);
+
+  // Look up PacketInfo for a sent packet, based on the sequence number, and
+  // populate all fields except for arrival_time. The packet parameter must
+  // thus be non-null and have the sequence_number field set.
+  bool GetInfo(PacketInfo* packet_info, bool remove);
+
  private:
-  void EraseOld();
-  void UpdateOldestSequenceNumber();
-
   Clock* const clock_;
-  const int64_t packet_age_limit_;
-  uint16_t oldest_sequence_number_;  // Oldest may not be lowest.
-  std::map<uint16_t, PacketInfo> history_;
+  const int64_t packet_age_limit_ms_;
+  SequenceNumberUnwrapper seq_num_unwrapper_;
+  std::map<int64_t, PacketInfo> history_;
 
-  RTC_DISALLOW_COPY_AND_ASSIGN(SendTimeHistory);
+  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(SendTimeHistory);
 };
 
 }  // namespace webrtc

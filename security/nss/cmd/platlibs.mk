@@ -32,6 +32,12 @@ else
 DBMLIB = $(DIST)/lib/$(LIB_PREFIX)dbm.$(LIB_SUFFIX) 
 endif
 
+ifeq ($(NSS_BUILD_UTIL_ONLY),1)
+SECTOOL_LIB = $(NULL)
+else
+SECTOOL_LIB = $(DIST)/lib/$(LIB_PREFIX)sectool.$(LIB_SUFFIX)
+endif
+
 ifdef USE_STATIC_LIBS
 
 DEFINES += -DNSS_USE_STATIC_LIBS
@@ -70,19 +76,9 @@ endif
 endif
 
 NSS_LIBS_1=
-SECTOOL_LIB=
 NSS_LIBS_2=
 NSS_LIBS_3=
 NSS_LIBS_4=
-
-ifneq ($(NSS_BUILD_UTIL_ONLY),1)
-SECTOOL_LIB = \
-	$(DIST)/lib/$(LIB_PREFIX)sectool.$(LIB_SUFFIX) \
-	$(NULL)
-else
-SECTOOL_LIB = \
-	$(NULL)
-endif
 
 ifneq ($(NSS_BUILD_SOFTOKEN_ONLY),1)
 ifeq ($(OS_ARCH), WINNT)
@@ -120,9 +116,6 @@ NSS_LIBS_1 = \
 	$(DIST)/lib/$(LIB_PREFIX)smime.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)ssl.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)nss.$(LIB_SUFFIX) \
-	$(NULL)
-SECTOOL_LIB = \
-	$(DIST)/lib/$(LIB_PREFIX)sectool.$(LIB_SUFFIX) \
 	$(NULL)
 NSS_LIBS_2 = \
 	$(DIST)/lib/$(LIB_PREFIX)pkcs12.$(LIB_SUFFIX) \
@@ -201,7 +194,7 @@ ifeq ($(OS_ARCH), WINNT)
 
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
 EXTRA_LIBS += \
-	$(DIST)/lib/$(LIB_PREFIX)sectool.$(LIB_SUFFIX) \
+	$(SECTOOL_LIB) \
 	$(NSSUTIL_LIB_DIR)/$(IMPORT_LIB_PREFIX)nssutil3$(IMPORT_LIB_SUFFIX) \
 	$(DIST)/lib/$(IMPORT_LIB_PREFIX)smime3$(IMPORT_LIB_SUFFIX) \
 	$(DIST)/lib/$(IMPORT_LIB_PREFIX)ssl3$(IMPORT_LIB_SUFFIX) \
@@ -220,7 +213,7 @@ else
 
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
 EXTRA_LIBS += \
-	$(DIST)/lib/$(LIB_PREFIX)sectool.$(LIB_SUFFIX) \
+	$(SECTOOL_LIB) \
 	$(NULL)
 
 ifeq ($(OS_ARCH), AIX) 
@@ -238,11 +231,13 @@ EXTRA_SHARED_LIBS += \
 	-lplds4 \
 	-lnspr4 \
 	$(NULL)
+ifndef NSS_BUILD_UTIL_ONLY
 ifndef NSS_BUILD_SOFTOKEN_ONLY
 EXTRA_SHARED_LIBS += \
 	-lssl3 \
 	-lsmime3 \
 	-lnss3
+endif
 endif
 endif
 

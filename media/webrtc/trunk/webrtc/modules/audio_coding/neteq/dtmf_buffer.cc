@@ -99,7 +99,7 @@ int DtmfBuffer::ParseEvent(uint32_t rtp_timestamp,
 // existing one.
 int DtmfBuffer::InsertEvent(const DtmfEvent& event) {
   if (event.event_no < 0 || event.event_no > 15 ||
-      event.volume < 0 || event.volume > 36 ||
+      event.volume < 0 || event.volume > 63 ||
       event.duration <= 0 || event.duration > 65535) {
     LOG(LS_WARNING) << "InsertEvent invalid parameters";
     return kInvalidEventParameters;
@@ -199,6 +199,7 @@ int DtmfBuffer::SetSampleRate(int fs_hz) {
   if (fs_hz != 8000 &&
       fs_hz != 16000 &&
       fs_hz != 32000 &&
+      fs_hz != 44100 &&
       fs_hz != 48000) {
     return kInvalidSampleRate;
   }

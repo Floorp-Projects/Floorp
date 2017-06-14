@@ -16,7 +16,6 @@
 #include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/include/logcat_trace_context.h"
 #include "webrtc/system_wrappers/include/logging.h"
-#include "webrtc/system_wrappers/include/ref_count.h"
 #include "webrtc/system_wrappers/include/trace.h"
 
 #include "AndroidJNIWrapper.h"
@@ -100,14 +99,12 @@ int32_t SetCaptureAndroidVM(JavaVM* javaVM) {
 
 namespace videocapturemodule {
 
-VideoCaptureModule* VideoCaptureImpl::Create(
-    const int32_t id,
+rtc::scoped_refptr<VideoCaptureModule> VideoCaptureImpl::Create(
     const char* deviceUniqueIdUTF8) {
-  RefCountImpl<videocapturemodule::VideoCaptureAndroid>* implementation =
-      new RefCountImpl<videocapturemodule::VideoCaptureAndroid>(id);
-  if (implementation->Init(id, deviceUniqueIdUTF8) != 0) {
-    delete implementation;
-    implementation = NULL;
+  rtc::scoped_refptr<VideoCaptureAndroid> implementation(
+      new rtc::RefCountedObject<VideoCaptureAndroid>());
+  if (implementation->Init(deviceUniqueIdUTF8) != 0) {
+    implementation = nullptr;
   }
   return implementation;
 }
@@ -118,6 +115,7 @@ int32_t VideoCaptureAndroid::OnIncomingFrame(uint8_t* videoFrame,
                                              int64_t captureTime) {
   if (!_captureStarted)
     return 0;
+
   VideoRotation current_rotation =
       (degrees <= 45 || degrees > 315) ? kVideoRotation_0 :
       (degrees > 45 && degrees <= 135) ? kVideoRotation_90 :
@@ -135,15 +133,14 @@ int32_t VideoCaptureAndroid::OnIncomingFrame(uint8_t* videoFrame,
       videoFrame, videoFrameLength, _captureCapability, captureTime);
 }
 
-VideoCaptureAndroid::VideoCaptureAndroid(const int32_t id)
-    : VideoCaptureImpl(id),
-      _deviceInfo(id),
+VideoCaptureAndroid::VideoCaptureAndroid()
+    : VideoCaptureImpl(),
+      _deviceInfo(),
       _jCapturer(NULL),
       _captureStarted(false) {
 }
 
-int32_t VideoCaptureAndroid::Init(const int32_t id,
-                                  const char* deviceUniqueIdUTF8) {
+int32_t VideoCaptureAndroid::Init(const char* deviceUniqueIdUTF8) {
   const int nameLength = strlen(deviceUniqueIdUTF8);
   if (nameLength >= kVideoCaptureUniqueNameLength)
     return -1;

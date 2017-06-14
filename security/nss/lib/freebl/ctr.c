@@ -19,30 +19,30 @@
 
 SECStatus
 CTR_InitContext(CTRContext *ctr, void *context, freeblCipherFunc cipher,
-                const unsigned char *param, unsigned int blocksize)
+                const unsigned char *param)
 {
     const CK_AES_CTR_PARAMS *ctrParams = (const CK_AES_CTR_PARAMS *)param;
 
     if (ctrParams->ulCounterBits == 0 ||
-        ctrParams->ulCounterBits > blocksize * PR_BITS_PER_BYTE) {
+        ctrParams->ulCounterBits > AES_BLOCK_SIZE * PR_BITS_PER_BYTE) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
 
-    /* Invariant: 0 < ctr->bufPtr <= blocksize */
+    /* Invariant: 0 < ctr->bufPtr <= AES_BLOCK_SIZE */
     ctr->checkWrap = PR_FALSE;
-    ctr->bufPtr = blocksize; /* no unused data in the buffer */
+    ctr->bufPtr = AES_BLOCK_SIZE; /* no unused data in the buffer */
     ctr->cipher = cipher;
     ctr->context = context;
     ctr->counterBits = ctrParams->ulCounterBits;
-    if (blocksize > sizeof(ctr->counter) ||
-        blocksize > sizeof(ctrParams->cb)) {
+    if (AES_BLOCK_SIZE > sizeof(ctr->counter) ||
+        AES_BLOCK_SIZE > sizeof(ctrParams->cb)) {
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
-    PORT_Memcpy(ctr->counter, ctrParams->cb, blocksize);
+    PORT_Memcpy(ctr->counter, ctrParams->cb, AES_BLOCK_SIZE);
     if (ctr->counterBits < 64) {
-        PORT_Memcpy(ctr->counterFirst, ctr->counter, blocksize);
+        PORT_Memcpy(ctr->counterFirst, ctr->counter, AES_BLOCK_SIZE);
         ctr->checkWrap = PR_TRUE;
     }
     return SECSuccess;
@@ -50,7 +50,7 @@ CTR_InitContext(CTRContext *ctr, void *context, freeblCipherFunc cipher,
 
 CTRContext *
 CTR_CreateContext(void *context, freeblCipherFunc cipher,
-                  const unsigned char *param, unsigned int blocksize)
+                  const unsigned char *param)
 {
     CTRContext *ctr;
     SECStatus rv;
@@ -60,7 +60,7 @@ CTR_CreateContext(void *context, freeblCipherFunc cipher,
     if (ctr == NULL) {
         return NULL;
     }
-    rv = CTR_InitContext(ctr, context, cipher, param, blocksize);
+    rv = CTR_InitContext(ctr, context, cipher, param);
     if (rv != SECSuccess) {
         CTR_DestroyContext(ctr, PR_TRUE);
         ctr = NULL;

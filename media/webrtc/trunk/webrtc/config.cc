@@ -12,48 +12,83 @@
 #include <sstream>
 #include <string>
 
+#include "webrtc/base/checks.h"
+
 namespace webrtc {
-std::string FecConfig::ToString() const {
+std::string NackConfig::ToString() const {
   std::stringstream ss;
-  ss << "{ulpfec_payload_type: " << ulpfec_payload_type;
-  ss << ", red_payload_type: " << red_payload_type;
+  ss << "{rtp_history_ms: " << rtp_history_ms;
   ss << '}';
   return ss.str();
 }
 
+std::string UlpfecConfig::ToString() const {
+  std::stringstream ss;
+  ss << "{ulpfec_payload_type: " << ulpfec_payload_type;
+  ss << ", red_payload_type: " << red_payload_type;
+  ss << ", red_rtx_payload_type: " << red_rtx_payload_type;
+  ss << '}';
+  return ss.str();
+}
+
+bool UlpfecConfig::operator==(const UlpfecConfig& other) const {
+  return ulpfec_payload_type == other.ulpfec_payload_type &&
+         red_payload_type == other.red_payload_type &&
+         red_rtx_payload_type == other.red_rtx_payload_type;
+}
+
 std::string RtpExtension::ToString() const {
   std::stringstream ss;
-  ss << "{name: " << name;
+  ss << "{uri: " << uri;
   ss << ", id: " << id;
   ss << '}';
   return ss.str();
 }
 
-const char* RtpExtension::kTOffset = "urn:ietf:params:rtp-hdrext:toffset";
-const char* RtpExtension::kAbsSendTime =
-    "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time";
-const char* RtpExtension::kVideoRotation = "urn:3gpp:video-orientation";
-const char* RtpExtension::kAudioLevel =
+const char* RtpExtension::kAudioLevelUri =
     "urn:ietf:params:rtp-hdrext:ssrc-audio-level";
-const char* RtpExtension::kTransportSequenceNumber =
-    "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions";
-const char* RtpExtension::kRtpStreamId =
-  "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id";
+const int RtpExtension::kAudioLevelDefaultId = 1;
 
-bool RtpExtension::IsSupportedForAudio(const std::string& name) {
-  return name == webrtc::RtpExtension::kAbsSendTime ||
-         name == webrtc::RtpExtension::kAudioLevel ||
-         name == webrtc::RtpExtension::kTransportSequenceNumber ||
-         name == webrtc::RtpExtension::kRtpStreamId;
+const char* RtpExtension::kTimestampOffsetUri =
+    "urn:ietf:params:rtp-hdrext:toffset";
+const int RtpExtension::kTimestampOffsetDefaultId = 2;
+
+const char* RtpExtension::kAbsSendTimeUri =
+    "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time";
+const int RtpExtension::kAbsSendTimeDefaultId = 3;
+
+const char* RtpExtension::kVideoRotationUri = "urn:3gpp:video-orientation";
+const int RtpExtension::kVideoRotationDefaultId = 4;
+
+const char* RtpExtension::kTransportSequenceNumberUri =
+    "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01";
+const int RtpExtension::kTransportSequenceNumberDefaultId = 5;
+
+const char* RtpExtension::kRtpStreamIdUri =
+  "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id";
+const int RtpExtension::kRtpStreamIdDefaultId = 6;
+
+// This extension allows applications to adaptively limit the playout delay
+// on frames as per the current needs. For example, a gaming application
+// has very different needs on end-to-end delay compared to a video-conference
+// application.
+const char* RtpExtension::kPlayoutDelayUri =
+    "http://www.webrtc.org/experiments/rtp-hdrext/playout-delay";
+const int RtpExtension::kPlayoutDelayDefaultId = 6;
+
+bool RtpExtension::IsSupportedForAudio(const std::string& uri) {
+  return uri == webrtc::RtpExtension::kAudioLevelUri ||
+         uri == webrtc::RtpExtension::kTransportSequenceNumberUri ||
+         uri == webrtc::RtpExtension::kRtpStreamIdUri;
 }
 
-bool RtpExtension::IsSupportedForVideo(const std::string& name) {
-  return name == webrtc::RtpExtension::kTOffset ||
-         name == webrtc::RtpExtension::kAbsSendTime ||
-         name == webrtc::RtpExtension::kVideoRotation ||
-         name == webrtc::RtpExtension::kTransportSequenceNumber ||
-         name == webrtc::RtpExtension::kRtpStreamId;
-
+bool RtpExtension::IsSupportedForVideo(const std::string& uri) {
+  return uri == webrtc::RtpExtension::kTimestampOffsetUri ||
+         uri == webrtc::RtpExtension::kAbsSendTimeUri ||
+         uri == webrtc::RtpExtension::kVideoRotationUri ||
+         uri == webrtc::RtpExtension::kTransportSequenceNumberUri ||
+         uri == webrtc::RtpExtension::kPlayoutDelayUri ||
+         uri == webrtc::RtpExtension::kRtpStreamIdUri;
 }
 
 VideoStream::VideoStream()
@@ -63,7 +98,9 @@ VideoStream::VideoStream()
       min_bitrate_bps(-1),
       target_bitrate_bps(-1),
       max_bitrate_bps(-1),
-      max_qp(-1) {}
+      max_qp(-1) {
+  rid[0] = '\0';
+}
 
 VideoStream::~VideoStream() = default;
 
@@ -76,6 +113,7 @@ std::string VideoStream::ToString() const {
   ss << ", target_bitrate_bps:" << target_bitrate_bps;
   ss << ", max_bitrate_bps:" << max_bitrate_bps;
   ss << ", max_qp: " << max_qp;
+  ss << ", rid: " << rid;
 
   ss << ", temporal_layer_thresholds_bps: [";
   for (size_t i = 0; i < temporal_layer_thresholds_bps.size(); ++i) {
@@ -91,23 +129,18 @@ std::string VideoStream::ToString() const {
 
 VideoEncoderConfig::VideoEncoderConfig()
     : content_type(ContentType::kRealtimeVideo),
-      encoder_specific_settings(NULL),
-      min_transmit_bitrate_bps(0) {
-}
+      encoder_specific_settings(nullptr),
+      min_transmit_bitrate_bps(0),
+      max_bitrate_bps(0),
+      number_of_streams(0) {}
+
+VideoEncoderConfig::VideoEncoderConfig(VideoEncoderConfig&&) = default;
 
 VideoEncoderConfig::~VideoEncoderConfig() = default;
 
 std::string VideoEncoderConfig::ToString() const {
   std::stringstream ss;
-
-  ss << "{streams: [";
-  for (size_t i = 0; i < streams.size(); ++i) {
-    ss << streams[i].ToString();
-    if (i != streams.size() - 1)
-      ss << ", ";
-  }
-  ss << ']';
-  ss << ", content_type: ";
+  ss << "{content_type: ";
   switch (content_type) {
     case ContentType::kRealtimeVideo:
       ss << "kRealtimeVideo";
@@ -122,6 +155,63 @@ std::string VideoEncoderConfig::ToString() const {
   ss << ", min_transmit_bitrate_bps: " << min_transmit_bitrate_bps;
   ss << '}';
   return ss.str();
+}
+
+VideoEncoderConfig::VideoEncoderConfig(const VideoEncoderConfig&) = default;
+
+void VideoEncoderConfig::EncoderSpecificSettings::FillEncoderSpecificSettings(
+    VideoCodec* codec) const {
+  if (codec->codecType == kVideoCodecH264) {
+    FillVideoCodecH264(codec->H264());
+  } else if (codec->codecType == kVideoCodecVP8) {
+    FillVideoCodecVp8(codec->VP8());
+  } else if (codec->codecType == kVideoCodecVP9) {
+    FillVideoCodecVp9(codec->VP9());
+  } else {
+    RTC_NOTREACHED() << "Encoder specifics set/used for unknown codec type.";
+  }
+}
+
+void VideoEncoderConfig::EncoderSpecificSettings::FillVideoCodecH264(
+    VideoCodecH264* h264_settings) const {
+  RTC_NOTREACHED();
+}
+
+void VideoEncoderConfig::EncoderSpecificSettings::FillVideoCodecVp8(
+    VideoCodecVP8* vp8_settings) const {
+  RTC_NOTREACHED();
+}
+
+void VideoEncoderConfig::EncoderSpecificSettings::FillVideoCodecVp9(
+    VideoCodecVP9* vp9_settings) const {
+  RTC_NOTREACHED();
+}
+
+VideoEncoderConfig::H264EncoderSpecificSettings::H264EncoderSpecificSettings(
+    const VideoCodecH264& specifics)
+    : specifics_(specifics) {}
+
+void VideoEncoderConfig::H264EncoderSpecificSettings::FillVideoCodecH264(
+    VideoCodecH264* h264_settings) const {
+  *h264_settings = specifics_;
+}
+
+VideoEncoderConfig::Vp8EncoderSpecificSettings::Vp8EncoderSpecificSettings(
+    const VideoCodecVP8& specifics)
+    : specifics_(specifics) {}
+
+void VideoEncoderConfig::Vp8EncoderSpecificSettings::FillVideoCodecVp8(
+    VideoCodecVP8* vp8_settings) const {
+  *vp8_settings = specifics_;
+}
+
+VideoEncoderConfig::Vp9EncoderSpecificSettings::Vp9EncoderSpecificSettings(
+    const VideoCodecVP9& specifics)
+    : specifics_(specifics) {}
+
+void VideoEncoderConfig::Vp9EncoderSpecificSettings::FillVideoCodecVp9(
+    VideoCodecVP9* vp9_settings) const {
+  *vp9_settings = specifics_;
 }
 
 }  // namespace webrtc

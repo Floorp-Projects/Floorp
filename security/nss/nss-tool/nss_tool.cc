@@ -13,6 +13,7 @@
 
 #include "argparse.h"
 #include "db/dbtool.h"
+#include "digest/digesttool.h"
 #include "enc/enctool.h"
 #include "tool.h"
 
@@ -21,11 +22,13 @@ static void Usage() {
   std::cerr << "       nss db [--path <directory>] <commands>" << std::endl;
   std::cerr << "       nss encrypt <options>" << std::endl;
   std::cerr << "       nss decrypt <options>" << std::endl;
+  std::cerr << "       nss digest <options>" << std::endl;
 }
 
 static const std::string kDbCommand = "db";
 static const std::string kEncryptCommand = "encrypt";
 static const std::string kDecryptCommand = "decrypt";
+static const std::string kDigestCommand = "digest";
 
 int main(int argc, char **argv) {
   if (argc < 2) {
@@ -45,6 +48,9 @@ int main(int argc, char **argv) {
   if (argv[1] == kDecryptCommand) {
     tool = std::unique_ptr<Tool>(new EncTool());
     arguments.push_back("--decrypt");
+  }
+  if (argv[1] == kDigestCommand) {
+    tool = std::unique_ptr<Tool>(new DigestTool());
   }
   if (!tool) {
     Usage();

@@ -7,9 +7,10 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "testing/gtest/include/gtest/gtest.h"
+
 #include "webrtc/modules/audio_coding/codecs/isac/fix/source/codec.h"
 #include "webrtc/system_wrappers/include/cpu_features_wrapper.h"
+#include "webrtc/test/gtest.h"
 
 static const int kSamples = FRAMESAMPLES/2;
 static const int32_t spec2time_out_expected_1[kSamples] = {
@@ -179,22 +180,14 @@ class TransformTest : public testing::Test {
 
 TEST_F(TransformTest, Time2SpecTest) {
   Time2SpecTester(WebRtcIsacfix_Time2SpecC);
-#ifdef WEBRTC_DETECT_NEON
-  if ((WebRtc_GetCPUFeaturesARM() & kCPUFeatureNEON) != 0) {
-    Time2SpecTester(WebRtcIsacfix_Time2SpecNeon);
-  }
-#elif defined(WEBRTC_HAS_NEON)
+#if defined(WEBRTC_HAS_NEON)
   Time2SpecTester(WebRtcIsacfix_Time2SpecNeon);
 #endif
 }
 
 TEST_F(TransformTest, Spec2TimeTest) {
   Spec2TimeTester(WebRtcIsacfix_Spec2TimeC);
-#ifdef WEBRTC_DETECT_NEON
-  if ((WebRtc_GetCPUFeaturesARM() & kCPUFeatureNEON) != 0) {
-    Spec2TimeTester(WebRtcIsacfix_Spec2TimeNeon);
-  }
-#elif defined(WEBRTC_HAS_NEON)
+#if defined(WEBRTC_HAS_NEON)
   Spec2TimeTester(WebRtcIsacfix_Spec2TimeNeon);
 #endif
 }

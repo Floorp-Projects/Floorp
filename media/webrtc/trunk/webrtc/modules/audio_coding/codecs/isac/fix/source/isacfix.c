@@ -17,9 +17,9 @@
 
 #include "webrtc/modules/audio_coding/codecs/isac/fix/include/isacfix.h"
 
-#include <assert.h>
 #include <stdlib.h>
 
+#include "webrtc/base/checks.h"
 #include "webrtc/modules/audio_coding/codecs/isac/fix/source/bandwidth_estimator.h"
 #include "webrtc/modules/audio_coding/codecs/isac/fix/source/codec.h"
 #include "webrtc/modules/audio_coding/codecs/isac/fix/source/entropy_coding.h"
@@ -201,7 +201,7 @@ int16_t WebRtcIsacfix_FreeInternal(ISACFIX_MainStruct *ISAC_main_inst)
  * This function initializes function pointers for ARM Neon platform.
  */
 
-#if defined(WEBRTC_DETECT_NEON) || defined(WEBRTC_HAS_NEON)
+#if defined(WEBRTC_HAS_NEON)
 static void WebRtcIsacfix_InitNeon(void) {
   WebRtcIsacfix_AutocorrFix = WebRtcIsacfix_AutocorrNeon;
   WebRtcIsacfix_FilterMaLoopFix = WebRtcIsacfix_FilterMaLoopNeon;
@@ -253,11 +253,7 @@ static void InitFunctionPointers(void) {
   WebRtcIsacfix_MatrixProduct1 = WebRtcIsacfix_MatrixProduct1C;
   WebRtcIsacfix_MatrixProduct2 = WebRtcIsacfix_MatrixProduct2C;
 
-#ifdef WEBRTC_DETECT_NEON
-  if ((WebRtc_GetCPUFeaturesARM() & kCPUFeatureNEON) != 0) {
-    WebRtcIsacfix_InitNeon();
-  }
-#elif defined(WEBRTC_HAS_NEON)
+#if defined(WEBRTC_HAS_NEON)
   WebRtcIsacfix_InitNeon();
 #endif
 
@@ -1117,8 +1113,8 @@ int16_t WebRtcIsacfix_Control(ISACFIX_MainStruct *ISAC_main_inst,
 void WebRtcIsacfix_SetInitialBweBottleneck(ISACFIX_MainStruct* ISAC_main_inst,
                                            int bottleneck_bits_per_second) {
   ISACFIX_SubStruct* inst = (ISACFIX_SubStruct*)ISAC_main_inst;
-  assert(bottleneck_bits_per_second >= 10000 &&
-         bottleneck_bits_per_second <= 32000);
+  RTC_DCHECK_GE(bottleneck_bits_per_second, 10000);
+  RTC_DCHECK_LE(bottleneck_bits_per_second, 32000);
   inst->bwestimator_obj.sendBwAvg = ((uint32_t)bottleneck_bits_per_second) << 7;
 }
 
@@ -1543,13 +1539,13 @@ void WebRtcIsacfix_version(char *version)
 void WebRtcIsacfix_GetBandwidthInfo(ISACFIX_MainStruct* ISAC_main_inst,
                                     IsacBandwidthInfo* bwinfo) {
   ISACFIX_SubStruct* inst = (ISACFIX_SubStruct*)ISAC_main_inst;
-  assert(inst->initflag & 1);  // Decoder initialized.
+  RTC_DCHECK_NE(0, inst->initflag & 1);  // Decoder initialized.
   WebRtcIsacfixBw_GetBandwidthInfo(&inst->bwestimator_obj, bwinfo);
 }
 
 void WebRtcIsacfix_SetBandwidthInfo(ISACFIX_MainStruct* ISAC_main_inst,
                                     const IsacBandwidthInfo* bwinfo) {
   ISACFIX_SubStruct* inst = (ISACFIX_SubStruct*)ISAC_main_inst;
-  assert(inst->initflag & 2);  // Encoder initialized.
+  RTC_DCHECK_NE(0, inst->initflag & 2);  // Encoder initialized.
   WebRtcIsacfixBw_SetBandwidthInfo(&inst->bwestimator_obj, bwinfo);
 }

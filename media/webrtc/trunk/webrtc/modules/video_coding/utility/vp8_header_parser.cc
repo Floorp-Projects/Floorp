@@ -74,8 +74,9 @@ static int VP8GetBit(VP8BitReader* const br, int prob) {
   uint8_t range = br->range_;
   if (br->bits_ < 0) {
     VP8LoadNewBytes(br);
+    if (br->eof_)
+      return 0;
   }
-
   const int pos = br->bits_;
   const uint8_t split = (range * prob) >> 8;
   const uint8_t value = static_cast<uint8_t>(br->value_ >> pos);

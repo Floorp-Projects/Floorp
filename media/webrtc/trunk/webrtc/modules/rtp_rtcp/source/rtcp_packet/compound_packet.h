@@ -12,7 +12,10 @@
 #ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_COMPOUND_PACKET_H_
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_COMPOUND_PACKET_H_
 
+#include <vector>
+
 #include "webrtc/base/basictypes.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet.h"
 
 namespace webrtc {
@@ -20,17 +23,21 @@ namespace rtcp {
 
 class CompoundPacket : public RtcpPacket {
  public:
-  CompoundPacket() : RtcpPacket() {}
+  CompoundPacket() {}
+  ~CompoundPacket() override {}
 
-  virtual ~CompoundPacket() {}
+  void Append(RtcpPacket* packet);
 
- protected:
+  // Size of this packet in bytes (i.e. total size of nested packets).
+  size_t BlockLength() const override;
+  // Returns true if all calls to Create succeeded.
   bool Create(uint8_t* packet,
               size_t* index,
               size_t max_length,
               RtcpPacket::PacketReadyCallback* callback) const override;
 
-  size_t BlockLength() const override;
+ protected:
+  std::vector<RtcpPacket*> appended_packets_;
 
  private:
   RTC_DISALLOW_COPY_AND_ASSIGN(CompoundPacket);

@@ -37,9 +37,7 @@ namespace {
 namespace voetest {
 
 ConferenceTransport::ConferenceTransport()
-    : pq_crit_(webrtc::CriticalSectionWrapper::CreateCriticalSection()),
-      stream_crit_(webrtc::CriticalSectionWrapper::CreateCriticalSection()),
-      packet_event_(webrtc::EventWrapper::Create()),
+    : packet_event_(webrtc::EventWrapper::Create()),
       thread_(Run, this, "ConferenceTransport"),
       rtt_ms_(0),
       stream_count_(0),
@@ -120,7 +118,7 @@ bool ConferenceTransport::SendRtcp(const uint8_t* data, size_t len) {
 
 int ConferenceTransport::GetReceiverChannelForSsrc(unsigned int sender_ssrc)
     const {
-  webrtc::CriticalSectionScoped lock(stream_crit_.get());
+  rtc::CritScope lock(&stream_crit_);
   auto it = streams_.find(sender_ssrc);
   if (it != streams_.end()) {
     return it->second.second;
@@ -132,8 +130,8 @@ void ConferenceTransport::StorePacket(Packet::Type type,
                                       const void* data,
                                       size_t len) {
   {
-    webrtc::CriticalSectionScoped lock(pq_crit_.get());
-    packet_queue_.push_back(Packet(type, data, len, rtc::Time()));
+    rtc::CritScope lock(&pq_crit_);
+    packet_queue_.push_back(Packet(type, data, len, rtc::TimeMillis()));
   }
   packet_event_->Set();
 }
@@ -198,7 +196,7 @@ bool ConferenceTransport::DispatchPackets() {
   while (true) {
     Packet packet;
     {
-      webrtc::CriticalSectionScoped lock(pq_crit_.get());
+      rtc::CritScope lock(&pq_crit_);
       if (packet_queue_.empty())
         break;
       packet = packet_queue_.front();
@@ -245,14 +243,14 @@ unsigned int ConferenceTransport::AddStream(std::string file_name,
   EXPECT_EQ(0, local_rtp_rtcp_->SetLocalSSRC(new_receiver, kLocalSsrc));
 
   {
-    webrtc::CriticalSectionScoped lock(stream_crit_.get());
+    rtc::CritScope lock(&stream_crit_);
     streams_[remote_ssrc] = std::make_pair(new_sender, new_receiver);
   }
   return remote_ssrc;  // remote ssrc used as stream id.
 }
 
 bool ConferenceTransport::RemoveStream(unsigned int id) {
-  webrtc::CriticalSectionScoped lock(stream_crit_.get());
+  rtc::CritScope lock(&stream_crit_);
   auto it = streams_.find(id);
   if (it == streams_.end()) {
     return false;

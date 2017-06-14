@@ -8,11 +8,9 @@
 
 #include "nsCOMPtr.h"
 #include "mozISpellI18NUtil.h"
-#include "nsIUnicodeEncoder.h"
-#include "nsIUnicodeDecoder.h"
 #include "nsString.h"
 
-#include "mozITXTToHTMLConv.h" 
+#include "mozITXTToHTMLConv.h"
 #include "nsCycleCollectionParticipant.h"
 
 class mozEnglishWordUtils : public mozISpellI18NUtil
@@ -24,9 +22,13 @@ public:
 
   mozEnglishWordUtils();
   /* additional members */
-  enum myspCapitalization{
-    NoCap,InitCap,AllCap,HuhCap
-  };  
+  enum myspCapitalization
+  {
+    NoCap,
+    InitCap,
+    AllCap,
+    HuhCap
+  };
 
 protected:
   virtual ~mozEnglishWordUtils();

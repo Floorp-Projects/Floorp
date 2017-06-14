@@ -37,7 +37,6 @@
 #include "nsIThreadRetargetableRequest.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIScriptError.h"
-#include "mozilla/dom/EncodingUtils.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
@@ -45,14 +44,13 @@
 #include "nsWrapperCacheInlines.h"
 #include "mozilla/Attributes.h"
 #include "nsError.h"
+#include "mozilla/Encoding.h"
 
 namespace mozilla {
 namespace dom {
 
 using namespace workers;
 
-#define REPLACEMENT_CHAR     (char16_t)0xFFFD
-#define BOM_CHAR             (char16_t)0xFEFF
 #define SPACE_CHAR           (char16_t)0x0020
 #define CR_CHAR              (char16_t)0x000D
 #define LF_CHAR              (char16_t)0x000A
@@ -213,13 +211,7 @@ public:
    *
    * PARSE_STATE_OFF              -> PARSE_STATE_BEGIN_OF_STREAM
    *
-   * PARSE_STATE_BEGIN_OF_STREAM  -> PARSE_STATE_BOM_WAS_READ |
-   *                                 PARSE_STATE_CR_CHAR |
-   *                                 PARSE_STATE_BEGIN_OF_LINE |
-   *                                 PARSE_STATE_COMMENT |
-   *                                 PARSE_STATE_FIELD_NAME
-   *
-   * PARSE_STATE_BOM_WAS_READ     -> PARSE_STATE_CR_CHAR |
+   * PARSE_STATE_BEGIN_OF_STREAM     -> PARSE_STATE_CR_CHAR |
    *                                 PARSE_STATE_BEGIN_OF_LINE |
    *                                 PARSE_STATE_COMMENT |
    *                                 PARSE_STATE_FIELD_NAME
@@ -255,7 +247,6 @@ public:
   enum ParserStatus {
     PARSE_STATE_OFF = 0,
     PARSE_STATE_BEGIN_OF_STREAM,
-    PARSE_STATE_BOM_WAS_READ,
     PARSE_STATE_CR_CHAR,
     PARSE_STATE_COMMENT,
     PARSE_STATE_FIELD_NAME,
@@ -285,8 +276,7 @@ public:
   UniquePtr<Message> mCurrentMessage;
   nsDeque mMessagesToDispatch;
   ParserStatus mStatus;
-  nsCOMPtr<nsIUnicodeDecoder> mUnicodeDecoder;
-  nsresult mLastConvertionResult;
+  mozilla::UniquePtr<mozilla::Decoder> mUnicodeDecoder;
   nsString mLastFieldName;
   nsString mLastFieldValue;
 
@@ -351,7 +341,6 @@ EventSourceImpl::EventSourceImpl(EventSource* aEventSource)
   : mEventSource(aEventSource)
   , mReconnectionTime(0)
   , mStatus(PARSE_STATE_OFF)
-  , mLastConvertionResult(NS_OK)
   , mMutex("EventSourceImpl::mMutex")
   , mFrozen(false)
   , mGoingToDispatchAllMessages(false)
@@ -598,7 +587,7 @@ EventSourceImpl::Init(nsIPrincipal* aPrincipal,
     Preferences::GetInt("dom.server-events.default-reconnection-time",
                         DEFAULT_RECONNECTION_TIME_VALUE);
 
-  mUnicodeDecoder = EncodingUtils::DecoderForEncoding("UTF-8");
+  mUnicodeDecoder = UTF_8_ENCODING->NewDecoderWithBOMRemoval();
 
   // the constructor should throw a SYNTAX_ERROR only if it fails resolving the
   // url parameter, so we don't care about the InitChannelAndRequestEventSource
@@ -730,27 +719,27 @@ EventSourceImpl::ParseSegment(const char* aBuffer, uint32_t aLength)
   if (IsClosed()) {
     return;
   }
-  int32_t srcCount, outCount;
-  char16_t out[2];
-  const char* p = aBuffer;
-  const char* end = aBuffer + aLength;
-
-  do {
-    srcCount = aLength - (p - aBuffer);
-    outCount = 2;
-
-    mLastConvertionResult =
-      mUnicodeDecoder->Convert(p, &srcCount, out, &outCount);
-    MOZ_ASSERT(mLastConvertionResult != NS_ERROR_ILLEGAL_INPUT);
-
-    for (int32_t i = 0; i < outCount; ++i) {
-      nsresult rv = ParseCharacter(out[i]);
+  char16_t buffer[1024];
+  auto dst = MakeSpan(buffer);
+  auto src = AsBytes(MakeSpan(aBuffer, aLength));
+  // XXX EOF handling is https://bugzilla.mozilla.org/show_bug.cgi?id=1369018
+  for (;;) {
+    uint32_t result;
+    size_t read;
+    size_t written;
+    bool hadErrors;
+    Tie(result, read, written, hadErrors) =
+      mUnicodeDecoder->DecodeToUTF16(src, dst, false);
+    Unused << hadErrors;
+    for (auto c : dst.To(written)) {
+      nsresult rv = ParseCharacter(c);
       NS_ENSURE_SUCCESS_VOID(rv);
     }
-    p = p + srcCount;
-  } while (p < end &&
-           mLastConvertionResult != NS_PARTIAL_MORE_INPUT &&
-           mLastConvertionResult != NS_OK);
+    if (result == kInputEmpty) {
+      return;
+    }
+    src = src.From(read);
+  }
 }
 
 class DataAvailableRunnable final : public Runnable
@@ -1163,10 +1152,9 @@ EventSourceImpl::ResetDecoder()
 {
   AssertIsOnTargetThread();
   if (mUnicodeDecoder) {
-    mUnicodeDecoder->Reset();
+    UTF_8_ENCODING->NewDecoderWithBOMRemovalInto(*mUnicodeDecoder);
   }
   mStatus = PARSE_STATE_OFF;
-  mLastConvertionResult = NS_OK;
   ClearFields();
 }
 
@@ -1682,22 +1670,6 @@ EventSourceImpl::ParseCharacter(char16_t aChr)
       break;
 
     case PARSE_STATE_BEGIN_OF_STREAM:
-      if (aChr == BOM_CHAR) {
-        mStatus = PARSE_STATE_BOM_WAS_READ;  // ignore it
-      } else if (aChr == CR_CHAR) {
-        mStatus = PARSE_STATE_CR_CHAR;
-      } else if (aChr == LF_CHAR) {
-        mStatus = PARSE_STATE_BEGIN_OF_LINE;
-      } else if (aChr == COLON_CHAR) {
-        mStatus = PARSE_STATE_COMMENT;
-      } else {
-        mLastFieldName += aChr;
-        mStatus = PARSE_STATE_FIELD_NAME;
-      }
-
-      break;
-
-    case PARSE_STATE_BOM_WAS_READ:
       if (aChr == CR_CHAR) {
         mStatus = PARSE_STATE_CR_CHAR;
       } else if (aChr == LF_CHAR) {

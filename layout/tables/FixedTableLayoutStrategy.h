@@ -24,8 +24,8 @@ public:
   virtual ~FixedTableLayoutStrategy();
 
   // nsITableLayoutStrategy implementation
-  virtual nscoord GetMinISize(nsRenderingContext* aRenderingContext) override;
-  virtual nscoord GetPrefISize(nsRenderingContext* aRenderingContext,
+  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  virtual nscoord GetPrefISize(gfxContext* aRenderingContext,
                                bool aComputingSize) override;
   virtual void MarkIntrinsicISizesDirty() override;
   virtual void ComputeColumnISizes(const ReflowInput& aReflowInput)

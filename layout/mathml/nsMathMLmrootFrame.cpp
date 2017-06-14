@@ -5,8 +5,8 @@
 
 #include "nsMathMLmrootFrame.h"
 #include "nsPresContext.h"
-#include "nsRenderingContext.h"
 #include <algorithm>
+#include "gfxContext.h"
 #include "gfxMathTable.h"
 
 using namespace mozilla;
@@ -359,7 +359,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
 }
 
 /* virtual */ void
-nsMathMLmrootFrame::GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingContext, ReflowOutput& aDesiredSize)
+nsMathMLmrootFrame::GetIntrinsicISizeMetrics(gfxContext* aRenderingContext, ReflowOutput& aDesiredSize)
 {
   nsIFrame* baseFrame = mFrames.FirstChild();
   nsIFrame* indexFrame = nullptr;

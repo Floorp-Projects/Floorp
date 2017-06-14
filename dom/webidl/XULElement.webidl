@@ -4,11 +4,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-interface MozControllers;
+interface XULControllers;
 interface MozFrameLoader;
 interface MozRDFCompositeDataSource;
 interface MozRDFResource;
-interface MozXULTemplateBuilder;
 
 [Func="IsChromeOrXBL"]
 interface XULElement : Element {
@@ -85,11 +84,11 @@ interface XULElement : Element {
   attribute boolean allowEvents;
 
   readonly attribute MozRDFCompositeDataSource? database;
-  readonly attribute MozXULTemplateBuilder?     builder;
+  readonly attribute XULTemplateBuilder?        builder;
   [Throws]
   readonly attribute MozRDFResource?            resource;
-  [Throws]
-  readonly attribute MozControllers             controllers;
+  [Throws, ChromeOnly]
+  readonly attribute XULControllers             controllers;
   [Throws]
   readonly attribute BoxObject?                 boxObject;
 

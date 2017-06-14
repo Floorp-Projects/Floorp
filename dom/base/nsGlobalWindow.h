@@ -1820,6 +1820,8 @@ private:
 
   bool IsBackgroundInternal() const;
 
+  void SetIsBackgroundInternal(bool aIsBackground);
+
 public:
   // Dispatch a runnable related to the global.
   virtual nsresult Dispatch(const char* aName,

@@ -194,7 +194,7 @@ public:
     nsIScrollableFrame*  mColumnsScrollFrame;
   };
 
-  DrawResult PaintTreeBody(nsRenderingContext& aRenderingContext,
+  DrawResult PaintTreeBody(gfxContext& aRenderingContext,
                            const nsRect& aDirtyRect, nsPoint aPt,
                            nsDisplayListBuilder* aBuilder);
 
@@ -213,14 +213,14 @@ protected:
   DrawResult PaintColumn(nsTreeColumn*        aColumn,
                          const nsRect&        aColumnRect,
                          nsPresContext*       aPresContext,
-                         nsRenderingContext&  aRenderingContext,
+                         gfxContext&          aRenderingContext,
                          const nsRect&        aDirtyRect);
 
   // This method paints a single row in the tree.
   DrawResult PaintRow(int32_t               aRowIndex,
                       const nsRect&         aRowRect,
                       nsPresContext*        aPresContext,
-                      nsRenderingContext&   aRenderingContext,
+                      gfxContext&           aRenderingContext,
                       const nsRect&         aDirtyRect,
                       nsPoint               aPt,
                       nsDisplayListBuilder* aBuilder);
@@ -229,7 +229,7 @@ protected:
   DrawResult PaintSeparator(int32_t              aRowIndex,
                             const nsRect&        aSeparatorRect,
                             nsPresContext*       aPresContext,
-                            nsRenderingContext&  aRenderingContext,
+                            gfxContext&          aRenderingContext,
                             const nsRect&        aDirtyRect);
 
   // This method paints a specific cell in a given row of the tree.
@@ -237,7 +237,7 @@ protected:
                        nsTreeColumn*         aColumn,
                        const nsRect&         aCellRect,
                        nsPresContext*        aPresContext,
-                       nsRenderingContext&   aRenderingContext,
+                       gfxContext&           aRenderingContext,
                        const nsRect&         aDirtyRect,
                        nscoord&              aCurrX,
                        nsPoint               aPt,
@@ -248,7 +248,7 @@ protected:
                          nsTreeColumn*        aColumn,
                          const nsRect&        aTwistyRect,
                          nsPresContext*       aPresContext,
-                         nsRenderingContext&  aRenderingContext,
+                         gfxContext&          aRenderingContext,
                          const nsRect&        aDirtyRect,
                          nscoord&             aRemainingWidth,
                          nscoord&             aCurrX);
@@ -258,7 +258,7 @@ protected:
                         nsTreeColumn*         aColumn,
                         const nsRect&         aImageRect,
                         nsPresContext*        aPresContext,
-                        nsRenderingContext&   aRenderingContext,
+                        gfxContext&           aRenderingContext,
                         const nsRect&         aDirtyRect,
                         nscoord&              aRemainingWidth,
                         nscoord&              aCurrX,
@@ -269,7 +269,7 @@ protected:
                        nsTreeColumn*       aColumn,
                        const nsRect&       aTextRect,
                        nsPresContext*      aPresContext,
-                       nsRenderingContext& aRenderingContext,
+                       gfxContext&         aRenderingContext,
                        const nsRect&       aDirtyRect,
                        nscoord&            aCurrX);
 
@@ -278,7 +278,7 @@ protected:
                            nsTreeColumn*        aColumn,
                            const nsRect&        aCheckboxRect,
                            nsPresContext*       aPresContext,
-                           nsRenderingContext&  aRenderingContext,
+                           gfxContext&          aRenderingContext,
                            const nsRect&        aDirtyRect);
 
   // This method paints the progress meter inside a particular cell of the tree.
@@ -286,14 +286,14 @@ protected:
                                 nsTreeColumn*         aColumn,
                                 const nsRect&         aProgressMeterRect,
                                 nsPresContext*        aPresContext,
-                                nsRenderingContext&   aRenderingContext,
+                                gfxContext&           aRenderingContext,
                                 const nsRect&         aDirtyRect,
                                 nsDisplayListBuilder* aBuilder);
 
   // This method paints a drop feedback of the tree.
   DrawResult PaintDropFeedback(const nsRect&        aDropFeedbackRect, 
                                nsPresContext*       aPresContext,
-                               nsRenderingContext&  aRenderingContext,
+                               gfxContext&          aRenderingContext,
                                const nsRect&        aDirtyRect,
                                nsPoint              aPt);
 
@@ -301,7 +301,7 @@ protected:
   // paint the background rect as if it were a full-blown frame.
   DrawResult PaintBackgroundLayer(nsStyleContext*      aStyleContext,
                                   nsPresContext*       aPresContext, 
-                                  nsRenderingContext&  aRenderingContext, 
+                                  gfxContext&          aRenderingContext,
                                   const nsRect&        aRect,
                                   const nsRect&        aDirtyRect);
 
@@ -317,7 +317,7 @@ protected:
   void AdjustForCellText(nsAutoString& aText,
                          int32_t aRowIndex,
                          nsTreeColumn* aColumn,
-                         nsRenderingContext& aRenderingContext,
+                         gfxContext& aRenderingContext,
                          nsFontMetrics& aFontMetrics,
                          nsRect& aTextRect);
 
@@ -411,7 +411,7 @@ protected:
   void EnsureView();
 
   nsresult GetCellWidth(int32_t aRow, nsTreeColumn* aCol,
-                        nsRenderingContext* aRenderingContext,
+                        gfxContext* aRenderingContext,
                         nscoord& aDesiredSize, nscoord& aCurrentSize);
   nscoord CalcMaxRowWidth();
 

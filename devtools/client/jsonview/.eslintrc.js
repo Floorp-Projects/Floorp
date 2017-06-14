@@ -6,6 +6,6 @@ module.exports = {
     "document": true,
     "window": true,
     "CustomEvent": true,
-    "Locale": true
+    "JSONView": true
   }
 };

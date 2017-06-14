@@ -15,12 +15,14 @@
 
 #include <string>
 
+#include "webrtc/base/scoped_ref_ptr.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
+class I420Buffer;
 namespace test {
 
-// Handles reading of frames from video files.
+// Handles reading of I420 frames from video files.
 class FrameReader {
  public:
   virtual ~FrameReader() {}
@@ -30,11 +32,9 @@ class FrameReader {
   // Returns false if an error has occurred, in addition to printing to stderr.
   virtual bool Init() = 0;
 
-  // Reads a frame into the supplied buffer, which must contain enough space
-  // for the frame size.
-  // Returns true if there are more frames to read, false if we've already
-  // read the last frame (in the previous call).
-  virtual bool ReadFrame(uint8_t* source_buffer) = 0;
+  // Reads a frame from the input file. On success, returns the frame.
+  // Returns nullptr if encountering end of file or a read error.
+  virtual rtc::scoped_refptr<I420Buffer> ReadFrame() = 0;
 
   // Closes the input file if open. Essentially makes this class impossible
   // to use anymore. Will also be invoked by the destructor.
@@ -51,12 +51,11 @@ class FrameReaderImpl : public FrameReader {
   // Creates a file handler. The input file is assumed to exist and be readable.
   // Parameters:
   //   input_filename          The file to read from.
-  //   frame_length_in_bytes   The size of each frame.
-  //                           For YUV this is 3 * width * height / 2
-  FrameReaderImpl(std::string input_filename, size_t frame_length_in_bytes);
+  //   width, height           Size of each frame to read.
+  FrameReaderImpl(std::string input_filename, int width, int height);
   ~FrameReaderImpl() override;
   bool Init() override;
-  bool ReadFrame(uint8_t* source_buffer) override;
+  rtc::scoped_refptr<I420Buffer> ReadFrame() override;
   void Close() override;
   size_t FrameLength() override;
   int NumberOfFrames() override;
@@ -64,6 +63,8 @@ class FrameReaderImpl : public FrameReader {
  private:
   std::string input_filename_;
   size_t frame_length_in_bytes_;
+  int width_;
+  int height_;
   int number_of_frames_;
   FILE* input_file_;
 };

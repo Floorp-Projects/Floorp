@@ -11,6 +11,7 @@
 #include "mozilla/GeckoRestyleManager.h"
 
 #include <algorithm> // For std::max
+#include "gfxContext.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/ViewportFrame.h"
@@ -31,7 +32,6 @@
 #include "nsAnimationManager.h"
 #include "nsTransitionManager.h"
 #include "nsViewManager.h"
-#include "nsRenderingContext.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsContainerFrame.h"

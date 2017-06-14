@@ -12,22 +12,6 @@
 #include "webrtc/voice_engine/test/auto_test/fixtures/after_streaming_fixture.h"
 #include "webrtc/voice_engine/test/auto_test/voe_standard_test.h"
 
-class RxCallback : public webrtc::VoERxVadCallback {
- public:
-  RxCallback() :
-    vad_decision(-1) {
-  }
-
-  virtual void OnRxVad(int, int vadDecision) {
-    char msg[128];
-    sprintf(msg, "RX VAD detected decision %d \n", vadDecision);
-    TEST_LOG("%s", msg);
-    vad_decision = vadDecision;
-  }
-
-  int vad_decision;
-};
-
 class AudioProcessingTest : public AfterStreamingFixture {
  protected:
   // Note: Be careful with this one, it is used in the
@@ -40,17 +24,6 @@ class AudioProcessingTest : public AfterStreamingFixture {
 
     EXPECT_EQ(0, voe_apm_->GetAgcStatus(agc_enabled, agc_mode));
     EXPECT_TRUE(agc_enabled);
-    EXPECT_EQ(agc_mode_to_set, agc_mode);
-  }
-
-  void TryEnablingRxAgcWithMode(webrtc::AgcModes agc_mode_to_set) {
-    EXPECT_EQ(0, voe_apm_->SetRxAgcStatus(channel_, true, agc_mode_to_set));
-
-    bool rx_agc_enabled = false;
-    webrtc::AgcModes agc_mode = webrtc::kAgcDefault;
-
-    EXPECT_EQ(0, voe_apm_->GetRxAgcStatus(channel_, rx_agc_enabled, agc_mode));
-    EXPECT_TRUE(rx_agc_enabled);
     EXPECT_EQ(agc_mode_to_set, agc_mode);
   }
 
@@ -89,18 +62,6 @@ class AudioProcessingTest : public AfterStreamingFixture {
     bool ns_status = true;
     webrtc::NsModes ns_mode = webrtc::kNsDefault;
     EXPECT_EQ(0, voe_apm_->GetNsStatus(ns_status, ns_mode));
-
-    EXPECT_TRUE(ns_status);
-    EXPECT_EQ(expected_ns_mode, ns_mode);
-  }
-
-  void TryEnablingRxNsWithMode(webrtc::NsModes ns_mode_to_set,
-                               webrtc::NsModes expected_ns_mode) {
-    EXPECT_EQ(0, voe_apm_->SetRxNsStatus(channel_, true, ns_mode_to_set));
-
-    bool ns_status = true;
-    webrtc::NsModes ns_mode = webrtc::kNsDefault;
-    EXPECT_EQ(0, voe_apm_->GetRxNsStatus(channel_, ns_status, ns_mode));
 
     EXPECT_TRUE(ns_status);
     EXPECT_EQ(expected_ns_mode, ns_mode);
@@ -199,26 +160,6 @@ TEST_F(AudioProcessingTest, CanEnableAndDisableEcModeSeveralTimesInARow) {
   EXPECT_EQ(webrtc::kEcAec, ec_mode);
 }
 
-// TODO(phoglund): Reenable below test when it's no longer flaky.
-TEST_F(AudioProcessingTest, DISABLED_TestVoiceActivityDetectionWithObserver) {
-  RxCallback rx_callback;
-  EXPECT_EQ(0, voe_apm_->RegisterRxVadObserver(channel_, rx_callback));
-
-  // The extra sleeps are to allow decisions some time to propagate to the
-  // observer.
-  TryDetectingSilence();
-  Sleep(100);
-
-  EXPECT_EQ(0, rx_callback.vad_decision);
-
-  TryDetectingSpeechAfterSilence();
-  Sleep(100);
-
-  EXPECT_EQ(1, rx_callback.vad_decision);
-
-  EXPECT_EQ(0, voe_apm_->DeRegisterRxVadObserver(channel_));
-}
-
 #endif   // !WEBRTC_IOS && !WEBRTC_ANDROID
 
 TEST_F(AudioProcessingTest, EnablingEcAecmShouldEnableEcAecm) {
@@ -248,25 +189,6 @@ TEST_F(AudioProcessingTest, CanSetAecmMode) {
   TryEnablingAecmWithMode(webrtc::kAecmSpeakerphone, false);
 }
 
-TEST_F(AudioProcessingTest, RxAgcShouldBeOffByDefault) {
-  bool rx_agc_enabled = true;
-  webrtc::AgcModes agc_mode = webrtc::kAgcDefault;
-
-  EXPECT_EQ(0, voe_apm_->GetRxAgcStatus(channel_, rx_agc_enabled, agc_mode));
-  EXPECT_FALSE(rx_agc_enabled);
-  EXPECT_EQ(webrtc::kAgcAdaptiveDigital, agc_mode);
-}
-
-TEST_F(AudioProcessingTest, CanTurnOnDigitalRxAcg) {
-  TryEnablingRxAgcWithMode(webrtc::kAgcAdaptiveDigital);
-  TryEnablingRxAgcWithMode(webrtc::kAgcFixedDigital);
-}
-
-TEST_F(AudioProcessingTest, CannotTurnOnAdaptiveAnalogRxAgc) {
-  EXPECT_EQ(-1, voe_apm_->SetRxAgcStatus(
-      channel_, true, webrtc::kAgcAdaptiveAnalog));
-}
-
 TEST_F(AudioProcessingTest, NsIsOffWithModerateSuppressionByDefault) {
   bool ns_status = true;
   webrtc::NsModes ns_mode = webrtc::kNsDefault;
@@ -292,33 +214,6 @@ TEST_F(AudioProcessingTest, CanSetNsMode) {
                         webrtc::kNsHighSuppression);
   TryEnablingNsWithMode(webrtc::kNsDefault,
                         webrtc::kNsModerateSuppression);
-}
-
-TEST_F(AudioProcessingTest, RxNsIsOffWithModerateSuppressionByDefault) {
-  bool ns_status = true;
-  webrtc::NsModes ns_mode = webrtc::kNsDefault;
-  EXPECT_EQ(0, voe_apm_->GetRxNsStatus(channel_, ns_status, ns_mode));
-
-  EXPECT_FALSE(ns_status);
-  EXPECT_EQ(webrtc::kNsModerateSuppression, ns_mode);
-}
-
-TEST_F(AudioProcessingTest, CanSetRxNsMode) {
-  EXPECT_EQ(0, voe_apm_->SetRxNsStatus(channel_, true));
-
-  // See comments on the regular NS test above.
-  TryEnablingRxNsWithMode(webrtc::kNsHighSuppression,
-                          webrtc::kNsHighSuppression);
-  TryEnablingRxNsWithMode(webrtc::kNsLowSuppression,
-                          webrtc::kNsLowSuppression);
-  TryEnablingRxNsWithMode(webrtc::kNsModerateSuppression,
-                          webrtc::kNsModerateSuppression);
-  TryEnablingRxNsWithMode(webrtc::kNsVeryHighSuppression,
-                          webrtc::kNsVeryHighSuppression);
-  TryEnablingRxNsWithMode(webrtc::kNsConference,
-                          webrtc::kNsHighSuppression);
-  TryEnablingRxNsWithMode(webrtc::kNsDefault,
-                          webrtc::kNsModerateSuppression);
 }
 
 TEST_F(AudioProcessingTest, VadIsDisabledByDefault) {

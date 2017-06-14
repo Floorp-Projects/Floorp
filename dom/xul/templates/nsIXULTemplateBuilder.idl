@@ -283,14 +283,6 @@ interface nsIXULTemplateBuilder : nsISupports
     void addRuleFilter(in nsIDOMNode aRule, in nsIXULTemplateRuleFilter aFilter);
 
     /**
-     * Called to initialize a XUL content builder on a particular root
-     * element. This element presumably has a ``datasources''
-     * attribute, which the builder will parse to set up the template
-     * builder's datasources.
-     */
-    [noscript] void init(in nsIContent aElement);
-
-    /**
      * Invoked lazily by a XUL element that needs its child content built.
      * If aForceCreation is true, then the contents of an element will be
      * generated even if it is closed. If false, the element will only

@@ -9,6 +9,7 @@
  */
 
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
 
@@ -16,6 +17,7 @@
 #include "webrtc/base/asyncresolverinterface.h"
 #include "webrtc/base/bind.h"
 #include "webrtc/base/checks.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/helpers.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/timeutils.h"
@@ -89,11 +91,11 @@ class StunProber::Requester : public sigslot::has_slots<> {
   StunProber* prober_;
 
   // The socket for this session.
-  rtc::scoped_ptr<rtc::AsyncPacketSocket> socket_;
+  std::unique_ptr<rtc::AsyncPacketSocket> socket_;
 
   // Temporary SocketAddress and buffer for RecvFrom.
   rtc::SocketAddress addr_;
-  rtc::scoped_ptr<rtc::ByteBuffer> response_packet_;
+  std::unique_ptr<rtc::ByteBufferWriter> response_packet_;
 
   std::vector<Request*> requests_;
   std::vector<rtc::SocketAddress> server_ips_;
@@ -111,7 +113,7 @@ StunProber::Requester::Requester(
     const std::vector<rtc::SocketAddress>& server_ips)
     : prober_(prober),
       socket_(socket),
-      response_packet_(new rtc::ByteBuffer(nullptr, kMaxUdpBufferSize)),
+      response_packet_(new rtc::ByteBufferWriter(nullptr, kMaxUdpBufferSize)),
       server_ips_(server_ips),
       thread_checker_(prober->thread_checker_) {
   socket_->SignalReadPacket.connect(
@@ -140,8 +142,8 @@ void StunProber::Requester::SendStunRequest() {
       rtc::CreateRandomString(cricket::kStunTransactionIdLength));
   message.SetType(cricket::STUN_BINDING_REQUEST);
 
-  rtc::scoped_ptr<rtc::ByteBuffer> request_packet(
-      new rtc::ByteBuffer(nullptr, kMaxUdpBufferSize));
+  std::unique_ptr<rtc::ByteBufferWriter> request_packet(
+      new rtc::ByteBufferWriter(nullptr, kMaxUdpBufferSize));
   if (!message.Write(request_packet.get())) {
     prober_->ReportOnFinished(WRITE_FAILED);
     return;
@@ -161,7 +163,7 @@ void StunProber::Requester::SendStunRequest() {
     return;
   }
 
-  request.sent_time_ms = rtc::Time();
+  request.sent_time_ms = rtc::TimeMillis();
 
   num_request_sent_++;
   RTC_DCHECK(static_cast<size_t>(num_request_sent_) <= server_ips_.size());
@@ -169,8 +171,8 @@ void StunProber::Requester::SendStunRequest() {
 
 void StunProber::Requester::Request::ProcessResponse(const char* buf,
                                                      size_t buf_len) {
-  int64_t now = rtc::Time();
-  rtc::ByteBuffer message(buf, buf_len);
+  int64_t now = rtc::TimeMillis();
+  rtc::ByteBufferReader message(buf, buf_len);
   cricket::StunMessage stun_response;
   if (!stun_response.Read(&message)) {
     // Invalid or incomplete STUN packet.
@@ -321,7 +323,7 @@ void StunProber::OnServerResolved(rtc::AsyncResolverInterface* resolver) {
   // Deletion of AsyncResolverInterface can't be done in OnResolveResult which
   // handles SignalDone.
   invoker_.AsyncInvoke<void>(
-      thread_,
+      RTC_FROM_HERE, thread_,
       rtc::Bind(&rtc::AsyncResolverInterface::Destroy, resolver, false));
   servers_.pop_back();
 
@@ -344,7 +346,7 @@ void StunProber::OnServerResolved(rtc::AsyncResolverInterface* resolver) {
 
   // Prepare all the sockets beforehand. All of them will bind to "any" address.
   while (sockets_.size() < total_socket_required()) {
-    rtc::scoped_ptr<rtc::AsyncPacketSocket> socket(
+    std::unique_ptr<rtc::AsyncPacketSocket> socket(
         socket_factory_->CreateUdpSocket(rtc::SocketAddress(INADDR_ANY, 0), 0,
                                          0));
     if (!socket) {
@@ -394,7 +396,7 @@ bool StunProber::SendNextRequest() {
   return true;
 }
 
-bool StunProber::should_send_next_request(uint32_t now) {
+bool StunProber::should_send_next_request(int64_t now) {
   if (interval_ms_ < THREAD_WAKE_UP_INTERVAL_MS) {
     return now >= next_request_time_ms_;
   } else {
@@ -412,12 +414,12 @@ int StunProber::get_wake_up_interval_ms() {
 
 void StunProber::MaybeScheduleStunRequests() {
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
-  uint32_t now = rtc::Time();
+  int64_t now = rtc::TimeMillis();
 
   if (Done()) {
     invoker_.AsyncInvokeDelayed<void>(
-        thread_, rtc::Bind(&StunProber::ReportOnFinished, this, SUCCESS),
-        timeout_ms_);
+        RTC_FROM_HERE, thread_,
+        rtc::Bind(&StunProber::ReportOnFinished, this, SUCCESS), timeout_ms_);
     return;
   }
   if (should_send_next_request(now)) {
@@ -428,7 +430,8 @@ void StunProber::MaybeScheduleStunRequests() {
     next_request_time_ms_ = now + interval_ms_;
   }
   invoker_.AsyncInvokeDelayed<void>(
-      thread_, rtc::Bind(&StunProber::MaybeScheduleStunRequests, this),
+      RTC_FROM_HERE, thread_,
+      rtc::Bind(&StunProber::MaybeScheduleStunRequests, this),
       get_wake_up_interval_ms());
 }
 

@@ -69,7 +69,7 @@ define(function (require, exports, module) {
       return (
         Toolbar({},
           ToolbarButton({className: "btn copy", onClick: this.onCopy},
-            Locale.$STR("jsonViewer.Copy")
+            JSONView.Locale.$STR("jsonViewer.Copy")
           )
         )
       );

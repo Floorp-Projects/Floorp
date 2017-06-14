@@ -180,11 +180,11 @@ class StunMessage {
 
   // Parses the STUN packet in the given buffer and records it here. The
   // return value indicates whether this was successful.
-  bool Read(rtc::ByteBuffer* buf);
+  bool Read(rtc::ByteBufferReader* buf);
 
   // Writes this object into a STUN packet. The return value indicates whether
   // this was successful.
-  bool Write(rtc::ByteBuffer* buf) const;
+  bool Write(rtc::ByteBufferWriter* buf) const;
 
   // Creates an empty message. Overridable by derived classes.
   virtual StunMessage* CreateNew() const { return new StunMessage(); }
@@ -221,11 +221,11 @@ class StunAttribute {
 
   // Reads the body (not the type or length) for this type of attribute from
   // the given buffer.  Return value is true if successful.
-  virtual bool Read(rtc::ByteBuffer* buf) = 0;
+  virtual bool Read(rtc::ByteBufferReader* buf) = 0;
 
   // Writes the body (not the type or length) to the given buffer.  Return
   // value is true if successful.
-  virtual bool Write(rtc::ByteBuffer* buf) const = 0;
+  virtual bool Write(rtc::ByteBufferWriter* buf) const = 0;
 
   // Creates an attribute object with the given type and smallest length.
   static StunAttribute* Create(StunAttributeValueType value_type,
@@ -245,8 +245,8 @@ class StunAttribute {
  protected:
   StunAttribute(uint16_t type, uint16_t length);
   void SetLength(uint16_t length) { length_ = length; }
-  void WritePadding(rtc::ByteBuffer* buf) const;
-  void ConsumePadding(rtc::ByteBuffer* buf) const;
+  void WritePadding(rtc::ByteBufferWriter* buf) const;
+  void ConsumePadding(rtc::ByteBufferReader* buf) const;
 
  private:
   uint16_t type_;
@@ -290,8 +290,8 @@ class StunAddressAttribute : public StunAttribute {
   }
   void SetPort(uint16_t port) { address_.SetPort(port); }
 
-  virtual bool Read(rtc::ByteBuffer* buf);
-  virtual bool Write(rtc::ByteBuffer* buf) const;
+  virtual bool Read(rtc::ByteBufferReader* buf);
+  virtual bool Write(rtc::ByteBufferWriter* buf) const;
 
  private:
   void EnsureAddressLength() {
@@ -327,8 +327,8 @@ class StunXorAddressAttribute : public StunAddressAttribute {
   virtual void SetOwner(StunMessage* owner) {
     owner_ = owner;
   }
-  virtual bool Read(rtc::ByteBuffer* buf);
-  virtual bool Write(rtc::ByteBuffer* buf) const;
+  virtual bool Read(rtc::ByteBufferReader* buf);
+  virtual bool Write(rtc::ByteBufferWriter* buf) const;
 
  private:
   rtc::IPAddress GetXoredIP() const;
@@ -352,8 +352,8 @@ class StunUInt32Attribute : public StunAttribute {
   bool GetBit(size_t index) const;
   void SetBit(size_t index, bool value);
 
-  virtual bool Read(rtc::ByteBuffer* buf);
-  virtual bool Write(rtc::ByteBuffer* buf) const;
+  virtual bool Read(rtc::ByteBufferReader* buf);
+  virtual bool Write(rtc::ByteBufferWriter* buf) const;
 
  private:
   uint32_t bits_;
@@ -372,8 +372,8 @@ class StunUInt64Attribute : public StunAttribute {
   uint64_t value() const { return bits_; }
   void SetValue(uint64_t bits) { bits_ = bits; }
 
-  virtual bool Read(rtc::ByteBuffer* buf);
-  virtual bool Write(rtc::ByteBuffer* buf) const;
+  virtual bool Read(rtc::ByteBufferReader* buf);
+  virtual bool Write(rtc::ByteBufferWriter* buf) const;
 
  private:
   uint64_t bits_;
@@ -401,8 +401,8 @@ class StunByteStringAttribute : public StunAttribute {
   uint8_t GetByte(size_t index) const;
   void SetByte(size_t index, uint8_t value);
 
-  virtual bool Read(rtc::ByteBuffer* buf);
-  virtual bool Write(rtc::ByteBuffer* buf) const;
+  virtual bool Read(rtc::ByteBufferReader* buf);
+  virtual bool Write(rtc::ByteBufferWriter* buf) const;
 
  private:
   void SetBytes(char* bytes, size_t length);
@@ -434,8 +434,8 @@ class StunErrorCodeAttribute : public StunAttribute {
   void SetNumber(uint8_t number) { number_ = number; }
   void SetReason(const std::string& reason);
 
-  bool Read(rtc::ByteBuffer* buf);
-  bool Write(rtc::ByteBuffer* buf) const;
+  bool Read(rtc::ByteBufferReader* buf);
+  bool Write(rtc::ByteBufferWriter* buf) const;
 
  private:
   uint8_t class_;
@@ -458,8 +458,8 @@ class StunUInt16ListAttribute : public StunAttribute {
   void SetType(int index, uint16_t value);
   void AddType(uint16_t value);
 
-  bool Read(rtc::ByteBuffer* buf);
-  bool Write(rtc::ByteBuffer* buf) const;
+  bool Read(rtc::ByteBufferReader* buf);
+  bool Write(rtc::ByteBufferWriter* buf) const;
 
  private:
   std::vector<uint16_t>* attr_types_;
@@ -602,10 +602,14 @@ class TurnMessage : public StunMessage {
 
 // RFC 5245 ICE STUN attributes.
 enum IceAttributeType {
-  STUN_ATTR_PRIORITY                    = 0x0024,  // UInt32
-  STUN_ATTR_USE_CANDIDATE               = 0x0025,  // No content, Length = 0
-  STUN_ATTR_ICE_CONTROLLED              = 0x8029,  // UInt64
-  STUN_ATTR_ICE_CONTROLLING             = 0x802A   // UInt64
+  STUN_ATTR_PRIORITY = 0x0024,         // UInt32
+  STUN_ATTR_USE_CANDIDATE = 0x0025,    // No content, Length = 0
+  STUN_ATTR_ICE_CONTROLLED = 0x8029,   // UInt64
+  STUN_ATTR_ICE_CONTROLLING = 0x802A,  // UInt64
+  STUN_ATTR_NOMINATION = 0xC001,       // UInt32
+  // UInt32. The higher 16 bits are the network ID. The lower 16 bits are the
+  // network cost.
+  STUN_ATTR_NETWORK_INFO = 0xC057
 };
 
 // RFC 5245-defined errors.
@@ -619,7 +623,10 @@ class IceMessage : public StunMessage {
  protected:
   virtual StunAttributeValueType GetAttributeValueType(int type) const {
     switch (type) {
-      case STUN_ATTR_PRIORITY:        return STUN_VALUE_UINT32;
+      case STUN_ATTR_PRIORITY:
+      case STUN_ATTR_NETWORK_INFO:
+      case STUN_ATTR_NOMINATION:
+        return STUN_VALUE_UINT32;
       case STUN_ATTR_USE_CANDIDATE:   return STUN_VALUE_BYTE_STRING;
       case STUN_ATTR_ICE_CONTROLLED:  return STUN_VALUE_UINT64;
       case STUN_ATTR_ICE_CONTROLLING: return STUN_VALUE_UINT64;

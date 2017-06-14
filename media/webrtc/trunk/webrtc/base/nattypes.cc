@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <assert.h>
-
 #include "webrtc/base/nattypes.h"
+
+#include "webrtc/base/checks.h"
 
 namespace rtc {
 
@@ -44,11 +44,17 @@ public:
 
 NAT* NAT::Create(NATType type) {
   switch (type) {
-  case NAT_OPEN_CONE:       return new OpenConeNAT();
-  case NAT_ADDR_RESTRICTED: return new AddressRestrictedNAT();
-  case NAT_PORT_RESTRICTED: return new PortRestrictedNAT();
-  case NAT_SYMMETRIC:       return new SymmetricNAT();
-  default: assert(0);       return 0;
+    case NAT_OPEN_CONE:
+      return new OpenConeNAT();
+    case NAT_ADDR_RESTRICTED:
+      return new AddressRestrictedNAT();
+    case NAT_PORT_RESTRICTED:
+      return new PortRestrictedNAT();
+    case NAT_SYMMETRIC:
+      return new SymmetricNAT();
+    default:
+      RTC_NOTREACHED();
+      return 0;
   }
 }
 

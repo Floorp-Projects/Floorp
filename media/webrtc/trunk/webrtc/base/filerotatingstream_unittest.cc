@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
 #include "webrtc/base/arraysize.h"
 #include "webrtc/base/checks.h"
 #include "webrtc/base/filerotatingstream.h"
@@ -17,7 +19,14 @@
 
 namespace rtc {
 
-class FileRotatingStreamTest : public ::testing::Test {
+#if defined (WEBRTC_ANDROID)
+// Fails on Android: https://bugs.chromium.org/p/webrtc/issues/detail?id=4364.
+#define MAYBE_FileRotatingStreamTest DISABLED_FileRotatingStreamTest
+#else
+#define MAYBE_FileRotatingStreamTest FileRotatingStreamTest
+#endif
+
+class MAYBE_FileRotatingStreamTest : public ::testing::Test {
  protected:
   static const char* kFilePrefix;
   static const size_t kMaxFileSize;
@@ -57,13 +66,13 @@ class FileRotatingStreamTest : public ::testing::Test {
                         const size_t expected_length,
                         const std::string& dir_path,
                         const char* file_prefix) {
-    scoped_ptr<FileRotatingStream> stream;
+    std::unique_ptr<FileRotatingStream> stream;
     stream.reset(new FileRotatingStream(dir_path, file_prefix));
     ASSERT_TRUE(stream->Open());
     size_t read = 0;
     size_t stream_size = 0;
     EXPECT_TRUE(stream->GetSize(&stream_size));
-    scoped_ptr<uint8_t[]> buffer(new uint8_t[expected_length]);
+    std::unique_ptr<uint8_t[]> buffer(new uint8_t[expected_length]);
     EXPECT_EQ(SR_SUCCESS,
               stream->ReadAll(buffer.get(), expected_length, &read, nullptr));
     EXPECT_EQ(0, memcmp(expected_contents, buffer.get(), expected_length));
@@ -74,8 +83,8 @@ class FileRotatingStreamTest : public ::testing::Test {
   void VerifyFileContents(const char* expected_contents,
                           const size_t expected_length,
                           const std::string& file_path) {
-    scoped_ptr<uint8_t[]> buffer(new uint8_t[expected_length]);
-    scoped_ptr<FileStream> stream(Filesystem::OpenFile(file_path, "r"));
+    std::unique_ptr<uint8_t[]> buffer(new uint8_t[expected_length]);
+    std::unique_ptr<FileStream> stream(Filesystem::OpenFile(file_path, "r"));
     EXPECT_TRUE(stream);
     if (!stream) {
       return;
@@ -88,15 +97,16 @@ class FileRotatingStreamTest : public ::testing::Test {
     EXPECT_EQ(file_size, expected_length);
   }
 
-  scoped_ptr<FileRotatingStream> stream_;
+  std::unique_ptr<FileRotatingStream> stream_;
   std::string dir_path_;
 };
 
-const char* FileRotatingStreamTest::kFilePrefix = "FileRotatingStreamTest";
-const size_t FileRotatingStreamTest::kMaxFileSize = 2;
+const char* MAYBE_FileRotatingStreamTest::kFilePrefix =
+    "FileRotatingStreamTest";
+const size_t MAYBE_FileRotatingStreamTest::kMaxFileSize = 2;
 
 // Tests that stream state is correct before and after Open / Close.
-TEST_F(FileRotatingStreamTest, State) {
+TEST_F(MAYBE_FileRotatingStreamTest, State) {
   Init("FileRotatingStreamTestState", kFilePrefix, kMaxFileSize, 3);
 
   EXPECT_EQ(SS_CLOSED, stream_->GetState());
@@ -107,14 +117,14 @@ TEST_F(FileRotatingStreamTest, State) {
 }
 
 // Tests that nothing is written to file when data of length zero is written.
-TEST_F(FileRotatingStreamTest, EmptyWrite) {
+TEST_F(MAYBE_FileRotatingStreamTest, EmptyWrite) {
   Init("FileRotatingStreamTestEmptyWrite", kFilePrefix, kMaxFileSize, 3);
 
   ASSERT_TRUE(stream_->Open());
   WriteAndFlush("a", 0);
 
   std::string logfile_path = stream_->GetFilePath(0);
-  scoped_ptr<FileStream> stream(Filesystem::OpenFile(logfile_path, "r"));
+  std::unique_ptr<FileStream> stream(Filesystem::OpenFile(logfile_path, "r"));
   size_t file_size = 0;
   EXPECT_TRUE(stream->GetSize(&file_size));
   EXPECT_EQ(0u, file_size);
@@ -122,7 +132,7 @@ TEST_F(FileRotatingStreamTest, EmptyWrite) {
 
 // Tests that a write operation followed by a read returns the expected data
 // and writes to the expected files.
-TEST_F(FileRotatingStreamTest, WriteAndRead) {
+TEST_F(MAYBE_FileRotatingStreamTest, WriteAndRead) {
   Init("FileRotatingStreamTestWriteAndRead", kFilePrefix, kMaxFileSize, 3);
 
   ASSERT_TRUE(stream_->Open());
@@ -156,7 +166,7 @@ TEST_F(FileRotatingStreamTest, WriteAndRead) {
 
 // Tests that writing data greater than the total capacity of the files
 // overwrites the files correctly and is read correctly after.
-TEST_F(FileRotatingStreamTest, WriteOverflowAndRead) {
+TEST_F(MAYBE_FileRotatingStreamTest, WriteOverflowAndRead) {
   Init("FileRotatingStreamTestWriteOverflowAndRead", kFilePrefix, kMaxFileSize,
        3);
   ASSERT_TRUE(stream_->Open());
@@ -173,7 +183,7 @@ TEST_F(FileRotatingStreamTest, WriteOverflowAndRead) {
 }
 
 // Tests that the returned file paths have the right folder and prefix.
-TEST_F(FileRotatingStreamTest, GetFilePath) {
+TEST_F(MAYBE_FileRotatingStreamTest, GetFilePath) {
   Init("FileRotatingStreamTestGetFilePath", kFilePrefix, kMaxFileSize, 20);
   for (auto i = 0; i < 20; ++i) {
     Pathname path(stream_->GetFilePath(i));
@@ -182,7 +192,16 @@ TEST_F(FileRotatingStreamTest, GetFilePath) {
   }
 }
 
-class CallSessionFileRotatingStreamTest : public ::testing::Test {
+#if defined (WEBRTC_ANDROID)
+// Fails on Android: https://bugs.chromium.org/p/webrtc/issues/detail?id=4364.
+#define MAYBE_CallSessionFileRotatingStreamTest \
+    DISABLED_CallSessionFileRotatingStreamTest
+#else
+#define MAYBE_CallSessionFileRotatingStreamTest \
+    CallSessionFileRotatingStreamTest
+#endif
+
+class MAYBE_CallSessionFileRotatingStreamTest : public ::testing::Test {
  protected:
   void Init(const std::string& dir_name, size_t max_total_log_size) {
     Pathname test_path;
@@ -215,13 +234,13 @@ class CallSessionFileRotatingStreamTest : public ::testing::Test {
   void VerifyStreamRead(const char* expected_contents,
                         const size_t expected_length,
                         const std::string& dir_path) {
-    scoped_ptr<CallSessionFileRotatingStream> stream(
+    std::unique_ptr<CallSessionFileRotatingStream> stream(
         new CallSessionFileRotatingStream(dir_path));
     ASSERT_TRUE(stream->Open());
     size_t read = 0;
     size_t stream_size = 0;
     EXPECT_TRUE(stream->GetSize(&stream_size));
-    scoped_ptr<uint8_t[]> buffer(new uint8_t[expected_length]);
+    std::unique_ptr<uint8_t[]> buffer(new uint8_t[expected_length]);
     EXPECT_EQ(SR_SUCCESS,
               stream->ReadAll(buffer.get(), expected_length, &read, nullptr));
     EXPECT_EQ(0, memcmp(expected_contents, buffer.get(), expected_length));
@@ -229,13 +248,13 @@ class CallSessionFileRotatingStreamTest : public ::testing::Test {
     EXPECT_EQ(stream_size, read);
   }
 
-  scoped_ptr<CallSessionFileRotatingStream> stream_;
+  std::unique_ptr<CallSessionFileRotatingStream> stream_;
   std::string dir_path_;
 };
 
 // Tests that writing and reading to a stream with the smallest possible
 // capacity works.
-TEST_F(CallSessionFileRotatingStreamTest, WriteAndReadSmallest) {
+TEST_F(MAYBE_CallSessionFileRotatingStreamTest, WriteAndReadSmallest) {
   Init("CallSessionFileRotatingStreamTestWriteAndReadSmallest", 4);
 
   ASSERT_TRUE(stream_->Open());
@@ -248,7 +267,7 @@ TEST_F(CallSessionFileRotatingStreamTest, WriteAndReadSmallest) {
 
 // Tests that writing and reading to a stream with capacity lesser than 4MB
 // behaves correctly.
-TEST_F(CallSessionFileRotatingStreamTest, WriteAndReadSmall) {
+TEST_F(MAYBE_CallSessionFileRotatingStreamTest, WriteAndReadSmall) {
   Init("CallSessionFileRotatingStreamTestWriteAndReadSmall", 8);
 
   ASSERT_TRUE(stream_->Open());
@@ -261,12 +280,12 @@ TEST_F(CallSessionFileRotatingStreamTest, WriteAndReadSmall) {
 
 // Tests that writing and reading to a stream with capacity greater than 4MB
 // behaves correctly.
-TEST_F(CallSessionFileRotatingStreamTest, WriteAndReadLarge) {
+TEST_F(MAYBE_CallSessionFileRotatingStreamTest, WriteAndReadLarge) {
   Init("CallSessionFileRotatingStreamTestWriteAndReadLarge", 6 * 1024 * 1024);
 
   ASSERT_TRUE(stream_->Open());
   const size_t buffer_size = 1024 * 1024;
-  scoped_ptr<uint8_t[]> buffer(new uint8_t[buffer_size]);
+  std::unique_ptr<uint8_t[]> buffer(new uint8_t[buffer_size]);
   for (int i = 0; i < 8; i++) {
     memset(buffer.get(), i, buffer_size);
     EXPECT_EQ(SR_SUCCESS,
@@ -275,7 +294,7 @@ TEST_F(CallSessionFileRotatingStreamTest, WriteAndReadLarge) {
 
   stream_.reset(new CallSessionFileRotatingStream(dir_path_));
   ASSERT_TRUE(stream_->Open());
-  scoped_ptr<uint8_t[]> expected_buffer(new uint8_t[buffer_size]);
+  std::unique_ptr<uint8_t[]> expected_buffer(new uint8_t[buffer_size]);
   int expected_vals[] = {0, 1, 2, 6, 7};
   for (size_t i = 0; i < arraysize(expected_vals); ++i) {
     memset(expected_buffer.get(), expected_vals[i], buffer_size);
@@ -288,12 +307,12 @@ TEST_F(CallSessionFileRotatingStreamTest, WriteAndReadLarge) {
 
 // Tests that writing and reading to a stream where only the first file is
 // written to behaves correctly.
-TEST_F(CallSessionFileRotatingStreamTest, WriteAndReadFirstHalf) {
+TEST_F(MAYBE_CallSessionFileRotatingStreamTest, WriteAndReadFirstHalf) {
   Init("CallSessionFileRotatingStreamTestWriteAndReadFirstHalf",
        6 * 1024 * 1024);
   ASSERT_TRUE(stream_->Open());
   const size_t buffer_size = 1024 * 1024;
-  scoped_ptr<uint8_t[]> buffer(new uint8_t[buffer_size]);
+  std::unique_ptr<uint8_t[]> buffer(new uint8_t[buffer_size]);
   for (int i = 0; i < 2; i++) {
     memset(buffer.get(), i, buffer_size);
     EXPECT_EQ(SR_SUCCESS,
@@ -302,7 +321,7 @@ TEST_F(CallSessionFileRotatingStreamTest, WriteAndReadFirstHalf) {
 
   stream_.reset(new CallSessionFileRotatingStream(dir_path_));
   ASSERT_TRUE(stream_->Open());
-  scoped_ptr<uint8_t[]> expected_buffer(new uint8_t[buffer_size]);
+  std::unique_ptr<uint8_t[]> expected_buffer(new uint8_t[buffer_size]);
   int expected_vals[] = {0, 1};
   for (size_t i = 0; i < arraysize(expected_vals); ++i) {
     memset(expected_buffer.get(), expected_vals[i], buffer_size);

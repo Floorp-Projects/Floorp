@@ -6,6 +6,7 @@
 #include "nsFieldSetFrame.h"
 
 #include <algorithm>
+#include "gfxContext.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
@@ -16,7 +17,6 @@
 #include "nsIFrameInlines.h"
 #include "nsLayoutUtils.h"
 #include "nsLegendFrame.h"
-#include "nsRenderingContext.h"
 #include "nsStyleConsts.h"
 
 using namespace mozilla;
@@ -91,7 +91,7 @@ public:
   }
 #endif
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) override;
+                     gfxContext* aCtx) override;
   virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override;
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
@@ -102,7 +102,7 @@ public:
 
 void
 nsDisplayFieldSetBorder::Paint(nsDisplayListBuilder* aBuilder,
-                               nsRenderingContext* aCtx)
+                               gfxContext* aCtx)
 {
   image::DrawResult result = static_cast<nsFieldSetFrame*>(mFrame)->
     PaintBorder(aBuilder, *aCtx, ToReferenceFrame(), mVisibleRect);
@@ -204,7 +204,7 @@ nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 image::DrawResult
 nsFieldSetFrame::PaintBorder(
   nsDisplayListBuilder* aBuilder,
-  nsRenderingContext& aRenderingContext,
+  gfxContext& aRenderingContext,
   nsPoint aPt,
   const nsRect& aDirtyRect)
 {
@@ -255,14 +255,12 @@ nsFieldSetFrame::PaintBorder(
                      false);
     RefPtr<Path> clipPath = pathBuilder->Finish();
 
-    gfxContext* gfx = aRenderingContext.ThebesContext();
-
-    gfx->Save();
-    gfx->Clip(clipPath);
+    aRenderingContext.Save();
+    aRenderingContext.Clip(clipPath);
     result &=
       nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                   aDirtyRect, rect, mStyleContext, borderFlags);
-    gfx->Restore();
+    aRenderingContext.Restore();
   } else {
     result &=
       nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
@@ -274,7 +272,7 @@ nsFieldSetFrame::PaintBorder(
 }
 
 nscoord
-nsFieldSetFrame::GetIntrinsicISize(nsRenderingContext* aRenderingContext,
+nsFieldSetFrame::GetIntrinsicISize(gfxContext* aRenderingContext,
                                    nsLayoutUtils::IntrinsicISizeType aType)
 {
   nscoord legendWidth = 0;
@@ -298,7 +296,7 @@ nsFieldSetFrame::GetIntrinsicISize(nsRenderingContext* aRenderingContext,
 
 
 nscoord
-nsFieldSetFrame::GetMinISize(nsRenderingContext* aRenderingContext)
+nsFieldSetFrame::GetMinISize(gfxContext* aRenderingContext)
 {
   nscoord result = 0;
   DISPLAY_MIN_WIDTH(this, result);
@@ -308,7 +306,7 @@ nsFieldSetFrame::GetMinISize(nsRenderingContext* aRenderingContext)
 }
 
 nscoord
-nsFieldSetFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
+nsFieldSetFrame::GetPrefISize(gfxContext* aRenderingContext)
 {
   nscoord result = 0;
   DISPLAY_PREF_WIDTH(this, result);

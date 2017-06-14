@@ -37,8 +37,11 @@ public:
   int StartSSL(const char* hostname, bool restartable) override;
   int Send(const void* pv, size_t cb) override;
   int SendTo(const void* pv, size_t cb, const SocketAddress& addr) override;
-  int Recv(void* pv, size_t cb) override;
-  int RecvFrom(void* pv, size_t cb, SocketAddress* paddr) override;
+  int Recv(void* pv, size_t cb, int64_t* timestamp) override;
+  int RecvFrom(void* pv,
+               size_t cb,
+               SocketAddress* paddr,
+               int64_t* timestamp) override;
   int Close() override;
 
   // Note that the socket returns ST_CONNECTING while SSL is being negotiated.

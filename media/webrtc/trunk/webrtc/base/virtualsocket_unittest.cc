@@ -14,6 +14,8 @@
 #include <netinet/in.h>
 #endif
 
+#include <memory>
+
 #include "webrtc/base/arraysize.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/gunit.h"
@@ -33,8 +35,8 @@ struct Sender : public MessageHandler {
         done(false),
         rate(rt),
         count(0) {
-    last_send = rtc::Time();
-    thread->PostDelayed(NextDelay(), this, 1);
+    last_send = rtc::TimeMillis();
+    thread->PostDelayed(RTC_FROM_HERE, NextDelay(), this, 1);
   }
 
   uint32_t NextDelay() {
@@ -48,9 +50,9 @@ struct Sender : public MessageHandler {
     if (done)
       return;
 
-    uint32_t cur_time = rtc::Time();
-    uint32_t delay = cur_time - last_send;
-    uint32_t size = rate * delay / 1000;
+    int64_t cur_time = rtc::TimeMillis();
+    int64_t delay = cur_time - last_send;
+    uint32_t size = static_cast<uint32_t>(rate * delay / 1000);
     size = std::min<uint32_t>(size, 4096);
     size = std::max<uint32_t>(size, sizeof(uint32_t));
 
@@ -59,16 +61,16 @@ struct Sender : public MessageHandler {
     socket->Send(dummy, size, options);
 
     last_send = cur_time;
-    thread->PostDelayed(NextDelay(), this, 1);
+    thread->PostDelayed(RTC_FROM_HERE, NextDelay(), this, 1);
   }
 
   Thread* thread;
-  scoped_ptr<AsyncUDPSocket> socket;
+  std::unique_ptr<AsyncUDPSocket> socket;
   rtc::PacketOptions options;
   bool done;
   uint32_t rate;  // bytes per second
   uint32_t count;
-  uint32_t last_send;
+  int64_t last_send;
   char dummy[4096];
 };
 
@@ -84,7 +86,7 @@ struct Receiver : public MessageHandler, public sigslot::has_slots<> {
         sum_sq(0),
         samples(0) {
     socket->SignalReadPacket.connect(this, &Receiver::OnReadPacket);
-    thread->PostDelayed(1000, this, 1);
+    thread->PostDelayed(RTC_FROM_HERE, 1000, this, 1);
   }
 
   ~Receiver() {
@@ -101,7 +103,7 @@ struct Receiver : public MessageHandler, public sigslot::has_slots<> {
     sec_count += size;
 
     uint32_t send_time = *reinterpret_cast<const uint32_t*>(data);
-    uint32_t recv_time = rtc::Time();
+    uint32_t recv_time = rtc::TimeMillis();
     uint32_t delay = recv_time - send_time;
     sum += delay;
     sum_sq += delay * delay;
@@ -119,11 +121,11 @@ struct Receiver : public MessageHandler, public sigslot::has_slots<> {
     if (bandwidth > 0)
       ASSERT_TRUE(sec_count <= 5 * bandwidth / 4);
     sec_count = 0;
-    thread->PostDelayed(1000, this, 1);
+    thread->PostDelayed(RTC_FROM_HERE, 1000, this, 1);
   }
 
   Thread* thread;
-  scoped_ptr<AsyncUDPSocket> socket;
+  std::unique_ptr<AsyncUDPSocket> socket;
   uint32_t bandwidth;
   bool done;
   size_t count;
@@ -345,11 +347,11 @@ class VirtualSocketServerTest : public testing::Test {
         EmptySocketAddressWithFamily(initial_addr.family());
 
     // Create client and server
-    scoped_ptr<AsyncSocket> client(ss_->CreateAsyncSocket(initial_addr.family(),
-                                                          SOCK_STREAM));
+    std::unique_ptr<AsyncSocket> client(
+        ss_->CreateAsyncSocket(initial_addr.family(), SOCK_STREAM));
     sink.Monitor(client.get());
-    scoped_ptr<AsyncSocket> server(ss_->CreateAsyncSocket(initial_addr.family(),
-                                                          SOCK_STREAM));
+    std::unique_ptr<AsyncSocket> server(
+        ss_->CreateAsyncSocket(initial_addr.family(), SOCK_STREAM));
     sink.Monitor(server.get());
 
     // Initiate connect
@@ -406,7 +408,7 @@ class VirtualSocketServerTest : public testing::Test {
 
     // Server accepts connection
     EXPECT_TRUE(sink.Check(server.get(), testing::SSE_READ));
-    scoped_ptr<AsyncSocket> accepted(server->Accept(&accept_addr));
+    std::unique_ptr<AsyncSocket> accepted(server->Accept(&accept_addr));
     ASSERT_TRUE(NULL != accepted.get());
     sink.Monitor(accepted.get());
 
@@ -435,9 +437,8 @@ class VirtualSocketServerTest : public testing::Test {
     a->Bind(initial_addr);
     EXPECT_EQ(a->GetLocalAddress().family(), initial_addr.family());
 
-
-    scoped_ptr<AsyncSocket> b(ss_->CreateAsyncSocket(initial_addr.family(),
-                                                     SOCK_STREAM));
+    std::unique_ptr<AsyncSocket> b(
+        ss_->CreateAsyncSocket(initial_addr.family(), SOCK_STREAM));
     sink.Monitor(b.get());
     b->Bind(initial_addr);
     EXPECT_EQ(b->GetLocalAddress().family(), initial_addr.family());
@@ -463,7 +464,7 @@ class VirtualSocketServerTest : public testing::Test {
 
     char buffer[10];
     EXPECT_FALSE(sink.Check(b.get(), testing::SSE_READ));
-    EXPECT_EQ(-1, b->Recv(buffer, 10));
+    EXPECT_EQ(-1, b->Recv(buffer, 10, nullptr));
 
     EXPECT_TRUE(sink.Check(a, testing::SSE_CLOSE));
     EXPECT_EQ(a->GetState(), AsyncSocket::CS_CLOSED);
@@ -530,7 +531,7 @@ class VirtualSocketServerTest : public testing::Test {
     EXPECT_TRUE(a->IsBlocking());
 
     // Read a subset of the data
-    result = b->Recv(recv_buffer + recv_pos, 500);
+    result = b->Recv(recv_buffer + recv_pos, 500, nullptr);
     EXPECT_EQ(500, result);
     recv_pos += result;
 
@@ -545,7 +546,7 @@ class VirtualSocketServerTest : public testing::Test {
 
     // Empty the recv buffer
     while (true) {
-      result = b->Recv(recv_buffer + recv_pos, kDataSize - recv_pos);
+      result = b->Recv(recv_buffer + recv_pos, kDataSize - recv_pos, nullptr);
       if (result < 0) {
         EXPECT_EQ(-1, result);
         EXPECT_TRUE(b->IsBlocking());
@@ -559,7 +560,7 @@ class VirtualSocketServerTest : public testing::Test {
 
     // Continue to empty the recv buffer
     while (true) {
-      result = b->Recv(recv_buffer + recv_pos, kDataSize - recv_pos);
+      result = b->Recv(recv_buffer + recv_pos, kDataSize - recv_pos, nullptr);
       if (result < 0) {
         EXPECT_EQ(-1, result);
         EXPECT_TRUE(b->IsBlocking());
@@ -578,7 +579,7 @@ class VirtualSocketServerTest : public testing::Test {
 
     // Receive the last of the data
     while (true) {
-      result = b->Recv(recv_buffer + recv_pos, kDataSize - recv_pos);
+      result = b->Recv(recv_buffer + recv_pos, kDataSize - recv_pos, nullptr);
       if (result < 0) {
         EXPECT_EQ(-1, result);
         EXPECT_TRUE(b->IsBlocking());
@@ -625,7 +626,7 @@ class VirtualSocketServerTest : public testing::Test {
     ss_->ProcessMessagesUntilIdle();
 
     for (char i = 0; i < cNumPackets; ++i) {
-      EXPECT_EQ(1, b->Recv(buffer, sizeof(buffer)));
+      EXPECT_EQ(1, b->Recv(buffer, sizeof(buffer), nullptr));
       EXPECT_EQ(static_cast<char>('0' + i), buffer[0]);
     }
 
@@ -645,7 +646,7 @@ class VirtualSocketServerTest : public testing::Test {
     ss_->ProcessMessagesUntilIdle();
 
     for (char i = 0; i < cNumPackets; ++i) {
-      EXPECT_EQ(1, b->Recv(buffer, sizeof(buffer)));
+      EXPECT_EQ(1, b->Recv(buffer, sizeof(buffer), nullptr));
       EXPECT_EQ(static_cast<char>('A' + i), buffer[0]);
     }
   }
@@ -1017,10 +1018,73 @@ TEST_F(VirtualSocketServerTest, CanSendDatagramFromUnboundIPv6ToIPv4Any) {
                           true);
 }
 
+TEST_F(VirtualSocketServerTest, SetSendingBlockedWithUdpSocket) {
+  AsyncSocket* socket1 =
+      ss_->CreateAsyncSocket(kIPv4AnyAddress.family(), SOCK_DGRAM);
+  AsyncSocket* socket2 =
+      ss_->CreateAsyncSocket(kIPv4AnyAddress.family(), SOCK_DGRAM);
+  socket1->Bind(kIPv4AnyAddress);
+  socket2->Bind(kIPv4AnyAddress);
+  TestClient* client1 = new TestClient(new AsyncUDPSocket(socket1));
+
+  ss_->SetSendingBlocked(true);
+  EXPECT_EQ(-1, client1->SendTo("foo", 3, socket2->GetLocalAddress()));
+  EXPECT_TRUE(socket1->IsBlocking());
+  EXPECT_EQ(0, client1->ready_to_send_count());
+
+  ss_->SetSendingBlocked(false);
+  EXPECT_EQ(1, client1->ready_to_send_count());
+  EXPECT_EQ(3, client1->SendTo("foo", 3, socket2->GetLocalAddress()));
+}
+
+TEST_F(VirtualSocketServerTest, SetSendingBlockedWithTcpSocket) {
+  constexpr size_t kBufferSize = 1024;
+  ss_->set_send_buffer_capacity(kBufferSize);
+  ss_->set_recv_buffer_capacity(kBufferSize);
+
+  testing::StreamSink sink;
+  AsyncSocket* socket1 =
+      ss_->CreateAsyncSocket(kIPv4AnyAddress.family(), SOCK_STREAM);
+  AsyncSocket* socket2 =
+      ss_->CreateAsyncSocket(kIPv4AnyAddress.family(), SOCK_STREAM);
+  sink.Monitor(socket1);
+  sink.Monitor(socket2);
+  socket1->Bind(kIPv4AnyAddress);
+  socket2->Bind(kIPv4AnyAddress);
+
+  // Connect sockets.
+  EXPECT_EQ(0, socket1->Connect(socket2->GetLocalAddress()));
+  EXPECT_EQ(0, socket2->Connect(socket1->GetLocalAddress()));
+  ss_->ProcessMessagesUntilIdle();
+
+  char data[kBufferSize] = {};
+
+  // First Send call will fill the send buffer but not send anything.
+  ss_->SetSendingBlocked(true);
+  EXPECT_EQ(static_cast<int>(kBufferSize), socket1->Send(data, kBufferSize));
+  ss_->ProcessMessagesUntilIdle();
+  EXPECT_FALSE(sink.Check(socket1, testing::SSE_WRITE));
+  EXPECT_FALSE(sink.Check(socket2, testing::SSE_READ));
+  EXPECT_FALSE(socket1->IsBlocking());
+
+  // Since the send buffer is full, next Send will result in EWOULDBLOCK.
+  EXPECT_EQ(-1, socket1->Send(data, kBufferSize));
+  EXPECT_FALSE(sink.Check(socket1, testing::SSE_WRITE));
+  EXPECT_FALSE(sink.Check(socket2, testing::SSE_READ));
+  EXPECT_TRUE(socket1->IsBlocking());
+
+  // When sending is unblocked, the buffered data should be sent and
+  // SignalWriteEvent should fire.
+  ss_->SetSendingBlocked(false);
+  ss_->ProcessMessagesUntilIdle();
+  EXPECT_TRUE(sink.Check(socket1, testing::SSE_WRITE));
+  EXPECT_TRUE(sink.Check(socket2, testing::SSE_READ));
+}
+
 TEST_F(VirtualSocketServerTest, CreatesStandardDistribution) {
   const uint32_t kTestMean[] = {10, 100, 333, 1000};
   const double kTestDev[] = { 0.25, 0.1, 0.01 };
-  // TODO: The current code only works for 1000 data points or more.
+  // TODO(deadbeef): The current code only works for 1000 data points or more.
   const uint32_t kTestSamples[] = {/*10, 100,*/ 1000};
   for (size_t midx = 0; midx < arraysize(kTestMean); ++midx) {
     for (size_t didx = 0; didx < arraysize(kTestDev); ++didx) {

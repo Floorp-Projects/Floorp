@@ -9,7 +9,7 @@
 #include "nssb64.h"
 
 #include "gtest/gtest.h"
-#include "scoped_ptrs.h"
+#include "scoped_ptrs_util.h"
 
 namespace nss_test {
 

@@ -25,6 +25,7 @@ CSRCS = \
         sslauth.c \
         sslcon.c \
         ssldef.c \
+        ssl3encode.c \
         sslenum.c \
         sslerr.c \
         sslerrstrs.c \
@@ -41,6 +42,7 @@ CSRCS = \
         sslver.c \
         authcert.c \
         cmpcert.c \
+        selfencrypt.c \
         sslinfo.c \
         ssl3ecc.c \
         tls13con.c \

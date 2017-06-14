@@ -12,8 +12,8 @@
 #define WEBRTC_COMMON_AUDIO_REAL_FOURIER_OOURA_H_
 
 #include <complex>
+#include <memory>
 
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_audio/real_fourier.h"
 
 namespace webrtc {
@@ -35,8 +35,8 @@ class RealFourierOoura : public RealFourier {
   const size_t complex_length_;
   // These are work arrays for Ooura. The names are based on the comments in
   // fft4g.c.
-  const rtc::scoped_ptr<size_t[]> work_ip_;
-  const rtc::scoped_ptr<float[]> work_w_;
+  const std::unique_ptr<size_t[]> work_ip_;
+  const std::unique_ptr<float[]> work_w_;
 };
 
 }  // namespace webrtc

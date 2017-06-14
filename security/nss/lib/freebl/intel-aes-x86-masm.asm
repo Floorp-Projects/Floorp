@@ -87,8 +87,6 @@ LOCAL   bail
         mov     input,      [esp + 2*4 + 4*4]
         mov     inputLen,   [esp + 2*4 + 5*4]
 
-        lea     ctx, [44+ctx]
-
 loop7:
         cmp     inputLen, 7*16
         jb      loop1
@@ -557,9 +555,7 @@ LOCAL   bail
         mov     input,      [esp + 2*4 + 4*4]
         mov     inputLen,   [esp + 2*4 + 5*4]
 
-        lea     ctx, [44+ctx]
-
-        movdqu  xmm0, [-32+ctx]
+        movdqu  xmm0, [252+ctx]
 
         movdqu  xmm2, [0*16 + ctx]
         movdqu  xmm3, [1*16 + ctx]
@@ -597,7 +593,7 @@ loop1:
         jmp loop1
 
 bail:
-        movdqu  [-32+ctx], xmm0
+        movdqu  [252+ctx], xmm0
 
         xor eax, eax
         pop inputLen
@@ -618,8 +614,6 @@ LOCAL   bail
         mov     output,     [esp + 2*4 + 1*4]
         mov     input,      [esp + 2*4 + 4*4]
         mov     inputLen,   [esp + 2*4 + 5*4]
-
-        lea     ctx, [44+ctx]
 
 loop7:
         cmp     inputLen, 7*16
@@ -649,7 +643,7 @@ loop7:
             ENDM
         aes_dec_last_rnd rnds
 
-        movdqu  xmm7, [-32 + ctx]
+        movdqu  xmm7, [252 + ctx]
         pxor    xmm0, xmm7
         movdqu  xmm7, [0*16 + input]
         pxor    xmm1, xmm7
@@ -672,7 +666,7 @@ loop7:
         movdqu  [4*16 + output], xmm4
         movdqu  [5*16 + output], xmm5
         movdqu  [6*16 + output], xmm6
-        movdqu  [-32 + ctx], xmm7
+        movdqu  [252 + ctx], xmm7
 
         lea input, [7*16 + input]
         lea output, [7*16 + output]
@@ -680,7 +674,7 @@ loop7:
         jmp loop7
 dec1:
 
-        movdqu  xmm3, [-32 + ctx]
+        movdqu  xmm3, [252 + ctx]
 
 loop1:
         cmp     inputLen, 1*16
@@ -710,7 +704,7 @@ loop1:
         jmp loop1
 
 bail:
-        movdqu  [-32 + ctx], xmm3
+        movdqu  [252 + ctx], xmm3
         xor eax, eax
         pop     inputLen
         ret
@@ -769,7 +763,6 @@ LOCAL   bail
         mov     inputLen, [esp + 4*5 + 5*4]
 
         mov     ctx, [4+ctrCtx]
-        lea     ctx, [44+ctx]
 
         mov     ebp, esp
         sub     esp, 7*16

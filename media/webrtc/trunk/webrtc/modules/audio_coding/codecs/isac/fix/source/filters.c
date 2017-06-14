@@ -8,8 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <assert.h>
-
+#include "webrtc/base/checks.h"
 #include "webrtc/modules/audio_coding/codecs/isac/fix/source/codec.h"
 
 // Autocorrelation function in fixed point.
@@ -27,8 +26,8 @@ int WebRtcIsacfix_AutocorrC(int32_t* __restrict r,
   int64_t prod = 0;
 
   // The ARM assembly code assumptoins.
-  assert(N % 4 == 0);
-  assert(N >= 8);
+  RTC_DCHECK_EQ(0, N % 4);
+  RTC_DCHECK_GE(N, 8);
 
   // Calculate r[0].
   for (i = 0; i < N; i++) {

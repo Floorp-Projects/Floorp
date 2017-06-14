@@ -14,9 +14,9 @@
 
 #include <algorithm>  // min
 
+#include "webrtc/base/checks.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/modules/audio_coding/codecs/audio_decoder.h"
-#include "webrtc/modules/audio_coding/codecs/cng/webrtc_cng.h"
 #include "webrtc/modules/audio_coding/neteq/audio_multi_vector.h"
 #include "webrtc/modules/audio_coding/neteq/background_noise.h"
 #include "webrtc/modules/audio_coding/neteq/decoder_database.h"
@@ -35,7 +35,7 @@ int Normal::Process(const int16_t* input,
     return static_cast<int>(length);
   }
 
-  assert(output->Empty());
+  RTC_DCHECK(output->Empty());
   // Output should be empty at this point.
   if (length % output->Channels() != 0) {
     // The length does not match the number of channels.
@@ -43,10 +43,9 @@ int Normal::Process(const int16_t* input,
     return 0;
   }
   output->PushBackInterleaved(input, length);
-  int16_t* signal = &(*output)[0][0];
 
   const int fs_mult = fs_hz_ / 8000;
-  assert(fs_mult > 0);
+  RTC_DCHECK_GT(fs_mult, 0);
   // fs_shift = log2(fs_mult), rounded down.
   // Note that |fs_shift| is not "exact" for 48 kHz.
   // TODO(hlundin): Investigate this further.
@@ -64,24 +63,26 @@ int Normal::Process(const int16_t* input,
     expand_->Process(&expanded);
     expand_->Reset();
 
+    size_t length_per_channel = length / output->Channels();
+    std::unique_ptr<int16_t[]> signal(new int16_t[length_per_channel]);
     for (size_t channel_ix = 0; channel_ix < output->Channels(); ++channel_ix) {
       // Adjust muting factor (main muting factor times expand muting factor).
       external_mute_factor_array[channel_ix] = static_cast<int16_t>(
           (external_mute_factor_array[channel_ix] *
           expand_->MuteFactor(channel_ix)) >> 14);
 
-      int16_t* signal = &(*output)[channel_ix][0];
-      size_t length_per_channel = length / output->Channels();
+      (*output)[channel_ix].CopyTo(length_per_channel, 0, signal.get());
+
       // Find largest absolute value in new data.
       int16_t decoded_max =
-          WebRtcSpl_MaxAbsValueW16(signal, length_per_channel);
+          WebRtcSpl_MaxAbsValueW16(signal.get(), length_per_channel);
       // Adjust muting factor if needed (to BGN level).
       size_t energy_length =
           std::min(static_cast<size_t>(fs_mult * 64), length_per_channel);
       int scaling = 6 + fs_shift
           - WebRtcSpl_NormW32(decoded_max * decoded_max);
       scaling = std::max(scaling, 0);  // |scaling| should always be >= 0.
-      int32_t energy = WebRtcSpl_DotProductWithScale(signal, signal,
+      int32_t energy = WebRtcSpl_DotProductWithScale(signal.get(), signal.get(),
                                                      energy_length, scaling);
       int32_t scaled_energy_length =
           static_cast<int32_t>(energy_length >> scaling);
@@ -97,9 +98,10 @@ int Normal::Process(const int16_t* input,
         // Normalize new frame energy to 15 bits.
         scaling = WebRtcSpl_NormW32(energy) - 16;
         // We want background_noise_.energy() / energy in Q14.
-        int32_t bgn_energy =
-            background_noise_.Energy(channel_ix) << (scaling+14);
-        int16_t energy_scaled = static_cast<int16_t>(energy << scaling);
+        int32_t bgn_energy = WEBRTC_SPL_SHIFT_W32(
+            background_noise_.Energy(channel_ix), scaling + 14);
+        int16_t energy_scaled =
+            static_cast<int16_t>(WEBRTC_SPL_SHIFT_W32(energy, scaling));
         int32_t ratio = WebRtcSpl_DivW32W16(bgn_energy, energy_scaled);
         mute_factor = WebRtcSpl_SqrtFloor(ratio << 14);
       } else {
@@ -114,8 +116,8 @@ int Normal::Process(const int16_t* input,
       int increment = 64 / fs_mult;
       for (size_t i = 0; i < length_per_channel; i++) {
         // Scale with mute factor.
-        assert(channel_ix < output->Channels());
-        assert(i < output->Size());
+        RTC_DCHECK_LT(channel_ix, output->Channels());
+        RTC_DCHECK_LT(i, output->Size());
         int32_t scaled_signal = (*output)[channel_ix][i] *
             external_mute_factor_array[channel_ix];
         // Shift 14 with proper rounding.
@@ -128,14 +130,19 @@ int Normal::Process(const int16_t* input,
 
       // Interpolate the expanded data into the new vector.
       // (NB/WB/SWB32/SWB48 8/16/32/48 samples.)
-      assert(fs_shift < 3);  // Will always be 0, 1, or, 2.
+      RTC_DCHECK_LT(fs_shift, 3);  // Will always be 0, 1, or, 2.
       increment = 4 >> fs_shift;
       int fraction = increment;
-      for (size_t i = 0; i < static_cast<size_t>(8 * fs_mult); i++) {
+      // Don't interpolate over more samples than what is in output. When this
+      // cap strikes, the interpolation will likely sound worse, but this is an
+      // emergency operation in response to unexpected input.
+      const size_t interp_len_samples =
+          std::min(static_cast<size_t>(8 * fs_mult), output->Size());
+      for (size_t i = 0; i < interp_len_samples; ++i) {
         // TODO(hlundin): Add 16 instead of 8 for correct rounding. Keeping 8
         // now for legacy bit-exactness.
-        assert(channel_ix < output->Channels());
-        assert(i < output->Size());
+        RTC_DCHECK_LT(channel_ix, output->Channels());
+        RTC_DCHECK_LT(i, output->Size());
         (*output)[channel_ix][i] =
             static_cast<int16_t>((fraction * (*output)[channel_ix][i] +
                 (32 - fraction) * expanded[channel_ix][i] + 8) >> 5);
@@ -143,35 +150,35 @@ int Normal::Process(const int16_t* input,
       }
     }
   } else if (last_mode == kModeRfc3389Cng) {
-    assert(output->Channels() == 1);  // Not adapted for multi-channel yet.
-    static const size_t kCngLength = 32;
+    RTC_DCHECK_EQ(output->Channels(), 1);  // Not adapted for multi-channel yet.
+    static const size_t kCngLength = 48;
+    RTC_DCHECK_LE(8 * fs_mult, kCngLength);
     int16_t cng_output[kCngLength];
     // Reset mute factor and start up fresh.
     external_mute_factor_array[0] = 16384;
-    AudioDecoder* cng_decoder = decoder_database_->GetActiveCngDecoder();
+    ComfortNoiseDecoder* cng_decoder = decoder_database_->GetActiveCngDecoder();
 
     if (cng_decoder) {
-      // Generate long enough for 32kHz.
-      if (WebRtcCng_Generate(cng_decoder->CngDecoderInstance(), cng_output,
-                             kCngLength, 0) < 0) {
+      // Generate long enough for 48kHz.
+      if (!cng_decoder->Generate(cng_output, 0)) {
         // Error returned; set return vector to all zeros.
         memset(cng_output, 0, sizeof(cng_output));
       }
     } else {
       // If no CNG instance is defined, just copy from the decoded data.
       // (This will result in interpolating the decoded with itself.)
-      memcpy(cng_output, signal, fs_mult * 8 * sizeof(int16_t));
+      (*output)[0].CopyTo(fs_mult * 8, 0, cng_output);
     }
     // Interpolate the CNG into the new vector.
     // (NB/WB/SWB32/SWB48 8/16/32/48 samples.)
-    assert(fs_shift < 3);  // Will always be 0, 1, or, 2.
+    RTC_DCHECK_LT(fs_shift, 3);  // Will always be 0, 1, or, 2.
     int16_t increment = 4 >> fs_shift;
     int16_t fraction = increment;
     for (size_t i = 0; i < static_cast<size_t>(8 * fs_mult); i++) {
       // TODO(hlundin): Add 16 instead of 8 for correct rounding. Keeping 8 now
       // for legacy bit-exactness.
-      signal[i] =
-          (fraction * signal[i] + (32 - fraction) * cng_output[i] + 8) >> 5;
+      (*output)[0][i] = (fraction * (*output)[0][i] +
+          (32 - fraction) * cng_output[i] + 8) >> 5;
       fraction += increment;
     }
   } else if (external_mute_factor_array[0] < 16384) {
@@ -184,8 +191,8 @@ int Normal::Process(const int16_t* input,
       for (size_t channel_ix = 0; channel_ix < output->Channels();
           ++channel_ix) {
         // Scale with mute factor.
-        assert(channel_ix < output->Channels());
-        assert(i < output->Size());
+        RTC_DCHECK_LT(channel_ix, output->Channels());
+        RTC_DCHECK_LT(i, output->Size());
         int32_t scaled_signal = (*output)[channel_ix][i] *
             external_mute_factor_array[channel_ix];
         // Shift 14 with proper rounding.

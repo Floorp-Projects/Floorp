@@ -6,20 +6,5 @@
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
-# Tests disabled because they dont work in libxul builds.
-#MOZILLA_INTERNAL_API = True
-#
-#CPP_SOURCES += [
-#    'TestUConv.cpp',
-#    'nsconv.cpp',
-#]
-#
-#if CONFIG['OS_ARCH'] == 'WINNT':
-#    CPP_SOURCES += [
-#        'convperf.cpp',
-#    ]
-#
-#SIMPLE_PROGRAMS += [source.replace('.cpp', CONFIG['BIN_SUFFIX']), CPP_SOURCES]
-
 MOCHITEST_MANIFESTS += ['mochitest.ini']
 

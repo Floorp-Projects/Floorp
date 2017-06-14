@@ -12,7 +12,6 @@
 
 #include <assert.h>
 
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/voice_engine/include/voe_errors.h"
 #include "webrtc/voice_engine/voice_engine_impl.h"
@@ -20,19 +19,13 @@
 namespace webrtc {
 
 VoEHardware* VoEHardware::GetInterface(VoiceEngine* voiceEngine) {
-#ifndef WEBRTC_VOICE_ENGINE_HARDWARE_API
-  return NULL;
-#else
   if (NULL == voiceEngine) {
     return NULL;
   }
   VoiceEngineImpl* s = static_cast<VoiceEngineImpl*>(voiceEngine);
   s->AddRef();
   return s;
-#endif
 }
-
-#ifdef WEBRTC_VOICE_ENGINE_HARDWARE_API
 
 VoEHardwareImpl::VoEHardwareImpl(voe::SharedData* shared) : _shared(shared) {
   WEBRTC_TRACE(kTraceMemory, kTraceVoice, VoEId(_shared->instance_id(), -1),
@@ -240,7 +233,7 @@ int VoEHardwareImpl::SetRecordingDevice(int index,
   WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                "SetRecordingDevice(index=%d, recordingChannel=%d)", index,
                (int)recordingChannel);
-  CriticalSectionScoped cs(_shared->crit_sec());
+  rtc::CritScope cs(_shared->crit_sec());
 
   if (!_shared->statistics().Initialized()) {
     _shared->SetLastError(VE_NOT_INITED, kTraceError);
@@ -354,7 +347,7 @@ int VoEHardwareImpl::SetRecordingDevice(int index,
 int VoEHardwareImpl::SetPlayoutDevice(int index) {
   WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                "SetPlayoutDevice(index=%d)", index);
-  CriticalSectionScoped cs(_shared->crit_sec());
+  rtc::CritScope cs(_shared->crit_sec());
 
   if (!_shared->statistics().Initialized()) {
     _shared->SetLastError(VE_NOT_INITED, kTraceError);
@@ -627,19 +620,6 @@ int VoEHardwareImpl::GetCPULoad(int& loadPercent)
     return 0;
 }
 
-bool VoEHardwareImpl::BuiltInAECIsEnabled() const
-{
-    WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
-        "%s", __FUNCTION__);
-    if (!_shared->statistics().Initialized())
-    {
-        _shared->SetLastError(VE_NOT_INITED, kTraceError);
-        return false;
-    }
-
-    return _shared->audio_device()->BuiltInAECIsEnabled();
-}
-
 int VoEHardwareImpl::SetRecordingSampleRate(unsigned int samples_per_sec) {
   WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                "%s", __FUNCTION__);
@@ -728,7 +708,5 @@ int VoEHardwareImpl::EnableBuiltInNS(bool enable) {
   }
   return _shared->audio_device()->EnableBuiltInNS(enable);
 }
-
-#endif  // WEBRTC_VOICE_ENGINE_HARDWARE_API
 
 }  // namespace webrtc

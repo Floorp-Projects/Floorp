@@ -2,10 +2,9 @@ stefan@webrtc.org
 henrik.lundin@webrtc.org
 mflodman@webrtc.org
 asapersson@webrtc.org
+danilchap@webrtc.org
 
 # These are for the common case of adding or renaming files. If you're doing
 # structural changes, please get a review from a reviewer in this file.
-per-file *.gyp=*
-per-file *.gypi=*
-
-per-file BUILD.gn=kjellander@webrtc.org
+per-file *.gn=*
+per-file *.gni=*

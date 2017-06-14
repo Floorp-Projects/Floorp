@@ -17,6 +17,7 @@
         '<(webrtc_root)/modules/modules.gyp:rtp_rtcp',
       ],
       'sources': [
+        'alr_detector.cc',
         'bitrate_prober.cc',
         'bitrate_prober.h',
         'paced_sender.cc',

@@ -84,7 +84,7 @@ using UniqueProfilerBacktrace =
 
 // Enter a pseudo stack frame in this scope and associate it with an
 // additional string.
-// This macro generates an RAII object. This RAII object stores the str
+// This macro generates an RAII object. This RAII object stores the dynamicStr
 // pointer in a field; it does not copy the string. This means that the string
 // you pass to this macro needs to live at least until the end of the current
 // scope.
@@ -128,19 +128,19 @@ using UniqueProfilerBacktrace =
 
 #define PROFILER_LABEL(name_space, info, category) \
   PROFILER_PLATFORM_TRACING(name_space "::" info) \
-  mozilla::ProfilerStackFrameRAII \
+  mozilla::AutoProfilerLabel \
   PROFILER_APPEND_LINE_NUMBER(profiler_raii)(name_space "::" info, nullptr, \
                                              __LINE__, category)
 
 #define PROFILER_LABEL_FUNC(category) \
   PROFILER_PLATFORM_TRACING(PROFILER_FUNCTION_NAME) \
-  mozilla::ProfilerStackFrameRAII \
+  mozilla::AutoProfilerLabel \
   PROFILER_APPEND_LINE_NUMBER(profiler_raii)(PROFILER_FUNCTION_NAME, nullptr, \
                                              __LINE__, category)
 
 #define PROFILER_LABEL_DYNAMIC(name_space, info, category, dynamicStr) \
   PROFILER_PLATFORM_TRACING(name_space "::" info) \
-  mozilla::ProfilerStackFrameRAII \
+  mozilla::AutoProfilerLabel \
   PROFILER_APPEND_LINE_NUMBER(profiler_raii)(name_space "::" info, dynamicStr, \
                                              __LINE__, category)
 
@@ -406,7 +406,7 @@ PROFILER_FUNC(void* profiler_get_stack_top(), nullptr)
 class nsISupports;
 class ProfilerMarkerPayload;
 
-// This exists purely for ProfilerStackFrameRAII. See the comment on the
+// This exists purely for AutoProfilerLabel. See the comment on the
 // definition in platform.cpp for details.
 extern MOZ_THREAD_LOCAL(PseudoStack*) sPseudoStack;
 
@@ -471,11 +471,11 @@ namespace mozilla {
 // are stack-allocated, and so exist within a thread, and are thus bounded by
 // the lifetime of the thread, which ensures that the references held can't be
 // used after the PseudoStack is destroyed.
-class MOZ_RAII ProfilerStackFrameRAII {
+class MOZ_RAII AutoProfilerLabel {
 public:
-  ProfilerStackFrameRAII(const char* aLabel, const char* aDynamicString,
-                         uint32_t aLine, js::ProfileEntry::Category aCategory
-                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  AutoProfilerLabel(const char* aLabel, const char* aDynamicString,
+                    uint32_t aLine, js::ProfileEntry::Category aCategory
+                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
@@ -484,11 +484,11 @@ public:
     mPseudoStack = sPseudoStack.get();
     if (mPseudoStack) {
       mPseudoStack->pushCppFrame(aLabel, aDynamicString, this, aLine,
-                                js::ProfileEntry::Kind::CPP_NORMAL, aCategory);
+                                 js::ProfileEntry::Kind::CPP_NORMAL, aCategory);
     }
   }
 
-  ~ProfilerStackFrameRAII()
+  ~AutoProfilerLabel()
   {
     // This function runs both on and off the main thread.
 
@@ -515,52 +515,70 @@ void profiler_clear_js_context();
 
 namespace mozilla {
 
-class MOZ_RAII GeckoProfilerInitRAII {
+class MOZ_RAII AutoProfilerInit
+{
 public:
-  explicit GeckoProfilerInitRAII(void* stackTop) {
+  explicit AutoProfilerInit(void* stackTop
+                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     profiler_init(stackTop);
   }
-  ~GeckoProfilerInitRAII() {
-    profiler_shutdown();
-  }
+
+  ~AutoProfilerInit() { profiler_shutdown(); }
+
+private:
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class MOZ_RAII GeckoProfilerThreadSleepRAII {
+class MOZ_RAII AutoProfilerThreadSleep
+{
 public:
-  GeckoProfilerThreadSleepRAII() {
+  explicit AutoProfilerThreadSleep(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     profiler_thread_sleep();
   }
-  ~GeckoProfilerThreadSleepRAII() {
-    profiler_thread_wake();
-  }
+
+  ~AutoProfilerThreadSleep() { profiler_thread_wake(); }
+
+private:
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 // Temporarily wake up the profiling of a thread while servicing events such as
 // Asynchronous Procedure Calls (APCs).
-class MOZ_RAII GeckoProfilerThreadWakeRAII {
+class MOZ_RAII AutoProfilerThreadWake
+{
 public:
-  GeckoProfilerThreadWakeRAII()
+  explicit AutoProfilerThreadWake(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
     : mIssuedWake(profiler_thread_is_sleeping())
   {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     if (mIssuedWake) {
       profiler_thread_wake();
     }
   }
-  ~GeckoProfilerThreadWakeRAII() {
+
+  ~AutoProfilerThreadWake()
+  {
     if (mIssuedWake) {
       MOZ_ASSERT(!profiler_thread_is_sleeping());
       profiler_thread_sleep();
     }
   }
+
 private:
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   bool mIssuedWake;
 };
 
-class MOZ_RAII GeckoProfilerTracingRAII {
+class MOZ_RAII AutoProfilerTracing
+{
 public:
-  GeckoProfilerTracingRAII(const char* aCategory, const char* aMarkerName,
-                           UniqueProfilerBacktrace aBacktrace
-                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  AutoProfilerTracing(const char* aCategory, const char* aMarkerName,
+                      UniqueProfilerBacktrace aBacktrace
+                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mCategory(aCategory)
     , mMarkerName(aMarkerName)
   {
@@ -569,8 +587,8 @@ public:
                      TRACING_INTERVAL_START);
   }
 
-  GeckoProfilerTracingRAII(const char* aCategory, const char* aMarkerName
-                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  AutoProfilerTracing(const char* aCategory, const char* aMarkerName
+                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mCategory(aCategory)
     , mMarkerName(aMarkerName)
   {
@@ -578,7 +596,8 @@ public:
     profiler_tracing(mCategory, mMarkerName, TRACING_INTERVAL_START);
   }
 
-  ~GeckoProfilerTracingRAII() {
+  ~AutoProfilerTracing()
+  {
     profiler_tracing(mCategory, mMarkerName, TRACING_INTERVAL_END);
   }
 
@@ -590,20 +609,22 @@ protected:
 
 // Convenience class to register and unregister a thread with the profiler.
 // Needs to be the first object on the stack of the thread.
-class MOZ_STACK_CLASS AutoProfilerRegister final
+class MOZ_RAII AutoProfilerRegister final
 {
 public:
-  explicit AutoProfilerRegister(const char* aName)
+  explicit AutoProfilerRegister(const char* aName
+                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
   {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     profiler_register_thread(aName, this);
   }
-  ~AutoProfilerRegister()
-  {
-    profiler_unregister_thread();
-  }
+
+  ~AutoProfilerRegister() { profiler_unregister_thread(); }
+
 private:
   AutoProfilerRegister(const AutoProfilerRegister&) = delete;
   AutoProfilerRegister& operator=(const AutoProfilerRegister&) = delete;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 } // namespace mozilla

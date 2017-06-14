@@ -179,7 +179,7 @@ NotifyDidRender(layers::CompositorBridgeParentBase* aBridge,
 void
 RenderThread::UpdateAndRender(wr::WindowId aWindowId)
 {
-  GeckoProfilerTracingRAII tracer("Paint", "Composite");
+  AutoProfilerTracing tracing("Paint", "Composite");
   MOZ_ASSERT(IsInRenderThread());
 
   auto it = mRenderers.find(aWindowId);
@@ -323,6 +323,16 @@ RenderThread::GetRenderTexture(WrExternalImageId aExternalImageId)
   MutexAutoLock lock(mRenderTextureMapLock);
   MOZ_ASSERT(mRenderTextures.Get(aExternalImageId.mHandle).get());
   return mRenderTextures.Get(aExternalImageId.mHandle).get();
+}
+
+WebRenderThreadPool::WebRenderThreadPool()
+{
+  mThreadPool = wr_thread_pool_new();
+}
+
+WebRenderThreadPool::~WebRenderThreadPool()
+{
+  wr_thread_pool_delete(mThreadPool);
 }
 
 } // namespace wr

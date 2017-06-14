@@ -8,9 +8,9 @@
 #include "nsReadLine.h"
 #include "nsStreamUtils.h"
 #include <algorithm>
-#include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/Unused.h"
 
-using mozilla::dom::EncodingUtils;
+using namespace mozilla;
 
 #define CONVERTER_BUFFER_SIZE 8192
 
@@ -31,32 +31,41 @@ nsConverterInputStream::Init(nsIInputStream* aStream,
         label = aCharset;
     }
 
-    if (aBufferSize <=0) aBufferSize=CONVERTER_BUFFER_SIZE;
-    
-    // get the decoder
-    nsAutoCString encoding;
-    if (label.EqualsLiteral("UTF-16")) {
-        // Compat with old test cases. Unclear if any extensions really care.
-        encoding.Assign(label);
-    } else if (!EncodingUtils::FindEncodingForLabelNoReplacement(label,
-                                                                 encoding)) {
+    auto encoding = Encoding::ForLabelNoReplacement(label);
+    if (!encoding) {
       return NS_ERROR_UCONV_NOCONV;
     }
-    mConverter = EncodingUtils::DecoderForEncoding(encoding);
- 
-    // set up our buffers
+    // Previously, the implementation auto-switched only
+    // between the two UTF-16 variants and only when
+    // initialized with an endianness-unspecific label.
+    mConverter = encoding->NewDecoder();
+
+    size_t outputBufferSize;
+    if (aBufferSize <= 0) {
+      aBufferSize = CONVERTER_BUFFER_SIZE;
+      outputBufferSize = CONVERTER_BUFFER_SIZE;
+    } else {
+      // NetUtil.jsm assumes that if buffer size equals
+      // the input size, the whole stream will be processed
+      // as one readString. This is not true with encoding_rs,
+      // because encoding_rs might want to see space for a
+      // surrogate pair, so let's compute a larger output
+      // buffer length.
+      CheckedInt<size_t> needed = mConverter->MaxUTF16BufferLength(aBufferSize);
+      if (!needed.isValid()) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      outputBufferSize = needed.value();
+    }
+
+    // set up our buffers.
     if (!mByteData.SetCapacity(aBufferSize, mozilla::fallible) ||
-        !mUnicharData.SetCapacity(aBufferSize, mozilla::fallible)) {
+        !mUnicharData.SetLength(outputBufferSize, mozilla::fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
     mInput = aStream;
-    mReplacementChar = aReplacementChar;
-    if (!aReplacementChar ||
-        aReplacementChar != mConverter->GetCharacterForUnMapped()) {
-        mConverter->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Signal);
-    }
-
+    mErrorsAreFatal = !aReplacementChar;
     return NS_OK;
 }
 
@@ -113,10 +122,10 @@ nsConverterInputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
       return rv;
     }
   }
-  
+
   if (bytesToWrite > aCount)
     bytesToWrite = aCount;
-  
+
   uint32_t bytesWritten;
   uint32_t totalBytesWritten = 0;
 
@@ -128,11 +137,10 @@ nsConverterInputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
       // don't propagate errors to the caller
       break;
     }
-    
+
     bytesToWrite -= bytesWritten;
     totalBytesWritten += bytesWritten;
     mUnicharDataOffset += bytesWritten;
-    
   }
 
   *aReadCount = totalBytesWritten;
@@ -179,17 +187,17 @@ nsConverterInputStream::Fill(nsresult * aErrorCode)
     *aErrorCode = mLastErrorCode;
     return 0;
   }
-  
+
   // We assume a many to one conversion and are using equal sizes for
   // the two buffers.  However if an error happens at the very start
   // of a byte buffer we may end up in a situation where n bytes lead
   // to n+1 unicode chars.  Thus we need to keep track of the leftover
   // bytes as we convert.
-  
+
   uint32_t nb;
   *aErrorCode = NS_FillArray(mByteData, mInput, mLeftOverBytes, &nb);
   if (nb == 0 && mLeftOverBytes == 0) {
-    // No more data 
+    // No more data
     *aErrorCode = NS_OK;
     return 0;
   }
@@ -198,40 +206,38 @@ nsConverterInputStream::Fill(nsresult * aErrorCode)
                "mByteData is lying to us somewhere");
 
   // Now convert as much of the byte buffer to unicode as possible
-  mUnicharDataOffset = 0;
+  auto src = AsBytes(MakeSpan(mByteData));
+  auto dst = MakeSpan(mUnicharData);
+  // mUnicharData.Length() is the buffer length, not the fill status.
+  // mUnicharDataLength reflects the current fill status.
   mUnicharDataLength = 0;
-  uint32_t srcConsumed = 0;
-  do {
-    int32_t srcLen = mByteData.Length() - srcConsumed;
-    int32_t dstLen = mUnicharData.Capacity() - mUnicharDataLength;
-    *aErrorCode = mConverter->Convert(mByteData.Elements()+srcConsumed,
-                                      &srcLen,
-                                      mUnicharData.Elements()+mUnicharDataLength,
-                                      &dstLen);
-    mUnicharDataLength += dstLen;
-    // XXX if srcLen is negative, we want to drop the _first_ byte in
-    // the erroneous byte sequence and try again.  This is not quite
-    // possible right now -- see bug 160784
-    srcConsumed += srcLen;
-    if (NS_FAILED(*aErrorCode) && mReplacementChar) {
-      NS_ASSERTION(0 < mUnicharData.Capacity() - mUnicharDataLength,
-                   "Decoder returned an error but filled the output buffer! "
-                   "Should not happen.");
-      mUnicharData.Elements()[mUnicharDataLength++] = mReplacementChar;
-      ++srcConsumed;
-      // XXX this is needed to make sure we don't underrun our buffer;
-      // bug 160784 again
-      srcConsumed = std::max<uint32_t>(srcConsumed, 0);
-      mConverter->Reset();
-    }
-    NS_ASSERTION(srcConsumed <= mByteData.Length(),
-                 "Whoa.  The converter should have returned NS_OK_UDEC_MOREINPUT before this point!");
-  } while (mReplacementChar &&
-           NS_FAILED(*aErrorCode) &&
-           mUnicharData.Capacity() > mUnicharDataLength);
-
-  mLeftOverBytes = mByteData.Length() - srcConsumed;
-
+  // Whenever we convert, mUnicharData is logically empty.
+  mUnicharDataOffset = 0;
+  // Truncation from size_t to uint32_t below is OK, because the sizes
+  // are bounded by the lengths of mByteData and mUnicharData.
+  uint32_t result;
+  size_t read;
+  size_t written;
+  bool hadErrors;
+  // The design of this class is fundamentally bogus in that trailing
+  // errors are ignored. Always passing false as the last argument to
+  // Decode* calls below.
+  if (mErrorsAreFatal) {
+    Tie(result, read, written) =
+      mConverter->DecodeToUTF16WithoutReplacement(src, dst, false);
+  } else {
+    Tie(result, read, written, hadErrors) =
+      mConverter->DecodeToUTF16(src, dst, false);
+  }
+  Unused << hadErrors;
+  mLeftOverBytes = mByteData.Length() - read;
+  mUnicharDataLength = written;
+  if (result == kInputEmpty || result == kOutputFull) {
+    *aErrorCode = NS_OK;
+  } else {
+    MOZ_ASSERT(mErrorsAreFatal, "How come DecodeToUTF16() reported error?");
+    *aErrorCode = NS_ERROR_UDEC_ILLEGALINPUT;
+  }
   return mUnicharDataLength;
 }
 

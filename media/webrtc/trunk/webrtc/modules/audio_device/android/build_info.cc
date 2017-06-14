@@ -16,9 +16,8 @@ namespace webrtc {
 
 BuildInfo::BuildInfo()
     : j_environment_(JVM::GetInstance()->environment()),
-      j_build_info_(JVM::GetInstance()->GetClass(
-          "org/webrtc/voiceengine/BuildInfo")) {
-}
+      j_build_info_(
+          JVM::GetInstance()->GetClass("org/webrtc/voiceengine/BuildInfo")) {}
 
 std::string BuildInfo::GetStringFromJava(const char* name) {
   jmethodID id = j_build_info_.GetStaticMethodId(name, "()Ljava/lang/String;");
@@ -51,8 +50,10 @@ std::string BuildInfo::GetBuildRelease() {
   return GetStringFromJava("getBuildRelease");
 }
 
-std::string BuildInfo::GetSdkVersion() {
-  return GetStringFromJava("getSdkVersion");
+SdkCode BuildInfo::GetSdkVersion() {
+  jmethodID id = j_build_info_.GetStaticMethodId("getSdkVersion", "()I");
+  jint j_version = j_build_info_.CallStaticIntMethod(id);
+  return static_cast<SdkCode>(j_version);
 }
 
 }  // namespace webrtc

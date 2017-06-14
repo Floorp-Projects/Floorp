@@ -24,8 +24,8 @@ public:
     virtual ~BasicTableLayoutStrategy();
 
     // nsITableLayoutStrategy implementation
-    virtual nscoord GetMinISize(nsRenderingContext* aRenderingContext) override;
-    virtual nscoord GetPrefISize(nsRenderingContext* aRenderingContext,
+    virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
+    virtual nscoord GetPrefISize(gfxContext* aRenderingContext,
                                  bool aComputingSize) override;
     virtual void MarkIntrinsicISizesDirty() override;
     virtual void ComputeColumnISizes(const ReflowInput& aReflowInput) override;
@@ -38,7 +38,7 @@ private:
                          BTLS_FINAL_ISIZE };
 
     // Compute intrinsic isize member variables on the columns.
-    void ComputeColumnIntrinsicISizes(nsRenderingContext* aRenderingContext);
+    void ComputeColumnIntrinsicISizes(gfxContext* aRenderingContext);
 
     // Distribute a colspanning cell's percent isize (if any) to its columns.
     void DistributePctISizeToColumns(float aSpanPrefPct,
@@ -69,7 +69,7 @@ private:
 
     // Compute the min and pref isizes of the table from the isize
     // variables on the columns.
-    void ComputeIntrinsicISizes(nsRenderingContext* aRenderingContext);
+    void ComputeIntrinsicISizes(gfxContext* aRenderingContext);
 
     nsTableFrame *mTableFrame;
     nscoord mMinISize;

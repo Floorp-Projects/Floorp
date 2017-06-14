@@ -179,10 +179,10 @@ define(function (require, exports, module) {
       return (
         Toolbar({},
           ToolbarButton({className: "btn save", onClick: this.onSave},
-            Locale.$STR("jsonViewer.Save")
+            JSONView.Locale.$STR("jsonViewer.Save")
           ),
           ToolbarButton({className: "btn copy", onClick: this.onCopy},
-            Locale.$STR("jsonViewer.Copy")
+            JSONView.Locale.$STR("jsonViewer.Copy")
           ),
           SearchBox({
             actions: this.props.actions

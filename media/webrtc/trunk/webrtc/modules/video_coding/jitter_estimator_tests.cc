@@ -9,8 +9,8 @@
 
 #include "webrtc/modules/video_coding/jitter_estimator.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/system_wrappers/include/clock.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 

@@ -16,6 +16,8 @@
 
 ******************************************************************/
 
+#include "get_cd_vec.h"
+
 #include "defines.h"
 #include "constants.h"
 #include "create_augmented_vec.h"
@@ -24,7 +26,7 @@
  *  Construct codebook vector for given index.
  *---------------------------------------------------------------*/
 
-void WebRtcIlbcfix_GetCbVec(
+bool WebRtcIlbcfix_GetCbVec(
     int16_t *cbvec,   /* (o) Constructed codebook vector */
     int16_t *mem,   /* (i) Codebook buffer */
     size_t index,   /* (i) Codebook index */
@@ -93,6 +95,17 @@ void WebRtcIlbcfix_GetCbVec(
     /* interpolated vectors */
 
     else {
+      if (cbveclen < SUBL) {
+        // We're going to fill in cbveclen + 5 elements of tempbuff2 in
+        // WebRtcSpl_FilterMAFastQ12, less than the SUBL + 5 elements we'll be
+        // using in WebRtcIlbcfix_CreateAugmentedVec. This error is caused by
+        // bad values in |index| (which come from the encoded stream). Tell the
+        // caller that things went south, and that the decoder state is now
+        // corrupt (because it's half-way through an update that we can't
+        // complete).
+        return false;
+      }
+
       /* Stuff zeros outside memory buffer  */
       memIndTest = lMem-cbveclen-CB_FILTERLEN;
       WebRtcSpl_MemSetW16(mem+lMem, 0, CB_HALFFILTERLEN);
@@ -108,4 +121,6 @@ void WebRtcIlbcfix_GetCbVec(
       WebRtcIlbcfix_CreateAugmentedVec(lag, tempbuff2+SUBL+5, cbvec);
     }
   }
+
+  return true;  // Success.
 }

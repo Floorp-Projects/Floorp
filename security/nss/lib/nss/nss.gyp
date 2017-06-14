@@ -33,24 +33,8 @@
         '<(DEPTH)/lib/pki/pki.gyp:nsspki',
         '<(DEPTH)/lib/dev/dev.gyp:nssdev',
         '<(DEPTH)/lib/base/base.gyp:nssb',
+        '<(DEPTH)/lib/libpkix/libpkix.gyp:libpkix',
       ],
-      'conditions': [
-        [ 'disable_libpkix==0', {
-          'dependencies': [
-            '<(DEPTH)/lib/libpkix/pkix/certsel/certsel.gyp:pkixcertsel',
-            '<(DEPTH)/lib/libpkix/pkix/checker/checker.gyp:pkixchecker',
-            '<(DEPTH)/lib/libpkix/pkix/params/params.gyp:pkixparams',
-            '<(DEPTH)/lib/libpkix/pkix/results/results.gyp:pkixresults',
-            '<(DEPTH)/lib/libpkix/pkix/top/top.gyp:pkixtop',
-            '<(DEPTH)/lib/libpkix/pkix/util/util.gyp:pkixutil',
-            '<(DEPTH)/lib/libpkix/pkix/crlsel/crlsel.gyp:pkixcrlsel',
-            '<(DEPTH)/lib/libpkix/pkix/store/store.gyp:pkixstore',
-            '<(DEPTH)/lib/libpkix/pkix_pl_nss/pki/pki.gyp:pkixpki',
-            '<(DEPTH)/lib/libpkix/pkix_pl_nss/system/system.gyp:pkixsystem',
-            '<(DEPTH)/lib/libpkix/pkix_pl_nss/module/module.gyp:pkixmodule'
-          ],
-          }],
-        ],
     },
     {
       'target_name': 'nss3',

@@ -11,9 +11,9 @@
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_BEAMFORMER_MATRIX_TEST_HELPERS_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_BEAMFORMER_MATRIX_TEST_HELPERS_H_
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/modules/audio_processing/beamformer/complex_matrix.h"
 #include "webrtc/modules/audio_processing/beamformer/matrix.h"
+#include "webrtc/test/gtest.h"
 
 namespace {
 const float kTolerance = 0.001f;

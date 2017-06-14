@@ -10,11 +10,10 @@
 
 #include "webrtc/modules/audio_processing/transient/wpd_node.h"
 
-#include <assert.h>
 #include <math.h>
 #include <string.h>
 
-#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/common_audio/fir_filter.h"
 #include "webrtc/modules/audio_processing/transient/dyadic_decimator.h"
 
@@ -30,7 +29,9 @@ WPDNode::WPDNode(size_t length,
       filter_(FIRFilter::Create(coefficients,
                                 coefficients_length,
                                 2 * length + 1)) {
-  assert(length > 0 && coefficients && coefficients_length > 0);
+  RTC_DCHECK_GT(length, 0);
+  RTC_DCHECK(coefficients);
+  RTC_DCHECK_GT(coefficients_length, 0);
   memset(data_.get(), 0.f, (2 * length + 1) * sizeof(data_[0]));
 }
 

@@ -180,7 +180,7 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
                                               void* aCallbackData,
                                               EndTransactionFlags aFlags)
 {
-  GeckoProfilerTracingRAII tracer("Paint", "RenderLayers");
+  AutoProfilerTracing tracing("Paint", "RenderLayers");
   mPaintedLayerCallback = aCallback;
   mPaintedLayerCallbackData = aCallbackData;
   mTransactionIncomplete = false;
@@ -229,8 +229,8 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   mLatestTransactionId = mTransactionIdAllocator->GetTransactionId();
 
   {
-    GeckoProfilerTracingRAII
-      tracer("Paint", sync ? "ForwardDPTransactionSync":"ForwardDPTransaction");
+    AutoProfilerTracing
+      tracing("Paint", sync ? "ForwardDPTransactionSync":"ForwardDPTransaction");
     WrBridge()->DPEnd(builder, size.ToUnknownSize(), sync, mLatestTransactionId, scrollData);
   }
 

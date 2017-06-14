@@ -13,8 +13,7 @@
 
 #include <stddef.h>  // size_t
 
-#include "testing/gtest/include/gtest/gtest.h"
-
+#include "webrtc/test/gtest.h"
 #include "webrtc/typedefs.h"
 
 namespace {

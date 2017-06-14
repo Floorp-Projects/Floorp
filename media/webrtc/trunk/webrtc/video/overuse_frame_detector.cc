@@ -17,15 +17,22 @@
 #include <list>
 #include <map>
 
+#include "webrtc/api/video/video_frame.h"
 #include "webrtc/base/checks.h"
-#include "webrtc/base/exp_filter.h"
 #include "webrtc/base/logging.h"
+#include "webrtc/base/numerics/exp_filter.h"
+#include "webrtc/common_video/include/frame_callback.h"
 #include "webrtc/system_wrappers/include/clock.h"
+
+#if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
+#include <mach/mach.h>
+#endif  // defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
 
 namespace webrtc {
 
 namespace {
-const int64_t kProcessIntervalMs = 5000;
+const int64_t kCheckForOveruseIntervalMs = 5000;
+const int64_t kTimeToFirstCheckForOveruseMs = 100;
 
 // Delay between consecutive rampups. (Used for quick recovery.)
 const int kQuickRampUpDelayMs = 10 * 1000;
@@ -42,7 +49,57 @@ const int kMaxOverusesBeforeApplyRampupDelay = 4;
 const float kSampleDiffMs = 33.0f;
 const float kMaxExp = 7.0f;
 
+const auto kScaleReasonCpu = ScalingObserverInterface::ScaleReason::kCpu;
 }  // namespace
+
+CpuOveruseOptions::CpuOveruseOptions()
+    : high_encode_usage_threshold_percent(85),
+      frame_timeout_interval_ms(1500),
+      min_frame_samples(120),
+      min_process_count(3),
+      high_threshold_consecutive_count(2) {
+#if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
+  // This is proof-of-concept code for letting the physical core count affect
+  // the interval into which we attempt to scale. For now, the code is Mac OS
+  // specific, since that's the platform were we saw most problems.
+  // TODO(torbjorng): Enhance SystemInfo to return this metric.
+
+  mach_port_t mach_host = mach_host_self();
+  host_basic_info hbi = {};
+  mach_msg_type_number_t info_count = HOST_BASIC_INFO_COUNT;
+  kern_return_t kr =
+      host_info(mach_host, HOST_BASIC_INFO, reinterpret_cast<host_info_t>(&hbi),
+                &info_count);
+  mach_port_deallocate(mach_task_self(), mach_host);
+
+  int n_physical_cores;
+  if (kr != KERN_SUCCESS) {
+    // If we couldn't get # of physical CPUs, don't panic. Assume we have 1.
+    n_physical_cores = 1;
+    LOG(LS_ERROR) << "Failed to determine number of physical cores, assuming 1";
+  } else {
+    n_physical_cores = hbi.physical_cpu;
+    LOG(LS_INFO) << "Number of physical cores:" << n_physical_cores;
+  }
+
+  // Change init list default for few core systems. The assumption here is that
+  // encoding, which we measure here, takes about 1/4 of the processing of a
+  // two-way call. This is roughly true for x86 using both vp8 and vp9 without
+  // hardware encoding. Since we don't affect the incoming stream here, we only
+  // control about 1/2 of the total processing needs, but this is not taken into
+  // account.
+  if (n_physical_cores == 1)
+    high_encode_usage_threshold_percent = 20;  // Roughly 1/4 of 100%.
+  else if (n_physical_cores == 2)
+    high_encode_usage_threshold_percent = 40;  // Roughly 1/4 of 200%.
+#endif  // defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
+
+  // Note that we make the interval 2x+epsilon wide, since libyuv scaling steps
+  // are close to that (when squared). This wide interval makes sure that
+  // scaling up or down does not jump all the way across the interval.
+  low_encode_usage_threshold_percent =
+      (high_encode_usage_threshold_percent - 1) / 2;
+}
 
 // Class for calculating the processing usage on the send-side (the average
 // processing time of a frame divided by the average time difference between
@@ -111,113 +168,92 @@ class OveruseFrameDetector::SendProcessingUsage {
   const float kMaxSampleDiffMs;
   uint64_t count_;
   const CpuOveruseOptions options_;
-  rtc::scoped_ptr<rtc::ExpFilter> filtered_processing_ms_;
-  rtc::scoped_ptr<rtc::ExpFilter> filtered_frame_diff_ms_;
+  std::unique_ptr<rtc::ExpFilter> filtered_processing_ms_;
+  std::unique_ptr<rtc::ExpFilter> filtered_frame_diff_ms_;
 };
 
-// Class for calculating the processing time of frames.
-class OveruseFrameDetector::FrameQueue {
+class OveruseFrameDetector::CheckOveruseTask : public rtc::QueuedTask {
  public:
-  FrameQueue() : last_processing_time_ms_(-1) {}
-  ~FrameQueue() {}
-
-  // Called when a frame is captured.
-  // Starts the measuring of the processing time of the frame.
-  void Start(int64_t capture_time, int64_t now) {
-    const size_t kMaxSize = 90;  // Allows for processing time of 1.5s at 60fps.
-    if (frame_times_.size() > kMaxSize) {
-      LOG(LS_WARNING) << "Max size reached, removed oldest frame.";
-      frame_times_.erase(frame_times_.begin());
-    }
-    if (frame_times_.find(capture_time) != frame_times_.end()) {
-      // Frame should not exist.
-      assert(false);
-      return;
-    }
-    frame_times_[capture_time] = now;
+  explicit CheckOveruseTask(OveruseFrameDetector* overuse_detector)
+      : overuse_detector_(overuse_detector) {
+    rtc::TaskQueue::Current()->PostDelayedTask(
+        std::unique_ptr<rtc::QueuedTask>(this), kTimeToFirstCheckForOveruseMs);
   }
 
-  // Called when the processing of a frame has finished.
-  // Returns the processing time of the frame.
-  int End(int64_t capture_time, int64_t now) {
-    std::map<int64_t, int64_t>::iterator it = frame_times_.find(capture_time);
-    if (it == frame_times_.end()) {
-      return -1;
-    }
-    // Remove any old frames up to current.
-    // Old frames have been skipped by the capture process thread.
-    // TODO(asapersson): Consider measuring time from first frame in list.
-    last_processing_time_ms_ = now - (*it).second;
-    frame_times_.erase(frame_times_.begin(), ++it);
-    return last_processing_time_ms_;
+  void Stop() {
+    RTC_CHECK(task_checker_.CalledSequentially());
+    overuse_detector_ = nullptr;
   }
-
-  void Reset() { frame_times_.clear(); }
-  int NumFrames() const { return static_cast<int>(frame_times_.size()); }
-  int last_processing_time_ms() const { return last_processing_time_ms_; }
 
  private:
-  // Captured frames mapped by the capture time.
-  std::map<int64_t, int64_t> frame_times_;
-  int last_processing_time_ms_;
-};
+  bool Run() override {
+    RTC_CHECK(task_checker_.CalledSequentially());
+    if (!overuse_detector_)
+      return true;  // This will make the task queue delete this task.
+    overuse_detector_->CheckForOveruse();
 
+    rtc::TaskQueue::Current()->PostDelayedTask(
+        std::unique_ptr<rtc::QueuedTask>(this), kCheckForOveruseIntervalMs);
+    // Return false to prevent this task from being deleted. Ownership has been
+    // transferred to the task queue when PostDelayedTask was called.
+    return false;
+  }
+  rtc::SequencedTaskChecker task_checker_;
+  OveruseFrameDetector* overuse_detector_;
+};
 
 OveruseFrameDetector::OveruseFrameDetector(
     Clock* clock,
     const CpuOveruseOptions& options,
-    CpuOveruseObserver* observer,
+    ScalingObserverInterface* observer,
+    EncodedFrameObserver* encoder_timing,
     CpuOveruseMetricsObserver* metrics_observer)
-    : options_(options),
+    : check_overuse_task_(nullptr),
+      options_(options),
       observer_(observer),
+      encoder_timing_(encoder_timing),
       metrics_observer_(metrics_observer),
       clock_(clock),
       num_process_times_(0),
-      last_capture_time_(0),
+      last_capture_time_ms_(-1),
+      last_processed_capture_time_ms_(-1),
       num_pixels_(0),
-      next_process_time_(clock_->TimeInMilliseconds()),
-      last_overuse_time_(0),
+      last_overuse_time_ms_(-1),
       checks_above_threshold_(0),
       num_overuse_detections_(0),
-      last_rampup_time_(0),
+      last_rampup_time_ms_(-1),
       in_quick_rampup_(false),
       current_rampup_delay_ms_(kStandardRampUpDelayMs),
-      last_sample_time_ms_(0),
-      usage_(new SendProcessingUsage(options)),
-      frame_queue_(new FrameQueue()) {
-  RTC_DCHECK(metrics_observer != nullptr);
-  // Make sure stats are initially up-to-date. This simplifies unit testing
-  // since we don't have to trigger an update using one of the methods which
-  // would also alter the overuse state.
-  UpdateCpuOveruseMetrics();
-  processing_thread_.DetachFromThread();
+      usage_(new SendProcessingUsage(options)) {
+  task_checker_.Detach();
 }
 
 OveruseFrameDetector::~OveruseFrameDetector() {
+  RTC_DCHECK(!check_overuse_task_) << "StopCheckForOverUse must be called.";
 }
 
-int OveruseFrameDetector::LastProcessingTimeMs() const {
-  rtc::CritScope cs(&crit_);
-  return frame_queue_->last_processing_time_ms();
+void OveruseFrameDetector::StartCheckForOveruse() {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
+  RTC_DCHECK(!check_overuse_task_);
+  check_overuse_task_ = new CheckOveruseTask(this);
+}
+void OveruseFrameDetector::StopCheckForOveruse() {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
+  check_overuse_task_->Stop();
+  check_overuse_task_ = nullptr;
 }
 
-int OveruseFrameDetector::FramesInQueue() const {
-  rtc::CritScope cs(&crit_);
-  return frame_queue_->NumFrames();
-}
+void OveruseFrameDetector::EncodedFrameTimeMeasured(int encode_duration_ms) {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
+  if (!metrics_)
+    metrics_ = rtc::Optional<CpuOveruseMetrics>(CpuOveruseMetrics());
+  metrics_->encode_usage_percent = usage_->Value();
 
-void OveruseFrameDetector::UpdateCpuOveruseMetrics() {
-  metrics_.encode_usage_percent = usage_->Value();
-
-  metrics_observer_->CpuOveruseMetricsUpdated(metrics_);
-}
-
-int64_t OveruseFrameDetector::TimeUntilNextProcess() {
-  RTC_DCHECK(processing_thread_.CalledOnValidThread());
-  return next_process_time_ - clock_->TimeInMilliseconds();
+  metrics_observer_->OnEncodedFrameTimeMeasured(encode_duration_ms, *metrics_);
 }
 
 bool OveruseFrameDetector::FrameSizeChanged(int num_pixels) const {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
   if (num_pixels != num_pixels_) {
     return true;
   }
@@ -225,86 +261,99 @@ bool OveruseFrameDetector::FrameSizeChanged(int num_pixels) const {
 }
 
 bool OveruseFrameDetector::FrameTimeoutDetected(int64_t now) const {
-  if (last_capture_time_ == 0) {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
+  if (last_capture_time_ms_ == -1)
     return false;
-  }
-  return (now - last_capture_time_) > options_.frame_timeout_interval_ms;
+  return (now - last_capture_time_ms_) > options_.frame_timeout_interval_ms;
 }
 
 void OveruseFrameDetector::ResetAll(int num_pixels) {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
   num_pixels_ = num_pixels;
   usage_->Reset();
-  frame_queue_->Reset();
-  last_capture_time_ = 0;
+  frame_timing_.clear();
+  last_capture_time_ms_ = -1;
+  last_processed_capture_time_ms_ = -1;
   num_process_times_ = 0;
-  UpdateCpuOveruseMetrics();
+  metrics_ = rtc::Optional<CpuOveruseMetrics>();
 }
 
-void OveruseFrameDetector::FrameCaptured(int width,
-                                         int height,
-                                         int64_t capture_time_ms) {
-  rtc::CritScope cs(&crit_);
+void OveruseFrameDetector::FrameCaptured(const VideoFrame& frame,
+                                         int64_t time_when_first_seen_ms) {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
+
+  if (FrameSizeChanged(frame.width() * frame.height()) ||
+      FrameTimeoutDetected(time_when_first_seen_ms)) {
+    ResetAll(frame.width() * frame.height());
+  }
+
+  if (last_capture_time_ms_ != -1)
+    usage_->AddCaptureSample(time_when_first_seen_ms - last_capture_time_ms_);
+
+  last_capture_time_ms_ = time_when_first_seen_ms;
+
+  frame_timing_.push_back(FrameTiming(frame.ntp_time_ms(), frame.timestamp(),
+                                      time_when_first_seen_ms));
+}
+
+void OveruseFrameDetector::FrameSent(uint32_t timestamp,
+                                     int64_t time_sent_in_ms) {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
+  // Delay before reporting actual encoding time, used to have the ability to
+  // detect total encoding time when encoding more than one layer. Encoding is
+  // here assumed to finish within a second (or that we get enough long-time
+  // samples before one second to trigger an overuse even when this is not the
+  // case).
+  static const int64_t kEncodingTimeMeasureWindowMs = 1000;
+  for (auto& it : frame_timing_) {
+    if (it.timestamp == timestamp) {
+      it.last_send_ms = time_sent_in_ms;
+      break;
+    }
+  }
+  // TODO(pbos): Handle the case/log errors when not finding the corresponding
+  // frame (either very slow encoding or incorrect wrong timestamps returned
+  // from the encoder).
+  // This is currently the case for all frames on ChromeOS, so logging them
+  // would be spammy, and triggering overuse would be wrong.
+  // https://crbug.com/350106
+  while (!frame_timing_.empty()) {
+    FrameTiming timing = frame_timing_.front();
+    if (time_sent_in_ms - timing.capture_ms < kEncodingTimeMeasureWindowMs)
+      break;
+    if (timing.last_send_ms != -1) {
+      int encode_duration_ms =
+          static_cast<int>(timing.last_send_ms - timing.capture_ms);
+      if (encoder_timing_) {
+        encoder_timing_->OnEncodeTiming(timing.capture_ntp_ms,
+                                        encode_duration_ms);
+      }
+      if (last_processed_capture_time_ms_ != -1) {
+        int64_t diff_ms = timing.capture_ms - last_processed_capture_time_ms_;
+        usage_->AddSample(encode_duration_ms, diff_ms);
+      }
+      last_processed_capture_time_ms_ = timing.capture_ms;
+      EncodedFrameTimeMeasured(encode_duration_ms);
+    }
+    frame_timing_.pop_front();
+  }
+}
+
+void OveruseFrameDetector::CheckForOveruse() {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
+  ++num_process_times_;
+  if (num_process_times_ <= options_.min_process_count || !metrics_)
+    return;
 
   int64_t now = clock_->TimeInMilliseconds();
-  if (FrameSizeChanged(width * height) || FrameTimeoutDetected(now)) {
-    ResetAll(width * height);
-  }
 
-  if (last_capture_time_ != 0)
-    usage_->AddCaptureSample(now - last_capture_time_);
-
-  last_capture_time_ = now;
-
-  frame_queue_->Start(capture_time_ms, now);
-}
-
-void OveruseFrameDetector::FrameSent(int64_t capture_time_ms) {
-  rtc::CritScope cs(&crit_);
-  int delay_ms = frame_queue_->End(capture_time_ms,
-                                   clock_->TimeInMilliseconds());
-  if (delay_ms > 0) {
-    AddProcessingTime(delay_ms);
-  }
-}
-
-void OveruseFrameDetector::AddProcessingTime(int elapsed_ms) {
-  int64_t now = clock_->TimeInMilliseconds();
-  if (last_sample_time_ms_ != 0) {
-    int64_t diff_ms = now - last_sample_time_ms_;
-    usage_->AddSample(elapsed_ms, diff_ms);
-  }
-  last_sample_time_ms_ = now;
-  UpdateCpuOveruseMetrics();
-}
-
-int32_t OveruseFrameDetector::Process() {
-  RTC_DCHECK(processing_thread_.CalledOnValidThread());
-
-  int64_t now = clock_->TimeInMilliseconds();
-
-  // Used to protect against Process() being called too often.
-  if (now < next_process_time_)
-    return 0;
-
-  next_process_time_ = now + kProcessIntervalMs;
-
-  CpuOveruseMetrics current_metrics;
-  {
-    rtc::CritScope cs(&crit_);
-    ++num_process_times_;
-
-    current_metrics = metrics_;
-    if (num_process_times_ <= options_.min_process_count)
-      return 0;
-  }
-
-  if (IsOverusing(current_metrics)) {
+  if (IsOverusing(*metrics_)) {
     // If the last thing we did was going up, and now have to back down, we need
     // to check if this peak was short. If so we should back off to avoid going
     // back and forth between this load, the system doesn't seem to handle it.
-    bool check_for_backoff = last_rampup_time_ > last_overuse_time_;
+    bool check_for_backoff = last_rampup_time_ms_ > last_overuse_time_ms_;
     if (check_for_backoff) {
-      if (now - last_rampup_time_ < kStandardRampUpDelayMs ||
+      if (now - last_rampup_time_ms_ < kStandardRampUpDelayMs ||
           num_overuse_detections_ > kMaxOverusesBeforeApplyRampupDelay) {
         // Going up was not ok for very long, back off.
         current_rampup_delay_ms_ *= kRampUpBackoffFactor;
@@ -316,33 +365,32 @@ int32_t OveruseFrameDetector::Process() {
       }
     }
 
-    last_overuse_time_ = now;
+    last_overuse_time_ms_ = now;
     in_quick_rampup_ = false;
     checks_above_threshold_ = 0;
     ++num_overuse_detections_;
 
-    if (observer_ != NULL)
-      observer_->OveruseDetected();
-  } else if (IsUnderusing(current_metrics, now)) {
-    last_rampup_time_ = now;
+    if (observer_)
+      observer_->ScaleDown(kScaleReasonCpu);
+  } else if (IsUnderusing(*metrics_, now)) {
+    last_rampup_time_ms_ = now;
     in_quick_rampup_ = true;
 
-    if (observer_ != NULL)
-      observer_->NormalUsage();
+    if (observer_)
+      observer_->ScaleUp(kScaleReasonCpu);
   }
 
   int rampup_delay =
       in_quick_rampup_ ? kQuickRampUpDelayMs : current_rampup_delay_ms_;
 
   LOG(LS_VERBOSE) << " Frame stats: "
-                  << " encode usage " << current_metrics.encode_usage_percent
+                  << " encode usage " << metrics_->encode_usage_percent
                   << " overuse detections " << num_overuse_detections_
                   << " rampup delay " << rampup_delay;
-
-  return 0;
 }
 
 bool OveruseFrameDetector::IsOverusing(const CpuOveruseMetrics& metrics) {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
   if (metrics.encode_usage_percent >=
       options_.high_encode_usage_threshold_percent) {
     ++checks_above_threshold_;
@@ -354,8 +402,9 @@ bool OveruseFrameDetector::IsOverusing(const CpuOveruseMetrics& metrics) {
 
 bool OveruseFrameDetector::IsUnderusing(const CpuOveruseMetrics& metrics,
                                         int64_t time_now) {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
   int delay = in_quick_rampup_ ? kQuickRampUpDelayMs : current_rampup_delay_ms_;
-  if (time_now < last_rampup_time_ + delay)
+  if (time_now < last_rampup_time_ms_ + delay)
     return false;
 
   return metrics.encode_usage_percent <

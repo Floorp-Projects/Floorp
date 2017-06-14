@@ -11,11 +11,15 @@
 #ifndef WEBRTC_MODULES_AUDIO_CODING_INCLUDE_AUDIO_CODING_MODULE_H_
 #define WEBRTC_MODULES_AUDIO_CODING_INCLUDE_AUDIO_CODING_MODULE_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "webrtc/base/deprecation.h"
+#include "webrtc/base/function_view.h"
 #include "webrtc/base/optional.h"
 #include "webrtc/common_types.h"
+#include "webrtc/modules/audio_coding/codecs/audio_decoder_factory.h"
 #include "webrtc/modules/audio_coding/include/audio_coding_module_typedefs.h"
 #include "webrtc/modules/audio_coding/neteq/include/neteq.h"
 #include "webrtc/modules/include/module.h"
@@ -61,15 +65,14 @@ class AudioCodingModule {
 
  public:
   struct Config {
-    Config() : id(0), neteq_config(), clock(Clock::GetRealTimeClock()) {
-      // Post-decode VAD is disabled by default in NetEq, however, Audio
-      // Conference Mixer relies on VAD decisions and fails without them.
-      neteq_config.enable_post_decode_vad = true;
-    }
+    Config();
+    Config(const Config&);
+    ~Config();
 
     int id;
     NetEq::Config neteq_config;
     Clock* clock;
+    rtc::scoped_refptr<AudioDecoderFactory> decoder_factory;
   };
 
   ///////////////////////////////////////////////////////////////////////////
@@ -207,6 +210,26 @@ class AudioCodingModule {
   virtual void RegisterExternalSendCodec(
       AudioEncoder* external_speech_encoder) = 0;
 
+  // |modifier| is called exactly once with one argument: a pointer to the
+  // unique_ptr that holds the current encoder (which is null if there is no
+  // current encoder). For the duration of the call, |modifier| has exclusive
+  // access to the unique_ptr; it may call the encoder, steal the encoder and
+  // replace it with another encoder or with nullptr, etc.
+  virtual void ModifyEncoder(
+      rtc::FunctionView<void(std::unique_ptr<AudioEncoder>*)> modifier) = 0;
+
+  // |modifier| is called exactly once with one argument: a const pointer to the
+  // current encoder (which is null if there is no current encoder).
+  virtual void QueryEncoder(
+      rtc::FunctionView<void(AudioEncoder const*)> query) = 0;
+
+  // Utility method for simply replacing the existing encoder with a new one.
+  void SetEncoder(std::unique_ptr<AudioEncoder> new_encoder) {
+    ModifyEncoder([&](std::unique_ptr<AudioEncoder>* encoder) {
+      *encoder = std::move(new_encoder);
+    });
+  }
+
   ///////////////////////////////////////////////////////////////////////////
   // int32_t SendCodec()
   // Get parameters for the codec currently registered as send codec.
@@ -229,6 +252,9 @@ class AudioCodingModule {
   ///////////////////////////////////////////////////////////////////////////
   // Sets the bitrate to the specified value in bits/sec. If the value is not
   // supported by the codec, it will choose another appropriate value.
+  //
+  // This is only used in test code that rely on old ACM APIs.
+  // TODO(minyue): Remove it when possible.
   virtual void SetBitRate(int bitrate_bps) = 0;
 
   // int32_t RegisterTransportCallback()
@@ -348,6 +374,8 @@ class AudioCodingModule {
   //   -1 if failed to set packet loss rate,
   //   0 if succeeded.
   //
+  // This is only used in test code that rely on old ACM APIs.
+  // TODO(minyue): Remove it when possible.
   virtual int SetPacketLossRate(int packet_loss_rate) = 0;
 
   ///////////////////////////////////////////////////////////////////////////
@@ -456,6 +484,11 @@ class AudioCodingModule {
   //
   virtual int32_t PlayoutFrequency() const = 0;
 
+  // Registers a decoder for the given payload type. Returns true iff
+  // successful.
+  virtual bool RegisterReceiveCodec(int rtp_payload_type,
+                                    const SdpAudioFormat& audio_format) = 0;
+
   ///////////////////////////////////////////////////////////////////////////
   // int32_t RegisterReceiveCodec()
   // Register possible decoders, can be called multiple times for
@@ -471,6 +504,13 @@ class AudioCodingModule {
   //    0 if the codec registered successfully.
   //
   virtual int RegisterReceiveCodec(const CodecInst& receive_codec) = 0;
+
+  // Register a decoder; call repeatedly to register multiple decoders. |df| is
+  // a decoder factory that returns an iSAC decoder; it will be called once if
+  // the decoder being registered is iSAC.
+  virtual int RegisterReceiveCodec(
+      const CodecInst& receive_codec,
+      rtc::FunctionView<std::unique_ptr<AudioDecoder>()> isac_factory) = 0;
 
   // Registers an external decoder. The name is only used to provide information
   // back to the caller about the decoder. Hence, the name is arbitrary, and may
@@ -511,6 +551,17 @@ class AudioCodingModule {
   //    0 if the codec is successfully retrieved.
   //
   virtual int32_t ReceiveCodec(CodecInst* curr_receive_codec) const = 0;
+
+  ///////////////////////////////////////////////////////////////////////////
+  // rtc::Optional<SdpAudioFormat> ReceiveFormat()
+  // Get the format associated with last received payload.
+  //
+  // Return value:
+  //    An SdpAudioFormat describing the format associated with the last
+  //    received payload.
+  //    An empty Optional if no payload has yet been received.
+  //
+  virtual rtc::Optional<SdpAudioFormat> ReceiveFormat() const = 0;
 
   ///////////////////////////////////////////////////////////////////////////
   // int32_t IncomingPacket()
@@ -594,7 +645,6 @@ class AudioCodingModule {
   //
   virtual int LeastRequiredDelayMs() const = 0;
 
-  ///////////////////////////////////////////////////////////////////////////
   // int32_t PlayoutTimestamp()
   // The send timestamp of an RTP packet is associated with the decoded
   // audio of the packet in question. This function returns the timestamp of
@@ -607,8 +657,25 @@ class AudioCodingModule {
   //    0 if the output is a correct timestamp.
   //   -1 if failed to output the correct timestamp.
   //
-  // TODO(tlegrand): Change function to return the timestamp.
-  virtual int32_t PlayoutTimestamp(uint32_t* timestamp) = 0;
+  RTC_DEPRECATED virtual int32_t PlayoutTimestamp(uint32_t* timestamp) = 0;
+
+  ///////////////////////////////////////////////////////////////////////////
+  // int32_t PlayoutTimestamp()
+  // The send timestamp of an RTP packet is associated with the decoded
+  // audio of the packet in question. This function returns the timestamp of
+  // the latest audio obtained by calling PlayoutData10ms(), or empty if no
+  // valid timestamp is available.
+  //
+  virtual rtc::Optional<uint32_t> PlayoutTimestamp() = 0;
+
+  ///////////////////////////////////////////////////////////////////////////
+  // int FilteredCurrentDelayMs()
+  // Returns the current total delay from NetEq (packet buffer and sync buffer)
+  // in ms, with smoothing applied to even out short-time fluctuations due to
+  // jitter. The packet buffer part of the delay is not updated during DTX/CNG
+  // periods.
+  //
+  virtual int FilteredCurrentDelayMs() const = 0;
 
   ///////////////////////////////////////////////////////////////////////////
   // int32_t PlayoutData10Ms(
@@ -625,13 +692,24 @@ class AudioCodingModule {
   //                         and other relevant parameters, c.f.
   //                         module_common_types.h for the definition of
   //                         AudioFrame.
+  //   -muted              : if true, the sample data in audio_frame is not
+  //                         populated, and must be interpreted as all zero.
   //
   // Return value:
   //   -1 if the function fails,
   //    0 if the function succeeds.
   //
   virtual int32_t PlayoutData10Ms(int32_t desired_freq_hz,
-                                        AudioFrame* audio_frame) = 0;
+                                  AudioFrame* audio_frame,
+                                  bool* muted) = 0;
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Same as above, but without the muted parameter. This methods should not be
+  // used if enable_fast_accelerate was set to true in NetEq::Config.
+  // TODO(henrik.lundin) Remove this method when downstream dependencies are
+  // ready.
+  virtual int32_t PlayoutData10Ms(int32_t desired_freq_hz,
+                                  AudioFrame* audio_frame) = 0;
 
   ///////////////////////////////////////////////////////////////////////////
   //   Codec specific

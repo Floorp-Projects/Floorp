@@ -590,7 +590,7 @@ static void printSize(char * aDesc, nscoord aSize)
 #endif
 
 /* virtual */ nscoord
-nsBoxFrame::GetMinISize(nsRenderingContext *aRenderingContext)
+nsBoxFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -612,7 +612,7 @@ nsBoxFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsBoxFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
+nsBoxFrame::GetPrefISize(gfxContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
@@ -1292,13 +1292,13 @@ public:
     aOutFrames->AppendElement(this);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder
-                     nsRenderingContext* aCtx);
+                     gfxContext* aCtx);
   NS_DISPLAY_DECL_NAME("XULDebug", TYPE_XUL_DEBUG)
 };
 
 void
 nsDisplayXULDebug::Paint(nsDisplayListBuilder* aBuilder,
-                         nsRenderingContext* aCtx)
+                         gfxContext* aCtx)
 {
   static_cast<nsBoxFrame*>(mFrame)->
     PaintXULDebugOverlay(*aCtx->GetDrawTarget(), ToReferenceFrame());

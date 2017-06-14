@@ -42,9 +42,10 @@ your system environment to use the libraries of your build from the "lib"
 directory, e.g., using the `LD_LIBRARY_PATH` or `DYLD_LIBRARY_PATH`.
 
     Usage: build.sh [-hcv] [-j <n>] [--nspr] [--gyp|-g] [--opt|-o] [-m32]
-                    [--test] [--fuzz] [--pprof] [--scan-build[=output]]
+                    [--test] [--pprof] [--scan-build[=output]] [--ct-verif]
                     [--asan] [--ubsan] [--msan] [--sancov[=edge|bb|func|...]]
-                    [--ct-verif] [--disable-tests]
+                    [--disable-tests] [--fuzz[=tls|oss]] [--system-sqlite]
+                    [--no-zdefs] [--with-nspr] [--system-nspr] [--enable-libpkix]
 
     This script builds NSS with gyp and ninja.
 
@@ -62,7 +63,9 @@ directory, e.g., using the `LD_LIBRARY_PATH` or `DYLD_LIBRARY_PATH`.
         --opt|-o         do an opt build
         -m32             do a 32-bit build on a 64-bit system
         --test           ignore map files and export everything we have
-        --fuzz           enable fuzzing mode. this always enables test builds
+        --fuzz           build fuzzing targets (this always enables test builds)
+                         --fuzz=tls to enable TLS fuzzing mode
+                         --fuzz=oss to build for OSS-Fuzz
         --pprof          build with gperftool support
         --ct-verif       build with valgrind for ct-verif
         --scan-build     run the build with scan-build (scan-build has to be in the path)
@@ -74,6 +77,13 @@ directory, e.g., using the `LD_LIBRARY_PATH` or `DYLD_LIBRARY_PATH`.
         --sancov         do sanitize coverage builds
                          --sancov=func sets coverage to function level for example
         --disable-tests  don't build tests and corresponding cmdline utils
+        --system-sqlite  use system sqlite
+        --no-zdefs       don't set -Wl,-z,defs
+        --with-nspr      don't build NSPR but use the one at the given location, e.g.
+                         --with-nspr=/path/to/nspr/include:/path/to/nspr/lib
+        --system-nspr    use system nspr. This requires an installation of NSPR and
+                         might not work on all systems.
+        --enable-libpkix make libpkix part of the build.
 
 ## Building NSS (legacy build system)
 

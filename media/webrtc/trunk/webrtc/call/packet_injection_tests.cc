@@ -8,9 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include <memory>
 
+#include "webrtc/logging/rtc_event_log/rtc_event_log.h"
 #include "webrtc/test/call_test.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/null_transport.h"
 
 namespace webrtc {
@@ -29,18 +31,18 @@ class PacketInjectionTest : public test::CallTest {
                              const uint8_t* packet,
                              size_t length);
 
-  rtc::scoped_ptr<RtpHeaderParser> rtp_header_parser_;
+  std::unique_ptr<RtpHeaderParser> rtp_header_parser_;
 };
 
 void PacketInjectionTest::InjectIncorrectPacket(CodecType codec_type,
                                                 uint8_t payload_type,
                                                 const uint8_t* packet,
                                                 size_t length) {
-  CreateSenderCall(Call::Config());
-  CreateReceiverCall(Call::Config());
+  CreateSenderCall(Call::Config(&event_log_));
+  CreateReceiverCall(Call::Config(&event_log_));
 
   test::NullTransport null_transport;
-  CreateSendConfig(1, 0, &null_transport);
+  CreateSendConfig(1, 0, 0, &null_transport);
   CreateMatchingReceiveConfigs(&null_transport);
   video_receive_configs_[0].decoders[0].payload_type = payload_type;
   switch (codec_type) {

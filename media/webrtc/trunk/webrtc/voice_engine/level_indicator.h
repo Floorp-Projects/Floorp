@@ -11,13 +11,12 @@
 #ifndef WEBRTC_VOICE_ENGINE_LEVEL_INDICATOR_H
 #define WEBRTC_VOICE_ENGINE_LEVEL_INDICATOR_H
 
+#include "webrtc/base/criticalsection.h"
 #include "webrtc/typedefs.h"
-#include "webrtc/voice_engine/voice_engine_defines.h"
 
 namespace webrtc {
 
 class AudioFrame;
-class CriticalSectionWrapper;
 namespace voe {
 
 class AudioLevel
@@ -40,7 +39,7 @@ public:
 private:
     enum { kUpdateFrequency = 10};
 
-    CriticalSectionWrapper& _critSect;
+    rtc::CriticalSection _critSect;
 
     int16_t _absMax;
     int16_t _count;

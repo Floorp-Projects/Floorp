@@ -11,15 +11,22 @@
 #ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_FORWARD_ERROR_CORRECTION_INTERNAL_H_
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_FORWARD_ERROR_CORRECTION_INTERNAL_H_
 
-#include "webrtc/modules/rtp_rtcp/source/forward_error_correction.h"
+#include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
 
-// Packet mask size in bytes (L bit is set).
-static const int kMaskSizeLBitSet = 6;
-// Packet mask size in bytes (L bit is cleared).
-static const int kMaskSizeLBitClear = 2;
+// Maximum number of media packets that can be protected
+// by these packet masks.
+constexpr size_t kUlpfecMaxMediaPackets = 48;
+
+// Packet mask size in bytes (given L bit).
+constexpr size_t kUlpfecPacketMaskSizeLBitClear = 2;
+constexpr size_t kUlpfecPacketMaskSizeLBitSet = 6;
+
+// Convenience constants.
+constexpr size_t kUlpfecMinPacketMaskSize = kUlpfecPacketMaskSizeLBitClear;
+constexpr size_t kUlpfecMaxPacketMaskSize = kUlpfecPacketMaskSizeLBitSet;
 
 namespace internal {
 
@@ -65,6 +72,37 @@ void GeneratePacketMasks(int num_media_packets, int num_fec_packets,
                          const PacketMaskTable& mask_table,
                          uint8_t* packet_mask);
 
+// Returns the required packet mask size, given the number of sequence numbers
+// that will be covered.
+size_t PacketMaskSize(size_t num_sequence_numbers);
+
+// Inserts |num_zeros| zero columns into |new_mask| at position
+// |new_bit_index|. If the current byte of |new_mask| can't fit all zeros, the
+// byte will be filled with zeros from |new_bit_index|, but the next byte will
+// be untouched.
+void InsertZeroColumns(int num_zeros,
+                       uint8_t* new_mask,
+                       int new_mask_bytes,
+                       int num_fec_packets,
+                       int new_bit_index);
+
+// Copies the left most bit column from the byte pointed to by
+// |old_bit_index| in |old_mask| to the right most column of the byte pointed
+// to by |new_bit_index| in |new_mask|. |old_mask_bytes| and |new_mask_bytes|
+// represent the number of bytes used per row for each mask. |num_fec_packets|
+// represent the number of rows of the masks.
+// The copied bit is shifted out from |old_mask| and is shifted one step to
+// the left in |new_mask|. |new_mask| will contain "xxxx xxn0" after this
+// operation, where x are previously inserted bits and n is the new bit.
+void CopyColumn(uint8_t* new_mask,
+                int new_mask_bytes,
+                uint8_t* old_mask,
+                int old_mask_bytes,
+                int num_fec_packets,
+                int new_bit_index,
+                int old_bit_index);
+
 }  // namespace internal
 }  // namespace webrtc
+
 #endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_FORWARD_ERROR_CORRECTION_INTERNAL_H_

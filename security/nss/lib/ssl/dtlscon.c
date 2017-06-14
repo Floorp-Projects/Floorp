@@ -236,7 +236,7 @@ dtls_RetransmitDetected(sslSocket *ss)
 }
 
 static SECStatus
-dtls_HandleHandshakeMessage(sslSocket *ss, SSL3Opaque *data, PRBool last)
+dtls_HandleHandshakeMessage(sslSocket *ss, PRUint8 *data, PRBool last)
 {
 
     /* At this point we are advancing our state machine, so we can free our last
@@ -482,7 +482,7 @@ dtls_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
  */
 SECStatus
 dtls_QueueMessage(sslSocket *ss, SSL3ContentType type,
-                  const SSL3Opaque *pIn, PRInt32 nIn)
+                  const PRUint8 *pIn, PRInt32 nIn)
 {
     SECStatus rv = SECSuccess;
     DTLSQueuedMessage *msg = NULL;
@@ -941,7 +941,7 @@ dtls_SetMTU(sslSocket *ss, PRUint16 advertised)
  * Caller must hold Handshake and RecvBuf locks.
  */
 SECStatus
-dtls_HandleHelloVerifyRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
+dtls_HandleHelloVerifyRequest(sslSocket *ss, PRUint8 *b, PRUint32 length)
 {
     int errCode = SSL_ERROR_RX_MALFORMED_HELLO_VERIFY_REQUEST;
     SECStatus rv;

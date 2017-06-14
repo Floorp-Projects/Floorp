@@ -15,16 +15,13 @@
 #include <shlobj.h>
 #endif  // WEBRTC_WIN
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
 #include <SystemConfiguration/SystemConfiguration.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
 #include <Security/Security.h>
 #include "macconversion.h"
+#include "webrtc/base/unixfilesystem.h"
 #endif
 
 #ifdef WEBRTC_IOS
@@ -33,19 +30,25 @@
 #endif
 
 #include <map>
+#include <memory>
 
 #include "webrtc/base/arraysize.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/fileutils.h"
 #include "webrtc/base/httpcommon.h"
 #include "webrtc/base/httpcommon-inl.h"
 #include "webrtc/base/pathutils.h"
 #include "webrtc/base/stringutils.h"
 
-#if defined(WEBRTC_WIN)
-#define _TRY_WINHTTP 1
 #define _TRY_JSPROXY 0
 #define _TRY_WM_FINDPROXY 0
+
+#if defined(WEBRTC_WIN)
+#define _TRY_WINHTTP 1
 #define _TRY_IE_LAN_SETTINGS 1
+#else
+#define _TRY_WINHTTP 0
+#define _TRY_IE_LAN_SETTINGS 0
 #endif  // WEBRTC_WIN
 
 // For all platforms try Firefox.
@@ -391,20 +394,10 @@ bool GetFirefoxProfilePath(Pathname* path) {
   path->AppendFolder("Mozilla");
   path->AppendFolder("Firefox");
 #elif defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
-  FSRef fr;
-  if (0 != FSFindFolder(kUserDomain, kApplicationSupportFolderType,
-                        kCreateFolder, &fr)) {
-    LOG(LS_ERROR) << "FSFindFolder failed";
-    return false;
-  }
-  char buffer[NAME_MAX + 1];
-  if (0 != FSRefMakePath(&fr, reinterpret_cast<uint8_t*>(buffer),
-                         arraysize(buffer))) {
-    LOG(LS_ERROR) << "FSRefMakePath failed";
-    return false;
-  }
-  path->SetFolder(std::string(buffer));
-  path->AppendFolder("Firefox");
+  rtc::UnixFilesystem filesystem;
+  filesystem.SetApplicationName("Firefox");
+  bool result = filesystem.GetAppDataFolder(path, true);
+  return result;
 #else
   char* user_home = getenv("HOME");
   if (user_home == NULL) {
@@ -418,7 +411,7 @@ bool GetFirefoxProfilePath(Pathname* path) {
 }
 
 bool GetDefaultFirefoxProfile(Pathname* profile_path) {
-  ASSERT(NULL != profile_path);
+  RTC_DCHECK(NULL != profile_path);
   Pathname path;
   if (!GetFirefoxProfilePath(&path)) {
     return false;
@@ -434,7 +427,7 @@ bool GetDefaultFirefoxProfile(Pathname* profile_path) {
   // Note: we are looking for the first entry with "Default=1", or the last
   // entry in the file
   path.SetFilename("profiles.ini");
-  scoped_ptr<FileStream> fs(Filesystem::OpenFile(path, "r"));
+  std::unique_ptr<FileStream> fs(Filesystem::OpenFile(path, "r"));
   if (!fs) {
     return false;
   }
@@ -499,7 +492,7 @@ bool GetDefaultFirefoxProfile(Pathname* profile_path) {
 bool ReadFirefoxPrefs(const Pathname& filename,
                       const char * prefix,
                       StringMap* settings) {
-  scoped_ptr<FileStream> fs(Filesystem::OpenFile(filename, "r"));
+  std::unique_ptr<FileStream> fs(Filesystem::OpenFile(filename, "r"));
   if (!fs) {
     LOG(LS_ERROR) << "Failed to open file: " << filename.pathname();
     return false;
@@ -1173,9 +1166,6 @@ bool GetMacProxySettings(ProxyInfo* proxy) {
       result = p_putPasswordInProxyInfo(proxy);
     }
 
-    // We created the dictionary with something that had the
-    // word 'copy' in it, so we have to release it, according
-    // to the Carbon memory management standards.
     CFRelease(proxyDict);
   } else {
     LOG(LS_ERROR) << "SCDynamicStoreCopyProxies failed";
@@ -1226,9 +1216,6 @@ bool GetiOSProxySettings(ProxyInfo* proxy) {
       result = true;
   }
 
-  // We created the dictionary with something that had the
-  // word 'copy' in it, so we have to release it, according
-  // to the Carbon memory management standards.
   CFRelease(proxy_dict);
 
   return result;

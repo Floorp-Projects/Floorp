@@ -12,9 +12,10 @@
 #define WEBRTC_BASE_PLATFORM_FILE_H_
 
 #include <stdio.h>
+#include <string>
 
 #if defined(WEBRTC_WIN)
-#include <windows.h>
+#include "webrtc/base/win32.h"
 #endif
 
 namespace rtc {
@@ -38,6 +39,17 @@ FILE* FdopenPlatformFileForWriting(PlatformFile file);
 // Don't use ClosePlatformFile to close a file opened with FdopenPlatformFile.
 // Use fclose instead.
 bool ClosePlatformFile(PlatformFile file);
+
+// Removes a file in the filesystem.
+bool RemoveFile(const std::string& path);
+
+// Opens a file for reading and writing. You might want to use base/file.h
+// instead.
+PlatformFile OpenPlatformFile(const std::string& path);
+
+// Creates a new file for reading and writing. If the file already exists it
+// will be overwritten. You might want to use base/file.h instead.
+PlatformFile CreatePlatformFile(const std::string& path);
 
 }  // namespace rtc
 

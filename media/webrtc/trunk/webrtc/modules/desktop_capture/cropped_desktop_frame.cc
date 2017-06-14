@@ -8,38 +8,43 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
 #include "webrtc/modules/desktop_capture/cropped_desktop_frame.h"
+
+#include "webrtc/base/constructormagic.h"
 
 namespace webrtc {
 
 // A DesktopFrame that is a sub-rect of another DesktopFrame.
 class CroppedDesktopFrame : public DesktopFrame {
  public:
-  CroppedDesktopFrame(DesktopFrame* frame, const DesktopRect& rect);
+  CroppedDesktopFrame(std::unique_ptr<DesktopFrame> frame,
+                      const DesktopRect& rect);
 
  private:
-  rtc::scoped_ptr<DesktopFrame> frame_;
+  std::unique_ptr<DesktopFrame> frame_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(CroppedDesktopFrame);
 };
 
-DesktopFrame*
-CreateCroppedDesktopFrame(DesktopFrame* frame, const DesktopRect& rect) {
-  if (!DesktopRect::MakeSize(frame->size()).ContainsRect(rect)) {
-    delete frame;
-    return NULL;
-  }
+std::unique_ptr<DesktopFrame> CreateCroppedDesktopFrame(
+    std::unique_ptr<DesktopFrame> frame,
+    const DesktopRect& rect) {
+  if (!DesktopRect::MakeSize(frame->size()).ContainsRect(rect))
+    return nullptr;
 
-  return new CroppedDesktopFrame(frame, rect);
+  return std::unique_ptr<DesktopFrame>(
+      new CroppedDesktopFrame(std::move(frame), rect));
 }
 
-CroppedDesktopFrame::CroppedDesktopFrame(DesktopFrame* frame,
+CroppedDesktopFrame::CroppedDesktopFrame(std::unique_ptr<DesktopFrame> frame,
                                          const DesktopRect& rect)
     : DesktopFrame(rect.size(),
                    frame->stride(),
                    frame->GetFrameDataAtPos(rect.top_left()),
-                   frame->shared_memory()),
-      frame_(frame) {
+                   frame->shared_memory()) {
+  frame_ = std::move(frame);
 }
 
 }  // namespace webrtc

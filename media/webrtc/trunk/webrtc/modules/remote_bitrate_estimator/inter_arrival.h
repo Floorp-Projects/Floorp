@@ -23,6 +23,11 @@ namespace webrtc {
 // a client defined rate.
 class InterArrival {
  public:
+  // After this many packet groups received out of order InterArrival will
+  // reset, assuming that clocks have made a jump.
+  static constexpr int kReorderedResetThreshold = 3;
+  static constexpr int64_t kArrivalTimeOffsetThresholdMs = 3000;
+
   // A timestamp group is defined as all packets with a timestamp which are at
   // most timestamp_group_length_ticks older than the first timestamp in that
   // group.
@@ -40,6 +45,7 @@ class InterArrival {
   // |packet_size_delta| (output) is the computed size delta.
   bool ComputeDeltas(uint32_t timestamp,
                      int64_t arrival_time_ms,
+                     int64_t system_time_ms,
                      size_t packet_size,
                      uint32_t* timestamp_delta,
                      int64_t* arrival_time_delta_ms,
@@ -61,6 +67,7 @@ class InterArrival {
     uint32_t first_timestamp;
     uint32_t timestamp;
     int64_t complete_time_ms;
+    int64_t last_system_time_ms;
   };
 
   // Returns true if the packet with timestamp |timestamp| arrived in order.
@@ -72,11 +79,14 @@ class InterArrival {
 
   bool BelongsToBurst(int64_t arrival_time_ms, uint32_t timestamp) const;
 
+  void Reset();
+
   const uint32_t kTimestampGroupLengthTicks;
   TimestampGroup current_timestamp_group_;
   TimestampGroup prev_timestamp_group_;
   double timestamp_to_ms_coeff_;
   bool burst_grouping_;
+  int num_consecutive_reordered_packets_;
 
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(InterArrival);
 };

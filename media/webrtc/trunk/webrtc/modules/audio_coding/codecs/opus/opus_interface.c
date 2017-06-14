@@ -9,9 +9,10 @@
  */
 
 #include "webrtc/modules/audio_coding/codecs/opus/opus_interface.h"
+
+#include "webrtc/base/checks.h"
 #include "webrtc/modules/audio_coding/codecs/opus/opus_inst.h"
 
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -30,15 +31,6 @@ enum {
 
   /* Default frame size, 20 ms @ 48 kHz, in samples (for one channel). */
   kWebRtcOpusDefaultFrameSize = 960,
-
-  // Maximum number of consecutive zeros, beyond or equal to which DTX can fail.
-  kZeroBreakCount = 157,
-
-#if defined(OPUS_FIXED_POINT)
-  kZeroBreakValue = 10,
-#else
-  kZeroBreakValue = 1,
-#endif
 };
 
 int16_t WebRtcOpus_EncoderCreate(OpusEncInst** inst,
@@ -60,11 +52,7 @@ int16_t WebRtcOpus_EncoderCreate(OpusEncInst** inst,
   }
 
   OpusEncInst* state = calloc(1, sizeof(OpusEncInst));
-  assert(state);
-
-  // Allocate zero counters.
-  state->zero_counts = calloc(channels, sizeof(size_t));
-  assert(state->zero_counts);
+  RTC_DCHECK(state);
 
   int error;
   state->encoder = opus_encoder_create(48000, (int)channels, opus_app,
@@ -84,7 +72,6 @@ int16_t WebRtcOpus_EncoderCreate(OpusEncInst** inst,
 int16_t WebRtcOpus_EncoderFree(OpusEncInst* inst) {
   if (inst) {
     opus_encoder_destroy(inst->encoder);
-    free(inst->zero_counts);
     free(inst);
     return 0;
   } else {
@@ -98,47 +85,22 @@ int WebRtcOpus_Encode(OpusEncInst* inst,
                       size_t length_encoded_buffer,
                       uint8_t* encoded) {
   int res;
-  size_t i;
-  size_t c;
-
-  int16_t buffer[2 * 48 * kWebRtcOpusMaxEncodeFrameSizeMs];
 
   if (samples > 48 * kWebRtcOpusMaxEncodeFrameSizeMs) {
     return -1;
   }
 
-  const size_t channels = inst->channels;
-  int use_buffer = 0;
-
-  // Break long consecutive zeros by forcing a "1" every |kZeroBreakCount|
-  // samples.
-  if (inst->in_dtx_mode) {
-    for (i = 0; i < samples; ++i) {
-      for (c = 0; c < channels; ++c) {
-        if (audio_in[i * channels + c] == 0) {
-          ++inst->zero_counts[c];
-          if (inst->zero_counts[c] == kZeroBreakCount) {
-            if (!use_buffer) {
-              memcpy(buffer, audio_in, samples * channels * sizeof(int16_t));
-              use_buffer = 1;
-            }
-            buffer[i * channels + c] = kZeroBreakValue;
-            inst->zero_counts[c] = 0;
-          }
-        } else {
-          inst->zero_counts[c] = 0;
-        }
-      }
-    }
-  }
-
   res = opus_encode(inst->encoder,
-                    use_buffer ? buffer : audio_in,
+                    (const opus_int16*)audio_in,
                     (int)samples,
                     encoded,
                     (opus_int32)length_encoded_buffer);
 
-  if (res == 1) {
+  if (res <= 0) {
+    return -1;
+  }
+
+  if (res <= 2) {
     // Indicates DTX since the packet has nothing but a header. In principle,
     // there is no need to send this packet. However, we do transmit the first
     // occurrence to let the decoder know that the encoder enters DTX mode.
@@ -148,12 +110,10 @@ int WebRtcOpus_Encode(OpusEncInst* inst,
       inst->in_dtx_mode = 1;
       return 1;
     }
-  } else if (res > 1) {
-    inst->in_dtx_mode = 0;
-    return res;
   }
 
-  return -1;
+  inst->in_dtx_mode = 0;
+  return res;
 }
 
 int16_t WebRtcOpus_SetBitRate(OpusEncInst* inst, int32_t rate) {
@@ -246,6 +206,20 @@ int16_t WebRtcOpus_DisableDtx(OpusEncInst* inst) {
 int16_t WebRtcOpus_SetComplexity(OpusEncInst* inst, int32_t complexity) {
   if (inst) {
     return opus_encoder_ctl(inst->encoder, OPUS_SET_COMPLEXITY(complexity));
+  } else {
+    return -1;
+  }
+}
+
+int16_t WebRtcOpus_SetForceChannels(OpusEncInst* inst, size_t num_channels) {
+  if (!inst)
+    return -1;
+  if (num_channels == 0) {
+    return opus_encoder_ctl(inst->encoder,
+                            OPUS_SET_FORCE_CHANNELS(OPUS_AUTO));
+  } else if (num_channels == 1 || num_channels == 2) {
+    return opus_encoder_ctl(inst->encoder,
+                            OPUS_SET_FORCE_CHANNELS(num_channels));
   } else {
     return -1;
   }

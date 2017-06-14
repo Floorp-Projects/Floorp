@@ -6,8 +6,12 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
-source_set("pacing") {
+import("../../build/webrtc.gni")
+
+rtc_static_library("pacing") {
   sources = [
+    "alr_detector.cc",
+    "alr_detector.h",
     "bitrate_prober.cc",
     "bitrate_prober.h",
     "paced_sender.cc",
@@ -16,18 +20,15 @@ source_set("pacing") {
     "packet_router.h",
   ]
 
-  configs += [ "../..:common_config" ]
-  public_configs = [ "../..:common_inherited_config" ]
-
-  if (is_clang) {
-    # Suppress warnings from Chrome's Clang plugins.
-    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  if (!build_with_chromium && is_clang) {
+    # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+    suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
 
   deps = [
+    "../..:webrtc_common",
+    "../../base:rtc_base_approved",
     "../../system_wrappers",
-    "../bitrate_controller",
     "../rtp_rtcp",
   ]
 }

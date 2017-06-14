@@ -21,8 +21,6 @@ VCMEncodedFrame::VCMEncodedFrame()
       _payloadType(0),
       _missingFrame(false),
       _codec(kVideoCodecUnknown),
-      _fragmentation(),
-      _rotation(kVideoRotation_0),
       _rotation_set(false) {
   _codecSpecificInfo.codecType = kVideoCodecUnknown;
 }
@@ -33,15 +31,14 @@ VCMEncodedFrame::VCMEncodedFrame(const webrtc::EncodedImage& rhs)
       _payloadType(0),
       _missingFrame(false),
       _codec(kVideoCodecUnknown),
-      _fragmentation(),
-      _rotation(kVideoRotation_0),
       _rotation_set(false) {
   _codecSpecificInfo.codecType = kVideoCodecUnknown;
   _buffer = NULL;
   _size = 0;
   _length = 0;
   if (rhs._buffer != NULL) {
-    VerifyAndAllocate(rhs._length);
+    VerifyAndAllocate(rhs._length +
+                      EncodedImage::GetBufferPaddingBytes(_codec));
     memcpy(_buffer, rhs._buffer, rhs._length);
   }
 }
@@ -53,18 +50,16 @@ VCMEncodedFrame::VCMEncodedFrame(const VCMEncodedFrame& rhs)
       _missingFrame(rhs._missingFrame),
       _codecSpecificInfo(rhs._codecSpecificInfo),
       _codec(rhs._codec),
-      _fragmentation(),
-      _rotation(rhs._rotation),
       _rotation_set(rhs._rotation_set) {
   _buffer = NULL;
   _size = 0;
   _length = 0;
   if (rhs._buffer != NULL) {
-    VerifyAndAllocate(rhs._length);
+    VerifyAndAllocate(rhs._length +
+                      EncodedImage::GetBufferPaddingBytes(_codec));
     memcpy(_buffer, rhs._buffer, rhs._length);
     _length = rhs._length;
   }
-  _fragmentation.CopyFrom(rhs._fragmentation);
 }
 
 VCMEncodedFrame::~VCMEncodedFrame() {
@@ -91,7 +86,7 @@ void VCMEncodedFrame::Reset() {
   _length = 0;
   _codecSpecificInfo.codecType = kVideoCodecUnknown;
   _codec = kVideoCodecUnknown;
-  _rotation = kVideoRotation_0;
+  rotation_ = kVideoRotation_0;
   _rotation_set = false;
 }
 
@@ -193,8 +188,6 @@ void VCMEncodedFrame::CopyCodecSpecific(const RTPVideoHeader* header) {
         break;
       }
       case kRtpVideoH264: {
-        _codecSpecificInfo.codecSpecific.H264.single_nalu =
-            header->codecHeader.H264.single_nalu;
         _codecSpecificInfo.codecType = kVideoCodecH264;
         break;
       }
@@ -204,10 +197,6 @@ void VCMEncodedFrame::CopyCodecSpecific(const RTPVideoHeader* header) {
       }
     }
   }
-}
-
-const RTPFragmentationHeader* VCMEncodedFrame::FragmentationHeader() const {
-  return &_fragmentation;
 }
 
 void VCMEncodedFrame::VerifyAndAllocate(size_t minimumSize) {

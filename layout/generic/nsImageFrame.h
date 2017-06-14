@@ -81,8 +81,8 @@ public:
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
-  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
-  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
+  virtual nscoord GetMinISize(gfxContext *aRenderingContext) override;
+  virtual nscoord GetPrefISize(gfxContext *aRenderingContext) override;
   virtual mozilla::IntrinsicSize GetIntrinsicSize() override;
   virtual nsSize GetIntrinsicRatio() override;
   virtual void Reflow(nsPresContext*           aPresContext,
@@ -147,7 +147,7 @@ public:
   static bool ShouldCreateImageFrameFor(mozilla::dom::Element* aElement,
                                           nsStyleContext* aStyleContext);
   
-  DrawResult DisplayAltFeedback(nsRenderingContext& aRenderingContext,
+  DrawResult DisplayAltFeedback(gfxContext& aRenderingContext,
                                 const nsRect& aDirtyRect,
                                 nsPoint aPt,
                                 uint32_t aFlags);
@@ -167,7 +167,7 @@ public:
   nsImageMap* GetImageMap();
   nsImageMap* GetExistingImageMap() const { return mImageMap; }
 
-  virtual void AddInlineMinISize(nsRenderingContext *aRenderingContext,
+  virtual void AddInlineMinISize(gfxContext *aRenderingContext,
                                  InlineMinISizeData *aData) override;
 
   void DisconnectMap();
@@ -188,7 +188,7 @@ protected:
   void EnsureIntrinsicSizeAndRatio();
 
   virtual mozilla::LogicalSize
-  ComputeSize(nsRenderingContext *aRenderingContext,
+  ComputeSize(gfxContext *aRenderingContext,
               mozilla::WritingMode aWritingMode,
               const mozilla::LogicalSize& aCBSize,
               nscoord aAvailableISize,
@@ -217,15 +217,15 @@ protected:
                         int32_t              aLength,
                         nscoord              aMaxWidth,
                         uint32_t&            aMaxFit,
-                        nsRenderingContext& aContext,
+                        gfxContext&          aContext,
                         nsFontMetrics&      aFontMetrics);
 
   void DisplayAltText(nsPresContext*      aPresContext,
-                      nsRenderingContext& aRenderingContext,
+                      gfxContext&          aRenderingContext,
                       const nsString&      aAltText,
                       const nsRect&        aRect);
 
-  DrawResult PaintImage(nsRenderingContext& aRenderingContext, nsPoint aPt,
+  DrawResult PaintImage(gfxContext& aRenderingContext, nsPoint aPt,
                         const nsRect& aDirtyRect, imgIContainer* aImage,
                         uint32_t aFlags);
 
@@ -427,7 +427,7 @@ public:
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion* aInvalidRegion) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) override;
+                     gfxContext* aCtx) override;
 
   virtual already_AddRefed<imgIContainer> GetImage() override;
 

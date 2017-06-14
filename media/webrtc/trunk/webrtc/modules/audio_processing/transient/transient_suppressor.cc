@@ -17,7 +17,7 @@
 #include <deque>
 #include <set>
 
-#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/common_audio/fft4g.h"
 #include "webrtc/common_audio/include/audio_util.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
@@ -101,13 +101,13 @@ int TransientSuppressor::Initialize(int sample_rate_hz,
   detector_.reset(new TransientDetector(detection_rate_hz));
   data_length_ = sample_rate_hz * ts::kChunkSizeMs / 1000;
   if (data_length_ > analysis_length_) {
-    assert(false);
+    RTC_NOTREACHED();
     return -1;
   }
   buffer_delay_ = analysis_length_ - data_length_;
 
   complex_analysis_length_ = analysis_length_ / 2 + 1;
-  assert(complex_analysis_length_ >= kMaxVoiceBin);
+  RTC_DCHECK_GE(complex_analysis_length_, kMaxVoiceBin);
   num_channels_ = num_channels;
   in_buffer_.reset(new float[analysis_length_ * num_channels_]);
   memset(in_buffer_.get(),

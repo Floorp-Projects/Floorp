@@ -57,11 +57,6 @@ int32_t AudioDeviceGeneric::EnableBuiltInAEC(bool enable) {
   return -1;
 }
 
-bool AudioDeviceGeneric::BuiltInAECIsEnabled() const {
-  LOG_F(LS_ERROR) << "Not supported on this platform";
-  return false;
-}
-
 bool AudioDeviceGeneric::BuiltInAGCIsAvailable() const {
   LOG_F(LS_ERROR) << "Not supported on this platform";
   return false;
@@ -82,15 +77,18 @@ int32_t AudioDeviceGeneric::EnableBuiltInNS(bool enable) {
   return -1;
 }
 
+#if defined(WEBRTC_IOS)
 int AudioDeviceGeneric::GetPlayoutAudioParameters(
     AudioParameters* params) const {
   LOG_F(LS_ERROR) << "Not supported on this platform";
   return -1;
 }
+
 int AudioDeviceGeneric::GetRecordAudioParameters(
     AudioParameters* params) const {
   LOG_F(LS_ERROR) << "Not supported on this platform";
   return -1;
 }
+#endif  // WEBRTC_IOS
 
 }  // namespace webrtc

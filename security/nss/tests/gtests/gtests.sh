@@ -24,7 +24,7 @@ gtest_init()
 {
   cd "$(dirname "$1")"
   if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
-      cd common
+      cd ../common
       . ./init.sh
   fi
 

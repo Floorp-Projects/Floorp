@@ -23,7 +23,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ipc/URIUtils.h"
 #include <algorithm>
-#include "mozilla/dom/EncodingUtils.h"
 #include "nsContentUtils.h"
 #include "prprf.h"
 #include "nsReadableUtils.h"
@@ -130,7 +129,6 @@ do {                                    \
 
 #endif // MOZ_RUST_URLPARSE
 
-using mozilla::dom::EncodingUtils;
 using namespace mozilla::ipc;
 
 namespace mozilla {
@@ -198,10 +196,13 @@ nsPrefObserver::Observe(nsISupports *subject,
 // nsStandardURL::nsSegmentEncoder
 //----------------------------------------------------------------------------
 
-nsStandardURL::
-nsSegmentEncoder::nsSegmentEncoder(const char *charset)
-    : mCharset(charset)
+nsStandardURL::nsSegmentEncoder::nsSegmentEncoder(const char* charset)
+  : mEncoding(charset ? Encoding::ForLabelNoReplacement(MakeStringSpan(charset))
+                      : nullptr)
 {
+  if (mEncoding == UTF_8_ENCODING) {
+    mEncoding = nullptr;
+  }
 }
 
 int32_t nsStandardURL::
@@ -224,21 +225,21 @@ nsSegmentEncoder::EncodeSegmentCount(const char *str,
         len = seg.mLen;
 
         // first honor the origin charset if appropriate. as an optimization,
-        // only do this if the segment is non-ASCII.  Further, if mCharset is
-        // null or the empty string then the origin charset is UTF-8 and there
-        // is nothing to do.
+        // only do this if the segment is non-ASCII.  Further, if mEncoding is
+        // null, then the origin charset is UTF-8 and there is nothing to do.
         nsAutoCString encBuf;
-        if (mCharset && *mCharset && !nsCRT::IsAscii(str + pos, len)) {
-            // we have to encode this segment
-            if (mEncoder || InitUnicodeEncoder()) {
-                NS_ConvertUTF8toUTF16 ucsBuf(Substring(str + pos, str + pos + len));
-                if (mEncoder->Encode(ucsBuf, encBuf)) {
-                    str = encBuf.get();
-                    pos = 0;
-                    len = encBuf.Length();
-                }
-                // else some failure occurred... assume UTF-8 is ok.
-            }
+        if (mEncoding && !nsCRT::IsAscii(str + pos, len)) {
+          // we have to encode this segment
+          nsresult rv;
+          const Encoding* ignored;
+          Tie(rv, ignored) =
+            mEncoding->Encode(Substring(str + pos, str + pos + len), encBuf);
+          if (NS_SUCCEEDED(rv)) {
+            str = encBuf.get();
+            pos = 0;
+            len = encBuf.Length();
+          }
+          // else some failure occurred... assume UTF-8 is ok.
         }
 
         uint32_t initLen = result.Length();
@@ -269,24 +270,6 @@ nsSegmentEncoder::EncodeSegment(const nsASingleFragmentCString &str,
     if (encoded)
         return result;
     return str;
-}
-
-bool nsStandardURL::
-nsSegmentEncoder::InitUnicodeEncoder()
-{
-    NS_ASSERTION(!mEncoder, "Don't call this if we have an encoder already!");
-    // "replacement" won't survive another label resolution
-    nsDependentCString label(mCharset);
-    if (label.EqualsLiteral("replacement")) {
-      // Returning false here causes the caller to use UTF-8.
-      return false;
-    }
-    nsAutoCString encoding;
-    if (!EncodingUtils::FindEncodingForLabelNoReplacement(label, encoding)) {
-      return false;
-    }
-    mEncoder = MakeUnique<nsNCRFallbackEncoderWrapper>(encoding);
-    return true;
 }
 
 #define GET_SEGMENT_ENCODER_INTERNAL(name, useUTF8) \

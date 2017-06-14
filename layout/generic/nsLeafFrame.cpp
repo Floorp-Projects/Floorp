@@ -15,7 +15,7 @@ nsLeafFrame::~nsLeafFrame()
 }
 
 /* virtual */ nscoord
-nsLeafFrame::GetMinISize(nsRenderingContext *aRenderingContext)
+nsLeafFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -24,7 +24,7 @@ nsLeafFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsLeafFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
+nsLeafFrame::GetPrefISize(gfxContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
@@ -34,7 +34,7 @@ nsLeafFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 
 /* virtual */
 LogicalSize
-nsLeafFrame::ComputeAutoSize(nsRenderingContext* aRenderingContext,
+nsLeafFrame::ComputeAutoSize(gfxContext*         aRenderingContext,
                              WritingMode         aWM,
                              const LogicalSize&  aCBSize,
                              nscoord             aAvailableISize,

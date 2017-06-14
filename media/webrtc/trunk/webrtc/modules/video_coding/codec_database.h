@@ -12,8 +12,8 @@
 #define WEBRTC_MODULES_VIDEO_CODING_CODEC_DATABASE_H_
 
 #include <map>
+#include <memory>
 
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 #include "webrtc/modules/video_coding/include/video_coding.h"
 #include "webrtc/modules/video_coding/generic_decoder.h"
@@ -28,7 +28,7 @@ struct VCMDecoderMapItem {
                     int number_of_cores,
                     bool require_key_frame);
 
-  rtc::scoped_ptr<VideoCodec> settings;
+  std::unique_ptr<VideoCodec> settings;
   int number_of_cores;
   bool require_key_frame;
 };
@@ -44,8 +44,7 @@ struct VCMExtDecoderMapItem {
 
 class VCMCodecDataBase {
  public:
-  VCMCodecDataBase(VideoEncoderRateObserver* encoder_rate_observer,
-                   VCMEncodedFrameCallback* encoded_frame_callback);
+  explicit VCMCodecDataBase(VCMEncodedFrameCallback* encoded_frame_callback);
   ~VCMCodecDataBase();
 
   // Sender Side
@@ -154,9 +153,8 @@ class VCMCodecDataBase {
   uint8_t encoder_payload_type_;
   VideoEncoder* external_encoder_;
   bool internal_source_;
-  VideoEncoderRateObserver* const encoder_rate_observer_;
   VCMEncodedFrameCallback* const encoded_frame_callback_;
-  rtc::scoped_ptr<VCMGenericEncoder> ptr_encoder_;
+  std::unique_ptr<VCMGenericEncoder> ptr_encoder_;
   VCMGenericDecoder* ptr_decoder_;
   DecoderMap dec_map_;
   ExternalDecoderMap dec_external_map_;

@@ -3,17 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsString.h"
-#include "nsIUnicodeEncoder.h"
-#include "nsIUnicodeDecoder.h"
 #include "nsITextToSubURI.h"
 #include "nsEscape.h"
 #include "nsTextToSubURI.h"
 #include "nsCRT.h"
-#include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/Encoding.h"
 #include "mozilla/Preferences.h"
 #include "nsISupportsPrimitives.h"
 
-using mozilla::dom::EncodingUtils;
+using namespace mozilla;
 
 // Fallback value for the pref "network.IDN.blacklist_chars".
 // UnEscapeURIForUI allows unescaped space; other than that, this is
@@ -44,114 +42,49 @@ nsTextToSubURI::~nsTextToSubURI()
 
 NS_IMPL_ISUPPORTS(nsTextToSubURI, nsITextToSubURI)
 
-NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
-  const char *charset, const char16_t *text, char **_retval) 
+NS_IMETHODIMP
+nsTextToSubURI::ConvertAndEscape(const nsACString& aCharset,
+                                 const nsAString& aText,
+                                 nsACString& aOut)
 {
-  if (!_retval) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *_retval = nullptr;
-  nsresult rv = NS_OK;
-  
-  if (!charset) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsDependentCString label(charset);
-  nsAutoCString encoding;
-  if (!EncodingUtils::FindEncodingForLabelNoReplacement(label, encoding)) {
+  auto encoding = Encoding::ForLabelNoReplacement(aCharset);
+  if (!encoding) {
+    aOut.Truncate();
     return NS_ERROR_UCONV_NOCONV;
   }
-  nsCOMPtr<nsIUnicodeEncoder> encoder =
-    EncodingUtils::EncoderForEncoding(encoding);
-  rv = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nullptr, (char16_t)'?');
-  if (NS_SUCCEEDED(rv) ) {
-    char buf[256];
-    char *pBuf = buf;
-    int32_t ulen = text ? NS_strlen(text) : 0;
-    int32_t outlen = 0;
-    if (NS_SUCCEEDED(rv = encoder->GetMaxLength(text, ulen, &outlen))) {
-      if (outlen >= 256) {
-        pBuf = (char*)moz_xmalloc(outlen+1);
-      }
-      if (nullptr == pBuf) {
-        outlen = 255;
-        pBuf = buf;
-      }
-      int32_t bufLen = outlen;
-      if (NS_SUCCEEDED(rv = encoder->Convert(text,&ulen, pBuf, &outlen))) {
-        // put termination characters (e.g. ESC(B of ISO-2022-JP) if necessary
-        int32_t finLen = bufLen - outlen;
-        if (finLen > 0) {
-          if (NS_SUCCEEDED(encoder->Finish((char *)(pBuf+outlen), &finLen))) {
-            outlen += finLen;
-          }
-        }
-        *_retval = nsEscape(pBuf, outlen, nullptr, url_XPAlphas);
-        if (nullptr == *_retval) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-        }
-      }
-    }
-    if (pBuf != buf) {
-      free(pBuf);
-    }
+  nsresult rv;
+  const Encoding* actualEncoding;
+  nsAutoCString intermediate;
+  Tie(rv, actualEncoding) = encoding->Encode(aText, intermediate);
+  Unused << actualEncoding;
+  if (NS_FAILED(rv)) {
+    aOut.Truncate();
+    return rv;
   }
-  
-  return rv;
+  bool ok = NS_Escape(intermediate, aOut, url_XPAlphas);
+  if (!ok) {
+    aOut.Truncate();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
 }
 
-NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
-  const char *charset, const char *text, char16_t **_retval) 
+NS_IMETHODIMP
+nsTextToSubURI::UnEscapeAndConvert(const nsACString& aCharset,
+                                   const nsACString& aText,
+                                   nsAString& aOut)
 {
-  if(nullptr == _retval)
-    return NS_ERROR_NULL_POINTER;
-  if(nullptr == text) {
-    // set empty string instead of returning error
-    // due to compatibility for old version
-    text = "";
-  }
-  *_retval = nullptr;
-  nsresult rv = NS_OK;
-  
-  if (!charset) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-
-  // unescape the string, unescape changes the input
-  char *unescaped = NS_strdup(text);
-  if (nullptr == unescaped)
-    return NS_ERROR_OUT_OF_MEMORY;
-  unescaped = nsUnescape(unescaped);
-  NS_ASSERTION(unescaped, "nsUnescape returned null");
-
-  nsDependentCString label(charset);
-  nsAutoCString encoding;
-  if (!EncodingUtils::FindEncodingForLabelNoReplacement(label, encoding)) {
-    free(unescaped);
+  auto encoding = Encoding::ForLabelNoReplacement(aCharset);
+  if (!encoding) {
+    aOut.Truncate();
     return NS_ERROR_UCONV_NOCONV;
   }
-  nsCOMPtr<nsIUnicodeDecoder> decoder =
-    EncodingUtils::DecoderForEncoding(encoding);
-  char16_t *pBuf = nullptr;
-  int32_t len = strlen(unescaped);
-  int32_t outlen = 0;
-  if (NS_SUCCEEDED(rv = decoder->GetMaxLength(unescaped, len, &outlen))) {
-    pBuf = (char16_t *) moz_xmalloc((outlen+1)*sizeof(char16_t));
-    if (nullptr == pBuf) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    } else {
-      if (NS_SUCCEEDED(rv = decoder->Convert(unescaped, &len, pBuf, &outlen))) {
-        pBuf[outlen] = 0;
-        *_retval = pBuf;
-      } else {
-        free(pBuf);
-      }
-    }
+  nsAutoCString unescaped(aText);
+  NS_UnescapeURL(unescaped);
+  auto rv = encoding->DecodeWithoutBOMHandling(unescaped, aOut);
+  if (NS_SUCCEEDED(rv)) {
+    return NS_OK;
   }
-  free(unescaped);
-
   return rv;
 }
 
@@ -168,20 +101,21 @@ static bool statefulCharset(const char *charset)
   return false;
 }
 
-nsresult nsTextToSubURI::convertURItoUnicode(const nsAFlatCString &aCharset,
-                                             const nsAFlatCString &aURI, 
-                                             nsAString &_retval)
+nsresult
+nsTextToSubURI::convertURItoUnicode(const nsAFlatCString& aCharset,
+                                    const nsAFlatCString& aURI,
+                                    nsAString& aOut)
 {
   // check for 7bit encoding the data may not be ASCII after we decode
   bool isStatefulCharset = statefulCharset(aCharset.get());
 
   if (!isStatefulCharset) {
     if (IsASCII(aURI)) {
-      CopyASCIItoUTF16(aURI, _retval);
+      CopyASCIItoUTF16(aURI, aOut);
       return NS_OK;
     }
     if (IsUTF8(aURI)) {
-      CopyUTF8toUTF16(aURI, _retval);
+      CopyUTF8toUTF16(aURI, aOut);
       return NS_OK;
     }
   }
@@ -189,31 +123,12 @@ nsresult nsTextToSubURI::convertURItoUnicode(const nsAFlatCString &aCharset,
   // empty charset could indicate UTF-8, but aURI turns out not to be UTF-8.
   NS_ENSURE_FALSE(aCharset.IsEmpty(), NS_ERROR_INVALID_ARG);
 
-  nsAutoCString encoding;
-  if (!EncodingUtils::FindEncodingForLabelNoReplacement(aCharset, encoding)) {
+  auto encoding = Encoding::ForLabelNoReplacement(aCharset);
+  if (!encoding) {
+    aOut.Truncate();
     return NS_ERROR_UCONV_NOCONV;
   }
-  nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder =
-    EncodingUtils::DecoderForEncoding(encoding);
-
-  unicodeDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Signal);
-
-  int32_t srcLen = aURI.Length();
-  int32_t dstLen;
-  nsresult rv = unicodeDecoder->GetMaxLength(aURI.get(), srcLen, &dstLen);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  char16_t *ustr = (char16_t *) moz_xmalloc(dstLen * sizeof(char16_t));
-  NS_ENSURE_TRUE(ustr, NS_ERROR_OUT_OF_MEMORY);
-
-  rv = unicodeDecoder->Convert(aURI.get(), &srcLen, ustr, &dstLen);
-
-  if (NS_SUCCEEDED(rv))
-    _retval.Assign(ustr, dstLen);
-  
-  free(ustr);
-
-  return rv;
+  return encoding->DecodeWithoutBOMHandlingAndWithoutReplacement(aURI, aOut);
 }
 
 NS_IMETHODIMP  nsTextToSubURI::UnEscapeURIForUI(const nsACString & aCharset, 

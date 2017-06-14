@@ -112,8 +112,8 @@ public:
                                   nsDisplayListBuilder* aBuilder,
                                   const nsDisplayListSet& aLists);
 
-  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
-  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
+  virtual nscoord GetMinISize(gfxContext *aRenderingContext) override;
+  virtual nscoord GetPrefISize(gfxContext *aRenderingContext) override;
   virtual IntrinsicISizeOffsetData IntrinsicISizeOffsets() override;
 
   virtual void Reflow(nsPresContext*      aPresContext,
@@ -210,7 +210,7 @@ public:
 
   virtual LogicalMargin GetBorderWidth(WritingMode aWM) const;
 
-  virtual DrawResult PaintBackground(nsRenderingContext& aRenderingContext,
+  virtual DrawResult PaintBackground(gfxContext&          aRenderingContext,
                                      const nsRect&        aDirtyRect,
                                      nsPoint              aPt,
                                      uint32_t             aFlags);
@@ -328,7 +328,7 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  virtual DrawResult PaintBackground(nsRenderingContext& aRenderingContext,
+  virtual DrawResult PaintBackground(gfxContext&          aRenderingContext,
                                      const nsRect&        aDirtyRect,
                                      nsPoint              aPt,
                                      uint32_t             aFlags) override;

@@ -14,7 +14,6 @@
 
 #include "webrtc/base/logging.h"
 #include "webrtc/modules/audio_coding/codecs/audio_decoder.h"
-#include "webrtc/modules/audio_coding/codecs/cng/webrtc_cng.h"
 #include "webrtc/modules/audio_coding/neteq/decoder_database.h"
 #include "webrtc/modules/audio_coding/neteq/dsp_helper.h"
 #include "webrtc/modules/audio_coding/neteq/sync_buffer.h"
@@ -23,31 +22,16 @@ namespace webrtc {
 
 void ComfortNoise::Reset() {
   first_call_ = true;
-  internal_error_code_ = 0;
 }
 
-int ComfortNoise::UpdateParameters(Packet* packet) {
-  assert(packet);  // Existence is verified by caller.
+int ComfortNoise::UpdateParameters(const Packet& packet) {
   // Get comfort noise decoder.
-  AudioDecoder* cng_decoder = decoder_database_->GetDecoder(
-      packet->header.payloadType);
-  if (!cng_decoder) {
-    delete [] packet->payload;
-    delete packet;
+  if (decoder_database_->SetActiveCngDecoder(packet.payload_type) != kOK) {
     return kUnknownPayloadType;
   }
-  decoder_database_->SetActiveCngDecoder(packet->header.payloadType);
-  CNG_dec_inst* cng_inst = cng_decoder->CngDecoderInstance();
-  int16_t ret = WebRtcCng_UpdateSid(cng_inst,
-                                    packet->payload,
-                                    packet->payload_length);
-  delete [] packet->payload;
-  delete packet;
-  if (ret < 0) {
-    internal_error_code_ = WebRtcCng_GetErrorCodeDec(cng_inst);
-    LOG(LS_ERROR) << "WebRtcCng_UpdateSid produced " << internal_error_code_;
-    return kInternalError;
-  }
+  ComfortNoiseDecoder* cng_decoder = decoder_database_->GetActiveCngDecoder();
+  RTC_DCHECK(cng_decoder);
+  cng_decoder->UpdateSid(packet.payload);
   return kOK;
 }
 
@@ -63,30 +47,31 @@ int ComfortNoise::Generate(size_t requested_length,
   }
 
   size_t number_of_samples = requested_length;
-  int16_t new_period = 0;
+  bool new_period = false;
   if (first_call_) {
     // Generate noise and overlap slightly with old data.
     number_of_samples = requested_length + overlap_length_;
-    new_period = 1;
+    new_period = true;
   }
   output->AssertSize(number_of_samples);
   // Get the decoder from the database.
-  AudioDecoder* cng_decoder = decoder_database_->GetActiveCngDecoder();
+  ComfortNoiseDecoder* cng_decoder = decoder_database_->GetActiveCngDecoder();
   if (!cng_decoder) {
     LOG(LS_ERROR) << "Unknwown payload type";
     return kUnknownPayloadType;
   }
-  CNG_dec_inst* cng_inst = cng_decoder->CngDecoderInstance();
-  // The expression &(*output)[0][0] is a pointer to the first element in
-  // the first channel.
-  if (WebRtcCng_Generate(cng_inst, &(*output)[0][0], number_of_samples,
-                         new_period) < 0) {
+
+  std::unique_ptr<int16_t[]> temp(new int16_t[number_of_samples]);
+  if (!cng_decoder->Generate(
+          rtc::ArrayView<int16_t>(temp.get(), number_of_samples),
+          new_period)) {
     // Error returned.
     output->Zeros(requested_length);
-    internal_error_code_ = WebRtcCng_GetErrorCodeDec(cng_inst);
-    LOG(LS_ERROR) << "WebRtcCng_Generate produced " << internal_error_code_;
+    LOG(LS_ERROR) <<
+        "ComfortNoiseDecoder::Genererate failed to generate comfort noise";
     return kInternalError;
   }
+  (*output)[0].OverwriteAt(temp.get(), number_of_samples, 0);
 
   if (first_call_) {
     // Set tapering window parameters. Values are in Q15.

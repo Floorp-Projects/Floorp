@@ -19,13 +19,22 @@ namespace webrtc {
 
 class AudioDecoder;
 
-void FuzzAudioDecoder(const uint8_t* data,
+enum class DecoderFunctionType {
+  kNormalDecode,
+  kRedundantDecode,
+};
+
+void FuzzAudioDecoder(DecoderFunctionType decode_type,
+                      const uint8_t* data,
                       size_t size,
                       AudioDecoder* decoder,
                       int sample_rate_hz,
                       size_t max_decoded_bytes,
                       int16_t* decoded);
 
+void FuzzAudioDecoderIncomingPacket(const uint8_t* data,
+                                    size_t size,
+                                    AudioDecoder* decoder);
 }  // namespace webrtc
 
 #endif  // WEBRTC_TEST_FUZZERS_AUDIO_DECODER_FUZZER_H_

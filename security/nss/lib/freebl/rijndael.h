@@ -6,13 +6,15 @@
 #define _RIJNDAEL_H_ 1
 
 #include "blapii.h"
+#include <stdint.h>
 
-#define RIJNDAEL_MIN_BLOCKSIZE 16 /* bytes */
-#define RIJNDAEL_MAX_BLOCKSIZE 32 /* bytes */
+#ifdef NSS_X86_OR_X64
+#include <wmmintrin.h> /* aes-ni */
+#endif
 
-typedef SECStatus AESBlockFunc(AESContext *cx,
-                               unsigned char *output,
-                               const unsigned char *input);
+typedef void AESBlockFunc(AESContext *cx,
+                          unsigned char *output,
+                          const unsigned char *input);
 
 /* RIJNDAEL_NUM_ROUNDS
  *
@@ -23,24 +25,18 @@ typedef SECStatus AESBlockFunc(AESContext *cx,
 #define RIJNDAEL_NUM_ROUNDS(Nk, Nb) \
     (PR_MAX(Nk, Nb) + 6)
 
-/* RIJNDAEL_MAX_STATE_SIZE
- *
- * Maximum number of bytes in the state (spec includes up to 256-bit block
- * size)
- */
-#define RIJNDAEL_MAX_STATE_SIZE 32
-
 /*
  * This magic number is (Nb_max * (Nr_max + 1))
  * where Nb_max is the maximum block size in 32-bit words,
  *       Nr_max is the maximum number of rounds, which is Nb_max + 6
  */
-#define RIJNDAEL_MAX_EXP_KEY_SIZE (8 * 15)
+#define RIJNDAEL_MAX_EXP_KEY_SIZE (4 * 15)
 
 /* AESContextStr
  *
  * Values which maintain the state for Rijndael encryption/decryption.
  *
+ * keySchedule - 128-bit registers for the key-schedule
  * iv          - initialization vector for CBC mode
  * Nb          - the number of bytes in a block, specified by user
  * Nr          - the number of rounds, specified by a table
@@ -51,17 +47,23 @@ typedef SECStatus AESBlockFunc(AESContext *cx,
  * isBlock     - is the mode of operation a block cipher or a stream cipher?
  */
 struct AESContextStr {
+    /* NOTE: Offsets to members in this struct are hardcoded in assembly.
+     * Don't change the struct without updating intel-aes.s and intel-gcm.s. */
+    union {
+#if defined(NSS_X86_OR_X64)
+        __m128i keySchedule[15];
+#endif
+        PRUint32 expandedKey[RIJNDAEL_MAX_EXP_KEY_SIZE];
+    };
     unsigned int Nb;
     unsigned int Nr;
     freeblCipherFunc worker;
-    /* NOTE: The offsets of iv and expandedKey are hardcoded in intel-aes.s.
-     * Don't add new members before them without updating intel-aes.s. */
-    unsigned char iv[RIJNDAEL_MAX_BLOCKSIZE];
-    PRUint32 expandedKey[RIJNDAEL_MAX_EXP_KEY_SIZE];
+    unsigned char iv[AES_BLOCK_SIZE];
     freeblDestroyFunc destroy;
     void *worker_cx;
     PRBool isBlock;
     int mode;
+    void *mem; /* Start of the allocated memory to free. */
 };
 
 #endif /* _RIJNDAEL_H_ */

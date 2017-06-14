@@ -13,14 +13,14 @@
 
 #include <list>
 #include <map>
+#include <memory>
 #include <utility>
 #include <vector>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
 #include "webrtc/system_wrappers/include/clock.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 namespace testing {
@@ -30,18 +30,18 @@ class TestBitrateObserver : public RemoteBitrateObserver {
   TestBitrateObserver() : updated_(false), latest_bitrate_(0) {}
   virtual ~TestBitrateObserver() {}
 
-  void OnReceiveBitrateChanged(const std::vector<unsigned int>& ssrcs,
-                               unsigned int bitrate) override;
+  void OnReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs,
+                               uint32_t bitrate) override;
 
   void Reset() { updated_ = false; }
 
   bool updated() const { return updated_; }
 
-  unsigned int latest_bitrate() const { return latest_bitrate_; }
+  uint32_t latest_bitrate() const { return latest_bitrate_; }
 
  private:
   bool updated_;
-  unsigned int latest_bitrate_;
+  uint32_t latest_bitrate_;
 };
 
 class RtpStream {
@@ -51,22 +51,26 @@ class RtpStream {
     int64_t arrival_time;
     uint32_t rtp_timestamp;
     size_t size;
-    unsigned int ssrc;
+    uint32_t ssrc;
   };
 
   struct RtcpPacket {
     uint32_t ntp_secs;
     uint32_t ntp_frac;
     uint32_t timestamp;
-    unsigned int ssrc;
+    uint32_t ssrc;
   };
 
   typedef std::list<RtpPacket*> PacketList;
 
   enum { kSendSideOffsetUs = 1000000 };
 
-  RtpStream(int fps, int bitrate_bps, unsigned int ssrc, unsigned int frequency,
-      uint32_t timestamp_offset, int64_t rtcp_receive_time);
+  RtpStream(int fps,
+            int bitrate_bps,
+            uint32_t ssrc,
+            uint32_t frequency,
+            uint32_t timestamp_offset,
+            int64_t rtcp_receive_time);
   void set_rtp_timestamp_offset(uint32_t offset);
 
   // Generates a new frame for this stream. If called too soon after the
@@ -75,7 +79,7 @@ class RtpStream {
   int64_t GenerateFrame(int64_t time_now_us, PacketList* packets);
 
   // The send-side time when the next frame can be generated.
-  double next_rtp_time() const;
+  int64_t next_rtp_time() const;
 
   // Generates an RTCP packet.
   RtcpPacket* Rtcp(int64_t time_now_us);
@@ -84,18 +88,18 @@ class RtpStream {
 
   int bitrate_bps() const;
 
-  unsigned int ssrc() const;
+  uint32_t ssrc() const;
 
-  static bool Compare(const std::pair<unsigned int, RtpStream*>& left,
-                      const std::pair<unsigned int, RtpStream*>& right);
+  static bool Compare(const std::pair<uint32_t, RtpStream*>& left,
+                      const std::pair<uint32_t, RtpStream*>& right);
 
  private:
   enum { kRtcpIntervalUs = 1000000 };
 
   int fps_;
   int bitrate_bps_;
-  unsigned int ssrc_;
-  unsigned int frequency_;
+  uint32_t ssrc_;
+  uint32_t frequency_;
   int64_t next_rtp_time_;
   int64_t next_rtcp_time_;
   uint32_t rtp_timestamp_offset_;
@@ -108,7 +112,7 @@ class StreamGenerator {
  public:
   typedef std::list<RtpStream::RtcpPacket*> RtcpList;
 
-  StreamGenerator(int capacity, double time_now);
+  StreamGenerator(int capacity, int64_t time_now);
 
   ~StreamGenerator();
 
@@ -123,14 +127,14 @@ class StreamGenerator {
   void SetBitrateBps(int bitrate_bps);
 
   // Set the RTP timestamp offset for the stream identified by |ssrc|.
-  void set_rtp_timestamp_offset(unsigned int ssrc, uint32_t offset);
+  void set_rtp_timestamp_offset(uint32_t ssrc, uint32_t offset);
 
   // TODO(holmer): Break out the channel simulation part from this class to make
   // it possible to simulate different types of channels.
   int64_t GenerateFrame(RtpStream::PacketList* packets, int64_t time_now_us);
 
  private:
-  typedef std::map<unsigned int, RtpStream*> StreamMap;
+  typedef std::map<uint32_t, RtpStream*> StreamMap;
 
   // Capacity of the simulated channel in bits per second.
   int capacity_;
@@ -169,8 +173,7 @@ class RemoteBitrateEstimatorTest : public ::testing::Test {
                       size_t payload_size,
                       int64_t arrival_time,
                       uint32_t rtp_timestamp,
-                      uint32_t absolute_send_time,
-                      bool was_paced);
+                      uint32_t absolute_send_time);
 
   // Generates a frame of packets belonging to a stream at a given bitrate and
   // with a given ssrc. The stream is pushed through a very simple simulated
@@ -178,39 +181,38 @@ class RemoteBitrateEstimatorTest : public ::testing::Test {
   // Returns true if an over-use was seen, false otherwise.
   // The StreamGenerator::updated() should be used to check for any changes in
   // target bitrate after the call to this function.
-  bool GenerateAndProcessFrame(unsigned int ssrc, unsigned int bitrate_bps);
+  bool GenerateAndProcessFrame(uint32_t ssrc, uint32_t bitrate_bps);
 
   // Run the bandwidth estimator with a stream of |number_of_frames| frames, or
   // until it reaches |target_bitrate|.
   // Can for instance be used to run the estimator for some time to get it
   // into a steady state.
-  unsigned int SteadyStateRun(unsigned int ssrc,
-                              int number_of_frames,
-                              unsigned int start_bitrate,
-                              unsigned int min_bitrate,
-                              unsigned int max_bitrate,
-                              unsigned int target_bitrate);
+  uint32_t SteadyStateRun(uint32_t ssrc,
+                          int number_of_frames,
+                          uint32_t start_bitrate,
+                          uint32_t min_bitrate,
+                          uint32_t max_bitrate,
+                          uint32_t target_bitrate);
 
   void TestTimestampGroupingTestHelper();
 
-  void TestGetStatsHelper();
-
   void TestWrappingHelper(int silence_time_s);
 
-  void InitialBehaviorTestHelper(unsigned int expected_converge_bitrate);
-  void RateIncreaseReorderingTestHelper(unsigned int expected_bitrate);
+  void InitialBehaviorTestHelper(uint32_t expected_converge_bitrate);
+  void RateIncreaseReorderingTestHelper(uint32_t expected_bitrate);
   void RateIncreaseRtpTimestampsTestHelper(int expected_iterations);
   void CapacityDropTestHelper(int number_of_streams,
                               bool wrap_time_stamp,
-                              unsigned int expected_bitrate_drop_delta);
+                              uint32_t expected_bitrate_drop_delta,
+                              int64_t receiver_clock_offset_change_ms);
 
-  static const unsigned int kDefaultSsrc;
-  static const int kArrivalTimeClockOffsetMs = 60000;
+  static const uint32_t kDefaultSsrc;
 
   SimulatedClock clock_;  // Time at the receiver.
-  rtc::scoped_ptr<testing::TestBitrateObserver> bitrate_observer_;
-  rtc::scoped_ptr<RemoteBitrateEstimator> bitrate_estimator_;
-  rtc::scoped_ptr<testing::StreamGenerator> stream_generator_;
+  std::unique_ptr<testing::TestBitrateObserver> bitrate_observer_;
+  std::unique_ptr<RemoteBitrateEstimator> bitrate_estimator_;
+  std::unique_ptr<testing::StreamGenerator> stream_generator_;
+  int64_t arrival_time_offset_ms_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(RemoteBitrateEstimatorTest);
 };

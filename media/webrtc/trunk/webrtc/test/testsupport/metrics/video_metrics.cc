@@ -14,9 +14,13 @@
 #include <stdio.h>
 
 #include <algorithm>  // min_element, max_element
+#include <memory>
 
+#include "webrtc/api/video/i420_buffer.h"
+#include "webrtc/api/video/video_frame.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
-#include "webrtc/video_frame.h"
+#include "webrtc/test/frame_utils.h"
+#include "libyuv/convert.h"
 
 namespace webrtc {
 namespace test {
@@ -34,8 +38,8 @@ enum VideoMetricsType { kPSNR, kSSIM, kBoth };
 
 // Calculates metrics for a frame and adds statistics to the result for it.
 void CalculateFrame(VideoMetricsType video_metrics_type,
-                    const VideoFrame* ref,
-                    const VideoFrame* test,
+                    const VideoFrameBuffer& ref,
+                    const VideoFrameBuffer& test,
                     int frame_number,
                     QualityMetricsResult* result) {
   FrameResult frame_result = {0, 0};
@@ -108,44 +112,35 @@ int CalculateMetrics(VideoMetricsType video_metrics_type,
   int frame_number = 0;
 
   // Read reference and test frames.
-  const size_t frame_length = 3 * width * height >> 1;
-  VideoFrame ref_frame;
-  VideoFrame test_frame;
-  rtc::scoped_ptr<uint8_t[]> ref_buffer(new uint8_t[frame_length]);
-  rtc::scoped_ptr<uint8_t[]> test_buffer(new uint8_t[frame_length]);
+  for (;;) {
+    rtc::scoped_refptr<I420Buffer> ref_i420_buffer(
+        test::ReadI420Buffer(width, height, ref_fp));
+    if (!ref_i420_buffer)
+      break;
 
-  // Set decoded image parameters.
-  int half_width = (width + 1) / 2;
-  ref_frame.CreateEmptyFrame(width, height, width, half_width, half_width);
-  test_frame.CreateEmptyFrame(width, height, width, half_width, half_width);
+    rtc::scoped_refptr<I420Buffer> test_i420_buffer(
+        test::ReadI420Buffer(width, height, test_fp));
 
-  size_t ref_bytes = fread(ref_buffer.get(), 1, frame_length, ref_fp);
-  size_t test_bytes = fread(test_buffer.get(), 1, frame_length, test_fp);
-  while (ref_bytes == frame_length && test_bytes == frame_length) {
-    // Converting from buffer to plane representation.
-    ConvertToI420(kI420, ref_buffer.get(), 0, 0, width, height, 0,
-                  kVideoRotation_0, &ref_frame);
-    ConvertToI420(kI420, test_buffer.get(), 0, 0, width, height, 0,
-                  kVideoRotation_0, &test_frame);
+    if (!test_i420_buffer)
+      break;
+
     switch (video_metrics_type) {
       case kPSNR:
-        CalculateFrame(kPSNR, &ref_frame, &test_frame, frame_number,
+        CalculateFrame(kPSNR, *ref_i420_buffer, *test_i420_buffer, frame_number,
                        psnr_result);
         break;
       case kSSIM:
-        CalculateFrame(kSSIM, &ref_frame, &test_frame, frame_number,
+        CalculateFrame(kSSIM, *ref_i420_buffer, *test_i420_buffer, frame_number,
                        ssim_result);
         break;
       case kBoth:
-        CalculateFrame(kPSNR, &ref_frame, &test_frame, frame_number,
+        CalculateFrame(kPSNR, *ref_i420_buffer, *test_i420_buffer, frame_number,
                        psnr_result);
-        CalculateFrame(kSSIM, &ref_frame, &test_frame, frame_number,
+        CalculateFrame(kSSIM, *ref_i420_buffer, *test_i420_buffer, frame_number,
                        ssim_result);
         break;
     }
     frame_number++;
-    ref_bytes = fread(ref_buffer.get(), 1, frame_length, ref_fp);
-    test_bytes = fread(test_buffer.get(), 1, frame_length, test_fp);
   }
   int return_code = 0;
   if (frame_number == 0) {

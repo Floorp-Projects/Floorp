@@ -11,7 +11,8 @@
 #ifndef WEBRTC_MODULES_AUDIO_DEVICE_FINE_AUDIO_BUFFER_H_
 #define WEBRTC_MODULES_AUDIO_DEVICE_FINE_AUDIO_BUFFER_H_
 
-#include "webrtc/base/scoped_ptr.h"
+#include <memory>
+
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -86,14 +87,14 @@ class FineAudioBuffer {
   // Number of audio bytes per 10ms.
   const size_t bytes_per_10_ms_;
   // Storage for output samples that are not yet asked for.
-  rtc::scoped_ptr<int8_t[]> playout_cache_buffer_;
+  std::unique_ptr<int8_t[]> playout_cache_buffer_;
   // Location of first unread output sample.
   size_t playout_cached_buffer_start_;
   // Number of bytes stored in output (contain samples to be played out) cache.
   size_t playout_cached_bytes_;
   // Storage for input samples that are about to be delivered to the WebRTC
   // ADB or remains from the last successful delivery of a 10ms audio buffer.
-  rtc::scoped_ptr<int8_t[]> record_cache_buffer_;
+  std::unique_ptr<int8_t[]> record_cache_buffer_;
   // Required (max) size in bytes of the |record_cache_buffer_|.
   const size_t required_record_buffer_size_bytes_;
   // Number of bytes in input (contains recorded samples) cache.

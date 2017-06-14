@@ -14,10 +14,12 @@
 #define WEBRTC_BASE_SSLIDENTITY_H_
 
 #include <algorithm>
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "webrtc/base/buffer.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/messagedigest.h"
 #include "webrtc/base/timeutils.h"
 
@@ -25,6 +27,18 @@ namespace rtc {
 
 // Forward declaration due to circular dependency with SSLCertificate.
 class SSLCertChain;
+
+struct SSLCertificateStats {
+  SSLCertificateStats(std::string&& fingerprint,
+                      std::string&& fingerprint_algorithm,
+                      std::string&& base64_certificate,
+                      std::unique_ptr<SSLCertificateStats>&& issuer);
+  ~SSLCertificateStats();
+  std::string fingerprint;
+  std::string fingerprint_algorithm;
+  std::string base64_certificate;
+  std::unique_ptr<SSLCertificateStats> issuer;
+};
 
 // Abstract interface overridden by SSL library specific
 // implementations.
@@ -36,7 +50,7 @@ class SSLCertChain;
 // possibly caching of intermediate results.)
 class SSLCertificate {
  public:
-  // Parses and build a certificate from a PEM encoded string.
+  // Parses and builds a certificate from a PEM encoded string.
   // Returns NULL on failure.
   // The length of the string representation of the certificate is
   // stored in *pem_length if it is non-NULL, and only if
@@ -50,9 +64,9 @@ class SSLCertificate {
   // Caller is responsible for freeing the returned object.
   virtual SSLCertificate* GetReference() const = 0;
 
-  // Provides the cert chain, or returns false.  The caller owns the chain.
-  // The chain includes a copy of each certificate, excluding the leaf.
-  virtual bool GetChain(SSLCertChain** chain) const = 0;
+  // Provides the cert chain, or null. The chain includes a copy of each
+  // certificate, excluding the leaf.
+  virtual std::unique_ptr<SSLCertChain> GetChain() const = 0;
 
   // Returns a PEM encoded string representation of the certificate.
   virtual std::string ToPEMString() const = 0;
@@ -73,6 +87,15 @@ class SSLCertificate {
   // Returns the time in seconds relative to epoch, 1970-01-01T00:00:00Z (UTC),
   // or -1 if an expiration time could not be retrieved.
   virtual int64_t CertificateExpirationTime() const = 0;
+
+  // Gets information (fingerprint, etc.) about this certificate and its chain
+  // (if it has a certificate chain). This is used for certificate stats, see
+  // https://w3c.github.io/webrtc-stats/#certificatestats-dict*.
+  std::unique_ptr<SSLCertificateStats> GetStats() const;
+
+ private:
+  std::unique_ptr<SSLCertificateStats> GetStats(
+    std::unique_ptr<SSLCertificateStats> issuer) const;
 };
 
 // SSLCertChain is a simple wrapper for a vector of SSLCertificates. It serves
@@ -112,18 +135,22 @@ class SSLCertChain {
   RTC_DISALLOW_COPY_AND_ASSIGN(SSLCertChain);
 };
 
-// KT_DEFAULT is currently an alias for KT_RSA.  This is likely to change.
 // KT_LAST is intended for vector declarations and loops over all key types;
 // it does not represent any key type in itself.
-// TODO(hbos,torbjorng): Don't change KT_DEFAULT without first updating
-// PeerConnectionFactory_nativeCreatePeerConnection's certificate generation
-// code.
-enum KeyType { KT_RSA, KT_ECDSA, KT_LAST, KT_DEFAULT = KT_RSA };
+// KT_DEFAULT is used as the default KeyType for KeyParams.
+enum KeyType { KT_RSA, KT_ECDSA, KT_LAST, KT_DEFAULT = KT_ECDSA };
 
 static const int kRsaDefaultModSize = 1024;
 static const int kRsaDefaultExponent = 0x10001;  // = 2^16+1 = 65537
 static const int kRsaMinModSize = 1024;
 static const int kRsaMaxModSize = 8192;
+
+// Certificate default validity lifetime.
+static const int kDefaultCertificateLifetimeInSeconds =
+    60 * 60 * 24 * 30;  // 30 days
+// Certificate validity window.
+// This is to compensate for slightly incorrect system clocks.
+static const int kCertificateWindowInSeconds = -60 * 60 * 24;
 
 struct RSAParams {
   unsigned int mod_size;
@@ -184,18 +211,24 @@ struct SSLIdentityParams {
 class SSLIdentity {
  public:
   // Generates an identity (keypair and self-signed certificate). If
-  // common_name is non-empty, it will be used for the certificate's
-  // subject and issuer name, otherwise a random string will be used.
+  // |common_name| is non-empty, it will be used for the certificate's subject
+  // and issuer name, otherwise a random string will be used. The key type and
+  // parameters are defined in |key_param|. The certificate's lifetime in
+  // seconds from the current time is defined in |certificate_lifetime|; it
+  // should be a non-negative number.
   // Returns NULL on failure.
   // Caller is responsible for freeing the returned object.
+  static SSLIdentity* GenerateWithExpiration(const std::string& common_name,
+                                             const KeyParams& key_param,
+                                             time_t certificate_lifetime);
   static SSLIdentity* Generate(const std::string& common_name,
                                const KeyParams& key_param);
   static SSLIdentity* Generate(const std::string& common_name,
-                               KeyType key_type) {
-    return Generate(common_name, KeyParams(key_type));
-  }
+                               KeyType key_type);
 
   // Generates an identity with the specified validity period.
+  // TODO(torbjorng): Now that Generate() accepts relevant params, make tests
+  // use that instead of this function.
   static SSLIdentity* GenerateForTest(const SSLIdentityParams& params);
 
   // Construct an identity from a private key and a certificate.
@@ -212,6 +245,8 @@ class SSLIdentity {
 
   // Returns a temporary reference to the certificate.
   virtual const SSLCertificate& certificate() const = 0;
+  virtual std::string PrivateKeyToPEMString() const = 0;
+  virtual std::string PublicKeyToPEMString() const = 0;
 
   // Helpers for parsing converting between PEM and DER format.
   static bool PemToDer(const std::string& pem_type,
@@ -221,6 +256,9 @@ class SSLIdentity {
                               const unsigned char* data,
                               size_t length);
 };
+
+bool operator==(const SSLIdentity& a, const SSLIdentity& b);
+bool operator!=(const SSLIdentity& a, const SSLIdentity& b);
 
 // Convert from ASN1 time as restricted by RFC 5280 to seconds from 1970-01-01
 // 00.00 ("epoch").  If the ASN1 time cannot be read, return -1.  The data at

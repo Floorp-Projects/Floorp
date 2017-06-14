@@ -9,10 +9,9 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_SCREENSHARE_LAYERS_H_
 #define WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_SCREENSHARE_LAYERS_H_
 
-#include <list>
+#include <vector>
 
-#include "vpx/vpx_encoder.h"
-
+#include "webrtc/base/rate_statistics.h"
 #include "webrtc/base/timeutils.h"
 #include "webrtc/modules/video_coding/codecs/vp8/temporal_layers.h"
 #include "webrtc/modules/video_coding/utility/frame_dropper.h"
@@ -21,6 +20,7 @@
 namespace webrtc {
 
 struct CodecSpecificInfoVP8;
+class Clock;
 
 class ScreenshareLayers : public TemporalLayers {
  public:
@@ -29,18 +29,26 @@ class ScreenshareLayers : public TemporalLayers {
   static const int kTl0Flags;
   static const int kTl1Flags;
   static const int kTl1SyncFlags;
+  static const int kMaxFrameIntervalMs;
 
-  ScreenshareLayers(int num_temporal_layers, uint8_t initial_tl0_pic_idx);
-  virtual ~ScreenshareLayers() {}
+  ScreenshareLayers(int num_temporal_layers,
+                    uint8_t initial_tl0_pic_idx,
+                    Clock* clock);
+  virtual ~ScreenshareLayers();
 
   // Returns the recommended VP8 encode flags needed. May refresh the decoder
   // and/or update the reference buffers.
   int EncodeFlags(uint32_t timestamp) override;
 
-  bool ConfigureBitrates(int bitrate_kbps,
-                         int max_bitrate_kbps,
-                         int framerate,
-                         vpx_codec_enc_cfg_t* cfg) override;
+  // Update state based on new bitrate target and incoming framerate.
+  // Returns the bitrate allocation for the active temporal layers.
+  std::vector<uint32_t> OnRatesUpdated(int bitrate_kbps,
+                                       int max_bitrate_kbps,
+                                       int framerate) override;
+
+  // Update the encoder configuration with target bitrates or other parameters.
+  // Returns true iff the configuration was actually modified.
+  bool UpdateConfiguration(vpx_codec_enc_cfg_t* cfg) override;
 
   void PopulateCodecSpecific(bool base_layer_sync,
                              CodecSpecificInfoVP8* vp8_info,
@@ -50,13 +58,11 @@ class ScreenshareLayers : public TemporalLayers {
 
   int CurrentLayerId() const override;
 
-  // Allows the layers adapter to update the encoder configuration prior to a
-  // frame being encoded. Return true if the configuration should be updated
-  // and false if now change is needed.
-  bool UpdateConfiguration(vpx_codec_enc_cfg_t* cfg) override;
-
  private:
   bool TimeToSync(int64_t timestamp) const;
+  uint32_t GetCodecTargetBitrateKbps() const;
+
+  Clock* const clock_;
 
   int number_of_temporal_layers_;
   bool last_base_layer_sync_;
@@ -64,13 +70,21 @@ class ScreenshareLayers : public TemporalLayers {
   int active_layer_;
   int64_t last_timestamp_;
   int64_t last_sync_timestamp_;
+  int64_t last_emitted_tl0_timestamp_;
   rtc::TimestampWrapAroundHandler time_wrap_handler_;
   int min_qp_;
   int max_qp_;
   uint32_t max_debt_bytes_;
-  int frame_rate_;
 
-  static const int kMaxNumTemporalLayers = 2;
+  // Configured max framerate.
+  rtc::Optional<uint32_t> target_framerate_;
+  // Incoming framerate from capturer.
+  rtc::Optional<uint32_t> capture_framerate_;
+  // Tracks what framerate we actually encode, and drops frames on overshoot.
+  RateStatistics encode_framerate_;
+  bool bitrate_updated_;
+
+  static constexpr int kMaxNumTemporalLayers = 2;
   struct TemporalLayer {
     TemporalLayer()
         : state(State::kNormal),
@@ -93,6 +107,20 @@ class ScreenshareLayers : public TemporalLayers {
 
     void UpdateDebt(int64_t delta_ms);
   } layers_[kMaxNumTemporalLayers];
+
+  void UpdateHistograms();
+  // Data for histogram statistics.
+  struct Stats {
+    int64_t first_frame_time_ms_ = -1;
+    int64_t num_tl0_frames_ = 0;
+    int64_t num_tl1_frames_ = 0;
+    int64_t num_dropped_frames_ = 0;
+    int64_t num_overshoots_ = 0;
+    int64_t tl0_qp_sum_ = 0;
+    int64_t tl1_qp_sum_ = 0;
+    int64_t tl0_target_bitrate_sum_ = 0;
+    int64_t tl1_target_bitrate_sum_ = 0;
+  } stats_;
 };
 }  // namespace webrtc
 

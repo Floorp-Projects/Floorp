@@ -317,7 +317,7 @@ protected:
 
     LOG("[%p] ticking drivers...", this);
     // RD is short for RefreshDriver
-    GeckoProfilerTracingRAII tracer("Paint", "RefreshDriverTick");
+    AutoProfilerTracing tracing("Paint", "RefreshDriverTick");
 
     TickRefreshDrivers(jsnow, now, mContentRefreshDrivers);
     TickRefreshDrivers(jsnow, now, mRootRefreshDrivers);
@@ -1676,7 +1676,7 @@ nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime)
   mFrameRequestCallbackDocs.Clear();
 
   if (!frameRequestCallbacks.IsEmpty()) {
-    GeckoProfilerTracingRAII tracer("Paint", "Scripts");
+    AutoProfilerTracing tracing("Paint", "Scripts");
     for (const DocumentFrameCallbacks& docCallbacks : frameRequestCallbacks) {
       // XXXbz Bug 863140: GetInnerWindow can return the outer
       // window in some cases.
@@ -1844,7 +1844,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
       RunFrameRequestCallbacks(aNowTime);
 
       if (mPresContext && mPresContext->GetPresShell()) {
-        Maybe<GeckoProfilerTracingRAII> tracingStyleFlush;
+        Maybe<AutoProfilerTracing> tracingStyleFlush;
         AutoTArray<nsIPresShell*, 16> observers;
         observers.AppendElements(mStyleFlushObservers);
         for (uint32_t j = observers.Length();
@@ -1875,7 +1875,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
       }
     } else if  (i == 1) {
       // This is the FlushType::Layout case.
-      Maybe<GeckoProfilerTracingRAII> tracingLayoutFlush;
+      Maybe<AutoProfilerTracing> tracingLayoutFlush;
       AutoTArray<nsIPresShell*, 16> observers;
       observers.AppendElements(mLayoutFlushObservers);
       for (uint32_t j = observers.Length();
@@ -2130,7 +2130,7 @@ nsRefreshDriver::FinishedWaitingForTransaction()
   if (mSkippedPaints &&
       !IsInRefresh() &&
       (ObserverCount() || ImageRequestCount())) {
-    GeckoProfilerTracingRAII tracer("Paint", "RefreshDriverTick");
+    AutoProfilerTracing tracing("Paint", "RefreshDriverTick");
     DoRefresh();
   }
   mSkippedPaints = false;

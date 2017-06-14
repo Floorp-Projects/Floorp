@@ -25,6 +25,10 @@
 #include "mozilla/BinarySearch.h"
 #include "nsComputedDOMStyle.h"
 
+namespace mozilla {
+class Encoding;
+}
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -136,10 +140,13 @@ nsPlainTextSerializer::~nsPlainTextSerializer()
   NS_WARNING_ASSERTION(mHeadLevel == 0, "Wrong head level!");
 }
 
-NS_IMETHODIMP 
-nsPlainTextSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
-                            const char* aCharSet, bool aIsCopying,
-                            bool aIsWholeDocument)
+NS_IMETHODIMP
+nsPlainTextSerializer::Init(uint32_t aFlags,
+                            uint32_t aWrapColumn,
+                            const Encoding* aEncoding,
+                            bool aIsCopying,
+                            bool aIsWholeDocument,
+                            bool* aNeedsPreformatScanning)
 {
 #ifdef DEBUG
   // Check if the major control flags are set correctly.
@@ -155,6 +162,7 @@ nsPlainTextSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
   }
 #endif
 
+  *aNeedsPreformatScanning = true;
   mFlags = aFlags;
   mWrapColumn = aWrapColumn;
 
@@ -371,6 +379,20 @@ nsPlainTextSerializer::AppendCDATASection(nsIContent* aCDATASection,
 }
 
 NS_IMETHODIMP
+nsPlainTextSerializer::ScanElementForPreformat(Element* aElement)
+{
+  mPreformatStack.push(IsElementPreformatted(aElement));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPlainTextSerializer::ForgetElementForPreformat(Element* aElement)
+{
+  mPreformatStack.pop();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPlainTextSerializer::AppendElementStart(Element* aElement,
                                           Element* aOriginalElement,
                                           nsAString& aStr)
@@ -388,7 +410,6 @@ nsPlainTextSerializer::AppendElementStart(Element* aElement,
 
   if (isContainer) {
     rv = DoOpenContainer(id);
-    mPreformatStack.push(IsElementPreformatted(mElement));
   }
   else {
     rv = DoAddLeaf(id);
@@ -422,7 +443,6 @@ nsPlainTextSerializer::AppendElementEnd(Element* aElement,
   rv = NS_OK;
   if (isContainer) {
     rv = DoCloseContainer(id);
-    mPreformatStack.pop();
   }
 
   mElement = nullptr;

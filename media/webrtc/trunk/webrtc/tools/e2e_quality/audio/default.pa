@@ -1,6 +1,0 @@
-# Place in ~/.pulse/ to add null sinks for the audio end-to-end quality test.
-
-.include /etc/pulse/default.pa
-
-load-module module-null-sink sink_name=render sink_properties=device.description=render format=s16 rate=48000 channels=1
-load-module module-null-sink sink_name=capture sink_properties=device.description=capture format=s16 rate=48000 channels=1

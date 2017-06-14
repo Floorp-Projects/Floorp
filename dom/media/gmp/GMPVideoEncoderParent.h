@@ -64,7 +64,7 @@ public:
   }
 
 private:
-  virtual ~GMPVideoEncoderParent();
+  virtual ~GMPVideoEncoderParent() {};
 
   // PGMPVideoEncoderParent
   void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -83,7 +83,6 @@ private:
   RefPtr<GMPContentParent> mPlugin;
   GMPVideoEncoderCallbackProxy* mCallback;
   GMPVideoHostImpl mVideoHost;
-  nsCOMPtr<nsIThread> mEncodedThread;
   const uint32_t mPluginId;
 };
 

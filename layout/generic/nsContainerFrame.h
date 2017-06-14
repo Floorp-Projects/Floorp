@@ -184,7 +184,7 @@ public:
   static void SyncWindowProperties(nsPresContext*       aPresContext,
                                    nsIFrame*            aFrame,
                                    nsView*              aView,
-                                   nsRenderingContext*  aRC,
+                                   gfxContext*          aRC,
                                    uint32_t             aFlags);
 
   /**
@@ -202,7 +202,7 @@ public:
                                  const nsSize& aMaxSize);
 
   // Used by both nsInlineFrame and nsFirstLetterFrame.
-  void DoInlineIntrinsicISize(nsRenderingContext *aRenderingContext,
+  void DoInlineIntrinsicISize(gfxContext *aRenderingContext,
                               InlineIntrinsicISizeData *aData,
                               nsLayoutUtils::IntrinsicISizeType aType);
 
@@ -211,7 +211,7 @@ public:
    * classes derived from nsContainerFrame want.
    */
   virtual mozilla::LogicalSize
-  ComputeAutoSize(nsRenderingContext*         aRenderingContext,
+  ComputeAutoSize(gfxContext*                 aRenderingContext,
                   mozilla::WritingMode        aWM,
                   const mozilla::LogicalSize& aCBSize,
                   nscoord                     aAvailableISize,

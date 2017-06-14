@@ -38,7 +38,6 @@
 #include "nsAHtml5TreeBuilderState.h"
 #include "nsGkAtoms.h"
 #include "nsHtml5ByteReadable.h"
-#include "nsIUnicodeDecoder.h"
 #include "nsHtml5Macros.h"
 #include "nsIContentHandle.h"
 #include "nsHtml5Portability.h"

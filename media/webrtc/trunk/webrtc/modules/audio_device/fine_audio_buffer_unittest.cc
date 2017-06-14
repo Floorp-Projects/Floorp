@@ -13,10 +13,9 @@
 #include <limits.h>
 #include <memory>
 
-#include "testing/gmock/include/gmock/gmock.h"
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_device/mock_audio_device_buffer.h"
+#include "webrtc/test/gmock.h"
+#include "webrtc/test/gtest.h"
 
 using ::testing::_;
 using ::testing::AtLeast;
@@ -118,9 +117,9 @@ void RunFineBufferTest(int sample_rate, int frame_size_in_samples) {
   FineAudioBuffer fine_buffer(&audio_device_buffer, kFrameSizeBytes,
                               sample_rate);
 
-  rtc::scoped_ptr<int8_t[]> out_buffer;
+  std::unique_ptr<int8_t[]> out_buffer;
   out_buffer.reset(new int8_t[fine_buffer.RequiredPlayoutBufferSizeBytes()]);
-  rtc::scoped_ptr<int8_t[]> in_buffer;
+  std::unique_ptr<int8_t[]> in_buffer;
   in_buffer.reset(new int8_t[kFrameSizeBytes]);
   for (int i = 0; i < kNumberOfFrames; ++i) {
     fine_buffer.GetPlayoutData(out_buffer.get());

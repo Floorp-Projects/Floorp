@@ -9,7 +9,7 @@
  */
 #include "webrtc/modules/rtp_rtcp/source/time_util.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 
@@ -21,21 +21,21 @@ TEST(TimeUtilTest, CompactNtp) {
   EXPECT_EQ(kNtpMid, CompactNtp(kNtp));
 }
 
-TEST(TimeUtilTest, CompactNtpToMs) {
+TEST(TimeUtilTest, CompactNtpRttToMs) {
   const NtpTime ntp1(0x12345, 0x23456);
   const NtpTime ntp2(0x12654, 0x64335);
-  uint32_t ms_diff = ntp2.ToMs() - ntp1.ToMs();
+  int64_t ms_diff = ntp2.ToMs() - ntp1.ToMs();
   uint32_t ntp_diff = CompactNtp(ntp2) - CompactNtp(ntp1);
 
-  uint32_t ntp_to_ms_diff = CompactNtpIntervalToMs(ntp_diff);
+  int64_t ntp_to_ms_diff = CompactNtpRttToMs(ntp_diff);
 
   EXPECT_NEAR(ms_diff, ntp_to_ms_diff, 1);
 }
 
-TEST(TimeUtilTest, CompactNtpToMsWithWrap) {
+TEST(TimeUtilTest, CompactNtpRttToMsWithWrap) {
   const NtpTime ntp1(0x1ffff, 0x23456);
   const NtpTime ntp2(0x20000, 0x64335);
-  uint32_t ms_diff = ntp2.ToMs() - ntp1.ToMs();
+  int64_t ms_diff = ntp2.ToMs() - ntp1.ToMs();
 
   // While ntp2 > ntp1, there compact ntp presentation happen to be opposite.
   // That shouldn't be a problem as long as unsigned arithmetic is used.
@@ -43,20 +43,31 @@ TEST(TimeUtilTest, CompactNtpToMsWithWrap) {
   ASSERT_LT(CompactNtp(ntp2), CompactNtp(ntp1));
 
   uint32_t ntp_diff = CompactNtp(ntp2) - CompactNtp(ntp1);
-  uint32_t ntp_to_ms_diff = CompactNtpIntervalToMs(ntp_diff);
+  int64_t ntp_to_ms_diff = CompactNtpRttToMs(ntp_diff);
 
   EXPECT_NEAR(ms_diff, ntp_to_ms_diff, 1);
 }
 
-TEST(TimeUtilTest, CompactNtpToMsLarge) {
-  const NtpTime ntp1(0x10000, 0x23456);
-  const NtpTime ntp2(0x1ffff, 0x64335);
-  uint32_t ms_diff = ntp2.ToMs() - ntp1.ToMs();
-  // Ntp difference close to maximum of ~18 hours should convert correctly too.
-  ASSERT_GT(ms_diff, 18u * 3600 * 1000);
+TEST(TimeUtilTest, CompactNtpRttToMsLarge) {
+  const NtpTime ntp1(0x10000, 0x00006);
+  const NtpTime ntp2(0x17fff, 0xffff5);
+  int64_t ms_diff = ntp2.ToMs() - ntp1.ToMs();
+  // Ntp difference close to 2^15 seconds should convert correctly too.
+  ASSERT_NEAR(ms_diff, ((1 << 15) - 1) * 1000, 1);
   uint32_t ntp_diff = CompactNtp(ntp2) - CompactNtp(ntp1);
-  uint32_t ntp_to_ms_diff = CompactNtpIntervalToMs(ntp_diff);
+  int64_t ntp_to_ms_diff = CompactNtpRttToMs(ntp_diff);
 
   EXPECT_NEAR(ms_diff, ntp_to_ms_diff, 1);
+}
+
+TEST(TimeUtilTest, CompactNtpRttToMsNegative) {
+  const NtpTime ntp1(0x20000, 0x23456);
+  const NtpTime ntp2(0x1ffff, 0x64335);
+  int64_t ms_diff = ntp2.ToMs() - ntp1.ToMs();
+  ASSERT_GT(0, ms_diff);
+  // Ntp difference close to 2^16 seconds should be treated as negative.
+  uint32_t ntp_diff = CompactNtp(ntp2) - CompactNtp(ntp1);
+  int64_t ntp_to_ms_diff = CompactNtpRttToMs(ntp_diff);
+  EXPECT_EQ(1, ntp_to_ms_diff);
 }
 }  // namespace webrtc

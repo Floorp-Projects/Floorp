@@ -36,7 +36,7 @@ class Rrtr {
   // Consumes Rrtr::kLength bytes.
   void Create(uint8_t* buffer) const;
 
-  void WithNtp(const NtpTime& ntp) { ntp_ = ntp; }
+  void SetNtp(NtpTime ntp) { ntp_ = ntp; }
 
   NtpTime ntp() const { return ntp_; }
 

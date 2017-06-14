@@ -172,7 +172,7 @@ ssl3_ClientExtensionAdvertised(const sslSocket *ss, PRUint16 ex_type)
  * buffer so they can only be used during ClientHello processing.
  */
 SECStatus
-ssl3_ParseExtensions(sslSocket *ss, SSL3Opaque **b, PRUint32 *length)
+ssl3_ParseExtensions(sslSocket *ss, PRUint8 **b, PRUint32 *length)
 {
     /* Clean out the extensions list. */
     ssl3_DestroyRemoteExtensions(&ss->ssl3.hs.remoteExtensions);
@@ -360,7 +360,7 @@ ssl3_HandleParsedExtensions(sslSocket *ss,
  * ssl3_HandleParsedExtensions. */
 SECStatus
 ssl3_HandleExtensions(sslSocket *ss,
-                      SSL3Opaque **b, PRUint32 *length,
+                      PRUint8 **b, PRUint32 *length,
                       SSL3HandshakeType handshakeMessage)
 {
     SECStatus rv;
@@ -500,7 +500,7 @@ ssl3_ExtAppendHandshakeNumber(const sslSocket *ss, PRInt32 num,
 
 SECStatus
 ssl3_ExtAppendHandshakeVariable(const sslSocket *ss,
-                                const SSL3Opaque *src, PRInt32 bytes,
+                                const PRUint8 *src, PRInt32 bytes,
                                 PRInt32 lenSize)
 {
     return ssl3_AppendHandshakeVariable((sslSocket *)ss, src, bytes, lenSize);
@@ -521,21 +521,21 @@ ssl3_ExtDecodeError(const sslSocket *ss)
 
 SECStatus
 ssl3_ExtConsumeHandshake(const sslSocket *ss, void *v, PRUint32 bytes,
-                         SSL3Opaque **b, PRUint32 *length)
+                         PRUint8 **b, PRUint32 *length)
 {
     return ssl3_ConsumeHandshake((sslSocket *)ss, v, bytes, b, length);
 }
 
 SECStatus
 ssl3_ExtConsumeHandshakeNumber(const sslSocket *ss, PRUint32 *num,
-                               PRUint32 bytes, SSL3Opaque **b, PRUint32 *length)
+                               PRUint32 bytes, PRUint8 **b, PRUint32 *length)
 {
     return ssl3_ConsumeHandshakeNumber((sslSocket *)ss, num, bytes, b, length);
 }
 
 SECStatus
 ssl3_ExtConsumeHandshakeVariable(const sslSocket *ss, SECItem *i,
-                                 PRUint32 bytes, SSL3Opaque **b,
+                                 PRUint32 bytes, PRUint8 **b,
                                  PRUint32 *length)
 {
     return ssl3_ConsumeHandshakeVariable((sslSocket *)ss, i, bytes, b, length);

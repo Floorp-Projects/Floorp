@@ -8,26 +8,26 @@
  *  be found in the AUTHORS file in the root of the source tree.
  *
  */
-
 #ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_SLI_H_
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_SLI_H_
 
 #include <vector>
 
 #include "webrtc/base/basictypes.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/psfb.h"
-#include "webrtc/modules/rtp_rtcp/source/rtcp_utility.h"
 
 namespace webrtc {
 namespace rtcp {
+class CommonHeader;
 
 // Slice loss indication (SLI) (RFC 4585).
 class Sli : public Psfb {
  public:
-  static const uint8_t kFeedbackMessageType = 2;
+  static constexpr uint8_t kFeedbackMessageType = 2;
   class Macroblocks {
    public:
-    static const size_t kLength = 4;
+    static constexpr size_t kLength = 4;
     Macroblocks() : item_(0) {}
     Macroblocks(uint8_t picture_id, uint16_t first, uint16_t number);
     ~Macroblocks() {}
@@ -44,17 +44,18 @@ class Sli : public Psfb {
   };
 
   Sli() {}
-  virtual ~Sli() {}
+  ~Sli() override {}
 
   // Parse assumes header is already parsed and validated.
-  bool Parse(const RTCPUtility::RtcpCommonHeader& header,
-             const uint8_t* payload);  // Size of the payload is in the header.
+  bool Parse(const CommonHeader& packet);
 
-  void WithPictureId(uint8_t picture_id,
-                     uint16_t first_macroblock = 0,
-                     uint16_t number_macroblocks = 0x1fff) {
-    items_.push_back(
-        Macroblocks(picture_id, first_macroblock, number_macroblocks));
+  void AddPictureId(uint8_t picture_id) {
+    items_.emplace_back(picture_id, 0, 0x1fff);
+  }
+  void AddPictureId(uint8_t picture_id,
+                    uint16_t first_macroblock,
+                    uint16_t number_macroblocks) {
+    items_.emplace_back(picture_id, first_macroblock, number_macroblocks);
   }
 
   const std::vector<Macroblocks>& macroblocks() const { return items_; }

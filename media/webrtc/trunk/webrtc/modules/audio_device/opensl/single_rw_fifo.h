@@ -11,7 +11,6 @@
 #ifndef WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_SINGLE_RW_FIFO_H_
 #define WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_SINGLE_RW_FIFO_H_
 
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/system_wrappers/include/atomic32.h"
 #include "webrtc/typedefs.h"
 
@@ -35,7 +34,7 @@ class SingleRwFifo {
   int capacity() const { return capacity_; }
 
  private:
-  rtc::scoped_ptr<int8_t* []> queue_;
+  std::unique_ptr<int8_t* []> queue_;
   int capacity_;
 
   Atomic32 size_;

@@ -718,7 +718,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
     if (wyciwygChannel) {
       // We know for sure that the parser needs to be using UTF16.
-      parserCharset = "UTF-16";
+      parserCharset = "UTF-16LE";
       parserCharsetSource = charsetSource < kCharsetFromChannel ?
         kCharsetFromChannel : charsetSource;
 

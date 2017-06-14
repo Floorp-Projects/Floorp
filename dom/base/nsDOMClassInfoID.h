@@ -19,21 +19,6 @@ enum nsDOMClassInfoID
   eDOMClassInfo_DOMPrototype_id,
   eDOMClassInfo_DOMConstructor_id,
 
-  // XUL classes
-#ifdef MOZ_XUL
-  eDOMClassInfo_XULCommandDispatcher_id,
-#endif
-  eDOMClassInfo_XULControllers_id,
-#ifdef MOZ_XUL
-  eDOMClassInfo_TreeSelection_id,
-  eDOMClassInfo_TreeContentView_id,
-#endif
-
-#ifdef MOZ_XUL
-  eDOMClassInfo_XULTemplateBuilder_id,
-  eDOMClassInfo_XULTreeBuilder_id,
-#endif
-
   eDOMClassInfo_ContentFrameMessageManager_id,
   eDOMClassInfo_ContentProcessMessageManager_id,
   eDOMClassInfo_ChromeMessageBroadcaster_id,

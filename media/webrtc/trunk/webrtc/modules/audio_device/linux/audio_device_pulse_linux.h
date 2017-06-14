@@ -11,6 +11,8 @@
 #ifndef WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_PULSE_LINUX_H
 #define WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_PULSE_LINUX_H
 
+#include <memory>
+
 #include "webrtc/base/platform_thread.h"
 #include "webrtc/base/thread_checker.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
@@ -103,7 +105,7 @@ public:
         AudioDeviceModule::AudioLayer& audioLayer) const override;
 
     // Main initializaton and termination
-    int32_t Init() override;
+    InitStatus Init() override;
     int32_t Terminate() override;
     bool Initialized() const override;
 
@@ -286,9 +288,9 @@ private:
     EventWrapper& _recStartEvent;
     EventWrapper& _playStartEvent;
 
-    // TODO(pbos): Remove scoped_ptr and use directly without resetting.
-    rtc::scoped_ptr<rtc::PlatformThread> _ptrThreadPlay;
-    rtc::scoped_ptr<rtc::PlatformThread> _ptrThreadRec;
+    // TODO(pbos): Remove unique_ptr and use directly without resetting.
+    std::unique_ptr<rtc::PlatformThread> _ptrThreadPlay;
+    std::unique_ptr<rtc::PlatformThread> _ptrThreadRec;
     int32_t _id;
 
     AudioMixerManagerLinuxPulse _mixerManager;

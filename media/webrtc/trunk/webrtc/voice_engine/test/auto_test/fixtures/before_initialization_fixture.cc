@@ -19,7 +19,6 @@ BeforeInitializationFixture::BeforeInitializationFixture()
   voe_base_ = webrtc::VoEBase::GetInterface(voice_engine_);
   voe_codec_ = webrtc::VoECodec::GetInterface(voice_engine_);
   voe_volume_control_ = webrtc::VoEVolumeControl::GetInterface(voice_engine_);
-  voe_dtmf_ = webrtc::VoEDtmf::GetInterface(voice_engine_);
   voe_rtp_rtcp_ = webrtc::VoERTP_RTCP::GetInterface(voice_engine_);
   voe_apm_ = webrtc::VoEAudioProcessing::GetInterface(voice_engine_);
   voe_network_ = webrtc::VoENetwork::GetInterface(voice_engine_);
@@ -34,7 +33,6 @@ BeforeInitializationFixture::~BeforeInitializationFixture() {
   voe_base_->Release();
   voe_codec_->Release();
   voe_volume_control_->Release();
-  voe_dtmf_->Release();
   voe_rtp_rtcp_->Release();
   voe_apm_->Release();
   voe_network_->Release();

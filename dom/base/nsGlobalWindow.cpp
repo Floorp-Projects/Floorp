@@ -3546,7 +3546,7 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
 
   bool docShellActive;
   mDocShell->GetIsActive(&docShellActive);
-  mIsBackground = !docShellActive;
+  SetIsBackgroundInternal(!docShellActive);
 }
 
 void
@@ -5127,9 +5127,10 @@ nsGlobalWindow::MayResolve(jsid aId)
     return true;
   }
 
-  if (aId == XPCJSRuntime::Get()->GetStringID(XPCJSContext::IDX_CONTROLLERS)) {
-    // We only resolve .controllers in release builds and on non-chrome windows,
-    // but let's not worry about any of that stuff.
+  if (aId == XPCJSRuntime::Get()->GetStringID(XPCJSContext::IDX_CONTROLLERS) ||
+      aId == XPCJSRuntime::Get()->GetStringID(XPCJSContext::IDX_CONTROLLERS_CLASS)) {
+    // We only resolve .controllers/.Controllers in release builds and on non-chrome
+    // windows, but let's not worry about any of that stuff.
     return true;
   }
 
@@ -10671,7 +10672,7 @@ void nsGlobalWindow::SetIsBackground(bool aIsBackground)
   MOZ_ASSERT(IsOuterWindow());
 
   bool resetTimers = (!aIsBackground && AsOuter()->IsBackground());
-  nsPIDOMWindow::SetIsBackground(aIsBackground);
+  SetIsBackgroundInternal(aIsBackground);
 
   nsGlobalWindow* inner = GetCurrentInnerWindowInternal();
 
@@ -10689,6 +10690,15 @@ void nsGlobalWindow::SetIsBackground(bool aIsBackground)
     }
     inner->SyncGamepadState();
   }
+}
+
+void
+nsGlobalWindow::SetIsBackgroundInternal(bool aIsBackground)
+{
+  if (mIsBackground != aIsBackground) {
+    TabGroup()->WindowChangedBackgroundStatus(aIsBackground);
+  }
+  mIsBackground = aIsBackground;
 }
 
 void nsGlobalWindow::MaybeUpdateTouchState()

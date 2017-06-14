@@ -110,8 +110,6 @@ MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs &aPrefs)
     mVoiceEngine(nullptr),
     mAudioInput(nullptr),
     mFullDuplex(aPrefs.mFullDuplex),
-    mExtendedFilter(aPrefs.mExtendedFilter),
-    mDelayAgnostic(aPrefs.mDelayAgnostic),
     mHasTabVideoSource(false)
 {
   nsCOMPtr<nsIComponentRegistrar> compMgr;
@@ -297,10 +295,7 @@ MediaEngineWebRTC::EnumerateAudioDevices(dom::MediaSourceEnum aMediaSource,
 #endif
 
   if (!mVoiceEngine) {
-    mConfig.Set<webrtc::ExtendedFilter>(new webrtc::ExtendedFilter(mExtendedFilter));
-    mConfig.Set<webrtc::DelayAgnostic>(new webrtc::DelayAgnostic(mDelayAgnostic));
-
-    mVoiceEngine = webrtc::VoiceEngine::Create(mConfig);
+    mVoiceEngine = webrtc::VoiceEngine::Create(/*mConfig*/);
     if (!mVoiceEngine) {
       return;
     }

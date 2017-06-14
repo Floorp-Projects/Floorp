@@ -14,8 +14,8 @@
 
 #include <math.h>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/modules/audio_coding/neteq/audio_multi_vector.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 
@@ -70,7 +70,7 @@ class DtmfToneGeneratorTest : public ::testing::Test {
       ASSERT_EQ(0, tone_gen_.Init(fs_hz, event, 0));  // 0 attenuation.
       EXPECT_EQ(kNumSamples, tone_gen_.Generate(kNumSamples, &ref_signal));
       // Test every 5 steps (to save time).
-      for (int attenuation = 1; attenuation <= 36; attenuation += 5) {
+      for (int attenuation = 1; attenuation <= 63; attenuation += 5) {
         std::ostringstream ss;
         ss << "Checking event " << event << " at sample rate " << fs_hz;
         ss << "; attenuation " << attenuation;
@@ -164,8 +164,8 @@ TEST(DtmfToneGenerator, TestErrors) {
             tone_gen.Init(fs, 16, attenuation));
   // Initialize with invalid attenuation -1.
   EXPECT_EQ(DtmfToneGenerator::kParameterError, tone_gen.Init(fs, event, -1));
-  // Initialize with invalid attenuation 37.
-  EXPECT_EQ(DtmfToneGenerator::kParameterError, tone_gen.Init(fs, event, 37));
+  // Initialize with invalid attenuation 64.
+  EXPECT_EQ(DtmfToneGenerator::kParameterError, tone_gen.Init(fs, event, 64));
   EXPECT_FALSE(tone_gen.initialized());  // Should still be uninitialized.
 
   // Initialize with valid parameters.
