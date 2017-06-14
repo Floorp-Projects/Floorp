@@ -24,6 +24,7 @@
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"
 #include "nsCSSPseudoElements.h" // For CSSPseudoElementType
+#include "nsIScriptError.h"
 #include "nsStyleContext.h"
 #include "nsTArray.h"
 #include <algorithm> // For std::stable_sort
@@ -845,6 +846,23 @@ AppendValueAsString(JSContext* aCx,
                                 *aValues.AppendElement());
 }
 
+static void
+ReportInvalidPropertyValueToConsole(nsCSSPropertyID aProperty,
+                                    const nsAString& aInvalidPropertyValue,
+                                    nsIDocument* aDoc)
+{
+  const nsString& invalidValue = PromiseFlatString(aInvalidPropertyValue);
+  const NS_ConvertASCIItoUTF16 propertyName(
+    nsCSSProps::GetStringValue(aProperty));
+  const char16_t* params[] = { invalidValue.get(), propertyName.get() };
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  NS_LITERAL_CSTRING("Animation"),
+                                  aDoc,
+                                  nsContentUtils::eDOM_PROPERTIES,
+                                  "InvalidKeyframePropertyValue",
+                                  params, ArrayLength(params));
+}
+
 /**
  * Construct a PropertyValuePair parsing the given string into a suitable
  * nsCSSValue object.
@@ -869,6 +887,8 @@ MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
 
     if (servoDeclarationBlock) {
       result.emplace(aProperty, Move(servoDeclarationBlock));
+    } else {
+      ReportInvalidPropertyValueToConsole(aProperty, aStringValue, aDocument);
     }
     return result;
   }
@@ -883,6 +903,7 @@ MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
                                   value);
     if (value.GetUnit() == eCSSUnit_Null) {
       // Invalid property value, so return Nothing.
+      ReportInvalidPropertyValueToConsole(aProperty, aStringValue, aDocument);
       return result;
     }
   }
