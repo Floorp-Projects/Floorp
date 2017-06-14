@@ -2184,13 +2184,13 @@ ScriptLoader::MaybeTriggerBytecodeEncoding()
     return;
   }
 
-  // Create a new runnable dedicated to encoding the content of the bytecode
-  // of all enqueued scripts. In case of failure, we give-up on encoding the
-  // bytecode.
+  // Create a new runnable dedicated to encoding the content of the bytecode of
+  // all enqueued scripts when the document is idle. In case of failure, we
+  // give-up on encoding the bytecode.
   nsCOMPtr<nsIRunnable> encoder =
     NewRunnableMethod("ScriptLoader::EncodeBytecode",
                       this, &ScriptLoader::EncodeBytecode);
-  if (NS_FAILED(NS_DispatchToCurrentThread(encoder))) {
+  if (NS_FAILED(NS_IdleDispatchToCurrentThread(encoder.forget()))) {
     GiveUpBytecodeEncoding();
   }
 }
