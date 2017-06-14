@@ -316,6 +316,7 @@ public:
     virtual void SetTransparencyMode(nsTransparencyMode aMode) override;
     virtual void SetWindowShadowStyle(int32_t aStyle) override;
     virtual void SetWindowOpacity(float aOpacity) override;
+    virtual void SetWindowTransform(const mozilla::gfx::Matrix& aTransform) override;
     virtual void SetShowsToolbarButton(bool aShow) override;
     virtual void SetShowsFullScreenButton(bool aShow) override;
     virtual void SetWindowAnimationType(WindowAnimationType aType) override;
@@ -419,6 +420,7 @@ protected:
 
   bool                 mInReportMoveEvent; // true if in a call to ReportMoveEvent().
   bool                 mInResize; // true if in a call to DoResize().
+  bool                 mWindowTransformIsIdentity;
 
   int32_t              mNumModalDescendents;
   InputContext         mInputContext;
