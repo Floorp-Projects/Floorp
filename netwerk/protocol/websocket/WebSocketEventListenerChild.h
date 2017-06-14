@@ -7,6 +7,7 @@
 #ifndef mozilla_net_WebSocketEventListenerChild_h
 #define mozilla_net_WebSocketEventListenerChild_h
 
+#include "mozilla/net/NeckoTargetHolder.h"
 #include "mozilla/net/PWebSocketEventListenerChild.h"
 
 namespace mozilla {
@@ -15,11 +16,13 @@ namespace net {
 class WebSocketEventService;
 
 class WebSocketEventListenerChild final : public PWebSocketEventListenerChild
+                                        , public NeckoTargetHolder
 {
 public:
   NS_INLINE_DECL_REFCOUNTING(WebSocketEventListenerChild)
 
-  explicit WebSocketEventListenerChild(uint64_t aInnerWindowID);
+  explicit WebSocketEventListenerChild(uint64_t aInnerWindowID,
+                                       nsIEventTarget* aTarget);
 
   mozilla::ipc::IPCResult RecvWebSocketCreated(const uint32_t& aWebSocketSerialID,
                                                const nsString& aURI,
