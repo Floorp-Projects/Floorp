@@ -914,7 +914,7 @@ nsAppStartup::TrackStartupCrashBegin(bool *aIsSafeModeNecessary)
   mIsSafeModeNecessary = (recentCrashes > maxResumedCrashes && maxResumedCrashes != -1);
 
   nsCOMPtr<nsIPrefService> prefs = Preferences::GetService();
-  rv = prefs->SavePrefFile(nullptr); // flush prefs to disk since we are tracking crashes
+  rv = static_cast<Preferences *>(prefs.get())->SavePrefFileBlocking(); // flush prefs to disk since we are tracking crashes
   NS_ENSURE_SUCCESS(rv, rv);
 
   GetAutomaticSafeModeNecessary(aIsSafeModeNecessary);
@@ -974,7 +974,10 @@ nsAppStartup::TrackStartupCrashEnd()
     if (NS_FAILED(rv)) NS_WARNING("Could not clear startup crash count.");
   }
   nsCOMPtr<nsIPrefService> prefs = Preferences::GetService();
-  rv = prefs->SavePrefFile(nullptr); // flush prefs to disk since we are tracking crashes
+  // save prefs to disk since we are tracking crashes.  This may be
+  // asynchronous, so a crash could sneak in that we would mistake for
+  // a start up crash. See bug 789945 and bug 1361262.
+  rv = prefs->SavePrefFile(nullptr);
 
   return rv;
 }
