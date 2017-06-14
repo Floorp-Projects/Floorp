@@ -15,6 +15,7 @@
 <script class="testbody" type="text/javascript">
 
 var path = "/tests/dom/base/test/";
+var isUnique = SpecialPowers.getBoolPref("security.data_uri.unique_opaque_origin");
 
 var testFramesLoaded = function() {
   var harness = SpecialPowers.wrap(document).getElementById("harness");
@@ -109,7 +110,7 @@ var testFramesLoaded = function() {
   // to a data: or javascript: document which frames an
   // X-Frame-Options: SAMEORIGIN document and the frame should load
   testFrameInJSURI();
-}
+};
 
 // test that a document can be framed under a javascript: URL opened by the
 // same site as the frame
@@ -123,10 +124,14 @@ var testFrameInJSURI = function() {
     win.close();
 
     // run last test
-    testFrameInDataURI();
-   }
+    if (!isUnique) {
+      testFrameInDataURI();
+    } else {
+      testFrameNotLoadedInDataURI();
+    }
+  };
   win.location.href = "javascript:document.write('"+html+"');document.close();";
-}
+};
 
 // test that a document can be framed under a data: URL opened by the
 // same site as the frame
@@ -134,15 +139,38 @@ var testFrameInDataURI = function() {
   var html = '<iframe id="sameorigin4" src="http://mochi.test:8888/tests/dom/base/test/file_x-frame-options_page.sjs?testid=sameorigin4&xfo=sameorigin"></iframe>';
   var win = window.open();
   win.onload = function() {
+    ok(!isUnique, "This test should be run only when security.data_uri.unique_opaque_origin is off");
     var test = win.document.getElementById("sameorigin4")
               .contentDocument.getElementById("test");
     ok(test != null, "frame under data: URL should have loaded.");
     win.close();
 
     SimpleTest.finish();
-   }
+  };
   win.location.href = "data:text/html,"+html;
-}
+};
+
+// test an iframe with X-FRAME-OPTIONS shouldn't be loaded in a cross-origin window,
+var testFrameNotLoadedInDataURI = function() {
+  // In this case we load two iframes, one is sameorigin4, which will have X-FRAME-OPTIONS,
+  // the other is postmessage, which won't get the XFO header.
+  // And because now window is navigated to a data: URI, which is considered as cross origin,
+  // So win.onload won't be fired, so we use the iframe 'postmessage' to know the iframes
+  // have been loaded.
+  var html = `<iframe id="sameorigin4" src="http://mochi.test:8888/tests/dom/base/test/file_x-frame-options_page.sjs?testid=sameorigin4&xfo=sameorigin"></iframe>
+              <iframe id="postmessage" src="http://mochi.test:8888/tests/dom/base/test/file_x-frame-options_page.sjs?testid=postmessage"></iframe>`;
+  var win = window.open();
+  window.onmessage = function(evt) {
+    ok(isUnique, "This test should be run only when security.data_uri.unique_opaque_origin is on");
+    var iframe = SpecialPowers.wrap(win).document.getElementById("sameorigin4");
+    var test = iframe.contentDocument.getElementById("test");
+    ok(test == null, "frame under data: URL should have blocked.");
+    win.close();
+
+    SimpleTest.finish();
+  };
+  win.location.href = "data:text/html,"+html;
+};
 
 SimpleTest.waitForExplicitFinish();
 
