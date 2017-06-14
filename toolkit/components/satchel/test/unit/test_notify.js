@@ -167,7 +167,6 @@ function* run_test_steps() {
     os.removeObserver(TestObserver, "satchel-storage-changed");
 
     do_test_finished();
-
   } catch (e) {
     throw new Error(`FAILED in test #${testnum} -- ${testdesc}: ${e}`);
   }

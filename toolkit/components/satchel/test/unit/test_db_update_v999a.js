@@ -64,7 +64,6 @@ function* tests() {
     yield countEntries("name-D", "value-D", checkOne);
     yield updateEntry("remove", "name-D", "value-D", next_test);
     yield countEntries("name-D", "value-D", checkZero);
-
   } catch (e) {
     throw new Error(`FAILED in test #${testnum} -- ${e}`);
   }

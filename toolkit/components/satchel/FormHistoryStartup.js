@@ -134,7 +134,6 @@ FormHistoryStartup.prototype = {
         });
         break;
       }
-
     }
   }
 };
