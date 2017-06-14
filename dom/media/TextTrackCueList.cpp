@@ -169,5 +169,11 @@ TextTrackCueList::IsCueExist(TextTrackCue *aCue)
   return false;
 }
 
+nsTArray<RefPtr<TextTrackCue>>&
+TextTrackCueList::GetCuesArray()
+{
+  return mList;
+}
+
 } // namespace dom
 } // namespace mozilla

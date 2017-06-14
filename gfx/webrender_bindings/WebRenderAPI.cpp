@@ -583,8 +583,9 @@ DisplayListBuilder::PushClip(const WrRect& aClipRect,
                              const WrImageMask* aMask)
 {
   uint64_t clip_id = wr_dp_push_clip(mWrState, aClipRect, aMask);
-  WRDL_LOG("PushClip id=%" PRIu64 " r=%s m=%p\n", clip_id,
-      Stringify(aClipRect).c_str(), aMask);
+  WRDL_LOG("PushClip id=%" PRIu64 " r=%s m=%p b=%s\n", clip_id,
+      Stringify(aClipRect).c_str(), aMask,
+      aMask ? Stringify(aMask->rect).c_str() : "none");
   mClipIdStack.push_back(clip_id);
 }
 
@@ -867,7 +868,8 @@ WrClipRegionToken
 DisplayListBuilder::PushClipRegion(const WrRect& aMain,
                                    const WrImageMask* aMask)
 {
-  WRDL_LOG("PushClipRegion r=%s m=%p\n", Stringify(aMain).c_str(), aMask);
+  WRDL_LOG("PushClipRegion r=%s m=%p b=%s\n", Stringify(aMain).c_str(), aMask,
+      aMask ? Stringify(aMask->rect).c_str() : "none");
   return wr_dp_push_clip_region(mWrState,
                                 aMain,
                                 nullptr, 0,
@@ -879,8 +881,9 @@ DisplayListBuilder::PushClipRegion(const WrRect& aMain,
                                    const nsTArray<WrComplexClipRegion>& aComplex,
                                    const WrImageMask* aMask)
 {
-  WRDL_LOG("PushClipRegion r=%s cl=%d m=%p\n", Stringify(aMain).c_str(),
-      (int)aComplex.Length(), aMask);
+  WRDL_LOG("PushClipRegion r=%s cl=%d m=%p b=%s\n", Stringify(aMain).c_str(),
+      (int)aComplex.Length(), aMask,
+      aMask ? Stringify(aMask->rect).c_str() : "none");
   return wr_dp_push_clip_region(mWrState,
                                 aMain,
                                 aComplex.Elements(), aComplex.Length(),

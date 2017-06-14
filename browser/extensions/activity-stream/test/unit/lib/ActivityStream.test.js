@@ -15,7 +15,8 @@ describe("ActivityStream", () => {
       "lib/NewTabInit.jsm": {NewTabInit: Fake},
       "lib/PlacesFeed.jsm": {PlacesFeed: Fake},
       "lib/TelemetryFeed.jsm": {TelemetryFeed: Fake},
-      "lib/TopSitesFeed.jsm": {TopSitesFeed: Fake}
+      "lib/TopSitesFeed.jsm": {TopSitesFeed: Fake},
+      "lib/PrefsFeed.jsm": {PrefsFeed: Fake}
     }));
     as = new ActivityStream();
     sandbox.stub(as.store, "init");
@@ -99,6 +100,10 @@ describe("ActivityStream", () => {
     });
     it("should create a Telemetry feed", () => {
       const feed = as.feeds["feeds.telemetry"]();
+      assert.instanceOf(feed, Fake);
+    });
+    it("should create a Prefs feed", () => {
+      const feed = as.feeds["feeds.prefs"]();
       assert.instanceOf(feed, Fake);
     });
   });

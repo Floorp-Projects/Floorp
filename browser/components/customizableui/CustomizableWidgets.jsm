@@ -596,21 +596,18 @@ const CustomizableWidgets = [
     }
   }, {
     id: "sidebar-button",
-    type: "view",
-    viewId: "PanelUI-sidebar",
     tooltiptext: "sidebar-button.tooltiptext2",
-    onViewShowing(aEvent) {
-      // Populate the subview with whatever menuitems are in the
-      // sidebar menu. We skip menu elements, because the menu panel has no way
-      // of dealing with those right now.
-      let doc = aEvent.target.ownerDocument;
-      let menu = doc.getElementById("viewSidebarMenu");
-
-      // First clear any existing menuitems then populate. Add it to the
-      // standard menu first, then copy all sidebar options to the panel.
-      let sidebarItems = doc.getElementById("PanelUI-sidebarItems");
-      clearSubview(sidebarItems);
-      fillSubviewFromMenuItems([...menu.children], sidebarItems);
+    onCommand(aEvent) {
+      let win = aEvent.target.ownerGlobal;
+      win.SidebarUI.toggle();
+    },
+    onCreated(aNode) {
+      // Add an observer so the button is checked while the sidebar is open
+      let doc = aNode.ownerDocument;
+      let obnode = doc.createElementNS(kNSXUL, "observes");
+      obnode.setAttribute("element", "sidebar-box");
+      obnode.setAttribute("attribute", "checked");
+      aNode.appendChild(obnode);
     }
   }, {
     id: "social-share-button",

@@ -15,9 +15,6 @@ import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.SiteIdentity;
-import org.mozilla.gecko.SiteIdentity.MixedMode;
-import org.mozilla.gecko.SiteIdentity.SecurityMode;
-import org.mozilla.gecko.SiteIdentity.TrackingMode;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.animation.PropertyAnimator;
@@ -367,64 +364,17 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
 
     private void updateSiteIdentity(@NonNull Tab tab) {
         final SiteIdentity siteIdentity = tab.getSiteIdentity();
+        final SecurityModeUtil.IconType type = SecurityModeUtil.resolve(siteIdentity, tab.getURL());
+        final int imageLevel = SecurityModeUtil.getImageLevel(type);
 
         mSiteIdentityPopup.setSiteIdentity(siteIdentity);
-
-        final SecurityMode securityMode;
-        final MixedMode activeMixedMode;
-        final MixedMode displayMixedMode;
-        final TrackingMode trackingMode;
-        final boolean securityException;
-
-        if (siteIdentity == null) {
-            securityMode = SecurityMode.UNKNOWN;
-            activeMixedMode = MixedMode.UNKNOWN;
-            displayMixedMode = MixedMode.UNKNOWN;
-            trackingMode = TrackingMode.UNKNOWN;
-            securityException = false;
-        } else {
-            securityMode = siteIdentity.getSecurityMode();
-            activeMixedMode = siteIdentity.getMixedModeActive();
-            displayMixedMode = siteIdentity.getMixedModeDisplay();
-            trackingMode = siteIdentity.getTrackingMode();
-            securityException = siteIdentity.isSecurityException();
-        }
-
-        // This is a bit tricky, but we have one icon and three potential indicators.
-        // Default to the identity level
-        int imageLevel = securityMode.ordinal();
-
-        // about: pages should default to having no icon too (the same as SecurityMode.UNKNOWN), however
-        // SecurityMode.CHROMEUI has a different ordinal - hence we need to manually reset it here.
-        // (We then continue and process the tracking / mixed content icons as usual, even for about: pages, as they
-        //  can still load external sites.)
-        if (securityMode == SecurityMode.CHROMEUI) {
-            imageLevel = LEVEL_DEFAULT_GLOBE; // == SecurityMode.UNKNOWN.ordinal()
-        }
-
-        // Check to see if any protection was overridden first
-        if (AboutPages.isTitlelessAboutPage(tab.getURL())) {
-            // We always want to just show a search icon on about:home
-            imageLevel = LEVEL_SEARCH_ICON;
-        } else if (securityException) {
-            imageLevel = LEVEL_WARNING_MINOR;
-        } else if (trackingMode == TrackingMode.TRACKING_CONTENT_LOADED) {
-            imageLevel = LEVEL_SHIELD_DISABLED;
-        } else if (trackingMode == TrackingMode.TRACKING_CONTENT_BLOCKED) {
-            imageLevel = LEVEL_SHIELD_ENABLED;
-        } else if (activeMixedMode == MixedMode.LOADED) {
-            imageLevel = LEVEL_LOCK_DISABLED;
-        } else if (displayMixedMode == MixedMode.LOADED) {
-            imageLevel = LEVEL_WARNING_MINOR;
-        }
+        mTrackingProtectionEnabled = SecurityModeUtil.isTrackingProtectionEnabled(siteIdentity);
 
         if (mSecurityImageLevel != imageLevel) {
             mSecurityImageLevel = imageLevel;
             mSiteSecurity.setImageLevel(mSecurityImageLevel);
             updatePageActions();
         }
-
-        mTrackingProtectionEnabled = trackingMode == TrackingMode.TRACKING_CONTENT_BLOCKED;
     }
 
     private void updateProgress(@NonNull Tab tab) {

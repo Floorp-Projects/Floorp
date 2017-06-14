@@ -63,7 +63,20 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
     mHaveNonAnimationRestyles = true;
   }
 
-  Servo_NoteExplicitHints(aElement, aRestyleHint, aMinChangeHint);
+  if (aRestyleHint & eRestyle_LaterSiblings) {
+    aRestyleHint &= ~eRestyle_LaterSiblings;
+
+    nsRestyleHint siblingHint = eRestyle_Subtree;
+    Element* current = aElement->GetNextElementSibling();
+    while (current) {
+      Servo_NoteExplicitHints(current, siblingHint, nsChangeHint(0));
+      current = current->GetNextElementSibling();
+    }
+  }
+
+  if (aRestyleHint || aMinChangeHint) {
+    Servo_NoteExplicitHints(aElement, aRestyleHint, aMinChangeHint);
+  }
 }
 
 void
@@ -519,20 +532,21 @@ ServoRestyleManager::SnapshotFor(Element* aElement)
 }
 
 /* static */ nsIFrame*
-ServoRestyleManager::FrameForPseudoElement(const nsIContent* aContent,
+ServoRestyleManager::FrameForPseudoElement(const Element* aElement,
                                            nsIAtom* aPseudoTagOrNull)
 {
-  MOZ_ASSERT(!aPseudoTagOrNull || aContent->IsElement());
   if (!aPseudoTagOrNull) {
-    return aContent->GetPrimaryFrame();
+    return nsLayoutUtils::GetStyleFrame(aElement);
   }
 
   if (aPseudoTagOrNull == nsCSSPseudoElements::before) {
-    return nsLayoutUtils::GetBeforeFrame(aContent);
+    Element* pseudoElement = nsLayoutUtils::GetBeforePseudo(aElement);
+    return pseudoElement ? nsLayoutUtils::GetStyleFrame(pseudoElement) : nullptr;
   }
 
   if (aPseudoTagOrNull == nsCSSPseudoElements::after) {
-    return nsLayoutUtils::GetAfterFrame(aContent);
+    Element* pseudoElement = nsLayoutUtils::GetAfterPseudo(aElement);
+    return pseudoElement ? nsLayoutUtils::GetStyleFrame(pseudoElement) : nullptr;
   }
 
   if (aPseudoTagOrNull == nsCSSPseudoElements::firstLine ||
@@ -787,7 +801,7 @@ ServoRestyleManager::AttributeWillChange(Element* aElement,
   }
 
   ServoElementSnapshot& snapshot = SnapshotFor(aElement);
-  snapshot.AddAttrs(aElement);
+  snapshot.AddAttrs(aElement, aNameSpaceID, aAttribute);
 
   if (AttributeInfluencesOtherPseudoClassState(aElement, aAttribute)) {
     snapshot.AddOtherPseudoClassState(aElement);

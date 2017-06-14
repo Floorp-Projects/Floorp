@@ -214,7 +214,17 @@ let addonSdkMethods = [
   "showToolbox",
 ];
 
-for (let method of addonSdkMethods) {
+/**
+ * Compatibility layer for webextensions.
+ *
+ * Those methods are called only after a DevTools webextension was loaded in DevTools,
+ * therefore DevTools should always be available when they are called.
+ */
+let webExtensionsMethods = [
+  "getTheme",
+];
+
+for (let method of [...addonSdkMethods, ...webExtensionsMethods]) {
   this.DevToolsShim[method] = function () {
     if (!this.isInstalled()) {
       throw new Error(`Method ${method} unavailable if DevTools are not installed`);

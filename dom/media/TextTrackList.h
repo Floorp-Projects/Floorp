@@ -64,6 +64,7 @@ public:
   void SetCuesInactive();
 
   bool AreTextTracksLoaded();
+  nsTArray<RefPtr<TextTrack>>& GetTextTrackArray();
 
   IMPL_EVENT_HANDLER(change)
   IMPL_EVENT_HANDLER(addtrack)

@@ -82,7 +82,7 @@ public:
    * Right now only supports a null tag, before or after. If the pseudo-element
    * is not null, the content needs to be an element.
    */
-  static nsIFrame* FrameForPseudoElement(const nsIContent* aContent,
+  static nsIFrame* FrameForPseudoElement(const Element* aElement,
                                          nsIAtom* aPseudoTagOrNull);
 
   /**

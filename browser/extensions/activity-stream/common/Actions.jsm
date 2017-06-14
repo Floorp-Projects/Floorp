@@ -36,7 +36,10 @@ const actionTypes = [
   "PLACES_HISTORY_CLEARED",
   "PLACES_LINK_BLOCKED",
   "PLACES_LINK_DELETED",
+  "PREFS_INITIAL_VALUES",
+  "PREF_CHANGED",
   "SCREENSHOT_UPDATED",
+  "SET_PREF",
   "TELEMETRY_PERFORMANCE_EVENT",
   "TELEMETRY_UNDESIRED_EVENT",
   "TELEMETRY_USER_EVENT",
@@ -160,6 +163,11 @@ function PerfEvent(data, importContext = globalImportContext) {
   return importContext === UI_CODE ? SendToMain(action) : action;
 }
 
+function SetPref(name, value, importContext = globalImportContext) {
+  const action = {type: actionTypes.SET_PREF, data: {name, value}};
+  return importContext === UI_CODE ? SendToMain(action) : action;
+}
+
 this.actionTypes = actionTypes;
 
 this.actionCreators = {
@@ -168,7 +176,8 @@ this.actionCreators = {
   UndesiredEvent,
   PerfEvent,
   SendToContent,
-  SendToMain
+  SendToMain,
+  SetPref
 };
 
 // These are helpers to test for certain kinds of actions

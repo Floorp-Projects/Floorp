@@ -16,6 +16,9 @@ ServoElementSnapshot::ServoElementSnapshot(const Element* aElement)
   , mContains(Flags(0))
   , mIsTableBorderNonzero(false)
   , mIsMozBrowserFrame(false)
+  , mClassAttributeChanged(false)
+  , mIdAttributeChanged(false)
+  , mOtherAttributeChanged(false)
 {
   MOZ_COUNT_CTOR(ServoElementSnapshot);
   mIsHTMLElementInHTMLDocument =
@@ -30,9 +33,23 @@ ServoElementSnapshot::~ServoElementSnapshot()
 }
 
 void
-ServoElementSnapshot::AddAttrs(Element* aElement)
+ServoElementSnapshot::AddAttrs(Element* aElement,
+                               int32_t aNameSpaceID,
+                               nsIAtom* aAttribute)
 {
   MOZ_ASSERT(aElement);
+
+  if (aNameSpaceID == kNameSpaceID_None) {
+    if (aAttribute == nsGkAtoms::_class) {
+      mClassAttributeChanged = true;
+    } else if (aAttribute == nsGkAtoms::id) {
+      mIdAttributeChanged = true;
+    } else {
+      mOtherAttributeChanged = true;
+    }
+  } else {
+    mOtherAttributeChanged = true;
+  }
 
   if (HasAttrs()) {
     return;

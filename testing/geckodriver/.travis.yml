@@ -4,13 +4,13 @@ cache:
     - $HOME/.cargo
     - $TRAVIS_BUILD_DIR/target
     - $HOME/docker/
-    
+
 before_install:
   - if [[ "$NAME" == "linux32" ]]; then
     sudo dpkg --purge build-essential libtool;
     sudo apt-get -qq update;
-    sudo apt-get -yq --force-yes install libstdc++6:i386 libbz2-dev:i386 gcc-multilib:i386 musl-tools:i386; fi
-    
+    sudo apt-get -yq --force-yes install libstdc++6:i386 libbz2-dev:i386 gcc-4.8:i386 gcc-4.8-multilib:i386 musl-tools:i386 binutils:i386; fi
+
 matrix:
   include:
     - os: linux

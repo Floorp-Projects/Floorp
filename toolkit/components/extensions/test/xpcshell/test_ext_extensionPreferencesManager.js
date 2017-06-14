@@ -210,6 +210,41 @@ add_task(async function test_preference_manager() {
   setSettings = await ExtensionSettingsStore.getAllForExtension(extensions[0], STORE_TYPE);
   deepEqual(setSettings, [], "removeAll removed all settings.");
 
+  // Tests for preventing automatic changes to manually edited prefs.
+  for (let setting in SETTINGS) {
+    let apiValue = "newValue";
+    let manualValue = "something different";
+    let settingObj = SETTINGS[setting];
+    let extension = extensions[1];
+    await ExtensionPreferencesManager.setSetting(extension, setting, apiValue);
+
+    let checkResetPrefs = (method) => {
+      let prefNames = settingObj.prefNames;
+      for (let i = 0; i < prefNames.length; i++) {
+        if (i === 0) {
+          equal(Preferences.get(prefNames[0]), manualValue,
+                `${method} did not change a manually set pref.`);
+        } else {
+          equal(Preferences.get(prefNames[i]),
+                settingObj.valueFn(prefNames[i], apiValue),
+                `${method} did not change another pref when a pref was manually set.`);
+        }
+      }
+    };
+
+    // Manually set the preference to a different value.
+    Preferences.set(settingObj.prefNames[0], manualValue);
+
+    await ExtensionPreferencesManager.disableAll(extension);
+    checkResetPrefs("disableAll");
+
+    await ExtensionPreferencesManager.enableAll(extension);
+    checkResetPrefs("enableAll");
+
+    await ExtensionPreferencesManager.removeAll(extension);
+    checkResetPrefs("removeAll");
+  }
+
   // Test with an uninitialized pref.
   let setting = "singlePref";
   let settingObj = SETTINGS[setting];

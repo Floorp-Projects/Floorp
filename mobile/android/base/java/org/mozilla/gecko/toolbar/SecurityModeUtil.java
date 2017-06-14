@@ -5,8 +5,11 @@
 
 package org.mozilla.gecko.toolbar;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
+import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.SiteIdentity;
 import org.mozilla.gecko.SiteIdentity.MixedMode;
 import org.mozilla.gecko.SiteIdentity.SecurityMode;
@@ -16,32 +19,91 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Util class which encapsulate logic of how CustomTabsActivity treats SiteIdentity.
- * TODO: Bug 1347037 - This class should be reusable for other components
+ * Util class to help on resolving SiteIdentity to get corresponding visual result.
  */
 public class SecurityModeUtil {
 
-    // defined basic mapping between SecurityMode and SecurityModeUtil.Mode
-    private static final Map<SecurityMode, Mode> securityModeMap;
+    /**
+     * Abstract icon type for SiteIdentity resolving algorithm. Hence no need to worry about
+     * Drawable level value.
+     */
+    public enum IconType {
+        UNKNOWN,
+        DEFAULT,
+        SEARCH,
+        LOCK_SECURE,
+        LOCK_WARNING, // not used for now. reserve for MixedDisplayContent icon, if any.
+        LOCK_INSECURE,
+        WARNING,
+        TRACKING_CONTENT_BLOCKED,
+        TRACKING_CONTENT_LOADED
+    }
+
+    // Defined mapping between IconType and Drawable image-level
+    private static final Map<IconType, Integer> imgLevelMap = new HashMap<>();
+
+    // http://dxr.mozilla.org/mozilla-central/source/mobile/android/base/java/org/mozilla/gecko/resources/drawable/site_security_icon.xml
+    static {
+        imgLevelMap.put(IconType.UNKNOWN, 0);
+        imgLevelMap.put(IconType.DEFAULT, 0);
+        imgLevelMap.put(IconType.LOCK_SECURE, 1);
+        imgLevelMap.put(IconType.WARNING, 2);
+        imgLevelMap.put(IconType.LOCK_INSECURE, 3);
+        imgLevelMap.put(IconType.TRACKING_CONTENT_BLOCKED, 4);
+        imgLevelMap.put(IconType.TRACKING_CONTENT_LOADED, 5);
+        imgLevelMap.put(IconType.SEARCH, 6);
+    }
+
+    // defined basic mapping between SecurityMode and SecurityModeUtil.IconType
+    private static final Map<SecurityMode, IconType> securityModeMap;
 
     static {
         securityModeMap = new HashMap<>();
-        securityModeMap.put(SecurityMode.UNKNOWN, Mode.UNKNOWN);
-        securityModeMap.put(SecurityMode.IDENTIFIED, Mode.LOCK_SECURE);
-        securityModeMap.put(SecurityMode.VERIFIED, Mode.LOCK_SECURE);
-        securityModeMap.put(SecurityMode.CHROMEUI, Mode.UNKNOWN);
+        securityModeMap.put(SecurityMode.UNKNOWN, IconType.UNKNOWN);
+        securityModeMap.put(SecurityMode.IDENTIFIED, IconType.LOCK_SECURE);
+        securityModeMap.put(SecurityMode.VERIFIED, IconType.LOCK_SECURE);
+        securityModeMap.put(SecurityMode.CHROMEUI, IconType.UNKNOWN);
     }
 
     /**
-     * To resolve which mode to be used for given SiteIdentity. Its logic is similar to
-     * ToolbarDisplayLayout.updateSiteIdentity
+     * Get image level from IconType, and to use in ImageView.setImageLevel().
+     *
+     * @param type IconType which is resolved by method resolve()
+     * @return the image level which defined in Drawable
+     */
+    public static int getImageLevel(@NonNull final IconType type) {
+        return imgLevelMap.containsKey(type)
+                ? imgLevelMap.get(type)
+                : imgLevelMap.get(IconType.UNKNOWN);
+    }
+
+    /**
+     * To resolve which icon-type to be used for given SiteIdentity.
      *
      * @param identity An identity of a site to be resolved
-     * @return Corresponding mode for resolved SiteIdentity, UNKNOWN as default.
+     * @return Corresponding type for resolved SiteIdentity, UNKNOWN as default.
      */
-    public static Mode resolve(final @Nullable SiteIdentity identity) {
+    public static IconType resolve(@Nullable final SiteIdentity identity) {
+        return resolve(identity, null);
+    }
+
+    /**
+     * To resolve which icon-type to be used for given SiteIdentity.
+     *
+     * @param identity An identity of a site to be resolved
+     * @param url      current page url
+     * @return Corresponding type for resolved SiteIdentity, UNKNOWN as default.
+     */
+    public static IconType resolve(@Nullable final SiteIdentity identity,
+                                   @Nullable final String url) {
+
+        if (!TextUtils.isEmpty(url) && AboutPages.isTitlelessAboutPage(url)) {
+            // We always want to just show a search icon on about:home
+            return IconType.SEARCH;
+        }
+
         if (identity == null) {
-            return Mode.UNKNOWN;
+            return IconType.UNKNOWN;
         }
 
         final SecurityMode securityMode = identity.getSecurityMode();
@@ -50,35 +112,40 @@ public class SecurityModeUtil {
         final TrackingMode trackingMode = identity.getTrackingMode();
         final boolean securityException = identity.isSecurityException();
 
-        if (securityMode == SiteIdentity.SecurityMode.CHROMEUI) {
-            return Mode.UNKNOWN;
+        if (securityException) {
+            return IconType.WARNING;
+        } else if (trackingMode == TrackingMode.TRACKING_CONTENT_LOADED) {
+            return IconType.TRACKING_CONTENT_LOADED;
+        } else if (trackingMode == TrackingMode.TRACKING_CONTENT_BLOCKED) {
+            return IconType.TRACKING_CONTENT_BLOCKED;
+        } else if (activeMixedMode == MixedMode.LOADED) {
+            return IconType.LOCK_INSECURE;
+        } else if (displayMixedMode == MixedMode.LOADED) {
+            return IconType.WARNING;
         }
 
-        if (securityException) {
-            return Mode.MIXED_MODE;
-        } else if (trackingMode == TrackingMode.TRACKING_CONTENT_LOADED) {
-            return Mode.TRACKING_CONTENT_LOADED;
-        } else if (trackingMode == TrackingMode.TRACKING_CONTENT_BLOCKED) {
-            return Mode.TRACKING_CONTENT_BLOCKED;
-        } else if (activeMixedMode == MixedMode.LOADED) {
-            return Mode.MIXED_MODE;
-        } else if (displayMixedMode == MixedMode.LOADED) {
-            return Mode.WARNING;
+        // Chrome-UI checking is after tracking/mixed-content, even for about: pages, as they
+        // can still load external sites.
+        if (securityMode == SiteIdentity.SecurityMode.CHROMEUI) {
+            return IconType.DEFAULT;
         }
 
         return securityModeMap.containsKey(securityMode)
                 ? securityModeMap.get(securityMode)
-                : Mode.UNKNOWN;
+                : IconType.UNKNOWN;
     }
 
-    // Security mode constants, which map to the icons / levels defined in:
-    // http://dxr.mozilla.org/mozilla-central/source/mobile/android/base/java/org/mozilla/gecko/resources/drawable/customtabs_site_security_level.xml
-    public enum Mode {
-        UNKNOWN,
-        LOCK_SECURE,
-        WARNING,
-        MIXED_MODE,
-        TRACKING_CONTENT_BLOCKED,
-        TRACKING_CONTENT_LOADED
+    /**
+     * For a given SiteIdentity, to check whether its tracking protection is enabled.
+     *
+     * @param identity to be checked
+     * @return true if tracking protection is enabled.
+     */
+    public static boolean isTrackingProtectionEnabled(final @Nullable SiteIdentity identity) {
+        final TrackingMode trackingMode = (identity == null)
+                ? TrackingMode.UNKNOWN
+                : identity.getTrackingMode();
+
+        return (trackingMode == TrackingMode.TRACKING_CONTENT_BLOCKED);
     }
 }

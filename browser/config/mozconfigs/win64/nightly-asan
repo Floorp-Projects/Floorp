@@ -14,4 +14,3 @@ export MOZ_PACKAGE_JSSHELL=1
 export MOZ_PKG_SPECIAL=asan
 
 . "$topsrcdir/build/mozconfig.common.override"
-. "$topsrcdir/build/mozconfig.cache"

@@ -1,0 +1,45 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>
+  Test for bug 1368240: We only invalidate style as little as needed
+</title>
+<link rel="author" href="mailto:emilio@crisal.io" title="Emilio Cobos Álvarez">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+.foo .bar {
+  color: red;
+}
+#container ~ .bar {
+  color: green;
+}
+</style>
+<div id="container">
+  <div></div>
+  <div></div>
+  <div></div>
+</div>
+<div></div>
+<div></div>
+<script>
+SimpleTest.waitForExplicitFinish();
+const utils = SpecialPowers.getDOMWindowUtils(window);
+
+// TODO(emilio): Add an API to get the style contexts we've recreated, to make
+// more elaborated tests.
+document.documentElement.offsetTop;
+const initialRestyleGeneration = utils.restyleGeneration;
+
+// Normally we'd restyle the whole subtree in this case, but we should go down
+// the tree invalidating as little as needed (nothing in this case).
+container.classList.add("foo");
+document.documentElement.offsetTop;
+is(utils.restyleGeneration, initialRestyleGeneration,
+   "Shouldn't have restyled any descendant");
+
+container.setAttribute("id", "");
+document.documentElement.offsetTop;
+is(utils.restyleGeneration, initialRestyleGeneration,
+   "Shouldn't have restyled any sibling");
+
+SimpleTest.finish();
+</script>

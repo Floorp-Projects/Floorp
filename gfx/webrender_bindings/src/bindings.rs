@@ -1325,14 +1325,24 @@ pub extern "C" fn wr_dp_pop_stacking_context(state: &mut WrState) {
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_clip(state: &mut WrState,
-                                  clip_rect: WrRect,
+                                  rect: WrRect,
                                   mask: *const WrImageMask)
                                   -> u64 {
     assert!(unsafe { is_in_main_thread() });
-    let clip_rect = clip_rect.into();
-    let mask = unsafe { mask.as_ref() }.map(|x| x.into());
+    let content_rect: LayoutRect = rect.into();
+
+    // Both the clip rect and mask rect need to be relative to the
+    // content rect when the clip region is being used as part of a clip item.
+    // Since the clip_rect is the same as the content_rect we can just set the
+    // origin to zero.
+    let clip_rect = LayoutRect::new(LayoutPoint::zero(), content_rect.size);
+    let mut mask : Option<ImageMask> = unsafe { mask.as_ref() }.map(|x| x.into());
+    if let Some(ref mut m) = mask {
+        m.rect.origin = m.rect.origin - content_rect.origin;
+    }
+
     let clip_region = state.frame_builder.dl_builder.push_clip_region(&clip_rect, vec![], mask);
-    let clip_id = state.frame_builder.dl_builder.define_clip(clip_rect, clip_region, None);
+    let clip_id = state.frame_builder.dl_builder.define_clip(content_rect, clip_region, None);
     state.frame_builder.dl_builder.push_clip_id(clip_id);
     // return the u64 id value from inside the ClipId::Clip(..)
     match clip_id {
@@ -1360,8 +1370,14 @@ pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
     // Avoid defining multiple scroll clips with the same clip id, as that
     // results in undefined behaviour or assertion failures.
     if !state.frame_builder.scroll_clips_defined.contains(&clip_id) {
-        let content_rect = content_rect.into();
-        let clip_rect = clip_rect.into();
+        let content_rect: LayoutRect = content_rect.into();
+
+        // Both the clip rect and mask rect need to be relative to the
+        // content_rect when the clip region is being used as part of a clip
+        // item. In this case there is no mask rect so that's a no-op.
+        let mut clip_rect: LayoutRect = clip_rect.into();
+        clip_rect.origin = clip_rect.origin - content_rect.origin;
+
         let clip_region = state.frame_builder.dl_builder.push_clip_region(&clip_rect, vec![], None);
         state.frame_builder.dl_builder.define_clip(content_rect, clip_region, Some(clip_id));
         state.frame_builder.scroll_clips_defined.insert(clip_id);
