@@ -50,9 +50,6 @@ public:
   // Can only be called when frozen.
   const TimeDuration& TimeRemaining() const;
 
-  // Can only be called when not frozen.
-  const TimeDuration& ScheduledDelay() const;
-
   // Window for which this timeout fires
   RefPtr<nsGlobalWindow> mWindow;
 
@@ -100,10 +97,6 @@ private:
 
   // Remaining time to wait.  Used only when timeouts are frozen.
   TimeDuration mTimeRemaining;
-
-  // The actual interval in milliseconds.  This may be throttled to
-  // a longer delay than mInterval for a number of reasons.
-  TimeDuration mScheduledDelay;
 
   ~Timeout() = default;
 };

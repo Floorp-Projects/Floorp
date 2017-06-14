@@ -1002,7 +1002,7 @@ ROLE(EMBEDDED_OBJECT,
 
 ROLE(NOTE,
      "note",
-     ATK_ROLE_SECTION,
+     ATK_ROLE_COMMENT,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_NOTE,
@@ -1368,3 +1368,26 @@ ROLE(SUMMARY,
      ROLE_SYSTEM_PUSHBUTTON,
      eNameFromSubtreeRule)
 
+ROLE(LANDMARK,
+     "landmark",
+     ATK_ROLE_LANDMARK,
+     NSAccessibilityGroupRole,
+     USE_ROLE_STRING,
+     IA2_ROLE_LANDMARK,
+     eNoNameRule)
+
+ROLE(NAVIGATION,
+     "navigation",
+     ATK_ROLE_LANDMARK,
+     NSAccessibilityGroupRole,
+     USE_ROLE_STRING,
+     IA2_ROLE_LANDMARK,
+     eNoNameRule)
+
+ROLE(FOOTNOTE,
+     "footnote",
+     ATK_ROLE_FOOTNOTE,
+     NSAccessibilityGroupRole,
+     USE_ROLE_STRING,
+     IA2_ROLE_FOOTNOTE,
+     eNoNameRule)

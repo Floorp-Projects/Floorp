@@ -697,6 +697,12 @@ getRoleCB(AtkObject *aAtkObj)
     aAtkObj->role = ATK_ROLE_LIST_ITEM;
   else if (aAtkObj->role == ATK_ROLE_MATH && !IsAtkVersionAtLeast(2, 12))
     aAtkObj->role = ATK_ROLE_SECTION;
+  else if (aAtkObj->role == ATK_ROLE_COMMENT && !IsAtkVersionAtLeast(2, 12))
+    aAtkObj->role = ATK_ROLE_SECTION;
+  else if (aAtkObj->role == ATK_ROLE_LANDMARK && !IsAtkVersionAtLeast(2, 12))
+    aAtkObj->role = ATK_ROLE_SECTION;
+  else if (aAtkObj->role == ATK_ROLE_FOOTNOTE && !IsAtkVersionAtLeast(2, 25, 2))
+    aAtkObj->role = ATK_ROLE_SECTION;
   else if (aAtkObj->role == ATK_ROLE_STATIC && !IsAtkVersionAtLeast(2, 16))
     aAtkObj->role = ATK_ROLE_TEXT;
   else if ((aAtkObj->role == ATK_ROLE_MATH_FRACTION ||
