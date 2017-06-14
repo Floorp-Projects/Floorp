@@ -26,7 +26,13 @@ if (AppConstants.platform == "linux")
 function startupRecorder() {
   this.wrappedJSObject = this;
   this.loader = Cc["@mozilla.org/moz/jsloader;1"].getService(Ci.xpcIJSModuleLoader);
-  this.data = {};
+  this.data = {
+    images: {
+      "image-drawing": new Set(),
+      "image-loading": new Set(),
+    },
+    code: {}
+  };
 }
 startupRecorder.prototype = {
   classID: Components.ID("{11c095b2-e42e-4bdf-9dd0-aed87595f6a4}"),
@@ -34,7 +40,7 @@ startupRecorder.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
   record(name) {
-    this.data[name] = {
+    this.data.code[name] = {
       components: this.loader.loadedComponents(),
       modules: this.loader.loadedModules(),
       services: Object.keys(Cc).filter(c => {
@@ -57,6 +63,8 @@ startupRecorder.prototype = {
       let topics = [
         "profile-do-change", // This catches stuff loaded during app-startup
         "toplevel-window-ready", // Catches stuff from final-ui-startup
+        "image-loading",
+        "image-drawing",
         firstPaintNotification,
         "sessionstore-windows-restored",
       ];
@@ -65,9 +73,16 @@ startupRecorder.prototype = {
       return;
     }
 
+    if (topic == "image-drawing" || topic == "image-loading") {
+      this.data.images[topic].add(data);
+      return;
+    }
+
     Services.obs.removeObserver(this, topic);
 
     if (topic == "sessionstore-windows-restored") {
+      Services.obs.removeObserver(this, "image-drawing");
+      Services.obs.removeObserver(this, "image-loading");
       // We use idleDispatchToMainThread here to record the set of
       // loaded scripts after we are fully done with startup and ready
       // to react to user events.
