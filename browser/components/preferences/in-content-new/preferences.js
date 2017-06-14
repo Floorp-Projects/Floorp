@@ -221,7 +221,8 @@ function search(aQuery, aAttribute, aSubquery, aSubAttribute) {
     // element will not get considered during search. This
     // should only be used when an element is still under
     // development and should not be shown for any reason.
-    if (element.getAttribute("data-hidden-from-search") != "true") {
+    if (element.getAttribute("data-hidden-from-search") != "true" ||
+        element.getAttribute("data-subpanel") == "true") {
       let attributeValue = element.getAttribute(aAttribute);
       if (attributeValue == aQuery) {
         if (!element.classList.contains("header") &&

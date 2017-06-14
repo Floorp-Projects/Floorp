@@ -29,7 +29,8 @@
 </hbox>
 
 <!-- Containers -->
-<groupbox id="browserContainersGroup" data-category="paneContainers" hidden="true">
+<groupbox id="browserContainersGroupPane" data-category="paneContainers" hidden="true"
+          data-hidden-from-search="true" data-subpanel="true">
   <vbox id="browserContainersbox">
 
     <richlistbox id="containersView" orient="vertical" persist="lastSelectedType"
