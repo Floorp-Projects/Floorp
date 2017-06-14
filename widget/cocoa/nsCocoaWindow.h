@@ -315,6 +315,7 @@ public:
     virtual nsTransparencyMode GetTransparencyMode() override;
     virtual void SetTransparencyMode(nsTransparencyMode aMode) override;
     virtual void SetWindowShadowStyle(int32_t aStyle) override;
+    virtual void SetWindowOpacity(float aOpacity) override;
     virtual void SetShowsToolbarButton(bool aShow) override;
     virtual void SetShowsFullScreenButton(bool aShow) override;
     virtual void SetWindowAnimationType(WindowAnimationType aType) override;
