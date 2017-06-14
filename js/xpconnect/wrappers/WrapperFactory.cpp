@@ -191,10 +191,14 @@ WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
     // If we've somehow gotten to this point after either the source or target
     // compartment has been nuked, return a DeadObjectProxy to prevent further
     // access.
+    // However, we always need to provide live wrappers for ScriptSourceObjects,
+    // since they're used for cross-compartment cloned scripts, and need to
+    // remain accessible even after the original compartment has been nuked.
     JSCompartment* origin = js::GetObjectCompartment(obj);
     JSCompartment* target = js::GetObjectCompartment(scope);
-    if (CompartmentPrivate::Get(origin)->wasNuked ||
-        CompartmentPrivate::Get(target)->wasNuked) {
+    if (!JS_IsScriptSourceObject(obj) &&
+        (CompartmentPrivate::Get(origin)->wasNuked ||
+         CompartmentPrivate::Get(target)->wasNuked)) {
         NS_WARNING("Trying to create a wrapper into or out of a nuked compartment");
 
         retObj.set(JS_NewDeadWrapper(cx));
@@ -352,7 +356,8 @@ static void
 DEBUG_CheckUnwrapSafety(HandleObject obj, const js::Wrapper* handler,
                         JSCompartment* origin, JSCompartment* target)
 {
-    if (CompartmentPrivate::Get(origin)->wasNuked || CompartmentPrivate::Get(target)->wasNuked) {
+    if (!JS_IsScriptSourceObject(obj) &&
+        (CompartmentPrivate::Get(origin)->wasNuked || CompartmentPrivate::Get(target)->wasNuked)) {
         // If either compartment has already been nuked, we should have returned
         // a dead wrapper from our prewrap callback, and this function should
         // not be called.
