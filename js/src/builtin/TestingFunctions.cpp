@@ -52,6 +52,7 @@
 #include "wasm/WasmModule.h"
 #include "wasm/WasmSignalHandlers.h"
 #include "wasm/WasmTextToBinary.h"
+#include "wasm/WasmTypes.h"
 
 #include "jscntxtinlines.h"
 #include "jsobjinlines.h"
@@ -658,8 +659,43 @@ WasmExtractCode(JSContext* cx, unsigned argc, Value* vp)
     }
 
     Rooted<WasmModuleObject*> module(cx, &unwrapped->as<WasmModuleObject>());
+
+    bool stableTier = false;
+    bool bestTier = false;
+    bool baselineTier = false;
+    bool ionTier = false;
+    if (args.length() > 1) {
+        JSString* opt = JS::ToString(cx, args[1]);
+        if (!opt)
+            return false;
+        if (!JS_StringEqualsAscii(cx, opt, "stable", &stableTier) ||
+            !JS_StringEqualsAscii(cx, opt, "best", &bestTier) ||
+            !JS_StringEqualsAscii(cx, opt, "baseline", &baselineTier) ||
+            !JS_StringEqualsAscii(cx, opt, "ion", &ionTier))
+        {
+            return false;
+        }
+        // You can omit the argument but you can't pass just anything you like
+        if (!(stableTier || bestTier || baselineTier || ionTier)) {
+            args.rval().setNull();
+            return true;
+        }
+    } else {
+        stableTier = true;
+    }
+
+    wasm::Tier tier;
+    if (stableTier)
+        tier = module->module().code().stableTier();
+    else if (bestTier)
+        tier = module->module().code().bestTier();
+    else if (baselineTier)
+        tier = wasm::Tier::Baseline;
+    else
+        tier = wasm::Tier::Ion;
+
     RootedValue result(cx);
-    if (!module->module().extractCode(cx, &result))
+    if (!module->module().extractCode(cx, tier, &result))
         return false;
 
     args.rval().set(result);
@@ -4692,8 +4728,11 @@ gc::ZealModeHelpText),
 "  Translates binary encoding to text format"),
 
     JS_FN_HELP("wasmExtractCode", WasmExtractCode, 1, 0,
-"wasmExtractCode(module)",
-"  Extracts generated machine code from WebAssembly.Module."),
+"wasmExtractCode(module[, tier])",
+"  Extracts generated machine code from WebAssembly.Module.  The tier is a string,\n"
+"  'stable', 'best', 'baseline', or 'ion'; the default is 'stable'.  If the request\n"
+"  cannot be satisfied then null is returned.  If the request is 'ion' then block\n"
+"  until background compilation is complete."),
 
     JS_FN_HELP("isLazyFunction", IsLazyFunction, 1, 0,
 "isLazyFunction(fun)",
