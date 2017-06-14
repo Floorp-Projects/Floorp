@@ -1098,7 +1098,6 @@ public:
   DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSChangJieActive)
   DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSQuickQuickActive)
   DECL_AND_IMPL_IS_TIP_ACTIVE(IsFreeChangJieActive)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsEasyChangjeiActive)
 
   DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSPinyinActive)
   DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSWubiActive)
@@ -1249,14 +1248,6 @@ private:
   {
     // FYI: The TIP name is misspelled...
     return mActiveTIPKeyboardDescription.EqualsLiteral("Free CangJie IME 10");
-  }
-
-  bool IsEasyChangjeiActiveInternal() const
-  {
-    return
-      mActiveTIPKeyboardDescription.Equals(
-        NS_LITERAL_STRING(
-          u"\x4E2D\x6587 (\x7E41\x9AD4) - \x6613\x9821\x8F38\x5165\x6CD5"));
   }
 
   /****************************************************************************
@@ -1577,9 +1568,6 @@ public:
   DECL_AND_IMPL_BOOL_PREF(
     "intl.tsf.hack.free_chang_jie.do_not_return_no_layout_error",
     DoNotReturnNoLayoutErrorToFreeChangJie, true)
-  DECL_AND_IMPL_BOOL_PREF(
-    "intl.tsf.hack.easy_changjei.do_not_return_no_layout_error",
-    DoNotReturnNoLayoutErrorToEasyChangjei, true)
   DECL_AND_IMPL_BOOL_PREF(
     "intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_first_char",
     DoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar, true)
@@ -4147,14 +4135,11 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
              mComposition.EndOffset() == acpEnd) {
       dontReturnNoLayoutError = true;
     }
-    // Free ChangJie 2010 and Easy Changjei 1.0.12.0 doesn't handle
-    // ITfContextView::GetTextExt() properly.  Prehaps, it's due to the bug of
-    // TSF.  We need to check if this is necessary on Windows 10 before
-    // disabling this on Windows 10.
-    else if ((TSFPrefs::DoNotReturnNoLayoutErrorToFreeChangJie() &&
-              TSFStaticSink::IsFreeChangJieActive()) ||
-             (TSFPrefs::DoNotReturnNoLayoutErrorToEasyChangjei() &&
-              TSFStaticSink::IsEasyChangjeiActive())) {
+    // Free ChangJie 2010 doesn't handle ITfContextView::GetTextExt() properly.
+    // Prehaps, it's due to the bug of TSF.  We need to check if this is
+    // necessary on Windows 10 before disabling this on Windows 10.
+    else if (TSFPrefs::DoNotReturnNoLayoutErrorToFreeChangJie() &&
+             TSFStaticSink::IsFreeChangJieActive()) {
       acpEnd = mComposition.mStart;
       acpStart = std::min(acpStart, acpEnd);
       dontReturnNoLayoutError = true;
