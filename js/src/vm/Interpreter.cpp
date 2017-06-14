@@ -2757,7 +2757,7 @@ END_CASE(JSOP_CHECKTHIS)
 CASE(JSOP_CHECKTHISREINIT)
 {
     if (!REGS.sp[-1].isMagic(JS_UNINITIALIZED_LEXICAL)) {
-        MOZ_ALWAYS_FALSE(ThrowInitializedThis(cx, REGS.fp()));
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_REINIT_THIS);
         goto error;
     }
 }
@@ -4226,10 +4226,24 @@ END_CASE(JSOP_NEWTARGET)
 CASE(JSOP_SUPERFUN)
 {
     ReservedRooted<JSObject*> superEnvFunc(&rootObject0, &GetSuperEnvFunction(cx, REGS));
+    MOZ_ASSERT(superEnvFunc->as<JSFunction>().isClassConstructor());
+    MOZ_ASSERT(superEnvFunc->as<JSFunction>().nonLazyScript()->isDerivedClassConstructor());
+
     ReservedRooted<JSObject*> superFun(&rootObject1);
-    superFun = SuperFunOperation(cx, superEnvFunc);
-    if (!superFun)
+
+    if (!GetPrototype(cx, superEnvFunc, &superFun))
         goto error;
+
+    ReservedRooted<Value> superFunVal(&rootValue0, UndefinedValue());
+    if (!superFun)
+        superFunVal = NullValue();
+    else if (!superFun->isConstructor())
+        superFunVal = ObjectValue(*superFun);
+
+    if (superFunVal.isObjectOrNull()) {
+        ReportIsNotFunction(cx, superFunVal, JSDVG_IGNORE_STACK, CONSTRUCT);
+        goto error;
+    }
 
     PUSH_OBJECT(*superFun);
 }
@@ -5226,36 +5240,4 @@ js::HomeObjectSuperBase(JSContext* cx, HandleObject homeObj)
     }
 
     return superBase;
-}
-
-JSObject*
-js::SuperFunOperation(JSContext* cx, HandleObject callee)
-{
-    MOZ_ASSERT(callee->as<JSFunction>().isClassConstructor());
-    MOZ_ASSERT(callee->as<JSFunction>().nonLazyScript()->isDerivedClassConstructor());
-
-    RootedObject superFun(cx);
-
-    if (!GetPrototype(cx, callee, &superFun))
-        return nullptr;
-
-    RootedValue superFunVal(cx, UndefinedValue());
-    if (!superFun)
-        superFunVal = NullValue();
-    else if (!superFun->isConstructor())
-        superFunVal = ObjectValue(*superFun);
-
-    if (superFunVal.isObjectOrNull()) {
-        ReportIsNotFunction(cx, superFunVal, JSDVG_IGNORE_STACK, CONSTRUCT);
-        return nullptr;
-    }
-
-    return superFun;
-}
-
-bool
-js::ThrowInitializedThis(JSContext* cx, AbstractFramePtr frame)
-{
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_REINIT_THIS);
-    return false;
 }

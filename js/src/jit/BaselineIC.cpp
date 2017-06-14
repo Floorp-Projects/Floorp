@@ -2400,7 +2400,7 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
     FallbackICSpew(cx, stub, "Call(%s)", CodeName[op]);
 
     MOZ_ASSERT(argc == GET_ARGC(pc));
-    bool constructing = (op == JSOP_NEW || op == JSOP_SUPERCALL);
+    bool constructing = (op == JSOP_NEW);
     bool ignoresReturnValue = (op == JSOP_CALL_IGNORES_RV);
 
     // Ensure vp array is rooted - we may GC in here.
@@ -2427,7 +2427,7 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
         return false;
     }
 
-    if (constructing) {
+    if (op == JSOP_NEW) {
         if (!ConstructFromStack(cx, callArgs))
             return false;
         res.set(callArgs.rval());
@@ -2488,7 +2488,7 @@ DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
-    bool constructing = (op == JSOP_SPREADNEW || op == JSOP_SPREADSUPERCALL);
+    bool constructing = (op == JSOP_SPREADNEW);
     FallbackICSpew(cx, stub, "SpreadCall(%s)", CodeName[op]);
 
     // Ensure vp array is rooted - we may GC in here.
