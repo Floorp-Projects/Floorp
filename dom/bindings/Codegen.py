@@ -458,17 +458,14 @@ class CGDOMJSClass(CGThing):
         if self.descriptor.interface.getExtendedAttribute("NeedResolve"):
             resolveHook = RESOLVE_HOOK_NAME
             mayResolveHook = MAY_RESOLVE_HOOK_NAME
-            enumerateHook = "nullptr"
             newEnumerateHook = NEW_ENUMERATE_HOOK_NAME
         elif self.descriptor.isGlobal():
             resolveHook = "mozilla::dom::ResolveGlobal"
             mayResolveHook = "mozilla::dom::MayResolveGlobal"
-            enumerateHook = "mozilla::dom::EnumerateGlobal"
-            newEnumerateHook = "nullptr"
+            newEnumerateHook = "mozilla::dom::EnumerateGlobal"
         else:
             resolveHook = "nullptr"
             mayResolveHook = "nullptr"
-            enumerateHook = "nullptr"
             newEnumerateHook = "nullptr"
 
         return fill(
@@ -478,7 +475,7 @@ class CGDOMJSClass(CGThing):
               nullptr,               /* delProperty */
               nullptr,               /* getProperty */
               nullptr,               /* setProperty */
-              ${enumerate}, /* enumerate */
+              nullptr,               /* enumerate */
               ${newEnumerate}, /* newEnumerate */
               ${resolve}, /* resolve */
               ${mayResolve}, /* mayResolve */
@@ -512,7 +509,6 @@ class CGDOMJSClass(CGThing):
             name=self.descriptor.interface.identifier.name,
             flags=classFlags,
             addProperty=ADDPROPERTY_HOOK_NAME if wantsAddProperty(self.descriptor) else 'nullptr',
-            enumerate=enumerateHook,
             newEnumerate=newEnumerateHook,
             resolve=resolveHook,
             mayResolve=mayResolveHook,
@@ -8922,11 +8918,7 @@ class CGEnumerateHook(CGAbstractBindingMethod):
         if self.descriptor.isGlobal():
             # Enumerate standard classes
             prefix = dedent("""
-                // This is OK even though we're a newEnumerate hook: this will
-                // define the relevant properties on the global, and the JS
-                // engine will pick those up, because it looks at the object's
-                // properties after this hook has returned.
-                if (!EnumerateGlobal(cx, obj)) {
+                if (!EnumerateGlobal(cx, obj, properties, enumerableOnly)) {
                   return false;
                 }
 
