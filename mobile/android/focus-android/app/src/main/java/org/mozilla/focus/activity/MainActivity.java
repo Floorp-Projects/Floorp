@@ -92,10 +92,15 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
+    protected void onStart() {
+        super.onStart();
 
         BrowsingNotificationService.foreground(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
 
         TelemetryWrapper.startSession();
 
@@ -114,14 +119,14 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
 
         super.onPause();
 
-        BrowsingNotificationService.background(this);
-
         TelemetryWrapper.stopSession();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+
+        BrowsingNotificationService.background(this);
 
         TelemetryWrapper.stopMainActivity();
     }

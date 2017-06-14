@@ -70,6 +70,16 @@ public class BrowsingNotificationService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         switch (intent.getAction()) {
             case ACTION_START:
+                // When we use ACTION_STOP to stop the browsing session, we also stop this Service (to conserve
+                // resources) so we lose track of the MainActivity's foreground/background state. If we start the
+                // session again (ACTION_START), we assume the default Activity state, backgrounded, and our handling
+                // of an additional ACTION_STOP will unexpectedly take the backgrounded code path even though the
+                // MainActivity is actually in the foreground, which closes the app.
+                //
+                // We can assume we would only start a browsing session with the MainActivity foregrounded,
+                // so we fix this problem by setting the MainActivity to the foreground state whenever ACTION_START
+                // is received.
+                foreground = true;
                 startBrowsingSession();
                 break;
 
