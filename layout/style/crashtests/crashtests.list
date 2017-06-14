@@ -38,7 +38,7 @@ load 460209-1.html
 load 460217-1.html
 load 460323-1.html
 load 466845-1.html
-asserts-if(stylo,4) load 469432-1.xhtml # bug 1370830
+load 469432-1.xhtml
 load 472195-1.html
 load 472237-1.html # will fail, test for leak (474704)
 HTTP(..) load 472237-1.html
