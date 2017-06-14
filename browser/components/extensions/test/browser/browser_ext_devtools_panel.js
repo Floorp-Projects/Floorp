@@ -2,12 +2,11 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "devtools",
-                                  "resource://devtools/shared/Loader.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
-                                  "resource://devtools/client/framework/gDevTools.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
                                   "resource://gre/modules/Preferences.jsm");
+
+const {DevToolsShim} = Cu.import("chrome://devtools-shim/content/DevToolsShim.jsm", {});
+const {gDevTools} = DevToolsShim;
 
 const DEVTOOLS_THEME_PREF = "devtools.theme";
 
@@ -76,7 +75,7 @@ add_task(async function test_theme_name_no_panel() {
 
   await extension.startup();
 
-  let target = devtools.TargetFactory.forTab(tab);
+  let target = gDevTools.getTargetForTab(tab);
   await gDevTools.showToolbox(target, "webconsole");
   info("developer toolbox opened");
 
@@ -195,7 +194,7 @@ add_task(async function test_devtools_page_panels_create() {
 
   await extension.startup();
 
-  let target = devtools.TargetFactory.forTab(tab);
+  let target = gDevTools.getTargetForTab(tab);
 
   const toolbox = await gDevTools.showToolbox(target, "webconsole");
   info("developer toolbox opened");

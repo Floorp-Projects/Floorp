@@ -21,6 +21,10 @@ const INITIAL_STATE = {
     initialized: false,
     // The history (and possibly default) links
     rows: []
+  },
+  Prefs: {
+    initialized: false,
+    values: {}
   }
 };
 
@@ -91,7 +95,21 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
   }
 }
 
+function Prefs(prevState = INITIAL_STATE.Prefs, action) {
+  let newValues;
+  switch (action.type) {
+    case at.PREFS_INITIAL_VALUES:
+      return Object.assign({}, prevState, {initialized: true, values: action.data});
+    case at.PREF_CHANGED:
+      newValues = Object.assign({}, prevState.values);
+      newValues[action.data.name] = action.data.value;
+      return Object.assign({}, prevState, {values: newValues});
+    default:
+      return prevState;
+  }
+}
+
 this.INITIAL_STATE = INITIAL_STATE;
-this.reducers = {TopSites, App};
+this.reducers = {TopSites, App, Prefs};
 
 this.EXPORTED_SYMBOLS = ["reducers", "INITIAL_STATE"];

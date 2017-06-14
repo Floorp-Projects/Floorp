@@ -24,7 +24,7 @@
                  android:paddingEnd="@dimen/browser_toolbar_site_security_padding_horizontal"
                  android:paddingTop="@dimen/browser_toolbar_site_security_padding_vertical"
                  android:paddingBottom="@dimen/browser_toolbar_site_security_padding_vertical"
-                 android:src="@drawable/site_security_level"
+                 android:src="@drawable/site_security_icon"
                  android:contentDescription="@string/site_security"
                  android:layout_gravity="center_vertical" />
 

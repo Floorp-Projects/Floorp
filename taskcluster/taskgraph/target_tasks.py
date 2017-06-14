@@ -54,7 +54,7 @@ def target_tasks_try_option_syntax(full_task_graph, parameters):
     parameters['message'] and, for context, the full task graph."""
     options = try_option_syntax.TryOptionSyntax(parameters['message'], full_task_graph)
     target_tasks_labels = [t.label for t in full_task_graph.tasks.itervalues()
-                           if options.task_matches(t.attributes)]
+                           if options.task_matches(t)]
 
     attributes = {
         k: getattr(options, k) for k in [
@@ -186,17 +186,6 @@ def target_tasks_valgrind(full_task_graph, parameters):
             return True
         return False
 
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
-
-
-@_target_task('nightly_code_coverage')
-def target_tasks_code_coverage(full_task_graph, parameters):
-    """Target tasks that generate coverage data."""
-    def filter(task):
-        platform = task.attributes.get('test_platform', '').split('/')[0]
-        if platform not in ('linux64-ccov', 'linux64-jsdcov'):
-            return False
-        return True
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 

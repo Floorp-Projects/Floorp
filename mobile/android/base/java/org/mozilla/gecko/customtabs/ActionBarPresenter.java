@@ -6,8 +6,6 @@
 package org.mozilla.gecko.customtabs;
 
 import android.content.res.Resources;
-import android.content.res.TypedArray;
-import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -227,12 +225,12 @@ public class ActionBarPresenter {
         if (identity == null) {
             mIconView.setVisibility(View.INVISIBLE);
         } else {
-            final SecurityModeUtil.Mode mode = SecurityModeUtil.resolve(identity);
+            final SecurityModeUtil.IconType type = SecurityModeUtil.resolve(identity);
             mIconView.setVisibility(View.VISIBLE);
-            mIconView.setImageLevel(mode.ordinal());
+            mIconView.setImageLevel(SecurityModeUtil.getImageLevel(type));
             mIdentityPopup.setSiteIdentity(identity);
 
-            if (mode == SecurityModeUtil.Mode.LOCK_SECURE) {
+            if (type == SecurityModeUtil.IconType.LOCK_SECURE) {
                 // Lock-Secure is special case. Keep its original green color.
                 DrawableCompat.setTintList(mIconView.getDrawable(), null);
             } else {

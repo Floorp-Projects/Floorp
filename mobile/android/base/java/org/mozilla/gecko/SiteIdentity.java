@@ -26,8 +26,6 @@ public class SiteIdentity {
     private String mVerifier;
     private String mOrigin;
 
-    // The order of the items here relate to image levels in
-    // site_security_level.xml
     public enum SecurityMode {
         UNKNOWN,
         IDENTIFIED,
@@ -35,16 +33,12 @@ public class SiteIdentity {
         CHROMEUI
     }
 
-    // The order of the items here relate to image levels in
-    // site_security_level.xml
     public enum MixedMode {
         UNKNOWN,
         BLOCKED,
         LOADED
     }
 
-    // The order of the items here relate to image levels in
-    // site_security_level.xml
     public enum TrackingMode {
         UNKNOWN,
         TRACKING_CONTENT_BLOCKED,

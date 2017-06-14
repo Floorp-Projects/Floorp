@@ -548,8 +548,8 @@ class TryOptionSyntax(object):
                     rv.add(a[len(prefix):])
         return sorted(rv)
 
-    def task_matches(self, attributes):
-        attr = attributes.get
+    def task_matches(self, task):
+        attr = task.attributes.get
 
         def check_run_on_projects():
             if attr('nightly') and not self.include_nightly:
@@ -574,7 +574,7 @@ class TryOptionSyntax(object):
             else:
                 return False
             if 'platforms' in test:
-                platform = attributes.get('test_platform', '').split('/')[0]
+                platform = attr('test_platform', '').split('/')[0]
                 if platform not in test['platforms']:
                     return False
             if 'only_chunks' in test and attr('test_chunk') not in test['only_chunks']:
@@ -587,6 +587,12 @@ class TryOptionSyntax(object):
             # They will be [] if there was no try syntax, and None if try syntax was detected but
             # they remained unspecified.
             if self.jobs and job_try_name not in self.jobs:
+                return False
+            elif not self.jobs and 'build' in task.dependencies:
+                # We exclude tasks with build dependencies from the default set of jobs because
+                # they will schedule their builds even if they end up optimized away. This means
+                # to run these tasks on try, they'll need to be explicitly specified by -j until
+                # we find a better solution (see bug 1372510).
                 return False
             elif not self.jobs and attr('build_platform'):
                 if self.platforms is None or attr('build_platform') in self.platforms:

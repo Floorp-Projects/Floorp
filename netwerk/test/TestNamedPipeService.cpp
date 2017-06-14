@@ -6,7 +6,7 @@
 #include "TestCommon.h"
 #include "gtest/gtest.h"
 
-#include <Windows.h>
+#include <windows.h>
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Monitor.h"

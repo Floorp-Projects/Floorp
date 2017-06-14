@@ -6,7 +6,7 @@
 
 /* Sidebars */
 
-#bookmarksPanel, 
+#bookmarksPanel,
 #history-panel,
 #sidebar-search-container,
 #tabs-panel {
@@ -25,10 +25,6 @@
 
 .sidebar-placesTree {
   -moz-appearance: -moz-mac-source-list;
-}
-
-.sidebar-placesTreechildren {
-  border-top: 1px solid #bebebe;
 }
 
 .sidebar-placesTreechildren::-moz-tree-separator {
@@ -163,7 +159,7 @@
 }
 
 #sidebar-search-container {
-  margin: 0 4px 6px;
+  margin: 0 4px;
 }
 
 /* Trees */

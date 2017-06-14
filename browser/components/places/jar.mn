@@ -7,7 +7,7 @@ browser.jar:
 # Provide another URI for the bookmarkProperties dialog so we can persist the
 # attributes separately
     content/browser/places/bookmarkProperties2.xul       (content/bookmarkProperties.xul)
-*   content/browser/places/places.xul                    (content/places.xul) 
+*   content/browser/places/places.xul                    (content/places.xul)
     content/browser/places/places.js                     (content/places.js)
     content/browser/places/places.css                    (content/places.css)
     content/browser/places/organizer.css                 (content/organizer.css)
@@ -19,9 +19,9 @@ browser.jar:
     content/browser/places/controller.js                 (content/controller.js)
     content/browser/places/treeView.js                   (content/treeView.js)
     content/browser/places/browserPlacesViews.js         (content/browserPlacesViews.js)
-# keep the Places version of the history sidebar at history/history-panel.xul 
+# keep the Places version of the history sidebar at history/history-panel.xul
 # to prevent having to worry about between versions of the browser
-*   content/browser/history/history-panel.xul            (content/history-panel.xul) 
+*   content/browser/history/history-panel.xul            (content/history-panel.xul)
     content/browser/places/history-panel.js              (content/history-panel.js)
 # ditto for the bookmarks sidebar
     content/browser/bookmarks/bookmarksPanel.xul         (content/bookmarksPanel.xul)

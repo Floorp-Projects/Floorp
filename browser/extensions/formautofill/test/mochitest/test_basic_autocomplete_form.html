@@ -47,13 +47,22 @@ function popupShownListener() {
   }
 }
 
-function checkInputFilled(element, expectedvalue) {
-  return new Promise(resolve => {
-    element.addEventListener("change", function onChange() {
-      is(element.value, expectedvalue, "Checking " + element.name + " field");
-      resolve();
-    }, {once: true});
-  });
+function checkElementFilled(element, expectedvalue) {
+  return [
+    new Promise(resolve => {
+      element.addEventListener("input", function onInput() {
+        ok(true, "Checking " + element.name + " field fires input event");
+        resolve();
+      }, {once: true});
+    }),
+    new Promise(resolve => {
+      element.addEventListener("change", function onChange() {
+        ok(true, "Checking " + element.name + " field fires change event");
+        is(element.value, expectedvalue, "Checking " + element.name + " field");
+        resolve();
+      }, {once: true});
+    }),
+  ];
 }
 
 function checkAutoCompleteInputFilled(element, expectedvalue) {
@@ -72,7 +81,7 @@ function checkFormFilled(address) {
     if (document.activeElement == element) {
       promises.push(checkAutoCompleteInputFilled(element, address[prop]));
     } else {
-      promises.push(checkInputFilled(element, address[prop]));
+      promises.push(...checkElementFilled(element, address[prop]));
     }
   }
   doKey("return");

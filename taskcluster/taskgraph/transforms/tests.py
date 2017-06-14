@@ -442,6 +442,8 @@ def set_tier(config, tests):
                                          'linux64-pgo/opt',
                                          'linux64-devedition/opt',
                                          'linux64-asan/opt',
+                                         'macosx64/opt',
+                                         'macosx64/debug',
                                          'android-4.3-arm7-api-15/opt',
                                          'android-4.3-arm7-api-15/debug',
                                          'android-4.2-x86/opt']:
@@ -512,9 +514,9 @@ def enable_code_coverage(config, tests):
             test['mozharness'].setdefault('extra-options', []).append('--code-coverage')
             test['when'] = {}
             test['instance-size'] = 'xlarge'
-            test['run-on-projects'] = []
+            test['run-on-projects'] = ['mozilla-central']
         elif test['build-platform'] == 'linux64-jsdcov/opt':
-            test['run-on-projects'] = []
+            test['run-on-projects'] = ['mozilla-central']
         yield test
 
 

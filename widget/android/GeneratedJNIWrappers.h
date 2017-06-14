@@ -5561,25 +5561,25 @@ public:
 
 };
 
-class GeckoHlsDemuxerWrapper : public mozilla::jni::ObjectBase<GeckoHlsDemuxerWrapper>
+class GeckoHLSDemuxerWrapper : public mozilla::jni::ObjectBase<GeckoHLSDemuxerWrapper>
 {
 public:
     static const char name[];
 
-    explicit GeckoHlsDemuxerWrapper(const Context& ctx) : ObjectBase<GeckoHlsDemuxerWrapper>(ctx) {}
+    explicit GeckoHLSDemuxerWrapper(const Context& ctx) : ObjectBase<GeckoHLSDemuxerWrapper>(ctx) {}
 
-    class HlsDemuxerCallbacks;
+    class Callbacks;
 
     struct Create_t {
-        typedef GeckoHlsDemuxerWrapper Owner;
-        typedef GeckoHlsDemuxerWrapper::LocalRef ReturnType;
-        typedef GeckoHlsDemuxerWrapper::Param SetterType;
+        typedef GeckoHLSDemuxerWrapper Owner;
+        typedef GeckoHLSDemuxerWrapper::LocalRef ReturnType;
+        typedef GeckoHLSDemuxerWrapper::Param SetterType;
         typedef mozilla::jni::Args<
                 mozilla::jni::Object::Param,
                 mozilla::jni::Object::Param> Args;
         static constexpr char name[] = "create";
         static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/media/GeckoHlsPlayer;Lorg/mozilla/gecko/media/GeckoHlsPlayer$DemuxerCallbacks;)Lorg/mozilla/gecko/media/GeckoHlsDemuxerWrapper;";
+                "(Lorg/mozilla/gecko/media/GeckoHlsPlayer;Lorg/mozilla/gecko/media/GeckoHlsPlayer$DemuxerCallbacks;)Lorg/mozilla/gecko/media/GeckoHLSDemuxerWrapper;";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -5589,10 +5589,10 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    static auto Create(mozilla::jni::Object::Param, mozilla::jni::Object::Param) -> GeckoHlsDemuxerWrapper::LocalRef;
+    static auto Create(mozilla::jni::Object::Param, mozilla::jni::Object::Param) -> GeckoHLSDemuxerWrapper::LocalRef;
 
     struct Destroy_t {
-        typedef GeckoHlsDemuxerWrapper Owner;
+        typedef GeckoHLSDemuxerWrapper Owner;
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<> Args;
@@ -5611,7 +5611,7 @@ public:
     auto Destroy() const -> void;
 
     struct GetAudioInfo_t {
-        typedef GeckoHlsDemuxerWrapper Owner;
+        typedef GeckoHLSDemuxerWrapper Owner;
         typedef mozilla::jni::Object::LocalRef ReturnType;
         typedef mozilla::jni::Object::Param SetterType;
         typedef mozilla::jni::Args<
@@ -5631,7 +5631,7 @@ public:
     auto GetAudioInfo(int32_t) const -> mozilla::jni::Object::LocalRef;
 
     struct GetBuffered_t {
-        typedef GeckoHlsDemuxerWrapper Owner;
+        typedef GeckoHLSDemuxerWrapper Owner;
         typedef int64_t ReturnType;
         typedef int64_t SetterType;
         typedef mozilla::jni::Args<> Args;
@@ -5650,7 +5650,7 @@ public:
     auto GetBuffered() const -> int64_t;
 
     struct GetNextKeyFrameTime_t {
-        typedef GeckoHlsDemuxerWrapper Owner;
+        typedef GeckoHLSDemuxerWrapper Owner;
         typedef int64_t ReturnType;
         typedef int64_t SetterType;
         typedef mozilla::jni::Args<> Args;
@@ -5669,7 +5669,7 @@ public:
     auto GetNextKeyFrameTime() const -> int64_t;
 
     struct GetNumberOfTracks_t {
-        typedef GeckoHlsDemuxerWrapper Owner;
+        typedef GeckoHLSDemuxerWrapper Owner;
         typedef int32_t ReturnType;
         typedef int32_t SetterType;
         typedef mozilla::jni::Args<
@@ -5689,7 +5689,7 @@ public:
     auto GetNumberOfTracks(int32_t) const -> int32_t;
 
     struct GetSamples_t {
-        typedef GeckoHlsDemuxerWrapper Owner;
+        typedef GeckoHLSDemuxerWrapper Owner;
         typedef mozilla::jni::ObjectArray::LocalRef ReturnType;
         typedef mozilla::jni::ObjectArray::Param SetterType;
         typedef mozilla::jni::Args<
@@ -5697,7 +5697,7 @@ public:
                 int32_t> Args;
         static constexpr char name[] = "getSamples";
         static constexpr char signature[] =
-                "(II)[Lorg/mozilla/gecko/media/GeckoHlsSample;";
+                "(II)[Lorg/mozilla/gecko/media/GeckoHLSSample;";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -5710,7 +5710,7 @@ public:
     auto GetSamples(int32_t, int32_t) const -> mozilla::jni::ObjectArray::LocalRef;
 
     struct GetVideoInfo_t {
-        typedef GeckoHlsDemuxerWrapper Owner;
+        typedef GeckoHLSDemuxerWrapper Owner;
         typedef mozilla::jni::Object::LocalRef ReturnType;
         typedef mozilla::jni::Object::Param SetterType;
         typedef mozilla::jni::Args<
@@ -5730,7 +5730,7 @@ public:
     auto GetVideoInfo(int32_t) const -> mozilla::jni::Object::LocalRef;
 
     struct IsLiveStream_t {
-        typedef GeckoHlsDemuxerWrapper Owner;
+        typedef GeckoHLSDemuxerWrapper Owner;
         typedef bool ReturnType;
         typedef bool SetterType;
         typedef mozilla::jni::Args<> Args;
@@ -5749,7 +5749,7 @@ public:
     auto IsLiveStream() const -> bool;
 
     struct Seek_t {
-        typedef GeckoHlsDemuxerWrapper Owner;
+        typedef GeckoHLSDemuxerWrapper Owner;
         typedef bool ReturnType;
         typedef bool SetterType;
         typedef mozilla::jni::Args<
@@ -5773,17 +5773,17 @@ public:
 
 };
 
-class GeckoHlsDemuxerWrapper::HlsDemuxerCallbacks : public mozilla::jni::ObjectBase<HlsDemuxerCallbacks>
+class GeckoHLSDemuxerWrapper::Callbacks : public mozilla::jni::ObjectBase<Callbacks>
 {
 public:
     static const char name[];
 
-    explicit HlsDemuxerCallbacks(const Context& ctx) : ObjectBase<HlsDemuxerCallbacks>(ctx) {}
+    explicit Callbacks(const Context& ctx) : ObjectBase<Callbacks>(ctx) {}
 
     struct New_t {
-        typedef HlsDemuxerCallbacks Owner;
-        typedef HlsDemuxerCallbacks::LocalRef ReturnType;
-        typedef HlsDemuxerCallbacks::Param SetterType;
+        typedef Callbacks Owner;
+        typedef Callbacks::LocalRef ReturnType;
+        typedef Callbacks::Param SetterType;
         typedef mozilla::jni::Args<> Args;
         static constexpr char name[] = "<init>";
         static constexpr char signature[] =
@@ -5797,10 +5797,10 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    static auto New() -> HlsDemuxerCallbacks::LocalRef;
+    static auto New() -> Callbacks::LocalRef;
 
     struct OnError_t {
-        typedef HlsDemuxerCallbacks Owner;
+        typedef Callbacks Owner;
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
@@ -5818,7 +5818,7 @@ public:
     };
 
     struct OnInitialized_t {
-        typedef HlsDemuxerCallbacks Owner;
+        typedef Callbacks Owner;
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
@@ -5842,17 +5842,17 @@ public:
     template<class Impl> class Natives;
 };
 
-class GeckoHlsResourceWrapper : public mozilla::jni::ObjectBase<GeckoHlsResourceWrapper>
+class GeckoHLSResourceWrapper : public mozilla::jni::ObjectBase<GeckoHLSResourceWrapper>
 {
 public:
     static const char name[];
 
-    explicit GeckoHlsResourceWrapper(const Context& ctx) : ObjectBase<GeckoHlsResourceWrapper>(ctx) {}
+    explicit GeckoHLSResourceWrapper(const Context& ctx) : ObjectBase<GeckoHLSResourceWrapper>(ctx) {}
 
-    class HlsResourceCallbacks;
+    class Callbacks;
 
     struct GetPlayer_t {
-        typedef GeckoHlsResourceWrapper Owner;
+        typedef GeckoHLSResourceWrapper Owner;
         typedef mozilla::jni::Object::LocalRef ReturnType;
         typedef mozilla::jni::Object::Param SetterType;
         typedef mozilla::jni::Args<> Args;
@@ -5871,15 +5871,15 @@ public:
     auto GetPlayer() const -> mozilla::jni::Object::LocalRef;
 
     struct Create_t {
-        typedef GeckoHlsResourceWrapper Owner;
-        typedef GeckoHlsResourceWrapper::LocalRef ReturnType;
-        typedef GeckoHlsResourceWrapper::Param SetterType;
+        typedef GeckoHLSResourceWrapper Owner;
+        typedef GeckoHLSResourceWrapper::LocalRef ReturnType;
+        typedef GeckoHLSResourceWrapper::Param SetterType;
         typedef mozilla::jni::Args<
                 mozilla::jni::String::Param,
                 mozilla::jni::Object::Param> Args;
         static constexpr char name[] = "create";
         static constexpr char signature[] =
-                "(Ljava/lang/String;Lorg/mozilla/gecko/media/GeckoHlsPlayer$ResourceCallbacks;)Lorg/mozilla/gecko/media/GeckoHlsResourceWrapper;";
+                "(Ljava/lang/String;Lorg/mozilla/gecko/media/GeckoHlsPlayer$ResourceCallbacks;)Lorg/mozilla/gecko/media/GeckoHLSResourceWrapper;";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -5889,10 +5889,10 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    static auto Create(mozilla::jni::String::Param, mozilla::jni::Object::Param) -> GeckoHlsResourceWrapper::LocalRef;
+    static auto Create(mozilla::jni::String::Param, mozilla::jni::Object::Param) -> GeckoHLSResourceWrapper::LocalRef;
 
     struct Destroy_t {
-        typedef GeckoHlsResourceWrapper Owner;
+        typedef GeckoHLSResourceWrapper Owner;
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<> Args;
@@ -5915,17 +5915,17 @@ public:
 
 };
 
-class GeckoHlsResourceWrapper::HlsResourceCallbacks : public mozilla::jni::ObjectBase<HlsResourceCallbacks>
+class GeckoHLSResourceWrapper::Callbacks : public mozilla::jni::ObjectBase<Callbacks>
 {
 public:
     static const char name[];
 
-    explicit HlsResourceCallbacks(const Context& ctx) : ObjectBase<HlsResourceCallbacks>(ctx) {}
+    explicit Callbacks(const Context& ctx) : ObjectBase<Callbacks>(ctx) {}
 
     struct New_t {
-        typedef HlsResourceCallbacks Owner;
-        typedef HlsResourceCallbacks::LocalRef ReturnType;
-        typedef HlsResourceCallbacks::Param SetterType;
+        typedef Callbacks Owner;
+        typedef Callbacks::LocalRef ReturnType;
+        typedef Callbacks::Param SetterType;
         typedef mozilla::jni::Args<> Args;
         static constexpr char name[] = "<init>";
         static constexpr char signature[] =
@@ -5939,10 +5939,10 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    static auto New() -> HlsResourceCallbacks::LocalRef;
+    static auto New() -> Callbacks::LocalRef;
 
     struct OnDataArrived_t {
-        typedef HlsResourceCallbacks Owner;
+        typedef Callbacks Owner;
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<> Args;
@@ -5959,7 +5959,7 @@ public:
     };
 
     struct OnError_t {
-        typedef HlsResourceCallbacks Owner;
+        typedef Callbacks Owner;
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
@@ -5982,15 +5982,15 @@ public:
     template<class Impl> class Natives;
 };
 
-class GeckoHlsSample : public mozilla::jni::ObjectBase<GeckoHlsSample>
+class GeckoHLSSample : public mozilla::jni::ObjectBase<GeckoHLSSample>
 {
 public:
     static const char name[];
 
-    explicit GeckoHlsSample(const Context& ctx) : ObjectBase<GeckoHlsSample>(ctx) {}
+    explicit GeckoHLSSample(const Context& ctx) : ObjectBase<GeckoHLSSample>(ctx) {}
 
     struct IsEOS_t {
-        typedef GeckoHlsSample Owner;
+        typedef GeckoHLSSample Owner;
         typedef bool ReturnType;
         typedef bool SetterType;
         typedef mozilla::jni::Args<> Args;
@@ -6009,7 +6009,7 @@ public:
     auto IsEOS() const -> bool;
 
     struct IsKeyFrame_t {
-        typedef GeckoHlsSample Owner;
+        typedef GeckoHLSSample Owner;
         typedef bool ReturnType;
         typedef bool SetterType;
         typedef mozilla::jni::Args<> Args;
@@ -6028,7 +6028,7 @@ public:
     auto IsKeyFrame() const -> bool;
 
     struct WriteToByteBuffer_t {
-        typedef GeckoHlsSample Owner;
+        typedef GeckoHLSSample Owner;
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
@@ -6048,7 +6048,7 @@ public:
     auto WriteToByteBuffer(mozilla::jni::ByteBuffer::Param) const -> void;
 
     struct CryptoInfo_t {
-        typedef GeckoHlsSample Owner;
+        typedef GeckoHLSSample Owner;
         typedef mozilla::jni::Object::LocalRef ReturnType;
         typedef mozilla::jni::Object::Param SetterType;
         typedef mozilla::jni::Args<> Args;
@@ -6067,7 +6067,7 @@ public:
     auto CryptoInfo() const -> mozilla::jni::Object::LocalRef;
 
     struct Duration_t {
-        typedef GeckoHlsSample Owner;
+        typedef GeckoHLSSample Owner;
         typedef int64_t ReturnType;
         typedef int64_t SetterType;
         typedef mozilla::jni::Args<> Args;
@@ -6088,7 +6088,7 @@ public:
     auto Duration(int64_t) const -> void;
 
     struct FormatIndex_t {
-        typedef GeckoHlsSample Owner;
+        typedef GeckoHLSSample Owner;
         typedef int32_t ReturnType;
         typedef int32_t SetterType;
         typedef mozilla::jni::Args<> Args;
@@ -6107,7 +6107,7 @@ public:
     auto FormatIndex() const -> int32_t;
 
     struct Info_t {
-        typedef GeckoHlsSample Owner;
+        typedef GeckoHLSSample Owner;
         typedef mozilla::jni::Object::LocalRef ReturnType;
         typedef mozilla::jni::Object::Param SetterType;
         typedef mozilla::jni::Args<> Args;

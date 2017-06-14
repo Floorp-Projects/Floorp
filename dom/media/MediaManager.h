@@ -7,6 +7,7 @@
 
 #include "MediaEngine.h"
 #include "mozilla/media/DeviceChangeCallback.h"
+#include "mozilla/dom/GetUserMediaRequest.h"
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
 #include "nsAutoPtr.h"
@@ -228,6 +229,7 @@ public:
   }
   void AddWindowID(uint64_t aWindowId, GetUserMediaWindowListener *aListener);
   void RemoveWindowID(uint64_t aWindowId);
+  void SendPendingGUMRequest();
   bool IsWindowStillActive(uint64_t aWindowId) {
     return !!GetWindowListener(aWindowId);
   }
@@ -314,6 +316,7 @@ private:
   WindowTable mActiveWindows;
   nsRefPtrHashtable<nsStringHashKey, GetUserMediaTask> mActiveCallbacks;
   nsClassHashtable<nsUint64HashKey, nsTArray<nsString>> mCallIds;
+  nsTArray<RefPtr<dom::GetUserMediaRequest>> mPendingGUMRequest;
 
   // Always exists
   nsAutoPtr<base::Thread> mMediaThread;
