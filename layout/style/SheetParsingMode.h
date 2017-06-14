@@ -40,7 +40,7 @@ namespace css {
  * Servo backend to recognize the sheets as the agent level, but Gecko
  * backend will parse it under _author_ level.
  */
-enum SheetParsingMode : uint8_t {
+enum SheetParsingMode {
   eAuthorSheetFeatures = 0,
   eUserSheetFeatures,
   eAgentSheetFeatures,
