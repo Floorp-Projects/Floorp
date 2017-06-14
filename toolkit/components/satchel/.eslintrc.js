@@ -47,5 +47,6 @@ module.exports = {
       max: 2,
     }],
     "no-throw-literal": "error",
+    "padded-blocks": ["error", "never"],
   },
 };

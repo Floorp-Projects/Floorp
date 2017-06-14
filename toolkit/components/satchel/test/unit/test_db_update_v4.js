@@ -14,7 +14,6 @@ function run_test() {
 
 function* next_test() {
   try {
-
   // ===== test init =====
     var testfile = do_get_file("formhistory_v3.sqlite");
     var profileDir = dirSvc.get("ProfD", Ci.nsIFile);
@@ -52,7 +51,6 @@ function* next_test() {
                          do_test_finished();
                        }
     );
-
   } catch (e) {
     throw new Error(`FAILED in test #${testnum} -- ${e}`);
   }

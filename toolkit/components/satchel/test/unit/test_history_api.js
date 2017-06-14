@@ -106,7 +106,6 @@ add_task(async function() {
   FormHistory._supportsDeletedTable = true;
 
   try {
-
   // ===== test init =====
     var testfile = do_get_file("formhistory_apitest.sqlite");
     var profileDir = dirSvc.get("ProfD", Ci.nsIFile);
@@ -450,7 +449,6 @@ add_task(async function() {
     await promiseUpdate([{ op: "remove", fieldname: "field5", value: null },
       { op: "remove", fieldname: null, value: null }]);
     Services.prefs.clearUserPref("browser.formfill.enable");
-
   } catch (e) {
     throw new Error(`FAILED in test #${testnum} -- ${e}`);
   } finally {
