@@ -144,20 +144,6 @@ interface nsIUpdate : nsISupports
   attribute AString channel;
 
   /**
-   * Whether to show the update prompt which requires user confirmation when an
-   * update is found during a background update check. This overrides the
-   * default setting to download the update in the background.
-   */
-  attribute boolean showPrompt;
-
-  /**
-   * Whether to show the "No Thanks" button in the update prompt. This allows
-   * the user to never receive a notification for that specific update version
-   * again.
-   */
-  attribute boolean showNeverForVersion;
-
-  /**
    * Whether the update is no longer supported on this system.
    */
   attribute boolean unsupported;
@@ -175,13 +161,6 @@ interface nsIUpdate : nsISupports
    * between the new version and the previous version.
    */
   attribute boolean isCompleteUpdate;
-
-  /**
-   * Whether or not the update is a security update or not. If this is true,
-   * then we present more serious sounding user interface messages to the
-   * user.
-   */
-  attribute boolean isSecurityUpdate;
 
   /**
    * When the update was installed.
