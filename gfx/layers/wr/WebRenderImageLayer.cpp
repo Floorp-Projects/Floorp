@@ -180,7 +180,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
     StackingContextHelper sc(aSc, aBuilder, this);
-    Maybe<WrImageMask> mask = BuildWrMaskLayer(&sc);
+    Maybe<WrImageMask> mask = BuildWrMaskLayer(aSc, &sc);
 
     WrBridge()->AddWebRenderParentCommand(OpUpdateAsyncImagePipeline(mPipelineId.value(),
                                                                      scBounds,
@@ -234,7 +234,8 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
 }
 
 Maybe<WrImageMask>
-WebRenderImageLayer::RenderMaskLayer(const gfx::Matrix4x4& aTransform)
+WebRenderImageLayer::RenderMaskLayer(const StackingContextHelper& aSc,
+                                     const gfx::Matrix4x4& aTransform)
 {
   if (!mContainer) {
      return Nothing();
@@ -283,7 +284,7 @@ WebRenderImageLayer::RenderMaskLayer(const gfx::Matrix4x4& aTransform)
   WrImageMask imageMask;
   imageMask.image = mKey.value();
   Rect maskRect = aTransform.TransformBounds(Rect(0, 0, size.width, size.height));
-  imageMask.rect = wr::ToWrRect(maskRect);
+  imageMask.rect = aSc.ToRelativeWrRect(ViewAs<LayerPixel>(maskRect));
   imageMask.repeat = false;
   return Some(imageMask);
 }

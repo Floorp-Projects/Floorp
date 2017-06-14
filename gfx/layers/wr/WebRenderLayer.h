@@ -26,7 +26,8 @@ public:
   virtual Layer* GetLayer() = 0;
   virtual void RenderLayer(wr::DisplayListBuilder& aBuilder,
                            const StackingContextHelper& aSc) = 0;
-  virtual Maybe<WrImageMask> RenderMaskLayer(const gfx::Matrix4x4& aTransform)
+  virtual Maybe<WrImageMask> RenderMaskLayer(const StackingContextHelper& aSc,
+                                             const gfx::Matrix4x4& aTransform)
   {
     MOZ_ASSERT(false);
     return Nothing();
@@ -52,11 +53,20 @@ public:
   LayerRect BoundsForStackingContext();
 
   // Builds a WrImageMask from the mask layer on this layer, if there is one.
-  // If this layer is pushing a stacking context, then the WrImageMask will be
-  // interpreted as relative to that stacking context by WR. The caller needs
-  // to pass in the StackingContextHelper for *this* layer, if there is one, in
-  // order for this function to make the necessary adjustments.
-  Maybe<WrImageMask> BuildWrMaskLayer(const StackingContextHelper* aUnapplySc);
+  // The |aRelativeTo| parameter should be a reference to the stacking context
+  // that we want this mask to be relative to. This is usually the stacking
+  // context of the *parent* layer of |this|, because that is what the mask
+  // is relative to in the layer tree.
+  // If |this| layer has already pushed a stacking context, and will be pushing
+  // the mask as part of a clip "inside" the stacking context, then WR will
+  // interpret the WrImageMask as relative to that stacking context. However,
+  // we usually don't want that, again because the layer tree semantics are that
+  // the mask is relative to the parent. Therefore callers that are doing this
+  // can pass in a pointer to the stacking context pushed by |this| layer in
+  // |aUnapplySc|, and this function will unapply the transforms from that
+  // stacking context to make sure the WrImageMask is correct.
+  Maybe<WrImageMask> BuildWrMaskLayer(const StackingContextHelper& aRelativeTo,
+                                      const StackingContextHelper* aUnapplySc);
 
 protected:
   BoundsTransformMatrix BoundsTransform();
