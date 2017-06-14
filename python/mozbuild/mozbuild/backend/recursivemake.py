@@ -742,20 +742,7 @@ class RecursiveMakeBackend(CommonBackend):
 
         all_compile_deps = reduce(lambda x,y: x|y,
             self._compile_graph.values()) if self._compile_graph else set()
-        # Include the following as dependencies of the top recursion target for
-        # compilation:
-        # - nodes that are not dependended upon by anything. Typically, this
-        #   would include programs, that need to be recursed, but that nothing
-        #   depends on.
-        # - nodes that have no dependencies of their own. Technically, this is
-        #   not necessary, because other things have dependencies on them, and
-        #   they all end up rooting to nodes from the above category. But the
-        #   way make works[1] is such that there can be benefits listing them
-        #   as direct dependencies of the top recursion target, to somehow
-        #   prioritize them.
-        #   1. See bug 1262241 comment 5.
-        compile_roots = [t for t, deps in self._compile_graph.iteritems()
-                         if not deps or t not in all_compile_deps]
+        compile_roots = set(self._compile_graph.keys()) - all_compile_deps
 
         rule = root_deps_mk.create_rule(['recurse_compile'])
         rule.add_dependencies(compile_roots)
