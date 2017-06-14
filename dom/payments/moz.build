@@ -14,18 +14,23 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.dom += [
+    'PaymentAddress.h',
     'PaymentRequest.h',
     'PaymentRequestManager.h',
+    'PaymentResponse.h',
 ]
 
 UNIFIED_SOURCES += [
     'PaymentActionRequest.cpp',
+    'PaymentActionResponse.cpp',
+    'PaymentAddress.cpp',
     'PaymentRequest.cpp',
     'PaymentRequestData.cpp',
     'PaymentRequestManager.cpp',
     'PaymentRequestModule.cpp',
     'PaymentRequestService.cpp',
     'PaymentRequestUtils.cpp',
+    'PaymentResponse.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
