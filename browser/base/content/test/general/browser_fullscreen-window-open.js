@@ -11,27 +11,29 @@ const TEST_FILE = "file_fullscreen-window-open.html";
 const gHttpTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/",
                                                           "http://127.0.0.1:8888/");
 
-function test() {
+var newWin;
+var newBrowser;
+
+async function test() {
   waitForExplicitFinish();
 
   Services.prefs.setBoolPref(PREF_DISABLE_OPEN_NEW_WINDOW, true);
 
-  let newTab = BrowserTestUtils.addTab(gBrowser, gHttpTestRoot + TEST_FILE);
-  gBrowser.selectedTab = newTab;
+  newWin = await BrowserTestUtils.openNewBrowserWindow();
+  newBrowser = newWin.gBrowser;
+  await promiseTabLoadEvent(newBrowser.selectedTab, gHttpTestRoot + TEST_FILE);
 
-  whenTabLoaded(newTab, function() {
-    // Enter browser fullscreen mode.
-    BrowserFullScreen();
+  // Enter browser fullscreen mode.
+  newWin.BrowserFullScreen();
 
-    runNextTest();
-  });
+  runNextTest();
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(async function() {
   // Exit browser fullscreen mode.
-  BrowserFullScreen();
+  newWin.BrowserFullScreen();
 
-  gBrowser.removeCurrentTab();
+  await BrowserTestUtils.closeWindow(newWin);
 
   Services.prefs.clearUserPref(PREF_DISABLE_OPEN_NEW_WINDOW);
 });
@@ -93,15 +95,15 @@ function test_open_with_pos() {
 
 // Test for window.open() with outerWidth/Height.
 function test_open_with_outerSize() {
-  let [outerWidth, outerHeight] = [window.outerWidth, window.outerHeight];
+  let [outerWidth, outerHeight] = [newWin.outerWidth, newWin.outerHeight];
   waitForTabOpen({
     message: {
       title: "test_open_with_outerSize",
       param: "outerWidth=200,outerHeight=200",
     },
     successFn() {
-      is(window.outerWidth, outerWidth, "Don't change window.outerWidth.");
-      is(window.outerHeight, outerHeight, "Don't change window.outerHeight.");
+      is(newWin.outerWidth, outerWidth, "Don't change window.outerWidth.");
+      is(newWin.outerHeight, outerHeight, "Don't change window.outerHeight.");
     },
     finalizeFn() {},
   });
@@ -109,15 +111,15 @@ function test_open_with_outerSize() {
 
 // Test for window.open() with innerWidth/Height.
 function test_open_with_innerSize() {
-  let [innerWidth, innerHeight] = [window.innerWidth, window.innerHeight];
+  let [innerWidth, innerHeight] = [newWin.innerWidth, newWin.innerHeight];
   waitForTabOpen({
     message: {
       title: "test_open_with_innerSize",
       param: "innerWidth=200,innerHeight=200",
     },
     successFn() {
-      is(window.innerWidth, innerWidth, "Don't change window.innerWidth.");
-      is(window.innerHeight, innerHeight, "Don't change window.innerHeight.");
+      is(newWin.innerWidth, innerWidth, "Don't change window.innerWidth.");
+      is(newWin.innerHeight, innerHeight, "Don't change window.innerHeight.");
     },
     finalizeFn() {},
   });
@@ -193,7 +195,7 @@ function waitForTabOpen(aOptions) {
   info("Running test: " + message.title);
 
   let onTabOpen = function onTabOpen(aEvent) {
-    gBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen, true);
+    newBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen, true);
 
     let tab = aEvent.target;
     whenTabLoaded(tab, function() {
@@ -204,11 +206,11 @@ function waitForTabOpen(aOptions) {
         aOptions.successFn();
       }
 
-      gBrowser.removeTab(tab);
+      newBrowser.removeTab(tab);
       finalize();
     });
   }
-  gBrowser.tabContainer.addEventListener("TabOpen", onTabOpen, true);
+  newBrowser.tabContainer.addEventListener("TabOpen", onTabOpen, true);
 
   let finalize = function() {
     aOptions.finalizeFn();
@@ -262,7 +264,7 @@ function waitForWindowOpen(aOptions) {
 }
 
 function executeWindowOpenInContent(aParam) {
-  ContentTask.spawn(gBrowser.selectedBrowser, JSON.stringify(aParam), async function(dataTestParam) {
+  ContentTask.spawn(newBrowser.selectedBrowser, JSON.stringify(aParam), async function(dataTestParam) {
     let testElm = content.document.getElementById("test");
     testElm.setAttribute("data-test-param", dataTestParam);
     testElm.click();
@@ -295,7 +297,7 @@ function waitForWindowOpenFromChrome(aOptions) {
   });
   Services.wm.addListener(listener);
 
-  window.open(url, message.title, message.option);
+  newWin.open(url, message.title, message.option);
 }
 
 function WindowListener(aTitle, aUrl, aCallBackObj) {
