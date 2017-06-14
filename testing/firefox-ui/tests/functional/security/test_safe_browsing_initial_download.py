@@ -34,7 +34,6 @@ class TestSafeBrowsingInitialDownload(PuppeteerMixin, MarionetteTestCase):
     prefs_provider_update_time = {
         # Force an immediate download of the safebrowsing files
         'browser.safebrowsing.provider.google4.nextupdatetime': 1,
-        'browser.safebrowsing.provider.google.nextupdatetime': 1,
         'browser.safebrowsing.provider.mozilla.nextupdatetime': 1,
     }
 
