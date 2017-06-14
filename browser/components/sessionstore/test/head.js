@@ -270,7 +270,7 @@ function forceSaveState() {
 function promiseRecoveryFileContents() {
   let promise = forceSaveState();
   return promise.then(function() {
-    return OS.File.read(SessionFile.Paths.recovery, { encoding: "utf-8" });
+    return OS.File.read(SessionFile.Paths.recovery, { encoding: "utf-8", compression: "lz4" });
   });
 }
 
@@ -278,7 +278,7 @@ var promiseForEachSessionRestoreFile = async function(cb) {
   for (let key of SessionFile.Paths.loadOrder) {
     let data = "";
     try {
-      data = await OS.File.read(SessionFile.Paths[key], { encoding: "utf-8" });
+      data = await OS.File.read(SessionFile.Paths[key], { encoding: "utf-8", compression: "lz4" });
     } catch (ex) {
       // Ignore missing files
       if (!(ex instanceof OS.File.Error && ex.becauseNoSuchFile)) {
