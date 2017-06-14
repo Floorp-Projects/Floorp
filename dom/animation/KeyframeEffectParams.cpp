@@ -152,7 +152,11 @@ KeyframeEffectParams::ParseSpacing(const nsAString& aSpacing,
     nsCSSProps::LookupProperty(identToken, CSSEnabledState::eForAllContent);
   if (aPacedProperty == eCSSProperty_UNKNOWN ||
       aPacedProperty == eCSSPropertyExtra_variable ||
-      !KeyframeUtils::IsAnimatableProperty(aPacedProperty)) {
+      // We just unconditionally pass Gecko as the backend type here since
+      // Servo doesn't support paced timing and this feature will soon be
+      // removed (bug 1339690).
+      !KeyframeUtils::IsAnimatableProperty(aPacedProperty,
+                                           StyleBackendType::Gecko)) {
     aPacedProperty = eCSSProperty_UNKNOWN;
     aInvalidPacedProperty = identToken;
   }
