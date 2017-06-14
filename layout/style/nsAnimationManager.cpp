@@ -856,23 +856,22 @@ GeckoCSSAnimationBuilder::GetKeyframePropertyValues(
       continue;
     }
 
-    PropertyValuePair pair;
-    pair.mProperty = prop;
-
     StyleAnimationValue computedValue;
     if (!StyleAnimationValue::ExtractComputedValue(prop, styleContext,
                                                    computedValue)) {
       continue;
     }
+
+    nsCSSValue propertyValue;
     DebugOnly<bool> uncomputeResult =
       StyleAnimationValue::UncomputeValue(prop, Move(computedValue),
-                                          pair.mValue);
+                                          propertyValue);
     MOZ_ASSERT(uncomputeResult,
                "Unable to get specified value from computed value");
-    MOZ_ASSERT(pair.mValue.GetUnit() != eCSSUnit_Null,
+    MOZ_ASSERT(propertyValue.GetUnit() != eCSSUnit_Null,
                "Not expecting to read invalid properties");
 
-    result.AppendElement(Move(pair));
+    result.AppendElement(Move(PropertyValuePair(prop, Move(propertyValue))));
     aAnimatedProperties.AddProperty(prop);
   }
 
@@ -941,13 +940,13 @@ GeckoCSSAnimationBuilder::FillInMissingKeyframeValues(
     }
 
     if (startKeyframe && !aPropertiesSetAtStart.HasProperty(prop)) {
-      PropertyValuePair propertyValue;
-      propertyValue.mProperty = prop;
+      // An uninitialized nsCSSValue represents the underlying value.
+      PropertyValuePair propertyValue(prop, Move(nsCSSValue()));
       startKeyframe->mPropertyValues.AppendElement(Move(propertyValue));
     }
     if (endKeyframe && !aPropertiesSetAtEnd.HasProperty(prop)) {
-      PropertyValuePair propertyValue;
-      propertyValue.mProperty = prop;
+      // An uninitialized nsCSSValue represents the underlying value.
+      PropertyValuePair propertyValue(prop, Move(nsCSSValue()));
       endKeyframe->mPropertyValues.AppendElement(Move(propertyValue));
     }
   }
