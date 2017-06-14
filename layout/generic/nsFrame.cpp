@@ -3099,7 +3099,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
   // Child is composited if it's transformed, partially transparent, or has
   // SVG effects or a blend mode..
-  EffectSet* effectSet = EffectSet::GetEffectSet(this);
+  EffectSet* effectSet = EffectSet::GetEffectSet(child);
   const nsStyleDisplay* disp = child->StyleDisplay();
   const nsStyleEffects* effects = child->StyleEffects();
   const nsStylePosition* pos = child->StylePosition();
