@@ -848,7 +848,7 @@ gfxPlatformFontList::RemoveCmap(const gfxCharacterMap* aCharMap)
     CharMapHashKey *found =
         mSharedCmaps.GetEntry(const_cast<gfxCharacterMap*>(aCharMap));
     if (found && found->GetKey() == aCharMap) {
-        mSharedCmaps.RemoveEntry(const_cast<gfxCharacterMap*>(aCharMap));
+        mSharedCmaps.RemoveEntry(found);
     }
 }
 
