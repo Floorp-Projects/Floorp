@@ -218,7 +218,13 @@ class JS_PUBLIC_API(CallbackTracer) : public JSTracer
     };
 
 #ifdef DEBUG
-    enum class TracerKind { DoNotCare, Moving, GrayBuffering, VerifyTraceProtoAndIface };
+    enum class TracerKind {
+        DoNotCare,
+        Moving,
+        GrayBuffering,
+        VerifyTraceProtoAndIface,
+        ClearEdges
+    };
     virtual TracerKind getTracerKind() const { return TracerKind::DoNotCare; }
 #endif
 
