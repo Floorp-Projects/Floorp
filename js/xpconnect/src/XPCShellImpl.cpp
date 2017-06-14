@@ -801,7 +801,7 @@ env_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
 
 static const JSClassOps env_classOps = {
     nullptr, nullptr, nullptr, env_setProperty,
-    env_enumerate, env_resolve
+    env_enumerate, nullptr, env_resolve
 };
 
 static const JSClass env_class = {

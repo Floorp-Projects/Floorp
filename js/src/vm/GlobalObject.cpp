@@ -653,6 +653,7 @@ GlobalDebuggees_classOps = {
     nullptr,
     nullptr,
     nullptr,
+    nullptr,
     GlobalDebuggees_finalize
 };
 
