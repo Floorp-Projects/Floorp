@@ -1077,16 +1077,17 @@ NativeObject::CopyElementsForWrite(JSContext* cx, NativeObject* obj)
 }
 
 /* static */ bool
-NativeObject::allocSlot(JSContext* cx, HandleNativeObject obj, uint32_t* slotp)
+NativeObject::allocDictionarySlot(JSContext* cx, HandleNativeObject obj, uint32_t* slotp)
 {
+    MOZ_ASSERT(obj->inDictionaryMode());
+
     uint32_t slot = obj->slotSpan();
     MOZ_ASSERT(slot >= JSSLOT_FREE(obj->getClass()));
 
-    // If this object is in dictionary mode, try to pull a free slot from the
-    // shape table's slot-number free list. Shapes without a ShapeTable have an
-    // empty free list, because we only purge ShapeTables with an empty free
-    // list.
-    if (obj->inDictionaryMode()) {
+    // Try to pull a free slot from the shape table's slot-number free list.
+    // Shapes without a ShapeTable have an empty free list, because we only
+    // purge ShapeTables with an empty free list.
+    {
         AutoCheckCannotGC nogc;
         if (ShapeTable* table = obj->lastProperty()->maybeTable(nogc)) {
             uint32_t last = table->freeList();
@@ -1114,10 +1115,7 @@ NativeObject::allocSlot(JSContext* cx, HandleNativeObject obj, uint32_t* slotp)
 
     *slotp = slot;
 
-    if (obj->inDictionaryMode() && !obj->setSlotSpan(cx, slot + 1))
-        return false;
-
-    return true;
+    return obj->setSlotSpan(cx, slot + 1);
 }
 
 void
