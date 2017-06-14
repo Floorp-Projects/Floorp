@@ -57,20 +57,10 @@ public:
   // that we want this mask to be relative to. This is usually the stacking
   // context of the *parent* layer of |this|, because that is what the mask
   // is relative to in the layer tree.
-  // If |this| layer has already pushed a stacking context, and will be pushing
-  // the mask as part of a clip "inside" the stacking context, then WR will
-  // interpret the WrImageMask as relative to that stacking context. However,
-  // we usually don't want that, again because the layer tree semantics are that
-  // the mask is relative to the parent. Therefore callers that are doing this
-  // can pass in a pointer to the stacking context pushed by |this| layer in
-  // |aUnapplySc|, and this function will unapply the transforms from that
-  // stacking context to make sure the WrImageMask is correct.
-  Maybe<WrImageMask> BuildWrMaskLayer(const StackingContextHelper& aRelativeTo,
-                                      const StackingContextHelper* aUnapplySc);
+  Maybe<WrImageMask> BuildWrMaskLayer(const StackingContextHelper& aRelativeTo);
 
 protected:
   BoundsTransformMatrix BoundsTransform();
-  Maybe<LayerRect> ClipRect();
 
   void DumpLayerInfo(const char* aLayerType, const LayerRect& aRect);
 };
