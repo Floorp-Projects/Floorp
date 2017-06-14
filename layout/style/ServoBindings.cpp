@@ -1273,9 +1273,18 @@ Gecko_CopyImageOrientationFrom(nsStyleVisibility* aDst,
 }
 
 void
-Gecko_SetCounterStyleToName(CounterStylePtr* aPtr, nsIAtom* aName)
+Gecko_SetCounterStyleToName(CounterStylePtr* aPtr, nsIAtom* aName,
+                            RawGeckoPresContextBorrowed aPresContext)
 {
-  *aPtr = already_AddRefed<nsIAtom>(aName);
+  // Try resolving the counter style if possible, and keep it unresolved
+  // otherwise.
+  CounterStyleManager* manager = aPresContext->CounterStyleManager();
+  nsCOMPtr<nsIAtom> name = already_AddRefed<nsIAtom>(aName);
+  if (CounterStyle* style = manager->GetCounterStyle(name)) {
+    *aPtr = style;
+  } else {
+    *aPtr = name.forget();
+  }
 }
 
 void
