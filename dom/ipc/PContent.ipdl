@@ -95,6 +95,7 @@ using mozilla::Telemetry::KeyedAccumulation from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::ScalarAction from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::KeyedScalarAction from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
+using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
 
 union ChromeRegistryItem
 {
@@ -624,6 +625,9 @@ child:
      * list and reloads its plugins.
      **/
     async SetPluginList(uint32_t pluginEpoch, PluginTag[] plugins, FakePluginTag[] fakePlugins);
+
+    async ShareCodeCoverageMutex(CrossProcessMutexHandle handle);
+
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
 

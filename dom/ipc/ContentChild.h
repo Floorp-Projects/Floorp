@@ -609,6 +609,9 @@ public:
   RecvSetPermissionsWithKey(const nsCString& aPermissionKey,
                             nsTArray<IPC::Permission>&& aPerms) override;
 
+  virtual mozilla::ipc::IPCResult
+  RecvShareCodeCoverageMutex(const CrossProcessMutexHandle& aHandle);
+
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
   bool
   SendGetA11yContentId();
