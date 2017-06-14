@@ -9,6 +9,7 @@
 #include "EditAggregateTransaction.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WeakPtr.h"
 #include "nsIAbsorbingTransaction.h"
 #include "nsIDOMNode.h"
 #include "nsCOMPtr.h"
@@ -26,11 +27,14 @@ class CompositionTransaction;
  * transactions it has absorbed.
  */
 
-class PlaceholderTransaction final : public EditAggregateTransaction,
-                                     public nsIAbsorbingTransaction,
-                                     public nsSupportsWeakReference
+class PlaceholderTransaction final
+ : public EditAggregateTransaction
+ , public nsIAbsorbingTransaction
+ , public SupportsWeakPtr<PlaceholderTransaction>
 {
 public:
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(PlaceholderTransaction)
+
   NS_DECL_ISUPPORTS_INHERITED
 
   PlaceholderTransaction(EditorBase& aEditorBase, nsIAtom* aName,
@@ -58,6 +62,11 @@ public:
                nsIAbsorbingTransaction* aForwardingAddress) override;
 
   NS_IMETHOD Commit() override;
+
+  NS_IMETHOD_(PlaceholderTransaction*) AsPlaceholderTransaction() override
+  {
+    return this;
+  }
 
   nsresult RememberEndingSelection();
 
