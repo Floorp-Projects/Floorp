@@ -14,6 +14,7 @@
 "use strict";
 
 var {BrowserActions} = SpecialPowers.Cu.import("resource://gre/modules/BrowserActions.jsm", {});
+var {ContentTaskUtils} = SpecialPowers.Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
 
 add_task(async function test_setTitle_and_getTitle() {
   async function background() {
@@ -28,7 +29,7 @@ add_task(async function test_setTitle_and_getTitle() {
     async function createAndTestNewTab(title, url) {
       // First make sure the default title is correct.
       let defaultTitle = await browser.browserAction.getTitle({});
-      browser.test.assertEq("Browser Action", defaultTitle, `Expected the default title to be ${defaultTitle}`);
+      browser.test.assertEq("Browser Action", defaultTitle, "Expected the default title to be returned");
 
       // Create a tab.
       let [tab] = await Promise.all([
@@ -43,7 +44,7 @@ add_task(async function test_setTitle_and_getTitle() {
       // Set the title for the new tab and test that getTitle returns the correct title.
       await browser.browserAction.setTitle({tabId: tab.id, title});
       tabTitle = await browser.browserAction.getTitle({tabId: tab.id});
-      browser.test.assertEq(title, tabTitle, `Expected the new tab title to be ${title}`);
+      browser.test.assertEq(title, tabTitle, "Expected the new tab title to be returned");
 
       return tab;
     }
@@ -55,25 +56,25 @@ add_task(async function test_setTitle_and_getTitle() {
 
     // Test the default title again.
     let title = await browser.browserAction.getTitle({});
-    browser.test.assertEq("Browser Action", title, `Expected the default title to be "Browser Action"`);
+    browser.test.assertEq("Browser Action", title, "Expected the default title to be returned");
 
     // Update the default title and confirm that the new title is returned.
     await browser.browserAction.setTitle({title: "Updated Title"});
     title = await browser.browserAction.getTitle({});
-    browser.test.assertEq("Updated Title", title, `Expected the default title to be "Updated Title"`);
+    browser.test.assertEq("Updated Title", title, "Expected the default title to be updated");
 
     // Try setting the default title to an empty string and confirm that the original title is still used.
     browser.browserAction.setTitle({title: ""});
     title = await browser.browserAction.getTitle({});
-    browser.test.assertEq("Updated Title", title, `Expected the default title to still be "Updated Title"`);
+    browser.test.assertEq("Updated Title", title, "Expected the default title to be returned");
 
     // Check all of the created tabs now.
     title = await browser.browserAction.getTitle({tabId: tab1.id});
-    browser.test.assertEq("tab 1", title, `Expected the first tab title to be ${title}`);
+    browser.test.assertEq("tab 1", title, "Expected the first tab title");
     title = await browser.browserAction.getTitle({tabId: tab2.id});
-    browser.test.assertEq("tab 2", title, `Expected the second tab title to be ${title}`);
+    browser.test.assertEq("tab 2", title, "Expected the second tab title");
     title = await browser.browserAction.getTitle({tabId: tab3.id});
-    browser.test.assertEq("tab 3", title, `Expected the third tab title to be ${title}`);
+    browser.test.assertEq("tab 3", title, "Expected the third tab title");
 
     // Unset the title for the first tab and confirm that it is unset.
     browser.browserAction.setTitle({tabId: tab1.id, title: ""});
@@ -111,7 +112,10 @@ add_task(async function test_setTitle_and_getTitle() {
   async function checkTab(tab, name) {
     extension.sendMessage("select-tab", tab.id);
     await extension.awaitMessage("tab-selected");
-    is(BrowserActions.getNameForActiveTab(`{${extension.uuid}}`), name, "Got the expected name for the active browser action");
+    // Wait until the browser action has updated to the correct title.
+    await ContentTaskUtils.waitForCondition(() => {
+      return BrowserActions.getNameForActiveTab(`{${extension.uuid}}`) === name;
+    });
   }
 
   await checkTab(tabs.tab1, "Updated Title");
