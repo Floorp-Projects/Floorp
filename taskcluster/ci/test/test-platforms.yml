@@ -121,7 +121,6 @@ linux64-ccov/opt:
     test-sets:
         - common-tests
         - web-platform-tests
-        - desktop-screenshot-capture
         - awsy
         - headless
 linux64-jsdcov/opt:
