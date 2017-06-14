@@ -87,7 +87,7 @@ CreateGlobalAndRunTest(JSContext* cx)
   static const JSClassOps GlobalClassOps = {
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, nullptr,
-    nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr,
     JS_GlobalObjectTraceHook
   };
 

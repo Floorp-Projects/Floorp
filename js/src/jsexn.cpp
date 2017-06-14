@@ -180,6 +180,7 @@ static const ClassOps ErrorObjectClassOps = {
     nullptr,                 /* getProperty */
     nullptr,                 /* setProperty */
     nullptr,                 /* enumerate */
+    nullptr,                 /* newEnumerate */
     nullptr,                 /* resolve */
     nullptr,                 /* mayResolve */
     exn_finalize,

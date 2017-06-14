@@ -123,6 +123,7 @@ static const JSClassOps sWitnessClassOps = {
   nullptr /* getProperty */,
   nullptr /* setProperty */,
   nullptr /* enumerate */,
+  nullptr /* newEnumerate */,
   nullptr /* resolve */,
   nullptr /* mayResolve */,
   Finalize /* finalize */
