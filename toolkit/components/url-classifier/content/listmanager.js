@@ -400,10 +400,12 @@ PROT_ListManager.prototype.makeUpdateRequest_ = function(updateUrl, tableData) {
         return;
       }
       let tableName = line.substring(0, p);
-      let metadata = line.substring(p + 1).split(":");
-      let stateBase64 = metadata[0];
-      log(tableName + " ==> " + stateBase64);
-      tableState[tableName] = stateBase64;
+      if (tableName in streamerMap.tableNames) {
+        let metadata = line.substring(p + 1).split(":");
+        let stateBase64 = metadata[0];
+        log(tableName + " ==> " + stateBase64);
+        tableState[tableName] = stateBase64;
+      }
     });
 
     // The state is a byte stream which server told us from the
