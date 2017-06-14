@@ -1,5 +1,5 @@
 const {reducers, INITIAL_STATE} = require("common/Reducers.jsm");
-const {TopSites, App} = reducers;
+const {TopSites, App, Prefs} = reducers;
 const {actionTypes: at} = require("common/Actions.jsm");
 
 describe("Reducers", () => {
@@ -105,6 +105,45 @@ describe("Reducers", () => {
         const action = {type: event, data: {url: "bar.com"}};
         const nextState = TopSites(oldState, action);
         assert.deepEqual(nextState.rows, [{url: "foo.com"}]);
+      });
+    });
+  });
+  describe("Prefs", () => {
+    function prevState(custom = {}) {
+      return Object.assign({}, INITIAL_STATE.Prefs, custom);
+    }
+    it("should have the correct initial state", () => {
+      const state = Prefs(undefined, {});
+      assert.deepEqual(state, INITIAL_STATE.Prefs);
+    });
+    describe("PREFS_INITIAL_VALUES", () => {
+      it("should return a new object", () => {
+        const state = Prefs(undefined, {type: at.PREFS_INITIAL_VALUES, data: {}});
+        assert.notEqual(INITIAL_STATE.Prefs, state, "should not modify INITIAL_STATE");
+      });
+      it("should set initalized to true", () => {
+        const state = Prefs(undefined, {type: at.PREFS_INITIAL_VALUES, data: {}});
+        assert.isTrue(state.initialized);
+      });
+      it("should set .values", () => {
+        const newValues = {foo: 1, bar: 2};
+        const state = Prefs(undefined, {type: at.PREFS_INITIAL_VALUES, data: newValues});
+        assert.equal(state.values, newValues);
+      });
+    });
+    describe("PREF_CHANGED", () => {
+      it("should return a new Prefs object", () => {
+        const state = Prefs(undefined, {type: at.PREF_CHANGED, data: {name: "foo", value: 2}});
+        assert.notEqual(INITIAL_STATE.Prefs, state, "should not modify INITIAL_STATE");
+      });
+      it("should set the changed pref", () => {
+        const state = Prefs(prevState({foo: 1}), {type: at.PREF_CHANGED, data: {name: "foo", value: 2}});
+        assert.equal(state.values.foo, 2);
+      });
+      it("should return a new .pref object instead of mutating", () => {
+        const oldState = prevState({foo: 1});
+        const state = Prefs(oldState, {type: at.PREF_CHANGED, data: {name: "foo", value: 2}});
+        assert.notEqual(oldState.values, state.values);
       });
     });
   });

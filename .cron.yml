@@ -65,13 +65,3 @@ jobs:
       when:
           - {hour: 16, minute: 0}
           - {hour: 4, minute: 0}
-
-    - name: nightly-code-coverage
-      job:
-          type: decision-task
-          treeherder-symbol: Nc
-          target-tasks-method: nightly_code_coverage
-      run-on-projects:
-          - mozilla-central
-      when:
-          - {hour: 18, minute: 0}

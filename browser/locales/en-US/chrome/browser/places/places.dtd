@@ -85,8 +85,7 @@
 <!ENTITY col.dateadded.label     "Added">
 <!ENTITY col.lastmodified.label  "Last Modified">
 
-<!ENTITY search.label                              "Search:">
-<!ENTITY search.accesskey                          "S">
+<!ENTITY search.placeholder  "Search">
 
 <!ENTITY cmd.find.key  "f">
 
@@ -104,8 +103,6 @@
 <!ENTITY detailsPane.less.accesskey "e">
 <!ENTITY detailsPane.selectAnItemText.description "Select an item to view and edit its properties">
 
-<!ENTITY find.label               "Search:">
-<!ENTITY find.accesskey           "S">
 <!ENTITY view.label               "View">
 <!ENTITY view.accesskey           "w">
 <!ENTITY byDate.label             "By Date">

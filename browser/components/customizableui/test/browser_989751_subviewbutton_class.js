@@ -57,7 +57,6 @@ add_task(async function() {
 });
 
 add_task(checkSubviewButtonClass("menuWebDeveloperPopup", "developer-button", "PanelUI-developerItems"));
-add_task(checkSubviewButtonClass("viewSidebarMenu", "sidebar-button", "PanelUI-sidebarItems"));
 
 registerCleanupFunction(function() {
   tempElement.classList.remove(kCustomClass)

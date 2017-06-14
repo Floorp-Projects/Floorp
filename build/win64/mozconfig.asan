@@ -1,14 +1,16 @@
 ac_add_options --target=x86_64-pc-mingw32
 ac_add_options --host=x86_64-pc-mingw32
 
-CLANG_LIB_DIR="$(cd $topsrcdir/clang/lib/clang/* && cd lib/windows && pwd)"
+if [ -d "$topsrcdir/clang" ]; then
+    CLANG_LIB_DIR="$(cd $topsrcdir/clang/lib/clang/* && cd lib/windows && pwd)"
 
-export LIB=$LIB:$CLANG_LIB_DIR
-mk_export_correct_style LIB
-export LDFLAGS="clang_rt.asan_dynamic-x86_64.lib clang_rt.asan_dynamic_runtime_thunk-x86_64.lib"
+    export LIB=$LIB:$CLANG_LIB_DIR
+    mk_export_correct_style LIB
+    export LDFLAGS="clang_rt.asan_dynamic-x86_64.lib clang_rt.asan_dynamic_runtime_thunk-x86_64.lib"
 
-export LLVM_SYMBOLIZER="$topsrcdir/clang/bin/llvm-symbolizer.exe"
-export MOZ_CLANG_RT_ASAN_LIB_PATH="${CLANG_LIB_DIR}/clang_rt.asan_dynamic-x86_64.dll"
+    export LLVM_SYMBOLIZER="$topsrcdir/clang/bin/llvm-symbolizer.exe"
+    export MOZ_CLANG_RT_ASAN_LIB_PATH="${CLANG_LIB_DIR}/clang_rt.asan_dynamic-x86_64.dll"
+fi
 
 # Enable ASan specific code and build workarounds
 ac_add_options --enable-address-sanitizer
