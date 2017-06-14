@@ -90,9 +90,6 @@ module.exports = {
     // Disallow unmodified loop conditions.
     "no-unmodified-loop-condition": "error",
 
-    // Disallow ternary operators when simpler alternatives exist.
-    "no-unneeded-ternary": "error",
-
     // No expressions where a statement is expected
     "no-unused-expressions": "error",
 

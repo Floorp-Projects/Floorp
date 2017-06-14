@@ -758,8 +758,7 @@ this.Presentation = { // jshint ignore:line
     aModifiedText) {
     let context;
     if (!aModifiedText) {
-      context = new PivotContext(aAccessible, null, -1, -1, true,
-        aIsHide ? true : false);
+      context = new PivotContext(aAccessible, null, -1, -1, true, !!aIsHide);
     }
     return this.presenters.map(p => p.liveRegion(context, aIsPolite, aIsHide,
                                                  aModifiedText));

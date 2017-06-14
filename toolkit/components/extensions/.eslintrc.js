@@ -252,9 +252,6 @@ module.exports = {
     // Allow use of undefined variable.
     "no-undefined": "off",
 
-    // Disallow the use of Boolean literals in conditional expressions.
-    "no-unneeded-ternary": "error",
-
     // We use var-only-at-top-level instead of no-var as we allow top level
     // vars.
     "no-var": "off",

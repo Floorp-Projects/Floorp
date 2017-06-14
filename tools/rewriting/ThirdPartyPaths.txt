@@ -68,6 +68,7 @@ security/sandbox/chromium/
 testing/gtest/gmock/
 testing/gtest/gtest/
 testing/talos/talos/tests/dromaeo/
+third_party/aom/
 third_party/python/blessings/
 third_party/python/configobj/
 third_party/python/futures/

@@ -1237,7 +1237,7 @@ EnvironmentCache.prototype = {
 
     try {
       // This uses the same set of flags used by the pref pane.
-      return shellService.isDefaultBrowser(false, true) ? true : false;
+      return !!shellService.isDefaultBrowser(false, true);
     } catch (ex) {
       this._log.error("_isDefaultBrowser - Could not determine if default browser", ex);
       return null;

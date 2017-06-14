@@ -20,8 +20,7 @@ for (let plugin of GMPScope.GMP_PLUGINS) {
       id: plugin.id,
       isValid: true,
       isInstalled: false,
-      isEME: (plugin.id == "gmp-widevinecdm" ||
-              plugin.id.indexOf("gmp-eme-") == 0) ? true : false,
+      isEME: !!(plugin.id == "gmp-widevinecdm" || plugin.id.indexOf("gmp-eme-") == 0),
   });
   gMockAddons.push(mockAddon);
 }

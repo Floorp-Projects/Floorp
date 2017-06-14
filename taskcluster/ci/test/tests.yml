@@ -9,7 +9,7 @@ awsy:
     description: "Are we slim yet"
     suite: awsy
     treeherder-symbol: tc-SY(sy)
-    run-on-projects: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    run-on-projects: ['release', 'trunk', 'try']
     docker-image: {"in-tree": "desktop1604-test"}
     max-run-time: 7200
     e10s: true
@@ -1162,7 +1162,7 @@ reftest-stylo:
     chunks: 16
     run-on-projects:
         by-test-platform:
-            linux64-stylo/opt: [ 'stylo', 'autoland', 'mozilla-central', 'try' ] # not on mozilla-inbound
+            linux64-stylo/opt: [ 'autoland', 'mozilla-central', 'try' ] # not on mozilla-inbound
             linux64-stylo-sequential/opt: [ 'mozilla-central']
             default: built-projects
     e10s:

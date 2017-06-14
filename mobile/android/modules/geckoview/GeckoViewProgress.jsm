@@ -56,7 +56,7 @@ class GeckoViewProgress extends GeckoViewModule {
                !aWebProgress.isLoadingDocument) {
       let message = {
         type: "GeckoView:PageStop",
-        success: aStatus ? false : true
+        success: !aStatus
       };
 
       this.eventDispatcher.sendRequest(message);

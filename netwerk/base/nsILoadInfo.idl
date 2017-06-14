@@ -676,6 +676,16 @@ interface nsILoadInfo : nsISupports
   [noscript, infallible] readonly attribute boolean mixedContentWouldBlock;
 
   /**
+   * True if this load is an HSTS priming request.
+   */
+  [noscript, infallible] attribute boolean isHSTSPriming;
+
+  /**
+   * True if this load was upgraded from HSTS priming
+   */
+  [noscript, infallible] attribute boolean isHSTSPrimingUpgrade;
+
+  /**
    * Mark this LoadInfo as needing HSTS Priming
    *
    * @param wouldBlock Carry the decision of Mixed Content Blocking to be

@@ -282,7 +282,7 @@ function setVCTextInvoker(aDocAcc, aPivotMoveMethod, aBoundary, aTextOffsets,
     VCChangedChecker.storePreviousPosAndOffset(aDocAcc.virtualCursor);
     SimpleTest.info(aDocAcc.virtualCursor.position);
     var moved = aDocAcc.virtualCursor[aPivotMoveMethod](aBoundary,
-      aIsFromUserInput === undefined ? true : false);
+      aIsFromUserInput === undefined);
     SimpleTest.is(!!moved, !!expectMove,
                   "moved pivot by text with " + aPivotMoveMethod +
                   " to " + aIdOrNameOrAcc);

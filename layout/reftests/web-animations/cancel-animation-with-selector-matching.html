@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<title>Discard cancelled animation styles</title>
+<style>
+#test {
+  width: 100px; height: 100px;
+  background-color: white;
+}
+.changed {
+  color: red;
+}
+
+</style>
+<div id="test"></div>
+<script>
+  var target = document.getElementById("test");
+  var anim = target.animate({ backgroundColor: [ "red", "red" ] }, 100000);
+
+  anim.ready.then(() => {
+    anim.cancel();
+    // Add a class name to cause selector matching in a subsequent restyle.
+    target.classList.add("changed");
+
+    requestAnimationFrame(() => {
+      document.documentElement.classList.remove("reftest-wait");
+    });
+  });
+</script>

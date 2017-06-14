@@ -524,12 +524,6 @@ static OPUS_INLINE int interp_bits2pulses(const CELTMode *m, int start, int end,
    return codedBands;
 }
 
-#if !defined(__clang__) && defined(__GNUC__) && defined(__arm__) && \
-    __GNUC__ == 4 && __GNUC_MINOR__ == 8
-#warning "OPUS library causes an internal compiler error for gcc-4.8 based toolchain in arm"
-#pragma GCC push_options
-#pragma GCC optimize ("O0")
-#endif
 int compute_allocation(const CELTMode *m, int start, int end, const int *offsets, const int *cap, int alloc_trim, int *intensity, int *dual_stereo,
       opus_int32 total, opus_int32 *balance, int *pulses, int *ebits, int *fine_priority, int C, int LM, ec_ctx *ec, int encode, int prev, int signalBandwidth)
 {
@@ -642,7 +636,4 @@ int compute_allocation(const CELTMode *m, int start, int end, const int *offsets
    RESTORE_STACK;
    return codedBands;
 }
-#if !defined(__clang__) && defined(__GNUC__) && defined(__arm__) && \
-    __GNUC__ == 4 && __GNUC_MINOR__ == 8
-#pragma GCC pop_options
-#endif
+

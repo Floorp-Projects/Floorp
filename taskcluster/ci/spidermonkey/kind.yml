@@ -76,10 +76,7 @@ jobs:
         run:
             using: spidermonkey-mozjs-crate
             spidermonkey-variant: plain
-        run-on-projects:
-            - integration
-            - release
-            - try
+        run-on-projects: ['integration', 'release', 'try']
 
     sm-plain/debug:
         description: "Spidermonkey Plain"

@@ -422,7 +422,7 @@ linux64-stylo/opt:
         custom-build-variant-cfg: stylo
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
+    run-on-projects: [ 'trunk', 'try' ]
 
 linux64-stylo/debug:
     description: "Linux64 Debug Stylo"
@@ -449,7 +449,7 @@ linux64-stylo/debug:
         custom-build-variant-cfg: stylo-debug
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
+    run-on-projects: [ 'trunk', 'try' ]
 
 linux64-noopt/debug:
     description: "Linux64 No-optimize Debug"
@@ -477,7 +477,7 @@ linux64-noopt/debug:
         tooltool-downloads: public
         keep-artifacts: false
         need-xvfb: true
-    run-on-projects: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
+    run-on-projects: [ 'trunk', 'try' ]
 
 linux64-jsdcov/opt:
     description: "Linux64-JSDCov Opt"

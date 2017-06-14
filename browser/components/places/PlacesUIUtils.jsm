@@ -949,7 +949,7 @@ this.PlacesUIUtils = {
       return;
     }
 
-    var loadInBackground = where == "tabshifted" ? true : false;
+    var loadInBackground = where == "tabshifted";
     // For consistency, we want all the bookmarks to open in new tabs, instead
     // of having one of them replace the currently focused tab.  Hence we call
     // loadTabs with aReplace set to false.

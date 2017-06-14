@@ -26,8 +26,9 @@ The projects where this task should be in the target task set.  This is how
 requirements like "only run this on inbound" get implemented.  These are
 either project names or the aliases
 
- * `integration` -- integration branches
- * `release` -- release branches including mozilla-central
+ * `integration` -- integration repositories (autoland, inbound, etc)
+ * `trunk` -- integration repositories plus mozilla-central
+ * `release` -- release repositories including mozilla-central
  * `all` -- everywhere (the default)
 
 For try, this attribute applies only if ``-p all`` is specified.  All jobs can

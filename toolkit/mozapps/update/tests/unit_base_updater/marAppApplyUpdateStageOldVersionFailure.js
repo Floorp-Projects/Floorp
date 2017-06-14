@@ -66,7 +66,7 @@ function runUpdateFinished() {
                "the update state" + MSG_SHOULD_EQUAL);
   checkPostUpdateRunningFile(false);
   setTestFilesAndDirsForFailure();
-  checkFilesAfterUpdateFailure(getApplyDirFile, IS_MACOSX ? false : true, false);
+  checkFilesAfterUpdateFailure(getApplyDirFile, !IS_MACOSX, false);
 
   let updatesDir = getUpdatesPatchDir();
   Assert.ok(updatesDir.exists(),

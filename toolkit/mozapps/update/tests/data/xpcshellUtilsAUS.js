@@ -825,8 +825,7 @@ function setupTestCommon() {
   }
 
   if (IS_WIN) {
-    Services.prefs.setBoolPref(PREF_APP_UPDATE_SERVICE_ENABLED,
-                               IS_SERVICE_TEST ? true : false);
+    Services.prefs.setBoolPref(PREF_APP_UPDATE_SERVICE_ENABLED, !!IS_SERVICE_TEST);
   }
 
   // adjustGeneralPaths registers a cleanup function that calls end_test when
