@@ -368,6 +368,7 @@ static bool
 GetPropertyValuesPairs(JSContext* aCx,
                        JS::Handle<JSObject*> aObject,
                        ListAllowance aAllowLists,
+                       StyleBackendType aBackend,
                        nsTArray<PropertyValuesPair>& aResult);
 
 static bool
@@ -493,7 +494,10 @@ KeyframeUtils::ApplySpacing(nsTArray<Keyframe>& aKeyframes,
 
   nsTArray<double> cumulativeDistances;
   if (aSpacingMode == SpacingMode::paced) {
-    MOZ_ASSERT(IsAnimatableProperty(aProperty),
+    // We just unconditionally pass Gecko as the backend type here since
+    // Servo doesn't support paced timing and this feature will soon be removed
+    // (bug 1339690).
+    MOZ_ASSERT(IsAnimatableProperty(aProperty, StyleBackendType::Gecko),
                "Paced property should be animatable");
 
     cumulativeDistances = GetCumulativeDistances(aComputedValues, aProperty,
@@ -717,8 +721,20 @@ KeyframeUtils::GetAnimationPropertiesFromKeyframes(
 }
 
 /* static */ bool
-KeyframeUtils::IsAnimatableProperty(nsCSSPropertyID aProperty)
+KeyframeUtils::IsAnimatableProperty(nsCSSPropertyID aProperty,
+                                    StyleBackendType aBackend)
 {
+  // Regardless of the backend type, treat the 'display' property as not
+  // animatable. (The Servo backend will report it as being animatable, since
+  // it is in fact animatable by SMIL.)
+  if (aProperty == eCSSProperty_display) {
+    return false;
+  }
+
+  if (aBackend == StyleBackendType::Servo) {
+    return Servo_Property_IsAnimatable(aProperty);
+  }
+
   if (aProperty == eCSSProperty_UNKNOWN) {
     return false;
   }
@@ -869,6 +885,7 @@ ConvertKeyframeSequence(JSContext* aCx,
       JS::Rooted<JSObject*> object(aCx, &value.toObject());
       if (!GetPropertyValuesPairs(aCx, object,
                                   ListAllowance::eDisallow,
+                                  aDocument->GetStyleBackendType(),
                                   propertyValuePairs)) {
         return false;
       }
@@ -905,6 +922,8 @@ ConvertKeyframeSequence(JSContext* aCx,
  * @param aAllowLists If eAllow, values will be converted to
  *   (DOMString or sequence<DOMString); if eDisallow, values
  *   will be converted to DOMString.
+ * @param aBackend The style backend in use. Used to determine which properties
+ *   are animatable since only animatable properties are read.
  * @param aResult The array into which the enumerated property-values
  *   pairs will be stored.
  * @return false on failure or JS exception thrown while interacting
@@ -914,6 +933,7 @@ static bool
 GetPropertyValuesPairs(JSContext* aCx,
                        JS::Handle<JSObject*> aObject,
                        ListAllowance aAllowLists,
+                       StyleBackendType aBackend,
                        nsTArray<PropertyValuesPair>& aResult)
 {
   nsTArray<AdditionalProperty> properties;
@@ -936,7 +956,7 @@ GetPropertyValuesPairs(JSContext* aCx,
     nsCSSPropertyID property =
       nsCSSProps::LookupPropertyByIDLName(propName,
                                           CSSEnabledState::eForAllContent);
-    if (KeyframeUtils::IsAnimatableProperty(property)) {
+    if (KeyframeUtils::IsAnimatableProperty(property, aBackend)) {
       AdditionalProperty* p = properties.AppendElement();
       p->mProperty = property;
       p->mJsidIndex = i;
@@ -1450,6 +1470,7 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
   JS::Rooted<JSObject*> object(aCx, &aValue.toObject());
   nsTArray<PropertyValuesPair> propertyValuesPairs;
   if (!GetPropertyValuesPairs(aCx, object, ListAllowance::eAllow,
+                              aDocument->GetStyleBackendType(),
                               propertyValuesPairs)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
