@@ -13,7 +13,7 @@
 #include "nsSVGDisplayableFrame.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGIntegrationUtils.h"
-#include "mozilla/dom/SVGSVGElement.h"
+#include "mozilla/dom/SVGViewportElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -67,7 +67,7 @@ nsSVGInnerSVGFrame::PaintSVG(gfxContext& aContext,
 
   if (StyleDisplay()->IsScrollableOverflow()) {
     float x, y, width, height;
-    static_cast<SVGSVGElement*>(mContent)->
+    static_cast<SVGViewportElement*>(mContent)->
       GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
 
     if (width <= 0 || height <= 0) {
@@ -90,7 +90,7 @@ nsSVGInnerSVGFrame::ReflowSVG()
   // mRect must be set before FinishAndStoreOverflow is called in order
   // for our overflow areas to be clipped correctly.
   float x, y, width, height;
-  static_cast<SVGSVGElement*>(mContent)->
+  static_cast<SVGViewportElement*>(mContent)->
     GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
   mRect = nsLayoutUtils::RoundGfxRectToAppRect(
                            gfxRect(x, y, width, height),
@@ -113,14 +113,14 @@ nsSVGInnerSVGFrame::NotifySVGChanged(uint32_t aFlags)
 
   if (aFlags & COORD_CONTEXT_CHANGED) {
 
-    SVGSVGElement *svg = static_cast<SVGSVGElement*>(mContent);
+    SVGViewportElement *svg = static_cast<SVGViewportElement*>(mContent);
 
     bool xOrYIsPercentage =
-      svg->mLengthAttributes[SVGSVGElement::ATTR_X].IsPercentage() ||
-      svg->mLengthAttributes[SVGSVGElement::ATTR_Y].IsPercentage();
+      svg->mLengthAttributes[SVGViewportElement::ATTR_X].IsPercentage() ||
+      svg->mLengthAttributes[SVGViewportElement::ATTR_Y].IsPercentage();
     bool widthOrHeightIsPercentage =
-      svg->mLengthAttributes[SVGSVGElement::ATTR_WIDTH].IsPercentage() ||
-      svg->mLengthAttributes[SVGSVGElement::ATTR_HEIGHT].IsPercentage();
+      svg->mLengthAttributes[SVGViewportElement::ATTR_WIDTH].IsPercentage() ||
+      svg->mLengthAttributes[SVGViewportElement::ATTR_HEIGHT].IsPercentage();
 
     if (xOrYIsPercentage || widthOrHeightIsPercentage) {
       // Ancestor changes can't affect how we render from the perspective of
@@ -180,7 +180,7 @@ nsSVGInnerSVGFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
     // Ideally getClientRects/getBoundingClientRect should be consistent with
     // getBBox.
     float x, y, w, h;
-    static_cast<SVGSVGElement*>(mContent)->
+    static_cast<SVGViewportElement*>(mContent)->
       GetAnimatedLengthValues(&x, &y, &w, &h, nullptr);
     if (w < 0.0f) w = 0.0f;
     if (h < 0.0f) h = 0.0f;
@@ -209,7 +209,7 @@ nsSVGInnerSVGFrame::AttributeChanged(int32_t  aNameSpaceID,
   if (aNameSpaceID == kNameSpaceID_None &&
       !(GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
 
-    SVGSVGElement* content = static_cast<SVGSVGElement*>(mContent);
+    SVGViewportElement* content = static_cast<SVGViewportElement*>(mContent);
 
     if (aAttribute == nsGkAtoms::width ||
         aAttribute == nsGkAtoms::height) {
@@ -313,7 +313,7 @@ nsSVGInnerSVGFrame::GetCanvasTM()
     NS_ASSERTION(GetParent(), "null parent");
 
     nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(GetParent());
-    SVGSVGElement *content = static_cast<SVGSVGElement*>(mContent);
+    SVGViewportElement *content = static_cast<SVGViewportElement*>(mContent);
 
     gfxMatrix tm = content->PrependLocalTransformsTo(parent->GetCanvasTM());
 
