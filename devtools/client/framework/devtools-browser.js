@@ -307,41 +307,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     }
   },
 
-  async inspectNode(tab, nodeSelectors) {
-    let target = TargetFactory.forTab(tab);
-
-    let toolbox = await gDevTools.showToolbox(target, "inspector");
-    let inspector = toolbox.getCurrentPanel();
-
-    // new-node-front tells us when the node has been selected, whether the
-    // browser is remote or not.
-    let onNewNode = inspector.selection.once("new-node-front");
-
-    // Evaluate the cross iframes query selectors
-    async function querySelectors(nodeFront) {
-      let selector = nodeSelectors.pop();
-      if (!selector) {
-        return nodeFront;
-      }
-      nodeFront = await inspector.walker.querySelector(nodeFront, selector);
-      if (nodeSelectors.length > 0) {
-        let { nodes } = await inspector.walker.children(nodeFront);
-        // This is the NodeFront for the document node inside the iframe
-        nodeFront = nodes[0];
-      }
-      return querySelectors(nodeFront);
-    }
-    let nodeFront = await inspector.walker.getRootNode();
-    nodeFront = await querySelectors(nodeFront);
-    // Select the final node
-    inspector.selection.setNodeFront(nodeFront, "browser-context-menu");
-
-    await onNewNode;
-    // Now that the node has been selected, wait until the inspector is
-    // fully updated.
-    await inspector.once("inspector-updated");
-  },
-
   _getContentProcessTarget(processId) {
     // Create a DebuggerServer in order to connect locally to it
     if (!DebuggerServer.initialized) {
