@@ -723,7 +723,7 @@ pref("browser.preferences.instantApply", true);
 #endif
 
 // Toggling Search bar on and off in about:preferences
-pref("browser.preferences.search", false);
+pref("browser.preferences.search", true);
 
 // Use the new in-content about:preferences in Nightly only for now
 #if defined(NIGHTLY_BUILD)
