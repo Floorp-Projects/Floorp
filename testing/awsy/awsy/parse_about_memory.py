@@ -14,14 +14,28 @@ import json
 
 
 def path_total(data, path):
+    """
+    Calculates the sum for the given data point path and its children. If
+    path does not end with a '/' then only the value for the exact path is
+    returned.
+    """
     totals = defaultdict(int)
     totals_heap = defaultdict(int)
     totals_heap_allocated = defaultdict(int)
+
+    discrete = not path.endswith('/')
+
+    def match(value):
+      if discrete:
+        return value == path
+      else:
+        return value.startswith(path)
+
     for report in data["reports"]:
         if report["kind"] == 1 and report["path"].startswith("explicit/"):
             totals_heap[report["process"]] += report["amount"]
 
-        if report["path"].startswith(path):
+        if match(report["path"]):
             totals[report["process"]] += report["amount"]
             if report["kind"] == 1:
                 totals_heap[report["process"]] += report["amount"]
@@ -78,7 +92,7 @@ if __name__ == "__main__":
     parser.add_argument('report', action='store',
                         help='Path to a memory report file.')
     parser.add_argument('prefix', action='store',
-                        help='Prefix of data point to measure.')
+                        help='Prefix of data point to measure. If the prefix does not end in a \'/\' then an exact match is made.')
     parser.add_argument('--proc-filter', action='store', default=None,
                         help='Process name filter. If not provided all processes will be included.')
 
