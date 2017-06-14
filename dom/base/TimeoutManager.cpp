@@ -177,6 +177,15 @@ TimeoutManager::IsValidFiringId(uint32_t aFiringId) const
   return !IsInvalidFiringId(aFiringId);
 }
 
+TimeDuration
+TimeoutManager::MinSchedulingDelay() const
+{
+  if (IsBackground()) {
+    return TimeDuration::FromMilliseconds(gMinBackgroundTimeoutValue);
+  }
+  return TimeDuration();
+}
+
 bool
 TimeoutManager::IsInvalidFiringId(uint32_t aFiringId) const
 {
@@ -424,7 +433,8 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
 
   // If we're not suspended, then set the timer.
   if (!mWindow.IsSuspended()) {
-    nsresult rv = mExecutor->MaybeSchedule(timeout->When());
+    nsresult rv = mExecutor->MaybeSchedule(timeout->When(),
+                                           MinSchedulingDelay());
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -535,7 +545,8 @@ TimeoutManager::ClearTimeout(int32_t aTimerId, Timeout::Reason aReason)
   OrderedTimeoutIterator iter(mNormalTimeouts, mTrackingTimeouts);
   Timeout* nextTimeout = iter.Next();
   if (nextTimeout) {
-    MOZ_ALWAYS_SUCCEEDS(mExecutor->MaybeSchedule(nextTimeout->When()));
+    MOZ_ALWAYS_SUCCEEDS(mExecutor->MaybeSchedule(nextTimeout->When(),
+                                                 MinSchedulingDelay()));
   }
 }
 
@@ -653,7 +664,8 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
     // method and the window should not have been suspended while
     // executing the loop above since it doesn't call out to js.
     MOZ_DIAGNOSTIC_ASSERT(!mWindow.IsSuspended());
-    MOZ_ALWAYS_SUCCEEDS(mExecutor->MaybeSchedule(nextDeadline));
+    MOZ_ALWAYS_SUCCEEDS(mExecutor->MaybeSchedule(nextDeadline,
+                                                 MinSchedulingDelay()));
   }
 
   // Maybe the timeout that the event was fired for has been deleted
@@ -777,7 +789,8 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
         if (!mWindow.IsSuspended()) {
           RefPtr<Timeout> timeout = runIter.Next();
           if (timeout) {
-            MOZ_ALWAYS_SUCCEEDS(mExecutor->MaybeSchedule(timeout->When()));
+            MOZ_ALWAYS_SUCCEEDS(mExecutor->MaybeSchedule(timeout->When(),
+                                                         MinSchedulingDelay()));
           }
         }
         break;
@@ -818,7 +831,8 @@ TimeoutManager::RescheduleTimeout(Timeout* aTimeout, const TimeStamp& now)
     return true;
   }
 
-  nsresult rv = mExecutor->MaybeSchedule(aTimeout->When());
+  nsresult rv = mExecutor->MaybeSchedule(aTimeout->When(),
+                                         MinSchedulingDelay());
   NS_ENSURE_SUCCESS(rv, false);
 
   return true;
@@ -852,7 +866,7 @@ TimeoutManager::ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS
   OrderedTimeoutIterator iter(mNormalTimeouts, mTrackingTimeouts);
   Timeout* firstTimeout = iter.Next();
   if (firstTimeout) {
-    rv = mExecutor->MaybeSchedule(firstTimeout->When());
+    rv = mExecutor->MaybeSchedule(firstTimeout->When(), MinSchedulingDelay());
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1112,7 +1126,8 @@ TimeoutManager::Resume()
   });
 
   if (!nextWakeUp.IsNull()) {
-    MOZ_ALWAYS_SUCCEEDS(mExecutor->MaybeSchedule(nextWakeUp));
+    MOZ_ALWAYS_SUCCEEDS(mExecutor->MaybeSchedule(nextWakeUp,
+                                                 MinSchedulingDelay()));
   }
 }
 
@@ -1157,6 +1172,20 @@ TimeoutManager::UpdateBackgroundState()
 {
   if (!IsBackground()) {
     ResetTimersForThrottleReduction();
+  }
+
+  // When the window moves to the background or foreground we should
+  // reschedule the TimeoutExecutor in case the MinSchedulingDelay()
+  // changed.  Only do this if the window is not suspended and we
+  // actually have a timeout.
+  if (!mWindow.IsSuspended()) {
+    OrderedTimeoutIterator iter(mNormalTimeouts, mTrackingTimeouts);
+    Timeout* nextTimeout = iter.Next();
+    if (nextTimeout) {
+      mExecutor->Cancel();
+      MOZ_ALWAYS_SUCCEEDS(mExecutor->MaybeSchedule(nextTimeout->When(),
+                                                   MinSchedulingDelay()));
+    }
   }
 }
 

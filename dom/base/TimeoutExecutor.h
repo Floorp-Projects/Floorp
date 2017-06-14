@@ -75,8 +75,7 @@ public:
   Shutdown();
 
   nsresult
-  MaybeSchedule(const TimeStamp& aDeadline,
-                const TimeDuration& aMinDelay = TimeDuration());
+  MaybeSchedule(const TimeStamp& aDeadline, const TimeDuration& aMinDelay);
 
   void
   Cancel();
