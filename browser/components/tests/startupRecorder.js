@@ -68,9 +68,10 @@ startupRecorder.prototype = {
     Services.obs.removeObserver(this, topic);
 
     if (topic == "sessionstore-windows-restored") {
-      // We use idleDispatch here to record the set of loaded scripts after we
-      // are fully done with startup and ready to react to user events.
-      Services.tm.mainThread.idleDispatch(
+      // We use idleDispatchToMainThread here to record the set of
+      // loaded scripts after we are fully done with startup and ready
+      // to react to user events.
+      Services.tm.idleDispatchToMainThread(
         this.record.bind(this, "before handling user events"));
     } else {
       const topicsToNames = {
