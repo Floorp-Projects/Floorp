@@ -1251,8 +1251,7 @@ FetchBody<Derived>::BeginConsumeBody()
   }
 
   nsCOMPtr<nsIRunnable> r = new BeginConsumeBodyRunnable<Derived>(this);
-  nsresult rv = NS_OK;
-  mMainThreadEventTarget->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+  nsresult rv = mMainThreadEventTarget->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     ReleaseObject();
     return rv;
