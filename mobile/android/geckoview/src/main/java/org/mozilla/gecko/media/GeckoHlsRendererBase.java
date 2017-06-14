@@ -30,7 +30,7 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
     // Notify GeckoHlsPlayer about renderer's status, i.e. data has arrived.
     protected GeckoHlsPlayer.ComponentEventDispatcher mPlayerEventDispatcher;
 
-    protected ConcurrentLinkedQueue<GeckoHlsSample> mDemuxedInputSamples = new ConcurrentLinkedQueue<>();
+    protected ConcurrentLinkedQueue<GeckoHLSSample> mDemuxedInputSamples = new ConcurrentLinkedQueue<>();
 
     protected ByteBuffer mInputBuffer = null;
     protected ArrayList<Format> mFormats = new ArrayList<Format>();
@@ -64,15 +64,15 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
             return false;
         }
 
-        Iterator<GeckoHlsSample> iter = mDemuxedInputSamples.iterator();
+        Iterator<GeckoHLSSample> iter = mDemuxedInputSamples.iterator();
         long firstPTS = 0;
         if (iter.hasNext()) {
-            GeckoHlsSample sample = iter.next();
+            GeckoHLSSample sample = iter.next();
             firstPTS = sample.info.presentationTimeUs;
         }
         long lastPTS = firstPTS;
         while (iter.hasNext()) {
-            GeckoHlsSample sample = iter.next();
+            GeckoHLSSample sample = iter.next();
             lastPTS = sample.info.presentationTimeUs;
         }
         return Math.abs(lastPTS - firstPTS) > QUEUED_INPUT_SAMPLE_DURATION_THRESHOLD;
@@ -87,16 +87,16 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
 
     public long getFirstSamplePTS() { return mFirstSampleStartTime; }
 
-    public synchronized ConcurrentLinkedQueue<GeckoHlsSample> getQueuedSamples(int number) {
-        ConcurrentLinkedQueue<GeckoHlsSample> samples =
-            new ConcurrentLinkedQueue<GeckoHlsSample>();
+    public synchronized ConcurrentLinkedQueue<GeckoHLSSample> getQueuedSamples(int number) {
+        ConcurrentLinkedQueue<GeckoHLSSample> samples =
+            new ConcurrentLinkedQueue<GeckoHLSSample>();
 
         int queuedSize = mDemuxedInputSamples.size();
         for (int i = 0; i < queuedSize; i++) {
             if (i >= number) {
                 break;
             }
-            GeckoHlsSample sample = mDemuxedInputSamples.poll();
+            GeckoHLSSample sample = mDemuxedInputSamples.poll();
             samples.offer(sample);
         }
         if (samples.isEmpty()) {
@@ -172,9 +172,9 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
 
     /*
      * The place we get demuxed data from HlsMediaSource(ExoPlayer).
-     * The data will then be converted to GeckoHlsSample and deliver to
+     * The data will then be converted to GeckoHLSSample and deliver to
      * GeckoHlsDemuxerWrapper for further use.
-     * If the return value is ture, that means a GeckoHlsSample is queued
+     * If the return value is ture, that means a GeckoHLSSample is queued
      * successfully. We can try to feed more samples into queue.
      * If the return value is false, that means we might encounter following
      * situation 1) not initialized 2) input stream is ended 3) queue is full.
@@ -232,7 +232,7 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
     private void maybeNotifyDataArrived() {
         if (mWaitingForData && isQueuedEnoughData()) {
             if (DEBUG) { Log.d(LOGTAG, "onDataArrived"); }
-            mPlayerEventDispatcher.onDataArrived();
+            mPlayerEventDispatcher.onDataArrived(getTrackType());
             mWaitingForData = false;
         }
     }

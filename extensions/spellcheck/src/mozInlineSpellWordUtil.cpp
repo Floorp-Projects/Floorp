@@ -81,8 +81,11 @@ mozInlineSpellWordUtil::Init(const nsWeakPtr& aWeakEditor)
 }
 
 static inline bool
-IsTextNode(nsINode* aNode)
+IsSpellCheckingTextNode(nsINode* aNode)
 {
+  nsIContent *parent = aNode->GetParent();
+  if (parent && parent->IsAnyOfHTMLElements(nsGkAtoms::script, nsGkAtoms::style))
+      return false;
   return aNode->IsNodeOfType(nsINode::eTEXT);
 }
 
@@ -132,7 +135,7 @@ static nsINode*
 FindNextTextNode(nsINode* aNode, int32_t aOffset, nsINode* aRoot)
 {
   NS_PRECONDITION(aNode, "Null starting node?");
-  NS_ASSERTION(!IsTextNode(aNode), "FindNextTextNode should start with a non-text node");
+  NS_ASSERTION(!IsSpellCheckingTextNode(aNode), "FindNextTextNode should start with a non-text node");
 
   nsINode* checkNode;
   // Need to start at the aOffset'th child
@@ -147,7 +150,7 @@ FindNextTextNode(nsINode* aNode, int32_t aOffset, nsINode* aRoot)
     checkNode = aNode->GetNextNonChildNode(aRoot);
   }
   
-  while (checkNode && !IsTextNode(checkNode)) {
+  while (checkNode && !IsSpellCheckingTextNode(checkNode)) {
     checkNode = checkNode->GetNextNode(aRoot);
   }
   return checkNode;
@@ -179,7 +182,7 @@ mozInlineSpellWordUtil::SetEnd(nsINode* aEndNode, int32_t aEndOffset)
 
   InvalidateWords();
 
-  if (!IsTextNode(aEndNode)) {
+  if (!IsSpellCheckingTextNode(aEndNode)) {
     // End at the start of the first text node after aEndNode/aEndOffset.
     aEndNode = FindNextTextNode(aEndNode, aEndOffset, mRootNode);
     aEndOffset = 0;
@@ -193,7 +196,7 @@ mozInlineSpellWordUtil::SetPosition(nsINode* aNode, int32_t aOffset)
 {
   InvalidateWords();
 
-  if (!IsTextNode(aNode)) {
+  if (!IsSpellCheckingTextNode(aNode)) {
     // Start at the start of the first text node after aNode/aOffset.
     aNode = FindNextTextNode(aNode, aOffset, mRootNode);
     aOffset = 0;
@@ -343,463 +346,6 @@ mozInlineSpellWordUtil::MakeRange(NodeOffset aBegin, NodeOffset aEnd,
   range.forget(aRange);
 
   return NS_OK;
-}
-
-/*********** DOM text extraction ************/
-
-// IsDOMWordSeparator
-//
-//    Determines if the given character should be considered as a DOM Word
-//    separator. Basically, this is whitespace, although it could also have
-//    certain punctuation that we know ALWAYS breaks words. This is important.
-//    For example, we can't have any punctuation that could appear in a URL
-//    or email address in this, because those need to always fit into a single
-//    DOM word.
-
-static bool
-IsDOMWordSeparator(char16_t ch)
-{
-  // simple spaces
-  if (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r')
-    return true;
-
-  // complex spaces - check only if char isn't ASCII (uncommon)
-  if (ch >= 0xA0 &&
-      (ch == 0x00A0 ||  // NO-BREAK SPACE
-       ch == 0x2002 ||  // EN SPACE
-       ch == 0x2003 ||  // EM SPACE
-       ch == 0x2009 ||  // THIN SPACE
-       ch == 0x3000))   // IDEOGRAPHIC SPACE
-    return true;
-
-  // otherwise not a space
-  return false;
-}
-
-static inline bool
-IsBRElement(nsINode* aNode)
-{
-  return aNode->IsHTMLElement(nsGkAtoms::br);
-}
-
-/**
- * Given a TextNode, checks to see if there's a DOM word separator before
- * aBeforeOffset within it. This function does not modify aSeparatorOffset when
- * it returns false.
- *
- * @param aNode the TextNode to check.
- * @param aBeforeOffset the offset in the TextNode before which we will search
- *        for the DOM separator. You can pass INT32_MAX to search the entire
- *        length of the string.
- * @param aSeparatorOffset will be set to the offset of the first separator it
- *        encounters. Will not be written to if no separator is found.
- * @returns True if it found a separator.
- */
-static bool
-TextNodeContainsDOMWordSeparator(nsINode* aNode,
-                                 int32_t aBeforeOffset,
-                                 int32_t* aSeparatorOffset)
-{
-  // aNode is actually an nsIContent, since it's eTEXT
-  nsIContent* content = static_cast<nsIContent*>(aNode);
-  const nsTextFragment* textFragment = content->GetText();
-  NS_ASSERTION(textFragment, "Where is our text?");
-  for (int32_t i = std::min(aBeforeOffset, int32_t(textFragment->GetLength())) - 1; i >= 0; --i) {
-    if (IsDOMWordSeparator(textFragment->CharAt(i))) {
-      // Be greedy, find as many separators as we can
-      for (int32_t j = i - 1; j >= 0; --j) {
-        if (IsDOMWordSeparator(textFragment->CharAt(j))) {
-          i = j;
-        } else {
-          break;
-        }
-      }
-      *aSeparatorOffset = i;
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
- * Check if there's a DOM word separator before aBeforeOffset in this node.
- * Always returns true if it's a BR element.
- * aSeparatorOffset is set to the index of the first character in the last
- * separator if any is found (0 for BR elements).
- *
- * This function does not modify aSeparatorOffset when it returns false.
- */
-static bool
-ContainsDOMWordSeparator(nsINode* aNode, int32_t aBeforeOffset,
-                         int32_t* aSeparatorOffset)
-{
-  if (IsBRElement(aNode)) {
-    *aSeparatorOffset = 0;
-    return true;
-  }
-
-  if (!IsTextNode(aNode))
-    return false;
-
-  return TextNodeContainsDOMWordSeparator(aNode, aBeforeOffset,
-                                          aSeparatorOffset);
-}
-
-static bool
-IsBreakElement(nsINode* aNode)
-{
-  if (!aNode->IsElement()) {
-    return false;
-  }
-
-  dom::Element *element = aNode->AsElement();
-    
-  if (element->IsHTMLElement(nsGkAtoms::br))
-    return true;
-
-  // If we don't have a frame, we don't consider ourselves a break
-  // element.  In particular, words can span us.
-  if (!element->GetPrimaryFrame())
-    return false;
-
-  // Anything that's not an inline element is a break element.
-  // XXXbz should replaced inlines be break elements, though?
-  return element->GetPrimaryFrame()->StyleDisplay()->mDisplay !=
-    StyleDisplay::Inline;
-}
-
-struct CheckLeavingBreakElementClosure {
-  bool          mLeftBreakElement;
-};
-
-static void
-CheckLeavingBreakElement(nsINode* aNode, void* aClosure)
-{
-  CheckLeavingBreakElementClosure* cl =
-    static_cast<CheckLeavingBreakElementClosure*>(aClosure);
-  if (!cl->mLeftBreakElement && IsBreakElement(aNode)) {
-    cl->mLeftBreakElement = true;
-  }
-}
-
-void
-mozInlineSpellWordUtil::NormalizeWord(nsSubstring& aWord)
-{
-  nsAutoString result;
-  ::NormalizeWord(aWord, 0, aWord.Length(), result);
-  aWord = result;
-}
-
-void
-mozInlineSpellWordUtil::BuildSoftText()
-{
-  // First we have to work backwards from mSoftStart to find a text node
-  // containing a DOM word separator, a non-inline-element
-  // boundary, or the hard start node. That's where we'll start building the
-  // soft string from.
-  nsINode* node = mSoftBegin.mNode;
-  int32_t firstOffsetInNode = 0;
-  int32_t checkBeforeOffset = mSoftBegin.mOffset;
-  while (node) {
-    if (ContainsDOMWordSeparator(node, checkBeforeOffset, &firstOffsetInNode)) {
-      if (node == mSoftBegin.mNode) {
-        // If we find a word separator on the first node, look at the preceding
-        // word on the text node as well.
-        int32_t newOffset = 0;
-        if (firstOffsetInNode > 0) {
-          // Try to find the previous word boundary in the current node. If
-          // we can't find one, start checking previous sibling nodes (if any
-          // adjacent ones exist) to see if we can find any text nodes with
-          // DOM word separators. We bail out as soon as we see a node that is
-          // not a text node, or we run out of previous sibling nodes. In the
-          // event that we simply cannot find any preceding word separator, the
-          // offset is set to 0, and the soft text beginning node is set to the
-          // "most previous" text node before the original starting node, or
-          // kept at the original starting node if no previous text nodes exist.
-          if (!ContainsDOMWordSeparator(node, firstOffsetInNode - 1,
-                                        &newOffset)) {
-            nsINode* prevNode = node->GetPreviousSibling();
-            while (prevNode && IsTextNode(prevNode)) {
-              mSoftBegin.mNode = prevNode;
-              if (TextNodeContainsDOMWordSeparator(prevNode, INT32_MAX,
-                                                   &newOffset)) {
-                break;
-              }
-              prevNode = prevNode->GetPreviousSibling();
-            }
-          }
-        }
-        firstOffsetInNode = newOffset;
-        mSoftBegin.mOffset = newOffset;
-      }
-      break;
-    }
-    checkBeforeOffset = INT32_MAX;
-    if (IsBreakElement(node)) {
-      // Since GetPreviousContent follows tree *preorder*, we're about to traverse
-      // up out of 'node'. Since node induces breaks (e.g., it's a block),
-      // don't bother trying to look outside it, just stop now.
-      break;
-    }
-    // GetPreviousContent below expects mRootNode to be an ancestor of node.
-    if (!nsContentUtils::ContentIsDescendantOf(node, mRootNode)) {
-      break;
-    }
-    node = node->GetPreviousContent(mRootNode);
-  }
-
-  // Now build up the string moving forward through the DOM until we reach
-  // the soft end and *then* see a DOM word separator, a non-inline-element
-  // boundary, or the hard end node.
-  mSoftText.Truncate();
-  mSoftTextDOMMapping.Clear();
-  bool seenSoftEnd = false;
-  // Leave this outside the loop so large heap string allocations can be reused
-  // across iterations
-  while (node) {
-    if (node == mSoftEnd.mNode) {
-      seenSoftEnd = true;
-    }
-
-    bool exit = false;
-    if (IsTextNode(node)) {
-      nsIContent* content = static_cast<nsIContent*>(node);
-      NS_ASSERTION(content, "Where is our content?");
-      const nsTextFragment* textFragment = content->GetText();
-      NS_ASSERTION(textFragment, "Where is our text?");
-      int32_t lastOffsetInNode = textFragment->GetLength();
-
-      if (seenSoftEnd) {
-        // check whether we can stop after this
-        for (int32_t i = node == mSoftEnd.mNode ? mSoftEnd.mOffset : 0;
-             i < int32_t(textFragment->GetLength()); ++i) {
-          if (IsDOMWordSeparator(textFragment->CharAt(i))) {
-            exit = true;
-            // stop at the first separator after the soft end point
-            lastOffsetInNode = i;
-            break;
-          }
-        }
-      }
-
-      if (firstOffsetInNode < lastOffsetInNode) {
-        int32_t len = lastOffsetInNode - firstOffsetInNode;
-        mSoftTextDOMMapping.AppendElement(
-          DOMTextMapping(NodeOffset(node, firstOffsetInNode), mSoftText.Length(), len));
-
-        bool ok = textFragment->AppendTo(mSoftText, firstOffsetInNode, len,
-                                         mozilla::fallible);
-        if (!ok) {
-            // probably out of memory, remove from mSoftTextDOMMapping
-            mSoftTextDOMMapping.RemoveElementAt(mSoftTextDOMMapping.Length() - 1);
-            exit = true;
-        }
-      }
-
-      firstOffsetInNode = 0;
-    }
-
-    if (exit)
-      break;
-
-    CheckLeavingBreakElementClosure closure = { false };
-    node = FindNextNode(node, mRootNode, CheckLeavingBreakElement, &closure);
-    if (closure.mLeftBreakElement || (node && IsBreakElement(node))) {
-      // We left, or are entering, a break element (e.g., block). Maybe we can
-      // stop now.
-      if (seenSoftEnd)
-        break;
-      // Record the break
-      mSoftText.Append(' ');
-    }
-  }
-  
-#ifdef DEBUG_SPELLCHECK
-  printf("Got DOM string: %s\n", NS_ConvertUTF16toUTF8(mSoftText).get());
-#endif
-}
-
-nsresult
-mozInlineSpellWordUtil::BuildRealWords()
-{
-  // This is pretty simple. We just have to walk mSoftText, tokenizing it
-  // into "real words".
-  // We do an outer traversal of words delimited by IsDOMWordSeparator, calling
-  // SplitDOMWord on each of those DOM words
-  int32_t wordStart = -1;
-  mRealWords.Clear();
-  for (int32_t i = 0; i < int32_t(mSoftText.Length()); ++i) {
-    if (IsDOMWordSeparator(mSoftText.CharAt(i))) {
-      if (wordStart >= 0) {
-        nsresult rv = SplitDOMWord(wordStart, i);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-        wordStart = -1;
-      }
-    } else {
-      if (wordStart < 0) {
-        wordStart = i;
-      }
-    }
-  }
-  if (wordStart >= 0) {
-    nsresult rv = SplitDOMWord(wordStart, mSoftText.Length());
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-
-  return NS_OK;
-}
-
-/*********** DOM/realwords<->mSoftText mapping functions ************/
-
-int32_t
-mozInlineSpellWordUtil::MapDOMPositionToSoftTextOffset(NodeOffset aNodeOffset)
-{
-  if (!mSoftTextValid) {
-    NS_ERROR("Soft text must be valid if we're to map into it");
-    return -1;
-  }
-  
-  for (int32_t i = 0; i < int32_t(mSoftTextDOMMapping.Length()); ++i) {
-    const DOMTextMapping& map = mSoftTextDOMMapping[i];
-    if (map.mNodeOffset.mNode == aNodeOffset.mNode) {
-      // Allow offsets at either end of the string, in particular, allow the
-      // offset that's at the end of the contributed string
-      int32_t offsetInContributedString =
-        aNodeOffset.mOffset - map.mNodeOffset.mOffset;
-      if (offsetInContributedString >= 0 &&
-          offsetInContributedString <= map.mLength)
-        return map.mSoftTextOffset + offsetInContributedString;
-      return -1;
-    }
-  }
-  return -1;
-}
-
-namespace {
-
-template<class T>
-class FirstLargerOffset
-{
-  int32_t mSoftTextOffset;
-
-public:
-  explicit FirstLargerOffset(int32_t aSoftTextOffset) : mSoftTextOffset(aSoftTextOffset) {}
-  int operator()(const T& t) const {
-  // We want the first larger offset, so never return 0 (which would
-  // short-circuit evaluation before finding the last such offset).
-    return mSoftTextOffset < t.mSoftTextOffset ? -1 : 1;
-  }
-};
-
-template<class T>
-bool
-FindLastNongreaterOffset(const nsTArray<T>& aContainer, int32_t aSoftTextOffset, size_t* aIndex)
-{
-  if (aContainer.Length() == 0) {
-    return false;
-  }
-
-  BinarySearchIf(aContainer, 0, aContainer.Length(),
-                 FirstLargerOffset<T>(aSoftTextOffset), aIndex);
-  if (*aIndex > 0) {
-    // There was at least one mapping with offset <= aSoftTextOffset. Step back
-    // to find the last element with |mSoftTextOffset <= aSoftTextOffset|.
-    *aIndex -= 1;
-  } else {
-    // Every mapping had offset greater than aSoftTextOffset.
-    MOZ_ASSERT(aContainer[*aIndex].mSoftTextOffset > aSoftTextOffset);
-  }
-  return true;
-}
-
-} // namespace
-
-mozInlineSpellWordUtil::NodeOffset
-mozInlineSpellWordUtil::MapSoftTextOffsetToDOMPosition(int32_t aSoftTextOffset,
-                                                       DOMMapHint aHint)
-{
-  NS_ASSERTION(mSoftTextValid, "Soft text must be valid if we're to map out of it");
-  if (!mSoftTextValid)
-    return NodeOffset(nullptr, -1);
-
-  // Find the last mapping, if any, such that mSoftTextOffset <= aSoftTextOffset
-  size_t index;
-  bool found = FindLastNongreaterOffset(mSoftTextDOMMapping, aSoftTextOffset, &index);
-  if (!found) {
-    return NodeOffset(nullptr, -1);
-  }
-
-  // 'index' is now the last mapping, if any, such that
-  // mSoftTextOffset <= aSoftTextOffset.
-  // If we're doing HINT_END, then we may want to return the end of the
-  // the previous mapping instead of the start of this mapping
-  if (aHint == HINT_END && index > 0) {
-    const DOMTextMapping& map = mSoftTextDOMMapping[index - 1];
-    if (map.mSoftTextOffset + map.mLength == aSoftTextOffset)
-      return NodeOffset(map.mNodeOffset.mNode, map.mNodeOffset.mOffset + map.mLength);
-  }
-
-  // We allow ourselves to return the end of this mapping even if we're
-  // doing HINT_START. This will only happen if there is no mapping which this
-  // point is the start of. I'm not 100% sure this is OK...
-  const DOMTextMapping& map = mSoftTextDOMMapping[index];
-  int32_t offset = aSoftTextOffset - map.mSoftTextOffset;
-  if (offset >= 0 && offset <= map.mLength)
-    return NodeOffset(map.mNodeOffset.mNode, map.mNodeOffset.mOffset + offset);
-
-  return NodeOffset(nullptr, -1);
-}
-
-int32_t
-mozInlineSpellWordUtil::FindRealWordContaining(int32_t aSoftTextOffset,
-    DOMMapHint aHint, bool aSearchForward)
-{
-  NS_ASSERTION(mSoftTextValid, "Soft text must be valid if we're to map out of it");
-  if (!mSoftTextValid)
-    return -1;
-
-  // Find the last word, if any, such that mSoftTextOffset <= aSoftTextOffset
-  size_t index;
-  bool found = FindLastNongreaterOffset(mRealWords, aSoftTextOffset, &index);
-  if (!found) {
-    return -1;
-  }
-
-  // 'index' is now the last word, if any, such that
-  // mSoftTextOffset <= aSoftTextOffset.
-  // If we're doing HINT_END, then we may want to return the end of the
-  // the previous word instead of the start of this word
-  if (aHint == HINT_END && index > 0) {
-    const RealWord& word = mRealWords[index - 1];
-    if (word.mSoftTextOffset + word.mLength == aSoftTextOffset)
-      return index - 1;
-  }
-
-  // We allow ourselves to return the end of this word even if we're
-  // doing HINT_START. This will only happen if there is no word which this
-  // point is the start of. I'm not 100% sure this is OK...
-  const RealWord& word = mRealWords[index];
-  int32_t offset = aSoftTextOffset - word.mSoftTextOffset;
-  if (offset >= 0 && offset <= static_cast<int32_t>(word.mLength))
-    return index;
-
-  if (aSearchForward) {
-    if (mRealWords[0].mSoftTextOffset > aSoftTextOffset) {
-      // All words have mSoftTextOffset > aSoftTextOffset
-      return 0;
-    }
-    // 'index' is the last word such that mSoftTextOffset <= aSoftTextOffset.
-    // Word index+1, if it exists, will be the first with
-    // mSoftTextOffset > aSoftTextOffset.
-    if (index + 1 < mRealWords.Length())
-      return index + 1;
-  }
-
-  return -1;
 }
 
 /*********** Word Splitting ************/
@@ -1041,6 +587,472 @@ WordSplitState::ShouldSkipWord(int32_t aStart, int32_t aLength)
 
   // not special
   return false;
+}
+
+/*********** DOM text extraction ************/
+
+// IsDOMWordSeparator
+//
+//    Determines if the given character should be considered as a DOM Word
+//    separator. Basically, this is whitespace, although it could also have
+//    certain punctuation that we know ALWAYS breaks words. This is important.
+//    For example, we can't have any punctuation that could appear in a URL
+//    or email address in this, because those need to always fit into a single
+//    DOM word.
+
+static bool
+IsDOMWordSeparator(char16_t ch)
+{
+  // simple spaces
+  if (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r')
+    return true;
+
+  // complex spaces - check only if char isn't ASCII (uncommon)
+  if (ch >= 0xA0 &&
+      (ch == 0x00A0 ||  // NO-BREAK SPACE
+       ch == 0x2002 ||  // EN SPACE
+       ch == 0x2003 ||  // EM SPACE
+       ch == 0x2009 ||  // THIN SPACE
+       ch == 0x3000))   // IDEOGRAPHIC SPACE
+    return true;
+
+  // otherwise not a space
+  return false;
+}
+
+static inline bool
+IsBRElement(nsINode* aNode)
+{
+  return aNode->IsHTMLElement(nsGkAtoms::br);
+}
+
+/**
+ * Given a TextNode, checks to see if there's a DOM word separator before
+ * aBeforeOffset within it. This function does not modify aSeparatorOffset when
+ * it returns false.
+ *
+ * @param aNode the TextNode to check.
+ * @param aBeforeOffset the offset in the TextNode before which we will search
+ *        for the DOM separator. You can pass INT32_MAX to search the entire
+ *        length of the string.
+ * @param aSeparatorOffset will be set to the offset of the first separator it
+ *        encounters. Will not be written to if no separator is found.
+ * @returns True if it found a separator.
+ */
+static bool
+TextNodeContainsDOMWordSeparator(nsINode* aNode,
+                                 int32_t aBeforeOffset,
+                                 int32_t* aSeparatorOffset)
+{
+  // aNode is actually an nsIContent, since it's eTEXT
+  nsIContent* content = static_cast<nsIContent*>(aNode);
+  const nsTextFragment* textFragment = content->GetText();
+  NS_ASSERTION(textFragment, "Where is our text?");
+  nsString text;
+  int32_t end = std::min(aBeforeOffset, int32_t(textFragment->GetLength()));
+  bool ok = textFragment->AppendTo(text, 0, end, mozilla::fallible);
+  if(!ok)
+    return false;
+
+  WordSplitState state(nullptr, text, 0, end);
+  for (int32_t i = end - 1; i >= 0; --i) {
+    if (IsDOMWordSeparator(textFragment->CharAt(i)) ||
+        state.ClassifyCharacter(i, true) == CHAR_CLASS_SEPARATOR) {
+      // Be greedy, find as many separators as we can
+      for (int32_t j = i - 1; j >= 0; --j) {
+        if (IsDOMWordSeparator(textFragment->CharAt(j)) ||
+            state.ClassifyCharacter(j, true) == CHAR_CLASS_SEPARATOR) {
+          i = j;
+        } else {
+          break;
+        }
+      }
+      *aSeparatorOffset = i;
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Check if there's a DOM word separator before aBeforeOffset in this node.
+ * Always returns true if it's a BR element.
+ * aSeparatorOffset is set to the index of the first character in the last
+ * separator if any is found (0 for BR elements).
+ *
+ * This function does not modify aSeparatorOffset when it returns false.
+ */
+static bool
+ContainsDOMWordSeparator(nsINode* aNode, int32_t aBeforeOffset,
+                         int32_t* aSeparatorOffset)
+{
+  if (IsBRElement(aNode)) {
+    *aSeparatorOffset = 0;
+    return true;
+  }
+
+  if (!IsSpellCheckingTextNode(aNode))
+    return false;
+
+  return TextNodeContainsDOMWordSeparator(aNode, aBeforeOffset,
+                                          aSeparatorOffset);
+}
+
+static bool
+IsBreakElement(nsINode* aNode)
+{
+  if (!aNode->IsElement()) {
+    return false;
+  }
+
+  dom::Element *element = aNode->AsElement();
+    
+  if (element->IsHTMLElement(nsGkAtoms::br))
+    return true;
+
+  // If we don't have a frame, we don't consider ourselves a break
+  // element.  In particular, words can span us.
+  if (!element->GetPrimaryFrame())
+    return false;
+
+  // Anything that's not an inline element is a break element.
+  // XXXbz should replaced inlines be break elements, though?
+  return element->GetPrimaryFrame()->StyleDisplay()->mDisplay !=
+    StyleDisplay::Inline;
+}
+
+struct CheckLeavingBreakElementClosure {
+  bool          mLeftBreakElement;
+};
+
+static void
+CheckLeavingBreakElement(nsINode* aNode, void* aClosure)
+{
+  CheckLeavingBreakElementClosure* cl =
+    static_cast<CheckLeavingBreakElementClosure*>(aClosure);
+  if (!cl->mLeftBreakElement && IsBreakElement(aNode)) {
+    cl->mLeftBreakElement = true;
+  }
+}
+
+void
+mozInlineSpellWordUtil::NormalizeWord(nsSubstring& aWord)
+{
+  nsAutoString result;
+  ::NormalizeWord(aWord, 0, aWord.Length(), result);
+  aWord = result;
+}
+
+void
+mozInlineSpellWordUtil::BuildSoftText()
+{
+  // First we have to work backwards from mSoftStart to find a text node
+  // containing a DOM word separator, a non-inline-element
+  // boundary, or the hard start node. That's where we'll start building the
+  // soft string from.
+  nsINode* node = mSoftBegin.mNode;
+  int32_t firstOffsetInNode = 0;
+  int32_t checkBeforeOffset = mSoftBegin.mOffset;
+  while (node) {
+    if (ContainsDOMWordSeparator(node, checkBeforeOffset, &firstOffsetInNode)) {
+      if (node == mSoftBegin.mNode) {
+        // If we find a word separator on the first node, look at the preceding
+        // word on the text node as well.
+        int32_t newOffset = 0;
+        if (firstOffsetInNode > 0) {
+          // Try to find the previous word boundary in the current node. If
+          // we can't find one, start checking previous sibling nodes (if any
+          // adjacent ones exist) to see if we can find any text nodes with
+          // DOM word separators. We bail out as soon as we see a node that is
+          // not a text node, or we run out of previous sibling nodes. In the
+          // event that we simply cannot find any preceding word separator, the
+          // offset is set to 0, and the soft text beginning node is set to the
+          // "most previous" text node before the original starting node, or
+          // kept at the original starting node if no previous text nodes exist.
+          if (!ContainsDOMWordSeparator(node, firstOffsetInNode - 1,
+                                        &newOffset)) {
+            nsINode* prevNode = node->GetPreviousSibling();
+            while (prevNode && IsSpellCheckingTextNode(prevNode)) {
+              mSoftBegin.mNode = prevNode;
+              if (TextNodeContainsDOMWordSeparator(prevNode, INT32_MAX,
+                                                   &newOffset)) {
+                break;
+              }
+              prevNode = prevNode->GetPreviousSibling();
+            }
+          }
+        }
+        firstOffsetInNode = newOffset;
+        mSoftBegin.mOffset = newOffset;
+      }
+      break;
+    }
+    checkBeforeOffset = INT32_MAX;
+    if (IsBreakElement(node)) {
+      // Since GetPreviousContent follows tree *preorder*, we're about to traverse
+      // up out of 'node'. Since node induces breaks (e.g., it's a block),
+      // don't bother trying to look outside it, just stop now.
+      break;
+    }
+    // GetPreviousContent below expects mRootNode to be an ancestor of node.
+    if (!nsContentUtils::ContentIsDescendantOf(node, mRootNode)) {
+      break;
+    }
+    node = node->GetPreviousContent(mRootNode);
+  }
+
+  // Now build up the string moving forward through the DOM until we reach
+  // the soft end and *then* see a DOM word separator, a non-inline-element
+  // boundary, or the hard end node.
+  mSoftText.Truncate();
+  mSoftTextDOMMapping.Clear();
+  bool seenSoftEnd = false;
+  // Leave this outside the loop so large heap string allocations can be reused
+  // across iterations
+  while (node) {
+    if (node == mSoftEnd.mNode) {
+      seenSoftEnd = true;
+    }
+
+    bool exit = false;
+    if (IsSpellCheckingTextNode(node)) {
+      nsIContent* content = static_cast<nsIContent*>(node);
+      NS_ASSERTION(content, "Where is our content?");
+      const nsTextFragment* textFragment = content->GetText();
+      NS_ASSERTION(textFragment, "Where is our text?");
+      int32_t lastOffsetInNode = textFragment->GetLength();
+
+      if (seenSoftEnd) {
+        // check whether we can stop after this
+        for (int32_t i = node == mSoftEnd.mNode ? mSoftEnd.mOffset : 0;
+             i < int32_t(textFragment->GetLength()); ++i) {
+          if (IsDOMWordSeparator(textFragment->CharAt(i))) {
+            exit = true;
+            // stop at the first separator after the soft end point
+            lastOffsetInNode = i;
+            break;
+          }
+        }
+      }
+
+      if (firstOffsetInNode < lastOffsetInNode) {
+        int32_t len = lastOffsetInNode - firstOffsetInNode;
+        mSoftTextDOMMapping.AppendElement(
+          DOMTextMapping(NodeOffset(node, firstOffsetInNode), mSoftText.Length(), len));
+
+        bool ok = textFragment->AppendTo(mSoftText, firstOffsetInNode, len,
+                                         mozilla::fallible);
+        if (!ok) {
+            // probably out of memory, remove from mSoftTextDOMMapping
+            mSoftTextDOMMapping.RemoveElementAt(mSoftTextDOMMapping.Length() - 1);
+            exit = true;
+        }
+      }
+
+      firstOffsetInNode = 0;
+    }
+
+    if (exit)
+      break;
+
+    CheckLeavingBreakElementClosure closure = { false };
+    node = FindNextNode(node, mRootNode, CheckLeavingBreakElement, &closure);
+    if (closure.mLeftBreakElement || (node && IsBreakElement(node))) {
+      // We left, or are entering, a break element (e.g., block). Maybe we can
+      // stop now.
+      if (seenSoftEnd)
+        break;
+      // Record the break
+      mSoftText.Append(' ');
+    }
+  }
+  
+#ifdef DEBUG_SPELLCHECK
+  printf("Got DOM string: %s\n", NS_ConvertUTF16toUTF8(mSoftText).get());
+#endif
+}
+
+nsresult
+mozInlineSpellWordUtil::BuildRealWords()
+{
+  // This is pretty simple. We just have to walk mSoftText, tokenizing it
+  // into "real words".
+  // We do an outer traversal of words delimited by IsDOMWordSeparator, calling
+  // SplitDOMWord on each of those DOM words
+  int32_t wordStart = -1;
+  mRealWords.Clear();
+  for (int32_t i = 0; i < int32_t(mSoftText.Length()); ++i) {
+    if (IsDOMWordSeparator(mSoftText.CharAt(i))) {
+      if (wordStart >= 0) {
+        nsresult rv = SplitDOMWord(wordStart, i);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+        wordStart = -1;
+      }
+    } else {
+      if (wordStart < 0) {
+        wordStart = i;
+      }
+    }
+  }
+  if (wordStart >= 0) {
+    nsresult rv = SplitDOMWord(wordStart, mSoftText.Length());
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
+/*********** DOM/realwords<->mSoftText mapping functions ************/
+
+int32_t
+mozInlineSpellWordUtil::MapDOMPositionToSoftTextOffset(NodeOffset aNodeOffset)
+{
+  if (!mSoftTextValid) {
+    NS_ERROR("Soft text must be valid if we're to map into it");
+    return -1;
+  }
+  
+  for (int32_t i = 0; i < int32_t(mSoftTextDOMMapping.Length()); ++i) {
+    const DOMTextMapping& map = mSoftTextDOMMapping[i];
+    if (map.mNodeOffset.mNode == aNodeOffset.mNode) {
+      // Allow offsets at either end of the string, in particular, allow the
+      // offset that's at the end of the contributed string
+      int32_t offsetInContributedString =
+        aNodeOffset.mOffset - map.mNodeOffset.mOffset;
+      if (offsetInContributedString >= 0 &&
+          offsetInContributedString <= map.mLength)
+        return map.mSoftTextOffset + offsetInContributedString;
+      return -1;
+    }
+  }
+  return -1;
+}
+
+namespace {
+
+template<class T>
+class FirstLargerOffset
+{
+  int32_t mSoftTextOffset;
+
+public:
+  explicit FirstLargerOffset(int32_t aSoftTextOffset) : mSoftTextOffset(aSoftTextOffset) {}
+  int operator()(const T& t) const {
+  // We want the first larger offset, so never return 0 (which would
+  // short-circuit evaluation before finding the last such offset).
+    return mSoftTextOffset < t.mSoftTextOffset ? -1 : 1;
+  }
+};
+
+template<class T>
+bool
+FindLastNongreaterOffset(const nsTArray<T>& aContainer, int32_t aSoftTextOffset, size_t* aIndex)
+{
+  if (aContainer.Length() == 0) {
+    return false;
+  }
+
+  BinarySearchIf(aContainer, 0, aContainer.Length(),
+                 FirstLargerOffset<T>(aSoftTextOffset), aIndex);
+  if (*aIndex > 0) {
+    // There was at least one mapping with offset <= aSoftTextOffset. Step back
+    // to find the last element with |mSoftTextOffset <= aSoftTextOffset|.
+    *aIndex -= 1;
+  } else {
+    // Every mapping had offset greater than aSoftTextOffset.
+    MOZ_ASSERT(aContainer[*aIndex].mSoftTextOffset > aSoftTextOffset);
+  }
+  return true;
+}
+
+} // namespace
+
+mozInlineSpellWordUtil::NodeOffset
+mozInlineSpellWordUtil::MapSoftTextOffsetToDOMPosition(int32_t aSoftTextOffset,
+                                                       DOMMapHint aHint)
+{
+  NS_ASSERTION(mSoftTextValid, "Soft text must be valid if we're to map out of it");
+  if (!mSoftTextValid)
+    return NodeOffset(nullptr, -1);
+
+  // Find the last mapping, if any, such that mSoftTextOffset <= aSoftTextOffset
+  size_t index;
+  bool found = FindLastNongreaterOffset(mSoftTextDOMMapping, aSoftTextOffset, &index);
+  if (!found) {
+    return NodeOffset(nullptr, -1);
+  }
+
+  // 'index' is now the last mapping, if any, such that
+  // mSoftTextOffset <= aSoftTextOffset.
+  // If we're doing HINT_END, then we may want to return the end of the
+  // the previous mapping instead of the start of this mapping
+  if (aHint == HINT_END && index > 0) {
+    const DOMTextMapping& map = mSoftTextDOMMapping[index - 1];
+    if (map.mSoftTextOffset + map.mLength == aSoftTextOffset)
+      return NodeOffset(map.mNodeOffset.mNode, map.mNodeOffset.mOffset + map.mLength);
+  }
+
+  // We allow ourselves to return the end of this mapping even if we're
+  // doing HINT_START. This will only happen if there is no mapping which this
+  // point is the start of. I'm not 100% sure this is OK...
+  const DOMTextMapping& map = mSoftTextDOMMapping[index];
+  int32_t offset = aSoftTextOffset - map.mSoftTextOffset;
+  if (offset >= 0 && offset <= map.mLength)
+    return NodeOffset(map.mNodeOffset.mNode, map.mNodeOffset.mOffset + offset);
+
+  return NodeOffset(nullptr, -1);
+}
+
+int32_t
+mozInlineSpellWordUtil::FindRealWordContaining(int32_t aSoftTextOffset,
+    DOMMapHint aHint, bool aSearchForward)
+{
+  NS_ASSERTION(mSoftTextValid, "Soft text must be valid if we're to map out of it");
+  if (!mSoftTextValid)
+    return -1;
+
+  // Find the last word, if any, such that mSoftTextOffset <= aSoftTextOffset
+  size_t index;
+  bool found = FindLastNongreaterOffset(mRealWords, aSoftTextOffset, &index);
+  if (!found) {
+    return -1;
+  }
+
+  // 'index' is now the last word, if any, such that
+  // mSoftTextOffset <= aSoftTextOffset.
+  // If we're doing HINT_END, then we may want to return the end of the
+  // the previous word instead of the start of this word
+  if (aHint == HINT_END && index > 0) {
+    const RealWord& word = mRealWords[index - 1];
+    if (word.mSoftTextOffset + word.mLength == aSoftTextOffset)
+      return index - 1;
+  }
+
+  // We allow ourselves to return the end of this word even if we're
+  // doing HINT_START. This will only happen if there is no word which this
+  // point is the start of. I'm not 100% sure this is OK...
+  const RealWord& word = mRealWords[index];
+  int32_t offset = aSoftTextOffset - word.mSoftTextOffset;
+  if (offset >= 0 && offset <= static_cast<int32_t>(word.mLength))
+    return index;
+
+  if (aSearchForward) {
+    if (mRealWords[0].mSoftTextOffset > aSoftTextOffset) {
+      // All words have mSoftTextOffset > aSoftTextOffset
+      return 0;
+    }
+    // 'index' is the last word such that mSoftTextOffset <= aSoftTextOffset.
+    // Word index+1, if it exists, will be the first with
+    // mSoftTextOffset > aSoftTextOffset.
+    if (index + 1 < mRealWords.Length())
+      return index + 1;
+  }
+
+  return -1;
 }
 
 // mozInlineSpellWordUtil::SplitDOMWord

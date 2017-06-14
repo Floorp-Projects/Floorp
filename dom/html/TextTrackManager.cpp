@@ -531,20 +531,60 @@ public:
 
   bool LessThan(SimpleTextTrackEvent* aOne, SimpleTextTrackEvent* aTwo) const
   {
+    // TimeMarchesOn step 13.1.
     if (aOne->mTime < aTwo->mTime) {
       return true;
     } else if (aOne->mTime > aTwo->mTime) {
       return false;
     }
 
-    int32_t positionOne = TrackChildPosition(aOne);
-    int32_t positionTwo = TrackChildPosition(aTwo);
-    if (positionOne < positionTwo) {
-      return true;
-    } else if (positionOne > positionTwo) {
-      return false;
+    // TimeMarchesOn step 13.2 text track cue order.
+    // TextTrack position in TextTrackList
+    TextTrack* t1 = aOne->mTrack;
+    TextTrack* t2 = aTwo->mTrack;
+    MOZ_ASSERT(t1, "CompareSimpleTextTrackEvents t1 is null");
+    MOZ_ASSERT(t2, "CompareSimpleTextTrackEvents t2 is null");
+    if (t1 != t2) {
+      TextTrackList* tList= t1->GetTextTrackList();
+      MOZ_ASSERT(tList, "CompareSimpleTextTrackEvents tList is null");
+      nsTArray<RefPtr<TextTrack>>& textTracks = tList->GetTextTrackArray();
+      auto index1 = textTracks.IndexOf(t1);
+      auto index2 = textTracks.IndexOf(t2);
+      if (index1 < index2) {
+        return true;
+      } else if (index1 > index2) {
+        return false;
+      }
     }
 
+    MOZ_ASSERT(t1 == t2, "CompareSimpleTextTrackEvents t1 != t2");
+    // c1 and c2 are both belongs to t1.
+    TextTrackCue* c1 = aOne->mCue;
+    TextTrackCue* c2 = aTwo->mCue;
+    if (c1 != c2) {
+      if (c1->StartTime() < c2->StartTime()) {
+        return true;
+      } else if (c1->StartTime() > c2->StartTime()) {
+        return false;
+      }
+      if (c1->EndTime() < c2->EndTime()) {
+        return true;
+      } else if (c1->EndTime() > c2->EndTime()) {
+        return false;
+      }
+
+      TextTrackCueList* cueList = t1->GetCues();
+      nsTArray<RefPtr<TextTrackCue>>& cues = cueList->GetCuesArray();
+      auto index1 = cues.IndexOf(c1);
+      auto index2 = cues.IndexOf(c2);
+      if (index1 < index2) {
+        return true;
+      } else if (index1 > index2) {
+        return false;
+      }
+    }
+
+    // TimeMarchesOn step 13.3.
     if (aOne->mName.EqualsLiteral("enter") ||
         aTwo->mName.EqualsLiteral("exit")) {
       return true;
