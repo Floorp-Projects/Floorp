@@ -608,7 +608,8 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
       nsCOMPtr<nsIInterfaceRequestor> iir = static_cast<nsIInterfaceRequestor*>(this);
       nsMainThreadPtrHandle<nsIInterfaceRequestor> handle =
           nsMainThreadPtrHandle<nsIInterfaceRequestor>(
-              new nsMainThreadPtrHolder<nsIInterfaceRequestor>(iir));
+              new nsMainThreadPtrHolder<nsIInterfaceRequestor>(
+                "nsIInterfaceRequestor", iir));
       UniquePtr<UploadStreamClosure> closure(new UploadStreamClosure(handle));
 
       // Accumulate the stream contents as the child sends it. We will continue with

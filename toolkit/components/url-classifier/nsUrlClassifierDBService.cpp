@@ -1052,7 +1052,8 @@ NS_IMPL_ISUPPORTS(nsUrlClassifierLookupCallback,
 nsUrlClassifierLookupCallback::~nsUrlClassifierLookupCallback()
 {
   if (mCallback) {
-    NS_ReleaseOnMainThread(mCallback.forget());
+    NS_ReleaseOnMainThread(
+      "nsUrlClassifierLookupCallback::mCallback", mCallback.forget());
   }
 }
 
@@ -1826,7 +1827,8 @@ nsUrlClassifierDBService::AsyncClassifyLocalWithTables(nsIURI *aURI,
 
   // Since aCallback will be passed around threads...
   nsMainThreadPtrHandle<nsIURIClassifierCallback> callback(
-    new nsMainThreadPtrHolder<nsIURIClassifierCallback>(aCallback));
+    new nsMainThreadPtrHolder<nsIURIClassifierCallback>(
+      "nsIURIClassifierCallback", aCallback));
 
   nsCOMPtr<nsIRunnable> r =
     NS_NewRunnableFunction([worker, key, tables, callback, startTime] () -> void {

@@ -59,8 +59,12 @@ private:
     MOZ_ASSERT(mBlobStorage);
     // If something when wrong, we still have to release these objects in the
     // correct thread.
-    NS_ProxyRelease(mBlobStorage->EventTarget(), mCallback.forget());
-    NS_ProxyRelease(mBlobStorage->EventTarget(), mBlob.forget());
+    NS_ProxyRelease(
+      "BlobCreationDoneRunnable::mCallback",
+      mBlobStorage->EventTarget(), mCallback.forget());
+    NS_ProxyRelease(
+      "BlobCreationDoneRunnable::mBlob",
+      mBlobStorage->EventTarget(), mBlob.forget());
   }
 
   RefPtr<MutableBlobStorage> mBlobStorage;
@@ -300,8 +304,12 @@ private:
     MOZ_ASSERT(mBlobStorage);
     // If something when wrong, we still have to release data in the correct
     // thread.
-    NS_ProxyRelease(mBlobStorage->EventTarget(), mParent.forget());
-    NS_ProxyRelease(mBlobStorage->EventTarget(), mCallback.forget());
+    NS_ProxyRelease(
+      "CreateBlobRunnable::mParent",
+      mBlobStorage->EventTarget(), mParent.forget());
+    NS_ProxyRelease(
+      "CreateBlobRunnable::mCallback",
+      mBlobStorage->EventTarget(), mCallback.forget());
   }
 
   RefPtr<MutableBlobStorage> mBlobStorage;
@@ -346,8 +354,12 @@ private:
     MOZ_ASSERT(mBlobStorage);
     // If something when wrong, we still have to release data in the correct
     // thread.
-    NS_ProxyRelease(mBlobStorage->EventTarget(), mParent.forget());
-    NS_ProxyRelease(mBlobStorage->EventTarget(), mCallback.forget());
+    NS_ProxyRelease(
+      "LastRunnable::mParent",
+      mBlobStorage->EventTarget(), mParent.forget());
+    NS_ProxyRelease(
+      "LastRunnable::mCallback",
+      mBlobStorage->EventTarget(), mCallback.forget());
   }
 
   RefPtr<MutableBlobStorage> mBlobStorage;

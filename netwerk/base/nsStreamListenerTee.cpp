@@ -42,7 +42,8 @@ nsStreamListenerTee::OnStopRequest(nsIRequest *request,
 
     // release sink on the same thread where the data was written (bug 716293)
     if (mEventTarget) {
-      NS_ProxyRelease(mEventTarget, mSink.forget());
+      NS_ProxyRelease(
+        "nsStreamListenerTee::mSink", mEventTarget, mSink.forget());
     }
     else {
         mSink = nullptr;

@@ -131,7 +131,8 @@ public:
 private:
   ~CheckPermissionRunnable()
   {
-     NS_ProxyRelease(mBackgroundEventTarget, mActor.forget());
+     NS_ProxyRelease(
+       "CheckPermissionRunnable::mActor", mBackgroundEventTarget, mActor.forget());
   }
 
   RefPtr<ContentParent> mContentParent;
