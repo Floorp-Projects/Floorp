@@ -8175,37 +8175,18 @@ nsDocument::IsScriptEnabled()
 }
 
 nsRadioGroupStruct*
-nsDocument::GetRadioGroupInternal(const nsAString& aName) const
-{
-  nsRadioGroupStruct* radioGroup;
-  if (!mRadioGroups.Get(aName, &radioGroup)) {
-    return nullptr;
-  }
-
-  return radioGroup;
-}
-
-nsRadioGroupStruct*
 nsDocument::GetRadioGroup(const nsAString& aName) const
 {
-  nsAutoString tmKey(aName);
-
-  return GetRadioGroupInternal(tmKey);
+  nsRadioGroupStruct* radioGroup = nullptr;
+  mRadioGroups.Get(aName, &radioGroup);
+  return radioGroup;
 }
 
 nsRadioGroupStruct*
 nsDocument::GetOrCreateRadioGroup(const nsAString& aName)
 {
-  nsAutoString tmKey(aName);
-
-  if (nsRadioGroupStruct* radioGroup = GetRadioGroupInternal(tmKey)) {
-    return radioGroup;
-  }
-
-  nsAutoPtr<nsRadioGroupStruct> newRadioGroup(new nsRadioGroupStruct());
-  mRadioGroups.Put(tmKey, newRadioGroup);
-
-  return newRadioGroup.forget();
+  return mRadioGroups.LookupForAdd(aName).OrInsert(
+    [] () { return new nsRadioGroupStruct(); });
 }
 
 void
