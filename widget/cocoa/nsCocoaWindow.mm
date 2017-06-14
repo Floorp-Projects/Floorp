@@ -84,6 +84,7 @@ extern "C" {
   extern CGSConnection _CGSDefaultConnection(void);
   extern CGError CGSSetWindowShadowAndRimParameters(const CGSConnection cid, CGSWindow wid, float standardDeviation, float density, int offsetX, int offsetY, unsigned int flags);
   extern CGError CGSSetWindowBackgroundBlurRadius(CGSConnection cid, CGSWindow wid, NSUInteger blur);
+  extern CGError CGSSetWindowTransform(CGSConnection cid, CGSWindow wid, CGAffineTransform transform);
 }
 
 #define NS_APPSHELLSERVICE_CONTRACTID "@mozilla.org/appshell/appShellService;1"
@@ -127,6 +128,7 @@ nsCocoaWindow::nsCocoaWindow()
 , mIsAnimationSuppressed(false)
 , mInReportMoveEvent(false)
 , mInResize(false)
+, mWindowTransformIsIdentity(true)
 , mNumModalDescendents(0)
 {
   if ([NSWindow respondsToSelector:@selector(setAllowsAutomaticWindowTabbing:)]) {
@@ -2174,6 +2176,68 @@ nsCocoaWindow::SetWindowOpacity(float aOpacity)
   }
 
   [mWindow setAlphaValue:(CGFloat)aOpacity];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+static inline CGAffineTransform
+GfxMatrixToCGAffineTransform(const gfx::Matrix& m)
+{
+  CGAffineTransform t;
+  t.a = m._11;
+  t.b = m._12;
+  t.c = m._21;
+  t.d = m._22;
+  t.tx = m._31;
+  t.ty = m._32;
+  return t;
+}
+
+void
+nsCocoaWindow::SetWindowTransform(const gfx::Matrix& aTransform)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (!mWindow) {
+    return;
+  }
+
+  gfx::Matrix transform = aTransform;
+
+  // aTransform is a transform that should be applied to the window relative
+  // to its regular position: If aTransform._31 is 100, then we want the
+  // window to be displayed 100 pixels to the right of its regular position.
+  // The transform that CGSSetWindowTransform accepts has a different meaning:
+  // It's used to answer the question "For the screen pixel at x,y (with the
+  // origin at the top left), what pixel in the window's buffer (again with
+  // origin top left) should be displayed at that position?"
+  // In the example above, this means that we need to call
+  // CGSSetWindowTransform with a horizontal translation of -windowPos.x - 100.
+  // So we need to invert the transform and adjust it by the window's position.
+  if (!transform.Invert()) {
+    // Treat non-invertible transforms as the identity transform.
+    transform = gfx::Matrix();
+  }
+
+  bool isIdentity = transform.IsIdentity();
+  if (isIdentity && mWindowTransformIsIdentity) {
+    return;
+  }
+
+  transform.PreTranslate(-mBounds.x, -mBounds.y);
+
+  // We also need to account for the backing scale factor: aTransform is given
+  // in device pixels, but CGSSetWindowTransform works with logical display
+  // pixels.
+  CGFloat backingScale = BackingScaleFactor();
+  transform.PreScale(backingScale, backingScale);
+  transform.PostScale(1 / backingScale, 1 / backingScale);
+
+  CGSConnection cid = _CGSDefaultConnection();
+  CGSSetWindowTransform(cid, [mWindow windowNumber],
+                        GfxMatrixToCGAffineTransform(transform));
+
+  mWindowTransformIsIdentity = isIdentity;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
