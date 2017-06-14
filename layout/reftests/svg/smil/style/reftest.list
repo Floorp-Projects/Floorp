@@ -38,7 +38,7 @@ fuzzy-if(skiaContent,1,550) == anim-css-fill-1-from-to-hex-curcol.svg   anim-css
 fuzzy-if(skiaContent,1,550) == anim-css-fill-1-to-ident-curcol.svg      anim-css-fill-1-ref.svg
 
 # 'fill' property, paced calcMode
-fails-if(styloVsGecko||stylo) == anim-css-fill-2-paced-rgb.svg            anim-css-fill-2-ref.svg
+== anim-css-fill-2-paced-rgb.svg            anim-css-fill-2-ref.svg
 
 # 'fill' property, animating *by* a named color
 fuzzy-if(skiaContent,1,580) fails-if(styloVsGecko||stylo) == anim-css-fill-3-by-ident-ident.svg       anim-css-fill-3-ref.svg
