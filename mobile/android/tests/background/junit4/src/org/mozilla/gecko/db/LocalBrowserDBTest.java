@@ -35,14 +35,13 @@ import static org.junit.Assert.assertTrue;
 @RunWith(TestRunner.class)
 public class LocalBrowserDBTest {
     private static final long INVALID_ID = -1;
-    private final String BOOKMARK_URL = "https://www.mozilla.org";
-    private final String BOOKMARK_TITLE = "mozilla";
-    private final String BOOKMARK_GUID = "guid1";
+    private static final String BOOKMARK_URL = "https://www.mozilla.org";
+    private static final String BOOKMARK_TITLE = "mozilla";
 
-    private final String UPDATE_URL = "https://bugzilla.mozilla.org";
-    private final String UPDATE_TITLE = "bugzilla";
+    private static final String UPDATE_URL = "https://bugzilla.mozilla.org";
+    private static final String UPDATE_TITLE = "bugzilla";
 
-    private final String FOLDER_NAME = "folder1";
+    private static final String FOLDER_NAME = "folder1";
 
     private Context context;
     private BrowserProvider provider;
