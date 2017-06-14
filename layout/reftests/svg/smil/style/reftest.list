@@ -89,9 +89,9 @@ fails-if(styloVsGecko||stylo) == anim-css-font-1.svg  anim-css-font-1-ref.svg
 == anim-css-fontsize-1-from-to-px-pct.svg   anim-css-fontsize-1-ref.svg
 
 # 'font-size' property, with negative addition
-fails-if(styloVsGecko||stylo) == anim-css-fontsize-2-from-by-px-px.svg    anim-css-fontsize-2-ref.svg
-fails-if(styloVsGecko||stylo) == anim-css-fontsize-2-from-by-px-em.svg    anim-css-fontsize-2-ref.svg
-fails-if(styloVsGecko||stylo) == anim-css-fontsize-2-from-by-em-em.svg    anim-css-fontsize-2-ref.svg
+== anim-css-fontsize-2-from-by-px-px.svg    anim-css-fontsize-2-ref.svg
+== anim-css-fontsize-2-from-by-px-em.svg    anim-css-fontsize-2-ref.svg
+== anim-css-fontsize-2-from-by-em-em.svg    anim-css-fontsize-2-ref.svg
 
 # 'stroke-dasharray' property, from/to with pixel values only
 skip-if(!styloVsGecko) == anim-css-strokedasharray-1.svg anim-css-strokedasharray-1-ref.svg
@@ -147,9 +147,9 @@ fuzzy-if(skiaContent,1,360) == anim-css-strokewidth-2-values-px-px.svg    anim-c
 == anim-css-strokewidth-3-paced.svg           anim-css-strokewidth-3-ref.svg
 
 # 'stroke-width' property, negative addition
-fails-if(styloVsGecko||stylo) == anim-css-strokewidth-4-from-by-px-px.svg   anim-css-strokewidth-4-ref.svg
-fails-if(styloVsGecko||stylo) == anim-css-strokewidth-4-from-by-px-em.svg   anim-css-strokewidth-4-ref.svg
-fails-if(styloVsGecko||stylo) == anim-css-strokewidth-4-from-by-em-em.svg   anim-css-strokewidth-4-ref.svg
+== anim-css-strokewidth-4-from-by-px-px.svg   anim-css-strokewidth-4-ref.svg
+== anim-css-strokewidth-4-from-by-px-em.svg   anim-css-strokewidth-4-ref.svg
+== anim-css-strokewidth-4-from-by-em-em.svg   anim-css-strokewidth-4-ref.svg
 fuzzy-if(skiaContent,1,170) == anim-css-strokewidth-4-from-by-no-no.svg   anim-css-strokewidth-4-ref.svg
 
 # check correct handling of "!important" values
