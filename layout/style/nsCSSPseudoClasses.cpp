@@ -139,6 +139,10 @@ nsCSSPseudoClasses::MatchesElement(Type aType, const dom::Element* aElement)
   switch (aType) {
     case CSSPseudoClassType::mozNativeAnonymous:
       return Some(aElement->IsInNativeAnonymousSubtree());
+    case CSSPseudoClassType::mozUseShadowTreeRoot:
+      return Some(aElement->IsRootOfAnonymousSubtree() &&
+                  aElement->GetParent() &&
+                  aElement->GetParent()->IsSVGElement(nsGkAtoms::use));
     case CSSPseudoClassType::mozTableBorderNonzero: {
       if (!aElement->IsHTMLElement(nsGkAtoms::table)) {
         return Some(false);
