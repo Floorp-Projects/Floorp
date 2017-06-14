@@ -21,6 +21,7 @@ class IncludeManifest(ManifestItem):
         :param node: AST Node corresponding to this Node.
         """
         ManifestItem.__init__(self, node)
+        self.set("skip", "False")
         self.child_map = {}
 
     @classmethod
