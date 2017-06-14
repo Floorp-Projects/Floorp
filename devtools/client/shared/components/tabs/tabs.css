@@ -20,14 +20,31 @@
 
 .tabs .tabs-menu-item {
   display: inline-block;
+  position: relative;
 }
 
 .tabs .tabs-menu-item a {
-  display: block;
+  display: flex;
+  justify-content: center;
   padding: 4px 8px;
   border: 1px solid transparent;
   text-decoration: none;
   white-space: nowrap;
+}
+
+.tabs .tabs-menu-item .tab-badge {
+  color: var(--theme-highlight-blue);
+  font-size: 80%;
+  font-style: italic;
+  /* Tabs have a 15px padding start/end, so we set the margins here in order to center the
+     badge after the tab title, with a 5px effective margin. */
+  margin-inline-start: 5px;
+  margin-inline-end: -10px;
+}
+
+.tabs .tabs-menu-item.is-active .tab-badge {
+  /* Use the same color as the tab-item when active */
+  color: inherit;
 }
 
 /* To avoid "select all" commands from selecting content in hidden tabs */
