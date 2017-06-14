@@ -238,7 +238,6 @@ case "$target" in
         case "$CC_VERSION" in
         19*)
             _CC_SUITE=14
-            MSVS_VERSION=2015
             MSVC_C_RUNTIME_DLL=vcruntime140.dll
             MSVC_CXX_RUNTIME_DLL=msvcp140.dll
 
@@ -275,7 +274,6 @@ case "$target" in
             fi
             ;;
         esac
-        AC_SUBST(MSVS_VERSION)
         AC_SUBST(MSVC_HAS_DIA_SDK)
         AC_SUBST(MSVC_C_RUNTIME_DLL)
         AC_SUBST(MSVC_CXX_RUNTIME_DLL)
