@@ -54,6 +54,8 @@ CrossProcessCompositorBridgeParent::RecvRequestNotifyAfterRemotePaint()
 void
 CrossProcessCompositorBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  mCanSend = false;
+
   // We must keep this object alive untill the code handling message
   // reception is finished on this thread.
   MessageLoop::current()->PostTask(NewRunnableMethod(this, &CrossProcessCompositorBridgeParent::DeferredDestroy));
@@ -485,7 +487,6 @@ CrossProcessCompositorBridgeParent::DeferredDestroy()
 CrossProcessCompositorBridgeParent::~CrossProcessCompositorBridgeParent()
 {
   MOZ_ASSERT(XRE_GetIOMessageLoop());
-  MOZ_ASSERT(IToplevelProtocol::GetTransport());
 }
 
 PTextureParent*
