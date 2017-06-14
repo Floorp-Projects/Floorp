@@ -8,6 +8,7 @@ import os
 import re
 import sys
 import urlparse
+from collections import defaultdict
 
 from mozpack.copier import FileRegistry
 from mozpack.files import PreprocessedFile
@@ -17,6 +18,388 @@ from chrome_map import ChromeManifestHandler
 
 import buildconfig
 import mozpack.path as mozpath
+
+class LcovRecord(object):
+    __slots__ = ("test_name",
+                 "source_file",
+                 "functions",
+                 "function_exec_counts",
+                 "function_count",
+                 "covered_function_count",
+                 "branches",
+                 "branch_count",
+                 "covered_branch_count",
+                 "lines",
+                 "line_count",
+                 "covered_line_count")
+    def __init__(self):
+        self.functions = {}
+        self.function_exec_counts = {}
+        self.branches = {}
+        self.lines = {}
+
+    def __iadd__(self, other):
+
+        # These shouldn't differ.
+        self.source_file = other.source_file
+        if hasattr(other, 'test_name'):
+            self.test_name = other.test_name
+        self.functions.update(other.functions)
+
+        for name, count in other.function_exec_counts.iteritems():
+            self.function_exec_counts[name] = count + self.function_exec_counts.get(name, 0)
+
+        for key, taken in other.branches.iteritems():
+            self.branches[key] = taken + self.branches.get(key, 0)
+
+        for line, (exec_count, checksum) in other.lines.iteritems():
+            new_exec_count = exec_count
+            if line in self.lines:
+                old_exec_count, _ = self.lines[line]
+                new_exec_count += old_exec_count
+            self.lines[line] = new_exec_count, checksum
+
+        self.resummarize()
+        return self
+
+    def resummarize(self):
+        # Re-calculate summaries after generating or splitting a record.
+        self.function_count = len(self.functions.keys())
+        # Function records may have moved between files, so filter here.
+        self.function_exec_counts = {fn_name: count for fn_name, count in self.function_exec_counts.iteritems()
+                                     if fn_name in self.functions.values()}
+        self.covered_function_count = len([c for c in self.function_exec_counts.values() if c])
+        self.line_count = len(self.lines)
+        self.covered_line_count = len([c for c, _ in self.lines.values() if c])
+        self.branch_count = len(self.branches)
+        self.covered_branch_count = len([c for c in self.branches.values() if c])
+
+class RecordRewriter(object):
+    # Helper class for rewriting/spliting individual lcov records according
+    # to what the preprocessor did.
+    def __init__(self):
+        self.pp_info = {}
+        self._ranges = None
+        self._line_comment_re = re.compile('^//@line (\d+) "(.+)"$')
+
+    def populate_pp_info(self, fh, src_path):
+        if src_path in self.pp_info:
+            return
+
+        # (start, end) -> (included_source, start)
+        section_info = dict()
+
+        this_section = None
+
+        def finish_section(pp_end):
+            pp_start, inc_source, inc_start = this_section
+            section_info[(pp_start, pp_end)] = inc_source, inc_start
+
+        for count, line in enumerate(fh):
+            # Regex are quite slow, so bail out early.
+            if not line.startswith('//@line'):
+                continue
+            m = re.match(self._line_comment_re, line)
+            if m:
+                if this_section:
+                    finish_section(count + 1)
+                inc_start, inc_source = m.groups()
+                pp_start = count + 2
+                this_section = pp_start, inc_source, int(inc_start)
+
+        if this_section:
+            finish_section(count + 2)
+
+        self.pp_info[src_path] = section_info
+
+    def _get_range(self, line):
+        for start, end in self._ranges:
+            if line < start:
+                return None
+            if line < end:
+                return start, end
+        return None
+
+    def _get_mapped_line(self, line, r):
+        inc_source, inc_start = self._current_pp_info[r]
+        start, end = r
+        offs = line - start
+        return inc_start + offs
+
+    def _get_record(self, inc_source):
+        if inc_source in self._additions:
+            gen_rec = self._additions[inc_source]
+        else:
+            gen_rec = LcovRecord()
+            gen_rec.source_file = inc_source
+            self._additions[inc_source] = gen_rec
+        return gen_rec
+
+    def _rewrite_lines(self, record):
+        rewritten_lines = {}
+        for ln, line_info in record.lines.iteritems():
+            r = self._get_range(ln)
+            if r is None:
+                rewritten_lines[ln] = line_info
+                continue
+            new_ln = self._get_mapped_line(ln, r)
+            inc_source, _ = self._current_pp_info[r]
+
+            if inc_source != record.source_file:
+                gen_rec = self._get_record(inc_source)
+                gen_rec.lines[new_ln] = line_info
+                continue
+
+            # Move exec_count to the new lineno.
+            rewritten_lines[new_ln] = line_info
+
+        record.lines = rewritten_lines
+
+    def _rewrite_functions(self, record):
+        rewritten_fns = {}
+
+        # Sometimes we get multiple entries for a named function ("top-level", for
+        # instance). It's not clear the records that result are well-formed, but
+        # we act as though if a function has multiple FN's, the corresponding
+        # FNDA's are all the same.
+        for ln, fn_name in record.functions.iteritems():
+            r = self._get_range(ln)
+            if r is None:
+                rewritten_fns[ln] = fn_name
+                continue
+            new_ln = self._get_mapped_line(ln, r)
+            inc_source, _ = self._current_pp_info[r]
+            if inc_source != record.source_file:
+                gen_rec = self._get_record(inc_source)
+                gen_rec.functions[new_ln] = fn_name
+                if fn_name in record.function_exec_counts:
+                    gen_rec.function_exec_counts[fn_name] = record.function_exec_counts[fn_name]
+                continue
+            rewritten_fns[new_ln] = fn_name
+        record.functions = rewritten_fns
+
+    def _rewrite_branches(self, record):
+        rewritten_branches = {}
+        for (ln, block_number, branch_number), taken in record.branches.iteritems():
+            r = self._get_range(ln)
+            if r is None:
+                rewritten_branches[ln, block_number, branch_number] = taken
+                continue
+            new_ln = self._get_mapped_line(ln, r)
+            inc_source, _ = self._current_pp_info[r]
+            if inc_source != record.source_file:
+                gen_rec = self._get_record(inc_source)
+                gen_rec.branches[(new_ln, block_number, branch_number)] = taken
+                continue
+            rewritten_branches[(new_ln, block_number, branch_number)] = taken
+
+        record.branches = rewritten_branches
+
+    def rewrite_record(self, record):
+        # Rewrite the lines in the given record according to preprocessor info
+        # and split to additional records when pp_info has included file info.
+        self._current_pp_info = self.pp_info[record.source_file]
+        self._ranges = sorted(self._current_pp_info.keys())
+        self._additions = {}
+        self._rewrite_lines(record)
+        self._rewrite_functions(record)
+        self._rewrite_branches(record)
+
+        record.resummarize()
+
+        generated_records = self._additions.values()
+        for r in generated_records:
+            r.resummarize()
+        return generated_records
+
+class LcovFile(object):
+    # Simple parser/pretty-printer for lcov format.
+    # lcov parsing based on http://ltp.sourceforge.net/coverage/lcov/geninfo.1.php
+
+    # TN:<test name>
+    # SF:<absolute path to the source file>
+    # FN:<line number of function start>,<function name>
+    # FNDA:<execution count>,<function name>
+    # FNF:<number of functions found>
+    # FNH:<number of function hit>
+    # BRDA:<line number>,<block number>,<branch number>,<taken>
+    # BRF:<number of branches found>
+    # BRH:<number of branches hit>
+    # DA:<line number>,<execution count>[,<checksum>]
+    # LF:<number of instrumented lines>
+    # LH:<number of lines with a non-zero execution count>
+    # end_of_record
+
+    def __init__(self, lcov_fh):
+        # These are keyed by source file because output will split sources (at
+        # least for xbl).
+        self._records = defaultdict(lambda: LcovRecord())
+        self.new_record()
+        self.parse_file(lcov_fh)
+
+    @property
+    def records(self):
+        return self._records.values()
+
+    @records.setter
+    def records(self, value):
+        self._records = {r.source_file: r for r in value}
+
+    def new_record(self):
+        rec = LcovRecord()
+        self.current_record = rec
+
+    def finish_record(self):
+        self._records[self.current_record.source_file] += self.current_record
+        self.new_record()
+
+    def parse_file(self, lcov_fh):
+        for count, line in enumerate(lcov_fh):
+            line = line.rstrip()
+            if not line:
+                continue
+            if line == 'end_of_record':
+                self.finish_record()
+                continue
+            colon = line.find(':')
+
+            prefix = line[:colon]
+
+            # We occasionally end up with multi-line scripts in data:
+            # uris that will trip up the parser, just skip them for now.
+            if colon < 0 or prefix not in ('TN', 'SF', 'FN', 'FNDA', 'FNF',
+                                           'FNH', 'BRDA', 'BRF', 'BRH', 'DA',
+                                           'LF', 'LH'):
+                continue
+            if prefix not in ('SF', 'TN'):
+                args = line[(colon + 1):].split(',')
+            else:
+                args = line[(colon + 1):],
+
+            def try_convert(a):
+                try:
+                    return int(a)
+                except ValueError:
+                    return a
+            args = [try_convert(a) for a in args]
+
+            try:
+                LcovFile.__dict__['parse_' + prefix](self, *args)
+            except ValueError:
+                print("Encountered an error at line %d:\n%s" %
+                      (count + 1, line))
+                raise
+            except KeyError:
+                print("Invalid lcov line start at %s:%d:\n%s" %
+                      (lcov_fh.name, count + 1, line))
+                raise
+
+    def print_file(self, fh):
+        for record in self.records:
+            fh.write(self.format_record(record))
+            fh.write('\n')
+
+    def format_record(self, record):
+        out_lines = []
+        for name in LcovRecord.__slots__:
+            if hasattr(record, name):
+                out_lines.append(LcovFile.__dict__['format_' + name](self, record))
+        return '\n'.join(out_lines) + '\nend_of_record'
+
+    def format_test_name(self, record):
+        return "TN:%s" % record.test_name
+
+    def format_source_file(self, record):
+        return "SF:%s" % record.source_file
+
+    def format_functions(self, record):
+        # Sorting results gives deterministic output (and is a lot faster than
+        # using OrderedDict).
+        fns = []
+        for start_lineno, fn_name in sorted(record.functions.iteritems()):
+            fns.append('FN:%s,%s' % (start_lineno, fn_name))
+        return '\n'.join(fns)
+
+    def format_function_exec_counts(self, record):
+        fndas = []
+        for name, exec_count in sorted(record.function_exec_counts.iteritems()):
+            fndas.append('FNDA:%s,%s' % (exec_count, name))
+        return '\n'.join(fndas)
+
+    def format_function_count(self, record):
+        return 'FNF:%s' % record.function_count
+
+    def format_covered_function_count(self, record):
+        return 'FNH:%s' % record.covered_function_count
+
+    def format_branches(self, record):
+        brdas = []
+        for key in sorted(record.branches):
+            taken = record.branches[key]
+            taken = '-' if taken == 0 else taken
+            brdas.append('BRDA:%s' %
+                         ','.join(map(str, list(key) + [taken])))
+        return '\n'.join(brdas)
+
+    def format_branch_count(self, record):
+        return 'BRF:%s' % record.branch_count
+
+    def format_covered_branch_count(self, record):
+        return 'BRH:%s' % record.covered_branch_count
+
+    def format_lines(self, record):
+        das = []
+        for line_no, (exec_count, checksum) in sorted(record.lines.iteritems()):
+            s = 'DA:%s,%s' % (line_no, exec_count)
+            if checksum:
+                s += ',%s' % checksum
+            das.append(s)
+        return '\n'.join(das)
+
+    def format_line_count(self, record):
+        return 'LF:%s' % record.line_count
+
+    def format_covered_line_count(self, record):
+        return 'LH:%s' % record.covered_line_count
+
+    def parse_TN(self, test_name):
+        self.current_record.test_name = test_name
+
+    def parse_SF(self, source_file):
+        self.current_record.source_file = source_file
+
+    def parse_FN(self, start_lineno, fn_name):
+        self.current_record.functions[start_lineno] = fn_name
+
+    def parse_FNDA(self, exec_count, fn_name):
+        self.current_record.function_exec_counts[fn_name] = exec_count
+
+    def parse_FNF(self, function_count):
+        self.current_record.function_count = function_count
+
+    def parse_FNH(self, covered_function_count):
+        self.current_record.covered_function_count = covered_function_count
+
+    def parse_BRDA(self, line_number, block_number, branch_number, taken):
+        taken = 0 if taken == '-' else taken
+        self.current_record.branches[(line_number, block_number,
+                                      branch_number)] = taken
+
+    def parse_BRF(self, branch_count):
+        self.current_record.branch_count = branch_count
+
+    def parse_BRH(self, covered_branch_count):
+        self.current_record.covered_branch_count = covered_branch_count
+
+    def parse_DA(self, line_number, execution_count, checksum=None):
+        self.current_record.lines[line_number] = (execution_count, checksum)
+
+    def parse_LH(self, covered_line_count):
+        self.current_record.covered_line_count = covered_line_count
+
+    def parse_LF(self, line_count):
+       self.current_record.line_count = line_count
+
 
 class UrlFinderError(Exception):
     pass
@@ -216,34 +599,56 @@ class LcovFileRewriter(object):
     def __init__(self, appdir, gredir, extra_chrome_manifests):
         self.topobjdir = buildconfig.topobjdir
         self.url_finder = UrlFinder(appdir, gredir, extra_chrome_manifests)
-        self._line_comment_re = re.compile('//@line \d+ "(.+)"$')
+        self.pp_rewriter = RecordRewriter()
 
     def rewrite_file(self, in_path, output_suffix):
         in_path = os.path.abspath(in_path)
         out_path = in_path + output_suffix
-        skip_section = False
-        with open(in_path) as fh, open(out_path, 'w+') as out_fh:
-            for line in fh:
-                if skip_section:
-                    if line.rstrip() == 'end_of_record':
-                        skip_section = False
+
+        with open(in_path) as fh:
+            lcov_file = LcovFile(fh)
+
+        removals = set()
+        additions = []
+        unknowns = set()
+        pp = set()
+        for record in lcov_file.records:
+            url = record.source_file
+            try:
+                res = self.url_finder.rewrite_url(url)
+                if res is None:
+                    removals.add(record)
                     continue
-                if line.startswith('SF:'):
-                    url = line[3:].rstrip()
-                    try:
-                        res = self.url_finder.rewrite_url(url)
-                        if res is None:
-                            skip_section = True
-                            continue
-                    except UrlFinderError as e:
-                        print("Error: %s.\nCouldn't find source info for %s" %
-                              (e, url))
-                        skip_section = True
-                        continue
-                    src_file, objdir_file, _ = res
-                    assert os.path.isfile(src_file), "Couldn't find mapped source file at %s!" % src_file
-                    line = 'SF:%s\n' % src_file
-                out_fh.write(line)
+
+            except Exception as e:
+                if url not in unknowns:
+                    print("Error: %s.\nCouldn't find source info for %s, removing record" %
+                          (e, url))
+                removals.add(record)
+                unknowns.add(url)
+                continue
+            source_file, objdir_file, preprocessed = res
+            assert os.path.isfile(source_file), "Couldn't find mapped source file at %s!" % source_file
+            record.source_file = source_file
+            if preprocessed:
+                pp.add(record)
+                obj_path = os.path.join(self.topobjdir, objdir_file)
+                with open(obj_path) as fh:
+                    self.pp_rewriter.populate_pp_info(fh, source_file)
+
+        additions = []
+        for r in pp:
+            additions += self.pp_rewriter.rewrite_record(r)
+
+        lcov_file.records = [r for r in lcov_file.records + additions
+                             if r not in removals]
+        if not lcov_file.records:
+            print("WARNING: No valid records found in %s" % in_path)
+            return
+
+        with open(out_path, 'w+') as out_fh:
+            lcov_file.print_file(out_fh)
+
 
 def main():
     parser = ArgumentParser(description="Given a set of gcov .info files produced "
