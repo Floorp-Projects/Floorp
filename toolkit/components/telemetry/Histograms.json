@@ -867,6 +867,15 @@
     "n_buckets": 50,
     "description": "Time spent on one asynchronous SnowWhite freeing (ms)"
   },
+  "CYCLE_COLLECTOR_SLICE_DURING_IDLE": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
+    "expires_in_version": "62",
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 50,
+    "description": "Percent of cycle collector slice done during idle time"
+  },
   "DEFERRED_FINALIZE_ASYNC": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
@@ -922,6 +931,15 @@
     "high": 10000,
     "n_buckets": 50,
     "description": "Max time spent on one forget skippable (ms)"
+  },
+  "FORGET_SKIPPABLE_DURING_IDLE": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
+    "expires_in_version": "62",
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 50,
+    "description": "Percent of the cycle collector's forget skippable done during idle time"
   },
   "FULLSCREEN_TRANSITION_BLACK_MS": {
     "record_in_processes": ["main", "content"],
@@ -1188,6 +1206,15 @@
     "n_values": 32,
     "bug_numbers": [1293262],
     "description": "How many objects groups were selected for pretenuring by a minor GC"
+  },
+  "GC_SLICE_DURING_IDLE": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
+    "expires_in_version": "62",
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 50,
+    "description": "Percent of GC slice done during idle time"
   },
   "GEOLOCATION_ACCURACY_EXPONENTIAL": {
     "record_in_processes": ["main", "content"],
