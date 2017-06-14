@@ -350,10 +350,10 @@ struct Zone : public JS::shadow::Zone,
 
   private:
     // List of non-ephemeron weak containers to sweep during beginSweepingSweepGroup.
-    js::ZoneGroupData<mozilla::LinkedList<WeakCache<void*>>> weakCaches_;
+    js::ZoneGroupData<mozilla::LinkedList<detail::WeakCacheBase>> weakCaches_;
   public:
-    mozilla::LinkedList<WeakCache<void*>>& weakCaches() { return weakCaches_.ref(); }
-    void registerWeakCache(WeakCache<void*>* cachep) {
+    mozilla::LinkedList<detail::WeakCacheBase>& weakCaches() { return weakCaches_.ref(); }
+    void registerWeakCache(detail::WeakCacheBase* cachep) {
         weakCaches().insertBack(cachep);
     }
 
@@ -465,18 +465,18 @@ struct Zone : public JS::shadow::Zone,
 
   private:
     // Set of all unowned base shapes in the Zone.
-    js::ZoneGroupData<JS::WeakCache<js::BaseShapeSet>> baseShapes_;
+    js::ZoneGroupData<js::BaseShapeSet> baseShapes_;
   public:
-    JS::WeakCache<js::BaseShapeSet>& baseShapes() { return baseShapes_.ref(); }
+    js::BaseShapeSet& baseShapes() { return baseShapes_.ref(); }
 
   private:
     // Set of initial shapes in the Zone. For certain prototypes -- namely,
     // those of various builtin classes -- there are two entries: one for a
     // lookup via TaggedProto, and one for a lookup via JSProtoKey. See
     // InitialShapeProto.
-    js::ZoneGroupData<JS::WeakCache<js::InitialShapeSet>> initialShapes_;
+    js::ZoneGroupData<js::InitialShapeSet> initialShapes_;
   public:
-    JS::WeakCache<js::InitialShapeSet>& initialShapes() { return initialShapes_.ref(); }
+    js::InitialShapeSet& initialShapes() { return initialShapes_.ref(); }
 
 #ifdef JSGC_HASH_TABLE_CHECKS
     void checkInitialShapesTableAfterMovingGC();

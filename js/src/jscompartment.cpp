@@ -75,7 +75,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     objectMetadataState(ImmediateMetadata()),
     selfHostingScriptSource(nullptr),
     objectMetadataTable(nullptr),
-    innerViews(zone, InnerViewTable()),
+    innerViews(zone),
     lazyArrayBuffers(nullptr),
     wasm(zone),
     nonSyntacticLexicalEnvironments_(nullptr),
