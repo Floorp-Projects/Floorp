@@ -47,6 +47,7 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '/caps',
+    '/dom/base',
     '/modules/libjar',
     '/netwerk/base',
     '/netwerk/protocol/http',
