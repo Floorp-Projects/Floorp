@@ -314,35 +314,6 @@ public:
 
 // ------------------------------------------------------------------
 //
-// Inlined helper methods
-//
-// ------------------------------------------------------------------
-
-inline bool
-IsInvalidValuePair(const PropertyValuePair& aPair, StyleBackendType aBackend)
-{
-  if (aBackend == StyleBackendType::Servo) {
-    return !aPair.mServoDeclarationBlock;
-  }
-
-  // There are three types of values we store as token streams:
-  //
-  // * Shorthand values (where we manually extract the token stream's string
-  //   value) and pass that along to various parsing methods
-  // * Longhand values with variable references
-  // * Invalid values
-  //
-  // We can distinguish between the last two cases because for invalid values
-  // we leave the token stream's mPropertyID as eCSSProperty_UNKNOWN.
-  return !nsCSSProps::IsShorthand(aPair.mProperty) &&
-         aPair.mValue.GetUnit() == eCSSUnit_TokenStream &&
-         aPair.mValue.GetTokenStreamValue()->mPropertyID
-           == eCSSProperty_UNKNOWN;
-}
-
-
-// ------------------------------------------------------------------
-//
 // Internal helper method declarations
 //
 // ------------------------------------------------------------------
@@ -378,7 +349,7 @@ AppendValueAsString(JSContext* aCx,
                     nsTArray<nsString>& aValues,
                     JS::Handle<JS::Value> aValue);
 
-static PropertyValuePair
+static Maybe<PropertyValuePair>
 MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
                       nsCSSParser& aParser, nsIDocument* aDocument);
 
@@ -719,9 +690,14 @@ ConvertKeyframeSequence(JSContext* aCx,
 
     for (PropertyValuesPair& pair : propertyValuePairs) {
       MOZ_ASSERT(pair.mValues.Length() == 1);
-      keyframe->mPropertyValues.AppendElement(
+
+      Maybe<PropertyValuePair> valuePair =
         MakePropertyValuePair(pair.mProperty, pair.mValues[0], parser,
-                              aDocument));
+                              aDocument);
+      if (!valuePair) {
+        continue;
+      }
+      keyframe->mPropertyValues.AppendElement(Move(valuePair.ref()));
 
 #ifdef DEBUG
       // When we go to convert keyframes into arrays of property values we
@@ -877,27 +853,22 @@ AppendValueAsString(JSContext* aCx,
  * @param aStringValue The property value to parse.
  * @param aParser The CSS parser object to use.
  * @param aDocument The document to use when parsing.
- * @return The constructed PropertyValuePair object.
+ * @return The constructed PropertyValuePair, or Nothing() if |aStringValue| is
+ *   an invalid property value.
  */
-static PropertyValuePair
+static Maybe<PropertyValuePair>
 MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
                       nsCSSParser& aParser, nsIDocument* aDocument)
 {
   MOZ_ASSERT(aDocument);
-  PropertyValuePair result;
-
-  result.mProperty = aProperty;
-
-#ifdef DEBUG
-  result.mSimulateComputeValuesFailure = false;
-#endif
+  Maybe<PropertyValuePair> result;
 
   if (aDocument->GetStyleBackendType() == StyleBackendType::Servo) {
     RefPtr<RawServoDeclarationBlock> servoDeclarationBlock =
       KeyframeUtils::ParseProperty(aProperty, aStringValue, aDocument);
 
     if (servoDeclarationBlock) {
-      result.mServoDeclarationBlock = servoDeclarationBlock.forget();
+      result.emplace(aProperty, Move(servoDeclarationBlock));
     }
     return result;
   }
@@ -910,17 +881,20 @@ MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
                                   aDocument->GetDocumentURI(),
                                   aDocument->NodePrincipal(),
                                   value);
+    if (value.GetUnit() == eCSSUnit_Null) {
+      // Invalid property value, so return Nothing.
+      return result;
+    }
   }
 
   if (value.GetUnit() == eCSSUnit_Null) {
-    // Either we have a shorthand, or we failed to parse a longhand.
-    // In either case, store the string value as a token stream.
+    // If we have a shorthand, store the string value as a token stream.
     nsCSSValueTokenStream* tokenStream = new nsCSSValueTokenStream;
     tokenStream->mTokenStream = aStringValue;
 
     // We are about to convert a null value to a token stream value but
     // by leaving the mPropertyID as unknown, we will be able to
-    // distinguish between invalid values and valid token stream values
+    // distinguish between shorthand values and valid token stream values
     // (e.g. values with variable references).
     MOZ_ASSERT(tokenStream->mPropertyID == eCSSProperty_UNKNOWN,
                "The property of a token stream should be initialized"
@@ -935,8 +909,7 @@ MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
     value.SetTokenStreamValue(tokenStream);
   }
 
-  result.mValue = value;
-
+  result.emplace(aProperty, Move(value));
   return result;
 }
 
@@ -1033,10 +1006,6 @@ GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
       MOZ_ASSERT(!pair.mServoDeclarationBlock,
                  "Animation values were parsed using Servo backend but target"
                  " element is not using Servo backend?");
-
-      if (IsInvalidValuePair(pair, StyleBackendType::Gecko)) {
-        continue;
-      }
 
       // Expand each value into the set of longhands and produce
       // a KeyframeValueEntry for each value.
@@ -1443,8 +1412,13 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
         keyframe->mComposite = composite;
         keyframe->mComputedOffset = offset;
       }
-      keyframe->mPropertyValues.AppendElement(
-        MakePropertyValuePair(pair.mProperty, stringValue, parser, aDocument));
+
+      Maybe<PropertyValuePair> valuePair =
+        MakePropertyValuePair(pair.mProperty, stringValue, parser, aDocument);
+      if (!valuePair) {
+        continue;
+      }
+      keyframe->mPropertyValues.AppendElement(Move(valuePair.ref()));
     }
   }
 
@@ -1514,10 +1488,6 @@ RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
                          : computedOffset;
 
     for (const PropertyValuePair& pair : frame.mPropertyValues) {
-      if (IsInvalidValuePair(pair, styleBackend)) {
-        continue;
-      }
-
       if (nsCSSProps::IsShorthand(pair.mProperty)) {
         if (styleBackend == StyleBackendType::Gecko) {
           nsCSSValueTokenStream* tokenStream =
@@ -1528,9 +1498,7 @@ RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
             continue;
           }
         }
-        // For the Servo backend, invalid shorthand values are represented by
-        // a null mServoDeclarationBlock member which we skip above in
-        // IsInvalidValuePair.
+
         MOZ_ASSERT(styleBackend != StyleBackendType::Servo ||
                    pair.mServoDeclarationBlock);
         CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(

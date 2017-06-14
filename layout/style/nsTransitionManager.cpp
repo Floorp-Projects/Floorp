@@ -791,18 +791,21 @@ AppendKeyframe(double aOffset,
 {
   Keyframe& frame = *aKeyframes.AppendElement();
   frame.mOffset.emplace(aOffset);
-  PropertyValuePair& pv = *frame.mPropertyValues.AppendElement();
-  pv.mProperty = aProperty;
 
   if (aValue.mServo) {
-    pv.mServoDeclarationBlock =
+    RefPtr<RawServoDeclarationBlock> decl =
       Servo_AnimationValue_Uncompute(aValue.mServo).Consume();
+    frame.mPropertyValues.AppendElement(
+      Move(PropertyValuePair(aProperty, Move(decl))));
   } else {
+    nsCSSValue propertyValue;
     DebugOnly<bool> uncomputeResult =
       StyleAnimationValue::UncomputeValue(aProperty, Move(aValue.mGecko),
-                                          pv.mValue);
+                                          propertyValue);
     MOZ_ASSERT(uncomputeResult,
                "Unable to get specified value from computed value");
+    frame.mPropertyValues.AppendElement(
+      Move(PropertyValuePair(aProperty, Move(propertyValue))));
   }
   return frame;
 }
