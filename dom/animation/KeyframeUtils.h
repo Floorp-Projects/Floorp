@@ -65,33 +65,6 @@ public:
                          ErrorResult& aRv);
 
   /**
-   * Calculate the StyleAnimationValues of properties of each keyframe.
-   * This involves expanding shorthand properties into longhand properties,
-   * removing the duplicated properties for each keyframe, and creating an
-   * array of |property:computed value| pairs for each keyframe.
-   *
-   * These computed values are used *both* when computing the final set of
-   * per-property animation values (see GetAnimationPropertiesFromKeyframes) as
-   * well when applying paced spacing. By returning these values here, we allow
-   * the result to be re-used in both operations.
-   *
-   * @param aKeyframes The input keyframes.
-   * @param aElement The context element.
-   * @param aStyleContext The style context to use when computing values.
-   * @return The set of ComputedKeyframeValues. The length will be the same as
-   *   aFrames.
-   */
-  static nsTArray<ComputedKeyframeValues>
-  GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
-                            dom::Element* aElement,
-                            nsStyleContext* aStyleContext);
-
-  static nsTArray<ComputedKeyframeValues>
-  GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
-                            dom::Element* aElement,
-                            const ServoComputedValues* aComputedValues);
-
-  /**
    * Calculate the computed offset of keyframes by evenly distributing keyframes
    * with a missing offset.
    *
@@ -108,20 +81,20 @@ public:
    * for each value.
    *
    * @param aKeyframes The input keyframes.
-   * @param aComputedValues The computed keyframe values (as returned by
-   *   GetComputedKeyframeValues) used to fill in the individual
-   *   AnimationPropertySegment objects. Although these values could be
-   *   calculated from |aKeyframes|, passing them in as a separate parameter
-   *   allows the result of GetComputedKeyframeValues to be re-used here.
+   * @param aElement The context element.
+   * @param aStyleType The |ServoComputedValues| or |nsStyleContext| to use
+   *   when computing values.
    * @param aEffectComposite The composite operation specified on the effect.
    *   For any keyframes in |aKeyframes| that do not specify a composite
    *   operation, this value will be used.
    * @return The set of animation properties. If an error occurs, the returned
    *   array will be empty.
    */
+  template<typename StyleType>
   static nsTArray<AnimationProperty> GetAnimationPropertiesFromKeyframes(
     const nsTArray<Keyframe>& aKeyframes,
-    const nsTArray<ComputedKeyframeValues>& aComputedValues,
+    dom::Element* aElement,
+    StyleType* aStyleType,
     dom::CompositeOperation aEffectComposite);
 
   /**
