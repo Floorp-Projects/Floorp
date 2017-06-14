@@ -42,5 +42,6 @@ module.exports = {
     }],
     "dot-location": ["error", "property"],
     "max-len": ["error", 100],
+    "no-fallthrough": "error",
   },
 };

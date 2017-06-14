@@ -35,7 +35,6 @@ FormHistoryStartup.prototype = {
         break;
       case "profile-after-change":
         this.init();
-      default:
         break;
     }
   },
