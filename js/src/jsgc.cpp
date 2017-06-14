@@ -7196,7 +7196,11 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
 
     JSContext* cx = source->runtimeFromActiveCooperatingThread()->activeContextFromOwnThread();
 
-    AutoPrepareForTracing prepare(cx, SkipAtoms);
+    MOZ_ASSERT(!source->zone()->wasGCStarted());
+    MOZ_ASSERT(!target->zone()->wasGCStarted());
+    JS::AutoAssertNoGC nogc(cx);
+
+    AutoTraceSession session(cx->runtime());
 
     // Cleanup tables and other state in the source compartment that will be
     // meaningless after merging into the target compartment.
