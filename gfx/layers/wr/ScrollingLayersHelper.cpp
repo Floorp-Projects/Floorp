@@ -68,7 +68,7 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
       Layer* maskLayer = layer->GetAncestorMaskLayerAt(maskLayerIndex.value());
       WebRenderLayer* maskWrLayer = WebRenderLayer::ToWebRenderLayer(maskLayer);
       // TODO: check this transform is correct in all cases
-      mask = maskWrLayer->RenderMaskLayer(maskLayer->GetTransform());
+      mask = maskWrLayer->RenderMaskLayer(aStackingContext, maskLayer->GetTransform());
     }
     mBuilder->PushClip(aStackingContext.ToRelativeWrRect(clipRect),
         mask.ptrOr(nullptr));
@@ -106,7 +106,7 @@ ScrollingLayersHelper::PushLayerLocalClip(const StackingContextHelper& aStacking
     clip = Some(layer->GetLocalTransformTyped().TransformBounds(mLayer->Bounds()));
   }
   if (clip) {
-    Maybe<WrImageMask> mask = mLayer->BuildWrMaskLayer(nullptr);
+    Maybe<WrImageMask> mask = mLayer->BuildWrMaskLayer(aStackingContext, nullptr);
     LayerRect clipRect = ViewAs<LayerPixel>(clip.ref(),
         PixelCastJustification::MovingDownToChildren);
     mBuilder->PushClip(aStackingContext.ToRelativeWrRect(clipRect), mask.ptrOr(nullptr));

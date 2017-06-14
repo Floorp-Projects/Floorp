@@ -40,7 +40,7 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
 
   ScrollingLayersHelper scroller(this, aBuilder, aSc);
 
-  Maybe<WrImageMask> mask = BuildWrMaskLayer(nullptr);
+  Maybe<WrImageMask> mask = BuildWrMaskLayer(aSc, nullptr);
   WrImageMask* imageMask = mask.ptrOr(nullptr);
 
   ParentLayerRect clip = GetLocalTransformTyped().TransformBounds(Bounds());

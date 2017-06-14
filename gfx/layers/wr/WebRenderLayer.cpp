@@ -41,7 +41,8 @@ WebRenderLayer::GetImageKey()
 }
 
 Maybe<WrImageMask>
-WebRenderLayer::BuildWrMaskLayer(const StackingContextHelper* aUnapplySc)
+WebRenderLayer::BuildWrMaskLayer(const StackingContextHelper& aRelativeTo,
+                                 const StackingContextHelper* aUnapplySc)
 {
   if (GetLayer()->GetMaskLayer()) {
     WebRenderLayer* maskLayer = ToWebRenderLayer(GetLayer()->GetMaskLayer());
@@ -55,7 +56,7 @@ WebRenderLayer::BuildWrMaskLayer(const StackingContextHelper* aUnapplySc)
       transform = transform * aUnapplySc->TransformToRoot();
     }
 
-    return maskLayer->RenderMaskLayer(transform);
+    return maskLayer->RenderMaskLayer(aRelativeTo, transform);
   }
 
   return Nothing();
