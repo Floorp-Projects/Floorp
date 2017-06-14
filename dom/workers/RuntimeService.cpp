@@ -1646,13 +1646,13 @@ RuntimeService::RegisterWorker(WorkerPrivate* aWorkerPrivate)
   {
     MutexAutoLock lock(mMutex);
 
-    if (!mDomainMap.Get(domain, &domainInfo)) {
-      NS_ASSERTION(!parent, "Shouldn't have a parent here!");
-
-      domainInfo = new WorkerDomainInfo();
-      domainInfo->mDomain = domain;
-      mDomainMap.Put(domain, domainInfo);
-    }
+    domainInfo = mDomainMap.LookupForAdd(domain).OrInsert(
+      [&domain, parent] () {
+        NS_ASSERTION(!parent, "Shouldn't have a parent here!");
+        WorkerDomainInfo* wdi = new WorkerDomainInfo();
+        wdi->mDomain = domain;
+        return wdi;
+      });
 
     queued = gMaxWorkersPerDomain &&
              domainInfo->ActiveWorkerCount() >= gMaxWorkersPerDomain &&
