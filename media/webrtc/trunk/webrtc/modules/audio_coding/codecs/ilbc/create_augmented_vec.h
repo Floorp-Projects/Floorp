@@ -27,10 +27,11 @@
  *----------------------------------------------------------------*/
 
 void WebRtcIlbcfix_CreateAugmentedVec(
-    size_t index,  /* (i) Index for the augmented vector to be created */
-    int16_t *buffer,  /* (i) Pointer to the end of the codebook memory that
-                                           is used for creation of the augmented codebook */
-    int16_t *cbVec  /* (o) The construced codebook vector */
-                                      );
+    size_t index,          /* (i) Index for the augmented vector to be
+                              created */
+    const int16_t* buffer, /* (i) Pointer to the end of the codebook memory
+                              that is used for creation of the augmented
+                              codebook */
+    int16_t* cbVec);       /* (o) The construced codebook vector */
 
 #endif

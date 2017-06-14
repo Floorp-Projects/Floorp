@@ -11,6 +11,9 @@
 #ifndef SRC_VOICE_ENGINE_MAIN_TEST_AUTO_TEST_STANDARD_AFTER_STREAMING_H_
 #define SRC_VOICE_ENGINE_MAIN_TEST_AUTO_TEST_STANDARD_AFTER_STREAMING_H_
 
+#include <memory>
+
+#include "webrtc/voice_engine/channel_proxy.h"
 #include "webrtc/voice_engine/test/auto_test/fixtures/before_streaming_fixture.h"
 
 // This fixture will, in addition to the work done by its superclasses,
@@ -19,6 +22,9 @@ class AfterStreamingFixture : public BeforeStreamingFixture {
  public:
   AfterStreamingFixture();
   virtual ~AfterStreamingFixture() {}
+
+ protected:
+  std::unique_ptr<webrtc::voe::ChannelProxy> channel_proxy_;
 };
 
 #endif  // SRC_VOICE_ENGINE_MAIN_TEST_AUTO_TEST_STANDARD_AFTER_STREAMING_H_

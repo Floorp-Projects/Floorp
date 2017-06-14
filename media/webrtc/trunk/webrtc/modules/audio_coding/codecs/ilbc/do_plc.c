@@ -119,12 +119,14 @@ void WebRtcIlbcfix_DoThePlc(
 
         /* Calculate shift value, so that the two measures can
            be put in the same Q domain */
-        if(((shiftMax<<1)+shift3) > ((shift1<<1)+shift2)) {
-          tmp1 = WEBRTC_SPL_MIN(31, (shiftMax<<1)+shift3-(shift1<<1)-shift2);
+        if(2 * shiftMax + shift3 > 2 * shift1 + shift2) {
+          tmp1 =
+              WEBRTC_SPL_MIN(31, 2 * shiftMax + shift3 - 2 * shift1 - shift2);
           tmp2 = 0;
         } else {
           tmp1 = 0;
-          tmp2 = WEBRTC_SPL_MIN(31, (shift1<<1)+shift2-(shiftMax<<1)-shift3);
+          tmp2 =
+              WEBRTC_SPL_MIN(31, 2 * shift1 + shift2 - 2 * shiftMax - shift3);
         }
 
         if ((measure>>tmp1) > (maxMeasure>>tmp2)) {

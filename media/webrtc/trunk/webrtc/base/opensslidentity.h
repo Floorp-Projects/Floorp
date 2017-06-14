@@ -14,10 +14,12 @@
 #include <openssl/evp.h>
 #include <openssl/x509.h>
 
+#include <memory>
 #include <string>
 
+#include "webrtc/base/checks.h"
 #include "webrtc/base/common.h"
-#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/sslidentity.h"
 
 typedef struct ssl_ctx_st SSL_CTX;
@@ -29,16 +31,24 @@ namespace rtc {
 class OpenSSLKeyPair {
  public:
   explicit OpenSSLKeyPair(EVP_PKEY* pkey) : pkey_(pkey) {
-    ASSERT(pkey_ != NULL);
+    RTC_DCHECK(pkey_ != NULL);
   }
 
   static OpenSSLKeyPair* Generate(const KeyParams& key_params);
+  // Constructs a key pair from the private key PEM string. This must not result
+  // in missing public key parameters. Returns null on error.
+  static OpenSSLKeyPair* FromPrivateKeyPEMString(
+      const std::string& pem_string);
 
   virtual ~OpenSSLKeyPair();
 
   virtual OpenSSLKeyPair* GetReference();
 
   EVP_PKEY* pkey() const { return pkey_; }
+  std::string PrivateKeyToPEMString() const;
+  std::string PublicKeyToPEMString() const;
+  bool operator==(const OpenSSLKeyPair& other) const;
+  bool operator!=(const OpenSSLKeyPair& other) const;
 
  private:
   void AddReference();
@@ -68,8 +78,9 @@ class OpenSSLCertificate : public SSLCertificate {
   X509* x509() const { return x509_; }
 
   std::string ToPEMString() const override;
-
   void ToDER(Buffer* der_buffer) const override;
+  bool operator==(const OpenSSLCertificate& other) const;
+  bool operator!=(const OpenSSLCertificate& other) const;
 
   // Compute the digest of the certificate given algorithm
   bool ComputeDigest(const std::string& algorithm,
@@ -85,7 +96,7 @@ class OpenSSLCertificate : public SSLCertificate {
                             size_t* length);
 
   bool GetSignatureDigestAlgorithm(std::string* algorithm) const override;
-  bool GetChain(SSLCertChain** chain) const override;
+  std::unique_ptr<SSLCertChain> GetChain() const override;
 
   int64_t CertificateExpirationTime() const override;
 
@@ -101,8 +112,9 @@ class OpenSSLCertificate : public SSLCertificate {
 // them consistently.
 class OpenSSLIdentity : public SSLIdentity {
  public:
-  static OpenSSLIdentity* Generate(const std::string& common_name,
-                                   const KeyParams& key_params);
+  static OpenSSLIdentity* GenerateWithExpiration(const std::string& common_name,
+                                                 const KeyParams& key_params,
+                                                 time_t certificate_lifetime);
   static OpenSSLIdentity* GenerateForTest(const SSLIdentityParams& params);
   static SSLIdentity* FromPEMStrings(const std::string& private_key,
                                      const std::string& certificate);
@@ -114,13 +126,18 @@ class OpenSSLIdentity : public SSLIdentity {
   // Configure an SSL context object to use our key and certificate.
   bool ConfigureIdentity(SSL_CTX* ctx);
 
+  std::string PrivateKeyToPEMString() const override;
+  std::string PublicKeyToPEMString() const override;
+  bool operator==(const OpenSSLIdentity& other) const;
+  bool operator!=(const OpenSSLIdentity& other) const;
+
  private:
   OpenSSLIdentity(OpenSSLKeyPair* key_pair, OpenSSLCertificate* certificate);
 
   static OpenSSLIdentity* GenerateInternal(const SSLIdentityParams& params);
 
-  scoped_ptr<OpenSSLKeyPair> key_pair_;
-  scoped_ptr<OpenSSLCertificate> certificate_;
+  std::unique_ptr<OpenSSLKeyPair> key_pair_;
+  std::unique_ptr<OpenSSLCertificate> certificate_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(OpenSSLIdentity);
 };

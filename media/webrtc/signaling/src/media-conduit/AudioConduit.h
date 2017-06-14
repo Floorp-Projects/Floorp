@@ -15,7 +15,6 @@
 
 // Audio Engine Includes
 #include "webrtc/common_types.h"
-#include "webrtc/transport.h"
 #include "webrtc/voice_engine/include/voe_base.h"
 #include "webrtc/voice_engine/include/voe_volume_control.h"
 #include "webrtc/voice_engine/include/voe_codec.h"
@@ -25,6 +24,8 @@
 #include "webrtc/voice_engine/include/voe_audio_processing.h"
 #include "webrtc/voice_engine/include/voe_video_sync.h"
 #include "webrtc/voice_engine/include/voe_rtp_rtcp.h"
+#include "webrtc/voice_engine/channel_proxy.h"
+
 //Some WebRTC types for short notations
  using webrtc::VoEBase;
  using webrtc::VoENetwork;
@@ -239,7 +240,7 @@ public:
                            unsigned int* packetsSent,
                            uint64_t* bytesSent) override;
 
-  bool SetDtmfPayloadType(unsigned char type) override;
+  bool SetDtmfPayloadType(unsigned char type, int freq) override;
 
   bool InsertDTMFTone(int channel, int eventCode, bool outOfBand,
                       int lengthMs, int attenuationDb) override;
@@ -301,6 +302,7 @@ private:
   AutoTArray<Processing,8> mProcessing;
 
   int mChannel;
+  std::unique_ptr<webrtc::voe::ChannelProxy> mChannelProxy;
   bool mDtmfEnabled;
   RecvCodecList    mRecvCodecList;
 

@@ -11,10 +11,11 @@
 #ifndef WEBRTC_BASE_TASKPARENT_H__
 #define WEBRTC_BASE_TASKPARENT_H__
 
+#include <memory>
 #include <set>
 
-#include "webrtc/base/basictypes.h"
-#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/constructormagic.h"
 
 namespace rtc {
 
@@ -32,7 +33,7 @@ class TaskParent {
 
   bool AllChildrenDone();
   bool AnyChildError();
-#if !defined(NDEBUG)
+#if RTC_DCHECK_IS_ON
   bool IsChildTask(Task *task);
 #endif
 
@@ -52,7 +53,7 @@ class TaskParent {
   TaskRunner *runner_;
   bool child_error_;
   typedef std::set<Task *> ChildSet;
-  scoped_ptr<ChildSet> children_;
+  std::unique_ptr<ChildSet> children_;
   RTC_DISALLOW_COPY_AND_ASSIGN(TaskParent);
 };
 

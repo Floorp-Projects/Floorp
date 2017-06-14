@@ -10,87 +10,47 @@
 
 #include "webrtc/modules/video_coding/codec_timer.h"
 
-#include <assert.h>
-
 namespace webrtc {
 
+namespace {
+
 // The first kIgnoredSampleCount samples will be ignored.
-static const int32_t kIgnoredSampleCount = 5;
+const int kIgnoredSampleCount = 5;
+// Return the |kPercentile| value in RequiredDecodeTimeMs().
+const float kPercentile = 0.95f;
+// The window size in ms.
+const int64_t kTimeLimitMs = 10000;
+
+}  // anonymous namespace
 
 VCMCodecTimer::VCMCodecTimer()
-    : _filteredMax(0), _ignoredSampleCount(0), _shortMax(0), _history() {
-  Reset();
-}
+    : ignored_sample_count_(0), filter_(kPercentile) {}
 
-void VCMCodecTimer::Reset() {
-  _filteredMax = 0;
-  _ignoredSampleCount = 0;
-  _shortMax = 0;
-  for (int i = 0; i < MAX_HISTORY_SIZE; i++) {
-    _history[i].shortMax = 0;
-    _history[i].timeMs = -1;
-  }
-}
-
-// Update the max-value filter
-void VCMCodecTimer::MaxFilter(int32_t decodeTime, int64_t nowMs) {
-  if (_ignoredSampleCount >= kIgnoredSampleCount) {
-    UpdateMaxHistory(decodeTime, nowMs);
-    ProcessHistory(nowMs);
-  } else {
-    _ignoredSampleCount++;
-  }
-}
-
-void VCMCodecTimer::UpdateMaxHistory(int32_t decodeTime, int64_t now) {
-  if (_history[0].timeMs >= 0 && now - _history[0].timeMs < SHORT_FILTER_MS) {
-    if (decodeTime > _shortMax) {
-      _shortMax = decodeTime;
-    }
-  } else {
-    // Only add a new value to the history once a second
-    if (_history[0].timeMs == -1) {
-      // First, no shift
-      _shortMax = decodeTime;
-    } else {
-      // Shift
-      for (int i = (MAX_HISTORY_SIZE - 2); i >= 0; i--) {
-        _history[i + 1].shortMax = _history[i].shortMax;
-        _history[i + 1].timeMs = _history[i].timeMs;
-      }
-    }
-    if (_shortMax == 0) {
-      _shortMax = decodeTime;
-    }
-
-    _history[0].shortMax = _shortMax;
-    _history[0].timeMs = now;
-    _shortMax = 0;
-  }
-}
-
-void VCMCodecTimer::ProcessHistory(int64_t nowMs) {
-  _filteredMax = _shortMax;
-  if (_history[0].timeMs == -1) {
+void VCMCodecTimer::AddTiming(int64_t decode_time_ms, int64_t now_ms) {
+  // Ignore the first |kIgnoredSampleCount| samples.
+  if (ignored_sample_count_ < kIgnoredSampleCount) {
+    ++ignored_sample_count_;
     return;
   }
-  for (int i = 0; i < MAX_HISTORY_SIZE; i++) {
-    if (_history[i].timeMs == -1) {
-      break;
-    }
-    if (nowMs - _history[i].timeMs > MAX_HISTORY_SIZE * SHORT_FILTER_MS) {
-      // This sample (and all samples after this) is too old
-      break;
-    }
-    if (_history[i].shortMax > _filteredMax) {
-      // This sample is the largest one this far into the history
-      _filteredMax = _history[i].shortMax;
-    }
+
+  // Insert new decode time value.
+  filter_.Insert(decode_time_ms);
+  history_.emplace(decode_time_ms, now_ms);
+
+  // Pop old decode time values.
+  while (!history_.empty() &&
+         now_ms - history_.front().sample_time_ms > kTimeLimitMs) {
+    filter_.Erase(history_.front().decode_time_ms);
+    history_.pop();
   }
 }
 
-// Get the maximum observed time within a time window
-int32_t VCMCodecTimer::RequiredDecodeTimeMs(FrameType /*frameType*/) const {
-  return _filteredMax;
+// Get the 95th percentile observed decode time within a time window.
+int64_t VCMCodecTimer::RequiredDecodeTimeMs() const {
+  return filter_.GetPercentileValue();
 }
+
+VCMCodecTimer::Sample::Sample(int64_t decode_time_ms, int64_t sample_time_ms)
+    : decode_time_ms(decode_time_ms), sample_time_ms(sample_time_ms) {}
+
 }  // namespace webrtc

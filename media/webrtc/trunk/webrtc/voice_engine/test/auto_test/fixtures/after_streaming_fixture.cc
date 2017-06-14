@@ -9,8 +9,12 @@
  */
 
 #include "webrtc/voice_engine/test/auto_test/fixtures/after_streaming_fixture.h"
+#include "webrtc/voice_engine/voice_engine_impl.h"
 
 AfterStreamingFixture::AfterStreamingFixture()
     : BeforeStreamingFixture() {
+  webrtc::VoiceEngineImpl* voe_impl =
+      static_cast<webrtc::VoiceEngineImpl*>(voice_engine_);
+  channel_proxy_ = voe_impl->GetChannelProxy(channel_);
   ResumePlaying();
 }

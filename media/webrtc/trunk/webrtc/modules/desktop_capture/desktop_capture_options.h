@@ -28,14 +28,18 @@ namespace webrtc {
 // capturers.
 class DesktopCaptureOptions {
  public:
-  // Creates an empty Options instance (e.g. without X display).
-  DesktopCaptureOptions();
-  ~DesktopCaptureOptions();
-
   // Returns instance of DesktopCaptureOptions with default parameters. On Linux
   // also initializes X window connection. x_display() will be set to null if
   // X11 connection failed (e.g. DISPLAY isn't set).
   static DesktopCaptureOptions CreateDefault();
+
+  DesktopCaptureOptions();
+  DesktopCaptureOptions(const DesktopCaptureOptions& options);
+  DesktopCaptureOptions(DesktopCaptureOptions&& options);
+  ~DesktopCaptureOptions();
+
+  DesktopCaptureOptions& operator=(const DesktopCaptureOptions& options);
+  DesktopCaptureOptions& operator=(DesktopCaptureOptions&& options);
 
 #if defined(USE_X11)
   SharedXDisplay* x_display() const { return x_display_; }
@@ -76,12 +80,30 @@ class DesktopCaptureOptions {
     disable_effects_ = disable_effects;
   }
 
+  // Flag that should be set if the consumer uses updated_region() and the
+  // capturer should try to provide correct updated_region() for the frames it
+  // generates (e.g. by comparing each frame with the previous one).
+  // TODO(zijiehe): WindowCapturer ignores this opinion until we merge
+  // ScreenCapturer and WindowCapturer interfaces.
+  bool detect_updated_region() const { return detect_updated_region_; }
+  void set_detect_updated_region(bool detect_updated_region) {
+    detect_updated_region_ = detect_updated_region;
+  }
+
 #if defined(WEBRTC_WIN)
   bool allow_use_magnification_api() const {
     return allow_use_magnification_api_;
   }
   void set_allow_use_magnification_api(bool allow) {
     allow_use_magnification_api_ = allow;
+  }
+  // Allowing directx based capturer or not, this capturer works on windows 7
+  // with platform update / windows 8 or upper.
+  bool allow_directx_capturer() const {
+    return allow_directx_capturer_;
+  }
+  void set_allow_directx_capturer(bool enabled) {
+    allow_directx_capturer_ = enabled;
   }
 #endif
 
@@ -97,10 +119,16 @@ class DesktopCaptureOptions {
 #endif
 
 #if defined(WEBRTC_WIN)
-  bool allow_use_magnification_api_;
+  bool allow_use_magnification_api_ = false;
+  bool allow_directx_capturer_ = false;
 #endif
-  bool use_update_notifications_;
-  bool disable_effects_;
+#if defined(USE_X11)
+  bool use_update_notifications_ = false;
+#else
+  bool use_update_notifications_ = true;
+#endif
+  bool disable_effects_ = true;
+  bool detect_updated_region_ = false;
 };
 
 }  // namespace webrtc

@@ -109,6 +109,25 @@ void WebRtcNs_Process(NsHandle* NS_inst,
  */
 float WebRtcNs_prior_speech_probability(NsHandle* handle);
 
+/* Returns a pointer to the noise estimate per frequency bin. The number of
+ * frequency bins can be provided using WebRtcNs_num_freq().
+ *
+ * Input
+ *      - handle        : Noise suppression instance.
+ *
+ * Return value         : Pointer to the noise estimate per frequency bin.
+ *                        Returns NULL if the input is a NULL pointer or an
+ *                        uninitialized instance.
+ */
+const float* WebRtcNs_noise_estimate(const NsHandle* handle);
+
+/* Returns the number of frequency bins, which is the length of the noise
+ * estimate for example.
+ *
+ * Return value         : Number of frequency bins.
+ */
+size_t WebRtcNs_num_freq();
+
 #ifdef __cplusplus
 }
 #endif

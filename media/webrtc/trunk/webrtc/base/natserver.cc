@@ -8,6 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
+#include "webrtc/base/checks.h"
 #include "webrtc/base/natsocketfactory.h"
 #include "webrtc/base/natserver.h"
 #include "webrtc/base/logging.h"
@@ -85,7 +88,7 @@ class NATProxyServerSocket : public AsyncProxyServerSocket {
     }
 
     int family = data[1];
-    ASSERT(family == AF_INET || family == AF_INET6);
+    RTC_DCHECK(family == AF_INET || family == AF_INET6);
     if ((family == AF_INET && *len < kNATEncodedIPv4AddressSize) ||
         (family == AF_INET6 && *len < kNATEncodedIPv6AddressSize)) {
       return;
@@ -167,7 +170,7 @@ void NATServer::OnInternalUDPPacket(
     Translate(route);
     iter = int_map_->find(route);
   }
-  ASSERT(iter != int_map_->end());
+  RTC_DCHECK(iter != int_map_->end());
 
   // Allow the destination to send packets back to the source.
   iter->second->WhitelistInsert(dest_addr);
@@ -184,7 +187,7 @@ void NATServer::OnExternalUDPPacket(
 
   // Find the translation for this addresses.
   ExternalMap::iterator iter = ext_map_->find(local_addr);
-  ASSERT(iter != ext_map_->end());
+  RTC_DCHECK(iter != ext_map_->end());
 
   // Allow the NAT to reject this packet.
   if (ShouldFilterOut(iter->second, remote_addr)) {
@@ -195,7 +198,7 @@ void NATServer::OnExternalUDPPacket(
 
   // Forward this packet to the internal address.
   // First prepend the address in a quasi-STUN format.
-  scoped_ptr<char[]> real_buf(new char[size + kNATEncodedIPv6AddressSize]);
+  std::unique_ptr<char[]> real_buf(new char[size + kNATEncodedIPv6AddressSize]);
   size_t addrlength = PackAddressForNAT(real_buf.get(),
                                         size + kNATEncodedIPv6AddressSize,
                                         remote_addr);

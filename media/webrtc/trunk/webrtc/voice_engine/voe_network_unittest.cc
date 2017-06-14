@@ -10,7 +10,7 @@
 
 #include "webrtc/voice_engine/include/voe_network.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/voice_engine/include/voe_errors.h"
 #include "webrtc/voice_engine/voice_engine_fixture.h"
 

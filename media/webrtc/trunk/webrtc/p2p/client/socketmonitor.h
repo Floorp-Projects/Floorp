@@ -16,7 +16,7 @@
 #include "webrtc/base/criticalsection.h"
 #include "webrtc/base/sigslot.h"
 #include "webrtc/base/thread.h"
-#include "webrtc/p2p/base/transport.h"  // for ConnectionInfos
+#include "webrtc/p2p/base/jseptransport.h"  // for ConnectionInfos
 
 // TODO(pthatcher): Move these to connectionmonitor.h and
 // connectionmonitor.cc, or just move them into channel.cc
@@ -33,7 +33,7 @@ class ConnectionMonitor : public rtc::MessageHandler,
                           public sigslot::has_slots<> {
 public:
   ConnectionMonitor(ConnectionStatsGetter* stats_getter,
-                    rtc::Thread* worker_thread,
+                    rtc::Thread* network_thread,
                     rtc::Thread* monitoring_thread);
   ~ConnectionMonitor();
 
@@ -50,7 +50,7 @@ public:
 
   std::vector<ConnectionInfo> connection_infos_;
   ConnectionStatsGetter* stats_getter_;
-  rtc::Thread* worker_thread_;
+  rtc::Thread* network_thread_;
   rtc::Thread* monitoring_thread_;
   rtc::CriticalSection crit_;
   uint32_t rate_;

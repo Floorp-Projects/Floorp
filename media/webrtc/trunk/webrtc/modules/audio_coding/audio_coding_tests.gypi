@@ -39,17 +39,4 @@
       ],
     },
   ],
-  'conditions': [
-    ['OS=="android"', {
-      'targets': [
-        {
-          'target_name': 'audio_codec_speed_tests_apk_target',
-          'type': 'none',
-          'dependencies': [
-            '<(apk_tests_path):audio_codec_speed_tests_apk',
-          ],
-        },
-      ],
-    }],
-  ],
 }

@@ -17,7 +17,9 @@
 
 #ifdef WIN32
 #include "windows.h"
+#ifndef CLOCKS_PER_SEC
 #define CLOCKS_PER_SEC 1000
+#endif
 #endif
 
 #include <ctype.h>
@@ -27,7 +29,6 @@
 #include "isac.h"
 #include "utility.h"
 #include "webrtc/base/format_macros.h"
-//#include "commonDefs.h"
 
 /* max number of samples per frame (= 60 ms frame) */
 #define MAX_FRAMESAMPLES_SWB 1920
@@ -38,13 +39,6 @@
 /* sampling frequency (Hz) */
 #define FS_SWB 32000
 #define FS_WB 16000
-
-//#define CHANGE_OUTPUT_NAME
-
-#ifdef HAVE_DEBUG_INFO
-#include "debugUtility.h"
-debugStruct debugInfo;
-#endif
 
 unsigned long framecnt = 0;
 
@@ -67,7 +61,6 @@ int main(int argc, char* argv[]) {
   int16_t codingMode = 1;
   int16_t shortdata[FRAMESAMPLES_SWB_10ms];
   int16_t decoded[MAX_FRAMESAMPLES_SWB];
-  // uint16_t  streamdata[1000];
   int16_t speechType[1];
   int16_t payloadLimit;
   int32_t rateLimit;
@@ -218,7 +211,7 @@ int main(int argc, char* argv[]) {
   _makepath(bitrateFileName, outDrive, outPath, "bitrate", ".txt");
 
   bitrateFile = fopen(bitrateFileName, "a");
-  fprintf(bitrateFile, "%  %%s  \n", inname);
+  fprintf(bitrateFile, "%%  %s  \n", inname);
 #endif
 
   printf("\n");
@@ -255,18 +248,6 @@ int main(int argc, char* argv[]) {
   }
   WebRtcIsac_DecoderInit(ISAC_main_inst);
 
-  // {
-  //   int32_t b1, b2;
-  //   FILE* fileID = fopen("GetBNTest.txt", "w");
-  //   b2 = 32100;
-  //   while (b2 <= 52000) {
-  //     WebRtcIsac_Control(ISAC_main_inst, b2, frameSize);
-  //     WebRtcIsac_GetUplinkBw(ISAC_main_inst, &b1);
-  //     fprintf(fileID, "%5d %5d\n", b2, b1);
-  //     b2 += 10;
-  //   }
-  // }
-
   if (codingMode == 1) {
     if (WebRtcIsac_Control(ISAC_main_inst, bottleneck, frameSize) < 0) {
       printf("cannot set bottleneck\n");
@@ -290,14 +271,6 @@ int main(int argc, char* argv[]) {
       return -1;
     }
   }
-
-  //=====================================
-  //#ifdef HAVE_DEBUG_INFO
-  //    if(setupDebugStruct(&debugInfo) < 0)
-  //    {
-  //        exit(1);
-  //    }
-  //#endif
 
   while (endfile == 0) {
     fprintf(stderr, "  \rframe = %7li", framecnt);
@@ -443,13 +416,6 @@ int main(int argc, char* argv[]) {
   printf("Rate Limit.................. %d bits/sec \n", rateLimit);
 
 #ifdef WIN32
-#ifdef HAVE_DEBUG_INFO
-  rateLB =
-      ((double)debugInfo.lbBytes * 8. * (sampFreqKHz)) / (double)totalsmpls;
-  rateUB =
-      ((double)debugInfo.ubBytes * 8. * (sampFreqKHz)) / (double)totalsmpls;
-#endif
-
   fprintf(bitrateFile, "%d  %10u     %d     %6.3f  %6.3f    %6.3f\n",
           sampFreqKHz, framecnt, bottleneck, rateLB, rateUB, rate);
   fclose(bitrateFile);
@@ -462,18 +428,6 @@ int main(int argc, char* argv[]) {
          maxStreamLen * 8 / 0.03, maxStreamLen);
   printf("Measured packet-loss........ %0.1f%% \n",
          100.0f * (float)lostPacketCntr / (float)packetCntr);
-
-  // #ifdef HAVE_DEBUG_INFO
-  // printf("Measured lower-band bit-rate %0.3f kbps (%.0f%%)\n",
-  //        rateLB, (double)(rateLB) * 100. /(double)(rate));
-  // printf("Measured upper-band bit-rate %0.3f kbps (%.0f%%)\n",
-  //        rateUB, (double)(rateUB) * 100. /(double)(rate));
-  //
-  // printf("Maximum payload lower-band.. %d bytes (%0.3f kbps)\n",
-  //        debugInfo.maxPayloadLB, debugInfo.maxPayloadLB * 8.0 / 0.03);
-  // printf("Maximum payload upper-band.. %d bytes (%0.3f kbps)\n",
-  //        debugInfo.maxPayloadUB, debugInfo.maxPayloadUB * 8.0 / 0.03);
-  // #endif
 
   printf("\n");
 
@@ -509,68 +463,5 @@ int main(int argc, char* argv[]) {
 
   WebRtcIsac_Free(ISAC_main_inst);
 
-#ifdef CHANGE_OUTPUT_NAME
-  {
-    char* p;
-    char myExt[50];
-    char bitRateStr[10];
-    char newOutName[500];
-    strcpy(newOutName, outname);
-
-    myExt[0] = '\0';
-    p = strchr(newOutName, '.');
-    if (p != NULL) {
-      strcpy(myExt, p);
-      *p = '_';
-      p++;
-      *p = '\0';
-    } else {
-      strcat(newOutName, "_");
-    }
-    sprintf(bitRateStr, "%0.0fkbps", rate);
-    strcat(newOutName, bitRateStr);
-    strcat(newOutName, myExt);
-    rename(outname, newOutName);
-  }
-#endif
   exit(0);
 }
-
-#ifdef HAVE_DEBUG_INFO
-int setupDebugStruct(debugStruct* str) {
-  str->prevPacketLost = 0;
-  str->currPacketLost = 0;
-
-  OPEN_FILE_WB(str->res0to4FilePtr, "Res0to4.dat");
-  OPEN_FILE_WB(str->res4to8FilePtr, "Res4to8.dat");
-  OPEN_FILE_WB(str->res8to12FilePtr, "Res8to12.dat");
-  OPEN_FILE_WB(str->res8to16FilePtr, "Res8to16.dat");
-
-  OPEN_FILE_WB(str->res0to4DecFilePtr, "Res0to4Dec.dat");
-  OPEN_FILE_WB(str->res4to8DecFilePtr, "Res4to8Dec.dat");
-  OPEN_FILE_WB(str->res8to12DecFilePtr, "Res8to12Dec.dat");
-  OPEN_FILE_WB(str->res8to16DecFilePtr, "Res8to16Dec.dat");
-
-  OPEN_FILE_WB(str->in0to4FilePtr, "in0to4.dat");
-  OPEN_FILE_WB(str->in4to8FilePtr, "in4to8.dat");
-  OPEN_FILE_WB(str->in8to12FilePtr, "in8to12.dat");
-  OPEN_FILE_WB(str->in8to16FilePtr, "in8to16.dat");
-
-  OPEN_FILE_WB(str->out0to4FilePtr, "out0to4.dat");
-  OPEN_FILE_WB(str->out4to8FilePtr, "out4to8.dat");
-  OPEN_FILE_WB(str->out8to12FilePtr, "out8to12.dat");
-  OPEN_FILE_WB(str->out8to16FilePtr, "out8to16.dat");
-  OPEN_FILE_WB(str->fftFilePtr, "riFFT.dat");
-  OPEN_FILE_WB(str->fftDecFilePtr, "riFFTDec.dat");
-
-  OPEN_FILE_WB(str->arrivalTime, NULL /*"ArivalTime.dat"*/);
-  str->lastArrivalTime = 0;
-
-  str->maxPayloadLB = 0;
-  str->maxPayloadUB = 0;
-  str->lbBytes = 0;
-  str->ubBytes = 0;
-
-  return 0;
-};
-#endif

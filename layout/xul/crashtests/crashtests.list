@@ -90,7 +90,7 @@ load 508927-1.xul
 load 508927-2.xul
 load 514300-1.xul
 asserts-if(stylo,2) load 536931-1.xhtml # bug 1370830
-asserts(1) load 538308-1.xul
+load 538308-1.xul
 load 557174-1.xml
 load 564705-1.xul
 asserts-if(stylo,2) load 583957-1.html # bug 1370830

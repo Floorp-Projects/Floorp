@@ -111,10 +111,10 @@ typedef struct TLSExtensionStr {
 } TLSExtension;
 
 SECStatus ssl3_HandleExtensions(sslSocket *ss,
-                                SSL3Opaque **b, PRUint32 *length,
+                                PRUint8 **b, PRUint32 *length,
                                 SSL3HandshakeType handshakeMessage);
 SECStatus ssl3_ParseExtensions(sslSocket *ss,
-                               SSL3Opaque **b, PRUint32 *length);
+                               PRUint8 **b, PRUint32 *length);
 SECStatus ssl3_HandleParsedExtensions(sslSocket *ss,
                                       SSL3HandshakeType handshakeMessage);
 TLSExtension *ssl3_FindExtension(sslSocket *ss,
@@ -142,18 +142,18 @@ SECStatus ssl3_ExtAppendHandshake(const sslSocket *ss, const void *void_src,
 SECStatus ssl3_ExtAppendHandshakeNumber(const sslSocket *ss, PRInt32 num,
                                         PRInt32 lenSize);
 SECStatus ssl3_ExtAppendHandshakeVariable(const sslSocket *ss,
-                                          const SSL3Opaque *src, PRInt32 bytes,
+                                          const PRUint8 *src, PRInt32 bytes,
                                           PRInt32 lenSize);
 void ssl3_ExtSendAlert(const sslSocket *ss, SSL3AlertLevel level,
                        SSL3AlertDescription desc);
 void ssl3_ExtDecodeError(const sslSocket *ss);
 SECStatus ssl3_ExtConsumeHandshake(const sslSocket *ss, void *v, PRUint32 bytes,
-                                   SSL3Opaque **b, PRUint32 *length);
+                                   PRUint8 **b, PRUint32 *length);
 SECStatus ssl3_ExtConsumeHandshakeNumber(const sslSocket *ss, PRUint32 *num,
-                                         PRUint32 bytes, SSL3Opaque **b,
+                                         PRUint32 bytes, PRUint8 **b,
                                          PRUint32 *length);
 SECStatus ssl3_ExtConsumeHandshakeVariable(const sslSocket *ss, SECItem *i,
-                                           PRUint32 bytes, SSL3Opaque **b,
+                                           PRUint32 bytes, PRUint8 **b,
                                            PRUint32 *length);
 
 #endif

@@ -24,7 +24,7 @@ namespace videocapturemodule
 class DeviceInfoImpl: public VideoCaptureModule::DeviceInfo
 {
 public:
-    DeviceInfoImpl(const int32_t id);
+    DeviceInfoImpl();
     virtual ~DeviceInfoImpl(void);
     virtual int32_t NumberOfCapabilities(const char* deviceUniqueIdUTF8);
     virtual int32_t GetCapability(
@@ -57,7 +57,6 @@ protected:
                                     const uint32_t height);
 protected:
     // Data members
-    int32_t _id;
     typedef std::vector<VideoCaptureCapability> VideoCaptureCapabilities;
     VideoCaptureCapabilities _captureCapabilities;
     RWLockWrapper& _apiLock;

@@ -13,7 +13,8 @@
 
 #include <string.h>
 
-#include "webrtc/base/scoped_ptr.h"
+#include <memory>
+
 #include "webrtc/common_types.h"
 #include "webrtc/modules/audio_coding/include/audio_coding_module.h"
 #include "webrtc/modules/audio_coding/test/ACMTest.h"
@@ -51,11 +52,11 @@ class ISACTest : public ACMTest {
 
   void SwitchingSamplingRate(int testNr, int maxSampRateChange);
 
-  rtc::scoped_ptr<AudioCodingModule> _acmA;
-  rtc::scoped_ptr<AudioCodingModule> _acmB;
+  std::unique_ptr<AudioCodingModule> _acmA;
+  std::unique_ptr<AudioCodingModule> _acmB;
 
-  rtc::scoped_ptr<Channel> _channel_A2B;
-  rtc::scoped_ptr<Channel> _channel_B2A;
+  std::unique_ptr<Channel> _channel_A2B;
+  std::unique_ptr<Channel> _channel_B2A;
 
   PCMFile _inFileA;
   PCMFile _inFileB;

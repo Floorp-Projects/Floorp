@@ -4,6 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+TEST_DIRS += [
+    'gtest',
+]
+
 DIRS += [
     'hyphenation/hyphen',
     'hyphenation/glue',
@@ -17,6 +21,15 @@ DIRS += [
 DIRS += [
     'uconv',
     'build',
+]
+
+EXPORTS.mozilla += [
+    'Encoding.h',
+]
+
+EXPORTS += [
+    '../third_party/rust/encoding_c/include/encoding_rs.h',
+    '../third_party/rust/encoding_c/include/encoding_rs_statics.h',
 ]
 
 with Files("**"):

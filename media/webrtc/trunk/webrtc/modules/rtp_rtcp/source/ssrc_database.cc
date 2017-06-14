@@ -9,17 +9,10 @@
  */
 
 #include "webrtc/modules/rtp_rtcp/source/ssrc_database.h"
-
+#include "webrtc/base/timeutils.h"
 #include "webrtc/base/checks.h"
-#include "webrtc/system_wrappers/include/clock.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
 namespace webrtc {
-namespace {
-uint64_t Seed() {
-  return Clock::GetRealTimeClock()->TimeInMicroseconds();
-}
-}  // namespace
 
 SSRCDatabase* SSRCDatabase::GetSSRCDatabase() {
   return GetStaticInstance<SSRCDatabase>(kAddRef);
@@ -30,7 +23,7 @@ void SSRCDatabase::ReturnSSRCDatabase() {
 }
 
 uint32_t SSRCDatabase::CreateSSRC() {
-  CriticalSectionScoped lock(crit_.get());
+  rtc::CritScope lock(&crit_);
 
   while (true) {  // Try until get a new ssrc.
     // 0 and 0xffffffff are invalid values for SSRC.
@@ -42,19 +35,17 @@ uint32_t SSRCDatabase::CreateSSRC() {
 }
 
 void SSRCDatabase::RegisterSSRC(uint32_t ssrc) {
-  CriticalSectionScoped lock(crit_.get());
+  rtc::CritScope lock(&crit_);
   ssrcs_.insert(ssrc);
 }
 
 void SSRCDatabase::ReturnSSRC(uint32_t ssrc) {
-  CriticalSectionScoped lock(crit_.get());
+  rtc::CritScope lock(&crit_);
   ssrcs_.erase(ssrc);
 }
 
-SSRCDatabase::SSRCDatabase()
-    : crit_(CriticalSectionWrapper::CreateCriticalSection()), random_(Seed()) {}
+SSRCDatabase::SSRCDatabase() : random_(rtc::TimeMicros()) {}
 
-SSRCDatabase::~SSRCDatabase() {
-}
+SSRCDatabase::~SSRCDatabase() {}
 
 }  // namespace webrtc

@@ -21,6 +21,9 @@
 #include "webrtc/call.h"
 #include "webrtc/config.h"
 #include "webrtc/common_types.h"
+#include "webrtc/common_types.h"
+#include "webrtc/api/video/video_frame_buffer.h"
+#include "webrtc/logging/rtc_event_log/rtc_event_log.h"
 
 #include <vector>
 
@@ -36,9 +39,9 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper>
 public:
   typedef webrtc::Call::Config Config;
 
-  static RefPtr<WebRtcCallWrapper> Create(const Config& config)
+  static RefPtr<WebRtcCallWrapper> Create()
   {
-    return new WebRtcCallWrapper(webrtc::Call::Create(config));
+    return new WebRtcCallWrapper();
   }
 
   webrtc::Call* Call() const
@@ -53,17 +56,23 @@ public:
       mCall.reset(nullptr); // Force it to release the voice engine reference
       // Delete() must be after all refs are released
       webrtc::VoiceEngine::Delete(voice_engine);
+    } else {
+      // Must ensure it's destroyed *before* the EventLog!
+      mCall.reset(nullptr);
     }
   }
 
   MOZ_DECLARE_REFCOUNTED_TYPENAME(WebRtcCallWrapper)
 
 private:
-  WebRtcCallWrapper() = delete;
-  explicit WebRtcCallWrapper(webrtc::Call* aCall)
-    : mCall(aCall) {}
+  WebRtcCallWrapper()
+  {
+    webrtc::Call::Config config(&mEventLog);
+    mCall.reset(webrtc::Call::Create(config));
+  }
   DISALLOW_COPY_AND_ASSIGN(WebRtcCallWrapper);
   UniquePtr<webrtc::Call> mCall;
+  webrtc::RtcEventLogNullImpl mEventLog;
 };
 
 
@@ -152,15 +161,16 @@ public:
    * implementations should keep a reference to the (ref-counted) image object
    * inside until it's no longer needed.
    */
-  virtual void RenderVideoFrame(const unsigned char* buffer,
-                                size_t buffer_size,
+  virtual void RenderVideoFrame(const webrtc::VideoFrameBuffer& buffer,
                                 uint32_t time_stamp,
                                 int64_t render_time,
                                 const ImageHandle& handle) = 0;
-  virtual void RenderVideoFrame(const unsigned char* buffer,
-                                size_t buffer_size,
+  virtual void RenderVideoFrame(const uint8_t* buffer_y,
                                 uint32_t y_stride,
-                                uint32_t cbcr_stride,
+                                const uint8_t* buffer_u,
+                                uint32_t u_stride,
+                                const uint8_t* buffer_v,
+                                uint32_t v_stride,
                                 uint32_t time_stamp,
                                 int64_t render_time,
                                 const ImageHandle& handle) = 0;
@@ -540,7 +550,7 @@ public:
     */
   virtual MediaConduitErrorCode EnableAudioLevelExtension(bool enabled, uint8_t id) = 0;
 
-  virtual bool SetDtmfPayloadType(unsigned char type) = 0;
+  virtual bool SetDtmfPayloadType(unsigned char type, int freq) = 0;
 
   virtual bool InsertDTMFTone(int channel, int eventCode, bool outOfBand,
                               int lengthMs, int attenuationDb) = 0;

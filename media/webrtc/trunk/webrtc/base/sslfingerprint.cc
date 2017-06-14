@@ -14,6 +14,7 @@
 #include <string>
 
 #include "webrtc/base/helpers.h"
+#include "webrtc/base/logging.h"
 #include "webrtc/base/messagedigest.h"
 #include "webrtc/base/stringencode.h"
 
@@ -62,6 +63,22 @@ SSLFingerprint* SSLFingerprint::CreateFromRfc4572(
                             value_len);
 }
 
+SSLFingerprint* SSLFingerprint::CreateFromCertificate(
+    const RTCCertificate* cert) {
+  std::string digest_alg;
+  if (!cert->ssl_certificate().GetSignatureDigestAlgorithm(&digest_alg)) {
+    LOG(LS_ERROR) << "Failed to retrieve the certificate's digest algorithm";
+    return nullptr;
+  }
+
+  SSLFingerprint* fingerprint = Create(digest_alg, cert->identity());
+  if (!fingerprint) {
+    LOG(LS_ERROR) << "Failed to create identity fingerprint, alg="
+                  << digest_alg;
+  }
+  return fingerprint;
+}
+
 SSLFingerprint::SSLFingerprint(const std::string& algorithm,
                                const uint8_t* digest_in,
                                size_t digest_len)
@@ -85,7 +102,7 @@ std::string SSLFingerprint::GetRfc4572Fingerprint() const {
   return fingerprint;
 }
 
-std::string SSLFingerprint::ToString() {
+std::string SSLFingerprint::ToString() const {
   std::string fp_str = algorithm;
   fp_str.append(" ");
   fp_str.append(GetRfc4572Fingerprint());

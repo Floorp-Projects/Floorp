@@ -15,26 +15,26 @@
 #include <string>
 #include <vector>
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet.h"
-#include "webrtc/modules/rtp_rtcp/source/rtcp_utility.h"
 
 namespace webrtc {
 namespace rtcp {
+class CommonHeader;
 
 class Bye : public RtcpPacket {
  public:
-  static const uint8_t kPacketType = 203;
+  static constexpr uint8_t kPacketType = 203;
 
   Bye();
-  virtual ~Bye() {}
+  ~Bye() override {}
 
   // Parse assumes header is already parsed and validated.
-  bool Parse(const RTCPUtility::RtcpCommonHeader& header,
-             const uint8_t* payload);  // Size of the payload is in the header.
+  bool Parse(const CommonHeader& packet);
 
-  void From(uint32_t ssrc) { sender_ssrc_ = ssrc; }
-  bool WithCsrc(uint32_t csrc);
-  void WithReason(const std::string& reason);
+  void SetSenderSsrc(uint32_t ssrc) { sender_ssrc_ = ssrc; }
+  bool SetCsrcs(std::vector<uint32_t> csrcs);
+  void SetReason(std::string reason);
 
   uint32_t sender_ssrc() const { return sender_ssrc_; }
   const std::vector<uint32_t>& csrcs() const { return csrcs_; }

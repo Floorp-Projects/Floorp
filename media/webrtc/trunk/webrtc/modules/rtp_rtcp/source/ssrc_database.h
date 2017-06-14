@@ -13,14 +13,21 @@
 
 #include <set>
 
+#include "webrtc/base/criticalsection.h"
 #include "webrtc/base/random.h"
-#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/base/thread_annotations.h"
 #include "webrtc/system_wrappers/include/static_instance.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
-class CriticalSectionWrapper;
 
+// TODO(tommi, holmer): Look into whether we can eliminate locking in this
+// class or the class itself completely once voice engine doesn't rely on it.
+// At the moment voe_auto_test requires locking, but it's not clear if that's
+// an issue with the test code or if it reflects real world usage or if that's
+// the best design performance wise.
+// If we do decide to keep the class, we should at least get rid of using
+// StaticInstance.
 class SSRCDatabase {
  public:
   static SSRCDatabase* GetSSRCDatabase();
@@ -31,20 +38,24 @@ class SSRCDatabase {
   void ReturnSSRC(uint32_t ssrc);
 
   SSRCDatabase();
-  virtual ~SSRCDatabase();
+  ~SSRCDatabase();
 
  protected:
   static SSRCDatabase* CreateInstance() { return new SSRCDatabase(); }
 
- private:
   // Friend function to allow the SSRC destructor to be accessed from the
   // template class.
   friend SSRCDatabase* GetStaticInstance<SSRCDatabase>(
       CountOperation count_operation);
 
-  rtc::scoped_ptr<CriticalSectionWrapper> crit_;
+ private:
+  rtc::CriticalSection crit_;
   Random random_ GUARDED_BY(crit_);
   std::set<uint32_t> ssrcs_ GUARDED_BY(crit_);
+  // TODO(tommi): Use a thread checker to ensure the object is created and
+  // deleted on the same thread.  At the moment this isn't possible due to
+  // voe::ChannelOwner in voice engine.  To reproduce, run:
+  // voe_auto_test --automated --gtest_filter=*MixManyChannelsForStressOpus
 };
 }  // namespace webrtc
 

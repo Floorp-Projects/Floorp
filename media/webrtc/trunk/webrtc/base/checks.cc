@@ -22,11 +22,16 @@
 #endif
 
 #if defined(WEBRTC_ANDROID)
-#define LOG_TAG "rtc"
+#define RTC_LOG_TAG "rtc"
 #include <android/log.h>  // NOLINT
 #endif
 
+#if defined(WEBRTC_WIN)
+#include <windows.h>
+#endif
+
 #include "webrtc/base/checks.h"
+#include "webrtc/base/logging.h"
 
 #if defined(_MSC_VER)
 // Warning C4722: destructor never returns, potential memory leak.
@@ -38,7 +43,7 @@ namespace rtc {
 
 void VPrintError(const char* format, va_list args) {
 #if defined(WEBRTC_ANDROID)
-  __android_log_vprint(ANDROID_LOG_ERROR, LOG_TAG, format, args);
+  __android_log_vprint(ANDROID_LOG_ERROR, RTC_LOG_TAG, format, args);
 #else
   vfprintf(stderr, format, args);
 #endif
@@ -105,8 +110,11 @@ NO_RETURN FatalMessage::~FatalMessage() {
 }
 
 void FatalMessage::Init(const char* file, int line) {
-  stream_ << std::endl << std::endl << "#" << std::endl << "# Fatal error in "
-          << file << ", line " << line << std::endl << "# ";
+  stream_ << std::endl << std::endl
+          << "#" << std::endl
+          << "# Fatal error in " << file << ", line " << line << std::endl
+          << "# last system error: " << LAST_SYSTEM_ERROR << std::endl
+          << "# ";
 }
 
 // MSVC doesn't like complex extern templates and DLLs.
@@ -125,3 +133,8 @@ template std::string* MakeCheckOpString<std::string, std::string>(
 #endif
 
 }  // namespace rtc
+
+// Function to call from the C version of the RTC_CHECK and RTC_DCHECK macros.
+NO_RETURN void rtc_FatalMessage(const char* file, int line, const char* msg) {
+  rtc::FatalMessage(file, line).stream() << msg;
+}

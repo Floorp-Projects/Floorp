@@ -48,7 +48,7 @@ class Rtcp {
                                      // report was generated.
   uint32_t expected_prior_;  // Expected number of packets, at the time of the
                              // last report.
-  uint32_t jitter_;  // Current jitter value.
+  int64_t jitter_;  // Current jitter value in Q4.
   int32_t transit_;  // Clock difference for previous packet.
 
   RTC_DISALLOW_COPY_AND_ASSIGN(Rtcp);

@@ -7616,6 +7616,67 @@
     "kind": "flag",
     "description": "a testing histogram; not meant to be touched"
   },
+  "TELEMETRY_TEST_CONTENT_PROCESS": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 10000,
+    "n_buckets": 10,
+    "bug_numbers": [1335343],
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_KEYED_CONTENT_PROCESS": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 10000,
+    "n_buckets": 10,
+    "keyed": true,
+    "bug_numbers": [1335343],
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_FLAG_CONTENT_PROCESS": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "flag",
+    "bug_numbers": [1335343],
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_FLAG_MAIN_PROCESS": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "flag",
+    "bug_numbers": [1335343],
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_ALL_PROCESSES": {
+    "record_in_processes": ["all"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 10000,
+    "n_buckets": 10,
+    "bug_numbers": [1335343],
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_ALL_CHILD_PROCESSES": {
+    "record_in_processes": ["all_childs"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 10000,
+    "n_buckets": 10,
+    "bug_numbers": [1335343],
+    "description": "a testing histogram; not meant to be touched"
+  },
   "STARTUP_CRASH_DETECTED": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
@@ -12488,6 +12549,16 @@
     "keyed": true,
     "cpp_guard": "XP_LINUX",
     "description": "System calls blocked by a seccomp-bpf sandbox policy; limited to syscalls where we would crash on Nightly.  The key is generally the architecture and syscall ID but in some cases we include non-personally-identifying information from the syscall arguments; see the function SubmitToTelemetry in security/sandbox/linux/reporter/SandboxReporter.cpp for details."
+  },
+  "SANDBOX_FAILED_LAUNCH": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["bowen@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 50,
+    "bug_numbers": [1368600],
+    "cpp_guard": "XP_WIN",
+    "description": "Error code when a Windows sandboxed process fails to launch. See https://dxr.mozilla.org/mozilla-central/search?q=ResultCode++path%3Asandbox_types.h&redirect=true for definitions of the error codes."
   },
   "SYNC_WORKER_OPERATION": {
     "record_in_processes": ["main", "content"],

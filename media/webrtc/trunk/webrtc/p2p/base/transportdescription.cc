@@ -12,7 +12,7 @@
 
 #include "webrtc/base/arraysize.h"
 #include "webrtc/base/stringutils.h"
-#include "webrtc/p2p/base/constants.h"
+#include "webrtc/p2p/base/p2pconstants.h"
 
 namespace cricket {
 

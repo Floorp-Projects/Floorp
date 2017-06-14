@@ -120,6 +120,7 @@ symbol that should guard C/C++ definitions associated with the histogram."""
         self._keyed = definition.get('keyed', False)
         self._expiration = definition.get('expires_in_version')
         self._labels = definition.get('labels', [])
+        self._record_in_processes = definition.get('record_in_processes')
 
         self.compute_bucket_parameters(definition)
         self.set_nsITelemetry_kind()
@@ -179,11 +180,11 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 
     def record_in_processes(self):
         """Returns a list of processes this histogram is permitted to record in."""
-        return self.definition['record_in_processes']
+        return self._record_in_processes
 
     def record_in_processes_enum(self):
         """Get the non-empty list of flags representing the processes to record data in"""
-        return [utils.process_name_to_enum(p) for p in self.record_in_processes]
+        return [utils.process_name_to_enum(p) for p in self.record_in_processes()]
 
     def ranges(self):
         """Return an array of lower bounds for each bucket in the histogram."""

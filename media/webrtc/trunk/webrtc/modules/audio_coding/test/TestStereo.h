@@ -13,7 +13,8 @@
 
 #include <math.h>
 
-#include "webrtc/base/scoped_ptr.h"
+#include <memory>
+
 #include "webrtc/modules/audio_coding/test/ACMTest.h"
 #include "webrtc/modules/audio_coding/test/Channel.h"
 #include "webrtc/modules/audio_coding/test/PCMFile.h"
@@ -82,8 +83,8 @@ class TestStereo : public ACMTest {
 
   int test_mode_;
 
-  rtc::scoped_ptr<AudioCodingModule> acm_a_;
-  rtc::scoped_ptr<AudioCodingModule> acm_b_;
+  std::unique_ptr<AudioCodingModule> acm_a_;
+  std::unique_ptr<AudioCodingModule> acm_b_;
 
   TestPackStereo* channel_a2b_;
 

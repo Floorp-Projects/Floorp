@@ -19,7 +19,7 @@ namespace rtc {
 //         NextPacket.
 
 TestClient::TestClient(AsyncPacketSocket* socket)
-    : socket_(socket), ready_to_send_(false) {
+    : socket_(socket), prev_packet_timestamp_(-1) {
   packets_ = new std::vector<Packet*>();
   socket_->SignalReadPacket.connect(this, &TestClient::OnPacket);
   socket_->SignalReadyToSend.connect(this, &TestClient::OnReadyToSend);
@@ -34,9 +34,10 @@ TestClient::~TestClient() {
 
 bool TestClient::CheckConnState(AsyncPacketSocket::State state) {
   // Wait for our timeout value until the socket reaches the desired state.
-  uint32_t end = TimeAfter(kTimeoutMs);
-  while (socket_->GetState() != state && TimeUntil(end) > 0)
+  int64_t end = TimeAfter(kTimeoutMs);
+  while (socket_->GetState() != state && TimeUntil(end) > 0) {
     Thread::Current()->ProcessMessages(1);
+  }
   return (socket_->GetState() == state);
 }
 
@@ -63,7 +64,7 @@ TestClient::Packet* TestClient::NextPacket(int timeout_ms) {
   // Pumping another thread's queue could lead to messages being dispatched from
   // the wrong thread to non-thread-safe objects.
 
-  uint32_t end = TimeAfter(timeout_ms);
+  int64_t end = TimeAfter(timeout_ms);
   while (TimeUntil(end) > 0) {
     {
       CritScope cs(&crit_);
@@ -90,11 +91,26 @@ bool TestClient::CheckNextPacket(const char* buf, size_t size,
   bool res = false;
   Packet* packet = NextPacket(kTimeoutMs);
   if (packet) {
-    res = (packet->size == size && memcmp(packet->buf, buf, size) == 0);
+    res = (packet->size == size && memcmp(packet->buf, buf, size) == 0 &&
+           CheckTimestamp(packet->packet_time.timestamp));
     if (addr)
       *addr = packet->addr;
     delete packet;
   }
+  return res;
+}
+
+bool TestClient::CheckTimestamp(int64_t packet_timestamp) {
+  bool res = true;
+  if (packet_timestamp == -1) {
+    res = false;
+  }
+  if (prev_packet_timestamp_ != -1) {
+    if (packet_timestamp < prev_packet_timestamp_) {
+      res = false;
+    }
+  }
+  prev_packet_timestamp_ = packet_timestamp;
   return res;
 }
 
@@ -114,29 +130,28 @@ int TestClient::SetOption(Socket::Option opt, int value) {
   return socket_->SetOption(opt, value);
 }
 
-bool TestClient::ready_to_send() const {
-  return ready_to_send_;
-}
-
 void TestClient::OnPacket(AsyncPacketSocket* socket, const char* buf,
                           size_t size, const SocketAddress& remote_addr,
                           const PacketTime& packet_time) {
   CritScope cs(&crit_);
-  packets_->push_back(new Packet(remote_addr, buf, size));
+  packets_->push_back(new Packet(remote_addr, buf, size, packet_time));
 }
 
 void TestClient::OnReadyToSend(AsyncPacketSocket* socket) {
-  ready_to_send_ = true;
+  ++ready_to_send_count_;
 }
 
-TestClient::Packet::Packet(const SocketAddress& a, const char* b, size_t s)
-    : addr(a), buf(0), size(s) {
+TestClient::Packet::Packet(const SocketAddress& a,
+                           const char* b,
+                           size_t s,
+                           const PacketTime& packet_time)
+    : addr(a), buf(0), size(s), packet_time(packet_time) {
   buf = new char[size];
   memcpy(buf, b, size);
 }
 
 TestClient::Packet::Packet(const Packet& p)
-    : addr(p.addr), buf(0), size(p.size) {
+    : addr(p.addr), buf(0), size(p.size), packet_time(p.packet_time) {
   buf = new char[size];
   memcpy(buf, p.buf, size);
 }

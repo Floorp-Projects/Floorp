@@ -37,7 +37,7 @@ void WebRtcSpl_VectorBitShiftW16(int16_t *res, size_t length,
     {
         for (i = length; i > 0; i--)
         {
-            (*res++) = ((*in++) << (-right_shifts));
+            (*res++) = ((*in++) * (1 << (-right_shifts)));
         }
     }
 }

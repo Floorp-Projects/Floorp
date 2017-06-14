@@ -23,6 +23,7 @@
 
 #include "webrtc/base/arraysize.h"
 #include "webrtc/base/base64.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/cryptstring.h"
 #include "webrtc/base/httpcommon-inl.h"
@@ -341,7 +342,7 @@ bool HttpDateToSeconds(const std::string& date, time_t* seconds) {
      1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11,  12
   };
 
-  ASSERT(NULL != seconds);
+  RTC_DCHECK(NULL != seconds);
   struct tm tval;
   memset(&tval, 0, sizeof(tval));
   char month[4], zone[6];
@@ -388,7 +389,7 @@ bool HttpDateToSeconds(const std::string& date, time_t* seconds) {
   tm *tm_for_timezone = localtime(&gmt);
   *seconds = gmt + tm_for_timezone->tm_gmtoff;
 #else
-#if _MSC_VER >= 1900
+#if defined(_MSC_VER) && _MSC_VER >= 1900
   long timezone = 0;
   _get_timezone(&timezone);
 #endif
@@ -481,9 +482,9 @@ void HttpData::setContent(const std::string& content_type,
 
 void HttpData::setDocumentAndLength(StreamInterface* document) {
   // TODO: Consider calling Rewind() here?
-  ASSERT(!hasHeader(HH_CONTENT_LENGTH, NULL));
-  ASSERT(!hasHeader(HH_TRANSFER_ENCODING, NULL));
-  ASSERT(document != NULL);
+  RTC_DCHECK(!hasHeader(HH_CONTENT_LENGTH, NULL));
+  RTC_DCHECK(!hasHeader(HH_TRANSFER_ENCODING, NULL));
+  RTC_DCHECK(document != NULL);
   this->document.reset(document);
   size_t content_length = 0;
   if (this->document->GetAvailable(&content_length)) {
@@ -515,7 +516,7 @@ HttpRequestData::copy(const HttpRequestData& src) {
 
 size_t
 HttpRequestData::formatLeader(char* buffer, size_t size) const {
-  ASSERT(path.find(' ') == std::string::npos);
+  RTC_DCHECK(path.find(' ') == std::string::npos);
   return sprintfn(buffer, size, "%s %.*s HTTP/%s", ToString(verb), path.size(),
                   path.data(), ToString(version));
 }
@@ -838,7 +839,7 @@ HttpAuthResult HttpAuthenticate(
     std::string dig_response = MD5(HA1 + ":" + middle + ":" + HA2);
 
 #if TEST_DIGEST
-    ASSERT(strcmp(dig_response.c_str(), DIGEST_RESPONSE) == 0);
+    RTC_DCHECK(strcmp(dig_response.c_str(), DIGEST_RESPONSE) == 0);
 #endif
 
     std::stringstream ss;
@@ -1020,7 +1021,7 @@ HttpAuthResult HttpAuthenticate(
         return HAR_IGNORE;
       }
 
-      ASSERT(!context);
+      RTC_DCHECK(!context);
       context = neg = new NegotiateAuthContext(auth_method, cred, ctx);
       neg->specified_credentials = specify_credentials;
       neg->steps = steps;

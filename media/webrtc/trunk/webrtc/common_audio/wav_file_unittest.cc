@@ -14,9 +14,9 @@
 #include <cmath>
 #include <limits>
 
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/common_audio/wav_header.h"
 #include "webrtc/common_audio/wav_file.h"
+#include "webrtc/common_audio/wav_header.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {

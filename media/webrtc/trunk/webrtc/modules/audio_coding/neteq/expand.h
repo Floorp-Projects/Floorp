@@ -12,9 +12,9 @@
 #define WEBRTC_MODULES_AUDIO_CODING_NETEQ_EXPAND_H_
 
 #include <assert.h>
+#include <memory>
 
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_coding/neteq/audio_multi_vector.h"
 #include "webrtc/typedefs.h"
 
@@ -61,6 +61,10 @@ class Expand {
     assert(channel < num_channels_);
     return channel_parameters_[channel].mute_factor;
   }
+
+  // Returns true if expansion has been faded down to zero amplitude (for all
+  // channels); false otherwise.
+  bool Muted() const;
 
   // Accessors and mutators.
   virtual size_t overlap_length() const;
@@ -120,12 +124,10 @@ class Expand {
 
   // Calculate the auto-correlation of |input|, with length |input_length|
   // samples. The correlation is calculated from a downsampled version of
-  // |input|, and is written to |output|. The scale factor is written to
-  // |output_scale|.
+  // |input|, and is written to |output|.
   void Correlation(const int16_t* input,
                    size_t input_length,
-                   int16_t* output,
-                   int* output_scale) const;
+                   int16_t* output) const;
 
   void UpdateLagIndex();
 
@@ -138,7 +140,7 @@ class Expand {
   int current_lag_index_;
   bool stop_muting_;
   size_t expand_duration_samples_;
-  rtc::scoped_ptr<ChannelParameters[]> channel_parameters_;
+  std::unique_ptr<ChannelParameters[]> channel_parameters_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(Expand);
 };

@@ -13,7 +13,7 @@
 #include "nsBoxLayoutState.h"
 
 nsBoxLayoutState::nsBoxLayoutState(nsPresContext* aPresContext,
-                                   nsRenderingContext* aRenderingContext,
+                                   gfxContext* aRenderingContext,
                                    const ReflowInput* aOuterReflowInput,
                                    uint16_t aReflowDepth)
   : mPresContext(aPresContext)

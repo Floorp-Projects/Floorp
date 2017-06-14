@@ -60,6 +60,26 @@ static_assert(IsConvertible<nsTArray<const int>, Span<const int>>::value,
 static_assert(!IsConvertible<nsTArray<const int>, Span<int>>::value,
               "nsTArray should not drop const in conversion");
 
+/**
+ * Rust slice-compatible nullptr replacement value.
+ */
+#define SLICE_CONST_INT_PTR reinterpret_cast<const int*>(0x1)
+
+/**
+ * Rust slice-compatible nullptr replacement value.
+ */
+#define SLICE_INT_PTR reinterpret_cast<int*>(0x1)
+
+/**
+ * Rust slice-compatible nullptr replacement value.
+ */
+#define SLICE_CONST_INT_PTR_PTR reinterpret_cast<const int**>(0x1)
+
+/**
+ * Rust slice-compatible nullptr replacement value.
+ */
+#define SLICE_INT_PTR_PTR reinterpret_cast<int**>(0x1)
+
 namespace {
 struct BaseClass
 {
@@ -113,39 +133,39 @@ SPAN_TEST(default_constructor)
   {
     Span<int> s;
     ASSERT_EQ(s.Length(), 0U);
-    ASSERT_EQ(s.data(), nullptr);
+    ASSERT_EQ(s.data(), SLICE_INT_PTR);
 
     Span<const int> cs;
     ASSERT_EQ(cs.Length(), 0U);
-    ASSERT_EQ(cs.data(), nullptr);
+    ASSERT_EQ(cs.data(), SLICE_CONST_INT_PTR);
   }
 
   {
     Span<int, 0> s;
     ASSERT_EQ(s.Length(), 0U);
-    ASSERT_EQ(s.data(), nullptr);
+    ASSERT_EQ(s.data(), SLICE_INT_PTR);
 
     Span<const int, 0> cs;
     ASSERT_EQ(cs.Length(), 0U);
-    ASSERT_EQ(cs.data(), nullptr);
+    ASSERT_EQ(cs.data(), SLICE_CONST_INT_PTR);
   }
 
   {
 #ifdef CONFIRM_COMPILATION_ERRORS
     Span<int, 1> s;
     ASSERT_EQ(s.Length(), 1U);
-    ASSERT_EQ(s.data(), nullptr); // explains why it can't compile
+    ASSERT_EQ(s.data(), SLICE_INT_PTR); // explains why it can't compile
 #endif
   }
 
   {
     Span<int> s{};
     ASSERT_EQ(s.Length(), 0U);
-    ASSERT_EQ(s.data(), nullptr);
+    ASSERT_EQ(s.data(), SLICE_INT_PTR);
 
     Span<const int> cs{};
     ASSERT_EQ(cs.Length(), 0U);
-    ASSERT_EQ(cs.data(), nullptr);
+    ASSERT_EQ(cs.data(), SLICE_CONST_INT_PTR);
   }
 }
 
@@ -167,49 +187,49 @@ SPAN_TEST(from_nullptr_constructor)
   {
     Span<int> s = nullptr;
     ASSERT_EQ(s.Length(), 0U);
-    ASSERT_EQ(s.data(), nullptr);
+    ASSERT_EQ(s.data(), SLICE_INT_PTR);
 
     Span<const int> cs = nullptr;
     ASSERT_EQ(cs.Length(), 0U);
-    ASSERT_EQ(cs.data(), nullptr);
+    ASSERT_EQ(cs.data(), SLICE_CONST_INT_PTR);
   }
 
   {
     Span<int, 0> s = nullptr;
     ASSERT_EQ(s.Length(), 0U);
-    ASSERT_EQ(s.data(), nullptr);
+    ASSERT_EQ(s.data(), SLICE_INT_PTR);
 
     Span<const int, 0> cs = nullptr;
     ASSERT_EQ(cs.Length(), 0U);
-    ASSERT_EQ(cs.data(), nullptr);
+    ASSERT_EQ(cs.data(), SLICE_CONST_INT_PTR);
   }
 
   {
 #ifdef CONFIRM_COMPILATION_ERRORS
     Span<int, 1> s = nullptr;
     ASSERT_EQ(s.Length(), 1U);
-    ASSERT_EQ(s.data(), nullptr); // explains why it can't compile
+    ASSERT_EQ(s.data(), SLICE_INT_PTR); // explains why it can't compile
 #endif
   }
 
   {
     Span<int> s{ nullptr };
     ASSERT_EQ(s.Length(), 0U);
-    ASSERT_EQ(s.data(), nullptr);
+    ASSERT_EQ(s.data(), SLICE_INT_PTR);
 
     Span<const int> cs{ nullptr };
     ASSERT_EQ(cs.Length(), 0U);
-    ASSERT_EQ(cs.data(), nullptr);
+    ASSERT_EQ(cs.data(), SLICE_CONST_INT_PTR);
   }
 
   {
     Span<int*> s{ nullptr };
     ASSERT_EQ(s.Length(), 0U);
-    ASSERT_EQ(s.data(), nullptr);
+    ASSERT_EQ(s.data(), SLICE_INT_PTR_PTR);
 
     Span<const int*> cs{ nullptr };
     ASSERT_EQ(cs.Length(), 0U);
-    ASSERT_EQ(cs.data(), nullptr);
+    ASSERT_EQ(cs.data(), SLICE_CONST_INT_PTR_PTR);
   }
 }
 
@@ -218,21 +238,21 @@ SPAN_TEST(from_nullptr_length_constructor)
   {
     Span<int> s{ nullptr, static_cast<Span<int>::index_type>(0) };
     ASSERT_EQ(s.Length(), 0U);
-    ASSERT_EQ(s.data(), nullptr);
+    ASSERT_EQ(s.data(), SLICE_INT_PTR);
 
     Span<const int> cs{ nullptr, static_cast<Span<int>::index_type>(0) };
     ASSERT_EQ(cs.Length(), 0U);
-    ASSERT_EQ(cs.data(), nullptr);
+    ASSERT_EQ(cs.data(), SLICE_CONST_INT_PTR);
   }
 
   {
     Span<int, 0> s{ nullptr, static_cast<Span<int>::index_type>(0) };
     ASSERT_EQ(s.Length(), 0U);
-    ASSERT_EQ(s.data(), nullptr);
+    ASSERT_EQ(s.data(), SLICE_INT_PTR);
 
     Span<const int, 0> cs{ nullptr, static_cast<Span<int>::index_type>(0) };
     ASSERT_EQ(cs.Length(), 0U);
-    ASSERT_EQ(cs.data(), nullptr);
+    ASSERT_EQ(cs.data(), SLICE_CONST_INT_PTR);
   }
 
 #if 0
@@ -260,11 +280,11 @@ SPAN_TEST(from_nullptr_length_constructor)
   {
     Span<int*> s{ nullptr, static_cast<Span<int>::index_type>(0) };
     ASSERT_EQ(s.Length(), 0U);
-    ASSERT_EQ(s.data(), nullptr);
+    ASSERT_EQ(s.data(), SLICE_INT_PTR_PTR);
 
     Span<const int*> cs{ nullptr, static_cast<Span<int>::index_type>(0) };
     ASSERT_EQ(cs.Length(), 0U);
-    ASSERT_EQ(cs.data(), nullptr);
+    ASSERT_EQ(cs.data(), SLICE_CONST_INT_PTR_PTR);
   }
 }
 
@@ -292,7 +312,7 @@ SPAN_TEST(from_pointer_length_constructor)
     int* p = nullptr;
     Span<int> s{ p, static_cast<Span<int>::index_type>(0) };
     ASSERT_EQ(s.Length(), 0U);
-    ASSERT_EQ(s.data(), nullptr);
+    ASSERT_EQ(s.data(), SLICE_INT_PTR);
   }
 
 #if 0
@@ -315,7 +335,7 @@ SPAN_TEST(from_pointer_length_constructor)
     int* p = nullptr;
     auto s = MakeSpan(p, static_cast<Span<int>::index_type>(0));
     ASSERT_EQ(s.Length(), 0U);
-    ASSERT_EQ(s.data(), nullptr);
+    ASSERT_EQ(s.data(), SLICE_INT_PTR);
   }
 
 #if 0
@@ -376,14 +396,14 @@ SPAN_TEST(from_pointer_pointer_constructor)
     int* p = nullptr;
     Span<int> s{ p, p };
     ASSERT_EQ(s.Length(), 0U);
-    ASSERT_EQ(s.data(), nullptr);
+    ASSERT_EQ(s.data(), SLICE_INT_PTR);
   }
 
   {
     int* p = nullptr;
     Span<int, 0> s{ p, p };
     ASSERT_EQ(s.Length(), 0U);
-    ASSERT_EQ(s.data(), nullptr);
+    ASSERT_EQ(s.data(), SLICE_INT_PTR);
   }
 
   // this will fail the std::distance() precondition, which asserts on MSVC debug builds
@@ -411,7 +431,7 @@ SPAN_TEST(from_pointer_pointer_constructor)
     int* p = nullptr;
     auto s = MakeSpan(p, p);
     ASSERT_EQ(s.Length(), 0U);
-    ASSERT_EQ(s.data(), nullptr);
+    ASSERT_EQ(s.data(), SLICE_INT_PTR);
   }
 }
 
@@ -1911,7 +1931,7 @@ SPAN_TEST(as_bytes)
     ASSERT_EQ(bs.size_bytes(), 0U);
     ASSERT_EQ(static_cast<const void*>(bs.data()),
               static_cast<const void*>(s.data()));
-    ASSERT_EQ(bs.data(), nullptr);
+    ASSERT_EQ(bs.data(), reinterpret_cast<const uint8_t*>(0x1));
   }
 
   {
@@ -1945,7 +1965,7 @@ SPAN_TEST(as_writable_bytes)
     ASSERT_EQ(bs.Length(), 0U);
     ASSERT_EQ(bs.size_bytes(), 0U);
     ASSERT_EQ(static_cast<void*>(bs.data()), static_cast<void*>(s.data()));
-    ASSERT_EQ(bs.data(), nullptr);
+    ASSERT_EQ(bs.data(), reinterpret_cast<uint8_t*>(0x1));
   }
 
   {

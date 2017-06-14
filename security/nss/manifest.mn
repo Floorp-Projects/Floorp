@@ -10,4 +10,4 @@ IMPORTS =	nspr20/v4.8 \
 
 RELEASE = nss
 
-DIRS = coreconf lib cmd gtests
+DIRS = coreconf lib cmd cpputil gtests

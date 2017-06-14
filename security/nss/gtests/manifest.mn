@@ -5,14 +5,32 @@
 CORE_DEPTH = ..
 DEPTH      = ..
 
-DIRS = \
+LIB_SRCDIRS = \
 	google_test \
 	common \
+	$(NULL)
+
+ifneq ($(NSS_BUILD_WITHOUT_UTIL),1)
+UTIL_SRCDIRS = \
+	util_gtest \
+	der_gtest \
+	$(NULL)
+endif
+
+ifneq ($(NSS_BUILD_SOFTOKEN_ONLY),1)
+ifneq ($(NSS_BUILD_UTIL_ONLY),1)
+NSS_SRCDIRS = \
 	certdb_gtest \
 	certhigh_gtest \
-	der_gtest \
-	util_gtest \
 	pk11_gtest \
 	ssl_gtest \
         nss_bogo_shim \
+	$(NULL)
+endif
+endif
+
+DIRS = \
+	$(LIB_SRCDIRS) \
+	$(UTIL_SRCDIRS) \
+	$(NSS_SRCDIRS) \
 	$(NULL)

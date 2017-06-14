@@ -11,7 +11,10 @@
 #ifndef WEBRTC_VOICE_ENGINE_SHARED_DATA_H
 #define WEBRTC_VOICE_ENGINE_SHARED_DATA_H
 
-#include "webrtc/base/scoped_ptr.h"
+#include <memory>
+
+#include "webrtc/base/criticalsection.h"
+#include "webrtc/base/scoped_ref_ptr.h"
 #include "webrtc/modules/audio_device/include/audio_device.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/modules/utility/include/process_thread.h"
@@ -22,9 +25,6 @@
 class ProcessThread;
 
 namespace webrtc {
-class Config;
-class CriticalSectionWrapper;
-
 namespace voe {
 
 class TransmitMixer;
@@ -37,13 +37,14 @@ public:
     uint32_t instance_id() const { return _instanceId; }
     Statistics& statistics() { return _engineStatistics; }
     ChannelManager& channel_manager() { return _channelManager; }
-    AudioDeviceModule* audio_device() { return _audioDevicePtr; }
-    void set_audio_device(AudioDeviceModule* audio_device);
+    AudioDeviceModule* audio_device() { return _audioDevicePtr.get(); }
+    void set_audio_device(
+        const rtc::scoped_refptr<AudioDeviceModule>& audio_device);
     AudioProcessing* audio_processing() { return audioproc_.get(); }
     void set_audio_processing(AudioProcessing* audio_processing);
     TransmitMixer* transmit_mixer() { return _transmitMixerPtr; }
     OutputMixer* output_mixer() { return _outputMixerPtr; }
-    CriticalSectionWrapper* crit_sec() { return _apiCritPtr; }
+    rtc::CriticalSection* crit_sec() { return &_apiCritPtr; }
     bool ext_recording() const { return _externalRecording; }
     void set_ext_recording(bool value) { _externalRecording = value; }
     bool ext_playout() const { return _externalPlayout; }
@@ -67,25 +68,24 @@ public:
 
 protected:
     const uint32_t _instanceId;
-    CriticalSectionWrapper* _apiCritPtr;
+    rtc::CriticalSection _apiCritPtr;
     ChannelManager _channelManager;
     Statistics _engineStatistics;
-    AudioDeviceModule* _audioDevicePtr;
+    rtc::scoped_refptr<AudioDeviceModule> _audioDevicePtr;
     OutputMixer* _outputMixerPtr;
     TransmitMixer* _transmitMixerPtr;
-    rtc::scoped_ptr<AudioProcessing> audioproc_;
-    rtc::scoped_ptr<ProcessThread> _moduleProcessThreadPtr;
+    std::unique_ptr<AudioProcessing> audioproc_;
+    std::unique_ptr<ProcessThread> _moduleProcessThreadPtr;
 
     bool _externalRecording;
     bool _externalPlayout;
 
     AudioDeviceModule::AudioLayer _audioDeviceLayer;
 
-    SharedData(const Config& config);
+    SharedData();
     virtual ~SharedData();
 };
 
 }  // namespace voe
-
 }  // namespace webrtc
 #endif // WEBRTC_VOICE_ENGINE_SHARED_DATA_H

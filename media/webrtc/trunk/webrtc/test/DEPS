@@ -1,0 +1,27 @@
+include_rules = [
+  "+webrtc/base",
+  "+webrtc/call",
+  "+webrtc/common_video",
+  "+webrtc/logging/rtc_event_log",
+  "+webrtc/media/base",
+  "+webrtc/modules/audio_coding",
+  "+webrtc/modules/audio_device",
+  "+webrtc/modules/audio_mixer",
+  "+webrtc/modules/audio_processing",
+  "+webrtc/modules/media_file",
+  "+webrtc/modules/rtp_rtcp",
+  "+webrtc/modules/video_capture",
+  "+webrtc/modules/video_coding",
+  "+webrtc/sdk",
+  "+webrtc/system_wrappers",
+  "+webrtc/voice_engine",
+]
+
+specific_include_rules = {
+  "gmock\.h": [
+    "+testing/gmock/include/gmock",
+  ],
+  "gtest\.h": [
+    "+testing/gtest/include/gtest",
+  ],
+}

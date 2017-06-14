@@ -136,6 +136,8 @@ struct WrRenderer;
 
 struct WrState;
 
+struct WrThreadPool;
+
 struct WrImageKey {
   uint32_t mNamespace;
   uint32_t mHandle;
@@ -933,6 +935,14 @@ WrState* wr_state_new(WrPipelineId aPipelineId,
 WR_FUNC;
 
 WR_INLINE
+void wr_thread_pool_delete(WrThreadPool *aThreadPool)
+WR_FUNC;
+
+WR_INLINE
+WrThreadPool* wr_thread_pool_new()
+WR_FUNC;
+
+WR_INLINE
 void wr_vec_u8_free(WrVecU8 aV)
 WR_FUNC;
 
@@ -941,6 +951,7 @@ bool wr_window_new(WrWindowId aWindowId,
                    uint32_t aWindowWidth,
                    uint32_t aWindowHeight,
                    void *aGlContext,
+                   WrThreadPool *aThreadPool,
                    bool aEnableProfiler,
                    WrAPI **aOutApi,
                    WrRenderer **aOutRenderer)

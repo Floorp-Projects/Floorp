@@ -28,33 +28,29 @@ class DecisionLogicNormal : public DecisionLogic {
                       DecoderDatabase* decoder_database,
                       const PacketBuffer& packet_buffer,
                       DelayManager* delay_manager,
-                      BufferLevelFilter* buffer_level_filter)
-      : DecisionLogic(fs_hz, output_size_samples, playout_mode,
-                      decoder_database, packet_buffer, delay_manager,
-                      buffer_level_filter) {
-  }
+                      BufferLevelFilter* buffer_level_filter,
+                      const TickTimer* tick_timer)
+      : DecisionLogic(fs_hz,
+                      output_size_samples,
+                      playout_mode,
+                      decoder_database,
+                      packet_buffer,
+                      delay_manager,
+                      buffer_level_filter,
+                      tick_timer) {}
 
  protected:
-  static const int kAllowMergeWithoutExpandMs = 20;  // 20 ms.
   static const int kReinitAfterExpands = 100;
   static const int kMaxWaitForPacket = 10;
 
-  // Returns the operation that should be done next. |sync_buffer| and |expand|
-  // are provided for reference. |decoder_frame_length| is the number of samples
-  // obtained from the last decoded frame. If there is a packet available, the
-  // packet header should be supplied in |packet_header|; otherwise it should
-  // be NULL. The mode resulting form the last call to NetEqImpl::GetAudio is
-  // supplied in |prev_mode|. If there is a DTMF event to play, |play_dtmf|
-  // should be set to true. The output variable |reset_decoder| will be set to
-  // true if a reset is required; otherwise it is left unchanged (i.e., it can
-  // remain true if it was true before the call).
   Operations GetDecisionSpecialized(const SyncBuffer& sync_buffer,
                                     const Expand& expand,
                                     size_t decoder_frame_length,
-                                    const RTPHeader* packet_header,
+                                    const Packet* next_packet,
                                     Modes prev_mode,
                                     bool play_dtmf,
-                                    bool* reset_decoder) override;
+                                    bool* reset_decoder,
+                                    size_t generated_noise_samples) override;
 
   // Returns the operation to do given that the expected packet is not
   // available, but a packet further into the future is at hand.
@@ -65,7 +61,8 @@ class DecisionLogicNormal : public DecisionLogic {
       Modes prev_mode,
       uint32_t target_timestamp,
       uint32_t available_timestamp,
-      bool play_dtmf);
+      bool play_dtmf,
+      size_t generated_noise_samples);
 
   // Returns the operation to do given that the expected packet is available.
   virtual Operations ExpectedPacketAvailable(Modes prev_mode, bool play_dtmf);
@@ -77,12 +74,16 @@ class DecisionLogicNormal : public DecisionLogic {
  private:
   // Returns the operation given that the next available packet is a comfort
   // noise payload (RFC 3389 only, not codec-internal).
-  Operations CngOperation(Modes prev_mode, uint32_t target_timestamp,
-                          uint32_t available_timestamp);
+  Operations CngOperation(Modes prev_mode,
+                          uint32_t target_timestamp,
+                          uint32_t available_timestamp,
+                          size_t generated_noise_samples);
 
   // Checks if enough time has elapsed since the last successful timescale
   // operation was done (i.e., accelerate or preemptive expand).
-  bool TimescaleAllowed() const { return timescale_hold_off_ == 0; }
+  bool TimescaleAllowed() const {
+    return !timescale_countdown_ || timescale_countdown_->Finished();
+  }
 
   // Checks if the current (filtered) buffer level is under the target level.
   bool UnderTargetLevel() const;

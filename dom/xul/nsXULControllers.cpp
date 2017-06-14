@@ -15,7 +15,6 @@
 #include "nsIControllers.h"
 #include "nsIDOMElement.h"
 #include "nsXULControllers.h"
-#include "nsDOMClassInfoID.h"
 #include "nsIController.h"
 
 //----------------------------------------------------------------------
@@ -79,7 +78,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULControllers)
   NS_INTERFACE_MAP_ENTRY(nsIControllers)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIControllers)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XULControllers)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULControllers)

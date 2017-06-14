@@ -14,6 +14,8 @@
 #define WEBRTC_MODULES_BITRATE_CONTROLLER_SEND_SIDE_BANDWIDTH_ESTIMATION_H_
 
 #include <deque>
+#include <utility>
+#include <vector>
 
 #include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "webrtc/system_wrappers/include/critical_section_wrapper.h"
@@ -24,7 +26,8 @@ class RtcEventLog;
 
 class SendSideBandwidthEstimation {
  public:
-  SendSideBandwidthEstimation();
+  SendSideBandwidthEstimation() = delete;
+  explicit SendSideBandwidthEstimation(RtcEventLog* event_log);
   virtual ~SendSideBandwidthEstimation();
 
   void CurrentEstimate(int* bitrate, uint8_t* loss, int64_t* rtt) const;
@@ -35,17 +38,21 @@ class SendSideBandwidthEstimation {
   // Call when we receive a RTCP message with TMMBR or REMB.
   void UpdateReceiverEstimate(int64_t now_ms, uint32_t bandwidth);
 
+  // Call when a new delay-based estimate is available.
+  void UpdateDelayBasedEstimate(int64_t now_ms, uint32_t bitrate_bps);
+
   // Call when we receive a RTCP message with a ReceiveBlock.
   void UpdateReceiverBlock(uint8_t fraction_loss,
                            int64_t rtt,
                            int number_of_packets,
                            int64_t now_ms);
 
+  void SetBitrates(int send_bitrate,
+                   int min_bitrate,
+                   int max_bitrate);
   void SetSendBitrate(int bitrate);
   void SetMinMaxBitrate(int min_bitrate, int max_bitrate);
   int GetMinBitrate() const;
-
-  void SetEventLog(RtcEventLog* event_log);
 
  private:
   enum UmaState { kNoUpdate, kFirstDone, kDone };
@@ -75,11 +82,15 @@ class SendSideBandwidthEstimation {
   int64_t last_low_bitrate_log_ms_;
 
   bool has_decreased_since_last_fraction_loss_;
-  int64_t time_last_receiver_block_ms_;
+  int64_t last_feedback_ms_;
+  int64_t last_packet_report_ms_;
+  int64_t last_timeout_ms_;
   uint8_t last_fraction_loss_;
+  uint8_t last_logged_fraction_loss_;
   int64_t last_round_trip_time_ms_;
 
   uint32_t bwe_incoming_;
+  uint32_t delay_based_bitrate_bps_;
   int64_t time_last_decrease_ms_;
   int64_t first_report_time_ms_;
   int initially_lost_packets_;
@@ -87,6 +98,8 @@ class SendSideBandwidthEstimation {
   UmaState uma_update_state_;
   std::vector<bool> rampup_uma_stats_updated_;
   RtcEventLog* event_log_;
+  int64_t last_rtc_event_log_ms_;
+  bool in_timeout_experiment_;
 };
 }  // namespace webrtc
 #endif  // WEBRTC_MODULES_BITRATE_CONTROLLER_SEND_SIDE_BANDWIDTH_ESTIMATION_H_

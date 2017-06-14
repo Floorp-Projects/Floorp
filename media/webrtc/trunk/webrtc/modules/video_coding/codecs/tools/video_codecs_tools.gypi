@@ -19,7 +19,7 @@
             '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
             '<(webrtc_root)/common.gyp:webrtc_common',
             '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers_default',
-            '<(webrtc_root)/test/metrics.gyp:metrics',
+            '<(webrtc_root)/test/test.gyp:test_support',
             '<(webrtc_vp8_dir)/vp8.gyp:webrtc_vp8',
           ],
           'sources': [

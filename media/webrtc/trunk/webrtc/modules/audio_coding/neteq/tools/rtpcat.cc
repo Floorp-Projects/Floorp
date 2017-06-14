@@ -10,12 +10,12 @@
 
 #include <stdio.h>
 
+#include <memory>
+
 #include "webrtc/base/checks.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/test/rtp_file_reader.h"
 #include "webrtc/test/rtp_file_writer.h"
 
-using rtc::scoped_ptr;
 using webrtc::test::RtpFileReader;
 using webrtc::test::RtpFileWriter;
 
@@ -26,13 +26,13 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
-  scoped_ptr<RtpFileWriter> output(
+  std::unique_ptr<RtpFileWriter> output(
       RtpFileWriter::Create(RtpFileWriter::kRtpDump, argv[argc - 1]));
   RTC_CHECK(output.get() != NULL) << "Cannot open output file.";
   printf("Output RTP file: %s\n", argv[argc - 1]);
 
   for (int i = 1; i < argc - 1; i++) {
-    scoped_ptr<RtpFileReader> input(
+    std::unique_ptr<RtpFileReader> input(
         RtpFileReader::Create(RtpFileReader::kRtpDump, argv[i]));
     RTC_CHECK(input.get() != NULL) << "Cannot open input file " << argv[i];
     printf("Input RTP file: %s\n", argv[i]);

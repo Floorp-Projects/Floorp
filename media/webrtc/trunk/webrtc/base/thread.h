@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <list>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -92,15 +93,21 @@ class Runnable {
 
 // WARNING! SUBCLASSES MUST CALL Stop() IN THEIR DESTRUCTORS!  See ~Thread().
 
-class Thread : public MessageQueue {
+class LOCKABLE Thread : public MessageQueue {
  public:
-  explicit Thread(SocketServer* ss = NULL);
+  // Create a new Thread and optionally assign it to the passed SocketServer.
+  Thread();
+  explicit Thread(SocketServer* ss);
+  explicit Thread(std::unique_ptr<SocketServer> ss);
+
   // NOTE: ALL SUBCLASSES OF Thread MUST CALL Stop() IN THEIR DESTRUCTORS (or
   // guarantee Stop() is explicitly called before the subclass is destroyed).
   // This is required to avoid a data race between the destructor modifying the
   // vtable, and the Thread::PreRun calling the virtual method Run().
   ~Thread() override;
 
+  static std::unique_ptr<Thread> CreateWithSocketServer();
+  static std::unique_ptr<Thread> Create();
   static Thread* Current();
 
   // Used to catch performance regressions. Use this to disallow blocking calls
@@ -144,7 +151,8 @@ class Thread : public MessageQueue {
   // ProcessMessages occasionally.
   virtual void Run();
 
-  virtual void Send(MessageHandler* phandler,
+  virtual void Send(const Location& posted_from,
+                    MessageHandler* phandler,
                     uint32_t id = 0,
                     MessageData* pdata = NULL);
 
@@ -152,15 +160,14 @@ class Thread : public MessageQueue {
   // provide the |ReturnT| template argument, which cannot (easily) be deduced.
   // Uses Send() internally, which blocks the current thread until execution
   // is complete.
-  // Ex: bool result = thread.Invoke<bool>(&MyFunctionReturningBool);
+  // Ex: bool result = thread.Invoke<bool>(RTC_FROM_HERE,
+  // &MyFunctionReturningBool);
   // NOTE: This function can only be called when synchronous calls are allowed.
   // See ScopedDisallowBlockingCalls for details.
   template <class ReturnT, class FunctorT>
-  ReturnT Invoke(const FunctorT& functor) {
-    InvokeBegin();
+  ReturnT Invoke(const Location& posted_from, const FunctorT& functor) {
     FunctorMessageHandler<ReturnT, FunctorT> handler(functor);
-    Send(&handler);
-    InvokeEnd();
+    InvokeInternal(posted_from, &handler);
     return handler.result();
   }
 
@@ -254,9 +261,7 @@ class Thread : public MessageQueue {
   // Returns true if there is such a message.
   bool PopSendMessageFromThread(const Thread* source, _SendMessage* msg);
 
-  // Used for tracking performance of Invoke calls.
-  void InvokeBegin();
-  void InvokeEnd();
+  void InvokeInternal(const Location& posted_from, MessageHandler* handler);
 
   std::list<_SendMessage> sendlist_;
   std::string name_;
@@ -285,7 +290,7 @@ class Thread : public MessageQueue {
 
 class AutoThread : public Thread {
  public:
-  explicit AutoThread(SocketServer* ss = 0);
+  AutoThread();
   ~AutoThread() override;
 
  private:
@@ -297,10 +302,10 @@ class AutoThread : public Thread {
 class ComThread : public Thread {
  public:
   ComThread() {}
-  virtual ~ComThread() { Stop(); }
+  ~ComThread() override { Stop(); }
 
  protected:
-  virtual void Run();
+  void Run() override;
 
  private:
   RTC_DISALLOW_COPY_AND_ASSIGN(ComThread);

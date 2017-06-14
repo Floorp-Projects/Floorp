@@ -45,16 +45,22 @@ enum VideoAnalysisMetricsType {kPSNR, kSSIM};
 // There may be missing or duplicate frames. Also the frames start at a random
 // position in the original video. We should provide a statistics file along
 // with the test video. The stats file contains the connection between the
-// actual frames in the test file and their position in the reference video, so
-// that the analysis could run with the right frames from both videos. The stats
-// file should be in the form 'frame_xxxx yyyy', where xxxx is the consecutive
-// number of the frame in the test video, and yyyy is the equivalent frame in
-// the reference video. The stats file could be produced by
+// actual frames in the test file and their bar code number. There is one file
+// for the reference video and one for the test video. The stats file should
+// be in the form 'frame_xxxx yyyy', where xxxx is the consecutive
+// number of the frame in the test video, and yyyy is the barcode number.
+// The stats file could be produced by
 // tools/barcode_tools/barcode_decoder.py. This script decodes the barcodes
 // integrated in every video and generates the stats file. If three was some
 // problem with the decoding there would be 'Barcode error' instead of yyyy.
-void RunAnalysis(const char* reference_file_name, const char* test_file_name,
-                 const char* stats_file_name, int width, int height,
+// The stat files are used to compare the right frames with each other and
+// to calculate statistics.
+void RunAnalysis(const char* reference_file_name,
+                 const char* test_file_name,
+                 const char* stats_file_reference_name,
+                 const char* stats_file_test_name,
+                 int width,
+                 int height,
                  ResultsContainer* results);
 
 // Compute PSNR or SSIM for an I420 frame (all planes). When we are calculating
@@ -79,11 +85,14 @@ void PrintAnalysisResults(FILE* output, const std::string& label,
 // Calculates max repeated and skipped frames and prints them to stdout in a
 // format that is compatible with Chromium performance numbers.
 void PrintMaxRepeatedAndSkippedFrames(const std::string& label,
-                                      const std::string& stats_file_name);
+                                      const std::string& stats_file_ref_name,
+                                      const std::string& stats_file_test_name);
 
 // Similar to the above, but will print to the specified file handle.
-void PrintMaxRepeatedAndSkippedFrames(FILE* output, const std::string& label,
-                                      const std::string& stats_file_name);
+void PrintMaxRepeatedAndSkippedFrames(FILE* output,
+                                      const std::string& label,
+                                      const std::string& stats_file_ref_name,
+                                      const std::string& stats_file_test_name);
 
 // Gets the next line from an open stats file.
 bool GetNextStatsLine(FILE* stats_file, char* line);

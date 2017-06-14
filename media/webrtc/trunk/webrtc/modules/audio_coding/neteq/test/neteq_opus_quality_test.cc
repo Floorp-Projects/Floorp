@@ -103,8 +103,8 @@ class NetEqOpusQualityTest : public NetEqQualityTest {
   NetEqOpusQualityTest();
   void SetUp() override;
   void TearDown() override;
-  virtual int EncodeBlock(int16_t* in_data, size_t block_size_samples,
-                          uint8_t* payload, size_t max_bytes);
+  int EncodeBlock(int16_t* in_data, size_t block_size_samples,
+                  rtc::Buffer* payload, size_t max_bytes) override;
  private:
   WebRtcOpusEncInst* opus_encoder_;
   OpusRepacketizer* repacketizer_;
@@ -175,25 +175,33 @@ void NetEqOpusQualityTest::TearDown() {
 
 int NetEqOpusQualityTest::EncodeBlock(int16_t* in_data,
                                       size_t block_size_samples,
-                                      uint8_t* payload, size_t max_bytes) {
+                                      rtc::Buffer* payload, size_t max_bytes) {
   EXPECT_EQ(block_size_samples, sub_block_size_samples_ * sub_packets_);
   int16_t* pointer = in_data;
   int value;
   opus_repacketizer_init(repacketizer_);
   for (int idx = 0; idx < sub_packets_; idx++) {
-    value = WebRtcOpus_Encode(opus_encoder_, pointer, sub_block_size_samples_,
-                              max_bytes, payload);
-    Log() << "Encoded a frame with Opus mode "
-          << (value == 0 ? 0 : payload[0] >> 3)
-          << std::endl;
-    if (OPUS_OK != opus_repacketizer_cat(repacketizer_, payload, value)) {
+    payload->AppendData(max_bytes, [&] (rtc::ArrayView<uint8_t> payload) {
+        value = WebRtcOpus_Encode(opus_encoder_,
+                                  pointer, sub_block_size_samples_,
+                                  max_bytes, payload.data());
+
+        Log() << "Encoded a frame with Opus mode "
+              << (value == 0 ? 0 : payload[0] >> 3)
+              << std::endl;
+
+        return (value >= 0) ? static_cast<size_t>(value) : 0;
+      });
+
+    if (OPUS_OK != opus_repacketizer_cat(repacketizer_,
+                                         payload->data(), value)) {
       opus_repacketizer_init(repacketizer_);
       // If the repacketization fails, we discard this frame.
       return 0;
     }
     pointer += sub_block_size_samples_ * channels_;
   }
-  value = opus_repacketizer_out(repacketizer_, payload,
+  value = opus_repacketizer_out(repacketizer_, payload->data(),
                                 static_cast<opus_int32>(max_bytes));
   EXPECT_GE(value, 0);
   return value;

@@ -9,8 +9,8 @@
 #include "nsIConverterOutputStream.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Encoding.h"
 
-class nsIUnicodeEncoder;
 class nsIOutputStream;
 
 /* ff8780a5-bbb1-4bc5-8ee7-057e7bc5c925 */
@@ -29,7 +29,7 @@ class nsConverterOutputStream final : public nsIConverterOutputStream {
     private:
         ~nsConverterOutputStream();
 
-        nsCOMPtr<nsIUnicodeEncoder> mConverter;
+        mozilla::UniquePtr<mozilla::Encoder> mConverter;
         nsCOMPtr<nsIOutputStream>   mOutStream;
 };
 

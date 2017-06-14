@@ -8,134 +8,103 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "webrtc/base/checks.h"
+#include "webrtc/base/logging.h"
 #include "webrtc/test/rtcp_packet_parser.h"
-
-#include "testing/gtest/include/gtest/gtest.h"
 
 namespace webrtc {
 namespace test {
 
-using namespace RTCPUtility;
+RtcpPacketParser::RtcpPacketParser() = default;
+RtcpPacketParser::~RtcpPacketParser() = default;
 
-RtcpPacketParser::RtcpPacketParser() {}
-
-RtcpPacketParser::~RtcpPacketParser() {}
-
-void RtcpPacketParser::Parse(const void *data, size_t len) {
-  const uint8_t* packet = static_cast<const uint8_t*>(data);
-  RTCPUtility::RTCPParserV2 parser(packet, len, true);
-  EXPECT_TRUE(parser.IsValid());
-  for (RTCPUtility::RTCPPacketTypes type = parser.Begin();
-       type != RTCPPacketTypes::kInvalid; type = parser.Iterate()) {
-    switch (type) {
-      case RTCPPacketTypes::kSr:
-        sender_report_.Set(parser.Packet().SR);
+bool RtcpPacketParser::Parse(const void* data, size_t length) {
+  const uint8_t* const buffer = static_cast<const uint8_t*>(data);
+  const uint8_t* const buffer_end = buffer + length;
+  rtcp::CommonHeader header;
+  for (const uint8_t* next_packet = buffer; next_packet != buffer_end;
+       next_packet = header.NextPacket()) {
+    RTC_DCHECK_GT(buffer_end - next_packet, 0);
+    if (!header.Parse(next_packet, buffer_end - next_packet)) {
+      LOG(LS_WARNING)
+          << "Invalid rtcp header or unaligned rtcp packet at position "
+          << (next_packet - buffer);
+      return false;
+    }
+    switch (header.type()) {
+      case rtcp::App::kPacketType:
+        app_.Parse(header);
         break;
-      case RTCPPacketTypes::kRr:
-        receiver_report_.Set(parser.Packet().RR);
+      case rtcp::Bye::kPacketType:
+        bye_.Parse(header, &sender_ssrc_);
         break;
-      case RTCPPacketTypes::kReportBlockItem:
-        report_block_.Set(parser.Packet().ReportBlockItem);
-        ++report_blocks_per_ssrc_[parser.Packet().ReportBlockItem.SSRC];
+      case rtcp::ExtendedReports::kPacketType:
+        xr_.Parse(header, &sender_ssrc_);
         break;
-      case RTCPPacketTypes::kSdes:
-        sdes_.Set();
+      case rtcp::ExtendedJitterReport::kPacketType:
+        ij_.Parse(header);
         break;
-      case RTCPPacketTypes::kSdesChunk:
-        sdes_chunk_.Set(parser.Packet().CName);
+      case rtcp::Psfb::kPacketType:
+        switch (header.fmt()) {
+          case rtcp::Fir::kFeedbackMessageType:
+            fir_.Parse(header, &sender_ssrc_);
+            break;
+          case rtcp::Pli::kFeedbackMessageType:
+            pli_.Parse(header, &sender_ssrc_);
+            break;
+          case rtcp::Remb::kFeedbackMessageType:
+            remb_.Parse(header, &sender_ssrc_);
+            break;
+          case rtcp::Rpsi::kFeedbackMessageType:
+            rpsi_.Parse(header, &sender_ssrc_);
+            break;
+          case rtcp::Sli::kFeedbackMessageType:
+            sli_.Parse(header, &sender_ssrc_);
+            break;
+          default:
+            LOG(LS_WARNING) << "Unknown rtcp payload specific feedback type "
+                            << header.fmt();
+            break;
+        }
         break;
-      case RTCPPacketTypes::kBye:
-        bye_.Set(parser.Packet().BYE);
+      case rtcp::ReceiverReport::kPacketType:
+        receiver_report_.Parse(header, &sender_ssrc_);
         break;
-      case RTCPPacketTypes::kApp:
-        app_.Set(parser.Packet().APP);
+      case rtcp::Rtpfb::kPacketType:
+        switch (header.fmt()) {
+          case rtcp::Nack::kFeedbackMessageType:
+            nack_.Parse(header, &sender_ssrc_);
+            break;
+          case rtcp::RapidResyncRequest::kFeedbackMessageType:
+            rrr_.Parse(header, &sender_ssrc_);
+            break;
+          case rtcp::Tmmbn::kFeedbackMessageType:
+            tmmbn_.Parse(header, &sender_ssrc_);
+            break;
+          case rtcp::Tmmbr::kFeedbackMessageType:
+            tmmbr_.Parse(header, &sender_ssrc_);
+            break;
+          case rtcp::TransportFeedback::kFeedbackMessageType:
+            transport_feedback_.Parse(header, &sender_ssrc_);
+            break;
+          default:
+            LOG(LS_WARNING) << "Unknown rtcp transport feedback type "
+                            << header.fmt();
+            break;
+        }
         break;
-      case RTCPPacketTypes::kAppItem:
-        app_item_.Set(parser.Packet().APP);
+      case rtcp::Sdes::kPacketType:
+        sdes_.Parse(header);
         break;
-      case RTCPPacketTypes::kExtendedIj:
-        ij_.Set();
-        break;
-      case RTCPPacketTypes::kExtendedIjItem:
-        ij_item_.Set(parser.Packet().ExtendedJitterReportItem);
-        break;
-      case RTCPPacketTypes::kPsfbPli:
-        pli_.Set(parser.Packet().PLI);
-        break;
-      case RTCPPacketTypes::kPsfbSli:
-        sli_.Set(parser.Packet().SLI);
-        break;
-      case RTCPPacketTypes::kPsfbSliItem:
-        sli_item_.Set(parser.Packet().SLIItem);
-        break;
-      case RTCPPacketTypes::kPsfbRpsi:
-        rpsi_.Set(parser.Packet().RPSI);
-        break;
-      case RTCPPacketTypes::kPsfbFir:
-        fir_.Set(parser.Packet().FIR);
-        break;
-      case RTCPPacketTypes::kPsfbFirItem:
-        fir_item_.Set(parser.Packet().FIRItem);
-        break;
-      case RTCPPacketTypes::kRtpfbNack:
-        nack_.Set(parser.Packet().NACK);
-        nack_item_.Clear();
-        break;
-      case RTCPPacketTypes::kRtpfbNackItem:
-        nack_item_.Set(parser.Packet().NACKItem);
-        break;
-      case RTCPPacketTypes::kPsfbApp:
-        psfb_app_.Set(parser.Packet().PSFBAPP);
-        break;
-      case RTCPPacketTypes::kPsfbRembItem:
-        remb_item_.Set(parser.Packet().REMBItem);
-        break;
-      case RTCPPacketTypes::kRtpfbTmmbr:
-        tmmbr_.Set(parser.Packet().TMMBR);
-        break;
-      case RTCPPacketTypes::kRtpfbTmmbrItem:
-        tmmbr_item_.Set(parser.Packet().TMMBRItem);
-        break;
-      case RTCPPacketTypes::kRtpfbTmmbn:
-        tmmbn_.Set(parser.Packet().TMMBN);
-        tmmbn_items_.Clear();
-        break;
-      case RTCPPacketTypes::kRtpfbTmmbnItem:
-        tmmbn_items_.Set(parser.Packet().TMMBNItem);
-        break;
-      case RTCPPacketTypes::kXrHeader:
-        xr_header_.Set(parser.Packet().XR);
-        dlrr_items_.Clear();
-        break;
-      case RTCPPacketTypes::kXrReceiverReferenceTime:
-        rrtr_.Set(parser.Packet().XRReceiverReferenceTimeItem);
-        break;
-      case RTCPPacketTypes::kXrDlrrReportBlock:
-        dlrr_.Set();
-        break;
-      case RTCPPacketTypes::kXrDlrrReportBlockItem:
-        dlrr_items_.Set(parser.Packet().XRDLRRReportBlockItem);
-        break;
-      case RTCPPacketTypes::kXrVoipMetric:
-        voip_metric_.Set(parser.Packet().XRVOIPMetricItem);
+      case rtcp::SenderReport::kPacketType:
+        sender_report_.Parse(header, &sender_ssrc_);
         break;
       default:
+        LOG(LS_WARNING) << "Unknown rtcp packet type " << header.type();
         break;
     }
   }
-}
-
-uint64_t Rpsi::PictureId() const {
-  assert(num_packets_ > 0);
-  uint16_t num_bytes = rpsi_.NumberOfValidBits / 8;
-  assert(num_bytes > 0);
-  uint64_t picture_id = 0;
-  for (uint16_t i = 0; i < num_bytes - 1; ++i) {
-    picture_id += (rpsi_.NativeBitString[i] & 0x7f);
-    picture_id <<= 7;
-  }
-  picture_id += (rpsi_.NativeBitString[num_bytes - 1] & 0x7f);
-  return picture_id;
+  return true;
 }
 
 }  // namespace test

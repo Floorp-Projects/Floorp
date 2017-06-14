@@ -14,14 +14,16 @@
       'type': 'executable',
       'dependencies': [
         'isac',
+        '<(webrtc_root)/base/base.gyp:rtc_base_approved',
       ],
       'include_dirs': [
-        './main/test',
         './main/include',
+        './main/test',
         './main/util',
         '<(webrtc_root)',
       ],
       'sources': [
+        'empty.cc',  # force build system to use C++ linker
         './main/test/simpleKenny.c',
         './main/util/utility.c',
       ],
@@ -45,6 +47,7 @@
       'type': 'executable',
       'dependencies': [
         'isac',
+        '<(webrtc_root)/base/base.gyp:rtc_base_approved',
       ],
       'include_dirs': [
         './main/test',

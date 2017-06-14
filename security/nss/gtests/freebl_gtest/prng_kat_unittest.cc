@@ -8,10 +8,10 @@
 
 #include <cstdlib>
 #include <fstream>
-#include <string>
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
+#include "util.h"
 
 #include "blapi.h"
 
@@ -42,15 +42,6 @@ std::string trim(std::string str) {
   const auto strEnd = str.find_last_not_of(whitespace);
   const auto strRange = strEnd - strBegin + 1;
   return str.substr(strBegin, strRange);
-}
-
-std::vector<uint8_t> hex_string_to_bytes(std::string s) {
-  std::vector<uint8_t> bytes;
-  assert(s.length() % 2 == 0);
-  for (size_t i = 0; i < s.length(); i += 2) {
-    bytes.push_back(std::stoul(s.substr(i, 2), nullptr, 16));
-  }
-  return bytes;
 }
 
 std::vector<uint8_t> read_option_s(std::string& s) {

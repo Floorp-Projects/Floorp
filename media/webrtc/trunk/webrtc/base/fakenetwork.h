@@ -11,6 +11,7 @@
 #ifndef WEBRTC_BASE_FAKENETWORK_H_
 #define WEBRTC_BASE_FAKENETWORK_H_
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -30,7 +31,7 @@ const int kFakeIPv6NetworkPrefixLength = 64;
 class FakeNetworkManager : public NetworkManagerBase,
                            public MessageHandler {
  public:
-  FakeNetworkManager() : thread_(Thread::Current()) {}
+  FakeNetworkManager() {}
 
   typedef std::vector<std::pair<SocketAddress, AdapterType>> IfaceList;
 
@@ -67,7 +68,7 @@ class FakeNetworkManager : public NetworkManagerBase,
     ++start_count_;
     if (start_count_ == 1) {
       sent_first_update_ = false;
-      thread_->Post(this);
+      rtc::Thread::Current()->Post(RTC_FROM_HERE, this);
     } else {
       if (sent_first_update_) {
         SignalNetworksChanged();
@@ -99,9 +100,9 @@ class FakeNetworkManager : public NetworkManagerBase,
         prefix_length = kFakeIPv6NetworkPrefixLength;
       }
       IPAddress prefix = TruncateIP(it->first.ipaddr(), prefix_length);
-      scoped_ptr<Network> net(new Network(it->first.hostname(),
-                                          it->first.hostname(), prefix,
-                                          prefix_length, it->second));
+      std::unique_ptr<Network> net(new Network(it->first.hostname(),
+                                               it->first.hostname(), prefix,
+                                               prefix_length, it->second));
       net->set_default_local_address_provider(this);
       net->AddIP(it->first.ipaddr());
       networks.push_back(net.release());
@@ -114,7 +115,6 @@ class FakeNetworkManager : public NetworkManagerBase,
     }
   }
 
-  Thread* thread_;
   IfaceList ifaces_;
   int next_index_ = 0;
   int start_count_ = 0;

@@ -40,7 +40,7 @@ public:
 
     // Module functions
     int64_t TimeUntilNextProcess() override = 0;
-    int32_t Process() override = 0;
+    void Process() override = 0;
 
     // Register/unregister a callback class for receiving the mixed audio.
     virtual int32_t RegisterMixedStreamCallback(

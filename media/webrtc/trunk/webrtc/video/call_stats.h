@@ -12,16 +12,16 @@
 #define WEBRTC_VIDEO_CALL_STATS_H_
 
 #include <list>
+#include <memory>
 
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/base/criticalsection.h"
 #include "webrtc/modules/include/module.h"
 #include "webrtc/system_wrappers/include/clock.h"
 
 namespace webrtc {
 
 class CallStatsObserver;
-class CriticalSectionWrapper;
 class RtcpRttStats;
 
 // CallStats keeps track of statistics for a call.
@@ -34,7 +34,7 @@ class CallStats : public Module {
 
   // Implements Module, to use the process thread.
   int64_t TimeUntilNextProcess() override;
-  int32_t Process() override;
+  void Process() override;
 
   // Returns a RtcpRttStats to register at a statistics provider. The object
   // has the same lifetime as the CallStats instance.
@@ -58,16 +58,21 @@ class CallStats : public Module {
   int64_t avg_rtt_ms() const;
 
  private:
+  void UpdateHistograms();
+
   Clock* const clock_;
   // Protecting all members.
-  rtc::scoped_ptr<CriticalSectionWrapper> crit_;
+  rtc::CriticalSection crit_;
   // Observer receiving statistics updates.
-  rtc::scoped_ptr<RtcpRttStats> rtcp_rtt_stats_;
+  std::unique_ptr<RtcpRttStats> rtcp_rtt_stats_;
   // The last time 'Process' resulted in statistic update.
   int64_t last_process_time_;
   // The last RTT in the statistics update (zero if there is no valid estimate).
   int64_t max_rtt_ms_;
   int64_t avg_rtt_ms_;
+  int64_t sum_avg_rtt_ms_ GUARDED_BY(crit_);
+  int64_t num_avg_rtt_ GUARDED_BY(crit_);
+  int64_t time_of_first_rtt_ms_ GUARDED_BY(crit_);
 
   // All Rtt reports within valid time interval, oldest first.
   std::list<RttTime> reports_;

@@ -11,9 +11,17 @@
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_AEC_ECHO_CANCELLATION_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_AEC_ECHO_CANCELLATION_H_
 
+#include <memory>
+
 #include <stddef.h>
 
+extern "C" {
+#include "webrtc/common_audio/ring_buffer.h"
+}
+#include "webrtc/modules/audio_processing/aec/aec_core.h"
 #include "webrtc/typedefs.h"
+
+namespace webrtc {
 
 // Errors
 #define AEC_UNSPECIFIED_ERROR 12000
@@ -25,16 +33,9 @@
 // Warnings
 #define AEC_BAD_PARAMETER_WARNING 12050
 
-enum {
-  kAecNlpConservative = 0,
-  kAecNlpModerate,
-  kAecNlpAggressive
-};
+enum { kAecNlpConservative = 0, kAecNlpModerate, kAecNlpAggressive };
 
-enum {
-  kAecFalse = 0,
-  kAecTrue
-};
+enum { kAecFalse = 0, kAecTrue };
 
 typedef struct {
   int16_t nlpMode;      // default kAecNlpModerate
@@ -56,13 +57,61 @@ typedef struct {
   AecLevel erl;
   AecLevel erle;
   AecLevel aNlp;
+  float divergent_filter_fraction;
 } AecMetrics;
 
 struct AecCore;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+class ApmDataDumper;
+
+typedef struct Aec {
+  Aec();
+  ~Aec();
+
+  std::unique_ptr<ApmDataDumper> data_dumper;
+
+  int delayCtr;
+  int sampFreq;
+  int splitSampFreq;
+  int scSampFreq;
+  float sampFactor;  // scSampRate / sampFreq
+  short skewMode;
+  int bufSizeStart;
+  int knownDelay;
+  int rate_factor;
+
+  short initFlag;  // indicates if AEC has been initialized
+
+  // Variables used for averaging far end buffer size
+  short counter;
+  int sum;
+  short firstVal;
+  short checkBufSizeCtr;
+
+  // Variables used for delay shifts
+  short msInSndCardBuf;
+  short filtDelay;  // Filtered delay estimate.
+  int timeForDelayChange;
+  int startup_phase;
+  int checkBuffSize;
+  short lastDelayDiff;
+
+  // Structures
+  void* resampler;
+
+  int skewFrCtr;
+  int resample;  // if the skew is small enough we don't resample
+  int highSkewCtr;
+  float skew;
+
+  RingBuffer* far_pre_buf;  // Time domain far-end pre-buffer.
+
+  int farend_started;
+
+  // Aec instance counter.
+  static int instance_count;
+  AecCore* aec;
+} Aec;
 
 /*
  * Allocates the memory needed by the AEC. The memory needs to be initialized
@@ -245,7 +294,6 @@ int WebRtcAec_GetDelayMetrics(void* handle,
 //
 struct AecCore* WebRtcAec_aec_core(void* handle);
 
-#ifdef __cplusplus
-}
-#endif
+}  // namespace webrtc
+
 #endif  // WEBRTC_MODULES_AUDIO_PROCESSING_AEC_ECHO_CANCELLATION_H_

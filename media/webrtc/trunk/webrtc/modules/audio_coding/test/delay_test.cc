@@ -12,21 +12,21 @@
 #include <math.h>
 
 #include <iostream>
+#include <memory>
 
 #include "gflags/gflags.h"
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/base/scoped_ptr.h"
-#include "webrtc/common.h"
 #include "webrtc/common_types.h"
-#include "webrtc/engine_configurations.h"
+#include "webrtc/modules/audio_coding/acm2/acm_common_defs.h"
+#include "webrtc/modules/audio_coding/codecs/audio_format_conversion.h"
 #include "webrtc/modules/audio_coding/include/audio_coding_module.h"
 #include "webrtc/modules/audio_coding/include/audio_coding_module_typedefs.h"
-#include "webrtc/modules/audio_coding/acm2/acm_common_defs.h"
 #include "webrtc/modules/audio_coding/test/Channel.h"
 #include "webrtc/modules/audio_coding/test/PCMFile.h"
 #include "webrtc/modules/audio_coding/test/utility.h"
 #include "webrtc/system_wrappers/include/event_wrapper.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/typedefs.h"
 
 DEFINE_string(codec, "isac", "Codec Name");
 DEFINE_int32(sample_rate_hz, 16000, "Sampling rate in Hertz.");
@@ -108,8 +108,9 @@ class DelayTest {
         continue;
       if (STR_CASE_CMP(my_codec_param.plname, "telephone-event") == 0)
         continue;
-      ASSERT_EQ(0, acm_b_->RegisterReceiveCodec(my_codec_param)) <<
-          "Couldn't register receive codec.\n";
+      ASSERT_EQ(true,
+                acm_b_->RegisterReceiveCodec(my_codec_param.pltype,
+                                             CodecInstToSdp(my_codec_param)));
     }
 
     // Create and connect the channel
@@ -180,7 +181,6 @@ class DelayTest {
 
     int num_frames = 0;
     int in_file_frames = 0;
-    uint32_t playout_ts;
     uint32_t received_ts;
     double average_delay = 0;
     double inst_delay_sec = 0;
@@ -205,14 +205,18 @@ class DelayTest {
 
       in_file_a_.Read10MsData(audio_frame);
       ASSERT_GE(acm_a_->Add10MsData(audio_frame), 0);
-      ASSERT_EQ(0, acm_b_->PlayoutData10Ms(out_freq_hz_b, &audio_frame));
+      bool muted;
+      ASSERT_EQ(0,
+                acm_b_->PlayoutData10Ms(out_freq_hz_b, &audio_frame, &muted));
+      RTC_DCHECK(!muted);
       out_file_b_.Write10MsData(
           audio_frame.data_,
           audio_frame.samples_per_channel_ * audio_frame.num_channels_);
-      acm_b_->PlayoutTimestamp(&playout_ts);
       received_ts = channel_a2b_->LastInTimestamp();
-      inst_delay_sec = static_cast<uint32_t>(received_ts - playout_ts)
-          / static_cast<double>(encoding_sample_rate_hz_);
+      rtc::Optional<uint32_t> playout_timestamp = acm_b_->PlayoutTimestamp();
+      ASSERT_TRUE(playout_timestamp);
+      inst_delay_sec = static_cast<uint32_t>(received_ts - *playout_timestamp) /
+                       static_cast<double>(encoding_sample_rate_hz_);
 
       if (num_frames > 10)
         average_delay = 0.95 * average_delay + 0.05 * inst_delay_sec;
@@ -223,8 +227,8 @@ class DelayTest {
     out_file_b_.Close();
   }
 
-  rtc::scoped_ptr<AudioCodingModule> acm_a_;
-  rtc::scoped_ptr<AudioCodingModule> acm_b_;
+  std::unique_ptr<AudioCodingModule> acm_a_;
+  std::unique_ptr<AudioCodingModule> acm_b_;
 
   Channel* channel_a2b_;
 

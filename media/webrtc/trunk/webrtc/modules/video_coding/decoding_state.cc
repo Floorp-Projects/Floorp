@@ -10,6 +10,8 @@
 
 #include "webrtc/modules/video_coding/decoding_state.h"
 
+#include "webrtc/base/logging.h"
+#include "webrtc/common_video/h264/h264_common.h"
 #include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/modules/video_coding/frame_buffer.h"
 #include "webrtc/modules/video_coding/jitter_buffer_common.h"
@@ -40,6 +42,8 @@ void VCMDecodingState::Reset() {
   full_sync_ = true;
   in_initial_state_ = true;
   memset(frame_decoded_, 0, sizeof(frame_decoded_));
+  received_sps_.clear();
+  received_pps_.clear();
 }
 
 uint32_t VCMDecodingState::time_stamp() const {
@@ -74,6 +78,24 @@ void VCMDecodingState::SetState(const VCMFrameBuffer* frame) {
   temporal_id_ = frame->TemporalId();
   tl0_pic_id_ = frame->Tl0PicId();
 
+  for (const NaluInfo& nalu : frame->GetNaluInfos()) {
+    if (nalu.type == H264::NaluType::kPps) {
+      if (nalu.pps_id < 0) {
+        LOG(LS_WARNING) << "Received pps without pps id.";
+      } else if (nalu.sps_id < 0) {
+        LOG(LS_WARNING) << "Received pps without sps id.";
+      } else {
+        received_pps_[nalu.pps_id] = nalu.sps_id;
+      }
+    } else if (nalu.type == H264::NaluType::kSps) {
+      if (nalu.sps_id < 0) {
+        LOG(LS_WARNING) << "Received sps without sps id.";
+      } else {
+        received_sps_.insert(nalu.sps_id);
+      }
+    }
+  }
+
   if (UsingFlexibleMode(frame)) {
     uint16_t frame_index = picture_id_ % kFrameDecodedLength;
     if (in_initial_state_) {
@@ -106,6 +128,8 @@ void VCMDecodingState::CopyFrom(const VCMDecodingState& state) {
   in_initial_state_ = state.in_initial_state_;
   frame_decoded_cleared_to_ = state.frame_decoded_cleared_to_;
   memcpy(frame_decoded_, state.frame_decoded_, sizeof(frame_decoded_));
+  received_sps_ = state.received_sps_;
+  received_pps_ = state.received_pps_;
 }
 
 bool VCMDecodingState::UpdateEmptyFrame(const VCMFrameBuffer* frame) {
@@ -183,8 +207,10 @@ bool VCMDecodingState::ContinuousFrame(const VCMFrameBuffer* frame) const {
   // A key frame is always considered continuous as it doesn't refer to any
   // frames and therefore won't introduce any errors even if prior frames are
   // missing.
-  if (frame->FrameType() == kVideoFrameKey)
+  if (frame->FrameType() == kVideoFrameKey &&
+      HaveSpsAndPps(frame->GetNaluInfos())) {
     return true;
+  }
   // When in the initial state we always require a key frame to start decoding.
   if (in_initial_state_)
     return false;
@@ -205,7 +231,8 @@ bool VCMDecodingState::ContinuousFrame(const VCMFrameBuffer* frame) const {
       return ContinuousPictureId(frame->PictureId());
     }
   } else {
-    return ContinuousSeqNum(static_cast<uint16_t>(frame->GetLowSeqNum()));
+    return ContinuousSeqNum(static_cast<uint16_t>(frame->GetLowSeqNum())) &&
+           HaveSpsAndPps(frame->GetNaluInfos());
   }
 }
 
@@ -264,8 +291,15 @@ bool VCMDecodingState::UsingPictureId(const VCMFrameBuffer* frame) const {
 }
 
 bool VCMDecodingState::UsingFlexibleMode(const VCMFrameBuffer* frame) const {
-  return frame->CodecSpecific()->codecType == kVideoCodecVP9 &&
-         frame->CodecSpecific()->codecSpecific.VP9.flexible_mode;
+  bool is_flexible_mode =
+      frame->CodecSpecific()->codecType == kVideoCodecVP9 &&
+      frame->CodecSpecific()->codecSpecific.VP9.flexible_mode;
+  if (is_flexible_mode && frame->PictureId() == kNoPictureId) {
+    LOG(LS_WARNING) << "Frame is marked as using flexible mode but no"
+                    << "picture id is set.";
+    return false;
+  }
+  return is_flexible_mode;
 }
 
 // TODO(philipel): change how check work, this check practially
@@ -280,6 +314,53 @@ bool VCMDecodingState::AheadOfFramesDecodedClearedTo(uint16_t index) const {
           ? kFrameDecodedLength - (index - frame_decoded_cleared_to_)
           : frame_decoded_cleared_to_ - index;
   return diff > kFrameDecodedLength / 2;
+}
+
+bool VCMDecodingState::HaveSpsAndPps(const std::vector<NaluInfo>& nalus) const {
+  std::set<int> new_sps;
+  std::map<int, int> new_pps;
+  for (const NaluInfo& nalu : nalus) {
+    // Check if this nalu actually contains sps/pps information or dependencies.
+    if (nalu.sps_id == -1 && nalu.pps_id == -1)
+      continue;
+    switch (nalu.type) {
+      case H264::NaluType::kPps:
+        if (nalu.pps_id < 0) {
+          LOG(LS_WARNING) << "Received pps without pps id.";
+        } else if (nalu.sps_id < 0) {
+          LOG(LS_WARNING) << "Received pps without sps id.";
+        } else {
+          new_pps[nalu.pps_id] = nalu.sps_id;
+        }
+        break;
+      case H264::NaluType::kSps:
+        if (nalu.sps_id < 0) {
+          LOG(LS_WARNING) << "Received sps without sps id.";
+        } else {
+          new_sps.insert(nalu.sps_id);
+        }
+        break;
+      default: {
+        int needed_sps = -1;
+        auto pps_it = new_pps.find(nalu.pps_id);
+        if (pps_it != new_pps.end()) {
+          needed_sps = pps_it->second;
+        } else {
+          auto pps_it2 = received_pps_.find(nalu.pps_id);
+          if (pps_it2 == received_pps_.end()) {
+            return false;
+          }
+          needed_sps = pps_it2->second;
+        }
+        if (new_sps.find(needed_sps) == new_sps.end() &&
+            received_sps_.find(needed_sps) == received_sps_.end()) {
+          return false;
+        }
+        break;
+      }
+    }
+  }
+  return true;
 }
 
 }  // namespace webrtc

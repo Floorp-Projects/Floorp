@@ -11,7 +11,8 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_TIMESTAMP_MAP_H_
 #define WEBRTC_MODULES_VIDEO_CODING_TIMESTAMP_MAP_H_
 
-#include "webrtc/base/scoped_ptr.h"
+#include <memory>
+
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -36,7 +37,7 @@ class VCMTimestampMap {
   };
   bool IsEmpty() const;
 
-  rtc::scoped_ptr<TimestampDataTuple[]> ring_buffer_;
+  std::unique_ptr<TimestampDataTuple[]> ring_buffer_;
   const size_t capacity_;
   size_t next_add_idx_;
   size_t next_pop_idx_;

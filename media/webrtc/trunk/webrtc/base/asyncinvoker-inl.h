@@ -58,7 +58,9 @@ class NotifyingAsyncClosureBase : public AsyncClosure,
   ~NotifyingAsyncClosureBase() override;
 
  protected:
-  NotifyingAsyncClosureBase(AsyncInvoker* invoker, Thread* calling_thread);
+  NotifyingAsyncClosureBase(AsyncInvoker* invoker,
+                            const Location& callback_posted_from,
+                            Thread* calling_thread);
   void TriggerCallback();
   void SetCallback(const Callback0<void>& callback) {
     CritScope cs(&crit_);
@@ -67,9 +69,10 @@ class NotifyingAsyncClosureBase : public AsyncClosure,
   bool CallbackCanceled() const { return calling_thread_ == NULL; }
 
  private:
+  AsyncInvoker* invoker_;
+  Location callback_posted_from_;
   Callback0<void> callback_;
   CriticalSection crit_;
-  AsyncInvoker* invoker_;
   Thread* calling_thread_;
 
   void CancelCallback();
@@ -80,14 +83,17 @@ template <class ReturnT, class FunctorT, class HostT>
 class NotifyingAsyncClosure : public NotifyingAsyncClosureBase {
  public:
   NotifyingAsyncClosure(AsyncInvoker* invoker,
+                        const Location& callback_posted_from,
                         Thread* calling_thread,
                         const FunctorT& functor,
                         void (HostT::*callback)(ReturnT),
                         HostT* callback_host)
-      :  NotifyingAsyncClosureBase(invoker, calling_thread),
-         functor_(functor),
-         callback_(callback),
-         callback_host_(callback_host) {}
+      : NotifyingAsyncClosureBase(invoker,
+                                  callback_posted_from,
+                                  calling_thread),
+        functor_(functor),
+        callback_(callback),
+        callback_host_(callback_host) {}
   virtual void Execute() {
     ReturnT result = functor_();
     if (!CallbackCanceled()) {
@@ -108,11 +114,14 @@ class NotifyingAsyncClosure<void, FunctorT, HostT>
     : public NotifyingAsyncClosureBase {
  public:
   NotifyingAsyncClosure(AsyncInvoker* invoker,
+                        const Location& callback_posted_from,
                         Thread* calling_thread,
                         const FunctorT& functor,
                         void (HostT::*callback)(),
                         HostT* callback_host)
-      : NotifyingAsyncClosureBase(invoker, calling_thread),
+      : NotifyingAsyncClosureBase(invoker,
+                                  callback_posted_from,
+                                  calling_thread),
         functor_(functor) {
     SetCallback(Callback0<void>(Bind(callback, callback_host)));
   }

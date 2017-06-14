@@ -19,10 +19,9 @@ CroppingWindowCapturer::CroppingWindowCapturer(
     const DesktopCaptureOptions& options)
     : options_(options),
       callback_(NULL),
-      window_capturer_(WindowCapturer::Create(options)),
+      window_capturer_(DesktopCapturer::CreateRawWindowCapturer(options)),
       selected_window_(kNullWindowId),
-      excluded_window_(kNullWindowId) {
-}
+      excluded_window_(kNullWindowId) {}
 
 CroppingWindowCapturer::~CroppingWindowCapturer() {}
 
@@ -36,18 +35,23 @@ void CroppingWindowCapturer::Stop() {
   callback_ = NULL;
 }
 
-void CroppingWindowCapturer::Capture(const DesktopRegion& region) {
+void CroppingWindowCapturer::SetSharedMemoryFactory(
+    std::unique_ptr<SharedMemoryFactory> shared_memory_factory) {
+  window_capturer_->SetSharedMemoryFactory(std::move(shared_memory_factory));
+}
+
+void CroppingWindowCapturer::CaptureFrame() {
   if (ShouldUseScreenCapturer()) {
     if (!screen_capturer_.get()) {
-      screen_capturer_.reset(ScreenCapturer::Create(options_));
+      screen_capturer_ = DesktopCapturer::CreateRawScreenCapturer(options_);
       if (excluded_window_) {
         screen_capturer_->SetExcludedWindow(excluded_window_);
       }
       screen_capturer_->Start(this);
     }
-    screen_capturer_->Capture(region);
+    screen_capturer_->CaptureFrame();
   } else {
-    window_capturer_->Capture(region);
+    window_capturer_->CaptureFrame();
   }
 }
 
@@ -58,58 +62,56 @@ void CroppingWindowCapturer::SetExcludedWindow(WindowId window) {
   }
 }
 
-bool CroppingWindowCapturer::GetWindowList(WindowList* windows) {
-  return window_capturer_->GetWindowList(windows);
+bool CroppingWindowCapturer::GetSourceList(SourceList* sources) {
+  return window_capturer_->GetSourceList(sources);
 }
 
-bool CroppingWindowCapturer::SelectWindow(WindowId id) {
-  if (window_capturer_->SelectWindow(id)) {
+bool CroppingWindowCapturer::SelectSource(SourceId id) {
+  if (window_capturer_->SelectSource(id)) {
     selected_window_ = id;
     return true;
   }
   return false;
 }
 
-bool CroppingWindowCapturer::BringSelectedWindowToFront() {
-  return window_capturer_->BringSelectedWindowToFront();
+bool CroppingWindowCapturer::FocusOnSelectedSource() {
+  return window_capturer_->FocusOnSelectedSource();
 }
 
-SharedMemory* CroppingWindowCapturer::CreateSharedMemory(size_t size) {
-  return callback_->CreateSharedMemory(size);
-}
-
-void CroppingWindowCapturer::OnCaptureCompleted(DesktopFrame* frame) {
-  rtc::scoped_ptr<DesktopFrame> screen_frame(frame);
-
+void CroppingWindowCapturer::OnCaptureResult(
+    DesktopCapturer::Result result,
+    std::unique_ptr<DesktopFrame> screen_frame) {
   if (!ShouldUseScreenCapturer()) {
     LOG(LS_INFO) << "Window no longer on top when ScreenCapturer finishes";
-    window_capturer_->Capture(DesktopRegion());
+    window_capturer_->CaptureFrame();
     return;
   }
 
-  if (!frame) {
+  if (result != Result::SUCCESS) {
     LOG(LS_WARNING) << "ScreenCapturer failed to capture a frame";
-    callback_->OnCaptureCompleted(NULL);
+    callback_->OnCaptureResult(result, nullptr);
     return;
   }
 
   DesktopRect window_rect = GetWindowRectInVirtualScreen();
   if (window_rect.is_empty()) {
     LOG(LS_WARNING) << "Window rect is empty";
-    callback_->OnCaptureCompleted(NULL);
+    callback_->OnCaptureResult(Result::ERROR_TEMPORARY, nullptr);
     return;
   }
 
-  rtc::scoped_ptr<DesktopFrame> window_frame(
-      CreateCroppedDesktopFrame(screen_frame.release(), window_rect));
-  callback_->OnCaptureCompleted(window_frame.release());
+  callback_->OnCaptureResult(
+      Result::SUCCESS,
+      CreateCroppedDesktopFrame(std::move(screen_frame), window_rect));
 }
 
 #if !defined(WEBRTC_WIN)
+// CroppingWindowCapturer is implemented only for windows. On other platforms
+// the regular window capturer is used.
 // static
-WindowCapturer*
-CroppingWindowCapturer::Create(const DesktopCaptureOptions& options) {
-  return WindowCapturer::Create(options);
+std::unique_ptr<DesktopCapturer> CroppingWindowCapturer::CreateCapturer(
+    const DesktopCaptureOptions& options) {
+  return DesktopCapturer::CreateWindowCapturer(options);
 }
 #endif
 

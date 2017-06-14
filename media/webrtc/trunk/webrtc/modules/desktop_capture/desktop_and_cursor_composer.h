@@ -11,7 +11,9 @@
 #ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_AND_CURSOR_COMPOSER_H_
 #define WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_AND_CURSOR_COMPOSER_H_
 
-#include "webrtc/base/scoped_ptr.h"
+#include <memory>
+
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/desktop_capture/desktop_capturer.h"
 #include "webrtc/modules/desktop_capture/mouse_cursor_monitor.h"
 
@@ -29,30 +31,32 @@ class DesktopAndCursorComposer : public DesktopCapturer,
   // of both arguments.
   DesktopAndCursorComposer(DesktopCapturer* desktop_capturer,
                       MouseCursorMonitor* mouse_monitor);
-  virtual ~DesktopAndCursorComposer();
+  ~DesktopAndCursorComposer() override;
 
   // DesktopCapturer interface.
   void Start(DesktopCapturer::Callback* callback) override;
   void Stop() override;
-  void Capture(const DesktopRegion& region) override;
+  void SetSharedMemoryFactory(
+      std::unique_ptr<SharedMemoryFactory> shared_memory_factory) override;
+  void CaptureFrame() override;
   void SetExcludedWindow(WindowId window) override;
 
  private:
   // DesktopCapturer::Callback interface.
-  SharedMemory* CreateSharedMemory(size_t size) override;
-  void OnCaptureCompleted(DesktopFrame* frame) override;
+  void OnCaptureResult(DesktopCapturer::Result result,
+                       std::unique_ptr<DesktopFrame> frame) override;
 
   // MouseCursorMonitor::Callback interface.
   void OnMouseCursor(MouseCursor* cursor) override;
   void OnMouseCursorPosition(MouseCursorMonitor::CursorState state,
                              const DesktopVector& position) override;
 
-  rtc::scoped_ptr<DesktopCapturer> desktop_capturer_;
-  rtc::scoped_ptr<MouseCursorMonitor> mouse_monitor_;
+  std::unique_ptr<DesktopCapturer> desktop_capturer_;
+  std::unique_ptr<MouseCursorMonitor> mouse_monitor_;
 
   DesktopCapturer::Callback* callback_;
 
-  rtc::scoped_ptr<MouseCursor> cursor_;
+  std::unique_ptr<MouseCursor> cursor_;
   MouseCursorMonitor::CursorState cursor_state_;
   DesktopVector cursor_position_;
 

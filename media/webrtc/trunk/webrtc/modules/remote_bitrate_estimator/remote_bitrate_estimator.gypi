@@ -24,14 +24,13 @@
         'include/send_time_history.h',
         'aimd_rate_control.cc',
         'aimd_rate_control.h',
+        'bwe_defines.cc',
         'inter_arrival.cc',
         'inter_arrival.h',
         'overuse_detector.cc',
         'overuse_detector.h',
         'overuse_estimator.cc',
         'overuse_estimator.h',
-        'rate_statistics.cc',
-        'rate_statistics.h',
         'remote_bitrate_estimator_abs_send_time.cc',
         'remote_bitrate_estimator_abs_send_time.h',
         'remote_bitrate_estimator_single_stream.cc',
@@ -39,19 +38,16 @@
         'remote_estimator_proxy.cc',
         'remote_estimator_proxy.h',
         'send_time_history.cc',
-        'transport_feedback_adapter.cc',
-        'transport_feedback_adapter.h',
-        'test/bwe_test_logging.cc',
         'test/bwe_test_logging.h',
       ], # source
       'conditions': [
         ['enable_bwe_test_logging==1', {
           'defines': [ 'BWE_TEST_LOGGING_COMPILE_TIME_ENABLE=1' ],
+          'sources': [
+            'test/bwe_test_logging.cc'
+          ],
         }, {
           'defines': [ 'BWE_TEST_LOGGING_COMPILE_TIME_ENABLE=0' ],
-          'sources!': [
-            'remote_bitrate_estimator/test/bwe_test_logging.cc'
-          ],
         }],
       ],
     },
@@ -59,52 +55,6 @@
   'conditions': [
     ['include_tests==1', {
       'targets': [
-        {
-          'target_name': 'bwe_simulator',
-          'type': 'static_library',
-          'dependencies': [
-            '<(DEPTH)/testing/gtest.gyp:gtest',
-          ],
-          'sources': [
-            'test/bwe.cc',
-            'test/bwe.h',
-            'test/bwe_test.cc',
-            'test/bwe_test.h',
-            'test/bwe_test_baselinefile.cc',
-            'test/bwe_test_baselinefile.h',
-            'test/bwe_test_fileutils.cc',
-            'test/bwe_test_fileutils.h',
-            'test/bwe_test_framework.cc',
-            'test/bwe_test_framework.h',
-            'test/bwe_test_logging.cc',
-            'test/bwe_test_logging.h',
-            'test/metric_recorder.cc',
-            'test/metric_recorder.h',
-            'test/packet_receiver.cc',
-            'test/packet_receiver.h',
-            'test/packet_sender.cc',
-            'test/packet_sender.h',
-            'test/packet.h',
-            'test/estimators/nada.cc',
-            'test/estimators/nada.h',
-            'test/estimators/remb.cc',
-            'test/estimators/remb.h',
-            'test/estimators/send_side.cc',
-            'test/estimators/send_side.h',
-            'test/estimators/tcp.cc',
-            'test/estimators/tcp.h',
-          ],
-          'conditions': [
-            ['enable_bwe_test_logging==1', {
-              'defines': [ 'BWE_TEST_LOGGING_COMPILE_TIME_ENABLE=1' ],
-            }, {
-              'defines': [ 'BWE_TEST_LOGGING_COMPILE_TIME_ENABLE=0' ],
-              'sources!': [
-                'remote_bitrate_estimator/test/bwe_test_logging.cc'
-              ],
-            }],
-          ],
-        },
         {
           'target_name': 'bwe_tools_util',
           'type': 'static_library',

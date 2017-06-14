@@ -113,14 +113,17 @@ OSCrypto.prototype = {
 
     // the data needs to be encoded in null terminated UTF-16
     data += "\0";
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                    createInstance(Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-16";
-    // result is an out parameter,
-    // result.value will contain the array length
-    let result = {};
+
     // dataArray is an array of bytes
-    let dataArray = converter.convertToByteArray(data, result);
+    let dataArray = new Array(data.length * 2);
+    for (let i = 0; i < data.length; i++) {
+      let c = data.charCodeAt(i);
+      let lo = c & 0xFF;
+      let hi = (c & 0xFF00) >> 8;
+      dataArray[i * 2] = lo;
+      dataArray[i * 2 + 1] = hi;
+    }
+
     // calculation of SHA1 hash value
     let cryptoHash = Cc["@mozilla.org/security/hash;1"].
                      createInstance(Ci.nsICryptoHash);

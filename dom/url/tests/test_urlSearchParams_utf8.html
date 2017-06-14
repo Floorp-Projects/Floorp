@@ -26,11 +26,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1032511
   /** Test for Bug 1032511 **/
   var a = new URLSearchParams("%e2");
   ok(a, "a exists");
-  is(a.toString(), '=', "The value should be here.");
+  is(a.toString(), '%EF%BF%BD=', "The value should be here.");
 
   a = new URLSearchParams("a%e2");
-  // This is a known decoder bug that fails to emit a REPLACEMENT CHARACTER.
-  is(a.toString(), 'a=', "The value should be here.");
+  is(a.toString(), 'a%EF%BF%BD=', "The value should be here.");
 
   a = new URLSearchParams("a%e2b");
   is(a.toString(), 'a%EF%BF%BDb=', "The value should be here.");

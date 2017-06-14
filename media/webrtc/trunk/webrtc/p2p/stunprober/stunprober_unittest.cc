@@ -8,13 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <stdint.h>
+
+#include <memory>
+
 #include "webrtc/base/asyncresolverinterface.h"
-#include "webrtc/base/basictypes.h"
 #include "webrtc/base/bind.h"
 #include "webrtc/base/checks.h"
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/physicalsocketserver.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/ssladapter.h"
 #include "webrtc/base/virtualsocketserver.h"
 #include "webrtc/p2p/base/basicpacketsocketfactory.h"
@@ -83,7 +85,7 @@ class StunProberTest : public testing::Test {
     rtc::NetworkManager::NetworkList networks;
     networks.push_back(&ipv4_network1);
 
-    rtc::scoped_ptr<rtc::BasicPacketSocketFactory> socket_factory(
+    std::unique_ptr<rtc::BasicPacketSocketFactory> socket_factory(
         new rtc::BasicPacketSocketFactory());
 
     // Set up the expected results for verification.
@@ -119,14 +121,14 @@ class StunProberTest : public testing::Test {
   }
 
   rtc::Thread* main_;
-  rtc::scoped_ptr<rtc::PhysicalSocketServer> pss_;
-  rtc::scoped_ptr<rtc::VirtualSocketServer> ss_;
+  std::unique_ptr<rtc::PhysicalSocketServer> pss_;
+  std::unique_ptr<rtc::VirtualSocketServer> ss_;
   rtc::SocketServerScope ss_scope_;
-  rtc::scoped_ptr<StunProber> prober;
+  std::unique_ptr<StunProber> prober;
   int result_ = 0;
   bool stopped_ = false;
-  rtc::scoped_ptr<cricket::TestStunServer> stun_server_1_;
-  rtc::scoped_ptr<cricket::TestStunServer> stun_server_2_;
+  std::unique_ptr<cricket::TestStunServer> stun_server_1_;
+  std::unique_ptr<cricket::TestStunServer> stun_server_2_;
 };
 
 TEST_F(StunProberTest, NonSharedMode) {

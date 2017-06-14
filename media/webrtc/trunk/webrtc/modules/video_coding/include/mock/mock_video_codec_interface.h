@@ -14,18 +14,18 @@
 #include <string>
 #include <vector>
 
-#include "testing/gmock/include/gmock/gmock.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
+#include "webrtc/test/gmock.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
 
 class MockEncodedImageCallback : public EncodedImageCallback {
  public:
-  MOCK_METHOD3(Encoded,
-               int32_t(const EncodedImage& encodedImage,
-                       const CodecSpecificInfo* codecSpecificInfo,
-                       const RTPFragmentationHeader* fragmentation));
+  MOCK_METHOD3(OnEncodedImage,
+               Result(const EncodedImage& encodedImage,
+                      const CodecSpecificInfo* codecSpecificInfo,
+                      const RTPFragmentationHeader* fragmentation));
 };
 
 class MockVideoEncoder : public VideoEncoder {
@@ -45,6 +45,9 @@ class MockVideoEncoder : public VideoEncoder {
   MOCK_METHOD0(Reset, int32_t());
   MOCK_METHOD2(SetChannelParameters, int32_t(uint32_t packetLoss, int64_t rtt));
   MOCK_METHOD2(SetRates, int32_t(uint32_t newBitRate, uint32_t frameRate));
+  MOCK_METHOD2(SetRateAllocation,
+               int32_t(const BitrateAllocation& newBitRate,
+                       uint32_t frameRate));
   MOCK_METHOD1(SetPeriodicKeyFrames, int32_t(bool enable));
 };
 
@@ -72,7 +75,6 @@ class MockVideoDecoder : public VideoDecoder {
   MOCK_METHOD1(RegisterDecodeCompleteCallback,
                int32_t(DecodedImageCallback* callback));
   MOCK_METHOD0(Release, int32_t());
-  MOCK_METHOD0(Reset, int32_t());
   MOCK_METHOD0(Copy, VideoDecoder*());
 };
 

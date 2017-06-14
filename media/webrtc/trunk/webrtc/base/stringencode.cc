@@ -13,7 +13,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "webrtc/base/basictypes.h"
 #include "webrtc/base/checks.h"
 #include "webrtc/base/stringutils.h"
 
@@ -120,7 +119,7 @@ const char* unsafe_filename_characters() {
   return "\\/:*?\"<>|";
 #else  // !WEBRTC_WIN
   // TODO(grunell): Should this never be reached?
-  RTC_DCHECK(false);
+  RTC_NOTREACHED();
   return "";
 #endif  // !WEBRTC_WIN
 }
@@ -275,7 +274,7 @@ size_t html_encode(char * buffer, size_t buflen,
           case '\'': escseq = "&#39;";  esclen = 5; break;
           case '\"': escseq = "&quot;"; esclen = 6; break;
           case '&':  escseq = "&amp;";  esclen = 5; break;
-          default: RTC_DCHECK(false);
+          default: RTC_NOTREACHED();
         }
         if (bufpos + esclen >= buflen) {
           break;
@@ -332,7 +331,7 @@ size_t xml_encode(char * buffer, size_t buflen,
         case '\'': escseq = "&apos;"; esclen = 6; break;
         case '\"': escseq = "&quot;"; esclen = 6; break;
         case '&':  escseq = "&amp;";  esclen = 5; break;
-        default: RTC_DCHECK(false);
+        default: RTC_NOTREACHED();
       }
       if (bufpos + esclen >= buflen) {
         break;

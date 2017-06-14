@@ -801,8 +801,7 @@ SEED_Decrypt(SEEDContext *cx, unsigned char *output,
 ** Create a new AES context suitable for AES encryption/decryption.
 **  "key" raw key data
 **  "keylen" the number of bytes of key data (16, 24, or 32)
-**      "blocklen" is the blocksize to use (16, 24, or 32)
-**                        XXX currently only blocksize==16 has been tested!
+**  "blocklen" is the blocksize to use. NOTE: only 16 is supported!
 */
 extern AESContext *
 AES_CreateContext(const unsigned char *key, const unsigned char *iv,

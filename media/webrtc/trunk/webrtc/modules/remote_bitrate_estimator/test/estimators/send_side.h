@@ -11,8 +11,10 @@
 #ifndef WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_ESTIMATORS_SEND_SIDE_H_
 #define WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_ESTIMATORS_SEND_SIDE_H_
 
+#include <memory>
 #include <vector>
 
+#include "webrtc/logging/rtc_event_log/mock/mock_rtc_event_log.h"
 #include "webrtc/modules/remote_bitrate_estimator/include/send_time_history.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/bwe.h"
 
@@ -20,23 +22,23 @@ namespace webrtc {
 namespace testing {
 namespace bwe {
 
-class FullBweSender : public BweSender, public RemoteBitrateObserver {
+class SendSideBweSender : public BweSender, public RemoteBitrateObserver {
  public:
-  FullBweSender(int kbps, BitrateObserver* observer, Clock* clock);
-  virtual ~FullBweSender();
+  SendSideBweSender(int kbps, BitrateObserver* observer, Clock* clock);
+  virtual ~SendSideBweSender();
 
   int GetFeedbackIntervalMs() const override;
   void GiveFeedback(const FeedbackPacket& feedback) override;
   void OnPacketsSent(const Packets& packets) override;
-  void OnReceiveBitrateChanged(const std::vector<unsigned int>& ssrcs,
-                               unsigned int bitrate) override;
+  void OnReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs,
+                               uint32_t bitrate) override;
   int64_t TimeUntilNextProcess() override;
-  int Process() override;
+  void Process() override;
 
  protected:
-  rtc::scoped_ptr<BitrateController> bitrate_controller_;
-  rtc::scoped_ptr<RemoteBitrateEstimator> rbe_;
-  rtc::scoped_ptr<RtcpBandwidthObserver> feedback_observer_;
+  std::unique_ptr<BitrateController> bitrate_controller_;
+  std::unique_ptr<DelayBasedBwe> bwe_;
+  std::unique_ptr<RtcpBandwidthObserver> feedback_observer_;
 
  private:
   Clock* const clock_;
@@ -44,8 +46,11 @@ class FullBweSender : public BweSender, public RemoteBitrateObserver {
   SendTimeHistory send_time_history_;
   bool has_received_ack_;
   uint16_t last_acked_seq_num_;
+  int64_t last_log_time_ms_;
+  SequenceNumberUnwrapper seq_num_unwrapper_;
+  ::testing::NiceMock<MockRtcEventLog> event_log_;
 
-  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(FullBweSender);
+  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(SendSideBweSender);
 };
 
 class SendSideBweReceiver : public BweReceiver {

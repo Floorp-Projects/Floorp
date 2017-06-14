@@ -23,10 +23,10 @@ class OpusSpeedTest : public AudioCodecSpeedTest {
   OpusSpeedTest();
   void SetUp() override;
   void TearDown() override;
-  virtual float EncodeABlock(int16_t* in_data, uint8_t* bit_stream,
-                             size_t max_bytes, size_t* encoded_bytes);
-  virtual float DecodeABlock(const uint8_t* bit_stream, size_t encoded_bytes,
-                             int16_t* out_data);
+  float EncodeABlock(int16_t* in_data, uint8_t* bit_stream,
+                     size_t max_bytes, size_t* encoded_bytes) override;
+  float DecodeABlock(const uint8_t* bit_stream, size_t encoded_bytes,
+                     int16_t* out_data) override;
   WebRtcOpusEncInst* opus_encoder_;
   WebRtcOpusDecInst* opus_decoder_;
 };

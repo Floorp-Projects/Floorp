@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
 #include <string>
 #include "webrtc/base/autodetectproxy.h"
 #include "webrtc/base/gunit.h"
@@ -67,10 +68,10 @@ class ProxyTest : public testing::Test {
   }
 
  private:
-  rtc::scoped_ptr<rtc::SocketServer> ss_;
-  rtc::scoped_ptr<rtc::SocksProxyServer> socks_;
+  std::unique_ptr<rtc::SocketServer> ss_;
+  std::unique_ptr<rtc::SocksProxyServer> socks_;
   // TODO: Make this a real HTTPS proxy server.
-  rtc::scoped_ptr<rtc::HttpListenServer> https_;
+  std::unique_ptr<rtc::HttpListenServer> https_;
 };
 
 // Tests whether we can use a SOCKS5 proxy to connect to a server.

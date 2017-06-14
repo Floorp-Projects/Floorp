@@ -29,7 +29,7 @@ public:
                                 const nsRect& aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
   virtual mozilla::LogicalSize
-    ComputeAutoSize(nsRenderingContext*         aRenderingContext,
+    ComputeAutoSize(gfxContext*                 aRenderingContext,
                     mozilla::WritingMode        aWM,
                     const mozilla::LogicalSize& aCBSize,
                     nscoord                     aAvailableISize,

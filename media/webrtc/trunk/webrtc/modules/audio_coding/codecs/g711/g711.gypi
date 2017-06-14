@@ -13,6 +13,7 @@
       'type': 'static_library',
       'dependencies': [
         'audio_encoder_interface',
+        'audio_decoder_interface',
       ],
       'sources': [
         'audio_decoder_pcm.cc',
@@ -26,20 +27,4 @@
       ],
     },
   ], # targets
-  'conditions': [
-    ['include_tests==1', {
-      'targets': [
-        {
-          'target_name': 'g711_test',
-          'type': 'executable',
-          'dependencies': [
-            'g711',
-          ],
-          'sources': [
-            'test/testG711.cc',
-          ],
-        },
-      ], # targets
-    }], # include_tests
-  ], # conditions
 }

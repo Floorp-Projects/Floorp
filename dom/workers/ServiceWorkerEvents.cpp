@@ -13,8 +13,7 @@
 #include "nsIOutputStream.h"
 #include "nsIScriptError.h"
 #include "nsITimedChannel.h"
-#include "nsIUnicodeDecoder.h"
-#include "nsIUnicodeEncoder.h"
+#include "mozilla/Encoding.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
 #include "nsComponentManagerUtils.h"
@@ -980,32 +979,21 @@ nsresult
 ExtractBytesFromUSVString(const nsAString& aStr, nsTArray<uint8_t>& aBytes)
 {
   MOZ_ASSERT(aBytes.IsEmpty());
-  nsCOMPtr<nsIUnicodeEncoder> encoder = EncodingUtils::EncoderForEncoding("UTF-8");
-  if (NS_WARN_IF(!encoder)) {
+  auto encoder = UTF_8_ENCODING->NewEncoder();
+  CheckedInt<size_t> needed =
+    encoder->MaxBufferLengthFromUTF16WithoutReplacement(aStr.Length());
+  if (NS_WARN_IF(!needed.isValid() ||
+                 !aBytes.SetLength(needed.value(), fallible))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  int32_t srcLen = aStr.Length();
-  int32_t destBufferLen;
-  nsresult rv = encoder->GetMaxLength(aStr.BeginReading(), srcLen, &destBufferLen);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (NS_WARN_IF(!aBytes.SetLength(destBufferLen, fallible))) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  char* destBuffer = reinterpret_cast<char*>(aBytes.Elements());
-  int32_t outLen = destBufferLen;
-  rv = encoder->Convert(aStr.BeginReading(), &srcLen, destBuffer, &outLen);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aBytes.Clear();
-    return rv;
-  }
-
-  aBytes.TruncateLength(outLen);
-
+  uint32_t result;
+  size_t read;
+  size_t written;
+  Tie(result, read, written) =
+    encoder->EncodeFromUTF16WithoutReplacement(aStr, aBytes, true);
+  MOZ_ASSERT(result == kInputEmpty);
+  MOZ_ASSERT(read == aStr.Length());
+  aBytes.TruncateLength(written);
   return NS_OK;
 }
 

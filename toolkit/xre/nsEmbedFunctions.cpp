@@ -420,7 +420,7 @@ XRE_InitChildProcess(int aArgc,
   mozilla::LogModule::Init();
 
   char aLocal;
-  GeckoProfilerInitRAII profiler(&aLocal);
+  AutoProfilerInit profilerInit(&aLocal);
 
   PROFILER_LABEL("Startup", "XRE_InitChildProcess",
     js::ProfileEntry::Category::OTHER);
@@ -789,7 +789,7 @@ XRE_InitParentProcess(int aArgc,
   mozilla::LogModule::Init();
 
   char aLocal;
-  GeckoProfilerInitRAII profiler(&aLocal);
+  AutoProfilerInit profilerInit(&aLocal);
 
   ScopedXREEmbed embed;
 

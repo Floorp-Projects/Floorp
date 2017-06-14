@@ -6,27 +6,20 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
-source_set("remote_bitrate_estimator") {
-  sources = [
-    "include/bwe_defines.h",
-    "include/remote_bitrate_estimator.h",
-    "rate_statistics.cc",
-    "rate_statistics.h",
-  ]
+import("../../build/webrtc.gni")
 
-  configs += [ "../../:common_inherited_config" ]
+rtc_static_library("remote_bitrate_estimator") {
+  # TODO(mbonadei): Remove (bugs.webrtc.org/6828)
+  # Errors on cyclic dependency with:
+  # rtp_rtcp:rtp_rtcp if enabled.
+  check_includes = false
 
-  deps = [
-    ":rbe_components",
-    "../..:webrtc_common",
-    "../../system_wrappers",
-  ]
-}
-
-source_set("rbe_components") {
   sources = [
     "aimd_rate_control.cc",
     "aimd_rate_control.h",
+    "bwe_defines.cc",
+    "include/bwe_defines.h",
+    "include/remote_bitrate_estimator.h",
     "include/send_time_history.h",
     "inter_arrival.cc",
     "inter_arrival.h",
@@ -35,23 +28,117 @@ source_set("rbe_components") {
     "overuse_estimator.cc",
     "overuse_estimator.h",
     "remote_bitrate_estimator_abs_send_time.cc",
+    "remote_bitrate_estimator_abs_send_time.h",
     "remote_bitrate_estimator_single_stream.cc",
+    "remote_bitrate_estimator_single_stream.h",
     "remote_estimator_proxy.cc",
     "remote_estimator_proxy.h",
     "send_time_history.cc",
-    "transport_feedback_adapter.cc",
-    "transport_feedback_adapter.h",
+    "test/bwe_test_logging.h",
   ]
 
-  configs += [ "../..:common_config" ]
-  public_configs = [ "../..:common_inherited_config" ]
+  if (rtc_enable_bwe_test_logging) {
+    defines = [ "BWE_TEST_LOGGING_COMPILE_TIME_ENABLE=1" ]
+    sources += [ "test/bwe_test_logging.cc" ]
+  } else {
+    defines = [ "BWE_TEST_LOGGING_COMPILE_TIME_ENABLE=0" ]
+  }
+
+  if (!build_with_chromium && is_clang) {
+    # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+    suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+  }
+
   deps = [
     "../..:webrtc_common",
+    "../../base:rtc_base",
+    "../../base:rtc_base_approved",
+    "../../system_wrappers",
   ]
+}
 
-  if (is_clang) {
-    # Suppress warnings from Chrome's Clang plugins.
-    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
+if (rtc_include_tests) {
+  rtc_static_library("bwe_simulator_lib") {
+    testonly = true
+    sources = [
+      "test/bwe.cc",
+      "test/bwe.h",
+      "test/bwe_test.cc",
+      "test/bwe_test.h",
+      "test/bwe_test_baselinefile.cc",
+      "test/bwe_test_baselinefile.h",
+      "test/bwe_test_fileutils.cc",
+      "test/bwe_test_fileutils.h",
+      "test/bwe_test_framework.cc",
+      "test/bwe_test_framework.h",
+      "test/bwe_test_logging.h",
+      "test/estimators/nada.cc",
+      "test/estimators/nada.h",
+      "test/estimators/remb.cc",
+      "test/estimators/remb.h",
+      "test/estimators/send_side.cc",
+      "test/estimators/send_side.h",
+      "test/estimators/tcp.cc",
+      "test/estimators/tcp.h",
+      "test/metric_recorder.cc",
+      "test/metric_recorder.h",
+      "test/packet.h",
+      "test/packet_receiver.cc",
+      "test/packet_receiver.h",
+      "test/packet_sender.cc",
+      "test/packet_sender.h",
+    ]
+
+    if (rtc_enable_bwe_test_logging) {
+      defines = [ "BWE_TEST_LOGGING_COMPILE_TIME_ENABLE=1" ]
+    } else {
+      defines = [ "BWE_TEST_LOGGING_COMPILE_TIME_ENABLE=0" ]
+    }
+
+    if (!build_with_chromium && is_clang) {
+      # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
+
+    if (is_win) {
+      cflags = [
+        # TODO(kjellander): Bug 261: fix this warning.
+        "/wd4373",  # virtual function override.
+      ]
+    }
+
+    deps = [
+      ":remote_bitrate_estimator",
+      "../..:webrtc_common",
+      "../../base:gtest_prod",
+      "../../base:rtc_base",
+      "../../base:rtc_base_approved",
+      "../../system_wrappers",
+      "../../test:test_support",
+      "../../voice_engine",
+      "../bitrate_controller",
+      "../congestion_controller",
+      "../pacing",
+      "../rtp_rtcp",
+      "//testing/gmock",
+      "//testing/gtest",
+    ]
+  }
+
+  rtc_source_set("remote_bitrate_estimator_perf_tests") {
+    testonly = true
+    sources = [
+      "remote_bitrate_estimators_test.cc",
+    ]
+    deps = [
+      ":bwe_simulator_lib",
+      ":remote_bitrate_estimator",
+      "../../base:rtc_base_approved",
+      "../../test:fileutils",
+    ]
+    if (!build_with_chromium && is_clang) {
+      # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
   }
 }

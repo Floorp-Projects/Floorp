@@ -65,7 +65,7 @@ nsHtml5Parser::~nsHtml5Parser()
 NS_IMETHODIMP_(void)
 nsHtml5Parser::SetContentSink(nsIContentSink* aSink)
 {
-  NS_ASSERTION(aSink == static_cast<nsIContentSink*> (mExecutor), 
+  NS_ASSERTION(aSink == static_cast<nsIContentSink*>(mExecutor),
                "Attempt to set a foreign sink.");
 }
 
@@ -95,7 +95,7 @@ nsHtml5Parser::SetCommand(const char* aCommand)
 NS_IMETHODIMP_(void)
 nsHtml5Parser::SetCommand(eParserCommands aParserCommand)
 {
-  NS_ASSERTION(aParserCommand == eViewNormal, 
+  NS_ASSERTION(aParserCommand == eViewNormal,
                "Parser command was not eViewNormal.");
 }
 
@@ -190,7 +190,7 @@ nsHtml5Parser::Parse(nsIURI* aURL,
    * Do NOT cause WillBuildModel to be called synchronously from here!
    * The document won't be ready for it until OnStartRequest!
    */
-  NS_PRECONDITION(!mExecutor->HasStarted(), 
+  NS_PRECONDITION(!mExecutor->HasStarted(),
                   "Tried to start parse without initializing the parser.");
   NS_PRECONDITION(GetStreamParser(),
                   "Can't call this Parse() variant on script-created parser");
@@ -219,7 +219,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
   // Maintain a reference to ourselves so we don't go away
   // till we're completely done. The old parser grips itself in this method.
   nsCOMPtr<nsIParser> kungFuDeathGrip(this);
-  
+
   // Gripping the other objects just in case, since the other old grip
   // required grips to these, too.
   RefPtr<nsHtml5StreamParser> streamKungFuDeathGrip(GetStreamParser());
@@ -248,8 +248,8 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
       mTokenizer->StartPlainText();
     }
     /*
-     * If you move the following line, be very careful not to cause 
-     * WillBuildModel to be called before the document has had its 
+     * If you move the following line, be very careful not to cause
+     * WillBuildModel to be called before the document has had its
      * script global object set.
      */
     rv = executor->WillBuildModel(eDTDMode_unknown);

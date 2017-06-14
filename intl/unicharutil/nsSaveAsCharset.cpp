@@ -5,7 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSaveAsCharset.h"
-#include "mozilla/dom/EncodingUtils.h"
+
+using namespace mozilla;
 
 //
 // nsISupports methods
@@ -26,24 +27,24 @@ nsSaveAsCharset::~nsSaveAsCharset()
 NS_IMETHODIMP
 nsSaveAsCharset::Init(const nsACString& aCharset, uint32_t aIgnored, uint32_t aAlsoIgnored)
 {
-  nsAutoCString encoding;
-  if (!mozilla::dom::EncodingUtils::FindEncodingForLabelNoReplacement(aCharset, encoding)) {
+  mEncoding = Encoding::ForLabelNoReplacement(aCharset);
+  if (!mEncoding) {
     return NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR;
   }
-  mEncoder = new nsNCRFallbackEncoderWrapper(encoding);
-  mCharset.Assign(encoding);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSaveAsCharset::Convert(const nsAString& aIn, nsACString& aOut)
 {
-  if (!mEncoder) {
+  if (!mEncoding) {
     return NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR;
   }
-
-  if (!mEncoder->Encode(aIn, aOut)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsresult rv;
+  const Encoding* ignored;
+  Tie(rv, ignored) = mEncoding->Encode(aIn, aOut);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
   return NS_OK;
 }
@@ -51,6 +52,10 @@ nsSaveAsCharset::Convert(const nsAString& aIn, nsACString& aOut)
 NS_IMETHODIMP 
 nsSaveAsCharset::GetCharset(nsACString& aCharset)
 {
-  aCharset.Assign(mCharset);
+  if (!mEncoding) {
+    aCharset.Truncate();
+  } else {
+    mEncoding->Name(aCharset);
+  }
   return NS_OK;
 }

@@ -9,9 +9,7 @@
 
 #include "nsDataHashtable.h"
 #include "nsString.h"
-
-class nsIUnicodeDecoder;
-class nsIUnicodeEncoder;
+#include "mozilla/Encoding.h"
 
 namespace mozilla {
 namespace dom {
@@ -19,7 +17,6 @@ namespace dom {
 class EncodingUtils
 {
 public:
-
   /**
    * Implements get an encoding algorithm from Encoding spec.
    * http://encoding.spec.whatwg.org/#concept-encoding-get
@@ -27,6 +24,9 @@ public:
    * false.
    * The returned name may not be lowercased due to compatibility with
    * our internal implementations.
+   *
+   * @deprecated Use mozilla::Encoding::ForLabel() in new code.
+   * https://bugzilla.mozilla.org/show_bug.cgi?id=1369025
    *
    * @param      aLabel, incoming label describing charset to be decoded.
    * @param      aOutEncoding, returning corresponding encoding for label.
@@ -45,6 +45,9 @@ public:
   /**
    * Like FindEncodingForLabel() except labels that map to "replacement"
    * are treated as unknown.
+   *
+   * @deprecated Use mozilla::Encoding::ForLabelNoReplacement() in new code.
+   * https://bugzilla.mozilla.org/show_bug.cgi?id=1369025
    *
    * @param      aLabel, incoming label describing charset to be decoded.
    * @param      aOutEncoding, returning corresponding encoding for label.
@@ -89,11 +92,15 @@ public:
   /**
    * Instantiates a decoder for an encoding. The input must be a
    * Gecko-canonical encoding name.
+   *
+   * @deprecated Use mozilla::Encoding::NewDecoderWithBOMRemoval()
+   *             (or more appropriate variant) in new code.
+   * https://bugzilla.mozilla.org/show_bug.cgi?id=1369032
+   *
    * @param aEncoding a Gecko-canonical encoding name
    * @return a decoder
    */
-  static already_AddRefed<nsIUnicodeDecoder>
-  DecoderForEncoding(const char* aEncoding)
+  static UniquePtr<Decoder> DecoderForEncoding(const char* aEncoding)
   {
     nsDependentCString encoding(aEncoding);
     return DecoderForEncoding(encoding);
@@ -101,21 +108,28 @@ public:
 
   /**
    * Instantiates a decoder for an encoding. The input must be a
+   *
+   * @deprecated Use mozilla::Encoding::NewDecoderWithBOMRemoval()
+   *             (or more appropriate variant) in new code.
+   * https://bugzilla.mozilla.org/show_bug.cgi?id=1369032
+   *
    * Gecko-canonical encoding name
    * @param aEncoding a Gecko-canonical encoding name
    * @return a decoder
    */
-  static already_AddRefed<nsIUnicodeDecoder>
-  DecoderForEncoding(const nsACString& aEncoding);
+  static UniquePtr<Decoder> DecoderForEncoding(const nsACString& aEncoding);
 
   /**
    * Instantiates an encoder for an encoding. The input must be a
+   *
+   * @deprecated Use mozilla::Encoding::NewEncoder() in new code.
+   * https://bugzilla.mozilla.org/show_bug.cgi?id=1369032
+   *
    * Gecko-canonical encoding name.
    * @param aEncoding a Gecko-canonical encoding name
    * @return an encoder
    */
-  static already_AddRefed<nsIUnicodeEncoder>
-  EncoderForEncoding(const char* aEncoding)
+  static UniquePtr<Encoder> EncoderForEncoding(const char* aEncoding)
   {
     nsDependentCString encoding(aEncoding);
     return EncoderForEncoding(encoding);
@@ -124,11 +138,14 @@ public:
   /**
    * Instantiates an encoder for an encoding. The input must be a
    * Gecko-canonical encoding name.
+   *
+   * @deprecated Use mozilla::Encoding::NewEncoder() in new code.
+   * https://bugzilla.mozilla.org/show_bug.cgi?id=1369032
+   *
    * @param aEncoding a Gecko-canonical encoding name
    * @return an encoder
    */
-  static already_AddRefed<nsIUnicodeEncoder>
-  EncoderForEncoding(const nsACString& aEncoding);
+  static UniquePtr<Encoder> EncoderForEncoding(const nsACString& aEncoding);
 
   /**
    * Finds a Gecko language group string (e.g. x-western) for a Gecko-canonical

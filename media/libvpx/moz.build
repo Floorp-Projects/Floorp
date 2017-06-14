@@ -86,10 +86,9 @@ if CONFIG['OS_TARGET'] == 'Android':
     # the OS they're on, so do it for them.
     DEFINES['__linux__'] = True
 
-    if not CONFIG['MOZ_WEBRTC']:
-        SOURCES += [
-            '%%%s/sources/android/cpufeatures/cpu-features.c' % CONFIG['ANDROID_NDK'],
-        ]
+    SOURCES += [
+        '%%%s/sources/android/cpufeatures/cpu-features.c' % CONFIG['ANDROID_NDK'],
+    ]
 
 if CONFIG['CLANG_CL'] or not CONFIG['_MSC_VER']:
     for f in SOURCES:

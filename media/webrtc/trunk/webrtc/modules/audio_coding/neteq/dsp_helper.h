@@ -67,6 +67,13 @@ class DspHelper {
 
   // Same as above, but processes |length| samples from |signal|, starting at
   // |start_index|.
+  static int RampSignal(AudioVector* signal,
+                        size_t start_index,
+                        size_t length,
+                        int factor,
+                        int increment);
+
+  // Same as above, but for an AudioMultiVector.
   static int RampSignal(AudioMultiVector* signal,
                         size_t start_index,
                         size_t length,
