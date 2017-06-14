@@ -54,6 +54,6 @@ function* next_test() {
     );
 
   } catch (e) {
-    throw "FAILED in test #" + testnum + " -- " + e;
+    throw new Error(`FAILED in test #${testnum} -- ${e}`);
   }
 }

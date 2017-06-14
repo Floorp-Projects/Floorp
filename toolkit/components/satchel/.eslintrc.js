@@ -46,5 +46,6 @@ module.exports = {
     "no-multiple-empty-lines": ["error", {
       max: 2,
     }],
+    "no-throw-literal": "error",
   },
 };
