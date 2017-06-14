@@ -80,7 +80,6 @@ TaskQueue::TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
   , mIsShutdown(false)
   , mName(aName)
 {
-  MOZ_COUNT_CTOR(TaskQueue);
 }
 
 TaskQueue::TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
@@ -93,7 +92,6 @@ TaskQueue::~TaskQueue()
 {
   MonitorAutoLock mon(mQueueMonitor);
   MOZ_ASSERT(mIsShutdown);
-  MOZ_COUNT_DTOR(TaskQueue);
 }
 
 TaskDispatcher&

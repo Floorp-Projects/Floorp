@@ -453,14 +453,16 @@ already_AddRefed<ParticularProcessPriorityManager>
 ProcessPriorityManagerImpl::GetParticularProcessPriorityManager(
   ContentParent* aContentParent)
 {
-  RefPtr<ParticularProcessPriorityManager> pppm;
   uint64_t cpId = aContentParent->ChildID();
-  mParticularManagers.Get(cpId, &pppm);
-  if (!pppm) {
-    pppm = new ParticularProcessPriorityManager(aContentParent);
-    pppm->Init();
-    mParticularManagers.Put(cpId, pppm);
+  auto entry = mParticularManagers.LookupForAdd(cpId);
+  RefPtr<ParticularProcessPriorityManager> pppm = entry.OrInsert(
+    [aContentParent]() {
+      return new ParticularProcessPriorityManager(aContentParent);
+    });
 
+  if (!entry) {
+    // We created a new entry.
+    pppm->Init();
     FireTestOnlyObserverNotification("process-created",
       nsPrintfCString("%" PRIu64, cpId));
   }
@@ -501,15 +503,12 @@ ProcessPriorityManagerImpl::ObserveContentParentDestroyed(nsISupports* aSubject)
   props->GetPropertyAsUint64(NS_LITERAL_STRING("childID"), &childID);
   NS_ENSURE_TRUE_VOID(childID != CONTENT_PROCESS_ID_UNKNOWN);
 
-  RefPtr<ParticularProcessPriorityManager> pppm;
-  mParticularManagers.Get(childID, &pppm);
-  if (pppm) {
-    pppm->ShutDown();
-
-    mParticularManagers.Remove(childID);
-
-    mHighPriorityChildIDs.RemoveEntry(childID);
-  }
+  mParticularManagers.LookupRemoveIf(childID,
+    [this, childID] (RefPtr<ParticularProcessPriorityManager>& aValue) {
+      aValue->ShutDown();
+      mHighPriorityChildIDs.RemoveEntry(childID);
+      return true; // remove it
+    });
 }
 
 void

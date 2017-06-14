@@ -75,6 +75,9 @@ public:
     Unused << rv;
   }
 
+  // Prevent a GCC warning about the other overload of Dispatch being hidden.
+  using AbstractThread::Dispatch;
+
   virtual bool IsCurrentThreadIn() override
   {
     // Compare NSPR threads so that this works after shutdown when
@@ -209,6 +212,42 @@ private:
     bool mDrainDirectTasks;
   };
 };
+
+NS_IMPL_ISUPPORTS(AbstractThread, nsIEventTarget, nsISerialEventTarget)
+
+NS_IMETHODIMP_(bool)
+AbstractThread::IsOnCurrentThreadInfallible()
+{
+  return IsCurrentThreadIn();
+}
+
+NS_IMETHODIMP
+AbstractThread::IsOnCurrentThread(bool* aResult)
+{
+  *aResult = IsCurrentThreadIn();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AbstractThread::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags)
+{
+  nsCOMPtr<nsIRunnable> event(aEvent);
+  return Dispatch(event.forget(), aFlags);
+}
+
+NS_IMETHODIMP
+AbstractThread::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
+{
+  Dispatch(Move(aEvent), DontAssertDispatchSuccess, NormalDispatch);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AbstractThread::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
+                                 uint32_t aDelayMs)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 void
 AbstractThread::TailDispatchTasksFor(AbstractThread* aThread)

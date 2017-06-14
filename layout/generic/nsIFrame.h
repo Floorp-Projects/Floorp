@@ -837,6 +837,12 @@ public:
   inline nsContainerFrame* GetInFlowParent();
 
   /**
+   * Gets the primary frame of the Content's flattened tree
+   * parent, if one exists.
+   */
+  inline nsIFrame* GetFlattenedTreeParentPrimaryFrame() const;
+
+  /**
    * Return the placeholder for this frame (which must be out-of-flow).
    * @note this will only return non-null if |this| is the first-in-flow
    * although we don't assert that here for legacy reasons.
