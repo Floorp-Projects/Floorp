@@ -4,6 +4,7 @@ add_task(async function testBackgroundWindowFailures() {
     [PREF_APP_UPDATE_BACKGROUNDMAXERRORS, maxBackgroundErrors],
     [PREF_APP_UPDATE_DOWNLOADPROMPTMAXATTEMPTS, 2]
   ]});
+
   let updateParams = "badURL=1";
   let extraWindow = await BrowserTestUtils.openNewBrowserWindow();
   await SimpleTest.promiseFocus(extraWindow);

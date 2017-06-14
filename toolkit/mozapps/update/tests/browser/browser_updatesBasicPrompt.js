@@ -1,6 +1,10 @@
 add_task(async function testBasicPrompt() {
-  SpecialPowers.pushPrefEnv({set: [[PREF_APP_UPDATE_STAGING_ENABLED, true]]});
-  let updateParams = "showPrompt=1&promptWaitTime=0";
+  SpecialPowers.pushPrefEnv({set: [
+    [PREF_APP_UPDATE_STAGING_ENABLED, true],
+    [PREF_APP_UPDATE_AUTO, false]
+  ]});
+
+  let updateParams = "promptWaitTime=0";
   gUseTestUpdater = true;
 
   await runUpdateTest(updateParams, 1, [

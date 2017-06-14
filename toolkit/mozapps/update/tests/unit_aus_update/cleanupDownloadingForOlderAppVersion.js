@@ -10,13 +10,12 @@ function run_test() {
   debugDump("testing cleanup of an update download in progress for an " +
             "older version of the application on startup (Bug 485624)");
 
-  let patches = getLocalPatchString(null, null, null, null, null, null,
-                                    STATE_DOWNLOADING);
-  let updates = getLocalUpdateString(patches, null, null, "version 0.9", "0.9");
+  let patchProps = {state: STATE_DOWNLOADING};
+  let patches = getLocalPatchString(patchProps);
+  let updateProps = {appVersion: "0.9"};
+  let updates = getLocalUpdateString(updateProps, patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_DOWNLOADING);
-
-  writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
 
   standardInit();
 
