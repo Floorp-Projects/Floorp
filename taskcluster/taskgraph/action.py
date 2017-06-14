@@ -118,6 +118,7 @@ def load_decisions(s, project, resultsets, filters):
     a list of taskIds from decision tasks.
     """
     project_url = "{}/project/{}/jobs/".format(TREEHERDER_URL, project)
+    decision_url = "{}/jobdetail/".format(TREEHERDER_URL)
     decisions = []
     decision_ids = []
 
@@ -139,7 +140,11 @@ def load_decisions(s, project, resultsets, filters):
         decisions += [t for t in unfiltered if t["job_type_name"] == "Gecko Decision Task"]
 
     for decision in decisions:
-        taskcluster_metadata = s.get(url=project_url + '{}/'.format(decision["id"]).json()["taskcluster_metadata"]
-        decision_ids.append(taskcluster_metadata["task_id"])
+        params = {"job_guid": decision["job_guid"]}
+        details = s.get(url=decision_url, params=params).json()["results"]
+        inspect = [detail["url"] for detail in details if detail["value"] == "Inspect Task"][0]
 
+        # Pull out the taskId from the URL e.g.
+        # oN1NErz_Rf2DZJ1hi7YVfA from tools.taskcluster.net/task-inspector/#oN1NErz_Rf2DZJ1hi7YVfA/
+        decision_ids.append(inspect.partition('#')[-1].rpartition('/')[0])
     return decision_ids
