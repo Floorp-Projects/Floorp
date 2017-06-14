@@ -311,8 +311,7 @@ ScriptLoader::SetModuleFetchFinishedAndResumeWaitingRequests(ModuleLoadRequest* 
   MOZ_ASSERT(!aRequest->IsReadyToRun());
 
   RefPtr<GenericPromise::Private> promise;
-  MOZ_ALWAYS_TRUE(mFetchingModules.Get(aRequest->mURI, getter_AddRefs(promise)));
-  mFetchingModules.Remove(aRequest->mURI);
+  MOZ_ALWAYS_TRUE(mFetchingModules.Remove(aRequest->mURI, getter_AddRefs(promise)));
 
   RefPtr<ModuleScript> ms(aRequest->mModuleScript);
   MOZ_ASSERT(NS_SUCCEEDED(aResult) == (ms != nullptr));
@@ -333,11 +332,16 @@ ScriptLoader::WaitForModuleFetch(ModuleLoadRequest* aRequest)
   MOZ_ASSERT(ModuleMapContainsModule(aRequest));
 
   RefPtr<GenericPromise::Private> promise;
-  if (mFetchingModules.Get(aRequest->mURI, getter_AddRefs(promise))) {
-    if (!promise) {
-      promise = new GenericPromise::Private(__func__);
-      mFetchingModules.Put(aRequest->mURI, promise);
-    }
+  mFetchingModules.LookupRemoveIf(aRequest->mURI,
+    [&promise] (RefPtr<GenericPromise::Private>& aValue) {
+      if (!aValue) {
+        aValue = new GenericPromise::Private(__func__);
+      }
+      promise = aValue;
+      return false; // don't remove the entry
+    });
+
+  if (promise) {
     return promise;
   }
 
