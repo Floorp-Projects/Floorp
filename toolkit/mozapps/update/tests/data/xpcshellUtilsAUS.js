@@ -1838,15 +1838,13 @@ function checkSymlink() {
  * Sets the active update and related information for updater tests.
  */
 function setupActiveUpdate() {
-  let state = IS_SERVICE_TEST ? STATE_PENDING_SVC : STATE_PENDING;
-  let channel = gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_CHANNEL);
-  let patches = getLocalPatchString(null, null, null, null, null, "true",
-                                    state);
-  let updates = getLocalUpdateString(patches, null, null, null, null, null,
-                                     null, null, null, null, "true", channel);
+  let pendingState = IS_SERVICE_TEST ? STATE_PENDING_SVC : STATE_PENDING;
+  let patchProps = {state: pendingState};
+  let patches = getLocalPatchString(patchProps);
+  let updates = getLocalUpdateString({}, patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeVersionFile(DEFAULT_UPDATE_VERSION);
-  writeStatusFile(state);
+  writeStatusFile(pendingState);
   reloadUpdateManagerData();
   Assert.ok(!!gUpdateManager.activeUpdate,
             "the active update should be defined");

@@ -11,17 +11,17 @@ function run_test() {
   debugDump("testing removal of an active update for a channel that is not" +
             "valid due to switching channels (Bug 486275).");
 
-  let patches = getLocalPatchString(null, null, null, null, null, null,
-                                    STATE_DOWNLOADING);
-  let updates = getLocalUpdateString(patches, null, null, "version 1.0", "1.0");
+  let patchProps = {state: STATE_DOWNLOADING};
+  let patches = getLocalPatchString(patchProps);
+  let updateProps = {appVersion: "1.0"};
+  let updates = getLocalUpdateString(updateProps, patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_DOWNLOADING);
 
-  patches = getLocalPatchString(null, null, null, null, null, null,
-                                STATE_FAILED);
-  updates = getLocalUpdateString(patches, null, "Existing", "version 3.0",
-                                 "3.0", "3.0", null, null, null, null,
-                                 getString("patchApplyFailure"));
+  patchProps = {state: STATE_FAILED};
+  patches = getLocalPatchString(patchProps);
+  updateProps = {name: "Existing"};
+  updates = getLocalUpdateString(updateProps, patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), false);
 
   setUpdateChannel("original_channel");

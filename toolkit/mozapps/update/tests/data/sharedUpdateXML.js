@@ -92,6 +92,8 @@ const STATE_FAILED_INVALID_CALLBACK_PATH_ERROR =
 const STATE_FAILED_INVALID_CALLBACK_DIR_ERROR =
   STATE_FAILED + STATE_FAILED_DELIMETER + INVALID_CALLBACK_DIR_ERROR;
 
+const DEFAULT_UPDATE_VERSION = "999999.0";
+
 /**
  * Constructs a string representing a remote update xml file.
  *
@@ -100,41 +102,81 @@ const STATE_FAILED_INVALID_CALLBACK_DIR_ERROR =
  * @return The string representing a remote update xml file.
  */
 function getRemoteUpdatesXMLString(aUpdates) {
-  return "<?xml version=\"1.0\"?>\n" +
-         "<updates>\n" +
-           aUpdates +
-         "</updates>\n";
+  return "<?xml version=\"1.0\"?>" +
+         "<updates>" +
+         aUpdates +
+         "</updates>";
 }
 
 /**
  * Constructs a string representing an update element for a remote update xml
  * file. See getUpdateString for parameter information not provided below.
  *
+ * @param  aUpdateProps
+ *         An object containing non default test values for an nsIUpdate.
+ *         See updateProps names below for possible object names.
  * @param  aPatches
  *         String representing the application update patches.
  * @return The string representing an update element for an update xml file.
  */
-function getRemoteUpdateString(aPatches, aType, aName, aDisplayVersion,
-                               aAppVersion, aBuildID, aDetailsURL, aShowPrompt,
-                               aShowNeverForVersion, aPromptWaitTime,
-                               aBackgroundInterval, aCustom1, aCustom2) {
-  return getUpdateString(aType, aName, aDisplayVersion, aAppVersion,
-                         aBuildID, aDetailsURL, aShowPrompt,
-                         aShowNeverForVersion, aPromptWaitTime,
-                         aBackgroundInterval, aCustom1, aCustom2) + ">\n" +
-              aPatches +
-         "  </update>\n";
+function getRemoteUpdateString(aUpdateProps, aPatches) {
+  const updateProps = {
+    type: "major",
+    name: "App Update Test",
+    displayVersion: null,
+    appVersion: DEFAULT_UPDATE_VERSION,
+    buildID: "20080811053724",
+    detailsURL: URL_HTTP_UPDATE_SJS + "?uiURL=DETAILS",
+    promptWaitTime: null,
+    backgroundInterval: null,
+    custom1: null,
+    custom2: null
+  };
+
+  for (let name in aUpdateProps) {
+    updateProps[name] = aUpdateProps[name];
+  }
+
+  return getUpdateString(updateProps) + ">" +
+         aPatches +
+         "</update>";
 }
 
 /**
  * Constructs a string representing a patch element for a remote update xml
  * file. See getPatchString for parameter information not provided below.
  *
+ * @param  aPatchProps (optional)
+ *         An object containing non default test values for an nsIUpdatePatch.
+ *         See patchProps below for possible object names.
  * @return The string representing a patch element for a remote update xml file.
  */
-function getRemotePatchString(aType, aURL, aHashFunction, aHashValue, aSize) {
-  return getPatchString(aType, aURL, aHashFunction, aHashValue, aSize) +
-         "/>\n";
+function getRemotePatchString(aPatchProps) {
+  const patchProps = {
+    type: "complete",
+    _url: null,
+    get url() {
+      if (this._url) {
+        return this._url;
+      }
+      if (gURLData) {
+        return gURLData + FILE_SIMPLE_MAR;
+      }
+      return null;
+    },
+    set url(val) {
+      this._url = val;
+    },
+    hashFunction: "MD5",
+    hashValue: MD5_HASH_SIMPLE_MAR,
+    size: SIZE_SIMPLE_MAR
+  };
+
+  for (let name in aPatchProps) {
+    patchProps[name] = aPatchProps[name];
+  }
+
+  return getPatchString(patchProps) + "/>";
 }
 
 /**
@@ -149,216 +191,169 @@ function getLocalUpdatesXMLString(aUpdates) {
     return "<updates xmlns=\"http://www.mozilla.org/2005/app-update\"/>";
   }
   return ("<updates xmlns=\"http://www.mozilla.org/2005/app-update\">" +
-            aUpdates +
-          "</updates>").replace(/>\s+\n*</g, "><");
+          aUpdates +
+          "</updates>");
 }
 
 /**
  * Constructs a string representing an update element for a local update xml
  * file. See getUpdateString for parameter information not provided below.
  *
+ * @param  aUpdateProps
+ *         An object containing non default test values for an nsIUpdate.
+ *         See updateProps names below for possible object names.
  * @param  aPatches
  *         String representing the application update patches.
- * @param  aServiceURL (optional)
- *         The update's xml url.
- *         If not specified it will default to 'http://test_service/'.
- * @param  aIsCompleteUpdate (optional)
- *         The string 'true' if this update was a complete update or the string
- *         'false' if this update was a partial update.
- *         If not specified it will default to 'true'.
- * @param  aChannel (optional)
- *         The update channel name.
- *         If not specified it will default to the default preference value of
- *         app.update.channel.
- * @param  aForegroundDownload (optional)
- *         The string 'true' if this update was manually downloaded or the
- *         string 'false' if this update was automatically downloaded.
- *         If not specified it will default to 'true'.
- * @param  aPreviousAppVersion (optional)
- *         The application version prior to applying the update.
- *         If not specified it will not be present.
  * @return The string representing an update element for an update xml file.
  */
-function getLocalUpdateString(aPatches, aType, aName, aDisplayVersion,
-                              aAppVersion, aBuildID, aDetailsURL, aServiceURL,
-                              aInstallDate, aStatusText, aIsCompleteUpdate,
-                              aChannel, aForegroundDownload, aShowPrompt,
-                              aShowNeverForVersion, aPromptWaitTime,
-                              aBackgroundInterval, aPreviousAppVersion,
-                              aCustom1, aCustom2) {
-  let serviceURL = aServiceURL ? aServiceURL : "http://test_service/";
-  let installDate = aInstallDate ? aInstallDate : "1238441400314";
-  let statusText = aStatusText ? aStatusText : "Install Pending";
+function getLocalUpdateString(aUpdateProps, aPatches) {
+  const updateProps = {
+    type: "major",
+    name: "App Update Test",
+    displayVersion: null,
+    _appVersion: null,
+    get appVersion() {
+      if (this._appVersion) {
+        return this._appVersion;
+      }
+      if (Services && Services.appinfo && Services.appinfo.version) {
+        return Services.appinfo.version;
+      }
+      return DEFAULT_UPDATE_VERSION;
+    },
+    set appVersion(val) {
+      this._appVersion = val;
+    },
+    buildID: "20080811053724",
+    detailsURL: URL_HTTP_UPDATE_SJS + "?uiURL=DETAILS",
+    promptWaitTime: null,
+    backgroundInterval: null,
+    custom1: null,
+    custom2: null,
+    serviceURL: "http://test_service/",
+    installDate: "1238441400314",
+    statusText: "Install Pending",
+    isCompleteUpdate: "true",
+    channel: gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_CHANNEL),
+    foregroundDownload: "true",
+    previousAppVersion: null
+  };
+
+  for (let name in aUpdateProps) {
+    updateProps[name] = aUpdateProps[name];
+  }
+
+  let previousAppVersion = updateProps.previousAppVersion ?
+    "previousAppVersion=\"" + updateProps.previousAppVersion + "\" " : "";
+  let serviceURL = "serviceURL=\"" + updateProps.serviceURL + "\" ";
+  let installDate = "installDate=\"" + updateProps.installDate + "\" ";
+  let statusText = updateProps.statusText ?
+    "statusText=\"" + updateProps.statusText + "\" " : "";
   let isCompleteUpdate =
-    typeof aIsCompleteUpdate == "string" ? aIsCompleteUpdate : "true";
-  let channel = aChannel ? aChannel
-                         : gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_CHANNEL);
-  let foregroundDownload =
-    typeof aForegroundDownload == "string" ? aForegroundDownload : "true";
-  let previousAppVersion = aPreviousAppVersion ? "previousAppVersion=\"" +
-                                                 aPreviousAppVersion + "\" "
-                                               : "";
-  return getUpdateString(aType, aName, aDisplayVersion, aAppVersion, aBuildID,
-                         aDetailsURL, aShowPrompt, aShowNeverForVersion,
-                         aPromptWaitTime, aBackgroundInterval, aCustom1, aCustom2) +
-                   " " +
-                   previousAppVersion +
-                   "serviceURL=\"" + serviceURL + "\" " +
-                   "installDate=\"" + installDate + "\" " +
-                   "statusText=\"" + statusText + "\" " +
-                   "isCompleteUpdate=\"" + isCompleteUpdate + "\" " +
-                   "channel=\"" + channel + "\" " +
-                   "foregroundDownload=\"" + foregroundDownload + "\">" +
-              aPatches +
-         "  </update>";
+    "isCompleteUpdate=\"" + updateProps.isCompleteUpdate + "\" ";
+  let channel = "channel=\"" + updateProps.channel + "\" ";
+  let foregroundDownload = updateProps.foregroundDownload ?
+    "foregroundDownload=\"" + updateProps.foregroundDownload + "\">" : ">";
+
+  return getUpdateString(updateProps) +
+         " " +
+         previousAppVersion +
+         serviceURL +
+         installDate +
+         statusText +
+         isCompleteUpdate +
+         channel +
+         foregroundDownload +
+         aPatches +
+         "</update>";
 }
 
 /**
  * Constructs a string representing a patch element for a local update xml file.
  * See getPatchString for parameter information not provided below.
  *
- * @param  aSelected (optional)
- *         Whether this patch is selected represented or not. The string 'true'
- *         denotes selected and the string 'false' denotes not selected.
- *         If not specified it will default to the string 'true'.
- * @param  aState (optional)
- *         The patch's state.
- *         If not specified it will default to STATE_SUCCEEDED.
+ * @param  aPatchProps (optional)
+ *         An object containing non default test values for an nsIUpdatePatch.
+ *         See patchProps below for possible object names.
  * @return The string representing a patch element for a local update xml file.
  */
-function getLocalPatchString(aType, aURL, aHashFunction, aHashValue, aSize,
-                             aSelected, aState) {
-  let selected = typeof aSelected == "string" ? aSelected : "true";
-  let state = aState ? aState : STATE_SUCCEEDED;
-  return getPatchString(aType, aURL, aHashFunction, aHashValue, aSize) + " " +
-         "selected=\"" + selected + "\" " +
-         "state=\"" + state + "\"/>\n";
+function getLocalPatchString(aPatchProps) {
+  const patchProps = {
+    type: "complete",
+    url: gURLData + FILE_SIMPLE_MAR,
+    hashFunction: "MD5",
+    hashValue: MD5_HASH_SIMPLE_MAR,
+    size: SIZE_SIMPLE_MAR,
+    selected: "true",
+    state: STATE_SUCCEEDED
+  };
+
+  for (let name in aPatchProps) {
+    patchProps[name] = aPatchProps[name];
+  }
+
+  let selected = "selected=\"" + patchProps.selected + "\" ";
+  let state = "state=\"" + patchProps.state + "\"/>";
+  return getPatchString(patchProps) + " " +
+         selected +
+         state;
 }
 
 /**
  * Constructs a string representing an update element for a remote update xml
  * file.
  *
- * @param  aType (optional)
- *         The update's type which should be major or minor. If not specified it
- *         will default to 'major'.
- * @param  aName (optional)
- *         The update's name.
- *         If not specified it will default to 'App Update Test'.
- * @param  aDisplayVersion (optional)
- *         The update's display version.
- *         If not specified it will default to 'version #' where # is the value
- *         of DEFAULT_UPDATE_VERSION.
- * @param  aAppVersion (optional)
- *         The update's application version.
- *         If not specified it will default to the value of
- *         DEFAULT_UPDATE_VERSION.
- * @param  aBuildID (optional)
- *         The update's build id.
- *         If not specified it will default to '20080811053724'.
- * @param  aDetailsURL (optional)
- *         The update's details url.
- *         If not specified it will default to
- *         URL_HTTP_UPDATE_SJS + "?uiURL=DETAILS" due to bug 470244.
- * @param  aShowPrompt (optional)
- *         Whether to show the prompt for the update when auto update is
- *         enabled.
- *         If not specified it will not be present and the update service will
- *         default to false.
- * @param  aShowNeverForVersion (optional)
- *         Whether to show the 'No Thanks' button in the update prompt.
- *         If not specified it will not be present and the update service will
- *         default to false.
- * @param  aPromptWaitTime (optional)
- *         Override for the app.update.promptWaitTime preference.
- * @param  aBackgroundInterval (optional)
- *         Override for the app.update.download.backgroundInterval preference.
- * @param  aCustom1 (optional)
- *         A custom attribute name and attribute value to add to the xml.
- *         Example: custom1_attribute="custom1 value"
- *         If not specified it will not be present.
- * @param  aCustom2 (optional)
- *         A custom attribute name and attribute value to add to the xml.
- *         Example: custom2_attribute="custom2 value"
- *         If not specified it will not be present.
+ * @param  aUpdateProps (optional)
+ *         An object containing non default test values for an nsIUpdate.
+ *         See the aUpdateProps property names below for possible object names.
  * @return The string representing an update element for an update xml file.
  */
-function getUpdateString(aType, aName, aDisplayVersion, aAppVersion, aBuildID,
-                         aDetailsURL, aShowPrompt, aShowNeverForVersion,
-                         aPromptWaitTime, aBackgroundInterval, aCustom1,
-                         aCustom2) {
-  let type = aType ? aType : "major";
-  let name = aName ? aName : "App Update Test";
-  let displayVersion = aDisplayVersion ? "displayVersion=\"" +
-                                         aDisplayVersion + "\" "
-                                       : "";
-  let appVersion = "appVersion=\"" +
-                   (aAppVersion ? aAppVersion : DEFAULT_UPDATE_VERSION) +
-                   "\" ";
-  let buildID = aBuildID ? aBuildID : "20080811053724";
-  // XXXrstrong - not specifying a detailsURL will cause a leak due to bug 470244
-//   let detailsURL = aDetailsURL ? "detailsURL=\"" + aDetailsURL + "\" " : "";
-  let detailsURL = "detailsURL=\"" +
-                   (aDetailsURL ? aDetailsURL
-                                : URL_HTTP_UPDATE_SJS + "?uiURL=DETAILS") + "\" ";
-  let showPrompt = aShowPrompt ? "showPrompt=\"" + aShowPrompt + "\" " : "";
-  let showNeverForVersion = aShowNeverForVersion ? "showNeverForVersion=\"" +
-                                                   aShowNeverForVersion + "\" "
-                                                 : "";
-  let promptWaitTime = aPromptWaitTime ? "promptWaitTime=\"" + aPromptWaitTime +
-                                         "\" "
-                                       : "";
-  let backgroundInterval = aBackgroundInterval ? "backgroundInterval=\"" +
-                                                 aBackgroundInterval + "\" "
-                                               : "";
-  let custom1 = aCustom1 ? aCustom1 + " " : "";
-  let custom2 = aCustom2 ? aCustom2 + " " : "";
-  return "  <update type=\"" + type + "\" " +
-                   "name=\"" + name + "\" " +
-                    displayVersion +
-                    appVersion +
-                    detailsURL +
-                    showPrompt +
-                    showNeverForVersion +
-                    promptWaitTime +
-                    backgroundInterval +
-                    custom1 +
-                    custom2 +
-                   "buildID=\"" + buildID + "\"";
+function getUpdateString(aUpdateProps) {
+  let type = "type=\"" + aUpdateProps.type + "\" ";
+  let name = "name=\"" + aUpdateProps.name + "\" ";
+  let displayVersion = aUpdateProps.displayVersion ?
+    "displayVersion=\"" + aUpdateProps.displayVersion + "\" " : "";
+  let appVersion = "appVersion=\"" + aUpdateProps.appVersion + "\" ";
+  // Not specifying a detailsURL will cause a leak due to bug 470244
+  let detailsURL = "detailsURL=\"" + aUpdateProps.detailsURL + "\" ";
+  let promptWaitTime = aUpdateProps.promptWaitTime ?
+    "promptWaitTime=\"" + aUpdateProps.promptWaitTime + "\" " : "";
+  let backgroundInterval = aUpdateProps.backgroundInterval ?
+    "backgroundInterval=\"" + aUpdateProps.backgroundInterval + "\" " : "";
+  let custom1 = aUpdateProps.custom1 ? aUpdateProps.custom1 + " " : "";
+  let custom2 = aUpdateProps.custom2 ? aUpdateProps.custom2 + " " : "";
+  let buildID = "buildID=\"" + aUpdateProps.buildID + "\"";
+
+  return "  <update " + type +
+                        name +
+                        displayVersion +
+                        appVersion +
+                        detailsURL +
+                        promptWaitTime +
+                        backgroundInterval +
+                        custom1 +
+                        custom2 +
+                        buildID;
 }
 
 /**
  * Constructs a string representing a patch element for an update xml file.
  *
- * @param  aType (optional)
- *         The patch's type which should be complete or partial.
- *         If not specified it will default to 'complete'.
- * @param  aURL (optional)
- *         The patch's url to the mar file.
- *         If not specified it will default to the value of:
- *         gURLData + FILE_SIMPLE_MAR
- * @param  aHashFunction (optional)
- *         The patch's hash function used to verify the mar file.
- *         If not specified it will default to 'MD5'.
- * @param  aHashValue (optional)
- *         The patch's hash value used to verify the mar file.
- *         If not specified it will default to the value of MD5_HASH_SIMPLE_MAR
- *         which is the MD5 hash value for the file specified by FILE_SIMPLE_MAR.
- * @param  aSize (optional)
- *         The patch's file size for the mar file.
- *         If not specified it will default to the file size for FILE_SIMPLE_MAR
- *         specified by SIZE_SIMPLE_MAR.
+ * @param  aPatchProps (optional)
+ *         An object containing non default test values for an nsIUpdatePatch.
+ *         See the patchProps property names below for possible object names.
  * @return The string representing a patch element for an update xml file.
  */
-function getPatchString(aType, aURL, aHashFunction, aHashValue, aSize) {
-  let type = aType ? aType : "complete";
-  let url = aURL ? aURL : gURLData + FILE_SIMPLE_MAR;
-  let hashFunction = aHashFunction ? aHashFunction : "MD5";
-  let hashValue = aHashValue ? aHashValue : MD5_HASH_SIMPLE_MAR;
-  let size = aSize ? aSize : SIZE_SIMPLE_MAR;
-  return "    <patch type=\"" + type + "\" " +
-                     "URL=\"" + url + "\" " +
-                     "hashFunction=\"" + hashFunction + "\" " +
-                     "hashValue=\"" + hashValue + "\" " +
-                     "size=\"" + size + "\"";
+function getPatchString(aPatchProps) {
+  let type = "type=\"" + aPatchProps.type + "\" ";
+  let url = "URL=\"" + aPatchProps.url + "\" ";
+  let hashFunction = "hashFunction=\"" + aPatchProps.hashFunction + "\" ";
+  let hashValue = "hashValue=\"" + aPatchProps.hashValue + "\" ";
+  let size = "size=\"" + aPatchProps.size + "\"";
+  return "<patch " +
+         type +
+         url +
+         hashFunction +
+         hashValue +
+         size;
 }

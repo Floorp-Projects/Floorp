@@ -47,12 +47,10 @@ function run_test() {
 
   standardInit();
 
-  writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
-  let url = URL_HOST + "/" + FILE_COMPLETE_MAR;
-  let patches = getLocalPatchString("complete", url, null, null, null, null,
-                                    STATE_FAILED);
-  let updates = getLocalUpdateString(patches, null, null, "version 1.0", "1.0",
-                                     null, null, null, null, url);
+  let patchProps = {url: URL_HOST + "/" + FILE_COMPLETE_MAR,
+                    state: STATE_FAILED};
+  let patches = getLocalPatchString(patchProps);
+  let updates = getLocalUpdateString({}, patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_FAILED);
 
