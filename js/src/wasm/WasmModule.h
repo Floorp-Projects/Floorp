@@ -262,7 +262,7 @@ class Module : public JS::WasmModule
 
     // Generated code analysis support:
 
-    bool extractCode(JSContext* cx, MutableHandleValue vp) const;
+    bool extractCode(JSContext* cx, Tier tier, MutableHandleValue vp) const;
 };
 
 typedef RefPtr<Module> SharedModule;
