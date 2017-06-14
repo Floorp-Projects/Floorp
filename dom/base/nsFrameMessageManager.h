@@ -28,6 +28,7 @@
 #include "mozilla/Attributes.h"
 #include "js/RootingAPI.h"
 #include "nsTObserverArray.h"
+#include "mozilla/TypedEnumBits.h"
 #include "mozilla/dom/SameProcessMessageQueue.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/jsipc/CpowHolder.h"
@@ -39,6 +40,8 @@ namespace dom {
 
 class nsIContentParent;
 class nsIContentChild;
+class ChildProcessMessageManager;
+class ChromeMessageSender;
 class ClonedMessageData;
 class MessageManagerReporter;
 
@@ -48,14 +51,15 @@ namespace ipc {
 // of 1 ms actually captures from 500us and above.
 static const uint32_t kMinTelemetrySyncMessageManagerLatencyMs = 1;
 
-enum MessageManagerFlags {
-  MM_CHILD = 0,
+enum class MessageManagerFlags {
+  MM_NONE = 0,
   MM_CHROME = 1,
   MM_GLOBAL = 2,
   MM_PROCESSMANAGER = 4,
   MM_BROADCASTER = 8,
   MM_OWNSCALLBACK = 16
 };
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(MessageManagerFlags);
 
 class MessageManagerCallback
 {
@@ -150,22 +154,27 @@ private:
   JS::Rooted<JSObject*> mObj;
 };
 
-class nsFrameMessageManager final : public nsIContentFrameMessageManager,
-                                    public nsIMessageBroadcaster,
-                                    public nsIFrameScriptLoader,
-                                    public nsIGlobalProcessScriptLoader
+class nsFrameMessageManager : public nsIContentFrameMessageManager,
+                              public nsIMessageBroadcaster,
+                              public nsIFrameScriptLoader,
+                              public nsIGlobalProcessScriptLoader
 {
   friend class mozilla::dom::MessageManagerReporter;
   typedef mozilla::dom::ipc::StructuredCloneData StructuredCloneData;
-public:
+
+protected:
+  typedef mozilla::dom::ipc::MessageManagerFlags MessageManagerFlags;
+
   nsFrameMessageManager(mozilla::dom::ipc::MessageManagerCallback* aCallback,
-                        nsFrameMessageManager* aParentManager,
-                        /* mozilla::dom::ipc::MessageManagerFlags */ uint32_t aFlags);
+                        MessageManagerFlags aFlags);
 
-private:
-  ~nsFrameMessageManager();
+  virtual ~nsFrameMessageManager();
 
 public:
+  explicit nsFrameMessageManager(mozilla::dom::ipc::MessageManagerCallback* aCallback)
+    : nsFrameMessageManager(aCallback, MessageManagerFlags::MM_NONE)
+  {}
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsFrameMessageManager,
                                                          nsIContentFrameMessageManager)
@@ -179,7 +188,7 @@ public:
   NS_DECL_NSIPROCESSSCRIPTLOADER
   NS_DECL_NSIGLOBALPROCESSSCRIPTLOADER
 
-  static nsFrameMessageManager*
+  static mozilla::dom::ChromeMessageSender*
   NewProcessMessageManager(bool aIsRemote);
 
   nsresult ReceiveMessage(nsISupports* aTarget, nsIFrameLoader* aTargetFrameLoader,
@@ -196,7 +205,6 @@ public:
   void Disconnect(bool aRemoveFromParent = true);
   void Close();
 
-  void InitWithCallback(mozilla::dom::ipc::MessageManagerCallback* aCallback);
   void SetCallback(mozilla::dom::ipc::MessageManagerCallback* aCallback);
 
   mozilla::dom::ipc::MessageManagerCallback* GetCallback()
@@ -217,14 +225,6 @@ public:
                                         StructuredCloneData& aData,
                                         JS::Handle<JSObject*> aCpows,
                                         nsIPrincipal* aPrincipal);
-  void RemoveFromParent();
-  nsFrameMessageManager* GetParentManager() { return mParentManager; }
-  void SetParentManager(nsFrameMessageManager* aParent)
-  {
-    NS_ASSERTION(!mParentManager, "We have parent manager already!");
-    NS_ASSERTION(mChrome, "Should not set parent manager!");
-    mParentManager = aParent;
-  }
   bool IsGlobal() { return mGlobal; }
   bool IsBroadcaster() { return mIsBroadcaster; }
 
@@ -232,11 +232,11 @@ public:
   {
     return sParentProcessManager;
   }
-  static nsFrameMessageManager* GetChildProcessManager()
+  static mozilla::dom::ChildProcessMessageManager* GetChildProcessManager()
   {
     return sChildProcessManager;
   }
-  static void SetChildProcessManager(nsFrameMessageManager* aManager)
+  static void SetChildProcessManager(mozilla::dom::ChildProcessMessageManager* aManager)
   {
     sChildProcessManager = aManager;
   }
@@ -246,6 +246,14 @@ public:
   void LoadPendingScripts();
 
 private:
+  virtual nsFrameMessageManager* GetParentManager()
+  {
+    return nullptr;
+  }
+  virtual void ClearParentManager(bool aRemove)
+  {
+  }
+
   nsresult SendMessage(const nsAString& aMessageName,
                        JS::Handle<JS::Value> aJSON,
                        JS::Handle<JS::Value> aObjects,
@@ -284,7 +292,6 @@ protected:
   bool mDisconnected;
   mozilla::dom::ipc::MessageManagerCallback* mCallback;
   nsAutoPtr<mozilla::dom::ipc::MessageManagerCallback> mOwnedCallback;
-  RefPtr<nsFrameMessageManager> mParentManager;
   nsTArray<nsString> mPendingScripts;
   nsTArray<bool> mPendingScriptsGlobalStates;
   JS::Heap<JS::Value> mInitialProcessData;
@@ -296,7 +303,7 @@ public:
   static nsFrameMessageManager* sSameProcessParentManager;
   static nsTArray<nsCOMPtr<nsIRunnable> >* sPendingSameProcessAsyncMessages;
 private:
-  static nsFrameMessageManager* sChildProcessManager;
+  static mozilla::dom::ChildProcessMessageManager* sChildProcessManager;
   enum ProcessCheckerType {
     PROCESS_CHECKER_PERMISSION,
     PROCESS_CHECKER_MANIFEST_URL,
