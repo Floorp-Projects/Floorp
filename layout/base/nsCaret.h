@@ -232,6 +232,12 @@ protected:
      */
     int32_t               mBlinkCount;
     /**
+     * mBlinkRate is the rate of the caret blinking the last time we read it.
+     * It is used as a way to optimize whether we need to reset the blinking
+     * timer.
+     */
+    uint32_t              mBlinkRate;
+    /**
      * mHideCount is not 0, it means that somebody doesn't want the caret
      * to be visible.  See AddForceHide() and RemoveForceHide().
      */
