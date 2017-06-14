@@ -106,6 +106,12 @@ JS_IsDeadWrapper(JSObject* obj);
 extern JS_FRIEND_API(JSObject*)
 JS_NewDeadWrapper(JSContext* cx, JSObject* origObject = nullptr);
 
+/**
+ * Determine whether the given object is a ScriptSourceObject.
+ */
+extern JS_FRIEND_API(bool)
+JS_IsScriptSourceObject(JSObject* obj);
+
 /*
  * Used by the cycle collector to trace through a shape or object group and
  * all cycle-participating data it reaches, using bounded stack space.
