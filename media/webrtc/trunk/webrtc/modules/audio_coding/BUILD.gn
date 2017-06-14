@@ -752,10 +752,20 @@ source_set("webrtc_opus") {
   }
 }
 
+config("neteq_config") {
+  include_dirs = [
+    # Need Opus header files for the audio classifier.
+    "//third_party/opus/src/celt",
+    "//third_party/opus/src/src",
+  ]
+}
+
 source_set("neteq") {
   sources = [
     "neteq/accelerate.cc",
     "neteq/accelerate.h",
+    "neteq/audio_classifier.cc",
+    "neteq/audio_classifier.h",
     "neteq/audio_decoder_impl.cc",
     "neteq/audio_decoder_impl.h",
     "neteq/audio_multi_vector.cc",

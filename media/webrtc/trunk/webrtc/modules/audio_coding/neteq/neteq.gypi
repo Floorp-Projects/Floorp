@@ -96,6 +96,8 @@
         'include/neteq.h',
         'accelerate.cc',
         'accelerate.h',
+        'audio_classifier.cc',
+        'audio_classifier.h',
         'audio_decoder_impl.cc',
         'audio_decoder_impl.h',
         'audio_multi_vector.cc',

@@ -157,6 +157,7 @@ if CONFIG['OS_TARGET'] in ['Darwin', 'Linux', 'WINNT']:
     # Requires external files
     #    '../webrtc/modules/audio_coding/codecs/isac/main/source/isac_unittest.cc',
     # Requires external files
+    #    '../webrtc/modules/audio_coding/neteq/audio_classifier_unittest.cc',
         '../webrtc/modules/audio_coding/neteq/audio_multi_vector_unittest.cc',
         '../webrtc/modules/audio_coding/neteq/audio_vector_unittest.cc',
         '../webrtc/modules/audio_coding/neteq/background_noise_unittest.cc',
