@@ -2195,15 +2195,19 @@ Console::IncreaseCounter(JSContext* aCx, const Sequence<JS::Value>& aArguments,
 
   aCountLabel = string;
 
-  uint32_t count = 0;
-  if (!mCounterRegistry.Get(aCountLabel, &count) &&
-      mCounterRegistry.Count() >= MAX_PAGE_COUNTERS) {
-    return MAX_PAGE_COUNTERS;
+  const bool maxCountersReached = mCounterRegistry.Count() >= MAX_PAGE_COUNTERS;
+  auto entry = mCounterRegistry.LookupForAdd(aCountLabel);
+  if (entry) {
+    ++entry.Data();
+  } else {
+    entry.OrInsert([](){ return 1; });
+    if (maxCountersReached) {
+      // oops, we speculatively added an entry even though we shouldn't
+      mCounterRegistry.Remove(aCountLabel);
+      return MAX_PAGE_COUNTERS;
+    }
   }
-
-  ++count;
-  mCounterRegistry.Put(aCountLabel, count);
-  return count;
+  return entry.Data();
 }
 
 JS::Value
