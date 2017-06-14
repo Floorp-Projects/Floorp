@@ -70,6 +70,7 @@ public class BrowsingNotificationService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         switch (intent.getAction()) {
             case ACTION_START:
+                foreground = true;
                 startBrowsingSession();
                 break;
 
