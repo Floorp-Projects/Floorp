@@ -324,6 +324,13 @@ public:
     return mStyles.Count() == 2;
   }
 
+  // Returns the counter style object for the given name from the style
+  // table if it is already built, and nullptr otherwise.
+  CounterStyle* GetCounterStyle(nsIAtom* aName) const {
+    return mStyles.Get(aName);
+  }
+  // Same as GetCounterStyle but try to build the counter style object
+  // rather than returning nullptr if that hasn't been built.
   CounterStyle* BuildCounterStyle(nsIAtom* aName);
 
   static CounterStyle* GetBuiltinStyle(int32_t aStyle);
