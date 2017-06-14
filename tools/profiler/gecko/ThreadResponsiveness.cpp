@@ -8,10 +8,10 @@
 #include "nsComponentManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsITimer.h"
-#include "mozilla/Monitor.h"
+#include "mozilla/Mutex.h"
 
-using mozilla::Monitor;
-using mozilla::MonitorAutoLock;
+using mozilla::Mutex;
+using mozilla::MutexAutoLock;
 using mozilla::TimeStamp;
 
 class CheckResponsivenessTask : public mozilla::Runnable,
@@ -19,7 +19,7 @@ class CheckResponsivenessTask : public mozilla::Runnable,
 public:
   CheckResponsivenessTask()
     : mLastTracerTime(TimeStamp::Now())
-    , mMonitor("CheckResponsivenessTask")
+    , mMutex("CheckResponsivenessTask")
     , mTimer(nullptr)
     , mHasEverBeenSuccessfullyDispatched(false)
     , mStop(false)
@@ -53,7 +53,7 @@ public:
   // Can only run on the main thread.
   NS_IMETHOD Run() override
   {
-    MonitorAutoLock mon(mMonitor);
+    MutexAutoLock mon(mMutex);
     if (mStop)
       return NS_OK;
 
@@ -78,7 +78,7 @@ public:
   }
 
   void Terminate() {
-    MonitorAutoLock mon(mMonitor);
+    MutexAutoLock mon(mMutex);
     mStop = true;
   }
 
@@ -90,7 +90,7 @@ public:
 
 private:
   TimeStamp mLastTracerTime;
-  Monitor mMonitor;
+  Mutex mMutex;
   nsCOMPtr<nsITimer> mTimer;
   bool mHasEverBeenSuccessfullyDispatched; // only accessed on the "update" thread
   bool mStop;
