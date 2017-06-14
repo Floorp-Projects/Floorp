@@ -977,4 +977,21 @@ interface nsIAccessibleRole : nsISupports
    * SUMMARY role.
    */
   const unsigned long ROLE_SUMMARY = 168;
+
+  /**
+   * An ARIA landmark. See related NAVIGATION role.
+   */
+  const unsigned long ROLE_LANDMARK = 169;
+
+  /**
+   * A specific type of ARIA landmark. The ability to distinguish navigation
+   * landmarks from other types of landmarks is needed because macOS has a
+   * specific AXSubrole and AXRoleDescription for navigation landmarks.
+   */
+  const unsigned long ROLE_NAVIGATION = 170;
+
+  /**
+   * An object that contains the text of a footnote.
+   */
+  const unsigned long ROLE_FOOTNOTE = 171;
 };

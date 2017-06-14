@@ -223,6 +223,11 @@ extern "C" {
  * @Since: ATK-2.16.
  *@ATK_ROLE_MATH_ROOT: An object that represents a mathematical expression
  * displayed with a radical. @Since: ATK-2.16.
+ *@ATK_ROLE_SUBSCRIPT: An object that contains text that is displayed as a
+ * subscript. @Since: ATK-2.16.
+ *@ATK_ROLE_SUPERSCRIPT: An object that contains text that is displayed as a
+ * superscript. @Since: ATK-2.16.
+ *@ATK_ROLE_FOOTNOTE: An object that contains the text of a footnote. @Since: ATK-2.26.
  *@ATK_ROLE_LAST_DEFINED: not a valid role, used for finding end of the enumeration
  *
  * Describes the role of an object
@@ -353,6 +358,9 @@ typedef enum
   ATK_ROLE_STATIC,
   ATK_ROLE_MATH_FRACTION,
   ATK_ROLE_MATH_ROOT,
+  ATK_ROLE_SUBSCRIPT,
+  ATK_ROLE_SUPERSCRIPT,
+  ATK_ROLE_FOOTNOTE,
   ATK_ROLE_LAST_DEFINED
 } AtkRole;
 

@@ -982,7 +982,25 @@ enum Role {
    */
   SUMMARY = 168,
 
-  LAST_ROLE = SUMMARY
+  /**
+   * An ARIA landmark. See related NAVIGATION role.
+   */
+  LANDMARK = 169,
+
+  /**
+   * A specific type of ARIA landmark. The ability to distinguish navigation
+   * landmarks from other types of landmarks is, for example, needed on macOS
+   * where specific AXSubrole and AXRoleDescription for navigation landmarks
+   * are used.
+   */
+  NAVIGATION = 170,
+
+  /**
+   * An object that contains the text of a footnote.
+   */
+  FOOTNOTE = 171,
+
+  LAST_ROLE = FOOTNOTE
 };
 
 } // namespace role

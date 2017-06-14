@@ -234,16 +234,21 @@ define(function (require, exports, module) {
         .map((tab) => typeof tab === "function" ? tab() : tab)
         .filter((tab) => tab)
         .map((tab, index) => {
-          let id = tab.props.id;
+          let {
+            id,
+            className: tabClassName,
+            title,
+            badge,
+            showBadge,
+          } = tab.props;
+
           let ref = "tab-menu-" + index;
-          let title = tab.props.title;
-          let tabClassName = tab.props.className;
           let isTabSelected = this.state.tabActive === index;
 
           let className = [
             "tabs-menu-item",
             tabClassName,
-            isTabSelected ? "is-active" : ""
+            isTabSelected ? "is-active" : "",
           ].join(" ");
 
           // Set tabindex to -1 (except the selected tab) so, it's focusable,
@@ -266,7 +271,11 @@ define(function (require, exports, module) {
                 role: "tab",
                 onClick: this.onClickTab.bind(this, index),
               },
-                title
+                title,
+                badge && !isTabSelected && showBadge() ?
+                  DOM.span({ className: "tab-badge" }, badge)
+                  :
+                  null
               )
             )
           );

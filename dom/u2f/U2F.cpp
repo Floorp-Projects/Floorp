@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "hasht.h"
+#include "mozilla/AbstractThread.h"
 #include "mozilla/dom/CallbackFunction.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/CryptoBuffer.h"
