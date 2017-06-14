@@ -19,8 +19,7 @@ nsBaseContentStream::DispatchCallback(bool async)
 
   nsCOMPtr<nsIInputStreamCallback> callback;
   if (async) {
-      callback = NS_NewInputStreamReadyEvent("nsBaseContentStream::DispatchCallback",
-                                             mCallback, mCallbackTarget);
+    callback = NS_NewInputStreamReadyEvent(mCallback, mCallbackTarget);
     mCallback = nullptr;
   } else {
     callback.swap(mCallback);
