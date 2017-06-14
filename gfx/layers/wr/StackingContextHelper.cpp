@@ -90,13 +90,5 @@ StackingContextHelper::ToRelativeWrRectRounded(const LayoutDeviceRect& aRect) co
   return wr::ToWrRect(RoundedToInt(ViewAs<LayerPixel>(aRect, PixelCastJustification::WebRenderHasUnitResolution) - mOrigin));
 }
 
-gfx::Matrix4x4
-StackingContextHelper::TransformToRoot() const
-{
-  gfx::Matrix4x4 inv = mTransform.Inverse();
-  inv.PostTranslate(-mOrigin.x, -mOrigin.y, 0);
-  return inv;
-}
-
 } // namespace layers
 } // namespace mozilla
