@@ -84,7 +84,7 @@ function* tests() {
     yield countEntries("name-A", "value-A", checkZero);
 
   } catch (e) {
-    throw "FAILED in test #" + testnum + " -- " + e;
+    throw new Error(`FAILED in test #${testnum} -- ${e}`);
   }
 
   do_test_finished();
