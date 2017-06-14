@@ -305,8 +305,17 @@ NativeObject::getChildProperty(JSContext* cx,
     } else {
         if (child.hasMissingSlot()) {
             uint32_t slot;
-            if (!allocSlot(cx, obj, &slot))
-                return nullptr;
+            if (obj->inDictionaryMode()) {
+                if (!allocDictionarySlot(cx, obj, &slot))
+                    return nullptr;
+            } else {
+                slot = obj->slotSpan();
+                MOZ_ASSERT(slot >= JSSLOT_FREE(obj->getClass()));
+                // Objects with many properties are converted to dictionary
+                // mode, so we can't overflow SHAPE_MAXIMUM_SLOT here.
+                MOZ_ASSERT(slot < JSSLOT_FREE(obj->getClass()) + PropertyTree::MAX_HEIGHT);
+                MOZ_ASSERT(slot < SHAPE_MAXIMUM_SLOT);
+            }
             child.setSlot(slot);
         } else {
             /*
@@ -733,7 +742,7 @@ NativeObject::putProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
          * out of here!
          */
         if (slot == SHAPE_INVALID_SLOT && !(attrs & JSPROP_SHARED)) {
-            if (!allocSlot(cx, obj, &slot))
+            if (!allocDictionarySlot(cx, obj, &slot))
                 return nullptr;
         }
 
