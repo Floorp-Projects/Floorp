@@ -7,7 +7,7 @@ var gContentWindow;
 var hasPocket = Services.prefs.getBoolPref("extensions.pocket.enabled");
 var isPhoton = Services.prefs.getBoolPref("browser.photon.structure.enabled");
 var hasQuit = !isPhoton ||
-              false; // Update this with AppConstants.platform != "macosx" after bug 1368734 lands;
+              AppConstants.platform != "macosx";
 var hasLibrary = isPhoton || false;
 
 requestLongerTimeout(2);
