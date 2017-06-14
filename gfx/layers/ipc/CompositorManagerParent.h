@@ -17,6 +17,7 @@
 namespace mozilla {
 namespace layers {
 
+class CompositorBridgeParent;
 class CompositorThreadHolder;
 
 class CompositorManagerParent final : public PCompositorManagerParent
@@ -26,6 +27,12 @@ class CompositorManagerParent final : public PCompositorManagerParent
 public:
   static already_AddRefed<CompositorManagerParent> CreateSameProcess();
   static void Create(Endpoint<PCompositorManagerParent>&& aEndpoint);
+
+  static already_AddRefed<CompositorBridgeParent>
+  CreateSameProcessWidgetCompositorBridge(CSSToLayoutDeviceScale aScale,
+                                          const CompositorOptions& aOptions,
+                                          bool aUseExternalSurfaceSize,
+                                          const gfx::IntSize& aSurfaceSize);
 
   void ActorDestroy(ActorDestroyReason aReason) override;
 
