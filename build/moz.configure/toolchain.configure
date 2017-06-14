@@ -873,6 +873,20 @@ host_cxx_compiler = compiler('C++', host, c_compiler=host_c_compiler,
 non_msvc_compiler = depends(c_compiler)(lambda info: info.type != 'msvc')
 building_with_gcc = depends(c_compiler)(lambda info: info.type == 'gcc')
 
+@depends(c_compiler)
+def msvs_version(info):
+    # clang-cl emulates the same version scheme as cl. And MSVS_VERSION needs to
+    # be set for GYP on Windows.
+    if info.type in ('clang-cl', 'msvc'):
+        if info.version >= '19.10':
+            return '2017'
+        elif info.version >= '19.00':
+            return '2015'
+
+    return ''
+
+set_config('MSVS_VERSION', msvs_version)
+
 include('compile-checks.configure')
 
 @depends(have_64_bit,

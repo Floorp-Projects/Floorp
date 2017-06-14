@@ -10,6 +10,8 @@ import sys
 import os
 import time
 import types
+import warnings
+
 import mozpack.path as mozpath
 from mozpack.files import FileFinder
 from .sandbox import alphabetical_sorted
@@ -372,7 +374,14 @@ class GypProcessor(object):
             # This isn't actually used anywhere in this generator, but it's needed
             # to override the registry detection of VC++ in gyp.
             os.environ['GYP_MSVS_OVERRIDE_PATH'] = 'fake_path'
-            os.environ['GYP_MSVS_VERSION'] = config.substs['MSVS_VERSION']
+
+            # TODO bug 1371485 upgrade vendored version of GYP to something that
+            # doesn't barf when MSVS_VERSION==2017.
+            msvs_version = config.substs['MSVS_VERSION']
+            if msvs_version == '2017':
+                warnings.warn('MSVS_VERSION being set to 2015 to appease GYP')
+                msvs_version = '2015'
+            os.environ['GYP_MSVS_VERSION'] = msvs_version
 
         params = {
             b'parallel': False,
