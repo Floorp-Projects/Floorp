@@ -21,7 +21,7 @@
 #include "mozilla/Attributes.h"
 
 class nsSVGOuterSVGFrame;
-class nsSVGInnerSVGFrame;
+class nsSVGViewportFrame;
 
 namespace mozilla {
 class AutoPreserveAspectRatioOverride;
@@ -49,7 +49,7 @@ public:
 class SVGViewportElement : public SVGGraphicsElement
 {
   friend class ::nsSVGOuterSVGFrame;
-  friend class ::nsSVGInnerSVGFrame;
+  friend class ::nsSVGViewportFrame;
 
 protected:
 
