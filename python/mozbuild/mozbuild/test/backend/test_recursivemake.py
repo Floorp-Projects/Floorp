@@ -837,7 +837,7 @@ class TestRecursiveMakeBackend(BackendTester):
         root_deps_path = mozpath.join(env.topobjdir, 'root-deps.mk')
         lines = [l.strip() for l in open(root_deps_path, 'rt').readlines()]
 
-        self.assertTrue(any(l == 'recurse_compile: code/host code/target' for l in lines))
+        self.assertTrue(any(l == 'recurse_compile: code/target code/host' for l in lines))
 
     def test_final_target(self):
         """Test that FINAL_TARGET is written to backend.mk correctly."""
