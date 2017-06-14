@@ -50,6 +50,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/ThreadLocal.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Unused.h"
 #include "AccessCheck.h"
