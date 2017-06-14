@@ -126,12 +126,12 @@ using namespace widget;
  *****************************************************************************/
 
 EditorBase::EditorBase()
-  : mPlaceHolderName(nullptr)
+  : mPlaceholderName(nullptr)
   , mSelState(nullptr)
   , mModCount(0)
   , mFlags(0)
   , mUpdateCount(0)
-  , mPlaceHolderBatch(0)
+  , mPlaceholderBatch(0)
   , mAction(EditAction::none)
   , mIMETextOffset(0)
   , mIMETextLength(0)
@@ -680,29 +680,29 @@ EditorBase::GetSelection(SelectionType aSelectionType)
 NS_IMETHODIMP
 EditorBase::DoTransaction(nsITransaction* aTxn)
 {
-  if (mPlaceHolderBatch && !mPlaceHolderTxn) {
-    nsCOMPtr<nsIAbsorbingTransaction> placeholderTransaction =
-      new PlaceholderTransaction(*this, mPlaceHolderName, Move(mSelState));
+  if (mPlaceholderBatch && !mPlaceholderTransactionWeak) {
+    RefPtr<PlaceholderTransaction> placeholderTransaction =
+      new PlaceholderTransaction(*this, mPlaceholderName, Move(mSelState));
 
     // Save off weak reference to placeholder transaction
-    mPlaceHolderTxn = do_GetWeakReference(placeholderTransaction);
+    mPlaceholderTransactionWeak = placeholderTransaction;
 
-    // QI to an nsITransaction since that's what DoTransaction() expects
-    nsCOMPtr<nsITransaction> transaction =
-      do_QueryInterface(placeholderTransaction);
     // We will recurse, but will not hit this case in the nested call
-    DoTransaction(transaction);
+    DoTransaction(placeholderTransaction);
 
     if (mTxnMgr) {
-      nsCOMPtr<nsITransaction> topTxn = mTxnMgr->PeekUndoStack();
-      if (topTxn) {
-        placeholderTransaction = do_QueryInterface(topTxn);
-        if (placeholderTransaction) {
+      nsCOMPtr<nsITransaction> topTransaction = mTxnMgr->PeekUndoStack();
+      nsCOMPtr<nsIAbsorbingTransaction> topAbsorbingTransaction =
+        do_QueryInterface(topTransaction);
+      if (topAbsorbingTransaction) {
+        RefPtr<PlaceholderTransaction> topPlaceholderTransaction =
+          topAbsorbingTransaction->AsPlaceholderTransaction();
+        if (topPlaceholderTransaction) {
           // there is a placeholder transaction on top of the undo stack.  It
           // is either the one we just created, or an earlier one that we are
           // now merging into.  From here on out remember this placeholder
           // instead of the one we just created.
-          mPlaceHolderTxn = do_GetWeakReference(placeholderTransaction);
+          mPlaceholderTransactionWeak = topPlaceholderTransaction;
         }
       }
     }
@@ -916,13 +916,13 @@ EditorBase::EndTransaction()
 NS_IMETHODIMP
 EditorBase::BeginPlaceHolderTransaction(nsIAtom* aName)
 {
-  NS_PRECONDITION(mPlaceHolderBatch >= 0, "negative placeholder batch count!");
-  if (!mPlaceHolderBatch) {
+  MOZ_ASSERT(mPlaceholderBatch >= 0, "negative placeholder batch count!");
+  if (!mPlaceholderBatch) {
     NotifyEditorObservers(eNotifyEditorObserversOfBefore);
     // time to turn on the batch
     BeginUpdateViewBatch();
-    mPlaceHolderTxn = nullptr;
-    mPlaceHolderName = aName;
+    mPlaceholderTransactionWeak = nullptr;
+    mPlaceholderName = aName;
     RefPtr<Selection> selection = GetSelection();
     if (selection) {
       mSelState = MakeUnique<SelectionState>();
@@ -932,12 +932,12 @@ EditorBase::BeginPlaceHolderTransaction(nsIAtom* aName)
       // So if current selection is into IME text node, it might be failed
       // to restore selection by UndoTransaction.
       // So we need update selection by range updater.
-      if (mPlaceHolderName == nsGkAtoms::IMETxnName) {
+      if (mPlaceholderName == nsGkAtoms::IMETxnName) {
         mRangeUpdater.RegisterSelectionState(*mSelState);
       }
     }
   }
-  mPlaceHolderBatch++;
+  mPlaceholderBatch++;
 
   return NS_OK;
 }
@@ -945,8 +945,9 @@ EditorBase::BeginPlaceHolderTransaction(nsIAtom* aName)
 NS_IMETHODIMP
 EditorBase::EndPlaceHolderTransaction()
 {
-  NS_PRECONDITION(mPlaceHolderBatch > 0, "zero or negative placeholder batch count when ending batch!");
-  if (mPlaceHolderBatch == 1) {
+  MOZ_ASSERT(mPlaceholderBatch > 0,
+             "zero or negative placeholder batch count when ending batch!");
+  if (mPlaceholderBatch == 1) {
     RefPtr<Selection> selection = GetSelection();
 
     // By making the assumption that no reflow happens during the calls
@@ -986,21 +987,16 @@ EditorBase::EndPlaceHolderTransaction()
     if (mSelState) {
       // we saved the selection state, but never got to hand it to placeholder
       // (else we ould have nulled out this pointer), so destroy it to prevent leaks.
-      if (mPlaceHolderName == nsGkAtoms::IMETxnName) {
+      if (mPlaceholderName == nsGkAtoms::IMETxnName) {
         mRangeUpdater.DropSelectionState(*mSelState);
       }
       mSelState = nullptr;
     }
     // We might have never made a placeholder if no action took place.
-    if (mPlaceHolderTxn) {
-      nsCOMPtr<nsIAbsorbingTransaction> plcTxn = do_QueryReferent(mPlaceHolderTxn);
-      if (plcTxn) {
-        plcTxn->EndPlaceHolderBatch();
-      } else {
-        // in the future we will check to make sure undo is off here,
-        // since that is the only known case where the placeholdertxn would disappear on us.
-        // For now just removing the assert.
-      }
+    if (mPlaceholderTransactionWeak) {
+      RefPtr<PlaceholderTransaction> placeholderTransaction =
+        mPlaceholderTransactionWeak.get();
+      placeholderTransaction->EndPlaceHolderBatch();
       // notify editor observers of action but if composing, it's done by
       // compositionchange event handler.
       if (!mComposition) {
@@ -1010,7 +1006,7 @@ EditorBase::EndPlaceHolderTransaction()
       NotifyEditorObservers(eNotifyEditorObserversOfCancel);
     }
   }
-  mPlaceHolderBatch--;
+  mPlaceholderBatch--;
 
   return NS_OK;
 }
