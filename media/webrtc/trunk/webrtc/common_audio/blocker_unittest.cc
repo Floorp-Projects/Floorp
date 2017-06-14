@@ -8,10 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
 #include "webrtc/common_audio/blocker.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/arraysize.h"
+#include "webrtc/test/gtest.h"
 
 namespace {
 
@@ -307,7 +309,7 @@ TEST_F(BlockerTest, InitialDelaysAreMinimum) {
   CopyBlockerCallback callback;
 
   for (size_t i = 0; i < arraysize(kChunkSize); ++i) {
-    rtc::scoped_ptr<float[]> window(new float[kBlockSize[i]]);
+    std::unique_ptr<float[]> window(new float[kBlockSize[i]]);
     for (size_t j = 0; j < kBlockSize[i]; ++j) {
       window[j] = 1.f;
     }

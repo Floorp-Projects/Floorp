@@ -120,7 +120,6 @@ nsresult nsScanner::SetDocumentCharset(const nsACString& aCharset , int32_t aSou
   mCharset.Assign(charsetName);
 
   mUnicodeDecoder = EncodingUtils::DecoderForEncoding(mCharset);
-  mUnicodeDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Signal);
 
   return NS_OK;
 }
@@ -225,61 +224,39 @@ nsresult nsScanner::Append(const char* aBuffer, uint32_t aLen)
 {
   nsresult res = NS_OK;
   if (mUnicodeDecoder) {
-    int32_t unicharBufLen = 0;
-
-    nsresult rv = mUnicodeDecoder->GetMaxLength(aBuffer, aLen, &unicharBufLen);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    CheckedInt<size_t> needed = mUnicodeDecoder->MaxUTF16BufferLength(aLen);
+    if (!needed.isValid()) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    nsScannerString::Buffer* buffer = nsScannerString::AllocBuffer(unicharBufLen + 1);
+    CheckedInt<uint32_t> allocLen(1); // null terminator due to legacy sadness
+    allocLen += needed.value();
+    if (!allocLen.isValid()) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    nsScannerString::Buffer* buffer =
+      nsScannerString::AllocBuffer(allocLen.value());
     NS_ENSURE_TRUE(buffer,NS_ERROR_OUT_OF_MEMORY);
     char16_t *unichars = buffer->DataStart();
 
-    int32_t totalChars = 0;
-    int32_t unicharLength = unicharBufLen;
-
-    do {
-      int32_t srcLength = aLen;
-      res = mUnicodeDecoder->Convert(aBuffer, &srcLength, unichars, &unicharLength);
-
-      totalChars += unicharLength;
-      // Continuation of failure case
-      if(NS_FAILED(res)) {
-        // if we failed, we consume one byte, replace it with the replacement
-        // character and try the conversion again.
-
-        // This is only needed because some decoders don't follow the
-        // nsIUnicodeDecoder contract: they return a failure when *aDestLength
-        // is 0 rather than the correct NS_OK_UDEC_MOREOUTPUT.  See bug 244177
-        if ((unichars + unicharLength) >= buffer->DataEnd()) {
-          NS_ERROR("Unexpected end of destination buffer");
-          break;
-        }
-
-        // Since about:blank is empty, this line runs only for XML. Use a
-        // character that's illegal in XML instead of U+FFFD in order to make
-        // expat flag the error.
-        unichars[unicharLength++] = 0xFFFF;
-
-        unichars = unichars + unicharLength;
-        unicharLength = unicharBufLen - (++totalChars);
-
-        mUnicodeDecoder->Reset();
-
-        if(((uint32_t) (srcLength + 1)) > aLen) {
-          srcLength = aLen;
-        }
-        else {
-          ++srcLength;
-        }
-
-        aBuffer += srcLength;
-        aLen -= srcLength;
-      }
-    } while (NS_FAILED(res) && (aLen > 0));
-
-    buffer->SetDataLength(totalChars);
+    uint32_t result;
+    size_t read;
+    size_t written;
+    Tie(result, read, written) =
+      mUnicodeDecoder->DecodeToUTF16WithoutReplacement(
+        AsBytes(MakeSpan(aBuffer, aLen)),
+        MakeSpan(unichars, needed.value()),
+        false); // Retain bug about failure to handle EOF
+    MOZ_ASSERT(result != kOutputFull);
+    MOZ_ASSERT(read <= aLen);
+    MOZ_ASSERT(written <= needed.value());
+    if (result != kInputEmpty) {
+      // Since about:blank is empty, this line runs only for XML. Use a
+      // character that's illegal in XML instead of U+FFFD in order to make
+      // expat flag the error. There is no need to loop and convert more, since
+      // expat will stop here anyway.
+      unichars[written++] = 0xFFFF;
+    }
+    buffer->SetDataLength(written);
     // Don't propagate return code of unicode decoder
     // since it doesn't reflect on our success or failure
     // - Ref. bug 87110

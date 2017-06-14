@@ -9,16 +9,16 @@
  */
 
 #include <arm_neon.h>
-#include <assert.h>
 #include <stdlib.h>
 
+#include "webrtc/base/checks.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
 // Maximum absolute value of word16 vector. C version for generic platforms.
 int16_t WebRtcSpl_MaxAbsValueW16Neon(const int16_t* vector, size_t length) {
   int absolute = 0, maximum = 0;
 
-  assert(length > 0);
+  RTC_DCHECK_GT(length, 0);
 
   const int16_t* p_start = vector;
   size_t rest = length & 7;
@@ -76,7 +76,7 @@ int32_t WebRtcSpl_MaxAbsValueW32Neon(const int32_t* vector, size_t length) {
   size_t i = 0;
   size_t residual = length & 0x7;
 
-  assert(length > 0);
+  RTC_DCHECK_GT(length, 0);
 
   const int32_t* p_start = vector;
   uint32x4_t max32x4_0 = vdupq_n_u32(0);
@@ -128,7 +128,7 @@ int16_t WebRtcSpl_MaxValueW16Neon(const int16_t* vector, size_t length) {
   size_t i = 0;
   size_t residual = length & 0x7;
 
-  assert(length > 0);
+  RTC_DCHECK_GT(length, 0);
 
   const int16_t* p_start = vector;
   int16x8_t max16x8 = vdupq_n_s16(WEBRTC_SPL_WORD16_MIN);
@@ -166,7 +166,7 @@ int32_t WebRtcSpl_MaxValueW32Neon(const int32_t* vector, size_t length) {
   size_t i = 0;
   size_t residual = length & 0x7;
 
-  assert(length > 0);
+  RTC_DCHECK_GT(length, 0);
 
   const int32_t* p_start = vector;
   int32x4_t max32x4_0 = vdupq_n_s32(WEBRTC_SPL_WORD32_MIN);
@@ -208,7 +208,7 @@ int16_t WebRtcSpl_MinValueW16Neon(const int16_t* vector, size_t length) {
   size_t i = 0;
   size_t residual = length & 0x7;
 
-  assert(length > 0);
+  RTC_DCHECK_GT(length, 0);
 
   const int16_t* p_start = vector;
   int16x8_t min16x8 = vdupq_n_s16(WEBRTC_SPL_WORD16_MAX);
@@ -246,7 +246,7 @@ int32_t WebRtcSpl_MinValueW32Neon(const int32_t* vector, size_t length) {
   size_t i = 0;
   size_t residual = length & 0x7;
 
-  assert(length > 0);
+  RTC_DCHECK_GT(length, 0);
 
   const int32_t* p_start = vector;
   int32x4_t min32x4_0 = vdupq_n_s32(WEBRTC_SPL_WORD32_MAX);

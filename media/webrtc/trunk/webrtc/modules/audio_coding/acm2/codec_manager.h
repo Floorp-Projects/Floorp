@@ -15,9 +15,9 @@
 
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/base/optional.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/thread_checker.h"
 #include "webrtc/modules/audio_coding/acm2/rent_a_codec.h"
+#include "webrtc/modules/audio_coding/include/audio_coding_module.h"
 #include "webrtc/modules/audio_coding/include/audio_coding_module_typedefs.h"
 #include "webrtc/common_types.h"
 
@@ -42,6 +42,9 @@ class CodecManager final {
   const CodecInst* GetCodecInst() const {
     return send_codec_inst_ ? &*send_codec_inst_ : nullptr;
   }
+
+  void UnsetCodecInst() { send_codec_inst_ = rtc::Optional<CodecInst>(); }
+
   const RentACodec::StackParameters* GetStackParams() const {
     return &codec_stack_params_;
   }
@@ -53,10 +56,16 @@ class CodecManager final {
 
   bool SetCodecFEC(bool enable_codec_fec);
 
+  // Uses the provided Rent-A-Codec to create a new encoder stack, if we have a
+  // complete specification; if so, it is then passed to set_encoder. On error,
+  // returns false.
+  bool MakeEncoder(RentACodec* rac, AudioCodingModule* acm);
+
  private:
   rtc::ThreadChecker thread_checker_;
   rtc::Optional<CodecInst> send_codec_inst_;
   RentACodec::StackParameters codec_stack_params_;
+  bool recreate_encoder_ = true;  // Need to recreate encoder?
 
   RTC_DISALLOW_COPY_AND_ASSIGN(CodecManager);
 };

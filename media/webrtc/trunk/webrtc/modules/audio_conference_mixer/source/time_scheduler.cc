@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "webrtc/base/timeutils.h"
 #include "webrtc/modules/audio_conference_mixer/source/time_scheduler.h"
 #include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
@@ -17,7 +18,7 @@ TimeScheduler::TimeScheduler(const int64_t periodicityInMs)
       _isStarted(false),
       _lastPeriodMark(),
       _periodicityInMs(periodicityInMs),
-      _periodicityInTicks(TickTime::MillisecondsToTicks(periodicityInMs)),
+      _periodicityInTicks(periodicityInMs * rtc::kNumNanosecsPerMillisec),
       _missedPeriods(0)
  {
  }
@@ -33,7 +34,7 @@ int32_t TimeScheduler::UpdateScheduler()
     if(!_isStarted)
     {
         _isStarted = true;
-        _lastPeriodMark = TickTime::Now();
+        _lastPeriodMark = rtc::TimeNanos();
         return 0;
     }
     // Don't perform any calculations until the debt of pending periods have
@@ -45,9 +46,9 @@ int32_t TimeScheduler::UpdateScheduler()
     }
 
     // Calculate the time that has past since previous call to this function.
-    TickTime tickNow = TickTime::Now();
-    TickInterval amassedTicks = tickNow - _lastPeriodMark;
-    int64_t amassedMs = amassedTicks.Milliseconds();
+    int64_t tickNow = rtc::TimeNanos();
+    int64_t amassedTicks = tickNow - _lastPeriodMark;
+    int64_t amassedMs = amassedTicks / rtc::kNumNanosecsPerMillisec;
 
     // Calculate the number of periods the time that has passed correspond to.
     int64_t periodsToClaim = amassedMs / _periodicityInMs;
@@ -89,10 +90,10 @@ int32_t TimeScheduler::TimeToNextUpdate(
 
     // Calculate the time (in ms) that has past since last call to
     // UpdateScheduler()
-    TickTime tickNow = TickTime::Now();
-    TickInterval ticksSinceLastUpdate = tickNow - _lastPeriodMark;
+    int64_t tickNow = rtc::TimeNanos();
+    int64_t ticksSinceLastUpdate = tickNow - _lastPeriodMark;
     const int64_t millisecondsSinceLastUpdate =
-        ticksSinceLastUpdate.Milliseconds();
+      ticksSinceLastUpdate / rtc::kNumNanosecsPerMillisec;
 
     updateTimeInMS = _periodicityInMs - millisecondsSinceLastUpdate;
     updateTimeInMS =  (updateTimeInMS < 0) ? 0 : updateTimeInMS;

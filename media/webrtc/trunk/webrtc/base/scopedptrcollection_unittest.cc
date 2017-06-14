@@ -8,6 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/scopedptrcollection.h"
 #include "webrtc/base/gunit.h"
 
@@ -41,7 +44,7 @@ class ScopedPtrCollectionTest : public testing::Test {
   }
 
   int num_instances_;
-  scoped_ptr<ScopedPtrCollection<InstanceCounter> > collection_;
+  std::unique_ptr<ScopedPtrCollection<InstanceCounter> > collection_;
 };
 
 TEST_F(ScopedPtrCollectionTest, PushBack) {

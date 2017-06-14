@@ -10,6 +10,8 @@
 
 #include "webrtc/base/bufferqueue.h"
 
+#include <algorithm>
+
 namespace rtc {
 
 BufferQueue::BufferQueue(size_t capacity, size_t default_size)
@@ -30,6 +32,14 @@ BufferQueue::~BufferQueue() {
 size_t BufferQueue::size() const {
   CritScope cs(&crit_);
   return queue_.size();
+}
+
+void BufferQueue::Clear() {
+  CritScope cs(&crit_);
+  while (!queue_.empty()) {
+    free_list_.push_back(queue_.front());
+    queue_.pop_front();
+  }
 }
 
 bool BufferQueue::ReadFront(void* buffer, size_t bytes, size_t* bytes_read) {

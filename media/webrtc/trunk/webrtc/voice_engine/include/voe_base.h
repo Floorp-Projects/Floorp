@@ -34,6 +34,9 @@
 #ifndef WEBRTC_VOICE_ENGINE_VOE_BASE_H
 #define WEBRTC_VOICE_ENGINE_VOE_BASE_H
 
+#include "webrtc/base/scoped_ref_ptr.h"
+#include "webrtc/modules/audio_coding/codecs/audio_decoder_factory.h"
+#include "webrtc/modules/audio_coding/include/audio_coding_module.h"
 #include "webrtc/common_types.h"
 
 namespace webrtc {
@@ -41,9 +44,6 @@ namespace webrtc {
 class AudioDeviceModule;
 class AudioProcessing;
 class AudioTransport;
-class Config;
-
-const int kVoEDefault = -1;
 
 // VoiceEngineObserver
 class WEBRTC_DLLEXPORT VoiceEngineObserver {
@@ -63,7 +63,6 @@ class WEBRTC_DLLEXPORT VoiceEngine {
   // Creates a VoiceEngine object, which can then be used to acquire
   // sub-APIs. Returns NULL on failure.
   static VoiceEngine* Create();
-  static VoiceEngine* Create(const Config& config);
 
   // Deletes a created VoiceEngine object and releases the utilized resources.
   // Note that if there are outstanding references held via other interfaces,
@@ -92,11 +91,24 @@ class WEBRTC_DLLEXPORT VoiceEngine {
  protected:
   VoiceEngine() {}
   ~VoiceEngine() {}
+
+ private:
+  // VS 2015 (others?) gets confused by a baseclass with no vtbl, and
+  // static_cast<VoiceEngineImpl*>(mVoiceEngine) produces a bad ptr.  It
+  // might also be related to the total size of the object.
+
+  // Add a virtual method to assuage the poor compiler.
+  virtual void DummyVS2015BugFix() {};
 };
 
 // VoEBase
 class WEBRTC_DLLEXPORT VoEBase {
  public:
+  struct ChannelConfig {
+    AudioCodingModule::Config acm_config;
+    bool enable_voice_pacing = false;
+  };
+
   // Factory for the VoEBase sub-API. Increases an internal reference
   // counter if successful. Returns NULL if the API is not supported or if
   // construction fails.
@@ -123,25 +135,34 @@ class WEBRTC_DLLEXPORT VoEBase {
   // functionality in a separate (reference counted) module.
   // - The AudioProcessing module handles capture-side processing. VoiceEngine
   // takes ownership of this object.
+  // - An AudioDecoderFactory - used to create audio decoders.
   // If NULL is passed for any of these, VoiceEngine will create its own.
   // Returns -1 in case of an error, 0 otherwise.
   // TODO(ajm): Remove default NULLs.
   virtual int Init(AudioDeviceModule* external_adm = NULL,
-                   AudioProcessing* audioproc = NULL) = 0;
+                   AudioProcessing* audioproc = NULL,
+                   const rtc::scoped_refptr<AudioDecoderFactory>&
+                       decoder_factory = nullptr) = 0;
 
   // Returns NULL before Init() is called.
   virtual AudioProcessing* audio_processing() = 0;
+
+  // This method is WIP - DO NOT USE!
+  // Returns NULL before Init() is called.
+  virtual AudioDeviceModule* audio_device_module() = 0;
 
   // Terminates all VoiceEngine functions and releases allocated resources.
   // Returns 0.
   virtual int Terminate() = 0;
 
   // Creates a new channel and allocates the required resources for it.
-  // One can use |config| to configure the channel. Currently that is used for
-  // choosing between ACM1 and ACM2, when creating Audio Coding Module.
+  // The second version accepts a |config| struct which includes an Audio Coding
+  // Module config and an option to enable voice pacing. Note that the
+  // decoder_factory member of the ACM config will be ignored (the decoder
+  // factory set through Init() will always be used).
   // Returns channel ID or -1 in case of an error.
   virtual int CreateChannel() = 0;
-  virtual int CreateChannel(const Config& config) = 0;
+  virtual int CreateChannel(const ChannelConfig& config) = 0;
 
   // Deletes an existing channel and releases the utilized resources.
   // Returns -1 in case of an error, 0 otherwise.
@@ -152,7 +173,7 @@ class WEBRTC_DLLEXPORT VoEBase {
   virtual int StartReceive(int channel) = 0;
 
   // Stops receiving incoming RTP/RTCP packets on the specified |channel|.
-  virtual int StopReceive(int channel) = 0;
+  virtual int StopReceive(int channel)  { return 0; }
 
   // Starts forwarding the packets to the mixer/soundcard for a
   // specified |channel|.

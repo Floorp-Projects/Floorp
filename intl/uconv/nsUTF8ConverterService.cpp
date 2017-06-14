@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=2:tabstop=4: 
+/* vim:expandtab:shiftwidth=2:tabstop=4:
  */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -7,62 +7,49 @@
 #include "nsString.h"
 #include "nsUTF8ConverterService.h"
 #include "nsEscape.h"
-#include "nsIUnicodeDecoder.h"
-#include "mozilla/dom/EncodingUtils.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/Encoding.h"
 
-using mozilla::dom::EncodingUtils;
+using namespace mozilla;
 
 NS_IMPL_ISUPPORTS(nsUTF8ConverterService, nsIUTF8ConverterService)
 
-static nsresult 
-ToUTF8(const nsACString &aString, const char *aCharset,
-       bool aAllowSubstitution, nsACString &aResult)
+static nsresult
+ToUTF8(const nsACString& aString,
+       const char* aCharset,
+       bool aAllowSubstitution,
+       nsACString& aResult)
 {
-  nsresult rv;
   if (!aCharset || !*aCharset)
     return NS_ERROR_INVALID_ARG;
 
-  nsDependentCString label(aCharset);
-  nsAutoCString encoding;
-  if (!EncodingUtils::FindEncodingForLabelNoReplacement(label, encoding)) {
+  auto encoding = Encoding::ForLabelNoReplacement(MakeStringSpan(aCharset));
+  if (!encoding) {
     return NS_ERROR_UCONV_NOCONV;
   }
-  nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder =
-    EncodingUtils::DecoderForEncoding(encoding);
-
-  if (!aAllowSubstitution)
-    unicodeDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Signal);
-
-  int32_t srcLen = aString.Length();
-  int32_t dstLen;
-  const nsAFlatCString& inStr = PromiseFlatCString(aString);
-  rv = unicodeDecoder->GetMaxLength(inStr.get(), srcLen, &dstLen);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  auto ustr = mozilla::MakeUnique<char16_t[]>(dstLen);
-  NS_ENSURE_TRUE(ustr, NS_ERROR_OUT_OF_MEMORY);
-
-  rv = unicodeDecoder->Convert(inStr.get(), &srcLen, ustr.get(), &dstLen);
-  if (NS_SUCCEEDED(rv)){
-    CopyUTF16toUTF8(Substring(ustr.get(), ustr.get() + dstLen), aResult);
+  if (aAllowSubstitution) {
+    nsresult rv = encoding->DecodeWithoutBOMHandling(aString, aResult);
+    if (NS_SUCCEEDED(rv)) {
+      return NS_OK;
+    }
+    return rv;
   }
-  return rv;
+  return encoding->DecodeWithoutBOMHandlingAndWithoutReplacement(aString,
+                                                                 aResult);
 }
 
-NS_IMETHODIMP  
-nsUTF8ConverterService::ConvertStringToUTF8(const nsACString &aString, 
-                                            const char *aCharset, 
-                                            bool aSkipCheck, 
+NS_IMETHODIMP
+nsUTF8ConverterService::ConvertStringToUTF8(const nsACString& aString,
+                                            const char* aCharset,
+                                            bool aSkipCheck,
                                             bool aAllowSubstitution,
                                             uint8_t aOptionalArgc,
-                                            nsACString &aUTF8String)
+                                            nsACString& aUTF8String)
 {
   bool allowSubstitution = (aOptionalArgc == 1) ? aAllowSubstitution : true;
 
   // return if ASCII only or valid UTF-8 providing that the ASCII/UTF-8
   // check is requested. It may not be asked for if a caller suspects
-  // that the input is in non-ASCII 7bit charset (ISO-2022-xx, HZ) or 
+  // that the input is in non-ASCII 7bit charset (ISO-2022-xx, HZ) or
   // it's in a charset other than UTF-8 that can be mistaken for UTF-8.
   if (!aSkipCheck && (IsASCII(aString) || IsUTF8(aString))) {
     aUTF8String = aString;
@@ -85,10 +72,10 @@ nsUTF8ConverterService::ConvertStringToUTF8(const nsACString &aString,
   return rv;
 }
 
-NS_IMETHODIMP  
-nsUTF8ConverterService::ConvertURISpecToUTF8(const nsACString &aSpec, 
-                                             const char *aCharset, 
-                                             nsACString &aUTF8Spec)
+NS_IMETHODIMP
+nsUTF8ConverterService::ConvertURISpecToUTF8(const nsACString& aSpec,
+                                             const char* aCharset,
+                                             nsACString& aUTF8Spec)
 {
   // assume UTF-8 if the spec contains unescaped non-ASCII characters.
   // No valid spec in Mozilla would break this assumption.
@@ -99,11 +86,13 @@ nsUTF8ConverterService::ConvertURISpecToUTF8(const nsACString &aSpec,
 
   aUTF8Spec.Truncate();
 
-  nsAutoCString unescapedSpec; 
-  // NS_UnescapeURL does not fill up unescapedSpec unless there's at least 
+  nsAutoCString unescapedSpec;
+  // NS_UnescapeURL does not fill up unescapedSpec unless there's at least
   // one character to unescape.
-  bool written = NS_UnescapeURL(PromiseFlatCString(aSpec).get(), aSpec.Length(), 
-                                  esc_OnlyNonASCII, unescapedSpec);
+  bool written = NS_UnescapeURL(PromiseFlatCString(aSpec).get(),
+                                aSpec.Length(),
+                                esc_OnlyNonASCII,
+                                unescapedSpec);
 
   if (!written) {
     aUTF8Spec = aSpec;

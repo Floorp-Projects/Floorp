@@ -57,17 +57,17 @@ static SECStatus tls13_SendHelloRetryRequest(sslSocket *ss,
                                              const sslNamedGroupDef *selectedGroup);
 
 static SECStatus tls13_HandleServerKeyShare(sslSocket *ss);
-static SECStatus tls13_HandleEncryptedExtensions(sslSocket *ss, SSL3Opaque *b,
+static SECStatus tls13_HandleEncryptedExtensions(sslSocket *ss, PRUint8 *b,
                                                  PRUint32 length);
 static SECStatus tls13_SendCertificate(sslSocket *ss);
 static SECStatus tls13_HandleCertificate(
-    sslSocket *ss, SSL3Opaque *b, PRUint32 length);
-static SECStatus tls13_HandleCertificateRequest(sslSocket *ss, SSL3Opaque *b,
+    sslSocket *ss, PRUint8 *b, PRUint32 length);
+static SECStatus tls13_HandleCertificateRequest(sslSocket *ss, PRUint8 *b,
                                                 PRUint32 length);
 static SECStatus
 tls13_SendCertificateVerify(sslSocket *ss, SECKEYPrivateKey *privKey);
 static SECStatus tls13_HandleCertificateVerify(
-    sslSocket *ss, SSL3Opaque *b, PRUint32 length,
+    sslSocket *ss, PRUint8 *b, PRUint32 length,
     SSL3Hashes *hashes);
 static SECStatus tls13_RecoverWrappedSharedSecret(sslSocket *ss,
                                                   sslSessionID *sid);
@@ -84,15 +84,15 @@ static SECStatus tls13_ComputePskBinderHash(sslSocket *ss,
                                             SSL3Hashes *hashes);
 static SECStatus tls13_VerifyFinished(sslSocket *ss, SSL3HandshakeType message,
                                       PK11SymKey *secret,
-                                      SSL3Opaque *b, PRUint32 length,
+                                      PRUint8 *b, PRUint32 length,
                                       const SSL3Hashes *hashes);
 static SECStatus tls13_ClientHandleFinished(sslSocket *ss,
-                                            SSL3Opaque *b, PRUint32 length,
+                                            PRUint8 *b, PRUint32 length,
                                             const SSL3Hashes *hashes);
 static SECStatus tls13_ServerHandleFinished(sslSocket *ss,
-                                            SSL3Opaque *b, PRUint32 length,
+                                            PRUint8 *b, PRUint32 length,
                                             const SSL3Hashes *hashes);
-static SECStatus tls13_HandleNewSessionTicket(sslSocket *ss, SSL3Opaque *b,
+static SECStatus tls13_HandleNewSessionTicket(sslSocket *ss, PRUint8 *b,
                                               PRUint32 length);
 static SECStatus tls13_ComputeHandshakeHashes(sslSocket *ss,
                                               SSL3Hashes *hashes);
@@ -468,7 +468,7 @@ tls13_SetupClientHello(sslSocket *ss)
 
 static SECStatus
 tls13_ImportDHEKeyShare(sslSocket *ss, SECKEYPublicKey *peerKey,
-                        SSL3Opaque *b, PRUint32 length,
+                        PRUint8 *b, PRUint32 length,
                         SECKEYPublicKey *pubKey)
 {
     SECStatus rv;
@@ -559,7 +559,7 @@ loser:
 }
 
 SECStatus
-tls13_HandlePostHelloHandshakeMessage(sslSocket *ss, SSL3Opaque *b,
+tls13_HandlePostHelloHandshakeMessage(sslSocket *ss, PRUint8 *b,
                                       PRUint32 length, SSL3Hashes *hashesPtr)
 {
     if (ss->sec.isServer && ss->ssl3.hs.zeroRttIgnore != ssl_0rtt_ignore_none) {
@@ -1662,7 +1662,7 @@ tls13_SendCertificateRequest(sslSocket *ss)
 }
 
 SECStatus
-tls13_HandleHelloRetryRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
+tls13_HandleHelloRetryRequest(sslSocket *ss, PRUint8 *b, PRUint32 length)
 {
     SECStatus rv;
     PRUint32 tmp;
@@ -1751,7 +1751,7 @@ tls13_HandleHelloRetryRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 }
 
 static SECStatus
-tls13_HandleCertificateRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
+tls13_HandleCertificateRequest(sslSocket *ss, PRUint8 *b, PRUint32 length)
 {
     SECStatus rv;
     TLS13CertificateRequest *certRequest = NULL;
@@ -2328,7 +2328,7 @@ tls13_HandleCertificateEntry(sslSocket *ss, SECItem *data, PRBool first,
  * Caller must hold Handshake and RecvBuf locks.
  */
 static SECStatus
-tls13_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
+tls13_HandleCertificate(sslSocket *ss, PRUint8 *b, PRUint32 length)
 {
     SECStatus rv;
     SECItem context = { siBuffer, NULL, 0 };
@@ -3026,7 +3026,7 @@ tls13_ChaCha20Poly1305(ssl3KeyMaterial *keys, PRBool doDecrypt,
 }
 
 static SECStatus
-tls13_HandleEncryptedExtensions(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
+tls13_HandleEncryptedExtensions(sslSocket *ss, PRUint8 *b, PRUint32 length)
 {
     SECStatus rv;
     PRUint32 innerLength;
@@ -3238,7 +3238,7 @@ done:
  * Caller must hold Handshake and RecvBuf locks.
  */
 SECStatus
-tls13_HandleCertificateVerify(sslSocket *ss, SSL3Opaque *b, PRUint32 length,
+tls13_HandleCertificateVerify(sslSocket *ss, PRUint8 *b, PRUint32 length,
                               SSL3Hashes *hashes)
 {
     SECItem signed_hash = { siBuffer, NULL, 0 };
@@ -3479,7 +3479,7 @@ tls13_SendFinished(sslSocket *ss, PK11SymKey *baseKey)
 static SECStatus
 tls13_VerifyFinished(sslSocket *ss, SSL3HandshakeType message,
                      PK11SymKey *secret,
-                     SSL3Opaque *b, PRUint32 length,
+                     PRUint8 *b, PRUint32 length,
                      const SSL3Hashes *hashes)
 {
     SECStatus rv;
@@ -3517,7 +3517,7 @@ tls13_VerifyFinished(sslSocket *ss, SSL3HandshakeType message,
 }
 
 static SECStatus
-tls13_ClientHandleFinished(sslSocket *ss, SSL3Opaque *b, PRUint32 length,
+tls13_ClientHandleFinished(sslSocket *ss, PRUint8 *b, PRUint32 length,
                            const SSL3Hashes *hashes)
 {
     SECStatus rv;
@@ -3544,7 +3544,7 @@ tls13_ClientHandleFinished(sslSocket *ss, SSL3Opaque *b, PRUint32 length,
 }
 
 static SECStatus
-tls13_ServerHandleFinished(sslSocket *ss, SSL3Opaque *b, PRUint32 length,
+tls13_ServerHandleFinished(sslSocket *ss, PRUint8 *b, PRUint32 length,
                            const SSL3Hashes *hashes)
 {
     SECStatus rv;
@@ -3868,7 +3868,7 @@ loser:
 }
 
 static SECStatus
-tls13_HandleNewSessionTicket(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
+tls13_HandleNewSessionTicket(sslSocket *ss, PRUint8 *b, PRUint32 length)
 {
     SECStatus rv;
     PRUint32 utmp;
@@ -4123,7 +4123,7 @@ SECStatus
 tls13_ProtectRecord(sslSocket *ss,
                     ssl3CipherSpec *cwSpec,
                     SSL3ContentType type,
-                    const SSL3Opaque *pIn,
+                    const PRUint8 *pIn,
                     PRUint32 contentLen,
                     sslBuffer *wrBuf)
 {

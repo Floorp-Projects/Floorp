@@ -8,13 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "testing/gmock/include/gmock/gmock.h"
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/modules/video_coding/include/mock/mock_video_codec_interface.h"
+#include <memory>
+
 #include "webrtc/modules/video_coding/include/mock/mock_vcm_callbacks.h"
+#include "webrtc/modules/video_coding/include/mock/mock_video_codec_interface.h"
 #include "webrtc/modules/video_coding/include/video_coding.h"
 #include "webrtc/modules/video_coding/test/test_util.h"
 #include "webrtc/system_wrappers/include/clock.h"
+#include "webrtc/test/gmock.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 
@@ -35,7 +37,7 @@ class VCMRobustnessTest : public ::testing::Test {
   virtual void SetUp() {
     clock_.reset(new SimulatedClock(0));
     ASSERT_TRUE(clock_.get() != NULL);
-    vcm_ = VideoCodingModule::Create(clock_.get(), &event_factory_);
+    vcm_.reset(VideoCodingModule::Create(clock_.get(), &event_factory_));
     ASSERT_TRUE(vcm_ != NULL);
     const size_t kMaxNackListSize = 250;
     const int kMaxPacketAgeToNack = 450;
@@ -47,7 +49,7 @@ class VCMRobustnessTest : public ::testing::Test {
     vcm_->RegisterExternalDecoder(&decoder_, video_codec_.plType);
   }
 
-  virtual void TearDown() { VideoCodingModule::Destroy(vcm_); }
+  virtual void TearDown() { vcm_.reset(); }
 
   void InsertPacket(uint32_t timestamp,
                     uint16_t seq_no,
@@ -64,18 +66,18 @@ class VCMRobustnessTest : public ::testing::Test {
     rtp_info.header.payloadType = video_codec_.plType;
     rtp_info.type.Video.codec = kRtpVideoVp8;
     rtp_info.type.Video.codecHeader.VP8.InitRTPVideoHeaderVP8();
-    rtp_info.type.Video.isFirstPacket = first;
+    rtp_info.type.Video.is_first_packet_in_frame = first;
 
     ASSERT_EQ(VCM_OK, vcm_->IncomingPacket(payload, kPayloadLen, rtp_info));
   }
 
-  VideoCodingModule* vcm_;
+  std::unique_ptr<VideoCodingModule> vcm_;
   VideoCodec video_codec_;
   MockVCMFrameTypeCallback frame_type_callback_;
   MockPacketRequestCallback request_callback_;
   NiceMock<MockVideoDecoder> decoder_;
   NiceMock<MockVideoDecoder> decoderCopy_;
-  rtc::scoped_ptr<SimulatedClock> clock_;
+  std::unique_ptr<SimulatedClock> clock_;
   NullEventFactory event_factory_;
 };
 
@@ -113,20 +115,20 @@ TEST_F(VCMRobustnessTest, TestHardNack) {
 
   clock_->AdvanceTimeMilliseconds(10);
 
-  ASSERT_EQ(VCM_OK, vcm_->Process());
+  vcm_->Process();
 
   ASSERT_EQ(VCM_FRAME_NOT_READY, vcm_->Decode(0));
 
   InsertPacket(6000, 8, false, true, kVideoFrameDelta);
   clock_->AdvanceTimeMilliseconds(10);
-  ASSERT_EQ(VCM_OK, vcm_->Process());
+  vcm_->Process();
 
   ASSERT_EQ(VCM_FRAME_NOT_READY, vcm_->Decode(0));
 
   InsertPacket(6000, 6, true, false, kVideoFrameDelta);
   InsertPacket(6000, 7, false, false, kVideoFrameDelta);
   clock_->AdvanceTimeMilliseconds(10);
-  ASSERT_EQ(VCM_OK, vcm_->Process());
+  vcm_->Process();
 
   ASSERT_EQ(VCM_OK, vcm_->Decode(0));
 }
@@ -143,12 +145,12 @@ TEST_F(VCMRobustnessTest, TestHardNackNoneDecoded) {
   InsertPacket(3000, 5, false, true, kVideoFrameDelta);
 
   EXPECT_EQ(VCM_FRAME_NOT_READY, vcm_->Decode(0));
-  ASSERT_EQ(VCM_OK, vcm_->Process());
+  vcm_->Process();
 
   clock_->AdvanceTimeMilliseconds(10);
 
   EXPECT_EQ(VCM_FRAME_NOT_READY, vcm_->Decode(0));
-  ASSERT_EQ(VCM_OK, vcm_->Process());
+  vcm_->Process();
 }
 
 TEST_F(VCMRobustnessTest, TestModeNoneWithErrors) {
@@ -195,25 +197,25 @@ TEST_F(VCMRobustnessTest, TestModeNoneWithErrors) {
   InsertPacket(0, 1, false, false, kVideoFrameKey);
   InsertPacket(0, 2, false, true, kVideoFrameKey);
   EXPECT_EQ(VCM_OK, vcm_->Decode(33));  // Decode timestamp 0.
-  EXPECT_EQ(VCM_OK, vcm_->Process());   // Expect no NACK list.
+  vcm_->Process();
 
   clock_->AdvanceTimeMilliseconds(33);
   InsertPacket(3000, 3, true, false, kVideoFrameDelta);
   // Packet 4 missing
   InsertPacket(3000, 5, false, true, kVideoFrameDelta);
   EXPECT_EQ(VCM_FRAME_NOT_READY, vcm_->Decode(0));
-  EXPECT_EQ(VCM_OK, vcm_->Process());  // Expect no NACK list.
+  vcm_->Process();
 
   clock_->AdvanceTimeMilliseconds(33);
   InsertPacket(6000, 6, true, false, kVideoFrameDelta);
   InsertPacket(6000, 7, false, false, kVideoFrameDelta);
   InsertPacket(6000, 8, false, true, kVideoFrameDelta);
   EXPECT_EQ(VCM_OK, vcm_->Decode(0));  // Decode timestamp 3000 incomplete.
-  EXPECT_EQ(VCM_OK, vcm_->Process());  // Expect no NACK list.
+  vcm_->Process();
 
   clock_->AdvanceTimeMilliseconds(10);
   EXPECT_EQ(VCM_OK, vcm_->Decode(23));  // Decode timestamp 6000 complete.
-  EXPECT_EQ(VCM_OK, vcm_->Process());   // Expect no NACK list.
+  vcm_->Process();
 
   clock_->AdvanceTimeMilliseconds(23);
   InsertPacket(3000, 4, false, false, kVideoFrameDelta);

@@ -10,14 +10,15 @@
 
 #include <time.h>
 #include <algorithm>
+#include <memory>
 #include "webrtc/base/asyncsocket.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/diskcache.h"
 #include "webrtc/base/httpclient.h"
 #include "webrtc/base/httpcommon-inl.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/pathutils.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/socketstream.h"
 #include "webrtc/base/stringencode.h"
 #include "webrtc/base/stringutils.h"
@@ -36,7 +37,7 @@ const size_t kCacheBody = 1;
 
 // Convert decimal string to integer
 bool HttpStringToUInt(const std::string& str, size_t* val) {
-  ASSERT(NULL != val);
+  RTC_DCHECK(NULL != val);
   char* eos = NULL;
   *val = strtoul(str.c_str(), &eos, 10);
   return (*eos == '\0');
@@ -336,16 +337,16 @@ StreamInterface* HttpClient::GetDocumentStream() {
 void HttpClient::start() {
   if (base_.mode() != HM_NONE) {
     // call reset() to abort an in-progress request
-    ASSERT(false);
+    RTC_NOTREACHED();
     return;
   }
 
-  ASSERT(!IsCacheActive());
+  RTC_DCHECK(!IsCacheActive());
 
   if (request().hasHeader(HH_TRANSFER_ENCODING, NULL)) {
     // Exact size must be known on the client.  Instead of using chunked
     // encoding, wrap data with auto-caching file or memory stream.
-    ASSERT(false);
+    RTC_NOTREACHED();
     return;
   }
 
@@ -402,7 +403,7 @@ void HttpClient::connect() {
   }
   StreamInterface* stream = pool_->RequestConnectedStream(server_, &stream_err);
   if (stream == NULL) {
-    ASSERT(0 != stream_err);
+    RTC_DCHECK(0 != stream_err);
     LOG(LS_ERROR) << "RequestConnectedStream error: " << stream_err;
     onHttpComplete(HM_CONNECT, HE_CONNECT_FAILED);
   } else {
@@ -452,8 +453,8 @@ bool HttpClient::ShouldRedirect(std::string* location) const {
 }
 
 bool HttpClient::BeginCacheFile() {
-  ASSERT(NULL != cache_);
-  ASSERT(CS_READY == cache_state_);
+  RTC_DCHECK(NULL != cache_);
+  RTC_DCHECK(CS_READY == cache_state_);
 
   std::string id = GetCacheID(request());
   CacheLock lock(cache_, id, true);
@@ -466,7 +467,8 @@ bool HttpClient::BeginCacheFile() {
     return false;
   }
 
-  scoped_ptr<StreamInterface> stream(cache_->WriteResource(id, kCacheBody));
+  std::unique_ptr<StreamInterface> stream(
+      cache_->WriteResource(id, kCacheBody));
   if (!stream) {
     LOG_F(LS_ERROR) << "Couldn't open body cache";
     return false;
@@ -485,7 +487,8 @@ bool HttpClient::BeginCacheFile() {
 }
 
 HttpError HttpClient::WriteCacheHeaders(const std::string& id) {
-  scoped_ptr<StreamInterface> stream(cache_->WriteResource(id, kCacheHeader));
+  std::unique_ptr<StreamInterface> stream(
+      cache_->WriteResource(id, kCacheHeader));
   if (!stream) {
     LOG_F(LS_ERROR) << "Couldn't open header cache";
     return HE_CACHE;
@@ -517,8 +520,8 @@ void HttpClient::CompleteCacheFile() {
 }
 
 bool HttpClient::CheckCache() {
-  ASSERT(NULL != cache_);
-  ASSERT(CS_READY == cache_state_);
+  RTC_DCHECK(NULL != cache_);
+  RTC_DCHECK(CS_READY == cache_state_);
 
   std::string id = GetCacheID(request());
   if (!cache_->HasResource(id)) {
@@ -563,7 +566,8 @@ bool HttpClient::CheckCache() {
 }
 
 HttpError HttpClient::ReadCacheHeaders(const std::string& id, bool override) {
-  scoped_ptr<StreamInterface> stream(cache_->ReadResource(id, kCacheHeader));
+  std::unique_ptr<StreamInterface> stream(
+      cache_->ReadResource(id, kCacheHeader));
   if (!stream) {
     return HE_CACHE;
   }
@@ -586,7 +590,7 @@ HttpError HttpClient::ReadCacheBody(const std::string& id) {
   HttpError error = HE_NONE;
 
   size_t data_size;
-  scoped_ptr<StreamInterface> stream(cache_->ReadResource(id, kCacheBody));
+  std::unique_ptr<StreamInterface> stream(cache_->ReadResource(id, kCacheBody));
   if (!stream || !stream->GetAvailable(&data_size)) {
     LOG_F(LS_ERROR) << "Unavailable cache body";
     error = HE_CACHE;
@@ -599,7 +603,7 @@ HttpError HttpClient::ReadCacheBody(const std::string& id) {
       && response().document) {
     // Allocate on heap to not explode the stack.
     const int array_size = 1024 * 64;
-    scoped_ptr<char[]> buffer(new char[array_size]);
+    std::unique_ptr<char[]> buffer(new char[array_size]);
     StreamResult result = Flow(stream.get(), buffer.get(), array_size,
                                response().document.get());
     if (SR_SUCCESS != result) {
@@ -611,7 +615,7 @@ HttpError HttpClient::ReadCacheBody(const std::string& id) {
 }
 
 bool HttpClient::PrepareValidate() {
-  ASSERT(CS_READY == cache_state_);
+  RTC_DCHECK(CS_READY == cache_state_);
   // At this point, request() contains the pending request, and response()
   // contains the cached response headers.  Reformat the request to validate
   // the cached content.
@@ -633,7 +637,7 @@ bool HttpClient::PrepareValidate() {
 }
 
 HttpError HttpClient::CompleteValidate() {
-  ASSERT(CS_VALIDATING == cache_state_);
+  RTC_DCHECK(CS_VALIDATING == cache_state_);
 
   std::string id = GetCacheID(request());
 
@@ -682,7 +686,7 @@ HttpError HttpClient::onHttpHeaderComplete(bool chunked, size_t& data_size) {
     // Continue processing response as normal
   }
 
-  ASSERT(!IsCacheActive());
+  RTC_DCHECK(!IsCacheActive());
   if ((request().verb == HV_HEAD) || !HttpCodeHasBody(response().scode)) {
     // HEAD requests and certain response codes contain no body
     data_size = 0;
@@ -753,7 +757,7 @@ void HttpClient::onHttpComplete(HttpMode mode, HttpError err) {
         request().document.reset();
       } else if (request().document && !request().document->Rewind()) {
         // Unable to replay the request document.
-        ASSERT(REDIRECT_ALWAYS == redirect_action_);
+        RTC_DCHECK(REDIRECT_ALWAYS == redirect_action_);
         err = HE_STREAM;
       }
       if (err == HE_NONE) {
@@ -812,7 +816,7 @@ void HttpClient::onHttpComplete(HttpMode mode, HttpError err) {
 void HttpClient::onHttpClosed(HttpError err) {
   // This shouldn't occur, since we return the stream to the pool upon command
   // completion.
-  ASSERT(false);
+  RTC_NOTREACHED();
 }
 
 //////////////////////////////////////////////////////////////////////

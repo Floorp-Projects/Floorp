@@ -8,14 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/base/scoped_ptr.h"
+#include <memory>
+
 #include "webrtc/common_types.h"
 #include "webrtc/modules/audio_coding/codecs/pcm16b/pcm16b.h"
 #include "webrtc/modules/audio_coding/include/audio_coding_module.h"
 #include "webrtc/modules/audio_coding/test/utility.h"
 #include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/system_wrappers/include/sleep.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
@@ -29,12 +30,12 @@ class TargetDelayTest : public ::testing::Test {
   void SetUp() {
     EXPECT_TRUE(acm_.get() != NULL);
 
-    CodecInst codec;
-    ASSERT_EQ(0, AudioCodingModule::Codec("L16", &codec, kSampleRateHz, 1));
     ASSERT_EQ(0, acm_->InitializeReceiver());
-    ASSERT_EQ(0, acm_->RegisterReceiveCodec(codec));
+    constexpr int pltype = 108;
+    ASSERT_EQ(true,
+              acm_->RegisterReceiveCodec(pltype, {"L16", kSampleRateHz, 1}));
 
-    rtp_info_.header.payloadType = codec.pltype;
+    rtp_info_.header.payloadType = pltype;
     rtp_info_.header.timestamp = 0;
     rtp_info_.header.ssrc = 0x12345678;
     rtp_info_.header.markerBit = false;
@@ -149,8 +150,10 @@ class TargetDelayTest : public ::testing::Test {
   // Pull audio equivalent to the amount of audio in one RTP packet.
   void Pull() {
     AudioFrame frame;
+    bool muted;
     for (int k = 0; k < kNum10msPerFrame; ++k) {  // Pull one frame.
-      ASSERT_EQ(0, acm_->PlayoutData10Ms(-1, &frame));
+      ASSERT_EQ(0, acm_->PlayoutData10Ms(-1, &frame, &muted));
+      ASSERT_FALSE(muted);
       // Had to use ASSERT_TRUE, ASSERT_EQ generated error.
       ASSERT_TRUE(kSampleRateHz == frame.sample_rate_hz_);
       ASSERT_EQ(1u, frame.num_channels_);
@@ -193,7 +196,7 @@ class TargetDelayTest : public ::testing::Test {
     return acm_->LeastRequiredDelayMs();
   }
 
-  rtc::scoped_ptr<AudioCodingModule> acm_;
+  std::unique_ptr<AudioCodingModule> acm_;
   WebRtcRTPHeader rtp_info_;
   uint8_t payload_[kPayloadLenBytes];
 };

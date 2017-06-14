@@ -16,12 +16,18 @@
 #include "webrtc/base/buffer.h"
 #include "webrtc/base/checks.h"
 #include "webrtc/base/gunit.h"
+#include "webrtc/test/gmock.h"
 
 namespace rtc {
 
 namespace {
+
+using ::testing::ElementsAre;
+using ::testing::IsEmpty;
+
 template <typename T>
 void Call(ArrayView<T>) {}
+
 }  // namespace
 
 TEST(ArrayViewTest, TestConstructFromPtrAndArray) {
@@ -228,6 +234,23 @@ TEST(ArrayViewTest, TestCompare) {
   EXPECT_NE(ArrayView<int>(a), ArrayView<int>(b));
   EXPECT_NE(ArrayView<int>(a), ArrayView<int>());
   EXPECT_NE(ArrayView<int>(a), ArrayView<int>(a, 2));
+}
+
+TEST(ArrayViewTest, TestSubView) {
+  int a[] = {1, 2, 3};
+  ArrayView<int> av(a);
+
+  EXPECT_EQ(av.subview(0), av);
+
+  EXPECT_THAT(av.subview(1), ElementsAre(2, 3));
+  EXPECT_THAT(av.subview(2), ElementsAre(3));
+  EXPECT_THAT(av.subview(3), IsEmpty());
+  EXPECT_THAT(av.subview(4), IsEmpty());
+
+  EXPECT_THAT(av.subview(1, 0), IsEmpty());
+  EXPECT_THAT(av.subview(1, 1), ElementsAre(2));
+  EXPECT_THAT(av.subview(1, 2), ElementsAre(2, 3));
+  EXPECT_THAT(av.subview(1, 3), ElementsAre(2, 3));
 }
 
 }  // namespace rtc

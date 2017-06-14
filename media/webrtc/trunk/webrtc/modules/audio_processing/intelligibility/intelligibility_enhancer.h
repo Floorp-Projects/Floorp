@@ -8,173 +8,128 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-//
-//  Specifies core class for intelligbility enhancement.
-//
-
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_INTELLIGIBILITY_INTELLIGIBILITY_ENHANCER_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_INTELLIGIBILITY_INTELLIGIBILITY_ENHANCER_H_
 
 #include <complex>
+#include <memory>
 #include <vector>
 
-#include "webrtc/base/scoped_ptr.h"
-#include "webrtc/common_audio/lapped_transform.h"
+#include "webrtc/base/swap_queue.h"
 #include "webrtc/common_audio/channel_buffer.h"
+#include "webrtc/common_audio/lapped_transform.h"
+#include "webrtc/modules/audio_processing/audio_buffer.h"
 #include "webrtc/modules/audio_processing/intelligibility/intelligibility_utils.h"
+#include "webrtc/modules/audio_processing/render_queue_item_verifier.h"
+#include "webrtc/modules/audio_processing/vad/voice_activity_detector.h"
 
 namespace webrtc {
 
 // Speech intelligibility enhancement module. Reads render and capture
 // audio streams and modifies the render stream with a set of gains per
 // frequency bin to enhance speech against the noise background.
-// Note: assumes speech and noise streams are already separated.
-class IntelligibilityEnhancer {
+// Details of the model and algorithm can be found in the original paper:
+// http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=6882788
+class IntelligibilityEnhancer : public LappedTransform::Callback {
  public:
-  struct Config {
-    // |var_*| are parameters for the VarianceArray constructor for the
-    // clear speech stream.
-    // TODO(bercic): the |var_*|, |*_rate| and |gain_limit| parameters should
-    // probably go away once fine tuning is done.
-    Config()
-        : sample_rate_hz(16000),
-          num_capture_channels(1),
-          num_render_channels(1),
-          var_type(intelligibility::VarianceArray::kStepDecaying),
-          var_decay_rate(0.9f),
-          var_window_size(10),
-          analysis_rate(800),
-          gain_change_limit(0.1f),
-          rho(0.02f) {}
-    int sample_rate_hz;
-    size_t num_capture_channels;
-    size_t num_render_channels;
-    intelligibility::VarianceArray::StepType var_type;
-    float var_decay_rate;
-    size_t var_window_size;
-    int analysis_rate;
-    float gain_change_limit;
-    float rho;
-  };
+  IntelligibilityEnhancer(int sample_rate_hz,
+                          size_t num_render_channels,
+                          size_t num_bands,
+                          size_t num_noise_bins);
 
-  explicit IntelligibilityEnhancer(const Config& config);
-  IntelligibilityEnhancer();  // Initialize with default config.
+  ~IntelligibilityEnhancer() override;
 
-  // Reads and processes chunk of noise stream in time domain.
-  void AnalyzeCaptureAudio(float* const* audio,
-                           int sample_rate_hz,
-                           size_t num_channels);
+  // Sets the capture noise magnitude spectrum estimate.
+  void SetCaptureNoiseEstimate(std::vector<float> noise, float gain);
 
   // Reads chunk of speech in time domain and updates with modified signal.
-  void ProcessRenderAudio(float* const* audio,
-                          int sample_rate_hz,
-                          size_t num_channels);
+  void ProcessRenderAudio(AudioBuffer* audio);
   bool active() const;
 
+ protected:
+  // All in frequency domain, receives input |in_block|, applies
+  // intelligibility enhancement, and writes result to |out_block|.
+  void ProcessAudioBlock(const std::complex<float>* const* in_block,
+                         size_t in_channels,
+                         size_t frames,
+                         size_t out_channels,
+                         std::complex<float>* const* out_block) override;
+
  private:
-  enum AudioSource {
-    kRenderStream = 0,  // Clear speech stream.
-    kCaptureStream,  // Noise stream.
-  };
-
-  // Provides access point to the frequency domain.
-  class TransformCallback : public LappedTransform::Callback {
-   public:
-    TransformCallback(IntelligibilityEnhancer* parent, AudioSource source);
-
-    // All in frequency domain, receives input |in_block|, applies
-    // intelligibility enhancement, and writes result to |out_block|.
-    void ProcessAudioBlock(const std::complex<float>* const* in_block,
-                           size_t in_channels,
-                           size_t frames,
-                           size_t out_channels,
-                           std::complex<float>* const* out_block) override;
-
-   private:
-    IntelligibilityEnhancer* parent_;
-    AudioSource source_;
-  };
-  friend class TransformCallback;
+  FRIEND_TEST_ALL_PREFIXES(IntelligibilityEnhancerTest, TestRenderUpdate);
   FRIEND_TEST_ALL_PREFIXES(IntelligibilityEnhancerTest, TestErbCreation);
   FRIEND_TEST_ALL_PREFIXES(IntelligibilityEnhancerTest, TestSolveForGains);
+  FRIEND_TEST_ALL_PREFIXES(IntelligibilityEnhancerTest,
+                           TestNoiseGainHasExpectedResult);
+  FRIEND_TEST_ALL_PREFIXES(IntelligibilityEnhancerTest,
+                           TestAllBandsHaveSameDelay);
 
-  // Sends streams to ProcessClearBlock or ProcessNoiseBlock based on source.
-  void DispatchAudio(AudioSource source,
-                     const std::complex<float>* in_block,
-                     std::complex<float>* out_block);
-
-  // Updates variance computation and analysis with |in_block_|,
-  // and writes modified speech to |out_block|.
-  void ProcessClearBlock(const std::complex<float>* in_block,
-                         std::complex<float>* out_block);
-
-  // Computes and sets modified gains.
-  void AnalyzeClearBlock(float power_target);
+  // Updates the SNR estimation and enables or disables this component using a
+  // hysteresis.
+  void SnrBasedEffectActivation();
 
   // Bisection search for optimal |lambda|.
-  void SolveForLambda(float power_target, float power_bot, float power_top);
+  void SolveForLambda(float power_target);
 
   // Transforms freq gains to ERB gains.
   void UpdateErbGains();
-
-  // Updates variance calculation for noise input with |in_block|.
-  void ProcessNoiseBlock(const std::complex<float>* in_block,
-                         std::complex<float>* out_block);
 
   // Returns number of ERB filters.
   static size_t GetBankSize(int sample_rate, size_t erb_resolution);
 
   // Initializes ERB filterbank.
-  void CreateErbBank();
+  std::vector<std::vector<float>> CreateErbBank(size_t num_freqs);
 
   // Analytically solves quadratic for optimal gains given |lambda|.
   // Negative gains are set to 0. Stores the results in |sols|.
   void SolveForGainsGivenLambda(float lambda, size_t start_freq, float* sols);
 
-  // Computes variance across ERB filters from freq variance |var|.
-  // Stores in |result|.
-  void FilterVariance(const float* var, float* result);
+  // Returns true if the audio is speech.
+  bool IsSpeech(const float* audio);
 
-  // Returns dot product of vectors specified by size |length| arrays |a|,|b|.
-  static float DotProduct(const float* a, const float* b, size_t length);
+  // Delays the high bands to compensate for the processing delay in the low
+  // band.
+  void DelayHighBands(AudioBuffer* audio);
+
+  static const size_t kMaxNumNoiseEstimatesToBuffer = 5;
 
   const size_t freqs_;         // Num frequencies in frequency domain.
-  const size_t window_size_;   // Window size in samples; also the block size.
+  const size_t num_noise_bins_;
   const size_t chunk_length_;  // Chunk size in samples.
   const size_t bank_size_;     // Num ERB filters.
   const int sample_rate_hz_;
-  const int erb_resolution_;
-  const size_t num_capture_channels_;
   const size_t num_render_channels_;
-  const int analysis_rate_;    // Num blocks before gains recalculated.
 
-  const bool active_;          // Whether render gains are being updated.
-                               // TODO(ekm): Add logic for updating |active_|.
-
-  intelligibility::VarianceArray clear_variance_;
-  intelligibility::VarianceArray noise_variance_;
-  rtc::scoped_ptr<float[]> filtered_clear_var_;
-  rtc::scoped_ptr<float[]> filtered_noise_var_;
-  std::vector<std::vector<float>> filter_bank_;
-  rtc::scoped_ptr<float[]> center_freqs_;
+  intelligibility::PowerEstimator<std::complex<float>> clear_power_estimator_;
+  intelligibility::PowerEstimator<float> noise_power_estimator_;
+  std::vector<float> filtered_clear_pow_;
+  std::vector<float> filtered_noise_pow_;
+  std::vector<float> center_freqs_;
+  std::vector<std::vector<float>> capture_filter_bank_;
+  std::vector<std::vector<float>> render_filter_bank_;
   size_t start_freq_;
-  rtc::scoped_ptr<float[]> rho_;  // Production and interpretation SNR.
-                                  // for each ERB band.
-  rtc::scoped_ptr<float[]> gains_eq_;  // Pre-filter modified gains.
+
+  std::vector<float> gains_eq_;  // Pre-filter modified gains.
   intelligibility::GainApplier gain_applier_;
 
-  // Destination buffers used to reassemble blocked chunks before overwriting
-  // the original input array with modifications.
-  ChannelBuffer<float> temp_render_out_buffer_;
-  ChannelBuffer<float> temp_capture_out_buffer_;
+  std::unique_ptr<LappedTransform> render_mangler_;
 
-  rtc::scoped_ptr<float[]> kbd_window_;
-  TransformCallback render_callback_;
-  TransformCallback capture_callback_;
-  rtc::scoped_ptr<LappedTransform> render_mangler_;
-  rtc::scoped_ptr<LappedTransform> capture_mangler_;
-  int block_count_;
-  int analysis_step_;
+  VoiceActivityDetector vad_;
+  std::vector<int16_t> audio_s16_;
+  size_t chunks_since_voice_;
+  bool is_speech_;
+  float snr_;
+  bool is_active_;
+
+  unsigned long int num_chunks_;
+  unsigned long int num_active_chunks_;
+
+  std::vector<float> noise_estimation_buffer_;
+  SwapQueue<std::vector<float>, RenderQueueItemVerifier<float>>
+      noise_estimation_queue_;
+
+  std::vector<std::unique_ptr<intelligibility::DelayBuffer>>
+      high_bands_buffers_;
 };
 
 }  // namespace webrtc

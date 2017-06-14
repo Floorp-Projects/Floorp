@@ -37,8 +37,9 @@ class CallStatistics {
   ~CallStatistics() {}
 
   // Call this method to indicate that NetEq engaged in decoding. |speech_type|
-  // is the audio-type according to NetEq.
-  void DecodedByNetEq(AudioFrame::SpeechType speech_type);
+  // is the audio-type according to NetEq, and |muted| indicates if the decoded
+  // frame was produced in muted state.
+  void DecodedByNetEq(AudioFrame::SpeechType speech_type, bool muted);
 
   // Call this method to indicate that a decoding call resulted in generating
   // silence, i.e. call to NetEq is bypassed and the output audio is zero.

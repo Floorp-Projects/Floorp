@@ -11,28 +11,57 @@
 #ifndef WEBRTC_VIDEO_ENCODER_H_
 #define WEBRTC_VIDEO_ENCODER_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "webrtc/base/checks.h"
 #include "webrtc/common_types.h"
 #include "webrtc/typedefs.h"
 #include "webrtc/video_frame.h"
+#include "webrtc/base/optional.h"
 
 namespace webrtc {
 
 class RTPFragmentationHeader;
 // TODO(pbos): Expose these through a public (root) header or change these APIs.
 struct CodecSpecificInfo;
-struct VideoCodec;
+class VideoCodec;
 
 class EncodedImageCallback {
  public:
   virtual ~EncodedImageCallback() {}
 
+  struct Result {
+    enum Error {
+      OK,
+
+      // Failed to send the packet.
+      ERROR_SEND_FAILED,
+    };
+
+    Result(Error error) : error(error) {}
+    Result(Error error, uint32_t frame_id) : error(error), frame_id(frame_id) {}
+
+    Error error;
+
+    // Frame ID assigned to the frame. The frame ID should be the same as the ID
+    // seen by the receiver for this frame. RTP timestamp of the frame is used
+    // as frame ID when RTP is used to send video. Must be used only when
+    // error=OK.
+    uint32_t frame_id = 0;
+
+    // Tells the encoder that the next frame is should be dropped.
+    bool drop_next_frame = false;
+  };
+
   // Callback function which is called when an image has been encoded.
-  virtual int32_t Encoded(const EncodedImage& encoded_image,
-                          const CodecSpecificInfo* codec_specific_info,
-                          const RTPFragmentationHeader* fragmentation) = 0;
+  virtual Result OnEncodedImage(
+      const EncodedImage& encoded_image,
+      const CodecSpecificInfo* codec_specific_info,
+      const RTPFragmentationHeader* fragmentation) = 0;
+
+  virtual void OnDroppedFrame() {}
 };
 
 class VideoEncoder {
@@ -43,9 +72,26 @@ class VideoEncoder {
     kVp9,
     kUnsupportedCodec,
   };
-
+  struct QpThresholds {
+    QpThresholds(int l, int h) : low(l), high(h) {}
+    QpThresholds() : low(-1), high(-1) {}
+    int low;
+    int high;
+  };
+  struct ScalingSettings {
+    ScalingSettings(bool on, int low, int high)
+        : enabled(on),
+          thresholds(rtc::Optional<QpThresholds>(QpThresholds(low, high))) {}
+    explicit ScalingSettings(bool on) : enabled(on) {}
+    const bool enabled;
+    const rtc::Optional<QpThresholds> thresholds;
+  };
   static VideoEncoder* Create(EncoderType codec_type,
                               bool enable_simulcast = false);
+  // Returns true if this type of encoder can be created using
+  // VideoEncoder::Create.
+  static bool IsSupportedSoftware(EncoderType codec_type);
+  static EncoderType CodecToEncoderType(VideoCodecType codec_type);
 
   static VideoCodecVP8 GetDefaultVp8Settings();
   static VideoCodecVP9 GetDefaultVp9Settings();
@@ -120,67 +166,28 @@ class VideoEncoder {
   //          - framerate       : The target frame rate
   //
   // Return value                : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-  virtual int32_t SetRates(uint32_t bitrate, uint32_t framerate) = 0;
+  virtual int32_t SetRates(uint32_t bitrate, uint32_t framerate) {
+    RTC_NOTREACHED() << "SetRate(uint32_t, uint32_t) is deprecated.";
+    return -1;
+  }
+
+  // Default fallback: Just use the sum of bitrates as the single target rate.
+  // TODO(sprang): Remove this default implementation when we remove SetRates().
+  virtual int32_t SetRateAllocation(const BitrateAllocation& allocation,
+                                    uint32_t framerate) {
+    return SetRates(allocation.get_sum_kbps(), framerate);
+  }
+
+  // Any encoder implementation wishing to use the WebRTC provided
+  // quality scaler must implement this method.
+  virtual ScalingSettings GetScalingSettings() const {
+    return ScalingSettings(false);
+  }
 
   virtual int32_t SetPeriodicKeyFrames(bool enable) { return -1; }
-  virtual void OnDroppedFrame() {}
-  virtual int GetTargetFramerate() { return -1; }
   virtual bool SupportsNativeHandle() const { return false; }
   virtual const char* ImplementationName() const { return "unknown"; }
 };
 
-// Class used to wrap external VideoEncoders to provide a fallback option on
-// software encoding when a hardware encoder fails to encode a stream due to
-// hardware restrictions, such as max resolution.
-class VideoEncoderSoftwareFallbackWrapper : public VideoEncoder {
- public:
-  VideoEncoderSoftwareFallbackWrapper(VideoCodecType codec_type,
-                                      webrtc::VideoEncoder* encoder);
-
-  int32_t InitEncode(const VideoCodec* codec_settings,
-                     int32_t number_of_cores,
-                     size_t max_payload_size) override;
-
-  int32_t RegisterEncodeCompleteCallback(
-      EncodedImageCallback* callback) override;
-
-  int32_t Release() override;
-  int32_t Encode(const VideoFrame& frame,
-                 const CodecSpecificInfo* codec_specific_info,
-                 const std::vector<FrameType>* frame_types) override;
-  int32_t SetChannelParameters(uint32_t packet_loss, int64_t rtt) override;
-
-  int32_t SetRates(uint32_t bitrate, uint32_t framerate) override;
-  void OnDroppedFrame() override;
-  int GetTargetFramerate() override;
-  bool SupportsNativeHandle() const override;
-  const char* ImplementationName() const override;
-
- private:
-  bool InitFallbackEncoder();
-
-  // Settings used in the last InitEncode call and used if a dynamic fallback to
-  // software is required.
-  VideoCodec codec_settings_;
-  int32_t number_of_cores_;
-  size_t max_payload_size_;
-
-  // The last bitrate/framerate set, and a flag for noting they are set.
-  bool rates_set_;
-  uint32_t bitrate_;
-  uint32_t framerate_;
-
-  // The last channel parameters set, and a flag for noting they are set.
-  bool channel_parameters_set_;
-  uint32_t packet_loss_;
-  int64_t rtt_;
-
-  const EncoderType encoder_type_;
-  webrtc::VideoEncoder* const encoder_;
-
-  rtc::scoped_ptr<webrtc::VideoEncoder> fallback_encoder_;
-  std::string fallback_implementation_name_;
-  EncodedImageCallback* callback_;
-};
 }  // namespace webrtc
 #endif  // WEBRTC_VIDEO_ENCODER_H_

@@ -17,7 +17,7 @@
 #include <unistd.h>
 
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
-#include <Carbon/Carbon.h>
+#include <CoreServices/CoreServices.h>
 #include <IOKit/IOCFBundle.h>
 #include <sys/statvfs.h>
 #include "webrtc/base/macutils.h"
@@ -45,23 +45,24 @@
 #endif
 
 #include "webrtc/base/arraysize.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/fileutils.h"
 #include "webrtc/base/pathutils.h"
 #include "webrtc/base/stream.h"
 #include "webrtc/base/stringutils.h"
 
-#if defined(WEBRTC_IOS)
-// Defined in iosfilesystem.mm.  No header file to discourage use
+#if defined(WEBRTC_MAC)
+// Defined in applefilesystem.mm.  No header file to discourage use
 // elsewhere; other places should use GetApp{Data,Temp}Folder() in
 // this file.  Don't copy/paste.  I mean it.
-char* IOSDataDirectory();
-char* IOSTempDirectory();
-void IOSAppName(rtc::Pathname* path);
+char* AppleDataDirectory();
+char* AppleTempDirectory();
+void AppleAppName(rtc::Pathname* path);
 #endif
 
 namespace rtc {
 
-#if !defined(WEBRTC_ANDROID) && !defined(WEBRTC_IOS)
+#if !defined(WEBRTC_ANDROID) && !defined(WEBRTC_MAC)
 char* UnixFilesystem::app_temp_path_ = NULL;
 #else
 char* UnixFilesystem::provided_app_data_folder_ = NULL;
@@ -79,11 +80,11 @@ void UnixFilesystem::SetAppTempFolder(const std::string& folder) {
 #endif
 
 UnixFilesystem::UnixFilesystem() {
-#if defined(WEBRTC_IOS)
+#if defined(WEBRTC_MAC)
   if (!provided_app_data_folder_)
-    provided_app_data_folder_ = IOSDataDirectory();
+    provided_app_data_folder_ = AppleDataDirectory();
   if (!provided_app_temp_folder_)
-    provided_app_temp_folder_ = IOSTempDirectory();
+    provided_app_temp_folder_ = AppleTempDirectory();
 #endif
 }
 
@@ -132,27 +133,11 @@ FileStream *UnixFilesystem::OpenFile(const Pathname &filename,
   return fs;
 }
 
-bool UnixFilesystem::CreatePrivateFile(const Pathname &filename) {
-  int fd = open(filename.pathname().c_str(),
-                O_RDWR | O_CREAT | O_EXCL,
-                S_IRUSR | S_IWUSR);
-  if (fd < 0) {
-    LOG_ERR(LS_ERROR) << "open() failed.";
-    return false;
-  }
-  // Don't need to keep the file descriptor.
-  if (close(fd) < 0) {
-    LOG_ERR(LS_ERROR) << "close() failed.";
-    // Continue.
-  }
-  return true;
-}
-
 bool UnixFilesystem::DeleteFile(const Pathname &filename) {
   LOG(LS_INFO) << "Deleting file:" << filename.pathname();
 
   if (!IsFile(filename)) {
-    ASSERT(IsFile(filename));
+    RTC_DCHECK(IsFile(filename));
     return false;
   }
   return ::unlink(filename.pathname().c_str()) == 0;
@@ -162,7 +147,7 @@ bool UnixFilesystem::DeleteEmptyFolder(const Pathname &folder) {
   LOG(LS_INFO) << "Deleting folder" << folder.pathname();
 
   if (!IsFolder(folder)) {
-    ASSERT(IsFolder(folder));
+    RTC_DCHECK(IsFolder(folder));
     return false;
   }
   std::string no_slash(folder.pathname(), 0, folder.pathname().length()-1);
@@ -171,19 +156,10 @@ bool UnixFilesystem::DeleteEmptyFolder(const Pathname &folder) {
 
 bool UnixFilesystem::GetTemporaryFolder(Pathname &pathname, bool create,
                                         const std::string *append) {
-#if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
-  FSRef fr;
-  if (0 != FSFindFolder(kOnAppropriateDisk, kTemporaryFolderType,
-                        kCreateFolder, &fr))
-    return false;
-  unsigned char buffer[NAME_MAX+1];
-  if (0 != FSRefMakePath(&fr, buffer, arraysize(buffer)))
-    return false;
-  pathname.SetPathname(reinterpret_cast<char*>(buffer), "");
-#elif defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
-  ASSERT(provided_app_temp_folder_ != NULL);
+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_MAC)
+  RTC_DCHECK(provided_app_temp_folder_ != NULL);
   pathname.SetPathname(provided_app_temp_folder_, "");
-#else  // !WEBRTC_MAC || WEBRTC_IOS && !WEBRTC_ANDROID
+#else
   if (const char* tmpdir = getenv("TMPDIR")) {
     pathname.SetPathname(tmpdir, "");
   } else if (const char* tmp = getenv("TMP")) {
@@ -195,9 +171,9 @@ bool UnixFilesystem::GetTemporaryFolder(Pathname &pathname, bool create,
     pathname.SetPathname("/tmp/", "");
 #endif  // !P_tmpdir
   }
-#endif  // !WEBRTC_MAC || WEBRTC_IOS && !WEBRTC_ANDROID
+#endif  // defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
   if (append) {
-    ASSERT(!append->empty());
+    RTC_DCHECK(!append->empty());
     pathname.AppendFolder(*append);
   }
   return !create || CreateFolder(pathname);
@@ -222,7 +198,7 @@ std::string UnixFilesystem::TempFilename(const Pathname &dir,
 bool UnixFilesystem::MoveFile(const Pathname &old_path,
                               const Pathname &new_path) {
   if (!IsFile(old_path)) {
-    ASSERT(IsFile(old_path));
+    RTC_DCHECK(IsFile(old_path));
     return false;
   }
   LOG(LS_VERBOSE) << "Moving " << old_path.pathname()
@@ -233,25 +209,6 @@ bool UnixFilesystem::MoveFile(const Pathname &old_path,
     if (!CopyFile(old_path, new_path))
       return false;
     if (!DeleteFile(old_path))
-      return false;
-  }
-  return true;
-}
-
-bool UnixFilesystem::MoveFolder(const Pathname &old_path,
-                                const Pathname &new_path) {
-  if (!IsFolder(old_path)) {
-    ASSERT(IsFolder(old_path));
-    return false;
-  }
-  LOG(LS_VERBOSE) << "Moving " << old_path.pathname()
-                  << " to " << new_path.pathname();
-  if (rename(old_path.pathname().c_str(), new_path.pathname().c_str()) != 0) {
-    if (errno != EXDEV)
-      return false;
-    if (!CopyFolder(old_path, new_path))
-      return false;
-    if (!DeleteFolderAndContents(old_path))
       return false;
   }
   return true;
@@ -290,18 +247,18 @@ bool UnixFilesystem::CopyFile(const Pathname &old_path,
 }
 
 bool UnixFilesystem::IsTemporaryPath(const Pathname& pathname) {
-#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
-  ASSERT(provided_app_temp_folder_ != NULL);
+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_MAC)
+  RTC_DCHECK(provided_app_temp_folder_ != NULL);
 #endif
 
   const char* const kTempPrefixes[] = {
-#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_MAC)
     provided_app_temp_folder_,
-#else
-    "/tmp/", "/var/tmp/",
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
     "/private/tmp/", "/private/var/tmp/", "/private/var/folders/",
 #endif  // WEBRTC_MAC && !defined(WEBRTC_IOS)
+#else
+    "/tmp/", "/var/tmp/",
 #endif  // WEBRTC_ANDROID || WEBRTC_IOS
   };
   for (size_t i = 0; i < arraysize(kTempPrefixes); ++i) {
@@ -356,61 +313,19 @@ bool UnixFilesystem::GetFileTime(const Pathname& path, FileTimeType which,
   return true;
 }
 
-bool UnixFilesystem::GetAppPathname(Pathname* path) {
-#if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
-  ProcessSerialNumber psn = { 0, kCurrentProcess };
-  CFDictionaryRef procinfo = ProcessInformationCopyDictionary(&psn,
-      kProcessDictionaryIncludeAllInformationMask);
-  if (NULL == procinfo)
-    return false;
-  CFStringRef cfpath = (CFStringRef) CFDictionaryGetValue(procinfo,
-      kIOBundleExecutableKey);
-  std::string path8;
-  bool success = ToUtf8(cfpath, &path8);
-  CFRelease(procinfo);
-  if (success)
-    path->SetPathname(path8);
-  return success;
-#elif defined(__native_client__)
-  return false;
-#elif IOS
-  IOSAppName(path);
-  return true;
-#else  // WEBRTC_MAC && !defined(WEBRTC_IOS)
-  char buffer[PATH_MAX + 2];
-  ssize_t len = readlink("/proc/self/exe", buffer, arraysize(buffer) - 1);
-  if ((len <= 0) || (len == PATH_MAX + 1))
-    return false;
-  buffer[len] = '\0';
-  path->SetPathname(buffer);
-  return true;
-#endif  // WEBRTC_MAC && !defined(WEBRTC_IOS)
-}
-
 bool UnixFilesystem::GetAppDataFolder(Pathname* path, bool per_user) {
-  ASSERT(!organization_name_.empty());
-  ASSERT(!application_name_.empty());
+  // On macOS and iOS, there is no requirement that the path contains the
+  // organization.
+#if !defined(WEBRTC_MAC)
+  RTC_DCHECK(!organization_name_.empty());
+#endif
+  RTC_DCHECK(!application_name_.empty());
 
   // First get the base directory for app data.
-#if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
-  if (per_user) {
-    // Use ~/Library/Application Support/<orgname>/<appname>/
-    FSRef fr;
-    if (0 != FSFindFolder(kUserDomain, kApplicationSupportFolderType,
-                          kCreateFolder, &fr))
-      return false;
-    unsigned char buffer[NAME_MAX+1];
-    if (0 != FSRefMakePath(&fr, buffer, arraysize(buffer)))
-      return false;
-    path->SetPathname(reinterpret_cast<char*>(buffer), "");
-  } else {
-    // TODO
-    return false;
-  }
-#elif defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)  // && !WEBRTC_MAC || WEBRTC_IOS
-  ASSERT(provided_app_data_folder_ != NULL);
+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_MAC)
+  RTC_DCHECK(provided_app_data_folder_ != NULL);
   path->SetPathname(provided_app_data_folder_, "");
-#elif defined(WEBRTC_LINUX) && !defined(WEBRTC_ANDROID)  // && !WEBRTC_MAC && !WEBRTC_IOS && !WEBRTC_ANDROID
+#elif defined(WEBRTC_LINUX) // && !WEBRTC_MAC && !WEBRTC_ANDROID
   if (per_user) {
     // We follow the recommendations in
     // http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
@@ -474,12 +389,12 @@ bool UnixFilesystem::GetAppDataFolder(Pathname* path, bool per_user) {
 }
 
 bool UnixFilesystem::GetAppTempFolder(Pathname* path) {
-#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
-  ASSERT(provided_app_temp_folder_ != NULL);
+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_MAC)
+  RTC_DCHECK(provided_app_temp_folder_ != NULL);
   path->SetPathname(provided_app_temp_folder_);
   return true;
 #else
-  ASSERT(!application_name_.empty());
+  RTC_DCHECK(!application_name_.empty());
   // TODO: Consider whether we are worried about thread safety.
   if (app_temp_path_ != NULL && strlen(app_temp_path_) > 0) {
     path->SetPathname(app_temp_path_);
@@ -508,7 +423,7 @@ bool UnixFilesystem::GetDiskFreeSpace(const Pathname& path,
 #ifdef __native_client__
   return false;
 #else  // __native_client__
-  ASSERT(NULL != freebytes);
+  RTC_DCHECK(NULL != freebytes);
   // TODO: Consider making relative paths absolute using cwd.
   // TODO: When popping off a symlink, push back on the components of the
   // symlink, so we don't jump out of the target disk inadvertently.
@@ -535,20 +450,6 @@ bool UnixFilesystem::GetDiskFreeSpace(const Pathname& path,
 
   return true;
 #endif  // !__native_client__
-}
-
-Pathname UnixFilesystem::GetCurrentDirectory() {
-  Pathname cwd;
-  char buffer[PATH_MAX];
-  char *path = getcwd(buffer, PATH_MAX);
-
-  if (!path) {
-    LOG_ERR(LS_ERROR) << "getcwd() failed";
-    return cwd;  // returns empty pathname
-  }
-  cwd.SetFolder(std::string(path));
-
-  return cwd;
 }
 
 char* UnixFilesystem::CopyString(const std::string& str) {

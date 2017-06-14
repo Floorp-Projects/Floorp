@@ -27,7 +27,7 @@ define(function (require, exports, module) {
     jsonText: json.textContent,
     jsonPretty: null,
     json: jsonData,
-    headers: window.headers,
+    headers: JSONView.headers,
     tabActive: 0,
     prettified: false
   };

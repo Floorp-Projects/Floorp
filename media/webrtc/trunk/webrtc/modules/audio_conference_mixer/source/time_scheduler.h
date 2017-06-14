@@ -15,8 +15,6 @@
 #ifndef WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_SOURCE_TIME_SCHEDULER_H_
 #define WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_SOURCE_TIME_SCHEDULER_H_
 
-#include "webrtc/system_wrappers/include/tick_util.h"
-
 namespace webrtc {
 class CriticalSectionWrapper;
 class TimeScheduler
@@ -36,7 +34,7 @@ private:
     CriticalSectionWrapper* _crit;
 
     bool _isStarted;
-    TickTime _lastPeriodMark;
+    int64_t _lastPeriodMark; // In ns
 
     int64_t _periodicityInMs;
     int64_t _periodicityInTicks;

@@ -12,31 +12,26 @@
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_APP_H_
 
 #include "webrtc/base/buffer.h"
-#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet.h"
-#include "webrtc/modules/rtp_rtcp/source/rtcp_utility.h"
 
 namespace webrtc {
 namespace rtcp {
+class CommonHeader;
 
 class App : public RtcpPacket {
  public:
-  static const uint8_t kPacketType = 204;
-  // 28 bytes for UDP header
-  // 12 bytes for RTCP app header
-  static const size_t kMaxDataSize = IP_PACKET_SIZE - 12 - 28;
+  static constexpr uint8_t kPacketType = 204;
   App() : sub_type_(0), ssrc_(0), name_(0) {}
-
-  virtual ~App() {}
+  ~App() override {}
 
   // Parse assumes header is already parsed and validated.
-  bool Parse(const RTCPUtility::RtcpCommonHeader& header,
-             const uint8_t* payload);  // Size of the payload is in the header.
+  bool Parse(const CommonHeader& packet);
 
-  void From(uint32_t ssrc) { ssrc_ = ssrc; }
-  void WithSubType(uint8_t subtype);
-  void WithName(uint32_t name) { name_ = name; }
-  void WithData(const uint8_t* data, size_t data_length);
+  void SetSsrc(uint32_t ssrc) { ssrc_ = ssrc; }
+  void SetSubType(uint8_t subtype);
+  void SetName(uint32_t name) { name_ = name; }
+  void SetData(const uint8_t* data, size_t data_length);
 
   uint8_t sub_type() const { return sub_type_; }
   uint32_t ssrc() const { return ssrc_; }
@@ -51,7 +46,11 @@ class App : public RtcpPacket {
               RtcpPacket::PacketReadyCallback* callback) const override;
 
  private:
-  size_t BlockLength() const override { return 12 + data_.size(); }
+  static constexpr size_t kAppBaseLength = 8;  // Ssrc and Name.
+  static constexpr size_t kMaxDataSize = 0xffff * 4 - kAppBaseLength;
+  size_t BlockLength() const override {
+    return kHeaderLength + kAppBaseLength + data_.size();
+  }
 
   uint8_t sub_type_;
   uint32_t ssrc_;

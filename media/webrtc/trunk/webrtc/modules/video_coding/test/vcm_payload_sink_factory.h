@@ -11,11 +11,11 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_TEST_VCM_PAYLOAD_SINK_FACTORY_H_
 #define WEBRTC_MODULES_VIDEO_CODING_TEST_VCM_PAYLOAD_SINK_FACTORY_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/video_coding/include/video_coding_defines.h"
 #include "webrtc/modules/video_coding/test/rtp_player.h"
 
@@ -58,8 +58,8 @@ class VcmPayloadSinkFactory : public PayloadSinkFactoryInterface {
   int64_t rtt_ms_;
   uint32_t render_delay_ms_;
   uint32_t min_playout_delay_ms_;
-  rtc::scoped_ptr<NullEventFactory> null_event_factory_;
-  rtc::scoped_ptr<CriticalSectionWrapper> crit_sect_;
+  std::unique_ptr<NullEventFactory> null_event_factory_;
+  std::unique_ptr<CriticalSectionWrapper> crit_sect_;
   Sinks sinks_;
 
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(VcmPayloadSinkFactory);

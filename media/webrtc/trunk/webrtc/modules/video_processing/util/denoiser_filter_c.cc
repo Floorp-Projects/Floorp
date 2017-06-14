@@ -25,17 +25,6 @@ void DenoiserFilterC::CopyMem16x16(const uint8_t* src,
   }
 }
 
-void DenoiserFilterC::CopyMem8x8(const uint8_t* src,
-                                 int src_stride,
-                                 uint8_t* dst,
-                                 int dst_stride) {
-  for (int i = 0; i < 8; i++) {
-    memcpy(dst, src, 8);
-    src += src_stride;
-    dst += dst_stride;
-  }
-}
-
 uint32_t DenoiserFilterC::Variance16x8(const uint8_t* a,
                                        int a_stride,
                                        const uint8_t* b,
@@ -59,7 +48,7 @@ uint32_t DenoiserFilterC::Variance16x8(const uint8_t* a,
   return *sse - ((static_cast<int64_t>(sum) * sum) >> 7);
 }
 
-DenoiserDecision DenoiserFilterC::MbDenoise(uint8_t* mc_running_avg_y,
+DenoiserDecision DenoiserFilterC::MbDenoise(const uint8_t* mc_running_avg_y,
                                             int mc_avg_y_stride,
                                             uint8_t* running_avg_y,
                                             int avg_y_stride,
@@ -136,57 +125,10 @@ DenoiserDecision DenoiserFilterC::MbDenoise(uint8_t* mc_running_avg_y,
     sum_diff += col_sum[c];
   }
 
-  sum_diff_thresh = kSumDiffThreshold;
-  if (increase_denoising)
-    sum_diff_thresh = kSumDiffThresholdHigh;
-  if (abs(sum_diff) > sum_diff_thresh) {
-    int delta = ((abs(sum_diff) - sum_diff_thresh) >> 8) + 1;
-    // Only apply the adjustment for max delta up to 3.
-    if (delta < 4) {
-      sig -= sig_stride * 16;
-      mc_running_avg_y -= mc_avg_y_stride * 16;
-      running_avg_y -= avg_y_stride * 16;
-      for (int r = 0; r < 16; ++r) {
-        for (int c = 0; c < 16; ++c) {
-          int diff = mc_running_avg_y[c] - sig[c];
-          int adjustment = abs(diff);
-          if (adjustment > delta)
-            adjustment = delta;
-          if (diff > 0) {
-            // Bring denoised signal down.
-            if (running_avg_y[c] - adjustment < 0)
-              running_avg_y[c] = 0;
-            else
-              running_avg_y[c] = running_avg_y[c] - adjustment;
-            col_sum[c] -= adjustment;
-          } else if (diff < 0) {
-            // Bring denoised signal up.
-            if (running_avg_y[c] + adjustment > 255)
-              running_avg_y[c] = 255;
-            else
-              running_avg_y[c] = running_avg_y[c] + adjustment;
-            col_sum[c] += adjustment;
-          }
-        }
-        sig += sig_stride;
-        mc_running_avg_y += mc_avg_y_stride;
-        running_avg_y += avg_y_stride;
-      }
-
-      sum_diff = 0;
-      for (int c = 0; c < 16; ++c) {
-        if (col_sum[c] >= 128) {
-          col_sum[c] = 127;
-        }
-        sum_diff += col_sum[c];
-      }
-
-      if (abs(sum_diff) > sum_diff_thresh)
-        return COPY_BLOCK;
-    } else {
-      return COPY_BLOCK;
-    }
-  }
+  sum_diff_thresh =
+      increase_denoising ? kSumDiffThresholdHigh : kSumDiffThreshold;
+  if (abs(sum_diff) > sum_diff_thresh)
+    return COPY_BLOCK;
 
   return FILTER_BLOCK;
 }

@@ -10,21 +10,19 @@
 
 #include "webrtc/modules/desktop_capture/win/screen_capturer_win_magnifier.h"
 
-#include <assert.h>
-
 #include <utility>
 
+#include "webrtc/base/checks.h"
+#include "webrtc/base/timeutils.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/desktop_frame_win.h"
 #include "webrtc/modules/desktop_capture/desktop_region.h"
-#include "webrtc/modules/desktop_capture/differ.h"
 #include "webrtc/modules/desktop_capture/mouse_cursor.h"
 #include "webrtc/modules/desktop_capture/win/cursor.h"
 #include "webrtc/modules/desktop_capture/win/desktop.h"
 #include "webrtc/modules/desktop_capture/win/screen_capture_utils.h"
 #include "webrtc/system_wrappers/include/logging.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
 
 namespace webrtc {
 
@@ -38,35 +36,23 @@ static LPCTSTR kMagnifierWindowName = L"MagnifierWindow";
 Atomic32 ScreenCapturerWinMagnifier::tls_index_(TLS_OUT_OF_INDEXES);
 
 ScreenCapturerWinMagnifier::ScreenCapturerWinMagnifier(
-    rtc::scoped_ptr<ScreenCapturer> fallback_capturer)
-    : fallback_capturer_(std::move(fallback_capturer)),
-      fallback_capturer_started_(false),
-      callback_(NULL),
-      current_screen_id_(kFullDesktopScreenId),
-      excluded_window_(NULL),
-      set_thread_execution_state_failed_(false),
-      desktop_dc_(NULL),
-      mag_lib_handle_(NULL),
-      mag_initialize_func_(NULL),
-      mag_uninitialize_func_(NULL),
-      set_window_source_func_(NULL),
-      set_window_filter_list_func_(NULL),
-      set_image_scaling_callback_func_(NULL),
-      host_window_(NULL),
-      magnifier_window_(NULL),
-      magnifier_initialized_(false),
-      magnifier_capture_succeeded_(true) {}
+    std::unique_ptr<DesktopCapturer> fallback_capturer)
+    : fallback_capturer_(std::move(fallback_capturer)) {}
 
 ScreenCapturerWinMagnifier::~ScreenCapturerWinMagnifier() {
   Stop();
 }
 
 void ScreenCapturerWinMagnifier::Start(Callback* callback) {
-  assert(!callback_);
-  assert(callback);
+  RTC_DCHECK(!callback_);
+  RTC_DCHECK(callback);
   callback_ = callback;
 
-  InitializeMagnifier();
+  if (!InitializeMagnifier()) {
+    LOG_F(LS_WARNING) << "Switching to fallback screen capturer becuase "
+                         "magnifier initialization failed.";
+    StartFallbackCapturer();
+  }
 }
 
 void ScreenCapturerWinMagnifier::Stop() {
@@ -95,22 +81,30 @@ void ScreenCapturerWinMagnifier::Stop() {
   }
 }
 
-void ScreenCapturerWinMagnifier::Capture(const DesktopRegion& region) {
-  TickTime capture_start_time = TickTime::Now();
+void ScreenCapturerWinMagnifier::SetSharedMemoryFactory(
+    std::unique_ptr<SharedMemoryFactory> shared_memory_factory) {
+  shared_memory_factory_ = std::move(shared_memory_factory);
+}
 
-  queue_.MoveToNextFrame();
-
-  // Request that the system not power-down the system, or the display hardware.
-  if (!SetThreadExecutionState(ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED)) {
-    if (!set_thread_execution_state_failed_) {
-      set_thread_execution_state_failed_ = true;
-      LOG_F(LS_WARNING) << "Failed to make system & display power assertion: "
-                        << GetLastError();
-    }
+void ScreenCapturerWinMagnifier::CaptureFrame() {
+  if (!magnifier_initialized_ ||
+      !magnifier_capture_succeeded_ ||
+      GetSystemMetrics(SM_CMONITORS) != 1) {
+    // Do not try to use the magnifier if it failed before and in multi-screen
+    // setup (where the API crashes sometimes).
+    LOG_F(LS_WARNING) << "Switching to the fallback screen capturer because "
+                         "initialization or last capture attempt failed, or "
+                         "execute on multi-screen system.";
+    StartFallbackCapturer();
+    fallback_capturer_->CaptureFrame();
+    return;
   }
+
+  int64_t capture_start_time_nanos = rtc::TimeNanos();
+
   // Switch to the desktop receiving user input if different from the current
   // one.
-  rtc::scoped_ptr<Desktop> input_desktop(Desktop::GetInputDesktop());
+  std::unique_ptr<Desktop> input_desktop(Desktop::GetInputDesktop());
   if (input_desktop.get() != NULL && !desktop_.IsSame(*input_desktop)) {
     // Release GDI resources otherwise SetThreadDesktop will fail.
     if (desktop_dc_) {
@@ -122,70 +116,35 @@ void ScreenCapturerWinMagnifier::Capture(const DesktopRegion& region) {
     desktop_.SetThreadDesktop(input_desktop.release());
   }
 
-  bool succeeded = false;
-
-  // Do not try to use the magnifier if it failed before and in multi-screen
-  // setup (where the API crashes sometimes).
-  if (magnifier_initialized_ && (GetSystemMetrics(SM_CMONITORS) == 1) &&
-      magnifier_capture_succeeded_) {
-    DesktopRect rect = GetScreenRect(current_screen_id_, current_device_key_);
-    CreateCurrentFrameIfNecessary(rect.size());
-
-    // CaptureImage may fail in some situations, e.g. windows8 metro mode.
-    succeeded = CaptureImage(rect);
-  }
-
-  // Defer to the fallback capturer if magnifier capturer did not work.
-  if (!succeeded) {
-    LOG_F(LS_WARNING) << "Switching to the fallback screen capturer.";
+  DesktopRect rect = GetScreenRect(current_screen_id_, current_device_key_);
+  queue_.MoveToNextFrame();
+  CreateCurrentFrameIfNecessary(rect.size());
+  // CaptureImage may fail in some situations, e.g. windows8 metro mode. So
+  // defer to the fallback capturer if magnifier capturer did not work.
+  if (!CaptureImage(rect)) {
+    LOG_F(LS_WARNING) << "Switching to the fallback screen capturer because "
+                         "last capture attempt failed.";
     StartFallbackCapturer();
-    fallback_capturer_->Capture(region);
+    fallback_capturer_->CaptureFrame();
     return;
   }
 
-  const DesktopFrame* current_frame = queue_.current_frame();
-  const DesktopFrame* last_frame = queue_.previous_frame();
-  if (last_frame && last_frame->size().equals(current_frame->size())) {
-    // Make sure the differencer is set up correctly for these previous and
-    // current screens.
-    if (!differ_.get() || (differ_->width() != current_frame->size().width()) ||
-        (differ_->height() != current_frame->size().height()) ||
-        (differ_->bytes_per_row() != current_frame->stride())) {
-      differ_.reset(new Differ(current_frame->size().width(),
-                               current_frame->size().height(),
-                               DesktopFrame::kBytesPerPixel,
-                               current_frame->stride()));
-    }
-
-    // Calculate difference between the two last captured frames.
-    DesktopRegion region;
-    differ_->CalcDirtyRegion(
-        last_frame->data(), current_frame->data(), &region);
-    helper_.InvalidateRegion(region);
-  } else {
-    // No previous frame is available, or the screen is resized. Invalidate the
-    // whole screen.
-    helper_.InvalidateScreen(current_frame->size());
-  }
-
-  helper_.set_size_most_recent(current_frame->size());
-
   // Emit the current frame.
-  DesktopFrame* frame = queue_.current_frame()->Share();
+  std::unique_ptr<DesktopFrame> frame = queue_.current_frame()->Share();
   frame->set_dpi(DesktopVector(GetDeviceCaps(desktop_dc_, LOGPIXELSX),
                                GetDeviceCaps(desktop_dc_, LOGPIXELSY)));
-  frame->mutable_updated_region()->Clear();
-  helper_.TakeInvalidRegion(frame->mutable_updated_region());
-  frame->set_capture_time_ms(
-      (TickTime::Now() - capture_start_time).Milliseconds());
-  callback_->OnCaptureCompleted(frame);
+  frame->mutable_updated_region()->SetRect(
+      DesktopRect::MakeSize(frame->size()));
+  frame->set_capture_time_ms((rtc::TimeNanos() - capture_start_time_nanos) /
+                             rtc::kNumNanosecsPerMillisec);
+  callback_->OnCaptureResult(Result::SUCCESS, std::move(frame));
 }
 
-bool ScreenCapturerWinMagnifier::GetScreenList(ScreenList* screens) {
-  return webrtc::GetScreenList(screens);
+bool ScreenCapturerWinMagnifier::GetSourceList(SourceList* sources) {
+  return webrtc::GetScreenList(sources);
 }
 
-bool ScreenCapturerWinMagnifier::SelectScreen(ScreenId id) {
+bool ScreenCapturerWinMagnifier::SelectSource(SourceId id) {
   bool valid = IsScreenValid(id, &current_device_key_);
 
   // Set current_screen_id_ even if the fallback capturer is being used, so we
@@ -194,7 +153,7 @@ bool ScreenCapturerWinMagnifier::SelectScreen(ScreenId id) {
     current_screen_id_ = id;
 
   if (fallback_capturer_started_)
-    fallback_capturer_->SelectScreen(id);
+    fallback_capturer_->SelectSource(id);
 
   return valid;
 }
@@ -208,15 +167,12 @@ void ScreenCapturerWinMagnifier::SetExcludedWindow(WindowId excluded_window) {
 }
 
 bool ScreenCapturerWinMagnifier::CaptureImage(const DesktopRect& rect) {
-  assert(magnifier_initialized_);
+  RTC_DCHECK(magnifier_initialized_);
 
   // Set the magnifier control to cover the captured rect. The content of the
   // magnifier control will be the captured image.
-  BOOL result = SetWindowPos(magnifier_window_,
-                             NULL,
-                             rect.left(), rect.top(),
-                             rect.width(), rect.height(),
-                             0);
+  BOOL result = SetWindowPos(magnifier_window_, NULL, rect.left(), rect.top(),
+                             rect.width(), rect.height(), 0);
   if (!result) {
     LOG_F(LS_WARNING) << "Failed to call SetWindowPos: " << GetLastError()
                       << ". Rect = {" << rect.left() << ", " << rect.top()
@@ -228,6 +184,8 @@ bool ScreenCapturerWinMagnifier::CaptureImage(const DesktopRect& rect) {
 
   RECT native_rect = {rect.left(), rect.top(), rect.right(), rect.bottom()};
 
+  RTC_DCHECK(tls_index_.Value() != static_cast<int32_t>(TLS_OUT_OF_INDEXES));
+  TlsSetValue(tls_index_.Value(), this);
   // OnCaptured will be called via OnMagImageScalingCallback and fill in the
   // frame before set_window_source_func_ returns.
   result = set_window_source_func_(magnifier_window_, native_rect);
@@ -251,21 +209,22 @@ BOOL ScreenCapturerWinMagnifier::OnMagImageScalingCallback(
     RECT unclipped,
     RECT clipped,
     HRGN dirty) {
-  assert(tls_index_.Value() != static_cast<int32_t>(TLS_OUT_OF_INDEXES));
-
+  RTC_DCHECK(tls_index_.Value() != static_cast<int32_t>(TLS_OUT_OF_INDEXES));
   ScreenCapturerWinMagnifier* owner =
       reinterpret_cast<ScreenCapturerWinMagnifier*>(
           TlsGetValue(tls_index_.Value()));
-
+  TlsSetValue(tls_index_.Value(), nullptr);
   owner->OnCaptured(srcdata, srcheader);
 
   return TRUE;
 }
 
+// TODO(zijiehe): These functions are available on Windows Vista or upper, so we
+// do not need to use LoadLibrary and GetProcAddress anymore. Use regular
+// include and function calls instead of a dynamical loaded library.
 bool ScreenCapturerWinMagnifier::InitializeMagnifier() {
-  assert(!magnifier_initialized_);
-
-  desktop_dc_ = GetDC(NULL);
+  RTC_DCHECK(!magnifier_initialized_);
+  desktop_dc_ = GetDC(nullptr);
 
   mag_lib_handle_ = LoadLibrary(L"Magnification.dll");
   if (!mag_lib_handle_)
@@ -299,7 +258,7 @@ bool ScreenCapturerWinMagnifier::InitializeMagnifier() {
     return false;
   }
 
-  HMODULE hInstance = NULL;
+  HMODULE hInstance = nullptr;
   result = GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
                                   GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
                               reinterpret_cast<char*>(&DefWindowProc),
@@ -317,22 +276,16 @@ bool ScreenCapturerWinMagnifier::InitializeMagnifier() {
   wcex.cbSize = sizeof(WNDCLASSEX);
   wcex.lpfnWndProc = &DefWindowProc;
   wcex.hInstance = hInstance;
-  wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
+  wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
   wcex.lpszClassName = kMagnifierHostClass;
 
   // Ignore the error which may happen when the class is already registered.
   RegisterClassEx(&wcex);
 
   // Create the host window.
-  host_window_ = CreateWindowEx(WS_EX_LAYERED,
-                                kMagnifierHostClass,
-                                kHostWindowName,
-                                0,
-                                0, 0, 0, 0,
-                                NULL,
-                                NULL,
-                                hInstance,
-                                NULL);
+  host_window_ =
+      CreateWindowEx(WS_EX_LAYERED, kMagnifierHostClass, kHostWindowName, 0, 0,
+                     0, 0, 0, nullptr, nullptr, hInstance, nullptr);
   if (!host_window_) {
     mag_uninitialize_func_();
     LOG_F(LS_WARNING) << "Failed to initialize ScreenCapturerWinMagnifier: "
@@ -341,14 +294,9 @@ bool ScreenCapturerWinMagnifier::InitializeMagnifier() {
   }
 
   // Create the magnifier control.
-  magnifier_window_ = CreateWindow(kMagnifierWindowClass,
-                                   kMagnifierWindowName,
-                                   WS_CHILD | WS_VISIBLE,
-                                   0, 0, 0, 0,
-                                   host_window_,
-                                   NULL,
-                                   hInstance,
-                                   NULL);
+  magnifier_window_ = CreateWindow(kMagnifierWindowClass, kMagnifierWindowName,
+                                   WS_CHILD | WS_VISIBLE, 0, 0, 0, 0,
+                                   host_window_, nullptr, hInstance, nullptr);
   if (!magnifier_window_) {
     mag_uninitialize_func_();
     LOG_F(LS_WARNING) << "Failed to initialize ScreenCapturerWinMagnifier: "
@@ -392,9 +340,6 @@ bool ScreenCapturerWinMagnifier::InitializeMagnifier() {
       TlsFree(new_tls_index);
   }
 
-  assert(tls_index_.Value() != static_cast<int32_t>(TLS_OUT_OF_INDEXES));
-  TlsSetValue(tls_index_.Value(), this);
-
   magnifier_initialized_ = true;
   return true;
 }
@@ -436,28 +381,22 @@ void ScreenCapturerWinMagnifier::CreateCurrentFrameIfNecessary(
   // Note that we can't reallocate other buffers at this point, since the caller
   // may still be reading from them.
   if (!queue_.current_frame() || !queue_.current_frame()->size().equals(size)) {
-    size_t buffer_size =
-        size.width() * size.height() * DesktopFrame::kBytesPerPixel;
-    SharedMemory* shared_memory = callback_->CreateSharedMemory(buffer_size);
-
-    rtc::scoped_ptr<DesktopFrame> buffer;
-    if (shared_memory) {
-      buffer.reset(new SharedMemoryDesktopFrame(
-          size, size.width() * DesktopFrame::kBytesPerPixel, shared_memory));
-    } else {
-      buffer.reset(new BasicDesktopFrame(size));
-    }
-    queue_.ReplaceCurrentFrame(buffer.release());
+    std::unique_ptr<DesktopFrame> frame =
+        shared_memory_factory_
+            ? SharedMemoryDesktopFrame::Create(size,
+                                               shared_memory_factory_.get())
+            : std::unique_ptr<DesktopFrame>(new BasicDesktopFrame(size));
+    queue_.ReplaceCurrentFrame(SharedDesktopFrame::Wrap(std::move(frame)));
   }
 }
 
 void ScreenCapturerWinMagnifier::StartFallbackCapturer() {
-  assert(fallback_capturer_);
+  RTC_DCHECK(fallback_capturer_);
   if (!fallback_capturer_started_) {
     fallback_capturer_started_ = true;
 
     fallback_capturer_->Start(callback_);
-    fallback_capturer_->SelectScreen(current_screen_id_);
+    fallback_capturer_->SelectSource(current_screen_id_);
   }
 }
 

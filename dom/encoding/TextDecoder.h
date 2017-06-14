@@ -11,7 +11,7 @@
 #include "mozilla/dom/TextDecoderBinding.h"
 #include "mozilla/dom/TypedArray.h"
 #include "nsAutoPtr.h"
-#include "nsIUnicodeDecoder.h"
+#include "mozilla/Encoding.h"
 
 namespace mozilla {
 
@@ -99,8 +99,9 @@ public:
    * @param      aOutDecodedString, decoded string of UTF-16 code points.
    * @param      aRv, error result.
    */
-  void Decode(const char* aInput, const int32_t aLength,
-              const bool aStream, nsAString& aOutDecodedString,
+  void Decode(mozilla::Span<const uint8_t> aInput,
+              const bool aStream,
+              nsAString& aOutDecodedString,
               ErrorResult& aRv);
 
   void Decode(const Optional<ArrayBufferViewOrArrayBuffer>& aBuffer,
@@ -114,7 +115,7 @@ public:
 
 private:
   nsCString mEncoding;
-  nsCOMPtr<nsIUnicodeDecoder> mDecoder;
+  mozilla::UniquePtr<mozilla::Decoder> mDecoder;
   bool mFatal;
 };
 

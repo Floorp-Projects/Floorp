@@ -11,8 +11,8 @@
 #ifndef WEBRTC_MODULES_AUDIO_CODING_TEST_PACKETLOSSTEST_H_
 #define WEBRTC_MODULES_AUDIO_CODING_TEST_PACKETLOSSTEST_H_
 
+#include <memory>
 #include <string>
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_coding/test/EncodeDecodeTest.h"
 
 namespace webrtc {
@@ -55,8 +55,8 @@ class PacketLossTest : public ACMTest {
   int channels_;
   std::string in_file_name_;
   int sample_rate_hz_;
-  rtc::scoped_ptr<SenderWithFEC> sender_;
-  rtc::scoped_ptr<ReceiverWithPacketLoss> receiver_;
+  std::unique_ptr<SenderWithFEC> sender_;
+  std::unique_ptr<ReceiverWithPacketLoss> receiver_;
   int expected_loss_rate_;
   int actual_loss_rate_;
   int burst_length_;

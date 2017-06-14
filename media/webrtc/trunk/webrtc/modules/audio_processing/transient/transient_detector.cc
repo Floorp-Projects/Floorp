@@ -10,11 +10,13 @@
 
 #include "webrtc/modules/audio_processing/transient/transient_detector.h"
 
-#include <assert.h>
 #include <float.h>
 #include <math.h>
 #include <string.h>
 
+#include <algorithm>
+
+#include "webrtc/base/checks.h"
 #include "webrtc/modules/audio_processing/transient/common.h"
 #include "webrtc/modules/audio_processing/transient/daubechies_8_wavelet_coeffs.h"
 #include "webrtc/modules/audio_processing/transient/moving_moments.h"
@@ -34,10 +36,10 @@ TransientDetector::TransientDetector(int sample_rate_hz)
       chunks_at_startup_left_to_delete_(kChunksAtStartupLeftToDelete),
       reference_energy_(1.f),
       using_reference_(false) {
-  assert(sample_rate_hz == ts::kSampleRate8kHz ||
-         sample_rate_hz == ts::kSampleRate16kHz ||
-         sample_rate_hz == ts::kSampleRate32kHz ||
-         sample_rate_hz == ts::kSampleRate48kHz);
+  RTC_DCHECK(sample_rate_hz == ts::kSampleRate8kHz ||
+             sample_rate_hz == ts::kSampleRate16kHz ||
+             sample_rate_hz == ts::kSampleRate32kHz ||
+             sample_rate_hz == ts::kSampleRate48kHz);
   int samples_per_transient = sample_rate_hz * kTransientLengthMs / 1000;
   // Adjustment to avoid data loss while downsampling, making
   // |samples_per_chunk_| and |samples_per_transient| always divisible by
@@ -70,7 +72,8 @@ float TransientDetector::Detect(const float* data,
                                 size_t data_length,
                                 const float* reference_data,
                                 size_t reference_length) {
-  assert(data && data_length == samples_per_chunk_);
+  RTC_DCHECK(data);
+  RTC_DCHECK_EQ(samples_per_chunk_, data_length);
 
   // TODO(aluebs): Check if these errors can logically happen and if not assert
   // on them.
@@ -158,7 +161,7 @@ float TransientDetector::ReferenceDetectionValue(const float* data,
     using_reference_ = false;
     return 1.f;
   }
-  assert(reference_energy_ != 0);
+  RTC_DCHECK_NE(0, reference_energy_);
   float result = 1.f / (1.f + exp(kReferenceNonLinearity *
                                   (kEnergyRatioThreshold -
                                    reference_energy / reference_energy_)));

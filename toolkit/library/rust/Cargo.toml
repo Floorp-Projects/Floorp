@@ -11,6 +11,9 @@ servo = ["gkrust-shared/servo"]
 quantum_render = ["gkrust-shared/quantum_render"]
 cubeb_pulse_rust = ["gkrust-shared/cubeb_pulse_rust"]
 gecko_debug = ["gkrust-shared/gecko_debug"]
+simd-accel = ["gkrust-shared/simd-accel"]
+no-static-ideograph-encoder-tables = ["gkrust-shared/no-static-ideograph-encoder-tables"]
+# parallel-utf8 = ["gkrust-shared/parallel-utf8"]
 
 [dependencies]
 gkrust-shared = { path = "shared" }

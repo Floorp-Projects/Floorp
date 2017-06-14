@@ -14,7 +14,8 @@
 // C code is at end of this file.
 
 #include <arm_neon.h>
-#include <assert.h>
+
+#include "webrtc/base/checks.h"
 
 void WebRtcIsacfix_AllpassFilter2FixDec16Neon(
     int16_t* data_ch1,  // Input and output in channel 1, in Q0
@@ -24,7 +25,7 @@ void WebRtcIsacfix_AllpassFilter2FixDec16Neon(
     const int length,  // Length of the data buffers
     int32_t* filter_state_ch1,  // Filter state for channel 1, in Q16
     int32_t* filter_state_ch2) {  // Filter state for channel 2, in Q16
-  assert(length % 2 == 0);
+  RTC_DCHECK_EQ(0, length % 2);
   int n = 0;
   int16x4_t factorv;
   int16x4_t datav;

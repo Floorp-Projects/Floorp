@@ -15,13 +15,15 @@
 #include <string>
 
 #include "webrtc/base/asyncsocket.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/cryptstring.h"
 #include "webrtc/base/logging.h"
 
 namespace rtc {
 
 struct HttpAuthContext;
-class ByteBuffer;
+class ByteBufferReader;
+class ByteBufferWriter;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -34,7 +36,7 @@ class BufferedReadAdapter : public AsyncSocketAdapter {
   ~BufferedReadAdapter() override;
 
   int Send(const void* pv, size_t cb) override;
-  int Recv(void* pv, size_t cb) override;
+  int Recv(void* pv, size_t cb, int64_t* timestamp) override;
 
  protected:
   int DirectSend(const void* pv, size_t cb) {
@@ -193,13 +195,13 @@ class AsyncSocksProxyServerSocket : public AsyncProxyServerSocket {
 
  private:
   void ProcessInput(char* data, size_t* len) override;
-  void DirectSend(const ByteBuffer& buf);
+  void DirectSend(const ByteBufferWriter& buf);
 
-  void HandleHello(ByteBuffer* request);
+  void HandleHello(ByteBufferReader* request);
   void SendHelloReply(uint8_t method);
-  void HandleAuth(ByteBuffer* request);
+  void HandleAuth(ByteBufferReader* request);
   void SendAuthReply(uint8_t result);
-  void HandleConnect(ByteBuffer* request);
+  void HandleConnect(ByteBufferReader* request);
   void SendConnectResult(int result, const SocketAddress& addr) override;
 
   void Error(int error);
@@ -222,8 +224,11 @@ class LoggingSocketAdapter : public AsyncSocketAdapter {
 
   int Send(const void* pv, size_t cb) override;
   int SendTo(const void* pv, size_t cb, const SocketAddress& addr) override;
-  int Recv(void* pv, size_t cb) override;
-  int RecvFrom(void* pv, size_t cb, SocketAddress* paddr) override;
+  int Recv(void* pv, size_t cb, int64_t* timestamp) override;
+  int RecvFrom(void* pv,
+               size_t cb,
+               SocketAddress* paddr,
+               int64_t* timestamp) override;
   int Close() override;
 
  protected:

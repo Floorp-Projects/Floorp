@@ -122,7 +122,8 @@ PlatformThread::PlatformThread(ThreadRunFunction func,
       name_(thread_name ? thread_name : "webrtc"),
 #if defined(WEBRTC_WIN)
       stop_(false),
-      thread_(NULL) {
+      thread_(NULL),
+      thread_id_(0) {
 #else
       stop_event_(false, false),
       thread_(0) {
@@ -135,6 +136,7 @@ PlatformThread::~PlatformThread() {
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
 #if defined(WEBRTC_WIN)
   RTC_DCHECK(!thread_);
+  RTC_DCHECK(!thread_id_);
 #endif  // defined(WEBRTC_WIN)
 }
 
@@ -155,7 +157,7 @@ bool PlatformUIThread::InternalInit() {
     hwnd_ = CreateWindowW(kThreadWindow, L"",
                           0, 0, 0, 0, 0,
                           NULL, NULL, hModule, NULL);
-    assert(hwnd_);
+    RTC_DCHECK(hwnd_);
     SetPropW(hwnd_, kThisProperty, this);
 
     if (timeout_) {
@@ -167,14 +169,14 @@ bool PlatformUIThread::InternalInit() {
 }
 
 void PlatformUIThread::RequestCallback() {
-  assert(hwnd_);
-  assert(static_reg_windows_msg);
+  RTC_DCHECK(hwnd_);
+  RTC_DCHECK(static_reg_windows_msg);
   PostMessage(hwnd_, static_reg_windows_msg, 0, 0);
 }
 
 bool PlatformUIThread::RequestCallbackTimer(unsigned int milliseconds) {
   if (!hwnd_) {
-    assert(!thread_);
+    RTC_DCHECK(!thread_);
     // set timer once thread starts
   } else {
     if (timerid_) {
@@ -187,6 +189,11 @@ bool PlatformUIThread::RequestCallbackTimer(unsigned int milliseconds) {
 }
 
 DWORD WINAPI PlatformThread::StartThread(void* param) {
+  // The GetLastError() function only returns valid results when it is called
+  // after a Win32 API function that returns a "failed" result. A crash dump
+  // contains the result from GetLastError() and to make sure it does not
+  // falsely report a Windows error we call SetLastError here.
+  ::SetLastError(ERROR_SUCCESS);
   static_cast<PlatformThread*>(param)->Run();
   return 0;
 }
@@ -206,10 +213,10 @@ void PlatformThread::Start() {
   // See bug 2902 for background on STACK_SIZE_PARAM_IS_A_RESERVATION.
   // Set the reserved stack stack size to 1M, which is the default on Windows
   // and Linux.
-  DWORD thread_id;
   thread_ = ::CreateThread(NULL, 1024 * 1024, &StartThread, this,
-                           STACK_SIZE_PARAM_IS_A_RESERVATION, &thread_id);
+                           STACK_SIZE_PARAM_IS_A_RESERVATION, &thread_id_);
   RTC_CHECK(thread_) << "CreateThread failed";
+  RTC_DCHECK(thread_id_);
 #else
   ThreadAttributes attr;
   // Set the stack stack size to 1M.
@@ -227,6 +234,14 @@ bool PlatformThread::IsRunning() const {
 #endif  // defined(WEBRTC_WIN)
 }
 
+PlatformThreadRef PlatformThread::GetThreadRef() const {
+#if defined(WEBRTC_WIN)
+  return thread_id_;
+#else
+  return thread_;
+#endif  // defined(WEBRTC_WIN)
+}
+
 void PlatformThread::Stop() {
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
   if (!IsRunning())
@@ -234,10 +249,13 @@ void PlatformThread::Stop() {
 
 #if defined(WEBRTC_WIN)
   // Set stop_ to |true| on the worker thread.
-  QueueUserAPC(&RaiseFlag, thread_, reinterpret_cast<ULONG_PTR>(&stop_));
+  bool queued = QueueAPC(&RaiseFlag, reinterpret_cast<ULONG_PTR>(&stop_));
+  // Queuing the APC can fail if the thread is being terminated.
+  RTC_CHECK(queued || GetLastError() == ERROR_GEN_FAILURE);
   WaitForSingleObject(thread_, INFINITE);
   CloseHandle(thread_);
   thread_ = nullptr;
+  thread_id_ = 0;
 #else
   stop_event_.Set();
   RTC_CHECK_EQ(0, pthread_join(thread_, nullptr));
@@ -264,7 +282,7 @@ void PlatformThread::Run() {
   if (!name_.empty())
     rtc::SetCurrentThreadName(name_.c_str());
   do {
-    // The interface contract of Start/Stop is that for a successfull call to
+    // The interface contract of Start/Stop is that for a successful call to
     // Start, there should be at least one call to the run function.  So we
     // call the function before checking |stop_|.
     if (!run_function_(obj_))
@@ -280,9 +298,7 @@ void PlatformThread::Run() {
 
 #if defined(WEBRTC_WIN)
 void PlatformUIThread::Run() {
-  if (!InternalInit()) {
-    assert(false);
-  }
+  RTC_CHECK(InternalInit()); // always evaluates
   PlatformThread::Run();
   // Don't need to DestroyWindow(hwnd_) due to WM_CLOSE->WM_DESTROY handling
 }
@@ -372,5 +388,14 @@ bool PlatformThread::SetPriority(ThreadPriority priority) {
   return pthread_setschedparam(thread_, policy, &param) == 0;
 #endif  // defined(WEBRTC_WIN)
 }
+
+#if defined(WEBRTC_WIN)
+bool PlatformThread::QueueAPC(PAPCFUNC function, ULONG_PTR data) {
+  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(IsRunning());
+
+  return QueueUserAPC(function, thread_, data) != FALSE;
+}
+#endif
 
 }  // namespace rtc

@@ -568,8 +568,8 @@ CERT_CompareRDN(const CERTRDN *a, const CERTRDN *b)
 SECComparison
 CERT_CompareName(const CERTName *a, const CERTName *b)
 {
-    CERTRDN **ardns, *ardn;
-    CERTRDN **brdns, *brdn;
+    CERTRDN **ardns;
+    CERTRDN **brdns;
     int ac, bc;
     SECComparison rv = SECEqual;
 
@@ -587,18 +587,8 @@ CERT_CompareName(const CERTName *a, const CERTName *b)
     if (ac > bc)
         return SECGreaterThan;
 
-    for (;;) {
-        if (!ardns++ || !brdns++) {
-            break;
-        }
-        ardn = *ardns;
-        brdn = *brdns;
-        if (!ardn) {
-            break;
-        }
-        rv = CERT_CompareRDN(ardn, brdn);
-        if (rv)
-            return rv;
+    while (rv == SECEqual && *ardns) {
+        rv = CERT_CompareRDN(*ardns++, *brdns++);
     }
     return rv;
 }

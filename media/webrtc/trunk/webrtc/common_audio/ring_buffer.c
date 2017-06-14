@@ -17,20 +17,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-enum Wrap {
-  SAME_WRAP,
-  DIFF_WRAP
-};
-
-struct RingBuffer {
-  size_t read_pos;
-  size_t write_pos;
-  size_t element_count;
-  size_t element_size;
-  enum Wrap rw_wrap;
-  char* data;
-};
-
 // Get address of region(s) from which we can read data.
 // If the region is contiguous, |data_ptr_bytes_2| will be zero.
 // If non-contiguous, |data_ptr_bytes_2| will be the size in bytes of the second

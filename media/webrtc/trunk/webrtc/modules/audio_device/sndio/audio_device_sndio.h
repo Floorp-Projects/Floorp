@@ -169,8 +169,8 @@ private:
 
     CriticalSectionWrapper& _critSect;
 
-    rtc::scoped_ptr<rtc::PlatformThread> _ptrThreadRec;
-    rtc::scoped_ptr<rtc::PlatformThread> _ptrThreadPlay;
+    rtc::scoped_refptr<rtc::PlatformThread> _ptrThreadRec;
+    rtc::scoped_refptr<rtc::PlatformThread> _ptrThreadPlay;
 
     int32_t _id;
 

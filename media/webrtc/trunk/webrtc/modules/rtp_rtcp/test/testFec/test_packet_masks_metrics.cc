@@ -45,10 +45,11 @@
 
 #include <math.h>
 
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/base/scoped_ptr.h"
+#include <memory>
+
 #include "webrtc/modules/rtp_rtcp/source/forward_error_correction_internal.h"
 #include "webrtc/modules/rtp_rtcp/test/testFec/average_residual_loss_xor_codes.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
@@ -191,7 +192,7 @@ class FecPacketMaskMetricsTest : public ::testing::Test {
   int RecoveredMediaPackets(int num_media_packets,
                             int num_fec_packets,
                             uint8_t* state) {
-    rtc::scoped_ptr<uint8_t[]> state_tmp(
+    std::unique_ptr<uint8_t[]> state_tmp(
         new uint8_t[num_media_packets + num_fec_packets]);
     memcpy(state_tmp.get(), state, num_media_packets + num_fec_packets);
     int num_recovered_packets = 0;
@@ -385,7 +386,7 @@ class FecPacketMaskMetricsTest : public ::testing::Test {
   // (which containes the code size parameters/protection length).
   void ComputeMetricsForCode(CodeType code_type,
                              int code_index) {
-    rtc::scoped_ptr<double[]> prob_weight(new double[kNumLossModels]);
+    std::unique_ptr<double[]> prob_weight(new double[kNumLossModels]);
     memset(prob_weight.get() , 0, sizeof(double) * kNumLossModels);
     MetricsFecCode metrics_code;
     SetMetricsZero(&metrics_code);
@@ -393,7 +394,7 @@ class FecPacketMaskMetricsTest : public ::testing::Test {
     int num_media_packets = code_params_[code_index].num_media_packets;
     int num_fec_packets = code_params_[code_index].num_fec_packets;
     int tot_num_packets = num_media_packets + num_fec_packets;
-    rtc::scoped_ptr<uint8_t[]> state(new uint8_t[tot_num_packets]);
+    std::unique_ptr<uint8_t[]> state(new uint8_t[tot_num_packets]);
     memset(state.get() , 0, tot_num_packets);
 
     int num_loss_configurations = static_cast<int>(pow(2.0f, tot_num_packets));
@@ -729,24 +730,24 @@ class FecPacketMaskMetricsTest : public ::testing::Test {
     int code_index = 0;
     // Maximum number of media packets allowed for the mask type.
     const int packet_mask_max = kMaxMediaPackets[fec_mask_type];
-    uint8_t* packet_mask = new uint8_t[packet_mask_max * kMaskSizeLBitSet];
+    std::unique_ptr<uint8_t[]> packet_mask(
+        new uint8_t[packet_mask_max * kUlpfecMaxPacketMaskSize]);
     // Loop through codes up to |kMaxMediaPacketsTest|.
     for (int num_media_packets = 1; num_media_packets <= kMaxMediaPacketsTest;
         num_media_packets++) {
       const int mask_bytes_fec_packet =
-          (num_media_packets > 16) ? kMaskSizeLBitSet : kMaskSizeLBitClear;
+          static_cast<int>(internal::PacketMaskSize(num_media_packets));
       internal::PacketMaskTable mask_table(fec_mask_type, num_media_packets);
       for (int num_fec_packets = 1; num_fec_packets <= num_media_packets;
           num_fec_packets++) {
-        memset(packet_mask, 0, num_media_packets * mask_bytes_fec_packet);
-        memcpy(packet_mask, mask_table.fec_packet_mask_table()
-               [num_media_packets - 1][num_fec_packets - 1],
+        memset(packet_mask.get(), 0, num_media_packets * mask_bytes_fec_packet);
+        memcpy(packet_mask.get(),
+               mask_table.fec_packet_mask_table()[num_media_packets - 1]
+                                                 [num_fec_packets - 1],
                num_fec_packets * mask_bytes_fec_packet);
         // Convert to bit mask.
-        GetPacketMaskConvertToBitMask(packet_mask,
-                                      num_media_packets,
-                                      num_fec_packets,
-                                      mask_bytes_fec_packet,
+        GetPacketMaskConvertToBitMask(packet_mask.get(), num_media_packets,
+                                      num_fec_packets, mask_bytes_fec_packet,
                                       code_type);
         if (RejectInvalidMasks(num_media_packets, num_fec_packets) < 0) {
           return -1;
@@ -758,7 +759,6 @@ class FecPacketMaskMetricsTest : public ::testing::Test {
       }
     }
     assert(code_index == kNumberCodes);
-    delete [] packet_mask;
     return 0;
   }
 

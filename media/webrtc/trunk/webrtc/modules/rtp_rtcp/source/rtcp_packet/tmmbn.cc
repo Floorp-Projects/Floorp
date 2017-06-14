@@ -10,63 +10,31 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/tmmbn.h"
 
+#include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/modules/rtp_rtcp/source/byte_io.h"
-
-using webrtc::RTCPUtility::PT_RTPFB;
-using webrtc::RTCPUtility::RTCPPacketRTPFBTMMBN;
-using webrtc::RTCPUtility::RTCPPacketRTPFBTMMBRItem;
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/common_header.h"
 
 namespace webrtc {
 namespace rtcp {
-namespace {
-const uint32_t kUnusedMediaSourceSsrc0 = 0;
-void AssignUWord8(uint8_t* buffer, size_t* offset, uint8_t value) {
-  buffer[(*offset)++] = value;
-}
-void AssignUWord32(uint8_t* buffer, size_t* offset, uint32_t value) {
-  ByteWriter<uint32_t>::WriteBigEndian(buffer + *offset, value);
-  *offset += 4;
-}
-
-void ComputeMantissaAnd6bitBase2Exponent(uint32_t input_base10,
-                                         uint8_t bits_mantissa,
-                                         uint32_t* mantissa,
-                                         uint8_t* exp) {
-  // input_base10 = mantissa * 2^exp
-  assert(bits_mantissa <= 32);
-  uint32_t mantissa_max = (1 << bits_mantissa) - 1;
-  uint8_t exponent = 0;
-  for (uint32_t i = 0; i < 64; ++i) {
-    if (input_base10 <= (mantissa_max << i)) {
-      exponent = i;
-      break;
-    }
-  }
-  *exp = exponent;
-  *mantissa = (input_base10 >> exponent);
-}
-
-void CreateTmmbrItem(const RTCPPacketRTPFBTMMBRItem& tmmbr_item,
-                     uint8_t* buffer,
-                     size_t* pos) {
-  uint32_t bitrate_bps = tmmbr_item.MaxTotalMediaBitRate * 1000;
-  uint32_t mantissa = 0;
-  uint8_t exp = 0;
-  ComputeMantissaAnd6bitBase2Exponent(bitrate_bps, 17, &mantissa, &exp);
-
-  AssignUWord32(buffer, pos, tmmbr_item.SSRC);
-  AssignUWord8(buffer, pos, (exp << 2) + ((mantissa >> 15) & 0x03));
-  AssignUWord8(buffer, pos, mantissa >> 7);
-  AssignUWord8(buffer, pos, (mantissa << 1) +
-                            ((tmmbr_item.MeasuredOverhead >> 8) & 0x01));
-  AssignUWord8(buffer, pos, tmmbr_item.MeasuredOverhead);
-}
-
+constexpr uint8_t Tmmbn::kFeedbackMessageType;
+// RFC 4585: Feedback format.
+// Common packet format:
+//
+//    0                   1                   2                   3
+//    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+//   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//   |V=2|P|   FMT   |       PT      |          length               |
+//   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//   |                  SSRC of packet sender                        |
+//   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//   |             SSRC of media source (unused) = 0                 |
+//   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//   :            Feedback Control Information (FCI)                 :
+//   :                                                               :
 // Temporary Maximum Media Stream Bit Rate Notification (TMMBN) (RFC 5104).
-//
-// FCI:
-//
+// The Feedback Control Information (FCI) consists of zero, one, or more
+// TMMBN FCI entries.
 //    0                   1                   2                   3
 //    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -74,31 +42,36 @@ void CreateTmmbrItem(const RTCPPacketRTPFBTMMBRItem& tmmbr_item,
 //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //   | MxTBR Exp |  MxTBR Mantissa                 |Measured Overhead|
 //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+bool Tmmbn::Parse(const CommonHeader& packet) {
+  RTC_DCHECK_EQ(packet.type(), kPacketType);
+  RTC_DCHECK_EQ(packet.fmt(), kFeedbackMessageType);
 
-void CreateTmmbn(const RTCPPacketRTPFBTMMBN& tmmbn,
-                 const std::vector<RTCPPacketRTPFBTMMBRItem>& tmmbn_items,
-                 uint8_t* buffer,
-                 size_t* pos) {
-  AssignUWord32(buffer, pos, tmmbn.SenderSSRC);
-  AssignUWord32(buffer, pos, kUnusedMediaSourceSsrc0);
-  for (uint8_t i = 0; i < tmmbn_items.size(); ++i) {
-    CreateTmmbrItem(tmmbn_items[i], buffer, pos);
-  }
-}
-}  // namespace
-
-bool Tmmbn::WithTmmbr(uint32_t ssrc, uint32_t bitrate_kbps, uint16_t overhead) {
-  assert(overhead <= 0x1ff);
-  if (tmmbn_items_.size() >= kMaxNumberOfTmmbrs) {
-    LOG(LS_WARNING) << "Max TMMBN size reached.";
+  if (packet.payload_size_bytes() < kCommonFeedbackLength) {
+    LOG(LS_WARNING) << "Payload length " << packet.payload_size_bytes()
+                    << " is too small for TMMBN.";
     return false;
   }
-  RTCPPacketRTPFBTMMBRItem tmmbn_item;
-  tmmbn_item.SSRC = ssrc;
-  tmmbn_item.MaxTotalMediaBitRate = bitrate_kbps;
-  tmmbn_item.MeasuredOverhead = overhead;
-  tmmbn_items_.push_back(tmmbn_item);
+  size_t items_size_bytes = packet.payload_size_bytes() - kCommonFeedbackLength;
+  if (items_size_bytes % TmmbItem::kLength != 0) {
+    LOG(LS_WARNING) << "Payload length " << packet.payload_size_bytes()
+                    << " is not valid for TMMBN.";
+    return false;
+  }
+  ParseCommonFeedback(packet.payload());
+  const uint8_t* next_item = packet.payload() + kCommonFeedbackLength;
+
+  size_t number_of_items = items_size_bytes / TmmbItem::kLength;
+  items_.resize(number_of_items);
+  for (TmmbItem& item : items_) {
+    if (!item.Parse(next_item))
+      return false;
+    next_item += TmmbItem::kLength;
+  }
   return true;
+}
+
+void Tmmbn::AddTmmbr(const TmmbItem& item) {
+  items_.push_back(item);
 }
 
 bool Tmmbn::Create(uint8_t* packet,
@@ -109,11 +82,19 @@ bool Tmmbn::Create(uint8_t* packet,
     if (!OnBufferFull(packet, index, callback))
       return false;
   }
-  const uint8_t kFmt = 4;
-  CreateHeader(kFmt, PT_RTPFB, HeaderLength(), packet, index);
-  CreateTmmbn(tmmbn_, tmmbn_items_, packet, index);
+  const size_t index_end = *index + BlockLength();
+
+  CreateHeader(kFeedbackMessageType, kPacketType, HeaderLength(), packet,
+               index);
+  RTC_DCHECK_EQ(0, Rtpfb::media_ssrc());
+  CreateCommonFeedback(packet + *index);
+  *index += kCommonFeedbackLength;
+  for (const TmmbItem& item : items_) {
+    item.Create(packet + *index);
+    *index += TmmbItem::kLength;
+  }
+  RTC_CHECK_EQ(index_end, *index);
   return true;
 }
-
 }  // namespace rtcp
 }  // namespace webrtc

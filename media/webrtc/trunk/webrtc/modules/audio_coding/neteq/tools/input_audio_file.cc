@@ -30,8 +30,8 @@ bool InputAudioFile::Read(size_t samples, int16_t* destination) {
     // Rewind and read the missing samples.
     rewind(fp_);
     size_t missing_samples = samples - samples_read;
-    if (fread(destination, sizeof(int16_t), missing_samples, fp_) <
-        missing_samples) {
+    if (fread(destination + samples_read, sizeof(int16_t), missing_samples,
+              fp_) < missing_samples) {
       // Could not read enough even after rewinding the file.
       return false;
     }

@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_VP9_FRAME_BUFFER_POOL_H_
-#define WEBRTC_MODULES_VIDEO_CODING_CODECS_VP9_FRAME_BUFFER_POOL_H_
+#ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_VP9_VP9_FRAME_BUFFER_POOL_H_
+#define WEBRTC_MODULES_VIDEO_CODING_CODECS_VP9_VP9_FRAME_BUFFER_POOL_H_
 
 #include <vector>
 
@@ -103,15 +103,22 @@ class Vp9FrameBufferPool {
 
  private:
   // Protects |allocated_buffers_|.
-  mutable rtc::CriticalSection buffers_lock_;
+  rtc::CriticalSection buffers_lock_;
   // All buffers, in use or ready to be recycled.
   std::vector<rtc::scoped_refptr<Vp9FrameBuffer>> allocated_buffers_
       GUARDED_BY(buffers_lock_);
-  // If more buffers than this are allocated we print warnings, and crash if
-  // in debug mode.
-  static const size_t max_num_buffers_ = 10;
+  // If more buffers than this are allocated we print warnings and crash if in
+  // debug mode. VP9 is defined to have 8 reference buffers, of which 3 can be
+  // referenced by any frame, see
+  // https://tools.ietf.org/html/draft-grange-vp9-bitstream-00#section-2.2.2.
+  // Assuming VP9 holds on to at most 8 buffers, any more buffers than that
+  // would have to be by application code. Decoded frames should not be
+  // referenced for longer than necessary. If we allow ~60 additional buffers
+  // then the application has ~1 second to e.g. render each frame of a 60 fps
+  // video.
+  static const size_t max_num_buffers_ = 68;
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_VIDEO_CODING_CODECS_VP9_FRAME_BUFFER_POOL_H_
+#endif  // WEBRTC_MODULES_VIDEO_CODING_CODECS_VP9_VP9_FRAME_BUFFER_POOL_H_

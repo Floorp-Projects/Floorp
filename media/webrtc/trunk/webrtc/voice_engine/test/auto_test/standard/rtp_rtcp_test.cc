@@ -8,8 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
+#include "webrtc/base/criticalsection.h"
 #include "webrtc/system_wrappers/include/atomic32.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/include/event_wrapper.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/voice_engine/test/auto_test/fixtures/after_streaming_fixture.h"
@@ -17,9 +19,7 @@
 
 class TestRtpObserver : public webrtc::VoERTPObserver {
  public:
-  TestRtpObserver()
-      : crit_(voetest::CriticalSectionWrapper::CreateCriticalSection()),
-        changed_ssrc_event_(voetest::EventWrapper::Create()) {}
+  TestRtpObserver() : changed_ssrc_event_(voetest::EventWrapper::Create()) {}
   virtual ~TestRtpObserver() {}
   virtual void OnIncomingCSRCChanged(int channel,
                                      unsigned int CSRC,
@@ -31,13 +31,13 @@ class TestRtpObserver : public webrtc::VoERTPObserver {
     EXPECT_EQ(voetest::kEventSignaled, changed_ssrc_event_->Wait(10*1000));
   }
   void SetIncomingSsrc(unsigned int ssrc) {
-    voetest::CriticalSectionScoped lock(crit_.get());
+    rtc::CritScope lock(&crit_);
     incoming_ssrc_ = ssrc;
   }
  public:
-  rtc::scoped_ptr<voetest::CriticalSectionWrapper> crit_;
+  rtc::CriticalSection crit_;
   unsigned int incoming_ssrc_;
-  rtc::scoped_ptr<voetest::EventWrapper> changed_ssrc_event_;
+  std::unique_ptr<voetest::EventWrapper> changed_ssrc_event_;
 };
 
 void TestRtpObserver::OnIncomingSSRCChanged(int channel,
@@ -48,7 +48,7 @@ void TestRtpObserver::OnIncomingSSRCChanged(int channel,
   TEST_LOG("%s", msg);
 
   {
-    voetest::CriticalSectionScoped lock(crit_.get());
+    rtc::CritScope lock(&crit_);
     if (incoming_ssrc_ == SSRC)
       changed_ssrc_event_->Set();
   }
@@ -67,7 +67,6 @@ class RtpRtcpTest : public AfterStreamingFixture {
     EXPECT_EQ(0, voe_network_->RegisterExternalTransport(second_channel_,
                                                          *transport_));
 
-    EXPECT_EQ(0, voe_base_->StartReceive(second_channel_));
     EXPECT_EQ(0, voe_base_->StartPlayout(second_channel_));
     EXPECT_EQ(0, voe_rtp_rtcp_->SetLocalSSRC(second_channel_, 5678));
     EXPECT_EQ(0, voe_base_->StartSend(second_channel_));

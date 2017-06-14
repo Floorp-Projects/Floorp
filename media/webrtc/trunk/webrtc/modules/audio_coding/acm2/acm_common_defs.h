@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_AUDIO_CODING_ACM2_ACM_COMMON_DEFS_H_
 #define WEBRTC_MODULES_AUDIO_CODING_ACM2_ACM_COMMON_DEFS_H_
 
-#include "webrtc/engine_configurations.h"
+#include "webrtc/typedefs.h"
 
 // Checks for enabled codecs, we prevent enabling codecs which are not
 // compatible.

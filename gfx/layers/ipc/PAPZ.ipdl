@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include "mozilla/GfxMessageUtils.h";
+include "mozilla/layers/LayersMessageUtils.h";
 
 include protocol PCompositorBridge;
 

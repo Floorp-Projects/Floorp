@@ -9,6 +9,8 @@
  */
 
 #include "webrtc/base/common.h"
+#include "webrtc/base/event.h"
+#include "webrtc/base/fakeclock.h"
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/helpers.h"
 #include "webrtc/base/thread.h"
@@ -17,72 +19,21 @@
 namespace rtc {
 
 TEST(TimeTest, TimeInMs) {
-  uint32_t ts_earlier = Time();
+  int64_t ts_earlier = TimeMillis();
   Thread::SleepMs(100);
-  uint32_t ts_now = Time();
+  int64_t ts_now = TimeMillis();
   // Allow for the thread to wakeup ~20ms early.
   EXPECT_GE(ts_now, ts_earlier + 80);
   // Make sure the Time is not returning in smaller unit like microseconds.
   EXPECT_LT(ts_now, ts_earlier + 1000);
 }
 
-TEST(TimeTest, Comparison) {
-  // Obtain two different times, in known order
-  TimeStamp ts_earlier = Time();
-  Thread::SleepMs(100);
-  TimeStamp ts_now = Time();
-  EXPECT_NE(ts_earlier, ts_now);
-
-  // Common comparisons
-  EXPECT_TRUE( TimeIsLaterOrEqual(ts_earlier, ts_now));
-  EXPECT_TRUE( TimeIsLater(       ts_earlier, ts_now));
-  EXPECT_FALSE(TimeIsLaterOrEqual(ts_now,     ts_earlier));
-  EXPECT_FALSE(TimeIsLater(       ts_now,     ts_earlier));
-
-  // Edge cases
-  EXPECT_TRUE( TimeIsLaterOrEqual(ts_earlier, ts_earlier));
-  EXPECT_FALSE(TimeIsLater(       ts_earlier, ts_earlier));
-
-  // Obtain a third time
-  TimeStamp ts_later = TimeAfter(100);
-  EXPECT_NE(ts_now, ts_later);
-  EXPECT_TRUE( TimeIsLater(ts_now,     ts_later));
-  EXPECT_TRUE( TimeIsLater(ts_earlier, ts_later));
-
-  // Common comparisons
-  EXPECT_TRUE( TimeIsBetween(ts_earlier, ts_now,     ts_later));
-  EXPECT_FALSE(TimeIsBetween(ts_earlier, ts_later,   ts_now));
-  EXPECT_FALSE(TimeIsBetween(ts_now,     ts_earlier, ts_later));
-  EXPECT_TRUE( TimeIsBetween(ts_now,     ts_later,   ts_earlier));
-  EXPECT_TRUE( TimeIsBetween(ts_later,   ts_earlier, ts_now));
-  EXPECT_FALSE(TimeIsBetween(ts_later,   ts_now,     ts_earlier));
-
-  // Edge cases
-  EXPECT_TRUE( TimeIsBetween(ts_earlier, ts_earlier, ts_earlier));
-  EXPECT_TRUE( TimeIsBetween(ts_earlier, ts_earlier, ts_later));
-  EXPECT_TRUE( TimeIsBetween(ts_earlier, ts_later,   ts_later));
-
-  // Earlier of two times
-  EXPECT_EQ(ts_earlier, TimeMin(ts_earlier, ts_earlier));
-  EXPECT_EQ(ts_earlier, TimeMin(ts_earlier, ts_now));
-  EXPECT_EQ(ts_earlier, TimeMin(ts_earlier, ts_later));
-  EXPECT_EQ(ts_earlier, TimeMin(ts_now,     ts_earlier));
-  EXPECT_EQ(ts_earlier, TimeMin(ts_later,   ts_earlier));
-
-  // Later of two times
-  EXPECT_EQ(ts_earlier, TimeMax(ts_earlier, ts_earlier));
-  EXPECT_EQ(ts_now,     TimeMax(ts_earlier, ts_now));
-  EXPECT_EQ(ts_later,   TimeMax(ts_earlier, ts_later));
-  EXPECT_EQ(ts_now,     TimeMax(ts_now,     ts_earlier));
-  EXPECT_EQ(ts_later,   TimeMax(ts_later,   ts_earlier));
-}
-
 TEST(TimeTest, Intervals) {
-  TimeStamp ts_earlier = Time();
-  TimeStamp ts_later = TimeAfter(500);
+  int64_t ts_earlier = TimeMillis();
+  int64_t ts_later = TimeAfter(500);
 
   // We can't depend on ts_later and ts_earlier to be exactly 500 apart
-  // since time elapses between the calls to Time() and TimeAfter(500)
+  // since time elapses between the calls to TimeMillis() and TimeAfter(500)
   EXPECT_LE(500,  TimeDiff(ts_later, ts_earlier));
   EXPECT_GE(-500, TimeDiff(ts_earlier, ts_later));
 
@@ -100,48 +51,12 @@ TEST(TimeTest, Intervals) {
   EXPECT_LE(TimeUntil(ts_later), 500);
 }
 
-TEST(TimeTest, BoundaryComparison) {
-  // Obtain two different times, in known order
-  TimeStamp ts_earlier = static_cast<TimeStamp>(-50);
-  TimeStamp ts_later = ts_earlier + 100;
-  EXPECT_NE(ts_earlier, ts_later);
-
-  // Common comparisons
-  EXPECT_TRUE( TimeIsLaterOrEqual(ts_earlier, ts_later));
-  EXPECT_TRUE( TimeIsLater(       ts_earlier, ts_later));
-  EXPECT_FALSE(TimeIsLaterOrEqual(ts_later,   ts_earlier));
-  EXPECT_FALSE(TimeIsLater(       ts_later,   ts_earlier));
-
-  // Earlier of two times
-  EXPECT_EQ(ts_earlier, TimeMin(ts_earlier, ts_earlier));
-  EXPECT_EQ(ts_earlier, TimeMin(ts_earlier, ts_later));
-  EXPECT_EQ(ts_earlier, TimeMin(ts_later,   ts_earlier));
-
-  // Later of two times
-  EXPECT_EQ(ts_earlier, TimeMax(ts_earlier, ts_earlier));
-  EXPECT_EQ(ts_later,   TimeMax(ts_earlier, ts_later));
-  EXPECT_EQ(ts_later,   TimeMax(ts_later,   ts_earlier));
-
-  // Interval
-  EXPECT_EQ(100,  TimeDiff(ts_later, ts_earlier));
-  EXPECT_EQ(-100, TimeDiff(ts_earlier, ts_later));
-}
-
-TEST(TimeTest, DISABLED_CurrentTmTime) {
-  struct tm tm;
-  int microseconds;
-
-  time_t before = ::time(NULL);
-  CurrentTmTime(&tm, &microseconds);
-  time_t after = ::time(NULL);
-
-  // Assert that 'tm' represents a time between 'before' and 'after'.
-  // mktime() uses local time, so we have to compensate for that.
-  time_t local_delta = before - ::mktime(::gmtime(&before));  // NOLINT
-  time_t t = ::mktime(&tm) + local_delta;
-
-  EXPECT_TRUE(before <= t && t <= after);
-  EXPECT_TRUE(0 <= microseconds && microseconds < 1000000);
+TEST(TimeTest, TestTimeDiff64) {
+  int64_t ts_diff = 100;
+  int64_t ts_earlier = rtc::TimeMillis();
+  int64_t ts_later = ts_earlier + ts_diff;
+  EXPECT_EQ(ts_diff, rtc::TimeDiff(ts_later, ts_earlier));
+  EXPECT_EQ(-ts_diff, rtc::TimeDiff(ts_earlier, ts_later));
 }
 
 class TimestampWrapAroundHandlerTest : public testing::Test {
@@ -153,18 +68,48 @@ class TimestampWrapAroundHandlerTest : public testing::Test {
 };
 
 TEST_F(TimestampWrapAroundHandlerTest, Unwrap) {
-  uint32_t ts = 0xfffffff2;
-  int64_t unwrapped_ts = ts;
-  EXPECT_EQ(ts, wraparound_handler_.Unwrap(ts));
+  // Start value.
+  int64_t ts = 2;
+  EXPECT_EQ(ts,
+            wraparound_handler_.Unwrap(static_cast<uint32_t>(ts & 0xffffffff)));
+
+  // Wrap backwards.
+  ts = -2;
+  EXPECT_EQ(ts,
+            wraparound_handler_.Unwrap(static_cast<uint32_t>(ts & 0xffffffff)));
+
+  // Forward to 2 again.
   ts = 2;
-  unwrapped_ts += 0x10;
-  EXPECT_EQ(unwrapped_ts, wraparound_handler_.Unwrap(ts));
-  ts = 0xfffffff2;
-  unwrapped_ts += 0xfffffff0;
-  EXPECT_EQ(unwrapped_ts, wraparound_handler_.Unwrap(ts));
-  ts = 0;
-  unwrapped_ts += 0xe;
-  EXPECT_EQ(unwrapped_ts, wraparound_handler_.Unwrap(ts));
+  EXPECT_EQ(ts,
+            wraparound_handler_.Unwrap(static_cast<uint32_t>(ts & 0xffffffff)));
+
+  // Max positive skip ahead, until max value (0xffffffff).
+  for (uint32_t i = 0; i <= 0xf; ++i) {
+    ts = (i << 28) + 0x0fffffff;
+    EXPECT_EQ(
+        ts, wraparound_handler_.Unwrap(static_cast<uint32_t>(ts & 0xffffffff)));
+  }
+
+  // Wrap around.
+  ts += 2;
+  EXPECT_EQ(ts,
+            wraparound_handler_.Unwrap(static_cast<uint32_t>(ts & 0xffffffff)));
+
+  // Max wrap backward...
+  ts -= 0x0fffffff;
+  EXPECT_EQ(ts,
+            wraparound_handler_.Unwrap(static_cast<uint32_t>(ts & 0xffffffff)));
+
+  // ...and back again.
+  ts += 0x0fffffff;
+  EXPECT_EQ(ts,
+            wraparound_handler_.Unwrap(static_cast<uint32_t>(ts & 0xffffffff)));
+}
+
+TEST_F(TimestampWrapAroundHandlerTest, NoNegativeStart) {
+  int64_t ts = 0xfffffff0;
+  EXPECT_EQ(ts,
+            wraparound_handler_.Unwrap(static_cast<uint32_t>(ts & 0xffffffff)));
 }
 
 class TmToSeconds : public testing::Test {
@@ -173,7 +118,7 @@ class TmToSeconds : public testing::Test {
     // Set use of the test RNG to get deterministic expiration timestamp.
     rtc::SetRandomTestMode(true);
   }
-  ~TmToSeconds() {
+  ~TmToSeconds() override {
     // Put it back for the next test.
     rtc::SetRandomTestMode(false);
   }
@@ -260,6 +205,179 @@ class TmToSeconds : public testing::Test {
 
 TEST_F(TmToSeconds, TestTmToSeconds) {
   TestTmToSeconds(100000);
+}
+
+TEST(TimeDelta, FromAndTo) {
+  EXPECT_TRUE(TimeDelta::FromSeconds(2) == TimeDelta::FromMilliseconds(2000));
+  EXPECT_TRUE(TimeDelta::FromMilliseconds(3) ==
+              TimeDelta::FromMicroseconds(3000));
+  EXPECT_TRUE(TimeDelta::FromMicroseconds(4) ==
+              TimeDelta::FromNanoseconds(4000));
+  EXPECT_EQ(13, TimeDelta::FromSeconds(13).ToSeconds());
+  EXPECT_EQ(13, TimeDelta::FromMilliseconds(13).ToMilliseconds());
+  EXPECT_EQ(13, TimeDelta::FromMicroseconds(13).ToMicroseconds());
+  EXPECT_EQ(13, TimeDelta::FromNanoseconds(13).ToNanoseconds());
+}
+
+TEST(TimeDelta, ComparisonOperators) {
+  EXPECT_LT(TimeDelta::FromSeconds(1), TimeDelta::FromSeconds(2));
+  EXPECT_EQ(TimeDelta::FromSeconds(3), TimeDelta::FromSeconds(3));
+  EXPECT_GT(TimeDelta::FromSeconds(5), TimeDelta::FromSeconds(4));
+}
+
+TEST(TimeDelta, NumericOperators) {
+  double d = 0.5;
+  EXPECT_EQ(TimeDelta::FromMilliseconds(500),
+            TimeDelta::FromMilliseconds(1000) * d);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(2000),
+            TimeDelta::FromMilliseconds(1000) / d);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(500),
+            TimeDelta::FromMilliseconds(1000) *= d);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(2000),
+            TimeDelta::FromMilliseconds(1000) /= d);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(500),
+            d * TimeDelta::FromMilliseconds(1000));
+
+  float f = 0.5;
+  EXPECT_EQ(TimeDelta::FromMilliseconds(500),
+            TimeDelta::FromMilliseconds(1000) * f);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(2000),
+            TimeDelta::FromMilliseconds(1000) / f);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(500),
+            TimeDelta::FromMilliseconds(1000) *= f);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(2000),
+            TimeDelta::FromMilliseconds(1000) /= f);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(500),
+            f * TimeDelta::FromMilliseconds(1000));
+
+  int i = 2;
+  EXPECT_EQ(TimeDelta::FromMilliseconds(2000),
+            TimeDelta::FromMilliseconds(1000) * i);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(500),
+            TimeDelta::FromMilliseconds(1000) / i);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(2000),
+            TimeDelta::FromMilliseconds(1000) *= i);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(500),
+            TimeDelta::FromMilliseconds(1000) /= i);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(2000),
+            i * TimeDelta::FromMilliseconds(1000));
+
+  int64_t i64 = 2;
+  EXPECT_EQ(TimeDelta::FromMilliseconds(2000),
+            TimeDelta::FromMilliseconds(1000) * i64);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(500),
+            TimeDelta::FromMilliseconds(1000) / i64);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(2000),
+            TimeDelta::FromMilliseconds(1000) *= i64);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(500),
+            TimeDelta::FromMilliseconds(1000) /= i64);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(2000),
+            i64 * TimeDelta::FromMilliseconds(1000));
+
+  EXPECT_EQ(TimeDelta::FromMilliseconds(500),
+            TimeDelta::FromMilliseconds(1000) * 0.5);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(2000),
+            TimeDelta::FromMilliseconds(1000) / 0.5);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(500),
+            TimeDelta::FromMilliseconds(1000) *= 0.5);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(2000),
+            TimeDelta::FromMilliseconds(1000) /= 0.5);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(500),
+            0.5 * TimeDelta::FromMilliseconds(1000));
+
+  EXPECT_EQ(TimeDelta::FromMilliseconds(2000),
+            TimeDelta::FromMilliseconds(1000) * 2);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(500),
+            TimeDelta::FromMilliseconds(1000) / 2);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(2000),
+            TimeDelta::FromMilliseconds(1000) *= 2);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(500),
+            TimeDelta::FromMilliseconds(1000) /= 2);
+  EXPECT_EQ(TimeDelta::FromMilliseconds(2000),
+            2 * TimeDelta::FromMilliseconds(1000));
+}
+
+// Test that all the time functions exposed by TimeUtils get time from the
+// fake clock when it's set.
+TEST(FakeClock, TimeFunctionsUseFakeClock) {
+  FakeClock clock;
+  SetClockForTesting(&clock);
+
+  clock.SetTimeNanos(987654321);
+  EXPECT_EQ(987u, Time32());
+  EXPECT_EQ(987, TimeMillis());
+  EXPECT_EQ(987654, TimeMicros());
+  EXPECT_EQ(987654321, TimeNanos());
+  EXPECT_EQ(1000u, TimeAfter(13));
+
+  SetClockForTesting(nullptr);
+  // After it's unset, we should get a normal time.
+  EXPECT_NE(987, TimeMillis());
+}
+
+TEST(FakeClock, InitialTime) {
+  FakeClock clock;
+  EXPECT_EQ(0, clock.TimeNanos());
+}
+
+TEST(FakeClock, SetTimeNanos) {
+  FakeClock clock;
+  clock.SetTimeNanos(123);
+  EXPECT_EQ(123, clock.TimeNanos());
+  clock.SetTimeNanos(456);
+  EXPECT_EQ(456, clock.TimeNanos());
+}
+
+TEST(FakeClock, AdvanceTime) {
+  FakeClock clock;
+  clock.AdvanceTime(TimeDelta::FromNanoseconds(1111u));
+  EXPECT_EQ(1111, clock.TimeNanos());
+  clock.AdvanceTime(TimeDelta::FromMicroseconds(2222u));
+  EXPECT_EQ(2223111, clock.TimeNanos());
+  clock.AdvanceTime(TimeDelta::FromMilliseconds(3333u));
+  EXPECT_EQ(3335223111, clock.TimeNanos());
+  clock.AdvanceTime(TimeDelta::FromSeconds(4444u));
+  EXPECT_EQ(4447335223111, clock.TimeNanos());
+}
+
+// When the clock is advanced, threads that are waiting in a socket select
+// should wake up and look at the new time. This allows tests using the
+// fake clock to run much faster, if the test is bound by time constraints
+// (such as a test for a STUN ping timeout).
+TEST(FakeClock, SettingTimeWakesThreads) {
+  int64_t real_start_time_ms = TimeMillis();
+
+  FakeClock clock;
+  SetClockForTesting(&clock);
+
+  Thread worker;
+  worker.Start();
+
+  // Post an event that won't be executed for 10 seconds.
+  Event message_handler_dispatched(false, false);
+  auto functor = [&message_handler_dispatched] {
+    message_handler_dispatched.Set();
+  };
+  FunctorMessageHandler<void, decltype(functor)> handler(functor);
+  worker.PostDelayed(RTC_FROM_HERE, 60000, &handler);
+
+  // Wait for a bit for the worker thread to be started and enter its socket
+  // select(). Otherwise this test would be trivial since the worker thread
+  // would process the event as soon as it was started.
+  Thread::Current()->SleepMs(1000);
+
+  // Advance the fake clock, expecting the worker thread to wake up
+  // and dispatch the message instantly.
+  clock.AdvanceTime(TimeDelta::FromSeconds(60u));
+  EXPECT_TRUE(message_handler_dispatched.Wait(0));
+  worker.Stop();
+
+  SetClockForTesting(nullptr);
+
+  // The message should have been dispatched long before the 60 seconds fully
+  // elapsed (just a sanity check).
+  int64_t real_end_time_ms = TimeMillis();
+  EXPECT_LT(real_end_time_ms - real_start_time_ms, 10000);
 }
 
 }  // namespace rtc

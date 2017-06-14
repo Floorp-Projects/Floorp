@@ -496,8 +496,8 @@ LbeginENC:
     vmovdqu CTR0, XMMWORD PTR[16*16 + 2*16 + Gctx]
     vmovdqu BSWAPMASK, XMMWORD PTR[Lbswap_mask]
     mov     KS, [16*16 + 3*16 + Gctx]
-    mov     NR, [4 + KS]
-    lea     KS, [48 + KS]
+    mov     NR, [244 + KS]
+    lea     KS, [KS]
 
     vpshufb CTR0, CTR0, BSWAPMASK
 
@@ -994,8 +994,7 @@ LbeginDEC:
     vmovdqu CTR0, XMMWORD PTR[16*16 + 2*16 + Gctx]
     vmovdqu BSWAPMASK, XMMWORD PTR[Lbswap_mask]
     mov     KS, [16*16 + 3*16 + Gctx]
-    mov     NR, [4 + KS]
-    lea     KS, [48 + KS]
+    mov     NR, [244 + KS]
 
     vpshufb CTR0, CTR0, BSWAPMASK
 

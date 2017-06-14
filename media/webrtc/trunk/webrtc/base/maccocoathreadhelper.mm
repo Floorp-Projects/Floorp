@@ -9,10 +9,11 @@
  */
 // Helper function for using Cocoa with Posix threading.
 
-#import <assert.h>
 #import <Foundation/Foundation.h>
 
 #import "webrtc/base/maccocoathreadhelper.h"
+
+#include "webrtc/base/checks.h"
 
 namespace rtc {
 
@@ -34,7 +35,7 @@ void InitCocoaMultiThreading() {
     [hack drain];
   }
 
-  assert([NSThread isMultiThreaded]);
+  RTC_DCHECK([NSThread isMultiThreaded]);
 }
 
 }  // namespace rtc

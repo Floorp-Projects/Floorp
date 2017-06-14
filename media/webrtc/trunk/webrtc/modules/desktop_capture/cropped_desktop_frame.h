@@ -15,10 +15,11 @@
 
 namespace webrtc {
 
-// Always takes ownership of |frame|. Returns NULL if |rect| is not contained
-// by the bounds of |frame|.
-DesktopFrame* CreateCroppedDesktopFrame(DesktopFrame* frame,
-                                        const DesktopRect& rect);
+// Returns nullptr frame if |rect| is not contained by the bounds of |frame|.
+std::unique_ptr<DesktopFrame> CreateCroppedDesktopFrame(
+    std::unique_ptr<DesktopFrame> frame,
+    const DesktopRect& rect);
+
 }  // namespace webrtc
 
 #endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_CROPPED_DESKTOP_FRAME_H_

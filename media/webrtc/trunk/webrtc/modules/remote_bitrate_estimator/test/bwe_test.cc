@@ -10,11 +10,11 @@
 
 #include "webrtc/modules/remote_bitrate_estimator/test/bwe_test.h"
 
+#include <memory>
 #include <sstream>
 
 #include "webrtc/base/arraysize.h"
 #include "webrtc/base/common.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/bwe_test_framework.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/metric_recorder.h"
@@ -555,10 +555,10 @@ void BweTest::RunVariableCapacity2MultipleFlows(BandwidthEstimatorType bwe_type,
 void BweTest::RunBidirectionalFlow(BandwidthEstimatorType bwe_type) {
   enum direction { kForward = 0, kBackward };
   const size_t kNumFlows = 2;
-  rtc::scoped_ptr<AdaptiveVideoSource> sources[kNumFlows];
-  rtc::scoped_ptr<VideoSender> senders[kNumFlows];
-  rtc::scoped_ptr<MetricRecorder> metric_recorders[kNumFlows];
-  rtc::scoped_ptr<PacketReceiver> receivers[kNumFlows];
+  std::unique_ptr<AdaptiveVideoSource> sources[kNumFlows];
+  std::unique_ptr<VideoSender> senders[kNumFlows];
+  std::unique_ptr<MetricRecorder> metric_recorders[kNumFlows];
+  std::unique_ptr<PacketReceiver> receivers[kNumFlows];
 
   sources[kForward].reset(new AdaptiveVideoSource(kForward, 30, 300, 0, 0));
   senders[kForward].reset(
@@ -664,9 +664,9 @@ void BweTest::RunRoundTripTimeFairness(BandwidthEstimatorType bwe_type) {
   const int kAllFlowIds[] = {0, 1, 2, 3, 4};  // Five RMCAT flows.
   const int64_t kAllOneWayDelayMs[] = {10, 25, 50, 100, 150};
   const size_t kNumFlows = arraysize(kAllFlowIds);
-  rtc::scoped_ptr<AdaptiveVideoSource> sources[kNumFlows];
-  rtc::scoped_ptr<VideoSender> senders[kNumFlows];
-  rtc::scoped_ptr<MetricRecorder> metric_recorders[kNumFlows];
+  std::unique_ptr<AdaptiveVideoSource> sources[kNumFlows];
+  std::unique_ptr<VideoSender> senders[kNumFlows];
+  std::unique_ptr<MetricRecorder> metric_recorders[kNumFlows];
 
   // Flows initialized 10 seconds apart.
   const int64_t kStartingApartMs = 10 * 1000;
@@ -682,7 +682,7 @@ void BweTest::RunRoundTripTimeFairness(BandwidthEstimatorType bwe_type) {
 
   JitterFilter jitter_filter(&uplink_, CreateFlowIds(kAllFlowIds, kNumFlows));
 
-  rtc::scoped_ptr<DelayFilter> up_delay_filters[kNumFlows];
+  std::unique_ptr<DelayFilter> up_delay_filters[kNumFlows];
   for (size_t i = 0; i < kNumFlows; ++i) {
     up_delay_filters[i].reset(new DelayFilter(&uplink_, kAllFlowIds[i]));
   }
@@ -693,7 +693,7 @@ void BweTest::RunRoundTripTimeFairness(BandwidthEstimatorType bwe_type) {
 
   // Delays is being plotted only for the first flow.
   // To plot all of them, replace "i == 0" with "true" on new PacketReceiver().
-  rtc::scoped_ptr<PacketReceiver> receivers[kNumFlows];
+  std::unique_ptr<PacketReceiver> receivers[kNumFlows];
   for (size_t i = 0; i < kNumFlows; ++i) {
     metric_recorders[i].reset(
         new MetricRecorder(bwe_names[bwe_type], static_cast<int>(i),
@@ -708,7 +708,7 @@ void BweTest::RunRoundTripTimeFairness(BandwidthEstimatorType bwe_type) {
         i == 0 && plot_total_available_capacity_);
   }
 
-  rtc::scoped_ptr<DelayFilter> down_delay_filters[kNumFlows];
+  std::unique_ptr<DelayFilter> down_delay_filters[kNumFlows];
   for (size_t i = 0; i < kNumFlows; ++i) {
     down_delay_filters[i].reset(new DelayFilter(&downlink_, kAllFlowIds[i]));
   }
@@ -780,10 +780,10 @@ void BweTest::RunMultipleShortTcpFairness(
   const size_t kNumRmcatFlows = arraysize(kAllRmcatFlowIds);
   const size_t kNumTotalFlows = kNumRmcatFlows + arraysize(kAllTcpFlowIds);
 
-  rtc::scoped_ptr<AdaptiveVideoSource> sources[kNumRmcatFlows];
-  rtc::scoped_ptr<PacketSender> senders[kNumTotalFlows];
-  rtc::scoped_ptr<MetricRecorder> metric_recorders[kNumTotalFlows];
-  rtc::scoped_ptr<PacketReceiver> receivers[kNumTotalFlows];
+  std::unique_ptr<AdaptiveVideoSource> sources[kNumRmcatFlows];
+  std::unique_ptr<PacketSender> senders[kNumTotalFlows];
+  std::unique_ptr<MetricRecorder> metric_recorders[kNumTotalFlows];
+  std::unique_ptr<PacketReceiver> receivers[kNumTotalFlows];
 
   // RMCAT Flows are initialized simultaneosly at t=5 seconds.
   const int64_t kRmcatStartingTimeMs = 5 * 1000;
@@ -872,10 +872,10 @@ void BweTest::RunPauseResumeFlows(BandwidthEstimatorType bwe_type) {
   const int kAllFlowIds[] = {0, 1, 2};  // Three RMCAT flows.
   const size_t kNumFlows = arraysize(kAllFlowIds);
 
-  rtc::scoped_ptr<AdaptiveVideoSource> sources[kNumFlows];
-  rtc::scoped_ptr<VideoSender> senders[kNumFlows];
-  rtc::scoped_ptr<MetricRecorder> metric_recorders[kNumFlows];
-  rtc::scoped_ptr<PacketReceiver> receivers[kNumFlows];
+  std::unique_ptr<AdaptiveVideoSource> sources[kNumFlows];
+  std::unique_ptr<VideoSender> senders[kNumFlows];
+  std::unique_ptr<MetricRecorder> metric_recorders[kNumFlows];
+  std::unique_ptr<PacketReceiver> receivers[kNumFlows];
 
   // Flows initialized simultaneously.
   const int64_t kStartingApartMs = 0;

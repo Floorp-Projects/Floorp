@@ -10,16 +10,16 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/extended_jitter_report.h"
 
+#include <utility>
+
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/modules/rtp_rtcp/source/byte_io.h"
-#include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
-
-using webrtc::RTCPUtility::RtcpCommonHeader;
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/common_header.h"
 
 namespace webrtc {
 namespace rtcp {
-
+constexpr uint8_t ExtendedJitterReport::kPacketType;
 // Transmission Time Offsets in RTP Streams (RFC 5450).
 //
 //      0                   1                   2                   3
@@ -39,33 +39,31 @@ namespace rtcp {
 //  (inside a compound RTCP packet), and MUST have the same value for RC
 //  (reception report count) as the receiver report.
 
-bool ExtendedJitterReport::Parse(const RtcpCommonHeader& header,
-                                 const uint8_t* payload) {
-  RTC_DCHECK(header.packet_type == kPacketType);
+bool ExtendedJitterReport::Parse(const CommonHeader& packet) {
+  RTC_DCHECK_EQ(packet.type(), kPacketType);
 
-  const uint8_t jitters_count = header.count_or_format;
-  const size_t kJitterSizeBytes = 4u;
+  const uint8_t number_of_jitters = packet.count();
 
-  if (header.payload_size_bytes < jitters_count * kJitterSizeBytes) {
+  if (packet.payload_size_bytes() < number_of_jitters * kJitterSizeBytes) {
     LOG(LS_WARNING) << "Packet is too small to contain all the jitter.";
     return false;
   }
 
-  inter_arrival_jitters_.resize(jitters_count);
-  for (size_t index = 0; index < jitters_count; ++index) {
-    inter_arrival_jitters_[index] =
-        ByteReader<uint32_t>::ReadBigEndian(&payload[index * kJitterSizeBytes]);
+  inter_arrival_jitters_.resize(number_of_jitters);
+  for (size_t index = 0; index < number_of_jitters; ++index) {
+    inter_arrival_jitters_[index] = ByteReader<uint32_t>::ReadBigEndian(
+        &packet.payload()[index * kJitterSizeBytes]);
   }
 
   return true;
 }
 
-bool ExtendedJitterReport::WithJitter(uint32_t jitter) {
-  if (inter_arrival_jitters_.size() >= kMaxNumberOfJitters) {
-    LOG(LS_WARNING) << "Max inter-arrival jitter items reached.";
+bool ExtendedJitterReport::SetJitterValues(std::vector<uint32_t> values) {
+  if (values.size() > kMaxNumberOfJitterValues) {
+    LOG(LS_WARNING) << "Too many inter-arrival jitter items.";
     return false;
   }
-  inter_arrival_jitters_.push_back(jitter);
+  inter_arrival_jitters_ = std::move(values);
   return true;
 }
 
@@ -84,7 +82,7 @@ bool ExtendedJitterReport::Create(
 
   for (uint32_t jitter : inter_arrival_jitters_) {
     ByteWriter<uint32_t>::WriteBigEndian(packet + *index, jitter);
-    *index += sizeof(uint32_t);
+    *index += kJitterSizeBytes;
   }
   // Sanity check.
   RTC_DCHECK_EQ(index_end, *index);

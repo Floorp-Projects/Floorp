@@ -23,6 +23,7 @@
     test.chain.replace("PC_LOCAL_GUM", [
       function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
         test.pcLocal.attachLocalStream(emitter.stream());
+        emitter.start();
       }
     ]);
 
@@ -30,7 +31,6 @@
       function PC_REMOTE_WAIT_FOR_FRAMES() {
         var vremote = test.pcRemote.remoteMediaElements[0];
         ok(vremote, "Should have remote video element for pcRemote");
-        emitter.start();
         return addFinallyToPromise(helper.checkVideoPlaying(vremote, 10, 10, 16))
             .finally(() => emitter.stop());
       }

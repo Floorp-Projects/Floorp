@@ -12,6 +12,7 @@
 #define WEBRTC_BASE_HTTPCOMMON_INL_H__
 
 #include "webrtc/base/arraysize.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/httpcommon.h"
 
@@ -72,7 +73,7 @@ void Url<CTYPE>::do_set_full_path(const CTYPE* val, size_t len) {
     // TODO: consider failing in this case.
     path_.assign(1, static_cast<CTYPE>('/'));
   } else {
-    ASSERT(val[0] == static_cast<CTYPE>('/'));
+    RTC_DCHECK(val[0] == static_cast<CTYPE>('/'));
     path_.assign(val, path_length);
   }
   query_.assign(query, len - path_length);

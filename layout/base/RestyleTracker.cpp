@@ -255,9 +255,9 @@ RestyleTracker::DoProcessRestyles()
               data->mRestyleHint, MarkerTracingType::START)));
         }
 
-        Maybe<GeckoProfilerTracingRAII> profilerRAII;
+        Maybe<AutoProfilerTracing> tracing;
         if (profiler_feature_active(ProfilerFeature::Restyle)) {
-          profilerRAII.emplace("Paint", "Styles", Move(data->mBacktrace));
+          tracing.emplace("Paint", "Styles", Move(data->mBacktrace));
         }
         ProcessOneRestyle(element, data->mRestyleHint, data->mChangeHint,
                           data->mRestyleHintData);
@@ -359,9 +359,9 @@ RestyleTracker::DoProcessRestyles()
                       index++, count);
           LOG_RESTYLE_INDENT();
 
-          Maybe<GeckoProfilerTracingRAII> profilerRAII;
+          Maybe<AutoProfilerTracing> tracing;
           if (profiler_feature_active(ProfilerFeature::Restyle)) {
-            profilerRAII.emplace("Paint", "Styles", Move(currentRestyle->mBacktrace));
+            tracing.emplace("Paint", "Styles", Move(currentRestyle->mBacktrace));
           }
           if (isTimelineRecording) {
             timelines->AddMarkerForDocShell(docShell, Move(

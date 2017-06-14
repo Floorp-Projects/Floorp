@@ -30,7 +30,6 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsError.h"
-#include "nsDOMClassInfoID.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/Element.h"
@@ -57,7 +56,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULCommandDispatcher)
     NS_INTERFACE_MAP_ENTRY(nsIDOMXULCommandDispatcher)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMXULCommandDispatcher)
-    NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XULCommandDispatcher)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULCommandDispatcher)

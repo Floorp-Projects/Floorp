@@ -7,11 +7,11 @@
 #ifndef nsBidiPresUtils_h___
 #define nsBidiPresUtils_h___
 
+#include "gfxContext.h"
 #include "nsBidi.h"
 #include "nsBidiUtils.h"
 #include "nsHashKeys.h"
 #include "nsCoord.h"
-#include "nsRenderingContext.h"
 
 #ifdef DrawText
 #undef DrawText
@@ -19,11 +19,11 @@
 
 struct BidiParagraphData;
 struct BidiLineData;
+class gfxContext;
 class nsFontMetrics;
 class nsIFrame;
 class nsBlockFrame;
 class nsPresContext;
-class nsRenderingContext;
 class nsBlockInFlowLineIterator;
 class nsStyleContext;
 struct nsSize;
@@ -213,7 +213,7 @@ public:
                              int32_t                aLength,
                              nsBidiLevel            aBaseLevel,
                              nsPresContext*         aPresContext,
-                             nsRenderingContext&    aRenderingContext,
+                             gfxContext&            aRenderingContext,
                              DrawTarget*            aTextRunConstructionDrawTarget,
                              nsFontMetrics&         aFontMetrics,
                              nscoord                aX,
@@ -231,7 +231,7 @@ public:
                                   int32_t              aLength,
                                   nsBidiLevel          aBaseLevel,
                                   nsPresContext*       aPresContext,
-                                  nsRenderingContext&  aRenderingContext,
+                                  gfxContext&          aRenderingContext,
                                   nsFontMetrics&       aFontMetrics)
   {
     nscoord length;
@@ -379,7 +379,7 @@ private:
                                  int32_t                aLength,
                                  nsBidiLevel            aBaseLevel,
                                  nsPresContext*         aPresContext,
-                                 nsRenderingContext&    aRenderingContext,
+                                 gfxContext&            aRenderingContext,
                                  DrawTarget*            aTextRunConstructionDrawTarget,
                                  nsFontMetrics&         aFontMetrics,
                                  Mode                   aMode,

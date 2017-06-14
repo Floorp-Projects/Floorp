@@ -29,7 +29,8 @@
           'webrtc/modules/modules.gyp:audio_device',
           'webrtc/modules/modules.gyp:video_capture_module',
           'webrtc/modules/modules.gyp:video_capture_module_internal_impl',
-          'webrtc/modules/modules.gyp:video_render',
+# TODO: missing?
+#          'webrtc/modules/modules.gyp:video_render',
 #          'webrtc/system_wrappers/source/system_wrappers.gyp:system_wrappers',
 #      'webrtc/system_wrappers/source/system_wrappers.gyp:metrics_default',
 #         'webrtc/video_engine/video_engine.gyp:video_engine_core',

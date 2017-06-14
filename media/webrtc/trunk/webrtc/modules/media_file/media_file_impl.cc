@@ -14,7 +14,6 @@
 #include "webrtc/modules/media_file/media_file_impl.h"
 #include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/include/file_wrapper.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
 #include "webrtc/system_wrappers/include/trace.h"
 
 namespace webrtc {
@@ -95,11 +94,10 @@ int64_t MediaFileImpl::TimeUntilNextProcess()
     return -1;
 }
 
-int32_t MediaFileImpl::Process()
+void MediaFileImpl::Process()
 {
     WEBRTC_TRACE(kTraceWarning, kTraceFile, _id,
                  "Process: This method is not used by MediaFile class.");
-    return -1;
 }
 
 int32_t MediaFileImpl::PlayoutAudioData(int8_t* buffer,
@@ -373,12 +371,11 @@ int32_t MediaFileImpl::StartPlayingAudioFile(
         return -1;
     }
 
-    if(inputStream->OpenFile(fileName, true, loop) != 0)
-    {
-        delete inputStream;
-        WEBRTC_TRACE(kTraceError, kTraceFile, _id,
-                     "Could not open input file %s", fileName);
-        return -1;
+    if (!inputStream->OpenFile(fileName, true)) {
+      delete inputStream;
+      WEBRTC_TRACE(kTraceError, kTraceFile, _id, "Could not open input file %s",
+                   fileName);
+      return -1;
     }
 
     if(StartPlayingStream(*inputStream, loop, notificationTimeMs,
@@ -750,13 +747,11 @@ int32_t MediaFileImpl::StartRecordingAudioFile(
         return -1;
     }
 
-    if(outputStream->OpenFile(fileName, false) != 0)
-    {
-        delete outputStream;
-        WEBRTC_TRACE(kTraceError, kTraceFile, _id,
-                     "Could not open output file '%s' for writing!",
-                     fileName);
-        return -1;
+    if (!outputStream->OpenFile(fileName, false)) {
+      delete outputStream;
+      WEBRTC_TRACE(kTraceError, kTraceFile, _id,
+                   "Could not open output file '%s' for writing!", fileName);
+      return -1;
     }
 
     if(maxSizeBytes)

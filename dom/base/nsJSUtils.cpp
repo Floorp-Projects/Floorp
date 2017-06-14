@@ -136,8 +136,8 @@ nsJSUtils::ExecutionContext::ExecutionContext(JSContext* aCx,
                                               JS::Handle<JSObject*> aGlobal)
   :
 #ifdef MOZ_GECKO_PROFILER
-    mProfilerRAII("nsJSUtils::ExecutionContext", /* dynamicStr */ nullptr,
-                  __LINE__, js::ProfileEntry::Category::JS),
+    mAutoProfilerLabel("nsJSUtils::ExecutionContext", /* dynamicStr */ nullptr,
+                       __LINE__, js::ProfileEntry::Category::JS),
 #endif
     mCx(aCx)
   , mCompartment(aCx, aGlobal)

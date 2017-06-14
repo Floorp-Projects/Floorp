@@ -13,15 +13,16 @@
 
 #include "webrtc/modules/audio_coding/neteq/delay_manager.h"
 
-#include "testing/gmock/include/gmock/gmock.h"
+#include "webrtc/test/gmock.h"
 
 namespace webrtc {
 
 class MockDelayManager : public DelayManager {
  public:
   MockDelayManager(size_t max_packets_in_buffer,
-                   DelayPeakDetector* peak_detector)
-      : DelayManager(max_packets_in_buffer, peak_detector) {}
+                   DelayPeakDetector* peak_detector,
+                   const TickTimer* tick_timer)
+      : DelayManager(max_packets_in_buffer, peak_detector, tick_timer) {}
   virtual ~MockDelayManager() { Die(); }
   MOCK_METHOD0(Die, void());
   MOCK_CONST_METHOD0(iat_vector,
@@ -34,8 +35,6 @@ class MockDelayManager : public DelayManager {
       int(int length_ms));
   MOCK_METHOD0(Reset,
       void());
-  MOCK_CONST_METHOD0(AverageIAT,
-      int());
   MOCK_CONST_METHOD0(PeakFound,
       bool());
   MOCK_METHOD1(UpdateCounters,
@@ -46,8 +45,6 @@ class MockDelayManager : public DelayManager {
       void(int* lower_limit, int* higher_limit));
   MOCK_CONST_METHOD0(TargetLevel,
       int());
-  MOCK_METHOD1(LastDecoderType,
-      void(NetEqDecoder decoder_type));
   MOCK_METHOD1(set_extra_delay_ms,
       void(int16_t delay));
   MOCK_CONST_METHOD0(base_target_level,

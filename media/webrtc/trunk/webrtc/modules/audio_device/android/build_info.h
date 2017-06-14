@@ -12,11 +12,28 @@
 #define WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_BUILD_INFO_H_
 
 #include <jni.h>
+#include <memory>
 #include <string>
 
 #include "webrtc/modules/utility/include/jvm_android.h"
 
 namespace webrtc {
+
+// This enumeration maps to the values returned by BuildInfo::GetSdkVersion(),
+// indicating the Android release associated with a given SDK version.
+// See https://developer.android.com/guide/topics/manifest/uses-sdk-element.html
+// for details.
+enum SdkCode {
+  SDK_CODE_JELLY_BEAN = 16,      // Android 4.1
+  SDK_CODE_JELLY_BEAN_MR1 = 17,  // Android 4.2
+  SDK_CODE_JELLY_BEAN_MR2 = 18,  // Android 4.3
+  SDK_CODE_KITKAT = 19,          // Android 4.4
+  SDK_CODE_WATCH = 20,           // Android 4.4W
+  SDK_CODE_LOLLIPOP = 21,        // Android 5.0
+  SDK_CODE_LOLLIPOP_MR1 = 22,    // Android 5.1
+  SDK_CODE_MARSHMALLOW = 23,     // Android 6.0
+  SDK_CODE_N = 24,
+};
 
 // Utility class used to query the Java class (org/webrtc/voiceengine/BuildInfo)
 // for device and Android build information.
@@ -41,8 +58,9 @@ class BuildInfo {
   std::string GetBuildType();
   // The user-visible version string (e.g. "5.1").
   std::string GetBuildRelease();
-  // The user-visible SDK version of the framework (e.g. 21).
-  std::string GetSdkVersion();
+  // The user-visible SDK version of the framework (e.g. 21). See SdkCode enum
+  // for translation.
+  SdkCode GetSdkVersion();
 
  private:
   // Helper method which calls a static getter method with |name| and returns
@@ -55,7 +73,7 @@ class BuildInfo {
 
   // Provides access to the JNIEnv interface pointer and the JavaToStdString()
   // method which is used to translate Java strings to std strings.
-  rtc::scoped_ptr<JNIEnvironment> j_environment_;
+  std::unique_ptr<JNIEnvironment> j_environment_;
 
   // Holds the jclass object and provides access to CallStaticObjectMethod().
   // Used by GetStringFromJava() during construction only.

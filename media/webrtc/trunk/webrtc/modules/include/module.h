@@ -32,7 +32,7 @@ class Module {
 
   // Process any pending tasks such as timeouts.
   // Called on a worker thread.
-  virtual int32_t Process() = 0;
+  virtual void Process() = 0;
 
   // This method is called when the module is attached to a *running* process
   // thread or detached from one.  In the case of detaching, |process_thread|

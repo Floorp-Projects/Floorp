@@ -474,7 +474,7 @@ protected:
      * Create a XUL template builder on the specified node.
      */
     static nsresult
-    CreateTemplateBuilder(nsIContent* aElement);
+    CreateTemplateBuilder(Element* aElement);
 
     /**
      * Add the current prototype's style sheets (currently it's just
@@ -566,10 +566,10 @@ protected:
     class TemplateBuilderHookup : public nsForwardReference
     {
     protected:
-        nsCOMPtr<nsIContent> mElement; // [OWNER]
+        nsCOMPtr<Element> mElement; // [OWNER]
 
     public:
-        explicit TemplateBuilderHookup(nsIContent* aElement)
+        explicit TemplateBuilderHookup(Element* aElement)
             : mElement(aElement) {}
 
         virtual Phase GetPhase() override { return eHookup; }

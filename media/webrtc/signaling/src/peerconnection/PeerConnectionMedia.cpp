@@ -61,8 +61,7 @@ static const char* logTag = "PeerConnectionMedia";
 RefPtr<WebRtcCallWrapper>
 CreateCall()
 {
-  WebRtcCallWrapper::Config call_config;
-  return WebRtcCallWrapper::Create(call_config);
+  return WebRtcCallWrapper::Create();
 }
 
 nsresult

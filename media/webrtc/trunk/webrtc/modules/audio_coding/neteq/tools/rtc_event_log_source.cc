@@ -16,50 +16,13 @@
 #include <limits>
 
 #include "webrtc/base/checks.h"
-#include "webrtc/call/rtc_event_log.h"
+#include "webrtc/call/call.h"
 #include "webrtc/modules/audio_coding/neteq/tools/packet.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_header_parser.h"
 
-// Files generated at build-time by the protobuf compiler.
-#ifdef WEBRTC_ANDROID_PLATFORM_BUILD
-#include "external/webrtc/webrtc/call/rtc_event_log.pb.h"
-#else
-#include "webrtc/call/rtc_event_log.pb.h"
-#endif
 
 namespace webrtc {
 namespace test {
-
-namespace {
-
-const rtclog::RtpPacket* GetRtpPacket(const rtclog::Event& event) {
-  if (!event.has_type() || event.type() != rtclog::Event::RTP_EVENT)
-    return nullptr;
-  if (!event.has_timestamp_us() || !event.has_rtp_packet())
-    return nullptr;
-  const rtclog::RtpPacket& rtp_packet = event.rtp_packet();
-  if (!rtp_packet.has_type() || rtp_packet.type() != rtclog::AUDIO ||
-      !rtp_packet.has_incoming() || !rtp_packet.incoming() ||
-      !rtp_packet.has_packet_length() || rtp_packet.packet_length() == 0 ||
-      !rtp_packet.has_header() || rtp_packet.header().size() == 0 ||
-      rtp_packet.packet_length() < rtp_packet.header().size())
-    return nullptr;
-  return &rtp_packet;
-}
-
-const rtclog::AudioPlayoutEvent* GetAudioPlayoutEvent(
-    const rtclog::Event& event) {
-  if (!event.has_type() || event.type() != rtclog::Event::AUDIO_PLAYOUT_EVENT)
-    return nullptr;
-  if (!event.has_timestamp_us() || !event.has_audio_playout_event())
-    return nullptr;
-  const rtclog::AudioPlayoutEvent& playout_event = event.audio_playout_event();
-  if (!playout_event.has_local_ssrc())
-    return nullptr;
-  return &playout_event;
-}
-
-}  // namespace
 
 RtcEventLogSource* RtcEventLogSource::Create(const std::string& file_name) {
   RtcEventLogSource* source = new RtcEventLogSource();
@@ -75,43 +38,55 @@ bool RtcEventLogSource::RegisterRtpHeaderExtension(RTPExtensionType type,
   return parser_->RegisterRtpHeaderExtension(type, id);
 }
 
-Packet* RtcEventLogSource::NextPacket() {
-  while (rtp_packet_index_ < event_log_->stream_size()) {
-    const rtclog::Event& event = event_log_->stream(rtp_packet_index_);
-    const rtclog::RtpPacket* rtp_packet = GetRtpPacket(event);
-    rtp_packet_index_++;
-    if (rtp_packet) {
-      uint8_t* packet_header = new uint8_t[rtp_packet->header().size()];
-      memcpy(packet_header, rtp_packet->header().data(),
-             rtp_packet->header().size());
-      Packet* packet = new Packet(packet_header, rtp_packet->header().size(),
-                                  rtp_packet->packet_length(),
-                                  event.timestamp_us() / 1000, *parser_.get());
-      if (packet->valid_header()) {
-        // Check if the packet should not be filtered out.
-        if (!filter_.test(packet->header().payloadType) &&
-            !(use_ssrc_filter_ && packet->header().ssrc != ssrc_))
-          return packet;
-      } else {
-        std::cout << "Warning: Packet with index " << (rtp_packet_index_ - 1)
-                  << " has an invalid header and will be ignored." << std::endl;
+std::unique_ptr<Packet> RtcEventLogSource::NextPacket() {
+  while (rtp_packet_index_ < parsed_stream_.GetNumberOfEvents()) {
+    if (parsed_stream_.GetEventType(rtp_packet_index_) ==
+        ParsedRtcEventLog::RTP_EVENT) {
+      PacketDirection direction;
+      MediaType media_type;
+      size_t header_length;
+      size_t packet_length;
+      uint64_t timestamp_us = parsed_stream_.GetTimestamp(rtp_packet_index_);
+      parsed_stream_.GetRtpHeader(rtp_packet_index_, &direction, &media_type,
+                                  nullptr, &header_length, &packet_length);
+      if (direction == kIncomingPacket && media_type == MediaType::AUDIO) {
+        uint8_t* packet_header = new uint8_t[header_length];
+        parsed_stream_.GetRtpHeader(rtp_packet_index_, nullptr, nullptr,
+                                    packet_header, nullptr, nullptr);
+        std::unique_ptr<Packet> packet(new Packet(
+            packet_header, header_length, packet_length,
+            static_cast<double>(timestamp_us) / 1000, *parser_.get()));
+        if (packet->valid_header()) {
+          // Check if the packet should not be filtered out.
+          if (!filter_.test(packet->header().payloadType) &&
+              !(use_ssrc_filter_ && packet->header().ssrc != ssrc_)) {
+            rtp_packet_index_++;
+            return packet;
+          }
+        } else {
+          std::cout << "Warning: Packet with index " << rtp_packet_index_
+                    << " has an invalid header and will be ignored."
+                    << std::endl;
+        }
       }
-      // The packet has either an invalid header or needs to be filtered out, so
-      // it can be deleted.
-      delete packet;
     }
+    rtp_packet_index_++;
   }
   return nullptr;
 }
 
 int64_t RtcEventLogSource::NextAudioOutputEventMs() {
-  while (audio_output_index_ < event_log_->stream_size()) {
-    const rtclog::Event& event = event_log_->stream(audio_output_index_);
-    const rtclog::AudioPlayoutEvent* playout_event =
-        GetAudioPlayoutEvent(event);
+  while (audio_output_index_ < parsed_stream_.GetNumberOfEvents()) {
+    if (parsed_stream_.GetEventType(audio_output_index_) ==
+        ParsedRtcEventLog::AUDIO_PLAYOUT_EVENT) {
+      uint64_t timestamp_us = parsed_stream_.GetTimestamp(audio_output_index_);
+      // We call GetAudioPlayout only to check that the protobuf event is
+      // well-formed.
+      parsed_stream_.GetAudioPlayout(audio_output_index_, nullptr);
+      audio_output_index_++;
+      return timestamp_us / 1000;
+    }
     audio_output_index_++;
-    if (playout_event)
-      return event.timestamp_us() / 1000;
   }
   return std::numeric_limits<int64_t>::max();
 }
@@ -120,8 +95,7 @@ RtcEventLogSource::RtcEventLogSource()
     : PacketSource(), parser_(RtpHeaderParser::Create()) {}
 
 bool RtcEventLogSource::OpenFile(const std::string& file_name) {
-  event_log_.reset(new rtclog::EventStream());
-  return RtcEventLog::ParseRtcEventLog(file_name, event_log_.get());
+  return parsed_stream_.ParseFile(file_name);
 }
 
 }  // namespace test

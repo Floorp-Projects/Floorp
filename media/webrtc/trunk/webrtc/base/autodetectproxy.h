@@ -70,6 +70,7 @@ class AutoDetectProxy : public SignalThread {
   void OnConnectEvent(AsyncSocket * socket);
   void OnReadEvent(AsyncSocket * socket);
   void OnCloseEvent(AsyncSocket * socket, int error);
+  void OnTimeout();
   void OnResolveResult(AsyncResolverInterface* resolver);
   bool DoConnect();
 

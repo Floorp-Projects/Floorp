@@ -10,84 +10,211 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/transport_feedback.h"
 
+#include <algorithm>
+
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
+#include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/modules/rtp_rtcp/source/byte_io.h"
-#include "webrtc/modules/rtp_rtcp/source/rtcp_utility.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/common_header.h"
 
 namespace webrtc {
 namespace rtcp {
-
+namespace {
 // Header size:
-// * 12 bytes Common Packet Format for RTCP Feedback Messages
+// * 4 bytes Common RTCP Packet Header
+// * 8 bytes Common Packet Format for RTCP Feedback Messages
 // * 8 bytes FeedbackPacket header
-static const uint32_t kHeaderSizeBytes = 12 + 8;
-static const uint32_t kChunkSizeBytes = 2;
-static const uint32_t kOneBitVectorCapacity = 14;
-static const uint32_t kTwoBitVectorCapacity = 7;
-static const uint32_t kRunLengthCapacity = 0x1FFF;
+constexpr size_t kTransportFeedbackHeaderSizeBytes = 4 + 8 + 8;
+constexpr size_t kChunkSizeBytes = 2;
 // TODO(sprang): Add support for dynamic max size for easier fragmentation,
 // eg. set it to what's left in the buffer or IP_PACKET_SIZE.
 // Size constraint imposed by RTCP common header: 16bit size field interpreted
 // as number of four byte words minus the first header word.
-static const uint32_t kMaxSizeBytes = (1 << 16) * 4;
-static const uint32_t kMinSizeBytes = kHeaderSizeBytes + kChunkSizeBytes;
-static const uint32_t kBaseScaleFactor =
+constexpr size_t kMaxSizeBytes = (1 << 16) * 4;
+// Payload size:
+// * 8 bytes Common Packet Format for RTCP Feedback Messages
+// * 8 bytes FeedbackPacket header.
+// * 2 bytes for one chunk.
+constexpr size_t kMinPayloadSizeBytes = 8 + 8 + 2;
+constexpr size_t kBaseScaleFactor =
     TransportFeedback::kDeltaScaleFactor * (1 << 8);
+constexpr int64_t kTimeWrapPeriodUs = (1ll << 24) * kBaseScaleFactor;
 
-class PacketStatusChunk {
+//    Message format
+//
+//     0                   1                   2                   3
+//     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//    |V=2|P|  FMT=15 |    PT=205     |           length              |
+//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//  0 |                     SSRC of packet sender                     |
+//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//  4 |                      SSRC of media source                     |
+//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//  8 |      base sequence number     |      packet status count      |
+//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// 12 |                 reference time                | fb pkt. count |
+//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// 16 |          packet chunk         |         packet chunk          |
+//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//    .                                                               .
+//    .                                                               .
+//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//    |         packet chunk          |  recv delta   |  recv delta   |
+//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//    .                                                               .
+//    .                                                               .
+//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//    |           recv delta          |  recv delta   | zero padding  |
+//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+}  // namespace
+constexpr uint8_t TransportFeedback::kFeedbackMessageType;
+constexpr size_t TransportFeedback::kMaxReportedPackets;
+
+// Keep delta_sizes that can be encoded into single chunk if it is last chunk.
+class TransportFeedback::LastChunk {
  public:
-  virtual ~PacketStatusChunk() {}
-  virtual uint16_t NumSymbols() const = 0;
-  virtual void AppendSymbolsTo(
-      std::vector<TransportFeedback::StatusSymbol>* vec) const = 0;
-  virtual void WriteTo(uint8_t* buffer) const = 0;
+  using DeltaSize = TransportFeedback::DeltaSize;
+
+  LastChunk();
+
+  bool Empty() const;
+  void Clear();
+  // Return if delta sizes still can be encoded into single chunk with added
+  // |delta_size|.
+  bool CanAdd(DeltaSize delta_size) const;
+  // Add |delta_size|, assumes |CanAdd(delta_size)|,
+  void Add(DeltaSize delta_size);
+
+  // Encode chunk as large as possible removing encoded delta sizes.
+  // Assume CanAdd() == false for some valid delta_size.
+  uint16_t Emit();
+  // Encode all stored delta_sizes into single chunk, pad with 0s if needed.
+  uint16_t EncodeLast() const;
+
+  // Decode up to |max_size| delta sizes from |chunk|.
+  void Decode(uint16_t chunk, size_t max_size);
+  // Appends content of the Lastchunk to |deltas|.
+  void AppendTo(std::vector<DeltaSize>* deltas) const;
+
+ private:
+  static constexpr size_t kMaxRunLengthCapacity = 0x1fff;
+  static constexpr size_t kMaxOneBitCapacity = 14;
+  static constexpr size_t kMaxTwoBitCapacity = 7;
+  static constexpr size_t kMaxVectorCapacity = kMaxOneBitCapacity;
+  static constexpr DeltaSize kLarge = 2;
+
+  uint16_t EncodeOneBit() const;
+  void DecodeOneBit(uint16_t chunk, size_t max_size);
+
+  uint16_t EncodeTwoBit(size_t size) const;
+  void DecodeTwoBit(uint16_t chunk, size_t max_size);
+
+  uint16_t EncodeRunLength() const;
+  void DecodeRunLength(uint16_t chunk, size_t max_size);
+
+  DeltaSize delta_sizes_[kMaxVectorCapacity];
+  uint16_t size_;
+  bool all_same_;
+  bool has_large_delta_;
 };
+constexpr size_t TransportFeedback::LastChunk::kMaxRunLengthCapacity;
+constexpr size_t TransportFeedback::LastChunk::kMaxOneBitCapacity;
+constexpr size_t TransportFeedback::LastChunk::kMaxTwoBitCapacity;
+constexpr size_t TransportFeedback::LastChunk::kMaxVectorCapacity;
 
-uint8_t EncodeSymbol(TransportFeedback::StatusSymbol symbol) {
-  switch (symbol) {
-    case TransportFeedback::StatusSymbol::kNotReceived:
-      return 0;
-    case TransportFeedback::StatusSymbol::kReceivedSmallDelta:
-      return 1;
-    case TransportFeedback::StatusSymbol::kReceivedLargeDelta:
-      return 2;
-    default:
-      RTC_NOTREACHED();
-      return 0;
+TransportFeedback::LastChunk::LastChunk() {
+  Clear();
+}
+
+bool TransportFeedback::LastChunk::Empty() const {
+  return size_ == 0;
+}
+
+void TransportFeedback::LastChunk::Clear() {
+  size_ = 0;
+  all_same_ = true;
+  has_large_delta_ = false;
+}
+
+bool TransportFeedback::LastChunk::CanAdd(DeltaSize delta_size) const {
+  RTC_DCHECK_LE(delta_size, 2);
+  if (size_ < kMaxTwoBitCapacity)
+    return true;
+  if (size_ < kMaxOneBitCapacity && !has_large_delta_ && delta_size != kLarge)
+    return true;
+  if (size_ < kMaxRunLengthCapacity && all_same_ &&
+      delta_sizes_[0] == delta_size)
+    return true;
+  return false;
+}
+
+void TransportFeedback::LastChunk::Add(DeltaSize delta_size) {
+  RTC_DCHECK(CanAdd(delta_size));
+  if (size_ < kMaxVectorCapacity)
+    delta_sizes_[size_] = delta_size;
+  size_++;
+  all_same_ = all_same_ && delta_size == delta_sizes_[0];
+  has_large_delta_ = has_large_delta_ || delta_size == kLarge;
+}
+
+uint16_t TransportFeedback::LastChunk::Emit() {
+  RTC_DCHECK(!CanAdd(0) || !CanAdd(1) || !CanAdd(2));
+  if (all_same_) {
+    uint16_t chunk = EncodeRunLength();
+    Clear();
+    return chunk;
+  }
+  if (size_ == kMaxOneBitCapacity) {
+    uint16_t chunk = EncodeOneBit();
+    Clear();
+    return chunk;
+  }
+  RTC_DCHECK_GE(size_, kMaxTwoBitCapacity);
+  uint16_t chunk = EncodeTwoBit(kMaxTwoBitCapacity);
+  // Remove |kMaxTwoBitCapacity| encoded delta sizes:
+  // Shift remaining delta sizes and recalculate all_same_ && has_large_delta_.
+  size_ -= kMaxTwoBitCapacity;
+  all_same_ = true;
+  has_large_delta_ = false;
+  for (size_t i = 0; i < size_; ++i) {
+    DeltaSize delta_size = delta_sizes_[kMaxTwoBitCapacity + i];
+    delta_sizes_[i] = delta_size;
+    all_same_ = all_same_ && delta_size == delta_sizes_[0];
+    has_large_delta_ = has_large_delta_ || delta_size == kLarge;
+  }
+
+  return chunk;
+}
+
+uint16_t TransportFeedback::LastChunk::EncodeLast() const {
+  RTC_DCHECK_GT(size_, 0);
+  if (all_same_)
+    return EncodeRunLength();
+  if (size_ <= kMaxTwoBitCapacity)
+    return EncodeTwoBit(size_);
+  return EncodeOneBit();
+}
+
+// Appends content of the Lastchunk to |deltas|.
+void TransportFeedback::LastChunk::AppendTo(
+    std::vector<DeltaSize>* deltas) const {
+  if (all_same_) {
+    deltas->insert(deltas->end(), size_, delta_sizes_[0]);
+  } else {
+    deltas->insert(deltas->end(), delta_sizes_, delta_sizes_ + size_);
   }
 }
 
-TransportFeedback::StatusSymbol DecodeSymbol(uint8_t value) {
-  switch (value) {
-    case 0:
-      return TransportFeedback::StatusSymbol::kNotReceived;
-    case 1:
-      return TransportFeedback::StatusSymbol::kReceivedSmallDelta;
-    case 2:
-      return TransportFeedback::StatusSymbol::kReceivedLargeDelta;
-    default:
-      RTC_NOTREACHED();
-      return TransportFeedback::StatusSymbol::kNotReceived;
+void TransportFeedback::LastChunk::Decode(uint16_t chunk, size_t max_size) {
+  if ((chunk & 0x8000) == 0) {
+    DecodeRunLength(chunk, max_size);
+  } else if ((chunk & 0x4000) == 0) {
+    DecodeOneBit(chunk, max_size);
+  } else {
+    DecodeTwoBit(chunk, max_size);
   }
-}
-
-TransportFeedback::TransportFeedback()
-    : packet_sender_ssrc_(0),
-      media_source_ssrc_(0),
-      base_seq_(-1),
-      base_time_(-1),
-      feedback_seq_(0),
-      last_seq_(-1),
-      last_timestamp_(-1),
-      first_symbol_cardinality_(0),
-      vec_needs_two_bit_symbols_(false),
-      size_bytes_(kHeaderSizeBytes) {
-}
-
-TransportFeedback::~TransportFeedback() {
-  for (PacketStatusChunk* chunk : status_chunks_)
-    delete chunk;
 }
 
 //  One Bit Status Vector Chunk
@@ -100,68 +227,25 @@ TransportFeedback::~TransportFeedback() {
 //
 //  T = 1
 //  S = 0
-//  symbol list = 14 entries where 0 = not received, 1 = received
+//  Symbol list = 14 entries where 0 = not received, 1 = received 1-byte delta.
+uint16_t TransportFeedback::LastChunk::EncodeOneBit() const {
+  RTC_DCHECK(!has_large_delta_);
+  RTC_DCHECK_LE(size_, kMaxOneBitCapacity);
+  uint16_t chunk = 0x8000;
+  for (size_t i = 0; i < size_; ++i)
+    chunk |= delta_sizes_[i] << (kMaxOneBitCapacity - 1 - i);
+  return chunk;
+}
 
-class OneBitVectorChunk : public PacketStatusChunk {
- public:
-  static const int kCapacity = 14;
-
-  explicit OneBitVectorChunk(
-      std::deque<TransportFeedback::StatusSymbol>* symbols) {
-    size_t input_size = symbols->size();
-    for (size_t i = 0; i < kCapacity; ++i) {
-      if (i < input_size) {
-        symbols_[i] = symbols->front();
-        symbols->pop_front();
-      } else {
-        symbols_[i] = TransportFeedback::StatusSymbol::kNotReceived;
-      }
-    }
-  }
-
-  virtual ~OneBitVectorChunk() {}
-
-  uint16_t NumSymbols() const override { return kCapacity; }
-
-  void AppendSymbolsTo(
-      std::vector<TransportFeedback::StatusSymbol>* vec) const override {
-    vec->insert(vec->end(), &symbols_[0], &symbols_[kCapacity]);
-  }
-
-  void WriteTo(uint8_t* buffer) const override {
-    const int kSymbolsInFirstByte = 6;
-    const int kSymbolsInSecondByte = 8;
-    buffer[0] = 0x80u;
-    for (int i = 0; i < kSymbolsInFirstByte; ++i) {
-      uint8_t encoded_symbol = EncodeSymbol(symbols_[i]);
-      RTC_DCHECK_LE(encoded_symbol, 1u);
-      buffer[0] |= encoded_symbol << (kSymbolsInFirstByte - (i + 1));
-    }
-    buffer[1] = 0x00u;
-    for (int i = 0; i < kSymbolsInSecondByte; ++i) {
-      uint8_t encoded_symbol = EncodeSymbol(symbols_[i + kSymbolsInFirstByte]);
-      RTC_DCHECK_LE(encoded_symbol, 1u);
-      buffer[1] |= encoded_symbol << (kSymbolsInSecondByte - (i + 1));
-    }
-  }
-
-  static OneBitVectorChunk* ParseFrom(const uint8_t* data) {
-    OneBitVectorChunk* chunk = new OneBitVectorChunk();
-
-    size_t index = 0;
-    for (int i = 5; i >= 0; --i)  // Last 5 bits from first byte.
-      chunk->symbols_[index++] = DecodeSymbol((data[0] >> i) & 0x01);
-    for (int i = 7; i >= 0; --i)  // 8 bits from the last byte.
-      chunk->symbols_[index++] = DecodeSymbol((data[1] >> i) & 0x01);
-
-    return chunk;
-  }
-
- private:
-  OneBitVectorChunk() {}
-
-  TransportFeedback::StatusSymbol symbols_[kCapacity];
-};
+void TransportFeedback::LastChunk::DecodeOneBit(uint16_t chunk,
+                                                size_t max_size) {
+  RTC_DCHECK_EQ(chunk & 0xc000, 0x8000);
+  size_ = std::min(kMaxOneBitCapacity, max_size);
+  has_large_delta_ = false;
+  all_same_ = false;
+  for (size_t i = 0; i < size_; ++i)
+    delta_sizes_[i] = (chunk >> (kMaxOneBitCapacity - 1 - i)) & 0x01;
+}
 
 //  Two Bit Status Vector Chunk
 //
@@ -173,66 +257,26 @@ class OneBitVectorChunk : public PacketStatusChunk {
 //
 //  T = 1
 //  S = 1
-//  symbol list = 7 entries of two bits each, see (Encode|Decode)Symbol
+//  symbol list = 7 entries of two bits each.
+uint16_t TransportFeedback::LastChunk::EncodeTwoBit(size_t size) const {
+  RTC_DCHECK_LE(size, size_);
+  uint16_t chunk = 0xc000;
+  for (size_t i = 0; i < size; ++i)
+    chunk |= delta_sizes_[i] << 2 * (kMaxTwoBitCapacity - 1 - i);
+  return chunk;
+}
 
-class TwoBitVectorChunk : public PacketStatusChunk {
- public:
-  static const int kCapacity = 7;
+void TransportFeedback::LastChunk::DecodeTwoBit(uint16_t chunk,
+                                                size_t max_size) {
+  RTC_DCHECK_EQ(chunk & 0xc000, 0xc000);
+  size_ = std::min(kMaxTwoBitCapacity, max_size);
+  has_large_delta_ = true;
+  all_same_ = false;
+  for (size_t i = 0; i < size_; ++i)
+    delta_sizes_[i] = (chunk >> 2 * (kMaxTwoBitCapacity - 1 - i)) & 0x03;
+}
 
-  explicit TwoBitVectorChunk(
-      std::deque<TransportFeedback::StatusSymbol>* symbols) {
-    size_t input_size = symbols->size();
-    for (size_t i = 0; i < kCapacity; ++i) {
-      if (i < input_size) {
-        symbols_[i] = symbols->front();
-        symbols->pop_front();
-      } else {
-        symbols_[i] = TransportFeedback::StatusSymbol::kNotReceived;
-      }
-    }
-  }
-
-  virtual ~TwoBitVectorChunk() {}
-
-  uint16_t NumSymbols() const override { return kCapacity; }
-
-  void AppendSymbolsTo(
-      std::vector<TransportFeedback::StatusSymbol>* vec) const override {
-    vec->insert(vec->end(), &symbols_[0], &symbols_[kCapacity]);
-  }
-
-  void WriteTo(uint8_t* buffer) const override {
-    buffer[0] = 0xC0;
-    buffer[0] |= EncodeSymbol(symbols_[0]) << 4;
-    buffer[0] |= EncodeSymbol(symbols_[1]) << 2;
-    buffer[0] |= EncodeSymbol(symbols_[2]);
-    buffer[1] = EncodeSymbol(symbols_[3]) << 6;
-    buffer[1] |= EncodeSymbol(symbols_[4]) << 4;
-    buffer[1] |= EncodeSymbol(symbols_[5]) << 2;
-    buffer[1] |= EncodeSymbol(symbols_[6]);
-  }
-
-  static TwoBitVectorChunk* ParseFrom(const uint8_t* buffer) {
-    TwoBitVectorChunk* chunk = new TwoBitVectorChunk();
-
-    chunk->symbols_[0] = DecodeSymbol((buffer[0] >> 4) & 0x03);
-    chunk->symbols_[1] = DecodeSymbol((buffer[0] >> 2) & 0x03);
-    chunk->symbols_[2] = DecodeSymbol(buffer[0] & 0x03);
-    chunk->symbols_[3] = DecodeSymbol((buffer[1] >> 6) & 0x03);
-    chunk->symbols_[4] = DecodeSymbol((buffer[1] >> 4) & 0x03);
-    chunk->symbols_[5] = DecodeSymbol((buffer[1] >> 2) & 0x03);
-    chunk->symbols_[6] = DecodeSymbol(buffer[1] & 0x03);
-
-    return chunk;
-  }
-
- private:
-  TwoBitVectorChunk() {}
-
-  TransportFeedback::StatusSymbol symbols_[kCapacity];
-};
-
-//  Two Bit Status Vector Chunk
+//  Run Length Status Vector Chunk
 //
 //  0                   1
 //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
@@ -241,100 +285,56 @@ class TwoBitVectorChunk : public PacketStatusChunk {
 //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //
 //  T = 0
-//  S = symbol, see (Encode|Decode)Symbol
+//  S = symbol
 //  Run Length = Unsigned integer denoting the run length of the symbol
-
-class RunLengthChunk : public PacketStatusChunk {
- public:
-  RunLengthChunk(TransportFeedback::StatusSymbol symbol, size_t size)
-      : symbol_(symbol), size_(size) {
-    RTC_DCHECK_LE(size, 0x1FFFu);
-  }
-
-  virtual ~RunLengthChunk() {}
-
-  uint16_t NumSymbols() const override { return size_; }
-
-  void AppendSymbolsTo(
-      std::vector<TransportFeedback::StatusSymbol>* vec) const override {
-    vec->insert(vec->end(), size_, symbol_);
-  }
-
-  void WriteTo(uint8_t* buffer) const override {
-    buffer[0] = EncodeSymbol(symbol_) << 5;  // Write S (T = 0 implicitly)
-    buffer[0] |= (size_ >> 8) & 0x1F;  // 5 most significant bits of run length.
-    buffer[1] = size_ & 0xFF;  // 8 least significant bits of run length.
-  }
-
-  static RunLengthChunk* ParseFrom(const uint8_t* buffer) {
-    RTC_DCHECK_EQ(0, buffer[0] & 0x80);
-    TransportFeedback::StatusSymbol symbol =
-        DecodeSymbol((buffer[0] >> 5) & 0x03);
-    uint16_t count = (static_cast<uint16_t>(buffer[0] & 0x1F) << 8) | buffer[1];
-
-    return new RunLengthChunk(symbol, count);
-  }
-
- private:
-  const TransportFeedback::StatusSymbol symbol_;
-  const size_t size_;
-};
-
-// Unwrap to a larger type, for easier handling of wraps.
-int64_t TransportFeedback::Unwrap(uint16_t sequence_number) {
-  if (last_seq_ == -1)
-    return sequence_number;
-
-  int64_t delta = sequence_number - last_seq_;
-  if (IsNewerSequenceNumber(sequence_number,
-                            static_cast<uint16_t>(last_seq_))) {
-    if (delta < 0)
-      delta += (1 << 16);
-  } else if (delta > 0) {
-    delta -= (1 << 16);
-  }
-
-  return last_seq_ + delta;
+uint16_t TransportFeedback::LastChunk::EncodeRunLength() const {
+  RTC_DCHECK(all_same_);
+  RTC_DCHECK_LE(size_, kMaxRunLengthCapacity);
+  return (delta_sizes_[0] << 13) | size_;
 }
 
-void TransportFeedback::WithPacketSenderSsrc(uint32_t ssrc) {
-  packet_sender_ssrc_ = ssrc;
+void TransportFeedback::LastChunk::DecodeRunLength(uint16_t chunk,
+                                                   size_t max_count) {
+  RTC_DCHECK_EQ(chunk & 0x8000, 0);
+  size_ = std::min<size_t>(chunk & 0x1fff, max_count);
+  size_t delta_size = (chunk >> 13) & 0x03;
+  has_large_delta_ = delta_size >= kLarge;
+  all_same_ = true;
+  // To make it consistent with Add function, populate delta_sizes_ beyound 1st.
+  for (size_t i = 0; i < std::min<size_t>(size_, kMaxVectorCapacity); ++i)
+    delta_sizes_[i] = delta_size;
 }
 
-void TransportFeedback::WithMediaSourceSsrc(uint32_t ssrc) {
-  media_source_ssrc_ = ssrc;
+TransportFeedback::TransportFeedback()
+    : base_seq_no_(0),
+      num_seq_no_(0),
+      base_time_ticks_(0),
+      feedback_seq_(0),
+      last_timestamp_us_(0),
+      last_chunk_(new LastChunk()),
+      size_bytes_(kTransportFeedbackHeaderSizeBytes) {}
+
+TransportFeedback::~TransportFeedback() {}
+
+void TransportFeedback::SetBase(uint16_t base_sequence,
+                                int64_t ref_timestamp_us) {
+  RTC_DCHECK_EQ(num_seq_no_, 0);
+  RTC_DCHECK_GE(ref_timestamp_us, 0);
+  base_seq_no_ = base_sequence;
+  base_time_ticks_ = (ref_timestamp_us % kTimeWrapPeriodUs) / kBaseScaleFactor;
+  last_timestamp_us_ = GetBaseTimeUs();
 }
 
-uint32_t TransportFeedback::GetPacketSenderSsrc() const {
-  return packet_sender_ssrc_;
-}
-
-uint32_t TransportFeedback::GetMediaSourceSsrc() const {
-  return media_source_ssrc_;
-}
-void TransportFeedback::WithBase(uint16_t base_sequence,
-                                 int64_t ref_timestamp_us) {
-  RTC_DCHECK_EQ(-1, base_seq_);
-  RTC_DCHECK_NE(-1, ref_timestamp_us);
-  base_seq_ = base_sequence;
-  last_seq_ = base_sequence;
-  base_time_ = ref_timestamp_us / kBaseScaleFactor;
-  last_timestamp_ = base_time_ * kBaseScaleFactor;
-}
-
-void TransportFeedback::WithFeedbackSequenceNumber(uint8_t feedback_sequence) {
+void TransportFeedback::SetFeedbackSequenceNumber(uint8_t feedback_sequence) {
   feedback_seq_ = feedback_sequence;
 }
 
-bool TransportFeedback::WithReceivedPacket(uint16_t sequence_number,
-                                           int64_t timestamp) {
-  RTC_DCHECK_NE(-1, base_seq_);
-  int64_t seq = Unwrap(sequence_number);
-  if (seq != base_seq_ && seq <= last_seq_)
-    return false;
-
+bool TransportFeedback::AddReceivedPacket(uint16_t sequence_number,
+                                          int64_t timestamp_us) {
   // Convert to ticks and round.
-  int64_t delta_full = timestamp - last_timestamp_;
+  int64_t delta_full = (timestamp_us - last_timestamp_us_) % kTimeWrapPeriodUs;
+  if (delta_full > kTimeWrapPeriodUs / 2)
+    delta_full -= kTimeWrapPeriodUs;
   delta_full +=
       delta_full < 0 ? -(kDeltaScaleFactor / 2) : kDeltaScaleFactor / 2;
   delta_full /= kDeltaScaleFactor;
@@ -346,223 +346,227 @@ bool TransportFeedback::WithReceivedPacket(uint16_t sequence_number,
     return false;
   }
 
-  StatusSymbol symbol;
-  if (delta >= 0 && delta <= 0xFF) {
-    symbol = StatusSymbol::kReceivedSmallDelta;
-  } else {
-    symbol = StatusSymbol::kReceivedLargeDelta;
-  }
-
-  if (!AddSymbol(symbol, seq))
-    return false;
-
-  receive_deltas_.push_back(delta);
-  last_timestamp_ += delta * kDeltaScaleFactor;
-  return true;
-}
-
-// Add a symbol for a received packet, with the given sequence number. This
-// method will add any "packet not received" symbols needed before this one.
-bool TransportFeedback::AddSymbol(StatusSymbol symbol, int64_t seq) {
-  while (last_seq_ < seq - 1) {
-    if (!Encode(StatusSymbol::kNotReceived))
+  uint16_t next_seq_no = base_seq_no_ + num_seq_no_;
+  if (sequence_number != next_seq_no) {
+    uint16_t last_seq_no = next_seq_no - 1;
+    if (!IsNewerSequenceNumber(sequence_number, last_seq_no))
       return false;
-    ++last_seq_;
-  }
-
-  if (!Encode(symbol))
-    return false;
-
-  last_seq_ = seq;
-  return true;
-}
-
-// Append a symbol to the internal symbol vector. If the new state cannot be
-// represented using a single status chunk, a chunk will first be emitted and
-// the associated symbols removed from the internal symbol vector.
-bool TransportFeedback::Encode(StatusSymbol symbol) {
-  if (last_seq_ - base_seq_ + 1 > 0xFFFF) {
-    LOG(LS_WARNING) << "Packet status count too large ( >= 2^16 )";
-    return false;
-  }
-
-  bool is_two_bit;
-  int delta_size;
-  switch (symbol) {
-    case StatusSymbol::kReceivedSmallDelta:
-      delta_size = 1;
-      is_two_bit = false;
-      break;
-    case StatusSymbol::kReceivedLargeDelta:
-      delta_size = 2;
-      is_two_bit = true;
-      break;
-    case StatusSymbol::kNotReceived:
-      is_two_bit = false;
-      delta_size = 0;
-      break;
-    default:
-      RTC_NOTREACHED();
-      return false;
-  }
-
-  if (symbol_vec_.empty()) {
-    if (size_bytes_ + delta_size + kChunkSizeBytes > kMaxSizeBytes)
-      return false;
-
-    symbol_vec_.push_back(symbol);
-    vec_needs_two_bit_symbols_ = is_two_bit;
-    first_symbol_cardinality_ = 1;
-    size_bytes_ += delta_size + kChunkSizeBytes;
-    return true;
-  }
-  if (size_bytes_ + delta_size > kMaxSizeBytes)
-    return false;
-
-  // Capacity, in number of symbols, that a vector chunk could hold.
-  size_t capacity = vec_needs_two_bit_symbols_ ? kTwoBitVectorCapacity
-                                               : kOneBitVectorCapacity;
-
-  // first_symbol_cardinality_ is the number of times the first symbol in
-  // symbol_vec is repeated. So if that is equal to the size of symbol_vec,
-  // there is only one kind of symbol - we can potentially RLE encode it.
-  // If we have less than (capacity) symbols in symbol_vec, we can't know
-  // for certain this will be RLE-encoded; if a different symbol is added
-  // these symbols will be needed to emit a vector chunk instead. However,
-  // if first_symbol_cardinality_ > capacity, then we cannot encode the
-  // current state as a vector chunk - we must first emit symbol_vec as an
-  // RLE-chunk and then add the new symbol.
-  bool rle_candidate = symbol_vec_.size() == first_symbol_cardinality_ ||
-                       first_symbol_cardinality_ > capacity;
-  if (rle_candidate) {
-    if (symbol_vec_.back() == symbol) {
-      ++first_symbol_cardinality_;
-      if (first_symbol_cardinality_ <= capacity) {
-        symbol_vec_.push_back(symbol);
-      } else if (first_symbol_cardinality_ == kRunLengthCapacity) {
-        // Max length for an RLE-chunk reached.
-        EmitRunLengthChunk();
-      }
-      size_bytes_ += delta_size;
-      return true;
-    } else {
-      // New symbol does not match what's already in symbol_vec.
-      if (first_symbol_cardinality_ >= capacity) {
-        // Symbols in symbol_vec can only be RLE-encoded. Emit the RLE-chunk
-        // and re-add input. symbol_vec is then guaranteed to have room for the
-        // symbol, so recursion cannot continue.
-        EmitRunLengthChunk();
-        return Encode(symbol);
-      }
-      // Fall through and treat state as non RLE-candidate.
-    }
-  }
-
-  // If this code point is reached, symbols in symbol_vec cannot be RLE-encoded.
-
-  if (is_two_bit && !vec_needs_two_bit_symbols_) {
-    // If the symbols in symbol_vec can be encoded using a one-bit chunk but
-    // the input symbol cannot, first check if we can simply change target type.
-    vec_needs_two_bit_symbols_ = true;
-    if (symbol_vec_.size() >= kTwoBitVectorCapacity) {
-      // symbol_vec contains more symbols than we can encode in a single
-      // two-bit chunk. Emit a new vector append to the remains, if any.
-      if (size_bytes_ + delta_size + kChunkSizeBytes > kMaxSizeBytes)
+    for (; next_seq_no != sequence_number; ++next_seq_no)
+      if (!AddDeltaSize(0))
         return false;
-      EmitVectorChunk();
-      // If symbol_vec isn't empty after emitting a vector chunk, we need to
-      // account for chunk size (otherwise handled by Encode method).
-      if (!symbol_vec_.empty())
-        size_bytes_ += kChunkSizeBytes;
-      return Encode(symbol);
-    }
-    // symbol_vec symbols fit within a single two-bit vector chunk.
-    capacity = kTwoBitVectorCapacity;
   }
 
-  symbol_vec_.push_back(symbol);
-  if (symbol_vec_.size() == capacity)
-    EmitVectorChunk();
+  DeltaSize delta_size = (delta >= 0 && delta <= 0xff) ? 1 : 2;
+  if (!AddDeltaSize(delta_size))
+    return false;
 
+  packets_.emplace_back(sequence_number, delta);
+  last_timestamp_us_ += delta * kDeltaScaleFactor;
   size_bytes_ += delta_size;
   return true;
 }
 
-// Upon packet completion, emit any remaining symbols in symbol_vec that have
-// not yet been emitted in a status chunk.
-void TransportFeedback::EmitRemaining() {
-  if (symbol_vec_.empty())
-    return;
-
-  size_t capacity = vec_needs_two_bit_symbols_ ? kTwoBitVectorCapacity
-                                               : kOneBitVectorCapacity;
-  if (first_symbol_cardinality_ > capacity) {
-    EmitRunLengthChunk();
-  } else {
-    EmitVectorChunk();
-  }
-}
-
-void TransportFeedback::EmitVectorChunk() {
-  if (vec_needs_two_bit_symbols_) {
-    status_chunks_.push_back(new TwoBitVectorChunk(&symbol_vec_));
-  } else {
-    status_chunks_.push_back(new OneBitVectorChunk(&symbol_vec_));
-  }
-  // Update first symbol cardinality to match what is potentially left in in
-  // symbol_vec.
-  first_symbol_cardinality_ = 1;
-  for (size_t i = 1; i < symbol_vec_.size(); ++i) {
-    if (symbol_vec_[i] != symbol_vec_[0])
-      break;
-    ++first_symbol_cardinality_;
-  }
-}
-
-void TransportFeedback::EmitRunLengthChunk() {
-  RTC_DCHECK_GE(first_symbol_cardinality_, symbol_vec_.size());
-  status_chunks_.push_back(
-      new RunLengthChunk(symbol_vec_.front(), first_symbol_cardinality_));
-  symbol_vec_.clear();
-}
-
-size_t TransportFeedback::BlockLength() const {
-  return size_bytes_;
-}
-
 uint16_t TransportFeedback::GetBaseSequence() const {
-  return base_seq_;
-}
-
-int64_t TransportFeedback::GetBaseTimeUs() const {
-  return base_time_ * kBaseScaleFactor;
+  return base_seq_no_;
 }
 
 std::vector<TransportFeedback::StatusSymbol>
 TransportFeedback::GetStatusVector() const {
   std::vector<TransportFeedback::StatusSymbol> symbols;
-  for (PacketStatusChunk* chunk : status_chunks_)
-    chunk->AppendSymbolsTo(&symbols);
-  int64_t status_count = last_seq_ - base_seq_ + 1;
-  // If packet ends with a vector chunk, it may contain extraneous "packet not
-  // received"-symbols at the end. Crop any such symbols.
-  symbols.erase(symbols.begin() + status_count, symbols.end());
+  uint16_t seq_no = GetBaseSequence();
+  for (const auto& packet : packets_) {
+    for (; seq_no != packet.sequence_number; ++seq_no)
+      symbols.push_back(StatusSymbol::kNotReceived);
+    if (packet.delta_ticks >= 0x00 && packet.delta_ticks <= 0xff) {
+      symbols.push_back(StatusSymbol::kReceivedSmallDelta);
+    } else {
+      symbols.push_back(StatusSymbol::kReceivedLargeDelta);
+    }
+    ++seq_no;
+  }
   return symbols;
 }
 
 std::vector<int16_t> TransportFeedback::GetReceiveDeltas() const {
-  return receive_deltas_;
+  std::vector<int16_t> deltas;
+  for (const auto& packet : packets_)
+    deltas.push_back(packet.delta_ticks);
+  return deltas;
+}
+
+int64_t TransportFeedback::GetBaseTimeUs() const {
+  return static_cast<int64_t>(base_time_ticks_) * kBaseScaleFactor;
 }
 
 std::vector<int64_t> TransportFeedback::GetReceiveDeltasUs() const {
-  if (receive_deltas_.empty())
-    return std::vector<int64_t>();
-
   std::vector<int64_t> us_deltas;
-  for (int16_t delta : receive_deltas_)
-    us_deltas.push_back(static_cast<int64_t>(delta) * kDeltaScaleFactor);
-
+  for (const auto& packet : packets_)
+    us_deltas.push_back(packet.delta_ticks * kDeltaScaleFactor);
   return us_deltas;
+}
+
+// De-serialize packet.
+bool TransportFeedback::Parse(const CommonHeader& packet) {
+  RTC_DCHECK_EQ(packet.type(), kPacketType);
+  RTC_DCHECK_EQ(packet.fmt(), kFeedbackMessageType);
+
+  if (packet.payload_size_bytes() < kMinPayloadSizeBytes) {
+    LOG(LS_WARNING) << "Buffer too small (" << packet.payload_size_bytes()
+                    << " bytes) to fit a "
+                       "FeedbackPacket. Minimum size = "
+                    << kMinPayloadSizeBytes;
+    return false;
+  }
+
+  const uint8_t* const payload = packet.payload();
+  ParseCommonFeedback(payload);
+
+  base_seq_no_ = ByteReader<uint16_t>::ReadBigEndian(&payload[8]);
+  size_t status_count = ByteReader<uint16_t>::ReadBigEndian(&payload[10]);
+  base_time_ticks_ = ByteReader<int32_t, 3>::ReadBigEndian(&payload[12]);
+  feedback_seq_ = payload[15];
+  Clear();
+  size_t index = 16;
+  const size_t end_index = packet.payload_size_bytes();
+
+  if (status_count == 0) {
+    LOG(LS_WARNING) << "Empty feedback messages not allowed.";
+    return false;
+  }
+
+  std::vector<uint8_t> delta_sizes;
+  delta_sizes.reserve(status_count);
+  while (delta_sizes.size() < status_count) {
+    if (index + kChunkSizeBytes > end_index) {
+      LOG(LS_WARNING) << "Buffer overflow while parsing packet.";
+      Clear();
+      return false;
+    }
+
+    uint16_t chunk = ByteReader<uint16_t>::ReadBigEndian(&payload[index]);
+    index += kChunkSizeBytes;
+    encoded_chunks_.push_back(chunk);
+    last_chunk_->Decode(chunk, status_count - delta_sizes.size());
+    last_chunk_->AppendTo(&delta_sizes);
+  }
+  // Last chunk is stored in the |last_chunk_|.
+  encoded_chunks_.pop_back();
+  RTC_DCHECK_EQ(delta_sizes.size(), status_count);
+  num_seq_no_ = status_count;
+
+  uint16_t seq_no = base_seq_no_;
+  for (size_t delta_size : delta_sizes) {
+    if (index + delta_size > end_index) {
+      LOG(LS_WARNING) << "Buffer overflow while parsing packet.";
+      Clear();
+      return false;
+    }
+    switch (delta_size) {
+      case 0:
+        break;
+      case 1: {
+        int16_t delta = payload[index];
+        packets_.emplace_back(seq_no, delta);
+        last_timestamp_us_ += delta * kDeltaScaleFactor;
+        index += delta_size;
+        break;
+      }
+      case 2: {
+        int16_t delta = ByteReader<int16_t>::ReadBigEndian(&payload[index]);
+        packets_.emplace_back(seq_no, delta);
+        last_timestamp_us_ += delta * kDeltaScaleFactor;
+        index += delta_size;
+        break;
+      }
+      case 3:
+        Clear();
+        LOG(LS_WARNING) << "Invalid delta_size for seq_no " << seq_no;
+        return false;
+      default:
+        RTC_NOTREACHED();
+        break;
+    }
+    ++seq_no;
+  }
+  size_bytes_ = RtcpPacket::kHeaderLength + index;
+  RTC_DCHECK_LE(index, end_index);
+  return true;
+}
+
+std::unique_ptr<TransportFeedback> TransportFeedback::ParseFrom(
+    const uint8_t* buffer,
+    size_t length) {
+  CommonHeader header;
+  if (!header.Parse(buffer, length))
+    return nullptr;
+  if (header.type() != kPacketType || header.fmt() != kFeedbackMessageType)
+    return nullptr;
+  std::unique_ptr<TransportFeedback> parsed(new TransportFeedback);
+  if (!parsed->Parse(header))
+    return nullptr;
+  return parsed;
+}
+
+bool TransportFeedback::IsConsistent() const {
+  size_t packet_size = kTransportFeedbackHeaderSizeBytes;
+  std::vector<DeltaSize> delta_sizes;
+  LastChunk chunk_decoder;
+  for (uint16_t chunk : encoded_chunks_) {
+    chunk_decoder.Decode(chunk, kMaxReportedPackets);
+    chunk_decoder.AppendTo(&delta_sizes);
+    packet_size += kChunkSizeBytes;
+  }
+  if (!last_chunk_->Empty()) {
+    last_chunk_->AppendTo(&delta_sizes);
+    packet_size += kChunkSizeBytes;
+  }
+  if (num_seq_no_ != delta_sizes.size()) {
+    LOG(LS_ERROR) << delta_sizes.size() << " packets encoded. Expected "
+                  << num_seq_no_;
+    return false;
+  }
+  int64_t timestamp_us = base_time_ticks_ * kBaseScaleFactor;
+  auto packet_it = packets_.begin();
+  uint16_t seq_no = base_seq_no_;
+  for (DeltaSize delta_size : delta_sizes) {
+    if (delta_size > 0) {
+      if (packet_it == packets_.end()) {
+        LOG(LS_ERROR) << "Failed to find delta for seq_no " << seq_no;
+        return false;
+      }
+      if (packet_it->sequence_number != seq_no) {
+        LOG(LS_ERROR) << "Expected to find delta for seq_no " << seq_no
+                      << ". Next delta is for " << packet_it->sequence_number;
+        return false;
+      }
+      if (delta_size == 1 &&
+          (packet_it->delta_ticks < 0 || packet_it->delta_ticks > 0xff)) {
+        LOG(LS_ERROR) << "Delta " << packet_it->delta_ticks << " for seq_no "
+                      << seq_no << " doesn't fit into one byte";
+        return false;
+      }
+      timestamp_us += packet_it->delta_ticks * kDeltaScaleFactor;
+      ++packet_it;
+    }
+    packet_size += delta_size;
+    ++seq_no;
+  }
+  if (packet_it != packets_.end()) {
+    LOG(LS_ERROR) << "Unencoded delta for seq_no "
+                  << packet_it->sequence_number;
+    return false;
+  }
+  if (timestamp_us != last_timestamp_us_) {
+    LOG(LS_ERROR) << "Last timestamp mismatch. Calculated: " << timestamp_us
+                  << ". Saved: " << last_timestamp_us_;
+    return false;
+  }
+  if (size_bytes_ != packet_size) {
+    LOG(LS_ERROR) << "Rtcp packet size mismatch. Calculated: " << packet_size
+                  << ". Saved: " << size_bytes_;
+    return false;
+  }
+  return true;
 }
 
 // Serialize packet.
@@ -570,44 +574,43 @@ bool TransportFeedback::Create(uint8_t* packet,
                                size_t* position,
                                size_t max_length,
                                PacketReadyCallback* callback) const {
-  if (base_seq_ == -1)
+  if (num_seq_no_ == 0)
     return false;
 
-  while (*position + size_bytes_ > max_length) {
+  while (*position + BlockLength() > max_length) {
     if (!OnBufferFull(packet, position, callback))
       return false;
   }
+  const size_t position_end = *position + BlockLength();
 
-  CreateHeader(kFeedbackMessageType, kPayloadType, HeaderLength(), packet,
+  CreateHeader(kFeedbackMessageType, kPacketType, HeaderLength(), packet,
                position);
-  ByteWriter<uint32_t>::WriteBigEndian(&packet[*position], packet_sender_ssrc_);
-  *position += 4;
-  ByteWriter<uint32_t>::WriteBigEndian(&packet[*position], media_source_ssrc_);
-  *position += 4;
+  CreateCommonFeedback(packet + *position);
+  *position += kCommonFeedbackLength;
 
-  RTC_DCHECK_LE(base_seq_, 0xFFFF);
-  ByteWriter<uint16_t>::WriteBigEndian(&packet[*position], base_seq_);
+  ByteWriter<uint16_t>::WriteBigEndian(&packet[*position], base_seq_no_);
   *position += 2;
 
-  int64_t status_count = last_seq_ - base_seq_ + 1;
-  RTC_DCHECK_LE(status_count, 0xFFFF);
-  ByteWriter<uint16_t>::WriteBigEndian(&packet[*position], status_count);
+  ByteWriter<uint16_t>::WriteBigEndian(&packet[*position], num_seq_no_);
   *position += 2;
 
-  ByteWriter<int32_t, 3>::WriteBigEndian(&packet[*position],
-                                         static_cast<int32_t>(base_time_));
+  ByteWriter<int32_t, 3>::WriteBigEndian(&packet[*position], base_time_ticks_);
   *position += 3;
 
   packet[(*position)++] = feedback_seq_;
 
-  // TODO(sprang): Get rid of this cast.
-  const_cast<TransportFeedback*>(this)->EmitRemaining();
-  for (PacketStatusChunk* chunk : status_chunks_) {
-    chunk->WriteTo(&packet[*position]);
+  for (uint16_t chunk : encoded_chunks_) {
+    ByteWriter<uint16_t>::WriteBigEndian(&packet[*position], chunk);
+    *position += 2;
+  }
+  if (!last_chunk_->Empty()) {
+    uint16_t chunk = last_chunk_->EncodeLast();
+    ByteWriter<uint16_t>::WriteBigEndian(&packet[*position], chunk);
     *position += 2;
   }
 
-  for (int16_t delta : receive_deltas_) {
+  for (const auto& received_packet : packets_) {
+    int16_t delta = received_packet.delta_ticks;
     if (delta >= 0 && delta <= 0xFF) {
       packet[(*position)++] = delta;
     } else {
@@ -619,157 +622,45 @@ bool TransportFeedback::Create(uint8_t* packet,
   while ((*position % 4) != 0)
     packet[(*position)++] = 0;
 
+  RTC_DCHECK_EQ(*position, position_end);
   return true;
 }
 
-//    Message format
-//
-//     0                   1                   2                   3
-//     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//    |V=2|P|  FMT=15 |    PT=205     |           length              |
-//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//    |                     SSRC of packet sender                     |
-//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//    |                      SSRC of media source                     |
-//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//    |      base sequence number     |      packet status count      |
-//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//    |                 reference time                | fb pkt. count |
-//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//    |          packet chunk         |         packet chunk          |
-//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//    .                                                               .
-//    .                                                               .
-//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//    |         packet chunk          |  recv delta   |  recv delta   |
-//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//    .                                                               .
-//    .                                                               .
-//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//    |           recv delta          |  recv delta   | zero padding  |
-//    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-// De-serialize packet.
-rtc::scoped_ptr<TransportFeedback> TransportFeedback::ParseFrom(
-    const uint8_t* buffer,
-    size_t length) {
-  rtc::scoped_ptr<TransportFeedback> packet(new TransportFeedback());
-
-  if (length < kMinSizeBytes) {
-    LOG(LS_WARNING) << "Buffer too small (" << length
-                    << " bytes) to fit a "
-                       "FeedbackPacket. Minimum size = " << kMinSizeBytes;
-    return nullptr;
-  }
-
-  RTCPUtility::RtcpCommonHeader header;
-  if (!RtcpParseCommonHeader(buffer, length, &header))
-    return nullptr;
-
-  if (header.count_or_format != kFeedbackMessageType) {
-    LOG(LS_WARNING) << "Invalid RTCP header: FMT must be "
-                    << kFeedbackMessageType << " but was "
-                    << header.count_or_format;
-    return nullptr;
-  }
-
-  if (header.packet_type != kPayloadType) {
-    LOG(LS_WARNING) << "Invalid RTCP header: PT must be " << kPayloadType
-                    << " but was " << header.packet_type;
-    return nullptr;
-  }
-
-  packet->packet_sender_ssrc_ = ByteReader<uint32_t>::ReadBigEndian(&buffer[4]);
-  packet->media_source_ssrc_ = ByteReader<uint32_t>::ReadBigEndian(&buffer[8]);
-  packet->base_seq_ = ByteReader<uint16_t>::ReadBigEndian(&buffer[12]);
-  uint16_t num_packets = ByteReader<uint16_t>::ReadBigEndian(&buffer[14]);
-  packet->base_time_ = ByteReader<int32_t, 3>::ReadBigEndian(&buffer[16]);
-  packet->feedback_seq_ = buffer[19];
-  size_t index = 20;
-  const size_t end_index = kHeaderLength + header.payload_size_bytes;
-
-  if (num_packets == 0) {
-    LOG(LS_WARNING) << "Empty feedback messages not allowed.";
-    return nullptr;
-  }
-  packet->last_seq_ = packet->base_seq_ + num_packets - 1;
-
-  size_t packets_read = 0;
-  while (packets_read < num_packets) {
-    if (index + 2 > end_index) {
-      LOG(LS_WARNING) << "Buffer overflow while parsing packet.";
-      return nullptr;
-    }
-
-    PacketStatusChunk* chunk =
-        ParseChunk(&buffer[index], num_packets - packets_read);
-    if (chunk == nullptr)
-      return nullptr;
-
-    index += 2;
-    packet->status_chunks_.push_back(chunk);
-    packets_read += chunk->NumSymbols();
-  }
-
-  std::vector<StatusSymbol> symbols = packet->GetStatusVector();
-
-  RTC_DCHECK_EQ(num_packets, symbols.size());
-
-  for (StatusSymbol symbol : symbols) {
-    switch (symbol) {
-      case StatusSymbol::kReceivedSmallDelta:
-        if (index + 1 > end_index) {
-          LOG(LS_WARNING) << "Buffer overflow while parsing packet.";
-          return nullptr;
-        }
-        packet->receive_deltas_.push_back(buffer[index]);
-        ++index;
-        break;
-      case StatusSymbol::kReceivedLargeDelta:
-        if (index + 2 > end_index) {
-          LOG(LS_WARNING) << "Buffer overflow while parsing packet.";
-          return nullptr;
-        }
-        packet->receive_deltas_.push_back(
-            ByteReader<int16_t>::ReadBigEndian(&buffer[index]));
-        index += 2;
-        break;
-      default:
-        continue;
-    }
-  }
-
-  RTC_DCHECK_GE(index, end_index - 3);
-  RTC_DCHECK_LE(index, end_index);
-
-  return packet;
+size_t TransportFeedback::BlockLength() const {
+  // Round size_bytes_ up to multiple of 32bits.
+  return (size_bytes_ + 3) & (~static_cast<size_t>(3));
 }
 
-PacketStatusChunk* TransportFeedback::ParseChunk(const uint8_t* buffer,
-                                                 size_t max_size) {
-  if (buffer[0] & 0x80) {
-    // First bit set => vector chunk.
-    std::deque<StatusSymbol> symbols;
-    if (buffer[0] & 0x40) {
-      // Second bit set => two bits per symbol vector.
-      return TwoBitVectorChunk::ParseFrom(buffer);
-    }
+void TransportFeedback::Clear() {
+  num_seq_no_ = 0;
+  last_timestamp_us_ = GetBaseTimeUs();
+  packets_.clear();
+  encoded_chunks_.clear();
+  last_chunk_->Clear();
+  size_bytes_ = kTransportFeedbackHeaderSizeBytes;
+}
 
-    // Second bit not set => one bit per symbol vector.
-    return OneBitVectorChunk::ParseFrom(buffer);
-  }
+bool TransportFeedback::AddDeltaSize(DeltaSize delta_size) {
+  if (num_seq_no_ == kMaxReportedPackets)
+    return false;
+  size_t add_chunk_size = last_chunk_->Empty() ? kChunkSizeBytes : 0;
+  if (size_bytes_ + delta_size + add_chunk_size > kMaxSizeBytes)
+    return false;
 
-  // First bit not set => RLE chunk.
-  RunLengthChunk* rle_chunk = RunLengthChunk::ParseFrom(buffer);
-  if (rle_chunk->NumSymbols() > max_size) {
-    LOG(LS_WARNING) << "Header/body mismatch. "
-                       "RLE block of size " << rle_chunk->NumSymbols()
-                    << " but only " << max_size << " left to read.";
-    delete rle_chunk;
-    return nullptr;
+  if (last_chunk_->CanAdd(delta_size)) {
+    size_bytes_ += add_chunk_size;
+    last_chunk_->Add(delta_size);
+    ++num_seq_no_;
+    return true;
   }
-  return rle_chunk;
+  if (size_bytes_ + delta_size + kChunkSizeBytes > kMaxSizeBytes)
+    return false;
+
+  encoded_chunks_.push_back(last_chunk_->Emit());
+  size_bytes_ += kChunkSizeBytes;
+  last_chunk_->Add(delta_size);
+  ++num_seq_no_;
+  return true;
 }
 
 }  // namespace rtcp

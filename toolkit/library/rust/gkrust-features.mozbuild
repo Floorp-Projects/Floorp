@@ -20,3 +20,7 @@ if CONFIG['MOZ_BUILD_WEBRENDER']:
 if CONFIG['MOZ_PULSEAUDIO']:
     gkrust_features += ['cubeb_pulse_rust']
 
+if CONFIG['MOZ_RUST_SIMD']:
+    gkrust_features += ['simd-accel']
+
+gkrust_features += ['no-static-ideograph-encoder-tables']

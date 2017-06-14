@@ -10,8 +10,6 @@
 #ifndef __ssl3proto_h_
 #define __ssl3proto_h_
 
-typedef PRUint8 SSL3Opaque;
-
 typedef PRUint16 SSL3ProtocolVersion;
 /* version numbers are defined in sslproto.h */
 
@@ -62,12 +60,12 @@ typedef struct {
 
 typedef struct {
     SECItem content;
-    SSL3Opaque MAC[MAX_MAC_LENGTH];
+    PRUint8 MAC[MAX_MAC_LENGTH];
 } SSL3GenericStreamCipher;
 
 typedef struct {
     SECItem content;
-    SSL3Opaque MAC[MAX_MAC_LENGTH];
+    PRUint8 MAC[MAX_MAC_LENGTH];
     PRUint8 padding[MAX_PADDING_LENGTH];
     PRUint8 padding_length;
 } SSL3GenericBlockCipher;
@@ -153,11 +151,11 @@ typedef struct {
 } SSL3HelloRequest;
 
 typedef struct {
-    SSL3Opaque rand[SSL3_RANDOM_LENGTH];
+    PRUint8 rand[SSL3_RANDOM_LENGTH];
 } SSL3Random;
 
 typedef struct {
-    SSL3Opaque id[32];
+    PRUint8 id[32];
     PRUint8 length;
 } SSL3SessionID;
 
@@ -243,7 +241,7 @@ typedef struct {
 
 typedef struct {
     union {
-        SSL3Opaque anonymous;
+        PRUint8 anonymous;
         SSL3Hashes certified;
     } u;
 } SSL3ServerKeyExchange;
@@ -262,11 +260,11 @@ typedef enum {
 } SSL3ClientCertificateType;
 
 typedef struct {
-    SSL3Opaque client_version[2];
-    SSL3Opaque random[46];
+    PRUint8 client_version[2];
+    PRUint8 random[46];
 } SSL3RSAPreMasterSecret;
 
-typedef SSL3Opaque SSL3MasterSecret[48];
+typedef PRUint8 SSL3MasterSecret[48];
 
 typedef enum {
     sender_client = 0x434c4e54,
@@ -276,7 +274,7 @@ typedef enum {
 typedef SSL3HashesIndividually SSL3Finished;
 
 typedef struct {
-    SSL3Opaque verify_data[12];
+    PRUint8 verify_data[12];
 } TLSFinished;
 
 /*
@@ -305,16 +303,9 @@ typedef enum {
     CLIENT_AUTH_CERTIFICATE = 1
 } ClientAuthenticationType;
 
-#define SESS_TICKET_KEY_NAME_LEN 16
-#define SESS_TICKET_KEY_NAME_PREFIX "NSS!"
-#define SESS_TICKET_KEY_NAME_PREFIX_LEN 4
-#define SESS_TICKET_KEY_VAR_NAME_LEN 12
-
-typedef struct {
-    unsigned char *key_name;
-    unsigned char *iv;
-    SECItem encrypted_state;
-    unsigned char *mac;
-} EncryptedSessionTicket;
+#define SELF_ENCRYPT_KEY_NAME_LEN 16
+#define SELF_ENCRYPT_KEY_NAME_PREFIX "NSS!"
+#define SELF_ENCRYPT_KEY_NAME_PREFIX_LEN 4
+#define SELF_ENCRYPT_KEY_VAR_NAME_LEN 12
 
 #endif /* __ssl3proto_h_ */

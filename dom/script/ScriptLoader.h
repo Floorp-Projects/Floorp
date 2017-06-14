@@ -9,7 +9,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsRefPtrHashtable.h"
-#include "nsIUnicodeDecoder.h"
+#include "mozilla/Encoding.h"
 #include "nsIScriptElement.h"
 #include "nsCOMArray.h"
 #include "nsCycleCollectionParticipant.h"

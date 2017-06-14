@@ -702,11 +702,7 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
                          aSegment.Length(),
                          specified)) {
     if (EncodingUtils::FindEncodingForLabel(specified, aCharset)) {
-      // FindEncodingForLabel currently never returns UTF-16LE but will
-      // probably change to never return UTF-16 instead, so check both here
-      // to avoid relying on the exact behavior.
-      if (aCharset.EqualsLiteral("UTF-16") ||
-          aCharset.EqualsLiteral("UTF-16BE") ||
+      if (aCharset.EqualsLiteral("UTF-16BE") ||
           aCharset.EqualsLiteral("UTF-16LE")) {
         // Be consistent with HTML <meta> handling in face of impossibility.
         // When the @charset rule itself evidently was not UTF-16-encoded,

@@ -14,9 +14,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#if _WIN32
+#ifdef _WIN32
 #include <windows.h>
-#elif WEBRTC_LINUX
+#elif defined(WEBRTC_LINUX)
 #include <time.h>
 #else
 #include <sys/time.h>
@@ -24,9 +24,9 @@
 #endif
 
 #include "webrtc/modules/audio_coding/acm2/acm_common_defs.h"
+#include "webrtc/modules/audio_coding/codecs/audio_format_conversion.h"
 #include "webrtc/modules/audio_coding/test/utility.h"
 #include "webrtc/system_wrappers/include/event_wrapper.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
 #include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
@@ -95,10 +95,14 @@ void ISACTest::Setup() {
   }
 
   // Register both iSAC-wb & iSAC-swb in both sides as receiver codecs.
-  EXPECT_EQ(0, _acmA->RegisterReceiveCodec(_paramISAC16kHz));
-  EXPECT_EQ(0, _acmA->RegisterReceiveCodec(_paramISAC32kHz));
-  EXPECT_EQ(0, _acmB->RegisterReceiveCodec(_paramISAC16kHz));
-  EXPECT_EQ(0, _acmB->RegisterReceiveCodec(_paramISAC32kHz));
+  EXPECT_EQ(true, _acmA->RegisterReceiveCodec(_paramISAC16kHz.pltype,
+                                              CodecInstToSdp(_paramISAC16kHz)));
+  EXPECT_EQ(true, _acmA->RegisterReceiveCodec(_paramISAC32kHz.pltype,
+                                              CodecInstToSdp(_paramISAC32kHz)));
+  EXPECT_EQ(true, _acmB->RegisterReceiveCodec(_paramISAC16kHz.pltype,
+                                              CodecInstToSdp(_paramISAC16kHz)));
+  EXPECT_EQ(true, _acmB->RegisterReceiveCodec(_paramISAC32kHz.pltype,
+                                              CodecInstToSdp(_paramISAC32kHz)));
 
   //--- Set A-to-B channel
   _channel_A2B.reset(new Channel);
@@ -199,9 +203,12 @@ void ISACTest::Run10ms() {
   EXPECT_GT(_inFileA.Read10MsData(audioFrame), 0);
   EXPECT_GE(_acmA->Add10MsData(audioFrame), 0);
   EXPECT_GE(_acmB->Add10MsData(audioFrame), 0);
-  EXPECT_EQ(0, _acmA->PlayoutData10Ms(32000, &audioFrame));
+  bool muted;
+  EXPECT_EQ(0, _acmA->PlayoutData10Ms(32000, &audioFrame, &muted));
+  ASSERT_FALSE(muted);
   _outFileA.Write10MsData(audioFrame);
-  EXPECT_EQ(0, _acmB->PlayoutData10Ms(32000, &audioFrame));
+  EXPECT_EQ(0, _acmB->PlayoutData10Ms(32000, &audioFrame, &muted));
+  ASSERT_FALSE(muted);
   _outFileB.Write10MsData(audioFrame);
 }
 

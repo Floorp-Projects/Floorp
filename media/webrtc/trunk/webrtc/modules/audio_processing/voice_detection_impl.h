@@ -11,9 +11,10 @@
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_VOICE_DETECTION_IMPL_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_VOICE_DETECTION_IMPL_H_
 
+#include <memory>
+
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/base/criticalsection.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 
 namespace webrtc {
@@ -49,7 +50,7 @@ class VoiceDetectionImpl : public VoiceDetection {
   int frame_size_ms_ GUARDED_BY(crit_) = 10;
   size_t frame_size_samples_ GUARDED_BY(crit_) = 0;
   int sample_rate_hz_ GUARDED_BY(crit_) = 0;
-  rtc::scoped_ptr<Vad> vad_ GUARDED_BY(crit_);
+  std::unique_ptr<Vad> vad_ GUARDED_BY(crit_);
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(VoiceDetectionImpl);
 };
 }  // namespace webrtc

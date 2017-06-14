@@ -13,10 +13,10 @@
 #include <stdio.h>
 
 #include <algorithm>
+#include <memory>
 #include <vector>
 
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/bwe_test_fileutils.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/bwe_test_logging.h"
 #include "webrtc/test/testsupport/fileutils.h"
@@ -44,7 +44,7 @@ class BaseLineFileVerify : public BaseLineFileInterface {
   BaseLineFileVerify(const std::string& filepath, bool allow_missing_file)
       : reader_(),
         fail_to_read_response_(false) {
-    rtc::scoped_ptr<ResourceFileReader> reader;
+    std::unique_ptr<ResourceFileReader> reader;
     reader.reset(ResourceFileReader::Create(filepath, "bin"));
     if (!reader.get()) {
       printf("WARNING: Missing baseline file for BWE test: %s.bin\n",
@@ -91,7 +91,7 @@ class BaseLineFileVerify : public BaseLineFileInterface {
   }
 
  private:
-  rtc::scoped_ptr<ResourceFileReader> reader_;
+  std::unique_ptr<ResourceFileReader> reader_;
   bool fail_to_read_response_;
 
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(BaseLineFileVerify);
@@ -122,7 +122,7 @@ class BaseLineFileUpdate : public BaseLineFileInterface {
         printf("WARNING: Cannot create output dir: %s\n", dir_path.c_str());
         return false;
       }
-      rtc::scoped_ptr<OutputFileWriter> writer;
+      std::unique_ptr<OutputFileWriter> writer;
       writer.reset(OutputFileWriter::Create(filepath_, "bin"));
       if (!writer.get()) {
         printf("WARNING: Cannot create output file: %s.bin\n",
@@ -142,7 +142,7 @@ class BaseLineFileUpdate : public BaseLineFileInterface {
   }
 
  private:
-  rtc::scoped_ptr<BaseLineFileInterface> verifier_;
+  std::unique_ptr<BaseLineFileInterface> verifier_;
   std::vector<uint32_t> output_content_;
   std::string filepath_;
 
@@ -155,7 +155,7 @@ BaseLineFileInterface* BaseLineFileInterface::Create(
   std::replace(filepath.begin(), filepath.end(), '/', '_');
   filepath = std::string(kResourceSubDir) + "/" + filepath;
 
-  rtc::scoped_ptr<BaseLineFileInterface> result;
+  std::unique_ptr<BaseLineFileInterface> result;
   result.reset(new BaseLineFileVerify(filepath, !write_output_file));
   if (write_output_file) {
     // Takes ownership of the |verifier| instance.

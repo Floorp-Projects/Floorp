@@ -13,9 +13,8 @@
  *
  */
 
+#include "webrtc/base/checks.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
-
-#include <assert.h>
 
 // Maximum number of samples in a low/high-band frame.
 enum
@@ -136,8 +135,8 @@ void WebRtcSpl_AnalysisQMF(const int16_t* in_data, size_t in_data_length,
     int32_t filter1[kMaxBandFrameLength];
     int32_t filter2[kMaxBandFrameLength];
     const size_t band_length = in_data_length / 2;
-    assert(in_data_length % 2 == 0);
-    assert(band_length <= kMaxBandFrameLength);
+    RTC_DCHECK_EQ(0, in_data_length % 2);
+    RTC_DCHECK_LE(band_length, kMaxBandFrameLength);
 
     // Split even and odd samples. Also shift them to Q10.
     for (i = 0, k = 0; i < band_length; i++, k += 2)
@@ -175,16 +174,16 @@ void WebRtcSpl_SynthesisQMF(const int16_t* low_band, const int16_t* high_band,
     int32_t filter2[kMaxBandFrameLength];
     size_t i;
     int16_t k;
-    assert(band_length <= kMaxBandFrameLength);
+    RTC_DCHECK_LE(band_length, kMaxBandFrameLength);
 
     // Obtain the sum and difference channels out of upper and lower-band channels.
     // Also shift to Q10 domain.
     for (i = 0; i < band_length; i++)
     {
         tmp = (int32_t)low_band[i] + (int32_t)high_band[i];
-        half_in1[i] = WEBRTC_SPL_LSHIFT_W32(tmp, 10);
+        half_in1[i] = tmp * (1 << 10);
         tmp = (int32_t)low_band[i] - (int32_t)high_band[i];
-        half_in2[i] = WEBRTC_SPL_LSHIFT_W32(tmp, 10);
+        half_in2[i] = tmp * (1 << 10);
     }
 
     // all-pass filter the sum and difference channels

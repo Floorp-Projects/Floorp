@@ -19,8 +19,8 @@
 #include "bandwidth_estimator.h"
 #include "settings.h"
 #include "isac.h"
+#include "webrtc/base/checks.h"
 
-#include <assert.h>
 #include <math.h>
 #include <string.h>
 
@@ -159,7 +159,7 @@ int16_t WebRtcIsac_UpdateBandwidthEstimator(
   int immediate_set = 0;
   int num_pkts_expected;
 
-  assert(!bwest_str->external_bw_info.in_use);
+  RTC_DCHECK(!bwest_str->external_bw_info.in_use);
 
   // We have to adjust the header-rate if the first packet has a
   // frame-size different than the initialized value.
@@ -514,7 +514,7 @@ int16_t WebRtcIsac_UpdateUplinkBwImpl(
     int16_t               index,
     enum IsacSamplingRate encoderSamplingFreq)
 {
-  assert(!bwest_str->external_bw_info.in_use);
+  RTC_DCHECK(!bwest_str->external_bw_info.in_use);
 
   if((index < 0) || (index > 23))
   {
@@ -572,7 +572,7 @@ int16_t WebRtcIsac_UpdateUplinkJitter(
     BwEstimatorstr*              bwest_str,
     int32_t                  index)
 {
-  assert(!bwest_str->external_bw_info.in_use);
+  RTC_DCHECK(!bwest_str->external_bw_info.in_use);
 
   if((index < 0) || (index > 23))
   {
@@ -711,7 +711,7 @@ int32_t WebRtcIsac_GetDownlinkBandwidth( const BwEstimatorstr *bwest_str)
   float   jitter_sign;
   float   bw_adjust;
 
-  assert(!bwest_str->external_bw_info.in_use);
+  RTC_DCHECK(!bwest_str->external_bw_info.in_use);
 
   /* create a value between -1.0 and 1.0 indicating "average sign" of jitter */
   jitter_sign = bwest_str->rec_jitter_short_term /
@@ -741,7 +741,7 @@ WebRtcIsac_GetDownlinkMaxDelay(const BwEstimatorstr *bwest_str)
 {
   int32_t rec_max_delay;
 
-  assert(!bwest_str->external_bw_info.in_use);
+  RTC_DCHECK(!bwest_str->external_bw_info.in_use);
 
   rec_max_delay = (int32_t)(bwest_str->rec_max_delay);
 
@@ -759,7 +759,7 @@ WebRtcIsac_GetDownlinkMaxDelay(const BwEstimatorstr *bwest_str)
 
 /* Clamp val to the closed interval [min,max]. */
 static int32_t clamp(int32_t val, int32_t min, int32_t max) {
-  assert(min <= max);
+  RTC_DCHECK_LE(min, max);
   return val < min ? min : (val > max ? max : val);
 }
 
@@ -778,7 +778,7 @@ int32_t WebRtcIsac_GetUplinkMaxDelay(const BwEstimatorstr* bwest_str) {
 void WebRtcIsacBw_GetBandwidthInfo(BwEstimatorstr* bwest_str,
                                    enum IsacSamplingRate decoder_sample_rate_hz,
                                    IsacBandwidthInfo* bwinfo) {
-  assert(!bwest_str->external_bw_info.in_use);
+  RTC_DCHECK(!bwest_str->external_bw_info.in_use);
   bwinfo->in_use = 1;
   bwinfo->send_bw_avg = WebRtcIsac_GetUplinkBandwidth(bwest_str);
   bwinfo->send_max_delay_avg = WebRtcIsac_GetUplinkMaxDelay(bwest_str);

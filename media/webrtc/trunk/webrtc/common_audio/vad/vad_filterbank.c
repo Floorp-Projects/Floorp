@@ -10,8 +10,7 @@
 
 #include "webrtc/common_audio/vad/vad_filterbank.h"
 
-#include <assert.h>
-
+#include "webrtc/base/checks.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/typedefs.h"
 
@@ -160,8 +159,8 @@ static void LogOfEnergy(const int16_t* data_in, size_t data_length,
   // we eventually will mask out the fractional part.
   uint32_t energy = 0;
 
-  assert(data_in != NULL);
-  assert(data_length > 0);
+  RTC_DCHECK(data_in);
+  RTC_DCHECK_GT(data_length, 0);
 
   energy = (uint32_t) WebRtcSpl_Energy((int16_t*) data_in, data_length,
                                        &tot_rshifts);
@@ -261,8 +260,8 @@ int16_t WebRtcVad_CalculateFeatures(VadInstT* self, const int16_t* data_in,
   int16_t* hp_out_ptr = hp_120;  // [2000 - 4000] Hz.
   int16_t* lp_out_ptr = lp_120;  // [0 - 2000] Hz.
 
-  assert(data_length <= 240);
-  assert(4 < kNumChannels - 1);  // Checking maximum |frequency_band|.
+  RTC_DCHECK_LE(data_length, 240);
+  RTC_DCHECK_LT(4, kNumChannels - 1);  // Checking maximum |frequency_band|.
 
   // Split at 2000 Hz and downsample.
   SplitFilter(in_ptr, data_length, &self->upper_state[frequency_band],

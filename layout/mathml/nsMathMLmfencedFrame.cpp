@@ -3,9 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
+#include "gfxContext.h"
 #include "nsMathMLmfencedFrame.h"
-#include "nsRenderingContext.h"
 #include "nsMathMLChar.h"
 #include <algorithm>
 
@@ -604,7 +603,7 @@ GetMaxCharWidth(nsPresContext*       aPresContext,
 }
 
 /* virtual */ void
-nsMathMLmfencedFrame::GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingContext, ReflowOutput& aDesiredSize)
+nsMathMLmfencedFrame::GetIntrinsicISizeMetrics(gfxContext* aRenderingContext, ReflowOutput& aDesiredSize)
 {
   nscoord width = 0;
 

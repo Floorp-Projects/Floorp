@@ -74,7 +74,7 @@ private:
   nsresult mSRIStatus;
 
   // Unicode decoder for charset.
-  nsCOMPtr<nsIUnicodeDecoder> mDecoder;
+  mozilla::UniquePtr<mozilla::Decoder> mDecoder;
 };
 
 } // namespace dom

@@ -11,7 +11,11 @@
 #ifndef WEBRTC_MODULES_VIDEO_PROCESSING_VIDEO_DENOISER_H_
 #define WEBRTC_MODULES_VIDEO_PROCESSING_VIDEO_DENOISER_H_
 
+#include <memory>
+
+#include "webrtc/common_video/include/i420_buffer_pool.h"
 #include "webrtc/modules/video_processing/util/denoiser_filter.h"
+#include "webrtc/modules/video_processing/util/noise_estimation.h"
 #include "webrtc/modules/video_processing/util/skin_detection.h"
 
 namespace webrtc {
@@ -19,18 +23,60 @@ namespace webrtc {
 class VideoDenoiser {
  public:
   explicit VideoDenoiser(bool runtime_cpu_detection);
-  void DenoiseFrame(const VideoFrame& frame, VideoFrame* denoised_frame);
+
+  rtc::scoped_refptr<VideoFrameBuffer> DenoiseFrame(
+      rtc::scoped_refptr<VideoFrameBuffer> frame,
+      bool noise_estimation_enabled);
 
  private:
-  void TrailingReduction(int mb_rows,
-                         int mb_cols,
-                         const uint8_t* y_src,
-                         int stride_y,
-                         uint8_t* y_dst);
+  void DenoiserReset(rtc::scoped_refptr<VideoFrameBuffer> frame);
+
+  // Check the mb position, return 1: close to the frame center (between 1/8
+  // and 7/8 of width/height), 3: close to the border (out of 1/16 and 15/16
+  // of width/height), 2: in between.
+  int PositionCheck(int mb_row, int mb_col, int noise_level);
+
+  // To reduce false detection in moving object detection (MOD).
+  void ReduceFalseDetection(const std::unique_ptr<uint8_t[]>& d_status,
+                            std::unique_ptr<uint8_t[]>* d_status_red,
+                            int noise_level);
+
+  // Return whether a block might cause trailing artifact by checking if one of
+  // its neighbor blocks is a moving edge block.
+  bool IsTrailingBlock(const std::unique_ptr<uint8_t[]>& d_status,
+                       int mb_row,
+                       int mb_col);
+
+  // Copy input blocks to dst buffer on moving object blocks (MOB).
+  void CopySrcOnMOB(const uint8_t* y_src,
+                    int stride_src,
+                    uint8_t* y_dst,
+                    int stride_dst);
+
+  // Copy luma margin blocks when frame width/height not divisible by 16.
+  void CopyLumaOnMargin(const uint8_t* y_src,
+                        int stride_src,
+                        uint8_t* y_dst,
+                        int stride_dst);
+
   int width_;
   int height_;
-  rtc::scoped_ptr<DenoiseMetrics[]> metrics_;
-  rtc::scoped_ptr<DenoiserFilter> filter_;
+  int mb_rows_;
+  int mb_cols_;
+  CpuType cpu_type_;
+  std::unique_ptr<DenoiserFilter> filter_;
+  std::unique_ptr<NoiseEstimation> ne_;
+  // 1 for moving edge block, 0 for static block.
+  std::unique_ptr<uint8_t[]> moving_edge_;
+  // 1 for moving object block, 0 for static block.
+  std::unique_ptr<uint8_t[]> moving_object_;
+  // x_density_ and y_density_ are used in MOD process.
+  std::unique_ptr<uint8_t[]> x_density_;
+  std::unique_ptr<uint8_t[]> y_density_;
+  // Save the return values by MbDenoise for each block.
+  std::unique_ptr<DenoiserDecision[]> mb_filter_decision_;
+  I420BufferPool buffer_pool_;
+  rtc::scoped_refptr<VideoFrameBuffer> prev_buffer_;
 };
 
 }  // namespace webrtc

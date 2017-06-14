@@ -13,7 +13,8 @@
 
 #include <math.h>
 
-#include "webrtc/base/scoped_ptr.h"
+#include <memory>
+
 #include "webrtc/modules/audio_coding/codecs/opus/opus_interface.h"
 #include "webrtc/modules/audio_coding/acm2/acm_resampler.h"
 #include "webrtc/modules/audio_coding/test/ACMTest.h"
@@ -39,7 +40,7 @@ class OpusTest : public ACMTest {
 
   void OpenOutFile(int test_number);
 
-  rtc::scoped_ptr<AudioCodingModule> acm_receiver_;
+  std::unique_ptr<AudioCodingModule> acm_receiver_;
   TestPackStereo* channel_a2b_;
   PCMFile in_file_stereo_;
   PCMFile in_file_mono_;

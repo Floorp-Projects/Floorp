@@ -12,6 +12,7 @@ include protocol PStreamNotify;
 include protocol PPluginSurface;
 
 include "mozilla/GfxMessageUtils.h";
+include "mozilla/layers/LayersMessageUtils.h";
 
 using NPError from "npapi.h";
 using struct mozilla::plugins::NPRemoteWindow from "mozilla/plugins/PluginMessageUtils.h";

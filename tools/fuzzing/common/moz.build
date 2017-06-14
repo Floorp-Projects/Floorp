@@ -5,10 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
+  'FuzzingMutate.cpp',
   'FuzzingTraits.cpp'
 ]
 
 EXPORTS += [
+  'FuzzingMutate.h',
   'FuzzingTraits.h'
 ]
 

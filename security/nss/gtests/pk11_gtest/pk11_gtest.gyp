@@ -12,6 +12,7 @@
       'type': 'executable',
       'sources': [
         'pk11_aeskeywrap_unittest.cc',
+        'pk11_aes_gcm_unittest.cc',
         'pk11_chacha20poly1305_unittest.cc',
         'pk11_curve25519_unittest.cc',
         'pk11_ecdsa_unittest.cc',
@@ -19,6 +20,7 @@
         'pk11_prf_unittest.cc',
         'pk11_prng_unittest.cc',
         'pk11_rsapss_unittest.cc',
+        'pk11_der_private_key_import_unittest.cc',
         '<(DEPTH)/gtests/common/gtests.cc'
       ],
       'dependencies': [

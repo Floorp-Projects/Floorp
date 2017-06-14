@@ -25,7 +25,7 @@
 
 #include <assert.h>
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/typedefs.h"
 
 /*********************/

@@ -1,11 +1,13 @@
 henrika@webrtc.org
+kwiberg@webrtc.org
 mflodman@webrtc.org
 niklas.enbom@webrtc.org
 tina.legrand@webrtc.org
 tommi@webrtc.org
 per-file .gitignore=*
-per-file AUTHORS=*
 per-file .gn=kjellander@webrtc.org
+per-file *.gyp=*
+per-file AUTHORS=*
 per-file BUILD.gn=kjellander@webrtc.org
 per-file DEPS=*
 per-file PRESUBMIT.py=kjellander@webrtc.org

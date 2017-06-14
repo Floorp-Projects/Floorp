@@ -80,6 +80,22 @@ int DspHelper::RampSignal(int16_t* signal,
   return RampSignal(signal, length, factor, increment, signal);
 }
 
+int DspHelper::RampSignal(AudioVector* signal,
+                          size_t start_index,
+                          size_t length,
+                          int factor,
+                          int increment) {
+  int factor_q20 = (factor << 6) + 32;
+  // TODO(hlundin): Add 32 to factor_q20 when converting back to Q14?
+  for (size_t i = start_index; i < start_index + length; ++i) {
+    (*signal)[i] = (factor * (*signal)[i] + 8192) >> 14;
+    factor_q20 += increment;
+    factor_q20 = std::max(factor_q20, 0);  // Never go negative.
+    factor = std::min(factor_q20 >> 6, 16384);
+  }
+  return factor;
+}
+
 int DspHelper::RampSignal(AudioMultiVector* signal,
                           size_t start_index,
                           size_t length,
@@ -94,7 +110,7 @@ int DspHelper::RampSignal(AudioMultiVector* signal,
   // Loop over the channels, starting at the same |factor| each time.
   for (size_t channel = 0; channel < signal->Channels(); ++channel) {
     end_factor =
-        RampSignal(&(*signal)[channel][start_index], length, factor, increment);
+        RampSignal(&(*signal)[channel], start_index, length, factor, increment);
   }
   return end_factor;
 }

@@ -10,9 +10,9 @@
 
 #include "webrtc/base/event_tracer.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/trace_event.h"
 #include "webrtc/system_wrappers/include/static_instance.h"
+#include "webrtc/test/gtest.h"
 
 namespace {
 

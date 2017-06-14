@@ -11,11 +11,13 @@
 #ifndef WEBRTC_BASE_HTTPCLIENT_H__
 #define WEBRTC_BASE_HTTPCLIENT_H__
 
+#include <memory>
+
+#include "webrtc/base/checks.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/httpbase.h"
 #include "webrtc/base/nethelpers.h"
 #include "webrtc/base/proxyinfo.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/sigslot.h"
 #include "webrtc/base/socketaddress.h"
 #include "webrtc/base/socketpool.h"
@@ -50,7 +52,7 @@ class SignalThread;
 // What to do:  Define STRICT_HTTP_ERROR=1 in your makefile.  Use HttpError in
 // your code (HttpErrorType should only be used for code that is shared
 // with groups which have not yet migrated).
-#if STRICT_HTTP_ERROR
+#if defined(STRICT_HTTP_ERROR) && STRICT_HTTP_ERROR
 typedef HttpError HttpErrorType;
 #else  // !STRICT_HTTP_ERROR
 typedef int HttpErrorType;
@@ -88,7 +90,10 @@ public:
   void set_uri_form(UriForm form) { uri_form_ = form; }
   UriForm uri_form() const { return uri_form_; }
 
-  void set_cache(DiskCache* cache) { ASSERT(!IsCacheActive()); cache_ = cache; }
+  void set_cache(DiskCache* cache) {
+    RTC_DCHECK(!IsCacheActive());
+    cache_ = cache;
+  }
   bool cache_enabled() const { return (NULL != cache_); }
 
   // reset clears the server, request, and response structures.  It will also
@@ -172,7 +177,7 @@ private:
   size_t retries_, attempt_, redirects_;
   RedirectAction redirect_action_;
   UriForm uri_form_;
-  scoped_ptr<HttpAuthContext> context_;
+  std::unique_ptr<HttpAuthContext> context_;
   DiskCache* cache_;
   CacheState cache_state_;
   AsyncResolverInterface* resolver_;

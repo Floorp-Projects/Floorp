@@ -18,7 +18,7 @@
 #include "nsIHTMLDocument.h"
 #include "nsCOMPtr.h"
 #include "nsIContentSerializer.h"
-#include "nsIUnicodeEncoder.h"
+#include "mozilla/Encoding.h"
 #include "nsIOutputStream.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
@@ -169,12 +169,12 @@ protected:
   nsCOMPtr<nsINode>              mNode;
   nsCOMPtr<nsIOutputStream>      mStream;
   nsCOMPtr<nsIContentSerializer> mSerializer;
-  nsCOMPtr<nsIUnicodeEncoder>    mUnicodeEncoder;
+  UniquePtr<Encoder> mUnicodeEncoder;
   nsCOMPtr<nsINode>              mCommonParent;
   nsCOMPtr<nsIDocumentEncoderNodeFixup> mNodeFixup;
 
   nsString          mMimeType;
-  nsCString         mCharset;
+  const Encoding* mEncoding;
   uint32_t          mFlags;
   uint32_t          mWrapColumn;
   uint32_t          mStartDepth;
@@ -186,12 +186,17 @@ protected:
   AutoTArray<int32_t, 8>     mStartOffsets;
   AutoTArray<nsIContent*, 8> mEndNodes;
   AutoTArray<int32_t, 8>     mEndOffsets;
+  // Whether the serializer cares about being notified to scan elements to
+  // keep track of whether they are preformatted.  This stores the out
+  // argument of nsIContentSerializer::Init().
+  bool              mNeedsPreformatScanning;
   bool              mHaltRangeHint;
   // Used when context has already been serialized for
   // table cell selections (where parent is <tr>)
   bool              mDisableContextSerialize;
   bool              mIsCopying;  // Set to true only while copying
   bool              mNodeIsContainer;
+  bool mIsPlainText;
   nsStringBuffer*   mCachedBuffer;
 };
 
@@ -207,7 +212,9 @@ NS_IMPL_CYCLE_COLLECTION(nsDocumentEncoder,
                          mDocument, mSelection, mRange, mNode, mSerializer,
                          mCommonParent)
 
-nsDocumentEncoder::nsDocumentEncoder() : mCachedBuffer(nullptr)
+nsDocumentEncoder::nsDocumentEncoder()
+  : mEncoding(nullptr)
+  , mCachedBuffer(nullptr)
 {
   Initialize();
   mMimeType.AssignLiteral("text/plain");
@@ -221,9 +228,11 @@ void nsDocumentEncoder::Initialize(bool aClearCachedSerializer)
   mEndDepth = 0;
   mStartRootIndex = 0;
   mEndRootIndex = 0;
+  mNeedsPreformatScanning = false;
   mHaltRangeHint = false;
   mDisableContextSerialize = false;
   mNodeIsContainer = false;
+  mIsPlainText = false;
   if (aClearCachedSerializer) {
     mSerializer = nullptr;
   }
@@ -326,7 +335,11 @@ nsDocumentEncoder::SetNativeContainerNode(nsINode* aContainer)
 NS_IMETHODIMP
 nsDocumentEncoder::SetCharset(const nsACString& aCharset)
 {
-  mCharset = aCharset;
+  const Encoding* encoding = Encoding::ForLabel(aCharset);
+  if (!encoding) {
+    return NS_ERROR_UCONV_NOCONV;
+  }
+  mEncoding = encoding->OutputEncoding();
   return NS_OK;
 }
 
@@ -351,6 +364,10 @@ nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
                                       nsAString& aStr,
                                       nsINode* aOriginalNode)
 {
+  if (mNeedsPreformatScanning && aNode->IsElement()) {
+    mSerializer->ScanElementForPreformat(aNode->AsElement());
+  }
+
   if (!IsVisibleNode(aNode))
     return NS_OK;
 
@@ -428,6 +445,10 @@ nsresult
 nsDocumentEncoder::SerializeNodeEnd(nsINode* aNode,
                                     nsAString& aStr)
 {
+  if (mNeedsPreformatScanning && aNode->IsElement()) {
+    mSerializer->ForgetElementForPreformat(aNode->AsElement());
+  }
+
   if (!IsVisibleNode(aNode))
     return NS_OK;
 
@@ -547,92 +568,55 @@ nsDocumentEncoder::SerializeToStringIterative(nsINode* aNode,
 static nsresult
 ConvertAndWrite(const nsAString& aString,
                 nsIOutputStream* aStream,
-                nsIUnicodeEncoder* aEncoder)
+                Encoder* aEncoder,
+                bool aIsPlainText)
 {
   NS_ENSURE_ARG_POINTER(aStream);
   NS_ENSURE_ARG_POINTER(aEncoder);
-  nsresult rv;
-  int32_t charLength, startCharLength;
-  const nsPromiseFlatString& flat = PromiseFlatString(aString);
-  const char16_t* unicodeBuf = flat.get();
-  int32_t unicodeLength = aString.Length();
-  int32_t startLength = unicodeLength;
 
-  rv = aEncoder->GetMaxLength(unicodeBuf, unicodeLength, &charLength);
-  startCharLength = charLength;
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!charLength) {
-    // Nothing to write.  Besides, a length 0 string has an immutable buffer, so
-    // attempts to null-terminate it will crash.
+  if (!aString.Length()) {
     return NS_OK;
   }
 
-  nsAutoCString charXferString;
-  if (!charXferString.SetLength(charLength, fallible))
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  char* charXferBuf = charXferString.BeginWriting();
-  nsresult convert_rv = NS_OK;
-
-  do {
-    unicodeLength = startLength;
-    charLength = startCharLength;
-
-    convert_rv = aEncoder->Convert(unicodeBuf, &unicodeLength, charXferBuf, &charLength);
-    NS_ENSURE_SUCCESS(convert_rv, convert_rv);
-
-    // Make sure charXferBuf is null-terminated before we call
-    // Write().
-
-    charXferBuf[charLength] = '\0';
-
-    uint32_t written;
-    rv = aStream->Write(charXferBuf, charLength, &written);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // If the converter couldn't convert a chraacer we replace the
-    // character with a characre entity.
-    if (convert_rv == NS_ERROR_UENC_NOMAPPING) {
-      // Finishes the conversion.
-      // The converter has the possibility to write some extra data and flush its final state.
-      char finish_buf[33];
-      charLength = sizeof(finish_buf) - 1;
-      rv = aEncoder->Finish(finish_buf, &charLength);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // Make sure finish_buf is null-terminated before we call
-      // Write().
-
-      finish_buf[charLength] = '\0';
-
-      rv = aStream->Write(finish_buf, charLength, &written);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsAutoCString entString("&#");
-      if (NS_IS_HIGH_SURROGATE(unicodeBuf[unicodeLength - 1]) &&
-          unicodeLength < startLength && NS_IS_LOW_SURROGATE(unicodeBuf[unicodeLength]))  {
-        entString.AppendInt(SURROGATE_TO_UCS4(unicodeBuf[unicodeLength - 1],
-                                              unicodeBuf[unicodeLength]));
-        unicodeLength += 1;
+  uint8_t buffer[4096];
+  auto src = MakeSpan(aString);
+  auto bufferSpan = MakeSpan(buffer);
+  // Reserve space for terminator
+  auto dst = bufferSpan.To(bufferSpan.Length() - 1);
+  for (;;) {
+    uint32_t result;
+    size_t read;
+    size_t written;
+    bool hadErrors;
+    if (aIsPlainText) {
+      Tie(result, read, written) =
+        aEncoder->EncodeFromUTF16WithoutReplacement(src, dst, false);
+      if (result != kInputEmpty && result != kOutputFull) {
+        // There's always room for one byte in the case of
+        // an unmappable character, because otherwise
+        // we'd have gotten `kOutputFull`.
+        dst[written++] = '?';
       }
-      else
-        entString.AppendInt(unicodeBuf[unicodeLength - 1]);
-      entString.Append(';');
-
-      // Since entString is an nsAutoCString we know entString.get()
-      // returns a null-terminated string, so no need for extra
-      // null-termination before calling Write() here.
-
-      rv = aStream->Write(entString.get(), entString.Length(), &written);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      unicodeBuf += unicodeLength;
-      startLength -= unicodeLength;
+    } else {
+      Tie(result, read, written, hadErrors) =
+        aEncoder->EncodeFromUTF16(src, dst, false);
     }
-  } while (convert_rv == NS_ERROR_UENC_NOMAPPING);
-
-  return rv;
+    Unused << hadErrors;
+    src = src.From(read);
+    // Sadly, we still have test cases that implement nsIOutputStream in JS, so
+    // the buffer needs to be zero-terminated for XPConnect to do its thing.
+    // See bug 170416.
+    bufferSpan[written] = 0;
+    uint32_t streamWritten;
+    nsresult rv = aStream->Write(
+      reinterpret_cast<char*>(dst.Elements()), written, &streamWritten);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    if (result == kInputEmpty) {
+      return NS_OK;
+    }
+  }
 }
 
 nsresult
@@ -644,7 +628,7 @@ nsDocumentEncoder::FlushText(nsAString& aString, bool aForce)
   nsresult rv = NS_OK;
 
   if (aString.Length() > 1024 || aForce) {
-    rv = ConvertAndWrite(aString, mStream, mUnicodeEncoder);
+    rv = ConvertAndWrite(aString, mStream, mUnicodeEncoder.get(), mIsPlainText);
 
     aString.Truncate();
   }
@@ -1075,7 +1059,8 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
   nsresult rv = NS_OK;
 
   bool rewriteEncodingDeclaration = !(mSelection || mRange || mNode) && !(mFlags & OutputDontRewriteEncodingDeclaration);
-  mSerializer->Init(mFlags, mWrapColumn, mCharset.get(), mIsCopying, rewriteEncodingDeclaration);
+  mSerializer->Init(
+    mFlags, mWrapColumn, mEncoding, mIsCopying, rewriteEncodingDeclaration, &mNeedsPreformatScanning);
 
   if (mSelection) {
     nsCOMPtr<nsIDOMRange> range;
@@ -1212,16 +1197,13 @@ nsDocumentEncoder::EncodeToStream(nsIOutputStream* aStream)
   if (!mDocument)
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsAutoCString encoding;
-  if (!EncodingUtils::FindEncodingForLabelNoReplacement(mCharset, encoding)) {
+  if (!mEncoding) {
     return NS_ERROR_UCONV_NOCONV;
   }
-  mUnicodeEncoder = EncodingUtils::EncoderForEncoding(encoding);
 
-  if (mMimeType.LowerCaseEqualsLiteral("text/plain")) {
-    rv = mUnicodeEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nullptr, '?');
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  mUnicodeEncoder = mEncoding->NewEncoder();
+
+  mIsPlainText = (mMimeType.LowerCaseEqualsLiteral("text/plain"));
 
   mStream = aStream;
 

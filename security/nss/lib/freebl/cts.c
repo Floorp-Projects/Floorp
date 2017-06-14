@@ -20,19 +20,15 @@ struct CTSContextStr {
 
 CTSContext *
 CTS_CreateContext(void *context, freeblCipherFunc cipher,
-                  const unsigned char *iv, unsigned int blocksize)
+                  const unsigned char *iv)
 {
     CTSContext *cts;
 
-    if (blocksize > MAX_BLOCK_SIZE) {
-        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-        return NULL;
-    }
     cts = PORT_ZNew(CTSContext);
     if (cts == NULL) {
         return NULL;
     }
-    PORT_Memcpy(cts->iv, iv, blocksize);
+    PORT_Memcpy(cts->iv, iv, MAX_BLOCK_SIZE);
     cts->cipher = cipher;
     cts->context = context;
     return cts;

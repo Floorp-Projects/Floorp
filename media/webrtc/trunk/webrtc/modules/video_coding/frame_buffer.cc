@@ -66,6 +66,10 @@ bool VCMFrameBuffer::NonReference() const {
   return _sessionInfo.NonReference();
 }
 
+std::vector<NaluInfo> VCMFrameBuffer::GetNaluInfos() const {
+  return _sessionInfo.GetNaluInfos();
+}
+
 void VCMFrameBuffer::SetGofInfo(const GofInfoVP9& gof_info, size_t idx) {
   _sessionInfo.SetGofInfo(gof_info, idx);
   // TODO(asapersson): Consider adding hdr->VP9.ref_picture_id for testing.
@@ -103,11 +107,13 @@ VCMFrameBufferEnum VCMFrameBuffer::InsertPacket(
     }
   }
 
-    // add safety margin because STAP-A packets can cause it to expand by
-    // ~two bytes per NAL
-  uint32_t requiredSizeBytes = Length() + packet.sizeBytes +
-                   (packet.insertStartCode ? kH264StartCodeLengthBytes : 0) +
-                                 kBufferSafetyMargin;
+  // add safety margin because STAP-A packets can cause it to expand by
+  // ~two bytes per NAL
+  uint32_t requiredSizeBytes =
+      Length() + packet.sizeBytes +
+      (packet.insertStartCode ? kH264StartCodeLengthBytes : 0) +
+      kBufferSafetyMargin +
+      EncodedImage::GetBufferPaddingBytes(packet.codec);
   if (requiredSizeBytes >= _size) {
     const uint8_t* prevBuffer = _buffer;
     const uint32_t increments =
@@ -130,7 +136,7 @@ VCMFrameBufferEnum VCMFrameBuffer::InsertPacket(
 
   // Don't copy payload specific data for empty packets (e.g padding packets).
   if (packet.sizeBytes > 0)
-    CopyCodecSpecific(&packet.codecSpecificHeader);
+    CopyCodecSpecific(&packet.video_header);
 
   int retVal =
       _sessionInfo.InsertPacket(packet, _buffer, decode_error_mode, frame_data);
@@ -153,9 +159,13 @@ VCMFrameBufferEnum VCMFrameBuffer::InsertPacket(
   // frame (I-frame or IDR frame in H.264 (AVC), or an IRAP picture in H.265
   // (HEVC)).
   if (packet.markerBit) {
-    RTC_DCHECK(!_rotation_set);
-    _rotation = packet.codecSpecificHeader.rotation;
+    //RTC_DCHECK(!_rotation_set);
+    rotation_ = packet.video_header.rotation;
     _rotation_set = true;
+  }
+
+  if (packet.is_first_packet_in_frame) {
+    playout_delay_ = packet.video_header.playout_delay;
   }
 
   if (_sessionInfo.complete()) {
@@ -250,18 +260,8 @@ bool VCMFrameBuffer::IsRetransmitted() const {
 }
 
 void VCMFrameBuffer::PrepareForDecode(bool continuous) {
-#ifdef INDEPENDENT_PARTITIONS
-  if (_codec == kVideoCodecVP8) {
-    _length = _sessionInfo.BuildVP8FragmentationHeader(_buffer, _length,
-                                                       &_fragmentation);
-  } else {
-    size_t bytes_removed = _sessionInfo.MakeDecodable();
-    _length -= bytes_removed;
-  }
-#else
   size_t bytes_removed = _sessionInfo.MakeDecodable();
   _length -= bytes_removed;
-#endif
   // Transfer frame information to EncodedFrame and create any codec
   // specific information.
   _frameType = _sessionInfo.FrameType();

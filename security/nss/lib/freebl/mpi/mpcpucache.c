@@ -17,7 +17,7 @@
  *
  * Currently the file returns good data for most modern x86 processors, and
  * reasonable data on 64-bit ppc processors. All other processors are assumed
- * to have a cache line size of 32 bytes unless modified by target.mk.
+ * to have a cache line size of 32 bytes.
  *
  */
 
@@ -775,18 +775,6 @@ s_mpi_getProcessorLineSize()
  *
  */
 
-/* target.mk can define MPI_CACHE_LINE_SIZE if it's common for the family or
- * OS */
-#if defined(MPI_CACHE_LINE_SIZE) && !defined(MPI_GET_PROCESSOR_LINE_SIZE_DEFINED)
-
-unsigned long
-s_mpi_getProcessorLineSize()
-{
-    return MPI_CACHE_LINE_SIZE;
-}
-#define MPI_GET_PROCESSOR_LINE_SIZE_DEFINED 1
-#endif
-
 /* If no way to get the processor cache line size has been defined, assume
  * it's 32 bytes (most common value, does not significantly impact performance)
  */
@@ -795,14 +783,5 @@ unsigned long
 s_mpi_getProcessorLineSize()
 {
     return 32;
-}
-#endif
-
-#ifdef TEST_IT
-#include <stdio.h>
-
-main()
-{
-    printf("line size = %d\n", s_mpi_getProcessorLineSize());
 }
 #endif

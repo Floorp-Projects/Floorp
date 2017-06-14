@@ -12,6 +12,8 @@ message Init {
   optional int32 num_reverse_channels = 5;
   optional int32 reverse_sample_rate = 6;
   optional int32 output_sample_rate = 7;
+  optional int32 reverse_output_sample_rate = 8;
+  optional int32 num_reverse_output_channels = 9;
 }
 
 // May contain interleaved or deinterleaved data, but don't store both formats.
@@ -44,7 +46,7 @@ message Stream {
 // Contains the configurations of various APM component. A Config message is
 // added when any of the fields are changed.
 message Config {
-  // Next field number 17.
+  // Next field number 19.
   // Acoustic echo canceler.
   optional bool aec_enabled = 1;
   optional bool aec_delay_agnostic_enabled = 2;
@@ -67,6 +69,11 @@ message Config {
   optional int32 ns_level = 15;
   // Transient suppression.
   optional bool transient_suppression_enabled = 16;
+  // Semicolon-separated string containing experimental feature
+  // descriptions.
+  optional string experiments_description = 17;
+  // Intelligibility Enhancer
+  optional bool intelligibility_enhancer_enabled = 18;
 }
 
 message Event {

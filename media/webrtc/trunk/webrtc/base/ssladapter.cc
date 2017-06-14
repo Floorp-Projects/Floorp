@@ -8,10 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#if HAVE_CONFIG_H
-#include "config.h"
-#endif  // HAVE_CONFIG_H
-
 #include "webrtc/base/ssladapter.h"
 
 #include "webrtc/base/sslconfig.h"

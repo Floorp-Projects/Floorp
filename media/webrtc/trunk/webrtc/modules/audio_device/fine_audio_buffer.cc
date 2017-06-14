@@ -106,7 +106,7 @@ void FineAudioBuffer::GetPlayoutData(int8_t* buffer) {
   // If playout_cached_bytes_ is larger than the cache buffer, uninitialized
   // memory will be read.
   RTC_CHECK_LE(playout_cached_bytes_, bytes_per_10_ms_);
-  RTC_CHECK_EQ(static_cast<size_t>(-bytes_left), playout_cached_bytes_);
+  RTC_CHECK_EQ(-bytes_left, playout_cached_bytes_);
   playout_cached_buffer_start_ = 0;
   memcpy(playout_cache_buffer_.get(), cache_ptr, playout_cached_bytes_);
 }

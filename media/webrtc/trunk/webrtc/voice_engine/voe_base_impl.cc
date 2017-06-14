@@ -12,12 +12,11 @@
 
 #include "webrtc/base/format_macros.h"
 #include "webrtc/base/logging.h"
-#include "webrtc/common.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/modules/audio_coding/codecs/builtin_audio_decoder_factory.h"
 #include "webrtc/modules/audio_coding/include/audio_coding_module.h"
 #include "webrtc/modules/audio_device/audio_device_impl.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/include/file_wrapper.h"
 #include "webrtc/voice_engine/channel.h"
 #include "webrtc/voice_engine/include/voe_errors.h"
@@ -39,16 +38,14 @@ VoEBase* VoEBase::GetInterface(VoiceEngine* voiceEngine) {
 
 VoEBaseImpl::VoEBaseImpl(voe::SharedData* shared)
     : voiceEngineObserverPtr_(nullptr),
-      callbackCritSect_(*CriticalSectionWrapper::CreateCriticalSection()),
       shared_(shared) {}
 
 VoEBaseImpl::~VoEBaseImpl() {
   TerminateInternal();
-  delete &callbackCritSect_;
 }
 
 void VoEBaseImpl::OnErrorIsReported(const ErrorCode error) {
-  CriticalSectionScoped cs(&callbackCritSect_);
+  rtc::CritScope cs(&callbackCritSect_);
   int errCode = 0;
   if (error == AudioDeviceObserver::kRecordingError) {
     errCode = VE_RUNTIME_REC_ERROR;
@@ -64,7 +61,7 @@ void VoEBaseImpl::OnErrorIsReported(const ErrorCode error) {
 }
 
 void VoEBaseImpl::OnWarningIsReported(const WarningCode warning) {
-  CriticalSectionScoped cs(&callbackCritSect_);
+  rtc::CritScope cs(&callbackCritSect_);
   int warningCode = 0;
   if (warning == AudioDeviceObserver::kRecordingWarning) {
     warningCode = VE_RUNTIME_REC_WARNING;
@@ -109,43 +106,6 @@ int32_t VoEBaseImpl::NeedMorePlayData(const size_t nSamples,
   return 0;
 }
 
-int VoEBaseImpl::OnDataAvailable(const int voe_channels[],
-                                 size_t number_of_voe_channels,
-                                 const int16_t* audio_data, int sample_rate,
-                                 size_t number_of_channels,
-                                 size_t number_of_frames,
-                                 int audio_delay_milliseconds, int volume,
-                                 bool key_pressed, bool need_audio_processing) {
-  if (number_of_voe_channels == 0) return 0;
-
-  if (need_audio_processing) {
-    return ProcessRecordedDataWithAPM(
-        voe_channels, number_of_voe_channels, audio_data, sample_rate,
-        number_of_channels, number_of_frames, audio_delay_milliseconds, 0,
-        volume, key_pressed);
-  }
-
-  // No need to go through the APM, demultiplex the data to each VoE channel,
-  // encode and send to the network.
-  for (size_t i = 0; i < number_of_voe_channels; ++i) {
-    // TODO(ajm): In the case where multiple channels are using the same codec
-    // rate, this path needlessly does extra conversions. We should convert once
-    // and share between channels.
-    PushCaptureData(voe_channels[i], audio_data, 16, sample_rate,
-                    number_of_channels, number_of_frames);
-  }
-
-  // Return 0 to indicate no need to change the volume.
-  return 0;
-}
-
-void VoEBaseImpl::OnData(int voe_channel, const void* audio_data,
-                         int bits_per_sample, int sample_rate,
-                         size_t number_of_channels, size_t number_of_frames) {
-  PushCaptureData(voe_channel, audio_data, bits_per_sample, sample_rate,
-                  number_of_channels, number_of_frames);
-}
-
 void VoEBaseImpl::PushCaptureData(int voe_channel, const void* audio_data,
                                   int bits_per_sample, int sample_rate,
                                   size_t number_of_channels,
@@ -176,7 +136,7 @@ void VoEBaseImpl::PullRenderData(int bits_per_sample,
 }
 
 int VoEBaseImpl::RegisterVoiceEngineObserver(VoiceEngineObserver& observer) {
-  CriticalSectionScoped cs(&callbackCritSect_);
+  rtc::CritScope cs(&callbackCritSect_);
   if (voiceEngineObserverPtr_) {
     shared_->SetLastError(
         VE_INVALID_OPERATION, kTraceError,
@@ -196,7 +156,7 @@ int VoEBaseImpl::RegisterVoiceEngineObserver(VoiceEngineObserver& observer) {
 }
 
 int VoEBaseImpl::DeRegisterVoiceEngineObserver() {
-  CriticalSectionScoped cs(&callbackCritSect_);
+  rtc::CritScope cs(&callbackCritSect_);
   if (!voiceEngineObserverPtr_) {
     shared_->SetLastError(
         VE_INVALID_OPERATION, kTraceError,
@@ -214,9 +174,11 @@ int VoEBaseImpl::DeRegisterVoiceEngineObserver() {
   return 0;
 }
 
-int VoEBaseImpl::Init(AudioDeviceModule* external_adm,
-                      AudioProcessing* audioproc) {
-  CriticalSectionScoped cs(shared_->crit_sec());
+int VoEBaseImpl::Init(
+    AudioDeviceModule* external_adm,
+    AudioProcessing* audioproc,
+    const rtc::scoped_refptr<AudioDecoderFactory>& decoder_factory) {
+  rtc::CritScope cs(shared_->crit_sec());
   WebRtcSpl_Init();
   if (shared_->statistics().Initialized()) {
     return 0;
@@ -232,7 +194,7 @@ int VoEBaseImpl::Init(AudioDeviceModule* external_adm,
     return -1;
 #else
     // Create the internal ADM implementation.
-    shared_->set_audio_device(AudioDeviceModuleImpl::Create(
+    shared_->set_audio_device(AudioDeviceModule::Create(
         VoEId(shared_->instance_id(), -1), shared_->audio_device_layer()));
 
     if (shared_->audio_device() == nullptr) {
@@ -326,7 +288,7 @@ int VoEBaseImpl::Init(AudioDeviceModule* external_adm,
   }
 
   if (!audioproc) {
-    audioproc = AudioProcessing::Create(shared_->channel_manager().config_);
+    audioproc = AudioProcessing::Create();
     if (!audioproc) {
       LOG(LS_ERROR) << "Failed to create AudioProcessing.";
       shared_->SetLastError(VE_NO_MEMORY);
@@ -378,33 +340,34 @@ int VoEBaseImpl::Init(AudioDeviceModule* external_adm,
   }
 #endif
 
+  if (decoder_factory)
+    decoder_factory_ = decoder_factory;
+  else
+    decoder_factory_ = CreateBuiltinAudioDecoderFactory();
+
   return shared_->statistics().SetInitialized();
 }
 
 int VoEBaseImpl::Terminate() {
-  CriticalSectionScoped cs(shared_->crit_sec());
+  rtc::CritScope cs(shared_->crit_sec());
   return TerminateInternal();
 }
 
 int VoEBaseImpl::CreateChannel() {
-  CriticalSectionScoped cs(shared_->crit_sec());
-  if (!shared_->statistics().Initialized()) {
-    shared_->SetLastError(VE_NOT_INITED, kTraceError);
-    return -1;
-  }
-
-  voe::ChannelOwner channel_owner = shared_->channel_manager().CreateChannel();
-  return InitializeChannel(&channel_owner);
+  return CreateChannel(ChannelConfig());
 }
 
-int VoEBaseImpl::CreateChannel(const Config& config) {
-  CriticalSectionScoped cs(shared_->crit_sec());
+int VoEBaseImpl::CreateChannel(const ChannelConfig& config) {
+  rtc::CritScope cs(shared_->crit_sec());
   if (!shared_->statistics().Initialized()) {
     shared_->SetLastError(VE_NOT_INITED, kTraceError);
     return -1;
   }
+
+  ChannelConfig config_copy(config);
+  config_copy.acm_config.decoder_factory = decoder_factory_;
   voe::ChannelOwner channel_owner =
-      shared_->channel_manager().CreateChannel(config);
+      shared_->channel_manager().CreateChannel(config_copy);
   return InitializeChannel(&channel_owner);
 }
 
@@ -434,7 +397,7 @@ int VoEBaseImpl::InitializeChannel(voe::ChannelOwner* channel_owner) {
 }
 
 int VoEBaseImpl::DeleteChannel(int channel) {
-  CriticalSectionScoped cs(shared_->crit_sec());
+  rtc::CritScope cs(shared_->crit_sec());
   if (!shared_->statistics().Initialized()) {
     shared_->SetLastError(VE_NOT_INITED, kTraceError);
     return -1;
@@ -461,7 +424,7 @@ int VoEBaseImpl::DeleteChannel(int channel) {
 }
 
 int VoEBaseImpl::StartReceive(int channel) {
-  CriticalSectionScoped cs(shared_->crit_sec());
+  rtc::CritScope cs(shared_->crit_sec());
   if (!shared_->statistics().Initialized()) {
     shared_->SetLastError(VE_NOT_INITED, kTraceError);
     return -1;
@@ -473,27 +436,12 @@ int VoEBaseImpl::StartReceive(int channel) {
                           "StartReceive() failed to locate channel");
     return -1;
   }
-  return channelPtr->StartReceiving();
-}
-
-int VoEBaseImpl::StopReceive(int channel) {
-  CriticalSectionScoped cs(shared_->crit_sec());
-  if (!shared_->statistics().Initialized()) {
-    shared_->SetLastError(VE_NOT_INITED, kTraceError);
-    return -1;
-  }
-  voe::ChannelOwner ch = shared_->channel_manager().GetChannel(channel);
-  voe::Channel* channelPtr = ch.channel();
-  if (channelPtr == nullptr) {
-    shared_->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
-                          "SetLocalReceiver() failed to locate channel");
-    return -1;
-  }
-  return channelPtr->StopReceiving();
+  channelPtr->ResetDiscardedPacketCount();
+  return 0;
 }
 
 int VoEBaseImpl::StartPlayout(int channel) {
-  CriticalSectionScoped cs(shared_->crit_sec());
+  rtc::CritScope cs(shared_->crit_sec());
   if (!shared_->statistics().Initialized()) {
     shared_->SetLastError(VE_NOT_INITED, kTraceError);
     return -1;
@@ -517,7 +465,7 @@ int VoEBaseImpl::StartPlayout(int channel) {
 }
 
 int VoEBaseImpl::StopPlayout(int channel) {
-  CriticalSectionScoped cs(shared_->crit_sec());
+  rtc::CritScope cs(shared_->crit_sec());
   if (!shared_->statistics().Initialized()) {
     shared_->SetLastError(VE_NOT_INITED, kTraceError);
     return -1;
@@ -537,7 +485,7 @@ int VoEBaseImpl::StopPlayout(int channel) {
 }
 
 int VoEBaseImpl::StartSend(int channel) {
-  CriticalSectionScoped cs(shared_->crit_sec());
+  rtc::CritScope cs(shared_->crit_sec());
   if (!shared_->statistics().Initialized()) {
     shared_->SetLastError(VE_NOT_INITED, kTraceError);
     return -1;
@@ -561,7 +509,7 @@ int VoEBaseImpl::StartSend(int channel) {
 }
 
 int VoEBaseImpl::StopSend(int channel) {
-  CriticalSectionScoped cs(shared_->crit_sec());
+  rtc::CritScope cs(shared_->crit_sec());
   if (!shared_->statistics().Initialized()) {
     shared_->SetLastError(VE_NOT_INITED, kTraceError);
     return -1;
@@ -590,7 +538,7 @@ int VoEBaseImpl::GetVersion(char version[1024]) {
 #ifdef WEBRTC_VOE_EXTERNAL_REC_AND_PLAYOUT
   versionString += "External recording and playout build";
 #endif
-  RTC_DCHECK_GT(1024u, versionString.size() + 1);
+  RTC_DCHECK_GT(1024, versionString.size() + 1);
   char* end = std::copy(versionString.cbegin(), versionString.cend(), version);
   end[0] = '\n';
   end[1] = '\0';
@@ -601,8 +549,7 @@ int VoEBaseImpl::LastError() { return (shared_->statistics().LastError()); }
 
 int32_t VoEBaseImpl::StartPlayout() {
   if (!shared_->audio_device()->Playing()) {
-    if (!shared_->ext_playout())
-    {
+    if (!shared_->ext_playout()) {
       if (shared_->audio_device()->InitPlayout() != 0) {
         LOG_F(LS_ERROR) << "Failed to initialize playout";
         return -1;
@@ -629,13 +576,15 @@ int32_t VoEBaseImpl::StopPlayout() {
 }
 
 int32_t VoEBaseImpl::StartSend() {
-  if (!shared_->audio_device()->Recording()) {
-    if (!shared_->ext_recording())
-    {
+  if (!shared_->ext_recording()) {
+    if (!shared_->audio_device()->RecordingIsInitialized() &&
+        !shared_->audio_device()->Recording()) {
       if (shared_->audio_device()->InitRecording() != 0) {
         LOG_F(LS_ERROR) << "Failed to initialize recording";
         return -1;
       }
+    }
+    if (!shared_->audio_device()->Recording()) {
       if (shared_->audio_device()->StartRecording() != 0) {
         LOG_F(LS_ERROR) << "Failed to start recording";
         return -1;
@@ -804,7 +753,7 @@ void VoEBaseImpl::GetPlayoutData(int sample_rate, size_t number_of_channels,
 
 int VoEBaseImpl::AssociateSendChannel(int channel,
                                       int accociate_send_channel) {
-  CriticalSectionScoped cs(shared_->crit_sec());
+  rtc::CritScope cs(shared_->crit_sec());
 
   if (!shared_->statistics().Initialized()) {
       shared_->SetLastError(VE_NOT_INITED, kTraceError);

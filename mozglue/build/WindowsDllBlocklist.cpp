@@ -32,6 +32,7 @@
 #include "mozilla/WindowsVersion.h"
 #include "nsWindowsHelpers.h"
 #include "WindowsDllBlocklist.h"
+#include "mozilla/AutoProfilerLabel.h"
 
 using namespace mozilla;
 
@@ -761,6 +762,14 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
 continue_loading:
 #ifdef DEBUG_very_verbose
   printf_stderr("LdrLoadDll: continuing load... ('%S')\n", moduleFileName->Buffer);
+#endif
+
+#ifdef MOZ_GECKO_PROFILER
+  // A few DLLs such as xul.dll and nss3.dll get loaded before mozglue's
+  // AutoProfilerLabel is initialized, and this is a no-op in those cases. But
+  // the vast majority of DLLs do get labelled here.
+  AutoProfilerLabel label("WindowsDllBlocklist::patched_LdrLoadDll", dllName,
+                          __LINE__);
 #endif
 
 #ifdef _M_AMD64

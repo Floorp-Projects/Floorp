@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/include/file_wrapper.h"
 #include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/voice_engine/include/voe_errors.h"
@@ -21,19 +20,13 @@
 namespace webrtc {
 
 VoERTP_RTCP* VoERTP_RTCP::GetInterface(VoiceEngine* voiceEngine) {
-#ifndef WEBRTC_VOICE_ENGINE_RTP_RTCP_API
-  return NULL;
-#else
   if (NULL == voiceEngine) {
     return NULL;
   }
   VoiceEngineImpl* s = static_cast<VoiceEngineImpl*>(voiceEngine);
   s->AddRef();
   return s;
-#endif
 }
-
-#ifdef WEBRTC_VOICE_ENGINE_RTP_RTCP_API
 
 VoERTP_RTCPImpl::VoERTP_RTCPImpl(voe::SharedData* shared) : _shared(shared) {
   WEBRTC_TRACE(kTraceMemory, kTraceVoice, VoEId(_shared->instance_id(), -1),
@@ -142,7 +135,7 @@ int VoERTP_RTCPImpl::SetReceiveAudioLevelIndicationStatus(int channel,
     // the range 1-14 inclusive.
     _shared->SetLastError(
         VE_INVALID_ARGUMENT, kTraceError,
-        "SetReceiveAbsoluteSenderTimeStatus() invalid id parameter");
+        "SetReceiveAudioLevelIndicationStatus() invalid id parameter");
     return -1;
   }
   // Set state and id for the specified channel.
@@ -155,69 +148,6 @@ int VoERTP_RTCPImpl::SetReceiveAudioLevelIndicationStatus(int channel,
     return -1;
   }
   return channel_ptr->SetReceiveAudioLevelIndicationStatus(enable, id);
-}
-
-int VoERTP_RTCPImpl::SetSendAbsoluteSenderTimeStatus(int channel,
-                                                     bool enable,
-                                                     unsigned char id) {
-  WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
-               "SetSendAbsoluteSenderTimeStatus(channel=%d, enable=%d, id=%u)",
-               channel, enable, id);
-  if (!_shared->statistics().Initialized()) {
-    _shared->SetLastError(VE_NOT_INITED, kTraceError);
-    return -1;
-  }
-  if (enable && (id < kVoiceEngineMinRtpExtensionId ||
-                 id > kVoiceEngineMaxRtpExtensionId)) {
-    // [RFC5285] The 4-bit id is the local identifier of this element in
-    // the range 1-14 inclusive.
-    _shared->SetLastError(
-        VE_INVALID_ARGUMENT, kTraceError,
-        "SetSendAbsoluteSenderTimeStatus() invalid id parameter");
-    return -1;
-  }
-  // Set state and id for the specified channel.
-  voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
-  voe::Channel* channelPtr = ch.channel();
-  if (channelPtr == NULL) {
-    _shared->SetLastError(
-        VE_CHANNEL_NOT_VALID, kTraceError,
-        "SetSendAbsoluteSenderTimeStatus() failed to locate channel");
-    return -1;
-  }
-  return channelPtr->SetSendAbsoluteSenderTimeStatus(enable, id);
-}
-
-int VoERTP_RTCPImpl::SetReceiveAbsoluteSenderTimeStatus(int channel,
-                                                        bool enable,
-                                                        unsigned char id) {
-  WEBRTC_TRACE(
-      kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
-      "SetReceiveAbsoluteSenderTimeStatus(channel=%d, enable=%d, id=%u)",
-      channel, enable, id);
-  if (!_shared->statistics().Initialized()) {
-    _shared->SetLastError(VE_NOT_INITED, kTraceError);
-    return -1;
-  }
-  if (enable && (id < kVoiceEngineMinRtpExtensionId ||
-                 id > kVoiceEngineMaxRtpExtensionId)) {
-    // [RFC5285] The 4-bit id is the local identifier of this element in
-    // the range 1-14 inclusive.
-    _shared->SetLastError(
-        VE_INVALID_ARGUMENT, kTraceError,
-        "SetReceiveAbsoluteSenderTimeStatus() invalid id parameter");
-    return -1;
-  }
-  // Set state and id for the specified channel.
-  voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
-  voe::Channel* channelPtr = ch.channel();
-  if (channelPtr == NULL) {
-    _shared->SetLastError(
-        VE_CHANNEL_NOT_VALID, kTraceError,
-        "SetReceiveAbsoluteSenderTimeStatus() failed to locate channel");
-    return -1;
-  }
-  return channelPtr->SetReceiveAbsoluteSenderTimeStatus(enable, id);
 }
 
 int VoERTP_RTCPImpl::SetRTCPStatus(int channel, bool enable) {
@@ -283,40 +213,6 @@ int VoERTP_RTCPImpl::GetRemoteRTCP_CNAME(int channel, char cName[256]) {
     return -1;
   }
   return channelPtr->GetRemoteRTCP_CNAME(cName);
-}
-
-int VoERTP_RTCPImpl::GetRemoteRTCPReceiverInfo(
-    int channel,
-    uint32_t& NTPHigh, // when last RR received
-    uint32_t& NTPLow,  // when last RR received
-    uint32_t& receivedPacketCount, // derived from RR + cached info
-    uint64_t& receivedOctetCount,  // derived from RR + cached info
-    uint32_t& jitter,          // from report block 1 in RR
-    uint16_t& fractionLost,    // from report block 1 in RR
-    uint32_t& cumulativeLost,  // from report block 1 in RR
-    int32_t& rttMs)
-{
-  WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
-               "GetRemoteRTCPReceiverInfo(channel=%d,...)", channel);
-  if (!_shared->statistics().Initialized()) {
-    _shared->SetLastError(VE_NOT_INITED, kTraceError);
-    return -1;
-  }
-  voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
-  voe::Channel* channelPtr = ch.channel();
-  if (channelPtr == NULL) {
-    _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
-                          "GetRemoteRTCPReceiverInfo() failed to locate channel");
-    return -1;
-  }
-  return channelPtr->GetRemoteRTCPReceiverInfo(NTPHigh,
-                                               NTPLow,
-                                               receivedPacketCount,
-                                               receivedOctetCount,
-                                               jitter,
-                                               fractionLost,
-                                               cumulativeLost,
-                                               rttMs);
 }
 
 int VoERTP_RTCPImpl::GetRTPStatistics(int channel,
@@ -390,55 +286,6 @@ int VoERTP_RTCPImpl::GetRemoteRTCPReportBlocks(
   return channel_ptr->GetRemoteRTCPReportBlocks(report_blocks);
 }
 
-int VoERTP_RTCPImpl::SetREDStatus(int channel,
-                                  bool enable,
-                                  int redPayloadtype) {
-  WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
-               "SetREDStatus(channel=%d, enable=%d, redPayloadtype=%d)",
-               channel, enable, redPayloadtype);
-#ifdef WEBRTC_CODEC_RED
-  if (!_shared->statistics().Initialized()) {
-    _shared->SetLastError(VE_NOT_INITED, kTraceError);
-    return -1;
-  }
-  voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
-  voe::Channel* channelPtr = ch.channel();
-  if (channelPtr == NULL) {
-    _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
-                          "SetREDStatus() failed to locate channel");
-    return -1;
-  }
-  return channelPtr->SetREDStatus(enable, redPayloadtype);
-#else
-  _shared->SetLastError(VE_FUNC_NOT_SUPPORTED, kTraceError,
-                        "SetREDStatus() RED is not supported");
-  return -1;
-#endif
-}
-
-int VoERTP_RTCPImpl::GetREDStatus(int channel,
-                                  bool& enabled,
-                                  int& redPayloadtype) {
-#ifdef WEBRTC_CODEC_RED
-  if (!_shared->statistics().Initialized()) {
-    _shared->SetLastError(VE_NOT_INITED, kTraceError);
-    return -1;
-  }
-  voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
-  voe::Channel* channelPtr = ch.channel();
-  if (channelPtr == NULL) {
-    _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
-                          "GetREDStatus() failed to locate channel");
-    return -1;
-  }
-  return channelPtr->GetREDStatus(enabled, redPayloadtype);
-#else
-  _shared->SetLastError(VE_FUNC_NOT_SUPPORTED, kTraceError,
-                        "GetREDStatus() RED is not supported");
-  return -1;
-#endif
-}
-
 int VoERTP_RTCPImpl::SetNACKStatus(int channel, bool enable, int maxNoPackets) {
   WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                "SetNACKStatus(channel=%d, enable=%d, maxNoPackets=%d)", channel,
@@ -454,7 +301,5 @@ int VoERTP_RTCPImpl::SetNACKStatus(int channel, bool enable, int maxNoPackets) {
   channelPtr->SetNACKStatus(enable, maxNoPackets);
   return 0;
 }
-
-#endif  // #ifdef WEBRTC_VOICE_ENGINE_RTP_RTCP_API
 
 }  // namespace webrtc

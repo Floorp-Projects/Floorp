@@ -29,7 +29,7 @@ class DeviceInfoAndroid : public DeviceInfoImpl {
   static void Initialize(JavaVM* javaVM);
   static void DeInitialize();
 
-  DeviceInfoAndroid(int32_t id);
+  DeviceInfoAndroid();
   virtual ~DeviceInfoAndroid();
 
   // Set |*index| to the index of the camera matching |deviceUniqueIdUTF8|, or

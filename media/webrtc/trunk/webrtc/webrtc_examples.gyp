@@ -6,67 +6,63 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 {
-  'includes': [
-    '../talk/build/common.gypi',
-  ],
-  'targets': [
-    {
-      'target_name': 'relayserver',
-      'type': 'executable',
-      'dependencies': [
-        '../talk/libjingle.gyp:libjingle',
-        '../talk/libjingle.gyp:libjingle_p2p',
-      ],
-      'sources': [
-        'examples/relayserver/relayserver_main.cc',
-      ],
-    },  # target relayserver
-    {
-      'target_name': 'stunserver',
-      'type': 'executable',
-      'dependencies': [
-        '../talk/libjingle.gyp:libjingle',
-        '../talk/libjingle.gyp:libjingle_p2p',
-      ],
-      'sources': [
-        'examples/stunserver/stunserver_main.cc',
-      ],
-    },  # target stunserver
-    {
-      'target_name': 'turnserver',
-      'type': 'executable',
-      'dependencies': [
-        '../talk/libjingle.gyp:libjingle',
-        '../talk/libjingle.gyp:libjingle_p2p',
-      ],
-      'sources': [
-        'examples/turnserver/turnserver_main.cc',
-      ],
-    },  # target turnserver
-    {
-      'target_name': 'peerconnection_server',
-      'type': 'executable',
-      'sources': [
-        'examples/peerconnection/server/data_socket.cc',
-        'examples/peerconnection/server/data_socket.h',
-        'examples/peerconnection/server/main.cc',
-        'examples/peerconnection/server/peer_channel.cc',
-        'examples/peerconnection/server/peer_channel.h',
-        'examples/peerconnection/server/utils.cc',
-        'examples/peerconnection/server/utils.h',
-      ],
-      'dependencies': [
-        '<(webrtc_root)/common.gyp:webrtc_common',
-        '../talk/libjingle.gyp:libjingle',
-      ],
-      # TODO(ronghuawu): crbug.com/167187 fix size_t to int truncations.
-      'msvs_disabled_warnings': [ 4309, ],
-    }, # target peerconnection_server
-  ],
   'conditions': [
     ['OS=="linux" or OS=="win"', {
       'targets': [
         {
+         'target_name': 'relayserver',
+         'type': 'executable',
+         'dependencies': [
+           '<(webrtc_root)/base/base.gyp:rtc_base_approved',
+           '<(webrtc_root)/pc/pc.gyp:rtc_pc',
+         ],
+         'sources': [
+           'examples/relayserver/relayserver_main.cc',
+         ],
+       },  # target relayserver
+       {
+         'target_name': 'stunserver',
+         'type': 'executable',
+         'dependencies': [
+           '<(webrtc_root)/base/base.gyp:rtc_base_approved',
+           '<(webrtc_root)/pc/pc.gyp:rtc_pc',
+         ],
+         'sources': [
+           'examples/stunserver/stunserver_main.cc',
+         ],
+       },  # target stunserver
+       {
+         'target_name': 'turnserver',
+         'type': 'executable',
+         'dependencies': [
+           '<(webrtc_root)/base/base.gyp:rtc_base_approved',
+           '<(webrtc_root)/pc/pc.gyp:rtc_pc',
+         ],
+         'sources': [
+           'examples/turnserver/turnserver_main.cc',
+         ],
+       },  # target turnserver
+       {
+         'target_name': 'peerconnection_server',
+         'type': 'executable',
+         'sources': [
+           'examples/peerconnection/server/data_socket.cc',
+           'examples/peerconnection/server/data_socket.h',
+           'examples/peerconnection/server/main.cc',
+           'examples/peerconnection/server/peer_channel.cc',
+           'examples/peerconnection/server/peer_channel.h',
+           'examples/peerconnection/server/utils.cc',
+           'examples/peerconnection/server/utils.h',
+         ],
+         'dependencies': [
+           '<(webrtc_root)/base/base.gyp:rtc_base_approved',
+           '<(webrtc_root)/common.gyp:webrtc_common',
+           '<(webrtc_root)/tools/internal_tools.gyp:command_line_parser',
+         ],
+         # TODO(ronghuawu): crbug.com/167187 fix size_t to int truncations.
+         'msvs_disabled_warnings': [ 4309, ],
+       }, # target peerconnection_server
+       {
           'target_name': 'peerconnection_client',
           'type': 'executable',
           'sources': [
@@ -78,9 +74,9 @@
             'examples/peerconnection/client/peer_connection_client.h',
           ],
           'dependencies': [
-            '../talk/libjingle.gyp:libjingle_peerconnection',
+            'api/api.gyp:libjingle_peerconnection',
             '<(webrtc_root)/system_wrappers/system_wrappers.gyp:field_trial_default',
-            '<@(libjingle_tests_additional_deps)',
+            '<(webrtc_root)/system_wrappers/system_wrappers.gyp:metrics_default',
           ],
           'conditions': [
             ['build_json==1', {
@@ -139,6 +135,11 @@
                 ],
               },
             }],  # OS=="linux"
+            ['OS=="linux" and target_arch=="ia32"', {
+              'cflags': [
+                '-Wno-sentinel',
+              ],
+            }],  # OS=="linux" and target_arch=="ia32"
           ],  # conditions
         },  # target peerconnection_client
       ], # targets
@@ -150,28 +151,42 @@
           'target_name': 'apprtc_common',
           'type': 'static_library',
           'dependencies': [
+            '<(webrtc_root)/sdk/sdk.gyp:rtc_sdk_common_objc',
             '<(webrtc_root)/system_wrappers/system_wrappers.gyp:field_trial_default',
-            '../talk/libjingle.gyp:libjingle_peerconnection_objc',
+            '<(webrtc_root)/system_wrappers/system_wrappers.gyp:metrics_default',
           ],
           'sources': [
-            'examples/objc/AppRTCDemo/common/ARDUtilities.h',
-            'examples/objc/AppRTCDemo/common/ARDUtilities.m',
+            'examples/objc/AppRTCMobile/common/ARDUtilities.h',
+            'examples/objc/AppRTCMobile/common/ARDUtilities.m',
           ],
           'include_dirs': [
-            'examples/objc/AppRTCDemo/common',
+            'examples/objc/AppRTCMobile/common',
           ],
           'direct_dependent_settings': {
             'include_dirs': [
-              'examples/objc/AppRTCDemo/common',
+              'examples/objc/AppRTCMobile/common',
             ],
           },
           'conditions': [
+            ['OS=="ios"', {
+              'xcode_settings': {
+                'WARNING_CFLAGS':  [
+                  # Suppress compiler warnings about deprecated that triggered
+                  # when moving from ios_deployment_target 7.0 to 9.0.
+                  # See webrtc:5549 for more details.
+                  '-Wno-deprecated-declarations',
+                ],
+              },
+            }],
             ['OS=="mac"', {
               'xcode_settings': {
                 'MACOSX_DEPLOYMENT_TARGET' : '10.8',
               },
             }],
           ],
+          'xcode_settings': {
+            'CLANG_ENABLE_OBJC_ARC': 'YES',
+          },
           'link_settings': {
             'xcode_settings': {
               'OTHER_LDFLAGS': [
@@ -184,69 +199,82 @@
           'target_name': 'apprtc_signaling',
           'type': 'static_library',
           'dependencies': [
+            '<(webrtc_root)/sdk/sdk.gyp:rtc_sdk_peerconnection_objc',
             'apprtc_common',
-            '../talk/libjingle.gyp:libjingle_peerconnection_objc',
             'socketrocket',
           ],
           'sources': [
-            'examples/objc/AppRTCDemo/ARDAppClient.h',
-            'examples/objc/AppRTCDemo/ARDAppClient.m',
-            'examples/objc/AppRTCDemo/ARDAppClient+Internal.h',
-            'examples/objc/AppRTCDemo/ARDAppEngineClient.h',
-            'examples/objc/AppRTCDemo/ARDAppEngineClient.m',
-            'examples/objc/AppRTCDemo/ARDBitrateTracker.h',
-            'examples/objc/AppRTCDemo/ARDBitrateTracker.m',
-            'examples/objc/AppRTCDemo/ARDCEODTURNClient.h',
-            'examples/objc/AppRTCDemo/ARDCEODTURNClient.m',
-            'examples/objc/AppRTCDemo/ARDJoinResponse.h',
-            'examples/objc/AppRTCDemo/ARDJoinResponse.m',
-            'examples/objc/AppRTCDemo/ARDJoinResponse+Internal.h',
-            'examples/objc/AppRTCDemo/ARDMessageResponse.h',
-            'examples/objc/AppRTCDemo/ARDMessageResponse.m',
-            'examples/objc/AppRTCDemo/ARDMessageResponse+Internal.h',
-            'examples/objc/AppRTCDemo/ARDRoomServerClient.h',
-            'examples/objc/AppRTCDemo/ARDSDPUtils.h',
-            'examples/objc/AppRTCDemo/ARDSDPUtils.m',
-            'examples/objc/AppRTCDemo/ARDSignalingChannel.h',
-            'examples/objc/AppRTCDemo/ARDSignalingMessage.h',
-            'examples/objc/AppRTCDemo/ARDSignalingMessage.m',
-            'examples/objc/AppRTCDemo/ARDStatsBuilder.h',
-            'examples/objc/AppRTCDemo/ARDStatsBuilder.m',
-            'examples/objc/AppRTCDemo/ARDTURNClient.h',
-            'examples/objc/AppRTCDemo/ARDWebSocketChannel.h',
-            'examples/objc/AppRTCDemo/ARDWebSocketChannel.m',
-            'examples/objc/AppRTCDemo/RTCICECandidate+JSON.h',
-            'examples/objc/AppRTCDemo/RTCICECandidate+JSON.m',
-            'examples/objc/AppRTCDemo/RTCICEServer+JSON.h',
-            'examples/objc/AppRTCDemo/RTCICEServer+JSON.m',
-            'examples/objc/AppRTCDemo/RTCMediaConstraints+JSON.h',
-            'examples/objc/AppRTCDemo/RTCMediaConstraints+JSON.m',
-            'examples/objc/AppRTCDemo/RTCSessionDescription+JSON.h',
-            'examples/objc/AppRTCDemo/RTCSessionDescription+JSON.m',
+            'examples/objc/AppRTCMobile/ARDAppClient.h',
+            'examples/objc/AppRTCMobile/ARDAppClient.m',
+            'examples/objc/AppRTCMobile/ARDAppClient+Internal.h',
+            'examples/objc/AppRTCMobile/ARDAppEngineClient.h',
+            'examples/objc/AppRTCMobile/ARDAppEngineClient.m',
+            'examples/objc/AppRTCMobile/ARDBitrateTracker.h',
+            'examples/objc/AppRTCMobile/ARDBitrateTracker.m',
+            'examples/objc/AppRTCMobile/ARDCEODTURNClient.h',
+            'examples/objc/AppRTCMobile/ARDCEODTURNClient.m',
+            'examples/objc/AppRTCMobile/ARDJoinResponse.h',
+            'examples/objc/AppRTCMobile/ARDJoinResponse.m',
+            'examples/objc/AppRTCMobile/ARDJoinResponse+Internal.h',
+            'examples/objc/AppRTCMobile/ARDMessageResponse.h',
+            'examples/objc/AppRTCMobile/ARDMessageResponse.m',
+            'examples/objc/AppRTCMobile/ARDMessageResponse+Internal.h',
+            'examples/objc/AppRTCMobile/ARDRoomServerClient.h',
+            'examples/objc/AppRTCMobile/ARDSDPUtils.h',
+            'examples/objc/AppRTCMobile/ARDSDPUtils.m',
+            'examples/objc/AppRTCMobile/ARDSignalingChannel.h',
+            'examples/objc/AppRTCMobile/ARDSignalingMessage.h',
+            'examples/objc/AppRTCMobile/ARDSignalingMessage.m',
+            'examples/objc/AppRTCMobile/ARDStatsBuilder.h',
+            'examples/objc/AppRTCMobile/ARDStatsBuilder.m',
+            'examples/objc/AppRTCMobile/ARDTURNClient.h',
+            'examples/objc/AppRTCMobile/ARDWebSocketChannel.h',
+            'examples/objc/AppRTCMobile/ARDWebSocketChannel.m',
+            'examples/objc/AppRTCMobile/RTCIceCandidate+JSON.h',
+            'examples/objc/AppRTCMobile/RTCIceCandidate+JSON.m',
+            'examples/objc/AppRTCMobile/RTCIceServer+JSON.h',
+            'examples/objc/AppRTCMobile/RTCIceServer+JSON.m',
+            'examples/objc/AppRTCMobile/RTCMediaConstraints+JSON.h',
+            'examples/objc/AppRTCMobile/RTCMediaConstraints+JSON.m',
+            'examples/objc/AppRTCMobile/RTCSessionDescription+JSON.h',
+            'examples/objc/AppRTCMobile/RTCSessionDescription+JSON.m',
           ],
           'include_dirs': [
-            'examples/objc/AppRTCDemo',
+            'examples/objc/AppRTCMobile',
           ],
           'direct_dependent_settings': {
             'include_dirs': [
-              'examples/objc/AppRTCDemo',
+              'examples/objc/AppRTCMobile',
             ],
           },
           'export_dependent_settings': [
-            '../talk/libjingle.gyp:libjingle_peerconnection_objc',
+            '<(webrtc_root)/sdk/sdk.gyp:rtc_sdk_peerconnection_objc',
           ],
           'conditions': [
+            ['OS=="ios"', {
+              'xcode_settings': {
+                'WARNING_CFLAGS':  [
+                  # Suppress compiler warnings about deprecated that triggered
+                  # when moving from ios_deployment_target 7.0 to 9.0.
+                  # See webrtc:5549 for more details.
+                  '-Wno-deprecated-declarations',
+                ],
+              },
+            }],
             ['OS=="mac"', {
               'xcode_settings': {
                 'MACOSX_DEPLOYMENT_TARGET' : '10.8',
               },
             }],
           ],
+          'xcode_settings': {
+            'CLANG_ENABLE_OBJC_ARC': 'YES',
+          },
         },
         {
-          'target_name': 'AppRTCDemo',
+          'target_name': 'AppRTCMobile',
           'type': 'executable',
-          'product_name': 'AppRTCDemo',
+          'product_name': 'AppRTCMobile',
           'mac_bundle': 1,
           'dependencies': [
             'apprtc_common',
@@ -255,51 +283,60 @@
           'conditions': [
             ['OS=="ios"', {
               'mac_bundle_resources': [
-                'examples/objc/AppRTCDemo/ios/resources/iPhone5@2x.png',
-                'examples/objc/AppRTCDemo/ios/resources/iPhone6@2x.png',
-                'examples/objc/AppRTCDemo/ios/resources/iPhone6p@3x.png',
-                'examples/objc/AppRTCDemo/ios/resources/Roboto-Regular.ttf',
-                'examples/objc/AppRTCDemo/ios/resources/ic_call_end_black_24dp.png',
-                'examples/objc/AppRTCDemo/ios/resources/ic_call_end_black_24dp@2x.png',
-                'examples/objc/AppRTCDemo/ios/resources/ic_clear_black_24dp.png',
-                'examples/objc/AppRTCDemo/ios/resources/ic_clear_black_24dp@2x.png',
-                'examples/objc/AppRTCDemo/ios/resources/ic_switch_video_black_24dp.png',
-                'examples/objc/AppRTCDemo/ios/resources/ic_switch_video_black_24dp@2x.png',
+                'examples/objc/AppRTCMobile/ios/resources/Roboto-Regular.ttf',
+                'examples/objc/AppRTCMobile/ios/resources/iPhone5@2x.png',
+                'examples/objc/AppRTCMobile/ios/resources/iPhone6@2x.png',
+                'examples/objc/AppRTCMobile/ios/resources/iPhone6p@3x.png',
+                'examples/objc/AppRTCMobile/ios/resources/ic_call_end_black_24dp.png',
+                'examples/objc/AppRTCMobile/ios/resources/ic_call_end_black_24dp@2x.png',
+                'examples/objc/AppRTCMobile/ios/resources/ic_clear_black_24dp.png',
+                'examples/objc/AppRTCMobile/ios/resources/ic_clear_black_24dp@2x.png',
+                'examples/objc/AppRTCMobile/ios/resources/ic_surround_sound_black_24dp.png',
+                'examples/objc/AppRTCMobile/ios/resources/ic_surround_sound_black_24dp@2x.png',
+                'examples/objc/AppRTCMobile/ios/resources/ic_switch_video_black_24dp.png',
+                'examples/objc/AppRTCMobile/ios/resources/ic_switch_video_black_24dp@2x.png',
+                'examples/objc/AppRTCMobile/ios/resources/mozart.mp3',
                 'examples/objc/Icon.png',
               ],
               'sources': [
-                'examples/objc/AppRTCDemo/ios/ARDAppDelegate.h',
-                'examples/objc/AppRTCDemo/ios/ARDAppDelegate.m',
-                'examples/objc/AppRTCDemo/ios/ARDMainView.h',
-                'examples/objc/AppRTCDemo/ios/ARDMainView.m',
-                'examples/objc/AppRTCDemo/ios/ARDMainViewController.h',
-                'examples/objc/AppRTCDemo/ios/ARDMainViewController.m',
-                'examples/objc/AppRTCDemo/ios/ARDStatsView.h',
-                'examples/objc/AppRTCDemo/ios/ARDStatsView.m',
-                'examples/objc/AppRTCDemo/ios/ARDVideoCallView.h',
-                'examples/objc/AppRTCDemo/ios/ARDVideoCallView.m',
-                'examples/objc/AppRTCDemo/ios/ARDVideoCallViewController.h',
-                'examples/objc/AppRTCDemo/ios/ARDVideoCallViewController.m',
-                'examples/objc/AppRTCDemo/ios/AppRTCDemo-Prefix.pch',
-                'examples/objc/AppRTCDemo/ios/UIImage+ARDUtilities.h',
-                'examples/objc/AppRTCDemo/ios/UIImage+ARDUtilities.m',
-                'examples/objc/AppRTCDemo/ios/main.m',
+                'examples/objc/AppRTCMobile/ios/ARDAppDelegate.h',
+                'examples/objc/AppRTCMobile/ios/ARDAppDelegate.m',
+                'examples/objc/AppRTCMobile/ios/ARDMainView.h',
+                'examples/objc/AppRTCMobile/ios/ARDMainView.m',
+                'examples/objc/AppRTCMobile/ios/ARDMainViewController.h',
+                'examples/objc/AppRTCMobile/ios/ARDMainViewController.m',
+                'examples/objc/AppRTCMobile/ios/ARDStatsView.h',
+                'examples/objc/AppRTCMobile/ios/ARDStatsView.m',
+                'examples/objc/AppRTCMobile/ios/ARDVideoCallView.h',
+                'examples/objc/AppRTCMobile/ios/ARDVideoCallView.m',
+                'examples/objc/AppRTCMobile/ios/ARDVideoCallViewController.h',
+                'examples/objc/AppRTCMobile/ios/ARDVideoCallViewController.m',
+                'examples/objc/AppRTCMobile/ios/AppRTCMobile-Prefix.pch',
+                'examples/objc/AppRTCMobile/ios/UIImage+ARDUtilities.h',
+                'examples/objc/AppRTCMobile/ios/UIImage+ARDUtilities.m',
+                'examples/objc/AppRTCMobile/ios/main.m',
               ],
               'xcode_settings': {
-                'INFOPLIST_FILE': 'examples/objc/AppRTCDemo/ios/Info.plist',
+                'INFOPLIST_FILE': 'examples/objc/AppRTCMobile/ios/Info.plist',
+                'WARNING_CFLAGS':  [
+                  # Suppress compiler warnings about deprecated that triggered
+                  # when moving from ios_deployment_target 7.0 to 9.0.
+                  # See webrtc:5549 for more details.
+                  '-Wno-deprecated-declarations',
+                ],
               },
             }],
             ['OS=="mac"', {
               'sources': [
-                'examples/objc/AppRTCDemo/mac/APPRTCAppDelegate.h',
-                'examples/objc/AppRTCDemo/mac/APPRTCAppDelegate.m',
-                'examples/objc/AppRTCDemo/mac/APPRTCViewController.h',
-                'examples/objc/AppRTCDemo/mac/APPRTCViewController.m',
-                'examples/objc/AppRTCDemo/mac/main.m',
+                'examples/objc/AppRTCMobile/mac/APPRTCAppDelegate.h',
+                'examples/objc/AppRTCMobile/mac/APPRTCAppDelegate.m',
+                'examples/objc/AppRTCMobile/mac/APPRTCViewController.h',
+                'examples/objc/AppRTCMobile/mac/APPRTCViewController.m',
+                'examples/objc/AppRTCMobile/mac/main.m',
               ],
               'xcode_settings': {
                 'CLANG_WARN_OBJC_MISSING_PROPERTY_SYNTHESIS': 'NO',
-                'INFOPLIST_FILE': 'examples/objc/AppRTCDemo/mac/Info.plist',
+                'INFOPLIST_FILE': 'examples/objc/AppRTCMobile/mac/Info.plist',
                 'MACOSX_DEPLOYMENT_TARGET' : '10.8',
                 'OTHER_LDFLAGS': [
                   '-framework AVFoundation',
@@ -312,15 +349,18 @@
               ],
             }],
           ],
-        },  # target AppRTCDemo
+          'xcode_settings': {
+            'CLANG_ENABLE_OBJC_ARC': 'YES',
+          },
+        },  # target AppRTCMobile
         {
           # TODO(tkchin): move this into the real third party location and
           # have it mirrored on chrome infra.
           'target_name': 'socketrocket',
           'type': 'static_library',
           'sources': [
-            'examples/objc/AppRTCDemo/third_party/SocketRocket/SRWebSocket.h',
-            'examples/objc/AppRTCDemo/third_party/SocketRocket/SRWebSocket.m',
+            'examples/objc/AppRTCMobile/third_party/SocketRocket/SRWebSocket.h',
+            'examples/objc/AppRTCMobile/third_party/SocketRocket/SRWebSocket.m',
           ],
           'conditions': [
             ['OS=="mac"', {
@@ -331,13 +371,15 @@
                 'MACOSX_DEPLOYMENT_TARGET' : '10.8',
                 # SRWebSocket.m uses code with partial availability.
                 # https://code.google.com/p/webrtc/issues/detail?id=4695
-                'WARNING_CFLAGS!': ['-Wpartial-availability'],
+                'WARNING_CFLAGS!': [
+                  '-Wpartial-availability',
+                ],
               },
             }],
           ],
           'direct_dependent_settings': {
             'include_dirs': [
-              'examples/objc/AppRTCDemo/third_party/SocketRocket',
+              'examples/objc/AppRTCMobile/third_party/SocketRocket',
             ],
           },
           'xcode_settings': {
@@ -345,6 +387,10 @@
             'WARNING_CFLAGS': [
               '-Wno-deprecated-declarations',
               '-Wno-nonnull',
+              # Hide the warning for SecRandomCopyBytes(), till we update
+              # to upstream.
+              # https://bugs.chromium.org/p/webrtc/issues/detail?id=6396
+              '-Wno-unused-result',
             ],
           },
           'link_settings': {
@@ -362,57 +408,62 @@
     ['OS=="android"', {
       'targets': [
         {
-          'target_name': 'AppRTCDemo',
+          'target_name': 'AppRTCMobile',
           'type': 'none',
           'dependencies': [
-            '../talk/libjingle.gyp:libjingle_peerconnection_java',
+            'api/api_java.gyp:libjingle_peerconnection_java',
           ],
           'variables': {
-            'apk_name': 'AppRTCDemo',
+            'apk_name': 'AppRTCMobile',
             'java_in_dir': 'examples/androidapp',
             'has_java_resources': 1,
             'resource_dir': 'examples/androidapp/res',
             'R_package': 'org.appspot.apprtc',
             'R_package_relpath': 'org/appspot/apprtc',
             'input_jars_paths': [
-              'examples/androidapp/third_party/autobanh/autobanh.jar',
+              'examples/androidapp/third_party/autobanh/lib/autobanh.jar',
              ],
             'library_dexed_jars_paths': [
-              'examples/androidapp/third_party/autobanh/autobanh.jar',
+              'examples/androidapp/third_party/autobanh/lib/autobanh.jar',
              ],
             'native_lib_target': 'libjingle_peerconnection_so',
             'add_to_dependents_classpaths':1,
           },
           'includes': [ '../build/java_apk.gypi' ],
-        },  # target AppRTCDemo
+        },  # target AppRTCMobile
 
         {
-          # AppRTCDemo creates a .jar as a side effect. Any java targets
+          # AppRTCMobile creates a .jar as a side effect. Any java targets
           # that need that .jar in their classpath should depend on this target,
-          # AppRTCDemo_apk. Dependents of AppRTCDemo_apk receive its
+          # AppRTCMobile_apk. Dependents of AppRTCMobile_apk receive its
           # jar path in the variable 'apk_output_jar_path'.
           # This target should only be used by targets which instrument
-          # AppRTCDemo_apk.
-          'target_name': 'AppRTCDemo_apk',
+          # AppRTCMobile_apk.
+          'target_name': 'AppRTCMobile_apk',
           'type': 'none',
           'dependencies': [
-             'AppRTCDemo',
+             'AppRTCMobile',
            ],
            'includes': [ '../build/apk_fake_jar.gypi' ],
-        },  # target AppRTCDemo_apk
+        },  # target AppRTCMobile_apk
 
         {
-          'target_name': 'AppRTCDemoTest',
+          'target_name': 'AppRTCMobileTest',
           'type': 'none',
           'dependencies': [
-            'AppRTCDemo_apk',
+            'AppRTCMobile_apk',
            ],
           'variables': {
-            'apk_name': 'AppRTCDemoTest',
+            'apk_name': 'AppRTCMobileTest',
             'java_in_dir': 'examples/androidtests',
             'is_test_apk': 1,
+            'test_type': 'instrumentation',
+            'test_runner_path': '<(DEPTH)/webrtc/build/android/test_runner.py',
           },
-          'includes': [ '../build/java_apk.gypi' ],
+          'includes': [
+            '../build/java_apk.gypi',
+            '../build/android/test_runner.gypi',
+          ],
         },
       ],  # targets
     }],  # OS=="android"

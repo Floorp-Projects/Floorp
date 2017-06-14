@@ -21,6 +21,13 @@
         'send_side_bandwidth_estimation.cc',
         'send_side_bandwidth_estimation.h',
       ],
+      'conditions': [
+        ['enable_bwe_test_logging==1', {
+          'defines': [ 'BWE_TEST_LOGGING_COMPILE_TIME_ENABLE=1' ],
+        }, {
+          'defines': [ 'BWE_TEST_LOGGING_COMPILE_TIME_ENABLE=0' ],
+        }],
+      ],
       # TODO(jschuh): Bug 1348: fix size_t to int truncations.
       'msvs_disabled_warnings': [ 4267, ],
     },

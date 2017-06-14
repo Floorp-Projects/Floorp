@@ -58,7 +58,7 @@ class VoECodecImpl : public VoECodec {
 
   int SetOpusDtx(int channel, bool enable_dtx) override;
 
-  RtcEventLog* GetEventLog() override;
+  int GetOpusDtxStatus(int channel, bool* enabled) override;
 
  protected:
   VoECodecImpl(voe::SharedData* shared);

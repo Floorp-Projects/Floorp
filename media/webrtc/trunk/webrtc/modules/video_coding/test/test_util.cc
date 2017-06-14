@@ -26,7 +26,7 @@ CmdArgs::CmdArgs()
       width(352),
       height(288),
       rtt(0),
-      inputFile(webrtc::test::ProjectRootPath() + "/resources/foreman_cif.yuv"),
+      inputFile(webrtc::test::ResourcePath("foreman_cif", "yuv")),
       outputFile(webrtc::test::OutputPath() +
                  "video_coding_test_output_352x288.yuv") {}
 

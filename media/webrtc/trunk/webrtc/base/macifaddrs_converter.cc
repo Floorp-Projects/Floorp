@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
 #include <net/if.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
@@ -15,7 +17,6 @@
 #include "webrtc/base/checks.h"
 #include "webrtc/base/ifaddrs_converter.h"
 #include "webrtc/base/logging.h"
-#include "webrtc/base/scoped_ptr.h"
 
 #if !defined(WEBRTC_IOS)
 #include <net/if_media.h>
@@ -269,7 +270,7 @@ class MacIfAddrsConverter : public IfAddrsConverter {
   }
 
  private:
-  rtc::scoped_ptr<IPv6AttributesGetter> ip_attribute_getter_;
+  std::unique_ptr<IPv6AttributesGetter> ip_attribute_getter_;
 };
 
 }  // namespace

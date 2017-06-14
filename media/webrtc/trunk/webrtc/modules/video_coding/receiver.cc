@@ -30,19 +30,54 @@ enum { kMaxReceiverDelayMs = 10000 };
 VCMReceiver::VCMReceiver(VCMTiming* timing,
                          Clock* clock,
                          EventFactory* event_factory)
-    : VCMReceiver(timing,
-                  clock,
-                  rtc::scoped_ptr<EventWrapper>(event_factory->CreateEvent()),
-                  rtc::scoped_ptr<EventWrapper>(event_factory->CreateEvent())) {
-}
+    : VCMReceiver::VCMReceiver(timing,
+                               clock,
+                               event_factory,
+                               nullptr,  // NackSender
+                               nullptr)  // KeyframeRequestSender
+{}
 
 VCMReceiver::VCMReceiver(VCMTiming* timing,
                          Clock* clock,
-                         rtc::scoped_ptr<EventWrapper> receiver_event,
-                         rtc::scoped_ptr<EventWrapper> jitter_buffer_event)
+                         EventFactory* event_factory,
+                         NackSender* nack_sender,
+                         KeyFrameRequestSender* keyframe_request_sender)
+    : VCMReceiver(
+          timing,
+          clock,
+          std::unique_ptr<EventWrapper>(event_factory
+                                            ? event_factory->CreateEvent()
+                                            : EventWrapper::Create()),
+          std::unique_ptr<EventWrapper>(event_factory
+                                            ? event_factory->CreateEvent()
+                                            : EventWrapper::Create()),
+          nack_sender,
+          keyframe_request_sender) {}
+
+VCMReceiver::VCMReceiver(VCMTiming* timing,
+                         Clock* clock,
+                         std::unique_ptr<EventWrapper> receiver_event,
+                         std::unique_ptr<EventWrapper> jitter_buffer_event)
+    : VCMReceiver::VCMReceiver(timing,
+                               clock,
+                               std::move(receiver_event),
+                               std::move(jitter_buffer_event),
+                               nullptr,  // NackSender
+                               nullptr)  // KeyframeRequestSender
+{}
+
+VCMReceiver::VCMReceiver(VCMTiming* timing,
+                         Clock* clock,
+                         std::unique_ptr<EventWrapper> receiver_event,
+                         std::unique_ptr<EventWrapper> jitter_buffer_event,
+                         NackSender* nack_sender,
+                         KeyFrameRequestSender* keyframe_request_sender)
     : crit_sect_(CriticalSectionWrapper::CreateCriticalSection()),
       clock_(clock),
-      jitter_buffer_(clock_, std::move(jitter_buffer_event)),
+      jitter_buffer_(clock_,
+                     std::move(jitter_buffer_event),
+                     nack_sender,
+                     keyframe_request_sender),
       timing_(timing),
       render_wait_event_(std::move(receiver_event)),
       receiveState_(kReceiveStateInitial),
@@ -69,9 +104,7 @@ void VCMReceiver::UpdateRtt(int64_t rtt) {
   jitter_buffer_.UpdateRtt(rtt);
 }
 
-int32_t VCMReceiver::InsertPacket(const VCMPacket& packet,
-                                  uint16_t frame_width,
-                                  uint16_t frame_height) {
+int32_t VCMReceiver::InsertPacket(const VCMPacket& packet) {
   // Insert the packet into the jitter buffer. The packet can either be empty or
   // contain media at this point.
   bool retransmitted = false;
@@ -99,32 +132,43 @@ void VCMReceiver::TriggerDecoderShutdown() {
 }
 
 VCMEncodedFrame* VCMReceiver::FrameForDecoding(uint16_t max_wait_time_ms,
-                                               int64_t* next_render_time_ms,
                                                bool prefer_late_decoding) {
   const int64_t start_time_ms = clock_->TimeInMilliseconds();
   uint32_t frame_timestamp = 0;
+  int min_playout_delay_ms = -1;
+  int max_playout_delay_ms = -1;
+  int64_t render_time_ms = 0;
   // Exhaust wait time to get a complete frame for decoding.
-  bool found_frame =
-      jitter_buffer_.NextCompleteTimestamp(max_wait_time_ms, &frame_timestamp);
+  VCMEncodedFrame* found_frame =
+      jitter_buffer_.NextCompleteFrame(max_wait_time_ms);
 
-  if (!found_frame)
-    found_frame = jitter_buffer_.NextMaybeIncompleteTimestamp(&frame_timestamp);
+  if (found_frame) {
+    frame_timestamp = found_frame->TimeStamp();
+    min_playout_delay_ms = found_frame->EncodedImage().playout_delay_.min_ms;
+    max_playout_delay_ms = found_frame->EncodedImage().playout_delay_.max_ms;
+  } else {
+    if (!jitter_buffer_.NextMaybeIncompleteTimestamp(&frame_timestamp))
+      return nullptr;
+  }
 
-  if (!found_frame)
-    return NULL;
+  if (min_playout_delay_ms >= 0)
+    timing_->set_min_playout_delay(min_playout_delay_ms);
+
+  if (max_playout_delay_ms >= 0)
+    timing_->set_max_playout_delay(max_playout_delay_ms);
 
   // We have a frame - Set timing and render timestamp.
   timing_->SetJitterDelay(jitter_buffer_.EstimatedJitterMs());
   const int64_t now_ms = clock_->TimeInMilliseconds();
   timing_->UpdateCurrentDelay(frame_timestamp);
-  *next_render_time_ms = timing_->RenderTimeMs(frame_timestamp, now_ms);
+  render_time_ms = timing_->RenderTimeMs(frame_timestamp, now_ms);
   // Check render timing.
   bool timing_error = false;
   // Assume that render timing errors are due to changes in the video stream.
-  if (*next_render_time_ms < 0) {
+  if (render_time_ms < 0) {
     timing_error = true;
-  } else if (std::abs(*next_render_time_ms - now_ms) > max_video_delay_ms_) {
-    int frame_delay = std::abs(*next_render_time_ms - now_ms);
+  } else if (std::abs(render_time_ms - now_ms) > max_video_delay_ms_) {
+    int frame_delay = std::abs(render_time_ms - now_ms);
     LOG(LS_WARNING) << "A frame about to be decoded is out of the configured "
                     << "delay bounds (" << frame_delay << " > "
                     << max_video_delay_ms_
@@ -151,8 +195,8 @@ VCMEncodedFrame* VCMReceiver::FrameForDecoding(uint16_t max_wait_time_ms,
         static_cast<int32_t>(clock_->TimeInMilliseconds() - start_time_ms);
     uint16_t new_max_wait_time =
         static_cast<uint16_t>(VCM_MAX(available_wait_time, 0));
-    uint32_t wait_time_ms = timing_->MaxWaitingTime(
-        *next_render_time_ms, clock_->TimeInMilliseconds());
+    uint32_t wait_time_ms =
+        timing_->MaxWaitingTime(render_time_ms, clock_->TimeInMilliseconds());
     if (new_max_wait_time < wait_time_ms) {
       // We're not allowed to wait until the frame is supposed to be rendered,
       // waiting as long as we're allowed to avoid busy looping, and then return
@@ -169,9 +213,9 @@ VCMEncodedFrame* VCMReceiver::FrameForDecoding(uint16_t max_wait_time_ms,
   if (frame == NULL) {
     return NULL;
   }
-  frame->SetRenderTime(*next_render_time_ms);
+  frame->SetRenderTime(render_time_ms);
   TRACE_EVENT_ASYNC_STEP1("webrtc", "Video", frame->TimeStamp(), "SetRenderTS",
-                          "render_time", *next_render_time_ms);
+                          "render_time", frame->RenderTimeMs());
   UpdateReceiveState(*frame);
   if (!frame->Complete()) {
     // Update stats for incomplete frames.
@@ -249,24 +293,6 @@ int VCMReceiver::SetMinReceiverDelay(int desired_delay_ms) {
   // Initializing timing to the desired delay.
   timing_->set_min_playout_delay(desired_delay_ms);
   return 0;
-}
-
-int VCMReceiver::RenderBufferSizeMs() {
-  uint32_t timestamp_start = 0u;
-  uint32_t timestamp_end = 0u;
-  // Render timestamps are computed just prior to decoding. Therefore this is
-  // only an estimate based on frames' timestamps and current timing state.
-  jitter_buffer_.RenderBufferSize(&timestamp_start, &timestamp_end);
-  if (timestamp_start == timestamp_end) {
-    return 0;
-  }
-  // Update timing.
-  const int64_t now_ms = clock_->TimeInMilliseconds();
-  timing_->SetJitterDelay(jitter_buffer_.EstimatedJitterMs());
-  // Get render timestamps.
-  uint32_t render_start = timing_->RenderTimeMs(timestamp_start, now_ms);
-  uint32_t render_end = timing_->RenderTimeMs(timestamp_end, now_ms);
-  return render_end - render_start;
 }
 
 void VCMReceiver::UpdateReceiveState(const VCMEncodedFrame& frame) {

@@ -10,14 +10,14 @@
 
 #include "webrtc/modules/audio_processing/transient/transient_detector.h"
 
+#include <memory>
 #include <sstream>
 #include <string>
 
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_processing/transient/common.h"
 #include "webrtc/modules/audio_processing/transient/file_utils.h"
 #include "webrtc/system_wrappers/include/file_wrapper.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/typedefs.h"
 
@@ -49,15 +49,13 @@ TEST(TransientDetectorTest, CorrectnessBasedOnFiles) {
     detect_file_name << "audio_processing/transient/detect"
                      << (sample_rate_hz / 1000) << "kHz";
 
-    rtc::scoped_ptr<FileWrapper> detect_file(FileWrapper::Create());
+    std::unique_ptr<FileWrapper> detect_file(FileWrapper::Create());
 
     detect_file->OpenFile(
         test::ResourcePath(detect_file_name.str(), "dat").c_str(),
-        true,    // Read only.
-        false,   // No loop.
-        false);  // No text.
+        true);  // Read only.
 
-    bool file_opened = detect_file->Open();
+    bool file_opened = detect_file->is_open();
     ASSERT_TRUE(file_opened) << "File could not be opened.\n"
           << detect_file_name.str().c_str();
 
@@ -66,19 +64,17 @@ TEST(TransientDetectorTest, CorrectnessBasedOnFiles) {
     audio_file_name << "audio_processing/transient/audio"
                     << (sample_rate_hz / 1000) << "kHz";
 
-    rtc::scoped_ptr<FileWrapper> audio_file(FileWrapper::Create());
+    std::unique_ptr<FileWrapper> audio_file(FileWrapper::Create());
 
     audio_file->OpenFile(
         test::ResourcePath(audio_file_name.str(), "pcm").c_str(),
-        true,    // Read only.
-        false,   // No loop.
-        false);  // No text.
+        true);  // Read only.
 
     // Create detector.
     TransientDetector detector(sample_rate_hz);
 
     const size_t buffer_length = sample_rate_hz * ts::kChunkSizeMs / 1000;
-    rtc::scoped_ptr<float[]> buffer(new float[buffer_length]);
+    std::unique_ptr<float[]> buffer(new float[buffer_length]);
 
     const float kTolerance = 0.02f;
 

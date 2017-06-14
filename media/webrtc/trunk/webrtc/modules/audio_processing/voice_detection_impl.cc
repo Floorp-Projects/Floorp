@@ -10,6 +10,7 @@
 
 #include "webrtc/modules/audio_processing/voice_detection_impl.h"
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/common_audio/vad/include/webrtc_vad.h"
 #include "webrtc/modules/audio_processing/audio_buffer.h"
 
@@ -41,7 +42,7 @@ VoiceDetectionImpl::~VoiceDetectionImpl() {}
 void VoiceDetectionImpl::Initialize(int sample_rate_hz) {
   rtc::CritScope cs(crit_);
   sample_rate_hz_ = sample_rate_hz;
-  rtc::scoped_ptr<Vad> new_vad;
+  std::unique_ptr<Vad> new_vad;
   if (enabled_) {
     new_vad.reset(new Vad());
   }
@@ -62,7 +63,7 @@ void VoiceDetectionImpl::ProcessCaptureAudio(AudioBuffer* audio) {
     return;
   }
 
-  RTC_DCHECK_GE(160u, audio->num_frames_per_band());
+  RTC_DCHECK_GE(160, audio->num_frames_per_band());
   // TODO(ajm): concatenate data in frame buffer here.
   int vad_ret = WebRtcVad_Process(vad_->state(), sample_rate_hz_,
                                   audio->mixed_low_pass_data(),
@@ -102,7 +103,7 @@ int VoiceDetectionImpl::set_stream_has_voice(bool has_voice) {
 bool VoiceDetectionImpl::stream_has_voice() const {
   rtc::CritScope cs(crit_);
   // TODO(ajm): enable this assertion?
-  //assert(using_external_vad_ || is_component_enabled());
+  //RTC_DCHECK(using_external_vad_ || is_component_enabled());
   return stream_has_voice_;
 }
 

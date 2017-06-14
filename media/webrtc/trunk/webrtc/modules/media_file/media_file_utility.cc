@@ -18,10 +18,10 @@
 #include "webrtc/base/format_macros.h"
 #include "webrtc/common_audio/wav_header.h"
 #include "webrtc/common_types.h"
-#include "webrtc/engine_configurations.h"
 #include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/system_wrappers/include/file_wrapper.h"
 #include "webrtc/system_wrappers/include/trace.h"
+#include "webrtc/typedefs.h"
 
 namespace {
 
@@ -1454,12 +1454,11 @@ int32_t ModuleFileUtility::FileDurationMs(const char* fileName,
                      "failed to create InStream object!");
         return -1;
     }
-    if(inStreamObj->OpenFile(fileName, true) == -1)
-    {
-        delete inStreamObj;
-        WEBRTC_TRACE(kTraceError, kTraceFile, _id,
-                     "failed to open file %s!", fileName);
-        return -1;
+    if (!inStreamObj->OpenFile(fileName, true)) {
+      delete inStreamObj;
+      WEBRTC_TRACE(kTraceError, kTraceFile, _id, "failed to open file %s!",
+                   fileName);
+      return -1;
     }
 
     switch (fileFormat)

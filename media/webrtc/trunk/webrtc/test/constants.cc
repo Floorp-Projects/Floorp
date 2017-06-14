@@ -16,5 +16,6 @@ namespace test {
 const int kTOffsetExtensionId = 6;
 const int kAbsSendTimeExtensionId = 7;
 const int kTransportSequenceNumberExtensionId = 8;
+const int kVideoRotationExtensionId = 9;
 }  // namespace test
 }  // namespace webrtc

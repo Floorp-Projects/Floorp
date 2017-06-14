@@ -11,6 +11,7 @@
 #include <iomanip>
 
 #include "webrtc/base/asyncsocket.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/socketfactory.h"
 #include "webrtc/base/socketpool.h"
@@ -82,7 +83,7 @@ void StreamCache::ReturnConnectedStream(StreamInterface* stream) {
       return;
     }
   }
-  ASSERT(false);
+  RTC_NOTREACHED();
 }
 
 void StreamCache::OnStreamEvent(StreamInterface* stream, int events, int err) {
@@ -103,7 +104,7 @@ void StreamCache::OnStreamEvent(StreamInterface* stream, int events, int err) {
       return;
     }
   }
-  ASSERT(false);
+  RTC_NOTREACHED();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -150,14 +151,14 @@ ReuseSocketPool::ReuseSocketPool(SocketFactory* factory)
 }
 
 ReuseSocketPool::~ReuseSocketPool() {
-  ASSERT(!checked_out_);
+  RTC_DCHECK(!checked_out_);
   delete stream_;
 }
 
 StreamInterface*
 ReuseSocketPool::RequestConnectedStream(const SocketAddress& remote, int* err) {
   // Only one socket can be used from this "pool" at a time
-  ASSERT(!checked_out_);
+  RTC_DCHECK(!checked_out_);
   if (!stream_) {
     LOG_F(LS_VERBOSE) << "Creating new socket";
     int family = remote.family();
@@ -197,8 +198,8 @@ ReuseSocketPool::RequestConnectedStream(const SocketAddress& remote, int* err) {
 
 void
 ReuseSocketPool::ReturnConnectedStream(StreamInterface* stream) {
-  ASSERT(stream == stream_);
-  ASSERT(checked_out_);
+  RTC_DCHECK(stream == stream_);
+  RTC_DCHECK(checked_out_);
   checked_out_ = false;
   // Until the socket is reused, monitor it to determine if it closes.
   stream_->SignalEvent.connect(this, &ReuseSocketPool::OnStreamEvent);
@@ -206,8 +207,8 @@ ReuseSocketPool::ReturnConnectedStream(StreamInterface* stream) {
 
 void
 ReuseSocketPool::OnStreamEvent(StreamInterface* stream, int events, int err) {
-  ASSERT(stream == stream_);
-  ASSERT(!checked_out_);
+  RTC_DCHECK(stream == stream_);
+  RTC_DCHECK(!checked_out_);
 
   // If the stream was written to and then immediately returned to us then
   // we may get a writable notification for it, which we should ignore.
@@ -219,7 +220,7 @@ ReuseSocketPool::OnStreamEvent(StreamInterface* stream, int events, int err) {
   // If the peer sent data, we can't process it, so drop the connection.
   // If the socket has closed, clean it up.
   // In either case, we'll reconnect it the next time it is used.
-  ASSERT(0 != (events & (SE_READ|SE_CLOSE)));
+  RTC_DCHECK(0 != (events & (SE_READ | SE_CLOSE)));
   if (0 != (events & SE_CLOSE)) {
     LOG_F(LS_VERBOSE) << "Connection closed with error: " << err;
   } else {
@@ -249,7 +250,7 @@ LoggingPoolAdapter::~LoggingPoolAdapter() {
 StreamInterface* LoggingPoolAdapter::RequestConnectedStream(
     const SocketAddress& remote, int* err) {
   if (StreamInterface* stream = pool_->RequestConnectedStream(remote, err)) {
-    ASSERT(SS_CLOSED != stream->GetState());
+    RTC_DCHECK(SS_CLOSED != stream->GetState());
     std::stringstream ss;
     ss << label_ << "(0x" << std::setfill('0') << std::hex << std::setw(8)
        << stream << ")";

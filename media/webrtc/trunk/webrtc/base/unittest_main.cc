@@ -19,7 +19,9 @@
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/ssladapter.h"
+#include "webrtc/base/sslstreamadapter.h"
 #include "webrtc/test/field_trial.h"
+#include "webrtc/test/testsupport/fileutils.h"
 
 DEFINE_bool(help, false, "prints this message");
 DEFINE_string(log, "", "logging options to use");
@@ -68,6 +70,7 @@ int main(int argc, char** argv) {
     return 0;
   }
 
+  webrtc::test::SetExecutablePath(argv[0]);
   webrtc::test::InitFieldTrialsFromString(FLAG_force_fieldtrials);
 
 #if defined(WEBRTC_WIN)
@@ -101,6 +104,7 @@ int main(int argc, char** argv) {
 
   // Initialize SSL which are used by several tests.
   rtc::InitializeSSL();
+  rtc::SSLStreamAdapter::enable_time_callback_for_testing();
 
   int res = RUN_ALL_TESTS();
 

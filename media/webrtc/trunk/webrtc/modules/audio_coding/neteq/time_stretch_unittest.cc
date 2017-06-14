@@ -14,13 +14,13 @@
 #include "webrtc/modules/audio_coding/neteq/preemptive_expand.h"
 
 #include <map>
+#include <memory>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/checks.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/modules/audio_coding/neteq/background_noise.h"
 #include "webrtc/modules/audio_coding/neteq/tools/input_audio_file.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
@@ -100,10 +100,10 @@ class TimeStretchTest : public ::testing::Test {
     }
   }
 
-  rtc::scoped_ptr<test::InputAudioFile> input_file_;
+  std::unique_ptr<test::InputAudioFile> input_file_;
   const int sample_rate_hz_;
   const size_t block_size_;
-  rtc::scoped_ptr<int16_t[]> audio_;
+  std::unique_ptr<int16_t[]> audio_;
   std::map<TimeStretch::ReturnCodes, int> return_stats_;
   BackgroundNoise background_noise_;
 };

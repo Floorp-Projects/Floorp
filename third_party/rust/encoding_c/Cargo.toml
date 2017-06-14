@@ -1,0 +1,25 @@
+[package]
+name = "encoding_c"
+description = "C API for encoding_rs"
+version = "0.7.4"
+authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
+license = "MIT/Apache-2.0"
+readme = "README.md"
+documentation = "https://docs.rs/encoding_c/"
+homepage = "https://docs.rs/encoding_c/"
+repository = "https://github.com/hsivonen/encoding_c"
+keywords = ["ffi", "capi", "encoding", "unicode", "charset"]
+# Uncomment the line below and rename build-disabled.rs to build.rs to re-run cheddar.
+# build = "build.rs"
+
+[features]
+simd-accel = ["encoding_rs/simd-accel"]
+no-static-ideograph-encoder-tables = ["encoding_rs/no-static-ideograph-encoder-tables"]
+parallel-utf8 = ["encoding_rs/parallel-utf8"]
+
+[dependencies]
+encoding_rs = "0.6.11"
+
+# Uncomment the lines below to re-run cheddar.
+# [build-dependencies]
+# rusty-cheddar = "0.3.3"

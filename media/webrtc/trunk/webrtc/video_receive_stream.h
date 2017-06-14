@@ -11,16 +11,17 @@
 #ifndef WEBRTC_VIDEO_RECEIVE_STREAM_H_
 #define WEBRTC_VIDEO_RECEIVE_STREAM_H_
 
+#include <limits>
 #include <map>
 #include <string>
 #include <vector>
 
+#include "webrtc/api/call/transport.h"
+#include "webrtc/base/platform_file.h"
 #include "webrtc/common_types.h"
+#include "webrtc/common_video/include/frame_callback.h"
 #include "webrtc/config.h"
-#include "webrtc/frame_callback.h"
-#include "webrtc/stream.h"
-#include "webrtc/transport.h"
-#include "webrtc/video_renderer.h"
+#include "webrtc/media/base/videosinkinterface.h"
 #include "webrtc/voice_engine/include/voe_base.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 
@@ -28,7 +29,7 @@ namespace webrtc {
 
 class VideoDecoder;
 
-class VideoReceiveStream : public ReceiveStream {
+class VideoReceiveStream {
  public:
   // TODO(mflodman) Move all these settings to VideoDecoder and move the
   // declaration to common_types.h.
@@ -45,9 +46,16 @@ class VideoReceiveStream : public ReceiveStream {
     // Name of the decoded payload (such as VP8). Maps back to the depacketizer
     // used to unpack incoming packets.
     std::string payload_name;
+
+    // This map contains the codec specific parameters from SDP, i.e. the "fmtp"
+    // parameters. It is the same as cricket::CodecParameterMap used in
+    // cricket::VideoCodec.
+    std::map<std::string, std::string> codec_params;
   };
 
   struct Stats {
+    std::string ToString(int64_t time_ms) const;
+
     int network_frame_rate = 0;
     int decode_frame_rate = 0;
     int render_frame_rate = 0;
@@ -62,11 +70,17 @@ class VideoReceiveStream : public ReceiveStream {
     int jitter_buffer_ms = 0;
     int min_playout_delay_ms = 0;
     int render_delay_ms = 10;
+    uint32_t frames_decoded = 0;
 
     int current_payload_type = -1;
 
     int total_bitrate_bps = 0;
     int discarded_packets = 0;
+
+    int width = 0;
+    int height = 0;
+
+    int sync_offset_ms = std::numeric_limits<int>::max();
 
     uint32_t ssrc = 0;
     std::string c_name;
@@ -76,9 +90,22 @@ class VideoReceiveStream : public ReceiveStream {
   };
 
   struct Config {
+   private:
+    // Access to the copy constructor is private to force use of the Copy()
+    // method for those exceptional cases where we do use it.
+    Config(const Config&) = default;
+
+   public:
     Config() = delete;
+    Config(Config&&) = default;
     explicit Config(Transport* rtcp_send_transport)
         : rtcp_send_transport(rtcp_send_transport) {}
+
+    Config& operator=(Config&&) = default;
+    Config& operator=(const Config&) = delete;
+
+    // Mostly used by tests.  Avoid creating copies if you can.
+    Config Copy() const { return Config(*this); }
 
     std::string ToString() const;
 
@@ -118,8 +145,8 @@ class VideoReceiveStream : public ReceiveStream {
       // See NackConfig for description.
       NackConfig nack;
 
-      // See FecConfig for description.
-      FecConfig fec;
+      // See UlpfecConfig for description.
+      UlpfecConfig ulpfec;
 
       // RTX settings for incoming video payloads that may be received. RTX is
       // disabled if there's no config present.
@@ -135,11 +162,6 @@ class VideoReceiveStream : public ReceiveStream {
       typedef std::map<int, Rtx> RtxMap;
       RtxMap rtx;
 
-      // If set to true, the RTX payload type mapping supplied in |rtx| will be
-      // used when restoring RTX packets. Without it, RTX packets will always be
-      // restored to the last non-RTX packet payload type received.
-      bool use_rtx_payload_mapping_on_restore = false;
-
       // RTP header extensions used for the received stream.
       std::vector<RtpExtension> extensions;
     } rtp;
@@ -147,14 +169,17 @@ class VideoReceiveStream : public ReceiveStream {
     // Transport for outgoing packets (RTCP).
     Transport* rtcp_send_transport = nullptr;
 
-    // VideoRenderer will be called for each decoded frame. 'nullptr' disables
-    // rendering of this stream.
-    VideoRenderer* renderer = nullptr;
+    // Must not be 'nullptr' when the stream is started.
+    rtc::VideoSinkInterface<VideoFrame>* renderer = nullptr;
 
     // Expected delay needed by the renderer, i.e. the frame will be delivered
     // this many milliseconds, if possible, earlier than the ideal render time.
     // Only valid if 'renderer' is set.
     int render_delay_ms = 10;
+
+    // If set, pass frames on to the renderer as soon as they are
+    // available.
+    bool disable_prerenderer_smoothing = false;
 
     // Identifier for an A/V synchronization group. Empty string to disable.
     // TODO(pbos): Synchronize streams in a sync group, not just video streams
@@ -169,6 +194,9 @@ class VideoReceiveStream : public ReceiveStream {
     // Called for each decoded frame. E.g. used when adding effects to the
     // decoded
     // stream. 'nullptr' disables the callback.
+    // TODO(tommi): This seems to be only used by a test or two.  Consider
+    // removing it (and use an appropriate alternative in the tests) as well
+    // as the associated code in VideoStreamDecoder.
     I420FrameCallback* pre_render_callback = nullptr;
 
     // Target delay in milliseconds. A positive value indicates this stream is
@@ -176,14 +204,34 @@ class VideoReceiveStream : public ReceiveStream {
     int target_delay_ms = 0;
   };
 
+  // Starts stream activity.
+  // When a stream is active, it can receive, process and deliver packets.
+  virtual void Start() = 0;
+  // Stops stream activity.
+  // When a stream is stopped, it can't receive, process or deliver packets.
+  virtual void Stop() = 0;
+
   // TODO(pbos): Add info on currently-received codec to Stats.
   virtual Stats GetStats() const = 0;
-  virtual int64_t GetRtt() const = 0;
 
   virtual bool
   GetRemoteRTCPSenderInfo(RTCPSenderInfo* sender_info) const = 0;
 
   virtual void SetSyncChannel(VoiceEngine* voice_engine, int audio_channel_id) = 0;
+
+  // Takes ownership of the file, is responsible for closing it later.
+  // Calling this method will close and finalize any current log.
+  // Giving rtc::kInvalidPlatformFileValue disables logging.
+  // If a frame to be written would make the log too large the write fails and
+  // the log is closed and finalized. A |byte_limit| of 0 means no limit.
+  virtual void EnableEncodedFrameRecording(rtc::PlatformFile file,
+                                           size_t byte_limit) = 0;
+  inline void DisableEncodedFrameRecording() {
+    EnableEncodedFrameRecording(rtc::kInvalidPlatformFileValue, 0);
+  }
+
+ protected:
+  virtual ~VideoReceiveStream() {}
 };
 
 }  // namespace webrtc

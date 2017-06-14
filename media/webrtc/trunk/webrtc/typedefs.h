@@ -138,7 +138,6 @@
 #define WEBRTC_CPU_DETECTION
 #endif
 
-// TODO(pbos): Use webrtc/base/basictypes.h instead to include fixed-size ints.
 #include <stdint.h>
 
 // Annotate a function indicating the caller must examine the return value.

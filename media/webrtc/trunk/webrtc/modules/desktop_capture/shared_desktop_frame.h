@@ -11,6 +11,8 @@
 #ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_SHARED_DESKTOP_FRAME_H_
 #define WEBRTC_MODULES_DESKTOP_CAPTURE_SHARED_DESKTOP_FRAME_H_
 
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/base/refcount.h"
 #include "webrtc/base/scoped_ref_ptr.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 
@@ -20,22 +22,27 @@ namespace webrtc {
 // sharing the same buffer.
 class SharedDesktopFrame : public DesktopFrame {
  public:
-  virtual ~SharedDesktopFrame();
+  ~SharedDesktopFrame() override;
 
+  static std::unique_ptr<SharedDesktopFrame> Wrap(
+      std::unique_ptr<DesktopFrame> desktop_frame);
+
+  // Deprecated.
+  // TODO(sergeyu): remove this method.
   static SharedDesktopFrame* Wrap(DesktopFrame* desktop_frame);
 
   // Returns the underlying instance of DesktopFrame.
   DesktopFrame* GetUnderlyingFrame();
 
   // Creates a clone of this object.
-  SharedDesktopFrame* Share();
+  std::unique_ptr<SharedDesktopFrame> Share();
 
   // Checks if the frame is currently shared. If it returns false it's
   // guaranteed that there are no clones of the object.
   bool IsShared();
 
  private:
-  class Core;
+  typedef rtc::RefCountedObject<std::unique_ptr<DesktopFrame>> Core;
 
   SharedDesktopFrame(rtc::scoped_refptr<Core> core);
 

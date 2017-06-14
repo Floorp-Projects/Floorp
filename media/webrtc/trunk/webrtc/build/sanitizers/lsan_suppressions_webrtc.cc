@@ -58,8 +58,6 @@ char kLSanDefaultSuppressions[] =
 // https://code.google.com/p/webrtc/issues/detail?id=4149 for details.
 "leak:StartDNSLookup\n"
 // https://code.google.com/p/webrtc/issues/detail?id=2527
-"leak:buzz::FakeXmppClient::SendStanza\n"
-"leak:buzz::XmppTask::XmppTask\n"
 "leak:HangoutPubSubClientTest::HangoutPubSubClientTest\n"
 "leak:MucRoomConfigTaskTest::SetUp\n"
 "leak:MucRoomDiscoveryTaskTest::SetUp\n"
@@ -70,7 +68,7 @@ char kLSanDefaultSuppressions[] =
 "leak:PubSubClientTest::PubSubClientTest\n"
 "leak:PubSubTasksTest::PubSubTasksTest\n"
 
-// libjingle_media_unittest
+// rtc_media_unittests
 "leak:cricket::FakeNetworkInterface::SetOption\n"
 "leak:CodecTest_TestCodecOperators_Test::TestBody\n"
 "leak:VideoEngineTest*::ConstrainNewCodecBody\n"
@@ -80,7 +78,7 @@ char kLSanDefaultSuppressions[] =
 "leak:WebRtcVideoEngineTestFake_SetBandwidthInConference_Test::TestBody\n"
 "leak:WebRtcVideoEngineTestFake_SetSendCodecsRejectBadFormat_Test::TestBody\n"
 
-// libjingle_peerconnection_unittest
+// peerconnection_unittests
 // https://code.google.com/p/webrtc/issues/detail?id=2528
 "leak:cricket::FakeVideoMediaChannel::~FakeVideoMediaChannel\n"
 "leak:cricket::MediaSessionDescriptionFactory::CreateAnswer\n"

@@ -10,7 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsICharsetDetectionObserver.h"
 #include "nsHtml5MetaScanner.h"
-#include "nsIUnicodeDecoder.h"
+#include "mozilla/Encoding.h"
 #include "nsHtml5TreeOpExecutor.h"
 #include "nsHtml5OwningUTF16Buffer.h"
 #include "nsIInputStream.h"
@@ -392,7 +392,7 @@ class nsHtml5StreamParser : public nsICharsetDetectionObserver {
     /**
      * The Unicode decoder
      */
-    nsCOMPtr<nsIUnicodeDecoder>   mUnicodeDecoder;
+    mozilla::UniquePtr<mozilla::Decoder> mUnicodeDecoder;
 
     /**
      * The buffer for sniffing the character encoding

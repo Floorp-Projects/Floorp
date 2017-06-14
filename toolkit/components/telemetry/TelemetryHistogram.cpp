@@ -39,6 +39,7 @@ using mozilla::Telemetry::Accumulation;
 using mozilla::Telemetry::KeyedAccumulation;
 using mozilla::Telemetry::ProcessID;
 using mozilla::Telemetry::Common::LogToBrowserConsole;
+using mozilla::Telemetry::Common::RecordedProcessType;
 
 namespace TelemetryIPCAccumulator = mozilla::TelemetryIPCAccumulator;
 
@@ -133,6 +134,7 @@ struct HistogramInfo {
   uint32_t dataset;
   uint32_t label_index;
   uint32_t label_count;
+  RecordedProcessType record_in_processes;
   bool keyed;
 
   const char *id() const;
@@ -984,7 +986,7 @@ KeyedHistogram::Add(const nsCString& key, uint32_t sample)
   bool canRecordDataset = CanRecordDataset(mDataset,
                                            internal_CanRecordBase(),
                                            internal_CanRecordExtended());
-  if (!canRecordDataset) {
+  if (!canRecordDataset || !IsRecordingEnabled()) {
     return NS_OK;
   }
 
@@ -1000,10 +1002,6 @@ KeyedHistogram::Add(const nsCString& key, uint32_t sample)
     return NS_ERROR_FAILURE;
   }
 #endif
-
-  if (!IsRecordingEnabled()) {
-    return NS_OK;
-  }
 
   histogram->Add(sample);
 #if !defined(MOZ_WIDGET_ANDROID)
@@ -1871,7 +1869,6 @@ void TelemetryHistogram::InitializeGlobalState(bool canRecordBase,
                            new KeyedHistogram(id, expiration, h.histogramType,
                                               h.min, h.max, h.bucketCount, h.dataset));
 
-
       nsCString gpuId(id);
       gpuId.AppendLiteral(GPU_HISTOGRAM_SUFFIX);
       gKeyedHistograms.Put(gpuId,
@@ -1952,6 +1949,15 @@ void
 TelemetryHistogram::InitHistogramRecordingEnabled()
 {
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+  auto processType = XRE_GetProcessType();
+  for (size_t i = 0; i < mozilla::ArrayLength(gHistograms); ++i) {
+    const HistogramInfo& h = gHistograms[i];
+    mozilla::Telemetry::HistogramID id = mozilla::Telemetry::HistogramID(i);
+    internal_SetHistogramRecordingEnabled(id,
+                                          CanRecordInProcess(h.record_in_processes,
+                                                             processType));
+  }
+
   for (auto recordingInitiallyDisabledID : kRecordingInitiallyDisabledIDs) {
     internal_SetHistogramRecordingEnabled(recordingInitiallyDisabledID,
                                           false);
@@ -1967,6 +1973,12 @@ TelemetryHistogram::SetHistogramRecordingEnabled(mozilla::Telemetry::HistogramID
     return;
   }
 
+  const HistogramInfo& h = gHistograms[aID];
+  if (!CanRecordInProcess(h.record_in_processes, XRE_GetProcessType())) {
+    // Don't permit record_in_process-disabled recording to be re-enabled.
+    return;
+  }
+
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   internal_SetHistogramRecordingEnabled(aID, aEnabled);
 }
@@ -1977,8 +1989,19 @@ TelemetryHistogram::SetHistogramRecordingEnabled(const nsACString &id,
                                                  bool aEnabled)
 {
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+
+  mozilla::Telemetry::HistogramID hId;
+  nsresult rv = internal_GetHistogramEnumId(PromiseFlatCString(id).get(), &hId);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  const HistogramInfo& hi = gHistograms[hId];
+  if (!CanRecordInProcess(hi.record_in_processes, XRE_GetProcessType())) {
+    return NS_OK;
+  }
+
   Histogram *h;
-  nsresult rv = internal_GetHistogramByName(id, &h);
+  rv = internal_GetHistogramByName(id, &h);
   if (NS_SUCCEEDED(rv)) {
     h->SetRecordingEnabled(aEnabled);
     return NS_OK;
@@ -2175,11 +2198,13 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
 
   // Ensure that all the HISTOGRAM_FLAG & HISTOGRAM_COUNT histograms have
   // been created, so that their values are snapshotted.
+  auto processType = XRE_GetProcessType();
   for (size_t i = 0; i < mozilla::Telemetry::HistogramCount; ++i) {
-    if (gHistograms[i].keyed) {
+    const HistogramInfo& hi = gHistograms[i];
+    if (hi.keyed || !CanRecordInProcess(hi.record_in_processes, processType)) {
       continue;
     }
-    const uint32_t type = gHistograms[i].histogramType;
+    const uint32_t type = hi.histogramType;
     if (type == nsITelemetry::HISTOGRAM_FLAG ||
         type == nsITelemetry::HISTOGRAM_COUNT) {
       Histogram *h;
@@ -2210,7 +2235,8 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
   // OK, now we can actually reflect things.
   JS::Rooted<JSObject*> hobj(cx);
   for (size_t i = 0; i < mozilla::Telemetry::HistogramCount; ++i) {
-    if (gHistograms[i].keyed) {
+    const HistogramInfo& hi = gHistograms[i];
+    if (hi.keyed) {
       continue;
     }
 
@@ -2218,7 +2244,8 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
     mozilla::Telemetry::HistogramID id = mozilla::Telemetry::HistogramID(i);
 
     for (uint32_t process = 0; process < static_cast<uint32_t>(ProcessID::Count); ++process) {
-      if ((ProcessID(process) == ProcessID::Gpu) && !includeGPUProcess) {
+      if (!CanRecordInProcess(hi.record_in_processes, ProcessID(process)) ||
+        ((ProcessID(process) == ProcessID::Gpu) && !includeGPUProcess)) {
         continue;
       }
       nsresult rv = internal_GetHistogramByEnumId(id, &h, ProcessID(process));

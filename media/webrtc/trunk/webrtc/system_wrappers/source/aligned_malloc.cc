@@ -13,7 +13,7 @@
 #include <memory.h>
 #include <stdlib.h>
 
-#if _WIN32
+#ifdef _WIN32
 #include <windows.h>
 #else
 #include <stdint.h>

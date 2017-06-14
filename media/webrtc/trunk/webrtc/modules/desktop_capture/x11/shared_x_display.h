@@ -14,13 +14,16 @@
 #include <map>
 #include <vector>
 
-#include <assert.h>
-#include <X11/Xlib.h>
-
 #include <string>
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/scoped_ref_ptr.h"
 #include "webrtc/system_wrappers/include/atomic32.h"
+
+// Including Xlib.h will involve evil defines (Bool, Status, True, False), which
+// easily conflict with other headers.
+typedef struct _XDisplay Display;
+typedef union _XEvent XEvent;
 
 namespace webrtc {
 

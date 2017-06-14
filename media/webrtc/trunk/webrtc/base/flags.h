@@ -23,10 +23,8 @@
 #ifndef WEBRTC_BASE_FLAGS_H__
 #define WEBRTC_BASE_FLAGS_H__
 
-#include <assert.h>
-
 #include "webrtc/base/checks.h"
-#include "webrtc/base/common.h"
+#include "webrtc/base/constructormagic.h"
 
 namespace rtc {
 
@@ -87,43 +85,43 @@ class Flag {
 
   // Flag variables
   bool* bool_variable() const {
-    assert(type_ == BOOL);
+    RTC_DCHECK_EQ(BOOL, type_);
     return &variable_->b;
   }
 
   int* int_variable() const {
-    assert(type_ == INT);
+    RTC_DCHECK_EQ(INT, type_);
     return &variable_->i;
   }
 
   double* float_variable() const {
-    assert(type_ == FLOAT);
+    RTC_DCHECK_EQ(FLOAT, type_);
     return &variable_->f;
   }
 
   const char** string_variable() const {
-    assert(type_ == STRING);
+    RTC_DCHECK_EQ(STRING, type_);
     return &variable_->s;
   }
 
   // Default values
   bool bool_default() const {
-    assert(type_ == BOOL);
+    RTC_DCHECK_EQ(BOOL, type_);
     return default_.b;
   }
 
   int int_default() const {
-    assert(type_ == INT);
+    RTC_DCHECK_EQ(INT, type_);
     return default_.i;
   }
 
   double float_default() const {
-    assert(type_ == FLOAT);
+    RTC_DCHECK_EQ(FLOAT, type_);
     return default_.f;
   }
 
   const char* string_default() const {
-    assert(type_ == STRING);
+    RTC_DCHECK_EQ(STRING, type_);
     return default_.s;
   }
 

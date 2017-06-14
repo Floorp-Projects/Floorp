@@ -26,7 +26,6 @@ const uint8_t kRtpMarkerBitMask = 0x80;
 
 RtpData* NullObjectRtpData();
 RtpFeedback* NullObjectRtpFeedback();
-RtpAudioFeedback* NullObjectRtpAudioFeedback();
 ReceiveStatistics* NullObjectReceiveStatistics();
 
 namespace RtpUtility {
@@ -36,8 +35,6 @@ struct Payload {
   bool audio;
   PayloadUnion typeSpecific;
 };
-
-typedef std::map<int8_t, Payload*> PayloadTypeMap;
 
 bool StringCompare(const char* str1, const char* str2, const uint32_t length);
 
@@ -53,20 +50,12 @@ class RtpHeaderParser {
   bool ParseRtcp(RTPHeader* header) const;
   bool Parse(RTPHeader* parsedPacket,
              RtpHeaderExtensionMap* ptrExtensionMap = nullptr) const;
-  RTC_DEPRECATED bool Parse(
-      RTPHeader& parsedPacket,  // NOLINT(runtime/references)
-      RtpHeaderExtensionMap* ptrExtensionMap = nullptr) const {
-    return Parse(&parsedPacket, ptrExtensionMap);
-  }
 
  private:
   void ParseOneByteExtensionHeader(RTPHeader* parsedPacket,
                                    const RtpHeaderExtensionMap* ptrExtensionMap,
                                    const uint8_t* ptrRTPDataExtensionEnd,
                                    const uint8_t* ptr) const;
-
-  uint8_t ParsePaddingBytes(const uint8_t* ptrRTPDataExtensionEnd,
-                            const uint8_t* ptr) const;
 
   const uint8_t* const _ptrRTPDataBegin;
   const uint8_t* const _ptrRTPDataEnd;

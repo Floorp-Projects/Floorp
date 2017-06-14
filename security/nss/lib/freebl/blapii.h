@@ -51,6 +51,18 @@ SEC_END_PROTOS
 #define HAVE_NO_SANITIZE_ATTR 0
 #endif
 
+/* Alignment helpers. */
+#if defined(_WINDOWS) && defined(NSS_X86_OR_X64)
+#define pre_align __declspec(align(16))
+#define post_align
+#elif defined(NSS_X86_OR_X64)
+#define pre_align
+#define post_align __attribute__((aligned(16)))
+#else
+#define pre_align
+#define post_align
+#endif
+
 #if defined(HAVE_UNALIGNED_ACCESS) && HAVE_NO_SANITIZE_ATTR
 #define NO_SANITIZE_ALIGNMENT __attribute__((no_sanitize("alignment")))
 #else

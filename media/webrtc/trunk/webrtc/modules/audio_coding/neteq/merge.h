@@ -37,7 +37,7 @@ class Merge {
         size_t num_channels,
         Expand* expand,
         SyncBuffer* sync_buffer);
-  virtual ~Merge() {}
+  virtual ~Merge();
 
   // The main method to produce the audio data. The decoded data is supplied in
   // |input|, having |input_length| samples in total for all channels
@@ -69,11 +69,10 @@ class Merge {
   // of samples that were taken from the |sync_buffer_|.
   size_t GetExpandedSignal(size_t* old_length, size_t* expand_period);
 
-  // Analyzes |input| and |expanded_signal| to find maximum values. Returns
-  // a muting factor (Q14) to be used on the new data.
+  // Analyzes |input| and |expanded_signal| and returns muting factor (Q14) to
+  // be used on the new data.
   int16_t SignalScaling(const int16_t* input, size_t input_length,
-                        const int16_t* expanded_signal,
-                        int16_t* expanded_max, int16_t* input_max) const;
+                        const int16_t* expanded_signal) const;
 
   // Downsamples |input| (|input_length| samples) and |expanded_signal| to
   // 4 kHz sample rate. The downsampled signals are written to
@@ -84,8 +83,7 @@ class Merge {
   // Calculates cross-correlation between |input_downsampled_| and
   // |expanded_downsampled_|, and finds the correlation maximum. The maximizing
   // lag is returned.
-  size_t CorrelateAndPeakSearch(int16_t expanded_max, int16_t input_max,
-                                size_t start_position, size_t input_length,
+  size_t CorrelateAndPeakSearch(size_t start_position, size_t input_length,
                                 size_t expand_period) const;
 
   const int fs_mult_;  // fs_hz_ / 8000.
@@ -95,6 +93,7 @@ class Merge {
   int16_t expanded_downsampled_[kExpandDownsampLength];
   int16_t input_downsampled_[kInputDownsampLength];
   AudioMultiVector expanded_;
+  std::vector<int16_t> temp_data_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(Merge);
 };

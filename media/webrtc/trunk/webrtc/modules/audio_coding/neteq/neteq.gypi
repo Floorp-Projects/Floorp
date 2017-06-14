@@ -15,6 +15,10 @@
     ],
     'neteq_defines': [],
     'conditions': [
+      ['include_ilbc==1', {
+        'codecs': ['ilbc',],
+        'neteq_defines': ['WEBRTC_CODEC_ILBC',],
+      }],
       ['include_opus==1', {
         'codecs': ['webrtc_opus',],
         'neteq_defines': ['WEBRTC_CODEC_OPUS',],
@@ -22,10 +26,6 @@
       ['include_g722==1', {
         'codecs': ['g722',],
         'neteq_defines': ['WEBRTC_CODEC_G722',],
-      }],
-      ['include_ilbc==1', {
-        'codecs': ['ilbc',],
-        'neteq_defines': ['WEBRTC_CODEC_ILBC',],
       }],
       ['include_isac==1', {
         'codecs': ['isac', 'isac_fix',],
@@ -43,61 +43,19 @@
     {
       'target_name': 'neteq',
       'type': 'static_library',
-      'include_dirs': [
-        '../../../../../../media/opus/celt',
-      ],
-      'direct_dependent_settings': {
-        'include_dirs': [
-          '../../../../../../media/opus/celt',
-	],
-      },
       'dependencies': [
         '<@(neteq_dependencies)',
         '<(webrtc_root)/common.gyp:webrtc_common',
+        'builtin_audio_decoder_factory',
+        'rent_a_codec',
       ],
       'defines': [
         '<@(neteq_defines)',
-      ],
-      'conditions': [
-        ['build_with_mozilla==0', {
-          'include_dirs': [
-            # Need Opus header files for the audio classifier.
-            '<(DEPTH)/third_party/opus/src/celt',
-            '<(DEPTH)/third_party/opus/src/src',
-          ],
-          'direct_dependent_settings': {
-            'include_dirs': [
-              # Need Opus header files for the audio classifier.
-              '<(DEPTH)/third_party/opus/src/celt',
-              '<(DEPTH)/third_party/opus/src/src',
-            ],
-          },
-          'export_dependent_settings': [
-            '<(DEPTH)/third_party/opus/opus.gyp:opus',
-          ],
-	}],
-        ['build_with_mozilla==1', {
-          'include_dirs': [
-            # Need Opus header files for the audio classifier.
-            '<(DEPTH)/../../../media/opus/celt',
-#            '<(DEPTH)/third_party/opus/src/src',
-          ],
-          'direct_dependent_settings': {
-            'include_dirs': [
-              '../../../../../../media/opus/celt',
-              # Need Opus header files for the audio classifier.
-              '<(DEPTH)/../../../media/opus/celt',
-#              '<(DEPTH)/third_party/opus/src/src',
-            ],
-          },
-        }],
       ],
       'sources': [
         'include/neteq.h',
         'accelerate.cc',
         'accelerate.h',
-        'audio_classifier.cc',
-        'audio_classifier.h',
         'audio_decoder_impl.cc',
         'audio_decoder_impl.h',
         'audio_multi_vector.cc',
@@ -110,6 +68,8 @@
         'buffer_level_filter.h',
         'comfort_noise.cc',
         'comfort_noise.h',
+        'cross_correlation.cc',
+        'cross_correlation.h',
         'decision_logic.cc',
         'decision_logic.h',
         'decision_logic_fax.cc',
@@ -133,8 +93,8 @@
         'expand.h',
         'merge.cc',
         'merge.h',
-        'nack.h',
-        'nack.cc',
+        'nack_tracker.h',
+        'nack_tracker.cc',
         'neteq_impl.cc',
         'neteq_impl.h',
         'neteq.cc',
@@ -142,10 +102,12 @@
         'statistics_calculator.h',
         'normal.cc',
         'normal.h',
+        'packet.cc',
+        'packet.h',
         'packet_buffer.cc',
         'packet_buffer.h',
-        'payload_splitter.cc',
-        'payload_splitter.h',
+        'red_payload_splitter.cc',
+        'red_payload_splitter.h',
         'post_decode_vad.cc',
         'post_decode_vad.h',
         'preemptive_expand.cc',
@@ -156,6 +118,8 @@
         'rtcp.h',
         'sync_buffer.cc',
         'sync_buffer.h',
+        'tick_timer.cc',
+        'tick_timer.h',
         'timestamp_scaler.cc',
         'timestamp_scaler.h',
         'time_stretch.cc',
@@ -163,94 +127,4 @@
       ],
     },
   ], # targets
-  'conditions': [
-    ['include_tests==1', {
-      'includes': ['neteq_tests.gypi',],
-      'targets': [
-        {
-          'target_name': 'audio_decoder_unittests',
-          'type': '<(gtest_target_type)',
-          'dependencies': [
-            '<@(codecs)',
-            'g722',
-            'ilbc',
-            'isac',
-            'isac_fix',
-            'audio_decoder_interface',
-            'neteq_unittest_tools',
-            '<(DEPTH)/testing/gtest.gyp:gtest',
-            '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
-            '<(webrtc_root)/test/test.gyp:test_support_main',
-          ],
-          'defines': [
-            '<@(neteq_defines)',
-          ],
-          'sources': [
-            'audio_decoder_impl.cc',
-            'audio_decoder_impl.h',
-            'audio_decoder_unittest.cc',
-          ],
-          'conditions': [
-            ['OS=="android"', {
-              'dependencies': [
-                '<(DEPTH)/testing/android/native_test.gyp:native_test_native_code',
-              ],
-            }],
-          ],
-        }, # audio_decoder_unittests
-
-        {
-          'target_name': 'neteq_unittest_tools',
-          'type': 'static_library',
-          'dependencies': [
-            'rtp_rtcp',
-            '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
-            '<(webrtc_root)/test/test.gyp:rtp_test_utils',
-          ],
-          'direct_dependent_settings': {
-            'include_dirs': [
-              'tools',
-            ],
-          },
-          'include_dirs': [
-            'tools',
-          ],
-          'sources': [
-            'tools/audio_checksum.h',
-            'tools/audio_loop.cc',
-            'tools/audio_loop.h',
-            'tools/audio_sink.h',
-            'tools/constant_pcm_packet_source.cc',
-            'tools/constant_pcm_packet_source.h',
-            'tools/input_audio_file.cc',
-            'tools/input_audio_file.h',
-            'tools/output_audio_file.h',
-            'tools/output_wav_file.h',
-            'tools/packet.cc',
-            'tools/packet.h',
-            'tools/packet_source.h',
-            'tools/resample_input_audio_file.cc',
-            'tools/resample_input_audio_file.h',
-            'tools/rtp_file_source.cc',
-            'tools/rtp_file_source.h',
-            'tools/rtp_generator.cc',
-            'tools/rtp_generator.h',
-          ],
-        }, # neteq_unittest_tools
-      ], # targets
-      'conditions': [
-        ['OS=="android"', {
-          'targets': [
-            {
-              'target_name': 'audio_decoder_unittests_apk_target',
-              'type': 'none',
-              'dependencies': [
-                '<(apk_tests_path):audio_decoder_unittests_apk',
-              ],
-            },
-          ],
-        }],
-      ],
-    }], # include_tests
-  ], # conditions
 }

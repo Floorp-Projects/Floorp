@@ -20,11 +20,10 @@
 
 #include "filterbank_internal.h"
 
-#include <assert.h>
-
 #include "codec.h"
 #include "filterbank_tables.h"
 #include "settings.h"
+#include "webrtc/base/checks.h"
 
 // Declare a function pointer.
 AllpassFilter2FixDec16 WebRtcIsacfix_AllpassFilter2FixDec16;
@@ -44,39 +43,43 @@ void WebRtcIsacfix_AllpassFilter2FixDec16C(
   int32_t a = 0, b = 0;
 
   // Assembly file assumption.
-  assert(length % 2 == 0);
+  RTC_DCHECK_EQ(0, length % 2);
 
   for (n = 0; n < length; n++) {
     // Process channel 1:
     in_out = data_ch1[n];
     a = factor_ch1[0] * in_out;  // Q15 * Q0 = Q15
-    a <<= 1;  // Q15 -> Q16
+    a *= 1 << 1;  // Q15 -> Q16
     b = WebRtcSpl_AddSatW32(a, state0_ch1);
     a = -factor_ch1[0] * (int16_t)(b >> 16);  // Q15
-    state0_ch1 = WebRtcSpl_AddSatW32(a << 1, (uint32_t)in_out << 16);  // Q16
+    state0_ch1 =
+        WebRtcSpl_AddSatW32(a * (1 << 1), (int32_t)in_out * (1 << 16));  // Q16
     in_out = (int16_t) (b >> 16);  // Save as Q0
 
     a = factor_ch1[1] * in_out;  // Q15 * Q0 = Q15
-    a <<= 1; // Q15 -> Q16
+    a *= 1 << 1; // Q15 -> Q16
     b = WebRtcSpl_AddSatW32(a, state1_ch1);  // Q16
     a = -factor_ch1[1] * (int16_t)(b >> 16);  // Q15
-    state1_ch1 = WebRtcSpl_AddSatW32(a << 1, (uint32_t)in_out << 16);  // Q16
+    state1_ch1 =
+        WebRtcSpl_AddSatW32(a * (1 << 1), (int32_t)in_out * (1 << 16));  // Q16
     data_ch1[n] = (int16_t) (b >> 16);  // Save as Q0
 
     // Process channel 2:
     in_out = data_ch2[n];
     a = factor_ch2[0] * in_out;  // Q15 * Q0 = Q15
-    a <<= 1;  // Q15 -> Q16
+    a *= 1 << 1;  // Q15 -> Q16
     b = WebRtcSpl_AddSatW32(a, state0_ch2);  // Q16
     a = -factor_ch2[0] * (int16_t)(b >> 16);  // Q15
-    state0_ch2 = WebRtcSpl_AddSatW32(a << 1, (uint32_t)in_out << 16);  // Q16
+    state0_ch2 =
+        WebRtcSpl_AddSatW32(a * (1 << 1), (int32_t)in_out * (1 << 16));  // Q16
     in_out = (int16_t) (b >> 16);  // Save as Q0
 
     a = factor_ch2[1] * in_out;  // Q15 * Q0 = Q15
-    a <<= 1;  // Q15 -> Q16
+    a *= (1 << 1);  // Q15 -> Q16
     b = WebRtcSpl_AddSatW32(a, state1_ch2);  // Q16
     a = -factor_ch2[1] * (int16_t)(b >> 16);  // Q15
-    state1_ch2 = WebRtcSpl_AddSatW32(a << 1, (uint32_t)in_out << 16);  // Q16
+    state1_ch2 =
+        WebRtcSpl_AddSatW32(a * (1 << 1), (int32_t)in_out * (1 << 16));  // Q16
     data_ch2[n] = (int16_t) (b >> 16);  // Save as Q0
   }
 
@@ -144,11 +147,11 @@ void WebRtcIsacfix_HighpassFilterFixDec32C(int16_t *io,
     c = in + ((a1 + b1) >> 7);  // Q0.
     io[k] = (int16_t)WebRtcSpl_SatW32ToW16(c);  // Write output as Q0.
 
-    c = (in << 2) - a2 - b2;  // In Q2.
+    c = in * (1 << 2) - a2 - b2;  // In Q2.
     c = (int32_t)WEBRTC_SPL_SAT(536870911, c, -536870912);
 
     state1 = state0;
-    state0 = c << 2;  // Write state as Q4
+    state0 = c * (1 << 2);  // Write state as Q4
   }
   state[0] = state0;
   state[1] = state1;

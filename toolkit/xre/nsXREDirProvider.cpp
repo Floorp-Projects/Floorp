@@ -1122,29 +1122,16 @@ nsXREDirProvider::DoShutdown()
 static nsresult
 GetShellFolderPath(KNOWNFOLDERID folder, nsAString& _retval)
 {
-  wchar_t* buf;
-  uint32_t bufLength = _retval.GetMutableData(&buf, MAXPATHLEN + 3);
-  NS_ENSURE_TRUE(bufLength >= (MAXPATHLEN + 3), NS_ERROR_OUT_OF_MEMORY);
-
-  nsresult rv = NS_OK;
-
-  LPITEMIDLIST pItemIDList = nullptr;
-
   DWORD flags = KF_FLAG_SIMPLE_IDLIST | KF_FLAG_DONT_VERIFY | KF_FLAG_NO_ALIAS;
-  if (SUCCEEDED(SHGetKnownFolderIDList(folder, flags, NULL, &pItemIDList)) &&
-      SHGetPathFromIDListW(pItemIDList, buf)) {
-    // We're going to use wcslen (wcsnlen not available in msvc7.1) so make
-    // sure to null terminate.
-    buf[bufLength - 1] = L'\0';
-    _retval.SetLength(wcslen(buf));
-  } else {
-    _retval.SetLength(0);
-    rv = NS_ERROR_NOT_AVAILABLE;
+  PWSTR path = nullptr;
+
+  if (!SUCCEEDED(SHGetKnownFolderPath(folder, flags, NULL, &path))) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
-  CoTaskMemFree(pItemIDList);
-
-  return rv;
+  _retval = nsDependentString(path);
+  CoTaskMemFree(path);
+  return NS_OK;
 }
 
 /**

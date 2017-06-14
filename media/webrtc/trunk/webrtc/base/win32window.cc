@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "webrtc/base/checks.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/win32window.h"
@@ -26,7 +27,7 @@ Win32Window::Win32Window() : wnd_(NULL) {
 }
 
 Win32Window::~Win32Window() {
-  ASSERT(NULL == wnd_);
+  RTC_DCHECK(NULL == wnd_);
 }
 
 bool Win32Window::Create(HWND parent, const wchar_t* title, DWORD style,

@@ -11,6 +11,7 @@
 #ifndef WEBRTC_MODULES_AUDIO_CODING_CODECS_OPUS_AUDIO_DECODER_OPUS_H_
 #define WEBRTC_MODULES_AUDIO_CODING_CODECS_OPUS_AUDIO_DECODER_OPUS_H_
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/audio_coding/codecs/audio_decoder.h"
 #include "webrtc/modules/audio_coding/codecs/opus/opus_interface.h"
 
@@ -21,11 +22,14 @@ class AudioDecoderOpus final : public AudioDecoder {
   explicit AudioDecoderOpus(size_t num_channels);
   ~AudioDecoderOpus() override;
 
+  std::vector<ParseResult> ParsePayload(rtc::Buffer&& payload,
+                                        uint32_t timestamp) override;
   void Reset() override;
   int PacketDuration(const uint8_t* encoded, size_t encoded_len) const override;
   int PacketDurationRedundant(const uint8_t* encoded,
                               size_t encoded_len) const override;
   bool PacketHasFec(const uint8_t* encoded, size_t encoded_len) const override;
+  int SampleRateHz() const override;
   size_t Channels() const override;
 
  protected:

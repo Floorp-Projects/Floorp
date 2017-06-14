@@ -212,6 +212,7 @@ pref(dom.webcomponents.enabled,true) load 1341693.html
 pref(dom.IntersectionObserver.enabled,true) load 1353529.xul
 pref(dom.IntersectionObserver.enabled,true) load 1369363.xul
 load 1370072.html
+pref(clipboard.autocopy,true) load 1370737.html
 pref(dom.IntersectionObserver.enabled,true) load 1370968.html
 load structured_clone_container_throws.html
 HTTP(..) load xhr_abortinprogress.html

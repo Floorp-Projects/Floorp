@@ -25,7 +25,6 @@
 #include "nsStyleConsts.h"
 #include "nsStyleContext.h"
 #include "nsHTMLParts.h"
-#include "nsRenderingContext.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsNameSpaceManager.h"
 #include "nsCSSAnonBoxes.h"
@@ -1408,12 +1407,12 @@ public:
     aOutFrames->AppendElement(mFrame);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) override;
+                     gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("FramesetBorder", TYPE_FRAMESET_BORDER)
 };
 
 void nsDisplayFramesetBorder::Paint(nsDisplayListBuilder* aBuilder,
-                                    nsRenderingContext* aCtx)
+                                    gfxContext* aCtx)
 {
   static_cast<nsHTMLFramesetBorderFrame*>(mFrame)->
     PaintBorder(aCtx->GetDrawTarget(), ToReferenceFrame());
@@ -1616,12 +1615,12 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) override;
+                     gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("FramesetBlank", TYPE_FRAMESET_BLANK)
 };
 
 void nsDisplayFramesetBlank::Paint(nsDisplayListBuilder* aBuilder,
-                                   nsRenderingContext* aCtx)
+                                   gfxContext* aCtx)
 {
   DrawTarget* drawTarget = aCtx->GetDrawTarget();
   int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();

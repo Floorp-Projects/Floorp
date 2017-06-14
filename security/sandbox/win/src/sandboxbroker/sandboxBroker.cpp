@@ -12,6 +12,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/NSPRLogModulesParser.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Telemetry.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCOMPtr.h"
 #include "nsDirectoryServiceDefs.h"
@@ -175,6 +176,7 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
   result = sBrokerService->SpawnTarget(aPath, aArguments, mPolicy,
                                        &last_warning, &last_error, &targetInfo);
   if (sandbox::SBOX_ALL_OK != result) {
+    Telemetry::Accumulate(Telemetry::SANDBOX_FAILED_LAUNCH, result);
     LOG_E("Failed (ResultCode %d) to SpawnTarget with last_error=%d, last_warning=%d",
           result, last_error, last_warning);
     return false;
