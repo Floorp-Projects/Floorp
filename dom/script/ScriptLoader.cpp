@@ -57,6 +57,7 @@
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/ConsoleReportCollector.h"
 
+#include "mozilla/AbstractThread.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Telemetry.h"

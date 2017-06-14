@@ -1593,6 +1593,8 @@ EventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
     nsAutoString eventType;
     if (listener.mAllEvents) {
       eventType.SetIsVoid(true);
+    } else if (listener.mListenerType == Listener::eNoListener) {
+      continue;
     } else {
       eventType.Assign(Substring(nsDependentAtomString(listener.mTypeAtom), 2));
     }

@@ -49,6 +49,56 @@
 }
 
 /**
+ * Layout Promote Bar
+ */
+
+.layout-promote-bar {
+  align-items: center;
+  background-color: var(--theme-toolbar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  display: flex;
+  font-size: 11px;
+  padding: 5px;
+  transition: all 0.25s ease;
+  width: 100%;
+  -moz-user-select: none;
+}
+
+.layout-promote-bar:hover {
+  background-color: var(--theme-toolbar-hover);
+}
+
+.layout-promote-info-icon {
+  display: inline-block;
+  background-size: 16px;
+  width: 16px;
+  height: 16px;
+  margin: 6px;
+  background-image: url("chrome://browser/skin/info.svg");
+}
+
+.layout-promote-message {
+  flex: 1;
+}
+
+.layout-promote-learn-more-link {
+  margin-inline-start: 5px;
+}
+
+.layout-promote-learn-more-link:hover {
+  text-decoration: underline;
+}
+
+.layout-promote-close-button {
+  margin: 6px;
+}
+
+.layout-promote-close-button::before {
+  background-image: url("chrome://devtools/skin/images/close.svg");
+  margin: -6px 0 0 -6px;
+}
+
+/**
  * Grid Container
  */
 

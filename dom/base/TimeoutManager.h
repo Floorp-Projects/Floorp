@@ -55,11 +55,6 @@ public:
   void ClearAllTimeouts();
   uint32_t GetTimeoutId(mozilla::dom::Timeout::Reason aReason);
 
-  // When timers are being throttled and we reduce the thottle delay we must
-  // reschedule.  The amount of the old throttle delay must be provided in
-  // order to bound how many timers must be examined.
-  nsresult ResetTimersForThrottleReduction();
-
   int32_t DOMMinTimeoutValue(bool aIsTracking) const;
 
   // aTimeout is the timeout that we're about to start running.  This function
@@ -76,6 +71,10 @@ public:
   void Resume();
   void Freeze();
   void Thaw();
+
+  // This should be called by nsGlobalWindow when the window might have moved
+  // to the background or foreground.
+  void UpdateBackgroundState();
 
   // Initialize TimeoutManager before the first time it is accessed.
   static void Initialize();
@@ -116,7 +115,6 @@ public:
   static const uint32_t InvalidFiringId;
 
 private:
-  nsresult ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS);
   void MaybeStartThrottleTrackingTimout();
 
   bool IsBackground() const;
@@ -132,6 +130,9 @@ private:
 
   bool
   IsInvalidFiringId(uint32_t aFiringId) const;
+
+  TimeDuration
+  MinSchedulingDelay() const;
 
 private:
   struct Timeouts {
@@ -149,9 +150,6 @@ private:
       TimeWhen
     };
     void Insert(mozilla::dom::Timeout* aTimeout, SortBy aSortBy);
-    nsresult ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS,
-                                             const TimeoutManager& aTimeoutManager,
-                                             SortBy aSortBy);
 
     const Timeout* GetFirst() const { return mTimeoutList.getFirst(); }
     Timeout* GetFirst() { return mTimeoutList.getFirst(); }

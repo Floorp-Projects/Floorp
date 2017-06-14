@@ -55,7 +55,7 @@ ToCanonicalSupports(nsISupports* aSupports)
 class nsAutoOwningThread
 {
 public:
-  nsAutoOwningThread() { mThread = PR_GetCurrentThread(); }
+  nsAutoOwningThread();
 
   // We move the actual assertion checks out-of-line to minimize code bloat,
   // but that means we have to pass a non-literal string to

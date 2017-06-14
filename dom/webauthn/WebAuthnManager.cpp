@@ -7,6 +7,7 @@
 #include "hasht.h"
 #include "nsNetCID.h"
 #include "nsICryptoHash.h"
+#include "mozilla/AbstractThread.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/AuthenticatorAttestationResponse.h"
 #include "mozilla/dom/Promise.h"

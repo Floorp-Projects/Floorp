@@ -19,7 +19,6 @@ UNIFIED_SOURCES += [
     'TestMediaDataDecoder.cpp',
     'TestMediaEventSource.cpp',
     'TestMediaMIMETypes.cpp',
-    'TestMozPromise.cpp',
     'TestMP3Demuxer.cpp',
     'TestMP4Demuxer.cpp',
     'TestRust.cpp',
