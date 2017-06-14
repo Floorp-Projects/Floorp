@@ -229,6 +229,13 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                           default=False,
                           help="Delete pending crash reports before running tests.")
 
+        self.add_argument("--max-retries",
+                          type=int,
+                          dest="maxRetries",
+                          default=4,
+                          help="The maximum number of attempts to try and recover from a "
+                               "crash before aborting the test run [default 4].")
+
         self.add_argument("tests",
                           metavar="TEST_PATH",
                           nargs="*",
