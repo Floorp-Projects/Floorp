@@ -131,6 +131,10 @@ nsIPrefBranch* Preferences::sRootBranch = nullptr;
 nsIPrefBranch* Preferences::sDefaultRootBranch = nullptr;
 bool Preferences::sShutdown = false;
 
+// This globally enables or disables OMT pref writing, both sync and async
+static int32_t sAllowOMTPrefWrite = -1;
+
+
 class ValueObserverHashKey : public PLDHashEntryHdr {
 public:
   typedef ValueObserverHashKey* KeyType;
@@ -225,6 +229,14 @@ ValueObserver::Observe(nsISupports     *aSubject,
   return NS_OK;
 }
 
+// We want to have an atomic pointer to the preference data that should be
+// written.  Make a struct so that we can capture the array and the length.
+struct PrefWriteData
+{
+  UniquePtr<char*[]> mData;
+  uint32_t mCount;
+};
+
 // Write the preference data to a file.
 //
 class PreferencesWriter final
@@ -289,6 +301,68 @@ public:
 #endif
     return rv;
   }
+
+  static
+  void Flush()
+  {
+    // This can be further optimized; instead of waiting for
+    // all of the writer thread to be available, we just have
+    // to wait for all the pending writes to be done.
+    if (!sPendingWriteData.compareExchange(nullptr, nullptr)) {
+      nsresult rv = NS_OK;
+      nsCOMPtr<nsIEventTarget> target =
+        do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
+      if (NS_SUCCEEDED(rv)) {
+        target->Dispatch(NS_NewRunnableFunction([] {}),
+                         nsIEventTarget::DISPATCH_SYNC);
+      }
+    }
+  }
+
+  // This is the data that all of the runnables (see below) will attempt
+  // to write.  It will always have the most up to date version, or be
+  // null, if the up to date information has already been written out.
+  static Atomic<PrefWriteData*> sPendingWriteData;
+};
+Atomic<PrefWriteData*> PreferencesWriter::sPendingWriteData((PrefWriteData*)0);
+
+class PWRunnable : public Runnable
+{
+public:
+  explicit PWRunnable(nsIFile* aFile) : mFile(aFile) {}
+
+  NS_IMETHOD Run() override
+  {
+    PrefWriteData* prefs = PreferencesWriter::sPendingWriteData.exchange(nullptr);
+    // If we get a nullptr on the exchange, it means that somebody
+    // else has already processed the request, and we can just return.
+
+    nsresult rv = NS_OK;
+    if (prefs) {
+      // The ::Write call will zero out the prefs->mData array, but not free it.
+      // The UniquePtr going out of scope will do that when we free prefs.
+      rv = PreferencesWriter::Write(mFile, prefs->mData.get(), prefs->mCount);
+      delete prefs;
+
+      // Make a copy of these so we can have them in runnable lambda.
+      // nsIFile is only there so that we would never release the
+      // ref counted pointer off main thread.
+      nsresult rvCopy = rv;
+      nsCOMPtr<nsIFile> fileCopy(mFile);
+      SystemGroup::Dispatch("Preferences::WriterRunnable",
+                            TaskCategory::Other,
+                            NS_NewRunnableFunction([fileCopy, rvCopy] {
+        MOZ_RELEASE_ASSERT(NS_IsMainThread());
+        if (NS_FAILED(rvCopy)) {
+          Preferences::DirtyCallback();
+        }
+      }));
+    }
+    return rv;
+  }
+
+protected:
+  nsCOMPtr<nsIFile> mFile;
 };
 
 struct CacheData {
@@ -778,13 +852,33 @@ Preferences::ResetUserPrefs()
 bool
 Preferences::AllowOffMainThreadSave()
 {
-  return false;
+  // Put in a preference that allows us to disable
+  // off main thread preference file save.
+  if (sAllowOMTPrefWrite < 0) {
+    bool value = false;
+    Preferences::GetBool("preferences.allow.omt-write", &value);
+    sAllowOMTPrefWrite = value ? 1 : 0;
+  }
+  return !!sAllowOMTPrefWrite;
 }
 
 nsresult
 Preferences::SavePrefFileBlocking()
 {
-  return SavePrefFileInternal(nullptr, SaveMethod::Blocking);
+  if (mDirty) {
+    return SavePrefFileInternal(nullptr, SaveMethod::Blocking);
+  }
+
+  // If we weren't dirty to start, SavePrefFileInternal will early exit
+  // so there is no guarantee that we don't have oustanding async
+  // saves in the pipe.  Since the contract of SavePrefFileOnMainThread
+  // is that the file on disk matches the preferences, we have to make
+  // sure those requests are completed.
+
+  if (AllowOffMainThreadSave()) {
+    PreferencesWriter::Flush();
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -1092,7 +1186,7 @@ Preferences::SavePrefFileInternal(nsIFile *aFile, SaveMethod aSaveMethod)
 }
 
 nsresult
-Preferences::WritePrefFile(nsIFile* aFile, SaveMethod /*aSaveMethod*/)
+Preferences::WritePrefFile(nsIFile* aFile, SaveMethod aSaveMethod)
 {
   if (!gHashTable) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -1101,8 +1195,47 @@ Preferences::WritePrefFile(nsIFile* aFile, SaveMethod /*aSaveMethod*/)
   PROFILER_LABEL("Preferences", "WritePrefFile",
                  js::ProfileEntry::Category::OTHER);
 
+  if (AllowOffMainThreadSave()) {
+
+    nsresult rv = NS_OK;
+    PrefWriteData* prefs = new PrefWriteData;
+    prefs->mData = pref_savePrefs(gHashTable, &prefs->mCount);
+
+    // Put the newly constructed preference data into sPendingWriteData
+    // for the next request to pick up
+    prefs = PreferencesWriter::sPendingWriteData.exchange(prefs);
+    if (prefs) {
+      // There was a previous request that hasn't been processed,
+      // and this is the data it had.  Delete the old data and return.
+      delete prefs;
+      return rv;
+    } else {
+      // There were no previous requests, dispatch one since
+      // sPendingWriteData has the up to date information.
+      nsCOMPtr<nsIEventTarget> target =
+        do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
+      if (NS_SUCCEEDED(rv)) {
+        bool async = aSaveMethod == SaveMethod::Asynchronous;
+        rv = target->Dispatch(new PWRunnable(aFile),
+                              async ? nsIEventTarget::DISPATCH_NORMAL :
+                                      nsIEventTarget::DISPATCH_SYNC);
+        return rv;
+      }
+    }
+
+    // If we can't get the thread for writing, for whatever reason, do the
+    // main thread write after making some noise:
+    MOZ_ASSERT(false,"failed to get the target thread for OMT pref write");
+  }
+
+  // This will do a main thread write.  It is safe to do it this way
+  // as AllowOffMainThreadSave() returns a consistent value for the
+  // lifetime of the parent process.
   uint32_t prefCount = 0;
   UniquePtr<char*[]> prefsData = pref_savePrefs(gHashTable, &prefCount);
+
+  // The ::Write call will zero out the prefsData array, but not free it.
+  // The UniquePtr going out of scope will do that.
   return PreferencesWriter::Write(aFile, prefsData.get(), prefCount);
 }
 
