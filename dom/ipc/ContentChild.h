@@ -610,7 +610,7 @@ public:
                             nsTArray<IPC::Permission>&& aPerms) override;
 
   virtual mozilla::ipc::IPCResult
-  RecvShareCodeCoverageMutex(const CrossProcessMutexHandle& aHandle);
+  RecvShareCodeCoverageMutex(const CrossProcessMutexHandle& aHandle) override;
 
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
   bool
