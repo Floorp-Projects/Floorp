@@ -315,11 +315,67 @@ function getSiteBlockedErrorDetails(docShell) {
   return blockedInfo;
 }
 
-addMessageListener("DeceptiveBlockedDetails", (message) => {
-  sendAsyncMessage("DeceptiveBlockedDetails:Result", {
-    blockedInfo: getSiteBlockedErrorDetails(docShell),
-  });
-});
+var AboutBlockedSiteListener = {
+  init(chromeGlobal) {
+    addMessageListener("DeceptiveBlockedDetails", this);
+    chromeGlobal.addEventListener("AboutBlockedLoaded", this, false, true);
+  },
+
+  get isBlockedSite() {
+    return content.document.documentURI.startsWith("about:blocked");
+  },
+
+  receiveMessage(msg) {
+    if (!this.isBlockedSite) {
+      return;
+    }
+
+    if (msg.name == "DeceptiveBlockedDetails") {
+      sendAsyncMessage("DeceptiveBlockedDetails:Result", {
+        blockedInfo: getSiteBlockedErrorDetails(docShell),
+      });
+    }
+  },
+
+  handleEvent(aEvent) {
+    if (!this.isBlockedSite) {
+      return;
+    }
+
+    if (aEvent.type != "AboutBlockedLoaded") {
+      return;
+    }
+
+    let provider = "";
+    if (docShell.failedChannel) {
+      let classifiedChannel = docShell.failedChannel.
+                              QueryInterface(Ci.nsIClassifiedChannel);
+      if (classifiedChannel) {
+        provider = classifiedChannel.matchedProvider;
+      }
+    }
+
+    let advisoryUrl = Services.prefs.getCharPref(
+      "browser.safebrowsing.provider." + provider + ".advisoryURL", "");
+    if (!advisoryUrl) {
+      let el = content.document.getElementById("advisoryDesc");
+      el.remove();
+      return;
+    }
+
+    let advisoryLinkText = Services.prefs.getCharPref(
+      "browser.safebrowsing.provider." + provider + ".advisoryName", "");
+    if (!advisoryLinkText) {
+      let el = content.document.getElementById("advisoryDesc");
+      el.remove();
+      return;
+    }
+
+    let anchorEl = content.document.getElementById("advisory_provider");
+    anchorEl.setAttribute("href", advisoryUrl);
+    anchorEl.textContent = advisoryLinkText;
+  },
+}
 
 var AboutNetAndCertErrorListener = {
   init(chromeGlobal) {
@@ -517,7 +573,7 @@ var AboutNetAndCertErrorListener = {
 }
 
 AboutNetAndCertErrorListener.init(this);
-
+AboutBlockedSiteListener.init(this);
 
 var ClickEventHandler = {
   init: function init() {
