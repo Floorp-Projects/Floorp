@@ -546,9 +546,13 @@ nsUrlClassifierStreamUpdater::UpdateError(nsresult result)
 nsresult
 nsUrlClassifierStreamUpdater::AddRequestBody(const nsACString &aRequestBody)
 {
-  nsCOMPtr<nsIInputStream> strStream;
-  nsresult rv = NS_NewCStringInputStream(getter_AddRefs(strStream),
-                                         aRequestBody);
+  nsresult rv;
+  nsCOMPtr<nsIStringInputStream> strStream =
+    do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = strStream->SetData(aRequestBody.BeginReading(),
+                          aRequestBody.Length());
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIUploadChannel> uploadChannel = do_QueryInterface(mChannel, &rv);

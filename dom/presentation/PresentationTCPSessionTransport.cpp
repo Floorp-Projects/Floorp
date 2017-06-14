@@ -22,7 +22,6 @@
 #include "nsThreadUtils.h"
 #include "PresentationLog.h"
 #include "PresentationTCPSessionTransport.h"
-#include "nsStringStream.h"
 
 #define BUFFER_SIZE 65536
 
@@ -238,7 +237,6 @@ PresentationTCPSessionTransport::CreateStream()
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  nsCOMPtr<nsIInputStream> stream = do_QueryInterface(mMultiplexStream);
 
   mMultiplexStreamCopier = do_CreateInstance("@mozilla.org/network/async-stream-copier;1", &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -252,7 +250,7 @@ PresentationTCPSessionTransport::CreateStream()
   }
 
   nsCOMPtr<nsIEventTarget> target = do_QueryInterface(sts);
-  rv = mMultiplexStreamCopier->Init(stream,
+  rv = mMultiplexStreamCopier->Init(mMultiplexStream,
                                     mSocketOutputStream,
                                     target,
                                     true, /* source buffered */
@@ -395,10 +393,16 @@ PresentationTCPSessionTransport::Send(const nsAString& aData)
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = NS_NewCStringInputStream(getter_AddRefs(stream),
-                                         NS_ConvertUTF16toUTF8(aData));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  nsresult rv;
+  nsCOMPtr<nsIStringInputStream> stream =
+    do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID, &rv);
+  if(NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  NS_ConvertUTF16toUTF8 msgString(aData);
+  rv = stream->SetData(msgString.BeginReading(), msgString.Length());
+  if(NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
