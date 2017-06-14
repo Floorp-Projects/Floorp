@@ -1923,14 +1923,12 @@ HttpChannelParent::ResumeForDiversion()
     // The nsHttpChannel will deliver remaining OnData/OnStop for the transfer.
     nsresult rv = mChannel->ResumeInternal();
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      FailDiversion(NS_ERROR_UNEXPECTED, true);
       return rv;
     }
     mSuspendedForDiversion = false;
   }
 
   if (NS_WARN_IF(mIPCClosed || !DoSendDeleteSelf())) {
-    FailDiversion(NS_ERROR_UNEXPECTED);
     return NS_ERROR_UNEXPECTED;
   }
   return NS_OK;
