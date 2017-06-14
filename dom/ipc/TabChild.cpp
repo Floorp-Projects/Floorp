@@ -3492,9 +3492,7 @@ void
 TabChildGlobal::Init()
 {
   NS_ASSERTION(!mMessageManager, "Re-initializing?!?");
-  mMessageManager = new nsFrameMessageManager(mTabChild,
-                                              nullptr,
-                                              MM_CHILD);
+  mMessageManager = new nsFrameMessageManager(mTabChild);
 
   TelemetryScrollProbe::Create(this);
 }

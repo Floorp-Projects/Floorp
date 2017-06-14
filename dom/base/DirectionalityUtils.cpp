@@ -208,6 +208,7 @@
 
 #include "nsINode.h"
 #include "nsIContent.h"
+#include "nsIContentInlines.h"
 #include "nsIDocument.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/DebugOnly.h"
