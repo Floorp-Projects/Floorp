@@ -39,32 +39,38 @@ public:
   void WebSocketCreated(uint32_t aWebSocketSerialID,
                         uint64_t aInnerWindowID,
                         const nsAString& aURI,
-                        const nsACString& aProtocols);
+                        const nsACString& aProtocols,
+                        nsIEventTarget* aTarget = nullptr);
 
   void WebSocketOpened(uint32_t aWebSocketSerialID,
                        uint64_t aInnerWindowID,
                        const nsAString& aEffectiveURI,
                        const nsACString& aProtocols,
-                       const nsACString& aExtensions);
+                       const nsACString& aExtensions,
+                       nsIEventTarget* aTarget = nullptr);
 
   void WebSocketMessageAvailable(uint32_t aWebSocketSerialID,
                                  uint64_t aInnerWindowID,
                                  const nsACString& aData,
-                                 uint16_t aMessageType);
+                                 uint16_t aMessageType,
+                                 nsIEventTarget* aTarget = nullptr);
 
   void WebSocketClosed(uint32_t aWebSocketSerialID,
                        uint64_t aInnerWindowID,
                        bool aWasClean,
                        uint16_t aCode,
-                       const nsAString& aReason);
+                       const nsAString& aReason,
+                       nsIEventTarget* aTarget = nullptr);
 
   void FrameReceived(uint32_t aWebSocketSerialID,
                      uint64_t aInnerWindowID,
-                     already_AddRefed<WebSocketFrame> aFrame);
+                     already_AddRefed<WebSocketFrame> aFrame,
+                     nsIEventTarget* aTarget = nullptr);
 
   void  FrameSent(uint32_t aWebSocketSerialID,
                   uint64_t aInnerWindowID,
-                  already_AddRefed<WebSocketFrame> aFrame);
+                  already_AddRefed<WebSocketFrame> aFrame,
+                  nsIEventTarget* aTarget = nullptr);
 
   already_AddRefed<WebSocketFrame>
   CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1, bool aRsvBit2, bool aRsvBit3,
