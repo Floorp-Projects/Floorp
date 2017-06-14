@@ -134,6 +134,8 @@ if __name__ == "__main__":
                         help='Prefix of data point to measure. If the prefix does not end in a \'/\' then an exact match is made.')
     parser.add_argument('--proc-filter', action='store', default=None,
                         help='Process name filter. If not provided all processes will be included.')
+    parser.add_argument('--mebi', action='store_true',
+                        help='Output values as mebibytes (instead of bytes) to match about:memory.')
 
     args = parser.parse_args()
     totals = calculate_memory_report_values(
@@ -144,7 +146,13 @@ if __name__ == "__main__":
         if v:
             print "{0}\t".format(k),
     print ""
+
+    bytes_per_mebibyte = 1024.0 * 1024.0
     for (k, v) in sorted_totals:
         if v:
-            print "{0}\t".format(v),
+            if args.mebi:
+                print "{0:.2f} MiB".format(v / bytes_per_mebibyte),
+            else:
+                print "{0} bytes".format(v),
+            print "\t",
     print ""
