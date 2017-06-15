@@ -72,12 +72,6 @@ public:
     MOZ_ASSERT(aProxy);
   }
 
-  Type
-  GetType() const
-  {
-    return mType;
-  }
-
   void
   ResolveOrReject();
 
