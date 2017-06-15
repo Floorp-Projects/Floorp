@@ -270,6 +270,7 @@ public:
                                   JS::MutableHandle<JS::PropertyDescriptor> aDesc);
 
   // Check whether we should avoid leaking distinguishing information to JS/CSS.
+  // This function can be called both in the main thread and worker threads.
   static bool ShouldResistFingerprinting();
   static bool ShouldResistFingerprinting(nsIDocShell* aDocShell);
 
@@ -2202,7 +2203,7 @@ public:
   static bool ResistFingerprinting(mozilla::dom::CallerType aCallerType)
   {
     return aCallerType != mozilla::dom::CallerType::System &&
-           mozilla::nsRFPService::IsResistFingerprintingEnabled();
+           ShouldResistFingerprinting();
   }
 
   /**
