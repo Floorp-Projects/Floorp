@@ -27,13 +27,14 @@ const TESTS = [ {
 function runTest() {
   debugDump("entering");
 
-  let patches = getLocalPatchString("partial", null, null, null, "1234", null,
-                                    STATE_DOWNLOADING) +
-                getLocalPatchString("complete", null, null, null, null,
-                                    "false");
-  let updates = getLocalUpdateString(patches, null, null, null,
-                                     Services.appinfo.version, null,
-                                     null, null, null, null, "false");
+  let patchProps = {type: "partial",
+                    size: "1234",
+                    state: STATE_DOWNLOADING};
+  let patches = getLocalPatchString(patchProps);
+  patchProps = {selected: "false"};
+  patches += getLocalPatchString(patchProps);
+  let updateProps = {isCompleteUpdate: "false"};
+  let updates = getLocalUpdateString(updateProps, patches);
 
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
 

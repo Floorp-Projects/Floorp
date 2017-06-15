@@ -60,6 +60,7 @@ parent:
   sync DPSyncEnd(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
                  WrSize aContentSize, ByteBuffer aDL, WrBuiltDisplayListDescriptor aDLDesc,
                  WebRenderScrollData aScrollData);
+  async ParentCommands(WebRenderParentCommand[] commands);
   sync DPGetSnapshot(PTexture texture);
   async AddPipelineIdForAsyncCompositable(PipelineId aImageId, CompositableHandle aHandle);
   async RemovePipelineIdForAsyncCompositable(PipelineId aPipelineId);

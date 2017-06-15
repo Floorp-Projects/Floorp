@@ -12,6 +12,7 @@ package org.webrtc.voiceengine;
 
 import android.util.Log;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -133,6 +134,7 @@ public class WebRtcAudioTrack {
       audioTrack.flush();
     }
 
+    @TargetApi(21)
     private int writeOnLollipop(AudioTrack audioTrack, ByteBuffer byteBuffer, int sizeInBytes) {
       return audioTrack.write(byteBuffer, sizeInBytes, AudioTrack.WRITE_BLOCKING);
     }
@@ -287,6 +289,7 @@ public class WebRtcAudioTrack {
             + "max gain: " + AudioTrack.getMaxVolume());
   }
 
+  @TargetApi(23)
   private void logMainParametersExtended() {
     if (WebRtcAudioUtils.runningOnMarshmallowOrHigher()) {
       Log.d(TAG, "AudioTrack: "

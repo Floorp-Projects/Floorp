@@ -483,7 +483,8 @@ nsBMPEncoder::NotifyListener()
        mNotifyThreshold || mFinished)) {
     nsCOMPtr<nsIInputStreamCallback> callback;
     if (mCallbackTarget) {
-      callback = NS_NewInputStreamReadyEvent(mCallback, mCallbackTarget);
+      callback = NS_NewInputStreamReadyEvent("nsBMPEncoder::NotifyListener",
+                                             mCallback, mCallbackTarget);
     } else {
       callback = mCallback;
     }

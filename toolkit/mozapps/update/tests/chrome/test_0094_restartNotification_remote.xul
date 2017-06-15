@@ -27,14 +27,11 @@ const TESTS = [ {
 function runTest() {
   debugDump("entering");
 
-  let patches = getLocalPatchString("complete", null, null, null, null, null,
-                                    STATE_PENDING);
-  let updates = getLocalUpdateString(patches, null, null, null,
-                                     Services.appinfo.version, null,
-                                     null, null, null, null, false,
-                                     null, false, false, false, 1);
+  let patchProps = {state: STATE_PENDING};
+  let patches = getLocalPatchString(patchProps);
+  let updateProps = {promptWaitTime: "1"};
+  let updates = getLocalUpdateString(updateProps, patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
-  writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
   writeStatusFile(STATE_SUCCEEDED);
     
   reloadUpdateManagerData();
@@ -46,7 +43,6 @@ function runTest() {
      "update's promptWaitTime attribute value was set by the XML");
     
   gUP.showUpdateDownloaded(gUpdateManager.activeUpdate, true);
-
 }
 
 ]]>

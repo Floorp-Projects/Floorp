@@ -29,11 +29,22 @@ class KnownTabs {
 
 /**
  * Open our helper page in a tab in its own content process, asserting that it
- * really is in its own process.
+ * really is in its own process.  We initially load and wait for about:blank to
+ * load, and only then loadURI to our actual page.  This is to ensure that
+ * LocalStorageManager has had an opportunity to be created and populate
+ * mOriginsHavingData.
+ *
+ * (nsGlobalWindow will reliably create LocalStorageManager as a side-effect of
+ * the unconditional call to nsGlobalWindow::PreloadLocalStorage.  This will
+ * reliably create the StorageDBChild instance, and its corresponding
+ * StorageDBParent will send the set of origins when it is constructed.)
  */
 function* openTestTabInOwnProcess(name, knownTabs) {
-  let url = HELPER_PAGE_URL + '?' + encodeURIComponent(name);
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  let realUrl = HELPER_PAGE_URL + '?' + encodeURIComponent(name);
+  // Load and wait for about:blank.
+  let tab = yield BrowserTestUtils.openNewForegroundTab({
+    gBrowser, opening: 'about:blank', forceNewProcess: true
+  });
   let pid = tab.linkedBrowser.frameLoader.tabParent.osPid;
   ok(!knownTabs.byName.has(name), "tab needs its own name: " + name);
   ok(!knownTabs.byPid.has(pid), "tab needs to be in its own process: " + pid);
@@ -41,6 +52,11 @@ function* openTestTabInOwnProcess(name, knownTabs) {
   let knownTab = new KnownTab(name, tab);
   knownTabs.byPid.set(pid, knownTab);
   knownTabs.byName.set(name, knownTab);
+
+  // Now trigger the actual load of our page.
+  tab.linkedBrowser.loadURI(realUrl);
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  is(tab.linkedBrowser.frameLoader.tabParent.osPid, pid, "still same pid");
   return knownTab;
 }
 
@@ -53,6 +69,45 @@ function* cleanupTabs(knownTabs) {
     knownTab.cleanup();
   }
   knownTabs.cleanup();
+}
+
+/**
+ * Wait for a LocalStorage flush to occur.  This notification can occur as a
+ * result of any of:
+ * - The normal, hardcoded 5-second flush timer.
+ * - InsertDBOp seeing a preload op for an origin with outstanding changes.
+ * - Us generating a "domstorage-test-flush-force" observer notification.
+ */
+function waitForLocalStorageFlush() {
+  return new Promise(function(resolve) {
+    let observer = {
+      observe: function() {
+        SpecialPowers.removeObserver(observer, "domstorage-test-flushed");
+        resolve();
+      }
+    };
+    SpecialPowers.addObserver(observer, "domstorage-test-flushed");
+  });
+}
+
+/**
+ * Trigger and wait for a flush.  This is only necessary for forcing
+ * mOriginsHavingData to be updated.  Normal operations exposed to content know
+ * to automatically flush when necessary for correctness.
+ *
+ * The notification we're waiting for to verify flushing is fundamentally
+ * ambiguous (see waitForLocalStorageFlush), so we actually trigger the flush
+ * twice and wait twice.  In the event there was a race, there will be 3 flush
+ * notifications, but correctness is guaranteed after the second notification.
+ */
+function triggerAndWaitForLocalStorageFlush() {
+  SpecialPowers.notifyObservers(null, "domstorage-test-flush-force");
+  // This first wait is ambiguous...
+  return waitForLocalStorageFlush().then(function() {
+    // So issue a second flush and wait for that.
+    SpecialPowers.notifyObservers(null, "domstorage-test-flush-force");
+    return waitForLocalStorageFlush();
+  })
 }
 
 /**
@@ -77,9 +132,10 @@ function clearOriginStorageEnsuringNoPreload() {
   // origin preload hash to still have our origin in it.
   let storage = Services.domStorageManager.createStorage(null, principal, "");
   storage.clear();
-  // We don't need to wait for anything.  The clear call will have queued the
-  // clear operation on the database thread, and the child process requests
-  // for origins will likewise be answered via the database thread.
+
+  // We also need to trigger a flush os that mOriginsHavingData gets updated.
+  // The inherent flush race is fine here because
+  return triggerAndWaitForLocalStorageFlush();
 }
 
 function* verifyTabPreload(knownTab, expectStorageExists) {
@@ -218,56 +274,35 @@ requestLongerTimeout(4);
  *   added an event listener.
  */
 add_task(function*() {
-  // - Boost process count so all of our tabs get new processes.
-  // Our test wants to assert things about the precache status which is only
-  // populated at process startup and never updated.  (Per analysis at
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1312022 this still makes
-  // sense.)  https://bugzilla.mozilla.org/show_bug.cgi?id=1312022 introduced
-  // a mechanism for keeping an arbitrary number of processes alive, modifying
-  // all browser chrome tests to keep alive whatever dom.ipc.processCount is set
-  // to.  The mechanism was slightly modified later to be type-based, so now
-  // it's "dom.ipc.keepProcessesAlive.web" we care about.
-  //
-  // Our options for ensuring we get a new process are to either:
-  // 1) Try and push keepalive down to 1 and kill off the processes that are
-  //    already hanging around.
-  // 2) Just bump the process count up enough so that every tab we open will
-  //    get a new process.
-  //
-  // The first option turns out to be hard to get right.  Specifically,
-  // although one can set the keepalive and process counts to 1 and open and
-  // close tabs to try and trigger process termination down to 1, since we don't
-  // know how many processes might exist, we can't reliably listen for observer
-  // notifications of their shutdown to ensure we're avoiding shutdown races.
-  // (If there are races then the processes won't actually be shut down.)  So
-  // it's easiest to just boost the limit.
-  let keepAliveCount = 0;
-  try {
-    // This will throw if the preference is not defined, leaving our value at 0.
-    // Alternately, we could use Preferences.jsm's Preferences.get() API which
-    // supports default values, but we're sticking with SpecialPowers here for
-    // consistency.
-    keepAliveCount = SpecialPowers.getIntPref("dom.ipc.keepProcessesAlive.web");
-  } catch (ex) {
-    // Then zero is correct.
-  }
-  let safeProcessCount = keepAliveCount + 6;
-  info("dom.ipc.keepProcessesAlive.web is " + keepAliveCount + ", boosting " +
-       "process count temporarily to " + safeProcessCount);
-
-  // (There's already one about:blank page open and we open 5 new tabs, so 6
-  // processes.  Actually, 7, just in case.)
   yield SpecialPowers.pushPrefEnv({
     set: [
-      ["dom.ipc.processCount", safeProcessCount],
-      ["dom.ipc.processCount.web", safeProcessCount]
+      // Stop the preallocated process manager from speculatively creating
+      // processes.  Our test explicitly asserts on whether preload happened or
+      // not for each tab's process.  This information is loaded and latched by
+      // the StorageDBParent constructor which the child process's
+      // LocalStorageManager() constructor causes to be created via a call to
+      // LocalStorageCache::StartDatabase().  Although the service is lazily
+      // created and should not have been created prior to our opening the tab,
+      // it's safest to ensure the process simply didn't exist before we ask for
+      // it.
+      //
+      // This is done in conjunction with our use of forceNewProcess when
+      // opening tabs.  There would be no point if we weren't also requesting a
+      // new process.
+      ["dom.ipc.processPrelaunch.enabled", false],
+      // Enable LocalStorage's testing API so we can explicitly trigger a flush
+      // when needed.
+      ["dom.storage.testing", true],
     ]
   });
 
   // Ensure that there is no localstorage data or potential false positives for
   // localstorage preloads by forcing the origin to be cleared prior to the
   // start of our test.
-  clearOriginStorageEnsuringNoPreload();
+  yield clearOriginStorageEnsuringNoPreload();
+
+  // Make sure mOriginsHavingData gets updated.
+  yield triggerAndWaitForLocalStorageFlush();
 
   // - Open tabs.  Don't configure any of them yet.
   const knownTabs = new KnownTabs();
@@ -355,6 +390,14 @@ add_task(function*() {
   yield* verifyTabStorageState(readerTab, lastWriteState);
   yield* verifyTabStorageEvents(lateWriteThenListenTab, lastWriteMutations);
   yield* verifyTabStorageState(lateWriteThenListenTab, lastWriteState);
+
+  // - Force a LocalStorage DB flush so mOriginsHavingData is updated.
+  // mOriginsHavingData is only updated when the storage thread runs its
+  // accumulated operations during the flush.  If we don't initiate and ensure
+  // that a flush has occurred before moving on to the next step,
+  // mOriginsHavingData may not include our origin when it's sent down to the
+  // child process.
+  yield triggerAndWaitForLocalStorageFlush();
 
   // - Open a fresh tab and make sure it sees the precache/preload
   const lateOpenSeesPreload =

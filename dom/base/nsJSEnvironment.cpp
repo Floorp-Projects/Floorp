@@ -227,6 +227,8 @@ static bool sIsCompactingOnUserInactive = false;
 static int32_t sExpensiveCollectorPokes = 0;
 static const int32_t kPokesBetweenExpensiveCollectorTriggers = 5;
 
+static TimeDuration sGCUnnotifiedTotalTime;
+
 // Return true if some meaningful work was done.
 typedef bool (*CollectorRunnerCallback) (TimeStamp aDeadline, void* aData);
 
@@ -1434,6 +1436,7 @@ FireForgetSkippable(uint32_t aSuspected, bool aRemoveChildless,
   AutoProfilerTracing
     tracing("CC", aDeadline.IsNull() ? "ForgetSkippable" : "IdleForgetSkippable");
   PRTime startTime = PR_Now();
+  TimeStamp startTimeStamp = TimeStamp::Now();
   FinishAnyIncrementalGC();
   bool earlyForgetSkippable =
     sCleanupsSinceLastGC < NS_MAJOR_FORGET_SKIPPABLE_CALLS;
@@ -1450,6 +1453,24 @@ FireForgetSkippable(uint32_t aSuspected, bool aRemoveChildless,
   sTotalForgetSkippableTime += delta;
   sRemovedPurples += (aSuspected - sPreviousSuspectedCount);
   ++sForgetSkippableBeforeCC;
+
+  TimeStamp now = TimeStamp::Now();
+  TimeDuration duration = now - startTimeStamp;
+  if (duration.ToSeconds()) {
+    TimeDuration idleDuration;
+    if (!aDeadline.IsNull()) {
+      if (aDeadline < now) {
+        // This slice overflowed the idle period.
+        idleDuration = aDeadline - startTimeStamp;
+      } else {
+        idleDuration = duration;
+      }
+    }
+
+    uint32_t percent =
+      uint32_t(idleDuration.ToSeconds() / duration.ToSeconds() * 100);
+    Telemetry::Accumulate(Telemetry::FORGET_SKIPPABLE_DURING_IDLE, percent);
+  }
 }
 
 MOZ_ALWAYS_INLINE
@@ -1518,7 +1539,8 @@ struct CycleCollectorStats
     mExtraForgetSkippableCalls = 0;
   }
 
-  void PrepareForCycleCollectionSlice(int32_t aExtraForgetSkippableCalls = 0);
+  void PrepareForCycleCollectionSlice(TimeStamp aDeadline = TimeStamp(),
+                                      int32_t aExtraForgetSkippableCalls = 0);
 
   void FinishCycleCollectionSlice()
   {
@@ -1528,6 +1550,25 @@ struct CycleCollectorStats
     }
 
     mEndSliceTime = TimeStamp::Now();
+    TimeDuration duration = mEndSliceTime - mBeginSliceTime;
+
+    if (duration.ToSeconds()) {
+      TimeDuration idleDuration;
+      if (!mIdleDeadline.IsNull()) {
+        if (mIdleDeadline < mEndSliceTime) {
+          // This slice overflowed the idle period.
+          idleDuration = mIdleDeadline - mBeginSliceTime;
+        } else {
+          idleDuration = duration;
+        }
+      }
+
+      uint32_t percent =
+        uint32_t(idleDuration.ToSeconds() / duration.ToSeconds() * 100);
+      Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_SLICE_DURING_IDLE,
+                            percent);
+    }
+
     uint32_t sliceTime = TimeBetween(mBeginSliceTime, mEndSliceTime);
     mMaxSliceTime = std::max(mMaxSliceTime, sliceTime);
     mMaxSliceTimeSinceClear = std::max(mMaxSliceTimeSinceClear, sliceTime);
@@ -1576,14 +1617,20 @@ struct CycleCollectorStats
 
   // A file to dump CC activity to; set by MOZ_CCTIMER environment variable.
   FILE* mFile;
+
+  // In case CC slice was triggered during idle time, set to the end of the idle
+  // period.
+  TimeStamp mIdleDeadline;
 };
 
 CycleCollectorStats gCCStats;
 
 void
-CycleCollectorStats::PrepareForCycleCollectionSlice(int32_t aExtraForgetSkippableCalls)
+CycleCollectorStats::PrepareForCycleCollectionSlice(TimeStamp aDeadline,
+                                                    int32_t aExtraForgetSkippableCalls)
 {
   mBeginSliceTime = TimeStamp::Now();
+  mIdleDeadline = aDeadline;
 
   // Before we begin the cycle collection, make sure there is no active GC.
   if (sCCLockedOut) {
@@ -1636,7 +1683,8 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
   PROFILER_LABEL("nsJSContext", "CycleCollectNow",
     js::ProfileEntry::Category::CC);
 
-  gCCStats.PrepareForCycleCollectionSlice(aExtraForgetSkippableCalls);
+  gCCStats.PrepareForCycleCollectionSlice(TimeStamp(),
+                                          aExtraForgetSkippableCalls);
   nsCycleCollector_collect(aListener);
   gCCStats.FinishCycleCollectionSlice();
 }
@@ -1655,7 +1703,7 @@ nsJSContext::RunCycleCollectorSlice(TimeStamp aDeadline)
   PROFILER_LABEL("nsJSContext", "RunCycleCollectorSlice",
     js::ProfileEntry::Category::CC);
 
-  gCCStats.PrepareForCycleCollectionSlice();
+  gCCStats.PrepareForCycleCollectionSlice(aDeadline);
 
   // Decide how long we want to budget for this slice. By default,
   // use an unlimited budget.
@@ -1946,6 +1994,8 @@ InterSliceGCRunnerFired(TimeStamp aDeadline, void* aData)
     budget = int64_t((aDeadline - TimeStamp::Now()).ToMilliseconds());
   }
 
+  TimeStamp startTimeStamp = TimeStamp::Now();
+
   uintptr_t reason = reinterpret_cast<uintptr_t>(aData);
   nsJSContext::GarbageCollectNow(aData ?
                                    static_cast<JS::gcreason::Reason>(reason) :
@@ -1953,6 +2003,28 @@ InterSliceGCRunnerFired(TimeStamp aDeadline, void* aData)
                                  nsJSContext::IncrementalGC,
                                  nsJSContext::NonShrinkingGC,
                                  budget);
+
+  TimeDuration duration = sGCUnnotifiedTotalTime;
+  sGCUnnotifiedTotalTime = TimeDuration();
+
+  if (duration.ToSeconds()) {
+    TimeDuration idleDuration;
+    if (!aDeadline.IsNull()) {
+      TimeStamp now = TimeStamp::Now();
+      if (aDeadline < now) {
+        // This slice overflowed the idle period.
+        idleDuration = aDeadline - startTimeStamp;
+      } else {
+        // Note, we don't want to use duration here, since it may contain
+        // data also from JS engine triggered GC slices.
+        idleDuration = now - startTimeStamp;
+      }
+    }
+
+    uint32_t percent =
+      uint32_t(idleDuration.ToSeconds() / duration.ToSeconds() * 100);
+    Telemetry::Accumulate(Telemetry::GC_SLICE_DURING_IDLE, percent);
+  }
   return true;
 }
 
@@ -2424,6 +2496,8 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
       break;
 
     case JS::GC_SLICE_END:
+      sGCUnnotifiedTotalTime +=
+        aDesc.lastSliceEnd(aCx) - aDesc.lastSliceStart(aCx);
 
       // Schedule another GC slice if the GC has more work to do.
       nsJSContext::KillInterSliceGCRunner();

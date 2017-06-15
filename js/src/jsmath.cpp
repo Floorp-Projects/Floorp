@@ -131,7 +131,7 @@ static const JSConstDoubleSpec math_constants[] = {
     {"PI"     ,  M_PI      },
     {"SQRT2"  ,  M_SQRT2   },
     {"SQRT1_2",  M_SQRT1_2 },
-    {0,0}
+    {nullptr  ,  0         }
 };
 
 MathCache::MathCache() {

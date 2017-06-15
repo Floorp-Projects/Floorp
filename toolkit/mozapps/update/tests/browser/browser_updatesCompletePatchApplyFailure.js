@@ -1,8 +1,7 @@
 add_task(async function testCompletePatchApplyFailure() {
-  let patches = getLocalPatchString("complete", null, null, null, null, null,
-                                    STATE_PENDING);
-  let updates = getLocalUpdateString(patches, null, null, null,
-                                     Services.appinfo.version, null);
+  let patchProps = {state: STATE_PENDING};
+  let patches = getLocalPatchString(patchProps);
+  let updates = getLocalUpdateString({}, patches);
 
   await runUpdateProcessingTest(updates, [
     {
