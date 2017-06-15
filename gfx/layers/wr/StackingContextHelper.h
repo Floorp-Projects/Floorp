@@ -66,10 +66,6 @@ public:
   // Same but rounds the rectangle to ints after transforming.
   WrRect ToRelativeWrRectRounded(const LayoutDeviceRect& aRect) const;
 
-  // Produce a transform that converts points from the coordinate space of this
-  // stacking context to the coordinate space of the root of the layer tree.
-  gfx::Matrix4x4 TransformToRoot() const;
-
 private:
   wr::DisplayListBuilder* mBuilder;
   LayerPoint mOrigin;
