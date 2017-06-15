@@ -611,8 +611,14 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
     }
     case eStyleImageType_Image:
     {
+      // XXX(aosmond): We will support downscale-on-decode in bug 1368776. Until
+      // then, don't pass FLAG_HIGH_QUALITY_SCALING.
+      uint32_t containerFlags = imgIContainer::FLAG_NONE;
+      if (mFlags & nsImageRenderer::FLAG_SYNC_DECODE_IMAGES) {
+        containerFlags |= imgIContainer::FLAG_SYNC_DECODE;
+      }
       RefPtr<layers::ImageContainer> container = mImageContainer->GetImageContainer(aLayer->WrManager(),
-                                                                                    ConvertImageRendererToDrawFlags(mFlags));
+                                                                                    containerFlags);
       if (!container) {
         NS_WARNING("Failed to get image container");
         return DrawResult::NOT_READY;

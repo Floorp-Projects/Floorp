@@ -10,60 +10,65 @@
 #include "js/HeapAPI.h"
 
 namespace JS {
-template <typename T> class WeakCache;
+namespace detail {
+class WeakCacheBase;
+} // namespace detail
 
 namespace shadow {
 JS_PUBLIC_API(void)
-RegisterWeakCache(JS::Zone* zone, JS::WeakCache<void*>* cachep);
+RegisterWeakCache(JS::Zone* zone, JS::detail::WeakCacheBase* cachep);
 JS_PUBLIC_API(void)
-RegisterWeakCache(JSRuntime* rt, JS::WeakCache<void*>* cachep);
+RegisterWeakCache(JSRuntime* rt, JS::detail::WeakCacheBase* cachep);
 } // namespace shadow
+
+namespace detail {
+class WeakCacheBase : public mozilla::LinkedListElement<WeakCacheBase>
+{
+    WeakCacheBase() = delete;
+    explicit WeakCacheBase(const WeakCacheBase&) = delete;
+
+  public:
+    explicit WeakCacheBase(Zone* zone) {
+        shadow::RegisterWeakCache(zone, this);
+    }
+    explicit WeakCacheBase(JSRuntime* rt) {
+        shadow::RegisterWeakCache(rt, this);
+    }
+    WeakCacheBase(WeakCacheBase&& other) = default;
+    virtual ~WeakCacheBase() {}
+
+    virtual void sweep() = 0;
+};
+} // namespace detail
 
 // A WeakCache stores the given Sweepable container and links itself into a
 // list of such caches that are swept during each GC. A WeakCache can be
 // specific to a zone, or across a whole runtime, depending on which
 // constructor is used.
 template <typename T>
-class WeakCache : public js::MutableWrappedPtrOperations<T, WeakCache<T>>,
-                  private mozilla::LinkedListElement<WeakCache<T>>
+class WeakCache : protected detail::WeakCacheBase,
+                  public js::MutableWrappedPtrOperations<T, WeakCache<T>>
 {
-    friend class mozilla::LinkedListElement<WeakCache<T>>;
-    friend class mozilla::LinkedList<WeakCache<T>>;
-
-    WeakCache() = delete;
-    WeakCache(const WeakCache&) = delete;
-
-    using SweepFn = void (*)(T*);
-    SweepFn sweeper;
     T cache;
 
   public:
     using Type = T;
 
-    template <typename U>
-    WeakCache(Zone* zone, U&& initial)
-      : cache(mozilla::Forward<U>(initial))
-    {
-        sweeper = GCPolicy<T>::sweep;
-        shadow::RegisterWeakCache(zone, reinterpret_cast<WeakCache<void*>*>(this));
-    }
-    template <typename U>
-    WeakCache(JSRuntime* rt, U&& initial)
-      : cache(mozilla::Forward<U>(initial))
-    {
-        sweeper = GCPolicy<T>::sweep;
-        shadow::RegisterWeakCache(rt, reinterpret_cast<WeakCache<void*>*>(this));
-    }
-    WeakCache(WeakCache&& other)
-      : sweeper(other.sweeper),
-        cache(mozilla::Move(other.cache))
-    {
-    }
+    template <typename... Args>
+    explicit WeakCache(Zone* zone, Args&&... args)
+      : WeakCacheBase(zone), cache(mozilla::Forward<Args>(args)...)
+    {}
+    template <typename... Args>
+    explicit WeakCache(JSRuntime* rt, Args&&... args)
+      : WeakCacheBase(rt), cache(mozilla::Forward<Args>(args)...)
+    {}
 
     const T& get() const { return cache; }
     T& get() { return cache; }
 
-    void sweep() { sweeper(&cache); }
+    void sweep() override {
+        GCPolicy<T>::sweep(&cache);
+    }
 };
 
 } // namespace JS

@@ -471,7 +471,7 @@ CacheFileHandles::RemoveHandle(CacheFileHandle *aHandle)
   if (entry->IsEmpty()) {
     LOG(("CacheFileHandles::RemoveHandle() hash=%08x%08x%08x%08x%08x "
          "list is empty, removing entry %p", LOGSHA1(entry->Hash()), entry));
-    mTable.RemoveEntry(*entry->Hash());
+    mTable.RemoveEntry(entry);
   }
 }
 

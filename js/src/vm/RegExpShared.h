@@ -255,8 +255,8 @@ class RegExpCompartment
      * The set of all RegExpShareds in the compartment. On every GC, every
      * RegExpShared that was not marked is deleted and removed from the set.
      */
-    using Set = JS::GCHashSet<ReadBarriered<RegExpShared*>, Key, RuntimeAllocPolicy>;
-    JS::WeakCache<Set> set_;
+    using Set = JS::WeakCache<JS::GCHashSet<ReadBarriered<RegExpShared*>, Key, RuntimeAllocPolicy>>;
+    Set set_;
 
     /*
      * This is the template object where the result of re.exec() is based on,

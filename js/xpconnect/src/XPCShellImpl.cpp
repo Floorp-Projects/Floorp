@@ -49,6 +49,10 @@
 #endif
 #endif
 
+#ifdef MOZ_CODE_COVERAGE
+#include "mozilla/CodeCoverageHandler.h"
+#endif
+
 // all this crap is needed to do the interactive shell stuff
 #include <stdlib.h>
 #include <errno.h>
@@ -801,7 +805,7 @@ env_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
 
 static const JSClassOps env_classOps = {
     nullptr, nullptr, nullptr, env_setProperty,
-    env_enumerate, env_resolve
+    env_enumerate, nullptr, env_resolve
 };
 
 static const JSClass env_class = {
@@ -1468,6 +1472,10 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
                      "processes will fail to start.");
         }
 #endif
+#endif
+
+#ifdef MOZ_CODE_COVERAGE
+        CodeCoverageHandler::Init();
 #endif
 
         {

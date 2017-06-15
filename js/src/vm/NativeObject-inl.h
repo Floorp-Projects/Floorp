@@ -500,6 +500,36 @@ NativeObject::create(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap 
     return nobj;
 }
 
+MOZ_ALWAYS_INLINE uint32_t
+NativeObject::numDynamicSlots() const
+{
+    return dynamicSlotsCount(numFixedSlots(), slotSpan(), getClass());
+}
+
+/* static */ MOZ_ALWAYS_INLINE uint32_t
+NativeObject::dynamicSlotsCount(uint32_t nfixed, uint32_t span, const Class* clasp)
+{
+    if (span <= nfixed)
+        return 0;
+    span -= nfixed;
+
+    // Increase the slots to SLOT_CAPACITY_MIN to decrease the likelihood
+    // the dynamic slots need to get increased again. ArrayObjects ignore
+    // this because slots are uncommon in that case.
+    if (clasp != &ArrayObject::class_ && span <= SLOT_CAPACITY_MIN)
+        return SLOT_CAPACITY_MIN;
+
+    uint32_t slots = mozilla::RoundUpPow2(span);
+    MOZ_ASSERT(slots >= span);
+    return slots;
+}
+
+/* static */ MOZ_ALWAYS_INLINE uint32_t
+NativeObject::dynamicSlotsCount(Shape* shape)
+{
+    return dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan(), shape->getObjectClass());
+}
+
 MOZ_ALWAYS_INLINE bool
 NativeObject::updateSlotsForSpan(JSContext* cx, size_t oldSpan, size_t newSpan)
 {

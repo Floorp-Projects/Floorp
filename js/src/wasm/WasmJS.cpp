@@ -483,6 +483,7 @@ const ClassOps WasmModuleObject::classOps_ =
     nullptr, /* getProperty */
     nullptr, /* setProperty */
     nullptr, /* enumerate */
+    nullptr, /* newEnumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
     WasmModuleObject::finalize
@@ -928,6 +929,7 @@ const ClassOps WasmInstanceObject::classOps_ =
     nullptr, /* getProperty */
     nullptr, /* setProperty */
     nullptr, /* enumerate */
+    nullptr, /* newEnumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
     WasmInstanceObject::finalize,
@@ -1020,7 +1022,7 @@ WasmInstanceObject::create(JSContext* cx,
         return nullptr;
     }
 
-    UniquePtr<WeakScopeMap> scopes = js::MakeUnique<WeakScopeMap>(cx->zone(), ScopeMap());
+    UniquePtr<WeakScopeMap> scopes = js::MakeUnique<WeakScopeMap>(cx->zone());
     if (!scopes || !scopes->init()) {
         ReportOutOfMemory(cx);
         return nullptr;
@@ -1288,6 +1290,7 @@ const ClassOps WasmMemoryObject::classOps_ =
     nullptr, /* getProperty */
     nullptr, /* setProperty */
     nullptr, /* enumerate */
+    nullptr, /* newEnumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
     WasmMemoryObject::finalize
@@ -1448,7 +1451,7 @@ WasmMemoryObject::WeakInstanceSet*
 WasmMemoryObject::getOrCreateObservers(JSContext* cx)
 {
     if (!hasObservers()) {
-        auto observers = MakeUnique<WeakInstanceSet>(cx->zone(), InstanceSet());
+        auto observers = MakeUnique<WeakInstanceSet>(cx->zone());
         if (!observers || !observers->init()) {
             ReportOutOfMemory(cx);
             return nullptr;
@@ -1545,6 +1548,7 @@ const ClassOps WasmTableObject::classOps_ =
     nullptr, /* getProperty */
     nullptr, /* setProperty */
     nullptr, /* enumerate */
+    nullptr, /* newEnumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
     WasmTableObject::finalize,

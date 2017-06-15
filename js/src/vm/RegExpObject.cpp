@@ -198,6 +198,7 @@ static const ClassOps RegExpObjectClassOps = {
     nullptr, /* getProperty */
     nullptr, /* setProperty */
     nullptr, /* enumerate */
+    nullptr, /* newEnumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
     nullptr, /* finalize */
@@ -1193,7 +1194,7 @@ RegExpShared::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 /* RegExpCompartment */
 
 RegExpCompartment::RegExpCompartment(Zone* zone)
-  : set_(zone, Set(zone->runtimeFromActiveCooperatingThread())),
+  : set_(zone, zone->runtimeFromActiveCooperatingThread()),
     matchResultTemplateObject_(nullptr),
     optimizableRegExpPrototypeShape_(nullptr),
     optimizableRegExpInstanceShape_(nullptr)
@@ -1293,7 +1294,7 @@ bool
 RegExpCompartment::get(JSContext* cx, HandleAtom source, RegExpFlag flags,
                        MutableHandleRegExpShared result)
 {
-    DependentAddPtr<Set> p(cx, set_.get(), Key(source, flags));
+    DependentAddPtr<Set> p(cx, set_, Key(source, flags));
     if (p) {
         result.set(*p);
         return true;
@@ -1305,7 +1306,7 @@ RegExpCompartment::get(JSContext* cx, HandleAtom source, RegExpFlag flags,
 
     new (shared) RegExpShared(source, flags);
 
-    if (!p.add(cx, set_.get(), Key(source, flags), shared)) {
+    if (!p.add(cx, set_, Key(source, flags), shared)) {
         ReportOutOfMemory(cx);
         return false;
     }

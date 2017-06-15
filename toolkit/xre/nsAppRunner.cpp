@@ -224,6 +224,10 @@
 #endif
 #endif
 
+#ifdef MOZ_CODE_COVERAGE
+#include "mozilla/CodeCoverageHandler.h"
+#endif
+
 extern uint32_t gRestartMode;
 extern void InstallSignalHandlers(const char *ProgramName);
 
@@ -4628,6 +4632,10 @@ XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig)
 
 #if defined(MOZ_SANDBOX) && defined(XP_LINUX) && !defined(ANDROID)
   SandboxInfo::ThreadingCheck();
+#endif
+
+#ifdef MOZ_CODE_COVERAGE
+  CodeCoverageHandler::Init();
 #endif
 
   char aLocal;

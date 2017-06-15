@@ -2026,12 +2026,11 @@ Console::StartTimer(JSContext* aCx, const JS::Value& aName,
 
   aTimerLabel = label;
 
-  DOMHighResTimeStamp entry = 0;
-  if (mTimerRegistry.Get(label, &entry)) {
+  auto entry = mTimerRegistry.LookupForAdd(label);
+  if (entry) {
     return eTimerAlreadyExists;
   }
-
-  mTimerRegistry.Put(label, aTimestamp);
+  entry.OrInsert([&aTimestamp](){ return aTimestamp; });
 
   *aTimerValue = aTimestamp;
   return eTimerDone;
@@ -2084,11 +2083,17 @@ Console::StopTimer(JSContext* aCx, const JS::Value& aName,
   aTimerLabel = key;
 
   DOMHighResTimeStamp entry = 0;
-  if (NS_WARN_IF(!mTimerRegistry.Get(key, &entry))) {
+  bool found = false;
+  mTimerRegistry.LookupRemoveIf(key,
+    [&found, &entry] (const DOMHighResTimeStamp& aValue) {
+      entry = aValue;
+      found = true;
+      return true;  // remove it
+    });
+
+  if (NS_WARN_IF(!found)) {
     return eTimerDoesntExist;
   }
-
-  mTimerRegistry.Remove(key);
 
   *aTimerDuration = aTimestamp - entry;
   return eTimerDone;
@@ -2190,15 +2195,19 @@ Console::IncreaseCounter(JSContext* aCx, const Sequence<JS::Value>& aArguments,
 
   aCountLabel = string;
 
-  uint32_t count = 0;
-  if (!mCounterRegistry.Get(aCountLabel, &count) &&
-      mCounterRegistry.Count() >= MAX_PAGE_COUNTERS) {
-    return MAX_PAGE_COUNTERS;
+  const bool maxCountersReached = mCounterRegistry.Count() >= MAX_PAGE_COUNTERS;
+  auto entry = mCounterRegistry.LookupForAdd(aCountLabel);
+  if (entry) {
+    ++entry.Data();
+  } else {
+    entry.OrInsert([](){ return 1; });
+    if (maxCountersReached) {
+      // oops, we speculatively added an entry even though we shouldn't
+      mCounterRegistry.Remove(aCountLabel);
+      return MAX_PAGE_COUNTERS;
+    }
   }
-
-  ++count;
-  mCounterRegistry.Put(aCountLabel, count);
-  return count;
+  return entry.Data();
 }
 
 JS::Value

@@ -39,6 +39,7 @@ class IAPZCTreeManager;
 class APZCTreeManagerChild;
 class ClientLayerManager;
 class CompositorBridgeParent;
+class CompositorManagerChild;
 class CompositorOptions;
 class TextureClient;
 class TextureClientPool;
@@ -52,7 +53,16 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorBridgeChild, override);
 
-  explicit CompositorBridgeChild(LayerManager *aLayerManager, uint32_t aNamespace);
+  explicit CompositorBridgeChild(CompositorManagerChild* aManager);
+
+  /**
+   * Initialize the singleton compositor bridge for a content process.
+   */
+  void InitForContent(uint32_t aNamespace);
+
+  void InitForWidget(uint64_t aProcessToken,
+                     LayerManager* aLayerManager,
+                     uint32_t aNamespace);
 
   void Destroy();
 
@@ -62,30 +72,6 @@ public:
    * in progressive paint calculations.
    */
   bool LookupCompositorFrameMetrics(const FrameMetrics::ViewID aId, FrameMetrics&);
-
-  /**
-   * Initialize the singleton compositor bridge for a content process.
-   */
-  static bool InitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoint, uint32_t aNamespace);
-  static bool ReinitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoint, uint32_t aNamespace);
-
-  static RefPtr<CompositorBridgeChild> CreateRemote(
-    const uint64_t& aProcessToken,
-    LayerManager* aLayerManager,
-    Endpoint<PCompositorBridgeChild>&& aEndpoint,
-    uint32_t aNamespace);
-
-  /**
-   * Initialize the CompositorBridgeChild, create CompositorBridgeParent, and
-   * open a same-process connection.
-   */
-  CompositorBridgeParent* InitSameProcess(
-    widget::CompositorWidget* aWidget,
-    const uint64_t& aLayerTreeId,
-    CSSToLayoutDeviceScale aScale,
-    const CompositorOptions& aOptions,
-    bool aUseExternalSurface,
-    const gfx::IntSize& aSurfaceSize);
 
   static CompositorBridgeChild* Get();
 
@@ -131,8 +117,6 @@ public:
                                        uint64_t aSerial,
                                        wr::MaybeExternalImageId& aExternalImageId,
                                        nsIEventTarget* aTarget) override;
-
-  virtual void HandleFatalError(const char* aName, const char* aMsg) const override;
 
   /**
    * Request that the parent tell us when graphics are ready on GPU.
@@ -219,8 +203,6 @@ public:
   PAPZChild* AllocPAPZChild(const uint64_t& aLayersId) override;
   bool DeallocPAPZChild(PAPZChild* aActor) override;
 
-  void ProcessingError(Result aCode, const char* aReason) override;
-
   void WillEndTransaction();
 
   PWebRenderBridgeChild* AllocPWebRenderBridgeChild(const wr::PipelineId& aPipelineId,
@@ -241,8 +223,7 @@ private:
   // Private destructor, to discourage deletion outside of Release():
   virtual ~CompositorBridgeChild();
 
-  void InitIPDL();
-  void DeallocPCompositorBridgeChild() override;
+  void AfterDestroy();
 
   virtual PLayerTransactionChild*
     AllocPLayerTransactionChild(const nsTArray<LayersBackend>& aBackendHints,
@@ -266,9 +247,6 @@ private:
   mozilla::ipc::IPCResult RecvObserveLayerUpdate(const uint64_t& aLayersId,
                                                  const uint64_t& aEpoch,
                                                  const bool& aActive) override;
-
-  already_AddRefed<nsIEventTarget>
-  GetSpecificMessageEventTarget(const Message& aMsg) override;
 
   uint64_t GetNextResourceId();
 
@@ -298,6 +276,8 @@ private:
     uint32_t mAPZCId;
   };
 
+  RefPtr<CompositorManagerChild> mCompositorManager;
+
   RefPtr<LayerManager> mLayerManager;
 
   uint32_t mIdNamespace;
@@ -319,6 +299,9 @@ private:
 
   // True until the beginning of the two-step shutdown sequence of this actor.
   bool mCanSend;
+
+  // False until the actor is destroyed.
+  bool mActorDestroyed;
 
   /**
    * Transaction id of ShadowLayerForwarder.

@@ -64,11 +64,9 @@ BroadcastChannelService::RegisterActor(BroadcastChannelParent* aParent,
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParent);
 
-  nsTArray<BroadcastChannelParent*>* parents;
-  if (!mAgents.Get(aOriginChannelKey, &parents)) {
-    parents = new nsTArray<BroadcastChannelParent*>();
-    mAgents.Put(aOriginChannelKey, parents);
-  }
+  nsTArray<BroadcastChannelParent*>* parents =
+    mAgents.LookupForAdd(aOriginChannelKey).OrInsert(
+      [] () { return new nsTArray<BroadcastChannelParent*>(); });
 
   MOZ_ASSERT(!parents->Contains(aParent));
   parents->AppendElement(aParent);
@@ -81,15 +79,14 @@ BroadcastChannelService::UnregisterActor(BroadcastChannelParent* aParent,
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParent);
 
-  nsTArray<BroadcastChannelParent*>* parents;
-  if (!mAgents.Get(aOriginChannelKey, &parents)) {
-    MOZ_CRASH("Invalid state");
-  }
-
-  parents->RemoveElement(aParent);
-  if (parents->IsEmpty()) {
-    mAgents.Remove(aOriginChannelKey);
-  }
+  DebugOnly<bool> found = false;
+  mAgents.LookupRemoveIf(aOriginChannelKey,
+    [&found, aParent] (nsTArray<BroadcastChannelParent*>* aValue) {
+      found = true;
+      aValue->RemoveElement(aParent);
+      return aValue->IsEmpty();  // remove the entry if the array is now empty
+    });
+  MOZ_ASSERT(found, "Invalid state");
 }
 
 void
