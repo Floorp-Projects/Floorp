@@ -11,6 +11,7 @@ const MOCK_DOC = MockDocument.createTestDocument("http://localhost:8080/test/",
                       <input id="tel" autocomplete="tel">
                       <input id="submit" type="submit">
                     </form>`);
+const TARGET_ELEMENT_ID = "street-addr";
 
 const TESTCASES = [
   {
@@ -110,7 +111,8 @@ TESTCASES.forEach(testcase => {
     }
     sinon.stub(FormAutofillContent, "_onFormSubmit");
 
-    FormAutofillContent.identifyAutofillFields(MOCK_DOC);
+    let element = MOCK_DOC.getElementById(TARGET_ELEMENT_ID);
+    FormAutofillContent.identifyAutofillFields(element);
     FormAutofillContent.notify(form);
 
     do_check_eq(FormAutofillContent._onFormSubmit.called,
