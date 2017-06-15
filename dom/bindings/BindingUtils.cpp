@@ -1984,6 +1984,7 @@ const js::ClassOps sBoringInterfaceObjectClassClassOps = {
     nullptr,               /* getProperty */
     nullptr,               /* setProperty */
     nullptr,               /* enumerate */
+    nullptr,               /* newEnumerate */
     nullptr,               /* resolve */
     nullptr,               /* mayResolve */
     nullptr,               /* finalize */
@@ -2004,7 +2005,6 @@ const js::ObjectOps sInterfaceObjectClassObjectOps = {
   nullptr, /* watch */
   nullptr, /* unwatch */
   nullptr, /* getElements */
-  nullptr, /* enumerate */
   InterfaceObjectToString, /* funToString */
 };
 
@@ -2721,13 +2721,15 @@ MayResolveGlobal(const JSAtomState& aNames, jsid aId, JSObject* aMaybeObj)
 }
 
 bool
-EnumerateGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj)
+EnumerateGlobal(JSContext* aCx, JS::HandleObject aObj,
+                JS::AutoIdVector& aProperties, bool aEnumerableOnly)
 {
   MOZ_ASSERT(JS_IsGlobalObject(aObj),
              "Should have a global here, since we plan to enumerate standard "
              "classes!");
 
-  return JS_EnumerateStandardClasses(aCx, aObj);
+  return JS_NewEnumerateStandardClasses(aCx, aObj, aProperties,
+                                        aEnumerableOnly);
 }
 
 bool
@@ -3224,7 +3226,7 @@ bool
 SystemGlobalEnumerate(JSContext* cx, JS::Handle<JSObject*> obj)
 {
   bool ignored = false;
-  return EnumerateGlobal(cx, obj) &&
+  return JS_EnumerateStandardClasses(cx, obj) &&
          ResolveSystemBinding(cx, obj, JSID_VOIDHANDLE, &ignored);
 }
 

@@ -399,6 +399,7 @@ static const ClassOps SharedArrayBufferObjectClassOps = {
     nullptr, /* getProperty */
     nullptr, /* setProperty */
     nullptr, /* enumerate */
+    nullptr, /* newEnumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
     SharedArrayBufferObject::Finalize,

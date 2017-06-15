@@ -1646,13 +1646,13 @@ RuntimeService::RegisterWorker(WorkerPrivate* aWorkerPrivate)
   {
     MutexAutoLock lock(mMutex);
 
-    if (!mDomainMap.Get(domain, &domainInfo)) {
-      NS_ASSERTION(!parent, "Shouldn't have a parent here!");
-
-      domainInfo = new WorkerDomainInfo();
-      domainInfo->mDomain = domain;
-      mDomainMap.Put(domain, domainInfo);
-    }
+    domainInfo = mDomainMap.LookupForAdd(domain).OrInsert(
+      [&domain, parent] () {
+        NS_ASSERTION(!parent, "Shouldn't have a parent here!");
+        WorkerDomainInfo* wdi = new WorkerDomainInfo();
+        wdi->mDomain = domain;
+        return wdi;
+      });
 
     queued = gMaxWorkersPerDomain &&
              domainInfo->ActiveWorkerCount() >= gMaxWorkersPerDomain &&
@@ -1728,12 +1728,9 @@ RuntimeService::RegisterWorker(WorkerPrivate* aWorkerPrivate)
     if (!isServiceWorker) {
       // Service workers are excluded since their lifetime is separate from
       // that of dom windows.
-      nsTArray<WorkerPrivate*>* windowArray;
-      if (!mWindowMap.Get(window, &windowArray)) {
-        windowArray = new nsTArray<WorkerPrivate*>(1);
-        mWindowMap.Put(window, windowArray);
-      }
-
+      nsTArray<WorkerPrivate*>* windowArray =
+        mWindowMap.LookupForAdd(window).OrInsert(
+          [] () { return new nsTArray<WorkerPrivate*>(1); });
       if (!windowArray->Contains(aWorkerPrivate)) {
         windowArray->AppendElement(aWorkerPrivate);
       } else {
@@ -1879,14 +1876,14 @@ RuntimeService::UnregisterWorker(WorkerPrivate* aWorkerPrivate)
     // May be null.
     nsPIDOMWindowInner* window = aWorkerPrivate->GetWindow();
 
-    nsTArray<WorkerPrivate*>* windowArray;
-    MOZ_ALWAYS_TRUE(mWindowMap.Get(window, &windowArray));
-
-    MOZ_ALWAYS_TRUE(windowArray->RemoveElement(aWorkerPrivate));
-
-    if (windowArray->IsEmpty()) {
-      mWindowMap.Remove(window);
-    }
+    DebugOnly<bool> found = false;
+    mWindowMap.LookupRemoveIf(window,
+      [&aWorkerPrivate, &found] (nsTArray<WorkerPrivate*>* aWindowArray) {
+        MOZ_ALWAYS_TRUE(aWindowArray->RemoveElement(aWorkerPrivate));
+        found = true;
+        return aWindowArray->IsEmpty();  // remove it if empty
+      });
+    MOZ_ASSERT(found, "window is not in mWindowMap");
   }
 
   if (queuedWorker && !ScheduleWorker(queuedWorker)) {

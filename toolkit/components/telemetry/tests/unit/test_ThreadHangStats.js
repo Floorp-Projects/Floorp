@@ -84,20 +84,17 @@ function run_test() {
       notEqual(endHangs.hangs[0].stack.length, 0);
       equal(typeof endHangs.hangs[0].stack[0], "string");
 
-      // Native stack gathering is only enabled on Windows x86.
-      if (mozinfo.os == "win" && mozinfo.bits == 32) {
-        // Make sure there is a nativeStacks field with native stacks in it.
-        ok(Array.isArray(endHangs.nativeStacks.memoryMap));
-        ok(Array.isArray(endHangs.nativeStacks.stacks));
-        ok(endHangs.nativeStacks.stacks.length > 0);
+      // Make sure there is a nativeStacks field with native stacks in it.
+      ok(Array.isArray(endHangs.nativeStacks.memoryMap));
+      ok(Array.isArray(endHangs.nativeStacks.stacks));
+      ok(endHangs.nativeStacks.stacks.length > 0);
 
-        // Make sure that at least one of the hangs contains a native stack.
-        ok(endHangs.hangs.some((hang) => {
-          return typeof hang.nativeStack == "number" &&
-            hang.nativeStack < endHangs.nativeStacks.stacks.length &&
-            Array.isArray(endHangs.nativeStacks.stacks[hang.nativeStack]);
-        }));
-      }
+      // Make sure that at least one of the hangs contains a native stack.
+      ok(endHangs.hangs.some((hang) => {
+        return typeof hang.nativeStack == "number" &&
+          hang.nativeStack < endHangs.nativeStacks.stacks.length &&
+          Array.isArray(endHangs.nativeStacks.stacks[hang.nativeStack]);
+      }));
 
       check_histogram(endHangs.hangs[0].histogram);
 

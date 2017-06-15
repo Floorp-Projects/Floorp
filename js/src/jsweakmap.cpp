@@ -32,7 +32,7 @@ WeakMapBase::WeakMapBase(JSObject* memOf, Zone* zone)
 
 WeakMapBase::~WeakMapBase()
 {
-    MOZ_ASSERT(CurrentThreadIsGCSweeping());
+    MOZ_ASSERT(CurrentThreadIsGCSweeping() || CurrentThreadCanAccessZone(zone_));
 }
 
 void
@@ -197,7 +197,6 @@ ObjectWeakMap::clear()
 void
 ObjectWeakMap::trace(JSTracer* trc)
 {
-    MOZ_ASSERT(map.initialized());
     map.trace(trc);
 }
 

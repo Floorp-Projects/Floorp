@@ -4330,13 +4330,8 @@ EventStateManager::GetWrapperByEventID(WidgetMouseEvent* aEvent)
     }
     return mMouseEnterLeaveHelper;
   }
-  RefPtr<OverOutElementsWrapper> helper;
-  if (!mPointersEnterLeaveHelper.Get(pointer->pointerId, getter_AddRefs(helper))) {
-    helper = new OverOutElementsWrapper();
-    mPointersEnterLeaveHelper.Put(pointer->pointerId, helper);
-  }
-
-  return helper;
+  return mPointersEnterLeaveHelper.LookupForAdd(pointer->pointerId).OrInsert(
+           [] () { return new OverOutElementsWrapper(); });
 }
 
 /* static */ void

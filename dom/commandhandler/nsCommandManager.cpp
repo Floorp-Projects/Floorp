@@ -102,11 +102,9 @@ nsCommandManager::AddCommandObserver(nsIObserver* aCommandObserver,
   // XXX todo: handle special cases of aCommandToObserve being null, or empty
 
   // for each command in the table, we make a list of observers for that command
-  ObserverList* commandObservers;
-  if (!mObserversTable.Get(aCommandToObserve, &commandObservers)) {
-    commandObservers = new ObserverList;
-    mObserversTable.Put(aCommandToObserve, commandObservers);
-  }
+  ObserverList* commandObservers =
+    mObserversTable.LookupForAdd(aCommandToObserve).OrInsert(
+      [] () { return new ObserverList; });
 
   // need to check that this command observer hasn't already been registered
   int32_t existingIndex = commandObservers->IndexOf(aCommandObserver);

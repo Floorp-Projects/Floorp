@@ -741,9 +741,7 @@ class NativeObject : public ShapedObject
     bool hasDynamicSlots() const { return !!slots_; }
 
     /* Compute dynamicSlotsCount() for this object. */
-    uint32_t numDynamicSlots() const {
-        return dynamicSlotsCount(numFixedSlots(), slotSpan(), getClass());
-    }
+    MOZ_ALWAYS_INLINE uint32_t numDynamicSlots() const;
 
     bool empty() const {
         return lastProperty()->isEmptyShape();
@@ -793,7 +791,7 @@ class NativeObject : public ShapedObject
      * after calling object-parameter-free shape methods, avoiding coupling
      * logic across the object vs. shape module wall.
      */
-    static bool allocSlot(JSContext* cx, HandleNativeObject obj, uint32_t* slotp);
+    static bool allocDictionarySlot(JSContext* cx, HandleNativeObject obj, uint32_t* slotp);
     void freeSlot(JSContext* cx, uint32_t slot);
 
   private:
@@ -1024,10 +1022,9 @@ class NativeObject : public ShapedObject
      * capacity is not stored explicitly, and the allocated size of the slot
      * array is kept in sync with this count.
      */
-    static uint32_t dynamicSlotsCount(uint32_t nfixed, uint32_t span, const Class* clasp);
-    static uint32_t dynamicSlotsCount(Shape* shape) {
-        return dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan(), shape->getObjectClass());
-    }
+    static MOZ_ALWAYS_INLINE uint32_t dynamicSlotsCount(uint32_t nfixed, uint32_t span,
+                                                        const Class* clasp);
+    static MOZ_ALWAYS_INLINE uint32_t dynamicSlotsCount(Shape* shape);
 
     /* Elements accessors. */
 

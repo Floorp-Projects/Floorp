@@ -1117,6 +1117,63 @@ JS_EnumerateStandardClasses(JSContext* cx, HandleObject obj)
     return GlobalObject::initStandardClasses(cx, global);
 }
 
+static bool
+EnumerateUnresolvedStandardClasses(JSContext* cx, Handle<GlobalObject*> global,
+                                   AutoIdVector& properties, const JSStdName* table)
+{
+    for (unsigned i = 0; !table[i].isSentinel(); i++) {
+        if (table[i].isDummy())
+            continue;
+
+        JSProtoKey key = table[i].key;
+
+        // If the standard class has been resolved, the properties have been
+        // defined on the global so we don't need to add them here.
+        if (global->isStandardClassResolved(key))
+            continue;
+
+        if (GlobalObject::skipDeselectedConstructor(cx, key))
+            continue;
+
+        if (const Class* clasp = ProtoKeyToClass(key)) {
+            if (clasp->flags & JSCLASS_IS_ANONYMOUS)
+                continue;
+            if (!clasp->specShouldDefineConstructor())
+                continue;
+        }
+
+        jsid id = NameToId(AtomStateOffsetToName(cx->names(), table[i].atomOffset));
+        if (!properties.append(id))
+            return false;
+    }
+
+    return true;
+}
+
+JS_PUBLIC_API(bool)
+JS_NewEnumerateStandardClasses(JSContext* cx, JS::HandleObject obj, JS::AutoIdVector& properties,
+                               bool enumerableOnly)
+{
+    if (enumerableOnly) {
+        // There are no enumerable lazy properties.
+        return true;
+    }
+
+    Handle<GlobalObject*> global = obj.as<GlobalObject>();
+
+    // It's fine to always append |undefined| here, it's non-configurable and
+    // the enumeration code filters duplicates.
+    if (!properties.append(NameToId(cx->names().undefined)))
+        return false;
+
+    if (!EnumerateUnresolvedStandardClasses(cx, global, properties, standard_class_names))
+        return false;
+    if (!EnumerateUnresolvedStandardClasses(cx, global, properties, builtin_property_names))
+        return false;
+
+    return true;
+}
+
 JS_PUBLIC_API(bool)
 JS_GetClassObject(JSContext* cx, JSProtoKey key, MutableHandleObject objp)
 {

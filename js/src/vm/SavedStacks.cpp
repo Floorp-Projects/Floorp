@@ -310,6 +310,7 @@ static const ClassOps SavedFrameClassOps = {
     nullptr,                    // getProperty
     nullptr,                    // setProperty
     nullptr,                    // enumerate
+    nullptr,                    // newEnumerate
     nullptr,                    // resolve
     nullptr,                    // mayResolve
     SavedFrame::finalize,       // finalize

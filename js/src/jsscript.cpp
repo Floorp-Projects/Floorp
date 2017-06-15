@@ -1381,6 +1381,7 @@ static const ClassOps ScriptSourceObjectClassOps = {
     nullptr, /* getProperty */
     nullptr, /* setProperty */
     nullptr, /* enumerate */
+    nullptr, /* newEnumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
     ScriptSourceObject::finalize,
