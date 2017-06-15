@@ -84,7 +84,7 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
   if (layer->GetIsFixedPosition()) {
     FrameMetrics::ViewID fixedFor = layer->GetFixedPositionScrollContainerId();
     Maybe<FrameMetrics::ViewID> scrollsWith = mBuilder->ParentScrollIdFor(fixedFor);
-    Maybe<wr::WrClipId> clipId = mBuilder->TopmostClipId();
+    Maybe<uint64_t> clipId = mBuilder->TopmostClipId();
     // Default to 0 if there is no ancestor, because 0 refers to the root scrollframe.
     mBuilder->PushClipAndScrollInfo(scrollsWith.valueOr(0), clipId.ptrOr(nullptr));
   }
