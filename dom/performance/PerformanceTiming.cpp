@@ -35,7 +35,8 @@ PerformanceTiming::PerformanceTiming(Performance* aPerformance,
 {
   MOZ_ASSERT(aPerformance, "Parent performance object should be provided");
 
-  if (!nsContentUtils::IsPerformanceTimingEnabled()) {
+  if (!nsContentUtils::IsPerformanceTimingEnabled() ||
+      nsContentUtils::ShouldResistFingerprinting()) {
     mZeroTime = 0;
   }
 
@@ -94,7 +95,8 @@ DOMHighResTimeStamp
 PerformanceTiming::FetchStartHighRes()
 {
   if (!mFetchStart) {
-    if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
+    if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized() ||
+        nsContentUtils::ShouldResistFingerprinting()) {
       return mZeroTime;
     }
     MOZ_ASSERT(!mAsyncOpen.IsNull(), "The fetch start time stamp should always be "
@@ -151,7 +153,8 @@ PerformanceTiming::TimingAllowed() const
 uint16_t
 PerformanceTiming::GetRedirectCount() const
 {
-  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
+  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized() ||
+      nsContentUtils::ShouldResistFingerprinting()) {
     return 0;
   }
   if (!mAllRedirectsSameOrigin) {
@@ -163,7 +166,8 @@ PerformanceTiming::GetRedirectCount() const
 bool
 PerformanceTiming::ShouldReportCrossOriginRedirect() const
 {
-  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
+  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized() ||
+      nsContentUtils::ShouldResistFingerprinting()) {
     return false;
   }
 
@@ -186,7 +190,8 @@ PerformanceTiming::ShouldReportCrossOriginRedirect() const
 DOMHighResTimeStamp
 PerformanceTiming::RedirectStartHighRes()
 {
-  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
+  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized() ||
+      nsContentUtils::ShouldResistFingerprinting()) {
     return mZeroTime;
   }
   return TimeStampToDOMHighResOrFetchStart(mRedirectStart);
@@ -219,7 +224,8 @@ PerformanceTiming::RedirectStart()
 DOMHighResTimeStamp
 PerformanceTiming::RedirectEndHighRes()
 {
-  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
+  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized() ||
+      nsContentUtils::ShouldResistFingerprinting()) {
     return mZeroTime;
   }
   return TimeStampToDOMHighResOrFetchStart(mRedirectEnd);
@@ -242,7 +248,8 @@ PerformanceTiming::RedirectEnd()
 DOMHighResTimeStamp
 PerformanceTiming::DomainLookupStartHighRes()
 {
-  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
+  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized() ||
+      nsContentUtils::ShouldResistFingerprinting()) {
     return mZeroTime;
   }
   return TimeStampToDOMHighResOrFetchStart(mDomainLookupStart);
@@ -257,7 +264,8 @@ PerformanceTiming::DomainLookupStart()
 DOMHighResTimeStamp
 PerformanceTiming::DomainLookupEndHighRes()
 {
-  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
+  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized() ||
+      nsContentUtils::ShouldResistFingerprinting()) {
     return mZeroTime;
   }
   // Bug 1155008 - nsHttpTransaction is racy. Return DomainLookupStart when null
@@ -274,7 +282,8 @@ PerformanceTiming::DomainLookupEnd()
 DOMHighResTimeStamp
 PerformanceTiming::ConnectStartHighRes()
 {
-  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
+  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized() ||
+      nsContentUtils::ShouldResistFingerprinting()) {
     return mZeroTime;
   }
   return mConnectStart.IsNull() ? DomainLookupEndHighRes()
@@ -290,7 +299,8 @@ PerformanceTiming::ConnectStart()
 DOMHighResTimeStamp
 PerformanceTiming::ConnectEndHighRes()
 {
-  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
+  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized() ||
+      nsContentUtils::ShouldResistFingerprinting()) {
     return mZeroTime;
   }
   // Bug 1155008 - nsHttpTransaction is racy. Return ConnectStart when null
@@ -307,7 +317,8 @@ PerformanceTiming::ConnectEnd()
 DOMHighResTimeStamp
 PerformanceTiming::RequestStartHighRes()
 {
-  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
+  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized() ||
+      nsContentUtils::ShouldResistFingerprinting()) {
     return mZeroTime;
   }
   return TimeStampToDOMHighResOrFetchStart(mRequestStart);
@@ -322,7 +333,8 @@ PerformanceTiming::RequestStart()
 DOMHighResTimeStamp
 PerformanceTiming::ResponseStartHighRes()
 {
-  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
+  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized() ||
+      nsContentUtils::ShouldResistFingerprinting()) {
     return mZeroTime;
   }
   if (mResponseStart.IsNull() ||
@@ -341,7 +353,8 @@ PerformanceTiming::ResponseStart()
 DOMHighResTimeStamp
 PerformanceTiming::ResponseEndHighRes()
 {
-  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
+  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized() ||
+      nsContentUtils::ShouldResistFingerprinting()) {
     return mZeroTime;
   }
   if (mResponseEnd.IsNull() ||
