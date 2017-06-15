@@ -86,6 +86,7 @@ const {
   promiseSetExtensionModifiedTime,
   promiseShutdownManager,
   promiseStartupManager,
+  promiseWebExtensionStartup,
   promiseWriteProxyFileToDir,
   registerDirectory,
   setExtensionModifiedTime,
@@ -1065,19 +1066,6 @@ function installAllFiles(aFiles, aCallback, aIgnoreIncompatible) {
 const EXTENSIONS_DB = "extensions.json";
 var gExtensionsJSON = gProfD.clone();
 gExtensionsJSON.append(EXTENSIONS_DB);
-
-function promiseWebExtensionStartup() {
-  const {Management} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
-
-  return new Promise(resolve => {
-    let listener = (evt, extension) => {
-      Management.off("ready", listener);
-      resolve(extension);
-    };
-
-    Management.on("ready", listener);
-  });
-}
 
 function promiseInstallWebExtension(aData) {
   let addonFile = createTempWebExtensionFile(aData);

@@ -20,18 +20,6 @@ const {
   EmbeddedExtensionManager,
 } = Components.utils.import("resource://gre/modules/LegacyExtensionsUtils.jsm", {});
 
-// Wait the startup of the embedded webextension.
-function promiseWebExtensionStartup() {
-  return new Promise(resolve => {
-    let listener = (event, extension) => {
-      Management.off("startup", listener);
-      resolve(extension);
-    };
-
-    Management.on("startup", listener);
-  });
-}
-
 function promiseWebExtensionShutdown() {
   return new Promise(resolve => {
     let listener = (event, extension) => {
