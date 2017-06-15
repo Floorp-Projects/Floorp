@@ -323,7 +323,7 @@ function makeUpdateStatement(aGuid, aNewData, aBindingArrays) {
   }
 
   query += queryTerms + " WHERE guid = :existing_guid";
-  aNewData["existing_guid"] = aGuid;
+  aNewData.existing_guid = aGuid;
 
   return dbCreateAsyncStatement(query, aNewData, aBindingArrays);
 }
@@ -471,7 +471,7 @@ var Migrators = {
    */
   dbMigrateToVersion4() {
     if (!_dbConnection.tableExists("moz_deleted_formhistory")) {
-      let table = dbSchema.tables["moz_deleted_formhistory"];
+      let table = dbSchema.tables.moz_deleted_formhistory;
       let tSQL = Object.keys(table).map(col => [col, table[col]].join(" ")).join(", ");
       _dbConnection.createTable("moz_deleted_formhistory", tSQL);
     }
@@ -959,7 +959,7 @@ this.FormHistory = {
             }
 
             this.foundResult = true;
-            changeToUpdate.guid = aResult["guid"];
+            changeToUpdate.guid = aResult.guid;
           },
 
           handleError(aError) {
