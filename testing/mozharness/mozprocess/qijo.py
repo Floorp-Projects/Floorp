@@ -80,6 +80,7 @@ class JOBOBJECT_EXTENDED_LIMIT_INFORMATION(Structure):
                 ('PeakProcessMemoryUsed', SIZE_T),
                 ('PeakJobMemoryUsed', SIZE_T)]
 
+
 # These numbers below come from:
 # http://msdn.microsoft.com/en-us/library/ms686216%28v=vs.85%29.aspx
 JobObjectAssociateCompletionPortInformation = 7

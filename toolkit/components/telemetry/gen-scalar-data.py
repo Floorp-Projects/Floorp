@@ -95,5 +95,6 @@ def main(output, *filenames):
     write_scalar_tables(scalars, output)
     print(file_footer, file=output)
 
+
 if __name__ == '__main__':
     main(sys.stdout, *sys.argv[1:])

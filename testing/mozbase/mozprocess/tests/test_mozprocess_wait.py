@@ -94,5 +94,6 @@ class ProcTestWait(proctest.ProcTest):
         self.assertEqual(returncode1, returncode2,
                          'Expected both returncodes of wait() to be equal')
 
+
 if __name__ == '__main__':
     mozunit.main()

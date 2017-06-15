@@ -9,5 +9,6 @@ from testcase import TelemetryTestCase
 def cli():
     mn_cli(testcase_class=TelemetryTestCase)
 
+
 if __name__ == '__main__':
     cli()

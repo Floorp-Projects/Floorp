@@ -49,5 +49,6 @@ class TestURLParsing(unittest.TestCase):
         self.assertEqual(parsed,
                          ['file', '', '/foo/bar', '', ''])
 
+
 if __name__ == '__main__':
     unittest.main()
