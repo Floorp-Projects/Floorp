@@ -198,5 +198,6 @@ http://127.0.0.1:8888           privileged
     def test_existing_permissions_db_v5(self):
         self.verify_user_version(5)
 
+
 if __name__ == '__main__':
     mozunit.main()

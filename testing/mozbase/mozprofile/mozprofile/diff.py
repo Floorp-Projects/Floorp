@@ -77,5 +77,6 @@ def diff_profiles(args=sys.argv[1:]):
         if diffs:
             print '-' * 4
 
+
 if __name__ == '__main__':
     diff_profiles()

@@ -129,6 +129,7 @@ def resolve_keyed_by(item, field, item_name, **extra_values):
             "No {} matching {!r} nor 'default' found while determining item {} in {}".format(
                 keyed_by, key, field, item_name))
 
+
 # Schemas for YAML files should use dashed identifiers by default.  If there are
 # components of the schema for which there is a good reason to use another format,
 # they can be whitelisted here.

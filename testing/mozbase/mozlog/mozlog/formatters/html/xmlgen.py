@@ -80,6 +80,7 @@ class Tag(list):
         name = self.__class__.__name__
         return "<%r tag object %d>" % (name, id(self))
 
+
 Namespace = NamespaceMetaclass('Namespace', (object, ), {
     '__tagspec__': None,
     '__tagclass__': Tag,
@@ -279,5 +280,6 @@ class _escape:
         """ xml-escape the given unicode string. """
         ustring = unicode(ustring)
         return self.charef_rex.sub(self._replacer, ustring)
+
 
 escape = _escape()
