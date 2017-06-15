@@ -19,6 +19,7 @@ BEGIN_TEST(testResolveRecursion)
         nullptr, // get
         nullptr, // set
         nullptr, // enumerate
+        nullptr, // newEnumerate
         my_resolve
     };
 
@@ -160,6 +161,7 @@ const JSClass* getGlobalClass() override {
         nullptr, // get
         nullptr, // set
         nullptr, // enumerate
+        nullptr, // newEnumerate
         my_resolve,
         nullptr, // mayResolve
         nullptr, // finalize

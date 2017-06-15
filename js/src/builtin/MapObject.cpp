@@ -132,6 +132,7 @@ static const ClassOps MapIteratorObjectClassOps = {
     nullptr, /* getProperty */
     nullptr, /* setProperty */
     nullptr, /* enumerate */
+    nullptr, /* newEnumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
     MapIteratorObject::finalize
@@ -290,6 +291,7 @@ const ClassOps MapObject::classOps_ = {
     nullptr, // getProperty
     nullptr, // setProperty
     nullptr, // enumerate
+    nullptr, // newEnumerate
     nullptr, // resolve
     nullptr, // mayResolve
     finalize,
@@ -870,6 +872,7 @@ static const ClassOps SetIteratorObjectClassOps = {
     nullptr, /* getProperty */
     nullptr, /* setProperty */
     nullptr, /* enumerate */
+    nullptr, /* newEnumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
     SetIteratorObject::finalize
@@ -1015,6 +1018,7 @@ const ClassOps SetObject::classOps_ = {
     nullptr, // getProperty
     nullptr, // setProperty
     nullptr, // enumerate
+    nullptr, // newEnumerate
     nullptr, // resolve
     nullptr, // mayResolve
     finalize,

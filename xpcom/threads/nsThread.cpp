@@ -1051,6 +1051,18 @@ nsThread::Shutdown()
 TimeStamp
 nsThread::GetIdleDeadline()
 {
+  // If we are shutting down, we won't honor the idle period, and we will
+  // always process idle runnables.  This will ensure that the idle queue
+  // gets exhausted at shutdown time to prevent intermittently leaking
+  // some runnables inside that queue and even worse potentially leaving
+  // some important cleanup work unfinished.
+  // Note that we need to check both of these conditions since ShuttingDown()
+  // will never return true on the main thread, where gXPCOMThreadsShutDown
+  // performs a similar function.
+  if (gXPCOMThreadsShutDown || ShuttingDown()) {
+    return TimeStamp::Now();
+  }
+
   TimeStamp idleDeadline;
   {
     // Releasing the lock temporarily since getting the idle period

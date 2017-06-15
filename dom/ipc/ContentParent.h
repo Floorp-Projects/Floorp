@@ -751,6 +751,17 @@ private:
   void ForwardKnownInfo();
 
   /**
+   * We might want to reuse barely used content processes if certain criteria are met.
+   */
+  bool TryToRecycle();
+
+  /**
+   * Removing it from the static array so it won't be returned for new tabs in
+   * GetNewOrUsedBrowserProcess.
+   */
+  void RemoveFromList();
+
+  /**
    * Decide whether the process should be kept alive even when it would normally
    * be shut down, for example when all its tabs are closed.
    */
@@ -1182,6 +1193,7 @@ private:
 
   GeckoChildProcessHost* mSubprocess;
   const TimeStamp mLaunchTS; // used to calculate time to start content process
+  TimeStamp mActivateTS;
   ContentParent* mOpener;
 
   nsString mRemoteType;

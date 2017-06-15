@@ -60,22 +60,6 @@ struct js::Nursery::FreeMallocedBuffersTask : public GCParallelTask
     virtual void run() override;
 };
 
-struct js::Nursery::SweepAction
-{
-    SweepAction(SweepThunk thunk, void* data, SweepAction* next)
-      : thunk(thunk), data(data), next(next)
-    {}
-
-    SweepThunk thunk;
-    void* data;
-    SweepAction* next;
-
-#if JS_BITS_PER_WORD == 32
-  protected:
-    uint32_t padding;
-#endif
-};
-
 #ifdef JS_GC_ZEAL
 struct js::Nursery::Canary
 {
@@ -131,7 +115,6 @@ js::Nursery::Nursery(JSRuntime* rt)
   , minorGCTriggerReason_(JS::gcreason::NO_REASON)
   , minorGcCount_(0)
   , freeMallocedBuffersTask(nullptr)
-  , sweepActions_(nullptr)
 #ifdef JS_GC_ZEAL
   , lastCanary_(nullptr)
 #endif
@@ -863,7 +846,6 @@ js::Nursery::sweep()
     }
     cellsWithUid_.clear();
 
-    runSweepActions();
     sweepDictionaryModeObjects();
 
 #ifdef JS_GC_ZEAL
@@ -1016,35 +998,6 @@ js::Nursery::updateNumChunksLocked(unsigned newCount,
         chunks_[i] = NurseryChunk::fromChunk(newChunk);
         chunk(i).poisonAndInit(runtime(), JS_FRESH_NURSERY_PATTERN);
     }
-}
-
-void
-js::Nursery::queueSweepAction(SweepThunk thunk, void* data)
-{
-    static_assert(sizeof(SweepAction) % CellAlignBytes == 0,
-                  "SweepAction size must be a multiple of cell alignment");
-
-    MOZ_ASSERT(isEnabled());
-
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    auto action = reinterpret_cast<SweepAction*>(allocate(sizeof(SweepAction)));
-    if (!action)
-        oomUnsafe.crash("Nursery::queueSweepAction");
-
-    new (action) SweepAction(thunk, data, sweepActions_);
-    sweepActions_ = action;
-}
-
-void
-js::Nursery::runSweepActions()
-{
-    // The hazard analysis doesn't know whether the thunks can GC.
-    JS::AutoSuppressGCAnalysis nogc;
-
-    AutoSetThreadIsSweeping threadIsSweeping;
-    for (auto action = sweepActions_; action; action = action->next)
-        action->thunk(action->data);
-    sweepActions_ = nullptr;
 }
 
 bool

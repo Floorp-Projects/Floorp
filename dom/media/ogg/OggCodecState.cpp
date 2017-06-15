@@ -1816,12 +1816,11 @@ SkeletonState::DecodeFisbone(ogg_packet* aPacket)
 
           if ((i == 0 && IsASCII(strMsg)) || (i != 0 && IsUTF8(strMsg))) {
             EMsgHeaderType eHeaderType = kFieldTypeMaps[i].mMsgHeaderType;
-            if (!field->mValuesStore.Contains(eHeaderType)) {
-              uint32_t nameLen = strlen(kFieldTypeMaps[i].mPatternToRecognize);
-              field->mValuesStore.Put(
-                eHeaderType,
-                new nsCString(msgHead + nameLen, msgProbe - msgHead - nameLen));
-            }
+            field->mValuesStore.LookupForAdd(eHeaderType).OrInsert(
+              [i, msgHead, msgProbe] () {
+                uint32_t nameLen = strlen(kFieldTypeMaps[i].mPatternToRecognize);
+                return new nsCString(msgHead + nameLen, msgProbe - msgHead - nameLen);
+              });
             isContentTypeParsed = i == 0 ? true : isContentTypeParsed;
           }
           break;
@@ -1836,12 +1835,12 @@ SkeletonState::DecodeFisbone(ogg_packet* aPacket)
     msgProbe++;
   }
 
-  if (!mMsgFieldStore.Contains(serialno)) {
-    mMsgFieldStore.Put(serialno, field.forget());
-  } else {
+  auto entry = mMsgFieldStore.LookupForAdd(serialno);
+  if (entry) {
+    // mMsgFieldStore has an entry for serialno already.
     return false;
   }
-
+  entry.OrInsert([&field]() { return field.forget(); });
   return true;
 }
 

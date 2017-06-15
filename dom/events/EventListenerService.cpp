@@ -380,12 +380,13 @@ EventListenerService::NotifyAboutMainThreadListenerChangeInternal(dom::EventTarg
     }
   }
 
-  RefPtr<EventListenerChange> changes = mPendingListenerChangesSet.Get(aTarget);
-  if (!changes) {
-    changes = new EventListenerChange(aTarget);
-    mPendingListenerChanges->AppendElement(changes, false);
-    mPendingListenerChangesSet.Put(aTarget, changes);
-  }
+  RefPtr<EventListenerChange> changes =
+    mPendingListenerChangesSet.LookupForAdd(aTarget).OrInsert(
+      [this, aTarget] () {
+        EventListenerChange* c = new EventListenerChange(aTarget);
+        mPendingListenerChanges->AppendElement(c, false);
+        return c;
+      });
   changes->AddChangedListenerName(aName);
 }
 

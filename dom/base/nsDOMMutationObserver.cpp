@@ -335,12 +335,14 @@ nsMutationReceiver::ContentRemoved(nsIDocument* aDocument,
     nsMutationReceiver* orig = GetParent() ? GetParent() : this;
     if (Observer()->GetReceiverFor(aChild, false, false) != orig) {
       bool transientExists = false;
-      nsCOMArray<nsMutationReceiver>* transientReceivers = nullptr;
-      Observer()->mTransientReceivers.Get(aChild, &transientReceivers);
-      if (!transientReceivers) {
-        transientReceivers = new nsCOMArray<nsMutationReceiver>();
-        Observer()->mTransientReceivers.Put(aChild, transientReceivers);
-      } else {
+      bool isNewEntry = false;
+      nsCOMArray<nsMutationReceiver>* transientReceivers =
+        Observer()->mTransientReceivers.LookupForAdd(aChild).OrInsert(
+          [&isNewEntry] () {
+            isNewEntry = true;
+            return new nsCOMArray<nsMutationReceiver>();
+          });
+      if (!isNewEntry) {
         for (int32_t i = 0; i < transientReceivers->Count(); ++i) {
           nsMutationReceiver* r = transientReceivers->ObjectAt(i);
           if (r->GetParent() == orig) {
@@ -1071,12 +1073,9 @@ nsAutoMutationBatch::Done()
       }
 
       if (allObservers.Length()) {
-        nsCOMArray<nsMutationReceiver>* transientReceivers = nullptr;
-        ob->mTransientReceivers.Get(removed, &transientReceivers);
-        if (!transientReceivers) {
-          transientReceivers = new nsCOMArray<nsMutationReceiver>();
-          ob->mTransientReceivers.Put(removed, transientReceivers);
-        }
+        nsCOMArray<nsMutationReceiver>* transientReceivers =
+          ob->mTransientReceivers.LookupForAdd(removed).OrInsert(
+            [] () { return new nsCOMArray<nsMutationReceiver>(); });
         for (uint32_t k = 0; k < allObservers.Length(); ++k) {
           nsMutationReceiver* r = allObservers[k];
           nsMutationReceiver* orig = r->GetParent() ? r->GetParent() : r;

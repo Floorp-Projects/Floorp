@@ -13,6 +13,7 @@
 #include "base/task.h"                  // for NewRunnableMethod, etc
 #include "gfxPrefs.h"
 #include "mozilla/dom/TabGroup.h"
+#include "mozilla/layers/CompositorManagerChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/APZChild.h"
 #include "mozilla/layers/IAPZCTreeManager.h"
@@ -77,17 +78,18 @@ static StaticRefPtr<CompositorBridgeChild> sCompositorBridge;
 
 Atomic<int32_t> KnowsCompositor::sSerialCounter(0);
 
-CompositorBridgeChild::CompositorBridgeChild(LayerManager *aLayerManager, uint32_t aNamespace)
-  : mLayerManager(aLayerManager)
-  , mIdNamespace(aNamespace)
+CompositorBridgeChild::CompositorBridgeChild(CompositorManagerChild *aManager)
+  : mCompositorManager(aManager)
+  , mIdNamespace(0)
   , mResourceId(0)
   , mCanSend(false)
+  , mActorDestroyed(false)
   , mFwdTransactionId(0)
   , mDeviceResetSequenceNumber(0)
   , mMessageLoop(MessageLoop::current())
+  , mProcessToken(0)
   , mSectionAllocator(nullptr)
 {
-  MOZ_ASSERT(mIdNamespace);
   MOZ_ASSERT(NS_IsMainThread());
 }
 
@@ -104,12 +106,18 @@ CompositorBridgeChild::IsSameProcess() const
   return OtherPid() == base::GetCurrentProcId();
 }
 
-static void DeferredDestroyCompositor(RefPtr<CompositorBridgeParent> aCompositorBridgeParent,
-                                      RefPtr<CompositorBridgeChild> aCompositorBridgeChild)
+void
+CompositorBridgeChild::AfterDestroy()
 {
-  aCompositorBridgeChild->Close();
+  // Note that we cannot rely upon mCanSend here because we already set that to
+  // false to prevent normal IPDL calls from being made after SendWillClose.
+  // The only time we should not issue Send__delete__ is if the actor is already
+  // destroyed, e.g. the compositor process crashed.
+  if (!mActorDestroyed) {
+    Send__delete__(this);
+  }
 
-  if (sCompositorBridge == aCompositorBridgeChild) {
+  if (sCompositorBridge == this) {
     sCompositorBridge = nullptr;
   }
 }
@@ -183,8 +191,9 @@ CompositorBridgeChild::Destroy()
   // handle compositor desctruction.
 
   // From now on we can't send any message message.
-  MessageLoop::current()->PostTask(
-             NewRunnableFunction(DeferredDestroyCompositor, mCompositorBridgeParent, selfRef));
+  MessageLoop::current()->PostTask(NewRunnableMethod(
+    "CompositorBridgeChild::AfterDestroy",
+    selfRef, &CompositorBridgeChild::AfterDestroy));
 }
 
 // static
@@ -209,28 +218,11 @@ CompositorBridgeChild::LookupCompositorFrameMetrics(const FrameMetrics::ViewID a
   return false;
 }
 
-/* static */ bool
-CompositorBridgeChild::InitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoint, uint32_t aNamespace)
-{
-  // There's only one compositor per child process.
-  MOZ_ASSERT(!sCompositorBridge);
-
-  RefPtr<CompositorBridgeChild> child(new CompositorBridgeChild(nullptr, aNamespace));
-  if (!aEndpoint.Bind(child)) {
-    NS_RUNTIMEABORT("Couldn't Open() Compositor channel.");
-    return false;
-  }
-  child->InitIPDL();
-
-  // We release this ref in DeferredDestroyCompositor.
-  sCompositorBridge = child;
-  return true;
-}
-
-/* static */ bool
-CompositorBridgeChild::ReinitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoint, uint32_t aNamespace)
+void
+CompositorBridgeChild::InitForContent(uint32_t aNamespace)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aNamespace);
 
   if (RefPtr<CompositorBridgeChild> old = sCompositorBridge.forget()) {
     // Note that at this point, ActorDestroy may not have been called yet,
@@ -240,59 +232,25 @@ CompositorBridgeChild::ReinitForContent(Endpoint<PCompositorBridgeChild>&& aEndp
     old->Destroy();
   }
 
-  return InitForContent(Move(aEndpoint), aNamespace);
-}
-
-CompositorBridgeParent*
-CompositorBridgeChild::InitSameProcess(widget::CompositorWidget* aWidget,
-                                       const uint64_t& aLayerTreeId,
-                                       CSSToLayoutDeviceScale aScale,
-                                       const CompositorOptions& aOptions,
-                                       bool aUseExternalSurface,
-                                       const gfx::IntSize& aSurfaceSize)
-{
-  TimeDuration vsyncRate =
-    gfxPlatform::GetPlatform()->GetHardwareVsync()->GetGlobalDisplay().GetVsyncRate();
-
-  mCompositorBridgeParent =
-    new CompositorBridgeParent(aScale, vsyncRate, aOptions, aUseExternalSurface, aSurfaceSize);
-
-  bool ok = Open(mCompositorBridgeParent->GetIPCChannel(),
-                 CompositorThreadHolder::Loop(),
-                 ipc::ChildSide);
-  MOZ_RELEASE_ASSERT(ok);
-
-  InitIPDL();
-  mCompositorBridgeParent->InitSameProcess(aWidget, aLayerTreeId);
-  return mCompositorBridgeParent;
-}
-
-/* static */ RefPtr<CompositorBridgeChild>
-CompositorBridgeChild::CreateRemote(const uint64_t& aProcessToken,
-                                    LayerManager* aLayerManager,
-                                    Endpoint<PCompositorBridgeChild>&& aEndpoint,
-                                    uint32_t aNamespace)
-{
-  RefPtr<CompositorBridgeChild> child = new CompositorBridgeChild(aLayerManager, aNamespace);
-  if (!aEndpoint.Bind(child)) {
-    return nullptr;
-  }
-  child->InitIPDL();
-  child->mProcessToken = aProcessToken;
-  return child;
-}
-
-void
-CompositorBridgeChild::InitIPDL()
-{
   mCanSend = true;
-  AddRef();
+  mIdNamespace = aNamespace;
+  sCompositorBridge = this;
 }
 
 void
-CompositorBridgeChild::DeallocPCompositorBridgeChild()
+CompositorBridgeChild::InitForWidget(uint64_t aProcessToken,
+                                     LayerManager* aLayerManager,
+                                     uint32_t aNamespace)
 {
-  Release();
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aProcessToken);
+  MOZ_ASSERT(aLayerManager);
+  MOZ_ASSERT(aNamespace);
+
+  mCanSend = true;
+  mProcessToken = aProcessToken;
+  mLayerManager = aLayerManager;
+  mIdNamespace = aNamespace;
 }
 
 /*static*/ CompositorBridgeChild*
@@ -584,6 +542,7 @@ CompositorBridgeChild::ActorDestroy(ActorDestroyReason aWhy)
   }
 
   mCanSend = false;
+  mActorDestroyed = true;
 
   if (mProcessToken && XRE_IsParentProcess()) {
     GPUProcessManager::Get()->NotifyRemoteActorDestroyed(mProcessToken);
@@ -907,27 +866,6 @@ CompositorBridgeChild::RecvObserveLayerUpdate(const uint64_t& aLayersId,
   return IPC_OK();
 }
 
-already_AddRefed<nsIEventTarget>
-CompositorBridgeChild::GetSpecificMessageEventTarget(const Message& aMsg)
-{
-  if (aMsg.type() != PCompositorBridge::Msg_DidComposite__ID) {
-    return nullptr;
-  }
-
-  uint64_t layersId;
-  PickleIterator iter(aMsg);
-  if (!IPC::ReadParam(&aMsg, &iter, &layersId)) {
-    return nullptr;
-  }
-
-  TabChild* tabChild = TabChild::GetFrom(layersId);
-  if (!tabChild) {
-    return nullptr;
-  }
-
-  return do_AddRef(tabChild->TabGroup()->EventTargetFor(TaskCategory::Other));
-}
-
 void
 CompositorBridgeChild::HoldUntilCompositableRefReleasedIfNecessary(TextureClient* aClient)
 {
@@ -1132,23 +1070,9 @@ CompositorBridgeChild::DeallocPAPZCTreeManagerChild(PAPZCTreeManagerChild* aActo
 }
 
 void
-CompositorBridgeChild::ProcessingError(Result aCode, const char* aReason)
-{
-  if (aCode != MsgDropped) {
-    gfxDevCrash(gfx::LogReason::ProcessingError) << "Processing error in CompositorBridgeChild: " << int(aCode);
-  }
-}
-
-void
 CompositorBridgeChild::WillEndTransaction()
 {
   ResetShmemCounter();
-}
-
-void
-CompositorBridgeChild::HandleFatalError(const char* aName, const char* aMsg) const
-{
-  dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
 }
 
 PWebRenderBridgeChild*

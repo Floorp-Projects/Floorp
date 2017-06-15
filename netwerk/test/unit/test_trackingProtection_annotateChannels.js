@@ -24,6 +24,8 @@ if (runtime.processType == runtime.PROCESS_TYPE_DEFAULT) {
   do_get_profile();
 }
 
+const topWindowURI = NetUtil.newURI("http://www.itisatrap.org/");
+
 var Ci = Components.interfaces;
 
 function listener(tracking, priority, nextTest) {
@@ -100,6 +102,7 @@ function makeChannel(path) {
   chan.QueryInterface(Ci.nsIHttpChannel);
   chan.requestMethod = "GET";
   chan.loadFlags |= Ci.nsIChannel.LOAD_CLASSIFY_URI;
+  chan.QueryInterface(Ci.nsIHttpChannelInternal).setTopWindowURIIfUnknown(topWindowURI);
   return chan;
 }
 
