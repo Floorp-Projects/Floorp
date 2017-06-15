@@ -125,7 +125,7 @@ public:
   }
 
 private:
-  AudioNodeStream* mDestination;
+  RefPtr<AudioNodeStream> mDestination;
   nsTArray<nsAutoPtr<blink::IIRFilter>> mIIRFilters;
   AudioDoubleArray mFeedforward;
   AudioDoubleArray mFeedback;

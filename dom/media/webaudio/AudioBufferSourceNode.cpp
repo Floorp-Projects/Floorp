@@ -582,8 +582,10 @@ public:
   int32_t mResamplerOutRate;
   uint32_t mChannels;
   float mDopplerShift;
-  AudioNodeStream* mDestination;
-  AudioNodeStream* mSource;
+  RefPtr<AudioNodeStream> mDestination;
+
+  // mSource deletes the engine in its destructor.
+  AudioNodeStream* MOZ_NON_OWNING_REF mSource;
   AudioParamTimeline mPlaybackRateTimeline;
   AudioParamTimeline mDetuneTimeline;
   bool mLoop;
