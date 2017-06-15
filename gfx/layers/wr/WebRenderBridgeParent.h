@@ -7,6 +7,8 @@
 #ifndef mozilla_layers_WebRenderBridgeParent_h
 #define mozilla_layers_WebRenderBridgeParent_h
 
+#include <unordered_set>
+
 #include "CompositableHost.h"           // for CompositableHost, ImageCompositeNotificationInfo
 #include "GLContextProvider.h"
 #include "mozilla/layers/CompositableTransactionParent.h"
@@ -34,6 +36,7 @@ class WebRenderAPI;
 namespace layers {
 
 class Compositor;
+class CompositorAnimationStorage;
 class CompositorBridgeParentBase;
 class CompositorVsyncScheduler;
 class WebRenderCompositableHolder;
@@ -49,7 +52,8 @@ public:
                         widget::CompositorWidget* aWidget,
                         CompositorVsyncScheduler* aScheduler,
                         RefPtr<wr::WebRenderAPI>&& aApi,
-                        RefPtr<WebRenderCompositableHolder>&& aHolder);
+                        RefPtr<WebRenderCompositableHolder>&& aHolder,
+                        RefPtr<CompositorAnimationStorage>&& aAnimStorage);
 
   wr::PipelineId PipelineId() { return mPipelineId; }
   wr::WebRenderAPI* GetWebRenderAPI() { return mApi; }
@@ -241,9 +245,13 @@ private:
   RefPtr<wr::WebRenderAPI> mApi;
   RefPtr<WebRenderCompositableHolder> mCompositableHolder;
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
+  RefPtr<CompositorAnimationStorage> mAnimStorage;
   std::vector<wr::ImageKey> mKeysToDelete;
   // XXX How to handle active keys of non-ExternalImages?
   nsDataHashtable<nsUint64HashKey, wr::ImageKey> mActiveKeys;
+  // mActiveAnimations is used to avoid leaking animations when WebRenderBridgeParent is
+  // destroyed abnormally and Tab move between different windows.
+  std::unordered_set<uint64_t> mActiveAnimations;
   nsDataHashtable<nsUint64HashKey, RefPtr<WebRenderImageHost>> mAsyncCompositables;
   nsDataHashtable<nsUint64HashKey, RefPtr<WebRenderImageHost>> mExternalImageIds;
   nsTArray<ImageCompositeNotificationInfo> mImageCompositeNotifications;
