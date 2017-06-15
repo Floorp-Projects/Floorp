@@ -10,7 +10,6 @@
 #include <limits>
 #include <stdint.h>
 
-#include "HLSResource.h"
 #include "HLSUtils.h"
 #include "MediaCodec.h"
 #include "mozilla/Unused.h"
@@ -118,14 +117,12 @@ private:
 
 };
 
-HLSDemuxer::HLSDemuxer(MediaResource* aResource)
-  : mResource(aResource)
-  , mTaskQueue(new AutoTaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
+HLSDemuxer::HLSDemuxer(int aPlayerId)
+  : mTaskQueue(new AutoTaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
                                  /* aSupportsTailDispatch = */ false))
   , mMutex("HLSDemuxer")
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aResource);
   HLSDemuxerCallbacksSupport::Init();
   mJavaCallbacks = GeckoHLSDemuxerWrapper::Callbacks::New();
   MOZ_ASSERT(mJavaCallbacks);
@@ -134,8 +131,7 @@ HLSDemuxer::HLSDemuxer(MediaResource* aResource)
   HLSDemuxerCallbacksSupport::AttachNative(mJavaCallbacks,
                                            mCallbackSupport);
 
-  auto resourceWrapper = static_cast<HLSResource*>(aResource)->GetResourceWrapper();
-  mHLSDemuxerWrapper = GeckoHLSDemuxerWrapper::Create(resourceWrapper->GetPlayer(), mJavaCallbacks);
+  mHLSDemuxerWrapper = GeckoHLSDemuxerWrapper::Create(aPlayerId, mJavaCallbacks);
   MOZ_ASSERT(mHLSDemuxerWrapper);
 }
 

@@ -130,8 +130,6 @@ WebRenderCompositableHolder::UpdateAsyncImagePipeline(const wr::PipelineId& aPip
                                                       const LayerRect& aScBounds,
                                                       const gfx::Matrix4x4& aScTransform,
                                                       const gfx::MaybeIntSize& aScaleToSize,
-                                                      const MaybeLayerRect& aClipRect,
-                                                      const MaybeImageMask& aMask,
                                                       const WrImageRendering& aFilter,
                                                       const WrMixBlendMode& aMixBlendMode)
 {
@@ -148,8 +146,6 @@ WebRenderCompositableHolder::UpdateAsyncImagePipeline(const wr::PipelineId& aPip
   holder->mScBounds = aScBounds;
   holder->mScTransform = aScTransform;
   holder->mScaleToSize = aScaleToSize;
-  holder->mClipRect = aClipRect;
-  holder->mMask = aMask;
   holder->mFilter = aFilter;
   holder->mMixBlendMode = aMixBlendMode;
 }
@@ -282,10 +278,8 @@ WebRenderCompositableHolder::ApplyAsyncImages(wr::WebRenderAPI* aApi)
       if (holder->mScaleToSize.isSome()) {
         rect = LayerRect(0, 0, holder->mScaleToSize.value().width, holder->mScaleToSize.value().height);
       }
-      LayerRect clipRect = holder->mClipRect.valueOr(rect);
       WrClipRegionToken clip = builder.PushClipRegion(
-        wr::ToWrRect(clipRect),
-        holder->mMask.ptrOr(nullptr));
+        wr::ToWrRect(rect), nullptr);
 
       if (useExternalImage) {
         MOZ_ASSERT(holder->mCurrentTexture->AsWebRenderTextureHost());

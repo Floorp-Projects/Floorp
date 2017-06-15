@@ -96,6 +96,12 @@
 #onboarding-overlay-dialog > footer {
   grid-row: footer-start;
   grid-column: dialog-start / tour-end;
+  font-size: 13px;
+}
+
+#onboarding-tour-hidden-checkbox {
+  margin-inline-start: 27px;
+  margin-inline-end: 10px;
 }
 
 /* Onboarding tour list */

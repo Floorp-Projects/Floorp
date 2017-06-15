@@ -414,6 +414,9 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
     MP3Decoder::IsSupportedType(*type) ||
     ADTSDecoder::IsSupportedType(*type) ||
     FlacDecoder::IsSupportedType(*type) ||
+#ifdef MOZ_ANDROID_HLS_SUPPORT
+    HLSDecoder::IsSupportedType(*type) ||
+#endif
     false;
 }
 
