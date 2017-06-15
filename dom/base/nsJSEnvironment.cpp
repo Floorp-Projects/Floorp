@@ -1602,7 +1602,7 @@ nsJSContext::GetMaxCCSliceTimeSinceClear()
 }
 
 static bool
-ICCRunnerFired(TimeStamp aDeadline, void* aData)
+ICCRunnerFired(TimeStamp aDeadline)
 {
   if (sDidShutdown) {
     return false;
@@ -1643,8 +1643,8 @@ nsJSContext::BeginCycleCollectionCallback()
 
   // Create an ICC timer even if ICC is globally disabled, because we could be manually triggering
   // an incremental collection, and we want to be sure to finish it.
-  sICCRunner = CollectorRunner::Create(ICCRunnerFired, kICCIntersliceDelay,
-                                       kIdleICCSliceBudget, true);
+  sICCRunner = IdleTaskRunner::Create(ICCRunnerFired, kICCIntersliceDelay,
+                                      kIdleICCSliceBudget, true, []{ return sShuttingDown; });
 }
 
 static_assert(NS_GC_DELAY > kMaxICCDuration, "A max duration ICC shouldn't reduce GC delay to 0");
@@ -1856,11 +1856,9 @@ GCTimerFired(nsITimer *aTimer, void *aClosure)
 {
   nsJSContext::KillGCTimer();
   // Now start the actual GC after initial timer has fired.
-  sInterSliceGCRunner = CollectorRunner::Create(InterSliceGCRunnerFired,
-                                                NS_INTERSLICE_GC_DELAY,
-                                                sActiveIntersliceGCBudget,
-                                                false,
-                                                aClosure);
+  sInterSliceGCRunner = IdleTaskRunner::Create([aClosure](TimeStamp aDeadline) {
+    return InterSliceGCRunnerFired(aDeadline, aClosure);
+  }, NS_INTERSLICE_GC_DELAY, sActiveIntersliceGCBudget, false, []{ return sShuttingDown; });
 }
 
 // static
@@ -1884,7 +1882,7 @@ ShouldTriggerCC(uint32_t aSuspected)
 }
 
 static bool
-CCRunnerFired(TimeStamp aDeadline, void* aData)
+CCRunnerFired(TimeStamp aDeadline)
 {
   if (sDidShutdown) {
     return false;
@@ -2036,13 +2034,13 @@ nsJSContext::RunNextCollectorTimer()
 
   if (sCCRunner) {
     if (ReadyToTriggerExpensiveCollectorTimer()) {
-      CCRunnerFired(TimeStamp(), nullptr);
+      CCRunnerFired(TimeStamp());
     }
     return;
   }
 
   if (sICCRunner) {
-    ICCRunnerFired(TimeStamp(), nullptr);
+    ICCRunnerFired(TimeStamp());
     return;
   }
 }
@@ -2149,8 +2147,9 @@ nsJSContext::MaybePokeCC()
     nsCycleCollector_dispatchDeferredDeletion();
 
     sCCRunner =
-      CollectorRunner::Create(CCRunnerFired, NS_CC_SKIPPABLE_DELAY,
-                              kForgetSkippableSliceDuration, true);
+      IdleTaskRunner::Create(CCRunnerFired, NS_CC_SKIPPABLE_DELAY,
+                             kForgetSkippableSliceDuration, true,
+                             []{ return sShuttingDown; });
   }
 }
 
@@ -2330,8 +2329,9 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
       nsJSContext::KillInterSliceGCRunner();
       if (!sShuttingDown && !aDesc.isComplete_) {
         sInterSliceGCRunner =
-          CollectorRunner::Create(InterSliceGCRunnerFired, NS_INTERSLICE_GC_DELAY,
-                                  sActiveIntersliceGCBudget, false);
+          IdleTaskRunner::Create([](TimeStamp aDeadline) {
+            return InterSliceGCRunnerFired(aDeadline, nullptr);
+          }, NS_INTERSLICE_GC_DELAY, sActiveIntersliceGCBudget, false, []{ return sShuttingDown; });
       }
 
       if (ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
