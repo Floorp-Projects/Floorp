@@ -33,7 +33,8 @@ public:
   Layer* GetLayer() override { return this; }
   void RenderLayer(wr::DisplayListBuilder& aBuilder,
                    const StackingContextHelper& aSc) override;
-  Maybe<WrImageMask> RenderMaskLayer(const gfx::Matrix4x4& aTransform) override;
+  Maybe<WrImageMask> RenderMaskLayer(const StackingContextHelper& aSc,
+                                     const gfx::Matrix4x4& aTransform) override;
 
 protected:
   CompositableType GetImageClientType();

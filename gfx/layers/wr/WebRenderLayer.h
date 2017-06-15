@@ -26,7 +26,8 @@ public:
   virtual Layer* GetLayer() = 0;
   virtual void RenderLayer(wr::DisplayListBuilder& aBuilder,
                            const StackingContextHelper& aSc) = 0;
-  virtual Maybe<WrImageMask> RenderMaskLayer(const gfx::Matrix4x4& aTransform)
+  virtual Maybe<WrImageMask> RenderMaskLayer(const StackingContextHelper& aSc,
+                                             const gfx::Matrix4x4& aTransform)
   {
     MOZ_ASSERT(false);
     return Nothing();
@@ -50,18 +51,18 @@ public:
 
   LayerRect Bounds();
   LayerRect BoundsForStackingContext();
-protected:
-  BoundsTransformMatrix BoundsTransform();
-  Maybe<LayerRect> ClipRect();
-
-  void DumpLayerInfo(const char* aLayerType, const LayerRect& aRect);
 
   // Builds a WrImageMask from the mask layer on this layer, if there is one.
-  // If this layer is pushing a stacking context, then the WrImageMask will be
-  // interpreted as relative to that stacking context by WR. The caller needs
-  // to pass in the StackingContextHelper for *this* layer, if there is one, in
-  // order for this function to make the necessary adjustments.
-  Maybe<WrImageMask> BuildWrMaskLayer(const StackingContextHelper* aUnapplySc);
+  // The |aRelativeTo| parameter should be a reference to the stacking context
+  // that we want this mask to be relative to. This is usually the stacking
+  // context of the *parent* layer of |this|, because that is what the mask
+  // is relative to in the layer tree.
+  Maybe<WrImageMask> BuildWrMaskLayer(const StackingContextHelper& aRelativeTo);
+
+protected:
+  BoundsTransformMatrix BoundsTransform();
+
+  void DumpLayerInfo(const char* aLayerType, const LayerRect& aRect);
 };
 
 } // namespace layers

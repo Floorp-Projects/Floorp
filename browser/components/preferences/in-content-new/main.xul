@@ -183,11 +183,9 @@
               name="layout.spellcheckDefault"
               type="int"/>
 
-#ifdef MOZ_TELEMETRY_REPORTING
   <preference id="toolkit.telemetry.enabled"
               name="toolkit.telemetry.enabled"
               type="bool"/>
-#endif
 
   <preference id="browser.preferences.defaultPerformanceSettings.enabled"
               name="browser.preferences.defaultPerformanceSettings.enabled"

@@ -40,9 +40,7 @@ WebRenderTextLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     );
     DumpLayerInfo("TextLayer", rect);
 
-    LayerRect clipRect = ClipRect().valueOr(rect);
-
-    WrBridge()->PushGlyphs(aBuilder, mGlyphs, mFont, aSc, rect, clipRect);
+    WrBridge()->PushGlyphs(aBuilder, mGlyphs, mFont, aSc, rect, rect);
 }
 
 } // namespace layers

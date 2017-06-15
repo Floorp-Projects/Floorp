@@ -125,16 +125,12 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   LayerRect rect = Bounds();
   DumpLayerInfo("ContainerLayer", rect);
 
-  Maybe<WrImageMask> mask = BuildWrMaskLayer(&sc);
-  aBuilder.PushClip(sc.ToRelativeWrRect(rect), mask.ptrOr(nullptr));
-
   for (LayerPolygon& child : children) {
     if (child.layer->IsBackfaceHidden()) {
       continue;
     }
     ToWebRenderLayer(child.layer)->RenderLayer(aBuilder, sc);
   }
-  aBuilder.PopClip();
 }
 
 void
