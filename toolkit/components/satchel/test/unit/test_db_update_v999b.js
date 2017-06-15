@@ -23,21 +23,21 @@ function next_test() {
 }
 
 function* tests() {
-  var testnum = 0;
+  let testnum = 0;
 
   try {
     // ===== test init =====
-    var testfile = do_get_file("formhistory_v999b.sqlite");
-    var profileDir = dirSvc.get("ProfD", Ci.nsIFile);
+    let testfile = do_get_file("formhistory_v999b.sqlite");
+    let profileDir = dirSvc.get("ProfD", Ci.nsIFile);
 
     // Cleanup from any previous tests or failures.
-    var destFile = profileDir.clone();
+    let destFile = profileDir.clone();
     destFile.append("formhistory.sqlite");
     if (destFile.exists()) {
       destFile.remove(false);
     }
 
-    var bakFile = profileDir.clone();
+    let bakFile = profileDir.clone();
     bakFile.append("formhistory.sqlite.corrupt");
     if (bakFile.exists()) {
       bakFile.remove(false);

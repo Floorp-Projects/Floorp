@@ -11,7 +11,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-var satchelFormListener = {
+let satchelFormListener = {
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIFormSubmitObserver,
     Ci.nsIObserver,

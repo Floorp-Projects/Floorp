@@ -22,10 +22,10 @@ var formHistoryStartup = Cc["@mozilla.org/satchel/form-history-startup;1"]
 formHistoryStartup.observe(null, "profile-after-change", null);
 
 function getDBVersion(dbfile) {
-  var ss = Cc["@mozilla.org/storage/service;1"]
+  let ss = Cc["@mozilla.org/storage/service;1"]
              .getService(Ci.mozIStorageService);
-  var dbConnection = ss.openDatabase(dbfile);
-  var version = dbConnection.schemaVersion;
+  let dbConnection = ss.openDatabase(dbfile);
+  let version = dbConnection.schemaVersion;
   dbConnection.close();
 
   return version;
@@ -52,7 +52,7 @@ function searchEntries(terms, params, iter) {
 // Count the number of entries with the given name and value, and call then(number)
 // when done. If name or value is null, then the value of that field does not matter.
 function countEntries(name, value, then) {
-  var obj = {};
+  let obj = {};
   if (name !== null) {
     obj.fieldname = name;
   }
@@ -76,7 +76,7 @@ function countEntries(name, value, then) {
 
 // Perform a single form history update and call then() when done.
 function updateEntry(op, name, value, then) {
-  var obj = { op };
+  let obj = { op };
   if (name !== null) {
     obj.fieldname = name;
   }

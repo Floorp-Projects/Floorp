@@ -201,7 +201,7 @@ function restoreForm() {
 
 // Check for expected form data.
 function checkForm(expectedValue) {
-  var formID = input.parentNode.id;
+  let formID = input.parentNode.id;
   is(input.value, expectedValue, "Checking " + formID + " input");
 }
 
@@ -1053,9 +1053,9 @@ function waitForMenuChange(expectedCount, expectedFirstValue) {
 }
 
 function checkMenuEntries(expectedValues, testNumber) {
-  var actualValues = getMenuEntries();
+  let actualValues = getMenuEntries();
   is(actualValues.length, expectedValues.length, testNumber + " Checking length of expected menu");
-  for (var i = 0; i < expectedValues.length; i++) {
+  for (let i = 0; i < expectedValues.length; i++) {
     is(actualValues[i], expectedValues[i], testNumber + " Checking menu entry #" + i);
   }
 }
