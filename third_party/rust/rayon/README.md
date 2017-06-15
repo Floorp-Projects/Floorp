@@ -2,7 +2,9 @@
 
 [![Join the chat at https://gitter.im/rayon-rs/Lobby](https://badges.gitter.im/rayon-rs/Lobby.svg)](https://gitter.im/rayon-rs/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-[![Build Status](https://travis-ci.org/nikomatsakis/rayon.svg?branch=master)](https://travis-ci.org/nikomatsakis/rayon)
+[![Travis Status](https://travis-ci.org/nikomatsakis/rayon.svg?branch=master)](https://travis-ci.org/nikomatsakis/rayon)
+
+[![Appveyor status](https://ci.appveyor.com/api/projects/status/6oft3iwgr6f2o4d4?svg=true)](https://ci.appveyor.com/project/nikomatsakis/rayon)
 
 Rayon is a data-parallelism library for Rust. It is extremely
 lightweight and makes it easy to convert a sequential computation into
@@ -29,6 +31,33 @@ at all, in fact. However, if you operate on mutexes or atomic
 integers, please see the [notes on atomicity](#atomicity).
 
 Rayon currently requires `rustc 1.12.0` or greater.
+
+### Using Rayon
+
+[Rayon is available on crates.io](https://crates.io/crates/rayon). The
+recommended way to use it is to add a line into your Cargo.toml such
+as:
+
+```rust
+[dependencies]
+rayon = 0.8.1
+```
+
+and then add the following to to your `lib.rs`:
+
+```rust
+extern crate rayon;
+```
+
+To use the Parallel Iterator APIs, a number of traits have to be in
+scope. The easiest way to bring those things into scope is to use the
+[Rayon prelude](https://docs.rs/rayon/*/rayon/prelude/index.html).
+In each module where you would like to use the parallel iterator APIs,
+just add:
+
+```rust
+use rayon::prelude::*;
+```
 
 ### Contribution
 
@@ -91,7 +120,7 @@ computation and then executing it. See the
 more details. (Sorry, proper documentation is still somewhat lacking.)
 
 [regular iterator]: http://doc.rust-lang.org/std/iter/trait.Iterator.html
-[pt]: https://github.com/nikomatsakis/rayon/blob/master/src/par_iter/mod.rs
+[pt]: https://github.com/nikomatsakis/rayon/blob/master/src/iter/mod.rs
 
 ### Using join for recursive, divide-and-conquer problems
 
@@ -392,6 +421,34 @@ fn search(path: &Path, cost_so_far: usize, best_cost: &Arc<AtomicUsize>) {
 
 Now in this case, we really WANT to see results from other threads
 interjected into our execution!
+
+## Semver policy, the rayon-core crate, and unstable features
+
+Rayon follows semver versioning. However, we also have APIs that are
+still in the process of development and which may break from release
+to release -- those APIs are not subject to semver. To use them,
+you have to set the cfg flag `rayon_unstable`. The easiest way to do this
+is to use the `RUSTFLAGS` environment variable:
+
+```
+RUSTFLAGS='--cfg rayon_unstable' cargo build
+```
+
+Note that this must not only be done for your crate, but for any crate
+that depends on your crate. This infectious nature is intentional, as
+it serves as a reminder that you are outside of the normal semver
+guarantees. **If you see unstable APIs that you would like to use,
+please request stabilization on the correspond tracking issue!**
+
+Rayon itself is internally split into two crates. The `rayon` crate is
+intended to be the main, user-facing crate, and hence all the
+documentation refers to `rayon`. This crate is still evolving and
+regularly goes through (minor) breaking changes. The `rayon-core`
+crate contains the global thread-pool and defines the core APIs: we no
+longer permit breaking changes in this crate (except to unstable
+features). The intention is that multiple semver-incompatible versions
+of the rayon crate can peacefully coexist; they will all share one
+global thread-pool through the `rayon-core` crate.
 
 ## License
 

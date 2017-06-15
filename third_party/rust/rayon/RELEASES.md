@@ -1,3 +1,90 @@
+# Release rayon 0.8.1 / rayon-core 1.2.0
+
+- The following core APIs are being stabilized:
+  - `rayon::spawn()` -- spawns a task into the Rayon threadpool; as it
+    is contained in the global scope (rather than a user-created
+    scope), the task cannot capture anything from the current stack
+    frame.
+  - `ThreadPool::join()`, `ThreadPool::spawn()`, `ThreadPool::scope()`
+    -- convenience APIs for launching new work within a thread-pool. 
+- The various iterator adapters are now tagged with `#[must_use]`
+- Parallel iterators now offer a `for_each_with` adapter, similar to
+  `map_with`.
+- We are adopting a new approach to handling the remaining unstable
+  APIs (which primarily pertain to futures integration). As awlays,
+  unstable APIs are intended for experimentation, but do not come with
+  any promise of compatibility (in other words, we might change them
+  in arbitrary ways in any release). Previously, we designated such
+  APIs using a Cargo feature "unstable". Now, we are using a regular
+  `#[cfg]` flag. This means that to see the unstable APIs, you must do
+  `RUSTFLAGS='--cfg rayon_unstable' cargo build`. This is
+  intentionally inconvenient; in particular, if you are a library,
+  then your clients must also modify their environment, signaling
+  their agreement to instability.
+
+# Release rayon 0.8.0 / rayon-core 1.1.0
+
+## Rayon 0.8.0
+
+- Added the `map_with` and `fold_with` combinators, which help for
+  passing along state (like channels) that cannot be shared between
+  threads but which can be cloned on each thread split.
+- Added the `while_some` combinator, which helps for writing short-circuiting iterators.
+- Added support for "short-circuiting" collection: e.g., collecting
+  from an iterator producing `Option<T>` or `Result<T, E>` into a
+  `Option<Collection<T>>` or `Result<Collection<T>, E>`.
+- Support `FromParallelIterator` for `Cow`.
+- Removed the deprecated weight APIs.
+- Simplified the parallel iterator trait hierarchy by removing the
+  `BoundedParallelIterator` and `ExactParallelIterator` traits,
+  which were not serving much purpose.
+- Improved documentation.
+- Added some missing `Send` impls.
+- Fixed some small bugs.
+
+## Rayon-core 1.1.0
+
+- We now have more documentation.
+- Renamed the (unstable) methods `spawn_async` and
+  `spawn_future_async` -- which spawn tasks that cannot hold
+  references -- to simply `spawn` and `spawn_future`, respectively.
+- We are now using the coco library for our deque.
+- Individual threadpools can now be configured in "breadth-first"
+  mode, which causes them to execute spawned tasks in the reverse
+  order that they used to.  In some specific scenarios, this can be a
+  win (though it is not generally the right choice).
+- Added top-level functions:
+  - `current_thread_index`, for querying the index of the current worker thread within
+    its thread-pool (previously available as `thread_pool.current_thread_index()`);
+  - `current_thread_has_pending_tasks`, for querying whether the
+    current worker that has an empty task deque or not. This can be
+    useful when deciding whether to spawn a task.
+- The environment variables for controlling Rayon are now
+  `RAYON_NUM_THREADS` and `RAYON_LOG`. The older variables (e.g.,
+  `RAYON_RS_NUM_CPUS` are still supported but deprecated).
+
+## Rayon-demo
+
+- Added a new game-of-life benchmark.
+
+## Contributors
+
+Thanks to the following contributors:
+
+- @ChristopherDavenport
+- @SuperFluffy
+- @antoinewdg
+- @crazymykl
+- @cuviper
+- @glandium
+- @julian-seward1
+- @leodasvacas
+- @leshow
+- @lilianmoraru
+- @mschmo
+- @nikomatsakis
+- @stjepang
+
 # Release rayon 0.7.1 / rayon-core 1.0.2
 
 This release is a targeted performance fix for #343, an issue where

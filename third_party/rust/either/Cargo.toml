@@ -1,0 +1,22 @@
+[package]
+name = "either"
+version = "1.1.0"
+authors = ["bluss"]
+
+license = "MIT/Apache-2.0"
+repository = "https://github.com/bluss/either"
+documentation = "https://docs.rs/either/1/"
+
+description = """
+The enum `Either`, with variants `Left` and `Right` and trait implementations including Iterator, Read, Write.
+
+Either has methods that are similar to Option and Result.
+
+Includes convenience macros `try_left!()` and `try_right!()` to use for short-circuiting logic."""
+
+keywords = ["data-structure", "no_std"]
+categories = ["data-structures", "no-std"]
+
+[features]
+default = ["use_std"]
+use_std = []

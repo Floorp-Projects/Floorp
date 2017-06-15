@@ -6,6 +6,7 @@ use super::*;
 ///
 /// [`flap_map()`]: trait.ParallelIterator.html#method.flat_map
 /// [`ParallelIterator`]: trait.ParallelIterator.html
+#[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct FlatMap<I: ParallelIterator, F> {
     base: I,
     map_op: F,
@@ -25,7 +26,7 @@ pub fn new<I, F>(base: I, map_op: F) -> FlatMap<I, F>
 
 impl<I, F, PI> ParallelIterator for FlatMap<I, F>
     where I: ParallelIterator,
-          F: Fn(I::Item) -> PI + Sync,
+          F: Fn(I::Item) -> PI + Sync + Send,
           PI: IntoParallelIterator
 {
     type Item = PI::Item;

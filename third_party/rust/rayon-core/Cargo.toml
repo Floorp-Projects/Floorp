@@ -12,34 +12,30 @@
 
 [package]
 name = "rayon-core"
-version = "1.0.2"
-authors = ["Niko Matsakis <niko@alum.mit.edu>"]
+version = "1.2.0"
+authors = ["Niko Matsakis <niko@alum.mit.edu>", "Josh Stone <cuviper@gmail.com>"]
 build = "build.rs"
 links = "rayon-core"
 description = "Core APIs for Rayon"
 documentation = "https://docs.rs/rayon/"
 license = "Apache-2.0/MIT"
 repository = "https://github.com/nikomatsakis/rayon"
+[dependencies.num_cpus]
+version = "1.2"
+
+[dependencies.coco]
+version = "0.1.1"
+
+[dependencies.futures]
+version = "0.1.7"
+
 [dependencies.lazy_static]
 version = "0.2.2"
-
-[dependencies.deque]
-version = "0.3.1"
-
-[dependencies.libc]
-version = "0.2.16"
 
 [dependencies.rand]
 version = "0.3"
 
-[dependencies.num_cpus]
-version = "1.2"
-
-[dependencies.futures]
-version = "0.1.7"
-optional = true
+[dependencies.libc]
+version = "0.2.16"
 
 [dev-dependencies]
-
-[features]
-unstable = ["futures"]
