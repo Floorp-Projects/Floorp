@@ -54,5 +54,6 @@ module.exports = {
     "array-bracket-spacing": ["error", "never"],
     "space-in-parens": ["error", "never"],
     "comma-dangle": ["error", "always-multiline"],
+    "dot-notation": "error",
   },
 };
