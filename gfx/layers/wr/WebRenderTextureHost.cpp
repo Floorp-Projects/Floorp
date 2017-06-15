@@ -7,14 +7,7 @@
 
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/LayersSurfaces.h"
-#include "mozilla/webrender/RenderBufferTextureHost.h"
-#include "mozilla/webrender/RenderTextureHost.h"
 #include "mozilla/webrender/RenderThread.h"
-
-#ifdef XP_MACOSX
-#include "mozilla/layers/MacIOSurfaceTextureHostOGL.h"
-#include "mozilla/webrender/RenderMacIOSurfaceTextureHostOGL.h"
-#endif
 
 namespace mozilla {
 namespace layers {
@@ -52,31 +45,28 @@ void
 WebRenderTextureHost::CreateRenderTextureHost(const layers::SurfaceDescriptor& aDesc,
                                               TextureHost* aTexture)
 {
-  RefPtr<wr::RenderTextureHost> texture;
+  MOZ_ASSERT(aTexture);
 
   switch (aDesc.type()) {
     case SurfaceDescriptor::TSurfaceDescriptorBuffer: {
-      BufferTextureHost* bufferTexture = aTexture->AsBufferTextureHost();
-      MOZ_ASSERT(bufferTexture);
-      texture = new wr::RenderBufferTextureHost(bufferTexture->GetBuffer(),
-                                                bufferTexture->GetBufferDescriptor());
       mIsWrappingNativeHandle = false;
       break;
     }
 #ifdef XP_MACOSX
     case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface: {
-      MacIOSurfaceTextureHostOGL* macTexture = aTexture->AsMacIOSurfaceTextureHost();
-      MOZ_ASSERT(macTexture);
-      texture = new wr::RenderMacIOSurfaceTextureHostOGL(macTexture->GetMacIOSurface());
       mIsWrappingNativeHandle = true;
       break;
     }
 #endif
+    case SurfaceDescriptor::TSurfaceDescriptorGPUVideo: {
+      mIsWrappingNativeHandle = !aTexture->HasIntermediateBuffer();
+      break;
+    }
     default:
       gfxCriticalError() << "No WR implement for texture type:" << aDesc.type();
   }
 
-  wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(mExternalImageId), texture.forget());
+  aTexture->CreateRenderTexture(mExternalImageId);
 }
 
 bool
@@ -169,7 +159,9 @@ void
 WebRenderTextureHost::GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
                                      const std::function<wr::ImageKey()>& aImageKeyAllocator)
 {
+  MOZ_ASSERT(mWrappedTextureHost);
   MOZ_ASSERT(aImageKeys.IsEmpty());
+
   mWrappedTextureHost->GetWRImageKeys(aImageKeys, aImageKeyAllocator);
 }
 
@@ -191,7 +183,9 @@ WebRenderTextureHost::PushExternalImage(wr::DisplayListBuilder& aBuilder,
                                         wr::ImageRendering aFilter,
                                         Range<const wr::ImageKey>& aImageKeys)
 {
+  MOZ_ASSERT(mWrappedTextureHost);
   MOZ_ASSERT(aImageKeys.length() > 0);
+
   mWrappedTextureHost->PushExternalImage(aBuilder,
                                          aBounds,
                                          aClip,

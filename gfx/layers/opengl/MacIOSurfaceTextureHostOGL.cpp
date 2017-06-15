@@ -5,6 +5,8 @@
 
 #include "MacIOSurfaceTextureHostOGL.h"
 #include "mozilla/gfx/MacIOSurface.h"
+#include "mozilla/webrender/RenderMacIOSurfaceTextureHostOGL.h"
+#include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "GLContextCGL.h"
 
@@ -112,6 +114,15 @@ gl::GLContext*
 MacIOSurfaceTextureHostOGL::gl() const
 {
   return mProvider ? mProvider->GetGLContext() : nullptr;
+}
+
+void
+MacIOSurfaceTextureHostOGL::CreateRenderTexture(const wr::ExternalImageId& aExternalImageId)
+{
+  RefPtr<wr::RenderTextureHost> texture =
+      new wr::RenderMacIOSurfaceTextureHostOGL(GetMacIOSurface());
+
+  wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId), texture.forget());
 }
 
 void

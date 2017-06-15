@@ -664,15 +664,16 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         script->bodyScopeIndex_ = bodyScopeIndex;
     }
 
+    if (mode == XDR_DECODE) {
+        if (!script->createScriptData(cx, length, nsrcnotes, natoms)) {
+            return false;
+        }
+    }
+
     auto scriptDataGuard = mozilla::MakeScopeExit([&] {
         if (mode == XDR_DECODE)
             script->freeScriptData();
     });
-
-    if (mode == XDR_DECODE) {
-        if (!script->createScriptData(cx, length, nsrcnotes, natoms))
-            return false;
-    }
 
     jsbytecode* code = script->code();
     if (!xdr->codeBytes(code, length) || !xdr->codeBytes(code + length, nsrcnotes)) {

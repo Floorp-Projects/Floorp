@@ -64,6 +64,7 @@ public:
   void DPEnd(wr::DisplayListBuilder &aBuilder, const gfx::IntSize& aSize,
              bool aIsSync, uint64_t aTransactionId,
              const WebRenderScrollData& aScrollData);
+  void ProcessWebRenderParentCommands();
 
   CompositorBridgeChild* GetCompositorBridgeChild();
 
