@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1274663
+-->
+  <head>
+    <meta charset="utf-8">
+    <title>Test device reset</title>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+  <body>
+    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1274663">Mozilla Bug 1274663</a>
+    <script>
+      var importObj = {};
+
+      var Cc = SpecialPowers.Cc;
+      var Ci = SpecialPowers.Ci;
+
+      var sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
+      var xr = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
+
+      var windows = SpecialPowers.Services.ww.getWindowEnumerator();
+      var windowutils;
+      while (windows.hasMoreElements()) {
+        windowutils = windows.getNext().QueryInterface(Ci.nsIInterfaceRequestor)
+                                       .getInterface(Ci.nsIDOMWindowUtils);
+      }
+
+      const PAGE_WIDTH = 200;
+      const PAGE_HEIGHT = 200;
+
+      // Helper functions
+
+      function testCompositor(ctx) {
+        takeWindowSnapshot(ctx);
+        var testPassed = true;
+
+        if (!verifyCanvasRendering(ctx)) {
+          testPassed = false;
+        }
+
+        return testPassed;
+      }
+
+      function testPixel(ctx, x, y, r, g, b, a, fuzz) {
+        var data = ctx.getImageData(x, y, 1, 1);
+
+        if (Math.abs(data.data[0] - r) <= fuzz &&
+            Math.abs(data.data[1] - g) <= fuzz &&
+            Math.abs(data.data[2] - b) <= fuzz &&
+            Math.abs(data.data[3] - a) <= fuzz) {
+          return true;
+        }
+        return false;
+      }
+
+      function verifyCanvasRendering(ctx) {
+        return testPixel(ctx, 20, 20, 140, 25, 86, 255, 0);
+      }
+
+      function takeWindowSnapshot(ctx) {
+        var flags = ctx.DRAWWINDOW_DRAW_CARET | ctx.DRAWWINDOW_DRAW_VIEW | ctx.DRAWWINDOW_USE_WIDGET_LAYERS;
+        ctx.drawWindow(window, 0, 0, PAGE_WIDTH, PAGE_HEIGHT, "rgb(140,25,86)", flags);
+      }
+
+      function createCanvas() {
+        let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+
+        canvas.setAttribute("width", PAGE_WIDTH + "px");
+        canvas.setAttribute("height", PAGE_HEIGHT + "px");
+
+        return canvas;
+      }
+
+      // Test runner code
+      windowutils.triggerDeviceReset();
+
+      SimpleTest.waitForExplicitFinish();
+      window.addEventListener("MozAfterPaint", function paintHandle(e) {
+        runCanvasTest();
+        window.removeEventListener("MozAfterPaint", paintHandle, false);
+      });
+
+      function runCanvasTest() {
+        const canvas = createCanvas();
+        const ctx = canvas.getContext("2d");
+        document.body.appendChild(canvas);
+
+        ok(testCompositor(ctx), "Canvas did not get rendered after device reset");
+        SimpleTest.finish();
+      }
+    </script>
+  </body>
+</html>
