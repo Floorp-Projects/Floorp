@@ -48,6 +48,8 @@ protected:
   virtual ~MediaBlockCacheBase() {}
 
 public:
+  // Initialize this cache.
+  // If called again, re-initialize cache with minimal chance of failure.
   virtual nsresult Init() = 0;
 
   // Can be called on any thread. This defers to a non-main thread.
