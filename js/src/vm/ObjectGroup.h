@@ -623,6 +623,14 @@ class ObjectGroupCompartment
     // Table for referencing types of objects keyed to an allocation site.
     AllocationSiteTable* allocationSiteTable;
 
+    // A single per-compartment ObjectGroup for all calls to StringSplitString.
+    // StringSplitString is always called from self-hosted code, and conceptually
+    // the return object for a string.split(string) operation should have a
+    // unified type.  Having a global group for this also allows us to remove
+    // the hash-table lookup that would be required if we allocated this group
+    // on the basis of call-site pc.
+    ReadBarrieredObjectGroup stringSplitStringGroup;
+
   public:
     struct NewEntry;
 
@@ -639,6 +647,8 @@ class ObjectGroupCompartment
     static ObjectGroup* makeGroup(JSContext* cx, const Class* clasp,
                                   Handle<TaggedProto> proto,
                                   ObjectGroupFlags initialFlags = 0);
+
+    static ObjectGroup* getStringSplitStringGroup(JSContext* cx);
 
     void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                 size_t* allocationSiteTables,

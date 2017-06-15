@@ -848,6 +848,39 @@ BaselineCacheIRCompiler::emitLoadStringResult()
     return true;
 }
 
+typedef bool (*StringSplitHelperFn)(JSContext*, HandleString, HandleString, HandleObjectGroup,
+                              uint32_t limit, MutableHandleValue);
+static const VMFunction StringSplitHelperInfo =
+    FunctionInfo<StringSplitHelperFn>(StringSplitHelper, "StringSplitHelper");
+
+bool
+BaselineCacheIRCompiler::emitCallStringSplitResult()
+{
+    Register str = allocator.useRegister(masm, reader.stringOperandId());
+    Register sep = allocator.useRegister(masm, reader.stringOperandId());
+    Address groupAddr(stubAddress(reader.stubOffset()));
+
+    AutoScratchRegister scratch(allocator, masm);
+    allocator.discardStack(masm);
+
+    AutoStubFrame stubFrame(*this);
+    stubFrame.enter(masm, scratch);
+
+    // Load the group in the scratch register.
+    masm.loadPtr(groupAddr, scratch);
+
+    masm.Push(Imm32(INT32_MAX));
+    masm.Push(scratch);
+    masm.Push(sep);
+    masm.Push(str);
+
+    if (!callVM(masm, StringSplitHelperInfo))
+        return false;
+
+    stubFrame.leave(masm);
+    return true;
+}
+
 bool
 BaselineCacheIRCompiler::callTypeUpdateIC(Register obj, ValueOperand val, Register scratch,
                                           LiveGeneralRegisterSet saveRegs)
@@ -1796,6 +1829,15 @@ BaselineCacheIRCompiler::emitLoadObject()
 }
 
 bool
+BaselineCacheIRCompiler::emitLoadStackValue()
+{
+    ValueOperand val = allocator.defineValueRegister(masm, reader.valOperandId());
+    Address addr = allocator.addressOf(masm, BaselineFrameSlot(reader.uint32Immediate()));
+    masm.loadValue(addr, val);
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitGuardDOMExpandoMissingOrGuardShape()
 {
     ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
@@ -1898,6 +1940,15 @@ BaselineCacheIRCompiler::init(CacheKind kind)
         available.add(R0.typeReg());
 #endif
         break;
+      case CacheKind::Call:
+        MOZ_ASSERT(numInputs == 1);
+        allocator.initInputLocation(0, R0.scratchReg(), JSVAL_TYPE_INT32);
+#if defined(JS_NUNBOX32)
+        // availableGeneralRegs can't know that Call is only using
+        // the payloadReg and not typeReg on x86.
+        available.add(R0.typeReg());
+#endif
+        break;
     }
 
     // Baseline doesn't allocate float registers so none of them are live.
@@ -1943,6 +1994,7 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
       case CacheKind::GetProp:
       case CacheKind::GetElem:
       case CacheKind::GetName:
+      case CacheKind::Call:
         stubDataOffset = sizeof(ICCacheIR_Monitored);
         stubKind = CacheIRStubKind::Monitored;
         break;

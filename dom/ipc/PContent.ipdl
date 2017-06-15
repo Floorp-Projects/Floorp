@@ -1002,7 +1002,8 @@ parent:
                TextureFactoryIdentifier textureFactoryIdentifier,
                uint64_t layersId,
                CompositorOptions compositorOptions,
-               uint32_t maxTouchPoints);
+               uint32_t maxTouchPoints,
+               DimensionInfo dimensions);
 
     async CreateWindowInDifferentProcess(
       PBrowser aThisTab,

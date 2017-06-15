@@ -855,6 +855,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
   uint64_t layersId = 0;
   CompositorOptions compositorOptions;
   uint32_t maxTouchPoints = 0;
+  DimensionInfo dimensionInfo;
 
   if (aIframeMoz) {
     MOZ_ASSERT(aTabOpener);
@@ -893,7 +894,8 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
                           &textureFactoryIdentifier,
                           &layersId,
                           &compositorOptions,
-                          &maxTouchPoints)) {
+                          &maxTouchPoints,
+                          &dimensionInfo)) {
       PRenderFrameChild::Send__delete__(renderFrame);
       return NS_ERROR_NOT_AVAILABLE;
     }
@@ -941,6 +943,8 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
   // pretty bogus; see bug 763602.
   newChild->DoFakeShow(textureFactoryIdentifier, layersId, compositorOptions,
                        renderFrame, showInfo);
+
+  newChild->RecvUpdateDimensions(dimensionInfo);
 
   for (size_t i = 0; i < frameScripts.Length(); i++) {
     FrameScriptInfo& info = frameScripts[i];

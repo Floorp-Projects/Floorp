@@ -646,6 +646,10 @@ bool GreaterThanOrEqual(JSContext* cx, MutableHandleValue lhs, MutableHandleValu
 template<bool Equal>
 bool StringsEqual(JSContext* cx, HandleString left, HandleString right, bool* res);
 
+MOZ_MUST_USE bool StringSplitHelper(JSContext* cx, HandleString str, HandleString sep,
+                                    HandleObjectGroup group, uint32_t limit,
+                                    MutableHandleValue result);
+
 MOZ_MUST_USE bool ArrayPopDense(JSContext* cx, HandleObject obj, MutableHandleValue rval);
 MOZ_MUST_USE bool ArrayPushDense(JSContext* cx, HandleObject obj, HandleValue v, uint32_t* length);
 MOZ_MUST_USE bool ArrayShiftDense(JSContext* cx, HandleObject obj, MutableHandleValue rval);

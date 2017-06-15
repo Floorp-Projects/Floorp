@@ -1483,7 +1483,7 @@ IonBuilder::inlineConstantStringSplitString(CallInfo& callInfo)
     JSString* stringStr = nullptr;
     JSString* stringSep = nullptr;
     JSObject* templateObject = nullptr;
-    if (!inspector->isOptimizableCallStringSplit(pc, &stringStr, &stringSep, &templateObject))
+    if (!inspector->isOptimizableConstStringSplit(pc, &stringStr, &stringSep, &templateObject))
         return InliningStatus_NotInlined;
 
     MOZ_ASSERT(stringStr);
@@ -1584,11 +1584,14 @@ IonBuilder::inlineStringSplitString(CallInfo& callInfo)
     if (resultConstStringSplit != InliningStatus_NotInlined)
         return resultConstStringSplit;
 
-    JSObject* templateObject = inspector->getTemplateObjectForNative(pc, js::intrinsic_StringSplitString);
-    if (!templateObject)
+    JSContext* cx = GetJitContext()->cx;
+    ObjectGroup* group = ObjectGroupCompartment::getStringSplitStringGroup(cx);
+    if (!group)
+        return InliningStatus_NotInlined;
+    if (group->maybePreliminaryObjects())
         return InliningStatus_NotInlined;
 
-    TypeSet::ObjectKey* retKey = TypeSet::ObjectKey::get(templateObject);
+    TypeSet::ObjectKey* retKey = TypeSet::ObjectKey::get(group);
     if (retKey->unknownProperties())
         return InliningStatus_NotInlined;
 
@@ -1602,12 +1605,7 @@ IonBuilder::inlineStringSplitString(CallInfo& callInfo)
     }
 
     callInfo.setImplicitlyUsedUnchecked();
-    MConstant* templateObjectDef = MConstant::New(alloc(), ObjectValue(*templateObject),
-                                                  constraints());
-    current->add(templateObjectDef);
-
-    MStringSplit* ins = MStringSplit::New(alloc(), constraints(), strArg, sepArg,
-                                          templateObjectDef);
+    MStringSplit* ins = MStringSplit::New(alloc(), constraints(), strArg, sepArg, group);
     current->add(ins);
     current->push(ins);
 

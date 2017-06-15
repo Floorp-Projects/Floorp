@@ -286,6 +286,9 @@ CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
         masm.jump(ool->rejoin());
         return;
       }
+      case CacheKind::Call:
+        /* CacheIR Call ICs should not show up in Ion. */
+        MOZ_CRASH();
     }
     MOZ_CRASH();
 }

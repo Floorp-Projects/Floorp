@@ -5553,20 +5553,14 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
     }
 
     if (!(redirectFlags & nsIChannelEventSink::REDIRECT_STS_UPGRADE) &&
-        mInterceptCache != INTERCEPTED) {
-        // Ensure that internally-redirected channels, or loads with manual
-        // redirect mode cannot be intercepted, which would look like two
-        // separate requests to the nsINetworkInterceptController.
-        if (mRedirectMode != nsIHttpChannelInternal::REDIRECT_MODE_MANUAL ||
-            (redirectFlags & (nsIChannelEventSink::REDIRECT_TEMPORARY |
-                              nsIChannelEventSink::REDIRECT_PERMANENT)) == 0) {
-            nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
-            rv = newChannel->GetLoadFlags(&loadFlags);
-            NS_ENSURE_SUCCESS(rv, rv);
-            loadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
-            rv = newChannel->SetLoadFlags(loadFlags);
-            NS_ENSURE_SUCCESS(rv, rv);
-        }
+        mInterceptCache != INTERCEPTED &&
+        mRedirectMode != nsIHttpChannelInternal::REDIRECT_MODE_MANUAL) {
+      nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
+      rv = newChannel->GetLoadFlags(&loadFlags);
+      NS_ENSURE_SUCCESS(rv, rv);
+      loadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
+      rv = newChannel->SetLoadFlags(loadFlags);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     if (redirectFlags & nsIChannelEventSink::REDIRECT_INTERNAL) {
