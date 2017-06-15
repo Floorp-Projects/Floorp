@@ -1336,9 +1336,10 @@ ClientMultiTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& a
 }
 
 bool
-ClientMultiTiledLayerBuffer::ProgressiveUpdate(nsIntRegion& aValidRegion,
+ClientMultiTiledLayerBuffer::ProgressiveUpdate(const nsIntRegion& aValidRegion,
                                                const nsIntRegion& aInvalidRegion,
                                                const nsIntRegion& aOldValidRegion,
+                                               nsIntRegion& aOutDrawnRegion,
                                                BasicTiledLayerPaintData* aPaintData,
                                                LayerManager::DrawPaintedLayerCallback aCallback,
                                                void* aCallbackData)
@@ -1350,6 +1351,7 @@ ClientMultiTiledLayerBuffer::ProgressiveUpdate(nsIntRegion& aValidRegion,
   bool repeat = false;
   bool isBufferChanged = false;
   nsIntRegion remainingInvalidRegion = aInvalidRegion;
+  nsIntRegion updatedValidRegion = aValidRegion;
   do {
     // Compute the region that should be updated. Repeat as many times as
     // is required.
@@ -1370,13 +1372,14 @@ ClientMultiTiledLayerBuffer::ProgressiveUpdate(nsIntRegion& aValidRegion,
     isBufferChanged = true;
 
     // Keep track of what we're about to refresh.
-    aValidRegion.Or(aValidRegion, regionToPaint);
+    aOutDrawnRegion.OrWith(regionToPaint);
+    updatedValidRegion.OrWith(regionToPaint);
 
     // aValidRegion may have been altered by InvalidateRegion, but we still
     // want to display stale content until it gets progressively updated.
     // Create a region that includes stale content.
     nsIntRegion validOrStale;
-    validOrStale.Or(aValidRegion, aOldValidRegion);
+    validOrStale.Or(updatedValidRegion, aOldValidRegion);
 
     // Paint the computed region and subtract it from the invalid region.
     PaintThebes(validOrStale, regionToPaint, remainingInvalidRegion,
@@ -1384,7 +1387,7 @@ ClientMultiTiledLayerBuffer::ProgressiveUpdate(nsIntRegion& aValidRegion,
     remainingInvalidRegion.SubOut(regionToPaint);
   } while (repeat);
 
-  TILING_LOG("TILING %p: Progressive update final valid region %s buffer changed %d\n", &mPaintedLayer, Stringify(aValidRegion).c_str(), isBufferChanged);
+  TILING_LOG("TILING %p: Progressive update final valid region %s buffer changed %d\n", &mPaintedLayer, Stringify(updatedValidRegion).c_str(), isBufferChanged);
   TILING_LOG("TILING %p: Progressive update final invalid region %s\n", &mPaintedLayer, Stringify(remainingInvalidRegion).c_str());
 
   // Return false if nothing has been drawn, or give what has been drawn
