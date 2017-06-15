@@ -1489,9 +1489,8 @@ Shape::removeChild(Shape* child)
 }
 
 Shape*
-PropertyTree::getChild(JSContext* cx, Shape* parentArg, Handle<StackShape> child)
+PropertyTree::getChild(JSContext* cx, Shape* parent, Handle<StackShape> child)
 {
-    RootedShape parent(cx, parentArg);
     MOZ_ASSERT(parent);
 
     Shape* existingShape = nullptr;
@@ -1526,27 +1525,29 @@ PropertyTree::getChild(JSContext* cx, Shape* parentArg, Handle<StackShape> child
             Shape* tmp = existingShape;
             TraceManuallyBarrieredEdge(zone->barrierTracer(), &tmp, "read barrier");
             MOZ_ASSERT(tmp == existingShape);
-        } else if (IsAboutToBeFinalizedUnbarriered(&existingShape)) {
-            /*
-             * The shape we've found is unreachable and due to be finalized, so
-             * remove our weak reference to it and don't use it.
-             */
-            MOZ_ASSERT(parent->isMarked());
-            parent->removeChild(existingShape);
-            existingShape = nullptr;
-        } else if (existingShape->isMarked(gc::GRAY)) {
-            UnmarkGrayShapeRecursively(existingShape);
+            return existingShape;
         }
+        if (!zone->isGCSweepingOrCompacting() ||
+            !IsAboutToBeFinalizedUnbarriered(&existingShape))
+        {
+            if (existingShape->isMarked(gc::GRAY))
+                UnmarkGrayShapeRecursively(existingShape);
+            return existingShape;
+        }
+        /*
+         * The shape we've found is unreachable and due to be finalized, so
+         * remove our weak reference to it and don't use it.
+         */
+        MOZ_ASSERT(parent->isMarked());
+        parent->removeChild(existingShape);
     }
 
-    if (existingShape)
-        return existingShape;
-
-    Shape* shape = Shape::new_(cx, child, parent->numFixedSlots());
+    RootedShape parentRoot(cx, parent);
+    Shape* shape = Shape::new_(cx, child, parentRoot->numFixedSlots());
     if (!shape)
         return nullptr;
 
-    if (!insertChild(cx, parent, shape))
+    if (!insertChild(cx, parentRoot, shape))
         return nullptr;
 
     return shape;
