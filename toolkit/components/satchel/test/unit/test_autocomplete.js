@@ -58,7 +58,7 @@ add_test(function test0() {
   now = 1000 * Date.now();
   numRecords = Math.ceil(maxTimeGroupings / bucketSize) * 2;
 
-  let changes = [ ];
+  let changes = [];
   for (let i = 0; i < numRecords; i += 2) {
     let useDate = now - (i / 2 * bucketSize * timeGroupingSize);
 
@@ -171,7 +171,7 @@ add_test(function test8() {
 
   let agedDate = 1000 * (Date.now() - getFormExpiryDays() * 24 * 60 * 60 * 1000);
 
-  let changes = [ ];
+  let changes = [];
   changes.push({ op: "add", fieldname: "field3", value: "old but not senior",
     timesUsed: 100, firstUsed: (agedDate + 60 * 1000 * 1000), lastUsed: now });
   changes.push({ op: "add", fieldname: "field3", value: "senior citizen",
@@ -192,7 +192,7 @@ add_test(function test9() {
 add_test(function test10() {
   do_log_info("Check entries that are really old or in the future");
 
-  let changes = [ ];
+  let changes = [];
   changes.push({ op: "add", fieldname: "field4", value: "date of 0",
     timesUsed: 1, firstUsed: 0, lastUsed: 0 });
   changes.push({ op: "add", fieldname: "field4", value: "in the future 1",
@@ -216,7 +216,7 @@ var syncValues = ["sync1", "sync1a", "sync2", "sync3"];
 add_test(function test12() {
   do_log_info("Check old synchronous api");
 
-  let changes = [ ];
+  let changes = [];
   for (let value of syncValues) {
     changes.push({ op: "add", fieldname: "field5", value });
   }
@@ -244,7 +244,7 @@ add_test(function test_token_limit_DB() {
 
   do_log_info("Check that the number of tokens used in a search is capped to MAX_SEARCH_TOKENS " +
                 "for performance when querying the DB");
-  let changes = [ ];
+  let changes = [];
   changes.push({ op: "add", fieldname: "field_token_cap",
     // value with 15 unique tokens
     value: "a b c d e f g h i j k l m n o",
