@@ -28,6 +28,7 @@ BUILDER_NAME_PREFIX = {
     'linux64-jsdcov': 'Ubuntu Code Coverage VM 12.04 x64',
     'linux64-stylo': 'Ubuntu VM 12.04 x64',
     'macosx64': 'Rev7 MacOSX Yosemite 10.10.5',
+    'macosx64-devedition': 'Rev7 MacOSX Yosemite 10.10.5 DevEdition',
     'android-4.3-arm7-api-15': 'Android 4.3 armv7 API 15+',
     'android-4.2-x86': 'Android 4.2 x86 Emulator',
     'android-4.3-arm7-api-15-gradle': 'Android 4.3 armv7 API 15+',
@@ -46,14 +47,13 @@ def test_packages_url(taskdesc):
     build_platform = taskdesc['attributes']['build_platform']
     build_type = taskdesc['attributes']['build_type']
 
-    if build_platform == 'macosx64' and build_type == 'opt':
+    if build_platform.startswith('macosx64') and build_type == 'opt':
         target = 'firefox-{}.en-US.{}'.format(get_firefox_version(), 'mac')
     else:
         target = 'target'
 
     return get_artifact_url(
         '<build>', 'public/build/{}.test_packages.json'.format(target))
-
 
 @run_job_using('docker-engine', 'mozharness-test', schema=mozharness_test_run_schema)
 @run_job_using('docker-worker', 'mozharness-test', schema=mozharness_test_run_schema)
