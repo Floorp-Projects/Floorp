@@ -1337,7 +1337,7 @@ ClientMultiTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& a
 
 bool
 ClientMultiTiledLayerBuffer::ProgressiveUpdate(nsIntRegion& aValidRegion,
-                                               nsIntRegion& aInvalidRegion,
+                                               const nsIntRegion& aInvalidRegion,
                                                const nsIntRegion& aOldValidRegion,
                                                BasicTiledLayerPaintData* aPaintData,
                                                LayerManager::DrawPaintedLayerCallback aCallback,
@@ -1349,11 +1349,12 @@ ClientMultiTiledLayerBuffer::ProgressiveUpdate(nsIntRegion& aValidRegion,
 
   bool repeat = false;
   bool isBufferChanged = false;
+  nsIntRegion remainingInvalidRegion = aInvalidRegion;
   do {
     // Compute the region that should be updated. Repeat as many times as
     // is required.
     nsIntRegion regionToPaint;
-    repeat = ComputeProgressiveUpdateRegion(aInvalidRegion,
+    repeat = ComputeProgressiveUpdateRegion(remainingInvalidRegion,
                                             aOldValidRegion,
                                             regionToPaint,
                                             aPaintData,
@@ -1378,13 +1379,13 @@ ClientMultiTiledLayerBuffer::ProgressiveUpdate(nsIntRegion& aValidRegion,
     validOrStale.Or(aValidRegion, aOldValidRegion);
 
     // Paint the computed region and subtract it from the invalid region.
-    PaintThebes(validOrStale, regionToPaint, aInvalidRegion,
+    PaintThebes(validOrStale, regionToPaint, remainingInvalidRegion,
                 aCallback, aCallbackData, true);
-    aInvalidRegion.Sub(aInvalidRegion, regionToPaint);
+    remainingInvalidRegion.SubOut(regionToPaint);
   } while (repeat);
 
   TILING_LOG("TILING %p: Progressive update final valid region %s buffer changed %d\n", &mPaintedLayer, Stringify(aValidRegion).c_str(), isBufferChanged);
-  TILING_LOG("TILING %p: Progressive update final invalid region %s\n", &mPaintedLayer, Stringify(aInvalidRegion).c_str());
+  TILING_LOG("TILING %p: Progressive update final invalid region %s\n", &mPaintedLayer, Stringify(remainingInvalidRegion).c_str());
 
   // Return false if nothing has been drawn, or give what has been drawn
   // to the shadow layer to upload.

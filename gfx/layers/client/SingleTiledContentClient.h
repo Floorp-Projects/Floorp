@@ -46,7 +46,7 @@ public:
  
   bool SupportsProgressiveUpdate() override { return false; }
   bool ProgressiveUpdate(nsIntRegion& aValidRegion,
-                         nsIntRegion& aInvalidRegion,
+                         const nsIntRegion& aInvalidRegion,
                          const nsIntRegion& aOldValidRegion,
                          BasicTiledLayerPaintData* aPaintData,
                          LayerManager::DrawPaintedLayerCallback aCallback,
