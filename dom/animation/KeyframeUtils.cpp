@@ -409,7 +409,7 @@ RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
                           nsIDocument* aDocument);
 
 static void
-DistributeRange(const Range<Keyframe>& aSpacingRange);
+DistributeRange(const Range<Keyframe>& aRange);
 
 // ------------------------------------------------------------------
 //
@@ -1517,48 +1517,24 @@ RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
 }
 
 /**
- * Evenly distribute the computed offsets in (A, B).
- * We pass the range keyframes in [A, B] and use A, B to calculate distributing
- * computed offsets in (A, B). The second range, aRangeToAdjust, is passed, so
- * we can know which keyframe we want to apply to. aRangeToAdjust should be in
- * the range of aSpacingRange.
+ * Distribute the offsets of all keyframes in between the endpoints of the
+ * given range.
  *
- * @param aSpacingRange The sequence of keyframes between whose endpoints we
- *   should apply distribute offsets.
- * @param aRangeToAdjust The range of keyframes we want to apply to.
+ * @param aRange The sequence of keyframes between whose endpoints we should
+ * distribute offsets.
  */
 static void
-DistributeRange(const Range<Keyframe>& aSpacingRange,
-                const Range<Keyframe>& aRangeToAdjust)
+DistributeRange(const Range<Keyframe>& aRange)
 {
-  MOZ_ASSERT(aRangeToAdjust.begin() >= aSpacingRange.begin() &&
-             aRangeToAdjust.end() <= aSpacingRange.end(),
-             "Out of range");
-  const size_t n = aSpacingRange.length() - 1;
-  const double startOffset = aSpacingRange[0].mComputedOffset;
-  const double diffOffset = aSpacingRange[n].mComputedOffset - startOffset;
-  for (auto iter = aRangeToAdjust.begin();
-       iter != aRangeToAdjust.end();
-       ++iter) {
-    size_t index = iter - aSpacingRange.begin();
+  const Range<Keyframe> rangeToAdjust = Range<Keyframe>(aRange.begin() + 1,
+                                                        aRange.end() - 1);
+  const size_t n = aRange.length() - 1;
+  const double startOffset = aRange[0].mComputedOffset;
+  const double diffOffset = aRange[n].mComputedOffset - startOffset;
+  for (auto iter = rangeToAdjust.begin(); iter != rangeToAdjust.end(); ++iter) {
+    size_t index = iter - aRange.begin();
     iter->mComputedOffset = startOffset + double(index) / n * diffOffset;
   }
-}
-
-/**
- * Overload of DistributeRange to apply distribute spacing to all keyframes in
- * between the endpoints of the given range.
- *
- * @param aSpacingRange The sequence of keyframes between whose endpoints we
- *   should apply distribute spacing.
- */
-static void
-DistributeRange(const Range<Keyframe>& aSpacingRange)
-{
-  // We don't need to apply distribute spacing to keyframe A and keyframe B.
-  DistributeRange(aSpacingRange,
-                  Range<Keyframe>(aSpacingRange.begin() + 1,
-                                  aSpacingRange.end() - 1));
 }
 
 } // namespace mozilla
