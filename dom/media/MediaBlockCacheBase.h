@@ -50,9 +50,6 @@ protected:
 public:
   virtual nsresult Init() = 0;
 
-  // Closes writer, shuts down thread.
-  virtual void Close() = 0;
-
   // Can be called on any thread. This defers to a non-main thread.
   virtual nsresult WriteBlock(uint32_t aBlockIndex,
                               Span<const uint8_t> aData1,

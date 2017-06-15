@@ -46,7 +46,6 @@ MemoryBlockCache::MemoryBlockCache(int64_t aContentLength)
 
 MemoryBlockCache::~MemoryBlockCache()
 {
-  MOZ_ASSERT(mBuffer.IsEmpty());
 }
 
 bool
@@ -84,14 +83,6 @@ MemoryBlockCache::Init()
   // Ignore initial growth.
   mHasGrown = false;
   return NS_OK;
-}
-
-void
-MemoryBlockCache::Close()
-{
-  LOG("@%p Close()", this);
-  MutexAutoLock lock(mMutex);
-  mBuffer.SetLength(0);
 }
 
 nsresult
