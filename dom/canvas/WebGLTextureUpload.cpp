@@ -1292,7 +1292,7 @@ WebGLTexture::TexImage(const char* funcName, TexImageTarget target, GLint level,
 
     GLenum glError;
     if (!blob->TexOrSubImage(isSubImage, needsRespec, funcName, this, target, level,
-                             driverUnpackInfo, xOffset, yOffset, zOffset, &glError))
+                             driverUnpackInfo, xOffset, yOffset, zOffset, pi, &glError))
     {
         return;
     }
@@ -1380,7 +1380,7 @@ WebGLTexture::TexSubImage(const char* funcName, TexImageTarget target, GLint lev
 
     GLenum glError;
     if (!blob->TexOrSubImage(isSubImage, needsRespec, funcName, this, target, level,
-                             driverUnpackInfo, xOffset, yOffset, zOffset, &glError))
+                             driverUnpackInfo, xOffset, yOffset, zOffset, pi, &glError))
     {
         return;
     }
