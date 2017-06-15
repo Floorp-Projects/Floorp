@@ -675,7 +675,8 @@ this.menusInternal = class extends ExtensionAPI {
 
         onClicked: new EventManager(context, "menusInternal.onClicked", fire => {
           let listener = (event, info, tab) => {
-            fire.async(info, tab);
+            context.withPendingBrowser(tab.linkedBrowser,
+                                       () => fire.sync(info, tab));
           };
 
           extension.on("webext-menu-menuitem-click", listener);
