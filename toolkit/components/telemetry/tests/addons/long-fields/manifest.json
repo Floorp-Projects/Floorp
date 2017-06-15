@@ -1,0 +1,12 @@
+{
+  "manifest_version": 2,
+  "name": "This is a really long addon name, that will get limited to 100 characters. We're much longer, we're at about 219. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus nullam sodales. Yeah, Latin placeholder.",
+  "description": "This is a really long addon description, that will get limited to 100 characters. We're much longer, we're at about 200. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus nullam sodales.",
+  "version": "1.0",
+
+  "applications": {
+    "gecko": {
+      "id": "tel-longfields-webext@tests.mozilla.org"
+    }
+  }
+}
