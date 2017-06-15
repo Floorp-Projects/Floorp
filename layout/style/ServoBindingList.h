@@ -228,6 +228,8 @@ SERVO_BINDING_FUNC(Servo_ComputedValues_ExtractAnimationValue,
                    nsCSSPropertyID property)
 SERVO_BINDING_FUNC(Servo_Property_IsAnimatable, bool,
                    nsCSSPropertyID property)
+SERVO_BINDING_FUNC(Servo_Property_IsTransitionable, bool,
+                   nsCSSPropertyID property)
 SERVO_BINDING_FUNC(Servo_Property_IsDiscreteAnimatable, bool,
                    nsCSSPropertyID property)
 SERVO_BINDING_FUNC(Servo_GetProperties_Overriding_Animation, void,

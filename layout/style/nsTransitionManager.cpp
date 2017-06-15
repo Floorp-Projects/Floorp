@@ -828,12 +828,13 @@ GetTransitionKeyframes(nsCSSPropertyID aProperty,
 }
 
 static bool
-IsAnimatable(nsCSSPropertyID aProperty, bool aIsServo)
+IsTransitionable(nsCSSPropertyID aProperty, bool aIsServo)
 {
   if (aIsServo) {
-    return Servo_Property_IsAnimatable(aProperty);
+    return Servo_Property_IsTransitionable(aProperty);
   }
 
+  // FIXME: This should also exclude discretely-animated properties.
   return nsCSSProps::kAnimTypeTable[aProperty] != eStyleAnimType_None;
 }
 
@@ -871,7 +872,7 @@ nsTransitionManager::ConsiderInitiatingTransition(
     return;
   }
 
-  if (!IsAnimatable(aProperty, aElement->IsStyledByServo())) {
+  if (!IsTransitionable(aProperty, aElement->IsStyledByServo())) {
     return;
   }
 
