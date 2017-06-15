@@ -15,6 +15,9 @@ document.getElementById("onboarding-overlay-dialog")
     case "onboarding-tour-customize-button":
       Mozilla.UITour.showHighlight("customize");
       break;
+   case "onboarding-tour-default-browser-button":
+      Mozilla.UITour.setConfiguration("defaultBrowser");
+      break;
     case "onboarding-tour-private-browsing-button":
       Mozilla.UITour.showHighlight("privateWindow");
       break;
