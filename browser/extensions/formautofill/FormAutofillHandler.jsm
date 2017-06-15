@@ -90,10 +90,61 @@ FormAutofillHandler.prototype = {
    * Set fieldDetails from the form about fields that can be autofilled.
    */
   collectFormFields() {
+    this._cacheValue.allFieldNames = null;
     this._formFieldCount = this.form.elements.length;
     let fieldDetails = FormAutofillHeuristics.getFormInfo(this.form);
     this.fieldDetails = fieldDetails ? fieldDetails : [];
     log.debug("Collected details on", this.fieldDetails.length, "fields");
+  },
+
+  getFieldDetailByName(fieldName) {
+    return this.fieldDetails.find(detail => detail.fieldName == fieldName);
+  },
+
+  _cacheValue: {
+    allFieldNames: null,
+    oneLineStreetAddress: null,
+  },
+
+  get allFieldNames() {
+    if (!this._cacheValue.allFieldNames) {
+      this._cacheValue.allFieldNames = this.fieldDetails.map(record => record.fieldName);
+    }
+    return this._cacheValue.allFieldNames;
+  },
+
+  _getOneLineStreetAddress(address) {
+    if (!this._cacheValue.oneLineStreetAddress) {
+      this._cacheValue.oneLineStreetAddress = {};
+    }
+    if (!this._cacheValue.oneLineStreetAddress[address]) {
+      this._cacheValue.oneLineStreetAddress[address] = FormAutofillUtils.toOneLineAddress(address);
+    }
+    return this._cacheValue.oneLineStreetAddress[address];
+  },
+
+  _addressTransformer(profile) {
+    if (profile["street-address"]) {
+      profile["street-address"] = this._getOneLineStreetAddress(profile["street-address"]);
+
+      let waitForConcat = [];
+      for (let f of ["address-line3", "address-line2", "address-line1"]) {
+        waitForConcat.unshift(profile[f]);
+        if (this.getFieldDetailByName(f)) {
+          if (waitForConcat.length > 1) {
+            profile[f] = FormAutofillUtils.toOneLineAddress(waitForConcat);
+          }
+          waitForConcat = [];
+        }
+      }
+    }
+  },
+
+  getAdaptedProfiles(originalProfiles) {
+    for (let profile of originalProfiles) {
+      this._addressTransformer(profile);
+    }
+    return originalProfiles;
   },
 
   /**
