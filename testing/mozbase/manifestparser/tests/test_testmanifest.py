@@ -120,5 +120,6 @@ class TestTestManifest(unittest.TestCase):
         self.assertEqual(len(empty_manifest.test_paths()), 0)
         self.assertEqual(len(empty_manifest.active_tests()), 0)
 
+
 if __name__ == '__main__':
     mozunit.main()

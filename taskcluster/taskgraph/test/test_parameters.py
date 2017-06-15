@@ -58,5 +58,6 @@ class TestParameters(unittest.TestCase):
                     load_parameters_file({'parameters': 'params.json'}),
                     {'some': 'data'})
 
+
 if __name__ == '__main__':
     main()

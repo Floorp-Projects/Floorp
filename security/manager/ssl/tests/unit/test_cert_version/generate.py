@@ -54,6 +54,7 @@ def writeCertspec(issuer, subject, fields):
             if len(field) > 0:
                 f.write('%s\n' % field)
 
+
 keyUsage = 'extension:keyUsage:keyCertSign,cRLSign'
 basicConstraintsCA = 'extension:basicConstraints:cA,'
 

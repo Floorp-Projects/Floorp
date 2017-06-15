@@ -82,5 +82,6 @@ class TestIndexTask(unittest.TestCase):
         taskgraph = TaskGraph(tasks, graph)
         return taskgraph, label_to_taskid
 
+
 if __name__ == '__main__':
     main()

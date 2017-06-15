@@ -515,5 +515,6 @@ def main(args=sys.argv[1:]):
               args.error_filename, args.all_stages, args.all_threads,
               debug=args.debug_level >= xtalos.DEBUG_INFO)
 
+
 if __name__ == "__main__":
     main()

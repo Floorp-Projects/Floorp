@@ -100,5 +100,6 @@ class TestNamedTemporaryFile(unittest.TestCase):
             if path and os.path.exists(path):
                 os.remove(path)
 
+
 if __name__ == '__main__':
     mozunit.main()

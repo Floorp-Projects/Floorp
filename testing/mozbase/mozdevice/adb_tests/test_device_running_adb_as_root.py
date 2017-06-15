@@ -33,6 +33,7 @@ class TestFileOperations(unittest.TestCase):
         dm = DeviceManagerADB()
         dm.reboot()
 
+
 if __name__ == "__main__":
     dm = DeviceManagerADB()
     if not dm.devices():

@@ -61,5 +61,6 @@ class TestLoad(unittest.TestCase):
             if os.path.exists(tmp.name):
                 os.remove(tmp.name)
 
+
 if __name__ == '__main__':
     mozunit.main()

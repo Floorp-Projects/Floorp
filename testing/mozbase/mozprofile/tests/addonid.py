@@ -183,5 +183,6 @@ class AddonIDTest(unittest.TestCase):
 """]
         return tests
 
+
 if __name__ == '__main__':
     mozunit.main()

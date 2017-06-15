@@ -168,6 +168,7 @@ class string_token(literal_token):
     def __init__(self, scanner, value):
         literal_token.__init__(self, scanner, value[1:-1])
 
+
 precedence = [(end_token, rparen_token),
               (or_op_token,),
               (and_op_token,),
