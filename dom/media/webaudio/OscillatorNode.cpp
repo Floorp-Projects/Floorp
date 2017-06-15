@@ -389,8 +389,9 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  AudioNodeStream* mSource;
-  AudioNodeStream* mDestination;
+  // mSource deletes this engine in its destructor
+  AudioNodeStream* MOZ_NON_OWNING_REF mSource;
+  RefPtr<AudioNodeStream> mDestination;
   StreamTime mStart;
   StreamTime mStop;
   AudioParamTimeline mFrequency;
