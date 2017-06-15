@@ -104,7 +104,6 @@
 #include "nsIDocShell.h"
 #include "nsIDocCharset.h"
 #include "nsIDocument.h"
-#include "nsIDocumentInlines.h"
 #include "Crypto.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
@@ -1000,7 +999,6 @@ nsPIDOMWindow<T>::nsPIDOMWindow(nsPIDOMWindowOuter *aOuterWindow)
   mIsHandlingResizeEvent(false), mIsInnerWindow(aOuterWindow != nullptr),
   mMayHavePaintEventListener(false), mMayHaveTouchEventListener(false),
   mMayHaveMouseEnterLeaveEventListener(false),
-  mMayHaveMouseMoveEventListener(false),
   mMayHavePointerEnterLeaveEventListener(false),
   mInnerObjectsFreed(false),
   mIsModalContentWindow(false),
@@ -2081,23 +2079,6 @@ void
 nsGlobalWindow::FreeInnerObjects()
 {
   NS_ASSERTION(IsInnerWindow(), "Don't free inner objects on an outer window");
-
-  if (mDoc && !nsContentUtils::IsSystemPrincipal(mDoc->NodePrincipal())) {
-    EventTarget* win = this;
-    EventTarget* html = mDoc->GetHtmlElement();
-    EventTarget* body = mDoc->GetBodyElement();
-
-    bool mouseAware = AsInner()->HasMouseMoveEventListeners();
-    bool keyboardAware = win->MayHaveAPZAwareKeyEventListener() ||
-                         mDoc->MayHaveAPZAwareKeyEventListener() ||
-                         (html && html->MayHaveAPZAwareKeyEventListener()) ||
-                         (body && body->MayHaveAPZAwareKeyEventListener());
-
-    Telemetry::Accumulate(Telemetry::APZ_AWARE_MOUSEMOVE_LISTENERS,
-                          mouseAware ? 1 : 0);
-    Telemetry::Accumulate(Telemetry::APZ_AWARE_KEY_LISTENERS,
-                          keyboardAware ? 1 : 0);
-  }
 
   // Make sure that this is called before we null out the document and
   // other members that the window destroyed observers could
