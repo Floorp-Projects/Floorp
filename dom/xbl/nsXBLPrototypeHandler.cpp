@@ -51,7 +51,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/EventHandlerBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/layers/Keyboard.h"
+#include "mozilla/layers/KeyboardMap.h"
 #include "xpcpublic.h"
 
 using namespace mozilla;

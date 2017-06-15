@@ -8,7 +8,7 @@
 #define mozilla_layers_KeyboardScrollAnimation_h_
 
 #include "GenericScrollAnimation.h"
-#include "mozilla/layers/Keyboard.h"
+#include "mozilla/layers/KeyboardMap.h"
 
 namespace mozilla {
 namespace layers {

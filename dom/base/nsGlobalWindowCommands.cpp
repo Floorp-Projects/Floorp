@@ -36,7 +36,7 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Selection.h"
-#include "mozilla/layers/Keyboard.h"
+#include "mozilla/layers/KeyboardMap.h"
 
 #include "nsIClipboardDragDropHooks.h"
 #include "nsIClipboardDragDropHookList.h"

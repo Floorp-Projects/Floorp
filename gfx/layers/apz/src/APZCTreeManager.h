@@ -14,7 +14,7 @@
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
 #include "mozilla/layers/TouchCounter.h"// for TouchCounter
 #include "mozilla/layers/IAPZCTreeManager.h" // for IAPZCTreeManager
-#include "mozilla/layers/Keyboard.h"    // for KeyboardMap
+#include "mozilla/layers/KeyboardMap.h" // for KeyboardMap
 #include "mozilla/layers/FocusState.h"  // for FocusState
 #include "mozilla/Mutex.h"              // for Mutex
 #include "mozilla/RefPtr.h"             // for RefPtr
