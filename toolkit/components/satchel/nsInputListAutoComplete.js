@@ -61,7 +61,7 @@ InputListAutoComplete.prototype = {
     }
 
     return [values, labels];
-  }
+  },
 };
 
 var component = [InputListAutoComplete];

@@ -45,7 +45,7 @@ function searchEntries(terms, params, iter) {
       if (!reason) {
         iter.next(results);
       }
-    }
+    },
   });
 }
 
@@ -70,7 +70,7 @@ function countEntries(name, value, then) {
       if (!reason) {
         then(count);
       }
-    }
+    },
   });
 }
 
@@ -95,7 +95,7 @@ function addEntry(name, value, then) {
     value,
     timesUsed: 1,
     firstUsed: now,
-    lastUsed: now
+    lastUsed: now,
   }, then);
 }
 

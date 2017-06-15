@@ -119,7 +119,7 @@ var Prefs = {
     this._debug = Services.prefs.getBoolPref("browser.formfill.debug");
     this._enabled = Services.prefs.getBoolPref("browser.formfill.enable");
     this._expireDays = Services.prefs.getIntPref("browser.formfill.expire_days");
-  }
+  },
 };
 
 function log(aMessage) {
@@ -165,23 +165,23 @@ const dbSchema = {
     moz_deleted_formhistory: {
       "id": "INTEGER PRIMARY KEY",
       "timeDeleted": "INTEGER",
-      "guid": "TEXT"
-    }
+      "guid": "TEXT",
+    },
   },
   indices: {
     moz_formhistory_index: {
       table: "moz_formhistory",
-      columns: ["fieldname"]
+      columns: ["fieldname"],
     },
     moz_formhistory_lastused_index: {
       table: "moz_formhistory",
-      columns: ["lastUsed"]
+      columns: ["lastUsed"],
     },
     moz_formhistory_guid_index: {
       table: "moz_formhistory",
-      columns: ["guid"]
+      columns: ["guid"],
     },
-  }
+  },
 };
 
 /**
@@ -475,7 +475,7 @@ var Migrators = {
       let tSQL = Object.keys(table).map(col => [col, table[col]].join(" ")).join(", ");
       _dbConnection.createTable("moz_deleted_formhistory", tSQL);
     }
-  }
+  },
 };
 
 function dbCreate() {
@@ -715,7 +715,7 @@ function updateFormHistoryWrite(aChanges, aCallbacks) {
         aCallbacks.handleError(aError);
       }
     },
-    handleResult: NOOP
+    handleResult: NOOP,
   };
 
   dbConnection.executeAsync(stmts, stmts.length, handlers);
@@ -744,7 +744,7 @@ function expireOldEntriesDeletion(aExpireTime, aBeginningCount) {
     },
     handleError(aError) {
       log("expireOldEntriesDeletionFailure");
-    }
+    },
   });
 }
 
@@ -766,7 +766,7 @@ function expireOldEntriesVacuum(aExpireTime, aBeginningCount) {
           handleError(aError) {
             log("expireVacuumError");
           },
-          handleCompletion: NOOP
+          handleCompletion: NOOP,
         });
       }
 
@@ -774,7 +774,7 @@ function expireOldEntriesVacuum(aExpireTime, aBeginningCount) {
     },
     handleError(aError) {
       log("expireEndCountFailure");
-    }
+    },
   });
 }
 
@@ -820,7 +820,7 @@ this.FormHistory = {
               1
           );
         }
-      }
+      },
     };
 
     stmt.executeAsync(handlers);
@@ -852,7 +852,7 @@ this.FormHistory = {
               1
           );
         }
-      }
+      },
     };
 
     stmt.executeAsync(handlers);
@@ -880,7 +880,7 @@ this.FormHistory = {
       if (aCallbacks && aCallbacks.handleError) {
         aCallbacks.handleError({
           message: "Form history is disabled, only remove operations are allowed",
-          result: Ci.mozIStorageError.MISUSE
+          result: Ci.mozIStorageError.MISUSE,
         });
       }
       if (aCallbacks && aCallbacks.handleCompletion) {
@@ -940,7 +940,7 @@ this.FormHistory = {
         ["guid"],
         {
           fieldname: change.fieldname,
-          value: change.value
+          value: change.value,
         }, {
           foundResult: false,
           handleResult(aResult) {
@@ -950,7 +950,7 @@ this.FormHistory = {
                 aCallbacks.handleError({
                   message:
                     "Database contains multiple entries with the same fieldname/value pair.",
-                  result: 19 // Constraint violation
+                  result: 19, // Constraint violation
                 });
               }
 
@@ -977,7 +977,7 @@ this.FormHistory = {
                 aCallbacks.handleCompletion(1);
               }
             }
-          }
+          },
         });
     }
 
@@ -1075,7 +1075,7 @@ this.FormHistory = {
             text:          value,
             textLowerCase: value.toLowerCase(),
             frecency,
-            totalScore:    Math.round(frecency * row.getResultByName("boundaryBonuses"))
+            totalScore:    Math.round(frecency * row.getResultByName("boundaryBonuses")),
           };
           if (aCallbacks && aCallbacks.handleResult) {
             aCallbacks.handleResult(entry);
@@ -1097,7 +1097,7 @@ this.FormHistory = {
               1
           );
         }
-      }
+      },
     });
     return pending;
   },
@@ -1134,11 +1134,11 @@ this.FormHistory = {
       },
       handleError(aError) {
         log("expireStartCountFailure");
-      }
+      },
     });
   },
 
-  shutdown() { dbClose(true); }
+  shutdown() { dbClose(true); },
 };
 
 // Prevent add-ons from redefining this API

@@ -67,7 +67,7 @@ var ParentUtils = {
         if (!reason) {
           sendAsyncMessage("entriesCounted", { ok: true, count });
         }
-      }
+      },
     };
 
     FormHistory.count(obj, listener);
@@ -117,7 +117,7 @@ var ParentUtils = {
   cleanup() {
     gAutocompletePopup.removeEventListener("popupshown", this._popupshownListener);
     this.cleanUpFormHist();
-  }
+  },
 };
 
 ParentUtils._popupshownListener =

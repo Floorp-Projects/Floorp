@@ -129,7 +129,7 @@ var checkObserver = {
                      callback();
                    }
                  });
-  }
+  },
 };
 
 function checkForSave(name, value, message) {

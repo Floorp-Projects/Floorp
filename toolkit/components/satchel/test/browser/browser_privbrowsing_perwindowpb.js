@@ -38,7 +38,7 @@ add_task(async function test() {
                           }
 
                           doneCounting.resolve();
-                        }
+                        },
                       });
     await doneCounting.promise;
   }
