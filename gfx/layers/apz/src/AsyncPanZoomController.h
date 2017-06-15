@@ -936,6 +936,7 @@ private:
   friend class GenericFlingAnimation;
   friend class OverscrollAnimation;
   friend class SmoothScrollAnimation;
+  friend class GenericScrollAnimation;
   friend class WheelScrollAnimation;
 
   friend class GenericOverscrollEffect;

@@ -292,6 +292,7 @@ UNIFIED_SOURCES += [
     'apz/src/DragTracker.cpp',
     'apz/src/FocusState.cpp',
     'apz/src/FocusTarget.cpp',
+    'apz/src/GenericScrollAnimation.cpp',
     'apz/src/GestureEventListener.cpp',
     'apz/src/HitTestingTreeNode.cpp',
     'apz/src/InputBlockState.cpp',
