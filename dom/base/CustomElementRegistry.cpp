@@ -843,10 +843,11 @@ CustomElementRegistry::WhenDefined(const nsAString& aName, ErrorResult& aRv)
     return promise.forget();
   }
 
-  if (mWhenDefinedPromiseMap.Contains(nameAtom)) {
-    mWhenDefinedPromiseMap.Get(nameAtom, getter_AddRefs(promise));
+  auto entry = mWhenDefinedPromiseMap.LookupForAdd(nameAtom);
+  if (entry) {
+    promise = entry.Data();
   } else {
-    mWhenDefinedPromiseMap.Put(nameAtom, promise);
+    entry.OrInsert([&promise](){ return promise; });
   }
 
   return promise.forget();

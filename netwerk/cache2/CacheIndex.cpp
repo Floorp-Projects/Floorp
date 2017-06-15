@@ -1624,7 +1624,7 @@ CacheIndex::ProcessPendingOperations()
             // Entries with empty file are not stored in index on disk. Just
             // remove the entry, but only in case the entry is not dirty, i.e.
             // the entry file was empty when we wrote the index.
-            mIndex.RemoveEntry(*update->Hash());
+            mIndex.RemoveEntry(entry);
             entry = nullptr;
           } else {
             entry->MarkRemoved();

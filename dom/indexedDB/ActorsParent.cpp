@@ -25245,6 +25245,7 @@ static const JSClassOps sNormalJSContextGlobalClassOps = {
   /* getProperty */ nullptr,
   /* setProperty */ nullptr,
   /* enumerate */ nullptr,
+  /* newEnumerate */ nullptr,
   /* resolve */ nullptr,
   /* mayResolve */ nullptr,
   /* finalize */ nullptr,

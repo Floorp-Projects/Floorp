@@ -255,6 +255,7 @@ public:
   NS_IMETHOD GetFetchCacheMode(uint32_t* aFetchCacheMode) override;
   NS_IMETHOD SetFetchCacheMode(uint32_t aFetchCacheMode) override;
   NS_IMETHOD GetTopWindowURI(nsIURI **aTopWindowURI) override;
+  NS_IMETHOD SetTopWindowURIIfUnknown(nsIURI *aTopWindowURI) override;
   NS_IMETHOD GetProxyURI(nsIURI **proxyURI) override;
   virtual void SetCorsPreflightParameters(const nsTArray<nsCString>& unsafeHeaders) override;
   NS_IMETHOD GetConnectionInfoHashKey(nsACString& aConnectionInfoHashKey) override;
@@ -375,7 +376,7 @@ protected:
   virtual void DoNotifyListenerCleanup() = 0;
 
   // drop reference to listener, its callbacks, and the progress sink
-  void ReleaseListeners();
+  virtual void ReleaseListeners();
 
   // This is fired only when a cookie is created due to the presence of
   // Set-Cookie header in the response header of any network request.

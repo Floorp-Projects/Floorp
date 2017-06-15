@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1370858
+-->
+<head>
+<title>Test for Bug 1370858</title>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1370858">Mozilla Bug 722599</a>
+<p id="display"></p>
+<div id="content">
+<input type="time" id="input_time" onchange="++changeEvents[0]"
+                                   oninput="++inputEvents[0]">
+<input type="date" id="input_date" onchange="++changeEvents[1]"
+                                   oninput="++inputEvents[1]">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/**
+ * Test for Bug 1370858.
+ * Test that change and input events are (not) fired for date/time inputs.
+ **/
+
+var inputTypes = ["time", "date"];
+var changeEvents = [0, 0];
+var inputEvents = [0, 0];
+var values = ["10:30", "2017-06-08"];
+var expectedValues = [["09:30", "01:30"], ["2017-05-08", "2017-01-08"]];
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  test();
+  SimpleTest.finish();
+});
+
+function test() {
+  for (var i = 0; i < inputTypes.length; i++) {
+    var input = document.getElementById("input_" + inputTypes[i]);
+    var inputRect = input.getBoundingClientRect();
+
+    // Points over the input's reset button
+    var resetButton_X = inputRect.width - 15;
+    var resetButton_Y = inputRect.height / 2;
+
+    is(changeEvents[i], 0, "Number of change events should be 0 at start.");
+    is(inputEvents[i], 0, "Number of input events should be 0 at start.");
+
+    // Test that change and input events are not dispatched setting .value by
+    // script.
+    input.value = values[i];
+    is(input.value, values[i], "Check that value was set correctly (0).");
+    is(changeEvents[i], 0, "Change event should not have dispatched (0).");
+    is(inputEvents[i], 0, "Input event should not have dispatched (0).");
+
+    // Test that change and input events are fired when changing the value using
+    // up/down keys.
+    input.focus();
+    synthesizeKey("VK_DOWN", {});
+    is(input.value, expectedValues[i][0], "Check that value was set correctly (1).");
+    is(changeEvents[i], 1, "Change event should be dispatched (1).");
+    is(inputEvents[i], 1, "Input event should ne dispatched (1).");
+
+    // Test that change and input events are fired when changing the value with
+    // the keyboard.
+    synthesizeKey("0", {});
+    synthesizeKey("1", {});
+    is(input.value, expectedValues[i][1], "Check that value was set correctly (2).");
+    is(changeEvents[i], 2, "Change event should be dispatched (2).");
+    is(inputEvents[i], 2, "Input event should be dispatched (2).");
+
+    // Test that change and input events are fired when clearing the value using
+    // the reset button.
+    synthesizeMouse(input, resetButton_X, resetButton_Y, {});
+    is(input.value, "", "Check that value was set correctly (3).");
+    is(changeEvents[i], 3, "Change event should be dispatched (3).");
+    is(inputEvents[i], 3, "Input event should be dispatched (3).");
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

@@ -2769,9 +2769,23 @@ js::PreventExtensions(JSContext* cx, HandleObject obj, ObjectOpResult& result, I
 
     // Force lazy properties to be resolved.
     if (obj->isNative()) {
-        if (JSEnumerateOp enumerate = obj->getClass()->getEnumerate()) {
+        const Class* clasp = obj->getClass();
+        if (JSEnumerateOp enumerate = clasp->getEnumerate()) {
             if (!enumerate(cx, obj.as<NativeObject>()))
                 return false;
+        }
+        if (clasp->getNewEnumerate() && clasp->getResolve()) {
+            AutoIdVector properties(cx);
+            if (!clasp->getNewEnumerate()(cx, obj, properties, /* enumerableOnly = */ false))
+                return false;
+
+            RootedId id(cx);
+            for (size_t i = 0; i < properties.length(); i++) {
+                id = properties[i];
+                bool found;
+                if (!HasOwnProperty(cx, obj, id, &found))
+                    return false;
+            }
         }
     }
 

@@ -33,7 +33,7 @@ using mozilla::CheckedInt;
 Table::Table(JSContext* cx, const TableDesc& desc, HandleWasmTableObject maybeObject,
              UniqueByteArray array)
   : maybeObject_(maybeObject),
-    observers_(cx->zone(), InstanceSet()),
+    observers_(cx->zone()),
     array_(Move(array)),
     kind_(desc.kind),
     length_(desc.limits.initial),

@@ -609,7 +609,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     GlobalObject* unwrapDebuggeeArgument(JSContext* cx, const Value& v);
 
     static void traceObject(JSTracer* trc, JSObject* obj);
+
     void trace(JSTracer* trc);
+    friend struct js::GCManagedDeletePolicy<Debugger>;
+
     void traceForMovingGC(JSTracer* trc);
     void traceCrossCompartmentEdges(JSTracer* tracer);
 

@@ -552,7 +552,7 @@ static const JSClass sCABIClass = {
 static const JSClassOps sCTypeProtoClassOps = {
   nullptr, nullptr, nullptr, nullptr,
   nullptr, nullptr, nullptr, nullptr,
-  ConstructAbstract, nullptr, ConstructAbstract
+  nullptr, ConstructAbstract, nullptr, ConstructAbstract
 };
 static const JSClass sCTypeProtoClass = {
   "CType",
@@ -569,8 +569,8 @@ static const JSClass sCDataProtoClass = {
 
 static const JSClassOps sCTypeClassOps = {
   nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, CType::Finalize,
-  CType::ConstructData, CType::HasInstance, CType::ConstructData,
+  nullptr, nullptr, nullptr, nullptr,
+  CType::Finalize, CType::ConstructData, CType::HasInstance, CType::ConstructData,
   CType::Trace
 };
 static const JSClass sCTypeClass = {
@@ -582,8 +582,8 @@ static const JSClass sCTypeClass = {
 
 static const JSClassOps sCDataClassOps = {
   nullptr, nullptr, ArrayType::Getter, ArrayType::Setter,
-  nullptr, nullptr, nullptr, CData::Finalize,
-  FunctionType::Call, nullptr, FunctionType::Call
+  nullptr, nullptr, nullptr, nullptr,
+  CData::Finalize, FunctionType::Call, nullptr, FunctionType::Call
 };
 static const JSClass sCDataClass = {
   "CData",
@@ -594,8 +594,9 @@ static const JSClass sCDataClass = {
 
 static const JSClassOps sCClosureClassOps = {
   nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, CClosure::Finalize,
-  nullptr, nullptr, nullptr, CClosure::Trace
+  nullptr, nullptr, nullptr, nullptr,
+  CClosure::Finalize, nullptr, nullptr, nullptr,
+  CClosure::Trace
 };
 static const JSClass sCClosureClass = {
   "CClosure",
@@ -620,7 +621,8 @@ static const JSClass sCDataFinalizerProtoClass = {
  */
 static const JSClassOps sCDataFinalizerClassOps = {
   nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, CDataFinalizer::Finalize
+  nullptr, nullptr, nullptr, nullptr,
+  CDataFinalizer::Finalize
 };
 static const JSClass sCDataFinalizerClass = {
   "CDataFinalizer",
@@ -811,7 +813,8 @@ static const JSClass sUInt64ProtoClass = {
 
 static const JSClassOps sInt64ClassOps = {
   nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, Int64Base::Finalize
+  nullptr, nullptr, nullptr, nullptr,
+  Int64Base::Finalize
 };
 
 static const JSClass sInt64Class = {

@@ -877,7 +877,6 @@ public:
 
 private:
   void AddOnDemandBuiltInUASheet(mozilla::StyleSheet* aSheet);
-  nsRadioGroupStruct* GetRadioGroupInternal(const nsAString& aName) const;
   void SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages);
 
 public:

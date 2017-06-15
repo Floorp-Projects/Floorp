@@ -2696,7 +2696,7 @@ JSRuntime::createSelfHostingGlobal(JSContext* cx)
     static const ClassOps shgClassOps = {
         nullptr, nullptr, nullptr, nullptr,
         nullptr, nullptr, nullptr, nullptr,
-        nullptr, nullptr, nullptr,
+        nullptr, nullptr, nullptr, nullptr,
         JS_GlobalObjectTraceHook
     };
 

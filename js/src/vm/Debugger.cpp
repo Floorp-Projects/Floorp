@@ -88,6 +88,7 @@ const ClassOps DebuggerFrame::classOps_ = {
     nullptr,    /* getProperty */
     nullptr,    /* setProperty */
     nullptr,    /* enumerate   */
+    nullptr,    /* newEnumerate */
     nullptr,    /* resolve     */
     nullptr,    /* mayResolve  */
     DebuggerFrame_finalize,
@@ -121,6 +122,7 @@ const ClassOps DebuggerEnvironment::classOps_ = {
     nullptr,    /* getProperty */
     nullptr,    /* setProperty */
     nullptr,    /* enumerate   */
+    nullptr,    /* newEnumerate */
     nullptr,    /* resolve     */
     nullptr,    /* mayResolve  */
     nullptr,    /* finalize    */
@@ -148,6 +150,7 @@ const ClassOps DebuggerObject::classOps_ = {
     nullptr,    /* getProperty */
     nullptr,    /* setProperty */
     nullptr,    /* enumerate   */
+    nullptr,    /* newEnumerate */
     nullptr,    /* resolve     */
     nullptr,    /* mayResolve  */
     nullptr,    /* finalize    */
@@ -175,6 +178,7 @@ static const ClassOps DebuggerScript_classOps = {
     nullptr,    /* getProperty */
     nullptr,    /* setProperty */
     nullptr,    /* enumerate   */
+    nullptr,    /* newEnumerate */
     nullptr,    /* resolve     */
     nullptr,    /* mayResolve  */
     nullptr,    /* finalize    */
@@ -203,6 +207,7 @@ static const ClassOps DebuggerSource_classOps = {
     nullptr,    /* getProperty */
     nullptr,    /* setProperty */
     nullptr,    /* enumerate   */
+    nullptr,    /* newEnumerate */
     nullptr,    /* resolve     */
     nullptr,    /* mayResolve  */
     nullptr,    /* finalize    */
@@ -3142,18 +3147,10 @@ Debugger::traceAllForMovingGC(JSTracer* trc)
 void
 Debugger::traceForMovingGC(JSTracer* trc)
 {
+    trace(trc);
+
     for (WeakGlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront())
         TraceManuallyBarrieredEdge(trc, e.mutableFront().unsafeGet(), "Global Object");
-
-    GCPtrNativeObject& dbgobj = toJSObjectRef();
-    TraceEdge(trc, &dbgobj, "Debugger Object");
-
-    scripts.trace(trc);
-    sources.trace(trc);
-    objects.trace(trc);
-    environments.trace(trc);
-    wasmInstanceScripts.trace(trc);
-    wasmInstanceSources.trace(trc);
 
     for (Breakpoint* bp = firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
         switch (bp->site->type()) {
@@ -3179,6 +3176,8 @@ Debugger::traceObject(JSTracer* trc, JSObject* obj)
 void
 Debugger::trace(JSTracer* trc)
 {
+    TraceEdge(trc, &object, "Debugger Object");
+
     TraceNullableEdge(trc, &uncaughtExceptionHook, "hooks");
 
     /*
@@ -3189,10 +3188,12 @@ Debugger::trace(JSTracer* trc)
      * weakly-referenced Debugger.Frame objects as well, for suspended generator
      * frames.)
      */
-    for (FrameMap::Range r = frames.all(); !r.empty(); r.popFront()) {
-        HeapPtr<DebuggerFrame*>& frameobj = r.front().value();
-        MOZ_ASSERT(MaybeForwarded(frameobj.get())->getPrivate());
-        TraceEdge(trc, &frameobj, "live Debugger.Frame");
+    if (frames.initialized()) {
+        for (FrameMap::Range r = frames.all(); !r.empty(); r.popFront()) {
+            HeapPtr<DebuggerFrame*>& frameobj = r.front().value();
+            MOZ_ASSERT(MaybeForwarded(frameobj.get())->getPrivate());
+            TraceEdge(trc, &frameobj, "live Debugger.Frame");
+        }
     }
 
     allocationsLog.trace(trc);
@@ -3287,6 +3288,7 @@ const ClassOps Debugger::classOps_ = {
     nullptr,    /* getProperty */
     nullptr,    /* setProperty */
     nullptr,    /* enumerate   */
+    nullptr,    /* newEnumerate */
     nullptr,    /* resolve     */
     nullptr,    /* mayResolve  */
     nullptr,    /* finalize    */
@@ -5029,6 +5031,7 @@ Debugger::makeGlobalObjectReference(JSContext* cx, unsigned argc, Value* vp)
     return dbg->wrapDebuggeeValue(cx, args.rval());
 }
 
+#ifdef JS_TRACE_LOGGING
 static bool
 DefineProperty(JSContext* cx, HandleObject obj, HandleId id, const char* value, size_t n)
 {
@@ -5040,7 +5043,6 @@ DefineProperty(JSContext* cx, HandleObject obj, HandleId id, const char* value, 
     return JS_DefinePropertyById(cx, obj, id, str, JSPROP_ENUMERATE);
 }
 
-#ifdef JS_TRACE_LOGGING
 # ifdef NIGHTLY_BUILD
 bool
 Debugger::setupTraceLogger(JSContext* cx, unsigned argc, Value* vp)
