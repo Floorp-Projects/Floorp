@@ -681,6 +681,18 @@ WinUtils::SetAPCPending()
 {
   sAPCPending = true;
 }
+
+/* static */
+a11y::Accessible*
+WinUtils::GetRootAccessibleForHWND(HWND aHwnd)
+{
+  nsWindow* window = GetNSWindowPtr(aHwnd);
+  if (!window) {
+    return nullptr;
+  }
+
+  return window->GetAccessible();
+}
 #endif // ACCESSIBILITY
 
 /* static */
