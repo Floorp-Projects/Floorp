@@ -11,16 +11,27 @@
 
 namespace mozilla {
 
-// Return true if some meaningful work was done.
-typedef bool (*IdleTaskRunnerCallback) (TimeStamp aDeadline, void* aData);
-
-// Repeating callback runner for CC and GC.
+// A general purpose repeating callback runner (it can be configured
+// to a one-time runner, too.) If it is running repeatedly,
+// one has to either explicitly Cancel() the runner or have
+// MayContinueProcessing() callback return false to completely remove
+// the runner.
 class IdleTaskRunner final : public IdleRunnable
 {
 public:
+  // Return true if some meaningful work was done.
+  using CallbackType = std::function<bool(TimeStamp aDeadline)>;
+
+  // A callback for "continue process" decision. Return false to
+  // stop processing. This can be an alternative to Cancel() or
+  // work together in different way.
+  using MayContinueProcessingCallbackType = std::function<bool()>;
+
+public:
   static already_AddRefed<IdleTaskRunner>
-  Create(IdleTaskRunnerCallback aCallback, uint32_t aDelay,
-         int64_t aBudget, bool aRepeating, void* aData = nullptr);
+  Create(const CallbackType& aCallback, uint32_t aDelay,
+         int64_t aBudget, bool aRepeating,
+         const MayContinueProcessingCallbackType& aMaybeContinueProcessing);
 
   NS_IMETHOD Run() override;
 
@@ -31,22 +42,23 @@ public:
   void Schedule(bool aAllowIdleDispatch);
 
 private:
-  explicit IdleTaskRunner(IdleTaskRunnerCallback aCallback,
+  explicit IdleTaskRunner(const CallbackType& aCallback,
                           uint32_t aDelay, int64_t aBudget,
-                          bool aRepeating, void* aData);
+                          bool aRepeating,
+                          const MayContinueProcessingCallbackType& aMaybeContinueProcessing);
   ~IdleTaskRunner();
   void CancelTimer();
 
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsITimer> mScheduleTimer;
   nsCOMPtr<nsIEventTarget> mTarget;
-  IdleTaskRunnerCallback mCallback;
+  CallbackType mCallback;
   uint32_t mDelay;
   TimeStamp mDeadline;
   TimeDuration mBudget;
   bool mRepeating;
   bool mTimerActive;
-  void* mData;
+  MayContinueProcessingCallbackType mMaybeContinueProcessing;
 };
 
 } // end of unnamed namespace.
