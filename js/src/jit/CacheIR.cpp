@@ -3583,8 +3583,10 @@ bool
 CallIRGenerator::tryAttachStringSplit()
 {
     // Get the object group to use for this location.
-    RootedObjectGroup group(cx_, ObjectGroup::allocationSiteGroup(cx_, script_, pc_,
-                                                                  JSProto_Array, nullptr));
+    RootedObjectGroup group(cx_, ObjectGroupCompartment::getStringSplitStringGroup(cx_));
+    if (!group) {
+        return false;
+    }
 
     AutoAssertNoPendingException aanpe(cx_);
     Int32OperandId argcId(writer.setInputOperandId(0));
