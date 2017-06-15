@@ -813,11 +813,12 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
   /**
    * Zoom the current page to a given level.
    * @param {Number} level The new zoom level.
+   * @param {String} actorID Optional. The highlighter actor ID.
    * @return {Promise} The returned promise will only resolve when the
    * highlighter has updated to the new zoom level.
    */
-  zoomPageTo: function (level) {
-    return this.changeZoomLevel(level, this.toolbox.highlighter.actorID);
+  zoomPageTo: function (level, actorID = this.toolbox.highlighter.actorID) {
+    return this.changeZoomLevel(level, actorID);
   },
 
   /* eslint-disable max-len */

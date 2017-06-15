@@ -79,11 +79,6 @@ public class BrowserLocaleManager implements LocaleManager {
         }
     }
 
-    @Override
-    public boolean isEnabled() {
-        return AppConstants.MOZ_LOCALE_SWITCHER;
-    }
-
     /**
      * Ensure that you call this early in your application startup,
      * and with a context that's sufficiently long-lived (typically

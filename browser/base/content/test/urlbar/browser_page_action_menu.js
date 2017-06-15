@@ -434,30 +434,12 @@ function promisePanelEvent(name) {
 }
 
 function promiseViewShown() {
-  return Promise.all([
-    promiseViewShowing(),
-    promiseTransitionEnd(),
-  ]).then(values => {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve(values[0]);
-      });
-    });
-  });
-}
-
-function promiseViewShowing() {
   return new Promise(resolve => {
-    gPanel.addEventListener("ViewShowing", (event) => {
-      resolve(event.target);
-    }, { once: true });
-  });
-}
-
-function promiseTransitionEnd() {
-  return new Promise(resolve => {
-    gPanel.addEventListener("transitionend", (event) => {
-      resolve(event.target);
+    gPanel.addEventListener("ViewShown", (event) => {
+      let target = event.originalTarget;
+      window.setTimeout(() => {
+        resolve(target);
+      }, 5000);
     }, { once: true });
   });
 }

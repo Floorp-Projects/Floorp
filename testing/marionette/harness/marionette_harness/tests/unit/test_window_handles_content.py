@@ -103,18 +103,22 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
             link = self.marionette.find_element(By.ID, "blob-download")
             link.click()
 
-        # We open a new window but are actually interested in the new tab
-        new_tab = self.open_tab(trigger=open_with_link)
+        new_win = self.open_window(trigger=open_with_link)
         self.assert_window_handles()
-        self.assertEqual(len(self.marionette.window_handles), len(self.start_tabs) + 1)
+        self.assertEqual(len(self.marionette.window_handles), len(self.start_tabs))
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
 
-        self.marionette.switch_to_window(new_tab)
+        self.marionette.switch_to_window(new_win)
         self.assert_window_handles()
-        self.assertEqual(self.marionette.current_window_handle, new_tab)
+
+        # Check that the opened window is not accessible via window handles
+        with self.assertRaises(errors.NoSuchWindowException):
+            self.marionette.current_window_handle
+        with self.assertRaises(errors.NoSuchWindowException):
+            self.marionette.close()
 
         # Close the opened window and carry on in our original tab.
-        self.marionette.close()
+        self.marionette.close_chrome_window()
         self.assert_window_handles()
         self.assertEqual(len(self.marionette.window_handles), len(self.start_tabs))
 

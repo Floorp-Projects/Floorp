@@ -40,10 +40,7 @@ extern crate style;
 extern crate webrender_traits;
 
 use app_units::Au;
-use euclid::point::Point2D;
-use euclid::rect::Rect;
-use euclid::scale_factor::ScaleFactor;
-use euclid::size::Size2D;
+use euclid::{Point2D, Rect, Size2D, ScaleFactor};
 use fnv::FnvHashMap;
 use gfx::display_list::{OpaqueNode, WebRenderImageInfo};
 use gfx::font;
@@ -111,9 +108,9 @@ use std::thread;
 use style::animation::Animation;
 use style::context::{QuirksMode, ReflowGoal, SharedStyleContext};
 use style::context::{StyleSystemOptions, ThreadLocalStyleContextCreationInfo};
-use style::data::StoredRestyleHint;
 use style::dom::{ShowSubtree, ShowSubtreeDataAndPrimaryValues, TElement, TNode};
 use style::error_reporting::{NullReporter, RustLogReporter};
+use style::invalidation::element::restyle_hints::RestyleHint;
 use style::logical_geometry::LogicalPoint;
 use style::media_queries::{Device, MediaList, MediaType};
 use style::selector_parser::SnapshotMap;
@@ -910,7 +907,7 @@ impl LayoutThread {
                 || {
             flow::mut_base(layout_root).stacking_relative_position =
                 LogicalPoint::zero(writing_mode).to_physical(writing_mode,
-                                                             self.viewport_size);
+                                                             self.viewport_size).to_vector();
 
             flow::mut_base(layout_root).clip = data.page_clip_rect;
 
@@ -1119,7 +1116,7 @@ impl LayoutThread {
                         let el = node.as_element().unwrap();
                         if let Some(mut d) = element.mutate_data() {
                             if d.has_styles() {
-                                d.ensure_restyle().hint.insert(StoredRestyleHint::subtree());
+                                d.ensure_restyle().hint.insert(RestyleHint::restyle_subtree());
                             }
                         }
                         if let Some(p) = el.parent_element() {
@@ -1155,7 +1152,7 @@ impl LayoutThread {
         if needs_dirtying {
             if let Some(mut d) = element.mutate_data() {
                 if d.has_styles() {
-                    d.ensure_restyle().hint.insert(StoredRestyleHint::subtree());
+                    d.ensure_restyle().hint.insert(RestyleHint::restyle_subtree());
                 }
             }
         }

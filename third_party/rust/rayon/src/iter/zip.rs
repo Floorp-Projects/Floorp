@@ -3,6 +3,7 @@ use super::*;
 use std::cmp;
 use std::iter;
 
+#[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct Zip<A: IndexedParallelIterator, B: IndexedParallelIterator> {
     a: A,
     b: B,
@@ -35,34 +36,20 @@ impl<A, B> ParallelIterator for Zip<A, B>
     }
 }
 
-impl<A, B> BoundedParallelIterator for Zip<A, B>
+impl<A, B> IndexedParallelIterator for Zip<A, B>
     where A: IndexedParallelIterator,
           B: IndexedParallelIterator
 {
-    fn upper_bound(&mut self) -> usize {
-        self.len()
-    }
-
     fn drive<C>(self, consumer: C) -> C::Result
         where C: Consumer<Self::Item>
     {
         bridge(self, consumer)
     }
-}
 
-impl<A, B> ExactParallelIterator for Zip<A, B>
-    where A: IndexedParallelIterator,
-          B: IndexedParallelIterator
-{
     fn len(&mut self) -> usize {
         cmp::min(self.a.len(), self.b.len())
     }
-}
 
-impl<A, B> IndexedParallelIterator for Zip<A, B>
-    where A: IndexedParallelIterator,
-          B: IndexedParallelIterator
-{
     fn with_producer<CB>(self, callback: CB) -> CB::Output
         where CB: ProducerCallback<Self::Item>
     {

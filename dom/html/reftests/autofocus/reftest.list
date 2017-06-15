@@ -5,8 +5,8 @@ fuzzy-if(skiaContent,1,3) needs-focus skip-if(styloVsGecko) == input-number.html
 fuzzy-if(skiaContent,1,3) needs-focus fails-if(styloVsGecko) == input-time.html input-time-ref.html
 fuzzy-if(skiaContent,1,3) needs-focus == button-load.html button-ref.html
 fuzzy-if(skiaContent,1,3) needs-focus == button-create.html button-ref.html
-fuzzy-if(skiaContent,1,3) needs-focus fails-if(styloVsGecko) == textarea-load.html textarea-ref.html
-fuzzy-if(skiaContent,1,3) needs-focus fails-if(styloVsGecko) == textarea-create.html textarea-ref.html
+fuzzy-if(skiaContent,1,3) needs-focus == textarea-load.html textarea-ref.html
+fuzzy-if(skiaContent,1,3) needs-focus == textarea-create.html textarea-ref.html
 fuzzy-if(skiaContent,9,6) needs-focus == select-load.html select-ref.html
 fuzzy-if(skiaContent,2,4) needs-focus == select-create.html select-ref.html
 needs-focus == autofocus-after-load.html autofocus-after-load-ref.html

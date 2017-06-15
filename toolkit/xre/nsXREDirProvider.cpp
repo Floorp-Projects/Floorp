@@ -773,7 +773,10 @@ CreateContentProcessSandboxTempDir()
     nsCOMPtr<nsIPrefService> prefsvc = Preferences::GetService();
     if (!prefsvc || NS_FAILED((rv = prefsvc->SavePrefFile(nullptr)))) {
       // Again, if we fail to save the pref file we might not be able to clean
-      // up the temp directory, so don't create one.
+      // up the temp directory, so don't create one.  Note that in the case
+      // the preference values allows an off main thread save, the successful
+      // return from the call doesn't mean we actually saved the file.  See
+      // bug 1364496 for details.
       NS_WARNING("Failed to save pref file, cannot create temp dir.");
       return nullptr;
     }

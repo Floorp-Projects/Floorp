@@ -226,7 +226,7 @@
                     '<(libevent_dir)/linux/',
                   ],
                 }],
-                ['OS=="bsd"', {
+                ['os_bsd==1', {
                   'include_dirs': [
                     '<(libevent_dir)/bsd/',
                   ],

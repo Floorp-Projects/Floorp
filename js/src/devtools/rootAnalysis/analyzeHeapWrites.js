@@ -182,6 +182,7 @@ function treatAsSafeArgument(entry, varName, csuName)
         ["Gecko_EnsureTArrayCapacity", "aArray", null],
         ["Gecko_ClearPODTArray", "aArray", null],
         ["Gecko_SetStyleGridTemplateArrayLengths", "aValue", null],
+        ["Gecko_SetGridTemplateLineNamesLength", "aValue", null],
         ["Gecko_ResizeTArrayForStrings", "aArray", null],
         ["Gecko_ClearAndResizeStyleContents", "aContent", null],
         [/Gecko_ClearAndResizeCounter/, "aContent", null],

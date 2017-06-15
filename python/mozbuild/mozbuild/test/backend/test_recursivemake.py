@@ -837,7 +837,7 @@ class TestRecursiveMakeBackend(BackendTester):
         root_deps_path = mozpath.join(env.topobjdir, 'root-deps.mk')
         lines = [l.strip() for l in open(root_deps_path, 'rt').readlines()]
 
-        self.assertTrue(any(l == 'recurse_compile: code/host code/target' for l in lines))
+        self.assertTrue(any(l == 'recurse_compile: code/target code/host' for l in lines))
 
     def test_final_target(self):
         """Test that FINAL_TARGET is written to backend.mk correctly."""
@@ -937,68 +937,6 @@ class TestRecursiveMakeBackend(BackendTester):
         # processing time.  This is a fragile test because there's currently no
         # way to iterate the manifest.
         self.assertFalse('instrumentation/./not_packaged.java' in m)
-
-    def test_binary_components(self):
-        """Ensure binary components are correctly handled."""
-        env = self._consume('binary-components', RecursiveMakeBackend)
-
-        with open(mozpath.join(env.topobjdir, 'foo', 'backend.mk')) as fh:
-            lines = fh.readlines()[2:]
-
-        self.assertEqual(lines, [
-            'misc::\n',
-            '\t$(call py_action,buildlist,$(DEPTH)/dist/bin/chrome.manifest '
-            + "'manifest components/components.manifest')\n",
-            '\t$(call py_action,buildlist,'
-            + '$(DEPTH)/dist/bin/components/components.manifest '
-            + "'binary-component foo')\n",
-            'LIBRARY_NAME := foo\n',
-            'FORCE_SHARED_LIB := 1\n',
-            'IMPORT_LIBRARY := foo\n',
-            'SHARED_LIBRARY := foo\n',
-            'IS_COMPONENT := 1\n',
-            'DSO_SONAME := foo\n',
-            'LIB_IS_C_ONLY := 1\n',
-        ])
-
-        with open(mozpath.join(env.topobjdir, 'bar', 'backend.mk')) as fh:
-            lines = fh.readlines()[2:]
-
-        self.assertEqual(lines, [
-            'LIBRARY_NAME := bar\n',
-            'FORCE_SHARED_LIB := 1\n',
-            'IMPORT_LIBRARY := bar\n',
-            'SHARED_LIBRARY := bar\n',
-            'IS_COMPONENT := 1\n',
-            'DSO_SONAME := bar\n',
-            'LIB_IS_C_ONLY := 1\n',
-        ])
-
-        self.assertTrue(os.path.exists(mozpath.join(env.topobjdir, 'binaries.json')))
-        with open(mozpath.join(env.topobjdir, 'binaries.json'), 'rb') as fh:
-            binaries = json.load(fh)
-
-        self.assertEqual(binaries, {
-            'programs': [],
-            'shared_libraries': [
-                {
-                    'basename': 'foo',
-                    'import_name': 'foo',
-                    'install_target': 'dist/bin',
-                    'lib_name': 'foo',
-                    'relobjdir': 'foo',
-                    'soname': 'foo',
-                },
-                {
-                    'basename': 'bar',
-                    'import_name': 'bar',
-                    'install_target': 'dist/bin',
-                    'lib_name': 'bar',
-                    'relobjdir': 'bar',
-                    'soname': 'bar',
-                }
-            ],
-        })
 
 
 if __name__ == '__main__':

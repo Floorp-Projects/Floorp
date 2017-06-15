@@ -8,10 +8,6 @@ project_flag('MOZ_ANDROID_EXCLUDE_FONTS',
              help='Whether to exclude font files from the build',
              default=True)
 
-project_flag('MOZ_LOCALE_SWITCHER',
-             help='Enable runtime locale switching',
-             default=True)
-
 project_flag('MOZ_ANDROID_GCM',
              help='Enable GCM (Google Cloud Messaging) registration',
              default=True,

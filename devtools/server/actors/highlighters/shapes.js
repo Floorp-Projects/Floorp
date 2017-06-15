@@ -6,11 +6,11 @@
 
 const { CanvasFrameAnonymousContentHelper,
         createSVGNode, createNode, getComputedStyle } = require("./utils/markup");
-const { setIgnoreLayoutChanges } = require("devtools/shared/layout/utils");
+const { setIgnoreLayoutChanges, getCurrentZoom } = require("devtools/shared/layout/utils");
 const { AutoRefreshHighlighter } = require("./auto-refresh");
 
 // We use this as an offset to avoid the marker itself from being on top of its shadow.
-const MARKER_SIZE = 10;
+const BASE_MARKER_SIZE = 10;
 
 /**
  * The ShapesHighlighter draws an outline shapes in the page.
@@ -22,6 +22,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     super(highlighterEnv);
 
     this.ID_CLASS_PREFIX = "shapes-";
+
+    this.referenceBox = "border";
+    this.useStrokeBox = false;
 
     this.markup = new CanvasFrameAnonymousContentHelper(this.highlighterEnv,
     this._buildMarkup.bind(this));
@@ -52,18 +55,6 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         "class": "shape-container",
         "viewBox": "0 0 100 100",
         "preserveAspectRatio": "none"
-      },
-      prefix: this.ID_CLASS_PREFIX
-    });
-
-    // We also need a separate element to draw the shapes' points markers. We can't use
-    // the SVG because it is scaled.
-    createNode(this.win, {
-      nodeType: "div",
-      parent: rootWrapper,
-      attributes: {
-        "id": "markers-container",
-        "class": "markers-container"
       },
       prefix: this.ID_CLASS_PREFIX
     });
@@ -104,14 +95,33 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX
     });
 
+    // Append a path to display the markers for the shape.
+    createSVGNode(this.win, {
+      nodeType: "path",
+      parent: mainSvg,
+      attributes: {
+        "id": "markers",
+        "class": "markers",
+      },
+      prefix: this.ID_CLASS_PREFIX
+    });
+
     return container;
   }
 
   get currentDimensions() {
-    return {
-      width: this.currentQuads.border[0].bounds.width,
-      height: this.currentQuads.border[0].bounds.height
-    };
+    let { top, left, width, height } = this.currentQuads[this.referenceBox][0].bounds;
+
+    // If an SVG element has a stroke, currentQuads will return the stroke bounding box.
+    // However, clip-path always uses the object bounding box unless "stroke-box" is
+    // specified. So, we must calculate the object bounding box if there is a stroke
+    // and "stroke-box" is not specified. stroke only applies to SVG elements, so use
+    // getBBox, which only exists for SVG, to check if currentNode is an SVG element.
+    if (this.currentNode.getBBox &&
+        getComputedStyle(this.currentNode).stroke !== "none" && !this.useStrokeBox) {
+      return getObjectBoundingBox(top, left, width, height, this.currentNode);
+    }
+    return { top, left, width, height };
   }
 
   /**
@@ -124,7 +134,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    *          or object of the coordinates needed to draw the shape.
    */
   _parseCSSShapeValue(definition) {
-    const types = [{
+    const shapeTypes = [{
       name: "polygon",
       prefix: "polygon(",
       coordParser: this.polygonPoints.bind(this)
@@ -141,10 +151,23 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       prefix: "inset(",
       coordParser: this.insetPoints.bind(this)
     }];
+    const geometryTypes = ["margin", "border", "padding", "content"];
 
-    for (let { name, prefix, coordParser } of types) {
+    // default to border
+    let referenceBox = "border";
+    for (let geometry of geometryTypes) {
+      if (definition.includes(geometry)) {
+        referenceBox = geometry;
+      }
+    }
+    this.referenceBox = referenceBox;
+
+    this.useStrokeBox = definition.includes("stroke-box");
+
+    for (let { name, prefix, coordParser } of shapeTypes) {
       if (definition.includes(prefix)) {
-        definition = definition.substring(prefix.length, definition.length - 1);
+        // the closing paren of the shape function is always the last one in definition.
+        definition = definition.substring(prefix.length, definition.lastIndexOf(")"));
         return {
           shapeType: name,
           coordinates: coordParser(definition)
@@ -180,8 +203,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     // The computed value of circle() always has the keyword "at".
     let values = definition.split(" at ");
     let radius = values[0];
-    let elemWidth = this.currentDimensions.width;
-    let elemHeight = this.currentDimensions.height;
+    let zoom = getCurrentZoom(this.win);
+    let elemWidth = this.currentDimensions.width / zoom;
+    let elemHeight = this.currentDimensions.height / zoom;
     let center = splitCoords(values[1]).map(this.convertCoordsToPercent.bind(this));
 
     if (radius === "closest-side") {
@@ -219,8 +243,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    */
   ellipsePoints(definition) {
     let values = definition.split(" at ");
-    let elemWidth = this.currentDimensions.width;
-    let elemHeight = this.currentDimensions.height;
+    let zoom = getCurrentZoom(this.win);
+    let elemWidth = this.currentDimensions.width / zoom;
+    let elemHeight = this.currentDimensions.height / zoom;
     let center = splitCoords(values[1]).map(this.convertCoordsToPercent.bind(this));
 
     let radii = values[0].trim().split(" ").map((radius, i) => {
@@ -280,8 +305,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   }
 
   convertCoordsToPercent(coord, i) {
-    let elemWidth = this.currentDimensions.width;
-    let elemHeight = this.currentDimensions.height;
+    let zoom = getCurrentZoom(this.win);
+    let elemWidth = this.currentDimensions.width / zoom;
+    let elemHeight = this.currentDimensions.height / zoom;
     let size = i % 2 === 0 ? elemWidth : elemHeight;
     if (coord.includes("calc(")) {
       return evalCalcExpression(coord.substring(5, coord.length - 1), size);
@@ -350,6 +376,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     this.getElement("ellipse").setAttribute("hidden", true);
     this.getElement("polygon").setAttribute("hidden", true);
     this.getElement("rect").setAttribute("hidden", true);
+    this.getElement("markers").setAttribute("d", "");
   }
 
   /**
@@ -360,23 +387,28 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   _update() {
     setIgnoreLayoutChanges(true);
 
-    let { top, left, width, height } = this.currentQuads.border[0].bounds;
+    let { top, left, width, height } = this.currentDimensions;
+    let zoom = getCurrentZoom(this.win);
+
+    top /= zoom;
+    left /= zoom;
+    width /= zoom;
+    height /= zoom;
 
     // Size the SVG like the current node.
     this.getElement("shape-container").setAttribute("style",
       `top:${top}px;left:${left}px;width:${width}px;height:${height}px;`);
 
     this._hideShapes();
-    this.getElement("markers-container").setAttribute("style", "");
 
     if (this.shapeType === "polygon") {
-      this._updatePolygonShape(top, left, width, height);
+      this._updatePolygonShape(width, height, zoom);
     } else if (this.shapeType === "circle") {
-      this._updateCircleShape(top, left, width, height);
+      this._updateCircleShape(width, height, zoom);
     } else if (this.shapeType === "ellipse") {
-      this._updateEllipseShape(top, left, width, height);
+      this._updateEllipseShape(width, height, zoom);
     } else if (this.shapeType === "inset") {
-      this._updateInsetShape(top, left, width, height);
+      this._updateInsetShape();
     }
 
     setIgnoreLayoutChanges(false, this.highlighterEnv.window.document.documentElement);
@@ -386,12 +418,11 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
   /**
    * Update the SVG polygon to fit the CSS polygon.
-   * @param {Number} top the top bound of the element quads
-   * @param {Number} left the left bound of the element quads
    * @param {Number} width the width of the element quads
    * @param {Number} height the height of the element quads
+   * @param {Number} zoom the zoom level of the window
    */
-  _updatePolygonShape(top, left, width, height) {
+  _updatePolygonShape(width, height, zoom) {
     // Draw and show the polygon.
     let points = this.coordinates.map(point => point.join(",")).join(" ");
 
@@ -399,23 +430,16 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     polygonEl.setAttribute("points", points);
     polygonEl.removeAttribute("hidden");
 
-    // Draw the points themselves, using the markers-container and multiple box-shadows.
-    let shadows = this.coordinates.map(([x, y]) => {
-      return `${MARKER_SIZE + x * width / 100}px ${MARKER_SIZE + y * height / 100}px 0 0`;
-    }).join(", ");
-
-    this.getElement("markers-container").setAttribute("style",
-      `top:${top - MARKER_SIZE}px;left:${left - MARKER_SIZE}px;box-shadow:${shadows};`);
+    this._drawMarkers(this.coordinates, width, height, zoom);
   }
 
   /**
    * Update the SVG ellipse to fit the CSS circle.
-   * @param {Number} top the top bound of the element quads
-   * @param {Number} left the left bound of the element quads
    * @param {Number} width the width of the element quads
    * @param {Number} height the height of the element quads
+   * @param {Number} zoom the zoom level of the window
    */
-  _updateCircleShape(top, left, width, height) {
+  _updateCircleShape(width, height, zoom) {
     let { rx, ry, cx, cy } = this.coordinates;
     let ellipseEl = this.getElement("ellipse");
     ellipseEl.setAttribute("rx", rx);
@@ -424,21 +448,16 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     ellipseEl.setAttribute("cy", cy);
     ellipseEl.removeAttribute("hidden");
 
-    let shadows = `${MARKER_SIZE + cx * width / 100}px
-      ${MARKER_SIZE + cy * height / 100}px 0 0`;
-
-    this.getElement("markers-container").setAttribute("style",
-      `top:${top - MARKER_SIZE}px;left:${left - MARKER_SIZE}px;box-shadow:${shadows};`);
+    this._drawMarkers([[cx, cy]], width, height, zoom);
   }
 
   /**
    * Update the SVG ellipse to fit the CSS ellipse.
-   * @param {Number} top the top bound of the element quads
-   * @param {Number} left the left bound of the element quads
    * @param {Number} width the width of the element quads
    * @param {Number} height the height of the element quads
+   * @param {Number} zoom the zoom level of the window
    */
-  _updateEllipseShape(top, left, width, height) {
+  _updateEllipseShape(width, height, zoom) {
     let { rx, ry, cx, cy } = this.coordinates;
     let ellipseEl = this.getElement("ellipse");
     ellipseEl.setAttribute("rx", rx);
@@ -447,34 +466,35 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     ellipseEl.setAttribute("cy", cy);
     ellipseEl.removeAttribute("hidden");
 
-    let shadows = `${MARKER_SIZE + cx * width / 100}px
-      ${MARKER_SIZE + cy * height / 100}px 0 0,
-      ${MARKER_SIZE + (cx + rx) * height / 100}px
-      ${MARKER_SIZE + cy * height / 100}px 0 0,
-      ${MARKER_SIZE + cx * height / 100}px
-      ${MARKER_SIZE + (cy + ry) * height / 100}px 0 0`;
-
-    this.getElement("markers-container").setAttribute("style",
-      `top:${top - MARKER_SIZE}px;left:${left - MARKER_SIZE}px;box-shadow:${shadows};`);
+    let markerCoords = [ [cx, cy], [cx + rx, cy], [cx, cy + ry] ];
+    this._drawMarkers(markerCoords, width, height, zoom);
   }
 
   /**
    * Update the SVG rect to fit the CSS inset.
-   * @param {Number} top the top bound of the element quads
-   * @param {Number} left the left bound of the element quads
-   * @param {Number} width the width of the element quads
-   * @param {Number} height the height of the element quads
    */
-  _updateInsetShape(top, left, width, height) {
+  _updateInsetShape() {
     let rectEl = this.getElement("rect");
     rectEl.setAttribute("x", this.coordinates.x);
     rectEl.setAttribute("y", this.coordinates.y);
     rectEl.setAttribute("width", this.coordinates.width);
     rectEl.setAttribute("height", this.coordinates.height);
     rectEl.removeAttribute("hidden");
+  }
 
-    this.getElement("markers-container").setAttribute("style",
-      `top:${top - MARKER_SIZE}px;left:${left - MARKER_SIZE}px;box-shadow:none;`);
+  /**
+   * Draw markers for the given coordinates.
+   * @param {Array} coords an array of coordinate arrays, of form [[x, y] ...]
+   * @param {Number} width the width of the element markers are being drawn for
+   * @param {Number} height the height of the element markers are being drawn for
+   * @param {Number} zoom the zoom level of the window
+   */
+  _drawMarkers(coords, width, height, zoom) {
+    let markers = coords.map(([x, y]) => {
+      return getCirclePath(x, y, width, height, zoom);
+    }).join(" ");
+
+    this.getElement("markers").setAttribute("d", markers);
   }
 
   /**
@@ -484,7 +504,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     setIgnoreLayoutChanges(true);
 
     this._hideShapes();
-    this.getElement("markers-container").setAttribute("style", "");
+    this.getElement("markers").setAttribute("d", "");
 
     setIgnoreLayoutChanges(false, this.highlighterEnv.window.document.documentElement);
   }
@@ -552,6 +572,70 @@ const shapeModeToCssPropertyName = mode => {
   return property.substring(0, 1).toLowerCase() + property.substring(1);
 };
 
+/**
+ * Get the SVG path definition for a circle with given attributes.
+ * @param {Number} cx the x coordinate of the centre of the circle
+ * @param {Number} cy the y coordinate of the centre of the circle
+ * @param {Number} width the width of the element the circle is being drawn for
+ * @param {Number} height the height of the element the circle is being drawn for
+ * @param {Number} zoom the zoom level of the window the circle is drawn in
+ * @returns {String} the definition of the circle in SVG path description format.
+ */
+const getCirclePath = (cx, cy, width, height, zoom) => {
+  // We use a viewBox of 100x100 for shape-container so it's easy to position things
+  // based on their percentage, but this makes it more difficult to create circles.
+  // Therefor, 100px is the base size of shape-container. In order to make the markers'
+  // size scale properly, we must adjust the radius based on zoom and the width/height of
+  // the element being highlighted, then calculate a radius for both x/y axes based
+  // on the aspect ratio of the element.
+  let radius = BASE_MARKER_SIZE * (100 / Math.max(width, height)) / zoom;
+  let ratio = width / height;
+  let rx = (ratio > 1) ? radius : radius / ratio;
+  let ry = (ratio > 1) ? radius * ratio : radius;
+  // a circle is drawn as two arc lines, starting at the leftmost point of the circle.
+  return `M${cx - rx},${cy}a${rx},${ry} 0 1,0 ${rx * 2},0` +
+         `a${rx},${ry} 0 1,0 ${rx * -2},0`;
+};
+
+/**
+ * Calculates the object bounding box for a node given its stroke bounding box.
+ * @param {Number} top the y coord of the top edge of the stroke bounding box
+ * @param {Number} left the x coord of the left edge of the stroke bounding box
+ * @param {Number} width the width of the stroke bounding box
+ * @param {Number} height the height of the stroke bounding box
+ * @param {Object} node the node object
+ * @returns {Object} an object of the form { top, left, width, height }, which
+ *          are the top/left/width/height of the object bounding box for the node.
+ */
+const getObjectBoundingBox = (top, left, width, height, node) => {
+  // See https://drafts.fxtf.org/css-masking-1/#stroke-bounding-box for details
+  // on this algorithm. Note that we intentionally do not check "stroke-linecap".
+  let strokeWidth = parseFloat(getComputedStyle(node).strokeWidth);
+  let delta = strokeWidth / 2;
+  let tagName = node.tagName;
+
+  if (tagName !== "rect" && tagName !== "ellipse"
+      && tagName !== "circle" && tagName !== "image") {
+    if (getComputedStyle(node).strokeLinejoin === "miter") {
+      let miter = getComputedStyle(node).strokeMiterlimit;
+      if (miter < Math.SQRT2) {
+        delta *= Math.SQRT2;
+      } else {
+        delta *= miter;
+      }
+    } else {
+      delta *= Math.SQRT2;
+    }
+  }
+
+  return {
+    top: top + delta,
+    left: left + delta,
+    width: width - 2 * delta,
+    height: height - 2 * delta
+  };
+};
+
 exports.ShapesHighlighter = ShapesHighlighter;
 
 // Export helper functions so they can be tested
@@ -559,3 +643,4 @@ exports.splitCoords = splitCoords;
 exports.coordToPercent = coordToPercent;
 exports.evalCalcExpression = evalCalcExpression;
 exports.shapeModeToCssPropertyName = shapeModeToCssPropertyName;
+exports.getCirclePath = getCirclePath;
