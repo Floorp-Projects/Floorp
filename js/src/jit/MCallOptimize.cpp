@@ -1483,7 +1483,7 @@ IonBuilder::inlineConstantStringSplitString(CallInfo& callInfo)
     JSString* stringStr = nullptr;
     JSString* stringSep = nullptr;
     JSObject* templateObject = nullptr;
-    if (!inspector->isOptimizableCallStringSplit(pc, &stringStr, &stringSep, &templateObject))
+    if (!inspector->isOptimizableConstStringSplit(pc, &stringStr, &stringSep, &templateObject))
         return InliningStatus_NotInlined;
 
     MOZ_ASSERT(stringStr);

@@ -1214,7 +1214,7 @@ class ICCall_ScriptedFunCall : public ICMonitoredStub
     };
 };
 
-class ICCall_StringSplit : public ICMonitoredStub
+class ICCall_ConstStringSplit : public ICMonitoredStub
 {
     friend class ICStubSpace;
 
@@ -1224,24 +1224,24 @@ class ICCall_StringSplit : public ICMonitoredStub
     GCPtrString expectedSep_;
     GCPtrObject templateObject_;
 
-    ICCall_StringSplit(JitCode* stubCode, ICStub* firstMonitorStub, uint32_t pcOffset, JSString* str,
-                       JSString* sep, JSObject* templateObject)
-      : ICMonitoredStub(ICStub::Call_StringSplit, stubCode, firstMonitorStub),
+    ICCall_ConstStringSplit(JitCode* stubCode, ICStub* firstMonitorStub, uint32_t pcOffset,
+                            JSString* str, JSString* sep, JSObject* templateObject)
+      : ICMonitoredStub(ICStub::Call_ConstStringSplit, stubCode, firstMonitorStub),
         pcOffset_(pcOffset), expectedStr_(str), expectedSep_(sep),
         templateObject_(templateObject)
     { }
 
   public:
     static size_t offsetOfExpectedStr() {
-        return offsetof(ICCall_StringSplit, expectedStr_);
+        return offsetof(ICCall_ConstStringSplit, expectedStr_);
     }
 
     static size_t offsetOfExpectedSep() {
-        return offsetof(ICCall_StringSplit, expectedSep_);
+        return offsetof(ICCall_ConstStringSplit, expectedSep_);
     }
 
     static size_t offsetOfTemplateObject() {
-        return offsetof(ICCall_StringSplit, templateObject_);
+        return offsetof(ICCall_ConstStringSplit, templateObject_);
     }
 
     GCPtrString& expectedStr() {
@@ -1274,7 +1274,7 @@ class ICCall_StringSplit : public ICMonitoredStub
       public:
         Compiler(JSContext* cx, ICStub* firstMonitorStub, uint32_t pcOffset, HandleString str,
                  HandleString sep, HandleValue templateObject)
-          : ICCallStubCompiler(cx, ICStub::Call_StringSplit),
+          : ICCallStubCompiler(cx, ICStub::Call_ConstStringSplit),
             firstMonitorStub_(firstMonitorStub),
             pcOffset_(pcOffset),
             expectedStr_(cx, str),
@@ -1283,8 +1283,9 @@ class ICCall_StringSplit : public ICMonitoredStub
         { }
 
         ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICCall_StringSplit>(space, getStubCode(), firstMonitorStub_, pcOffset_,
-                                               expectedStr_, expectedSep_, templateObject_);
+            return newStub<ICCall_ConstStringSplit>(space, getStubCode(), firstMonitorStub_,
+                                                    pcOffset_, expectedStr_, expectedSep_,
+                                                    templateObject_);
         }
    };
 };
