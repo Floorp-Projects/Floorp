@@ -209,6 +209,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mAltDataLength(0)
   , mForceMainDocumentChannel(false)
   , mIsTrackingResource(false)
+  , mLastRedirectFlags(0)
 {
   LOG(("Creating HttpBaseChannel @%p\n", this));
 
@@ -3249,8 +3250,12 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
 
   // Preserve the CORS preflight information.
   nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(newChannel);
-  if (mRequireCORSPreflight && httpInternal) {
-    httpInternal->SetCorsPreflightParameters(mUnsafeHeaders);
+  if (httpInternal) {
+    httpInternal->SetLastRedirectFlags(redirectFlags);
+
+    if (mRequireCORSPreflight) {
+      httpInternal->SetCorsPreflightParameters(mUnsafeHeaders);
+    }
   }
 
   if (preserveMethod) {
@@ -4060,6 +4065,21 @@ HttpBaseChannel::GetConnectionInfoHashKey(nsACString& aConnectionInfoHashKey)
     return NS_ERROR_FAILURE;
   }
   aConnectionInfoHashKey.Assign(mConnectionInfo->HashKey());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetLastRedirectFlags(uint32_t *aValue)
+{
+  NS_ENSURE_ARG(aValue);
+  *aValue = mLastRedirectFlags;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetLastRedirectFlags(uint32_t aValue)
+{
+  mLastRedirectFlags = aValue;
   return NS_OK;
 }
 
