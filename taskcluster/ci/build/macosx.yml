@@ -43,6 +43,27 @@ macosx64/opt:
         secrets: true
         tooltool-downloads: internal
 
+macosx64-devedition/opt:
+    description: "MacOS X Dev Edition x64"
+    index:
+        product: firefox
+        job-name: macosx64-devedition-opt
+    treeherder:
+        platform: macosx64-devedition/opt
+        symbol: tc(B)
+        tier: 1
+    worker-type: buildbot-bridge/buildbot-bridge
+    run:
+        using: mozharness
+        actions: [get-secrets build update]
+        config:
+            - builds/releng_base_mac_64_builds.py
+            - balrog/production.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        tooltool-downloads: internal
+    run-on-projects: ['mozilla-beta',]
+
 macosx64-noopt/debug:
     description: "MacOS X x64 No-optimize Debug"
     index:
