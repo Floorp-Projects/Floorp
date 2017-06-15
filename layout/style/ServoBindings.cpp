@@ -821,24 +821,24 @@ Gecko_MatchLang(RawGeckoElementBorrowed aElement,
                                                  aValue, aElement->OwnerDoc());
   }
 
-  if (aOverrideLang) {
-    nsDependentAtomString overrideLang(aOverrideLang);
-    return nsCSSRuleProcessor::LangPseudoMatches(aElement, &overrideLang, true,
-                                                 aValue, aElement->OwnerDoc());
-  }
-
-  return nsCSSRuleProcessor::LangPseudoMatches(aElement, nullptr, true,
+  return nsCSSRuleProcessor::LangPseudoMatches(aElement, aOverrideLang, true,
                                                aValue, aElement->OwnerDoc());
 }
 
 nsIAtom*
 Gecko_GetXMLLangValue(RawGeckoElementBorrowed aElement)
 {
-  nsString string;
-  if (aElement->GetAttr(kNameSpaceID_XML, nsGkAtoms::lang, string)) {
-    return NS_Atomize(string).take();
+  const nsAttrValue* attr =
+    aElement->GetParsedAttr(nsGkAtoms::lang, kNameSpaceID_XML);
+
+  if (!attr) {
+    return nullptr;
   }
-  return nullptr;
+
+  MOZ_ASSERT(attr->Type() == nsAttrValue::eAtom);
+
+  nsCOMPtr<nsIAtom> atom = attr->GetAtomValue();
+  return atom.forget().take();
 }
 
 template <typename Implementor>
@@ -853,6 +853,7 @@ template <typename Implementor>
 static nsIAtom*
 LangValue(Implementor* aElement)
 {
+  // TODO(emilio): Deduplicate a bit with nsIContent::GetLang().
   const nsAttrValue* attr =
     aElement->GetParsedAttr(nsGkAtoms::lang, kNameSpaceID_XML);
   if (!attr && aElement->SupportsLangAttr()) {
@@ -863,9 +864,9 @@ LangValue(Implementor* aElement)
     return nullptr;
   }
 
-  nsString lang;
-  attr->ToString(lang);
-  return NS_Atomize(lang).take();
+  MOZ_ASSERT(attr->Type() == nsAttrValue::eAtom);
+  nsCOMPtr<nsIAtom> atom = attr->GetAtomValue();
+  return atom.forget().take();
 }
 
 template <typename Implementor, typename MatchFn>

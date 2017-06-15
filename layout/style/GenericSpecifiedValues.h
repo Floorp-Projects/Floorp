@@ -53,6 +53,9 @@ public:
     inline void SetIdentStringValue(nsCSSPropertyID aId, const nsString& aValue);
     inline void SetIdentStringValueIfUnset(nsCSSPropertyID aId, const nsString& aValue);
 
+    inline void SetIdentAtomValue(nsCSSPropertyID aId, nsIAtom* aValue);
+    inline void SetIdentAtomValueIfUnset(nsCSSPropertyID aId, nsIAtom* aValue);
+
     // Set a property to a keyword (usually NS_STYLE_* or StyleFoo::*)
     inline void SetKeywordValue(nsCSSPropertyID aId, int32_t aValue);
     inline void SetKeywordValueIfUnset(nsCSSPropertyID aId, int32_t aValue);

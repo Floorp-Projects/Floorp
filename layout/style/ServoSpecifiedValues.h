@@ -35,6 +35,15 @@ public:
     }
   }
 
+  void SetIdentAtomValue(nsCSSPropertyID aId, nsIAtom* aValue);
+
+  void SetIdentAtomValueIfUnset(nsCSSPropertyID aId, nsIAtom* aValue)
+  {
+    if (!PropertyIsSet(aId)) {
+      SetIdentAtomValue(aId, aValue);
+    }
+  }
+
   void SetKeywordValue(nsCSSPropertyID aId, int32_t aValue);
 
   void SetKeywordValueIfUnset(nsCSSPropertyID aId, int32_t aValue)
