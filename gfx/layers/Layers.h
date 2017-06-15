@@ -2010,6 +2010,20 @@ public:
     InvalidateRegion(GetValidRegion().GetBounds());
   }
 
+  void ClearValidRegion() { mValidRegion.SetEmpty(); }
+  void AddToValidRegion(const nsIntRegion& aRegion)
+  {
+    mValidRegion.OrWith(aRegion);
+  }
+  void SubtractFromValidRegion(const nsIntRegion& aRegion)
+  {
+    mValidRegion.SubOut(aRegion);
+  }
+  void UpdateValidRegionAfterInvalidRegionChanged()
+  {
+    SubtractFromValidRegion(mInvalidRegion.GetRegion());
+  }
+
   virtual PaintedLayer* AsPaintedLayer() override { return this; }
 
   MOZ_LAYER_DECL_NAME("PaintedLayer", TYPE_PAINTED)
@@ -2036,7 +2050,7 @@ public:
       NS_ASSERTION(-0.5 <= (&transformed)->x && (&transformed)->x < 0.5 &&
                    -0.5 <= (&transformed)->y && (&transformed)->y < 0.5,
                    "Residual translation out of range");
-      mValidRegion.SetEmpty();
+      ClearValidRegion();
     }
     ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
   }
@@ -2083,7 +2097,11 @@ protected:
    * mEffectiveTransform to get the ideal transform.
    */
   gfxPoint mResidualTranslation;
+
+private:
   nsIntRegion mValidRegion;
+
+protected:
   /**
    * The creation hint that was used when constructing this layer.
    */
