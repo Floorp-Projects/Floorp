@@ -196,10 +196,6 @@ let ProfileAutocomplete = {
     Services.obs.removeObserver(this, "autocomplete-will-enter-text");
   },
 
-  getProfileAutoCompleteResult() {
-    return this._lastAutoCompleteResult;
-  },
-
   setProfileAutoCompleteResult(result) {
     this._lastAutoCompleteResult = result;
     this._lastAutoCompleteFocusedInput = formFillController.focusedInput;
@@ -506,11 +502,8 @@ var FormAutofillContent = {
 
   _previewProfile(doc) {
     let selectedIndex = ProfileAutocomplete._getSelectedIndex(doc.ownerGlobal);
-    let lastAutoCompleteResult = ProfileAutocomplete.getProfileAutoCompleteResult();
 
-    if (selectedIndex === -1 ||
-        !lastAutoCompleteResult ||
-        lastAutoCompleteResult.getStyleAt(selectedIndex) != "autofill-profile") {
+    if (selectedIndex === -1) {
       ProfileAutocomplete._clearProfilePreview();
     } else {
       ProfileAutocomplete._previewSelectedProfile(selectedIndex);
@@ -523,23 +516,6 @@ var FormAutofillContent = {
               .QueryInterface(Ci.nsIDocShell)
               .QueryInterface(Ci.nsIInterfaceRequestor)
               .getInterface(Ci.nsIContentFrameMessageManager);
-  },
-
-  _onKeyDown(e) {
-    let lastAutoCompleteResult = ProfileAutocomplete.getProfileAutoCompleteResult();
-    let focusedInput = formFillController.focusedInput;
-
-    if (e.keyCode != Ci.nsIDOMKeyEvent.DOM_VK_RETURN || !lastAutoCompleteResult || !focusedInput) {
-      return;
-    }
-
-    let selectedIndex = ProfileAutocomplete._getSelectedIndex(e.target.ownerGlobal);
-    let selectedRowStyle = lastAutoCompleteResult.getStyleAt(selectedIndex);
-    if (selectedRowStyle == "autofill-footer") {
-      focusedInput.addEventListener("DOMAutoComplete", () => {
-        Services.cpmm.sendAsyncMessage("FormAutofill:OpenPreferences");
-      }, {once: true});
-    }
   },
 };
 

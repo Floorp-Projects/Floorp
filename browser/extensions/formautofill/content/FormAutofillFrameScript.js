@@ -27,7 +27,6 @@ var FormAutofillFrameScript = {
     addEventListener("focusin", this);
     addMessageListener("FormAutofill:PreviewProfile", this);
     addMessageListener("FormAutoComplete:PopupClosed", this);
-    addMessageListener("FormAutoComplete:PopupOpened", this);
   },
 
   handleEvent(evt) {
@@ -66,24 +65,11 @@ var FormAutofillFrameScript = {
       return;
     }
 
-    const doc = content.document;
-    const {chromeEventHandler} = doc.ownerGlobal.getInterface(Ci.nsIDocShell);
-
     switch (message.name) {
-      case "FormAutofill:PreviewProfile": {
-        FormAutofillContent._previewProfile(doc);
+      case "FormAutofill:PreviewProfile":
+      case "FormAutoComplete:PopupClosed":
+        FormAutofillContent._previewProfile(content.document);
         break;
-      }
-      case "FormAutoComplete:PopupClosed": {
-        FormAutofillContent._previewProfile(doc);
-        chromeEventHandler.removeEventListener("keydown", FormAutofillContent._onKeyDown,
-                                               {capturing: true});
-        break;
-      }
-      case "FormAutoComplete:PopupOpened": {
-        chromeEventHandler.addEventListener("keydown", FormAutofillContent._onKeyDown,
-                                            {capturing: true});
-      }
     }
   },
 };
