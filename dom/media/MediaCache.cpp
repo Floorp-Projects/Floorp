@@ -279,10 +279,6 @@ protected:
     NS_ASSERTION(mStreams.IsEmpty(), "Stream(s) still open!");
     Truncate();
     NS_ASSERTION(mIndex.Length() == 0, "Blocks leaked?");
-    if (mBlockCache) {
-      mBlockCache->Close();
-      mBlockCache = nullptr;
-    }
     if (mContentLength <= 0) {
       // Only gather "MEDIACACHE" telemetry for the file-based cache.
       LOG("MediaCache::~MediaCache(this=%p) MEDIACACHE_WATERMARK_KB=%u",
@@ -708,10 +704,7 @@ MediaCache::Flush()
   // Truncate file, close it, and reopen
   Truncate();
   NS_ASSERTION(mIndex.Length() == 0, "Blocks leaked?");
-  if (mBlockCache) {
-    mBlockCache->Close();
-    mBlockCache = nullptr;
-  }
+  mBlockCache = nullptr;
   Init();
 }
 

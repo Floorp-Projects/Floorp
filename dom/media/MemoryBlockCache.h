@@ -41,9 +41,6 @@ public:
   // Allocate initial buffer.
   virtual nsresult Init() override;
 
-  // Empty buffer.
-  virtual void Close() override;
-
   // Can be called on any thread.
   virtual nsresult WriteBlock(uint32_t aBlockIndex,
                               Span<const uint8_t> aData1,
