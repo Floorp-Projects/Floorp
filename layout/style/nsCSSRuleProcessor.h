@@ -172,7 +172,7 @@ public:
                                   bool* const aDependence = nullptr);
 
   static bool LangPseudoMatches(const mozilla::dom::Element* aElement,
-                                const nsAString* aOverrideLang,
+                                const nsIAtom* aOverrideLang,
                                 bool aHasOverrideLang,
                                 const char16_t* aString,
                                 const nsIDocument* aDocument);
