@@ -2833,9 +2833,7 @@ profiler_get_backtrace()
 
   ProfileBuffer* buffer = new ProfileBuffer(PROFILER_GET_BACKTRACE_ENTRIES);
 
-  UniquePlatformData platformData = AllocPlatformData(tid);
-
-  TickSample sample(info->RacyInfo(), info->mContext, platformData.get());
+  TickSample sample(info->RacyInfo(), info->mContext, info->GetPlatformData());
 
 #if defined(HAVE_NATIVE_UNWIND)
 #if defined(GP_OS_linux) || defined(GP_OS_android)
