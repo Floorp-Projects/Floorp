@@ -54,7 +54,7 @@
 #include "mozilla/ipc/TestShellChild.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/APZChild.h"
-#include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/layers/CompositorManagerChild.h"
 #include "mozilla/layers/ContentProcessController.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layout/RenderFrameChild.h"
@@ -220,6 +220,9 @@
 #include "mozilla/ipc/CrashReporterClient.h"
 #endif
 
+#ifdef MOZ_CODE_COVERAGE
+#include "mozilla/CodeCoverageHandler.h"
+#endif
 
 using namespace mozilla;
 using namespace mozilla::docshell;
@@ -1174,18 +1177,21 @@ ContentChild::RecvInitProcessHangMonitor(Endpoint<PProcessHangMonitorChild>&& aH
 }
 
 mozilla::ipc::IPCResult
-ContentChild::RecvInitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor,
+ContentChild::RecvInitRendering(Endpoint<PCompositorManagerChild>&& aCompositor,
                                 Endpoint<PImageBridgeChild>&& aImageBridge,
                                 Endpoint<PVRManagerChild>&& aVRBridge,
                                 Endpoint<PVideoDecoderManagerChild>&& aVideoManager,
                                 nsTArray<uint32_t>&& namespaces)
 {
-  MOZ_ASSERT(namespaces.Length() == 2);
+  MOZ_ASSERT(namespaces.Length() == 3);
 
-  if (!CompositorBridgeChild::InitForContent(Move(aCompositor), namespaces[0])) {
+  if (!CompositorManagerChild::Init(Move(aCompositor), namespaces[0])) {
     return IPC_FAIL_NO_REASON(this);
   }
-  if (!ImageBridgeChild::InitForContent(Move(aImageBridge), namespaces[1])) {
+  if (!CompositorManagerChild::CreateContentCompositorBridge(namespaces[1])) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  if (!ImageBridgeChild::InitForContent(Move(aImageBridge), namespaces[2])) {
     return IPC_FAIL_NO_REASON(this);
   }
   if (!gfx::VRManagerChild::InitForContent(Move(aVRBridge))) {
@@ -1196,13 +1202,13 @@ ContentChild::RecvInitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor,
 }
 
 mozilla::ipc::IPCResult
-ContentChild::RecvReinitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor,
+ContentChild::RecvReinitRendering(Endpoint<PCompositorManagerChild>&& aCompositor,
                                   Endpoint<PImageBridgeChild>&& aImageBridge,
                                   Endpoint<PVRManagerChild>&& aVRBridge,
                                   Endpoint<PVideoDecoderManagerChild>&& aVideoManager,
                                   nsTArray<uint32_t>&& namespaces)
 {
-  MOZ_ASSERT(namespaces.Length() == 2);
+  MOZ_ASSERT(namespaces.Length() == 3);
   nsTArray<RefPtr<TabChild>> tabs = TabChild::GetAll();
 
   // Zap all the old layer managers we have lying around.
@@ -1213,10 +1219,13 @@ ContentChild::RecvReinitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor
   }
 
   // Re-establish singleton bridges to the compositor.
-  if (!CompositorBridgeChild::ReinitForContent(Move(aCompositor), namespaces[0])) {
+  if (!CompositorManagerChild::Init(Move(aCompositor), namespaces[0])) {
     return IPC_FAIL_NO_REASON(this);
   }
-  if (!ImageBridgeChild::ReinitForContent(Move(aImageBridge), namespaces[1])) {
+  if (!CompositorManagerChild::CreateContentCompositorBridge(namespaces[1])) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  if (!ImageBridgeChild::ReinitForContent(Move(aImageBridge), namespaces[2])) {
     return IPC_FAIL_NO_REASON(this);
   }
   if (!gfx::VRManagerChild::ReinitForContent(Move(aVRBridge))) {
@@ -3416,6 +3425,18 @@ ContentChild::RecvSetPluginList(const uint32_t& aPluginEpoch,
   RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
   host->SetPluginsInContent(aPluginEpoch, aPluginTags, aFakePluginTags);
   return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentChild::RecvShareCodeCoverageMutex(const CrossProcessMutexHandle& aHandle)
+{
+#ifdef MOZ_CODE_COVERAGE
+  CodeCoverageHandler::Init(aHandle);
+  return IPC_OK();
+#else
+  NS_RUNTIMEABORT("Shouldn't receive this message in non-code coverage builds!");
+  return IPC_FAIL_NO_REASON(this);
+#endif
 }
 
 } // namespace dom

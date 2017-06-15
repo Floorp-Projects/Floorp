@@ -167,6 +167,7 @@ static const JSClassOps pm_classOps = {
     nullptr,
     nullptr,
     nullptr,
+    nullptr,
     pm_finalize
 };
 

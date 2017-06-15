@@ -259,6 +259,10 @@
 #include "ProfilerParent.h"
 #endif
 
+#ifdef MOZ_CODE_COVERAGE
+#include "mozilla/CodeCoverageHandler.h"
+#endif
+
 // For VP9Benchmark::sBenchmarkFpsPref
 #include "Benchmark.h"
 
@@ -858,12 +862,17 @@ ContentParent::GetNewOrUsedBrowserProcess(const nsAString& aRemoteType,
     }
 
     // Try to take the preallocated process only for the default process type.
+    // The preallocated process manager might not had the chance yet to release the process
+    // after a very recent ShutDownProcess, let's make sure we don't try to reuse a process
+    // that is being shut down.
     RefPtr<ContentParent> p;
     if (aRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE) &&
-        (p = PreallocatedProcessManager::Take())) {
+        (p = PreallocatedProcessManager::Take()) &&
+        !p->mShutdownPending) {
       // For pre-allocated process we have not set the opener yet.
       p->mOpener = aOpener;
       contentParents.AppendElement(p);
+      p->mActivateTS = TimeStamp::Now();
       return p.forget();
     }
   }
@@ -878,6 +887,7 @@ ContentParent::GetNewOrUsedBrowserProcess(const nsAString& aRemoteType,
   p->Init();
 
   contentParents.AppendElement(p);
+  p->mActivateTS = TimeStamp::Now();
   return p.forget();
 }
 
@@ -1518,7 +1528,7 @@ ContentParent::ShutDownMessageManager()
 }
 
 void
-ContentParent::MarkAsTroubled()
+ContentParent::RemoveFromList()
 {
   if (IsForJSPlugin()) {
     if (sJSPluginContentParents) {
@@ -1550,6 +1560,12 @@ ContentParent::MarkAsTroubled()
       sPrivateContent = nullptr;
     }
   }
+}
+
+void
+ContentParent::MarkAsTroubled()
+{
+  RemoveFromList();
   mIsAvailable = false;
 }
 
@@ -1851,6 +1867,26 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
 }
 
 bool
+ContentParent::TryToRecycle()
+{
+  // This life time check should be replaced by a memory health check (memory usage + fragmentation).
+  const double kMaxLifeSpan = 5;
+  if (mShutdownPending ||
+      mCalledKillHard ||
+      !IsAvailable() ||
+      !mRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE) ||
+      (TimeStamp::Now() - mActivateTS).ToSeconds() > kMaxLifeSpan ||
+      !PreallocatedProcessManager::Provide(this)) {
+    return false;
+  }
+
+  // The PreallocatedProcessManager took over the ownership let's not keep a reference to it,
+  // until we don't take it back.
+  RemoveFromList();
+  return true;
+}
+
+bool
 ContentParent::ShouldKeepProcessAlive() const
 {
   if (IsForJSPlugin()) {
@@ -1912,6 +1948,10 @@ ContentParent::NotifyTabDestroying(const TabId& aTabId,
       return;
     }
 
+    if (cp->TryToRecycle()) {
+      return;
+    }
+
     // We're dying now, so prevent this content process from being
     // recycled during its shutdown procedure.
     cp->MarkAsDead();
@@ -1961,7 +2001,7 @@ ContentParent::NotifyTabDestroyed(const TabId& aTabId,
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
   nsTArray<TabId> tabIds = cpm->GetTabParentsByProcessId(this->ChildID());
 
-  if (tabIds.Length() == 1 && !ShouldKeepProcessAlive()) {
+  if (tabIds.Length() == 1 && !ShouldKeepProcessAlive() && !TryToRecycle()) {
     // In the case of normal shutdown, send a shutdown message to child to
     // allow it to perform shutdown tasks.
     MessageLoop::current()->PostTask(NewRunnableMethod
@@ -2060,8 +2100,13 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
     return false;
   }
 
-  Open(mSubprocess->GetChannel(),
-     base::GetProcId(mSubprocess->GetChildProcessHandle()));
+  base::ProcessId procId = base::GetProcId(mSubprocess->GetChildProcessHandle());
+
+  Open(mSubprocess->GetChannel(), procId);
+
+#ifdef MOZ_CODE_COVERAGE
+  Unused << SendShareCodeCoverageMutex(CodeCoverageHandler::Get()->GetMutexHandle(procId));
+#endif
 
   InitInternal(aInitialPriority,
                true, /* Setup off-main thread compositing */
@@ -2094,6 +2139,7 @@ ContentParent::ContentParent(ContentParent* aOpener,
   : nsIContentParent()
   , mSubprocess(nullptr)
   , mLaunchTS(TimeStamp::Now())
+  , mActivateTS(TimeStamp::Now())
   , mOpener(aOpener)
   , mRemoteType(aRemoteType)
   , mChildID(gContentChildID++)
@@ -2317,11 +2363,11 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     if (useOffMainThreadCompositing) {
       GPUProcessManager* gpm = GPUProcessManager::Get();
 
-      Endpoint<PCompositorBridgeChild> compositor;
+      Endpoint<PCompositorManagerChild> compositor;
       Endpoint<PImageBridgeChild> imageBridge;
       Endpoint<PVRManagerChild> vrBridge;
       Endpoint<PVideoDecoderManagerChild> videoManager;
-      nsTArray<uint32_t> namespaces;
+      AutoTArray<uint32_t, 3> namespaces;
 
       DebugOnly<bool> opened = gpm->CreateContentBridges(
         OtherPid(),
@@ -2337,7 +2383,7 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
         Move(imageBridge),
         Move(vrBridge),
         Move(videoManager),
-        Move(namespaces));
+        namespaces);
 
       gpm->AddListener(this);
     }
@@ -2483,11 +2529,11 @@ ContentParent::OnCompositorUnexpectedShutdown()
 {
   GPUProcessManager* gpm = GPUProcessManager::Get();
 
-  Endpoint<PCompositorBridgeChild> compositor;
+  Endpoint<PCompositorManagerChild> compositor;
   Endpoint<PImageBridgeChild> imageBridge;
   Endpoint<PVRManagerChild> vrBridge;
   Endpoint<PVideoDecoderManagerChild> videoManager;
-  nsTArray<uint32_t> namespaces;
+  AutoTArray<uint32_t, 3> namespaces;
 
   DebugOnly<bool> opened = gpm->CreateContentBridges(
     OtherPid(),
@@ -2503,7 +2549,7 @@ ContentParent::OnCompositorUnexpectedShutdown()
     Move(imageBridge),
     Move(vrBridge),
     Move(videoManager),
-    Move(namespaces));
+    namespaces);
 }
 
 void

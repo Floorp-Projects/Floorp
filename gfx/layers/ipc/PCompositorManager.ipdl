@@ -1,0 +1,73 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PCompositorBridge;
+
+using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
+using mozilla::TimeDuration from "mozilla/TimeStamp.h";
+using mozilla::CSSToLayoutDeviceScale from "Units.h";
+using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
+using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
+
+namespace mozilla {
+namespace layers {
+
+struct WidgetCompositorOptions {
+  CSSToLayoutDeviceScale scale;
+  TimeDuration vsyncRate;
+  CompositorOptions options;
+  bool useExternalSurfaceSize;
+  IntSize surfaceSize;
+};
+
+struct ContentCompositorOptions {
+};
+
+struct SameProcessWidgetCompositorOptions {
+};
+
+union CompositorBridgeOptions {
+  ContentCompositorOptions;
+  WidgetCompositorOptions;
+  SameProcessWidgetCompositorOptions;
+};
+
+/**
+ * The PCompositorManager protocol is the top-level protocol between the
+ * compositor thread and the creators of compositors. It exists in the
+ * following conditions:
+ * - One PCompositorManager between the GPU process and each content process.
+ *   If the GPU/UI processes are combined, there is one PCompositorManager
+ *   between the combined GPU/UI process and each content process.
+ * - One PCompositorManager between the GPU process and the UI process. If
+ *   they are combined, there is still one PCompositorManager, but both the
+ *   child and parent live in the same process.
+ * The intention for this protocol is to facilitate communication with the
+ * compositor thread for compositor data that is only shared once, rather than
+ * per PCompositorBridge instance.
+ */
+sync protocol PCompositorManager
+{
+  manages PCompositorBridge;
+
+parent:
+  /**
+   * There are three variants of a PCompositorBridge protocol, each of which can
+   * only be created by certain processes and configurations:
+   * - A "content" PCompositorBridge is requested by each content process,
+   *   representing the drawable area for Web content.
+   * - A "widget" PCompositorBridge is requested by the UI process for each
+   *   "top level browser window" for chrome and such.
+   * - A "same process widget" PCompositorBridge is requested by the combined
+   *   GPU/UI process for each "top level browser window" as above.
+   * See gfx/layers/ipc/PCompositorBridge.ipdl for more details.
+   */
+  async PCompositorBridge(CompositorBridgeOptions options);
+};
+
+} // layers
+} // mozilla

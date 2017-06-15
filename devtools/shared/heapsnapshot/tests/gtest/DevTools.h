@@ -74,7 +74,7 @@ struct DevTools : public ::testing::Test {
     static const JSClassOps globalClassOps = {
       nullptr, nullptr, nullptr, nullptr,
       nullptr, nullptr, nullptr, nullptr,
-      nullptr, nullptr, nullptr,
+      nullptr, nullptr, nullptr, nullptr,
       JS_GlobalObjectTraceHook
     };
     static const JSClass globalClass = {

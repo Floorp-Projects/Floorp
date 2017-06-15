@@ -192,8 +192,8 @@ static bool
 NPObjWrapper_GetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp);
 
 static bool
-NPObjWrapper_Enumerate(JSContext *cx, JS::Handle<JSObject*> obj, JS::AutoIdVector &properties,
-                       bool enumerableOnly);
+NPObjWrapper_NewEnumerate(JSContext *cx, JS::Handle<JSObject*> obj, JS::AutoIdVector &properties,
+                          bool enumerableOnly);
 
 static bool
 NPObjWrapper_Resolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
@@ -224,7 +224,8 @@ const static js::ClassOps sNPObjectJSWrapperClassOps = {
     NPObjWrapper_DelProperty,
     NPObjWrapper_GetProperty,
     NPObjWrapper_SetProperty,
-    nullptr,
+    nullptr,                    /* enumerate */
+    NPObjWrapper_NewEnumerate,
     NPObjWrapper_Resolve,
     nullptr,                    /* mayResolve */
     NPObjWrapper_Finalize,
@@ -239,20 +240,6 @@ const static js::ClassExtension sNPObjectJSWrapperClassExtension = {
     NPObjWrapper_ObjectMoved
 };
 
-const static js::ObjectOps sNPObjectJSWrapperObjectOps = {
-    nullptr, // lookupProperty
-    nullptr, // defineProperty
-    nullptr, // hasProperty
-    nullptr, // getProperty
-    nullptr, // setProperty
-    nullptr, // getOwnPropertyDescriptor
-    nullptr, // deleteProperty
-    nullptr, nullptr, // watch/unwatch
-    nullptr, // getElements
-    NPObjWrapper_Enumerate,
-    nullptr,
-};
-
 const static js::Class sNPObjectJSWrapperClass = {
     NPRUNTIME_JSCLASS_NAME,
     JSCLASS_HAS_PRIVATE |
@@ -260,7 +247,7 @@ const static js::Class sNPObjectJSWrapperClass = {
     &sNPObjectJSWrapperClassOps,
     JS_NULL_CLASS_SPEC,
     &sNPObjectJSWrapperClassExtension,
-    &sNPObjectJSWrapperObjectOps
+    JS_NULL_OBJECT_OPS
 };
 
 typedef struct NPObjectMemberPrivate {
@@ -288,7 +275,7 @@ NPObjectMember_toPrimitive(JSContext *cx, unsigned argc, JS::Value *vp);
 
 static const JSClassOps sNPObjectMemberClassOps = {
   nullptr, nullptr, NPObjectMember_GetProperty, nullptr,
-  nullptr, nullptr, nullptr,
+  nullptr, nullptr, nullptr, nullptr,
   NPObjectMember_Finalize, NPObjectMember_Call,
   nullptr, nullptr, NPObjectMember_Trace
 };
@@ -1622,8 +1609,8 @@ CallNPMethod(JSContext *cx, unsigned argc, JS::Value *vp)
 }
 
 static bool
-NPObjWrapper_Enumerate(JSContext *cx, JS::Handle<JSObject*> obj,
-                       JS::AutoIdVector &properties, bool enumerableOnly)
+NPObjWrapper_NewEnumerate(JSContext *cx, JS::Handle<JSObject*> obj,
+                          JS::AutoIdVector &properties, bool enumerableOnly)
 {
   NPObject *npobj = GetNPObject(cx, obj);
   if (!npobj || !npobj->_class) {

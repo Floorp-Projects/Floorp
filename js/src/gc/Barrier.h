@@ -436,10 +436,16 @@ class GCPtr : public WriteBarrieredBase<T>
     }
 #ifdef DEBUG
     ~GCPtr() {
-        // No prebarrier necessary as this only happens when we are sweeping or
-        // after we have just collected the nursery.  Note that the wrapped
-        // pointer may already have been freed by this point.
-        MOZ_ASSERT(CurrentThreadIsGCSweeping());
+        // No barriers are necessary as this only happens when we are sweeping
+        // or when after GCManagedDeletePolicy has triggered the barriers for us
+        // and cleared the pointer.
+        //
+        // If you get a crash here, you may need to make the containing object
+        // use GCManagedDeletePolicy and use JS::DeletePolicy to destroy it.
+        //
+        // Note that when sweeping the wrapped pointer may already have been
+        // freed by this point.
+        MOZ_ASSERT(CurrentThreadIsGCSweeping() || this->value == JS::GCPolicy<T>::initial());
         Poison(this, JS_FREED_HEAP_PTR_PATTERN, sizeof(*this));
     }
 #endif

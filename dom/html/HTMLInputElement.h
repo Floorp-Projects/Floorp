@@ -1613,7 +1613,8 @@ private:
     return IsSingleLineTextControl(false, aType) ||
            aType == NS_FORM_INPUT_RANGE ||
            aType == NS_FORM_INPUT_NUMBER ||
-           aType == NS_FORM_INPUT_TIME;
+           aType == NS_FORM_INPUT_TIME ||
+           aType == NS_FORM_INPUT_DATE;
   }
 
   /**

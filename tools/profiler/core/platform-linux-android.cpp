@@ -130,7 +130,7 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////
-// BEGIN SamplerThread target specifics
+// BEGIN Sampler target specifics
 
 // The only way to reliably interrupt a Linux thread and inspect its register
 // and stack state is by sending a signal to it, and doing the work inside the
@@ -199,7 +199,7 @@ struct SigHandlerCoordinator
   ucontext_t mUContext; // Context at signal
 };
 
-struct SigHandlerCoordinator* SamplerThread::sSigHandlerCoordinator = nullptr;
+struct SigHandlerCoordinator* Sampler::sSigHandlerCoordinator = nullptr;
 
 static void
 SigprofHandler(int aSignal, siginfo_t* aInfo, void* aContext)
@@ -208,18 +208,18 @@ SigprofHandler(int aSignal, siginfo_t* aInfo, void* aContext)
   int savedErrno = errno;
 
   MOZ_ASSERT(aSignal == SIGPROF);
-  MOZ_ASSERT(SamplerThread::sSigHandlerCoordinator);
+  MOZ_ASSERT(Sampler::sSigHandlerCoordinator);
 
   // By sending us this signal, the sampler thread has sent us message 1 in
   // the comment above, with the meaning "|sSigHandlerCoordinator| is ready
   // for use, please copy your register context into it."
-  SamplerThread::sSigHandlerCoordinator->mUContext =
+  Sampler::sSigHandlerCoordinator->mUContext =
     *static_cast<ucontext_t*>(aContext);
 
   // Send message 2: tell the sampler thread that the context has been copied
   // into |sSigHandlerCoordinator->mUContext|.  sem_post can never fail by
   // being interrupted by a signal, so there's no loop around this call.
-  int r = sem_post(&SamplerThread::sSigHandlerCoordinator->mMessage2);
+  int r = sem_post(&Sampler::sSigHandlerCoordinator->mMessage2);
   MOZ_ASSERT(r == 0);
 
   // At this point, the sampler thread assumes we are suspended, so we must
@@ -227,7 +227,7 @@ SigprofHandler(int aSignal, siginfo_t* aInfo, void* aContext)
 
   // Wait for message 3: the sampler thread tells us to resume.
   while (true) {
-    r = sem_wait(&SamplerThread::sSigHandlerCoordinator->mMessage3);
+    r = sem_wait(&Sampler::sSigHandlerCoordinator->mMessage3);
     if (r == -1 && errno == EINTR) {
       // Interrupted by a signal.  Try again.
       continue;
@@ -240,29 +240,17 @@ SigprofHandler(int aSignal, siginfo_t* aInfo, void* aContext)
   // Send message 4: tell the sampler thread that we are finished accessing
   // |sSigHandlerCoordinator|.  After this point it is not safe to touch
   // |sSigHandlerCoordinator|.
-  r = sem_post(&SamplerThread::sSigHandlerCoordinator->mMessage4);
+  r = sem_post(&Sampler::sSigHandlerCoordinator->mMessage4);
   MOZ_ASSERT(r == 0);
 
   errno = savedErrno;
 }
 
-static void*
-ThreadEntry(void* aArg)
-{
-  auto thread = static_cast<SamplerThread*>(aArg);
-  thread->mSamplerTid = gettid();
-  thread->Run();
-  return nullptr;
-}
-
-SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
-                             double aIntervalMilliseconds)
-  : mActivityGeneration(aActivityGeneration)
-  , mIntervalMicroseconds(
-      std::max(1, int(floor(aIntervalMilliseconds * 1000 + 0.5))))
-  , mMyPid(getpid())
+Sampler::Sampler(PSLockRef aLock)
+  : mMyPid(getpid())
   // We don't know what the sampler thread's ID will be until it runs, so set
-  // mSamplerTid to a dummy value and fill it in for real in ThreadEntry().
+  // mSamplerTid to a dummy value and fill it in for real in
+  // SuspendAndSampleAndResumeThread().
   , mSamplerTid(-1)
 {
 #if defined(USE_EHABI_STACKWALK)
@@ -302,64 +290,29 @@ SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
     }
   }
 #endif
-
-  // Start the sampling thread. It repeatedly sends a SIGPROF signal. Sending
-  // the signal ourselves instead of relying on itimer provides much better
-  // accuracy.
-  if (pthread_create(&mThread, nullptr, ThreadEntry, this) != 0) {
-    MOZ_CRASH("pthread_create failed");
-  }
-}
-
-SamplerThread::~SamplerThread()
-{
-  pthread_join(mThread, nullptr);
 }
 
 void
-SamplerThread::Stop(PSLockRef aLock)
+Sampler::Disable(PSLockRef aLock)
 {
   // Restore old signal handler. This is global state so it's important that
-  // we do it now, while gPSMutex is locked. It's safe to do this now even
-  // though this SamplerThread is still alive, because the next time the main
-  // loop of Run() iterates it won't get past the mActivityGeneration check,
-  // and so won't send any signals.
+  // we do it now, while gPSMutex is locked.
   sigaction(SIGPROF, &mOldSigprofHandler, 0);
 }
 
+template<typename Func>
 void
-SamplerThread::SleepMicro(uint32_t aMicroseconds)
-{
-  if (aMicroseconds >= 1000000) {
-    // Use usleep for larger intervals, because the nanosleep
-    // code below only supports intervals < 1 second.
-    MOZ_ALWAYS_TRUE(!::usleep(aMicroseconds));
-    return;
-  }
-
-  struct timespec ts;
-  ts.tv_sec  = 0;
-  ts.tv_nsec = aMicroseconds * 1000UL;
-
-  int rv = ::nanosleep(&ts, &ts);
-
-  while (rv != 0 && errno == EINTR) {
-    // Keep waiting in case of interrupt.
-    // nanosleep puts the remaining time back into ts.
-    rv = ::nanosleep(&ts, &ts);
-  }
-
-  MOZ_ASSERT(!rv, "nanosleep call failed");
-}
-
-void
-SamplerThread::SuspendAndSampleAndResumeThread(PSLockRef aLock,
-                                               TickSample& aSample)
+Sampler::SuspendAndSampleAndResumeThread(PSLockRef aLock,
+                                         TickSample& aSample,
+                                         const Func& aDoSample)
 {
   // Only one sampler thread can be sampling at once.  So we expect to have
   // complete control over |sSigHandlerCoordinator|.
   MOZ_ASSERT(!sSigHandlerCoordinator);
 
+  if (mSamplerTid == -1) {
+    mSamplerTid = gettid();
+  }
   int sampleeTid = aSample.mThreadId;
   MOZ_RELEASE_ASSERT(sampleeTid != mSamplerTid);
 
@@ -406,7 +359,7 @@ SamplerThread::SuspendAndSampleAndResumeThread(PSLockRef aLock,
   // Extract the current PC and sp.
   FillInSample(aSample, &sSigHandlerCoordinator->mUContext);
 
-  Tick(aLock, ActivePS::Buffer(aLock), aSample);
+  aDoSample();
 
   //----------------------------------------------------------------//
   // Resume the target thread.
@@ -434,6 +387,76 @@ SamplerThread::SuspendAndSampleAndResumeThread(PSLockRef aLock,
   // This isn't strictly necessary, but doing so does help pick up anomalies
   // in which the signal handler is running when it shouldn't be.
   sSigHandlerCoordinator = nullptr;
+}
+
+// END Sampler target specifics
+////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////
+// BEGIN SamplerThread target specifics
+
+static void*
+ThreadEntry(void* aArg)
+{
+  auto thread = static_cast<SamplerThread*>(aArg);
+  thread->Run();
+  return nullptr;
+}
+
+SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
+                             double aIntervalMilliseconds)
+  : Sampler(aLock)
+  , mActivityGeneration(aActivityGeneration)
+  , mIntervalMicroseconds(
+      std::max(1, int(floor(aIntervalMilliseconds * 1000 + 0.5))))
+{
+  // Start the sampling thread. It repeatedly sends a SIGPROF signal. Sending
+  // the signal ourselves instead of relying on itimer provides much better
+  // accuracy.
+  if (pthread_create(&mThread, nullptr, ThreadEntry, this) != 0) {
+    MOZ_CRASH("pthread_create failed");
+  }
+}
+
+SamplerThread::~SamplerThread()
+{
+  pthread_join(mThread, nullptr);
+}
+
+void
+SamplerThread::SleepMicro(uint32_t aMicroseconds)
+{
+  if (aMicroseconds >= 1000000) {
+    // Use usleep for larger intervals, because the nanosleep
+    // code below only supports intervals < 1 second.
+    MOZ_ALWAYS_TRUE(!::usleep(aMicroseconds));
+    return;
+  }
+
+  struct timespec ts;
+  ts.tv_sec  = 0;
+  ts.tv_nsec = aMicroseconds * 1000UL;
+
+  int rv = ::nanosleep(&ts, &ts);
+
+  while (rv != 0 && errno == EINTR) {
+    // Keep waiting in case of interrupt.
+    // nanosleep puts the remaining time back into ts.
+    rv = ::nanosleep(&ts, &ts);
+  }
+
+  MOZ_ASSERT(!rv, "nanosleep call failed");
+}
+
+void
+SamplerThread::Stop(PSLockRef aLock)
+{
+  // Restore old signal handler. This is global state so it's important that
+  // we do it now, while gPSMutex is locked. It's safe to do this now even
+  // though this SamplerThread is still alive, because the next time the main
+  // loop of Run() iterates it won't get past the mActivityGeneration check,
+  // and so won't send any signals.
+  Sampler::Disable(aLock);
 }
 
 // END SamplerThread target specifics
