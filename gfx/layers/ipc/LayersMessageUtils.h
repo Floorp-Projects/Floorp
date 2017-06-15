@@ -19,7 +19,7 @@
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/layers/GeckoContentController.h"
-#include "mozilla/layers/Keyboard.h"
+#include "mozilla/layers/KeyboardMap.h"
 #include "mozilla/layers/LayerAttributes.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/Move.h"
