@@ -24,7 +24,7 @@ var TestObserver = {
     if (data == "formhistory-expireoldentries") {
       next_test();
     }
-  }
+  },
 };
 
 function test_finished() {

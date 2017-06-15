@@ -53,5 +53,6 @@ module.exports = {
     radix: "error",
     "array-bracket-spacing": ["error", "never"],
     "space-in-parens": ["error", "never"],
+    "comma-dangle": ["error", "always-multiline"],
   },
 };

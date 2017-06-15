@@ -55,12 +55,12 @@ add_test(function test_corruptFormHistoryDB_emptyInit() {
         },
         handleError(aError2) {
           do_throw("DB initialized after reading a corrupt DB file found an entry.");
-        }
+        },
       });
     },
     handleError(aError) {
       do_throw("DB initialized after reading a corrupt DB file is not empty.");
-    }
+    },
   });
 });
 

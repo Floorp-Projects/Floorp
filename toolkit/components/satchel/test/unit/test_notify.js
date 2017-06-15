@@ -30,7 +30,7 @@ let TestObserver = {
 
     expectedNotification = null;
     expectedData = null;
-  }
+  },
 };
 
 let testIterator = null;
@@ -150,7 +150,7 @@ function* run_test_steps() {
     yield FormHistory.update({
       op: "remove",
       firstUsedStart: expectedData[0],
-      firstUsedEnd: expectedData[1]
+      firstUsedEnd: expectedData[1],
     }, {
       handleCompletion(reason) {
         if (!reason) {

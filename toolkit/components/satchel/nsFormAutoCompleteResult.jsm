@@ -177,5 +177,5 @@ FormAutoCompleteResult.prototype = {
   },
 
   // nsISupports
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult])
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult]),
 };
