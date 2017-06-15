@@ -5,9 +5,13 @@
   <body>
     <div id="host"></div>
     <script>
-      var host = document.getElementById("host");
-      var root = host.createShadowRoot();
-      root.innerHTML = "<span>a</span>";
+      var host, root;
+
+      function run() {
+        host = document.getElementById("host");
+        root = host.createShadowRoot();
+        root.innerHTML = "<span>a</span>";
+      }
 
       function tweak() {
         var span = document.createElement("span");
@@ -20,7 +24,12 @@
         document.documentElement.removeAttribute("class");
       }
 
-      window.addEventListener("MozReftestInvalidate", tweak);
+      if (document.body.createShadowRoot) {
+        run();
+        window.addEventListener("MozReftestInvalidate", tweak);
+      } else {
+        document.documentElement.className = "";
+      }
     </script>
   </body>
 </html>

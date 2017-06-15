@@ -5,8 +5,10 @@
 <body>
 <div id="outer"><span id="distnode">text</span></div>
 <script>
-var shadowRoot = document.getElementById('outer').createShadowRoot();
-shadowRoot.innerHTML = '<div><content></content></div>';
+function run() {
+  var shadowRoot = document.getElementById('outer').createShadowRoot();
+  shadowRoot.innerHTML = '<div><content></content></div>';
+}
 
 function tweak() {
   var distNode = document.getElementById("distnode");
@@ -15,7 +17,12 @@ function tweak() {
   document.documentElement.removeAttribute("class");
 }
 
-window.addEventListener("MozReftestInvalidate", tweak);
+if (document.body.createShadowRoot) {
+  run();
+  window.addEventListener("MozReftestInvalidate", tweak);
+} else {
+  document.documentElement.className = "";
+}
 </script>
 </body>
 </html>
