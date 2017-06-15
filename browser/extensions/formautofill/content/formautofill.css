@@ -2,27 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-profile"],
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-footer"] {
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-profile"] {
   display: block;
   margin: 0;
   padding: 0;
   height: auto;
   min-height: auto;
-}
 
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-profile"] {
   -moz-binding: url("chrome://formautofill/content/formautofill.xml#autocomplete-profile-listitem");
-}
-
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-footer"] {
-  -moz-binding: url("chrome://formautofill/content/formautofill.xml#autocomplete-profile-listitem-footer");
 }
 
 /* Treat @collpased="true" as display: none similar to how it is for XUL elements.
  * https://developer.mozilla.org/en-US/docs/Web/CSS/visibility#Values */
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-profile"][collapsed="true"],
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-footer"][collapsed="true"] {
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-profile"][collapsed="true"] {
   display: none;
 }
 
