@@ -358,8 +358,8 @@ private:
     INACTIVE_REQUESTED = 3,
   } mJSSampling;
 
-  // When sampling, this holds the generation number and offset in PS::mBuffer
-  // of the most recent sample for this thread.
+  // When sampling, this holds the generation number and offset in
+  // ActivePS::mBuffer of the most recent sample for this thread.
   ProfileBuffer::LastSample mLastSample;
 };
 
