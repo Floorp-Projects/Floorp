@@ -29,7 +29,7 @@ RemoteCompositorSession::RemoteCompositorSession(nsBaseWidget* aWidget,
    mWidget(aWidget),
    mAPZ(aAPZ)
 {
-  GPUProcessManager::Get()->RegisterSession(this);
+  GPUProcessManager::Get()->RegisterRemoteProcessSession(this);
   if (mAPZ) {
     mAPZ->SetCompositorSession(this);
   }
@@ -50,8 +50,7 @@ RemoteCompositorSession::NotifySessionLost()
   // Re-entrancy should be impossible: when we are being notified of a lost
   // session, we have by definition not shut down yet. We will shutdown, but
   // then will be removed from the notification list.
-  MOZ_ASSERT(mWidget);
-  mWidget->NotifyRemoteCompositorSessionLost(this);
+  mWidget->NotifyCompositorSessionLost(this);
 }
 
 CompositorBridgeParent*
@@ -74,7 +73,7 @@ RemoteCompositorSession::GetContentController()
 }
 
 nsIWidget*
-RemoteCompositorSession::GetWidget()
+RemoteCompositorSession::GetWidget() const
 {
   return mWidget;
 }
@@ -102,7 +101,7 @@ RemoteCompositorSession::Shutdown()
     mUiCompositorControllerChild = nullptr;
   }
 #endif //defined(MOZ_WIDGET_ANDROID)
-  GPUProcessManager::Get()->UnregisterSession(this);
+  GPUProcessManager::Get()->UnregisterRemoteProcessSession(this);
 }
 
 } // namespace layers

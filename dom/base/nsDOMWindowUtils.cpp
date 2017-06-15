@@ -84,6 +84,7 @@
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/QuotaManager.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/layers/FrameUniformityData.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "nsPrintfCString.h"
@@ -4127,6 +4128,22 @@ NS_IMETHODIMP
 nsDOMWindowUtils::LeaveChaosMode()
 {
   ChaosMode::leaveChaosMode();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::TriggerDeviceReset()
+{
+  ContentChild* cc = ContentChild::GetSingleton();
+  if (cc) {
+    cc->SendDeviceReset();
+    return NS_OK;
+  }
+
+  GPUProcessManager* pm = GPUProcessManager::Get();
+  if (pm) {
+    pm->TriggerDeviceResetForTesting();
+  }
   return NS_OK;
 }
 
