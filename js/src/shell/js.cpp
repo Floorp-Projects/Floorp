@@ -3332,6 +3332,25 @@ CooperativeEndSingleThreadedExecution(JSContext* cx)
         cooperationState->singleThreaded = false;
 }
 
+static bool
+EnsureGeckoProfilingStackInstalled(JSContext* cx, ShellContext* sc)
+{
+    if (cx->geckoProfiler().installed()) {
+        MOZ_ASSERT(sc->geckoProfilingStack);
+        return true;
+    }
+
+    MOZ_ASSERT(!sc->geckoProfilingStack);
+    sc->geckoProfilingStack = MakeUnique<PseudoStack>();
+    if (!sc->geckoProfilingStack) {
+        JS_ReportOutOfMemory(cx);
+        return false;
+    }
+
+    SetContextProfilingStack(cx, sc->geckoProfilingStack.get());
+    return true;
+}
+
 struct WorkerInput
 {
     JSRuntime* parentRuntime;
@@ -3400,6 +3419,10 @@ WorkerMain(void* arg)
         environmentPreparer.emplace(cx);
     } else {
         JS_AddInterruptCallback(cx, ShellInterruptCallback);
+
+        // The Gecko Profiler requires that all cooperating contexts have
+        // profiling stacks installed.
+        MOZ_ALWAYS_TRUE(EnsureGeckoProfilingStackInstalled(cx, sc.get()));
     }
 
     do {
@@ -3430,11 +3453,6 @@ WorkerMain(void* arg)
 
     KillWatchdog(cx);
     JS_SetGrayGCRootsTracer(cx, nullptr, nullptr);
-
-    if (sc->geckoProfilingStack) {
-        MOZ_ALWAYS_TRUE(cx->runtime()->geckoProfiler().enable(false));
-        SetContextProfilingStack(cx, nullptr);
-    }
 }
 
 // Workers can spawn other workers, so we need a lock to access workerThreads.
@@ -5210,26 +5228,16 @@ IsLatin1(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+// Set the profiling stack for each cooperating context in a runtime.
 static bool
-EnsureGeckoProfilingStackInstalled(JSContext* cx, ShellContext* sc)
+EnsureAllContextProfilingStacks(JSContext* cx)
 {
-    if (cx->runtime()->geckoProfiler().installed()) {
-        if (!sc->geckoProfilingStack) {
-            JS_ReportErrorASCII(cx, "Profiler already installed by another context");
+    for (const CooperatingContext& target : cx->runtime()->cooperatingContexts()) {
+        ShellContext* sc = GetShellContext(target.context());
+        if (!EnsureGeckoProfilingStackInstalled(target.context(), sc))
             return false;
-        }
-
-        return true;
     }
 
-    MOZ_ASSERT(!sc->geckoProfilingStack);
-    sc->geckoProfilingStack = MakeUnique<PseudoStack>();
-    if (!sc->geckoProfilingStack) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
-
-    SetContextProfilingStack(cx, sc->geckoProfilingStack.get());
     return true;
 }
 
@@ -5238,21 +5246,11 @@ EnableGeckoProfiling(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    ShellContext* sc = GetShellContext(cx);
-
-    if (!EnsureGeckoProfilingStackInstalled(cx, sc))
+    if (!EnsureAllContextProfilingStacks(cx))
         return false;
-
-    // Disable before re-enabling; see the assertion in
-    // |GeckoProfiler::setProfilingStack|.
-    if (cx->runtime()->geckoProfiler().installed())
-        MOZ_ALWAYS_TRUE(cx->runtime()->geckoProfiler().enable(false));
 
     cx->runtime()->geckoProfiler().enableSlowAssertions(false);
-    if (!cx->runtime()->geckoProfiler().enable(true)) {
-        JS_ReportErrorASCII(cx, "Cannot ensure single threaded execution in profiler");
-        return false;
-    }
+    cx->runtime()->geckoProfiler().enable(true);
 
     args.rval().setUndefined();
     return true;
@@ -5264,11 +5262,6 @@ EnableGeckoProfilingWithSlowAssertions(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setUndefined();
 
-    ShellContext* sc = GetShellContext(cx);
-
-    if (!EnsureGeckoProfilingStackInstalled(cx, sc))
-        return false;
-
     if (cx->runtime()->geckoProfiler().enabled()) {
         // If profiling already enabled with slow assertions disabled,
         // this is a no-op.
@@ -5277,18 +5270,14 @@ EnableGeckoProfilingWithSlowAssertions(JSContext* cx, unsigned argc, Value* vp)
 
         // Slow assertions are off.  Disable profiling before re-enabling
         // with slow assertions on.
-        MOZ_ALWAYS_TRUE(cx->runtime()->geckoProfiler().enable(false));
+        cx->runtime()->geckoProfiler().enable(false);
     }
 
-    // Disable before re-enabling; see the assertion in |GeckoProfiler::setProfilingStack|.
-    if (cx->runtime()->geckoProfiler().installed())
-        MOZ_ALWAYS_TRUE(cx->runtime()->geckoProfiler().enable(false));
+    if (!EnsureAllContextProfilingStacks(cx))
+        return false;
 
     cx->runtime()->geckoProfiler().enableSlowAssertions(true);
-    if (!cx->runtime()->geckoProfiler().enable(true)) {
-        JS_ReportErrorASCII(cx, "Cannot ensure single threaded execution in profiler");
-        return false;
-    }
+    cx->runtime()->geckoProfiler().enable(true);
 
     return true;
 }
@@ -5299,17 +5288,10 @@ DisableGeckoProfiling(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setUndefined();
 
-    ShellContext* sc = GetShellContext(cx);
-
-    if (!cx->runtime()->geckoProfiler().installed())
+    if (!cx->runtime()->geckoProfiler().enabled())
         return true;
 
-    if (!sc->geckoProfilingStack) {
-        JS_ReportErrorASCII(cx, "Profiler was not installed by this context");
-        return false;
-    }
-
-    MOZ_ALWAYS_TRUE(cx->runtime()->geckoProfiler().enable(false));
+    cx->runtime()->geckoProfiler().enable(false);
     return true;
 }
 
