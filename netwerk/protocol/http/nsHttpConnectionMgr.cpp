@@ -3079,7 +3079,10 @@ nsHttpConnectionMgr::ShouldStopReading(nsHttpTransaction * aTrans, bool aThrottl
 bool nsHttpConnectionMgr::IsConnEntryUnderPressure(nsHttpConnectionInfo *connInfo)
 {
     nsConnectionEntry *ent = mCT.Get(connInfo->HashKey());
-    MOZ_ASSERT(ent);
+    if (!ent) {
+      // No entry, no pressure.
+      return false;
+    }
 
     nsTArray<RefPtr<PendingTransactionInfo>> *transactions =
         ent->mPendingTransactionTable.Get(mCurrentTopLevelOuterContentWindowId);
