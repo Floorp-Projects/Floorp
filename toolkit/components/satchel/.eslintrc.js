@@ -2,6 +2,8 @@
 
 module.exports = {
   rules: {
+    "mozilla/var-only-at-top-level": "error",
+
     curly: ["error", "all"],
     indent: ["error", 2, {
       SwitchCase: 1,

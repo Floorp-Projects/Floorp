@@ -50,7 +50,7 @@ function checkTimeDeleted(guid, checkFunction) {
 }
 
 function promiseUpdateEntry(op, name, value) {
-  var change = { op };
+  let change = { op };
   if (name !== null) {
     change.fieldname = name;
   }
@@ -107,11 +107,11 @@ add_task(async function() {
 
   try {
   // ===== test init =====
-    var testfile = do_get_file("formhistory_apitest.sqlite");
-    var profileDir = dirSvc.get("ProfD", Ci.nsIFile);
+    let testfile = do_get_file("formhistory_apitest.sqlite");
+    let profileDir = dirSvc.get("ProfD", Ci.nsIFile);
 
     // Cleanup from any previous tests or failures.
-    var destFile = profileDir.clone();
+    let destFile = profileDir.clone();
     destFile.append("formhistory.sqlite");
     if (destFile.exists()) {
       destFile.remove(false);

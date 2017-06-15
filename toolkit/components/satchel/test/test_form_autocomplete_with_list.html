@@ -70,7 +70,7 @@ function restoreForm() {
 
 // Check for expected form data.
 function checkForm(expectedValue) {
-  var formID = input.parentNode.id;
+  let formID = input.parentNode.id;
   is(input.value, expectedValue, "Checking " + formID + " input");
 }
 
@@ -106,6 +106,7 @@ registerPopupShownListener(popupShownListener);
 */
 function runTest() {
   testNum++;
+  let datalist;
 
   info("Starting test #" + testNum);
 
@@ -328,8 +329,8 @@ function runTest() {
       // Removing the second element while on the first then going down and
       // push enter. Value should be one from the third suggesion.
       doKey("down");
-      var datalist = document.getElementById("suggest");
-      var toRemove = datalist.children[1];
+      datalist = document.getElementById("suggest");
+      let toRemove = datalist.children[1];
       datalist.removeChild(toRemove);
 
       SimpleTest.executeSoon(function() {
@@ -351,7 +352,7 @@ function runTest() {
       // down and push enter. Value should be the on from the new suggestion.
       doKey("down");
       datalist = document.getElementById("suggest");
-      var added = new Option("Foo");
+      let added = new Option("Foo");
       datalist.insertBefore(added, datalist.children[1]);
       waitForMenuChange(4);
       break;
@@ -488,9 +489,9 @@ function waitForMenuChange(expectedCount) {
 }
 
 function checkMenuEntries(expectedValues, testNumber) {
-  var actualValues = getMenuEntries();
+  let actualValues = getMenuEntries();
   is(actualValues.length, expectedValues.length, testNumber + " Checking length of expected menu");
-  for (var i = 0; i < expectedValues.length; i++) {
+  for (let i = 0; i < expectedValues.length; i++) {
     is(actualValues[i], expectedValues[i], testNumber + " Checking menu entry #" + i);
   }
 }

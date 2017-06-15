@@ -13,7 +13,7 @@ var numRecords, timeGroupingSize, now;
 const DEFAULT_EXPIRE_DAYS = 180;
 
 function padLeft(number, length) {
-  var str = number + "";
+  let str = number + "";
   while (str.length < length) {
     str = "0" + str;
   }
@@ -29,11 +29,11 @@ function getFormExpiryDays() {
 
 function run_test() {
   // ===== test init =====
-  var testfile = do_get_file("formhistory_autocomplete.sqlite");
-  var profileDir = dirSvc.get("ProfD", Ci.nsIFile);
+  let testfile = do_get_file("formhistory_autocomplete.sqlite");
+  let profileDir = dirSvc.get("ProfD", Ci.nsIFile);
 
   // Cleanup from any previous tests or failures.
-  var destFile = profileDir.clone();
+  let destFile = profileDir.clone();
   destFile.append("formhistory.sqlite");
   if (destFile.exists()) {
     destFile.remove(false);
@@ -50,8 +50,8 @@ function run_test() {
 }
 
 add_test(function test0() {
-  var maxTimeGroupings = prefs.getIntPref("browser.formfill.maxTimeGroupings");
-  var bucketSize = prefs.getIntPref("browser.formfill.bucketSize");
+  let maxTimeGroupings = prefs.getIntPref("browser.formfill.maxTimeGroupings");
+  let bucketSize = prefs.getIntPref("browser.formfill.bucketSize");
 
   // ===== Tests with constant timesUsed and varying lastUsed date =====
   // insert 2 records per bucket to check alphabetical sort within

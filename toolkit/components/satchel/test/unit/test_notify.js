@@ -5,10 +5,10 @@
  *
  */
 
-var expectedNotification;
-var expectedData;
+let expectedNotification;
+let expectedData;
 
-var TestObserver = {
+let TestObserver = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
   observe(subject, topic, data) {
@@ -33,7 +33,7 @@ var TestObserver = {
   }
 };
 
-var testIterator = null;
+let testIterator = null;
 
 function run_test() {
   do_test_pending();
@@ -46,11 +46,11 @@ function next_test() {
 }
 
 function* run_test_steps() {
-  var testnum = 0;
-  var testdesc = "Setup of test form history entries";
+  let testnum = 0;
+  let testdesc = "Setup of test form history entries";
 
   try {
-    var entry1 = ["entry1", "value1"];
+    let entry1 = ["entry1", "value1"];
 
     /* ========== 1 ========== */
     testnum = 1;
@@ -63,7 +63,7 @@ function* run_test_steps() {
     });
 
     // Add the observer
-    var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+    let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     os.addObserver(TestObserver, "satchel-storage-changed");
 
     /* ========== 2 ========== */
