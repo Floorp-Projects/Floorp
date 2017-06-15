@@ -262,7 +262,7 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  AudioNodeStream* mDestination;
+  RefPtr<AudioNodeStream> mDestination;
   // This member is set on the main thread, but is not accessed on the rendering
   // thread untile mPanningModelFunction has changed, and this happens strictly
   // later, via a MediaStreamGraph ControlMessage.

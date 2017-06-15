@@ -101,7 +101,7 @@ public:
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     // Not owned:
-    // - mDestination (probably)
+    // - mDestination - MediaStreamGraphImpl::CollectSizesForMemoryReport() accounts for mDestination.
     // - mGain - Internal ref owned by AudioNode
     return AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
   }
@@ -111,7 +111,7 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  AudioNodeStream* mDestination;
+  RefPtr<AudioNodeStream> mDestination;
   AudioParamTimeline mGain;
 };
 
