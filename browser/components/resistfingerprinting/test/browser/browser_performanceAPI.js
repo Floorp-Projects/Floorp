@@ -29,11 +29,13 @@ const PERFORMANCE_TIMINGS = [
   "loadEventEnd",
 ];
 
-add_task(async function runTests() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({"set":
     [["privacy.resistFingerprinting", true]]
   });
+});
 
+add_task(async function runTests() {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser, TEST_PATH + "file_dummy.html");
 
@@ -53,6 +55,30 @@ add_task(async function runTests() {
     is(content.performance.getEntriesByType("resource").length, 0, "No entries for performance.getEntriesByType()");
     is(content.performance.getEntriesByName("Test", "mark").length, 0, "No entries for performance.getEntriesByName()");
 
+  });
+
+  await BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function runTestsForWorker() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser, TEST_PATH + "file_dummy.html");
+
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+    await new Promise(resolve => {
+      let worker = new content.Worker("file_workerPerformance.js");
+      worker.onmessage = function(e) {
+        if (e.data.type == "status") {
+          ok(e.data.status, e.data.msg);
+        } else if (e.data.type == "finish") {
+          resolve();
+        } else {
+          ok(false, "Unknown message type");
+          resolve();
+        }
+      }
+      worker.postMessage({type: "runTests"});
+    });
   });
 
   await BrowserTestUtils.removeTab(tab);
