@@ -357,12 +357,19 @@ nsHTMLDocument::TryCacheCharset(nsICachingChannel* aCachingChannel,
 
   nsCString cachedCharset;
   rv = aCachingChannel->GetCacheTokenCachedCharset(cachedCharset);
+  if (NS_FAILED(rv) || cachedCharset.IsEmpty()) {
+    return;
+  }
+  // The canonical names changed, so the cache may have an old name.
+  if (!cachedCharset.EqualsLiteral("replacement")) {
+    if (!EncodingUtils::FindEncodingForLabel(cachedCharset, cachedCharset)) {
+      return;
+    }
+  }
   // Check EncodingUtils::IsAsciiCompatible() even in the cache case, because the value
   // might be stale and in the case of a stale charset that is not a rough
   // ASCII superset, the parser has no way to recover.
-  if (NS_SUCCEEDED(rv) &&
-      !cachedCharset.IsEmpty() &&
-      EncodingUtils::IsAsciiCompatible(cachedCharset))
+  if (EncodingUtils::IsAsciiCompatible(cachedCharset))
   {
     aCharset = cachedCharset;
     aCharsetSource = kCharsetFromCache;
