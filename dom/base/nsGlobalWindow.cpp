@@ -13870,6 +13870,13 @@ nsGlobalWindow::GetGamepads(nsTArray<RefPtr<Gamepad> >& aGamepads)
 {
   MOZ_ASSERT(IsInnerWindow());
   aGamepads.Clear();
+
+  // navigator.getGamepads() always returns an empty array when
+  // privacy.resistFingerprinting is true.
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    return;
+  }
+
   // mGamepads.Count() may not be sufficient, but it's not harmful.
   aGamepads.SetCapacity(mGamepads.Count());
   for (auto iter = mGamepads.Iter(); !iter.Done(); iter.Next()) {

@@ -20,6 +20,7 @@
 #include "mozilla/StaticPtr.h"
 
 #include "nsAutoPtr.h"
+#include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMDocument.h"
@@ -138,7 +139,7 @@ GamepadManager::AddListener(nsGlobalWindow* aWindow)
   MOZ_ASSERT(aWindow->IsInnerWindow());
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!mEnabled || mShuttingDown) {
+  if (!mEnabled || mShuttingDown || nsContentUtils::ShouldResistFingerprinting()) {
     return;
   }
 
@@ -315,6 +316,12 @@ GamepadManager::FireAxisMoveEvent(EventTarget* aTarget,
 void
 GamepadManager::NewConnectionEvent(uint32_t aIndex, bool aConnected)
 {
+  // Do not fire gamepadconnected and gamepaddisconnected events when
+  // privacy.resistFingerprinting is true.
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    return;
+  }
+
   if (mShuttingDown) {
     return;
   }
@@ -398,7 +405,7 @@ GamepadManager::FireConnectionEvent(EventTarget* aTarget,
 void
 GamepadManager::SyncGamepadState(uint32_t aIndex, Gamepad* aGamepad)
 {
-  if (mShuttingDown || !mEnabled) {
+  if (mShuttingDown || !mEnabled || nsContentUtils::ShouldResistFingerprinting()) {
     return;
   }
 
