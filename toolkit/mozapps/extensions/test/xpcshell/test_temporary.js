@@ -18,19 +18,6 @@ const sampleRDFManifest = {
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 startupManager();
 
-const {Management} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
-
-function promiseAddonStartup() {
-  return new Promise(resolve => {
-    let listener = (extension) => {
-      Management.off("startup", listener);
-      resolve(extension);
-    };
-
-    Management.on("startup", listener);
-  });
-}
-
 BootstrapMonitor.init();
 
 // Partial list of bootstrap reasons from XPIProvider.jsm
@@ -265,7 +252,7 @@ add_task(async function() {
 
     await Promise.all([
       AddonManager.installTemporaryAddon(webext),
-      promiseAddonStartup(),
+      promiseWebExtensionStartup(),
     ]);
     addon = await promiseAddonByID(ID);
 
@@ -295,7 +282,7 @@ add_task(async function() {
 
     await Promise.all([
       AddonManager.installTemporaryAddon(webext),
-      promiseAddonStartup(),
+      promiseWebExtensionStartup(),
     ]);
     addon = await promiseAddonByID(ID);
 
@@ -327,7 +314,7 @@ add_task(async function() {
 
     await Promise.all([
       AddonManager.installTemporaryAddon(webext),
-      promiseAddonStartup(),
+      promiseWebExtensionStartup(),
     ]);
     addon = await promiseAddonByID(ID);
 
