@@ -25,6 +25,7 @@ namespace gfx {
   _(DIRECT_DRAW,                  Feature,      "DirectDraw")                     \
   _(GPU_PROCESS,                  Feature,      "GPU Process")                    \
   _(WEBRENDER,                    Feature,      "WebRender")                      \
+  _(OMTP,                         Feature,      "Off Main Thread Painting")       \
   /* Add new entries above this comment */
 
 enum class Feature : uint32_t {

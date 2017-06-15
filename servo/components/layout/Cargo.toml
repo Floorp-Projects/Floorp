@@ -14,7 +14,7 @@ app_units = "0.4.1"
 atomic_refcell = "0.1"
 bitflags = "0.7"
 canvas_traits = {path = "../canvas_traits"}
-euclid = "0.13"
+euclid = "0.14.4"
 fnv = "1.0"
 gfx = {path = "../gfx"}
 gfx_traits = {path = "../gfx_traits"}
@@ -29,7 +29,7 @@ ordered-float = "0.4"
 parking_lot = "0.3.3"
 profile_traits = {path = "../profile_traits"}
 range = {path = "../range"}
-rayon = "0.7.1"
+rayon = "0.8"
 script_layout_interface = {path = "../script_layout_interface"}
 script_traits = {path = "../script_traits"}
 selectors = { path = "../selectors" }

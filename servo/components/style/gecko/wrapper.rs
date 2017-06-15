@@ -68,7 +68,8 @@ use logical_geometry::WritingMode;
 use media_queries::Device;
 use properties::{ComputedValues, parse_style_attribute};
 use properties::{Importance, PropertyDeclaration, PropertyDeclarationBlock};
-use properties::animated_properties::{AnimationValue, AnimationValueMap, TransitionProperty};
+use properties::animated_properties::{AnimatableLonghand, AnimationValue, AnimationValueMap};
+use properties::animated_properties::TransitionProperty;
 use properties::style_structs::Font;
 use rule_tree::CascadeLevel as ServoCascadeLevel;
 use selector_parser::{AttrValue, ElementExt, PseudoClassStringArg};
@@ -382,17 +383,19 @@ impl<'lb> GeckoXBLBinding<'lb> {
     // Implements Gecko's nsXBLBinding::WalkRules().
     fn get_declarations_for<E, V>(&self,
                                   element: &E,
+                                  pseudo_element: Option<&PseudoElement>,
                                   applicable_declarations: &mut V)
         where E: TElement,
               V: Push<ApplicableDeclarationBlock> + VecLike<ApplicableDeclarationBlock> {
         if let Some(base_binding) = self.base_binding() {
-            base_binding.get_declarations_for(element, applicable_declarations);
+            base_binding.get_declarations_for(element, pseudo_element, applicable_declarations);
         }
 
         let raw_data = unsafe { bindings::Gecko_XBLBinding_GetRawServoStyleSet(self.0) };
         if let Some(raw_data) = raw_data {
             let data = PerDocumentStyleData::from_ffi(&*raw_data).borrow();
             data.stylist.push_applicable_declarations_as_xbl_only_stylist(element,
+                                                                          pseudo_element,
                                                                           applicable_declarations);
         }
     }
@@ -942,6 +945,7 @@ impl<'le> TElement for GeckoElement<'le> {
     // Implements Gecko's nsBindingManager::WalkRules(). Returns whether to cut off the
     // inheritance.
     fn get_declarations_from_xbl_bindings<V>(&self,
+                                             pseudo_element: Option<&PseudoElement>,
                                              applicable_declarations: &mut V)
                                              -> bool
         where V: Push<ApplicableDeclarationBlock> + VecLike<ApplicableDeclarationBlock> {
@@ -951,7 +955,9 @@ impl<'le> TElement for GeckoElement<'le> {
 
         while let Some(element) = current {
             if let Some(binding) = element.get_xbl_binding() {
-                binding.get_declarations_for(self, applicable_declarations);
+                binding.get_declarations_for(self,
+                                             pseudo_element,
+                                             applicable_declarations);
 
                 // If we're not looking at our original element, allow the binding to cut off
                 // style inheritance.
@@ -1034,7 +1040,6 @@ impl<'le> TElement for GeckoElement<'le> {
                                 after_change_style: &ComputedValues)
                                 -> bool {
         use gecko_bindings::structs::nsCSSPropertyID;
-        use properties::{PropertyId, animated_properties};
         use std::collections::HashSet;
 
         debug_assert!(self.might_need_transitions_update(Some(before_change_style),
@@ -1069,6 +1074,8 @@ impl<'le> TElement for GeckoElement<'le> {
                 continue;
             }
 
+            let transition_property: TransitionProperty = property.into();
+
             let mut property_check_helper = |property: &TransitionProperty| -> bool {
                 if self.needs_transitions_update_per_property(property,
                                                               combined_duration,
@@ -1085,26 +1092,25 @@ impl<'le> TElement for GeckoElement<'le> {
                 }
                 false
             };
-            if property == nsCSSPropertyID::eCSSPropertyExtra_all_properties {
-                if TransitionProperty::any(property_check_helper) {
-                    return true;
-                }
-            } else {
-                let is_shorthand = PropertyId::from_nscsspropertyid(property).ok().map_or(false, |p| {
-                        p.as_shorthand().is_ok()
-                });
-                if is_shorthand {
-                    let shorthand: TransitionProperty = property.into();
+
+            match transition_property {
+                TransitionProperty::All => {
+                    if TransitionProperty::any(property_check_helper) {
+                        return true;
+                    }
+                },
+                TransitionProperty::Unsupported(_) => { },
+                ref shorthand if shorthand.is_shorthand() => {
                     if shorthand.longhands().iter().any(|p| property_check_helper(p)) {
                         return true;
                     }
-                } else {
-                    if animated_properties::nscsspropertyid_is_animatable(property) &&
-                       property_check_helper(&property.into()) {
+                },
+                ref longhand => {
+                    if property_check_helper(longhand) {
                         return true;
                     }
-                }
-            }
+                },
+            };
         }
 
         // Check if we have to cancel the running transition because this is not a matching
@@ -1124,22 +1130,21 @@ impl<'le> TElement for GeckoElement<'le> {
                                              -> bool {
         use properties::animated_properties::AnimatedProperty;
 
-        // We don't allow transitions on properties that are not interpolable.
-        if property.is_discrete() {
-            return false;
-        }
+        // |property| should be an animatable longhand
+        let animatable_longhand = AnimatableLonghand::from_transition_property(property).unwrap();
 
         if existing_transitions.contains_key(property) {
             // If there is an existing transition, update only if the end value differs.
             // If the end value has not changed, we should leave the currently running
             // transition as-is since we don't want to interrupt its timing function.
             let after_value =
-                Arc::new(AnimationValue::from_computed_values(property, after_change_style));
+                Arc::new(AnimationValue::from_computed_values(&animatable_longhand,
+                                                              after_change_style));
             return existing_transitions.get(property).unwrap() != &after_value;
         }
 
         combined_duration > 0.0f32 &&
-        AnimatedProperty::from_transition_property(property,
+        AnimatedProperty::from_animatable_longhand(&animatable_longhand,
                                                    before_change_style,
                                                    after_change_style).does_animate()
     }

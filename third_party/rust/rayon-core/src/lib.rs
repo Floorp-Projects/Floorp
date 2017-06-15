@@ -35,10 +35,10 @@ use std::error::Error;
 use std::str::FromStr;
 use std::fmt;
 
-extern crate deque;
+extern crate coco;
 #[macro_use]
 extern crate lazy_static;
-#[cfg(feature = "unstable")]
+#[cfg(rayon_unstable)]
 extern crate futures;
 extern crate libc;
 extern crate num_cpus;
@@ -51,31 +51,32 @@ mod latch;
 mod join;
 mod job;
 mod registry;
-#[cfg(feature = "unstable")]
+#[cfg(rayon_unstable)]
 mod future;
 mod scope;
 mod sleep;
-#[cfg(feature = "unstable")]
-mod spawn_async;
+mod spawn;
 mod test;
 mod thread_pool;
 mod unwind;
 mod util;
 
 pub use thread_pool::ThreadPool;
+pub use thread_pool::current_thread_index;
+pub use thread_pool::current_thread_has_pending_tasks;
 pub use join::join;
 pub use scope::{scope, Scope};
-#[cfg(feature = "unstable")]
-pub use spawn_async::spawn_async;
-#[cfg(feature = "unstable")]
-pub use spawn_async::spawn_future_async;
-#[cfg(feature = "unstable")]
+pub use spawn::spawn;
+#[cfg(rayon_unstable)]
+pub use spawn::spawn_future;
+#[cfg(rayon_unstable)]
 pub use future::RayonFuture;
 
 /// Returns the number of threads in the current registry. If this
-/// code is executing within the Rayon thread-pool, then this will be
-/// the number of threads for the current thread-pool. Otherwise, it
-/// will be the number of threads for the global thread-pool.
+/// code is executing within a Rayon thread-pool, then this will be
+/// the number of threads for the thread-pool of the current
+/// thread. Otherwise, it will be the number of threads for the global
+/// thread-pool.
 ///
 /// This can be useful when trying to judge how many times to split
 /// parallel work (the parallel iterator traits use this value
@@ -94,10 +95,11 @@ pub fn current_num_threads() -> usize {
 }
 
 /// Contains the rayon thread pool configuration.
+#[derive(Default)]
 pub struct Configuration {
     /// The number of threads in the rayon thread pool.
-    /// If zero will use the RAYON_RS_NUM_CPUS environment variable.
-    /// If RAYON_RS_NUM_CPUS is invalid or zero will use the default.
+    /// If zero will use the RAYON_NUM_THREADS environment variable.
+    /// If RAYON_NUM_THREADS is invalid or zero will use the default.
     num_threads: usize,
 
     /// Custom closure, if any, to handle a panic that we cannot propagate
@@ -115,6 +117,11 @@ pub struct Configuration {
 
     /// Closure invoked on worker thread exit.
     exit_handler: Option<Box<ExitHandler>>,
+
+    /// If false, worker threads will execute spawned jobs in a
+    /// "depth-first" fashion. If true, they will do a "breadth-first"
+    /// fashion. Depth-first is the default.
+    breadth_first: bool,
 }
 
 /// The type for a panic handling closure. Note that this same closure
@@ -134,14 +141,7 @@ type ExitHandler = Fn(usize) + Send + Sync;
 impl Configuration {
     /// Creates and return a valid rayon thread pool configuration, but does not initialize it.
     pub fn new() -> Configuration {
-        Configuration {
-            num_threads: 0,
-            get_thread_name: None,
-            panic_handler: None,
-            stack_size: None,
-            start_handler: None,
-            exit_handler: None,
-        }
+        Configuration::default()
     }
 
     /// Get the number of threads that will be used for the thread
@@ -150,6 +150,13 @@ impl Configuration {
         if self.num_threads > 0 {
             self.num_threads
         } else {
+            match env::var("RAYON_NUM_THREADS").ok().and_then(|s| usize::from_str(&s).ok()) {
+                Some(x) if x > 0 => return x,
+                Some(x) if x == 0 => return num_cpus::get(),
+                _ => {},
+            }
+
+            // Support for deprecated `RAYON_RS_NUM_CPUS`.
             match env::var("RAYON_RS_NUM_CPUS").ok().and_then(|s| usize::from_str(&s).ok()) {
                 Some(x) if x > 0 => x,
                 _ => num_cpus::get(),
@@ -179,8 +186,9 @@ impl Configuration {
     /// If `num_threads` is 0, or you do not call this function, then
     /// the Rayon runtime will select the number of threads
     /// automatically. At present, this is based on the
-    /// `RAYON_RS_NUM_CPUS` (if set), or the number of logical CPUs
-    /// (otherwise). In the future, however, the default behavior may
+    /// `RAYON_NUM_THREADS` environment variable (if set), 
+    /// or the number of logical CPUs (otherwise). 
+    /// In the future, however, the default behavior may
     /// change to dynamically add or remove threads as needed.
     ///
     /// **Future compatibility warning:** Given the default behavior
@@ -190,6 +198,11 @@ impl Configuration {
     /// may wish to use the [`num_cpus`
     /// crate](https://crates.io/crates/num_cpus) to query the number
     /// of CPUs dynamically.
+    ///
+    /// **Old environment variable:** `RAYON_NUM_THREADS` is a one-to-one
+    /// replacement of the now deprecated `RAYON_RS_NUM_CPUS` environment
+    /// variable. If both variables are specified, `RAYON_NUM_THREADS` will
+    /// be prefered.
     pub fn num_threads(mut self, num_threads: usize) -> Configuration {
         self.num_threads = num_threads;
         self
@@ -203,7 +216,7 @@ impl Configuration {
     /// Normally, whenever Rayon catches a panic, it tries to
     /// propagate it to someplace sensible, to try and reflect the
     /// semantics of sequential execution. But in some cases,
-    /// particularly with the `spawn_async()` APIs, there is no
+    /// particularly with the `spawn()` APIs, there is no
     /// obvious place where we should propagate the panic to.
     /// In that case, this panic handler is invoked.
     ///
@@ -232,6 +245,35 @@ impl Configuration {
         self
     }
 
+    /// Suggest to worker threads that they execute spawned jobs in a
+    /// "breadth-first" fashion. Typically, when a worker thread is
+    /// idle or blocked, it will attempt to execute the job from the
+    /// *top* of its local deque of work (i.e., the job most recently
+    /// spawned). If this flag is set to true, however, workers will
+    /// prefer to execute in a *breadth-first* fashion -- that is,
+    /// they will search for jobs at the *bottom* of their local
+    /// deque. (At present, workers *always* steal from the bottom of
+    /// other worker's deques, regardless of the setting of this
+    /// flag.)
+    ///
+    /// If you think of the tasks as a tree, where a parent task
+    /// spawns its children in the tree, then this flag loosely
+    /// corresponds to doing a breadth-first traversal of the tree,
+    /// whereas the default would be to do a depth-first traversal.
+    ///
+    /// **Note that this is an "execution hint".** Rayon's task
+    /// execution is highly dynamic and the precise order in which
+    /// independent tasks are executed is not intended to be
+    /// guaranteed.
+    pub fn breadth_first(mut self) -> Self {
+        self.breadth_first = true;
+        self
+    }
+
+    fn get_breadth_first(&self) -> bool {
+        self.breadth_first
+    }
+
     /// Takes the current thread start callback, leaving `None`.
     fn take_start_handler(&mut self) -> Option<Box<StartHandler>> {
         self.start_handler.take()
@@ -239,6 +281,8 @@ impl Configuration {
 
     /// Set a callback to be invoked on thread start.
     ///
+    /// The closure is passed the index of the thread on which it is invoked.
+    /// Note that this same closure may be invoked multiple times in parallel.
     /// If this closure panics, the panic will be passed to the panic handler.
     /// If that handler returns, then startup will continue normally.
     pub fn start_handler<H>(mut self, start_handler: H) -> Configuration
@@ -255,6 +299,8 @@ impl Configuration {
 
     /// Set a callback to be invoked on thread exit.
     ///
+    /// The closure is passed the index of the thread on which it is invoked.
+    /// Note that this same closure may be invoked multiple times in parallel.
     /// If this closure panics, the panic will be passed to the panic handler.
     /// If that handler returns, then the thread will exit normally.
     pub fn exit_handler<H>(mut self, exit_handler: H) -> Configuration
@@ -288,17 +334,12 @@ pub fn initialize(config: Configuration) -> Result<(), Box<Error>> {
     Ok(())
 }
 
-/// This is a debugging API not really intended for end users. It will
-/// dump some performance statistics out using `println`.
-#[cfg(feature = "unstable")]
-pub fn dump_stats() {
-    dump_stats!();
-}
-
 impl fmt::Debug for Configuration {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let Configuration { ref num_threads, ref get_thread_name, ref panic_handler, ref stack_size,
-                            ref start_handler, ref exit_handler } = *self;
+        let Configuration { ref num_threads, ref get_thread_name,
+                            ref panic_handler, ref stack_size,
+                            ref start_handler, ref exit_handler,
+                            ref breadth_first } = *self;
 
         // Just print `Some("<closure>")` or `None` to the debug
         // output.
@@ -317,6 +358,7 @@ impl fmt::Debug for Configuration {
          .field("stack_size", &stack_size)
          .field("start_handler", &start_handler)
          .field("exit_handler", &exit_handler)
+         .field("breadth_first", &breadth_first)
          .finish()
     }
 }

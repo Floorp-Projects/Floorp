@@ -4,57 +4,87 @@
 
 use iter::*;
 use iter::internal::*;
+use split_producer::*;
 use std::cmp;
 
 /// Parallel extensions for slices.
-///
-/// Implementing this trait is not permitted outside of `rayon`.
-pub trait ParallelSlice<T> {
-    private_decl!{}
+pub trait ParallelSlice<T: Sync> {
+    /// Returns a plain slice, which is used to implement the rest of the
+    /// parallel methods.
+    fn as_parallel_slice(&self) -> &[T];
+
+    /// Returns a parallel iterator over subslices separated by elements that
+    /// match the separator.
+    fn par_split<P>(&self, separator: P) -> Split<T, P>
+        where P: Fn(&T) -> bool + Sync + Send
+    {
+        Split {
+            slice: self.as_parallel_slice(),
+            separator: separator,
+        }
+    }
 
     /// Returns a parallel iterator over all contiguous windows of
     /// length `size`. The windows overlap.
-    fn par_windows(&self, size: usize) -> Windows<T> where T: Sync;
+    fn par_windows(&self, window_size: usize) -> Windows<T> {
+        Windows {
+            window_size: window_size,
+            slice: self.as_parallel_slice(),
+        }
+    }
 
     /// Returns a parallel iterator over at most `size` elements of
     /// `self` at a time. The chunks do not overlap.
-    fn par_chunks(&self, size: usize) -> Chunks<T> where T: Sync;
+    fn par_chunks(&self, chunk_size: usize) -> Chunks<T> {
+        Chunks {
+            chunk_size: chunk_size,
+            slice: self.as_parallel_slice(),
+        }
+    }
+}
+
+impl<T: Sync> ParallelSlice<T> for [T] {
+    #[inline]
+    fn as_parallel_slice(&self) -> &[T] {
+        self
+    }
+}
+
+
+/// Parallel extensions for mutable slices.
+pub trait ParallelSliceMut<T: Send> {
+    /// Returns a plain mutable slice, which is used to implement the rest of
+    /// the parallel methods.
+    fn as_parallel_slice_mut(&mut self) -> &mut [T];
+
+    /// Returns a parallel iterator over mutable subslices separated by
+    /// elements that match the separator.
+    fn par_split_mut<P>(&mut self, separator: P) -> SplitMut<T, P>
+        where P: Fn(&T) -> bool + Sync + Send
+    {
+        SplitMut {
+            slice: self.as_parallel_slice_mut(),
+            separator: separator,
+        }
+    }
 
     /// Returns a parallel iterator over at most `size` elements of
     /// `self` at a time. The chunks are mutable and do not overlap.
-    fn par_chunks_mut(&mut self, size: usize) -> ChunksMut<T> where T: Send;
-}
-
-impl<T> ParallelSlice<T> for [T] {
-    private_impl!{}
-
-    fn par_windows(&self, window_size: usize) -> Windows<T>
-        where T: Sync
-    {
-        Windows {
-            window_size: window_size,
-            slice: self,
-        }
-    }
-
-    fn par_chunks(&self, chunk_size: usize) -> Chunks<T>
-        where T: Sync
-    {
-        Chunks {
-            chunk_size: chunk_size,
-            slice: self,
-        }
-    }
-
-    fn par_chunks_mut(&mut self, chunk_size: usize) -> ChunksMut<T>
-        where T: Send
-    {
+    fn par_chunks_mut(&mut self, chunk_size: usize) -> ChunksMut<T> {
         ChunksMut {
             chunk_size: chunk_size,
-            slice: self,
+            slice: self.as_parallel_slice_mut(),
         }
     }
 }
+
+impl<T: Send> ParallelSliceMut<T> for [T] {
+    #[inline]
+    fn as_parallel_slice_mut(&mut self) -> &mut [T] {
+        self
+    }
+}
+
 
 impl<'data, T: Sync + 'data> IntoParallelIterator for &'data [T] {
     type Item = &'data T;
@@ -112,25 +142,17 @@ impl<'data, T: Sync + 'data> ParallelIterator for Iter<'data, T> {
     }
 }
 
-impl<'data, T: Sync + 'data> BoundedParallelIterator for Iter<'data, T> {
-    fn upper_bound(&mut self) -> usize {
-        ExactParallelIterator::len(self)
-    }
-
+impl<'data, T: Sync + 'data> IndexedParallelIterator for Iter<'data, T> {
     fn drive<C>(self, consumer: C) -> C::Result
         where C: Consumer<Self::Item>
     {
         bridge(self, consumer)
     }
-}
 
-impl<'data, T: Sync + 'data> ExactParallelIterator for Iter<'data, T> {
     fn len(&mut self) -> usize {
         self.slice.len()
     }
-}
 
-impl<'data, T: Sync + 'data> IndexedParallelIterator for Iter<'data, T> {
     fn with_producer<CB>(self, callback: CB) -> CB::Output
         where CB: ProducerCallback<Self::Item>
     {
@@ -177,25 +199,17 @@ impl<'data, T: Sync + 'data> ParallelIterator for Chunks<'data, T> {
     }
 }
 
-impl<'data, T: Sync + 'data> BoundedParallelIterator for Chunks<'data, T> {
-    fn upper_bound(&mut self) -> usize {
-        ExactParallelIterator::len(self)
-    }
-
+impl<'data, T: Sync + 'data> IndexedParallelIterator for Chunks<'data, T> {
     fn drive<C>(self, consumer: C) -> C::Result
         where C: Consumer<Self::Item>
     {
         bridge(self, consumer)
     }
-}
 
-impl<'data, T: Sync + 'data> ExactParallelIterator for Chunks<'data, T> {
     fn len(&mut self) -> usize {
         (self.slice.len() + (self.chunk_size - 1)) / self.chunk_size
     }
-}
 
-impl<'data, T: Sync + 'data> IndexedParallelIterator for Chunks<'data, T> {
     fn with_producer<CB>(self, callback: CB) -> CB::Output
         where CB: ProducerCallback<Self::Item>
     {
@@ -254,26 +268,18 @@ impl<'data, T: Sync + 'data> ParallelIterator for Windows<'data, T> {
     }
 }
 
-impl<'data, T: Sync + 'data> BoundedParallelIterator for Windows<'data, T> {
-    fn upper_bound(&mut self) -> usize {
-        ExactParallelIterator::len(self)
-    }
-
+impl<'data, T: Sync + 'data> IndexedParallelIterator for Windows<'data, T> {
     fn drive<C>(self, consumer: C) -> C::Result
         where C: Consumer<Self::Item>
     {
         bridge(self, consumer)
     }
-}
 
-impl<'data, T: Sync + 'data> ExactParallelIterator for Windows<'data, T> {
     fn len(&mut self) -> usize {
         assert!(self.window_size >= 1);
         self.slice.len().saturating_sub(self.window_size - 1)
     }
-}
 
-impl<'data, T: Sync + 'data> IndexedParallelIterator for Windows<'data, T> {
     fn with_producer<CB>(self, callback: CB) -> CB::Output
         where CB: ProducerCallback<Self::Item>
     {
@@ -332,25 +338,17 @@ impl<'data, T: Send + 'data> ParallelIterator for IterMut<'data, T> {
     }
 }
 
-impl<'data, T: Send + 'data> BoundedParallelIterator for IterMut<'data, T> {
-    fn upper_bound(&mut self) -> usize {
-        ExactParallelIterator::len(self)
-    }
-
+impl<'data, T: Send + 'data> IndexedParallelIterator for IterMut<'data, T> {
     fn drive<C>(self, consumer: C) -> C::Result
         where C: Consumer<Self::Item>
     {
         bridge(self, consumer)
     }
-}
 
-impl<'data, T: Send + 'data> ExactParallelIterator for IterMut<'data, T> {
     fn len(&mut self) -> usize {
         self.slice.len()
     }
-}
 
-impl<'data, T: Send + 'data> IndexedParallelIterator for IterMut<'data, T> {
     fn with_producer<CB>(self, callback: CB) -> CB::Output
         where CB: ProducerCallback<Self::Item>
     {
@@ -397,25 +395,17 @@ impl<'data, T: Send + 'data> ParallelIterator for ChunksMut<'data, T> {
     }
 }
 
-impl<'data, T: Send + 'data> BoundedParallelIterator for ChunksMut<'data, T> {
-    fn upper_bound(&mut self) -> usize {
-        ExactParallelIterator::len(self)
-    }
-
+impl<'data, T: Send + 'data> IndexedParallelIterator for ChunksMut<'data, T> {
     fn drive<C>(self, consumer: C) -> C::Result
         where C: Consumer<Self::Item>
     {
         bridge(self, consumer)
     }
-}
 
-impl<'data, T: Send + 'data> ExactParallelIterator for ChunksMut<'data, T> {
     fn len(&mut self) -> usize {
         (self.slice.len() + (self.chunk_size - 1)) / self.chunk_size
     }
-}
 
-impl<'data, T: Send + 'data> IndexedParallelIterator for ChunksMut<'data, T> {
     fn with_producer<CB>(self, callback: CB) -> CB::Output
         where CB: ProducerCallback<Self::Item>
     {
@@ -450,5 +440,121 @@ impl<'data, T: 'data + Send> Producer for ChunksMutProducer<'data, T> {
              chunk_size: self.chunk_size,
              slice: right,
          })
+    }
+}
+
+
+/// Parallel iterator over slices separated by a predicate
+pub struct Split<'data, T: 'data, P> {
+    slice: &'data [T],
+    separator: P,
+}
+
+impl<'data, T, P> ParallelIterator for Split<'data, T, P>
+    where P: Fn(&T) -> bool + Sync + Send,
+          T: Sync
+{
+    type Item = &'data [T];
+
+    fn drive_unindexed<C>(self, consumer: C) -> C::Result
+        where C: UnindexedConsumer<Self::Item>
+    {
+        let producer = SplitProducer::new(self.slice, &self.separator);
+        bridge_unindexed(producer, consumer)
+    }
+}
+
+/// Implement support for `SplitProducer`.
+impl<'data, T, P> Fissile<P> for &'data [T]
+    where P: Fn(&T) -> bool
+{
+    fn length(&self) -> usize {
+        self.len()
+    }
+
+    fn midpoint(&self, end: usize) -> usize {
+        end / 2
+    }
+
+    fn find(&self, separator: &P, start: usize, end: usize) -> Option<usize> {
+        self[start..end].iter().position(separator)
+    }
+
+    fn rfind(&self, separator: &P, end: usize) -> Option<usize> {
+        self[..end].iter().rposition(separator)
+    }
+
+    fn split_once(self, index: usize) -> (Self, Self) {
+        let (left, right) = self.split_at(index);
+        (left, &right[1..]) // skip the separator
+    }
+
+    fn fold_splits<F>(self, separator: &P, folder: F, skip_last: bool) -> F
+        where F: Folder<Self>,
+              Self: Send
+    {
+        let mut split = self.split(separator);
+        if skip_last {
+            split.next_back();
+        }
+        folder.consume_iter(split)
+    }
+}
+
+
+/// Parallel iterator over mutable slices separated by a predicate
+pub struct SplitMut<'data, T: 'data, P> {
+    slice: &'data mut [T],
+    separator: P,
+}
+
+impl<'data, T, P> ParallelIterator for SplitMut<'data, T, P>
+    where P: Fn(&T) -> bool + Sync + Send,
+          T: Send
+{
+    type Item = &'data mut [T];
+
+    fn drive_unindexed<C>(self, consumer: C) -> C::Result
+        where C: UnindexedConsumer<Self::Item>
+    {
+        let producer = SplitProducer::new(self.slice, &self.separator);
+        bridge_unindexed(producer, consumer)
+    }
+}
+
+/// Implement support for `SplitProducer`.
+impl<'data, T, P> Fissile<P> for &'data mut [T]
+    where P: Fn(&T) -> bool
+{
+    fn length(&self) -> usize {
+        self.len()
+    }
+
+    fn midpoint(&self, end: usize) -> usize {
+        end / 2
+    }
+
+    fn find(&self, separator: &P, start: usize, end: usize) -> Option<usize> {
+        self[start..end].iter().position(separator)
+    }
+
+    fn rfind(&self, separator: &P, end: usize) -> Option<usize> {
+        self[..end].iter().rposition(separator)
+    }
+
+    fn split_once(self, index: usize) -> (Self, Self) {
+        let (left, right) = self.split_at_mut(index);
+        (left, &mut right[1..]) // skip the separator
+    }
+
+    fn fold_splits<F>(self, separator: &P, folder: F, skip_last: bool) -> F
+        where F: Folder<Self>,
+              Self: Send
+    {
+        let mut split = self.split_mut(separator);
+        if skip_last {
+            split.next_back();
+        }
+        folder.consume_iter(split)
     }
 }

@@ -20,26 +20,26 @@
               },
               "default_icon": {
                 "$ref": "IconPath",
-                "unsupported": true,
+                "deprecated": "Unsupported on Android.",
                 "optional": true
               },
               "default_popup": {
                 "type": "string",
                 "format": "relativeUrl",
-                "unsupported": true,
+                "deprecated": "Unsupported on Android.",
                 "optional": true,
                 "preprocess": "localize"
               },
               "browser_style": {
                 "type": "boolean",
-                "unsupported": true,
+                "deprecated": "Unsupported on Android.",
                 "optional": true
               },
               "default_area": {
                 "description": "Defines the location the browserAction will appear by default.  The default location is navbar.",
                 "type": "string",
                 "enum": ["navbar", "menupanel", "tabstrip", "personaltoolbar"],
-                "unsupported": true,
+                "deprecated": "Unsupported on Android.",
                 "optional": true
               }
             },

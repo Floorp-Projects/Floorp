@@ -104,9 +104,9 @@ mozbase:
 
 mozharness:
     description: mozharness integration tests
-    platform: lint/opt
+    platform: linux64/opt
     treeherder:
-        symbol: py(MH)
+        symbol: py(mh)
         kind: test
         tier: 2
     worker-type: aws-provisioner-v1/gecko-t-linux-xlarge

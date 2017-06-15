@@ -5407,6 +5407,7 @@ var TabletModeUpdater = {
       document.documentElement.removeAttribute("tabletmode");
     }
     if (wasInTabletMode != isInTabletMode) {
+      gUIDensity.update();
       TabsInTitlebar.updateAppearance(true);
     }
   },
@@ -5446,7 +5447,10 @@ function displaySecurityInfo() {
 
 // Updates the UI density (for touch and compact mode) based on the uidensity pref.
 var gUIDensity = {
+  MODE_COMPACT: 1,
+  MODE_TOUCH: 2,
   prefDomain: "browser.uidensity",
+
   observe(aSubject, aTopic, aPrefName) {
     if (aTopic != "nsPref:changed" || aPrefName != this.prefDomain)
       return;
@@ -5455,12 +5459,22 @@ var gUIDensity = {
   },
 
   update() {
+    let mode;
+    // Automatically override the uidensity to touch in Windows tablet mode.
+    if (AppConstants.isPlatformAndVersionAtLeast("win", "10") &&
+        WindowsUIUtils.inTabletMode &&
+        gPrefService.getBoolPref("browser.touchmode.auto")) {
+      mode = this.MODE_TOUCH;
+    } else {
+      mode = gPrefService.getIntPref(this.prefDomain);
+    }
+
     let doc = document.documentElement;
-    switch (gPrefService.getIntPref(this.prefDomain)) {
-    case 1:
+    switch (mode) {
+    case this.MODE_COMPACT:
       doc.setAttribute("uidensity", "compact");
       break;
-    case 2:
+    case this.MODE_TOUCH:
       doc.setAttribute("uidensity", "touch");
       break;
     default:

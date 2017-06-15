@@ -59,6 +59,7 @@ class FirefoxConnector {
     this.actions = actions;
     this.getState = getState;
     this.tabTarget = connection.tabConnection.tabTarget;
+    this.toolbox = connection.toolbox;
 
     this.webConsoleClient = this.tabTarget.activeConsole;
 

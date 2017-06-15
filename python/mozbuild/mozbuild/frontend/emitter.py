@@ -78,7 +78,6 @@ from .data import (
     XPIDLFile,
 )
 from mozpack.chrome.manifest import (
-    ManifestBinaryComponent,
     Manifest,
 )
 
@@ -608,7 +607,6 @@ class TreeMetadataEmitter(LoggingMixin):
         shared_name = context.get('SHARED_LIBRARY_NAME')
 
         is_framework = context.get('IS_FRAMEWORK')
-        is_component = context.get('IS_COMPONENT')
 
         soname = context.get('SONAME')
 
@@ -630,22 +628,10 @@ class TreeMetadataEmitter(LoggingMixin):
                 raise SandboxValidationError(
                     'FINAL_LIBRARY conflicts with IS_FRAMEWORK. '
                     'Please remove one.', context)
-            if is_component:
-                raise SandboxValidationError(
-                    'FINAL_LIBRARY conflicts with IS_COMPONENT. '
-                    'Please remove one.', context)
             static_args['link_into'] = final_lib
             static_lib = True
 
         if libname:
-            if is_component:
-                if static_lib:
-                    raise SandboxValidationError(
-                        'IS_COMPONENT conflicts with FORCE_STATIC_LIB. '
-                        'Please remove one.', context)
-                shared_lib = True
-                shared_args['variant'] = SharedLibrary.COMPONENT
-
             if is_framework:
                 if soname:
                     raise SandboxValidationError(
@@ -742,10 +728,6 @@ class TreeMetadataEmitter(LoggingMixin):
                 self._linkage.append((context, lib, 'USE_LIBS'))
                 linkables.append(lib)
                 generated_files.add(lib.lib_name)
-                if is_component and not context['NO_COMPONENTS_MANIFEST']:
-                    yield ChromeManifestEntry(context,
-                        'components/components.manifest',
-                        ManifestBinaryComponent('components', lib.lib_name))
                 if symbols_file and isinstance(symbols_file, SourcePath):
                     script = mozpath.join(
                         mozpath.dirname(mozpath.dirname(__file__)),

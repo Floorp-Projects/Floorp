@@ -388,7 +388,7 @@ DriverCrashGuard::FlushPreferences()
   MOZ_ASSERT(XRE_IsParentProcess());
 
   if (nsIPrefService* prefService = Preferences::GetService()) {
-    prefService->SavePrefFile(nullptr);
+    static_cast<Preferences *>(prefService)->SavePrefFileBlocking();
   }
 }
 

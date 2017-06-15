@@ -5,7 +5,7 @@
 
 void main(void) {
     Primitive prim = load_primitive();
-    Rectangle rect = fetch_rectangle(prim.prim_index);
+    Rectangle rect = fetch_rectangle(prim.specific_prim_address);
     vColor = rect.color;
 #ifdef WR_FEATURE_TRANSFORM
     TransformVertexInfo vi = write_transform_vertex(prim.local_rect,

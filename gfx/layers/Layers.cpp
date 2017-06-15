@@ -1850,6 +1850,9 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   }
   if (mSimpleAttrs.ScrolledClip()) {
     AppendToString(aStream, mSimpleAttrs.ScrolledClip()->GetClipRect(), " [scrolled-clip=", "]");
+    if (const Maybe<size_t>& ix = mSimpleAttrs.ScrolledClip()->GetMaskLayerIndex()) {
+      AppendToString(aStream, ix.value(), " [scrolled-mask=", "]");
+    }
   }
   if (1.0 != mSimpleAttrs.PostXScale() || 1.0 != mSimpleAttrs.PostYScale()) {
     aStream << nsPrintfCString(" [postScale=%g, %g]", mSimpleAttrs.PostXScale(), mSimpleAttrs.PostYScale()).get();

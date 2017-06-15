@@ -203,27 +203,37 @@ struct ParamTraits<mozilla::dom::RTCIceCandidatePairStats>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, aParam.mComponentId);
+    WriteParam(aMsg, aParam.mTransportId);
     WriteParam(aMsg, aParam.mLocalCandidateId);
     WriteParam(aMsg, aParam.mPriority);
     WriteParam(aMsg, aParam.mNominated);
+    WriteParam(aMsg, aParam.mWritable);
     WriteParam(aMsg, aParam.mReadable);
     WriteParam(aMsg, aParam.mRemoteCandidateId);
     WriteParam(aMsg, aParam.mSelected);
     WriteParam(aMsg, aParam.mState);
+    WriteParam(aMsg, aParam.mBytesSent);
+    WriteParam(aMsg, aParam.mBytesReceived);
+    WriteParam(aMsg, aParam.mLastPacketSentTimestamp);
+    WriteParam(aMsg, aParam.mLastPacketReceivedTimestamp);
     WriteRTCStats(aMsg, aParam);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
-    if (!ReadParam(aMsg, aIter, &(aResult->mComponentId)) ||
+    if (!ReadParam(aMsg, aIter, &(aResult->mTransportId)) ||
         !ReadParam(aMsg, aIter, &(aResult->mLocalCandidateId)) ||
         !ReadParam(aMsg, aIter, &(aResult->mPriority)) ||
         !ReadParam(aMsg, aIter, &(aResult->mNominated)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mWritable)) ||
         !ReadParam(aMsg, aIter, &(aResult->mReadable)) ||
         !ReadParam(aMsg, aIter, &(aResult->mRemoteCandidateId)) ||
         !ReadParam(aMsg, aIter, &(aResult->mSelected)) ||
         !ReadParam(aMsg, aIter, &(aResult->mState)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mBytesSent)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mBytesReceived)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mLastPacketSentTimestamp)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mLastPacketReceivedTimestamp)) ||
         !ReadRTCStats(aMsg, aIter, aResult)) {
       return false;
     }

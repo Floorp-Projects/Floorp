@@ -32,10 +32,10 @@ impl BlobImageRenderer for Moz2dImageRenderer {
     }
 
     fn request(&mut self,
+               _resources: &BlobImageResources,
                request: BlobImageRequest,
                descriptor: &BlobImageDescriptor,
-               _dirty_rect: Option<DeviceUintRect>,
-               _images: &ImageStore) {
+               _dirty_rect: Option<DeviceUintRect>) {
         debug_assert!(!self.rendered_images.contains_key(&request));
         // TODO: implement tiling.
         assert!(request.tile.is_none());
@@ -50,7 +50,7 @@ impl BlobImageRenderer for Moz2dImageRenderer {
         let descriptor = descriptor.clone();
         let commands = Arc::clone(self.blob_commands.get(&request.key).unwrap());
 
-        self.workers.spawn_async(move || {
+        self.workers.spawn(move || {
             let buf_size = (descriptor.width
                 * descriptor.height
                 * descriptor.format.bytes_per_pixel().unwrap()) as usize;
@@ -104,6 +104,8 @@ impl BlobImageRenderer for Moz2dImageRenderer {
 
         // If we break out of the loop above it means the channel closed unexpectedly.
         Err(BlobImageError::Other("Channel closed".into()))
+    }
+    fn delete_font(&mut self, _font: FontKey) {
     }
 }
 

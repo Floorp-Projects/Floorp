@@ -7,6 +7,8 @@ const TEST_SELECTORS = {
   btnEdit: "#edit",
 };
 
+const DIALOG_SIZE = "width=600,height=400";
+
 function waitForAddresses() {
   return new Promise(resolve => {
     Services.cpmm.addMessageListener("FormAutofill:Addresses", function getResult(result) {
@@ -45,7 +47,7 @@ add_task(async function test_removingSingleAndMultipleProfiles() {
   await saveAddress(TEST_ADDRESS_2);
   await saveAddress(TEST_ADDRESS_3);
 
-  let win = window.openDialog(MANAGE_PROFILES_DIALOG_URL);
+  let win = window.openDialog(MANAGE_PROFILES_DIALOG_URL, null, DIALOG_SIZE);
   await waitForAddresses();
 
   let selAddresses = win.document.querySelector(TEST_SELECTORS.selAddresses);
@@ -74,7 +76,7 @@ add_task(async function test_removingSingleAndMultipleProfiles() {
 });
 
 add_task(async function test_profilesDialogWatchesStorageChanges() {
-  let win = window.openDialog(MANAGE_PROFILES_DIALOG_URL);
+  let win = window.openDialog(MANAGE_PROFILES_DIALOG_URL, null, DIALOG_SIZE);
   await waitForAddresses();
 
   let selAddresses = win.document.querySelector(TEST_SELECTORS.selAddresses);

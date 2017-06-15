@@ -356,12 +356,6 @@ photonpanelmultiview panelview[title] {
   padding-top: 0;
 }
 
-photonpanelmultiview .panel-subview-body {
-  /*XXXmikedeboer this flex is unnecessary, so I unset it for our case. It might
-                  break other panels, though, so I refrain from removing it above. */
-  -moz-box-flex: unset;
-}
-
 /* END photonpanelview adjustments */
 
 .cui-widget-panel.cui-widget-panelWithFooter > .panel-arrowcontainer > .panel-arrowcontent {

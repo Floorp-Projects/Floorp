@@ -2024,7 +2024,7 @@ CounterStyle*
 CounterStyleManager::BuildCounterStyle(nsIAtom* aName)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  CounterStyle* data = mStyles.Get(aName);
+  CounterStyle* data = GetCounterStyle(aName);
   if (data) {
     return data;
   }

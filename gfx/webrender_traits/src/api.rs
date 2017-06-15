@@ -10,7 +10,7 @@ use std::fmt;
 use std::marker::PhantomData;
 use {BuiltDisplayList, BuiltDisplayListDescriptor, ClipId, ColorF, DeviceIntPoint, DeviceIntSize};
 use {DeviceUintRect, DeviceUintSize, FontKey, GlyphDimensions, GlyphKey};
-use {ImageData, ImageDescriptor, ImageKey, LayoutPoint, LayoutSize, LayoutTransform};
+use {ImageData, ImageDescriptor, ImageKey, LayoutPoint, LayoutVector2D, LayoutSize, LayoutTransform};
 use {NativeFontHandle, WorldPoint};
 #[cfg(feature = "webgl")]
 use {WebGLCommand, WebGLContextId};
@@ -461,13 +461,13 @@ pub enum ScrollEventPhase {
 #[derive(Clone, Deserialize, Serialize)]
 pub struct ScrollLayerState {
     pub id: ClipId,
-    pub scroll_offset: LayoutPoint,
+    pub scroll_offset: LayoutVector2D,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum ScrollLocation {
     /// Scroll by a certain amount.
-    Delta(LayoutPoint),
+    Delta(LayoutVector2D),
     /// Scroll to very top of element.
     Start,
     /// Scroll to very bottom of element.

@@ -13,7 +13,8 @@ use webrender::{ApiRecordingReceiver, BinaryRecorder};
 use thread_profiler::register_thread_with_profiler;
 use moz2d_renderer::Moz2dImageRenderer;
 use app_units::Au;
-use euclid::{TypedPoint2D, TypedSize2D, TypedRect, TypedMatrix4D, SideOffsets2D};
+use euclid::{TypedPoint2D, TypedSize2D, TypedRect, TypedTransform3D, SideOffsets2D};
+use euclid::TypedVector2D;
 use rayon;
 
 extern crate webrender_traits;
@@ -177,6 +178,12 @@ impl<U> Into<TypedPoint2D<f32, U>> for WrPoint {
     }
 }
 
+impl<U> Into<TypedVector2D<f32, U>> for WrPoint {
+    fn into(self) -> TypedVector2D<f32, U> {
+        TypedVector2D::new(self.x, self.y)
+    }
+}
+
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct WrSize {
@@ -232,44 +239,44 @@ pub struct WrMatrix {
     values: [f32; 16],
 }
 
-impl<'a, U, E> Into<TypedMatrix4D<f32, U, E>> for &'a WrMatrix {
-    fn into(self) -> TypedMatrix4D<f32, U, E> {
-        TypedMatrix4D::row_major(self.values[0],
-                                 self.values[1],
-                                 self.values[2],
-                                 self.values[3],
-                                 self.values[4],
-                                 self.values[5],
-                                 self.values[6],
-                                 self.values[7],
-                                 self.values[8],
-                                 self.values[9],
-                                 self.values[10],
-                                 self.values[11],
-                                 self.values[12],
-                                 self.values[13],
-                                 self.values[14],
-                                 self.values[15])
+impl<'a, U, E> Into<TypedTransform3D<f32, U, E>> for &'a WrMatrix {
+    fn into(self) -> TypedTransform3D<f32, U, E> {
+        TypedTransform3D::row_major(self.values[0],
+                                    self.values[1],
+                                    self.values[2],
+                                    self.values[3],
+                                    self.values[4],
+                                    self.values[5],
+                                    self.values[6],
+                                    self.values[7],
+                                    self.values[8],
+                                    self.values[9],
+                                    self.values[10],
+                                    self.values[11],
+                                    self.values[12],
+                                    self.values[13],
+                                    self.values[14],
+                                    self.values[15])
     }
 }
-impl<U, E> Into<TypedMatrix4D<f32, U, E>> for WrMatrix {
-    fn into(self) -> TypedMatrix4D<f32, U, E> {
-        TypedMatrix4D::row_major(self.values[0],
-                                 self.values[1],
-                                 self.values[2],
-                                 self.values[3],
-                                 self.values[4],
-                                 self.values[5],
-                                 self.values[6],
-                                 self.values[7],
-                                 self.values[8],
-                                 self.values[9],
-                                 self.values[10],
-                                 self.values[11],
-                                 self.values[12],
-                                 self.values[13],
-                                 self.values[14],
-                                 self.values[15])
+impl<U, E> Into<TypedTransform3D<f32, U, E>> for WrMatrix {
+    fn into(self) -> TypedTransform3D<f32, U, E> {
+        TypedTransform3D::row_major(self.values[0],
+                                    self.values[1],
+                                    self.values[2],
+                                    self.values[3],
+                                    self.values[4],
+                                    self.values[5],
+                                    self.values[6],
+                                    self.values[7],
+                                    self.values[8],
+                                    self.values[9],
+                                    self.values[10],
+                                    self.values[11],
+                                    self.values[12],
+                                    self.values[13],
+                                    self.values[14],
+                                    self.values[15])
     }
 }
 
@@ -1367,7 +1374,7 @@ pub extern "C" fn wr_dp_push_clip(state: &mut WrState,
     let clip_rect = LayoutRect::new(LayoutPoint::zero(), content_rect.size);
     let mut mask : Option<ImageMask> = unsafe { mask.as_ref() }.map(|x| x.into());
     if let Some(ref mut m) = mask {
-        m.rect.origin = m.rect.origin - content_rect.origin;
+        m.rect.origin = m.rect.origin - content_rect.origin.to_vector();
     }
 
     let clip_region = state.frame_builder.dl_builder.push_clip_region(&clip_rect, vec![], mask);
@@ -1405,7 +1412,7 @@ pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
         // content_rect when the clip region is being used as part of a clip
         // item. In this case there is no mask rect so that's a no-op.
         let mut clip_rect: LayoutRect = clip_rect.into();
-        clip_rect.origin = clip_rect.origin - content_rect.origin;
+        clip_rect.origin = clip_rect.origin - content_rect.origin.to_vector();
 
         let clip_region = state.frame_builder.dl_builder.push_clip_region(&clip_rect, vec![], None);
         state.frame_builder.dl_builder.define_clip(content_rect, clip_region, Some(clip_id));

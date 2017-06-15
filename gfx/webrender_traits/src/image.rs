@@ -5,6 +5,7 @@
 use std::sync::Arc;
 use {DeviceUintRect, DevicePoint};
 use {TileOffset, TileSize};
+use font::{FontKey, FontTemplate};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
@@ -135,6 +136,11 @@ impl ImageData {
     }
 }
 
+pub trait BlobImageResources {
+    fn get_font_data(&self, key: FontKey) -> &FontTemplate;
+    fn get_image(&self, key: ImageKey) -> Option<(&ImageData, &ImageDescriptor)>;
+}
+
 pub trait BlobImageRenderer: Send {
     fn add(&mut self, key: ImageKey, data: BlobImageData, tiling: Option<TileSize>);
 
@@ -143,12 +149,14 @@ pub trait BlobImageRenderer: Send {
     fn delete(&mut self, key: ImageKey);
 
     fn request(&mut self,
+               services: &BlobImageResources,
                key: BlobImageRequest,
                descriptor: &BlobImageDescriptor,
-               dirty_rect: Option<DeviceUintRect>,
-               images: &ImageStore);
+               dirty_rect: Option<DeviceUintRect>);
 
     fn resolve(&mut self, key: BlobImageRequest) -> BlobImageResult;
+
+    fn delete_font(&mut self, key: FontKey);
 }
 
 pub type BlobImageData = Vec<u8>;
@@ -182,8 +190,4 @@ pub enum BlobImageError {
 pub struct BlobImageRequest {
     pub key: ImageKey,
     pub tile: Option<TileOffset>,
-}
-
-pub trait ImageStore {
-    fn get_image(&self, key: ImageKey) -> Option<(&ImageData, &ImageDescriptor)>;
 }

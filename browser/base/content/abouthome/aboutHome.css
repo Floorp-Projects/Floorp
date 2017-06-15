@@ -363,7 +363,7 @@ body[narrow] #restorePreviousSession::before {
   display: block;
   position: absolute;
   top: 12px;
-  right: 12px;
+  offset-inline-end: 12px;
   width: 70px;
   height: 20px;
 }
@@ -437,4 +437,3 @@ body[narrow] #restorePreviousSession::before {
     transform-origin: top center;
   }
 }
-
