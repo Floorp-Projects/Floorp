@@ -4,7 +4,6 @@ module.exports = {
   "rules": {
     "block-scoped-var": "error",
     "comma-dangle": "off",
-    "comma-style": ["error", "last"],
     "complexity": ["error", {"max": 21}],
     "dot-notation": "error",
     "indent": ["error", 2, {"SwitchCase": 1, "ArrayExpression": "first", "ObjectExpression": "first"}],

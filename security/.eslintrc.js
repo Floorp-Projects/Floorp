@@ -8,9 +8,6 @@ module.exports = {
     // Braces only needed for multi-line arrow function blocks
     "arrow-body-style": ["error", "as-needed"],
 
-    // Commas at the end of the line not the start
-    "comma-style": "error",
-
     // Verify calls of super() in constructors.
     "constructor-super": "error",
 

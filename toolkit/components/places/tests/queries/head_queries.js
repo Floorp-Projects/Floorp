@@ -136,11 +136,11 @@ async function task_populateDB(aArray) {
       }
 
       if (qdata.isLivemark) {
-        await PlacesUtils.livemarks.addLivemark({ title: qdata.title
-                                                , parentId: (await PlacesUtils.promiseItemId(qdata.parentGuid))
-                                                , index: qdata.index
-                                                , feedURI: uri(qdata.feedURI)
-                                                , siteURI: uri(qdata.uri)
+        await PlacesUtils.livemarks.addLivemark({ title: qdata.title,
+                                                  parentId: (await PlacesUtils.promiseItemId(qdata.parentGuid)),
+                                                  index: qdata.index,
+                                                  feedURI: uri(qdata.feedURI),
+                                                  siteURI: uri(qdata.uri)
                                                 });
       }
 
