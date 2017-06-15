@@ -13,6 +13,7 @@
 #include "jit/CacheIRSpewer.h"
 #include "jit/IonCaches.h"
 
+#include "vm/SelfHosting.h"
 #include "jsobjinlines.h"
 
 #include "vm/EnvironmentObject-inl.h"
@@ -3528,3 +3529,128 @@ TypeOfIRGenerator::tryAttachObject(ValOperandId valId)
     return true;
 }
 
+
+CallIRGenerator::CallIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
+                                 ICState::Mode mode, uint32_t argc,
+                                 HandleValue callee, HandleValue thisval, HandleValueArray args)
+  : IRGenerator(cx, script, pc, CacheKind::Call, mode),
+    argc_(argc),
+    callee_(callee),
+    thisval_(thisval),
+    args_(args),
+    cachedStrategy_()
+{ }
+
+CallIRGenerator::OptStrategy
+CallIRGenerator::canOptimize()
+{
+    // Ensure callee is a function.
+    if (!callee_.isObject() || !callee_.toObject().is<JSFunction>())
+        return OptStrategy::None;
+
+    RootedFunction calleeFunc(cx_, &callee_.toObject().as<JSFunction>());
+
+    OptStrategy strategy;
+    if ((strategy = canOptimizeStringSplit(calleeFunc)) != OptStrategy::None) {
+        return strategy;
+    }
+
+    return OptStrategy::None;
+}
+
+CallIRGenerator::OptStrategy
+CallIRGenerator::canOptimizeStringSplit(HandleFunction calleeFunc)
+{
+    if (argc_ != 2 || !args_[0].isString() || !args_[1].isString())
+        return OptStrategy::None;
+
+    // Just for now: if they're both atoms, then do not optimize using
+    // CacheIR and allow the legacy "ConstStringSplit" BaselineIC optimization
+    // to proceed.
+    if (args_[0].toString()->isAtom() && args_[1].toString()->isAtom())
+        return OptStrategy::None;
+
+    if (!calleeFunc->isNative())
+        return OptStrategy::None;
+
+    if (calleeFunc->native() != js::intrinsic_StringSplitString)
+        return OptStrategy::None;
+
+    return OptStrategy::StringSplit;
+}
+
+bool
+CallIRGenerator::tryAttachStringSplit()
+{
+    // Get the object group to use for this location.
+    RootedObjectGroup group(cx_, ObjectGroupCompartment::getStringSplitStringGroup(cx_));
+    if (!group) {
+        return false;
+    }
+
+    AutoAssertNoPendingException aanpe(cx_);
+    Int32OperandId argcId(writer.setInputOperandId(0));
+
+    // Ensure argc == 1.
+    writer.guardSpecificInt32Immediate(argcId, 2);
+
+    // 1 argument only.  Stack-layout here is (bottom to top):
+    //
+    //  3: Callee
+    //  2: ThisValue
+    //  1: Arg0
+    //  0: Arg1 <-- Top of stack
+
+    // Ensure callee is an object and is the function that matches the callee optimized
+    // against during stub generation (i.e. the String_split function object).
+    ValOperandId calleeValId = writer.loadStackValue(3);
+    ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
+    writer.guardIsNativeFunction(calleeObjId, js::intrinsic_StringSplitString);
+
+    // Ensure arg0 is a string.
+    ValOperandId arg0ValId = writer.loadStackValue(1);
+    StringOperandId arg0StrId = writer.guardIsString(arg0ValId);
+
+    // Ensure arg1 is a string.
+    ValOperandId arg1ValId = writer.loadStackValue(0);
+    StringOperandId arg1StrId = writer.guardIsString(arg1ValId);
+
+    // Call custom string splitter VM-function.
+    writer.callStringSplitResult(arg0StrId, arg1StrId, group);
+    writer.typeMonitorResult();
+
+    return true;
+}
+
+CallIRGenerator::OptStrategy
+CallIRGenerator::getOptStrategy(bool* optimizeAfterCall)
+{
+    if (!cachedStrategy_) {
+        cachedStrategy_ = mozilla::Some(canOptimize());
+    }
+    if (optimizeAfterCall != nullptr) {
+        MOZ_ASSERT(cachedStrategy_.isSome());
+        switch (cachedStrategy_.value()) {
+          case OptStrategy::StringSplit:
+            *optimizeAfterCall = true;
+            break;
+
+          default:
+            *optimizeAfterCall = false;
+        }
+    }
+    return cachedStrategy_.value();
+}
+
+bool
+CallIRGenerator::tryAttachStub()
+{
+    OptStrategy strategy = getOptStrategy();
+
+    if (strategy == OptStrategy::StringSplit) {
+        return tryAttachStringSplit();
+    }
+
+    MOZ_ASSERT(strategy == OptStrategy::None);
+    return false;
+}

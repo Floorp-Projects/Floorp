@@ -9,16 +9,16 @@
 
 <script type="text/javascript">
 
+let { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
 const State = {
   BYTECHECK: -1,
-  INSTALLING: 0,
-  INSTALLED: 1,
-  ACTIVATING: 2,
-  ACTIVATED: 3,
-  REDUNDANT: 4
+  INSTALLING: Ci.nsIServiceWorkerInfo.STATE_INSTALLING,
+  INSTALLED: Ci.nsIServiceWorkerInfo.STATE_INSTALLED,
+  ACTIVATING: Ci.nsIServiceWorkerInfo.STATE_ACTIVATING,
+  ACTIVATED: Ci.nsIServiceWorkerInfo.STATE_ACTIVATED,
+  REDUNDANT: Ci.nsIServiceWorkerInfo.STATE_REDUNDANT
 };
-
-let { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 let swm = Cc["@mozilla.org/serviceworkers/manager;1"].
           getService(Ci.nsIServiceWorkerManager);
 

@@ -5732,3 +5732,6 @@ pref("layers.advanced.filter-layers", 2);
 
 // Enable lowercased response header name
 pref("dom.xhr.lowercase_header.enabled", false);
+
+// Open noopener links in a new process
+pref("dom.noopener.newprocess.enabled", true);

@@ -115,10 +115,14 @@ class FFSetup(object):
             mozrunner.Runner)
 
         if self.test_config.get('webextensions', None):
+            # bug 1272255 - marionette doesn't work with MOZ_DISABLE_NONLOCAL_CONNECTIONS
+            self.env['MOZ_DISABLE_NONLOCAL_CONNECTIONS'] = '0'
+
             args = [self.browser_config["extra_args"], "-marionette"]
             runner = runner_cls(profile=self.profile_dir,
                                 binary=self.browser_config["browser_path"],
                                 cmdargs=args,
+                                env=self.env,
                                 process_class=ProcessHandlerMixin,
                                 process_args={})
 
@@ -158,6 +162,7 @@ class FFSetup(object):
             runner = runner_cls(profile=self.profile_dir,
                                 binary=self.browser_config["browser_path"],
                                 cmdargs=args,
+                                env=self.env,
                                 process_class=ProcessHandlerMixin,
                                 process_args={})
 

@@ -1401,6 +1401,27 @@ CacheIRCompiler::emitGuardClass()
 }
 
 bool
+CacheIRCompiler::emitGuardIsNativeFunction()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    JSNative nativeFunc = reinterpret_cast<JSNative>(reader.pointer());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Ensure obj is a function.
+    const Class* clasp = &JSFunction::class_;
+    masm.branchTestObjClass(Assembler::NotEqual, obj, scratch, clasp, failure->label());
+
+    // Ensure function native matches.
+    masm.branchPtr(Assembler::NotEqual, Address(obj, JSFunction::offsetOfNativeOrScript()),
+                   ImmPtr(nativeFunc), failure->label());
+    return true;
+}
+
+bool
 CacheIRCompiler::emitGuardIsProxy()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
@@ -1442,6 +1463,20 @@ CacheIRCompiler::emitGuardNotDOMProxy()
 
     masm.branchTestProxyHandlerFamily(Assembler::Equal, obj, scratch,
                                       GetDOMProxyHandlerFamily(), failure->label());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitGuardSpecificInt32Immediate()
+{
+    Register reg = allocator.useRegister(masm, reader.int32OperandId());
+    int32_t ival = reader.int32Immediate();
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.branch32(Assembler::NotEqual, reg, Imm32(ival), failure->label());
     return true;
 }
 
@@ -2188,6 +2223,21 @@ CacheIRCompiler::emitLoadTypeOfObjectResult()
     }
 
     masm.bind(&done);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitCallPrintString()
+{
+    const char* str = reinterpret_cast<char*>(reader.pointer());
+    masm.printf(str);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitBreakpoint()
+{
+    masm.breakpoint();
     return true;
 }
 

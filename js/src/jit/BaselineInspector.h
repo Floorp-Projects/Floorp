@@ -110,8 +110,8 @@ class BaselineInspector
     bool hasSeenDoubleResult(jsbytecode* pc);
     bool hasSeenNonStringIterMore(jsbytecode* pc);
 
-    MOZ_MUST_USE bool isOptimizableCallStringSplit(jsbytecode* pc, JSString** strOut,
-                                                   JSString** sepOut, JSObject** objOut);
+    MOZ_MUST_USE bool isOptimizableConstStringSplit(jsbytecode* pc, JSString** strOut,
+                                                    JSString** sepOut, JSObject** objOut);
     JSObject* getTemplateObject(jsbytecode* pc);
     JSObject* getTemplateObjectForNative(jsbytecode* pc, Native native);
     JSObject* getTemplateObjectForClassHook(jsbytecode* pc, const Class* clasp);
