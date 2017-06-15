@@ -68,5 +68,9 @@ module.exports = {
     "no-unneeded-ternary": "error",
     yoda: "error",
     "no-new-wrappers": "error",
+    "no-unused-vars": ["error", {
+      args: "none",
+      varsIgnorePattern: "^(Cc|Ci|Cr|Cu|EXPORTED_SYMBOLS)$",
+    }],
   },
 };
