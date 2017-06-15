@@ -222,10 +222,6 @@ SERVO_BINDING_FUNC(Servo_GetComputedKeyframeValues, void,
                    ServoComputedValuesBorrowed style,
                    RawServoStyleSetBorrowed set,
                    RawGeckoComputedKeyframeValuesListBorrowedMut result)
-SERVO_BINDING_FUNC(Servo_AnimationValueMap_Push, void,
-                   RawServoAnimationValueMapBorrowedMut,
-                   nsCSSPropertyID property,
-                   RawServoAnimationValueBorrowed value)
 SERVO_BINDING_FUNC(Servo_ComputedValues_ExtractAnimationValue,
                    RawServoAnimationValueStrong,
                    ServoComputedValuesBorrowed computed_values,
