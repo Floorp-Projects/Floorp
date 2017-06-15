@@ -936,7 +936,7 @@ WR_FUNC;
 
 WR_INLINE
 void wr_thread_pool_delete(WrThreadPool *aThreadPool)
-WR_FUNC;
+WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
 WrThreadPool* wr_thread_pool_new()

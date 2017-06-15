@@ -890,6 +890,7 @@ pub unsafe extern "C" fn wr_thread_pool_new() -> *mut WrThreadPool {
     Box::into_raw(Box::new(WrThreadPool(workers)))
 }
 
+/// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub unsafe extern "C" fn wr_thread_pool_delete(thread_pool: *mut WrThreadPool) {
     Box::from_raw(thread_pool);

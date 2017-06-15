@@ -8,10 +8,9 @@ function run_test() {
 
   debugDump("testing update logs are first in first out deleted");
 
-  writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
-  let patches = getLocalPatchString(null, null, null, null, null, null,
-                                    STATE_PENDING);
-  let updates = getLocalUpdateString(patches);
+  let patchProps = {state: STATE_PENDING};
+  let patches = getLocalPatchString(patchProps);
+  let updates = getLocalUpdateString({}, patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_SUCCEEDED);
 

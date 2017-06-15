@@ -10,14 +10,13 @@ function run_test() {
             "same version of the application with the same application " +
             "build id on startup (Bug 536547)");
 
-  let patches = getLocalPatchString(null, null, null, null, null, null,
-                                    STATE_DOWNLOADING);
-  let updates = getLocalUpdateString(patches, null, null, "version 1.0", "1.0",
-                                     "2007010101");
+  let patchProps = {state: STATE_DOWNLOADING};
+  let patches = getLocalPatchString(patchProps);
+  let updateProps = {appVersion: "1.0",
+                     buildID: "2007010101"};
+  let updates = getLocalUpdateString(updateProps, patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_DOWNLOADING);
-
-  writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
 
   standardInit();
 

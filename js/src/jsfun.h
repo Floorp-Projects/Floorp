@@ -774,6 +774,9 @@ class FunctionExtended : public JSFunction
     static inline size_t offsetOfArrowNewTargetSlot() {
         return offsetOfExtendedSlot(ARROW_NEWTARGET_SLOT);
     }
+    static inline size_t offsetOfMethodHomeObjectSlot() {
+        return offsetOfExtendedSlot(METHOD_HOMEOBJECT_SLOT);
+    }
 
   private:
     friend class JSFunction;

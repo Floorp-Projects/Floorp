@@ -9,10 +9,9 @@ function run_test() {
             "STATUS_NONE, the version file is for a newer version, and the " +
             "update xml has an update with STATE_PENDING (Bug 601701).");
 
-  writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
-  let patches = getLocalPatchString(null, null, null, null, null, null,
-                                    STATE_PENDING);
-  let updates = getLocalUpdateString(patches);
+  let patchProps = {state: STATE_PENDING};
+  let patches = getLocalPatchString(patchProps);
+  let updates = getLocalUpdateString({}, patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeVersionFile("99.9");
 

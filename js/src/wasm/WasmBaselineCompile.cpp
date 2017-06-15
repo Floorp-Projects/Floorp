@@ -2747,15 +2747,7 @@ class BaseCompiler
         RegF32 rv = RegF32(ReturnFloat32Reg);
         MOZ_ASSERT(isAvailable(rv));
         needF32(rv);
-#if defined(JS_CODEGEN_X86)
-        if (call.usesSystemAbi) {
-            masm.reserveStack(sizeof(float));
-            Operand op(esp, 0);
-            masm.fstp32(op);
-            masm.loadFloat32(op, rv);
-            masm.freeStack(sizeof(float));
-        }
-#elif defined(JS_CODEGEN_ARM)
+#if defined(JS_CODEGEN_ARM)
         if (call.usesSystemAbi && !call.hardFP)
             masm.ma_vxfer(r0, rv);
 #endif
@@ -2766,15 +2758,7 @@ class BaseCompiler
         RegF64 rv = RegF64(ReturnDoubleReg);
         MOZ_ASSERT(isAvailable(rv));
         needF64(rv);
-#if defined(JS_CODEGEN_X86)
-        if (call.usesSystemAbi) {
-            masm.reserveStack(sizeof(double));
-            Operand op(esp, 0);
-            masm.fstp(op);
-            masm.loadDouble(op, rv);
-            masm.freeStack(sizeof(double));
-        }
-#elif defined(JS_CODEGEN_ARM)
+#if defined(JS_CODEGEN_ARM)
         if (call.usesSystemAbi && !call.hardFP)
             masm.ma_vxfer(r0, r1, rv);
 #endif

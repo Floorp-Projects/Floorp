@@ -66,10 +66,14 @@ function check_test_helper_pt1_2() {
   gNextRunFunc();
 }
 
-function setResponseBody(aHashFunction, aHashValue, aSize) {
-  let patches = getRemotePatchString(null, null,
-                                     aHashFunction, aHashValue, aSize);
-  let updates = getRemoteUpdateString(patches);
+function setResponseBody(aHashFunction, aHashValue, aSize = null) {
+  let patchProps = {hashFunction: aHashFunction,
+                    hashValue: aHashValue};
+  if (aSize) {
+    patchProps.size = aSize;
+  }
+  let patches = getRemotePatchString(patchProps);
+  let updates = getRemoteUpdateString({}, patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
 }
 
@@ -145,8 +149,9 @@ function run_test_pt10() {
 
 // mar download with the mar not found
 function run_test_pt11() {
-  let patches = getRemotePatchString(null, gURLData + "missing.mar");
-  let updates = getRemoteUpdateString(patches);
+  let patchProps = {url: gURLData + "missing.mar"};
+  let patches = getRemotePatchString(patchProps);
+  let updates = getRemoteUpdateString({}, patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
   run_test_helper_pt1("mar download with the mar not found",
                       Cr.NS_ERROR_UNEXPECTED, run_test_pt12);
