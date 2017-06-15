@@ -226,7 +226,8 @@ ThrottleInputStream::AllowInput()
 {
   MOZ_ASSERT(mCallback);
   nsCOMPtr<nsIInputStreamCallback> callbackEvent =
-    NS_NewInputStreamReadyEvent(mCallback, mEventTarget);
+    NS_NewInputStreamReadyEvent("ThrottleInputStream::AllowInput",
+                                mCallback, mEventTarget);
   mCallback = nullptr;
   mEventTarget = nullptr;
   callbackEvent->OnInputStreamReady(this);

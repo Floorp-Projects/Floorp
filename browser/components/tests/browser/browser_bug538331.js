@@ -17,12 +17,10 @@ const XML_EMPTY = "<?xml version=\"1.0\"?><updates xmlns=" +
 const XML_PREFIX =  "<updates xmlns=\"http://www.mozilla.org/2005/app-update\"" +
                     "><update appVersion=\"1.0\" buildID=\"20080811053724\" " +
                     "channel=\"nightly\" displayVersion=\"Version 1.0\" " +
-                    "extensionVersion=\"1.0\" installDate=\"1238441400314\" " +
-                    "isCompleteUpdate=\"true\" name=\"Update Test 1.0\" " +
-                    "serviceURL=\"https://example.com/\" showNeverForVersion=" +
-                    "\"false\" showPrompt=\"false\" type=" +
-                    "\"minor\" version=\"version 1.0\" detailsURL=" +
+                    "installDate=\"1238441400314\" isCompleteUpdate=\"true\" " +
+                    "name=\"Update Test 1.0\" type=\"minor\" detailsURL=" +
                     "\"http://example.com/\" previousAppVersion=\"1.0\" " +
+                    "serviceURL=\"https://example.com/\" " +
                     "statusText=\"The Update was successfully installed\" " +
                     "foregroundDownload=\"true\"";
 

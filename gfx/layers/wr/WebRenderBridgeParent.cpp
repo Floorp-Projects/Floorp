@@ -111,13 +111,15 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
                                              widget::CompositorWidget* aWidget,
                                              CompositorVsyncScheduler* aScheduler,
                                              RefPtr<wr::WebRenderAPI>&& aApi,
-                                             RefPtr<WebRenderCompositableHolder>&& aHolder)
+                                             RefPtr<WebRenderCompositableHolder>&& aHolder,
+                                             RefPtr<CompositorAnimationStorage>&& aAnimStorage)
   : mCompositorBridge(aCompositorBridge)
   , mPipelineId(aPipelineId)
   , mWidget(aWidget)
   , mApi(aApi)
   , mCompositableHolder(aHolder)
   , mCompositorScheduler(aScheduler)
+  , mAnimStorage(aAnimStorage)
   , mChildLayerObserverEpoch(0)
   , mParentLayerObserverEpoch(0)
   , mWrEpoch(0)
@@ -127,6 +129,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   , mForceRendering(false)
 {
   MOZ_ASSERT(mCompositableHolder);
+  MOZ_ASSERT(mAnimStorage);
   mCompositableHolder->AddPipeline(mPipelineId);
   if (mWidget) {
     MOZ_ASSERT(!mCompositorScheduler);
@@ -280,13 +283,13 @@ WebRenderBridgeParent::RecvDeleteCompositorAnimations(InfallibleTArray<uint64_t>
     return IPC_OK();
   }
 
-  uint64_t storageId = mWidget ? 0 : GetLayersId();
-  CompositorAnimationStorage* storage =
-    mCompositorBridge->GetAnimationStorage(storageId);
-  MOZ_ASSERT(storage);
-
   for (uint32_t i = 0; i < aIds.Length(); i++) {
-    storage->ClearById(aIds[i]);
+    if (mActiveAnimations.find(aIds[i]) != mActiveAnimations.end()) {
+      mAnimStorage->ClearById(aIds[i]);
+      mActiveAnimations.erase(aIds[i]);
+    } else {
+      NS_ERROR("Tried to delete invalid animation");
+    }
   }
 
   return IPC_OK();
@@ -442,14 +445,19 @@ WebRenderBridgeParent::RecvDPSyncEnd(const gfx::IntSize &aSize,
   return IPC_OK();
 }
 
-void
-WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
-                                                InfallibleTArray<WebRenderParentCommand>& aCommands, const wr::Epoch& aEpoch,
-                                                const WrSize& aContentSize, const ByteBuffer& dl,
-                                                const WrBuiltDisplayListDescriptor& dlDesc)
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvParentCommands(nsTArray<WebRenderParentCommand>&& aCommands)
 {
-  mCompositableHolder->SetCompositionTime(TimeStamp::Now());
+  if (mDestroyed) {
+    return IPC_OK();
+  }
+  ProcessWebRenderParentCommands(aCommands);
+  return IPC_OK();
+}
 
+void
+WebRenderBridgeParent::ProcessWebRenderParentCommands(InfallibleTArray<WebRenderParentCommand>& aCommands)
+{
   for (InfallibleTArray<WebRenderParentCommand>::index_type i = 0; i < aCommands.Length(); ++i) {
     const WebRenderParentCommand& cmd = aCommands[i];
     switch (cmd.type()) {
@@ -515,20 +523,16 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
         const OpAddCompositorAnimations& op = cmd.get_OpAddCompositorAnimations();
         CompositorAnimations data(Move(op.data()));
         if (data.animations().Length()) {
-          uint64_t id = mWidget ? 0 : GetLayersId();
-          CompositorAnimationStorage* storage =
-            mCompositorBridge->GetAnimationStorage(id);
-          if (storage) {
-            storage->SetAnimations(data.id(), data.animations());
-            // Store the default opacity
-            if (op.opacity().type() == OptionalOpacity::Tfloat) {
-              storage->SetAnimatedValue(data.id(), op.opacity().get_float());
-            }
-            // Store the default transform
-            if (op.transform().type() == OptionalTransform::TMatrix4x4) {
-              Matrix4x4 transform(Move(op.transform().get_Matrix4x4()));
-              storage->SetAnimatedValue(data.id(), Move(transform));
-            }
+          mAnimStorage->SetAnimations(data.id(), data.animations());
+          mActiveAnimations.insert(data.id());
+          // Store the default opacity
+          if (op.opacity().type() == OptionalOpacity::Tfloat) {
+            mAnimStorage->SetAnimatedValue(data.id(), op.opacity().get_float());
+          }
+          // Store the default transform
+          if (op.transform().type() == OptionalTransform::TMatrix4x4) {
+            Matrix4x4 transform(Move(op.transform().get_Matrix4x4()));
+            mAnimStorage->SetAnimatedValue(data.id(), Move(transform));
           }
         }
         break;
@@ -539,6 +543,17 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
       }
     }
   }
+}
+
+void
+WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
+                                                InfallibleTArray<WebRenderParentCommand>& aCommands, const wr::Epoch& aEpoch,
+                                                const WrSize& aContentSize, const ByteBuffer& dl,
+                                                const WrBuiltDisplayListDescriptor& dlDesc)
+{
+  mCompositableHolder->SetCompositionTime(TimeStamp::Now());
+  ProcessWebRenderParentCommands(aCommands);
+
   if (mWidget) {
     LayoutDeviceIntSize size = mWidget->GetClientSize();
     mApi->SetWindowParameters(size);
@@ -809,17 +824,13 @@ void
 WebRenderBridgeParent::SampleAnimations(nsTArray<WrOpacityProperty>& aOpacityArray,
                                         nsTArray<WrTransformProperty>& aTransformArray)
 {
-  uint64_t id = mWidget ? 0 : GetLayersId();
-  CompositorAnimationStorage* storage =
-    mCompositorBridge->GetAnimationStorage(id);
-
-  AnimationHelper::SampleAnimations(storage,
+  AnimationHelper::SampleAnimations(mAnimStorage,
                                     mCompositorScheduler->
                                       GetLastComposeTime());
 
   // return the animated data if has
-  if (storage->AnimatedValueCount()) {
-    for(auto iter = storage->ConstAnimatedValueTableIter();
+  if (mAnimStorage->AnimatedValueCount()) {
+    for(auto iter = mAnimStorage->ConstAnimatedValueTableIter();
         !iter.Done(); iter.Next()) {
       AnimatedValue * value = iter.UserData();
       if (value->mType == AnimatedValue::TRANSFORM) {
@@ -1038,9 +1049,15 @@ WebRenderBridgeParent::ClearResources()
 
   mCompositableHolder->RemovePipeline(mPipelineId, wr::NewEpoch(mWrEpoch));
 
+  for (std::unordered_set<uint64_t>::iterator iter = mActiveAnimations.begin(); iter != mActiveAnimations.end(); iter++) {
+    mAnimStorage->ClearById(*iter);
+  }
+  mActiveAnimations.clear();
+
   if (mWidget) {
     mCompositorScheduler->Destroy();
   }
+  mAnimStorage = nullptr;
   mCompositorScheduler = nullptr;
   mApi = nullptr;
   mCompositorBridge = nullptr;

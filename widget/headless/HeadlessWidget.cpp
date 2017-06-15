@@ -113,7 +113,7 @@ HeadlessWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
                                 LayerManagerPersistence aPersistence)
 {
   if (!mLayerManager) {
-    mLayerManager = new BasicLayerManager(BasicLayerManager::BLM_OFFSCREEN);
+    mLayerManager = new BasicLayerManager(this);
   }
 
   return mLayerManager;

@@ -27,8 +27,6 @@ const PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED = "app.update.notifiedUnsupported";
 const PREF_APP_UPDATE_TEST_LOOP           = "app.update.test.loop";
 const PREF_APP_UPDATE_URL_MANUAL          = "app.update.url.manual";
 
-const PREFBRANCH_APP_UPDATE_NEVER         = "app.update.never.";
-
 const UPDATE_TEST_LOOP_INTERVAL = 2000;
 
 const URI_UPDATES_PROPERTIES  = "chrome://mozapps/locale/update/updates.properties";
@@ -233,13 +231,7 @@ var gUpdates = {
   never() {
     // If the user clicks "No Thanks", we should not prompt them to update to
     // this version again unless they manually select "Check for Updates..."
-    // which will clear all of the "never" prefs. There are currently two
-    // "never" prefs: the older PREFBRANCH_APP_UPDATE_NEVER as well as the
-    // OSX-only PREF_APP_UPDATE_ELEVATE_NEVER. We set both of these prefs (if
-    // applicable) to ensure that we don't prompt the user regardless of which
-    // pref is checked.
-    let neverPrefName = PREFBRANCH_APP_UPDATE_NEVER + this.update.appVersion;
-    Services.prefs.setBoolPref(neverPrefName, true);
+    // which will clear app.update.elevate.never preference.
     let aus = CoC["@mozilla.org/updates/update-service;1"].
               getService(CoI.nsIApplicationUpdateService);
     if (aus.elevationRequired) {
@@ -499,11 +491,9 @@ var gCheckingPage = {
     gUpdates.setButtons(null, null, null, false, true);
     gUpdates.wiz.getButton("cancel").focus();
 
-    // Clear all of the "never" prefs to handle the scenario where the user
-    // clicked "never" for an update, selected "Check for Updates...", and
-    // then canceled.  If we don't clear the "never" prefs future
-    // notifications will never happen.
-    Services.prefs.deleteBranch(PREFBRANCH_APP_UPDATE_NEVER);
+    // Clear elevation never prefs to handle the scenario where the user clicked
+    // "never" for an update and then canceled a manual update check.  If the
+    // preference isn't cleared then future notifications will never happen.
     if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_ELEVATE_NEVER)) {
       Services.prefs.clearUserPref(PREF_APP_UPDATE_ELEVATE_NEVER);
     }
@@ -552,10 +542,15 @@ var gCheckingPage = {
           return;
         }
 
-        if (!aus.canApplyUpdates || gUpdates.update.elevationFailure) {
-          // Prevent multiple notifications for the same update when the user is
-          // unable to apply updates.
+        if (gUpdates.update.elevationFailure) {
+          // Prevent multiple notifications for the same update when the client
+          // has had an elevation failure.
           gUpdates.never();
+          gUpdates.wiz.goTo("manualUpdate");
+          return;
+        }
+
+        if (!aus.canApplyUpdates) {
           gUpdates.wiz.goTo("manualUpdate");
           return;
         }
@@ -654,9 +649,8 @@ var gUpdatesFoundBasicPage = {
   onPageShow() {
     gUpdates.wiz.canRewind = false;
     var update = gUpdates.update;
-    gUpdates.setButtons("askLaterButton",
-                        update.showNeverForVersion ? "noThanksButton" : null,
-                        "updateButton_" + update.type, true);
+    gUpdates.setButtons("askLaterButton", null, "updateButton_" + update.type,
+                        true);
     var btn = gUpdates.wiz.getButton("next");
     btn.focus();
 
@@ -688,11 +682,6 @@ var gUpdatesFoundBasicPage = {
   },
 
   onExtra1() {
-    gUpdates.wiz.cancel();
-  },
-
-  onExtra2() {
-    gUpdates.never();
     gUpdates.wiz.cancel();
   }
 };

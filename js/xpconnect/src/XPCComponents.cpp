@@ -39,6 +39,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsGlobalWindow.h"
 #include "nsScriptError.h"
+#include "GeckoProfiler.h"
 
 using namespace mozilla;
 using namespace JS;
@@ -2501,6 +2502,12 @@ nsXPCComponents_Utils::Import(const nsACString& registryLocation,
         do_GetService(MOZJSCOMPONENTLOADER_CONTRACTID);
     if (!moduleloader)
         return NS_ERROR_FAILURE;
+
+    const nsCString& flatLocation = PromiseFlatCString(registryLocation);
+    PROFILER_LABEL_DYNAMIC("Components.utils", "import",
+                           js::ProfileEntry::Category::OTHER,
+                           flatLocation.get());
+
     return moduleloader->Import(registryLocation, targetObj, cx, optionalArgc, retval);
 }
 

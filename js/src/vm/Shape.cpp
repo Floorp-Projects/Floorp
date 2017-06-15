@@ -350,7 +350,7 @@ NativeObject::getChildProperty(JSContext* cx,
         return shape;
     }
 
-    Shape* shape = cx->zone()->propertyTree().getChild(cx, parent, child);
+    Shape* shape = cx->zone()->propertyTree().inlinedGetChild(cx, parent, child);
     if (!shape)
         return nullptr;
     //MOZ_ASSERT(shape->parent == parent);
@@ -1384,13 +1384,13 @@ EmptyShape::new_(JSContext* cx, Handle<UnownedBaseShape*> base, uint32_t nfixed)
     return shape;
 }
 
-inline HashNumber
+MOZ_ALWAYS_INLINE HashNumber
 ShapeHasher::hash(const Lookup& l)
 {
     return l.hash();
 }
 
-inline bool
+MOZ_ALWAYS_INLINE bool
 ShapeHasher::match(const Key k, const Lookup& l)
 {
     return k->matches(l);
@@ -1488,10 +1488,9 @@ Shape::removeChild(Shape* child)
     }
 }
 
-Shape*
-PropertyTree::getChild(JSContext* cx, Shape* parentArg, Handle<StackShape> child)
+MOZ_ALWAYS_INLINE Shape*
+PropertyTree::inlinedGetChild(JSContext* cx, Shape* parent, Handle<StackShape> child)
 {
-    RootedShape parent(cx, parentArg);
     MOZ_ASSERT(parent);
 
     Shape* existingShape = nullptr;
@@ -1526,30 +1525,38 @@ PropertyTree::getChild(JSContext* cx, Shape* parentArg, Handle<StackShape> child
             Shape* tmp = existingShape;
             TraceManuallyBarrieredEdge(zone->barrierTracer(), &tmp, "read barrier");
             MOZ_ASSERT(tmp == existingShape);
-        } else if (IsAboutToBeFinalizedUnbarriered(&existingShape)) {
-            /*
-             * The shape we've found is unreachable and due to be finalized, so
-             * remove our weak reference to it and don't use it.
-             */
-            MOZ_ASSERT(parent->isMarked());
-            parent->removeChild(existingShape);
-            existingShape = nullptr;
-        } else if (existingShape->isMarked(gc::GRAY)) {
-            UnmarkGrayShapeRecursively(existingShape);
+            return existingShape;
         }
+        if (!zone->isGCSweepingOrCompacting() ||
+            !IsAboutToBeFinalizedUnbarriered(&existingShape))
+        {
+            if (existingShape->isMarked(gc::GRAY))
+                UnmarkGrayShapeRecursively(existingShape);
+            return existingShape;
+        }
+        /*
+         * The shape we've found is unreachable and due to be finalized, so
+         * remove our weak reference to it and don't use it.
+         */
+        MOZ_ASSERT(parent->isMarked());
+        parent->removeChild(existingShape);
     }
 
-    if (existingShape)
-        return existingShape;
-
-    Shape* shape = Shape::new_(cx, child, parent->numFixedSlots());
+    RootedShape parentRoot(cx, parent);
+    Shape* shape = Shape::new_(cx, child, parentRoot->numFixedSlots());
     if (!shape)
         return nullptr;
 
-    if (!insertChild(cx, parent, shape))
+    if (!insertChild(cx, parentRoot, shape))
         return nullptr;
 
     return shape;
+}
+
+Shape*
+PropertyTree::getChild(JSContext* cx, Shape* parent, Handle<StackShape> child)
+{
+    return inlinedGetChild(cx, parent, child);
 }
 
 void

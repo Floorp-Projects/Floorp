@@ -275,6 +275,7 @@ struct VMFunction
 template <class> struct TypeToDataType { /* Unexpected return type for a VMFunction. */ };
 template <> struct TypeToDataType<bool> { static const DataType result = Type_Bool; };
 template <> struct TypeToDataType<JSObject*> { static const DataType result = Type_Object; };
+template <> struct TypeToDataType<JSFunction*> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<NativeObject*> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<PlainObject*> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<InlineTypedObject*> { static const DataType result = Type_Object; };
