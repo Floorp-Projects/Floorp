@@ -158,7 +158,7 @@ public:
   const SdpRtpmapAttributeList::Rtpmap* FindRtpmap(const std::string& pt) const;
   const SdpSctpmapAttributeList::Sctpmap* GetSctpmap() const;
   uint32_t GetSctpPort() const;
-  uint32_t GetMaxMessageSize() const;
+  bool GetMaxMessageSize(uint32_t* size) const;
   bool HasRtcpFb(const std::string& pt,
                  SdpRtcpFbAttributeList::Type type,
                  const std::string& subType) const;
