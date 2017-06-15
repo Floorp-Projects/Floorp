@@ -73,9 +73,18 @@ FileBlockCache::SetCacheFile(PRFileDesc* aFD)
 nsresult
 FileBlockCache::Init()
 {
+  MutexAutoLock mon(mDataMutex);
+  if (mThread) {
+    LOG("Init() again");
+    // Just discard pending changes, assume MediaCache won't read from
+    // blocks it hasn't written to.
+    mChangeIndexList.clear();
+    mBlockChanges.Clear();
+    return NS_OK;
+  }
+
   LOG("Init()");
 
-  MutexAutoLock mon(mDataMutex);
   nsresult rv = NS_NewNamedThread("FileBlockCache",
                                   getter_AddRefs(mThread),
                                   nullptr,
@@ -304,7 +313,6 @@ FileBlockCache::PerformBlockIOs()
 {
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
   MutexAutoLock mon(mDataMutex);
-  NS_ASSERTION(!mChangeIndexList.empty(), "Only dispatch when there's work to do");
   NS_ASSERTION(mIsWriteScheduled, "Should report write running or scheduled.");
 
   LOG("Run() mFD=%p mThread=%p", mFD, mThread.get());

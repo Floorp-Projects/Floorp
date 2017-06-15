@@ -61,6 +61,8 @@ protected:
   virtual ~FileBlockCache();
 
 public:
+  // Launch thread and open temporary file.
+  // If re-initializing, just discard pending writes if any.
   nsresult Init() override;
 
   // Can be called on any thread. This defers to a non-main thread.
