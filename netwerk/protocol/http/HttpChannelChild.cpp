@@ -3163,7 +3163,9 @@ HttpChannelChild::ResetInterception()
 
   // The chance to intercept any further requests associated with this channel
   // (such as redirects) has passed.
-  mLoadFlags |= LOAD_BYPASS_SERVICE_WORKER;
+  if (mRedirectMode != nsIHttpChannelInternal::REDIRECT_MODE_MANUAL) {
+    mLoadFlags |= LOAD_BYPASS_SERVICE_WORKER;
+  }
 
   // Continue with the original cross-process request
   nsresult rv = ContinueAsyncOpen();
