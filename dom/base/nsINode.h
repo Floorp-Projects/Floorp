@@ -1759,6 +1759,7 @@ public:
   void UnbindObject(nsISupports* aObject);
 
   void GetBoundMutationObservers(nsTArray<RefPtr<nsDOMMutationObserver> >& aResult);
+  void GenerateXPath(nsAString& aResult);
 
   already_AddRefed<mozilla::dom::AccessibleNode> GetAccessibleNode();
 
