@@ -11,8 +11,6 @@
 namespace mozilla {
 namespace wr {
 
-class RenderMacIOSurfaceTextureHostOGL;
-
 class RenderTextureHostOGL : public RenderTextureHost
 {
 public:
@@ -23,8 +21,7 @@ public:
   virtual gfx::IntSize GetSize(uint8_t aChannelIndex) const = 0;
   virtual GLuint GetGLHandle(uint8_t aChannelIndex) const = 0;
 
-  virtual RenderTextureHostOGL* AsTextureHostOGL() { return this; }
-  virtual RenderMacIOSurfaceTextureHostOGL* AsMacIOSurfaceTextureHostOGL() { return nullptr; }
+  virtual RenderTextureHostOGL* AsTextureHostOGL()  override { return this; }
 
 protected:
   virtual ~RenderTextureHostOGL();

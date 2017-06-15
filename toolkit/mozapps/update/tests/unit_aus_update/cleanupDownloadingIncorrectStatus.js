@@ -9,10 +9,9 @@ function run_test() {
             "STATUS_NONE and the update xml has an update with " +
             "STATE_DOWNLOADING (Bug 539717).");
 
-  writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
-  let patches = getLocalPatchString(null, null, null, null, null, null,
-                                    STATE_DOWNLOADING);
-  let updates = getLocalUpdateString(patches);
+  let patchProps = {state: STATE_DOWNLOADING};
+  let patches = getLocalPatchString(patchProps);
+  let updates = getLocalUpdateString({}, patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_NONE);
 

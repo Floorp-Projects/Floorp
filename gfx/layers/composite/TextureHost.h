@@ -598,6 +598,13 @@ public:
   virtual MacIOSurfaceTextureHostOGL* AsMacIOSurfaceTextureHost() { return nullptr; }
   virtual WebRenderTextureHost* AsWebRenderTextureHost() { return nullptr; }
 
+  // Create the corresponding RenderTextureHost type of this texture, and
+  // register the RenderTextureHost into render thread.
+  virtual void CreateRenderTexture(const wr::ExternalImageId& aExternalImageId)
+  {
+    MOZ_ASSERT_UNREACHABLE("No CreateRenderTexture() implementation for this TextureHost type.");
+  }
+
   // Create all necessary image keys for this textureHost rendering.
   // @param aImageKeys - [out] The set of ImageKeys used for this textureHost
   // composing.
@@ -715,6 +722,8 @@ public:
   virtual BufferTextureHost* AsBufferTextureHost() override { return this; }
 
   const BufferDescriptor& GetBufferDescriptor() const { return mDescriptor; }
+
+  virtual void CreateRenderTexture(const wr::ExternalImageId& aExternalImageId) override;
 
   virtual void GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
                               const std::function<wr::ImageKey()>& aImageKeyAllocator) override;

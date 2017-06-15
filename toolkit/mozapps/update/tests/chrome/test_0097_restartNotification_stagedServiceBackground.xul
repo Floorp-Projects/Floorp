@@ -29,13 +29,10 @@ gUseTestUpdater = true;
 function runTest() {
   debugDump("entering");
 
-  let patches = getLocalPatchString("complete", null, null, null, null, null,
-                                    STATE_APPLIED_SVC);
-  let updates = getLocalUpdateString(patches, null, null, null,
-                                     Services.appinfo.version,
-                                     Services.appinfo.platformVersion);
+  let patchProps = {state: STATE_APPLIED_SVC};
+  let patches = getLocalPatchString(patchProps);
+  let updates = getLocalUpdateString({}, patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
-  writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
   writeStatusFile(STATE_APPLIED_SVC);
 
   Services.prefs.setIntPref(PREF_APP_UPDATE_PROMPTWAITTIME, 1);

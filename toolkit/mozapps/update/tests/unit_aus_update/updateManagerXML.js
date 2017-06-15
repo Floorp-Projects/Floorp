@@ -16,34 +16,56 @@ function run_test() {
   // preference doesn't already exist.
   Services.prefs.deleteBranch("app.update.download.backgroundInterval");
 
-  // XXXrstrong - not specifying a detailsURL will cause a leak due to bug 470244
-  // and until bug 470244 is fixed this will not test the value for detailsURL
-  // when it isn't specified in the update xml.
-  let patches = getLocalPatchString("partial", "http://partial/", "SHA256",
-                                    "cd43", "86", "true", STATE_PENDING);
-  let updates = getLocalUpdateString(patches, "major", "New", "version 4",
-                                     "4.0", "20070811053724",
-                                     "http://details1/",
-                                     "http://service1/", "1238441300314",
-                                     "test status text", "false",
-                                     "test_channel", "true", "true", "true",
-                                     "345600", "300", "3.0",
-                                     "custom1_attr=\"custom1 value\"",
-                                     "custom2_attr=\"custom2 value\"");
+  let patchProps = {type: "partial",
+                    url: "http://partial/",
+                    hashFunction: "SHA256",
+                    hashValue: "cd43",
+                    size: "86",
+                    selected: "true",
+                    state: STATE_PENDING};
+  let patches = getLocalPatchString(patchProps);
+  let updateProps = {type: "major",
+                     name: "New",
+                     displayVersion: "version 4",
+                     appVersion: "4.0",
+                     buildID: "20070811053724",
+                     detailsURL: "http://details1/",
+                     serviceURL: "http://service1/",
+                     installDate: "1238441300314",
+                     statusText: "test status text",
+                     isCompleteUpdate: "false",
+                     channel: "test_channel",
+                     foregroundDownload: "true",
+                     promptWaitTime: "345600",
+                     backgroundInterval: "300",
+                     previousAppVersion: "3.0",
+                     custom1: "custom1_attr=\"custom1 value\"",
+                     custom2: "custom2_attr=\"custom2 value\""};
+  let updates = getLocalUpdateString(updateProps, patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_SUCCEEDED);
 
-  patches = getLocalPatchString("complete", "http://complete/", "SHA1", "6232",
-                                "75", "true", STATE_FAILED);
-  updates = getLocalUpdateString(patches, "major", "Existing", null, "3.0",
-                                 null,
-                                 "http://details2/",
-                                 "http://service2/", null,
-                                 getString("patchApplyFailure"), "true",
-                                 "test_channel", "false", null, null, "691200",
-                                 null, null,
-                                 "custom3_attr=\"custom3 value\"",
-                                 "custom4_attr=\"custom4 value\"");
+  patchProps = {type: "complete",
+                url: "http://complete/",
+                hashFunction: "SHA1",
+                hashValue: "6232",
+                size: "75",
+                selected: "true",
+                state: STATE_FAILED};
+  patches = getLocalPatchString(patchProps);
+  updateProps = {type: "minor",
+                 name: "Existing",
+                 appVersion: "3.0",
+                 detailsURL: "http://details2/",
+                 serviceURL: "http://service2/",
+                 statusText: getString("patchApplyFailure"),
+                 isCompleteUpdate: "true",
+                 channel: "test_channel",
+                 foregroundDownload: "false",
+                 promptWaitTime: "691200",
+                 custom1: "custom3_attr=\"custom3 value\"",
+                 custom2: "custom4_attr=\"custom4 value\""};
+  updates = getLocalUpdateString(updateProps, patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), false);
 
   standardInit();
@@ -80,10 +102,6 @@ function run_test() {
             "the update isCompleteUpdate attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.channel, "test_channel",
                "the update channel attribute" + MSG_SHOULD_EQUAL);
-  Assert.ok(!!update.showPrompt,
-            "the update showPrompt attribute" + MSG_SHOULD_EQUAL);
-  Assert.ok(!!update.showNeverForVersion,
-            "the update showNeverForVersion attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.promptWaitTime, "345600",
                "the update promptWaitTime attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.getProperty("backgroundInterval"), "300",
@@ -119,7 +137,7 @@ function run_test() {
                "the update state attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.name, "Existing",
                "the update name attribute" + MSG_SHOULD_EQUAL);
-  Assert.equal(update.type, "major",
+  Assert.equal(update.type, "minor",
                "the update type attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.displayVersion, "3.0",
                "the update displayVersion attribute" + MSG_SHOULD_EQUAL);
@@ -139,10 +157,6 @@ function run_test() {
             "the update isCompleteUpdate attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.channel, "test_channel",
                "the update channel attribute" + MSG_SHOULD_EQUAL);
-  Assert.ok(!update.showPrompt,
-            "the update showPrompt attribute" + MSG_SHOULD_EQUAL);
-  Assert.ok(!update.showNeverForVersion,
-            "the update showNeverForVersion attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.promptWaitTime, "691200",
                "the update promptWaitTime attribute" + MSG_SHOULD_EQUAL);
   // The default and maximum value for backgroundInterval is 600

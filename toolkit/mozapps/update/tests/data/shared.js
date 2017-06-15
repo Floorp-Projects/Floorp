@@ -31,9 +31,6 @@ const PREF_APP_UPDATE_URL                        = "app.update.url";
 const PREF_APP_UPDATE_URL_DETAILS                = "app.update.url.details";
 const PREF_APP_UPDATE_URL_MANUAL                 = "app.update.url.manual";
 
-
-const PREFBRANCH_APP_UPDATE_NEVER = "app.update.never.";
-
 const PREFBRANCH_APP_PARTNER         = "app.partner.";
 const PREF_DISTRIBUTION_ID           = "distribution.id";
 const PREF_DISTRIBUTION_VERSION      = "distribution.version";
@@ -72,8 +69,6 @@ const UPDATE_SETTINGS_CONTENTS = "[Settings]\n" +
 const PR_RDWR        = 0x04;
 const PR_CREATE_FILE = 0x08;
 const PR_TRUNCATE    = 0x20;
-
-const DEFAULT_UPDATE_VERSION = "999999.0";
 
 var gChannel;
 

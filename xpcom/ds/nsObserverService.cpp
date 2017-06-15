@@ -21,6 +21,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "nsString.h"
+#include "GeckoProfiler.h"
 
 #define NOTIFY_GLOBAL_OBSERVERS
 
@@ -282,6 +283,9 @@ NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports* aSubject,
   }
 
   mozilla::TimeStamp start = TimeStamp::Now();
+
+  PROFILER_LABEL_DYNAMIC("nsObserverService", "NotifyObservers",
+                         js::ProfileEntry::Category::OTHER, aTopic);
 
   nsObserverList* observerList = mObserverTopicTable.GetEntry(aTopic);
   if (observerList) {

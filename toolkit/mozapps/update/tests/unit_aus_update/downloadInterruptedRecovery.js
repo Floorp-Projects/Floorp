@@ -65,10 +65,9 @@ function check_test_helper_pt1_2() {
   gNextRunFunc();
 }
 
-function setResponseBody(aHashFunction, aHashValue, aSize) {
-  let patches = getRemotePatchString(null, null,
-                                     aHashFunction, aHashValue, aSize);
-  let updates = getRemoteUpdateString(patches);
+function setResponseBody(aHashFunction, aHashValue) {
+  let patches = getRemotePatchString({});
+  let updates = getRemoteUpdateString({}, patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
 }
 

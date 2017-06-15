@@ -216,6 +216,7 @@ namespace jit {
     _(JSOP_FINALYIELDRVAL)     \
     _(JSOP_RESUME)             \
     _(JSOP_CALLEE)             \
+    _(JSOP_SUPERBASE)          \
     _(JSOP_GETRVAL)            \
     _(JSOP_SETRVAL)            \
     _(JSOP_RETRVAL)            \
@@ -243,9 +244,12 @@ namespace jit {
     _(JSOP_IS_CONSTRUCTING)    \
     _(JSOP_TRY_DESTRUCTURING_ITERCLOSE) \
     _(JSOP_CHECKCLASSHERITAGE) \
+    _(JSOP_INITHOMEOBJECT)     \
     _(JSOP_BUILTINPROTO)       \
     _(JSOP_OBJWITHPROTO)       \
-    _(JSOP_FUNWITHPROTO)
+    _(JSOP_FUNWITHPROTO)       \
+    _(JSOP_CLASSCONSTRUCTOR)   \
+    _(JSOP_DERIVEDCONSTRUCTOR)
 
 class BaselineCompiler : public BaselineCompilerSpecific
 {
@@ -363,6 +367,8 @@ class BaselineCompiler : public BaselineCompilerSpecific
     void getEnvironmentCoordinateObject(Register reg);
     Address getEnvironmentCoordinateAddressFromObject(Register objReg, Register reg);
     Address getEnvironmentCoordinateAddress(Register reg);
+
+    void getThisEnvironmentCallee(Register reg);
 };
 
 extern const VMFunction NewArrayCopyOnWriteInfo;
