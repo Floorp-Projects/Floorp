@@ -121,6 +121,16 @@ WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder,
 }
 
 void
+WebRenderBridgeChild::ProcessWebRenderParentCommands()
+{
+  if (mParentCommands.IsEmpty()) {
+    return;
+  }
+  this->SendParentCommands(mParentCommands);
+  mParentCommands.Clear();
+}
+
+void
 WebRenderBridgeChild::AddPipelineIdForAsyncCompositable(const wr::PipelineId& aPipelineId,
                                                         const CompositableHandle& aHandle)
 {
