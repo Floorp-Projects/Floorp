@@ -52,5 +52,6 @@ module.exports = {
     "padded-blocks": ["error", "never"],
     radix: "error",
     "array-bracket-spacing": ["error", "never"],
+    "space-in-parens": ["error", "never"],
   },
 };

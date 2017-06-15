@@ -97,7 +97,7 @@ function promiseSearchEntries(terms, params) {
 
 function promiseCountEntries(name, value, checkFn) {
   return new Promise(resolve => {
-    countEntries(name, value, function(result) { checkFn(result); resolve(); } );
+    countEntries(name, value, function(result) { checkFn(result); resolve(); });
   });
 }
 
