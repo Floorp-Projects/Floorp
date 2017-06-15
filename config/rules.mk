@@ -904,6 +904,11 @@ ifdef MOZ_RUST_SIMD
 rust_unlock_unstable += RUSTC_BOOTSTRAP=1
 endif
 
+ifdef MOZ_USING_SCCACHE
+sccache_wrap := RUSTC_WRAPPER='$(CCACHE)'
+endif
+
+
 # This function is intended to be called by:
 #
 #   $(call CARGO_BUILD,EXTRA_ENV_VAR1=X EXTRA_ENV_VAR2=Y ...)
@@ -912,7 +917,7 @@ endif
 #
 #   $(call CARGO_BUILD)
 define CARGO_BUILD
-env $(environment_cleaner) $(rust_unlock_unstable) $(rustflags_override) \
+env $(environment_cleaner) $(rust_unlock_unstable) $(rustflags_override) $(sccache_wrap) \
 	CARGO_TARGET_DIR=$(CARGO_TARGET_DIR) \
 	RUSTC=$(RUSTC) \
 	MOZ_SRC=$(topsrcdir) \
