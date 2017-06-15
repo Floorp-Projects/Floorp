@@ -34,18 +34,18 @@ function run_test() {
            getService(Ci.nsINavBookmarksService);
 
   const QUERIES = [
-      "place:folder=PLACES_ROOT"
-    , "place:folder=BOOKMARKS_MENU"
-    , "place:folder=TAGS"
-    , "place:folder=UNFILED_BOOKMARKS"
-    , "place:folder=TOOLBAR"
+      "place:folder=PLACES_ROOT",
+      "place:folder=BOOKMARKS_MENU",
+      "place:folder=TAGS",
+      "place:folder=UNFILED_BOOKMARKS",
+      "place:folder=TOOLBAR"
   ];
   const FOLDER_IDS = [
-      bs.placesRoot
-    , bs.bookmarksMenuFolder
-    , bs.tagsFolder
-    , bs.unfiledBookmarksFolder
-    , bs.toolbarFolder
+      bs.placesRoot,
+      bs.bookmarksMenuFolder,
+      bs.tagsFolder,
+      bs.unfiledBookmarksFolder,
+      bs.toolbarFolder
   ];
 
   // add something in the bookmarks menu folder so a query to it returns results

@@ -65,8 +65,8 @@ AutoCompleteSearch.prototype = {
     this.stopSearchInvoked = true;
   },
   QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIFactory
-  , Ci.nsIAutoCompleteSearch
+    Ci.nsIFactory,
+    Ci.nsIAutoCompleteSearch
   ]),
   createInstance(outer, iid) {
     return this.QueryInterface(iid);

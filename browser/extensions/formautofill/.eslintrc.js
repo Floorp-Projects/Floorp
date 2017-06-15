@@ -32,9 +32,6 @@ module.exports = {
     // No space padding in parentheses
     "space-in-parens": ["error", "never"],
 
-    // Commas at the end of the line not the start
-    "comma-style": "error",
-
     // Require braces around blocks that start a new line
     "curly": ["error", "all"],
 
