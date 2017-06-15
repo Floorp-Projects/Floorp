@@ -37,12 +37,6 @@ this.ProfileAutoCompleteResult = function(searchString,
   this._popupLabels = this._generateLabels(this._focusedFieldName,
                                            this._allFieldNames,
                                            this._matchingProfiles);
-  // Add an empty result entry for footer. Its content will come from
-  // the footer binding, so don't assign any value to it.
-  this._popupLabels.push({
-    primary: "",
-    secondary: "",
-  });
 };
 
 ProfileAutoCompleteResult.prototype = {
@@ -185,9 +179,6 @@ ProfileAutoCompleteResult.prototype = {
    */
   getStyleAt(index) {
     this._checkIndexBounds(index);
-    if (index == this.matchCount - 1) {
-      return "autofill-footer";
-    }
     return "autofill-profile";
   },
 
