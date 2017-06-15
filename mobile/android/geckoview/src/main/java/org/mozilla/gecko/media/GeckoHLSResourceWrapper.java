@@ -12,11 +12,11 @@ import org.mozilla.gecko.mozglue.JNIObject;
 public class GeckoHLSResourceWrapper {
     private static final String LOGTAG = "GeckoHLSResourceWrapper";
     private static final boolean DEBUG = false;
-    private GeckoHlsPlayer mPlayer = null;
+    private BaseHlsPlayer mPlayer = null;
     private boolean mDestroy = false;
 
     public static class Callbacks extends JNIObject
-    implements GeckoHlsPlayer.ResourceCallbacks {
+    implements BaseHlsPlayer.ResourceCallbacks {
         @WrapForJNI(calledFrom = "gecko")
         Callbacks() {}
 
@@ -35,27 +35,32 @@ public class GeckoHLSResourceWrapper {
     } // Callbacks
 
     private GeckoHLSResourceWrapper(String url,
-                                    GeckoHlsPlayer.ResourceCallbacks callback) {
+                                    BaseHlsPlayer.ResourceCallbacks callback) {
         if (DEBUG) Log.d(LOGTAG, "GeckoHLSResourceWrapper created with url = " + url);
         assertTrue(callback != null);
 
-        mPlayer = new GeckoHlsPlayer();
-        mPlayer.addResourceWrapperCallbackListener(callback);
-        mPlayer.init(url);
+        mPlayer = GeckoPlayerFactory.getPlayer();
+        try {
+            mPlayer.addResourceWrapperCallbackListener(callback);
+            mPlayer.init(url);
+        } catch (Exception e) {
+            Log.e(LOGTAG, "Failed to create GeckoHlsResourceWrapper !", e);
+            callback.onError(BaseHlsPlayer.ResourceError.UNKNOWN.code());
+        }
     }
 
     @WrapForJNI(calledFrom = "gecko")
     public static GeckoHLSResourceWrapper create(String url,
-                                                 GeckoHlsPlayer.ResourceCallbacks callback) {
+                                                 BaseHlsPlayer.ResourceCallbacks callback) {
         return new GeckoHLSResourceWrapper(url, callback);
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public GeckoHlsPlayer GetPlayer() {
+    public int getPlayerId() {
         // GeckoHLSResourceWrapper should always be created before others
         assertTrue(!mDestroy);
         assertTrue(mPlayer != null);
-        return mPlayer;
+        return mPlayer.getId();
     }
 
     private static void assertTrue(boolean condition) {
@@ -72,6 +77,7 @@ public class GeckoHLSResourceWrapper {
         }
         mDestroy = true;
         if (mPlayer != null) {
+            GeckoPlayerFactory.removePlayer(mPlayer);
             mPlayer.release();
             mPlayer = null;
         }
