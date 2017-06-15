@@ -487,6 +487,9 @@ private:
   nsCOMPtr<nsIFile>        mCurrentFile;
   bool                     mDirty = false;
   bool                     mProfileShutdown = false;
+  // we wait a bit after prefs are dirty before writing them. In this
+  // period, mDirty and mSavePending will both be true.
+  bool                     mSavePending;
 
   static Preferences*      sPreferences;
   static nsIPrefBranch*    sRootBranch;
