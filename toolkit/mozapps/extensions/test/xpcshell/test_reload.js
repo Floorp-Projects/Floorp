@@ -21,19 +21,6 @@ const manifestSample = {
   }],
 };
 
-const { Management } = Components.utils.import("resource://gre/modules/Extension.jsm", {});
-
-function promiseAddonStartup() {
-  return new Promise(resolve => {
-    let listener = (extension) => {
-      Management.off("startup", listener);
-      resolve(extension);
-    };
-
-    Management.on("startup", listener);
-  });
-}
-
 async function installAddon(fixtureName, addonID) {
   await promiseInstallAllFiles([do_get_addon(fixtureName)]);
   return promiseAddonByID(addonID);
@@ -85,7 +72,7 @@ add_task(async function test_reloading_a_temp_addon() {
 
   await Promise.all([
     addon.reload(),
-    promiseAddonStartup(),
+    promiseWebExtensionStartup(),
   ]);
   await onReload;
 
@@ -119,7 +106,7 @@ add_task(async function test_can_reload_permanent_addon() {
 
   await Promise.all([
     addon.reload(),
-    promiseAddonStartup(),
+    promiseWebExtensionStartup(),
   ]);
 
   do_check_true(disabledCalled);
@@ -152,7 +139,7 @@ add_task(async function test_reload_to_invalid_version_fails() {
 
   let addonDir = await promiseWriteWebManifestForExtension(manifest, tempdir, "invalid_version");
   await AddonManager.installTemporaryAddon(addonDir);
-  await promiseAddonStartup();
+  await promiseWebExtensionStartup();
 
   let addon = await promiseAddonByID(addonId);
   notEqual(addon, null);
