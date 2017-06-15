@@ -7,6 +7,7 @@ use std::cmp;
 ///
 /// [`min_len()`]: trait.IndexedParallelIterator.html#method.min_len
 /// [`IndexedParallelIterator`]: trait.IndexedParallelIterator.html
+#[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct MinLen<I: IndexedParallelIterator> {
     base: I,
     min: usize,
@@ -40,29 +41,17 @@ impl<I> ParallelIterator for MinLen<I>
     }
 }
 
-impl<I> BoundedParallelIterator for MinLen<I>
-    where I: IndexedParallelIterator
-{
-    fn upper_bound(&mut self) -> usize {
-        self.len()
-    }
-
-    fn drive<C: Consumer<Self::Item>>(self, consumer: C) -> C::Result {
-        bridge(self, consumer)
-    }
-}
-
-impl<I> ExactParallelIterator for MinLen<I>
-    where I: IndexedParallelIterator
-{
-    fn len(&mut self) -> usize {
-        self.base.len()
-    }
-}
-
 impl<I> IndexedParallelIterator for MinLen<I>
     where I: IndexedParallelIterator
 {
+    fn drive<C: Consumer<Self::Item>>(self, consumer: C) -> C::Result {
+        bridge(self, consumer)
+    }
+
+    fn len(&mut self) -> usize {
+        self.base.len()
+    }
+
     fn with_producer<CB>(self, callback: CB) -> CB::Output
         where CB: ProducerCallback<Self::Item>
     {
@@ -138,6 +127,7 @@ impl<P> Producer for MinLenProducer<P>
 ///
 /// [`max_len()`]: trait.IndexedParallelIterator.html#method.max_len
 /// [`IndexedParallelIterator`]: trait.IndexedParallelIterator.html
+#[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct MaxLen<I: IndexedParallelIterator> {
     base: I,
     max: usize,
@@ -171,29 +161,17 @@ impl<I> ParallelIterator for MaxLen<I>
     }
 }
 
-impl<I> BoundedParallelIterator for MaxLen<I>
-    where I: IndexedParallelIterator
-{
-    fn upper_bound(&mut self) -> usize {
-        self.len()
-    }
-
-    fn drive<C: Consumer<Self::Item>>(self, consumer: C) -> C::Result {
-        bridge(self, consumer)
-    }
-}
-
-impl<I> ExactParallelIterator for MaxLen<I>
-    where I: IndexedParallelIterator
-{
-    fn len(&mut self) -> usize {
-        self.base.len()
-    }
-}
-
 impl<I> IndexedParallelIterator for MaxLen<I>
     where I: IndexedParallelIterator
 {
+    fn drive<C: Consumer<Self::Item>>(self, consumer: C) -> C::Result {
+        bridge(self, consumer)
+    }
+
+    fn len(&mut self) -> usize {
+        self.base.len()
+    }
+
     fn with_producer<CB>(self, callback: CB) -> CB::Output
         where CB: ProducerCallback<Self::Item>
     {
