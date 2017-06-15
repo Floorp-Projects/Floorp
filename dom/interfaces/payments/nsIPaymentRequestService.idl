@@ -7,9 +7,7 @@
 #include "nsIVariant.idl"
 #include "nsIPaymentRequest.idl"
 #include "nsIPaymentActionRequest.idl"
-#include "nsIPaymentActionResponse.idl"
 #include "nsISimpleEnumerator.idl"
-#include "nsIPaymentUIService.idl"
 
 /*
  *  nsPaymentRequestService is used to manage the created PaymentRequest in the
@@ -19,27 +17,19 @@
 [scriptable, builtinclass, uuid(cccd665f-edf3-41fc-ab9b-fc55b37340aa)]
 interface nsIPaymentRequestService : nsISupports
 {
-  nsIPaymentRequest getPaymentRequestById(in AString aRequestId);
+  nsIPaymentRequest getPaymentRequestById(in AString requestId);
   nsISimpleEnumerator enumerate();
 
   /*
-   *  These methods are only for testing.
+   *  This method is only for testing.
    */
   void cleanup();
-  void setTestingUIService(in nsIPaymentUIService aUIService);
-
-  void removeActionCallback(in nsIPaymentActionCallback aCallback);
 
   /*
    *  requestPayment is used to handle the asked action request of the payment
    *  from content process.
    */
   void requestPayment(in nsIPaymentActionRequest aRequest);
-
-  /*
-   *  respondPayment is used for payment UI to respond the asked action result.
-   */
-  void respondPayment(in nsIPaymentActionResponse aResponse);
 };
 
 %{C++
