@@ -2103,8 +2103,10 @@ void NrTcpSocketIpc::maybe_post_socket_ready() {
     }
     if (poll_flags() & PR_POLL_READ) {
       if (msg_queue_.size()) {
-        r_log(LOG_GENERIC, LOG_INFO, "Firing read callback (%u)",
-              (uint32_t)msg_queue_.size());
+        if (msg_queue_.size() > 5) {
+          r_log(LOG_GENERIC, LOG_INFO, "Firing read callback (%u)",
+                (uint32_t)msg_queue_.size());
+        }
         fire_callback(NR_ASYNC_WAIT_READ);
         has_event = true;
       }
