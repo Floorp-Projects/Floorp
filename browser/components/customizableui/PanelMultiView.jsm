@@ -167,6 +167,9 @@ this.PanelMultiView = class {
   get _mainView() {
     return this._mainViewId ? this.document.getElementById(this._mainViewId) : null;
   }
+  get showingSubViewAsMainView() {
+    return this.node.getAttribute("mainViewIsSubView") == "true";
+  }
 
   get _transitioning() {
     return this.__transitioning;
@@ -468,6 +471,7 @@ this.PanelMultiView = class {
           custWidget.onViewShowing({ target: aAnchor, detail });
         }
       }
+      viewNode.setAttribute("current", true);
       if (this.panelViews && this._mainViewWidth)
         viewNode.style.maxWidth = viewNode.style.minWidth = this._mainViewWidth + "px";
 
@@ -490,7 +494,6 @@ this.PanelMultiView = class {
       }
 
       this._currentSubView = viewNode;
-      viewNode.setAttribute("current", true);
       if (this.panelViews) {
         this.node.setAttribute("viewtype", "subview");
         if (!playTransition)

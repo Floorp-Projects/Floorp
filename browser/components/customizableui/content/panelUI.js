@@ -515,14 +515,12 @@ const PanelUI = {
       multiView.setAttribute("nosubviews", "true");
       multiView.setAttribute("viewCacheId", "appMenu-viewCache");
       if (gPhotonStructure) {
-        tempPanel.setAttribute("photon", true);
         multiView.setAttribute("mainViewId", viewNode.id);
         multiView.appendChild(viewNode);
       }
       tempPanel.appendChild(multiView);
-      if (!gPhotonStructure) {
-        multiView.setMainView(viewNode);
-      }
+      multiView.setAttribute("mainViewIsSubView", "true");
+      multiView.setMainView(viewNode);
       viewNode.classList.add("cui-widget-panelview");
 
       let viewShown = false;
