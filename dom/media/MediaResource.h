@@ -210,7 +210,7 @@ public:
   // Otherwise, it returns an owned buffer.
   // MediaReadAt may return fewer bytes than requested if end of stream is
   // encountered. There is no need to call it again to get more data.
-  virtual already_AddRefed<MediaByteBuffer> MediaReadAt(int64_t aOffset, uint32_t aCount)
+  already_AddRefed<MediaByteBuffer> MediaReadAt(int64_t aOffset, uint32_t aCount)
   {
     RefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
     bool ok = bytes->SetLength(aCount, fallible);
@@ -585,7 +585,6 @@ public:
                   uint32_t aCount, uint32_t* aBytes) override;
   // Data stored in IO&lock-encumbered MediaCacheStream, caching recommended.
   bool ShouldCacheReads() override { return true; }
-  already_AddRefed<MediaByteBuffer> MediaReadAt(int64_t aOffset, uint32_t aCount) override;
   int64_t Tell() override;
 
   // Any thread
