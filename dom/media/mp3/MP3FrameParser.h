@@ -11,7 +11,6 @@
 #include "mp4_demuxer/ByteReader.h"
 
 namespace mozilla {
-namespace mp3 {
 
 // ID3 header parser state machine used by FrameParser.
 // The header contains the following format (one byte per term):
@@ -338,7 +337,6 @@ private:
   Frame mPrevFrame;
 };
 
-} // namespace mp3
 } // namespace mozilla
 
 #endif

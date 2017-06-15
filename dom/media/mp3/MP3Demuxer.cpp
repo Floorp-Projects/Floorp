@@ -28,7 +28,6 @@ using mozilla::media::TimeIntervals;
 using mp4_demuxer::ByteReader;
 
 namespace mozilla {
-namespace mp3 {
 
 // MP3Demuxer
 
@@ -774,5 +773,4 @@ MP3TrackDemuxer::AverageFrameLength() const
   return 0.0;
 }
 
-} // namespace mp3
 } // namespace mozilla
