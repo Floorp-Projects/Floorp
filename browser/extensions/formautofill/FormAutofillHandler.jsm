@@ -185,10 +185,11 @@ FormAutofillHandler.prototype = {
         hasFilledFields |= (fieldDetail.state == "AUTO_FILLED");
       }
 
-      // Unregister listeners once no field is in AUTO_FILLED state.
+      // Unregister listeners and clear guid once no field is in AUTO_FILLED state.
       if (!hasFilledFields) {
         this.form.rootElement.removeEventListener("input", onChangeHandler);
         this.form.rootElement.removeEventListener("reset", onChangeHandler);
+        this.filledProfileGUID = null;
       }
     };
 
