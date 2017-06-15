@@ -442,14 +442,19 @@ WebRenderBridgeParent::RecvDPSyncEnd(const gfx::IntSize &aSize,
   return IPC_OK();
 }
 
-void
-WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
-                                                InfallibleTArray<WebRenderParentCommand>& aCommands, const wr::Epoch& aEpoch,
-                                                const WrSize& aContentSize, const ByteBuffer& dl,
-                                                const WrBuiltDisplayListDescriptor& dlDesc)
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvParentCommands(nsTArray<WebRenderParentCommand>&& aCommands)
 {
-  mCompositableHolder->SetCompositionTime(TimeStamp::Now());
+  if (mDestroyed) {
+    return IPC_OK();
+  }
+  ProcessWebRenderParentCommands(aCommands);
+  return IPC_OK();
+}
 
+void
+WebRenderBridgeParent::ProcessWebRenderParentCommands(InfallibleTArray<WebRenderParentCommand>& aCommands)
+{
   for (InfallibleTArray<WebRenderParentCommand>::index_type i = 0; i < aCommands.Length(); ++i) {
     const WebRenderParentCommand& cmd = aCommands[i];
     switch (cmd.type()) {
@@ -541,6 +546,17 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
       }
     }
   }
+}
+
+void
+WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
+                                                InfallibleTArray<WebRenderParentCommand>& aCommands, const wr::Epoch& aEpoch,
+                                                const WrSize& aContentSize, const ByteBuffer& dl,
+                                                const WrBuiltDisplayListDescriptor& dlDesc)
+{
+  mCompositableHolder->SetCompositionTime(TimeStamp::Now());
+  ProcessWebRenderParentCommands(aCommands);
+
   if (mWidget) {
     LayoutDeviceIntSize size = mWidget->GetClientSize();
     mApi->SetWindowParameters(size);
