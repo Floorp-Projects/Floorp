@@ -130,6 +130,7 @@ this.browserAction = class extends ExtensionAPI {
         let view = document.createElementNS(XUL_NS, "panelview");
         view.id = this.viewId;
         view.setAttribute("flex", "1");
+        view.setAttribute("extension", true);
 
         document.getElementById("PanelUI-multiView").appendChild(view);
         document.addEventListener("popupshowing", this);
