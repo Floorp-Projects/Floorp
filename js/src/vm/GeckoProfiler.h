@@ -114,35 +114,25 @@ class AutoGeckoProfilerEntry;
 class GeckoProfilerEntryMarker;
 class GeckoProfilerBaselineOSRMarker;
 
-class GeckoProfiler
+class GeckoProfilerThread
 {
     friend class AutoGeckoProfilerEntry;
     friend class GeckoProfilerEntryMarker;
     friend class GeckoProfilerBaselineOSRMarker;
 
-    JSRuntime*           rt;
-    ExclusiveData<ProfileStringMap> strings;
     PseudoStack*         pseudoStack_;
-    bool                 slowAssertions;
-    uint32_t             enabled_;
-    void                (*eventMarker_)(const char*);
-
-    UniqueChars allocProfileString(JSScript* script, JSFunction* function);
 
   public:
-    explicit GeckoProfiler(JSRuntime* rt);
-
-    bool init();
+    GeckoProfilerThread();
 
     uint32_t stackPointer() { MOZ_ASSERT(installed()); return pseudoStack_->stackPointer; }
     ProfileEntry* stack() { return pseudoStack_->entries; }
 
     /* management of whether instrumentation is on or off */
-    bool enabled() { MOZ_ASSERT_IF(enabled_, installed()); return enabled_; }
     bool installed() { return pseudoStack_ != nullptr; }
-    MOZ_MUST_USE bool enable(bool enabled);
-    void enableSlowAssertions(bool enabled) { slowAssertions = enabled; }
-    bool slowAssertionsEnabled() { return slowAssertions; }
+
+    void setProfilingStack(PseudoStack* pseudoStack);
+    void trace(JSTracer* trc);
 
     /*
      * Functions which are the actual instrumentation to track run information
@@ -155,19 +145,30 @@ class GeckoProfiler
      */
     bool enter(JSContext* cx, JSScript* script, JSFunction* maybeFun);
     void exit(JSScript* script, JSFunction* maybeFun);
-    void updatePC(JSScript* script, jsbytecode* pc) {
-        if (!enabled())
-            return;
+    inline void updatePC(JSContext* cx, JSScript* script, jsbytecode* pc);
+};
 
-        uint32_t sp = pseudoStack_->stackPointer;
-        if (sp - 1 < PseudoStack::MaxEntries) {
-            MOZ_ASSERT(sp > 0);
-            MOZ_ASSERT(pseudoStack_->entries[sp - 1].rawScript() == script);
-            pseudoStack_->entries[sp - 1].setPC(pc);
-        }
-    }
+class GeckoProfilerRuntime
+{
+    JSRuntime*           rt;
+    ExclusiveData<ProfileStringMap> strings;
+    bool                 slowAssertions;
+    uint32_t             enabled_;
+    void                (*eventMarker_)(const char*);
 
-    void setProfilingStack(PseudoStack* pseudoStack);
+    UniqueChars allocProfileString(JSScript* script, JSFunction* function);
+
+  public:
+    explicit GeckoProfilerRuntime(JSRuntime* rt);
+
+    bool init();
+
+    /* management of whether instrumentation is on or off */
+    bool enabled() { return enabled_; }
+    void enable(bool enabled);
+    void enableSlowAssertions(bool enabled) { slowAssertions = enabled; }
+    bool slowAssertionsEnabled() { return slowAssertions; }
+
     void setEventMarker(void (*fn)(const char*));
     const char* profileString(JSScript* script, JSFunction* maybeFun);
     void onScriptFinalized(JSScript* script);
@@ -182,7 +183,6 @@ class GeckoProfiler
         return &enabled_;
     }
 
-    void trace(JSTracer* trc);
     void fixupStringsMapAfterMovingGC();
 #ifdef JSGC_HASH_TABLE_CHECKS
     void checkStringsMapAfterMovingGC();
@@ -190,13 +190,13 @@ class GeckoProfiler
 };
 
 inline size_t
-GeckoProfiler::stringsCount()
+GeckoProfilerRuntime::stringsCount()
 {
     return strings.lock()->count();
 }
 
 inline void
-GeckoProfiler::stringsReset()
+GeckoProfilerRuntime::stringsReset()
 {
     strings.lock()->clear();
 }
@@ -209,13 +209,13 @@ GeckoProfiler::stringsReset()
 class MOZ_RAII GeckoProfilerEntryMarker
 {
   public:
-    explicit GeckoProfilerEntryMarker(JSRuntime* rt,
+    explicit GeckoProfilerEntryMarker(JSContext* cx,
                                       JSScript* script
                                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
     ~GeckoProfilerEntryMarker();
 
   private:
-    GeckoProfiler* profiler;
+    GeckoProfilerThread* profiler;
     mozilla::DebugOnly<uint32_t> spBefore_;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
@@ -228,13 +228,13 @@ class MOZ_RAII GeckoProfilerEntryMarker
 class MOZ_NONHEAP_CLASS AutoGeckoProfilerEntry
 {
   public:
-    explicit AutoGeckoProfilerEntry(JSRuntime* rt, const char* label,
+    explicit AutoGeckoProfilerEntry(JSContext* cx, const char* label,
                                     ProfileEntry::Category category = ProfileEntry::Category::JS
                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
     ~AutoGeckoProfilerEntry();
 
   private:
-    GeckoProfiler* profiler_;
+    GeckoProfilerThread* profiler_;
     mozilla::DebugOnly<uint32_t> spBefore_;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
@@ -247,12 +247,12 @@ class MOZ_NONHEAP_CLASS AutoGeckoProfilerEntry
 class MOZ_RAII GeckoProfilerBaselineOSRMarker
 {
   public:
-    explicit GeckoProfilerBaselineOSRMarker(JSRuntime* rt, bool hasProfilerFrame
+    explicit GeckoProfilerBaselineOSRMarker(JSContext* cx, bool hasProfilerFrame
                                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
     ~GeckoProfilerBaselineOSRMarker();
 
   private:
-    GeckoProfiler* profiler;
+    GeckoProfilerThread* profiler;
     mozilla::DebugOnly<uint32_t> spBefore_;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
@@ -272,18 +272,18 @@ class MOZ_RAII GeckoProfilerBaselineOSRMarker
 template<class Assembler, class Register>
 class GeckoProfilerInstrumentation
 {
-    GeckoProfiler* profiler_; // Instrumentation location management
+    GeckoProfilerRuntime* profiler_; // Instrumentation location management
 
   public:
     /*
      * Creates instrumentation which writes information out the the specified
      * profiler's stack and constituent fields.
      */
-    explicit GeckoProfilerInstrumentation(GeckoProfiler* profiler) : profiler_(profiler) {}
+    explicit GeckoProfilerInstrumentation(GeckoProfilerRuntime* profiler) : profiler_(profiler) {}
 
     /* Small proxies around GeckoProfiler */
     bool enabled() { return profiler_ && profiler_->enabled(); }
-    GeckoProfiler* profiler() { MOZ_ASSERT(enabled()); return profiler_; }
+    GeckoProfilerRuntime* profiler() { MOZ_ASSERT(enabled()); return profiler_; }
     void disable() { profiler_ = nullptr; }
 };
 

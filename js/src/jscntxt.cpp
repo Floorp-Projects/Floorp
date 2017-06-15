@@ -1590,6 +1590,7 @@ void
 JSContext::trace(JSTracer* trc)
 {
     cycleDetectorVector().trace(trc);
+    geckoProfiler().trace(trc);
 
     if (trc->isMarkingTracer() && compartment_)
         compartment_->mark();

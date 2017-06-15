@@ -37,7 +37,7 @@ CompileRuntime::jitRuntime()
     return runtime()->jitRuntime();
 }
 
-GeckoProfiler&
+GeckoProfilerRuntime&
 CompileRuntime::geckoProfiler()
 {
     return runtime()->geckoProfiler();

@@ -390,9 +390,6 @@ struct JSContext : public JS::RootingContext,
     js::Activation* profilingActivation() const {
         return profilingActivation_;
     }
-    void* addressOfProfilingActivation() {
-        return (void*) &profilingActivation_;
-    }
     static size_t offsetOfProfilingActivation() {
         return offsetof(JSContext, profilingActivation_);
      }
@@ -602,6 +599,12 @@ struct JSContext : public JS::RootingContext,
     void enableProfilerSampling() {
         suppressProfilerSampling = false;
     }
+
+  private:
+    /* Gecko profiling metadata */
+    js::UnprotectedData<js::GeckoProfilerThread> geckoProfiler_;
+  public:
+    js::GeckoProfilerThread& geckoProfiler() { return geckoProfiler_.ref(); }
 
 #if defined(XP_DARWIN)
     js::wasm::MachExceptionHandler wasmMachExceptionHandler;
