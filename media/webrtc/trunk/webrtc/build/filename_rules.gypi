@@ -31,7 +31,7 @@
     # In case a file is not needed, it is going to be excluded later on.
     # TODO(evan): the above is not correct; we shouldn't build _linux
     # files on non-linux.
-    ['OS!="linux" and OS!="openbsd" and OS!="freebsd" or >(nacl_untrusted_build)==1', {
+    ['OS!="linux" and OS!="solaris" and <(os_bsd)!=1 or >(nacl_untrusted_build)==1', {
       'sources/': [
         ['exclude', '_linux(_unittest|_test)?\\.(h|cc)$'],
         ['exclude', '(^|/)linux/'],
@@ -60,7 +60,7 @@
         ['exclude', '_nacl(_unittest)?\\.(h|cc)$'],
       ],
     }],
-    ['OS!="linux" and OS!="openbsd" and OS!="freebsd" or >(nacl_untrusted_build)==1', {
+    ['OS!="linux" and OS!="solaris" and <(os_bsd)!=1 or >(nacl_untrusted_build)==1', {
       'sources/': [
         ['exclude', '_xdg(_unittest)?\\.(h|cc)$'],
       ],
