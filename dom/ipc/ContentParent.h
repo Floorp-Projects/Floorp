@@ -536,15 +536,7 @@ public:
                    const nsCString& aFeatures,
                    const nsCString& aBaseURI,
                    const float& aFullZoom,
-                   nsresult* aResult,
-                   bool* aWindowIsNew,
-                   InfallibleTArray<FrameScriptInfo>* aFrameScripts,
-                   nsCString* aURLToLoad,
-                   layers::TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                   uint64_t* aLayersId,
-                   mozilla::layers::CompositorOptions* aCompositorOptions,
-                   uint32_t* aMaxTouchPoints,
-                   DimensionInfo* aDimensions) override;
+                   CreateWindowResolver&& aResolve) override;
 
   virtual mozilla::ipc::IPCResult RecvCreateWindowInDifferentProcess(
     PBrowserParent* aThisTab,
