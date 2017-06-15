@@ -68,15 +68,19 @@ dictionary PaymentOptions {
  SecureContext,
  Func="mozilla::dom::PaymentRequest::PrefEnabled"]
 interface PaymentRequest : EventTarget {
+  /* TODO : Add show() support in Bug 1345366
   [NewObject]
   Promise<PaymentResponse> show();
+   */
   [NewObject]
   Promise<void>            abort();
   [NewObject]
   Promise<boolean>         canMakePayment();
 
   readonly attribute DOMString            id;
+  /* TODO : Add PaymentAddress support in Bug 1345369
   readonly attribute PaymentAddress?      shippingAddress;
+   */
   readonly attribute DOMString?           shippingOption;
   readonly attribute PaymentShippingType? shippingType;
 
