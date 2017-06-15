@@ -50,7 +50,7 @@ impl BlobImageRenderer for Moz2dImageRenderer {
         let descriptor = descriptor.clone();
         let commands = Arc::clone(self.blob_commands.get(&request.key).unwrap());
 
-        self.workers.spawn_async(move || {
+        self.workers.spawn(move || {
             let buf_size = (descriptor.width
                 * descriptor.height
                 * descriptor.format.bytes_per_pixel().unwrap()) as usize;
