@@ -39,6 +39,7 @@ protected:
 
 public:
   // Allocate initial buffer.
+  // If re-initializing, clear buffer.
   virtual nsresult Init() override;
 
   // Can be called on any thread.
