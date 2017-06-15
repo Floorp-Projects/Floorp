@@ -104,6 +104,7 @@ public:
                                         const ByteBuffer& dl,
                                         const WrBuiltDisplayListDescriptor& dlDesc,
                                         const WebRenderScrollData& aScrollData) override;
+  mozilla::ipc::IPCResult RecvParentCommands(nsTArray<WebRenderParentCommand>&& commands) override;
   mozilla::ipc::IPCResult RecvDPGetSnapshot(PTextureParent* aTexture) override;
 
   mozilla::ipc::IPCResult RecvAddPipelineIdForAsyncCompositable(const wr::PipelineId& aPipelineIds,
@@ -189,6 +190,7 @@ private:
 
   uint64_t GetLayersId() const;
   void DeleteOldImages();
+  void ProcessWebRenderParentCommands(InfallibleTArray<WebRenderParentCommand>& aCommands);
   void ProcessWebRenderCommands(const gfx::IntSize &aSize,
                                 InfallibleTArray<WebRenderParentCommand>& commands,
                                 const wr::Epoch& aEpoch,
