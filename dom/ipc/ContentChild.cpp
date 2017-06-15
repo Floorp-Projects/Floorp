@@ -857,6 +857,17 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
   uint32_t maxTouchPoints = 0;
   DimensionInfo dimensionInfo;
 
+  nsCOMPtr<nsPIDOMWindowInner> parentTopInnerWindow;
+  if (aParent) {
+    nsCOMPtr<nsPIDOMWindowOuter> parentTopWindow =
+      nsPIDOMWindowOuter::From(aParent)->GetTop();
+    if (parentTopWindow) {
+      parentTopInnerWindow = parentTopWindow->GetCurrentInnerWindow();
+    }
+  }
+
+  // Send down the request to open the window.
+  RefPtr<CreateWindowPromise> windowCreated;
   if (aIframeMoz) {
     MOZ_ASSERT(aTabOpener);
     nsAutoCString url;
@@ -869,10 +880,11 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
       url.SetIsVoid(true);
     }
 
-    newChild->SendBrowserFrameOpenWindow(aTabOpener, renderFrame, NS_ConvertUTF8toUTF16(url),
-                                         name, NS_ConvertUTF8toUTF16(features),
-                                         aWindowIsNew, &textureFactoryIdentifier,
-                                         &layersId, &compositorOptions, &maxTouchPoints);
+    // NOTE: BrowserFrameOpenWindowPromise is the same type as
+    // CreateWindowPromise, and this code depends on that fact.
+    windowCreated =
+      newChild->SendBrowserFrameOpenWindow(aTabOpener, renderFrame, NS_ConvertUTF8toUTF16(url),
+                                           name, NS_ConvertUTF8toUTF16(features));
   } else {
     nsAutoCString baseURIString;
     float fullZoom;
@@ -881,30 +893,89 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
       return rv;
     }
 
-    if (!SendCreateWindow(aTabOpener, newChild, renderFrame,
-                          aChromeFlags, aCalledFromJS, aPositionSpecified,
-                          aSizeSpecified,
-                          features,
-                          baseURIString,
-                          fullZoom,
-                          &rv,
-                          aWindowIsNew,
-                          &frameScripts,
-                          &urlToLoad,
-                          &textureFactoryIdentifier,
-                          &layersId,
-                          &compositorOptions,
-                          &maxTouchPoints,
-                          &dimensionInfo)) {
-      PRenderFrameChild::Send__delete__(renderFrame);
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    if (NS_FAILED(rv)) {
-      PRenderFrameChild::Send__delete__(renderFrame);
-      return rv;
-    }
+    windowCreated =
+      SendCreateWindow(aTabOpener, newChild, renderFrame,
+                       aChromeFlags, aCalledFromJS, aPositionSpecified,
+                       aSizeSpecified,
+                       features,
+                       baseURIString,
+                       fullZoom);
   }
+
+  // Await the promise being resolved. When the promise is resolved, we'll set
+  // the `ready` local variable, which will cause us to exit our nested event
+  // loop.
+  bool ready = false;
+  windowCreated->Then(SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
+                      [&] (const CreatedWindowInfo& info) {
+                        rv = info.rv();
+                        *aWindowIsNew = info.windowOpened();
+                        frameScripts = info.frameScripts();
+                        urlToLoad = info.urlToLoad();
+                        textureFactoryIdentifier = info.textureFactoryIdentifier();
+                        layersId = info.layersId();
+                        compositorOptions = info.compositorOptions();
+                        maxTouchPoints = info.maxTouchPoints();
+                        dimensionInfo = info.dimensions();
+                        ready = true;
+                      },
+                      [&] (const CreateWindowPromise::RejectValueType aReason) {
+                        NS_WARNING("windowCreated promise rejected");
+                        rv = NS_ERROR_NOT_AVAILABLE;
+                        ready = true;
+                      });
+
+  // =======================
+  // Begin Nested Event Loop
+  // =======================
+
+  // We have to wait for a response from either SendCreateWindow or
+  // SendBrowserFrameOpenWindow with information we're going to need to return
+  // from this function, So we spin a nested event loop until they get back to
+  // us.
+
+  // Prevent the docshell from becoming active while the nested event loop is
+  // spinning.
+  newChild->AddPendingDocShellBlocker();
+  auto removePendingDocShellBlocker = MakeScopeExit([&] {
+    if (newChild) {
+      newChild->RemovePendingDocShellBlocker();
+    }
+  });
+
+  // Suspend our window if we have one to make sure we don't re-enter it.
+  if (parentTopInnerWindow) {
+    parentTopInnerWindow->Suspend();
+  }
+
+  {
+    AutoNoJSAPI nojsapi;
+
+    // Spin the event loop until we get a response. Callers of this function
+    // already have to guard against an inner event loop spinning in the
+    // non-e10s case because of the need to spin one to create a new chrome
+    // window.
+    SpinEventLoopUntil([&] () { return ready; });
+    MOZ_RELEASE_ASSERT(ready,
+                       "We are on the main thread, so we should not exit this "
+                       "loop without ready being true.");
+  }
+
+  if (parentTopInnerWindow) {
+    parentTopInnerWindow->Resume();
+  }
+
+  // =====================
+  // End Nested Event Loop
+  // =====================
+
+  // Handle the error which we got back from the parent process, if we got
+  // one.
+  if (NS_FAILED(rv)) {
+    PRenderFrameChild::Send__delete__(renderFrame);
+    return rv;
+  }
+
   if (!*aWindowIsNew) {
     PRenderFrameChild::Send__delete__(renderFrame);
     return NS_ERROR_ABORT;
