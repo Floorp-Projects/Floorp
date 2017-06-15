@@ -6051,32 +6051,53 @@ nsDocument::IsWebComponentsEnabled(JSContext* aCx, JSObject* aObject)
 {
   JS::Rooted<JSObject*> obj(aCx, aObject);
 
-  if (nsContentUtils::IsWebComponentsEnabled()) {
-    return true;
-  }
-
-  // Check for the webcomponents permission. See Bug 1181555.
   JSAutoCompartment ac(aCx, obj);
   JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, obj));
   nsCOMPtr<nsPIDOMWindowInner> window =
     do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(global));
 
-  return IsWebComponentsEnabled(window);
+  bool enabled =
+    nsContentUtils::IsWebComponentsEnabled() ||
+    // Check for the webcomponents permission. See Bug 1181555.
+    IsWebComponentsEnabled(window);
+
+  if (!enabled) {
+    return false;
+  }
+
+  nsIDocument* doc = window ? window->GetExtantDoc() : nullptr;
+  if (doc && doc->IsStyledByServo()) {
+    NS_WARNING("stylo: Web Components not supported yet");
+    return false;
+  }
+
+  return true;
 }
 
 bool
 nsDocument::IsWebComponentsEnabled(dom::NodeInfo* aNodeInfo)
 {
-  if (nsContentUtils::IsWebComponentsEnabled()) {
-    return true;
+  nsIDocument* doc = aNodeInfo->GetDocument();
+
+  bool enabled = nsContentUtils::IsWebComponentsEnabled();
+  if (!enabled) {
+    // Use GetScopeObject() here so that data documents work the same way as the
+    // main document they're associated with.
+    nsCOMPtr<nsPIDOMWindowInner> window =
+      do_QueryInterface(doc->GetScopeObject());
+    enabled = IsWebComponentsEnabled(window);
   }
 
-  nsIDocument* doc = aNodeInfo->GetDocument();
-  // Use GetScopeObject() here so that data documents work the same way as the
-  // main document they're associated with.
-  nsCOMPtr<nsPIDOMWindowInner> window =
-    do_QueryInterface(doc->GetScopeObject());
-  return IsWebComponentsEnabled(window);
+  if (!enabled) {
+    return false;
+  }
+
+  if (doc->IsStyledByServo()) {
+    NS_WARNING("stylo: Web Components not supported yet");
+    return false;
+  }
+
+  return true;
 }
 
 bool
