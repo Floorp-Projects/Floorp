@@ -39,6 +39,8 @@ FormAutofillHandler.prototype = {
    */
   form: null,
 
+  _formFieldCount: 0,
+
   /**
    * Array of collected data about relevant form fields.  Each item is an object
    * storing the identifying details of the field and a reference to the
@@ -76,10 +78,19 @@ FormAutofillHandler.prototype = {
     PREVIEW: "-moz-autofill-preview",
   },
 
+  get isFormChangedSinceLastCollection() {
+    // When the number of form controls is the same with last collection, it
+    // can be recognized as there is no element changed. However, we should
+    // improve the function to detect the element changes. e.g. a tel field
+    // is changed from type="hidden" to type="tel".
+    return this._formFieldCount != this.form.elements.length;
+  },
+
   /**
    * Set fieldDetails from the form about fields that can be autofilled.
    */
   collectFormFields() {
+    this._formFieldCount = this.form.elements.length;
     let fieldDetails = FormAutofillHeuristics.getFormInfo(this.form);
     this.fieldDetails = fieldDetails ? fieldDetails : [];
     log.debug("Collected details on", this.fieldDetails.length, "fields");
