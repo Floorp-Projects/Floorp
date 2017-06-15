@@ -26,6 +26,8 @@ def arg_parser():
                         help='Test suites to run in their entirety.')
     parser.add_argument('-t', '--talos', dest='talos', action='append',
                         help='Talos suites to run.')
+    parser.add_argument('-j', '--jobs', dest='jobs', action='append',
+                        help='Job tasks to run.')
     parser.add_argument('--tag', dest='tags', action='append',
                         help='Restrict tests to the given tag (may be specified multiple times).')
     parser.add_argument('--and', action='store_true', dest='intersection',
@@ -389,9 +391,12 @@ class AutoTry(object):
                 rv[item] = paths_by_flavor[item].copy()
         return rv
 
-    def calc_try_syntax(self, platforms, tests, talos, builds, paths_by_flavor, tags,
+    def calc_try_syntax(self, platforms, tests, talos, jobs, builds, paths_by_flavor, tags,
                         extras, intersection):
-        parts = ["try:", "-b", builds, "-p", ",".join(platforms)]
+        parts = ["try:"]
+
+        if platforms:
+            parts.extend(["-b", builds, "-p", ",".join(platforms)])
 
         suites = tests if not intersection else {}
         paths = set()
@@ -429,13 +434,19 @@ class AutoTry(object):
             del suites['all']
             suites.update({suite_name: None for suite_name in non_compiled_suites})
 
-        parts.append("-u")
-        parts.append(",".join("%s%s" % (k, "[%s]" % ",".join(v) if v else "")
-                              for k,v in sorted(suites.items())) if suites else "none")
+        if suites:
+            parts.append("-u")
+            parts.append(",".join("%s%s" % (k, "[%s]" % ",".join(v) if v else "")
+                                  for k,v in sorted(suites.items())))
 
-        parts.append("-t")
-        parts.append(",".join("%s%s" % (k, "[%s]" % ",".join(v) if v else "")
-                              for k,v in sorted(talos.items())) if talos else "none")
+        if talos:
+            parts.append("-t")
+            parts.append(",".join("%s%s" % (k, "[%s]" % ",".join(v) if v else "")
+                                  for k,v in sorted(talos.items())))
+
+        if jobs:
+            parts.append("-j")
+            parts.append(",".join(jobs))
 
         if tags:
             parts.append(' '.join('--tag %s' % t for t in tags))
