@@ -459,13 +459,9 @@ parent:
      *
      * @param opener the PBrowser whose content called window.open.
      */
-    sync BrowserFrameOpenWindow(PBrowser opener, PRenderFrame renderFrame,
-                                nsString aURL, nsString aName, nsString aFeatures)
-      returns (bool windowOpened,
-               TextureFactoryIdentifier textureFactoryIdentifier,
-               uint64_t layersId,
-               CompositorOptions compositorOptions,
-               uint32_t maxTouchPoints);
+    async BrowserFrameOpenWindow(PBrowser opener, PRenderFrame renderFrame,
+                                 nsString aURL, nsString aName, nsString aFeatures)
+        returns (CreatedWindowInfo window);
 
     /**
      * Tells the containing widget whether the given input block results in a
