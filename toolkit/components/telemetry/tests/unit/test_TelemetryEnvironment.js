@@ -983,7 +983,7 @@ add_task(async function test_prefDefault() {
 
 add_task(async function test_addonsWatch_InterestingChange() {
   const ADDON_INSTALL_URL = gDataRoot + "restartless.xpi";
-  const ADDON_ID = "tel-restartless-xpi@tests.mozilla.org";
+  const ADDON_ID = "tel-restartless-webext@tests.mozilla.org";
   // We only expect a single notification for each install, uninstall, enable, disable.
   const EXPECTED_NOTIFICATIONS = 4;
 
@@ -1018,10 +1018,12 @@ add_task(async function test_addonsWatch_InterestingChange() {
   Assert.ok(!(ADDON_ID in TelemetryEnvironment.currentEnvironment.addons.activeAddons));
 
   checkpointPromise = registerCheckpointPromise(3);
+  let startupPromise = AddonTestUtils.promiseWebExtensionStartup(ADDON_ID);
   addon.userDisabled = false;
   await checkpointPromise;
   assertCheckpoint(3);
   Assert.ok(ADDON_ID in TelemetryEnvironment.currentEnvironment.addons.activeAddons);
+  await startupPromise;
 
   checkpointPromise = registerCheckpointPromise(4);
   await AddonManagerTesting.uninstallAddonByID(ADDON_ID);
@@ -1119,7 +1121,7 @@ add_task(async function test_addonsWatch_NotInterestingChange() {
 
 add_task(async function test_addonsAndPlugins() {
   const ADDON_INSTALL_URL = gDataRoot + "restartless.xpi";
-  const ADDON_ID = "tel-restartless-xpi@tests.mozilla.org";
+  const ADDON_ID = "tel-restartless-webext@tests.mozilla.org";
   const ADDON_INSTALL_DATE = truncateToDays(Date.now());
   const EXPECTED_ADDON_DATA = {
     blocklisted: false,
@@ -1136,8 +1138,8 @@ add_task(async function test_addonsAndPlugins() {
     updateDay: ADDON_INSTALL_DATE,
     signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
     isSystem: false,
-    isWebExtension: false,
-    multiprocessCompatible: false,
+    isWebExtension: true,
+    multiprocessCompatible: true,
   };
   const SYSTEM_ADDON_ID = "tel-system-xpi@tests.mozilla.org";
   const EXPECTED_SYSTEM_ADDON_DATA = {
@@ -1272,12 +1274,14 @@ add_task(async function test_addonsAndPlugins() {
 });
 
 add_task(async function test_signedAddon() {
-  const ADDON_INSTALL_URL = gDataRoot + "signed.xpi";
-  const ADDON_ID = "tel-signed-xpi@tests.mozilla.org";
+  AddonTestUtils.useRealCertChecks = true;
+
+  const ADDON_INSTALL_URL = gDataRoot + "signed-webext.xpi";
+  const ADDON_ID = "tel-signed-webext@tests.mozilla.org";
   const ADDON_INSTALL_DATE = truncateToDays(Date.now());
   const EXPECTED_ADDON_DATA = {
     blocklisted: false,
-    description: "A signed addon which gets enabled without a reboot.",
+    description: "A signed webextension",
     name: "XPI Telemetry Signed Test",
     userDisabled: false,
     appDisabled: false,
@@ -1310,11 +1314,13 @@ add_task(async function test_signedAddon() {
   for (let f in EXPECTED_ADDON_DATA) {
     Assert.equal(targetAddon[f], EXPECTED_ADDON_DATA[f], f + " must have the correct value.");
   }
+
+  AddonTestUtils.useRealCertChecks = false;
 });
 
 add_task(async function test_addonsFieldsLimit() {
   const ADDON_INSTALL_URL = gDataRoot + "long-fields.xpi";
-  const ADDON_ID = "tel-longfields-xpi@tests.mozilla.org";
+  const ADDON_ID = "tel-longfields-webext@tests.mozilla.org";
 
   // Install the addon and wait for the TelemetryEnvironment to pick it up.
   let deferred = PromiseUtils.defer();
@@ -1351,7 +1357,7 @@ add_task(async function test_collectionWithbrokenAddonData() {
   };
 
   const ADDON_INSTALL_URL = gDataRoot + "restartless.xpi";
-  const ADDON_ID = "tel-restartless-xpi@tests.mozilla.org";
+  const ADDON_ID = "tel-restartless-webext@tests.mozilla.org";
   const ADDON_INSTALL_DATE = truncateToDays(Date.now());
   const EXPECTED_ADDON_DATA = {
     blocklisted: false,
