@@ -2316,7 +2316,17 @@ nsContentUtils::IsCallerChrome()
 bool
 nsContentUtils::ShouldResistFingerprinting()
 {
-  return nsRFPService::IsResistFingerprintingEnabled();
+  if (NS_IsMainThread()) {
+    return nsRFPService::IsResistFingerprintingEnabled();
+  }
+
+  workers::WorkerPrivate* workerPrivate = workers::GetCurrentThreadWorkerPrivate();
+  if (NS_WARN_IF(!workerPrivate)) {
+    return false;
+  }
+  workerPrivate->AssertIsOnWorkerThread();
+
+  return workerPrivate->ResistFingerprintingEnabled();
 }
 
 bool
@@ -2326,7 +2336,7 @@ nsContentUtils::ShouldResistFingerprinting(nsIDocShell* aDocShell)
     return false;
   }
   bool isChrome = nsContentUtils::IsChromeDoc(aDocShell->GetDocument());
-  return !isChrome && nsRFPService::IsResistFingerprintingEnabled();
+  return !isChrome && ShouldResistFingerprinting();
 }
 
 /* static */
