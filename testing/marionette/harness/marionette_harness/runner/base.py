@@ -300,8 +300,12 @@ class BaseMarionetteArguments(ArgumentParser):
                           help="addon to install; repeat for multiple addons.")
         self.add_argument('--repeat',
                           type=int,
-                          default=0,
                           help='number of times to repeat the test(s)')
+        self.add_argument("--run-until-failure",
+                          action="store_true",
+                          help="Run tests repeatedly and stop on the first time a test fails. "
+                               "Default cap is 30 runs, which can be overwritten "
+                               "with the --repeat parameter.")
         self.add_argument('--testvars',
                           action='append',
                           help='path to a json file with any test data required')
@@ -433,6 +437,9 @@ class BaseMarionetteArguments(ArgumentParser):
         if not args.address and not args.binary and not args.emulator:
             self.error('You must specify --binary, or --address, or --emulator')
 
+        if args.repeat is not None and args.repeat < 0:
+            self.error('The value of --repeat has to be equal or greater than 0.')
+
         if args.total_chunks is not None and args.this_chunk is None:
             self.error('You must specify which chunk to run.')
 
@@ -502,7 +509,9 @@ class BaseMarionetteTestRunner(object):
     def __init__(self, address=None,
                  app=None, app_args=None, binary=None, profile=None,
                  logger=None, logdir=None,
-                 repeat=0, testvars=None,
+                 repeat=None,
+                 run_until_failure=None,
+                 testvars=None,
                  symbols_path=None,
                  shuffle=False, shuffle_seed=random.randint(0, sys.maxint), this_chunk=1,
                  total_chunks=1,
@@ -530,7 +539,8 @@ class BaseMarionetteTestRunner(object):
         self.logger = logger
         self.marionette = None
         self.logdir = logdir
-        self.repeat = repeat
+        self.repeat = repeat or 0
+        self.run_until_failure = run_until_failure or False
         self.symbols_path = symbols_path
         self.socket_timeout = socket_timeout
         self.shuffle = shuffle
@@ -563,6 +573,10 @@ class BaseMarionetteTestRunner(object):
                 'browser.tabs.remote.force-enable': True,
                 'extensions.e10sBlocksEnabling': False,
             })
+
+        # If no repeat has been set, default to 30 extra runs
+        if self.run_until_failure and repeat is None:
+            self.repeat = 30
 
         def gather_debug(test, status):
             # No screenshots and page source for skipped tests
@@ -867,13 +881,16 @@ class BaseMarionetteTestRunner(object):
 
         interrupted = None
         try:
-            counter = self.repeat
-            while counter >= 0:
-                round_num = self.repeat - counter
-                if round_num > 0:
-                    self.logger.info('\nREPEAT {}\n-------'.format(round_num))
+            repeat_index = 0
+            while repeat_index <= self.repeat:
+                if repeat_index > 0:
+                    self.logger.info("\nREPEAT {}\n-------".format(repeat_index))
                 self.run_test_sets()
-                counter -= 1
+                if self.run_until_failure and self.failed > 0:
+                    break
+
+                repeat_index += 1
+
         except KeyboardInterrupt:
             # in case of KeyboardInterrupt during the test execution
             # we want to display current test results.

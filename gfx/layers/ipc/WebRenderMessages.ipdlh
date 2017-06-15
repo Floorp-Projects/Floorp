@@ -51,8 +51,6 @@ struct OpUpdateAsyncImagePipeline {
   LayerRect scBounds;
   Matrix4x4 scTransform;
   MaybeIntSize scaleToSize;
-  MaybeLayerRect clipRect;
-  MaybeImageMask mask;
   WrImageRendering filter;
   WrMixBlendMode mixBlendMode;
 };

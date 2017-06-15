@@ -454,6 +454,7 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
     mRasterizerDiscardEnabled = false;
     mScissorTestEnabled = false;
     mDepthTestEnabled = 0;
+    mStencilTestEnabled = 0;
     mGenerateMipmapHint = LOCAL_GL_DONT_CARE;
 
     // Bindings, etc.

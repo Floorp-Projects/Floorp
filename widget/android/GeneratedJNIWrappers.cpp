@@ -1937,7 +1937,7 @@ const char GeckoHLSDemuxerWrapper::name[] =
 constexpr char GeckoHLSDemuxerWrapper::Create_t::name[];
 constexpr char GeckoHLSDemuxerWrapper::Create_t::signature[];
 
-auto GeckoHLSDemuxerWrapper::Create(mozilla::jni::Object::Param a0, mozilla::jni::Object::Param a1) -> GeckoHLSDemuxerWrapper::LocalRef
+auto GeckoHLSDemuxerWrapper::Create(int32_t a0, mozilla::jni::Object::Param a1) -> GeckoHLSDemuxerWrapper::LocalRef
 {
     return mozilla::jni::Method<Create_t>::Call(GeckoHLSDemuxerWrapper::Context(), nullptr, a0, a1);
 }
@@ -2034,14 +2034,6 @@ constexpr char GeckoHLSDemuxerWrapper::Callbacks::OnInitialized_t::signature[];
 const char GeckoHLSResourceWrapper::name[] =
         "org/mozilla/gecko/media/GeckoHLSResourceWrapper";
 
-constexpr char GeckoHLSResourceWrapper::GetPlayer_t::name[];
-constexpr char GeckoHLSResourceWrapper::GetPlayer_t::signature[];
-
-auto GeckoHLSResourceWrapper::GetPlayer() const -> mozilla::jni::Object::LocalRef
-{
-    return mozilla::jni::Method<GetPlayer_t>::Call(GeckoHLSResourceWrapper::mCtx, nullptr);
-}
-
 constexpr char GeckoHLSResourceWrapper::Create_t::name[];
 constexpr char GeckoHLSResourceWrapper::Create_t::signature[];
 
@@ -2056,6 +2048,14 @@ constexpr char GeckoHLSResourceWrapper::Destroy_t::signature[];
 auto GeckoHLSResourceWrapper::Destroy() const -> void
 {
     return mozilla::jni::Method<Destroy_t>::Call(GeckoHLSResourceWrapper::mCtx, nullptr);
+}
+
+constexpr char GeckoHLSResourceWrapper::GetPlayerId_t::name[];
+constexpr char GeckoHLSResourceWrapper::GetPlayerId_t::signature[];
+
+auto GeckoHLSResourceWrapper::GetPlayerId() const -> int32_t
+{
+    return mozilla::jni::Method<GetPlayerId_t>::Call(GeckoHLSResourceWrapper::mCtx, nullptr);
 }
 
 const char GeckoHLSResourceWrapper::Callbacks::name[] =

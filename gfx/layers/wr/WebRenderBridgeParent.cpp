@@ -509,8 +509,6 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(InfallibleTArray<WebRender
                                                       op.scBounds(),
                                                       op.scTransform(),
                                                       op.scaleToSize(),
-                                                      op.clipRect(),
-                                                      op.mask(),
                                                       op.filter(),
                                                       op.mixBlendMode());
         break;

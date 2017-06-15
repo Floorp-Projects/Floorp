@@ -61,7 +61,7 @@
                   onclick="checkForMiddleClick(this, event);"
                   label="&helpKeyboardShortcuts.label;"
                   accesskey="&helpKeyboardShortcuts.accesskey;"/>
-#ifdef MOZ_TELEMETRY_REPORTING
+#ifdef MOZ_SERVICES_HEALTHREPORT
         <menuitem id="healthReport"
                   label="&healthReport2.label;"
                   accesskey="&healthReport2.accesskey;"
