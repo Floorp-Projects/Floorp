@@ -6,35 +6,25 @@
 @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 
-xul|richlistitem[originaltype="autofill-profile"][selected="true"] > .autofill-item-box {
+xul|richlistitem[originaltype="autofill-profile"][selected="true"] > .profile-item-box {
   background-color: #F2F2F2;
 }
 
-xul|richlistitem[originaltype="autofill-footer"][selected="true"] > .autofill-footer {
-  background-color: #DCDCDE;
-}
-
-.autofill-item-box {
+.profile-item-box {
   --item-padding-vertical: 6px;
   --item-padding-horizontal: 10px;
   --col-spacer: 7px;
   --item-width: calc(50% - (var(--col-spacer) / 2));
-  --item-text-color: -moz-FieldText;
 }
 
-.autofill-item-box[size="small"] {
+.profile-item-box[size="small"] {
   --item-padding-vertical: 7px;
   --col-spacer: 0px;
   --row-spacer: 3px;
   --item-width: 100%;
 }
 
-.autofill-footer {
-  --item-padding-vertical: 0;
-  --item-padding-horizontal: 0;
-}
-
-.autofill-item-box {
+.profile-item-box {
   box-sizing: border-box;
   margin: 0;
   border-bottom: 1px solid rgba(38,38,38,.15);
@@ -46,14 +36,14 @@ xul|richlistitem[originaltype="autofill-footer"][selected="true"] > .autofill-fo
   flex-wrap: wrap;
   align-items: center;
   background-color: #FFFFFF;
-  color: var(--item-text-color);
+  color: -moz-FieldText
 }
 
-.autofill-item-box:last-child {
+.profile-item-box:last-child {
   border-bottom: 0;
 }
 
-.autofill-item-box > .profile-item-col {
+.profile-item-box > .profile-item-col {
   box-sizing: border-box;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -61,27 +51,21 @@ xul|richlistitem[originaltype="autofill-footer"][selected="true"] > .autofill-fo
   width: var(--item-width);
 }
 
-.autofill-item-box > .profile-label-col {
+.profile-item-box > .profile-label-col {
   text-align: start;
 }
 
-.autofill-item-box > .profile-comment-col {
+.profile-item-box > .profile-comment-col {
   margin-inline-start: var(--col-spacer);
   text-align: end;
   color: GrayText;
 }
 
-.autofill-item-box[size="small"] {
+.profile-item-box[size="small"] {
   flex-direction: column;
 }
 
-.autofill-item-box[size="small"] > .profile-comment-col {
+.profile-item-box[size="small"] > .profile-comment-col {
   margin-top: var(--row-spacer);
   text-align: start;
-}
-
-.autofill-footer {
-  height: 41px;
-  background-color: #EDEDED;
-  justify-content: center;
 }
