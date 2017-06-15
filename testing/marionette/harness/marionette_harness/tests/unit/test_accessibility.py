@@ -152,8 +152,6 @@ class TestAccessibility(MarionetteTestCase):
                               lambda button: self.assertRaises(ElementNotInteractableException,
                                                                button.click))
 
-    @unittest.skipIf(sys.platform.startswith("linux"),
-                     "Bug 1341493 - ElementNotAccessibleException not raised")
     def test_element_visible_but_not_visible_to_accessbility(self):
         self.setup_accessibility()
         # Elements are displayed but hidden from accessibility API
