@@ -20,7 +20,7 @@ using mozilla::layers::MaybeZoomConstraints from "FrameMetrics.h";
 using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/APZUtils.h";
 using mozilla::layers::AsyncDragMetrics from "mozilla/layers/AsyncDragMetrics.h";
 using mozilla::layers::GeckoContentController::TapType from "mozilla/layers/GeckoContentController.h";
-using class mozilla::layers::KeyboardMap from "mozilla/layers/Keyboard.h";
+using class mozilla::layers::KeyboardMap from "mozilla/layers/KeyboardMap.h";
 
 using nsEventStatus from "mozilla/EventForwards.h";
 using EventMessage from "mozilla/EventForwards.h";
