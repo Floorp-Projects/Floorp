@@ -177,8 +177,30 @@ TK_DEFINES = $(firstword \
 # chrome directory.
 PKG_ZIP_DIRS = chrome $(or $(DIST_SUBDIRS),$(DIST_SUBDIR))
 
+# Clone a l10n repository, either via hg or git
+# Make this a variable as it's embedded in a sh conditional
+ifeq ($(VCS_CHECKOUT_TYPE),hg)
+L10N_CO = $(HG) --cwd $(L10NBASEDIR) clone https://hg.mozilla.org/l10n-central/$(AB_CD)/
+else
+ifeq ($(VCS_CHECKOUT_TYPE),git)
+L10N_CO = $(GIT) -C $(L10NBASEDIR) clone hg://hg.mozilla.org/l10n-central/$(AB_CD)/
+else
+L10N_CO = $(error You need to use either hg or git)
+endif
+endif
+
+
 merge-%: IS_LANGUAGE_REPACK=1
+merge-%: AB_CD=$*
 merge-%:
+# For nightly builds, we automatically check out missing localizations
+# from l10n-central.
+ifdef NIGHTLY_BUILD
+	@if  ! test -d $(L10NBASEDIR)/$(AB_CD) ; then \
+		$(NSINSTALL) -D $(L10NBASEDIR) ; \
+		$(L10N_CO) ; \
+	fi
+endif
 	$(RM) -rf $(REAL_LOCALE_MERGEDIR)
 	$(MOZILLA_DIR)/mach compare-locales --l10n-base $(L10NBASEDIR) --merge-dir $(REAL_LOCALE_MERGEDIR) $*
 
