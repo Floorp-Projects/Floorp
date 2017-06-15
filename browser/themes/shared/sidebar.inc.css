@@ -25,7 +25,7 @@
   position: relative;
 }
 
-#appcontent ~ .sidebar-splitter {
+.sidebar-splitter[overlapend] {
   border-inline-end-width: 0;
   border-inline-start-width: 1px;
   margin-inline-start: 0;
