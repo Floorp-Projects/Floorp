@@ -80,6 +80,7 @@ def docker_worker_toolchain(config, job, taskdesc):
     worker = taskdesc['worker']
     worker['artifacts'] = []
     worker['caches'] = []
+    worker['chain-of-trust'] = True
 
     docker_worker_add_public_artifacts(config, job, taskdesc)
     docker_worker_add_tc_vcs_cache(config, job, taskdesc)
@@ -146,6 +147,7 @@ def windows_toolchain(config, job, taskdesc):
         'path': r'public\build',
         'type': 'directory',
     }]
+    worker['chain-of-trust'] = True
 
     docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
 
