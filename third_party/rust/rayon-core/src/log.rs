@@ -1,11 +1,14 @@
 //! Debug Logging
 //!
-//! To use in a debug build, set the env var `RAYON_RS_LOG=1`.  In a
+//! To use in a debug build, set the env var `RAYON_LOG=1`.  In a
 //! release build, logs are compiled out. You will have to change
 //! `DUMP_LOGS` to be `true`.
+//!
+//! **Old environment variable:** `RAYON_LOG` is a one-to-one
+//! replacement of the now deprecated `RAYON_RS_LOG` environment
+//! variable, which is still supported for backwards compatibility.
 
 use std::env;
-use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT};
 
 #[derive(Debug)]
 pub enum Event {
@@ -44,38 +47,11 @@ pub enum Event {
 pub const DUMP_LOGS: bool = cfg!(debug_assertions);
 
 lazy_static! {
-    pub static ref LOG_ENV: bool = env::var("RAYON_RS_LOG").is_ok();
+    pub static ref LOG_ENV: bool = env::var("RAYON_LOG").is_ok() || env::var("RAYON_RS_LOG").is_ok();
 }
 
 macro_rules! log {
     ($event:expr) => {
         if ::log::DUMP_LOGS { if *::log::LOG_ENV { println!("{:?}", $event); } }
-    }
-}
-
-pub static STOLEN_JOB: AtomicUsize = ATOMIC_USIZE_INIT;
-
-macro_rules! stat_stolen {
-    () => {
-        ::log::STOLEN_JOB.fetch_add(1, ::std::sync::atomic::Ordering::SeqCst);
-    }
-}
-
-pub static POPPED_JOB: AtomicUsize = ATOMIC_USIZE_INIT;
-
-macro_rules! stat_popped {
-    () => {
-        ::log::POPPED_JOB.fetch_add(1, ::std::sync::atomic::Ordering::SeqCst);
-    }
-}
-
-macro_rules! dump_stats {
-    () => {
-        {
-            let stolen = ::log::STOLEN_JOB.load(::std::sync::atomic::Ordering::SeqCst);
-            println!("Jobs stolen: {:?}", stolen);
-            let popped = ::log::POPPED_JOB.load(::std::sync::atomic::Ordering::SeqCst);
-            println!("Jobs popped: {:?}", popped);
-        }
     }
 }
