@@ -251,9 +251,8 @@ public:
   };
 
 protected:
-  explicit MediaCache(int64_t aContentLength, MediaBlockCacheBase* aCache)
-    : mContentLength(aContentLength)
-    , mNextResourceID(1)
+  explicit MediaCache(MediaBlockCacheBase* aCache)
+    : mNextResourceID(1)
     , mReentrantMonitor("MediaCache.mReentrantMonitor")
     , mBlockCache(aCache)
     , mUpdateQueued(false)
@@ -392,11 +391,6 @@ protected:
   // This is a raw pointer set by GetMediaCache(), and reset by ~MediaCache(),
   // both on the main thread; and is not accessed anywhere else.
   static MediaCache* gMediaCache;
-
-  // Expected content length if known initially from the HTTP Content-Length
-  // header (this is a memory-backed MediaCache), otherwise -1 (file-backed
-  // MediaCache).
-  const int64_t mContentLength;
 
   // This member is main-thread only. It's used to allocate unique
   // resource IDs to streams.
@@ -695,7 +689,7 @@ MediaCache::GetMediaCache(int64_t aContentLength)
     RefPtr<MediaBlockCacheBase> bc = new MemoryBlockCache(aContentLength);
     nsresult rv = bc->Init();
     if (NS_SUCCEEDED(rv)) {
-      RefPtr<MediaCache> mc = new MediaCache(aContentLength, bc);
+      RefPtr<MediaCache> mc = new MediaCache(bc);
       LOG("GetMediaCache(%" PRIi64 ") -> Memory MediaCache %p",
           aContentLength,
           mc.get());
@@ -714,7 +708,7 @@ MediaCache::GetMediaCache(int64_t aContentLength)
   RefPtr<MediaBlockCacheBase> bc = new FileBlockCache();
   nsresult rv = bc->Init();
   if (NS_SUCCEEDED(rv)) {
-    gMediaCache = new MediaCache(-1, bc);
+    gMediaCache = new MediaCache(bc);
     LOG("GetMediaCache(%" PRIi64 ") -> Created file-backed MediaCache",
         aContentLength);
   } else {
