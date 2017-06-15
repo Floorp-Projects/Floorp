@@ -132,7 +132,11 @@ ThreadStackHelper::GetStacksInternal(Stack* aStack, NativeStack* aNativeStack)
 #endif
 
   auto callback = [&, this] (void** aPCs, size_t aCount) {
-    FillStackBuffer();
+#ifdef MOZ_THREADSTACKHELPER_PSEUDO
+    if (mStackToFill) {
+      FillStackBuffer();
+    }
+#endif
 
 #ifdef MOZ_THREADSTACKHELPER_NATIVE
     if (mNativeStackToFill) {
@@ -144,9 +148,11 @@ ThreadStackHelper::GetStacksInternal(Stack* aStack, NativeStack* aNativeStack)
 #endif
   };
 
-  profiler_suspend_and_sample_thread(mThreadId,
-                                     callback,
-                                     /* aSampleNative = */ !!aNativeStack);
+  if (mStackToFill || mNativeStackToFill) {
+    profiler_suspend_and_sample_thread(mThreadId,
+                                       callback,
+                                       /* aSampleNative = */ !!aNativeStack);
+  }
 #endif
 }
 
