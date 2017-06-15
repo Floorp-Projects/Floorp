@@ -152,6 +152,11 @@ ManageProfileDialog.prototype = {
     ];
 
     let parts = [];
+    if (address["street-address"]) {
+      address["street-address"] = FormAutofillUtils.toOneLineAddress(
+        address["street-address"]
+      );
+    }
     for (const fieldName of fieldOrder) {
       let string = address[fieldName];
       if (string) {

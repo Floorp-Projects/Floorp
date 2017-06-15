@@ -114,11 +114,14 @@ AutofillProfileAutoCompleteSearch.prototype = {
       // Sort addresses by timeLastUsed for showing the lastest used address at top.
       addresses.sort((a, b) => b.timeLastUsed - a.timeLastUsed);
 
+      let handler = FormAutofillContent.getFormHandler(focusedInput);
+      let adaptedAddresses = handler.getAdaptedProfiles(addresses);
+
       let allFieldNames = FormAutofillContent.getAllFieldNames(focusedInput);
       let result = new ProfileAutoCompleteResult(searchString,
                                                  info.fieldName,
                                                  allFieldNames,
-                                                 addresses,
+                                                 adaptedAddresses,
                                                  {});
 
       listener.onSearchResult(this, result);
@@ -442,8 +445,8 @@ var FormAutofillContent = {
   },
 
   getAllFieldNames(element) {
-    let formDetails = this.getFormDetails(element);
-    return formDetails.map(record => record.fieldName);
+    let formHandler = this.getFormHandler(element);
+    return formHandler ? formHandler.allFieldNames : null;
   },
 
   identifyAutofillFields(element) {
