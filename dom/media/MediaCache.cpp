@@ -703,11 +703,12 @@ MediaCache::Flush()
     FreeBlock(blockIndex);
   }
 
-  // Truncate file, close it, and reopen
+  // Truncate index array.
   Truncate();
   NS_ASSERTION(mIndex.Length() == 0, "Blocks leaked?");
-  mBlockCache = nullptr;
-  Init();
+  // Re-initialize block cache.
+  nsresult rv = mBlockCache->Init();
+  NS_ENSURE_SUCCESS_VOID(rv);
 }
 
 void
