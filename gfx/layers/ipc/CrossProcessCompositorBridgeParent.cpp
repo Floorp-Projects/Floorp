@@ -210,7 +210,8 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
   WebRenderBridgeParent* parent = nullptr;
   RefPtr<wr::WebRenderAPI> api = root->GetWebRenderAPI();
   RefPtr<WebRenderCompositableHolder> holder = root->CompositableHolder();
-  parent = new WebRenderBridgeParent(this, aPipelineId, nullptr, root->CompositorScheduler(), Move(api), Move(holder));
+  RefPtr<CompositorAnimationStorage> animStorage = cbp->GetAnimationStorage(0);
+  parent = new WebRenderBridgeParent(this, aPipelineId, nullptr, root->CompositorScheduler(), Move(api), Move(holder), Move(animStorage));
 
   parent->AddRef(); // IPDL reference
   sIndirectLayerTrees[layersId].mCrossProcessParent = this;
