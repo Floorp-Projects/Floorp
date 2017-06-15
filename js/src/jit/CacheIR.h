@@ -142,7 +142,8 @@ class TypedOperandId : public OperandId
     _(BindName)             \
     _(In)                   \
     _(HasOwn)               \
-    _(TypeOf)
+    _(TypeOf)               \
+    _(Call)
 
 enum class CacheKind : uint8_t
 {
@@ -165,12 +166,14 @@ extern const char* CacheKindNames[];
     _(GuardProto)                         \
     _(GuardClass)                         \
     _(GuardCompartment)                   \
+    _(GuardIsNativeFunction)              \
     _(GuardIsProxy)                       \
     _(GuardIsCrossCompartmentWrapper)     \
     _(GuardNotDOMProxy)                   \
     _(GuardSpecificObject)                \
     _(GuardSpecificAtom)                  \
     _(GuardSpecificSymbol)                \
+    _(GuardSpecificInt32Immediate)        \
     _(GuardNoDetachedTypedObjects)        \
     _(GuardMagicValue)                    \
     _(GuardFrameHasNoArgumentsObject)     \
@@ -180,6 +183,7 @@ extern const char* CacheKindNames[];
     _(GuardAndGetIndexFromString)         \
     _(GuardHasGetterSetter)               \
     _(GuardGroupHasUnanalyzedNewScript)   \
+    _(LoadStackValue)                     \
     _(LoadObject)                         \
     _(LoadProto)                          \
     _(LoadEnclosingEnvironment)           \
@@ -248,6 +252,10 @@ extern const char* CacheKindNames[];
     _(LoadBooleanResult)                  \
     _(LoadStringResult)                   \
     _(LoadTypeOfObjectResult)             \
+                                          \
+    _(CallStringSplitResult)              \
+    _(CallPrintString)                    \
+    _(Breakpoint)                         \
                                           \
     _(TypeMonitorResult)                  \
     _(ReturnFromIC)                       \
@@ -377,6 +385,16 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         operandLastUsed_[opId.id()] = nextInstructionId_ - 1;
     }
 
+    void writeInt32Immediate(int32_t i32) {
+        buffer_.writeSigned(i32);
+    }
+    void writeUint32Immediate(uint32_t u32) {
+        buffer_.writeUnsigned(u32);
+    }
+    void writePointer(void* ptr) {
+        buffer_.writeRawPointer(ptr);
+    }
+
     void writeOpWithOperandId(CacheOp op, OperandId opId) {
         writeOp(op);
         writeOperandId(opId);
@@ -503,6 +521,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::GuardClass, obj);
         buffer_.writeByte(uint32_t(kind));
     }
+    void guardIsNativeFunction(ObjOperandId obj, JSNative nativeFunc) {
+        writeOpWithOperandId(CacheOp::GuardIsNativeFunction, obj);
+        writePointer(JS_FUNC_TO_DATA_PTR(void*, nativeFunc));
+    }
     void guardIsProxy(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::GuardIsProxy, obj);
     }
@@ -523,6 +545,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void guardSpecificSymbol(SymbolOperandId sym, JS::Symbol* expected) {
         writeOpWithOperandId(CacheOp::GuardSpecificSymbol, sym);
         addStubField(uintptr_t(expected), StubField::Type::Symbol);
+    }
+    void guardSpecificInt32Immediate(Int32OperandId operand, int32_t expected) {
+        writeOp(CacheOp::GuardSpecificInt32Immediate);
+        writeOperandId(operand);
+        writeInt32Immediate(expected);
     }
     void guardMagicValue(ValOperandId val, JSWhyMagic magic) {
         writeOpWithOperandId(CacheOp::GuardMagicValue, val);
@@ -580,6 +607,12 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         return res;
     }
 
+    ValOperandId loadStackValue(uint32_t idx) {
+        ValOperandId res(nextOperandId_++);
+        writeOpWithOperandId(CacheOp::LoadStackValue, res);
+        writeUint32Immediate(idx);
+        return res;
+    }
     ObjOperandId loadObject(JSObject* obj) {
         ObjOperandId res(nextOperandId_++);
         writeOpWithOperandId(CacheOp::LoadObject, res);
@@ -912,6 +945,21 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::LoadTypeOfObjectResult, obj);
     }
 
+    void callStringSplitResult(StringOperandId str, StringOperandId sep, ObjectGroup* group) {
+        writeOp(CacheOp::CallStringSplitResult);
+        writeOperandId(str);
+        writeOperandId(sep);
+        addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
+    }
+
+    void callPrintString(const char* str) {
+        writeOp(CacheOp::CallPrintString);
+        writePointer(const_cast<char*>(str));
+    }
+    void breakpoint() {
+        writeOp(CacheOp::Breakpoint);
+    }
+
     void typeMonitorResult() {
         writeOp(CacheOp::TypeMonitorResult);
     }
@@ -961,6 +1009,9 @@ class MOZ_RAII CacheIRReader
     Scalar::Type scalarType() { return Scalar::Type(buffer_.readByte()); }
     uint32_t typeDescrKey() { return buffer_.readByte(); }
     JSWhyMagic whyMagic() { return JSWhyMagic(buffer_.readByte()); }
+    int32_t int32Immediate() { return buffer_.readSigned(); }
+    uint32_t uint32Immediate() { return buffer_.readUnsigned(); }
+    void* pointer() { return buffer_.readRawPointer(); }
 
     ReferenceTypeDescr::Type referenceTypeDescrType() {
         return ReferenceTypeDescr::Type(buffer_.readByte());
@@ -1315,6 +1366,35 @@ class MOZ_RAII TypeOfIRGenerator : public IRGenerator
   public:
     TypeOfIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode mode, HandleValue value);
 
+    bool tryAttachStub();
+};
+
+class MOZ_RAII CallIRGenerator : public IRGenerator
+{
+  public:
+    enum class OptStrategy {
+        None = 0,
+        StringSplit
+    };
+
+  private:
+    uint32_t argc_;
+    HandleValue callee_;
+    HandleValue thisval_;
+    HandleValueArray args_;
+
+    mozilla::Maybe<OptStrategy> cachedStrategy_;
+
+    OptStrategy canOptimize();
+    OptStrategy canOptimizeStringSplit(HandleFunction calleeFunc);
+    bool tryAttachStringSplit();
+
+  public:
+    CallIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode mode,
+                    uint32_t argc, HandleValue callee, HandleValue thisval,
+                    HandleValueArray args);
+
+    OptStrategy getOptStrategy(bool* optimizeAfterCall = nullptr);
     bool tryAttachStub();
 };
 

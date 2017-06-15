@@ -12,6 +12,7 @@ import xtalos
 import subprocess
 import json
 import mozfile
+import shutil
 
 
 EVENTNAME_INDEX = 0
@@ -36,6 +37,14 @@ net_events = {
 gThreads = {}
 gConnectionIDs = {}
 gHeaders = {}
+
+
+def uploadFile(filename):
+    mud = os.environ.get('MOZ_UPLOAD_DIR', None)
+    if mud:
+        print("uploading raw file %s via blobber" % filename)
+        mud_filename = os.path.join(mud, filename)
+        shutil.copyfile(filename, "%s.log" % mud_filename)
 
 
 def filterOutHeader(data):
@@ -292,8 +301,9 @@ def etlparser(xperf_path, etl_filename, processID, approot=None,
         elif event.startswith("Microsoft-Windows-TCPIP"):
             trackThreadNetIO(row, io, stage)
 
-    # remove the csv file
-    if not debug:
+    if debug:
+        uploadFile(csvname)
+    else:
         mozfile.remove(csvname)
 
     output = "thread, stage, counter, value\n"
@@ -303,6 +313,9 @@ def etlparser(xperf_path, etl_filename, processID, approot=None,
         fname = "%s_thread_stats%s" % os.path.splitext(outputFile)
         with open(fname, "w") as f:
             f.write(output)
+
+        if debug:
+            uploadFile(fname)
     else:
         print(output)
 
@@ -319,9 +332,18 @@ def etlparser(xperf_path, etl_filename, processID, approot=None,
                                 (all_stages and x[2] != stages[0] or
                                  not checkWhitelist(x[0], whitelist)),
                       files.iterkeys())
+    if debug:
+        # in debug, we want stages = [startup+normal] and all threads, not just (main)
+        # we will use this data to upload fileIO info to blobber only for debug mode
+        outputData = filter(lambda x: (all_stages or x[2] in [stages[0], stages[1]]) and
+                                      (all_stages and x[2] not in [stages[0], stages[1]] or
+                                       not checkWhitelist(x[0], whitelist)),
+                            files.iterkeys())
+    else:
+        outputData = filekeys
 
     # output data
-    for row in filekeys:
+    for row in outputData:
         output = "%s, %s, %s, %s, %s, %s, %s\n" % (
             row[0],
             row[1],
@@ -336,6 +358,8 @@ def etlparser(xperf_path, etl_filename, processID, approot=None,
     if outputFile:
         # close the file handle
         outFile.close()
+        if debug:
+            uploadFile(outputFile)
 
     # We still like to have the outputfile to record the raw data, now
     # filter out acceptable files/ranges
@@ -455,12 +479,8 @@ def etlparser(xperf_path, etl_filename, processID, approot=None,
             with open(error_filename, 'w') as errorFile:
                 errorFile.write('\n'.join(errors))
 
-# TODO: commented this out from bug 1205005, we have a memory error in blobber
-# upload
-#        mud = os.environ.get('MOZ_UPLOAD_DIR', None)
-#        if mud:
-#            mud_filename = os.path.join(mud, etl_filename)
-#            os.rename(etl_filename, mud_filename)
+        if debug:
+            uploadFile(etl_filename)
 
 
 def etlparser_from_config(config_file, **kwargs):

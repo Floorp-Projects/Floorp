@@ -22,9 +22,11 @@ namespace jit {
     _(GuardIsInt32Index)                  \
     _(GuardType)                          \
     _(GuardClass)                         \
+    _(GuardIsNativeFunction)              \
     _(GuardIsProxy)                       \
     _(GuardIsCrossCompartmentWrapper)     \
     _(GuardNotDOMProxy)                   \
+    _(GuardSpecificInt32Immediate)        \
     _(GuardMagicValue)                    \
     _(GuardNoUnboxedExpando)              \
     _(GuardAndLoadUnboxedExpando)         \
@@ -53,6 +55,8 @@ namespace jit {
     _(LoadTypedElementResult)             \
     _(LoadObjectResult)                   \
     _(LoadTypeOfObjectResult)             \
+    _(CallPrintString)                    \
+    _(Breakpoint)                         \
     _(MegamorphicLoadSlotByValueResult)   \
     _(MegamorphicHasOwnResult)            \
     _(WrapResult)
