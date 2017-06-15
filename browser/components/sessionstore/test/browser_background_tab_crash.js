@@ -219,3 +219,26 @@ add_task(async function test_background_crash_multiple() {
     });
   });
 });
+
+// Tests that crashed preloaded tabs are removed and no unexpected errors are
+// thrown.
+add_task(async function test_preload_crash() {
+  if (!Services.prefs.getBoolPref("browser.newtab.preload")) {
+    return;
+  }
+
+  // Since new tab is only crashable for the activity-stream version,
+  // we need to flip the pref
+  await SpecialPowers.pushPrefEnv({
+    set: [[ "browser.newtabpage.activity-stream.enabled", true ]]
+  });
+
+  // Release any existing preloaded browser
+  gBrowser._getPreloadedBrowser();
+  // Create a fresh preloaded browser
+  gBrowser._createPreloadBrowser();
+
+  await BrowserTestUtils.crashBrowser(gBrowser._preloadedBrowser, false);
+
+  Assert.ok(!gBrowser._preloadedBrowser);
+});
