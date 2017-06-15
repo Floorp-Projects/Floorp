@@ -124,61 +124,60 @@ struct nsRuleData final: mozilla::GenericSpecifiedValues
     return ValueFor(aId)->GetUnit() != eCSSUnit_Null;
   }
 
-  void SetIdentStringValue(nsCSSPropertyID aId,
-                           const nsString& aValue) {
+  void SetIdentStringValue(nsCSSPropertyID aId, const nsString& aValue)
+  {
     ValueFor(aId)->SetStringValue(aValue, eCSSUnit_Ident);
   }
 
-  void SetIdentStringValueIfUnset(nsCSSPropertyID aId,
-                                const nsString& aValue) {
+  void SetIdentStringValueIfUnset(nsCSSPropertyID aId, const nsString& aValue)
+  {
     if (!PropertyIsSet(aId)) {
       SetIdentStringValue(aId, aValue);
     }
   }
 
-  void SetKeywordValue(nsCSSPropertyID aId,
-                       int32_t aValue) {
+  void SetKeywordValue(nsCSSPropertyID aId, int32_t aValue)
+  {
     ValueFor(aId)->SetIntValue(aValue, eCSSUnit_Enumerated);
   }
 
-  void SetKeywordValueIfUnset(nsCSSPropertyID aId,
-                              int32_t aValue) {
+  void SetKeywordValueIfUnset(nsCSSPropertyID aId, int32_t aValue)
+  {
     if (!PropertyIsSet(aId)) {
       SetKeywordValue(aId, aValue);
     }
   }
 
-
-  void SetIntValue(nsCSSPropertyID aId,
-                   int32_t aValue) {
+  void SetIntValue(nsCSSPropertyID aId, int32_t aValue)
+  {
     ValueFor(aId)->SetIntValue(aValue, eCSSUnit_Integer);
   }
 
-  void SetPixelValue(nsCSSPropertyID aId,
-                     float aValue) {
+  void SetPixelValue(nsCSSPropertyID aId, float aValue)
+  {
     ValueFor(aId)->SetFloatValue(aValue, eCSSUnit_Pixel);
   }
 
-  void SetPixelValueIfUnset(nsCSSPropertyID aId,
-                            float aValue) {
+  void SetPixelValueIfUnset(nsCSSPropertyID aId, float aValue)
+  {
     if (!PropertyIsSet(aId)) {
       SetPixelValue(aId, aValue);
     }
   }
 
-  void SetLengthValue(nsCSSPropertyID aId,
-                      nsCSSValue aValue) {
+  void SetLengthValue(nsCSSPropertyID aId, nsCSSValue aValue)
+  {
     nsCSSValue* val = ValueFor(aId);
     *val = aValue;
   }
 
-  void SetNumberValue(nsCSSPropertyID aId,
-                     float aValue) {
+  void SetNumberValue(nsCSSPropertyID aId, float aValue)
+  {
     ValueFor(aId)->SetFloatValue(aValue, eCSSUnit_Number);
   }
 
-  void SetPercentValue(nsCSSPropertyID aId,
-                       float aValue) {
+  void SetPercentValue(nsCSSPropertyID aId, float aValue)
+  {
     ValueFor(aId)->SetPercentValue(aValue);
   }
 
@@ -192,8 +191,8 @@ struct nsRuleData final: mozilla::GenericSpecifiedValues
     }
   }
 
-  void SetPercentValueIfUnset(nsCSSPropertyID aId,
-                              float aValue) {
+  void SetPercentValueIfUnset(nsCSSPropertyID aId, float aValue)
+  {
     if (!PropertyIsSet(aId)) {
       SetPercentValue(aId, aValue);
     }
@@ -209,13 +208,13 @@ struct nsRuleData final: mozilla::GenericSpecifiedValues
     }
   }
 
-  void SetColorValue(nsCSSPropertyID aId,
-                     nscolor aValue) {
+  void SetColorValue(nsCSSPropertyID aId, nscolor aValue)
+  {
     ValueFor(aId)->SetColorValue(aValue);
   }
 
-  void SetColorValueIfUnset(nsCSSPropertyID aId,
-                            nscolor aValue) {
+  void SetColorValueIfUnset(nsCSSPropertyID aId, nscolor aValue)
+  {
     if (!PropertyIsSet(aId)) {
       SetColorValue(aId, aValue);
     }
