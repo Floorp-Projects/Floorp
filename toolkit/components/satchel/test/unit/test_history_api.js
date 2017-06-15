@@ -22,7 +22,7 @@ function countDeletedEntries(expected) {
       },
       handleCompletion() {
         stmt.finalize();
-      }
+      },
     });
   });
 }
@@ -44,7 +44,7 @@ function checkTimeDeleted(guid, checkFunction) {
       },
       handleCompletion() {
         stmt.finalize();
-      }
+      },
     });
   });
 }
@@ -72,7 +72,7 @@ function promiseUpdate(change) {
         } else {
           resolve();
         }
-      }
+      },
     });
   });
 }
@@ -90,7 +90,7 @@ function promiseSearchEntries(terms, params) {
                            if (!reason) {
                              resolve(results);
                            }
-                         }
+                         },
                        });
   });
 }
@@ -152,7 +152,7 @@ add_task(async function() {
       handleCompletion() {
         stmt.finalize();
         deferred.resolve();
-      }
+      },
     });
     await deferred.promise;
 
@@ -181,7 +181,7 @@ add_task(async function() {
                                 if (!reason) {
                                   deferred.resolve();
                                 }
-                              }
+                              },
                             });
     await deferred.promise;
 
@@ -434,13 +434,13 @@ add_task(async function() {
                    "Adding when form history is disabled should fail");
     Assert.rejects(promiseUpdate([
       { op: "update", fieldname: "field5", value: "value5" },
-      { op: "remove", fieldname: "field5", value: "value5" }
+      { op: "remove", fieldname: "field5", value: "value5" },
     ]),
                    function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
                    "mixed operations when form history is disabled should fail");
     Assert.rejects(promiseUpdate([
       null, undefined, "", 1, {},
-      { op: "remove", fieldname: "field5", value: "value5" }
+      { op: "remove", fieldname: "field5", value: "value5" },
     ]),
                    function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
                    "Invalid entries when form history is disabled should fail");

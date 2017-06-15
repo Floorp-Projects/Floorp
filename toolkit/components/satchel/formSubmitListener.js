@@ -15,7 +15,7 @@ let satchelFormListener = {
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIFormSubmitObserver,
     Ci.nsIObserver,
-    Ci.nsISupportsWeakReference
+    Ci.nsISupportsWeakReference,
   ]),
 
   debug: true,
@@ -166,7 +166,7 @@ let satchelFormListener = {
     } catch (e) {
       this.log("notify failed: " + e);
     }
-  }
+  },
 };
 
 satchelFormListener.init();

@@ -89,7 +89,7 @@ add_test(function test2() {
     onSearchCompletion(aResults) {
       do_check_eq(numRecords, aResults.matchCount);
       run_next_test();
-    }
+    },
   });
 });
 
@@ -104,7 +104,7 @@ add_test(function test3() {
         do_check_eq(parseInt(aResults.getValueAt(i).substr(5), 10), --lastFound);
       }
       run_next_test();
-    }
+    },
   });
 });
 
@@ -119,7 +119,7 @@ add_test(function test4() {
         do_check_eq(parseInt(aResults.getValueAt(i).substr(5), 10), --lastFound);
       }
       run_next_test();
-    }
+    },
   });
 });
 
@@ -148,7 +148,7 @@ add_test(function test6() {
         do_check_eq(parseInt(aResults.getValueAt(i).substr(5), 10), --lastFound);
       }
       run_next_test();
-    }
+    },
   });
 });
 
@@ -162,7 +162,7 @@ add_test(function test7() {
         do_check_eq(parseInt(aResults.getValueAt(i).substr(5), 10), --lastFound);
       }
       run_next_test();
-    }
+    },
   });
 });
 
@@ -185,7 +185,7 @@ add_test(function test9() {
       do_check_eq(aResults.getValueAt(0), "senior citizen");
       do_check_eq(aResults.getValueAt(1), "old but not senior");
       run_next_test();
-    }
+    },
   });
 });
 
@@ -207,7 +207,7 @@ add_test(function test11() {
     onSearchCompletion(aResults) {
       do_check_eq(aResults.matchCount, 3);
       run_next_test();
-    }
+    },
   });
 });
 
@@ -238,7 +238,7 @@ add_test(function test_token_limit_DB() {
                                                 "All search tokens should be used with " +
                                                         "previous results");
                                     run_next_test();
-                                  }
+                                  },
                                 });
   }
 
@@ -260,7 +260,7 @@ add_test(function test_token_limit_DB() {
                                                 "Only the first MAX_SEARCH_TOKENS tokens " +
                                                         "should be used for DB queries");
                                     test_token_limit_previousResult(aResults);
-                                  }
+                                  },
                                 });
   });
 });

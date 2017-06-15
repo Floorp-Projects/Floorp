@@ -198,7 +198,7 @@ FormAutoComplete.prototype = {
 
     QueryInterface: XPCOMUtils.generateQI([
       Ci.nsIObserver,
-      Ci.nsISupportsWeakReference
+      Ci.nsISupportsWeakReference,
     ]),
 
     observe(subject, topic, data) {
@@ -237,7 +237,7 @@ FormAutoComplete.prototype = {
             self.log("Oops! Pref not handled, change ignored.");
         }
       }
-    }
+    },
   },
 
   // AutoCompleteE10S needs to be able to call autoCompleteSearchAsync without
@@ -493,7 +493,7 @@ FormAutoComplete.prototype = {
       maxTimeGroupings:   this._maxTimeGroupings,
       timeGroupingSize:   this._timeGroupingSize,
       prefixWeight:       this._prefixWeight,
-      boundaryWeight:     this._boundaryWeight
+      boundaryWeight:     this._boundaryWeight,
     };
 
     this.stopAutoCompleteSearch();
@@ -531,7 +531,7 @@ FormAutoComplete.prototype = {
       boundaryCalc += this._prefixWeight;
     }
     entry.totalScore = Math.round(entry.frecency * Math.max(1, boundaryCalc));
-  }
+  },
 
 }; // end of FormAutoComplete implementation
 
@@ -623,7 +623,7 @@ FormAutoCompleteResult.prototype = {
     if (removeFromDB) {
       this.client.remove(removedEntry.text);
     }
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([FormAutoComplete]);

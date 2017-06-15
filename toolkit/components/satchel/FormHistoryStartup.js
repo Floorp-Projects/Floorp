@@ -18,7 +18,7 @@ FormHistoryStartup.prototype = {
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIObserver,
     Ci.nsISupportsWeakReference,
-    Ci.nsIFrameMessageListener
+    Ci.nsIFrameMessageListener,
   ]),
 
   observe(subject, topic, data) {
@@ -117,7 +117,7 @@ FormHistoryStartup.prototype = {
                                     { id, results });
               }
             }
-          }
+          },
         };
 
         query = FormHistory.getAutoCompleteResults(searchString, params, processResults);
@@ -135,7 +135,7 @@ FormHistoryStartup.prototype = {
         break;
       }
     }
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([FormHistoryStartup]);

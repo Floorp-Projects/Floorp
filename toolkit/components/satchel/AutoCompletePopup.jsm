@@ -19,7 +19,7 @@ var AutoCompleteResultView = {
   // nsISupports
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIAutoCompleteController,
-    Ci.nsIAutoCompleteInput
+    Ci.nsIAutoCompleteInput,
   ]),
 
   // Private variables
@@ -245,7 +245,7 @@ this.AutoCompletePopup = {
           browser: message.target,
           rect,
           dir,
-          results
+          results,
         });
         break;
       }
