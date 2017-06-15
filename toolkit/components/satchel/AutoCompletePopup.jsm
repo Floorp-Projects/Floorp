@@ -6,7 +6,7 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-this.EXPORTED_SYMBOLS = [ "AutoCompletePopup" ];
+this.EXPORTED_SYMBOLS = ["AutoCompletePopup"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");

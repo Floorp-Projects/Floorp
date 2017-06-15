@@ -51,5 +51,6 @@ module.exports = {
     "no-throw-literal": "error",
     "padded-blocks": ["error", "never"],
     radix: "error",
+    "array-bracket-spacing": ["error", "never"],
   },
 };

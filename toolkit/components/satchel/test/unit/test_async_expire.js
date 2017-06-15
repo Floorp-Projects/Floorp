@@ -84,7 +84,7 @@ function* tests() {
   let updateLastUsed = function updateLastUsedFn(results, age) {
     let lastUsed = now - age * 24 * PR_HOURS;
 
-    let changes = [ ];
+    let changes = [];
     for (let r = 0; r < results.length; r++) {
       changes.push({ op: "update", lastUsed, guid: results[r].guid });
     }
