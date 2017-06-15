@@ -490,10 +490,9 @@ SdpHelper::GetIdsFromMsid(const Sdp& sdp,
         *trackId = i->appdata;
         found = true;
       } else if ((*streamId != i->identifier) || (*trackId != i->appdata)) {
-        SDP_SET_ERROR("Found multiple different webrtc msids in m-section "
-                       << msection.GetLevel() << ". The behavior here is "
-                       "undefined.");
-        return NS_ERROR_INVALID_ARG;
+        MOZ_MTLOG(ML_WARNING, "Found multiple different webrtc msids in "
+                       "m-section " << msection.GetLevel() << ". The "
+                       "behavior w/o transceivers is undefined.");
       }
     }
   }
