@@ -310,7 +310,7 @@ private:
     , mEntries(aEntries)
     , mInterval(aInterval)
     , mFeatures(AdjustFeatures(aFeatures, aFilterCount))
-    , mBuffer(new ProfileBuffer(aEntries))
+    , mBuffer(MakeUnique<ProfileBuffer>(aEntries))
       // The new sampler thread doesn't start sampling immediately because the
       // main loop within Run() is blocked until this function's caller unlocks
       // gPSMutex.
@@ -2844,12 +2844,12 @@ profiler_get_backtrace()
 #endif
 #endif
 
-  ProfileBuffer* buffer = new ProfileBuffer(PROFILER_GET_BACKTRACE_ENTRIES);
+  auto buffer = MakeUnique<ProfileBuffer>(PROFILER_GET_BACKTRACE_ENTRIES);
 
-  DoSyncSample(lock, *info, now, regs, buffer);
+  DoSyncSample(lock, *info, now, regs, buffer.get());
 
   return UniqueProfilerBacktrace(
-    new ProfilerBacktrace("SyncProfile", tid, buffer));
+    new ProfilerBacktrace("SyncProfile", tid, Move(buffer)));
 }
 
 void
