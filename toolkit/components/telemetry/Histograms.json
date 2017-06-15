@@ -5983,7 +5983,7 @@
   },
   "FX_TAB_SWITCH_SPINNER_VISIBLE_MS": {
     "record_in_processes": ["main", "content"],
-    "expires_in_version": "56",
+    "expires_in_version": "63",
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 20,
@@ -5992,7 +5992,7 @@
   },
   "FX_TAB_SWITCH_SPINNER_VISIBLE_LONG_MS": {
     "record_in_processes": ["main", "content"],
-    "expires_in_version": "56",
+    "expires_in_version": "63",
     "kind": "exponential",
     "low": 1000,
     "high": 64000,
