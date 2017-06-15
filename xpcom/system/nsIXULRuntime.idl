@@ -24,7 +24,7 @@ uint32_t GetMaxWebProcessCount();
  *                    stable/frozen, please contact Benjamin Smedberg.
  */
 
-[scriptable, uuid(a1b2e167-b748-42bf-ba85-996ec39062b9)]
+[scriptable, uuid(03602fac-fa3f-4a50-9baa-b88456fb4a0f)]
 interface nsIXULRuntime : nsISupports
 {
   /**
@@ -130,6 +130,11 @@ interface nsIXULRuntime : nsISupports
    * If true, the accessibility service is running.
    */
   readonly attribute boolean accessibilityEnabled;
+
+  /**
+   * If true, the AccessibleHandler dll is used.
+   */
+  readonly attribute boolean accessibleHandlerUsed;
 
   /**
    * Indicates whether the current Firefox build is 64-bit.
