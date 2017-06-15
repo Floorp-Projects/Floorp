@@ -2005,6 +2005,11 @@ public:
    */
   const nsIntRegion& GetValidRegion() const { return mValidRegion; }
 
+  void InvalidateWholeLayer()
+  {
+    InvalidateRegion(GetValidRegion().GetBounds());
+  }
+
   virtual PaintedLayer* AsPaintedLayer() override { return this; }
 
   MOZ_LAYER_DECL_NAME("PaintedLayer", TYPE_PAINTED)
