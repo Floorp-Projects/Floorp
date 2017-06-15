@@ -42,8 +42,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillPreferences",
                                   "resource://formautofill/FormAutofillPreferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillDoorhanger",
                                   "resource://formautofill/FormAutofillDoorhanger.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
-                                  "resource:///modules/RecentWindow.jsm");
 
 this.log = null;
 FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
@@ -83,7 +81,6 @@ FormAutofillParent.prototype = {
     Services.ppmm.addMessageListener("FormAutofill:GetAddresses", this);
     Services.ppmm.addMessageListener("FormAutofill:SaveAddress", this);
     Services.ppmm.addMessageListener("FormAutofill:RemoveAddresses", this);
-    Services.ppmm.addMessageListener("FormAutofill:OpenPreferences", this);
     Services.mm.addMessageListener("FormAutofill:OnFormSubmit", this);
 
     // Observing the pref and storage changes
@@ -199,11 +196,6 @@ FormAutofillParent.prototype = {
       }
       case "FormAutofill:OnFormSubmit": {
         this._onFormSubmit(data, target);
-        break;
-      }
-      case "FormAutofill:OpenPreferences": {
-        const win = RecentWindow.getMostRecentBrowserWindow();
-        win.openPreferences("panePrivacy", {origin: "autofillFooter"});
       }
     }
   },
