@@ -112,7 +112,8 @@ const NEW_LINES = /(\r\n|\r|\n)/;
 const MAX_ICON_SIZE   = 10000;
 
 // Default charset to use for sending search parameters. ISO-8859-1 is used to
-// match previous nsInternetSearchService behavior.
+// match previous nsInternetSearchService behavior as a URL parameter. Label
+// resolution causes windows-1252 to be actually used.
 const DEFAULT_QUERY_CHARSET = "ISO-8859-1";
 
 const SEARCH_BUNDLE = "chrome://global/locale/search/search.properties";

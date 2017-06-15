@@ -1330,7 +1330,7 @@ TextEditor::OutputToString(const nsAString& aFormatType,
   nsAutoCString charsetStr;
   rv = GetDocumentCharacterSet(charsetStr);
   if (NS_FAILED(rv) || charsetStr.IsEmpty()) {
-    charsetStr.AssignLiteral("ISO-8859-1");
+    charsetStr.AssignLiteral("windows-1252");
   }
 
   nsCOMPtr<nsIDocumentEncoder> encoder =

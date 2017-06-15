@@ -292,12 +292,12 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
 
         char *bytes;
         uint32_t bytesLen;
-        NS_NAMED_LITERAL_CSTRING(isoCharset, "ISO-8859-1");
+        NS_NAMED_LITERAL_CSTRING(isoCharset, "windows-1252");
         NS_NAMED_LITERAL_CSTRING(utf8Charset, "UTF-8");
         const nsLiteralCString *charset;
         if (IsISO88591(result)) {
             // For compatibility, if the result is ISO-8859-1, we use
-            // ISO-8859-1, so that people can compatibly create images
+            // windows-1252, so that people can compatibly create images
             // using javascript: URLs.
             bytes = ToNewCString(result);
             bytesLen = result.Length();
