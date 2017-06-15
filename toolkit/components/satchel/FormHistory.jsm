@@ -171,15 +171,15 @@ const dbSchema = {
   indices: {
     moz_formhistory_index: {
       table: "moz_formhistory",
-      columns: [ "fieldname" ]
+      columns: ["fieldname"]
     },
     moz_formhistory_lastused_index: {
       table: "moz_formhistory",
-      columns: [ "lastUsed" ]
+      columns: ["lastUsed"]
     },
     moz_formhistory_guid_index: {
       table: "moz_formhistory",
-      columns: [ "guid" ]
+      columns: ["guid"]
     },
   }
 };
@@ -645,7 +645,7 @@ function updateFormHistoryWrite(aChanges, aCallbacks) {
           delete change.timeDeleted;
         }
         stmt = makeRemoveStatement(change, bindingArrays);
-        notifications.push([ "formhistory-remove", change.guid ]);
+        notifications.push(["formhistory-remove", change.guid]);
         break;
       case "update":
         log("Update form history " + change);
@@ -658,24 +658,24 @@ function updateFormHistoryWrite(aChanges, aCallbacks) {
           delete change.newGuid;
         }
         stmt = makeUpdateStatement(guid, change, bindingArrays);
-        notifications.push([ "formhistory-update", guid ]);
+        notifications.push(["formhistory-update", guid]);
         break;
       case "bump":
         log("Bump form history " + change);
         if (change.guid) {
           stmt = makeBumpStatement(change.guid, now, bindingArrays);
-          notifications.push([ "formhistory-update", change.guid ]);
+          notifications.push(["formhistory-update", change.guid]);
         } else {
           change.guid = generateGUID();
           stmt = makeAddStatement(change, now, bindingArrays);
-          notifications.push([ "formhistory-add", change.guid ]);
+          notifications.push(["formhistory-add", change.guid]);
         }
         break;
       case "add":
         log("Add to form history " + change);
         change.guid = generateGUID();
         stmt = makeAddStatement(change, now, bindingArrays);
-        notifications.push([ "formhistory-add", change.guid ]);
+        notifications.push(["formhistory-add", change.guid]);
         break;
       default:
         // We should've already guaranteed that change.op is one of the above
@@ -937,7 +937,7 @@ this.FormHistory = {
       numSearches++;
       let changeToUpdate = change;
       FormHistory.search(
-        [ "guid" ],
+        ["guid"],
         {
           fieldname: change.fieldname,
           value: change.value
