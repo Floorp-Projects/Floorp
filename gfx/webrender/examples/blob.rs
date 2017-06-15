@@ -167,7 +167,7 @@ impl wt::BlobImageRenderer for CheckerboardRenderer {
         let tx = self.tx.clone();
         let descriptor = descriptor.clone();
 
-        self.workers.spawn_async(move || {
+        self.workers.spawn(move || {
             let result = render_blob(cmds, &descriptor, request.tile);
             tx.send((request, result)).unwrap();
         });
