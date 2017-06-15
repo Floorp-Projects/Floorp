@@ -27,8 +27,8 @@ PERF_SUITES = [
     { 'name': "Resident Memory", 'node': "resident" },
     { 'name': "Explicit Memory", 'node': "explicit/" },
     { 'name': "Heap Unclassified", 'node': "explicit/heap-unclassified" },
-    { 'name': "JS", 'node': "js-main-runtime" },
-    { 'name': "Images", 'node': "explicit/images" }
+    { 'name': "JS", 'node': "js-main-runtime/" },
+    { 'name': "Images", 'node': "explicit/images/" }
 ]
 
 def update_checkpoint_paths(checkpoint_files):

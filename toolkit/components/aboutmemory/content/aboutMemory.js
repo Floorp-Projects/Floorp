@@ -828,6 +828,10 @@ function makeDReportMap(aJSONReports) {
     path = path.replace(/jar:file:\\\\\\(.+)\\omni.ja!/,
                         "jar:file:\\\\\\...\\omni.ja!");
 
+    // Normalize script source counts.
+    path = path.replace(/source\(scripts=(\d+), /,
+                        "source\(scripts=NNN, ");
+
     let processPath = process + kProcessPathSep + path;
     let rOld = dreportMap[processPath];
     if (rOld === undefined) {

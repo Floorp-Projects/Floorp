@@ -29,6 +29,7 @@
     {"process": "P2 (pid 22)", "path": "explicit/window-objects/top(bar.com, id=456)/...", "kind": 0, "units": 0, "amount": 44, "description": "Desc."},
     {"process": "P2 (pid 22)", "path": "p6/z-moz-nullprincipal:{161effaa-c1f7-4010-a08e-e7c9aea01aed}/p6", "kind": 2, "units": 0, "amount": 44, "description": "Desc."},
     {"process": "P2 (pid 22)", "path": "p7/js-main-runtime-compartments/system/jar:file:\\\\\\temp_abc\\firefox\\omni.ja!/p7", "kind": 2, "units": 0, "amount": 44, "description": "Desc."},
+    {"process": "P2 (pid 22)", "path": "explicit/js-non-window/runtime/script-sources/source(scripts=1, <non-notable files>)/misc", "kind": 2, "units": 0, "amount": 33, "description": "Desc."},
 
     {"process": "P4", "path": "p4", "kind": 2, "units": 0, "amount": 66, "description": "Desc."},
 

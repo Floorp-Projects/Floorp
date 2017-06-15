@@ -52,20 +52,29 @@ function run_test_pt02() {
   gUpdates = null;
   gUpdateCount = null;
   gCheckFunc = check_test_pt02;
-  let patches = getRemotePatchString("complete", "http://complete/", "SHA1",
-                                     "98db9dad8e1d80eda7e1170d0187d6f53e477059",
-                                     "9856459");
-  patches += getRemotePatchString("partial", "http://partial/", "SHA1",
-                                  "e6678ca40ae7582316acdeddf3c133c9c8577de4",
-                                  "1316138");
-  let updates = getRemoteUpdateString(patches, "minor", "Minor Test",
-                                      "version 2.1a1pre", "2.1a1pre",
-                                      "20080811053724",
-                                      "http://details/",
-                                      "true",
-                                      "true", "345600", "1200",
-                                      "custom1_attr=\"custom1 value\"",
-                                      "custom2_attr=\"custom2 value\"");
+  let patchProps = {type: "complete",
+                    url: "http://complete/",
+                    hashFunction: "SHA1",
+                    hashValue: "98db9dad8e1d80eda7e1170d0187d6f53e477059",
+                    size: "9856459"};
+  let patches = getRemotePatchString(patchProps);
+  patchProps = {type: "partial",
+                url: "http://partial/",
+                hashFunction: "SHA1",
+                hashValue: "e6678ca40ae7582316acdeddf3c133c9c8577de4",
+                size: "1316138"};
+  patches += getRemotePatchString(patchProps);
+  let updateProps = {type: "minor",
+                     name: "Minor Test",
+                     displayVersion: "version 2.1a1pre",
+                     appVersion: "2.1a1pre",
+                     buildID: "20080811053724",
+                     detailsURL: "http://details/",
+                     promptWaitTime: "345600",
+                     backgroundInterval: "1200",
+                     custom1: "custom1_attr=\"custom1 value\"",
+                     custom2: "custom2_attr=\"custom2 value\""};
+  let updates = getRemoteUpdateString(updateProps, patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
@@ -100,10 +109,6 @@ function check_test_pt02() {
                "the update buildID attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(bestUpdate.detailsURL, "http://details/",
                "the update detailsURL attribute" + MSG_SHOULD_EQUAL);
-  Assert.ok(bestUpdate.showPrompt,
-            "the update showPrompt attribute" + MSG_SHOULD_EQUAL);
-  Assert.ok(bestUpdate.showNeverForVersion,
-            "the update showNeverForVersion attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(bestUpdate.promptWaitTime, "345600",
                "the update promptWaitTime attribute" + MSG_SHOULD_EQUAL);
   // The default and maximum value for backgroundInterval is 600
@@ -197,9 +202,10 @@ function run_test_pt04() {
 
 // one update available with two patches
 function run_test_pt05() {
-  let patches = getRemotePatchString("complete");
-  patches += getRemotePatchString("partial");
-  let updates = getRemoteUpdateString(patches);
+  let patches = getRemotePatchString({});
+  let patchProps = {type: "partial"};
+  patches += getRemotePatchString(patchProps);
+  let updates = getRemoteUpdateString({}, patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
   run_test_helper_pt1("testing one update available",
                       1, run_test_pt06);
@@ -207,11 +213,11 @@ function run_test_pt05() {
 
 // three updates available each with two patches
 function run_test_pt06() {
-  let patches = getRemotePatchString("complete");
-  patches += getRemotePatchString("partial");
-  let updates = getRemoteUpdateString(patches);
-  updates += getRemoteUpdateString(patches);
-  updates += getRemoteUpdateString(patches);
+  let patches = getRemotePatchString({});
+  let patchProps = {type: "partial"};
+  patches += getRemotePatchString(patchProps);
+  let updates = getRemoteUpdateString({}, patches);
+  updates += updates + updates;
   gResponseBody = getRemoteUpdatesXMLString(updates);
   run_test_helper_pt1("testing three updates available",
                       3, run_test_pt07);
@@ -220,9 +226,12 @@ function run_test_pt06() {
 // one update with complete and partial patches with size 0 specified in the
 // update xml
 function run_test_pt07() {
-  let patches = getRemotePatchString("complete", null, null, null, "0");
-  patches += getRemotePatchString("partial", null, null, null, "0");
-  let updates = getRemoteUpdateString(patches);
+  let patchProps = {size: "0"};
+  let patches = getRemotePatchString(patchProps);
+  patchProps = {type: "partial",
+                size: "0"};
+  patches += getRemotePatchString(patchProps);
+  let updates = getRemoteUpdateString({}, patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
   run_test_helper_pt1("testing one update with complete and partial " +
                       "patches with size 0", 0, run_test_pt08);
@@ -230,8 +239,9 @@ function run_test_pt07() {
 
 // one update with complete patch with size 0 specified in the update xml
 function run_test_pt08() {
-  let patches = getRemotePatchString("complete", null, null, null, "0");
-  let updates = getRemoteUpdateString(patches);
+  let patchProps = {size: "0"};
+  let patches = getRemotePatchString(patchProps);
+  let updates = getRemoteUpdateString({}, patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
   run_test_helper_pt1("testing one update with complete patch with size 0",
                       0, run_test_pt9);
@@ -239,8 +249,10 @@ function run_test_pt08() {
 
 // one update with partial patch with size 0 specified in the update xml
 function run_test_pt9() {
-  let patches = getRemotePatchString("partial", null, null, null, "0");
-  let updates = getRemoteUpdateString(patches);
+  let patchProps = {type: "partial",
+                    size: "0"};
+  let patches = getRemotePatchString(patchProps);
+  let updates = getRemoteUpdateString({}, patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
   run_test_helper_pt1("testing one update with partial patch with size 0",
                       0, run_test_pt10);
@@ -248,10 +260,13 @@ function run_test_pt9() {
 
 // check that updates for older versions of the application aren't selected
 function run_test_pt10() {
-  let patches = getRemotePatchString("complete");
-  patches += getRemotePatchString("partial");
-  let updates = getRemoteUpdateString(patches, "minor", null, null, "1.0pre");
-  updates += getRemoteUpdateString(patches, "minor", null, null, "1.0a");
+  let patches = getRemotePatchString({});
+  let patchProps = {type: "partial"};
+  patches += getRemotePatchString(patchProps);
+  let updateProps = {appVersion: "1.0pre"};
+  let updates = getRemoteUpdateString(updateProps, patches);
+  updateProps = {appVersion: "1.0a"};
+  updates += getRemoteUpdateString(updateProps, patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
   run_test_helper_pt1("testing two updates older than the current version",
                       2, check_test_pt10);
@@ -266,9 +281,11 @@ function check_test_pt10() {
 
 // check that updates for the current version of the application are selected
 function run_test_pt11() {
-  let patches = getRemotePatchString("complete");
-  patches += getRemotePatchString("partial");
-  let updates = getRemoteUpdateString(patches, "minor", null, "version 1.0");
+  let patches = getRemotePatchString({});
+  let patchProps = {type: "partial"};
+  patches += getRemotePatchString(patchProps);
+  let updateProps = {appVersion: "1.0"};
+  let updates = getRemoteUpdateString(updateProps, patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
   run_test_helper_pt1("testing one update equal to the current version",
                       1, check_test_pt11);
@@ -278,7 +295,9 @@ function check_test_pt11() {
   let bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount);
   Assert.ok(!!bestUpdate,
             "there should be one update available");
-  Assert.equal(bestUpdate.displayVersion, "version 1.0",
+  Assert.equal(bestUpdate.appVersion, "1.0",
+               "the update appVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.displayVersion, "1.0",
                "the update displayVersion attribute" + MSG_SHOULD_EQUAL);
 
   doTestFinish();

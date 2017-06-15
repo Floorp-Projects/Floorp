@@ -1,7 +1,6 @@
 add_task(async function testBasicPrompt() {
-  SpecialPowers.pushPrefEnv({set: [
-    [PREF_APP_UPDATE_SERVICE_ENABLED, false],
-  ]});
+  SpecialPowers.pushPrefEnv({set: [[PREF_APP_UPDATE_SERVICE_ENABLED, false]]});
+
   let updateParams = "promptWaitTime=0";
 
   let file = getWriteTestFile();

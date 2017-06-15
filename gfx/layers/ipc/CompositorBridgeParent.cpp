@@ -1620,7 +1620,8 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
     new WebRenderCompositableHolder(WebRenderBridgeParent::AllocIdNameSpace());
   MOZ_ASSERT(api); // TODO have a fallback
   api->SetRootPipeline(aPipelineId);
-  mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, nullptr, Move(api), Move(holder));
+  RefPtr<CompositorAnimationStorage> animStorage = GetAnimationStorage(0);
+  mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, nullptr, Move(api), Move(holder), Move(animStorage));
   *aIdNamespace = mWrBridge->GetIdNameSpace();
 
   mCompositorScheduler = mWrBridge->CompositorScheduler();

@@ -1627,10 +1627,6 @@
           this.log("onBlur originalTarget: " + aEvent.originalTarget +
             " target: " + aEvent.target);
 
-          if (document.activeElement == this.mInputElement) {
-            return;
-          }
-
           if (aEvent.target == this.mInputElement && this.mIsPickerOpen) {
             this.mInputElement.closeDateTimePicker();
           }

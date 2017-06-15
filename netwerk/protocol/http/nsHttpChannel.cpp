@@ -4902,6 +4902,38 @@ nsHttpChannel::ReadFromCache(bool alreadyMarkedValid)
     LOG(("nsHttpChannel::ReadFromCache [this=%p] "
          "Using cached copy of: %s\n", this, mSpec.get()));
 
+    if (mRaceCacheWithNetwork) {
+        MOZ_ASSERT(mFirstResponseSource != RESPONSE_FROM_CACHE);
+        if (mFirstResponseSource == RESPONSE_PENDING) {
+            LOG(("First response from cache\n"));
+            mFirstResponseSource = RESPONSE_FROM_CACHE;
+
+            // Cancel the transaction because we will serve the request from the cache
+            CancelNetworkRequest(NS_BINDING_ABORTED);
+            if (mTransactionPump && mSuspendCount) {
+                uint32_t suspendCount = mSuspendCount;
+                while (suspendCount--) {
+                    mTransactionPump->Resume();
+                }
+            }
+            mTransaction = nullptr;
+            mTransactionPump = nullptr;
+        } else {
+            MOZ_ASSERT(mFirstResponseSource == RESPONSE_FROM_NETWORK);
+            LOG(("Skipping read from cache because first response was from network\n"));
+
+            if (!mOnCacheEntryCheckTimestamp.IsNull()) {
+                TimeStamp currentTime = TimeStamp::Now();
+                int64_t savedTime = (currentTime - mOnStartRequestTimestamp).ToMilliseconds();
+                Telemetry::Accumulate(Telemetry::NETWORK_RACE_CACHE_WITH_NETWORK_SAVED_TIME, savedTime);
+
+                int64_t diffTime = (currentTime - mOnCacheEntryCheckTimestamp).ToMilliseconds();
+                Telemetry::Accumulate(Telemetry::NETWORK_RACE_CACHE_WITH_NETWORK_OCEC_ON_START_DIFF, diffTime);
+            }
+            return NS_OK;
+        }
+    }
+
     if (mCachedResponseHead)
         mResponseHead = Move(mCachedResponseHead);
 
@@ -6930,30 +6962,14 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     if (mRaceCacheWithNetwork) {
         LOG(("  racingNetAndCache - mFirstResponseSource:%d fromCache:%d fromNet:%d\n",
              mFirstResponseSource, request == mCachePump, request == mTransactionPump));
-        if (mFirstResponseSource == RESPONSE_PENDING &&
-            request == mTransactionPump) {
+        if (mFirstResponseSource == RESPONSE_PENDING) {
+            // When the cache wins mFirstResponseSource is set to RESPONSE_FROM_CACHE
+            // earlier in ReadFromCache, so this must be a response from the network.
+            MOZ_ASSERT(request == mTransactionPump);
             LOG(("  First response from network\n"));
             mFirstResponseSource = RESPONSE_FROM_NETWORK;
-        } else if (mFirstResponseSource == RESPONSE_PENDING &&
-            request == mCachePump) {
-            LOG(("  First response from cache\n"));
-            mFirstResponseSource = RESPONSE_FROM_CACHE;
-
-            // XXX: Consider cancelling H2 transactions  or H1 transactions
-            // that are not keep-alive.
         } else if (WRONG_RACING_RESPONSE_SOURCE(request)) {
             LOG(("  Early return when racing. This response not needed."));
-
-            // Net wins, but OnCacheEntryCheck was already called.
-            if (mFirstResponseSource == RESPONSE_FROM_NETWORK &&
-                !mOnCacheEntryCheckTimestamp.IsNull()) {
-                TimeStamp currentTime = TimeStamp::Now();
-                int64_t savedTime = (currentTime - mOnStartRequestTimestamp).ToMilliseconds();
-                Telemetry::Accumulate(Telemetry::NETWORK_RACE_CACHE_WITH_NETWORK_SAVED_TIME, savedTime);
-
-                int64_t diffTime = (currentTime - mOnCacheEntryCheckTimestamp).ToMilliseconds();
-                Telemetry::Accumulate(Telemetry::NETWORK_RACE_CACHE_WITH_NETWORK_OCEC_ON_START_DIFF, diffTime);
-            }
             return NS_OK;
         }
     }
