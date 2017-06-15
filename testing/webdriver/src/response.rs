@@ -9,12 +9,12 @@ pub enum WebDriverResponse {
     CloseWindow(CloseWindowResponse),
     Cookie(CookieResponse),
     DeleteSession,
-    ElementRect(ElementRectResponse),
+    ElementRect(RectResponse),
     Generic(ValueResponse),
     NewSession(NewSessionResponse),
     Timeouts(TimeoutsResponse),
     Void,
-    WindowRect(WindowRectResponse),
+    WindowRect(RectResponse),
 }
 
 impl WebDriverResponse {
@@ -111,24 +111,16 @@ impl ValueResponse {
 }
 
 #[derive(RustcEncodable, Debug)]
-pub struct WindowRectResponse {
-    pub x: i64,
-    pub y: i64,
-    pub width: u64,
-    pub height: u64,
-}
-
-#[derive(RustcEncodable, Debug)]
-pub struct ElementRectResponse {
+pub struct RectResponse {
     pub x: f64,
     pub y: f64,
     pub width: f64,
     pub height: f64
 }
 
-impl ElementRectResponse {
-    pub fn new(x: f64, y: f64, width: f64, height: f64) -> ElementRectResponse {
-        ElementRectResponse {
+impl RectResponse {
+    pub fn new(x: f64, y: f64, width: f64, height: f64) -> RectResponse {
+        RectResponse {
             x: x,
             y: y,
             width: width,
@@ -208,11 +200,10 @@ mod tests {
     use super::{WebDriverResponse,
                 CloseWindowResponse,
                 CookieResponse,
-                ElementRectResponse,
+                RectResponse,
                 NewSessionResponse,
                 ValueResponse,
                 TimeoutsResponse,
-                WindowRectResponse,
                 Cookie,
                 Nullable};
 
@@ -250,7 +241,7 @@ mod tests {
 
     #[test]
     fn test_element_rect() {
-        let resp = WebDriverResponse::ElementRect(ElementRectResponse::new(
+        let resp = WebDriverResponse::ElementRect(RectResponse::new(
             0f64, 1f64, 2f64, 3f64));
         let expected = r#"{"value": {"x": 0.0, "y": 1.0, "width": 2.0, "height": 3.0}}"#;
         test(resp, expected);
@@ -258,13 +249,13 @@ mod tests {
 
     #[test]
     fn test_window_rect() {
-        let resp = WebDriverResponse::WindowRect(WindowRectResponse {
-            x: 0i64,
-            y: 1i64,
-            width: 2u64,
-            height: 3u64,
+        let resp = WebDriverResponse::WindowRect(RectResponse {
+            x: 0f64,
+            y: 1f64,
+            width: 2f64,
+            height: 3f64,
         });
-        let expected = r#"{"value": {"x": 0, "y": 1, "width": 2, "height": 3}}"#;
+        let expected = r#"{"value": {"x": 0.0, "y": 1.0, "width": 2.0, "height": 3.0}}"#;
         test(resp, expected);
     }
 
