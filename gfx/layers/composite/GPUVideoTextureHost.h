@@ -43,6 +43,23 @@ public:
   virtual const char* Name() override { return "GPUVideoTextureHost"; }
 #endif
 
+  virtual bool HasIntermediateBuffer() const override;
+
+  virtual void CreateRenderTexture(const wr::ExternalImageId& aExternalImageId) override;
+
+  virtual void GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
+                              const std::function<wr::ImageKey()>& aImageKeyAllocator) override;
+
+  virtual void AddWRImage(wr::WebRenderAPI* aAPI,
+                          Range<const wr::ImageKey>& aImageKeys,
+                          const wr::ExternalImageId& aExtID) override;
+
+  virtual void PushExternalImage(wr::DisplayListBuilder& aBuilder,
+                                 const WrRect& aBounds,
+                                 const WrClipRegionToken aClip,
+                                 wr::ImageRendering aFilter,
+                                 Range<const wr::ImageKey>& aImageKeys) override;
+
 protected:
   RefPtr<TextureHost> mWrappedTextureHost;
 };

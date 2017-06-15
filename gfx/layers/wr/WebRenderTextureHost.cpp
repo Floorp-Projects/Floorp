@@ -58,6 +58,10 @@ WebRenderTextureHost::CreateRenderTextureHost(const layers::SurfaceDescriptor& a
       break;
     }
 #endif
+    case SurfaceDescriptor::TSurfaceDescriptorGPUVideo: {
+      mIsWrappingNativeHandle = !aTexture->HasIntermediateBuffer();
+      break;
+    }
     default:
       gfxCriticalError() << "No WR implement for texture type:" << aDesc.type();
   }
