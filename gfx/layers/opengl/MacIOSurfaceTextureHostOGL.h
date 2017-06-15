@@ -62,6 +62,8 @@ public:
     return mSurface;
   }
 
+  virtual void CreateRenderTexture(const wr::ExternalImageId& aExternalImageId) override;
+
   virtual void GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
                               const std::function<wr::ImageKey()>& aImageKeyAllocator) override;
 
