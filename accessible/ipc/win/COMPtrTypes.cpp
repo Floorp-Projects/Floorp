@@ -9,6 +9,7 @@
 #include "Accessible2_3.h"
 #include "MainThreadUtils.h"
 #include "mozilla/a11y/Accessible.h"
+#include "mozilla/a11y/Platform.h"
 #include "mozilla/a11y/HandlerProvider.h"
 #include "mozilla/Move.h"
 #include "mozilla/mscom/MainThreadHandoff.h"
@@ -40,7 +41,8 @@ CreateHolderFromAccessible(Accessible* aAccToWrap)
   }
 
   static const bool useHandler =
-    Preferences::GetBool("accessibility.handler.enabled", false);
+    Preferences::GetBool("accessibility.handler.enabled", false) &&
+    IsHandlerRegistered();
 
   RefPtr<HandlerProvider> payload;
   if (useHandler) {
