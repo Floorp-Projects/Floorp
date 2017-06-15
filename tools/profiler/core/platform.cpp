@@ -615,7 +615,6 @@ public:
   // SamplerThread samples the thread in question.
   TickSample(ThreadInfo* aThreadInfo, int64_t aRSSMemory, int64_t aUSSMemory)
     : mIsSynchronous(false)
-    , mTimeStamp(TimeStamp::Now())
     , mThreadId(aThreadInfo->ThreadId())
     , mRacyInfo(aThreadInfo->RacyInfo())
     , mJSContext(aThreadInfo->mContext)
@@ -640,7 +639,6 @@ public:
   TickSample(NotNull<RacyThreadInfo*> aRacyInfo, JSContext* aJSContext,
              PlatformData* aPlatformData)
     : mIsSynchronous(true)
-    , mTimeStamp(TimeStamp::Now())
     , mThreadId(Thread::GetCurrentId())
     , mRacyInfo(aRacyInfo)
     , mJSContext(aJSContext)
@@ -668,8 +666,6 @@ public:
 
   // False for periodic samples, true for synchronous samples.
   const bool mIsSynchronous;
-
-  const TimeStamp mTimeStamp;
 
   const int mThreadId;
 
@@ -1287,7 +1283,9 @@ Tick(PSLockRef aLock, const TickSample& aSample, ProfileBuffer* aBuffer)
 
   aBuffer->addTagThreadId(aSample.mThreadId, aSample.mLastSample);
 
-  TimeDuration delta = aSample.mTimeStamp - CorePS::ProcessStartTime();
+  const TimeStamp now = TimeStamp::Now();
+
+  TimeDuration delta = now - CorePS::ProcessStartTime();
   aBuffer->addTag(ProfileBufferEntry::Time(delta.ToMilliseconds()));
 
   NativeStack nativeStack;
@@ -1320,7 +1318,7 @@ Tick(PSLockRef aLock, const TickSample& aSample, ProfileBuffer* aBuffer)
 
   if (aSample.mResponsiveness && aSample.mResponsiveness->HasData()) {
     TimeDuration delta =
-      aSample.mResponsiveness->GetUnresponsiveDuration(aSample.mTimeStamp);
+      aSample.mResponsiveness->GetUnresponsiveDuration(now);
     aBuffer->addTag(ProfileBufferEntry::Responsiveness(delta.ToMilliseconds()));
   }
 
