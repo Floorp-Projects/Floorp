@@ -515,6 +515,7 @@ const STATUSES = new Map([
   ["element not interactable", ElementNotInteractableError],
   ["insecure certificate", InsecureCertificateError],
   ["invalid argument", InvalidArgumentError],
+  ["invalid cookie domain", InvalidCookieDomainError],
   ["invalid element state", InvalidElementStateError],
   ["invalid selector", InvalidSelectorError],
   ["invalid session id", InvalidSessionIDError],
