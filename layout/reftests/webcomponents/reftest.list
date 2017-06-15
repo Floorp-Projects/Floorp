@@ -1,19 +1,19 @@
-pref(dom.webcomponents.enabled,true) == cross-tree-selection-1.html cross-tree-selection-1-ref.html
-pref(dom.webcomponents.enabled,true) == basic-shadow-1.html basic-shadow-1-ref.html
-pref(dom.webcomponents.enabled,true) == basic-shadow-2.html basic-shadow-2-ref.html
-pref(dom.webcomponents.enabled,true) == basic-shadow-3.html basic-shadow-3-ref.html
-pref(dom.webcomponents.enabled,true) == basic-shadow-4.html basic-shadow-4-ref.html
-pref(dom.webcomponents.enabled,true) == basic-insertion-point-1.html basic-insertion-point-1-ref.html
-pref(dom.webcomponents.enabled,true) skip-if(styloVsGecko||stylo) == basic-insertion-point-2.html basic-insertion-point-2-ref.html
-pref(dom.webcomponents.enabled,true) == adjacent-insertion-points-1.html adjacent-insertion-points-1-ref.html
-pref(dom.webcomponents.enabled,true) == adjacent-insertion-points-2.html adjacent-insertion-points-2-ref.html
-pref(dom.webcomponents.enabled,true) == fallback-content-1.html fallback-content-1-ref.html
-pref(dom.webcomponents.enabled,true) == remove-insertion-point-1.html remove-insertion-point-1-ref.html
-pref(dom.webcomponents.enabled,true) == nested-insertion-point-1.html nested-insertion-point-1-ref.html
-pref(dom.webcomponents.enabled,true) skip-if(styloVsGecko||stylo) == basic-shadow-element-1.html basic-shadow-element-1-ref.html
-pref(dom.webcomponents.enabled,true) skip-if(styloVsGecko||stylo) == nested-shadow-element-1.html nested-shadow-element-1-ref.html
-pref(dom.webcomponents.enabled,true) skip-if(styloVsGecko||stylo) == update-dist-node-descendants-1.html update-dist-node-descendants-1-ref.html
-pref(dom.webcomponents.enabled,true) skip-if(styloVsGecko||stylo) == input-transition-1.html input-transition-1-ref.html
-pref(dom.webcomponents.enabled,true) == dynamic-insertion-point-distribution-1.html dynamic-insertion-point-distribution-1-ref.html
-pref(dom.webcomponents.enabled,true) == dynamic-insertion-point-distribution-2.html dynamic-insertion-point-distribution-2-ref.html
-pref(dom.webcomponents.enabled,true) == remove-append-shadow-host-1.html remove-append-shadow-host-1-ref.html
+pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == cross-tree-selection-1.html cross-tree-selection-1-ref.html
+pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == basic-shadow-1.html basic-shadow-1-ref.html
+pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == basic-shadow-2.html basic-shadow-2-ref.html
+pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == basic-shadow-3.html basic-shadow-3-ref.html
+pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == basic-shadow-4.html basic-shadow-4-ref.html
+pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == basic-insertion-point-1.html basic-insertion-point-1-ref.html
+pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == basic-insertion-point-2.html basic-insertion-point-2-ref.html
+pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == adjacent-insertion-points-1.html adjacent-insertion-points-1-ref.html
+pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == adjacent-insertion-points-2.html adjacent-insertion-points-2-ref.html
+pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == fallback-content-1.html fallback-content-1-ref.html
+pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == remove-insertion-point-1.html remove-insertion-point-1-ref.html
+pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == nested-insertion-point-1.html nested-insertion-point-1-ref.html
+pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == basic-shadow-element-1.html basic-shadow-element-1-ref.html
+pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == nested-shadow-element-1.html nested-shadow-element-1-ref.html
+pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == update-dist-node-descendants-1.html update-dist-node-descendants-1-ref.html
+pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == input-transition-1.html input-transition-1-ref.html
+pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == dynamic-insertion-point-distribution-1.html dynamic-insertion-point-distribution-1-ref.html
+pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == dynamic-insertion-point-distribution-2.html dynamic-insertion-point-distribution-2-ref.html
+pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == remove-append-shadow-host-1.html remove-append-shadow-host-1-ref.html

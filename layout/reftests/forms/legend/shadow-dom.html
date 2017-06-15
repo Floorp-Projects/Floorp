@@ -48,17 +48,19 @@ div.after::after {content: " Y";}
         return e;
       }
 
-      document.body.offsetHeight;
+      function run() {
+        document.body.offsetHeight;
 
-      shadow("host1").innerHTML = '<content></content> c';
-      shadow("host2").innerHTML = 'a <content></content> c';
-      shadow("host3").innerHTML = 'a <content></content>';
-      shadow("host4").innerHTML = '<content></content>';
-      shadow("host5").innerHTML = 'a <content></content>';
-      shadow("host6").innerHTML = '<z style="color:blue; display:contents"><content></content></z> c';
-      shadow("host7").innerHTML = 'a <content select=".c"></content> <content select=".b"></content> B';
-      shadow("host8").innerHTML = 'A <content select=".c"></content> <content select=".b"></content> B';
-      shadow("host9").innerHTML = 'A <content select=".c"></content> <content select=".b"></content> B <content select=".b"></content>';
+        shadow("host1").innerHTML = '<content></content> c';
+        shadow("host2").innerHTML = 'a <content></content> c';
+        shadow("host3").innerHTML = 'a <content></content>';
+        shadow("host4").innerHTML = '<content></content>';
+        shadow("host5").innerHTML = 'a <content></content>';
+        shadow("host6").innerHTML = '<z style="color:blue; display:contents"><content></content></z> c';
+        shadow("host7").innerHTML = 'a <content select=".c"></content> <content select=".b"></content> B';
+        shadow("host8").innerHTML = 'A <content select=".c"></content> <content select=".b"></content> B';
+        shadow("host9").innerHTML = 'A <content select=".c"></content> <content select=".b"></content> B <content select=".b"></content>';
+      }
 
       function tweak() {
         document.body.offsetHeight;
@@ -105,7 +107,12 @@ div.after::after {content: " Y";}
           },0);
       }
 
-      window.addEventListener("MozReftestInvalidate", tweak);
+      if (document.body.createShadowRoot) {
+        run();
+        window.addEventListener("MozReftestInvalidate", tweak);
+      } else {
+        document.documentElement.removeAttribute("class");
+      }
     </script>
   </body>
 </html>
