@@ -114,7 +114,7 @@ private:
    * Helper function to do the high-precision paint.
    * This function returns true if it updated the paint buffer.
    */
-  bool RenderHighPrecision(nsIntRegion& aInvalidRegion,
+  bool RenderHighPrecision(const nsIntRegion& aInvalidRegion,
                            const nsIntRegion& aVisibleRegion,
                            LayerManager::DrawPaintedLayerCallback aCallback,
                            void* aCallbackData);
@@ -123,7 +123,7 @@ private:
    * Helper function to do the low-precision paint.
    * This function returns true if it updated the paint buffer.
    */
-  bool RenderLowPrecision(nsIntRegion& aInvalidRegion,
+  bool RenderLowPrecision(const nsIntRegion& aInvalidRegion,
                           const nsIntRegion& aVisibleRegion,
                           LayerManager::DrawPaintedLayerCallback aCallback,
                           void* aCallbackData);
