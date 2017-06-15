@@ -13,7 +13,6 @@ module.exports = {
     "block-scoped-var": "error",
     "camelcase": "error",
     "comma-dangle": ["error", "never"],
-    "comma-style": ["error", "last"],
     "complexity": ["error", 20],
     "consistent-this": "off",
     "curly": ["error", "multi-line"],
