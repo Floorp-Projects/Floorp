@@ -314,4 +314,12 @@ interface nsIHttpChannelInternal : nsISupports
      * The connection info's hash key. We use it to test connection separation.
      */
     [must_use] readonly attribute ACString connectionInfoHashKey;
+
+    /**
+     * If this channel was created as the result of a redirect, then this
+     * value will reflect the redirect flags passed to the
+     * SetupReplacementChannel() method.
+     */
+    [noscript, infallible]
+    attribute unsigned long lastRedirectFlags;
 };

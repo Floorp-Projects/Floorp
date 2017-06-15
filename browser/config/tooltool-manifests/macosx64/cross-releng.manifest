@@ -24,13 +24,13 @@
     "filename": "MacOSX10.7.sdk.tar.bz2"
   },
   {
-    "version": "sccache rev d3aa1116844b50c03015266d2f48235509fa7deb",
+    "version": "sccache rev 9155425cfc038d6a60deb50816055f4e93b93ad1",
     "algorithm": "sha512",
     "visibility": "public",
     "filename": "sccache2.tar.xz",
     "unpack": true,
-    "digest": "fde0128b9a4df74f268f9d45748534d0314db0467ae22e36101df4a5374c36bb8676514e8b70254fb2e6f2a2d1224ff7ce498305223035d5f1e7e306fda2f5d5",
-    "size": 2179220
+    "digest": "da67d4a872f8d23ef0707e02a823e5a644f1988e605d2c46c787641c8c37ae4521ab7d83b1dc4c0cc52d203be6313c7f9580830845536fa7c2a521af9443f69a",
+    "size": 2192144
   },
   {
     "version": "https://github.com/mozilla/libdmg-hfsplus rev ba04b00435a0853f1499d751617177828ee8ec00",

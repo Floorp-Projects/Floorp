@@ -904,64 +904,65 @@ nsFormFillController::OnSearchCompletion(nsIAutoCompleteResult *aResult)
 NS_IMETHODIMP
 nsFormFillController::HandleEvent(nsIDOMEvent* aEvent)
 {
-  nsAutoString type;
-  aEvent->GetType(type);
+  WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
+  NS_ENSURE_STATE(internalEvent);
 
-  if (type.EqualsLiteral("focus")) {
+  switch (internalEvent->mMessage) {
+  case eFocus:
     return Focus(aEvent);
-  }
-  if (type.EqualsLiteral("mousedown")) {
+  case eMouseDown:
     return MouseDown(aEvent);
-  }
-  if (type.EqualsLiteral("keypress")) {
+  case eKeyPress:
     return KeyPress(aEvent);
-  }
-  if (type.EqualsLiteral("input")) {
-    bool unused = false;
-    return (!mSuppressOnInput && mController && mFocusedInput) ?
-           mController->HandleText(&unused) : NS_OK;
-  }
-  if (type.EqualsLiteral("blur")) {
+  case eEditorInput:
+    {
+      bool unused = false;
+      return (!mSuppressOnInput && mController && mFocusedInput) ?
+             mController->HandleText(&unused) : NS_OK;
+    }
+  case eBlur:
     if (mFocusedInput) {
       StopControllingInput();
     }
     return NS_OK;
-  }
-  if (type.EqualsLiteral("compositionstart")) {
+  case eCompositionStart:
     NS_ASSERTION(mController, "should have a controller!");
     if (mController && mFocusedInput) {
       mController->HandleStartComposition();
     }
     return NS_OK;
-  }
-  if (type.EqualsLiteral("compositionend")) {
+  case eCompositionEnd:
     NS_ASSERTION(mController, "should have a controller!");
     if (mController && mFocusedInput) {
       mController->HandleEndComposition();
     }
     return NS_OK;
-  }
-  if (type.EqualsLiteral("contextmenu")) {
+  case eContextMenu:
     if (mFocusedPopup) {
       mFocusedPopup->ClosePopup();
     }
     return NS_OK;
-  }
-  if (type.EqualsLiteral("pagehide")) {
-
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(
-      aEvent->InternalDOMEvent()->GetTarget());
-    if (!doc) {
-      return NS_OK;
-    }
-
-    if (mFocusedInput) {
-      if (doc == mFocusedInputNode->OwnerDoc()) {
-        StopControllingInput();
+  case ePageHide:
+    {
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(
+        aEvent->InternalDOMEvent()->GetTarget());
+      if (!doc) {
+        return NS_OK;
       }
-    }
 
-    RemoveForDocument(doc);
+      if (mFocusedInput) {
+        if (doc == mFocusedInputNode->OwnerDoc()) {
+          StopControllingInput();
+        }
+      }
+
+      RemoveForDocument(doc);
+    }
+    break;
+  default:
+    // Handling the default case to shut up stupid -Wswitch warnings.
+    // One day compilers will be smarter...
+    break;
   }
 
   return NS_OK;

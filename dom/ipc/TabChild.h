@@ -350,11 +350,7 @@ public:
                     PRenderFrameChild* aRenderFrame) override;
 
   virtual mozilla::ipc::IPCResult
-  RecvUpdateDimensions(const CSSRect& aRect,
-                       const CSSSize& aSize,
-                       const ScreenOrientationInternal& aOrientation,
-                       const LayoutDeviceIntPoint& aClientOffset,
-                       const LayoutDeviceIntPoint& aChromeDisp) override;
+  RecvUpdateDimensions(const mozilla::dom::DimensionInfo& aDimensionInfo) override;
   virtual mozilla::ipc::IPCResult
   RecvSizeModeChanged(const nsSizeMode& aSizeMode) override;
 

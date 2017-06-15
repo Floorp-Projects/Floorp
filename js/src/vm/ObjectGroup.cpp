@@ -1693,6 +1693,7 @@ ObjectGroupCompartment::~ObjectGroupCompartment()
     js_delete(arrayObjectTable);
     js_delete(plainObjectTable);
     js_delete(allocationSiteTable);
+    stringSplitStringGroup = nullptr;
 }
 
 void
@@ -1736,6 +1737,44 @@ ObjectGroupCompartment::makeGroup(JSContext* cx, const Class* clasp,
         return nullptr;
     new(group) ObjectGroup(clasp, proto, cx->compartment(), initialFlags);
 
+    return group;
+}
+
+/* static */
+ObjectGroup*
+ObjectGroupCompartment::getStringSplitStringGroup(JSContext* cx)
+{
+    ObjectGroupCompartment& groups = cx->compartment()->objectGroups;
+
+    ObjectGroup* group = groups.stringSplitStringGroup.get();
+    if (group) {
+        return group;
+    }
+
+    // The following code is a specialized version of the code
+    // for ObjectGroup::allocationSiteGroup().
+
+    const Class* clasp = GetClassForProtoKey(JSProto_Array);
+
+    RootedObject proto(cx);
+    if (!GetBuiltinPrototype(cx, JSProto_Array, &proto))
+        return nullptr;
+    Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
+
+    group = makeGroup(cx, clasp, tagged, /* initialFlags = */ 0);
+    if (!group)
+        return nullptr;
+
+    if (cx->options().unboxedArrays()) {
+        PreliminaryObjectArrayWithTemplate* preliminaryObjects =
+            cx->new_<PreliminaryObjectArrayWithTemplate>(nullptr);
+        if (preliminaryObjects)
+            group->setPreliminaryObjects(preliminaryObjects);
+        else
+            cx->recoverFromOutOfMemory();
+    }
+
+    groups.stringSplitStringGroup.set(group);
     return group;
 }
 
@@ -1820,6 +1859,11 @@ ObjectGroupCompartment::sweep(FreeOp* fop)
         arrayObjectTable->sweep();
     if (plainObjectTable)
         plainObjectTable->sweep();
+    if (stringSplitStringGroup) {
+        if (JS::GCPolicy<ReadBarrieredObjectGroup>::needsSweep(&stringSplitStringGroup)) {
+            stringSplitStringGroup = nullptr;
+        }
+    }
 }
 
 void

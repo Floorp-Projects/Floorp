@@ -24,12 +24,12 @@
     "unpack": true
   },
   {
-    "version": "sccache rev d3aa1116844b50c03015266d2f48235509fa7deb",
+    "version": "sccache rev 9155425cfc038d6a60deb50816055f4e93b93ad1",
     "algorithm": "sha512",
     "visibility": "public",
     "filename": "sccache2.tar.bz2",
     "unpack": true,
-    "digest": "0c6516cd41ab5c49644ac40be4cb3f3c358d4ecc8d5ea6d3eff627c4230c16aba37152365c99132d4673991a34cac282efb7fc4bb4f96086300676e456feb316",
-    "size": 1609392
+    "digest": "6e14c9a19ee4178b105ee2d995c647888a162056c61d2bd5d1d9dce0326af5ea45cc7d2f28d0b9a499ab2aa909ed534e6c545c6d27319bdd598b6dbceaca2e22",
+    "size": 1669459
   }
 ]
