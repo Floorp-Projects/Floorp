@@ -358,7 +358,7 @@ DecoderTraits::CreateReader(const MediaContainerType& aType,
   } else
 #endif
   if (MP3Decoder::IsSupportedType(aType)) {
-    decoderReader = new MediaFormatReader(aDecoder, new mp3::MP3Demuxer(aDecoder->GetResource()));
+    decoderReader = new MediaFormatReader(aDecoder, new MP3Demuxer(aDecoder->GetResource()));
   } else
   if (ADTSDecoder::IsSupportedType(aType)) {
     decoderReader = new MediaFormatReader(aDecoder, new ADTSDemuxer(aDecoder->GetResource()));
