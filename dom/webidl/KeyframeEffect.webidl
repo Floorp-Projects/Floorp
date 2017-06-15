@@ -18,7 +18,6 @@ enum IterationCompositeOperation {
 dictionary KeyframeEffectOptions : AnimationEffectTimingProperties {
   IterationCompositeOperation iterationComposite = "replace";
   CompositeOperation          composite = "replace";
-  DOMString                   spacing = "distribute";
 };
 
 [Func="nsDocument::IsWebAnimationsEnabled",
@@ -30,7 +29,6 @@ interface KeyframeEffectReadOnly : AnimationEffectReadOnly {
   readonly attribute (Element or CSSPseudoElement)?  target;
   readonly attribute IterationCompositeOperation iterationComposite;
   readonly attribute CompositeOperation          composite;
-  readonly attribute DOMString                   spacing;
 
   // We use object instead of ComputedKeyframe so that we can put the
   // property-value pairs on the object.
@@ -66,8 +64,6 @@ interface KeyframeEffect : KeyframeEffectReadOnly {
   [NeedsCallerType]
   inherit attribute IterationCompositeOperation    iterationComposite;
   inherit attribute CompositeOperation          composite;
-  [SetterThrows, NeedsCallerType]
-  inherit attribute DOMString                   spacing;
   [Throws]
   void setKeyframes (object? keyframes);
 };

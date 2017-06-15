@@ -148,6 +148,10 @@ var SidebarUI = {
       let boxOrdinal = this._box.ordinal;
       this._box.ordinal = appcontent.ordinal;
       appcontent.ordinal = boxOrdinal;
+      // Indicate we've switched ordering to the splitter
+      this._splitter.setAttribute("overlapend", true);
+    } else {
+      this._splitter.removeAttribute("overlapend");
     }
 
     this.hideSwitcherPanel();

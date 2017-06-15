@@ -54,6 +54,7 @@ JOB_NAME_WHITELIST = set([
     'macosx64-debug',
     'macosx64-noopt-debug',
     'macosx64-opt',
+    'macosx64-devedition-opt',
     'macosx64-st-an-debug',
     'macosx64-st-an-opt',
     'shell-haz-debug',
