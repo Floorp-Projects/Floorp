@@ -69,7 +69,7 @@ var BrowserActions = {
       type: "Menu:AddBrowserAction",
       id: this._nextMenuId++,
       uuid: browserAction.uuid,
-      name: browserAction.name,
+      name: browserAction.defaults.name,
     });
 
     this._browserActions[browserAction.uuid] = browserAction;

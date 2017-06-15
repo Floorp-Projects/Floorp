@@ -41,7 +41,20 @@ var statsExpectedByType = {
   "data-channel": { skip: true },
   "track": { skip: true },
   "transport": { skip: true },
-  "candidate-pair": { skip : true },
+  "candidate-pair": {
+    expected: ["id", "timestamp", "type",
+      "transportId", "localCandidateId", "remoteCandidateId", "state",
+      "priority", "nominated", "writable", "readable",
+      "bytesSent", "bytesReceived",
+      "lastPacketSentTimestamp", "lastPacketReceivedTimestamp",],
+    optional: ["selected",],
+    unimplemented: ["totalRoundTripTime", "currentRoundTripTime",
+      "availableOutgoingBitrate", "availableIncomingBitrate",
+      "requestsReceived", "requestsSent", "responsesReceived",
+      "responsesSent", "retransmissionsReceived", "retransmissionsSent",
+      "consentRequestsSent",],
+    deprecated: [],
+  },
   "local-candidate": { skip: true },
   "remote-candidate": { skip: true },
   "certificate": { skip: true },
@@ -360,6 +373,79 @@ var pedanticChecks = report => {
           + ".framesEncoded is a sane number for a short test. value="
           + stat.framesEncoded);
       }
+    } else if (stat.type == "candidate-pair") {
+      //
+      // Required fields
+      //
+
+      // transportId
+      ok(stat.transportId,
+        stat.type + ".transportId has a value. value="
+        + stat.transportId);
+
+      // localCandidateId
+      ok(stat.localCandidateId,
+        stat.type + ".localCandidateId has a value. value="
+        + stat.localCandidateId);
+
+      // remoteCandidateId
+      ok(stat.remoteCandidateId,
+        stat.type + ".remoteCandidateId has a value. value="
+        + stat.remoteCandidateId);
+
+      // state
+      ok(stat.state == "succeeded",
+        stat.type + ".state is succeeded. value="
+        + stat.state);
+
+      // priority
+      ok(stat.priority,
+        stat.type + ".priority has a value. value="
+        + stat.priority);
+
+      // nominated
+      ok(stat.nominated,
+        stat.type + ".nominated is true. value="
+        + stat.nominated);
+
+      // readable
+      ok(stat.readable,
+        stat.type + ".readable is true. value="
+        + stat.readable);
+
+      // writable
+      ok(stat.writable,
+        stat.type + ".writable is true. value="
+        + stat.writable);
+
+      // bytesSent
+      ok(stat.bytesSent > 20000 && stat.bytesSent < 800000,
+        stat.type + ".bytesSent is a sane number (20,000<>800,000)for a short test. value="
+        + stat.bytesSent);
+
+      // bytesReceived
+      ok(stat.bytesReceived > 20000 && stat.bytesReceived < 800000,
+        stat.type + ".bytesReceived is a sane number (20,000<>800,000) for a short test. value="
+        + stat.bytesReceived);
+
+      // lastPacketSentTimestamp
+      ok(stat.lastPacketSentTimestamp,
+        stat.type + ".lastPacketSentTimestamp has a value. value="
+        + stat.lastPacketSentTimestamp);
+
+      // lastPacketReceivedTimestamp
+      ok(stat.lastPacketReceivedTimestamp,
+        stat.type + ".lastPacketReceivedTimestamp has a value. value="
+        + stat.lastPacketReceivedTimestamp);
+
+      //
+      // Optional fields
+      //
+      // selected
+      ok(stat.selected === undefined || stat.selected == true,
+        stat.type + ".selected is undefined or true. value="
+        + stat.selected);
+
     }
 
     //

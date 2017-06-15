@@ -204,13 +204,6 @@ public class AppConstants {
     false;
 //#endif
 
-    public static final boolean MOZ_LOCALE_SWITCHER =
-//#ifdef MOZ_LOCALE_SWITCHER
-    true;
-//#else
-    false;
-//#endif
-
     public static final boolean MOZ_UPDATER =
 //#ifdef MOZ_UPDATER
     true;

@@ -6,18 +6,23 @@ Bug 1224115 - Storage Inspector table filtering
 <head>
   <meta charset="utf-8">
   <title>Storage inspector table filtering test</title>
-</head>
-<body>
-<script type="text/javascript">
-"use strict";
 
-localStorage.setItem("01234", "56789");
-localStorage.setItem("ANIMAL", "hOrSe");
-localStorage.setItem("FOO", "bArBaz");
-localStorage.setItem("food", "energy bar");
-localStorage.setItem("money", "##$$$**");
-localStorage.setItem("sport", "football");
-localStorage.setItem("year", "2016");
-</script>
+  <script type="text/javascript">
+    "use strict";
+
+    /* exported init */
+    function init() {
+      document.cookie = "01234=56789";
+      document.cookie = "ANIMAL=hOrSe";
+      document.cookie = "food=energy bar";
+      document.cookie = "FOO=bArBaz";
+      document.cookie = "money=##$$$**";
+      document.cookie = "sport=football";
+      document.cookie = "year=2016";
+    }
+  </script>
+
+</head>
+<body onload="init()">
 </body>
 </html>

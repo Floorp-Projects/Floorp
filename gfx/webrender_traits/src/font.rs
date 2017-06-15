@@ -4,6 +4,7 @@
 
 use app_units::Au;
 use {ColorU, ColorF, LayoutPoint};
+use std::sync::Arc;
 
 #[cfg(target_os = "macos")] use core_foundation::string::CFString;
 #[cfg(target_os = "macos")] use core_graphics::font::CGFont;
@@ -61,6 +62,13 @@ impl FontKey {
     pub fn new(key0: u32, key1: u32) -> FontKey {
         FontKey(key0, key1)
     }
+}
+
+
+#[derive(Clone)]
+pub enum FontTemplate {
+    Raw(Arc<Vec<u8>>, u32),
+    Native(NativeFontHandle),
 }
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq, Serialize, Deserialize, Ord, PartialOrd)]

@@ -1,0 +1,19 @@
+language: rust
+sudo: false
+
+rust:
+  - 1.11.0
+  - stable
+  - beta
+  - nightly
+
+branches:
+  only:
+    - master
+
+# the main build
+script:
+  - |
+      cargo build --no-default-features &&
+      cargo build &&
+      cargo test

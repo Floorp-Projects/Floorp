@@ -18,3 +18,4 @@
     - [Replacing One Type with Another](./replacing-types.md)
     - [Preventing the Derivation of `Copy` and `Clone`](./nocopy.md)
 - [Generating Bindings to C++](./cpp.md)
+- [Using Unions](./using-unions.md)

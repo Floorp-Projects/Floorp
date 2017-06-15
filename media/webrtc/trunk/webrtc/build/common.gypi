@@ -442,13 +442,6 @@
       ['os_bsd==1', {
         'defines': [
           'WEBRTC_BSD',
-          'WEBRTC_THREAD_RR',
-        ],
-      }],
-      ['OS=="dragonfly" or OS=="netbsd"', {
-        'defines': [
-          # doesn't support pthread_condattr_setclock
-          'WEBRTC_CLOCK_TYPE_REALTIME',
         ],
       }],
       ['OS=="openbsd"', {
@@ -580,17 +573,7 @@
       }],
       ['os_bsd==1', {
         'defines': [
-          'BSD',
-        ],
-      }],
-      ['OS=="openbsd"', {
-        'defines': [
-          'OPENBSD',
-        ],
-      }],
-      ['OS=="freebsd"', {
-        'defines': [
-          'FREEBSD',
+          'WEBRTC_BSD',
         ],
       }],
       ['include_internal_audio_device==1', {
@@ -678,17 +661,7 @@
         }],
         ['os_bsd==1', {
           'defines': [
-            'BSD',
-          ],
-        }],
-        ['OS=="openbsd"', {
-          'defines': [
-            'OPENBSD',
-          ],
-        }],
-        ['OS=="freebsd"', {
-          'defines': [
-            'FREEBSD',
+            'WEBRTC_BSD',
           ],
         }],
       ],

@@ -39,11 +39,12 @@ class TestCloseWindow(WindowManagerMixin, MarionetteTestCase):
         win = self.open_window(trigger=open_window_with_js)
         self.marionette.switch_to_window(win)
 
-        self.assertIn(win, self.marionette.window_handles)
+        self.assertIn(win, self.marionette.chrome_window_handles)
+        self.assertNotIn(win, self.marionette.window_handles)
         chrome_window_handles = self.marionette.close_chrome_window()
         self.assertNotIn(win, chrome_window_handles)
         self.assertListEqual(self.start_windows, chrome_window_handles)
-        self.assertNotIn(win, self.marionette.window_handles)
+        self.assertNotIn(win, self.marionette.chrome_window_handles)
 
     def test_close_chrome_window_for_last_open_window(self):
         self.close_all_windows()

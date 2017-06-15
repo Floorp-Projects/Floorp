@@ -338,9 +338,6 @@ essentially the same as the above mentioned templates, prefixed with "Gecko":
   - ``GeckoSharedLibrary``
   - ``GeckoFramework``
 
-There is also ``XPCOMBinaryComponent`` for XPCOM components, which is a
-special kind of library.
-
 All the Gecko-prefixed templates take the same arguments as their
 non-Gecko-prefixed counterparts, and can take a few more arguments
 for non-standard cases. See the definition of ``GeckoBinary`` in

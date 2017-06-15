@@ -178,5 +178,33 @@ add_task(async function() {
     "unsigned_legacy@tests.mozilla.org",
   ]);
 
+  // Disable unsigned extensions
+  SpecialPowers.pushPrefEnv({
+    set: [
+      ["xpinstall.signatures.required", false],
+    ],
+  });
+
+  // The name of the pane should go back to "Legacy Extensions"
+  await mgrWin.gLegacyView.refresh();
+  is(catItem.disabled, false, "Legacy category is visible");
+  is(catItem.getAttribute("name"), get_string("type.legacy.name"),
+     "Category label with no unsigned extensions is correct");
+
+  // The unsigned extension should be present in the main extensions pane
+  await catUtils.openType("extension");
+  checkList("addon-list", [
+    "webextension@tests.mozilla.org",
+    "mozilla@tests.mozilla.org",
+    "unsigned_webext@tests.mozilla.org",
+  ]);
+
+  // And it should not be present in the legacy pane
+  await catUtils.openType("legacy");
+  checkList("legacy-list", [
+    "legacy@tests.mozilla.org",
+    "unsigned_legacy@tests.mozilla.org",
+  ]);
+
   await close_manager(mgrWin);
 });

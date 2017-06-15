@@ -1634,6 +1634,7 @@ StaticRefPtr<ITfMessagePump> TSFTextStore::sMessagePump;
 StaticRefPtr<ITfKeystrokeMgr> TSFTextStore::sKeystrokeMgr;
 StaticRefPtr<ITfDisplayAttributeMgr> TSFTextStore::sDisplayAttrMgr;
 StaticRefPtr<ITfCategoryMgr> TSFTextStore::sCategoryMgr;
+StaticRefPtr<ITfCompartment> TSFTextStore::sCompartmentForOpenClose;
 StaticRefPtr<ITfDocumentMgr> TSFTextStore::sDisabledDocumentMgr;
 StaticRefPtr<ITfContext> TSFTextStore::sDisabledContext;
 StaticRefPtr<ITfInputProcessorProfiles> TSFTextStore::sInputProcessorProfiles;
@@ -5992,10 +5993,12 @@ TSFTextStore::SetIMEOpenState(bool aState)
     ("TSFTextStore::SetIMEOpenState(aState=%s)",
      GetBoolName(aState)));
 
-  RefPtr<ITfCompartment> comp;
-  if (!GetCompartment(sThreadMgr,
-                      GUID_COMPARTMENT_KEYBOARD_OPENCLOSE,
-                      getter_AddRefs(comp))) {
+  if (!sThreadMgr) {
+    return;
+  }
+
+  RefPtr<ITfCompartment> comp = GetCompartmentForOpenClose();
+  if (NS_WARN_IF(!comp)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Debug,
       ("  TSFTextStore::SetIMEOpenState() FAILED due to"
        "no compartment available"));
@@ -6005,30 +6008,54 @@ TSFTextStore::SetIMEOpenState(bool aState)
   VARIANT variant;
   variant.vt = VT_I4;
   variant.lVal = aState;
+  HRESULT hr = comp->SetValue(sClientId, &variant);
+  if (NS_WARN_IF(FAILED(hr))) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("  TSFTextStore::SetIMEOpenState() FAILED due to "
+       "ITfCompartment::SetValue() failure, hr=0x%08X", hr));
+    return;
+  }
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
     ("  TSFTextStore::SetIMEOpenState(), setting "
      "0x%04X to GUID_COMPARTMENT_KEYBOARD_OPENCLOSE...",
      variant.lVal));
-  comp->SetValue(sClientId, &variant);
 }
 
 // static
 bool
 TSFTextStore::GetIMEOpenState()
 {
-  RefPtr<ITfCompartment> comp;
-  if (!GetCompartment(sThreadMgr,
-                      GUID_COMPARTMENT_KEYBOARD_OPENCLOSE,
-                      getter_AddRefs(comp)))
+  if (!sThreadMgr) {
     return false;
+  }
+
+  RefPtr<ITfCompartment> comp = GetCompartmentForOpenClose();
+  if (NS_WARN_IF(!comp)) {
+    return false;
+  }
 
   VARIANT variant;
   ::VariantInit(&variant);
-  if (SUCCEEDED(comp->GetValue(&variant)) && variant.vt == VT_I4)
-    return variant.lVal != 0;
+  HRESULT hr = comp->GetValue(&variant);
+  if (NS_WARN_IF(FAILED(hr))) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("TSFTextStore::GetIMEOpenState() FAILED due to "
+       "ITfCompartment::GetValue() failure, hr=0x%08X", hr));
+    return false;
+  }
+  // Until IME is open in this process, the result may be empty.
+  if (variant.vt == VT_EMPTY) {
+    return false;
+  }
+  if (NS_WARN_IF(variant.vt != VT_I4)) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("TSFTextStore::GetIMEOpenState() FAILED due to "
+       "invalid result of ITfCompartment::GetValue()"));
+    ::VariantClear(&variant);
+    return false;
+  }
 
-  ::VariantClear(&variant); // clear up in case variant.vt != VT_I4
-  return false;
+  return variant.lVal != 0;
 }
 
 // static
@@ -6152,26 +6179,6 @@ TSFTextStore::Initialize()
     return;
   }
 
-  RefPtr<ITfMessagePump> messagePump;
-  hr = threadMgr->QueryInterface(IID_ITfMessagePump,
-                                 getter_AddRefs(messagePump));
-  if (FAILED(hr) || !messagePump) {
-    MOZ_LOG(sTextStoreLog, LogLevel::Error,
-      ("  TSFTextStore::Initialize() FAILED to "
-       "QI message pump from the thread manager, hr=0x%08X", hr));
-    return;
-  }
-
-  RefPtr<ITfKeystrokeMgr> keystrokeMgr;
-  hr = threadMgr->QueryInterface(IID_ITfKeystrokeMgr,
-                                 getter_AddRefs(keystrokeMgr));
-  if (FAILED(hr) || !keystrokeMgr) {
-    MOZ_LOG(sTextStoreLog, LogLevel::Error,
-      ("  TSFTextStore::Initialize() FAILED to "
-       "QI keystroke manager from the thread manager, hr=0x%08X", hr));
-    return;
-  }
-
   hr = threadMgr->Activate(&sClientId);
   if (FAILED(hr)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
@@ -6204,8 +6211,6 @@ TSFTextStore::Initialize()
   MarkContextAsEmpty(disabledContext);
 
   sThreadMgr = threadMgr;
-  sMessagePump = messagePump;
-  sKeystrokeMgr = keystrokeMgr;
   sDisabledDocumentMgr = disabledDocumentMgr;
   sDisabledContext = disabledContext;
 
@@ -6222,6 +6227,39 @@ TSFTextStore::GetThreadMgr()
 {
   RefPtr<ITfThreadMgr> threadMgr = sThreadMgr;
   return threadMgr.forget();
+}
+
+// static
+already_AddRefed<ITfMessagePump>
+TSFTextStore::GetMessagePump()
+{
+  static bool sInitialized = false;
+  if (!sThreadMgr) {
+    return nullptr;
+  }
+  if (sMessagePump) {
+    RefPtr<ITfMessagePump> messagePump = sMessagePump;
+    return messagePump.forget();
+  }
+  // If it tried to retrieve ITfMessagePump from sThreadMgr but it failed,
+  // we shouldn't retry it at every message due to performance reason.
+  // Although this shouldn't occur actually.
+  if (sInitialized) {
+    return nullptr;
+  }
+  sInitialized = true;
+
+  RefPtr<ITfMessagePump> messagePump;
+  HRESULT hr = sThreadMgr->QueryInterface(IID_ITfMessagePump,
+                                          getter_AddRefs(messagePump));
+  if (NS_WARN_IF(FAILED(hr)) || NS_WARN_IF(!messagePump)) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("TSFTextStore::GetMessagePump() FAILED to "
+       "QI message pump from the thread manager, hr=0x%08X", hr));
+    return nullptr;
+  }
+  sMessagePump = messagePump;
+  return messagePump.forget();
 }
 
 // static
@@ -6272,6 +6310,43 @@ TSFTextStore::GetCategoryMgr()
 }
 
 // static
+already_AddRefed<ITfCompartment>
+TSFTextStore::GetCompartmentForOpenClose()
+{
+  if (sCompartmentForOpenClose) {
+    RefPtr<ITfCompartment> compartment = sCompartmentForOpenClose;
+    return compartment.forget();
+  }
+
+  if (!sThreadMgr) {
+    return nullptr;
+  }
+
+  RefPtr<ITfCompartmentMgr> compartmentMgr;
+  HRESULT hr = sThreadMgr->QueryInterface(IID_ITfCompartmentMgr,
+                                          getter_AddRefs(compartmentMgr));
+  if (NS_WARN_IF(FAILED(hr)) || NS_WARN_IF(!compartmentMgr)) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("TSFTextStore::GetCompartmentForOpenClose() FAILED due to"
+       "sThreadMgr not having ITfCompartmentMgr, hr=0x%08X", hr));
+    return nullptr;
+  }
+
+  RefPtr<ITfCompartment> compartment;
+  hr = compartmentMgr->GetCompartment(GUID_COMPARTMENT_KEYBOARD_OPENCLOSE,
+                                      getter_AddRefs(compartment));
+  if (NS_WARN_IF(FAILED(hr)) || NS_WARN_IF(!compartment)) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("TSFTextStore::GetCompartmentForOpenClose() FAILED due to"
+       "ITfCompartmentMgr::GetCompartment() failuere, hr=0x%08X", hr));
+    return nullptr;
+  }
+
+  sCompartmentForOpenClose = compartment;
+  return compartment.forget();
+}
+
+// static
 already_AddRefed<ITfInputProcessorProfiles>
 TSFTextStore::GetInputProcessorProfiles()
 {
@@ -6312,6 +6387,7 @@ TSFTextStore::Terminate()
   sEnabledTextStore = nullptr;
   sDisabledDocumentMgr = nullptr;
   sDisabledContext = nullptr;
+  sCompartmentForOpenClose = nullptr;
   sInputProcessorProfiles = nullptr;
   sClientId = 0;
   if (sThreadMgr) {
@@ -6326,8 +6402,28 @@ TSFTextStore::Terminate()
 bool
 TSFTextStore::ProcessRawKeyMessage(const MSG& aMsg)
 {
-  if (!sKeystrokeMgr) {
+  if (!sThreadMgr) {
     return false; // not in TSF mode
+  }
+  static bool sInitialized = false;
+  if (!sKeystrokeMgr) {
+    // If it tried to retrieve ITfKeystrokeMgr from sThreadMgr but it failed,
+    // we shouldn't retry it at every keydown nor keyup due to performance
+    // reason.  Although this shouldn't occur actually.
+    if (sInitialized) {
+      return false;
+    }
+    sInitialized = true;
+    RefPtr<ITfKeystrokeMgr> keystrokeMgr;
+    HRESULT hr = sThreadMgr->QueryInterface(IID_ITfKeystrokeMgr,
+                                            getter_AddRefs(keystrokeMgr));
+    if (NS_WARN_IF(FAILED(hr)) || NS_WARN_IF(!keystrokeMgr)) {
+      MOZ_LOG(sTextStoreLog, LogLevel::Error,
+        ("TSFTextStore::ProcessRawKeyMessage() FAILED to "
+         "QI keystroke manager from the thread manager, hr=0x%08X", hr));
+      return false;
+    }
+    sKeystrokeMgr = keystrokeMgr.forget();
   }
 
   if (aMsg.message == WM_KEYDOWN) {

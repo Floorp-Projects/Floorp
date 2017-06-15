@@ -23,7 +23,7 @@ mod test;
 /// ### Warning about blocking I/O
 ///
 /// The assumption is that the closures given to `join()` are
-/// CPU-bound tasks that to do not perform I/O or other blocking
+/// CPU-bound tasks that do not perform I/O or other blocking
 /// operations. If you do perform I/O, and that I/O should block
 /// (e.g., waiting for a network request), the overall performance may
 /// be poor.  Moreover, if you cause one closure to be blocked waiting
@@ -65,7 +65,7 @@ pub fn join<A, B, RA, RB>(oper_a: A, oper_b: B) -> (RA, RB)
         // pushed on top of it in the stack, and we will have to pop
         // those off to get to it.
         while !job_b.latch.probe() {
-            if let Some(job) = worker_thread.pop() {
+            if let Some(job) = worker_thread.take_local_job() {
                 if job == job_b_ref {
                     // Found it! Let's run it.
                     //

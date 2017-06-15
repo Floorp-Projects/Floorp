@@ -137,7 +137,12 @@
             'libraries': [ '$(SDKROOT)/System/Library/Frameworks/ApplicationServices.framework', ],
           },
         }],
-        ['OS=="linux" or OS=="android"', {
+        ['os_bsd==1', {
+          'defines': [
+            'WEBRTC_THREAD_RR',
+          ],
+        }],
+        ['OS=="linux" or OS=="android" or os_bsd==1', {
           'sources': [
             'source/atomic32_non_darwin_unix.cc',
           ],

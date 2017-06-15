@@ -23,6 +23,7 @@ const { showMenu } = require("./utils/menu");
 const {
   getUrlQuery,
   parseQueryString,
+  getUrlBaseName,
 } = require("./utils/request-utils");
 
 function RequestListContextMenu({
@@ -309,7 +310,7 @@ RequestListContextMenu.prototype = {
    */
   saveImageAs() {
     let { encoding, text } = this.selectedRequest.responseContent.content;
-    let fileName = this.selectedRequest.urlDetails.baseNameWithQuery;
+    let fileName = getUrlBaseName(this.selectedRequest.url);
     let data;
     if (encoding === "base64") {
       let decoded = atob(text);

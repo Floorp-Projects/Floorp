@@ -15,7 +15,7 @@ use ir::context::{BindgenContext, ItemId};
 use ir::derive::{CanDeriveCopy, CanDeriveDebug, CanDeriveDefault};
 use ir::dot;
 use ir::enum_ty::{Enum, EnumVariant, EnumVariantValue};
-use ir::function::{Function, FunctionSig};
+use ir::function::{Abi, Function, FunctionSig};
 use ir::int::IntKind;
 use ir::item::{Item, ItemAncestors, ItemCanonicalName, ItemCanonicalPath,
                ItemSet};
@@ -34,7 +34,7 @@ use std::collections::hash_map::{Entry, HashMap};
 use std::fmt::Write;
 use std::mem;
 use std::ops;
-use syntax::abi::Abi;
+use syntax::abi;
 use syntax::ast;
 use syntax::codemap::{Span, respan};
 use syntax::ptr::P;
@@ -221,7 +221,7 @@ struct ForeignModBuilder {
 }
 
 impl ForeignModBuilder {
-    fn new(abi: Abi) -> Self {
+    fn new(abi: abi::Abi) -> Self {
         ForeignModBuilder {
             inner: ast::ForeignMod {
                 abi: abi,
@@ -503,7 +503,7 @@ impl CodeGenerator for Var {
                 vis: ast::Visibility::Public,
             };
 
-            let item = ForeignModBuilder::new(Abi::C)
+            let item = ForeignModBuilder::new(abi::Abi::C)
                 .with_foreign_item(item)
                 .build(ctx);
             result.push(item);
@@ -1927,7 +1927,7 @@ impl MethodCodegen for Method {
 
         let sig = ast::MethodSig {
             unsafety: ast::Unsafety::Unsafe,
-            abi: Abi::Rust,
+            abi: abi::Abi::Rust,
             decl: P(fndecl),
             generics: ast::Generics::default(),
             constness: respan(ctx.span(), ast::Constness::NotConst),
@@ -2683,7 +2683,7 @@ impl TryToRustTy for Type {
                 // sizeof(NonZero<_>) optimization with opaque blobs (because
                 // they aren't NonZero), so don't *ever* use an or_opaque
                 // variant here.
-                let ty = fs.try_to_rust_ty(ctx, &())?;
+                let ty = fs.try_to_rust_ty(ctx, item)?;
 
                 let prefix = ctx.trait_prefix();
                 Ok(quote_ty!(ctx.ext_cx(), ::$prefix::option::Option<$ty>))
@@ -2851,11 +2851,11 @@ impl TryToRustTy for TemplateInstantiation {
 }
 
 impl TryToRustTy for FunctionSig {
-    type Extra = ();
+    type Extra = Item;
 
     fn try_to_rust_ty(&self,
                       ctx: &BindgenContext,
-                      _: &())
+                      item: &Item)
                       -> error::Result<P<ast::Ty>> {
         // TODO: we might want to consider ignoring the reference return value.
         let ret = utils::fnsig_return_ty(ctx, &self);
@@ -2867,9 +2867,17 @@ impl TryToRustTy for FunctionSig {
             variadic: self.is_variadic(),
         });
 
+        let abi = match self.abi() {
+            Abi::Known(abi) => abi,
+            Abi::Unknown(unknown_abi) => {
+                panic!("Invalid or unknown abi {:?} for function {:?} {:?}",
+                       unknown_abi, item.canonical_name(ctx), self);
+            }
+        };
+
         let fnty = ast::TyKind::BareFn(P(ast::BareFnTy {
             unsafety: ast::Unsafety::Unsafe,
-            abi: self.abi().expect("Invalid or unknown ABI for function!"),
+            abi: abi,
             lifetimes: vec![],
             decl: decl,
         }));
@@ -2949,8 +2957,15 @@ impl CodeGenerator for Function {
             vis: ast::Visibility::Public,
         };
 
-        let item = ForeignModBuilder::new(signature.abi()
-                .expect("Invalid or unknown ABI for function!"))
+        let abi = match signature.abi() {
+            Abi::Known(abi) => abi,
+            Abi::Unknown(unknown_abi) => {
+                panic!("Invalid or unknown abi {:?} for function {:?} ({:?})",
+                       unknown_abi, canonical_name, self);
+            }
+        };
+
+        let item = ForeignModBuilder::new(abi)
             .with_foreign_item(foreign_item)
             .build(ctx);
 
@@ -3420,7 +3435,7 @@ mod utils {
             _ => panic!("How?"),
         };
 
-        let decl_ty = signature.try_to_rust_ty(ctx, &())
+        let decl_ty = signature.try_to_rust_ty(ctx, sig)
             .expect("function signature to Rust type conversion is infallible");
         match decl_ty.unwrap().node {
             ast::TyKind::BareFn(bare_fn) => bare_fn.unwrap().decl,

@@ -48,17 +48,10 @@ pub enum SourceTexture {
 }
 
 const COLOR_FLOAT_TO_FIXED: f32 = 255.0;
-const COLOR_FLOAT_TO_FIXED_WIDE: f32 = 65535.0;
 pub const ANGLE_FLOAT_TO_FIXED: f32 = 65535.0;
 
 pub const ORTHO_NEAR_PLANE: f32 = -1000000.0;
 pub const ORTHO_FAR_PLANE: f32 = 1000000.0;
-
-#[derive(Clone)]
-pub enum FontTemplate {
-    Raw(Arc<Vec<u8>>, u32),
-    Native(NativeFontHandle),
-}
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum TextureSampler {
@@ -67,15 +60,11 @@ pub enum TextureSampler {
     Color2,
     CacheA8,
     CacheRGBA8,
-    Data16,
     Data32,
     ResourceCache,
     Layers,
     RenderTasks,
-    Geometry,
     ResourceRects,
-    Gradients,
-    SplitGeometry,
     Dither,
 }
 
@@ -143,7 +132,6 @@ pub enum ClipAttribute {
 }
 
 // A packed RGBA8 color ordered for vertex data or similar.
-// Use PackedTexel instead if intending to upload to a texture.
 
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
@@ -161,37 +149,6 @@ impl PackedColor {
             g: (0.5 + color.g * COLOR_FLOAT_TO_FIXED).floor() as u8,
             b: (0.5 + color.b * COLOR_FLOAT_TO_FIXED).floor() as u8,
             a: (0.5 + color.a * COLOR_FLOAT_TO_FIXED).floor() as u8,
-        }
-    }
-}
-
-// RGBA8 textures currently pack texels in BGRA format for upload.
-// PackedTexel abstracts away this difference from PackedColor.
-
-#[derive(Debug, Clone, Copy)]
-#[repr(C)]
-pub struct PackedTexel {
-    pub b: u8,
-    pub g: u8,
-    pub r: u8,
-    pub a: u8,
-}
-
-impl PackedTexel {
-    pub fn high_bytes(color: &ColorF) -> PackedTexel {
-        Self::extract_bytes(color, 8)
-    }
-
-    pub fn low_bytes(color: &ColorF) -> PackedTexel {
-        Self::extract_bytes(color, 0)
-    }
-
-    fn extract_bytes(color: &ColorF, shift_by: i32) -> PackedTexel {
-        PackedTexel {
-            b: ((0.5 + color.b * COLOR_FLOAT_TO_FIXED_WIDE).floor() as u32 >> shift_by & 0xff) as u8,
-            g: ((0.5 + color.g * COLOR_FLOAT_TO_FIXED_WIDE).floor() as u32 >> shift_by & 0xff) as u8,
-            r: ((0.5 + color.r * COLOR_FLOAT_TO_FIXED_WIDE).floor() as u32 >> shift_by & 0xff) as u8,
-            a: ((0.5 + color.a * COLOR_FLOAT_TO_FIXED_WIDE).floor() as u32 >> shift_by & 0xff) as u8,
         }
     }
 }
