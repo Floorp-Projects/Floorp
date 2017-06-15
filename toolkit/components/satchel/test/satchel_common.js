@@ -2,6 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint
+  "no-unused-vars": ["error", {
+    vars: "local",
+    args: "none",
+    varsIgnorePattern: "^(Cc|Ci|Cr|Cu|EXPORTED_SYMBOLS)$",
+  }],
+*/
+
 /* import-globals-from ../../../../testing/mochitest/tests/SimpleTest/SimpleTest.js */
 
 var gPopupShownExpected = false;

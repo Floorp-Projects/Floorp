@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var dbFile, oldSize;
-var currentTestIndex = 0;
+var dbFile;
 
 function triggerExpiration() {
   // We can't easily fake a "daily idle" event, so for testing purposes form

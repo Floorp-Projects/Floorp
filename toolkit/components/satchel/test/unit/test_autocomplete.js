@@ -4,7 +4,6 @@
 
 "use strict";
 
-var testnum = 0;
 var fac;
 var prefs;
 
