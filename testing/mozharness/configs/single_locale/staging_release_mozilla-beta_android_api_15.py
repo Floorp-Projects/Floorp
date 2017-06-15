@@ -1,7 +1,7 @@
 BRANCH = "mozilla-beta"
 MOZ_UPDATE_CHANNEL = "beta"
 MOZILLA_DIR = BRANCH
-OBJDIR = "obj-l10n"
+OBJDIR = "obj-firefox"
 STAGE_SERVER = "ftp.stage.mozaws.net"
 EN_US_BINARY_URL = "http://" + STAGE_SERVER + "/pub/mobile/candidates/%(version)s-candidates/build%(buildnum)d/android-api-15/en-US"
 HG_SHARE_BASE_DIR = "/builds/hg-shared"
