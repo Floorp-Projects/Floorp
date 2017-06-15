@@ -694,6 +694,9 @@ public:
   }
 #endif
 
+  void AddPendingDocShellBlocker();
+  void RemovePendingDocShellBlocker();
+
 protected:
   virtual ~TabChild();
 
@@ -790,6 +793,9 @@ private:
                           const ScrollableLayerGuid& aGuid,
                           const uint64_t& aInputBlockId);
 
+  void InternalSetDocShellIsActive(bool aIsActive,
+                                   bool aPreserveLayers);
+
   class DelayedDeleteRunnable;
 
   TextureFactoryIdentifier mTextureFactoryIdentifier;
@@ -869,6 +875,11 @@ private:
 #if defined(ACCESSIBILITY)
   PDocAccessibleChild* mTopLevelDocAccessibleChild;
 #endif
+
+  bool mPendingDocShellIsActive;
+  bool mPendingDocShellPreserveLayers;
+  bool mPendingDocShellReceivedMessage;
+  uint32_t mPendingDocShellBlockers;
 
   DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };
