@@ -158,10 +158,6 @@ public:
 
   IterationCompositeOperation IterationComposite() const;
   CompositeOperation Composite() const;
-  void GetSpacing(nsString& aRetVal) const
-  {
-    mEffectOptions.GetSpacingAsString(aRetVal);
-  }
   void NotifyAnimationTimingUpdated();
   void RequestRestyle(EffectCompositor::RestyleType aRestyleType);
   void SetAnimation(Animation* aAnimation) override;

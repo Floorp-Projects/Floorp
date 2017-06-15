@@ -806,6 +806,9 @@ exports['test button click'] = function*(assert) {
 }
 
 exports['test button icon set'] = function(assert) {
+  Cu.import("resource://gre/modules/Services.jsm");
+  Services.prefs.setBoolPref("browser.photon.structure.enabled", false);
+
   const { CustomizableUI } = Cu.import('resource:///modules/CustomizableUI.jsm', {});
   let loader = Loader(module);
   let { ActionButton } = loader.require('sdk/ui');
@@ -837,12 +840,12 @@ exports['test button icon set'] = function(assert) {
   let { node, id: widgetId } = getWidget(button.id);
   let { devicePixelRatio } = node.ownerGlobal;
 
-  let size = 16 * devicePixelRatio;
+  let size = [5, 16, 32, 64].find(x => (16 * devicePixelRatio) <= x);
 
   assert.equal(node.getAttribute('image'), data.url(button.icon[size].substr(2)),
     'the icon is set properly in navbar');
 
-  size = 32 * devicePixelRatio;
+  size = [5, 16, 32, 64].find(x => (32 * devicePixelRatio) <= x);
 
   CustomizableUI.addWidgetToArea(widgetId, CustomizableUI.AREA_PANEL);
 
@@ -856,10 +859,15 @@ exports['test button icon set'] = function(assert) {
   // persist.
   CustomizableUI.addWidgetToArea(widgetId, CustomizableUI.AREA_NAVBAR);
 
+  Cu.import("resource://gre/modules/Services.jsm");
+  Services.prefs.clearUserPref("browser.photon.structure.enabled");
   loader.unload();
 }
 
 exports['test button icon set with only one option'] = function(assert) {
+  Cu.import("resource://gre/modules/Services.jsm");
+  Services.prefs.setBoolPref("browser.photon.structure.enabled", false);
+
   const { CustomizableUI } = Cu.import('resource:///modules/CustomizableUI.jsm', {});
   let loader = Loader(module);
   let { ActionButton } = loader.require('sdk/ui');
@@ -902,6 +910,8 @@ exports['test button icon set with only one option'] = function(assert) {
   // persist.
   CustomizableUI.addWidgetToArea(widgetId, CustomizableUI.AREA_NAVBAR);
 
+  Cu.import("resource://gre/modules/Services.jsm");
+  Services.prefs.clearUserPref("browser.photon.structure.enabled");
   loader.unload();
 }
 
