@@ -1362,7 +1362,7 @@ PurgeEnvironmentChainHelper(JSContext* cx, HandleObject objArg, HandleId id)
  * flagged as a delegate (i.e., obj has ever been on a prototype or parent
  * chain).
  */
-static inline bool
+static MOZ_ALWAYS_INLINE bool
 PurgeEnvironmentChain(JSContext* cx, HandleObject obj, HandleId id)
 {
     if (obj->isDelegate() && obj->isNative())
