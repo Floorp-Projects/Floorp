@@ -295,7 +295,7 @@ ClientTiledPaintedLayer::UseProgressiveDraw() {
 }
 
 bool
-ClientTiledPaintedLayer::RenderHighPrecision(nsIntRegion& aInvalidRegion,
+ClientTiledPaintedLayer::RenderHighPrecision(const nsIntRegion& aInvalidRegion,
                                             const nsIntRegion& aVisibleRegion,
                                             LayerManager::DrawPaintedLayerCallback aCallback,
                                             void* aCallbackData)
@@ -345,11 +345,13 @@ ClientTiledPaintedLayer::RenderHighPrecision(nsIntRegion& aInvalidRegion,
 }
 
 bool
-ClientTiledPaintedLayer::RenderLowPrecision(nsIntRegion& aInvalidRegion,
+ClientTiledPaintedLayer::RenderLowPrecision(const nsIntRegion& aInvalidRegion,
                                            const nsIntRegion& aVisibleRegion,
                                            LayerManager::DrawPaintedLayerCallback aCallback,
                                            void* aCallbackData)
 {
+  nsIntRegion invalidRegion = aInvalidRegion;
+
   // Render the low precision buffer, if the visible region is larger than the
   // critical display port.
   if (!mPaintData.mCriticalDisplayPort ||
@@ -369,7 +371,7 @@ ClientTiledPaintedLayer::RenderLowPrecision(nsIntRegion& aInvalidRegion,
       mLowPrecisionValidRegion.SetEmpty();
       mContentClient->GetLowPrecisionTiledBuffer()->ResetPaintedAndValidState();
       mContentClient->GetLowPrecisionTiledBuffer()->SetFrameResolution(mPaintData.mResolution);
-      aInvalidRegion = aVisibleRegion;
+      invalidRegion = aVisibleRegion;
     }
 
     // Invalidate previously valid content that is no longer visible
@@ -380,14 +382,14 @@ ClientTiledPaintedLayer::RenderLowPrecision(nsIntRegion& aInvalidRegion,
 
     // Remove the valid high-precision region from the invalid low-precision
     // region. We don't want to spend time drawing things twice.
-    aInvalidRegion.Sub(aInvalidRegion, mValidRegion);
+    invalidRegion.SubOut(mValidRegion);
 
-    TILING_LOG("TILING %p: Progressive paint: low-precision invalid region is %s\n", this, Stringify(aInvalidRegion).c_str());
+    TILING_LOG("TILING %p: Progressive paint: low-precision invalid region is %s\n", this, Stringify(invalidRegion).c_str());
     TILING_LOG("TILING %p: Progressive paint: low-precision old valid region is %s\n", this, Stringify(oldValidRegion).c_str());
 
-    if (!aInvalidRegion.IsEmpty()) {
+    if (!invalidRegion.IsEmpty()) {
       updatedBuffer = mContentClient->GetLowPrecisionTiledBuffer()->ProgressiveUpdate(
-                            mLowPrecisionValidRegion, aInvalidRegion, oldValidRegion,
+                            mLowPrecisionValidRegion, invalidRegion, oldValidRegion,
                             &mPaintData, aCallback, aCallbackData);
     }
 

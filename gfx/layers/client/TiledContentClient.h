@@ -297,7 +297,7 @@ public:
 
   virtual bool SupportsProgressiveUpdate() = 0;
   virtual bool ProgressiveUpdate(nsIntRegion& aValidRegion,
-                         nsIntRegion& aInvalidRegion,
+                         const nsIntRegion& aInvalidRegion,
                          const nsIntRegion& aOldValidRegion,
                          BasicTiledLayerPaintData* aPaintData,
                          LayerManager::DrawPaintedLayerCallback aCallback,
@@ -356,7 +356,7 @@ public:
    * See ComputeProgressiveUpdateRegion below for parameter documentation.
    */
   bool ProgressiveUpdate(nsIntRegion& aValidRegion,
-                         nsIntRegion& aInvalidRegion,
+                         const nsIntRegion& aInvalidRegion,
                          const nsIntRegion& aOldValidRegion,
                          BasicTiledLayerPaintData* aPaintData,
                          LayerManager::DrawPaintedLayerCallback aCallback,
