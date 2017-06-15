@@ -33,7 +33,7 @@ def make_signing_description(config, jobs):
             job_specs = [
                  {
                     'artifacts': ['public/build/{locale}/target.dmg'],
-                    'format': 'dmg',
+                    'format': 'macapp',
                  }, {
                     'artifacts': ['public/build/{locale}/target.complete.mar'],
                     'format': 'mar',
