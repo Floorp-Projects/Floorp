@@ -314,7 +314,7 @@ function startTest() {
   $_(14, "test1").type  = "password";
   $_(14, "test1").value = "dontSaveThis";
 
-  var testData = ccNumbers.valid16;
+  let testData = ccNumbers.valid16;
   for (let i = 0; i != testData.length; i++) {
     $_(15, "test" + (i + 1)).value = testData[i];
   }
@@ -350,7 +350,7 @@ function startTest() {
   $_(109, "test9").value = "savedValue";
 
   // submit the first form.
-  var button = getFormSubmitButton(1);
+  let button = getFormSubmitButton(1);
   button.click();
 }
 
@@ -466,7 +466,7 @@ function submitForm(formNum) {
   //
   setTimeout(function() {
     checkObserver.waitForChecks(function() {
-      var nextFormNum = formNum == 22 ? 100 : (formNum + 1);
+      let nextFormNum = formNum == 22 ? 100 : (formNum + 1);
 
       // Submit the next form. Special cases are Forms 21 and 100, which happen
       // from an HTTPS domain in an iframe.
@@ -475,7 +475,7 @@ function submitForm(formNum) {
         SpecialPowers.wrap(document.getElementById("iframe").contentWindow)
         .wrappedJSObject.clickButton(nextFormNum);
       } else {
-        var button = getFormSubmitButton(nextFormNum);
+        let button = getFormSubmitButton(nextFormNum);
         button.click();
       }
     });
