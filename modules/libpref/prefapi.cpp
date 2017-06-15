@@ -312,20 +312,11 @@ pref_SetPref(const dom::PrefSetting& aPref)
     return rv;
 }
 
-UniquePtr<char*[]>
-pref_savePrefs(PLDHashTable* aTable, uint32_t* aPrefCount)
+PrefSaveData
+pref_savePrefs(PLDHashTable* aTable)
 {
-    // This function allocates the entries in the savedPrefs array it returns.
-    // It is the callers responsibility to go through the array and free
-    // all of them.  The aPrefCount entries will be non-null.  Any end padding
-    // is an implementation detail and may change.
-    MOZ_ASSERT(aPrefCount);
-    auto savedPrefs = MakeUnique<char*[]>(aTable->EntryCount());
+    PrefSaveData savedPrefs(aTable->EntryCount());
 
-    // This is not necessary, but leaving it in for now
-    memset(savedPrefs.get(), 0, aTable->EntryCount() * sizeof(char*));
-
-    int32_t j = 0;
     for (auto iter = aTable->Iter(); !iter.Done(); iter.Next()) {
         auto pref = static_cast<PrefHashEntry*>(iter.Get());
 
@@ -364,14 +355,13 @@ pref_savePrefs(PLDHashTable* aTable, uint32_t* aPrefCount)
         nsAutoCString prefName;
         str_escape(pref->key, prefName);
 
-        savedPrefs[j++] = ToNewCString(prefPrefix +
-                                       prefName +
-                                       NS_LITERAL_CSTRING("\", ") +
-                                       prefValue +
-                                       NS_LITERAL_CSTRING(");"));
+        savedPrefs.AppendElement()->
+            reset(ToNewCString(prefPrefix +
+                               prefName +
+                               NS_LITERAL_CSTRING("\", ") +
+                               prefValue +
+                               NS_LITERAL_CSTRING(");")));
     }
-    *aPrefCount = j;
-
     return savedPrefs;
 }
 
@@ -450,24 +440,6 @@ pref_GetPrefFromEntry(PrefHashEntry *aHashEntry, dom::PrefSetting* aPref)
                aPref->userValue().type() == dom::MaybePrefValue::Tnull_t ||
                (aPref->defaultValue().get_PrefValue().type() ==
                 aPref->userValue().get_PrefValue().type()));
-}
-
-
-int
-pref_CompareStrings(const void *v1, const void *v2, void *unused)
-{
-    char *s1 = *(char**) v1;
-    char *s2 = *(char**) v2;
-
-    if (!s1)
-    {
-        if (!s2)
-            return 0;
-        return -1;
-    }
-    if (!s2)
-        return 1;
-    return strcmp(s1, s2);
 }
 
 bool PREF_HasUserPref(const char *pref_name)
