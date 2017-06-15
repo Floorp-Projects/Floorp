@@ -42,6 +42,7 @@ this.ProfileAutoCompleteResult = function(searchString,
   this._popupLabels.push({
     primary: "",
     secondary: "",
+    categories: FormAutofillUtils.getCategoriesFromFieldNames(allFieldNames),
   });
 };
 

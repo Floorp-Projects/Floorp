@@ -1225,7 +1225,12 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           <![CDATA[
             let existingItemsCount = this.richlistbox.childNodes.length;
             for (let i = this._matchCount; i < existingItemsCount; ++i) {
-              this.richlistbox.childNodes[i].collapsed = true;
+              let item = this.richlistbox.childNodes[i];
+
+              item.collapsed = true;
+              if (typeof item._onCollapse == "function") {
+                item._onCollapse();
+              }
             }
           ]]>
         </body>
@@ -1344,7 +1349,8 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               // which has different structure of <content> and overrides
               // _adjustAcItem().
               reusable = originalType === style ||
-                         (style !== "autofill-profile" && originalType !== "autofill-profile");
+                         (style !== "autofill-profile" && originalType !== "autofill-profile" &&
+                         style !== "autofill-footer" && originalType !== "autofill-footer");
             } else {
               // need to create a new item
               item = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "richlistitem");
