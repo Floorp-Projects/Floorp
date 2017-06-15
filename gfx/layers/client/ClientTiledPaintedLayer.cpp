@@ -322,8 +322,12 @@ ClientTiledPaintedLayer::RenderHighPrecision(const nsIntRegion& aInvalidRegion,
 
     TILING_LOG("TILING %p: Progressive update with old valid region %s\n", this, Stringify(oldValidRegion).c_str());
 
-    return mContentClient->GetTiledBuffer()->ProgressiveUpdate(mValidRegion, aInvalidRegion,
-                      oldValidRegion, &mPaintData, aCallback, aCallbackData);
+    nsIntRegion drawnRegion;
+    bool updatedBuffer =
+      mContentClient->GetTiledBuffer()->ProgressiveUpdate(mValidRegion, aInvalidRegion,
+                      oldValidRegion, drawnRegion, &mPaintData, aCallback, aCallbackData);
+    mValidRegion.OrWith(drawnRegion);
+    return updatedBuffer;
   }
 
   // Otherwise do a non-progressive paint. We must do this even when
@@ -388,9 +392,11 @@ ClientTiledPaintedLayer::RenderLowPrecision(const nsIntRegion& aInvalidRegion,
     TILING_LOG("TILING %p: Progressive paint: low-precision old valid region is %s\n", this, Stringify(oldValidRegion).c_str());
 
     if (!invalidRegion.IsEmpty()) {
+      nsIntRegion drawnRegion;
       updatedBuffer = mContentClient->GetLowPrecisionTiledBuffer()->ProgressiveUpdate(
                             mLowPrecisionValidRegion, invalidRegion, oldValidRegion,
-                            &mPaintData, aCallback, aCallbackData);
+                            drawnRegion, &mPaintData, aCallback, aCallbackData);
+      mLowPrecisionValidRegion.OrWith(drawnRegion);
     }
 
     TILING_LOG("TILING %p: Progressive paint: low-precision new valid region is %s\n", this, Stringify(mLowPrecisionValidRegion).c_str());
