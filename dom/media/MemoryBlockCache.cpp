@@ -113,13 +113,25 @@ MemoryBlockCache::EnsureBufferCanContain(size_t aContentLength)
         desiredLength);
     return false;
   }
-  size_t newSizes = static_cast<size_t>(mCombinedSizes += extra);
-  LOG("EnsureBufferCanContain(%zu) - buffer size %zu + %zu = %zu; combined "
+  MOZ_ASSERT(mBuffer.Length() == desiredLength);
+  const size_t capacity = mBuffer.Capacity();
+  const size_t extraCapacity = capacity - desiredLength;
+  if (extraCapacity != 0) {
+    // Our buffer was given a larger capacity than the requested length, we may
+    // as well claim that extra capacity, both for our accounting, and to
+    // possibly bypass some future growths that would fit in this new capacity.
+    mBuffer.SetLength(capacity);
+  }
+  size_t newSizes =
+    static_cast<size_t>(mCombinedSizes += (extra + extraCapacity));
+  LOG("EnsureBufferCanContain(%zu) - buffer size %zu + requested %zu + bonus "
+      "%zu = %zu; combined "
       "sizes %zu",
       aContentLength,
       initialLength,
       extra,
-      mBuffer.Length(),
+      extraCapacity,
+      capacity,
       newSizes);
   mHasGrown = true;
   return true;
