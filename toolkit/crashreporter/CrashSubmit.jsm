@@ -344,9 +344,10 @@ Submitter.prototype = {
     let id = this.id;
 
     if (this.recordSubmission) {
-      p = manager.ensureCrashIsPresent(id).then(() => {
-        return manager.addSubmissionAttempt(id, submissionID, new Date());
-      });
+      p = p.then(() => { return manager.ensureCrashIsPresent(id); })
+           .then(() => {
+             return manager.addSubmissionAttempt(id, submissionID, new Date());
+            });
     }
     p.then(() => { xhr.send(formData); });
     return true;
