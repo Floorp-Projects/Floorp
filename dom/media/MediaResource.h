@@ -792,15 +792,11 @@ public:
                           uint32_t aCount,
                           uint32_t* aBytes) const;
 
-  // Convenience methods, directly calling the MediaResource method of the same
-  // name.
-  // Those functions do not update the MediaResource offset as returned
-  // by Tell().
-
   // This method returns nullptr if anything fails.
   // Otherwise, it returns an owned buffer.
   // MediaReadAt may return fewer bytes than requested if end of stream is
   // encountered. There is no need to call it again to get more data.
+  // Note this method will not update mOffset.
   already_AddRefed<MediaByteBuffer> MediaReadAt(int64_t aOffset, uint32_t aCount) const
   {
     RefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
