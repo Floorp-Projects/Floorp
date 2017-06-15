@@ -206,31 +206,6 @@ public:
   // waste, but caching lock/IO-bound resources means reducing the impact of
   // each read.
   virtual bool ShouldCacheReads() = 0;
-  // This method returns nullptr if anything fails.
-  // Otherwise, it returns an owned buffer.
-  // MediaReadAt may return fewer bytes than requested if end of stream is
-  // encountered. There is no need to call it again to get more data.
-  already_AddRefed<MediaByteBuffer> MediaReadAt(int64_t aOffset, uint32_t aCount)
-  {
-    RefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
-    bool ok = bytes->SetLength(aCount, fallible);
-    NS_ENSURE_TRUE(ok, nullptr);
-    char* curr = reinterpret_cast<char*>(bytes->Elements());
-    const char* start = curr;
-    while (aCount > 0) {
-      uint32_t bytesRead;
-      nsresult rv = ReadAt(aOffset, curr, aCount, &bytesRead);
-      NS_ENSURE_SUCCESS(rv, nullptr);
-      if (!bytesRead) {
-        break;
-      }
-      aOffset += bytesRead;
-      aCount -= bytesRead;
-      curr += bytesRead;
-    }
-    bytes->SetLength(curr - start);
-    return bytes.forget();
-  }
 
   already_AddRefed<MediaByteBuffer> CachedReadAt(int64_t aOffset, uint32_t aCount)
   {
@@ -828,7 +803,24 @@ public:
   // encountered. There is no need to call it again to get more data.
   already_AddRefed<MediaByteBuffer> MediaReadAt(int64_t aOffset, uint32_t aCount) const
   {
-    return mResource->MediaReadAt(aOffset, aCount);
+    RefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
+    bool ok = bytes->SetLength(aCount, fallible);
+    NS_ENSURE_TRUE(ok, nullptr);
+    char* curr = reinterpret_cast<char*>(bytes->Elements());
+    const char* start = curr;
+    while (aCount > 0) {
+      uint32_t bytesRead;
+      nsresult rv = mResource->ReadAt(aOffset, curr, aCount, &bytesRead);
+      NS_ENSURE_SUCCESS(rv, nullptr);
+      if (!bytesRead) {
+        break;
+      }
+      aOffset += bytesRead;
+      aCount -= bytesRead;
+      curr += bytesRead;
+    }
+    bytes->SetLength(curr - start);
+    return bytes.forget();
   }
   // Get the length of the stream in bytes. Returns -1 if not known.
   // This can change over time; after a seek operation, a misbehaving
