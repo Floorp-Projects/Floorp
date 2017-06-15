@@ -260,8 +260,13 @@ def mozharness_on_buildbot_bridge(config, job, taskdesc):
 
     worker.pop('env', None)
 
+    if 'devedition' in job['attributes']['build_platform']:
+        buildername = 'OS X 10.7 {} devedition build'.format(branch)
+    else:
+        buildername = 'OS X 10.7 {} build'.format(branch)
+
     worker.update({
-        'buildername': 'OS X 10.7 {} build'.format(branch),
+        'buildername': buildername,
         'sourcestamp': {
             'branch': branch,
             'repository': config.params['head_repository'],
