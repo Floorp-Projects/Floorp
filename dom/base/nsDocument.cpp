@@ -1287,7 +1287,7 @@ nsIDocument::nsIDocument()
     mBlockAllMixedContentPreloads(false),
     mUpgradeInsecureRequests(false),
     mUpgradeInsecurePreloads(false),
-    mCharacterSet(NS_LITERAL_CSTRING("ISO-8859-1")),
+    mCharacterSet(NS_LITERAL_CSTRING("windows-1252")),
     mCharacterSetSource(0),
     mParentDocument(nullptr),
     mCachedRootElement(nullptr),
