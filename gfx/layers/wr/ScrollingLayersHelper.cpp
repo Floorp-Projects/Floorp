@@ -42,6 +42,14 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
     }
 
     const FrameMetrics& fm = layer->GetFrameMetrics(i - 1);
+    if (layer->GetIsFixedPosition() &&
+        layer->GetFixedPositionScrollContainerId() == fm.GetScrollId()) {
+      // If the layer contents are fixed for this metadata onwards, we need
+      // to insert the layer's local clip at this point in the clip tree,
+      // as a child of whatever's on the stack.
+      PushLayerLocalClip(aStackingContext);
+    }
+
     if (!fm.IsScrollable()) {
       continue;
     }
@@ -78,7 +86,12 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
   // referred to as the "scroll container"). What this really means is that we
   // don't want this content to scroll with any scroll layer on the stack up to
   // and including the scroll container, but we do want it to scroll with any
-  // ancestor scroll layers. So we do a PushClipAndScrollInfo that maintains
+  // ancestor scroll layers.
+  // Also, the local clip on the layer (defined by layer->GetClipRect() and
+  // layer->GetMaskLayer()) also need to be fixed relative to the scroll
+  // container. This is why we inserted it into the clip tree during the
+  // loop above when we encountered the scroll container.
+  // At this point we do a PushClipAndScrollInfo that maintains
   // the current non-scrolling clip stack, but resets the scrolling clip stack
   // to the ancestor of the scroll container.
   if (layer->GetIsFixedPosition()) {
@@ -87,9 +100,9 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
     Maybe<wr::WrClipId> clipId = mBuilder->TopmostClipId();
     // Default to 0 if there is no ancestor, because 0 refers to the root scrollframe.
     mBuilder->PushClipAndScrollInfo(scrollsWith.valueOr(0), clipId.ptrOr(nullptr));
+  } else {
+    PushLayerLocalClip(aStackingContext);
   }
-
-  PushLayerLocalClip(aStackingContext);
 }
 
 void
@@ -132,14 +145,17 @@ ScrollingLayersHelper::PushLayerClip(const LayerClip& aClip,
 ScrollingLayersHelper::~ScrollingLayersHelper()
 {
   Layer* layer = mLayer->GetLayer();
-  if (mPushedLayerLocalClip) {
-    mBuilder->PopClip();
-  }
   if (!mLayer->WrManager()->AsyncPanZoomEnabled()) {
+    if (mPushedLayerLocalClip) {
+      mBuilder->PopClip();
+    }
     return;
   }
+
   if (layer->GetIsFixedPosition()) {
     mBuilder->PopClipAndScrollInfo();
+  } else if (mPushedLayerLocalClip) {
+    mBuilder->PopClip();
   }
   if (layer->GetScrolledClip()) {
     mBuilder->PopClip();
@@ -148,6 +164,11 @@ ScrollingLayersHelper::~ScrollingLayersHelper()
     const FrameMetrics& fm = layer->GetFrameMetrics(i);
     if (fm.IsScrollable()) {
       mBuilder->PopScrollLayer();
+    }
+    if (layer->GetIsFixedPosition() &&
+        layer->GetFixedPositionScrollContainerId() == fm.GetScrollId() &&
+        mPushedLayerLocalClip) {
+      mBuilder->PopClip();
     }
     const ScrollMetadata& metadata = layer->GetScrollMetadata(i);
     if (metadata.GetScrollClip()) {
