@@ -125,8 +125,11 @@ MediaCacheFlusher::UnregisterMediaCache(MediaCache* aMediaCache)
   }
 }
 
-class MediaCache {
+class MediaCache
+{
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaCache)
+
   friend class MediaCacheStream::BlockList;
   typedef MediaCacheStream::BlockList BlockList;
   static const int64_t BLOCK_SIZE = MediaCacheStream::BLOCK_SIZE;
@@ -136,17 +139,7 @@ public:
   // If the length is known and considered small enough, a discrete MediaCache
   // with memory backing will be given. Otherwise the one MediaCache with
   // file backing will be provided.
-  // The caller adds a reference to the MediaCache object by calling
-  // OpenStream(); and later must release it by calling ReleaseStream() and
-  // then MaybeShutdown().
-  static MediaCache* GetMediaCache(int64_t aContentLength);
-
-  // Shut down the cache if it's no longer needed. We shut down
-  // the cache as soon as there are no streams. This means that during
-  // normal operation we are likely to start up the cache and shut it down
-  // many times, but that's OK since starting it up is cheap and
-  // shutting it down cleans things up and releases disk space.
-  void MaybeShutdown();
+  static RefPtr<MediaCache> GetMediaCache(int64_t aContentLength);
 
   // Brutally flush the cache contents. Main thread only.
   void Flush();
@@ -264,17 +257,31 @@ protected:
     , mNextResourceID(1)
     , mReentrantMonitor("MediaCache.mReentrantMonitor")
     , mUpdateQueued(false)
-    , mShutdownInsteadOfUpdating(false)
 #ifdef DEBUG
     , mInUpdate(false)
 #endif
   {
+    NS_ASSERTION(NS_IsMainThread(), "Only construct MediaCache on main thread");
     MOZ_COUNT_CTOR(MediaCache);
     MediaCacheFlusher::RegisterMediaCache(this);
   }
 
   ~MediaCache()
   {
+    NS_ASSERTION(NS_IsMainThread(), "Only destroy MediaCache on main thread");
+    if (this == gMediaCache) {
+      // This is the file-backed MediaCache, reset the global pointer.
+      gMediaCache = nullptr;
+    }
+    if (mContentLength > 0) {
+      // This is an memory-backed MediaCache, update the combined memory usage.
+      gMediaMemoryCachesCombinedSize -= mContentLength;
+      LOG("~MediaCache(Memory-backed MediaCache %p) -> combined size now %" PRIi64,
+          this,
+          gMediaMemoryCachesCombinedSize);
+    } else {
+      LOG("~MediaCache(Global file-backed MediaCache)");
+    }
     MediaCacheFlusher::UnregisterMediaCache(this);
     NS_ASSERTION(mStreams.IsEmpty(), "Stream(s) still open!");
     Truncate();
@@ -393,12 +400,10 @@ protected:
   // end
   void Truncate();
 
-  // Shutdown this MediaCache, and reset gMediaCache if we are the global one.
-  // If there is no queued update, destroy the MediaCache immediately.
-  // Otherwise when the update is processed, it will destroy the MediaCache.
-  void ShutdownAndDestroyThis();
-
   // There is at most one file-backed media cache.
+  // It is owned by all MediaCacheStreams that use it.
+  // This is a raw pointer set by GetMediaCache(), and reset by ~MediaCache(),
+  // both on the main thread; and is not accessed anywhere else.
   static MediaCache* gMediaCache;
 
   // Combined size of all memory-backed MediaCaches. Main-thread only.
@@ -432,9 +437,6 @@ protected:
   BlockList       mFreeBlocks;
   // True if an event to run Update() has been queued but not processed
   bool            mUpdateQueued;
-  // Main-thread only. True when shutting down, and the update task should
-  // destroy this MediaCache.
-  bool            mShutdownInsteadOfUpdating;
 #ifdef DEBUG
   bool            mInUpdate;
 #endif
@@ -719,53 +721,7 @@ MediaCache::CloseStreamsForPrivateBrowsing()
   }
 }
 
-void
-MediaCache::MaybeShutdown()
-{
-  NS_ASSERTION(NS_IsMainThread(),
-               "MediaCache::MaybeShutdown called on non-main thread");
-  if (!mStreams.IsEmpty()) {
-    // Don't shut down yet, streams are still alive
-    return;
-  }
-
-  ShutdownAndDestroyThis();
-}
-
-void
-MediaCache::ShutdownAndDestroyThis()
-{
-  NS_ASSERTION(NS_IsMainThread(),
-               "MediaCache::Shutdown called on non-main thread");
-  // Since we're on the main thread, no-one is going to add a new stream
-  // while we shut down.
-
-  if (this == gMediaCache) {
-    // This is the global MediaCache, reset the global pointer to ensure it's
-    // not used anymore (in case it doesn't get destroyed immediately).
-    gMediaCache = nullptr;
-  }
-
-  if (mUpdateQueued) {
-    // An update is queued, let it destroy this MediaCache object.
-    mShutdownInsteadOfUpdating = true;
-    return;
-  }
-
-  if (mContentLength > 0) {
-    // This is an memory-backed MediaCache, update the combined memory usage.
-    gMediaMemoryCachesCombinedSize -= mContentLength;
-    LOG("ShutdownAndDestroyThis(Memory-backed MediaCache %p) -> combined size now %" PRIi64,
-        this,
-        gMediaMemoryCachesCombinedSize);
-  } else {
-    LOG("ShutdownAndDestroyThis(Global file-backed MediaCache)");
-  }
-
-  delete this;
-}
-
-/* static */ MediaCache*
+/* static */ RefPtr<MediaCache>
 MediaCache::GetMediaCache(int64_t aContentLength)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
@@ -779,20 +735,19 @@ MediaCache::GetMediaCache(int64_t aContentLength)
         sysmem * MediaPrefs::MediaMemoryCachesCombinedLimitPcSysmem() / 100)) {
     // Small-enough resource (and we are under the maximum memory usage), use
     // a new memory-backed MediaCache.
-    MediaCache* mc = new MediaCache(aContentLength);
+    RefPtr<MediaCache> mc = new MediaCache(aContentLength);
     nsresult rv = mc->Init();
     if (NS_SUCCEEDED(rv)) {
       gMediaMemoryCachesCombinedSize += aContentLength;
       LOG("GetMediaCache(%" PRIi64
           ") -> Memory MediaCache %p, combined size %" PRIi64,
           aContentLength,
-          mc,
+          mc.get(),
           gMediaMemoryCachesCombinedSize);
       return mc;
     }
     // Memory-backed MediaCache initialization failed, clean up and try for a
     // file-backed MediaCache below.
-    delete mc;
   }
 
   if (gMediaCache) {
@@ -804,7 +759,6 @@ MediaCache::GetMediaCache(int64_t aContentLength)
   gMediaCache = new MediaCache(-1);
   nsresult rv = gMediaCache->Init();
   if (NS_FAILED(rv)) {
-    delete gMediaCache;
     gMediaCache = nullptr;
     LOG("GetMediaCache(%" PRIi64 ") -> Failed to create file-backed MediaCache",
         aContentLength);
@@ -1191,14 +1145,6 @@ MediaCache::Update()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
-  if (mShutdownInsteadOfUpdating) {
-    // Safe to modify mUpdateQueued as we are shutting down and nobody should
-    // call MediaCache functions now.
-    mUpdateQueued = false;
-    ShutdownAndDestroyThis();
-    return;
-  }
-
   // The action to use for each stream. We store these so we can make
   // decisions while holding the cache lock but implement those decisions
   // without holding the cache lock, since we need to call out to
@@ -1544,7 +1490,7 @@ MediaCache::Update()
 class UpdateEvent : public Runnable
 {
 public:
-  explicit UpdateEvent(MediaCache& aMediaCache)
+  explicit UpdateEvent(MediaCache* aMediaCache)
     : Runnable("MediaCache::UpdateEvent")
     , mMediaCache(aMediaCache)
   {
@@ -1552,12 +1498,12 @@ public:
 
   NS_IMETHOD Run() override
   {
-    mMediaCache.Update();
+    mMediaCache->Update();
     return NS_OK;
   }
 
 private:
-  MediaCache& mMediaCache;
+  RefPtr<MediaCache> mMediaCache;
 };
 
 void
@@ -1575,7 +1521,7 @@ MediaCache::QueueUpdate()
   // XXX MediaCache does updates when decoders are still running at
   // shutdown and get freed in the final cycle-collector cleanup.  So
   // don't leak a runnable in that case.
-  nsCOMPtr<nsIRunnable> event = new UpdateEvent(*this);
+  nsCOMPtr<nsIRunnable> event = new UpdateEvent(this);
   SystemGroup::Dispatch("MediaCache::UpdateEvent",
                         TaskCategory::Other,
                         event.forget());
@@ -2108,7 +2054,6 @@ MediaCacheStream::~MediaCacheStream()
   if (mMediaCache) {
     NS_ASSERTION(mClosed, "Stream was not closed");
     mMediaCache->ReleaseStream(this);
-    mMediaCache->MaybeShutdown();
   }
 
   uint32_t lengthKb = uint32_t(

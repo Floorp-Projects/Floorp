@@ -440,7 +440,7 @@ private:
   bool UpdatePrincipal(nsIPrincipal* aPrincipal);
 
   // Instance of MediaCache to use with this MediaCacheStream.
-  MediaCache* mMediaCache;
+  RefPtr<MediaCache> mMediaCache;
 
   // These fields are main-thread-only.
   ChannelMediaResource*  mClient;
