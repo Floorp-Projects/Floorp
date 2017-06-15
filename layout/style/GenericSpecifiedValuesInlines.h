@@ -41,6 +41,18 @@ GenericSpecifiedValues::SetIdentStringValueIfUnset(nsCSSPropertyID aId, const ns
 }
 
 void
+GenericSpecifiedValues::SetIdentAtomValueIfUnset(nsCSSPropertyID aId, nsIAtom* aValue)
+{
+  MOZ_STYLO_FORWARD(SetIdentAtomValueIfUnset, (aId, aValue))
+}
+
+void
+GenericSpecifiedValues::SetIdentAtomValue(nsCSSPropertyID aId, nsIAtom* aValue)
+{
+  MOZ_STYLO_FORWARD(SetIdentAtomValue, (aId, aValue))
+}
+
+void
 GenericSpecifiedValues::SetKeywordValue(nsCSSPropertyID aId, int32_t aValue)
 {
   // there are some static asserts in MOZ_STYLO_FORWARD which
