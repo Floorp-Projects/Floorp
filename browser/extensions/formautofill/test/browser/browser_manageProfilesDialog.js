@@ -19,6 +19,13 @@ function waitForAddresses() {
   });
 }
 
+registerCleanupFunction(async function() {
+  let addresses = await getAddresses();
+  if (addresses.length) {
+    await removeAddresses(addresses.map(address => address.guid));
+  }
+});
+
 add_task(async function test_manageProfilesInitialState() {
   await BrowserTestUtils.withNewTab({gBrowser, url: MANAGE_PROFILES_DIALOG_URL}, async function(browser) {
     await ContentTask.spawn(browser, TEST_SELECTORS, (args) => {
