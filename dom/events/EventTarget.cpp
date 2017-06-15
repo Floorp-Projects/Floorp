@@ -65,13 +65,6 @@ EventTarget::IsApzAware() const
 }
 
 bool
-EventTarget::MayHaveAPZAwareKeyEventListener() const
-{
-  EventListenerManager* elm = GetExistingListenerManager();
-  return elm && elm->MayHaveAPZAwareKeyEventListener();
-}
-
-bool
 EventTarget::DispatchEvent(Event& aEvent,
                            CallerType aCallerType,
                            ErrorResult& aRv)

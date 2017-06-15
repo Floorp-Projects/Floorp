@@ -668,7 +668,6 @@ protected:
   bool                   mMayHavePaintEventListener;
   bool                   mMayHaveTouchEventListener;
   bool                   mMayHaveMouseEnterLeaveEventListener;
-  bool                   mMayHaveMouseMoveEventListener;
   bool                   mMayHavePointerEnterLeaveEventListener;
 
   // Used to detect whether we have called FreeInnerObjects() (e.g. to ensure
@@ -812,24 +811,6 @@ public:
     }
 
     mMutationBits |= aType;
-  }
-
-  /**
-   * Call this to check whether some node (this window, its document,
-   * or content in that document) has or had a mousemove event listener.
-   */
-  bool HasMouseMoveEventListeners()
-  {
-    return mMayHaveMouseMoveEventListener;
-  }
-
-  /**
-   * Call this to indicate that some node (this window, its document,
-   * or content in that document) has or had a mousemove event listener.
-   */
-  void SetHasMouseMoveEventListeners()
-  {
-    mMayHaveMouseMoveEventListener = true;
   }
 
   /**
