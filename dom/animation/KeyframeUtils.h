@@ -99,7 +99,7 @@ public:
    *
    * @param aKeyframes The set of keyframes to adjust.
    */
-  static void ApplyDistributeSpacing(nsTArray<Keyframe>& aKeyframes);
+  static void DistributeKeyframes(nsTArray<Keyframe>& aKeyframes);
 
   /**
    * Converts an array of Keyframe objects into an array of AnimationProperty

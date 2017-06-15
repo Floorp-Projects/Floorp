@@ -217,7 +217,7 @@ KeyframeEffectReadOnly::DoSetKeyframes(nsTArray<Keyframe>&& aKeyframes,
   }
 
   mKeyframes = Move(aKeyframes);
-  KeyframeUtils::ApplyDistributeSpacing(mKeyframes);
+  KeyframeUtils::DistributeKeyframes(mKeyframes);
 
   if (mAnimation && mAnimation->IsRelevant()) {
     nsNodeUtils::AnimationChanged(mAnimation);
