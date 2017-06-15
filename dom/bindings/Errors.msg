@@ -94,7 +94,6 @@ MSG_DEF(MSG_CACHE_ADD_FAILED_RESPONSE, 3, JSEXN_TYPEERR, "Cache got {0} response
 MSG_DEF(MSG_SW_UPDATE_BAD_REGISTRATION, 2, JSEXN_TYPEERR, "Failed to update the ServiceWorker for scope {0} because the registration has been {1} since the update was scheduled.")
 MSG_DEF(MSG_INVALID_DURATION_ERROR, 1, JSEXN_TYPEERR, "Invalid duration '{0}'.")
 MSG_DEF(MSG_INVALID_EASING_ERROR, 1, JSEXN_TYPEERR, "Invalid easing '{0}'.")
-MSG_DEF(MSG_INVALID_SPACING_MODE_ERROR, 1, JSEXN_TYPEERR, "Invalid spacing '{0}'.")
 MSG_DEF(MSG_USELESS_SETTIMEOUT, 1, JSEXN_TYPEERR, "Useless {0} call (missing quotes around argument?)")
 MSG_DEF(MSG_TOKENLIST_NO_SUPPORTED_TOKENS, 2, JSEXN_TYPEERR, "{0} attribute of <{1}> does not define any supported tokens")
 MSG_DEF(MSG_CACHE_STREAM_CLOSED, 0, JSEXN_TYPEERR, "Response body is a cache file stream that has already been closed.")

@@ -25,10 +25,19 @@ enum class CompositeOperation : uint8_t;
  */
 struct PropertyValuePair
 {
+  PropertyValuePair(nsCSSPropertyID aProperty, nsCSSValue&& aValue)
+    : mProperty(aProperty), mValue(Move(aValue)) { }
+  PropertyValuePair(nsCSSPropertyID aProperty,
+                    RefPtr<RawServoDeclarationBlock>&& aValue)
+    : mProperty(aProperty), mServoDeclarationBlock(Move(aValue))
+  {
+    MOZ_ASSERT(mServoDeclarationBlock, "Should be valid property value");
+  }
+
   nsCSSPropertyID mProperty;
-  // The specified value for the property. For shorthand properties or invalid
-  // property values, we store the specified property value as a token stream
-  // (string).
+  // The specified value for the property. For shorthand property values,
+  // we store the specified property value as a token stream (string).
+  // If this is uninitialized, we use the underlying value.
   nsCSSValue mValue;
 
   // The specified value when using the Servo backend.
@@ -37,7 +46,7 @@ struct PropertyValuePair
 #ifdef DEBUG
   // Flag to indicate that when we call StyleAnimationValue::ComputeValues on
   // this value we should behave as if that function had failed.
-  bool mSimulateComputeValuesFailure;
+  bool mSimulateComputeValuesFailure = false;
 #endif
 
   bool operator==(const PropertyValuePair&) const;

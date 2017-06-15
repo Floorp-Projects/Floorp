@@ -701,19 +701,28 @@ var Bookmarks = Object.freeze({
     const folderGuids = [this.toolbarGuid, this.menuGuid, this.unfiledGuid,
                           this.mobileGuid];
     return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: eraseEverything",
-      db => db.executeTransaction(async function() {
-        await removeFoldersContents(db, folderGuids, options);
-        const time = PlacesUtils.toPRTime(new Date());
-        const syncChangeDelta =
-          PlacesSyncUtils.bookmarks.determineSyncChangeDelta(options.source);
-        for (let folderGuid of folderGuids) {
-          await db.executeCached(
-            `UPDATE moz_bookmarks SET lastModified = :time,
-                                      syncChangeCounter = syncChangeCounter + :syncChangeDelta
-             WHERE id IN (SELECT id FROM moz_bookmarks WHERE guid = :folderGuid )
-            `, { folderGuid, time, syncChangeDelta });
+      async function(db) {
+        let urls;
+
+        await db.executeTransaction(async function() {
+          urls = await removeFoldersContents(db, folderGuids, options);
+          const time = PlacesUtils.toPRTime(new Date());
+          const syncChangeDelta =
+            PlacesSyncUtils.bookmarks.determineSyncChangeDelta(options.source);
+          for (let folderGuid of folderGuids) {
+            await db.executeCached(
+              `UPDATE moz_bookmarks SET lastModified = :time,
+                                        syncChangeCounter = syncChangeCounter + :syncChangeDelta
+               WHERE id IN (SELECT id FROM moz_bookmarks WHERE guid = :folderGuid )
+              `, { folderGuid, time, syncChangeDelta });
+          }
+        });
+
+        // We don't wait for the frecency calculation.
+        if (urls && urls.length) {
+          updateFrecency(db, urls, true).then(null, Cu.reportError);
         }
-      })
+      }
     );
   },
 
@@ -1541,6 +1550,7 @@ function fetchBookmarksByParent(info) {
 function removeBookmark(item, options) {
   return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: removeBookmark",
     async function(db) {
+    let urls;
     let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
 
     await db.executeTransaction(async function transaction() {
@@ -1549,7 +1559,7 @@ function removeBookmark(item, options) {
         if (options.preventRemovalOfNonEmptyFolders && item._childCount > 0) {
           throw new Error("Cannot remove a non-empty folder.");
         }
-        await removeFoldersContents(db, [item.guid], options);
+        urls = await removeFoldersContents(db, [item.guid], options);
       }
 
       // Remove annotations first.  If it's a tag, we can avoid paying that cost.
@@ -1594,6 +1604,10 @@ function removeBookmark(item, options) {
     if (item.type == Bookmarks.TYPE_BOOKMARK && !isUntagging) {
       // ...though we don't wait for the calculation.
       updateFrecency(db, [item.url]).catch(Cu.reportError);
+    }
+
+    if (urls && urls.length && item.type == Bookmarks.TYPE_FOLDER) {
+      updateFrecency(db, urls, true).catch(Cu.reportError);
     }
 
     return item;
@@ -1950,10 +1964,15 @@ var setAncestorsLastModified = async function(db, folderGuid, time, syncChangeDe
 /**
  * Remove all descendants of one or more bookmark folders.
  *
- * @param db
+ * @param {Object} db
  *        the Sqlite.jsm connection handle.
- * @param folderGuids
+ * @param {Array} folderGuids
  *        array of folder guids.
+ * @return {Array}
+ *         An array of urls that will need to be updated for frecency. These
+ *         are returned rather than updated immediately so that the caller
+ *         can decide when they need to be updated - they do not need to
+ *         stop this function from completing.
  */
 var removeFoldersContents =
 async function(db, folderGuids, options) {
@@ -2008,9 +2027,6 @@ async function(db, folderGuids, options) {
 
   // TODO (Bug 1087576): this may leave orphan tags behind.
 
-  let urls = itemsRemoved.filter(item => "url" in item).map(item => item.url);
-  updateFrecency(db, urls, true).then(null, Cu.reportError);
-
   // Send onItemRemoved notifications to listeners.
   // TODO (Bug 1087580): for the case of eraseEverything, this should send a
   // single clear bookmarks notification rather than notifying for each
@@ -2040,6 +2056,7 @@ async function(db, folderGuids, options) {
       }
     }
   }
+  return itemsRemoved.filter(item => "url" in item).map(item => item.url);
 };
 
 /**

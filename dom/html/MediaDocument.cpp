@@ -293,7 +293,7 @@ MediaDocument::GetFileName(nsAString& aResult, nsIChannel* aChannel)
 
   nsAutoCString docCharset;
   // Now that the charset is set in |StartDocumentLoad| to the charset of
-  // the document viewer instead of a bogus value ("ISO-8859-1" set in
+  // the document viewer instead of a bogus value ("windows-1252" set in
   // |nsDocument|'s ctor), the priority is given to the current charset. 
   // This is necessary to deal with a media document being opened in a new 
   // window or a new tab, in which case |originCharset| of |nsIURI| is not 

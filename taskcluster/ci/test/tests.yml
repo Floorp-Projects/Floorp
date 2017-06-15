@@ -33,6 +33,8 @@ cppunit:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            windows7-32-vm/debug: built-projects
+            windows7-32/debug: built-projects
             windows10-64-asan/opt: []  # as an exception to windows.*
             linux64-qr/.*: ['mozilla-central', 'try']
             default: built-projects
@@ -125,6 +127,8 @@ external-media-tests-base:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            windows7-32-vm/debug: built-projects
+            windows7-32/debug: built-projects
             default: built-projects
     mozharness:
         script: firefox_media_tests_taskcluster.py
@@ -151,6 +155,8 @@ external-media-tests-twitch:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            windows7-32-vm/debug: built-projects
+            windows7-32/debug: built-projects
             default: built-projects
     mozharness:
         script: firefox_media_tests_taskcluster.py
@@ -176,6 +182,8 @@ external-media-tests-youtube:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            windows7-32-vm/debug: built-projects
+            windows7-32/debug: built-projects
             default: built-projects
     mozharness:
         script: firefox_media_tests_taskcluster.py
@@ -246,6 +254,8 @@ gtest:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            windows7-32-vm/debug: built-projects
+            windows7-32/debug: built-projects
             linux64-qr/.*: ['mozilla-central', 'try']
             default: built-projects
     mozharness:
@@ -334,6 +344,8 @@ jsreftest:
         by-test-platform:
             windows10-64-asan/opt: built-projects  # exception to windows.*, below
             windows.*: ['mozilla-central', 'try']
+            windows7-32-vm/debug: built-projects
+            windows7-32/debug: built-projects
             default: built-projects
     mozharness:
         by-test-platform:
@@ -397,6 +409,8 @@ marionette:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            windows7-32-vm/debug: built-projects
+            windows7-32/debug: built-projects
             default: built-projects
     mozharness:
         by-test-platform:
@@ -535,6 +549,8 @@ mochitest-a11y:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            windows7-32-vm/debug: built-projects
+            windows7-32/debug: built-projects
             linux64-qr/.*: ['mozilla-central', 'try']
             default: built-projects
     mozharness:
@@ -697,6 +713,10 @@ mochitest-chrome:
                             - remove_executables.py
                 extra-options:
                     - --mochitest-suite=chrome
+    tier:
+        by-test-platform:
+            windows7-32.*: 2
+            default: default
 
 mochitest-chrome-style:
     description: "Mochitest chrome run for style system"
@@ -760,6 +780,10 @@ mochitest-clipboard:
                             - remove_executables.py
                 extra-options:
                     - --mochitest-suite=plain-clipboard,chrome-clipboard,browser-chrome-clipboard,jetpack-package-clipboard
+    tier:
+        by-test-platform:
+            windows7-32.*: 2
+            default: default
 
 mochitest-devtools-chrome:
     description: "Mochitest devtools-chrome run"
@@ -780,6 +804,8 @@ mochitest-devtools-chrome:
         by-test-platform:
             windows10.*: []
             windows7.*: ['mozilla-central', 'try']
+            windows7-32-vm/debug: built-projects
+            windows7-32/debug: built-projects
             default: built-projects
     e10s:
         by-test-platform:
@@ -876,6 +902,8 @@ mochitest-jetpack:
         by-test-platform:
             windows10-64-asan/opt: built-projects  # exception to windows.*, below
             windows.*: ['mozilla-central', 'try']
+            windows7-32-vm/debug: built-projects
+            windows7-32/debug: built-projects
             default: built-projects
     mozharness:
         mochitest-flavor: jetpack-package
@@ -1514,6 +1542,8 @@ web-platform-tests:
         by-test-platform:
             windows10.*: ['mozilla-central', 'try']
             windows7.*: ['mozilla-central', 'try']
+            windows7-32-vm/debug: built-projects
+            windows7-32/debug: built-projects
             default: built-projects
     mozharness:
         script: web_platform_tests.py
@@ -1545,6 +1575,8 @@ web-platform-tests-reftests:
         by-test-platform:
             windows10.*: ['mozilla-central', 'try']
             windows7.*: ['mozilla-central', 'try']
+            windows7-32-vm/debug: built-projects
+            windows7-32/debug: built-projects
             default: built-projects
     mozharness:
         script: web_platform_tests.py
