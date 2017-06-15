@@ -7,9 +7,6 @@ package org.mozilla.gecko.media;
 
 import android.util.Log;
 
-import com.google.android.exoplayer2.Format;
-import com.google.android.exoplayer2.util.MimeTypes;
-
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
@@ -17,7 +14,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
 
 public final class GeckoHLSDemuxerWrapper {
     private static final String LOGTAG = "GeckoHLSDemuxerWrapper";
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     // NOTE : These TRACK definitions should be synced with Gecko.
     public enum TrackType {
@@ -34,10 +31,10 @@ public final class GeckoHLSDemuxerWrapper {
         }
     }
 
-    private GeckoHlsPlayer mPlayer = null;
+    private BaseHlsPlayer mPlayer = null;
 
     public static class Callbacks extends JNIObject
-        implements GeckoHlsPlayer.DemuxerCallbacks {
+    implements BaseHlsPlayer.DemuxerCallbacks {
 
         @WrapForJNI(calledFrom = "gecko")
         Callbacks() {}
@@ -62,15 +59,15 @@ public final class GeckoHLSDemuxerWrapper {
         }
     }
 
-    private GeckoHlsPlayer.TrackType getPlayerTrackType(int trackType) {
+    private BaseHlsPlayer.TrackType getPlayerTrackType(int trackType) {
         if (trackType == TrackType.AUDIO.value()) {
-            return GeckoHlsPlayer.TrackType.AUDIO;
+            return BaseHlsPlayer.TrackType.AUDIO;
         } else if (trackType == TrackType.VIDEO.value()) {
-            return GeckoHlsPlayer.TrackType.VIDEO;
+            return BaseHlsPlayer.TrackType.VIDEO;
         } else if (trackType == TrackType.TEXT.value()) {
-            return GeckoHlsPlayer.TrackType.TEXT;
+            return BaseHlsPlayer.TrackType.TEXT;
         }
-        return GeckoHlsPlayer.TrackType.UNDEFINED;
+        return BaseHlsPlayer.TrackType.UNDEFINED;
     }
 
     @WrapForJNI
@@ -80,14 +77,14 @@ public final class GeckoHLSDemuxerWrapper {
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static GeckoHLSDemuxerWrapper create(GeckoHlsPlayer player,
-                                                GeckoHlsPlayer.DemuxerCallbacks callback) {
-        return new GeckoHLSDemuxerWrapper(player, callback);
+    public static GeckoHLSDemuxerWrapper create(int id, BaseHlsPlayer.DemuxerCallbacks callback) {
+        return new GeckoHLSDemuxerWrapper(id, callback);
     }
 
     @WrapForJNI
     public int getNumberOfTracks(int trackType) {
-        int tracks = mPlayer != null ? mPlayer.getNumberOfTracks(getPlayerTrackType(trackType)) : 0;
+        assertTrue(mPlayer != null);
+        int tracks = mPlayer.getNumberOfTracks(getPlayerTrackType(trackType));
         if (DEBUG) Log.d(LOGTAG, "[GetNumberOfTracks] type : " + trackType + ", num = " + tracks);
         return tracks;
     }
@@ -95,42 +92,16 @@ public final class GeckoHLSDemuxerWrapper {
     @WrapForJNI
     public GeckoAudioInfo getAudioInfo(int index) {
         assertTrue(mPlayer != null);
-
         if (DEBUG) Log.d(LOGTAG, "[getAudioInfo] formatIndex : " + index);
-        Format fmt = mPlayer.getAudioTrackFormat(index);
-        if (fmt == null) {
-            return null;
-        }
-        /* According to https://github.com/google/ExoPlayer/blob
-         * /d979469659861f7fe1d39d153b90bdff1ab479cc/library/core/src/main
-         * /java/com/google/android/exoplayer2/audio/MediaCodecAudioRenderer.java#L221-L224,
-         * if the input audio format is not raw, exoplayer would assure that
-         * the sample's pcm encoding bitdepth is 16.
-         * For HLS content, it should always be 16.
-         */
-        assertTrue(!MimeTypes.AUDIO_RAW.equals(fmt.sampleMimeType));
-        // For HLS content, csd-0 is enough.
-        byte[] csd = fmt.initializationData.isEmpty() ? null : fmt.initializationData.get(0);
-        GeckoAudioInfo aInfo = new GeckoAudioInfo(fmt.sampleRate, fmt.channelCount,
-                                                  16, 0, mPlayer.getDuration(),
-                                                  fmt.sampleMimeType, csd);
+        GeckoAudioInfo aInfo = mPlayer.getAudioInfo(index);
         return aInfo;
     }
 
     @WrapForJNI
     public GeckoVideoInfo getVideoInfo(int index) {
         assertTrue(mPlayer != null);
-
         if (DEBUG) Log.d(LOGTAG, "[getVideoInfo] formatIndex : " + index);
-        Format fmt = mPlayer.getVideoTrackFormat(index);
-        if (fmt == null) {
-            return null;
-        }
-        GeckoVideoInfo vInfo = new GeckoVideoInfo(fmt.width, fmt.height,
-                                                  fmt.width, fmt.height,
-                                                  fmt.rotationDegrees, fmt.stereoMode,
-                                                  mPlayer.getDuration(), fmt.sampleMimeType,
-                                                  null, null);
+        GeckoVideoInfo vInfo = mPlayer.getVideoInfo(index);
         return vInfo;
     }
 
@@ -142,30 +113,24 @@ public final class GeckoHLSDemuxerWrapper {
         return mPlayer.seek(seekTime);
     }
 
-    GeckoHLSDemuxerWrapper(GeckoHlsPlayer player,
-                           GeckoHlsPlayer.DemuxerCallbacks callback) {
+    GeckoHLSDemuxerWrapper(int id, BaseHlsPlayer.DemuxerCallbacks callback) {
         if (DEBUG) Log.d(LOGTAG, "Constructing GeckoHLSDemuxerWrapper ...");
         assertTrue(callback != null);
-        assertTrue(player != null);
         try {
-            this.mPlayer = player;
-            this.mPlayer.addDemuxerWrapperCallbackListener(callback);
+            mPlayer = GeckoPlayerFactory.getPlayer(id);
+            mPlayer.addDemuxerWrapperCallbackListener(callback);
         } catch (Exception e) {
             Log.e(LOGTAG, "Constructing GeckoHLSDemuxerWrapper ... error", e);
-            callback.onError(GeckoHlsPlayer.DemuxerError.UNKNOWN.code());
+            callback.onError(BaseHlsPlayer.DemuxerError.UNKNOWN.code());
         }
     }
 
     @WrapForJNI
     private GeckoHLSSample[] getSamples(int mediaType, int number) {
+        assertTrue(mPlayer != null);
         ConcurrentLinkedQueue<GeckoHLSSample> samples = null;
         // getA/VSamples will always return a non-null instance.
-        if (mediaType == TrackType.VIDEO.value()) {
-            samples = mPlayer.getVideoSamples(number);
-        } else if (mediaType == TrackType.AUDIO.value()) {
-            samples = mPlayer.getAudioSamples(number);
-        }
-
+        samples = mPlayer.getSamples(getPlayerTrackType(mediaType), number);
         assertTrue(samples.size() <= number);
         return samples.toArray(new GeckoHLSSample[samples.size()]);
     }
@@ -192,7 +157,8 @@ public final class GeckoHLSDemuxerWrapper {
 
     private void release() {
         assertTrue(mPlayer != null);
-        if (DEBUG) Log.d(LOGTAG, "release GeckoHlsPlayer...");
+        if (DEBUG) Log.d(LOGTAG, "release BaseHlsPlayer...");
+        GeckoPlayerFactory.removePlayer(mPlayer);
         mPlayer.release();
         mPlayer = null;
     }

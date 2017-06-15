@@ -37,12 +37,9 @@
   <preference id="layout.spellcheckDefault"
               name="layout.spellcheckDefault"
               type="int"/>
-
-#ifdef MOZ_TELEMETRY_REPORTING
   <preference id="toolkit.telemetry.enabled"
               name="toolkit.telemetry.enabled"
               type="bool"/>
-#endif
 
   <!-- Data Choices tab -->
 #ifdef MOZ_CRASHREPORTER
@@ -189,6 +186,9 @@
     <!-- Data Choices -->
     <tabpanel id="dataChoicesPanel" orient="vertical">
 #ifdef MOZ_TELEMETRY_REPORTING
+      <description>&healthReportingDisabled.label;</description>
+      <separator class="thin"/>
+#endif
       <groupbox>
         <caption>
           <checkbox id="submitHealthReportBox" label="&enableHealthReport.label;"
@@ -216,7 +216,6 @@
           </hbox>
         </vbox>
       </groupbox>
-#endif
 #ifdef MOZ_CRASHREPORTER
       <groupbox>
         <caption>

@@ -29,7 +29,7 @@ class HLSDemuxer final : public MediaDataDemuxer
 {
   class HLSDemuxerCallbacksSupport;
 public:
-  explicit HLSDemuxer(MediaResource* aResource);
+  explicit HLSDemuxer(int aPlayerId);
 
   RefPtr<InitPromise> Init() override;
 
@@ -58,7 +58,6 @@ private:
   bool OnTaskQueue() const;
   TrackInfo* GetTrackInfo(TrackInfo::TrackType);
   ~HLSDemuxer();
-  RefPtr<MediaResource> mResource;
   friend class HLSTrackDemuxer;
 
   const RefPtr<AutoTaskQueue> mTaskQueue;

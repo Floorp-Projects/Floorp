@@ -5575,11 +5575,11 @@ public:
         typedef GeckoHLSDemuxerWrapper::LocalRef ReturnType;
         typedef GeckoHLSDemuxerWrapper::Param SetterType;
         typedef mozilla::jni::Args<
-                mozilla::jni::Object::Param,
+                int32_t,
                 mozilla::jni::Object::Param> Args;
         static constexpr char name[] = "create";
         static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/media/GeckoHlsPlayer;Lorg/mozilla/gecko/media/GeckoHlsPlayer$DemuxerCallbacks;)Lorg/mozilla/gecko/media/GeckoHLSDemuxerWrapper;";
+                "(ILorg/mozilla/gecko/media/BaseHlsPlayer$DemuxerCallbacks;)Lorg/mozilla/gecko/media/GeckoHLSDemuxerWrapper;";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -5589,7 +5589,7 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    static auto Create(mozilla::jni::Object::Param, mozilla::jni::Object::Param) -> GeckoHLSDemuxerWrapper::LocalRef;
+    static auto Create(int32_t, mozilla::jni::Object::Param) -> GeckoHLSDemuxerWrapper::LocalRef;
 
     struct Destroy_t {
         typedef GeckoHLSDemuxerWrapper Owner;
@@ -5851,25 +5851,6 @@ public:
 
     class Callbacks;
 
-    struct GetPlayer_t {
-        typedef GeckoHLSResourceWrapper Owner;
-        typedef mozilla::jni::Object::LocalRef ReturnType;
-        typedef mozilla::jni::Object::Param SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "GetPlayer";
-        static constexpr char signature[] =
-                "()Lorg/mozilla/gecko/media/GeckoHlsPlayer;";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::GECKO;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    auto GetPlayer() const -> mozilla::jni::Object::LocalRef;
-
     struct Create_t {
         typedef GeckoHLSResourceWrapper Owner;
         typedef GeckoHLSResourceWrapper::LocalRef ReturnType;
@@ -5879,7 +5860,7 @@ public:
                 mozilla::jni::Object::Param> Args;
         static constexpr char name[] = "create";
         static constexpr char signature[] =
-                "(Ljava/lang/String;Lorg/mozilla/gecko/media/GeckoHlsPlayer$ResourceCallbacks;)Lorg/mozilla/gecko/media/GeckoHLSResourceWrapper;";
+                "(Ljava/lang/String;Lorg/mozilla/gecko/media/BaseHlsPlayer$ResourceCallbacks;)Lorg/mozilla/gecko/media/GeckoHLSResourceWrapper;";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -5909,6 +5890,25 @@ public:
     };
 
     auto Destroy() const -> void;
+
+    struct GetPlayerId_t {
+        typedef GeckoHLSResourceWrapper Owner;
+        typedef int32_t ReturnType;
+        typedef int32_t SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getPlayerId";
+        static constexpr char signature[] =
+                "()I";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::GECKO;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    auto GetPlayerId() const -> int32_t;
 
     static const mozilla::jni::CallingThread callingThread =
             mozilla::jni::CallingThread::ANY;

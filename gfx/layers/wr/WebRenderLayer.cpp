@@ -41,21 +41,12 @@ WebRenderLayer::GetImageKey()
 }
 
 Maybe<WrImageMask>
-WebRenderLayer::BuildWrMaskLayer(const StackingContextHelper* aUnapplySc)
+WebRenderLayer::BuildWrMaskLayer(const StackingContextHelper& aRelativeTo)
 {
   if (GetLayer()->GetMaskLayer()) {
     WebRenderLayer* maskLayer = ToWebRenderLayer(GetLayer()->GetMaskLayer());
-
-    // If |this| layer is pushing a stacking context, that should be passed in
-    // as |aUnapplySc|. We need to unapply the transform from that stacking
-    // context because the mask layer (according to WR) is outside that stacking
-    // context.
     gfx::Matrix4x4 transform = maskLayer->GetLayer()->GetTransform();
-    if (aUnapplySc) {
-      transform = transform * aUnapplySc->TransformToRoot();
-    }
-
-    return maskLayer->RenderMaskLayer(transform);
+    return maskLayer->RenderMaskLayer(aRelativeTo, transform);
   }
 
   return Nothing();
@@ -88,18 +79,6 @@ WebRenderLayer::BoundsForStackingContext()
   }
 
   return bounds;
-}
-
-Maybe<LayerRect>
-WebRenderLayer::ClipRect()
-{
-  Layer* layer = GetLayer();
-  if (!layer->GetClipRect()) {
-    return Nothing();
-  }
-  ParentLayerRect clip(layer->GetClipRect().ref());
-  LayerToParentLayerMatrix4x4 transform = layer->GetLocalTransformTyped();
-  return Some(transform.Inverse().TransformBounds(clip));
 }
 
 Maybe<wr::ImageKey>
@@ -144,17 +123,18 @@ WebRenderLayer::DumpLayerInfo(const char* aLayerType, const LayerRect& aRect)
     return;
   }
 
-  Matrix4x4 transform = GetLayer()->GetTransform();
+  Layer* layer = GetLayer();
+  Matrix4x4 transform = layer->GetTransform();
   LayerRect bounds = Bounds();
   WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetLayer()->GetMixBlendMode());
 
   printf_stderr("%s %p using bounds=%s, transform=%s, rect=%s, clip=%s, mix-blend-mode=%s\n",
                 aLayerType,
-                GetLayer(),
+                layer,
                 Stringify(bounds).c_str(),
                 Stringify(transform).c_str(),
                 Stringify(aRect).c_str(),
-                Stringify(ClipRect().valueOr(aRect)).c_str(),
+                layer->GetClipRect() ? Stringify(layer->GetClipRect().value()).c_str() : "none",
                 Stringify(mixBlendMode).c_str());
 }
 
