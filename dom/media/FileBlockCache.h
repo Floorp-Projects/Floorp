@@ -63,9 +63,6 @@ protected:
 public:
   nsresult Init() override;
 
-  // Closes writer, shuts down thread.
-  void Close() override;
-
   // Can be called on any thread. This defers to a non-main thread.
   nsresult WriteBlock(uint32_t aBlockIndex,
                       Span<const uint8_t> aData1,
@@ -139,6 +136,9 @@ private:
 
   void SetCacheFile(PRFileDesc* aFD);
 
+  // Close file in thread and terminate thread.
+  void Close();
+
   // Performs block writes and block moves on its own thread.
   void PerformBlockIOs();
 
@@ -191,8 +191,6 @@ private:
   // True when a read is happening. Pending writes may be postponed, to give
   // higher priority to reads (which may be blocking the caller).
   bool mIsReading;
-  // True if the writer is ready to enqueue writes.
-  bool mIsOpen;
   // True if we've got a temporary file descriptor. Note: we don't use mFD
   // directly as that's synchronized via mFileMutex and we need to make
   // decisions about whether we can write while holding mDataMutex.
