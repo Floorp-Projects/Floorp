@@ -14,8 +14,6 @@ if (typeof(classifierHelper) == "undefined") {
   var classifierHelper = {};
 }
 
-const ADD_CHUNKNUM = 524;
-const SUB_CHUNKNUM = 523;
 const HASHLEN = 32;
 
 const PREFS = {
@@ -23,6 +21,8 @@ const PREFS = {
   DISALLOW_COMPLETIONS : "urlclassifier.disallow_completions",
   PROVIDER_GETHASHURL : "browser.safebrowsing.provider.mozilla.gethashURL"
 };
+
+classifierHelper._curAddChunkNum = 1;
 
 // Keep urls added to database, those urls should be automatically
 // removed after test complete.
@@ -103,57 +103,31 @@ classifierHelper.addUrlToDB = function(updateData) {
     let CHUNKLEN = CHUNKDATA.length;
     let HASHLEN = update.len ? update.len : 32;
 
+    update.addChunk = classifierHelper._curAddChunkNum;
+    classifierHelper._curAddChunkNum += 1;
+
     classifierHelper._updatesToCleanup.push(update);
     testUpdate +=
       "n:1000\n" +
       "i:" + LISTNAME + "\n" +
       "ad:1\n" +
-      "a:" + ADD_CHUNKNUM + ":" + HASHLEN + ":" + CHUNKLEN + "\n" +
+      "a:" + update.addChunk + ":" + HASHLEN + ":" + CHUNKLEN + "\n" +
       CHUNKDATA;
   }
 
   return classifierHelper._update(testUpdate);
 }
 
-// Pass { url: ..., db: ... } to remove url from database,
-// Returns a Promise.
-classifierHelper.removeUrlFromDB = function(updateData) {
-  var testUpdate = "";
-  for (var update of updateData) {
-    var LISTNAME = update.db;
-    var CHUNKDATA = ADD_CHUNKNUM + ":" + update.url;
-    var CHUNKLEN = CHUNKDATA.length;
-    var HASHLEN = update.len ? update.len : 32;
-
-    testUpdate +=
-      "n:1000\n" +
-      "i:" + LISTNAME + "\n" +
-      "s:" + SUB_CHUNKNUM + ":" + HASHLEN + ":" + CHUNKLEN + "\n" +
-      CHUNKDATA;
-  }
-
-  classifierHelper._updatesToCleanup =
-    classifierHelper._updatesToCleanup.filter((v) => {
-      return updateData.indexOf(v) == -1;
-    });
-
-  return classifierHelper._update(testUpdate);
-};
-
 // This API is used to expire all add/sub chunks we have updated
-// by using addUrlToDB and removeUrlFromDB.
+// by using addUrlToDB.
 // Returns a Promise.
 classifierHelper.resetDatabase = function() {
   var testUpdate = "";
   for (var update of classifierHelper._updatesToCleanup) {
-    if (testUpdate.includes(update.db))
-      continue;
-
     testUpdate +=
       "n:1000\n" +
       "i:" + update.db + "\n" +
-      "ad:" + ADD_CHUNKNUM + "\n" +
-      "sd:" + SUB_CHUNKNUM + "\n"
+      "ad:" + update.addChunk + "\n";
   }
 
   return classifierHelper._update(testUpdate);

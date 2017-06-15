@@ -214,7 +214,6 @@ public class GeckoPreferences
      * Track the last locale so we know whether to redisplay.
      */
     private Locale lastLocale = Locale.getDefault();
-    private boolean localeSwitchingIsEnabled;
 
     private void startActivityForResultChoosingTransition(final Intent intent, final int requestCode) {
         startActivityForResult(intent, requestCode);
@@ -355,10 +354,6 @@ public class GeckoPreferences
     protected void onCreate(Bundle savedInstanceState) {
         // Apply the current user-selected locale, if necessary.
         checkLocale();
-
-        // Track this so we can decide whether to show locale options.
-        // See also the workaround below for Bug 1015209.
-        localeSwitchingIsEnabled = BrowserLocaleManager.getInstance().isEnabled();
 
         // For Android v11+ where we use Fragments (v11+ only due to bug 866352),
         // check that PreferenceActivity.EXTRA_SHOW_FRAGMENT has been set
@@ -663,17 +658,6 @@ public class GeckoPreferences
     private void setupPreferences(PreferenceGroup preferences, ArrayList<String> prefs) {
         for (int i = 0; i < preferences.getPreferenceCount(); i++) {
             final Preference pref = preferences.getPreference(i);
-
-            // Eliminate locale switching if necessary.
-            // This logic will need to be extended when
-            // content language selection (Bug 881510) is implemented.
-            if (!localeSwitchingIsEnabled &&
-                "preferences_locale".equals(pref.getExtras().getString("resource"))) {
-                preferences.removePreference(pref);
-                i--;
-                continue;
-            }
-
             String key = pref.getKey();
             if (pref instanceof PreferenceGroup) {
                 // If datareporting is disabled, remove UI.

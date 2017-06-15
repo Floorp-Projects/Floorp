@@ -1168,23 +1168,6 @@ class TestEmitterBasic(unittest.TestCase):
         ]
         self.assertEquals([p.full_path for p in objs[0].paths], expected)
 
-    def test_binary_components(self):
-        """Test that IS_COMPONENT/NO_COMPONENTS_MANIFEST work properly."""
-        reader = self.reader('binary-components')
-        objs = self.read_topsrcdir(reader)
-
-        self.assertEqual(len(objs), 3)
-        self.assertIsInstance(objs[0], ChromeManifestEntry)
-        self.assertEqual(objs[0].path,
-                         'dist/bin/components/components.manifest')
-        self.assertIsInstance(objs[0].entry, manifest.ManifestBinaryComponent)
-        self.assertEqual(objs[0].entry.base, 'dist/bin/components')
-        self.assertEqual(objs[0].entry.relpath, objs[1].lib_name)
-        self.assertIsInstance(objs[1], SharedLibrary)
-        self.assertEqual(objs[1].basename, 'foo')
-        self.assertIsInstance(objs[2], SharedLibrary)
-        self.assertEqual(objs[2].basename, 'bar')
-
     def test_install_shared_lib(self):
         """Test that we can install a shared library with TEST_HARNESS_FILES"""
         reader = self.reader('test-install-shared-lib')

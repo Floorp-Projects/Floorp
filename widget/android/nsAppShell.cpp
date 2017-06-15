@@ -194,9 +194,10 @@ public:
         // We really want to send a notification like profile-before-change,
         // but profile-before-change ends up shutting some things down instead
         // of flushing data
-        nsIPrefService* prefs = Preferences::GetService();
+        Preferences* prefs = static_cast<Preferences *>(Preferences::GetService());
         if (prefs) {
-            prefs->SavePrefFile(nullptr);
+            // Force a main thread blocking save
+            prefs->SavePrefFileBlocking();
         }
     }
 

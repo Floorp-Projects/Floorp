@@ -4,8 +4,6 @@
 
 const LIST_UPDATED_TOPIC     = "plugins-list-updated";
 
-// We need to use the same algorithm for generating IDs for plugins
-var { getIDHashForString } = Components.utils.import("resource://gre/modules/addons/PluginProvider.jsm", {});
 var { MockRegistrar } = Components.utils.import("resource://testing-common/MockRegistrar.jsm", {});
 
 function PluginTag(name, description) {
@@ -121,7 +119,7 @@ function run_test_2() {
 function run_test_3() {
   let tag = new PluginTag("Quicktime", "A mock Quicktime plugin");
   PLUGINS.push(tag);
-  let id = getIDHashForString(tag.name + tag.description);
+  let id = tag.name + tag.description;
 
   let test_params = {};
   test_params[id] = [
@@ -156,7 +154,7 @@ function run_test_3() {
 // Tests that a removed plugin disappears from in the API and sends out events
 function run_test_4() {
   let tag = PLUGINS.splice(1, 1)[0];
-  let id = getIDHashForString(tag.name + tag.description);
+  let id = tag.name + tag.description;
 
   let test_params = {};
   test_params[id] = [
@@ -214,11 +212,11 @@ function run_test_6() {
   PLUGINS.push(newTag);
 
   let test_params = {};
-  test_params[getIDHashForString(oldTag.name + oldTag.description)] = [
+  test_params[oldTag.name + oldTag.description] = [
     ["onUninstalling", false],
     "onUninstalled"
   ];
-  test_params[getIDHashForString(newTag.name + newTag.description)] = [
+  test_params[newTag.name + newTag.description] = [
     ["onInstalling", false],
     "onInstalled"
   ];
@@ -253,11 +251,11 @@ function run_test_7() {
   PLUGINS[1] = new PluginTag("Flash 2", "A new crash-free Flash!");
 
   let test_params = {};
-  test_params[getIDHashForString(PLUGINS[0].name + PLUGINS[0].description)] = [
+  test_params[PLUGINS[0].name + PLUGINS[0].description] = [
     ["onDisabling", false],
     "onDisabled"
   ];
-  test_params[getIDHashForString(PLUGINS[1].name + PLUGINS[1].description)] = [
+  test_params[PLUGINS[1].name + PLUGINS[1].description] = [
     ["onEnabling", false],
     "onEnabled"
   ];

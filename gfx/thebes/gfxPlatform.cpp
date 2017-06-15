@@ -8,6 +8,7 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/ISurfaceAllocator.h"     // for GfxMemoryImageReporter
 #include "mozilla/webrender/RenderThread.h"
+#include "mozilla/layers/PaintThread.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/GraphicsMessages.h"
@@ -694,6 +695,7 @@ gfxPlatform::Init()
 #endif
     gPlatform->InitAcceleration();
     gPlatform->InitWebRenderConfig();
+    gPlatform->InitOMTPConfig();
 
     if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
       GPUProcessManager* gpu = GPUProcessManager::Get();
@@ -942,18 +944,22 @@ gfxPlatform::Shutdown()
 /* static */ void
 gfxPlatform::InitLayersIPC()
 {
-    if (sLayersIPCIsUp) {
-      return;
-    }
-    sLayersIPCIsUp = true;
+  if (sLayersIPCIsUp) {
+    return;
+  }
+  sLayersIPCIsUp = true;
 
-    if (XRE_IsParentProcess())
-    {
-        if (gfxVars::UseWebRender()) {
-            wr::RenderThread::Start();
-        }
-        layers::CompositorThreadHolder::Start();
+  if (XRE_IsContentProcess()) {
+    if (gfxVars::UseOMTP()) {
+      layers::PaintThread::Start();
     }
+  } else if (XRE_IsParentProcess()) {
+    if (gfxVars::UseWebRender()) {
+      wr::RenderThread::Start();
+    }
+
+    layers::CompositorThreadHolder::Start();
+  }
 }
 
 /* static */ void
@@ -971,6 +977,10 @@ gfxPlatform::ShutdownLayersIPC()
           layers::CompositorBridgeChild::ShutDown();
           layers::ImageBridgeChild::ShutDown();
         }
+
+        if (gfxVars::UseOMTP()) {
+          layers::PaintThread::Shutdown();
+        }
     } else if (XRE_IsParentProcess()) {
         gfx::VRManagerChild::ShutDown();
         layers::CompositorBridgeChild::ShutDown();
@@ -978,8 +988,9 @@ gfxPlatform::ShutdownLayersIPC()
         // This has to happen after shutting down the child protocols.
         layers::CompositorThreadHolder::Shutdown();
         if (gfxVars::UseWebRender()) {
-            wr::RenderThread::ShutDown();
+          wr::RenderThread::ShutDown();
         }
+
     } else {
       // TODO: There are other kind of processes and we should make sure gfx
       // stuff is either not created there or shut down properly.
@@ -2393,6 +2404,48 @@ gfxPlatform::InitWebRenderConfig()
   // gfxFeature is not usable in the GPU process, so we use gfxVars to transmit this feature
   if (gfxConfig::IsEnabled(Feature::WEBRENDER)) {
     gfxVars::SetUseWebRender(true);
+    reporter.SetSuccessful();
+  }
+}
+
+void
+gfxPlatform::InitOMTPConfig()
+{
+  bool prefEnabled = Preferences::GetBool("layers.omtp.enabled", false);
+
+  // We don't want to report anything for this feature when turned off, as it is still early in development
+  if (!prefEnabled) {
+    return;
+  }
+
+  ScopedGfxFeatureReporter reporter("OMTP", prefEnabled);
+
+  if (!XRE_IsParentProcess()) {
+    // The parent process runs through all the real decision-making code
+    // later in this function. For other processes we still want to report
+    // the state of the feature for crash reports.
+    if (gfxVars::UseOMTP()) {
+      reporter.SetSuccessful();
+    }
+    return;
+  }
+
+  FeatureState& featureOMTP = gfxConfig::GetFeature(Feature::OMTP);
+
+  featureOMTP.DisableByDefault(
+      FeatureStatus::OptIn,
+      "OMTP is an opt-in feature",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_DEFAULT_OFF"));
+
+  featureOMTP.UserEnable("Enabled by pref");
+
+  if (InSafeMode()) {
+    featureOMTP.ForceDisable(FeatureStatus::Blocked, "OMTP blocked by safe-mode",
+                         NS_LITERAL_CSTRING("FEATURE_FAILURE_COMP_SAFEMODE"));
+  }
+
+  if (gfxConfig::IsEnabled(Feature::OMTP)) {
+    gfxVars::SetUseOMTP(true);
     reporter.SetSuccessful();
   }
 }

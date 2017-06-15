@@ -661,13 +661,16 @@ ICEStats.prototype = {
         stat.state || "",
         stat.priority || "",
         stat.nominated || "",
-        stat.selected || ""
+        stat.selected || "",
+        stat.bytesSent || "",
+        stat.bytesReceived || ""
       ]);
     }
 
     let statsTable = new SimpleTable(
       [getString("local_candidate"), getString("remote_candidate"), getString("ice_state"),
-       getString("priority"), getString("nominated"), getString("selected")],
+       getString("priority"), getString("nominated"), getString("selected"),
+       getString("ice_pair_bytes_sent"), getString("ice_pair_bytes_received")],
       tbody);
 
     let div = document.createElement("div");
@@ -725,7 +728,9 @@ ICEStats.prototype = {
           state: pair.state,
           priority: pair.priority,
           nominated: pair.nominated,
-          selected: pair.selected
+          selected: pair.selected,
+          bytesSent: pair.bytesSent,
+          bytesReceived: pair.bytesReceived
         };
         matched[local.id] = true;
 

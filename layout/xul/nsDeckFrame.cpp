@@ -110,6 +110,13 @@ nsDeckFrame::IndexChanged()
                                   currentBox, GetSelectedBox());
   }
 #endif
+
+  // Force any popups that might be anchored on elements within hidden
+  // box to update.
+  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+  if (pm && currentBox) {
+    pm->UpdatePopupPositions(currentBox->PresContext()->RefreshDriver());
+  }
 }
 
 int32_t

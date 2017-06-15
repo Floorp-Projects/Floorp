@@ -324,9 +324,9 @@ var PopupBlocking = {
       case "DOMPopupBlocked":
         return this.onPopupBlocked(ev);
       case "pageshow":
-        return this.onPageShow(ev);
+        return this._removeIrrelevantPopupData();
       case "pagehide":
-        return this.onPageHide(ev);
+        return this._removeIrrelevantPopupData(ev.target);
     }
     return undefined;
   },
@@ -353,14 +353,15 @@ var PopupBlocking = {
     this.updateBlockedPopups(true);
   },
 
-  onPageShow(ev) {
+  _removeIrrelevantPopupData(removedDoc = null) {
     if (this.popupData) {
       let i = 0;
+      let oldLength = this.popupData.length;
       while (i < this.popupData.length) {
+        let {requestingWindow, requestingDocument} = this.popupDataInternal[i];
         // Filter out irrelevant reports.
-        if (this.popupDataInternal[i].requestingWindow &&
-            (this.popupDataInternal[i].requestingWindow.document ==
-             this.popupDataInternal[i].requestingDocument)) {
+        if (requestingWindow && requestingWindow.document == requestingDocument &&
+            requestingDocument != removedDoc) {
           i++;
         } else {
           this.popupData.splice(i, 1);
@@ -371,15 +372,9 @@ var PopupBlocking = {
         this.popupData = null;
         this.popupDataInternal = null;
       }
-      this.updateBlockedPopups(false);
-    }
-  },
-
-  onPageHide(ev) {
-    if (this.popupData) {
-      this.popupData = null;
-      this.popupDataInternal = null;
-      this.updateBlockedPopups(false);
+      if (!this.popupData || oldLength > this.popupData.length) {
+        this.updateBlockedPopups(false);
+      }
     }
   },
 

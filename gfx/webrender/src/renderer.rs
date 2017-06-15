@@ -14,7 +14,7 @@ use debug_render::DebugRenderer;
 use device::{DepthFunction, Device, FrameId, ProgramId, TextureId, VertexFormat, GpuMarker, GpuProfiler};
 use device::{GpuSample, TextureFilter, VAOId, VertexUsageHint, FileWatcherHandler, TextureTarget, ShaderError};
 use device::get_gl_format_bgra;
-use euclid::Matrix4D;
+use euclid::Transform3D;
 use fnv::FnvHasher;
 use frame_builder::FrameBuilderConfig;
 use gleam::gl;
@@ -24,7 +24,6 @@ use internal_types::{CacheTextureId, RendererFrame, ResultMsg, TextureUpdateOp};
 use internal_types::{TextureUpdateList, PackedVertex, RenderTargetMode};
 use internal_types::{ORTHO_NEAR_PLANE, ORTHO_FAR_PLANE, SourceTexture};
 use internal_types::{BatchTextures, TextureSampler};
-use prim_store::{GradientData, SplitGeometry};
 use profiler::{Profiler, BackendProfileCounters};
 use profiler::{GpuProfileTag, RendererProfileTimers, RendererProfileCounters};
 use record::ApiRecordingReceiver;
@@ -55,8 +54,7 @@ use webgl_types::GLContextHandleWrapper;
 use webrender_traits::{ColorF, Epoch, PipelineId, RenderNotifier, RenderDispatcher};
 use webrender_traits::{ExternalImageId, ExternalImageType, ImageData, ImageFormat, RenderApiSender};
 use webrender_traits::{DeviceIntRect, DeviceUintRect, DevicePoint, DeviceIntPoint, DeviceIntSize, DeviceUintSize};
-use webrender_traits::{ImageDescriptor, BlobImageRenderer};
-use webrender_traits::{channel, FontRenderMode};
+use webrender_traits::{BlobImageRenderer, channel, FontRenderMode};
 use webrender_traits::VRCompositorHandler;
 use webrender_traits::{YuvColorSpace, YuvFormat};
 use webrender_traits::{YUV_COLOR_SPACES, YUV_FORMATS};
@@ -195,37 +193,53 @@ pub enum BlendMode {
 
 /// The device-specific representation of the cache texture in gpu_cache.rs
 struct CacheTexture {
-    id: TextureId,
+    current_id: TextureId,
+    next_id: TextureId,
 }
 
 impl CacheTexture {
     fn new(device: &mut Device) -> CacheTexture {
-        let id = device.create_texture_ids(1, TextureTarget::Default)[0];
+        let ids = device.create_texture_ids(2, TextureTarget::Default);
 
         CacheTexture {
-            id: id,
+            current_id: ids[0],
+            next_id: ids[1],
         }
     }
 
     fn update(&mut self, device: &mut Device, updates: &GpuCacheUpdateList) {
         // See if we need to create or resize the texture.
-        let current_dimensions = device.get_texture_dimensions(self.id);
-
+        let current_dimensions = device.get_texture_dimensions(self.current_id);
         if updates.height > current_dimensions.height {
-            // TODO(gw): Handle resizing an existing cache texture.
-            if current_dimensions.height > 0 {
-                panic!("TODO: Implement texture copy!!!");
-            }
-
             // Create a f32 texture that can be used for the vertex shader
             // to fetch data from.
-            device.init_texture(self.id,
+            device.init_texture(self.next_id,
                                 MAX_VERTEX_TEXTURE_WIDTH as u32,
                                 updates.height as u32,
                                 ImageFormat::RGBAF32,
                                 TextureFilter::Nearest,
-                                RenderTargetMode::None,
+                                RenderTargetMode::SimpleRenderTarget,
                                 None);
+
+            // Copy the current texture into the newly resized texture.
+            if current_dimensions.height > 0 {
+                device.bind_draw_target(Some((self.next_id, 0)), None);
+
+                let blit_rect = DeviceIntRect::new(DeviceIntPoint::zero(),
+                                                   DeviceIntSize::new(MAX_VERTEX_TEXTURE_WIDTH as i32,
+                                                                      current_dimensions.height as i32));
+
+                // TODO(gw): Should probably switch this to glCopyTexSubImage2D, since we
+                // don't do any stretching here.
+                device.blit_render_target(Some((self.current_id, 0)),
+                                          Some(blit_rect),
+                                          blit_rect);
+
+                // Free the GPU memory for that texture until we need to resize again.
+                device.deinit_texture(self.current_id);
+            }
+
+            mem::swap(&mut self.current_id, &mut self.next_id);
         }
 
         for update in &updates.updates {
@@ -244,7 +258,7 @@ impl CacheTexture {
                                          .offset(block_index as isize);
                         slice::from_raw_parts(ptr as *const _, block_count * 16)
                     };
-                    device.update_texture(self.id,
+                    device.update_texture(self.current_id,
                                           address.u as u32,
                                           address.v as u32,
                                           block_count as u32,
@@ -325,45 +339,6 @@ impl GpuStoreLayout for VertexDataTextureLayout {
 
 type VertexDataTexture = GpuDataTexture<VertexDataTextureLayout>;
 pub type VertexDataStore<T> = GpuStore<T, VertexDataTextureLayout>;
-
-pub struct GradientDataTextureLayout;
-
-impl GpuStoreLayout for GradientDataTextureLayout {
-    fn image_format() -> ImageFormat {
-        ImageFormat::RGBA8
-    }
-
-    fn texture_width<T>() -> usize {
-        mem::size_of::<GradientData>() / Self::texel_size() / 2
-    }
-
-    fn texture_filter() -> TextureFilter {
-        TextureFilter::Linear
-    }
-}
-
-type GradientDataTexture = GpuDataTexture<GradientDataTextureLayout>;
-pub type GradientDataStore = GpuStore<GradientData, GradientDataTextureLayout>;
-
-pub struct SplitGeometryTextureLayout;
-
-impl GpuStoreLayout for SplitGeometryTextureLayout {
-    fn image_format() -> ImageFormat {
-        //TODO: use normalized integers
-        ImageFormat::RGBAF32
-    }
-
-    fn texture_width<T>() -> usize {
-        MAX_VERTEX_TEXTURE_WIDTH - (MAX_VERTEX_TEXTURE_WIDTH % Self::texels_per_item::<T>())
-    }
-
-    fn texture_filter() -> TextureFilter {
-        TextureFilter::Nearest
-    }
-}
-
-type SplitGeometryTexture = GpuDataTexture<SplitGeometryTextureLayout>;
-pub type SplitGeometryStore = GpuStore<SplitGeometry, SplitGeometryTextureLayout>;
 
 const TRANSFORM_FEATURE: &'static str = "TRANSFORM";
 const SUBPIXEL_AA_FEATURE: &'static str = "SUBPIXEL_AA";
@@ -530,12 +505,8 @@ fn create_clip_shader(name: &'static str, device: &mut Device) -> Result<Program
 struct GpuDataTextures {
     layer_texture: VertexDataTexture,
     render_task_texture: VertexDataTexture,
-    prim_geom_texture: VertexDataTexture,
-    data16_texture: VertexDataTexture,
     data32_texture: VertexDataTexture,
     resource_rects_texture: VertexDataTexture,
-    gradient_data_texture: GradientDataTexture,
-    split_geometry_texture: SplitGeometryTexture,
 }
 
 impl GpuDataTextures {
@@ -543,33 +514,21 @@ impl GpuDataTextures {
         GpuDataTextures {
             layer_texture: VertexDataTexture::new(device),
             render_task_texture: VertexDataTexture::new(device),
-            prim_geom_texture: VertexDataTexture::new(device),
-            data16_texture: VertexDataTexture::new(device),
             data32_texture: VertexDataTexture::new(device),
             resource_rects_texture: VertexDataTexture::new(device),
-            gradient_data_texture: GradientDataTexture::new(device),
-            split_geometry_texture: SplitGeometryTexture::new(device),
         }
     }
 
     fn init_frame(&mut self, device: &mut Device, frame: &mut Frame) {
-        self.data16_texture.init(device, &mut frame.gpu_data16);
         self.data32_texture.init(device, &mut frame.gpu_data32);
-        self.prim_geom_texture.init(device, &mut frame.gpu_geometry);
         self.resource_rects_texture.init(device, &mut frame.gpu_resource_rects);
         self.layer_texture.init(device, &mut frame.layer_texture_data);
         self.render_task_texture.init(device, &mut frame.render_task_data);
-        self.gradient_data_texture.init(device, &mut frame.gpu_gradient_data);
-        self.split_geometry_texture.init(device, &mut frame.gpu_split_geometry);
 
         device.bind_texture(TextureSampler::Layers, self.layer_texture.id);
         device.bind_texture(TextureSampler::RenderTasks, self.render_task_texture.id);
-        device.bind_texture(TextureSampler::Geometry, self.prim_geom_texture.id);
-        device.bind_texture(TextureSampler::Data16, self.data16_texture.id);
         device.bind_texture(TextureSampler::Data32, self.data32_texture.id);
         device.bind_texture(TextureSampler::ResourceRects, self.resource_rects_texture.id);
-        device.bind_texture(TextureSampler::Gradients, self.gradient_data_texture.id);
-        device.bind_texture(TextureSampler::SplitGeometry, self.split_geometry_texture.id);
     }
 }
 
@@ -992,34 +951,8 @@ impl Renderer {
         let device_max_size = device.max_texture_size();
         let max_texture_size = cmp::min(device_max_size, options.max_texture_size.unwrap_or(device_max_size));
 
-        let mut texture_cache = TextureCache::new(max_texture_size);
-        let mut backend_profile_counters = BackendProfileCounters::new();
-
-        let white_pixels: Vec<u8> = vec![
-            0xff, 0xff, 0xff, 0xff,
-            0xff, 0xff, 0xff, 0xff,
-            0xff, 0xff, 0xff, 0xff,
-            0xff, 0xff, 0xff, 0xff,
-        ];
-        let mask_pixels: Vec<u8> = vec![
-            0xff, 0xff,
-            0xff, 0xff,
-        ];
-
-        // TODO: Ensure that the white texture can never get evicted when the cache supports LRU eviction!
-        let white_image_id = texture_cache.new_item_id();
-        texture_cache.insert(white_image_id,
-                             ImageDescriptor::new(2, 2, ImageFormat::RGBA8, false),
-                             TextureFilter::Linear,
-                             ImageData::Raw(Arc::new(white_pixels)),
-                             &mut backend_profile_counters.resources.texture_cache);
-
-        let dummy_mask_image_id = texture_cache.new_item_id();
-        texture_cache.insert(dummy_mask_image_id,
-                             ImageDescriptor::new(2, 2, ImageFormat::A8, false),
-                             TextureFilter::Linear,
-                             ImageData::Raw(Arc::new(mask_pixels)),
-                             &mut backend_profile_counters.resources.texture_cache);
+        let texture_cache = TextureCache::new(max_texture_size);
+        let backend_profile_counters = BackendProfileCounters::new();
 
         let dummy_cache_texture_id = device.create_texture_ids(1, TextureTarget::Array)[0];
         device.init_texture(dummy_cache_texture_id,
@@ -1384,7 +1317,7 @@ impl Renderer {
                         self.update_texture_cache();
 
                         self.update_gpu_cache();
-                        self.device.bind_texture(TextureSampler::ResourceCache, self.gpu_cache_texture.id);
+                        self.device.bind_texture(TextureSampler::ResourceCache, self.gpu_cache_texture.current_id);
 
                         frame_id
                     };
@@ -1586,7 +1519,7 @@ impl Renderer {
                                vao: VAOId,
                                shader: ProgramId,
                                textures: &BatchTextures,
-                               projection: &Matrix4D<f32>) {
+                               projection: &Transform3D<f32>) {
         self.device.bind_vao(vao);
         self.device.bind_program(shader, projection);
 
@@ -1617,7 +1550,7 @@ impl Renderer {
 
     fn submit_batch(&mut self,
                     batch: &PrimitiveBatch,
-                    projection: &Matrix4D<f32>,
+                    projection: &Transform3D<f32>,
                     render_task_data: &[RenderTaskData],
                     cache_texture: TextureId,
                     render_target: Option<(TextureId, i32)>,
@@ -1781,7 +1714,7 @@ impl Renderer {
                          color_cache_texture: TextureId,
                          clear_color: Option<[f32; 4]>,
                          render_task_data: &[RenderTaskData],
-                         projection: &Matrix4D<f32>) {
+                         projection: &Transform3D<f32>) {
         {
             let _gm = self.gpu_profile.add_marker(GPU_TAG_SETUP_TARGET);
             self.device.bind_draw_target(render_target, Some(target_size));
@@ -1925,7 +1858,7 @@ impl Renderer {
                          render_target: (TextureId, i32),
                          target: &AlphaRenderTarget,
                          target_size: DeviceUintSize,
-                         projection: &Matrix4D<f32>) {
+                         projection: &Transform3D<f32>) {
         {
             let _gm = self.gpu_profile.add_marker(GPU_TAG_SETUP_TARGET);
             self.device.bind_draw_target(Some(render_target), Some(target_size));
@@ -2163,7 +2096,7 @@ impl Renderer {
                         None
                     };
                     size = framebuffer_size;
-                    projection = Matrix4D::ortho(0.0,
+                    projection = Transform3D::ortho(0.0,
                                                  size.width as f32,
                                                  size.height as f32,
                                                  0.0,
@@ -2172,7 +2105,7 @@ impl Renderer {
                 } else {
                     size = &frame.cache_size;
                     clear_color = Some([0.0, 0.0, 0.0, 0.0]);
-                    projection = Matrix4D::ortho(0.0,
+                    projection = Transform3D::ortho(0.0,
                                                  size.width as f32,
                                                  0.0,
                                                  size.height as f32,

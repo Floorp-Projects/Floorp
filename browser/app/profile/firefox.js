@@ -240,6 +240,13 @@ pref("general.autoScroll", true);
 // UI density of the browser chrome. This mostly affects toolbarbutton
 // and urlbar spacing. The possible values are 0=normal, 1=compact, 2=touch.
 pref("browser.uidensity", 0);
+// Whether Firefox will automatically override the uidensity to "touch"
+// while the user is in a touch environment (such as Windows tablet mode).
+#ifdef MOZ_PHOTON_THEME
+pref("browser.touchmode.auto", true);
+#else
+pref("browser.touchmode.auto", false);
+#endif
 
 // At startup, check if we're the default browser and prompt user if not.
 pref("browser.shell.checkDefaultBrowser", true);
@@ -716,7 +723,7 @@ pref("browser.preferences.instantApply", true);
 #endif
 
 // Toggling Search bar on and off in about:preferences
-pref("browser.preferences.search", false);
+pref("browser.preferences.search", true);
 
 // Use the new in-content about:preferences in Nightly only for now
 #if defined(NIGHTLY_BUILD)

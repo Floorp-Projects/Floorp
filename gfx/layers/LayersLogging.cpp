@@ -170,6 +170,9 @@ AppendToString(std::stringstream& aStream, const ScrollMetadata& m,
   if (m.HasScrollClip()) {
     AppendToString(aStream, m.ScrollClip().GetClipRect(), "] [clip=");
   }
+  if (m.HasMaskLayer()) {
+    AppendToString(aStream, m.ScrollClip().GetMaskLayerIndex().value(), "] [mask=");
+  }
   aStream << "] }" << sfx;
 }
 

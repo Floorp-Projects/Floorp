@@ -353,6 +353,8 @@ public:
 
     void SetPopupWindowLevel();
 
+    bool InFullScreenMode() const { return mInFullScreenMode; }
+
 protected:
   virtual ~nsCocoaWindow();
 

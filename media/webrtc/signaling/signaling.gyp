@@ -291,6 +291,12 @@
             'USE_FAKE_PCOBSERVER',
           ],
         }],
+        # See webrtc/base/task_queue.h
+        ['OS!="mac" and OS!="ios" and OS!="win"', {
+          'defines': [
+            'WEBRTC_BUILD_LIBEVENT',
+          ],
+        }],
         ['(OS=="linux") or (OS=="android")', {
           'include_dirs': [
           ],
@@ -303,7 +309,6 @@
             'LINUX',
             'GIPS_VER=3510',
             'SECLIB_OPENSSL',
-            'WEBRTC_BUILD_LIBEVENT',
           ],
 
           'cflags_mozilla': [

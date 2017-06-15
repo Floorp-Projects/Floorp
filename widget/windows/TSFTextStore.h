@@ -210,11 +210,6 @@ public:
     }
   }
 
-  static ITfMessagePump* GetMessagePump()
-  {
-    return sMessagePump;
-  }
-
   static void* GetThreadManager()
   {
     return static_cast<void*>(sThreadMgr);
@@ -1007,6 +1002,10 @@ protected:
   static already_AddRefed<ITfThreadMgr> GetThreadMgr();
   // sMessagePump is QI'ed from sThreadMgr
   static StaticRefPtr<ITfMessagePump> sMessagePump;
+public:
+  // Expose GetMessagePump() for WinUtils.
+  static already_AddRefed<ITfMessagePump> GetMessagePump();
+private:
   // sKeystrokeMgr is QI'ed from sThreadMgr
   static StaticRefPtr<ITfKeystrokeMgr> sKeystrokeMgr;
   // TSF display attribute manager
@@ -1015,6 +1014,9 @@ protected:
   // TSF category manager
   static StaticRefPtr<ITfCategoryMgr> sCategoryMgr;
   static already_AddRefed<ITfCategoryMgr> GetCategoryMgr();
+  // Compartment for (Get|Set)IMEOpenState()
+  static StaticRefPtr<ITfCompartment> sCompartmentForOpenClose;
+  static already_AddRefed<ITfCompartment> GetCompartmentForOpenClose();
 
   // Current text store which is managing a keyboard enabled editor (i.e.,
   // editable editor).  Currently only ONE TSFTextStore instance is ever used,

@@ -109,11 +109,8 @@ public:
   // DOM Range gravity will promote the selection out of the node on deletion,
   // which is not what you want if you know you are reinserting it.
   nsresult SelAdjCreateNode(nsINode* aParent, int32_t aPosition);
-  nsresult SelAdjCreateNode(nsIDOMNode* aParent, int32_t aPosition);
   nsresult SelAdjInsertNode(nsINode* aParent, int32_t aPosition);
-  nsresult SelAdjInsertNode(nsIDOMNode* aParent, int32_t aPosition);
   void SelAdjDeleteNode(nsINode* aNode);
-  void SelAdjDeleteNode(nsIDOMNode* aNode);
   nsresult SelAdjSplitNode(nsIContent& aOldRightNode, int32_t aOffset,
                            nsIContent* aNewLeftNode);
   nsresult SelAdjJoinNodes(nsINode& aLeftNode,

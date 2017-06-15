@@ -823,6 +823,12 @@ int nr_ice_peer_ctx_deliver_packet_maybe(nr_ice_peer_ctx *pctx, nr_ice_component
     if(!cand)
       ABORT(R_REJECTED);
 
+    // accumulate the received bytes for the active candidate pair
+    if (peer_comp->active) {
+      peer_comp->active->bytes_recvd += len;
+      gettimeofday(&peer_comp->active->last_recvd, 0);
+    }
+
     /* OK, there's a match. Call the handler */
 
     if (pctx->handler) {

@@ -172,7 +172,7 @@ fails-if(styloVsGecko||stylo) == anim-paintserver-1.svg anim-paintserver-1-ref.s
 == anim-fill-overpaintserver-2.svg lime.svg
 
 # animate where we fallback from 'additive' animation to non-additive
-fails-if(styloVsGecko||stylo) == anim-additive-fallback-1.svg anim-standard-ref.svg
+== anim-additive-fallback-1.svg anim-standard-ref.svg
 
 == anim-remove-1.svg anim-standard-ref.svg
 == anim-remove-2.svg anim-standard-ref.svg
@@ -275,8 +275,8 @@ fails-if(styloVsGecko||stylo) == anim-defs-gradient-property.svg lime.svg
 == anim-defs-width.svg lime.svg
 
 # Test animation that changes 'display' attribute
-fails-if(styloVsGecko||stylo) == anim-display.svg lime.svg
-fails-if(styloVsGecko||stylo) == anim-display-in-g-element.svg lime.svg
+== anim-display.svg lime.svg
+== anim-display-in-g-element.svg lime.svg
 
 # Test animation that change 'display' style value to 'none'
 == anim-change-display-none-for-ancestor-elem.html lime.html

@@ -317,6 +317,10 @@ function isCorrectlySigned(aAddon) {
   return aAddon.isCorrectlySigned !== false;
 }
 
+function isDisabledUnsigned(addon) {
+  return AddonSettings.REQUIRE_SIGNING && !isCorrectlySigned(addon);
+}
+
 function isLegacyExtension(addon) {
   let legacy = false;
   if (addon.type == "extension" && !addon.isWebExtension) {
@@ -2850,7 +2854,7 @@ var gLegacyView = {
   async show(type, request) {
     let addons = await AddonManager.getAddonsByTypes(["extension"]);
     addons = addons.filter(a => !a.hidden &&
-                              (isLegacyExtension(a) || !isCorrectlySigned(a)));
+                              (isLegacyExtension(a) || isDisabledUnsigned(a)));
 
     while (this._listBox.itemCount > 0)
       this._listBox.removeItemAt(0);
@@ -2884,7 +2888,7 @@ var gLegacyView = {
     let haveUnsigned = false;
     let haveLegacy = false;
     for (let extension of extensions) {
-      if (AddonSettings.REQUIRE_SIGNING && !isCorrectlySigned(extension)) {
+      if (isDisabledUnsigned(extension)) {
         haveUnsigned = true;
       }
       if (isLegacyExtension(extension)) {
@@ -2986,8 +2990,7 @@ var gListView = {
       if (!legacyExtensionsEnabled) {
         let preLen = aAddonsList.length;
         aAddonsList = aAddonsList.filter(addon => !isLegacyExtension(addon) &&
-                                                  (isCorrectlySigned(addon) ||
-                                                   !AddonSettings.REQUIRE_SIGNING));
+                                                  !isDisabledUnsigned(addon));
         if (aAddonsList.length != preLen) {
           showLegacyInfo = true;
         }
@@ -3505,7 +3508,7 @@ var gDetailView = {
         errorLink.value = gStrings.ext.GetStringFromName("details.notification.blocked.link");
         errorLink.href = this._addon.blocklistURL;
         errorLink.hidden = false;
-      } else if (!isCorrectlySigned(this._addon) && AddonSettings.REQUIRE_SIGNING) {
+      } else if (isDisabledUnsigned(this._addon)) {
         this.node.setAttribute("notification", "error");
         document.getElementById("detail-error").textContent = gStrings.ext.formatStringFromName(
           "details.notification.unsignedAndDisabled", [this._addon.name, gStrings.brandShortName], 2

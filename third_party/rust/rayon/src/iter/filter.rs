@@ -6,6 +6,7 @@ use super::*;
 ///
 /// [`filter()`]: trait.ParallelIterator.html#method.filter
 /// [`ParallelIterator`]: trait.ParallelIterator.html
+#[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct Filter<I: ParallelIterator, P> {
     base: I,
     filter_op: P,
@@ -25,7 +26,7 @@ pub fn new<I, P>(base: I, filter_op: P) -> Filter<I, P>
 
 impl<I, P> ParallelIterator for Filter<I, P>
     where I: ParallelIterator,
-          P: Fn(&I::Item) -> bool + Sync
+          P: Fn(&I::Item) -> bool + Sync + Send
 {
     type Item = I::Item;
 
@@ -34,22 +35,6 @@ impl<I, P> ParallelIterator for Filter<I, P>
     {
         let consumer1 = FilterConsumer::new(consumer, &self.filter_op);
         self.base.drive_unindexed(consumer1)
-    }
-}
-
-impl<I, P> BoundedParallelIterator for Filter<I, P>
-    where I: BoundedParallelIterator,
-          P: Fn(&I::Item) -> bool + Sync
-{
-    fn upper_bound(&mut self) -> usize {
-        self.base.upper_bound()
-    }
-
-    fn drive<C>(self, consumer: C) -> C::Result
-        where C: Consumer<Self::Item>
-    {
-        let consumer1 = FilterConsumer::new(consumer, &self.filter_op);
-        self.base.drive(consumer1)
     }
 }
 

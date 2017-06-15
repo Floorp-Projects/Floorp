@@ -62,6 +62,36 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
             self.assertEqual(self.marionette.window_handles,
                              window_handles_in_chrome_scope)
 
+    def test_chrome_window_handles_after_opening_new_dialog(self):
+        xul_dialog = "chrome://marionette/content/test_dialog.xul"
+
+        def open_via_js():
+            self.marionette.execute_script("""
+                window.openDialog(arguments[0]);
+            """, script_args=(xul_dialog,))
+
+        new_win = self.open_window(trigger=open_via_js)
+        self.assert_window_handles()
+        self.assertEqual(len(self.marionette.chrome_window_handles), len(self.start_windows) + 1)
+        self.assertEqual(self.marionette.current_chrome_window_handle, self.start_window)
+
+        # Check that the new tab has the correct page loaded
+        self.marionette.switch_to_window(new_win)
+        self.assert_window_handles()
+        self.assertEqual(self.marionette.current_chrome_window_handle, new_win)
+        self.assertEqual(self.marionette.get_url(), xul_dialog)
+
+        # Close the opened dialog and carry on in our original tab.
+        self.marionette.close_chrome_window()
+        self.assert_window_handles()
+        self.assertEqual(len(self.marionette.chrome_window_handles), len(self.start_windows))
+
+        self.marionette.switch_to_window(self.start_window)
+        self.assert_window_handles()
+        self.assertEqual(self.marionette.current_chrome_window_handle, self.start_window)
+        with self.marionette.using_context("content"):
+            self.assertEqual(self.marionette.get_url(), self.test_page)
+
     def test_chrome_window_handles_after_opening_new_window(self):
         def open_with_link():
             with self.marionette.using_context("content"):
@@ -138,6 +168,40 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
 
         self.marionette.switch_to_window(self.start_tab)
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
+
+    def test_window_handles_after_opening_new_dialog(self):
+        xul_dialog = "chrome://marionette/content/test_dialog.xul"
+
+        def open_via_js():
+            self.marionette.execute_script("""
+                window.openDialog(arguments[0]);
+            """, script_args=(xul_dialog,))
+
+        new_win = self.open_window(trigger=open_via_js)
+        self.assert_window_handles()
+        self.assertEqual(len(self.marionette.window_handles), len(self.start_tabs))
+        self.assertEqual(self.marionette.current_window_handle, self.start_tab)
+
+        self.marionette.switch_to_window(new_win)
+        self.assert_window_handles()
+        self.assertEqual(self.marionette.get_url(), xul_dialog)
+
+        # Check that the opened dialog is not accessible via window handles
+        with self.assertRaises(errors.NoSuchWindowException):
+            self.marionette.current_window_handle
+        with self.assertRaises(errors.NoSuchWindowException):
+            self.marionette.close()
+
+        # Close the dialog and carry on in our original tab.
+        self.marionette.close_chrome_window()
+        self.assert_window_handles()
+        self.assertEqual(len(self.marionette.window_handles), len(self.start_tabs))
+
+        self.marionette.switch_to_window(self.start_tab)
+        self.assert_window_handles()
+        self.assertEqual(self.marionette.current_window_handle, self.start_tab)
+        with self.marionette.using_context("content"):
+            self.assertEqual(self.marionette.get_url(), self.test_page)
 
     def test_window_handles_after_opening_new_window(self):
         def open_with_link():
