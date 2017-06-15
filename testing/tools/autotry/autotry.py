@@ -403,7 +403,8 @@ class AutoTry(object):
                         paths.add("%s:%s" % (flavor, test))
                     suites[job_name] = tests.get(suite, [])
 
-        if not suites:
+        # intersection implies tests are expected
+        if intersection and not suites:
             raise ValueError("No tests found matching filters")
 
         if extras.get('artifact'):

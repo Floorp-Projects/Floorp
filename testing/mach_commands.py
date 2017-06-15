@@ -536,9 +536,6 @@ class PushToTry(MachCommandBase):
 
     def validate_args(self, **kwargs):
         from autotry import AutoTry
-        if not kwargs["paths"] and not kwargs["tests"] and not kwargs["tags"]:
-            print("Paths, tags, or tests must be specified as an argument to autotry.")
-            sys.exit(1)
 
         if kwargs["platforms"] is None:
             if 'AUTOTRY_PLATFORM_HINT' in os.environ:
