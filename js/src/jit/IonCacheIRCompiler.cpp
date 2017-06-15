@@ -456,6 +456,7 @@ IonCacheIRCompiler::init()
         break;
       }
       case CacheKind::TypeOf:
+      case CacheKind::Call:
         MOZ_CRASH("Invalid cache");
       case CacheKind::HasOwn: {
         IonHasOwnIC* ic = ic_->asHasOwnIC();
@@ -1162,6 +1163,37 @@ bool
 IonCacheIRCompiler::emitLoadStringResult()
 {
     MOZ_CRASH("not used in ion");
+}
+
+typedef bool (*StringSplitHelperFn)(JSContext*, HandleString, HandleString, HandleObjectGroup,
+                              uint32_t limit, MutableHandleValue);
+static const VMFunction StringSplitHelperInfo =
+    FunctionInfo<StringSplitHelperFn>(StringSplitHelper, "StringSplitHelper");
+
+bool
+IonCacheIRCompiler::emitCallStringSplitResult()
+{
+    AutoSaveLiveRegisters save(*this);
+    AutoOutputRegister output(*this);
+
+    Register str = allocator.useRegister(masm, reader.stringOperandId());
+    Register sep = allocator.useRegister(masm, reader.stringOperandId());
+    ObjectGroup* group = groupStubField(reader.stubOffset());
+
+    allocator.discardStack(masm);
+
+    prepareVMCall(masm);
+
+    masm.Push(str);
+    masm.Push(sep);
+    masm.Push(ImmGCPtr(group));
+    masm.Push(Imm32(INT32_MAX));
+
+    if (!callVM(masm, StringSplitHelperInfo))
+        return false;
+
+    masm.storeCallResultValue(output);
+    return true;
 }
 
 static bool
@@ -1962,6 +1994,13 @@ IonCacheIRCompiler::emitLoadObject()
     JSObject* obj = objectStubField(reader.stubOffset());
     masm.movePtr(ImmGCPtr(obj), reg);
     return true;
+}
+
+bool
+IonCacheIRCompiler::emitLoadStackValue()
+{
+    MOZ_ASSERT_UNREACHABLE("emitLoadStackValue not supported for IonCaches.");
+    return false;
 }
 
 bool
