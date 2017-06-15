@@ -105,6 +105,12 @@ typedef DPI_AWARENESS_CONTEXT(WINAPI * SetThreadDpiAwarenessContextProc)(DPI_AWA
 typedef BOOL(WINAPI * EnableNonClientDpiScalingProc)(HWND);
 
 namespace mozilla {
+#if defined(ACCESSIBILITY)
+namespace a11y {
+class Accessible;
+} // namespace a11y
+#endif // defined(ACCESSIBILITY)
+
 namespace widget {
 
 // Windows message debugging data
@@ -492,6 +498,8 @@ public:
 
 #ifdef ACCESSIBILITY
   static void SetAPCPending();
+
+  static a11y::Accessible* GetRootAccessibleForHWND(HWND aHwnd);
 #endif
 
 private:
