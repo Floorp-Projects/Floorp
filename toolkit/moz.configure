@@ -86,12 +86,20 @@ option('--with-l10n-base', nargs=1, env='L10NBASEDIR',
 
 @depends('--with-l10n-base')
 @imports(_from='os.path', _import='isdir')
+@imports(_from='os.path', _import='expanduser')
+@imports(_from='os', _import='environ')
 def l10n_base(value):
     if value:
         path = value[0]
         if not isdir(path):
             die("Invalid value --with-l10n-base, %s doesn't exist", path)
-        return os.path.realpath(os.path.abspath(path))
+    else:
+        path = os.path.join(
+            environ.get(
+                'MOZBUILD_STATE_PATH',
+                expanduser(os.path.join('~', '.mozbuild'))),
+            'l10n-central')
+    return os.path.realpath(os.path.abspath(path))
 
 set_config('L10NBASEDIR', l10n_base)
 
