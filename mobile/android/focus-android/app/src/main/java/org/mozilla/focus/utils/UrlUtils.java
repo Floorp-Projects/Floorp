@@ -19,10 +19,11 @@ import java.net.URISyntaxException;
 
 public class UrlUtils {
     public static String normalize(@NonNull String input) {
-        Uri uri = Uri.parse(input);
+        String trimmedInput = input.trim();
+        Uri uri = Uri.parse(trimmedInput);
 
         if (TextUtils.isEmpty(uri.getScheme())) {
-            uri = Uri.parse("http://" + input);
+            uri = Uri.parse("http://" + trimmedInput);
         }
 
         return uri.toString();
@@ -34,11 +35,12 @@ public class UrlUtils {
      * TODO: This is a super simple and probably stupid implementation.
      */
     public static boolean isUrl(String url) {
-        if (url.contains(" ")) {
+        String trimmedUrl = url.trim();
+        if (trimmedUrl.contains(" ")) {
             return false;
         }
 
-        return url.contains(".") || url.contains(":");
+        return trimmedUrl.contains(".") || trimmedUrl.contains(":");
     }
 
     public static boolean isHttpOrHttps(String url) {

@@ -58,6 +58,9 @@ public class UrlUtilsTest {
     public void testIsUrl() {
         assertTrue(UrlUtils.isUrl("http://www.mozilla.org"));
         assertTrue(UrlUtils.isUrl("https://www.mozilla.org"));
+        assertTrue(UrlUtils.isUrl("https://www.mozilla.org "));
+        assertTrue(UrlUtils.isUrl(" https://www.mozilla.org"));
+        assertTrue(UrlUtils.isUrl(" https://www.mozilla.org "));
         assertTrue(UrlUtils.isUrl("https://www.mozilla.org/en-US/internet-health/"));
         assertTrue(UrlUtils.isUrl("file:///mnt/sdcard/"));
         assertTrue(UrlUtils.isUrl("mozilla.org"));
@@ -74,6 +77,9 @@ public class UrlUtilsTest {
         assertEquals("file:///mnt/sdcard/", UrlUtils.normalize("file:///mnt/sdcard/"));
 
         assertEquals("http://mozilla.org", UrlUtils.normalize("mozilla.org"));
+        assertEquals("http://mozilla.org", UrlUtils.normalize("http://mozilla.org "));
+        assertEquals("http://mozilla.org", UrlUtils.normalize(" http://mozilla.org "));
+        assertEquals("http://mozilla.org", UrlUtils.normalize(" http://mozilla.org"));
         assertEquals("http://localhost", UrlUtils.normalize("localhost"));
     }
 
