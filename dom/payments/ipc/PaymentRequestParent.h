@@ -8,16 +8,15 @@
 #define mozilla_dom_PaymentRequestParent_h
 
 #include "mozilla/dom/PPaymentRequestParent.h"
-#include "nsIPaymentActionRequest.h"
+#include "nsISupports.h"
 
 namespace mozilla {
 namespace dom {
 
-class PaymentRequestParent final : public nsIPaymentActionCallback
-                                 , public PPaymentRequestParent
+class PaymentRequestParent final : public PPaymentRequestParent
 {
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIPAYMENTACTIONCALLBACK
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PaymentRequestParent)
 
   explicit PaymentRequestParent(uint64_t aTabId);
 
@@ -30,10 +29,6 @@ protected:
   void ActorDestroy(ActorDestroyReason aWhy) override;
 private:
   ~PaymentRequestParent() = default;
-
-  nsresult CreateActionRequest(const nsAString& aRequestId,
-                               uint32_t aActionType,
-                               nsIPaymentActionRequest** aAction);
 
   bool mActorAlived;
   uint64_t mTabId;

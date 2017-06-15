@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/PaymentRequest.h"
-#include "mozilla/dom/PaymentResponse.h"
 #include "nsContentUtils.h"
 #include "PaymentRequestManager.h"
 
@@ -22,20 +21,10 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PaymentRequest,
                                                   DOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResultPromise)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAcceptPromise)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAbortPromise)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResponse)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mShippingAddress)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PaymentRequest,
                                                 DOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mResultPromise)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAcceptPromise)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAbortPromise)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mResponse)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mShippingAddress)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(PaymentRequest)
@@ -48,26 +37,6 @@ bool
 PaymentRequest::PrefEnabled(JSContext* aCx, JSObject* aObj)
 {
   return Preferences::GetBool("dom.payments.request.enabled");
-}
-
-bool
-PaymentRequest::IsValidMethodData(const Sequence<PaymentMethodData>& aMethodData,
-                                  nsAString& aErrorMsg)
-{
-  if (!aMethodData.Length()) {
-    aErrorMsg.AssignLiteral("At least one payment method is required.");
-    return false;
-  }
-
-  for (const PaymentMethodData& methodData : aMethodData) {
-    if (!methodData.mSupportedMethods.Length()) {
-      aErrorMsg.AssignLiteral(
-        "At least one payment method identifier is required.");
-      return false;
-    }
-  }
-
-  return true;
 }
 
 bool
@@ -183,10 +152,11 @@ PaymentRequest::Constructor(const GlobalObject& aGlobal,
 
   // [TODO] Bug 1318988 - Implement `allowPaymentRequest` on iframe
 
-  // Check payment methods and details
+  // Check payment methods is done by webidl
+
+  // Check payment details
   nsAutoString message;
-  if (!IsValidMethodData(aMethodData, message) ||
-      !IsValidDetailsInit(aDetails, message)) {
+  if (!IsValidDetailsInit(aDetails, message)) {
     aRv.ThrowTypeError<MSG_ILLEGAL_PR_CONSTRUCTOR>(message);
     return nullptr;
   }
@@ -201,7 +171,6 @@ PaymentRequest::Constructor(const GlobalObject& aGlobal,
   nsresult rv = manager->CreatePayment(window, aMethodData, aDetails,
                                        aOptions, getter_AddRefs(request));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
     return nullptr;
   }
 
@@ -229,7 +198,6 @@ PaymentRequest::CreatePaymentRequest(nsPIDOMWindowInner* aWindow, nsresult& aRv)
 PaymentRequest::PaymentRequest(nsPIDOMWindowInner* aWindow, const nsAString& aInternalId)
   : DOMEventTargetHelper(aWindow)
   , mInternalId(aInternalId)
-  , mShippingAddress(nullptr)
   , mUpdating(false)
   , mState(eCreated)
 {
@@ -237,180 +205,24 @@ PaymentRequest::PaymentRequest(nsPIDOMWindowInner* aWindow, const nsAString& aIn
 }
 
 already_AddRefed<Promise>
-PaymentRequest::CanMakePayment(ErrorResult& aRv)
+PaymentRequest::Show(ErrorResult& aRv)
 {
-  if (mState != eCreated) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
-  if (mResultPromise) {
-    aRv.Throw(NS_ERROR_DOM_NOT_ALLOWED_ERR);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
-  ErrorResult result;
-  RefPtr<Promise> promise = Promise::Create(global, result);
-  if (result.Failed()) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
-  if (NS_WARN_IF(!manager)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-  nsresult rv = manager->CanMakePayment(mInternalId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    promise->MaybeReject(NS_ERROR_FAILURE);
-    return promise.forget();
-  }
-  mResultPromise = promise;
-  return promise.forget();
-}
-
-void
-PaymentRequest::RespondCanMakePayment(bool aResult)
-{
-  MOZ_ASSERT(mResultPromise);
-  mResultPromise->MaybeResolve(aResult);
-  mResultPromise = nullptr;
+  aRv.Throw(NS_ERROR_FAILURE);
+  return nullptr;
 }
 
 already_AddRefed<Promise>
-PaymentRequest::Show(ErrorResult& aRv)
+PaymentRequest::CanMakePayment(ErrorResult& aRv)
 {
-  if (mState != eCreated) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
-  ErrorResult result;
-  RefPtr<Promise> promise = Promise::Create(global, result);
-  if (result.Failed()) {
-    mState = eClosed;
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
-  if (NS_WARN_IF(!manager)) {
-    mState = eClosed;
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-  nsresult rv = manager->ShowPayment(mInternalId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    promise->MaybeReject(NS_ERROR_FAILURE);
-    mState = eClosed;
-    return promise.forget();
-  }
-
-  mAcceptPromise = promise;
-  mState = eInteractive;
-  return promise.forget();
-}
-
-void
-PaymentRequest::RejectShowPayment(nsresult aRejectReason)
-{
-  MOZ_ASSERT(mAcceptPromise);
-  MOZ_ASSERT(ReadyForUpdate());
-
-  mAcceptPromise->MaybeReject(aRejectReason);
-  mState = eClosed;
-  mAcceptPromise = nullptr;
-}
-
-void
-PaymentRequest::RespondShowPayment(bool aAccept,
-                                   const nsAString& aMethodName,
-                                   const nsAString& aDetails,
-                                   const nsAString& aPayerName,
-                                   const nsAString& aPayerEmail,
-                                   const nsAString& aPayerPhone,
-                                   nsresult aRv)
-{
-  MOZ_ASSERT(mAcceptPromise);
-  MOZ_ASSERT(ReadyForUpdate());
-  MOZ_ASSERT(mState == eInteractive);
-
-  if (!aAccept) {
-    RejectShowPayment(aRv);
-    return;
-  }
-
-  RefPtr<PaymentResponse> paymentResponse =
-    new PaymentResponse(GetOwner(), mInternalId, mId, aMethodName,
-                        mShippingOption, mShippingAddress, aDetails,
-                        aPayerName, aPayerEmail, aPayerPhone);
-  mResponse = paymentResponse;
-  mAcceptPromise->MaybeResolve(paymentResponse);
-
-  mState = eClosed;
-  mAcceptPromise = nullptr;
-}
-
-void
-PaymentRequest::RespondComplete()
-{
-  MOZ_ASSERT(mResponse);
-  mResponse->RespondComplete();
+  aRv.Throw(NS_ERROR_FAILURE);
+  return nullptr;
 }
 
 already_AddRefed<Promise>
 PaymentRequest::Abort(ErrorResult& aRv)
 {
-  if (mState != eInteractive) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
-  if (mAbortPromise) {
-    aRv.Throw(NS_ERROR_DOM_NOT_ALLOWED_ERR);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
-  ErrorResult result;
-  RefPtr<Promise> promise = Promise::Create(global, result);
-  if (result.Failed()) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
-  if (NS_WARN_IF(!manager)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-  nsresult rv = manager->AbortPayment(mInternalId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  mAbortPromise = promise;
-  return promise.forget();
-}
-
-void
-PaymentRequest::RespondAbortPayment(bool aSuccess)
-{
-  MOZ_ASSERT(mAbortPromise);
-  MOZ_ASSERT(mState == eInteractive);
-
-  if (aSuccess) {
-    mAbortPromise->MaybeResolve(JS::UndefinedHandleValue);
-    mAbortPromise = nullptr;
-    RejectShowPayment(NS_ERROR_DOM_ABORT_ERR);
-  } else {
-    mAbortPromise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    mAbortPromise = nullptr;
-  }
+  aRv.Throw(NS_ERROR_FAILURE);
+  return nullptr;
 }
 
 void
@@ -437,23 +249,10 @@ PaymentRequest::Equals(const nsAString& aInternalId) const
   return mInternalId.Equals(aInternalId);
 }
 
-bool
-PaymentRequest::ReadyForUpdate()
-{
-  return mState == eInteractive && !mUpdating;
-}
-
 void
 PaymentRequest::SetUpdating(bool aUpdating)
 {
   mUpdating = aUpdating;
-}
-
-already_AddRefed<PaymentAddress>
-PaymentRequest::GetShippingAddress() const
-{
-  RefPtr<PaymentAddress> address = mShippingAddress;
-  return address.forget();
 }
 
 void

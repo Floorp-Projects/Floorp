@@ -6,10 +6,8 @@
 
 XPIDL_SOURCES += [
     'nsIPaymentActionRequest.idl',
-    'nsIPaymentActionResponse.idl',
     'nsIPaymentRequest.idl',
     'nsIPaymentRequestService.idl',
-    'nsIPaymentUIService.idl',
 ]
 
 XPIDL_MODULE = 'dom_payments'
