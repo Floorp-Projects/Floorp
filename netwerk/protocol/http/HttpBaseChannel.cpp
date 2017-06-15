@@ -2963,7 +2963,26 @@ HttpBaseChannel::ShouldIntercept(nsIURI* aURI)
   nsCOMPtr<nsINetworkInterceptController> controller;
   GetCallback(controller);
   bool shouldIntercept = false;
-  if (controller && !BypassServiceWorker() && mLoadInfo) {
+
+  // We should never intercept internal redirects.  The ServiceWorker code
+  // can trigger interntal redirects as the result of a FetchEvent.  If
+  // we re-intercept then an infinite loop can occur.
+  //
+  // Its also important that we do not set the LOAD_BYPASS_SERVICE_WORKER
+  // flag because an internal redirect occurs.  Its possible that another
+  // interception should occur after the internal redirect.  For example,
+  // if the ServiceWorker chooses not to call respondWith() the channel
+  // will be reset with an internal redirect.  If the request is a navigation
+  // and the network then triggers a redirect its possible the new URL
+  // should be intercepted again.
+  //
+  // Note, HSTS upgrade redirects are often treated the same as internal
+  // redirects.  In this case, however, we intentionally allow interception
+  // of HSTS upgrade redirects.  This matches the expected spec behavior and
+  // does not run the risk of infinite loops as described above.
+  bool internalRedirect = mLastRedirectFlags & nsIChannelEventSink::REDIRECT_INTERNAL;
+
+  if (controller && mLoadInfo && !BypassServiceWorker() && !internalRedirect) {
     nsresult rv = controller->ShouldPrepareForIntercept(aURI ? aURI : mURI.get(),
                                                         nsContentUtils::IsNonSubresourceRequest(this),
                                                         &shouldIntercept);
