@@ -55,5 +55,6 @@ module.exports = {
     "space-in-parens": ["error", "never"],
     "comma-dangle": ["error", "always-multiline"],
     "dot-notation": "error",
+    "semi-spacing": ["error", {"before": false, "after": true}],
   },
 };
