@@ -479,6 +479,11 @@ pref("browser.tabs.drawInTitlebar", false);
 pref("browser.tabs.drawInTitlebar", true);
 #endif
 
+// false - disable the tabbar session restore button
+// true - enable the tabbar session restore button
+// To be enabled with shield
+pref("browser.tabs.restorebutton", false);
+
 // When tabs opened by links in other tabs via a combination of
 // browser.link.open_newwindow being set to 3 and target="_blank" etc are
 // closed:
