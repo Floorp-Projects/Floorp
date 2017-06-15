@@ -387,6 +387,7 @@ class ModuleEnvironmentObject : public EnvironmentObject
     static const uint32_t MODULE_SLOT = 1;
 
     static const ObjectOps objectOps_;
+    static const ClassOps classOps_;
 
   public:
     static const Class class_;
@@ -418,8 +419,8 @@ class ModuleEnvironmentObject : public EnvironmentObject
                                          MutableHandle<PropertyDescriptor> desc);
     static bool deleteProperty(JSContext* cx, HandleObject obj, HandleId id,
                                ObjectOpResult& result);
-    static bool enumerate(JSContext* cx, HandleObject obj, AutoIdVector& properties,
-                          bool enumerableOnly);
+    static bool newEnumerate(JSContext* cx, HandleObject obj, AutoIdVector& properties,
+                             bool enumerableOnly);
 };
 
 typedef Rooted<ModuleEnvironmentObject*> RootedModuleEnvironmentObject;

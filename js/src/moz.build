@@ -286,7 +286,6 @@ UNIFIED_SOURCES += [
     'json.cpp',
     'jsopcode.cpp',
     'jsprf.cpp',
-    'jspropertytree.cpp',
     'jsscript.cpp',
     'jsstr.cpp',
     'jswatchpoint.cpp',

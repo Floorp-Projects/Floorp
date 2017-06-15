@@ -2548,7 +2548,8 @@ History::RegisterVisitedCallback(nsIURI* aURI,
     // assumes that aLink is non-nullptr, we will need to return now.
     if (NS_FAILED(rv) || !aLink) {
       // Remove our array from the hashtable so we don't keep it around.
-      mObservers.RemoveEntry(aURI);
+      MOZ_ASSERT(key == mObservers.GetEntry(aURI), "The URIs hash mutated!");
+      mObservers.RemoveEntry(key);
       return rv;
     }
   }
@@ -2598,7 +2599,8 @@ History::UnregisterVisitedCallback(nsIURI* aURI,
 
   // If the array is now empty, we should remove it from the hashtable.
   if (observers.IsEmpty()) {
-    mObservers.RemoveEntry(aURI);
+    MOZ_ASSERT(key == mObservers.GetEntry(aURI), "The URIs hash mutated!");
+    mObservers.RemoveEntry(key);
   }
 
   return NS_OK;

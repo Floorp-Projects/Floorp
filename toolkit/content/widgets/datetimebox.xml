@@ -126,7 +126,7 @@
             this.clearFieldValue(this.mYearField);
           }
 
-          if (!aFromInputElement) {
+          if (!aFromInputElement && this.mInputElement.value) {
             this.mInputElement.setUserInput("");
           }
         ]]>
@@ -190,7 +190,9 @@
       <method name="setInputValueFromFields">
         <body>
         <![CDATA[
-          if (!this.isAnyValueAvailable(false)) {
+          if (!this.isAnyValueAvailable(false) && this.mInputElement.value) {
+            // Values in the input box was cleared, clear the input element's
+            // value if not empty.
             this.mInputElement.setUserInput("");
             return;
           }
@@ -220,6 +222,10 @@
 
           let date = [year, month, day].join("-");
 
+          if (date == this.mInputElement.value) {
+            return;
+          }
+
           this.log("setInputValueFromFields: " + date);
           this.mInputElement.setUserInput(date);
         ]]>
@@ -245,6 +251,9 @@
           if (!this.isEmpty(day)) {
             this.setFieldValue(this.mDayField, day);
           }
+
+          // Update input element's .value if needed.
+          this.setInputValueFromFields();
         ]]>
         </body>
       </method>
@@ -697,7 +706,9 @@
       <method name="setInputValueFromFields">
         <body>
         <![CDATA[
-          if (!this.isAnyValueAvailable(false)) {
+          if (!this.isAnyValueAvailable(false) && this.mInputElement.value) {
+            // Values in the input box was cleared, clear the input element's
+            // value if not empty.
             this.mInputElement.setUserInput("");
             return;
           }
@@ -743,6 +754,10 @@
             time += "." + millisecond;
           }
 
+          if (time == this.mInputElement.value) {
+            return;
+          }
+
           this.log("setInputValueFromFields: " + time);
           this.mInputElement.setUserInput(time);
         ]]>
@@ -768,6 +783,9 @@
           if (!this.isEmpty(minute)) {
             this.setFieldValue(this.mMinuteField, minute);
           }
+
+          // Update input element's .value if needed.
+          this.setInputValueFromFields();
         ]]>
         </body>
        </method>
@@ -807,7 +825,7 @@
             this.clearFieldValue(this.mDayPeriodField);
           }
 
-          if (!aFromInputElement) {
+          if (!aFromInputElement && this.mInputElement.value) {
             this.mInputElement.setUserInput("");
           }
         ]]>

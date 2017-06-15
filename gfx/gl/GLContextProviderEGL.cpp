@@ -81,7 +81,7 @@ using namespace mozilla::widget;
 } while (0)
 
 static bool
-CreateConfig(EGLConfig* aConfig);
+CreateConfig(EGLConfig* aConfig, bool aEnableDepthBuffer);
 
 // append three zeros at the end of attribs list to work around
 // EGL implementation bugs that iterate until they find 0, instead of
@@ -176,7 +176,7 @@ GLContextEGLFactory::Create(EGLNativeWindowType aWindow,
     bool doubleBuffered = true;
 
     EGLConfig config;
-    if (!CreateConfig(&config)) {
+    if (!CreateConfig(&config, aWebRender)) {
         MOZ_CRASH("GFX: Failed to create EGLConfig!\n");
         return nullptr;
     }
@@ -643,7 +643,7 @@ static const EGLint kEGLConfigAttribsRGBA32[] = {
 };
 
 static bool
-CreateConfig(EGLConfig* aConfig, int32_t depth)
+CreateConfig(EGLConfig* aConfig, int32_t depth, bool aEnableDepthBuffer)
 {
     EGLConfig configs[64];
     const EGLint* attribs;
@@ -685,6 +685,13 @@ CreateConfig(EGLConfig* aConfig, int32_t depth)
              (depth == 24 && r == 8 && g == 8 && b == 8) ||
              (depth == 32 && r == 8 && g == 8 && b == 8 && a == 8)))
         {
+            EGLint z;
+            if (aEnableDepthBuffer) {
+                if (!sEGLLibrary.fGetConfigAttrib(EGL_DISPLAY(), config, LOCAL_EGL_DEPTH_SIZE, &z) ||
+                    z != 24) {
+                    continue;
+                }
+            }
             *aConfig = config;
             return true;
         }
@@ -698,20 +705,20 @@ CreateConfig(EGLConfig* aConfig, int32_t depth)
 // NB: It's entirely legal for the returned EGLConfig to be valid yet
 // have the value null.
 static bool
-CreateConfig(EGLConfig* aConfig)
+CreateConfig(EGLConfig* aConfig, bool aEnableDepthBuffer)
 {
     int32_t depth = gfxVars::ScreenDepth();
-    if (!CreateConfig(aConfig, depth)) {
+    if (!CreateConfig(aConfig, depth, aEnableDepthBuffer)) {
 #ifdef MOZ_WIDGET_ANDROID
         // Bug 736005
         // Android doesn't always support 16 bit so also try 24 bit
         if (depth == 16) {
-            return CreateConfig(aConfig, 24);
+            return CreateConfig(aConfig, 24, aEnableDepthBuffer);
         }
         // Bug 970096
         // Some devices that have 24 bit screens only support 16 bit OpenGL?
         if (depth == 24) {
-            return CreateConfig(aConfig, 16);
+            return CreateConfig(aConfig, 16, aEnableDepthBuffer);
         }
 #endif
         return false;
@@ -772,7 +779,7 @@ GLContextProviderEGL::CreateEGLSurface(void* aWindow)
     }
 
     EGLConfig config;
-    if (!CreateConfig(&config)) {
+    if (!CreateConfig(&config, /* aEnableDepthBuffer */ false)) {
         MOZ_CRASH("GFX: Failed to create EGLConfig 2!\n");
     }
 

@@ -782,33 +782,32 @@ SourceSurfaceImage::GetTextureClient(KnowsCompositor* aForwarder)
     return nullptr;
   }
 
-  RefPtr<TextureClient> textureClient = mTextureClients.Get(aForwarder->GetSerial());
+  auto entry = mTextureClients.LookupForAdd(aForwarder->GetSerial());
+  if (entry) {
+    return entry.Data();
+  }
+
+  RefPtr<TextureClient> textureClient;
+  RefPtr<SourceSurface> surface = GetAsSourceSurface();
+  MOZ_ASSERT(surface);
+  if (surface) {
+    // gfx::BackendType::NONE means default to content backend
+    textureClient =
+      TextureClient::CreateFromSurface(aForwarder,
+                                       surface,
+                                       BackendSelector::Content,
+                                       mTextureFlags,
+                                       ALLOC_DEFAULT);
+  }
   if (textureClient) {
+    textureClient->SyncWithObject(aForwarder->GetSyncObject());
+    entry.OrInsert([&textureClient](){ return textureClient; });
     return textureClient;
   }
 
-  RefPtr<SourceSurface> surface = GetAsSourceSurface();
-  MOZ_ASSERT(surface);
-  if (!surface) {
-    return nullptr;
-  }
-
-  if (!textureClient) {
-    // gfx::BackendType::NONE means default to content backend
-    textureClient = TextureClient::CreateFromSurface(aForwarder,
-                                                     surface,
-                                                     BackendSelector::Content,
-                                                     mTextureFlags,
-                                                     ALLOC_DEFAULT);
-  }
-  if (!textureClient) {
-    return nullptr;
-  }
-
-  textureClient->SyncWithObject(aForwarder->GetSyncObject());
-
-  mTextureClients.Put(aForwarder->GetSerial(), textureClient);
-  return textureClient;
+  // Remove the speculatively added entry.
+  mTextureClients.Remove(aForwarder->GetSerial());
+  return nullptr;
 }
 
 ImageContainer::ProducerID

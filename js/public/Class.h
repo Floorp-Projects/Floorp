@@ -607,6 +607,7 @@ typedef void
     JSGetterOp         getGetProperty() const { return cOps ? cOps->getProperty : nullptr; } \
     JSSetterOp         getSetProperty() const { return cOps ? cOps->setProperty : nullptr; } \
     JSEnumerateOp      getEnumerate()   const { return cOps ? cOps->enumerate   : nullptr; } \
+    JSNewEnumerateOp   getNewEnumerate()const { return cOps ? cOps->newEnumerate: nullptr; } \
     JSResolveOp        getResolve()     const { return cOps ? cOps->resolve     : nullptr; } \
     JSMayResolveOp     getMayResolve()  const { return cOps ? cOps->mayResolve  : nullptr; } \
     JSNative           getCall()        const { return cOps ? cOps->call        : nullptr; } \
@@ -640,6 +641,7 @@ struct JS_STATIC_CLASS ClassOps
     JSGetterOp          getProperty;
     JSSetterOp          setProperty;
     JSEnumerateOp       enumerate;
+    JSNewEnumerateOp    newEnumerate;
     JSResolveOp         resolve;
     JSMayResolveOp      mayResolve;
     FinalizeOp          finalize;
@@ -738,7 +740,6 @@ struct JS_STATIC_CLASS ObjectOps
     WatchOp          watch;
     UnwatchOp        unwatch;
     GetElementsOp    getElements;
-    JSNewEnumerateOp enumerate;
     JSFunToStringOp  funToString;
 };
 
@@ -758,6 +759,7 @@ struct JS_STATIC_CLASS JSClassOps
     JSGetterOp          getProperty;
     JSSetterOp          setProperty;
     JSEnumerateOp       enumerate;
+    JSNewEnumerateOp    newEnumerate;
     JSResolveOp         resolve;
     JSMayResolveOp      mayResolve;
     JSFinalizeOp        finalize;
@@ -973,7 +975,6 @@ struct JS_STATIC_CLASS Class
     WatchOp          getOpsWatch()          const { return oOps ? oOps->watch          : nullptr; }
     UnwatchOp        getOpsUnwatch()        const { return oOps ? oOps->unwatch        : nullptr; }
     GetElementsOp    getOpsGetElements()    const { return oOps ? oOps->getElements    : nullptr; }
-    JSNewEnumerateOp getOpsEnumerate()      const { return oOps ? oOps->enumerate      : nullptr; }
     JSFunToStringOp  getOpsFunToString()    const { return oOps ? oOps->funToString    : nullptr; }
 };
 
@@ -986,6 +987,8 @@ static_assert(offsetof(JSClassOps, getProperty) == offsetof(ClassOps, getPropert
 static_assert(offsetof(JSClassOps, setProperty) == offsetof(ClassOps, setProperty),
               "ClassOps and JSClassOps must be consistent");
 static_assert(offsetof(JSClassOps, enumerate) == offsetof(ClassOps, enumerate),
+              "ClassOps and JSClassOps must be consistent");
+static_assert(offsetof(JSClassOps, newEnumerate) == offsetof(ClassOps, newEnumerate),
               "ClassOps and JSClassOps must be consistent");
 static_assert(offsetof(JSClassOps, resolve) == offsetof(ClassOps, resolve),
               "ClassOps and JSClassOps must be consistent");
