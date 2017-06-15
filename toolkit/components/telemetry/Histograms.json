@@ -129,24 +129,6 @@
     "bug_numbers": [1172689],
     "description": "Recorded when application reputation remote lookup is performed, `true` is recorded if the lookup times out."
   },
-  "APPLICATION_REPUTATION_BLOCKLIST_MATCH": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
-    "expires_in_version": "60",
-    "kind": "enumerated",
-    "n_values": 4,
-    "bug_numbers": [1331139],
-    "description": "For each Application Reputation lookup against both the V2 and V4 Google lists, note which version of block list returned a match (0 = no match, 1 = match only V2, 2 = match only V4, 3 = match both V2 and V4)"
-  },
-  "APPLICATION_REPUTATION_ALLOWLIST_MATCH": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
-    "expires_in_version": "60",
-    "kind": "enumerated",
-    "n_values": 4,
-    "bug_numbers": [1331139],
-    "description": "For each Application Reputation lookup against both the V2 and V4 Google lists, note which version of the allow list returned a match (0 = no match, 1 = match only V2, 2 = match only V4, 3 = match both V2 and V4)"
-  },
   "ASYNC_ANIMATION_CONTENT_TOO_LARGE_FRAME_SIZE": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["bbirtles@mozilla.com"],
@@ -4949,25 +4931,6 @@
     "n_values": 16,
     "bug_numbers": [1311910],
     "description": "Whether or not an error was encountered while processing a Safe Browsing update (0 = success, 1 = unspecified error, 2 = addition of an already existing prefix, 3 = parser got into an infinite loop, 4 = removal index out of bounds, 5 = checksum mismatch, 6 = missing checksum, 7 = update while shutdown, 8 = cannot find table, 9 = build prefix failure, 10 = write disk failure, 11 = protocol parser error). Keyed by provider"
-  },
-  "URLCLASSIFIER_MATCH_RESULT": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
-    "expires_in_version": "60",
-    "kind": "enumerated",
-    "n_values": 16,
-    "bug_numbers": [1311931],
-    "description": "The result of each URL lookup against both google and google4 lists. (0 = no match, 1 = V2 prefix only, 2 = V4 prefix only, 3 = V2 and V4 prefixes, 4 = V2 and V4 completions, 5 = V2 completion only, 6 = V4 completion only, 7 = V2 completion and v4 prefix, 8 = V2 prefix and V4 completion, 9 = unexpected result)"
-
-  },
-  "URLCLASSIFIER_MATCH_THREAT_TYPE_RESULT" : {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
-    "expires_in_version": "60",
-    "kind": "enumerated",
-    "n_values": 64,
-    "bug_numbers": [1311933],
-    "description": "Whether or not a full URL match is of the same threat type on V2 and V4. (0 = same, otherwise the value is a bit flag where 0x01 = V2 phishing, 0x02 = V2 malware, 0x04 = V2 unwanted, 0x08 = V4 phishing, 0x10 = V4 malware, 0x20 = V4 unwanted)"
   },
   "URLCLASSIFIER_POSITIVE_CACHE_DURATION": {
     "record_in_processes": ["main", "content"],

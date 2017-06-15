@@ -14,6 +14,7 @@ use parser::{ParserContext, log_css_error};
 use properties::animated_properties::AnimationValue;
 use selectors::parser::SelectorParseError;
 use shared_lock::Locked;
+use smallvec::SmallVec;
 use std::fmt;
 use std::slice::Iter;
 use style_traits::{PARSING_MODE_DEFAULT, ToCss, ParseError, ParsingMode, StyleParseError};
@@ -125,7 +126,7 @@ impl<'a, 'cx, 'cx_a:'cx> AnimationValueIterator<'a, 'cx, 'cx_a> {
 }
 
 impl<'a, 'cx, 'cx_a:'cx> Iterator for AnimationValueIterator<'a, 'cx, 'cx_a> {
-    type Item = (TransitionProperty, AnimationValue);
+    type Item = (AnimatableLonghand, AnimationValue);
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         use properties::Importance;
@@ -135,11 +136,11 @@ impl<'a, 'cx, 'cx_a:'cx> Iterator for AnimationValueIterator<'a, 'cx, 'cx_a> {
             match next {
                 Some(&(ref decl, importance)) => {
                     if importance == Importance::Normal {
-                        let property = TransitionProperty::from_declaration(decl);
+                        let property = AnimatableLonghand::from_declaration(decl);
                         let animation = AnimationValue::from_declaration(decl, &mut self.context,
                                                                          self.default_values);
                         debug_assert!(property.is_none() == animation.is_none(),
-                                      "The failure condition of TransitionProperty::from_declaration \
+                                      "The failure condition of AnimatableLonghand::from_declaration \
                                        and AnimationValue::from_declaration should be the same");
                         // Skip the property if either ::from_declaration fails.
                         match (property, animation) {
@@ -200,7 +201,7 @@ impl PropertyDeclarationBlock {
         }
     }
 
-    /// Return an iterator of (TransitionProperty, AnimationValue).
+    /// Return an iterator of (AnimatableLonghand, AnimationValue).
     pub fn to_animation_value_iter<'a, 'cx, 'cx_a:'cx>(&'a self,
                                                        context: &'cx mut Context<'cx_a>,
                                                        default_values: &'a Arc<ComputedValues>)
@@ -553,7 +554,7 @@ impl PropertyDeclarationBlock {
         let mut longhands = LonghandIdSet::new();
 
         for (property, animation_value) in animation_value_map.iter() {
-          longhands.set_transition_property_bit(property);
+          longhands.set_animatable_longhand_bit(property);
           declarations.push((animation_value.uncompute(), Importance::Normal));
         }
 
@@ -590,7 +591,7 @@ impl ToCss for PropertyDeclarationBlock {
         // Step 1 -> dest = result list
 
         // Step 2
-        let mut already_serialized = Vec::new();
+        let mut already_serialized = PropertyDeclarationIdSet::new();
 
         // Step 3
         for &(ref declaration, importance) in &*self.declarations {
@@ -598,29 +599,38 @@ impl ToCss for PropertyDeclarationBlock {
             let property = declaration.id();
 
             // Step 3.2
-            if already_serialized.contains(&property) {
+            if already_serialized.contains(property) {
                 continue;
             }
 
             // Step 3.3
             let shorthands = declaration.shorthands();
             if !shorthands.is_empty() {
-                // Step 3.3.1
-                let mut longhands = self.declarations.iter()
-                    .filter(|d| !already_serialized.contains(&d.0.id()))
-                    .collect::<Vec<_>>();
+                // Step 3.3.1 is done by checking already_serialized while
+                // iterating below.
 
                 // Step 3.3.2
                 for &shorthand in shorthands {
                     let properties = shorthand.longhands();
 
                     // Substep 2 & 3
-                    let mut current_longhands = Vec::new();
+                    let mut current_longhands = SmallVec::<[_; 10]>::new();
                     let mut important_count = 0;
                     let mut found_system = None;
 
-                    if shorthand == ShorthandId::Font && longhands.iter().any(|&&(ref l, _)| l.get_system().is_some()) {
-                        for &&(ref longhand, longhand_importance) in longhands.iter() {
+                    let is_system_font =
+                        shorthand == ShorthandId::Font &&
+                        self.declarations.iter().any(|&(ref l, _)| {
+                            !already_serialized.contains(l.id()) &&
+                            l.get_system().is_some()
+                        });
+
+                    if is_system_font {
+                        for &(ref longhand, longhand_importance) in &self.declarations {
+                            if already_serialized.contains(longhand.id()) {
+                                continue;
+                            }
+
                             if longhand.get_system().is_some() || longhand.is_default_line_height() {
                                 current_longhands.push(longhand);
                                 if found_system.is_none() {
@@ -632,7 +642,11 @@ impl ToCss for PropertyDeclarationBlock {
                             }
                         }
                     } else {
-                        for &&(ref longhand, longhand_importance) in longhands.iter() {
+                        for &(ref longhand, longhand_importance) in &self.declarations {
+                            if already_serialized.contains(longhand.id()) {
+                                continue;
+                            }
+
                             if longhand.id().is_longhand_of(shorthand) {
                                 current_longhands.push(longhand);
                                 if longhand_importance.important() {
@@ -642,10 +656,10 @@ impl ToCss for PropertyDeclarationBlock {
                         }
                         // Substep 1:
                         //
-                         // Assuming that the PropertyDeclarationBlock contains no
-                         // duplicate entries, if the current_longhands length is
-                         // equal to the properties length, it means that the
-                         // properties that map to shorthand are present in longhands
+                        // Assuming that the PropertyDeclarationBlock contains no
+                        // duplicate entries, if the current_longhands length is
+                        // equal to the properties length, it means that the
+                        // properties that map to shorthand are present in longhands
                         if current_longhands.len() != properties.len() {
                             continue;
                         }
@@ -725,18 +739,13 @@ impl ToCss for PropertyDeclarationBlock {
 
                     for current_longhand in &current_longhands {
                         // Substep 9
-                        already_serialized.push(current_longhand.id());
-                        let index_to_remove = longhands.iter().position(|l| l.0 == **current_longhand);
-                        if let Some(index) = index_to_remove {
-                            // Substep 10
-                            longhands.remove(index);
-                        }
+                        already_serialized.insert(current_longhand.id());
                     }
                 }
             }
 
             // Step 3.3.4
-            if already_serialized.contains(&property) {
+            if already_serialized.contains(property) {
                 continue;
             }
 
@@ -756,7 +765,7 @@ impl ToCss for PropertyDeclarationBlock {
                 &mut is_first_serialization)?;
 
             // Step 3.3.8
-            already_serialized.push(property);
+            already_serialized.insert(property);
         }
 
         // Step 4

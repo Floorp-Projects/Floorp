@@ -1,6 +1,5 @@
 use ::{Configuration, ExitHandler, PanicHandler, StartHandler};
-use deque;
-use deque::{Worker, Stealer, Stolen};
+use coco::deque::{self, Worker, Stealer};
 use job::{JobRef, StackJob};
 use latch::{LatchProbe, Latch, CountLatch, LockLatch};
 #[allow(unused_imports)]
@@ -113,6 +112,7 @@ impl<'a> Drop for Terminator<'a> {
 impl Registry {
     pub fn new(mut configuration: Configuration) -> Result<Arc<Registry>, Box<Error>> {
         let n_threads = configuration.get_num_threads();
+        let breadth_first = configuration.get_breadth_first();
 
         let (inj_worker, inj_stealer) = deque::new();
         let (workers, stealers): (Vec<_>, Vec<_>) = (0..n_threads).map(|_| deque::new()).unzip();
@@ -142,13 +142,17 @@ impl Registry {
             if let Some(stack_size) = configuration.get_stack_size() {
                 b = b.stack_size(stack_size);
             }
-            try!(b.spawn(move || unsafe { main_loop(worker, registry, index) }));
+            try!(b.spawn(move || unsafe { main_loop(worker, registry, index, breadth_first) }));
         }
 
         // Returning normally now, without termination.
         mem::forget(t1000);
 
         Ok(registry.clone())
+    }
+
+    pub fn global() -> Arc<Registry> {
+        global_registry().clone()
     }
 
     pub fn current() -> Arc<Registry> {
@@ -265,16 +269,11 @@ impl Registry {
     }
 
     fn pop_injected_job(&self, worker_index: usize) -> Option<JobRef> {
-        loop {
-            match self.job_uninjector.steal() {
-                Stolen::Empty => return None,
-                Stolen::Abort => (), // retry
-                Stolen::Data(v) => {
-                    log!(UninjectedWork { worker: worker_index });
-                    return Some(v);
-                }
-            }
+        let stolen = self.job_uninjector.steal();
+        if stolen.is_some() {
+            log!(UninjectedWork { worker: worker_index });
         }
+        stolen
     }
 
     /// Increment the terminate counter. This increment should be
@@ -293,10 +292,10 @@ impl Registry {
     /// since installing the thread-pool blocks until any joins/scopes
     /// complete, this ensures that joins/scopes are covered.
     ///
-    /// The exception is `spawn_async()`, which can create a job
-    /// outside of any blocking scope. In that case, the job itself
-    /// holds a terminate count and is responsible for invoking
-    /// `terminate()` when finished.
+    /// The exception is `::spawn()`, which can create a job outside
+    /// of any blocking scope. In that case, the job itself holds a
+    /// terminate count and is responsible for invoking `terminate()`
+    /// when finished.
     pub fn increment_terminate_count(&self) {
         self.terminate_latch.increment();
     }
@@ -351,8 +350,13 @@ impl ThreadInfo {
 /// WorkerThread identifiers
 
 pub struct WorkerThread {
+    /// the "worker" half of our local deque
     worker: Worker<JobRef>,
+
     index: usize,
+
+    /// are these workers configured to steal breadth-first or not?
+    breadth_first: bool,
 
     /// A weak random number generator.
     rng: UnsafeCell<rand::XorShiftRng>,
@@ -405,11 +409,22 @@ impl WorkerThread {
         self.registry.sleep.tickle(self.index);
     }
 
-    /// Pop `job` from top of stack, returning `false` if it has been
-    /// stolen.
     #[inline]
-    pub unsafe fn pop(&self) -> Option<JobRef> {
-        self.worker.pop()
+    pub fn local_deque_is_empty(&self) -> bool {
+        self.worker.len() == 0
+    }
+
+    /// Attempts to obtain a "local" job -- typically this means
+    /// popping from the top of the stack, though if we are configured
+    /// for breadth-first execution, it would mean dequeuing from the
+    /// bottom.
+    #[inline]
+    pub unsafe fn take_local_job(&self) -> Option<JobRef> {
+        if !self.breadth_first {
+            self.worker.pop()
+        } else {
+            self.worker.steal()
+        }
     }
 
     /// Wait until the latch is set. Try to keep busy by popping and
@@ -438,7 +453,7 @@ impl WorkerThread {
             // deques, and finally to injected jobs from the
             // outside. The idea is to finish what we started before
             // we take on something new.
-            if let Some(job) = self.pop()
+            if let Some(job) = self.take_local_job()
                                    .or_else(|| self.steal())
                                    .or_else(|| self.registry.pop_injected_job(self.index)) {
                 yields = self.registry.sleep.work_found(self.index, yields);
@@ -496,16 +511,11 @@ impl WorkerThread {
             .filter(|&i| i != self.index)
             .filter_map(|victim_index| {
                 let victim = &self.registry.thread_infos[victim_index];
-                loop {
-                    match victim.stealer.steal() {
-                        Stolen::Empty => return None,
-                        Stolen::Abort => (), // retry
-                        Stolen::Data(v) => {
-                            log!(StoleWork { worker: self.index, victim: victim_index });
-                            return Some(v);
-                        }
-                    }
+                let stolen = victim.stealer.steal();
+                if stolen.is_some() {
+                    log!(StoleWork { worker: self.index, victim: victim_index });
                 }
+                stolen
             })
             .next()
     }
@@ -513,9 +523,13 @@ impl WorkerThread {
 
 /// ////////////////////////////////////////////////////////////////////////
 
-unsafe fn main_loop(worker: Worker<JobRef>, registry: Arc<Registry>, index: usize) {
+unsafe fn main_loop(worker: Worker<JobRef>,
+                    registry: Arc<Registry>,
+                    index: usize,
+                    breadth_first: bool) {
     let worker_thread = WorkerThread {
         worker: worker,
+        breadth_first: breadth_first,
         index: index,
         rng: UnsafeCell::new(rand::weak_rng()),
         registry: registry.clone(),
@@ -545,7 +559,7 @@ unsafe fn main_loop(worker: Worker<JobRef>, registry: Arc<Registry>, index: usiz
     worker_thread.wait_until(&registry.terminate_latch);
 
     // Should not be any work left in our queue.
-    debug_assert!(worker_thread.pop().is_none());
+    debug_assert!(worker_thread.take_local_job().is_none());
 
     // let registry know we are done
     registry.thread_infos[index].stopped.set();

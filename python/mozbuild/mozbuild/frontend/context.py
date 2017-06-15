@@ -1169,12 +1169,6 @@ VARIABLES = {
         with the host compiler.
         """),
 
-    'IS_COMPONENT': (bool, bool,
-        """Whether the library contains a binary XPCOM component manifest.
-
-        Implies FORCE_SHARED_LIB.
-        """),
-
     'HOST_LIBRARY_NAME': (unicode, unicode,
         """Name of target library generated when cross compiling.
         """),
@@ -1836,7 +1830,6 @@ TEMPLATE_VARIABLES = {
     'HOST_PROGRAM',
     'HOST_LIBRARY_NAME',
     'HOST_SIMPLE_PROGRAMS',
-    'IS_COMPONENT',
     'IS_FRAMEWORK',
     'LIBRARY_NAME',
     'PROGRAM',
@@ -2211,17 +2204,6 @@ DEPRECATION_HINTS = {
 
             Library('foo') [ or LIBRARY_NAME = 'foo' ]
             FORCE_SHARED_LIB = True
-        ''',
-
-    'IS_COMPONENT': '''
-        Please use
-
-            XPCOMBinaryComponent('foo')
-
-        instead of
-
-            Library('foo') [ or LIBRARY_NAME = 'foo' ]
-            IS_COMPONENT = True
         ''',
 
     'IS_FRAMEWORK': '''

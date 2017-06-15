@@ -947,9 +947,11 @@ TableWidget.prototype = {
     // Loop through all items and hide unmatched items
     for (let [id, val] of this.items) {
       for (let prop in val) {
-        if (ignoreProps.includes(prop)) {
+        let column = this.columns.get(prop);
+        if (ignoreProps.includes(prop) || column.hidden) {
           continue;
         }
+
         let propValue = val[prop].toString().toLowerCase();
         if (propValue.includes(value)) {
           itemsToHide.splice(itemsToHide.indexOf(id), 1);
@@ -1080,6 +1082,13 @@ Column.prototype = {
    */
   get sorted() {
     return this._sortState || 0;
+  },
+
+  /**
+   * Returns a boolean indicating whether the column is hidden.
+   */
+  get hidden() {
+    return this.wrapper.hasAttribute("hidden");
   },
 
   /**

@@ -89,7 +89,7 @@ function getExtensionInfoForAddon(extension, addon) {
 
 const listenerMap = new WeakMap();
 // Some management APIs are intentionally limited.
-const allowedTypes = ["theme"];
+const allowedTypes = ["theme", "extension"];
 
 class AddonListener {
   constructor() {
@@ -106,29 +106,33 @@ class AddonListener {
     return getExtensionInfoForAddon(ext, addon);
   }
 
+  checkAllowed(addon) {
+    return !addon.isSystem && allowedTypes.includes(addon.type);
+  }
+
   onEnabled(addon) {
-    if (!allowedTypes.includes(addon.type)) {
+    if (!this.checkAllowed(addon)) {
       return;
     }
     this.emit("onEnabled", this.getExtensionInfo(addon));
   }
 
   onDisabled(addon) {
-    if (!allowedTypes.includes(addon.type)) {
+    if (!this.checkAllowed(addon)) {
       return;
     }
     this.emit("onDisabled", this.getExtensionInfo(addon));
   }
 
   onInstalled(addon) {
-    if (!allowedTypes.includes(addon.type)) {
+    if (!this.checkAllowed(addon)) {
       return;
     }
     this.emit("onInstalled", this.getExtensionInfo(addon));
   }
 
   onUninstalled(addon) {
-    if (!allowedTypes.includes(addon.type)) {
+    if (!this.checkAllowed(addon)) {
       return;
     }
     this.emit("onUninstalled", this.getExtensionInfo(addon));
@@ -161,9 +165,16 @@ this.management = class extends ExtensionAPI {
     let {extension} = context;
     return {
       management: {
+        async get(id) {
+          let addon = await AddonManager.getAddonByID(id);
+          if (!addon.isSystem) {
+            return getExtensionInfoForAddon(extension, addon);
+          }
+        },
+
         async getAll() {
           let addons = await AddonManager.getAddonsByTypes(allowedTypes);
-          return addons.map(addon => {
+          return addons.filter(addon => !addon.isSystem).map(addon => {
             // If the extension is enabled get it and use it for more data.
             let ext = addon.isWebExtension && GlobalManager.extensionMap.get(addon.id);
             return getExtensionInfoForAddon(ext, addon);
@@ -204,8 +215,11 @@ this.management = class extends ExtensionAPI {
           if (!addon) {
             throw new ExtensionError(`No such addon ${id}`);
           }
-          if (!allowedTypes.includes(addon.type)) {
+          if (addon.type !== "theme") {
             throw new ExtensionError("setEnabled applies only to theme addons");
+          }
+          if (addon.isSystem) {
+            throw new ExtensionError("setEnabled cannot be used with a system addon");
           }
           addon.userDisabled = !enabled;
         },

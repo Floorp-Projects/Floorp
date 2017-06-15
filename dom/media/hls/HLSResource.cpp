@@ -34,7 +34,10 @@ HLSResource::HLSResource(MediaResourceCallback* aCallback,
                          nsIChannel* aChannel,
                          nsIURI* aURI,
                          const MediaContainerType& aContainerType)
-  : BaseMediaResource(aCallback, aChannel, aURI, aContainerType)
+  : mCallback(aCallback)
+  , mChannel(aChannel)
+  , mURI(aURI)
+  , mContainerType(aContainerType)
 {
   nsCString spec;
   nsresult rv = aURI->GetSpec(spec);

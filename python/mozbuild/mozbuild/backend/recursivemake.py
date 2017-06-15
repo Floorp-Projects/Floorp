@@ -110,7 +110,6 @@ MOZBUILD_VARIABLES = [
     b'HOST_LIBRARY_NAME',
     b'HOST_PROGRAM',
     b'HOST_SIMPLE_PROGRAMS',
-    b'IS_COMPONENT',
     b'JAR_MANIFEST',
     b'JAVA_JAR_TARGETS',
     b'LD_VERSION_SCRIPT',
@@ -615,6 +614,10 @@ class RecursiveMakeBackend(CommonBackend):
             # No need to call _process_linked_libraries, because Rust
             # libraries are self-contained objects at this point.
 
+            # Hook the library into the compile graph.
+            build_target = self._build_target_for_obj(obj)
+            self._compile_graph[build_target]
+
         elif isinstance(obj, SharedLibrary):
             self._process_shared_library(obj, backend_file)
             self._process_linked_libraries(obj, backend_file)
@@ -738,7 +741,20 @@ class RecursiveMakeBackend(CommonBackend):
 
         all_compile_deps = reduce(lambda x,y: x|y,
             self._compile_graph.values()) if self._compile_graph else set()
-        compile_roots = set(self._compile_graph.keys()) - all_compile_deps
+        # Include the following as dependencies of the top recursion target for
+        # compilation:
+        # - nodes that are not dependended upon by anything. Typically, this
+        #   would include programs, that need to be recursed, but that nothing
+        #   depends on.
+        # - nodes that have no dependencies of their own. Technically, this is
+        #   not necessary, because other things have dependencies on them, and
+        #   they all end up rooting to nodes from the above category. But the
+        #   way make works[1] is such that there can be benefits listing them
+        #   as direct dependencies of the top recursion target, to somehow
+        #   prioritize them.
+        #   1. See bug 1262241 comment 5.
+        compile_roots = [t for t, deps in self._compile_graph.iteritems()
+                         if not deps or t not in all_compile_deps]
 
         rule = root_deps_mk.create_rule(['recurse_compile'])
         rule.add_dependencies(compile_roots)
@@ -1215,8 +1231,6 @@ class RecursiveMakeBackend(CommonBackend):
         backend_file.write('FORCE_SHARED_LIB := 1\n')
         backend_file.write('IMPORT_LIBRARY := %s\n' % libdef.import_name)
         backend_file.write('SHARED_LIBRARY := %s\n' % libdef.lib_name)
-        if libdef.variant == libdef.COMPONENT:
-            backend_file.write('IS_COMPONENT := 1\n')
         if libdef.soname:
             backend_file.write('DSO_SONAME := %s\n' % libdef.soname)
         if libdef.symbols_file:
@@ -1286,7 +1300,6 @@ class RecursiveMakeBackend(CommonBackend):
                     if isinstance(obj, SharedLibrary):
                         write_shared_and_system_libs(lib)
                 elif isinstance(obj, SharedLibrary):
-                    assert lib.variant != lib.COMPONENT
                     backend_file.write_once('SHARED_LIBS += %s/%s\n'
                                         % (relpath, lib.import_name))
             elif isinstance(obj, (Program, SimpleProgram)):
@@ -1295,7 +1308,6 @@ class RecursiveMakeBackend(CommonBackend):
                                         % (relpath, lib.import_name))
                     write_shared_and_system_libs(lib)
                 else:
-                    assert lib.variant != lib.COMPONENT
                     backend_file.write_once('SHARED_LIBS += %s/%s\n'
                                         % (relpath, lib.import_name))
             elif isinstance(obj, (HostLibrary, HostProgram, HostSimpleProgram)):

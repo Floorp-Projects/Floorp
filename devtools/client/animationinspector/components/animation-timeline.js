@@ -262,6 +262,8 @@ AnimationsTimeline.prototype = {
     this.animationDetailCloseButton = null;
     this.animationRootEl = null;
     this.selectedAnimation = null;
+
+    this.isDestroyed = true;
   },
 
   /**
@@ -486,6 +488,11 @@ AnimationsTimeline.prototype = {
 
       // Draw the animation time block.
       const tracks = yield this.getTracks(animation);
+      // If we're destroyed by now, just give up.
+      if (this.isDestroyed) {
+        return;
+      }
+
       let timeBlock = new AnimationTimeBlock();
       timeBlock.init(timeBlockEl);
       timeBlock.render(animation, tracks);
@@ -674,7 +681,16 @@ AnimationsTimeline.prototype = {
      * handle.
      */
     if (this.serverTraits.hasGetProperties) {
-      let properties = yield animation.getProperties();
+      let properties = [];
+      try {
+        properties = yield animation.getProperties();
+      } catch (e) {
+        // Expected if we've already been destroyed in the meantime.
+        if (!this.isDestroyed) {
+          throw e;
+        }
+      }
+
       for (let {name, values} of properties) {
         if (!tracks[name]) {
           tracks[name] = [];
@@ -686,7 +702,16 @@ AnimationsTimeline.prototype = {
         }
       }
     } else {
-      let frames = yield animation.getFrames();
+      let frames = [];
+      try {
+        frames = yield animation.getFrames();
+      } catch (e) {
+        // Expected if we've already been destroyed in the meantime.
+        if (!this.isDestroyed) {
+          throw e;
+        }
+      }
+
       for (let frame of frames) {
         for (let name in frame) {
           if (this.NON_PROPERTIES.indexOf(name) != -1) {

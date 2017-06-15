@@ -53,7 +53,6 @@ def _defines():
                 'MOZ_CRASHREPORTER',
                 'MOZ_DEBUG',
                 'MOZ_INSTALL_TRACKING',
-                'MOZ_LOCALE_SWITCHER',
                 'MOZ_NATIVE_DEVICES',
                 'MOZ_SWITCHBOARD'):
         if CONFIG[var]:

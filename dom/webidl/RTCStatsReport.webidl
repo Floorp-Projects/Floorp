@@ -124,13 +124,18 @@ enum RTCStatsIceCandidatePairState {
 };
 
 dictionary RTCIceCandidatePairStats : RTCStats {
-  DOMString componentId;
+  DOMString transportId;
   DOMString localCandidateId;
   DOMString remoteCandidateId;
   RTCStatsIceCandidatePairState state;
   unsigned long long priority;
-  boolean readable;
   boolean nominated;
+  boolean writable;
+  boolean readable;
+  unsigned long long bytesSent;
+  unsigned long long bytesReceived;
+  DOMHighResTimeStamp lastPacketSentTimestamp;
+  DOMHighResTimeStamp lastPacketReceivedTimestamp;
   boolean selected;
 };
 

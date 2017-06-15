@@ -36,7 +36,7 @@ private:
   HLSResource* mResource;
 };
 
-class HLSResource final : public BaseMediaResource
+class HLSResource final : public MediaResource
 {
 public:
   HLSResource(MediaResourceCallback* aCallback,
@@ -120,6 +120,10 @@ private:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
+  RefPtr<MediaResourceCallback> mCallback;
+  nsCOMPtr<nsIChannel> mChannel;
+  nsCOMPtr<nsIURI> mURI;
+  const MediaContainerType mContainerType;
   java::GeckoHLSResourceWrapper::GlobalRef mHLSResourceWrapper;
   java::GeckoHLSResourceWrapper::Callbacks::GlobalRef mJavaCallbacks;
 };

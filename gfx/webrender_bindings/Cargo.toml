@@ -6,9 +6,9 @@ license = "MPL-2.0"
 
 [dependencies]
 webrender_traits = {path = "../webrender_traits", version = "0.40.0"}
-rayon = {version = "0.7", features = ["unstable"]}
+rayon = "0.8"
 thread_profiler = "0.1.1"
-euclid = "0.13"
+euclid = "0.14.4"
 app_units = "0.4"
 gleam = "0.4"
 

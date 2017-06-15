@@ -95,7 +95,7 @@ use style::parser::ParserContext;
 use style::properties::{CascadeFlags, ComputedValues, Importance, SourcePropertyDeclaration};
 use style::properties::{LonghandIdSet, PropertyDeclaration, PropertyDeclarationBlock, PropertyId, StyleBuilder};
 use style::properties::SKIP_ROOT_AND_ITEM_BASED_DISPLAY_FIXUP;
-use style::properties::animated_properties::{Animatable, AnimationValue, TransitionProperty};
+use style::properties::animated_properties::{Animatable, AnimatableLonghand, AnimationValue};
 use style::properties::parse_one_declaration_into;
 use style::rule_tree::StyleSource;
 use style::selector_parser::PseudoElementCascadeType;
@@ -380,18 +380,6 @@ pub extern "C" fn Servo_AnimationValues_ComputeDistance(from: RawServoAnimationV
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_AnimationValueMap_Push(value_map: RawServoAnimationValueMapBorrowedMut,
-                                               property: nsCSSPropertyID,
-                                               value: RawServoAnimationValueBorrowed)
-{
-    use style::properties::animated_properties::AnimationValueMap;
-
-    let value_map = AnimationValueMap::from_ffi_mut(value_map);
-    let value = AnimationValue::as_arc(&value).as_ref();
-    value_map.insert(property.into(), value.clone());
-}
-
-#[no_mangle]
 pub extern "C" fn Servo_AnimationCompose(raw_value_map: RawServoAnimationValueMapBorrowedMut,
                                          base_values: *mut ::std::os::raw::c_void,
                                          css_property: nsCSSPropertyID,
@@ -405,7 +393,10 @@ pub extern "C" fn Servo_AnimationCompose(raw_value_map: RawServoAnimationValueMa
     use style::gecko_bindings::bindings::Gecko_GetProgressFromComputedTiming;
     use style::properties::animated_properties::AnimationValueMap;
 
-    let property: TransitionProperty = css_property.into();
+    let property = match AnimatableLonghand::from_nscsspropertyid(css_property) {
+        Some(longhand) => longhand,
+        None => { return (); }
+    };
     let value_map = AnimationValueMap::from_ffi_mut(raw_value_map);
 
     // We will need an underlying value if either of the endpoints is null...
@@ -696,8 +687,13 @@ pub extern "C" fn Servo_ComputedValues_ExtractAnimationValue(computed_values: Se
                                                              property_id: nsCSSPropertyID)
                                                              -> RawServoAnimationValueStrong
 {
+    let property = match AnimatableLonghand::from_nscsspropertyid(property_id) {
+        Some(longhand) => longhand,
+        None => { return Strong::null(); }
+    };
+
     let computed_values = ComputedValues::as_arc(&computed_values);
-    Arc::new(AnimationValue::from_computed_values(&property_id.into(), computed_values)).into_strong()
+    Arc::new(AnimationValue::from_computed_values(&property, computed_values)).into_strong()
 }
 
 #[no_mangle]
@@ -707,9 +703,17 @@ pub extern "C" fn Servo_Property_IsAnimatable(property: nsCSSPropertyID) -> bool
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_Property_IsTransitionable(property: nsCSSPropertyID) -> bool {
+    use style::properties::animated_properties;
+    animated_properties::nscsspropertyid_is_transitionable(property)
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_Property_IsDiscreteAnimatable(property: nsCSSPropertyID) -> bool {
-    let property: TransitionProperty = property.into();
-    property.is_discrete()
+    match AnimatableLonghand::from_nscsspropertyid(property) {
+        Some(longhand) => longhand.is_discrete(),
+        None => false
+    }
 }
 
 #[no_mangle]
@@ -1444,7 +1448,7 @@ pub extern "C" fn Servo_ResolvePseudoStyle(element: RawGeckoElementBorrowed,
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
     match get_pseudo_style(&guard, element, &pseudo, RuleInclusion::All,
-                           data.styles(), doc_data) {
+                           data.styles(), &*doc_data.borrow()) {
         Some(values) => values.into_strong(),
         // FIXME(emilio): This looks pretty wrong! Shouldn't it be at least an
         // empty style inheriting from the element?
@@ -1478,28 +1482,29 @@ fn get_pseudo_style(guard: &SharedRwLockReadGuard,
                     pseudo: &PseudoElement,
                     rule_inclusion: RuleInclusion,
                     styles: &ElementStyles,
-                    doc_data: &PerDocumentStyleData)
+                    doc_data: &PerDocumentStyleDataImpl)
                     -> Option<Arc<ComputedValues>>
 {
     match pseudo.cascade_type() {
         PseudoElementCascadeType::Eager => styles.pseudos.get(&pseudo).map(|s| s.values().clone()),
         PseudoElementCascadeType::Precomputed => unreachable!("No anonymous boxes"),
         PseudoElementCascadeType::Lazy => {
-            let d = doc_data.borrow_mut();
             let base = if pseudo.inherits_from_default_values() {
-                d.default_computed_values()
+                doc_data.default_computed_values()
             } else {
                 styles.primary.values()
             };
             let guards = StylesheetGuards::same(guard);
             let metrics = get_metrics_provider_for_product();
-            d.stylist.lazily_compute_pseudo_element_style(&guards,
-                                                          &element,
-                                                          &pseudo,
-                                                          rule_inclusion,
-                                                          base,
-                                                          &metrics)
-                     .map(|s| s.values().clone())
+            doc_data.stylist
+                .lazily_compute_pseudo_element_style(
+                    &guards,
+                    &element,
+                    &pseudo,
+                    rule_inclusion,
+                    base,
+                    &metrics)
+                .map(|s| s.values().clone())
         },
     }
 }
@@ -2565,10 +2570,11 @@ pub extern "C" fn Servo_ResolveStyleLazily(element: RawGeckoElementBorrowed,
     let guard = global_style_data.shared_lock.read();
     let element = GeckoElement(element);
     let doc_data = PerDocumentStyleData::from_ffi(raw_data);
+    let data = doc_data.borrow();
     let rule_inclusion = RuleInclusion::from(rule_inclusion);
     let finish = |styles: &ElementStyles| -> Arc<ComputedValues> {
         PseudoElement::from_pseudo_type(pseudo_type).and_then(|ref pseudo| {
-            get_pseudo_style(&guard, element, pseudo, rule_inclusion, styles, doc_data)
+            get_pseudo_style(&guard, element, pseudo, rule_inclusion, styles, &*data)
         }).unwrap_or_else(|| styles.primary.values().clone())
     };
 
@@ -2589,7 +2595,6 @@ pub extern "C" fn Servo_ResolveStyleLazily(element: RawGeckoElementBorrowed,
 
     // We don't have the style ready. Go ahead and compute it as necessary.
     let mut result = None;
-    let data = doc_data.borrow();
     let shared = create_shared_context(&global_style_data,
                                        &guard,
                                        &data,
@@ -2694,10 +2699,10 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(keyframes: RawGeckoKeyframeLis
             let guard = declarations.read_with(&guard);
 
             for anim in guard.to_animation_value_iter(&mut context, &default_values) {
-                if !seen.has_transition_property_bit(&anim.0) {
+                if !seen.has_animatable_longhand_bit(&anim.0) {
                     // This is safe since we immediately write to the uninitialized values.
                     unsafe { animation_values.set_len((property_index + 1) as u32) };
-                    seen.set_transition_property_bit(&anim.0);
+                    seen.set_animatable_longhand_bit(&anim.0);
                     animation_values[property_index].mProperty = (&anim.0).into();
                     // We only make sure we have enough space for this variable,
                     // but didn't construct a default value for StyleAnimationValue,
@@ -2794,7 +2799,7 @@ pub extern "C" fn Servo_AssertTreeIsClean(root: RawGeckoElementBorrowed) {
 
 fn append_computed_property_value(keyframe: *mut structs::Keyframe,
                                   style: &ComputedValues,
-                                  property: &TransitionProperty,
+                                  property: &AnimatableLonghand,
                                   shared_lock: &SharedRwLock) {
     let block = style.to_declaration_block(property.clone().into());
     unsafe {
@@ -2813,7 +2818,7 @@ enum Offset {
     One
 }
 
-fn fill_in_missing_keyframe_values(all_properties:  &[TransitionProperty],
+fn fill_in_missing_keyframe_values(all_properties:  &[AnimatableLonghand],
                                    timing_function: nsTimingFunctionBorrowed,
                                    style: &ComputedValues,
                                    properties_set_at_offset: &LonghandIdSet,
@@ -2821,7 +2826,7 @@ fn fill_in_missing_keyframe_values(all_properties:  &[TransitionProperty],
                                    keyframes: RawGeckoKeyframeListBorrowedMut,
                                    shared_lock: &SharedRwLock) {
     let needs_filling = all_properties.iter().any(|ref property| {
-        !properties_set_at_offset.has_transition_property_bit(property)
+        !properties_set_at_offset.has_animatable_longhand_bit(property)
     });
 
     // Return earli if all animated properties are already set.
@@ -2840,7 +2845,7 @@ fn fill_in_missing_keyframe_values(all_properties:  &[TransitionProperty],
 
     // Append properties that have not been set at this offset.
     for ref property in all_properties.iter() {
-        if !properties_set_at_offset.has_transition_property_bit(property) {
+        if !properties_set_at_offset.has_animatable_longhand_bit(property) {
             append_computed_property_value(keyframe,
                                            style,
                                            property,
@@ -2932,17 +2937,20 @@ pub extern "C" fn Servo_StyleSet_GetKeyframesForName(raw_data: RawServoStyleSetB
 
                 let mut index = unsafe { (*keyframe).mPropertyValues.len() };
                 for &(ref declaration, _) in animatable {
-                    let property = TransitionProperty::from_declaration(declaration).unwrap();
-                    if !properties_set_at_current_offset.has_transition_property_bit(&property) {
-                        properties_set_at_current_offset.set_transition_property_bit(&property);
+                    let property = AnimatableLonghand::from_declaration(declaration).unwrap();
+                    // Skip the 'display' property because although it is animatable from SMIL,
+                    // it should not be animatable from CSS Animations.
+                    if property != AnimatableLonghand::Display &&
+                        !properties_set_at_current_offset.has_animatable_longhand_bit(&property) {
+                        properties_set_at_current_offset.set_animatable_longhand_bit(&property);
                         if current_offset == 0.0 {
-                            properties_set_at_start.set_transition_property_bit(&property);
+                            properties_set_at_start.set_animatable_longhand_bit(&property);
                         } else if current_offset == 1.0 {
-                            properties_set_at_end.set_transition_property_bit(&property);
+                            properties_set_at_end.set_animatable_longhand_bit(&property);
                         }
 
                         unsafe {
-                            let property = TransitionProperty::from_declaration(declaration).unwrap();
+                            let property = AnimatableLonghand::from_declaration(declaration).unwrap();
                             (*keyframe).mPropertyValues.set_len((index + 1) as u32);
                             (*keyframe).mPropertyValues[index].mProperty = (&property).into();
                             (*keyframe).mPropertyValues[index].mServoDeclarationBlock.set_arc_leaky(

@@ -30,13 +30,43 @@
     clip-path: circle(25% at 30% 40%);
   }
   #ellipse {
-    clip-path: ellipse(40% 30% at 25% 75%);
+    clip-path: ellipse(40% 30% at 25% 75%) content-box;
+    padding: 20px;
+  }
+  #ellipse-padding-box {
+    clip-path: ellipse(40% 30% at 25% 75%) padding-box;
+    padding: 20px;
   }
   #inset {
     clip-path: inset(200px 100px 30% 15%);
+  }
+  .svg {
+    width: 800px;
+    height: 800px;
+  }
+  #rect {
+    clip-path: polygon(0 0,
+                       100px 50%,
+                       200px 0,
+                       300px 50%,
+                       400px 0,
+                       500px 50%,
+                       600px 0,
+                       700px 50%,
+                       800px 0,
+                       90% 100%,
+                       50% 60%,
+                       10% 100%);
+    stroke: red;
+    stroke-width: 20px;
+    fill: blue;
   }
 </style>
 <div class="wrapper" id="polygon"></div>
 <div class="wrapper" id="circle"></div>
 <div class="wrapper" id="ellipse"></div>
+<div class="wrapper" id="ellipse-padding-box"></div>
 <div class="wrapper" id="inset"></div>
+<svg class="svg">
+  <rect id="rect" x="10" y="10" width="700" height="700"></rect>
+</svg>

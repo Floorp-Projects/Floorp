@@ -79,6 +79,25 @@ impl DotAttributes for Function {
     }
 }
 
+/// An ABI extracted from a clang cursor.
+#[derive(Debug, Copy, Clone)]
+pub enum Abi {
+    /// A known ABI, that rust also understand.
+    Known(abi::Abi),
+    /// An unknown or invalid ABI.
+    Unknown(CXCallingConv),
+}
+
+impl Abi {
+    /// Returns whether this Abi is known or not.
+    fn is_unknown(&self) -> bool {
+        match *self {
+            Abi::Unknown(..) => true,
+            _ => false,
+        }
+    }
+}
+
 /// A function signature.
 #[derive(Debug)]
 pub struct FunctionSig {
@@ -93,29 +112,32 @@ pub struct FunctionSig {
     is_variadic: bool,
 
     /// The ABI of this function.
-    abi: Option<abi::Abi>,
+    abi: Abi,
 }
 
-fn get_abi(cc: CXCallingConv) -> Option<abi::Abi> {
+fn get_abi(cc: CXCallingConv) -> Abi {
     use clang_sys::*;
-    match cc {
-        CXCallingConv_Default => Some(abi::Abi::C),
-        CXCallingConv_C => Some(abi::Abi::C),
-        CXCallingConv_X86StdCall => Some(abi::Abi::Stdcall),
-        CXCallingConv_X86FastCall => Some(abi::Abi::Fastcall),
-        CXCallingConv_AAPCS => Some(abi::Abi::Aapcs),
-        CXCallingConv_X86_64Win64 => Some(abi::Abi::Win64),
-        _ => None,
-    }
+    Abi::Known(match cc {
+        CXCallingConv_Default => abi::Abi::C,
+        CXCallingConv_C => abi::Abi::C,
+        CXCallingConv_X86StdCall => abi::Abi::Stdcall,
+        CXCallingConv_X86FastCall => abi::Abi::Fastcall,
+        CXCallingConv_AAPCS => abi::Abi::Aapcs,
+        CXCallingConv_X86_64Win64 => abi::Abi::Win64,
+        other => return Abi::Unknown(other),
+    })
 }
 
-// Mac os needs __ for mangled symbols but rust will automatically prepend the extra _.
-// We need to make sure that we don't include __ because rust will turn into ___.
+// Mac os and Win32 need __ for mangled symbols but rust will automatically
+// prepend the extra _.
 //
-// TODO(emilio): This is wrong when the target system is not the host
-// system. See https://github.com/servo/rust-bindgen/issues/593
-fn macos_mangling(symbol: &mut String) {
-    if cfg!(target_os = "macos") && symbol.starts_with("_") {
+// We need to make sure that we don't include __ because rust will turn into
+// ___.
+fn mangling_hack_if_needed(ctx: &BindgenContext, symbol: &mut String) {
+    // NB: win64 also contains the substring "win32" in the target triple, so
+    // we need to actually check for i686...
+    if ctx.target().contains("macos") ||
+       (ctx.target().contains("i686") && ctx.target().contains("windows")) {
         symbol.remove(0);
     }
 }
@@ -138,7 +160,7 @@ pub fn cursor_mangling(ctx: &BindgenContext,
 
     if let Ok(mut manglings) = cursor.cxx_manglings() {
         if let Some(mut m) = manglings.pop() {
-            macos_mangling(&mut m);
+            mangling_hack_if_needed(ctx, &mut m);
             return Some(m);
         }
     }
@@ -148,7 +170,7 @@ pub fn cursor_mangling(ctx: &BindgenContext,
         return None;
     }
 
-    macos_mangling(&mut mangling);
+    mangling_hack_if_needed(ctx, &mut mangling);
 
     if cursor.kind() == clang_sys::CXCursor_Destructor {
         // With old (3.8-) libclang versions, and the Itanium ABI, clang returns
@@ -185,7 +207,7 @@ impl FunctionSig {
     pub fn new(return_type: ItemId,
                arguments: Vec<(Option<String>, ItemId)>,
                is_variadic: bool,
-               abi: Option<abi::Abi>)
+               abi: Abi)
                -> Self {
         FunctionSig {
             return_type: return_type,
@@ -299,7 +321,7 @@ impl FunctionSig {
         let call_conv = ty.call_conv();
         let abi = get_abi(call_conv);
 
-        if abi.is_none() {
+        if abi.is_unknown() {
             warn!("Unknown calling convention: {:?}", call_conv);
         }
 
@@ -317,7 +339,7 @@ impl FunctionSig {
     }
 
     /// Get this function signature's ABI.
-    pub fn abi(&self) -> Option<abi::Abi> {
+    pub fn abi(&self) -> Abi {
         self.abi
     }
 
@@ -429,8 +451,8 @@ impl CanDeriveDebug for FunctionSig {
         }
 
         match self.abi {
-            Some(abi::Abi::C) |
-            None => true,
+            Abi::Known(abi::Abi::C) |
+            Abi::Unknown(..) => true,
             _ => false,
         }
     }

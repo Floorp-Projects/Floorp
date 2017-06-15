@@ -1216,24 +1216,6 @@ dnl Only one oddball right now (QNX), but this gives us flexibility
 dnl if any other platforms need to override this in the future.
 AC_DEFINE_UNQUOTED(D_INO,$DIRENT_INO)
 
-dnl ========================================================
-dnl = Flags to strip unused symbols from .so components and
-dnl = to export jemalloc symbols when linking a program
-dnl ========================================================
-case "$target" in
-    *-linux*|*-kfreebsd*-gnu|*-gnu*)
-        MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
-        ;;
-    *-darwin*)
-        MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,-exported_symbols_list -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-export-list'
-        ;;
-    *-mingw*)
-        if test -n "$GNU_CC"; then
-           MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
-        fi
-        ;;
-esac
-
 if test -z "$COMPILE_ENVIRONMENT"; then
     SKIP_COMPILER_CHECKS=1
     SKIP_LIBRARY_CHECKS=1
@@ -4897,11 +4879,6 @@ if test "$NECKO_COOKIES"; then
 fi
 
 dnl ========================================================
-if test "$MOZ_DEBUG" -o "$MOZ_DMD"; then
-    MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
-fi
-
-dnl ========================================================
 dnl =
 dnl = Maintainer debug option (no --enable equivalent)
 dnl =
@@ -4956,7 +4933,6 @@ AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(STRIP_FLAGS)
 AC_SUBST(USE_ELF_HACK)
 AC_SUBST(INCREMENTAL_LINKER)
-AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 
 AC_SUBST(MOZ_FIX_LINK_PATHS)
 
