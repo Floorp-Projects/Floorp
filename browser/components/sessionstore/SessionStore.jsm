@@ -3614,7 +3614,6 @@ var SessionStoreInternal = {
     // Save the index in case we updated it above.
     tabData.index = activeIndex + 1;
 
-    browser.setAttribute("pending", "true");
     tab.setAttribute("pending", "true");
 
     // If we're restoring this tab, it certainly shouldn't be in
@@ -3728,10 +3727,6 @@ var SessionStoreInternal = {
       }
     }
 
-    // We have to mark this tab as restoring first, otherwise
-    // the "pending" attribute will be applied to the linked
-    // browser, which removes it from the display list. We cannot
-    // flip the remoteness of any browser that is not being displayed.
     this.markTabAsRestoring(aTab);
 
     // We need a new frameloader if we are reloading into a browser with a
@@ -3803,7 +3798,6 @@ var SessionStoreInternal = {
 
     // Set this tab's state to restoring
     browser.__SS_restoreState = TAB_STATE_RESTORING;
-    browser.removeAttribute("pending");
     aTab.removeAttribute("pending");
   },
 
@@ -4556,7 +4550,6 @@ var SessionStoreInternal = {
     delete browser.__SS_restoreState;
 
     aTab.removeAttribute("pending");
-    browser.removeAttribute("pending");
 
     if (previousState == TAB_STATE_RESTORING) {
       if (this._tabsRestoringCount)

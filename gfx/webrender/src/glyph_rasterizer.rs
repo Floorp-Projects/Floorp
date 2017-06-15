@@ -15,7 +15,7 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::collections::HashSet;
 use std::mem;
 use texture_cache::{TextureCacheItemId, TextureCache};
-use internal_types::FontTemplate;
+use webrender_traits::FontTemplate;
 use webrender_traits::{FontKey, FontRenderMode, ImageData, ImageFormat};
 use webrender_traits::{ImageDescriptor, ColorF, LayoutPoint};
 use webrender_traits::{GlyphKey, GlyphOptions, GlyphInstance, GlyphDimensions};
@@ -183,7 +183,7 @@ impl GlyphRasterizer {
         // spawn an async task to get off of the render backend thread as early as
         // possible and in that task use rayon's fork join dispatch to rasterize the
         // glyphs in the thread pool.
-        self.workers.spawn_async(move || {
+        self.workers.spawn(move || {
             let jobs = glyphs.par_iter().map(|request: &GlyphRequest| {
                 profile_scope!("glyph-raster");
                 let mut context = font_contexts.lock_current_context();
@@ -248,9 +248,7 @@ impl GlyphRasterizer {
         for job in rasterized_glyphs {
             let image_id = job.result.and_then(
                 |glyph| if glyph.width > 0 && glyph.height > 0 {
-                    let image_id = texture_cache.new_item_id();
-                    texture_cache.insert(
-                        image_id,
+                    let image_id = texture_cache.insert(
                         ImageDescriptor {
                             width: glyph.width,
                             height: glyph.height,
@@ -277,7 +275,7 @@ impl GlyphRasterizer {
         if !self.fonts_to_remove.is_empty() {
             let font_contexts = Arc::clone(&self.font_contexts);
             let fonts_to_remove = mem::replace(&mut self.fonts_to_remove, Vec::new());
-            self.workers.spawn_async(move || {
+            self.workers.spawn(move || {
                 for font_key in &fonts_to_remove {
                     font_contexts.lock_shared_context().delete_font(font_key);
                 }

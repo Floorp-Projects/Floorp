@@ -289,7 +289,8 @@ void Gecko_CopyImageOrientationFrom(nsStyleVisibility* aDst,
 
 // Counter style.
 // This function takes an already addrefed nsIAtom
-void Gecko_SetCounterStyleToName(mozilla::CounterStylePtr* ptr, nsIAtom* name);
+void Gecko_SetCounterStyleToName(mozilla::CounterStylePtr* ptr, nsIAtom* name,
+                                 RawGeckoPresContextBorrowed pres_context);
 void Gecko_SetCounterStyleToSymbols(mozilla::CounterStylePtr* ptr,
                                     uint8_t symbols_type,
                                     nsACString const* const* symbols,
@@ -374,6 +375,9 @@ void Gecko_ResizeTArrayForStrings(nsTArray<nsString>* array, uint32_t length);
 
 void Gecko_SetStyleGridTemplateArrayLengths(nsStyleGridTemplate* grid_template,
                                             uint32_t track_sizes);
+
+void Gecko_SetGridTemplateLineNamesLength(nsStyleGridTemplate* grid_template,
+                                          uint32_t track_sizes);
 
 void Gecko_CopyStyleGridTemplateValues(nsStyleGridTemplate* grid_template,
                                        const nsStyleGridTemplate* other);

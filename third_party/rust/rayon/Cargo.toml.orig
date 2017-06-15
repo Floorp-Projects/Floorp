@@ -1,7 +1,8 @@
 [package]
 name = "rayon"
-version = "0.7.1"
-authors = ["Niko Matsakis <niko@alum.mit.edu>"]
+version = "0.8.1"
+authors = ["Niko Matsakis <niko@alum.mit.edu>",
+           "Josh Stone <cuviper@gmail.com>"]
 description = "Simple work-stealing parallelism for Rust"
 license = "Apache-2.0/MIT"
 repository = "https://github.com/nikomatsakis/rayon"
@@ -12,7 +13,7 @@ members = ["rayon-demo", "rayon-core"]
 exclude = ["ci"]
 
 [dependencies]
-rayon-core = { version = "1.0.2", path = "rayon-core" }
+rayon-core = { version = "1.2", path = "rayon-core" }
 
 [dev-dependencies]
 compiletest_rs = "0.2.1"
@@ -20,8 +21,3 @@ docopt = "0.7"
 futures = "0.1.7"
 rand = "0.3"
 rustc-serialize = "0.3"
-
-[features]
-# Unstable APIs that have not yet
-# proven their utility.
-unstable = ["rayon-core/unstable"]

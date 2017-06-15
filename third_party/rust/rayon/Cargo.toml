@@ -12,15 +12,15 @@
 
 [package]
 name = "rayon"
-version = "0.7.1"
-authors = ["Niko Matsakis <niko@alum.mit.edu>"]
+version = "0.8.1"
+authors = ["Niko Matsakis <niko@alum.mit.edu>", "Josh Stone <cuviper@gmail.com>"]
 description = "Simple work-stealing parallelism for Rust"
 documentation = "https://docs.rs/rayon/"
 license = "Apache-2.0/MIT"
 repository = "https://github.com/nikomatsakis/rayon"
 [dependencies.rayon-core]
-version = "1.0.2"
-[dev-dependencies.rustc-serialize]
+version = "1.2"
+[dev-dependencies.rand]
 version = "0.3"
 
 [dev-dependencies.futures]
@@ -29,11 +29,8 @@ version = "0.1.7"
 [dev-dependencies.docopt]
 version = "0.7"
 
-[dev-dependencies.rand]
-version = "0.3"
-
 [dev-dependencies.compiletest_rs]
 version = "0.2.1"
 
-[features]
-unstable = ["rayon-core/unstable"]
+[dev-dependencies.rustc-serialize]
+version = "0.3"

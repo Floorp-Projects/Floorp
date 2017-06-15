@@ -1,0 +1,209 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>PageAction Test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+Cu.import("resource://gre/modules/Services.jsm");
+
+var {PageActions} = Cu.import("resource://gre/modules/PageActions.jsm", {});
+
+let dataURI = "iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAC4klEQVRYhdWXLWzbQBSADQtDAwsHC1tUhUxqfL67lk2tdn+OJg0ODU0rLByqgqINBY6tmlbn7LMTJ5FaFVVBk1G0oUGjG2jT2Y7jxmmcbU/6iJ+f36fz+e5sGP9riCGm9hB37RG+scd4Yo/wsDXCZyIE2xuXsce4bY+wXkAsQtzYmExrfFgvkJkRbkzo1ehoxx5iXcgI/9iYUGt8WH9MqDXEcmNChmEYrRCf2SHWeYgQx3x0tLNRIeKQLTtEFyJEep4NTuhk8BC+yMrwEE3+iozo42d8gK7FAOkMsRiiN8QhW2ttSK5QTfRRV4QoymVeJMvPvDp7gCZigD613MN6yRFA3SWarow9QB9LCfG+NeF9qCtjAKOSQjCqVKhfVsiHEQ+grgx/lRGqUihAc1uL8EFD+KCRO+GrF4J61phcoRoPoEzkYhZYpykh5sMb7kOdIeY+jHKur4QI4Feh4AFX1nVeLxrAvQchGsBz5ls6wa2QdwcvIcE2863bTH79KOvsz/uUYJsp+J0pSzNlDckVqqVGUAF+n6uS7txcOl6wot4JVy70ufDLy4pWLUQVPE81pRI0mGe9oxLMHSeohHvMs/STUNaUK6vDPCvOyxMFDx4achehRDJmHnydnkPww5OFfLxrGIZBFDyYl4LpMzlTQFIP6AQx86w2UeYBccFpJrcKv5L9eGDtUAU6RIELqsB74uynjy/UBRF1gS5BTFxwQT1wTiXoUg9MH7m/3NZRRoi5IJytUbMgzv4Wc832+oQkiKgEehmyMkkpKsFkQV11QsRJL5rJYBLItQgRaUZEmnoZXsomz3vGiWw+I9KMF9SVFOqZEemZekli1jN3U/UOqhHHvC6oWWGElhfSpGdOk6+O9prdwvtLj5BjRsQxdRnot+Zeifpy/2/0stktKTRNLmbk0mwXyl8253fyojj+8rxOHNAhjjm5n0/5OOCGOKBzkrMO0Z75lvSAzKlrF32Z/3z8BqLAn+yMV7VhAAAAAElFTkSuQmCC";
+
+let image = atob(dataURI);
+const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte => byte.charCodeAt(0)).buffer;
+
+add_task(async function test_setPopup_and_getPopup() {
+  async function background() {
+    let tabCreatedPromise = new Promise(resolve => {
+      let onTabCreated = tab => {
+        browser.tabs.onCreated.removeListener(onTabCreated);
+        resolve();
+      };
+      browser.tabs.onCreated.addListener(onTabCreated);
+    });
+
+    async function createAndTestNewTab(expectedPopup, url) {
+      // Create a tab.
+      let [tab] = await Promise.all([
+        browser.tabs.create({url}),
+        tabCreatedPromise,
+      ]);
+
+      // Test that the default popup is returned before the popup is set for the tab.
+      let defaultPopup = await browser.pageAction.getPopup({tabId: tab.id});
+      browser.test.assertTrue(defaultPopup.includes("default.html"), "Expected the default popup to be returned");
+
+      // Set the title for the new tab and test that getTitle returns the correct title.
+      await browser.pageAction.setPopup({tabId: tab.id, popup: expectedPopup});
+      let actualPopup = await browser.pageAction.getPopup({tabId: tab.id});
+      browser.test.assertTrue(actualPopup.includes(expectedPopup), "Expected the new tab popup to be returned");
+
+      return tab;
+    }
+
+    // Create and test 2 new tabs.
+    let tab1 = await createAndTestNewTab("a.html", "about:blank");
+    let tab2 = await createAndTestNewTab("b.html", "about:blank");
+
+    // Check all of the created tabs now.
+    let popup = await browser.pageAction.getPopup({tabId: tab1.id});
+    browser.test.assertTrue(popup.includes("a.html"), "Expected the first tab popup");
+    popup = await browser.pageAction.getPopup({tabId: tab2.id});
+    browser.test.assertTrue(popup.includes("b.html"), "Expected the second tab popup");
+
+    // Unset the title for the first tab and confirm that it is unset.
+    browser.pageAction.setPopup({tabId: tab1.id, popup: ""});
+    popup = await browser.pageAction.getPopup({tabId: tab1.id});
+    browser.test.assertTrue(popup.includes("default.html"), "Expected the default popup to be returned");
+
+    // Reset the title for the first tab.
+    browser.pageAction.setPopup({tabId: tab1.id, popup: "a.html"});
+    popup = await browser.pageAction.getPopup({tabId: tab1.id});
+    browser.test.assertTrue(popup.includes("a.html"), "Expected the first tab popup");
+
+    // Keeps track of the tabs for which onClicked should fire when the page action is clicked on.
+    let expectingOnClicked = {};
+
+    browser.pageAction.onClicked.addListener(tab => {
+      browser.test.assertTrue(expectingOnClicked[tab.id], "The onClicked listener should only fire when we expect it to.");
+      browser.test.sendMessage("page-action-onClicked-fired");
+    });
+
+    browser.test.onMessage.addListener(async (msg, data) => {
+      if (msg === "select-tab") {
+        await browser.tabs.update(data.tabId, {active: true});
+        browser.test.sendMessage("tab-selected");
+      } else if (msg === "page-action-show") {
+        browser.pageAction.show(data.tabId).then(() => {
+          browser.test.sendMessage("page-action-shown");
+        });
+      } else if (msg == "page-action-set-popup") {
+        if (data.popup == "") {
+          expectingOnClicked[data.tabId] = true;
+        } else {
+          delete expectingOnClicked[tabId];
+        }
+        browser.pageAction.setPopup({tabId: data.tabId, popup: data.popup}).then(() => {
+          browser.test.sendMessage("page-action-popup-set");
+        });
+      } else if (msg == "page-action-get-popup") {
+        browser.pageAction.getPopup({tabId: data.tabId}).then(url => {
+          browser.test.sendMessage("page-action-got-popup", url);
+        });
+      } else if (msg === "finish") {
+        await browser.tabs.remove([tab1.id, tab2.id]);
+        browser.test.notifyPass("page-action-popup");
+      }
+    });
+
+    browser.test.sendMessage("tabs", {tab1, tab2});
+  }
+
+  function popupScript() {
+    window.onload = () => {
+      browser.test.sendMessage("page-action-from-popup", location.href);
+    };
+    browser.test.onMessage.addListener((msg, details) => {
+      if (msg == "page-action-close-popup") {
+        if (details.location == location.href) {
+          window.close();
+        }
+      }
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      "name": "PageAction Extension",
+      "page_action": {
+        "default_title": "Page Action",
+        "default_popup": "default.html",
+        "default_icon": {
+          "18": "extension.png",
+        },
+      },
+    },
+    files: {
+      "default.html": `<html><head><meta charset="utf-8"><script src="popup.js"><\/script></head></html>`,
+      "extension.png": IMAGE_ARRAYBUFFER,
+      "a.html": `<html><head><meta charset="utf-8"><script src="popup.js"><\/script></head></html>`,
+      "b.html": `<html><head><meta charset="utf-8"><script src="popup.js"><\/script></head></html>`,
+      "popup.js": popupScript,
+    },
+  });
+
+  let tabClosedPromise = () => {
+    return new Promise(resolve => {
+      let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+      let BrowserApp = chromeWin.BrowserApp;
+
+      let tabCloseListener = (event) => {
+        BrowserApp.deck.removeEventListener("TabClose", tabCloseListener);
+        let browser = event.target;
+        let url = browser.currentURI.spec;
+        resolve(url);
+      };
+
+      BrowserApp.deck.addEventListener("TabClose", tabCloseListener);
+    });
+  };
+
+  async function testPopup(tabId, expectedPopup, uuid) {
+    extension.sendMessage("page-action-get-popup", {tabId});
+    let actualPopup = await extension.awaitMessage("page-action-got-popup");
+    ok(actualPopup.includes(expectedPopup), `Expected the correct popup for tab ${tabId}`);
+
+    extension.sendMessage("select-tab", {tabId});
+    await extension.awaitMessage("tab-selected");
+
+    extension.sendMessage("page-action-show", {tabId});
+    await extension.awaitMessage("page-action-shown");
+
+    ok(PageActions.isShown(uuid), "page action is shown");
+    PageActions.synthesizeClick(uuid);
+    let location = await extension.awaitMessage("page-action-from-popup");
+    ok(location.includes(expectedPopup), "The popup with the correct URL should be shown.");
+
+    extension.sendMessage("page-action-close-popup", {location});
+    location = await tabClosedPromise();
+    ok(location.includes(expectedPopup), "The popup with the correct URL should be closed.");
+  }
+
+  await extension.startup();
+
+  let {tab1, tab2} = await extension.awaitMessage("tabs");
+
+  const uuid = `{${extension.uuid}}`;
+  await testPopup(tab1.id, "a.html", uuid);
+  await testPopup(tab2.id, "b.html", uuid);
+
+  // Test that the default popup is used when the first tabs popup is unset.
+  extension.sendMessage("page-action-set-popup", {tabId: tab1.id, popup: ""});
+  await extension.awaitMessage("page-action-popup-set");
+
+  await testPopup(tab1.id, "default.html", uuid);
+
+  extension.sendMessage("finish");
+  await extension.awaitFinish("page-action-popup");
+
+  await extension.unload();
+});
+
+
+</script>
+
+</body>
+</html>

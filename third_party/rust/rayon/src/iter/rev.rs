@@ -2,6 +2,7 @@ use super::internal::*;
 use super::*;
 use std::iter;
 
+#[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct Rev<I: IndexedParallelIterator> {
     base: I,
 }
@@ -31,29 +32,17 @@ impl<I> ParallelIterator for Rev<I>
     }
 }
 
-impl<I> BoundedParallelIterator for Rev<I>
-    where I: IndexedParallelIterator
-{
-    fn upper_bound(&mut self) -> usize {
-        self.len()
-    }
-
-    fn drive<C: Consumer<Self::Item>>(self, consumer: C) -> C::Result {
-        bridge(self, consumer)
-    }
-}
-
-impl<I> ExactParallelIterator for Rev<I>
-    where I: IndexedParallelIterator
-{
-    fn len(&mut self) -> usize {
-        self.base.len()
-    }
-}
-
 impl<I> IndexedParallelIterator for Rev<I>
     where I: IndexedParallelIterator
 {
+    fn drive<C: Consumer<Self::Item>>(self, consumer: C) -> C::Result {
+        bridge(self, consumer)
+    }
+
+    fn len(&mut self) -> usize {
+        self.base.len()
+    }
+
     fn with_producer<CB>(mut self, callback: CB) -> CB::Output
         where CB: ProducerCallback<Self::Item>
     {

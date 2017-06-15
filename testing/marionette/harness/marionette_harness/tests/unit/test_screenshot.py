@@ -144,7 +144,7 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
                 features += ",width={}".format(width)
 
             self.marionette.execute_script("""
-                window.open(arguments[0], "", arguments[1]);
+                window.openDialog(arguments[0], "", arguments[1]);
                 """, script_args=[url, features])
 
         return self.open_window(opener)

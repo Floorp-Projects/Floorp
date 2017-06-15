@@ -6,7 +6,8 @@
 
 var gSearchResultsPane = {
   findSelection: null,
-  listSearchTooltips: [],
+  listSearchTooltips: new Set(),
+  listSearchMenuitemIndicators: new Set(),
   searchResultsCategory: null,
   searchInput: null,
 
@@ -193,6 +194,7 @@ var gSearchResultsPane = {
     let query = event.target.value.trim().toLowerCase();
     this.findSelection.removeAllRanges();
     this.removeAllSearchTooltips();
+    this.removeAllSearchMenuitemIndicators();
 
     let srHeader = document.getElementById("header-searchResults");
 
@@ -242,9 +244,7 @@ var gSearchResultsPane = {
           strings.getFormattedString("searchResults.needHelp2", [helpUrl, brandName]);
       } else {
         // Creating tooltips for all the instances found
-        for (let node of this.listSearchTooltips) {
-          this.createSearchTooltip(node, query);
-        }
+        this.listSearchTooltips.forEach((node) => this.createSearchTooltip(node, query));
       }
     } else {
       this.searchResultsCategory.hidden = true;
@@ -301,8 +301,17 @@ var gSearchResultsPane = {
       let keywordsResult = this.stringMatchesFilters(nodeObject.getAttribute("searchkeywords"), searchPhrase);
 
       // Creating tooltips for buttons
-      if (keywordsResult && nodeObject.tagName === "button") {
-        this.listSearchTooltips.push(nodeObject);
+      if (keywordsResult && (nodeObject.tagName === "button" || nodeObject.tagName == "menulist")) {
+        this.listSearchTooltips.add(nodeObject);
+      }
+
+      if (keywordsResult && nodeObject.tagName === "menuitem") {
+        nodeObject.setAttribute("indicator", "true");
+        this.listSearchMenuitemIndicators.add(nodeObject);
+        let menulist = nodeObject.closest("menulist");
+
+        menulist.setAttribute("indicator", "true");
+        this.listSearchMenuitemIndicators.add(menulist);
       }
 
       if ((nodeObject.tagName == "button" ||
@@ -315,18 +324,44 @@ var gSearchResultsPane = {
       matchesFound = matchesFound || complexTextNodesResult || labelResult || valueResult || keywordsResult;
     }
 
-    for (let i = 0; i < nodeObject.childNodes.length; i++) {
-      // Search only if child node is not hidden
-      if (!nodeObject.childNodes[i].hidden && nodeObject.getAttribute("data-hidden-from-search") !== "true") {
-        let result = this.searchWithinNode(nodeObject.childNodes[i], searchPhrase);
-        // Creating tooltips for menulist element
-        if (result && nodeObject.tagName === "menulist") {
-          this.listSearchTooltips.push(nodeObject);
-        }
+    // Should not search unselected child nodes of a <xul:deck> element
+    // except the "historyPane" <xul:deck> element.
+    if (nodeObject.tagName == "deck" && nodeObject.id != "historyPane") {
+      let index = nodeObject.selectedIndex;
+      if (index != -1) {
+        let result = this.searchChildNodeIfVisible(nodeObject, index, searchPhrase);
+        matchesFound = matchesFound || result;
+      }
+    } else {
+      for (let i = 0; i < nodeObject.childNodes.length; i++) {
+        let result = this.searchChildNodeIfVisible(nodeObject, i, searchPhrase);
         matchesFound = matchesFound || result;
       }
     }
     return matchesFound;
+  },
+
+  /**
+   * Search for a phrase within a child node if it is visible.
+   *
+   * @param Node nodeObject
+   *    The parent DOM Element
+   * @param Number index
+   *    The index for the childNode
+   * @param String searchPhrase
+   * @returns boolean
+   *    Returns true when found the specific childNode, false otherwise
+   */
+  searchChildNodeIfVisible(nodeObject, index, searchPhrase) {
+    let result = false;
+    if (!nodeObject.childNodes[index].hidden && nodeObject.getAttribute("data-hidden-from-search") !== "true") {
+      result = this.searchWithinNode(nodeObject.childNodes[index], searchPhrase);
+      // Creating tooltips for menulist element
+      if (result && nodeObject.tagName === "menulist") {
+        this.listSearchTooltips.add(nodeObject);
+      }
+    }
+    return result;
   },
 
   /**
@@ -369,6 +404,14 @@ var gSearchResultsPane = {
       searchTooltip.parentElement.classList.remove("search-tooltip-parent");
       searchTooltip.remove();
     }
-    this.listSearchTooltips = [];
+    this.listSearchTooltips.clear();
+  },
+
+  /**
+   * Remove all indicators on menuitem.
+   */
+  removeAllSearchMenuitemIndicators() {
+    this.listSearchMenuitemIndicators.forEach((node) => node.removeAttribute("indicator"));
+    this.listSearchMenuitemIndicators.clear();
   }
 }

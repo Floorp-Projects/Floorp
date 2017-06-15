@@ -430,6 +430,58 @@ class Tab extends TabBase {
   }
 }
 
+// Manages tab-specific context data and dispatches tab select and close events.
+class TabContext {
+  constructor(getDefaults, extension) {
+    this.extension = extension;
+    this.getDefaults = getDefaults;
+    this.tabData = new Map();
+
+    GlobalEventDispatcher.registerListener(this, [
+      "Tab:Selected",
+      "Tab:Closed",
+    ]);
+
+    EventEmitter.decorate(this);
+  }
+
+  get(tabId) {
+    if (!this.tabData.has(tabId)) {
+      this.tabData.set(tabId, this.getDefaults());
+    }
+
+    return this.tabData.get(tabId);
+  }
+
+  clear(tabId) {
+    this.tabData.delete(tabId);
+  }
+
+  /**
+   * Required by the GlobalEventDispatcher module. This event will get
+   * called whenever one of the registered listeners fires.
+   * @param {string} event The event which fired.
+   * @param {object} data Information about the event which fired.
+   */
+  onEvent(event, data) {
+    switch (event) {
+      case "Tab:Selected":
+        this.emit("tab-selected", data.id);
+        break;
+      case "Tab:Closed":
+        this.emit("tab-closed", data.tabId);
+        break;
+    }
+  }
+
+  shutdown() {
+    GlobalEventDispatcher.unregisterListener(this, [
+      "Tab:Selected",
+      "Tab:Closed",
+    ]);
+  }
+}
+
 class Window extends WindowBase {
   get focused() {
     return this.window.document.hasFocus();
@@ -476,7 +528,7 @@ class Window extends WindowBase {
   }
 }
 
-Object.assign(global, {Tab, Window});
+Object.assign(global, {Tab, TabContext, Window});
 
 class TabManager extends TabManagerBase {
   get(tabId, default_ = undefined) {

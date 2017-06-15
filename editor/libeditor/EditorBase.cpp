@@ -1453,7 +1453,7 @@ EditorBase::InsertNode(nsIContent& aNode,
     CreateTxnForInsertNode(aNode, aParent, aPosition);
   nsresult rv = DoTransaction(transaction);
 
-  mRangeUpdater.SelAdjInsertNode(aParent.AsDOMNode(), aPosition);
+  mRangeUpdater.SelAdjInsertNode(&aParent, aPosition);
 
   {
     AutoActionListenerArray listeners(mActionListeners);

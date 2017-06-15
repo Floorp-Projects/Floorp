@@ -243,22 +243,7 @@ RangeUpdater::SelAdjCreateNode(nsINode* aParent,
 }
 
 nsresult
-RangeUpdater::SelAdjCreateNode(nsIDOMNode* aParent,
-                               int32_t aPosition)
-{
-  nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
-  return SelAdjCreateNode(parent, aPosition);
-}
-
-nsresult
 RangeUpdater::SelAdjInsertNode(nsINode* aParent,
-                               int32_t aPosition)
-{
-  return SelAdjCreateNode(aParent, aPosition);
-}
-
-nsresult
-RangeUpdater::SelAdjInsertNode(nsIDOMNode* aParent,
                                int32_t aPosition)
 {
   return SelAdjCreateNode(aParent, aPosition);
@@ -317,14 +302,6 @@ RangeUpdater::SelAdjDeleteNode(nsINode* aNode)
       item->endOffset = offset;
     }
   }
-}
-
-void
-RangeUpdater::SelAdjDeleteNode(nsIDOMNode* aNode)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE_VOID(node);
-  return SelAdjDeleteNode(node);
 }
 
 nsresult

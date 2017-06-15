@@ -9,10 +9,10 @@ use std::collections::LinkedList;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::collections::{BinaryHeap, VecDeque};
 use std::f64;
+use std::fmt::Debug;
 use std::usize;
+use std::sync::mpsc;
 
-fn is_bounded<T: ExactParallelIterator>(_: T) {}
-fn is_exact<T: ExactParallelIterator>(_: T) {}
 fn is_indexed<T: IndexedParallelIterator>(_: T) {}
 
 #[test]
@@ -61,6 +61,11 @@ pub fn execute_strings() {
     let par_even: String = s.par_chars().filter(|&c| (c as u32) & 1 == 0).collect();
     let ser_even: String = s.chars().filter(|&c| (c as u32) & 1 == 0).collect();
     assert_eq!(par_even, ser_even);
+
+    // test `FromParallelIterator<&char> for String`
+    let vchars: Vec<char> = s.par_chars().collect();
+    let par_chars: String = vchars.par_iter().collect();
+    assert_eq!(s, par_chars);
 }
 
 #[test]
@@ -118,10 +123,8 @@ pub fn execute_strings_split() {
 }
 
 #[test]
-pub fn check_map_exact_and_bounded() {
+pub fn check_map_indexed() {
     let a = [1, 2, 3];
-    is_bounded(a.par_iter().map(|x| x));
-    is_exact(a.par_iter().map(|x| x));
     is_indexed(a.par_iter().map(|x| x));
 }
 
@@ -182,12 +185,15 @@ pub fn fold_map_reduce() {
 }
 
 #[test]
-#[allow(deprecated)]
-pub fn check_weight_exact_and_bounded() {
-    let a = [1, 2, 3];
-    is_bounded(a.par_iter().weight(2.0));
-    is_exact(a.par_iter().weight(2.0));
-    is_indexed(a.par_iter().weight(2.0));
+pub fn fold_is_full() {
+    let counter = AtomicUsize::new(0);
+    let a = (0_i32..2048)
+        .into_par_iter()
+        .inspect(|_| { counter.fetch_add(1, Ordering::SeqCst); })
+        .fold(|| 0, |a, b| a + b)
+        .find_any(|_| true);
+    assert!(a.is_some());
+    assert!(counter.load(Ordering::SeqCst) < 2048); // should not have visited every single one
 }
 
 #[test]
@@ -346,33 +352,25 @@ pub fn check_drops() {
 }
 
 #[test]
-pub fn check_slice_exact_and_bounded() {
+pub fn check_slice_indexed() {
     let a = vec![1, 2, 3];
-    is_bounded(a.par_iter());
-    is_exact(a.par_iter());
     is_indexed(a.par_iter());
 }
 
 #[test]
-pub fn check_slice_mut_exact_and_bounded() {
+pub fn check_slice_mut_indexed() {
     let mut a = vec![1, 2, 3];
-    is_bounded(a.par_iter_mut());
-    is_exact(a.par_iter_mut());
     is_indexed(a.par_iter_mut());
 }
 
 #[test]
-pub fn check_vec_exact_and_bounded() {
+pub fn check_vec_indexed() {
     let a = vec![1, 2, 3];
-    is_bounded(a.clone().into_par_iter());
-    is_exact(a.clone().into_par_iter());
     is_indexed(a.clone().into_par_iter());
 }
 
 #[test]
-pub fn check_range_exact_and_bounded() {
-    is_bounded((1..5).into_par_iter());
-    is_exact((1..5).into_par_iter());
+pub fn check_range_indexed() {
     is_indexed((1..5).into_par_iter());
 }
 
@@ -648,6 +646,7 @@ pub fn check_lt_direct() {
     assert!(!(1..1024).into_par_iter().lt(0..1024));
 }
 
+#[test]
 pub fn check_lt_to_seq() {
     let par_result = (0..1024).into_par_iter().lt((1..1024).into_par_iter());
     let seq_result = (0..1024).lt(1..1024);
@@ -660,6 +659,7 @@ pub fn check_le_equal_direct() {
     assert!((0..1024).into_par_iter().le((0..1024).into_par_iter()));
 }
 
+#[test]
 pub fn check_le_equal_to_seq() {
     let par_result = (0..1024).into_par_iter().le((0..1024).into_par_iter());
     let seq_result = (0..1024).le(0..1024);
@@ -672,6 +672,7 @@ pub fn check_le_less_direct() {
     assert!((0..1024).into_par_iter().le((1..1024).into_par_iter()));
 }
 
+#[test]
 pub fn check_le_less_to_seq() {
     let par_result = (0..1024).into_par_iter().le((1..1024).into_par_iter());
     let seq_result = (0..1024).le(1..1024);
@@ -811,6 +812,47 @@ pub fn check_empty_flat_map_sum() {
     // empty on the outside
     let c: i32 = empty.par_iter().flat_map(|_| a.par_iter()).sum();
     assert_eq!(c, 0);
+}
+
+#[test]
+pub fn check_slice_split() {
+    let v: Vec<_> = (0..1000).collect();
+    for m in 1..100 {
+        let a: Vec<_> = v.split(|x| x % m == 0).collect();
+        let b: Vec<_> = v.par_split(|x| x % m == 0).collect();
+        assert_eq!(a, b);
+    }
+
+    // same as std::slice::split() examples
+    let slice = [10, 40, 33, 20];
+    let v: Vec<_> = slice.par_split(|num| num % 3 == 0).collect();
+    assert_eq!(v, &[&slice[..2], &slice[3..]]);
+
+    let slice = [10, 40, 33];
+    let v: Vec<_> = slice.par_split(|num| num % 3 == 0).collect();
+    assert_eq!(v, &[&slice[..2], &slice[..0]]);
+
+    let slice = [10, 6, 33, 20];
+    let v: Vec<_> = slice.par_split(|num| num % 3 == 0).collect();
+    assert_eq!(v, &[&slice[..1], &slice[..0], &slice[3..]]);
+}
+
+#[test]
+pub fn check_slice_split_mut() {
+    let mut v1: Vec<_> = (0..1000).collect();
+    let mut v2 = v1.clone();
+    for m in 1..100 {
+        let a: Vec<_> = v1.split_mut(|x| x % m == 0).collect();
+        let b: Vec<_> = v2.par_split_mut(|x| x % m == 0).collect();
+        assert_eq!(a, b);
+    }
+
+    // same as std::slice::split_mut() example
+    let mut v = [10, 40, 30, 20, 60, 50];
+    v.par_split_mut(|num| num % 3 == 0).for_each(|group| {
+        group[0] = 1;
+    });
+    assert_eq!(v, [1, 40, 30, 1, 60, 1]);
 }
 
 #[test]
@@ -1132,6 +1174,60 @@ pub fn check_find_is_present() {
 }
 
 #[test]
+pub fn check_while_some() {
+    let value = (0_i32..2048)
+        .into_par_iter()
+        .map(Some)
+        .while_some()
+        .max();
+    assert_eq!(value, Some(2047));
+
+    let counter = AtomicUsize::new(0);
+    let value = (0_i32..2048)
+        .into_par_iter()
+        .map(|x| {
+                 counter.fetch_add(1, Ordering::SeqCst);
+                 if x < 1024 { Some(x) } else { None }
+             })
+        .while_some()
+        .max();
+    assert!(value < Some(1024));
+    assert!(counter.load(Ordering::SeqCst) < 2048); // should not have visited every single one
+}
+
+#[test]
+pub fn par_iter_collect_option() {
+    let a: Option<Vec<_>> = (0_i32..2048).map(Some).collect();
+    let b: Option<Vec<_>> = (0_i32..2048).into_par_iter().map(Some).collect();
+    assert_eq!(a, b);
+
+    let c: Option<Vec<_>> = (0_i32..2048)
+        .into_par_iter()
+        .map(|x| if x == 1234 { None } else { Some(x) })
+        .collect();
+    assert_eq!(c, None);
+}
+
+#[test]
+pub fn par_iter_collect_result() {
+    let a: Result<Vec<_>, ()> = (0_i32..2048).map(Ok).collect();
+    let b: Result<Vec<_>, ()> = (0_i32..2048).into_par_iter().map(Ok).collect();
+    assert_eq!(a, b);
+
+    let c: Result<Vec<_>, _> = (0_i32..2048)
+        .into_par_iter()
+        .map(|x| if x == 1234 { Err(x) } else { Ok(x) })
+        .collect();
+    assert_eq!(c, Err(1234));
+
+    let d: Result<Vec<_>, _> = (0_i32..2048)
+        .into_par_iter()
+        .map(|x| if x % 100 == 99 { Err(x) } else { Ok(x) })
+        .collect();
+    assert_eq!(d.map_err(|x| x % 100), Err(99));
+}
+
+#[test]
 pub fn par_iter_collect() {
     let a: Vec<i32> = (0..1024).collect();
     let b: Vec<i32> = a.par_iter().map(|&i| i + 1).collect();
@@ -1209,6 +1305,33 @@ pub fn par_iter_collect_linked_list_flat_map_filter() {
 }
 
 #[test]
+pub fn par_iter_collect_cows() {
+    use std::borrow::Cow;
+
+    let s = "Fearless Concurrency with Rust";
+
+    // Collects `i32` into a `Vec`
+    let a: Cow<[i32]> = (0..1024).collect();
+    let b: Cow<[i32]> = a.par_iter().cloned().collect();
+    assert_eq!(a, b);
+
+    // Collects `char` into a `String`
+    let a: Cow<str> = s.chars().collect();
+    let b: Cow<str> = s.par_chars().collect();
+    assert_eq!(a, b);
+
+    // Collects `str` into a `String`
+    let a: Cow<str> = s.split_whitespace().collect();
+    let b: Cow<str> = s.par_split_whitespace().collect();
+    assert_eq!(a, b);
+
+    // Collects `String` into a `String`
+    let a: Cow<str> = s.split_whitespace().map(|s| s.to_owned()).collect();
+    let b: Cow<str> = s.par_split_whitespace().map(|s| s.to_owned()).collect();
+    assert_eq!(a, b);
+}
+
+#[test]
 pub fn par_iter_unindexed_flat_map() {
     let b: Vec<i64> = (0_i64..1024).into_par_iter().flat_map(|i| Some(i)).collect();
     let c: Vec<i64> = (0_i64..1024).flat_map(|i| Some(i)).collect();
@@ -1228,6 +1351,25 @@ fn min_max() {
 
 #[test]
 fn min_max_by() {
+    let mut rng = XorShiftRng::from_seed([14159, 26535, 89793, 23846]);
+    // Make sure there are duplicate keys, for testing sort stability
+    let r: Vec<i32> = rng.gen_iter().take(512).collect();
+    let a: Vec<(i32, u16)> = r.iter()
+        .chain(&r)
+        .cloned()
+        .zip(0..)
+        .collect();
+    for i in 0..a.len() + 1 {
+        let slice = &a[..i];
+        assert_eq!(slice.par_iter().min_by(|x, y| x.0.cmp(&y.0)),
+                   slice.iter().min_by(|x, y| x.0.cmp(&y.0)));
+        assert_eq!(slice.par_iter().max_by(|x, y| x.0.cmp(&y.0)),
+                   slice.iter().max_by(|x, y| x.0.cmp(&y.0)));
+    }
+}
+
+#[test]
+fn min_max_by_key() {
     let mut rng = XorShiftRng::from_seed([14159, 26535, 89793, 23846]);
     // Make sure there are duplicate keys, for testing sort stability
     let r: Vec<i32> = rng.gen_iter().take(512).collect();
@@ -1324,4 +1466,199 @@ fn check_lengths() {
             check(min, max);
         }
     }
+}
+
+#[test]
+fn check_map_with() {
+    let (sender, receiver) = mpsc::channel();
+    let a: HashSet<_> = (0..1024).collect();
+
+    a.par_iter()
+        .cloned()
+        .map_with(sender, |s, i| s.send(i).unwrap())
+        .count();
+
+    let b: HashSet<_> = receiver.iter().collect();
+    assert_eq!(a, b);
+}
+
+#[test]
+fn check_fold_with() {
+    let (sender, receiver) = mpsc::channel();
+    let a: HashSet<_> = (0..1024).collect();
+
+    a.par_iter()
+        .cloned()
+        .fold_with(sender, |s, i| {
+            s.send(i).unwrap();
+            s
+        })
+        .count();
+
+    let b: HashSet<_> = receiver.iter().collect();
+    assert_eq!(a, b);
+}
+
+#[test]
+fn check_for_each_with() {
+    let (sender, receiver) = mpsc::channel();
+    let a: HashSet<_> = (0..1024).collect();
+
+    a.par_iter()
+        .cloned()
+        .for_each_with(sender, |s, i| s.send(i).unwrap());
+
+    let b: HashSet<_> = receiver.iter().collect();
+    assert_eq!(a, b);
+}
+
+#[test]
+fn check_extend_items() {
+    fn check<C>()
+        where C: Default + Eq + Debug
+               + Extend<i32> + for<'a> Extend<&'a i32>
+               + ParallelExtend<i32> + for<'a> ParallelExtend<&'a i32>
+    {
+        let mut serial = C::default();
+        let mut parallel = C::default();
+
+        // extend with references
+        let v: Vec<_> = (0..128).collect();
+        serial.extend(&v);
+        parallel.par_extend(&v);
+        assert_eq!(serial, parallel);
+
+        // extend with values
+        serial.extend(-128..0);
+        parallel.par_extend(-128..0);
+        assert_eq!(serial, parallel);
+    }
+
+    check::<BTreeSet<_>>();
+    check::<HashSet<_>>();
+    check::<LinkedList<_>>();
+    check::<Vec<_>>();
+    check::<VecDeque<_>>();
+}
+
+#[test]
+fn check_extend_heap() {
+    let mut serial: BinaryHeap<_> = Default::default();
+    let mut parallel: BinaryHeap<_> = Default::default();
+
+    // extend with references
+    let v: Vec<_> = (0..128).collect();
+    serial.extend(&v);
+    parallel.par_extend(&v);
+    assert_eq!(serial.clone().into_sorted_vec(), parallel.clone().into_sorted_vec());
+
+    // extend with values
+    serial.extend(-128..0);
+    parallel.par_extend(-128..0);
+    assert_eq!(serial.into_sorted_vec(), parallel.into_sorted_vec());
+}
+
+#[test]
+fn check_extend_pairs() {
+    fn check<C>()
+        where C: Default + Eq + Debug
+               + Extend<(usize, i32)> + for<'a> Extend<(&'a usize, &'a i32)>
+               + ParallelExtend<(usize, i32)> + for<'a> ParallelExtend<(&'a usize, &'a i32)>
+    {
+        let mut serial = C::default();
+        let mut parallel = C::default();
+
+        // extend with references
+        let m: HashMap<_, _> = (0..128).enumerate().collect();
+        serial.extend(&m);
+        parallel.par_extend(&m);
+        assert_eq!(serial, parallel);
+
+        // extend with values
+        let v: Vec<(_, _)> = (-128..0).enumerate().collect();
+        serial.extend(v.clone());
+        parallel.par_extend(v);
+        assert_eq!(serial, parallel);
+    }
+
+    check::<BTreeMap<usize, i32>>();
+    check::<HashMap<usize, i32>>();
+}
+
+#[test]
+fn check_unzip_into() {
+    let mut a = vec![];
+    let mut b = vec![];
+    (0..1024)
+        .into_par_iter()
+        .map(|i| i * i)
+        .enumerate()
+        .unzip_into(&mut a, &mut b);
+
+    let (c, d): (Vec<_>, Vec<_>) = (0..1024).map(|i| i * i).enumerate().unzip();
+    assert_eq!(a, c);
+    assert_eq!(b, d);
+}
+
+#[test]
+fn check_unzip() {
+    // indexed, unindexed
+    let (a, b): (Vec<_>, HashSet<_>) = (0..1024)
+        .into_par_iter()
+        .map(|i| i * i)
+        .enumerate()
+        .unzip();
+    let (c, d): (Vec<_>, HashSet<_>) = (0..1024).map(|i| i * i).enumerate().unzip();
+    assert_eq!(a, c);
+    assert_eq!(b, d);
+
+    // unindexed, indexed
+    let (a, b): (HashSet<_>, Vec<_>) = (0..1024)
+        .into_par_iter()
+        .map(|i| i * i)
+        .enumerate()
+        .unzip();
+    let (c, d): (HashSet<_>, Vec<_>) = (0..1024).map(|i| i * i).enumerate().unzip();
+    assert_eq!(a, c);
+    assert_eq!(b, d);
+
+    // indexed, indexed
+    let (a, b): (Vec<_>, Vec<_>) = (0..1024)
+        .into_par_iter()
+        .map(|i| i * i)
+        .enumerate()
+        .unzip();
+    let (c, d): (Vec<_>, Vec<_>) = (0..1024).map(|i| i * i).enumerate().unzip();
+    assert_eq!(a, c);
+    assert_eq!(b, d);
+
+    // unindexed producer
+    let (a, b): (Vec<_>, Vec<_>) = (0..1024)
+        .into_par_iter()
+        .filter_map(|i| Some((i, i * i)))
+        .unzip();
+    let (c, d): (Vec<_>, Vec<_>) = (0..1024).filter_map(|i| Some((i, i * i))).unzip();
+    assert_eq!(a, c);
+    assert_eq!(b, d);
+}
+
+#[test]
+fn check_partition() {
+    let (a, b): (Vec<_>, Vec<_>) = (0..1024).into_par_iter().partition(|&i| i % 3 == 0);
+    let (c, d): (Vec<_>, Vec<_>) = (0..1024).partition(|&i| i % 3 == 0);
+    assert_eq!(a, c);
+    assert_eq!(b, d);
+}
+
+#[test]
+fn check_partition_map() {
+    let input = "a b c 1 2 3 x y z";
+    let (a, b): (Vec<_>, String) = input
+        .par_split_whitespace()
+        .partition_map(|s| match s.parse::<i32>() {
+                           Ok(n) => Either::Left(n),
+                           Err(_) => Either::Right(s),
+                       });
+    assert_eq!(a, vec![1, 2, 3]);
+    assert_eq!(b, "abcxyz");
 }

@@ -56,7 +56,7 @@
 
 #ifdef DEBUG
 #define ENSURE_MAIN_PROCESS(message, pref) do {                                \
-  if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {        \
+  if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {                                  \
     nsPrintfCString msg("ENSURE_MAIN_PROCESS failed. %s %s", message, pref);   \
     NS_WARNING(msg.get());                                                     \
     return NS_ERROR_NOT_AVAILABLE;                                             \
@@ -74,7 +74,7 @@ public:
 #define WATCHING_PREF_RAII() WatchinPrefRAII watchingPrefRAII
 #else
 #define ENSURE_MAIN_PROCESS(message, pref)                                     \
-  if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {        \
+  if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {                                  \
     return NS_ERROR_NOT_AVAILABLE;                                             \
   }
 #define WATCHING_PREF_RAII()
@@ -130,6 +130,10 @@ Preferences* Preferences::sPreferences = nullptr;
 nsIPrefBranch* Preferences::sRootBranch = nullptr;
 nsIPrefBranch* Preferences::sDefaultRootBranch = nullptr;
 bool Preferences::sShutdown = false;
+
+// This globally enables or disables OMT pref writing, both sync and async
+static int32_t sAllowOMTPrefWrite = -1;
+
 
 class ValueObserverHashKey : public PLDHashEntryHdr {
 public:
@@ -224,6 +228,142 @@ ValueObserver::Observe(nsISupports     *aSubject,
 
   return NS_OK;
 }
+
+// We want to have an atomic pointer to the preference data that should be
+// written.  Make a struct so that we can capture the array and the length.
+struct PrefWriteData
+{
+  UniquePtr<char*[]> mData;
+  uint32_t mCount;
+};
+
+// Write the preference data to a file.
+//
+class PreferencesWriter final
+{
+public:
+  PreferencesWriter()
+  {
+  }
+
+  // Note that this method will free the contents of aPrefs, but not
+  // the aPrefs itself.
+  static
+  nsresult Write(nsIFile* aFile, char* aPrefs[], uint32_t aPrefCount)
+  {
+    nsCOMPtr<nsIOutputStream> outStreamSink;
+    nsCOMPtr<nsIOutputStream> outStream;
+    uint32_t                  writeAmount;
+    nsresult                  rv;
+
+    // execute a "safe" save by saving through a tempfile
+    rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(outStreamSink),
+                                         aFile,
+                                         -1,
+                                         0600);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    rv = NS_NewBufferedOutputStream(getter_AddRefs(outStream), outStreamSink, 4096);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    /* Sort the preferences to make a readable file on disk */
+    NS_QuickSort(aPrefs, aPrefCount, sizeof(char *),
+                 pref_CompareStrings, nullptr);
+
+    // write out the file header
+    outStream->Write(kPrefFileHeader, sizeof(kPrefFileHeader) - 1, &writeAmount);
+
+    for (uint32_t valueIdx = 0; valueIdx < aPrefCount; valueIdx++) {
+      char*& pref = aPrefs[valueIdx];
+      MOZ_ASSERT(pref);
+      outStream->Write(pref, strlen(pref), &writeAmount);
+      outStream->Write(NS_LINEBREAK, NS_LINEBREAK_LEN, &writeAmount);
+      free(pref);
+      pref = nullptr;
+    }
+
+    // tell the safe output stream to overwrite the real prefs file
+    // (it'll abort if there were any errors during writing)
+    nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(outStream);
+    NS_ASSERTION(safeStream, "expected a safe output stream!");
+    if (safeStream) {
+      rv = safeStream->Finish();
+    }
+
+#ifdef DEBUG
+    if (NS_FAILED(rv)) {
+      NS_WARNING("failed to save prefs file! possible data loss");
+    }
+#endif
+    return rv;
+  }
+
+  static
+  void Flush()
+  {
+    // This can be further optimized; instead of waiting for
+    // all of the writer thread to be available, we just have
+    // to wait for all the pending writes to be done.
+    if (!sPendingWriteData.compareExchange(nullptr, nullptr)) {
+      nsresult rv = NS_OK;
+      nsCOMPtr<nsIEventTarget> target =
+        do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
+      if (NS_SUCCEEDED(rv)) {
+        target->Dispatch(NS_NewRunnableFunction([] {}),
+                         nsIEventTarget::DISPATCH_SYNC);
+      }
+    }
+  }
+
+  // This is the data that all of the runnables (see below) will attempt
+  // to write.  It will always have the most up to date version, or be
+  // null, if the up to date information has already been written out.
+  static Atomic<PrefWriteData*> sPendingWriteData;
+};
+Atomic<PrefWriteData*> PreferencesWriter::sPendingWriteData((PrefWriteData*)0);
+
+class PWRunnable : public Runnable
+{
+public:
+  explicit PWRunnable(nsIFile* aFile) : mFile(aFile) {}
+
+  NS_IMETHOD Run() override
+  {
+    PrefWriteData* prefs = PreferencesWriter::sPendingWriteData.exchange(nullptr);
+    // If we get a nullptr on the exchange, it means that somebody
+    // else has already processed the request, and we can just return.
+
+    nsresult rv = NS_OK;
+    if (prefs) {
+      // The ::Write call will zero out the prefs->mData array, but not free it.
+      // The UniquePtr going out of scope will do that when we free prefs.
+      rv = PreferencesWriter::Write(mFile, prefs->mData.get(), prefs->mCount);
+      delete prefs;
+
+      // Make a copy of these so we can have them in runnable lambda.
+      // nsIFile is only there so that we would never release the
+      // ref counted pointer off main thread.
+      nsresult rvCopy = rv;
+      nsCOMPtr<nsIFile> fileCopy(mFile);
+      SystemGroup::Dispatch("Preferences::WriterRunnable",
+                            TaskCategory::Other,
+                            NS_NewRunnableFunction([fileCopy, rvCopy] {
+        MOZ_RELEASE_ASSERT(NS_IsMainThread());
+        if (NS_FAILED(rvCopy)) {
+          Preferences::DirtyCallback();
+        }
+      }));
+    }
+    return rv;
+  }
+
+protected:
+  nsCOMPtr<nsIFile> mFile;
+};
 
 struct CacheData {
   void* cacheLocation;
@@ -555,7 +695,6 @@ NS_INTERFACE_MAP_BEGIN(Preferences)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
-
 /*
  * nsIPrefService Implementation
  */
@@ -609,6 +748,7 @@ Preferences::Init()
   if (!observerService)
     return NS_ERROR_FAILURE;
 
+  observerService->AddObserver(this, "profile-before-change-telemetry", true);
   rv = observerService->AddObserver(this, "profile-before-change", true);
 
   observerService->AddObserver(this, "load-extension-defaults", true);
@@ -629,13 +769,18 @@ NS_IMETHODIMP
 Preferences::Observe(nsISupports *aSubject, const char *aTopic,
                      const char16_t *someData)
 {
-  if (XRE_IsContentProcess())
+  if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
   nsresult rv = NS_OK;
 
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     rv = SavePrefFile(nullptr);
+  } else if (!nsCRT::strcmp(aTopic, "profile-before-change-telemetry")) {
+    if (AllowOffMainThreadSave()) {
+      PreferencesWriter::Flush();
+    }
   } else if (!strcmp(aTopic, "load-extension-defaults")) {
     pref_LoadPrefsInDirList(NS_EXT_PREFS_DEFAULTS_DIR_LIST);
   } else if (!nsCRT::strcmp(aTopic, "reload-default-prefs")) {
@@ -645,7 +790,7 @@ Preferences::Observe(nsISupports *aSubject, const char *aTopic,
     // Our process is being suspended. The OS may wake our process later,
     // or it may kill the process. In case our process is going to be killed
     // from the suspended state, we save preferences before suspending.
-    rv = SavePrefFile(nullptr);
+    rv = SavePrefFileBlocking();
   }
   return rv;
 }
@@ -654,14 +799,20 @@ Preferences::Observe(nsISupports *aSubject, const char *aTopic,
 NS_IMETHODIMP
 Preferences::ReadUserPrefs(nsIFile *aFile)
 {
-  if (XRE_IsContentProcess()) {
-    NS_ERROR("cannot load prefs from content process");
+  if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {
+    NS_ERROR("must load prefs from parent process");
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   nsresult rv;
 
   if (nullptr == aFile) {
+    // We should not be re-reading the user preferences, but if we
+    // are going to try, make sure there are no outstanding saves
+    if (AllowOffMainThreadSave()) {
+      PreferencesWriter::Flush();
+    }
+
     rv = UseDefaultPrefFile();
     // A user pref file is optional.
     // Ignore all errors related to it, so we retain 'rv' value :-|
@@ -684,8 +835,8 @@ Preferences::ReadUserPrefs(nsIFile *aFile)
 NS_IMETHODIMP
 Preferences::ResetPrefs()
 {
-  if (XRE_IsContentProcess()) {
-    NS_ERROR("cannot reset prefs from content process");
+  if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {
+    NS_ERROR("must reset prefs from parent process");
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -700,24 +851,59 @@ Preferences::ResetPrefs()
 NS_IMETHODIMP
 Preferences::ResetUserPrefs()
 {
-  if (XRE_IsContentProcess()) {
-    NS_ERROR("cannot reset user prefs from content process");
+  if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {
+    NS_ERROR("must reset user prefs from parent process");
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   PREF_ClearAllUserPrefs();
-  return NS_OK;    
+  return NS_OK;
+}
+
+bool
+Preferences::AllowOffMainThreadSave()
+{
+  // Put in a preference that allows us to disable
+  // off main thread preference file save.
+  if (sAllowOMTPrefWrite < 0) {
+    bool value = false;
+    Preferences::GetBool("preferences.allow.omt-write", &value);
+    sAllowOMTPrefWrite = value ? 1 : 0;
+  }
+  return !!sAllowOMTPrefWrite;
+}
+
+nsresult
+Preferences::SavePrefFileBlocking()
+{
+  if (mDirty) {
+    return SavePrefFileInternal(nullptr, SaveMethod::Blocking);
+  }
+
+  // If we weren't dirty to start, SavePrefFileInternal will early exit
+  // so there is no guarantee that we don't have oustanding async
+  // saves in the pipe.  Since the contract of SavePrefFileOnMainThread
+  // is that the file on disk matches the preferences, we have to make
+  // sure those requests are completed.
+
+  if (AllowOffMainThreadSave()) {
+    PreferencesWriter::Flush();
+  }
+  return NS_OK;
+}
+
+nsresult
+Preferences::SavePrefFileAsynchronous()
+{
+  return SavePrefFileInternal(nullptr, SaveMethod::Asynchronous);
 }
 
 NS_IMETHODIMP
 Preferences::SavePrefFile(nsIFile *aFile)
 {
-  if (XRE_IsContentProcess()) {
-    NS_ERROR("cannot save pref file from content process");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  return SavePrefFileInternal(aFile);
+  // This is the method accessible from service API.  Make it off
+  // main thread.
+  return SavePrefFileInternal(aFile, SaveMethod::Asynchronous);
 }
 
 static nsresult
@@ -883,13 +1069,13 @@ Preferences::UseDefaultPrefFile()
     // exist, so save a new one. mUserPrefReadFailed will be
     // used to catch an error in actually reading the file.
     if (NS_FAILED(rv)) {
-      if (NS_FAILED(SavePrefFileInternal(aFile)))
+      if (NS_FAILED(SavePrefFileInternal(aFile, SaveMethod::Blocking)))
         NS_ERROR("Failed to save new shared pref file");
       else
         rv = NS_OK;
     }
   }
-  
+
   return rv;
 }
 
@@ -948,6 +1134,13 @@ Preferences::ReadAndOwnUserPrefFile(nsIFile *aFile)
   
   if (mCurrentFile == aFile)
     return NS_OK;
+
+  // Since we're changing the pref file, we may have to make
+  // sure the outstanding writes are handled first.
+  if (AllowOffMainThreadSave()) {
+    PreferencesWriter::Flush();
+  }
+
   mCurrentFile = aFile;
 
   nsresult rv = NS_OK;
@@ -969,14 +1162,24 @@ Preferences::ReadAndOwnUserPrefFile(nsIFile *aFile)
 }
 
 nsresult
-Preferences::SavePrefFileInternal(nsIFile *aFile)
+Preferences::SavePrefFileInternal(nsIFile *aFile, SaveMethod aSaveMethod)
 {
+  if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {
+    NS_ERROR("must save pref file from parent process");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   // We allow different behavior here when aFile argument is not null,
   // but it happens to be the same as the current file.  It is not
   // clear that we should, but it does give us a "force" save on the
   // unmodified pref file (see the original bug 160377 when we added this.)
 
   if (nullptr == aFile) {
+    // Off main thread writing only if allowed
+    if (!AllowOffMainThreadSave()) {
+      aSaveMethod = SaveMethod::Blocking;
+    }
+
     // the mDirty flag tells us if we should write to mCurrentFile
     // we only check this flag when the caller wants to write to the default
     if (!mDirty) {
@@ -986,7 +1189,7 @@ Preferences::SavePrefFileInternal(nsIFile *aFile)
     // It's possible that we never got a prefs file.
     nsresult rv = NS_OK;
     if (mCurrentFile) {
-      rv = WritePrefFile(mCurrentFile);
+      rv = WritePrefFile(mCurrentFile, aSaveMethod);
     }
 
     // If we succeeded writing to mCurrentFile, reset the dirty flag
@@ -995,67 +1198,63 @@ Preferences::SavePrefFileInternal(nsIFile *aFile)
     }
     return rv;
   } else {
-    return WritePrefFile(aFile);
+    // We only allow off main thread writes on mCurrentFile
+    return WritePrefFile(aFile, SaveMethod::Blocking);
   }
 }
 
 nsresult
-Preferences::WritePrefFile(nsIFile* aFile)
+Preferences::WritePrefFile(nsIFile* aFile, SaveMethod aSaveMethod)
 {
-  nsCOMPtr<nsIOutputStream> outStreamSink;
-  nsCOMPtr<nsIOutputStream> outStream;
-  uint32_t                  writeAmount;
-  nsresult                  rv;
-
-  if (!gHashTable)
+  if (!gHashTable) {
     return NS_ERROR_NOT_INITIALIZED;
+  }
 
   PROFILER_LABEL("Preferences", "WritePrefFile",
                  js::ProfileEntry::Category::OTHER);
 
-  // execute a "safe" save by saving through a tempfile
-  rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(outStreamSink),
-                                       aFile,
-                                       -1,
-                                       0600);
-  if (NS_FAILED(rv)) 
+  if (AllowOffMainThreadSave()) {
+
+    nsresult rv = NS_OK;
+    PrefWriteData* prefs = new PrefWriteData;
+    prefs->mData = pref_savePrefs(gHashTable, &prefs->mCount);
+
+    // Put the newly constructed preference data into sPendingWriteData
+    // for the next request to pick up
+    prefs = PreferencesWriter::sPendingWriteData.exchange(prefs);
+    if (prefs) {
+      // There was a previous request that hasn't been processed,
+      // and this is the data it had.  Delete the old data and return.
+      delete prefs;
       return rv;
-  rv = NS_NewBufferedOutputStream(getter_AddRefs(outStream), outStreamSink, 4096);
-  if (NS_FAILED(rv)) 
-      return rv;  
-
-  // get the lines that we're supposed to be writing to the file
-  uint32_t prefCount;
-  UniquePtr<char*[]> valueArray = pref_savePrefs(gHashTable, &prefCount);
-
-  /* Sort the preferences to make a readable file on disk */
-  NS_QuickSort(valueArray.get(), prefCount, sizeof(char *),
-               pref_CompareStrings, nullptr);
-
-  // write out the file header
-  outStream->Write(kPrefFileHeader, sizeof(kPrefFileHeader) - 1, &writeAmount);
-
-  for (uint32_t valueIdx = 0; valueIdx < prefCount; valueIdx++) {
-    char*& pref = valueArray[valueIdx];
-    MOZ_ASSERT(pref);
-    outStream->Write(pref, strlen(pref), &writeAmount);
-    outStream->Write(NS_LINEBREAK, NS_LINEBREAK_LEN, &writeAmount);
-    free(pref);
-    pref = nullptr;
-  }
-
-  // tell the safe output stream to overwrite the real prefs file
-  // (it'll abort if there were any errors during writing)
-  nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(outStream);
-  NS_ASSERTION(safeStream, "expected a safe output stream!");
-  if (safeStream) {
-    rv = safeStream->Finish();
-    if (NS_FAILED(rv)) {
-      NS_WARNING("failed to save prefs file! possible data loss");
-      return rv;
+    } else {
+      // There were no previous requests, dispatch one since
+      // sPendingWriteData has the up to date information.
+      nsCOMPtr<nsIEventTarget> target =
+        do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
+      if (NS_SUCCEEDED(rv)) {
+        bool async = aSaveMethod == SaveMethod::Asynchronous;
+        rv = target->Dispatch(new PWRunnable(aFile),
+                              async ? nsIEventTarget::DISPATCH_NORMAL :
+                                      nsIEventTarget::DISPATCH_SYNC);
+        return rv;
+      }
     }
+
+    // If we can't get the thread for writing, for whatever reason, do the
+    // main thread write after making some noise:
+    MOZ_ASSERT(false,"failed to get the target thread for OMT pref write");
   }
-  return NS_OK;
+
+  // This will do a main thread write.  It is safe to do it this way
+  // as AllowOffMainThreadSave() returns a consistent value for the
+  // lifetime of the parent process.
+  uint32_t prefCount = 0;
+  UniquePtr<char*[]> prefsData = pref_savePrefs(gHashTable, &prefCount);
+
+  // The ::Write call will zero out the prefsData array, but not free it.
+  // The UniquePtr going out of scope will do that.
+  return PreferencesWriter::Write(aFile, prefsData.get(), prefCount);
 }
 
 static nsresult openPrefFile(nsIFile* aFile)
@@ -1063,7 +1262,7 @@ static nsresult openPrefFile(nsIFile* aFile)
   nsCOMPtr<nsIInputStream> inStr;
 
   nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), aFile);
-  if (NS_FAILED(rv)) 
+  if (NS_FAILED(rv))
     return rv;        
 
   int64_t fileSize64;

@@ -439,6 +439,14 @@ const getHighlighterHelperFor = (type) => Task.async(
         };
       },
 
+      get actorID() {
+        if (!highlighter) {
+          return null;
+        }
+
+        return highlighter.actorID;
+      },
+
       show: function* (selector = ":root", options) {
         highlightedNode = yield getNodeFront(selector, inspector);
         return yield highlighter.show(highlightedNode, options);

@@ -1,2 +1,0 @@
-Component('bar')
-NO_COMPONENTS_MANIFEST = True

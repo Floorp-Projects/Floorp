@@ -66,7 +66,7 @@ function triggerActivity() {
 }
 
 function viewSourceInDebugger() {
-  return connector.viewSourceInDebugger();
+  return connector.viewSourceInDebugger(...arguments);
 }
 
 module.exports = {

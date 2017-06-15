@@ -708,7 +708,7 @@ int nr_ice_set_local_addresses(nr_ice_ctx *ctx,
     int default_addr_ct = 0;
 
     if (ctx->local_addrs) {
-      r_log(LOG_ICE,LOG_ERR,"ICE(%s): local addresses already set",ctx->label);
+      r_log(LOG_ICE,LOG_WARNING,"ICE(%s): local addresses already set, no work to do",ctx->label);
       ABORT(R_ALREADY);
     }
     if (!stun_addrs || !stun_addr_ct) {

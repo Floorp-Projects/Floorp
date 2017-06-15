@@ -175,7 +175,6 @@
         "name": "get",
         "type": "function",
         "permissions": ["management"],
-        "unsupported": true,
         "description": "Returns information about the installed extension that has the given ID.",
         "async": "callback",
         "parameters": [

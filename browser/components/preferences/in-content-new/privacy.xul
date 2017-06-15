@@ -191,9 +191,31 @@
     </label>
     <menulist id="historyMode">
       <menupopup>
-        <menuitem label="&historyHeader.remember.label;" value="remember"/>
-        <menuitem label="&historyHeader.dontremember.label;" value="dontremember"/>
-        <menuitem label="&historyHeader.custom.label;" value="custom"/>
+        <menuitem label="&historyHeader.remember.label;" value="remember" searchkeywords="&rememberDescription.label;
+                                                                                          &rememberActions.pre.label;
+                                                                                          &rememberActions.clearHistory.label;
+                                                                                          &rememberActions.middle.label;
+                                                                                          &rememberActions.removeCookies.label;
+                                                                                          &rememberActions.post.label;"/>
+        <menuitem label="&historyHeader.dontremember.label;" value="dontremember" searchkeywords="&dontrememberDescription.label;
+                                                                                                  &dontrememberActions.pre.label;
+                                                                                                  &dontrememberActions.clearHistory.label;
+                                                                                                  &dontrememberActions.post.label;"/>
+        <menuitem label="&historyHeader.custom.label;" value="custom" searchkeywords="&privateBrowsingPermanent2.label;
+                                                                                      &rememberHistory2.label;
+                                                                                      &rememberSearchForm.label;
+                                                                                      &acceptCookies.label;
+                                                                                      &cookieExceptions.label;
+                                                                                      &acceptThirdParty.pre.label;
+                                                                                      &acceptThirdParty.always.label;
+                                                                                      &acceptThirdParty.visited.label;
+                                                                                      &acceptThirdParty.never.label;
+                                                                                      &keepUntil.label;
+                                                                                      &expire.label;
+                                                                                      &close.label;
+                                                                                      &showCookies.label;
+                                                                                      &clearOnClose.label;
+                                                                                      &clearOnCloseSettings.label;"/>
       </menupopup>
     </menulist>
     <label>&historyHeader.post.label;</label>

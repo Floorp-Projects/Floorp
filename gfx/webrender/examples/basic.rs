@@ -21,6 +21,7 @@ use webrender_traits::{ClipRegionToken, ColorF, DisplayListBuilder, Epoch, Glyph
 use webrender_traits::{DeviceIntPoint, DeviceUintSize, LayoutPoint, LayoutRect, LayoutSize};
 use webrender_traits::{ImageData, ImageDescriptor, ImageFormat};
 use webrender_traits::{PipelineId, RenderApi, TransformStyle, BoxShadowClipMode};
+use euclid::vec2;
 
 #[derive(Debug)]
 enum Gesture {
@@ -381,7 +382,7 @@ fn main() {
         let rect = LayoutRect::new(LayoutPoint::new(0.0, 0.0), LayoutSize::new(0.0, 0.0));
         let simple_box_bounds = LayoutRect::new(LayoutPoint::new(20.0, 200.0),
                                                 LayoutSize::new(50.0, 50.0));
-        let offset = LayoutPoint::new(10.0, 10.0);
+        let offset = vec2(10.0, 10.0);
         let color = ColorF::new(1.0, 1.0, 1.0, 1.0);
         let blur_radius = 0.0;
         let spread_radius = 0.0;

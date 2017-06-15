@@ -1043,17 +1043,17 @@ var Bookmarks = Object.freeze({
 /**
  * Sends a bookmarks notification through the given observers.
  *
- * @param observers
+ * @param {Array} observers
  *        array of nsINavBookmarkObserver objects.
- * @param notification
+ * @param {String} notification
  *        the notification name.
- * @param args
+ * @param {Array} [args]
  *        array of arguments to pass to the notification.
- * @param information
+ * @param {Object} [information]
  *        Information about the notification, so we can filter based
  *        based on the observer's preferences.
  */
-function notify(observers, notification, args, information = {}) {
+function notify(observers, notification, args = [], information = {}) {
   for (let observer of observers) {
     if (information.isTagging && observer.skipTags) {
       continue;

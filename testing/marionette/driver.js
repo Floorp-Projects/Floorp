@@ -188,6 +188,7 @@ Object.defineProperty(GeckoDriver.prototype, "windowHandles", {
       let win = winEn.getNext();
       let tabBrowser = browser.getTabBrowser(win);
 
+      // Only return handles for browser windows
       if (tabBrowser) {
         tabBrowser.tabs.forEach(tab => {
           let winId = this.getIdForBrowser(browser.getBrowserForTab(tab));
@@ -195,9 +196,6 @@ Object.defineProperty(GeckoDriver.prototype, "windowHandles", {
             hs.push(winId);
           }
         });
-      } else {
-        // For other chrome windows beside the browser window, only add the window itself.
-        hs.push(getOuterWindowId(win));
       }
     }
 
@@ -349,16 +347,8 @@ GeckoDriver.prototype.getCurrentWindow = function (forcedContext = undefined) {
       if (this.curFrame !== null) {
         win = this.curFrame;
 
-      } else if (this.curBrowser !== null) {
-        if (browser.getTabBrowser(this.curBrowser.window)) {
-          // For browser windows we have to check if the current tab still exists.
-          if (this.curBrowser.tab && this.curBrowser.contentBrowser) {
-            win = this.curBrowser.window;
-          }
-        } else {
-          // For non-browser windows just return the window.
+      } else if (this.curBrowser !== null && this.curBrowser.contentBrowser) {
           win = this.curBrowser.window;
-        }
       }
 
       break;
@@ -1191,22 +1181,14 @@ GeckoDriver.prototype.getIdForBrowser = function (browser) {
  *
  * @return {string}
  *     Unique window handle.
+ *
+ * @throws {NoSuchWindowError}
+ *     Top-level browsing context has been discarded.
  */
 GeckoDriver.prototype.getWindowHandle = function (cmd, resp) {
-  assert.window(this.getCurrentWindow(Context.CONTENT));
+  assert.contentBrowser(this.curBrowser);
 
-  // curFrameId always holds the current tab.
-  if (this.curBrowser.curFrameId) {
-    resp.body.value = this.curBrowser.curFrameId.toString();
-    return;
-  }
-
-  for (let i in this.browsers) {
-    if (this.curBrowser == this.browsers[i]) {
-      resp.body.value = i.toString();
-      return;
-    }
-  }
+  return this.curBrowser.curFrameId.toString();
 };
 
 /**
@@ -1234,6 +1216,9 @@ GeckoDriver.prototype.getWindowHandles = function (cmd, resp) {
  *
  * @return {string}
  *     Unique window handle.
+ *
+ * @throws {NoSuchWindowError}
+ *     Top-level browsing context has been discarded.
  */
 GeckoDriver.prototype.getChromeWindowHandle = function (cmd, resp) {
   assert.window(this.getCurrentWindow(Context.CHROME));
@@ -2525,7 +2510,7 @@ GeckoDriver.prototype.deleteCookie = function* (cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.close = function (cmd, resp) {
-  assert.window(this.getCurrentWindow());
+  assert.contentBrowser(this.curBrowser);
   assert.noUserPrompt(this.dialog);
 
   let nwins = 0;
@@ -2533,20 +2518,17 @@ GeckoDriver.prototype.close = function (cmd, resp) {
   let winEn = Services.wm.getEnumerator(null);
   while (winEn.hasMoreElements()) {
     let win = winEn.getNext();
-
-    // For browser windows count the tabs. Otherwise take the window itself.
     let tabbrowser = browser.getTabBrowser(win);
+
     if (tabbrowser) {
       nwins += tabbrowser.tabs.length;
-    } else {
-      nwins++;
     }
   }
 
   // If there is only 1 window left, do not close it. Instead return a faked
   // empty array of window handles. This will instruct geckodriver to terminate
   // the application.
-  if (nwins == 1) {
+  if (nwins === 1) {
     return [];
   }
 

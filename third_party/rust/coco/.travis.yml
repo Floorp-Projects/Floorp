@@ -1,0 +1,27 @@
+language: rust
+
+rust:
+  - stable
+  - beta
+  - nightly
+
+env:
+    global:
+      - RUST_MIN_STACK=33554432
+
+matrix:
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+      - llvm-toolchain-precise
+      - llvm-toolchain-precise-3.8
+    packages:
+      - llvm-3.8
+      - llvm-3.8-dev
+      - clang-3.8
+      - clang-3.8-dev
+
+script:
+  - ./ci/script.sh
