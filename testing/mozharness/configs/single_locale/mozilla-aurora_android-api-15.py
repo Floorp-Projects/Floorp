@@ -3,7 +3,7 @@ import os
 BRANCH = "mozilla-aurora"
 MOZ_UPDATE_CHANNEL = "aurora"
 MOZILLA_DIR = BRANCH
-OBJDIR = "obj-l10n"
+OBJDIR = "obj-firefox"
 EN_US_BINARY_URL = "http://archive.mozilla.org/pub/mobile/nightly/latest-%s-android-api-15/en-US" % BRANCH
 HG_SHARE_BASE_DIR = "/builds/hg-shared"
 

@@ -1,7 +1,7 @@
 BRANCH = "mozilla-release"
 MOZ_UPDATE_CHANNEL = "release"
 MOZILLA_DIR = BRANCH
-OBJDIR = "obj-l10n"
+OBJDIR = "obj-firefox"
 STAGE_SERVER = "dev-stage01.srv.releng.scl3.mozilla.com"
 EN_US_BINARY_URL = "http://" + STAGE_SERVER + "/pub/mozilla.org/mobile/candidates/%(version)s-candidates/build%(buildnum)d/android-api-15/en-US"
 HG_SHARE_BASE_DIR = "/builds/hg-shared"
