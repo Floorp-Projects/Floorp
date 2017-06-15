@@ -174,8 +174,6 @@ add_task(async function remove_folder() {
                                                  title: "a folder" });
   checkBookmarkObject(bm1);
 
-  let manyFrencenciesPromise = promiseManyFrecenciesChanged();
-
   let bm2 = await PlacesUtils.bookmarks.remove(bm1.guid);
   checkBookmarkObject(bm2);
 
@@ -187,10 +185,29 @@ add_task(async function remove_folder() {
   Assert.equal(bm2.title, "a folder");
   Assert.ok(!("url" in bm2));
 
-  // We should get an onManyFrecenciesChanged notification with the remove of
-  // a folder.
+  // No promiseManyFrecenciesChanged in this test as the folder doesn't have
+  // any children that would need updating.
+});
+
+add_task(async function test_contents_removed() {
+  let folder1 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                                     type: PlacesUtils.bookmarks.TYPE_FOLDER,
+                                                     title: "a folder" });
+  let bm1 = await PlacesUtils.bookmarks.insert({ parentGuid: folder1.guid,
+                                                 type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+                                                 url: "http://example.com/",
+                                                 title: "" });
+
+  let manyFrencenciesPromise = promiseManyFrecenciesChanged();
+  await PlacesUtils.bookmarks.remove(folder1);
+  Assert.strictEqual((await PlacesUtils.bookmarks.fetch(folder1.guid)), null);
+  Assert.strictEqual((await PlacesUtils.bookmarks.fetch(bm1.guid)), null);
+
+  // We should get an onManyFrecenciesChanged notification with the removal of
+  // a folder with children.
   await manyFrencenciesPromise;
 });
+
 
 add_task(async function test_nested_contents_removed() {
   let folder1 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -199,12 +216,20 @@ add_task(async function test_nested_contents_removed() {
   let folder2 = await PlacesUtils.bookmarks.insert({ parentGuid: folder1.guid,
                                                      type: PlacesUtils.bookmarks.TYPE_FOLDER,
                                                      title: "a folder" });
-  let sep = await PlacesUtils.bookmarks.insert({ parentGuid: folder2.guid,
-                                                 type: PlacesUtils.bookmarks.TYPE_SEPARATOR });
+  let bm1 = await PlacesUtils.bookmarks.insert({ parentGuid: folder2.guid,
+                                                 type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+                                                 url: "http://example.com/",
+                                                 title: "" });
+
+  let manyFrencenciesPromise = promiseManyFrecenciesChanged();
   await PlacesUtils.bookmarks.remove(folder1);
   Assert.strictEqual((await PlacesUtils.bookmarks.fetch(folder1.guid)), null);
   Assert.strictEqual((await PlacesUtils.bookmarks.fetch(folder2.guid)), null);
-  Assert.strictEqual((await PlacesUtils.bookmarks.fetch(sep.guid)), null);
+  Assert.strictEqual((await PlacesUtils.bookmarks.fetch(bm1.guid)), null);
+
+  // We should get an onManyFrecenciesChanged notification with the removal of
+  // a folder with children.
+  await manyFrencenciesPromise;
 });
 
 add_task(async function remove_folder_empty_title() {
@@ -248,7 +273,3 @@ add_task(async function test_nested_content_fails_when_not_allowed() {
   await Assert.rejects(PlacesUtils.bookmarks.remove(folder1, {preventRemovalOfNonEmptyFolders: true}),
                        /Cannot remove a non-empty folder./);
 });
-
-function run_test() {
-  run_next_test();
-}
