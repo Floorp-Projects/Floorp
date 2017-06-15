@@ -107,9 +107,13 @@ nsresult nsScanner::SetDocumentCharset(const nsACString& aCharset , int32_t aSou
   mCharsetSource = aSource;
 
   nsCString charsetName;
-  mozilla::DebugOnly<bool> valid =
-      EncodingUtils::FindEncodingForLabel(aCharset, charsetName);
-  MOZ_ASSERT(valid, "Should never call with a bogus aCharset.");
+  if (aCharset.EqualsLiteral("replacement")) {
+    charsetName.Assign(aCharset);
+  } else {
+    mozilla::DebugOnly<bool> valid =
+        EncodingUtils::FindEncodingForLabel(aCharset, charsetName);
+    MOZ_ASSERT(valid, "Should never call with a bogus aCharset.");
+  }
 
   if (!mCharset.IsEmpty() && charsetName.Equals(mCharset)) {
     return NS_OK; // no difference, don't change it
