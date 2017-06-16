@@ -2887,31 +2887,6 @@ nsCocoaWindow::GetEditCommands(NativeKeyBindingsType aType,
 
 @end
 
-static float
-GetDPI(NSWindow* aWindow)
-{
-  NSScreen* screen = [aWindow screen];
-  if (!screen)
-    return 96.0f;
-
-  CGDirectDisplayID displayID =
-    [[[screen deviceDescription] objectForKey:@"NSScreenNumber"] intValue];
-  CGFloat heightMM = ::CGDisplayScreenSize(displayID).height;
-  size_t heightPx = ::CGDisplayPixelsHigh(displayID);
-  if (heightMM < 1 || heightPx < 1) {
-    // Something extremely bogus is going on
-    return 96.0f;
-  }
-
-  float dpi = heightPx / (heightMM / MM_PER_INCH_FLOAT);
-
-  // Account for HiDPI mode where Cocoa's "points" do not correspond to real
-  // device pixels
-  CGFloat backingScale = GetBackingScaleFactor(aWindow);
-
-  return dpi * backingScale;
-}
-
 @interface NSView(FrameViewMethodSwizzling)
 - (NSPoint)FrameView__closeButtonOrigin;
 - (NSPoint)FrameView__fullScreenButtonOrigin;
@@ -3065,7 +3040,6 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
   mActiveTitlebarColor = nil;
   mInactiveTitlebarColor = nil;
   mDisabledNeedsDisplay = NO;
-  mDPI = GetDPI(self);
   mTrackingArea = nil;
   mDirtyRect = NSZeroRect;
   mBeingShown = NO;
@@ -3211,11 +3185,6 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 - (NSColor*)titlebarColorForActiveWindow:(BOOL)aActive
 {
   return aActive ? mActiveTitlebarColor : mInactiveTitlebarColor;
-}
-
-- (float)getDPI
-{
-  return mDPI;
 }
 
 - (NSView*)trackingAreaView
