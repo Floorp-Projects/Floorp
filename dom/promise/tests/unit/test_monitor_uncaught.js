@@ -103,7 +103,7 @@ add_task(function* test_observe_uncaught() {
     };
     yield {
       promise: Promise.resolve(0).catch(null),
-      name: "`then(null, null)`"
+      name: "`catch(null)`"
     };
     yield {
       promise: Promise.reject(0).catch(() => {}),
