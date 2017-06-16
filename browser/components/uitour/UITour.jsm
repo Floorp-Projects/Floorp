@@ -576,6 +576,9 @@ this.UITour = {
           return false;
         }
 
+        if (data.email) {
+          p.append("email", data.email);
+        }
         // We want to replace the current tab.
         browser.loadURI("about:accounts?" + p.toString());
         break;
