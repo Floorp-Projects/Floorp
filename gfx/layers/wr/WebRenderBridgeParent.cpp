@@ -195,7 +195,10 @@ WebRenderBridgeParent::RecvAddImage(const wr::ImageKey& aImageKey,
     return IPC_OK();
   }
   MOZ_ASSERT(mApi);
+  MOZ_ASSERT(mActiveImageKeys.find(wr::AsUint64(aImageKey)) == mActiveImageKeys.end());
+
   wr::ImageDescriptor descriptor(aSize, aStride, aFormat);
+  mActiveImageKeys.insert(wr::AsUint64(aImageKey));
   mApi->AddImage(aImageKey, descriptor,
                  aBuffer.AsSlice());
 
@@ -213,7 +216,10 @@ WebRenderBridgeParent::RecvAddBlobImage(const wr::ImageKey& aImageKey,
     return IPC_OK();
   }
   MOZ_ASSERT(mApi);
+  MOZ_ASSERT(mActiveImageKeys.find(wr::AsUint64(aImageKey)) == mActiveImageKeys.end());
+
   wr::ImageDescriptor descriptor(aSize, aStride, aFormat);
+  mActiveImageKeys.insert(wr::AsUint64(aImageKey));
   mApi->AddBlobImage(aImageKey, descriptor,
                      aBuffer.AsSlice());
 
@@ -229,7 +235,10 @@ WebRenderBridgeParent::RecvAddRawFont(const wr::FontKey& aFontKey,
     return IPC_OK();
   }
   MOZ_ASSERT(mApi);
+  MOZ_ASSERT(mFontKeys.find(wr::AsUint64(aFontKey)) == mFontKeys.end());
+
   auto slice = aBuffer.AsSlice();
+  mFontKeys.insert(wr::AsUint64(aFontKey));
   mApi->AddRawFont(aFontKey, slice, aFontIndex);
 
   return IPC_OK();
@@ -242,7 +251,14 @@ WebRenderBridgeParent::RecvDeleteFont(const wr::FontKey& aFontKey)
     return IPC_OK();
   }
   MOZ_ASSERT(mApi);
-  mApi->DeleteFont(aFontKey);
+
+  if (mFontKeys.find(wr::AsUint64(aFontKey)) != mFontKeys.end()) {
+    mFontKeys.erase(wr::AsUint64(aFontKey));
+    mApi->DeleteFont(aFontKey);
+  } else {
+    MOZ_ASSERT_UNREACHABLE("invalid FontKey");
+  }
+
   return IPC_OK();
 }
 
@@ -269,10 +285,12 @@ WebRenderBridgeParent::RecvDeleteImage(const wr::ImageKey& aImageKey)
     return IPC_OK();
   }
   MOZ_ASSERT(mApi);
-  if (mActiveKeys.Get(wr::AsUint64(aImageKey), nullptr)) {
-    mActiveKeys.Remove(wr::AsUint64(aImageKey));
+  if (mActiveImageKeys.find(wr::AsUint64(aImageKey)) != mActiveImageKeys.end()) {
+    mActiveImageKeys.erase(wr::AsUint64(aImageKey));
+    mKeysToDelete.push_back(aImageKey);
+  } else {
+    MOZ_ASSERT_UNREACHABLE("invalid ImageKey");
   }
-  mKeysToDelete.push_back(aImageKey);
   return IPC_OK();
 }
 
@@ -465,8 +483,8 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(InfallibleTArray<WebRender
         const OpAddExternalImage& op = cmd.get_OpAddExternalImage();
         Range<const wr::ImageKey> keys(&op.key(), 1);
         MOZ_ASSERT(mExternalImageIds.Get(wr::AsUint64(op.externalImageId())).get());
-        MOZ_ASSERT(!mActiveKeys.Get(wr::AsUint64(keys[0]), nullptr));
-        mActiveKeys.Put(wr::AsUint64(keys[0]), keys[0]);
+        MOZ_ASSERT(mActiveImageKeys.find(wr::AsUint64(keys[0])) == mActiveImageKeys.end());
+        mActiveImageKeys.insert(wr::AsUint64(keys[0]));
 
         RefPtr<WebRenderImageHost> host = mExternalImageIds.Get(wr::AsUint64(op.externalImageId()));
         if (!host) {
@@ -1029,10 +1047,14 @@ WebRenderBridgeParent::ClearResources()
   mApi->ClearRootDisplayList(wr::NewEpoch(mWrEpoch), mPipelineId);
   // Schedule composition to clean up Pipeline
   mCompositorScheduler->ScheduleComposition();
-  for (auto iter = mActiveKeys.Iter(); !iter.Done(); iter.Next()) {
-    mKeysToDelete.push_back(iter.Data());
-    iter.Remove();
+  for (std::unordered_set<uint64_t>::iterator iter = mFontKeys.begin(); iter != mFontKeys.end(); iter++) {
+    mApi->DeleteFont(wr::AsFontKey(*iter));
   }
+  mFontKeys.clear();
+  for (std::unordered_set<uint64_t>::iterator iter = mActiveImageKeys.begin(); iter != mActiveImageKeys.end(); iter++) {
+    mKeysToDelete.push_back(wr::AsImageKey(*iter));
+  }
+  mActiveImageKeys.clear();
   DeleteOldImages();
   for (auto iter = mExternalImageIds.Iter(); !iter.Done(); iter.Next()) {
     iter.Data()->ClearWrBridge();
