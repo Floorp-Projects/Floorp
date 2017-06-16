@@ -233,9 +233,9 @@ TimeoutManager::IsInvalidFiringId(uint32_t aFiringId) const
 #define DOM_CLAMP_TIMEOUT_NESTING_LEVEL 5
 
 int32_t
-TimeoutManager::DOMMinTimeoutValue(Timeout* aTimeout) const {
+TimeoutManager::CalculateDelay(Timeout* aTimeout) const {
   MOZ_DIAGNOSTIC_ASSERT(aTimeout);
-  int32_t result = 0;
+  int32_t result = aTimeout->mInterval;
 
   if (aTimeout->mIsInterval ||
       aTimeout->mNestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
@@ -430,8 +430,7 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
   }
 
   // Now clamp the actual interval we will use for the timer based on
-  uint32_t realInterval =
-    std::max(interval, DOMMinTimeoutValue(timeout));
+  uint32_t realInterval = CalculateDelay(timeout);
 
   TimeDuration delta = TimeDuration::FromMilliseconds(realInterval);
   timeout->SetWhenOrTimeRemaining(TimeStamp::Now(), delta);
@@ -480,7 +479,7 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
            "returned %stracking timeout ID %u\n",
            aIsInterval ? "Interval" : "Timeout",
            this, timeout.get(), interval,
-           DOMMinTimeoutValue(timeout),
+           (CalculateDelay(timeout) - interval),
            mThrottleTrackingTimeouts ? "yes"
                                      : (mThrottleTrackingTimeoutsTimer ?
                                           "pending" : "no"),
@@ -805,11 +804,9 @@ TimeoutManager::RescheduleTimeout(Timeout* aTimeout, const TimeStamp& now)
   }
 
   // Compute time to next timeout for interval timer.
-  // Make sure nextInterval is at least DOMMinTimeoutValue().
+  // Make sure nextInterval is at least CalculateDelay().
   TimeDuration nextInterval =
-    TimeDuration::FromMilliseconds(
-        std::max(aTimeout->mInterval,
-                 uint32_t(DOMMinTimeoutValue(aTimeout))));
+    TimeDuration::FromMilliseconds(CalculateDelay(aTimeout));
 
   TimeStamp firingTime = now + nextInterval;
 
