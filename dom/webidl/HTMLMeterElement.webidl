@@ -26,9 +26,5 @@ interface HTMLMeterElement : HTMLElement {
            attribute double high;
            [SetterThrows]
            attribute double optimum;
-
-  /**
-   * The labels attribute will be done with bug 556743.
-   */
-  //readonly attribute NodeList labels;
+           readonly attribute NodeList labels;
 };
