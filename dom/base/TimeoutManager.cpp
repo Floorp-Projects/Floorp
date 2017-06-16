@@ -229,8 +229,9 @@ TimeoutManager::IsInvalidFiringId(uint32_t aFiringId) const
 }
 
 int32_t
-TimeoutManager::DOMMinTimeoutValue(bool aIsTracking) const {
-  bool throttleTracking = aIsTracking && mThrottleTrackingTimeouts;
+TimeoutManager::DOMMinTimeoutValue(Timeout* aTimeout) const {
+  MOZ_DIAGNOSTIC_ASSERT(aTimeout);
+  bool throttleTracking = aTimeout->mIsTracking && mThrottleTrackingTimeouts;
   auto minValue = throttleTracking ? gMinTrackingTimeoutValue
                                    : gMinClampTimeoutValue;
   return minValue;
@@ -427,7 +428,7 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
     // Don't allow timeouts less than DOMMinTimeoutValue() from
     // now...
     realInterval = std::max(realInterval,
-                            uint32_t(DOMMinTimeoutValue(timeout->mIsTracking)));
+                            uint32_t(DOMMinTimeoutValue(timeout)));
   }
 
   TimeDuration delta = TimeDuration::FromMilliseconds(realInterval);
@@ -477,7 +478,7 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
            "returned %stracking timeout ID %u\n",
            aIsInterval ? "Interval" : "Timeout",
            this, timeout.get(), interval,
-           DOMMinTimeoutValue(timeout->mIsTracking),
+           DOMMinTimeoutValue(timeout),
            mThrottleTrackingTimeouts ? "yes"
                                      : (mThrottleTrackingTimeoutsTimer ?
                                           "pending" : "no"),
@@ -806,7 +807,7 @@ TimeoutManager::RescheduleTimeout(Timeout* aTimeout, const TimeStamp& now)
   TimeDuration nextInterval =
     TimeDuration::FromMilliseconds(
         std::max(aTimeout->mInterval,
-                 uint32_t(DOMMinTimeoutValue(aTimeout->mIsTracking))));
+                 uint32_t(DOMMinTimeoutValue(aTimeout))));
 
   TimeStamp firingTime = now + nextInterval;
 
