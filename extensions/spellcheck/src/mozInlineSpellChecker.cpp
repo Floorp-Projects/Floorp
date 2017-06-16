@@ -490,8 +490,7 @@ public:
 
   nsresult Post()
   {
-    nsCOMPtr<nsIRunnable> runnable(this);
-    return NS_IdleDispatchToCurrentThread(runnable.forget(), 1000);
+    return NS_DispatchToMainThread(this);
   }
 
   NS_IMETHOD Run() override
