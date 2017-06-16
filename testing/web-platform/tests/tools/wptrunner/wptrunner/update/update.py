@@ -71,7 +71,7 @@ class SyncFromUpstream(Step):
         with state.push(["sync", "paths", "metadata_path", "tests_path", "local_tree",
                          "sync_tree"]):
             state.target_rev = kwargs["rev"]
-            state.no_patch = kwargs["no_patch"]
+            state.patch = kwargs["patch"]
             state.suite_name = kwargs["suite_name"]
             state.path_excludes = kwargs["exclude"]
             state.path_includes = kwargs["include"]
@@ -90,7 +90,7 @@ class UpdateMetadata(Step):
         with state.push(["local_tree", "sync_tree", "paths", "serve_root"]):
             state.run_log = kwargs["run_log"]
             state.ignore_existing = kwargs["ignore_existing"]
-            state.no_patch = kwargs["no_patch"]
+            state.patch = kwargs["patch"]
             state.suite_name = kwargs["suite_name"]
             state.product = kwargs["product"]
             state.config = kwargs["config"]
