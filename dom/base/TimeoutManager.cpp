@@ -981,28 +981,10 @@ TimeoutManager::Resume()
     MaybeStartThrottleTrackingTimout();
   }
 
-  TimeStamp now = TimeStamp::Now();
-  TimeStamp nextWakeUp;
-
-  ForEachUnorderedTimeout([&](Timeout* aTimeout) {
-    // The timeout When() is set to the absolute time when the timer should
-    // fire.  Recalculate the delay from now until that deadline.  If the
-    // the deadline has already passed or falls within our minimum delay
-    // deadline, then clamp the resulting value to the minimum delay.
-    int32_t remaining = 0;
-    if (aTimeout->When() > now) {
-      remaining = static_cast<int32_t>((aTimeout->When() - now).ToMilliseconds());
-    }
-    uint32_t delay = std::max(remaining, DOMMinTimeoutValue(aTimeout->mIsTracking));
-    aTimeout->SetWhenOrTimeRemaining(now, TimeDuration::FromMilliseconds(delay));
-
-    if (nextWakeUp.IsNull() || aTimeout->When() < nextWakeUp) {
-      nextWakeUp = aTimeout->When();
-    }
-  });
-
-  if (!nextWakeUp.IsNull()) {
-    MOZ_ALWAYS_SUCCEEDS(mExecutor->MaybeSchedule(nextWakeUp,
+  OrderedTimeoutIterator iter(mNormalTimeouts, mTrackingTimeouts);
+  Timeout* nextTimeout = iter.Next();
+  if (nextTimeout) {
+    MOZ_ALWAYS_SUCCEEDS(mExecutor->MaybeSchedule(nextTimeout->When(),
                                                  MinSchedulingDelay()));
   }
 }
