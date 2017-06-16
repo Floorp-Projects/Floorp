@@ -72,5 +72,6 @@ module.exports = {
       args: "none",
       varsIgnorePattern: "^(Cc|Ci|Cr|Cu|EXPORTED_SYMBOLS)$",
     }],
+    "no-caller": "error",
   },
 };
