@@ -73,8 +73,11 @@ public:
     return do_QueryFrame(GetInner());
   }
 
-  // Return the block wrapper around our kids.
-  void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
+  // Update the style on the block wrappers around our kids.
+  virtual void DoUpdateStyleOfOwnedAnonBoxes(
+    mozilla::ServoStyleSet& aStyleSet,
+    nsStyleChangeList& aChangeList,
+    nsChangeHint aHintForThisFrame) override;
 
 #ifdef ACCESSIBILITY  
   virtual mozilla::a11y::AccType AccessibleType() override;

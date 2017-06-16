@@ -664,10 +664,13 @@ nsFieldSetFrame::GetNaturalBaselineBOffset(WritingMode          aWM,
 }
 
 void
-nsFieldSetFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
+nsFieldSetFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoStyleSet& aStyleSet,
+                                               nsStyleChangeList& aChangeList,
+                                               nsChangeHint aHintForThisFrame)
 {
-  if (nsIFrame* kid = GetInner()) {
-    aResult.AppendElement(OwnedAnonBox(this, kid));
+  nsIFrame* kid = GetInner();
+  if (kid) {
+    UpdateStyleOfChildAnonBox(kid, aStyleSet, aChangeList, aHintForThisFrame);
   }
 }
 

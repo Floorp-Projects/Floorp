@@ -414,12 +414,15 @@ nsHTMLCanvasFrame::GetContinuationOffset(nscoord* aWidth) const
 }
 
 void
-nsHTMLCanvasFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
+nsHTMLCanvasFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoStyleSet& aStyleSet,
+                                                 nsStyleChangeList& aChangeList,
+                                                 nsChangeHint aHintForThisFrame)
 {
   MOZ_ASSERT(mFrames.FirstChild(), "Must have our canvas content anon box");
   MOZ_ASSERT(!mFrames.FirstChild()->GetNextSibling(),
              "Must only have our canvas content anon box");
-  aResult.AppendElement(OwnedAnonBox(this, mFrames.FirstChild()));
+  UpdateStyleOfChildAnonBox(mFrames.FirstChild(),
+                            aStyleSet, aChangeList, aHintForThisFrame);
 }
 
 #ifdef ACCESSIBILITY

@@ -971,11 +971,14 @@ nsSVGOuterSVGFrame::VerticalScrollbarNotNeeded() const
 }
 
 void
-nsSVGOuterSVGFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
+nsSVGOuterSVGFrame::DoUpdateStyleOfOwnedAnonBoxes(
+  mozilla::ServoStyleSet& aStyleSet,
+  nsStyleChangeList& aChangeList,
+  nsChangeHint aHintForThisFrame)
 {
   nsIFrame* anonKid = PrincipalChildList().FirstChild();
   MOZ_ASSERT(anonKid->IsSVGOuterSVGAnonChildFrame());
-  aResult.AppendElement(OwnedAnonBox(this, anonKid));
+  UpdateStyleOfChildAnonBox(anonKid, aStyleSet, aChangeList, aHintForThisFrame);
 }
 
 //----------------------------------------------------------------------
