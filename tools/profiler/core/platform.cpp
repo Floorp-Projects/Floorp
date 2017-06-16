@@ -4,28 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// There are three kinds of samples done by the profiler.
-//
-// - A "periodic" sample is the most complex kind. It is done in response to a
-//   timer while the profiler is active. It involves writing a stack trace plus
-//   a variety of other values (memory measurements, responsiveness
-//   measurements, markers, etc.) into the main ProfileBuffer. The sampling is
-//   done from off-thread, and so SuspendAndSampleAndResumeThread() is used to
-//   get the register values.
-//
-// - A "synchronous" sample is a simpler kind. It is done in response to an API
-//   call (profiler_get_backtrace()). It involves writing a stack trace and
-//   little else into a temporary ProfileBuffer, and wrapping that up in a
-//   ProfilerBacktrace that can be subsequently used in a marker. The sampling
-//   is done on-thread, and so Registers::SyncPopulate() is used to get the
-//   register values.
-//
-// - A "backtrace" sample is the simplest kind. It is done in response to an
-//   API call (profiler_suspend_and_sample_thread()). It involves getting a
-//   stack trace and passing it to a callback function; it does not write to a
-//   ProfileBuffer. The sampling is done from off-thread, and so uses
-//   SuspendAndSampleAndResumeThread() to get the register values.
-
 #include <algorithm>
 #include <ostream>
 #include <fstream>
@@ -625,41 +603,103 @@ MOZ_THREAD_LOCAL(PseudoStack*) sPseudoStack;
 static const char* const kMainThreadName = "GeckoMain";
 
 ////////////////////////////////////////////////////////////////////////
-// BEGIN sampling/unwinding code
+// BEGIN tick/unwinding code
 
-// The registers used for stack unwinding and a few other sampling purposes.
-class Registers
-{
+// TickSample contains all the information needed by Tick(). Some of it is
+// pointers to long-lived things, and some of it is sampled just before the
+// call to Tick().
+class TickSample {
 public:
-  Registers()
-    : mPC(nullptr)
-    , mSP(nullptr)
-    , mFP(nullptr)
-    , mLR(nullptr)
+  // This constructor is for periodic samples, i.e. those performed in response
+  // to a timer firing. Periodic samples are performed off-thread, i.e. the
+  // SamplerThread samples the thread in question.
+  TickSample(ThreadInfo* aThreadInfo, int64_t aRSSMemory, int64_t aUSSMemory)
+    : mIsSynchronous(false)
+    , mTimeStamp(TimeStamp::Now())
+    , mThreadId(aThreadInfo->ThreadId())
+    , mRacyInfo(aThreadInfo->RacyInfo())
+    , mJSContext(aThreadInfo->mContext)
+    , mStackTop(aThreadInfo->StackTop())
+    , mLastSample(&aThreadInfo->LastSample())
+    , mPlatformData(aThreadInfo->GetPlatformData())
+    , mResponsiveness(aThreadInfo->GetThreadResponsiveness())
+    , mRSSMemory(aRSSMemory)    // may be zero
+    , mUSSMemory(aUSSMemory)    // may be zero
 #if defined(GP_OS_linux) || defined(GP_OS_android)
     , mContext(nullptr)
 #endif
+    , mPC(nullptr)
+    , mSP(nullptr)
+    , mFP(nullptr)
+    , mLR(nullptr)
+  {}
+
+  // This constructor is for synchronous samples, i.e. those performed in
+  // response to an explicit sampling request via the API. Synchronous samples
+  // are performed on-thread, i.e. the thread samples itself.
+  TickSample(NotNull<RacyThreadInfo*> aRacyInfo, JSContext* aJSContext,
+             PlatformData* aPlatformData)
+    : mIsSynchronous(true)
+    , mTimeStamp(TimeStamp::Now())
+    , mThreadId(Thread::GetCurrentId())
+    , mRacyInfo(aRacyInfo)
+    , mJSContext(aJSContext)
+    , mStackTop(nullptr)
+    , mLastSample(nullptr)
+    , mPlatformData(aPlatformData)
+    , mResponsiveness(nullptr)
+    , mRSSMemory(0)
+    , mUSSMemory(0)
+#if defined(GP_OS_linux) || defined(GP_OS_android)
+    , mContext(nullptr)
+#endif
+    , mPC(nullptr)
+    , mSP(nullptr)
+    , mFP(nullptr)
+    , mLR(nullptr)
   {}
 
   // Fills in mContext, mPC, mSP, mFP, and mLR for a synchronous sample.
 #if defined(GP_OS_linux) || defined(GP_OS_android)
-  void SyncPopulate(ucontext_t* aContext);
+  void PopulateContext(ucontext_t* aContext);
 #else
-  void SyncPopulate();
+  void PopulateContext();
 #endif
 
-  // These fields are filled in by
-  // SamplerThread::SuspendAndSampleAndResumeThread() for periodic and
-  // backtrace samples, and by SyncPopulate() for synchronous samples.
+  // False for periodic samples, true for synchronous samples.
+  const bool mIsSynchronous;
+
+  const TimeStamp mTimeStamp;
+
+  const int mThreadId;
+
+  const NotNull<RacyThreadInfo*> mRacyInfo;
+
+  JSContext* const mJSContext;
+
+  void* const mStackTop;
+
+  ProfileBuffer::LastSample* const mLastSample;   // may be null
+
+  PlatformData* const mPlatformData;
+
+  ThreadResponsiveness* const mResponsiveness;    // may be null
+
+  const int64_t mRSSMemory;                       // may be zero
+  const int64_t mUSSMemory;                       // may be zero
+
+  // The remaining fields are filled in, after construction, by
+  // SamplerThread::SuspendAndSampleAndResume() for periodic samples, and
+  // PopulateContext() for synchronous samples. They are filled in separately
+  // from the other fields in this class because the code that fills them in is
+  // platform-specific.
+#if defined(GP_OS_linux) || defined(GP_OS_android)
+  ucontext_t* mContext; // The context from the signal handler.
+#endif
   Address mPC;    // Instruction pointer.
   Address mSP;    // Stack pointer.
   Address mFP;    // Frame pointer.
   Address mLR;    // ARM link register.
-#if defined(GP_OS_linux) || defined(GP_OS_android)
-  // This contains all the registers, which means it duplicates the four fields
-  // above. This is ok.
-  ucontext_t* mContext; // The context from the signal handler.
-#endif
 };
 
 static void
@@ -793,14 +833,13 @@ struct AutoWalkJSStack
 };
 
 static void
-MergeStacksIntoProfile(PSLockRef aLock, bool aIsSynchronous,
-                       const ThreadInfo& aThreadInfo, const Registers& aRegs,
-                       const NativeStack& aNativeStack, ProfileBuffer* aBuffer)
+MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
+                       const TickSample& aSample, NativeStack& aNativeStack)
 {
-  NotNull<RacyThreadInfo*> racyInfo = aThreadInfo.RacyInfo();
+  NotNull<RacyThreadInfo*> racyInfo = aSample.mRacyInfo;
   js::ProfileEntry* pseudoEntries = racyInfo->entries;
   uint32_t pseudoCount = racyInfo->stackSize();
-  JSContext* context = aThreadInfo.mContext;
+  JSContext* context = aSample.mJSContext;
 
   // Make a copy of the JS stack into a JSFrame array. This is necessary since,
   // like the native stack, the JS stack is iterated youngest-to-oldest and we
@@ -811,7 +850,7 @@ MergeStacksIntoProfile(PSLockRef aLock, bool aIsSynchronous,
   // sampled JIT entries inside the JS engine. See note below concerning 'J'
   // entries.
   uint32_t startBufferGen;
-  startBufferGen = aIsSynchronous
+  startBufferGen = aSample.mIsSynchronous
                  ? UINT32_MAX
                  : aBuffer->mGeneration;
   uint32_t jsCount = 0;
@@ -824,16 +863,16 @@ MergeStacksIntoProfile(PSLockRef aLock, bool aIsSynchronous,
 
     if (autoWalkJSStack.walkAllowed) {
       JS::ProfilingFrameIterator::RegisterState registerState;
-      registerState.pc = aRegs.mPC;
-      registerState.sp = aRegs.mSP;
-      registerState.lr = aRegs.mLR;
-      registerState.fp = aRegs.mFP;
+      registerState.pc = aSample.mPC;
+      registerState.sp = aSample.mSP;
+      registerState.lr = aSample.mLR;
+      registerState.fp = aSample.mFP;
 
       JS::ProfilingFrameIterator jsIter(context, registerState,
                                         startBufferGen);
       for (; jsCount < maxFrames && !jsIter.done(); ++jsIter) {
         // See note below regarding 'J' entries.
-        if (aIsSynchronous || jsIter.isWasm()) {
+        if (aSample.mIsSynchronous || jsIter.isWasm()) {
           uint32_t extracted =
             jsIter.extractStack(jsFrames, jsCount, maxFrames);
           jsCount += extracted;
@@ -952,7 +991,7 @@ MergeStacksIntoProfile(PSLockRef aLock, bool aIsSynchronous,
       // JIT code. This means that if we inserted such OptInfoAddr entries into
       // the buffer, nsRefreshDriver would now be holding on to a backtrace
       // with stale JIT code return addresses.
-      if (aIsSynchronous ||
+      if (aSample.mIsSynchronous ||
           jsFrame.kind == JS::ProfilingFrameIterator::Frame_Wasm) {
         AddDynamicCodeLocationTag(aBuffer, jsFrame.label);
       } else {
@@ -982,7 +1021,7 @@ MergeStacksIntoProfile(PSLockRef aLock, bool aIsSynchronous,
   //
   // Do not do this for synchronous samples, which use their own
   // ProfileBuffers instead of the global one in CorePS.
-  if (!aIsSynchronous && context) {
+  if (!aSample.mIsSynchronous && context) {
     MOZ_ASSERT(aBuffer->mGeneration >= startBufferGen);
     uint32_t lapCount = aBuffer->mGeneration - startBufferGen;
     JS::UpdateJSContextProfilerSampleBufferGen(context, aBuffer->mGeneration,
@@ -1006,28 +1045,28 @@ StackWalkCallback(uint32_t aFrameNumber, void* aPC, void* aSP, void* aClosure)
 }
 
 static void
-DoNativeBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
-                  const Registers& aRegs, NativeStack& aNativeStack)
+DoNativeBacktrace(PSLockRef aLock, NativeStack& aNativeStack,
+                  const TickSample& aSample)
 {
   // Start with the current function. We use 0 as the frame number here because
   // the FramePointerStackWalk() and MozStackWalk() calls below will use 1..N.
   // This is a bit weird but it doesn't matter because StackWalkCallback()
   // doesn't use the frame number argument.
-  StackWalkCallback(/* frameNum */ 0, aRegs.mPC, aRegs.mSP, &aNativeStack);
+  StackWalkCallback(/* frameNum */ 0, aSample.mPC, aSample.mSP, &aNativeStack);
 
   uint32_t maxFrames = uint32_t(MAX_NATIVE_FRAMES - aNativeStack.mCount);
 
 #if defined(GP_OS_darwin) || (defined(GP_PLAT_x86_windows))
-  void* stackEnd = aThreadInfo.StackTop();
-  if (aRegs.mFP >= aRegs.mSP && aRegs.mFP <= stackEnd) {
+  void* stackEnd = aSample.mStackTop;
+  if (aSample.mFP >= aSample.mSP && aSample.mFP <= stackEnd) {
     FramePointerStackWalk(StackWalkCallback, /* skipFrames */ 0, maxFrames,
-                          &aNativeStack, reinterpret_cast<void**>(aRegs.mFP),
+                          &aNativeStack, reinterpret_cast<void**>(aSample.mFP),
                           stackEnd);
   }
 #else
   // Win64 always omits frame pointers so for it we use the slower
   // MozStackWalk().
-  uintptr_t thread = GetThreadHandle(aThreadInfo.GetPlatformData());
+  uintptr_t thread = GetThreadHandle(aSample.mPlatformData);
   MOZ_ASSERT(thread);
   MozStackWalk(StackWalkCallback, /* skipFrames */ 0, maxFrames, &aNativeStack,
                thread, /* platformData */ nullptr);
@@ -1037,12 +1076,12 @@ DoNativeBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
 
 #ifdef USE_EHABI_STACKWALK
 static void
-DoNativeBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
-                  const Registers& aRegs, NativeStack& aNativeStack)
+DoNativeBacktrace(PSLockRef aLock, NativeStack& aNativeStack,
+                  const TickSample& aSample)
 {
-  const mcontext_t* mcontext = &aRegs.mContext->uc_mcontext;
+  const mcontext_t* mcontext = &aSample.mContext->uc_mcontext;
   mcontext_t savedContext;
-  NotNull<RacyThreadInfo*> racyInfo = aThreadInfo.RacyInfo();
+  NotNull<RacyThreadInfo*> racyInfo = aSample.mRacyInfo;
 
   // The pseudostack contains an "EnterJIT" frame whenever we enter
   // JIT code with profiling enabled; the stack pointer value points
@@ -1086,7 +1125,7 @@ DoNativeBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
   // Now unwind whatever's left (starting from either the last EnterJIT frame
   // or, if no EnterJIT was found, the original registers).
   aNativeStack.mCount +=
-    EHABIStackWalk(*mcontext, aThreadInfo.StackTop(),
+    EHABIStackWalk(*mcontext, aSample.mStackTop,
                    aNativeStack.mSPs + aNativeStack.mCount,
                    aNativeStack.mPCs + aNativeStack.mCount,
                    MAX_NATIVE_FRAMES - aNativeStack.mCount);
@@ -1114,10 +1153,10 @@ ASAN_memcpy(void* aDst, const void* aSrc, size_t aLen)
 #endif
 
 static void
-DoNativeBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
-                  const Registers& aRegs, NativeStack& aNativeStack)
+DoNativeBacktrace(PSLockRef aLock, NativeStack& aNativeStack,
+                  const TickSample& aSample)
 {
-  const mcontext_t* mc = &aRegs.mContext->uc_mcontext;
+  const mcontext_t* mc = &aSample.mContext->uc_mcontext;
 
   lul::UnwindRegs startRegs;
   memset(&startRegs, 0, sizeof(startRegs));
@@ -1187,7 +1226,7 @@ DoNativeBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
 #else
 #   error "Unknown plat"
 #endif
-    uintptr_t end = reinterpret_cast<uintptr_t>(aThreadInfo.StackTop());
+    uintptr_t end = reinterpret_cast<uintptr_t>(aSample.mStackTop);
     uintptr_t ws  = sizeof(void*);
     start &= ~(ws-1);
     end   &= ~(ws-1);
@@ -1241,89 +1280,64 @@ DoNativeBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
 
 #endif
 
-// Writes some components shared by periodic and synchronous profiles to
-// ActivePS's ProfileBuffer. (This should only be called from DoSyncSample()
-// and DoPeriodicSample().)
-static void
-DoSharedSample(PSLockRef aLock, bool aIsSynchronous,
-               ThreadInfo& aThreadInfo, const Registers& aRegs,
-               const TimeStamp& aNow, ProfileBuffer* aBuffer)
+void
+Tick(PSLockRef aLock, const TickSample& aSample, ProfileBuffer* aBuffer)
 {
   MOZ_RELEASE_ASSERT(ActivePS::Exists(aLock));
 
-  TimeDuration delta = aNow - CorePS::ProcessStartTime();
+  aBuffer->addTagThreadId(aSample.mThreadId, aSample.mLastSample);
+
+  TimeDuration delta = aSample.mTimeStamp - CorePS::ProcessStartTime();
   aBuffer->addTag(ProfileBufferEntry::Time(delta.ToMilliseconds()));
 
   NativeStack nativeStack;
 #if defined(HAVE_NATIVE_UNWIND)
   if (ActivePS::FeatureStackWalk(aLock)) {
-    DoNativeBacktrace(aLock, aThreadInfo, aRegs, nativeStack);
+    DoNativeBacktrace(aLock, nativeStack, aSample);
 
-    MergeStacksIntoProfile(aLock, aIsSynchronous, aThreadInfo, aRegs,
-                           nativeStack, aBuffer);
+    MergeStacksIntoProfile(aLock, aBuffer, aSample, nativeStack);
   } else
 #endif
   {
-    MergeStacksIntoProfile(aLock, aIsSynchronous, aThreadInfo, aRegs,
-                           nativeStack, aBuffer);
+    MergeStacksIntoProfile(aLock, aBuffer, aSample, nativeStack);
 
     if (ActivePS::FeatureLeaf(aLock)) {
-      aBuffer->addTag(ProfileBufferEntry::NativeLeafAddr((void*)aRegs.mPC));
+      aBuffer->addTag(ProfileBufferEntry::NativeLeafAddr((void*)aSample.mPC));
     }
   }
-}
 
-// Writes the components of a synchronous sample to the given ProfileBuffer.
-static void
-DoSyncSample(PSLockRef aLock, ThreadInfo& aThreadInfo, const Registers& aRegs,
-             ProfileBuffer* aBuffer)
-{
-  aBuffer->addTagThreadId(aThreadInfo.ThreadId());
-
-  DoSharedSample(aLock, /* isSynchronous = */ true, aThreadInfo, aRegs,
-                 TimeStamp::Now(), aBuffer);
-}
-
-// Writes the components of a periodic sample to ActivePS's ProfileBuffer.
-static void
-DoPeriodicSample(PSLockRef aLock, ThreadInfo& aThreadInfo,
-                 const Registers& aRegs, int64_t aRSSMemory, int64_t aUSSMemory)
-{
-  const TimeStamp now = TimeStamp::Now();
-
-  ProfileBuffer* buffer = ActivePS::Buffer(aLock);
-
-  buffer->addTagThreadId(aThreadInfo.ThreadId(), &aThreadInfo.LastSample());
-
-  DoSharedSample(aLock, /* isSynchronous = */ false, aThreadInfo, aRegs, now,
-                 buffer);
-
-  ProfilerMarkerLinkedList* pendingMarkersList =
-    aThreadInfo.RacyInfo()->GetPendingMarkers();
-  while (pendingMarkersList && pendingMarkersList->peek()) {
-    ProfilerMarker* marker = pendingMarkersList->popHead();
-    buffer->addStoredMarker(marker);
-    buffer->addTag(ProfileBufferEntry::Marker(marker));
+  // Don't process the PseudoStack's markers if we're synchronously sampling
+  // the current thread.
+  if (!aSample.mIsSynchronous) {
+    ProfilerMarkerLinkedList* pendingMarkersList =
+      aSample.mRacyInfo->GetPendingMarkers();
+    while (pendingMarkersList && pendingMarkersList->peek()) {
+      ProfilerMarker* marker = pendingMarkersList->popHead();
+      aBuffer->addStoredMarker(marker);
+      aBuffer->addTag(ProfileBufferEntry::Marker(marker));
+    }
   }
 
-  ThreadResponsiveness* resp = aThreadInfo.GetThreadResponsiveness();
-  if (resp && resp->HasData()) {
-    TimeDuration delta = resp->GetUnresponsiveDuration(now);
-    buffer->addTag(ProfileBufferEntry::Responsiveness(delta.ToMilliseconds()));
+  if (aSample.mResponsiveness && aSample.mResponsiveness->HasData()) {
+    TimeDuration delta =
+      aSample.mResponsiveness->GetUnresponsiveDuration(aSample.mTimeStamp);
+    aBuffer->addTag(ProfileBufferEntry::Responsiveness(delta.ToMilliseconds()));
   }
 
-  if (aRSSMemory != 0) {
-    double rssMemory = static_cast<double>(aRSSMemory);
-    buffer->addTag(ProfileBufferEntry::ResidentMemory(rssMemory));
+  // rssMemory is equal to 0 when we are not recording.
+  if (aSample.mRSSMemory != 0) {
+    double rssMemory = static_cast<double>(aSample.mRSSMemory);
+    aBuffer->addTag(ProfileBufferEntry::ResidentMemory(rssMemory));
   }
 
-  if (aUSSMemory != 0) {
-    double ussMemory = static_cast<double>(aUSSMemory);
-    buffer->addTag(ProfileBufferEntry::UnsharedMemory(ussMemory));
+  // ussMemory is equal to 0 when we are not recording.
+  if (aSample.mUSSMemory != 0) {
+    double ussMemory = static_cast<double>(aSample.mUSSMemory);
+    aBuffer->addTag(ProfileBufferEntry::UnsharedMemory(ussMemory));
   }
 }
 
-// END sampling/unwinding code
+// END tick/unwinding code
 ////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////
@@ -1724,14 +1738,14 @@ public:
   void Disable(PSLockRef aLock);
 
   // This method suspends and resumes the samplee thread. It calls the passed-in
-  // function-like object aProcessRegs (passing it a populated |const
-  // Registers&| arg) while the samplee thread is suspended.
+  // function like object aDoSample while the samplee thread is suspended, after
+  // filling in register values in aSample.
   //
   // Func must be a function-like object of type `void()`.
   template<typename Func>
   void SuspendAndSampleAndResumeThread(PSLockRef aLock,
-                                       const ThreadInfo& aThreadInfo,
-                                       const Func& aProcessRegs);
+                                       TickSample& aSample,
+                                       const Func& aDoSample);
 
 private:
 #if defined(GP_OS_linux) || defined(GP_OS_android)
@@ -1877,10 +1891,11 @@ SamplerThread::Run()
 #endif
           }
 
-          SuspendAndSampleAndResumeThread(lock, *info,
-                                          [&](const Registers& aRegs) {
-            DoPeriodicSample(lock, *info, aRegs, rssMemory, ussMemory);
-          });
+          TickSample sample(info, rssMemory, ussMemory);
+
+          SuspendAndSampleAndResumeThread(lock, sample, [&] {
+              Tick(lock, sample, ActivePS::Buffer(lock));
+            });
         }
 
 #if defined(USE_LUL_STACKWALK)
@@ -2818,20 +2833,22 @@ profiler_get_backtrace()
 
   Thread::tid_t tid = Thread::GetCurrentId();
 
-  Registers regs;
+  ProfileBuffer* buffer = new ProfileBuffer(PROFILER_GET_BACKTRACE_ENTRIES);
+
+  UniquePlatformData platformData = AllocPlatformData(tid);
+
+  TickSample sample(info->RacyInfo(), info->mContext, platformData.get());
 
 #if defined(HAVE_NATIVE_UNWIND)
 #if defined(GP_OS_linux) || defined(GP_OS_android)
   ucontext_t context;
-  regs.SyncPopulate(&context);
+  sample.PopulateContext(&context);
 #else
-  regs.SyncPopulate();
+  sample.PopulateContext();
 #endif
 #endif
 
-  ProfileBuffer* buffer = new ProfileBuffer(PROFILER_GET_BACKTRACE_ENTRIES);
-
-  DoSyncSample(lock, *info, regs, buffer);
+  Tick(lock, sample, buffer);
 
   return UniqueProfilerBacktrace(
     new ProfilerBacktrace("SyncProfile", tid, buffer));
@@ -3044,10 +3061,9 @@ profiler_current_thread_id()
 // is paused. Doing stuff in this function like allocating which may try to
 // claim locks is a surefire way to deadlock.
 void
-profiler_suspend_and_sample_thread(
-  int aThreadId,
-  const std::function<void(void**, size_t)>& aCallback,
-  bool aSampleNative /* = true */)
+profiler_suspend_and_sample_thread(int aThreadId,
+                                   const std::function<void(void**, size_t)>& aCallback,
+                                   bool aSampleNative /* = true */)
 {
   // Allocate the space for the native stack
   NativeStack nativeStack;
@@ -3062,18 +3078,17 @@ profiler_suspend_and_sample_thread(
     if (info->ThreadId() == aThreadId) {
       // Suspend, sample, and then resume the target thread.
       Sampler sampler(lock);
-      Registers regs;
-      sampler.SuspendAndSampleAndResumeThread(lock, *info,
-                                              [&](const Registers& aRegs) {
-        // The target thread is now suspended. Collect a native backtrace, and
-        // call the callback.
+      TickSample sample(info, 0, 0);
+      sampler.SuspendAndSampleAndResumeThread(lock, sample, [&] {
+          // The target thread is now suspended, collect a native backtrace, and
+          // call the callback.
 #if defined(HAVE_NATIVE_UNWIND)
-        if (aSampleNative) {
-          DoNativeBacktrace(lock, *info, aRegs, nativeStack);
-        }
+          if (aSampleNative) {
+            DoNativeBacktrace(lock, nativeStack, sample);
+          }
 #endif
-        aCallback(nativeStack.mPCs, nativeStack.mCount);
-      });
+          aCallback(nativeStack.mPCs, nativeStack.mCount);
+        });
 
       // NOTE: Make sure to disable the sampler before it is destroyed, in case
       // the profiler is running at the same time.
