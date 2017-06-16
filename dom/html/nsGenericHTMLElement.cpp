@@ -198,17 +198,16 @@ nsGenericHTMLElement::CopyInnerTo(Element* aDst, bool aPreallocateChildren)
       // We still clone CSS attributes, even in the cross-document case.
       // https://github.com/w3c/webappsec-csp/issues/212
 
-      nsAutoString valStr;
-      value->ToString(valStr);
-
-      DeclarationBlock* decl = value->GetCSSDeclarationValue();
       // We can't just set this as a string, because that will fail
       // to reparse the string into style data until the node is
       // inserted into the document.  Clone the Rule instead.
-      RefPtr<DeclarationBlock> declClone = decl->Clone();
-
-      rv = aDst->SetInlineStyleDeclaration(declClone, &valStr, false);
+      nsAttrValue valueCopy(*value);
+      rv = aDst->SetParsedAttr(name->NamespaceID(), name->LocalName(),
+                               name->GetPrefix(), valueCopy, false);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      DeclarationBlock* cssDeclaration = value->GetCSSDeclarationValue();
+      cssDeclaration->SetImmutable();
     } else if (reparse) {
       nsAutoString valStr;
       value->ToString(valStr);
