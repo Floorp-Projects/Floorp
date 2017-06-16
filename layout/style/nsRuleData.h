@@ -129,36 +129,15 @@ struct nsRuleData final: mozilla::GenericSpecifiedValues
     ValueFor(aId)->SetStringValue(aValue, eCSSUnit_Ident);
   }
 
-  void SetIdentStringValueIfUnset(nsCSSPropertyID aId, const nsString& aValue)
-  {
-    if (!PropertyIsSet(aId)) {
-      SetIdentStringValue(aId, aValue);
-    }
-  }
-
   void SetIdentAtomValue(nsCSSPropertyID aId, nsIAtom* aValue)
   {
     nsCOMPtr<nsIAtom> atom = aValue;
     ValueFor(aId)->SetAtomIdentValue(atom.forget());
   }
 
-  void SetIdentAtomValueIfUnset(nsCSSPropertyID aId, nsIAtom* aValue)
-  {
-    if (!PropertyIsSet(aId)) {
-      SetIdentAtomValue(aId, aValue);
-    }
-  }
-
   void SetKeywordValue(nsCSSPropertyID aId, int32_t aValue)
   {
     ValueFor(aId)->SetIntValue(aValue, eCSSUnit_Enumerated);
-  }
-
-  void SetKeywordValueIfUnset(nsCSSPropertyID aId, int32_t aValue)
-  {
-    if (!PropertyIsSet(aId)) {
-      SetKeywordValue(aId, aValue);
-    }
   }
 
   void SetIntValue(nsCSSPropertyID aId, int32_t aValue)
@@ -169,13 +148,6 @@ struct nsRuleData final: mozilla::GenericSpecifiedValues
   void SetPixelValue(nsCSSPropertyID aId, float aValue)
   {
     ValueFor(aId)->SetFloatValue(aValue, eCSSUnit_Pixel);
-  }
-
-  void SetPixelValueIfUnset(nsCSSPropertyID aId, float aValue)
-  {
-    if (!PropertyIsSet(aId)) {
-      SetPixelValue(aId, aValue);
-    }
   }
 
   void SetLengthValue(nsCSSPropertyID aId, nsCSSValue aValue)
@@ -198,39 +170,13 @@ struct nsRuleData final: mozilla::GenericSpecifiedValues
     ValueFor(aId)->SetAutoValue();
   }
 
-  void SetAutoValueIfUnset(nsCSSPropertyID aId) {
-    if (!PropertyIsSet(aId)) {
-      SetAutoValue(aId);
-    }
-  }
-
-  void SetPercentValueIfUnset(nsCSSPropertyID aId, float aValue)
-  {
-    if (!PropertyIsSet(aId)) {
-      SetPercentValue(aId, aValue);
-    }
-  }
-
   void SetCurrentColor(nsCSSPropertyID aId) {
     ValueFor(aId)->SetIntValue(NS_COLOR_CURRENTCOLOR, eCSSUnit_EnumColor);
-  }
-
-  void SetCurrentColorIfUnset(nsCSSPropertyID aId) {
-    if (!PropertyIsSet(aId)) {
-      SetCurrentColor(aId);
-    }
   }
 
   void SetColorValue(nsCSSPropertyID aId, nscolor aValue)
   {
     ValueFor(aId)->SetColorValue(aValue);
-  }
-
-  void SetColorValueIfUnset(nsCSSPropertyID aId, nscolor aValue)
-  {
-    if (!PropertyIsSet(aId)) {
-      SetColorValue(aId, aValue);
-    }
   }
 
   void SetFontFamily(const nsString& aValue);
