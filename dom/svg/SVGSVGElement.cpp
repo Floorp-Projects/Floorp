@@ -664,13 +664,6 @@ SVGSVGElement::InvalidateTransformNotifyFrame()
   }
 }
 
-bool
-SVGSVGElement::HasPreserveAspectRatio()
-{
-  return HasAttr(kNameSpaceID_None, nsGkAtoms::preserveAspectRatio) ||
-    mPreserveAspectRatio.IsAnimated();
-}
-
 nsSVGElement::EnumAttributesInfo
 SVGSVGElement::GetEnumInfo()
 {
