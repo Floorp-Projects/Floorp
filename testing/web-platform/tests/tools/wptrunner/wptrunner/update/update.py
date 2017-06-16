@@ -30,7 +30,7 @@ class LoadConfig(Step):
         state.tests_path = state.paths["/"]["tests_path"]
         state.metadata_path = state.paths["/"]["metadata_path"]
 
-        assert state.tests_path.startswith("/")
+        assert os.path.isabs(state.tests_path)
 
 
 class LoadTrees(Step):
