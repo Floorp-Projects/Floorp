@@ -395,6 +395,13 @@ def check_args_update(kwargs):
     if kwargs["patch"] is None:
         kwargs["patch"] = kwargs["sync"]
 
+    for item in kwargs["run_log"]:
+        if os.path.isdir(item):
+            print >> sys.stderr, "Log file %s is a directory" % item
+            sys.exit(1)
+
+    return kwargs
+
 
 def create_parser_update(product_choices=None):
     from mozlog.structured import commandline
