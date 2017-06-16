@@ -164,10 +164,11 @@ class sessionrestore(TsBase):
     gecko_profile_startup = True
     gecko_profile_entries = 10000000
     profile_path = '${talos}/startup_test/sessionrestore/profile'
-    url = 'startup_test/sessionrestore/index.html'
     shutdown = False
     reinstall = ['sessionstore.js', 'sessionCheckpoints.json']
-    # Restore the session
+    # Restore the session. We have to provide a URL, otherwise Talos
+    # asks for a manifest URL.
+    url = 'about:home'
     preferences = {'browser.startup.page': 3}
     unit = 'ms'
 
@@ -181,7 +182,6 @@ class sessionrestore_no_auto_restore(sessionrestore):
     2. Launch Firefox.
     3. Measure the delta between firstPaint and sessionRestored.
     """
-    # Restore about:home
     preferences = {'browser.startup.page': 1}
 
 
