@@ -14,122 +14,12 @@
 #include "mozilla/dom/TabGroup.h"
 #include "OrderedTimeoutIterator.h"
 #include "TimeoutExecutor.h"
+#include "TimeoutBudgetManager.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
 static LazyLogModule gLog("Timeout");
-
-// Time between sampling timeout execution time.
-const uint32_t kTelemetryPeriodMS = 1000;
-
-class TimeoutBudgetManager
-{
-public:
-  static TimeoutBudgetManager& Get();
-  TimeoutBudgetManager() : mLastCollection(TimeStamp::Now()) {}
-
-  void StartRecording(const TimeStamp& aNow);
-  void StopRecording();
-  TimeDuration RecordExecution(const TimeStamp& aNow,
-                               bool aIsTracking,
-                               bool aIsBackground);
-  void MaybeCollectTelemetry(const TimeStamp& aNow);
-private:
-  struct TelemetryData
-  {
-    TimeDuration mForegroundTracking;
-    TimeDuration mForegroundNonTracking;
-    TimeDuration mBackgroundTracking;
-    TimeDuration mBackgroundNonTracking;
-  };
-
-  void Accumulate(Telemetry::HistogramID aId, const TimeDuration& aSample);
-
-  TelemetryData mTelemetryData;
-  TimeStamp mStart;
-  TimeStamp mLastCollection;
-};
-
-static TimeoutBudgetManager gTimeoutBudgetManager;
-
-/* static */ TimeoutBudgetManager&
-TimeoutBudgetManager::Get()
-{
-  return gTimeoutBudgetManager;
-}
-
-void
-TimeoutBudgetManager::StartRecording(const TimeStamp& aNow)
-{
-  mStart = aNow;
-}
-
-void
-TimeoutBudgetManager::StopRecording()
-{
-  mStart = TimeStamp();
-}
-
-TimeDuration
-TimeoutBudgetManager::RecordExecution(const TimeStamp& aNow,
-                                      bool aIsTracking,
-                                      bool aIsBackground)
-{
-  if (!mStart) {
-    // If we've started a sync operation mStart might be null, in
-    // which case we should not record this piece of execution.
-    return TimeDuration();
-  }
-
-  TimeDuration duration = aNow - mStart;
-
-  if (aIsBackground) {
-    if (aIsTracking) {
-      mTelemetryData.mBackgroundTracking += duration;
-    } else {
-      mTelemetryData.mBackgroundNonTracking += duration;
-    }
-  } else {
-    if (aIsTracking) {
-      mTelemetryData.mForegroundTracking += duration;
-    } else {
-      mTelemetryData.mForegroundNonTracking += duration;
-    }
-  }
-
-  return duration;
-}
-
-void
-TimeoutBudgetManager::Accumulate(Telemetry::HistogramID aId,
-                                 const TimeDuration& aSample)
-{
-  uint32_t sample = std::round(aSample.ToMilliseconds());
-  if (sample) {
-    Telemetry::Accumulate(aId, sample);
-  }
-}
-
-void
-TimeoutBudgetManager::MaybeCollectTelemetry(const TimeStamp& aNow)
-{
-  if ((aNow - mLastCollection).ToMilliseconds() < kTelemetryPeriodMS) {
-    return;
-  }
-
-  Accumulate(Telemetry::TIMEOUT_EXECUTION_FG_TRACKING_MS,
-             mTelemetryData.mForegroundTracking);
-  Accumulate(Telemetry::TIMEOUT_EXECUTION_FG_MS,
-             mTelemetryData.mForegroundNonTracking);
-  Accumulate(Telemetry::TIMEOUT_EXECUTION_BG_TRACKING_MS,
-             mTelemetryData.mBackgroundTracking);
-  Accumulate(Telemetry::TIMEOUT_EXECUTION_BG_MS,
-             mTelemetryData.mBackgroundNonTracking);
-
-  mTelemetryData = TelemetryData();
-  mLastCollection = aNow;
-}
 
 static int32_t              gRunningTimeoutDepth       = 0;
 
