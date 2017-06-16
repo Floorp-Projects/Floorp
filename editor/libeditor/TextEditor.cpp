@@ -877,14 +877,14 @@ TextEditor::UpdateIMEComposition(WidgetCompositionEvent* aCompsitionChangeEvent)
   TextComposition::CompositionChangeEventHandlingMarker
     compositionChangeEventHandlingMarker(mComposition, aCompsitionChangeEvent);
 
-  NotifyEditorObservers(eNotifyEditorObserversOfBefore);
-
   RefPtr<nsCaret> caretP = ps->GetCaret();
 
   nsresult rv;
   {
     AutoPlaceHolderBatch batch(this, nsGkAtoms::IMETxnName);
 
+    MOZ_ASSERT(mIsInEditAction,
+      "AutoPlaceHolderBatch should've notified the observes of before-edit");
     rv = InsertText(aCompsitionChangeEvent->mData);
 
     if (caretP) {
