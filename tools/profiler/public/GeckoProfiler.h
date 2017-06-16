@@ -103,10 +103,15 @@ using UniqueProfilerBacktrace =
 // only recorded if a sample is collected while it is active, marker will always
 // be collected.
 #define PROFILER_MARKER(marker_name) do {} while (0)
-#define PROFILER_MARKER_PAYLOAD(marker_name, payload) \
-  do { \
-    mozilla::UniquePtr<ProfilerMarkerPayload> payloadDeletor(payload); \
-  } while (0)
+
+// Like PROFILER_MARKER, but with an additional payload.
+//
+// Note: this is deliberately not defined when MOZ_GECKO_PROFILER is undefined.
+// This macro should not be used in that case -- i.e. all uses of this macro
+// should be guarded by a MOZ_GECKO_PROFILER check -- because payload creation
+// requires allocation, which is something we should not do in builds that
+// don't contain the profiler.
+//#define PROFILER_MARKER_PAYLOAD(marker_name, payload) /* undefined */
 
 #else   // defined(MOZ_GECKO_PROFILER)
 
@@ -419,8 +424,9 @@ extern MOZ_THREAD_LOCAL(PseudoStack*) sPseudoStack;
 
 // Adds a marker to the PseudoStack. A no-op if the profiler is inactive or in
 // privacy mode.
+void profiler_add_marker(const char* aMarkerName);
 void profiler_add_marker(const char* aMarkerName,
-                         ProfilerMarkerPayload* aPayload = nullptr);
+                         mozilla::UniquePtr<ProfilerMarkerPayload> aPayload);
 
 #define PROFILER_APPEND_LINE_NUMBER_PASTE(id, line) id ## line
 #define PROFILER_APPEND_LINE_NUMBER_EXPAND(id, line) \

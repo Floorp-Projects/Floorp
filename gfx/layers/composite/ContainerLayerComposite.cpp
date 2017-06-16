@@ -100,8 +100,9 @@ PrintUniformityInfo(Layer* aLayer)
   }
 
   Point translation = transform.As2D().GetTranslation();
-  LayerTranslationPayload* payload = new LayerTranslationPayload(aLayer, translation);
-  PROFILER_MARKER_PAYLOAD("LayerTranslation", payload);
+  PROFILER_MARKER_PAYLOAD(
+    "LayerTranslation",
+    MakeUnique<LayerTranslationPayload>(aLayer, translation));
 #endif
 }
 

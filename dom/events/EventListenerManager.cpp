@@ -1299,10 +1299,10 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
               TimeStamp endTime = TimeStamp::Now();
               uint16_t phase;
               (*aDOMEvent)->GetEventPhase(&phase);
-              PROFILER_MARKER_PAYLOAD("DOMEvent",
-                                      new DOMEventMarkerPayload(typeStr, phase,
-                                                                startTime,
-                                                                endTime));
+              PROFILER_MARKER_PAYLOAD(
+                "DOMEvent",
+                MakeUnique<DOMEventMarkerPayload>(typeStr, phase,
+                                                  startTime, endTime));
 #else
               MOZ_CRASH("Gecko Profiler is N/A but profiler_is_active() returned true");
 #endif

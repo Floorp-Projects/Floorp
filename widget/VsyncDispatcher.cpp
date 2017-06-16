@@ -11,11 +11,6 @@
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
 
-#ifdef MOZ_GECKO_PROFILER
-#include "GeckoProfiler.h"
-#include "ProfilerMarkerPayload.h"
-#endif
-
 using namespace mozilla::layers;
 
 namespace mozilla {

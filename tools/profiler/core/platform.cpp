@@ -2945,19 +2945,23 @@ racy_profiler_add_marker(const char* aMarkerName,
 }
 
 void
-profiler_add_marker(const char* aMarkerName, ProfilerMarkerPayload* aPayload)
+profiler_add_marker(const char* aMarkerName,
+                    UniquePtr<ProfilerMarkerPayload> aPayload)
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  // aPayload must be freed if we return early.
-  UniquePtr<ProfilerMarkerPayload> payload(aPayload);
-
-  // This function is hot enough that we use RacyFeatures, notActivePS.
+  // This function is hot enough that we use RacyFeatures, not ActivePS.
   if (!RacyFeatures::IsActiveWithoutPrivacy()) {
     return;
   }
 
-  racy_profiler_add_marker(aMarkerName, Move(payload));
+  racy_profiler_add_marker(aMarkerName, Move(aPayload));
+}
+
+void
+profiler_add_marker(const char* aMarkerName)
+{
+  profiler_add_marker(aMarkerName, nullptr);
 }
 
 void
