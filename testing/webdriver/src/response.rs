@@ -8,6 +8,7 @@ use time;
 pub enum WebDriverResponse {
     CloseWindow(CloseWindowResponse),
     Cookie(CookieResponse),
+    Cookies(CookiesResponse),
     DeleteSession,
     ElementRect(RectResponse),
     Generic(ValueResponse),
@@ -19,21 +20,23 @@ pub enum WebDriverResponse {
 
 impl WebDriverResponse {
     pub fn to_json_string(self) -> String {
+        use response::WebDriverResponse::*;
+
         let obj = match self {
-            WebDriverResponse::CloseWindow(ref x) => json::encode(&x.to_json()),
-            WebDriverResponse::Cookie(ref x) => json::encode(x),
-            WebDriverResponse::DeleteSession => Ok("{}".to_string()),
-            WebDriverResponse::ElementRect(ref x) => json::encode(x),
-            WebDriverResponse::Generic(ref x) => json::encode(x),
-            WebDriverResponse::NewSession(ref x) => json::encode(x),
-            WebDriverResponse::Timeouts(ref x) => json::encode(x),
-            WebDriverResponse::Void => Ok("{}".to_string()),
-            WebDriverResponse::WindowRect(ref x) => json::encode(x),
+            CloseWindow(ref x) => json::encode(&x.to_json()),
+            Cookie(ref x) => json::encode(x),
+            Cookies(ref x) => json::encode(x),
+            DeleteSession => Ok("{}".to_string()),
+            ElementRect(ref x) => json::encode(x),
+            Generic(ref x) => json::encode(x),
+            NewSession(ref x) => json::encode(x),
+            Timeouts(ref x) => json::encode(x),
+            Void => Ok("{}".to_string()),
+            WindowRect(ref x) => json::encode(x),
         }.unwrap();
 
         match self {
-            WebDriverResponse::Generic(_) |
-            WebDriverResponse::Cookie(_) => obj,
+            Generic(_) | Cookie(_) | Cookies(_) => obj,
             _ => {
                 let mut data = String::with_capacity(11 + obj.len());
                 data.push_str("{\"value\": ");
@@ -129,7 +132,6 @@ impl RectResponse {
     }
 }
 
-//TODO: some of these fields are probably supposed to be optional
 #[derive(RustcEncodable, PartialEq, Debug, Clone)]
 pub struct Cookie {
     pub name: String,
@@ -138,22 +140,7 @@ pub struct Cookie {
     pub domain: Nullable<String>,
     pub expiry: Nullable<Date>,
     pub secure: bool,
-    pub httpOnly: bool
-}
-
-impl Cookie {
-    pub fn new(name: String, value: String, path: Nullable<String>, domain: Nullable<String>,
-               expiry: Nullable<Date>, secure: bool, http_only: bool) -> Cookie {
-        Cookie {
-            name: name,
-            value: value,
-            path: path,
-            domain: domain,
-            expiry: expiry,
-            secure: secure,
-            httpOnly: http_only
-        }
-    }
+    pub httpOnly: bool,
 }
 
 impl Into<cookie::Cookie<'static>> for Cookie {
@@ -172,7 +159,7 @@ impl Into<cookie::Cookie<'static>> for Cookie {
         let cookie = match self.expiry {
             Nullable::Value(Date(expiry)) => {
                 cookie.expires(time::at(time::Timespec::new(expiry as i64, 0)))
-            },
+            }
             Nullable::Null => cookie,
         };
         cookie.finish()
@@ -181,31 +168,20 @@ impl Into<cookie::Cookie<'static>> for Cookie {
 
 #[derive(RustcEncodable, Debug)]
 pub struct CookieResponse {
-    pub value: Vec<Cookie>
+    pub value: Cookie,
 }
 
-impl CookieResponse {
-    pub fn new(value: Vec<Cookie>) -> CookieResponse {
-        CookieResponse {
-            value: value
-        }
-    }
+#[derive(RustcEncodable, Debug)]
+pub struct CookiesResponse {
+    pub value: Vec<Cookie>,
 }
-
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeMap;
+    use super::{CloseWindowResponse, Cookie, CookieResponse, CookiesResponse, NewSessionResponse,
+                Nullable, RectResponse, TimeoutsResponse, ValueResponse, WebDriverResponse};
     use rustc_serialize::json::Json;
-    use super::{WebDriverResponse,
-                CloseWindowResponse,
-                CookieResponse,
-                RectResponse,
-                NewSessionResponse,
-                ValueResponse,
-                TimeoutsResponse,
-                Cookie,
-                Nullable};
+    use std::collections::BTreeMap;
 
     fn test(resp: WebDriverResponse, expected_str: &str) {
         let data = resp.to_json_string();
@@ -224,17 +200,36 @@ mod tests {
 
     #[test]
     fn test_cookie() {
-        let resp = WebDriverResponse::Cookie(CookieResponse::new(
-            vec![
-                Cookie::new("test".into(),
-                            "test_value".into(),
-                            Nullable::Value("/".into()),
-                            Nullable::Null,
-                            Nullable::Null,
-                            true,
-                            false)
-            ]));
-        let expected = r#"{"value": [{"name": "test", "value": "test_value", "path": "/",
+        let cookie = Cookie {
+            name: "name".into(),
+            value: "value".into(),
+            path: Nullable::Value("/".into()),
+            domain: Nullable::Null,
+            expiry: Nullable::Null,
+            secure: true,
+            httpOnly: false,
+        };
+        let resp = WebDriverResponse::Cookie(CookieResponse { value: cookie });
+        let expected = r#"{"value": {"name": "name", "expiry": null, "value": "value",
+"path": "/", "domain": null, "secure": true, "httpOnly": false}}"#;
+        test(resp, expected);
+    }
+
+    #[test]
+    fn test_cookies() {
+        let resp = WebDriverResponse::Cookies(CookiesResponse {
+            value: vec![
+                Cookie {
+                    name: "name".into(),
+                    value: "value".into(),
+                    path: Nullable::Value("/".into()),
+                    domain: Nullable::Null,
+                    expiry: Nullable::Null,
+                    secure: true,
+                    httpOnly: false,
+                }
+            ]});
+        let expected = r#"{"value": [{"name": "name", "value": "value", "path": "/",
 "domain": null, "expiry": null, "secure": true, "httpOnly": false}]}"#;
         test(resp, expected);
     }
