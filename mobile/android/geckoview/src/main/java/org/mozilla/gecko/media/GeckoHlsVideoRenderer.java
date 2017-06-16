@@ -55,7 +55,7 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
         super(C.TRACK_TYPE_VIDEO, eventDispatcher);
         assertTrue(Versions.feature16Plus);
         LOGTAG = getClass().getSimpleName();
-        DEBUG = false;
+        DEBUG = AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG_BUILD;;
     }
 
     @Override
