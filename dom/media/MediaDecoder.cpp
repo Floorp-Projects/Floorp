@@ -186,18 +186,6 @@ MediaDecoder::ResourceCallback::NotifyNetworkError()
   }
 }
 
-void
-MediaDecoder::ResourceCallback::NotifyDecodeError()
-{
-  RefPtr<ResourceCallback> self = this;
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
-    if (self->mDecoder) {
-      self->mDecoder->DecodeError(NS_ERROR_DOM_MEDIA_FATAL_ERR);
-    }
-  });
-  mAbstractMainThread->Dispatch(r.forget());
-}
-
 /* static */ void
 MediaDecoder::ResourceCallback::TimerCallback(nsITimer* aTimer, void* aClosure)
 {

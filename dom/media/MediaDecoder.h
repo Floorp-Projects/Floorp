@@ -111,7 +111,6 @@ public:
     MediaDecoderOwner* GetMediaOwner() const override;
     void SetInfinite(bool aInfinite) override;
     void NotifyNetworkError() override;
-    void NotifyDecodeError() override;
     void NotifyDataArrived() override;
     void NotifyBytesDownloaded() override;
     void NotifyDataEnded(nsresult aStatus) override;
