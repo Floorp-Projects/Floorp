@@ -417,6 +417,24 @@ IDBFactory::AllowedForPrincipal(nsIPrincipal* aPrincipal,
   return true;
 }
 
+void
+IDBFactory::UpdateActiveTransactionCount(int32_t aDelta)
+{
+  AssertIsOnOwningThread();
+  if (mWindow) {
+    mWindow->UpdateActiveIndexedDBTransactionCount(aDelta);
+  }
+}
+
+void
+IDBFactory::UpdateActiveDatabaseCount(int32_t aDelta)
+{
+  AssertIsOnOwningThread();
+  if (mWindow) {
+    mWindow->UpdateActiveIndexedDBDatabaseCount(aDelta);
+  }
+}
+
 bool
 IDBFactory::IsChrome() const
 {
