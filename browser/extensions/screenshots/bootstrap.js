@@ -1,3 +1,4 @@
+/* globals ADDON_DISABLE */
 const OLD_ADDON_PREF_NAME = "extensions.jid1-NeEaf3sAHdKHPA@jetpack.deviceIdInfo";
 const OLD_ADDON_ID = "jid1-NeEaf3sAHdKHPA@jetpack";
 const ADDON_ID = "screenshots@mozilla.org";
@@ -59,7 +60,10 @@ const appStartupObserver = {
 }
 
 const APP_STARTUP = 1;
+let startupReason;
+
 function startup(data, reason) { // eslint-disable-line no-unused-vars
+  startupReason = reason;
   if (reason === APP_STARTUP) {
     appStartupObserver.register();
   } else {
@@ -78,7 +82,7 @@ function shutdown(data, reason) { // eslint-disable-line no-unused-vars
     resourceURI: addonResourceURI
   });
   if (webExtension.started) {
-    stop(webExtension);
+    stop(webExtension, reason);
   }
 }
 
@@ -103,12 +107,12 @@ function handleStartup() {
   if (!shouldDisable() && !webExtension.started) {
     start(webExtension);
   } else if (shouldDisable()) {
-    stop(webExtension);
+    stop(webExtension, ADDON_DISABLE);
   }
 }
 
 function start(webExtension) {
-  webExtension.startup().then((api) => {
+  webExtension.startup(startupReason).then((api) => {
     api.browser.runtime.onMessage.addListener(handleMessage);
   }).catch((err) => {
     // The startup() promise will be rejected if the webExtension was
@@ -121,8 +125,8 @@ function start(webExtension) {
   });
 }
 
-function stop(webExtension) {
-  webExtension.shutdown();
+function stop(webExtension, reason) {
+  webExtension.shutdown(reason);
 }
 
 function handleMessage(msg, sender, sendReply) {

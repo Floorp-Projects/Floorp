@@ -107,7 +107,7 @@
     "message": "Done"
   },
   "termsAndPrivacyNoticeCloudServices": {
-    "message": "By using Firefox Screenshots, you agree to the Firefox Cloud Services $TERMSANDPRIVACYNOTICETERMSLINK$ and $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "message": "By using Firefox Screenshots, you agree to our $TERMSANDPRIVACYNOTICETERMSLINK$ and $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
