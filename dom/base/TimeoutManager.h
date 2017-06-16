@@ -55,7 +55,7 @@ public:
   void ClearAllTimeouts();
   uint32_t GetTimeoutId(mozilla::dom::Timeout::Reason aReason);
 
-  int32_t CalculateDelay(Timeout* aTimeout) const;
+  TimeDuration CalculateDelay(Timeout* aTimeout) const;
 
   // aTimeout is the timeout that we're about to start running.  This function
   // returns the current timeout.
