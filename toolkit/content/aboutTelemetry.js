@@ -252,7 +252,7 @@ var Settings = {
 
   getStatusStringForSetting(setting) {
     let enabled = Preferences.get(setting.pref, setting.defaultPrefValue);
-    let status = bundle.GetStringFromName(enabled ? "enabled" : "disabled");
+    let status = bundle.GetStringFromName(enabled ? "telemetryEnabled" : "telemetryDisabled");
     return status;
   },
 
@@ -329,14 +329,14 @@ var PingPicker = {
   },
 
   render() {
-    let pings = bundle.GetStringFromName("pings");
+    let pings = bundle.GetStringFromName("pingExplanationLink");
     let pingLink = "<a href=\"http://gecko.readthedocs.io/en/latest/toolkit/components/telemetry/telemetry/concepts/pings.html\">&quot;" + pings + "&quot;</a>";
     let pingName = "<span class=\"change-ping\">" + this._getSelectedPingName() + "</span>";
 
     let explanation = bundle.formatStringFromName("pingExplanation", [pingLink, pingName], 2);
     let pingExplanation = document.getElementById("ping-explanation");
     pingExplanation.innerHTML = explanation;
-    this.attachObservers();
+    GenericSubsection.deleteAllSubSections();
   },
 
   async update() {
@@ -361,7 +361,6 @@ var PingPicker = {
         document.getElementById("archived-ping-picker").hidden = false;
       }
     }
-    this.render();
   },
 
   _updateCurrentPingData() {
@@ -925,8 +924,8 @@ var RawPayload = {
    * Renders the raw payload
    */
   render(aPing) {
-    setHasData("raw-payload-section", true);
-    let pre = document.getElementById("raw-payload-data-pre");
+    setHasData("raw-ping-data-section", true);
+    let pre = document.getElementById("raw-ping-data");
     pre.textContent = JSON.stringify(aPing.payload, null, 2);
   }
 };
@@ -1389,8 +1388,14 @@ var GenericSubsection = {
 
   addSubSectionToSidebar(id, title) {
     let category = document.querySelector("#categories > [value=" + id + "]");
+    category.classList.add("has-subsection");
     let subCategory = document.createElement("div");
-    subCategory.setAttribute("class", "subsection");
+    subCategory.classList.add("category-subsection");
+    subCategory.setAttribute("value", id + "-" + title);
+    subCategory.addEventListener("click", (ev) => {
+      let section = ev.target;
+      showSubSection(section);
+    });
     subCategory.appendChild(document.createTextNode(title))
     category.appendChild(subCategory);
   },
@@ -1399,7 +1404,7 @@ var GenericSubsection = {
     for (let [title, sectionData] of data) {
       let hasData = sectionData.size > 0;
       let s = this.renderSubsectionHeader(title, hasData, sectionID);
-      s.appendChild(this.renderSubsectionData(sectionData));
+      s.appendChild(this.renderSubsectionData(title, sectionData));
       dataDiv.appendChild(s);
     }
   },
@@ -1407,22 +1412,33 @@ var GenericSubsection = {
   renderSubsectionHeader(title, hasData, sectionID) {
     this.addSubSectionToSidebar(sectionID, title);
     let section = document.createElement("section");
-    section.classList.add("data-subsection");
+    section.setAttribute("id", sectionID + "-" + title);
+    section.classList.add("data-subsection", "expanded");
     if (hasData) {
       section.classList.add("has-subdata");
     }
     return section;
   },
 
-  renderSubsectionData(data) {
+  renderSubsectionData(title, data) {
     // Create data container
     let dataDiv = document.createElement("div");
     dataDiv.setAttribute("class", "subsection-data subdata");
     // Instanciate the data
     let table = GenericTable.render(data);
+    let caption = document.createElement("caption");
+    caption.textContent = title;
+    table.appendChild(caption);
     dataDiv.appendChild(table);
 
     return dataDiv;
+  },
+
+  deleteAllSubSections() {
+    let subsections = document.querySelectorAll(".category-subsection");
+    subsections.forEach((el) => {
+      el.parentElement.removeChild(el);
+    })
   },
 
 }
@@ -1721,19 +1737,40 @@ function setupPageHeader() {
  * Change the section displayed
  */
 function show(selected) {
-    let current_section = document.querySelector(".active");
-    let selected_section = document.getElementById(selected.getAttribute("value"));
-    if (current_section == selected_section)
-      return;
-    current_section.classList.remove("active");
-    current_section.hidden = true;
-    selected_section.classList.add("active");
-    selected_section.hidden = false;
+  let current_button = document.querySelector(".category.selected");
+  current_button.classList.remove("selected");
+  selected.classList.add("selected");
+  // Hack because subsection text appear selected. See Bug 1375114.
+  document.getSelection().empty();
 
-    let current_button = document.querySelector("[selected=true]");
-    current_button.removeAttribute("selected");
-    selected.setAttribute("selected", "true");
-    document.getElementById("sectionTitle").textContent = selected.textContent;
+  let current_section = document.querySelector(".active");
+  let selected_section = document.getElementById(selected.getAttribute("value"));
+  if (current_section == selected_section)
+    return;
+  current_section.classList.remove("active");
+  current_section.hidden = true;
+  selected_section.classList.add("active");
+  selected_section.hidden = false;
+
+  let title = selected.querySelector(".category-name").textContent;
+  document.getElementById("sectionTitle").textContent = title;
+}
+
+function showSubSection(selected) {
+  let current_selection = document.querySelector(".category-subsection.selected");
+  if (current_selection)
+    current_selection.classList.remove("selected");
+  selected.classList.add("selected");
+
+  let section = document.getElementById(selected.getAttribute("value"));
+  section.parentElement.childNodes.forEach((element) => {
+    element.classList.remove("expanded");
+  }, this);
+  section.classList.add("expanded");
+
+  let title = selected.parentElement.querySelector(".category-name").textContent;
+  document.getElementById("sectionTitle").textContent = title + " - " + selected.textContent;
+  document.getSelection().empty(); // prevent subsection text selection
 }
 
 /**
@@ -2109,18 +2146,18 @@ function renderPayloadList(ping) {
 
 function togglePingSections(isMainPing) {
   // We always show the sections that are "common" to all pings.
-  // The raw payload section is only used for pings other than "main" and "saved-session".
-  let commonSections = new Set(["general-data-section", "environment-data-section"]);
-  let otherPingSections = new Set(["raw-payload-section"]);
+  let commonSections = new Set(["heading",
+                                "home",
+                                "general-data-section",
+                                "environment-data-section",
+                                "raw-ping-data-section"]);
 
-  let elements = document.getElementById("categories").children;
+  let elements = document.querySelectorAll(".category");
   for (let section of elements) {
-    if (commonSections.has(section.id)) {
+    if (commonSections.has(section.getAttribute("value"))) {
       continue;
     }
-
-    let showElement = isMainPing != otherPingSections.has(section.id);
-    section.hidden = !showElement;
+    section.classList.toggle("has-data", isMainPing);
   }
 }
 
@@ -2128,11 +2165,10 @@ function displayPingData(ping, updatePayloadList = false) {
   gPingData = ping;
 
   // Render raw ping data.
-  let pre = document.getElementById("raw-ping-data");
-  pre.textContent = JSON.stringify(gPingData, null, 2);
-
+  RawPayload.render(ping);
 
   try {
+    PingPicker.render();
     displayRichPingData(ping, updatePayloadList);
   } catch (err) {
     console.log(err);
@@ -2163,7 +2199,6 @@ function displayRichPingData(ping, updatePayloadList) {
   togglePingSections(isMainPing);
 
   if (!isMainPing) {
-    RawPayload.render(ping);
     return;
   }
 
