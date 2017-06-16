@@ -44,8 +44,6 @@ GMPProcessChild::Init(int aArgc, char* aArgv[])
 #error Not implemented
 #endif
 
-  BackgroundHangMonitor::Startup();
-
   return mPlugin.Init(pluginFilename,
                       ParentPid(),
                       IOThreadChild::message_loop(),
@@ -55,7 +53,6 @@ GMPProcessChild::Init(int aArgc, char* aArgv[])
 void
 GMPProcessChild::CleanUp()
 {
-  BackgroundHangMonitor::Shutdown();
 }
 
 } // namespace gmp
