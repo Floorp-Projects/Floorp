@@ -1243,7 +1243,7 @@ let IconDetails = {
 let StartupCache = {
   DB_NAME: "ExtensionStartupCache",
 
-  SCHEMA_VERSION: 2,
+  SCHEMA_VERSION: 3,
 
   STORE_NAMES: Object.freeze(["locales", "manifests", "schemas"]),
 
