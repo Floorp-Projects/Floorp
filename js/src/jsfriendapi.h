@@ -1383,6 +1383,10 @@ class MOZ_STACK_CLASS JS_FRIEND_API(AutoStableStringChars)
     bool isLatin1() const { return state_ == Latin1; }
     bool isTwoByte() const { return state_ == TwoByte; }
 
+    const JS::Latin1Char* latin1Chars() const {
+        MOZ_ASSERT(state_ == Latin1);
+        return latin1Chars_;
+    }
     const char16_t* twoByteChars() const {
         MOZ_ASSERT(state_ == TwoByte);
         return twoByteChars_;
