@@ -7,7 +7,7 @@
   <Description about="urn:mozilla:install-manifest">
     <em:id>followonsearch@mozilla.com</em:id>
     <em:name>Follow-on Search Telemetry</em:name>
-    <em:version>0.9.0</em:version>
+    <em:version>0.9.1</em:version>
     <em:type>2</em:type>
     <em:bootstrap>true</em:bootstrap>
     <em:multiprocessCompatible>true</em:multiprocessCompatible>
