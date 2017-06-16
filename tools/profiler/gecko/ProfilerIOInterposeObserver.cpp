@@ -21,10 +21,9 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation)
     filename = NS_ConvertUTF16toUTF8(aObservation.Filename());
   }
 
-  IOMarkerPayload* markerPayload = new IOMarkerPayload(aObservation.Reference(),
-                                                       filename.get(),
-                                                       aObservation.Start(),
-                                                       aObservation.End(),
-                                                       Move(stack));
-  PROFILER_MARKER_PAYLOAD(aObservation.ObservedOperationString(), markerPayload);
+  PROFILER_MARKER_PAYLOAD(
+    aObservation.ObservedOperationString(),
+    MakeUnique<IOMarkerPayload>(aObservation.Reference(), filename.get(),
+                                aObservation.Start(), aObservation.End(),
+                                Move(stack)));
 }
