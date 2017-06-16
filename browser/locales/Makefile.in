@@ -23,6 +23,10 @@ WIN32_INSTALLER_IN ?= $(ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
 RETRIEVE_WINDOWS_INSTALLER = 1
 
 MOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox.mozilla.org
+# For Nightly, we know where to get the builds from to do local repacks
+ifdef NIGHTLY_BUILD
+export EN_US_BINARY_URL ?= https://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central
+endif
 
 L10N_PREF_JS_EXPORTS = $(call MERGE_FILE,firefox-l10n.js)
 L10N_PREF_JS_EXPORTS_PATH = $(FINAL_TARGET)/$(PREF_DIR)
