@@ -21,6 +21,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "StartupPerformance",
 
 // Observer Service topics.
 const STARTUP_TOPIC = "profile-after-change";
+const WINDOW_READY_TOPIC = "browser-delayed-startup-finished";
 
 // Process Message Manager topics.
 const MSG_REQUEST = "session-restore-test?duration";
@@ -48,6 +49,10 @@ nsSessionRestoreTalosTest.prototype = {
         break;
       case StartupPerformance.RESTORED_TOPIC:
         this.onReady(true);
+        break;
+      case WINDOW_READY_TOPIC:
+        Services.obs.removeObserver(this, WINDOW_READY_TOPIC);
+        this.onWindow(aSubject);
         break;
       default:
         throw new Error(`Unknown topic ${aTopic}`);
@@ -81,6 +86,19 @@ nsSessionRestoreTalosTest.prototype = {
     if (hasRestoredTabs) {
       Services.obs.removeObserver(this, StartupPerformance.RESTORED_TOPIC);
     }
+
+    // onReady might fire before the browser window has finished initializing
+    // or sometimes soon after. We handle both cases here.
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    if (!win || !win.gBrowser) {
+      // We didn't have a window around yet, so we'll wait until one becomes
+      // available before opening the result tab.
+      Services.obs.addObserver(this, WINDOW_READY_TOPIC);
+    } else {
+      // We have a window, so we can open the result tab in it right away.
+      this.onWindow(win);
+    }
+
     try {
       setTimeout(function() {
         // `StartupPerformance.latestRestoredTimeStamp` actually becomes available only on the next tick.
@@ -107,6 +125,13 @@ nsSessionRestoreTalosTest.prototype = {
       dump("\n");
     }
   },
+
+  /**
+   * A window is ready for us to open the result tab in.
+   */
+  onWindow(win) {
+    win.gBrowser.addTab("chrome://session-restore-test/content/index.html");
+  }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
