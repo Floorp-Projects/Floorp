@@ -15,11 +15,10 @@
 #include "mozilla/Base64.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/DOMError.h"
-#include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileReaderBinding.h"
 #include "mozilla/dom/ProgressEvent.h"
-#include "nsContentUtils.h"
+#include "mozilla/Encoding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMJSUtils.h"
 #include "nsError.h"
@@ -451,37 +450,33 @@ FileReader::GetAsText(Blob *aBlob,
                       uint32_t aDataLen,
                       nsAString& aResult)
 {
-  // The BOM sniffing is baked into the "decode" part of the Encoding
-  // Standard, which the File API references.
-  nsAutoCString encoding;
-  if (!nsContentUtils::CheckForBOM(
-        reinterpret_cast<const unsigned char *>(aFileData),
-        aDataLen,
-        encoding)) {
-    // BOM sniffing failed. Try the API argument.
-    if (!EncodingUtils::FindEncodingForLabel(aCharset,
-                                             encoding)) {
-      // API argument failed. Try the type property of the blob.
-      nsAutoString type16;
-      aBlob->GetType(type16);
-      NS_ConvertUTF16toUTF8 type(type16);
-      nsAutoCString specifiedCharset;
-      bool haveCharset;
-      int32_t charsetStart, charsetEnd;
-      NS_ExtractCharsetFromContentType(type,
-                                       specifiedCharset,
-                                       &haveCharset,
-                                       &charsetStart,
-                                       &charsetEnd);
-      if (!EncodingUtils::FindEncodingForLabel(specifiedCharset, encoding)) {
-        // Type property failed. Use UTF-8.
-        encoding.AssignLiteral("UTF-8");
-      }
+  // Try the API argument.
+  const Encoding* encoding = Encoding::ForLabel(aCharset);
+  if (!encoding) {
+    // API argument failed. Try the type property of the blob.
+    nsAutoString type16;
+    aBlob->GetType(type16);
+    NS_ConvertUTF16toUTF8 type(type16);
+    nsAutoCString specifiedCharset;
+    bool haveCharset;
+    int32_t charsetStart, charsetEnd;
+    NS_ExtractCharsetFromContentType(type,
+                                     specifiedCharset,
+                                     &haveCharset,
+                                     &charsetStart,
+                                     &charsetEnd);
+    encoding = Encoding::ForLabel(specifiedCharset);
+    if (!encoding) {
+      // Type property failed. Use UTF-8.
+      encoding = UTF_8_ENCODING;
     }
   }
 
-  return nsContentUtils::ConvertStringFromEncoding(
-      encoding, aFileData, aDataLen, aResult);
+  auto data = MakeSpan(reinterpret_cast<const uint8_t*>(aFileData),
+                       aDataLen);
+  nsresult rv;
+  Tie(rv, encoding) = encoding->Decode(data, aResult);
+  return NS_FAILED(rv) ? rv : NS_OK;
 }
 
 nsresult
