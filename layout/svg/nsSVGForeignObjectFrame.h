@@ -82,8 +82,12 @@ public:
 
   nsRect GetInvalidRegion();
 
-  // Return our ::-moz-svg-foreign-content anonymous box.
-  void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
+  /**
+   * Update the style of our ::-moz-svg-foreign-content anonymous box.
+   */
+  void DoUpdateStyleOfOwnedAnonBoxes(mozilla::ServoStyleSet& aStyleSet,
+                                     nsStyleChangeList& aChangeList,
+                                     nsChangeHint aHintForThisFrame) override;
 
 protected:
   // implementation helpers:

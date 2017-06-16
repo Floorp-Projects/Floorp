@@ -572,8 +572,12 @@ nsSVGForeignObjectFrame::GetInvalidRegion()
 }
 
 void
-nsSVGForeignObjectFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
+nsSVGForeignObjectFrame::DoUpdateStyleOfOwnedAnonBoxes(
+  ServoStyleSet& aStyleSet,
+  nsStyleChangeList& aChangeList,
+  nsChangeHint aHintForThisFrame)
 {
   MOZ_ASSERT(PrincipalChildList().FirstChild(), "Must have our anon box");
-  aResult.AppendElement(OwnedAnonBox(this, PrincipalChildList().FirstChild()));
+  UpdateStyleOfChildAnonBox(PrincipalChildList().FirstChild(),
+                            aStyleSet, aChangeList, aHintForThisFrame);
 }
