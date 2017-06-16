@@ -119,7 +119,7 @@
 
 #PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"][animate] hbox[anonid="search-suggestions-hint-typing"] {
   overflow: hidden;
-  max-width: 8ch;
+  max-width: 12ch;
   width: 0;
   animation-name: search-suggestions-hint-typing;
   animation-duration: 500ms;
@@ -137,7 +137,7 @@
 
 @keyframes search-suggestions-hint-typing {
   from { width: 0; }
-  to   { width: 8ch; }
+  to   { width: 12ch; }
 }
 
 #PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"][animate] hbox[anonid="search-suggestions-hint-box"] {
