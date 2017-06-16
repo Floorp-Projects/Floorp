@@ -24,9 +24,13 @@ def test_output_pass(runtests):
     assert tbpl_status == TBPL_SUCCESS
     assert log_level in (INFO, WARNING)
 
+    test_status = filter_action('test_status', lines)
+    assert len(test_status) == 3
+    assert all(t['status'] == 'PASS' for t in test_status)
+
     test_end = filter_action('test_end', lines)
     assert len(test_end) == 3
-    assert all(t['status'] == 'PASS' for t in test_end)
+    assert all(t['status'] == 'OK' for t in test_end)
 
 
 def test_output_fail(runtests):
@@ -37,9 +41,13 @@ def test_output_fail(runtests):
     assert tbpl_status == TBPL_WARNING
     assert log_level == WARNING
 
+    test_status = filter_action('test_status', lines)
+    assert len(test_status) == 3
+    assert all(t['status'] == 'FAIL' for t in test_status)
+
     test_end = filter_action('test_end', lines)
     assert len(test_end) == 3
-    assert all(t['status'] == 'FAIL' for t in test_end)
+    assert all(t['status'] == 'OK' for t in test_end)
 
 
 @pytest.mark.skip_mozinfo("!crashreporter")
@@ -86,10 +94,13 @@ def test_output_assertion(runtests):
     assert tbpl_status == TBPL_WARNING
     assert log_level == WARNING
 
+    test_status = filter_action('test_status', lines)
+    assert len(test_status) == 1
+    assert test_status[0]['status'] == 'PASS'
+
     test_end = filter_action('test_end', lines)
     assert len(test_end) == 1
-    # TODO: this should be ASSERT
-    assert test_end[0]['status'] == 'PASS'
+    assert test_end[0]['status'] == 'OK'
 
     assertions = filter_action('assertion_count', lines)
     assert len(assertions) == 1
