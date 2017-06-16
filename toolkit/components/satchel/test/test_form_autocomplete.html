@@ -1038,12 +1038,12 @@ function addEntry(name, value) {
 
 // Runs the next test when scroll event occurs
 function waitForScroll() {
-  addEventListener("scroll", function() {
+  addEventListener("scroll", function listener() {
     if (!window.pageYOffset) {
       return;
     }
 
-    removeEventListener("scroll", arguments.callee, false);
+    removeEventListener("scroll", listener, false);
     setTimeout(runTest, 100);
   }, false);
 }
