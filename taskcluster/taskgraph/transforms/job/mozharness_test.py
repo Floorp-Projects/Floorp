@@ -55,6 +55,7 @@ def test_packages_url(taskdesc):
     return get_artifact_url(
         '<build>', 'public/build/{}.test_packages.json'.format(target))
 
+
 @run_job_using('docker-engine', 'mozharness-test', schema=mozharness_test_run_schema)
 @run_job_using('docker-worker', 'mozharness-test', schema=mozharness_test_run_schema)
 def mozharness_test_on_docker(config, job, taskdesc):
