@@ -420,7 +420,7 @@ NativeObject::copy(JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap,
     return obj;
 }
 
-inline void
+MOZ_ALWAYS_INLINE void
 NativeObject::setSlotWithType(JSContext* cx, Shape* shape,
                               const Value& value, bool overwriting)
 {

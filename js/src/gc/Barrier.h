@@ -685,7 +685,7 @@ class HeapSlot : public WriteBarrieredBase<Value>
                                                const Value& target) const;
 #endif
 
-    void set(NativeObject* owner, Kind kind, uint32_t slot, const Value& v) {
+    MOZ_ALWAYS_INLINE void set(NativeObject* owner, Kind kind, uint32_t slot, const Value& v) {
         MOZ_ASSERT(preconditionForSet(owner, kind, slot));
         pre();
         value = v;
