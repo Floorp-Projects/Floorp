@@ -9,6 +9,7 @@
 #include "nsFrameMessageManager.h"
 
 #include "ContentChild.h"
+#include "GeckoProfiler.h"
 #include "nsASCIIMask.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
@@ -1520,6 +1521,13 @@ void
 nsMessageManagerScriptExecutor::LoadScriptInternal(const nsAString& aURL,
                                                    bool aRunInGlobalScope)
 {
+#ifdef MOZ_GECKO_PROFILER
+  NS_LossyConvertUTF16toASCII urlCStr(aURL);
+  PROFILER_LABEL_DYNAMIC("nsMessageManagerScriptExecutor", "LoadScriptInternal",
+                          js::ProfileEntry::Category::OTHER,
+                          urlCStr.get());
+#endif
+
   if (!mGlobal || !sCachedScripts) {
     return;
   }
