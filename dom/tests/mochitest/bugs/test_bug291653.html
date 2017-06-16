@@ -25,13 +25,7 @@ var secondListenerDidRun = false;
 
 var w;
 function start() {
-  if ("showModalDialog" in window) {
-    w = window.open("file_bug291653.html", "foo", "width=300,height=300");
-  } else {
-    // window.showModalDialog doesn't exist in e10s mode, nothing to do in this test.
-    ok(true, "nothing to do in e10s mode");
-    SimpleTest.finish();
-  }
+  w = window.open("file_bug291653.html", "foo", "width=300,height=300");
 }
 
 function closeTest() {
@@ -48,7 +42,7 @@ function end() {
   setTimeout("closeTest()", 500);
 }
 
-start();
+SpecialPowers.pushPrefEnv({ set: [[ "dom.disable_window_showModalDialog", false ]] }, start);
 
 </script>
 </pre>

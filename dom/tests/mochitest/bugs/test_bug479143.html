@@ -18,25 +18,32 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479143
 
   SimpleTest.waitForExplicitFinish();
 
-  setTimeout(function() {
-    if ("showModalDialog" in window) {
-      var interval = setInterval(function() { var i = 0; i++; }, 10);
+  SpecialPowers.pushPrefEnv({ set: [[ "dom.disable_window_showModalDialog", false ]] }, doTest);
+  async function doTest() {
+    await SpecialPowers.pushPrefEnv({ set: [[ "dom.disable_window_showModalDialog", false ]] });
+    let iframe = document.createElement("iframe");
+    document.body.appendChild(iframe);
+    await new Promise(resolve => {
+      iframe.addEventListener("load", resolve);
+    });
+    window.showModalDialog = iframe.contentWindow.showModalDialog;
 
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", "test_bug479143.html", false);
-      xhr.send(null);
+    var interval = setInterval(function() { var i = 0; i++; }, 10);
 
-      window.showModalDialog("javascript:" +
-                             "setTimeout(function() { window.close(); }, 1000);",
-                             null);
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "test_bug479143.html", false);
+    xhr.send(null);
 
-      clearInterval(interval);
-    }
+    window.showModalDialog("javascript:" +
+                           "setTimeout(function() { window.close(); }, 1000);",
+                           null);
+
+    clearInterval(interval);
 
     ok(true, "did not crash");
 
     SimpleTest.finish();
-  }, 0);
+  }
 
 </script>
 </pre>
