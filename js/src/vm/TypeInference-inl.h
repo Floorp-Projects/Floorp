@@ -837,7 +837,7 @@ struct TypeHashSet
 
     // Lookup an entry in a hash set, return nullptr if it does not exist.
     template <class T, class U, class KEY>
-    static inline U*
+    static MOZ_ALWAYS_INLINE U*
     Lookup(U** values, unsigned count, T key)
     {
         if (count == 0)
@@ -1133,7 +1133,7 @@ ObjectGroup::getProperty(JSContext* cx, JSObject* obj, jsid id)
     return &base->types;
 }
 
-inline HeapTypeSet*
+MOZ_ALWAYS_INLINE HeapTypeSet*
 ObjectGroup::maybeGetProperty(jsid id)
 {
     MOZ_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id) || JSID_IS_SYMBOL(id));
