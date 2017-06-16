@@ -251,7 +251,7 @@ class GeckoInstance(object):
             "process_args": process_args
         }
 
-    def close(self, restart=False, clean=False):
+    def close(self, clean=False):
         """
         Close the managed Gecko process.
 
@@ -261,13 +261,14 @@ class GeckoInstance(object):
         :param restart: If True, assume this is being called by restart method.
         :param clean: If True, also perform runner cleanup.
         """
-        if not restart:
-            self.profile = None
-
         if self.runner:
             self.runner.stop()
             if clean:
                 self.runner.cleanup()
+
+        if clean and self.profile:
+            self.profile.cleanup()
+            self.profile = None
 
     def restart(self, prefs=None, clean=True):
         """
@@ -276,11 +277,7 @@ class GeckoInstance(object):
         :param prefs: Dictionary of preference names and values.
         :param clean: If True, reset the profile before starting.
         """
-        self.close(restart=True)
-
-        if clean and self.profile:
-            self.profile.cleanup()
-            self.profile = None
+        self.close(clean=clean)
 
         if prefs:
             self.prefs = prefs

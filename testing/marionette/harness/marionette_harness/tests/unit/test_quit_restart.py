@@ -70,6 +70,7 @@ class TestQuitRestart(MarionetteTestCase):
         MarionetteTestCase.setUp(self)
 
         self.pid = self.marionette.process_id
+        self.profile = self.marionette.profile
         self.session_id = self.marionette.session_id
 
         # Use a preference to check that the restart was successful. If its
@@ -98,12 +99,36 @@ class TestQuitRestart(MarionetteTestCase):
             Services.startup.quit(flags);
         """, script_args=(restart,))
 
-    def test_force_restart(self):
-        self.marionette.restart()
+    def test_force_clean_restart(self):
+        self.marionette.restart(clean=True)
+        self.assertNotEqual(self.marionette.profile, self.profile)
         self.assertEqual(self.marionette.session_id, self.session_id)
 
         # A forced restart will cause a new process id
         self.assertNotEqual(self.marionette.process_id, self.pid)
+        self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
+                            "about:")
+
+    def test_force_restart(self):
+        self.marionette.restart()
+        self.assertEqual(self.marionette.profile, self.profile)
+        self.assertEqual(self.marionette.session_id, self.session_id)
+
+        # A forced restart will cause a new process id
+        self.assertNotEqual(self.marionette.process_id, self.pid)
+        self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
+                            "about:")
+
+    def test_force_clean_quit(self):
+        self.marionette.quit(clean=True)
+
+        self.assertEqual(self.marionette.session, None)
+        with self.assertRaisesRegexp(errors.MarionetteException, "Please start a session"):
+            self.marionette.get_url()
+
+        self.marionette.start_session()
+        self.assertNotEqual(self.marionette.profile, self.profile)
+        self.assertNotEqual(self.marionette.session_id, self.session_id)
         self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
                             "about:")
 
@@ -115,12 +140,13 @@ class TestQuitRestart(MarionetteTestCase):
             self.marionette.get_url()
 
         self.marionette.start_session()
+        self.assertEqual(self.marionette.profile, self.profile)
         self.assertNotEqual(self.marionette.session_id, self.session_id)
         self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
                             "about:")
 
     @skip("Bug 1363368 - Wrong window handles after in_app restarts")
-    def test_in_app_clean_restart(self):
+    def test_no_in_app_clean_restart(self):
         # Test that in_app and clean cannot be used in combination
         with self.assertRaises(ValueError):
             self.marionette.restart(in_app=True, clean=True)
@@ -131,6 +157,7 @@ class TestQuitRestart(MarionetteTestCase):
             skip("Bug 1363368 - Wrong window handles after in_app restarts")
 
         self.marionette.restart(in_app=True)
+        self.assertEqual(self.marionette.profile, self.profile)
         self.assertEqual(self.marionette.session_id, self.session_id)
 
         # An in-app restart will keep the same process id only on Linux
@@ -150,6 +177,7 @@ class TestQuitRestart(MarionetteTestCase):
         self.marionette.restart(in_app=True,
                                 callback=lambda: self.shutdown(restart=True))
 
+        self.assertEqual(self.marionette.profile, self.profile)
         self.assertEqual(self.marionette.session_id, self.session_id)
 
         # An in-app restart will keep the same process id only on Linux
@@ -186,6 +214,7 @@ class TestQuitRestart(MarionetteTestCase):
             self.marionette.get_url()
 
         self.marionette.start_session()
+        self.assertEqual(self.marionette.profile, self.profile)
         self.assertNotEqual(self.marionette.session_id, self.session_id)
         self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
                             "about:")
@@ -201,6 +230,7 @@ class TestQuitRestart(MarionetteTestCase):
             self.marionette.get_url()
 
         self.marionette.start_session()
+        self.assertEqual(self.marionette.profile, self.profile)
         self.assertNotEqual(self.marionette.session_id, self.session_id)
         self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
                             "about:")
