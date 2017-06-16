@@ -3102,7 +3102,7 @@ GeckoDriver.prototype.receiveMessage = function (message) {
               "path": cookie.path,
               "host": cookie.host,
               "secure": cookie.isSecure,
-              "expiry": cookie.expires,
+              "expiry": cookie.expiry,
               "httpOnly": cookie.isHttpOnly,
               "originAttributes": cookie.originAttributes
             });
