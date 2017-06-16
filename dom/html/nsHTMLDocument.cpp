@@ -84,6 +84,7 @@
 
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/FallbackEncoding.h"
+#include "mozilla/Encoding.h"
 #include "mozilla/LoadInfo.h"
 #include "nsIEditingSession.h"
 #include "nsIEditor.h"
@@ -1358,8 +1359,7 @@ nsHTMLDocument::GetCookie(nsAString& aCookie, ErrorResult& rv)
     service->GetCookieString(codebaseURI, channel, getter_Copies(cookie));
     // CopyUTF8toUTF16 doesn't handle error
     // because it assumes that the input is valid.
-    nsContentUtils::ConvertStringFromEncoding(NS_LITERAL_CSTRING("UTF-8"),
-                                              cookie, aCookie);
+    UTF_8_ENCODING->DecodeWithoutBOMHandling(cookie, aCookie);
   }
 }
 
