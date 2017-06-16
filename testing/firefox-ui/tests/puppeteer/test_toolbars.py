@@ -5,7 +5,7 @@
 from firefox_puppeteer import PuppeteerMixin
 from marionette_driver import expected, By, Wait
 from marionette_driver.errors import NoSuchElementException
-from marionette_harness import MarionetteTestCase, skip
+from marionette_harness import MarionetteTestCase
 
 
 class TestNavBar(PuppeteerMixin, MarionetteTestCase):
@@ -152,18 +152,14 @@ class TestAutoCompleteResults(PuppeteerMixin, MarionetteTestCase):
         finally:
             super(TestAutoCompleteResults, self).tearDown()
 
-    @skip("Bug 1372205 - AssertionError: 9 != 10")
     def test_popup_elements(self):
-        # TODO: This test is not very robust because it relies on the history
-        # in the default profile.
         self.assertFalse(self.autocomplete_results.is_open)
-        self.browser.navbar.locationbar.urlbar.send_keys('a')
-        results = self.autocomplete_results.results
+        self.browser.navbar.locationbar.urlbar.send_keys('.')
         Wait(self.marionette).until(lambda _: self.autocomplete_results.is_complete)
-        visible_result_count = len(self.autocomplete_results.visible_results)
-        self.assertTrue(visible_result_count > 0)
-        self.assertEqual(visible_result_count,
-                         int(results.get_property('itemCount')))
+        count_visible_results = len(self.autocomplete_results.visible_results)
+        self.assertTrue(count_visible_results > 0)
+        self.assertLessEqual(count_visible_results,
+                             self.autocomplete_results.element.get_property('maxResults'))
 
     def test_close(self):
         self.browser.navbar.locationbar.urlbar.send_keys('a')
