@@ -152,11 +152,16 @@ MakeScreen(GdkScreen* aScreen, gint aMonitorNum)
     gdkScaleFactor * gfxPlatformGtk::GetFontScaleFactor());
 
   float dpi = 96.0f;
+  gint heightMM = gdk_screen_get_monitor_height_mm(aScreen, aMonitorNum);
+  if (heightMM > 0) {
+    dpi = rect.height / (heightMM / MM_PER_INCH_FLOAT);
+  }
+
   MOZ_LOG(sScreenLog, LogLevel::Debug,
-           ("New screen [%d %d %d %d (%d %d %d %d) %d %f %f]",
+           ("New screen [%d %d %d %d (%d %d %d %d) %d %f %f %f]",
             rect.x, rect.y, rect.width, rect.height,
             availRect.x, availRect.y, availRect.width, availRect.height,
-            pixelDepth, defaultCssScale.scale, dpi));
+            pixelDepth, contentsScale.scale, defaultCssScale.scale, dpi));
   RefPtr<Screen> screen = new Screen(rect, availRect,
                                      pixelDepth, pixelDepth,
                                      contentsScale, defaultCssScale,

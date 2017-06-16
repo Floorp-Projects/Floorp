@@ -804,13 +804,12 @@ nsWindow::GetParent(void)
 float
 nsWindow::GetDPI()
 {
-    GdkScreen *screen = gdk_display_get_default_screen(gdk_display_get_default());
-    double heightInches = gdk_screen_get_height_mm(screen)/MM_PER_INCH_FLOAT;
-    if (heightInches < 0.25) {
-        // Something's broken, but we'd better not crash.
-        return 96.0f;
+    float dpi = 96.0f;
+    nsCOMPtr<nsIScreen> screen = GetWidgetScreen();
+    if (screen) {
+        screen->GetDpi(&dpi);
     }
-    return float(gdk_screen_get_height(screen)/heightInches);
+    return dpi;
 }
 
 double
