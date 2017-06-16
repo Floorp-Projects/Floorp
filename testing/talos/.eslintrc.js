@@ -21,6 +21,7 @@ module.exports = {
     "TalosPowersContent": true,
     "TalosPowersParent": true,
     "TalosContentProfiler": true,
+    "TalosParentProfiler": true,
     "tpRecordTime": true
   },
 
