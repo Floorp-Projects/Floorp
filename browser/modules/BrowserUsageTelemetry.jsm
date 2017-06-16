@@ -9,6 +9,7 @@ this.EXPORTED_SYMBOLS = [
   "BrowserUsageTelemetry",
   "URLBAR_SELECTED_RESULT_TYPES",
   "URLBAR_SELECTED_RESULT_METHODS",
+  "MINIMUM_TAB_COUNT_INTERVAL_MS",
  ];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
@@ -85,6 +86,10 @@ const URLBAR_SELECTED_RESULT_METHODS = {
   enterSelection: 1,
   click: 2,
 };
+
+
+const MINIMUM_TAB_COUNT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes, in ms
+
 
 function getOpenTabsAndWinsCounts() {
   let tabCount = 0;
@@ -321,6 +326,8 @@ let urlbarListener = {
 
 let BrowserUsageTelemetry = {
   init() {
+    this._lastRecordTabCount = 0;
+
     urlbarListener.init();
     this._setupAfterRestore();
   },
@@ -649,7 +656,14 @@ let BrowserUsageTelemetry = {
     win.addEventListener("load", onLoad);
   },
 
-  _recordTabCount(tabCount = getTabCount()) {
-    Services.telemetry.getHistogramById("TAB_COUNT").add(tabCount);
-  },
+  _recordTabCount(tabCount) {
+    let currentTime = Date.now();
+    if (currentTime > this._lastRecordTabCount + MINIMUM_TAB_COUNT_INTERVAL_MS) {
+      if (tabCount === undefined) {
+        tabCount = getTabCount();
+      }
+      Services.telemetry.getHistogramById("TAB_COUNT").add(tabCount);
+      this._lastRecordTabCount = currentTime;
+    }
+  }
 };
