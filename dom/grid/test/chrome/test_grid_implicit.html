@@ -6,49 +6,49 @@
 <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 <style>
 body {
-	margin: 40px;
+  margin: 40px;
 }
 .wrapper {
-	display: grid;
-	grid-gap: 10px;
-	grid-auto-columns: 20px;
-	grid-auto-rows: 20px;
-	background-color: #f00;
+  display: grid;
+  grid-gap: 10px;
+  grid-auto-columns: 20px;
+  grid-auto-rows: 20px;
+  background-color: #f00;
 }
 
 .template1 {
-	grid-template-columns: 100px 50px 100px;
-	grid-template-rows: 50px [areaD-start middle] 50px [areaD-end];
-	grid-template-areas: "areaA areaA ....."
-						 "..... areaC areaC";
+  grid-template-columns: 100px 50px 100px;
+  grid-template-rows: 50px [areaD-start middle] 50px [areaD-end];
+  grid-template-areas: "areaA areaA ....."
+             "..... areaC areaC";
 }
 
 .template2 {
-	grid-template-areas: "..... areaA ......";
+  grid-template-areas: "..... areaA ......";
     grid-template-columns: [areaA-start] 50px 50px 50px;
 }
 
 .template3 {
-	grid-template-columns: [areaA-start areaB-end areaC-end areaD-start] 50px [areaA-end areaB-start areaC-start areaD-end];
-	grid-template-rows: [areaA-end areaB-start areaC-end] 50px [areaA-start areaB-end areaC-start];
+  grid-template-columns: [areaA-start areaB-end areaC-end areaD-start] 50px [areaA-end areaB-start areaC-start areaD-end];
+  grid-template-rows: [areaA-end areaB-start areaC-end] 50px [areaA-start areaB-end areaC-start];
 }
 
 .box {
-	background-color: #444;
-	color: #fff;
+  background-color: #444;
+  color: #fff;
 }
 .a {
-	grid-area: areaA;
+  grid-area: areaA;
 }
 .b {
-	grid-row: span got-this-name-implicitly / 2;
-	grid-column: areaA-end / span 2;
+  grid-row: span got-this-name-implicitly / 2;
+  grid-column: areaA-end / span 2;
 }
 .c {
-	grid-area: areaC;
+  grid-area: areaC;
 }
 .d {
-	grid-area: areaD;
+  grid-area: areaD;
 }
 </style>
 
@@ -58,193 +58,193 @@ body {
 SimpleTest.waitForExplicitFinish();
 
 function runTests() {
-	// test the first grid wrapper
-	let wrapper = document.getElementById("wrapper1");
-	let grid = wrapper.getGridFragments()[0];
-	
-	// test column and row line counts
-	is(grid.cols.lines.length, 6,
-		"Grid.cols.lines property has length that respects implicit expansion."
-	);
-	is(grid.rows.lines.length, 4,
-		"Grid.rows.lines property has length that respects implicit expansion."
-	);
+  // test the first grid wrapper
+  let wrapper = document.getElementById("wrapper1");
+  let grid = wrapper.getGridFragments()[0];
 
-	if ((grid.cols.lines.length == 6) &&
-	    (grid.rows.lines.length == 4)) {
+  // test column and row line counts
+  is(grid.cols.lines.length, 6,
+    "Grid.cols.lines property has length that respects implicit expansion."
+  );
+  is(grid.rows.lines.length, 4,
+    "Grid.rows.lines property has length that respects implicit expansion."
+  );
 
-		// test explicit / implicit lines
-		is(grid.cols.lines[0].type, "explicit", "Grid column line 1 is explicit.");
-		is(grid.cols.lines[4].type, "implicit", "Grid column line 5 is implicit.");
-		is(grid.cols.lines[5].type, "implicit", "Grid column line 6 is implicit.");
-		
-		is(grid.rows.lines[0].type, "implicit", "Grid row line 1 is implicit.");
-		is(grid.rows.lines[1].type, "explicit", "Grid row line 2 is explicit.");
-		is(grid.rows.lines[3].type, "explicit", "Grid row line 4 is explicit.");
-		
-		// test that row line 1 gets the name forced on it by placement of item B
-		todo_isnot(grid.rows.lines[0].names.indexOf("got-this-name-implicitly"), -1,
-			"Grid row line 1 has the name 'got-this-name-implicitly'."
-		);
-		
-		// test that row line 3 gets its explicit name
-		isnot(grid.rows.lines[2].names.indexOf("middle"), -1,
-			"Grid row line 3 has the name 'middle'."
-		);
-		
-		// test the names of the implicit column lines that were created for area 'areaD'
-		isnot(grid.cols.lines[4].names.indexOf("areaD-start"), -1,
-			"Grid column line 5 has the name 'areaD-start'."
-		);
-		isnot(grid.cols.lines[5].names.indexOf("areaD-end"), -1,
-			"Grid column line 6 has the name 'areaD-end'."
-		);
-	}
+  if ((grid.cols.lines.length == 6) &&
+      (grid.rows.lines.length == 4)) {
 
-	// test column and row track counts
-	is(grid.cols.tracks.length, 5,
-		"Grid.cols.tracks property has length that respects implicit expansion."
-	);
-	is(grid.rows.tracks.length, 3,
-		"Grid.rows.tracks property has length that respects implicit expansion."
-	);
+    // test explicit / implicit lines
+    is(grid.cols.lines[0].type, "explicit", "Grid column line 1 is explicit.");
+    is(grid.cols.lines[4].type, "implicit", "Grid column line 5 is implicit.");
+    is(grid.cols.lines[5].type, "implicit", "Grid column line 6 is implicit.");
 
-	if ((grid.cols.tracks.length == 5) &&
-	    (grid.rows.tracks.length == 3)) {
+    is(grid.rows.lines[0].type, "implicit", "Grid row line 1 is implicit.");
+    is(grid.rows.lines[1].type, "explicit", "Grid row line 2 is explicit.");
+    is(grid.rows.lines[3].type, "explicit", "Grid row line 4 is explicit.");
 
-		// test explicit / implicit tracks
-		is(grid.cols.tracks[0].type, "explicit", "Grid column track 1 is explicit.");
-		is(grid.cols.tracks[3].type, "implicit", "Grid column track 4 is implicit.");
-		is(grid.cols.tracks[4].type, "implicit", "Grid column track 5 is implicit.");
+    // test that row line 1 gets the name forced on it by placement of item B
+    todo_isnot(grid.rows.lines[0].names.indexOf("got-this-name-implicitly"), -1,
+      "Grid row line 1 has the name 'got-this-name-implicitly'."
+    );
 
-		is(grid.rows.tracks[0].type, "implicit", "Grid row track 1 is implicit.");
-		is(grid.rows.tracks[1].type, "explicit", "Grid row track 2 is explicit.");
-		is(grid.rows.tracks[2].type, "explicit", "Grid row track 3 is explicit.");
-	}
+    // test that row line 3 gets its explicit name
+    isnot(grid.rows.lines[2].names.indexOf("middle"), -1,
+      "Grid row line 3 has the name 'middle'."
+    );
 
-	// test area count
-	is(grid.areas.length, 3,
-		"Grid.areas property has length that respects implicit expansion."
-	);
+    // test the names of the implicit column lines that were created for area 'areaD'
+    isnot(grid.cols.lines[4].names.indexOf("areaD-start"), -1,
+      "Grid column line 5 has the name 'areaD-start'."
+    );
+    isnot(grid.cols.lines[5].names.indexOf("areaD-end"), -1,
+      "Grid column line 6 has the name 'areaD-end'."
+    );
+  }
 
-	for (var i = 0; i < grid.areas.length; i++) {
-		var area = grid.areas[i];
-		if (area.name == "areaD") {
-			is(area.type, "implicit", area.name + " is implicit.");
+  // test column and row track counts
+  is(grid.cols.tracks.length, 5,
+    "Grid.cols.tracks property has length that respects implicit expansion."
+  );
+  is(grid.rows.tracks.length, 3,
+    "Grid.rows.tracks property has length that respects implicit expansion."
+  );
 
-			// test lines of implicit areas
-			is(area.rowStart, 3, area.name + " has start row line of 3.");
-			is(area.rowEnd, 4, area.name + " has end row line of 4.");
-			is(area.columnStart, 5, area.name + " has start column line of 5.");
-			is(area.columnEnd, 6, area.name + " has end column line of 6.");
-		} else {
-			is(area.type, "explicit", area.name + " is explicit.");
-		}
-	}
-	
-	
-	// test the second grid wrapper
-	wrapper = document.getElementById("wrapper2");
-	grid = wrapper.getGridFragments()[0];
-	
-	// test column and row line counts
-	is(grid.cols.lines.length, 4,
-		"Grid.cols.lines property doesn't expand due to an explicit line declaration."
-	);
-	is(grid.rows.lines.length, 2,
-		"Grid.rows.lines property has length that respects implicit expansion."
-	);
-	
-	// test area count
-	is(grid.areas.length, 1,
-		"Grid.areas property has length that respects implicit expansion."
-	);
-	
-	for (var i = 0; i < grid.areas.length; i++) {
-		var area = grid.areas[i];
-		if (area.name == "areaA") {
-			is(area.type, "implicit", area.name + " is implicit.");
+  if ((grid.cols.tracks.length == 5) &&
+      (grid.rows.tracks.length == 3)) {
 
-			// test lines of implicit areas
-			is(area.rowStart, 1, area.name + " has start row line of 1.");
-			is(area.rowEnd, 2, area.name + " has end row line of 2.");
-			is(area.columnStart, 1, area.name + " has start column line of 1.");
-			is(area.columnEnd, 3, area.name + " has end column line of 3.");
-		}
-	}
-	
-	
-	// test the third grid wrapper
-	wrapper = document.getElementById("wrapper3");
-	grid = wrapper.getGridFragments()[0];
-	
-	// test column and row line counts
-	is(grid.cols.lines.length, 2,
-		"Grid.cols.lines property doesn't expand due to an explicit line declaration."
-	);
-	is(grid.rows.lines.length, 2,
-		"Grid.rows.lines property doesn't expand due to an explicit line declaration."
-	);
-	
-	if (grid.cols.lines.length == 2 && grid.rows.lines.length == 2) {
-		// check that areaC gets both the explicit line names and the implicit line names
-		isnot(grid.cols.lines[0].names.indexOf("areaC-start"), -1,
-			"Grid row line 1 has the name 'areaC-start'."
-		);
-		
-		isnot(grid.cols.lines[0].names.indexOf("areaC-end"), -1,
-			"Grid row line 1 has the name 'areaC-end'."
-		);
-		
-		isnot(grid.cols.lines[1].names.indexOf("areaC-start"), -1,
-			"Grid row line 2 has the name 'areaC-start'."
-		);
-		
-		isnot(grid.cols.lines[1].names.indexOf("areaC-end"), -1,
-			"Grid row line 2 has the name 'areaC-end'."
-		);
-	}
-	
-	// test area count
-	is(grid.areas.length, 4,
-		"Grid.areas property reports 4 areas."
-	);
-	
-	for (var i = 0; i < grid.areas.length; i++) {
-		var area = grid.areas[i];
-		if (area.name == "areaC") {
-			// test lines of implicit area
-			is(area.rowStart, 1, area.name + " has start row line of 1.");
-			is(area.rowEnd, 2, area.name + " has end row line of 2.");
-			is(area.columnStart, 1, area.name + " has start column line of 1.");
-			is(area.columnEnd, 2, area.name + " has end column line of 2.");
-		}
-	}
+    // test explicit / implicit tracks
+    is(grid.cols.tracks[0].type, "explicit", "Grid column track 1 is explicit.");
+    is(grid.cols.tracks[3].type, "implicit", "Grid column track 4 is implicit.");
+    is(grid.cols.tracks[4].type, "implicit", "Grid column track 5 is implicit.");
 
-	SimpleTest.finish();
+    is(grid.rows.tracks[0].type, "implicit", "Grid row track 1 is implicit.");
+    is(grid.rows.tracks[1].type, "explicit", "Grid row track 2 is explicit.");
+    is(grid.rows.tracks[2].type, "explicit", "Grid row track 3 is explicit.");
+  }
+
+  // test area count
+  is(grid.areas.length, 3,
+    "Grid.areas property has length that respects implicit expansion."
+  );
+
+  for (var i = 0; i < grid.areas.length; i++) {
+    var area = grid.areas[i];
+    if (area.name == "areaD") {
+      is(area.type, "implicit", area.name + " is implicit.");
+
+      // test lines of implicit areas
+      is(area.rowStart, 3, area.name + " has start row line of 3.");
+      is(area.rowEnd, 4, area.name + " has end row line of 4.");
+      is(area.columnStart, 5, area.name + " has start column line of 5.");
+      is(area.columnEnd, 6, area.name + " has end column line of 6.");
+    } else {
+      is(area.type, "explicit", area.name + " is explicit.");
+    }
+  }
+
+
+  // test the second grid wrapper
+  wrapper = document.getElementById("wrapper2");
+  grid = wrapper.getGridFragments()[0];
+
+  // test column and row line counts
+  is(grid.cols.lines.length, 4,
+    "Grid.cols.lines property doesn't expand due to an explicit line declaration."
+  );
+  is(grid.rows.lines.length, 2,
+    "Grid.rows.lines property has length that respects implicit expansion."
+  );
+
+  // test area count
+  is(grid.areas.length, 1,
+    "Grid.areas property has length that respects implicit expansion."
+  );
+
+  for (var i = 0; i < grid.areas.length; i++) {
+    var area = grid.areas[i];
+    if (area.name == "areaA") {
+      is(area.type, "implicit", area.name + " is implicit.");
+
+      // test lines of implicit areas
+      is(area.rowStart, 1, area.name + " has start row line of 1.");
+      is(area.rowEnd, 2, area.name + " has end row line of 2.");
+      is(area.columnStart, 1, area.name + " has start column line of 1.");
+      is(area.columnEnd, 3, area.name + " has end column line of 3.");
+    }
+  }
+
+
+  // test the third grid wrapper
+  wrapper = document.getElementById("wrapper3");
+  grid = wrapper.getGridFragments()[0];
+
+  // test column and row line counts
+  is(grid.cols.lines.length, 2,
+    "Grid.cols.lines property doesn't expand due to an explicit line declaration."
+  );
+  is(grid.rows.lines.length, 2,
+    "Grid.rows.lines property doesn't expand due to an explicit line declaration."
+  );
+
+  if (grid.cols.lines.length == 2 && grid.rows.lines.length == 2) {
+    // check that areaC gets both the explicit line names and the implicit line names
+    isnot(grid.cols.lines[0].names.indexOf("areaC-start"), -1,
+      "Grid row line 1 has the name 'areaC-start'."
+    );
+
+    isnot(grid.cols.lines[0].names.indexOf("areaC-end"), -1,
+      "Grid row line 1 has the name 'areaC-end'."
+    );
+
+    isnot(grid.cols.lines[1].names.indexOf("areaC-start"), -1,
+      "Grid row line 2 has the name 'areaC-start'."
+    );
+
+    isnot(grid.cols.lines[1].names.indexOf("areaC-end"), -1,
+      "Grid row line 2 has the name 'areaC-end'."
+    );
+  }
+
+  // test area count
+  is(grid.areas.length, 4,
+    "Grid.areas property reports 4 areas."
+  );
+
+  for (var i = 0; i < grid.areas.length; i++) {
+    var area = grid.areas[i];
+    if (area.name == "areaC") {
+      // test lines of implicit area
+      is(area.rowStart, 1, area.name + " has start row line of 1.");
+      is(area.rowEnd, 2, area.name + " has end row line of 2.");
+      is(area.columnStart, 1, area.name + " has start column line of 1.");
+      is(area.columnEnd, 2, area.name + " has end column line of 2.");
+    }
+  }
+
+  SimpleTest.finish();
 }
 </script>
 </head>
 <body onLoad="runTests();">
 
-	<div id="wrapper1" class="wrapper template1">
-		<div id="boxA" class="box a">A</div>
-		<div id="boxB" class="box b">B</div>
-		<div id="boxC" class="box c">C</div>
-		<div id="boxD" class="box d">D</div>
-	</div>
-	
-	<br/>
-	
-	<div id="wrapper2" class="wrapper template2">
-		<div id="boxA" class="box a">A</div>
-	</div>
-	
-	<br/>
-	
-	<div id="wrapper3" class="wrapper template3">
-		<div id="boxC" class="box c">C</div>
-	</div>
+  <div id="wrapper1" class="wrapper template1">
+    <div id="boxA" class="box a">A</div>
+    <div id="boxB" class="box b">B</div>
+    <div id="boxC" class="box c">C</div>
+    <div id="boxD" class="box d">D</div>
+  </div>
+
+  <br/>
+
+  <div id="wrapper2" class="wrapper template2">
+    <div id="boxA" class="box a">A</div>
+  </div>
+
+  <br/>
+
+  <div id="wrapper3" class="wrapper template3">
+    <div id="boxC" class="box c">C</div>
+  </div>
 
 </body>
 </html>
