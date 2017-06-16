@@ -201,7 +201,8 @@ XMLHttpRequestMainThread::XMLHttpRequestMainThread()
     mResultJSON(JS::UndefinedValue()),
     mResultArrayBuffer(nullptr),
     mIsMappedArrayBuffer(false),
-    mXPCOMifier(nullptr)
+    mXPCOMifier(nullptr),
+    mEventDispatchingSuspended(false)
 {
   mozilla::HoldJSObjects(this);
 }
@@ -1368,7 +1369,7 @@ XMLHttpRequestMainThread::FireReadystatechangeEvent()
   event->InitEvent(kLiteralString_readystatechange, false, false);
   // We assume anyone who managed to call CreateReadystatechangeEvent is trusted
   event->SetTrusted(true);
-  DispatchDOMEvent(nullptr, event, nullptr, nullptr);
+  DispatchOrStoreEvent(this, event);
   return NS_OK;
 }
 
@@ -1411,7 +1412,7 @@ XMLHttpRequestMainThread::DispatchProgressEvent(DOMEventTargetHelper* aTarget,
     ProgressEvent::Constructor(aTarget, typeString, init);
   event->SetTrusted(true);
 
-  aTarget->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
+  DispatchOrStoreEvent(aTarget, event);
 
   if (aType == ProgressEventType::progress) {
     mInLoadProgressEvent = false;
@@ -1431,6 +1432,45 @@ XMLHttpRequestMainThread::DispatchProgressEvent(DOMEventTargetHelper* aTarget,
   if (aType == ProgressEventType::load || aType == ProgressEventType::error ||
       aType == ProgressEventType::timeout || aType == ProgressEventType::abort) {
     DispatchProgressEvent(aTarget, ProgressEventType::loadend, aLoaded, aTotal);
+  }
+}
+
+void
+XMLHttpRequestMainThread::DispatchOrStoreEvent(DOMEventTargetHelper* aTarget,
+                                               Event* aEvent)
+{
+  MOZ_ASSERT(aTarget);
+  MOZ_ASSERT(aEvent);
+
+  if (mEventDispatchingSuspended) {
+    PendingEvent* event = mPendingEvents.AppendElement();
+    event->mTarget = aTarget;
+    event->mEvent = aEvent;
+    return;
+  }
+
+  aTarget->DispatchDOMEvent(nullptr, aEvent, nullptr, nullptr);
+}
+
+void
+XMLHttpRequestMainThread::SuspendEventDispatching()
+{
+  MOZ_ASSERT(!mEventDispatchingSuspended);
+  mEventDispatchingSuspended = true;
+}
+
+void
+XMLHttpRequestMainThread::ResumeEventDispatching()
+{
+  MOZ_ASSERT(mEventDispatchingSuspended);
+  mEventDispatchingSuspended = false;
+
+  nsTArray<PendingEvent> pendingEvents;
+  pendingEvents.SwapElements(mPendingEvents);
+
+  for (uint32_t i = 0; i < pendingEvents.Length(); ++i) {
+    pendingEvents[i].mTarget->
+      DispatchDOMEvent(nullptr, pendingEvents[i].mEvent, nullptr, nullptr);
   }
 }
 
@@ -2409,10 +2449,6 @@ XMLHttpRequestMainThread::ChangeStateToDone()
     mTimeoutTimer->Cancel();
   }
 
-  if (mFlagSynchronous) {
-    UnsuppressEventHandlingAndResume();
-  }
-
   // Per spec, fire the last download progress event, if any,
   // before readystatechange=4/done. (Note that 0-sized responses
   // will have not sent a progress event yet, so one must be sent here).
@@ -3033,6 +3069,7 @@ XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody)
       }
     }
 
+    SuspendEventDispatching();
     StopProgressEventTimer();
 
     SyncTimeoutType syncTimeoutType = MaybeStartSyncTimeoutTimer();
@@ -3056,6 +3093,7 @@ XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody)
     }
 
     UnsuppressEventHandlingAndResume();
+    ResumeEventDispatching();
   } else {
     // Now that we've successfully opened the channel, we can change state.  Note
     // that this needs to come after the AsyncOpen() and rv check, because this
