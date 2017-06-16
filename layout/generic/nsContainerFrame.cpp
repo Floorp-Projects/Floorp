@@ -340,10 +340,12 @@ nsContainerFrame::GetChildLists(nsTArray<ChildList>* aLists) const
     } else if (aProp == OverflowContainersProperty()) {
       MOZ_ASSERT(IsFrameOfType(nsIFrame::eCanContainOverflowContainers),
                  "found unexpected OverflowContainersProperty");
+      Unused << this; // silence clang -Wunused-lambda-capture in opt builds
       L(aValue)->AppendIfNonempty(aLists, kOverflowContainersList);
     } else if (aProp == ExcessOverflowContainersProperty()) {
       MOZ_ASSERT(IsFrameOfType(nsIFrame::eCanContainOverflowContainers),
                  "found unexpected ExcessOverflowContainersProperty");
+      Unused << this; // silence clang -Wunused-lambda-capture in opt builds
       L(aValue)->AppendIfNonempty(aLists, kExcessOverflowContainersList);
     } else if (aProp == BackdropProperty()) {
       L(aValue)->AppendIfNonempty(aLists, kBackdropList);
