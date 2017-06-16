@@ -39,6 +39,13 @@ public class ReferrerReceiver extends BroadcastReceiver {
     private static final String MOZILLA_UTM_SOURCE = "mozilla";
 
     /**
+     * If the install intent has this source, it is a referrer intent using our
+     * Adjust ID. It's treated as OTA and tracked using Adjust and
+     * Mozilla's metrics systems.
+     */
+    private static final String MOZILLA_ADJUST_SOURCE = "xodfft";
+
+    /**
      * If the install intent has this campaign, we'll load the specified distribution.
      */
     private static final String DISTRIBUTION_UTM_CAMPAIGN = "distribution";
@@ -54,7 +61,8 @@ public class ReferrerReceiver extends BroadcastReceiver {
         // Track the referrer object for distribution handling.
         ReferrerDescriptor referrer = new ReferrerDescriptor(intent.getStringExtra("referrer"));
 
-        if (!TextUtils.equals(referrer.source, MOZILLA_UTM_SOURCE)) {
+        if (!TextUtils.equals(referrer.source, MOZILLA_UTM_SOURCE) &&
+            !TextUtils.equals(referrer.source, MOZILLA_ADJUST_SOURCE)) {
             // Allow the Adjust handler to process the intent.
             try {
                 AdjustConstants.getAdjustHelper().onReceive(context, intent);
