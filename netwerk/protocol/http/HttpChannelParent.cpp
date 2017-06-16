@@ -7,7 +7,6 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
-#include "mozilla/AbstractThread.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/net/HttpChannelParent.h"
@@ -50,6 +49,7 @@
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
 #include "nsIStorageStream.h"
+#include "nsThreadUtils.h"
 #include "nsQueryObject.h"
 #include "nsIURIClassifier.h"
 
@@ -740,7 +740,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   ++mAsyncOpenBarrier;
   RefPtr<GenericPromise> promise = WaitForBgParent();
   RefPtr<HttpChannelParent> self = this;
-  promise->Then(AbstractThread::MainThread(), __func__,
+  promise->Then(GetMainThreadSerialEventTarget(), __func__,
                 [self]() {
                   self->mRequest.Complete();
                   self->TryInvokeAsyncOpen(NS_OK);
@@ -822,7 +822,7 @@ HttpChannelParent::ConnectChannel(const uint32_t& registrarId, const bool& shoul
   // Waiting for background channel
   RefPtr<GenericPromise> promise = WaitForBgParent();
   RefPtr<HttpChannelParent> self = this;
-  promise->Then(AbstractThread::MainThread(), __func__,
+  promise->Then(GetMainThreadSerialEventTarget(), __func__,
                 [self]() {
                   self->mRequest.Complete();
                 },
@@ -1044,7 +1044,7 @@ HttpChannelParent::ContinueVerification(nsIAsyncVerifyRedirectReadyCallback* aCa
   // Otherwise, wait for the background channel.
   RefPtr<GenericPromise> promise = WaitForBgParent();
   nsCOMPtr<nsIAsyncVerifyRedirectReadyCallback> callback = aCallback;
-  promise->Then(AbstractThread::MainThread(), __func__,
+  promise->Then(GetMainThreadSerialEventTarget(), __func__,
                 [callback]() {
                   callback->ReadyToVerify(NS_OK);
                 },

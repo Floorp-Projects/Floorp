@@ -916,6 +916,9 @@ nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  // TODO: Bug 1353683
+  // consider calling SetBlockedRequest in nsCORSListenerProxy::UpdateChannel
+  //
   // Check that the uri is ok to load
   rv = nsContentUtils::GetSecurityManager()->
     CheckLoadURIWithPrincipal(mRequestingPrincipal, uri,

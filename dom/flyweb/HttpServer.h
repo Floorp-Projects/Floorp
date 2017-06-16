@@ -20,10 +20,9 @@
 
 class nsIX509Cert;
 
+class nsISerialEventTarget;
+
 namespace mozilla {
-
-class AbstractThread;
-
 namespace dom {
 
 extern bool
@@ -47,7 +46,7 @@ class HttpServer final : public nsIServerSocketListener,
                          public nsILocalCertGetCallback
 {
 public:
-  explicit HttpServer(AbstractThread* aMainThread);
+  explicit HttpServer(nsISerialEventTarget* aEventTarget);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISERVERSOCKETLISTENER
@@ -187,7 +186,7 @@ private:
   int32_t mPort;
   bool mHttps;
 
-  const RefPtr<AbstractThread> mAbstractMainThread;
+  const nsCOMPtr<nsISerialEventTarget> mEventTarget;
 };
 
 } // namespace dom

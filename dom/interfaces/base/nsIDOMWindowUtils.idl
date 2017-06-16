@@ -920,7 +920,7 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   nsIDOMNodeList nodesFromRect(in float aX,
                                in float aY,
-                               in float aTopSize, 
+                               in float aTopSize,
                                in float aRightSize,
                                in float aBottomSize,
                                in float aLeftSize,
@@ -1408,7 +1408,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * error if there is no widget associated with this window.
    */
   readonly attribute AString layerManagerType;
-  
+
   /**
    * True if the layer manager for the widget associated with this window is
    * forwarding layers to a remote compositor, false otherwise. Throws an
@@ -1594,7 +1594,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * the bounds of the window. Always returns true in non-DEBUG builds.
    */
   boolean leafLayersPartitionWindow();
- 
+
   /**
    * Check if any PaintedLayer painting has been done for this element,
    * clears the painted flags if they have.
@@ -1729,7 +1729,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * Synchronously loads a style sheet from |sheetURI| and adds it to the list
    * of additional style sheets of the document.
    *
-   * These additional style sheets are very much like user/agent sheets loaded 
+   * These additional style sheets are very much like user/agent sheets loaded
    * with loadAndRegisterSheet. The only difference is that they are applied only
    * on the document owned by this window.
    *
@@ -1752,7 +1752,7 @@ interface nsIDOMWindowUtils : nsISupports {
   void addSheet(in nsIPreloadedStyleSheet sheet, in unsigned long type);
 
   /**
-   * Remove the document style sheet at |sheetURI| from the list of additional 
+   * Remove the document style sheet at |sheetURI| from the list of additional
    * style sheets of the document.  The removal takes effect immediately.
    */
   void removeSheet(in nsIURI sheetURI, in unsigned long type);
@@ -1932,6 +1932,11 @@ interface nsIDOMWindowUtils : nsISupports {
    * Decrease the chaos mode activation level. See enterChaosMode().
    */
   void leaveChaosMode();
+
+  /**
+   * Alerts Gecko of a device reset
+   */
+  void triggerDeviceReset();
 
   /**
    * Returns whether the document's style set's rule processor for the

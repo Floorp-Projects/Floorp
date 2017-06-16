@@ -104,6 +104,15 @@ interface nsIImageLoadingContent : imgINotificationObserver
   imgIRequest getRequest(in long aRequestType);
 
   /**
+   * Call this function when the request was blocked by any of the
+   * security policies enforced.
+   *
+   * @param aContentDecision the decision returned from nsIContentPolicy
+   *                         (any of the types REJECT_*)
+   */
+  void setBlockedRequest(in int16_t aContentDecision);
+
+  /**
    * @return true if the current request's size is available.
    */
   [noscript, notxpcom] boolean currentRequestHasSize();

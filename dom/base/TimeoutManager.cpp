@@ -129,11 +129,11 @@ TimeoutTelemetry::MaybeCollectTelemetry(TimeStamp aNow)
 static int32_t              gRunningTimeoutDepth       = 0;
 
 // The default shortest interval/timeout we permit
-#define DEFAULT_MIN_TIMEOUT_VALUE 4 // 4ms
+#define DEFAULT_MIN_CLAMP_TIMEOUT_VALUE 4 // 4ms
 #define DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE 1000 // 1000ms
 #define DEFAULT_MIN_TRACKING_TIMEOUT_VALUE 4 // 4ms
 #define DEFAULT_MIN_TRACKING_BACKGROUND_TIMEOUT_VALUE 1000 // 1000ms
-static int32_t gMinTimeoutValue = 0;
+static int32_t gMinClampTimeoutValue = 0;
 static int32_t gMinBackgroundTimeoutValue = 0;
 static int32_t gMinTrackingTimeoutValue = 0;
 static int32_t gMinTrackingBackgroundTimeoutValue = 0;
@@ -228,12 +228,27 @@ TimeoutManager::IsInvalidFiringId(uint32_t aFiringId) const
   return !mFiringIdStack.Contains(aFiringId);
 }
 
-int32_t
-TimeoutManager::DOMMinTimeoutValue(bool aIsTracking) const {
-  bool throttleTracking = aIsTracking && mThrottleTrackingTimeouts;
-  auto minValue = throttleTracking ? gMinTrackingTimeoutValue
-                                   : gMinTimeoutValue;
-  return minValue;
+// The number of nested timeouts before we start clamping. HTML5 says 1, WebKit
+// uses 5.
+#define DOM_CLAMP_TIMEOUT_NESTING_LEVEL 5
+
+TimeDuration
+TimeoutManager::CalculateDelay(Timeout* aTimeout) const {
+  MOZ_DIAGNOSTIC_ASSERT(aTimeout);
+  TimeDuration result = aTimeout->mInterval;
+
+  if (aTimeout->mIsInterval ||
+      aTimeout->mNestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
+    result = TimeDuration::Max(
+      result, TimeDuration::FromMilliseconds(gMinClampTimeoutValue));
+  }
+
+  if (aTimeout->mIsTracking && mThrottleTrackingTimeouts) {
+    result = TimeDuration::Max(
+      result, TimeDuration::FromMilliseconds(gMinTrackingTimeoutValue));
+  }
+
+  return result;
 }
 
 #define TRACKING_SEPARATE_TIMEOUT_BUCKETING_STRATEGY 0 // Consider all timeouts coming from tracking scripts as tracking
@@ -245,10 +260,6 @@ static int32_t gTimeoutBucketingStrategy = 0;
 
 #define DEFAULT_TRACKING_TIMEOUT_THROTTLING_DELAY  -1  // Only positive integers cause us to introduce a delay for tracking
                                                        // timeout throttling.
-
-// The number of nested timeouts before we start clamping. HTML5 says 1, WebKit
-// uses 5.
-#define DOM_CLAMP_TIMEOUT_NESTING_LEVEL 5
 
 // The longest interval (as PRIntervalTime) we permit, or that our
 // timer code can handle, really. See DELAY_INTERVAL_LIMIT in
@@ -299,9 +310,9 @@ TimeoutManager::~TimeoutManager()
 void
 TimeoutManager::Initialize()
 {
-  Preferences::AddIntVarCache(&gMinTimeoutValue,
+  Preferences::AddIntVarCache(&gMinClampTimeoutValue,
                               "dom.min_timeout_value",
-                              DEFAULT_MIN_TIMEOUT_VALUE);
+                              DEFAULT_MIN_CLAMP_TIMEOUT_VALUE);
   Preferences::AddIntVarCache(&gMinBackgroundTimeoutValue,
                               "dom.min_background_timeout_value",
                               DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE);
@@ -369,10 +380,14 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
   }
 
   RefPtr<Timeout> timeout = new Timeout();
+  timeout->mWindow = &mWindow;
   timeout->mIsInterval = aIsInterval;
-  timeout->mInterval = interval;
+  timeout->mInterval = TimeDuration::FromMilliseconds(interval);
   timeout->mScriptHandler = aHandler;
   timeout->mReason = aReason;
+
+  // No popups from timeouts by default
+  timeout->mPopupState = openAbused;
 
   switch (gTimeoutBucketingStrategy) {
   default:
@@ -411,21 +426,14 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
     break;
   }
 
-  // Now clamp the actual interval we will use for the timer based on
   uint32_t nestingLevel = sNestingLevel + 1;
-  uint32_t realInterval = interval;
-  if (aIsInterval || nestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL ||
-      timeout->mIsTracking) {
-    // Don't allow timeouts less than DOMMinTimeoutValue() from
-    // now...
-    realInterval = std::max(realInterval,
-                            uint32_t(DOMMinTimeoutValue(timeout->mIsTracking)));
+  if (!aIsInterval) {
+    timeout->mNestingLevel = nestingLevel;
   }
 
-  timeout->mWindow = &mWindow;
-
-  TimeDuration delta = TimeDuration::FromMilliseconds(realInterval);
-  timeout->SetWhenOrTimeRemaining(TimeStamp::Now(), delta);
+  // Now clamp the actual interval we will use for the timer based on
+  TimeDuration realInterval = CalculateDelay(timeout);
+  timeout->SetWhenOrTimeRemaining(TimeStamp::Now(), realInterval);
 
   // If we're not suspended, then set the timer.
   if (!mWindow.IsSuspended()) {
@@ -435,13 +443,6 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
       return rv;
     }
   }
-
-  if (!aIsInterval) {
-    timeout->mNestingLevel = nestingLevel;
-  }
-
-  // No popups from timeouts by default
-  timeout->mPopupState = openAbused;
 
   if (gRunningTimeoutDepth == 0 &&
       mWindow.GetPopupControlState() < openAbused) {
@@ -474,15 +475,15 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
 
   MOZ_LOG(gLog, LogLevel::Debug,
           ("Set%s(TimeoutManager=%p, timeout=%p, delay=%i, "
-           "minimum=%i, throttling=%s, background=%d, realInterval=%i) "
+           "minimum=%f, throttling=%s, background=%d, realInterval=%f) "
            "returned %stracking timeout ID %u\n",
            aIsInterval ? "Interval" : "Timeout",
            this, timeout.get(), interval,
-           DOMMinTimeoutValue(timeout->mIsTracking),
+           (CalculateDelay(timeout) - timeout->mInterval).ToMilliseconds(),
            mThrottleTrackingTimeouts ? "yes"
                                      : (mThrottleTrackingTimeoutsTimer ?
                                           "pending" : "no"),
-           int(IsBackground()), realInterval,
+           int(IsBackground()), realInterval.ToMilliseconds(),
            timeout->mIsTracking ? "" : "non-",
            timeout->mTimeoutId));
 
@@ -803,11 +804,8 @@ TimeoutManager::RescheduleTimeout(Timeout* aTimeout, const TimeStamp& now)
   }
 
   // Compute time to next timeout for interval timer.
-  // Make sure nextInterval is at least DOMMinTimeoutValue().
-  TimeDuration nextInterval =
-    TimeDuration::FromMilliseconds(
-        std::max(aTimeout->mInterval,
-                 uint32_t(DOMMinTimeoutValue(aTimeout->mIsTracking))));
+  // Make sure nextInterval is at least CalculateDelay().
+  TimeDuration nextInterval = CalculateDelay(aTimeout);
 
   TimeStamp firingTime = now + nextInterval;
 
@@ -981,28 +979,10 @@ TimeoutManager::Resume()
     MaybeStartThrottleTrackingTimout();
   }
 
-  TimeStamp now = TimeStamp::Now();
-  TimeStamp nextWakeUp;
-
-  ForEachUnorderedTimeout([&](Timeout* aTimeout) {
-    // The timeout When() is set to the absolute time when the timer should
-    // fire.  Recalculate the delay from now until that deadline.  If the
-    // the deadline has already passed or falls within our minimum delay
-    // deadline, then clamp the resulting value to the minimum delay.
-    int32_t remaining = 0;
-    if (aTimeout->When() > now) {
-      remaining = static_cast<int32_t>((aTimeout->When() - now).ToMilliseconds());
-    }
-    uint32_t delay = std::max(remaining, DOMMinTimeoutValue(aTimeout->mIsTracking));
-    aTimeout->SetWhenOrTimeRemaining(now, TimeDuration::FromMilliseconds(delay));
-
-    if (nextWakeUp.IsNull() || aTimeout->When() < nextWakeUp) {
-      nextWakeUp = aTimeout->When();
-    }
-  });
-
-  if (!nextWakeUp.IsNull()) {
-    MOZ_ALWAYS_SUCCEEDS(mExecutor->MaybeSchedule(nextWakeUp,
+  OrderedTimeoutIterator iter(mNormalTimeouts, mTrackingTimeouts);
+  Timeout* nextTimeout = iter.Next();
+  if (nextTimeout) {
+    MOZ_ALWAYS_SUCCEEDS(mExecutor->MaybeSchedule(nextTimeout->When(),
                                                  MinSchedulingDelay()));
   }
 }
