@@ -10,16 +10,18 @@
 #include "Layers.h"
 #include "mozilla/Sprintf.h"
 
+using namespace mozilla;
+
 ProfilerMarkerPayload::ProfilerMarkerPayload(UniqueProfilerBacktrace aStack)
-  : mStack(mozilla::Move(aStack))
+  : mStack(Move(aStack))
 {}
 
-ProfilerMarkerPayload::ProfilerMarkerPayload(const mozilla::TimeStamp& aStartTime,
-                                             const mozilla::TimeStamp& aEndTime,
+ProfilerMarkerPayload::ProfilerMarkerPayload(const TimeStamp& aStartTime,
+                                             const TimeStamp& aEndTime,
                                              UniqueProfilerBacktrace aStack)
   : mStartTime(aStartTime)
   , mEndTime(aEndTime)
-  , mStack(mozilla::Move(aStack))
+  , mStack(Move(aStack))
 {}
 
 ProfilerMarkerPayload::~ProfilerMarkerPayload()
@@ -65,7 +67,7 @@ ProfilerMarkerTracing::ProfilerMarkerTracing(const char* aCategory,
   , mKind(aKind)
 {
   if (aCause) {
-    SetStack(mozilla::Move(aCause));
+    SetStack(Move(aCause));
   }
 }
 
@@ -88,8 +90,8 @@ ProfilerMarkerTracing::StreamPayload(SpliceableJSONWriter& aWriter,
 }
 
 GPUMarkerPayload::GPUMarkerPayload(
-  const mozilla::TimeStamp& aCpuTimeStart,
-  const mozilla::TimeStamp& aCpuTimeEnd,
+  const TimeStamp& aCpuTimeStart,
+  const TimeStamp& aCpuTimeEnd,
   uint64_t aGpuTimeStart,
   uint64_t aGpuTimeEnd)
 
@@ -132,11 +134,10 @@ ProfilerMarkerImagePayload::StreamPayload(SpliceableJSONWriter& aWriter,
 
 IOMarkerPayload::IOMarkerPayload(const char* aSource,
                                  const char* aFilename,
-                                 const mozilla::TimeStamp& aStartTime,
-                                 const mozilla::TimeStamp& aEndTime,
+                                 const TimeStamp& aStartTime,
+                                 const TimeStamp& aEndTime,
                                  UniqueProfilerBacktrace aStack)
-  : ProfilerMarkerPayload(aStartTime, aEndTime,
-                          mozilla::Move(aStack)),
+  : ProfilerMarkerPayload(aStartTime, aEndTime, Move(aStack)),
     mSource(aSource)
 {
   mFilename = aFilename ? strdup(aFilename) : nullptr;
@@ -160,7 +161,7 @@ IOMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
 }
 
 UserTimingMarkerPayload::UserTimingMarkerPayload(const nsAString& aName,
-                                                 const mozilla::TimeStamp& aStartTime)
+                                                 const TimeStamp& aStartTime)
   : ProfilerMarkerPayload(aStartTime, aStartTime, nullptr)
   , mEntryType("mark")
   , mName(aName)
@@ -168,8 +169,8 @@ UserTimingMarkerPayload::UserTimingMarkerPayload(const nsAString& aName,
 }
 
 UserTimingMarkerPayload::UserTimingMarkerPayload(const nsAString& aName,
-                                                 const mozilla::TimeStamp& aStartTime,
-                                                 const mozilla::TimeStamp& aEndTime)
+                                                 const TimeStamp& aStartTime,
+                                                 const TimeStamp& aEndTime)
   : ProfilerMarkerPayload(aStartTime, aEndTime, nullptr)
   , mEntryType("measure")
   , mName(aName)
@@ -191,8 +192,8 @@ UserTimingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
 }
 
 DOMEventMarkerPayload::DOMEventMarkerPayload(const nsAString& aType, uint16_t aPhase,
-                                             const mozilla::TimeStamp& aStartTime,
-                                             const mozilla::TimeStamp& aEndTime)
+                                             const TimeStamp& aStartTime,
+                                             const TimeStamp& aEndTime)
   : ProfilerMarkerPayload(aStartTime, aEndTime, nullptr)
   , mType(aType)
   , mPhase(aPhase)
@@ -219,9 +220,9 @@ ProfilerJSEventMarker(const char *event)
     PROFILER_MARKER(event);
 }
 
-LayerTranslationPayload::LayerTranslationPayload(mozilla::layers::Layer* aLayer,
-                                                 mozilla::gfx::Point aPoint)
-  : ProfilerMarkerPayload(mozilla::TimeStamp::Now(), mozilla::TimeStamp::Now(), nullptr)
+LayerTranslationPayload::LayerTranslationPayload(layers::Layer* aLayer,
+                                                 gfx::Point aPoint)
+  : ProfilerMarkerPayload(TimeStamp::Now(), TimeStamp::Now(), nullptr)
   , mLayer(aLayer)
   , mPoint(aPoint)
 {
@@ -242,8 +243,8 @@ LayerTranslationPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.StringProperty("category", "LayerTranslation");
 }
 
-TouchDataPayload::TouchDataPayload(const mozilla::ScreenIntPoint& aPoint)
-  : ProfilerMarkerPayload(mozilla::TimeStamp::Now(), mozilla::TimeStamp::Now(), nullptr)
+TouchDataPayload::TouchDataPayload(const ScreenIntPoint& aPoint)
+  : ProfilerMarkerPayload(TimeStamp::Now(), TimeStamp::Now(), nullptr)
 {
   mPoint = aPoint;
 }
@@ -257,7 +258,7 @@ TouchDataPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.IntProperty("y", mPoint.y);
 }
 
-VsyncPayload::VsyncPayload(mozilla::TimeStamp aVsyncTimestamp)
+VsyncPayload::VsyncPayload(TimeStamp aVsyncTimestamp)
   : ProfilerMarkerPayload(aVsyncTimestamp, aVsyncTimestamp, nullptr)
   , mVsyncTimestamp(aVsyncTimestamp)
 {
@@ -275,7 +276,7 @@ VsyncPayload::StreamPayload(SpliceableJSONWriter& aWriter,
 
 void
 GCSliceMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                    const mozilla::TimeStamp& aProcessStartTime,
+                                    const TimeStamp& aProcessStartTime,
                                     UniqueStacks& aUniqueStacks)
 {
   MOZ_ASSERT(mTimingJSON);
@@ -289,7 +290,7 @@ GCSliceMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
 
 void
 GCMajorMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                    const mozilla::TimeStamp& aProcessStartTime,
+                                    const TimeStamp& aProcessStartTime,
                                     UniqueStacks& aUniqueStacks)
 {
   MOZ_ASSERT(mTimingJSON);
@@ -303,7 +304,7 @@ GCMajorMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
 
 void
 GCMinorMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                    const mozilla::TimeStamp& aProcessStartTime,
+                                    const TimeStamp& aProcessStartTime,
                                     UniqueStacks& aUniqueStacks)
 {
   MOZ_ASSERT(mTimingData);
