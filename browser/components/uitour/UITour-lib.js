@@ -556,6 +556,8 @@ if (typeof Mozilla == "undefined") {
    * is a string, begins with "utm_" and contains only only alphanumeric
    * characters, dashes or underscores. The values may be any string and will
    * automatically be encoded.
+   * @param {String} email - A string containing the default email account
+   * for the URL opened by the browser.
    * @since 31, 47 for `extraURLCampaignParams`
    * @example
    * // Will open about:accounts?action=signup&entrypoint=uitour
@@ -567,10 +569,15 @@ if (typeof Mozilla == "undefined") {
    *   'utm_foo': 'bar',
    *   'utm_bar': 'baz'
    * });
+   * @example
+   * // Will open:
+   * // about:accounts?action=signup&entrypoint=uitour&email=foo%40bar.com
+   * Mozilla.UITour.showFirefoxAccounts(null, "foo@bar.com");
    */
-  Mozilla.UITour.showFirefoxAccounts = function(extraURLCampaignParams) {
+  Mozilla.UITour.showFirefoxAccounts = function(extraURLCampaignParams, email) {
     _sendEvent("showFirefoxAccounts", {
       extraURLCampaignParams: JSON.stringify(extraURLCampaignParams),
+      email
     });
   };
 
