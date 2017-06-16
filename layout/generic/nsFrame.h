@@ -701,13 +701,6 @@ protected:
   // Fire DOM event. If no aContent argument use frame's mContent.
   void FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent = nullptr);
 
-  // A helper for implementing UpdateStyleOfOwnedAnonBoxes for the specific case
-  // of the owned anon box being a child of this frame.
-  void UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
-                                 mozilla::ServoStyleSet& aStyleSet,
-                                 nsStyleChangeList& aChangeList,
-                                 nsChangeHint aHintForThisFrame);
-
 private:
   void BoxReflow(nsBoxLayoutState& aState,
                  nsPresContext*    aPresContext,
