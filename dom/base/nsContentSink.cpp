@@ -339,17 +339,6 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
       return rv;
     }
   }
-  else if (aHeader == nsGkAtoms::msthemecompatible) {
-    // Disable theming for the presshell if the value is no.
-    // XXXbz don't we want to support this as an HTTP header too?
-    nsAutoString value(aValue);
-    if (value.LowerCaseEqualsLiteral("no")) {
-      nsIPresShell* shell = mDocument->GetShell();
-      if (shell) {
-        shell->DisableThemeSupport();
-      }
-    }
-  }
 
   return rv;
 }
