@@ -1260,7 +1260,10 @@ nsColumnSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 void
-nsColumnSetFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
+nsColumnSetFrame::DoUpdateStyleOfOwnedAnonBoxes(
+    mozilla::ServoStyleSet& aStyleSet,
+    nsStyleChangeList& aChangeList,
+    nsChangeHint aHintForThisFrame)
 {
   // Everything in mFrames is continuations of the first thing in mFrames.
   nsIFrame* column = mFrames.FirstChild();
@@ -1273,7 +1276,7 @@ nsColumnSetFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
   MOZ_ASSERT(column->StyleContext()->GetPseudo() ==
                nsCSSAnonBoxes::columnContent,
              "What sort of child is this?");
-  aResult.AppendElement(OwnedAnonBox(column));
+  UpdateStyleOfChildAnonBox(column, aStyleSet, aChangeList, aHintForThisFrame);
 }
 
 #ifdef DEBUG
