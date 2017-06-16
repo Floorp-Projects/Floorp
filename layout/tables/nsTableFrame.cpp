@@ -8001,31 +8001,19 @@ nsTableFrame::InvalidateTableFrame(nsIFrame* aFrame,
 }
 
 void
-nsTableFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
+nsTableFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoStyleSet& aStyleSet,
+                                            nsStyleChangeList& aChangeList,
+                                            nsChangeHint aHintForThisFrame)
 {
   nsIFrame* wrapper = GetParent();
-  MOZ_ASSERT(wrapper->StyleContext()->GetPseudo() ==
-               nsCSSAnonBoxes::tableWrapper,
-             "What happened to our parent?");
-  aResult.AppendElement(
-    OwnedAnonBox(this, wrapper, &UpdateStyleOfOwnedAnonBoxesForTableWrapper));
-}
 
-/* static */ void
-nsTableFrame::UpdateStyleOfOwnedAnonBoxesForTableWrapper(
-    nsIFrame* aOwningFrame,
-    nsIFrame* aWrapperFrame,
-    ServoStyleSet& aStyleSet,
-    nsStyleChangeList& aChangeList,
-    nsChangeHint aHintForThisFrame)
-{
-  MOZ_ASSERT(aWrapperFrame->StyleContext()->GetPseudo() ==
+  MOZ_ASSERT(wrapper->StyleContext()->GetPseudo() ==
                nsCSSAnonBoxes::tableWrapper,
              "What happened to our parent?");
 
   RefPtr<nsStyleContext> newContext =
     aStyleSet.ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::tableWrapper,
-                                                 aOwningFrame->StyleContext());
+                                                 StyleContext());
 
   // Figure out whether we have an actual change.  It's important that we do
   // this, even though all the wrapper's changes are due to properties it
@@ -8033,19 +8021,18 @@ nsTableFrame::UpdateStyleOfOwnedAnonBoxesForTableWrapper(
   // style structs and hence changes to them aren't reflected in
   // aHintForThisFrame at all.
   uint32_t equalStructs, samePointerStructs; // Not used, actually.
-  nsChangeHint wrapperHint = aWrapperFrame->StyleContext()->CalcStyleDifference(
+  nsChangeHint wrapperHint = wrapper->StyleContext()->CalcStyleDifference(
     newContext,
     &equalStructs,
     &samePointerStructs);
   if (wrapperHint) {
-    aChangeList.AppendChange(aWrapperFrame, aWrapperFrame->GetContent(),
-                             wrapperHint);
+    aChangeList.AppendChange(wrapper, wrapper->GetContent(), wrapperHint);
   }
 
-  for (nsIFrame* cur = aWrapperFrame; cur; cur = cur->GetNextContinuation()) {
+  for (nsIFrame* cur = wrapper; cur; cur = cur->GetNextContinuation()) {
     cur->SetStyleContext(newContext);
   }
 
-  MOZ_ASSERT(!(aWrapperFrame->GetStateBits() & NS_FRAME_OWNS_ANON_BOXES),
+  MOZ_ASSERT(!(wrapper->GetStateBits() & NS_FRAME_OWNS_ANON_BOXES),
              "Wrapper frame doesn't have any anon boxes of its own!");
 }

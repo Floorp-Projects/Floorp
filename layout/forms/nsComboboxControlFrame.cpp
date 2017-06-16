@@ -1189,10 +1189,15 @@ nsComboboxControlFrame::GetContentInsertionFrame() {
 }
 
 void
-nsComboboxControlFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
+nsComboboxControlFrame::DoUpdateStyleOfOwnedAnonBoxes(
+  ServoStyleSet& aStyleSet,
+  nsStyleChangeList& aChangeList,
+  nsChangeHint aHintForThisFrame)
 {
-  aResult.AppendElement(OwnedAnonBox(this, mDropdownFrame));
-  aResult.AppendElement(OwnedAnonBox(this, mDisplayFrame));
+  UpdateStyleOfChildAnonBox(mDropdownFrame, aStyleSet, aChangeList,
+                            aHintForThisFrame);
+  UpdateStyleOfChildAnonBox(mDisplayFrame, aStyleSet, aChangeList,
+                            aHintForThisFrame);
 }
 
 nsresult
