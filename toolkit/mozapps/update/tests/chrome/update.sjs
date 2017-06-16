@@ -116,8 +116,6 @@ function handleRequest(aRequest, aResponse) {
     size = SIZE_SIMPLE_MAR + (params.invalidCompleteSize ? "1" : "");
     let patchProps = {type: "complete",
                       url: url,
-                      hashFunction: "SHA512",
-                      hashValue: SHA512_HASH_SIMPLE_MAR,
                       size: size};
     patches += getRemotePatchString(patchProps);
   }
@@ -126,8 +124,6 @@ function handleRequest(aRequest, aResponse) {
     size = SIZE_SIMPLE_MAR + (params.invalidPartialSize ? "1" : "");
     let patchProps = {type: "partial",
                       url: url,
-                      hashFunction: "SHA512",
-                      hashValue: SHA512_HASH_SIMPLE_MAR,
                       size: size};
     patches += getRemotePatchString(patchProps);
   }

@@ -1325,7 +1325,6 @@ XPCOMUtils.defineLazyGetter(this, "gInstallDirPathHash", function test_gIDPH() {
     do_throw("Windows only function called by a different platform!");
   }
 
-  // Figure out where we should check for a cached hash value
   if (!MOZ_APP_BASENAME) {
     return null;
   }
