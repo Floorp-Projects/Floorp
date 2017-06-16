@@ -735,6 +735,8 @@ public:
 
   // XPCOM GetCustomVisibility() is OK
 
+  already_AddRefed<nsINodeList> GetLabels();
+
   // XPCOM Select() is OK
 
   Nullable<uint32_t> GetSelectionStart(ErrorResult& aRv);
