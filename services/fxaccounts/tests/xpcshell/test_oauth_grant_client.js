@@ -106,14 +106,13 @@ add_test(function parseErrorResponse() {
   client._Request = new mockResponse(response);
   client.getTokenFromAssertion("assertion", "scope")
     .catch(function(e) {
-        do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
-        do_check_eq(e.code, STATUS_SUCCESS);
-        do_check_eq(e.errno, ERRNO_PARSE);
-        do_check_eq(e.error, ERROR_PARSE);
-        do_check_eq(e.message, "unexpected");
-        run_next_test();
-      }
-    );
+      do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
+      do_check_eq(e.code, STATUS_SUCCESS);
+      do_check_eq(e.errno, ERRNO_PARSE);
+      do_check_eq(e.error, ERROR_PARSE);
+      do_check_eq(e.message, "unexpected");
+      run_next_test();
+    });
 });
 
 add_test(function serverErrorResponse() {
@@ -132,8 +131,7 @@ add_test(function serverErrorResponse() {
       do_check_eq(e.error, "Bad Request");
       do_check_eq(e.message, "Unauthorized");
       run_next_test();
-    }
-  );
+    });
 });
 
 add_test(function networkErrorResponse() {
@@ -144,13 +142,12 @@ add_test(function networkErrorResponse() {
   Services.prefs.setBoolPref("identity.fxaccounts.skipDeviceRegistration", true);
   client.getTokenFromAssertion("assertion", "scope")
     .catch(function(e) {
-        do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
-        do_check_eq(e.code, null);
-        do_check_eq(e.errno, ERRNO_NETWORK);
-        do_check_eq(e.error, ERROR_NETWORK);
-        run_next_test();
-      }
-    ).catch(() => {}).then(() =>
+      do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
+      do_check_eq(e.code, null);
+      do_check_eq(e.errno, ERRNO_NETWORK);
+      do_check_eq(e.error, ERROR_NETWORK);
+      run_next_test();
+    }).catch(() => {}).then(() =>
       Services.prefs.clearUserPref("identity.fxaccounts.skipDeviceRegistration"));
 });
 
@@ -159,14 +156,13 @@ add_test(function unsupportedMethod() {
 
   return client._createRequest("/", "PUT")
     .catch(function(e) {
-        do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
-        do_check_eq(e.code, ERROR_CODE_METHOD_NOT_ALLOWED);
-        do_check_eq(e.errno, ERRNO_NETWORK);
-        do_check_eq(e.error, ERROR_NETWORK);
-        do_check_eq(e.message, ERROR_MSG_METHOD_NOT_ALLOWED);
-        run_next_test();
-      }
-    );
+      do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
+      do_check_eq(e.code, ERROR_CODE_METHOD_NOT_ALLOWED);
+      do_check_eq(e.errno, ERRNO_NETWORK);
+      do_check_eq(e.error, ERROR_NETWORK);
+      do_check_eq(e.message, ERROR_MSG_METHOD_NOT_ALLOWED);
+      run_next_test();
+    });
 });
 
 add_test(function onCompleteRequestError() {
@@ -174,14 +170,13 @@ add_test(function onCompleteRequestError() {
   client._Request = new mockResponseError(new Error("onComplete error"));
   client.getTokenFromAssertion("assertion", "scope")
     .catch(function(e) {
-        do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
-        do_check_eq(e.code, null);
-        do_check_eq(e.errno, ERRNO_NETWORK);
-        do_check_eq(e.error, ERROR_NETWORK);
-        do_check_eq(e.message, "Error: onComplete error");
-        run_next_test();
-      }
-  );
+      do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
+      do_check_eq(e.code, null);
+      do_check_eq(e.errno, ERRNO_NETWORK);
+      do_check_eq(e.error, ERROR_NETWORK);
+      do_check_eq(e.message, "Error: onComplete error");
+      run_next_test();
+    });
 });
 
 add_test(function incorrectErrno() {
@@ -200,8 +195,7 @@ add_test(function incorrectErrno() {
       do_check_eq(e.error, "Bad Request");
       do_check_eq(e.message, "Unauthorized");
       run_next_test();
-    }
-  );
+    });
 });
 
 add_test(function constructorTests() {
