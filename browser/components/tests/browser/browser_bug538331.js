@@ -25,9 +25,8 @@ const XML_PREFIX =  "<updates xmlns=\"http://www.mozilla.org/2005/app-update\"" 
                     "foregroundDownload=\"true\"";
 
 const XML_SUFFIX = "><patch type=\"complete\" URL=\"http://example.com/\" " +
-                   "hashFunction=\"MD5\" hashValue=" +
-                   "\"6232cd43a1c77e30191c53a329a3f99d\" size=\"775\" " +
-                   "selected=\"true\" state=\"succeeded\"/></update></updates>";
+                   "size=\"775\" selected=\"true\" state=\"succeeded\"/>" +
+                   "</update></updates>";
 
 // nsBrowserContentHandler.js defaultArgs tests
 const BCH_TESTS = [

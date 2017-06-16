@@ -15,16 +15,6 @@
 
 const FILE_SIMPLE_MAR = "simple.mar";
 const SIZE_SIMPLE_MAR = "1031";
-const MD5_HASH_SIMPLE_MAR    = "1f8c038577bb6845d94ccec4999113ee";
-const SHA1_HASH_SIMPLE_MAR   = "5d49a672c87f10f31d7e326349564a11272a028b";
-const SHA256_HASH_SIMPLE_MAR = "1aabbed5b1dd6e16e139afc5b43d479e254e0c26" +
-                               "3c8fb9249c0a1bb93071c5fb";
-const SHA384_HASH_SIMPLE_MAR = "26615014ea034af32ef5651492d5f493f5a7a1a48522e" +
-                               "d24c366442a5ec21d5ef02e23fb58d79729b8ca2f9541" +
-                               "99dd53";
-const SHA512_HASH_SIMPLE_MAR = "922e5ae22081795f6e8d65a3c508715c9a314054179a8" +
-                               "bbfe5f50dc23919ad89888291bc0a07586ab17dd0304a" +
-                               "b5347473601127571c66f61f5080348e05c36b";
 
 const STATE_NONE            = "null";
 const STATE_DOWNLOADING     = "downloading";
@@ -167,8 +157,6 @@ function getRemotePatchString(aPatchProps) {
     set url(val) {
       this._url = val;
     },
-    hashFunction: "MD5",
-    hashValue: MD5_HASH_SIMPLE_MAR,
     size: SIZE_SIMPLE_MAR
   };
 
@@ -281,8 +269,6 @@ function getLocalPatchString(aPatchProps) {
   const patchProps = {
     type: "complete",
     url: gURLData + FILE_SIMPLE_MAR,
-    hashFunction: "MD5",
-    hashValue: MD5_HASH_SIMPLE_MAR,
     size: SIZE_SIMPLE_MAR,
     selected: "true",
     state: STATE_SUCCEEDED
@@ -347,13 +333,9 @@ function getUpdateString(aUpdateProps) {
 function getPatchString(aPatchProps) {
   let type = "type=\"" + aPatchProps.type + "\" ";
   let url = "URL=\"" + aPatchProps.url + "\" ";
-  let hashFunction = "hashFunction=\"" + aPatchProps.hashFunction + "\" ";
-  let hashValue = "hashValue=\"" + aPatchProps.hashValue + "\" ";
   let size = "size=\"" + aPatchProps.size + "\"";
   return "<patch " +
          type +
          url +
-         hashFunction +
-         hashValue +
          size;
 }

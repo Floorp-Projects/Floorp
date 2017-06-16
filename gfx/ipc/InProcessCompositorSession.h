@@ -21,7 +21,7 @@ class InProcessCompositorSession final : public CompositorSession
 {
 public:
   static RefPtr<InProcessCompositorSession> Create(
-    nsIWidget* aWidget,
+    nsBaseWidget* baseWidget,
     LayerManager* aLayerManager,
     const uint64_t& aRootLayerTreeId,
     CSSToLayoutDeviceScale aScale,
@@ -32,15 +32,20 @@ public:
 
   CompositorBridgeParent* GetInProcessBridge() const override;
   void SetContentController(GeckoContentController* aController) override;
+  nsIWidget* GetWidget() const;
   RefPtr<IAPZCTreeManager> GetAPZCTreeManager() const override;
   void Shutdown() override;
 
+  void NotifySessionLost();
+
 private:
   InProcessCompositorSession(widget::CompositorWidget* aWidget,
+                             nsBaseWidget* baseWidget,
                              CompositorBridgeChild* aChild,
                              CompositorBridgeParent* aParent);
 
 private:
+  nsBaseWidget* mWidget;
   RefPtr<CompositorBridgeParent> mCompositorBridgeParent;
   RefPtr<CompositorWidget> mCompositorWidget;
 };

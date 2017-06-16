@@ -1747,9 +1747,9 @@ imgLoader::ValidateRequestWithNewChannel(imgRequest* request,
 
   mozilla::net::PredictorLearn(aURI, aInitialDocumentURI,
                                nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE, aLoadGroup);
-
   rv = newChannel->AsyncOpen2(listener);
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    req->CancelAndForgetObserver(rv);
     return false;
   }
 
