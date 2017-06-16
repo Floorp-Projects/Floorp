@@ -3428,7 +3428,8 @@ ICCall_Native::Compiler::generateStubCode(MacroAssembler& masm)
 
     // Load the callee in R1.
     if (isSpread_) {
-        masm.loadValue(Address(masm.getStackPointer(), ICStackValueOffset + 2 * sizeof(Value)), R1);
+        unsigned skipToCallee = (2 + isConstructing_) * sizeof(Value);
+        masm.loadValue(Address(masm.getStackPointer(), skipToCallee + ICStackValueOffset), R1);
     } else {
         unsigned nonArgsSlots = (1 + isConstructing_) * sizeof(Value);
         BaseValueIndex calleeSlot(masm.getStackPointer(), argcReg, ICStackValueOffset + nonArgsSlots);
