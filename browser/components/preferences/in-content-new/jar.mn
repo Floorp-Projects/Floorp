@@ -8,9 +8,8 @@ browser.jar:
    content/browser/preferences/in-content-new/subdialogs.js
 
    content/browser/preferences/in-content-new/main.js
+   content/browser/preferences/in-content-new/search.js
    content/browser/preferences/in-content-new/privacy.js
    content/browser/preferences/in-content-new/containers.js
-   content/browser/preferences/in-content-new/advanced.js
-   content/browser/preferences/in-content-new/applications.js
    content/browser/preferences/in-content-new/sync.js
    content/browser/preferences/in-content-new/findInPage.js
