@@ -202,7 +202,7 @@ mozilla::ipc::IPCResult
 GPUChild::RecvNotifyDeviceReset(const GPUDeviceData& aData)
 {
   gfxPlatform::GetPlatform()->ImportGPUDeviceData(aData);
-  mHost->mListener->OnProcessDeviceReset(mHost);
+  mHost->mListener->OnRemoteProcessDeviceReset(mHost);
   return IPC_OK();
 }
 

@@ -54,14 +54,10 @@ function run_test_pt02() {
   gCheckFunc = check_test_pt02;
   let patchProps = {type: "complete",
                     url: "http://complete/",
-                    hashFunction: "SHA1",
-                    hashValue: "98db9dad8e1d80eda7e1170d0187d6f53e477059",
                     size: "9856459"};
   let patches = getRemotePatchString(patchProps);
   patchProps = {type: "partial",
                 url: "http://partial/",
-                hashFunction: "SHA1",
-                hashValue: "e6678ca40ae7582316acdeddf3c133c9c8577de4",
                 size: "1316138"};
   patches += getRemotePatchString(patchProps);
   let updateProps = {type: "minor",
@@ -148,10 +144,6 @@ function check_test_pt02() {
                "the update patch type attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(patch.URL, "http://complete/",
                "the update patch URL attribute" + MSG_SHOULD_EQUAL);
-  Assert.equal(patch.hashFunction, "SHA1",
-               "the update patch hashFunction attribute" + MSG_SHOULD_EQUAL);
-  Assert.equal(patch.hashValue, "98db9dad8e1d80eda7e1170d0187d6f53e477059",
-               "the update patch hashValue attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(patch.size, 9856459,
                "the update patch size attribute" + MSG_SHOULD_EQUAL);
   // The value for patch.state can be the string 'null' as a valid value. This
@@ -171,10 +163,6 @@ function check_test_pt02() {
                "the update patch type attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(patch.URL, "http://partial/",
                "the update patch URL attribute" + MSG_SHOULD_EQUAL);
-  Assert.equal(patch.hashFunction, "SHA1",
-               "the update patch hashFunction attribute" + MSG_SHOULD_EQUAL);
-  Assert.equal(patch.hashValue, "e6678ca40ae7582316acdeddf3c133c9c8577de4",
-               "the update patch hashValue attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(patch.size, 1316138,
                "the update patch size attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(patch.state, STATE_NONE,

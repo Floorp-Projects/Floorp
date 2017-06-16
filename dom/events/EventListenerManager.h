@@ -161,15 +161,13 @@ protected:
   uint16_t mMayHaveCapturingListeners : 1;
   uint16_t mMayHaveSystemGroupListeners : 1;
   uint16_t mMayHaveTouchEventListener : 1;
-  uint16_t mMayHaveMouseMoveEventListener : 1;
   uint16_t mMayHaveMouseEnterLeaveEventListener : 1;
   uint16_t mMayHavePointerEnterLeaveEventListener : 1;
-  uint16_t mMayHaveAPZAwareKeyEventListener : 1;
   uint16_t mMayHaveKeyEventListener : 1;
   uint16_t mMayHaveInputOrCompositionEventListener : 1;
   uint16_t mClearingListeners : 1;
   uint16_t mIsMainThreadELM : 1;
-  // uint16_t mUnused : 3;
+  // uint16_t mUnused : 5;
 };
 
 /*
@@ -441,12 +439,8 @@ public:
    */
   bool MayHaveTouchEventListener() { return mMayHaveTouchEventListener; }
 
-  bool MayHaveMouseMoveEventListener() { return mMayHaveMouseMoveEventListener; }
-
   bool MayHaveMouseEnterLeaveEventListener() { return mMayHaveMouseEnterLeaveEventListener; }
   bool MayHavePointerEnterLeaveEventListener() { return mMayHavePointerEnterLeaveEventListener; }
-
-  bool MayHaveAPZAwareKeyEventListener() const { return mMayHaveAPZAwareKeyEventListener; }
 
   /**
    * Returns true if there may be a key event listener (keydown, keypress,

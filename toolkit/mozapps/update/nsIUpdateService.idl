@@ -40,17 +40,6 @@ interface nsIUpdatePatch : nsISupports
   attribute AString finalURL;
 
   /**
-   * The hash function to use when determining this file's integrity
-   */
-  attribute AString hashFunction;
-
-  /**
-   * The value of the hash function named above that should be computed if
-   * this file is not corrupt.
-   */
-  attribute AString hashValue;
-
-  /**
    * The size of this file, in bytes.
    */
   attribute unsigned long size;

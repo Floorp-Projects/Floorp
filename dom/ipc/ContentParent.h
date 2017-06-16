@@ -1061,6 +1061,8 @@ private:
 
   virtual mozilla::ipc::IPCResult RecvFirstIdle() override;
 
+  virtual mozilla::ipc::IPCResult RecvDeviceReset() override;
+
   virtual mozilla::ipc::IPCResult RecvKeywordToURI(const nsCString& aKeyword,
                                                    nsString* aProviderName,
                                                    OptionalIPCStream* aPostData,

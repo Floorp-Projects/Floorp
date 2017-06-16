@@ -107,7 +107,7 @@ __w_pdfjs_require__(15);
 
 var _streamsLib = __w_pdfjs_require__(9);
 
-var globalScope = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : undefined;
+var globalScope = typeof window !== 'undefined' && window.Math === Math ? window : typeof global !== 'undefined' && global.Math === Math ? global : typeof self !== 'undefined' && self.Math === Math ? self : undefined;
 var FONT_IDENTITY_MATRIX = [0.001, 0, 0, 0.001, 0, 0];
 const NativeImageDecoding = {
   NONE: 'none',
@@ -2705,7 +2705,7 @@ var PDFPageProxy = function PDFPageProxyClosure() {
         stats.time('Rendering');
         internalRenderTask.initializeGraphics(transparency);
         internalRenderTask.operatorListChanged();
-      }, complete);
+      }).catch(complete);
       return renderTask;
     },
     getOperatorList: function PDFPageProxy_getOperatorList() {
@@ -2918,7 +2918,7 @@ var PDFWorker = function PDFWorkerClosure() {
   }
   let pdfWorkerPorts = new WeakMap();
   function PDFWorker(name, port) {
-    if (pdfWorkerPorts.has(port)) {
+    if (port && pdfWorkerPorts.has(port)) {
       throw new Error('Cannot use more than one PDFWorker per port');
     }
     this.name = name;
@@ -3528,6 +3528,7 @@ var RenderTask = function RenderTaskClosure() {
   return RenderTask;
 }();
 var InternalRenderTask = function InternalRenderTaskClosure() {
+  let canvasInRendering = new WeakMap();
   function InternalRenderTask(callback, params, objs, commonObjs, operatorList, pageNumber, canvasFactory) {
     this.callback = callback;
     this.params = params;
@@ -3547,9 +3548,16 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
     this._continueBound = this._continue.bind(this);
     this._scheduleNextBound = this._scheduleNext.bind(this);
     this._nextBound = this._next.bind(this);
+    this._canvas = params.canvasContext.canvas;
   }
   InternalRenderTask.prototype = {
     initializeGraphics: function InternalRenderTask_initializeGraphics(transparency) {
+      if (this._canvas) {
+        if (canvasInRendering.has(this._canvas)) {
+          throw new Error('Cannot use the same canvas during multiple render() operations. ' + 'Use different canvas or ensure previous operations were ' + 'cancelled or completed.');
+        }
+        canvasInRendering.set(this._canvas, this);
+      }
       if (this.cancelled) {
         return;
       }
@@ -3575,6 +3583,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
     cancel: function InternalRenderTask_cancel() {
       this.running = false;
       this.cancelled = true;
+      if (this._canvas) {
+        canvasInRendering.delete(this._canvas);
+      }
       this.callback(new _dom_utils.RenderingCancelledException('Rendering cancelled, page ' + this.pageNumber, 'canvas'));
     },
     operatorListChanged: function InternalRenderTask_operatorListChanged() {
@@ -3619,6 +3630,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
         this.running = false;
         if (this.operatorList.lastChunk) {
           this.gfx.endDrawing();
+          if (this._canvas) {
+            canvasInRendering.delete(this._canvas);
+          }
           this.callback();
         }
       }
@@ -3642,8 +3656,8 @@ var _UnsupportedManager = function UnsupportedManagerClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '1.8.439';
-  exports.build = build = '08c64371';
+  exports.version = version = '1.8.450';
+  exports.build = build = '20975134';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -4645,8 +4659,8 @@ if (!_util.globalScope.PDFJS) {
 }
 var PDFJS = _util.globalScope.PDFJS;
 {
-  PDFJS.version = '1.8.439';
-  PDFJS.build = '08c64371';
+  PDFJS.version = '1.8.450';
+  PDFJS.build = '20975134';
 }
 PDFJS.pdfBug = false;
 if (PDFJS.verbosity !== undefined) {
@@ -9993,8 +10007,8 @@ exports.TilingPattern = TilingPattern;
 "use strict";
 
 
-var pdfjsVersion = '1.8.439';
-var pdfjsBuild = '08c64371';
+var pdfjsVersion = '1.8.450';
+var pdfjsBuild = '20975134';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayGlobal = __w_pdfjs_require__(8);
 var pdfjsDisplayAPI = __w_pdfjs_require__(3);

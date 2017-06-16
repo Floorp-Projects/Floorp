@@ -10,8 +10,8 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/TaskCategory.h"
 
-class nsIEventTarget;
 class nsIRunnable;
+class nsISerialEventTarget;
 
 namespace mozilla {
 class AbstractThread;
@@ -31,9 +31,9 @@ public:
                             already_AddRefed<nsIRunnable>&& aRunnable);
 
   // This method may or may not be safe off of the main thread. For nsIDocument
-  // it is safe. For nsIGlobalWindow it is not safe. The nsIEventTarget can
+  // it is safe. For nsIGlobalWindow it is not safe. The nsISerialEventTarget can
   // always be used off the main thread.
-  virtual nsIEventTarget* EventTargetFor(TaskCategory aCategory) const;
+  virtual nsISerialEventTarget* EventTargetFor(TaskCategory aCategory) const;
 
   // Must be called on the main thread. The AbstractThread can always be used
   // off the main thread.

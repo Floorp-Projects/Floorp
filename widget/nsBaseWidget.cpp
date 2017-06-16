@@ -1358,7 +1358,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   }
 }
 
-void nsBaseWidget::NotifyRemoteCompositorSessionLost(CompositorSession* aSession)
+void nsBaseWidget::NotifyCompositorSessionLost(CompositorSession* aSession)
 {
   MOZ_ASSERT(aSession == mCompositorSession);
   DestroyLayerManager();
