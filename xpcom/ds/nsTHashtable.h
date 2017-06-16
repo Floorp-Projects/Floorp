@@ -163,12 +163,49 @@ public:
   }
 
   /**
+   * Get the entry associated with a key, or create a new entry using infallible
+   * allocation and insert that.
+   * @param     aKey the key to retrieve
+   * @param     aEntry will be assigned (if non-null) to the entry that was found
+   *            or created
+   * @return    true if a new entry was created, or false if an existing entry
+   *            was found
+   */
+  MOZ_MUST_USE
+  bool EnsureInserted(KeyType aKey, EntryType** aEntry = nullptr)
+  {
+    auto oldCount = Count();
+    EntryType* entry = PutEntry(aKey);
+    if (aEntry) {
+      *aEntry = entry;
+    }
+    return oldCount != Count();
+  }
+
+  /**
    * Remove the entry associated with a key.
    * @param     aKey of the entry to remove
    */
   void RemoveEntry(KeyType aKey)
   {
     mTable.Remove(EntryType::KeyToPointer(aKey));
+  }
+
+  /**
+   * Lookup the entry associated with aKey and remove it if found, otherwise
+   * do nothing.
+   * @param     aKey of the entry to remove
+   * @return    true if an entry was found and removed, or false if no entry
+   *            was found for aKey
+   */
+  bool EnsureRemoved(KeyType aKey)
+  {
+    auto* entry = GetEntry(aKey);
+    if (entry) {
+      RemoveEntry(entry);
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -493,7 +530,6 @@ public:
 
   nsTHashtable(nsTHashtable&&) = default;
 
-  /* Wrapper functions */
   using Base::GetGeneration;
   using Base::Count;
   using Base::IsEmpty;
@@ -506,6 +542,7 @@ public:
   using Base::MarkImmutable;
 #endif
 
+  /* Wrapper functions */
   EntryType* GetEntry(T* aKey) const
   {
     return reinterpret_cast<EntryType*>(Base::GetEntry(aKey));
@@ -528,9 +565,20 @@ public:
       Base::PutEntry(aKey, mozilla::fallible));
   }
 
+  MOZ_MUST_USE
+  bool EnsureInserted(T* aKey, EntryType** aEntry = nullptr)
+  {
+    return Base::EnsureInserted(aKey, reinterpret_cast<::detail::VoidPtrHashKey**>(aEntry));
+  }
+
   void RemoveEntry(T* aKey)
   {
     Base::RemoveEntry(aKey);
+  }
+
+  bool EnsureRemoved(T* aKey)
+  {
+    return Base::EnsureRemoved(aKey);
   }
 
   void RemoveEntry(EntryType* aEntry)
