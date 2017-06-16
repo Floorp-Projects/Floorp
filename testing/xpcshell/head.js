@@ -12,8 +12,7 @@
 
 /* defined by the harness */
 /* globals _HEAD_FILES, _HEAD_JS_PATH, _JSDEBUGGER_PORT, _JSCOV_DIR,
-    _MOZINFO_JS_PATH, _TEST_FILE, _TEST_NAME, _TESTING_MODULES_DIR,
-    _XPCSHELL_PROCESS:true */
+    _MOZINFO_JS_PATH, _TEST_FILE, _TEST_NAME, _TESTING_MODULES_DIR:true */
 
 /* defined by XPCShellImpl.cpp */
 /* globals load, sendCommand */
@@ -30,6 +29,9 @@ var _tests_pending = 0;
 var _cleanupFunctions = [];
 var _pendingTimers = [];
 var _profileInitialized = false;
+
+// Assigned in do_load_child_test_harness.
+var _XPCSHELL_PROCESS;
 
 // Register the testing-common resource protocol early, to have access to its
 // modules.
@@ -50,7 +52,6 @@ var Assert = new AssertCls(function(err, message, stack) {
     do_report_result(true, message, stack);
   }
 });
-
 
 var _add_params = function(params) {
   if (typeof _XPCSHELL_PROCESS != "undefined") {
@@ -1251,7 +1252,7 @@ function do_load_child_test_harness() {
       + "const _TEST_NAME=" + uneval(_TEST_NAME) + "; "
       // We'll need more magic to get the debugger working in the child
       + "const _JSDEBUGGER_PORT=0; "
-      + "const _XPCSHELL_PROCESS='child';";
+      + "_XPCSHELL_PROCESS='child';";
 
   if (typeof _JSCOV_DIR === "string") {
     command += " const _JSCOV_DIR=" + uneval(_JSCOV_DIR) + ";";
