@@ -235,7 +235,7 @@ TimeoutManager::IsInvalidFiringId(uint32_t aFiringId) const
 TimeDuration
 TimeoutManager::CalculateDelay(Timeout* aTimeout) const {
   MOZ_DIAGNOSTIC_ASSERT(aTimeout);
-  TimeDuration result = TimeDuration::FromMilliseconds(aTimeout->mInterval);
+  TimeDuration result = aTimeout->mInterval;
 
   if (aTimeout->mIsInterval ||
       aTimeout->mNestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
@@ -382,7 +382,7 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
   RefPtr<Timeout> timeout = new Timeout();
   timeout->mWindow = &mWindow;
   timeout->mIsInterval = aIsInterval;
-  timeout->mInterval = interval;
+  timeout->mInterval = TimeDuration::FromMilliseconds(interval);
   timeout->mScriptHandler = aHandler;
   timeout->mReason = aReason;
 
@@ -479,7 +479,7 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
            "returned %stracking timeout ID %u\n",
            aIsInterval ? "Interval" : "Timeout",
            this, timeout.get(), interval,
-           (CalculateDelay(timeout) - TimeDuration::FromMilliseconds(interval)).ToMilliseconds(),
+           (CalculateDelay(timeout) - timeout->mInterval).ToMilliseconds(),
            mThrottleTrackingTimeouts ? "yes"
                                      : (mThrottleTrackingTimeoutsTimer ?
                                           "pending" : "no"),
