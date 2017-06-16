@@ -157,10 +157,9 @@ module.exports = createClass({
     const rowNumber = target.dataset.gridRow;
     const columnNumber = target.dataset.gridColumn;
 
-    onShowGridAreaHighlight(grids[id].nodeFront, null, color);
-    onShowGridCellHighlight(grids[id].nodeFront, color);
-
     if (hide) {
+      onShowGridAreaHighlight(grids[id].nodeFront, null, color);
+      onShowGridCellHighlight(grids[id].nodeFront, color);
       return;
     }
 
@@ -298,7 +297,6 @@ module.exports = createClass({
 
     return dom.g(
       {
-        id: "grid-cell-group",
         "className": "grid-cell-group",
         "data-grid-line-color": color,
         "style": { color }
@@ -331,7 +329,6 @@ module.exports = createClass({
     return showOutline ?
       dom.svg(
         {
-          id: "grid-outline",
           width: "100%",
           height: this.getHeight(),
           viewBox: `${TRANSLATE_X} ${TRANSLATE_Y} ${width} ${height}`,
@@ -348,8 +345,7 @@ module.exports = createClass({
     return selectedGrid ?
       dom.div(
         {
-          id: "grid-outline-container",
-          className: "grid-outline-container",
+          className: "grid-outline",
         },
         this.renderOutline()
       )
