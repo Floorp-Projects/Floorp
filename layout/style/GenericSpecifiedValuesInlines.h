@@ -20,7 +20,9 @@
 
 namespace mozilla {
 
-MOZ_DEFINE_STYLO_METHODS(GenericSpecifiedValues, nsRuleData, ServoSpecifiedValues)
+MOZ_DEFINE_STYLO_METHODS(GenericSpecifiedValues,
+                         nsRuleData,
+                         ServoSpecifiedValues)
 
 bool
 GenericSpecifiedValues::PropertyIsSet(nsCSSPropertyID aId)
@@ -29,13 +31,15 @@ GenericSpecifiedValues::PropertyIsSet(nsCSSPropertyID aId)
 }
 
 void
-GenericSpecifiedValues::SetIdentStringValue(nsCSSPropertyID aId, const nsString& aValue)
+GenericSpecifiedValues::SetIdentStringValue(nsCSSPropertyID aId,
+                                            const nsString& aValue)
 {
   MOZ_STYLO_FORWARD(SetIdentStringValue, (aId, aValue))
 }
 
 void
-GenericSpecifiedValues::SetIdentStringValueIfUnset(nsCSSPropertyID aId, const nsString& aValue)
+GenericSpecifiedValues::SetIdentStringValueIfUnset(nsCSSPropertyID aId,
+                                                   const nsString& aValue)
 {
   if (!PropertyIsSet(aId)) {
     SetIdentStringValue(aId, aValue);
@@ -49,7 +53,8 @@ GenericSpecifiedValues::SetIdentAtomValue(nsCSSPropertyID aId, nsIAtom* aValue)
 }
 
 void
-GenericSpecifiedValues::SetIdentAtomValueIfUnset(nsCSSPropertyID aId, nsIAtom* aValue)
+GenericSpecifiedValues::SetIdentAtomValueIfUnset(nsCSSPropertyID aId,
+                                                 nsIAtom* aValue)
 {
   if (!PropertyIsSet(aId)) {
     SetIdentAtomValue(aId, aValue);
@@ -63,12 +68,14 @@ GenericSpecifiedValues::SetKeywordValue(nsCSSPropertyID aId, int32_t aValue)
   // won't work with the overloaded SetKeywordValue function,
   // so we copy its expansion and use SetIntValue for decltype
   // instead
-  static_assert(!mozilla::IsSame<decltype(&MOZ_STYLO_THIS_TYPE::SetIntValue),
-                 decltype(&MOZ_STYLO_GECKO_TYPE::SetKeywordValue)>
-        ::value, "Gecko subclass should define its own SetKeywordValue");
-  static_assert(!mozilla::IsSame<decltype(&MOZ_STYLO_THIS_TYPE::SetIntValue),
-                 decltype(&MOZ_STYLO_SERVO_TYPE::SetKeywordValue)>
-        ::value, "Servo subclass should define its own SetKeywordValue");
+  static_assert(
+    !mozilla::IsSame<decltype(&MOZ_STYLO_THIS_TYPE::SetIntValue),
+                     decltype(&MOZ_STYLO_GECKO_TYPE::SetKeywordValue)>::value,
+    "Gecko subclass should define its own SetKeywordValue");
+  static_assert(
+    !mozilla::IsSame<decltype(&MOZ_STYLO_THIS_TYPE::SetIntValue),
+                     decltype(&MOZ_STYLO_SERVO_TYPE::SetKeywordValue)>::value,
+    "Servo subclass should define its own SetKeywordValue");
 
   if (IsServo()) {
     return AsServo()->SetKeywordValue(aId, aValue);
@@ -77,7 +84,8 @@ GenericSpecifiedValues::SetKeywordValue(nsCSSPropertyID aId, int32_t aValue)
 }
 
 void
-GenericSpecifiedValues::SetKeywordValueIfUnset(nsCSSPropertyID aId, int32_t aValue)
+GenericSpecifiedValues::SetKeywordValueIfUnset(nsCSSPropertyID aId,
+                                               int32_t aValue)
 {
   if (!PropertyIsSet(aId)) {
     SetKeywordValue(aId, aValue);
@@ -123,7 +131,8 @@ GenericSpecifiedValues::SetPercentValue(nsCSSPropertyID aId, float aValue)
 }
 
 void
-GenericSpecifiedValues::SetPercentValueIfUnset(nsCSSPropertyID aId, float aValue)
+GenericSpecifiedValues::SetPercentValueIfUnset(nsCSSPropertyID aId,
+                                               float aValue)
 {
   if (!PropertyIsSet(aId)) {
     SetPercentValue(aId, aValue);
@@ -165,7 +174,8 @@ GenericSpecifiedValues::SetColorValue(nsCSSPropertyID aId, nscolor aValue)
 }
 
 void
-GenericSpecifiedValues::SetColorValueIfUnset(nsCSSPropertyID aId, nscolor aValue)
+GenericSpecifiedValues::SetColorValueIfUnset(nsCSSPropertyID aId,
+                                             nscolor aValue)
 {
   if (!PropertyIsSet(aId)) {
     SetColorValue(aId, aValue);

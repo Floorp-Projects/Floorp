@@ -22,18 +22,19 @@ nsRuleData::GetPoisonOffset()
                 "expect uintptr_t and size_t to be the same size");
   static_assert(uintptr_t(-1) > uintptr_t(0),
                 "expect uintptr_t to be unsigned");
-  static_assert(size_t(-1) > size_t(0),
-                "expect size_t to be unsigned");
+  static_assert(size_t(-1) > size_t(0), "expect size_t to be unsigned");
   uintptr_t framePoisonValue = mozPoisonValue();
   return size_t(framePoisonValue - uintptr_t(mValueStorage)) /
          sizeof(nsCSSValue);
 }
 
-nsRuleData::nsRuleData(uint32_t aSIDs, nsCSSValue* aValueStorage,
-                       nsPresContext* aContext, nsStyleContext* aStyleContext)
-  : GenericSpecifiedValues(StyleBackendType::Gecko, aContext, aSIDs),
-    mStyleContext(aStyleContext),
-    mValueStorage(aValueStorage)
+nsRuleData::nsRuleData(uint32_t aSIDs,
+                       nsCSSValue* aValueStorage,
+                       nsPresContext* aContext,
+                       nsStyleContext* aStyleContext)
+  : GenericSpecifiedValues(StyleBackendType::Gecko, aContext, aSIDs)
+  , mStyleContext(aStyleContext)
+  , mValueStorage(aValueStorage)
 {
 #ifndef MOZ_VALGRIND
   size_t framePoisonOffset = GetPoisonOffset();
