@@ -5582,8 +5582,11 @@ SVGTextFrame::TransformFrameRectFromTextChild(const nsRect& aRect,
 }
 
 void
-SVGTextFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
+SVGTextFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoStyleSet& aStyleSet,
+                                            nsStyleChangeList& aChangeList,
+                                            nsChangeHint aHintForThisFrame)
 {
   MOZ_ASSERT(PrincipalChildList().FirstChild(), "Must have our anon box");
-  aResult.AppendElement(OwnedAnonBox(PrincipalChildList().FirstChild()));
+  UpdateStyleOfChildAnonBox(PrincipalChildList().FirstChild(),
+                            aStyleSet, aChangeList, aHintForThisFrame);
 }

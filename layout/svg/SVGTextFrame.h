@@ -353,8 +353,12 @@ public:
   gfxRect TransformFrameRectFromTextChild(const nsRect& aRect,
                                           nsIFrame* aChildFrame);
 
-  // Return our ::-moz-svg-text anonymous box.
-  void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
+  /**
+   * Update the style of our ::-moz-svg-text anonymous box.
+   */
+  void DoUpdateStyleOfOwnedAnonBoxes(mozilla::ServoStyleSet& aStyleSet,
+                                     nsStyleChangeList& aChangeList,
+                                     nsChangeHint aHintForThisFrame) override;
 
 private:
   /**

@@ -396,12 +396,16 @@ nsHTMLButtonControlFrame::SetAdditionalStyleContext(int32_t aIndex,
 }
 
 void
-nsHTMLButtonControlFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
+nsHTMLButtonControlFrame::DoUpdateStyleOfOwnedAnonBoxes(
+  ServoStyleSet& aStyleSet,
+  nsStyleChangeList& aChangeList,
+  nsChangeHint aHintForThisFrame)
 {
   MOZ_ASSERT(mFrames.FirstChild(), "Must have our button-content anon box");
   MOZ_ASSERT(!mFrames.FirstChild()->GetNextSibling(),
              "Must only have our button-content anon box");
-  aResult.AppendElement(OwnedAnonBox(mFrames.FirstChild()));
+  UpdateStyleOfChildAnonBox(mFrames.FirstChild(),
+                            aStyleSet, aChangeList, aHintForThisFrame);
 }
 
 #ifdef DEBUG
