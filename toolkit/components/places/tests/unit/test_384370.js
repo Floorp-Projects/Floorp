@@ -11,6 +11,10 @@ var bookmarkData = [
   { uri: uri("http://en.wikipedia.org/wiki/Diplodocus"), title: "dinosaur, dj, rad word" }
 ];
 
+function run_test() {
+  run_next_test();
+}
+
 /*
   HTML+FEATURES SUMMARY:
   - import legacy bookmarks
@@ -48,7 +52,7 @@ add_task(async function() {
                                          title });
   }
 
-  await validate("initial database");
+  await validate();
 
   // Test exporting a Places canonical json file.
   // 1. export to bookmarks.exported.json
@@ -61,18 +65,14 @@ add_task(async function() {
   do_print("imported json");
 
   // 4. run the test-suite
-  await validate("re-imported json");
+  await validate();
   do_print("validated import");
 });
 
-async function validate(infoMsg) {
-  do_print(`Validating ${infoMsg}: testMenuBookmarks`);
+async function validate() {
   await testMenuBookmarks();
-  do_print(`Validating ${infoMsg}: testToolbarBookmarks`);
   await testToolbarBookmarks();
-  do_print(`Validating ${infoMsg}: testUnfiledBookmarks`);
   testUnfiledBookmarks();
-  do_print(`Validating ${infoMsg}: testTags`);
   testTags();
   await PlacesTestUtils.promiseAsyncUpdates();
 }

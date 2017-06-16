@@ -20,9 +20,6 @@ this.push(myTest);
 */
 
 tests.push({
-  // Initialise something to avoid undefined property warnings in validate.
-  _litterTitle: "",
-
   populate: function populate() {
     // check initial size
     var rootNode = PlacesUtils.getFolderContents(PlacesUtils.placesRootId,
@@ -121,6 +118,10 @@ tests.push({
     rootNode.containerOpen = false;
   }
 });
+
+function run_test() {
+  run_next_test();
+}
 
 add_task(async function() {
   // make json file

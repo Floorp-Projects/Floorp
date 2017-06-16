@@ -40,121 +40,65 @@ const DEFAULT_INDEX = PlacesUtils.bookmarks.DEFAULT_INDEX;
 var test = {
   _testRootId: null,
   _testRootTitle: "test root",
-  _folderGuids: [],
+  _folderIds: [],
   _bookmarkURIs: [],
   _count: 3,
-  _extraBookmarksCount: 10,
 
-  populate: async function populate() {
+  populate: function populate() {
     // folder to hold this test
-    await PlacesUtils.bookmarks.eraseEverything();
-
-    let testFolderItems = [];
-    // Set a date 60 seconds ago, so that we can set newer bookmarks later.
-    let dateAdded = new Date(new Date() - 60000);
+    PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.toolbarFolderId);
+    this._testRootId =
+      PlacesUtils.bookmarks.createFolder(PlacesUtils.toolbarFolderId,
+                                         this._testRootTitle, DEFAULT_INDEX);
 
     // create test folders each with a bookmark
-    for (let i = 0; i < this._count; i++) {
-      this._folderGuids.push(PlacesUtils.history.makeGuid());
-      testFolderItems.push({
-        guid: this._folderGuids[i],
-        title: `folder${i}`,
-        type: PlacesUtils.bookmarks.TYPE_FOLDER,
-        dateAdded,
-        children: [{
-          dateAdded,
-          url: `http://${i}`,
-          title: `bookmark${i}`,
-        }]
-      });
+    for (var i = 0; i < this._count; i++) {
+      var folderId =
+        PlacesUtils.bookmarks.createFolder(this._testRootId, "folder" + i, DEFAULT_INDEX);
+      this._folderIds.push(folderId)
+
+      var bookmarkURI = uri("http://" + i);
+      PlacesUtils.bookmarks.insertBookmark(folderId, bookmarkURI,
+                                           DEFAULT_INDEX, "bookmark" + i);
+      this._bookmarkURIs.push(bookmarkURI);
     }
-
-    let bookmarksTree = {
-      guid: PlacesUtils.bookmarks.toolbarGuid,
-      children: [{
-        dateAdded,
-        title: this._testRootTitle,
-        type: PlacesUtils.bookmarks.TYPE_FOLDER,
-        children: testFolderItems
-      }]
-    };
-
-    let insertedBookmarks = await PlacesUtils.bookmarks.insertTree(bookmarksTree);
 
     // create a query URI with 1 folder (ie: folder shortcut)
-    let folderIdsMap = await PlacesUtils.promiseManyItemIds(this._folderGuids);
-    let folderIds = [];
-    for (let id of folderIdsMap.values()) {
-      folderIds.push(id);
-    }
-
-    this._queryURI1 = `place:folder=${folderIdsMap.get(this._folderGuids[0])}&queryType=1`;
+    this._queryURI1 = uri("place:folder=" + this._folderIds[0] + "&queryType=1");
     this._queryTitle1 = "query1";
-    await PlacesUtils.bookmarks.insert({
-      parentGuid: insertedBookmarks[0].guid,
-      dateAdded,
-      url: this._queryURI1,
-      title: this._queryTitle1
-    });
+    PlacesUtils.bookmarks.insertBookmark(this._testRootId, this._queryURI1,
+                                         DEFAULT_INDEX, this._queryTitle1);
 
     // create a query URI with _count folders
-    this._queryURI2 = `place:folder=${folderIds.join("&folder=")}&queryType=1`;
+    this._queryURI2 = uri("place:folder=" + this._folderIds.join("&folder=") + "&queryType=1");
     this._queryTitle2 = "query2";
-    await PlacesUtils.bookmarks.insert({
-      parentGuid: insertedBookmarks[0].guid,
-      dateAdded,
-      url: this._queryURI2,
-      title: this._queryTitle2
-    });
+    PlacesUtils.bookmarks.insertBookmark(this._testRootId, this._queryURI2,
+                                         DEFAULT_INDEX, this._queryTitle2);
 
     // create a query URI with _count queries (each with a folder)
     // first get a query object for each folder
-    var queries = folderIds.map(function(aFolderId) {
+    var queries = this._folderIds.map(function(aFolderId) {
       var query = PlacesUtils.history.getNewQuery();
       query.setFolders([aFolderId], 1);
       return query;
     });
-
     var options = PlacesUtils.history.getNewQueryOptions();
     options.queryType = options.QUERY_TYPE_BOOKMARKS;
     this._queryURI3 =
-      PlacesUtils.history.queriesToQueryString(queries, queries.length, options);
+      uri(PlacesUtils.history.queriesToQueryString(queries, queries.length, options));
     this._queryTitle3 = "query3";
-    await PlacesUtils.bookmarks.insert({
-      parentGuid: insertedBookmarks[0].guid,
-      dateAdded,
-      url: this._queryURI3,
-      title: this._queryTitle3
-    });
-
-    // Create a query URI for most recent bookmarks with NO folders specified.
-    this._queryURI4 = "place:queryType=1&sort=12&excludeItemIfParentHasAnnotation=livemark%2FfeedURI&maxResults=10&excludeQueries=1";
-    this._queryTitle4 = "query4";
-    await PlacesUtils.bookmarks.insert({
-      parentGuid: insertedBookmarks[0].guid,
-      dateAdded,
-      url: this._queryURI4,
-      title: this._queryTitle4
-    });
-
-    dump_table("moz_bookmarks");
-    dump_table("moz_places");
+    PlacesUtils.bookmarks.insertBookmark(this._testRootId, this._queryURI3,
+                                         DEFAULT_INDEX, this._queryTitle3);
   },
 
   clean() {},
 
-  validate: async function validate(addExtras) {
-    if (addExtras) {
-      // Throw a wrench in the works by inserting some new bookmarks,
-      // ensuring folder ids won't be the same, when restoring.
-      let date = new Date() - (this._extraBookmarksCount * 1000);
-      for (let i = 0; i < this._extraBookmarksCount; i++) {
-        await PlacesUtils.bookmarks.insert({
-          parentGuid: PlacesUtils.bookmarks.menuGuid,
-          url: uri("http://aaaa" + i),
-          dateAdded: new Date(date + ((this._extraBookmarksCount - i) * 1000)),
-        });
-      }
+  validate: function validate() {
+    // Throw a wrench in the works by inserting some new bookmarks,
+    // ensuring folder ids won't be the same, when restoring.
+    for (let i = 0; i < 10; i++) {
+      PlacesUtils.bookmarks.
+                  insertBookmark(PlacesUtils.bookmarksMenuFolderId, uri("http://aaaa" + i), DEFAULT_INDEX, "");
     }
 
     var toolbar =
@@ -168,8 +112,8 @@ var test = {
     folderNode.QueryInterface(Ci.nsINavHistoryQueryResultNode);
     folderNode.containerOpen = true;
 
-    // |_count| folders + the query nodes
-    do_check_eq(folderNode.childCount, this._count + 4);
+    // |_count| folders + the query node
+    do_check_eq(folderNode.childCount, this._count + 3);
 
     for (let i = 0; i < this._count; i++) {
       var subFolder = folderNode.getChild(i);
@@ -191,9 +135,6 @@ var test = {
     // validate multiple queries query
     this.validateQueryNode3(folderNode.getChild(this._count + 2));
 
-    // validate recent folders query
-    this.validateQueryNode4(folderNode.getChild(this._count + 3));
-
     // clean up
     folderNode.containerOpen = false;
     toolbar.containerOpen = false;
@@ -207,8 +148,8 @@ var test = {
     aNode.containerOpen = true;
     do_check_eq(aNode.childCount, 1);
     var child = aNode.getChild(0);
-    do_check_true(uri(child.uri).equals(uri("http://0")));
-    do_check_eq(child.title, "bookmark0");
+    do_check_true(uri(child.uri).equals(uri("http://0")))
+    do_check_eq(child.title, "bookmark0")
     aNode.containerOpen = false;
   },
 
@@ -240,51 +181,40 @@ var test = {
       do_check_eq(child.title, "bookmark" + i)
     }
     aNode.containerOpen = false;
-  },
-
-  validateQueryNode4(aNode) {
-    do_check_eq(aNode.title, this._queryTitle4);
-    do_check_true(PlacesUtils.nodeIsQuery(aNode));
-
-    aNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
-    aNode.containerOpen = true;
-    // The query will list the extra bookmarks added at the start of validate.
-    do_check_eq(aNode.childCount, this._extraBookmarksCount);
-    for (var i = 0; i < aNode.childCount; i++) {
-      var child = aNode.getChild(i);
-      do_check_eq(child.uri, `http://aaaa${i}/`);
-    }
-    aNode.containerOpen = false;
-  },
+  }
 }
 tests.push(test);
+
+function run_test() {
+  run_next_test();
+}
 
 add_task(async function() {
   // make json file
   let jsonFile = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.json");
 
   // populate db
-  for (let singleTest of tests) {
-    await singleTest.populate();
+  tests.forEach(function(aTest) {
+    aTest.populate();
     // sanity
-    await singleTest.validate(true);
-  }
+    aTest.validate();
+  });
 
   // export json to file
   await BookmarkJSONUtils.exportToFile(jsonFile);
 
   // clean
-  for (let singleTest of tests) {
-    singleTest.clean();
-  }
+  tests.forEach(function(aTest) {
+    aTest.clean();
+  });
 
   // restore json file
   await BookmarkJSONUtils.importFromFile(jsonFile, true);
 
   // validate
-  for (let singleTest of tests) {
-    await singleTest.validate(false);
-  }
+  tests.forEach(function(aTest) {
+    aTest.validate();
+  });
 
   // clean up
   await OS.File.remove(jsonFile);
