@@ -26,7 +26,7 @@ struct nsRuleData;
 
 typedef void (*nsPostResolveFunc)(void* aStyleStruct, nsRuleData* aData);
 
-struct nsRuleData final: mozilla::GenericSpecifiedValues
+struct nsRuleData final : mozilla::GenericSpecifiedValues
 {
   mozilla::RuleNodeCacheConditions mConditions;
   bool mIsImportantRule;
@@ -49,8 +49,10 @@ struct nsRuleData final: mozilla::GenericSpecifiedValues
 
   nsAutoPtr<mozilla::CSSVariableDeclarations> mVariables;
 
-  nsRuleData(uint32_t aSIDs, nsCSSValue* aValueStorage,
-             nsPresContext* aContext, nsStyleContext* aStyleContext);
+  nsRuleData(uint32_t aSIDs,
+             nsCSSValue* aValueStorage,
+             nsPresContext* aContext,
+             nsStyleContext* aStyleContext);
 
 #ifdef DEBUG
   ~nsRuleData();
@@ -77,13 +79,13 @@ struct nsRuleData final: mozilla::GenericSpecifiedValues
     // include that here since it includes us.
     MOZ_ASSERT(mSIDs & (1 << sid),
                "calling nsRuleData::ValueFor on property not in mSIDs");
-    MOZ_ASSERT(indexInStruct != size_t(-1),
-               "logical property");
+    MOZ_ASSERT(indexInStruct != size_t(-1), "logical property");
 
     return mValueStorage + mValueOffsets[sid] + indexInStruct;
   }
 
-  const nsCSSValue* ValueFor(nsCSSPropertyID aProperty) const {
+  const nsCSSValue* ValueFor(nsCSSPropertyID aProperty) const
+  {
     return const_cast<nsRuleData*>(this)->ValueFor(aProperty);
   }
 
@@ -120,7 +122,8 @@ struct nsRuleData final: mozilla::GenericSpecifiedValues
   #undef CSS_PROP_PUBLIC_OR_PRIVATE
 
   // GenericSpecifiedValues overrides
-  bool PropertyIsSet(nsCSSPropertyID aId) {
+  bool PropertyIsSet(nsCSSPropertyID aId)
+  {
     return ValueFor(aId)->GetUnit() != eCSSUnit_Null;
   }
 
@@ -170,7 +173,8 @@ struct nsRuleData final: mozilla::GenericSpecifiedValues
     ValueFor(aId)->SetAutoValue();
   }
 
-  void SetCurrentColor(nsCSSPropertyID aId) {
+  void SetCurrentColor(nsCSSPropertyID aId)
+  {
     ValueFor(aId)->SetIntValue(NS_COLOR_CURRENTCOLOR, eCSSUnit_EnumColor);
   }
 
@@ -185,7 +189,6 @@ struct nsRuleData final: mozilla::GenericSpecifiedValues
 
 private:
   inline size_t GetPoisonOffset();
-
 };
 
 #endif
