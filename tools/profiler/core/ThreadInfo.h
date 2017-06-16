@@ -55,9 +55,11 @@ public:
   }
 
   void AddPendingMarker(const char* aMarkerName,
-                        ProfilerMarkerPayload* aPayload, double aTime)
+                        mozilla::UniquePtr<ProfilerMarkerPayload> aPayload,
+                        double aTime)
   {
-    ProfilerMarker* marker = new ProfilerMarker(aMarkerName, aPayload, aTime);
+    ProfilerMarker* marker =
+      new ProfilerMarker(aMarkerName, Move(aPayload), aTime);
     mPendingMarkers.insert(marker);
   }
 

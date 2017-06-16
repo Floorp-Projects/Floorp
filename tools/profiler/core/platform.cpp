@@ -2920,12 +2920,9 @@ profiler_get_backtrace_noalloc(char *output, size_t outputSize)
 
 static void
 racy_profiler_add_marker(const char* aMarkerName,
-                         ProfilerMarkerPayload* aPayload)
+                         UniquePtr<ProfilerMarkerPayload> aPayload)
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
-
-  // aPayload must be freed if we return early.
-  UniquePtr<ProfilerMarkerPayload> payload(aPayload);
 
   // We don't assert that RacyFeatures::IsActiveWithoutPrivacy() is true here,
   // because it's possible that the result has changed since we tested it in
@@ -2939,11 +2936,11 @@ racy_profiler_add_marker(const char* aMarkerName,
     return;
   }
 
-  TimeStamp origin = (payload && !payload->GetStartTime().IsNull())
-                   ? payload->GetStartTime()
+  TimeStamp origin = (aPayload && !aPayload->GetStartTime().IsNull())
+                   ? aPayload->GetStartTime()
                    : TimeStamp::Now();
   TimeDuration delta = origin - CorePS::ProcessStartTime();
-  racyInfo->AddPendingMarker(aMarkerName, payload.release(),
+  racyInfo->AddPendingMarker(aMarkerName, Move(aPayload),
                              delta.ToMilliseconds());
 }
 
@@ -2960,7 +2957,7 @@ profiler_add_marker(const char* aMarkerName, ProfilerMarkerPayload* aPayload)
     return;
   }
 
-  racy_profiler_add_marker(aMarkerName, payload.release());
+  racy_profiler_add_marker(aMarkerName, Move(payload));
 }
 
 void
@@ -2974,8 +2971,8 @@ profiler_tracing(const char* aCategory, const char* aMarkerName,
     return;
   }
 
-  auto payload = new ProfilerMarkerTracing(aCategory, aKind);
-  racy_profiler_add_marker(aMarkerName, payload);
+  auto payload = MakeUnique<ProfilerMarkerTracing>(aCategory, aKind);
+  racy_profiler_add_marker(aMarkerName, Move(payload));
 }
 
 void
@@ -2989,8 +2986,9 @@ profiler_tracing(const char* aCategory, const char* aMarkerName,
     return;
   }
 
-  auto payload = new ProfilerMarkerTracing(aCategory, aKind, Move(aCause));
-  racy_profiler_add_marker(aMarkerName, payload);
+  auto payload =
+    MakeUnique<ProfilerMarkerTracing>(aCategory, aKind, Move(aCause));
+  racy_profiler_add_marker(aMarkerName, Move(payload));
 }
 
 void
