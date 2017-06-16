@@ -261,7 +261,8 @@ photonpanelmultiview .panel-subview-header {
 }
 
 #appMenu-popup > .panel-arrowcontainer > .panel-arrowcontent,
-#PanelUI-popup > .panel-arrowcontainer > .panel-arrowcontent {
+#PanelUI-popup > .panel-arrowcontainer > .panel-arrowcontent,
+panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
   overflow: hidden;
 }
 
@@ -338,7 +339,8 @@ panelview:not([mainview]) .toolbarbutton-text,
 
 /* START photonpanelview adjustments */
 
-#appMenu-popup > .panel-arrowcontainer > .panel-arrowcontent {
+#appMenu-popup > .panel-arrowcontainer > .panel-arrowcontent,
+panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 0;
   border-radius: 0;
 }
@@ -348,7 +350,8 @@ photonpanelmultiview panelview {
   padding: 6px 0;
 }
 
-#appMenu-popup panelview {
+#appMenu-popup panelview,
+#customizationui-widget-multiview panelview:not([extension]) {
   min-width: @menuPanelWidth@;
 }
 
@@ -2074,6 +2077,16 @@ photonpanelmultiview .PanelUI-subView .panel-header > .subviewbutton-back {
 photonpanelmultiview .PanelUI-subView toolbarseparator {
   margin-inline-start: 0;
   margin-inline-end: 0;
+}
+
+photonpanelmultiview#customizationui-widget-multiview > .panel-viewcontainer {
+  overflow: hidden;
+}
+
+/* This is explicitly overriding the overflow properties set above. */
+photonpanelmultiview .cui-widget-panelview {
+  overflow-x: visible;
+  overflow-y: visible;
 }
 
 /* END photon adjustments */
