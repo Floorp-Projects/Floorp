@@ -129,11 +129,11 @@ TimeoutTelemetry::MaybeCollectTelemetry(TimeStamp aNow)
 static int32_t              gRunningTimeoutDepth       = 0;
 
 // The default shortest interval/timeout we permit
-#define DEFAULT_MIN_TIMEOUT_VALUE 4 // 4ms
+#define DEFAULT_MIN_CLAMP_TIMEOUT_VALUE 4 // 4ms
 #define DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE 1000 // 1000ms
 #define DEFAULT_MIN_TRACKING_TIMEOUT_VALUE 4 // 4ms
 #define DEFAULT_MIN_TRACKING_BACKGROUND_TIMEOUT_VALUE 1000 // 1000ms
-static int32_t gMinTimeoutValue = 0;
+static int32_t gMinClampTimeoutValue = 0;
 static int32_t gMinBackgroundTimeoutValue = 0;
 static int32_t gMinTrackingTimeoutValue = 0;
 static int32_t gMinTrackingBackgroundTimeoutValue = 0;
@@ -232,7 +232,7 @@ int32_t
 TimeoutManager::DOMMinTimeoutValue(bool aIsTracking) const {
   bool throttleTracking = aIsTracking && mThrottleTrackingTimeouts;
   auto minValue = throttleTracking ? gMinTrackingTimeoutValue
-                                   : gMinTimeoutValue;
+                                   : gMinClampTimeoutValue;
   return minValue;
 }
 
@@ -299,9 +299,9 @@ TimeoutManager::~TimeoutManager()
 void
 TimeoutManager::Initialize()
 {
-  Preferences::AddIntVarCache(&gMinTimeoutValue,
+  Preferences::AddIntVarCache(&gMinClampTimeoutValue,
                               "dom.min_timeout_value",
-                              DEFAULT_MIN_TIMEOUT_VALUE);
+                              DEFAULT_MIN_CLAMP_TIMEOUT_VALUE);
   Preferences::AddIntVarCache(&gMinBackgroundTimeoutValue,
                               "dom.min_background_timeout_value",
                               DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE);
