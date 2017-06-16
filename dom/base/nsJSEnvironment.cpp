@@ -1995,7 +1995,7 @@ InterSliceGCRunnerFired(TimeStamp aDeadline, void* aData)
   }
 
   TimeStamp startTimeStamp = TimeStamp::Now();
-
+  TimeDuration duration = sGCUnnotifiedTotalTime;
   uintptr_t reason = reinterpret_cast<uintptr_t>(aData);
   nsJSContext::GarbageCollectNow(aData ?
                                    static_cast<JS::gcreason::Reason>(reason) :
@@ -2004,20 +2004,20 @@ InterSliceGCRunnerFired(TimeStamp aDeadline, void* aData)
                                  nsJSContext::NonShrinkingGC,
                                  budget);
 
-  TimeDuration duration = sGCUnnotifiedTotalTime;
   sGCUnnotifiedTotalTime = TimeDuration();
-
+  TimeStamp now = TimeStamp::Now();
+  TimeDuration sliceDuration = now - startTimeStamp;
+  duration += sliceDuration;
   if (duration.ToSeconds()) {
     TimeDuration idleDuration;
     if (!aDeadline.IsNull()) {
-      TimeStamp now = TimeStamp::Now();
       if (aDeadline < now) {
         // This slice overflowed the idle period.
         idleDuration = aDeadline - startTimeStamp;
       } else {
         // Note, we don't want to use duration here, since it may contain
         // data also from JS engine triggered GC slices.
-        idleDuration = now - startTimeStamp;
+        idleDuration = sliceDuration;
       }
     }
 
