@@ -49,7 +49,7 @@ function addJsonViewTab(url, timeout = -1) {
 
     // Resolve if the JSONView is fully loaded or wait
     // for an initialization event.
-    if (content.window.wrappedJSObject.jsonViewInitialized) {
+    if (content.window.wrappedJSObject.JSONView.initialized) {
       deferred.resolve(tab);
     } else {
       waitForContentMessage("Test:JsonView:JSONViewInitialized").then(() => {
