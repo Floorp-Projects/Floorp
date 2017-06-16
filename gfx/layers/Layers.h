@@ -1800,7 +1800,7 @@ public:
    * Clear the invalid rect, marking the layer as being identical to what is currently
    * composited.
    */
-  void ClearInvalidRect() { mInvalidRegion.SetEmpty(); }
+  virtual void ClearInvalidRect() { mInvalidRegion.SetEmpty(); }
 
   // These functions allow attaching an AsyncPanZoomController to this layer,
   // and can be used anytime.
@@ -1997,31 +1997,54 @@ public:
   {
     MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ValidRegion", this));
     mValidRegion = aRegion;
+    mValidRegionIsCurrent = true;
     Mutated();
   }
 
   /**
    * Can be used anytime
    */
-  const nsIntRegion& GetValidRegion() const { return mValidRegion; }
+  const nsIntRegion& GetValidRegion() const
+  {
+    EnsureValidRegionIsCurrent();
+    return mValidRegion;
+  }
 
   void InvalidateWholeLayer()
   {
-    InvalidateRegion(GetValidRegion().GetBounds());
+    mInvalidRegion.Add(GetValidRegion().GetBounds());
+    ClearValidRegion();
   }
 
-  void ClearValidRegion() { mValidRegion.SetEmpty(); }
+  void ClearValidRegion()
+  {
+    mValidRegion.SetEmpty();
+    mValidRegionIsCurrent = true;
+  }
   void AddToValidRegion(const nsIntRegion& aRegion)
   {
+    EnsureValidRegionIsCurrent();
     mValidRegion.OrWith(aRegion);
   }
   void SubtractFromValidRegion(const nsIntRegion& aRegion)
   {
+    EnsureValidRegionIsCurrent();
     mValidRegion.SubOut(aRegion);
   }
   void UpdateValidRegionAfterInvalidRegionChanged()
   {
-    SubtractFromValidRegion(mInvalidRegion.GetRegion());
+    // Changes to mInvalidRegion will be applied to mValidRegion on the next
+    // call to EnsureValidRegionIsCurrent().
+    mValidRegionIsCurrent = false;
+  }
+
+  void ClearInvalidRect() override
+  {
+    // mInvalidRegion is about to be reset. This is the last chance to apply
+    // any pending changes from it to mValidRegion. Do that by calling
+    // EnsureValidRegionIsCurrent().
+    EnsureValidRegionIsCurrent();
+    mInvalidRegion.SetEmpty();
   }
 
   virtual PaintedLayer* AsPaintedLayer() override { return this; }
@@ -2081,6 +2104,7 @@ protected:
               LayerManager::PaintedLayerCreationHint aCreationHint = LayerManager::NONE)
     : Layer(aManager, aImplData)
     , mValidRegion()
+    , mValidRegionIsCurrent(true)
     , mCreationHint(aCreationHint)
     , mUsedForReadback(false)
     , mAllowResidualTranslation(false)
@@ -2099,7 +2123,34 @@ protected:
   gfxPoint mResidualTranslation;
 
 private:
-  nsIntRegion mValidRegion;
+  /**
+   * Needs to be called prior to accessing mValidRegion, unless mValidRegion is
+   * being completely overwritten.
+   */
+  void EnsureValidRegionIsCurrent() const
+  {
+    if (!mValidRegionIsCurrent) {
+      // Apply any pending mInvalidRegion changes to mValidRegion.
+      if (!mValidRegion.IsEmpty()) {
+        // Calling mInvalidRegion.GetRegion() is expensive.
+        // That's why we delay the adjustment of mValidRegion for as long as
+        // possible, so that multiple modifications to mInvalidRegion can be
+        // applied to mValidRegion in one go.
+        mValidRegion.SubOut(mInvalidRegion.GetRegion());
+      }
+      mValidRegionIsCurrent = true;
+    }
+  }
+
+  /**
+   * The layer's valid region. If mValidRegionIsCurrent is false, then
+   * mValidRegion has not yet been updated for recent changes to
+   * mInvalidRegion. Those pending changes can be applied by calling
+   * EnsureValidRegionIsCurrent().
+   */
+  mutable nsIntRegion mValidRegion;
+
+  mutable bool mValidRegionIsCurrent;
 
 protected:
   /**
