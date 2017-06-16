@@ -29,7 +29,7 @@ add_task(function* () {
   let { highlighters, store } = inspector;
 
   yield selectNode("#grid1", inspector);
-  let gridList = doc.getElementById("grid-list");
+  let gridList = doc.querySelector("#grid-list");
   let checkbox1 = gridList.children[0].querySelector("input");
   let checkbox2 = gridList.children[1].querySelector("input");
 
