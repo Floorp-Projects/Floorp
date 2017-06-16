@@ -405,11 +405,10 @@ PropertyHasBeenMarkedNonConstant(JSObject* obj, jsid id)
 }
 
 MOZ_ALWAYS_INLINE bool
-HasTypePropertyId(JSObject* obj, jsid id, TypeSet::Type type)
+HasTrackedPropertyType(JSObject* obj, jsid id, TypeSet::Type type)
 {
-    id = IdToTypeId(id);
-    if (!TrackPropertyTypes(obj, id))
-        return true;
+    MOZ_ASSERT(id == IdToTypeId(id));
+    MOZ_ASSERT(TrackPropertyTypes(obj, id));
 
     if (HeapTypeSet* types = obj->group()->maybeGetProperty(id)) {
         if (!types->hasType(type))
@@ -421,6 +420,16 @@ HasTypePropertyId(JSObject* obj, jsid id, TypeSet::Type type)
     }
 
     return false;
+}
+
+MOZ_ALWAYS_INLINE bool
+HasTypePropertyId(JSObject* obj, jsid id, TypeSet::Type type)
+{
+    id = IdToTypeId(id);
+    if (!TrackPropertyTypes(obj, id))
+        return true;
+
+    return HasTrackedPropertyType(obj, id, type);
 }
 
 MOZ_ALWAYS_INLINE bool
@@ -437,16 +446,14 @@ MOZ_ALWAYS_INLINE void
 AddTypePropertyId(JSContext* cx, JSObject* obj, jsid id, TypeSet::Type type)
 {
     id = IdToTypeId(id);
-    if (TrackPropertyTypes(obj, id))
+    if (TrackPropertyTypes(obj, id) && !HasTrackedPropertyType(obj, id, type))
         AddTypePropertyId(cx, obj->group(), obj, id, type);
 }
 
 MOZ_ALWAYS_INLINE void
 AddTypePropertyId(JSContext* cx, JSObject* obj, jsid id, const Value& value)
 {
-    id = IdToTypeId(id);
-    if (TrackPropertyTypes(obj, id))
-        AddTypePropertyId(cx, obj->group(), obj, id, value);
+    return AddTypePropertyId(cx, obj, id, TypeSet::GetValueType(value));
 }
 
 inline void
