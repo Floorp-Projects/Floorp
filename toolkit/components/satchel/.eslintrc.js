@@ -4,6 +4,7 @@ module.exports = {
   rules: {
     "mozilla/no-cpows-in-tests": "error",
     "mozilla/var-only-at-top-level": "error",
+    "mozilla/balanced-listeners": "error",
 
     curly: ["error", "all"],
     indent: ["error", 2, {
