@@ -148,13 +148,13 @@ the package has all required strings, and that the strings don't contain
 errors. To ensure that, we're *merging* the localization and ``en-US``
 at build time, nick-named :term:`l10n-merge`.
 
-The process is usually triggered via
+The process can be manually triggered via
 
 .. code-block:: bash
 
-    $obj-dir/browser/locales> make merge-de LOCALE_MERGEDIR=$PWD/merge-de
+    $> ./mach build merge-de
 
-It creates another directory in the object dir, :file:`merge-ab-CD`, in
+It creates another directory in the object dir, :file:`merge-dir/ab-CD`, in
 which the modified files are stored. The actual repackaging process looks for
 the localized files in the merge dir first, then the localized file, and then
 in ``en-US``. Thus, for the ``de`` localization of
@@ -197,12 +197,9 @@ Localizations
 Now that we talked in-depth about how to expose content to localizers,
 where are the localizations?
 
-We host a mercurial repository per locale and per branch. Most of our
-localizations only work starting with aurora, so the bulk of the localizations
-is found on https://hg.mozilla.org/releases/l10n/mozilla-aurora/. We have
-several localizations continuously working with mozilla-central, those
-repositories are on https://hg.mozilla.org/l10n-central/.
+We host a mercurial repository per locale and per branch. All of our
+localizations can be found on https://hg.mozilla.org/l10n-central/.
 
 You can search inside our localized files on
 `Transvision <https://transvision.mozfr.org/>`_ and
-https://dxr.mozilla.org/l10n-mozilla-aurora/source/.
+https://dxr.mozilla.org/l10n-central/source/.
