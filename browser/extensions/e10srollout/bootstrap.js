@@ -22,9 +22,16 @@ const TEST_THRESHOLD = {
 // content processes to use and whether to allow addons for the experiment.
 const MULTI_EXPERIMENT = {
   "beta": { buckets: { 1: .5, 4: 1, }, // 1 process: 50%, 4 processes: 50%
-            addons: true },
+            addonsDisableExperiment: false },
+
   "release": { buckets: { 1: .2, 4: 1 }, // 1 process: 20%, 4 processes: 80%
-               addons: false },
+
+               // When on the "release" channel, getAddonsDisqualifyForMulti
+               // will return true if any addon installed is not a web extension.
+               // Therefore, this returns true if and only if all addons
+               // installed are web extensions or if no addons are installed
+               // at all.
+               get addonsDisableExperiment() { return getAddonsDisqualifyForMulti(); } }
 };
 
 const ADDON_ROLLOUT_POLICY = {
@@ -173,7 +180,7 @@ function defineCohort() {
   //   the default number of content processes (1 on beta) but still in the
   //   test cohort.
   if (!(updateChannel in MULTI_EXPERIMENT) ||
-      (!MULTI_EXPERIMENT[updateChannel].addons && cohortPrefix) ||
+      MULTI_EXPERIMENT[updateChannel].addonsDisableExperiment ||
       !eligibleForMulti ||
       userOptedIn.multi ||
       disqualified) {
