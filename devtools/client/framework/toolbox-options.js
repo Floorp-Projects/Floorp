@@ -322,11 +322,6 @@ OptionsPanel.prototype = {
       label: "Enable new debugger frontend",
       id: "devtools-new-debugger",
       parentId: "debugger-options"
-    }, {
-      pref: "devtools.layoutview.enabled",
-      label: "Enable layout panel",
-      id: "devtools-layout-panel",
-      parentId: "inspector-options"
     }];
 
     let createPreferenceOption = ({pref, label, id}) => {
