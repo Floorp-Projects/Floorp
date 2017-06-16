@@ -7,10 +7,12 @@
 <script type="application/javascript"
         src="chrome://browser/content/preferences/in-content-new/main.js"/>
 
+#ifdef MOZ_UPDATER
+  <script type="application/javascript" src="chrome://browser/content/aboutDialog-appUpdater.js"/>
+#endif
+
 <script type="application/javascript"
         src="chrome://mozapps/content/preferences/fontbuilder.js"/>
-
-<stringbundle id="engineManagerBundle" src="chrome://browser/locale/engineManager.properties"/>
 
 <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences.properties"/>
 
@@ -59,19 +61,6 @@
     <preference id="browser.privatebrowsing.autostart"
                 name="browser.privatebrowsing.autostart"
                 type="bool"/>
-
-    <!-- Search Engine -->
-    <preference id="browser.search.suggest.enabled"
-                  name="browser.search.suggest.enabled"
-                  type="bool"/>
-
-    <preference id="browser.urlbar.suggest.searches"
-                name="browser.urlbar.suggest.searches"
-                type="bool"/>
-
-    <preference id="browser.search.hiddenOneOffs"
-                name="browser.search.hiddenOneOffs"
-                type="unichar"/>
 
     <!-- Downloads -->
     <preference id="browser.download.useDownloadDir"
@@ -199,10 +188,87 @@
               name="layers.acceleration.disabled"
               type="bool"
               inverted="true"/>
+
+  <!-- Files and Applications -->
+  <preference id="browser.feeds.handler"
+              name="browser.feeds.handler"
+              type="string"/>
+  <preference id="browser.feeds.handler.default"
+              name="browser.feeds.handler.default"
+              type="string"/>
+  <preference id="browser.feeds.handlers.application"
+              name="browser.feeds.handlers.application"
+              type="file"/>
+  <preference id="browser.feeds.handlers.webservice"
+              name="browser.feeds.handlers.webservice"
+              type="string"/>
+
+  <preference id="browser.videoFeeds.handler"
+              name="browser.videoFeeds.handler"
+              type="string"/>
+  <preference id="browser.videoFeeds.handler.default"
+              name="browser.videoFeeds.handler.default"
+              type="string"/>
+  <preference id="browser.videoFeeds.handlers.application"
+              name="browser.videoFeeds.handlers.application"
+              type="file"/>
+  <preference id="browser.videoFeeds.handlers.webservice"
+              name="browser.videoFeeds.handlers.webservice"
+              type="string"/>
+
+  <preference id="browser.audioFeeds.handler"
+              name="browser.audioFeeds.handler"
+              type="string"/>
+  <preference id="browser.audioFeeds.handler.default"
+              name="browser.audioFeeds.handler.default"
+              type="string"/>
+  <preference id="browser.audioFeeds.handlers.application"
+              name="browser.audioFeeds.handlers.application"
+              type="file"/>
+  <preference id="browser.audioFeeds.handlers.webservice"
+              name="browser.audioFeeds.handlers.webservice"
+              type="string"/>
+
+  <preference id="pref.downloads.disable_button.edit_actions"
+              name="pref.downloads.disable_button.edit_actions"
+              type="bool"/>
+
+  <!-- DRM content -->
+  <preference id="media.eme.enabled"
+              name="media.eme.enabled"
+              type="bool"/>
+
+  <!-- Update -->
+  <preference id="browser.preferences.advanced.selectedTabIndex"
+              name="browser.preferences.advanced.selectedTabIndex"
+              type="int"/>
+
+#ifdef MOZ_UPDATER
+  <preference id="app.update.enabled"
+              name="app.update.enabled"
+              type="bool"/>
+  <preference id="app.update.auto"
+              name="app.update.auto"
+              type="bool"/>
+
+  <preference id="app.update.disable_button.showUpdateHistory"
+              name="app.update.disable_button.showUpdateHistory"
+              type="bool"/>
+
+#ifdef MOZ_MAINTENANCE_SERVICE
+  <preference id="app.update.service.enabled"
+              name="app.update.service.enabled"
+              type="bool"/>
+#endif
+#endif
+
+  <preference id="browser.search.update"
+              name="browser.search.update"
+              type="bool"/>
 </preferences>
 
-<hbox id="header-general"
-      class="header"
+<hbox id="generalCategory"
+      class="subcategory"
       hidden="true"
       data-category="paneGeneral">
   <label class="header-name" flex="1">&paneGeneral.title;</label>
@@ -242,7 +308,7 @@
         <label id="isNotDefaultLabel" flex="1">&isNotDefault.label;</label>
         <button id="setDefaultButton"
                 class="accessory-button"
-                label="&setAsMyDefaultBrowser2.label;" accesskey="&setAsMyDefaultBrowser2.accesskey;"
+                label="&setAsMyDefaultBrowser3.label;" accesskey="&setAsMyDefaultBrowser3.accesskey;"
                 preference="pref.general.disable_button.default_browser"/>
       </hbox>
       <hbox align="center" class="indent">
@@ -319,64 +385,8 @@
   </html:table>
 </groupbox>
 
-<!-- Default Search Engine -->
-<groupbox id="defaultEngineGroup" data-category="paneGeneral" data-subcategory="search">
   <caption><label>&defaultSearchEngine.label;</label></caption>
-  <label>&chooseYourDefaultSearchEngine.label;</label>
-  <box align="start">
-    <menulist id="defaultEngine">
-      <menupopup/>
-    </menulist>
-  </box>
-  <checkbox id="suggestionsInSearchFieldsCheckbox"
-            label="&provideSearchSuggestions.label;"
-            accesskey="&provideSearchSuggestions.accesskey;"
-            preference="browser.search.suggest.enabled"/>
-  <vbox class="indent">
-    <checkbox id="urlBarSuggestion" label="&showURLBarSuggestions.label;"
-              accesskey="&showURLBarSuggestions.accesskey;"
-              preference="browser.urlbar.suggest.searches"/>
-    <hbox id="urlBarSuggestionPermanentPBLabel"
-          align="center" class="indent">
-      <label flex="1">&urlBarSuggestionsPermanentPB.label;</label>
-    </hbox>
-  </vbox>
-</groupbox>
-
-<groupbox id="oneClickSearchProvidersGroup" data-category="paneGeneral" data-subcategory="search">
   <caption><label>&oneClickSearchEngines.label;</label></caption>
-  <label>&chooseWhichOneToDisplay.label;</label>
-
-  <tree id="engineList" flex="1" rows="8" hidecolumnpicker="true" editable="true"
-        seltype="single" allowunderflowscroll="true">
-    <treechildren id="engineChildren" flex="1"/>
-    <treecols>
-      <treecol id="engineShown" type="checkbox" editable="true" sortable="false"/>
-      <treecol id="engineName" flex="4" label="&engineNameColumn.label;" sortable="false"/>
-      <treecol id="engineKeyword" flex="1" label="&engineKeywordColumn.label;" editable="true"
-                sortable="false"/>
-    </treecols>
-  </tree>
-
-  <hbox>
-    <button id="restoreDefaultSearchEngines"
-            label="&restoreDefaultSearchEngines.label;"
-            accesskey="&restoreDefaultSearchEngines.accesskey;"/>
-    <spacer flex="1"/>
-    <button id="removeEngineButton"
-            class="searchEngineAction accessory-button"
-            label="&removeEngine.label;"
-            accesskey="&removeEngine.accesskey;"
-            disabled="true"/>
-  </hbox>
-
-  <separator class="thin"/>
-
-  <hbox id="addEnginesBox" pack="start">
-    <label id="addEngines" class="text-link">&addMoreSearchEngines2.label;</label>
-  </hbox>
-</groupbox>
-
 <!-- Tab preferences -->
 <groupbox data-category="paneGeneral"
           hidden="true">
@@ -409,80 +419,33 @@
               accesskey="&showTabsInTaskbar.accesskey;"
               preference="browser.taskbar.previews.enable"/>
 #endif
-</groupbox>
 
-<!-- Accessibility -->
-<groupbox data-category="paneGeneral" id="accessibilityGroup">
-  <caption><label>&accessibility.label;</label></caption>
-
-#ifdef XP_WIN
-  <checkbox id="useOnScreenKeyboard"
-            hidden="true"
-            label="&useOnScreenKeyboard.label;"
-            accesskey="&useOnScreenKeyboard.accesskey;"
-            preference="ui.osk.enabled"/>
-#endif
-  <checkbox id="useCursorNavigation"
-            label="&useCursorNavigation.label;"
-            accesskey="&useCursorNavigation.accesskey;"
-            preference="accessibility.browsewithcaret"/>
-  <checkbox id="searchStartTyping"
-            label="&searchOnStartTyping.label;"
-            accesskey="&searchOnStartTyping.accesskey;"
-            preference="accessibility.typeaheadfind"/>
-  <checkbox id="blockAutoRefresh"
-            label="&blockAutoReload.label;"
-            accesskey="&blockAutoReload.accesskey;"
-            preference="accessibility.blockautorefresh"/>
-</groupbox>
-
-<!-- Languages -->
-<groupbox id="languagesGroup" data-category="paneGeneral" hidden="true">
-  <caption><label>&languages.label;</label></caption>
-
-  <hbox id="languagesBox" align="center">
-    <description flex="1" control="chooseLanguage">&chooseLanguage.label;</description>
-    <button id="chooseLanguage"
-            class="accessory-button"
-            label="&chooseButton.label;"
-            accesskey="&chooseButton.accesskey;"
-            searchkeywords="&languages.customize.Header;
-                            &languages.customize.description;
-                            &languages.customize.moveUp.label;
-                            &languages.customize.moveDown.label;
-                            &languages.customize.deleteButton.label;
-                            &languages.customize.selectLanguage.label;
-                            &languages.customize.addButton.label;"/>
-  </hbox>
-
-  <hbox id="translationBox" hidden="true">
-    <hbox align="center" flex="1">
-      <checkbox id="translate" preference="browser.translation.detectLanguage"
-                label="&translateWebPages.label;." accesskey="&translateWebPages.accesskey;"
-                onsyncfrompreference="return gMainPane.updateButtons('translateButton',
-                                              'browser.translation.detectLanguage');"/>
-      <hbox id="bingAttribution" hidden="true">
-        <label>&translation.options.attribution.beforeLogo;</label>
-        <separator orient="vertical" class="thin"/>
-        <image id="translationAttributionImage" aria-label="Microsoft Translator"
-               src="chrome://browser/content/microsoft-translator-attribution.png"/>
-        <separator orient="vertical" class="thin"/>
-        <label>&translation.options.attribution.afterLogo;</label>
-      </hbox>
+    <hbox id="browserContainersbox" hidden="true" align="center">
+      <checkbox id="browserContainersCheckbox"
+                label="&browserContainersEnabled.label;"
+                accesskey="&browserContainersEnabled.accesskey;"
+                preference="privacy.userContext.enabled"
+                onsyncfrompreference="return gPrivacyPane.readBrowserContainersCheckbox();"/>
+      <label id="browserContainersLearnMore" class="learnMore text-link">
+        &browserContainersLearnMore.label;
+      </label>
+      <spacer flex="1"/>
+      <button id="browserContainersSettings"
+              class="accessory-button"
+              label="&browserContainersSettings.label;"
+              accesskey="&browserContainersSettings.accesskey;"
+              searchkeywords="&addButton.label;
+                              &preferencesButton.label;
+                              &removeButton.label;"/>
     </hbox>
-    <button id="translateButton"
-            class="accessory-button"
-            label="&translateExceptions.label;"
-            accesskey="&translateExceptions.accesskey;"/>
-  </hbox>
-  <checkbox id="checkSpelling"
-          label="&checkUserSpelling.label;"
-          accesskey="&checkUserSpelling.accesskey;"
-          onsyncfrompreference="return gMainPane.readCheckSpelling();"
-          onsynctopreference="return gMainPane.writeCheckSpelling();"
-          preference="layout.spellcheckDefault"/>
 </groupbox>
 
+<hbox id="languageAndAppearanceCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneGeneral">
+  <label class="header-name" flex="1">&languageAndAppearance.label;</label>
+</hbox>
 
 <!-- Fonts and Colors -->
 <groupbox id="fontsGroup" data-category="paneGeneral" hidden="true">
@@ -610,24 +573,310 @@
   </vbox>
 </groupbox>
 
-<!-- Browsing -->
-<groupbox id="browsingGroup" data-category="paneGeneral">
-  <caption><label>&browsing.label;</label></caption>
+<!-- Languages -->
+<groupbox id="languagesGroup" data-category="paneGeneral" hidden="true">
+  <caption><label>&language2.label;</label></caption>
 
-  <checkbox id="useAutoScroll"
-            label="&useAutoScroll.label;"
-            accesskey="&useAutoScroll.accesskey;"
-            preference="general.autoScroll"/>
-  <checkbox id="useSmoothScrolling"
-            label="&useSmoothScrolling.label;"
-            accesskey="&useSmoothScrolling.accesskey;"
-            preference="general.smoothScroll"/>
+  <hbox id="languagesBox" align="center">
+    <description flex="1" control="chooseLanguage">&chooseLanguage.label;</description>
+    <button id="chooseLanguage"
+            class="accessory-button"
+            label="&chooseButton.label;"
+            accesskey="&chooseButton.accesskey;"
+            searchkeywords="&languages.customize.Header;
+                            &languages.customize.description;
+                            &languages.customize.moveUp.label;
+                            &languages.customize.moveDown.label;
+                            &languages.customize.deleteButton.label;
+                            &languages.customize.selectLanguage.label;
+                            &languages.customize.addButton.label;"/>
+  </hbox>
+
+  <hbox id="translationBox" hidden="true">
+    <hbox align="center" flex="1">
+      <checkbox id="translate" preference="browser.translation.detectLanguage"
+                label="&translateWebPages.label;." accesskey="&translateWebPages.accesskey;"
+                onsyncfrompreference="return gMainPane.updateButtons('translateButton',
+                                              'browser.translation.detectLanguage');"/>
+      <hbox id="bingAttribution" hidden="true">
+        <label>&translation.options.attribution.beforeLogo;</label>
+        <separator orient="vertical" class="thin"/>
+        <image id="translationAttributionImage" aria-label="Microsoft Translator"
+               src="chrome://browser/content/microsoft-translator-attribution.png"/>
+        <separator orient="vertical" class="thin"/>
+        <label>&translation.options.attribution.afterLogo;</label>
+      </hbox>
+    </hbox>
+    <button id="translateButton"
+            class="accessory-button"
+            label="&translateExceptions.label;"
+            accesskey="&translateExceptions.accesskey;"/>
+  </hbox>
+  <checkbox id="checkSpelling"
+          label="&checkUserSpelling.label;"
+          accesskey="&checkUserSpelling.accesskey;"
+          onsyncfrompreference="return gMainPane.readCheckSpelling();"
+          onsynctopreference="return gMainPane.writeCheckSpelling();"
+          preference="layout.spellcheckDefault"/>
 </groupbox>
+
+<!-- Files and Applications -->
+<keyset data-category="paneGeneral">
+  <!-- Ctrl+f/k focus the search box in the Applications pane.
+       These <key>s have oncommand attributes because of bug 371900. -->
+  <key key="&focusSearch1.key;" modifiers="accel" id="focusSearch1" oncommand=";"/>
+  <key key="&focusSearch2.key;" modifiers="accel" id="focusSearch2" oncommand=";"/>
+</keyset>
+
+<hbox id="filesAndApplicationsCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneGeneral">
+  <label class="header-name" flex="1">&filesAndApplications.label;</label>
+</hbox>
+
+<!--Downloads-->
+<groupbox id="downloadsGroup" data-category="paneGeneral" hidden="true">
+  <caption><label>&downloads.label;</label></caption>
+
+  <radiogroup id="saveWhere"
+              preference="browser.download.useDownloadDir"
+              onsyncfrompreference="return gMainPane.readUseDownloadDir();">
+    <hbox id="saveToRow">
+      <radio id="saveTo"
+            value="true"
+            label="&saveTo.label;"
+            accesskey="&saveTo.accesskey;"
+            aria-labelledby="saveTo downloadFolder"/>
+      <filefield id="downloadFolder"
+                flex="1"
+                preference="browser.download.folderList"
+                preference-editable="true"
+                aria-labelledby="saveTo"
+                onsyncfrompreference="return gMainPane.displayDownloadDirPref();"/>
+      <button id="chooseFolder"
+#ifdef XP_MACOSX
+              accesskey="&chooseFolderMac.accesskey;"
+              label="&chooseFolderMac.label;"
+#else
+              accesskey="&chooseFolderWin.accesskey;"
+              label="&chooseFolderWin.label;"
+#endif
+      />
+    </hbox>
+    <radio id="alwaysAsk"
+          value="false"
+          label="&alwaysAskWhere.label;"
+          accesskey="&alwaysAskWhere.accesskey;"/>
+  </radiogroup>
+</groupbox>
+
+<groupbox id="applicationsGroup" data-category="paneGeneral" hidden="true">
+  <caption><label>&applications.label;</label></caption>
+  <description>&applications.description;</description>
+  <textbox id="filter" flex="1"
+           type="search"
+           placeholder="&filter2.emptytext;"
+           aria-controls="handlersView"/>
+
+  <richlistbox id="handlersView" orient="vertical" persist="lastSelectedType"
+               preference="pref.downloads.disable_button.edit_actions"
+               flex="1">
+    <listheader equalsize="always">
+        <treecol id="typeColumn" label="&typeColumn.label;" value="type"
+                 accesskey="&typeColumn.accesskey;" persist="sortDirection"
+                 flex="1" sortDirection="ascending"/>
+        <treecol id="actionColumn" label="&actionColumn2.label;" value="action"
+                 accesskey="&actionColumn2.accesskey;" persist="sortDirection"
+                 flex="1"/>
+    </listheader>
+  </richlistbox>
+</groupbox>
+
+
+<!-- DRM Content -->
+<groupbox id="drmGroup" data-category="paneGeneral" hidden="true">
+  <caption><label>&drmContent2.label;</label></caption>
+  <grid id="contentGrid2">
+    <columns>
+      <column flex="1"/>
+      <column/>
+    </columns>
+    <rows id="contentRows-2">
+      <row id="playDRMContentRow">
+        <hbox align="center">
+          <checkbox id="playDRMContent" preference="media.eme.enabled"
+                    label="&playDRMContent2.label;" accesskey="&playDRMContent2.accesskey;"/>
+          <label id="playDRMContentLink" class="learnMore text-link">
+            &playDRMContent.learnMore.label;
+          </label>
+        </hbox>
+      </row>
+    </rows>
+  </grid>
+</groupbox>
+
+#ifdef HAVE_SHELL_SERVICE
+  <stringbundle id="bundleShell" src="chrome://browser/locale/shellservice.properties"/>
+  <stringbundle id="bundleBrand" src="chrome://branding/locale/brand.properties"/>
+#endif
+
+<hbox id="updatesCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneGeneral">
+  <label class="header-name" flex="1">&updateApplication.label;</label>
+</hbox>
+
+<!-- Update -->
+<groupbox id="updateApp" data-category="paneGeneral" hidden="true">
+  <hbox align="start">
+    <vbox flex="1">
+      <description>
+        &updateApplication.version.pre;<label id="version"/>&updateApplication.version.post;
+        <label id="releasenotes" class="learnMore text-link" hidden="true">&releaseNotes.link;</label>
+      </description>
+      <description id="distribution" class="text-blurb" hidden="true"/>
+      <description id="distributionId" class="text-blurb" hidden="true"/>
+    </vbox>
+#ifdef MOZ_UPDATER
+    <spacer flex="1"/>
+    <vbox>
+      <button id="showUpdateHistory"
+              class="accessory-button"
+              label="&updateHistory2.label;"
+              accesskey="&updateHistory2.accesskey;"
+              preference="app.update.disable_button.showUpdateHistory"
+              searchkeywords="&history.title; &history.intro;"/>
+    </vbox>
+#endif
+  </hbox>
+#ifdef MOZ_UPDATER
+  <vbox id="updateBox">
+    <deck id="updateDeck" orient="vertical">
+      <hbox id="checkForUpdates" align="center">
+        <spacer flex="1"/>
+        <button id="checkForUpdatesButton"
+                label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                oncommand="gAppUpdater.checkForUpdates();"/>
+      </hbox>
+      <hbox id="downloadAndInstall" align="center">
+        <spacer flex="1"/>
+        <button id="downloadAndInstallButton"
+                oncommand="gAppUpdater.startDownload();"/>
+                <!-- label and accesskey will be filled by JS -->
+      </hbox>
+      <hbox id="apply" align="center">
+        <spacer flex="1"/>
+        <button id="updateButton"
+                label="&update.updateButton.label3;"
+                accesskey="&update.updateButton.accesskey;"
+                oncommand="gAppUpdater.buttonRestartAfterDownload();"/>
+      </hbox>
+      <hbox id="checkingForUpdates" align="center">
+        <image class="update-throbber"/><label>&update.checkingForUpdates;</label>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                disabled="true"/>
+      </hbox>
+      <hbox id="downloading" align="center">
+        <image class="update-throbber"/><label>&update.downloading.start;</label><label id="downloadStatus"/><label>&update.downloading.end;</label>
+      </hbox>
+      <hbox id="applying" align="center">
+        <image class="update-throbber"/><label>&update.applying;</label>
+      </hbox>
+      <hbox id="downloadFailed" align="center">
+        <label>&update.failed.start;</label><label id="failedLink" class="text-link">&update.failed.linkText;</label><label>&update.failed.end;</label>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                oncommand="gAppUpdater.checkForUpdates();"/>
+      </hbox>
+      <hbox id="adminDisabled" align="center">
+        <label>&update.adminDisabled;</label>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                disabled="true"/>
+      </hbox>
+      <hbox id="noUpdatesFound" align="center">
+        <label>&update.noUpdatesFound;</label>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                oncommand="gAppUpdater.checkForUpdates();"/>
+      </hbox>
+      <hbox id="otherInstanceHandlingUpdates" align="center">
+        <label>&update.otherInstanceHandlingUpdates;</label>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                disabled="true"/>
+      </hbox>
+      <hbox id="manualUpdate" align="center">
+        <label>&update.manual.start;</label><label id="manualLink" class="text-link"/><label>&update.manual.end;</label>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                disabled="true"/>
+      </hbox>
+      <hbox id="unsupportedSystem" align="center">
+        <label>&update.unsupported.start;</label><label id="unsupportedLink" class="text-link">&update.unsupported.linkText;</label><label>&update.unsupported.end;</label>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                disabled="true"/>
+      </hbox>
+      <hbox id="restarting" align="center">
+        <image class="update-throbber"/><label>&update.restarting;</label>
+        <spacer flex="1"/>
+        <button label="&update.updateButton.label3;"
+                accesskey="&update.updateButton.accesskey;"
+                disabled="true"/>
+      </hbox>
+    </deck>
+  </vbox>
+#endif
+
+  <separator/>
+#ifdef MOZ_UPDATER
+  <description>&updateApplication.description;</description>
+  <radiogroup id="updateRadioGroup">
+    <radio id="autoDesktop"
+           value="auto"
+           label="&updateAuto2.label;"
+           accesskey="&updateAuto2.accesskey;"/>
+    <radio value="checkOnly"
+          label="&updateCheckChoose2.label;"
+          accesskey="&updateCheckChoose2.accesskey;"/>
+    <radio value="manual"
+          label="&updateManual2.label;"
+          accesskey="&updateManual2.accesskey;"/>
+  </radiogroup>
+#ifdef MOZ_MAINTENANCE_SERVICE
+  <checkbox id="useService"
+            label="&useService.label;"
+            accesskey="&useService.accesskey;"
+            preference="app.update.service.enabled"/>
+#endif
+#endif
+  <checkbox id="enableSearchUpdate"
+            label="&enableSearchUpdate2.label;"
+            accesskey="&enableSearchUpdate2.accesskey;"
+            preference="browser.search.update"/>
+</groupbox>
+
+<hbox id="performanceCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneGeneral">
+  <label class="header-name" flex="1">&performance.label;</label>
+</hbox>
 
 <!-- Performance -->
 <groupbox id="performanceGroup" data-category="paneGeneral" hidden="true">
-  <caption><label>&performance.label;</label></caption>
-
   <hbox align="center">
     <checkbox id="useRecommendedPerformanceSettings"
               label="&useRecommendedPerformanceSettings2.label;"
@@ -659,4 +908,76 @@
     <description id="contentProcessCountEnabledDescription">&limitContentProcessOption.description;</description>
     <description id="contentProcessCountDisabledDescription">&limitContentProcessOption.disabledDescription;<label class="text-link" href="https://wiki.mozilla.org/Electrolysis">&limitContentProcessOption.disabledDescriptionLink;</label></description>
   </vbox>
+</groupbox>
+
+<hbox id="browsingCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneGeneral">
+  <label class="header-name" flex="1">&browsing.label;</label>
+</hbox>
+
+<!-- Browsing -->
+<groupbox id="browsingGroup" data-category="paneGeneral" hidden="true">
+  <checkbox id="useAutoScroll"
+            label="&useAutoScroll.label;"
+            accesskey="&useAutoScroll.accesskey;"
+            preference="general.autoScroll"/>
+  <checkbox id="useSmoothScrolling"
+            label="&useSmoothScrolling.label;"
+            accesskey="&useSmoothScrolling.accesskey;"
+            preference="general.smoothScroll"/>
+
+#ifdef XP_WIN
+  <checkbox id="useOnScreenKeyboard"
+            hidden="true"
+            label="&useOnScreenKeyboard.label;"
+            accesskey="&useOnScreenKeyboard.accesskey;"
+            preference="ui.osk.enabled"/>
+#endif
+  <checkbox id="useCursorNavigation"
+            label="&useCursorNavigation.label;"
+            accesskey="&useCursorNavigation.accesskey;"
+            preference="accessibility.browsewithcaret"/>
+  <checkbox id="searchStartTyping"
+            label="&searchOnStartTyping.label;"
+            accesskey="&searchOnStartTyping.accesskey;"
+            preference="accessibility.typeaheadfind"/>
+</groupbox>
+
+<hbox id="networkProxyCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneGeneral">
+  <label class="header-name" flex="1">&networkProxy.label;</label>
+</hbox>
+
+<!-- Network Proxy-->
+<groupbox id="connectionGroup" data-category="paneGeneral" hidden="true">
+  <hbox align="center">
+    <description flex="1" control="connectionSettings">&connectionDesc.label;</description>
+    <button id="connectionSettings"
+            class="accessory-button"
+            icon="network"
+            label="&connectionSettings.label;"
+            accesskey="&connectionSettings.accesskey;"
+            searchkeywords="&connectionsDialog.title;
+                            &noProxyTypeRadio.label;
+                            &WPADTypeRadio.label;
+                            &systemTypeRadio.label;
+                            &manualTypeRadio.label;
+                            &http.label;
+                            &ssl.label;
+                            &ftp.label;
+                            &socks.label;
+                            &socks4.label;
+                            &socks5.label;
+                            &noproxy.label;
+                            &noproxyExplain.label;
+                            &shareproxy.label;
+                            &autoTypeRadio.label;
+                            &reload.label;
+                            &autologinproxy.label;
+                            &socksRemoteDNS.label2;"/>
+  </hbox>
 </groupbox>
