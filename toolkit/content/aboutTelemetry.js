@@ -329,7 +329,7 @@ var PingPicker = {
 
     let explanation = bundle.formatStringFromName("pingExplanation", [pingName], 1);
     pingExplanation.innerHTML = explanation;
-    this.attachObservers();
+    GenericSubsection.deleteAllSubSections();
   },
 
   async update() {
@@ -354,7 +354,6 @@ var PingPicker = {
         document.getElementById("archived-ping-picker").hidden = false;
       }
     }
-    this.render();
   },
 
   _updateCurrentPingData() {
@@ -1382,8 +1381,14 @@ var GenericSubsection = {
 
   addSubSectionToSidebar(id, title) {
     let category = document.querySelector("#categories > [value=" + id + "]");
+    category.classList.add("has-subsection");
     let subCategory = document.createElement("div");
-    subCategory.setAttribute("class", "subsection");
+    subCategory.classList.add("category-subsection");
+    subCategory.setAttribute("value", id + "-" + title);
+    subCategory.addEventListener("click", (ev) => {
+      let section = ev.target;
+      showSubSection(section);
+    });
     subCategory.appendChild(document.createTextNode(title))
     category.appendChild(subCategory);
   },
@@ -1392,7 +1397,7 @@ var GenericSubsection = {
     for (let [title, sectionData] of data) {
       let hasData = sectionData.size > 0;
       let s = this.renderSubsectionHeader(title, hasData, sectionID);
-      s.appendChild(this.renderSubsectionData(sectionData));
+      s.appendChild(this.renderSubsectionData(title, sectionData));
       dataDiv.appendChild(s);
     }
   },
@@ -1400,22 +1405,33 @@ var GenericSubsection = {
   renderSubsectionHeader(title, hasData, sectionID) {
     this.addSubSectionToSidebar(sectionID, title);
     let section = document.createElement("section");
-    section.classList.add("data-subsection");
+    section.setAttribute("id", sectionID + "-" + title);
+    section.classList.add("data-subsection", "expanded");
     if (hasData) {
       section.classList.add("has-subdata");
     }
     return section;
   },
 
-  renderSubsectionData(data) {
+  renderSubsectionData(title, data) {
     // Create data container
     let dataDiv = document.createElement("div");
     dataDiv.setAttribute("class", "subsection-data subdata");
     // Instanciate the data
     let table = GenericTable.render(data);
+    let caption = document.createElement("caption");
+    caption.textContent = title;
+    table.appendChild(caption);
     dataDiv.appendChild(table);
 
     return dataDiv;
+  },
+
+  deleteAllSubSections() {
+    let subsections = document.querySelectorAll(".category-subsection");
+    subsections.forEach((el) => {
+      el.parentElement.removeChild(el);
+    })
   },
 
 }
@@ -1714,19 +1730,40 @@ function setupPageHeader() {
  * Change the section displayed
  */
 function show(selected) {
-    let current_section = document.querySelector(".active");
-    let selected_section = document.getElementById(selected.getAttribute("value"));
-    if (current_section == selected_section)
-      return;
-    current_section.classList.remove("active");
-    current_section.hidden = true;
-    selected_section.classList.add("active");
-    selected_section.hidden = false;
+  let current_button = document.querySelector(".category.selected");
+  current_button.classList.remove("selected");
+  selected.classList.add("selected");
+  // Hack because subsection text appear selected. See Bug 1375114.
+  document.getSelection().empty();
 
-    let current_button = document.querySelector("[selected=true]");
-    current_button.removeAttribute("selected");
-    selected.setAttribute("selected", "true");
-    document.getElementById("sectionTitle").textContent = selected.textContent;
+  let current_section = document.querySelector(".active");
+  let selected_section = document.getElementById(selected.getAttribute("value"));
+  if (current_section == selected_section)
+    return;
+  current_section.classList.remove("active");
+  current_section.hidden = true;
+  selected_section.classList.add("active");
+  selected_section.hidden = false;
+
+  let title = selected.querySelector(".category-name").textContent;
+  document.getElementById("sectionTitle").textContent = title;
+}
+
+function showSubSection(selected) {
+  let current_selection = document.querySelector(".category-subsection.selected");
+  if (current_selection)
+    current_selection.classList.remove("selected");
+  selected.classList.add("selected");
+
+  let section = document.getElementById(selected.getAttribute("value"));
+  section.parentElement.childNodes.forEach((element) => {
+    element.classList.remove("expanded");
+  }, this);
+  section.classList.add("expanded");
+
+  let title = selected.parentElement.querySelector(".category-name").textContent;
+  document.getElementById("sectionTitle").textContent = title + " - " + selected.textContent;
+  document.getSelection().empty(); // prevent subsection text selection
 }
 
 /**
@@ -2126,6 +2163,7 @@ function displayPingData(ping, updatePayloadList = false) {
 
 
   try {
+    PingPicker.render();
     displayRichPingData(ping, updatePayloadList);
   } catch (err) {
     console.log(err);
