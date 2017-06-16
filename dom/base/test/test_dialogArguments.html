@@ -16,8 +16,16 @@
 */
 SimpleTest.waitForExplicitFinish();
 
-function openModal() {
-	showModalDialog("javascript:opener.winRef = window; \
+async function openModal() {
+	await SpecialPowers.pushPrefEnv({ set: [[
+		"dom.disable_window_showModalDialog", false ]] });
+
+	let iframe = document.createElement("iframe");
+	document.body.appendChild(iframe);
+	await new Promise(resolve => {
+		iframe.addEventListener("load", resolve);
+	});
+	iframe.contentWindow.showModalDialog("javascript:opener.winRef = window; \
 		window.opener.setTimeout(\'winRef.dialogArguments;\', 0);\
 		window.close();");
 
