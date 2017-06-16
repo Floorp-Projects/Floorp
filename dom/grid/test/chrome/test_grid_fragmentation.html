@@ -52,24 +52,24 @@ x { display:block; height:20px; }
 SimpleTest.waitForExplicitFinish();
 
 function runTests() {
-	var wrapper = document.getElementById("wrapper");
-	var fragments = wrapper.getGridFragments();
-	
-	// test fragments of the grid
-	is(fragments.length, 2, "Grid is split into two fragments.");
-	
-	if (fragments.length == 2) {
-		var grid0 = fragments[0];
-		var grid1 = fragments[1];
-	
-		// test that both fragments have one row track and two lines
-		is(grid0.rows.tracks.length, 1, "Fragment 0 has one row track.");
-		is(grid0.rows.lines.length, 2, "Fragment 0 has two row lines.");
-		is(grid1.rows.tracks.length, 1, "Fragment 1 has one row track.");
-		is(grid1.rows.lines.length, 2, "Fragment 1 has two row lines.");
-	}
-	
-	SimpleTest.finish();
+  var wrapper = document.getElementById("wrapper");
+  var fragments = wrapper.getGridFragments();
+
+  // test fragments of the grid
+  is(fragments.length, 2, "Grid is split into two fragments.");
+
+  if (fragments.length == 2) {
+    var grid0 = fragments[0];
+    var grid1 = fragments[1];
+
+    // test that both fragments have one row track and two lines
+    is(grid0.rows.tracks.length, 1, "Fragment 0 has one row track.");
+    is(grid0.rows.lines.length, 2, "Fragment 0 has two row lines.");
+    is(grid1.rows.tracks.length, 1, "Fragment 1 has one row track.");
+    is(grid1.rows.lines.length, 2, "Fragment 1 has two row lines.");
+  }
+
+  SimpleTest.finish();
 }
 </script>
 </head>
