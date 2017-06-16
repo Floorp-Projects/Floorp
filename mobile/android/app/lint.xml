@@ -61,8 +61,8 @@
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/IntentHelper.java"/>
         <ignore path="**/media/webrtc/trunk/webrtc/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioEffects.java"/>
         <ignore path="**/media/webrtc/trunk/webrtc/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioRecord.java"/>
-        <ignore path="**/mobile/android/base/resources/values/styles.xml"/>
-        <ignore path="**/mobile/android/base/resources/values/themes.xml"/>
+        <ignore path="src/main/res/values/styles.xml"/>
+        <ignore path="src/main/res/values/themes.xml"/>
     </issue>
 
     <!-- We fixed all "Registered" lint errors. However the current gradle plugin has a bug where

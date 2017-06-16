@@ -99,7 +99,7 @@ $(suggestedsites-dstdir-raw)/suggestedsites.json: FORCE
 	$(call py_action,generate_suggestedsites, \
 		--verbose \
 		--android-package-name=$(ANDROID_PACKAGE_NAME) \
-		--resources=$(srcdir)/../resources \
+		--resources=$(topsrcdir)/mobile/android/app/src/main/res \
 		$(if $(filter en-US,$(AB_CD)),,--srcdir=$(l10n-srcdir)) \
 		--srcdir=$(topsrcdir)/mobile/locales/en-US/chrome \
 		$@)
