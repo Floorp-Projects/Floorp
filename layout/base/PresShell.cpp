@@ -787,7 +787,6 @@ nsIPresShell::nsIPresShell()
     , mIsDestroying(false)
     , mIsReflowing(false)
     , mPaintingSuppressed(false)
-    , mIsThemeSupportDisabled(false)
     , mIsActive(false)
     , mFrozen(false)
     , mIsFirstPaint(false)
@@ -854,7 +853,6 @@ PresShell::PresShell()
   mLastOSWake = mLoadBegin = TimeStamp::Now();
 
   mSelectionFlags = nsISelectionDisplay::DISPLAY_TEXT | nsISelectionDisplay::DISPLAY_IMAGES;
-  mIsThemeSupportDisabled = false;
   mIsActive = true;
   // FIXME/bug 735029: find a better solution to this problem
   mIsFirstPaint = true;
