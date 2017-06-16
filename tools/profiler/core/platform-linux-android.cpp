@@ -76,30 +76,30 @@ Thread::GetCurrentId()
 }
 
 static void
-FillInRegs(Registers& aRegs, ucontext_t* aContext)
+FillInSample(TickSample& aSample, ucontext_t* aContext)
 {
-  aRegs.mContext = aContext;
+  aSample.mContext = aContext;
   mcontext_t& mcontext = aContext->uc_mcontext;
 
   // Extracting the sample from the context is extremely machine dependent.
 #if defined(GP_ARCH_x86)
-  aRegs.mPC = reinterpret_cast<Address>(mcontext.gregs[REG_EIP]);
-  aRegs.mSP = reinterpret_cast<Address>(mcontext.gregs[REG_ESP]);
-  aRegs.mFP = reinterpret_cast<Address>(mcontext.gregs[REG_EBP]);
+  aSample.mPC = reinterpret_cast<Address>(mcontext.gregs[REG_EIP]);
+  aSample.mSP = reinterpret_cast<Address>(mcontext.gregs[REG_ESP]);
+  aSample.mFP = reinterpret_cast<Address>(mcontext.gregs[REG_EBP]);
 #elif defined(GP_ARCH_amd64)
-  aRegs.mPC = reinterpret_cast<Address>(mcontext.gregs[REG_RIP]);
-  aRegs.mSP = reinterpret_cast<Address>(mcontext.gregs[REG_RSP]);
-  aRegs.mFP = reinterpret_cast<Address>(mcontext.gregs[REG_RBP]);
+  aSample.mPC = reinterpret_cast<Address>(mcontext.gregs[REG_RIP]);
+  aSample.mSP = reinterpret_cast<Address>(mcontext.gregs[REG_RSP]);
+  aSample.mFP = reinterpret_cast<Address>(mcontext.gregs[REG_RBP]);
 #elif defined(GP_ARCH_arm)
-  aRegs.mPC = reinterpret_cast<Address>(mcontext.arm_pc);
-  aRegs.mSP = reinterpret_cast<Address>(mcontext.arm_sp);
-  aRegs.mFP = reinterpret_cast<Address>(mcontext.arm_fp);
-  aRegs.mLR = reinterpret_cast<Address>(mcontext.arm_lr);
+  aSample.mPC = reinterpret_cast<Address>(mcontext.arm_pc);
+  aSample.mSP = reinterpret_cast<Address>(mcontext.arm_sp);
+  aSample.mFP = reinterpret_cast<Address>(mcontext.arm_fp);
+  aSample.mLR = reinterpret_cast<Address>(mcontext.arm_lr);
 #elif defined(GP_ARCH_aarch64)
-  aRegs.mPC = reinterpret_cast<Address>(mcontext.pc);
-  aRegs.mSP = reinterpret_cast<Address>(mcontext.sp);
-  aRegs.mFP = reinterpret_cast<Address>(mcontext.regs[29]);
-  aRegs.mLR = reinterpret_cast<Address>(mcontext.regs[30]);
+  aSample.mPC = reinterpret_cast<Address>(mcontext.pc);
+  aSample.mSP = reinterpret_cast<Address>(mcontext.sp);
+  aSample.mFP = reinterpret_cast<Address>(mcontext.regs[29]);
+  aSample.mLR = reinterpret_cast<Address>(mcontext.regs[30]);
 #else
 # error "bad platform"
 #endif
@@ -303,8 +303,8 @@ Sampler::Disable(PSLockRef aLock)
 template<typename Func>
 void
 Sampler::SuspendAndSampleAndResumeThread(PSLockRef aLock,
-                                         const ThreadInfo& aThreadInfo,
-                                         const Func& aProcessRegs)
+                                         TickSample& aSample,
+                                         const Func& aDoSample)
 {
   // Only one sampler thread can be sampling at once.  So we expect to have
   // complete control over |sSigHandlerCoordinator|.
@@ -313,7 +313,7 @@ Sampler::SuspendAndSampleAndResumeThread(PSLockRef aLock,
   if (mSamplerTid == -1) {
     mSamplerTid = gettid();
   }
-  int sampleeTid = aThreadInfo.ThreadId();
+  int sampleeTid = aSample.mThreadId;
   MOZ_RELEASE_ASSERT(sampleeTid != mSamplerTid);
 
   //----------------------------------------------------------------//
@@ -356,10 +356,10 @@ Sampler::SuspendAndSampleAndResumeThread(PSLockRef aLock,
   // The samplee thread is now frozen and sSigHandlerCoordinator->mUContext is
   // valid.  We can poke around in it and unwind its stack as we like.
 
-  // Extract the current register values.
-  Registers regs;
-  FillInRegs(regs, &sSigHandlerCoordinator->mUContext);
-  aProcessRegs(regs);
+  // Extract the current PC and sp.
+  FillInSample(aSample, &sSigHandlerCoordinator->mUContext);
+
+  aDoSample();
 
   //----------------------------------------------------------------//
   // Resume the target thread.
@@ -523,12 +523,13 @@ PlatformInit(PSLockRef aLock)
 #endif
 
 void
-Registers::SyncPopulate(ucontext_t* aContext)
+TickSample::PopulateContext(ucontext_t* aContext)
 {
+  MOZ_ASSERT(mIsSynchronous);
   MOZ_ASSERT(aContext);
 
   if (!getcontext(aContext)) {
-    FillInRegs(*this, aContext);
+    FillInSample(*this, aContext);
   }
 }
 
