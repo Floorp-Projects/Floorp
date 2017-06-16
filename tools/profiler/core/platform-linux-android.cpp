@@ -259,9 +259,9 @@ Sampler::Sampler(PSLockRef aLock)
   bool createdLUL = false;
   lul::LUL* lul = CorePS::Lul(aLock);
   if (!lul) {
-    lul = new lul::LUL(logging_sink_for_LUL);
-    CorePS::SetLul(aLock, lul);
+    CorePS::SetLul(aLock, MakeUnique<lul::LUL>(logging_sink_for_LUL));
     // Read all the unwind info currently available.
+    lul = CorePS::Lul(aLock);
     read_procmaps(lul);
     createdLUL = true;
   }
