@@ -25,7 +25,7 @@ add_task(function* () {
   let { highlighters, store } = inspector;
 
   yield selectNode("#grid", inspector);
-  let gridList = doc.getElementById("grid-list");
+  let gridList = doc.querySelector("#grid-list");
   let checkbox = gridList.children[0].querySelector("input");
 
   info("Checking the initial state of the Grid Inspector.");
