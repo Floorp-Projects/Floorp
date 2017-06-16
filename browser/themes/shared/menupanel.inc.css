@@ -249,3 +249,24 @@ toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button {
 #appMenu-fullscreen-button[checked] {
   list-style-image: url(chrome://browser/skin/fullscreen-exit.svg);
 }
+
+#appMenu-library-history-button {
+  list-style-image: url(chrome://browser/skin/history.svg);
+}
+
+#appMenu-library-remotetabs-button {
+  list-style-image: url("chrome://browser/skin/synced-tabs.svg");
+}
+
+#PanelUI-remotetabs-syncnow {
+  list-style-image: url("chrome://browser/skin/sync.svg");
+}
+
+#PanelUI-remotetabs-view-managedevices {
+  list-style-image: url("chrome://browser/skin/device-mobile.svg");
+}
+
+#appMenuViewHistorySidebar,
+#PanelUI-remotetabs-view-sidebar {
+  list-style-image: url("chrome://browser/skin/sidebars.svg");
+}
