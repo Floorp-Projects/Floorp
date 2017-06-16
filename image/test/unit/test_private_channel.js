@@ -108,6 +108,8 @@ function run_test() {
 
   do_test_pending();
 
+  Services.prefs.setBoolPref("network.http.rcwn.enabled", false);
+
   // We create a public channel that loads an image, then an identical
   // one that should cause a cache read. We then create a private channel
   // and load the same image, and do that a second time to ensure a cache
