@@ -293,6 +293,10 @@ class LcovFile(object):
                 print("Invalid lcov line start at %s:%d:\n%s" %
                       (lcov_fh.name, count + 1, line))
                 raise
+            except TypeError:
+                print("Invalid lcov line start at %s:%d:\n%s" %
+                      (lcov_fh.name, count + 1, line))
+                raise
 
     def print_file(self, fh):
         for record in self.records:
