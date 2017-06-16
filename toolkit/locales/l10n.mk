@@ -56,6 +56,13 @@ ACDEFINES += \
 	-DPKG_INST_BASENAME='$(PKG_INST_BASENAME)' \
 	$(NULL)
 
+# export some global defines for l10n repacks
+BASE_MERGE:=$(CURDIR)/merge-dir
+export REAL_LOCALE_MERGEDIR=$(BASE_MERGE)/$(AB_CD)
+# is an l10n repack step:
+export IS_LANGUAGE_REPACK
+# is a language pack:
+export IS_LANGPACK
 
 clobber-%: AB_CD=$*
 clobber-%:
@@ -170,9 +177,16 @@ TK_DEFINES = $(firstword \
 # chrome directory.
 PKG_ZIP_DIRS = chrome $(or $(DIST_SUBDIRS),$(DIST_SUBDIR))
 
+merge-%: IS_LANGUAGE_REPACK=1
+merge-%:
+	$(RM) -rf $(REAL_LOCALE_MERGEDIR)
+	$(MOZILLA_DIR)/mach compare-locales --l10n-base $(L10NBASEDIR) --merge-dir $(REAL_LOCALE_MERGEDIR) $*
+
 langpack-%: LANGPACK_FILE=$(ABS_DIST)/$(PKG_LANGPACK_PATH)$(PKG_LANGPACK_BASENAME).xpi
 langpack-%: AB_CD=$*
 langpack-%: XPI_NAME=locale-$*
+langpack-%: IS_LANGUAGE_REPACK=1
+langpack-%: IS_LANGPACK=1
 langpack-%: libs-%
 	@echo 'Making langpack $(LANGPACK_FILE)'
 	$(NSINSTALL) -D $(DIST)/$(PKG_LANGPACK_PATH)

@@ -87,6 +87,7 @@ DEFINES += -DBOOKMARKS_INCLUDE_DIR=$(dir $(call MERGE_FILE,profile/bookmarks.inc
 
 libs-%: AB_CD=$*
 libs-%:
+	$(if $(filter en-US,$(AB_CD)),, @$(MAKE) merge-$*)
 	$(NSINSTALL) -D $(DIST)/install
 	@$(MAKE) -C ../../toolkit/locales libs-$* XPI_ROOT_APPID='$(XPI_ROOT_APPID)'
 	@$(MAKE) -C ../../services/sync/locales AB_CD=$* XPI_NAME=locale-$*
@@ -109,7 +110,9 @@ endif
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*
 
 chrome-%: AB_CD=$*
+chrome-%: IS_LANGUAGE_REPACK=1
 chrome-%:
+	$(if $(filter en-US,$(AB_CD)),, @$(MAKE) merge-$*)
 	@$(MAKE) -C ../../toolkit/locales chrome-$*
 	@$(MAKE) -C ../../services/sync/locales chrome AB_CD=$*
 	@$(MAKE) -C ../../extensions/spellcheck/locales chrome AB_CD=$*
@@ -157,6 +160,7 @@ langpack: langpack-$(AB_CD)
 # builds, and repack an installer if applicable. It is called from the
 # tinderbox scripts. Alter it with caution.
 
+installers-%: IS_LANGUAGE_REPACK=1
 installers-%: clobber-% langpack-% repackage-win32-installer-% repackage-zip-%
 	@echo 'repackaging done'
 
@@ -177,9 +181,11 @@ else
 endif
 endif
 
+ifndef IS_LANGPACK
 ifdef MOZ_CRASHREPORTER
 libs:: $(call MERGE_FILE,crashreporter/crashreporter-override.ini)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
+endif
 endif
 
 ident:
@@ -189,14 +195,6 @@ ident:
 	@printf 'buildid '
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py \
 	    $(STAGEDIST)/application.ini App BuildID
-
-merge-%: AB_CD=$*
-merge-%:
-ifdef LOCALE_MERGEDIR
-	$(RM) -rf $(LOCALE_MERGEDIR)
-	$(topsrcdir)/mach compare-locales --merge-dir $(LOCALE_MERGEDIR) $*
-endif
-	@echo
 
 # test target, depends on make package
 # try to repack x-test, with just toolkit/defines.inc being there
@@ -209,7 +207,7 @@ l10n-check::
 	@# we do the same for WIN32_INSTALLER_IN, which are based on MOZ_SIMPLE_PACKAGE_NAME
 	@# not being reset, overwriting the value they would get with MOZ_SIMPLE_PACKAGE_NAME
 	@# reset.
-	$(MAKE) installers-x-test L10NBASEDIR='$(PWD)' LOCALE_MERGEDIR='$(PWD)/mergedir' \
+	$(MAKE) installers-x-test L10NBASEDIR='$(PWD)' \
 	    ZIP_IN='$(ZIP_IN)' WIN32_INSTALLER_IN='$(WIN32_INSTALLER_IN)' MOZ_SIMPLE_PACKAGE_NAME=
 	$(PYTHON) $(topsrcdir)/toolkit/mozapps/installer/unpack.py $(DIST)/l10n-stage/$(MOZ_PKG_DIR)$(_RESPATH)
 	cd $(DIST)/l10n-stage && test $$(cat $(MOZ_PKG_DIR)$(_RESPATH)/update.locale) = x-test
