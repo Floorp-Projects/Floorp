@@ -222,6 +222,8 @@
              preprocessed_resources res/raw folder. Lint reports it as unused. We should get
              rid of the file eventually. See bug 1268948. -->
         <ignore path="**/raw/.mkdir.done" />
+        <ignore path="src/australis/res/values/skin_strings.xml"/>
+        <ignore path="src/photon/res/values/skin_strings.xml"/>
     </issue>
     <issue id="Usability" severity="error" />
     <issue id="UseCheckPermission" severity="error" />
