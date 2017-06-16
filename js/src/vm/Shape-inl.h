@@ -333,6 +333,30 @@ Shape::searchNoHashify(Shape* start, jsid id)
     return start->searchLinear(id);
 }
 
+/* static */ MOZ_ALWAYS_INLINE Shape*
+NativeObject::addProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
+                          GetterOp getter, SetterOp setter, uint32_t slot, unsigned attrs,
+                          unsigned flags, bool allowDictionary)
+{
+    MOZ_ASSERT(!JSID_IS_VOID(id));
+    MOZ_ASSERT(getter != JS_PropertyStub);
+    MOZ_ASSERT(setter != JS_StrictPropertyStub);
+    MOZ_ASSERT(obj->uninlinedNonProxyIsExtensible());
+    MOZ_ASSERT(!obj->containsPure(id));
+
+    AutoKeepShapeTables keep(cx);
+    ShapeTable::Entry* entry = nullptr;
+    if (obj->inDictionaryMode()) {
+        ShapeTable* table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
+        if (!table)
+            return nullptr;
+        entry = &table->search<MaybeAdding::Adding>(id, keep);
+    }
+
+    return addPropertyInternal(cx, obj, id, getter, setter, slot, attrs, flags, entry,
+                               allowDictionary, keep);
+}
+
 } /* namespace js */
 
 #endif /* vm_Shape_inl_h */
