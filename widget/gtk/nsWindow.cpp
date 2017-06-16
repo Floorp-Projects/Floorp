@@ -40,6 +40,11 @@
 #if (MOZ_WIDGET_GTK == 3)
 #include <gtk/gtkx.h>
 #endif
+
+#ifdef MOZ_WAYLAND
+#include <gdk/gdkwayland.h>
+#endif /* MOZ_WAYLAND */
+
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
 #include <X11/Xatom.h>
@@ -48,11 +53,11 @@
 #if (MOZ_WIDGET_GTK == 3)
 #include <gdk/gdkkeysyms-compat.h>
 #endif
-
 #if (MOZ_WIDGET_GTK == 2)
 #include "gtk2xtbin.h"
 #endif
 #endif /* MOZ_X11 */
+
 #include <gdk/gdkkeysyms.h>
 #if (MOZ_WIDGET_GTK == 2)
 #include <gtk/gtkprivate.h>
@@ -816,6 +821,20 @@ double
 nsWindow::GetDefaultScaleInternal()
 {
     return GdkScaleFactor() * gfxPlatformGtk::GetFontScaleFactor();
+}
+
+DesktopToLayoutDeviceScale
+nsWindow::GetDesktopToDeviceScale()
+{
+#ifdef MOZ_WAYLAND
+    GdkDisplay* gdkDisplay = gdk_display_get_default();
+    if (GDK_IS_WAYLAND_DISPLAY(gdkDisplay)) {
+        return DesktopToLayoutDeviceScale(GdkScaleFactor());
+    }
+#endif
+
+    // In Gtk/X11, we manage windows using device pixels.
+    return DesktopToLayoutDeviceScale(1.0);
 }
 
 void

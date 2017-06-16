@@ -8,7 +8,10 @@
 
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
-#endif
+#endif /* MOZ_X11 */
+#ifdef MOZ_WAYLAND
+#include <gdk/gdkwayland.h>
+#endif /* MOZ_WAYLAND */
 #include <dlfcn.h>
 #include <gtk/gtk.h>
 
@@ -147,7 +150,16 @@ MakeScreen(GdkScreen* aScreen, gint aMonitorNum)
                                 workarea.width * gdkScaleFactor,
                                 workarea.height * gdkScaleFactor);
   uint32_t pixelDepth = GetGTKPixelDepth();
+
+  // Use per-monitor scaling factor in gtk/wayland, or 1.0 otherwise.
   DesktopToLayoutDeviceScale contentsScale(1.0);
+#ifdef MOZ_WAYLAND
+    GdkDisplay* gdkDisplay = gdk_display_get_default();
+    if (GDK_IS_WAYLAND_DISPLAY(gdkDisplay)) {
+      contentsScale.scale = gdkScaleFactor;
+    }
+#endif
+
   CSSToLayoutDeviceScale defaultCssScale(
     gdkScaleFactor * gfxPlatformGtk::GetFontScaleFactor());
 
