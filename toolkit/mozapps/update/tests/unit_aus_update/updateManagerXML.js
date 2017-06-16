@@ -18,8 +18,6 @@ function run_test() {
 
   let patchProps = {type: "partial",
                     url: "http://partial/",
-                    hashFunction: "SHA256",
-                    hashValue: "cd43",
                     size: "86",
                     selected: "true",
                     state: STATE_PENDING};
@@ -47,8 +45,6 @@ function run_test() {
 
   patchProps = {type: "complete",
                 url: "http://complete/",
-                hashFunction: "SHA1",
-                hashValue: "6232",
                 size: "75",
                 selected: "true",
                 state: STATE_FAILED};
@@ -120,10 +116,6 @@ function run_test() {
                "the update patch type attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(patch.URL, "http://partial/",
                "the update patch URL attribute" + MSG_SHOULD_EQUAL);
-  Assert.equal(patch.hashFunction, "SHA256",
-               "the update patch hashFunction attribute" + MSG_SHOULD_EQUAL);
-  Assert.equal(patch.hashValue, "cd43",
-               "the update patch hashValue attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(patch.size, "86",
                "the update patch size attribute" + MSG_SHOULD_EQUAL);
   Assert.ok(!!patch.selected,
@@ -176,10 +168,6 @@ function run_test() {
                "the update patch type attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(patch.URL, "http://complete/",
                "the update patch URL attribute" + MSG_SHOULD_EQUAL);
-  Assert.equal(patch.hashFunction, "SHA1",
-               "the update patch hashFunction attribute" + MSG_SHOULD_EQUAL);
-  Assert.equal(patch.hashValue, "6232",
-               "the update patch hashValue attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(patch.size, "75",
                "the update patch size attribute" + MSG_SHOULD_EQUAL);
   Assert.ok(!!patch.selected,

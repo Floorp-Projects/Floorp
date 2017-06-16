@@ -18,8 +18,7 @@ var gExpectedStatusResult;
 function run_test() {
   setupTestCommon();
 
-  debugDump("testing mar downloads, mar hash verification, and " +
-            "mar download interrupted recovery");
+  debugDump("testing mar downloads and mar download interrupted recovery");
 
   Services.prefs.setBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, false);
   start_httpserver();
@@ -65,7 +64,7 @@ function check_test_helper_pt1_2() {
   gNextRunFunc();
 }
 
-function setResponseBody(aHashFunction, aHashValue) {
+function setResponseBody() {
   let patches = getRemotePatchString({});
   let updates = getRemoteUpdateString({}, patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
@@ -200,7 +199,7 @@ IncrementalDownload.prototype = {
 // Test disconnecting during an update
 function run_test_pt1() {
   initMockIncrementalDownload();
-  setResponseBody("MD5", MD5_HASH_SIMPLE_MAR);
+  setResponseBody();
   run_test_helper_pt1("mar download with connection interruption",
                       Cr.NS_OK, run_test_pt2);
 }
@@ -210,7 +209,7 @@ function run_test_pt2() {
   gIncrementalDownloadErrorType = 0;
   Services.prefs.setIntPref(PREF_APP_UPDATE_SOCKET_MAXERRORS, 2);
   Services.prefs.setIntPref(PREF_APP_UPDATE_RETRYTIMEOUT, 0);
-  setResponseBody("MD5", MD5_HASH_SIMPLE_MAR);
+  setResponseBody();
   run_test_helper_pt1("mar download with connection interruption without recovery",
                       Cr.NS_ERROR_NET_RESET, run_test_pt3);
 }
@@ -218,7 +217,7 @@ function run_test_pt2() {
 // Test entering offline mode while downloading
 function run_test_pt3() {
   gIncrementalDownloadErrorType = 4;
-  setResponseBody("MD5", MD5_HASH_SIMPLE_MAR);
+  setResponseBody();
   run_test_helper_pt1("mar download with offline mode",
                       Cr.NS_OK, finish_test);
 }
