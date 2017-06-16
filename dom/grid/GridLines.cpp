@@ -90,7 +90,9 @@ GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
     for (uint32_t i = aTrackInfo->mStartFragmentTrack;
          i < aTrackInfo->mEndFragmentTrack + 1;
          i++) {
-      uint32_t line1Index = i + 1;
+      // Since line indexes are 1-based, calculate a 1-based value
+      // for this track to simplify some calculations.
+      const uint32_t line1Index = i + 1;
 
       startOfNextTrack = (i < aTrackInfo->mEndFragmentTrack) ?
                          aTrackInfo->mPositions[i] :
@@ -139,23 +141,30 @@ GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
 
       RefPtr<GridLine> line = new GridLine(this);
       mLines.AppendElement(line);
+      MOZ_ASSERT(line1Index > 0, "line1Index must be positive.");
+      bool isBeforeFirstExplicit =
+        (line1Index <= aTrackInfo->mNumLeadingImplicitTracks);
+      // Calculate an actionable line number for this line, that could be used
+      // in a css grid property to align a grid item or area at that line.
+      // For implicit lines that appear before line 1, report a number of 0.
+      // We can't report negative indexes, because those have a different
+      // meaning in the css grid spec (negative indexes are negative-1-based
+      // from the end of the grid decreasing towards the front).
+      uint32_t lineNumber = isBeforeFirstExplicit ? 0 :
+        (line1Index - aTrackInfo->mNumLeadingImplicitTracks + numAddedLines);
+      GridDeclaration lineType =
+        (isBeforeFirstExplicit ||
+         line1Index > (aTrackInfo->mNumLeadingImplicitTracks +
+                       aTrackInfo->mNumExplicitTracks + 1))
+         ? GridDeclaration::Implicit
+         : GridDeclaration::Explicit;
       line->SetLineValues(
         lineNames,
         nsPresContext::AppUnitsToDoubleCSSPixels(lastTrackEdge),
         nsPresContext::AppUnitsToDoubleCSSPixels(startOfNextTrack -
                                                  lastTrackEdge),
-        line1Index + numAddedLines,
-        (
-          // Implicit if there are no explicit tracks, or if the index
-          // is before the first explicit track, or after
-          // a track beyond the last explicit track.
-          (aTrackInfo->mNumExplicitTracks == 0) ||
-          (i < aTrackInfo->mNumLeadingImplicitTracks) ||
-          (i > aTrackInfo->mNumLeadingImplicitTracks +
-               aTrackInfo->mNumExplicitTracks) ?
-            GridDeclaration::Implicit :
-            GridDeclaration::Explicit
-        )
+        lineNumber,
+        lineType
       );
 
       if (i < aTrackInfo->mEndFragmentTrack) {
@@ -215,11 +224,16 @@ GridLines::AppendRemovedAutoFits(const ComputedGridTrackInfo* aTrackInfo,
 
     RefPtr<GridLine> line = new GridLine(this);
     mLines.AppendElement(line);
+    MOZ_ASSERT(aTrackInfo->mRepeatFirstTrack >=
+               aTrackInfo->mNumLeadingImplicitTracks,
+      "We shouldn't have a repeat track within the implicit tracks.");
+    uint32_t lineNumber = aTrackInfo->mRepeatFirstTrack -
+      aTrackInfo->mNumLeadingImplicitTracks + aRepeatIndex + 1;
     line->SetLineValues(
       aLineNames,
       nsPresContext::AppUnitsToDoubleCSSPixels(aLastTrackEdge),
       nsPresContext::AppUnitsToDoubleCSSPixels(0),
-      aTrackInfo->mRepeatFirstTrack + aRepeatIndex + 1,
+      lineNumber,
       GridDeclaration::Explicit
     );
 
