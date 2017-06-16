@@ -316,7 +316,11 @@ function limitTopLevelMessageCount(state, record, logLimit) {
 
   const isInRemovedId = id => removedMessagesId.includes(id);
   const mapHasRemovedIdKey = map => map.findKey((value, id) => isInRemovedId(id));
+  const objectHasRemovedIdKey = obj => Object.keys(obj).findIndex(isInRemovedId) !== -1;
   const cleanUpCollection = map => removedMessagesId.forEach(id => map.remove(id));
+  const cleanUpList = list => list.filter(id => {
+    return isInRemovedId(id) === false;
+  });
   const cleanUpObject = object => [...Object.entries(object)]
     .reduce((res, [id, value]) => {
       if (!isInRemovedId(id)) {
@@ -328,7 +332,7 @@ function limitTopLevelMessageCount(state, record, logLimit) {
   record.set("messagesById", record.messagesById.withMutations(cleanUpCollection));
 
   if (record.messagesUiById.find(isInRemovedId)) {
-    record.set("messagesUiById", record.messagesUiById.withMutations(cleanUpCollection));
+    record.set("messagesUiById", cleanUpList(record.messagesUiById));
   }
   if (mapHasRemovedIdKey(record.messagesTableDataById)) {
     record.set("messagesTableDataById",
@@ -337,12 +341,11 @@ function limitTopLevelMessageCount(state, record, logLimit) {
   if (mapHasRemovedIdKey(record.groupsById)) {
     record.set("groupsById", record.groupsById.withMutations(cleanUpCollection));
   }
-
-  if (Object.keys(record.repeatById).includes(removedMessagesId)) {
+  if (objectHasRemovedIdKey(record.repeatById)) {
     record.set("repeatById", cleanUpObject(record.repeatById));
   }
 
-  if (Object.keys(record.networkMessagesUpdateById).includes(removedMessagesId)) {
+  if (objectHasRemovedIdKey(record.networkMessagesUpdateById)) {
     record.set("networkMessagesUpdateById",
       cleanUpObject(record.networkMessagesUpdateById));
   }
