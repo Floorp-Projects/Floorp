@@ -1433,15 +1433,15 @@ MarkValueFromIon(JSRuntime* rt, Value* vp)
 void
 MarkStringFromIon(JSRuntime* rt, JSString** stringp)
 {
-    if (*stringp)
-        TraceManuallyBarrieredEdge(&rt->gc.marker, stringp, "write barrier");
+    MOZ_ASSERT(*stringp);
+    TraceManuallyBarrieredEdge(&rt->gc.marker, stringp, "write barrier");
 }
 
 void
 MarkObjectFromIon(JSRuntime* rt, JSObject** objp)
 {
-    if (*objp)
-        TraceManuallyBarrieredEdge(&rt->gc.marker, objp, "write barrier");
+    MOZ_ASSERT(*objp);
+    TraceManuallyBarrieredEdge(&rt->gc.marker, objp, "write barrier");
 }
 
 void

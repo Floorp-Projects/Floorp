@@ -571,6 +571,13 @@ MacroAssembler::branchPtr(Condition cond, wasm::SymbolicAddress lhs, Register rh
     branchPtr(cond, SecondScratchReg, rhs, label);
 }
 
+void
+MacroAssembler::branchPtr(Condition cond, const BaseIndex& lhs, ImmWord rhs, Label* label)
+{
+    loadPtr(lhs, SecondScratchReg);
+    branchPtr(cond, SecondScratchReg, rhs, label);
+}
+
 template <typename T>
 CodeOffsetJump
 MacroAssembler::branchPtrWithPatch(Condition cond, Register lhs, T rhs, RepatchLabel* label)
