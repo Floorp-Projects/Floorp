@@ -135,6 +135,10 @@ class GCVector
             GCPolicy<T>::trace(trc, &elem, "vector element");
     }
 
+    bool needsSweep() const {
+        return !this->empty();
+    }
+
     void sweep() {
         uint32_t src, dst = 0;
         for (src = 0; src < length(); src++) {
