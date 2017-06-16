@@ -6,7 +6,6 @@ use std::fmt;
 use std::f32::consts::PI;
 
 use super::{Token, Parser, ToCss, ParseError, BasicParseError};
-use tokenizer::NumericValue;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -430,11 +429,11 @@ fn parse_color_function<'i, 't>(name: &str, arguments: &mut Parser<'i, 't>) -> R
         };
         let token = try!(arguments.next());
         match token {
-            Token::Number(NumericValue { value: v, .. }) => {
+            Token::Number { value: v, .. } => {
                 clamp_unit_f32(v)
             }
-            Token::Percentage(ref v) => {
-                clamp_unit_f32(v.unit_value)
+            Token::Percentage { unit_value: v, .. } => {
+                clamp_unit_f32(v)
             }
             t => {
                 return Err(BasicParseError::UnexpectedToken(t))
@@ -459,10 +458,10 @@ fn parse_rgb_components_rgb<'i, 't>(arguments: &mut Parser<'i, 't>) -> Result<(u
     // Either integers or percentages, but all the same type.
     // https://drafts.csswg.org/css-color/#rgb-functions
     match try!(arguments.next()) {
-        Token::Number(NumericValue { value: v, .. }) => {
+        Token::Number { value: v, .. } => {
             red = clamp_floor_256_f32(v);
             green = clamp_floor_256_f32(match try!(arguments.next()) {
-                Token::Number(NumericValue { value: v, .. }) => v,
+                Token::Number { value: v, .. } => v,
                 Token::Comma => {
                     uses_commas = true;
                     try!(arguments.expect_number())
@@ -474,10 +473,10 @@ fn parse_rgb_components_rgb<'i, 't>(arguments: &mut Parser<'i, 't>) -> Result<(u
             }
             blue = clamp_floor_256_f32(try!(arguments.expect_number()));
         }
-        Token::Percentage(ref v) => {
-            red = clamp_unit_f32(v.unit_value);
+        Token::Percentage { unit_value, .. } => {
+            red = clamp_unit_f32(unit_value);
             green = clamp_unit_f32(match try!(arguments.next()) {
-                Token::Percentage(ref v) => v.unit_value,
+                Token::Percentage { unit_value, .. } => unit_value,
                 Token::Comma => {
                     uses_commas = true;
                     try!(arguments.expect_percentage())
@@ -501,8 +500,8 @@ fn parse_rgb_components_hsl<'i, 't>(arguments: &mut Parser<'i, 't>) -> Result<(u
     // https://drafts.csswg.org/css-values/#angles
     let token = try!(arguments.next());
     let hue_degrees = match token {
-        Token::Number(NumericValue { value: v, .. }) => Ok(v),
-        Token::Dimension(NumericValue { value: v, .. }, ref unit) => {
+        Token::Number { value: v, .. } => Ok(v),
+        Token::Dimension { value: v, ref unit, .. } => {
             match_ignore_ascii_case! { &*unit,
                 "deg" => Ok(v),
                 "grad" => Ok(v * 360. / 400.),
@@ -521,7 +520,7 @@ fn parse_rgb_components_hsl<'i, 't>(arguments: &mut Parser<'i, 't>) -> Result<(u
     // Saturation and lightness are clamped to 0% ... 100%
     // https://drafts.csswg.org/css-color/#the-hsl-notation
     let saturation = match try!(arguments.next()) {
-        Token::Percentage(ref v) => v.unit_value,
+        Token::Percentage { unit_value, .. } => unit_value,
         Token::Comma => {
             uses_commas = true;
             try!(arguments.expect_percentage())
