@@ -1014,9 +1014,10 @@ nsInlineFrame::AccessibleType()
 #endif
 
 void
-nsInlineFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoStyleSet& aStyleSet,
-                                             nsStyleChangeList& aChangeList,
-                                             nsChangeHint aHintForThisFrame)
+nsInlineFrame::UpdateStyleOfOwnedAnonBoxesForIBSplit(
+    ServoStyleSet& aStyleSet,
+    nsStyleChangeList& aChangeList,
+    nsChangeHint aHintForThisFrame)
 {
   MOZ_ASSERT(GetStateBits() & NS_FRAME_OWNS_ANON_BOXES,
              "Why did we get called?");
