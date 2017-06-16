@@ -33,9 +33,8 @@
 <!ENTITY  history.label                 "History">
 <!ENTITY  permissions.label             "Permissions">
 
-<!ENTITY  locationBar.label             "Location Bar">
-
-<!ENTITY  locbar.suggest2.label         "When using the location bar, suggest">
+<!ENTITY  addressBar.label              "Address Bar">
+<!ENTITY  addressBar.suggest.label      "When using the address bar, suggest">
 <!ENTITY  locbar.history.label          "History">
 <!ENTITY  locbar.history.accesskey      "H">
 <!ENTITY  locbar.bookmarks.label        "Bookmarks">
@@ -109,7 +108,6 @@
 <!ENTITY  clearOnCloseSettings.label     "Settings…">
 <!ENTITY  clearOnCloseSettings.accesskey "t">
 
-<!ENTITY  browserContainersHeader.label         "Container Tabs">
 <!ENTITY  browserContainersLearnMore.label      "Learn more">
 <!ENTITY  browserContainersEnabled.label        "Enable Container Tabs">
 <!ENTITY  browserContainersEnabled.accesskey    "n">
