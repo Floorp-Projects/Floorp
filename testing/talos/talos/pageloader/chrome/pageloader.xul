@@ -46,7 +46,7 @@
 
   <script type="application/x-javascript" 
           src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript" src="Profiler.js"></script>
+  <script type="application/x-javascript" src="chrome://talos-powers-content/content/TalosParentProfiler.js"></script>
   <script type="application/x-javascript" src="MozillaFileLogger.js"></script>
   <script type="application/x-javascript" src="report.js"></script>
   <script type="application/x-javascript" src="pageloader.js"></script>
