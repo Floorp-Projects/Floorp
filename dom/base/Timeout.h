@@ -72,8 +72,8 @@ public:
   // Returned as value of setTimeout()
   uint32_t mTimeoutId;
 
-  // Interval in milliseconds
-  uint32_t mInterval;
+  // Interval
+  TimeDuration mInterval;
 
   // Identifies which firing level this Timeout is being processed in
   // when sync loops trigger nested firing.
