@@ -253,19 +253,6 @@ const nsCacheableFuncStringContentList::ContentListType
   nsCacheableFuncStringHTMLCollection::sType = nsCacheableFuncStringContentList::eHTMLCollection;
 #endif
 
-JSObject*
-nsCacheableFuncStringNodeList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
-{
-  return NodeListBinding::Wrap(cx, this, aGivenProto);
-}
-
-
-JSObject*
-nsCacheableFuncStringHTMLCollection::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
-{
-  return HTMLCollectionBinding::Wrap(cx, this, aGivenProto);
-}
-
 // Hashtable for storing nsCacheableFuncStringContentList
 static PLDHashTable* gFuncStringContentListHashTable;
 
@@ -378,6 +365,7 @@ NS_GetFuncStringHTMLCollection(nsINode* aRootNode,
                                                                        aString);
 }
 
+//-----------------------------------------------------
 // nsContentList implementation
 
 nsContentList::nsContentList(nsINode* aRootNode,
@@ -659,7 +647,7 @@ nsContentList::AttributeChanged(nsIDocument *aDocument, Element* aElement,
                                 const nsAttrValue* aOldValue)
 {
   NS_PRECONDITION(aElement, "Must have a content node to work with");
-  
+
   if (!mFunc || !mFuncMayDependOnAttr || mState == LIST_DIRTY ||
       !MayContainRelevantNodes(aElement->GetParentNode()) ||
       !nsContentUtils::IsInSameAnonymousTree(mRootNode, aElement)) {
@@ -805,7 +793,7 @@ nsContentList::ContentInserted(nsIDocument *aDocument,
 
   ASSERT_IN_SYNC;
 }
- 
+
 void
 nsContentList::ContentRemoved(nsIDocument *aDocument,
                               nsIContent* aContainer,
@@ -1074,3 +1062,126 @@ nsContentList::AssertInSync()
   NS_ASSERTION(cnt == mElements.Length(), "Too few elements");
 }
 #endif
+
+//-----------------------------------------------------
+// nsCacheableFuncStringNodeList
+
+JSObject*
+nsCacheableFuncStringNodeList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
+{
+  return NodeListBinding::Wrap(cx, this, aGivenProto);
+}
+
+//-----------------------------------------------------
+// nsCacheableFuncStringHTMLCollection
+
+JSObject*
+nsCacheableFuncStringHTMLCollection::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
+{
+  return HTMLCollectionBinding::Wrap(cx, this, aGivenProto);
+}
+
+//-----------------------------------------------------
+// nsLabelsNodeList
+
+JSObject*
+nsLabelsNodeList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
+{
+  return NodeListBinding::Wrap(cx, this, aGivenProto);
+}
+
+void
+nsLabelsNodeList::AttributeChanged(nsIDocument* aDocument, Element* aElement,
+                                   int32_t aNameSpaceID, nsIAtom* aAttribute,
+                                   int32_t aModType,
+                                   const nsAttrValue* aOldValue)
+{
+  MOZ_ASSERT(aElement, "Must have a content node to work with");
+  if (mState == LIST_DIRTY ||
+      !nsContentUtils::IsInSameAnonymousTree(mRootNode, aElement)) {
+    return;
+  }
+
+  // We need to handle input type changes to or from "hidden".
+  if (aElement->IsHTMLElement(nsGkAtoms::input) &&
+      aAttribute == nsGkAtoms::type && aNameSpaceID == kNameSpaceID_None) {
+    SetDirty();
+    return;
+  }
+}
+
+void
+nsLabelsNodeList::ContentAppended(nsIDocument* aDocument,
+                                  nsIContent* aContainer,
+                                  nsIContent* aFirstNewContent,
+                                  int32_t aNewIndexInContainer)
+{
+  // If a labelable element is moved to outside or inside of
+  // nested associated labels, we're gonna have to modify
+  // the content list.
+  if (mState != LIST_DIRTY ||
+      nsContentUtils::IsInSameAnonymousTree(mRootNode, aContainer)) {
+    SetDirty();
+    return;
+  }
+}
+
+void
+nsLabelsNodeList::ContentInserted(nsIDocument* aDocument,
+                                  nsIContent* aContainer,
+                                  nsIContent* aChild,
+                                  int32_t aIndexInContainer)
+{
+  // If a labelable element is moved to outside or inside of
+  // nested associated labels, we're gonna have to modify
+  // the content list.
+  if (mState != LIST_DIRTY ||
+      nsContentUtils::IsInSameAnonymousTree(mRootNode, aChild)) {
+    SetDirty();
+    return;
+  }
+}
+
+void
+nsLabelsNodeList::ContentRemoved(nsIDocument* aDocument,
+                                 nsIContent* aContainer,
+                                 nsIContent* aChild,
+                                 int32_t aIndexInContainer,
+                                 nsIContent* aPreviousSibling)
+{
+  // If a labelable element is removed, we're gonna have to clean
+  // the content list.
+  if (mState != LIST_DIRTY ||
+      nsContentUtils::IsInSameAnonymousTree(mRootNode, aChild)) {
+    SetDirty();
+    return;
+  }
+}
+
+void
+nsLabelsNodeList::MaybeResetRoot(nsINode* aRootNode)
+{
+  MOZ_ASSERT(aRootNode, "Must have root");
+  if (mRootNode == aRootNode) {
+    return;
+  }
+
+  mRootNode->RemoveMutationObserver(this);
+  mRootNode = aRootNode;
+  mRootNode->AddMutationObserver(this);
+  SetDirty();
+}
+
+void
+nsLabelsNodeList::PopulateSelf(uint32_t aNeededLength)
+{
+  MOZ_ASSERT(mRootNode, "Must have root");
+
+  // Start searching at the root.
+  nsINode* cur = mRootNode;
+  if (mElements.IsEmpty() && cur->IsElement() && Match(cur->AsElement())) {
+    mElements.AppendElement(cur->AsElement());
+  }
+
+  nsContentList::PopulateSelf(aNeededLength);
+}
