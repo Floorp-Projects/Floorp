@@ -2,6 +2,31 @@
 
 Cu.import("resource://gre/modules/AppMenuNotifications.jsm");
 
+function waitForDocshellActivated() {
+  return ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+    // Setting docshell activated/deactivated will trigger visibility state
+    // changes to relevant state ("visible" or "hidden"). AFAIK, there is no
+    // such event notifying docshell is being activated, so I use
+    // "visibilitychange" event rather than polling the docShell.isActive.
+    await ContentTaskUtils.waitForEvent(content.document, "visibilitychange",
+                                        true /* capture */, (aEvent) => {
+      return content.document.docShell.isActive;
+    });
+  });
+}
+
+function waitForFullscreen() {
+  return Promise.all([
+    BrowserTestUtils.waitForEvent(window, "fullscreen"),
+    // In the platforms that support reporting occlusion state (e.g. Mac),
+    // enter/exit fullscreen mode will trigger docshell being set to non-activate
+    // and then set to activate back again. For those platforms, we should wait
+    // until the docshell has been activated again before starting next test,
+    // otherwise, the fullscreen request might be denied.
+    (Services.appinfo.OS === "Darwin") ? waitForDocshellActivated() : Promise.resolve()
+  ]);
+}
+
 add_task(async function testFullscreen() {
   if (Services.appinfo.OS !== "Darwin") {
     await SpecialPowers.pushPrefEnv({
@@ -23,7 +48,7 @@ add_task(async function testFullscreen() {
   let doorhanger = notifications[0];
   is(doorhanger.id, "appMenu-update-manual-notification", "PanelUI is displaying the update-manual notification.");
 
-  let fullscreenPromise = BrowserTestUtils.waitForEvent(window, "fullscreen");
+  let fullscreenPromise = waitForFullscreen();
   EventUtils.synthesizeKey("VK_F11", {});
   await fullscreenPromise;
   isnot(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is still showing after entering fullscreen.");
