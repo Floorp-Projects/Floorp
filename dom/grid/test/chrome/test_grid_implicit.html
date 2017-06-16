@@ -33,6 +33,11 @@ body {
   grid-template-rows: [areaA-end areaB-start areaC-end] 50px [areaA-start areaB-end areaC-start];
 }
 
+.template4 {
+  grid-template-columns: 100px 50px 100px;
+  grid-template-rows: 50px;
+}
+
 .box {
   background-color: #444;
   color: #fff;
@@ -49,6 +54,9 @@ body {
 }
 .d {
   grid-area: areaD;
+}
+.e {
+  grid-column: -7 / 5;
 }
 </style>
 
@@ -78,9 +86,13 @@ function runTests() {
     is(grid.cols.lines[4].type, "implicit", "Grid column line 5 is implicit.");
     is(grid.cols.lines[5].type, "implicit", "Grid column line 6 is implicit.");
 
-    is(grid.rows.lines[0].type, "implicit", "Grid row line 1 is implicit.");
-    is(grid.rows.lines[1].type, "explicit", "Grid row line 2 is explicit.");
-    is(grid.rows.lines[3].type, "explicit", "Grid row line 4 is explicit.");
+
+    is(grid.rows.lines[0].type, "implicit", "Grid row line 0 is implicit.");
+    is(grid.rows.lines[0].number, 0, "Grid row line 0 has correct number.");
+    is(grid.rows.lines[1].type, "explicit", "Grid row line 1 is explicit.");
+    is(grid.rows.lines[1].number, 1, "Grid row line 1 has correct number.");
+    is(grid.rows.lines[3].type, "explicit", "Grid row line 3 is explicit.");
+    is(grid.rows.lines[3].number, 3, "Grid row line 3 has correct number.");
 
     // test that row line 1 gets the name forced on it by placement of item B
     todo_isnot(grid.rows.lines[0].names.indexOf("got-this-name-implicitly"), -1,
@@ -221,6 +233,48 @@ function runTests() {
     }
   }
 
+  // test the fourth grid wrapper
+  wrapper = document.getElementById("wrapper4");
+  grid = wrapper.getGridFragments()[0];
+
+  // test column and row line counts
+  is(grid.cols.lines.length, 8,
+    "Grid.cols.lines property expands properly with implicit columns on both sides."
+  );
+  is(grid.rows.lines.length, 2,
+    "Grid.rows.lines property is as expected"
+  );
+
+  if (grid.cols.lines.length == 8) {
+    // check that all the lines get correct implict/explicit type and number
+    let expectedType = [
+      "implicit",
+      "implicit",
+      "implicit",
+      "explicit",
+      "explicit",
+      "explicit",
+      "explicit",
+      "implicit",
+    ];
+    let expectedNumber = [
+      0,
+      0,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+    ];
+
+    for (let i = 0; i < grid.cols.lines.length; i++) {
+      let line = grid.cols.lines[i];
+      is(line.type, expectedType[i], "Line index " + i + " has expected type.");
+      is(line.number, expectedNumber[i], "Line index " + i + " has expected number.");
+    }
+  }
+
   SimpleTest.finish();
 }
 </script>
@@ -244,6 +298,10 @@ function runTests() {
 
   <div id="wrapper3" class="wrapper template3">
     <div id="boxC" class="box c">C</div>
+  </div>
+
+  <div id="wrapper4" class="wrapper template4">
+    <div id="boxE" class="box e">E</div>
   </div>
 
 </body>
