@@ -190,6 +190,7 @@ var listener = {
   onWindowLoaded() {
     let browser = this.win.document.createElementNS(XUL_NS, "browser");
     browser.setAttribute("type", "content");
+    browser.setAttribute("disableglobalhistory", "true");
 
     let remoteBrowser = Services.appinfo.browserTabsRemoteAutostart;
     browser.setAttribute("remote", remoteBrowser);
