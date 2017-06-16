@@ -397,6 +397,9 @@ const SNAPSHOT_SCHEMA = {
         forceDisabled: {
           type: "number",
         },
+        handlerUsed: {
+          type: "boolean",
+        },
       },
     },
     libraryVersions: {

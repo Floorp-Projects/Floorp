@@ -307,17 +307,10 @@ protected:
    RefPtr<imgRequestProxy>& PrepareNextRequest(ImageLoadType aImageLoadType);
 
   /**
-   * Called when we would normally call PrepareNextRequest(), but the request was
-   * blocked.
-   */
-  void SetBlockedRequest(nsIURI* aURI, int16_t aContentDecision);
-
-  /**
    * Returns a COMPtr reference to the current/pending image requests, cleaning
    * up and canceling anything that was there before. Note that if you just want
    * to get rid of one of the requests, you should call
-   * Clear*Request(NS_BINDING_ABORTED) instead, since it passes a more appropriate
-   * aReason than Prepare*Request() does (NS_ERROR_IMAGE_SRC_CHANGED).
+   * Clear*Request(NS_BINDING_ABORTED) instead.
    *
    * @param aImageLoadType The ImageLoadType for this request
    */
@@ -470,6 +463,17 @@ private:
   // registered with the refresh driver.
   bool mCurrentRequestRegistered;
   bool mPendingRequestRegistered;
+
+  // TODO:
+  // Bug 1353685: Should ServiceWorker call SetBlockedRequest?
+  //
+  // This member is used in SetBlockedRequest, if it's true, then this call is
+  // triggered from LoadImage.
+  // If this is false, it means this call is from other places like
+  // ServiceWorker, then we will ignore call to SetBlockedRequest for now.
+  //
+  // Also we use this variable to check if some evil code is reentering LoadImage.
+  bool mIsStartingImageLoad;
 };
 
 #endif // nsImageLoadingContent_h__
