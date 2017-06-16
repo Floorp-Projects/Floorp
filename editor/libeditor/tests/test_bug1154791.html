@@ -22,6 +22,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1154791
 
 <script class="testbody" type="application/javascript">
 
+let {onSpellCheck} = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
+
 /** Test for Bug 1154791 **/
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
@@ -37,14 +39,14 @@ SimpleTest.waitForFocus(function() {
       setTimeout(function() {
         synthesizeKey(" ", {});
 
-        setTimeout(function() {
+        onSpellCheck(div, function() {
           var sel = getSpellCheckSelection();
           is(sel.rangeCount, 2, "We should have two misspelled words");
           is(String(sel.getRangeAt(0)), "thiss", "Correct misspelled word");
           is(String(sel.getRangeAt(1)), "onee", "Correct misspelled word");
 
           SimpleTest.finish();
-        },0);
+        });
       },0);
     },0);
   });
