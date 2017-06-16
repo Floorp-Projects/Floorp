@@ -27,7 +27,7 @@ public class GeckoHlsAudioRenderer extends GeckoHlsRendererBase {
         super(C.TRACK_TYPE_AUDIO, eventDispatcher);
         assertTrue(Versions.feature16Plus);
         LOGTAG = getClass().getSimpleName();
-        DEBUG = false;
+        DEBUG = AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG_BUILD;;
     }
 
     @Override
