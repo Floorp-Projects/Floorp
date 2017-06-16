@@ -232,18 +232,20 @@ TimeoutManager::IsInvalidFiringId(uint32_t aFiringId) const
 // uses 5.
 #define DOM_CLAMP_TIMEOUT_NESTING_LEVEL 5
 
-int32_t
+TimeDuration
 TimeoutManager::CalculateDelay(Timeout* aTimeout) const {
   MOZ_DIAGNOSTIC_ASSERT(aTimeout);
-  int32_t result = aTimeout->mInterval;
+  TimeDuration result = TimeDuration::FromMilliseconds(aTimeout->mInterval);
 
   if (aTimeout->mIsInterval ||
       aTimeout->mNestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
-    result = std::max(result, gMinClampTimeoutValue);
+    result = TimeDuration::Max(
+      result, TimeDuration::FromMilliseconds(gMinClampTimeoutValue));
   }
 
   if (aTimeout->mIsTracking && mThrottleTrackingTimeouts) {
-    result = std::max(result, gMinTrackingTimeoutValue);
+    result = TimeDuration::Max(
+      result, TimeDuration::FromMilliseconds(gMinTrackingTimeoutValue));
   }
 
   return result;
@@ -430,10 +432,8 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
   }
 
   // Now clamp the actual interval we will use for the timer based on
-  uint32_t realInterval = CalculateDelay(timeout);
-
-  TimeDuration delta = TimeDuration::FromMilliseconds(realInterval);
-  timeout->SetWhenOrTimeRemaining(TimeStamp::Now(), delta);
+  TimeDuration realInterval = CalculateDelay(timeout);
+  timeout->SetWhenOrTimeRemaining(TimeStamp::Now(), realInterval);
 
   // If we're not suspended, then set the timer.
   if (!mWindow.IsSuspended()) {
@@ -475,15 +475,15 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
 
   MOZ_LOG(gLog, LogLevel::Debug,
           ("Set%s(TimeoutManager=%p, timeout=%p, delay=%i, "
-           "minimum=%i, throttling=%s, background=%d, realInterval=%i) "
+           "minimum=%f, throttling=%s, background=%d, realInterval=%f) "
            "returned %stracking timeout ID %u\n",
            aIsInterval ? "Interval" : "Timeout",
            this, timeout.get(), interval,
-           (CalculateDelay(timeout) - interval),
+           (CalculateDelay(timeout) - TimeDuration::FromMilliseconds(interval)).ToMilliseconds(),
            mThrottleTrackingTimeouts ? "yes"
                                      : (mThrottleTrackingTimeoutsTimer ?
                                           "pending" : "no"),
-           int(IsBackground()), realInterval,
+           int(IsBackground()), realInterval.ToMilliseconds(),
            timeout->mIsTracking ? "" : "non-",
            timeout->mTimeoutId));
 
@@ -805,8 +805,7 @@ TimeoutManager::RescheduleTimeout(Timeout* aTimeout, const TimeStamp& now)
 
   // Compute time to next timeout for interval timer.
   // Make sure nextInterval is at least CalculateDelay().
-  TimeDuration nextInterval =
-    TimeDuration::FromMilliseconds(CalculateDelay(aTimeout));
+  TimeDuration nextInterval = CalculateDelay(aTimeout);
 
   TimeStamp firingTime = now + nextInterval;
 
