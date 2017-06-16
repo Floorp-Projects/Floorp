@@ -4988,11 +4988,6 @@ class PDFPageView {
       this.textLayer = null;
     }
   }
-  updatePosition() {
-    if (this.textLayer) {
-      this.textLayer.render(TEXT_LAYER_RENDER_DELAY);
-    }
-  }
   cssTransform(target, redrawAnnotations = false) {
     let width = this.viewport.width;
     let height = this.viewport.height;
@@ -6645,14 +6640,11 @@ var PDFViewer = function pdfViewer() {
       this._pageViewsReady = false;
       this.viewer.textContent = '';
     },
-    _scrollUpdate: function PDFViewer_scrollUpdate() {
+    _scrollUpdate() {
       if (this.pagesCount === 0) {
         return;
       }
       this.update();
-      for (var i = 0, ii = this._pages.length; i < ii; i++) {
-        this._pages[i].updatePosition();
-      }
     },
     _setScaleDispatchEvent: function pdfViewer_setScaleDispatchEvent(newScale, newValue, preset) {
       var arg = {
