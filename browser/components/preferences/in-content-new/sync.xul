@@ -28,8 +28,8 @@
 <script type="application/javascript"
         src="chrome://browser/content/preferences/in-content-new/sync.js"/>
 
-<hbox id="header-sync"
-      class="header"
+<hbox id="firefoxAccountCategory"
+      class="searchCategory"
       hidden="true"
       data-category="paneSync">
   <label class="header-name" flex="1">&paneSync1.title;</label>
