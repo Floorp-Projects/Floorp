@@ -31,8 +31,11 @@ clobber-stage:
 	$(RM) $(DEPTH)/mobile/android/base/res/values-*/strings.xml
 	$(RM) $(DEPTH)/mobile/android/base/res/raw-*/suggestedsites.json
 
+# merge if we're not en-US, using conditional function as we need
+# the current value of AB_CD
 libs-%: AB_CD=$*
 libs-%:
+	$(if $(filter en-US,$(AB_CD)),, @$(MAKE) merge-$*)
 	@$(MAKE) -C $(DEPTH)/mobile/locales libs-$*
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
 ifeq ($(OS_TARGET),Android)
@@ -40,8 +43,12 @@ ifeq ($(OS_TARGET),Android)
 endif
 
 # Tailored target to just add the chrome processing for multi-locale builds
+# merge if we're not en-US, using conditional function as we need
+# the current value of AB_CD
 chrome-%: AB_CD=$*
+chrome-%: IS_LANGUAGE_REPACK=1
 chrome-%:
+	$(if $(filter en-US,$(AB_CD)),, @$(MAKE) merge-$*)
 	@$(MAKE) -C $(DEPTH)/mobile/locales chrome-$*
 	@$(MAKE) chrome AB_CD=$*
 ifeq ($(OS_TARGET),Android)
@@ -51,6 +58,7 @@ endif
 # This is a generic target that will make a langpack and repack tarball
 # builds. It is called from the tinderbox scripts. Alter it with caution.
 
+installers-%: IS_LANGUAGE_REPACK=1
 installers-%: clobber-stage repackage-zip-%
 	@echo 'repackaging done'
 
@@ -71,11 +79,3 @@ ident:
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(FENNEC_APPLICATION_INI_PATH) App SourceStamp
 	@printf 'buildid '
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(FENNEC_APPLICATION_INI_PATH) App BuildID
-
-merge-%: AB_CD=$*
-merge-%:
-ifdef LOCALE_MERGEDIR
-	$(RM) -rf $(LOCALE_MERGEDIR)
-	$(topsrcdir)/mach compare-locales --merge-dir $(LOCALE_MERGEDIR) $*
-endif
-	@echo
