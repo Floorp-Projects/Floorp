@@ -127,7 +127,7 @@ def using_ccache(ccache, ccache_is_sccache):
 
 @depends_if(ccache, ccache_is_sccache)
 def using_sccache(ccache, ccache_is_sccache):
-    return True
+    return ccache and ccache_is_sccache
 
 set_config('MOZ_USING_CCACHE', using_ccache)
 set_config('MOZ_USING_SCCACHE', using_sccache)
