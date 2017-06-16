@@ -83,5 +83,6 @@ class TestTargetTasks(unittest.TestCase):
         finally:
             try_option_syntax.TryOptionSyntax = orig_TryOptionSyntax
 
+
 if __name__ == '__main__':
     main()

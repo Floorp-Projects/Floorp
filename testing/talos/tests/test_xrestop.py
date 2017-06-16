@@ -59,5 +59,6 @@ class TestXrestop(unittest.TestCase):
         # cleanup: set subprocess.Popen back
         subprocess.Popen = Popen
 
+
 if __name__ == '__main__':
     unittest.main()

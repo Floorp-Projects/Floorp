@@ -1,6 +1,6 @@
 Finding Elements
 ================
-.. py:currentmodule:: marionette
+.. py:currentmodule:: marionette_driver.marionette
 
 One of the most common and yet often most difficult tasks in Marionette is
 finding a DOM element on a webpage or in the chrome UI. Marionette provides
@@ -20,7 +20,7 @@ Search Strategies
 
 Search strategies are defined in the :class:`By` class::
 
-    from marionette import By
+    from marionette_driver import By
     print(By.ID)
 
 The strategies are:

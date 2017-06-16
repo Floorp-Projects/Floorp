@@ -743,6 +743,7 @@ class ManifestParser(object):
         # make a ManifestParser instance
         return cls(manifests=manifests)
 
+
 convert = ManifestParser.from_directories
 
 

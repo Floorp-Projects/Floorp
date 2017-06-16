@@ -73,5 +73,6 @@ class TestProfilePrint(unittest.TestCase):
                          for key, value in mozprofile.FirefoxProfile.preferences.items()]
         self.assertTrue(set(ff_pref_lines).issubset(lines))
 
+
 if __name__ == '__main__':
     mozunit.main()

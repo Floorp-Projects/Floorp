@@ -17,5 +17,6 @@ class BaseUrlTest(unittest.TestCase):
                          httpd.get_url(path="/cheezburgers.html"))
         httpd.stop()
 
+
 if __name__ == '__main__':
     mozunit.main()

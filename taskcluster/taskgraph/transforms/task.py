@@ -539,6 +539,7 @@ def payload_builder(name):
         return func
     return wrap
 
+
 # define a collection of index builders, depending on the type implementation
 index_builders = {}
 

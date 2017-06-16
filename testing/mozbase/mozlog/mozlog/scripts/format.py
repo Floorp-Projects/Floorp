@@ -35,6 +35,7 @@ def main(**kwargs):
     for data in reader.read(input_file):
         handler(data)
 
+
 if __name__ == "__main__":
     parser = get_parser()
     args = parser.parse_args()

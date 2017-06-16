@@ -28,8 +28,8 @@ class element_present(object):
 
     Or by using a function/lambda returning an element::
 
-        el = Wait(marionette).\
-                until(expected.element_present(lambda m: m.find_element(By.ID, "foo")))
+        el = Wait(marionette).until(
+            expected.element_present(lambda m: m.find_element(By.ID, "foo")))
 
     :param args: locator or function returning web element
     :returns: the web element once it is located, or False
@@ -57,8 +57,8 @@ class element_not_present(element_present):
 
     Or by using a function/lambda returning an element::
 
-        r = Wait(marionette).\
-                until(expected.element_present(lambda m: m.find_element(By.ID, "foo")))
+        r = Wait(marionette).until(
+            expected.element_present(lambda m: m.find_element(By.ID, "foo")))
 
     :param args: locator or function returning web element
     :returns: True if element is not present, or False if it is present
@@ -115,8 +115,8 @@ class elements_present(object):
 
     Or by using a function/lambda returning a list of elements::
 
-        els = Wait(marionette).\
-                until(expected.elements_present(lambda m: m.find_elements(By.TAG_NAME, "a")))
+        els = Wait(marionette).until(
+            expected.elements_present(lambda m: m.find_elements(By.TAG_NAME, "a")))
 
     :param args: locator or function returning a list of web elements
     :returns: list of web elements once they are located, or False
@@ -144,8 +144,8 @@ class elements_not_present(elements_present):
 
     Or by using a function/lambda returning a list of elements::
 
-        r = Wait(marionette).\
-                until(expected.elements_not_present(lambda m: m.find_elements(By.TAG_NAME, "a")))
+        r = Wait(marionette).until(
+            expected.elements_not_present(lambda m: m.find_elements(By.TAG_NAME, "a")))
 
     :param args: locator or function returning a list of web elements
     :returns: True if elements are missing, False if one or more are
@@ -169,7 +169,8 @@ class element_displayed(object):
     Stale elements, meaning elements that have been detached from the
     DOM of the current context are treated as not being displayed,
     meaning this expectation is not analogous to the behaviour of
-    calling `is_displayed()` on an `HTMLElement`.
+    calling :func:`~marionette_driver.marionette.HTMLElement.is_displayed`
+    on an :class:`~marionette_driver.marionette.HTMLElement`.
 
     You can select which element to be checked for visibility by
     supplying a locator::
@@ -213,7 +214,8 @@ class element_not_displayed(element_displayed):
     Stale elements, meaning elements that have been detached fom the
     DOM of the current context are treated as not being displayed,
     meaning this expectation is not analogous to the behaviour of
-    calling `is_displayed()` on an `HTMLElement`.
+    calling :func:`~marionette_driver.marionette.HTMLElement.is_displayed`
+    on an :class:`~marionette_driver.marionette.HTMLElement`.
 
     You can select which element to be checked for visibility by
     supplying a locator::

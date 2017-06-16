@@ -346,5 +346,6 @@ def cli(args=sys.argv[1:]):
     cli = DMCli()
     cli.run(args)
 
+
 if __name__ == '__main__':
     cli()

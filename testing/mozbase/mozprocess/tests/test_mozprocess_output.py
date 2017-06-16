@@ -55,5 +55,6 @@ class ProcTestOutput(proctest.ProcTest):
 
         self.determine_status(p, False, ())
 
+
 if __name__ == '__main__':
     mozunit.main()

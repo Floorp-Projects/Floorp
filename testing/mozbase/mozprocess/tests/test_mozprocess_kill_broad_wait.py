@@ -31,5 +31,6 @@ class ProcTestKill(proctest.ProcTest):
 
         self.determine_status(p, expectedfail=('returncode',))
 
+
 if __name__ == '__main__':
     mozunit.main()

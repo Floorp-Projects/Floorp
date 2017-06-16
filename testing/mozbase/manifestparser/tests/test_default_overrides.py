@@ -114,5 +114,6 @@ class TestSubsuiteDefaults(unittest.TestCase):
             self.assertEqual(expected_subsuites[value['name']],
                              value['subsuite'])
 
+
 if __name__ == '__main__':
     mozunit.main()

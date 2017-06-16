@@ -55,6 +55,7 @@ def _filter(results_cmp):
         return rv
     return inner
 
+
 filter_unstable = _filter(lambda x: len(x) > 1)
 filter_stable = _filter(lambda x: len(x) == 1)
 
@@ -112,6 +113,7 @@ def main(**kwargs):
             print_results(unstable)
         else:
             print_run(unstable)
+
 
 if __name__ == "__main__":
     parser = get_parser()

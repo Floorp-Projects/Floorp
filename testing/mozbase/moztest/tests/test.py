@@ -53,5 +53,6 @@ class Collection(unittest.TestCase):
     def test_unique_contexts(self):
         self.assertEqual(len(self.collection.contexts), 3)
 
+
 if __name__ == '__main__':
     mozunit.main()

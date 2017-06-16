@@ -377,5 +377,6 @@ user_pref("webgl.force-enabled", true);
         finally:
             httpd.stop()
 
+
 if __name__ == '__main__':
     mozunit.main()

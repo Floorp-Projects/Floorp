@@ -8503,6 +8503,15 @@
     "n_buckets": 66,
     "description": "MediaCacheStream stream notified length size in bytes, from the HTTP header. Recorded when each MediaCacheStream is first notified."
   },
+  "MEMORYBLOCKCACHE_ERRORS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["gsquelart@mozilla.com"],
+    "bug_numbers": [1371882],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 16,
+    "description": "Unexpected errors encountered during use of MemoryBlockCache. 0=InitUnderuse, 1=InitAllocation, 2=ReadOverrun, 3=WriteBlockOverflow, 4=WriteBlockCannotGrow, 5=MoveBlockSourceOverrun, 6=MoveBlockDestOverflow, 7=MoveBlockCannotGrow"
+  },
   "VIDEO_MFT_OUTPUT_NULL_SAMPLES": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["cpearce@mozilla.com"],

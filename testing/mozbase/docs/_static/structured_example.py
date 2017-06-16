@@ -98,5 +98,6 @@ def main():
     except:
         logger.critical("Error during test run:\n%s" % traceback.format_exc())
 
+
 if __name__ == "__main__":
     main()

@@ -604,6 +604,14 @@ static inline WrFilterOp ToWrFilterOp(const layers::CSSFilter& filter) {
   };
 }
 
+// Corresponds to an "internal" webrender clip id. That is, a
+// ClipId::Clip(x,pipeline_id) maps to a WrClipId{x}. We use a struct wrapper
+// instead of a typedef so that this is a distinct type from FrameMetrics::ViewID
+// and the compiler will catch accidental conversions between the two.
+struct WrClipId {
+  uint64_t id;
+};
+
 } // namespace wr
 } // namespace mozilla
 

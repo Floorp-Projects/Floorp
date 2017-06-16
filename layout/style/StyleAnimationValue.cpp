@@ -38,6 +38,7 @@
 #include "nsIDocument.h"
 #include "nsIFrame.h"
 #include "gfx2DGlue.h"
+#include "nsStyleContextInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -3519,7 +3520,7 @@ ComputeValuesFromStyleRule(nsCSSPropertyID aProperty,
 
     // Force walk of rule tree
     nsStyleStructID sid = nsCSSProps::kSIDTable[aProperty];
-    tmpStyleContext->StyleData(sid);
+    tmpStyleContext->AsGecko()->StyleData(sid);
 
     // The rule node will have unconditional cached style data if the value is
     // not context-sensitive.  So if there's nothing cached, it's not context
@@ -3970,7 +3971,7 @@ SubstitutePixelValues(nsStyleContext* aStyleContext,
   if (aInput.IsCalcUnit()) {
     RuleNodeCacheConditions conditions;
     nsRuleNode::ComputedCalc c =
-      nsRuleNode::SpecifiedCalcToComputedCalc(aInput, aStyleContext,
+      nsRuleNode::SpecifiedCalcToComputedCalc(aInput, aStyleContext->AsGecko(),
                                               aStyleContext->PresContext(),
                                               conditions);
     nsStyleCoord::CalcValue c2;
@@ -3990,7 +3991,7 @@ SubstitutePixelValues(nsStyleContext* aStyleContext,
   } else if (aInput.IsLengthUnit() &&
              aInput.GetUnit() != eCSSUnit_Pixel) {
     RuleNodeCacheConditions conditions;
-    nscoord len = nsRuleNode::CalcLength(aInput, aStyleContext,
+    nscoord len = nsRuleNode::CalcLength(aInput, aStyleContext->AsGecko(),
                                          aStyleContext->PresContext(),
                                          conditions);
     aOutput.SetFloatValue(nsPresContext::AppUnitsToFloatCSSPixels(len),
@@ -4220,7 +4221,7 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
   MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
              "bad property");
   const void* styleStruct =
-    aStyleContext->StyleData(nsCSSProps::kSIDTable[aProperty]);
+    aStyleContext->AsGecko()->StyleData(nsCSSProps::kSIDTable[aProperty]);
   ptrdiff_t ssOffset = nsCSSProps::kStyleStructOffsetTable[aProperty];
   nsStyleAnimType animType = nsCSSProps::kAnimTypeTable[aProperty];
   MOZ_ASSERT(0 <= ssOffset ||
@@ -4788,7 +4789,7 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
           eUnit_Visibility);
         return true;
       }
-      if (aStyleContext->StyleSource().IsServoComputedValues()) {
+      if (aStyleContext->IsServo()) {
         NS_ERROR("stylo: extracting discretely animated values not supported");
         return false;
       }
@@ -5359,7 +5360,7 @@ AnimationValue::FromString(nsCSSPropertyID aProperty,
   RefPtr<nsStyleContext> styleContext =
     nsComputedDOMStyle::GetStyleContext(aElement, nullptr, shell);
 
-  if (styleContext->StyleSource().IsServoComputedValues()) {
+  if (auto servoContext = styleContext->GetAsServo()) {
     nsPresContext* presContext = shell->GetPresContext();
     if (!presContext) {
       return result;
@@ -5373,7 +5374,7 @@ AnimationValue::FromString(nsCSSPropertyID aProperty,
     }
 
     const ServoComputedValues* computedValues =
-      styleContext->StyleSource().AsServoComputedValues();
+      servoContext->ComputedValues();
     result.mServo = presContext->StyleSet()
                                ->AsServo()
                                ->ComputeAnimationValue(aElement,

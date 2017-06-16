@@ -164,6 +164,18 @@ add_task(async function check_fallback_after_form_autofill() {
   checkMenuEntries(["1-234-567-890"]);
 });
 
+// Resume form autofill once all the autofilled fileds are changed.
+add_task(async function check_form_autofill_resume() {
+  document.querySelector("#tel").blur();
+  document.querySelector("#form1").reset();
+  await setInput("#tel", "");
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(address =>
+    JSON.stringify({primary: address.tel, secondary: address["street-address"]})
+  ));
+});
+
 registerPopupShownListener(popupShownListener);
 
 </script>

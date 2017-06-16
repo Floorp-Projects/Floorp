@@ -514,7 +514,7 @@ ProcessMatrixOperator(Matrix4x4& aMatrix,
   Matrix4x4 matrix2 = readTransform(aData->Item(2));
   double progress = aData->Item(3).GetPercentValue();
 
-  if (aContext && aContext->StyleSource().IsServoComputedValues()) {
+  if (aContext && aContext->IsServo()) {
     aMatrix =
       OperateTransformMatrixByServo<Operator>(matrix1, matrix2, progress)
         * aMatrix;

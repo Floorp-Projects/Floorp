@@ -225,3 +225,30 @@
 #onboarding-tour-private-browsing:hover {
   background-image: url("img/icons_private-colored.svg");
 }
+
+#onboarding-tour-addons {
+  background-image: url("img/icons_addons.svg");
+}
+
+#onboarding-tour-addons.onboarding-active,
+#onboarding-tour-addons:hover {
+  background-image: url("img/icons_addons-colored.svg");
+}
+
+#onboarding-tour-customize {
+  background-image: url("img/icons_customize.svg");
+}
+
+#onboarding-tour-customize.onboarding-active,
+#onboarding-tour-customize:hover {
+  background-image: url("img/icons_customize-colored.svg");
+}
+
+#onboarding-tour-default-browser {
+  background-image: url("img/icons_default.svg");
+}
+
+#onboarding-tour-default-browser.onboarding-active,
+#onboarding-tour-default-browser:hover {
+  background-image: url("img/icons_default-colored.svg");
+}

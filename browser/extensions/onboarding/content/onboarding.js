@@ -33,8 +33,6 @@ const BRAND_SHORT_NAME = Services.strings
  *   // Add no-button css class in the div if this tour does not need a button.
  *   // The overlay layout will responsively position and distribute space for these 3 sections based on viewport size
  *   getPage() {},
- *   isCompleted() {},
- *   setCompleted() {},
  * },
  **/
 var onboardingTours = [
@@ -57,13 +55,45 @@ var onboardingTours = [
       `;
       return div;
     },
-    isCompleted() {
-      // TODO: determine completion by looking up preferences.
-      return false;
+  },
+  {
+    id: "onboarding-tour-addons",
+    tourNameId: "onboarding.tour-addons",
+    getPage(win) {
+      let div = win.document.createElement("div");
+      div.innerHTML = `
+        <section class="onboarding-tour-description">
+          <h1 data-l10n-id="onboarding.tour-addons.title"></h1>
+          <p data-l10n-id="onboarding.tour-addons.description"></p>
+        </section>
+        <section class="onboarding-tour-content">
+          <img src="resource://onboarding/img/figure_addons.svg" />
+        </section>
+        <aside class="onboarding-tour-button">
+          <button id="onboarding-tour-addons-button" data-l10n-id="onboarding.tour-addons.button"></button>
+        </aside>
+      `;
+      return div;
     },
-    setCompleted() {
-      // TODO: set completion to preferences.
-      return true;
+  },
+  {
+    id: "onboarding-tour-customize",
+    tourNameId: "onboarding.tour-customize",
+    getPage(win) {
+      let div = win.document.createElement("div");
+      div.innerHTML = `
+        <section class="onboarding-tour-description">
+          <h1 data-l10n-id="onboarding.tour-customize.title"></h1>
+          <p data-l10n-id="onboarding.tour-customize.description"></p>
+        </section>
+        <section class="onboarding-tour-content">
+          <img src="resource://onboarding/img/figure_customize.svg" />
+        </section>
+        <aside class="onboarding-tour-button">
+          <button id="onboarding-tour-customize-button" data-l10n-id="onboarding.tour-customize.button"></button>
+        </aside>
+      `;
+      return div;
     },
   },
   {
@@ -85,13 +115,22 @@ var onboardingTours = [
       `;
       return div;
     },
-    isCompleted() {
-      // TODO: determine completion by looking up preferences.
-      return false;
-    },
-    setCompleted() {
-      // TODO: set completion to preferences.
-      return true;
+  },
+  {
+    id: "onboarding-tour-default-browser",
+    tourNameId: "onboarding.tour-default-browser",
+    getPage(win) {
+      let div = win.document.createElement("div");
+      div.innerHTML = `
+        <section class="onboarding-tour-description">
+          <h1 data-l10n-id="onboarding.tour-default-browser.title"></h1>
+          <p data-l10n-id="onboarding.tour-default-browser.description"></p>
+        </section>
+        <section class="onboarding-tour-content">
+          <img src="resource://onboarding/img/figure_default.svg" />
+        </section>
+      `;
+      return div;
     },
   },
 ];

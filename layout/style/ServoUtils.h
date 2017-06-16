@@ -28,12 +28,7 @@ void AssertIsMainThreadOrServoFontMetricsLocked();
   bool IsServo() const { return false; }
 #endif
 
-/**
- * Macro used in a base class of |geckotype_| and |servotype_|.
- * The class should define |StyleBackendType mType;| itself.
- */
-#define MOZ_DECL_STYLO_METHODS(geckotype_, servotype_)  \
-  MOZ_DECL_STYLO_CHECK_METHODS                          \
+#define MOZ_DECL_STYLO_CONVERT_METHODS(geckotype_, servotype_)  \
   inline geckotype_* AsGecko();                         \
   inline servotype_* AsServo();                         \
   inline const geckotype_* AsGecko() const;             \
@@ -42,6 +37,14 @@ void AssertIsMainThreadOrServoFontMetricsLocked();
   inline servotype_* GetAsServo();                      \
   inline const geckotype_* GetAsGecko() const;          \
   inline const servotype_* GetAsServo() const;
+
+/**
+ * Macro used in a base class of |geckotype_| and |servotype_|.
+ * The class should define |StyleBackendType mType;| itself.
+ */
+#define MOZ_DECL_STYLO_METHODS(geckotype_, servotype_)  \
+  MOZ_DECL_STYLO_CHECK_METHODS                          \
+  MOZ_DECL_STYLO_CONVERT_METHODS(geckotype_, servotype_)
 
 /**
  * Macro used in inline header of class |type_| with its Gecko and Servo

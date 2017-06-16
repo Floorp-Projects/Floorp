@@ -205,5 +205,6 @@ def main():
         else:
             raise RuntimeError("Cannot determine Balrog submission style")
 
+
 if __name__ == '__main__':
     main()

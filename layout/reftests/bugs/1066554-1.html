@@ -7,15 +7,17 @@
   <script>
     function insertShadowSVG() {
       var x = document.getElementById("x");
-      x.createShadowRoot();
-      x.shadowRoot.innerHTML =
-        '<svg width="50px" height="10px"> \
-           <switch> \
-             <foreignObject width="50px" height="50px"> \
-               <div style="width: 100px; height: 10px; background: red;"></div> \
-             </foreignObject> \
-           </switch> \
-         </svg>';
+      if (x.createShadowRoot) {
+        x.createShadowRoot();
+        x.shadowRoot.innerHTML =
+          '<svg width="50px" height="10px"> \
+             <switch> \
+               <foreignObject width="50px" height="50px"> \
+                 <div style="width: 100px; height: 10px; background: red;"></div> \
+               </foreignObject> \
+             </switch> \
+           </svg>';
+      }
       document.documentElement.removeAttribute("class");
     }
     window.addEventListener("MozReftestInvalidate", insertShadowSVG);
