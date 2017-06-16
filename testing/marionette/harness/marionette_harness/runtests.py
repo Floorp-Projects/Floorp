@@ -97,5 +97,6 @@ def cli(runner_class=MarionetteTestRunner, parser_class=MarionetteArguments,
         sys.exit(1)
     sys.exit(0)
 
+
 if __name__ == "__main__":
     cli()

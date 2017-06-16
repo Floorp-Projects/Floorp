@@ -160,6 +160,7 @@ def make_task_description(config, jobs):
         # yield only the task description, discarding the job description
         yield taskdesc
 
+
 # A registry of all functions decorated with run_job_using
 registry = {}
 

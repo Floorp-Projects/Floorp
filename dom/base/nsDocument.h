@@ -1395,6 +1395,9 @@ private:
   void UpdatePossiblyStaleDocumentState();
   static bool CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp);
 
+  // Check whether web components are enabled for the given window.
+  static bool IsWebComponentsEnabled(nsPIDOMWindowInner* aWindow);
+
 public:
   virtual already_AddRefed<mozilla::dom::CustomElementRegistry>
     GetCustomElementRegistry() override;
@@ -1404,8 +1407,6 @@ public:
   // Check whether web components are enabled for the global of the document
   // this nodeinfo comes from.
   static bool IsWebComponentsEnabled(mozilla::dom::NodeInfo* aNodeInfo);
-  // Check whether web components are enabled for the given window.
-  static bool IsWebComponentsEnabled(nsPIDOMWindowInner* aWindow);
 
   RefPtr<mozilla::EventListenerManager> mListenerManager;
   RefPtr<mozilla::dom::StyleSheetList> mDOMStyleSheets;

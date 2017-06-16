@@ -44,7 +44,8 @@ class HTMLElement(object):
         """Returns an ``HTMLElement`` instance that matches the specified
         method and target, relative to the current element.
 
-        For more details on this function, see the `find_element` method
+        For more details on this function, see the
+        :func:`~marionette_driver.marionette.Marionette.find_element` method
         in the Marionette class.
         """
         return self.marionette.find_element(method, target, self.id)
@@ -53,7 +54,8 @@ class HTMLElement(object):
         """Returns a list of all ``HTMLElement`` instances that match the
         specified method and target in the current context.
 
-        For more details on this function, see the find_elements method
+        For more details on this function, see the
+        :func:`~marionette_driver.marionette.Marionette.find_elements` method
         in the Marionette class.
         """
         return self.marionette.find_elements(method, target, self.id)
@@ -79,6 +81,7 @@ class HTMLElement(object):
             return self.get_attribute(name)
 
     def click(self):
+        """Simulates a click on the element."""
         self.marionette._send_message("clickElement", {"id": self.id})
 
     def tap(self, x=None, y=None):
@@ -247,7 +250,7 @@ class Actions(object):
         '''
         Sends a 'touchend' event to this element.
 
-        May only be called if press() has already be called on this element.
+        May only be called if :func:`press` has already be called on this element.
 
         If press and release are chained without a move action between them,
         then it will be processed as a 'tap' event, and will dispatch the
@@ -266,7 +269,7 @@ class Actions(object):
 
         :param element: Element to move towards.
 
-        May only be called if press() has already be called.
+        May only be called if :func:`press` has already be called.
         '''
         element = element.id
         self.action_chain.append(['move', element])
@@ -277,7 +280,7 @@ class Actions(object):
         Sends 'touchmove' event to the given x, y coordinates relative to the
         top-left of the currently touched element.
 
-        May only be called if press() has already be called.
+        May only be called if :func:`press` has already be called.
 
         :param x: Specifies x-coordinate of move event, relative to the
          top-left corner of the element.
@@ -303,7 +306,7 @@ class Actions(object):
         '''
         Sends 'touchcancel' event to the target of the original 'touchstart' event.
 
-        May only be called if press() has already be called.
+        May only be called if :func:`press` has already be called.
         '''
         self.action_chain.append(['cancel'])
         return self
@@ -455,6 +458,7 @@ class Actions(object):
         """
         Perform a "keyUp" action for the given key code. Modifier keys are
         respected by the server for the course of an action chain.
+
         :param key_up: The key to release as a result of this action.
         """
         self.action_chain.append(['keyUp', key_code])
@@ -865,6 +869,7 @@ class Marionette(object):
                            `nsILocalFile`, and `nsIPrefLocalizedString`.
 
         Usage example::
+
             marionette.get_pref("browser.tabs.warnOnClose")
 
         """
@@ -894,6 +899,7 @@ class Marionette(object):
                        value is set. Defaults to `False`.
 
         Usage example::
+
             marionette.set_pref("browser.tabs.warnOnClose", True)
 
         """
@@ -917,7 +923,7 @@ class Marionette(object):
         """Set the value of a list of preferences.
 
         :param prefs: A dict containing one or more preferences and their values
-                      to be set. See `set_pref` for further details.
+                      to be set. See :func:`set_pref` for further details.
         :param default_branch: Optional, if `True` the preference value will
                        be written to the default branch, and will remain until
                        the application gets restarted. Otherwise a user-defined
@@ -936,7 +942,7 @@ class Marionette(object):
         """Set preferences for code executed in a `with` block, and restores them on exit.
 
         :param prefs: A dict containing one or more preferences and their values
-                      to be set. See `set_prefs` for further details.
+                      to be set. See :func:`set_prefs` for further details.
         :param default_branch: Optional, if `True` the preference value will
                        be written to the default branch, and will remain until
                        the application gets restarted. Otherwise a user-defined
@@ -962,7 +968,7 @@ class Marionette(object):
         it will kill the currently running instance, and spawn a new
         instance with the requested preferences.
 
-        : param prefs: A dictionary whose keys are preference names.
+        :param prefs: A dictionary whose keys are preference names.
         """
         if not self.instance:
             raise errors.MarionetteException("enforce_gecko_prefs() can only be called "
@@ -1063,7 +1069,7 @@ class Marionette(object):
 
         This command will delete the active marionette session. It also allows
         manipulation of eg. the profile data while the application is not running.
-        To start the application again, start_session() has to be called.
+        To start the application again, :func:`start_session` has to be called.
 
         :param in_app: If True, marionette will cause a quit from within the
                        browser. Otherwise the browser will be quit immediately
@@ -1223,11 +1229,11 @@ class Marionette(object):
         """Close the current session and disconnect from the server.
 
         :param send_request: Optional, if `True` a request to close the session on
-            the server side will be send. Use `False` in case of eg. in_app restart()
+            the server side will be sent. Use `False` in case of eg. in_app restart()
             or quit(), which trigger a deletion themselves. Defaults to `True`.
         :param reset_session_id: Optional, if `True` the current session id will
-            be reset, which will require an explicit call to `start_session()` before
-            the test can continue. Defaults to `False`.
+            be reset, which will require an explicit call to :func:`start_session`
+            before the test can continue. Defaults to `False`.
         """
         try:
             if send_request:
@@ -1256,10 +1262,10 @@ class Marionette(object):
         allowed to run.
 
         If a script does not return in the specified amount of time,
-        a ScriptTimeoutException is raised.
+        a ``ScriptTimeoutException`` is raised.
 
         :param timeout: The maximum number of milliseconds an asynchronous
-            script can run without causing an ScriptTimeoutException to
+            script can run without causing an ``ScriptTimeoutException`` to
             be raised
 
         .. note:: `set_script_timeout` is deprecated, please use
@@ -1274,9 +1280,8 @@ class Marionette(object):
     def set_search_timeout(self, timeout):
         """Sets a timeout for the find methods.
 
-        When searching for an element using
-        either :class:`Marionette.find_element` or
-        :class:`Marionette.find_elements`, the method will continue
+        When searching for an element using either :func:`find_element` or
+        :func:`find_elements`, the method will continue
         trying to locate the element for up to timeout ms. This can be
         useful if, for example, the element you're looking for might
         not exist immediately, because it belongs to a page which is
@@ -1479,8 +1484,8 @@ class Marionette(object):
             self.set_context(scope)
 
     def switch_to_alert(self):
-        """Returns an Alert object for interacting with a currently
-        displayed alert.
+        """Returns an :class:`~marionette_driver.marionette.Alert` object for
+        interacting with a currently displayed alert.
 
         ::
 
@@ -1504,8 +1509,8 @@ class Marionette(object):
         self.window = window_id
 
     def get_active_frame(self):
-        """Returns an HTMLElement representing the frame Marionette is
-        currently acting on."""
+        """Returns an :class:`~marionette_driver.marionette.HTMLElement`
+        representing the frame Marionette is currently acting on."""
         return self._send_message("getActiveFrame", key="value")
 
     def switch_to_default_content(self):
@@ -1524,7 +1529,8 @@ class Marionette(object):
         if applicable.
 
         :param frame: A reference to the frame to switch to.  This can
-            be an ``HTMLElement``, an integer index, string name, or an
+            be an :class:`~marionette_driver.marionette.HTMLElement`,
+            an integer index, string name, or an
             ID attribute.  If you call ``switch_to_frame`` without an
             argument, it will switch to the top-level frame.
 
@@ -1544,9 +1550,9 @@ class Marionette(object):
         DOM, if applicable.
 
         :param host: A reference to the host element containing Shadow DOM.
-            This can be an ``HTMLElement``. If you call
-            ``switch_to_shadow_root`` without an argument, it will switch to the
-            parent Shadow DOM or the top-level frame.
+            This can be an :class:`~marionette_driver.marionette.HTMLElement`.
+            If you call ``switch_to_shadow_root`` without an argument, it will
+            switch to the parent Shadow DOM or the top-level frame.
         """
         body = {}
         if isinstance(host, HTMLElement):
@@ -1591,10 +1597,10 @@ class Marionette(object):
 
         The document is considered successfully loaded when the
         `DOMContentLoaded` event on the frame element associated with the
-        `window` triggers and `document.readState` is "complete".
+        `window` triggers and `document.readyState` is "complete".
 
         In chrome context it will change the current `window`'s location
-        to the supplied URL and wait until `document.readState` equals
+        to the supplied URL and wait until `document.readyState` equals
         "complete" or the page timeout duration has elapsed.
 
         :param url: The URL to navigate to.
@@ -1672,8 +1678,8 @@ class Marionette(object):
         result (or None if the script does return a value).
 
         The script is executed in the context set by the most recent
-        set_context() call, or to the CONTEXT_CONTENT context if set_context()
-        has not been called.
+        :func:`set_context` call, or to the CONTEXT_CONTENT context if
+        :func:`set_context` has not been called.
 
         :param script: A string containing the JavaScript to execute.
         :param script_args: An interable of arguments to pass to the script.
@@ -1719,7 +1725,7 @@ class Marionette(object):
 
         Global variables set by individual scripts do not persist between
         script calls by default.  If you wish to persist data between
-        script calls, you can set new_sandbox to False on your next call,
+        script calls, you can set `new_sandbox` to False on your next call,
         and add any new variables to a new 'global' object like this:
 
         ::
@@ -1749,8 +1755,8 @@ class Marionette(object):
         result (or None if the script does return a value).
 
         The script is executed in the context set by the most recent
-        set_context() call, or to the CONTEXT_CONTENT context if
-        set_context() has not been called.
+        :func:`set_context` call, or to the CONTEXT_CONTENT context if
+        :func:`set_context` has not been called.
 
         :param script: A string containing the JavaScript to execute.
         :param script_args: An interable of arguments to pass to the script.
@@ -1792,15 +1798,18 @@ class Marionette(object):
         return self._from_json(rv)
 
     def find_element(self, method, target, id=None):
-        """Returns an HTMLElement instances that matches the specified
-        method and target in the current context.
+        """Returns an :class:`~marionette_driver.marionette.HTMLElement`
+        instance that matches the specified method and target in the current
+        context.
 
-        An HTMLElement instance may be used to call other methods on the
-        element, such as click().  If no element is immediately found, the
-        attempt to locate an element will be repeated for up to the amount of
-        time set by ``timeout.implicit``. If multiple elements match the given
-        criteria, only the first is returned. If no element matches, a
-        NoSuchElementException will be raised.
+        An :class:`~marionette_driver.marionette.HTMLElement` instance may be
+        used to call other methods on the element, such as
+        :func:`~marionette_driver.marionette.HTMLElement.click`.  If no element
+        is immediately found, the attempt to locate an element will be repeated
+        for up to the amount of time set by
+        :attr:`marionette_driver.timeout.Timeouts.implicit`. If multiple
+        elements match the given criteria, only the first is returned. If no
+        element matches, a ``NoSuchElementException`` will be raised.
 
         :param method: The method to use to locate the element; one of:
             "id", "name", "class name", "tag name", "css selector",
@@ -1819,13 +1828,16 @@ class Marionette(object):
         return self._send_message("findElement", body, key="value")
 
     def find_elements(self, method, target, id=None):
-        """Returns a list of all HTMLElement instances that match the
-        specified method and target in the current context.
+        """Returns a list of all
+        :class:`~marionette_driver.marionette.HTMLElement` instances that match
+        the specified method and target in the current context.
 
-        An HTMLElement instance may be used to call other methods on the
-        element, such as click().  If no element is immediately found,
-        the attempt to locate an element will be repeated for up to the
-        amount of time set by ``timeout.implicit``.
+        An :class:`~marionette_driver.marionette.HTMLElement` instance may be
+        used to call other methods on the element, such as
+        :func:`~marionette_driver.marionette.HTMLElement.click`.  If no element
+        is immediately found, the attempt to locate an element will be repeated
+        for up to the amount of time set by
+        :attr:`marionette_driver.timeout.Timeouts.implicit`.
 
         :param method: The method to use to locate the elements; one
             of: "id", "name", "class name", "tag name", "css selector",
@@ -1956,8 +1968,9 @@ class Marionette(object):
         :param element: The element to take a screenshot of.  If None, will
             take a screenshot of the current frame.
 
-        :param highlights: A list of HTMLElement objects to draw a red
-            box around in the returned screenshot.
+        :param highlights: A list of
+            :class:`~marionette_driver.marionette.HTMLElement` objects to draw
+            a red box around in the returned screenshot.
 
         :param format: if "base64" (the default), returns the screenshot
             as a base64-string. If "binary", the data is decoded and
@@ -2058,7 +2071,7 @@ class Marionette(object):
 
     def maximize_window(self):
         """ Resize the browser window currently receiving commands. The action
-        should be equivalent to the user pressing the the maximize button
+        should be equivalent to the user pressing the maximize button
         """
         return self._send_message("maximizeWindow")
 

@@ -66,5 +66,6 @@ def main(args=sys.argv[1:]):
     # install talos into the virtualenv
     call([os.path.abspath(virtualenv_python), 'setup.py', 'develop'], cwd=here)
 
+
 if __name__ == '__main__':
     main()

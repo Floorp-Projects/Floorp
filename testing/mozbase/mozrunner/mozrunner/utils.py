@@ -61,6 +61,7 @@ def findInPath(fileName, path=os.environ['PATH']):
             if os.path.isfile(os.path.join(dir, fileName + ".exe")):
                 return os.path.join(dir, fileName + ".exe")
 
+
 if __name__ == '__main__':
     for i in sys.argv[1:]:
         print findInPath(i)

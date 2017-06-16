@@ -42,5 +42,6 @@ class ApkTest(unittest.TestCase):
             v = get_version(f.name)
             self.assertEqual(v.get('package_name'), "org.mozilla.fennec")
 
+
 if __name__ == '__main__':
     mozunit.main()

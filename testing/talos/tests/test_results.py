@@ -75,5 +75,6 @@ class TestPageloaderResults(unittest.TestCase):
         self.assertEqual(filtered[0][0], 68.)
         self.assertEqual(filtered[-1][0], 1623.)
 
+
 if __name__ == '__main__':
     unittest.main()

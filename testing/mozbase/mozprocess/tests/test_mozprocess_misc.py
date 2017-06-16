@@ -39,5 +39,6 @@ class ProcTestMisc(proctest.ProcTest):
         p.run()
         p.wait()
 
+
 if __name__ == '__main__':
     mozunit.main()

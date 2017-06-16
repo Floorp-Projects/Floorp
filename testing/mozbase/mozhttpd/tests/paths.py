@@ -75,5 +75,6 @@ class PathTest(unittest.TestCase):
             self.try_get_expect_404(httpd.get_url())
             httpd.stop()
 
+
 if __name__ == '__main__':
     mozunit.main()

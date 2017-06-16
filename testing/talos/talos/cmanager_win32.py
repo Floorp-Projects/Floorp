@@ -23,6 +23,7 @@ class _PDH_COUNTER_PATH_ELEMENTS_A(Structure):
                 ("dwInstanceIndex", DWORD),
                 ("szCounterName", LPSTR)]
 
+
 _PDH_MORE_DATA = -2147481646  # the need more space error
 
 
@@ -77,6 +78,7 @@ class _PDH_Counter_Union(Union):
 class _PDH_FMT_COUNTERVALUE(Structure):
     _fields_ = [('CStatus', DWORD),
                 ('union', _PDH_Counter_Union)]
+
 
 _PDH_FMT_LONG = 0x00000100
 

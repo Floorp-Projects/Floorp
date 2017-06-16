@@ -746,6 +746,7 @@ def main(output, inputPath):
     with open(inputPath) as configStream:
         output.write(Certificate(configStream).toPEM())
 
+
 # When run as a standalone program, this will read a specification from
 # stdin and output the certificate as PEM to stdout.
 if __name__ == '__main__':

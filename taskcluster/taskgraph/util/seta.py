@@ -199,6 +199,7 @@ class SETA(object):
             self.low_value_bb_tasks[project] = self.query_low_value_tasks(project, bbb=True)
         return label in self.low_value_bb_tasks[project]
 
+
 # create a single instance of this class, and expose its `is_low_value_task`
 # bound method as a module-level function
 is_low_value_task = SETA().is_low_value_task

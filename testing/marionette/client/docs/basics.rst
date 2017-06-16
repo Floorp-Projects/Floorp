@@ -131,7 +131,7 @@ using the :func:`~Marionette.find_element` or :func:`~Marionette.find_elements`
 methods:
 
 .. parsed-literal::
-   from marionette import HTMLElement
+   from marionette_driver.marionette import HTMLElement
    element = client.find_element(By.ID, 'my-id')
    assert type(element) == HTMLElement
    elements = client.find_elements(By.TAG_NAME, 'a')

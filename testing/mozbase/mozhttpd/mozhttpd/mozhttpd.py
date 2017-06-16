@@ -326,5 +326,6 @@ def main(args=sys.argv[1:]):
     print "Serving '%s' at %s:%s" % (server.docroot, server.host, server.port)
     server.start(block=True)
 
+
 if __name__ == '__main__':
     main()

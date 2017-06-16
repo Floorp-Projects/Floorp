@@ -193,5 +193,6 @@ def main(output, *filenames):
     write_histogram_static_asserts(output, histograms)
     write_debug_histogram_ranges(output, histograms)
 
+
 if __name__ == '__main__':
     main(sys.stdout, *sys.argv[1:])

@@ -55,6 +55,7 @@ def update_manifest(source_manifest, target, target_filename):
             save_manifest(old, target_filename)
             break
 
+
 '''Mapping from targets to target filenames.'''
 TARGETS = {
         'x86_64-unknown-linux-gnu-repack': [

@@ -323,5 +323,6 @@ def cli(args=sys.argv[1:]):
                 adb_host=args.adb_host,
                 adb_port=args.adb_port)
 
+
 if __name__ == '__main__':
     cli()

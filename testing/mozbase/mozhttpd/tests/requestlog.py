@@ -39,5 +39,6 @@ class RequestLogTest(unittest.TestCase):
 
         self.assertEqual(len(request_log), 0)
 
+
 if __name__ == '__main__':
     mozunit.main()

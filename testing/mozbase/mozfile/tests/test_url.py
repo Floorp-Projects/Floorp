@@ -19,5 +19,6 @@ class TestIsUrl(unittest.TestCase):
         self.assertTrue(is_url('file:///usr/bin/mozilla.org'))
         self.assertFalse(is_url('c:\foo\bar'))
 
+
 if __name__ == '__main__':
     mozunit.main()

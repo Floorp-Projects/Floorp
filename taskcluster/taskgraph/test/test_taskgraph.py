@@ -74,5 +74,6 @@ class TestTaskGraph(unittest.TestCase):
         tasks, new_graph = TaskGraph.from_json(graph.to_json())
         self.assertEqual(graph, new_graph)
 
+
 if __name__ == '__main__':
     main()

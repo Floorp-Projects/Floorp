@@ -133,5 +133,6 @@ def main():
     f += '-%s' % args.mode
     generate_report(tuple_list, filepath=f + '.csv', mode=args.mode)
 
+
 if __name__ == "__main__":
     main()

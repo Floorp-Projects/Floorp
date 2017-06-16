@@ -136,7 +136,7 @@ fn get_abi(cc: CXCallingConv) -> Abi {
 fn mangling_hack_if_needed(ctx: &BindgenContext, symbol: &mut String) {
     // NB: win64 also contains the substring "win32" in the target triple, so
     // we need to actually check for i686...
-    if ctx.target().contains("macos") ||
+    if ctx.target().contains("darwin") ||
        (ctx.target().contains("i686") && ctx.target().contains("windows")) {
         symbol.remove(0);
     }

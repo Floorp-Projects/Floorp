@@ -151,5 +151,6 @@ class TalosConfigUnitTest(unittest.TestCase):
         with self.assertRaises(KeyError):
             self.validate(content['approot'], "test/path/to")
 
+
 if __name__ == '__main__':
     unittest.main()

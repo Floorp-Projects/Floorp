@@ -15,6 +15,7 @@
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/EffectSet.h"
+#include "mozilla/GeckoStyleContext.h"
 #include "mozilla/FloatingPoint.h" // For IsFinite
 #include "mozilla/LookAndFeel.h" // For LookAndFeel::GetInt
 #include "mozilla/KeyframeUtils.h"
@@ -28,6 +29,7 @@
 #include "nsCSSPseudoElements.h" // For CSSPseudoElementType
 #include "nsIPresShell.h"
 #include "nsIScriptError.h"
+#include "nsStyleContextInlines.h"
 
 namespace mozilla {
 
@@ -300,7 +302,7 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
   }
 
   const ServoComputedValues* currentStyle =
-    aStyleContext->StyleSource().AsServoComputedValues();
+    aStyleContext->ComputedValues();
 
   DoUpdateProperties(currentStyle);
 }
@@ -1643,7 +1645,7 @@ CreateStyleContextForAnimationValue(nsCSSPropertyID aProperty,
 
   // We need to call StyleData to generate cached data for the style context.
   // Otherwise CalcStyleDifference returns no meaningful result.
-  styleContext->StyleData(nsCSSProps::kSIDTable[aProperty]);
+  styleContext->AsGecko()->StyleData(nsCSSProps::kSIDTable[aProperty]);
 
   return styleContext.forget();
 }

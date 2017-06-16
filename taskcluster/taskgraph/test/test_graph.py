@@ -153,5 +153,6 @@ class TestGraph(unittest.TestCase):
             '3': set(['4']),
         })
 
+
 if __name__ == '__main__':
     main()

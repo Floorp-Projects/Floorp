@@ -324,5 +324,6 @@ class TestTryOptionSyntax(unittest.TestCase):
         tos = TryOptionSyntax('try: --no-retry', graph_with_jobs)
         self.assertTrue(tos.no_retry)
 
+
 if __name__ == '__main__':
     main()

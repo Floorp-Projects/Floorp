@@ -5,8 +5,8 @@ fuzzy-if(Android,8,604) == display-contents-acid.html display-contents-acid-ref.
 fuzzy-if(Android,8,604) == display-contents-acid-dyn-1.html display-contents-acid-ref.html
 fuzzy-if(Android,8,604) == display-contents-acid-dyn-2.html display-contents-acid-ref.html
 fuzzy-if(Android,8,604) == display-contents-acid-dyn-3.html display-contents-acid-ref.html
-skip-if(styloVsGecko||stylo) == display-contents-generated-content.html display-contents-generated-content-ref.html
-skip-if(styloVsGecko||stylo) == display-contents-generated-content-2.html display-contents-generated-content-ref.html
+== display-contents-generated-content.html display-contents-generated-content-ref.html
+== display-contents-generated-content-2.html display-contents-generated-content-ref.html
 fails-if(styloVsGecko||stylo) == display-contents-style-inheritance-1.html display-contents-style-inheritance-1-ref.html
 fails-if(styloVsGecko||stylo) == display-contents-style-inheritance-1-stylechange.html display-contents-style-inheritance-1-ref.html
 fuzzy-if(winWidget,12,100) skip-if(styloVsGecko||stylo) == display-contents-style-inheritance-1-dom-mutations.html display-contents-style-inheritance-1-ref.html
@@ -17,7 +17,7 @@ fuzzy-if(winWidget,12,100) skip-if(styloVsGecko||stylo) == display-contents-styl
 == display-contents-visibility-hidden-2.html display-contents-visibility-hidden-ref.html
 == display-contents-495385-2d.html display-contents-495385-2d-ref.html
 fuzzy-if(Android,7,3935) == display-contents-xbl.xhtml display-contents-xbl-ref.html
-fuzzy-if(Android,7,1186) pref(dom.webcomponents.enabled,true) skip-if(styloVsGecko||stylo) == display-contents-shadow-dom-1.html display-contents-shadow-dom-1-ref.html
+fuzzy-if(Android,7,1186) pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == display-contents-shadow-dom-1.html display-contents-shadow-dom-1-ref.html
 == display-contents-xbl-2.xul display-contents-xbl-2-ref.xul
 asserts(1) asserts-if(styloVsGecko,2) == display-contents-xbl-3.xul display-contents-xbl-3-ref.xul # bug 1089223
 skip == display-contents-xbl-4.xul display-contents-xbl-4-ref.xul # fails (not just asserts) due to bug 1089223

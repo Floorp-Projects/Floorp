@@ -6,7 +6,7 @@
 
 #include "AnimValuesStyleRule.h"
 #include "nsRuleData.h"
-#include "nsStyleContext.h"
+#include "mozilla/GeckoStyleContext.h"
 
 namespace mozilla {
 
@@ -15,7 +15,7 @@ NS_IMPL_ISUPPORTS(AnimValuesStyleRule, nsIStyleRule)
 void
 AnimValuesStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  nsStyleContext *contextParent = aRuleData->mStyleContext->GetParent();
+  GeckoStyleContext *contextParent = aRuleData->mStyleContext->GetParent();
   if (contextParent && contextParent->HasPseudoElementData()) {
     // Don't apply transitions or animations to things inside of
     // pseudo-elements.

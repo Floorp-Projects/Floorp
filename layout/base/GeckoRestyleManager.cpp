@@ -13,6 +13,7 @@
 #include <algorithm> // For std::max
 #include "gfxContext.h"
 #include "mozilla/EffectSet.h"
+#include "mozilla/GeckoStyleContext.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/ViewportFrame.h"
 #include "mozilla/css/StyleRule.h" // For nsCSSSelector
@@ -23,6 +24,7 @@
 #include "nsAutoPtr.h"
 #include "nsStyleChangeList.h"
 #include "nsRuleProcessorData.h"
+#include "nsStyleContextInlines.h"
 #include "nsStyleSet.h"
 #include "nsStyleUtil.h"
 #include "nsCSSFrameConstructor.h"
@@ -1767,7 +1769,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
                                   eRestyle_Subtree |
                                   eRestyle_ForceDescendants));
 
-  RefPtr<nsStyleContext> oldContext = mFrame->StyleContext();
+  RefPtr<GeckoStyleContext> oldContext = mFrame->StyleContext()->AsGecko();
 
   nsTArray<SwapInstruction> swaps;
 
@@ -1916,7 +1918,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
     for (SwapInstruction& swap : swaps) {
       LOG_RESTYLE("swapping style structs between %p and %p",
                   swap.mOldContext.get(), swap.mNewContext.get());
-      swap.mOldContext->SwapStyleData(swap.mNewContext, swap.mStructsToSwap);
+      swap.mOldContext->AsGecko()->SwapStyleData(swap.mNewContext->AsGecko(), swap.mStructsToSwap);
       swappedStructs |= swap.mStructsToSwap;
     }
     swaps.Clear();
@@ -2751,7 +2753,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
           } else {
             LOG_RESTYLE("swapping style structs between %p and %p",
                         oldContext.get(), newContext.get());
-            oldContext->SwapStyleData(newContext, equalStructs);
+            oldContext->AsGecko()->SwapStyleData(newContext->AsGecko(), equalStructs);
             *aSwappedStructs |= equalStructs;
           }
 #ifdef RESTYLE_LOGGING
@@ -2759,9 +2761,9 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
           if (structs) {
             LOG_RESTYLE_INDENT();
             LOG_RESTYLE("old style context now has: %s",
-                        oldContext->GetCachedStyleDataAsString(structs).get());
+                        oldContext->AsGecko()->GetCachedStyleDataAsString(structs).get());
             LOG_RESTYLE("new style context now has: %s",
-                        newContext->GetCachedStyleDataAsString(structs).get());
+                        newContext->AsGecko()->GetCachedStyleDataAsString(structs).get());
           }
 #endif
         }
@@ -3443,7 +3445,7 @@ ClearCachedInheritedStyleDataOnDescendants(
   for (size_t i = 0; i < aContextsToClear.Length(); i++) {
     auto& entry = aContextsToClear[i];
     if (!entry.mStyleContext->HasSingleReference()) {
-      entry.mStyleContext->ClearCachedInheritedStyleDataOnDescendants(
+      entry.mStyleContext->AsGecko()->ClearCachedInheritedStyleDataOnDescendants(
           entry.mStructs);
     }
     entry.mStyleContext = nullptr;

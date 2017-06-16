@@ -324,5 +324,6 @@ yellow = submarine"""  # noqa
         self.assertEqual(len(parser.tests), 0)
         self.assertTrue(len(parser.manifests()) == 1)
 
+
 if __name__ == '__main__':
     mozunit.main()

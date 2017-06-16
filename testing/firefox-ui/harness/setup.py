@@ -18,6 +18,7 @@ def get_version():
     return re.findall("__version__ = '([\d\.]+)'",
                       read('firefox_ui_harness', '__init__.py'), re.M)[0]
 
+
 long_description = """Custom Marionette runner classes and entry scripts for Firefox Desktop
 specific Marionette tests.
 """

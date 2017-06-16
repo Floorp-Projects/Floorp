@@ -228,5 +228,6 @@ class MergeTest(unittest.TestCase):
         self.assertEqual(second, {'b': 20, 'c': 30})
         self.assertEqual(third, {'c': 300, 'd': 400})
 
+
 if __name__ == '__main__':
     mozunit.main()
