@@ -143,6 +143,10 @@ function log(message) {
 // This also prevents us from handling reloads with hashes twice
 let gLastSearch = null;
 
+// Keep track of the original window we were loaded in
+// so we don't handle requests for other windows.
+let gOriginalWindow = null;
+
 /**
  * Since most codes are in the URL, we can handle them via
  * a progress listener.
@@ -151,6 +155,9 @@ var webProgressListener = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener, Ci.nsISupportsWeakReference]),
   onLocationChange(aWebProgress, aRequest, aLocation, aFlags)
   {
+    if (aWebProgress.DOMWindow && (aWebProgress.DOMWindow != gOriginalWindow)) {
+      return;
+    }
     try {
       if (!aWebProgress.isTopLevel ||
           // Not a URL
@@ -231,9 +238,9 @@ function onPageLoad(event) {
       uri.spec == gLastSearch) {
     return;
   }
-  var queries = new URLSearchParams(doc.location.search);
+  var queries = new URLSearchParams(doc.location.search.toLowerCase());
   // For Bing, QBRE form code is used for all follow-on search
-  if (queries.get("form") != "QBRE") {
+  if (queries.get("form") != "qbre") {
     return;
   }
   if (parseCookies(doc.cookie).SRCHS == "PC=MOZI") {
@@ -262,6 +269,8 @@ function sendSaveTelemetryMsg(code, sap, type) {
 addEventListener("DOMContentLoaded", onPageLoad, false);
 docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebProgress)
         .addProgressListener(webProgressListener, Ci.nsIWebProgress.NOTIFY_LOCATION);
+
+gOriginalWindow = content;
 
 let gDisabled = false;
 
