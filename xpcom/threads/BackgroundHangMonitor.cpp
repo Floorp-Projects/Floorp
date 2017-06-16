@@ -238,7 +238,7 @@ public:
 
 
 StaticRefPtr<BackgroundHangManager> BackgroundHangManager::sInstance;
-bool BackgroundHangManager::sDisabled = false;
+bool BackgroundHangManager::sDisabled = true;
 
 MOZ_THREAD_LOCAL(BackgroundHangThread*) BackgroundHangThread::sTlsKey;
 bool BackgroundHangThread::sTlsKeyInitialized;
@@ -713,6 +713,10 @@ BackgroundHangMonitor::Startup()
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 #ifdef MOZ_ENABLE_BACKGROUND_HANG_MONITOR
   MOZ_ASSERT(!BackgroundHangManager::sInstance, "Already initialized");
+
+  // Enable the BackgroundHangManager by setting sDisabled to false in Startup.
+  MOZ_ASSERT(BackgroundHangManager::sDisabled);
+  BackgroundHangManager::sDisabled = false;
 
   if (!strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta")) {
     if (XRE_IsParentProcess()) { // cached ClientID hasn't been read yet
