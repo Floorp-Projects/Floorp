@@ -85,9 +85,9 @@ impl Serialize for RGBA {
 }
 
 #[cfg(feature = "serde")]
-impl Deserialize for RGBA {
+impl<'de> Deserialize<'de> for RGBA {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer
+        where D: Deserializer<'de>
     {
         let (r, g, b, a) = try!(Deserialize::deserialize(deserializer));
         Ok(RGBA::new(r, g, b, a))
