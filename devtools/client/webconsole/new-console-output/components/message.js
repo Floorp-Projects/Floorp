@@ -227,6 +227,8 @@ const Message = createClass({
       }, `[${l10n.getStr("webConsoleMoreInfoLabel")}]`);
     }
 
+    const bodyElements = Array.isArray(messageBody) ? messageBody : [messageBody];
+
     return dom.div({
       className: topLevelClasses.join(" "),
       onContextMenu: this.onContextMenu,
@@ -243,7 +245,7 @@ const Message = createClass({
           // Add whitespaces for formatting when copying to the clipboard.
           timestampEl ? " " : null,
           dom.span({ className: "message-body devtools-monospace" },
-            messageBody,
+            ...bodyElements,
             learnMore
           ),
           repeat ? " " : null,
