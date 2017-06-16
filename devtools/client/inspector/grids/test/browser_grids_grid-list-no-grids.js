@@ -23,7 +23,7 @@ add_task(function* () {
 
   yield selectNode("#grid", inspector);
   let noGridList = doc.querySelector(".layout-no-grids");
-  let gridList = doc.getElementById("grid-list");
+  let gridList = doc.querySelector("#grid-list");
 
   info("Checking the initial state of the Grid Inspector.");
   ok(noGridList, "The message no grid containers is displayed.");
