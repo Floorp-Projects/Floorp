@@ -290,7 +290,7 @@ Shape::replaceLastProperty(JSContext* cx, StackBaseShape& base,
  * which must be lastProperty() if inDictionaryMode(), else parent must be
  * one of lastProperty() or lastProperty()->parent.
  */
-/* static */ Shape*
+/* static */ MOZ_ALWAYS_INLINE Shape*
 NativeObject::getChildProperty(JSContext* cx,
                                HandleNativeObject obj, HandleShape parent,
                                MutableHandle<StackShape> child)
