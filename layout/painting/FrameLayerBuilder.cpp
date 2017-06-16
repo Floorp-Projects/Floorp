@@ -4552,8 +4552,6 @@ FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData)
     return;
   }
 
-  PaintedLayerItemsEntry* entry = mPaintedLayerItems.GetEntry(paintedLayer);
-
   nsAutoPtr<nsDisplayItemGeometry> geometry;
 
   PaintedDisplayItemLayerUserData* layerData =
@@ -4615,6 +4613,7 @@ FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData)
                changedFrameInvalidations.IsEmpty() == 0) {
       notifyRenderingChanged = false;
     }
+    PaintedLayerItemsEntry* entry = mPaintedLayerItems.GetEntry(paintedLayer);
     aData->mClip.AddOffsetAndComputeDifference(entry->mCommonClipCount,
                                                shift, aData->mGeometry->ComputeInvalidationRegion(),
                                                clip, entry->mLastCommonClipCount,
