@@ -37,9 +37,6 @@ public:
   // Notify that a network error is encountered.
   virtual void NotifyNetworkError() {}
 
-  // Notify that decoding has failed.
-  virtual void NotifyDecodeError() {}
-
   // Notify that data arrives on the stream and is read into the cache.
   virtual void NotifyDataArrived() {}
 
