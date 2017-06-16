@@ -18,6 +18,27 @@
     "description": "Exposes the browser's profiler.",
 
     "permissions": ["geckoProfiler"],
+    "types": [
+      {
+        "id": "ProfilerFeature",
+        "type": "string",
+        "enum": [
+          "displaylistdump",
+          "gpu",
+          "java",
+          "js",
+          "layersdump",
+          "leaf",
+          "mainthreadio",
+          "memory",
+          "privacy",
+          "restyle",
+          "stackwalk",
+          "tasktracer",
+          "threads"
+        ]
+      }
+    ],
     "functions": [
       {
        "name": "start",
@@ -42,14 +63,7 @@
                 "type": "array",
                 "description": "A list of active features for the profiler.",
                 "items": {
-                  "type": "string",
-                  "enum": [
-                    "js",
-                    "stackwalk",
-                    "tasktracer",
-                    "leaf",
-                    "threads"
-                  ]
+                  "$ref": "ProfilerFeature"
                 }
               },
               "threads": {
