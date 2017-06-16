@@ -193,18 +193,6 @@ struct TextureFactoryIdentifier
     , mSupportsComponentAlpha(aSupportsComponentAlpha)
     , mSyncHandle(aSyncHandle)
   {}
-
-  bool operator==(const TextureFactoryIdentifier& aOther) const {
-    return
-      mParentBackend == aOther.mParentBackend &&
-      mParentProcessType == aOther.mParentProcessType &&
-      mMaxTextureSize == aOther.mMaxTextureSize &&
-      mCompositorUseANGLE == aOther.mCompositorUseANGLE &&
-      mSupportsTextureBlitting == aOther.mSupportsTextureBlitting &&
-      mSupportsPartialUploads == aOther.mSupportsPartialUploads &&
-      mSupportsComponentAlpha == aOther.mSupportsComponentAlpha &&
-      mSyncHandle == aOther.mSyncHandle;
-  }
 };
 
 /**
