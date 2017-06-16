@@ -171,11 +171,11 @@
 <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
 <stringbundle id="signonBundle" src="chrome://passwordmgr/locale/passwordmgr.properties"/>
 
-<hbox id="header-privacy"
-      class="header"
+<hbox id="browserPrivacyCategory"
+      class="subcategory"
       hidden="true"
       data-category="panePrivacy">
-  <label class="header-name" flex="1">&panePrivacySecurity.title;</label>
+  <label class="header-name" flex="1">&browserPrivacy.label;</label>
 </hbox>
 
 <!-- Passwords -->
@@ -504,6 +504,13 @@
   </vbox>
 </groupbox>
 
+<hbox id="permissionsCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="panePrivacy">
+  <label class="header-name" flex="1">&permissions.label;</label>
+</hbox>
+
 <!-- Permissions -->
 <groupbox id="permissionsGroup" data-category="panePrivacy" hidden="true">
   <grid>
@@ -571,10 +578,16 @@
   </hbox>
 </groupbox>
 
+<hbox id="dataCollectionCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="panePrivacy">
+  <label class="header-name" flex="1">&dataCollection.label;</label>
+</hbox>
+
 <!-- Firefox Data Collection and Use -->
 #ifdef MOZ_DATA_REPORTING
 <groupbox id="dataCollectionGroup" data-category="panePrivacy" data-subcategory="reports" hidden="true">
-  <caption><label>&dataCollection.label;</label></caption>
   <description>
     &dataCollectionDesc.label;<label id="dataCollectionLearnMore" class="learnMore text-link">&dataCollectionLearnMore.label;</label>
   </description>
@@ -612,6 +625,13 @@
 #endif
 </groupbox>
 #endif
+
+<hbox id="securityCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="panePrivacy">
+  <label class="header-name" flex="1">&security.label;</label>
+</hbox>
 
 <!-- addons, forgery (phishing) UI Security -->
 <groupbox id="addonsPhishingGroup" data-category="panePrivacy" hidden="true">
