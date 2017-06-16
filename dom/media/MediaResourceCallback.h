@@ -40,9 +40,6 @@ public:
   // Notify that data arrives on the stream and is read into the cache.
   virtual void NotifyDataArrived() {}
 
-  // Notify that MediaResource has received some data.
-  virtual void NotifyBytesDownloaded() {}
-
   // Notify download is ended.
   // NOTE: this can be called with the media cache lock held, so don't
   // block or do anything which might try to acquire a lock!

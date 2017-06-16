@@ -200,7 +200,13 @@ void
 MediaDecoder::ResourceCallback::NotifyDataArrived()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!mDecoder || mTimerArmed) {
+  if (!mDecoder) {
+    return;
+  }
+
+  mDecoder->NotifyBytesDownloaded();
+
+  if (mTimerArmed) {
     return;
   }
   // In situations where these notifications come from stochastic network
@@ -210,15 +216,6 @@ MediaDecoder::ResourceCallback::NotifyDataArrived()
   mTimerArmed = true;
   mTimer->InitWithFuncCallback(
     TimerCallback, this, sDelay, nsITimer::TYPE_ONE_SHOT);
-}
-
-void
-MediaDecoder::ResourceCallback::NotifyBytesDownloaded()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mDecoder) {
-    mDecoder->NotifyBytesDownloaded();
-  }
 }
 
 void

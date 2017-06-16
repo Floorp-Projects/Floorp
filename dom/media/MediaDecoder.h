@@ -112,7 +112,6 @@ public:
     void SetInfinite(bool aInfinite) override;
     void NotifyNetworkError() override;
     void NotifyDataArrived() override;
-    void NotifyBytesDownloaded() override;
     void NotifyDataEnded(nsresult aStatus) override;
     void NotifyPrincipalChanged() override;
     void NotifySuspendedStatusChanged() override;
