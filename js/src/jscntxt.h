@@ -474,10 +474,6 @@ struct JSContext : public JS::RootingContext,
      */
     js::ThreadLocalData<int32_t> suppressGC;
 
-    // In some cases, invoking GC barriers (incremental or otherwise) will break
-    // things. These barriers assert if this flag is set.
-    js::ThreadLocalData<bool> allowGCBarriers;
-
 #ifdef DEBUG
     // Whether this thread is actively Ion compiling.
     js::ThreadLocalData<bool> ionCompiling;
