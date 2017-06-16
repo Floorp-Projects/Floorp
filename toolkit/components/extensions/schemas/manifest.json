@@ -245,7 +245,8 @@
             "type": "string",
             "enum": [
               "alarms",
-              "storage"
+              "storage",
+              "unlimitedStorage"
             ]
           }
         ]
