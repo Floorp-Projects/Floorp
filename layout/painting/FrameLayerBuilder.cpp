@@ -2313,14 +2313,17 @@ ContainerState::AttemptToRecyclePaintedLayer(AnimatedGeometryRoot* aAnimatedGeom
                                              const nsPoint& aTopLeft)
 {
   Layer* oldLayer = mLayerBuilder->GetOldLayerFor(aItem);
-  if (!oldLayer || !oldLayer->AsPaintedLayer() ||
-      !mPaintedLayersAvailableForRecycling.Contains(oldLayer->AsPaintedLayer())) {
+  if (!oldLayer || !oldLayer->AsPaintedLayer()) {
     return nullptr;
   }
 
-  // Try to recycle a layer
+  if (!mPaintedLayersAvailableForRecycling.EnsureRemoved(oldLayer->AsPaintedLayer())) {
+    // Not found.
+    return nullptr;
+  }
+
+  // Try to recycle the layer.
   RefPtr<PaintedLayer> layer = oldLayer->AsPaintedLayer();
-  mPaintedLayersAvailableForRecycling.RemoveEntry(layer);
 
   // Check if the layer hint has changed and whether or not the layer should
   // be recreated because of it.
