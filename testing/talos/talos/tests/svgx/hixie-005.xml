@@ -82,6 +82,21 @@ the previous batches are not removed from the document.
       if (parent.reportResults) parent.reportResults(end - start, start);
     }
   }
-  addEventListener("load", function(){ rAF(runTest); });
+  addEventListener("load", function() {
+    try {
+      // Outside of talos, this throws a security exception which no-op this file.
+      // (It's not required nor allowed for addons since Firefox 17)
+      // It's used inside talos from non-privileged pages (like during tscroll),
+      // and it works because talos disables all/most security measures.
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    } catch (e) {}
+
+    Components.utils.import("resource://gre/modules/Services.jsm");
+    Services.scriptloader.loadSubScript("chrome://talos-powers-content/content/TalosContentProfiler.js");
+
+    TalosContentProfiler.resume("hixie-005.xml loaded", true).then(() => {
+      rAF(runTest);
+    });
+  });
  ]]></script>
 </svg>
