@@ -28,8 +28,8 @@ impl HeapSizeOf for Au {
     fn heap_size_of_children(&self) -> usize { 0 }
 }
 
-impl Deserialize for Au {
-    fn deserialize<D: Deserializer>(deserializer: D) -> Result<Au, D::Error> {
+impl<'de> Deserialize<'de> for Au {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Au, D::Error> {
         Ok(Au(try!(i32::deserialize(deserializer))).clamp())
     }
 }
