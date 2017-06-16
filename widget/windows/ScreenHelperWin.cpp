@@ -48,11 +48,13 @@ CollectMonitors(HMONITOR aMon, HDC hDCScreen, LPRECT, LPARAM ioParam)
     // (Some devices report 32 and some devices report 24.)
     pixelDepth = 24;
   }
-  float dpi = 96.0f;
-  MOZ_LOG(sScreenLog, LogLevel::Debug, ("New screen [%d %d %d %d %d %f %f]",
-                                        rect.x, rect.y, rect.width, rect.height,
-                                        pixelDepth, defaultCssScaleFactor.scale,
-                                        dpi));
+  float dpi = WinUtils::MonitorDPI(aMon);
+  MOZ_LOG(sScreenLog, LogLevel::Debug,
+           ("New screen [%d %d %d %d (%d %d %d %d) %d %f %f %f]",
+            rect.x, rect.y, rect.width, rect.height,
+            availRect.x, availRect.y, availRect.width, availRect.height,
+            pixelDepth, contentsScaleFactor.scale, defaultCssScaleFactor.scale,
+            dpi));
   auto screen = new Screen(rect, availRect,
                            pixelDepth, pixelDepth,
                            contentsScaleFactor, defaultCssScaleFactor,
