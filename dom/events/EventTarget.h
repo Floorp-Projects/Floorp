@@ -100,7 +100,6 @@ public:
   virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) {}
 
   virtual bool IsApzAware() const;
-  bool MayHaveAPZAwareKeyEventListener() const;
 
 protected:
   EventHandlerNonNull* GetEventHandler(nsIAtom* aType,

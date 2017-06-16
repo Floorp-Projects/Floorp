@@ -16,6 +16,7 @@
 
 class nsIEventTarget;
 class nsIRunnable;
+class nsISerialEventTarget;
 
 namespace mozilla {
 class AbstractThread;
@@ -103,7 +104,7 @@ public:
                             TaskCategory aCategory,
                             already_AddRefed<nsIRunnable>&& aRunnable);
 
-  virtual nsIEventTarget* EventTargetFor(TaskCategory aCategory) const;
+  virtual nsISerialEventTarget* EventTargetFor(TaskCategory aCategory) const;
 
   // Must always be called on the main thread. The returned AbstractThread can
   // always be used off the main thread.
@@ -127,7 +128,7 @@ protected:
   virtual AbstractThread* AbstractMainThreadForImpl(TaskCategory aCategory);
 
   // Helper method to create an event target specific to a particular TaskCategory.
-  virtual already_AddRefed<nsIEventTarget>
+  virtual already_AddRefed<nsISerialEventTarget>
   CreateEventTargetFor(TaskCategory aCategory);
 
   // Given an event target returned by |dispatcher->CreateEventTargetFor|, this
@@ -153,7 +154,7 @@ protected:
   static SchedulerGroup* sRunningDispatcher;
   bool mAccessValid;
 
-  nsCOMPtr<nsIEventTarget> mEventTargets[size_t(TaskCategory::Count)];
+  nsCOMPtr<nsISerialEventTarget> mEventTargets[size_t(TaskCategory::Count)];
   RefPtr<AbstractThread> mAbstractThreads[size_t(TaskCategory::Count)];
 };
 

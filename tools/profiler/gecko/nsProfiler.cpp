@@ -20,11 +20,11 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "shared-libraries.h"
 #include "js/Value.h"
-#include "mozilla/AbstractThread.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/TypedArray.h"
 #include "nsLocalFile.h"
+#include "nsThreadUtils.h"
 #include "ProfilerParent.h"
 #include "platform.h"
 
@@ -275,7 +275,7 @@ nsProfiler::GetProfileDataAsync(double aSinceTime, JSContext* aCx,
   }
 
   StartGathering(aSinceTime)->Then(
-    AbstractThread::MainThread(), __func__,
+    GetMainThreadSerialEventTarget(), __func__,
     [promise](nsCString aResult) {
       AutoJSAPI jsapi;
       if (NS_WARN_IF(!jsapi.Init(promise->GlobalJSObject()))) {
@@ -343,7 +343,7 @@ nsProfiler::GetProfileDataAsArrayBuffer(double aSinceTime, JSContext* aCx,
   }
 
   StartGathering(aSinceTime)->Then(
-    AbstractThread::MainThread(), __func__,
+    GetMainThreadSerialEventTarget(), __func__,
     [promise](nsCString aResult) {
       AutoJSAPI jsapi;
       if (NS_WARN_IF(!jsapi.Init(promise->GlobalJSObject()))) {
@@ -384,7 +384,7 @@ nsProfiler::DumpProfileToFileAsync(const nsACString& aFilename,
   nsCString filename(aFilename);
 
   StartGathering(aSinceTime)->Then(
-    AbstractThread::MainThread(), __func__,
+    GetMainThreadSerialEventTarget(), __func__,
     [filename](const nsCString& aResult) {
       nsCOMPtr<nsIFile> file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
       nsresult rv = file->InitWithNativePath(filename);
@@ -605,7 +605,7 @@ nsProfiler::StartGathering(double aSinceTime)
   mPendingProfiles = profiles.Length();
   RefPtr<nsProfiler> self = this;
   for (auto profile : profiles) {
-    profile->Then(AbstractThread::MainThread(), __func__,
+    profile->Then(GetMainThreadSerialEventTarget(), __func__,
       [self](const nsCString& aResult) {
         self->GatheredOOPProfile(aResult);
       },

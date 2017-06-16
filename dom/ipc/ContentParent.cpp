@@ -5378,3 +5378,14 @@ ContentParent::RecvMaybeReloadPlugins()
   pluginHost->ReloadPlugins();
   return IPC_OK();
 }
+
+mozilla::ipc::IPCResult
+ContentParent::RecvDeviceReset()
+{
+  GPUProcessManager* pm = GPUProcessManager::Get();
+  if (pm) {
+    pm->TriggerDeviceResetForTesting();
+  }
+
+  return IPC_OK();
+}

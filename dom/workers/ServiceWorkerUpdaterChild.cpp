@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ServiceWorkerUpdaterChild.h"
-#include "mozilla/AbstractThread.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -24,7 +24,7 @@ ServiceWorkerUpdaterChild::ServiceWorkerUpdaterChild(GenericPromise* aPromise,
   MOZ_ASSERT(aSuccessRunnable);
   MOZ_ASSERT(aFailureRunnable);
 
-  aPromise->Then(AbstractThread::MainThread(), __func__,
+  aPromise->Then(GetMainThreadSerialEventTarget(), __func__,
     [this]() {
       mPromiseHolder.Complete();
       Unused << Send__delete__(this);

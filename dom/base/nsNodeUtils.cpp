@@ -539,9 +539,6 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
           if (elm->MayHaveTouchEventListener()) {
             window->SetHasTouchEventListeners();
           }
-          if (elm->MayHaveMouseMoveEventListener()) {
-            window->SetHasMouseMoveEventListeners();
-          }
           if (elm->MayHaveMouseEnterLeaveEventListener()) {
             window->SetHasMouseEnterLeaveEventListeners();
           }

@@ -121,6 +121,7 @@
 #include "nsAccessibilityService.h"
 #if defined(XP_WIN)
 #include "mozilla/a11y/Compatibility.h"
+#include "mozilla/a11y/Platform.h"
 #endif
 #endif
 
@@ -962,6 +963,18 @@ nsXULAppInfo::GetAccessibilityEnabled(bool* aResult)
 {
 #ifdef ACCESSIBILITY
   *aResult = GetAccService() != nullptr;
+#else
+  *aResult = false;
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetAccessibleHandlerUsed(bool* aResult)
+{
+#if defined(ACCESSIBILITY) && defined(XP_WIN)
+  *aResult = Preferences::GetBool("accessibility.handler.enabled", false) &&
+    a11y::IsHandlerRegistered();
 #else
   *aResult = false;
 #endif

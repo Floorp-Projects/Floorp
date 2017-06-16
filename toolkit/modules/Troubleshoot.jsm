@@ -541,14 +541,13 @@ var dataProviders = {
 
   accessibility: function accessibility(done) {
     let data = {};
-    data.isActive = Cc["@mozilla.org/xre/app-info;1"].
-                    getService(Ci.nsIXULRuntime).
-                    accessibilityEnabled;
+    data.isActive = Services.appinfo.accessibilityEnabled;
     // eslint-disable-next-line mozilla/use-default-preference-values
     try {
       data.forceDisabled =
         Services.prefs.getIntPref("accessibility.force_disabled");
     } catch (e) {}
+    data.handlerUsed = Services.appinfo.accessibleHandlerUsed;
     done(data);
   },
 

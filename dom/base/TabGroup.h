@@ -119,7 +119,7 @@ public:
 
   // This method is always safe to call off the main thread. The nsIEventTarget
   // can always be used off the main thread.
-  nsIEventTarget* EventTargetFor(TaskCategory aCategory) const override;
+  nsISerialEventTarget* EventTargetFor(TaskCategory aCategory) const override;
 
   void WindowChangedBackgroundStatus(bool aIsNowBackground);
 

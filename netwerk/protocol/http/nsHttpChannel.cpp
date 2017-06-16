@@ -9166,6 +9166,16 @@ nsHttpChannel::MaybeRaceCacheWithNetwork()
         return NS_OK;
     }
 
+    // We must not race if the channel has a failure status code.
+    if (NS_FAILED(mStatus)) {
+        return NS_OK;
+    }
+
+    // If a CORS Preflight is required we must not race.
+    if (mRequireCORSPreflight && !mIsCorsPreflightDone) {
+        return NS_OK;
+    }
+
     uint32_t threshold = mCacheOpenWithPriority ? sRCWNQueueSizePriority
                                                 : sRCWNQueueSizeNormal;
     // No need to trigger to trigger the racing, since most likely the cache

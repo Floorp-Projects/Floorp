@@ -84,7 +84,7 @@ public:
                     TaskCategory aCategory,
                     already_AddRefed<nsIRunnable>&& aRunnable);
 
-  nsIEventTarget* EventTargetFor(TaskCategory aCategory) const;
+  nsISerialEventTarget* EventTargetFor(TaskCategory aCategory) const;
 
   AbstractThread*
   AbstractMainThreadFor(TaskCategory aCategory);
