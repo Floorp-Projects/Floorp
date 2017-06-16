@@ -5,8 +5,8 @@ fuzzy-if(Android,8,604) == display-contents-acid.html display-contents-acid-ref.
 fuzzy-if(Android,8,604) == display-contents-acid-dyn-1.html display-contents-acid-ref.html
 fuzzy-if(Android,8,604) == display-contents-acid-dyn-2.html display-contents-acid-ref.html
 fuzzy-if(Android,8,604) == display-contents-acid-dyn-3.html display-contents-acid-ref.html
-skip-if(styloVsGecko||stylo) == display-contents-generated-content.html display-contents-generated-content-ref.html
-skip-if(styloVsGecko||stylo) == display-contents-generated-content-2.html display-contents-generated-content-ref.html
+== display-contents-generated-content.html display-contents-generated-content-ref.html
+== display-contents-generated-content-2.html display-contents-generated-content-ref.html
 fails-if(styloVsGecko||stylo) == display-contents-style-inheritance-1.html display-contents-style-inheritance-1-ref.html
 fails-if(styloVsGecko||stylo) == display-contents-style-inheritance-1-stylechange.html display-contents-style-inheritance-1-ref.html
 fuzzy-if(winWidget,12,100) skip-if(styloVsGecko||stylo) == display-contents-style-inheritance-1-dom-mutations.html display-contents-style-inheritance-1-ref.html
