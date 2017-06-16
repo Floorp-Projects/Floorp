@@ -19,7 +19,6 @@ Form autofill test: simple form address autofill
 
 "use strict";
 
-let expectingPopup = null;
 let MOCK_STORAGE = [{
   organization: "Sesame Street",
   "street-address": "123 Sesame Street.",
@@ -33,21 +32,6 @@ let MOCK_STORAGE = [{
   country: "US",
   "address-level1": "CA",
 }];
-
-function expectPopup() {
-  info("expecting a popup");
-  return new Promise(resolve => {
-    expectingPopup = resolve;
-  });
-}
-
-function popupShownListener() {
-  info("popup shown for test ");
-  if (expectingPopup) {
-    expectingPopup();
-    expectingPopup = null;
-  }
-}
 
 function checkElementFilled(element, expectedvalue) {
   return [
@@ -101,6 +85,8 @@ async function setupFormHistory() {
     {op: "add", fieldname: "email", value: "foo@mozilla.com"},
   ]);
 }
+
+initPopupListener();
 
 // Form with history only.
 add_task(async function history_only_menu_checking() {
@@ -177,8 +163,6 @@ add_task(async function check_form_autofill_resume() {
     JSON.stringify({primary: address.tel, secondary: address["street-address"]})
   ));
 });
-
-registerPopupShownListener(popupShownListener);
 
 </script>
 
