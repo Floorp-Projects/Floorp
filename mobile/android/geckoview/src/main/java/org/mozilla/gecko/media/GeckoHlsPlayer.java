@@ -47,7 +47,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     private static final String LOGTAG = "GeckoHlsPlayer";
     private static final DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
     private static final int MAX_TIMELINE_ITEM_LINES = 3;
-    private static boolean DEBUG = false;
+    private static boolean DEBUG = AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG_BUILD;
 
     private static AtomicInteger sPlayerId = new AtomicInteger(0);
     /*
@@ -136,11 +136,12 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     }
 
     protected void checkInitDone() {
-        assertTrue(mDemuxerCallbacks != null);
-        assertTrue(mTracksInfo != null);
         if (mIsDemuxerInitDone) {
             return;
         }
+        assertTrue(mDemuxerCallbacks != null);
+        assertTrue(mTracksInfo != null);
+
         if (DEBUG) {
             Log.d(LOGTAG, "[checkInitDone] VReady:" + mTracksInfo.videoReady() +
                     ",AReady:" + mTracksInfo.audioReady() +
@@ -206,30 +207,39 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     public final class ComponentListener {
 
         // General purpose implementation
-        public void onDataArrived(int trackType) {
+        public synchronized void onDataArrived(int trackType) {
+            if (DEBUG) { Log.d(LOGTAG, "[CB][onDataArrived] id " + mPlayerId); }
+            if (!mIsPlayerInitDone) {
+                return;
+            }
             assertTrue(mResourceCallbacks != null);
             assertTrue(mTracksInfo != null);
-            Log.d(LOGTAG, "[CB][onDataArrived]");
             mTracksInfo.onDataArrived(trackType);
             mResourceCallbacks.onDataArrived();
             checkInitDone();
         }
 
-        public void onVideoInputFormatChanged(Format format) {
-            assertTrue(mTracksInfo != null);
+        public synchronized void onVideoInputFormatChanged(Format format) {
             if (DEBUG) {
                 Log.d(LOGTAG, "[CB] onVideoInputFormatChanged [" + format + "]");
                 Log.d(LOGTAG, "[CB] SampleMIMEType [" +
                               format.sampleMimeType + "], ContainerMIMEType [" +
-                              format.containerMimeType + "]");
+                              format.containerMimeType + "], id : " + mPlayerId);
             }
+            if (!mIsPlayerInitDone) {
+                return;
+            }
+            assertTrue(mTracksInfo != null);
             mTracksInfo.onVideoInfoUpdated();
             checkInitDone();
         }
 
-        public void onAudioInputFormatChanged(Format format) {
+        public synchronized void onAudioInputFormatChanged(Format format) {
+            if (DEBUG) { Log.d(LOGTAG, "[CB] onAudioInputFormatChanged [" + format + "], mPlayerId :" + mPlayerId); }
+            if (!mIsPlayerInitDone) {
+                return;
+            }
             assertTrue(mTracksInfo != null);
-            if (DEBUG) { Log.d(LOGTAG, "[CB] onAudioInputFormatChanged [" + format + "]"); }
             mTracksInfo.onAudioInfoUpdated();
             checkInitDone();
         }
@@ -548,7 +558,6 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     @Override
     public ConcurrentLinkedQueue<GeckoHLSSample> getSamples(TrackType trackType,
                                                             int number) {
-        if (DEBUG) { Log.d(LOGTAG, "(" + trackType + ") getSamples : " + number); }
         if (trackType == TrackType.VIDEO) {
             return mVRenderer != null ? mVRenderer.getQueuedSamples(number) :
                                         new ConcurrentLinkedQueue<GeckoHLSSample>();
@@ -682,8 +691,8 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     }
 
     @Override
-    public void release() {
-        if (DEBUG) { Log.d(LOGTAG, "releasing  ..."); }
+    public synchronized void release() {
+        if (DEBUG) { Log.d(LOGTAG, "releasing  ... id : " + mPlayerId); }
         if (mPlayer != null) {
             mPlayer.removeListener(this);
             mPlayer.stop();
