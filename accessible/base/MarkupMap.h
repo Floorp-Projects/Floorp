@@ -19,7 +19,7 @@ MARKUPMAP(acronym,
 
 MARKUPMAP(article,
           New_HyperText,
-          roles::DOCUMENT,
+          roles::ARTICLE,
           Attr(xmlroles, article))
 
 MARKUPMAP(aside,
