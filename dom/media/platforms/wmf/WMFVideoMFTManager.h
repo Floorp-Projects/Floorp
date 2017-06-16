@@ -121,6 +121,7 @@ private:
   bool mGotValidOutputAfterNullOutput = false;
   bool mGotExcessiveNullOutput = false;
   bool mIsValid = true;
+  bool mIMFUsable = false;
 };
 
 } // namespace mozilla
