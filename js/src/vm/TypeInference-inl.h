@@ -433,7 +433,7 @@ void AddTypePropertyId(JSContext* cx, ObjectGroup* group, JSObject* obj, jsid id
 void AddTypePropertyId(JSContext* cx, ObjectGroup* group, JSObject* obj, jsid id, const Value& value);
 
 /* Add a possible type for a property of obj. */
-inline void
+MOZ_ALWAYS_INLINE void
 AddTypePropertyId(JSContext* cx, JSObject* obj, jsid id, TypeSet::Type type)
 {
     id = IdToTypeId(id);
@@ -441,7 +441,7 @@ AddTypePropertyId(JSContext* cx, JSObject* obj, jsid id, TypeSet::Type type)
         AddTypePropertyId(cx, obj->group(), obj, id, type);
 }
 
-inline void
+MOZ_ALWAYS_INLINE void
 AddTypePropertyId(JSContext* cx, JSObject* obj, jsid id, const Value& value)
 {
     id = IdToTypeId(id);
