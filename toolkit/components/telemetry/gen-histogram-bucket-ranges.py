@@ -49,4 +49,5 @@ def main(argv):
 
     print json.dumps({'histograms': all_histograms})
 
+
 main(sys.argv[1:])

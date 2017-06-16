@@ -90,5 +90,6 @@ class ProcTestKill(proctest.ProcTest):
 
         self.assertEquals(p.proc.returncode, -signal.SIGKILL)
 
+
 if __name__ == '__main__':
     mozunit.main()

@@ -29,6 +29,7 @@
 #include "nsIServiceManager.h"
 #include "nsContainerFrame.h"
 #include "nsContentCID.h"
+#include "mozilla/GeckoStyleContext.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
 #include "nsLayoutUtils.h"
@@ -284,7 +285,7 @@ nsSplitterFrame::Init(nsIContent*       aContent,
                                            nsGkAtoms::orient)) {
         aContent->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
                           NS_LITERAL_STRING("vertical"), false);
-        nsStyleContext* parentStyleContext = StyleContext()->GetParent();
+        GeckoStyleContext* parentStyleContext = StyleContext()->GetParent();
         RefPtr<nsStyleContext> newContext = PresContext()->StyleSet()->
           ResolveStyleFor(aContent->AsElement(), parentStyleContext,
                           LazyComputeBehavior::Allow);

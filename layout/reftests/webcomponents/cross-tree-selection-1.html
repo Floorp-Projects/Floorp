@@ -3,6 +3,11 @@
 <head>
   <script>
     function tweak() {
+      if (!document.body.createShadowRoot) {
+        document.documentElement.className = "";
+        return;
+      }
+
       var host = document.getElementById("host");
       var shadow = host.createShadowRoot();
 

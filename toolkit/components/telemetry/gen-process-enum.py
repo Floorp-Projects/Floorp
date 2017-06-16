@@ -62,5 +62,6 @@ def main(output, *filenames):
         print("\nError generating processes enums:\n" + str(ex) + "\n")
         sys.exit(1)
 
+
 if __name__ == '__main__':
     main(sys.stdout, *sys.argv[1:])

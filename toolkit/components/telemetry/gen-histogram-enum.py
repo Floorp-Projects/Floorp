@@ -113,5 +113,6 @@ def main(output, *filenames):
     # Footer.
     print(footer, file=output)
 
+
 if __name__ == '__main__':
     main(sys.stdout, *sys.argv[1:])

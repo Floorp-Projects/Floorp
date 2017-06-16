@@ -18,6 +18,7 @@
 #include "PLDHashTable.h"
 #include "nsICSSPseudoComparator.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/css/ImportRule.h"
 #include "mozilla/css/StyleRule.h"
 #include "mozilla/css/GroupRule.h"
 #include "nsIDocument.h"

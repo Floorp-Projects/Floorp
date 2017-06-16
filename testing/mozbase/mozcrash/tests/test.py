@@ -240,5 +240,6 @@ class TestJavaException(unittest.TestCase):
                           " >>> NOT-SO-BAD EXCEPTION FROM THREAD 9 (\"GeckoBackgroundThread\")"
         self.assert_(not mozcrash.check_for_java_exception(passable_log, quiet=True))
 
+
 if __name__ == '__main__':
     mozunit.main()

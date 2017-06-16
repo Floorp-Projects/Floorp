@@ -42,6 +42,7 @@
 #include "nsFrameManager.h"
 #include "nsLayoutUtils.h"
 #include "LayoutLogging.h"
+#include "mozilla/GeckoStyleContext.h"
 #include "mozilla/GeckoRestyleManager.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/RestyleManagerInlines.h"
@@ -7197,7 +7198,7 @@ nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix, uint32_t aFlags) con
       pseudoTag->ToString(atomString);
       aTo += nsPrintfCString("%s", NS_LossyConvertUTF16toASCII(atomString).get());
     }
-    if (mStyleContext->StyleSource().IsGeckoRuleNodeOrNull()) {
+    if (mStyleContext->IsGecko()) {
       if (!mStyleContext->GetParent() ||
           (GetParent() && GetParent()->StyleContext() != mStyleContext->GetParent())) {
         aTo += nsPrintfCString("^%p", mStyleContext->GetParent());

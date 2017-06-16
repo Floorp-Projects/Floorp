@@ -587,13 +587,13 @@ DisplayListBuilder::PushClip(const WrRect& aClipRect,
   WRDL_LOG("PushClip id=%" PRIu64 " r=%s m=%p b=%s\n", clip_id,
       Stringify(aClipRect).c_str(), aMask,
       aMask ? Stringify(aMask->rect).c_str() : "none");
-  mClipIdStack.push_back(clip_id);
+  mClipIdStack.push_back(WrClipId { clip_id });
 }
 
 void
 DisplayListBuilder::PopClip()
 {
-  WRDL_LOG("PopClip id=%" PRIu64 "\n", mClipIdStack.back());
+  WRDL_LOG("PopClip id=%" PRIu64 "\n", mClipIdStack.back().id);
   mClipIdStack.pop_back();
   wr_dp_pop_clip(mWrState);
 }
@@ -627,11 +627,12 @@ DisplayListBuilder::PopScrollLayer()
 
 void
 DisplayListBuilder::PushClipAndScrollInfo(const layers::FrameMetrics::ViewID& aScrollId,
-                                          const uint64_t* aClipId)
+                                          const WrClipId* aClipId)
 {
   WRDL_LOG("PushClipAndScroll s=%" PRIu64 " c=%s\n", aScrollId,
-      aClipId ? Stringify(*aClipId).c_str() : "none");
-  wr_dp_push_clip_and_scroll_info(mWrState, aScrollId, aClipId);
+      aClipId ? Stringify(aClipId->id).c_str() : "none");
+  wr_dp_push_clip_and_scroll_info(mWrState, aScrollId,
+      aClipId ? &(aClipId->id) : nullptr);
 }
 
 void
@@ -891,7 +892,7 @@ DisplayListBuilder::PushClipRegion(const WrRect& aMain,
                                 aMask);
 }
 
-Maybe<uint64_t>
+Maybe<WrClipId>
 DisplayListBuilder::TopmostClipId()
 {
   if (mClipIdStack.empty()) {

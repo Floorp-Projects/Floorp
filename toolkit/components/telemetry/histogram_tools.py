@@ -69,6 +69,7 @@ def exponential_buckets(dmin, dmax, n_buckets):
         ret_array[bucket_index] = current
     return ret_array
 
+
 always_allowed_keys = ['kind', 'description', 'cpp_guard', 'expires_in_version',
                        'alert_emails', 'keyed', 'releaseChannelCollection',
                        'bug_numbers', 'record_in_processes']
@@ -579,6 +580,7 @@ def from_nsDeprecatedOperationList(filename, strict_type_checks):
             add_counter('page')
 
     return histograms
+
 
 FILENAME_PARSERS = {
     'Histograms.json': from_Histograms_json,

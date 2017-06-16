@@ -261,5 +261,6 @@ class TestLoggingMixin(unittest.TestCase):
         actual_messages = loggable._logger.handlers[0].messages
         self.assertEqual(expected_messages, actual_messages)
 
+
 if __name__ == '__main__':
     mozunit.main()

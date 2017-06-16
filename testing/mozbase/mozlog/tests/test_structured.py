@@ -1095,5 +1095,6 @@ class TestReader(unittest.TestCase):
         self.assertEquals(handler.action_0_count, 1)
         self.assertEquals(handler.action_1_count, 1)
 
+
 if __name__ == "__main__":
     mozunit.main()

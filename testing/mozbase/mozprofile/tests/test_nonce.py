@@ -48,5 +48,6 @@ class PreferencesNonceTest(unittest.TestCase):
         prefs = Preferences.read_prefs(user_js)
         self.assertEqual(dict(prefs), {'foo': 'bar'})
 
+
 if __name__ == '__main__':
     mozunit.main()

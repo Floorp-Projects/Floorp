@@ -186,5 +186,6 @@ class TestTalosError(unittest.TestCase):
         with self.assertRaises(TalosError):
             BrowserLogResults(results_raw="__FAIL<bad test>__FAIL")
 
+
 if __name__ == '__main__':
     unittest.main()

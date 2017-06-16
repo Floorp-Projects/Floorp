@@ -67,6 +67,7 @@ def default_formatter_options(log_type, overrides):
 
     return rv
 
+
 fmt_options = {
     # <option name>: (<wrapper function>, description, <applicable formatters>, action)
     # "action" is used by the commandline parser in use.

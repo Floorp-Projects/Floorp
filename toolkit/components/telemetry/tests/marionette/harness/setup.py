@@ -15,6 +15,7 @@ def read(*parts):
     with open(os.path.join(THIS_DIR, *parts)) as f:
         return f.read()
 
+
 setup(name='telemetry-harness',
       version=PACKAGE_VERSION,
       description=("""Custom Marionette runner classes and entry scripts for Telemetry

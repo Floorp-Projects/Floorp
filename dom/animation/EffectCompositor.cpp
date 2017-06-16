@@ -15,6 +15,7 @@
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/EffectSet.h"
+#include "mozilla/GeckoStyleContext.h"
 #include "mozilla/LayerAnimationInfo.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/RestyleManagerInlines.h"
@@ -33,6 +34,7 @@
 #include "nsLayoutUtils.h"
 #include "nsRuleNode.h" // For nsRuleNode::ComputePropertiesOverridingAnimation
 #include "nsRuleProcessorData.h" // For ElementRuleProcessorData etc.
+#include "nsStyleContextInlines.h"
 #include "nsTArray.h"
 #include <bitset>
 #include <initializer_list>
@@ -168,7 +170,7 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
     EffectCompositor::GetAnimationElementAndPseudoForFrame(aFrame);
   if (pseudoElement) {
     StyleBackendType backend =
-      aFrame->StyleContext()->StyleSource().IsServoComputedValues()
+      aFrame->StyleContext()->IsServo()
       ? StyleBackendType::Servo
       : StyleBackendType::Gecko;
     EffectCompositor::MaybeUpdateCascadeResults(backend,
@@ -801,7 +803,7 @@ EffectCompositor::GetOverriddenProperties(StyleBackendType aBackendType,
       break;
     case StyleBackendType::Gecko:
       nsRuleNode::ComputePropertiesOverridingAnimation(propertiesToTrack,
-                                                       aStyleContext,
+                                                       aStyleContext->AsGecko(),
                                                        result);
       break;
 

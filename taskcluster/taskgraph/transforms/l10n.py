@@ -32,6 +32,7 @@ from voluptuous import (
 def _by_platform(arg):
     return optionally_keyed_by('build-platform', arg)
 
+
 # shortcut for a string where task references are allowed
 taskref_or_string = Any(
     basestring,

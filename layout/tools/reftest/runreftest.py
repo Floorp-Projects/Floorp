@@ -57,6 +57,8 @@ except ImportError:
 
 def categoriesToRegex(categoryList):
     return "\\(" + ', '.join(["(?P<%s>\\d+) %s" % c for c in categoryList]) + "\\)"
+
+
 summaryLines = [('Successful', [('pass', 'pass'), ('loadOnly', 'load only')]),
                 ('Unexpected', [('fail', 'unexpected fail'),
                                 ('pass', 'unexpected pass'),

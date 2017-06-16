@@ -70,5 +70,6 @@ def main(args=sys.argv[1:]):
     except xtalos.XTalosError as e:
         parser.error(str(e))
 
+
 if __name__ == "__main__":
     main()

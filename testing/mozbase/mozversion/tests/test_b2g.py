@@ -70,5 +70,6 @@ class SourcesTest(unittest.TestCase):
         self.assertIsNone(v.get('gaia_changeset'))
         self.assertIsNone(v.get('gaia_date'))
 
+
 if __name__ == '__main__':
     mozunit.main()

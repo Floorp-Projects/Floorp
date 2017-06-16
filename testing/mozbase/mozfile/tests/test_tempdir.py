@@ -40,5 +40,6 @@ class TestTemporaryDirectory(unittest.TestCase):
         self.assertFalse(os.path.isdir(path))
         self.assertFalse(os.path.exists(path))
 
+
 if __name__ == '__main__':
     mozunit.main()

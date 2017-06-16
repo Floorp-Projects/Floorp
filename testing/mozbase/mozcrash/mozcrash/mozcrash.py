@@ -381,6 +381,7 @@ def check_for_java_exception(logcat, test_name=None, quiet=False):
 
     return found_exception
 
+
 if mozinfo.isWin:
     import ctypes
     import uuid

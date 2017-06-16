@@ -50,5 +50,6 @@ http://127.0.0.1:8888           privileged
         schema_version = entries[0][0]
         self.assertEqual(schema_version, 5)
 
+
 if __name__ == '__main__':
     mozunit.main()
