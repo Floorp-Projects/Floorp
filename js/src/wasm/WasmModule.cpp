@@ -580,11 +580,13 @@ Module::initSegments(JSContext* cx,
     Instance& instance = instanceObj->instance();
     const SharedTableVector& tables = instance.tables();
 
+    Tier tier = Tier::TBD;
+
     // Perform all error checks up front so that this function does not perform
     // partial initialization if an error is reported.
 
     for (const ElemSegment& seg : elemSegments_) {
-        uint32_t numElems = seg.elemCodeRangeIndices.length();
+        uint32_t numElems = seg.elemCodeRangeIndices(tier).length();
 
         uint32_t tableLength = tables[seg.tableIndex]->length();
         uint32_t offset = EvaluateInitExpr(globalImports, seg.offset);
@@ -617,11 +619,10 @@ Module::initSegments(JSContext* cx,
     for (const ElemSegment& seg : elemSegments_) {
         Table& table = *tables[seg.tableIndex];
         uint32_t offset = EvaluateInitExpr(globalImports, seg.offset);
-        Tier tier = Tier::TBD;
         const CodeRangeVector& codeRanges = metadata(tier).codeRanges;
         uint8_t* codeBase = instance.codeBase(tier);
 
-        for (uint32_t i = 0; i < seg.elemCodeRangeIndices.length(); i++) {
+        for (uint32_t i = 0; i < seg.elemCodeRangeIndices(tier).length(); i++) {
             uint32_t funcIndex = seg.elemFuncIndices[i];
             if (funcIndex < funcImports.length() && IsExportedWasmFunction(funcImports[funcIndex])) {
                 MOZ_ASSERT(!metadata().isAsmJS());
@@ -634,7 +635,7 @@ Module::initSegments(JSContext* cx,
                 Instance& exportInstance = exportInstanceObj->instance();
                 table.set(offset + i, exportInstance.codeBase(exportTier) + cr.funcTableEntry(), exportInstance);
             } else {
-                const CodeRange& cr = codeRanges[seg.elemCodeRangeIndices[i]];
+                const CodeRange& cr = codeRanges[seg.elemCodeRangeIndices(tier)[i]];
                 uint32_t entryOffset = table.isTypedFunction()
                                        ? cr.funcNormalEntry()
                                        : cr.funcTableEntry();
