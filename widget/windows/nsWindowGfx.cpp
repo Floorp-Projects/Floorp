@@ -179,16 +179,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 
     gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
 
-    nsTArray<nsWindow*> windows = EnumAllWindows();
-    for (nsWindow* window : windows) {
-      window->OnRenderingDeviceReset();
-    }
-
-    nsTArray<mozilla::dom::ContentParent*> children;
-    mozilla::dom::ContentParent::GetAll(children);
-    for (const auto& child : children) {
-      child->OnCompositorDeviceReset();
-    }
+    GPUProcessManager::Get()->OnInProcessDeviceReset();
 
     gfxCriticalNote << "(nsWindow) Finished device reset.";
     return false;
@@ -681,7 +672,7 @@ HBITMAP nsWindowGfx::DataToBitmap(uint8_t* aImageData,
   head.biYPelsPerMeter = 0;
   head.biClrUsed = 0;
   head.biClrImportant = 0;
-  
+
   BITMAPINFO& bi = *(BITMAPINFO*)reserved_space;
 
   if (aDepth == 1) {

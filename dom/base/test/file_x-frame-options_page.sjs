@@ -54,6 +54,10 @@ function handleRequest(request, response)
   // to test if the page loaded
   response.write("<h1 id=\"test\">" + query["testid"] + "</h1>");
 
+  if (query['testid'] == "postmessage") {
+    response.write("<script>parent.opener.postMessage('ok', '*');</script>");
+  }
+
   if (query['multipart'] == "1") {
     response.write("\r\n--" + BOUNDARY + "\r\n");
   }
