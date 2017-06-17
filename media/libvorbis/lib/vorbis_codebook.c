@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: basic codebook pack/unpack/code/decode operations
- last mod: $Id: codebook.c 19457 2015-03-03 00:15:29Z giles $
+ last mod: $Id$
 
  ********************************************************************/
 

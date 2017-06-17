@@ -56,18 +56,18 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
             "default": False,
             "help": "Permits a software GL implementation (such as LLVMPipe) to use the GL compositor."}
          ],
+        [["--enable-webrender"], {
+            "action": "store_true",
+            "dest": "enable_webrender",
+            "default": False,
+            "help": "Tries to enable the WebRender compositor."}
+         ],
         [["--parallel-stylo-traversal"], {
             "action": "store_true",
             "dest": "parallel_stylo_traversal",
             "default": False,
             "help": "Forcibly enable parallel traversal in Stylo with STYLO_THREADS=4"}
          ],
-        [["--enable-webrender"], {
-            "action": "store_true",
-            "dest": "enable_webrender",
-            "default": False,
-            "help": "Tries to enable the WebRender compositor."}
-         ]
     ] + copy.deepcopy(testing_config_options) + \
         copy.deepcopy(blobupload_config_options) + \
         copy.deepcopy(code_coverage_config_options)
@@ -169,6 +169,9 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
 
         if not c["e10s"]:
             cmd.append("--disable-e10s")
+
+        if c["parallel_stylo_traversal"]:
+            cmd.append("--stylo-threads=4")
 
         for opt in ["total_chunks", "this_chunk"]:
             val = c.get(opt)

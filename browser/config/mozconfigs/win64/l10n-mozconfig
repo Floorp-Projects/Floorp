@@ -1,9 +1,9 @@
 . "$topsrcdir/browser/config/mozconfigs/common"
 . "$topsrcdir/browser/config/mozconfigs/win64/common-win64"
+. "$topsrcdir/build/mozconfig.no-compile"
 
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --with-l10n-base=../../l10n
-ac_add_options --with-windows-version=603
 ac_add_options --with-branding=browser/branding/nightly
 
 export MOZILLA_OFFICIAL=1
@@ -14,7 +14,5 @@ export MOZ_TELEMETRY_REPORTING=1
 # Don't autoclobber l10n, as this can lead to missing binaries and broken builds
 # Bug 1283438
 mk_add_options AUTOCLOBBER=
-
-. $topsrcdir/build/win64/mozconfig.vs-latest
 
 . "$topsrcdir/build/mozconfig.common.override"

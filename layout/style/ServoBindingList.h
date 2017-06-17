@@ -518,6 +518,10 @@ SERVO_BINDING_FUNC(Servo_TraverseSubtree,
 // Assert that the tree has no pending or unconsumed restyles.
 SERVO_BINDING_FUNC(Servo_AssertTreeIsClean, void, RawGeckoElementBorrowed root)
 
+// Checks whether the rule tree has crossed its threshold for unused rule nodes,
+// and if so, frees them.
+SERVO_BINDING_FUNC(Servo_MaybeGCRuleTree, void, RawServoStyleSetBorrowed set)
+
 // Returns computed values for the given element without any animations rules.
 SERVO_BINDING_FUNC(Servo_StyleSet_GetBaseComputedValuesForElement,
                    ServoComputedValuesStrong,

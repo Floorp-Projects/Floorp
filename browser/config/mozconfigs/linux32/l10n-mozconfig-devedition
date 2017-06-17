@@ -4,7 +4,7 @@ ac_add_options --with-l10n-base=../../l10n
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --with-branding=browser/branding/aurora
 
-. $topsrcdir/build/unix/mozconfig.linux32
+. "$topsrcdir/build/mozconfig.no-compile"
 
 export MOZILLA_OFFICIAL=1
 

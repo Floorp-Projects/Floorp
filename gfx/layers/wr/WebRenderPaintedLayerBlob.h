@@ -46,7 +46,7 @@ public:
   virtual void InvalidateRegion(const nsIntRegion& aRegion) override
   {
     mInvalidRegion.Add(aRegion);
-    mValidRegion.Sub(mValidRegion, mInvalidRegion.GetRegion());
+    UpdateValidRegionAfterInvalidRegionChanged();
   }
 
   Layer* GetLayer() override { return this; }

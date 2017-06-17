@@ -1,10 +1,10 @@
-The source from this directory was copied from the libvorbis
-subversion repository using the update.sh script. The only changes
+The source from this directory was copied from the vorbis 
+git repository using the update.sh script. The only changes
 made were those applied by update.sh and the addition/update of
 Makefile.in and moz.build files for the Mozilla build system.
 
-The upstream version used was libvorbis 1.3.5.
-https://svn.xiph.org/tags/vorbis/libvorbis-1.3.5@19464
+The upstream version used was vorbis v1.3.5-48-ge5b1378
+from https://git.xiph.org/vorbis.git
 
 Some files are renamed during the copy to prevent clashes with object
 file names with other Mozilla libraries.

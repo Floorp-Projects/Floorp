@@ -101,8 +101,9 @@ WheelScrollAnimation::InitPreferences(TimeStamp aTime)
     mOriginMaxMS = clamped(gfxPrefs::PixelSmoothScrollMaxDurationMs(), 0, 10000);
     mOriginMinMS = clamped(gfxPrefs::PixelSmoothScrollMinDurationMs(), 0, mOriginMaxMS);
     break;
+  case ScrollWheelInput::SCROLLDELTA_SENTINEL:
+    MOZ_FALLTHROUGH_ASSERT("Invalid value");
   case ScrollWheelInput::SCROLLDELTA_LINE:
-  default:
     mOriginMaxMS = clamped(gfxPrefs::WheelSmoothScrollMaxDurationMs(), 0, 10000);
     mOriginMinMS = clamped(gfxPrefs::WheelSmoothScrollMinDurationMs(), 0, mOriginMaxMS);
     break;

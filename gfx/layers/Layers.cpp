@@ -2101,8 +2101,9 @@ void
 PaintedLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
   Layer::PrintInfo(aStream, aPrefix);
-  if (!mValidRegion.IsEmpty()) {
-    AppendToString(aStream, mValidRegion, " [valid=", "]");
+  nsIntRegion validRegion = GetValidRegion();
+  if (!validRegion.IsEmpty()) {
+    AppendToString(aStream, validRegion, " [valid=", "]");
   }
 }
 
@@ -2114,8 +2115,9 @@ PaintedLayer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
   using namespace layerscope;
   LayersPacket::Layer* layer = aPacket->mutable_layer(aPacket->layer_size()-1);
   layer->set_type(LayersPacket::Layer::PaintedLayer);
-  if (!mValidRegion.IsEmpty()) {
-    DumpRegion(layer->mutable_valid(), mValidRegion);
+  nsIntRegion validRegion = GetValidRegion();
+  if (!validRegion.IsEmpty()) {
+    DumpRegion(layer->mutable_valid(), validRegion);
   }
 }
 

@@ -1222,6 +1222,7 @@ let nestedNamespaceJson = [
         "events": [
           {
             "name": "onEvent",
+            "type": "function",
           },
         ],
         "properties": {
@@ -1286,17 +1287,27 @@ add_task(async function testNestedNamespace() {
      "Got the expected instance of the CustomType defined in the schema");
   ok(instanceOfCustomType.functionOnCustomType,
      "Got the expected method in the CustomType instance");
+  ok(instanceOfCustomType.onEvent &&
+     instanceOfCustomType.onEvent.addListener &&
+     typeof instanceOfCustomType.onEvent.addListener == "function",
+     "Got the expected event defined in the CustomType instance");
 
-  // TODO: test support events and properties in a SubModuleType defined in the schema,
+  instanceOfCustomType.functionOnCustomType("param_value");
+  verify("call", "nested.namespace.instanceOfCustomType",
+         "functionOnCustomType", ["param_value"]);
+
+  let fakeListener = () => {};
+  instanceOfCustomType.onEvent.addListener(fakeListener);
+  verify("addListener", "nested.namespace.instanceOfCustomType",
+         "onEvent", [fakeListener, []]);
+  instanceOfCustomType.onEvent.removeListener(fakeListener);
+  verify("removeListener", "nested.namespace.instanceOfCustomType",
+         "onEvent", [fakeListener]);
+
+  // TODO: test support properties in a SubModuleType defined in the schema,
   // once implemented, e.g.:
-  //
-  // ok(instanceOfCustomType.url,
-  //    "Got the expected property defined in the CustomType instance)
-  //
-  // ok(instanceOfCustomType.onEvent &&
-  //    instanceOfCustomType.onEvent.addListener &&
-  //    typeof instanceOfCustomType.onEvent.addListener == "function",
-  //    "Got the expected event defined in the CustomType instance");
+  // ok("url" in instanceOfCustomType,
+  //   "Got the expected property defined in the CustomType instance");
 });
 
 let $importJson = [
