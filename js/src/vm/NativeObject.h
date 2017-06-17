@@ -795,15 +795,16 @@ class NativeObject : public ShapedObject
     void freeSlot(JSContext* cx, uint32_t slot);
 
   private:
-    static Shape* getChildProperty(JSContext* cx, HandleNativeObject obj,
-                                   HandleShape parent, MutableHandle<StackShape> child);
+    static MOZ_ALWAYS_INLINE Shape* getChildProperty(JSContext* cx, HandleNativeObject obj,
+                                                     HandleShape parent,
+                                                     MutableHandle<StackShape> child);
 
   public:
     /* Add a property whose id is not yet in this scope. */
-    static Shape* addProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
-                              JSGetterOp getter, JSSetterOp setter,
-                              uint32_t slot, unsigned attrs, unsigned flags,
-                              bool allowDictionary = true);
+    static MOZ_ALWAYS_INLINE Shape* addProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
+                                                JSGetterOp getter, JSSetterOp setter,
+                                                uint32_t slot, unsigned attrs, unsigned flags,
+                                                bool allowDictionary = true);
 
     /* Add a data property whose id is not yet in this scope. */
     static Shape* addDataProperty(JSContext* cx, HandleNativeObject obj,
@@ -901,36 +902,36 @@ class NativeObject : public ShapedObject
         return getSlotAddressUnchecked(slot);
     }
 
-    HeapSlot& getSlotRef(uint32_t slot) {
+    MOZ_ALWAYS_INLINE HeapSlot& getSlotRef(uint32_t slot) {
         MOZ_ASSERT(slotInRange(slot));
         return *getSlotAddress(slot);
     }
 
-    const HeapSlot& getSlotRef(uint32_t slot) const {
+    MOZ_ALWAYS_INLINE const HeapSlot& getSlotRef(uint32_t slot) const {
         MOZ_ASSERT(slotInRange(slot));
         return *getSlotAddress(slot);
     }
 
     // Check requirements on values stored to this object.
-    inline void checkStoredValue(const Value& v) {
+    MOZ_ALWAYS_INLINE void checkStoredValue(const Value& v) {
         MOZ_ASSERT(IsObjectValueInCompartment(v, compartment()));
         MOZ_ASSERT(AtomIsMarked(zoneFromAnyThread(), v));
     }
 
-    void setSlot(uint32_t slot, const Value& value) {
+    MOZ_ALWAYS_INLINE void setSlot(uint32_t slot, const Value& value) {
         MOZ_ASSERT(slotInRange(slot));
         checkStoredValue(value);
         getSlotRef(slot).set(this, HeapSlot::Slot, slot, value);
     }
 
-    void initSlot(uint32_t slot, const Value& value) {
+    MOZ_ALWAYS_INLINE void initSlot(uint32_t slot, const Value& value) {
         MOZ_ASSERT(getSlot(slot).isUndefined());
         MOZ_ASSERT(slotInRange(slot));
         checkStoredValue(value);
         initSlotUnchecked(slot, value);
     }
 
-    void initSlotUnchecked(uint32_t slot, const Value& value) {
+    MOZ_ALWAYS_INLINE void initSlotUnchecked(uint32_t slot, const Value& value) {
         getSlotAddressUnchecked(slot)->init(this, HeapSlot::Slot, slot, value);
     }
 
@@ -964,30 +965,30 @@ class NativeObject : public ShapedObject
     static bool rollbackProperties(JSContext* cx, HandleNativeObject obj,
                                    uint32_t slotSpan);
 
-    inline void setSlotWithType(JSContext* cx, Shape* shape,
-                                const Value& value, bool overwriting = true);
+    MOZ_ALWAYS_INLINE void setSlotWithType(JSContext* cx, Shape* shape,
+                                           const Value& value, bool overwriting = true);
 
-    inline const Value& getReservedSlot(uint32_t index) const {
+    MOZ_ALWAYS_INLINE const Value& getReservedSlot(uint32_t index) const {
         MOZ_ASSERT(index < JSSLOT_FREE(getClass()));
         return getSlot(index);
     }
 
-    const HeapSlot& getReservedSlotRef(uint32_t index) const {
+    MOZ_ALWAYS_INLINE const HeapSlot& getReservedSlotRef(uint32_t index) const {
         MOZ_ASSERT(index < JSSLOT_FREE(getClass()));
         return getSlotRef(index);
     }
 
-    HeapSlot& getReservedSlotRef(uint32_t index) {
+    MOZ_ALWAYS_INLINE HeapSlot& getReservedSlotRef(uint32_t index) {
         MOZ_ASSERT(index < JSSLOT_FREE(getClass()));
         return getSlotRef(index);
     }
 
-    void initReservedSlot(uint32_t index, const Value& v) {
+    MOZ_ALWAYS_INLINE void initReservedSlot(uint32_t index, const Value& v) {
         MOZ_ASSERT(index < JSSLOT_FREE(getClass()));
         initSlot(index, v);
     }
 
-    void setReservedSlot(uint32_t index, const Value& v) {
+    MOZ_ALWAYS_INLINE void setReservedSlot(uint32_t index, const Value& v) {
         MOZ_ASSERT(index < JSSLOT_FREE(getClass()));
         setSlot(index, v);
     }
