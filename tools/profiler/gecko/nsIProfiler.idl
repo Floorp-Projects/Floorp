@@ -65,7 +65,18 @@ interface nsIProfiler : nsISupports
                               [optional] in double aSinceTime);
 
   boolean IsActive();
+
+  /**
+   * Returns an array of the features that are supported in this build.
+   * Features may vary depending on platform and build flags.
+   */
   void GetFeatures(out uint32_t aCount, [retval, array, size_is(aCount)] out string aFeatures);
+
+  /**
+   * Returns an array of all features that are supported by the profiler.
+   * The array may contain features that are not supported in this build.
+   */
+  void GetAllFeatures(out uint32_t aCount, [retval, array, size_is(aCount)] out string aFeatures);
 
   /**
    * The starting parameters that were sent to the profiler for sampling.

@@ -111,7 +111,7 @@ add_task(async function() {
   do_check_false(addon.appDisabled);
   do_check_true(addon.isActive);
   do_check_eq(addon.type, "extension");
-  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   await promiseRestartManager();
 
@@ -141,7 +141,7 @@ add_task(async function() {
   do_check_false(addon.appDisabled);
   do_check_true(addon.isActive);
   do_check_eq(addon.type, "extension");
-  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   let tempdir = gTmpD.clone();
 
@@ -178,7 +178,7 @@ add_task(async function() {
   do_check_false(addon.appDisabled);
   do_check_true(addon.isActive);
   do_check_eq(addon.type, "extension");
-  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   restartManager();
 
@@ -195,7 +195,7 @@ add_task(async function() {
   do_check_false(addon.appDisabled);
   do_check_true(addon.isActive);
   do_check_eq(addon.type, "extension");
-  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   unpacked_addon.remove(true);
 
@@ -229,7 +229,7 @@ add_task(async function() {
     do_check_false(addon.appDisabled);
     do_check_true(addon.isActive);
     do_check_eq(addon.type, "extension");
-    do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+    do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
     restartManager();
 
@@ -246,7 +246,7 @@ add_task(async function() {
     do_check_false(addon.appDisabled);
     do_check_true(addon.isActive);
     do_check_eq(addon.type, "extension");
-    do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+    do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
     packed_addon.remove(false);
 
@@ -277,7 +277,7 @@ add_task(async function() {
     do_check_false(addon.appDisabled);
     do_check_true(addon.isActive);
     do_check_eq(addon.type, "extension");
-    do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+    do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
     // test that re-loading a webextension works, using the same filename
     webext.remove(false);
@@ -308,7 +308,7 @@ add_task(async function() {
     do_check_true(addon.isActive);
     do_check_eq(addon.type, "extension");
     do_check_true(addon.isWebExtension);
-    do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+    do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
     // test reloading a webextension with the same name, but a different type.
     webext.remove(false);
@@ -356,7 +356,7 @@ add_task(async function() {
     do_check_false(addon.appDisabled);
     do_check_true(addon.isActive);
     do_check_eq(addon.type, "extension");
-    do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+    do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
   }
 
   // remove original add-on
@@ -441,7 +441,7 @@ add_task(async function() {
   do_check_false(addon.appDisabled);
   do_check_true(addon.isActive);
   do_check_eq(addon.type, "extension");
-  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   addon.uninstall();
 
@@ -458,7 +458,7 @@ add_task(async function() {
   do_check_false(addon.appDisabled);
   do_check_true(addon.isActive);
   do_check_eq(addon.type, "extension");
-  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   unpacked_addon.remove(true);
   addon.uninstall();
@@ -689,7 +689,7 @@ add_task(async function() {
   do_check_false(tempAddon.appDisabled);
   do_check_true(tempAddon.isActive);
   do_check_eq(tempAddon.type, "extension");
-  do_check_eq(tempAddon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  do_check_eq(tempAddon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   tempAddon.uninstall();
   unpacked_addon.remove(true);
@@ -708,7 +708,7 @@ add_task(async function() {
   do_check_false(addon.appDisabled);
   do_check_true(addon.isActive);
   do_check_eq(addon.type, "extension");
-  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   addon.uninstall();
 
@@ -743,7 +743,7 @@ add_task(async function() {
   do_check_false(addon.appDisabled);
   do_check_true(addon.isActive);
   do_check_eq(addon.type, "extension");
-  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   let tempdir = gTmpD.clone();
   writeInstallRDFToDir({
@@ -799,7 +799,7 @@ add_task(async function() {
   do_check_true(addon.isActive);
   do_check_eq(addon.type, "extension");
   do_check_false(addon.isWebExtension);
-  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   await AddonManager.installTemporaryAddon(do_get_addon("test_bootstrap1_1"));
 

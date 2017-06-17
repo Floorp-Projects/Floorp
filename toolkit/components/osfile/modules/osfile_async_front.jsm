@@ -385,6 +385,10 @@ var Scheduler = this.Scheduler = {
    * @param {string} method The name of the method to call.
    * @param {...} args The arguments to pass to the method. These arguments
    * must be clonable.
+   * The last argument by convention may be an object `options`, with some of
+   * the following fields:
+   *   - {number|null} outSerializationDuration A parameter to be filled with
+   *     duration of the `this.worker.post` method.
    * @return {Promise} A promise conveying the result/error caused by
    * calling |method| with arguments |args|.
    */
@@ -419,14 +423,33 @@ var Scheduler = this.Scheduler = {
       // Don't kill the worker just yet
       Scheduler.restartTimer();
 
+      // The last object inside the args may be an options object.
+      let options = null;
+      if (args && args.length >= 1 && typeof args[args.length-1] === "object") {
+        options = args[args.length - 1];
+      }
 
       let reply;
       try {
         try {
           Scheduler.Debugging.messagesSent++;
           Scheduler.Debugging.latestSent = Scheduler.Debugging.latestSent.slice(0, 2);
+          let serializationStartTimeMs = Date.now();
           reply = await this.worker.post(method, args, closure);
+          let serializationEndTimeMs = Date.now();
           Scheduler.Debugging.latestReceived = [Date.now(), summarizeObject(reply)];
+
+          // There were no options for recording the serialization duration.
+          if (options && "outSerializationDuration" in options) {
+            // The difference might be negative for very fast operations, since Date.now() may not be monotonic.
+            let serializationDurationMs = Math.max(0, serializationEndTimeMs - serializationStartTimeMs);
+
+            if (typeof options.outSerializationDuration === "number") {
+              options.outSerializationDuration += serializationDurationMs;
+            } else {
+              options.outSerializationDuration = serializationDurationMs;
+            }
+          }
           return reply;
         } finally {
           Scheduler.Debugging.messagesReceived++;
@@ -640,8 +663,8 @@ File.prototype = {
     // Options might be a nullish value, so better check for that before using
     // the |in| operator.
     if (isTypedArray(buffer) && !(options && "bytes" in options)) {
-      // Preserve reference to option |outExecutionDuration|, if it is passed.
-      options = clone(options, ["outExecutionDuration"]);
+      // Preserve reference to option |outExecutionDuration|, |outSerializationDuration|, if it is passed.
+      options = clone(options, ["outExecutionDuration", "outSerializationDuration"]);
       options.bytes = buffer.byteLength;
     }
     return Scheduler.post("File_prototype_write",
@@ -1070,7 +1093,7 @@ File.read = function read(path, bytes, options = {}) {
     // We should now be passing it as a field of |options|.
     options = bytes || {};
   } else {
-    options = clone(options, ["outExecutionDuration"]);
+    options = clone(options, ["outExecutionDuration", "outSerializationDuration"]);
     if (typeof bytes != "undefined") {
       options.bytes = bytes;
     }
@@ -1151,8 +1174,8 @@ File.exists = function exists(path) {
  */
 File.writeAtomic = function writeAtomic(path, buffer, options = {}) {
   // Copy |options| to avoid modifying the original object but preserve the
-  // reference to |outExecutionDuration| option if it is passed.
-  options = clone(options, ["outExecutionDuration"]);
+  // reference to |outExecutionDuration|, |outSerializationDuration| option if it is passed.
+  options = clone(options, ["outExecutionDuration", "outSerializationDuration"]);
   // As options.tmpPath is a path, we need to encode it as |Type.path| message
   if ("tmpPath" in options) {
     options.tmpPath = Type.path.toMsg(options.tmpPath);

@@ -947,7 +947,7 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent,
       case MultiTouchInput::MULTITOUCH_MOVE: rv = OnTouchMove(multiTouchInput); break;
       case MultiTouchInput::MULTITOUCH_END: rv = OnTouchEnd(multiTouchInput); break;
       case MultiTouchInput::MULTITOUCH_CANCEL: rv = OnTouchCancel(multiTouchInput); break;
-      default: NS_WARNING("Unhandled multitouch"); break;
+      case MultiTouchInput::MULTITOUCH_SENTINEL: MOZ_ASSERT_UNREACHABLE("Invalid value"); break;
     }
     break;
   }
@@ -966,7 +966,7 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent,
       case PanGestureInput::PANGESTURE_MOMENTUMSTART: rv = OnPanMomentumStart(panGestureInput); break;
       case PanGestureInput::PANGESTURE_MOMENTUMPAN: rv = OnPan(panGestureInput, false); break;
       case PanGestureInput::PANGESTURE_MOMENTUMEND: rv = OnPanMomentumEnd(panGestureInput); break;
-      default: NS_WARNING("Unhandled pan gesture"); break;
+      case PanGestureInput::PANGESTURE_SENTINEL: MOZ_ASSERT_UNREACHABLE("Invalid value"); break;
     }
     break;
   }
@@ -975,9 +975,6 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent,
     if (!mouseInput.TransformToLocal(aTransformToApzc)) {
       return rv;
     }
-
-    // TODO Need to implement blocks to properly handle this.
-    //rv = HandleDragEvent(mouseInput, dragMetrics);
     break;
   }
   case SCROLLWHEEL_INPUT: {
@@ -1007,7 +1004,10 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent,
     rv = HandleGestureEvent(tapInput);
     break;
   }
-  default: NS_WARNING("Unhandled input event type"); break;
+  case SENTINEL_INPUT: {
+    MOZ_ASSERT_UNREACHABLE("Invalid value");
+    break;
+  }
   }
 
   return rv;
@@ -1026,7 +1026,7 @@ nsEventStatus AsyncPanZoomController::HandleGestureEvent(const InputData& aEvent
       case PinchGestureInput::PINCHGESTURE_START: rv = OnScaleBegin(pinchGestureInput); break;
       case PinchGestureInput::PINCHGESTURE_SCALE: rv = OnScale(pinchGestureInput); break;
       case PinchGestureInput::PINCHGESTURE_END: rv = OnScaleEnd(pinchGestureInput); break;
-      default: NS_WARNING("Unhandled pinch gesture"); break;
+      case PinchGestureInput::PINCHGESTURE_SENTINEL: MOZ_ASSERT_UNREACHABLE("Invalid value"); break;
     }
     break;
   }
@@ -1040,11 +1040,11 @@ nsEventStatus AsyncPanZoomController::HandleGestureEvent(const InputData& aEvent
       case TapGestureInput::TAPGESTURE_DOUBLE: rv = OnDoubleTap(tapGestureInput); break;
       case TapGestureInput::TAPGESTURE_SECOND: rv = OnSecondTap(tapGestureInput); break;
       case TapGestureInput::TAPGESTURE_CANCEL: rv = OnCancelTap(tapGestureInput); break;
-      default: NS_WARNING("Unhandled tap gesture"); break;
+      case TapGestureInput::TAPGESTURE_SENTINEL: MOZ_ASSERT_UNREACHABLE("Invalid value"); break;
     }
     break;
   }
-  default: NS_WARNING("Unhandled input event"); break;
+  default: MOZ_ASSERT_UNREACHABLE("Unhandled input event"); break;
   }
 
   return rv;
@@ -1088,9 +1088,6 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent
     case PANNING_LOCKED_Y:
     case PINCHING:
       NS_WARNING("Received impossible touch in OnTouchStart");
-      break;
-    default:
-      NS_WARNING("Unhandled case in OnTouchStart");
       break;
   }
 
@@ -1600,8 +1597,10 @@ AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent) cons
       delta = ToParentLayerCoordinates(ScreenPoint(aEvent.mDeltaX, aEvent.mDeltaY), aEvent.mOrigin);
       break;
     }
-    default:
-      MOZ_ASSERT_UNREACHABLE("unexpected scroll delta type");
+    case ScrollWheelInput::SCROLLDELTA_SENTINEL: {
+      MOZ_ASSERT_UNREACHABLE("Invalid value");
+      break;
+    }
   }
 
   // Apply user-set multipliers.
@@ -1691,8 +1690,13 @@ AsyncPanZoomController::CanScroll(ScrollDirection aDirection) const
   switch (aDirection) {
   case ScrollDirection::HORIZONTAL: return mX.CanScroll();
   case ScrollDirection::VERTICAL:   return mY.CanScroll();
-  default:                MOZ_ASSERT(false); return false;
+
+  case ScrollDirection::NONE:
+  case ScrollDirection::SENTINEL:
+    MOZ_ASSERT_UNREACHABLE("Invalid value");
+    break;
   }
+  return false;
 }
 
 bool
@@ -1732,10 +1736,11 @@ ScrollInputMethodForWheelDeltaType(ScrollWheelInput::ScrollDeltaType aDeltaType)
     case ScrollWheelInput::SCROLLDELTA_PIXEL: {
       return ScrollInputMethod::ApzWheelPixel;
     }
-    default:
-      MOZ_ASSERT_UNREACHABLE("unexpected scroll delta type");
-      return ScrollInputMethod::ApzWheelLine;
+    case ScrollWheelInput::SCROLLDELTA_SENTINEL:
+      break;
   }
+  MOZ_ASSERT_UNREACHABLE("Invalid value");
+  return ScrollInputMethod::ApzWheelLine;
 }
 
 nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEvent)

@@ -418,13 +418,12 @@ nsProfiler::IsActive(bool *aIsActive)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsProfiler::GetFeatures(uint32_t* aCount, char*** aFeatureList)
+static void
+GetArrayOfStringsForFeatures(uint32_t aFeatures,
+                             uint32_t* aCount, char*** aFeatureList)
 {
-  uint32_t features = profiler_get_available_features();
-
   #define COUNT_IF_SET(n_, str_, Name_) \
-    if (ProfilerFeature::Has##Name_(features)) { \
+    if (ProfilerFeature::Has##Name_(aFeatures)) { \
       len++; \
     }
 
@@ -437,7 +436,7 @@ nsProfiler::GetFeatures(uint32_t* aCount, char*** aFeatureList)
   auto featureList = static_cast<char**>(moz_xmalloc(len * sizeof(char*)));
 
   #define DUP_IF_SET(n_, str_, Name_) \
-    if (ProfilerFeature::Has##Name_(features)) { \
+    if (ProfilerFeature::Has##Name_(aFeatures)) { \
       size_t strLen = strlen(str_); \
       featureList[i] = static_cast<char*>( \
         nsMemory::Clone(str_, (strLen + 1) * sizeof(char))); \
@@ -448,10 +447,24 @@ nsProfiler::GetFeatures(uint32_t* aCount, char*** aFeatureList)
   size_t i = 0;
   PROFILER_FOR_EACH_FEATURE(DUP_IF_SET)
 
-  #undef STRDUP_IF_SET
+  #undef DUP_IF_SET
 
   *aFeatureList = featureList;
   *aCount = len;
+}
+
+NS_IMETHODIMP
+nsProfiler::GetFeatures(uint32_t* aCount, char*** aFeatureList)
+{
+  uint32_t features = profiler_get_available_features();
+  GetArrayOfStringsForFeatures(features, aCount, aFeatureList);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProfiler::GetAllFeatures(uint32_t* aCount, char*** aFeatureList)
+{
+  GetArrayOfStringsForFeatures((uint32_t)-1, aCount, aFeatureList);
   return NS_OK;
 }
 
