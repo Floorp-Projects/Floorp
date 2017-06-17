@@ -619,7 +619,6 @@ GPUProcessManager::DestroyProcess()
     mVsyncBridge->Close();
     mVsyncBridge = nullptr;
   }
-  CompositorManagerChild::OnGPUProcessShutdown();
 
 #ifdef MOZ_CRASHREPORTER
   CrashReporter::AnnotateCrashReport(

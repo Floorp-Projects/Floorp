@@ -28,7 +28,6 @@ public:
   static bool InitSameProcess(uint32_t aNamespace);
   static bool Init(Endpoint<PCompositorManagerChild>&& aEndpoint,
                    uint32_t aNamespace);
-  static void OnGPUProcessShutdown();
   static void Shutdown();
 
   static bool
