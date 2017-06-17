@@ -441,6 +441,17 @@ WebSocketEventService::RemoveListener(uint64_t aInnerWindowID,
 }
 
 NS_IMETHODIMP
+WebSocketEventService::HasListenerFor(uint64_t aInnerWindowID,
+                                      bool* aResult)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  *aResult = mWindows.Get(aInnerWindowID);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 WebSocketEventService::Observe(nsISupports* aSubject, const char* aTopic,
                                const char16_t* aData)
 {

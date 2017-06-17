@@ -1074,6 +1074,16 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kGenericAccType,
     kNoReqStates
   },
+  { // term
+    &nsGkAtoms::term,
+    roles::TERM,
+    kUseMapRole,
+    eNoValue,
+    eNoAction,
+    eNoLiveAttr,
+    kGenericAccType,
+    states::READONLY
+  },
   { // textbox
     &nsGkAtoms::textbox,
     roles::ENTRY,

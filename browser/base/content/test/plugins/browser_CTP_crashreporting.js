@@ -133,10 +133,11 @@ add_task(async function() {
       getUI("submitButton").click();
 
       // And wait for the parent to say that the crash report was submitted
-      // successfully.
+      // successfully. This can take time on debug builds.
       await ContentTaskUtils.waitForCondition(() => {
         return statusDiv.getAttribute("status") == "success";
-      }, "Timed out waiting for plugin binding to be in success state");
+      }, "Timed out waiting for plugin binding to be in success state",
+      100, 200);
     });
 
     let [subject, ] = await crashReportPromise;
