@@ -296,9 +296,10 @@ public:
                    bool aIsProgressive = false) = 0;
 
   virtual bool SupportsProgressiveUpdate() = 0;
-  virtual bool ProgressiveUpdate(nsIntRegion& aValidRegion,
-                         nsIntRegion& aInvalidRegion,
+  virtual bool ProgressiveUpdate(const nsIntRegion& aValidRegion,
+                         const nsIntRegion& aInvalidRegion,
                          const nsIntRegion& aOldValidRegion,
+                         nsIntRegion& aOutDrawnRegion,
                          BasicTiledLayerPaintData* aPaintData,
                          LayerManager::DrawPaintedLayerCallback aCallback,
                          void* aCallbackData) = 0;
@@ -354,10 +355,13 @@ public:
   /**
    * Performs a progressive update of a given tiled buffer.
    * See ComputeProgressiveUpdateRegion below for parameter documentation.
+   * aOutDrawnRegion is an outparameter that contains the region that was
+   * drawn, and which can now be added to the layer's valid region.
    */
-  bool ProgressiveUpdate(nsIntRegion& aValidRegion,
-                         nsIntRegion& aInvalidRegion,
+  bool ProgressiveUpdate(const nsIntRegion& aValidRegion,
+                         const nsIntRegion& aInvalidRegion,
                          const nsIntRegion& aOldValidRegion,
+                         nsIntRegion& aOutDrawnRegion,
                          BasicTiledLayerPaintData* aPaintData,
                          LayerManager::DrawPaintedLayerCallback aCallback,
                          void* aCallbackData) override;

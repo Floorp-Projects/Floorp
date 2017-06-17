@@ -6,12 +6,16 @@
 @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 
-.profile-item-box > .profile-item-col > .profile-comment {
+.autofill-item-box > .profile-item-col > .profile-comment {
   font-size: .83em;
 }
 
+.autofill-footer {
+  font-size: .91em;
+}
+
 @media (-moz-windows-default-theme: 0) {
-  xul|richlistitem[originaltype="autofill-profile"][selected="true"] > .profile-item-box {
+  xul|richlistitem[originaltype="autofill-profile"][selected="true"] > .autofill-item-box {
     background-color: Highlight;
   }
 }

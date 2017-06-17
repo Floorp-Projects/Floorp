@@ -5,10 +5,14 @@
 @namespace url("http://www.w3.org/1999/xhtml");
 
 
-.profile-item-box > .profile-item-col > .profile-label {
+.autofill-item-box > .profile-item-col > .profile-label {
   font-size: .84em;
 }
 
-.profile-item-box > .profile-item-col > .profile-comment {
+.autofill-item-box > .profile-item-col > .profile-comment {
   font-size: .7em;
+}
+
+.autofill-footer {
+  font-size: .77em;
 }

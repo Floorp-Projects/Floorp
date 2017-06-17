@@ -381,7 +381,8 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
   }
 
   default:
-    NS_WARNING("Unknown touch event type");
+    MOZ_ASSERT_UNREACHABLE("Unknown touch event type");
+    break;
   }
 
   if (sentContentResponse &&

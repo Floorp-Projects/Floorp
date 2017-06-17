@@ -680,6 +680,10 @@ ServoRestyleManager::DoProcessPendingRestyles(TraversalRestyleBehavior
   mRestyleForCSSRuleChanges = false;
   mInStyleRefresh = false;
 
+  // Now that everything has settled, see if we have enough free rule nodes in
+  // the tree to warrant sweeping them.
+  styleSet->MaybeGCRuleTree();
+
   // Note: We are in the scope of |animationsWithDestroyedFrame|, so
   //       |mAnimationsWithDestroyedFrame| is still valid.
   MOZ_ASSERT(mAnimationsWithDestroyedFrame);

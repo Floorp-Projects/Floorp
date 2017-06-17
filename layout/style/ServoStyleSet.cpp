@@ -1291,6 +1291,13 @@ ServoStyleSet::UpdateStylist()
 }
 
 void
+ServoStyleSet::MaybeGCRuleTree()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  Servo_MaybeGCRuleTree(mRawSet.get());
+}
+
+void
 ServoStyleSet::PrependSheetOfType(SheetType aType,
                                   ServoStyleSheet* aSheet)
 {

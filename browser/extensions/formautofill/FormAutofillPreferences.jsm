@@ -11,6 +11,8 @@
 this.EXPORTED_SYMBOLS = ["FormAutofillPreferences"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+// Add addresses enabled flag in telemetry environment for recording the number of
+// users who disable/enable the address autofill feature.
 const PREF_AUTOFILL_ENABLED = "extensions.formautofill.addresses.enabled";
 const BUNDLE_URI = "chrome://formautofill/locale/formautofill.properties";
 const MANAGE_PROFILES_URL = "chrome://formautofill/content/manageProfiles.xhtml";
