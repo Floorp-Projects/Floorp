@@ -100,15 +100,6 @@ option(env='MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER',
 set_config('MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER',
            depends_if('MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER')(lambda _: True))
 
-option('--enable-photon', help='Enable Photon skin', default=False)
-
-@depends('--enable-photon')
-def photon_skin(value):
-    if value:
-        return True
-
-set_config('MOZ_ANDROID_PHOTON', photon_skin)
-
 imply_option('MOZ_SOCIAL', False)
 imply_option('MOZ_SERVICES_HEALTHREPORT', True)
 imply_option('MOZ_ANDROID_HISTORY', True)
