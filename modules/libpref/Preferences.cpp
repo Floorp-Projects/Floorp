@@ -229,14 +229,6 @@ ValueObserver::Observe(nsISupports     *aSubject,
   return NS_OK;
 }
 
-// We want to have an atomic pointer to the preference data that should be
-// written.  Make a struct so that we can capture the array and the length.
-struct PrefWriteData
-{
-  UniquePtr<char*[]> mData;
-  uint32_t mCount;
-};
-
 // Write the preference data to a file.
 //
 class PreferencesWriter final
@@ -246,10 +238,8 @@ public:
   {
   }
 
-  // Note that this method will free the contents of aPrefs, but not
-  // the aPrefs itself.
   static
-  nsresult Write(nsIFile* aFile, char* aPrefs[], uint32_t aPrefCount)
+  nsresult Write(nsIFile* aFile, PrefSaveData& aPrefs)
   {
     nsCOMPtr<nsIOutputStream> outStreamSink;
     nsCOMPtr<nsIOutputStream> outStream;
@@ -270,20 +260,31 @@ public:
       return rv;
     }
 
+    struct CharComparator
+    {
+      bool LessThan(const mozilla::UniqueFreePtr<char>& a,
+                    const mozilla::UniqueFreePtr<char>& b) const
+      {
+        return strcmp(a.get(), b.get()) < 0;
+      }
+      bool Equals(const mozilla::UniqueFreePtr<char>& a,
+                  const mozilla::UniqueFreePtr<char>& b) const
+      {
+        return strcmp(a.get(), b.get()) == 0;
+      }
+    };
+
     /* Sort the preferences to make a readable file on disk */
-    NS_QuickSort(aPrefs, aPrefCount, sizeof(char *),
-                 pref_CompareStrings, nullptr);
+    aPrefs.Sort(CharComparator());
 
     // write out the file header
     outStream->Write(kPrefFileHeader, sizeof(kPrefFileHeader) - 1, &writeAmount);
 
-    for (uint32_t valueIdx = 0; valueIdx < aPrefCount; valueIdx++) {
-      char*& pref = aPrefs[valueIdx];
+    for (auto& prefptr : aPrefs) {
+      char* pref = prefptr.get();
       MOZ_ASSERT(pref);
       outStream->Write(pref, strlen(pref), &writeAmount);
       outStream->Write(NS_LINEBREAK, NS_LINEBREAK_LEN, &writeAmount);
-      free(pref);
-      pref = nullptr;
     }
 
     // tell the safe output stream to overwrite the real prefs file
@@ -322,9 +323,9 @@ public:
   // This is the data that all of the runnables (see below) will attempt
   // to write.  It will always have the most up to date version, or be
   // null, if the up to date information has already been written out.
-  static Atomic<PrefWriteData*> sPendingWriteData;
+  static Atomic<PrefSaveData*> sPendingWriteData;
 };
-Atomic<PrefWriteData*> PreferencesWriter::sPendingWriteData((PrefWriteData*)0);
+Atomic<PrefSaveData*> PreferencesWriter::sPendingWriteData(nullptr);
 
 class PWRunnable : public Runnable
 {
@@ -333,16 +334,13 @@ public:
 
   NS_IMETHOD Run() override
   {
-    PrefWriteData* prefs = PreferencesWriter::sPendingWriteData.exchange(nullptr);
+    mozilla::UniquePtr<PrefSaveData> prefs(PreferencesWriter::sPendingWriteData.exchange(nullptr));
     // If we get a nullptr on the exchange, it means that somebody
     // else has already processed the request, and we can just return.
 
     nsresult rv = NS_OK;
     if (prefs) {
-      // The ::Write call will zero out the prefs->mData array, but not free it.
-      // The UniquePtr going out of scope will do that when we free prefs.
-      rv = PreferencesWriter::Write(mFile, prefs->mData.get(), prefs->mCount);
-      delete prefs;
+      rv = PreferencesWriter::Write(mFile, *prefs);
 
       // Make a copy of these so we can have them in runnable lambda.
       // nsIFile is only there so that we would never release the
@@ -1216,16 +1214,15 @@ Preferences::WritePrefFile(nsIFile* aFile, SaveMethod aSaveMethod)
   if (AllowOffMainThreadSave()) {
 
     nsresult rv = NS_OK;
-    PrefWriteData* prefs = new PrefWriteData;
-    prefs->mData = pref_savePrefs(gHashTable, &prefs->mCount);
+    mozilla::UniquePtr<PrefSaveData> prefs =
+      MakeUnique<PrefSaveData>(pref_savePrefs(gHashTable));
 
     // Put the newly constructed preference data into sPendingWriteData
     // for the next request to pick up
-    prefs = PreferencesWriter::sPendingWriteData.exchange(prefs);
+    prefs.reset(PreferencesWriter::sPendingWriteData.exchange(prefs.release()));
     if (prefs) {
       // There was a previous request that hasn't been processed,
-      // and this is the data it had.  Delete the old data and return.
-      delete prefs;
+      // and this is the data it had.
       return rv;
     } else {
       // There were no previous requests, dispatch one since
@@ -1249,12 +1246,8 @@ Preferences::WritePrefFile(nsIFile* aFile, SaveMethod aSaveMethod)
   // This will do a main thread write.  It is safe to do it this way
   // as AllowOffMainThreadSave() returns a consistent value for the
   // lifetime of the parent process.
-  uint32_t prefCount = 0;
-  UniquePtr<char*[]> prefsData = pref_savePrefs(gHashTable, &prefCount);
-
-  // The ::Write call will zero out the prefsData array, but not free it.
-  // The UniquePtr going out of scope will do that.
-  return PreferencesWriter::Write(aFile, prefsData.get(), prefCount);
+  PrefSaveData prefsData = pref_savePrefs(gHashTable);
+  return PreferencesWriter::Write(aFile, prefsData);
 }
 
 static nsresult openPrefFile(nsIFile* aFile)

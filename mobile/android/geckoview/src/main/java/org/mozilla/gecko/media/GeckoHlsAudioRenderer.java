@@ -9,6 +9,8 @@ import android.media.MediaCodec.BufferInfo;
 import android.media.MediaCodec.CryptoInfo;
 import android.util.Log;
 
+import org.mozilla.gecko.AppConstants;
+
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.RendererCapabilities;
@@ -27,7 +29,7 @@ public class GeckoHlsAudioRenderer extends GeckoHlsRendererBase {
         super(C.TRACK_TYPE_AUDIO, eventDispatcher);
         assertTrue(Versions.feature16Plus);
         LOGTAG = getClass().getSimpleName();
-        DEBUG = false;
+        DEBUG = AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG_BUILD;;
     }
 
     @Override
@@ -138,7 +140,7 @@ public class GeckoHlsAudioRenderer extends GeckoHlsRendererBase {
 
         mDemuxedInputSamples.offer(sample);
 
-        if (DEBUG) {
+        if (AppConstants.DEBUG_BUILD) {
             Log.d(LOGTAG, "Demuxed sample PTS : " +
                           sample.info.presentationTimeUs + ", duration :" +
                           sample.duration + ", formatIndex(" +

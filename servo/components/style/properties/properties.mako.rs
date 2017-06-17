@@ -20,7 +20,7 @@ use stylearc::{Arc, UniqueArc};
 use app_units::Au;
 #[cfg(feature = "servo")] use cssparser::RGBA;
 use cssparser::{Parser, TokenSerializationType, serialize_identifier};
-use cssparser::ParserInput;
+use cssparser::{ParserInput, CompactCowStr};
 use error_reporting::ParseErrorReporter;
 #[cfg(feature = "servo")] use euclid::SideOffsets2D;
 use computed_values;
@@ -491,7 +491,7 @@ impl CSSWideKeyword {
 
     /// Takes the result of cssparser::Parser::expect_ident() and converts it
     /// to a CSSWideKeyword.
-    pub fn from_ident<'i>(ident: &Cow<'i, str>) -> Option<Self> {
+    pub fn from_ident<'i>(ident: &str) -> Option<Self> {
         match_ignore_ascii_case! { ident,
             // If modifying this set of keyword, also update values::CustomIdent::from_ident
             "initial" => Some(CSSWideKeyword::Initial),
@@ -986,7 +986,7 @@ impl PropertyId {
     /// Returns a given property from the string `s`.
     ///
     /// Returns Err(()) for unknown non-custom properties
-    pub fn parse<'i>(property_name: Cow<'i, str>) -> Result<Self, ParseError<'i>> {
+    pub fn parse<'i>(property_name: CompactCowStr<'i>) -> Result<Self, ParseError<'i>> {
         if let Ok(name) = ::custom_properties::parse_name(&property_name) {
             return Ok(PropertyId::Custom(::custom_properties::Name::from(name)))
         }
@@ -1893,6 +1893,13 @@ impl ComputedValues {
     /// in StyleBuilder::for_inheritance.
     pub fn clone_visited_style(&self) -> Option<Arc<ComputedValues>> {
         self.visited_style.clone()
+    }
+
+    // Aah! The << in the return type below is not valid syntax, but we must
+    // escape < that way for Mako.
+    /// Gets a reference to the custom properties map (if one exists).
+    pub fn get_custom_properties(&self) -> Option<<&::custom_properties::ComputedValuesMap> {
+        self.custom_properties.as_ref().map(|x| &**x)
     }
 
     /// Get the custom properties map if necessary.

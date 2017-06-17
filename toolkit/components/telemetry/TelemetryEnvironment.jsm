@@ -782,6 +782,9 @@ function EnvironmentCache() {
   // Don't allow querying the search service too early to prevent
   // impacting the startup performance.
   this._canQuerySearch = false;
+  // To guard against slowing down startup, defer gathering heavy environment
+  // entries until the session is restored.
+  this._sessionWasRestored = false;
 
   // A map of listeners that will be called on environment changes.
   this._changeListeners = new Map();
@@ -1069,9 +1072,13 @@ EnvironmentCache.prototype = {
         Services.obs.removeObserver(this, aTopic);
         break;
       case SESSIONSTORE_WINDOWS_RESTORED_TOPIC:
+        this._sessionWasRestored = true;
         // Make sure to initialize the search service once we've done restoring
         // the windows, so that we don't risk loosing search data.
         Services.search.init();
+        // The default browser check could take some time, so just call it after
+        // the session was restored.
+        this._updateDefaultBrowser();
         break;
     }
   },
@@ -1244,6 +1251,16 @@ EnvironmentCache.prototype = {
     }
   },
 
+  _updateDefaultBrowser() {
+    if (AppConstants.platform === "android") {
+      return;
+    }
+    // Make sure to have a settings section.
+    this._currentEnvironment.settings = this._currentEnvironment.settings || {};
+    this._currentEnvironment.settings.isDefaultBrowser =
+      this._sessionWasRestored ? this._isDefaultBrowser() : null;
+  },
+
   /**
    * Update the cached settings data.
    */
@@ -1272,11 +1289,7 @@ EnvironmentCache.prototype = {
     this._currentEnvironment.settings.addonCompatibilityCheckEnabled =
       AddonManager.checkCompatibility;
 
-    if (AppConstants.platform !== "android") {
-      this._currentEnvironment.settings.isDefaultBrowser =
-        this._isDefaultBrowser();
-    }
-
+    this._updateDefaultBrowser();
     this._updateSearchEngine();
   },
 

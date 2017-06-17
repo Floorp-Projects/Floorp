@@ -84,7 +84,7 @@ impl<T: Copy, U> TypedPoint2D<T, U> {
 
     /// Cast this point into a vector.
     ///
-    /// Equivalent to substracting the origin to this point.
+    /// Equivalent to subtracting the origin from this point.
     #[inline]
     pub fn to_vector(&self) -> TypedVector2D<T, U> {
         vec2(self.x, self.y)

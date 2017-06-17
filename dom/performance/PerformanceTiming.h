@@ -116,7 +116,8 @@ public:
   // PerformanceNavigation WebIDL methods
   DOMTimeMilliSec NavigationStart() const
   {
-    if (!nsContentUtils::IsPerformanceTimingEnabled()) {
+    if (!nsContentUtils::IsPerformanceTimingEnabled() ||
+        nsContentUtils::ShouldResistFingerprinting()) {
       return 0;
     }
     return GetDOMTiming()->GetNavigationStart();
@@ -124,7 +125,8 @@ public:
 
   DOMTimeMilliSec UnloadEventStart()
   {
-    if (!nsContentUtils::IsPerformanceTimingEnabled()) {
+    if (!nsContentUtils::IsPerformanceTimingEnabled() ||
+        nsContentUtils::ShouldResistFingerprinting()) {
       return 0;
     }
     return GetDOMTiming()->GetUnloadEventStart();
@@ -132,7 +134,8 @@ public:
 
   DOMTimeMilliSec UnloadEventEnd()
   {
-    if (!nsContentUtils::IsPerformanceTimingEnabled()) {
+    if (!nsContentUtils::IsPerformanceTimingEnabled() ||
+        nsContentUtils::ShouldResistFingerprinting()) {
       return 0;
     }
     return GetDOMTiming()->GetUnloadEventEnd();
@@ -180,7 +183,8 @@ public:
 
   DOMTimeMilliSec DomLoading()
   {
-    if (!nsContentUtils::IsPerformanceTimingEnabled()) {
+    if (!nsContentUtils::IsPerformanceTimingEnabled() ||
+        nsContentUtils::ShouldResistFingerprinting()) {
       return 0;
     }
     return GetDOMTiming()->GetDomLoading();
@@ -188,7 +192,8 @@ public:
 
   DOMTimeMilliSec DomInteractive() const
   {
-    if (!nsContentUtils::IsPerformanceTimingEnabled()) {
+    if (!nsContentUtils::IsPerformanceTimingEnabled() ||
+        nsContentUtils::ShouldResistFingerprinting()) {
       return 0;
     }
     return GetDOMTiming()->GetDomInteractive();
@@ -196,7 +201,8 @@ public:
 
   DOMTimeMilliSec DomContentLoadedEventStart() const
   {
-    if (!nsContentUtils::IsPerformanceTimingEnabled()) {
+    if (!nsContentUtils::IsPerformanceTimingEnabled() ||
+        nsContentUtils::ShouldResistFingerprinting()) {
       return 0;
     }
     return GetDOMTiming()->GetDomContentLoadedEventStart();
@@ -204,7 +210,8 @@ public:
 
   DOMTimeMilliSec DomContentLoadedEventEnd() const
   {
-    if (!nsContentUtils::IsPerformanceTimingEnabled()) {
+    if (!nsContentUtils::IsPerformanceTimingEnabled() ||
+        nsContentUtils::ShouldResistFingerprinting()) {
       return 0;
     }
     return GetDOMTiming()->GetDomContentLoadedEventEnd();
@@ -212,7 +219,8 @@ public:
 
   DOMTimeMilliSec DomComplete() const
   {
-    if (!nsContentUtils::IsPerformanceTimingEnabled()) {
+    if (!nsContentUtils::IsPerformanceTimingEnabled() ||
+        nsContentUtils::ShouldResistFingerprinting()) {
       return 0;
     }
     return GetDOMTiming()->GetDomComplete();
@@ -220,7 +228,8 @@ public:
 
   DOMTimeMilliSec LoadEventStart() const
   {
-    if (!nsContentUtils::IsPerformanceTimingEnabled()) {
+    if (!nsContentUtils::IsPerformanceTimingEnabled() ||
+        nsContentUtils::ShouldResistFingerprinting()) {
       return 0;
     }
     return GetDOMTiming()->GetLoadEventStart();
@@ -228,7 +237,8 @@ public:
 
   DOMTimeMilliSec LoadEventEnd() const
   {
-    if (!nsContentUtils::IsPerformanceTimingEnabled()) {
+    if (!nsContentUtils::IsPerformanceTimingEnabled() ||
+        nsContentUtils::ShouldResistFingerprinting()) {
       return 0;
     }
     return GetDOMTiming()->GetLoadEventEnd();

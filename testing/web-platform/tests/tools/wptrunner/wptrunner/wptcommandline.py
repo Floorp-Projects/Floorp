@@ -392,6 +392,15 @@ def check_args_update(kwargs):
 
     if kwargs["product"] is None:
         kwargs["product"] = "firefox"
+    if kwargs["patch"] is None:
+        kwargs["patch"] = kwargs["sync"]
+
+    for item in kwargs["run_log"]:
+        if os.path.isdir(item):
+            print >> sys.stderr, "Log file %s is a directory" % item
+            sys.exit(1)
+
+    return kwargs
 
 
 def create_parser_update(product_choices=None):
@@ -419,10 +428,12 @@ def create_parser_update(product_choices=None):
     parser.add_argument("--branch", action="store", type=abs_path,
                         help="Remote branch to sync against")
     parser.add_argument("--rev", action="store", help="Revision to sync to")
-    parser.add_argument("--no-patch", action="store_true",
-                        help="Don't create an mq patch or git commit containing the changes.")
+    parser.add_argument("--patch", action="store_true", dest="patch", default=None,
+                        help="Create a VCS commit containing the changes.")
+    parser.add_argument("--no-patch", action="store_false", dest="patch",
+                        help="Don't create a VCS commit containing the changes.")
     parser.add_argument("--sync", dest="sync", action="store_true", default=False,
-                        help="Sync the tests with the latest from upstream")
+                        help="Sync the tests with the latest from upstream (implies --patch)")
     parser.add_argument("--ignore-existing", action="store_true", help="When updating test results only consider results from the logfiles provided, not existing expectations.")
     parser.add_argument("--continue", action="store_true", help="Continue a previously started run of the update script")
     parser.add_argument("--abort", action="store_true", help="Clear state from a previous incomplete run of the update script")

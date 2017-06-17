@@ -20,8 +20,11 @@ class PrefSetting;
 } // namespace dom
 } // namespace mozilla
 
-mozilla::UniquePtr<char*[]>
-pref_savePrefs(PLDHashTable* aTable, uint32_t* aPrefCount);
+
+typedef nsTArray<mozilla::UniqueFreePtr<char> > PrefSaveData;
+
+PrefSaveData
+pref_savePrefs(PLDHashTable* aTable);
 
 nsresult
 pref_SetPref(const mozilla::dom::PrefSetting& aPref);
@@ -37,7 +40,6 @@ void
 pref_SetWatchingPref(bool watching);
 #endif
 
-int pref_CompareStrings(const void *v1, const void *v2, void* unused);
 PrefHashEntry* pref_HashTableLookup(const char *key);
 
 bool

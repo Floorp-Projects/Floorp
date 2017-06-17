@@ -90,10 +90,8 @@ public:
                                   const nsSVGMark& aMark,
                                   float aStrokeWidth);
 
-  // Update the style on our anonymous box child.
-  void DoUpdateStyleOfOwnedAnonBoxes(mozilla::ServoStyleSet& aStyleSet,
-                                     nsStyleChangeList& aChangeList,
-                                     nsChangeHint aHintForThisFrame) override;
+  // Return our anonymous box child.
+  void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
 
 private:
   // stuff needed for callback

@@ -602,12 +602,7 @@ nsStyleList::nsStyleList(const nsPresContext* aContext)
   : mListStylePosition(NS_STYLE_LIST_STYLE_POSITION_OUTSIDE)
 {
   MOZ_COUNT_CTOR(nsStyleList);
-  if (aContext->StyleSet()->IsServo()) {
-    mCounterStyle = do_AddRef(nsGkAtoms::disc);
-  } else {
-    mCounterStyle = aContext->
-      CounterStyleManager()->BuildCounterStyle(nsGkAtoms::disc);
-  }
+  mCounterStyle = CounterStyleManager::GetDiscStyle();
   SetQuotesInitial();
 }
 

@@ -246,7 +246,7 @@ function checkFieldWrite(entry, location, fields)
             return;
         if (/nsCOMPtr<.*?>.mRawPtr/.test(field))
             return;
-}
+    }
 
     var str = "";
     for (var field of fields)
@@ -319,6 +319,14 @@ function ignoreCallEdge(entry, callee)
     if (/nsCSSValue::Array::AddRef/.test(callee) &&
         /nsStyleContentData::SetCounters/.test(name) &&
         entry.isSafeArgument(2))
+    {
+        return true;
+    }
+
+    // AllChildrenIterator asks AppendOwnedAnonBoxes to append into an nsTArray
+    // local variable.
+    if (/nsIFrame::AppendOwnedAnonBoxes/.test(callee) &&
+        /AllChildrenIterator::AppendNativeAnonymousChildren/.test(name))
     {
         return true;
     }

@@ -393,20 +393,10 @@ var pedanticChecks = report => {
         stat.type + ".remoteCandidateId has a value. value="
         + stat.remoteCandidateId);
 
-      // state
-      ok(stat.state == "succeeded",
-        stat.type + ".state is succeeded. value="
-        + stat.state);
-
       // priority
       ok(stat.priority,
         stat.type + ".priority has a value. value="
         + stat.priority);
-
-      // nominated
-      ok(stat.nominated,
-        stat.type + ".nominated is true. value="
-        + stat.nominated);
 
       // readable
       ok(stat.readable,
@@ -418,31 +408,48 @@ var pedanticChecks = report => {
         stat.type + ".writable is true. value="
         + stat.writable);
 
-      // bytesSent
-      ok(stat.bytesSent > 20000 && stat.bytesSent < 800000,
-        stat.type + ".bytesSent is a sane number (20,000<>800,000)for a short test. value="
-        + stat.bytesSent);
+      // state
+      if (stat.state == "succeeded") {
+        // nominated
+        ok(stat.nominated,
+          stat.type + ".nominated is true. value="
+          + stat.nominated);
 
-      // bytesReceived
-      ok(stat.bytesReceived > 20000 && stat.bytesReceived < 800000,
-        stat.type + ".bytesReceived is a sane number (20,000<>800,000) for a short test. value="
-        + stat.bytesReceived);
+        // bytesSent
+        ok(stat.bytesSent > 20000 && stat.bytesSent < 800000,
+          stat.type + ".bytesSent is a sane number (20,000<>800,000)for a short test. value="
+          + stat.bytesSent);
 
-      // lastPacketSentTimestamp
-      ok(stat.lastPacketSentTimestamp,
-        stat.type + ".lastPacketSentTimestamp has a value. value="
-        + stat.lastPacketSentTimestamp);
+        // bytesReceived
+        ok(stat.bytesReceived > 20000 && stat.bytesReceived < 800000,
+          stat.type + ".bytesReceived is a sane number (20,000<>800,000) for a short test. value="
+          + stat.bytesReceived);
 
-      // lastPacketReceivedTimestamp
-      ok(stat.lastPacketReceivedTimestamp,
-        stat.type + ".lastPacketReceivedTimestamp has a value. value="
-        + stat.lastPacketReceivedTimestamp);
+        // lastPacketSentTimestamp
+        ok(stat.lastPacketSentTimestamp,
+          stat.type + ".lastPacketSentTimestamp has a value. value="
+          + stat.lastPacketSentTimestamp);
+
+        // lastPacketReceivedTimestamp
+        ok(stat.lastPacketReceivedTimestamp,
+          stat.type + ".lastPacketReceivedTimestamp has a value. value="
+          + stat.lastPacketReceivedTimestamp);
+
+      } else {
+        // nominated
+        ok(!stat.nominated,
+          stat.type + ".nominated is false. value="
+          + stat.nominated);
+      }
+
 
       //
       // Optional fields
       //
       // selected
-      ok(stat.selected === undefined || stat.selected == true,
+      ok(stat.selected === undefined ||
+         ((stat.state == "succeeded" && stat.selected == true) ||
+          (stat.selected == false)),
         stat.type + ".selected is undefined or true. value="
         + stat.selected);
 
