@@ -105,7 +105,7 @@ function writeDataToFile(file, data) {
   fstream.init(file, -1, -1, 0);
   var os = Cc["@mozilla.org/intl/converter-output-stream;1"]
            .createInstance(Ci.nsIConverterOutputStream);
-  os.init(fstream, "UTF-8", 0, 0x0000);
+  os.init(fstream, "UTF-8");
   os.writeString(data);
   os.close();
   fstream.close();

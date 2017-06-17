@@ -33,7 +33,7 @@ add_task(function* do_test() {
   ostream.init(file, -1, 0o666, 0);
   let conv = Cc["@mozilla.org/intl/converter-output-stream;1"].
              createInstance(Ci.nsIConverterOutputStream);
-  conv.init(ostream, "UTF-8", 0, 0);
+  conv.init(ostream, "UTF-8");
 
   conv.writeString("# this is a comment\n");
   conv.writeString("\n"); // a blank line!
