@@ -61,7 +61,7 @@ protected:
 
   already_AddRefed<layers::CompositingRenderTargetD3D11> GetNextRenderTarget();
 
-  VRHMDSensorState GetSensorState(double timeOffset);
+  VRHMDSensorState GetSensorState(double absTime);
 
   ovrHmdDesc mDesc;
   ovrSession mSession;

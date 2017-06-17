@@ -1064,13 +1064,16 @@ class Marionette(object):
         self._send_message("quitApplication", body)
 
     @do_process_check
-    def quit(self, in_app=False, callback=None):
+    def quit(self, clean=False, in_app=False, callback=None):
         """Terminate the currently running instance.
 
         This command will delete the active marionette session. It also allows
         manipulation of eg. the profile data while the application is not running.
         To start the application again, :func:`start_session` has to be called.
 
+        :param clean: If False the same profile will be used after the next start of
+                      the application. Note that the in app initiated restart always
+                      maintains the same profile.
         :param in_app: If True, marionette will cause a quit from within the
                        browser. Otherwise the browser will be quit immediately
                        by killing the process.
@@ -1103,7 +1106,7 @@ class Marionette(object):
 
         else:
             self.delete_session(reset_session_id=True)
-            self.instance.close()
+            self.instance.close(clean=clean)
 
     @do_process_check
     def restart(self, clean=False, in_app=False, callback=None):
@@ -1192,8 +1195,8 @@ class Marionette(object):
         if self.instance:
             returncode = self.instance.runner.returncode
             if returncode is not None:
-                # We're managing a binary which has terminated, so restart it.
-                self.instance.restart()
+                # We're managing a binary which has terminated, so start it again.
+                self.instance.start()
 
         self.client = transport.TcpTransport(
             self.host,

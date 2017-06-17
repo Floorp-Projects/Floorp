@@ -58,7 +58,7 @@ BasicPaintedLayer::PaintThebes(gfxContext* aContext,
   CompositionOp effectiveOperator = GetEffectiveOperator(this);
 
   if (!BasicManager()->IsRetained()) {
-    mValidRegion.SetEmpty();
+    ClearValidRegion();
     mContentClient->Clear();
 
     nsIntRegion toDraw = IntersectWithClip(GetLocalVisibleRegion().ToUnknownRegion(), aContext);
@@ -164,7 +164,7 @@ BasicPaintedLayer::Validate(LayerManager::DrawPaintedLayerCallback aCallback,
   }
   PaintState state =
     mContentClient->BeginPaintBuffer(this, flags);
-  mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
+  SubtractFromValidRegion(state.mRegionToInvalidate);
 
   DrawTarget* target = mContentClient->BorrowDrawTargetForPainting(state);
   if (target && target->IsValid()) {

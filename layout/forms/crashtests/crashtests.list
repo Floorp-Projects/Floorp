@@ -63,7 +63,7 @@ load 960277-2.html
 load 997709-1.html
 load 1102791.html
 skip-if(stylo) load 1140216.html # bug 1323693, bug 1341973
-load 1182414.html
+skip-if(stylo) load 1182414.html # bug 1373874
 load 1212688.html
 load 1228670.xhtml
-load 1279354.html
+skip-if(stylo) load 1279354.html # bug 1373874

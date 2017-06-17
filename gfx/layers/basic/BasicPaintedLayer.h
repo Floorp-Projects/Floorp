@@ -56,7 +56,7 @@ public:
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
     mInvalidRegion.Add(aRegion);
-    mValidRegion.Sub(mValidRegion, mInvalidRegion.GetRegion());
+    UpdateValidRegionAfterInvalidRegionChanged();
   }
 
   virtual void PaintThebes(gfxContext* aContext,
@@ -73,7 +73,7 @@ public:
     if (mContentClient) {
       mContentClient->Clear();
     }
-    mValidRegion.SetEmpty();
+    ClearValidRegion();
   }
 
   virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) override
@@ -84,7 +84,7 @@ public:
       mEffectiveTransform = GetLocalTransform() * aTransformToSurface;
       if (gfxPoint(0,0) != mResidualTranslation) {
         mResidualTranslation = gfxPoint(0,0);
-        mValidRegion.SetEmpty();
+        ClearValidRegion();
       }
       ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
       return;
@@ -120,7 +120,7 @@ protected:
     // representation of a region.)
     nsIntRegion tmp;
     tmp.Or(mVisibleRegion.ToUnknownRegion(), aExtendedRegionToDraw);
-    mValidRegion.Or(mValidRegion, tmp);
+    AddToValidRegion(tmp);
   }
 
   RefPtr<ContentClientBasic> mContentClient;

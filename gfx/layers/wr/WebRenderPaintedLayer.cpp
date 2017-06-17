@@ -124,7 +124,7 @@ WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   }
 
   nsIntRegion regionToPaint;
-  regionToPaint.Sub(mVisibleRegion.ToUnknownRegion(), mValidRegion);
+  regionToPaint.Sub(mVisibleRegion.ToUnknownRegion(), GetValidRegion());
 
   // We have something to paint but can't. This usually happens only in
   // empty transactions
