@@ -2441,9 +2441,6 @@ nsNativeThemeWin::ThemeSupportsWidget(nsPresContext* aPresContext,
   // XXXdwh We can go even further and call the API to ask if support exists for
   // specific widgets.
 
-  if (aPresContext && !aPresContext->PresShell()->IsThemeSupportEnabled())
-    return false;
-
   if (aWidgetType == NS_THEME_FOCUS_OUTLINE) {
     return true;
   }

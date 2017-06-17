@@ -128,9 +128,12 @@ is(typeof(document.createElement("button").setCustomValidity), "function",
    "button.setCustomValidity should be a function");
 
 // .labels
-todo("labels" in document.createElement("button"),
-     "button.labels isn't implemented yet");
-
+ok("labels" in document.createElement("button"),
+   "button.labels should be an IDL attribute of the button element");
+is(typeof(document.createElement("button").labels), "object",
+   "button.labels should be an object");
+ok(document.createElement("button").labels instanceof NodeList,
+   "button.labels sohuld be an instance of NodeList");
 </script>
 </pre>
 </body>

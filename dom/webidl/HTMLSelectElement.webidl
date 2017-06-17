@@ -54,7 +54,7 @@ interface HTMLSelectElement : HTMLElement {
   boolean reportValidity();
   void setCustomValidity(DOMString error);
 
-// NYI:  readonly attribute NodeList labels;
+  readonly attribute NodeList labels;
 
   // https://www.w3.org/Bugs/Public/show_bug.cgi?id=20720
   void remove();
