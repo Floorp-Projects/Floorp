@@ -1370,18 +1370,6 @@ if CONFIG['MOZ_ANDROID_MMA']:
 # Putting branding earlier allows branders to override default resources.
 ANDROID_RES_DIRS += [
     '/' + CONFIG['MOZ_BRANDING_DIRECTORY'] + '/res',
-]
-
-if CONFIG['MOZ_ANDROID_PHOTON']:
-    ANDROID_RES_DIRS += [
-        '/mobile/android/app/src/photon/res',
-    ]
-else:
-    ANDROID_RES_DIRS += [
-        '/mobile/android/app/src/australis/res',
-    ]
-
-ANDROID_RES_DIRS += [
     '/mobile/android/app/src/main/res',
     '/mobile/android/services/src/main/res',
     '!res',
