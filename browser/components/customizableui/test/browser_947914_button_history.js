@@ -14,10 +14,8 @@ add_task(async function() {
   let historyButton = document.getElementById("history-panelmenu");
   ok(historyButton, "History button appears in Panel Menu");
 
-  let historyPanel = document.getElementById("PanelUI-history");
-  let promise = BrowserTestUtils.waitForEvent(historyPanel, "ViewShown");
   historyButton.click();
-  await promise;
+  let historyPanel = document.getElementById("PanelUI-history");
   ok(historyPanel.getAttribute("current"), "History Panel is in view");
 
   let panelHiddenPromise = promisePanelHidden(window);
