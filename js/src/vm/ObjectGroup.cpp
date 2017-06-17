@@ -1907,8 +1907,8 @@ ObjectGroupCompartment::checkNewTableAfterMovingGC(NewTable* table)
     if (!table || !table->initialized())
         return;
 
-    for (NewTable::Enum e(*table); !e.empty(); e.popFront()) {
-        NewEntry entry = e.front();
+    for (auto r = table->all(); !r.empty(); r.popFront()) {
+        NewEntry entry = r.front();
         CheckGCThingAfterMovingGC(entry.group.unbarrieredGet());
         TaggedProto proto = entry.group.unbarrieredGet()->proto();
         if (proto.isObject())
@@ -1921,7 +1921,7 @@ ObjectGroupCompartment::checkNewTableAfterMovingGC(NewTable* table)
 
         NewEntry::Lookup lookup(clasp, proto, entry.associated);
         auto ptr = table->lookup(lookup);
-        MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &e.front());
+        MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
     }
 }
 

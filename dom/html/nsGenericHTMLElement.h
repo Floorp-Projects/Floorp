@@ -851,6 +851,12 @@ public:
   }
 
   virtual bool IsLabelable() const override;
+
+  static bool MatchLabelsElement(Element* aElement, int32_t aNamespaceID,
+                                 nsIAtom* aAtom, void* aData);
+
+  already_AddRefed<nsINodeList> Labels();
+
   virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override;
 
   static bool TouchEventsEnabled(JSContext* /* unused */, JSObject* /* unused */);

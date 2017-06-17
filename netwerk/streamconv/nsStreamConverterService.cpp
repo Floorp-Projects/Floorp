@@ -196,7 +196,7 @@ public:
     void* operator()(void* anObject) override {
         nsCString *string = (nsCString*)anObject;
         delete string;
-        return 0;
+        return nullptr;
     }
 };
 

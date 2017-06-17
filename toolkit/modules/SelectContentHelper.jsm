@@ -259,7 +259,12 @@ this.SelectContentHelper.prototype = {
 
       case "Forms:DismissedDropDown":
         let selectedOption = this.element.item(this.element.selectedIndex);
-        if (this.initialSelection != selectedOption) {
+        if (this.initialSelection === selectedOption) {
+          // Clear active document
+          DOMUtils.removeContentState(this.element,
+                                      kStateActive,
+                                      /* aClearActiveDocument */ true);
+        } else {
           let win = this.element.ownerGlobal;
           // For ordering of events, we're using non-e10s as our guide here,
           // since the spec isn't exactly clear. In non-e10s, we fire:
@@ -270,8 +275,12 @@ this.SelectContentHelper.prototype = {
           if (!this.closedWithEnter) {
             this.dispatchMouseEvent(win, selectedOption, "mousedown");
             this.dispatchMouseEvent(win, selectedOption, "mouseup");
-            DOMUtils.removeContentState(this.element, kStateActive);
           }
+          // Clear active document no matter user selects
+          // via keyboard or mouse
+          DOMUtils.removeContentState(this.element,
+                                      kStateActive,
+                                      /* aClearActiveDocument */ true);
 
           let inputEvent = new win.UIEvent("input", {
             bubbles: true,

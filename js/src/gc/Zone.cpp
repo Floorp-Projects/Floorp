@@ -251,8 +251,8 @@ Zone::discardJitCode(FreeOp* fop, bool discardBaselineCode)
 void
 JS::Zone::checkUniqueIdTableAfterMovingGC()
 {
-    for (UniqueIdMap::Enum e(uniqueIds()); !e.empty(); e.popFront())
-        js::gc::CheckGCThingAfterMovingGC(e.front().key());
+    for (auto r = uniqueIds().all(); !r.empty(); r.popFront())
+        js::gc::CheckGCThingAfterMovingGC(r.front().key());
 }
 #endif
 

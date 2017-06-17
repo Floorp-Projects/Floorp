@@ -376,9 +376,9 @@ protected:
    * traversed the whole document (or both).
    *
    * @param aNeededLength the length the list should have when we are
-   *        done (unless it exhausts the document)   
+   *        done (unless it exhausts the document)
    */
-  void PopulateSelf(uint32_t aNeededLength);
+  virtual void PopulateSelf(uint32_t aNeededLength);
 
   /**
    * @param  aContainer a content node which must be a descendant of
@@ -589,4 +589,40 @@ public:
 #endif
 };
 
+class nsLabelsNodeList final : public nsContentList
+{
+public:
+  nsLabelsNodeList(nsINode* aRootNode,
+                   nsContentListMatchFunc aFunc,
+                   nsContentListDestroyFunc aDestroyFunc,
+                   void* aData)
+    : nsContentList(aRootNode, aFunc, aDestroyFunc, aData)
+  {
+  }
+
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
+
+  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
+
+ /**
+  * Reset root, mutation observer, and clear content list
+  * if the root has been changed.
+  *
+  * @param aRootNode The node under which to limit our search.
+  */
+  void MaybeResetRoot(nsINode* aRootNode);
+
+private:
+ /**
+  * Start searching at the last one if we already have nodes, otherwise
+  * start searching at the root.
+  *
+  * @param aNeededLength The list of length should have when we are
+  *                      done (unless it exhausts the document).
+  */
+  void PopulateSelf(uint32_t aNeededLength) override;
+};
 #endif // nsContentList_h___

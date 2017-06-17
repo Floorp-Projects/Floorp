@@ -420,7 +420,7 @@ NativeObject::copy(JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap,
     return obj;
 }
 
-inline void
+MOZ_ALWAYS_INLINE void
 NativeObject::setSlotWithType(JSContext* cx, Shape* shape,
                               const Value& value, bool overwriting)
 {
@@ -739,8 +739,9 @@ LookupOwnPropertyInline(JSContext* cx,
         }
     }
 
-    // Check for a native property.
-    if (Shape* shape = obj->lookup(cx, id)) {
+    // Check for a native property. Call Shape::search directly (instead of
+    // NativeObject::lookup) because it's inlined.
+    if (Shape* shape = obj->lastProperty()->search(cx, id)) {
         propp.setNativeProperty(shape);
         *donep = true;
         return true;

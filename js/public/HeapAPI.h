@@ -168,6 +168,7 @@ struct Zone
     bool isGCSweeping() const { return gcState_ == Sweep; }
     bool isGCFinished() const { return gcState_ == Finished; }
     bool isGCCompacting() const { return gcState_ == Compact; }
+    bool isGCMarking() const { return gcState_ == Mark || gcState_ == MarkGray; }
     bool isGCSweepingOrCompacting() const { return gcState_ == Sweep || gcState_ == Compact; }
 
     static MOZ_ALWAYS_INLINE JS::shadow::Zone* asShadowZone(JS::Zone* zone) {
