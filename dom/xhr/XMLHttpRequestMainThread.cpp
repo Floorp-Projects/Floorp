@@ -25,6 +25,7 @@
 #include "mozilla/dom/XMLDocument.h"
 #include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
+#include "mozilla/Encoding.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
@@ -76,7 +77,6 @@
 #include "mozilla/Telemetry.h"
 #include "jsfriendapi.h"
 #include "GeckoProfiler.h"
-#include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "mozilla/Attributes.h"
 #include "MultipartBlobImpl.h"
@@ -503,22 +503,24 @@ XMLHttpRequestMainThread::DetectCharset()
   }
 
   nsAutoCString charsetVal;
+  const Encoding* encoding;
   bool ok = mChannel &&
             NS_SUCCEEDED(mChannel->GetContentCharset(charsetVal)) &&
-            EncodingUtils::FindEncodingForLabel(charsetVal, mResponseCharset);
-  if (!ok || mResponseCharset.IsEmpty()) {
+            (encoding = Encoding::ForLabel(charsetVal));
+  if (!ok) {
     // MS documentation states UTF-8 is default for responseText
-    mResponseCharset.AssignLiteral("UTF-8");
+    encoding = UTF_8_ENCODING;
   }
 
   if (mResponseType == XMLHttpRequestResponseType::Json &&
-      !mResponseCharset.EqualsLiteral("UTF-8")) {
+      encoding != UTF_8_ENCODING) {
     // The XHR spec says only UTF-8 is supported for responseType == "json"
     LogMessage("JSONCharsetWarning", GetOwner());
-    mResponseCharset.AssignLiteral("UTF-8");
+    encoding = UTF_8_ENCODING;
   }
 
-  mDecoder = EncodingUtils::DecoderForEncoding(mResponseCharset);
+  encoding->Name(mResponseCharset);
+  mDecoder = encoding->NewDecoderWithBOMRemoval();
 
   return NS_OK;
 }
@@ -2431,7 +2433,7 @@ XMLHttpRequestMainThread::MatchCharsetAndDecoderToResponseDocument()
     mResponseCharset = mResponseXML->GetDocumentCharacterSet();
     TruncateResponseText();
     mResponseBodyDecodedPos = 0;
-    mDecoder = EncodingUtils::DecoderForEncoding(mResponseCharset);
+    mDecoder = Encoding::ForName(mResponseCharset)->NewDecoderWithBOMRemoval();
   }
 }
 

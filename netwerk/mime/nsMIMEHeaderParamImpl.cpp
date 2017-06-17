@@ -21,9 +21,9 @@
 #include "nsReadableUtils.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsError.h"
-#include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/Encoding.h"
 
-using mozilla::dom::EncodingUtils;
+using mozilla::Encoding;
 
 // static functions declared below are moved from mailnews/mime/src/comi18n.cpp
   
@@ -100,15 +100,14 @@ nsMIMEHeaderParamImpl::DoGetParameter(const nsACString& aHeaderVal,
 
     if (!aFallbackCharset.IsEmpty())
     {
-        nsAutoCString charset;
-        EncodingUtils::FindEncodingForLabel(aFallbackCharset, charset);
+        const Encoding* encoding = Encoding::ForLabel(aFallbackCharset);
         nsAutoCString str2;
         nsCOMPtr<nsIUTF8ConverterService> 
           cvtUTF8(do_GetService(NS_UTF8CONVERTERSERVICE_CONTRACTID));
         if (cvtUTF8 &&
             NS_SUCCEEDED(cvtUTF8->ConvertStringToUTF8(str1, 
                 PromiseFlatCString(aFallbackCharset).get(), false,
-                                   !charset.EqualsLiteral("UTF-8"),
+                                   encoding != UTF_8_ENCODING,
                                    1, str2))) {
           CopyUTF8toUTF16(str2, aResult);
           return NS_OK;
