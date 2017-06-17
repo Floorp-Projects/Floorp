@@ -5233,6 +5233,9 @@ PrepareWeakCacheTasks(JSRuntime* rt)
     // Build a vector of sweep tasks to run on a helper thread.
     WeakCacheTaskVector tasks;
     bool ok = IterateWeakCaches(rt, [&] (JS::detail::WeakCacheBase* cache) {
+        if (!cache->needsSweep())
+            return true;
+
         return tasks.emplaceBack(rt, *cache);
     });
 
@@ -6009,7 +6012,6 @@ GCRuntime::canChangeActiveContext(JSContext* cx)
     // scheduling.
     return cx->heapState == JS::HeapState::Idle
         && !cx->suppressGC
-        && cx->allowGCBarriers
         && !cx->inUnsafeRegion
         && !cx->generationalDisabled
         && !cx->compactingDisabledCount
@@ -7492,25 +7494,6 @@ JS::AutoAssertNoGC::~AutoAssertNoGC()
 {
     MOZ_ASSERT(cx_->inUnsafeRegion > 0);
     cx_->inUnsafeRegion--;
-}
-
-JS::AutoAssertOnBarrier::AutoAssertOnBarrier(JSContext* cx)
-  : context(cx),
-    prev(cx->allowGCBarriers)
-{
-    context->allowGCBarriers = false;
-}
-
-JS::AutoAssertOnBarrier::~AutoAssertOnBarrier()
-{
-    MOZ_ASSERT(!context->allowGCBarriers);
-    context->allowGCBarriers = prev;
-}
-
-JS_FRIEND_API(bool)
-js::gc::BarriersAreAllowedOnCurrentThread()
-{
-    return TlsContext.get()->allowGCBarriers;
 }
 
 #ifdef DEBUG

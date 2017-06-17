@@ -231,9 +231,9 @@ var TabsInTitlebar = {
       }
 
       // Then add a negative margin to the titlebar, so that the following elements
-      // will overlap it by the lesser of the titlebar height or the tabstrip+menu.
-      let minTitlebarOrTabsHeight = Math.min(titlebarContentHeight, tabAndMenuHeight);
-      titlebar.style.marginBottom = "-" + minTitlebarOrTabsHeight + "px";
+      // will overlap it by the greater of the titlebar height or the tabstrip+menu.
+      let maxTitlebarOrTabsHeight = Math.max(titlebarContentHeight, tabAndMenuHeight);
+      titlebar.style.marginBottom = "-" + maxTitlebarOrTabsHeight + "px";
 
       // Finally, size the placeholders:
       if (AppConstants.platform == "macosx") {

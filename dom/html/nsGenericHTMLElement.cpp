@@ -107,6 +107,7 @@
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
 #include "ReferrerPolicy.h"
+#include "mozilla/dom/HTMLLabelElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -511,6 +512,14 @@ nsGenericHTMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     }
   }
 
+  // We need to consider a labels element is moved to another subtree
+  // with different root, it needs to update labels list and its root
+  // as well.
+  nsDOMSlots* slots = GetExistingDOMSlots();
+  if (slots && slots->mLabelsList) {
+    slots->mLabelsList->MaybeResetRoot(SubtreeRoot());
+  }
+
   return rv;
 }
 
@@ -529,6 +538,13 @@ nsGenericHTMLElement::UnbindFromTree(bool aDeep, bool aNullParent)
     if (htmlDocument) {
       htmlDocument->ChangeContentEditableCount(this, -1);
     }
+  }
+
+  // We need to consider a labels element is removed from tree,
+  // it needs to update labels list and its root as well.
+  nsDOMSlots* slots = GetExistingDOMSlots();
+  if (slots && slots->mLabelsList) {
+    slots->mLabelsList->MaybeResetRoot(SubtreeRoot());
   }
 
   nsStyledElement::UnbindFromTree(aDeep, aNullParent);
@@ -1677,6 +1693,30 @@ bool
 nsGenericHTMLElement::IsLabelable() const
 {
   return IsAnyOfHTMLElements(nsGkAtoms::progress, nsGkAtoms::meter);
+}
+
+/* static */ bool
+nsGenericHTMLElement::MatchLabelsElement(Element* aElement, int32_t aNamespaceID,
+                                         nsIAtom* aAtom, void* aData)
+{
+  HTMLLabelElement* element = HTMLLabelElement::FromContent(aElement);
+  return element && element->GetControl() == aData;
+}
+
+already_AddRefed<nsINodeList>
+nsGenericHTMLElement::Labels()
+{
+  MOZ_ASSERT(IsLabelable(),
+             "Labels() only allow labelable elements to use it.");
+  nsDOMSlots* slots = DOMSlots();
+
+  if (!slots->mLabelsList) {
+    slots->mLabelsList = new nsLabelsNodeList(SubtreeRoot(), MatchLabelsElement,
+                                              nullptr, this);
+  }
+
+  RefPtr<nsLabelsNodeList> labels = slots->mLabelsList;
+  return labels.forget();
 }
 
 bool

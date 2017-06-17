@@ -152,7 +152,7 @@ interface inIDOMUtils : nsISupports
                               in boolean aShowingAnonymousContent);
   nsIDOMNodeList getChildrenForNode(in nsIDOMNode aNode,
                                     in boolean aShowingAnonymousContent);
-  
+
   // XBL utilities
   nsIArray getBindingURLs(in nsIDOMElement aElement);
 
@@ -164,11 +164,15 @@ interface inIDOMUtils : nsISupports
    * that for the remove case we simply pass in nullptr for the element.
    * Use them accordingly.
    *
+   * When removing the active state, you may optionally also clear the active
+   * document as well by setting aClearActiveDocument
+   *
    * @return Returns true if the state was set successfully. See more details
    * in EventStateManager.h SetContentState.
    */
   bool setContentState(in nsIDOMElement aElement, in unsigned long long aState);
-  bool removeContentState(in nsIDOMElement aElement, in unsigned long long aState);
+  bool removeContentState(in nsIDOMElement aElement, in unsigned long long aState,
+                          [optional] in bool aClearActiveDocument);
 
   nsIDOMFontFaceList getUsedFontFaces(in nsIDOMRange aRange);
 

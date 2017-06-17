@@ -3574,12 +3574,6 @@ bool
 nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame,
                                       uint8_t aWidgetType)
 {
-  // We don't have CSS set up to render non-native scrollbars on Mac OS X so we
-  // render natively even if native theme support is disabled.
-  if (aWidgetType != NS_THEME_SCROLLBAR &&
-      aPresContext && !aPresContext->PresShell()->IsThemeSupportEnabled())
-    return false;
-
   // if this is a dropdown button in a combobox the answer is always no
   if (aWidgetType == NS_THEME_MENULIST_BUTTON) {
     nsIFrame* parentFrame = aFrame->GetParent();

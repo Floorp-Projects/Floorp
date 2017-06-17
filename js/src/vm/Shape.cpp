@@ -290,7 +290,7 @@ Shape::replaceLastProperty(JSContext* cx, StackBaseShape& base,
  * which must be lastProperty() if inDictionaryMode(), else parent must be
  * one of lastProperty() or lastProperty()->parent.
  */
-/* static */ Shape*
+/* static */ MOZ_ALWAYS_INLINE Shape*
 NativeObject::getChildProperty(JSContext* cx,
                                HandleNativeObject obj, HandleShape parent,
                                MutableHandle<StackShape> child)
@@ -416,30 +416,6 @@ js::NativeObject::toDictionaryMode(JSContext* cx, HandleNativeObject obj)
     root->base()->setSlotSpan(span);
 
     return true;
-}
-
-/* static */ Shape*
-NativeObject::addProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
-                          GetterOp getter, SetterOp setter, uint32_t slot, unsigned attrs,
-                          unsigned flags, bool allowDictionary)
-{
-    MOZ_ASSERT(!JSID_IS_VOID(id));
-    MOZ_ASSERT(getter != JS_PropertyStub);
-    MOZ_ASSERT(setter != JS_StrictPropertyStub);
-    MOZ_ASSERT(obj->nonProxyIsExtensible());
-    MOZ_ASSERT(!obj->containsPure(id));
-
-    AutoKeepShapeTables keep(cx);
-    ShapeTable::Entry* entry = nullptr;
-    if (obj->inDictionaryMode()) {
-        ShapeTable* table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
-        if (!table)
-            return nullptr;
-        entry = &table->search<MaybeAdding::Adding>(id, keep);
-    }
-
-    return addPropertyInternal(cx, obj, id, getter, setter, slot, attrs, flags, entry,
-                               allowDictionary, keep);
 }
 
 static bool
@@ -1288,12 +1264,12 @@ Zone::checkBaseShapeTableAfterMovingGC()
     if (!baseShapes().initialized())
         return;
 
-    for (BaseShapeSet::Enum e(baseShapes()); !e.empty(); e.popFront()) {
-        UnownedBaseShape* base = e.front().unbarrieredGet();
+    for (auto r = baseShapes().all(); !r.empty(); r.popFront()) {
+        UnownedBaseShape* base = r.front().unbarrieredGet();
         CheckGCThingAfterMovingGC(base);
 
         BaseShapeSet::Ptr ptr = baseShapes().lookup(base);
-        MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &e.front());
+        MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
     }
 }
 
@@ -1349,8 +1325,8 @@ Zone::checkInitialShapesTableAfterMovingGC()
      * initialShapes that points into the nursery, and that the hash table
      * entries are discoverable.
      */
-    for (InitialShapeSet::Enum e(initialShapes()); !e.empty(); e.popFront()) {
-        InitialShapeEntry entry = e.front();
+    for (auto r = initialShapes().all(); !r.empty(); r.popFront()) {
+        InitialShapeEntry entry = r.front();
         JSProtoKey protoKey = entry.proto.key();
         TaggedProto proto = entry.proto.proto().unbarrieredGet();
         Shape* shape = entry.shape.unbarrieredGet();
@@ -1365,7 +1341,7 @@ Zone::checkInitialShapesTableAfterMovingGC()
                       shape->numFixedSlots(),
                       shape->getObjectFlags());
         InitialShapeSet::Ptr ptr = initialShapes().lookup(lookup);
-        MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &e.front());
+        MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
     }
 }
 
