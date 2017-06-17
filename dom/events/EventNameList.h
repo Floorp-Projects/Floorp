@@ -164,6 +164,14 @@ EVENT(change,
       eFormChange,
       EventNameType_HTMLXUL,
       eBasicEventClass)
+EVENT(CheckboxStateChange,
+      eFormCheckboxStateChange,
+      EventNameType_None,
+      eBasicEventClass)
+EVENT(RadioStateChange,
+      eFormRadioStateChange,
+      EventNameType_None,
+      eBasicEventClass)
 EVENT(auxclick,
       eMouseAuxClick,
       EventNameType_All,
