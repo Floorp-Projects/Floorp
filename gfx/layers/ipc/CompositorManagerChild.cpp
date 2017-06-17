@@ -54,6 +54,20 @@ CompositorManagerChild::Init(Endpoint<PCompositorManagerChild>&& aEndpoint,
 }
 
 /* static */ void
+CompositorManagerChild::OnGPUProcessShutdown()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!sInstance) {
+    return;
+  }
+
+  // GPUChild was torn down first when the GPU process was lost. We can't wait
+  // for CompositorManagerChild::ActorDestroy because we may recreate the
+  // CompositorManager pair before that is executed.
+  sInstance = nullptr;
+}
+
+/* static */ void
 CompositorManagerChild::Shutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -187,6 +201,9 @@ void
 CompositorManagerChild::ActorDestroy(ActorDestroyReason aReason)
 {
   mCanSend = false;
+  if (sInstance == this) {
+    sInstance = nullptr;
+  }
 }
 
 PCompositorBridgeChild*
