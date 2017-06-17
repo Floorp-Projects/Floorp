@@ -7,7 +7,7 @@
 
 <window id="main-window"
         onload="startup();"
-        windowtype="navigator:browser"
+        windowtype="navigator:geckoview"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <browser id="content" type="content" primary="true" src="about:blank" flex="1"/>

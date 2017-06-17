@@ -45,6 +45,7 @@ EXPORTS.mozilla += [
     '!TelemetryHistogramEnums.h',
     '!TelemetryProcessEnums.h',
     '!TelemetryScalarEnums.h',
+    'CombinedStacks.h',
     'ipc/TelemetryComms.h',
     'ipc/TelemetryIPC.h',
     'ProcessedStack.h',

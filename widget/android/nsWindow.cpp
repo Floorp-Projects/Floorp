@@ -1460,7 +1460,6 @@ nsWindow::nsWindow() :
     mScreenId(0), // Use 0 (primary screen) as the default value.
     mIsVisible(false),
     mParent(nullptr),
-    mAwaitingFullScreen(false),
     mIsFullScreen(false)
 {
 }
@@ -1764,12 +1763,6 @@ nsWindow::Resize(double aX,
     // Should we skip honoring aRepaint here?
     if (aRepaint && FindTopLevel() == nsWindow::TopWindow())
         RedrawAll();
-
-    nsIWidgetListener* listener = GetWidgetListener();
-    if (mAwaitingFullScreen && listener) {
-        listener->FullscreenChanged(mIsFullScreen);
-        mAwaitingFullScreen = false;
-    }
 }
 
 void
@@ -1925,9 +1918,13 @@ nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen*)
     }
 
     mIsFullScreen = aFullScreen;
-    mAwaitingFullScreen = true;
     mAndroidView->mEventDispatcher->Dispatch(aFullScreen ?
             u"GeckoView:FullScreenEnter" : u"GeckoView:FullScreenExit");
+
+    nsIWidgetListener* listener = GetWidgetListener();
+    if (listener) {
+        listener->FullscreenChanged(mIsFullScreen);
+    }
     return NS_OK;
 }
 

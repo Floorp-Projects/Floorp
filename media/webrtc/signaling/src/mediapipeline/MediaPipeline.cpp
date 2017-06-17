@@ -100,7 +100,7 @@ protected:
 };
 
 // I420 buffer size macros
-#define YSIZE(x,y) ((x)*(y))
+#define YSIZE(x,y) (CheckedInt<int>(x)*(y))
 #define CRSIZE(x,y) ((((x)+1) >> 1) * (((y)+1) >> 1))
 #define I420SIZE(x,y) (YSIZE((x),(y)) + 2 * CRSIZE((x),(y)))
 
@@ -295,20 +295,26 @@ protected:
 
     if (aForceBlack) {
       IntSize size = aImage->GetSize();
-      uint32_t yPlaneLen = YSIZE(size.width, size.height);
-      uint32_t cbcrPlaneLen = 2 * CRSIZE(size.width, size.height);
-      uint32_t length = yPlaneLen + cbcrPlaneLen;
+      CheckedInt<int> yPlaneLen = YSIZE(size.width, size.height);
+      // doesn't need to be CheckedInt, any overflow will be caught by YSIZE
+      int cbcrPlaneLen = 2 * CRSIZE(size.width, size.height);
+      CheckedInt<int> length = yPlaneLen + cbcrPlaneLen;
+
+      if (!yPlaneLen.isValid() || !length.isValid()) {
+        return;
+      }
 
       // Send a black image.
-      auto pixelData = MakeUniqueFallible<uint8_t[]>(length);
+      auto pixelData = MakeUniqueFallible<uint8_t[]>(length.value());
       if (pixelData) {
         // YCrCb black = 0x10 0x80 0x80
-        memset(pixelData.get(), 0x10, yPlaneLen);
+        memset(pixelData.get(), 0x10, yPlaneLen.value());
         // Fill Cb/Cr planes
-        memset(pixelData.get() + yPlaneLen, 0x80, cbcrPlaneLen);
+        memset(pixelData.get() + yPlaneLen.value(), 0x80, cbcrPlaneLen);
 
         MOZ_MTLOG(ML_DEBUG, "Sending a black video frame");
-        VideoFrameConverted(Move(pixelData), length, size.width, size.height,
+        VideoFrameConverted(Move(pixelData), length.value(),
+                            size.width, size.height,
                             mozilla::kVideoI420, 0);
       }
       return;
@@ -363,11 +369,17 @@ protected:
     }
 
     IntSize size = aImage->GetSize();
+    // these don't need to be CheckedInt, any overflow will be caught by YSIZE
     int half_width = (size.width + 1) >> 1;
     int half_height = (size.height + 1) >> 1;
     int c_size = half_width * half_height;
-    int buffer_size = YSIZE(size.width, size.height) + 2 * c_size;
-    auto yuv_scoped = MakeUniqueFallible<uint8[]>(buffer_size);
+    CheckedInt<int> buffer_size = YSIZE(size.width, size.height) + 2 * c_size;
+
+    if (!buffer_size.isValid()) {
+      return;
+    }
+
+    auto yuv_scoped = MakeUniqueFallible<uint8[]>(buffer_size.value());
     if (!yuv_scoped) {
       return;
     }
@@ -382,7 +394,7 @@ protected:
     }
 
     int rv;
-    int cb_offset = YSIZE(size.width, size.height);
+    int cb_offset = YSIZE(size.width, size.height).value();
     int cr_offset = cb_offset + c_size;
     switch (surf->GetFormat()) {
       case SurfaceFormat::B8G8R8A8:
@@ -413,7 +425,7 @@ protected:
     }
     MOZ_MTLOG(ML_DEBUG, "Sending an I420 video frame converted from " <<
                         Stringify(surf->GetFormat()));
-    VideoFrameConverted(Move(yuv_scoped), buffer_size, size.width, size.height, mozilla::kVideoI420, 0);
+    VideoFrameConverted(Move(yuv_scoped), buffer_size.value(), size.width, size.height, mozilla::kVideoI420, 0);
   }
 
   Atomic<int32_t, Relaxed> mLength;
