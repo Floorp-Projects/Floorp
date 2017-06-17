@@ -41,14 +41,14 @@ namespace webrtc
 {
 AudioDeviceSndio::AudioDeviceSndio(const int32_t id) :
     _ptrAudioBuffer(NULL),
+    _playHandle(NULL),
+    _recHandle(NULL),
     _critSect(*CriticalSectionWrapper::CreateCriticalSection()),
     _id(id),
     _recordingBuffer(NULL),
     _playoutBuffer(NULL),
     _playBufType(AudioDeviceModule::kFixedBufferSize),
     _initialized(false),
-    _playHandle(NULL),
-    _recHandle(NULL),
     _recording(false),
     _playing(false),
     _AGC(false),
@@ -107,19 +107,19 @@ int32_t AudioDeviceSndio::ActiveAudioLayer(
     return 0;
 }
 
-int32_t AudioDeviceSndio::Init()
+AudioDeviceGeneric::InitStatus AudioDeviceSndio::Init()
 {
 
     CriticalSectionScoped lock(&_critSect);
 
     if (_initialized)
     {
-        return 0;
+        return InitStatus::OK;
     }
     _playError = 0;
     _recError = 0;
     _initialized = true;
-    return 0;
+    return InitStatus::OK;
 }
 
 int32_t AudioDeviceSndio::Terminate()
@@ -686,8 +686,6 @@ int32_t AudioDeviceSndio::InitRecording()
 
 int32_t AudioDeviceSndio::StartRecording()
 {
-    const char* threadName = "webrtc_audio_module_capture_thread";
-
     if (_recHandle == NULL)
     {
         return -1;
@@ -773,8 +771,6 @@ bool AudioDeviceSndio::PlayoutIsInitialized() const
 
 int32_t AudioDeviceSndio::StartPlayout()
 {
-    const char* threadName = "webrtc_audio_module_play_thread";
-
     if (_playHandle == NULL)
     {
         return -1;
