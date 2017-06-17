@@ -65,5 +65,5 @@ load 1102791.html
 skip-if(stylo) load 1140216.html # bug 1323693, bug 1341973
 load 1182414.html
 load 1212688.html
-load 1228670.xhtml
+skip-if(stylo) load 1228670.xhtml # bug 1373874
 load 1279354.html
