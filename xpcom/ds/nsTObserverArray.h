@@ -263,7 +263,8 @@ public:
   }
 
   // See nsTArray::RemoveElementsBy.
-  void RemoveElementsBy(const std::function<bool(const elem_type&)>& aPredicate)
+  template <typename Predicate>
+  void RemoveElementsBy(Predicate aPredicate)
   {
     index_type i = 0;
     mArray.RemoveElementsBy([&](const elem_type& aItem) {
