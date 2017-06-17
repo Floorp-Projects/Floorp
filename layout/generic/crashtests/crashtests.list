@@ -1,5 +1,5 @@
 load 25888-1.html
-load 25888-2.html
+skip-if(stylo) load 25888-2.html # bug 1373874
 load 37757-1.html
 load 225868-1.html
 load 255468.xhtml
