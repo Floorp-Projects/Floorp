@@ -201,13 +201,9 @@ nsSVGMarkerFrame::SetParentCoordCtxProvider(SVGSVGElement *aContext)
 }
 
 void
-nsSVGMarkerFrame::DoUpdateStyleOfOwnedAnonBoxes(
-  mozilla::ServoStyleSet& aStyleSet,
-  nsStyleChangeList& aChangeList,
-  nsChangeHint aHintForThisFrame)
+nsSVGMarkerFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
 {
-  UpdateStyleOfChildAnonBox(GetAnonymousChildFrame(this), aStyleSet,
-                            aChangeList, aHintForThisFrame);
+  aResult.AppendElement(OwnedAnonBox(GetAnonymousChildFrame(this)));
 }
 
 //----------------------------------------------------------------------

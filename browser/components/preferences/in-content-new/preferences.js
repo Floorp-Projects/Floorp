@@ -166,7 +166,7 @@ function gotoPref(aCategory) {
   if (category != "paneSearchResults") {
     gSearchResultsPane.searchInput.value = "";
     gSearchResultsPane.searchResultsCategory.hidden = true;
-    gSearchResultsPane.findSelection.removeAllRanges();
+    gSearchResultsPane.getFindSelection(window).removeAllRanges();
     gSearchResultsPane.removeAllSearchTooltips();
     gSearchResultsPane.removeAllSearchMenuitemIndicators();
   } else if (!gSearchResultsPane.searchInput.value) {
@@ -174,6 +174,7 @@ function gotoPref(aCategory) {
     // a query string. Default to the General pane instead.
     category = kDefaultCategoryInternalName;
     document.location.hash = kDefaultCategory;
+    gSearchResultsPane.query = null;
   }
 
   // Updating the hash (below) or changing the selected category

@@ -418,8 +418,8 @@ FxAccountsInternal.prototype = {
    *
    * @return Promise
    */
-  notifyDevices(deviceIds, payload, TTL) {
-    if (!Array.isArray(deviceIds)) {
+  notifyDevices(deviceIds, excludedIds, payload, TTL) {
+    if (typeof deviceIds == "string") {
       deviceIds = [deviceIds];
     }
     return this.currentAccountState.getUserAccountData()
@@ -432,7 +432,7 @@ FxAccountsInternal.prototype = {
             "notifyDevices called without a session token");
         }
         return this.fxAccountsClient.notifyDevices(data.sessionToken, deviceIds,
-          payload, TTL);
+          excludedIds, payload, TTL);
     });
   },
 

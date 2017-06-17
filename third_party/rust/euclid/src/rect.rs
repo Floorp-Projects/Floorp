@@ -38,9 +38,9 @@ impl<T: HeapSizeOf, U> HeapSizeOf for TypedRect<T, U> {
     }
 }
 
-impl<T: Copy + Deserialize, U> Deserialize for TypedRect<T, U> {
+impl<'de, T: Copy + Deserialize<'de>, U> Deserialize<'de> for TypedRect<T, U> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer
+        where D: Deserializer<'de>
     {
         let (origin, size) = try!(Deserialize::deserialize(deserializer));
         Ok(TypedRect::new(origin, size))

@@ -24,9 +24,6 @@
 //! Client code typically creates a set of aliases for each type and doesn't need
 //! to deal with the specifics of typed units further. For example:
 //!
-//! All euclid types are marked `#[repr(C)]` in order to facilitate exposing them to
-//! foreign function interfaces (provided the underlying scalar type is also `repr(C)`).
-//!
 //! ```rust
 //! use euclid::*;
 //! pub struct ScreenSpace;
@@ -34,9 +31,12 @@
 //! pub type ScreenSize = TypedSize2D<f32, ScreenSpace>;
 //! pub struct WorldSpace;
 //! pub type WorldPoint = TypedPoint3D<f32, WorldSpace>;
-//! pub type ProjectionMatrix = TypedMatrix4D<f32, WorldSpace, ScreenSpace>;
+//! pub type ProjectionMatrix = TypedTransform3D<f32, WorldSpace, ScreenSpace>;
 //! // etc...
 //! ```
+//!
+//! All euclid types are marked `#[repr(C)]` in order to facilitate exposing them to
+//! foreign function interfaces (provided the underlying scalar type is also `repr(C)`).
 //!
 //! Components are accessed in their scalar form by default for convenience, and most
 //! types additionally implement strongly typed accessors which return typed ```Length``` wrappers.

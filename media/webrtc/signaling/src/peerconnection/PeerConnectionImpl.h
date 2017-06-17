@@ -647,7 +647,7 @@ private:
   nsresult ConfigureJsepSessionCodecs();
 
   NS_IMETHODIMP EnsureDataConnection(uint16_t aLocalPort, uint16_t aNumstreams,
-                                     uint32_t aMaxMessageSize);
+                                     uint32_t aMaxMessageSize, bool aMMSSet);
 
   nsresult CloseInt();
   nsresult CheckApiState(bool assert_ice_ready) const;
@@ -681,6 +681,7 @@ private:
       uint16_t* localport,
       uint16_t* remoteport,
       uint32_t* maxmessagesize,
+      bool*     mmsset,
       uint16_t* level) const;
 
   static void DeferredAddTrackToJsepSession(const std::string& pcHandle,

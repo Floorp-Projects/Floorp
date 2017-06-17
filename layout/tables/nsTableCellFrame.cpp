@@ -1071,14 +1071,12 @@ nsTableCellFrame::GetBorderWidth(WritingMode aWM) const
 }
 
 void
-nsTableCellFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoStyleSet& aStyleSet,
-                                                nsStyleChangeList& aChangeList,
-                                                nsChangeHint aHintForThisFrame)
+nsTableCellFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
 {
   nsIFrame* kid = mFrames.FirstChild();
   MOZ_ASSERT(kid && !kid->GetNextSibling(),
              "Table cells should have just one child");
-  UpdateStyleOfChildAnonBox(kid, aStyleSet, aChangeList, aHintForThisFrame);
+  aResult.AppendElement(OwnedAnonBox(kid));
 }
 
 #ifdef DEBUG_FRAME_DUMP
