@@ -554,20 +554,6 @@ class JS_PUBLIC_API(AutoAssertNoAlloc)
 };
 
 /**
- * Assert if a GC barrier is invoked while this class is live. This class does
- * not disable the static rooting hazard analysis.
- */
-class JS_PUBLIC_API(AutoAssertOnBarrier)
-{
-    JSContext* context;
-    bool prev;
-
-  public:
-    explicit AutoAssertOnBarrier(JSContext* cx);
-    ~AutoAssertOnBarrier();
-};
-
-/**
  * Disable the static rooting hazard analysis in the live region and assert if
  * any allocation that could potentially trigger a GC occurs while this guard
  * object is live. This is most useful to help the exact rooting hazard analysis
@@ -645,9 +631,6 @@ UnmarkGrayGCThingRecursively(GCCellPtr thing);
 namespace js {
 namespace gc {
 
-extern JS_FRIEND_API(bool)
-BarriersAreAllowedOnCurrentThread();
-
 static MOZ_ALWAYS_INLINE void
 ExposeGCThingToActiveJS(JS::GCCellPtr thing)
 {
@@ -661,8 +644,6 @@ ExposeGCThingToActiveJS(JS::GCCellPtr thing)
     // another runtime.
     if (thing.mayBeOwnedByOtherRuntime())
         return;
-
-    MOZ_DIAGNOSTIC_ASSERT(BarriersAreAllowedOnCurrentThread());
 
     if (IsIncrementalBarrierNeededOnTenuredGCThing(thing))
         JS::IncrementalReadBarrier(thing);

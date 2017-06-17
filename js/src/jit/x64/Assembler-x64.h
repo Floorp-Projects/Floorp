@@ -871,6 +871,9 @@ class Assembler : public AssemblerX86Shared
           case Operand::MEM_REG_DISP:
             masm.cmpq_im(rhs.value, lhs.disp(), lhs.base());
             break;
+          case Operand::MEM_SCALE:
+            masm.cmpq_im(rhs.value, lhs.disp(), lhs.base(), lhs.index(), lhs.scale());
+            break;
           case Operand::MEM_ADDRESS32:
             masm.cmpq_im(rhs.value, lhs.address());
             break;

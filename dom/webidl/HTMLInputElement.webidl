@@ -112,7 +112,7 @@ interface HTMLInputElement : HTMLElement {
   boolean reportValidity();
   void setCustomValidity(DOMString error);
 
-  // Bug 850365 readonly attribute NodeList labels;
+  readonly attribute NodeList? labels;
 
   void select();
 

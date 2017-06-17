@@ -242,11 +242,8 @@ struct Zone : public JS::shadow::Zone,
         return CurrentThreadIsHeapMajorCollecting() && !rt->gc.isHeapCompacting() && gcState_ != NoGC;
     }
 
-    bool isGCMarking() {
-        if (CurrentThreadIsHeapCollecting())
-            return gcState_ == Mark || gcState_ == MarkGray;
-        else
-            return needsIncrementalBarrier();
+    bool shouldMarkInZone() const {
+        return needsIncrementalBarrier() || isGCMarking();
     }
 
     // Get a number that is incremented whenever this zone is collected, and

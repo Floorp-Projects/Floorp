@@ -25,6 +25,7 @@
 
 class ContentUnbinder;
 class nsContentList;
+class nsLabelsNodeList;
 class nsDOMAttributeMap;
 class nsDOMTokenList;
 class nsIControllers;
@@ -312,6 +313,11 @@ public:
      * An object implementing the .classList property for this element.
      */
     RefPtr<nsDOMTokenList> mClassList;
+
+    /*
+     * An object implementing the .labels property for this element.
+     */
+    RefPtr<nsLabelsNodeList> mLabelsList;
 
     /**
      * ShadowRoot bound to the element.
