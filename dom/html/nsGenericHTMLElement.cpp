@@ -1224,19 +1224,8 @@ MapLangAttributeInto(const nsMappedAttributes* aAttributes, GenericSpecifiedValu
   }
   MOZ_ASSERT(langValue->Type() == nsAttrValue::eAtom);
   if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Font))) {
-    nsIAtom* atom = langValue->GetAtomValue();
-
-    const nsDependentAtomString atomString(atom);
-    Maybe<nsCOMPtr<nsIAtom>> lowerAtom;
-    if (nsContentUtils::StringContainsASCIIUpper(atomString)) {
-      nsAutoString dest;
-      dest.SetCapacity(atomString.Length());
-      nsContentUtils::ASCIIToLower(atomString, dest);
-      lowerAtom.emplace(NS_AtomizeMainThread(dest));
-    }
-
-    aData->SetIdentAtomValueIfUnset(
-        eCSSProperty__x_lang, lowerAtom ? lowerAtom->get() : atom);
+    aData->SetIdentAtomValueIfUnset(eCSSProperty__x_lang,
+                                    langValue->GetAtomValue());
   }
   if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Text))) {
     if (!aData->PropertyIsSet(eCSSProperty_text_emphasis_position)) {
