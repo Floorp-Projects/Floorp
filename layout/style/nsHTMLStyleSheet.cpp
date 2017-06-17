@@ -593,17 +593,8 @@ nsHTMLStyleSheet::CalculateMappedServoDeclarations(nsPresContext* aPresContext)
 nsIStyleRule*
 nsHTMLStyleSheet::LangRuleFor(const nsIAtom* aLanguage)
 {
-  Maybe<nsCOMPtr<nsIAtom>> lowerAtom;
-  nsDependentAtomString langString(aLanguage);
-  if (nsContentUtils::StringContainsASCIIUpper(langString)) {
-    nsString dest;
-    nsContentUtils::ASCIIToLower(langString, dest);
-    lowerAtom.emplace(NS_AtomizeMainThread(dest));
-  }
-
-  const nsIAtom* key = lowerAtom ? *lowerAtom : aLanguage;
   auto entry =
-    static_cast<LangRuleTableEntry*>(mLangRuleTable.Add(key, fallible));
+    static_cast<LangRuleTableEntry*>(mLangRuleTable.Add(aLanguage, fallible));
   if (!entry) {
     NS_ASSERTION(false, "out of memory");
     return nullptr;

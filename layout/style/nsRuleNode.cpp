@@ -3607,9 +3607,6 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, GeckoStyleContext* aContext,
   // This is not a real CSS property, it is an HTML attribute mapped to CSS.
   const nsCSSValue* langValue = aRuleData->ValueForLang();
   if (eCSSUnit_AtomIdent == langValue->GetUnit()) {
-    MOZ_ASSERT(!nsContentUtils::StringContainsASCIIUpper(
-                  nsDependentAtomString(langValue->GetAtomValue())));
-
     aFont->mLanguage = langValue->GetAtomValue();
     aFont->mExplicitLanguage = true;
   }
