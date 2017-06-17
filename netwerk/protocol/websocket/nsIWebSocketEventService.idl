@@ -76,4 +76,6 @@ interface nsIWebSocketEventService : nsISupports
 
   [must_use] void removeListener(in unsigned long long aInnerWindowID,
                                  in nsIWebSocketEventListener aListener);
+
+  [must_use] bool hasListenerFor(in unsigned long long aInnerWindowID);
 };

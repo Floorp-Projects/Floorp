@@ -150,12 +150,11 @@ DOMIntersectionObserver::GetThresholds(nsTArray<double>& aRetVal)
 void
 DOMIntersectionObserver::Observe(Element& aTarget)
 {
-  if (mObservationTargets.Contains(&aTarget)) {
-    return;
+  if (mObservationTargets.EnsureInserted(&aTarget)) {
+    // A new entry was created.
+    aTarget.RegisterIntersectionObserver(this);
+    Connect();
   }
-  aTarget.RegisterIntersectionObserver(this);
-  mObservationTargets.PutEntry(&aTarget);
-  Connect();
 }
 
 void
@@ -173,14 +172,11 @@ DOMIntersectionObserver::Unobserve(Element& aTarget)
 void
 DOMIntersectionObserver::UnlinkTarget(Element& aTarget)
 {
-    if (!mObservationTargets.Contains(&aTarget)) {
-        return;
-    }
-
-    mObservationTargets.RemoveEntry(&aTarget);
-    if (mObservationTargets.Count() == 0) {
-        Disconnect();
-    }
+  if (mObservationTargets.EnsureRemoved(&aTarget) &&
+      mObservationTargets.Count() == 0) {
+    // We removed the last entry.
+    Disconnect();
+  }
 }
 
 void

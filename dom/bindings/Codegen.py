@@ -4988,7 +4988,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
               }
 
               ${typeName}::EntryType* entry;
-              if (idsSeen.Contains(propName)) {
+              if (!idsSeen.EnsureInserted(propName)) {
                 // Find the existing entry.
                 auto idx = recordEntries.IndexOf(propName);
                 MOZ_ASSERT(idx != recordEntries.NoIndex,
@@ -5004,7 +5004,6 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 // Safe to do an infallible append here, because we did a
                 // SetCapacity above to the right capacity.
                 entry = recordEntries.AppendElement();
-                idsSeen.PutEntry(propName);
               }
               entry->mKey = propName;
               ${valueType}& slot = entry->mValue;
