@@ -51,15 +51,25 @@ add_UITour_task(async function test_checkSyncCounts() {
 
 // The showFirefoxAccounts API is sync related, so we test that here too...
 add_UITour_task(async function test_firefoxAccountsNoParams() {
+  info("Load about:accounts containing an iframe to https://accounts.firefox.com");
   await gContentAPI.showFirefoxAccounts();
   await BrowserTestUtils.browserLoaded(gTestTab.linkedBrowser, false,
                                        "about:accounts?action=signup&entrypoint=uitour");
 });
 
+
 add_UITour_task(async function test_firefoxAccountsValidParams() {
+  info("Load about:accounts containing an iframe to https://accounts.firefox.com");
   await gContentAPI.showFirefoxAccounts({ utm_foo: "foo", utm_bar: "bar" });
   await BrowserTestUtils.browserLoaded(gTestTab.linkedBrowser, false,
                                        "about:accounts?action=signup&entrypoint=uitour&utm_foo=foo&utm_bar=bar");
+});
+
+add_UITour_task(async function test_firefoxAccountsWithEmail() {
+  info("Load about:accounts containing an iframe to https://accounts.firefox.com");
+  await gContentAPI.showFirefoxAccounts(null, "foo@bar.com");
+  await BrowserTestUtils.browserLoaded(gTestTab.linkedBrowser, false,
+                                       "about:accounts?action=signup&entrypoint=uitour&email=foo%40bar.com");
 });
 
 add_UITour_task(async function test_firefoxAccountsNonAlphaValue() {
@@ -69,6 +79,7 @@ add_UITour_task(async function test_firefoxAccountsNonAlphaValue() {
   let value = "foo& /=?:\\\xa9";
   // encodeURIComponent encodes spaces to %20 but we want "+"
   let expected = encodeURIComponent(value).replace(/%20/g, "+");
+  info("Load about:accounts containing an iframe to https://accounts.firefox.com");
   await gContentAPI.showFirefoxAccounts({ utm_foo: value });
   await BrowserTestUtils.browserLoaded(gTestTab.linkedBrowser, false,
                                        "about:accounts?action=signup&entrypoint=uitour&utm_foo=" + expected);

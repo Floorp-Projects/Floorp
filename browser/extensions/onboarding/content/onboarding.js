@@ -121,6 +121,8 @@ var onboardingTours = [
     tourNameId: "onboarding.tour-default-browser",
     getPage(win) {
       let div = win.document.createElement("div");
+      let defaultBrowserButtonId = win.matchMedia("(-moz-os-version: windows-win7)").matches ?
+        "onboarding.tour-default-browser.win7.button" : "onboarding.tour-default-browser.button";
       div.innerHTML = `
         <section class="onboarding-tour-description">
           <h1 data-l10n-id="onboarding.tour-default-browser.title"></h1>
@@ -129,6 +131,9 @@ var onboardingTours = [
         <section class="onboarding-tour-content">
           <img src="resource://onboarding/img/figure_default.svg" />
         </section>
+        <aside class="onboarding-tour-button">
+          <button id="onboarding-tour-default-browser-button" data-l10n-id="${defaultBrowserButtonId}"></button>
+        </aside>
       `;
       return div;
     },

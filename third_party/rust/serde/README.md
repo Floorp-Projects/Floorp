@@ -1,4 +1,9 @@
-# Serde &emsp; [![Build Status](https://api.travis-ci.org/serde-rs/serde.svg?branch=master)](https://travis-ci.org/serde-rs/serde) [![Latest Version](https://img.shields.io/crates/v/serde.svg)](https://crates.io/crates/serde)
+# Serde &emsp; [![Build Status]][travis] [![Latest Version]][crates.io]
+
+[Build Status]: https://api.travis-ci.org/serde-rs/serde.svg?branch=master
+[travis]: https://travis-ci.org/serde-rs/serde
+[Latest Version]: https://img.shields.io/crates/v/serde.svg
+[crates.io]: https://crates.io/crates/serde
 
 **Serde is a framework for *ser*ializing and *de*serializing Rust data structures efficiently and generically.**
 
@@ -15,10 +20,15 @@ You may be looking for:
 
 ## Serde in action
 
+<a href="http://play.integer32.com/?gist=9003c5b88c1f4989941925d7190c6eec" target="_blank">
+<img align="right" width="50" src="https://raw.githubusercontent.com/serde-rs/serde-rs.github.io/master/img/run.png">
+</a>
+
 ```rust
 #[macro_use]
 extern crate serde_derive;
 
+extern crate serde;
 extern crate serde_json;
 
 #[derive(Serialize, Deserialize, Debug)]

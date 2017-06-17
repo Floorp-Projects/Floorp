@@ -171,6 +171,12 @@ Performance::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 void
 Performance::GetEntries(nsTArray<RefPtr<PerformanceEntry>>& aRetval)
 {
+  // We return an empty list when 'privacy.resistFingerprinting' is on.
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    aRetval.Clear();
+    return;
+  }
+
   aRetval = mResourceEntries;
   aRetval.AppendElements(mUserEntries);
   aRetval.Sort(PerformanceEntryComparator());
@@ -180,6 +186,12 @@ void
 Performance::GetEntriesByType(const nsAString& aEntryType,
                               nsTArray<RefPtr<PerformanceEntry>>& aRetval)
 {
+  // We return an empty list when 'privacy.resistFingerprinting' is on.
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    aRetval.Clear();
+    return;
+  }
+
   if (aEntryType.EqualsLiteral("resource")) {
     aRetval = mResourceEntries;
     return;
@@ -203,6 +215,11 @@ Performance::GetEntriesByName(const nsAString& aName,
                               nsTArray<RefPtr<PerformanceEntry>>& aRetval)
 {
   aRetval.Clear();
+
+  // We return an empty list when 'privacy.resistFingerprinting' is on.
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    return;
+  }
 
   for (PerformanceEntry* entry : mResourceEntries) {
     if (entry->GetName().Equals(aName) &&
@@ -261,6 +278,11 @@ Performance::RoundTime(double aTime) const
 void
 Performance::Mark(const nsAString& aName, ErrorResult& aRv)
 {
+  // We add nothing when 'privacy.resistFingerprinting' is on.
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    return;
+  }
+
   // Don't add the entry if the buffer is full. XXX should be removed by bug 1159003.
   if (mUserEntries.Length() >= mResourceTimingBufferSize) {
     return;
@@ -325,6 +347,11 @@ Performance::Measure(const nsAString& aName,
                      const Optional<nsAString>& aEndMark,
                      ErrorResult& aRv)
 {
+  // We add nothing when 'privacy.resistFingerprinting' is on.
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    return;
+  }
+
   // Don't add the entry if the buffer is full. XXX should be removed by bug
   // 1159003.
   if (mUserEntries.Length() >= mResourceTimingBufferSize) {
@@ -439,6 +466,12 @@ Performance::InsertResourceEntry(PerformanceEntry* aEntry)
 {
   MOZ_ASSERT(aEntry);
   MOZ_ASSERT(mResourceEntries.Length() < mResourceTimingBufferSize);
+
+  // We won't add an entry when 'privacy.resistFingerprint' is true.
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    return;
+  }
+
   if (mResourceEntries.Length() >= mResourceTimingBufferSize) {
     return;
   }

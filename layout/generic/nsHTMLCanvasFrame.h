@@ -97,12 +97,9 @@ public:
     return PrincipalChildList().FirstChild()->GetContentInsertionFrame();
   }
 
-  /**
-   * Update the style of our ::-moz-html-canvas-content anonymous box.
-   */
-  void DoUpdateStyleOfOwnedAnonBoxes(mozilla::ServoStyleSet& aStyleSet,
-                                     nsStyleChangeList& aChangeList,
-                                     nsChangeHint aHintForThisFrame) override;
+  // Return the ::-moz-html-canvas-content anonymous box.
+  void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
+
 protected:
   virtual ~nsHTMLCanvasFrame();
 

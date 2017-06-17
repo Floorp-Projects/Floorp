@@ -6,7 +6,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin/"?>
-<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
 
 <!DOCTYPE dialog [
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
@@ -45,7 +45,7 @@
     <description>&clearDataSettings2.label;</description>
 
     <groupbox orient="horizontal">
-      <caption label="&historySection.label;"/>
+      <caption><label>&historySection.label;</label></caption>
       <grid flex="1">
         <columns>
           <column dialogWidth="&sanitizePrefs2.column.width;"
@@ -78,7 +78,7 @@
       </grid>
     </groupbox>
     <groupbox orient="horizontal">
-      <caption label="&dataSection.label;"/>
+      <caption><label>&dataSection.label;</label></caption>
       <grid flex="1">
         <columns>
           <column dialogWidth="&sanitizePrefs2.column.width;"

@@ -45,9 +45,9 @@ impl<T: HeapSizeOf, Src, Dst> HeapSizeOf for ScaleFactor<T, Src, Dst> {
     }
 }
 
-impl<T, Src, Dst> Deserialize for ScaleFactor<T, Src, Dst> where T: Deserialize {
+impl<'de, T, Src, Dst> Deserialize<'de> for ScaleFactor<T, Src, Dst> where T: Deserialize<'de> {
     fn deserialize<D>(deserializer: D) -> Result<ScaleFactor<T, Src, Dst>, D::Error>
-                      where D: Deserializer {
+                      where D: Deserializer<'de> {
         Ok(ScaleFactor(try!(Deserialize::deserialize(deserializer)), PhantomData))
     }
 }

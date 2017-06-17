@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <meta charset=utf-8>
+    <script type="text/javascript">
+      window.addEventListener("MozReftestInvalidate", () => {
+        let frameset = document.getElementById("frameset");
+        let newFrame = document.createElement("frame");
+        frameset.appendChild(newFrame);
+        frameset.cols = "*";
+
+        newFrame = document.createElement("frame");
+        frameset.appendChild(newFrame);
+        frameset.cols = frameset.cols + ",*";
+
+        document.documentElement.removeAttribute("class");
+      });
+    </script>
+  </head>
+  <frameset id="frameset" cols="">
+  </frameset>
+</html>

@@ -153,7 +153,7 @@ class WebPlatformTestsUpdater(MozbuildObject):
                 kwargs["include"] = ["css/css-timing-1/*", "css/css-animations-1/*", "css/css-transitions-1/*"]
 
 
-        updatecommandline.check_args(kwargs)
+        kwargs = updatecommandline.check_args(kwargs)
         logger = update.setup_logging(kwargs, {"mach": sys.stdout})
 
         try:

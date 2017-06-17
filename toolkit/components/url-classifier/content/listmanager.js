@@ -603,6 +603,27 @@ PROT_ListManager.prototype.downloadError_ = function(table, updateUrl, status) {
                                "download error: " + status);
 }
 
+/**
+ * Get back-off time for the given provider.
+ * Return 0 if we are not in back-off mode.
+ */
+PROT_ListManager.prototype.getBackOffTime = function(provider) {
+  let updateUrl = "";
+  for (var table in this.tablesData) {
+    if (this.tablesData[table].provider == provider) {
+      updateUrl = this.tablesData[table].updateUrl;
+      break;
+    }
+  }
+
+  if (!updateUrl || !this.requestBackoffs_[updateUrl]) {
+    return 0;
+  }
+
+  let delay = this.requestBackoffs_[updateUrl].nextRequestDelay();
+  return delay == 0 ? 0 : Date.now() + delay;
+}
+
 PROT_ListManager.prototype.QueryInterface = function(iid) {
   if (iid.equals(Ci.nsISupports) ||
       iid.equals(Ci.nsIUrlListManager) ||

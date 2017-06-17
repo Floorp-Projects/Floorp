@@ -65,7 +65,7 @@
     <stringbundle id="preferencesBundle" src="chrome://browser/locale/preferences/preferences.properties"/>
 
     <groupbox>
-      <caption label="&proxyTitle.label;"/>
+      <caption><label>&proxyTitle.label;</label></caption>
 
       <radiogroup id="networkProxyType" preference="network.proxy.type"
                   onsyncfrompreference="return gConnectionsDialog.readProxyType();">
@@ -81,12 +81,12 @@
           <rows>
             <row align="center">
               <hbox pack="end">
-                <label value="&http.label;" accesskey="&http.accesskey;" control="networkProxyHTTP"/>
+                <label accesskey="&http.accesskey;" control="networkProxyHTTP">&http.label;</label>
               </hbox>
               <hbox align="center">
                 <textbox id="networkProxyHTTP" flex="1"
                          preference="network.proxy.http" onsyncfrompreference="return gConnectionsDialog.readHTTPProxyServer();"/>
-                <label value="&port.label;" accesskey="&HTTPport.accesskey;" control="networkProxyHTTP_Port"/>
+                <label accesskey="&HTTPport.accesskey;" control="networkProxyHTTP_Port">&port.label;</label>
                 <textbox id="networkProxyHTTP_Port" type="number" max="65535" size="5"
                          preference="network.proxy.http_port" onsyncfrompreference="return gConnectionsDialog.readHTTPProxyPort();"/>
               </hbox>
@@ -101,36 +101,36 @@
             </row>
             <row align="center">
               <hbox pack="end">
-                <label value="&ssl.label;" accesskey="&ssl.accesskey;" control="networkProxySSL"/>
+                <label accesskey="&ssl.accesskey;" control="networkProxySSL">&ssl.label;</label>
               </hbox>
               <hbox align="center">
                 <textbox id="networkProxySSL" flex="1" preference="network.proxy.ssl"
                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ssl', false);"/>
-                <label value="&port.label;" accesskey="&SSLport.accesskey;" control="networkProxySSL_Port"/>
+                <label accesskey="&SSLport.accesskey;" control="networkProxySSL_Port">&port.label;</label>
                 <textbox id="networkProxySSL_Port" type="number" max="65535" size="5" preference="network.proxy.ssl_port"
                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ssl', true);"/>
               </hbox>
             </row>
             <row align="center">
               <hbox pack="end">
-                <label value="&ftp.label;" accesskey="&ftp.accesskey;" control="networkProxyFTP"/>
+                <label accesskey="&ftp.accesskey;" control="networkProxyFTP">&ftp.label;</label>
               </hbox>
               <hbox align="center">
                 <textbox id="networkProxyFTP" flex="1" preference="network.proxy.ftp"
                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ftp', false);"/>
-                <label value="&port.label;" accesskey="&FTPport.accesskey;" control="networkProxyFTP_Port"/>
+                <label accesskey="&FTPport.accesskey;" control="networkProxyFTP_Port">&port.label;</label>
                 <textbox id="networkProxyFTP_Port" type="number" max="65535" size="5" preference="network.proxy.ftp_port"
                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ftp', true);"/>
               </hbox>
             </row>
             <row align="center">
               <hbox pack="end">
-                <label value="&socks.label;" accesskey="&socks.accesskey;" control="networkProxySOCKS"/>
+                <label accesskey="&socks.accesskey;" control="networkProxySOCKS">&socks.label;</label>
               </hbox>
               <hbox align="center">
                 <textbox id="networkProxySOCKS" flex="1" preference="network.proxy.socks"
                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('socks', false);"/>
-                <label value="&port.label;" accesskey="&SOCKSport.accesskey;" control="networkProxySOCKS_Port"/>
+                <label accesskey="&SOCKSport.accesskey;" control="networkProxySOCKS_Port">&port.label;</label>
                 <textbox id="networkProxySOCKS_Port" type="number" max="65535" size="5" preference="network.proxy.socks_port"
                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('socks', true);"/>
               </hbox>
@@ -145,9 +145,9 @@
               </radiogroup>
               </box>
             </row>
-            <label value="&noproxy.label;" accesskey="&noproxy.accesskey;" control="networkProxyNone"/>
+            <label accesskey="&noproxy.accesskey;" control="networkProxyNone">&noproxy.label;</label>
             <textbox id="networkProxyNone" preference="network.proxy.no_proxies_on" multiline="true" rows="2"/>
-            <label value="&noproxyExplain.label;" control="networkProxyNone"/>
+            <label control="networkProxyNone">&noproxyExplain.label;</label>
           </rows>
         </grid>
         <radio value="2" label="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;"/>

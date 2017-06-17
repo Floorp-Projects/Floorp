@@ -156,6 +156,11 @@ var Provider = {
       let nut = Services.prefs.getCharPref(pref, "");
       values["col-nextupdatetime"] = nut ? new Date(nut * 1) : STR_NA;
 
+      let listmanager = Cc["@mozilla.org/url-classifier/listmanager;1"]
+                        .getService(Ci.nsIUrlListManager);
+      let bot = listmanager.getBackOffTime(provider);
+      values["col-backofftime"] = bot ? new Date(bot * 1) : STR_NA;
+
       for (let key of Object.keys(values)) {
         let elem = document.getElementById(provider + "-" + key);
         elem.childNodes[0].nodeValue = values[key];

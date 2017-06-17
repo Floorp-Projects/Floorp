@@ -178,7 +178,11 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElementBase)
 nsresult
 nsGenericHTMLElement::CopyInnerTo(Element* aDst, bool aPreallocateChildren)
 {
+  MOZ_ASSERT(!aDst->GetUncomposedDoc(),
+             "Should not CopyInnerTo an Element in a document");
   nsresult rv;
+
+  bool reparse = (aDst->OwnerDoc() != OwnerDoc());
 
   rv = static_cast<nsGenericHTMLElement*>(aDst)->mAttrsAndChildren.
        EnsureCapacityToClone(mAttrsAndChildren, aPreallocateChildren);
@@ -189,11 +193,14 @@ nsGenericHTMLElement::CopyInnerTo(Element* aDst, bool aPreallocateChildren)
     const nsAttrName *name = mAttrsAndChildren.AttrNameAt(i);
     const nsAttrValue *value = mAttrsAndChildren.AttrAt(i);
 
-    nsAutoString valStr;
-    value->ToString(valStr);
-
     if (name->Equals(nsGkAtoms::style, kNameSpaceID_None) &&
         value->Type() == nsAttrValue::eCSSDeclaration) {
+      // We still clone CSS attributes, even in the cross-document case.
+      // https://github.com/w3c/webappsec-csp/issues/212
+
+      nsAutoString valStr;
+      value->ToString(valStr);
+
       DeclarationBlock* decl = value->GetCSSDeclarationValue();
       // We can't just set this as a string, because that will fail
       // to reparse the string into style data until the node is
@@ -202,13 +209,19 @@ nsGenericHTMLElement::CopyInnerTo(Element* aDst, bool aPreallocateChildren)
 
       rv = aDst->SetInlineStyleDeclaration(declClone, &valStr, false);
       NS_ENSURE_SUCCESS(rv, rv);
+    } else if (reparse) {
+      nsAutoString valStr;
+      value->ToString(valStr);
 
-      continue;
+      rv = aDst->SetAttr(name->NamespaceID(), name->LocalName(),
+                         name->GetPrefix(), valStr, false);
+      NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+      nsAttrValue valueCopy(*value);
+      rv = aDst->SetParsedAttr(name->NamespaceID(), name->LocalName(),
+                               name->GetPrefix(), valueCopy, false);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
-
-    rv = aDst->SetAttr(name->NamespaceID(), name->LocalName(),
-                       name->GetPrefix(), valStr, false);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;

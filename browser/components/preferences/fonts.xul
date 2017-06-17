@@ -104,9 +104,8 @@
               </menupopup>
             </menulist>
             <hbox align="center" pack="end">
-              <label value="&size.label;"
-                     accesskey="&sizeProportional.accesskey;"
-                     control="sizeVar"/>
+              <label accesskey="&sizeProportional.accesskey;"
+                     control="sizeVar">&size.label;</label>
             </hbox>
             <menulist id="sizeVar" delayprefsave="true">
               <menupopup>
@@ -142,58 +141,65 @@
             <hbox align="center" pack="end">
               <label accesskey="&serif.accesskey;" control="serif">&serif.label;</label>
             </hbox>
-            <menulist id="serif" flex="1" style="width: 0px;" delayprefsave="true"
-                      onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
+            <hbox>
+              <menulist id="serif" flex="1" style="width: 0px;" delayprefsave="true"
+                        onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
+            </hbox>
             <spacer/>
           </row>
           <row align="center">
             <hbox align="center" pack="end">
               <label accesskey="&sans-serif.accesskey;" control="sans-serif">&sans-serif.label;</label>
             </hbox>
-            <menulist id="sans-serif" flex="1" style="width: 0px;" delayprefsave="true"
-                      onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
+            <hbox>
+              <menulist id="sans-serif" flex="1" style="width: 0px;" delayprefsave="true"
+                        onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
+            </hbox>
             <spacer/>
           </row>
           <row align="center">
             <hbox align="center" pack="end">
               <label accesskey="&monospace.accesskey;" control="monospace">&monospace.label;</label>
             </hbox>
-            <menulist id="monospace" flex="1" style="width: 0px;" crop="right" delayprefsave="true"
-                      onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
-            <hbox align="center" pack="end">
-              <label value="&size.label;"
-                     accesskey="&sizeMonospace.accesskey;"
-                     control="sizeMono"/>
+            <hbox>
+              <menulist id="monospace" flex="1" style="width: 0px;" crop="right" delayprefsave="true"
+                        onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
             </hbox>
-            <menulist id="sizeMono" delayprefsave="true">
-              <menupopup>
-                <menuitem value="9" label="9"/>
-                <menuitem value="10" label="10"/>
-                <menuitem value="11" label="11"/>
-                <menuitem value="12" label="12"/>
-                <menuitem value="13" label="13"/>
-                <menuitem value="14" label="14"/>
-                <menuitem value="15" label="15"/>
-                <menuitem value="16" label="16"/>
-                <menuitem value="17" label="17"/>
-                <menuitem value="18" label="18"/>
-                <menuitem value="20" label="20"/>
-                <menuitem value="22" label="22"/>
-                <menuitem value="24" label="24"/>
-                <menuitem value="26" label="26"/>
-                <menuitem value="28" label="28"/>
-                <menuitem value="30" label="30"/>
-                <menuitem value="32" label="32"/>
-                <menuitem value="34" label="34"/>
-                <menuitem value="36" label="36"/>
-                <menuitem value="40" label="40"/>
-                <menuitem value="44" label="44"/>
-                <menuitem value="48" label="48"/>
-                <menuitem value="56" label="56"/>
-                <menuitem value="64" label="64"/>
-                <menuitem value="72" label="72"/>
-              </menupopup>
-            </menulist>
+            <hbox align="center" pack="end">
+              <label accesskey="&sizeMonospace.accesskey;"
+                     control="sizeMono">&size.label;</label>
+            </hbox>
+            <hbox>
+              <menulist id="sizeMono" delayprefsave="true">
+                <menupopup>
+                  <menuitem value="9" label="9"/>
+                  <menuitem value="10" label="10"/>
+                  <menuitem value="11" label="11"/>
+                  <menuitem value="12" label="12"/>
+                  <menuitem value="13" label="13"/>
+                  <menuitem value="14" label="14"/>
+                  <menuitem value="15" label="15"/>
+                  <menuitem value="16" label="16"/>
+                  <menuitem value="17" label="17"/>
+                  <menuitem value="18" label="18"/>
+                  <menuitem value="20" label="20"/>
+                  <menuitem value="22" label="22"/>
+                  <menuitem value="24" label="24"/>
+                  <menuitem value="26" label="26"/>
+                  <menuitem value="28" label="28"/>
+                  <menuitem value="30" label="30"/>
+                  <menuitem value="32" label="32"/>
+                  <menuitem value="34" label="34"/>
+                  <menuitem value="36" label="36"/>
+                  <menuitem value="40" label="40"/>
+                  <menuitem value="44" label="44"/>
+                  <menuitem value="48" label="48"/>
+                  <menuitem value="56" label="56"/>
+                  <menuitem value="64" label="64"/>
+                  <menuitem value="72" label="72"/>
+                </menupopup>
+              </menulist>
+            </hbox>
           </row>
         </rows>
       </grid>
@@ -247,12 +253,11 @@
 
     <!-- Text Encoding -->
     <groupbox>
-      <caption label="&languages.customize.Fallback2.grouplabel;"/>
+      <caption><label>&languages.customize.Fallback2.grouplabel;</label></caption>
       <description>&languages.customize.Fallback2.desc;</description>
       <hbox align="center">
-        <label value="&languages.customize.Fallback2.label;"
-               accesskey="&languages.customize.Fallback2.accesskey;"
-               control="DefaultCharsetList"/>
+        <label accesskey="&languages.customize.Fallback2.accesskey;"
+               control="DefaultCharsetList">&languages.customize.Fallback2.label;</label>
         <menulist id="DefaultCharsetList" preference="intl.charset.fallback.override">
           <menupopup>
             <menuitem label="&languages.customize.Fallback.auto;"        value=""/>
