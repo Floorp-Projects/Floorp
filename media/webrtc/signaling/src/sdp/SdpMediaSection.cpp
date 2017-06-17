@@ -110,15 +110,18 @@ SdpMediaSection::GetSctpPort() const
   return attrs.GetSctpPort();
 }
 
-uint32_t
-SdpMediaSection::GetMaxMessageSize() const
+bool
+SdpMediaSection::GetMaxMessageSize(uint32_t* size) const
 {
+  *size = 0;
+
   auto& attrs = GetAttributeList();
   if (!attrs.HasAttribute(SdpAttribute::kMaxMessageSizeAttribute)) {
-    return 0;
+    return false;
   }
 
-  return attrs.GetMaxMessageSize();
+  *size = attrs.GetMaxMessageSize();
+  return true;
 }
 
 bool

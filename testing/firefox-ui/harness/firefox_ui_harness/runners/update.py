@@ -16,6 +16,7 @@ DEFAULT_PREFS = {
     # Bug 1355026: Re-enable when support for the new simplified UI update is available
     'app.update.doorhanger': False,
     'app.update.log': True,
+    'app.update.staging.enabled': True,
     'startup.homepage_override_url': 'about:blank',
 }
 

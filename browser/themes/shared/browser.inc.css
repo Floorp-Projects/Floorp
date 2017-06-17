@@ -5,15 +5,16 @@
 %ifdef MOZ_PHOTON_THEME
 %ifdef CAN_DRAW_IN_TITLEBAR
 /* Add space for dragging the window */
-%ifdef MENUBAR_CAN_AUTOHIDE
-:root[tabsintitlebar][sizemode=normal] #toolbar-menubar[autohide=true] ~ #TabsToolbar {
-  padding-inline-start: 40px;
-}
+%ifdef MOZ_WIDGET_COCOA
+:root[tabsintitlebar]:not([sizemode=fullscreen]) #TabsToolbar
+%elifdef MENUBAR_CAN_AUTOHIDE
+:root[tabsintitlebar][sizemode=normal] #toolbar-menubar[autohide=true] ~ #TabsToolbar
 %else
-:root[tabsintitlebar][sizemode=normal] #TabsToolbar {
+:root[tabsintitlebar][sizemode=normal] #TabsToolbar
+%endif
+{
   padding-inline-start: 40px;
 }
-%endif
 %endif
 
 /* Go button */

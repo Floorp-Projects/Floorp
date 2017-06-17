@@ -26,7 +26,7 @@
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
   <prefpane id="ColorsDialogPane"
             helpTopic="prefs-fonts-and-colors">
-  
+
     <preferences>
       <preference id="browser.display.document_color_use"   name="browser.display.document_color_use"   type="int"/>
       <preference id="browser.anchor_color"                 name="browser.anchor_color"                 type="string"/>
@@ -36,18 +36,18 @@
       <preference id="browser.display.background_color"     name="browser.display.background_color"     type="string"/>
       <preference id="browser.display.use_system_colors"    name="browser.display.use_system_colors"    type="bool"/>
     </preferences>
-    
+
     <hbox>
       <groupbox flex="1">
-        <caption label="&color;"/>
+        <caption><label>&color;</label></caption>
         <hbox align="center">
-          <label value="&textColor.label;" accesskey="&textColor.accesskey;" control="foregroundtextmenu"/>
+          <label accesskey="&textColor.accesskey;" control="foregroundtextmenu">&textColor.label;</label>
           <spacer flex="1"/>
           <colorpicker type="button" id="foregroundtextmenu" palettename="standard"
                        preference="browser.display.foreground_color"/>
         </hbox>
         <hbox align="center" style="margin-top: 5px">
-          <label value="&backgroundColor.label;" accesskey="&backgroundColor.accesskey;" control="backgroundmenu"/>
+          <label accesskey="&backgroundColor.accesskey;" control="backgroundmenu">&backgroundColor.label;</label>
           <spacer flex="1"/>
           <colorpicker type="button" id="backgroundmenu" palettename="standard"
                        preference="browser.display.background_color"/>
@@ -58,17 +58,17 @@
                     preference="browser.display.use_system_colors"/>
         </hbox>
       </groupbox>
-        
+
       <groupbox flex="1">
-        <caption label="&links;"/>
+        <caption><label>&links;</label></caption>
         <hbox align="center">
-          <label value="&linkColor.label;" accesskey="&linkColor.accesskey;" control="unvisitedlinkmenu"/>
+          <label accesskey="&linkColor.accesskey;" control="unvisitedlinkmenu">&linkColor.label;</label>
           <spacer flex="1"/>
           <colorpicker type="button" id="unvisitedlinkmenu" palettename="standard"
                        preference="browser.anchor_color"/>
         </hbox>
         <hbox align="center" style="margin-top: 5px">
-          <label value="&visitedLinkColor.label;" accesskey="&visitedLinkColor.accesskey;" control="visitedlinkmenu"/>
+          <label accesskey="&visitedLinkColor.accesskey;" control="visitedlinkmenu">&visitedLinkColor.label;</label>
           <spacer flex="1"/>
           <colorpicker type="button" id="visitedlinkmenu" palettename="standard"
                        preference="browser.visited_color"/>
@@ -87,16 +87,18 @@
 #endif
       <label accesskey="&overrideDefaultPageColors.accesskey;"
              control="useDocumentColors">&overrideDefaultPageColors.label;</label>
-      <menulist id="useDocumentColors" preference="browser.display.document_color_use">
-        <menupopup>
-          <menuitem label="&overrideDefaultPageColors.always.label;"
-                    value="2" id="documentColorAlways"/>
-          <menuitem label="&overrideDefaultPageColors.auto.label;"
-                    value="0" id="documentColorAutomatic"/>
-          <menuitem label="&overrideDefaultPageColors.never.label;"
-                    value="1" id="documentColorNever"/>
-        </menupopup>
-      </menulist>
+      <hbox>
+        <menulist id="useDocumentColors" preference="browser.display.document_color_use" flex="1">
+          <menupopup>
+            <menuitem label="&overrideDefaultPageColors.always.label;"
+                      value="2" id="documentColorAlways"/>
+            <menuitem label="&overrideDefaultPageColors.auto.label;"
+                      value="0" id="documentColorAutomatic"/>
+            <menuitem label="&overrideDefaultPageColors.never.label;"
+                      value="1" id="documentColorNever"/>
+          </menupopup>
+        </menulist>
+      </hbox>
     </vbox>
   </prefpane>
 </prefwindow>

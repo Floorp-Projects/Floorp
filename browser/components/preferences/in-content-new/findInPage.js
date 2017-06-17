@@ -5,16 +5,12 @@
 /* import-globals-from preferences.js */
 
 var gSearchResultsPane = {
-  findSelection: null,
   listSearchTooltips: new Set(),
   listSearchMenuitemIndicators: new Set(),
   searchResultsCategory: null,
   searchInput: null,
 
   init() {
-    let controller = this.getSelectionController();
-    this.findSelection = controller.getSelection(Ci.nsISelectionController.SELECTION_FIND);
-    this.findSelection.setColors("currentColor", "#ffe900", "currentColor", "#003eaa");
     this.searchResultsCategory = document.getElementById("category-search-results");
 
     this.searchInput = document.getElementById("searchInput");
@@ -123,6 +119,10 @@ var gSearchResultsPane = {
    *      Returns true when atleast one instance of search phrase is found, otherwise false
    */
   highlightMatches(textNodes, nodeSizes, textSearch, searchPhrase) {
+    if (!searchPhrase) {
+      return false;
+    }
+
     let indices = [];
     let i = -1;
     while ((i = textSearch.indexOf(searchPhrase, i + 1)) >= 0) {
@@ -160,23 +160,32 @@ var gSearchResultsPane = {
       let range = document.createRange();
       range.setStart(startNode, startValue);
       range.setEnd(endNode, endValue);
-      this.findSelection.addRange(range);
+      this.getFindSelection(startNode.ownerGlobal).addRange(range);
     }
 
     return indices.length > 0;
   },
 
-  getSelectionController() {
+  /**
+   * Get the selection instance from given window
+   *
+   * @param Object win
+   *   The window object points to frame's window
+   */
+  getFindSelection(win) {
     // Yuck. See bug 138068.
-    let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIWebNavigation)
-                         .QueryInterface(Ci.nsIDocShell);
+    let docShell = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIWebNavigation)
+                      .QueryInterface(Ci.nsIDocShell);
 
     let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsISelectionDisplay)
-                             .QueryInterface(Ci.nsISelectionController);
+                              .getInterface(Ci.nsISelectionDisplay)
+                              .QueryInterface(Ci.nsISelectionController);
 
-    return controller;
+    let selection = controller.getSelection(Ci.nsISelectionController.SELECTION_FIND);
+    selection.setColors("currentColor", "#ffe900", "currentColor", "#003eaa");
+
+    return selection;
   },
 
   get strings() {
@@ -191,14 +200,14 @@ var gSearchResultsPane = {
    *    to search for filted query in
    */
   searchFunction(event) {
-    let query = event.target.value.trim().toLowerCase();
-    this.findSelection.removeAllRanges();
+    this.query = event.target.value.trim().toLowerCase();
+    this.getFindSelection(window).removeAllRanges();
     this.removeAllSearchTooltips();
     this.removeAllSearchMenuitemIndicators();
 
     let srHeader = document.getElementById("header-searchResults");
 
-    if (query) {
+    if (this.query) {
       // Showing the Search Results Tag
       gotoPref("paneSearchResults");
 
@@ -219,7 +228,7 @@ var gSearchResultsPane = {
       for (let i = 0; i < rootPreferencesChildren.length; i++) {
         if (rootPreferencesChildren[i].className != "header" &&
             rootPreferencesChildren[i].className != "no-results-message" &&
-            this.searchWithinNode(rootPreferencesChildren[i], query)) {
+            this.searchWithinNode(rootPreferencesChildren[i], this.query)) {
           rootPreferencesChildren[i].hidden = false;
           resultsFound = true;
         } else {
@@ -236,15 +245,15 @@ var gSearchResultsPane = {
         let strings = this.strings;
 
         document.getElementById("sorry-message").textContent = AppConstants.platform == "win" ?
-          strings.getFormattedString("searchResults.sorryMessageWin", [query]) :
-          strings.getFormattedString("searchResults.sorryMessageUnix", [query]);
+          strings.getFormattedString("searchResults.sorryMessageWin", [this.query]) :
+          strings.getFormattedString("searchResults.sorryMessageUnix", [this.query]);
         let helpUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "preferences";
         let brandName = document.getElementById("bundleBrand").getString("brandShortName");
         document.getElementById("need-help").innerHTML =
           strings.getFormattedString("searchResults.needHelp2", [helpUrl, brandName]);
       } else {
         // Creating tooltips for all the instances found
-        this.listSearchTooltips.forEach((node) => this.createSearchTooltip(node, query));
+        this.listSearchTooltips.forEach((anchorNode) => this.createSearchTooltip(anchorNode, this.query));
       }
     } else {
       this.searchResultsCategory.hidden = true;
@@ -368,25 +377,26 @@ var gSearchResultsPane = {
    * Inserting a div structure infront of the DOM element matched textContent.
    * Then calculation the offsets to position the tooltip in the correct place.
    *
-   * @param Node currentNode
+   * @param Node anchorNode
    *    DOM Element
    * @param String query
    *    Word or words that are being searched for
    */
-  createSearchTooltip(currentNode, query) {
-    let searchTooltip = document.createElement("span");
+  createSearchTooltip(anchorNode, query) {
+    let searchTooltip = anchorNode.ownerDocument.createElement("span");
     searchTooltip.setAttribute("class", "search-tooltip");
     searchTooltip.textContent = query;
 
-    currentNode.parentElement.classList.add("search-tooltip-parent");
-    currentNode.parentElement.appendChild(searchTooltip);
+    anchorNode.setAttribute("data-has-tooltip", "true");
+    anchorNode.parentElement.classList.add("search-tooltip-parent");
+    anchorNode.parentElement.appendChild(searchTooltip);
 
     // In order to get the up-to-date position of each of the nodes that we're
     // putting tooltips on, we have to flush layout intentionally, and that
     // this is the result of a XUL limitation (bug 1363730).
-    let anchorRect = currentNode.getBoundingClientRect();
+    let anchorRect = anchorNode.getBoundingClientRect();
     let tooltipRect = searchTooltip.getBoundingClientRect();
-    let parentRect = currentNode.parentElement.getBoundingClientRect();
+    let parentRect = anchorNode.parentElement.getBoundingClientRect();
 
     let offSet = (anchorRect.width / 2) - (tooltipRect.width / 2);
     let relativeOffset = anchorRect.left - parentRect.left;
@@ -404,6 +414,7 @@ var gSearchResultsPane = {
       searchTooltip.parentElement.classList.remove("search-tooltip-parent");
       searchTooltip.remove();
     }
+    this.listSearchTooltips.forEach((anchorNode) => anchorNode.removeAttribute("data-has-tooltip"));
     this.listSearchTooltips.clear();
   },
 

@@ -13,6 +13,7 @@ add_task(function* () {
   let repoStubFilePath = getTestFilePath("../stubs/networkEvent.js");
   let repoStubFileContent = yield OS.File.read(repoStubFilePath, { encoding: "utf-8" });
 
+  is(generatedStubs, repoStubFileContent, "Generated stub has the expected content");
   if (generatedStubs != repoStubFileContent) {
     ok(false, "The networkEvent stubs file needs to be updated by running " +
       "`mach test devtools/client/webconsole/new-console-output/test/fixtures/" +
