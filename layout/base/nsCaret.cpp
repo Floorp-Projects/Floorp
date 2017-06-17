@@ -671,6 +671,7 @@ void nsCaret::StopBlinking()
   if (mBlinkTimer)
   {
     mBlinkTimer->Cancel();
+    mBlinkRate = 0;
   }
 }
 
