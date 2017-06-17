@@ -591,6 +591,10 @@ GetBlur(gfxContext* aDestinationCtx,
     return nullptr;
   }
 
+  if (RefPtr<SourceSurface> opt = destDT->OptimizeSourceSurface(boxShadow)) {
+    boxShadow = opt;
+  }
+
   if (!useDestRect) {
     CacheBlur(destDT, minSize, aBlurRadius, aCornerRadii, aShadowColor,
               aOutBlurMargin, boxShadow);
@@ -1131,6 +1135,10 @@ gfxAlphaBoxBlur::GetInsetBlur(const Rect& aOuterRect,
   RefPtr<SourceSurface> minInsetBlur = DoBlur(&aShadowColor);
   if (!minInsetBlur) {
     return nullptr;
+  }
+
+  if (RefPtr<SourceSurface> opt = aDestDrawTarget->OptimizeSourceSurface(minInsetBlur)) {
+    minInsetBlur = opt;
   }
 
   if (!aIsDestRect) {

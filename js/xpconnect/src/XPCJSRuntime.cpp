@@ -139,12 +139,8 @@ public:
 
   nsresult Dispatch()
   {
-      nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
-      if (!thread) {
-          return NS_ERROR_FAILURE;
-      }
       nsCOMPtr<nsIRunnable> self(this);
-      return thread->IdleDispatch(self.forget());
+      return NS_IdleDispatchToCurrentThread(self.forget(), 1000);
   }
 
   void Start(bool aContinuation = false, bool aPurge = false)
