@@ -99,9 +99,6 @@ SERVO_BINDING_FUNC(Servo_StyleSet_ResolveForDeclarations,
 SERVO_BINDING_FUNC(Servo_StyleSet_MightHaveAttributeDependency, bool,
                    RawServoStyleSetBorrowed set,
                    nsIAtom* local_name)
-SERVO_BINDING_FUNC(Servo_StyleSet_HasStateDependency, bool,
-                   RawServoStyleSetBorrowed set,
-                   uint64_t state)
 
 // CSSRuleList
 SERVO_BINDING_FUNC(Servo_CssRules_ListTypes, void,
