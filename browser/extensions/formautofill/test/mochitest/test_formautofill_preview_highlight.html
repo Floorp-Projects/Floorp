@@ -123,6 +123,11 @@ add_task(async function check_preview() {
     checkFormPreviewFields(MOCK_STORAGE[i]);
   }
 
+  // Navigate to the footer
+  doKey("down");
+  await notifySelectedIndex(MOCK_STORAGE.length);
+  checkFormPreviewFields();
+
   doKey("down");
   await notifySelectedIndex(-1);
   checkFormPreviewFields();

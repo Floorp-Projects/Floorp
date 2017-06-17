@@ -55,9 +55,12 @@ public:
   virtual Layer* AsLayer() override { return this; }
   virtual void InvalidateRegion(const nsIntRegion& aRegion) override {
     mInvalidRegion.Add(aRegion);
-    nsIntRegion invalidRegion = mInvalidRegion.GetRegion();
-    mValidRegion.Sub(mValidRegion, invalidRegion);
-    mLowPrecisionValidRegion.Sub(mLowPrecisionValidRegion, invalidRegion);
+    UpdateValidRegionAfterInvalidRegionChanged();
+    if (!mLowPrecisionValidRegion.IsEmpty()) {
+      // Also update mLowPrecisionValidRegion. Unfortunately we call
+      // mInvalidRegion.GetRegion() here, which is expensive.
+      mLowPrecisionValidRegion.SubOut(mInvalidRegion.GetRegion());
+    }
   }
 
   // Shadow methods
@@ -114,7 +117,7 @@ private:
    * Helper function to do the high-precision paint.
    * This function returns true if it updated the paint buffer.
    */
-  bool RenderHighPrecision(nsIntRegion& aInvalidRegion,
+  bool RenderHighPrecision(const nsIntRegion& aInvalidRegion,
                            const nsIntRegion& aVisibleRegion,
                            LayerManager::DrawPaintedLayerCallback aCallback,
                            void* aCallbackData);
@@ -123,7 +126,7 @@ private:
    * Helper function to do the low-precision paint.
    * This function returns true if it updated the paint buffer.
    */
-  bool RenderLowPrecision(nsIntRegion& aInvalidRegion,
+  bool RenderLowPrecision(const nsIntRegion& aInvalidRegion,
                           const nsIntRegion& aVisibleRegion,
                           LayerManager::DrawPaintedLayerCallback aCallback,
                           void* aCallbackData);

@@ -794,21 +794,7 @@ public class LocalBrowserDB extends BrowserDB {
                         History.DATE_LAST_VISITED + " DESC");
     }
 
-    @Override
-    public Cursor getRecentHistoryBetweenTime(ContentResolver cr, int limit, long start, long end) {
-        return cr.query(combinedUriWithLimit(limit),
-                new String[] { Combined._ID,
-                        Combined.BOOKMARK_ID,
-                        Combined.HISTORY_ID,
-                        Combined.URL,
-                        Combined.TITLE,
-                        Combined.DATE_LAST_VISITED,
-                        Combined.VISITS },
-                History.DATE_LAST_VISITED + " >= " + start + " AND " + History.DATE_LAST_VISITED + " < " + end,
-                null,
-                History.DATE_LAST_VISITED + " DESC");
-    }
-
+    @Nullable
     public Cursor getHistoryForURL(ContentResolver cr, String uri) {
         return cr.query(mHistoryUriWithProfile,
                 new String[] {

@@ -46,10 +46,14 @@ DIRS += [
     '/hal',
     '/js/xpconnect',
     '/intl/chardet',
-    '/media/libyuv',
     '/modules/libjar',
     '/storage',
 ]
+
+if CONFIG['COMPILE_ENVIRONMENT']:
+    DIRS += [
+        '/media/libyuv',
+    ]
 
 if CONFIG['MOZ_PERMISSIONS']:
     DIRS += [
@@ -61,7 +65,7 @@ DIRS += [
     '/rdf',
 ]
 
-if CONFIG['MOZ_WEBRTC']:
+if CONFIG['MOZ_WEBRTC'] and CONFIG['COMPILE_ENVIRONMENT']:
     DIRS += [
         '/media/webrtc',
         '/media/mtransport',

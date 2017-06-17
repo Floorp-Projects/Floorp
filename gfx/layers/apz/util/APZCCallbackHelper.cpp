@@ -976,8 +976,7 @@ APZCCallbackHelper::NotifyPinchGesture(PinchGestureInput::PinchGestureType aType
       msg = eMagnifyGesture;
       break;
     case PinchGestureInput::PINCHGESTURE_SENTINEL:
-    default:
-      MOZ_ASSERT_UNREACHABLE("Invalid gesture type");
+      MOZ_ASSERT_UNREACHABLE("Invalid value");
       return;
   }
 

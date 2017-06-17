@@ -1,0 +1,11 @@
+ac_add_options --disable-compile-environment
+
+# Override any toolchain defines we've inherited from other mozconfigs.
+unset CC
+unset CXX
+unset HOST_CC
+unset HOST_CXX
+unset RUSTC
+unset CARGO
+unset MAKECAB
+unset TOOLCHAIN_PREFIX

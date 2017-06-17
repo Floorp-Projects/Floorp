@@ -341,6 +341,12 @@ public:
     }
   }
 
+  /**
+   * Checks whether the rule tree has crossed its threshold for unused nodes,
+   * and if so, frees them.
+   */
+  void MaybeGCRuleTree();
+
 #ifdef DEBUG
   void AssertTreeIsClean();
 #else
