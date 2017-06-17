@@ -809,6 +809,7 @@ public class LocalBrowserDB extends BrowserDB {
                 History.DATE_LAST_VISITED + " DESC");
     }
 
+    @Nullable
     public Cursor getHistoryForURL(ContentResolver cr, String uri) {
         return cr.query(mHistoryUriWithProfile,
                 new String[] {
