@@ -343,7 +343,7 @@ class ThreadHangStats;
  *               will be moved and aStats should be treated as
  *               invalid after this function returns
  */
-void RecordThreadHangStats(ThreadHangStats& aStats);
+void RecordThreadHangStats(ThreadHangStats&& aStats);
 
 /**
  * Record a failed attempt at locking the user's profile.

@@ -51,6 +51,10 @@ toolbar[brighttext] #pocket-button {
   }
 }
 
+#appMenu-library-pocket-button {
+  list-style-image: url("chrome://pocket-shared/skin/pocket-list.svg");
+}
+
 #panelMenu_pocket,
 #menu_pocket,
 #BMB_pocket {

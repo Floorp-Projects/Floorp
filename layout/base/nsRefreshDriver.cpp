@@ -239,10 +239,6 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (LastTickSkippedAnyPaints()) {
-      return TimeStamp::Now();
-    }
-
     TimeStamp mostRecentRefresh = MostRecentRefresh();
     TimeDuration refreshRate = GetTimerRate();
     TimeStamp idleEnd = mostRecentRefresh + refreshRate;

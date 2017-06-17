@@ -23,6 +23,8 @@ fivee sixx<br>
 
 <script class="testbody" type="application/javascript">
 
+let {onSpellCheck} = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
+
 /** Test for Bug 1100966 **/
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
@@ -37,12 +39,14 @@ SimpleTest.waitForFocus(function() {
       setTimeout(function() {
         synthesizeKey("VK_BACK_SPACE", {});
 
-        var sel = getSpellCheckSelection();
-        is(sel.rangeCount, 2, "We should have two misspelled words");
-        is(String(sel.getRangeAt(0)), "fivee", "Correct misspelled word");
-        is(String(sel.getRangeAt(1)), "sixx", "Correct misspelled word");
+        onSpellCheck(div, function() {
+          var sel = getSpellCheckSelection();
+          is(sel.rangeCount, 2, "We should have two misspelled words");
+          is(String(sel.getRangeAt(0)), "fivee", "Correct misspelled word");
+          is(String(sel.getRangeAt(1)), "sixx", "Correct misspelled word");
 
-        SimpleTest.finish();
+          SimpleTest.finish();
+        });
       },0);
     },0);
   });
