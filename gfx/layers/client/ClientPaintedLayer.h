@@ -19,11 +19,8 @@
 #include "mozilla/layers/PLayerTransaction.h" // for PaintedLayerAttributes
 
 namespace mozilla {
-namespace gfx {
-  class DrawEventRecorderMemory;
-};
-
 namespace layers {
+
 class CompositableClient;
 class ShadowableLayer;
 class SpecificLayerAttributes;
@@ -112,15 +109,6 @@ public:
 
 protected:
   void PaintThebes(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates);
-  void RecordThebes();
-  bool CanRecordLayer(ReadbackProcessor* aReadback);
-  bool HasMaskLayers();
-  already_AddRefed<gfx::DrawEventRecorderMemory> RecordPaintedLayer();
-  void ReplayPaintedLayer(DrawEventRecorderMemory* aRecorder);
-  bool EnsureContentClient();
-  uint32_t GetPaintFlags();
-  void UpdateContentClient(PaintState& aState);
-  bool UpdatePaintRegion(PaintState& aState);
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
