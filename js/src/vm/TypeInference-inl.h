@@ -405,11 +405,10 @@ PropertyHasBeenMarkedNonConstant(JSObject* obj, jsid id)
 }
 
 MOZ_ALWAYS_INLINE bool
-HasTypePropertyId(JSObject* obj, jsid id, TypeSet::Type type)
+HasTrackedPropertyType(JSObject* obj, jsid id, TypeSet::Type type)
 {
-    id = IdToTypeId(id);
-    if (!TrackPropertyTypes(obj, id))
-        return true;
+    MOZ_ASSERT(id == IdToTypeId(id));
+    MOZ_ASSERT(TrackPropertyTypes(obj, id));
 
     if (HeapTypeSet* types = obj->group()->maybeGetProperty(id)) {
         if (!types->hasType(type))
@@ -424,6 +423,16 @@ HasTypePropertyId(JSObject* obj, jsid id, TypeSet::Type type)
 }
 
 MOZ_ALWAYS_INLINE bool
+HasTypePropertyId(JSObject* obj, jsid id, TypeSet::Type type)
+{
+    id = IdToTypeId(id);
+    if (!TrackPropertyTypes(obj, id))
+        return true;
+
+    return HasTrackedPropertyType(obj, id, type);
+}
+
+MOZ_ALWAYS_INLINE bool
 HasTypePropertyId(JSObject* obj, jsid id, const Value& value)
 {
     return HasTypePropertyId(obj, id, TypeSet::GetValueType(value));
@@ -433,20 +442,18 @@ void AddTypePropertyId(JSContext* cx, ObjectGroup* group, JSObject* obj, jsid id
 void AddTypePropertyId(JSContext* cx, ObjectGroup* group, JSObject* obj, jsid id, const Value& value);
 
 /* Add a possible type for a property of obj. */
-inline void
+MOZ_ALWAYS_INLINE void
 AddTypePropertyId(JSContext* cx, JSObject* obj, jsid id, TypeSet::Type type)
 {
     id = IdToTypeId(id);
-    if (TrackPropertyTypes(obj, id))
+    if (TrackPropertyTypes(obj, id) && !HasTrackedPropertyType(obj, id, type))
         AddTypePropertyId(cx, obj->group(), obj, id, type);
 }
 
-inline void
+MOZ_ALWAYS_INLINE void
 AddTypePropertyId(JSContext* cx, JSObject* obj, jsid id, const Value& value)
 {
-    id = IdToTypeId(id);
-    if (TrackPropertyTypes(obj, id))
-        AddTypePropertyId(cx, obj->group(), obj, id, value);
+    return AddTypePropertyId(cx, obj, id, TypeSet::GetValueType(value));
 }
 
 inline void
@@ -830,7 +837,7 @@ struct TypeHashSet
 
     // Lookup an entry in a hash set, return nullptr if it does not exist.
     template <class T, class U, class KEY>
-    static inline U*
+    static MOZ_ALWAYS_INLINE U*
     Lookup(U** values, unsigned count, T key)
     {
         if (count == 0)
@@ -1126,7 +1133,7 @@ ObjectGroup::getProperty(JSContext* cx, JSObject* obj, jsid id)
     return &base->types;
 }
 
-inline HeapTypeSet*
+MOZ_ALWAYS_INLINE HeapTypeSet*
 ObjectGroup::maybeGetProperty(jsid id)
 {
     MOZ_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id) || JSID_IS_SYMBOL(id));

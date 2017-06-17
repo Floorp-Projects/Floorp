@@ -14,6 +14,7 @@
 #include "nsFocusManager.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsQueryObject.h"
+#include "mozilla/dom/ShadowRoot.h"
 
 // construction, destruction
 
@@ -268,17 +269,23 @@ HTMLLabelElement::GetLabeledElement() const
     return GetFirstLabelableDescendant();
   }
 
-  // We have a @for. The id has to be linked to an element in the same document
+  // We have a @for. The id has to be linked to an element in the same tree
   // and this element should be a labelable form control.
-  //XXXsmaug It is unclear how this should work in case the element is in
-  //         Shadow DOM.
-  //         See https://www.w3.org/Bugs/Public/show_bug.cgi?id=26365.
-  nsIDocument* doc = GetUncomposedDoc();
-  if (!doc) {
-    return nullptr;
+  nsINode* root = SubtreeRoot();
+  ShadowRoot* shadow = ShadowRoot::FromNode(root);
+  Element* element = nullptr;
+
+  if (shadow) {
+    element = shadow->GetElementById(elementId);
+  } else {
+    nsIDocument* doc = GetUncomposedDoc();
+    if (doc) {
+      element = doc->GetElementById(elementId);
+    } else {
+      element = nsContentUtils::MatchElementId(root->AsContent(), elementId);
+    }
   }
 
-  Element* element = doc->GetElementById(elementId);
   if (element && element->IsLabelable()) {
     return static_cast<nsGenericHTMLElement*>(element);
   }

@@ -955,20 +955,6 @@ public:
   virtual void UnsuppressPainting() = 0;
 
   /**
-   * Called to disable nsITheme support in a specific presshell.
-   */
-  void DisableThemeSupport()
-  {
-    // Doesn't have to be dynamic.  Just set the bool.
-    mIsThemeSupportDisabled = true;
-  }
-
-  /**
-   * Indicates whether theme support is enabled.
-   */
-  bool IsThemeSupportEnabled() const { return !mIsThemeSupportDisabled; }
-
-  /**
    * Get the set of agent style sheets for this presentation
    */
   virtual nsresult GetAgentStyleSheets(
@@ -1861,9 +1847,6 @@ protected:
 
   // For all documents we initially lock down painting.
   bool                      mPaintingSuppressed : 1;
-
-  // Whether or not form controls should use nsITheme in this shell.
-  bool                      mIsThemeSupportDisabled : 1;
 
   bool                      mIsActive : 1;
   bool                      mFrozen : 1;

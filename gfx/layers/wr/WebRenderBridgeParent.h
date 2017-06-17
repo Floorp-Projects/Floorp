@@ -247,8 +247,10 @@ private:
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   RefPtr<CompositorAnimationStorage> mAnimStorage;
   std::vector<wr::ImageKey> mKeysToDelete;
-  // XXX How to handle active keys of non-ExternalImages?
-  nsDataHashtable<nsUint64HashKey, wr::ImageKey> mActiveKeys;
+  // mActiveImageKeys and mFontKeys are used to avoid leaking animations when
+  // WebRenderBridgeParent is destroyed abnormally and Tab move between different windows.
+  std::unordered_set<uint64_t> mActiveImageKeys;
+  std::unordered_set<uint64_t> mFontKeys;
   // mActiveAnimations is used to avoid leaking animations when WebRenderBridgeParent is
   // destroyed abnormally and Tab move between different windows.
   std::unordered_set<uint64_t> mActiveAnimations;

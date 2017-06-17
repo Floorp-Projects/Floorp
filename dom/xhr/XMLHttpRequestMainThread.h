@@ -401,7 +401,8 @@ public:
                     ErrorResult& aRv);
 
   void
-  Abort() {
+  Abort()
+  {
     ErrorResult rv;
     Abort(rv);
     MOZ_ASSERT(!rv.Failed());
@@ -607,7 +608,20 @@ protected:
 
   nsresult DispatchToMainThread(already_AddRefed<nsIRunnable> aRunnable);
 
+  void DispatchOrStoreEvent(DOMEventTargetHelper* aTarget, Event* aEvent);
+
   already_AddRefed<nsXMLHttpRequestXPCOMifier> EnsureXPCOMifier();
+
+  void SuspendEventDispatching();
+  void ResumeEventDispatching();
+
+  struct PendingEvent
+  {
+    RefPtr<DOMEventTargetHelper> mTarget;
+    RefPtr<Event> mEvent;
+  };
+
+  nsTArray<PendingEvent> mPendingEvents;
 
   nsCOMPtr<nsISupports> mContext;
   nsCOMPtr<nsIPrincipal> mPrincipal;
@@ -836,6 +850,10 @@ protected:
 
   // Helper object to manage our XPCOM scriptability bits
   nsXMLHttpRequestXPCOMifier* mXPCOMifier;
+
+  // When this is set to true, the event dispatching is suspended. This is
+  // useful to change the correct state when XHR is working sync.
+  bool mEventDispatchingSuspended;
 
   static bool sDontWarnAboutSyncXHR;
 };

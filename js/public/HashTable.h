@@ -1613,6 +1613,7 @@ class HashTable : private AllocPolicy
     {
         METER(stats.rehashes++);
         removedCount = 0;
+        gen++;
         for (size_t i = 0; i < capacity(); ++i)
             table[i].unsetCollision();
 
@@ -1797,6 +1798,9 @@ class HashTable : private AllocPolicy
         if (!p.isValid())
             return false;
 
+        MOZ_ASSERT(p.generation == generation());
+        MOZ_ASSERT(p.mutationCount == mutationCount);
+
         // Changing an entry from removed to live does not affect whether we
         // are overloaded and can be handled separately.
         if (p.entry_->isRemoved()) {
@@ -1880,6 +1884,7 @@ class HashTable : private AllocPolicy
         MOZ_ASSERT(table);
         mozilla::ReentrancyGuard g(*this);
         MOZ_ASSERT(p.found());
+        MOZ_ASSERT(p.generation == generation());
         remove(*p.entry_);
         checkUnderloaded();
     }
@@ -1889,6 +1894,7 @@ class HashTable : private AllocPolicy
         MOZ_ASSERT(table);
         mozilla::ReentrancyGuard g(*this);
         MOZ_ASSERT(p.found());
+        MOZ_ASSERT(p.generation == generation());
         typename HashTableEntry<T>::NonConstT t(mozilla::Move(*p));
         HashPolicy::setKey(t, const_cast<Key&>(k));
         remove(*p.entry_);
