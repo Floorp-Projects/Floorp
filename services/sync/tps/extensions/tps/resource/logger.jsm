@@ -44,7 +44,7 @@ var Logger = {
     this._foStream.init(this._file, fileflags, 0o666, 0);
     this._converter = Cc["@mozilla.org/intl/converter-output-stream;1"]
                       .createInstance(Ci.nsIConverterOutputStream);
-    this._converter.init(this._foStream, "UTF-8", 0, 0);
+    this._converter.init(this._foStream, "UTF-8");
   },
 
   write(data) {

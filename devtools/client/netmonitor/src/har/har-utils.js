@@ -90,7 +90,7 @@ var HarUtils = {
 
       let convertor = Cc["@mozilla.org/intl/converter-output-stream;1"]
         .createInstance(Ci.nsIConverterOutputStream);
-      convertor.init(foStream, "UTF-8", 0, 0);
+      convertor.init(foStream, "UTF-8");
 
       // The entire jsonString can be huge so, write the data in chunks.
       let chunkLength = 1024 * 1024;

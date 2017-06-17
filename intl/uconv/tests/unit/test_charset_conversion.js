@@ -69,7 +69,7 @@ function test_utf8_1()
   for (var i = 0; i < UNICODE_STRINGS.length; i++)
   {
     var pipe = Pipe();
-    var conv = new COS(pipe.outputStream, "UTF-8", 1024, 0x0);
+    var conv = new COS(pipe.outputStream, "UTF-8");
     do_check_true(conv.writeString(UNICODE_STRINGS[i]));
     conv.close();
 

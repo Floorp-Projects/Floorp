@@ -551,7 +551,7 @@ function writeStringToFile(file, string) {
     stream.init(file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
                             FileUtils.MODE_TRUNCATE, FileUtils.PERMS_FILE,
                            0);
-    converter.init(stream, "UTF-8", 0, 0x0000);
+    converter.init(stream, "UTF-8");
     converter.writeString(string);
   } finally {
     converter.close();

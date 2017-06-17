@@ -31,7 +31,7 @@ function write_registry(version, info) {
   var charset = "UTF-8"; // Can be any character encoding name that Mozilla supports
   var os = Cc["@mozilla.org/intl/converter-output-stream;1"].
            createInstance(Ci.nsIConverterOutputStream);
-  os.init(foStream, charset, 0, 0x0000);
+  os.init(foStream, charset);
 
   os.writeString(header);
   os.writeString(info);
