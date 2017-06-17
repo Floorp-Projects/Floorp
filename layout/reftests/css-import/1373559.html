@@ -1,0 +1,10 @@
+<!doctype html>
+<title>CSS test for bug 1373559: Deleted @import rules no longer apply to the document.</title>
+<style></style>
+Shouldn't be red.
+<script>
+let sheet = document.styleSheets[0];
+sheet.insertRule("@import url(data:text/css,body{color:red})", 0);
+document.documentElement.offsetTop;
+sheet.deleteRule(0);
+</script>
