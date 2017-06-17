@@ -128,15 +128,15 @@ CompositorManagerParent::Bind(Endpoint<PCompositorManagerParent>&& aEndpoint)
 void
 CompositorManagerParent::ActorDestroy(ActorDestroyReason aReason)
 {
-  StaticMutexAutoLock lock(sMutex);
-  if (sInstance == this) {
-    sInstance = nullptr;
-  }
 }
 
 void
 CompositorManagerParent::DeallocPCompositorManagerParent()
 {
+  StaticMutexAutoLock lock(sMutex);
+  if (sInstance == this) {
+    sInstance = nullptr;
+  }
   Release();
 }
 
@@ -179,6 +179,7 @@ CompositorManagerParent::AllocPCompositorBridgeParent(const CompositorBridgeOpti
       // Note that the static mutex not only is used to protect sInstance, but
       // also mPendingCompositorBridges.
       StaticMutexAutoLock lock(sMutex);
+      MOZ_ASSERT(sInstance == this);
       MOZ_ASSERT(!mPendingCompositorBridges.IsEmpty());
 
       CompositorBridgeParent* bridge = mPendingCompositorBridges[0];
