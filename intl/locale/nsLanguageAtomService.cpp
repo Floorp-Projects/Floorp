@@ -8,13 +8,16 @@
 #include "nsUnicharUtils.h"
 #include "nsIAtom.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/intl/OSPreferences.h"
-#include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/intl/OSPreferences.h"
 #include "mozilla/ServoBindings.h"
 
 using namespace mozilla;
 using mozilla::intl::OSPreferences;
+
+static constexpr nsUConvProp encodingsGroups[] = {
+#include "encodingsgroups.properties.h"
+};
 
 static constexpr nsUConvProp kLangGroups[] = {
 #include "langGroups.properties.h"
@@ -46,7 +49,10 @@ already_AddRefed<nsIAtom>
 nsLanguageAtomService::LookupCharSet(const nsACString& aCharSet)
 {
   nsAutoCString group;
-  dom::EncodingUtils::LangGroupForEncoding(aCharSet, group);
+  if (NS_FAILED(nsUConvPropertySearch::SearchPropertyValue(
+      encodingsGroups, ArrayLength(encodingsGroups), aCharSet, group))) {
+    return RefPtr<nsIAtom>(nsGkAtoms::Unicode).forget();
+  }
   return NS_Atomize(group);
 }
 
