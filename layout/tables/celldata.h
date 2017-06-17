@@ -6,6 +6,7 @@
 #define CellData_h__
 
 #include "nsISupports.h"
+#include "nsITableCellLayout.h" // for MAX_COLSPAN / MAX_ROWSPAN
 #include "nsCoord.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/WritingModes.h"
@@ -15,10 +16,6 @@ class nsTableCellFrame;
 class nsCellMap;
 class BCCellData;
 
-
-#define MAX_ROWSPAN 65534 // the cellmap can not handle more.
-#define MAX_COLSPAN 1000 // limit as IE and opera do.  If this ever changes,
-                         // change COL_SPAN_OFFSET/COL_SPAN_SHIFT accordingly.
 
 /**
   * Data stored by nsCellMap to rationalize rowspan and colspan cells.
