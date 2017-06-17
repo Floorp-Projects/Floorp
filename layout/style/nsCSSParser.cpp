@@ -4938,6 +4938,7 @@ CSSParserImpl::ParseCounterStyleName(bool aForDefinition)
   static const nsCSSKeyword kReservedNames[] = {
     eCSSKeyword_none,
     eCSSKeyword_decimal,
+    eCSSKeyword_disc,
     eCSSKeyword_UNKNOWN
   };
 

@@ -7,7 +7,6 @@ use cssparser::{Parser, ParserInput};
 use cssparser::ToCss as ParserToCss;
 use env_logger::LogBuilder;
 use selectors::Element;
-use std::borrow::Cow;
 use std::env;
 use std::fmt::Write;
 use std::ptr;
@@ -301,7 +300,7 @@ pub extern "C" fn Servo_TraverseSubtree(root: RawGeckoElementBorrowed,
         return false;
     }
 
-    element.has_dirty_descendants() || element.borrow_data().unwrap().has_restyle()
+    element.has_dirty_descendants() || element.borrow_data().unwrap().restyle.contains_restyle_data()
 }
 
 #[no_mangle]
@@ -1652,7 +1651,9 @@ pub extern "C" fn Servo_ParseEasing(easing: *const nsAString,
                                      QuirksMode::NoQuirks);
     let easing = unsafe { (*easing).to_string() };
     let mut input = ParserInput::new(&easing);
-    match transition_timing_function::single_value::parse(&context, &mut Parser::new(&mut input)) {
+    let mut parser = Parser::new(&mut input);
+    let result = transition_timing_function::single_value::parse(&context, &mut parser);
+    match result {
         Ok(parsed_easing) => {
             *output = parsed_easing.into();
             true
@@ -1826,7 +1827,7 @@ pub extern "C" fn Servo_DeclarationBlock_GetNthProperty(declarations: RawServoDe
 macro_rules! get_property_id_from_property {
     ($property: ident, $ret: expr) => {{
         let property = unsafe { $property.as_ref().unwrap().as_str_unchecked() };
-        match PropertyId::parse(Cow::Borrowed(property)) {
+        match PropertyId::parse(property.into()) {
             Ok(property_id) => property_id,
             Err(_) => { return $ret; }
         }
@@ -2351,7 +2352,8 @@ pub extern "C" fn Servo_DeclarationBlock_SetFontFamily(declarations:
     let string = unsafe { (*value).to_string() };
     let mut input = ParserInput::new(&string);
     let mut parser = Parser::new(&mut input);
-    if let Ok(family) = FontFamily::parse(&mut parser) {
+    let result = FontFamily::parse(&mut parser);
+    if let Ok(family) = result {
         if parser.is_exhausted() {
             let decl = PropertyDeclaration::FontFamily(Box::new(family));
             write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
@@ -2461,7 +2463,7 @@ unsafe fn maybe_restyle<'a>(data: &'a mut AtomicRefMut<ElementData>,
     bindings::Gecko_SetOwnerDocumentNeedsStyleFlush(element.0);
 
     // Ensure and return the RestyleData.
-    Some(data.ensure_restyle())
+    Some(&mut data.restyle)
 }
 
 #[no_mangle]
@@ -2518,13 +2520,16 @@ pub extern "C" fn Servo_NoteExplicitHints(element: RawGeckoElementBorrowed,
 pub extern "C" fn Servo_TakeChangeHint(element: RawGeckoElementBorrowed) -> nsChangeHint
 {
     let element = GeckoElement(element);
-    let damage = if let Some(mut data) = element.mutate_data() {
-        let d = data.get_restyle().map_or(GeckoRestyleDamage::empty(), |r| r.damage);
-        data.clear_restyle();
-        d
-    } else {
-        warn!("Trying to get change hint from unstyled element");
-        GeckoRestyleDamage::empty()
+    let damage = match element.mutate_data() {
+        Some(mut data) => {
+            let damage = data.restyle.damage;
+            data.clear_restyle_state();
+            damage
+        }
+        None => {
+            warn!("Trying to get change hint from unstyled element");
+            GeckoRestyleDamage::empty()
+        }
     };
 
     debug!("Servo_TakeChangeHint: {:?}, damage={:?}", element, damage);

@@ -24,7 +24,7 @@ describe("NetworkEventMessage component:", () => {
   describe("GET request", () => {
     it("renders as expected", () => {
       const message = stubPreparedMessages.get("GET request");
-      const update = stubPreparedMessages.get("GET request eventTimings");
+      const update = stubPreparedMessages.get("GET request update");
       const wrapper = render(NetworkEventMessage({
         message,
         serviceContainer,
@@ -43,7 +43,7 @@ describe("NetworkEventMessage component:", () => {
     });
 
     it("does not have a timestamp when timestampsVisible prop is falsy", () => {
-      const message = stubPreparedMessages.get("GET request eventTimings");
+      const message = stubPreparedMessages.get("GET request update");
       const wrapper = render(NetworkEventMessage({
         message,
         serviceContainer,
@@ -69,7 +69,7 @@ describe("NetworkEventMessage component:", () => {
   describe("XHR GET request", () => {
     it("renders as expected", () => {
       const message = stubPreparedMessages.get("XHR GET request");
-      const update = stubPreparedMessages.get("XHR GET request eventTimings");
+      const update = stubPreparedMessages.get("XHR GET request update");
       const wrapper = render(NetworkEventMessage({
         message,
         serviceContainer,
@@ -87,7 +87,7 @@ describe("NetworkEventMessage component:", () => {
   describe("XHR POST request", () => {
     it("renders as expected", () => {
       const message = stubPreparedMessages.get("XHR POST request");
-      const update = stubPreparedMessages.get("XHR POST request eventTimings");
+      const update = stubPreparedMessages.get("XHR POST request update");
       const wrapper = render(NetworkEventMessage({
         message,
         serviceContainer,

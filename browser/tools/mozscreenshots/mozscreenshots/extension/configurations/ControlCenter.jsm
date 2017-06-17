@@ -16,7 +16,7 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 
 let {UrlClassifierTestUtils} = Cu.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
 
-const RESOURCE_PATH = "extensions/mozscreenshots/browser/chrome/mozscreenshots/lib/controlCenter";
+const RESOURCE_PATH = "browser/browser/tools/mozscreenshots/mozscreenshots/extension/mozscreenshots/browser/chrome/mozscreenshots/lib/controlCenter";
 const HTTP_PAGE = "http://example.com/";
 const HTTPS_PAGE = "https://example.com/";
 const PERMISSIONS_PAGE = "https://test1.example.com/";

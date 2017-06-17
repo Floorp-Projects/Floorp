@@ -98,12 +98,9 @@ public:
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
 
-  /**
-   * Update the style of our ::-moz-button-content anonymous box.
-   */
-  void DoUpdateStyleOfOwnedAnonBoxes(mozilla::ServoStyleSet& aStyleSet,
-                                     nsStyleChangeList& aChangeList,
-                                     nsChangeHint aHintForThisFrame) override;
+  // Return the ::-moz-button-content anonymous box.
+  void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
+
 protected:
   nsHTMLButtonControlFrame(nsStyleContext* aContext, nsIFrame::ClassID aID);
 

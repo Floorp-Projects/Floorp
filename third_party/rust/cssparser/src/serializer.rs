@@ -5,7 +5,7 @@
 use std::ascii::AsciiExt;
 use std::fmt::{self, Write};
 
-use super::{Token, NumericValue, PercentageValue};
+use super::Token;
 
 
 /// Trait for things the can serialize themselves in CSS syntax.
@@ -43,20 +43,21 @@ pub trait ToCss {
 
 
 #[inline]
-fn write_numeric<W>(value: NumericValue, dest: &mut W) -> fmt::Result where W: fmt::Write {
+fn write_numeric<W>(value: f32, int_value: Option<i32>, has_sign: bool, dest: &mut W)
+                    -> fmt::Result where W: fmt::Write {
     // `value.value >= 0` is true for negative 0.
-    if value.has_sign && value.value.is_sign_positive() {
+    if has_sign && value.is_sign_positive() {
         try!(dest.write_str("+"));
     }
 
-    if value.value == 0.0 && value.value.is_sign_negative() {
+    if value == 0.0 && value.is_sign_negative() {
         // Negative zero. Work around #20596.
         try!(dest.write_str("-0"))
     } else {
-        try!(write!(dest, "{}", value.value))
+        try!(write!(dest, "{}", value))
     }
 
-    if value.int_value.is_none() && value.value.fract() == 0. {
+    if int_value.is_none() && value.fract() == 0. {
         try!(dest.write_str(".0"));
     }
     Ok(())
@@ -87,18 +88,15 @@ impl<'a> ToCss for Token<'a> {
             },
             Token::Delim(value) => try!(write!(dest, "{}", value)),
 
-            Token::Number(value) => try!(write_numeric(value, dest)),
-            Token::Percentage(PercentageValue { unit_value, int_value, has_sign }) => {
-                let value = NumericValue {
-                    value: unit_value * 100.,
-                    int_value: int_value,
-                    has_sign: has_sign,
-                };
-                try!(write_numeric(value, dest));
+            Token::Number { value, int_value, has_sign } => {
+                try!(write_numeric(value, int_value, has_sign, dest))
+            }
+            Token::Percentage { unit_value, int_value, has_sign } => {
+                try!(write_numeric(unit_value * 100., int_value, has_sign, dest));
                 try!(dest.write_str("%"));
             },
-            Token::Dimension(value, ref unit) => {
-                try!(write_numeric(value, dest));
+            Token::Dimension { value, int_value, has_sign, ref unit } => {
+                try!(write_numeric(value, int_value, has_sign, dest));
                 // Disambiguate with scientific notation.
                 let unit = &**unit;
                 if unit == "e" || unit == "E" || unit.starts_with("e-") || unit.starts_with("E-") {
@@ -389,9 +387,9 @@ impl<'a> Token<'a> {
             Token::Delim('|') => DelimBar,
             Token::Delim('/') => DelimSlash,
             Token::Delim('*') => DelimAsterisk,
-            Token::Number(_) => Number,
-            Token::Percentage(_) => Percentage,
-            Token::Dimension(..) => Dimension,
+            Token::Number { .. } => Number,
+            Token::Percentage { .. } => Percentage,
+            Token::Dimension { .. } => Dimension,
             Token::WhiteSpace(_) => WhiteSpace,
             Token::Comment(_) => DelimSlash,
             Token::DashMatch => DashMatch,

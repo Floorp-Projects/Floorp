@@ -13,7 +13,7 @@ Cu.import("resource:///modules/E10SUtils.jsm");
 Cu.import("resource://testing-common/ContentTask.jsm");
 Cu.import("resource://testing-common/BrowserTestUtils.jsm");
 
-const URL = "https://test1.example.com/extensions/mozscreenshots/browser/chrome/mozscreenshots/lib/permissionPrompts.html";
+const URL = "https://test1.example.com/browser/browser/tools/mozscreenshots/mozscreenshots/extension/mozscreenshots/browser/chrome/mozscreenshots/lib/permissionPrompts.html";
 let lastTab = null;
 
 this.PermissionPrompts = {

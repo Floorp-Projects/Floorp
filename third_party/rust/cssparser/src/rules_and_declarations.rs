@@ -4,10 +4,10 @@
 
 // https://drafts.csswg.org/css-syntax/#parsing
 
+use compact_cow_str::CompactCowStr;
 use parser::{parse_until_before, parse_until_after, parse_nested_block};
 use std::ascii::AsciiExt;
 use std::ops::Range;
-use std::borrow::Cow;
 use super::{Token, Parser, Delimiter, SourcePosition, ParseError, BasicParseError};
 
 
@@ -72,7 +72,7 @@ pub trait DeclarationParser<'i> {
     /// If `!important` can be used in a given context,
     /// `input.try(parse_important).is_ok()` should be used at the end
     /// of the implementation of this method and the result should be part of the return value.
-    fn parse_value<'t>(&mut self, name: Cow<'i, str>, input: &mut Parser<'i, 't>)
+    fn parse_value<'t>(&mut self, name: CompactCowStr<'i>, input: &mut Parser<'i, 't>)
                        -> Result<Self::Declaration, ParseError<'i, Self::Error>>;
 }
 
@@ -112,7 +112,7 @@ pub trait AtRuleParser<'i> {
     /// The given `input` is a "delimited" parser
     /// that ends wherever the prelude should end.
     /// (Before the next semicolon, the next `{`, or the end of the current block.)
-    fn parse_prelude<'t>(&mut self, name: Cow<'i, str>, input: &mut Parser<'i, 't>)
+    fn parse_prelude<'t>(&mut self, name: CompactCowStr<'i>, input: &mut Parser<'i, 't>)
                      -> Result<AtRuleType<Self::Prelude, Self::AtRule>, ParseError<'i, Self::Error>> {
         let _ = name;
         let _ = input;
@@ -407,7 +407,7 @@ pub struct PreciseParseError<'i, E: 'i> {
     pub span: Range<SourcePosition>,
 }
 
-fn parse_at_rule<'i: 't, 't, P, E>(start_position: SourcePosition, name: Cow<'i, str>,
+fn parse_at_rule<'i: 't, 't, P, E>(start_position: SourcePosition, name: CompactCowStr<'i>,
                                    input: &mut Parser<'i, 't>, parser: &mut P)
                                    -> Result<<P as AtRuleParser<'i>>::AtRule, PreciseParseError<'i, E>>
                                    where P: AtRuleParser<'i, Error = E> {

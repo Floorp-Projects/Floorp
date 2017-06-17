@@ -64,15 +64,15 @@ fn parse_tokens<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(), BasicParseErro
             }
             parse_question_marks(input)
         }
-        Token::Dimension(..) => {
+        Token::Dimension { .. } => {
             parse_question_marks(input)
         }
-        Token::Number(_) => {
+        Token::Number { .. } => {
             let after_number = input.position();
             match input.next_including_whitespace() {
                 Ok(Token::Delim('?')) => parse_question_marks(input),
-                Ok(Token::Dimension(..)) => {}
-                Ok(Token::Number(_)) => {}
+                Ok(Token::Dimension { .. }) => {}
+                Ok(Token::Number { .. }) => {}
                 _ => input.reset(after_number)
             }
         }

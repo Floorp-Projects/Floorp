@@ -75,4 +75,11 @@ interface nsIUrlListManager : nsISupports
      * for the update url. Update may still fail because of backoff algorithm.
      */
     boolean checkForUpdates(in ACString updateUrl);
+
+    /**
+     * This is currently used by about:url-classifier to get back-off time
+     * (in millisecond since epoch) for the given provider. Return 0 if we
+     * are not in back-off mode.
+     */
+    uint64_t getBackOffTime(in ACString provider);
 };

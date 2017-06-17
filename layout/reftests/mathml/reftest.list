@@ -294,8 +294,8 @@ fails-if(Android||OSX) == mathvariant-2.html mathvariant-2-ref.html # Bugs 10106
 == mathvariant-4.html mathvariant-4-ref.html
 == mathvariant-5.html mathvariant-5-ref.html
 == dtls-1.html dtls-1-ref.html
-fails-if(styloVsGecko||stylo) == dtls-2.html dtls-2-ref.html # bug 1366206
-fails-if(styloVsGecko||stylo) == dtls-3.html dtls-3-ref.html # bug 1366206
+== dtls-2.html dtls-2-ref.html
+== dtls-3.html dtls-3-ref.html
 == ssty-1.html ssty-1-ref.html
 == ssty-2.html ssty-2-ref.html
 == ssty-3.html ssty-3-ref.html

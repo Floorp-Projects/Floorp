@@ -816,6 +816,7 @@ add_task(async function test_clients_not_in_fxa_list() {
 
   let fxAccounts = engine.fxAccounts;
   engine.fxAccounts = {
+    notifyDevices() { return Promise.resolve(true); },
     getDeviceId() { return fxAccounts.getDeviceId(); },
     getDeviceList() { return Promise.resolve([{ id: remoteId }]); }
   };
@@ -1439,17 +1440,18 @@ add_task(async function test_command_sync() {
     engine._sync();
     equal(collection.count(), 3, "3 remote records written (+1 for the synced local record)");
 
-    let notifiedIds;
     engine.sendCommand("wipeAll", []);
     engine._tracker.addChangedID(engine.localID);
-    engine.getClientFxaDeviceId = (id) => "fxa-" + id;
-    engine._notifyCollectionChanged = (ids) => (notifiedIds = ids);
+    const getClientFxaDeviceId = sinon.stub(engine, "getClientFxaDeviceId", (id) => "fxa-" + id);
+    const engineMock = sinon.mock(engine);
+    let _notifyCollectionChanged = engineMock.expects("_notifyCollectionChanged")
+                                             .withArgs(["fxa-" + remoteId, "fxa-" + remoteId2]);
     _("Syncing.");
     engine._sync();
-    deepEqual(notifiedIds, ["fxa-fake-guid-00", "fxa-fake-guid-01"]);
-    ok(!notifiedIds.includes(engine.getClientFxaDeviceId(engine.localID)),
-      "We never notify the local device");
+    _notifyCollectionChanged.verify();
 
+    engineMock.restore();
+    getClientFxaDeviceId.restore();
   } finally {
     cleanup();
     engine._tracker.clearChangedIDs();
@@ -1535,6 +1537,42 @@ add_task(async function ensureSameFlowIDs() {
 
   } finally {
     Service.recordTelemetryEvent = origRecordTelemetryEvent;
+  }
+});
+
+add_task(async function test_other_clients_notified_on_first_sync() {
+  _("Ensure that other clients are notified when we upload our client record for the first time.");
+
+  engine.resetLastSync();
+  engine._store.wipe();
+  generateNewKeys(Service.collectionKeys);
+
+  let server = serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  const fxAccounts = engine.fxAccounts;
+  let calls = 0;
+  engine.fxAccounts = {
+    getDeviceId() { return fxAccounts.getDeviceId(); },
+    notifyDevices() {
+      calls++;
+      return Promise.resolve(true);
+    }
+  };
+
+  try {
+    engine.lastRecordUpload = 0;
+    _("First sync, should notify other clients");
+    engine._sync();
+    equal(calls, 1);
+
+    _("Second sync, should not notify other clients");
+    engine._sync();
+    equal(calls, 1);
+  } finally {
+    engine.fxAccounts = fxAccounts;
+    cleanup();
+    await promiseStopServer(server);
   }
 });
 

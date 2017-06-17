@@ -220,7 +220,6 @@
 #include "nsIWebNavigationInfo.h"
 #include "nsPluginHost.h"
 #include "mozilla/HangAnnotations.h"
-#include "mozilla/ServoRestyleManager.h"
 #include "mozilla/Encoding.h"
 
 #include "nsIBidiKeyboard.h"
@@ -2317,7 +2316,17 @@ nsContentUtils::IsCallerChrome()
 bool
 nsContentUtils::ShouldResistFingerprinting()
 {
-  return nsRFPService::IsResistFingerprintingEnabled();
+  if (NS_IsMainThread()) {
+    return nsRFPService::IsResistFingerprintingEnabled();
+  }
+
+  workers::WorkerPrivate* workerPrivate = workers::GetCurrentThreadWorkerPrivate();
+  if (NS_WARN_IF(!workerPrivate)) {
+    return false;
+  }
+  workerPrivate->AssertIsOnWorkerThread();
+
+  return workerPrivate->ResistFingerprintingEnabled();
 }
 
 bool
@@ -2327,7 +2336,7 @@ nsContentUtils::ShouldResistFingerprinting(nsIDocShell* aDocShell)
     return false;
   }
   bool isChrome = nsContentUtils::IsChromeDoc(aDocShell->GetDocument());
-  return !isChrome && nsRFPService::IsResistFingerprintingEnabled();
+  return !isChrome && ShouldResistFingerprinting();
 }
 
 /* static */
@@ -5324,12 +5333,6 @@ void
 nsContentUtils::DestroyAnonymousContent(nsCOMPtr<nsIContent>* aContent)
 {
   if (*aContent) {
-    // Don't wait until UnbindFromTree to clear ServoElementData, since
-    // leak checking at shutdown can run before the AnonymousContentDestroyer
-    // runs.
-    if ((*aContent)->IsStyledByServo() && (*aContent)->IsElement()) {
-      ServoRestyleManager::ClearServoDataFromSubtree((*aContent)->AsElement());
-    }
     AddScriptRunner(new AnonymousContentDestroyer(aContent));
   }
 }
@@ -5339,12 +5342,6 @@ void
 nsContentUtils::DestroyAnonymousContent(nsCOMPtr<Element>* aElement)
 {
   if (*aElement) {
-    // Don't wait until UnbindFromTree to clear ServoElementData, since
-    // leak checking at shutdown can run before the AnonymousContentDestroyer
-    // runs.
-    if ((*aElement)->IsStyledByServo()) {
-      ServoRestyleManager::ClearServoDataFromSubtree(*aElement);
-    }
     AddScriptRunner(new AnonymousContentDestroyer(aElement));
   }
 }
