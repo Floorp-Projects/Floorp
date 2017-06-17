@@ -2906,6 +2906,67 @@ CharSplitHelper(JSContext* cx, HandleLinearString str, uint32_t limit, HandleObj
     return NewCopiedArrayTryUseGroup(cx, group, splits.begin(), splits.length());
 }
 
+template <typename TextChar>
+static MOZ_ALWAYS_INLINE JSObject*
+SplitSingleCharHelper(JSContext* cx, HandleLinearString str, const TextChar* text,
+                      uint32_t textLen, char16_t patCh, HandleObjectGroup group)
+{
+    // Count the number of occurrences of patCh within text.
+    uint32_t count = 0;
+    for (size_t index = 0; index < textLen; index++) {
+        if (static_cast<char16_t>(text[index]) == patCh)
+            count++;
+    }
+
+    // Handle zero-occurrence case - return input string in an array.
+    if (count == 0) {
+        RootedValue strValue(cx, StringValue(str.get()));
+        return NewCopiedArrayTryUseGroup(cx, group, &strValue.get(), 1);
+    }
+
+    // Reserve memory for substring values.
+    AutoValueVector splits(cx);
+    if (!splits.reserve(count + 1))
+        return nullptr;
+
+    // Add substrings.
+    size_t lastEndIndex = 0;
+    for (size_t index = 0; index < textLen; index++) {
+        if (static_cast<char16_t>(text[index]) == patCh) {
+            size_t subLength = size_t(index - lastEndIndex);
+            JSString* sub = NewDependentString(cx, str, lastEndIndex, subLength);
+            if (!sub || !splits.append(StringValue(sub)))
+                return nullptr;
+            lastEndIndex = index + 1;
+        }
+    }
+
+    // Add substring for tail of string (after last match).
+    JSString* sub = NewDependentString(cx, str, lastEndIndex, textLen - lastEndIndex);
+    if (!sub || !splits.append(StringValue(sub)))
+        return nullptr;
+
+    return NewCopiedArrayTryUseGroup(cx, group, splits.begin(), splits.length());
+}
+
+// ES 2016 draft Mar 25, 2016 21.1.3.17 steps 4, 8, 12-18.
+static JSObject*
+SplitSingleCharHelper(JSContext* cx, HandleLinearString str, char16_t ch, HandleObjectGroup group) {
+
+    // Step 12.
+    size_t strLength = str->length();
+
+    AutoStableStringChars linearChars(cx);
+    if (!linearChars.init(cx, str))
+        return nullptr;
+
+    if (linearChars.isLatin1()) {
+        return SplitSingleCharHelper(cx, str, linearChars.latin1Chars(), strLength, ch, group);
+    } else {
+        return SplitSingleCharHelper(cx, str, linearChars.twoByteChars(), strLength, ch, group);
+    }
+}
+
 // ES 2016 draft Mar 25, 2016 21.1.3.17 steps 4, 8, 12-18.
 JSObject*
 js::str_split_string(JSContext* cx, HandleObjectGroup group, HandleString str, HandleString sep, uint32_t limit)
@@ -2921,6 +2982,11 @@ js::str_split_string(JSContext* cx, HandleObjectGroup group, HandleString str, H
 
     if (linearSep->length() == 0)
         return CharSplitHelper(cx, linearStr, limit, group);
+
+    if (linearSep->length() == 1 && limit >= static_cast<uint32_t>(INT32_MAX)) {
+        char16_t ch = linearSep->latin1OrTwoByteChar(0);
+        return SplitSingleCharHelper(cx, linearStr, ch, group);
+    }
 
     return SplitHelper(cx, linearStr, limit, linearSep, group);
 }

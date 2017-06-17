@@ -9,6 +9,7 @@
 #include "base/compiler_specific.h"
 #include "mozilla/ArrayUtils.h"
 #include "nsGkAtoms.h"
+#include "nsITableCellLayout.h" // for MAX_COLSPAN / MAX_ROWSPAN
 #include "nsCRT.h"
 #include "nsLayoutStylesheetCache.h"
 #include "nsRuleData.h"
@@ -146,8 +147,10 @@ nsMathMLElement::ParseAttribute(int32_t aNamespaceID,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult)
 {
+  MOZ_ASSERT(IsMathMLElement());
+
   if (aNamespaceID == kNameSpaceID_None) {
-    if (IsMathMLElement(nsGkAtoms::math) && aAttribute == nsGkAtoms::mode) {
+    if (mNodeInfo->Equals(nsGkAtoms::math) && aAttribute == nsGkAtoms::mode) {
       WarnDeprecated(nsGkAtoms::mode->GetUTF16String(),
                      nsGkAtoms::display->GetUTF16String(), OwnerDoc());
     }
@@ -160,6 +163,16 @@ nsMathMLElement::ParseAttribute(int32_t aNamespaceID,
         aAttribute == nsGkAtoms::background ||
         aAttribute == nsGkAtoms::mathbackground_) {
       return aResult.ParseColor(aValue);
+    }
+    if (mNodeInfo->Equals(nsGkAtoms::mtd_)) {
+      if (aAttribute == nsGkAtoms::columnspan_) {
+        aResult.ParseClampedNonNegativeInt(aValue, 1, 1, MAX_COLSPAN);
+        return true;
+      }
+      if (aAttribute == nsGkAtoms::rowspan) {
+        aResult.ParseClampedNonNegativeInt(aValue, 1, 0, MAX_ROWSPAN);
+        return true;
+      }
     }
   }
 
@@ -205,6 +218,8 @@ static Element::MappedAttributeEntry sDirStyles[] = {
 bool
 nsMathMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
+  MOZ_ASSERT(IsMathMLElement());
+
   static const MappedAttributeEntry* const mtableMap[] = {
     sMtableStyles,
     sCommonPresStyles
@@ -236,10 +251,10 @@ nsMathMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
   if (IsAnyOfMathMLElements(nsGkAtoms::mstyle_, nsGkAtoms::math))
     return FindAttributeDependence(aAttribute, mstyleMap);
 
-  if (IsMathMLElement(nsGkAtoms::mtable_))
+  if (mNodeInfo->Equals(nsGkAtoms::mtable_))
     return FindAttributeDependence(aAttribute, mtableMap);
 
-  if (IsMathMLElement(nsGkAtoms::mrow_))
+  if (mNodeInfo->Equals(nsGkAtoms::mrow_))
     return FindAttributeDependence(aAttribute, mrowMap);
 
   if (IsAnyOfMathMLElements(nsGkAtoms::maction_,

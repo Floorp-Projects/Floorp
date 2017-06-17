@@ -340,7 +340,6 @@ protected:
 
     nsCOMPtr<nsIIdleServiceInternal> mIdleService;
 
-    bool mAwaitingFullScreen;
     bool mIsFullScreen;
 
     bool UseExternalCompositingSurface() const override {

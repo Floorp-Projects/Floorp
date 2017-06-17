@@ -1161,47 +1161,6 @@ nsMathMLmtdFrame::Init(nsIContent*       aContent,
   RemoveStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT);
 }
 
-int32_t
-nsMathMLmtdFrame::GetRowSpan()
-{
-  int32_t rowspan = 1;
-
-  // Don't look at the content's rowspan if we're not an mtd or a pseudo cell.
-  if (mContent->IsMathMLElement(nsGkAtoms::mtd_) &&
-      !StyleContext()->GetPseudo()) {
-    nsAutoString value;
-    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rowspan, value);
-    if (!value.IsEmpty()) {
-      nsresult error;
-      rowspan = value.ToInteger(&error);
-      if (NS_FAILED(error) || rowspan < 0)
-        rowspan = 1;
-      rowspan = std::min(rowspan, MAX_ROWSPAN);
-    }
-  }
-  return rowspan;
-}
-
-int32_t
-nsMathMLmtdFrame::GetColSpan()
-{
-  int32_t colspan = 1;
-
-  // Don't look at the content's colspan if we're not an mtd or a pseudo cell.
-  if (mContent->IsMathMLElement(nsGkAtoms::mtd_) &&
-      !StyleContext()->GetPseudo()) {
-    nsAutoString value;
-    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::columnspan_, value);
-    if (!value.IsEmpty()) {
-      nsresult error;
-      colspan = value.ToInteger(&error);
-      if (NS_FAILED(error) || colspan <= 0 || colspan > MAX_COLSPAN)
-        colspan = 1;
-    }
-  }
-  return colspan;
-}
-
 nsresult
 nsMathMLmtdFrame::AttributeChanged(int32_t  aNameSpaceID,
                                    nsIAtom* aAttribute,

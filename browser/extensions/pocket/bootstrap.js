@@ -9,7 +9,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu, manager: Cm} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/utils.js");
-Cu.import("resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
@@ -318,7 +317,7 @@ var PocketOverlay = {
     for (let window of CustomizableUI.windows) {
       for (let id of ["panelMenu_pocket", "menu_pocket", "BMB_pocket",
                       "panelMenu_pocketSeparator", "menu_pocketSeparator",
-                      "BMB_pocketSeparator"]) {
+                      "BMB_pocketSeparator", "appMenu-library-pocket-button"]) {
         let element = window.document.getElementById(id);
         if (element)
           element.remove();
@@ -412,6 +411,19 @@ var PocketOverlay = {
       sib.parentNode.insertBefore(sep, sib);
       sib.parentNode.insertBefore(menu, sib);
     }
+
+    // Add to library panel
+    sib = document.getElementById("appMenu-library-history-button");
+    if (sib && !document.getElementById("appMenu-library-pocket-button")) {
+      let menu = createElementWithAttrs(document, "toolbarbutton", {
+        "id": "appMenu-library-pocket-button",
+        "label": gPocketBundle.GetStringFromName("pocketMenuitem.label"),
+        "class": "subviewbutton subviewbutton-iconic",
+        "oncommand": "openUILink(Pocket.listURL, event);",
+        "hidden": hidden
+      });
+      sib.parentNode.insertBefore(menu, sib);
+    }
   },
   onWidgetAfterDOMChange(aWidgetNode) {
     if (aWidgetNode.id != "pocket-button") {
@@ -419,11 +431,20 @@ var PocketOverlay = {
     }
     let doc = aWidgetNode.ownerDocument;
     let hidden = !CustomizableUI.getPlacementOfWidget("pocket-button");
-    for (let prefix of ["panelMenu_", "menu_", "BMB_"]) {
-      let element = doc.getElementById(prefix + "pocket");
+    let elementIds = [
+      "panelMenu_pocket",
+      "menu_pocket",
+      "BMB_pocket",
+      "appMenu-library-pocket-button",
+    ];
+    for (let elementId of elementIds) {
+      let element = doc.getElementById(elementId);
       if (element) {
         element.hidden = hidden;
-        doc.getElementById(prefix + "pocketSeparator").hidden = hidden;
+        let sep = doc.getElementById(elementId + "Separator");
+        if (sep) {
+          sep.hidden = hidden;
+        }
       }
     }
     // enable or disable reader button
