@@ -7,6 +7,9 @@
   @counter-style decimal {
     system: extends upper-roman;
   }
+  @counter-style disc {
+    system: extends decimal;
+  }
   @counter-style hebrew {
     system: extends cjk-decimal;
   }
@@ -14,5 +17,6 @@
 <ol>
   <li style="list-style-type: none">foo
   <li style="list-style-type: decimal">bar
+  <li style="list-style-type: disc">baz
   <li style="list-style-type: hebrew">
 </ol>

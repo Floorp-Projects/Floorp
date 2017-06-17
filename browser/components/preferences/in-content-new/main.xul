@@ -321,7 +321,7 @@
 
 <!-- Default Search Engine -->
 <groupbox id="defaultEngineGroup" data-category="paneGeneral" data-subcategory="search">
-  <caption label="&defaultSearchEngine.label;"/>
+  <caption><label>&defaultSearchEngine.label;</label></caption>
   <label>&chooseYourDefaultSearchEngine.label;</label>
   <box align="start">
     <menulist id="defaultEngine">
@@ -344,7 +344,7 @@
 </groupbox>
 
 <groupbox id="oneClickSearchProvidersGroup" data-category="paneGeneral" data-subcategory="search">
-  <caption label="&oneClickSearchEngines.label;"/>
+  <caption><label>&oneClickSearchEngines.label;</label></caption>
   <label>&chooseWhichOneToDisplay.label;</label>
 
   <tree id="engineList" flex="1" rows="8" hidecolumnpicker="true" editable="true"

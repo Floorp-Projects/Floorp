@@ -333,6 +333,24 @@ SubDialog.prototype = {
     }
 
     this._trapFocus();
+
+    // Search within main document and highlight matched keyword.
+    gSearchResultsPane.searchWithinNode(this._titleElement, gSearchResultsPane.query);
+
+    // Search within sub-dialog document and highlight matched keyword.
+    let subDialogsChildren = this._frame.contentDocument
+      .querySelectorAll(":scope > *:not([data-hidden-from-search])");
+
+    for (let i = 0; i < subDialogsChildren.length; i++) {
+      gSearchResultsPane.searchWithinNode(subDialogsChildren[i], gSearchResultsPane.query);
+    }
+
+    // Creating tooltips for all the instances found
+    for (let node of gSearchResultsPane.listSearchTooltips) {
+      if (!node.getAttribute("data-has-tooltip")) {
+        gSearchResultsPane.createSearchTooltip(node, gSearchResultsPane.query);
+      }
+    }
   },
 
   _onResize(mutations) {

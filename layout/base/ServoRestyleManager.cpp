@@ -182,16 +182,19 @@ struct ServoRestyleManager::TextPostTraversalState
   bool mShouldPostHints;
   bool mShouldComputeHints;
   nsChangeHint mComputedHint;
+  nsChangeHint mHintsHandled;
 
   TextPostTraversalState(nsStyleContext& aParentContext,
                          ServoStyleSet& aStyleSet,
-                         bool aDisplayContentsParentStyleChanged)
+                         bool aDisplayContentsParentStyleChanged,
+                         nsChangeHint aHintsHandled)
     : mParentContext(aParentContext)
     , mStyleSet(aStyleSet)
     , mStyle(nullptr)
     , mShouldPostHints(aDisplayContentsParentStyleChanged)
     , mShouldComputeHints(aDisplayContentsParentStyleChanged)
     , mComputedHint(nsChangeHint_Empty)
+    , mHintsHandled(aHintsHandled)
   {}
 
   nsStyleContext& ComputeStyle(nsIContent* aTextNode)
@@ -230,6 +233,7 @@ struct ServoRestyleManager::TextPostTraversalState
         oldContext->CalcStyleDifference(&aNewContext,
                                         &equalStructs,
                                         &samePointerStructs);
+      mComputedHint = NS_RemoveSubsumedHints(mComputedHint, mHintsHandled);
     }
 
     if (mComputedHint) {
@@ -312,12 +316,15 @@ bool
 ServoRestyleManager::ProcessPostTraversal(Element* aElement,
                                           nsStyleContext* aParentContext,
                                           ServoStyleSet* aStyleSet,
-                                          nsStyleChangeList& aChangeList)
+                                          nsStyleChangeList& aChangeList,
+                                          nsChangeHint aChangesHandled)
 {
   nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(aElement);
 
   // Grab the change hint from Servo.
   nsChangeHint changeHint = Servo_TakeChangeHint(aElement);
+  changeHint = NS_RemoveSubsumedHints(changeHint, aChangesHandled);
+  aChangesHandled |= changeHint;
 
   // Handle lazy frame construction by posting a reconstruct for any lazily-
   // constructed roots.
@@ -446,12 +453,15 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
 
     StyleChildrenIterator it(aElement);
     TextPostTraversalState textState(
-        *upToDateContext, *aStyleSet, displayContentsNode && recreateContext);
+        *upToDateContext,
+        *aStyleSet,
+        displayContentsNode && recreateContext,
+        aChangesHandled);
     for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
       if (traverseElementChildren && n->IsElement()) {
         recreatedAnyContext |=
           ProcessPostTraversal(n->AsElement(), upToDateContext,
-                               aStyleSet, aChangeList);
+                               aStyleSet, aChangeList, aChangesHandled);
       } else if (traverseTextChildren && n->IsNodeOfType(nsINode::eTEXT)) {
         recreatedAnyContext |=
           ProcessPostTraversalForText(n, aChangeList, textState);
@@ -616,7 +626,8 @@ ServoRestyleManager::DoProcessPendingRestyles(TraversalRestyleBehavior
     bool anyStyleChanged = false;
     while (Element* root = iter.GetNextStyleRoot()) {
       anyStyleChanged |=
-        ProcessPostTraversal(root, nullptr, styleSet, currentChanges);
+        ProcessPostTraversal(
+            root, nullptr, styleSet, currentChanges, nsChangeHint(0));
     }
 
     // Process the change hints.

@@ -3,6 +3,8 @@
 "use strict";
 
 add_task(async function testPopupBorderRadius() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       browser.tabs.query({active: true, currentWindow: true}, tabs => {

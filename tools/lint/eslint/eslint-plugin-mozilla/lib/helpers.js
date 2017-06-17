@@ -526,10 +526,10 @@ module.exports = {
    */
   get rootDir() {
     if (!gRootDir) {
-      function searchUpForIgnore(dirName) {
+      function searchUpForIgnore(dirName, filename) {
         let parsed = path.parse(dirName);
         while (parsed.root !== dirName) {
-          if (fs.existsSync(path.join(dirName, ".eslintignore"))) {
+          if (fs.existsSync(path.join(dirName, filename))) {
             return dirName;
           }
           // Move up a level
@@ -539,13 +539,18 @@ module.exports = {
         return null;
       }
 
-      let possibleRoot = searchUpForIgnore(path.dirname(module.filename));
+      let possibleRoot = searchUpForIgnore(path.dirname(module.filename), ".eslintignore");
       if (!possibleRoot) {
-        possibleRoot = searchUpForIgnore(path.resolve());
-        if (!possibleRoot) {
-          // We've couldn't find a root from the module or CWD
-          throw new Error("Unable to find root of repository");
-        }
+        possibleRoot = searchUpForIgnore(path.resolve(), ".eslintignore");
+      }
+      if (!possibleRoot) {
+        possibleRoot = searchUpForIgnore(path.resolve(), "package.json");
+      }
+      if (!possibleRoot) {
+        // We've couldn't find a root from the module or CWD, so lets just go
+        // for the CWD. We really don't want to throw if possible, as that
+        // tends to give confusing results when used with ESLint.
+        possibleRoot = process.cwd();
       }
 
       gRootDir = possibleRoot;

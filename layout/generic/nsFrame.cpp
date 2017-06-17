@@ -46,7 +46,7 @@
 #include "mozilla/GeckoRestyleManager.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/RestyleManagerInlines.h"
-
+#include "nsInlineFrame.h"
 #include "nsIDOMNode.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
@@ -10201,10 +10201,10 @@ nsFrame::BoxMetrics() const
 }
 
 void
-nsFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
-                                   ServoStyleSet& aStyleSet,
-                                   nsStyleChangeList& aChangeList,
-                                   nsChangeHint aHintForThisFrame)
+nsIFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
+                                    ServoStyleSet& aStyleSet,
+                                    nsStyleChangeList& aChangeList,
+                                    nsChangeHint aHintForThisFrame)
 {
   MOZ_ASSERT(aChildFrame->GetParent() == this,
              "This should only be used for children!");
@@ -10479,14 +10479,71 @@ nsIFrame::IsScrolledOutOfView()
   return IsFrameScrolledOutOfView(this);
 }
 
-/* virtual */
 void
 nsIFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoStyleSet& aStyleSet,
-                                      nsStyleChangeList& aChangeList,
-                                      nsChangeHint aHintForThisFrame)
+                                        nsStyleChangeList& aChangeList,
+                                        nsChangeHint aHintForThisFrame)
+{
+  // As a special case, we check for {ib}-split block frames here, rather
+  // than have an nsInlineFrame::AppendDirectlyOwnedAnonBoxes implementation
+  // that returns them.
+  //
+  // (If we did handle them in AppendDirectlyOwnedAnonBoxes, we would have to
+  // return *all* of the in-flow {ib}-split block frames, not just the first
+  // one.  For restyling, we really just need the first in flow, and the other
+  // user of the AppendOwnedAnonBoxes API, AllChildIterator, doesn't need to
+  // know about them at all, since these block frames never create NAC.  So we
+  // avoid any unncessary hashtable lookups for the {ib}-split frames by calling
+  // UpdateStyleOfOwnedAnonBoxesForIBSplit directly here.)
+  if (IsInlineFrame()) {
+    if ((GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) {
+      static_cast<nsInlineFrame*>(this)->
+        UpdateStyleOfOwnedAnonBoxesForIBSplit(aStyleSet, aChangeList,
+                                              aHintForThisFrame);
+    }
+    return;
+  }
+
+  AutoTArray<OwnedAnonBox,4> frames;
+  AppendDirectlyOwnedAnonBoxes(frames);
+  for (OwnedAnonBox& box : frames) {
+    if (box.mUpdateStyleFn) {
+      box.mUpdateStyleFn(this, box.mAnonBoxFrame,
+                         aStyleSet, aChangeList, aHintForThisFrame);
+    } else {
+      UpdateStyleOfChildAnonBox(box.mAnonBoxFrame,
+                                aStyleSet, aChangeList, aHintForThisFrame);
+    }
+  }
+}
+
+/* virtual */ void
+nsIFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
 {
   MOZ_ASSERT(!(GetStateBits() & NS_FRAME_OWNS_ANON_BOXES));
   MOZ_ASSERT(false, "Why did this get called?");
+}
+
+void
+nsIFrame::DoAppendOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
+{
+  size_t i = aResult.Length();
+  AppendDirectlyOwnedAnonBoxes(aResult);
+
+  // After appending the directly owned anonymous boxes of this frame to
+  // aResult above, we need to check each of them to see if they own
+  // any anonymous boxes themselves.  Note that we keep progressing
+  // through aResult, looking for additional entries in aResult from these
+  // subsequent AppendDirectlyOwnedAnonBoxes calls.  (Thus we can't
+  // use a ranged for loop here.)
+
+  while (i < aResult.Length()) {
+    nsIFrame* f = aResult[i].mAnonBoxFrame;
+    if (f->GetStateBits() & NS_FRAME_OWNS_ANON_BOXES) {
+      f->AppendDirectlyOwnedAnonBoxes(aResult);
+    }
+    ++i;
+  }
 }
 
 nsIFrame::CaretPosition::CaretPosition()

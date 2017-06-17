@@ -40,11 +40,11 @@ macro_rules! define_matrix {
             }
         }
 
-        impl<T, $($phantom),+> ::serde::Deserialize for $name<T, $($phantom),+>
-            where T: ::serde::Deserialize
+        impl<'de, T, $($phantom),+> ::serde::Deserialize<'de> for $name<T, $($phantom),+>
+            where T: ::serde::Deserialize<'de>
         {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-                where D: ::serde::Deserializer
+                where D: ::serde::Deserializer<'de>
             {
                 let ($($field,)+) =
                     try!(::serde::Deserialize::deserialize(deserializer));

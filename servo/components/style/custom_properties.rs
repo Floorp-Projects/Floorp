@@ -66,7 +66,7 @@ pub struct BorrowedSpecifiedValue<'a> {
 
 /// A computed value is just a set of tokens as well, until we resolve variables
 /// properly.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
 pub struct ComputedValue {
     css: String,
@@ -281,7 +281,7 @@ fn parse_declaration_value_block<'i, 't>
             Token::Hash(ref value) |
             Token::IDHash(ref value) |
             Token::UnquotedUrl(ref value) |
-            Token::Dimension(_, ref value) => {
+            Token::Dimension { unit: ref value, .. } => {
                 if value.ends_with("�") && input.slice_from(token_start).ends_with("\\") {
                     // Unescaped backslash at EOF in these contexts is interpreted as U+FFFD
                     // Check the value in case the final backslash was itself escaped.
