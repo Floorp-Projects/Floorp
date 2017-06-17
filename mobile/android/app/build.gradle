@@ -183,6 +183,7 @@ android {
             res {
                 srcDir "${topsrcdir}/${mozconfig.substs.MOZ_BRANDING_DIRECTORY}/res"
                 srcDir "${project.buildDir}/generated/source/preprocessed_resources" // See syncPreprocessedResources.
+                srcDir "${topsrcdir}/mobile/android/base/resources"
                 srcDir "${topsrcdir}/mobile/android/services/src/main/res"
                 if (mozconfig.substs.MOZ_CRASHREPORTER) {
                     srcDir "${topsrcdir}/mobile/android/base/crashreporter/res"
