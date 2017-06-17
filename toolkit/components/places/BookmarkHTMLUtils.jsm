@@ -1015,7 +1015,7 @@ BookmarkExporter.prototype = {
           // Write bookmarks in UTF-8.
           this._converterOut = Cc["@mozilla.org/intl/converter-output-stream;1"]
                                .createInstance(Ci.nsIConverterOutputStream);
-          this._converterOut.init(bufferedOut, "utf-8", 0, 0);
+          this._converterOut.init(bufferedOut, "utf-8");
           try {
             this._writeHeader();
             await this._writeContainer(this._root);
