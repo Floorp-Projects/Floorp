@@ -1362,10 +1362,4 @@ ServoStyleSet::MightHaveAttributeDependency(nsIAtom* aAttribute)
   return Servo_StyleSet_MightHaveAttributeDependency(mRawSet.get(), aAttribute);
 }
 
-bool
-ServoStyleSet::HasStateDependency(EventStates aState)
-{
-  return Servo_StyleSet_HasStateDependency(mRawSet.get(), aState.ServoValue());
-}
-
 ServoStyleSet* ServoStyleSet::sInServoTraversal = nullptr;
