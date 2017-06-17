@@ -10,6 +10,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.mozilla.gecko.switchboard.SwitchBoard;
@@ -213,6 +214,7 @@ public class AddToHomeScreenPromotion extends TabsTrayVisibilityAwareDelegate im
         return urlAnnotations.hasAcceptedOrDeclinedHomeScreenShortcut(context.getContentResolver(), url);
     }
 
+    @Nullable
     public static URLHistory getHistoryForURL(Context context, String url) {
         final GeckoProfile profile = GeckoProfile.get(context);
         final BrowserDB browserDB = BrowserDB.from(profile);
@@ -220,6 +222,10 @@ public class AddToHomeScreenPromotion extends TabsTrayVisibilityAwareDelegate im
         Cursor cursor = null;
         try {
             cursor = browserDB.getHistoryForURL(context.getContentResolver(), url);
+
+            if (cursor == null) {
+                return null;
+            }
 
             if (cursor.moveToFirst()) {
                 return new URLHistory(
