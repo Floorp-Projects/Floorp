@@ -12,3 +12,4 @@ fails-if(styloVsGecko||stylo) == 445415-2b.xhtml 445415-2-ref.xhtml
 == 1368782-1.html green.html
 == 1368782-2.html green.html
 == 1368782-3.html green.html
+== 1373559.html 1373559-ref.html
