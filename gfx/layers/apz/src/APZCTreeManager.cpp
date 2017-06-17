@@ -1203,9 +1203,10 @@ ConvertToTouchBehavior(HitTestResult result)
       return AllowedTouchBehavior::HORIZONTAL_PAN
            | AllowedTouchBehavior::VERTICAL_PAN;
     case HitDispatchToContentRegion:
-    default:
       return AllowedTouchBehavior::UNKNOWN;
   }
+  MOZ_ASSERT_UNREACHABLE("Invalid value");
+  return AllowedTouchBehavior::UNKNOWN;
 }
 
 already_AddRefed<AsyncPanZoomController>

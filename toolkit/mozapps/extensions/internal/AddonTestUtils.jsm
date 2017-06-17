@@ -215,6 +215,7 @@ var AddonTestUtils = {
   addonStartup: null,
   testUnpacked: false,
   useRealCertChecks: false,
+  usePrivilegedSignatures: true,
 
   init(testScope) {
     this.testScope = testScope;
@@ -499,6 +500,9 @@ var AddonTestUtils = {
           let id = await this.getIDFromManifest(manifestURI);
 
           let fakeCert = {commonName: id};
+          if (this.usePrivilegedSignatures) {
+            fakeCert.organizationalUnit = "Mozilla Extensions";
+          }
 
           return [callback, Cr.NS_OK, fakeCert];
         } catch (e) {

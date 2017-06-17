@@ -1,13 +1,22 @@
+
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
+
 // Enable signature checks for these tests
 gUseRealCertChecks = true;
 // Disable update security
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 
 const DATA = "data/signing_checks/";
-const GOOD = [
-  ["signed_bootstrap_2.xpi", AddonManager.SIGNEDSTATE_SIGNED],
-  ["signed_nonbootstrap_2.xpi", AddonManager.SIGNEDSTATE_SIGNED]
+let GOOD = [
+  ["privileged_bootstrap_2.xpi", AddonManager.SIGNEDSTATE_PRIVILEGED],
 ];
+if (AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
+  GOOD.push(
+    ["signed_bootstrap_2.xpi", AddonManager.SIGNEDSTATE_SIGNED],
+    ["signed_nonbootstrap_2.xpi", AddonManager.SIGNEDSTATE_SIGNED],
+  );
+}
+
 const BAD = [
   ["unsigned_bootstrap_2.xpi", AddonManager.SIGNEDSTATE_MISSING],
   ["signed_bootstrap_badid_2.xpi", AddonManager.SIGNEDSTATE_BROKEN],

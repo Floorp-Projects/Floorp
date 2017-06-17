@@ -179,6 +179,8 @@ scheme host and port.""")
                              help="Defines an extra user preference (overrides those in prefs_root)")
     gecko_group.add_argument("--leak-check", dest="leak_check", action="store_true",
                              help="Enable leak checking")
+    gecko_group.add_argument("--stylo-threads", action="store", type=int, default=1,
+                             help="Number of parallel threads to use for stylo")
 
     servo_group = parser.add_argument_group("Servo-specific")
     servo_group.add_argument("--user-stylesheet",

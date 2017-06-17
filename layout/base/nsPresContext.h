@@ -1504,11 +1504,11 @@ protected:
 
 #ifdef RESTYLE_LOGGING
   // Should we output debug information about restyling for this document?
-  bool                  mRestyleLoggingEnabled;
+  unsigned mRestyleLoggingEnabled : 1;
 #endif
 
 #ifdef DEBUG
-  bool                  mInitialized;
+  unsigned mInitialized : 1;
 #endif
 
 

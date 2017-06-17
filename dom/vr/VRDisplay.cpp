@@ -463,7 +463,7 @@ VRDisplay::GetSubmitFrameResult(VRSubmitFrameResult& aResult)
     return false;
   }
 
-  const char* srcData = (decodedImg.get());
+  const char* srcData = decodedImg.get();
   const gfx::IntSize size(resultInfo.mWidth, resultInfo.mHeight);
   RefPtr<DataSourceSurface> dataSurface = gfx::CreateDataSourceSurfaceFromData(
                                             size, resultInfo.mFormat, (uint8_t*)srcData,
