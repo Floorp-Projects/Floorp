@@ -53,7 +53,7 @@ ClientPaintedLayer::PaintThebes(nsTArray<ReadbackProcessor::Update>* aReadbackUp
 #endif
   PaintState state =
     mContentClient->BeginPaintBuffer(this, flags);
-  SubtractFromValidRegion(state.mRegionToInvalidate);
+  mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
 
   if (!state.mRegionToDraw.IsEmpty() && !ClientManager()->GetPaintedLayerCallback()) {
     ClientManager()->SetTransactionIncomplete();
@@ -101,7 +101,7 @@ ClientPaintedLayer::PaintThebes(nsTArray<ReadbackProcessor::Update>* aReadbackUp
   if (didUpdate) {
     Mutated();
 
-    AddToValidRegion(state.mRegionToDraw);
+    mValidRegion.Or(mValidRegion, state.mRegionToDraw);
 
     ContentClientRemote* contentClientRemote = static_cast<ContentClientRemote*>(mContentClient.get());
     MOZ_ASSERT(contentClientRemote->GetIPCHandle());
