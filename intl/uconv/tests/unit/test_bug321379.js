@@ -18,7 +18,7 @@ function run_test() {
 
   // Output
   var outStr = storage.getOutputStream(0);
-  var out = new ConverterOutputStream(outStr, "UTF-8", 1024, 0xFFFD);
+  var out = new ConverterOutputStream(outStr, "UTF-8");
   out.writeString("Foo.");
   out.close();
   out.close(); // This line should not crash. It should just do nothing.

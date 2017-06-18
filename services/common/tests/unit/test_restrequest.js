@@ -189,7 +189,7 @@ add_test(function test_get_utf8() {
 
     let converter = Cc["@mozilla.org/intl/converter-output-stream;1"]
                     .createInstance(Ci.nsIConverterOutputStream);
-    converter.init(res.bodyOutputStream, "UTF-8", 0, 0x0000);
+    converter.init(res.bodyOutputStream, "UTF-8");
     converter.writeString(response);
     converter.close();
   }});
@@ -270,7 +270,7 @@ add_test(function test_charsets() {
 
     let converter = Cc["@mozilla.org/intl/converter-output-stream;1"]
                     .createInstance(Ci.nsIConverterOutputStream);
-    converter.init(res.bodyOutputStream, "us-ascii", 0, 0x0000);
+    converter.init(res.bodyOutputStream, "us-ascii");
     converter.writeString(response);
     converter.close();
   }});

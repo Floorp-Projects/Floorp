@@ -1289,7 +1289,7 @@ function saveJSON(aData, aFile) {
   let stream = FileUtils.openSafeFileOutputStream(aFile);
   let converter = AM_Cc["@mozilla.org/intl/converter-output-stream;1"].
     createInstance(AM_Ci.nsIConverterOutputStream);
-  converter.init(stream, "UTF-8", 0, 0x0000);
+  converter.init(stream, "UTF-8");
   // XXX pretty print the JSON while debugging
   converter.writeString(JSON.stringify(aData, null, 2));
   converter.flush();

@@ -10,7 +10,6 @@
 
 #include "nsServiceManagerUtils.h"
 
-#include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/BinarySearch.h"

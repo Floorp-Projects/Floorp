@@ -86,7 +86,7 @@ add_test(function test_load_logging() {
   fos.init(file, flags, FileUtils.PERMS_FILE, fos.DEFER_OPEN);
   let stream = Cc["@mozilla.org/intl/converter-output-stream;1"]
                  .createInstance(Ci.nsIConverterOutputStream);
-  stream.init(fos, "UTF-8", 4096, 0x0000);
+  stream.init(fos, "UTF-8");
   stream.writeString("invalid json!");
   stream.close();
 
