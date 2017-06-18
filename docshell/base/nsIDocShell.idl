@@ -11,8 +11,12 @@
 %{ C++
 #include "js/TypeDecls.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/NotNull.h"
 class nsPresContext;
 class nsIPresShell;
+namespace mozilla {
+class Encoding;
+}
 %}
 
 /**
@@ -22,6 +26,7 @@ class nsIPresShell;
 [ptr] native nsPresContext(nsPresContext);
 [ptr] native nsIPresShell(nsIPresShell);
 [ref] native MaybeURI(mozilla::Maybe<nsCOMPtr<nsIURI>>);
+[ref] native Encoding(const mozilla::Encoding*);
 
 interface nsIURI;
 interface nsIChannel;
@@ -713,11 +718,11 @@ interface nsIDocShell : nsIDocShellTreeItem
    * In a child docshell, this is the charset of the parent docshell
    */
   [noscript, notxpcom, nostdcall] void setParentCharset(
-    in ACString parentCharset,
+    in Encoding parentCharset,
     in int32_t parentCharsetSource,
     in nsIPrincipal parentCharsetPrincipal);
   [noscript, notxpcom, nostdcall] void getParentCharset(
-    out ACString parentCharset,
+    out Encoding parentCharset,
     out int32_t parentCharsetSource,
     out nsIPrincipal parentCharsetPrincipal);
 
