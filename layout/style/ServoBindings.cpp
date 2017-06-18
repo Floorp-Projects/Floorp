@@ -222,6 +222,37 @@ Gecko_GetDocumentElement(RawGeckoDocumentBorrowed aDoc)
   return aDoc->GetDocumentElement();
 }
 
+RawGeckoElementBorrowedOrNull
+Gecko_GetBeforeOrAfterPseudo(RawGeckoElementBorrowed aElement, bool aIsBefore)
+{
+  MOZ_ASSERT(aElement);
+  MOZ_ASSERT(aElement->HasProperties());
+
+  return aIsBefore
+    ? nsLayoutUtils::GetBeforePseudo(aElement)
+    : nsLayoutUtils::GetAfterPseudo(aElement);
+}
+
+nsTArray<nsIContent*>*
+Gecko_GetAnonymousContentForElement(RawGeckoElementBorrowed aElement)
+{
+  nsIAnonymousContentCreator* ac = do_QueryFrame(aElement->GetPrimaryFrame());
+  if (!ac) {
+    return nullptr;
+  }
+
+  auto* array = new nsTArray<nsIContent*>();
+  nsContentUtils::AppendNativeAnonymousChildren(aElement, *array, 0);
+  return array;
+}
+
+void
+Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* aAnonContent)
+{
+  MOZ_ASSERT(aAnonContent);
+  delete aAnonContent;
+}
+
 StyleChildrenIteratorOwnedOrNull
 Gecko_MaybeCreateStyleChildrenIterator(RawGeckoNodeBorrowed aNode)
 {
