@@ -8,14 +8,12 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Internationalization")
 
 EXPORTS.mozilla.dom += [
-    'EncodingUtils.h',
     'FallbackEncoding.h',
     'TextDecoder.h',
     'TextEncoder.h',
 ]
 
 UNIFIED_SOURCES += [
-    'EncodingUtils.cpp',
     'FallbackEncoding.cpp',
     'TextDecoder.cpp',
     'TextEncoder.cpp',
@@ -29,7 +27,6 @@ LOCAL_INCLUDES += [
 props2arrays = '/intl/locale/props2arrays.py'
 prefixes = (
     'domainsfallbacks',
-    'encodingsgroups',
     'labelsencodings',
     'localesfallbacks',
     'nonparticipatingdomains',
