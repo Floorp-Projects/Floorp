@@ -177,7 +177,7 @@
   padding: 7px;
 }
 
-#onboarding-tour-sync-page form > button {
+#onboarding-tour-sync-page form > #onboarding-tour-sync-button {
   padding: 10px 20px;
   min-width: 40%;
   font-size: 15px;
@@ -190,6 +190,7 @@
   box-shadow: 0 1px 0 rgba(0,0,0,0.23);
   cursor: pointer;
   margin: 15px 0;
+  float: none;
 }
 
 /* Onboarding tour pages */
@@ -242,18 +243,18 @@
   grid-column: tour-content-start / tour-page-end;
 }
 
-.onboarding-tour-button {
+.onboarding-tour-button-container {
   grid-row: tour-button-start / tour-page-end;
   grid-column: tour-content-start / tour-page-end;
 }
 
-.onboarding-tour-page.onboarding-no-button > .onboarding-tour-button {
+.onboarding-tour-page.onboarding-no-button > .onboarding-tour-button-container {
   display: none;
   grid-row: tour-page-end;
   grid-column: tour-page-end;
 }
 
-.onboarding-tour-button > button {
+.onboarding-tour-action-button {
   padding: 10px 20px;
   font-size: 15px;
   font-weight: 600;
@@ -269,7 +270,7 @@
   margin-top: -32px;
 }
 
-.onboarding-tour-button > button:active {
+.onboarding-tour-action-button:active {
   background: #0881dd;
 }
 
@@ -418,6 +419,7 @@
 #onboarding-notification-tour-icon {
   width: 64px;
   height: 64px;
+  background-size: 64px;
   background-repeat: no-repeat;
 }
 
