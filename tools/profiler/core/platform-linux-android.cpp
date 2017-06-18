@@ -351,7 +351,8 @@ Sampler::SuspendAndSampleAndResumeThread(PSLockRef aLock,
   // sampled has been suspended at some entirely arbitrary point, and we have
   // no idea which unsharable resources (locks, essentially) it holds.  So any
   // attempt to acquire any lock, including the implied locks used by the
-  // malloc implementation, risks deadlock.
+  // malloc implementation, risks deadlock.  This includes TimeStamp::Now(),
+  // which gets a lock on Windows.
 
   // The samplee thread is now frozen and sSigHandlerCoordinator->mUContext is
   // valid.  We can poke around in it and unwind its stack as we like.
