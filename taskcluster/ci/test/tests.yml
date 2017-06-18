@@ -667,6 +667,7 @@ mochitest-chrome:
     suite: mochitest/chrome
     treeherder-symbol: tc-M(c)
     loopback-video: true
+    docker-image: {"in-tree": "desktop1604-test"}
     instance-size:
         by-test-platform:
             android.*: xlarge
