@@ -942,9 +942,19 @@ protected:
    * Setting the value.
    *
    * @param aValue      String to set.
+   * @param aOldValue   Previous value before setting aValue.
+                        If previous value is unknown, aOldValue can be nullptr.
    * @param aFlags      See nsTextEditorState::SetValueFlags.
    */
-  nsresult SetValueInternal(const nsAString& aValue, uint32_t aFlags);
+  nsresult SetValueInternal(const nsAString& aValue,
+                            const nsAString* aOldValue,
+                            uint32_t aFlags);
+
+  nsresult SetValueInternal(const nsAString& aValue,
+                            uint32_t aFlags)
+  {
+    return SetValueInternal(aValue, nullptr, aFlags);
+  }
 
   // Generic getter for the value that doesn't do experimental control type
   // sanitization.

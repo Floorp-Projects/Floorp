@@ -4,9 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/DebugOnly.h"
-
 #include "nsHtml5StreamParser.h"
+
+#include "mozilla/DebugOnly.h"
+#include "mozilla/Encoding.h"
 #include "nsContentUtils.h"
 #include "nsHtml5Tokenizer.h"
 #include "nsIHttpChannel.h"
@@ -29,10 +30,7 @@
 #include "nsNetUtil.h"
 #include "nsXULAppAPI.h"
 
-#include "mozilla/dom/EncodingUtils.h"
-
 using namespace mozilla;
-using mozilla::dom::EncodingUtils;
 
 int32_t nsHtml5StreamParser::sTimerInitialDelay = 120;
 int32_t nsHtml5StreamParser::sTimerSubsequentDelay = 120;
@@ -255,13 +253,15 @@ nsHtml5StreamParser::Notify(const char* aCharset, nsDetectionConfident aConf)
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   if (aConf == eBestAnswer || aConf == eSureAnswer) {
     mFeedChardet = false; // just in case
-    nsAutoCString encoding;
-    if (!EncodingUtils::FindEncodingForLabelNoReplacement(
-        nsDependentCString(aCharset), encoding)) {
+    const Encoding* encoding = Encoding::ForLabelNoReplacement(
+        nsDependentCString(aCharset));
+    if (!encoding) {
       return NS_OK;
     }
+    nsAutoCString charset;
+    encoding->Name(charset);
     if (HasDecoder()) {
-      if (mCharset.Equals(encoding)) {
+      if (mCharset.Equals(charset)) {
         NS_ASSERTION(mCharsetSource < kCharsetFromAutoDetection,
             "Why are we running chardet at all?");
         mCharsetSource = kCharsetFromAutoDetection;
@@ -269,7 +269,7 @@ nsHtml5StreamParser::Notify(const char* aCharset, nsDetectionConfident aConf)
       } else {
         // We've already committed to a decoder. Request a reload from the
         // docshell.
-        mTreeBuilder->NeedsCharsetSwitchTo(encoding,
+        mTreeBuilder->NeedsCharsetSwitchTo(charset,
                                            kCharsetFromAutoDetection,
                                            0);
         FlushTreeOpsAndDisarmTimer();
@@ -278,7 +278,7 @@ nsHtml5StreamParser::Notify(const char* aCharset, nsDetectionConfident aConf)
     } else {
       // Got a confident answer from the sniffing buffer. That code will
       // take care of setting up the decoder.
-      mCharset.Assign(encoding);
+      mCharset.Assign(charset);
       mCharsetSource = kCharsetFromAutoDetection;
       mTreeBuilder->SetDocumentCharset(mCharset, mCharsetSource);
     }
@@ -321,7 +321,7 @@ nsHtml5StreamParser::SetupDecodingAndWriteSniffingBufferAndCurrentSegment(const 
 {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   nsresult rv = NS_OK;
-  mUnicodeDecoder = EncodingUtils::DecoderForEncoding(mCharset);
+  mUnicodeDecoder = Encoding::ForName(mCharset)->NewDecoderWithBOMRemoval();
   if (mSniffingBuffer) {
     uint32_t writeCount;
     rv = WriteStreamBytes(mSniffingBuffer.get(), mSniffingLength, &writeCount);
@@ -340,7 +340,7 @@ nsHtml5StreamParser::SetupDecodingFromBom(const char* aDecoderCharsetName)
 {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   mCharset.Assign(aDecoderCharsetName);
-  mUnicodeDecoder = EncodingUtils::DecoderForEncoding(mCharset);
+  mUnicodeDecoder = Encoding::ForName(mCharset)->NewDecoderWithBOMRemoval();
   mCharsetSource = kCharsetFromByteOrderMark;
   mFeedChardet = false;
   mTreeBuilder->SetDocumentCharset(mCharset, mCharsetSource);
@@ -742,24 +742,26 @@ nsHtml5StreamParser::SniffStreamBytes(const uint8_t* aFromSegment,
     if (mMode == NORMAL || mMode == VIEW_SOURCE_HTML || mMode == LOAD_AS_DATA) {
       nsHtml5ByteReadable readable(aFromSegment, aFromSegment +
           countToSniffingLimit);
-      nsAutoCString encoding;
-      mMetaScanner->sniff(&readable, encoding);
+      nsAutoCString charset;
+      mMetaScanner->sniff(&readable, charset);
       // Due to the way nsHtml5Portability reports OOM, ask the tree buider
       nsresult rv;
       if (NS_FAILED((rv = mTreeBuilder->IsBroken()))) {
         MarkAsBroken(rv);
         return rv;
       }
-      if (!encoding.IsEmpty()) {
+      if (!charset.IsEmpty()) {
+        const Encoding* encoding = Encoding::ForName(charset);
         // meta scan successful; honor overrides unless meta is XSS-dangerous
         if ((mCharsetSource == kCharsetFromParentForced ||
              mCharsetSource == kCharsetFromUserForced) &&
-            EncodingUtils::IsAsciiCompatible(encoding)) {
+            (encoding->IsAsciiCompatible() ||
+             encoding == ISO_2022_JP_ENCODING)) {
           // Honor override
           return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(
             aFromSegment, aCount, aWriteCount);
         }
-        mCharset.Assign(encoding);
+        mCharset.Assign(charset);
         mCharsetSource = kCharsetFromMetaPrescan;
         mFeedChardet = false;
         mTreeBuilder->SetDocumentCharset(mCharset, mCharsetSource);
@@ -780,24 +782,26 @@ nsHtml5StreamParser::SniffStreamBytes(const uint8_t* aFromSegment,
   // not the last buffer
   if (mMode == NORMAL || mMode == VIEW_SOURCE_HTML || mMode == LOAD_AS_DATA) {
     nsHtml5ByteReadable readable(aFromSegment, aFromSegment + aCount);
-    nsAutoCString encoding;
-    mMetaScanner->sniff(&readable, encoding);
+    nsAutoCString charset;
+    mMetaScanner->sniff(&readable, charset);
     // Due to the way nsHtml5Portability reports OOM, ask the tree buider
     nsresult rv;
     if (NS_FAILED((rv = mTreeBuilder->IsBroken()))) {
       MarkAsBroken(rv);
       return rv;
     }
-    if (!encoding.IsEmpty()) {
+    if (!charset.IsEmpty()) {
+      const Encoding* encoding = Encoding::ForName(charset);
       // meta scan successful; honor overrides unless meta is XSS-dangerous
       if ((mCharsetSource == kCharsetFromParentForced ||
            mCharsetSource == kCharsetFromUserForced) &&
-          EncodingUtils::IsAsciiCompatible(encoding)) {
+          (encoding->IsAsciiCompatible() ||
+           encoding == ISO_2022_JP_ENCODING)) {
         // Honor override
         return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment,
             aCount, aWriteCount);
       }
-      mCharset.Assign(encoding);
+      mCharset.Assign(charset);
       mCharsetSource = kCharsetFromMetaPrescan;
       mFeedChardet = false;
       mTreeBuilder->SetDocumentCharset(mCharset, mCharsetSource);
@@ -1003,7 +1007,7 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   mFeedChardet = false;
 
   // Instantiate the converter here to avoid BOM sniffing.
-  mUnicodeDecoder = EncodingUtils::DecoderForEncoding(mCharset);
+  mUnicodeDecoder = Encoding::ForName(mCharset)->NewDecoderWithBOMRemoval();
   return NS_OK;
 }
 
@@ -1230,8 +1234,8 @@ nsHtml5StreamParser::CopySegmentsToParser(nsIInputStream *aInStream,
 bool
 nsHtml5StreamParser::PreferredForInternalEncodingDecl(nsACString& aEncoding)
 {
-  nsAutoCString newEncoding;
-  if (!EncodingUtils::FindEncodingForLabel(aEncoding, newEncoding)) {
+  const Encoding* newEncoding = Encoding::ForLabel(aEncoding);
+  if (!newEncoding) {
     // the encoding name is bogus
     mTreeBuilder->MaybeComplainAboutCharset("EncMetaUnsupported",
                                             true,
@@ -1239,23 +1243,23 @@ nsHtml5StreamParser::PreferredForInternalEncodingDecl(nsACString& aEncoding)
     return false;
   }
 
-  if (newEncoding.EqualsLiteral("UTF-16BE") ||
-      newEncoding.EqualsLiteral("UTF-16LE")) {
+  if (newEncoding == UTF_16BE_ENCODING ||
+      newEncoding == UTF_16LE_ENCODING) {
     mTreeBuilder->MaybeComplainAboutCharset("EncMetaUtf16",
                                             true,
                                             mTokenizer->getLineNumber());
-    newEncoding.AssignLiteral("UTF-8");
+    newEncoding = UTF_8_ENCODING;
   }
 
-  if (newEncoding.EqualsLiteral("x-user-defined")) {
+  if (newEncoding == X_USER_DEFINED_ENCODING) {
     // WebKit/Blink hack for Indian and Armenian legacy sites
     mTreeBuilder->MaybeComplainAboutCharset("EncMetaUserDefined",
                                             true,
                                             mTokenizer->getLineNumber());
-    newEncoding.AssignLiteral("windows-1252");
+    newEncoding = WINDOWS_1252_ENCODING;
   }
 
-  if (newEncoding.Equals(mCharset)) {
+  if (newEncoding == Encoding::ForName(mCharset)) {
     if (mCharsetSource < kCharsetFromMetaPrescan) {
       if (mInitialEncodingWasFromParentFrame) {
         mTreeBuilder->MaybeComplainAboutCharset("EncLateMetaFrame",
@@ -1272,7 +1276,7 @@ nsHtml5StreamParser::PreferredForInternalEncodingDecl(nsACString& aEncoding)
     return false;
   }
 
-  aEncoding.Assign(newEncoding);
+  newEncoding->Name(aEncoding);
   return true;
 }
 

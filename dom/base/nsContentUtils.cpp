@@ -4498,45 +4498,6 @@ nsContentUtils::GetSubdocumentWithOuterWindowId(nsIDocument *aDocument,
   return nullptr;
 }
 
-// Convert the string from the given encoding to Unicode.
-/* static */
-nsresult
-nsContentUtils::ConvertStringFromEncoding(const nsACString& aEncoding,
-                                          const char* aInput,
-                                          uint32_t aInputLen,
-                                          nsAString& aOutput)
-{
-  const Encoding* encoding;
-  if (aEncoding.IsEmpty()) {
-    encoding = UTF_8_ENCODING;
-  } else {
-    encoding = Encoding::ForName(aEncoding);
-  }
-  nsresult rv = encoding->DecodeWithBOMRemoval(MakeSpan(reinterpret_cast<const uint8_t*>(aInput), aInputLen), aOutput);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  return NS_OK;
-}
-
-/* static */
-bool
-nsContentUtils::CheckForBOM(const unsigned char* aBuffer, uint32_t aLength,
-                            nsACString& aCharset)
-{
-  auto span = MakeSpan(reinterpret_cast<const uint8_t*>(aBuffer), aLength);
-  const Encoding* encoding;
-  size_t bomLength;
-  Tie(encoding, bomLength) = Encoding::ForBOM(span);
-  Unused << bomLength;
-  if (!encoding) {
-    aCharset.Truncate();
-    return false;
-  }
-  encoding->Name(aCharset);
-  return true;
-}
-
 /* static */
 void
 nsContentUtils::RegisterShutdownObserver(nsIObserver* aObserver)
