@@ -20,7 +20,7 @@ function run_test() {
   ostream.init(file, 0x02, 0o666, 0);
   var conv = Cc["@mozilla.org/intl/converter-output-stream;1"].
              createInstance(Ci.nsIConverterOutputStream);
-  conv.init(ostream, "UTF-8", 0, 0);
+  conv.init(ostream, "UTF-8");
   for (var i = 0; i < file.fileSize; ++i)
     conv.writeString("a");
   conv.close();
