@@ -143,6 +143,7 @@ UNIFIED_SOURCES += [
     'nsFontInflationData.cpp',
     'nsFrame.cpp',
     'nsFrameList.cpp',
+    'nsFrameSelection.cpp',
     'nsFrameSetFrame.cpp',
     'nsFrameState.cpp',
     'nsFrameUtil.cpp',
