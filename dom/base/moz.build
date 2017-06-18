@@ -4,6 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files('*Selection*'):
+    BUG_COMPONENT = ('Core', 'Selection')
+
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM")
 
@@ -194,6 +197,7 @@ EXPORTS.mozilla.dom += [
     'ResponsiveImageSelector.h',
     'SameProcessMessageQueue.h',
     'ScreenOrientation.h',
+    'Selection.h',
     'ShadowRoot.h',
     'StructuredCloneBlob.h',
     'StructuredCloneHolder.h',
@@ -336,6 +340,7 @@ UNIFIED_SOURCES += [
     'ResponsiveImageSelector.cpp',
     'SameProcessMessageQueue.cpp',
     'ScreenOrientation.cpp',
+    'Selection.cpp',
     'ShadowRoot.cpp',
     'StructuredCloneBlob.cpp',
     'StructuredCloneHolder.cpp',
