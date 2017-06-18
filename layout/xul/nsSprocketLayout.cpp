@@ -572,7 +572,7 @@ nsSprocketLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState)
     // Sanity-checking code to ensure we don't do an infinite # of passes.
     passes++;
     NS_ASSERTION(passes < 10, "A Box's child is constantly growing!!!!!");
-    if (passes > 10)
+    if (passes >= 10)
       break;
   } while (false == finished);
 
