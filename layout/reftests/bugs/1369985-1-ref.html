@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<style>
+body {
+  padding: 0;
+  margin: 0;
+  font-size: 2px;
+  line-height: 1;
+}
+p {
+  padding: 0;
+  margin: 0;
+}
+</style>
+<body>
+<script>
+  let x = '<p>' + '\u2588'.repeat(100) + '</p>';
+  for (let i = 0; i < 99; i++) {
+    document.write(x)
+  }
+  document.write('<p>あ\nあ</p>');
+  for (let i = 0; i < 300; i++) {
+    document.write(x)
+  }
+</script>
