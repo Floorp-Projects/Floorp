@@ -895,28 +895,6 @@ public:
   }
 };
 
-// OnStreamComplete always adopts the buffer, utility class to release it in
-// a couple of places.
-class MOZ_STACK_CLASS AutoFreeBuffer final {
-  uint8_t* mBuffer;
-
-public:
-  explicit AutoFreeBuffer(uint8_t* aBuffer)
-    : mBuffer(aBuffer)
-  {}
-
-  ~AutoFreeBuffer()
-  {
-    free(mBuffer);
-  }
-
-  void
-  Reset()
-  {
-    mBuffer= nullptr;
-  }
-};
-
 template <class Derived>
 class FailConsumeBodyWorkerRunnable : public MainThreadWorkerControlRunnable
 {
@@ -1355,7 +1333,9 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
   mReadDone = true;
 #endif
 
-  AutoFreeBuffer autoFree(aResult);
+  auto autoFree = mozilla::MakeScopeExit([&] {
+    free(aResult);
+  });
 
   MOZ_ASSERT(mConsumePromise);
   RefPtr<Promise> localPromise = mConsumePromise.forget();
@@ -1429,7 +1409,7 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
 
         localPromise->MaybeResolve(cx, val);
         // ArrayBuffer takes over ownership.
-        autoFree.Reset();
+        autoFree.release();
       }
       break;
     }
@@ -1440,7 +1420,7 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
     case CONSUME_FORMDATA: {
       nsCString data;
       data.Adopt(reinterpret_cast<char*>(aResult), aResultLength);
-      autoFree.Reset();
+      autoFree.release();
 
       RefPtr<dom::FormData> fd = BodyUtil::ConsumeFormData(
         derivedClass->GetParentObject(),
