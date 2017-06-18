@@ -6,6 +6,7 @@
 
 #include "nsRDFXMLParser.h"
 
+#include "mozilla/Encoding.h"
 #include "nsIComponentManager.h"
 #include "nsIParser.h"
 #include "nsCharsetSource.h"
@@ -65,7 +66,7 @@ nsRDFXMLParser::ParseAsync(nsIRDFDataSource* aSink, nsIURI* aBaseURI, nsIStreamL
     nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    parser->SetDocumentCharset(NS_LITERAL_CSTRING("UTF-8"),
+    parser->SetDocumentCharset(UTF_8_ENCODING,
                                kCharsetFromDocTypeDefault);
     parser->SetContentSink(sink);
 
@@ -96,7 +97,7 @@ nsRDFXMLParser::ParseString(nsIRDFDataSource* aSink, nsIURI* aBaseURI, const nsA
     nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    parser->SetDocumentCharset(NS_LITERAL_CSTRING("UTF-8"),
+    parser->SetDocumentCharset(UTF_8_ENCODING,
                                kCharsetFromOtherComponent);
     parser->SetContentSink(sink);
 

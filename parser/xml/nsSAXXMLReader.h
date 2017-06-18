@@ -19,6 +19,7 @@
 #include "nsIMozSAXXMLDeclarationHandler.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/NotNull.h"
 
 #define NS_SAXXMLREADER_CONTRACTID "@mozilla.org/saxparser/xmlreader;1"
 #define NS_SAXXMLREADER_CID  \
@@ -64,9 +65,8 @@ public:
   {
   }
   
-  NS_IMETHOD SetDocumentCharset(nsACString& aCharset) override
+  virtual void SetDocumentCharset(NotNull<const Encoding*> aEncoding) override
   {
-    return NS_OK;
   }
   
   virtual nsISupports *GetTarget() override
@@ -87,8 +87,8 @@ private:
   nsCOMPtr<nsIRequestObserver> mParserObserver;
   bool mIsAsyncParse;
   static bool TryChannelCharset(nsIChannel *aChannel,
-                                  int32_t& aCharsetSource,
-                                  nsACString& aCharset);
+                                int32_t& aCharsetSource,
+                                NotNull<const Encoding*>& aEncoding);
   nsresult EnsureBaseURI();
   nsresult InitParser(nsIRequestObserver *aListener, nsIChannel *aChannel);
   nsresult SplitExpatName(const char16_t *aExpatName,
