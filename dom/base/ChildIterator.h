@@ -231,8 +231,6 @@ public:
 private:
   // Helpers.
   void AppendNativeAnonymousChildren();
-  void AppendNativeAnonymousChildrenFromFrame(nsIFrame* aFrame);
-
   const nsIContent* mOriginalContent;
 
   // mAnonKids is an array of native anonymous children, mAnonKidsIdx is index
