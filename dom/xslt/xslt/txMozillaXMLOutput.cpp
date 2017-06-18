@@ -823,9 +823,7 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, int32_t aNsID,
         const Encoding* encoding = Encoding::ForLabel(mOutputFormat.mEncoding);
         if (encoding) {
             mDocument->SetDocumentCharacterSetSource(kCharsetFromOtherComponent);
-            nsAutoCString canonicalCharset;
-            encoding->Name(canonicalCharset);
-            mDocument->SetDocumentCharacterSet(canonicalCharset);
+            mDocument->SetDocumentCharacterSet(WrapNotNull(encoding));
         }
     }
 

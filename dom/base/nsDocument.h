@@ -424,10 +424,11 @@ public:
   virtual void GetBaseTarget(nsAString &aBaseTarget) override;
 
   /**
-   * Return a standard name for the document's character set. This will
+   * Set the document's character encoding. This will
    * trigger a startDocumentLoad if necessary to answer the question.
    */
-  virtual void SetDocumentCharacterSet(const nsACString& aCharSetID) override;
+  virtual void
+    SetDocumentCharacterSet(NotNull<const Encoding*> aEncoding) override;
 
   /**
    * Add an observer that gets notified whenever the charset changes.
@@ -1048,7 +1049,7 @@ protected:
 
   void TryChannelCharset(nsIChannel *aChannel,
                          int32_t& aCharsetSource,
-                         nsACString& aCharset,
+                         NotNull<const Encoding*>& aEncoding,
                          nsHtml5TreeOpExecutor* aExecutor);
 
   // Call this before the document does something that will unbind all content.
