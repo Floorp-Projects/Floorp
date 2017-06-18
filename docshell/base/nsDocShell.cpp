@@ -215,9 +215,9 @@
 #include "nsIURL.h"
 #include "nsIWebBrowserFind.h"
 #include "nsIWidget.h"
-#include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/PerformanceNavigation.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/Encoding.h"
 
 #ifdef MOZ_TOOLKIT_SEARCH
 #include "nsIBrowserSearchService.h"
@@ -2116,16 +2116,16 @@ nsDocShell::SetForcedCharset(const nsACString& aCharset)
     mForcedCharset.Truncate();
     return NS_OK;
   }
-  nsAutoCString encoding;
-  if (!EncodingUtils::FindEncodingForLabel(aCharset, encoding)) {
+  const Encoding* encoding = Encoding::ForLabel(aCharset);
+  if (!encoding) {
     // Reject unknown labels
     return NS_ERROR_INVALID_ARG;
   }
-  if (!EncodingUtils::IsAsciiCompatible(encoding)) {
+  if (!encoding->IsAsciiCompatible() && encoding != ISO_2022_JP_ENCODING) {
     // Reject XSS hazards
     return NS_ERROR_INVALID_ARG;
   }
-  mForcedCharset = encoding;
+  encoding->Name(mForcedCharset);
   return NS_OK;
 }
 

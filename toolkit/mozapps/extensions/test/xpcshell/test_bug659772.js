@@ -134,7 +134,7 @@ async function run_test_1() {
       stream.init(jsonfile, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
                             FileUtils.MODE_TRUNCATE, FileUtils.PERMS_FILE,
                             0);
-      converter.init(stream, "UTF-8", 0, 0x0000);
+      converter.init(stream, "UTF-8");
       converter.writeString(JSON.stringify(addonObj));
       converter.close();
       stream.close();
@@ -275,7 +275,7 @@ async function run_test_2() {
       stream.init(jsonfile, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
                             FileUtils.MODE_TRUNCATE, FileUtils.PERMS_FILE,
                             0);
-      converter.init(stream, "UTF-8", 0, 0x0000);
+      converter.init(stream, "UTF-8");
       converter.writeString(JSON.stringify(addonObj));
       converter.close();
       stream.close();

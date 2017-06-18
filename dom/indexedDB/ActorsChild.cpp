@@ -24,13 +24,13 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseFileChild.h"
 #include "mozilla/dom/indexedDB/PIndexedDBPermissionRequestChild.h"
 #include "mozilla/dom/ipc/PendingIPCBlobChild.h"
 #include "mozilla/dom/IPCBlobUtils.h"
+#include "mozilla/Encoding.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/TaskQueue.h"
 #include "nsCOMPtr.h"
@@ -1330,28 +1330,22 @@ private:
       return NS_OK;
     }
 
-    nsAutoCString encoding;
-    // The BOM sniffing is baked into the "decode" part of the Encoding
-    // Standard, which the File API references.
-    if (!nsContentUtils::CheckForBOM(
-          reinterpret_cast<const unsigned char *>(data.get()),
-          data.Length(),
-          encoding)) {
-      // BOM sniffing failed. Try the API argument.
-      if (!EncodingUtils::FindEncodingForLabel(mFileRequest->GetEncoding(),
-                                               encoding)) {
-        // API argument failed. Since we are dealing with a file system file,
-        // we don't have a meaningful type attribute for the blob available,
-        // so proceeding to the next step, which is defaulting to UTF-8.
-        encoding.AssignLiteral("UTF-8");
-      }
+    // Try the API argument.
+    const Encoding* encoding =
+      Encoding::ForLabel(mFileRequest->GetEncoding());
+    if (!encoding) {
+      // API argument failed. Since we are dealing with a file system file,
+      // we don't have a meaningful type attribute for the blob available,
+      // so proceeding to the next step, which is defaulting to UTF-8.
+      encoding = UTF_8_ENCODING;
     }
 
     nsString tmpString;
-    rv = nsContentUtils::ConvertStringFromEncoding(encoding, data, tmpString);
+    Tie(rv, encoding) = encoding->Decode(data, tmpString);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR;
     }
+    rv = NS_OK;
 
     if (NS_WARN_IF(!xpc::StringToJsval(aCx, tmpString, aResult))) {
       return NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR;

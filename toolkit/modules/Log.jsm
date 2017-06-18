@@ -793,9 +793,7 @@ StorageStreamAppender.prototype = {
         this._converterStream = Cc["@mozilla.org/intl/converter-output-stream;1"]
                                   .createInstance(Ci.nsIConverterOutputStream);
       }
-      this._converterStream.init(
-        this._outputStream, "UTF-8", STREAM_SEGMENT_SIZE,
-        Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+      this._converterStream.init(this._outputStream, "UTF-8");
     }
     return this._converterStream;
   },

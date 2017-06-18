@@ -254,20 +254,6 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
         return new DefaultHttpDataSourceFactory(AppConstants.USER_AGENT_FENNEC_MOBILE, bandwidthMeter);
     }
 
-    private MediaSource buildMediaSource(Uri uri, String overrideExtension) {
-        if (DEBUG) { Log.d(LOGTAG, "buildMediaSource uri[" + uri + "]" + ", overridedExt[" + overrideExtension + "]"); }
-        int type = Util.inferContentType(TextUtils.isEmpty(overrideExtension)
-                                         ? uri.getLastPathSegment()
-                                         : "." + overrideExtension);
-        switch (type) {
-            case C.TYPE_HLS:
-                return new HlsMediaSource(uri, mMediaDataSourceFactory, mMainHandler, null);
-            default:
-                mResourceCallbacks.onError(ResourceError.UNSUPPORTED.code());
-                throw new IllegalArgumentException("Unsupported type: " + type);
-        }
-    }
-
     // To make sure that each player has a unique id, GeckoHlsPlayer should be
     // created only from synchronized APIs in GeckoPlayerFactory.
     public GeckoHlsPlayer() {
@@ -541,7 +527,11 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
 
         Uri uri = Uri.parse(url);
         mMediaDataSourceFactory = buildDataSourceFactory(ctx, BANDWIDTH_METER);
-        mMediaSource = buildMediaSource(uri, null);
+        mMediaSource = new HlsMediaSource(uri, mMediaDataSourceFactory, mMainHandler, null);
+        if (DEBUG) {
+            Log.d(LOGTAG, "Uri is " + uri +
+                          ", ContentType is " + Util.inferContentType(uri.getLastPathSegment()));
+        }
 
         mPlayer.prepare(mMediaSource);
         mIsPlayerInitDone = true;
