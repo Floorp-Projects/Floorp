@@ -154,7 +154,10 @@ function Tester(aTests, structuredLogger, aCallback) {
   this.TestUtils = Components.utils.import("resource://testing-common/TestUtils.jsm", null).TestUtils;
   this.Task.Debugging.maintainStack = true;
   this.Promise = Components.utils.import("resource://gre/modules/Promise.jsm", null).Promise;
+  this.PromiseTestUtils = Components.utils.import("resource://testing-common/PromiseTestUtils.jsm", null).PromiseTestUtils;
   this.Assert = Components.utils.import("resource://testing-common/Assert.jsm", null).Assert;
+
+  this.PromiseTestUtils.init();
 
   this.SimpleTestOriginal = {};
   SIMPLETEST_OVERRIDES.forEach(m => {
@@ -162,34 +165,6 @@ function Tester(aTests, structuredLogger, aCallback) {
   });
 
   this._coverageCollector = null;
-
-  this._toleratedUncaughtRejections = null;
-  this._uncaughtErrorObserver = ({message, date, fileName, stack, lineNumber}) => {
-    let ex = message;
-    if (fileName || lineNumber) {
-      ex = {
-        fileName: fileName,
-        lineNumber: lineNumber,
-        message: message,
-        toString: function() {
-          return message;
-        }
-      };
-    }
-
-    // We may have a whitelist of rejections we wish to tolerate.
-    let pass = this._toleratedUncaughtRejections &&
-      this._toleratedUncaughtRejections.indexOf(message) != -1;
-    let name = "A promise chain failed to handle a rejection: ";
-    if (pass) {
-      name = "WARNING: (PLEASE FIX THIS AS PART OF BUG 1077403) " + name;
-    }
-
-    this.currentTest.addResult(new testResult({
-      pass, name, ex, todo: pass, stack,
-      allowFailure: this.currentTest.allowFailure,
-    }));
-  };
 }
 Tester.prototype = {
   EventUtils: {},
@@ -243,9 +218,6 @@ Tester.prototype = {
       "__SS_tabsToRestore", "__SSi",
       "webConsoleCommandController",
     ];
-
-    this.Promise.Debugging.clearUncaughtErrorObservers();
-    this.Promise.Debugging.addUncaughtErrorObserver(this._uncaughtErrorObserver);
 
     if (this.tests.length)
       this.waitForGraphicsTestWindowToBeGone(this.nextTest.bind(this));
@@ -344,8 +316,6 @@ Tester.prototype = {
   },
 
   finish: function Tester_finish(aSkipSummary) {
-    this.Promise.Debugging.flushUncaughtErrors();
-
     var passCount = this.tests.reduce((a, f) => a + f.passCount, 0);
     var failCount = this.tests.reduce((a, f) => a + f.failCount, 0);
     var todoCount = this.tests.reduce((a, f) => a + f.todoCount, 0);
@@ -360,8 +330,9 @@ Tester.prototype = {
     } else {
       TabDestroyObserver.destroy();
       Services.console.unregisterListener(this);
-      this.Promise.Debugging.clearUncaughtErrorObservers();
-      this._treatUncaughtRejectionsAsFailures = false;
+
+      // It's important to terminate the module to avoid crashes on shutdown.
+      this.PromiseTestUtils.uninit();
 
       // In the main process, we print the ShutdownLeaksCollector message here.
       let pid = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).processID;
@@ -422,7 +393,6 @@ Tester.prototype = {
 
   nextTest: Task.async(function*() {
     if (this.currentTest) {
-      this.Promise.Debugging.flushUncaughtErrors();
       if (this._coverageCollector) {
         this._coverageCollector.recordTestCoverage(this.currentTest.path);
       }
@@ -454,8 +424,6 @@ Tester.prototype = {
         }));
       }
 
-      this.Promise.Debugging.flushUncaughtErrors();
-
       let winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
       if (winUtils.isTestControllingRefreshes) {
@@ -472,6 +440,10 @@ Tester.prototype = {
           allowFailure: this.currentTest.allowFailure,
         }));
       }
+
+      this.PromiseTestUtils.ensureDOMPromiseRejectionsProcessed();
+      this.PromiseTestUtils.assertNoUncaughtRejections();
+      this.PromiseTestUtils.assertNoMoreExpectedRejections();
 
       Object.keys(window).forEach(function (prop) {
         if (parseInt(prop) == prop) {
@@ -748,6 +720,7 @@ Tester.prototype = {
       }));
     });
 
+    this.PromiseTestUtils.Assert = this.currentTest.scope.Assert;
     this.ContentTask.setTestScope(currentScope);
 
     // Allow Assert.jsm methods to be tacked to the current scope.
@@ -789,7 +762,6 @@ Tester.prototype = {
     try {
       this._scriptLoader.loadSubScript(this.currentTest.path,
                                        this.currentTest.scope);
-      this.Promise.Debugging.flushUncaughtErrors();
       // Run the test
       this.lastStartTime = Date.now();
       if (this.currentTest.scope.__tasks) {
@@ -798,6 +770,7 @@ Tester.prototype = {
           throw "Cannot run both a add_task test and a normal test at the same time.";
         }
         let Promise = this.Promise;
+        let PromiseTestUtils = this.PromiseTestUtils;
         this.Task.spawn(function*() {
           let task;
           while ((task = this.__tasks.shift())) {
@@ -825,7 +798,7 @@ Tester.prototype = {
                 }));
               }
             }
-            Promise.Debugging.flushUncaughtErrors();
+            PromiseTestUtils.assertNoUncaughtRejections();
             this.SimpleTest.info("Leaving test " + task.name);
           }
           this.finish();
@@ -1074,10 +1047,6 @@ function testScope(aTester, aTest, expected) {
   };
 
   this.thisTestLeaksUncaughtRejectionsAndShouldBeFixed = function(...rejections) {
-    if (!aTester._toleratedUncaughtRejections) {
-      aTester._toleratedUncaughtRejections = [];
-    }
-    aTester._toleratedUncaughtRejections.push(...rejections);
   };
 
   this.expectAssertions = function test_expectAssertions(aMin, aMax) {
