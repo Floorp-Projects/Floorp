@@ -194,6 +194,69 @@ public:
     }
   }
 
+  struct LookupResult {
+  private:
+    EntryType* mEntry;
+    nsBaseHashtable& mTable;
+#ifdef DEBUG
+    uint32_t mTableGeneration;
+#endif
+
+  public:
+    LookupResult(EntryType* aEntry, nsBaseHashtable& aTable)
+      : mEntry(aEntry)
+      , mTable(aTable)
+#ifdef DEBUG
+      , mTableGeneration(aTable.GetGeneration())
+#endif
+    {}
+
+    // Is there something stored in the table?
+    explicit operator bool() const
+    {
+      MOZ_ASSERT(mTableGeneration == mTable.GetGeneration());
+      return mEntry;
+    }
+
+    void Remove()
+    {
+      if (!*this) {
+        return;
+      }
+      mTable.RemoveEntry(mEntry);
+      mEntry = nullptr;
+    }
+
+    MOZ_MUST_USE DataType& Data()
+    {
+      MOZ_ASSERT(!!*this, "must have an entry to access its value");
+      return mEntry->mData;
+    }
+  };
+
+  /**
+   * Looks up aKey in the hashtable and returns an object that allows you to
+   * read/modify the value of the entry, or remove the entry (if found).
+   *
+   * A typical usage of this API looks like this:
+   *
+   *   if (auto entry = hashtable.Lookup(key)) {
+   *     DoSomething(entry.Data());
+   *     if (entry.Data() > 42) {
+   *       entry.Remove();
+   *     }
+   *   } // else - an entry with the given key doesn't exist
+   *
+   * This is useful for cases where you want to read/write the value of an entry
+   * and (optionally) remove the entry without having to do multiple hashtable
+   * lookups.  If you want to insert a new entry if one does not exist, then use
+   * LookupForAdd instead, see below.
+   */
+  MOZ_MUST_USE LookupResult Lookup(KeyType aKey)
+  {
+    return LookupResult(this->GetEntry(aKey), *this);
+  }
+
   struct EntryPtr {
   private:
     EntryType& mEntry;
