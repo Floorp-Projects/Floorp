@@ -71,9 +71,6 @@ private:
   nsresult CheckForSPSChange(MediaRawData* aSample);
   void UpdateConfigFromExtraData(MediaByteBuffer* aExtraData);
 
-  void OnDecoderInitDone(const TrackType aTrackType);
-  void OnDecoderInitFailed(const MediaResult& aError);
-
   bool CanRecycleDecoder() const;
 
   void DecodeFirstSample(MediaRawData* aSample);
@@ -88,7 +85,6 @@ private:
   RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   RefPtr<layers::ImageContainer> mImageContainer;
   const RefPtr<TaskQueue> mTaskQueue;
-  RefPtr<MediaRawData> mPendingSample;
   RefPtr<MediaDataDecoder> mDecoder;
   MozPromiseRequestHolder<InitPromise> mInitPromiseRequest;
   MozPromiseRequestHolder<DecodePromise> mDecodePromiseRequest;
