@@ -101,6 +101,10 @@ public:
   }
 
   // Faster comparison in the case we know the namespace is null
+  // Note that some callers such as nsAttrAndChildArray::IndexOfAttr() will
+  // call this function on nsAttrName structs with 0 mBits, so no attempt
+  // must be made to do anything with mBits besides comparing it with the
+  // incoming aAtom argument.
   bool Equals(nsIAtom* aAtom) const
   {
     return reinterpret_cast<uintptr_t>(aAtom) == mBits;
