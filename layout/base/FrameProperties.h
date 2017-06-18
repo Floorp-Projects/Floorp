@@ -62,7 +62,7 @@ protected:
  *
  * To use this class, declare a global (i.e., file, class or function-scope
  * static member) FramePropertyDescriptor and pass its address as
- * aProperty in the FramePropertyTable methods.
+ * aProperty in the FrameProperties methods.
  */
 template<typename T>
 struct FramePropertyDescriptor : public FramePropertyDescriptorUntyped
