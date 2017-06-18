@@ -33,8 +33,10 @@ nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI,
 
   nsAutoCString charset;
   aURI->GetOriginCharset(charset);
-  const Encoding* encoding = charset.IsEmpty() ?
-    UTF_8_ENCODING : Encoding::ForName(charset);
+  auto encoding = Encoding::ForLabelNoReplacement(charset);
+  if (!encoding) {
+    encoding = UTF_8_ENCODING;
+  }
   nsAutoString ref;
   nsresult rv = encoding->DecodeWithoutBOMHandling(refPart, ref);
   if (NS_FAILED(rv) || ref.IsEmpty()) {

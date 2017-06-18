@@ -13398,14 +13398,14 @@ nsGlobalWindow::SecurityCheckURL(const char *aURL)
   // used to actually kick off the load in nsWindowWatcher.cpp.
   nsCOMPtr<nsIDocument> doc = sourceWindow->GetDoc();
   nsIURI* baseURI = nullptr;
-  nsAutoCString charset(NS_LITERAL_CSTRING("UTF-8")); // default to utf-8
+  auto encoding = UTF_8_ENCODING; // default to utf-8
   if (doc) {
     baseURI = doc->GetDocBaseURI();
-    charset = doc->GetDocumentCharacterSet();
+    encoding = doc->GetDocumentCharacterSet();
   }
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), nsDependentCString(aURL),
-                          charset.get(), baseURI);
+                          encoding, baseURI);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
