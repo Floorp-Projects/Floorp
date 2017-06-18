@@ -77,6 +77,8 @@ private:
   bool CanRecycleDecoder() const;
 
   void DecodeFirstSample(MediaRawData* aSample);
+  void DrainThenFlushDecoder(MediaRawData* aPendingSample);
+  void FlushThenShutdownDecoder(MediaRawData* aPendingSample);
 
   RefPtr<PlatformDecoderModule> mPDM;
   const VideoInfo mOriginalConfig;
@@ -92,6 +94,8 @@ private:
   MozPromiseRequestHolder<DecodePromise> mDecodePromiseRequest;
   MozPromiseHolder<DecodePromise> mDecodePromise;
   MozPromiseRequestHolder<FlushPromise> mFlushRequest;
+  MediaDataDecoder::DecodedData mPendingFrames;
+  MozPromiseRequestHolder<DecodePromise> mDrainRequest;
   MozPromiseRequestHolder<ShutdownPromise> mShutdownRequest;
   RefPtr<ShutdownPromise> mShutdownPromise;
   MozPromiseHolder<FlushPromise> mFlushPromise;
