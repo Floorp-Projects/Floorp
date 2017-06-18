@@ -3,8 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #define NS_HTML5_TREE_BUILDER_HANDLE_ARRAY_LENGTH 512
-
   private:
+    using Encoding = mozilla::Encoding;
+    template <typename T> using NotNull = mozilla::NotNull<T>;
+
     nsHtml5OplessBuilder*                  mBuilder;
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // If mBuilder is not null, the tree op machinery is not in use and
@@ -104,11 +106,12 @@
     
     void FlushLoads();
 
-    void SetDocumentCharset(nsACString& aCharset, int32_t aCharsetSource);
+    void SetDocumentCharset(NotNull<const Encoding*> aEncoding,
+                            int32_t aCharsetSource);
 
     void StreamEnded();
 
-    void NeedsCharsetSwitchTo(const nsACString& aEncoding,
+    void NeedsCharsetSwitchTo(NotNull<const Encoding*> aEncoding,
                               int32_t aSource,
                               int32_t aLineNumber);
 

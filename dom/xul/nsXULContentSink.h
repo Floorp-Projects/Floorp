@@ -41,7 +41,7 @@ public:
     NS_IMETHOD WillResume(void) override;
     NS_IMETHOD SetParser(nsParserBase* aParser) override;
     virtual void FlushPendingNotifications(mozilla::FlushType aType) override { }
-    NS_IMETHOD SetDocumentCharset(nsACString& aCharset) override;
+    virtual void SetDocumentCharset(NotNull<const Encoding*> aEncoding) override;
     virtual nsISupports *GetTarget() override;
 
     /**
