@@ -341,6 +341,7 @@ UNIFIED_SOURCES += [
     'SameProcessMessageQueue.cpp',
     'ScreenOrientation.cpp',
     'Selection.cpp',
+    'SelectionChangeListener.cpp',
     'ShadowRoot.cpp',
     'StructuredCloneBlob.cpp',
     'StructuredCloneHolder.cpp',
