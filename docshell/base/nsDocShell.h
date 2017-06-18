@@ -62,6 +62,7 @@
 #include "nsIDeprecationWarner.h"
 
 namespace mozilla {
+class Encoding;
 enum class TaskCategory;
 namespace dom {
 class EventTarget;
@@ -155,6 +156,7 @@ class nsDocShell final
 {
   friend class nsDSURIContentListener;
   friend class FramingChecker;
+  using Encoding = mozilla::Encoding;
 
 public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(nsDocShell)
@@ -273,6 +275,8 @@ public:
     mInFrameSwap = aInSwap;
   }
   bool InFrameSwap();
+
+  const Encoding* GetForcedCharset() { return mForcedCharset; }
 
 private:
   bool CanSetOriginAttributes();
@@ -1036,8 +1040,8 @@ protected:
   nsString mInterceptedDocumentId;
 
 private:
-  nsCString mForcedCharset;
-  nsCString mParentCharset;
+  const Encoding* mForcedCharset;
+  const Encoding* mParentCharset;
   int32_t mParentCharsetSource;
   nsCOMPtr<nsIPrincipal> mParentCharsetPrincipal;
   nsTObserverArray<nsWeakPtr> mPrivacyObservers;
