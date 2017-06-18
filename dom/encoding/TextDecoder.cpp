@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/TextDecoder.h"
-#include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/UnionTypes.h"
+#include "mozilla/Encoding.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsContentUtils.h"
 #include <stdint.h>
@@ -20,30 +20,31 @@ void
 TextDecoder::Init(const nsAString& aLabel, const bool aFatal,
                   ErrorResult& aRv)
 {
-  nsAutoCString encoding;
   // Let encoding be the result of getting an encoding from label.
   // If encoding is failure or replacement, throw a RangeError
   // (https://encoding.spec.whatwg.org/#dom-textdecoder).
-  if (!EncodingUtils::FindEncodingForLabelNoReplacement(aLabel, encoding)) {
+  const Encoding* encoding = Encoding::ForLabelNoReplacement(aLabel);
+  if (!encoding) {
     nsAutoString label(aLabel);
-    EncodingUtils::TrimSpaceCharacters(label);
+    label.Trim(" \t\n\f\r");
     aRv.ThrowRangeError<MSG_ENCODING_NOT_SUPPORTED>(label);
     return;
   }
-  InitWithEncoding(encoding, aFatal);
+  InitWithEncoding(WrapNotNull(encoding), aFatal);
 }
 
 void
-TextDecoder::InitWithEncoding(const nsACString& aEncoding, const bool aFatal)
+TextDecoder::InitWithEncoding(NotNull<const Encoding*> aEncoding,
+                              const bool aFatal)
 {
-  mEncoding = aEncoding;
+  aEncoding->Name(mEncoding);
   // If the constructor is called with an options argument,
   // and the fatal property of the dictionary is set,
   // set the internal fatal flag of the decoder object.
   mFatal = aFatal;
 
   // Create a decoder object for mEncoding.
-  mDecoder = EncodingUtils::DecoderForEncoding(mEncoding);
+  mDecoder = aEncoding->NewDecoderWithBOMRemoval();
 }
 
 void

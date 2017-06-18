@@ -566,9 +566,8 @@ fn pulse_format_to_cubeb_format(format: pa_sample_format_t) -> cubeb::DeviceFmt 
         PA_SAMPLE_S16BE => cubeb::DEVICE_FMT_S16BE,
         PA_SAMPLE_FLOAT32LE => cubeb::DEVICE_FMT_F32LE,
         PA_SAMPLE_FLOAT32BE => cubeb::DEVICE_FMT_F32BE,
-        _ => {
-            panic!("Invalid format");
-        },
+        // Unsupported format, return F32NE
+        _ => cubeb::CUBEB_FMT_F32NE,
     }
 }
 

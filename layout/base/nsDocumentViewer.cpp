@@ -41,8 +41,8 @@
 #include "mozilla/a11y/DocAccessible.h"
 #endif
 #include "mozilla/BasicEvents.h"
+#include "mozilla/Encoding.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -3382,17 +3382,20 @@ nsDocumentViewer::SetForceCharacterSet(const nsACString& aForceCharacterSet)
   // than a canonical name. However, in case where the input is a canonical
   // name, "replacement" doesn't survive label resolution. Additionally, the
   // empty string means no hint.
-  nsAutoCString encoding;
+  const Encoding* encoding = nullptr;
   if (!aForceCharacterSet.IsEmpty()) {
     if (aForceCharacterSet.EqualsLiteral("replacement")) {
-      encoding.AssignLiteral("replacement");
-    } else if (!EncodingUtils::FindEncodingForLabel(aForceCharacterSet,
-                                                    encoding)) {
+      encoding = REPLACEMENT_ENCODING;
+    } else if (!(encoding = Encoding::ForLabel(aForceCharacterSet))) {
       // Reject unknown labels
       return NS_ERROR_INVALID_ARG;
     }
   }
-  mForceCharacterSet = encoding;
+  if (encoding) {
+    encoding->Name(mForceCharacterSet);
+  } else {
+    mForceCharacterSet.Truncate();
+  }
   // now set the force char set on all children of mContainer
   CallChildren(SetChildForceCharacterSet, (void*) &aForceCharacterSet);
   return NS_OK;
@@ -3449,17 +3452,20 @@ nsDocumentViewer::SetHintCharacterSet(const nsACString& aHintCharacterSet)
   // than a canonical name. However, in case where the input is a canonical
   // name, "replacement" doesn't survive label resolution. Additionally, the
   // empty string means no hint.
-  nsAutoCString encoding;
+  const Encoding* encoding = nullptr;
   if (!aHintCharacterSet.IsEmpty()) {
     if (aHintCharacterSet.EqualsLiteral("replacement")) {
-      encoding.AssignLiteral("replacement");
-    } else if (!EncodingUtils::FindEncodingForLabel(aHintCharacterSet,
-                                                    encoding)) {
+      encoding = REPLACEMENT_ENCODING;
+    } else if (!(encoding = Encoding::ForLabel(aHintCharacterSet))) {
       // Reject unknown labels
       return NS_ERROR_INVALID_ARG;
     }
   }
-  mHintCharset = encoding;
+  if (encoding) {
+    encoding->Name(mHintCharset);
+  } else {
+    mHintCharset.Truncate();
+  }
   // now set the hint char set on all children of mContainer
   CallChildren(SetChildHintCharacterSet, (void*) &aHintCharacterSet);
   return NS_OK;

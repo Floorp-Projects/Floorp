@@ -16,7 +16,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
-#include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/Encoding.h"
 #include "nsTextNode.h"
 #include "nsNameSpaceManager.h"
 
@@ -160,11 +160,11 @@ txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
 
     // Set the charset
     if (!mOutputFormat.mEncoding.IsEmpty()) {
-        nsAutoCString canonicalCharset;
-
-        if (EncodingUtils::FindEncodingForLabel(mOutputFormat.mEncoding,
-                                                canonicalCharset)) {
+        const Encoding* encoding = Encoding::ForLabel(mOutputFormat.mEncoding);
+        if (encoding) {
             mDocument->SetDocumentCharacterSetSource(kCharsetFromOtherComponent);
+            nsAutoCString canonicalCharset;
+            encoding->Name(canonicalCharset);
             mDocument->SetDocumentCharacterSet(canonicalCharset);
         }
     }

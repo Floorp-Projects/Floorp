@@ -6,10 +6,11 @@
 
 //#define __INCREMENTAL 1
 
+#include "nsScanner.h"
+
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
-
-#include "nsScanner.h"
+#include "mozilla/Encoding.h"
 #include "nsDebug.h"
 #include "nsReadableUtils.h"
 #include "nsIInputStream.h"
@@ -18,10 +19,6 @@
 #include "nsCRT.h"
 #include "nsParser.h"
 #include "nsCharsetSource.h"
-
-#include "mozilla/dom/EncodingUtils.h"
-
-using mozilla::dom::EncodingUtils;
 
 nsReadEndCondition::nsReadEndCondition(const char16_t* aTerminateChars) :
   mChars(aTerminateChars), mFilter(char16_t(~0)) // All bits set
@@ -106,15 +103,16 @@ nsresult nsScanner::SetDocumentCharset(const nsACString& aCharset , int32_t aSou
 
   mCharsetSource = aSource;
 
-  nsCString charsetName;
+  const Encoding* encoding;
   if (aCharset.EqualsLiteral("replacement")) {
-    charsetName.Assign(aCharset);
+    encoding = REPLACEMENT_ENCODING;
   } else {
-    mozilla::DebugOnly<bool> valid =
-        EncodingUtils::FindEncodingForLabel(aCharset, charsetName);
-    MOZ_ASSERT(valid, "Should never call with a bogus aCharset.");
+    encoding = Encoding::ForLabel(aCharset);
+    MOZ_ASSERT(encoding, "Should never call with a bogus aCharset.");
   }
 
+  nsCString charsetName;
+  encoding->Name(charsetName);
   if (!mCharset.IsEmpty() && charsetName.Equals(mCharset)) {
     return NS_OK; // no difference, don't change it
   }
@@ -123,7 +121,7 @@ nsresult nsScanner::SetDocumentCharset(const nsACString& aCharset , int32_t aSou
 
   mCharset.Assign(charsetName);
 
-  mUnicodeDecoder = EncodingUtils::DecoderForEncoding(mCharset);
+  mUnicodeDecoder = encoding->NewDecoderWithBOMRemoval();
 
   return NS_OK;
 }

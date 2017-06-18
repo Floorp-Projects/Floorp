@@ -2492,7 +2492,8 @@ nsTextEditorState::GetValue(nsAString& aValue, bool aIgnoreWrap) const
 }
 
 bool
-nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
+nsTextEditorState::SetValue(const nsAString& aValue, const nsAString* aOldValue,
+                            uint32_t aFlags)
 {
   nsAutoString newValue(aValue);
 
@@ -2505,6 +2506,9 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
   // mIsCommittingComposition is set false.  See below.
   if (mIsCommittingComposition) {
     mValueBeingSet = aValue;
+    // GetValue doesn't return current text frame's content during committing.
+    // So we cannot trust this old value
+    aOldValue = nullptr;
   }
 
   // Note that if this may be called during reframe of the editor.  In such
@@ -2525,7 +2529,15 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
         // If setting value won't change current value, we shouldn't commit
         // composition for compatibility with the other browsers.
         nsAutoString currentValue;
-        mBoundFrame->GetText(currentValue);
+        if (aOldValue) {
+#ifdef DEBUG
+          mBoundFrame->GetText(currentValue);
+          MOZ_ASSERT(currentValue.Equals(*aOldValue));
+#endif
+          currentValue.Assign(*aOldValue);
+        } else {
+          mBoundFrame->GetText(currentValue);
+        }
         if (newValue == currentValue) {
           // Note that in this case, we shouldn't fire any events with setting
           // value because event handlers may try to set value recursively but
@@ -2533,6 +2545,9 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
           // script (see below).
           return true;
         }
+        // IME might commit composition, then change value, so we cannot
+        // trust old value from parameter.
+        aOldValue = nullptr;
       }
       // If there is composition, need to commit composition first because
       // other browsers do that.
@@ -2593,7 +2608,15 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
 #endif
 
     nsAutoString currentValue;
-    mBoundFrame->GetText(currentValue);
+    if (aOldValue) {
+#ifdef DEBUG
+      mBoundFrame->GetText(currentValue);
+      MOZ_ASSERT(currentValue.Equals(*aOldValue));
+#endif
+      currentValue.Assign(*aOldValue);
+    } else {
+      mBoundFrame->GetText(currentValue);
+    }
 
     AutoWeakFrame weakFrame(mBoundFrame);
 

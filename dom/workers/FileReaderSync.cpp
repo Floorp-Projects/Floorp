@@ -9,9 +9,8 @@
 #include "jsfriendapi.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Base64.h"
-#include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/File.h"
-#include "nsContentUtils.h"
+#include "mozilla/Encoding.h"
 #include "mozilla/dom/FileReaderSyncBinding.h"
 #include "nsCExternalHandlerService.h"
 #include "nsComponentManagerUtils.h"
@@ -142,8 +141,6 @@ FileReaderSync::ReadAsText(Blob& aBlob,
     return;
   }
 
-  nsAutoCString encoding;
-
   nsCString sniffBuf;
   if (!sniffBuf.SetLength(3, fallible)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
@@ -162,30 +159,26 @@ FileReaderSync::ReadAsText(Blob& aBlob,
     return;
   }
 
-  // The BOM sniffing is baked into the "decode" part of the Encoding
-  // Standard, which the File API references.
-  if (!nsContentUtils::CheckForBOM((const unsigned char*)sniffBuf.BeginReading(),
-                                   numRead, encoding)) {
-    // BOM sniffing failed. Try the API argument.
-    if (!aEncoding.WasPassed() ||
-        !EncodingUtils::FindEncodingForLabel(aEncoding.Value(),
-                                             encoding)) {
-      // API argument failed. Try the type property of the blob.
-      nsAutoString type16;
-      aBlob.GetType(type16);
-      NS_ConvertUTF16toUTF8 type(type16);
-      nsAutoCString specifiedCharset;
-      bool haveCharset;
-      int32_t charsetStart, charsetEnd;
-      NS_ExtractCharsetFromContentType(type,
-                                       specifiedCharset,
-                                       &haveCharset,
-                                       &charsetStart,
-                                       &charsetEnd);
-      if (!EncodingUtils::FindEncodingForLabel(specifiedCharset, encoding)) {
-        // Type property failed. Use UTF-8.
-        encoding.AssignLiteral("UTF-8");
-      }
+  // Try the API argument.
+  const Encoding* encoding = aEncoding.WasPassed() ?
+    Encoding::ForLabel(aEncoding.Value()) : nullptr;
+  if (!encoding) {
+    // API argument failed. Try the type property of the blob.
+    nsAutoString type16;
+    aBlob.GetType(type16);
+    NS_ConvertUTF16toUTF8 type(type16);
+    nsAutoCString specifiedCharset;
+    bool haveCharset;
+    int32_t charsetStart, charsetEnd;
+    NS_ExtractCharsetFromContentType(type,
+                                     specifiedCharset,
+                                     &haveCharset,
+                                     &charsetStart,
+                                     &charsetEnd);
+    encoding = Encoding::ForLabel(specifiedCharset);
+    if (!encoding) {
+      // Type property failed. Use UTF-8.
+      encoding = UTF_8_ENCODING;
     }
   }
 
@@ -231,7 +224,9 @@ FileReaderSync::ReadAsText(Blob& aBlob,
     }
   }
 
-  aRv = ConvertStream(multiplexStream, encoding.get(), aResult);
+  nsAutoCString charset;
+  encoding->Name(charset);
+  aRv = ConvertStream(multiplexStream, charset.get(), aResult);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
