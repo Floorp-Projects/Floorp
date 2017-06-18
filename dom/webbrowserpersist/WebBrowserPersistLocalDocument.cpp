@@ -137,7 +137,7 @@ WebBrowserPersistLocalDocument::GetContentType(nsACString& aContentType)
 NS_IMETHODIMP
 WebBrowserPersistLocalDocument::GetCharacterSet(nsACString& aCharSet)
 {
-    aCharSet = GetCharacterSet();
+    GetCharacterSet()->Name(aCharSet);
     return NS_OK;
 }
 
@@ -236,7 +236,7 @@ WebBrowserPersistLocalDocument::GetHistory()
     return history.forget();
 }
 
-const nsCString&
+NotNull<const Encoding*>
 WebBrowserPersistLocalDocument::GetCharacterSet() const
 {
     return mDocument->GetDocumentCharacterSet();
@@ -397,7 +397,7 @@ ResourceReader::OnWalkURI(const nsACString& aURISpec)
 
     rv = NS_NewURI(getter_AddRefs(uri),
                    aURISpec,
-                   mParent->GetCharacterSet().get(),
+                   mParent->GetCharacterSet(),
                    mCurrentBaseURI);
     NS_ENSURE_SUCCESS(rv, rv);
     return OnWalkURI(uri);
@@ -552,7 +552,7 @@ ResourceReader::OnWalkDOMNode(nsIDOMNode* aNode)
         if (!codebase.IsEmpty()) {
             nsCOMPtr<nsIURI> baseURI;
             rv = NS_NewURI(getter_AddRefs(baseURI), codebase,
-                           mParent->GetCharacterSet().get(), mCurrentBaseURI);
+                           mParent->GetCharacterSet(), mCurrentBaseURI);
             NS_ENSURE_SUCCESS(rv, rv);
             if (baseURI) {
                 mCurrentBaseURI = baseURI;
@@ -717,7 +717,7 @@ PersistNodeFixup::FixupURI(nsAString &aURI)
     // get the current location of the file (absolutized)
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_NewURI(getter_AddRefs(uri), aURI,
-                            mParent->GetCharacterSet().get(), mCurrentBaseURI);
+                            mParent->GetCharacterSet(), mCurrentBaseURI);
     NS_ENSURE_SUCCESS(rv, rv);
     nsAutoCString spec;
     rv = uri->GetSpec(spec);
@@ -804,7 +804,7 @@ PersistNodeFixup::FixupAnchor(nsIDOMNode *aNode)
         // Make a new URI to replace the current one
         nsCOMPtr<nsIURI> newURI;
         rv = NS_NewURI(getter_AddRefs(newURI), oldCValue,
-                       mParent->GetCharacterSet().get(), relativeURI);
+                       mParent->GetCharacterSet(), relativeURI);
         if (NS_SUCCEEDED(rv) && newURI) {
             newURI->SetUserPass(EmptyCString());
             nsAutoCString uriSpec;
@@ -1130,7 +1130,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
             if (!codebase.IsEmpty()) {
                 nsCOMPtr<nsIURI> baseURI;
                 NS_NewURI(getter_AddRefs(baseURI), codebase,
-                          mParent->GetCharacterSet().get(), mCurrentBaseURI);
+                          mParent->GetCharacterSet(), mCurrentBaseURI);
                 if (baseURI) {
                     mCurrentBaseURI = baseURI;
                 }

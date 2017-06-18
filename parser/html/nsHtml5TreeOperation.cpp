@@ -105,7 +105,6 @@ nsHtml5TreeOperation::~nsHtml5TreeOperation()
       break;
     case eTreeOpSetDocumentCharset:
     case eTreeOpNeedsCharsetSwitchTo:
-      delete[] mOne.charPtr;
       break;
     case eTreeOpProcessOfflineManifest:
       free(mOne.unicharPtr);
@@ -789,17 +788,16 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       return NS_OK;
     }
     case eTreeOpSetDocumentCharset: {
-      char* str = mOne.charPtr;
+      auto encoding = WrapNotNull(mOne.encoding);
       int32_t charsetSource = mFour.integer;
-      nsDependentCString dependentString(str);
-      aBuilder->SetDocumentCharsetAndSource(dependentString, charsetSource);
+      aBuilder->SetDocumentCharsetAndSource(encoding, charsetSource);
       return NS_OK;
     }
     case eTreeOpNeedsCharsetSwitchTo: {
-      char* str = mOne.charPtr;
+      auto encoding = WrapNotNull(mOne.encoding);
       int32_t charsetSource = mFour.integer;
       int32_t lineNumber = mTwo.integer;
-      aBuilder->NeedsCharsetSwitchTo(str, charsetSource, (uint32_t)lineNumber);
+      aBuilder->NeedsCharsetSwitchTo(encoding, charsetSource, (uint32_t)lineNumber);
       return NS_OK;
     }
     case eTreeOpUpdateStyleSheet: {
@@ -884,11 +882,11 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
 
       nsIDocument* doc = aBuilder->GetDocument();
 
-      const nsCString& charset = doc->GetDocumentCharacterSet();
+      auto encoding = doc->GetDocumentCharacterSet();
       nsCOMPtr<nsIURI> uri;
       nsresult rv = NS_NewURI(getter_AddRefs(uri),
                               relative,
-                              charset.get(),
+                              encoding,
                               aBuilder->GetViewSourceBaseURI());
       NS_ENSURE_SUCCESS(rv, NS_OK);
 

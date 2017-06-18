@@ -7,10 +7,12 @@
 #ifndef mozilla_dom_FallbackEncoding_h_
 #define mozilla_dom_FallbackEncoding_h_
 
+#include "mozilla/NotNull.h"
 #include "nsIObserver.h"
 #include "nsString.h"
 
 namespace mozilla {
+class Encoding;
 namespace dom {
 
 class FallbackEncoding : public nsIObserver
@@ -30,7 +32,7 @@ public:
    *
    * @param aFallback the outparam for the fallback encoding
    */
-  static void FromLocale(nsACString& aFallback);
+  static NotNull<const Encoding*> FromLocale();
 
   /**
    * Checks if it is appropriate to call FromTopLevelDomain() for a given TLD.
@@ -47,7 +49,7 @@ public:
    * @param aTLD the top-level domain (in Punycode)
    * @param aFallback the outparam for the fallback encoding
    */
-  static void FromTopLevelDomain(const nsACString& aTLD, nsACString& aFallback);
+  static NotNull<const Encoding*> FromTopLevelDomain(const nsACString& aTLD);
 
   // public API ends here!
 
@@ -78,7 +80,7 @@ private:
    */
   void Invalidate()
   {
-    mFallback.Truncate();
+    mFallback = nullptr;
   }
 
   static void PrefChanged(const char*, void*);
@@ -87,9 +89,9 @@ private:
    * Gets the fallback encoding label.
    * @param aFallback the fallback encoding
    */
-  void Get(nsACString& aFallback);
+  NotNull<const Encoding*> Get();
 
-  nsCString mFallback;
+  const Encoding* mFallback;
 };
 
 } // namespace dom

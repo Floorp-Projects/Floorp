@@ -101,7 +101,9 @@ enum eHtml5StreamState {
   STREAM_ENDED = 2
 };
 
-class nsHtml5StreamParser : public nsICharsetDetectionObserver {
+class nsHtml5StreamParser final : public nsICharsetDetectionObserver {
+  template <typename T> using NotNull = mozilla::NotNull<T>;
+  using Encoding = mozilla::Encoding;
 
   friend class nsHtml5RequestStopper;
   friend class nsHtml5DataAvailable;
@@ -153,14 +155,15 @@ class nsHtml5StreamParser : public nsICharsetDetectionObserver {
      *  Call this method once you've created a parser, and want to instruct it
      *  about what charset to load
      *
-     *  @param   aCharset the charset of a document
+     *  @param   aEncoding the charset of a document
      *  @param   aCharsetSource the source of the charset
      */
-    inline void SetDocumentCharset(const nsACString& aCharset, int32_t aSource) {
+    inline void SetDocumentCharset(NotNull<const Encoding*> aEncoding,
+                                   int32_t aSource) {
       NS_PRECONDITION(mStreamState == STREAM_NOT_STARTED,
                       "SetDocumentCharset called too late.");
       NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-      mCharset = aCharset;
+      mEncoding = aEncoding;
       mCharsetSource = aSource;
     }
     
@@ -194,9 +197,9 @@ class nsHtml5StreamParser : public nsICharsetDetectionObserver {
     void DropTimer();
 
     /**
-     * Sets mCharset and mCharsetSource appropriately for the XML View Source
+     * Sets mEncoding and mCharsetSource appropriately for the XML View Source
      * case if aEncoding names a supported rough ASCII superset and sets
-     * the mCharset and mCharsetSource to the UTF-8 default otherwise.
+     * the mEncoding and mCharsetSource to the UTF-8 default otherwise.
      */
     void SetEncodingFromExpat(const char16_t* aEncoding);
 
@@ -339,7 +342,7 @@ class nsHtml5StreamParser : public nsICharsetDetectionObserver {
      *                            (UTF-16BE, UTF-16LE or UTF-8; the BOM has
      *                            been swallowed)
      */
-    nsresult SetupDecodingFromBom(const char* aDecoderCharsetName);
+    nsresult SetupDecodingFromBom(NotNull<const Encoding*> aEncoding);
 
     /**
      * Become confident or resolve and encoding name to its preferred form.
@@ -349,7 +352,7 @@ class nsHtml5StreamParser : public nsICharsetDetectionObserver {
      *         aEncoding and false if the parser became confident or if
      *         the encoding name did not specify a usable encoding
      */
-    bool PreferredForInternalEncodingDecl(nsACString& aEncoding);
+    const Encoding* PreferredForInternalEncodingDecl(const nsACString& aEncoding);
 
     /**
      * Callback for mFlushTimer.
@@ -423,7 +426,7 @@ class nsHtml5StreamParser : public nsICharsetDetectionObserver {
     /**
      * The character encoding in use
      */
-    nsCString                     mCharset;
+    NotNull<const Encoding*>      mEncoding;
 
     /**
      * Whether reparse is forbidden
