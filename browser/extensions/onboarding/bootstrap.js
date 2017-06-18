@@ -15,6 +15,15 @@ const PREF_WHITELIST = [
   "browser.onboarding.notification.lastPrompted"
 ];
 
+[
+  "onboarding-tour-private-browsing",
+  "onboarding-tour-addons",
+  "onboarding-tour-customize",
+  "onboarding-tour-search",
+  "onboarding-tour-default-browser",
+  "onboarding-tour-sync",
+].forEach(tourId => PREF_WHITELIST.push(`browser.onboarding.tour.${tourId}.completed`));
+
 /**
  * Set pref. Why no `getPrefs` function is due to the priviledge level.
  * We cannot set prefs inside a framescript but can read.
