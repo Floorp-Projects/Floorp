@@ -49,7 +49,7 @@ WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder,
   IntSize imageSize(size.ToUnknownSize());
   if (!regionToPaint.IsEmpty() && WrManager()->GetPaintedLayerCallback()) {
     RefPtr<gfx::DrawEventRecorderMemory> recorder = MakeAndAddRef<gfx::DrawEventRecorderMemory>();
-    RefPtr<gfx::DrawTarget> dummyDt = gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, imageSize, gfx::SurfaceFormat::B8G8R8X8);
+    RefPtr<gfx::DrawTarget> dummyDt = gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, IntSize(1, 1), gfx::SurfaceFormat::B8G8R8X8);
     RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, imageSize);
 
     dt->ClearRect(Rect(0, 0, imageSize.width, imageSize.height));
