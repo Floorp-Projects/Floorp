@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<script>
+// This is the constant in nsTextFrame.cpp of the number of lines which
+// a text run can be built up to.
+const NUM_LINES_TO_BUILD_TEXT_RUNS = 200;
+// Push the affecting line to be the last line in the text run.
+for (let i = 0; i < NUM_LINES_TO_BUILD_TEXT_RUNS - 1; i++) {
+  document.write('x<br>');
+}
+// The exact number here isn't important. It just needs to be large
+// enough that '\n' would be inside text after a line break.
+for (let i = 0; i < 2000; i++) {
+  document.write('あ');
+}
+document.write('\nあ<br>');
+// Then this ruby would not get its text run.
+document.write('x<ruby>x</ruby>');
+</script>
