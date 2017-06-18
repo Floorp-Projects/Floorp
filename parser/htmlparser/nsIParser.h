@@ -25,6 +25,7 @@
 #include "nsTArray.h"
 #include "nsIAtom.h"
 #include "nsParserBase.h"
+#include "mozilla/NotNull.h"
 
 #define NS_IPARSER_IID \
 { 0x2c4ad90a, 0x740e, 0x4212, \
@@ -35,6 +36,9 @@ class nsIRequestObserver;
 class nsString;
 class nsIURI;
 class nsIChannel;
+namespace mozilla {
+class Encoding;
+}
 
 enum eParserCommands {
   eViewNormal,
@@ -63,6 +67,9 @@ enum eStreamState {eNone,eOnStart,eOnDataAvail,eOnStop};
  * likely than not that #including this header is the wrong thing to do.
  */
 class nsIParser : public nsParserBase {
+  protected:
+    using Encoding = mozilla::Encoding;
+    template <typename T> using NotNull = mozilla::NotNull<T>;
   public:
 
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPARSER_IID)
@@ -105,8 +112,8 @@ class nsIParser : public nsParserBase {
      *  @param   aCharsetSource- the soure of the chares
      *  @return	 nada
      */
-    NS_IMETHOD_(void) SetDocumentCharset(const nsACString& aCharset, int32_t aSource)=0;
-    NS_IMETHOD_(void) GetDocumentCharset(nsACString& oCharset, int32_t& oSource)=0;
+    virtual void SetDocumentCharset(NotNull<const Encoding*> aCharset,
+                                    int32_t aSource) = 0;
 
     /** 
      * Get the channel associated with this parser

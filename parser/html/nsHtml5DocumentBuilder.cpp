@@ -49,11 +49,12 @@ nsHtml5DocumentBuilder::MarkAsBroken(nsresult aReason)
 }
 
 void
-nsHtml5DocumentBuilder::SetDocumentCharsetAndSource(nsACString& aCharset, int32_t aCharsetSource)
+nsHtml5DocumentBuilder::SetDocumentCharsetAndSource(NotNull<const Encoding*> aEncoding,
+                                                    int32_t aCharsetSource)
 {
   if (mDocument) {
     mDocument->SetDocumentCharacterSetSource(aCharsetSource);
-    mDocument->SetDocumentCharacterSet(aCharset);
+    mDocument->SetDocumentCharacterSet(aEncoding);
   }
 }
 

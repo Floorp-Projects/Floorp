@@ -6,13 +6,13 @@
 
 #include "mozilla/Encoding.h"
 
-void
-nsHtml5MetaScanner::sniff(nsHtml5ByteReadable* bytes, nsACString& charset)
+const Encoding*
+nsHtml5MetaScanner::sniff(nsHtml5ByteReadable* bytes)
 {
   readable = bytes;
   stateLoop(stateSave);
   readable = nullptr;
-  charset.Assign(mCharset);
+  return mEncoding;
 }
 
 bool
@@ -25,20 +25,20 @@ nsHtml5MetaScanner::tryCharset(nsHtml5String charset)
   nsString charset16; // Not Auto, because using it to hold nsStringBuffer*
   charset.ToString(charset16);
   CopyUTF16toUTF8(charset16, label);
-  const mozilla::Encoding* encoding = mozilla::Encoding::ForLabel(label);
+  const Encoding* encoding = Encoding::ForLabel(label);
   if (!encoding) {
     return false;
   }
   if (encoding == UTF_16BE_ENCODING ||
       encoding == UTF_16LE_ENCODING) {
-    mCharset.AssignLiteral("UTF-8");
+    mEncoding = UTF_8_ENCODING;
     return true;
   }
   if (encoding == X_USER_DEFINED_ENCODING) {
     // WebKit/Blink hack for Indian and Armenian legacy sites
-    mCharset.AssignLiteral("windows-1252");
+    mEncoding = WINDOWS_1252_ENCODING;
     return true;
   }
-  encoding->Name(mCharset);
+  mEncoding = encoding;
   return true;
 }

@@ -5,17 +5,17 @@
 
 /* This parsing code originally lived in xpfe/components/directory/ - bbaetz */
 
-#include "mozilla/ArrayUtils.h"
-
-#include "prprf.h"
-
 #include "nsDirIndexParser.h"
-#include "nsEscape.h"
-#include "nsIInputStream.h"
-#include "nsCRT.h"
+
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/FallbackEncoding.h"
-#include "nsITextToSubURI.h"
+#include "mozilla/Encoding.h"
+#include "prprf.h"
+#include "nsCRT.h"
+#include "nsEscape.h"
 #include "nsIDirIndex.h"
+#include "nsIInputStream.h"
+#include "nsITextToSubURI.h"
 #include "nsServiceManagerUtils.h"
 
 using namespace mozilla;
@@ -33,7 +33,8 @@ nsDirIndexParser::Init() {
   mLineStart = 0;
   mHasDescription = false;
   mFormat[0] = -1;
-  mozilla::dom::FallbackEncoding::FromLocale(mEncoding);
+  auto encoding = mozilla::dom::FallbackEncoding::FromLocale();
+  encoding->Name(mEncoding);
  
   nsresult rv;
   // XXX not threadsafe
