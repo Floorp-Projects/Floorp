@@ -478,7 +478,7 @@ StyleSheet::GetCssRules(nsIPrincipal& aSubjectPrincipal,
   if (!AreRulesAvailable(aSubjectPrincipal, aRv)) {
     return nullptr;
   }
-  FORWARD_INTERNAL(GetCssRulesInternal, (aRv))
+  FORWARD_INTERNAL(GetCssRulesInternal, ())
 }
 
 css::Rule*

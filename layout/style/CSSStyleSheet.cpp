@@ -670,7 +670,7 @@ CSSStyleSheet::SetScopeElement(dom::Element* aScopeElement)
 }
 
 CSSRuleList*
-CSSStyleSheet::GetCssRulesInternal(ErrorResult& aRv)
+CSSStyleSheet::GetCssRulesInternal()
 {
   if (!mRuleCollection) {
     mRuleCollection = new CSSRuleListImpl(this);
