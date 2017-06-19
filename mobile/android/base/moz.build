@@ -88,28 +88,28 @@ with Files('java/org/mozilla/gecko/*GuestSession*'):
 with Files('locales/**'):
     BUG_COMPONENT = ('Firefox for Android', 'General')
 
-with Files('resources/**'):
+with Files('../app/src/*/res/**'):
     BUG_COMPONENT = ('Firefox for Android', 'General')
 
-with Files('resources/anim/**'):
+with Files('../app/src/*/res/anim/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Overlays')
 
-with Files('resources/raw/*favicon*'):
+with Files('../app/src/*/res/raw/*favicon*'):
     BUG_COMPONENT = ('Firefox for Android', 'Favicon Handling')
 
-with Files('resources/xml*/*preference*'):
+with Files('../app/src/*/res/xml*/*preference*'):
     BUG_COMPONENT = ('Firefox for Android', 'Settings and Preferences')
 
-with Files('resources/menu/**'):
+with Files('../app/src/*/res/menu/**'):
     BUG_COMPONENT = ('Firefox for Android', 'General')
 
-with Files('resources/menu/*home*'):
+with Files('../app/src/*/res/menu/*home*'):
     BUG_COMPONENT = ('Firefox for Android', 'Awesomescreen')
 
-with Files('resources/menu/*activitystream*'):
+with Files('../app/src/*/res/menu/*activitystream*'):
     BUG_COMPONENT = ('Firefox for Android', 'Awesomescreen')
 
-with Files('resources/menu/browsersearch_contextmenu.xml'):
+with Files('../app/src/*/res/menu/browsersearch_contextmenu.xml'):
     BUG_COMPONENT = ('Firefox for Android', 'Awesomescreen')
 
 DIRS += ['locales']
