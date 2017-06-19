@@ -6,13 +6,13 @@
 #if !defined(AndroidMediaDecoder_h_)
 #define AndroidMediaDecoder_h_
 
-#include "MediaDecoder.h"
+#include "ChannelMediaDecoder.h"
 #include "AndroidMediaDecoder.h"
 #include "MediaContainerType.h"
 
 namespace mozilla {
 
-class AndroidMediaDecoder : public MediaDecoder
+class AndroidMediaDecoder : public ChannelMediaDecoder
 {
   MediaContainerType mType;
 public:
