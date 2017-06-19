@@ -597,200 +597,6 @@ class PriMap {
     return mSecMaps.size();
   }
 
-  // Assess heuristically whether the given address is an instruction
-  // immediately following a call instruction.
-  // RUNS IN NO-MALLOC CONTEXT
-  bool MaybeIsReturnPoint(TaggedUWord aInstrAddr, SegArray* aSegArray) {
-    if (!aInstrAddr.Valid()) {
-      return false;
-    }
-
-    uintptr_t ia = aInstrAddr.Value();
-
-    // Assume that nobody would be crazy enough to put code in the
-    // first or last page.
-    if (ia < 4096 || ((uintptr_t)(-ia)) < 4096) {
-      return false;
-    }
-
-    // See if it falls inside a known r-x mapped area.  Poking around
-    // outside such places risks segfaulting.
-    uintptr_t insns_min, insns_max;
-    bool b = aSegArray->getBoundingCodeSegment(&insns_min, &insns_max, ia);
-    if (!b) {
-      // no code (that we know about) at this address
-      return false;
-    }
-
-    // |ia| falls within an r-x range.  So we can
-    // safely poke around in [insns_min, insns_max].
-
-#if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
-    // Is the previous instruction recognisably a CALL?  This is
-    // common for the 32- and 64-bit versions, except for the
-    // simm32(%rip) case, which is 64-bit only.
-    //
-    // For all other cases, the 64 bit versions are either identical
-    // to the 32 bit versions, or have an optional extra leading REX.W
-    // byte (0x41).  Since the extra 0x41 is optional we have to
-    // ignore it, with the convenient result that the same matching
-    // logic works for both 32- and 64-bit cases.
-
-    uint8_t* p = (uint8_t*)ia;
-#   if defined(GP_ARCH_amd64)
-    // CALL simm32(%rip)  == FF15 simm32
-    if (ia - 6 >= insns_min && p[-6] == 0xFF && p[-5] == 0x15) {
-      return true;
-    }
-#   endif
-    // CALL rel32  == E8 rel32  (both 32- and 64-bit)
-    if (ia - 5 >= insns_min && p[-5] == 0xE8) {
-      return true;
-    }
-    // CALL *%eax .. CALL *%edi  ==   FFD0 ..   FFD7  (32-bit)
-    // CALL *%rax .. CALL *%rdi  ==   FFD0 ..   FFD7  (64-bit)
-    // CALL *%r8  .. CALL *%r15  == 41FFD0 .. 41FFD7  (64-bit)
-    if (ia - 2 >= insns_min &&
-        p[-2] == 0xFF && p[-1] >= 0xD0 && p[-1] <= 0xD7) {
-      return true;
-    }
-    // Almost all of the remaining cases that occur in practice are
-    // of the form CALL *simm8(reg) or CALL *simm32(reg).
-    //
-    // 64 bit cases:
-    //
-    // call  *simm8(%rax)         FF50   simm8
-    // call  *simm8(%rcx)         FF51   simm8
-    // call  *simm8(%rdx)         FF52   simm8
-    // call  *simm8(%rbx)         FF53   simm8
-    // call  *simm8(%rsp)         FF5424 simm8
-    // call  *simm8(%rbp)         FF55   simm8
-    // call  *simm8(%rsi)         FF56   simm8
-    // call  *simm8(%rdi)         FF57   simm8
-    //
-    // call  *simm8(%r8)        41FF50   simm8
-    // call  *simm8(%r9)        41FF51   simm8
-    // call  *simm8(%r10)       41FF52   simm8
-    // call  *simm8(%r11)       41FF53   simm8
-    // call  *simm8(%r12)       41FF5424 simm8
-    // call  *simm8(%r13)       41FF55   simm8
-    // call  *simm8(%r14)       41FF56   simm8
-    // call  *simm8(%r15)       41FF57   simm8
-    //
-    // call  *simm32(%rax)        FF90   simm32
-    // call  *simm32(%rcx)        FF91   simm32
-    // call  *simm32(%rdx)        FF92   simm32
-    // call  *simm32(%rbx)        FF93   simm32
-    // call  *simm32(%rsp)        FF9424 simm32
-    // call  *simm32(%rbp)        FF95   simm32
-    // call  *simm32(%rsi)        FF96   simm32
-    // call  *simm32(%rdi)        FF97   simm32
-    //
-    // call  *simm32(%r8)       41FF90   simm32
-    // call  *simm32(%r9)       41FF91   simm32
-    // call  *simm32(%r10)      41FF92   simm32
-    // call  *simm32(%r11)      41FF93   simm32
-    // call  *simm32(%r12)      41FF9424 simm32
-    // call  *simm32(%r13)      41FF95   simm32
-    // call  *simm32(%r14)      41FF96   simm32
-    // call  *simm32(%r15)      41FF97   simm32
-    //
-    // 32 bit cases:
-    //
-    // call  *simm8(%eax)         FF50   simm8
-    // call  *simm8(%ecx)         FF51   simm8
-    // call  *simm8(%edx)         FF52   simm8
-    // call  *simm8(%ebx)         FF53   simm8
-    // call  *simm8(%esp)         FF5424 simm8
-    // call  *simm8(%ebp)         FF55   simm8
-    // call  *simm8(%esi)         FF56   simm8
-    // call  *simm8(%edi)         FF57   simm8
-    //
-    // call  *simm32(%eax)        FF90   simm32
-    // call  *simm32(%ecx)        FF91   simm32
-    // call  *simm32(%edx)        FF92   simm32
-    // call  *simm32(%ebx)        FF93   simm32
-    // call  *simm32(%esp)        FF9424 simm32
-    // call  *simm32(%ebp)        FF95   simm32
-    // call  *simm32(%esi)        FF96   simm32
-    // call  *simm32(%edi)        FF97   simm32
-    if (ia - 3 >= insns_min &&
-        p[-3] == 0xFF &&
-        (p[-2] >= 0x50 && p[-2] <= 0x57 && p[-2] != 0x54)) {
-      // imm8 case, not including %esp/%rsp
-      return true;
-    }
-    if (ia - 4 >= insns_min &&
-        p[-4] == 0xFF && p[-3] == 0x54 && p[-2] == 0x24) {
-      // imm8 case for %esp/%rsp
-      return true;
-    }
-    if (ia - 6 >= insns_min &&
-        p[-6] == 0xFF &&
-        (p[-5] >= 0x90 && p[-5] <= 0x97 && p[-5] != 0x94)) {
-      // imm32 case, not including %esp/%rsp
-      return true;
-    }
-    if (ia - 7 >= insns_min &&
-        p[-7] == 0xFF && p[-6] == 0x94 && p[-5] == 0x24) {
-      // imm32 case for %esp/%rsp
-      return true;
-    }
-
-#elif defined(GP_ARCH_arm)
-    if (ia & 1) {
-      uint16_t w0 = 0, w1 = 0;
-      // The return address has its lowest bit set, indicating a return
-      // to Thumb code.
-      ia &= ~(uintptr_t)1;
-      if (ia - 2 >= insns_min && ia - 1 <= insns_max) {
-        w1 = *(uint16_t*)(ia - 2);
-      }
-      if (ia - 4 >= insns_min && ia - 1 <= insns_max) {
-        w0 = *(uint16_t*)(ia - 4);
-      }
-      // Is it a 32-bit Thumb call insn?
-      // BL  simm26 (Encoding T1)
-      if ((w0 & 0xF800) == 0xF000 && (w1 & 0xC000) == 0xC000) {
-        return true;
-      }
-      // BLX simm26 (Encoding T2)
-      if ((w0 & 0xF800) == 0xF000 && (w1 & 0xC000) == 0xC000) {
-        return true;
-      }
-      // Other possible cases:
-      // (BLX Rm, Encoding T1).
-      // BLX Rm (encoding T1, 16 bit, inspect w1 and ignore w0.)
-      // 0100 0111 1 Rm 000
-    } else {
-      // Returning to ARM code.
-      uint32_t a0 = 0;
-      if ((ia & 3) == 0 && ia - 4 >= insns_min && ia - 1 <= insns_max) {
-        a0 = *(uint32_t*)(ia - 4);
-      }
-      // Leading E forces unconditional only -- fix.  It could be
-      // anything except F, which is the deprecated NV code.
-      // BL simm26 (Encoding A1)
-      if ((a0 & 0xFF000000) == 0xEB000000) {
-        return true;
-      }
-      // Other possible cases:
-      // BLX simm26 (Encoding A2)
-      //if ((a0 & 0xFE000000) == 0xFA000000)
-      //  return true;
-      // BLX (register) (A1): BLX <c> <Rm>
-      // cond 0001 0010 1111 1111 1111 0011 Rm
-      // again, cond can be anything except NV (0xF)
-    }
-
-#else
-# error "Unsupported arch"
-#endif
-
-    // Not an insn we recognise.
-    return false;
-  }
-
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
     size_t n = aMallocSizeOf(this);
 
@@ -882,20 +688,19 @@ LUL::MaybeShowStats()
   // This is racey in the sense that it can't guarantee that
   //   n_new == n_new_Context + n_new_CFI + n_new_Scanned
   // if it should happen that mStats is updated by some other thread
-  // in between computation of n_new and n_new_{Context,CFI,Scanned}.
+  // in between computation of n_new and n_new_{Context,CFI,FP}.
   // But it's just stats printing, so we don't really care.
   uint32_t n_new = mStats - mStatsPrevious;
   if (n_new >= 5000) {
     uint32_t n_new_Context = mStats.mContext - mStatsPrevious.mContext;
     uint32_t n_new_CFI     = mStats.mCFI     - mStatsPrevious.mCFI;
     uint32_t n_new_FP      = mStats.mFP      - mStatsPrevious.mFP;
-    uint32_t n_new_Scanned = mStats.mScanned - mStatsPrevious.mScanned;
     mStatsPrevious = mStats;
     char buf[200];
     SprintfLiteral(buf,
                    "LUL frame stats: TOTAL %5u"
-                   "    CTX %4u    CFI %4u    FP %4u    SCAN %4u",
-                   n_new, n_new_Context, n_new_CFI, n_new_FP, n_new_Scanned);
+                   "    CTX %4u    CFI %4u    FP %4u",
+                   n_new, n_new_Context, n_new_CFI, n_new_FP);
     buf[sizeof(buf)-1] = 0;
     mLog(buf);
   }
@@ -1340,9 +1145,7 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
             /*OUT*/uintptr_t* aFrameSPs,
             /*OUT*/size_t* aFramesUsed, 
             /*OUT*/size_t* aFramePointerFramesAcquired,
-            /*OUT*/size_t* aScannedFramesAcquired,
             size_t aFramesAvail,
-            size_t aScannedFramesAllowed,
             UnwindRegs* aStartRegs, StackImage* aStackImg)
 {
   MOZ_ASSERT(!mAdminMode);
@@ -1354,10 +1157,6 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
 
   UnwindRegs  regs          = *aStartRegs;
   TaggedUWord last_valid_sp = TaggedUWord();
-
-  // Stack-scan control
-  unsigned int n_scanned_frames      = 0;  // # s-s frames recovered so far
-  static const int NUM_SCANNED_WORDS = 50; // max allowed scan length
 
   while (true) {
 
@@ -1456,6 +1255,7 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
       mLog(buf);
     }
 
+#if defined(GP_PLAT_x86_android) || defined(GP_PLAT_x86_linux)
     /////////////////////////////////////////////
     ////
     // On 32 bit x86-linux, syscalls are often done via the VDSO
@@ -1497,7 +1297,6 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
     // hasn't been rescheduled.  The code below doesn't handle that;
     // it could easily be made to.
     //
-#if defined(GP_PLAT_x86_android) || defined(GP_PLAT_x86_linux)
     if (!ruleset && *aFramesUsed == 1 && ia.Valid() && sp.Valid()) {
       uintptr_t insns_min, insns_max;
       uintptr_t eip = ia.Value();
@@ -1523,9 +1322,9 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
         }
       }
     }
-#endif
     ////
     /////////////////////////////////////////////
+#endif // defined(GP_PLAT_x86_android) || defined(GP_PLAT_x86_linux)
 
     // So, do we have a ruleset for this address?  If so, use it now.
     if (ruleset) {
@@ -1536,172 +1335,67 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
       // Use the RuleSet to compute the registers for the previous
       // frame.  |regs| is modified in-place.
       UseRuleSet(&regs, aStackImg, ruleset, pfxinstrs);
+      continue;
 
-    } else {
-
-      // There's no RuleSet for the specified address.  On amd64_linux, see if
-      // it's possible to recover the caller's frame by using the frame pointer.
-      // This would probably work for the 32-bit case too, but hasn't been
-      // tested for that case.
+    }
 
 #if defined(GP_PLAT_amd64_linux)
-      // We seek to compute (new_IP, new_SP, new_BP) from (old_BP, stack image),
-      // and assume the following layout:
-      //
-      //                 <--- new_SP
-      //   +----------+
-      //   |  new_IP  |  (return address)
-      //   +----------+
-      //   |  new_BP  |  <--- old_BP
-      //   +----------+
-      //   |   ....   |
-      //   |   ....   |
-      //   |   ....   |
-      //   +----------+  <---- old_SP (arbitrary, but must be <= old_BP)
+    // There's no RuleSet for the specified address.  On amd64_linux, see if
+    // it's possible to recover the caller's frame by using the frame pointer.
+    // This would probably work for the 32-bit case too, but hasn't been
+    // tested for that case.
 
-      const size_t wordSzB = sizeof(uintptr_t);
-      TaggedUWord old_xsp = regs.xsp;
+    // We seek to compute (new_IP, new_SP, new_BP) from (old_BP, stack image),
+    // and assume the following layout:
+    //
+    //                 <--- new_SP
+    //   +----------+
+    //   |  new_IP  |  (return address)
+    //   +----------+
+    //   |  new_BP  |  <--- old_BP
+    //   +----------+
+    //   |   ....   |
+    //   |   ....   |
+    //   |   ....   |
+    //   +----------+  <---- old_SP (arbitrary, but must be <= old_BP)
 
-      // points at new_BP ?
-      TaggedUWord old_xbp = regs.xbp;
-      // points at new_IP ?
-      TaggedUWord old_xbp_plus1 = regs.xbp + TaggedUWord(1 * wordSzB);
-      // is the new_SP ?
-      TaggedUWord old_xbp_plus2 = regs.xbp + TaggedUWord(2 * wordSzB);
+    const size_t wordSzB = sizeof(uintptr_t);
+    TaggedUWord old_xsp = regs.xsp;
 
-      if (old_xbp.Valid() && old_xbp.IsAligned() &&
-          old_xsp.Valid() && old_xsp.IsAligned() &&
-          old_xsp.Value() <= old_xbp.Value()) {
-        // We don't need to do any range, alignment or validity checks for
-        // addresses passed to DerefTUW, since that performs them itself, and
-        // returns an invalid value on failure.  Any such value will poison
-        // subsequent uses, and we do a final check for validity before putting
-        // the computed values into |regs|.
-        TaggedUWord new_xbp = DerefTUW(old_xbp, aStackImg);
-        if (new_xbp.Valid() && new_xbp.IsAligned() &&
-            old_xbp.Value() < new_xbp.Value()) {
-          TaggedUWord new_xip = DerefTUW(old_xbp_plus1, aStackImg);
-          TaggedUWord new_xsp = old_xbp_plus2;
-          if (new_xbp.Valid() && new_xip.Valid() && new_xsp.Valid()) {
-            regs.xbp = new_xbp;
-            regs.xip = new_xip;
-            regs.xsp = new_xsp;
-            (*aFramePointerFramesAcquired)++;
-            continue;
-          }
+    // points at new_BP ?
+    TaggedUWord old_xbp = regs.xbp;
+    // points at new_IP ?
+    TaggedUWord old_xbp_plus1 = regs.xbp + TaggedUWord(1 * wordSzB);
+    // is the new_SP ?
+    TaggedUWord old_xbp_plus2 = regs.xbp + TaggedUWord(2 * wordSzB);
+
+    if (old_xbp.Valid() && old_xbp.IsAligned() &&
+        old_xsp.Valid() && old_xsp.IsAligned() &&
+        old_xsp.Value() <= old_xbp.Value()) {
+      // We don't need to do any range, alignment or validity checks for
+      // addresses passed to DerefTUW, since that performs them itself, and
+      // returns an invalid value on failure.  Any such value will poison
+      // subsequent uses, and we do a final check for validity before putting
+      // the computed values into |regs|.
+      TaggedUWord new_xbp = DerefTUW(old_xbp, aStackImg);
+      if (new_xbp.Valid() && new_xbp.IsAligned() &&
+          old_xbp.Value() < new_xbp.Value()) {
+        TaggedUWord new_xip = DerefTUW(old_xbp_plus1, aStackImg);
+        TaggedUWord new_xsp = old_xbp_plus2;
+        if (new_xbp.Valid() && new_xip.Valid() && new_xsp.Valid()) {
+          regs.xbp = new_xbp;
+          regs.xip = new_xip;
+          regs.xsp = new_xsp;
+          (*aFramePointerFramesAcquired)++;
+          continue;
         }
-      }
-#endif
-
-      // As a last-ditch resort, see if it's possible to get anywhere by
-      // stack-scanning.
-
-      // Use stack scanning frugally.
-      if (n_scanned_frames++ >= aScannedFramesAllowed) {
-        break;
-      }
-
-      // We can't scan the stack without a valid, aligned stack pointer.
-      if (!sp.IsAligned()) {
-        break;
-      }
-
-      bool scan_succeeded = false;
-      for (int i = 0; i < NUM_SCANNED_WORDS; ++i) {
-        TaggedUWord aWord = DerefTUW(sp, aStackImg);
-        // aWord is something we fished off the stack.  It should be
-        // valid, unless we overran the stack bounds.
-        if (!aWord.Valid()) {
-          break;
-        }
-
-        // Now, does aWord point inside a text section and immediately
-        // after something that looks like a call instruction?
-        if (mPriMap->MaybeIsReturnPoint(aWord, mSegArray)) {
-          // Yes it does.  Update the unwound registers heuristically,
-          // using the same schemes as Breakpad does.
-          scan_succeeded = true;
-          (*aScannedFramesAcquired)++;
-
-#if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
-          // The same logic applies for the 32- and 64-bit cases.
-          // Register names of the form xsp etc refer to (eg) esp in
-          // the 32-bit case and rsp in the 64-bit case.
-#         if defined(GP_ARCH_amd64)
-          const int wordSize = 8;
-#         else
-          const int wordSize = 4;
-#         endif
-          // The return address -- at XSP -- will have been pushed by
-          // the CALL instruction.  So the caller's XSP value
-          // immediately before and after that CALL instruction is the
-          // word above XSP.
-          regs.xsp = sp + TaggedUWord(wordSize);
-
-          // aWord points at the return point, so back up one byte
-          // to put it in the calling instruction.
-          regs.xip = aWord + TaggedUWord((uintptr_t)(-1));
-
-          // Computing a new value from the frame pointer is more tricky.
-          if (regs.xbp.Valid() &&
-              sp.Valid() && regs.xbp.Value() == sp.Value() - wordSize) {
-            // One possibility is that the callee begins with the standard
-            // preamble "push %xbp; mov %xsp, %xbp".  In which case, the
-            // (1) caller's XBP value will be at the word below XSP, and
-            // (2) the current (callee's) XBP will point at that word:
-            regs.xbp = DerefTUW(regs.xbp, aStackImg);
-          } else if (regs.xbp.Valid() &&
-                     sp.Valid() && regs.xbp.Value() >= sp.Value() + wordSize) {
-            // If that didn't work out, maybe the callee didn't change
-            // XBP, so it still holds the caller's value.  For that to
-            // be plausible, XBP will need to have a value at least
-            // higher than XSP since that holds the purported return
-            // address.  In which case do nothing, since XBP already
-            // holds the "right" value.
-          } else {
-            // Mark XBP as invalid, so that subsequent unwind iterations
-            // don't assume it holds valid data.
-            regs.xbp = TaggedUWord();
-          }
-
-          // Move on to the next word up the stack
-          sp = sp + TaggedUWord(wordSize);
-
-#elif defined(GP_ARCH_arm)
-          // Set all registers to be undefined, except for SP(R13) and
-          // PC(R15).
-
-          // aWord points either at the return point, if returning to
-          // ARM code, or one insn past the return point if returning
-          // to Thumb code.  In both cases, aWord-2 is guaranteed to
-          // fall within the calling instruction.
-          regs.r15 = aWord + TaggedUWord((uintptr_t)(-2));
-
-          // Make SP be the word above the location where the return
-          // address was found.
-          regs.r13 = sp + TaggedUWord(4);
-
-          // All other regs are undefined.
-          regs.r7 = regs.r11 = regs.r12 = regs.r14 = TaggedUWord();
-
-          // Move on to the next word up the stack
-          sp = sp + TaggedUWord(4);
-
-#else
-# error "Unknown plat"
-#endif
-
-          break;
-        }
-
-      } // for (int i = 0; i < NUM_SCANNED_WORDS; i++)
-
-      // We tried to make progress by scanning the stack, but failed.
-      // So give up -- fall out of the top level unwind loop.
-      if (!scan_succeeded) {
-        break;
       }
     }
+#endif // defined(GP_PLAT_amd64_linux)
+
+    // We failed to recover a frame either using CFI or FP chasing, and we
+    // have no other ways to recover the frame.  So we have to give up.
+    break;
 
   } // top level unwind loop
 
@@ -1815,13 +1509,10 @@ bool GetAndCheckStackTrace(LUL* aLUL, const char* dstring)
   uintptr_t frameSPs[MAX_TEST_FRAMES];
   size_t framesAvail = mozilla::ArrayLength(framePCs);
   size_t framesUsed  = 0;
-  size_t scannedFramesAllowed = 0;
-  size_t scannedFramesAcquired = 0, framePointerFramesAcquired = 0;
+  size_t framePointerFramesAcquired = 0;
   aLUL->Unwind( &framePCs[0], &frameSPs[0],
-                &framesUsed,
-                &framePointerFramesAcquired, &scannedFramesAcquired,
-                framesAvail, scannedFramesAllowed,
-                &startRegs, stackImg );
+                &framesUsed, &framePointerFramesAcquired,
+                framesAvail, &startRegs, stackImg );
 
   delete stackImg;
 
