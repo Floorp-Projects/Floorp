@@ -91,9 +91,6 @@ private:
   // in their Shutdown() method, so we'll drop the reference naturally when
   // we're shutting down (in the non xpcom-shutdown case).
   nsTHashtable<nsRefPtrHashKey<MediaDecoder>> mDecoders;
-
-  bool mIsDoingXPCOMShutDown = false;
-  nsresult mError = NS_OK;
 };
 
 } // namespace mozilla
