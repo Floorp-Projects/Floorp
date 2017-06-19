@@ -504,6 +504,7 @@ BRANCH_PRIORITIES = {
     'comm-beta': 'high',
     'mozilla-central': 'medium',
     'comm-central': 'medium',
+    'mozilla-aurora': 'medium',
     'comm-aurora': 'medium',
     'autoland': 'low',
     'mozilla-inbound': 'low',
