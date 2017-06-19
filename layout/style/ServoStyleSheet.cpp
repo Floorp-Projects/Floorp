@@ -285,7 +285,7 @@ ServoStyleSheet::Clone(StyleSheet* aCloneParent,
   return clone.forget();
 }
 
-CSSRuleList*
+ServoCSSRuleList*
 ServoStyleSheet::GetCssRulesInternal()
 {
   if (!mRuleList) {
