@@ -377,8 +377,11 @@ CSSStyleSheet::CSSStyleSheet(const CSSStyleSheet& aCopy,
 
 CSSStyleSheet::~CSSStyleSheet()
 {
-  UnparentChildren();
+}
 
+void
+CSSStyleSheet::LastRelease()
+{
   DropRuleCollection();
   // XXX The document reference is not reference counted and should
   // not be released. The document will let us know when it is going
@@ -386,6 +389,7 @@ CSSStyleSheet::~CSSStyleSheet()
   if (mRuleProcessors) {
     NS_ASSERTION(mRuleProcessors->Length() == 0, "destructing sheet with rule processor reference");
     delete mRuleProcessors; // weak refs, should be empty here anyway
+    mRuleProcessors = nullptr;
   }
   if (mInRuleProcessorCache) {
     RuleProcessorCache::RemoveSheet(this);
