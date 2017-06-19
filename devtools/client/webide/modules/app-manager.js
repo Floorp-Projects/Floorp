@@ -483,7 +483,7 @@ var AppManager = exports.AppManager = {
           // Only watch for errors here.  Final resolution occurs above, once
           // we've reached the CONNECTED state.
           this.selectedRuntime.connect(this.connection)
-                              .then(null, e => reject(e));
+                              .catch(e => reject(e));
         } catch (e) {
           reject(e);
         }

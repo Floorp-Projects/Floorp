@@ -25,7 +25,7 @@ function run_test() {
         promise.resolve(define_code())
           .then(run_code)
           .then(test_frame_location)
-          .then(null, error => {
+          .catch(error => {
             dump(error + "\n");
             dump(error.stack);
             do_check_true(false);

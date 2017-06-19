@@ -6844,7 +6844,7 @@ var Distribution = {
       } catch (e) {
         Cu.reportError("Distribution: Could not parse JSON: " + e);
       }
-    }).then(null, function onError(reason) {
+    }).catch(function onError(reason) {
       if (!(reason instanceof OS.File.Error && reason.becauseNoSuchFile)) {
         Cu.reportError("Distribution: Could not read from " + aFile.leafName + " file");
       }

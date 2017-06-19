@@ -70,7 +70,7 @@ function startup(reason, options) {
     // Run the addon even in case of error (best effort approach)
     require('../l10n/loader').
       load(rootURI).
-      then(null, function failure(error) {
+      catch(function failure(error) {
         if (!isNative)
           console.info("Error while loading localization: " + error.message);
       }).
@@ -81,7 +81,7 @@ function startup(reason, options) {
         return ready;
       }).then(function() {
         run(options);
-      }).then(null, console.exception);
+      }).catch(console.exception);
     return void 0; // otherwise we raise a warning, see bug 910304
   });
 }

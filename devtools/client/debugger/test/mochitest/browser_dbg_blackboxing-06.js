@@ -27,7 +27,7 @@ function test() {
     waitForCaretAndScopes(gPanel, 21)
       .then(testBlackBox)
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
-      .then(null, aError => {
+      .catch(aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
       });
 

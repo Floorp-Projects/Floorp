@@ -28,7 +28,7 @@ function runTests(sw)
     const prettyText = sp.getText();
     ok(prettyText.includes(space));
     finish();
-  }).then(null, error => {
+  }).catch(error => {
     ok(false, error);
   });
 }

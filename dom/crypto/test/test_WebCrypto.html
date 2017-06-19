@@ -491,9 +491,7 @@ TestArray.addTest(
 
     function doEncrypt(x) {
       return encrypt(x, new Uint8Array(15))
-        .then(
-          null,
-          function () { return encrypt(new Uint8Array(17)); }
+        .catch(function () { return encrypt(new Uint8Array(17)); }
         );
     }
 
@@ -541,9 +539,7 @@ TestArray.addTest(
 
     function doDecrypt(x) {
       return decrypt(x, new Uint8Array(15))
-        .then(
-          null,
-          function () { return decrypt(x, new Uint8Array(17)); }
+        .catch(function () { return decrypt(x, new Uint8Array(17)); }
         );
     }
 
@@ -591,9 +587,7 @@ TestArray.addTest(
 
     function doEncrypt(x) {
       return encrypt(x, new Uint8Array(15))
-        .then(
-          null,
-          function () { return encrypt(x, new Uint8Array(17)); }
+        .catch(function () { return encrypt(x, new Uint8Array(17)); }
         );
     }
 
@@ -641,9 +635,7 @@ TestArray.addTest(
 
     function decrypt(x) {
       return decrypt(x, new Uint8Array(15))
-        .then(
-          null,
-          function () { return decrypt(x, new Uint8Array(17)); }
+        .catch(function () { return decrypt(x, new Uint8Array(17)); }
         );
     }
 

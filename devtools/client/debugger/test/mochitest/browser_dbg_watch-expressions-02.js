@@ -33,7 +33,7 @@ function test() {
     performTest()
       .then(finishTest)
       .then(() => closeDebuggerAndFinish(gPanel))
-      .then(null, aError => {
+      .catch(aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
       });
   });

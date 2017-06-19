@@ -207,7 +207,7 @@ function checkAvailable(client, actorID) {
 }
 
 function promiseDone(currentPromise) {
-  currentPromise.then(null, err => {
+  currentPromise.catch(err => {
     ok(false, "Promise failed: " + err);
     if (err.stack) {
       dump(err.stack);
@@ -299,7 +299,7 @@ function addTest(test) {
 }
 
 function addAsyncTest(generator) {
-  _tests.push(() => Task.spawn(generator).then(null, ok.bind(null, false)));
+  _tests.push(() => Task.spawn(generator).catch(ok.bind(null, false)));
 }
 
 function runNextTest() {

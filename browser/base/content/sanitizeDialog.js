@@ -103,9 +103,9 @@ var gSanitizePromptDialog = {
     docElt.getButton("cancel").disabled = true;
 
     try {
-      s.sanitize().then(null, Components.utils.reportError)
+      s.sanitize().catch(Components.utils.reportError)
                   .then(() => window.close())
-                  .then(null, Components.utils.reportError);
+                  .catch(Components.utils.reportError);
       return false;
     } catch (er) {
       Components.utils.reportError("Exception during sanitize: " + er);

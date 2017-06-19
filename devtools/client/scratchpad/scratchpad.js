@@ -695,7 +695,7 @@ var Scratchpad = {
       source: uglyText
     }).then(data => {
       this.editor.setText(data.code);
-    }).then(null, error => {
+    }).catch(error => {
       this.writeAsErrorComment({ exception: error });
       throw error;
     });
@@ -1735,7 +1735,7 @@ var Scratchpad = {
       this.populateRecentFilesMenu();
       PreferenceObserver.init();
       CloseObserver.init();
-    }).then(null, (err) => console.error(err));
+    }).catch((err) => console.error(err));
     this._setupCommandListeners();
     this._updateViewMenuItems();
     this._setupPopupShowingListeners();
