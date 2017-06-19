@@ -1004,7 +1004,7 @@ LayerTransactionParent::AsLayer(const LayerHandle& aHandle)
   if (!aHandle) {
     return nullptr;
   }
-  return mLayerMap.Get(aHandle.Value()).get();
+  return mLayerMap.GetWeak(aHandle.Value());
 }
 
 mozilla::ipc::IPCResult
@@ -1019,14 +1019,11 @@ LayerTransactionParent::RecvNewCompositable(const CompositableHandle& aHandle, c
 mozilla::ipc::IPCResult
 LayerTransactionParent::RecvReleaseLayer(const LayerHandle& aHandle)
 {
-  if (!aHandle) {
+  RefPtr<Layer> layer;
+  if (!aHandle || !mLayerMap.Remove(aHandle.Value(), getter_AddRefs(layer))) {
     return IPC_FAIL_NO_REASON(this);
   }
-  Maybe<RefPtr<Layer>> maybeLayer = mLayerMap.GetAndRemove(aHandle.Value());
-  if (!maybeLayer) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  (*maybeLayer)->Disconnect();
+  layer->Disconnect();
   return IPC_OK();
 }
 
