@@ -274,7 +274,6 @@ var gPrivacyPane = {
       document.getElementById("offlineAppsList")
               .style.height = bundlePrefs.getString("offlineAppsList.height");
       let offlineGroup = document.getElementById("offlineGroup");
-      offlineGroup.hidden = false;
       offlineGroup.removeAttribute("data-hidden-from-search");
     }
 
@@ -295,7 +294,6 @@ var gPrivacyPane = {
       let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "storage-permissions";
       document.getElementById("siteDataLearnMoreLink").setAttribute("href", url);
       let siteDataGroup = document.getElementById("siteDataGroup");
-      siteDataGroup.hidden = false;
       siteDataGroup.removeAttribute("data-hidden-from-search");
     }
 
