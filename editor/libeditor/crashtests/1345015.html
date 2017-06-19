@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="application/javascript">
+      document.designMode = "on";
+      let selection = window.getSelection();
+
+      let foo = document.createElement('foo');
+      let div = document.createElement('div');
+      document.documentElement.appendChild(foo);
+      document.documentElement.appendChild(div);
+      foo.outerHTML = '<foo>';
+
+      let range = document.createRange();
+      range.selectNode(div);
+      selection.addRange(range);
+      range.setStart(foo, 0);
+
+      range = document.createRange();
+      range.selectNode(document.documentElement);
+      selection.addRange(range);
+
+      document.execCommand('insertparagraph', false, null);
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
