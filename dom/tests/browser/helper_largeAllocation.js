@@ -293,6 +293,7 @@ function* largeAllocSuccessTests() {
     if (!(yield getInLAProc(aBrowser))) {
       yield epc;
     } else {
+      epc.catch(() => {});
       epc.kill();
     }
 

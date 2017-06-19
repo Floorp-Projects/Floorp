@@ -299,9 +299,9 @@ Performance::Mark(const nsAString& aName, ErrorResult& aRv)
 
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_is_active()) {
-    PROFILER_MARKER_PAYLOAD("UserTiming",
-                            new UserTimingMarkerPayload(aName,
-                                                        TimeStamp::Now()));
+    PROFILER_MARKER_PAYLOAD(
+      "UserTiming",
+      MakeUnique<UserTimingMarkerPayload>(aName, TimeStamp::Now()));
   }
 #endif
 }
@@ -397,9 +397,9 @@ Performance::Measure(const nsAString& aName,
                                TimeDuration::FromMilliseconds(startTime);
     TimeStamp endTimeStamp = CreationTimeStamp() +
                              TimeDuration::FromMilliseconds(endTime);
-    PROFILER_MARKER_PAYLOAD("UserTiming",
-                            new UserTimingMarkerPayload(aName, startTimeStamp,
-                                                        endTimeStamp));
+    PROFILER_MARKER_PAYLOAD(
+      "UserTiming",
+      MakeUnique<UserTimingMarkerPayload>(aName, startTimeStamp, endTimeStamp));
   }
 #endif
 }

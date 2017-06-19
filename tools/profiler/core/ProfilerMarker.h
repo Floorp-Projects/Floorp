@@ -22,10 +22,11 @@ class ProfilerMarker
 
 public:
   explicit ProfilerMarker(const char* aMarkerName,
-                          ProfilerMarkerPayload* aPayload = nullptr,
+                          mozilla::UniquePtr<ProfilerMarkerPayload>
+                            aPayload = nullptr,
                           double aTime = 0)
     : mMarkerName(strdup(aMarkerName))
-    , mPayload(aPayload)
+    , mPayload(Move(aPayload))
     , mTime(aTime)
   {}
 

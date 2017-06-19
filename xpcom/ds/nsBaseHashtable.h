@@ -159,39 +159,67 @@ public:
    */
   void Remove(KeyType aKey) { this->RemoveEntry(aKey); }
 
+  struct LookupResult {
+  private:
+    EntryType* mEntry;
+    nsBaseHashtable& mTable;
+#ifdef DEBUG
+    uint32_t mTableGeneration;
+#endif
+
+  public:
+    LookupResult(EntryType* aEntry, nsBaseHashtable& aTable)
+      : mEntry(aEntry)
+      , mTable(aTable)
+#ifdef DEBUG
+      , mTableGeneration(aTable.GetGeneration())
+#endif
+    {}
+
+    // Is there something stored in the table?
+    explicit operator bool() const
+    {
+      MOZ_ASSERT(mTableGeneration == mTable.GetGeneration());
+      return mEntry;
+    }
+
+    void Remove()
+    {
+      if (!*this) {
+        return;
+      }
+      mTable.RemoveEntry(mEntry);
+      mEntry = nullptr;
+    }
+
+    MOZ_MUST_USE DataType& Data()
+    {
+      MOZ_ASSERT(!!*this, "must have an entry to access its value");
+      return mEntry->mData;
+    }
+  };
+
   /**
-   * Looks up aKey in the hashtable and if found calls the given callback
-   * aFunction with the value.  If the callback returns true then the entry
-   * is removed.  If aKey doesn't exist nothing happens.
-   * The hashtable must not be modified in the callback function.
+   * Looks up aKey in the hashtable and returns an object that allows you to
+   * read/modify the value of the entry, or remove the entry (if found).
    *
    * A typical usage of this API looks like this:
    *
-   *   table.LookupRemoveIf(key, [](T* aValue) {
-   *     // ... do stuff using aValue ...
-   *     return aValue->IsEmpty(); // or some other condition to remove it
-   *   });
+   *   if (auto entry = hashtable.Lookup(key)) {
+   *     DoSomething(entry.Data());
+   *     if (entry.Data() > 42) {
+   *       entry.Remove();
+   *     }
+   *   } // else - an entry with the given key doesn't exist
    *
-   * This is useful for cases where you want to lookup and possibly modify
-   * the value and then maybe remove the entry but would like to avoid two
-   * hashtable lookups.
+   * This is useful for cases where you want to read/write the value of an entry
+   * and (optionally) remove the entry without having to do multiple hashtable
+   * lookups.  If you want to insert a new entry if one does not exist, then use
+   * LookupForAdd instead, see below.
    */
-  template<class F>
-  void LookupRemoveIf(KeyType aKey, F aFunction)
+  MOZ_MUST_USE LookupResult Lookup(KeyType aKey)
   {
-#ifdef DEBUG
-    auto tableGeneration = GetGeneration();
-#endif
-    EntryType* ent = this->GetEntry(aKey);
-    if (!ent) {
-      return;
-    }
-    bool shouldRemove = aFunction(ent->mData);
-    MOZ_ASSERT(tableGeneration == GetGeneration(),
-               "hashtable was modified by the LookupRemoveIf callback!");
-    if (shouldRemove) {
-      this->RemoveEntry(ent);
-    }
+    return LookupResult(this->GetEntry(aKey), *this);
   }
 
   struct EntryPtr {
