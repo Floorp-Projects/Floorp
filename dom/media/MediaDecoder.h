@@ -253,10 +253,6 @@ public:
   // Return true if the stream is infinite (see SetInfinite).
   bool IsInfinite() const;
 
-  // Called by MediaResource when some data has been received.
-  // Call on the main thread only.
-  void NotifyDownloadProgressed();
-
   // Called as data arrives on the stream and is read into the cache.  Called
   // on the main thread only.
   void NotifyDataArrived();
@@ -590,6 +586,10 @@ protected:
 
 private:
   void NotifyDataArrivedInternal();
+
+  // Called by MediaResource when some data has been received.
+  // Call on the main thread only.
+  void NotifyDownloadProgressed();
 
   nsCString GetDebugInfo();
 
