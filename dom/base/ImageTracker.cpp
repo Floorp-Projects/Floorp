@@ -60,20 +60,16 @@ ImageTracker::Remove(imgIRequest* aImage, uint32_t aFlags)
   NS_ENSURE_ARG_POINTER(aImage);
 
   // Get the old count. It should exist and be > 0.
-  DebugOnly<bool> found = false;
-  bool remove = false;
-  mImages.LookupRemoveIf(aImage,
-    [&found, &remove] (uint32_t& aCount) {
-      found = true;
-      MOZ_ASSERT(aCount > 0, "Entry in the image tracker with count 0!");
-      --aCount;
-      // If the count is now zero, remove it from the tracker.
-      remove = aCount == 0;
-      return remove;
-    });
-
-  MOZ_ASSERT(found, "Removing image that wasn't in the tracker!");
-  if (!remove) {
+  if (auto entry = mImages.Lookup(aImage)) {
+    MOZ_ASSERT(entry.Data() > 0, "Entry in the image tracker with count 0!");
+    // If the count becomes zero, remove it from the tracker.
+    if (--entry.Data() == 0) {
+      entry.Remove();
+    } else {
+      return NS_OK;
+    }
+  } else {
+    MOZ_ASSERT_UNREACHABLE("Removing image that wasn't in the tracker!");
     return NS_OK;
   }
 

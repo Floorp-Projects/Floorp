@@ -4104,12 +4104,10 @@ bool
 Element::UpdateIntersectionObservation(DOMIntersectionObserver* aObserver, int32_t aThreshold)
 {
   bool updated = false;
-  RegisteredIntersectionObservers()->LookupRemoveIf(aObserver,
-    [&updated, aThreshold] (int32_t& aValue) {
-      updated = aValue != aThreshold;
-      aValue = aThreshold;
-      return false; // don't remove the entry
-    });
+  if (auto entry = RegisteredIntersectionObservers()->Lookup(aObserver)) {
+    updated = entry.Data() != aThreshold;
+    entry.Data() = aThreshold;
+  }
   return updated;
 }
 

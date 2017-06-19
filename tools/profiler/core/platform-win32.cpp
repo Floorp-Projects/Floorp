@@ -93,10 +93,10 @@ Sampler::Disable(PSLockRef aLock)
 template<typename Func>
 void
 Sampler::SuspendAndSampleAndResumeThread(PSLockRef aLock,
-                                         TickSample& aSample,
-                                         const Func& aDoSample)
+                                         const ThreadInfo& aThreadInfo,
+                                         const Func& aProcessRegs)
 {
-  HANDLE profiled_thread = aSample.mPlatformData->ProfiledThread();
+  HANDLE profiled_thread = aThreadInfo.GetPlatformData()->ProfiledThread();
   if (profiled_thread == nullptr) {
     return;
   }
@@ -138,17 +138,18 @@ Sampler::SuspendAndSampleAndResumeThread(PSLockRef aLock,
   // what we do here, or risk deadlock.  See the corresponding comment in
   // platform-linux-android.cpp for details.
 
+  Registers regs;
 #if defined(GP_ARCH_amd64)
-  aSample.mPC = reinterpret_cast<Address>(context.Rip);
-  aSample.mSP = reinterpret_cast<Address>(context.Rsp);
-  aSample.mFP = reinterpret_cast<Address>(context.Rbp);
+  regs.mPC = reinterpret_cast<Address>(context.Rip);
+  regs.mSP = reinterpret_cast<Address>(context.Rsp);
+  regs.mFP = reinterpret_cast<Address>(context.Rbp);
 #else
-  aSample.mPC = reinterpret_cast<Address>(context.Eip);
-  aSample.mSP = reinterpret_cast<Address>(context.Esp);
-  aSample.mFP = reinterpret_cast<Address>(context.Ebp);
+  regs.mPC = reinterpret_cast<Address>(context.Eip);
+  regs.mSP = reinterpret_cast<Address>(context.Esp);
+  regs.mFP = reinterpret_cast<Address>(context.Ebp);
 #endif
 
-  aDoSample();
+  aProcessRegs(regs);
 
   //----------------------------------------------------------------//
   // Resume the target thread.
@@ -264,10 +265,8 @@ PlatformInit(PSLockRef aLock)
 }
 
 void
-TickSample::PopulateContext()
+Registers::SyncPopulate()
 {
-  MOZ_ASSERT(mIsSynchronous);
-
   CONTEXT context;
   RtlCaptureContext(&context);
 

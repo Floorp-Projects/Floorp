@@ -690,7 +690,7 @@ EventListenerManager::ListenerCanHandle(const Listener* aListener,
   // true even when aEvent->mMessage == eUnidentifiedEvent and
   // aListener=>mEventMessage != eUnidentifiedEvent as long as the atoms are
   // the same
-  if (aListener->mAllEvents) {
+  if (MOZ_UNLIKELY(aListener->mAllEvents)) {
     return true;
   }
   if (aEvent->mMessage == eUnidentifiedEvent) {
@@ -699,9 +699,9 @@ EventListenerManager::ListenerCanHandle(const Listener* aListener,
     }
     return aListener->mTypeString.Equals(aEvent->mSpecifiedEventTypeString);
   }
-  if (!nsContentUtils::IsUnprefixedFullscreenApiEnabled() &&
-      aEvent->IsTrusted() && (aEventMessage == eFullscreenChange ||
-                              aEventMessage == eFullscreenError)) {
+  if (MOZ_UNLIKELY(!nsContentUtils::IsUnprefixedFullscreenApiEnabled() &&
+                    aEvent->IsTrusted() && (aEventMessage == eFullscreenChange ||
+                                            aEventMessage == eFullscreenError))) {
     // If unprefixed Fullscreen API is not enabled, don't dispatch it
     // to the content.
     if (!aEvent->mFlags.mInSystemGroup && !aListener->mIsChrome) {
@@ -1299,10 +1299,10 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
               TimeStamp endTime = TimeStamp::Now();
               uint16_t phase;
               (*aDOMEvent)->GetEventPhase(&phase);
-              PROFILER_MARKER_PAYLOAD("DOMEvent",
-                                      new DOMEventMarkerPayload(typeStr, phase,
-                                                                startTime,
-                                                                endTime));
+              PROFILER_MARKER_PAYLOAD(
+                "DOMEvent",
+                MakeUnique<DOMEventMarkerPayload>(typeStr, phase,
+                                                  startTime, endTime));
 #else
               MOZ_CRASH("Gecko Profiler is N/A but profiler_is_active() returned true");
 #endif

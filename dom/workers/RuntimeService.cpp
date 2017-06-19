@@ -1875,15 +1875,14 @@ RuntimeService::UnregisterWorker(WorkerPrivate* aWorkerPrivate)
   else if (aWorkerPrivate->IsDedicatedWorker()) {
     // May be null.
     nsPIDOMWindowInner* window = aWorkerPrivate->GetWindow();
-
-    DebugOnly<bool> found = false;
-    mWindowMap.LookupRemoveIf(window,
-      [&aWorkerPrivate, &found] (nsTArray<WorkerPrivate*>* aWindowArray) {
-        MOZ_ALWAYS_TRUE(aWindowArray->RemoveElement(aWorkerPrivate));
-        found = true;
-        return aWindowArray->IsEmpty();  // remove it if empty
-      });
-    MOZ_ASSERT(found, "window is not in mWindowMap");
+    if (auto entry = mWindowMap.Lookup(window)) {
+      MOZ_ALWAYS_TRUE(entry.Data()->RemoveElement(aWorkerPrivate));
+      if (entry.Data()->IsEmpty()) {
+        entry.Remove();
+      }
+    } else {
+      MOZ_ASSERT_UNREACHABLE("window is not in mWindowMap");
+    }
   }
 
   if (queuedWorker && !ScheduleWorker(queuedWorker)) {
