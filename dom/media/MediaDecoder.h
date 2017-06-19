@@ -589,6 +589,8 @@ protected:
     media::TimeUnit::FromMicroseconds(250000);
 
 private:
+  void NotifyDataArrivedInternal();
+
   nsCString GetDebugInfo();
 
   // Called when the metadata from the media file has been loaded by the
