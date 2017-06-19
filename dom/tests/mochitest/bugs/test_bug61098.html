@@ -220,12 +220,11 @@ var expectedState;
 
 function runtests()
 {
-  SpecialPowers.pushPrefEnv({'set': [["dom.successive_dialog_time_limit", 3],
-                                     ["dom.disable_window_showModalDialog", false]]},
+  SpecialPowers.pushPrefEnv({'set': [["dom.successive_dialog_time_limit", 3]]},
                             runtestsInner);
 }
 
-async function runtestsInner()
+function runtestsInner()
 {
   registerMockPromptService();
 
@@ -305,13 +304,6 @@ async function runtestsInner()
   is (promptState, void(0), "Wrong prompt state after blocked prompt()");
 
   w.close();
-
-  let iframe = document.createElement("iframe");
-  document.body.appendChild(iframe);
-  await new Promise(resolve => {
-    iframe.addEventListener("load", resolve);
-  });
-  window.showModalDialog = iframe.contentWindow.showModalDialog;
 
   // Test that showModalDialog() works normally and then gets blocked
   // on the second call.

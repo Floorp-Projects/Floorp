@@ -32,41 +32,32 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=437361
   }
 
   function test(disableOpen, exceptionExpected, testFn, errorMsg) {
-    var oldPrefVal = SpecialPowers.getBoolPref("dom.disable_open_during_load");
-    try {
-      SpecialPowers.setBoolPref("dom.disable_open_during_load", disableOpen);
-      testFn();
-      ok(!exceptionExpected, errorMsg);
-    } catch (_) {
-      ok(exceptionExpected, errorMsg);
-    }
-    finally {
-      SpecialPowers.setBoolPref("dom.disable_open_during_load", oldPrefVal);
+    if ("showModalDialog" in window) {
+      var oldPrefVal = SpecialPowers.getBoolPref("dom.disable_open_during_load");
+      try {
+        SpecialPowers.setBoolPref("dom.disable_open_during_load", disableOpen);
+        testFn();
+        ok(!exceptionExpected, errorMsg);
+      } catch (_) {
+        ok(exceptionExpected, errorMsg);
+      }
+      finally {
+        SpecialPowers.setBoolPref("dom.disable_open_during_load", oldPrefVal);
+      }
+    } else {
+      ok(true, "nothing to do in e10s mode");
     }
   }
 
-  SimpleTest.waitForExplicitFinish();
+  test(true, false, testModalDialogBlockedCleanly,
+       "Blocked showModalDialog caused an exception.");
+       
+  test(false, false, testModalDialogAllowed,
+       "showModalDialog was blocked even though dom.disable_open_during_load was false.");
 
-  SpecialPowers.pushPrefEnv({ set: [[ "dom.disable_window_showModalDialog", false ]] }, doTest);
-  async function doTest() {
-    let iframe = document.createElement("iframe");
-    document.body.appendChild(iframe);
-    await new Promise(resolve => {
-      iframe.addEventListener("load", resolve);
-    });
-    window.showModalDialog = iframe.contentWindow.showModalDialog;
+  test(false, true, testOtherExceptionsNotTrapped,
+       "Incorrectly suppressed insecure showModalDialog exception.");
 
-    test(true, false, testModalDialogBlockedCleanly,
-         "Blocked showModalDialog caused an exception.");
-
-    test(false, false, testModalDialogAllowed,
-         "showModalDialog was blocked even though dom.disable_open_during_load was false.");
-
-    test(false, true, testOtherExceptionsNotTrapped,
-         "Incorrectly suppressed insecure showModalDialog exception.");
-
-    SimpleTest.finish();
-  }
   </script>
 </head>
 <body>
