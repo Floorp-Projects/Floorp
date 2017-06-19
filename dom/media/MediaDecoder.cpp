@@ -204,7 +204,7 @@ MediaDecoder::ResourceCallback::NotifyDataArrived()
     return;
   }
 
-  mDecoder->NotifyBytesDownloaded();
+  mDecoder->NotifyDownloadProgressed();
 
   if (mTimerArmed) {
     return;
@@ -1045,7 +1045,7 @@ MediaDecoder::ShouldThrottleDownload()
 }
 
 void
-MediaDecoder::NotifyBytesDownloaded()
+MediaDecoder::NotifyDownloadProgressed()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
