@@ -34,6 +34,6 @@
   </foreignObject>
   <!-- this has to come after the iframe for some reason -->
 	<script type="text/javascript" xlink:href="../../scripts/talos-debug.js"/>
-	<script type="text/javascript" xlink:href="../../scripts/Profiler.js"/>
+	<script language="Javascript" type="text/javascript" src="chrome://talos-powers-content/content/TalosContentProfiler.js"></script>
 	<script type="text/javascript" xlink:href="../../pageloader/chrome/tscroll.js"/>
 </svg>
