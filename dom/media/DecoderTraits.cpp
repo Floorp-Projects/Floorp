@@ -4,9 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ChannelMediaDecoder.h"
 #include "DecoderTraits.h"
 #include "MediaContainerType.h"
-#include "MediaDecoder.h"
 #include "nsMimeTypes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
@@ -265,14 +265,13 @@ bool DecoderTraits::ShouldHandleMediaType(const char* aMIMEType,
 }
 
 // Instantiates but does not initialize decoder.
-static
-already_AddRefed<MediaDecoder>
+static already_AddRefed<ChannelMediaDecoder>
 InstantiateDecoder(const MediaContainerType& aType,
                    MediaDecoderInit& aInit,
                    DecoderDoctorDiagnostics* aDiagnostics)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  RefPtr<MediaDecoder> decoder;
+  RefPtr<ChannelMediaDecoder> decoder;
 
 #ifdef MOZ_ANDROID_HLS_SUPPORT
   if (HLSDecoder::IsSupportedType(aType)) {
@@ -328,7 +327,7 @@ InstantiateDecoder(const MediaContainerType& aType,
 }
 
 /* static */
-already_AddRefed<MediaDecoder>
+already_AddRefed<ChannelMediaDecoder>
 DecoderTraits::CreateDecoder(const nsACString& aType,
                              MediaDecoderInit& aInit,
                              DecoderDoctorDiagnostics* aDiagnostics)

@@ -6,17 +6,17 @@
 #if !defined(OggDecoder_h_)
 #define OggDecoder_h_
 
-#include "MediaDecoder.h"
+#include "ChannelMediaDecoder.h"
 
 namespace mozilla {
 
 class MediaContainerType;
 
-class OggDecoder : public MediaDecoder
+class OggDecoder : public ChannelMediaDecoder
 {
 public:
   explicit OggDecoder(MediaDecoderInit& aInit)
-    : MediaDecoder(aInit)
+    : ChannelMediaDecoder(aInit)
   {}
 
   MediaDecoder* Clone(MediaDecoderInit& aInit) override {
