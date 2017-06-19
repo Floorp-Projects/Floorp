@@ -30,9 +30,7 @@ LOCAL_INCLUDES += [
 USE_LIBS += [
     '/media/webrtc/trunk/third_party/gflags/gflags_gflags/gflags',
     '/testing/gtest/gtest',
-    'media_libjpeg',
     'media_libopus',
-    'media_libvpx',
     'mozglue',
     'speex',
     'webrtc',
@@ -44,6 +42,16 @@ USE_LIBS += [
     'webrtc_vp9',
     'yuv',
 ]
+
+if CONFIG['MOZ_SYSTEM_JPEG']:
+    OS_LIBS += CONFIG['MOZ_JPEG_LIBS']
+else:
+    USE_LIBS += ['media_libjpeg']
+
+if CONFIG['MOZ_SYSTEM_LIBVPX']:
+    OS_LIBS += CONFIG['MOZ_LIBVPX_LIBS']
+else:
+    USE_LIBS += ['media_libvpx']
 
 if CONFIG['OS_TARGET'] in ['Darwin', 'Linux', 'WINNT']:
     if CONFIG['OS_TARGET'] == 'Linux':
