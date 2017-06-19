@@ -263,6 +263,11 @@ class BufferList : private AllocPolicy
   // bytes may be split across multiple buffers. Size() is increased by aSize.
   inline bool WriteBytes(const char* aData, size_t aSize);
 
+  // Allocates a buffer of at most |aMaxBytes| bytes and, if successful, returns
+  // that buffer, and places its size in |aSize|. If unsuccessful, returns null
+  // and leaves |aSize| undefined.
+  inline char* AllocateBytes(size_t aMaxSize, size_t* aSize);
+
   // Copies possibly non-contiguous byte range starting at aIter into
   // aData. aIter is advanced by aSize bytes. Returns false if it runs out of
   // data before aSize.
@@ -313,7 +318,7 @@ private:
   {
   }
 
-  void* AllocateSegment(size_t aSize, size_t aCapacity)
+  char* AllocateSegment(size_t aSize, size_t aCapacity)
   {
     MOZ_RELEASE_ASSERT(mOwning);
     MOZ_ASSERT(aSize <= aCapacity);
@@ -344,34 +349,48 @@ BufferList<AllocPolicy>::WriteBytes(const char* aData, size_t aSize)
   MOZ_RELEASE_ASSERT(mStandardCapacity);
 
   size_t copied = 0;
-  size_t remaining = aSize;
-
-  if (!mSegments.empty()) {
-    Segment& lastSegment = mSegments.back();
-
-    size_t toCopy = std::min(aSize, lastSegment.mCapacity - lastSegment.mSize);
-    memcpy(lastSegment.mData + lastSegment.mSize, aData, toCopy);
-    lastSegment.mSize += toCopy;
-    mSize += toCopy;
-
-    copied += toCopy;
-    remaining -= toCopy;
-  }
-
-  while (remaining) {
-    size_t toCopy = std::min(remaining, mStandardCapacity);
-
-    void* data = AllocateSegment(toCopy, mStandardCapacity);
+  while (copied < aSize) {
+    size_t toCopy;
+    char* data = AllocateBytes(aSize - copied, &toCopy);
     if (!data) {
       return false;
     }
     memcpy(data, aData + copied, toCopy);
-
     copied += toCopy;
-    remaining -= toCopy;
   }
 
   return true;
+}
+
+template<typename AllocPolicy>
+char*
+BufferList<AllocPolicy>::AllocateBytes(size_t aMaxSize, size_t* aSize)
+{
+  MOZ_RELEASE_ASSERT(mOwning);
+  MOZ_RELEASE_ASSERT(mStandardCapacity);
+
+  if (!mSegments.empty()) {
+    Segment& lastSegment = mSegments.back();
+
+    size_t capacity = lastSegment.mCapacity - lastSegment.mSize;
+    if (capacity) {
+      size_t size = std::min(aMaxSize, capacity);
+      char* data = lastSegment.mData + lastSegment.mSize;
+
+      lastSegment.mSize += size;
+      mSize += size;
+
+      *aSize = size;
+      return data;
+    }
+  }
+
+  size_t size = std::min(aMaxSize, mStandardCapacity);
+  char* data = AllocateSegment(size, mStandardCapacity);
+  if (data) {
+    *aSize = size;
+  }
+  return data;
 }
 
 template<typename AllocPolicy>
