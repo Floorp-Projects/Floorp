@@ -59,6 +59,7 @@ class MatchRunOnProjects(unittest.TestCase):
         self.assertTrue(match_run_on_projects('autoland', ['all']))
         self.assertTrue(match_run_on_projects('mozilla-inbound', ['all']))
         self.assertTrue(match_run_on_projects('mozilla-central', ['all']))
+        self.assertTrue(match_run_on_projects('mozilla-aurora', ['all']))
         self.assertTrue(match_run_on_projects('mozilla-beta', ['all']))
         self.assertTrue(match_run_on_projects('mozilla-release', ['all']))
 
@@ -68,6 +69,7 @@ class MatchRunOnProjects(unittest.TestCase):
         self.assertFalse(match_run_on_projects('autoland', ['release']))
         self.assertFalse(match_run_on_projects('mozilla-inbound', ['release']))
         self.assertTrue(match_run_on_projects('mozilla-central', ['release']))
+        self.assertTrue(match_run_on_projects('mozilla-aurora', ['release']))
         self.assertTrue(match_run_on_projects('mozilla-beta', ['release']))
         self.assertTrue(match_run_on_projects('mozilla-release', ['release']))
 
@@ -77,6 +79,7 @@ class MatchRunOnProjects(unittest.TestCase):
         self.assertTrue(match_run_on_projects('autoland', ['integration']))
         self.assertTrue(match_run_on_projects('mozilla-inbound', ['integration']))
         self.assertFalse(match_run_on_projects('mozilla-central', ['integration']))
+        self.assertFalse(match_run_on_projects('mozilla-aurora', ['integration']))
         self.assertFalse(match_run_on_projects('mozilla-beta', ['integration']))
         self.assertFalse(match_run_on_projects('mozilla-integration', ['integration']))
 
@@ -87,5 +90,6 @@ class MatchRunOnProjects(unittest.TestCase):
         self.assertFalse(match_run_on_projects('autoland', ['release', 'try', 'date']))
         self.assertFalse(match_run_on_projects('mozilla-inbound', ['release', 'try', 'date']))
         self.assertTrue(match_run_on_projects('mozilla-central', ['release', 'try', 'date']))
+        self.assertTrue(match_run_on_projects('mozilla-aurora', ['release', 'try', 'date']))
         self.assertTrue(match_run_on_projects('mozilla-beta', ['release', 'try', 'date']))
         self.assertTrue(match_run_on_projects('mozilla-release', ['release', 'try', 'date']))
