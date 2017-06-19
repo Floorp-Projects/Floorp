@@ -194,13 +194,18 @@ windows10-64-asan/opt:
 macosx64/debug:
     build-platform: macosx64/debug
     test-sets:
-        - macosx64-tests-debug
+        - macosx64-tests
 
 macosx64/opt:
     build-platform: macosx64/opt
     test-sets:
         - macosx64-tests-talos
-        - macosx64-tests-debug
+        - macosx64-tests
+
+macosx64-nightly/opt:
+      build-platform: macosx64-nightly/opt
+      test-sets:
+        - macosx64-tests
 
 macosx64-devedition/opt:
     build-platform: macosx64-devedition/opt

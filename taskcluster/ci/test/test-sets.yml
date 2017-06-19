@@ -144,7 +144,7 @@ windows-gpu-tests:
 #    - mochitest-chrome
 #    - mochitest-clipboard
 
-macosx64-tests-debug:
+macosx64-tests:
     - cppunit
     - crashtest
     - external-media-tests-base
