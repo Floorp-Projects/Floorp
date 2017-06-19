@@ -1130,6 +1130,10 @@ def geckodriver(enable, automation, compile_env, cross_compile, hazard, target):
     default on supported CI build platforms.
     """
     if enable:
+        if not compile_env:
+            die("--enable-geckodriver is not available without a compile "
+                "environment. A geckodriver binary will be downloaded during "
+                "an artifact build by default where available.")
         return True
 
     if enable.origin == 'default':
