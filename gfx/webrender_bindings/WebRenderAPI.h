@@ -36,6 +36,18 @@ class DisplayListBuilder;
 class RendererOGL;
 class RendererEvent;
 
+// This isn't part of WR's API, but we define it here to simplify layout's
+// logic and data plumbing.
+struct Line {
+  float baseline;
+  float start;
+  float end;
+  float width;
+  wr::ColorF color;
+  wr::LineOrientation orientation;
+  wr::LineStyle style;
+};
+
 class WebRenderAPI
 {
   NS_INLINE_DECL_REFCOUNTING(WebRenderAPI);
@@ -294,6 +306,17 @@ public:
                 wr::FontKey aFontKey,
                 Range<const wr::GlyphInstance> aGlyphBuffer,
                 float aGlyphSize);
+
+  void PushLine(const wr::LayoutRect& aClip,
+                const wr::Line& aLine);
+
+  void PushTextShadow(const wr::LayoutRect& aBounds,
+                      const wr::LayoutRect& aClip,
+                      const wr::TextShadow& aShadow);
+
+  void PopTextShadow();
+
+
 
   void PushBoxShadow(const wr::LayoutRect& aRect,
                      const wr::LayoutRect& aClip,

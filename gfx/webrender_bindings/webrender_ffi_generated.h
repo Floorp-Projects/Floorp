@@ -77,6 +77,22 @@ enum class ImageRendering : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
+enum class LineOrientation : uint8_t {
+  Vertical = 0,
+  Horizontal = 1,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
+enum class LineStyle : uint8_t {
+  Solid = 0,
+  Dotted = 1,
+  Dashed = 2,
+  Wavy = 3,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
 enum class MixBlendMode : uint32_t {
   Normal = 0,
   Multiply = 1,
@@ -556,6 +572,18 @@ struct GlyphInstance {
   }
 };
 
+struct TextShadow {
+  LayoutVector2D offset;
+  ColorF color;
+  float blur_radius;
+
+  bool operator==(const TextShadow& aOther) const {
+    return offset == aOther.offset &&
+           color == aOther.color &&
+           blur_radius == aOther.blur_radius;
+  }
+};
+
 typedef YuvColorSpace WrYuvColorSpace;
 
 struct MutByteSlice {
@@ -801,6 +829,10 @@ void wr_dp_pop_stacking_context(WrState *aState)
 WR_FUNC;
 
 WR_INLINE
+void wr_dp_pop_text_shadow(WrState *aState)
+WR_FUNC;
+
+WR_INLINE
 void wr_dp_push_border(WrState *aState,
                        LayoutRect aRect,
                        LayoutRect aClip,
@@ -897,6 +929,18 @@ void wr_dp_push_image(WrState *aState,
 WR_FUNC;
 
 WR_INLINE
+void wr_dp_push_line(WrState *aState,
+                     LayoutRect aClip,
+                     float aBaseline,
+                     float aStart,
+                     float aEnd,
+                     LineOrientation aOrientation,
+                     float aWidth,
+                     ColorF aColor,
+                     LineStyle aStyle)
+WR_FUNC;
+
+WR_INLINE
 void wr_dp_push_linear_gradient(WrState *aState,
                                 LayoutRect aRect,
                                 LayoutRect aClip,
@@ -958,6 +1002,13 @@ void wr_dp_push_text(WrState *aState,
                      const GlyphInstance *aGlyphs,
                      uint32_t aGlyphCount,
                      float aGlyphSize)
+WR_FUNC;
+
+WR_INLINE
+void wr_dp_push_text_shadow(WrState *aState,
+                            LayoutRect aBounds,
+                            LayoutRect aClip,
+                            TextShadow aShadow)
 WR_FUNC;
 
 WR_INLINE

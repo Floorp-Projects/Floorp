@@ -965,6 +965,45 @@ DisplayListBuilder::PushText(const wr::LayoutRect& aBounds,
 }
 
 void
+DisplayListBuilder::PushLine(const wr::LayoutRect& aClip,
+                             const wr::Line& aLine)
+{
+ wr_dp_push_line(mWrState, aClip, aLine.baseline, aLine.start, aLine.end,
+                 aLine.orientation, aLine.width, aLine.color, aLine.style);
+
+/* TODO(Gankro): remove this
+  LayoutRect rect;
+  if (aLine.orientation == wr::LineOrientation::Horizontal) {
+    rect.origin.x = aLine.start;
+    rect.origin.y = aLine.baseline;
+    rect.size.width = aLine.end - aLine.start;
+    rect.size.height = aLine.width;
+  } else {
+    rect.origin.x = aLine.baseline;
+    rect.origin.y = aLine.start;
+    rect.size.width = aLine.width;
+    rect.size.height = aLine.end - aLine.start;
+  }
+
+  PushRect(rect, aClip, aLine.color);
+*/
+}
+
+void
+DisplayListBuilder::PushTextShadow(const wr::LayoutRect& aRect,
+                                   const wr::LayoutRect& aClip,
+                                   const wr::TextShadow& aShadow)
+{
+  wr_dp_push_text_shadow(mWrState, aRect, aClip, aShadow);
+}
+
+void
+DisplayListBuilder::PopTextShadow()
+{
+  wr_dp_pop_text_shadow(mWrState);
+}
+
+void
 DisplayListBuilder::PushBoxShadow(const wr::LayoutRect& aRect,
                                   const wr::LayoutRect& aClip,
                                   const wr::LayoutRect& aBoxBounds,
