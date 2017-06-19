@@ -42,7 +42,11 @@ MediaShutdownManager&
 MediaShutdownManager::Instance()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_DIAGNOSTIC_ASSERT(sInstance);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  if (!sInstance) {
+    MOZ_CRASH_UNSAFE_PRINTF("sInstance is null. sInitPhase=%d", int(sInitPhase));
+  }
+#endif
   return *sInstance;
 }
 
