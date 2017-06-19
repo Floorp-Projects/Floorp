@@ -151,7 +151,7 @@ HTMLVideoElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const
 uint32_t HTMLVideoElement::MozParsedFrames() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
-  if (!sVideoStatsEnabled) {
+  if (!IsVideoStatsEnabled()) {
     return 0;
   }
   return mDecoder ? mDecoder->GetFrameStatistics().GetParsedFrames() : 0;
@@ -160,7 +160,7 @@ uint32_t HTMLVideoElement::MozParsedFrames() const
 uint32_t HTMLVideoElement::MozDecodedFrames() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
-  if (!sVideoStatsEnabled) {
+  if (!IsVideoStatsEnabled()) {
     return 0;
   }
   return mDecoder ? mDecoder->GetFrameStatistics().GetDecodedFrames() : 0;
@@ -169,7 +169,7 @@ uint32_t HTMLVideoElement::MozDecodedFrames() const
 uint32_t HTMLVideoElement::MozPresentedFrames() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
-  if (!sVideoStatsEnabled) {
+  if (!IsVideoStatsEnabled()) {
     return 0;
   }
   return mDecoder ? mDecoder->GetFrameStatistics().GetPresentedFrames() : 0;
@@ -178,7 +178,7 @@ uint32_t HTMLVideoElement::MozPresentedFrames() const
 uint32_t HTMLVideoElement::MozPaintedFrames()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
-  if (!sVideoStatsEnabled) {
+  if (!IsVideoStatsEnabled()) {
     return 0;
   }
   layers::ImageContainer* container = GetImageContainer();
@@ -188,6 +188,10 @@ uint32_t HTMLVideoElement::MozPaintedFrames()
 double HTMLVideoElement::MozFrameDelay()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
+  if (!IsVideoStatsEnabled()) {
+    return 0.0;
+  }
+
   VideoFrameContainer* container = GetVideoFrameContainer();
   // Hide negative delays. Frame timing tweaks in the compositor (e.g.
   // adding a bias value to prevent multiple dropped/duped frames when
@@ -242,7 +246,7 @@ HTMLVideoElement::GetVideoPlaybackQuality()
   uint32_t droppedFrames = 0;
   uint32_t corruptedFrames = 0;
 
-  if (sVideoStatsEnabled) {
+  if (IsVideoStatsEnabled()) {
     if (nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow()) {
       Performance* perf = window->GetPerformance();
       if (perf) {
@@ -323,6 +327,12 @@ void
 HTMLVideoElement::Init()
 {
   Preferences::AddBoolVarCache(&sVideoStatsEnabled, "media.video_stats.enabled");
+}
+
+/* static */
+bool
+HTMLVideoElement::IsVideoStatsEnabled() {
+  return sVideoStatsEnabled && !nsContentUtils::ShouldResistFingerprinting();
 }
 
 } // namespace dom
