@@ -31,6 +31,7 @@ clobber-stage:
 	$(RM) $(DEPTH)/mobile/android/base/res/values-*/strings.xml
 	$(RM) $(DEPTH)/mobile/android/base/res/raw-*/suggestedsites.json
 
+libs-%: AB_CD=$*
 libs-%:
 	@$(MAKE) -C $(DEPTH)/mobile/locales libs-$*
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
@@ -39,6 +40,7 @@ ifeq ($(OS_TARGET),Android)
 endif
 
 # Tailored target to just add the chrome processing for multi-locale builds
+chrome-%: AB_CD=$*
 chrome-%:
 	@$(MAKE) -C $(DEPTH)/mobile/locales chrome-$*
 	@$(MAKE) chrome AB_CD=$*
@@ -70,6 +72,7 @@ ident:
 	@printf 'buildid '
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(FENNEC_APPLICATION_INI_PATH) App BuildID
 
+merge-%: AB_CD=$*
 merge-%:
 ifdef LOCALE_MERGEDIR
 	$(RM) -rf $(LOCALE_MERGEDIR)

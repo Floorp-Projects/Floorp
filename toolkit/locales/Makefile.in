@@ -12,6 +12,7 @@ ifdef LOCALE_MERGEDIR
 vpath crashreporter.% @srcdir@/en-US/crashreporter
 endif
 
+libs-%: AB_CD=$*
 libs-%:
 	@$(MAKE) -C ../../netwerk/locales/ libs AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C ../../dom/locales/ libs AB_CD=$* XPI_NAME=locale-$*
@@ -21,6 +22,7 @@ libs-%:
 
 # target to be used by multi-locale l10n builds, just add this locale
 # like regular chrome code
+chrome-%: AB_CD=$*
 chrome-%:
 	@$(MAKE) -C $(DEPTH)/netwerk/locales/ chrome AB_CD=$*
 	@$(MAKE) -C $(DEPTH)/dom/locales/ chrome AB_CD=$*

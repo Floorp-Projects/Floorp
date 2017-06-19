@@ -130,6 +130,7 @@ libs-preqs =\
   $(call mkdir-deps,$(DIST)/install) \
   $(NULL)
 
+libs-%: AB_CD=$*
 libs-%: $(libs-preqs)
 	$(display-deps)
 	@$(MAKE) -C $(DEPTH)/toolkit/locales libs-$*
@@ -139,6 +140,7 @@ libs-%: $(libs-preqs)
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*
 
 # Tailored target to just add the chrome processing for multi-locale builds
+chrome-%: AB_CD=$*
 chrome-%:
 	$(display-deps)
 	@$(MAKE) -B searchplugins AB_CD=$*
