@@ -28,7 +28,7 @@ config = {
             "mar_channel_ids": [],
             "channel_names": ["beta", "beta-localtest", "beta-cdntest"],
             "rules_to_update": ["firefox-beta-cdntest", "firefox-beta-localtest"],
-            "publish_rules": ["firefox-beta"],
+            "publish_rules": [32],
         },
     },
     "balrog_use_dummy_suffix": False,
