@@ -17,21 +17,20 @@
 var TalosParentProfiler;
 
 (function() {
+  Components.utils.import("resource://gre/modules/Services.jsm");
+  Components.utils.import("resource://gre/modules/Console.jsm");
 
   // Whether or not this TalosContentProfiler object has had initFromObject
   // or initFromURLQueryParams called on it. Any functions that change the
   // state of the Gecko Profiler should only be called after calling either
   // initFromObject or initFromURLQueryParams.
-  let initted = false;
+  let initted = Services.profiler.IsActive();
 
   // The subtest name that beginTest() was called with.
   let currentTest = "unknown";
 
   // Profiler settings.
   let interval, entries, threadsArray, profileDir;
-
-  Components.utils.import("resource://gre/modules/Services.jsm");
-  Components.utils.import("resource://gre/modules/Console.jsm");
 
   // Use a bit of XPCOM hackery to get at the Talos Powers service
   // implementation...
