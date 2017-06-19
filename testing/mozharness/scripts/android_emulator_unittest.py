@@ -14,7 +14,6 @@ import sys
 import signal
 import socket
 import subprocess
-import telnetlib
 import time
 import tempfile
 
@@ -262,12 +261,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             self.info('stderr: %s' % str(err.strip()))
         return out
 
-    def _telnet_cmd(self, telnet, command):
-        telnet.write('%s\n' % command)
-        result = telnet.read_until('OK', 10)
-        self.info('%s: %s' % (command, result))
-        return result
-
     def _verify_adb(self):
         self.info('Verifying adb connectivity')
         self._run_with_timeout(180, [self.adb_path, 'wait-for-device'])
@@ -287,37 +280,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             return True
         return False
 
-    def _telnet_to_emulator(self):
-        port = self.emulator["emulator_port"]
-        telnet_ok = False
-        try:
-            tn = telnetlib.Telnet('localhost', port, 10)
-            if tn is not None:
-                self.info('Connected to port %d' % port)
-                res = tn.read_until('OK', 10)
-                self.info(res)
-                self._telnet_cmd(tn, 'avd status')
-                self._telnet_cmd(tn, 'redir list')
-                self._telnet_cmd(tn, 'network status')
-                tn.write('quit\n')
-                tn.read_all()
-                telnet_ok = True
-            else:
-                self.warning('Unable to connect to port %d' % port)
-        except socket.error, e:
-            self.info('Trying again after socket error: %s' % str(e))
-            pass
-        except EOFError:
-            self.info('Trying again after EOF')
-            pass
-        except:
-            self.info('Trying again after unexpected exception')
-            pass
-        finally:
-            if tn is not None:
-                tn.close()
-        return telnet_ok
-
     def _verify_emulator(self):
         adb_ok = self._verify_adb()
         if not adb_ok:
@@ -330,10 +292,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         boot_ok = self._retry(30, 10, self._is_boot_completed, "Verify Android boot completed", max_time = 330)
         if not boot_ok:
             self.warning('Unable to verify Android boot completion')
-            return False
-        telnet_ok = self._retry(4, 30, self._telnet_to_emulator, "Verify telnet to emulator")
-        if not telnet_ok:
-            self.warning('Unable to telnet to emulator on port %d' % self.emulator["emulator_port"])
             return False
         return True
 
@@ -672,7 +630,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
 
     def verify_emulator(self):
         '''
-        Check to see if the emulator can be contacted via adb and telnet.
+        Check to see if the emulator can be contacted via adb.
         If any communication attempt fails, kill the emulator, re-launch, and re-check.
         '''
         self.mkdir_p(self.query_abs_dirs()['abs_blob_upload_dir'])
