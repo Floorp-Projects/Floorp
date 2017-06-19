@@ -13,6 +13,9 @@ cp -pr $1/cubeb-ffi/src/* cubeb-ffi/src/
 test -d pulse-ffi/src || mkdir -p pulse-ffi/src
 cp -pr $1/pulse-ffi/Cargo.toml pulse-ffi/
 cp -pr $1/pulse-ffi/src/* pulse-ffi/src/
+test -d pulse-rs/src || mkdir -p pulse-rs/src
+cp -pr $1/pulse-rs/Cargo.toml pulse-rs/
+cp -pr $1/pulse-rs/src/* pulse-rs/src/
 
 if [ -d $1/.git ]; then
   rev=$(cd $1 && git rev-parse --verify HEAD)
