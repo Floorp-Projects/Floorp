@@ -780,6 +780,13 @@ public:
   bool ShouldHandleIMEComposition() const;
 
   /**
+   * Returns number of undo or redo items.  If TransactionManager returns
+   * unexpected error, returns -1.
+   */
+  int32_t NumberOfUndoItems() const;
+  int32_t NumberOfRedoItems() const;
+
+  /**
    * From html rules code - migration in progress.
    */
   static nsresult GetTagString(nsIDOMNode* aNode, nsAString& outString);

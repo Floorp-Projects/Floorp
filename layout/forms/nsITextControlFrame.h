@@ -8,9 +8,12 @@
  
 #include "nsIFormControlFrame.h"
 
-class nsIEditor;
 class nsISelectionController;
 class nsFrameSelection;
+
+namespace mozilla {
+class TextEditor;
+} // namespace mozilla
 
 class nsITextControlFrame : public nsIFormControlFrame
 {
@@ -23,7 +26,7 @@ public:
     eBackward
   };
 
-  NS_IMETHOD    GetEditor(nsIEditor **aEditor) = 0;
+  NS_IMETHOD_(already_AddRefed<mozilla::TextEditor>) GetTextEditor() = 0;
 
   NS_IMETHOD    SetSelectionRange(uint32_t aSelectionStart,
                                   uint32_t aSelectionEnd,
