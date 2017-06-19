@@ -1,10 +1,11 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef PROFILER_MARKERS_H
-#define PROFILER_MARKERS_H
+#ifndef ProfilerMarkerPayload_h
+#define ProfilerMarkerPayload_h
 
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Attributes.h"
@@ -25,18 +26,11 @@ class Layer;
 class SpliceableJSONWriter;
 class UniqueStacks;
 
-/**
- * This is an abstract object that can be implied to supply
- * data to be attached with a profiler marker. Most data inserted
- * into a profile is stored in a circular buffer. This buffer
- * typically wraps around and overwrites most entries. Because
- * of this, this structure is designed to defer the work of
- * prepare the payload only when 'preparePayload' is called.
- *
- * Note when implementing that this object is typically constructed
- * on a particular thread but 'preparePayload' and the destructor
- * is called from the main thread.
- */
+// This is an abstract class that can be implemented to supply data to be
+// attached with a profiler marker.
+//
+// When subclassing this, note that the destructor can be called on any thread,
+// i.e. not necessarily on the thread that created the object.
 class ProfilerMarkerPayload
 {
 public:
@@ -45,14 +39,8 @@ public:
                         const mozilla::TimeStamp& aEndTime,
                         UniqueProfilerBacktrace aStack = nullptr);
 
-  /**
-   * Called from the main thread
-   */
   virtual ~ProfilerMarkerPayload();
 
-  /**
-   * Called from the main thread
-   */
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
                              const mozilla::TimeStamp& aProcessStartTime,
                              UniqueStacks& aUniqueStacks) = 0;
@@ -60,28 +48,28 @@ public:
   mozilla::TimeStamp GetStartTime() const { return mStartTime; }
 
 protected:
-  /**
-   * Called from the main thread
-   */
-  void streamCommonProps(const char* aMarkerType,
+  void StreamCommonProps(const char* aMarkerType,
                          SpliceableJSONWriter& aWriter,
                          const mozilla::TimeStamp& aProcessStartTime,
                          UniqueStacks& aUniqueStacks);
 
-  void SetStack(UniqueProfilerBacktrace aStack) { mStack = mozilla::Move(aStack); }
+  void SetStack(UniqueProfilerBacktrace aStack)
+  {
+    mStack = mozilla::Move(aStack);
+  }
 
 private:
-  mozilla::TimeStamp  mStartTime;
-  mozilla::TimeStamp  mEndTime;
-  UniqueProfilerBacktrace  mStack;
+  mozilla::TimeStamp mStartTime;
+  mozilla::TimeStamp mEndTime;
+  UniqueProfilerBacktrace mStack;
 };
 
-class ProfilerMarkerTracing : public ProfilerMarkerPayload
+class TracingMarkerPayload : public ProfilerMarkerPayload
 {
 public:
-  ProfilerMarkerTracing(const char* aCategory, TracingKind aKind);
-  ProfilerMarkerTracing(const char* aCategory, TracingKind aKind,
-                        UniqueProfilerBacktrace aCause);
+  TracingMarkerPayload(const char* aCategory, TracingKind aKind);
+  TracingMarkerPayload(const char* aCategory, TracingKind aKind,
+                       UniqueProfilerBacktrace aCause);
 
   const char *GetCategory() const { return mCategory; }
   TracingKind GetKind() const { return mKind; }
@@ -93,19 +81,6 @@ public:
 private:
   const char *mCategory;
   TracingKind mKind;
-};
-
-class ProfilerMarkerImagePayload : public ProfilerMarkerPayload
-{
-public:
-  explicit ProfilerMarkerImagePayload(gfxASurface *aImg);
-
-  virtual void StreamPayload(SpliceableJSONWriter& aWriter,
-                             const mozilla::TimeStamp& aProcessStartTime,
-                             UniqueStacks& aUniqueStacks) override;
-
-private:
-  RefPtr<gfxASurface> mImg;
 };
 
 class IOMarkerPayload : public ProfilerMarkerPayload
@@ -163,14 +138,12 @@ private:
   nsString mName;
 };
 
-/**
- * Contains the translation applied to a 2d layer so we can
- * track the layer position at each frame.
- */
-class LayerTranslationPayload : public ProfilerMarkerPayload
+// Contains the translation applied to a 2d layer so we can track the layer
+// position at each frame.
+class LayerTranslationMarkerPayload : public ProfilerMarkerPayload
 {
 public:
-  LayerTranslationPayload(mozilla::layers::Layer* aLayer,
+  LayerTranslationMarkerPayload(mozilla::layers::Layer* aLayer,
                           mozilla::gfx::Point aPoint);
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
@@ -184,32 +157,12 @@ private:
 
 #include "Units.h"    // For ScreenIntPoint
 
-/**
- * Tracks when touch events are processed by gecko, not when
- * the touch actually occured in gonk/android.
- */
-class TouchDataPayload : public ProfilerMarkerPayload
+// Tracks when a vsync occurs according to the HardwareComposer.
+class VsyncMarkerPayload : public ProfilerMarkerPayload
 {
 public:
-  explicit TouchDataPayload(const mozilla::ScreenIntPoint& aPoint);
-  virtual ~TouchDataPayload() {}
-
-  virtual void StreamPayload(SpliceableJSONWriter& aWriter,
-                             const mozilla::TimeStamp& aProcessStartTime,
-                             UniqueStacks& aUniqueStacks) override;
-
-private:
-  mozilla::ScreenIntPoint mPoint;
-};
-
-/**
- * Tracks when a vsync occurs according to the HardwareComposer.
- */
-class VsyncPayload : public ProfilerMarkerPayload
-{
-public:
-  explicit VsyncPayload(mozilla::TimeStamp aVsyncTimestamp);
-  virtual ~VsyncPayload() {}
+  explicit VsyncMarkerPayload(mozilla::TimeStamp aVsyncTimestamp);
+  virtual ~VsyncMarkerPayload() {}
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
                              const mozilla::TimeStamp& aProcessStartTime,
@@ -299,5 +252,4 @@ private:
   JS::UniqueChars mTimingData;
 };
 
-
-#endif // PROFILER_MARKERS_H
+#endif // ProfilerMarkerPayload_h

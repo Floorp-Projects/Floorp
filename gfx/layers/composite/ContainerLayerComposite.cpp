@@ -36,7 +36,7 @@
 #include <vector>
 #include "GeckoProfiler.h"              // for GeckoProfiler
 #ifdef MOZ_GECKO_PROFILER
-#include "ProfilerMarkerPayload.h"      // for LayerTranslationPayload
+#include "ProfilerMarkerPayload.h"      // for LayerTranslationMarkerPayload
 #endif
 
 #define CULLING_LOG(...)
@@ -102,7 +102,7 @@ PrintUniformityInfo(Layer* aLayer)
   Point translation = transform.As2D().GetTranslation();
   PROFILER_MARKER_PAYLOAD(
     "LayerTranslation",
-    MakeUnique<LayerTranslationPayload>(aLayer, translation));
+    MakeUnique<LayerTranslationMarkerPayload>(aLayer, translation));
 #endif
 }
 

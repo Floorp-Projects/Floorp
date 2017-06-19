@@ -322,22 +322,22 @@ TEST(GeckoProfiler, Pause)
 
 // A class that keeps track of how many instances have been created, streamed,
 // and destroyed.
-class GTestPayload : public ProfilerMarkerPayload
+class GTestMarkerPayload : public ProfilerMarkerPayload
 {
 public:
-  explicit GTestPayload(int aN)
+  explicit GTestMarkerPayload(int aN)
     : mN(aN)
   {
     sNumCreated++;
   }
 
-  virtual ~GTestPayload() { sNumDestroyed++; }
+  virtual ~GTestMarkerPayload() { sNumDestroyed++; }
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
                              const mozilla::TimeStamp& aStartTime,
                              UniqueStacks& aUniqueStacks) override
   {
-    streamCommonProps("gtest", aWriter, aStartTime, aUniqueStacks);
+    StreamCommonProps("gtest", aWriter, aStartTime, aUniqueStacks);
     char buf[64];
     SprintfLiteral(buf, "gtest-%d", mN);
     aWriter.IntProperty(buf, mN);
@@ -348,16 +348,16 @@ private:
   int mN;
 
 public:
-  // The number of GTestPayload instances that have been created, streamed, and
-  // destroyed.
+  // The number of GTestMarkerPayload instances that have been created,
+  // streamed, and destroyed.
   static int sNumCreated;
   static int sNumStreamed;
   static int sNumDestroyed;
 };
 
-int GTestPayload::sNumCreated = 0;
-int GTestPayload::sNumStreamed = 0;
-int GTestPayload::sNumDestroyed = 0;
+int GTestMarkerPayload::sNumCreated = 0;
+int GTestMarkerPayload::sNumStreamed = 0;
+int GTestMarkerPayload::sNumDestroyed = 0;
 
 TEST(GeckoProfiler, Markers)
 {
@@ -382,15 +382,15 @@ TEST(GeckoProfiler, Markers)
 
   profiler_add_marker("M1");
   profiler_add_marker("M2",
-                      MakeUnique<ProfilerMarkerTracing>("C", TRACING_EVENT));
+                      MakeUnique<TracingMarkerPayload>("C", TRACING_EVENT));
   PROFILER_MARKER("M3");
   PROFILER_MARKER_PAYLOAD(
     "M4",
-    MakeUnique<ProfilerMarkerTracing>("C", TRACING_EVENT,
-                                      profiler_get_backtrace()));
+    MakeUnique<TracingMarkerPayload>("C", TRACING_EVENT,
+                                     profiler_get_backtrace()));
 
   for (int i = 0; i < 10; i++) {
-    PROFILER_MARKER_PAYLOAD("M5", MakeUnique<GTestPayload>(i));
+    PROFILER_MARKER_PAYLOAD("M5", MakeUnique<GTestMarkerPayload>(i));
   }
 
   // Sleep briefly to ensure a sample is taken and the pending markers are
@@ -402,11 +402,11 @@ TEST(GeckoProfiler, Markers)
 
   UniquePtr<char[]> profile = w.WriteFunc()->CopyData();
 
-  // The GTestPayloads should have been created and streamed, but not yet
+  // The GTestMarkerPayloads should have been created and streamed, but not yet
   // destroyed.
-  ASSERT_TRUE(GTestPayload::sNumCreated == 10);
-  ASSERT_TRUE(GTestPayload::sNumStreamed == 10);
-  ASSERT_TRUE(GTestPayload::sNumDestroyed == 0);
+  ASSERT_TRUE(GTestMarkerPayload::sNumCreated == 10);
+  ASSERT_TRUE(GTestMarkerPayload::sNumStreamed == 10);
+  ASSERT_TRUE(GTestMarkerPayload::sNumDestroyed == 0);
   for (int i = 0; i < 10; i++) {
     char buf[64];
     SprintfLiteral(buf, "\"gtest-%d\"", i);
@@ -415,11 +415,11 @@ TEST(GeckoProfiler, Markers)
 
   profiler_stop();
 
-  // The GTestPayloads should have been destroyed.
-  ASSERT_TRUE(GTestPayload::sNumDestroyed == 10);
+  // The GTestMarkerPayloads should have been destroyed.
+  ASSERT_TRUE(GTestMarkerPayload::sNumDestroyed == 10);
 
   for (int i = 0; i < 10; i++) {
-    PROFILER_MARKER_PAYLOAD("M5", MakeUnique<GTestPayload>(i));
+    PROFILER_MARKER_PAYLOAD("M5", MakeUnique<GTestMarkerPayload>(i));
   }
 
   profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
@@ -429,10 +429,10 @@ TEST(GeckoProfiler, Markers)
 
   profiler_stop();
 
-  // The second set of GTestPayloads should not have been streamed.
-  ASSERT_TRUE(GTestPayload::sNumCreated == 20);
-  ASSERT_TRUE(GTestPayload::sNumStreamed == 10);
-  ASSERT_TRUE(GTestPayload::sNumDestroyed == 20);
+  // The second set of GTestMarkerPayloads should not have been streamed.
+  ASSERT_TRUE(GTestMarkerPayload::sNumCreated == 20);
+  ASSERT_TRUE(GTestMarkerPayload::sNumStreamed == 10);
+  ASSERT_TRUE(GTestMarkerPayload::sNumDestroyed == 20);
 }
 
 TEST(GeckoProfiler, Time)
