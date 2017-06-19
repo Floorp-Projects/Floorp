@@ -70,6 +70,16 @@ public:
   void Unregister(MediaDecoder* aDecoder);
 
 private:
+  enum InitPhase
+  {
+    NotInited,
+    InitSucceeded,
+    InitFailed,
+    XPCOMShutdownStarted,
+    XPCOMShutdownEnded
+  };
+
+  static InitPhase sInitPhase;
 
   MediaShutdownManager();
   virtual ~MediaShutdownManager();
