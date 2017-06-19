@@ -1740,47 +1740,6 @@ SetFactor(const nsCSSValue& aValue, float& aField, RuleNodeCacheConditions& aCon
   NS_NOTREACHED("SetFactor: inappropriate unit");
 }
 
-static void
-SetTransformValue(const nsCSSValue& aValue,
-                  RefPtr<nsCSSValueSharedList>& aField,
-                  RuleNodeCacheConditions& aConditions,
-                  nsCSSValueSharedList* const aParentValue)
-{
-  /* Convert the nsCSSValueList into an nsTArray<nsTransformFunction *>. */
-  switch (aValue.GetUnit()) {
-  case eCSSUnit_Null:
-    break;
-
-  case eCSSUnit_Initial:
-  case eCSSUnit_Unset:
-  case eCSSUnit_None:
-    aField = nullptr;
-    break;
-
-  case eCSSUnit_Inherit:
-    aField = aParentValue;
-    aConditions.SetUncacheable();
-    break;
-
-  case eCSSUnit_SharedList: {
-    nsCSSValueSharedList* list = aValue.GetSharedListValue();
-    nsCSSValueList* head = list->mHead;
-    MOZ_ASSERT(head, "transform list must have at least one item");
-    // can get a _None in here from transform animation
-    if (head->mValue.GetUnit() == eCSSUnit_None) {
-      MOZ_ASSERT(head->mNext == nullptr, "none must be alone");
-      aField = nullptr;
-    } else {
-      aField = list;
-    }
-    break;
-  }
-
-  default:
-    MOZ_ASSERT(false, "unrecognized transform unit");
-  }
-}
-
 void*
 nsRuleNode::operator new(size_t sz, nsPresContext* aPresContext)
 {
@@ -5316,34 +5275,6 @@ nsRuleNode::ComputeUIResetData(void* aStartStruct,
            parentUI->mWindowShadow,
            NS_STYLE_WINDOW_SHADOW_DEFAULT);
 
-  // -moz-window-opacity: factor, inherit, initial
-  SetFactor(*aRuleData->ValueForWindowOpacity(),
-            ui->mWindowOpacity, conditions,
-            parentUI->mWindowOpacity, 1.0f,
-            SETFCT_OPACITY | SETFCT_UNSET_INITIAL);
-
-  // -moz-window-transform
-  SetTransformValue(*aRuleData->ValueForWindowTransform(),
-                    ui->mSpecifiedWindowTransform, conditions,
-                    parentUI->mSpecifiedWindowTransform);
-
-  // -moz-window-transform-origin
-  const nsCSSValue* windowTransformOriginValue =
-    aRuleData->ValueForWindowTransformOrigin();
-  if (windowTransformOriginValue->GetUnit() != eCSSUnit_Null) {
-    mozilla::DebugOnly<bool> result =
-      SetPairCoords(*windowTransformOriginValue,
-                    ui->mWindowTransformOrigin[0],
-                    ui->mWindowTransformOrigin[1],
-                    parentUI->mWindowTransformOrigin[0],
-                    parentUI->mWindowTransformOrigin[1],
-                    SETCOORD_LPH | SETCOORD_INITIAL_HALF |
-                      SETCOORD_BOX_POSITION | SETCOORD_STORE_CALC |
-                      SETCOORD_UNSET_INITIAL,
-                    aContext, mPresContext, conditions);
-    NS_ASSERTION(result, "Malformed -moz-window-transform-origin parse!");
-  }
-
   COMPUTE_END_RESET(UIReset, ui)
 }
 
@@ -6411,9 +6342,40 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     }
   }
 
-  SetTransformValue(*aRuleData->ValueForTransform(),
-                    display->mSpecifiedTransform, conditions,
-                    parentDisplay->mSpecifiedTransform);
+  /* Convert the nsCSSValueList into an nsTArray<nsTransformFunction *>. */
+  const nsCSSValue* transformValue = aRuleData->ValueForTransform();
+  switch (transformValue->GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_Initial:
+  case eCSSUnit_Unset:
+  case eCSSUnit_None:
+    display->mSpecifiedTransform = nullptr;
+    break;
+
+  case eCSSUnit_Inherit:
+    display->mSpecifiedTransform = parentDisplay->mSpecifiedTransform;
+    conditions.SetUncacheable();
+    break;
+
+  case eCSSUnit_SharedList: {
+    nsCSSValueSharedList* list = transformValue->GetSharedListValue();
+    nsCSSValueList* head = list->mHead;
+    MOZ_ASSERT(head, "transform list must have at least one item");
+    // can get a _None in here from transform animation
+    if (head->mValue.GetUnit() == eCSSUnit_None) {
+      MOZ_ASSERT(head->mNext == nullptr, "none must be alone");
+      display->mSpecifiedTransform = nullptr;
+    } else {
+      display->mSpecifiedTransform = list;
+    }
+    break;
+  }
+
+  default:
+    MOZ_ASSERT(false, "unrecognized transform unit");
+  }
 
   /* Convert the nsCSSValueList into a will-change bitfield for fast lookup */
   const nsCSSValue* willChangeValue = aRuleData->ValueForWillChange();

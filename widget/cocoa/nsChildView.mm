@@ -3767,6 +3767,12 @@ NSEvent* gLastDragMouseDownEvent = nil;
 {
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
   [self drawRect:aRect inContext:cgContext];
+
+  // If we're a transparent window and our contents have changed, we need
+  // to make sure the shadow is updated to the new contents.
+  if ([[self window] isKindOfClass:[BaseWindow class]]) {
+    [(BaseWindow*)[self window] deferredInvalidateShadow];
+  }
 }
 
 - (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext

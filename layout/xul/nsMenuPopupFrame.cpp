@@ -457,15 +457,6 @@ nsMenuPopupFrame::IsLeafDynamic() const
 }
 
 void
-nsMenuPopupFrame::UpdateWidgetProperties()
-{
-  if (nsIWidget* widget = GetWidget()) {
-    widget->SetWindowOpacity(StyleUIReset()->mWindowOpacity);
-    widget->SetWindowTransform(ComputeWidgetTransform());
-  }
-}
-
-void
 nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
                               nsIFrame* aAnchor, bool aSizedToPopup)
 {

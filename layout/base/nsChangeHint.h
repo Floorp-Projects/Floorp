@@ -232,12 +232,6 @@ enum nsChangeHint : uint32_t {
    */
   nsChangeHint_CSSOverflowChange = 1 << 28,
 
-  /**
-   * Indicates that nsIFrame::UpdateWidgetProperties needs to be called.
-   * This is used for -moz-window-* properties.
-   */
-  nsChangeHint_UpdateWidgetProperties = 1 << 29,
-
   // IMPORTANT NOTE: When adding a new hint, you will need to add it to
   // one of:
   //
@@ -253,7 +247,7 @@ enum nsChangeHint : uint32_t {
   /**
    * Dummy hint value for all hints. It exists for compile time check.
    */
-  nsChangeHint_AllHints = (1 << 30) - 1,
+  nsChangeHint_AllHints = (1 << 29) - 1,
 };
 
 // Redefine these operators to return nothing. This will catch any use
@@ -355,8 +349,7 @@ inline nsChangeHint operator^=(nsChangeHint& aLeft, nsChangeHint aRight)
   nsChangeHint_UpdatePostTransformOverflow |               \
   nsChangeHint_UpdateTransformLayer |                      \
   nsChangeHint_UpdateUsesOpacity |                         \
-  nsChangeHint_AddOrRemoveTransform |                      \
-  nsChangeHint_UpdateWidgetProperties                      \
+  nsChangeHint_AddOrRemoveTransform                        \
 )
 
 // The change hints that are sometimes considered to be handled for descendants.

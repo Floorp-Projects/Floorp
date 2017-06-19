@@ -305,9 +305,6 @@ COMPUTED_STYLE_PROP(_moz_user_modify,              UserModify)
 COMPUTED_STYLE_PROP(_moz_user_select,              UserSelect)
 COMPUTED_STYLE_PROP(_moz_window_dragging,          WindowDragging)
 COMPUTED_STYLE_PROP(_moz_window_shadow,            WindowShadow)
-COMPUTED_STYLE_PROP(_moz_window_opacity,           WindowOpacity)
-COMPUTED_STYLE_PROP(_moz_window_transform,         WindowTransform)
-COMPUTED_STYLE_PROP(_moz_window_transform_origin,  WindowTransformOrigin)
 
 /* ********************************** *\
  * Implementations of -webkit- styles *

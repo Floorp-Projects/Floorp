@@ -39,7 +39,7 @@ STYLE_STRUCTS = [("INHERITED",) + x for x in [
     ("TextReset",      "nullptr",   NORMAL_DEP + LENGTH_DEP + COLOR_DEP),
     ("Display",        "nullptr",   NORMAL_DEP + LENGTH_DEP),
     ("Content",        "nullptr",   NORMAL_DEP + LENGTH_DEP),
-    ("UIReset",        "nullptr",   NORMAL_DEP + LENGTH_DEP),
+    ("UIReset",        "nullptr",   NORMAL_DEP),
     ("Table",          "nullptr",   NORMAL_DEP),
     ("Margin",         "nullptr",   NORMAL_DEP + LENGTH_DEP),
     ("Padding",        "nullptr",   NORMAL_DEP + LENGTH_DEP),

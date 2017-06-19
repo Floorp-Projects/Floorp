@@ -205,14 +205,6 @@ namespace nsStyleTransformMatrix {
                                          float aAppUnitsPerMatrixUnit,
                                          bool* aContains3dTransform);
 
-  /**
-   * Given two nsStyleCoord values, compute the 2d position with respect to the
-   * given TransformReferenceBox that these values describe, in device pixels.
-   */
-  mozilla::gfx::Point Convert2DPosition(nsStyleCoord const (&aValue)[2],
-                                        TransformReferenceBox& aRefBox,
-                                        int32_t aAppUnitsPerDevPixel);
-
   // Shear type for decomposition.
   enum class ShearType {
     XYSHEAR,

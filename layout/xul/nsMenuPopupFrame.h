@@ -248,8 +248,6 @@ public:
 
   virtual bool IsLeafDynamic() const override;
 
-  virtual void UpdateWidgetProperties() override;
-
   // layout, position and display the popup as needed
   void LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
                    nsIFrame* aAnchor, bool aSizedToPopup);
