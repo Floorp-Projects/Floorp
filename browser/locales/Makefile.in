@@ -93,6 +93,7 @@ $(DIST)/branding:
 
 DEFINES += -DBOOKMARKS_INCLUDE_DIR=$(dir $(call MERGE_FILE,profile/bookmarks.inc))
 
+libs-%: AB_CD=$*
 libs-%:
 	$(NSINSTALL) -D $(DIST)/install
 	@$(MAKE) -C ../../toolkit/locales libs-$* XPI_ROOT_APPID='$(XPI_ROOT_APPID)'
@@ -115,6 +116,7 @@ endif
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=$(PREF_DIR)
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*
 
+chrome-%: AB_CD=$*
 chrome-%:
 	@$(MAKE) -C ../../toolkit/locales chrome-$*
 	@$(MAKE) -C ../../services/sync/locales chrome AB_CD=$*
@@ -196,6 +198,7 @@ ident:
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py \
 	    $(STAGEDIST)/application.ini App BuildID
 
+merge-%: AB_CD=$*
 merge-%:
 ifdef LOCALE_MERGEDIR
 	$(RM) -rf $(LOCALE_MERGEDIR)
