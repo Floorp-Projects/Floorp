@@ -10,7 +10,15 @@ with Files('**'):
 MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 
 EXPORTS += [
+    'celldata.h',             # included by nsCellMap.h
+    'nsCellMap.h',            # included by nsTableWrapperFrame.h
     'nsITableCellLayout.h',
+    'nsTableCellFrame.h',     # included by dom/base/Selection.cpp
+    'nsTableFrame.h',         # included by nsTableWrapperFrame.h
+    'nsTableRowFrame.h',      # included by nsTableCellFrame.h
+    'nsTableRowGroupFrame.h', # included by nsTableRowFrame.h
+    'nsTableWrapperFrame.h',  # included by dom/base/Selection.cpp
+    'TableArea.h',            # included by nsCellMap.h
 ]
 
 UNIFIED_SOURCES += [

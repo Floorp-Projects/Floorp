@@ -55,9 +55,11 @@ public:
   }
 
   void AddPendingMarker(const char* aMarkerName,
-                        ProfilerMarkerPayload* aPayload, double aTime)
+                        mozilla::UniquePtr<ProfilerMarkerPayload> aPayload,
+                        double aTime)
   {
-    ProfilerMarker* marker = new ProfilerMarker(aMarkerName, aPayload, aTime);
+    ProfilerMarker* marker =
+      new ProfilerMarker(aMarkerName, Move(aPayload), aTime);
     mPendingMarkers.insert(marker);
   }
 
@@ -358,8 +360,8 @@ private:
     INACTIVE_REQUESTED = 3,
   } mJSSampling;
 
-  // When sampling, this holds the generation number and offset in PS::mBuffer
-  // of the most recent sample for this thread.
+  // When sampling, this holds the generation number and offset in
+  // ActivePS::mBuffer of the most recent sample for this thread.
   ProfileBuffer::LastSample mLastSample;
 };
 

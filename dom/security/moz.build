@@ -11,6 +11,7 @@ TEST_DIRS += ['test']
 
 EXPORTS.mozilla.dom += [
     'ContentVerifier.h',
+    'FramingChecker.h',
     'nsContentSecurityManager.h',
     'nsCSPContext.h',
     'nsCSPService.h',
@@ -28,6 +29,7 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     'ContentVerifier.cpp',
+    'FramingChecker.cpp',
     'nsContentSecurityManager.cpp',
     'nsCSPContext.cpp',
     'nsCSPParser.cpp',
@@ -43,6 +45,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/caps',
+    '/docshell/base',  # for nsDocShell.h
     '/netwerk/base',
 ]
 
