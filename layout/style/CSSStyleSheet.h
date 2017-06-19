@@ -187,7 +187,7 @@ protected:
 
 protected:
   // Internal methods which do not have security check and completeness check.
-  dom::CSSRuleList* GetCssRulesInternal(ErrorResult& aRv);
+  dom::CSSRuleList* GetCssRulesInternal();
   uint32_t InsertRuleInternal(const nsAString& aRule,
                               uint32_t aIndex, ErrorResult& aRv);
   void DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv);

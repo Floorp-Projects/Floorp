@@ -286,7 +286,7 @@ ServoStyleSheet::Clone(StyleSheet* aCloneParent,
 }
 
 CSSRuleList*
-ServoStyleSheet::GetCssRulesInternal(ErrorResult& aRv)
+ServoStyleSheet::GetCssRulesInternal()
 {
   if (!mRuleList) {
     EnsureUniqueInner();
@@ -304,7 +304,7 @@ ServoStyleSheet::InsertRuleInternal(const nsAString& aRule,
                                     uint32_t aIndex, ErrorResult& aRv)
 {
   // Ensure mRuleList is constructed.
-  GetCssRulesInternal(aRv);
+  GetCssRulesInternal();
 
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
   aRv = mRuleList->InsertRule(aRule, aIndex);
@@ -326,7 +326,7 @@ void
 ServoStyleSheet::DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv)
 {
   // Ensure mRuleList is constructed.
-  GetCssRulesInternal(aRv);
+  GetCssRulesInternal();
   if (aIndex > mRuleList->Length()) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
