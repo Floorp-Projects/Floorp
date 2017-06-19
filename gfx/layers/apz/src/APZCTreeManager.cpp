@@ -986,6 +986,8 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       MouseInput& mouseInput = aEvent.AsMouseInput();
       mouseInput.mHandledByAPZ = true;
 
+      mCurrentMousePosition = mouseInput.mOrigin;
+
       bool startsDrag = DragTracker::StartsDrag(mouseInput);
       if (startsDrag) {
         // If this is the start of a drag we need to unambiguously know if it's
@@ -2476,6 +2478,12 @@ APZCTreeManager::GetApzcToGeckoTransform(const AsyncPanZoomController *aApzc) co
   }
 
   return ViewAs<ParentLayerToScreenMatrix4x4>(result);
+}
+
+ScreenPoint
+APZCTreeManager::GetCurrentMousePosition() const
+{
+  return mCurrentMousePosition;
 }
 
 already_AddRefed<AsyncPanZoomController>
