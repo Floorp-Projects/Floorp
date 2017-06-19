@@ -3934,6 +3934,8 @@ public:
    */
   bool IsScrolledOutOfView();
 
+  virtual void UpdateWidgetProperties() {}
+
   /**
    * @return true iff this frame has one or more associated image requests.
    * @see mozilla::css::ImageLoader.

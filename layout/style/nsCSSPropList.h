@@ -4494,6 +4494,16 @@ CSS_PROP_UIRESET(
     kWindowShadowKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
+CSS_PROP_UIRESET(
+    -moz-window-opacity,
+    _moz_window_opacity,
+    CSS_PROP_DOMPROP_PREFIXED(WindowOpacity),
+    CSS_PROPERTY_INTERNAL | CSS_PROPERTY_PARSE_VALUE,
+    "",
+    VARIANT_HN,
+    nullptr,
+    offsetof(nsStyleUIReset, mWindowOpacity),
+    eStyleAnimType_float)
 #endif // CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_TEXT(
     word-break,
