@@ -628,23 +628,18 @@ static const char* const kMainThreadName = "GeckoMain";
 // BEGIN sampling/unwinding code
 
 // The registers used for stack unwinding and a few other sampling purposes.
+// The ctor does nothing; users are responsible for filling in the fields.
 class Registers
 {
 public:
-  Registers()
-    : mPC(nullptr)
-    , mSP(nullptr)
-    , mFP(nullptr)
-    , mLR(nullptr)
-#if defined(GP_OS_linux) || defined(GP_OS_android)
-    , mContext(nullptr)
-#endif
-  {}
+  Registers() {}
 
 #if defined(HAVE_NATIVE_UNWIND)
   // Fills in mPC, mSP, mFP, mLR, and mContext for a synchronous sample.
   void SyncPopulate();
 #endif
+
+  void Clear() { memset(this, 0, sizeof(*this)); }
 
   // These fields are filled in by
   // SamplerThread::SuspendAndSampleAndResumeThread() for periodic and
@@ -2832,9 +2827,10 @@ profiler_get_backtrace()
   TimeStamp now = TimeStamp::Now();
 
   Registers regs;
-
 #if defined(HAVE_NATIVE_UNWIND)
   regs.SyncPopulate();
+#else
+  regs.Clear();
 #endif
 
   auto buffer = MakeUnique<ProfileBuffer>(PROFILER_GET_BACKTRACE_ENTRIES);

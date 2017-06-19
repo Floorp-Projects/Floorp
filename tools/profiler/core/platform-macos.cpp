@@ -120,6 +120,7 @@ Sampler::SuspendAndSampleAndResumeThread(PSLockRef aLock,
     regs.mPC = reinterpret_cast<Address>(state.REGISTER_FIELD(ip));
     regs.mSP = reinterpret_cast<Address>(state.REGISTER_FIELD(sp));
     regs.mFP = reinterpret_cast<Address>(state.REGISTER_FIELD(bp));
+    regs.mLR = 0;
 
     aProcessRegs(regs);
   }
@@ -208,6 +209,7 @@ Registers::SyncPopulate()
   );
   mPC = reinterpret_cast<Address>(__builtin_extract_return_addr(
                                     __builtin_return_address(0)));
+  mLR = 0;
 }
 #endif
 
