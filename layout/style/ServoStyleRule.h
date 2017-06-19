@@ -12,6 +12,7 @@
 #include "mozilla/BindingStyleRule.h"
 #include "mozilla/ServoBindingTypes.h"
 
+#include "nsICSSStyleRuleDOMWrapper.h"
 #include "nsIDOMCSSStyleRule.h"
 #include "nsICSSStyleRuleDOMWrapper.h"
 #include "nsDOMCSSDeclaration.h"
