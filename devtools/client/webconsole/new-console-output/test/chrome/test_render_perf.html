@@ -55,34 +55,28 @@ const testPackets = Array.from({length: NUM_MESSAGES}).map((el, id) => ({
 }));
 const lastPacket = testPackets.pop();
 
-function startMeasure(label) {
-  const startLabel = label + "start";
-  performance.mark(startLabel);
-  return {
-    stop: (clear = true) => {
-      performance.measure(label, startLabel);
-      const entries = performance.getEntriesByName(label);
-      if (clear){
-        performance.clearMeasures(label);
-      }
-      return entries[entries.length - 1];
-    }
-  }
-}
-
-function wait(time) {
-  return new Promise(resolve => setTimeout(resolve, time));
+async function timeit(cb) {
+  // Return a Promise that resolves the number of seconds cb takes.
+  let start = performance.now();
+  await cb();
+  let elapsed = performance.now() - start;
+  return elapsed;
 }
 
 async function addAllMessages(wrapper) {
-  testPackets.forEach((packet) => wrapper.dispatchMessageAdd(packet));
-  // Only wait for the last packet to minimize work.
-  await wrapper.dispatchMessageAdd(lastPacket, true);
-  await new Promise(resolve => requestAnimationFrame(resolve));
+  let time = await timeit(async () => {
+    testPackets.forEach((packet) => wrapper.dispatchMessageAdd(packet));
+    // Only wait for the last packet to minimize work.
+    await wrapper.dispatchMessageAdd(lastPacket, true);
+    await new Promise(resolve => requestAnimationFrame(resolve));
+  });
+  return time;
 }
 
 async function addMessage(wrapper, message) {
-  await wrapper.dispatchMessageAdd(message, true);
+  return timeit(async () => {
+    await wrapper.dispatchMessageAdd(message, true);
+  });
 }
 
 function getTimes(times) {
@@ -100,25 +94,28 @@ async function clearMessages(wrapper) {
   await new Promise(resolve => requestAnimationFrame(resolve));
 }
 
+async function testStreamLogging(wrapper) {
+  await clearMessages(wrapper);
+  let streamTimes = [];
+  for (let i = 0; i < NUM_STREAMING; i++) {
+    streamTimes.push(addMessage(wrapper, testPackets[i]));
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  let {avg, median} = getTimes(await Promise.all(streamTimes));
+  info(`STREAMING: On average, it took ${avg} ms (median ${median} ms) ` +
+       `for each message`);
+}
+
 async function testBulkLogging(wrapper) {
   await clearMessages(wrapper);
   let bulkTimes = [];
   const iterations = 5;
   for (let i = 0; i < iterations; i++) {
-    const measure = startMeasure("bulk log");
-    await addAllMessages(wrapper);
-    const {duration} = measure.stop();
+    let time = await addAllMessages(wrapper);
+    info(`took ${time} ms to render bulk messages (iteration ${i})`);
+    bulkTimes.push(time);
 
-    info(`took ${duration} ms to render bulk messages (iteration ${i})`);
-    bulkTimes.push(duration);
-
-    // Do not clear the store on last iteration so the next test can use the messages.
-    if (i !== iterations - 1){
-      // Wait before clearing messages so those events are more spotable on the profile.
-      await wait(500);
-      await clearMessages(wrapper);
-      await wait(500);
-    }
+    await clearMessages(wrapper);
   }
   let {avg, median} = getTimes(bulkTimes);
 
@@ -127,41 +124,17 @@ async function testBulkLogging(wrapper) {
 }
 
 async function testFiltering(wrapper) {
-  const measureFilter = startMeasure("filtering");
+  await clearMessages(wrapper);
+  await addAllMessages(wrapper);
+  let filterToggleTimeOff = await timeit(() => {
+    wrapper.getStore().dispatch(actions.filterToggle("log"));
+  });
+  info(`Filter toggle time (off): ${filterToggleTimeOff}`);
 
-  const measureFilterOff = startMeasure("filtering off");
-  let filterToggleTimeOff = await wrapper.getStore().dispatch(actions.filterToggle("log"));
-  const measureFilterOffEntry = measureFilterOff.stop();
-  info(`Filter toggle time (off): ${measureFilterOffEntry.duration}`);
-
-  const measureFilterOn = startMeasure("filtering on");
-  let filterToggleTimeOn = await wrapper.getStore().dispatch(actions.filterToggle("log"));
-  const measureFilterOnEntry = measureFilterOn.stop();
-  info(`Filter toggle time (on): ${measureFilterOnEntry.duration}`);
-  measureFilter.stop();
-}
-
-async function testStreamLogging(wrapper, clear = true) {
-  const streamMeasureLabel = "stream" + (clear === false ? " and prune" : "");
-  const streamMeasure = startMeasure(streamMeasureLabel);
-  if (clear === true) {
-    await clearMessages(wrapper);
-  }
-
-  const measureLabel = "stream - add single message";
-  for (let i = 0; i < NUM_STREAMING; i++) {
-    const measure = startMeasure(measureLabel);
-    await addMessage(wrapper, testPackets[i]);
-    measure.stop(false);
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
-
-  let streamTimes = performance.getEntriesByName(measureLabel).map(entry => entry.duration);
-  performance.clearMeasures(measureLabel);
-  let { avg, median } = getTimes(streamTimes);
-  info(`STREAMING${clear === false ? " AND PRUNING": ""}: On average, ` +
-    `it took ${avg} ms (median ${median} ms) for each message`);
-  streamMeasure.stop();
+  let filterToggleTimeOn = await timeit(() => {
+    wrapper.getStore().dispatch(actions.filterToggle("log"));
+  });
+  info(`Filter toggle time (on): ${filterToggleTimeOn}`);
 }
 
 window.onload = async function () {
@@ -195,22 +168,14 @@ window.onload = async function () {
   );
   info("Profiler has started");
 
-  await wait(500);
+  Services.profiler.AddMarker("Stream Logging");
+  await testStreamLogging(wrapper);
 
+  Services.profiler.AddMarker("Bulk Logging");
   await testBulkLogging(wrapper);
 
-  await wait(500);
-
+  Services.profiler.AddMarker("Filtering Logging");
   await testFiltering(wrapper);
-
-  await wait(500);
-
-  // first pass, without clearing the store.
-  await testStreamLogging(wrapper, false);
-
-  await wait(500);
-  // second pass, with an empty store.
-  await testStreamLogging(wrapper, true);
 
   ok(true, "Tests finished");
 
