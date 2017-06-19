@@ -1,6 +1,7 @@
-<html>
+<html class="reftest-wait">
     <head>
         <script>
+          function boom() {
             o1 = document.createElement("script");
             o2 = document.implementation.createDocument('', '', null);
             o3 = document.createElement("iframe");
@@ -9,6 +10,9 @@
             o5 = document.createTextNode('o2.adoptNode(o3); try { o4.location = "" } catch(e) {}');
             o1.appendChild(o5);
             document.documentElement.appendChild(o1);
+            document.documentElement.classList.remove("reftest-wait");
+          }
         </script>
     </head>
+    <body onload="boom();"></body>
 </html>
