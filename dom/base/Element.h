@@ -487,6 +487,16 @@ public:
 
   inline void NoteDirtyDescendantsForServo();
 
+  bool HasAnimationOnlyDirtyDescendantsForServo() const {
+    MOZ_ASSERT(IsStyledByServo());
+    return HasFlag(ELEMENT_HAS_ANIMATION_ONLY_DIRTY_DESCENDANTS_FOR_SERVO);
+  }
+
+  void UnsetHasAnimationOnlyDirtyDescendantsForServo() {
+    MOZ_ASSERT(IsStyledByServo());
+    UnsetFlags(ELEMENT_HAS_ANIMATION_ONLY_DIRTY_DESCENDANTS_FOR_SERVO);
+  }
+
 #ifdef DEBUG
   inline bool DirtyDescendantsBitIsPropagatedForServo();
 #endif
