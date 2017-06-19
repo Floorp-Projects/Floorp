@@ -29,7 +29,7 @@ function test() {
       .then(testNavigate)
       .then(testDetach)
       .then(finish)
-      .then(null, aError => {
+      .catch(aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
       });
   });

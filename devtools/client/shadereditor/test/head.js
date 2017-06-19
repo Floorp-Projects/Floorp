@@ -118,7 +118,7 @@ function ifWebGLUnsupported() {
 
 function test() {
   let generator = isWebGLSupported(document) ? ifWebGLSupported : ifWebGLUnsupported;
-  Task.spawn(generator).then(null, handleError);
+  Task.spawn(generator).catch(handleError);
 }
 
 function createCanvas() {

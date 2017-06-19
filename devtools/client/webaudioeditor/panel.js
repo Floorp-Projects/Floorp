@@ -44,7 +44,7 @@ WebAudioEditorPanel.prototype = {
         this.emit("ready");
         return this;
       })
-      .then(null, function onError(aReason) {
+      .catch(function onError(aReason) {
         console.error("WebAudioEditorPanel open failed. " +
                       aReason.error + ": " + aReason.message);
       });

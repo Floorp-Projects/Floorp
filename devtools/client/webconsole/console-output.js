@@ -3074,7 +3074,7 @@ Widgets.ObjectRenderers.add({
     // the message is destroyed.
     this.message.widgets.add(this);
 
-    this.linkToInspector().then(null, e => console.error(e));
+    this.linkToInspector().catch(e => console.error(e));
   },
 
   /**
@@ -3162,7 +3162,7 @@ Widgets.ObjectRenderers.add({
   unhighlightDomNode: function () {
     return this.linkToInspector().then(() => {
       return this.toolbox.highlighterUtils.unhighlight();
-    }).then(null, e => console.error(e));
+    }).catch(e => console.error(e));
   },
 
   /**

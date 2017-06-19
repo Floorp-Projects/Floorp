@@ -20,7 +20,7 @@ function test() {
     let options = {customIframe: iframe};
     gDevTools.showToolbox(target, null, Toolbox.HostType.CUSTOM, options)
              .then(testCustomHost, console.error)
-             .then(null, console.error);
+             .catch(console.error);
   });
 
   function onMessage(event) {

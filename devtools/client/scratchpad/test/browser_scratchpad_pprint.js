@@ -22,7 +22,7 @@ function runTests(sw)
     const prettyText = sp.getText();
     ok(prettyText.includes("\n"));
     finish();
-  }).then(null, error => {
+  }).catch(error => {
     ok(false, error);
   });
 }

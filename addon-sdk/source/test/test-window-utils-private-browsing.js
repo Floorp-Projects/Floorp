@@ -79,7 +79,7 @@ exports.testWindowTrackerIgnoresPrivateWindows = function(assert, done) {
         return close(window);
       });
     });
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 };
 
 // Test setting activeWIndow and onFocus for private windows
@@ -142,7 +142,7 @@ exports.testSettingActiveWindowDoesNotIgnorePrivateWindow = function(assert, don
 
       return close(window);
     })
-  }).then(done).then(null, assert.fail);
+  }).then(done).catch(assert.fail);
 };
 
 exports.testActiveWindowDoesNotIgnorePrivateWindow = function(assert, done) {
@@ -182,7 +182,7 @@ exports.testActiveWindowDoesNotIgnorePrivateWindow = function(assert, done) {
     }
 
     return close(window);
-  }).then(done).then(null, assert.fail);
+  }).then(done).catch(assert.fail);
 }
 
 exports.testWindowIteratorIgnoresPrivateWindows = function(assert, done) {
@@ -204,7 +204,7 @@ exports.testWindowIteratorIgnoresPrivateWindows = function(assert, done) {
     }
 
     return close(window);
-  }).then(done).then(null, assert.fail);
+  }).then(done).catch(assert.fail);
 };
 
 require("sdk/test").run(exports);

@@ -611,7 +611,7 @@ ElementEditor.prototype = {
     // Changing the tagName removes the node. Make sure the replacing node gets
     // selected afterwards.
     this.markup.reselectOnRemoved(this.node, "edittagname");
-    this.markup.walker.editTagName(this.node, newTagName).then(null, () => {
+    this.markup.walker.editTagName(this.node, newTagName).catch(() => {
       // Failed to edit the tag name, cancel the reselection.
       this.markup.cancelReselectOnRemoved();
     });

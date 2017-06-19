@@ -385,7 +385,7 @@ GMPWrapper.prototype = {
         let gmpInstallManager = new GMPInstallManager();
         // We don't really care about the results, if someone is interested
         // they can check the log.
-        gmpInstallManager.simpleCheckAndInstall().then(null, () => {});
+        gmpInstallManager.simpleCheckAndInstall().catch(() => {});
       }
       this._isUpdateCheckPending = false;
     }, delay);

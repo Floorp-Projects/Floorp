@@ -44,7 +44,7 @@ function test() {
       "Should have the right property value for |arg|.");
 
     yield resumeDebuggerThenCloseAndFinish(panel);
-  }).then(null, aError => {
+  }).catch(aError => {
     ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
   });
 }
