@@ -76,6 +76,10 @@ SERVO_BINDING_FUNC(Servo_StyleSet_InsertStyleSheetBefore, void,
                    RawServoStyleSheetBorrowed sheet,
                    uint64_t unique_id,
                    uint64_t before_unique_id)
+SERVO_BINDING_FUNC(Servo_StyleSet_UpdateStyleSheet, void,
+                   RawServoStyleSetBorrowed set,
+                   RawServoStyleSheetBorrowed sheet,
+                   uint64_t unique_id)
 SERVO_BINDING_FUNC(Servo_StyleSet_FlushStyleSheets, void, RawServoStyleSetBorrowed set,
                    RawGeckoElementBorrowedOrNull doc_elem)
 SERVO_BINDING_FUNC(Servo_StyleSet_NoteStyleSheetsChanged, void,
