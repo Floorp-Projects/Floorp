@@ -1,7 +1,7 @@
-//! HTTP Cookie parsing and Cookie Jar management.
+//! HTTP cookie parsing and cookie jar management.
 //!
-//! This crates provides the [Cookie](struct.Cookie.html) type, which directly
-//! maps to an HTTP cookie, and the [CookieJar](struct.CookieJar.html) type,
+//! This crates provides the [`Cookie`](struct.Cookie.html) type, which directly
+//! maps to an HTTP cookie, and the [`CookieJar`](struct.CookieJar.html) type,
 //! which allows for simple management of many cookies as well as encryption and
 //! signing of cookies for session management.
 //!
@@ -10,7 +10,7 @@
 //! Add the following to the `[dependencies]` section of your `Cargo.toml`:
 //!
 //! ```ignore
-//! cookie = "0.6"
+//! cookie = "0.9"
 //! ```
 //!
 //! Then add the following line to your crate root:
@@ -25,13 +25,18 @@
 //! features:
 //!
 //!
-//! * **secure** (enabled by default)
+//! * **secure** (disabled by default)
 //!
-//!   Enables signing and encryption of cookies.
+//!   Enables signed and private (signed + encrypted) cookie jars.
 //!
-//!   When this feature is enabled, signed and encrypted cookies jars will
-//!   encrypt and/or sign any cookies added to them. When this feature is
-//!   disabled, those cookies will be added in plaintext.
+//!   When this feature is enabled, the
+//!   [signed](struct.CookieJar.html#method.signed) and
+//!   [private](struct.CookieJar.html#method.private) method of `CookieJar` and
+//!   [`SignedJar`](struct.SignedJar.html) and
+//!   [`PrivateJar`](struct.PrivateJar.html) structures are available. The jars
+//!   act as "children jars", allowing for easy retrieval and addition of signed
+//!   and/or encrypted cookies to a cookie jar. When this feature is disabled,
+//!   none of the types are available.
 //!
 //! * **percent-encode** (disabled by default)
 //!
@@ -39,7 +44,7 @@
 //!
 //!   When this feature is enabled, the
 //!   [encoded](struct.Cookie.html#method.encoded) and
-//!   [parse_encoded](struct.Cookie.html#method.parse_encoded) methods of
+//!   [`parse_encoded`](struct.Cookie.html#method.parse_encoded) methods of
 //!   `Cookie` become available. The `encoded` method returns a wrapper around a
 //!   `Cookie` whose `Display` implementation percent-encodes the name and value
 //!   of the cookie. The `parse_encoded` method percent-decodes the name and
@@ -53,18 +58,20 @@
 //! features = ["secure", "percent-encode"]
 //! ```
 
-#![doc(html_root_url = "https://docs.rs/cookie/0.6")]
-#![allow(deprecated)]
+#![doc(html_root_url = "https://docs.rs/cookie/0.9")]
 #![deny(missing_docs)]
-#![cfg_attr(test, deny(warnings))]
 
-#[cfg(feature = "percent-encode")]
-extern crate url;
+#[cfg(feature = "percent-encode")] extern crate url;
 extern crate time;
 
 mod builder;
-mod jar;
 mod parse;
+mod jar;
+mod delta;
+mod draft;
+
+#[cfg(feature = "secure")] #[macro_use] mod secure;
+#[cfg(feature = "secure")] pub use secure::*;
 
 use std::borrow::Cow;
 use std::ascii::AsciiExt;
@@ -77,9 +84,9 @@ use time::{Tm, Duration};
 
 use parse::parse_cookie;
 pub use parse::ParseError;
-
 pub use builder::CookieBuilder;
-pub use jar::CookieJar;
+pub use jar::{CookieJar, Delta, Iter};
+pub use draft::*;
 
 #[derive(Debug, Clone)]
 enum CookieStr {
@@ -90,14 +97,6 @@ enum CookieStr {
 }
 
 impl CookieStr {
-    /// Whether this string is derived from indexes or not.
-    fn is_indexed(&self) -> bool {
-        match *self {
-            CookieStr::Indexed(..) => true,
-            CookieStr::Concrete(..) => false,
-        }
-    }
-
     /// Retrieves the string `self` corresponds to. If `self` is derived from
     /// indexes, the corresponding subslice of `string` is returned. Otherwise,
     /// the concrete string is returned.
@@ -106,13 +105,25 @@ impl CookieStr {
     ///
     /// Panics if `self` is an indexed string and `string` is None.
     fn to_str<'s>(&'s self, string: Option<&'s Cow<str>>) -> &'s str {
-        if self.is_indexed() && string.is_none() {
-            panic!("Cannot convert indexed str to str without base string!")
-        }
-
         match *self {
-            CookieStr::Indexed(i, j) => &string.unwrap()[i..j],
+            CookieStr::Indexed(i, j) => {
+                let s = string.expect("`Some` base string must exist when \
+                    converting indexed str to str! (This is a module invariant.)");
+                &s[i..j]
+            },
             CookieStr::Concrete(ref cstr) => &*cstr,
+        }
+    }
+
+    fn to_raw_str<'s, 'c: 's>(&'s self, string: &'s Cow<'c, str>) -> Option<&'c str> {
+        match *self {
+            CookieStr::Indexed(i, j) => {
+                match *string {
+                    Cow::Borrowed(s) => Some(&s[i..j]),
+                    Cow::Owned(_) => None,
+                }
+            },
+            CookieStr::Concrete(_) => None,
         }
     }
 }
@@ -132,7 +143,7 @@ impl CookieStr {
 /// ```
 ///
 /// To construct more elaborate cookies, use the [build](#method.build) method
-/// and [CookieBuilder](struct.CookieBuilder.html) methods:
+/// and [`CookieBuilder`](struct.CookieBuilder.html) methods:
 ///
 /// ```rust
 /// use cookie::Cookie;
@@ -165,6 +176,8 @@ pub struct Cookie<'c> {
     secure: bool,
     /// Whether this cookie was marked httponly.
     http_only: bool,
+    /// The draft `SameSite` attribute.
+    same_site: Option<SameSite>,
 }
 
 impl Cookie<'static> {
@@ -192,7 +205,25 @@ impl Cookie<'static> {
             path: None,
             secure: false,
             http_only: false,
+            same_site: None,
         }
+    }
+
+    /// Creates a new `Cookie` with the given name and an empty value.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use cookie::Cookie;
+    ///
+    /// let cookie = Cookie::named("name");
+    /// assert_eq!(cookie.name(), "name");
+    /// assert!(cookie.value().is_empty());
+    /// ```
+    pub fn named<N>(name: N) -> Cookie<'static>
+        where N: Into<Cow<'static, str>>
+    {
+        Cookie::new(name, "")
     }
 
     /// Creates a new `CookieBuilder` instance from the given key and value
@@ -299,6 +330,7 @@ impl<'c> Cookie<'c> {
             path: self.path,
             secure: self.secure,
             http_only: self.http_only,
+            same_site: self.same_site,
         }
     }
 
@@ -375,6 +407,21 @@ impl<'c> Cookie<'c> {
     #[inline]
     pub fn secure(&self) -> bool {
         self.secure
+    }
+
+    /// Returns the `SameSite` attribute of this cookie if one was specified.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cookie::{Cookie, SameSite};
+    ///
+    /// let c = Cookie::parse("name=value; SameSite=Lax").unwrap();
+    /// assert_eq!(c.same_site(), Some(SameSite::Lax));
+    /// ```
+    #[inline]
+    pub fn same_site(&self) -> Option<SameSite> {
+        self.same_site
     }
 
     /// Returns the specified max-age of the cookie if one was specified.
@@ -530,6 +577,24 @@ impl<'c> Cookie<'c> {
         self.secure = value;
     }
 
+    /// Sets the value of `same_site` in `self` to `value`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cookie::{Cookie, SameSite};
+    ///
+    /// let mut c = Cookie::new("name", "value");
+    /// assert!(c.same_site().is_none());
+    ///
+    /// c.set_same_site(SameSite::Strict);
+    /// assert_eq!(c.same_site(), Some(SameSite::Strict));
+    /// ```
+    #[inline]
+    pub fn set_same_site(&mut self, value: SameSite) {
+        self.same_site = Some(value);
+    }
+
     /// Sets the value of `max_age` in `self` to `value`.
     ///
     /// # Example
@@ -614,6 +679,34 @@ impl<'c> Cookie<'c> {
         self.expires = Some(time);
     }
 
+    /// Makes `self` a "permanent" cookie by extending its expiration and max
+    /// age 20 years into the future.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # extern crate cookie;
+    /// extern crate time;
+    ///
+    /// use cookie::Cookie;
+    /// use time::Duration;
+    ///
+    /// # fn main() {
+    /// let mut c = Cookie::new("foo", "bar");
+    /// assert!(c.expires().is_none());
+    /// assert!(c.max_age().is_none());
+    ///
+    /// c.make_permanent();
+    /// assert!(c.expires().is_some());
+    /// assert_eq!(c.max_age(), Some(Duration::days(365 * 20)));
+    /// # }
+    /// ```
+    pub fn make_permanent(&mut self) {
+        let twenty_years = Duration::days(365 * 20);
+        self.set_max_age(twenty_years);
+        self.set_expires(time::now() + twenty_years);
+    }
+
     fn fmt_parameters(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.http_only() {
             write!(f, "; HttpOnly")?;
@@ -621,6 +714,10 @@ impl<'c> Cookie<'c> {
 
         if self.secure() {
             write!(f, "; Secure")?;
+        }
+
+        if let Some(same_site) = self.same_site() {
+            write!(f, "; SameSite={}", same_site)?;
         }
 
         if let Some(path) = self.path() {
@@ -640,6 +737,133 @@ impl<'c> Cookie<'c> {
         }
 
         Ok(())
+    }
+
+    /// Returns the name of `self` as a string slice of the raw string `self`
+    /// was originally parsed from. If `self` was not originally parsed from a
+    /// raw string, returns `None`.
+    ///
+    /// This method differs from [name](#method.name) in that it returns a
+    /// string with the same lifetime as the originally parsed string. This
+    /// lifetime may outlive `self`. If a longer lifetime is not required, or
+    /// you're unsure if you need a longer lifetime, use [name](#method.name).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cookie::Cookie;
+    ///
+    /// let cookie_string = format!("{}={}", "foo", "bar");
+    ///
+    /// // `c` will be dropped at the end of the scope, but `name` will live on
+    /// let name = {
+    ///     let c = Cookie::parse(cookie_string.as_str()).unwrap();
+    ///     c.name_raw()
+    /// };
+    ///
+    /// assert_eq!(name, Some("foo"));
+    /// ```
+    #[inline]
+    pub fn name_raw(&self) -> Option<&'c str> {
+        self.cookie_string.as_ref()
+            .and_then(|s| self.name.to_raw_str(s))
+    }
+
+    /// Returns the value of `self` as a string slice of the raw string `self`
+    /// was originally parsed from. If `self` was not originally parsed from a
+    /// raw string, returns `None`.
+    ///
+    /// This method differs from [value](#method.value) in that it returns a
+    /// string with the same lifetime as the originally parsed string. This
+    /// lifetime may outlive `self`. If a longer lifetime is not required, or
+    /// you're unsure if you need a longer lifetime, use [value](#method.value).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cookie::Cookie;
+    ///
+    /// let cookie_string = format!("{}={}", "foo", "bar");
+    ///
+    /// // `c` will be dropped at the end of the scope, but `value` will live on
+    /// let value = {
+    ///     let c = Cookie::parse(cookie_string.as_str()).unwrap();
+    ///     c.value_raw()
+    /// };
+    ///
+    /// assert_eq!(value, Some("bar"));
+    /// ```
+    #[inline]
+    pub fn value_raw(&self) -> Option<&'c str> {
+        self.cookie_string.as_ref()
+            .and_then(|s| self.value.to_raw_str(s))
+    }
+
+    /// Returns the `Path` of `self` as a string slice of the raw string `self`
+    /// was originally parsed from. If `self` was not originally parsed from a
+    /// raw string, or if `self` doesn't contain a `Path`, or if the `Path` has
+    /// changed since parsing, returns `None`.
+    ///
+    /// This method differs from [path](#method.path) in that it returns a
+    /// string with the same lifetime as the originally parsed string. This
+    /// lifetime may outlive `self`. If a longer lifetime is not required, or
+    /// you're unsure if you need a longer lifetime, use [path](#method.path).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cookie::Cookie;
+    ///
+    /// let cookie_string = format!("{}={}; Path=/", "foo", "bar");
+    ///
+    /// // `c` will be dropped at the end of the scope, but `path` will live on
+    /// let path = {
+    ///     let c = Cookie::parse(cookie_string.as_str()).unwrap();
+    ///     c.path_raw()
+    /// };
+    ///
+    /// assert_eq!(path, Some("/"));
+    /// ```
+    #[inline]
+    pub fn path_raw(&self) -> Option<&'c str> {
+        match (self.path.as_ref(), self.cookie_string.as_ref()) {
+            (Some(path), Some(string)) => path.to_raw_str(string),
+            _ => None,
+        }
+    }
+
+    /// Returns the `Domain` of `self` as a string slice of the raw string
+    /// `self` was originally parsed from. If `self` was not originally parsed
+    /// from a raw string, or if `self` doesn't contain a `Domain`, or if the
+    /// `Domain` has changed since parsing, returns `None`.
+    ///
+    /// This method differs from [domain](#method.domain) in that it returns a
+    /// string with the same lifetime as the originally parsed string. This
+    /// lifetime may outlive `self` struct. If a longer lifetime is not
+    /// required, or you're unsure if you need a longer lifetime, use
+    /// [domain](#method.domain).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cookie::Cookie;
+    ///
+    /// let cookie_string = format!("{}={}; Domain=crates.io", "foo", "bar");
+    ///
+    /// //`c` will be dropped at the end of the scope, but `domain` will live on
+    /// let domain = {
+    ///     let c = Cookie::parse(cookie_string.as_str()).unwrap();
+    ///     c.domain_raw()
+    /// };
+    ///
+    /// assert_eq!(domain, Some("crates.io"));
+    /// ```
+    #[inline]
+    pub fn domain_raw(&self) -> Option<&'c str> {
+        match (self.domain.as_ref(), self.cookie_string.as_ref()) {
+            (Some(domain), Some(string)) => domain.to_raw_str(string),
+            _ => None,
+        }
     }
 }
 
@@ -678,6 +902,19 @@ impl<'a, 'c: 'a> fmt::Display for EncodedCookie<'a, 'c> {
 }
 
 impl<'c> fmt::Display for Cookie<'c> {
+    /// Formats the cookie `self` as a `Set-Cookie` header value.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use cookie::Cookie;
+    ///
+    /// let mut cookie = Cookie::build("foo", "bar")
+    ///     .path("/")
+    ///     .finish();
+    ///
+    /// assert_eq!(&cookie.to_string(), "foo=bar; Path=/");
+    /// ```
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}={}", self.name(), self.value())?;
         self.fmt_parameters(f)
@@ -723,7 +960,7 @@ impl<'a, 'b> PartialEq<Cookie<'b>> for Cookie<'a> {
 
 #[cfg(test)]
 mod tests {
-    use ::Cookie;
+    use ::{Cookie, SameSite};
     use ::time::{strptime, Duration};
 
     #[test]
@@ -757,6 +994,60 @@ mod tests {
             .expires(expires).finish();
         assert_eq!(&cookie.to_string(),
                    "foo=bar; Expires=Wed, 21 Oct 2015 07:28:00 GMT");
+
+        let cookie = Cookie::build("foo", "bar")
+            .same_site(SameSite::Strict).finish();
+        assert_eq!(&cookie.to_string(), "foo=bar; SameSite=Strict");
+
+        let cookie = Cookie::build("foo", "bar")
+            .same_site(SameSite::Lax).finish();
+        assert_eq!(&cookie.to_string(), "foo=bar; SameSite=Lax");
+    }
+
+    #[test]
+    fn cookie_string_long_lifetimes() {
+        let cookie_string = "bar=baz; Path=/subdir; HttpOnly; Domain=crates.io".to_owned();
+        let (name, value, path, domain) = {
+            // Create a cookie passing a slice
+            let c = Cookie::parse(cookie_string.as_str()).unwrap();
+            (c.name_raw(), c.value_raw(), c.path_raw(), c.domain_raw())
+        };
+
+        assert_eq!(name, Some("bar"));
+        assert_eq!(value, Some("baz"));
+        assert_eq!(path, Some("/subdir"));
+        assert_eq!(domain, Some("crates.io"));
+    }
+
+    #[test]
+    fn owned_cookie_string() {
+        let cookie_string = "bar=baz; Path=/subdir; HttpOnly; Domain=crates.io".to_owned();
+        let (name, value, path, domain) = {
+            // Create a cookie passing an owned string
+            let c = Cookie::parse(cookie_string).unwrap();
+            (c.name_raw(), c.value_raw(), c.path_raw(), c.domain_raw())
+        };
+
+        assert_eq!(name, None);
+        assert_eq!(value, None);
+        assert_eq!(path, None);
+        assert_eq!(domain, None);
+    }
+
+    #[test]
+    fn owned_cookie_struct() {
+        let cookie_string = "bar=baz; Path=/subdir; HttpOnly; Domain=crates.io";
+        let (name, value, path, domain) = {
+            // Create an owned cookie
+            let c = Cookie::parse(cookie_string).unwrap().into_owned();
+
+            (c.name_raw(), c.value_raw(), c.path_raw(), c.domain_raw())
+        };
+
+        assert_eq!(name, None);
+        assert_eq!(value, None);
+        assert_eq!(path, None);
+        assert_eq!(domain, None);
     }
 
     #[test]
