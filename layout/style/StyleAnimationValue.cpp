@@ -4317,21 +4317,6 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
           break;
         }
 
-        case eCSSProperty__moz_window_transform_origin: {
-          const nsStyleUIReset *styleUIReset =
-            static_cast<const nsStyleUIReset*>(styleStruct);
-          nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
-          if (!StyleCoordToCSSValue(styleUIReset->mWindowTransformOrigin[0],
-                                    pair->mXValue) ||
-              !StyleCoordToCSSValue(styleUIReset->mWindowTransformOrigin[1],
-                                    pair->mYValue)) {
-            return false;
-          }
-          aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),
-                                                      eUnit_CSSValuePair);
-          break;
-        }
-
         case eCSSProperty_stroke_dasharray: {
           const nsStyleSVG *svg = static_cast<const nsStyleSVG*>(styleStruct);
           if (!svg->mStrokeDasharray.IsEmpty()) {
@@ -4592,31 +4577,6 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
             // Clone, and convert all lengths (not percents) to pixels.
             nsCSSValueList **resultTail = getter_Transfers(result);
             for (const nsCSSValueList *l = display->mSpecifiedTransform->mHead;
-                 l; l = l->mNext) {
-              nsCSSValueList *clone = new nsCSSValueList;
-              *resultTail = clone;
-              resultTail = &clone->mNext;
-
-              SubstitutePixelValues(aStyleContext, l->mValue, clone->mValue);
-            }
-          } else {
-            result = new nsCSSValueList();
-            result->mValue.SetNoneValue();
-          }
-
-          aComputedValue.SetTransformValue(
-              new nsCSSValueSharedList(result.forget()));
-          break;
-        }
-
-        case eCSSProperty__moz_window_transform: {
-          const nsStyleUIReset *uiReset =
-            static_cast<const nsStyleUIReset*>(styleStruct);
-          nsAutoPtr<nsCSSValueList> result;
-          if (uiReset->mSpecifiedWindowTransform) {
-            // Clone, and convert all lengths (not percents) to pixels.
-            nsCSSValueList **resultTail = getter_Transfers(result);
-            for (const nsCSSValueList *l = uiReset->mSpecifiedWindowTransform->mHead;
                  l; l = l->mNext) {
               nsCSSValueList *clone = new nsCSSValueList;
               *resultTail = clone;

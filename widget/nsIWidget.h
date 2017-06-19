@@ -1105,22 +1105,6 @@ class nsIWidget : public nsISupports
      */
     virtual void SetWindowShadowStyle(int32_t aStyle) = 0;
 
-    /**
-     * Set the opacity of the window.
-     * Values need to be between 0.0f (invisible) and 1.0f (fully opaque).
-     *
-     * Ignored on child widgets and on non-Mac platforms.
-     */
-    virtual void SetWindowOpacity(float aOpacity) {}
-
-    /**
-     * Set the transform of the window. Values are in device pixels,
-     * the origin is the top left corner of the window.
-     *
-     * Ignored on child widgets and on non-Mac platforms.
-     */
-    virtual void SetWindowTransform(const mozilla::gfx::Matrix& aTransform) {}
-
     /*
      * On Mac OS X, this method shows or hides the pill button in the titlebar
      * that's used to collapse the toolbar.
