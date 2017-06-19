@@ -292,6 +292,8 @@ protected:
 
   void UnparentChildren();
 
+  void LastRelease();
+
   // Return success if the subject principal subsumes the principal of our
   // inner, error otherwise.  This will also succeed if the subject has
   // UniversalXPConnect or if access is allowed by CORS.  In the latter case,

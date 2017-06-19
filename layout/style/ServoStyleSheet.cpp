@@ -106,8 +106,11 @@ ServoStyleSheet::ServoStyleSheet(const ServoStyleSheet& aCopy,
 
 ServoStyleSheet::~ServoStyleSheet()
 {
-  UnparentChildren();
+}
 
+void
+ServoStyleSheet::LastRelease()
+{
   DropRuleList();
 }
 
