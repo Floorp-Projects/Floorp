@@ -4607,19 +4607,19 @@ PresShell::StyleSheetApplicableStateChanged(StyleSheet* aStyleSheet)
 }
 
 void
-PresShell::StyleRuleChanged(StyleSheet* aStyleSheet)
+PresShell::StyleRuleChanged(StyleSheet* aStyleSheet, css::Rule* aStyleRule)
 {
   RecordStyleSheetChange(aStyleSheet, StyleSheet::ChangeType::RuleChanged);
 }
 
 void
-PresShell::StyleRuleAdded(StyleSheet* aStyleSheet)
+PresShell::StyleRuleAdded(StyleSheet* aStyleSheet, css::Rule* aStyleRule)
 {
   RecordStyleSheetChange(aStyleSheet, StyleSheet::ChangeType::RuleAdded);
 }
 
 void
-PresShell::StyleRuleRemoved(StyleSheet* aStyleSheet)
+PresShell::StyleRuleRemoved(StyleSheet* aStyleSheet, css::Rule* aStyleRule)
 {
   RecordStyleSheetChange(aStyleSheet, StyleSheet::ChangeType::RuleRemoved);
 }
