@@ -68,6 +68,9 @@ pref("devtools.inspector.colorWidget.enabled", false);
 // Enable the Font Inspector
 pref("devtools.fontinspector.enabled", true);
 
+// Enable the Layout View
+pref("devtools.layoutview.enabled", false);
+
 // Counter to promote the inspector layout view.
 // @remove after release 56 (See Bug 1355747)
 pref("devtools.promote.layoutview", 1);
