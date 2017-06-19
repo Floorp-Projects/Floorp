@@ -587,9 +587,9 @@ protected:
 private:
   void NotifyDataArrivedInternal();
 
-  // Called by MediaResource when some data has been received.
+  // Called to recompute playback rate and notify 'progress' event.
   // Call on the main thread only.
-  void NotifyDownloadProgressed();
+  void DownloadProgressed();
 
   nsCString GetDebugInfo();
 
