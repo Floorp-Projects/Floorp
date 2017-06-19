@@ -57,6 +57,7 @@ modules/fdlibm/
 modules/freetype2/
 modules/libbz2/
 modules/libmar/
+modules/woff2/
 modules/zlib/
 netwerk/sctp/src/
 netwerk/srtp/src/
@@ -80,8 +81,8 @@ third_party/python/pyasn1/
 third_party/python/pyasn1-modules/
 third_party/python/PyECC/
 third_party/python/pytest/
-third_party/python/pyyaml/
 third_party/python/pytoml/
+third_party/python/pyyaml/
 third_party/python/redo/
 third_party/python/requests/
 third_party/python/rsa/

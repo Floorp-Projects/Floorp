@@ -1045,10 +1045,10 @@ nsCSSRendering::CreateBorderRendererForOutline(nsPresContext* aPresContext,
                                outlineColor };
 
   // convert the border widths
-  Float outlineWidths[4] = { Float(width / twipsPerPixel),
-                             Float(width / twipsPerPixel),
-                             Float(width / twipsPerPixel),
-                             Float(width / twipsPerPixel) };
+  Float outlineWidths[4] = { Float(width) / twipsPerPixel,
+                             Float(width) / twipsPerPixel,
+                             Float(width) / twipsPerPixel,
+                             Float(width) / twipsPerPixel };
   Rect dirtyRect = NSRectToRect(aDirtyRect, twipsPerPixel);
 
   nsIDocument* document = nullptr;
@@ -1113,10 +1113,10 @@ nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
     nscoord twipsRadii[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     ComputePixelRadii(twipsRadii, oneDevPixel, &focusRadii);
   }
-  Float focusWidths[4] = { Float(oneCSSPixel / oneDevPixel),
-                           Float(oneCSSPixel / oneDevPixel),
-                           Float(oneCSSPixel / oneDevPixel),
-                           Float(oneCSSPixel / oneDevPixel) };
+  Float focusWidths[4] = { Float(oneCSSPixel) / oneDevPixel,
+                           Float(oneCSSPixel) / oneDevPixel,
+                           Float(oneCSSPixel) / oneDevPixel,
+                           Float(oneCSSPixel) / oneDevPixel };
 
   uint8_t focusStyles[4] = { NS_STYLE_BORDER_STYLE_DOTTED,
                              NS_STYLE_BORDER_STYLE_DOTTED,
@@ -1645,7 +1645,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
 
       RectCornerRadii clipRectRadii;
       if (hasBorderRadius) {
-        Float spreadDistance = shadowItem->mSpread / twipsPerPixel;
+        Float spreadDistance = Float(shadowItem->mSpread) / twipsPerPixel;
 
         Float borderSizes[4];
 
@@ -1727,10 +1727,10 @@ nsCSSRendering::GetShadowInnerRadii(nsIFrame* aFrame,
     ComputePixelRadii(twipsRadii, twipsPerPixel, &borderRadii);
 
     Float borderSizes[4] = {
-      Float(border.top / twipsPerPixel),
-      Float(border.right / twipsPerPixel),
-      Float(border.bottom / twipsPerPixel),
-      Float(border.left / twipsPerPixel)
+      Float(border.top) / twipsPerPixel,
+      Float(border.right) / twipsPerPixel,
+      Float(border.bottom) / twipsPerPixel,
+      Float(border.left) / twipsPerPixel
     };
     nsCSSBorderRenderer::ComputeInnerRadii(borderRadii,
                                            borderSizes,

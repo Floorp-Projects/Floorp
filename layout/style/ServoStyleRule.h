@@ -11,7 +11,9 @@
 
 #include "mozilla/BindingStyleRule.h"
 #include "mozilla/ServoBindingTypes.h"
+#include "mozilla/WeakPtr.h"
 
+#include "nsICSSStyleRuleDOMWrapper.h"
 #include "nsIDOMCSSStyleRule.h"
 #include "nsICSSStyleRuleDOMWrapper.h"
 #include "nsDOMCSSDeclaration.h"
@@ -52,6 +54,7 @@ private:
 
 class ServoStyleRule final : public BindingStyleRule
                            , public nsICSSStyleRuleDOMWrapper
+                           , public SupportsWeakPtr<ServoStyleRule>
 {
 public:
   ServoStyleRule(already_AddRefed<RawServoStyleRule> aRawRule,
@@ -62,6 +65,8 @@ public:
                                                          css::Rule)
   bool IsCCLeaf() const final MOZ_MUST_OVERRIDE;
   NS_DECL_NSIDOMCSSSTYLERULE
+
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(ServoStyleRule)
 
   // nsICSSStyleRuleDOMWrapper
   NS_IMETHOD GetCSSStyleRule(BindingStyleRule **aResult) override;

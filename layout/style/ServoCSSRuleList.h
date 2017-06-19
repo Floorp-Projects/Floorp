@@ -51,10 +51,6 @@ public:
 
   uint16_t GetRuleType(uint32_t aIndex) const;
 
-  typedef nsDataHashtable<nsPtrHashKey<const RawServoStyleRule>,
-                          ServoStyleRule*> StyleRuleHashtable;
-  void FillStyleRuleHashtable(StyleRuleHashtable& aTable);
-
 private:
   virtual ~ServoCSSRuleList();
 

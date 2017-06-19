@@ -42,7 +42,7 @@ public:
   RefPtr<AudioDataPromise> RequestAudioData();
 
   RefPtr<VideoDataPromise>
-  RequestVideoData(bool aSkipToNextKeyframe, media::TimeUnit aTimeThreshold);
+  RequestVideoData(media::TimeUnit aTimeThreshold);
 
   RefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType);
 

@@ -5,19 +5,6 @@
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 
-function promiseAddonStartup() {
-  const {Management} = Cu.import("resource://gre/modules/Extension.jsm", {});
-
-  return new Promise(resolve => {
-    let listener = (evt, extension) => {
-      Management.off("startup", listener);
-      resolve(extension);
-    };
-
-    Management.on("startup", listener);
-  });
-}
-
 add_task(async function setup() {
   await ExtensionTestUtils.startAddonManager();
 });
@@ -148,8 +135,7 @@ add_task(async function test_experiments_api() {
 
   // Install boring WebExtension add-on.
   let boringAddon = await AddonManager.installTemporaryAddon(boringAddonFile);
-  await promiseAddonStartup();
-
+  await AddonTestUtils.promiseWebExtensionStartup();
 
   // Install interesting WebExtension add-on.
   let promise = new Promise(resolve => {
@@ -157,7 +143,7 @@ add_task(async function test_experiments_api() {
   });
 
   let addon = await AddonManager.installTemporaryAddon(addonFile);
-  await promiseAddonStartup();
+  await AddonTestUtils.promiseWebExtensionStartup();
 
   let hello = await promise;
   equal(hello, "Here I am", "Should get hello from add-on");

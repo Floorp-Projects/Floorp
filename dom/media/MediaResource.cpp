@@ -464,8 +464,6 @@ ChannelMediaResource::CopySegmentToCache(nsIPrincipal* aPrincipal,
                                          uint32_t aCount,
                                          uint32_t* aWriteCount)
 {
-  mCallback->NotifyDataArrived();
-
   // Keep track of where we're up to.
   LOG("CopySegmentToCache at mOffset [%" PRId64 "] add "
       "[%d] bytes for decoder[%p]",
@@ -725,31 +723,6 @@ nsresult ChannelMediaResource::ReadAt(int64_t aOffset,
   return rv;
 }
 
-already_AddRefed<MediaByteBuffer>
-ChannelMediaResource::MediaReadAt(int64_t aOffset, uint32_t aCount)
-{
-  NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
-
-  RefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
-  bool ok = bytes->SetLength(aCount, fallible);
-  NS_ENSURE_TRUE(ok, nullptr);
-  char* curr = reinterpret_cast<char*>(bytes->Elements());
-  const char* start = curr;
-  while (aCount > 0) {
-    uint32_t bytesRead;
-    nsresult rv = mCacheStream.ReadAt(aOffset, curr, aCount, &bytesRead);
-    NS_ENSURE_SUCCESS(rv, nullptr);
-    if (!bytesRead) {
-      break;
-    }
-    aOffset += bytesRead;
-    aCount -= bytesRead;
-    curr += bytesRead;
-  }
-  bytes->SetLength(curr - start);
-  return bytes.forget();
-}
-
 void
 ChannelMediaResource::ThrottleReadahead(bool bThrottle)
 {
@@ -901,7 +874,7 @@ void
 ChannelMediaResource::DoNotifyDataReceived()
 {
   mDataReceivedEvent.Revoke();
-  mCallback->NotifyBytesDownloaded();
+  mCallback->NotifyDataArrived();
 }
 
 void
@@ -1194,7 +1167,6 @@ public:
                   uint32_t aCount, uint32_t* aBytes) override;
   // (Probably) file-based, caching recommended.
   bool ShouldCacheReads() override { return true; }
-  already_AddRefed<MediaByteBuffer> MediaReadAt(int64_t aOffset, uint32_t aCount) override;
   int64_t  Tell() override;
 
   // Any thread
@@ -1482,15 +1454,6 @@ nsresult FileMediaResource::ReadAt(int64_t aOffset, char* aBuffer,
     DispatchBytesConsumed(*aBytes, aOffset);
   }
   return rv;
-}
-
-already_AddRefed<MediaByteBuffer>
-FileMediaResource::MediaReadAt(int64_t aOffset, uint32_t aCount)
-{
-  NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
-
-  MutexAutoLock lock(mLock);
-  return UnsafeMediaReadAt(aOffset, aCount);
 }
 
 already_AddRefed<MediaByteBuffer>
