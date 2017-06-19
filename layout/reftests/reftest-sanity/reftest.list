@@ -165,8 +165,9 @@ fuzzy(1,0-2) skip-if(styloVsGecko) != fuzzy.html fuzzy-ref.html
 # When using 565 fuzzy.html and fuzzy-ref.html will compare as equal
 fails-if(!styloVsGecko) fuzzy-if(false,2,1) random-if(Android) == fuzzy.html fuzzy-ref.html
 
-# Test that reftest-no-paint fails correctly. With WR enabled, it will generate color layers instead of updating color on the painted layer.
-fails skip-if(webrender) == reftest-no-paint.html reftest-no-paint-ref.html
+# Test that reftest-no-paint fails correctly.
+# Since this is a "layers"-specific test, we allow any non-crash result with WebRender.
+fails random-if(webrender) == reftest-no-paint.html reftest-no-paint-ref.html
 
 skip-if(!asyncPan||!browserIsRemote) == async-scroll-1a.html async-scroll-1-ref.html
 
@@ -180,24 +181,27 @@ skip-if(!Android) pref(apz.allow_zooming,true) != async-zoom-1.html async-zoom-1
 fuzzy(112,800) skip-if(!Android) pref(apz.allow_zooming,true) == async-zoom-2.html async-zoom-2-ref.html
 
 # reftest-opaque-layer
-fails-if(webrender) == reftest-opaque-layer-pass.html reftest-opaque-layer-pass.html
-fails-if(webrender) != reftest-opaque-layer-pass.html about:blank
-fails-if(webrender) != about:blank reftest-opaque-layer-pass.html
-fails == reftest-opaque-layer-fail.html reftest-opaque-layer-fail.html
+# Since this is a "layers"-specific test, we allow any non-crash result with WebRender.
+random-if(webrender) == reftest-opaque-layer-pass.html reftest-opaque-layer-pass.html
+random-if(webrender) != reftest-opaque-layer-pass.html about:blank
+random-if(webrender) != about:blank reftest-opaque-layer-pass.html
+fails random-if(webrender) == reftest-opaque-layer-fail.html reftest-opaque-layer-fail.html
 
 # If reftest-opaque-layer fails (no matter whether it fails in the test or in the reference),
 # it shouldn't matter whether the test matches the reference.
-fails != reftest-opaque-layer-fail.html reftest-opaque-layer-fail.html
-fails == reftest-opaque-layer-fail.html about:blank
-fails-if(!styloVsGecko) == about:blank reftest-opaque-layer-fail.html
-fails != reftest-opaque-layer-fail.html about:blank
-fails-if(!styloVsGecko) != about:blank reftest-opaque-layer-fail.html
+# Since this is a "layers"-specific test, we allow any non-crash result with WebRender.
+fails random-if(webrender) != reftest-opaque-layer-fail.html reftest-opaque-layer-fail.html
+fails random-if(webrender) == reftest-opaque-layer-fail.html about:blank
+fails-if(!styloVsGecko) random-if(webrender) == about:blank reftest-opaque-layer-fail.html
+fails random-if(webrender) != reftest-opaque-layer-fail.html about:blank
+fails-if(!styloVsGecko) random-if(webrender) != about:blank reftest-opaque-layer-fail.html
 
 # reftest-opaque-layer and reftest-wait
-fails-if(webrender) == reftest-opaque-layer-wait-pass.html reftest-opaque-layer-pass.html
-fails-if(webrender) != reftest-opaque-layer-wait-pass.html about:blank
-fails fails-if(styloVsGecko) == reftest-opaque-layer-wait-fail.html reftest-opaque-layer-fail.html
-fails-if(!styloVsGecko) fails-if(styloVsGecko) != reftest-opaque-layer-wait-fail.html about:blank
+# Since this is a "layers"-specific test, we allow any non-crash result with WebRender.
+random-if(webrender) == reftest-opaque-layer-wait-pass.html reftest-opaque-layer-pass.html
+random-if(webrender) != reftest-opaque-layer-wait-pass.html about:blank
+fails fails-if(styloVsGecko) random-if(webrender) == reftest-opaque-layer-wait-fail.html reftest-opaque-layer-fail.html
+fails-if(!styloVsGecko) fails-if(styloVsGecko) random-if(webrender) != reftest-opaque-layer-wait-fail.html about:blank
 
 # reftest-assigned-layer
 != reftest-assigned-layer-pass.html about:blank
