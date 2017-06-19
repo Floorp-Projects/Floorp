@@ -38,6 +38,7 @@
 #include "mozilla/TextComposition.h"    // for TextComposition
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"        // for Element, nsINode::AsElement
+#include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/mozalloc.h"           // for operator new, etc.
@@ -70,7 +71,6 @@
 #include "nsIDOMMouseEvent.h"           // for nsIDOMMouseEvent
 #include "nsIDOMNode.h"                 // for nsIDOMNode, etc.
 #include "nsIDOMNodeList.h"             // for nsIDOMNodeList
-#include "nsIDocument.h"                // for nsIDocument
 #include "nsIDocumentStateListener.h"   // for nsIDocumentStateListener
 #include "nsIEditActionListener.h"      // for nsIEditActionListener
 #include "nsIEditorObserver.h"          // for nsIEditorObserver
@@ -150,7 +150,8 @@ EditorBase::EditorBase()
 
 EditorBase::~EditorBase()
 {
-  NS_ASSERTION(!mDocWeak || mDidPreDestroy, "Why PreDestroy hasn't been called?");
+  MOZ_ASSERT(!IsInitialized() || mDidPreDestroy,
+             "Why PreDestroy hasn't been called?");
 
   if (mComposition) {
     mComposition->OnEditorDestroyed();
@@ -208,20 +209,21 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(EditorBase)
 
 
 NS_IMETHODIMP
-EditorBase::Init(nsIDOMDocument* aDoc,
+EditorBase::Init(nsIDOMDocument* aDOMDocument,
                  nsIContent* aRoot,
-                 nsISelectionController* aSelCon,
+                 nsISelectionController* aSelectionController,
                  uint32_t aFlags,
                  const nsAString& aValue)
 {
   MOZ_ASSERT(mAction == EditAction::none,
              "Initializing during an edit action is an error");
-  MOZ_ASSERT(aDoc);
-  if (!aDoc)
+  MOZ_ASSERT(aDOMDocument);
+  if (!aDOMDocument) {
     return NS_ERROR_NULL_POINTER;
+  }
 
   // First only set flags, but other stuff shouldn't be initialized now.
-  // Don't move this call after initializing mDocWeak.
+  // Don't move this call after initializing mDocumentWeak.
   // SetFlags() can check whether it's called during initialization or not by
   // them.  Note that SetFlags() will be called by PostCreate().
 #ifdef DEBUG
@@ -230,19 +232,21 @@ EditorBase::Init(nsIDOMDocument* aDoc,
   SetFlags(aFlags);
   NS_ASSERTION(NS_SUCCEEDED(rv), "SetFlags() failed");
 
-  mDocWeak = do_GetWeakReference(aDoc);  // weak reference to doc
+  nsCOMPtr<nsIDocument> document = do_QueryInterface(aDOMDocument);
+  mDocumentWeak = document.get();
   // HTML editors currently don't have their own selection controller,
   // so they'll pass null as aSelCon, and we'll get the selection controller
   // off of the presshell.
-  nsCOMPtr<nsISelectionController> selCon;
-  if (aSelCon) {
-    mSelConWeak = do_GetWeakReference(aSelCon);   // weak reference to selectioncontroller
-    selCon = aSelCon;
+  nsCOMPtr<nsISelectionController> selectionController;
+  if (aSelectionController) {
+    mSelectionControllerWeak = aSelectionController;
+    selectionController = aSelectionController;
   } else {
     nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-    selCon = do_QueryInterface(presShell);
+    selectionController = do_QueryInterface(presShell);
   }
-  NS_ASSERTION(selCon, "Selection controller should be available at this point");
+  MOZ_ASSERT(selectionController,
+             "Selection controller should be available at this point");
 
   //set up root element if we are passed one.
   if (aRoot)
@@ -259,13 +263,14 @@ EditorBase::Init(nsIDOMDocument* aDoc,
     mIMETextNode = nullptr;
   }
 
-  /* Show the caret */
-  selCon->SetCaretReadOnly(false);
-  selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
+  // Show the caret.
+  selectionController->SetCaretReadOnly(false);
+  selectionController->SetDisplaySelection(
+                         nsISelectionController::SELECTION_ON);
+  // Show all the selection reflected to user.
+  selectionController->SetSelectionFlags(nsISelectionDisplay::DISPLAY_ALL);
 
-  selCon->SetSelectionFlags(nsISelectionDisplay::DISPLAY_ALL);//we want to see all the selection reflected to user
-
-  NS_POSTCONDITION(mDocWeak, "bad state");
+  MOZ_ASSERT(IsInitialized());
 
   // Make sure that the editor will be destroyed properly
   mDidPreDestroy = false;
@@ -344,8 +349,9 @@ EditorBase::CreateEventListeners()
 nsresult
 EditorBase::InstallEventListeners()
 {
-  NS_ENSURE_TRUE(mDocWeak && mEventListener,
-                 NS_ERROR_NOT_INITIALIZED);
+  if (NS_WARN_IF(!IsInitialized()) || NS_WARN_IF(!mEventListener)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   // Initialize the event target.
   nsCOMPtr<nsIContent> rootContent = GetRoot();
@@ -366,7 +372,7 @@ EditorBase::InstallEventListeners()
 void
 EditorBase::RemoveEventListeners()
 {
-  if (!mDocWeak || !mEventListener) {
+  if (!IsInitialized() || !mEventListener) {
     return;
   }
   reinterpret_cast<EditorEventListener*>(mEventListener.get())->Disconnect();
@@ -489,7 +495,7 @@ EditorBase::SetFlags(uint32_t aFlags)
   bool spellcheckerWasEnabled = CanEnableSpellCheck();
   mFlags = aFlags;
 
-  if (!mDocWeak) {
+  if (!IsInitialized()) {
     // If we're initializing, we shouldn't do anything now.
     // SetFlags() will be called by PostCreate(),
     // we should synchronize some stuff for the flags at that time.
@@ -555,17 +561,15 @@ EditorBase::GetIsDocumentEditable(bool* aIsDocumentEditable)
 already_AddRefed<nsIDocument>
 EditorBase::GetDocument()
 {
-  NS_PRECONDITION(mDocWeak, "bad state, mDocWeak weak pointer not initialized");
-  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
-  return doc.forget();
+  nsCOMPtr<nsIDocument> document = mDocumentWeak.get();
+  return document.forget();
 }
 
 already_AddRefed<nsIDOMDocument>
 EditorBase::GetDOMDocument()
 {
-  NS_PRECONDITION(mDocWeak, "bad state, mDocWeak weak pointer not initialized");
-  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
-  return doc.forget();
+  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(mDocumentWeak);
+  return domDocument.forget();
 }
 
 NS_IMETHODIMP
@@ -578,11 +582,12 @@ EditorBase::GetDocument(nsIDOMDocument** aDoc)
 already_AddRefed<nsIPresShell>
 EditorBase::GetPresShell()
 {
-  NS_PRECONDITION(mDocWeak, "bad state, null mDocWeak");
-  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
-  NS_ENSURE_TRUE(doc, nullptr);
-  nsCOMPtr<nsIPresShell> ps = doc->GetShell();
-  return ps.forget();
+  nsCOMPtr<nsIDocument> document = GetDocument();
+  if (NS_WARN_IF(!document)) {
+    return nullptr;
+  }
+  nsCOMPtr<nsIPresShell> presShell = document->GetShell();
+  return presShell.forget();
 }
 
 already_AddRefed<nsIWidget>
@@ -628,14 +633,14 @@ EditorBase::GetSelectionController(nsISelectionController** aSel)
 already_AddRefed<nsISelectionController>
 EditorBase::GetSelectionController()
 {
-  nsCOMPtr<nsISelectionController> selCon;
-  if (mSelConWeak) {
-    selCon = do_QueryReferent(mSelConWeak);
+  nsCOMPtr<nsISelectionController> selectionController;
+  if (mSelectionControllerWeak) {
+    selectionController = mSelectionControllerWeak.get();
   } else {
     nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-    selCon = do_QueryInterface(presShell);
+    selectionController = do_QueryInterface(presShell);
   }
-  return selCon.forget();
+  return selectionController.forget();
 }
 
 NS_IMETHODIMP
@@ -1043,7 +1048,8 @@ EditorBase::GetDocumentIsEmpty(bool* aDocumentIsEmpty)
 NS_IMETHODIMP
 EditorBase::SelectAll()
 {
-  if (!mDocWeak) {
+  // XXX Why doesn't this check if the document is alive?
+  if (!IsInitialized()) {
     return NS_ERROR_NOT_INITIALIZED;
   }
   ForceCompositionEnd();
@@ -1056,7 +1062,8 @@ EditorBase::SelectAll()
 NS_IMETHODIMP
 EditorBase::BeginningOfDocument()
 {
-  if (!mDocWeak) {
+  // XXX Why doesn't this check if the document is alive?
+  if (!IsInitialized()) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
@@ -1093,7 +1100,10 @@ EditorBase::BeginningOfDocument()
 NS_IMETHODIMP
 EditorBase::EndOfDocument()
 {
-  NS_ENSURE_TRUE(mDocWeak, NS_ERROR_NOT_INITIALIZED);
+  // XXX Why doesn't this check if the document is alive?
+  if (NS_WARN_IF(!IsInitialized())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   // get selection
   RefPtr<Selection> selection = GetSelection();
@@ -1128,20 +1138,22 @@ EditorBase::GetDocumentModified(bool* outDocModified)
 NS_IMETHODIMP
 EditorBase::GetDocumentCharacterSet(nsACString& characterSet)
 {
-  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
-  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
-
-  characterSet = doc->GetDocumentCharacterSet();
+  nsCOMPtr<nsIDocument> document = GetDocument();
+  if (NS_WARN_IF(!document)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  characterSet = document->GetDocumentCharacterSet();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 EditorBase::SetDocumentCharacterSet(const nsACString& characterSet)
 {
-  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
-  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
-
-  doc->SetDocumentCharacterSet(characterSet);
+  nsCOMPtr<nsIDocument> document = GetDocument();
+  if (NS_WARN_IF(!document)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  document->SetDocumentCharacterSet(characterSet);
   return NS_OK;
 }
 
@@ -2007,12 +2019,17 @@ NS_IMETHODIMP
 EditorBase::DebugDumpContent()
 {
 #ifdef DEBUG
-  nsCOMPtr<nsIDOMHTMLDocument> doc = do_QueryReferent(mDocWeak);
-  NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
-
-  nsCOMPtr<nsIDOMHTMLElement>bodyElem;
-  doc->GetBody(getter_AddRefs(bodyElem));
-  nsCOMPtr<nsIContent> content = do_QueryInterface(bodyElem);
+  nsCOMPtr<nsIDocument> document = GetDocument();
+  if (NS_WARN_IF(!document)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  nsCOMPtr<nsIDOMHTMLDocument> domHTMLDocument = do_QueryInterface(document);
+  if (NS_WARN_IF(!domHTMLDocument)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  nsCOMPtr<nsIDOMHTMLElement> bodyElement;
+  domHTMLDocument->GetBody(getter_AddRefs(bodyElement));
+  nsCOMPtr<nsIContent> content = do_QueryInterface(bodyElement);
   if (content) {
     content->List();
   }
@@ -2312,18 +2329,20 @@ EditorBase::CloneAttributes(Element* aDest,
 nsresult
 EditorBase::ScrollSelectionIntoView(bool aScrollToAnchor)
 {
-  nsCOMPtr<nsISelectionController> selCon;
-  if (NS_SUCCEEDED(GetSelectionController(getter_AddRefs(selCon))) && selCon) {
-    int16_t region = nsISelectionController::SELECTION_FOCUS_REGION;
-
-    if (aScrollToAnchor) {
-      region = nsISelectionController::SELECTION_ANCHOR_REGION;
-    }
-
-    selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
-      region, nsISelectionController::SCROLL_OVERFLOW_HIDDEN);
+  nsCOMPtr<nsISelectionController> selectionController =
+    GetSelectionController();
+  if (!selectionController) {
+    return NS_OK;
   }
 
+  int16_t region = nsISelectionController::SELECTION_FOCUS_REGION;
+  if (aScrollToAnchor) {
+    region = nsISelectionController::SELECTION_ANCHOR_REGION;
+  }
+  selectionController->ScrollSelectionIntoView(
+                         nsISelectionController::SELECTION_NORMAL,
+                         region,
+                         nsISelectionController::SCROLL_OVERFLOW_HIDDEN);
   return NS_OK;
 }
 
@@ -4787,22 +4806,27 @@ EditorBase::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_INITIALIZED);
 
-  nsCOMPtr<nsISelectionController> selCon;
-  nsresult rv = GetSelectionController(getter_AddRefs(selCon));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsISelectionController> selectionController =
+    GetSelectionController();
+  if (NS_WARN_IF(!selectionController)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // Init the caret
   RefPtr<nsCaret> caret = presShell->GetCaret();
   NS_ENSURE_TRUE(caret, NS_ERROR_UNEXPECTED);
   caret->SetIgnoreUserModify(false);
   caret->SetSelection(selection);
-  selCon->SetCaretReadOnly(IsReadonly());
-  selCon->SetCaretEnabled(true);
+  selectionController->SetCaretReadOnly(IsReadonly());
+  selectionController->SetCaretEnabled(true);
 
   // Init selection
-  selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
-  selCon->SetSelectionFlags(nsISelectionDisplay::DISPLAY_ALL);
-  selCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
+  selectionController->SetDisplaySelection(
+                         nsISelectionController::SELECTION_ON);
+  selectionController->SetSelectionFlags(
+                         nsISelectionDisplay::DISPLAY_ALL);
+  selectionController->RepaintSelection(
+                         nsISelectionController::SELECTION_NORMAL);
   // If the computed selection root isn't root content, we should set it
   // as selection ancestor limit.  However, if that is root element, it means
   // there is not limitation of the selection, then, we must set nullptr.
@@ -4852,9 +4876,11 @@ EditorBase::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
 NS_IMETHODIMP
 EditorBase::FinalizeSelection()
 {
-  nsCOMPtr<nsISelectionController> selCon;
-  nsresult rv = GetSelectionController(getter_AddRefs(selCon));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsISelectionController> selectionController =
+    GetSelectionController();
+  if (NS_WARN_IF(!selectionController)) {
+    return NS_ERROR_FAILURE;
+  }
 
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_STATE(selection);
@@ -4864,7 +4890,7 @@ EditorBase::FinalizeSelection()
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_INITIALIZED);
 
-  selCon->SetCaretEnabled(false);
+  selectionController->SetCaretEnabled(false);
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   NS_ENSURE_TRUE(fm, NS_ERROR_NOT_INITIALIZED);
@@ -4879,25 +4905,30 @@ EditorBase::FinalizeSelection()
     ErrorResult ret;
     if (!doc || !doc->HasFocus(ret)) {
       // If the document already lost focus, mark the selection as disabled.
-      selCon->SetDisplaySelection(nsISelectionController::SELECTION_DISABLED);
+      selectionController->SetDisplaySelection(
+                             nsISelectionController::SELECTION_DISABLED);
     } else {
       // Otherwise, mark selection as normal because outside of a
       // contenteditable element should be selected with normal selection
       // color after here.
-      selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
+      selectionController->SetDisplaySelection(
+                             nsISelectionController::SELECTION_ON);
     }
   } else if (IsFormWidget() || IsPasswordEditor() ||
              IsReadonly() || IsDisabled() || IsInputFiltered()) {
     // In <input> or <textarea>, the independent selection should be hidden
     // while this editor doesn't have focus.
-    selCon->SetDisplaySelection(nsISelectionController::SELECTION_HIDDEN);
+    selectionController->SetDisplaySelection(
+                           nsISelectionController::SELECTION_HIDDEN);
   } else {
     // Otherwise, although we're not sure how this case happens, the
     // independent selection should be marked as disabled.
-    selCon->SetDisplaySelection(nsISelectionController::SELECTION_DISABLED);
+    selectionController->SetDisplaySelection(
+                           nsISelectionController::SELECTION_DISABLED);
   }
 
-  selCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
+  selectionController->RepaintSelection(
+                         nsISelectionController::SELECTION_NORMAL);
   return NS_OK;
 }
 
@@ -5108,8 +5139,11 @@ EditorBase::IsActiveInDOMWindow()
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   NS_ENSURE_TRUE(fm, false);
 
-  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
-  nsPIDOMWindowOuter* ourWindow = doc->GetWindow();
+  nsCOMPtr<nsIDocument> document = GetDocument();
+  if (NS_WARN_IF(!document)) {
+    return false;
+  }
+  nsPIDOMWindowOuter* ourWindow = document->GetWindow();
   nsCOMPtr<nsPIDOMWindowOuter> win;
   nsIContent* content =
     nsFocusManager::GetFocusedDescendant(ourWindow, false,
@@ -5219,10 +5253,11 @@ EditorBase::GetIMESelectionStartOffsetIn(nsINode* aTextNode)
 {
   MOZ_ASSERT(aTextNode, "aTextNode must not be nullptr");
 
-  nsCOMPtr<nsISelectionController> selectionController;
-  nsresult rv = GetSelectionController(getter_AddRefs(selectionController));
-  NS_ENSURE_SUCCESS(rv, -1);
-  NS_ENSURE_TRUE(selectionController, -1);
+  nsCOMPtr<nsISelectionController> selectionController =
+    GetSelectionController();
+  if (NS_WARN_IF(!selectionController)) {
+    return -1;
+  }
 
   int32_t minOffset = INT32_MAX;
   static const SelectionType kIMESelectionTypes[] = {

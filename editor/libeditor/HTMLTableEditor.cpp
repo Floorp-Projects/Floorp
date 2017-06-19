@@ -2590,7 +2590,6 @@ HTMLEditor::GetCellIndexes(nsIDOMElement* aCell,
     aCell = cell;
   }
 
-  NS_ENSURE_TRUE(mDocWeak, NS_ERROR_NOT_INITIALIZED);
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
