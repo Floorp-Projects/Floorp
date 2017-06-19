@@ -78,6 +78,7 @@ public:
   void HandleFocusEvent();
   void HandleBlurEvent();
   void SetPickerState(bool aOpen);
+  bool HasBadInput();
 
 private:
   class SyncDisabledStateEvent;

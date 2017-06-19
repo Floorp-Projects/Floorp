@@ -838,6 +838,12 @@ public:
    */
   void SetFocusState(bool aIsFocused);
 
+  /*
+   * Called from datetime input box binding when the the user entered value
+   * becomes valid/invalid.
+   */
+  void UpdateValidityState();
+
   HTMLInputElement* GetOwnerNumberControl();
 
   void StartNumberControlSpinnerSpin();

@@ -125,6 +125,20 @@ nsDateTimeControlFrame::HandleBlurEvent()
   }
 }
 
+bool
+nsDateTimeControlFrame::HasBadInput()
+{
+  nsCOMPtr<nsIDateTimeInputArea> inputAreaContent =
+    do_QueryInterface(mInputAreaContent);
+
+  bool result = false;
+  if (inputAreaContent) {
+    inputAreaContent->HasBadInput(&result);
+  }
+
+  return result;
+}
+
 nscoord
 nsDateTimeControlFrame::GetMinISize(gfxContext* aRenderingContext)
 {

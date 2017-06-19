@@ -8,6 +8,7 @@
 
 #include "js/Date.h"
 #include "mozilla/dom/HTMLInputElement.h"
+#include "nsDateTimeControlFrame.h"
 
 const double DateTimeInputTypeBase::kMinimumYear = 1;
 const double DateTimeInputTypeBase::kMaximumYear = 275760;
@@ -88,6 +89,17 @@ DateTimeInputTypeBase::HasStepMismatch(bool aUseZeroIfValueNaN) const
 
   // Value has to be an integral multiple of step.
   return NS_floorModulo(value - GetStepBase(), step) != mozilla::Decimal(0);
+}
+
+bool
+DateTimeInputTypeBase::HasBadInput() const
+{
+  nsDateTimeControlFrame* frame = do_QueryFrame(GetPrimaryFrame());
+  if (!frame) {
+    return false;
+  }
+
+  return frame->HasBadInput();;
 }
 
 bool
