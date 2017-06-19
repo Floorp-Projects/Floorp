@@ -192,9 +192,11 @@ H264Converter::Shutdown()
 {
   mInitPromiseRequest.DisconnectIfExists();
   mDecodePromiseRequest.DisconnectIfExists();
+  mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+  mDrainRequest.DisconnectIfExists();
   mFlushRequest.DisconnectIfExists();
-  mShutdownRequest.DisconnectIfExists();
   mFlushPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+  mShutdownRequest.DisconnectIfExists();
   mNeedAVCC.reset();
 
   if (mShutdownPromise) {
