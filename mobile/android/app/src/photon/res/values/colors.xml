@@ -5,6 +5,87 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <resources>
+    <!-- color palette for Photon -->
+    <color name="photon_text_main">#272727</color>
+    <color name="photon_text_main_private">#FFFFFF</color>
+    <color name="photon_text_secondary">#B2B2B2</color>
+    <color name="photon_text_secondary_private">#737373</color>
+    <color name="photon_text_placeholder">#B2B2B2</color>
+    <color name="photon_text_placeholder_private">#737373</color>
+    <color name="photon_text_selected_highlight">#E4E4E4</color>
+    <color name="photon_text_selected_highlight_private">#737373</color>
+
+    <color name="photon_search_suggestion_box">#E4E4E4</color>
+
+    <!-- opacity: 20% -->
+    <color name="photon_search_suggestion_box_pressed">#33E4E4E4</color>
+
+    <color name="photon_search_suggestion_box_private">#2A2A2A</color>
+
+    <!-- opacity: 20% -->
+    <color name="photon_search_suggestion_box_private_pressed">#332A2A2A</color>
+
+    <color name="photon_browser_toolbar_bg">#F9F9FA</color>
+    <color name="photon_browser_toolbar_bg_private">#38383D</color>
+
+    <color name="photon_content_bg">#FFFFFF</color>
+
+    <!-- opacity: 10% -->
+    <color name="photon_content_bg_pressed">#19272727</color>
+
+    <color name="photon_content_bg_private">#414146</color>
+
+    <!-- opacity: 10% -->
+    <color name="photon_content_bg_private_pressed">#19272727</color>
+
+    <color name="photon_tabs_tray_bg">#272727</color>
+    <color name="photon_highlight">#00A2FE</color>
+    <color name="photon_highlight_private">#AC39FF</color>
+    <color name="photon_loading_indicator_light">#00DCFC</color>
+    <color name="photon_loading_indicator_light_private">#FF1AD9</color>
+    <color name="photon_loading_indicator_dark">#00A2FE</color>
+    <color name="photon_loading_indicator_dark_private">#9400FF</color>
+    <color name="photon_menu_bg">#F9F9FA</color>
+    <color name="photon_menu_bg_private">#38383D</color>
+    <color name="photon_icon">#272727</color>
+    <color name="photon_icon_private">#FFFFFF</color>
+    <color name="photon_icon_lock">#16DA00</color>
+
+    <color name="photon_notification_bg">#0096DD</color>
+
+    <!-- opacity: 10% -->
+    <color name="photon_notification_bg_pressed">#19000000</color>
+
+    <color name="photon_toolbar_text_color">#3B3B3B</color>
+    <color name="photon_toolbar_text_color_private">#FFFFFF</color>
+    <color name="photon_toolbar_image_tint">@color/photon_toolbar_text_color</color>
+    <color name="photon_toolbar_image_tint_private">@color/photon_toolbar_text_color_private</color>
+    <color name="photon_toolbar_bg">#F7FAFC</color>
+    <color name="photon_toolbar_bg_private">#38383D</color>
+
+    <color name="photon_tabs_counter_fg">#272727</color>
+    <color name="photon_tabs_counter_fg_private">#FFFFFF</color>
+
+    <color name="photon_two_line_page_row_bg">#FFFFFF</color>
+    <color name="photon_two_line_page_row_bg_private">#414146</color>
+
+    <color name="photon_search_item_text">@color/photon_text_main</color>
+    <color name="photon_search_item_text_private">@color/photon_text_main_private</color>
+
+    <color name="photon_home_list_divider">@color/photon_two_line_page_row_bg</color>
+    <color name="photon_home_list_divider_private">@color/photon_two_line_page_row_bg_private
+    </color>
+
+    <color name="progress_start">#00DCFC</color>
+    <color name="progress_end">#00A2FE</color>
+
+    <color name="photon_url_bar_blocked">#D70022</color>
+    <color name="photon_url_bar_blocked_private">#D70022</color>
+    <color name="photon_url_bar_certificate_owner">#05A700</color>
+    <color name="photon_url_bar_certificate_owner_private">#16DA00</color>
+    <color name="photon_url_bar_domain">@color/photon_text_main</color>
+    <color name="photon_url_bar_domain_private">@color/photon_text_main_private</color>
+
     <!-- Fennec color palette (bug 1127517) -->
     <color name="fennec_ui_orange">#FF9500</color>
     <color name="affirmative_green">#6FBE4A</color>
