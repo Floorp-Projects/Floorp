@@ -3,12 +3,11 @@
 #include "pathtools_public.h"
 
 #if defined( _WIN32)
-#include <windows.h>
+#include <Windows.h>
 #include <direct.h>
-#include <shobjidl.h>
-#include <knownfolders.h>
-#include <shlobj.h>
-#include <share.h>
+#include <Shobjidl.h>
+#include <KnownFolders.h>
+#include <Shlobj.h>
 
 #undef GetEnvironmentVariable
 #else
