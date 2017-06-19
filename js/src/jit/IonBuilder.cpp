@@ -1496,8 +1496,12 @@ IonBuilder::visitBlock(const CFGBlock* cfgblock, MBasicBlock* mblock)
         mblock->setHitCount(script()->getHitCount(mblock->pc()));
 
     // Optimization to move a predecessor that only has this block as successor
-    // just before this block.
-    if (mblock->numPredecessors() == 1 && mblock->getPredecessor(0)->numSuccessors() == 1) {
+    // just before this block.  Skip this optimization if the previous block is
+    // not part of the same function, as we might have to backtrack on inlining
+    // failures.
+    if (mblock->numPredecessors() == 1 && mblock->getPredecessor(0)->numSuccessors() == 1 &&
+        !mblock->getPredecessor(0)->outerResumePoint())
+    {
         graph().removeBlockFromList(mblock->getPredecessor(0));
         graph().addBlock(mblock->getPredecessor(0));
     }
