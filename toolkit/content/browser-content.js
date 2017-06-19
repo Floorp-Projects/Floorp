@@ -134,10 +134,26 @@ var ClickEventHandler = {
     if (!this._scrollable)
       return;
 
+    let domUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDOMWindowUtils);
+    let scrollable = this._scrollable;
+    if (scrollable instanceof Ci.nsIDOMWindow) {
+      // getViewId() needs an element to operate on.
+      scrollable = scrollable.document.documentElement;
+    }
+    let scrollId = null;
+    try {
+      scrollId = domUtils.getViewId(scrollable);
+    } catch (e) {
+      // No view ID - leave it as null. Receiving side will check.
+    }
+    let presShellId = domUtils.getPresShellId();
     let [enabled] = sendSyncMessage("Autoscroll:Start",
                                     {scrolldir: this._scrolldir,
                                      screenX: event.screenX,
-                                     screenY: event.screenY});
+                                     screenY: event.screenY,
+                                     scrollId,
+                                     presShellId});
     if (!enabled) {
       this._scrollable = null;
       return;
