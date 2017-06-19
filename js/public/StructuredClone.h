@@ -221,9 +221,9 @@ class MOZ_NON_MEMMOVABLE JS_PUBLIC_API(JSStructuredCloneData) :
     static const size_t kInitialCapacity = 4096;
     static const size_t kStandardCapacity = 4096;
 
-    const JSStructuredCloneCallbacks* callbacks_;
-    void* closure_;
-    OwnTransferablePolicy ownTransferables_;
+    const JSStructuredCloneCallbacks* callbacks_ = nullptr;
+    void* closure_ = nullptr;
+    OwnTransferablePolicy ownTransferables_ = OwnTransferablePolicy::NoTransferables;
     js::SharedArrayRawBufferRefs refsHeld_;
 
     void setOptionalCallbacks(const JSStructuredCloneCallbacks* callbacks,
