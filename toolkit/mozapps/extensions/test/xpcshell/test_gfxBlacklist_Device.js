@@ -35,7 +35,10 @@ function run_test() {
   var gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
 
   // We can't do anything if we can't spoof the stuff we need.
-  do_check_true(gfxInfo instanceof Ci.nsIGfxInfoDebug);
+  if (!(gfxInfo instanceof Ci.nsIGfxInfoDebug)) {
+    do_test_finished();
+    return;
+  }
 
   gfxInfo.QueryInterface(Ci.nsIGfxInfoDebug);
 
@@ -62,16 +65,12 @@ function run_test() {
       gfxInfo.spoofDeviceID("aabb");
       gfxInfo.spoofDriverVersion("5");
       break;
-    default:
-      do_check_true(false);
-      return;
   }
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
   startupManager();
 
   do_test_pending();
-
 
   function checkBlacklist() {
     var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);
