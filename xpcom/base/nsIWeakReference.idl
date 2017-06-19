@@ -37,6 +37,11 @@ interface nsIWeakReference : nsISupports
 
 %{C++
     virtual size_t SizeOfOnlyThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
+
+    /**
+     * Returns true if the referring object is alive.  Otherwise, false.
+     */
+    virtual bool IsAlive() const = 0;
 %}
   };
 
