@@ -450,7 +450,7 @@ SourceBuffer::AppendDataCompletedWithSuccess(const SourceBufferTask::AppendBuffe
     // Tell our parent decoder that we have received new data.
     mMediaSource->GetDecoder()->NotifyDataArrived();
     // Send progress event.
-    mMediaSource->GetDecoder()->NotifyBytesDownloaded();
+    mMediaSource->GetDecoder()->NotifyDownloadProgressed();
   }
 
   mCurrentAttributes = aResult.second();
