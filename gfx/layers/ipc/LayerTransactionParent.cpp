@@ -987,11 +987,14 @@ LayerTransactionParent::NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransa
 bool
 LayerTransactionParent::BindLayerToHandle(RefPtr<Layer> aLayer, const LayerHandle& aHandle)
 {
-  if (!aHandle || !aLayer || mLayerMap.Contains(aHandle.Value())) {
+  if (!aHandle || !aLayer) {
     return false;
   }
-
-  mLayerMap.Put(aHandle.Value(), aLayer);
+  if (auto entry = mLayerMap.LookupForAdd(aHandle.Value())) {
+    return false;
+  } else {
+    entry.OrInsert([&aLayer] () { return aLayer; });
+  }
   return true;
 }
 
@@ -1016,15 +1019,14 @@ LayerTransactionParent::RecvNewCompositable(const CompositableHandle& aHandle, c
 mozilla::ipc::IPCResult
 LayerTransactionParent::RecvReleaseLayer(const LayerHandle& aHandle)
 {
-  if (!aHandle || !mLayerMap.Contains(aHandle.Value())) {
+  if (!aHandle) {
     return IPC_FAIL_NO_REASON(this);
   }
-
   Maybe<RefPtr<Layer>> maybeLayer = mLayerMap.GetAndRemove(aHandle.Value());
-  if (maybeLayer) {
-    (*maybeLayer)->Disconnect();
+  if (!maybeLayer) {
+    return IPC_FAIL_NO_REASON(this);
   }
-
+  (*maybeLayer)->Disconnect();
   return IPC_OK();
 }
 
