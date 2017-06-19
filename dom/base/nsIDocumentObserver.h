@@ -135,8 +135,10 @@ public:
    * the document observers.
    *
    * @param aStyleSheet the StyleSheet that contians the rule
+   * @param aStyleRule the changed rule
    */
-  virtual void StyleRuleChanged(mozilla::StyleSheet* aStyleSheet) = 0;
+  virtual void StyleRuleChanged(mozilla::StyleSheet* aStyleSheet,
+                                mozilla::css::Rule* aStyleRule) = 0;
 
   /**
    * A StyleRule has just been added to a style sheet.
@@ -146,8 +148,10 @@ public:
    * to all of the document observers.
    *
    * @param aStyleSheet the StyleSheet that has been modified
+   * @param aStyleRule the added rule
    */
-  virtual void StyleRuleAdded(mozilla::StyleSheet* aStyleSheet) = 0;
+  virtual void StyleRuleAdded(mozilla::StyleSheet* aStyleSheet,
+                              mozilla::css::Rule* aStyleRule) = 0;
 
   /**
    * A StyleRule has just been removed from a style sheet.
@@ -157,8 +161,10 @@ public:
    * to all of the document observers.
    *
    * @param aStyleSheet the StyleSheet that has been modified
+   * @param aStyleRule the removed rule
    */
-  virtual void StyleRuleRemoved(mozilla::StyleSheet* aStyleSheet) = 0;
+  virtual void StyleRuleRemoved(mozilla::StyleSheet* aStyleSheet,
+                                mozilla::css::Rule* aStyleRule) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
@@ -198,13 +204,16 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
         mozilla::StyleSheet* aStyleSheet) override;
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_STYLERULECHANGED                         \
-    virtual void StyleRuleChanged(mozilla::StyleSheet* aStyleSheet) override;
+    virtual void StyleRuleChanged(mozilla::StyleSheet* aStyleSheet,          \
+                                  mozilla::css::Rule* aStyleRule) override;
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_STYLERULEADDED                           \
-    virtual void StyleRuleAdded(mozilla::StyleSheet* aStyleSheet) override;
+    virtual void StyleRuleAdded(mozilla::StyleSheet* aStyleSheet,            \
+                                mozilla::css::Rule* aStyleRule) override;
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_STYLERULEREMOVED                         \
-    virtual void StyleRuleRemoved(mozilla::StyleSheet* aStyleSheet) override;
+    virtual void StyleRuleRemoved(mozilla::StyleSheet* aStyleSheet,          \
+                                  mozilla::css::Rule* aStyleRule) override;
 
 #define NS_DECL_NSIDOCUMENTOBSERVER                                          \
     NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE                                  \
@@ -276,15 +285,18 @@ _class::StyleSheetApplicableStateChanged(mozilla::StyleSheet* aStyleSheet)\
 {                                                                         \
 }                                                                         \
 void                                                                      \
-_class::StyleRuleChanged(mozilla::StyleSheet* aStyleSheet)                \
+_class::StyleRuleChanged(mozilla::StyleSheet* aStyleSheet,                \
+                         mozilla::css::Rule* aStyleRule)                  \
 {                                                                         \
 }                                                                         \
 void                                                                      \
-_class::StyleRuleAdded(mozilla::StyleSheet* aStyleSheet)                  \
+_class::StyleRuleAdded(mozilla::StyleSheet* aStyleSheet,                  \
+                       mozilla::css::Rule* aStyleRule)                    \
 {                                                                         \
 }                                                                         \
 void                                                                      \
-_class::StyleRuleRemoved(mozilla::StyleSheet* aStyleSheet)                \
+_class::StyleRuleRemoved(mozilla::StyleSheet* aStyleSheet,                \
+                         mozilla::css::Rule* aStyleRule)                  \
 {                                                                         \
 }
 
