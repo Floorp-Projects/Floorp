@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MP3Decoder.h"
+
 #include "MediaContainerType.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaFormatReader.h"
@@ -25,7 +26,7 @@ MP3Decoder::Clone(MediaDecoderInit& aInit) {
 MediaDecoderStateMachine*
 MP3Decoder::CreateStateMachine() {
   RefPtr<MediaDecoderReader> reader =
-      new MediaFormatReader(this, new mp3::MP3Demuxer(GetResource()));
+      new MediaFormatReader(this, new MP3Demuxer(GetResource()));
   return new MediaDecoderStateMachine(this, reader);
 }
 

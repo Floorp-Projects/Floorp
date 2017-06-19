@@ -9,6 +9,7 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/SharedThreadPool.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/TaskQueue.h"
 
 namespace mozilla {

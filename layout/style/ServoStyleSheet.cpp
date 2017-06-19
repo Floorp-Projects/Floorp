@@ -9,6 +9,7 @@
 #include "mozilla/css/Rule.h"
 #include "mozilla/StyleBackendType.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/ServoImportRule.h"
 #include "mozilla/ServoMediaList.h"
 #include "mozilla/ServoCSSRuleList.h"
 #include "mozilla/css/GroupRule.h"
@@ -255,8 +256,7 @@ ServoStyleSheet::StyleSheetLoaded(StyleSheet* aSheet,
 
   if (mDocument && NS_SUCCEEDED(aStatus)) {
     mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
-    NS_WARNING("stylo: Import rule object not implemented");
-    mDocument->StyleRuleAdded(this, nullptr);
+    mDocument->StyleRuleAdded(this, sheet->GetOwnerRule());
   }
 
   return NS_OK;
@@ -285,8 +285,8 @@ ServoStyleSheet::Clone(StyleSheet* aCloneParent,
   return clone.forget();
 }
 
-CSSRuleList*
-ServoStyleSheet::GetCssRulesInternal(ErrorResult& aRv)
+ServoCSSRuleList*
+ServoStyleSheet::GetCssRulesInternal()
 {
   if (!mRuleList) {
     EnsureUniqueInner();
@@ -304,7 +304,7 @@ ServoStyleSheet::InsertRuleInternal(const nsAString& aRule,
                                     uint32_t aIndex, ErrorResult& aRv)
 {
   // Ensure mRuleList is constructed.
-  GetCssRulesInternal(aRv);
+  GetCssRulesInternal();
 
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
   aRv = mRuleList->InsertRule(aRule, aIndex);
@@ -326,7 +326,7 @@ void
 ServoStyleSheet::DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv)
 {
   // Ensure mRuleList is constructed.
-  GetCssRulesInternal(aRv);
+  GetCssRulesInternal();
   if (aIndex > mRuleList->Length()) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;

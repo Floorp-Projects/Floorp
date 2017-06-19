@@ -10,6 +10,7 @@
 #include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/MediaList.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/ServoCSSRuleList.h"
 #include "mozilla/ServoStyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/CSSStyleSheet.h"
@@ -478,7 +479,7 @@ StyleSheet::GetCssRules(nsIPrincipal& aSubjectPrincipal,
   if (!AreRulesAvailable(aSubjectPrincipal, aRv)) {
     return nullptr;
   }
-  FORWARD_INTERNAL(GetCssRulesInternal, (aRv))
+  FORWARD_INTERNAL(GetCssRulesInternal, ())
 }
 
 css::Rule*

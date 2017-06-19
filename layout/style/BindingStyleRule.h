@@ -18,6 +18,9 @@
 class nsICSSDeclaration;
 
 namespace mozilla {
+namespace dom {
+class Element;
+}
 
 class BindingStyleRule : public css::Rule
 {

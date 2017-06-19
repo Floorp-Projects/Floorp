@@ -102,11 +102,6 @@ LazyLogModule gUrlClassifierDbServiceLog("UrlClassifierDbService");
 // 30 minutes as the maximum negative cache duration.
 #define MAXIMUM_NEGATIVE_CACHE_DURATION_SEC (30 * 60 * 1000)
 
-// TODO: The following two prefs are to be removed after we
-//       roll out full v4 hash completion. See Bug 1331534.
-#define TAKE_V4_COMPLETION_RESULT_PREF    "browser.safebrowsing.temporary.take_v4_completion_result"
-#define TAKE_V4_COMPLETION_RESULT_DEFAULT false
-
 class nsUrlClassifierDBServiceWorker;
 
 // Singleton instance.
@@ -1287,14 +1282,6 @@ nsUrlClassifierLookupCallback::HandleResults()
     if (!result.Confirmed()) {
       LOG(("Skipping result %s from table %s (not confirmed)",
            result.PartialHashHex().get(), result.mTableName.get()));
-      continue;
-    }
-
-    if (StringEndsWith(result.mTableName, NS_LITERAL_CSTRING("-proto")) &&
-        !Preferences::GetBool(TAKE_V4_COMPLETION_RESULT_PREF,
-                              TAKE_V4_COMPLETION_RESULT_DEFAULT)) {
-      // Bug 1331534 - We temporarily ignore hash completion result
-      // for v4 tables.
       continue;
     }
 

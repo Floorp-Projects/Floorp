@@ -782,6 +782,16 @@ ServoRestyleManager::ContentStateChanged(nsIContent* aContent,
   ContentStateChangedInternal(aElement, aChangedBits, &changeHint,
                               &restyleHint);
 
+  // Don't bother taking a snapshot if no rules depend on these state bits.
+  //
+  // We always take a snapshot for the LTR/RTL event states, since Servo doesn't
+  // track those bits in the same way, and we know that :dir() rules are always
+  // present in UA style sheets.
+  if (!aChangedBits.HasAtLeastOneOfStates(DIRECTION_STATES) &&
+      !StyleSet()->HasStateDependency(aChangedBits)) {
+    return;
+  }
+
   ServoElementSnapshot& snapshot = SnapshotFor(aElement);
   EventStates previousState = aElement->StyleState() ^ aChangedBits;
   snapshot.AddState(previousState);
@@ -815,10 +825,22 @@ ServoRestyleManager::AttributeWillChange(Element* aElement,
     return;
   }
 
+  bool influencesOtherPseudoClassState =
+    AttributeInfluencesOtherPseudoClassState(aElement, aAttribute);
+
+  if (!influencesOtherPseudoClassState &&
+      !((aNameSpaceID == kNameSpaceID_None &&
+         (aAttribute == nsGkAtoms::id ||
+          aAttribute == nsGkAtoms::_class)) ||
+        aAttribute == nsGkAtoms::lang ||
+        StyleSet()->MightHaveAttributeDependency(aAttribute))) {
+    return;
+  }
+
   ServoElementSnapshot& snapshot = SnapshotFor(aElement);
   snapshot.AddAttrs(aElement, aNameSpaceID, aAttribute);
 
-  if (AttributeInfluencesOtherPseudoClassState(aElement, aAttribute)) {
+  if (influencesOtherPseudoClassState) {
     snapshot.AddOtherPseudoClassState(aElement);
   }
 
@@ -833,7 +855,6 @@ ServoRestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
                                       const nsAttrValue* aOldValue)
 {
   MOZ_ASSERT(!mInStyleRefresh);
-  MOZ_ASSERT(!mSnapshots.Get(aElement) || mSnapshots.Get(aElement)->HasAttrs());
 
   nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
   if (primaryFrame) {

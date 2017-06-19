@@ -1,0 +1,202 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for bug 1359217</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<iframe id="test"></iframe>
+<pre id="log">
+<script>
+/**
+ * This test checks that getCSSStyleRules returns correct style set in
+ * various cases. To avoid effects from UA sheets, most of the tests use
+ * an element with "unknowntagname".
+ */
+
+let iframe = document.getElementById("test");
+let domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
+                            .getService(SpecialPowers.Ci.inIDOMUtils);
+const nsIDOMCSSStyleRule = SpecialPowers.Ci["nsIDOMCSSStyleRule"];
+
+SimpleTest.waitForExplicitFinish();
+
+function* getStyleRules(elem) {
+  let rules = domUtils.getCSSStyleRules(elem);
+  for (let i = 0; i < rules.length; i++) {
+    yield SpecialPowers.unwrap(rules.GetElementAt(i)
+                               .QueryInterface(nsIDOMCSSStyleRule));
+  }
+}
+
+// This will check that value of z-index property declarations in the
+// rules from getCSSStyleRules matches the given content.
+function checkRules(doc, rulesContent, queryStr = "unknowntagname") {
+  let elem = doc.querySelector(queryStr);
+  let rules = [...getStyleRules(elem)];
+  is(rules.length, rulesContent.length, "Rule length should match");
+  if (rules.length != rulesContent.length) {
+    return;
+  }
+  for (let i = 0; i < rules.length; i++) {
+    let style = rules[i].style;
+    let expectation = rulesContent[i].toString();
+    is(style.length, 1, "Should contain only one declaration");
+    is(style.zIndex, expectation, "Should match expectation");
+  }
+}
+
+const tests = [
+  {
+    title: "Add new stylesheet",
+    async run(doc) {
+      checkRules(doc, [1]);
+      let link = doc.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "getCSSStyleRules-2.css";
+      doc.head.appendChild(link);
+      // Check the rules synchronously when the stylesheet has not been
+      // loaded, there should still be no rule matches.
+      checkRules(doc, [1]);
+      await new Promise(resolve => { link.onload = resolve; });
+      checkRules(doc, [1, 2]);
+    },
+  },
+  {
+    title: "Remove stylesheet",
+    async run(doc) {
+      checkRules(doc, [1]);
+      doc.querySelector("link").remove();
+      checkRules(doc, []);
+    },
+  },
+  {
+    title: "Enable stylesheet",
+    async run(doc) {
+      // Set disabled flag before we invoke the utils.
+      let link = doc.querySelector("link");
+      link.sheet.disabled = true;
+      checkRules(doc, []);
+      link.sheet.disabled = false;
+      checkRules(doc, [1]);
+    },
+  },
+  {
+    title: "Disable stylesheet",
+    async run(doc) {
+      checkRules(doc, [1]);
+      doc.querySelector("link").sheet.disabled = true;
+      checkRules(doc, []);
+    },
+  },
+  {
+    title: "Change stylesheet set",
+    base: "alternate",
+    async run(doc) {
+      checkRules(doc, []);
+      doc.selectedStyleSheetSet = "x";
+      checkRules(doc, [1]);
+      doc.selectedStyleSheetSet = "";
+      checkRules(doc, []);
+    },
+  },
+  {
+    title: "Add and remove rules",
+    async run(doc) {
+      checkRules(doc, [1]);
+
+      let sheet = doc.querySelector("link").sheet;
+      info("Inserting style rule");
+      sheet.insertRule("unknowntagname { z-index: 3; }", 1);
+      checkRules(doc, [1, 3]);
+
+      info("Removing style rule");
+      sheet.deleteRule(0);
+      checkRules(doc, [3]);
+
+      info("Inserting media rule");
+      sheet.insertRule("@media all { unknowntagname { z-index: 4; } }", 1);
+      checkRules(doc, [3, 4]);
+
+      info("Inserting supports rule");
+      sheet.insertRule(
+        "@supports (z-index: 0) { unknowntagname { z-index: 5; } }", 1);
+      checkRules(doc, [3, 5, 4]);
+
+      info("Inserting import rule");
+      sheet.insertRule("@import url(getCSSStyleRules-2.css);", 0);
+      // There is no notification we can get when the associated style
+      // sheet gets loaded, so we have to query it.
+      while (true) {
+        try {
+          sheet.cssRules[0].styleSheet.cssRules;
+          break;
+        } catch (e) {
+          if (e.name == "InvalidAccessError") {
+            await new Promise(resolve => requestAnimationFrame(resolve));
+          } else {
+            throw e;
+          }
+        }
+      }
+      checkRules(doc, [2, 3, 5, 4]);
+
+      info("Removing supports rule");
+      sheet.deleteRule(2);
+      checkRules(doc, [2, 3, 4]);
+
+      info("Removing media rule");
+      sheet.deleteRule(2);
+      checkRules(doc, [2, 3]);
+
+      info("Removing import rule");
+      sheet.deleteRule(0);
+      checkRules(doc, [3]);
+    },
+  },
+  {
+    title: "Check UA sheets",
+    async run(doc) {
+      doc.querySelector("link").remove();
+      checkRules(doc, []);
+      let elem = doc.querySelector("unknowntagname");
+      elem.setAttribute("dir", "");
+      let seenUnicodeBidi = false;
+      for (let rule of getStyleRules(elem)) {
+        if (rule.style.unicodeBidi == "isolate") {
+          seenUnicodeBidi = true;
+          break;
+        }
+      }
+      ok(seenUnicodeBidi, "Should have unicode-bidi " +
+         "declaration from UA stylesheet html.css");
+    },
+  },
+];
+
+async function runTests() {
+  for (let i = 0; i < tests.length; i++) {
+    let test = tests[i];
+    info(`Test ${i}: ${test.title}`);
+    iframe.src = "about:blank";
+    if (!test.base) {
+      test.base = "default";
+    }
+    iframe.src = `file_getCSSStyleRules-${test.base}.html`;
+    await new Promise(resolve => { iframe.onload = resolve; });
+    try {
+      await test.run(iframe.contentDocument);
+    } catch (e) {
+      ok(false, "JavaScript error: " + e);
+    }
+  }
+  SimpleTest.finish();
+}
+
+runTests();
+
+</script>
+</pre>
+</body>
+</html>

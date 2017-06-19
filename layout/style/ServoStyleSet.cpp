@@ -10,6 +10,8 @@
 #include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoRestyleManager.h"
+#include "mozilla/ServoStyleRuleMap.h"
+#include "mozilla/css/Loader.h"
 #include "mozilla/dom/AnonymousContent.h"
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/Element.h"
@@ -92,6 +94,13 @@ ServoStyleSet::BeginShutdown()
 {
   nsIDocument* doc = mPresContext->Document();
 
+  // Remove the style rule map from document's observer and drop it.
+  if (mStyleRuleMap) {
+    doc->RemoveObserver(mStyleRuleMap);
+    doc->CSSLoader()->RemoveObserver(mStyleRuleMap);
+    mStyleRuleMap = nullptr;
+  }
+
   // It's important to do this before mRawSet is released, since that will cause
   // a RuleTree GC, which needs to happen after we have dropped all of the
   // document's strong references to RuleNodes.  We also need to do it here,
@@ -144,6 +153,10 @@ size_t
 ServoStyleSet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
+
+  if (mStyleRuleMap) {
+    n += mStyleRuleMap->SizeOfIncludingThis(aMallocSizeOf);
+  }
 
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:
@@ -1354,6 +1367,30 @@ ServoStyleSet::RunPostTraversalTasks()
   for (auto& task : tasks) {
     task.Run();
   }
+}
+
+ServoStyleRuleMap*
+ServoStyleSet::StyleRuleMap()
+{
+  if (!mStyleRuleMap) {
+    mStyleRuleMap = new ServoStyleRuleMap(this);
+    nsIDocument* doc = mPresContext->Document();
+    doc->AddObserver(mStyleRuleMap);
+    doc->CSSLoader()->AddObserver(mStyleRuleMap);
+  }
+  return mStyleRuleMap;
+}
+
+bool
+ServoStyleSet::MightHaveAttributeDependency(nsIAtom* aAttribute)
+{
+  return Servo_StyleSet_MightHaveAttributeDependency(mRawSet.get(), aAttribute);
+}
+
+bool
+ServoStyleSet::HasStateDependency(EventStates aState)
+{
+  return Servo_StyleSet_HasStateDependency(mRawSet.get(), aState.ServoValue());
 }
 
 ServoStyleSet* ServoStyleSet::sInServoTraversal = nullptr;

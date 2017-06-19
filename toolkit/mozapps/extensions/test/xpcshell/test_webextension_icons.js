@@ -11,25 +11,12 @@ profileDir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 startupManager();
 
-const { Management } = Components.utils.import("resource://gre/modules/Extension.jsm", {});
-
-function promiseAddonStartup() {
-  return new Promise(resolve => {
-    let listener = (evt, extension) => {
-      Management.off("startup", listener);
-      resolve(extension);
-    };
-
-    Management.on("startup", listener);
-  });
-}
-
 async function testSimpleIconsetParsing(manifest) {
   await promiseWriteWebManifestForExtension(manifest, profileDir);
 
   await Promise.all([
     promiseRestartManager(),
-    manifest.theme || promiseAddonStartup(),
+    manifest.theme || promiseWebExtensionStartup(ID),
   ]);
 
   let uri = do_get_addon_root_uri(profileDir, ID);
@@ -63,7 +50,7 @@ async function testSimpleIconsetParsing(manifest) {
   // check if icons are persisted through a restart
   await Promise.all([
     promiseRestartManager(),
-    manifest.theme || promiseAddonStartup(),
+    manifest.theme || promiseWebExtensionStartup(ID),
   ]);
 
   addon = await promiseAddonByID(ID);
@@ -79,7 +66,7 @@ async function testRetinaIconsetParsing(manifest) {
 
   await Promise.all([
     promiseRestartManager(),
-    manifest.theme || promiseAddonStartup(),
+    manifest.theme || promiseWebExtensionStartup(ID),
   ]);
 
   let addon = await promiseAddonByID(ID);
@@ -108,7 +95,7 @@ async function testNoIconsParsing(manifest) {
 
   await Promise.all([
     promiseRestartManager(),
-    manifest.theme || promiseAddonStartup(),
+    manifest.theme || promiseWebExtensionStartup(ID),
   ]);
 
   let addon = await promiseAddonByID(ID);
