@@ -2916,6 +2916,10 @@ void AsyncPanZoomController::ScrollBy(const CSSPoint& aOffset) {
   mFrameMetrics.ScrollBy(aOffset);
 }
 
+void AsyncPanZoomController::ScrollByAndClamp(const CSSPoint& aOffset) {
+  mFrameMetrics.ClampAndSetScrollOffset(mFrameMetrics.GetScrollOffset() + aOffset);
+}
+
 void AsyncPanZoomController::ScaleWithFocus(float aScale,
                                             const CSSPoint& aFocus) {
   mFrameMetrics.ZoomBy(aScale);

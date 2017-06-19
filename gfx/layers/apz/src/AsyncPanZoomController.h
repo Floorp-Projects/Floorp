@@ -532,9 +532,17 @@ protected:
   nsEventStatus OnCancelTap(const TapGestureInput& aEvent);
 
   /**
-   * Scrolls the viewport by an X,Y offset.
+   * Scroll the scroll frame by an X,Y offset.
+   * The resulting scroll offset is not clamped to the scrollable rect;
+   * the caller must ensure it stays within range.
    */
   void ScrollBy(const CSSPoint& aOffset);
+
+  /**
+   * Scroll the scroll frame by an X,Y offset, clamping the resulting
+   * scroll offset to the scrollable rect.
+   */
+  void ScrollByAndClamp(const CSSPoint& aOffset);
 
   /**
    * Scales the viewport by an amount (note that it multiplies this scale in to
