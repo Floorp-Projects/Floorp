@@ -28,7 +28,7 @@ config = {
             "mar_channel_ids": [],
             "channel_names": ["esr", "esr-localtest", "esr-cdntest"],
             "rules_to_update": ["esr52-cdntest", "esr52-localtest"],
-            "publish_rules": ["esr52"],
+            "publish_rules": [521],
         },
     },
     "balrog_use_dummy_suffix": False,

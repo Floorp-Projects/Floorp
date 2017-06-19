@@ -30,7 +30,8 @@ config = {
             ],
             "channel_names": ["beta", "beta-localtest", "beta-cdntest"],
             "rules_to_update": ["firefox-beta-cdntest", "firefox-beta-localtest"],
-            "publish_rules": ["firefox-beta"],
+            "publish_rules": [32],
+            "schedule_asap": True,
         },
         "release": {
             "version_regex": r"^\d+\.\d+(\.\d+)?$",
@@ -40,7 +41,7 @@ config = {
             "mar_channel_ids": [],
             "channel_names": ["release", "release-localtest", "release-cdntest"],
             "rules_to_update": ["firefox-release-cdntest", "firefox-release-localtest"],
-            "publish_rules": ["firefox-release"],
+            "publish_rules": [145],
         },
     },
     "balrog_use_dummy_suffix": False,
