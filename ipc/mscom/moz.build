@@ -11,6 +11,7 @@ EXPORTS.mozilla.mscom += [
     'COMApartmentRegion.h',
     'COMPtrHolder.h',
     'EnsureMTA.h',
+    'MainThreadClientInfo.h',
     'MainThreadRuntime.h',
     'Objref.h',
     'ProxyStream.h',
@@ -21,6 +22,7 @@ EXPORTS.mozilla.mscom += [
 UNIFIED_SOURCES += [
     'AgileReference.cpp',
     'EnsureMTA.cpp',
+    'MainThreadClientInfo.cpp',
     'MainThreadRuntime.cpp',
     'Objref.cpp',
     'ProxyStream.cpp',
