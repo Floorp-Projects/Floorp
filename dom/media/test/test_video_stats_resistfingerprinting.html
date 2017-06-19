@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Mozilla Bug:
+https://bugzilla.mozilla.org/show_bug.cgi?id=1369309
+Tor Ticket:
+https://trac.torproject.org/projects/tor/ticket/15757
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1369309</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="manifest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=682299">Mozilla Bug 1369309</a>
+<a target="_blank" href="https://trac.torproject.org/projects/tor/ticket/15757">Tor Ticket 15757</a>
+
+<!-- The main testing script -->
+<script class="testbody" type="text/javascript">
+  var manager = new MediaTestManager;
+  // Push the setting of 'privacy.resistFingerprinting' into gTestPrefs, which
+  // will be set during MediaTestManager.runTests().
+  gTestPrefs.push(
+    ["privacy.resistFingerprinting", true]
+  );
+  var testCases = [
+    { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.266 },
+    { name:"seek-short.webm", type:"video/webm", width:320, height:240, duration:0.23 },
+  ];
+
+  function checkStats(v) {
+    is(v.mozParsedFrames, 0,
+        "mozParsedFrames should be 0 if fingerprinting resistance is enabled");
+    is(v.mozDecodedFrames, 0,
+        "mozDecodedFrames should be 0 if fingerprinting resistance is enabled");
+    is(v.mozPresentedFrames, 0,
+        "mozPresentedFrames should be 0 if fingerprinting resistance is enabled");
+    is(v.mozPaintedFrames, 0,
+        "mozPaintedFrames should be 0 if fingerprinting resistance is enabled");
+    is(v.mozFrameDelay, 0.0,
+        "mozFrameDelay should be 0.0 if fingerprinting resistance is enabled");
+    let playbackQuality = v.getVideoPlaybackQuality();
+    is(playbackQuality.creationTime, 0,
+        "VideoPlaybackQuality.creationTime should be 0 if fingerprinting resistance is enabled");
+    is(playbackQuality.totalVideoFrames, 0,
+        "VideoPlaybackQuality.totalVideoFrames should be 0 if fingerprinting resistance is enabled");
+    is(playbackQuality.droppedVideoFrames, 0,
+        "VideoPlaybackQuality.droppedVideoFrames should be 0 if fingerprinting resistance is enabled");
+    is(playbackQuality.corruptedVideoFrames, 0,
+        "VideoPlaybackQuality.corruptedVideoFrames should be 0 if fingerprinting resistance is enabled");
+  }
+
+  function startTest(test, token) {
+    let v = document.createElement("video");
+    v.token = token;
+    v.src = test.name;
+    manager.started(token);
+    once(v, "ended", () => {
+      checkStats(v);
+      removeNodeAndSource(v);
+      manager.finished(v.token);
+    });
+    v.play();
+  }
+
+  manager.runTests(testCases, startTest);
+
+</script>
+</body>
+</html>
