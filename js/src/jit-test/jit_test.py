@@ -248,6 +248,7 @@ def main(argv):
         options.exclude += ['debug/bug1160182.js']
         options.exclude += ['xdr/incremental-encoder.js']
         options.exclude += ['xdr/bug1186973.js']                # Bug 1369785
+        options.exclude += ['xdr/relazify.js']
         options.exclude += ['basic/werror.js']
 
         # Prevent code coverage test that expects coverage
