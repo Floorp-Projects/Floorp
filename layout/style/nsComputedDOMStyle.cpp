@@ -4227,6 +4227,14 @@ nsComputedDOMStyle::DoGetWindowShadow()
 }
 
 already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetWindowOpacity()
+{
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  val->SetNumber(StyleUIReset()->mWindowOpacity);
+  return val.forget();
+}
+
+already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetWordBreak()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
