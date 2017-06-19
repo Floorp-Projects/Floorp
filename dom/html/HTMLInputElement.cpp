@@ -2525,6 +2525,20 @@ HTMLInputElement::SetFocusState(bool aIsFocused)
   }
 }
 
+void
+HTMLInputElement::UpdateValidityState()
+{
+  if (NS_WARN_IF(!IsDateTimeInputType(mType))) {
+    return;
+  }
+
+  // For now, datetime input box call this function only when the value may
+  // become valid/invalid. For other validity states, they will be updated when
+  // .value is actually changed.
+  UpdateBadInputValidityState();
+  UpdateState(true);
+}
+
 bool
 HTMLInputElement::MozIsTextField(bool aExcludePassword)
 {
@@ -7640,6 +7654,13 @@ HTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
         key.AssignLiteral("FormValidationBadInputNumber");
       } else if (mType == NS_FORM_INPUT_EMAIL) {
         key.AssignLiteral("FormValidationInvalidEmail");
+      } else if (mType == NS_FORM_INPUT_DATE && IsInputDateTimeEnabled()) {
+        // For input date and time, only date may have an invalid value, as
+        // we forbid or autocorrect values that are not in the valid range for
+        // time. For example, in 12hr format, if user enters '2' in the hour
+        // field, it will be treated as '02' and automatically advance to the
+        // next field.
+        key.AssignLiteral("FormValidationInvalidDate");
       } else {
         return NS_ERROR_UNEXPECTED;
       }
