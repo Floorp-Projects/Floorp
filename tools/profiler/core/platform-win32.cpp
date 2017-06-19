@@ -52,6 +52,7 @@ PopulateRegsFromContext(Registers& aRegs, CONTEXT* aContext)
 #else
  #error "bad arch"
 #endif
+  aRegs.mLR = 0;
 }
 
 class PlatformData

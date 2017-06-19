@@ -86,10 +86,12 @@ PopulateRegsFromContext(Registers& aRegs, ucontext_t* aContext)
   aRegs.mPC = reinterpret_cast<Address>(mcontext.gregs[REG_EIP]);
   aRegs.mSP = reinterpret_cast<Address>(mcontext.gregs[REG_ESP]);
   aRegs.mFP = reinterpret_cast<Address>(mcontext.gregs[REG_EBP]);
+  aRegs.mLR = 0;
 #elif defined(GP_ARCH_amd64)
   aRegs.mPC = reinterpret_cast<Address>(mcontext.gregs[REG_RIP]);
   aRegs.mSP = reinterpret_cast<Address>(mcontext.gregs[REG_RSP]);
   aRegs.mFP = reinterpret_cast<Address>(mcontext.gregs[REG_RBP]);
+  aRegs.mLR = 0;
 #elif defined(GP_ARCH_arm)
   aRegs.mPC = reinterpret_cast<Address>(mcontext.arm_pc);
   aRegs.mSP = reinterpret_cast<Address>(mcontext.arm_sp);
