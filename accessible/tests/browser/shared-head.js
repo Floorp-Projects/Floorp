@@ -10,7 +10,8 @@
 /* exported Logger, MOCHITESTS_DIR, invokeSetAttribute, invokeFocus,
             invokeSetStyle, getAccessibleDOMNodeID, getAccessibleTagName,
             addAccessibleTask, findAccessibleChildByID, isDefunct,
-            CURRENT_CONTENT_DIR, loadScripts, loadFrameScripts, Cc, Cu */
+            CURRENT_CONTENT_DIR, loadScripts, loadFrameScripts, snippetToURL,
+            Cc, Cu */
 
 const { interfaces: Ci, utils: Cu, classes: Cc } = Components;
 
@@ -205,6 +206,31 @@ function loadFrameScripts(browser, ...scripts) {
 }
 
 /**
+ * Takes an HTML snippet and returns an encoded URI for a full document
+ * with the snippet.
+ * @param {String} snippet   a markup snippet.
+ * @param {Object} bodyAttrs extra attributes to use in the body tag. Default is
+ *                           { id: "body "}.
+ * @return {String} a base64 encoded data url of the document container the
+ *                  snippet.
+ **/
+function snippetToURL(snippet, bodyAttrs={}) {
+  let attrs = Object.assign({}, { id: "body" }, bodyAttrs);
+  let attrsString = Object.entries(attrs).map(
+    ([attr, value]) => `${attr}=${JSON.stringify(value)}`).join(" ");
+  let encodedDoc = btoa(
+    `<html>
+      <head>
+        <meta charset="utf-8"/>
+        <title>Accessibility Test</title>
+      </head>
+      <body ${attrsString}>${snippet}</body>
+    </html>`);
+
+  return `data:text/html;charset=utf-8;base64,${encodedDoc}`;
+}
+
+/**
  * A wrapper around browser test add_task that triggers an accessible test task
  * as a new browser test task with given document, data URL or markup snippet.
  * @param  {String}                 doc  URL (relative to current directory) or
@@ -219,16 +245,7 @@ function addAccessibleTask(doc, task) {
     if (doc.includes('doc_')) {
       url = `${CURRENT_CONTENT_DIR}e10s/${doc}`;
     } else {
-      // Assume it's a markup snippet.
-      url = "data:text/html;charset=utf-8;base64,";
-      url += btoa(
-        `<html>
-          <head>
-            <meta charset="utf-8"/>
-            <title>Accessibility Test</title>
-          </head>
-          <body id="body">${doc}</body>
-        </html>`);
+      url = snippetToURL(doc);
     }
 
     registerCleanupFunction(() => {
