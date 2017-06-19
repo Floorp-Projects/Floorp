@@ -20,15 +20,13 @@ from mach.decorators import (
     Command,
 )
 
-# This should probably be consolidated with similar classes in other test
-# runners.
-class InvalidTestPathError(Exception):
-    """Exception raised when the test path is not valid."""
+from mach_commands_base import WebPlatformTestsRunner, create_parser_wpt
 
-class WebPlatformTestsRunner(MozbuildObject):
-    """Run web platform tests."""
 
-    def setup_kwargs_firefox(self, kwargs):
+class WebPlatformTestsRunnerSetup(MozbuildObject):
+    default_log_type = "mach"
+
+    def kwargs_firefox(self, kwargs):
         from wptrunner import wptcommandline
 
         build_path = os.path.join(self.topobjdir, 'build')
@@ -70,7 +68,7 @@ class WebPlatformTestsRunner(MozbuildObject):
 
         kwargs = wptcommandline.check_args(kwargs)
 
-    def setup_kwargs_wptrun(self, kwargs):
+    def kwargs_wptrun(self, kwargs):
         from wptrunner import wptcommandline
         here = os.path.join(self.topsrcdir, 'testing', 'web-platform')
 
@@ -113,27 +111,6 @@ class WebPlatformTestsRunner(MozbuildObject):
 
         kwargs = wptcommandline.check_args(kwargs)
 
-    def run_tests(self, **kwargs):
-        from wptrunner import wptrunner
-
-        if kwargs["product"] in ["firefox", None]:
-            self.setup_kwargs_firefox(kwargs)
-        elif kwargs["product"] in ("chrome", "edge", "servo"):
-            self.setup_kwargs_wptrun(kwargs)
-        else:
-            raise ValueError("Unknown product %s" % kwargs["product"])
-
-        logger = wptrunner.setup_logging(kwargs, {"mach": sys.stdout})
-        result = wptrunner.run_tests(**kwargs)
-
-        return int(not result)
-
-    def list_test_groups(self, **kwargs):
-        from wptrunner import wptrunner
-
-        self.setup_kwargs(kwargs)
-
-        wptrunner.list_test_groups(**kwargs)
 
 class WebPlatformTestsUpdater(MozbuildObject):
     """Update web platform tests."""
@@ -307,10 +284,6 @@ class WPTManifestUpdater(MozbuildObject):
         manifestupdate.update(logger, wpt_dir, check_clean, rebuild)
 
 
-def create_parser_wpt():
-    from wptrunner import wptcommandline
-    return wptcommandline.create_parser(["firefox", "chrome", "edge", "servo"])
-
 def create_parser_update():
     from update import updatecommandline
     return updatecommandline.create_parser()
@@ -364,12 +337,9 @@ class MachCommands(MachCommandBase):
                 params["include"].append(item["name"])
             del params["test_objects"]
 
-        wpt_runner = self._spawn(WebPlatformTestsRunner)
-
-        if params["list_test_groups"]:
-            return wpt_runner.list_test_groups(**params)
-        else:
-            return wpt_runner.run_tests(**params)
+        wpt_setup = self._spawn(WebPlatformTestsRunnerSetup)
+        wpt_runner = WebPlatformTestsRunner(wpt_setup)
+        return wpt_runner.run(**params)
 
     @Command("wpt",
              category="testing",

@@ -207,11 +207,12 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
 
     def download_and_extract(self):
         super(WebPlatformTest, self).download_and_extract(
-            extract_dirs=["bin/*",
+            extract_dirs=["mach",
+                          "bin/*",
                           "config/*",
                           "mozbase/*",
                           "marionette/*",
-                          "tools/wptserve/*",
+                          "tools/*",
                           "web-platform/*"],
             suite_categories=["web-platform"])
 
