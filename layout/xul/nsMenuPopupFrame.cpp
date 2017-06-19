@@ -461,6 +461,7 @@ nsMenuPopupFrame::UpdateWidgetProperties()
 {
   if (nsIWidget* widget = GetWidget()) {
     widget->SetWindowOpacity(StyleUIReset()->mWindowOpacity);
+    widget->SetWindowTransform(ComputeWidgetTransform());
   }
 }
 
