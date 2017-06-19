@@ -526,18 +526,18 @@ class Addresses extends AutofillRecords {
    * Merge the address if storage has multiple mergeable records.
    * @param {Object} targetAddress
    *        The address for merge.
-   * @returns {boolean}
-   *          Return true if the target address is mergeable or false if not.
+   * @returns {Array.<string>}
+   *          Return an array of the merged GUID string.
    */
   mergeToStorage(targetAddress) {
-    let merged = false;
+    let mergedGUIDs = [];
     for (let address of this._store.data[this._collectionName]) {
       if (this.mergeIfPossible(address.guid, targetAddress)) {
-        merged = true;
+        mergedGUIDs.push(address.guid);
       }
     }
-    this.log.debug("Existing records matching and merging is", merged);
-    return merged;
+    this.log.debug("Existing records matching and merging count is", mergedGUIDs.length);
+    return mergedGUIDs;
   }
 }
 
