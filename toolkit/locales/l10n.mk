@@ -19,6 +19,8 @@
 #   language pack and zip package.
 #   Other targets like windows installers might be listed, too, and should
 #   be defined in the including makefile.
+#   The installer-% targets should not set AB_CD, so that the unpackaging
+#   step finds the original package.
 # The including makefile should provide values for the variables
 #   MOZ_APP_VERSION and MOZ_LANGPACK_EID.
 
@@ -55,6 +57,7 @@ ACDEFINES += \
 	$(NULL)
 
 
+clobber-%: AB_CD=$*
 clobber-%:
 	$(RM) -rf $(DIST)/xpi-stage/locale-$*
 
