@@ -4,7 +4,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 /* import-globals-from ../../../../framework/test/shared-head.js */
 /* exported WCUL10n, openNewTabAndConsole, waitForMessages, waitFor, findMessage,
-   openContextMenu, hideContextMenu */
+   openContextMenu, hideContextMenu, loadDocument */
 
 "use strict";
 
@@ -64,7 +64,7 @@ function waitForMessages({ hud, messages }) {
   return new Promise(resolve => {
     let numMatched = 0;
     let receivedLog = hud.ui.on("new-messages",
-      function messagesReceieved(e, newMessages) {
+      function messagesReceived(e, newMessages) {
         for (let message of messages) {
           if (message.matched) {
             continue;
@@ -72,7 +72,7 @@ function waitForMessages({ hud, messages }) {
 
           for (let newMessage of newMessages) {
             let messageBody = newMessage.node.querySelector(".message-body");
-            if (messageBody.textContent == message.text) {
+            if (messageBody.textContent.includes(message.text)) {
               numMatched++;
               message.matched = true;
               info("Matched a message with text: " + message.text +
@@ -82,7 +82,7 @@ function waitForMessages({ hud, messages }) {
           }
 
           if (numMatched === messages.length) {
-            hud.ui.off("new-messages", messagesReceieved);
+            hud.ui.off("new-messages", messagesReceived);
             resolve(receivedLog);
             return;
           }
@@ -178,4 +178,11 @@ function hideContextMenu(hud) {
   let onPopupHidden = once(popup, "popuphidden");
   popup.hidePopup();
   return onPopupHidden;
+}
+
+function loadDocument(browser) {
+  return new Promise(resolve => {
+    browser.addEventListener("load", resolve, {capture: true, once: true});
+    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_PATH);
+  });
 }
