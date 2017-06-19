@@ -590,55 +590,57 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aElement);
 
+  if (!aElement->IsInComposedDoc()) {
+    return;
+  }
+
   nsPresContext* presContext = nsContentUtils::GetContextForContent(aElement);
-  if (!presContext) {
+  if (!presContext || !presContext->IsDynamic()) {
     return;
   }
 
   nsIAtom* pseudoTag = PseudoTagAndCorrectElementForAnimation(aElement);
-  if (presContext->IsDynamic() && aElement->IsInComposedDoc()) {
-    CSSPseudoElementType pseudoType =
-      nsCSSPseudoElements::GetPseudoType(pseudoTag,
-                                         CSSEnabledState::eForAllContent);
+  CSSPseudoElementType pseudoType =
+    nsCSSPseudoElements::GetPseudoType(pseudoTag,
+                                       CSSEnabledState::eForAllContent);
 
-    if (aTasks & UpdateAnimationsTasks::CSSAnimations) {
-      presContext->AnimationManager()->
-        UpdateAnimations(const_cast<dom::Element*>(aElement), pseudoType,
-                         aComputedValues);
-    }
+  if (aTasks & UpdateAnimationsTasks::CSSAnimations) {
+    presContext->AnimationManager()->
+      UpdateAnimations(const_cast<dom::Element*>(aElement), pseudoType,
+                       aComputedValues);
+  }
 
-    // aComputedValues might be nullptr if the target element is now in a
-    // display:none subtree. We still call Gecko_UpdateAnimations in this case
-    // because we need to stop CSS animations in the display:none subtree.
-    // However, we don't need to update transitions since they are stopped by
-    // RestyleManager::AnimationsWithDestroyedFrame so we just return early
-    // here.
-    if (!aComputedValues) {
-      return;
-    }
+  // aComputedValues might be nullptr if the target element is now in a
+  // display:none subtree. We still call Gecko_UpdateAnimations in this case
+  // because we need to stop CSS animations in the display:none subtree.
+  // However, we don't need to update transitions since they are stopped by
+  // RestyleManager::AnimationsWithDestroyedFrame so we just return early
+  // here.
+  if (!aComputedValues) {
+    return;
+  }
 
-    if (aTasks & UpdateAnimationsTasks::CSSTransitions) {
-      MOZ_ASSERT(aOldComputedValues);
-      presContext->TransitionManager()->
-        UpdateTransitions(const_cast<dom::Element*>(aElement), pseudoType,
-                          aOldComputedValues, aComputedValues);
-    }
+  if (aTasks & UpdateAnimationsTasks::CSSTransitions) {
+    MOZ_ASSERT(aOldComputedValues);
+    presContext->TransitionManager()->
+      UpdateTransitions(const_cast<dom::Element*>(aElement), pseudoType,
+                        aOldComputedValues, aComputedValues);
+  }
 
-    if (aTasks & UpdateAnimationsTasks::EffectProperties) {
-      presContext->EffectCompositor()->UpdateEffectProperties(
-        aComputedValues, const_cast<dom::Element*>(aElement), pseudoType);
-    }
+  if (aTasks & UpdateAnimationsTasks::EffectProperties) {
+    presContext->EffectCompositor()->UpdateEffectProperties(
+      aComputedValues, const_cast<dom::Element*>(aElement), pseudoType);
+  }
 
-    if (aTasks & UpdateAnimationsTasks::CascadeResults) {
-      // This task will be scheduled if we detected any changes to !important
-      // rules. We post a restyle here so that we can update the cascade
-      // results in the pre-traversal of the next restyle.
-      presContext->EffectCompositor()
-                 ->RequestRestyle(const_cast<Element*>(aElement),
-                                  pseudoType,
-                                  EffectCompositor::RestyleType::Standard,
-                                  EffectCompositor::CascadeLevel::Animations);
-    }
+  if (aTasks & UpdateAnimationsTasks::CascadeResults) {
+    // This task will be scheduled if we detected any changes to !important
+    // rules. We post a restyle here so that we can update the cascade
+    // results in the pre-traversal of the next restyle.
+    presContext->EffectCompositor()
+               ->RequestRestyle(const_cast<Element*>(aElement),
+                                pseudoType,
+                                EffectCompositor::RestyleType::Standard,
+                                EffectCompositor::CascadeLevel::Animations);
   }
 }
 
