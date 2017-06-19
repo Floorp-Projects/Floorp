@@ -503,12 +503,11 @@ ProcessPriorityManagerImpl::ObserveContentParentDestroyed(nsISupports* aSubject)
   props->GetPropertyAsUint64(NS_LITERAL_STRING("childID"), &childID);
   NS_ENSURE_TRUE_VOID(childID != CONTENT_PROCESS_ID_UNKNOWN);
 
-  mParticularManagers.LookupRemoveIf(childID,
-    [this, childID] (RefPtr<ParticularProcessPriorityManager>& aValue) {
-      aValue->ShutDown();
-      mHighPriorityChildIDs.RemoveEntry(childID);
-      return true; // remove it
-    });
+  if (auto entry = mParticularManagers.Lookup(childID)) {
+    entry.Data()->ShutDown();
+    mHighPriorityChildIDs.RemoveEntry(childID);
+    entry.Remove();
+  }
 }
 
 void
