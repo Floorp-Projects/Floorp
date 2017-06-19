@@ -59,25 +59,43 @@ struct ProfilerBacktraceDestructor
 using UniqueProfilerBacktrace =
   mozilla::UniquePtr<ProfilerBacktrace, ProfilerBacktraceDestructor>;
 
-#if !defined(MOZ_GECKO_PROFILER)
+#if defined(MOZ_GECKO_PROFILER)
 
 // Use these for functions below that must be visible whether the profiler is
 // enabled or not. When the profiler is disabled they are static inline
 // functions (with a simple return value if they are non-void) that should be
 // optimized away during compilation.
-#define PROFILER_FUNC(decl, rv)  static inline decl { return rv; }
-#define PROFILER_FUNC_VOID(decl) static inline void decl {}
+#define PROFILER_FUNC(decl, rv)  decl;
+#define PROFILER_FUNC_VOID(decl) void decl;
+
+#if defined(__GNUC__) || defined(_MSC_VER)
+# define PROFILER_FUNCTION_NAME __FUNCTION__
+#else
+  // From C99, supported by some C++ compilers. Just the raw function name.
+# define PROFILER_FUNCTION_NAME __func__
+#endif
+
+// we want the class and function name but can't easily get that using preprocessor macros
+// __func__ doesn't have the class name and __PRETTY_FUNCTION__ has the parameters
 
 // Insert an RAII object in this scope to enter a pseudo stack frame. Any
 // samples collected in this scope will contain this label in their pseudo
 // stack. The name_space and info arguments must be string literals.
 // Use PROFILER_LABEL_DYNAMIC if you want to add additional / dynamic
 // information to the pseudo stack frame.
-#define PROFILER_LABEL(name_space, info, category) do {} while (0)
+#define PROFILER_LABEL(name_space, info, category) \
+  PROFILER_PLATFORM_TRACING(name_space "::" info) \
+  mozilla::AutoProfilerLabel \
+  PROFILER_APPEND_LINE_NUMBER(profiler_raii)(name_space "::" info, nullptr, \
+                                             __LINE__, category)
 
 // Similar to PROFILER_LABEL, PROFILER_LABEL_FUNC will push/pop the enclosing
 // functon name as the pseudostack label.
-#define PROFILER_LABEL_FUNC(category) do {} while (0)
+#define PROFILER_LABEL_FUNC(category) \
+  PROFILER_PLATFORM_TRACING(PROFILER_FUNCTION_NAME) \
+  mozilla::AutoProfilerLabel \
+  PROFILER_APPEND_LINE_NUMBER(profiler_raii)(PROFILER_FUNCTION_NAME, nullptr, \
+                                             __LINE__, category)
 
 // Enter a pseudo stack frame in this scope and associate it with an
 // additional string.
@@ -96,59 +114,41 @@ using UniqueProfilerBacktrace =
 // PROFILER_LABEL frames take up considerably less space in the profile buffer
 // than PROFILER_LABEL_DYNAMIC frames.
 #define PROFILER_LABEL_DYNAMIC(name_space, info, category, dynamicStr) \
-  do {} while (0)
+  PROFILER_PLATFORM_TRACING(name_space "::" info) \
+  mozilla::AutoProfilerLabel \
+  PROFILER_APPEND_LINE_NUMBER(profiler_raii)(name_space "::" info, dynamicStr, \
+                                             __LINE__, category)
 
 // Insert a marker in the profile timeline. This is useful to delimit something
 // important happening such as the first paint. Unlike profiler_label that are
 // only recorded if a sample is collected while it is active, marker will always
 // be collected.
-#define PROFILER_MARKER(marker_name) do {} while (0)
+#define PROFILER_MARKER(marker_name) profiler_add_marker(marker_name)
 
 // Like PROFILER_MARKER, but with an additional payload.
-//
+#define PROFILER_MARKER_PAYLOAD(marker_name, payload) \
+  profiler_add_marker(marker_name, payload)
+
+#else   // defined(MOZ_GECKO_PROFILER)
+
+#define PROFILER_FUNC(decl, rv)  static inline decl { return rv; }
+#define PROFILER_FUNC_VOID(decl) static inline void decl {}
+
+#define PROFILER_LABEL(name_space, info, category) do {} while (0)
+
+#define PROFILER_LABEL_FUNC(category) do {} while (0)
+
+#define PROFILER_LABEL_DYNAMIC(name_space, info, category, dynamicStr) \
+  do {} while (0)
+
+#define PROFILER_MARKER(marker_name) do {} while (0)
+
 // Note: this is deliberately not defined when MOZ_GECKO_PROFILER is undefined.
 // This macro should not be used in that case -- i.e. all uses of this macro
 // should be guarded by a MOZ_GECKO_PROFILER check -- because payload creation
 // requires allocation, which is something we should not do in builds that
 // don't contain the profiler.
 //#define PROFILER_MARKER_PAYLOAD(marker_name, payload) /* undefined */
-
-#else   // defined(MOZ_GECKO_PROFILER)
-
-#if defined(__GNUC__) || defined(_MSC_VER)
-# define PROFILER_FUNCTION_NAME __FUNCTION__
-#else
-  // From C99, supported by some C++ compilers. Just the raw function name.
-# define PROFILER_FUNCTION_NAME __func__
-#endif
-
-#define PROFILER_FUNC(decl, rv)  decl;
-#define PROFILER_FUNC_VOID(decl) void decl;
-
-// we want the class and function name but can't easily get that using preprocessor macros
-// __func__ doesn't have the class name and __PRETTY_FUNCTION__ has the parameters
-
-#define PROFILER_LABEL(name_space, info, category) \
-  PROFILER_PLATFORM_TRACING(name_space "::" info) \
-  mozilla::AutoProfilerLabel \
-  PROFILER_APPEND_LINE_NUMBER(profiler_raii)(name_space "::" info, nullptr, \
-                                             __LINE__, category)
-
-#define PROFILER_LABEL_FUNC(category) \
-  PROFILER_PLATFORM_TRACING(PROFILER_FUNCTION_NAME) \
-  mozilla::AutoProfilerLabel \
-  PROFILER_APPEND_LINE_NUMBER(profiler_raii)(PROFILER_FUNCTION_NAME, nullptr, \
-                                             __LINE__, category)
-
-#define PROFILER_LABEL_DYNAMIC(name_space, info, category, dynamicStr) \
-  PROFILER_PLATFORM_TRACING(name_space "::" info) \
-  mozilla::AutoProfilerLabel \
-  PROFILER_APPEND_LINE_NUMBER(profiler_raii)(name_space "::" info, dynamicStr, \
-                                             __LINE__, category)
-
-#define PROFILER_MARKER(marker_name) profiler_add_marker(marker_name)
-#define PROFILER_MARKER_PAYLOAD(marker_name, payload) \
-  profiler_add_marker(marker_name, payload)
 
 #endif  // defined(MOZ_GECKO_PROFILER)
 
