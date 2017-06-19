@@ -10,6 +10,7 @@
 #include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/MediaList.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/ServoCSSRuleList.h"
 #include "mozilla/ServoStyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/CSSStyleSheet.h"
