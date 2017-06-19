@@ -480,19 +480,13 @@ class Build(MachCommandBase):
                 # until we suppress them for real.
                 # TODO remove entries/feature once we stop generating warnings
                 # in these directories.
-                LOCAL_SUPPRESS_DIRS = (
-                    'gfx/angle',
-                    'gfx/cairo',
-                    'intl/icu/source',
-                    'js/src/ctypes/libffi',
-                    'media/libtheora',
-                    'media/mtransport/third_party/nICEr',
-                    'media/mtransport/third_party/nrappkit',
-                    'media/webrtc/trunk/webrtc',
-                    'netwerk/sctp/src/netinet',
-                    'nsprpub',
-                    'security/nss',
-                )
+                pathToThirdparty = os.path.join(self.topsrcdir,
+                                                "tools",
+                                               "rewriting",
+                                               "ThirdPartyPaths.txt")
+                with open(pathToThirdparty) as f:
+                    # Normalize the path (no trailing /)
+                    LOCAL_SUPPRESS_DIRS = tuple(d.rstrip('/') for d in f.read().splitlines())
 
                 suppressed_by_dir = collections.Counter()
 
