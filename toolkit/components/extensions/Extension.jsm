@@ -748,6 +748,7 @@ this.Extension = class extends ExtensionData {
     this.parentMessageManager = null;
 
     this.id = addonData.id;
+    this.version = addonData.version;
     this.baseURI = NetUtil.newURI(this.getURL("")).QueryInterface(Ci.nsIURL);
     this.principal = this.createPrincipal();
 
@@ -855,7 +856,7 @@ this.Extension = class extends ExtensionData {
   }
 
   readLocaleFile(locale) {
-    return StartupCache.locales.get([this.id, locale],
+    return StartupCache.locales.get([this.id, this.version, locale],
                                     () => super.readLocaleFile(locale))
       .then(result => {
         this.localeData.messages.set(locale, result);
@@ -863,7 +864,7 @@ this.Extension = class extends ExtensionData {
   }
 
   parseManifest() {
-    return StartupCache.manifests.get([this.id, Locale.getLocale()],
+    return StartupCache.manifests.get([this.id, this.version, Locale.getLocale()],
                                       () => super.parseManifest());
   }
 
