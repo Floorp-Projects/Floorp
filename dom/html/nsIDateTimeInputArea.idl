@@ -30,6 +30,11 @@ interface nsIDateTimeInputArea : nsISupports
   void blurInnerTextBox();
 
   /**
+   * Called from DOM/Layout to know whether the current entered value is valid.
+   */
+  boolean hasBadInput();
+
+  /**
    * Set the current state of the picker, true if it's opened, false otherwise.
    */
   void setPickerState(in boolean isOpen);
