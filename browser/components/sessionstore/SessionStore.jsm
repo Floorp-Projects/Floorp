@@ -3255,7 +3255,6 @@ var SessionStoreInternal = {
     }
 
     let tabbrowser = aWindow.gBrowser;
-    let tabsToRemove = overwriteTabs ? tabbrowser.browsers.length : 0;
     let newTabCount = winData.tabs.length;
     var tabs = [];
 
@@ -3266,9 +3265,18 @@ var SessionStoreInternal = {
 
     // We need to keep track of the initially open tabs so that they
     // can be moved to the end of the restored tabs.
-    let initialTabs = [];
+    let initialTabs;
     if (!overwriteTabs && firstWindow) {
       initialTabs = Array.slice(tabbrowser.tabs);
+    }
+
+    // Get rid of tabs that aren't needed anymore.
+    if (overwriteTabs) {
+      for (let i = tabbrowser.browsers.length - 1; i >= 0; i--) {
+        if (!tabbrowser.tabs[i].selected) {
+          tabbrowser.removeTab(tabbrowser.tabs[i]);
+        }
+      }
     }
 
     let restoreTabsLazily = this._prefBranch.getBoolPref("sessionstore.restore_tabs_lazily") &&
@@ -3279,61 +3287,67 @@ var SessionStoreInternal = {
 
       let userContextId = tabData.userContextId;
       let select = t == selectTab - 1;
-      let createLazyBrowser = restoreTabsLazily && !select && !tabData.pinned;
+      let tab;
 
-      let url = "about:blank";
-      if (createLazyBrowser && tabData.entries && tabData.entries.length) {
-        // Let tabbrowser know the future URI because progress listeners won't
-        // get onLocationChange notification before the browser is inserted.
-        let activeIndex = (tabData.index || tabData.entries.length) - 1;
-        // Ensure the index is in bounds.
-        activeIndex = Math.min(activeIndex, tabData.entries.length - 1);
-        activeIndex = Math.max(activeIndex, 0);
-        url = tabData.entries[activeIndex].url;
+      // Re-use existing selected tab if possible to avoid the overhead of
+      // selecting a new tab.
+      if (select &&
+          tabbrowser.selectedTab.userContextId == userContextId) {
+        tab = tabbrowser.selectedTab;
+        if (!tabData.pinned) {
+          tabbrowser.unpinTab(tab);
+        }
+        tabbrowser.moveTabToEnd();
+        if (aWindow.gMultiProcessBrowser && !tab.linkedBrowser.isRemoteBrowser) {
+          tabbrowser.updateBrowserRemoteness(tab.linkedBrowser, true);
+        }
       }
 
-      // Setting noInitialLabel is a perf optimization. Rendering tab labels
-      // would make resizing the tabs more expensive as we're adding them.
-      // Each tab will get its initial label set in restoreTab.
-      let tab = tabbrowser.addTab(url,
-                                  { createLazyBrowser,
-                                    skipAnimation: true,
-                                    noInitialLabel: true,
-                                    userContextId,
-                                    skipBackgroundNotify: true });
+      // Add a new tab if needed.
+      if (!tab) {
+        let createLazyBrowser = restoreTabsLazily && !select && !tabData.pinned;
 
-      if (select) {
-        // Select a new tab first to prevent the removeTab loop from changing
-        // the selected tab over and over again.
-        tabbrowser.selectedTab = tab;
-
-        // Remove superfluous tabs.
-        for (let i = 0; i < tabsToRemove; i++) {
-          tabbrowser.removeTab(tabbrowser.tabs[0]);
+        let url = "about:blank";
+        if (createLazyBrowser && tabData.entries && tabData.entries.length) {
+          // Let tabbrowser know the future URI because progress listeners won't
+          // get onLocationChange notification before the browser is inserted.
+          let activeIndex = (tabData.index || tabData.entries.length) - 1;
+          // Ensure the index is in bounds.
+          activeIndex = Math.min(activeIndex, tabData.entries.length - 1);
+          activeIndex = Math.max(activeIndex, 0);
+          url = tabData.entries[activeIndex].url;
         }
-        tabsToRemove = 0;
+
+        // Setting noInitialLabel is a perf optimization. Rendering tab labels
+        // would make resizing the tabs more expensive as we're adding them.
+        // Each tab will get its initial label set in restoreTab.
+        tab = tabbrowser.addTab(url,
+                                { createLazyBrowser,
+                                  skipAnimation: true,
+                                  noInitialLabel: true,
+                                  userContextId,
+                                  skipBackgroundNotify: true });
+
+        if (select) {
+          let leftoverTab = tabbrowser.selectedTab;
+          tabbrowser.selectedTab = tab;
+          tabbrowser.removeTab(leftoverTab);
+        }
       }
 
       tabs.push(tab);
 
       if (tabData.hidden) {
-        tabbrowser.hideTab(tabs[t]);
+        tabbrowser.hideTab(tab);
+      }
+
+      if (tabData.pinned) {
+        tabbrowser.pinTab(tab);
       }
     }
 
-    for (let i = 0; i < newTabCount; ++i) {
-      if (winData.tabs[i].pinned) {
-        tabbrowser.pinTab(tabs[i]);
-      } else {
-        // Pinned tabs are clustered at the start of the tab strip. As
-        // soon as we reach a tab that isn't pinned, we know there aren't
-        // any more for this window.
-        break;
-      }
-    }
-
-    if (!overwriteTabs && firstWindow) {
-      // Move the originally open tabs to the end
+    // Move the originally open tabs to the end.
+    if (initialTabs) {
       let endPosition = tabbrowser.tabs.length - 1;
       for (let i = 0; i < initialTabs.length; i++) {
         tabbrowser.unpinTab(initialTabs[i]);
