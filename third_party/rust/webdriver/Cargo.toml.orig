@@ -1,0 +1,20 @@
+[package]
+name = "webdriver"
+version = "0.27.0"
+authors = ["Mozilla Tools and Automation <tools@lists.mozilla.com>"]
+description = "Library implementing the wire protocol for the W3C WebDriver specification"
+documentation = "https://docs.rs/webdriver"
+repository = "https://github.com/mozilla/webdriver-rust"
+readme = "README.md"
+keywords = ["webdriver", "browser", "automation", "protocol", "w3c"]
+license = "MPL-2.0"
+
+[dependencies]
+backtrace = "0.3"
+cookie = {version = "0.9", default-features = false}
+hyper = "0.10"
+log = "0.3"
+regex = "0.2"
+rustc-serialize = "0.3"
+time = "0.1"
+url = "1"
