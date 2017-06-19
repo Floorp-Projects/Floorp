@@ -40,7 +40,7 @@ public:
 
   // Add to the buffer a sample start (ThreadId) entry for aThreadId. Also,
   // record the resulting generation and index in |aLS| if it's non-null.
-  void addTagThreadId(int aThreadId, LastSample* aLS);
+  void addTagThreadId(int aThreadId, LastSample* aLS = nullptr);
 
   void StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
                            double aSinceTime, JSContext* cx,
