@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ImageView
+        android:id="@+id/url_bar_entry"
+        style="@style/UrlBar.Entry"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/url_bar_entry"
+        android:clickable="false"
+        android:duplicateParentState="true"
+        android:focusable="false" />
+
+    <!-- The attributes statically defined here are for the expanded
+         forward button. We translate/hide the forward button in code -
+         see BrowserToolbarTablet.animateForwardButton.
+
+         (for alpha) We want the button hidden to start so alpha=0.
+
+         (for layout_width) The visible area of the forward button is a
+	     nav_button_width and the non-visible area slides halfway
+	     under the back button. This non-visible area is used to
+	     ensure the forward button background fully covers the space
+	     to the right of the back button.
+
+         (for layout_marginLeft) We left align with back,
+         but only need to hide halfway underneath.
+
+         (for paddingLeft) We use left padding to center the
+         arrow in the visible area as opposed to the true width. -->
+    <org.mozilla.gecko.toolbar.ForwardButton
+        android:id="@+id/forward"
+        style="@style/UrlBar.ForwardButton"
+        android:layout_width="@dimen/tablet_nav_button_width_plus_half"
+        android:layout_height="match_parent"
+        android:layout_centerVertical="true"
+        android:layout_gravity="center_vertical"
+        android:layout_marginBottom="11.5dp"
+        android:layout_marginTop="11.5dp"
+        android:alpha="0"
+        android:background="@drawable/url_bar_nav_button"
+        android:contentDescription="@string/forward"
+        android:paddingBottom="0dp"
+        android:paddingTop="0dp"
+        android:src="@drawable/ic_menu_forward" />
+
+    <org.mozilla.gecko.toolbar.BackButton
+        android:id="@+id/back"
+        style="@style/UrlBar.BackButton"
+        android:layout_width="@dimen/tablet_nav_button_width"
+        android:layout_height="@dimen/tablet_nav_button_width"
+        android:layout_centerVertical="true"
+        android:background="@drawable/url_bar_nav_button"
+        android:contentDescription="@string/back"
+        android:src="@drawable/ic_menu_back" />
+
+    <org.mozilla.gecko.toolbar.ToolbarEditLayout
+        android:id="@+id/edit_layout"
+        style="@style/UrlBar.EditLayout"
+        android:orientation="horizontal"
+        android:visibility="gone" />
+
+    <!-- Note: we set the padding on the site security icon to increase its tappable area. -->
+    <org.mozilla.gecko.toolbar.ToolbarDisplayLayout
+        android:id="@+id/display_layout"
+        style="@style/UrlBar.DisplayLayout" />
+
+    <LinearLayout
+        android:id="@+id/menu_items"
+        style="@style/UrlBar.MenuItem"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
+        android:orientation="horizontal" />
+
+    <org.mozilla.gecko.widget.themed.ThemedImageButton
+        android:id="@+id/tabs"
+        style="@style/UrlBar.Tabs"
+        android:layout_alignWithParentIfMissing="true"
+        android:background="@drawable/browser_toolbar_action_bar_button" />
+
+    <!-- In a 56x60dp space, centering 24dp image will leave 16x18dp. -->
+    <org.mozilla.gecko.toolbar.TabCounter
+        android:id="@+id/tabs_counter"
+        style="@style/UrlBar.TabCounter"
+        android:layout_alignBottom="@id/tabs"
+        android:layout_alignTop="@id/tabs"
+        android:layout_marginBottom="18dp"
+        android:layout_marginTop="18dp"
+        android:background="@drawable/tabs_count" />
+
+    <!-- Bug 1144707. Use clickable View instead of menu button margin to prevent
+         edit mode actiivation when user clicks on the edge of the screen. -->
+    <View
+        android:id="@id/menu_margin"
+        style="@style/UrlBar.MenuMargin"
+        android:layout_width="6dp"
+        android:layout_height="match_parent"
+        android:clickable="true"
+        android:visibility="gone" />
+
+    <org.mozilla.gecko.widget.themed.ThemedFrameLayout
+        android:id="@+id/menu"
+        style="@style/UrlBar.Menu"
+        android:layout_alignWithParentIfMissing="true"
+        android:background="@drawable/browser_toolbar_action_bar_button"
+        android:contentDescription="@string/menu">
+
+        <org.mozilla.gecko.widget.themed.ThemedImageView
+            android:id="@+id/menu_icon"
+            style="@style/UrlBar.ImageButton.BrowserToolbarColors"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/browser_toolbar_menu_icon_height"
+            android:layout_gravity="center"
+            android:scaleType="centerInside"
+            android:src="@drawable/menu" />
+
+    </org.mozilla.gecko.widget.themed.ThemedFrameLayout>
+
+    <!-- We draw after the menu items so when they are hidden, the cancel button,
+         which is thus drawn on top, may be pressed. -->
+    <org.mozilla.gecko.widget.themed.ThemedImageView
+        android:id="@+id/edit_cancel"
+        style="@style/UrlBar.EditCancel"
+        android:layout_width="@dimen/browser_toolbar_icon_width"
+        android:layout_height="@dimen/browser_toolbar_height"
+        android:layout_weight="0.0"
+        android:contentDescription="@string/edit_mode_cancel"
+        android:src="@drawable/close_edit_mode_selector"
+        android:visibility="gone" />
+
+</merge>
