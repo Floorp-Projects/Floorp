@@ -131,6 +131,74 @@ include('build/moz.configure/headers.configure',
 include('build/moz.configure/warnings.configure',
         when='--enable-compile-environment')
 
+option(env='SO_VERSION', nargs=1, help='Shared library version for OpenBSD systems')
+
+@depends(target, target_is_windows, target_is_darwin, building_with_gcc, 'SO_VERSION')
+def library_name_info(target, is_windows, is_darwin, building_with_gcc, so_version):
+    dll_prefix = 'lib'
+    dll_suffix = '.so'
+    lib_prefix = 'lib'
+    lib_suffix = 'a'
+    rust_lib_prefix = 'lib'
+    rust_lib_suffix = 'a'
+    obj_suffix = 'o'
+    import_lib_suffix = ''
+
+    if is_windows:
+        dll_prefix = ''
+        dll_suffix = '.dll'
+
+        rust_lib_prefix = ''
+        rust_lib_suffix = 'lib'
+
+        # It's OK if we're doing an artifact build and building_with_gcc is
+        # inaccurate.  Artifact builds with mingw ought to be pretty rare anyway.
+        if building_with_gcc:
+            import_lib_suffix = 'a'
+        else:
+            import_lib_suffix = 'lib'
+            lib_prefix = ''
+            lib_suffix = 'lib'
+            obj_suffix = 'obj'
+    elif is_darwin:
+        dll_suffix = '.dylib'
+    elif target.kernel == 'OpenBSD':
+        if so_version:
+            dll_suffix = '.so.%s' % so_version
+        else:
+            dll_suffix = '.so.1.0'
+
+    assert dll_suffix[0] == '.'
+    assert obj_suffix[0] != '.'
+    assert lib_suffix[0] != '.'
+    assert rust_lib_suffix[0] != '.'
+
+    return namespace(
+        dll_prefix=dll_prefix,
+        dll_suffix=dll_suffix,
+
+        lib_prefix=lib_prefix,
+        lib_suffix=lib_suffix,
+
+        rust_lib_prefix=rust_lib_prefix,
+        rust_lib_suffix=rust_lib_suffix,
+
+        obj_suffix=obj_suffix,
+        import_lib_suffix=import_lib_suffix,
+    )
+
+set_config('DLL_PREFIX', library_name_info.dll_prefix)
+set_config('DLL_SUFFIX', library_name_info.dll_suffix)
+set_config('LIB_PREFIX', library_name_info.lib_prefix)
+set_config('LIB_SUFFIX', library_name_info.lib_suffix)
+set_config('RUST_LIB_PREFIX', library_name_info.rust_lib_prefix)
+set_config('RUST_LIB_SUFFIX', library_name_info.rust_lib_suffix)
+set_config('OBJ_SUFFIX', library_name_info.obj_suffix)
+# Lots of compilation tests depend on this variable being present.
+add_old_configure_assignment('OBJ_SUFFIX', library_name_info.obj_suffix)
+set_config('IMPORT_LIB_SUFFIX', library_name_info.import_lib_suffix)
+set_define('MOZ_DLL_SUFFIX', depends(library_name_info)(lambda lni: '"%s"' % lni.dll_suffix))
+
 include(include_project_configure)
 
 @depends('--help')
