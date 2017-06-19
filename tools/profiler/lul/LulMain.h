@@ -184,7 +184,6 @@ public:
     : mContext(0)
     , mCFI(0)
     , mFP(0)
-    , mScanned(0)
   {}
 
   template <typename S>
@@ -192,7 +191,6 @@ public:
     : mContext(aOther.mContext)
     , mCFI(aOther.mCFI)
     , mFP(aOther.mFP)
-    , mScanned(aOther.mScanned)
   {}
 
   template <typename S>
@@ -201,21 +199,18 @@ public:
     mContext = aOther.mContext;
     mCFI     = aOther.mCFI;
     mFP      = aOther.mFP;
-    mScanned = aOther.mScanned;
     return *this;
   }
 
   template <typename S>
   uint32_t operator-(const LULStats<S>& aOther) {
     return (mContext - aOther.mContext) +
-           (mCFI - aOther.mCFI) + (mFP - aOther.mFP) +
-           (mScanned - aOther.mScanned);
+           (mCFI - aOther.mCFI) + (mFP - aOther.mFP);
   }
 
   T mContext; // Number of context frames
   T mCFI;     // Number of CFI/EXIDX frames
   T mFP;      // Number of frame-pointer recovered frames
-  T mScanned; // Number of scanned frames
 };
 
 
@@ -320,12 +315,6 @@ public:
   // the SP values might be invalid, in which case the value zero will
   // be written in the relevant frameSPs[] slot.
   //
-  // Unwinding may optionally use stack scanning.  The maximum number
-  // of frames that may be recovered by stack scanning is
-  // |aScannedFramesAllowed| and the actual number recovered is
-  // written into *aScannedFramesAcquired.  |aScannedFramesAllowed|
-  // must be less than or equal to |aFramesAvail|.
-  //
   // This function assumes that the SP values increase as it unwinds
   // away from the innermost frame -- that is, that the stack grows
   // down.  It monitors SP values as it unwinds to check they
@@ -336,17 +325,13 @@ public:
   // any Admin calls whilst in Unwind mode.
   // MOZ_CRASHes if the calling thread is not registered for unwinding.
   //
-  // Up to aScannedFramesAllowed stack-scanned frames may be recovered.
-  //
   // The calling thread must previously have been registered via a call to
   // RegisterSampledThread.
   void Unwind(/*OUT*/uintptr_t* aFramePCs,
               /*OUT*/uintptr_t* aFrameSPs,
               /*OUT*/size_t* aFramesUsed,
               /*OUT*/size_t* aFramePointerFramesAcquired,
-              /*OUT*/size_t* aScannedFramesAcquired,
               size_t aFramesAvail,
-              size_t aScannedFramesAllowed,
               UnwindRegs* aStartRegs, StackImage* aStackImg);
 
   // The logging sink.  Call to send debug strings to the caller-
