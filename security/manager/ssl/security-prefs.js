@@ -124,7 +124,7 @@ pref("security.cert_pinning.max_max_age_seconds", 5184000);
 // HSTS Priming
 // If a request is mixed-content, send an HSTS priming request to attempt to
 // see if it is available over HTTPS.
-#ifdef RELEASE_OR_BETA
+#ifdef RELEASE
 // Don't change the order of evaluation of mixed-content and HSTS upgrades in
 // order to be most compatible with current standards
 pref("security.mixed_content.send_hsts_priming", false);
