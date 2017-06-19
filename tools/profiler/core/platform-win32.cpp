@@ -264,6 +264,7 @@ PlatformInit(PSLockRef aLock)
 {
 }
 
+#if defined(HAVE_NATIVE_UNWIND)
 void
 Registers::SyncPopulate()
 {
@@ -280,4 +281,5 @@ Registers::SyncPopulate()
   mFP = reinterpret_cast<Address>(context.Ebp);
 #endif
 }
+#endif
 
