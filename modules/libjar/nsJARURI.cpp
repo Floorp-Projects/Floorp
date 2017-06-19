@@ -288,6 +288,15 @@ nsJARURI::SetSpecWithBase(const nsACString &aSpec, nsIURI* aBaseURL)
 
     ++begin; // now we're past the "jar:"
 
+    nsACString::const_iterator frag = begin;
+    while (frag != end && *frag != '#') {
+        ++frag;
+    }
+    if (frag != end) {
+        // there was a fragment, mark that as the end of the URL to scan
+        end = frag;
+    }
+
     // Search backward from the end for the "!/" delimiter. Remember, jar URLs
     // can nest, e.g.:
     //    jar:jar:http://www.foo.com/bar.jar!/a.jar!/b.html
@@ -312,6 +321,7 @@ nsJARURI::SetSpecWithBase(const nsACString &aSpec, nsIURI* aBaseURL)
     while (*delim_end == '/')
         ++delim_end;
 
+    aSpec.EndReading(end); // set to the original 'end'
     return SetJAREntry(Substring(delim_end, end));
 }
 
