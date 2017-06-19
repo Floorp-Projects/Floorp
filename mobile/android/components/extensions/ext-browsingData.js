@@ -97,6 +97,9 @@ this.browsingData = class extends ExtensionAPI {
         removeDownloads(options) {
           return Sanitizer.clearItem("downloadHistory", options.since);
         },
+        removeFormData(options) {
+          return Sanitizer.clearItem("formdata", options.since);
+        },
       },
     };
   }
