@@ -102,6 +102,12 @@ ProfileAutoCompleteResult.prototype = {
         "additional-name",
         "family-name",
       ],
+      "street-address": [
+        "street-address",
+        "address-line1",
+        "address-line2",
+        "address-line3",
+      ],
       "country-name": [
         "country",
         "country-name",
