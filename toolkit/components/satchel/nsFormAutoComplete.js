@@ -155,8 +155,6 @@ function FormAutoComplete() {
 }
 
 /**
- * FormAutoComplete
- *
  * Implements the nsIFormAutoComplete interface in the main process.
  */
 FormAutoComplete.prototype = {
