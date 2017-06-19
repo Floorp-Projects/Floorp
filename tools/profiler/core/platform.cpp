@@ -641,10 +641,8 @@ public:
 #endif
   {}
 
-  // Fills in mContext, mPC, mSP, mFP, and mLR for a synchronous sample.
-#if defined(GP_OS_linux) || defined(GP_OS_android)
-  void SyncPopulate(ucontext_t* aContext);
-#else
+#if defined(HAVE_NATIVE_UNWIND)
+  // Fills in mPC, mSP, mFP, mLR, and mContext for a synchronous sample.
   void SyncPopulate();
 #endif
 
@@ -2836,12 +2834,7 @@ profiler_get_backtrace()
   Registers regs;
 
 #if defined(HAVE_NATIVE_UNWIND)
-#if defined(GP_OS_linux) || defined(GP_OS_android)
-  ucontext_t context;
-  regs.SyncPopulate(&context);
-#else
   regs.SyncPopulate();
-#endif
 #endif
 
   auto buffer = MakeUnique<ProfileBuffer>(PROFILER_GET_BACKTRACE_ENTRIES);

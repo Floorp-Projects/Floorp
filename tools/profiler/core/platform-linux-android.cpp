@@ -523,13 +523,18 @@ PlatformInit(PSLockRef aLock)
 
 #endif
 
-void
-Registers::SyncPopulate(ucontext_t* aContext)
-{
-  MOZ_ASSERT(aContext);
+#if defined(HAVE_NATIVE_UNWIND)
+// Context used by synchronous samples. It's safe to have a single one because
+// only one synchronous sample can be taken at a time (due to
+// profiler_get_backtrace()'s PSAutoLock).
+ucontext_t sSyncUContext;
 
-  if (!getcontext(aContext)) {
-    FillInRegs(*this, aContext);
+void
+Registers::SyncPopulate()
+{
+  if (!getcontext(&sSyncUContext)) {
+    FillInRegs(*this, &sSyncUContext);
   }
 }
+#endif
 

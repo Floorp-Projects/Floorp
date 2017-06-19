@@ -192,6 +192,7 @@ PlatformInit(PSLockRef aLock)
 {
 }
 
+#if defined(HAVE_NATIVE_UNWIND)
 void
 Registers::SyncPopulate()
 {
@@ -208,4 +209,5 @@ Registers::SyncPopulate()
   mPC = reinterpret_cast<Address>(__builtin_extract_return_addr(
                                     __builtin_return_address(0)));
 }
+#endif
 
