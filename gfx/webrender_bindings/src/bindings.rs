@@ -532,7 +532,7 @@ pub unsafe extern "C" fn wr_thread_pool_new() -> *mut WrThreadPool {
             register_thread_with_profiler(format!("WebRender:Worker#{}", idx));
         });
 
-    let workers = Arc::new(rayon::ThreadPool::new(worker_config).unwrap());        
+    let workers = Arc::new(rayon::ThreadPool::new(worker_config).unwrap());
 
     Box::into_raw(Box::new(WrThreadPool(workers)))
 }
@@ -1279,6 +1279,48 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
                     colorf,
                     Au::from_f32_px(glyph_size),
                     glyph_options);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_push_text_shadow(state: &mut WrState,
+                                         bounds: LayoutRect,
+                                         clip: LayoutRect,
+                                         shadow: TextShadow) {
+    assert!(unsafe { is_in_main_thread() });
+
+    state.frame_builder.dl_builder.push_text_shadow(bounds, Some(LocalClip::Rect(clip.into())), shadow.into());
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_pop_text_shadow(state: &mut WrState) {
+    assert!(unsafe { is_in_main_thread() });
+
+    state.frame_builder.dl_builder.pop_text_shadow();
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_push_line(state: &mut WrState,
+                                  clip: LayoutRect,
+                                  baseline: f32,
+                                  start: f32,
+                                  end: f32,
+                                  orientation: LineOrientation,
+                                  width: f32,
+                                  color: ColorF,
+                                  style: LineStyle) {
+    assert!(unsafe { is_in_main_thread() });
+
+    state.frame_builder
+         .dl_builder
+         .push_line(Some(LocalClip::Rect(clip.into())),
+                    baseline,
+                    start,
+                    end,
+                    orientation,
+                    width,
+                    color,
+                    style);
+
 }
 
 #[no_mangle]
