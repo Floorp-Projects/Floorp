@@ -6377,7 +6377,7 @@ PresShell::Paint(nsView*         aViewToPaint,
         props = Move(LayerProperties::CloneFrom(layerManager->GetRoot()));
       }
 
-      MaybeSetupTransactionIdAllocator(layerManager, aViewToPaint);
+      MaybeSetupTransactionIdAllocator(layerManager, presContext);
 
       if (layerManager->EndEmptyTransaction((aFlags & PAINT_COMPOSITE) ?
             LayerManager::END_DEFAULT : LayerManager::END_NO_COMPOSITE)) {
@@ -6444,7 +6444,7 @@ PresShell::Paint(nsView*         aViewToPaint,
     root->SetVisibleRegion(LayerIntRegion::FromUnknownRegion(bounds));
     layerManager->SetRoot(root);
   }
-  MaybeSetupTransactionIdAllocator(layerManager, aViewToPaint);
+  MaybeSetupTransactionIdAllocator(layerManager, presContext);
   layerManager->EndTransaction(nullptr, nullptr, (aFlags & PAINT_COMPOSITE) ?
     LayerManager::END_DEFAULT : LayerManager::END_NO_COMPOSITE);
 }
