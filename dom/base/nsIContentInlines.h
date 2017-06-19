@@ -100,4 +100,10 @@ nsINode::GetFlattenedTreeParentNodeForStyle() const
   return ::GetFlattenedTreeParentNode<nsIContent::eForStyle>(this);
 }
 
+inline bool
+nsINode::NodeOrAncestorHasDirAuto() const
+{
+  return AncestorHasDirAuto() || (IsElement() && AsElement()->HasDirAuto());
+}
+
 #endif // nsIContentInlines_h
