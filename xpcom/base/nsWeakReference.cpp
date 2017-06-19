@@ -37,6 +37,7 @@ public:
   // nsIWeakReference...
   NS_DECL_NSIWEAKREFERENCE
   size_t SizeOfOnlyThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+  bool IsAlive() const override { return mReferent != nullptr; }
 
 private:
   MOZ_WEAKREF_DECL_OWNINGTHREAD
