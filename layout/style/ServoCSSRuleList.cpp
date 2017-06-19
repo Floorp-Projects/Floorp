@@ -275,7 +275,7 @@ ServoCSSRuleList::InsertRule(const nsAString& aRule, uint32_t aIndex)
       // may be reused and the reused stylesheet doesn't refer to the
       // right raw sheet, which is bug 1368381. This should be converted
       // to an assertion after that bug gets fixed.
-      if (servoSheet->RawSheet() == raw) {
+      if (servoSheet->RawSheet() != raw) {
         NS_WARNING("New child sheet should always be prepended to the list");
         return static_cast<ServoStyleSheet*>(nullptr);
       }
