@@ -39,7 +39,7 @@ AnimationState::UpdateState(bool aAnimationFinished,
                                           DefaultSurfaceFlags(),
                                           PlaybackType::eAnimated));
 
-  return UpdateStateInternal(result, aAnimationFinished, aSize);
+  return UpdateStateInternal(result, aAnimationFinished, aSize, aAllowInvalidation);
 }
 
 const gfx::IntRect
