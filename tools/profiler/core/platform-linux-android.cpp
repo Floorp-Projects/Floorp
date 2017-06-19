@@ -76,7 +76,7 @@ Thread::GetCurrentId()
 }
 
 static void
-FillInRegs(Registers& aRegs, ucontext_t* aContext)
+PopulateRegsFromContext(Registers& aRegs, ucontext_t* aContext)
 {
   aRegs.mContext = aContext;
   mcontext_t& mcontext = aContext->uc_mcontext;
@@ -359,7 +359,7 @@ Sampler::SuspendAndSampleAndResumeThread(PSLockRef aLock,
 
   // Extract the current register values.
   Registers regs;
-  FillInRegs(regs, &sSigHandlerCoordinator->mUContext);
+  PopulateRegsFromContext(regs, &sSigHandlerCoordinator->mUContext);
   aProcessRegs(regs);
 
   //----------------------------------------------------------------//
@@ -533,7 +533,7 @@ void
 Registers::SyncPopulate()
 {
   if (!getcontext(&sSyncUContext)) {
-    FillInRegs(*this, &sSyncUContext);
+    PopulateRegsFromContext(*this, &sSyncUContext);
   }
 }
 #endif
