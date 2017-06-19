@@ -10479,6 +10479,47 @@ nsIFrame::IsScrolledOutOfView()
   return IsFrameScrolledOutOfView(this);
 }
 
+gfx::Matrix
+nsIFrame::ComputeWidgetTransform()
+{
+  const nsStyleUIReset* uiReset = StyleUIReset();
+  if (!uiReset->mSpecifiedWindowTransform) {
+    return gfx::Matrix();
+  }
+
+  nsStyleTransformMatrix::TransformReferenceBox refBox;
+  refBox.Init(GetSize());
+
+  nsPresContext* presContext = PresContext();
+  int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
+  RuleNodeCacheConditions dummy;
+  bool dummyBool;
+  gfx::Matrix4x4 matrix =
+    nsStyleTransformMatrix::ReadTransforms(uiReset->mSpecifiedWindowTransform->mHead,
+                                           StyleContext(),
+                                           presContext,
+                                           dummy,
+                                           refBox,
+                                           float(appUnitsPerDevPixel),
+                                           &dummyBool);
+
+  // Apply the -moz-window-transform-origin translation to the matrix.
+  Point transformOrigin =
+    nsStyleTransformMatrix::Convert2DPosition(uiReset->mWindowTransformOrigin,
+                                              refBox, appUnitsPerDevPixel);
+  matrix.ChangeBasis(Point3D(transformOrigin.x, transformOrigin.y, 0));
+
+  gfx::Matrix result2d;
+  if (!matrix.CanDraw2D(&result2d)) {
+    // FIXME: It would be preferable to reject non-2D transforms at parse time.
+    NS_WARNING("-moz-window-transform does not describe a 2D transform, "
+               "but only 2d transforms are supported");
+    return gfx::Matrix();
+  }
+
+  return result2d;
+}
+
 static already_AddRefed<nsIWidget>
 GetWindowWidget(nsPresContext* aPresContext)
 {
@@ -10514,6 +10555,7 @@ nsIFrame::UpdateWidgetProperties()
   }
   if (nsCOMPtr<nsIWidget> widget = GetWindowWidget(presContext)) {
     widget->SetWindowOpacity(StyleUIReset()->mWindowOpacity);
+    widget->SetWindowTransform(ComputeWidgetTransform());
   }
 }
 
