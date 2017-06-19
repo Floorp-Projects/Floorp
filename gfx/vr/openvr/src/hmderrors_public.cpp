@@ -42,6 +42,16 @@ const char *GetEnglishStringForHmdError( vr::EVRInitError eError )
 	case VRInitError_Init_Internal:				return "vrserver internal error (124)";
 	case VRInitError_Init_HmdDriverIdIsNone:	return "Hmd DriverId is invalid (125)";
 	case VRInitError_Init_HmdNotFoundPresenceFailed:	return "Hmd Not Found Presence Failed (126)";
+	case VRInitError_Init_VRMonitorNotFound: return "VR Monitor Not Found (127)";
+	case VRInitError_Init_VRMonitorStartupFailed: return "VR Monitor startup failed (128)";
+	case VRInitError_Init_LowPowerWatchdogNotSupported: return "Low Power Watchdog Not Supported (129)";
+	case VRInitError_Init_InvalidApplicationType: return "Invalid Application Type (130)";
+	case VRInitError_Init_NotAvailableToWatchdogApps: return "Not available to watchdog apps (131)";
+	case VRInitError_Init_WatchdogDisabledInSettings: return "Watchdog disabled in settings (132)";
+	case VRInitError_Init_VRDashboardNotFound: return "VR Dashboard Not Found (133)";
+	case VRInitError_Init_VRDashboardStartupFailed: return "VR Dashboard startup failed (134)";
+	case VRInitError_Init_VRHomeNotFound: return "VR Home Not Found (135)";
+	case VRInitError_Init_VRHomeStartupFailed: return "VR home startup failed (136)";
 
 	case VRInitError_Driver_Failed:				return "Driver Failed (200)";
 	case VRInitError_Driver_Unknown:			return "Driver Not Known (201)";
@@ -71,6 +81,8 @@ const char *GetEnglishStringForHmdError( vr::EVRInitError eError )
 	case VRInitError_Compositor_D3D11HardwareRequired:		return "Compositor failed to find DX11 hardware (401)";
 	case VRInitError_Compositor_FirmwareRequiresUpdate:		return "Compositor requires mandatory firmware update (402)";
 	case VRInitError_Compositor_OverlayInitFailed:			return "Compositor initialization succeeded, but overlay init failed (403)";
+	case VRInitError_Compositor_ScreenshotsInitFailed:			return "Compositor initialization succeeded, but screenshot init failed (404)";
+	case VRInitError_Compositor_UnableToCreateDevice:			return "Compositor unable to create graphics device (405)";
 
 	// Oculus
 	case VRInitError_VendorSpecific_UnableToConnectToOculusRuntime:	return "Unable to connect to Oculus Runtime (1000)";
@@ -141,6 +153,10 @@ const char *GetIDForVRInitError( vr::EVRInitError eError )
 		RETURN_ENUM_AS_STRING( VRInitError_Init_InvalidApplicationType );
 		RETURN_ENUM_AS_STRING( VRInitError_Init_NotAvailableToWatchdogApps );
 		RETURN_ENUM_AS_STRING( VRInitError_Init_WatchdogDisabledInSettings );
+		RETURN_ENUM_AS_STRING( VRInitError_Init_VRDashboardNotFound );
+		RETURN_ENUM_AS_STRING( VRInitError_Init_VRDashboardStartupFailed );
+		RETURN_ENUM_AS_STRING( VRInitError_Init_VRHomeNotFound );
+		RETURN_ENUM_AS_STRING( VRInitError_Init_VRHomeStartupFailed );
 
 		RETURN_ENUM_AS_STRING( VRInitError_Init_HmdDriverIdIsNone );
 		RETURN_ENUM_AS_STRING( VRInitError_Init_HmdNotFoundPresenceFailed );
@@ -173,6 +189,8 @@ const char *GetIDForVRInitError( vr::EVRInitError eError )
 		RETURN_ENUM_AS_STRING( VRInitError_Compositor_D3D11HardwareRequired );
 		RETURN_ENUM_AS_STRING( VRInitError_Compositor_FirmwareRequiresUpdate );
 		RETURN_ENUM_AS_STRING( VRInitError_Compositor_OverlayInitFailed );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_ScreenshotsInitFailed );
+		RETURN_ENUM_AS_STRING( VRInitError_Compositor_UnableToCreateDevice );
 
 		// Oculus
 		RETURN_ENUM_AS_STRING( VRInitError_VendorSpecific_UnableToConnectToOculusRuntime);
