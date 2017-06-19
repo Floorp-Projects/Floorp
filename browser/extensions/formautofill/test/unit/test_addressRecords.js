@@ -359,7 +359,7 @@ add_task(async function test_mergeToStorage() {
   let anotherAddress = profileStorage.addresses._clone(TEST_ADDRESS_2);
   profileStorage.addresses.add(anotherAddress);
   anotherAddress.email = "timbl@w3.org";
-  do_check_eq(profileStorage.addresses.mergeToStorage(anotherAddress), true);
+  do_check_eq(profileStorage.addresses.mergeToStorage(anotherAddress).length, 2);
   do_check_eq(profileStorage.addresses.getAll()[1].email, anotherAddress.email);
   do_check_eq(profileStorage.addresses.getAll()[2].email, anotherAddress.email);
 });
