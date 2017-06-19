@@ -7073,18 +7073,47 @@ nsDisplayTransform::ComputePerspectiveMatrix(const nsIFrame* aFrame,
 
   TransformReferenceBox refBox(cbFrame);
 
-  Point perspectiveOrigin =
-    nsStyleTransformMatrix::Convert2DPosition(cbDisplay->mPerspectiveOrigin,
-                                              refBox, aAppUnitsPerPixel);
+  /* Allows us to access named variables by index. */
+  Point3D perspectiveOrigin;
+  gfx::Float* coords[2] = {&perspectiveOrigin.x, &perspectiveOrigin.y};
+  TransformReferenceBox::DimensionGetter dimensionGetter[] =
+    { &TransformReferenceBox::Width, &TransformReferenceBox::Height };
+
+  /* For both of the coordinates, if the value of perspective-origin is a
+   * percentage, it's relative to the size of the frame.  Otherwise, if it's
+   * a distance, it's already computed for us!
+   */
+  for (uint8_t index = 0; index < 2; ++index) {
+    /* If the -transform-origin specifies a percentage, take the percentage
+     * of the size of the box.
+     */
+    const nsStyleCoord &coord = cbDisplay->mPerspectiveOrigin[index];
+    if (coord.GetUnit() == eStyleUnit_Calc) {
+      const nsStyleCoord::Calc *calc = coord.GetCalcValue();
+      *coords[index] =
+        NSAppUnitsToFloatPixels((refBox.*dimensionGetter[index])(), aAppUnitsPerPixel) *
+          calc->mPercent +
+        NSAppUnitsToFloatPixels(calc->mLength, aAppUnitsPerPixel);
+    } else if (coord.GetUnit() == eStyleUnit_Percent) {
+      *coords[index] =
+        NSAppUnitsToFloatPixels((refBox.*dimensionGetter[index])(), aAppUnitsPerPixel) *
+        coord.GetPercentValue();
+    } else {
+      MOZ_ASSERT(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
+      *coords[index] =
+        NSAppUnitsToFloatPixels(coord.GetCoordValue(), aAppUnitsPerPixel);
+    }
+  }
 
   /* GetOffsetTo computes the offset required to move from 0,0 in cbFrame to 0,0
    * in aFrame. Although we actually want the inverse of this, it's faster to
    * compute this way.
    */
   nsPoint frameToCbOffset = -aFrame->GetOffsetTo(cbFrame);
-  Point frameToCbGfxOffset(
+  Point3D frameToCbGfxOffset(
             NSAppUnitsToFloatPixels(frameToCbOffset.x, aAppUnitsPerPixel),
-            NSAppUnitsToFloatPixels(frameToCbOffset.y, aAppUnitsPerPixel));
+            NSAppUnitsToFloatPixels(frameToCbOffset.y, aAppUnitsPerPixel),
+            0.0f);
 
   /* Move the perspective origin to be relative to aFrame, instead of relative
    * to the containing block which is how it was specified in the style system.
@@ -7094,7 +7123,7 @@ nsDisplayTransform::ComputePerspectiveMatrix(const nsIFrame* aFrame,
   aOutMatrix._34 =
     -1.0 / NSAppUnitsToFloatPixels(perspective, aAppUnitsPerPixel);
 
-  aOutMatrix.ChangeBasis(Point3D(perspectiveOrigin.x, perspectiveOrigin.y, 0));
+  aOutMatrix.ChangeBasis(perspectiveOrigin);
   return true;
 }
 

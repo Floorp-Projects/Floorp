@@ -1042,8 +1042,7 @@ protected:
   bool ParseListStyleType(nsCSSValue& aValue);
   bool ParseMargin();
   bool ParseClipPath(nsCSSValue& aValue);
-  bool ParseTransform(bool aIsPrefixed, nsCSSPropertyID aProperty,
-                      bool aDisallowRelativeValues = false);
+  bool ParseTransform(bool aIsPrefixed, bool aDisallowRelativeValues = false);
   bool ParseObjectPosition();
   bool ParseOutline();
   bool ParseOverflow();
@@ -1386,7 +1385,7 @@ protected:
                               InfallibleTArray<nsCSSValue>& aOutput);
 
   /* Functions for transform-origin/perspective-origin Parsing */
-  bool ParseTransformOrigin(nsCSSPropertyID aProperty);
+  bool ParseTransformOrigin(bool aPerspective);
 
   /* Functions for filter parsing */
   bool ParseFilter();
@@ -1947,8 +1946,7 @@ CSSParserImpl::ParseTransformProperty(const nsAString& aPropValue,
   css::ErrorReporter reporter(scanner, mSheet, mChildLoader, nullptr);
   InitScanner(scanner, reporter, nullptr, nullptr, nullptr);
 
-  bool parsedOK = ParseTransform(false, eCSSProperty_transform,
-                                 aDisallowRelativeValues);
+  bool parsedOK = ParseTransform(false, aDisallowRelativeValues);
   // We should now be at EOF
   if (parsedOK && GetToken(true)) {
     parsedOK = false;
@@ -11869,14 +11867,13 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSPropertyID aPropID)
   case eCSSProperty_will_change:
     return ParseWillChange();
   case eCSSProperty_transform:
-  case eCSSProperty__moz_window_transform:
-    return ParseTransform(false, aPropID);
+    return ParseTransform(false);
   case eCSSProperty__moz_transform:
-    return ParseTransform(true, eCSSProperty_transform);
+    return ParseTransform(true);
   case eCSSProperty_transform_origin:
+    return ParseTransformOrigin(false);
   case eCSSProperty_perspective_origin:
-  case eCSSProperty__moz_window_transform_origin:
-    return ParseTransformOrigin(aPropID);
+    return ParseTransformOrigin(true);
   case eCSSProperty_transition:
     return ParseTransition();
   case eCSSProperty_animation:
@@ -16235,15 +16232,9 @@ CSSParserImpl::ParseSingleTransform(bool aIsPrefixed,
 
 /* Parses a transform property list by continuously reading in properties
  * and constructing a matrix from it.
- * aProperty can be transform or -moz-window-transform.
- * FIXME: For -moz-window-transform, it would be nice to reject non-2d
- * transforms at parse time, because the implementation only supports 2d
- * transforms. Instead, at the moment, non-2d transforms are treated as the
- * identity transform very late in the pipeline.
  */
 bool
-CSSParserImpl::ParseTransform(bool aIsPrefixed, nsCSSPropertyID aProperty,
-                              bool aDisallowRelativeValues)
+CSSParserImpl::ParseTransform(bool aIsPrefixed, bool aDisallowRelativeValues)
 {
   nsCSSValue value;
   // 'inherit', 'initial', 'unset' and 'none' must be alone
@@ -16265,7 +16256,7 @@ CSSParserImpl::ParseTransform(bool aIsPrefixed, nsCSSPropertyID aProperty,
       cur = cur->mNext;
     }
   }
-  AppendValue(aProperty, value);
+  AppendValue(eCSSProperty_transform, value);
   return true;
 }
 
@@ -16540,11 +16531,16 @@ CSSParserImpl::ParseShapeOutside(nsCSSValue& aValue)
     aValue, nsCSSProps::kShapeOutsideShapeBoxKTable);
 }
 
-bool CSSParserImpl::ParseTransformOrigin(nsCSSPropertyID aProperty)
+bool CSSParserImpl::ParseTransformOrigin(bool aPerspective)
 {
   nsCSSValuePair position;
   if (!ParseBoxPositionValues(position, true))
     return false;
+
+  nsCSSPropertyID prop = eCSSProperty_transform_origin;
+  if (aPerspective) {
+    prop = eCSSProperty_perspective_origin;
+  }
 
   // Unlike many other uses of pairs, this position should always be stored
   // as a pair, even if the values are the same, so it always serializes as
@@ -16554,10 +16550,10 @@ bool CSSParserImpl::ParseTransformOrigin(nsCSSPropertyID aProperty)
       position.mXValue.GetUnit() == eCSSUnit_Unset) {
     MOZ_ASSERT(position.mXValue == position.mYValue,
                "inherit/initial/unset only half?");
-    AppendValue(aProperty, position.mXValue);
+    AppendValue(prop, position.mXValue);
   } else {
     nsCSSValue value;
-    if (aProperty != eCSSProperty_transform_origin) {
+    if (aPerspective) {
       value.SetPairValue(position.mXValue, position.mYValue);
     } else {
       nsCSSValue depth;
@@ -16571,7 +16567,7 @@ bool CSSParserImpl::ParseTransformOrigin(nsCSSPropertyID aProperty)
       value.SetTripletValue(position.mXValue, position.mYValue, depth);
     }
 
-    AppendValue(aProperty, value);
+    AppendValue(prop, value);
   }
   return true;
 }
