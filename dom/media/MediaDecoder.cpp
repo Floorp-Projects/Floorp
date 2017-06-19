@@ -192,7 +192,7 @@ MediaDecoder::ResourceCallback::TimerCallback(nsITimer* aTimer, void* aClosure)
   MOZ_ASSERT(NS_IsMainThread());
   ResourceCallback* thiz = static_cast<ResourceCallback*>(aClosure);
   MOZ_ASSERT(thiz->mDecoder);
-  thiz->mDecoder->NotifyDataArrived();
+  thiz->mDecoder->NotifyDataArrivedInternal();
   thiz->mTimerArmed = false;
 }
 
@@ -1540,11 +1540,17 @@ void MediaDecoder::AddSizeOfResources(ResourceSizes* aSizes)
 }
 
 void
-MediaDecoder::NotifyDataArrived()
+MediaDecoder::NotifyDataArrivedInternal()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   mDataArrivedEvent.Notify();
+}
+
+void
+MediaDecoder::NotifyDataArrived()
+{
+  NotifyDataArrivedInternal();
 }
 
 // Provide access to the state machine object
