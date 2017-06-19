@@ -1946,7 +1946,7 @@ class AddonInstall {
         if (isTheme(this.addon.type) && this.addon.active)
           AddonManagerPrivate.notifyAddonChanged(this.addon.id, this.addon.type, requiresRestart);
       }
-    })().then(null, (e) => {
+    })().catch((e) => {
       logger.warn(`Failed to install ${this.file.path} from ${this.sourceURI.spec} to ${stagedAddon.path}`, e);
 
       if (stagedAddon.exists())

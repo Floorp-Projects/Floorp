@@ -60,7 +60,7 @@ function test() {
 
     yield close(client);
     yield closeDebuggerAndFinish(panel);
-  }).then(null, error => {
+  }).catch(error => {
     ok(false, "Got an error: " + error.message + "\n" + error.stack);
   });
 }

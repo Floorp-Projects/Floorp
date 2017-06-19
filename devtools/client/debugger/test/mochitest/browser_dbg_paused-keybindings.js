@@ -44,7 +44,7 @@ function test() {
     yield caretMove;
 
     yield resumeDebuggerThenCloseAndFinish(panel);
-  }).then(null, aError => {
+  }).catch(aError => {
     ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
   });
 }

@@ -60,7 +60,7 @@ function test() {
       yield disableAutoPrettyPrint();
 
       closeDebuggerAndFinish(gPanel)
-        .then(null, aError => {
+        .catch(aError => {
           ok(false, "Got an error: " + DevToolsUtils.safeErrorString(aError));
         });
     });

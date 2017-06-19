@@ -1216,7 +1216,7 @@ BrowserGlue.prototype = {
         let newProfilePath = newProfile.rootDir.path;
         OS.File.removeDir(newProfilePath).then(() => {
           return OS.File.makeDir(newProfilePath);
-        }).then(null, e => {
+        }).catch(e => {
           Cu.reportError("Could not empty profile 'default': " + e);
         });
       }

@@ -105,9 +105,7 @@ add_test(function parseErrorResponse() {
 
   client._Request = new mockResponse(response);
   client.getTokenFromAssertion("assertion", "scope")
-    .then(
-      null,
-      function(e) {
+    .catch(function(e) {
         do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
         do_check_eq(e.code, STATUS_SUCCESS);
         do_check_eq(e.errno, ERRNO_PARSE);
@@ -127,9 +125,7 @@ add_test(function serverErrorResponse() {
 
   client._Request = new mockResponse(response);
   client.getTokenFromAssertion("blah", "scope")
-    .then(
-    null,
-    function(e) {
+    .catch(function(e) {
       do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
       do_check_eq(e.code, 400);
       do_check_eq(e.errno, ERRNO_INVALID_FXA_ASSERTION);
@@ -147,9 +143,7 @@ add_test(function networkErrorResponse() {
   });
   Services.prefs.setBoolPref("identity.fxaccounts.skipDeviceRegistration", true);
   client.getTokenFromAssertion("assertion", "scope")
-    .then(
-      null,
-      function(e) {
+    .catch(function(e) {
         do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
         do_check_eq(e.code, null);
         do_check_eq(e.errno, ERRNO_NETWORK);
@@ -164,9 +158,7 @@ add_test(function unsupportedMethod() {
   let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
 
   return client._createRequest("/", "PUT")
-    .then(
-      null,
-      function(e) {
+    .catch(function(e) {
         do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
         do_check_eq(e.code, ERROR_CODE_METHOD_NOT_ALLOWED);
         do_check_eq(e.errno, ERRNO_NETWORK);
@@ -181,9 +173,7 @@ add_test(function onCompleteRequestError() {
   let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
   client._Request = new mockResponseError(new Error("onComplete error"));
   client.getTokenFromAssertion("assertion", "scope")
-    .then(
-      null,
-      function(e) {
+    .catch(function(e) {
         do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
         do_check_eq(e.code, null);
         do_check_eq(e.errno, ERRNO_NETWORK);
@@ -203,9 +193,7 @@ add_test(function incorrectErrno() {
 
   client._Request = new mockResponse(response);
   client.getTokenFromAssertion("blah", "scope")
-    .then(
-    null,
-    function(e) {
+    .catch(function(e) {
       do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
       do_check_eq(e.code, 400);
       do_check_eq(e.errno, ERRNO_UNKNOWN_ERROR);

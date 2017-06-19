@@ -465,7 +465,7 @@ TabSources.prototype = {
         this._setSourceMapRoot(map, absSourceMapURL, sourceURL);
         return map;
       })
-      .then(null, error => {
+      .catch(error => {
         if (!DevToolsUtils.reportingDisabled) {
           DevToolsUtils.reportException("TabSources.prototype._fetchSourceMap", error);
         }

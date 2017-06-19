@@ -6050,7 +6050,7 @@ class MutableDirectoryInstallLocation extends DirectoryInstallLocation {
 
     OS.File.makeDir(this._directory.path);
     let stagepath = OS.Path.join(this._directory.path, DIR_STAGE);
-    return this._stagingDirPromise = OS.File.makeDir(stagepath).then(null, (e) => {
+    return this._stagingDirPromise = OS.File.makeDir(stagepath).catch((e) => {
       if (e instanceof OS.File.Error && e.becauseExists)
         return;
       logger.error("Failed to create staging directory", e);

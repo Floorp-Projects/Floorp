@@ -363,7 +363,7 @@
         let dropPoint = this._getDropPoint(event);
         if (dropPoint && dropPoint.ip) {
           PlacesControllerDragHelper.onDrop(dropPoint.ip, event.dataTransfer)
-                                    .then(null, Components.utils.reportError);
+                                    .catch(Components.utils.reportError);
           event.preventDefault();
         }
 

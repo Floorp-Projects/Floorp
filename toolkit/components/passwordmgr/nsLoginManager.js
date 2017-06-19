@@ -527,7 +527,7 @@ LoginManager.prototype = {
       LoginManagerContent._autoCompleteSearchAsync(aSearchString, previousResult,
                                                    aElement, rect);
     acLookupPromise.then(completeSearch.bind(this, acLookupPromise))
-                             .then(null, Cu.reportError);
+                             .catch(Cu.reportError);
   },
 
   stopSearch() {

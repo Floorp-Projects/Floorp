@@ -124,7 +124,7 @@ ElementStyle.prototype = {
       }
 
       return undefined;
-    }).then(null, e => {
+    }).catch(e => {
       // populate is often called after a setTimeout,
       // the connection may already be closed.
       if (this.destroyed) {

@@ -392,7 +392,7 @@ proto.rejects = function(promise, expected, message) {
         this.report(false, err, expected, message);
         resolve();
       }
-    ).then(null, reject);
+    ).catch(reject);
   });
 };
 

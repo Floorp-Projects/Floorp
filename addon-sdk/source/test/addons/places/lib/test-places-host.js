@@ -66,7 +66,7 @@ exports.testBookmarksCreateFail = function (assert, done) {
     group: bmsrv.unfiledBookmarksFolder
   }];
   all(items.map(function (item) {
-    return send('sdk-places-bookmarks-create', item).then(null, function (reason) {
+    return send('sdk-places-bookmarks-create', item).catch(function (reason) {
       assert.ok(reason, 'bookmark create should fail');
     });
   })).then(done);

@@ -620,7 +620,7 @@ AppActorFront.prototype = {
     }
 
     return DevToolsUtils.settleAll(promises)
-                        .then(null, () => {});
+                        .catch(() => {});
   },
 
   _listenAppEvents: function (listener) {

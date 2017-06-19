@@ -156,7 +156,7 @@ VariableBubbleView.prototype = {
           dumpn(msg);
         }
       })
-      .then(null, err => {
+      .catch(err => {
         let msg = "Couldn't evaluate: " + err.message;
         console.error(msg);
         dumpn(msg);
