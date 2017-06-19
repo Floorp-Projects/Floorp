@@ -725,27 +725,55 @@ nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
     }
     else if (aName == nsGkAtoms::dir) {
       Directionality dir = eDir_LTR;
+      // A boolean tracking whether we need to recompute our directionality.
+      // This needs to happen after we update our internal "dir" attribute
+      // state but before we call SetDirectionalityOnDescendants.
+      bool recomputeDirectionality = false;
+      // We don't want to have to keep getting the "dir" attribute in
+      // IntrinsicState, so we manually recompute our dir-related event states
+      // here and send the relevant update notifications.
+      EventStates dirStates;
       if (aValue && aValue->Type() == nsAttrValue::eEnum) {
         SetHasValidDir();
+        dirStates |= NS_EVENT_STATE_HAS_DIR_ATTR;
         Directionality dirValue = (Directionality)aValue->GetEnumValue();
         if (dirValue == eDir_Auto) {
           SetHasDirAuto();
+          dirStates |= NS_EVENT_STATE_DIR_ATTR_LIKE_AUTO;
           ClearHasFixedDir();
         } else {
           dir = dirValue;
           SetDirectionality(dir, aNotify);
           ClearHasDirAuto();
           SetHasFixedDir();
+          if (dirValue == eDir_LTR) {
+            dirStates |= NS_EVENT_STATE_DIR_ATTR_LTR;
+          } else {
+            MOZ_ASSERT(dirValue == eDir_RTL);
+            dirStates |= NS_EVENT_STATE_DIR_ATTR_RTL;
+          }
         }
       } else {
+        if (aValue) {
+          // We have a value, just not a valid one.
+          dirStates |= NS_EVENT_STATE_HAS_DIR_ATTR;
+        }
         ClearHasValidDir();
         ClearHasFixedDir();
         if (NodeInfo()->Equals(nsGkAtoms::bdi)) {
           SetHasDirAuto();
+          dirStates |= NS_EVENT_STATE_DIR_ATTR_LIKE_AUTO;
         } else {
           ClearHasDirAuto();
-          dir = RecomputeDirectionality(this, aNotify);
+          recomputeDirectionality = true;
         }
+      }
+      // Now figure out what's changed about our dir states.
+      EventStates oldDirStates = State() & DIR_ATTR_STATES;
+      EventStates changedStates = dirStates ^ oldDirStates;
+      ToggleStates(changedStates, aNotify);
+      if (recomputeDirectionality) {
+        dir = RecomputeDirectionality(this, aNotify);
       }
       SetDirectionalityOnDescendants(this, dir, aNotify);
     } else if (aName == nsGkAtoms::contenteditable) {
