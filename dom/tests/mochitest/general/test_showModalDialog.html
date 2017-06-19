@@ -24,40 +24,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=862918
     win.wrappedJSObject.go();
   };
 
-  SimpleTest.waitForExplicitFinish();
+  var someObj = { foo: 42, bar: "hi"};
+  var xurl = location.toString()
+                     .replace('mochi.test:8888', 'example.org')
+                     .replace('test_showModal', 'file_showModal');
+  if (xurl.indexOf('?') != -1)
+    xurl = xurl.substring(0, xurl.indexOf('?'));
+  is(showModalDialog('file_showModalDialog.html'), "rv: undefined");
+  is(showModalDialog(xurl), undefined);
+  is(showModalDialog('file_showModalDialog.html', 3), "rv: 3");
+  is(showModalDialog(xurl, 3), undefined);
+  is(showModalDialog('file_showModalDialog.html', someObj), "rv: " + someObj);
+  is(showModalDialog(xurl, someObj), undefined);
 
-  SpecialPowers.pushPrefEnv({ set: [[ "dom.disable_window_showModalDialog", false ]] }, doTest);
-  async function doTest() {
-    let iframe = document.createElement("iframe");
-    document.body.appendChild(iframe);
-    await new Promise(resolve => {
-      iframe.addEventListener("load", resolve);
-    });
-    window.showModalDialog = iframe.contentWindow.showModalDialog;
+  // Test sequential navigations.
+  is(showModalDialog('file_showModalDialog.html?http://mochi.test:8888', 4),
+                     'rv: 4');
+  is(showModalDialog('file_showModalDialog.html?http://example.com', 4), undefined);
+  is(showModalDialog('file_showModalDialog.html?http://example.com,http://mochi.test:8888', 4), 'rv: 4');
 
-    var someObj = { foo: 42, bar: "hi"};
-    var xurl = location.toString()
-                       .replace('mochi.test:8888', 'example.org')
-                       .replace('test_showModal', 'file_showModal');
-    if (xurl.indexOf('?') != -1)
-      xurl = xurl.substring(0, xurl.indexOf('?'));
-    is(window.showModalDialog('file_showModalDialog.html'), "rv: undefined");
-    is(window.showModalDialog(xurl), undefined);
-    is(window.showModalDialog('file_showModalDialog.html', 3), "rv: 3");
-    is(window.showModalDialog(xurl, 3), undefined);
-    is(window.showModalDialog('file_showModalDialog.html', someObj), "rv: " + someObj);
-    is(window.showModalDialog(xurl, someObj), undefined);
-
-    // Test sequential navigations.
-    is(window.showModalDialog('file_showModalDialog.html?http://mochi.test:8888', 4),
-                       'rv: 4');
-    is(window.showModalDialog('file_showModalDialog.html?http://example.com', 4), undefined);
-    is(window.showModalDialog('file_showModalDialog.html?http://example.com,http://mochi.test:8888', 4), 'rv: 4');
-
-    // This test used to assert after gc. Make sure it doesn't.
-    SpecialPowers.gc();
-    SimpleTest.finish();
-  }
+  // This test used to assert after gc. Make sure it doesn't.
+  SpecialPowers.gc();
 
   </script>
 </head>

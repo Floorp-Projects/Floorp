@@ -109,9 +109,7 @@ function doTest() {
   // file_iframe_j_if3.html has an ok() function that calls window.parent.ok_wrapper.
 }
 
-let loaded = new Promise(resolve => { addLoadEvent(resolve) });
-let prefSet = SpecialPowers.pushPrefEnv({ set: [[ "dom.disable_window_showModalDialog", false ]] });
-Promise.all([ loaded, prefSet ]).then(doTest);
+addLoadEvent(doTest);
 </script>
 
 <body>

@@ -19,26 +19,22 @@ function onMsgRcv(event)
   is(event.data, "args: undefined", "Unexpected cross origin dialog arguments.");
 }
 
-async function runTest() {
-  await SpecialPowers.pushPrefEnv({ set: [[ "dom.disable_window_showModalDialog", false ]] });
-  let iframe = document.createElement("iframe");
-  document.body.appendChild(iframe);
-  await new Promise(resolve => {
-    iframe.addEventListener("load", resolve);
-  });
-  window.showModalDialog = iframe.contentWindow.showModalDialog;
+function runTest() {
+  if ("showModalDialog" in window) {
+    window.addEventListener("message", onMsgRcv);
 
-  window.addEventListener("message", onMsgRcv);
+    var result = window.showModalDialog("file_bug504862.html", "my args");
+    // NB: We used to clear returnValue on each navigation, but now we do a
+    // security check on access, so we can safely make returnValue live on
+    // the browsing context, per spec.
+    is(result, 3, "window sees previous dialog documents return value.");
 
-  var result = window.showModalDialog("file_bug504862.html", "my args");
-  // NB: We used to clear returnValue on each navigation, but now we do a
-  // security check on access, so we can safely make returnValue live on
-  // the browsing context, per spec.
-  is(result, 3, "window sees previous dialog documents return value.");
+    result = window.showModalDialog("http://test1.example.com/tests/dom/tests/mochitest/bugs/file_bug504862.html", "my args");
 
-  result = window.showModalDialog("http://test1.example.com/tests/dom/tests/mochitest/bugs/file_bug504862.html", "my args");
-
-  is(result, undefined, "Able to see return value from cross origin dialog.");
+    is(result, undefined, "Able to see return value from cross origin dialog.");
+  } else {
+    ok(true, "nothing to do in e10s mode");
+  }
 
   SimpleTest.finish();
 }
