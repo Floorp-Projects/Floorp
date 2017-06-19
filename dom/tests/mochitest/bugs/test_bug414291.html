@@ -13,7 +13,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=414291
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 414291 **/
-SimpleTest.waitForExplicitFinish();
 
 var result1 = 0;
 var result2 = 0;
@@ -25,20 +24,9 @@ is(result1, 0, "window should not be opened either as modal or loaded synchronou
 window.open("file2_bug414291.html", "w2", "modal=yes");
 is(result2, 0, "window should not be opened either as modal or data loaded synchronously.");
 
-SpecialPowers.pushPrefEnv({ set: [[ "dom.disable_window_showModalDialog", false ]] }, runModalTest);
-async function runModalTest() {
-  let iframe = document.createElement("iframe");
-  document.body.appendChild(iframe);
-  await new Promise(resolve => {
-    iframe.addEventListener("load", resolve);
-  });
-  window.showModalDialog = iframe.contentWindow.showModalDialog;
-
-  if (window.showModalDialog) {
-    result3 = window.showModalDialog("file3_bug414291.html");
-    is(result3, 3, "window should be opened as modal.");
-  }
-  SimpleTest.finish();
+if (window.showModalDialog) {
+  result3 = window.showModalDialog("file3_bug414291.html");
+  is(result3, 3, "window should be opened as modal.");
 }
 
 </script>
