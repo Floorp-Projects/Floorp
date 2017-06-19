@@ -76,7 +76,24 @@ const EXPECTED_APPMENU_OPEN_REFLOWS = [
 
 const EXPECTED_APPMENU_SUBVIEW_REFLOWS = [
   /**
-   * Nothing here! Please don't add anything new!
+   * The synced tabs view has labels that are multiline. Because of bugs in
+   * XUL layout relating to multiline text in scrollable containers, we need
+   * to manually read their height in order to ensure container heights are
+   * correct. Unfortunately this requires 2 sync reflows.
+   *
+   * If we add more views where this is necessary, we may need to duplicate
+   * these expected reflows further.
+   */
+  [
+    "descriptionHeightWorkaround@resource:///modules/PanelMultiView.jsm",
+    "onTransitionEnd@resource:///modules/PanelMultiView.jsm",
+  ],
+  [
+    "descriptionHeightWorkaround@resource:///modules/PanelMultiView.jsm",
+    "onTransitionEnd@resource:///modules/PanelMultiView.jsm",
+  ],
+  /**
+   * Please don't add anything new!
    */
 ];
 
@@ -110,8 +127,10 @@ add_task(async function() {
       }
 
       for (let button of navButtons) {
+        info("Click " + button.id);
         button.click();
         await BrowserTestUtils.waitForEvent(PanelUI.panel, "ViewShown");
+        info("Shown " + PanelUI.multiView.instance._currentSubView.id);
         // Unfortunately, I can't find a better accessor to the current
         // subview, so I have to reach the PanelMultiView instance
         // here.
