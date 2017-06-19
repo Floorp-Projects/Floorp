@@ -209,12 +209,16 @@ Link::LinkState() const
     // Make sure the href attribute has a valid link (bug 23209).
     // If we have a good href, register with History if available.
     if (mHistory && hrefURI) {
+      // We have to make sure to mark ourselves as registered before registering
+      // ourselves, as RegisterVisitedCallback may synchronously set our link
+      // state.
+      self->mRegistered = true;
       nsresult rv = mHistory->RegisterVisitedCallback(hrefURI, self);
       if (NS_SUCCEEDED(rv)) {
-        self->mRegistered = true;
-
         // And make sure we are in the document's link map.
         element->GetComposedDoc()->AddStyleRelevantLink(self);
+      } else {
+        self->mRegistered = false;
       }
     }
   }

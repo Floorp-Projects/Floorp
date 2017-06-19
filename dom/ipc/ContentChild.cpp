@@ -2385,6 +2385,8 @@ ContentChild::RecvNotifyAlertsObserver(const nsCString& aType, const nsString& a
   return IPC_OK();
 }
 
+// NOTE: This method is being run in the SystemGroup, and thus cannot directly
+// touch pages. See GetSpecificMessageEventTarget.
 mozilla::ipc::IPCResult
 ContentChild::RecvNotifyVisited(const URIParams& aURI)
 {
@@ -3385,6 +3387,20 @@ ContentChild::GetConstructedEventTarget(const Message& aMsg)
   }
 
   return nsIContentChild::GetConstructedEventTarget(aMsg);
+}
+
+// The IPC code will call this method asking us to assign an event target to
+// specific messages.
+already_AddRefed<nsIEventTarget>
+ContentChild::GetSpecificMessageEventTarget(const Message& aMsg)
+{
+  if (aMsg.type() == PContent::Msg_NotifyVisited__ID && SystemGroup::Initialized()) {
+    // NotifyVisited is a frequent message. We want to handle it in the
+    // SystemGroup, and then dispatch individual runnables into each TabGroup.
+    return do_AddRef(SystemGroup::EventTargetFor(TaskCategory::Other));
+  }
+
+  return nullptr;
 }
 
 void
