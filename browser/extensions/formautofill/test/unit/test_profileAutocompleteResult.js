@@ -9,6 +9,7 @@ let matchingProfiles = [{
   name: "Timothy Berners-Lee",
   organization: "Sesame Street",
   "street-address": "123 Sesame Street.",
+  "address-line1": "123 Sesame Street.",
   tel: "1-345-345-3456.",
 }, {
   guid: "test-guid-2",
@@ -17,15 +18,28 @@ let matchingProfiles = [{
   name: "John Doe",
   organization: "Mozilla",
   "street-address": "331 E. Evelyn Avenue",
+  "address-line1": "331 E. Evelyn Avenue",
   tel: "1-650-903-0800",
 }, {
   guid: "test-guid-3",
   organization: "",
-  "street-address": "321, No Name St.",
+  "street-address": "321, No Name St. 2nd line 3rd line",
+  "address-line1": "321, No Name St.",
+  "address-line2": "2nd line",
+  "address-line3": "3rd line",
   tel: "1-000-000-0000",
 }];
 
-let allFieldNames = ["given-name", "family-name", "street-address", "organization", "tel"];
+let allFieldNames = [
+  "given-name",
+  "family-name",
+  "street-address",
+  "address-line1",
+  "address-line2",
+  "address-line3",
+  "organization",
+  "tel",
+];
 
 let testCases = [{
   description: "Focus on an `organization` field",
@@ -91,7 +105,7 @@ let testCases = [{
       comment: JSON.stringify(matchingProfiles[2]),
       label: JSON.stringify({
         primary: "1-000-000-0000",
-        secondary: "321, No Name St.",
+        secondary: "321, No Name St. 2nd line 3rd line",
       }),
       image: "",
     }],
@@ -103,6 +117,45 @@ let testCases = [{
   allFieldNames,
   searchString: "",
   fieldName: "street-address",
+  expected: {
+    searchResult: Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
+    defaultIndex: 0,
+    items: [{
+      value: "123 Sesame Street.",
+      style: "autofill-profile",
+      comment: JSON.stringify(matchingProfiles[0]),
+      label: JSON.stringify({
+        primary: "123 Sesame Street.",
+        secondary: "Timothy Berners-Lee",
+      }),
+      image: "",
+    }, {
+      value: "331 E. Evelyn Avenue",
+      style: "autofill-profile",
+      comment: JSON.stringify(matchingProfiles[1]),
+      label: JSON.stringify({
+        primary: "331 E. Evelyn Avenue",
+        secondary: "John Doe",
+      }),
+      image: "",
+    }, {
+      value: "321, No Name St. 2nd line 3rd line",
+      style: "autofill-profile",
+      comment: JSON.stringify(matchingProfiles[2]),
+      label: JSON.stringify({
+        primary: "321, No Name St. 2nd line 3rd line",
+        secondary: "1-000-000-0000",
+      }),
+      image: "",
+    }],
+  },
+}, {
+  description: "Focus on an `address-line1` field",
+  options: {},
+  matchingProfiles,
+  allFieldNames,
+  searchString: "",
+  fieldName: "address-line1",
   expected: {
     searchResult: Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
     defaultIndex: 0,
