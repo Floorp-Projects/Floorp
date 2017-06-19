@@ -26,7 +26,7 @@
 namespace mozilla {
 
 MP4Decoder::MP4Decoder(MediaDecoderInit& aInit)
-  : MediaDecoder(aInit)
+  : ChannelMediaDecoder(aInit)
 {
 }
 

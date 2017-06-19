@@ -7,28 +7,31 @@
 #ifndef HLSDecoder_h_
 #define HLSDecoder_h_
 
-#include "MediaDecoder.h"
+#include "ChannelMediaDecoder.h"
 
 namespace mozilla {
 class MediaFormatReader;
 
-class HLSDecoder final : public MediaDecoder
+class HLSDecoder final : public ChannelMediaDecoder
 {
 public:
   // MediaDecoder interface.
-    explicit HLSDecoder(MediaDecoderInit& aInit) : MediaDecoder(aInit) { }
+  explicit HLSDecoder(MediaDecoderInit& aInit)
+    : ChannelMediaDecoder(aInit)
+  {
+  }
 
-    MediaDecoder* Clone(MediaDecoderInit& aInit) override;
+  MediaDecoder* Clone(MediaDecoderInit& aInit) override;
 
-    MediaDecoderStateMachine* CreateStateMachine() override;
+  MediaDecoderStateMachine* CreateStateMachine() override;
 
-    // Returns true if the HLS backend is pref'ed on.
-    static bool IsEnabled();
+  // Returns true if the HLS backend is pref'ed on.
+  static bool IsEnabled();
 
-    // Returns true if aContainerType is an HLS type that we think we can render
-    // with the a platform decoder backend.
-    // If provided, codecs are checked for support.
-    static bool IsSupportedType(const MediaContainerType& aContainerType);
+  // Returns true if aContainerType is an HLS type that we think we can render
+  // with the a platform decoder backend.
+  // If provided, codecs are checked for support.
+  static bool IsSupportedType(const MediaContainerType& aContainerType);
 
 private:
   RefPtr<MediaFormatReader> mReader;

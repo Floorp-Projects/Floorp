@@ -15,9 +15,9 @@ class nsACString;
 namespace mozilla {
 
 class AbstractMediaDecoder;
+class ChannelMediaDecoder;
 class DecoderDoctorDiagnostics;
 class MediaContainerType;
-class MediaDecoder;
 struct MediaDecoderInit;
 class MediaDecoderOwner;
 class MediaDecoderReader;
@@ -43,9 +43,10 @@ public:
 
   // Create a decoder for the given aType. Returns null if we
   // were unable to create the decoder.
-  static already_AddRefed<MediaDecoder> CreateDecoder(const nsACString& aType,
-                                                      MediaDecoderInit& aInit,
-                                                      DecoderDoctorDiagnostics* aDiagnostics);
+  static already_AddRefed<ChannelMediaDecoder> CreateDecoder(
+    const nsACString& aType,
+    MediaDecoderInit& aInit,
+    DecoderDoctorDiagnostics* aDiagnostics);
 
   // Create a reader for thew given MIME type aType. Returns null
   // if we were unable to create the reader.
