@@ -40,8 +40,9 @@ use webdriver::command::{
     SwitchToFrameParameters, LocatorParameters, JavascriptCommandParameters,
     GetNamedCookieParameters, AddCookieParameters, TimeoutsParameters,
     ActionsParameters, TakeScreenshotParameters};
-use webdriver::response::{CloseWindowResponse, Cookie, CookieResponse, RectResponse,
-                          NewSessionResponse, TimeoutsResponse, ValueResponse, WebDriverResponse};
+use webdriver::response::{CloseWindowResponse, Cookie, CookieResponse, CookiesResponse,
+                          RectResponse, NewSessionResponse, TimeoutsResponse, ValueResponse,
+                          WebDriverResponse};
 use webdriver::common::{
     Date, Nullable, WebElement, FrameId, ELEMENT_KEY};
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
@@ -736,7 +737,7 @@ impl MarionetteSession {
                 WebDriverResponse::ElementRect(RectResponse::new(x, y, width, height))
             },
             FullscreenWindow | MaximizeWindow | GetWindowRect |
-            MaximizeWindow | SetWindowRect(_) => {
+            SetWindowRect(_) => {
                 let width = try_opt!(
                     try_opt!(resp.result.find("width"),
                              ErrorStatus::UnknownError,
@@ -769,12 +770,12 @@ impl MarionetteSession {
             },
             GetCookies => {
                 let cookies = try!(self.process_cookies(&resp.result));
-                WebDriverResponse::Cookie(CookieResponse::new(cookies))
+                WebDriverResponse::Cookies(CookiesResponse {value: cookies})
             },
             GetNamedCookie(ref name) => {
                 let mut cookies = try!(self.process_cookies(&resp.result));
                 cookies.retain(|x| x.name == *name);
-                WebDriverResponse::Cookie(CookieResponse::new(cookies))
+                WebDriverResponse::Cookies(CookiesResponse { value : cookies })
             }
             FindElement(_) | FindElementElement(_, _) => {
                 let element = try!(self.to_web_element(
@@ -907,7 +908,8 @@ impl MarionetteSession {
                 x.find("httpOnly").map_or(Some(false), |x| x.as_boolean()),
                 ErrorStatus::UnknownError,
                 "Failed to interpret httpOnly as boolean");
-            Ok(Cookie::new(name, value, path, domain, expiry, secure, http_only))
+            Ok(Cookie {name: name , value: value, path: path, domain: domain,
+                      expiry: expiry, secure: secure , httpOnly: http_only})
         }).collect::<Result<Vec<_>, _>>()
     }
 
