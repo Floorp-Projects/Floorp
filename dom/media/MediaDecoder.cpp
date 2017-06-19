@@ -1551,6 +1551,7 @@ void
 MediaDecoder::NotifyDataArrived()
 {
   NotifyDataArrivedInternal();
+  NotifyDownloadProgressed();
 }
 
 // Provide access to the state machine object
