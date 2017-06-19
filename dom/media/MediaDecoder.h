@@ -111,9 +111,7 @@ public:
     MediaDecoderOwner* GetMediaOwner() const override;
     void SetInfinite(bool aInfinite) override;
     void NotifyNetworkError() override;
-    void NotifyDecodeError() override;
     void NotifyDataArrived() override;
-    void NotifyBytesDownloaded() override;
     void NotifyDataEnded(nsresult aStatus) override;
     void NotifyPrincipalChanged() override;
     void NotifySuspendedStatusChanged() override;
@@ -257,7 +255,7 @@ public:
 
   // Called by MediaResource when some data has been received.
   // Call on the main thread only.
-  virtual void NotifyBytesDownloaded();
+  void NotifyDownloadProgressed();
 
   // Called as data arrives on the stream and is read into the cache.  Called
   // on the main thread only.

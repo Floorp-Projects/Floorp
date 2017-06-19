@@ -1202,6 +1202,168 @@ const transformListType = {
 };
 
 const filterListType = {
+  testInterpolation: function(property, setup) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate({ [idlName]:
+                                       ['blur(10px)', 'blur(50px)'] },
+                                      1000);
+
+      testAnimationSamples(animation, idlName,
+        [{ time: 500,    expected: 'blur(30px)' }]);
+    }, property + ': blur function' );
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate({ [idlName]: ['hue-rotate(0deg)',
+                                                   'hue-rotate(100deg)'] },
+                                     1000);
+
+      testAnimationSamples(animation, idlName,
+        [{ time: 500,    expected: 'hue-rotate(50deg)' }]);
+    }, property + ': hue-rotate function with same unit(deg)' );
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate({ [idlName]: ['hue-rotate(10deg)',
+                                                   'hue-rotate(100rad)'] },
+                                     1000);
+
+      // 10deg = 0.1745rad.
+      testAnimationSamples(animation, idlName,
+        [{ time: 500,    expected: 'hue-rotate(50.0873rad)' }]);
+    }, property + ': hue-rotate function with different unit(deg -> rad)');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate(
+        { [idlName]:
+          ['drop-shadow(10px 10px 10px rgba(255, 0, 0, 0.4))',
+           'drop-shadow(50px 50px 50px rgba(0, 0, 255, 0.8))'] },
+        1000);
+
+      testAnimationSamples(
+        animation, idlName,
+        [{ time: 500,
+            expected: 'drop-shadow(rgba(85, 0, 170, 0.6) 30px 30px 30px)' }]);
+    }, property + ': drop-shadow function' );
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate(
+        { [idlName]:
+          ['brightness(0.1) contrast(0.1) grayscale(0.1) invert(0.1) ' +
+           'opacity(0.1) saturate(0.1) sepia(0.1)',
+           'brightness(0.5) contrast(0.5) grayscale(0.5) invert(0.5) ' +
+           'opacity(0.5) saturate(0.5) sepia(0.5)'] },
+        1000);
+
+      testAnimationSamples(animation, idlName,
+        [{ time: 500,
+           expected: 'brightness(0.3) contrast(0.3) grayscale(0.3) ' +
+           'invert(0.3) opacity(0.3) saturate(0.3) sepia(0.3)' }]);
+    }, property + ': percentage or numeric-specifiable functions' +
+       '(number value)');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate(
+        { [idlName]:
+          ['brightness(10%) contrast(10%) grayscale(10%) invert(10%) ' +
+           'opacity(10%) saturate(10%) sepia(10%)',
+           'brightness(50%) contrast(50%) grayscale(50%) invert(50%) ' +
+           'opacity(50%) saturate(50%) sepia(50%)'] },
+        1000);
+
+      testAnimationSamples(animation, idlName,
+        [{ time: 500,
+           expected: 'brightness(0.3) contrast(0.3) grayscale(0.3) ' +
+           'invert(0.3) opacity(0.3) saturate(0.3) sepia(0.3)' }]);
+    }, property + ': percentage or numeric-specifiable functions' +
+       '(percentage value)');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate(
+        { [idlName]:
+          // To make missing filter-function-lists, specified the grayscale.
+          ['grayscale(0)',
+           'grayscale(1) brightness(0) contrast(0) opacity(0) saturate(0)' ]},
+        1000);
+
+      testAnimationSamples(animation, idlName,
+        [{ time: 500,
+           expected: 'grayscale(0.5) brightness(0.5) contrast(0.5) ' +
+                     'opacity(0.5) saturate(0.5)' }]);
+    }, property + ': interpolate different length of filter-function-list ' +
+       ' with function which lacuna value is 1');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate(
+        { [idlName]:
+          // To make missing filter-function-lists, specified the opacity.
+          ['opoacity(1)',
+           'opacity(0) grayscale(1) invert(1) sepia(1) blur(10px)'] },
+        1000);
+
+      testAnimationSamples(animation, idlName,
+        [{ time: 500,
+           expected:
+           'opacity(0.5) grayscale(0.5) invert(0.5) sepia(0.5) blur(5px)' }]);
+    }, property + ': interpolate different length of filter-function-list ' +
+       ' with function which lacuna value is 0');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style.color = "rgba(255, 0, 0, 0.4)";
+      var animation = target.animate(
+        { [idlName]:
+          ['blur(0px)',
+           'blur(10px) drop-shadow(10px 10px 10px rgba(0, 0, 255, 0.8))'] },
+        1000);
+
+      testAnimationSamples(animation, idlName,
+        [{ time: 500,
+           // The lacuna value of drop-shadow's color is taken from
+           // the color property.
+           expected: 'blur(5px) drop-shadow(rgba(85, 0, 170, 0.6) 5px 5px 5px' }]);
+    }, property + ': interpolate different length of filter-function-list ' +
+       'with drop-shadow function');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate({ [idlName]: ['none', 'blur(10px)'] },
+                                     1000);
+
+      testAnimationSamples(animation, idlName,
+        [{ time: 500, expected: 'blur(5px)' }]);
+    }, property + ': interpolate from none');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate(
+        { [idlName]:
+          ['blur(0px) url(\"#f1\")',
+           'blur(10px) url(\"#f2\")']},
+        1000);
+      testAnimationSamples(animation, idlName,
+        [{ time: 499, expected: 'blur(0px) url(\"#f1\")' },
+         { time: 500, expected: 'blur(10px) url(\"#f2\")' }]);
+    }, property + ': url function (interpoalte as discrete)');
+  },
+
   testAddition: function(property, setup) {
     test(function(t) {
       var idlName = propertyToIDL(property);

@@ -1,0 +1,12 @@
+{
+  "manifest_version": 2,
+  "name": "XPI Telemetry Restartless Test",
+  "description": "A restartless addon which gets enabled without a reboot.",
+  "version": "1.0",
+
+  "applications": {
+    "gecko": {
+      "id": "tel-restartless-webext@tests.mozilla.org"
+    }
+  }
+}

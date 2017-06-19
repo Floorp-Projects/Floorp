@@ -26,6 +26,10 @@ EXPORTS += [
     'nsFontFaceList.h',
 ]
 
+EXPORTS.mozilla += [
+    'ServoStyleRuleMap.h',
+]
+
 UNIFIED_SOURCES += [
     'inCSSValueSearch.cpp',
     'inDeepTreeWalker.cpp',
@@ -33,6 +37,7 @@ UNIFIED_SOURCES += [
     'inLayoutUtils.cpp',
     'nsFontFace.cpp',
     'nsFontFaceList.cpp',
+    'ServoStyleRuleMap.cpp',
 ]
 
 if CONFIG['MOZ_XUL']:

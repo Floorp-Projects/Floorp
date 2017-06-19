@@ -186,18 +186,6 @@ MediaDecoder::ResourceCallback::NotifyNetworkError()
   }
 }
 
-void
-MediaDecoder::ResourceCallback::NotifyDecodeError()
-{
-  RefPtr<ResourceCallback> self = this;
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
-    if (self->mDecoder) {
-      self->mDecoder->DecodeError(NS_ERROR_DOM_MEDIA_FATAL_ERR);
-    }
-  });
-  mAbstractMainThread->Dispatch(r.forget());
-}
-
 /* static */ void
 MediaDecoder::ResourceCallback::TimerCallback(nsITimer* aTimer, void* aClosure)
 {
@@ -212,7 +200,13 @@ void
 MediaDecoder::ResourceCallback::NotifyDataArrived()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!mDecoder || mTimerArmed) {
+  if (!mDecoder) {
+    return;
+  }
+
+  mDecoder->NotifyDownloadProgressed();
+
+  if (mTimerArmed) {
     return;
   }
   // In situations where these notifications come from stochastic network
@@ -222,15 +216,6 @@ MediaDecoder::ResourceCallback::NotifyDataArrived()
   mTimerArmed = true;
   mTimer->InitWithFuncCallback(
     TimerCallback, this, sDelay, nsITimer::TYPE_ONE_SHOT);
-}
-
-void
-MediaDecoder::ResourceCallback::NotifyBytesDownloaded()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mDecoder) {
-    mDecoder->NotifyBytesDownloaded();
-  }
 }
 
 void
@@ -1060,7 +1045,7 @@ MediaDecoder::ShouldThrottleDownload()
 }
 
 void
-MediaDecoder::NotifyBytesDownloaded()
+MediaDecoder::NotifyDownloadProgressed()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
