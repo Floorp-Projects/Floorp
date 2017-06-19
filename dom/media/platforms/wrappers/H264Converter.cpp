@@ -192,16 +192,24 @@ H264Converter::Shutdown()
 {
   mInitPromiseRequest.DisconnectIfExists();
   mDecodePromiseRequest.DisconnectIfExists();
+  mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+  mDrainRequest.DisconnectIfExists();
   mFlushRequest.DisconnectIfExists();
-  mShutdownRequest.DisconnectIfExists();
   mFlushPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
-  mNeedAVCC.reset();
+  mShutdownRequest.DisconnectIfExists();
 
   if (mShutdownPromise) {
     // We have a shutdown in progress, return that promise instead as we can't
     // shutdown a decoder twice.
     return mShutdownPromise.forget();
   }
+  return ShutdownDecoder();
+}
+
+RefPtr<ShutdownPromise>
+H264Converter::ShutdownDecoder()
+{
+  mNeedAVCC.reset();
   if (mDecoder) {
     RefPtr<MediaDataDecoder> decoder = mDecoder.forget();
     return decoder->Shutdown();
@@ -479,7 +487,7 @@ void H264Converter::FlushThenShutdownDecoder(MediaRawData* aPendingSample)
                return;
              }
 
-             mShutdownPromise = Shutdown();
+             mShutdownPromise = ShutdownDecoder();
              mShutdownPromise
                ->Then(AbstractThread::GetCurrent()->AsTaskQueue(),
                       __func__,

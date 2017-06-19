@@ -76,6 +76,7 @@ private:
   void DecodeFirstSample(MediaRawData* aSample);
   void DrainThenFlushDecoder(MediaRawData* aPendingSample);
   void FlushThenShutdownDecoder(MediaRawData* aPendingSample);
+  RefPtr<ShutdownPromise> ShutdownDecoder();
 
   RefPtr<PlatformDecoderModule> mPDM;
   const VideoInfo mOriginalConfig;
