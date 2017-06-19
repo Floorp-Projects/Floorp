@@ -18,6 +18,19 @@ var gSearchResultsPane = {
     if (!this.searchInput.hidden) {
       this.searchInput.addEventListener("command", this);
       this.searchInput.addEventListener("focus", this);
+
+      // Throttling the resize event to reduce the callback frequency
+      let callbackId;
+      window.addEventListener("resize", () => {
+        if (!callbackId) {
+          callbackId = window.requestAnimationFrame(() => {
+            this.listSearchTooltips.forEach((anchorNode) => {
+              this.calculateTooltipPosition(anchorNode);
+            });
+            callbackId = null;
+          });
+        }
+      });
     }
   },
 
@@ -397,6 +410,12 @@ var gSearchResultsPane = {
     anchorNode.setAttribute("data-has-tooltip", "true");
     anchorNode.parentElement.classList.add("search-tooltip-parent");
     anchorNode.parentElement.appendChild(searchTooltip);
+
+    this.calculateTooltipPosition(anchorNode);
+  },
+
+  calculateTooltipPosition(anchorNode) {
+    let searchTooltip = anchorNode.parentElement.querySelector(":scope > .search-tooltip");
 
     // In order to get the up-to-date position of each of the nodes that we're
     // putting tooltips on, we have to flush layout intentionally, and that
