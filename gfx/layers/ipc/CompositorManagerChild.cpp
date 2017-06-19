@@ -28,7 +28,8 @@ CompositorManagerChild::IsInitialized()
 CompositorManagerChild::InitSameProcess(uint32_t aNamespace)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (NS_WARN_IF(sInstance)) {
+  if (NS_WARN_IF(sInstance &&
+                 sInstance->OtherPid() == base::GetCurrentProcId())) {
     MOZ_ASSERT_UNREACHABLE("Already initialized");
     return false;
   }
@@ -187,6 +188,9 @@ void
 CompositorManagerChild::ActorDestroy(ActorDestroyReason aReason)
 {
   mCanSend = false;
+  if (sInstance == this) {
+    sInstance = nullptr;
+  }
 }
 
 PCompositorBridgeChild*

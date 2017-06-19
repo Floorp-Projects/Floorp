@@ -1,5 +1,12 @@
 const PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_webAudio.html";
 
+// The tab closing code leaves an uncaught rejection. This test has been
+// whitelisted until the issue is fixed.
+if (!gMultiProcessBrowser) {
+  Cu.import("resource://testing-common/PromiseTestUtils.jsm", this);
+  PromiseTestUtils.expectUncaughtRejection(/is no longer, usable/);
+}
+
 add_task(async function setup_test_preference() {
   await SpecialPowers.pushPrefEnv({"set": [
     ["media.useAudioChannelService.testing", true],

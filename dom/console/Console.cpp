@@ -2082,20 +2082,16 @@ Console::StopTimer(JSContext* aCx, const JS::Value& aName,
 
   aTimerLabel = key;
 
-  DOMHighResTimeStamp entry = 0;
-  bool found = false;
-  mTimerRegistry.LookupRemoveIf(key,
-    [&found, &entry] (const DOMHighResTimeStamp& aValue) {
-      entry = aValue;
-      found = true;
-      return true;  // remove it
-    });
-
-  if (NS_WARN_IF(!found)) {
+  DOMHighResTimeStamp value = 0;
+  if (auto entry = mTimerRegistry.Lookup(key)) {
+    value = entry.Data();
+    entry.Remove();
+  } else {
+    NS_WARNING("mTimerRegistry entry not found");
     return eTimerDoesntExist;
   }
 
-  *aTimerDuration = aTimestamp - entry;
+  *aTimerDuration = aTimestamp - value;
   return eTimerDone;
 }
 

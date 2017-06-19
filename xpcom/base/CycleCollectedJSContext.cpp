@@ -46,10 +46,6 @@
 #include "nsThreadUtils.h"
 #include "xpcpublic.h"
 
-#ifdef MOZ_GECKO_PROFILER
-#include "ProfilerMarkerPayload.h"
-#endif
-
 using namespace mozilla;
 using namespace mozilla::dom;
 

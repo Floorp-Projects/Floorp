@@ -21,6 +21,16 @@
  *          promiseAnimationFrame getCustomizableUIPanelID
  */
 
+// There are shutdown issues for which multiple rejections are left uncaught.
+// This bug should be fixed, but for the moment this directory is whitelisted.
+//
+// NOTE: Entire directory whitelisting should be kept to a minimum. Normally you
+//       should use "expectUncaughtRejection" to flag individual failures.
+const {PromiseTestUtils} = Cu.import("resource://testing-common/PromiseTestUtils.jsm", {});
+PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
+PromiseTestUtils.whitelistRejectionsGlobally(/No matching message handler/);
+PromiseTestUtils.whitelistRejectionsGlobally(/Receiving end does not exist/);
+
 const {AppConstants} = Cu.import("resource://gre/modules/AppConstants.jsm", {});
 const {CustomizableUI} = Cu.import("resource:///modules/CustomizableUI.jsm", {});
 
