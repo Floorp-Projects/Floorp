@@ -134,6 +134,7 @@ ServoRestyleManager::ClearServoDataFromSubtree(Element* aElement)
 {
   if (!aElement->HasServoData()) {
     MOZ_ASSERT(!aElement->HasDirtyDescendantsForServo());
+    MOZ_ASSERT(!aElement->HasAnimationOnlyDirtyDescendantsForServo());
     return;
   }
 
@@ -146,13 +147,14 @@ ServoRestyleManager::ClearServoDataFromSubtree(Element* aElement)
 
   aElement->ClearServoData();
   aElement->UnsetHasDirtyDescendantsForServo();
+  aElement->UnsetHasAnimationOnlyDirtyDescendantsForServo();
 }
-
 
 /* static */ void
 ServoRestyleManager::ClearRestyleStateFromSubtree(Element* aElement)
 {
-  if (aElement->HasDirtyDescendantsForServo()) {
+  if (aElement->HasDirtyDescendantsForServo() ||
+      aElement->HasAnimationOnlyDirtyDescendantsForServo()) {
     StyleChildrenIterator it(aElement);
     for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
       if (n->IsElement()) {
@@ -163,6 +165,7 @@ ServoRestyleManager::ClearRestyleStateFromSubtree(Element* aElement)
 
   Unused << Servo_TakeChangeHint(aElement);
   aElement->UnsetHasDirtyDescendantsForServo();
+  aElement->UnsetHasAnimationOnlyDirtyDescendantsForServo();
   aElement->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES);
 }
 
@@ -444,7 +447,9 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
   const bool descendantsNeedFrames =
     aElement->HasFlag(NODE_DESCENDANTS_NEED_FRAMES);
   const bool traverseElementChildren =
-    aElement->HasDirtyDescendantsForServo() || descendantsNeedFrames;
+    aElement->HasDirtyDescendantsForServo() ||
+    aElement->HasAnimationOnlyDirtyDescendantsForServo() ||
+    descendantsNeedFrames;
   const bool traverseTextChildren = recreateContext || descendantsNeedFrames;
   bool recreatedAnyContext = recreateContext;
   if (traverseElementChildren || traverseTextChildren) {
@@ -470,6 +475,7 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
   }
 
   aElement->UnsetHasDirtyDescendantsForServo();
+  aElement->UnsetHasAnimationOnlyDirtyDescendantsForServo();
   aElement->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES);
   return recreatedAnyContext;
 }
