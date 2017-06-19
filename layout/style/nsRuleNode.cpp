@@ -5275,6 +5275,12 @@ nsRuleNode::ComputeUIResetData(void* aStartStruct,
            parentUI->mWindowShadow,
            NS_STYLE_WINDOW_SHADOW_DEFAULT);
 
+  // -moz-window-opacity: factor, inherit, initial
+  SetFactor(*aRuleData->ValueForWindowOpacity(),
+            ui->mWindowOpacity, conditions,
+            parentUI->mWindowOpacity, 1.0f,
+            SETFCT_OPACITY | SETFCT_UNSET_INITIAL);
+
   COMPUTE_END_RESET(UIReset, ui)
 }
 
