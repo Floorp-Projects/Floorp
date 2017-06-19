@@ -2,6 +2,14 @@
 //       unprivileged code.
 // - Please make sure that any changes apply cleanly to all use cases.
 
+if (typeof(TalosContentProfiler) == "undefined") {
+  try {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  } catch (e) {}
+  Components.utils.import("resource://gre/modules/Services.jsm");
+  Services.scriptloader.loadSubScript("chrome://talos-powers-content/content/TalosContentProfiler.js");
+}
+
 function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
   var win;
   if (target == "content") {
@@ -165,30 +173,33 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
 
         /* stop scrolling if we can't scroll more, or if we've reached requested number of steps */
         if ((getPos() == lastScrollPos) || (opt_numSteps && (durations.length >= (opt_numSteps + 2)))) {
-          if (typeof(Profiler) !== "undefined") {
-            Profiler.pause();
+          let profilerPaused = Promise.resolve();
+          if (typeof(TalosContentProfiler) !== "undefined") {
+            profilerPaused = TalosContentProfiler.pause(testBaseName, true);
           }
 
-          // Note: The first (1-5) intervals WILL be longer than the rest.
-          // First interval might include initial rendering and be extra slow.
-          // Also requestAnimationFrame needs to sync (optimally in 1 frame) after long frames.
-          // Suggested: Ignore the first 5 intervals.
+          profilerPaused.then(() => {
+            // Note: The first (1-5) intervals WILL be longer than the rest.
+            // First interval might include initial rendering and be extra slow.
+            // Also requestAnimationFrame needs to sync (optimally in 1 frame) after long frames.
+            // Suggested: Ignore the first 5 intervals.
 
-          durations.pop(); // Last step was 0.
-          durations.pop(); // and the prev one was shorter and with end-of-page logic, ignore both.
+            durations.pop(); // Last step was 0.
+            durations.pop(); // and the prev one was shorter and with end-of-page logic, ignore both.
 
-          if (win.talosDebug)
-            win.talosDebug.displayData = true; // In a browser: also display all data points.
+            if (win.talosDebug)
+              win.talosDebug.displayData = true; // In a browser: also display all data points.
 
-          // For analysis (otherwise, it's too many data points for talos):
-          var sum = 0;
-          for (var i = 0; i < durations.length; i++)
-            sum += Number(durations[i]);
+            // For analysis (otherwise, it's too many data points for talos):
+            var sum = 0;
+            for (var i = 0; i < durations.length; i++)
+              sum += Number(durations[i]);
 
-          // Report average interval or (failsafe) 0 if no intervls were recorded
-          result.values.push(durations.length ? sum / durations.length : 0);
-          result.names.push(testBaseName);
-          resolve();
+            // Report average interval or (failsafe) 0 if no intervls were recorded
+            result.values.push(durations.length ? sum / durations.length : 0);
+            result.names.push(testBaseName);
+            resolve();
+          });
           return;
         }
 
@@ -196,10 +207,11 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
         rAF(tick);
       }
 
-      if (typeof(Profiler) !== "undefined") {
-        Profiler.resume();
+      if (typeof(TalosContentProfiler) !== "undefined") {
+        TalosContentProfiler.resume(testBaseName, true).then(() => {
+          rAF(tick);
+        });
       }
-      rAF(tick);
     });
   }
 
