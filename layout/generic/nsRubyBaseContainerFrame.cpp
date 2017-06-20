@@ -79,7 +79,8 @@ LineBreakBefore(nsIFrame* aFrame,
     iter.SetOriginalOffset(textFrame->GetContentOffset());
     uint32_t pos = iter.GetSkippedOffset();
     gfxTextRun* textRun = textFrame->GetTextRun(nsTextFrame::eInflated);
-    if (pos >= textRun->GetLength()) {
+    MOZ_ASSERT(textRun, "fail to build textrun?");
+    if (!textRun || pos >= textRun->GetLength()) {
       // The text frame contains no character at all.
       return gfxBreakPriority::eNoBreak;
     }
