@@ -111,7 +111,10 @@ class BookmarkRepairRequestor extends CollectionRepairRequestor {
     // that tests have a slightly easier time, hence the `|| []` in each loop.
 
     // Missing children records when the parent exists but a child doesn't.
-    for (let { child } of validationInfo.problems.missingChildren || []) {
+    for (let { parent, child } of validationInfo.problems.missingChildren || []) {
+      // We can't be sure if the child is missing or our copy of the parent is
+      // wrong, so request both
+      ids.add(parent);
       ids.add(child);
     }
     if (ids.size > MAX_REQUESTED_IDS) {
@@ -130,18 +133,22 @@ class BookmarkRepairRequestor extends CollectionRepairRequestor {
       return ids; // might as well give up here - we aren't going to repair.
     }
 
-    // Entries where we have the parent but know for certain that the child was
-    // deleted.
-    for (let { parent } of validationInfo.problems.deletedChildren || []) {
+    // Entries where we have the parent but we have a record from the server that
+    // claims the child was deleted.
+    for (let { parent, child } of validationInfo.problems.deletedChildren || []) {
+      // Request both, since we don't know if it's a botched deletion or revival
       ids.add(parent);
+      ids.add(child);
     }
     if (ids.size > MAX_REQUESTED_IDS) {
       return ids; // might as well give up here - we aren't going to repair.
     }
 
     // Entries where the child references a parent that we don't have, but we
-    // know why: the parent was deleted.
-    for (let { child } of validationInfo.problems.deletedParents || []) {
+    // have a record from the server that claims the parent was deleted.
+    for (let { parent, child } of validationInfo.problems.deletedParents || []) {
+      // Request both, since we don't know if it's a botched deletion or revival
+      ids.add(parent);
       ids.add(child);
     }
     if (ids.size > MAX_REQUESTED_IDS) {
@@ -169,7 +176,6 @@ class BookmarkRepairRequestor extends CollectionRepairRequestor {
       ids.add(child);
     }
 
-    // XXX - any others we should consider?
     return ids;
   }
 
