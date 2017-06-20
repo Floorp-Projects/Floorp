@@ -21,7 +21,8 @@ class MP4Decoder : public ChannelMediaDecoder
 public:
   explicit MP4Decoder(MediaDecoderInit& aInit);
 
-  MediaDecoder* Clone(MediaDecoderInit& aInit) override {
+  ChannelMediaDecoder* Clone(MediaDecoderInit& aInit) override
+  {
     if (!IsEnabled()) {
       return nullptr;
     }

@@ -34,13 +34,6 @@ MediaSourceDecoder::MediaSourceDecoder(MediaDecoderInit& aInit)
   mExplicitDuration.Set(Some(UnspecifiedNaN<double>()));
 }
 
-MediaDecoder*
-MediaSourceDecoder::Clone(MediaDecoderInit& aInit)
-{
-  // TODO: Sort out cloning.
-  return nullptr;
-}
-
 MediaDecoderStateMachine*
 MediaSourceDecoder::CreateStateMachine()
 {

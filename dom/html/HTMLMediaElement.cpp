@@ -49,7 +49,6 @@
 #include "nsITimer.h"
 
 #include "MediaError.h"
-#include "MediaDecoder.h"
 #include "MediaPrefs.h"
 #include "MediaResource.h"
 
@@ -70,6 +69,7 @@
 #include "nsIScriptError.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "mozilla/dom/MediaSource.h"
+#include "ChannelMediaDecoder.h"
 #include "MediaMetadataManager.h"
 #include "MediaSourceDecoder.h"
 #include "MediaStreamListener.h"
@@ -2446,7 +2446,9 @@ nsresult HTMLMediaElement::LoadResource()
   HTMLMediaElement* other = LookupMediaElementURITable(mLoadingSrc);
   if (other && other->mDecoder) {
     // Clone it.
-    nsresult rv = InitializeDecoderAsClone(other->mDecoder);
+    // TODO: remove the cast by storing ChannelMediaDecoder in the URI table.
+    nsresult rv = InitializeDecoderAsClone(
+      static_cast<ChannelMediaDecoder*>(other->mDecoder.get()));
     if (NS_SUCCEEDED(rv))
       return rv;
   }
@@ -4596,7 +4598,8 @@ HTMLMediaElement::CanPlayType(const nsAString& aType, nsAString& aResult)
   return NS_OK;
 }
 
-nsresult HTMLMediaElement::InitializeDecoderAsClone(MediaDecoder* aOriginal)
+nsresult
+HTMLMediaElement::InitializeDecoderAsClone(ChannelMediaDecoder* aOriginal)
 {
   NS_ASSERTION(mLoadingSrc, "mLoadingSrc must already be set");
   NS_ASSERTION(mDecoder == nullptr, "Shouldn't have a decoder");
@@ -4615,7 +4618,7 @@ nsresult HTMLMediaElement::InitializeDecoderAsClone(MediaDecoder* aOriginal)
     mHasSuspendTaint,
     HasAttr(kNameSpaceID_None, nsGkAtoms::loop));
 
-  RefPtr<MediaDecoder> decoder = aOriginal->Clone(decoderInit);
+  RefPtr<ChannelMediaDecoder> decoder = aOriginal->Clone(decoderInit);
   if (!decoder)
     return NS_ERROR_FAILURE;
 
@@ -4654,7 +4657,7 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
     mHasSuspendTaint,
     HasAttr(kNameSpaceID_None, nsGkAtoms::loop));
 
-  RefPtr<MediaDecoder> decoder =
+  RefPtr<ChannelMediaDecoder> decoder =
     DecoderTraits::CreateDecoder(mimeType, decoderInit, &diagnostics);
   diagnostics.StoreFormatDiagnostics(OwnerDoc(),
                                      NS_ConvertASCIItoUTF16(mimeType),

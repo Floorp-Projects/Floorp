@@ -13,7 +13,7 @@
 
 namespace mozilla {
 
-MediaDecoder*
+ChannelMediaDecoder*
 WaveDecoder::Clone(MediaDecoderInit& aInit)
 {
   return new WaveDecoder(aInit);
