@@ -3801,7 +3801,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
     // transaction because we wanted to update plugins first. Schedule the
     // composite now.
     if (layerManager) {
-      layerManager->Composite();
+      layerManager->ScheduleComposite();
     }
   }
 
