@@ -1,7 +1,3 @@
-function run_test() {
-  run_next_test();
-}
-
 /* Bug 1016953 - When a previous bookmark backup exists with the same hash
 regardless of date, an automatic backup should attempt to either rename it to
 today's date if the backup was for an old date or leave it alone if it was for

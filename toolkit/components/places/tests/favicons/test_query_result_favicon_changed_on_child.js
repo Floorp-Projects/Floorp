@@ -68,7 +68,3 @@ add_task(async function test_query_result_favicon_changed_on_child() {
   // Free the resources immediately.
   result.root.containerOpen = false;
 });
-
-function run_test() {
-  run_next_test();
-}
