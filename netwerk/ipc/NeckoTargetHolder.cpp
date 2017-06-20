@@ -19,9 +19,23 @@ NeckoTargetHolder::GetNeckoTarget()
   nsCOMPtr<nsIEventTarget> target = mNeckoTarget;
 
   if (!target) {
-    target = do_GetMainThread();
+    target = GetMainThreadEventTarget();
   }
   return target.forget();
+}
+
+nsresult
+NeckoTargetHolder::Dispatch(already_AddRefed<nsIRunnable>&& aRunnable,
+                            uint32_t aDispatchFlags)
+{
+  if (mNeckoTarget) {
+    return mNeckoTarget->Dispatch(Move(aRunnable), aDispatchFlags);
+  }
+
+  nsCOMPtr<nsIEventTarget> mainThreadTarget = GetMainThreadEventTarget();
+  MOZ_ASSERT(mainThreadTarget);
+
+  return mainThreadTarget->Dispatch(Move(aRunnable), aDispatchFlags);
 }
 
 } // namespace net
