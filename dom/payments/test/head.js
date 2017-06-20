@@ -101,6 +101,34 @@ function checkComplexPayment(aPayment) {
   is(paymentOptions.shippingType, "shipping", "shippingType option should be 'shipping'");
 }
 
+function checkDupShippingOptionsPayment(aPayment) {
+  // checking the passed PaymentMethods parameter
+  is(aPayment.paymentMethods.length, 1, "paymentMethods' length should be 1.");
+
+  const methodData = aPayment.paymentMethods.queryElementAt(0, Ci.nsIPaymentMethodData);
+  ok(methodData, "Fail to get payment methodData.");
+  is(methodData.supportedMethods, "MyPay", "modifier's supported method name should be 'MyPay'.");
+  is(methodData.data, "", "method data should be empty");
+
+  // checking the passed PaymentDetails parameter
+  const details = aPayment.paymentDetails;
+  is(details.id, "duplicate shipping options details", "details.id should be 'duplicate shipping options details'.");
+  is(details.totalItem.label, "Donation", "total item's label should be 'Donation'.");
+  is(details.totalItem.amount.currency, "USD", "total item's currency should be 'USD'.");
+  is(details.totalItem.amount.value, "55.00", "total item's value should be '55.00'.");
+
+  const shippingOptions = details.shippingOptions;
+  is(shippingOptions.length, 0, "shippingOptions' length should be 0.");
+
+  // checking the passed PaymentOptions parameter
+  const paymentOptions = aPayment.paymentOptions;
+  ok(paymentOptions.requestPayerName, "payerName option should be true");
+  ok(paymentOptions.requestPayerEmail, "payerEmail option should be true");
+  ok(paymentOptions.requestPayerPhone, "payerPhone option should be true");
+  ok(paymentOptions.requestShipping, "requestShipping option should be true");
+  is(paymentOptions.shippingType, "shipping", "shippingType option should be 'shipping'");
+}
+
 function cleanup() {
   const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"].getService(Ci.nsIPaymentRequestService);
   if (paymentSrv) {
