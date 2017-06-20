@@ -20,7 +20,7 @@ public:
     : ChannelMediaDecoder(aInit)
   {
   }
-  MediaDecoder* Clone(MediaDecoderInit& aInit) override;
+  ChannelMediaDecoder* Clone(MediaDecoderInit& aInit) override;
   MediaDecoderStateMachine* CreateStateMachine() override;
 
   // Returns true if the MP3 backend is preffed on, and we're running on a
