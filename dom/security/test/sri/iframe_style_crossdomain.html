@@ -45,11 +45,11 @@
       ok(false, "We should load non-CORS cross-domain stylesheets with incorrect hashes!");
     }
 
-    function good_correctDataBlocked() {
-      ok(true, "We should block CORS cross-domain stylesheets in data: URI!");
+    function bad_correctDataBlocked() {
+      ok(false, "We should not block non-CORS cross-domain stylesheets in data: URI!");
     }
-    function bad_correctDataLoaded() {
-      ok(false, "A CORS cross-domain stylesheet with data: URI was correctly loaded.");
+    function good_correctDataLoaded() {
+      ok(true, "A non-CORS cross-domain stylesheet with data: URI was correctly loaded.");
     }
     function bad_correctDataCORSBlocked() {
       ok(false, "We should not block CORS stylesheets in data: URI!");
@@ -85,18 +85,11 @@
         onerror="good_incorrectHashBlocked()"
         onload="bad_incorrectHashLoaded()">
 
-  <!-- valid CORS sha256 hash in a data: URL, but didn't specify crossorigin -->
+  <!-- valid non-CORS sha256 hash in a data: URL -->
   <link rel="stylesheet" href="data:text/css,.green-text{color:rgb(0, 255, 0)}"
         integrity="sha256-EhVtGGyovvffvYdhyqJxUJ/ekam7zlxxo46iM13cwP0="
-        onerror="good_correctDataBlocked()"
-        onload="bad_correctDataLoaded()">
-
-  <!-- valid CORS sha256 hash in a data: URL -->
-  <link rel="stylesheet" href="data:text/css,.green-text{color:rgb(0, 255, 0)}"
-        integrity="sha256-EhVtGGyovvffvYdhyqJxUJ/ekam7zlxxo46iM13cwP0="
-        crossorigin="anonymous"
-        onerror="bad_correctDataCORSBlocked()"
-        onload="good_correctDataCORSLoaded()">
+        onerror="bad_correctDataBlocked()"
+        onload="good_correctDataLoaded()">
 
   <!-- valid CORS sha256 hash in a data: URL -->
   <link rel="stylesheet" href="data:text/css,.blue-text{color:rgb(0, 0, 255)}"
