@@ -7,10 +7,14 @@
 #ifndef mozilla_dom_FetchConsumer_h
 #define mozilla_dom_FetchConsumer_h
 
+#include "Fetch.h"
+
 class nsIThread;
 
 namespace mozilla {
 namespace dom {
+
+class Promise;
 
 namespace workers {
 class WorkerPrivate;
@@ -28,8 +32,12 @@ class FetchBodyConsumer final
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FetchBodyConsumer<Derived>)
 
-  static already_AddRefed<FetchBodyConsumer<Derived>>
-  Create(FetchBody<Derived>* aBody);
+  static already_AddRefed<Promise>
+  Create(nsIGlobalObject* aGlobal,
+         nsIEventTarget* aMainThreadEventTarget,
+         FetchBody<Derived>* aBody,
+         FetchConsumeType aType,
+         ErrorResult& aRv);
 
   void
   ReleaseObject();
@@ -40,8 +48,30 @@ public:
     return mBody;
   }
 
+  void
+  BeginConsumeBodyMainThread();
+
+  void
+  ContinueConsumeBody(nsresult aStatus, uint32_t aLength, uint8_t* aResult);
+
+  void
+  ContinueConsumeBlobBody(BlobImpl* aBlobImpl);
+
+  void
+  CancelPump();
+
+  workers::WorkerPrivate*
+  GetWorkerPrivate() const
+  {
+    return mWorkerPrivate;
+  }
+
 private:
-  explicit FetchBodyConsumer(FetchBody<Derived>* aBody);
+  FetchBodyConsumer(nsIEventTarget* aMainThreadEventTarget,
+                    workers::WorkerPrivate* aWorkerPrivate,
+                    FetchBody<Derived>* aBody,
+                    Promise* aPromise,
+                    FetchConsumeType aType);
 
   ~FetchBodyConsumer();
 
@@ -52,12 +82,26 @@ private:
   RegisterWorkerHolder(workers::WorkerPrivate* aWorkerPrivate);
 
   nsCOMPtr<nsIThread> mTargetThread;
+  nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
   RefPtr<FetchBody<Derived>> mBody;
 
   // Set when consuming the body is attempted on a worker.
   // Unset when consumption is done/aborted.
   // This WorkerHolder keeps alive the consumer via a cycle.
   UniquePtr<workers::WorkerHolder> mWorkerHolder;
+
+  // Always set whenever the FetchBodyConsumer is created on the worker thread.
+  workers::WorkerPrivate* mWorkerPrivate;
+
+  nsMainThreadPtrHandle<nsIInputStreamPump> mConsumeBodyPump;
+
+  // Only ever set once, always on target thread.
+  FetchConsumeType mConsumeType;
+  RefPtr<Promise> mConsumePromise;
+
+#ifdef DEBUG
+  bool mReadDone;
+#endif
 };
 
 } // namespace dom
