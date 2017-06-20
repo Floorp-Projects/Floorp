@@ -290,14 +290,14 @@ PlacesController.prototype = {
       break;
     case "placesCmd_createBookmark":
       let node = this._view.selectedNode;
-      PlacesUIUtils.showBookmarkDialog({ action: "add"
-                                       , type: "bookmark"
-                                       , hiddenRows: [ "description"
-                                                     , "keyword"
-                                                     , "location"
-                                                     , "loadInSidebar" ]
-                                       , uri: NetUtil.newURI(node.uri)
-                                       , title: node.title
+      PlacesUIUtils.showBookmarkDialog({ action: "add",
+                                         type: "bookmark",
+                                         hiddenRows: [ "description",
+                                                        "keyword",
+                                                        "location",
+                                                        "loadInSidebar" ],
+                                         uri: NetUtil.newURI(node.uri),
+                                         title: node.title
                                        }, window.top);
       break;
     }
@@ -677,9 +677,9 @@ PlacesController.prototype = {
     if (!node)
       return;
 
-    PlacesUIUtils.showBookmarkDialog({ action: "edit"
-                                     , node
-                                     , hiddenRows: [ "folderPicker" ]
+    PlacesUIUtils.showBookmarkDialog({ action: "edit",
+                                       node,
+                                       hiddenRows: [ "folderPicker" ]
                                      }, window.top);
   },
 
@@ -734,10 +734,10 @@ PlacesController.prototype = {
       throw Cr.NS_ERROR_NOT_AVAILABLE;
 
     let performed =
-      PlacesUIUtils.showBookmarkDialog({ action: "add"
-                                       , type: aType
-                                       , defaultInsertionPoint: ip
-                                       , hiddenRows: [ "folderPicker" ]
+      PlacesUIUtils.showBookmarkDialog({ action: "add",
+                                         type: aType,
+                                         defaultInsertionPoint: ip,
+                                         hiddenRows: [ "folderPicker" ]
                                        }, window.top);
     if (performed) {
       // Select the new item.
@@ -765,8 +765,8 @@ PlacesController.prototype = {
       return;
     }
 
-    let txn = PlacesTransactions.NewSeparator({ parentGuid: await ip.promiseGuid()
-                                              , index: ip.index });
+    let txn = PlacesTransactions.NewSeparator({ parentGuid: await ip.promiseGuid(),
+                                                index: ip.index });
     let guid = await txn.transact();
     let itemId = await PlacesUtils.promiseItemId(guid);
     // Select the new item.

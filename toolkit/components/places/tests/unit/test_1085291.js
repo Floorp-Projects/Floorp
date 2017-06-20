@@ -14,25 +14,25 @@ add_task(async function() {
   }
 
   // Normal bookmark.
-  await insertAndTest({ parentGuid: root.bookmarkGuid
-                      , type: PlacesUtils.bookmarks.TYPE_BOOKMARK
-                      , title: "Test Bookmark"
-                      , url: "http://test.url.tld" });
+  await insertAndTest({ parentGuid: root.bookmarkGuid,
+                        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+                        title: "Test Bookmark",
+                        url: "http://test.url.tld" });
 
   // place: query
-  await insertAndTest({ parentGuid: root.bookmarkGuid
-                      , type: PlacesUtils.bookmarks.TYPE_BOOKMARK
-                      , title: "Test Query"
-                      , url: "place:folder=BOOKMARKS_MENU" });
+  await insertAndTest({ parentGuid: root.bookmarkGuid,
+                        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+                        title: "Test Query",
+                        url: "place:folder=BOOKMARKS_MENU" });
 
   // folder
-  await insertAndTest({ parentGuid: root.bookmarkGuid
-                      , type: PlacesUtils.bookmarks.TYPE_FOLDER
-                      , title: "Test Folder" });
+  await insertAndTest({ parentGuid: root.bookmarkGuid,
+                        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+                        title: "Test Folder" });
 
   // separator
-  await insertAndTest({ parentGuid: root.bookmarkGuid
-                      , type: PlacesUtils.bookmarks.TYPE_SEPARATOR });
+  await insertAndTest({ parentGuid: root.bookmarkGuid,
+                        type: PlacesUtils.bookmarks.TYPE_SEPARATOR });
 
   root.containerOpen = false;
 });

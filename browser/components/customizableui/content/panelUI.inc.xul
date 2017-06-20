@@ -117,16 +117,16 @@
         <vbox id="PanelUI-remotetabs-main" observes="sync-syncnow-state">
           <vbox id="PanelUI-remotetabs-buttons">
             <toolbarbutton id="PanelUI-remotetabs-view-sidebar"
-                           class="subviewbutton"
+                           class="subviewbutton subviewbutton-iconic"
                            observes="viewTabsSidebar"
                            label="&appMenuRemoteTabs.sidebar.label;"/>
             <toolbarbutton id="PanelUI-remotetabs-view-managedevices"
-                           class="subviewbutton"
+                           class="subviewbutton subviewbutton-iconic"
                            label="&appMenuRemoteTabs.managedevices.label;"
                            oncommand="gSync.openDevicesManagementPage('syncedtabs-menupanel');"/>
             <toolbarbutton id="PanelUI-remotetabs-syncnow"
                            observes="sync-status"
-                           class="subviewbutton"
+                           class="subviewbutton subviewbutton-iconic"
                            oncommand="gSync.doSync();"
                            closemenu="none"/>
             <menuseparator id="PanelUI-remotetabs-separator"/>

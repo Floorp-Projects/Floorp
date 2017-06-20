@@ -59,17 +59,71 @@ function testSameContent(video1, video2) {
   ok(true, `${video1.token} video1 and video2 have identical content.`);
 }
 
+function waitUntilSeekToLastFrame(video) {
+  Log(video.token, "Waiting for seeking to the last frame");
+  function callSeekToNextFrame() {
+    video.seekToNextFrame().then(
+      () => {
+        if (!video.seenEnded) {
+          callSeekToNextFrame();
+        }
+      },
+      () => {
+        // When seek reaches the end, the promise is resolved before 'ended'
+        // is fired. The resolver calls callSeekToNextFrame() to schedule
+        // another seek and then the 'ended' handler calls finish() to shut
+        // down the MediaDecoder which will reject the seek promise. So we don't
+        // raise an error in this case.
+        ok(video.seenEnded, "seekToNextFrame() failed.");
+      }
+    );
+  }
+
+  return new Promise(function(resolve, reject) {
+    video.seenEnded = false;
+    video.addEventListener("ended", () => {
+      video.seenEnded = true;
+      resolve();
+    }, true);
+    callSeekToNextFrame(video);
+  });
+}
+
+function appendVideoToDocWithoutLoad(token, width, height) {
+  // Default size of (160, 120) is used by other media tests.
+  if (width === undefined) { width = 160; }
+  if (height === undefined) { height = 3*width/4; }
+
+  let v = document.createElement('video');
+  v.token = token;
+  document.body.appendChild(v);
+  v.width = width;
+  v.height = height;
+  return v;
+}
+
+function loadAndWaitUntilLoadedmetadata(video, url, preloadType = "metadata") {
+  return new Promise((resolve, reject) => {
+    video.preload = preloadType;
+    video.addEventListener("loadedmetadata", () => { resolve(); }, true);
+    video.src = url;
+  });
+}
+
 startTest({
   desc: "Test resume an ended video shows the last frame.",
   prefs: [
     [ "media.test.video-suspend", true ],
     [ "media.suspend-bkgnd-video.enabled", true ],
-    [ "media.suspend-bkgnd-video.delay-ms", 100 ]
+    [ "media.suspend-bkgnd-video.delay-ms", 100 ],
+    [ "media.dormant-on-pause-timeout-ms", -1],
+    [ "media.decoder.skip-to-next-key-frame.enabled", false]
   ],
   tests: gDecodeSuspendTests,
+
   runTest: (test, token) => {
     let v = appendVideoToDoc(test.name, token);
-    let vReference = appendVideoToDoc(test.name, token);
+    let vReference = appendVideoToDocWithoutLoad(token+"-ref");
     manager.started(token);
 
     /*
@@ -77,10 +131,10 @@ startTest({
      * resuming video decoder should seek to the last frame.
      * This issue was found in bug 1358057.
      */
-    Promise.all([waitUntilPlaying(v), waitUntilPlaying(vReference)])
+    Promise.all([waitUntilPlaying(v), loadAndWaitUntilLoadedmetadata(vReference, test.name, "auto")])
       .then(() => testVideoSuspendsWhenHidden(v))
       .then(() => {
-        return Promise.all([waitUntilEnded(v), waitUntilEnded(vReference)]);
+        return Promise.all([waitUntilEnded(v), waitUntilSeekToLastFrame(vReference)]);
       })
       .then(() => testVideoOnlySeekCompletedWhenShown(v))
       .then(() => {

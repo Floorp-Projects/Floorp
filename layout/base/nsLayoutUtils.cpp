@@ -8602,14 +8602,14 @@ void StrokeLineWithSnapping(const nsPoint& aP1, const nsPoint& aP2,
 
 namespace layout {
 
-
 void
-MaybeSetupTransactionIdAllocator(layers::LayerManager* aManager, nsView* aView)
+MaybeSetupTransactionIdAllocator(layers::LayerManager* aManager,
+                                 nsPresContext* aPresContext)
 {
-  if (aManager->GetBackendType() == LayersBackend::LAYERS_CLIENT ||
-      aManager->GetBackendType() == LayersBackend::LAYERS_WR) {
-    nsRefreshDriver *refresh = aView->GetViewManager()->GetPresShell()->GetPresContext()->RefreshDriver();
-    aManager->SetTransactionIdAllocator(refresh);
+  auto backendType = aManager->GetBackendType();
+  if (backendType == LayersBackend::LAYERS_CLIENT ||
+      backendType == LayersBackend::LAYERS_WR) {
+    aManager->SetTransactionIdAllocator(aPresContext->RefreshDriver());
   }
 }
 

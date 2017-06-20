@@ -14,6 +14,7 @@
 
 #include "nsColor.h"
 #include "nsCOMPtr.h"
+#include "nsIAtom.h"
 #include "nsIStyleRule.h"
 #include "nsIStyleRuleProcessor.h"
 #include "PLDHashTable.h"
@@ -78,9 +79,9 @@ public:
   // and converting the ruledata to Servo specified values.
   void CalculateMappedServoDeclarations(nsPresContext* aPresContext);
 
-  nsIStyleRule* LangRuleFor(const nsString& aLanguage);
+  nsIStyleRule* LangRuleFor(const nsIAtom* aLanguage);
 
-private: 
+private:
   nsHTMLStyleSheet(const nsHTMLStyleSheet& aCopy) = delete;
   nsHTMLStyleSheet& operator=(const nsHTMLStyleSheet& aCopy) = delete;
 
@@ -169,7 +170,7 @@ public: // for mLangRuleTable structures only
   private:
     ~LangRule() {}
   public:
-    explicit LangRule(const nsSubstring& aLang) : mLang(aLang) {}
+    explicit LangRule(nsIAtom* aLang) : mLang(aLang) {}
 
     NS_DECL_ISUPPORTS
 
@@ -182,7 +183,7 @@ public: // for mLangRuleTable structures only
     virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
   #endif
 
-    nsString mLang;
+    nsCOMPtr<nsIAtom> mLang;
   };
 
 private:
