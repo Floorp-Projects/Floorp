@@ -1,0 +1,19 @@
+[package]
+name = "core-text"
+version = "5.0.1"
+authors = ["The Servo Project Developers"]
+description = "Bindings to the Core Text framework."
+license = "MIT/Apache-2.0"
+repository = "https://github.com/servo/core-text-rs"
+
+[features]
+default = []
+# For OS X 10.7 compat, use this feature. It will exclude some things
+lion = []
+
+[dependencies]
+libc = "0.2"
+
+[target.x86_64-apple-darwin.dependencies]
+core-foundation = "0.3"
+core-graphics = "0.8"
