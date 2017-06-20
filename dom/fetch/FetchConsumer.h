@@ -21,14 +21,14 @@ template <class Derived> class FetchBody;
 
 // FetchBody is not thread-safe but we need to move it around threads.
 // In order to keep it alive all the time, we use a WorkerHolder, if created on
-// workers, plus a wrapper.
+// workers, plus a this consumer.
 template <class Derived>
-class FetchBodyWrapper final
+class FetchBodyConsumer final
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FetchBodyWrapper<Derived>)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FetchBodyConsumer<Derived>)
 
-  static already_AddRefed<FetchBodyWrapper<Derived>>
+  static already_AddRefed<FetchBodyConsumer<Derived>>
   Create(FetchBody<Derived>* aBody);
 
   void
@@ -41,9 +41,9 @@ public:
   }
 
 private:
-  explicit FetchBodyWrapper(FetchBody<Derived>* aBody);
+  explicit FetchBodyConsumer(FetchBody<Derived>* aBody);
 
-  ~FetchBodyWrapper();
+  ~FetchBodyConsumer();
 
   void
   AssertIsOnTargetThread() const;
@@ -56,7 +56,7 @@ private:
 
   // Set when consuming the body is attempted on a worker.
   // Unset when consumption is done/aborted.
-  // This WorkerHolder keeps alive the wrapper via a cycle.
+  // This WorkerHolder keeps alive the consumer via a cycle.
   UniquePtr<workers::WorkerHolder> mWorkerHolder;
 };
 
