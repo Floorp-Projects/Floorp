@@ -6,6 +6,8 @@
 
 #include "minidump_callback.h"
 
+#include <winternl.h>
+
 #include <algorithm>
 #include <cassert>
 
@@ -14,21 +16,68 @@ namespace google_breakpad {
 static const DWORD sHeapRegionSize= 1024;
 static DWORD sPageSize = 0;
 
-bool GetAppMemoryFromRegister(HANDLE aProcess,
-                              RegisterValueType aRegister,
-                              AppMemoryList::iterator aResult)
-{
-  static_assert(sizeof(RegisterValueType) == sizeof(void*),
-                "Size mismatch between DWORD/DWORD64 and void*");
+using NtQueryInformationThreadFunc = decltype(::NtQueryInformationThread);
+static NtQueryInformationThreadFunc* sNtQueryInformationThread = nullptr;
 
+
+namespace {
+enum {
+  ThreadBasicInformation,
+};
+
+struct CLIENT_ID {
+  PVOID UniqueProcess;
+  PVOID UniqueThread;
+};
+
+struct THREAD_BASIC_INFORMATION {
+  NTSTATUS ExitStatus;
+  PVOID TebBaseAddress;
+  CLIENT_ID ClientId;
+  KAFFINITY AffMask;
+  DWORD Priority;
+  DWORD BasePriority;
+};
+}
+
+void InitAppMemoryInternal()
+{
   if (!sPageSize) {
     SYSTEM_INFO systemInfo;
     GetSystemInfo(&systemInfo);
     sPageSize = systemInfo.dwPageSize;
   }
 
+  if (!sNtQueryInformationThread) {
+    sNtQueryInformationThread = (NtQueryInformationThreadFunc*)
+      (::GetProcAddress(::GetModuleHandleW(L"ntdll.dll"),
+                                           "NtQueryInformationThread"));
+  }
+}
+
+bool GetAppMemoryFromRegister(HANDLE aProcess,
+                              const NT_TIB* aTib,
+                              RegisterValueType aRegister,
+                              AppMemory* aResult)
+{
+  static_assert(sizeof(RegisterValueType) == sizeof(void*),
+                "Size mismatch between DWORD/DWORD64 and void*");
+
+  if (!sPageSize) {
+    // GetSystemInfo() should not fail, but bail out just in case it fails.
+    return false;
+  }
+
   RegisterValueType addr = aRegister;
   addr &= ~(static_cast<RegisterValueType>(sPageSize) - 1);
+
+  if (aTib) {
+    if (aRegister >= (RegisterValueType)aTib->StackLimit &&
+        aRegister <= (RegisterValueType)aTib->StackBase) {
+      // aRegister points to the stack.
+      return false;
+    }
+  }
 
   MEMORY_BASIC_INFORMATION memInfo;
   memset(&memInfo, 0, sizeof(memInfo));
@@ -79,6 +128,42 @@ FindNextPreallocated(AppMemoryList& aList, AppMemoryList::iterator aBegin) {
   return it;
 }
 
+static bool
+GetThreadTib(HANDLE aProcess, DWORD aThreadId, NT_TIB* aTib) {
+  HANDLE threadHandle = ::OpenThread(THREAD_QUERY_INFORMATION,
+                                     FALSE,
+                                     aThreadId);
+  if (!threadHandle) {
+    return false;
+  }
+
+  if (!sNtQueryInformationThread) {
+    return false;
+  }
+
+  THREAD_BASIC_INFORMATION threadInfo;
+  auto status = (*sNtQueryInformationThread)(threadHandle,
+                                             (THREADINFOCLASS)ThreadBasicInformation,
+                                             &threadInfo,
+                                             sizeof(threadInfo),
+                                             NULL);
+  if (!NT_SUCCESS(status)) {
+    return false;
+  }
+
+  auto readSuccess = ::ReadProcessMemory(aProcess,
+                                         threadInfo.TebBaseAddress,
+                                         aTib,
+                                         sizeof(*aTib),
+                                         NULL);
+  if (!readSuccess) {
+    return false;
+  }
+
+  ::CloseHandle(threadHandle);
+  return true;
+}
+
 void IncludeAppMemoryFromExceptionContext(HANDLE aProcess,
                                           DWORD aThreadId,
                                           AppMemoryList& aList,
@@ -86,6 +171,14 @@ void IncludeAppMemoryFromExceptionContext(HANDLE aProcess,
                                           bool aInstructionPointerOnly) {
   RegisterValueType heapAddrCandidates[kExceptionAppMemoryRegions];
   size_t numElements = 0;
+
+  NT_TIB tib;
+  memset(&tib, 0, sizeof(tib));
+  if (!GetThreadTib(aProcess, aThreadId, &tib)) {
+    // Fail to query thread stack range: only safe to include the region around
+    // the instruction pointer.
+    aInstructionPointerOnly = true;
+  }
 
   // Add registers that might have a heap address to heapAddrCandidates.
   // Note that older versions of DbgHelp.dll don't correctly put the memory
@@ -121,16 +214,50 @@ void IncludeAppMemoryFromExceptionContext(HANDLE aProcess,
   heapAddrCandidates[numElements++] = aExceptionContext->Rip;
 #endif
 
-  auto appMemory = aList.begin();
+  // Inplace sort the candidates for excluding or merging memory regions.
+  auto begin = &heapAddrCandidates[0], end = &heapAddrCandidates[numElements];
+  std::make_heap(begin, end);
+  std::sort_heap(begin, end);
+
+  auto appMemory = FindNextPreallocated(aList, aList.begin());
   for (size_t i = 0; i < numElements; i++) {
-    appMemory = FindNextPreallocated(aList, appMemory);
     if (appMemory == aList.end()) {
       break;
     }
 
-    if (GetAppMemoryFromRegister(aProcess, heapAddrCandidates[i], appMemory)) {
-      appMemory++;
+    AppMemory tmp{};
+    if (!GetAppMemoryFromRegister(aProcess,
+                                  aInstructionPointerOnly ? nullptr : &tib,
+                                  heapAddrCandidates[i],
+                                  &tmp)) {
+      continue;
     }
+
+    if (!(tmp.ptr && tmp.length)) {
+      // Something unexpected happens. Skip this candidate.
+      continue;
+    }
+
+    if (!appMemory->ptr) {
+      *appMemory = tmp;
+      continue;
+    }
+
+    if (appMemory->ptr + appMemory->length > tmp.ptr) {
+      // The beginning of the next region fall within the range of the previous
+      // region: merge into one. Note that we don't merge adjacent regions like
+      // [0, 99] and [100, 199] in case we cross the border of memory allocation
+      // regions.
+      appMemory->length = tmp.ptr + tmp.length - appMemory->ptr;
+      continue;
+    }
+
+    appMemory = FindNextPreallocated(aList, ++appMemory);
+    if (appMemory == aList.end()) {
+      break;
+    }
+
+    *appMemory = tmp;
   }
 }
 
