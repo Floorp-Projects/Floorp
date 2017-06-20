@@ -537,7 +537,7 @@ LIRGeneratorARM::visitWasmSelect(MWasmSelect* ins)
 }
 
 void
-LIRGeneratorARM::visitAsmJSNeg(MAsmJSNeg* ins)
+LIRGeneratorARM::visitWasmNeg(MWasmNeg* ins)
 {
     if (ins->type() == MIRType::Int32) {
         define(new(alloc()) LNegI(useRegisterAtStart(ins->input())), ins);
