@@ -93,6 +93,18 @@ public:
   // @return True if the array is empty or false otherwise.
   bool IsEmpty() const { return mArray.IsEmpty(); }
 
+  // This method provides direct, readonly access to the array elements.
+  // @return A pointer to the first element of the array.  If the array is
+  // empty, then this pointer must not be dereferenced.
+  const elem_type* Elements() const
+  {
+    return mArray.Elements();
+  }
+  elem_type* Elements()
+  {
+    return mArray.Elements();
+  }
+
   // This method provides direct access to an element of the array. The given
   // index must be within the array bounds. If the underlying array may change
   // during iteration, use an iterator instead of this function.
@@ -251,7 +263,8 @@ public:
   }
 
   // See nsTArray::RemoveElementsBy.
-  void RemoveElementsBy(const std::function<bool(const elem_type&)>& aPredicate)
+  template <typename Predicate>
+  void RemoveElementsBy(Predicate aPredicate)
   {
     index_type i = 0;
     mArray.RemoveElementsBy([&](const elem_type& aItem) {
@@ -361,7 +374,7 @@ public:
     elem_type& GetNext()
     {
       NS_ASSERTION(HasMore(), "iterating beyond end of array");
-      return base_type::mArray.ElementAt(base_type::mPosition++);
+      return base_type::mArray.Elements()[base_type::mPosition++];
     }
   };
 
@@ -390,7 +403,7 @@ public:
     elem_type& GetNext()
     {
       NS_ASSERTION(HasMore(), "iterating beyond end of array");
-      return base_type::mArray.ElementAt(base_type::mPosition++);
+      return base_type::mArray.Elements()[base_type::mPosition++];
     }
 
   private:
@@ -426,7 +439,7 @@ public:
     elem_type& GetNext()
     {
       NS_ASSERTION(HasMore(), "iterating beyond start of array");
-      return base_type::mArray.ElementAt(--base_type::mPosition);
+      return base_type::mArray.Elements()[--base_type::mPosition];
     }
 
     // Removes the element at the current iterator position.

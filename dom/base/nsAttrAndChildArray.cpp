@@ -569,8 +569,14 @@ nsAttrAndChildArray::IndexOfAttr(nsIAtom* aLocalName, int32_t aNamespaceID) cons
   uint32_t slotCount = AttrSlotCount();
   if (aNamespaceID == kNameSpaceID_None) {
     // This should be the common case so lets make an optimized loop
-    for (i = 0; i < slotCount && AttrSlotIsTaken(i); ++i) {
+    // Note that here we don't check for AttrSlotIsTaken() in the loop
+    // condition for the sake of performance because comparing aLocalName
+    // against null would fail in the loop body (since Equals() just compares
+    // the raw pointer value of aLocalName to what AttrSlotIsTaken() would be
+    // checking.
+    for (i = 0; i < slotCount; ++i) {
       if (ATTRS(mImpl)[i].mName.Equals(aLocalName)) {
+        MOZ_ASSERT(AttrSlotIsTaken(i), "sanity check");
         return i;
       }
     }

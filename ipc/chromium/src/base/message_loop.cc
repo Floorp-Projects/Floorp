@@ -182,10 +182,12 @@ MessageLoop::MessageLoop(Type type, nsIThread* aThread)
 #endif  // OS_WIN
       transient_hang_timeout_(0),
       permanent_hang_timeout_(0),
-      next_sequence_num_(0),
-      mEventTarget(new EventTarget(this)) {
+      next_sequence_num_(0) {
   DCHECK(!current()) << "should only have one message loop per thread";
   get_tls_ptr().Set(this);
+
+  // Must initialize after current() is initialized.
+  mEventTarget = new EventTarget(this);
 
   switch (type_) {
   case TYPE_MOZILLA_PARENT:

@@ -229,6 +229,20 @@ class LcovFile(object):
     # LF:<number of instrumented lines>
     # LH:<number of lines with a non-zero execution count>
     # end_of_record
+    PREFIX_TYPES = {
+      'TN': 0,
+      'SF': 0,
+      'FN': 1,
+      'FNDA': 1,
+      'FNF': 0,
+      'FNH': 0,
+      'BRDA': 3,
+      'BRF': 0,
+      'BRH': 0,
+      'DA': 2,
+      'LH': 0,
+      'LF': 0,
+    }
 
     def __init__(self, lcov_fh):
         # These are keyed by source file because output will split sources (at
@@ -267,14 +281,10 @@ class LcovFile(object):
 
             # We occasionally end up with multi-line scripts in data:
             # uris that will trip up the parser, just skip them for now.
-            if colon < 0 or prefix not in ('TN', 'SF', 'FN', 'FNDA', 'FNF',
-                                           'FNH', 'BRDA', 'BRF', 'BRH', 'DA',
-                                           'LF', 'LH'):
+            if colon < 0 or prefix not in self.PREFIX_TYPES:
                 continue
-            if prefix not in ('SF', 'TN'):
-                args = line[(colon + 1):].split(',')
-            else:
-                args = line[(colon + 1):],
+
+            args = line[(colon + 1):].split(',', self.PREFIX_TYPES[prefix])
 
             def try_convert(a):
                 try:
