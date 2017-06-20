@@ -8,22 +8,23 @@
 // except according to those terms.
 
 use core_foundation::base::{CFRelease, CFRetain, CFTypeID, CFTypeRef, TCFType};
+use core_foundation::data::{CFData, CFDataRef};
 
-use libc::{c_void, size_t};
+use libc::{c_void, size_t, off_t};
 use std::mem;
 use std::ptr;
 
-pub type CGDataProviderGetBytesCallback = *const u8;
-pub type CGDataProviderReleaseInfoCallback = *const u8;
-pub type CGDataProviderRewindCallback = *const u8;
-pub type CGDataProviderSkipBytesCallback = *const u8;
-pub type CGDataProviderSkipForwardCallback = *const u8;
+pub type CGDataProviderGetBytesCallback = Option<unsafe extern fn (*mut c_void, *mut c_void, size_t) -> size_t>;
+pub type CGDataProviderReleaseInfoCallback = Option<unsafe extern fn (*mut c_void)>;
+pub type CGDataProviderRewindCallback = Option<unsafe extern fn (*mut c_void)>;
+pub type CGDataProviderSkipBytesCallback = Option<unsafe extern fn (*mut c_void, size_t)>;
+pub type CGDataProviderSkipForwardCallback = Option<unsafe extern fn (*mut c_void, off_t) -> off_t>;
 
-pub type CGDataProviderGetBytePointerCallback = *const u8;
-pub type CGDataProviderGetBytesAtOffsetCallback = *const u8;
-pub type CGDataProviderReleaseBytePointerCallback = *const u8;
-pub type CGDataProviderReleaseDataCallback = *const u8;
-pub type CGDataProviderGetBytesAtPositionCallback = *const u8;
+pub type CGDataProviderGetBytePointerCallback = Option<unsafe extern fn (*mut c_void) -> *mut c_void>;
+pub type CGDataProviderGetBytesAtOffsetCallback = Option<unsafe extern fn (*mut c_void, *mut c_void, size_t, size_t)>;
+pub type CGDataProviderReleaseBytePointerCallback = Option<unsafe extern fn (*mut c_void, *const c_void)>;
+pub type CGDataProviderReleaseDataCallback = Option<unsafe extern fn (*mut c_void, *const c_void, size_t)>;
+pub type CGDataProviderGetBytesAtPositionCallback = Option<unsafe extern fn (*mut c_void, *mut c_void, off_t, size_t)>;
 
 #[repr(C)]
 pub struct __CGDataProvider;
@@ -82,15 +83,20 @@ impl CGDataProvider {
             let result = CGDataProviderCreateWithData(ptr::null_mut(),
                                                       buffer.as_ptr() as *const c_void,
                                                       buffer.len() as size_t,
-                                                      ptr::null());
+                                                      None);
             TCFType::wrap_under_create_rule(result)
         }
+    }
+
+    /// Creates a copy of the data from the underlying `CFDataProviderRef`.
+    pub fn copy_data(&self) -> CFData {
+        unsafe { CFData::wrap_under_create_rule(CGDataProviderCopyData(self.obj)) }
     }
 }
 
 #[link(name = "ApplicationServices", kind = "framework")]
 extern {
-    //fn CGDataProviderCopyData
+    fn CGDataProviderCopyData(provider: CGDataProviderRef) -> CFDataRef;
     //fn CGDataProviderCreateDirect
     //fn CGDataProviderCreateSequential
     //fn CGDataProviderCreateWithCFData

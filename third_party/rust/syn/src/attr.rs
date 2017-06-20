@@ -21,7 +21,10 @@ impl Attribute {
 /// distinguished for pretty-printing.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum AttrStyle {
+    /// Attribute of the form `#![...]`.
     Outer,
+
+    /// Attribute of the form `#[...]`.
     Inner,
 }
 
@@ -34,17 +37,23 @@ pub enum MetaItem {
     ///
     /// E.g. `test` as in `#[test]`
     Word(Ident),
+
     /// List meta item.
     ///
     /// E.g. `derive(..)` as in `#[derive(..)]`
     List(Ident, Vec<NestedMetaItem>),
-    /// Name value meta item.
+
+    /// Name-value meta item.
     ///
     /// E.g. `feature = "foo"` as in `#[feature = "foo"]`
     NameValue(Ident, Lit),
 }
 
 impl MetaItem {
+    /// Name of the item.
+    ///
+    /// E.g. `test` as in `#[test]`, `derive` as in `#[derive(..)]`, and
+    /// `feature` as in `#[feature = "foo"]`.
     pub fn name(&self) -> &str {
         match *self {
             MetaItem::Word(ref name) |
@@ -59,11 +68,14 @@ impl MetaItem {
 /// E.g. the '..' in `#[name(..)]`.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum NestedMetaItem {
-    /// A full MetaItem, for recursive meta items.
-    MetaItem(MetaItem),
-    /// A literal.
+    /// A full `MetaItem`.
     ///
-    /// E.g. "foo", 64, true
+    /// E.g. `Copy` in `#[derive(Copy)]` would be a `MetaItem::Word(Ident::from("Copy"))`.
+    MetaItem(MetaItem),
+
+    /// A Rust literal.
+    ///
+    /// E.g. `"name"` in `#[rename("name")]`.
     Literal(Lit),
 }
 

@@ -8,6 +8,8 @@
 // except according to those terms.
 
 use base::CGFloat;
+use core_foundation::base::TCFType;
+use core_foundation::dictionary::CFDictionary;
 
 pub const CG_ZERO_POINT: CGPoint = CGPoint {
     x: 0.0,
@@ -70,15 +72,31 @@ impl CGRect {
             ffi::CGRectInset(*self, size.width, size.height)
         }
     }
+
+    #[inline]
+    pub fn from_dict_representation(dict: &CFDictionary) -> Option<CGRect> {
+        let mut rect = CGRect::new(&CGPoint::new(0., 0.), &CGSize::new(0., 0.));
+        let result = unsafe {
+            ffi::CGRectMakeWithDictionaryRepresentation(dict.as_concrete_TypeRef(), &mut rect)
+        };
+        if result == 0 {
+            None
+        } else {
+            Some(rect)
+        }
+    }
 }
 
 mod ffi {
-    use base::CGFloat;
+    use base::{CGFloat, boolean_t};
     use geometry::CGRect;
+    use core_foundation::dictionary::CFDictionaryRef;
 
     #[link(name = "ApplicationServices", kind = "framework")]
     extern {
         pub fn CGRectInset(rect: CGRect, dx: CGFloat, dy: CGFloat) -> CGRect;
+        pub fn CGRectMakeWithDictionaryRepresentation(dict: CFDictionaryRef,
+                                                      rect: *mut CGRect) -> boolean_t;
     }
 }
 

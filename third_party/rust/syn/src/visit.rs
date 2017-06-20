@@ -286,9 +286,7 @@ pub fn walk_generics<V: Visitor>(visitor: &mut V, generics: &Generics) {
                 visitor.visit_lifetime(lifetime);
                 walk_list!(visitor, visit_lifetime, bounds);
             }
-            WherePredicate::EqPredicate(WhereEqPredicate { ref lhs_ty,
-                                                           ref rhs_ty,
-                                                           .. }) => {
+            WherePredicate::EqPredicate(WhereEqPredicate { ref lhs_ty, ref rhs_ty, .. }) => {
                 visitor.visit_ty(lhs_ty);
                 visitor.visit_ty(rhs_ty);
             }
@@ -420,9 +418,7 @@ pub fn walk_item<V: Visitor>(visitor: &mut V, item: &Item) {
             visitor.visit_ty(ty);
             walk_list!(visitor, visit_impl_item, impl_items);
         }
-        ItemKind::Mac(ref mac) => {
-            visitor.visit_mac(mac)
-        }
+        ItemKind::Mac(ref mac) => visitor.visit_mac(mac),
     }
 }
 
@@ -497,7 +493,7 @@ pub fn walk_expr<V: Visitor>(visitor: &mut V, expr: &Expr) {
         }
         ExprKind::Match(ref expr, ref arms) => {
             visitor.visit_expr(expr);
-            for &Arm{ref attrs, ref pats, ref guard, ref body} in arms {
+            for &Arm { ref attrs, ref pats, ref guard, ref body } in arms {
                 walk_list!(visitor, visit_attribute, attrs);
                 walk_list!(visitor, visit_pat, pats);
                 if let Some(ref guard) = *guard {
@@ -563,7 +559,7 @@ pub fn walk_expr<V: Visitor>(visitor: &mut V, expr: &Expr) {
         }
         ExprKind::Struct(ref path, ref fields, ref maybe_base) => {
             visitor.visit_path(path);
-            for &FieldValue{ref ident, ref expr, ..} in fields {
+            for &FieldValue { ref ident, ref expr, .. } in fields {
                 visitor.visit_ident(ident);
                 visitor.visit_expr(expr);
             }
@@ -611,7 +607,7 @@ pub fn walk_pat<V: Visitor>(visitor: &mut V, pat: &Pat) {
         }
         Pat::Struct(ref path, ref field_pats, _) => {
             visitor.visit_path(path);
-            for &FieldPat{ref ident, ref pat, ..} in field_pats {
+            for &FieldPat { ref ident, ref pat, .. } in field_pats {
                 visitor.visit_ident(ident);
                 visitor.visit_pat(pat);
             }
@@ -657,7 +653,8 @@ pub fn walk_pat<V: Visitor>(visitor: &mut V, pat: &Pat) {
 pub fn walk_fn_decl<V: Visitor>(visitor: &mut V, fn_decl: &FnDecl) {
     for input in &fn_decl.inputs {
         match *input {
-            FnArg::SelfRef(_, _) | FnArg::SelfValue(_) => {}
+            FnArg::SelfRef(_, _) |
+            FnArg::SelfValue(_) => {}
             FnArg::Captured(ref pat, ref ty) => {
                 visitor.visit_pat(pat);
                 visitor.visit_ty(ty);
@@ -772,7 +769,7 @@ pub fn walk_view_path<V: Visitor>(visitor: &mut V, view_path: &ViewPath) {
         }
         ViewPath::List(ref path, ref items) => {
             visitor.visit_path(path);
-            for &PathListItem{ref name, ref rename} in items {
+            for &PathListItem { ref name, ref rename } in items {
                 visitor.visit_ident(name);
                 walk_opt_ident(visitor, rename);
             }
