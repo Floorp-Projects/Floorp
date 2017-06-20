@@ -5643,16 +5643,6 @@
             return;
 
           let browser = event.originalTarget;
-
-          // Preloaded browsers do not actually have any tabs. If one crashes,
-          // it should be released and removed.
-          if (browser === this._preloadedBrowser) {
-            // Calling _getPreloadedBrowser is necessary to actually consume the preloaded browser
-            let preloaded = this._getPreloadedBrowser();
-            preloaded.remove();
-            return;
-          }
-
           let icon = browser.mIconURL;
           let tab = this.getTabForBrowser(browser);
 
