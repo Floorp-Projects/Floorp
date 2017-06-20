@@ -26,6 +26,8 @@ modules += [
     'redux.js',
     'reselect.js',
     'seamless-immutable.js',
+    'WasmDis.js',
+    'WasmParser.js',
 ]
 
 DevToolsModules(*modules)

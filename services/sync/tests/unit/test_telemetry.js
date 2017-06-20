@@ -384,6 +384,38 @@ add_task(async function test_engine_fail_ioerror() {
   }
 });
 
+add_task(async function test_clean_urls() {
+  enableValidationPrefs();
+
+  Service.engineManager.register(SteamEngine);
+  let engine = Service.engineManager.get("steam");
+  engine.enabled = true;
+  let server = serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+  engine._errToThrow = new TypeError("http://www.google .com is not a valid URL.");
+
+  try {
+    _(`test_clean_urls: Steam tracker contents: ${
+      JSON.stringify(engine._tracker.changedIDs)}`);
+    let ping = await sync_and_validate_telem(true);
+    equal(ping.status.service, SYNC_FAILED_PARTIAL);
+    let failureReason = ping.engines.find(e => e.name === "steam").failureReason;
+    equal(failureReason.name, "unexpectederror");
+    equal(failureReason.error, "<URL> is not a valid URL.");
+    // Handle other errors that include urls.
+    engine._errToThrow = "Other error message that includes some:url/foo/bar/ in it.";
+    ping = await sync_and_validate_telem(true);
+    equal(ping.status.service, SYNC_FAILED_PARTIAL);
+    failureReason = ping.engines.find(e => e.name === "steam").failureReason;
+    equal(failureReason.name, "unexpectederror");
+    equal(failureReason.error, "Other error message that includes <URL> in it.");
+  } finally {
+    await cleanAndGo(engine, server);
+    Service.engineManager.unregister(engine);
+  }
+});
+
+
 add_task(async function test_initial_sync_engines() {
   enableValidationPrefs();
 

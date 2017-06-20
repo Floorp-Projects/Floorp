@@ -80,16 +80,16 @@
     "message": "Dii ka i ywar me mako cal pa but potbuk keken. Itwero bene wot iwiye me wero yer mamegi."
   },
   "tourHeaderThree": {
-    "message": "Kit ma imito"
-  },
-  "tourBodyThree": {
-    "message": "Gwok cal mamegi ma ki ngolo ii Kakube pi nywako i yoo ma yot, onyo gamo gi i kompiuta ni. Itwero bene diyo mapeca me Cal Na me nongo cal ma i mako weng."
-  },
-  "tourHeaderFour": {
     "message": "Mak dirica onyo Potbuk weng"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Yer mapeca ma i tung lacuc malo me mako kabedo ma nen i dirica onyo me mako potbuk weng."
+  },
+  "tourHeaderFour": {
+    "message": "Kit ma imito"
+  },
+  "tourBodyFour": {
+    "message": "Gwok cal mamegi ma ki ngolo ii Kakube pi nywako i yoo ma yot, onyo gamo gi i kompiuta ni. Itwero bene diyo mapeca me Cal Na me nongo cal ma i mako weng."
   },
   "tourSkip": {
     "message": "Kal"

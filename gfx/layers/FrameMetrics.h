@@ -548,10 +548,14 @@ private:
   // size of the element being scrolled. However for RTL pages or elements
   // the x value may be negative.
   //
-  // This is relative to the document. It is in the same coordinate space as
-  // |mScrollOffset|, but a different coordinate space than |mViewport| and
-  // |mDisplayPort|. Note also that this coordinate system is understood by
-  // window.scrollTo().
+  // For scrollable frames that are overflow:hidden the x and y are usually
+  // set to the value of the current scroll offset, and the width and height
+  // will match the composition bounds width and height. In effect this reduces
+  // the scrollable range to 0.
+  //
+  // This is in the same coordinate space as |mScrollOffset|, but a different
+  // coordinate space than |mViewport| and |mDisplayPort|. Note also that this
+  // coordinate system is understood by window.scrollTo().
   //
   // This is valid on any layer unless it has no content.
   CSSRect mScrollableRect;

@@ -64,6 +64,7 @@ DevToolsModules(
     'system.js',
     'task.js',
     'ThreadSafeDevToolsUtils.js',
+    'wasm-source-map.js',
 )
 
 with Files('**'):

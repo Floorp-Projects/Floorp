@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "您不能幫 Firefox Screenshots 的頁面拍照！"
   },
+  "emptySelectionErrorTitle": {
+    "message": "您的選擇範圍太小"
+  },
   "genericErrorTitle": {
     "message": "唉呀，Firefox Screenshots 有點秀逗了。"
   },
@@ -80,16 +83,16 @@
     "message": "點擊並拖曳出頁面當中的一部份，您也可以停留下來，強調選擇範圍。"
   },
   "tourHeaderThree": {
-    "message": "用您想要的方式分享"
-  },
-  "tourBodyThree": {
-    "message": "直接將裁切過的擷圖傳到網路上方便分享，或者下載到電腦上。您也可以點擊「我的擷圖」按鈕，尋找您拍過的所有擷圖。"
-  },
-  "tourHeaderFour": {
     "message": "拍攝視窗或整張網頁"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "透過右上角的不同按鈕來選擇只拍攝視窗中的可見區域，或是整張網頁。"
+  },
+  "tourHeaderFour": {
+    "message": "用您想要的方式分享"
+  },
+  "tourBodyFour": {
+    "message": "直接將裁切過的擷圖傳到網路上方便分享，或者下載到電腦上。您也可以點擊「我的擷圖」按鈕，尋找您拍過的所有擷圖。"
   },
   "tourSkip": {
     "message": "略過"

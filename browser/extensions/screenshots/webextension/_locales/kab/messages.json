@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Ur tezmireḍ ar ad teṭṭfeḍ agdil n usebter Firefox Screenshots!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "Tafrant inek wezzil-t aṭas"
+  },
   "genericErrorTitle": {
     "message": "Ihuh! Firefox Screenshots ur iteddu ara."
   },
@@ -80,16 +83,16 @@
     "message": "Sit sakin zuɣer akken ad teṭṭfeḍ aḥric seg usebter. Tzemreḍ daɣen ad tesrifgeḍ akken ad tsebṛuṛqeḍ afran-ik."
   },
   "tourHeaderThree": {
-    "message": "Akken tebγiḍ"
-  },
-  "tourBodyThree": {
-    "message": "Sekles tuṭṭfiwin-ik ar Web i beṭṭu fessusen, neɣ sider-itent-id ar uselkim-ik. Tzemr€d daɣen ad tiseḍ ɣef tqeffalt Tiṭṭfiwin-iw akken ad tafeḍ akk tuṭṭfiwin n ugdil i teggid."
-  },
-  "tourHeaderFour": {
     "message": "Ṭṭef isfuyla neγ isebtar meṛṛa"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Fren tiqeffalin s afella ayeffus akken ad teṭṭfeḍ tamnaṭ yettbanen deg usfaylu neɣ asebter i meṛṛa."
+  },
+  "tourHeaderFour": {
+    "message": "Akken tebγiḍ"
+  },
+  "tourBodyFour": {
+    "message": "Sekles tuṭṭfiwin-ik ar Web i beṭṭu fessusen, neɣ sider-itent-id ar uselkim-ik. Tzemr€d daɣen ad tiseḍ ɣef tqeffalt Tiṭṭfiwin-iw akken ad tafeḍ akk tuṭṭfiwin n ugdil i teggid."
   },
   "tourSkip": {
     "message": "Zgel"

@@ -129,6 +129,24 @@
     "bug_numbers": [1172689],
     "description": "Recorded when application reputation remote lookup is performed, `true` is recorded if the lookup times out."
   },
+  "APPLICATION_REPUTATION_BLOCKLIST_MATCH": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 4,
+    "bug_numbers": [1331139],
+    "description": "For each Application Reputation lookup against both the V2 and V4 Google lists, note which version of block list returned a match (0 = no match, 1 = match only V2, 2 = match only V4, 3 = match both V2 and V4)"
+  },
+  "APPLICATION_REPUTATION_ALLOWLIST_MATCH": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 4,
+    "bug_numbers": [1331139],
+    "description": "For each Application Reputation lookup against both the V2 and V4 Google lists, note which version of the allow list returned a match (0 = no match, 1 = match only V2, 2 = match only V4, 3 = match both V2 and V4)"
+  },
   "ASYNC_ANIMATION_CONTENT_TOO_LARGE_FRAME_SIZE": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["bbirtles@mozilla.com"],
@@ -10212,6 +10230,15 @@
     "keyed": true,
     "description": "The amount of time required for HSTS priming requests (ms), keyed by success or failure of the priming request. (success, failure)"
   },
+  "HSTS_UPGRADE_SOURCE": {
+    "record_in_processes": [ "main" ],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1363546],
+    "expires_in_version": "62",
+    "kind": "enumerated",
+    "n_values": 8,
+    "description": "When we record an upgrade due to HSTS, record the source of that HSTS entry. (0: HSTS preload list, 1: HSTS Header seen naturally, 2: HSTS priming)"
+  },
   "MIXED_CONTENT_OBJECT_SUBREQUEST": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["seceng-telemetry@mozilla.com"],
@@ -13385,6 +13412,27 @@
     "n_buckets": 100,
     "description": "The amount of time it takes to load a WebExtensions background page, from when the build function is called to when the page has finished processing the onload event."
   },
+  "WEBEXT_BROWSERACTION_POPUP_OPEN_MS": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["addons-dev-internal@mozilla.com"],
+    "bug_numbers": [1297167],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "The amount of time it takes for a BrowserAction popup to open."
+  },
+  "WEBEXT_BROWSERACTION_POPUP_PRELOAD_RESULT_COUNT": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["addons-dev-internal@mozilla.com"],
+    "bug_numbers": [1297167],
+    "expires_in_version": "60",
+    "kind": "categorical",
+    "labels": ["popupShown", "clearAfterHover", "clearAfterMousedown"],
+    "releaseChannelCollection": "opt-out",
+    "description": "The number of times a browserAction popup is preloaded and results in one of the categories."
+  },
   "WEBEXT_EXTENSION_STARTUP_MS": {
     "record_in_processes": ["main"],
     "alert_emails": ["addons-dev-internal@mozilla.com"],
@@ -13395,6 +13443,17 @@
     "high": 50000,
     "n_buckets": 100,
     "description": "The amount of time it takes for a WebExtension to start up, from when the startup function is called to when the startup promise resolves."
+  },
+  "WEBEXT_PAGEACTION_POPUP_OPEN_MS": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["addons-dev-internal@mozilla.com"],
+    "bug_numbers": [1297167],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "The amount of time it takes for a PageAction popup to open."
   },
   "NOTIFY_OBSERVERS_LATENCY_MS": {
     "record_in_processes": ["main", "content", "gpu"],

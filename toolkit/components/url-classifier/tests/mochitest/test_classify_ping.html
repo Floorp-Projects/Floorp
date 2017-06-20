@@ -52,9 +52,8 @@
     ping(id, host_track);
 
     return new Promise(function(resolve, reject) {
-      setTimeout(function() {
-        isPinged(id, expectPing, msg, resolve);
-      }, timeout);
+      // Retry at most 30 seconds.
+      isPingedWithRetry(id, expectPing, msg, resolve, 30 * 1000 / RETRY_TIMEOUT_MS);
     });
   }
 
