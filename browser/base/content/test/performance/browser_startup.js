@@ -90,7 +90,11 @@ const startupPhases = {
   // We are at this phase once we are ready to handle user events.
   // Anything loaded at this phase or before gets in the way of the user
   // interacting with the first browser window.
-  "before handling user events": {},
+  "before handling user events": {blacklist: {
+    modules: new Set([
+      "resource://gre/modules/LoginManagerContextMenu.jsm",
+    ]),
+  }},
 };
 
 function test() {
