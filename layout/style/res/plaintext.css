@@ -9,6 +9,6 @@ pre {
 }
 
 /* Make text go with the rules of dir=auto, but allow it to be overriden if 'Switch Text Direction' is triggered */
-html:not([dir]) pre {
+html:not([dir]) pre { /* Not a UA sheet, so doesn't use :-moz-has-dir-attr */
   unicode-bidi: plaintext;
 }
