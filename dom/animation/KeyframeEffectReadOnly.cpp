@@ -349,7 +349,7 @@ KeyframeEffectReadOnly::DoUpdateProperties(StyleType* aStyle)
   }
 
   mProperties = Move(properties);
-  UpadateEffectSet();
+  UpdateEffectSet();
 
   for (AnimationProperty& property : mProperties) {
     property.mIsRunningOnCompositor =
@@ -961,7 +961,7 @@ KeyframeEffectReadOnly::UpdateTargetRegistration()
     EffectSet* effectSet =
       EffectSet::GetOrCreateEffectSet(mTarget->mElement, mTarget->mPseudoType);
     effectSet->AddEffect(*this);
-    UpadateEffectSet(effectSet);
+    UpdateEffectSet(effectSet);
   } else {
     UnregisterTarget();
   }
@@ -1832,7 +1832,7 @@ KeyframeEffectReadOnly::ContainsAnimatedScale(const nsIFrame* aFrame) const
 }
 
 void
-KeyframeEffectReadOnly::UpadateEffectSet(EffectSet* aEffectSet) const
+KeyframeEffectReadOnly::UpdateEffectSet(EffectSet* aEffectSet) const
 {
   EffectSet* effectSet =
     aEffectSet ? aEffectSet
