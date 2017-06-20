@@ -6,18 +6,17 @@
 
 #include "TimeoutBudgetManager.h"
 
-#include "mozilla/dom/Timeout.h"
-
 namespace mozilla {
 namespace dom {
 
 // Time between sampling timeout execution time.
 const uint32_t kTelemetryPeriodMS = 1000;
 
+static TimeoutBudgetManager gTimeoutBudgetManager;
+
 /* static */ TimeoutBudgetManager&
 TimeoutBudgetManager::Get()
 {
-  static TimeoutBudgetManager gTimeoutBudgetManager;
   return gTimeoutBudgetManager;
 }
 
@@ -33,32 +32,34 @@ TimeoutBudgetManager::StopRecording()
   mStart = TimeStamp();
 }
 
-void
+TimeDuration
 TimeoutBudgetManager::RecordExecution(const TimeStamp& aNow,
-                                      const Timeout* aTimeout,
+                                      bool aIsTracking,
                                       bool aIsBackground)
 {
   if (!mStart) {
     // If we've started a sync operation mStart might be null, in
     // which case we should not record this piece of execution.
-    return;
+    return TimeDuration();
   }
 
   TimeDuration duration = aNow - mStart;
 
   if (aIsBackground) {
-    if (aTimeout->mIsTracking) {
+    if (aIsTracking) {
       mTelemetryData.mBackgroundTracking += duration;
     } else {
       mTelemetryData.mBackgroundNonTracking += duration;
     }
   } else {
-    if (aTimeout->mIsTracking) {
+    if (aIsTracking) {
       mTelemetryData.mForegroundTracking += duration;
     } else {
       mTelemetryData.mForegroundNonTracking += duration;
     }
   }
+
+  return duration;
 }
 
 void
