@@ -304,7 +304,7 @@ LIRGeneratorMIPSShared::lowerUrshD(MUrsh* mir)
 }
 
 void
-LIRGeneratorMIPSShared::visitAsmJSNeg(MAsmJSNeg* ins)
+LIRGeneratorMIPSShared::visitWasmNeg(MWasmNeg* ins)
 {
     if (ins->type() == MIRType::Int32) {
         define(new(alloc()) LNegI(useRegisterAtStart(ins->input())), ins);

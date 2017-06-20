@@ -216,9 +216,9 @@ LIRGeneratorARM64::lowerUrshD(MUrsh* mir)
 }
 
 void
-LIRGeneratorARM64::visitAsmJSNeg(MAsmJSNeg* ins)
+LIRGeneratorARM64::visitWasmNeg(MWasmNeg* ins)
 {
-    MOZ_CRASH("visitAsmJSNeg");
+    MOZ_CRASH("visitWasmNeg");
 }
 
 void

@@ -3506,7 +3506,7 @@ EmitBodyExprs(FunctionCompiler& f)
           case uint16_t(Op::F32Abs):
             CHECK(EmitUnaryWithType<MAbs>(f, ValType::F32, MIRType::Float32));
           case uint16_t(Op::F32Neg):
-            CHECK(EmitUnaryWithType<MAsmJSNeg>(f, ValType::F32, MIRType::Float32));
+            CHECK(EmitUnaryWithType<MWasmNeg>(f, ValType::F32, MIRType::Float32));
           case uint16_t(Op::F32Ceil):
             CHECK(EmitUnaryMathBuiltinCall(f, SymbolicAddress::CeilF, ValType::F32));
           case uint16_t(Op::F32Floor):
@@ -3533,7 +3533,7 @@ EmitBodyExprs(FunctionCompiler& f)
           case uint16_t(Op::F64Abs):
             CHECK(EmitUnaryWithType<MAbs>(f, ValType::F64, MIRType::Double));
           case uint16_t(Op::F64Neg):
-            CHECK(EmitUnaryWithType<MAsmJSNeg>(f, ValType::F64, MIRType::Double));
+            CHECK(EmitUnaryWithType<MWasmNeg>(f, ValType::F64, MIRType::Double));
           case uint16_t(Op::F64Ceil):
             CHECK(EmitUnaryMathBuiltinCall(f, SymbolicAddress::CeilD, ValType::F64));
           case uint16_t(Op::F64Floor):
@@ -3613,7 +3613,7 @@ EmitBodyExprs(FunctionCompiler& f)
           case uint16_t(Op::I32Max):
             CHECK_ASMJS(EmitMinMax(f, ValType::I32, MIRType::Int32, Op(op) == Op::I32Max));
           case uint16_t(Op::I32Neg):
-            CHECK_ASMJS(EmitUnaryWithType<MAsmJSNeg>(f, ValType::I32, MIRType::Int32));
+            CHECK_ASMJS(EmitUnaryWithType<MWasmNeg>(f, ValType::I32, MIRType::Int32));
           case uint16_t(Op::I32BitNot):
             CHECK_ASMJS(EmitBitNot(f, ValType::I32));
           case uint16_t(Op::I32Abs):
