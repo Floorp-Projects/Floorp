@@ -39,7 +39,7 @@
  * post a runnable to the main thread to release ourselves from there.
  */
 template<>
-struct nsRunnableMethodReceiver<mozilla::a11y::LazyInstantiator, true, false>
+struct nsRunnableMethodReceiver<mozilla::a11y::LazyInstantiator, true>
 {
   mozilla::mscom::STAUniquePtr<mozilla::a11y::LazyInstantiator> mObj;
   explicit nsRunnableMethodReceiver(mozilla::a11y::LazyInstantiator* aObj)
@@ -53,7 +53,6 @@ struct nsRunnableMethodReceiver<mozilla::a11y::LazyInstantiator, true, false>
   ~nsRunnableMethodReceiver() { Revoke(); }
   mozilla::a11y::LazyInstantiator* Get() const { return mObj.get(); }
   void Revoke() { mObj = nullptr; }
-  void SetDeadline(mozilla::TimeStamp aDeadline) {}
 };
 
 namespace mozilla {
