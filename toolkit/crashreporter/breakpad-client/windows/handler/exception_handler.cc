@@ -41,12 +41,6 @@
 
 namespace google_breakpad {
 
-// This is passed as the context to the MinidumpWriteDump callback.
-typedef struct {
-  AppMemoryList::const_iterator iter;
-  AppMemoryList::const_iterator end;
-} MinidumpCallbackContext;
-
 vector<ExceptionHandler*>* ExceptionHandler::handler_stack_ = NULL;
 LONG ExceptionHandler::handler_stack_index_ = 0;
 CRITICAL_SECTION ExceptionHandler::handler_stack_critical_section_;
@@ -864,44 +858,6 @@ bool ExceptionHandler::WriteMinidumpWithException(
 }
 
 // static
-BOOL CALLBACK ExceptionHandler::MinidumpWriteDumpCallback(
-    PVOID context,
-    const PMINIDUMP_CALLBACK_INPUT callback_input,
-    PMINIDUMP_CALLBACK_OUTPUT callback_output) {
-  switch (callback_input->CallbackType) {
-  case MemoryCallback: {
-    MinidumpCallbackContext* callback_context =
-        reinterpret_cast<MinidumpCallbackContext*>(context);
-    if (callback_context->iter == callback_context->end)
-      return FALSE;
-
-    // Include the specified memory region.
-    callback_output->MemoryBase = callback_context->iter->ptr;
-    callback_output->MemorySize = callback_context->iter->length;
-    callback_context->iter++;
-    return TRUE;
-  }
-
-    // Include all modules.
-  case IncludeModuleCallback:
-  case ModuleCallback:
-    return TRUE;
-
-    // Include all threads.
-  case IncludeThreadCallback:
-  case ThreadCallback:
-    return TRUE;
-
-    // Stop receiving cancel callbacks.
-  case CancelCallback:
-    callback_output->CheckCancel = FALSE;
-    callback_output->Cancel = FALSE;
-    return TRUE;
-  }
-  // Ignore other callback types.
-  return FALSE;
-}
-
 bool ExceptionHandler::WriteMinidumpWithExceptionForProcess(
     DWORD requesting_thread_id,
     EXCEPTION_POINTERS* exinfo,
