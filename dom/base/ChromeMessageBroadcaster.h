@@ -26,6 +26,63 @@ public:
     : ChromeMessageBroadcaster(aParentManager, MessageManagerFlags::MM_NONE)
   {}
 
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
+
+  using nsFrameMessageManager::BroadcastAsyncMessage;
+  void BroadcastAsyncMessage(JSContext* aCx, const nsAString& aMessageName,
+                             JS::Handle<JS::Value> aObj,
+                             JS::Handle<JSObject*> aObjects,
+                             mozilla::ErrorResult& aError)
+  {
+    DispatchAsyncMessage(aCx, aMessageName, aObj, aObjects, nullptr,
+                         JS::UndefinedHandleValue, aError);
+  }
+  uint32_t ChildCount()
+  {
+    return mChildManagers.Length();
+  }
+  using nsFrameMessageManager::GetChildAt;
+  MessageListenerManager* GetChildAt(uint32_t aIndex)
+  {
+    return mChildManagers.SafeElementAt(aIndex);
+  }
+  // XPCOM ReleaseCachedProcesses is OK
+
+  // ProcessScriptLoader
+  using nsFrameMessageManager::LoadProcessScript;
+  void LoadProcessScript(const nsAString& aUrl, bool aAllowDelayedLoad,
+                         mozilla::ErrorResult& aError)
+  {
+    LoadScript(aUrl, aAllowDelayedLoad, false, aError);
+  }
+  // XPCOM RemoveDelayedProcessScript is OK
+  using nsFrameMessageManager::GetDelayedProcessScripts;
+  void GetDelayedProcessScripts(JSContext* aCx,
+                                nsTArray<nsTArray<JS::Value>>& aScripts,
+                                mozilla::ErrorResult& aError)
+  {
+    GetDelayedScripts(aCx, aScripts, aError);
+  }
+
+  // GlobalProcessScriptLoader
+  // XPCOM GetInitialProcessData is OK
+
+  // FrameScriptLoader
+  using nsFrameMessageManager::LoadFrameScript;
+  void LoadFrameScript(const nsAString& aUrl, bool aAllowDelayedLoad,
+                       bool aRunInGlobalScope, mozilla::ErrorResult& aError)
+  {
+    LoadScript(aUrl, aAllowDelayedLoad, aRunInGlobalScope, aError);
+  }
+  using nsFrameMessageManager::GetDelayedFrameScripts;
+  void GetDelayedFrameScripts(JSContext* aCx,
+                              nsTArray<nsTArray<JS::Value>>& aScripts,
+                              mozilla::ErrorResult& aError)
+  {
+    GetDelayedScripts(aCx, aScripts, aError);
+  }
+
 private:
   ChromeMessageBroadcaster(nsFrameMessageManager* aParentManager,
                            MessageManagerFlags aFlags);

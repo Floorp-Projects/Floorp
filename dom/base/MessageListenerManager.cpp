@@ -22,6 +22,7 @@ MessageListenerManager::~MessageListenerManager()
 }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MessageListenerManager)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
 NS_INTERFACE_MAP_END_INHERITING(nsFrameMessageManager)
 NS_IMPL_ADDREF_INHERITED(MessageListenerManager, nsFrameMessageManager)
 NS_IMPL_RELEASE_INHERITED(MessageListenerManager, nsFrameMessageManager)
@@ -31,8 +32,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MessageListenerManager,
                                                   nsFrameMessageManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParentManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(MessageListenerManager,
+                                               nsFrameMessageManager)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MessageListenerManager,
                                                 nsFrameMessageManager)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParentManager)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
