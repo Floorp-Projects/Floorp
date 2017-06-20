@@ -14,7 +14,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
 const ACTIVITY_STREAM_ENABLED_PREF = "browser.newtabpage.activity-stream.enabled";
-const BROWSER_READY_NOTIFICATION = "browser-ui-startup-complete";
+const BROWSER_READY_NOTIFICATION = "browser-delayed-startup-finished";
 const REASON_SHUTDOWN_ON_PREF_CHANGE = "PREF_OFF";
 const REASON_STARTUP_ON_PREF_CHANGE = "PREF_ON";
 const RESOURCE_BASE = "resource://activity-stream";
