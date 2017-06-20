@@ -828,7 +828,7 @@ nsOfflineManifestItem::HandleManifestLine(const nsCString::const_iterator &aBegi
             ++begin;
         }
 
-        const nsCSubstring &magic = Substring(begin, end);
+        const nsACString& magic = Substring(begin, end);
 
         if (!magic.EqualsLiteral("CACHE MANIFEST")) {
             mParserState = PARSE_ERROR;
@@ -848,7 +848,7 @@ nsOfflineManifestItem::HandleManifestLine(const nsCString::const_iterator &aBegi
     if (begin == end || *begin == '#')
         return NS_OK;
 
-    const nsCSubstring &line = Substring(begin, end);
+    const nsACString& line = Substring(begin, end);
 
     if (line.EqualsLiteral("CACHE:")) {
         mParserState = PARSE_CACHE_ENTRIES;
@@ -2002,7 +2002,7 @@ nsOfflineCacheUpdate::SetOwner(nsOfflineCacheUpdateOwner *aOwner)
 }
 
 bool
-nsOfflineCacheUpdate::IsForGroupID(const nsCSubstring &groupID)
+nsOfflineCacheUpdate::IsForGroupID(const nsACString& groupID)
 {
     return mGroupID == groupID;
 }

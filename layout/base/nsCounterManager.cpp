@@ -236,7 +236,7 @@ nsCounterManager::AddResetOrIncrement(nsIFrame* aFrame, int32_t aIndex,
 }
 
 nsCounterList*
-nsCounterManager::CounterListFor(const nsSubstring& aCounterName)
+nsCounterManager::CounterListFor(const nsAString& aCounterName)
 {
   return mNames.LookupForAdd(aCounterName).OrInsert([]() {
     return new nsCounterList();

@@ -237,7 +237,7 @@ public:
    * @param aReason         A constant from nsIHelperAppLauncherDialog indicating
    *                        why the request is handled by a helper app.
    */
-  nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo, const nsCSubstring& aFileExtension,
+  nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo, const nsACString& aFileExtension,
                        nsIInterfaceRequestor * aContentContext,
                        nsIInterfaceRequestor * aWindowContext,
                        nsExternalHelperAppService * aExtProtSvc,

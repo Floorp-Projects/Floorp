@@ -653,7 +653,7 @@ nsChannelClassifier::IsHostnameWhitelisted(nsIURI *aUri,
 
   nsCCharSeparatedTokenizer tokenizer(aWhitelisted, ',');
   while (tokenizer.hasMoreTokens()) {
-    const nsCSubstring& token = tokenizer.nextToken();
+    const nsACString& token = tokenizer.nextToken();
     if (token.Equals(host)) {
       LOG(("nsChannelClassifier[%p]:StartInternal skipping %s (whitelisted)",
            this, host.get()));

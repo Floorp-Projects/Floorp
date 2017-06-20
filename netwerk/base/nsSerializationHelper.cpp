@@ -18,7 +18,7 @@
 using namespace mozilla;
 
 nsresult
-NS_SerializeToString(nsISerializable* obj, nsCSubstring& str)
+NS_SerializeToString(nsISerializable* obj, nsACString& str)
 {
   RefPtr<nsBase64Encoder> stream(new nsBase64Encoder());
   if (!stream)
@@ -37,7 +37,7 @@ NS_SerializeToString(nsISerializable* obj, nsCSubstring& str)
 }
 
 nsresult
-NS_DeserializeObject(const nsCSubstring& str, nsISupports** obj)
+NS_DeserializeObject(const nsACString& str, nsISupports** obj)
 {
   nsCString decodedData;
   nsresult rv = Base64Decode(str, decodedData);

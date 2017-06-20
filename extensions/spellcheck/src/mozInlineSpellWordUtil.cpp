@@ -269,7 +269,7 @@ mozInlineSpellWordUtil::GetRangeForWord(nsIDOMNode* aWordNode,
 
 // This is to fix characters that the spellchecker may not like
 static void
-NormalizeWord(const nsSubstring& aInput, int32_t aPos, int32_t aLen, nsAString& aOutput)
+NormalizeWord(const nsAString& aInput, int32_t aPos, int32_t aLen, nsAString& aOutput)
 {
   aOutput.Truncate();
   for (int32_t i = 0; i < aLen; i++) {
@@ -736,7 +736,7 @@ CheckLeavingBreakElement(nsINode* aNode, void* aClosure)
 }
 
 void
-mozInlineSpellWordUtil::NormalizeWord(nsSubstring& aWord)
+mozInlineSpellWordUtil::NormalizeWord(nsAString& aWord)
 {
   nsAutoString result;
   ::NormalizeWord(aWord, 0, aWord.Length(), result);

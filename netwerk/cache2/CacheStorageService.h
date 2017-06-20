@@ -294,12 +294,12 @@ private:
   void PurgeOverMemoryLimit();
 
 private:
-  nsresult DoomStorageEntries(nsCSubstring const& aContextKey,
+  nsresult DoomStorageEntries(const nsACString& aContextKey,
                               nsILoadContextInfo* aContext,
                               bool aDiskStorage,
                               bool aPin,
                               nsICacheEntryDoomCallback* aCallback);
-  nsresult AddStorageEntry(nsCSubstring const& aContextKey,
+  nsresult AddStorageEntry(const nsACString& aContextKey,
                            const nsACString & aURI,
                            const nsACString & aIdExtension,
                            bool aWriteToDisk,

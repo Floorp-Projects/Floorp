@@ -223,7 +223,7 @@ public:
 
     void SetOwner(nsOfflineCacheUpdateOwner *aOwner);
 
-    bool IsForGroupID(const nsCSubstring &groupID);
+    bool IsForGroupID(const nsACString& groupID);
     bool IsForProfile(nsIFile* aCustomProfileDir);
 
     virtual nsresult UpdateFinished(nsOfflineCacheUpdate *aUpdate) override;

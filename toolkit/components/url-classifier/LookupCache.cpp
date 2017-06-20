@@ -316,7 +316,7 @@ LookupCache::GetLookupFragments(const nsACString& aSpec,
     return NS_OK;
   }
 
-  const nsCSubstring& host = Substring(begin, iter++);
+  const nsACString& host = Substring(begin, iter++);
   nsAutoCString path;
   path.Assign(Substring(iter, end));
 
@@ -417,7 +417,7 @@ LookupCache::GetHostKeys(const nsACString& aSpec,
     return NS_OK;
   }
 
-  const nsCSubstring& host = Substring(begin, iter);
+  const nsACString& host = Substring(begin, iter);
 
   if (IsCanonicalizedIP(host)) {
     nsCString *key = aHostKeys->AppendElement();
