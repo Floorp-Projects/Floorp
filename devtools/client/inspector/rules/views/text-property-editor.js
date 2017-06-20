@@ -358,6 +358,7 @@ TextPropertyEditor.prototype = {
       filterClass: "ruleview-filter",
       filterSwatchClass: SHARED_SWATCH_CLASS + " " + FILTER_SWATCH_CLASS,
       gridClass: "ruleview-grid",
+      shapeClass: "ruleview-shape",
       defaultColorType: !propDirty,
       urlClass: "theme-link",
       baseURI: this.sheetHref
@@ -439,6 +440,20 @@ TextPropertyEditor.prototype = {
       if (this.ruleView.highlighters.gridHighlighterShown ===
           this.ruleView.inspector.selection.nodeFront) {
         gridToggle.classList.add("active");
+      }
+    }
+
+    let shapeToggle = this.valueSpan.querySelector(".ruleview-shape");
+    if (shapeToggle) {
+      let mode = "css" + name.split("-").map(s => {
+        return s[0].toUpperCase() + s.slice(1);
+      }).join("");
+      shapeToggle.setAttribute("data-mode", mode);
+
+      let { highlighters, inspector } = this.ruleView;
+      if (highlighters.shapesHighlighterShown === inspector.selection.nodeFront &&
+          highlighters.state.shapes.options.mode === mode) {
+        shapeToggle.classList.add("active");
       }
     }
 
