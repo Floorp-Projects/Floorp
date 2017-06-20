@@ -68,7 +68,6 @@ InitContext(vpx_codec_ctx_t* aCtx,
 
 VPXDecoder::VPXDecoder(const CreateDecoderParams& aParams)
   : mImageContainer(aParams.mImageContainer)
-  , mImageAllocator(aParams.mKnowsCompositor)
   , mTaskQueue(aParams.mTaskQueue)
   , mInfo(aParams.VideoConfig())
   , mCodec(MimeTypeToCodec(aParams.VideoConfig().mMimeType))
@@ -206,8 +205,7 @@ VPXDecoder::ProcessDecode(MediaRawData* aSample)
                                        aSample->mKeyframe,
                                        aSample->mTimecode,
                                        mInfo.ScaledImageRect(img->d_w,
-                                                             img->d_h),
-                                       mImageAllocator);
+                                                             img->d_h));
     } else {
       VideoData::YCbCrBuffer::Plane alpha_plane;
       alpha_plane.mData = img_alpha->planes[0];
