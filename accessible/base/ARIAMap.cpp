@@ -141,7 +141,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eOpenCloseAction,
     eNoLiveAttr,
     kGenericAccType,
-    states::COLLAPSED | states::HASPOPUP | states::VERTICAL,
+    states::COLLAPSED | states::HASPOPUP,
     eARIAAutoComplete,
     eARIAReadonly,
     eARIAOrientation
@@ -1149,7 +1149,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eNoAction,
     eNoLiveAttr,
     eSelect | eTable,
-    states::VERTICAL,
+    kNoReqStates,
     eARIAReadonlyOrEditable,
     eARIAMultiSelectable,
     eFocusableUntilDisabled,
