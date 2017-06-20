@@ -75,6 +75,8 @@ exports.ANGLE_TAKING_FUNCTIONS = ["linear-gradient", "-moz-linear-gradient",
                                   "rotateY", "rotateZ", "rotate3d", "skew", "skewX",
                                   "skewY", "hue-rotate"];
 
+exports.BASIC_SHAPE_FUNCTIONS = ["polygon", "circle", "ellipse", "inset"];
+
 /**
  * The list of all CSS Pseudo Elements.
  *

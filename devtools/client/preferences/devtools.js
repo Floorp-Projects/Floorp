@@ -64,6 +64,8 @@ pref("devtools.inspector.showAllAnonymousContent", false);
 pref("devtools.inspector.mdnDocsTooltip.enabled", false);
 // Enable the new color widget
 pref("devtools.inspector.colorWidget.enabled", false);
+// Enable the CSS shapes highlighter
+pref("devtools.inspector.shapesHighlighter.enabled", false);
 
 // Enable the Font Inspector
 pref("devtools.fontinspector.enabled", true);

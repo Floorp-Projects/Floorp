@@ -39,9 +39,11 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
     this.markup = new CanvasFrameAnonymousContentHelper(this.highlighterEnv,
       this._buildMarkup.bind(this));
+    this.onPageHide = this.onPageHide.bind(this);
 
     let { pageListenerTarget } = this.highlighterEnv;
     DOM_EVENTS.forEach(event => pageListenerTarget.addEventListener(event, this));
+    pageListenerTarget.addEventListener("pagehide", this.onPageHide);
   }
 
   _buildMarkup() {
@@ -1261,6 +1263,14 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     this.getElement("markers").setAttribute("d", "");
 
     setIgnoreLayoutChanges(false, this.highlighterEnv.window.document.documentElement);
+  }
+
+  onPageHide({ target }) {
+    // If a page hide event is triggered for current window's highlighter, hide the
+    // highlighter.
+    if (target.defaultView === this.win) {
+      this.hide();
+    }
   }
 }
 
