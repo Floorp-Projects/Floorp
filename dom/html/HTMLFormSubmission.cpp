@@ -889,7 +889,7 @@ GetSubmitEncoding(nsGenericHTMLElement* aForm)
   if (doc) {
     return Encoding::ForName(doc->GetDocumentCharacterSet());
   }
-  return WrapNotNull(UTF_8_ENCODING);
+  return UTF_8_ENCODING;
 }
 
 void
