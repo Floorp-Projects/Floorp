@@ -14,6 +14,8 @@
 #include "nsPrintfCString.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/SharedThreadPool.h"
+#include "mozilla/TaskQueue.h"
 #include <stdint.h>
 #include <algorithm>
 
