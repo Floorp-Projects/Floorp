@@ -177,7 +177,7 @@ fuzzy-if(skiaContent,1,145) == rounded-background-color-width-left-6.html rounde
 == border-image-width-4.html border-image-width-0.html
 == border-image-width-9.html border-image-width-0.html
 
-== iframe-1.html iframe-1-ref.html
+fails-if(webrender) == iframe-1.html iframe-1-ref.html  # bug 1374378 for webrender
 
 fails-if(styloVsGecko||stylo) == viewport-units-rounding-1.html viewport-units-rounding-1-ref.html
 == viewport-units-rounding-2.html about:blank
