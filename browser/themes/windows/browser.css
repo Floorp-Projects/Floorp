@@ -2059,3 +2059,8 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
   padding-top: .9167em;
   padding-bottom: .9167em;
 }
+
+/* Prevent movement in the restore-tabs-button when it's clicked. */
+.restore-tabs-button:hover:active:not([disabled="true"]) {
+  padding: 3px;
+}
