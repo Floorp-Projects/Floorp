@@ -494,6 +494,20 @@ private:
   RefPtr<IDXGIKeyedMutex> mMutex;
 };
 
+class D3D11MTAutoEnter
+{
+public:
+  explicit D3D11MTAutoEnter(already_AddRefed<ID3D10Multithread> aMT)
+    : mMT(aMT)
+  {
+    mMT->Enter();
+  }
+  ~D3D11MTAutoEnter() { mMT->Leave(); }
+
+private:
+  RefPtr<ID3D10Multithread> mMT;
+};
+
 } // namespace layers
 } // namespace mozilla
 
