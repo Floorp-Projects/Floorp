@@ -605,14 +605,6 @@ this.BrowserTestUtils = {
       features += ",height=" + options.height;
     }
 
-    if (options.left) {
-      features += ",left=" + options.left;
-    }
-
-    if (options.top) {
-      features += ",top=" + options.top;
-    }
-
     if (options.hasOwnProperty("remote")) {
       let remoteState = options.remote ? "remote" : "non-remote";
       features += `,${remoteState}`;
