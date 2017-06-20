@@ -98,10 +98,6 @@ public:
     MOZ_CRASH("GFX: Call on compositor, not LayerManagerComposite");
   }
 
-  virtual LayersBackend GetBackendType() override
-  {
-    MOZ_CRASH("GFX: Shouldn't be called for composited layer manager");
-  }
   virtual void GetBackendName(nsAString& name) override
   {
     MOZ_CRASH("GFX: Shouldn't be called for composited layer manager");
@@ -403,9 +399,11 @@ public:
   bool AsyncPanZoomEnabled() const override;
 
 public:
-  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() override
-  {
+  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() override {
     return mCompositor->GetTextureFactoryIdentifier();
+  }
+  virtual LayersBackend GetBackendType() override {
+    return mCompositor ? mCompositor->GetBackendType() : LayersBackend::LAYERS_NONE;
   }
 
   void ForcePresent() override { mCompositor->ForcePresent(); }
