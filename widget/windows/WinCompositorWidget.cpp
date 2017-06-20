@@ -327,5 +327,11 @@ WinCompositorWidget::FreeWindowSurface(HDC dc)
     ::ReleaseDC(mWnd, dc);
 }
 
+bool
+WinCompositorWidget::IsHidden() const
+{
+  return ::IsIconic(mWnd);
+}
+
 } // namespace widget
 } // namespace mozilla
