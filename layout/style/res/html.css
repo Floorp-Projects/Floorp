@@ -7,18 +7,18 @@
 
 /* bidi */
 
-[dir] {
+:-moz-has-dir-attr {
   unicode-bidi: isolate;
 }
-[dir="rtl"] {
+:-moz-dir-attr-rtl {
   direction: rtl;
 }
-[dir="ltr"] {
+:-moz-dir-attr-ltr {
   direction: ltr;
 }
 
-bdi:dir(ltr), [dir="auto"]:dir(ltr) { direction: ltr; }
-bdi:dir(rtl), [dir="auto"]:dir(rtl) { direction: rtl; }
+:-moz-dir-attr-like-auto:dir(ltr) { direction: ltr; }
+:-moz-dir-attr-like-auto:dir(rtl) { direction: rtl; }
 
 /* To ensure http://www.w3.org/TR/REC-html40/struct/dirlang.html#style-bidi:
  *
@@ -89,10 +89,15 @@ xmp {
 bdi, output {
   unicode-bidi: isolate;
 }
-bdo, bdo[dir] {
+/* We need the "bdo:-moz-has-dir-attr" bit because "bdo" has lower
+   specificity than the ":-moz-has-dir-attr" selector above. */
+bdo, bdo:-moz-has-dir-attr {
   unicode-bidi: isolate-override;
 }
-textarea[dir="auto"], pre[dir="auto"] { unicode-bidi: plaintext; }
+textarea:-moz-dir-attr-like-auto,
+pre:-moz-dir-attr-like-auto {
+    unicode-bidi: plaintext;
+}
 
 /* blocks */
 
