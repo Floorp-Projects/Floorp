@@ -8,10 +8,9 @@
 
 const { Ci } = require("chrome");
 const Services = require("Services");
-
-loader.lazyRequireGetter(this, "HarCollector", "devtools/client/netmonitor/har/har-collector", true);
-loader.lazyRequireGetter(this, "HarExporter", "devtools/client/netmonitor/har/har-exporter", true);
-loader.lazyRequireGetter(this, "HarUtils", "devtools/client/netmonitor/har/har-utils", true);
+const { HarCollector } = require("./har-collector");
+const { HarExporter } = require("./har-exporter");
+const { HarUtils } = require("./har-utils");
 
 const prefDomain = "devtools.netmonitor.har.";
 
