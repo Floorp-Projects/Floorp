@@ -72,8 +72,6 @@ public:
    */
   static already_AddRefed<ContentParent> Take();
 
-  static bool Provide(ContentParent* aParent);
-
 private:
   PreallocatedProcessManager();
   DISALLOW_EVIL_CONSTRUCTORS(PreallocatedProcessManager);
