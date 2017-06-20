@@ -24,7 +24,6 @@
 #include "gfx2DGlue.h"
 #include "gfxPrefs.h"
 #include "gfxWindowsPlatform.h"
-#include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Logging.h"
@@ -517,23 +516,11 @@ bool
 WMFVideoMFTManager::InitInternal()
 {
   mUseHwAccel = false; // default value; changed if D3D setup succeeds.
-  RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetContentDevice();
-  if (!device) {
-    device = gfx::DeviceManagerDx::Get()->GetCompositorDevice();
-  }
-  RefPtr<ID3D10Multithread> multi;
-  HRESULT hr =
-    device->QueryInterface((ID3D10Multithread**)getter_AddRefs(multi));
-  if (SUCCEEDED(hr)) {
-    multi->SetMultithreadProtected(TRUE);
-    mIMFUsable = true;
-  }
-
-  bool useDxva = mIMFUsable && InitializeDXVA();
+  bool useDxva = InitializeDXVA();
 
   RefPtr<MFTDecoder> decoder(new MFTDecoder());
 
-  hr = decoder->Create(GetMFTGUID());
+  HRESULT hr = decoder->Create(GetMFTGUID());
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   RefPtr<IMFAttributes> attr(decoder->GetAttributes());
@@ -852,7 +839,7 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   nsIntRect pictureRegion = mVideoInfo.ScaledImageRect(videoWidth, videoHeight);
 
   LayersBackend backend = GetCompositorBackendType(mKnowsCompositor);
-  if (backend != LayersBackend::LAYERS_D3D11 || !mIMFUsable) {
+  if (backend != LayersBackend::LAYERS_D3D11) {
     RefPtr<VideoData> v =
       VideoData::CreateAndCopyData(mVideoInfo,
                                    mImageContainer,
