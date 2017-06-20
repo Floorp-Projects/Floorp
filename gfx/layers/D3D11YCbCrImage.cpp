@@ -69,7 +69,7 @@ D3D11YCbCrImage::SetData(KnowsCompositor* aAllocator,
     return false;
   }
 
-  mt->Enter();
+  D3D11MTAutoEnter mtAutoEnter(mt.forget());
 
   RefPtr<ID3D11DeviceContext> ctx;
   allocator->GetDevice()->GetImmediateContext(getter_AddRefs(ctx));
@@ -97,8 +97,7 @@ D3D11YCbCrImage::SetData(KnowsCompositor* aAllocator,
                          aData.mCbCrStride,
                          aData.mCbCrStride * aData.mCbCrSize.height);
 
-  mt->Leave();
-
+  
   return true;
 }
 
@@ -160,21 +159,7 @@ D3D11YCbCrImage::GetAsSourceSurface()
     return nullptr;
   }
 
-  class D3D11MTAutoEnter
-  {
-  public:
-    explicit D3D11MTAutoEnter(already_AddRefed<ID3D10Multithread> aMT)
-      : mMT(aMT)
-    {
-      mMT->Enter();
-    }
-    ~D3D11MTAutoEnter()
-    {
-      mMT->Leave();
-    }
-  private:
-    RefPtr<ID3D10Multithread> mMT;
-  } mtAutoEnter(mt.forget());
+  D3D11MTAutoEnter mtAutoEnter(mt.forget());
 
   texY->GetDesc(&desc);
   desc.BindFlags = 0;
