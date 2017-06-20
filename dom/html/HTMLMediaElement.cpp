@@ -4685,7 +4685,13 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
     mChannelLoader = nullptr;
   }
 
-  return FinishDecoderSetup(decoder, resource, aListener);
+  nsresult rv = FinishDecoderSetup(decoder, resource, aListener);
+  if (NS_SUCCEEDED(rv)) {
+    AddMediaElementToURITable();
+    NS_ASSERTION(MediaElementTableCount(this, mLoadingSrc) == 1,
+      "Media element should have single table entry if decode initialized");
+  }
+  return rv;
 }
 
 nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
@@ -4751,8 +4757,6 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
     mChannelLoader = nullptr;
   }
 
-  AddMediaElementToURITable();
-
   // We may want to suspend the new stream now.
   // This will also do an AddRemoveSelfReference.
   NotifyOwnerDocumentActivityChanged();
@@ -4767,9 +4771,6 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
   if (NS_FAILED(rv)) {
     ShutdownDecoder();
   }
-
-  NS_ASSERTION(NS_SUCCEEDED(rv) == (MediaElementTableCount(this, mLoadingSrc) == 1),
-    "Media element should have single table entry if decode initialized");
 
   return rv;
 }
