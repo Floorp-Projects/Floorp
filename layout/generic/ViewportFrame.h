@@ -18,6 +18,8 @@ class nsPresContext;
 
 namespace mozilla {
 
+class ServoRestyleState;
+
 /**
   * ViewportFrame is the parent of a single child - the doc root frame or a scroll frame
   * containing the doc root frame. ViewportFrame stores this child in its primary child
@@ -76,7 +78,7 @@ public:
    * Update our style (and recursively the styles of any anonymous boxes we
    * might own)
    */
-  void UpdateStyle(ServoStyleSet& aStyleSet, nsStyleChangeList& aChangeList);
+  void UpdateStyle(ServoRestyleState& aStyleSet);
 
   /**
    * Return our single anonymous box child.

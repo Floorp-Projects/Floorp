@@ -598,11 +598,9 @@ public:
 
 protected:
   static void UpdateStyleOfOwnedAnonBoxesForTableWrapper(
-      nsIFrame* aOwningFrame,
-      nsIFrame* aWrapperFrame,
-      mozilla::ServoStyleSet& aStyleSet,
-      nsStyleChangeList& aChangeList,
-      nsChangeHint aHintForThisFrame);
+    nsIFrame* aOwningFrame,
+    nsIFrame* aWrapperFrame,
+    mozilla::ServoRestyleState& aRestyleState);
 
   /** protected constructor.
     * @see NewFrame
