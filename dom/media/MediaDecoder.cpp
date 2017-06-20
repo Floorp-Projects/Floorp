@@ -1030,6 +1030,15 @@ MediaDecoder::ShouldThrottleDownload()
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE(mDecoderStateMachine, false);
 
+  int64_t length = mResource->GetLength();
+  if (length > 0 &&
+      length <= int64_t(MediaPrefs::MediaMemoryCacheMaxSize()) * 1024) {
+    // Don't throttle the download of small resources. This is to speed
+    // up seeking, as seeks into unbuffered ranges would require starting
+    // up a new HTTP transaction, which adds latency.
+    return false;
+  }
+
   if (Preferences::GetBool("media.throttle-regardless-of-download-rate",
                            false)) {
     return true;
