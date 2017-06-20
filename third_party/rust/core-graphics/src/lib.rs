@@ -8,8 +8,11 @@
 // except according to those terms.
 
 extern crate libc;
+#[macro_use]
 extern crate core_foundation;
-extern crate serde;
+
+#[macro_use]
+extern crate bitflags;
 
 pub mod base;
 pub mod color_space;
@@ -17,7 +20,8 @@ pub mod context;
 pub mod data_provider;
 pub mod display;
 pub mod event;
-pub mod event_source; 
+pub mod event_source;
 pub mod font;
 pub mod geometry;
 pub mod private;
+pub mod image;

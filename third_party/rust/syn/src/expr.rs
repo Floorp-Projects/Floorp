@@ -1,8 +1,12 @@
 use super::*;
 
+/// An expression.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Expr {
+    /// Type of the expression.
     pub node: ExprKind,
+
+    /// Attributes tagged on the expression.
     pub attrs: Vec<Attribute>,
 }
 
@@ -19,15 +23,21 @@ impl From<ExprKind> for Expr {
 pub enum ExprKind {
     /// A `box x` expression.
     Box(Box<Expr>),
+
     /// First expr is the place; second expr is the value.
+    ///
+    /// E.g. 'plae <- val'.
     InPlace(Box<Expr>, Box<Expr>),
-    /// An array (`[a, b, c, d]`)
+
+    /// An array, e.g. `[a, b, c, d]`.
     Array(Vec<Expr>),
-    /// A function call
+
+    /// A function call.
     ///
     /// The first field resolves to the function itself,
     /// and the second field is the list of arguments
     Call(Box<Expr>, Vec<Expr>),
+
     /// A method call (`x.foo::<Bar, Baz>(a, b, c, d)`)
     ///
     /// The `Ident` is the identifier for the method name.
@@ -41,69 +51,89 @@ pub enum ExprKind {
     /// Thus, `x.foo::<Bar, Baz>(a, b, c, d)` is represented as
     /// `ExprKind::MethodCall(foo, [Bar, Baz], [x, a, b, c, d])`.
     MethodCall(Ident, Vec<Ty>, Vec<Expr>),
-    /// A tuple (`(a, b, c, d)`)
+
+    /// A tuple, e.g. `(a, b, c, d)`.
     Tup(Vec<Expr>),
-    /// A binary operation (For example: `a + b`, `a * b`)
+
+    /// A binary operation, e.g. `a + b`, `a * b`.
     Binary(BinOp, Box<Expr>, Box<Expr>),
-    /// A unary operation (For example: `!x`, `*x`)
+
+    /// A unary operation, e.g. `!x`, `*x`.
     Unary(UnOp, Box<Expr>),
-    /// A literal (For example: `1`, `"foo"`)
+
+    /// A literal, e.g. `1`, `"foo"`.
     Lit(Lit),
-    /// A cast (`foo as f64`)
+
+    /// A cast, e.g. `foo as f64`.
     Cast(Box<Expr>, Box<Ty>),
-    /// Type ascription (`foo: f64`)
+
+    /// A type ascription, e.g. `foo: f64`.
     Type(Box<Expr>, Box<Ty>),
+
     /// An `if` block, with an optional else block
     ///
-    /// `if expr { block } else { expr }`
+    /// E.g., `if expr { block } else { expr }`
     If(Box<Expr>, Block, Option<Box<Expr>>),
+
     /// An `if let` expression with an optional else block
     ///
-    /// `if let pat = expr { block } else { expr }`
+    /// E.g., `if let pat = expr { block } else { expr }`
     ///
     /// This is desugared to a `match` expression.
     IfLet(Box<Pat>, Box<Expr>, Block, Option<Box<Expr>>),
+
     /// A while loop, with an optional label
     ///
-    /// `'label: while expr { block }`
+    /// E.g., `'label: while expr { block }`
     While(Box<Expr>, Block, Option<Ident>),
-    /// A while-let loop, with an optional label
+
+    /// A while-let loop, with an optional label.
     ///
-    /// `'label: while let pat = expr { block }`
+    /// E.g., `'label: while let pat = expr { block }`
     ///
     /// This is desugared to a combination of `loop` and `match` expressions.
     WhileLet(Box<Pat>, Box<Expr>, Block, Option<Ident>),
-    /// A for loop, with an optional label
+
+    /// A for loop, with an optional label.
     ///
-    /// `'label: for pat in expr { block }`
+    /// E.g., `'label: for pat in expr { block }`
     ///
     /// This is desugared to a combination of `loop` and `match` expressions.
     ForLoop(Box<Pat>, Box<Expr>, Block, Option<Ident>),
-    /// Conditionless loop (can be exited with break, continue, or return)
+
+    /// Conditionless loop with an optional label.
     ///
-    /// `'label: loop { block }`
+    /// E.g. `'label: loop { block }`
     Loop(Block, Option<Ident>),
+
     /// A `match` block.
     Match(Box<Expr>, Vec<Arm>),
+
     /// A closure (for example, `move |a, b, c| a + b + c`)
     Closure(CaptureBy, Box<FnDecl>, Box<Expr>),
+
     /// A block (`{ ... }` or `unsafe { ... }`)
     Block(Unsafety, Block),
 
     /// An assignment (`a = foo()`)
     Assign(Box<Expr>, Box<Expr>),
+
     /// An assignment with an operator
     ///
     /// For example, `a += 1`.
     AssignOp(BinOp, Box<Expr>, Box<Expr>),
+
     /// Access of a named struct field (`obj.foo`)
     Field(Box<Expr>, Ident),
+
     /// Access of an unnamed field of a struct or tuple-struct
     ///
     /// For example, `foo.0`.
     TupField(Box<Expr>, usize),
+
     /// An indexing operation (`foo[2]`)
     Index(Box<Expr>, Box<Expr>),
+
     /// A range (`1..2`, `1..`, `..2`, `1...2`, `1...`, `...2`)
     Range(Option<Box<Expr>>, Option<Box<Expr>>, RangeLimits),
 
@@ -116,10 +146,13 @@ pub enum ExprKind {
 
     /// A referencing operation (`&a` or `&mut a`)
     AddrOf(Mutability, Box<Expr>),
+
     /// A `break`, with an optional label to break, and an optional expression
     Break(Option<Ident>, Option<Box<Expr>>),
+
     /// A `continue`, with an optional label
     Continue(Option<Ident>),
+
     /// A `return`, with an optional value to be returned
     Ret(Option<Box<Expr>>),
 
@@ -145,11 +178,20 @@ pub enum ExprKind {
     Try(Box<Expr>),
 }
 
+/// A field-value pair in a struct literal.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct FieldValue {
+    /// Name of the field.
     pub ident: Ident,
+
+    /// Value of the field.
     pub expr: Expr,
+
+    /// Whether this is a shorthand field, e.g. `Struct { x }`
+    /// instead of `Struct { x: x }`.
     pub is_shorthand: bool,
+
+    /// Attributes tagged on the field.
     pub attrs: Vec<Attribute>,
 }
 
@@ -162,6 +204,7 @@ pub struct Block {
     pub stmts: Vec<Stmt>,
 }
 
+/// A statement, usually ending in a semicolon.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum Stmt {
     /// A local (let) binding.
@@ -170,21 +213,26 @@ pub enum Stmt {
     /// An item definition.
     Item(Box<Item>),
 
-    /// Expr without trailing semi-colon.
+    /// Expr without trailing semicolon.
     Expr(Box<Expr>),
 
+    /// Expression with trailing semicolon;
     Semi(Box<Expr>),
 
+    /// Macro invocation.
     Mac(Box<(Mac, MacStmtStyle, Vec<Attribute>)>),
 }
 
+/// How a macro was invoked.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum MacStmtStyle {
     /// The macro statement had a trailing semicolon, e.g. `foo! { ... };`
     /// `foo!(...);`, `foo![...];`
     Semicolon,
+
     /// The macro statement had braces; e.g. foo! { ... }
     Braces,
+
     /// The macro statement had parentheses or brackets and no semicolon; e.g.
     /// `foo!(...)`. All of these will end up being converted into macro
     /// expressions.
@@ -196,6 +244,7 @@ pub enum MacStmtStyle {
 pub struct Local {
     pub pat: Box<Pat>,
     pub ty: Option<Box<Ty>>,
+
     /// Initializer expression to set the value, if any
     pub init: Option<Box<Expr>>,
     pub attrs: Vec<Attribute>,
@@ -1357,9 +1406,9 @@ mod printing {
                     if qself.position > 0 {
                         tokens.append("as");
                         for (i, segment) in path.segments
-                            .iter()
-                            .take(qself.position)
-                            .enumerate() {
+                                .iter()
+                                .take(qself.position)
+                                .enumerate() {
                             if i > 0 || path.global {
                                 tokens.append("::");
                             }
@@ -1505,9 +1554,9 @@ mod printing {
                     if qself.position > 0 {
                         tokens.append("as");
                         for (i, segment) in path.segments
-                            .iter()
-                            .take(qself.position)
-                            .enumerate() {
+                                .iter()
+                                .take(qself.position)
+                                .enumerate() {
                             if i > 0 || path.global {
                                 tokens.append("::");
                             }

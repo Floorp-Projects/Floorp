@@ -139,9 +139,9 @@ impl<F> PathSegmentsBuilder<F>
 
     pub fn build(self) -> F::Result {
         self.callback.invoke(Path {
-            global: self.global,
-            segments: self.segments,
-        })
+                                 global: self.global,
+                                 segments: self.segments,
+                             })
     }
 }
 
@@ -181,16 +181,12 @@ impl<F> PathSegmentBuilder<F>
 
     pub fn with_generics(self, generics: Generics) -> Self {
         // Strip off the bounds.
-        let lifetimes = generics.lifetimes
-            .iter()
-            .map(|lifetime_def| lifetime_def.lifetime.clone());
+        let lifetimes = generics.lifetimes.iter().map(|lifetime_def| lifetime_def.lifetime.clone());
 
-        let tys = generics.ty_params
-            .iter()
-            .map(|ty_param| TyBuilder::new().id(ty_param.ident.clone()));
+        let tys =
+            generics.ty_params.iter().map(|ty_param| TyBuilder::new().id(ty_param.ident.clone()));
 
-        self.with_lifetimes(lifetimes)
-            .with_tys(tys)
+        self.with_lifetimes(lifetimes).with_tys(tys)
     }
 
     pub fn with_lifetimes<I, L>(mut self, iter: I) -> Self
@@ -241,9 +237,9 @@ impl<F> PathSegmentBuilder<F>
         where T: ToIdent
     {
         TyBuilder::with_callback(TypeBindingBuilder {
-            id: id.to_ident(),
-            builder: self,
-        })
+                                     id: id.to_ident(),
+                                     builder: self,
+                                 })
     }
 
     pub fn no_return(self) -> F::Result {
@@ -263,9 +259,9 @@ impl<F> PathSegmentBuilder<F>
         let parameters = PathParameters::Parenthesized(data);
 
         self.callback.invoke(PathSegment {
-            ident: self.id,
-            parameters: parameters,
-        })
+                                 ident: self.id,
+                                 parameters: parameters,
+                             })
     }
 
     pub fn build(self) -> F::Result {
@@ -278,9 +274,9 @@ impl<F> PathSegmentBuilder<F>
         let parameters = PathParameters::AngleBracketed(data);
 
         self.callback.invoke(PathSegment {
-            ident: self.id,
-            parameters: parameters,
-        })
+                                 ident: self.id,
+                                 parameters: parameters,
+                             })
     }
 }
 
@@ -310,9 +306,9 @@ impl<F> Invoke<Ty> for TypeBindingBuilder<F>
         let id = self.id;
 
         self.builder.with_binding(TypeBinding {
-            ident: id,
-            ty: ty,
-        })
+                                      ident: id,
+                                      ty: ty,
+                                  })
     }
 }
 

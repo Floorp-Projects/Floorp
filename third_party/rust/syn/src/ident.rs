@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::fmt::{self, Display};
 
-#[derive(Debug, Clone, Eq, Hash)]
+#[derive(Debug, Clone, Eq, Hash, Ord, PartialOrd)]
 pub struct Ident(String);
 
 impl Ident {
@@ -105,10 +105,10 @@ pub mod parsing {
         for (i, ch) in input.char_indices() {
             if !UnicodeXID::is_xid_start(ch) && !UnicodeXID::is_xid_continue(ch) {
                 return if i == 0 {
-                    IResult::Error
-                } else {
-                    IResult::Done(&input[i..], input[..i].into())
-                };
+                           IResult::Error
+                       } else {
+                           IResult::Done(&input[i..], input[..i].into())
+                       };
             }
         }
 

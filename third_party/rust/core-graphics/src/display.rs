@@ -15,6 +15,8 @@ use libc;
 pub use base::{CGError, boolean_t};
 pub use geometry::{CGRect, CGPoint, CGSize};
 
+use image::CGImageRef;
+
 pub type CGDirectDisplayID = libc::uint32_t;
 pub type CGWindowID        = libc::uint32_t;
 
@@ -30,6 +32,14 @@ pub const kCGWindowListOptionOnScreenBelowWindow: CGWindowListOption = 1 << 2;
 pub const kCGWindowListOptionIncludingWindow:  CGWindowListOption    = 1 << 3;
 pub const kCGWindowListExcludeDesktopElements: CGWindowListOption    = 1 << 4;
 
+pub type CGWindowImageOption = libc::uint32_t;
+
+pub const kCGWindowImageDefault: CGWindowImageOption = 0;
+pub const kCGWindowImageBoundsIgnoreFraming: CGWindowImageOption = 1 << 0;
+pub const kCGWindowImageShouldBeOpaque: CGWindowImageOption = 1 << 1;
+pub const kCGWindowImageOnlyShadows: CGWindowImageOption = 1 << 2;
+pub const kCGWindowImageBestResolution: CGWindowImageOption = 1 << 3;
+pub const kCGWindowImageNominalResolution: CGWindowImageOption = 1 << 4;
 
 pub use core_foundation::dictionary::{ CFDictionary, CFDictionaryRef, CFDictionaryGetValueIfPresent };
 pub use core_foundation::array::{ CFArray, CFArrayRef };
@@ -38,6 +48,9 @@ pub use core_foundation::base::{  CFIndex, CFRelease, CFTypeRef };
 
 #[link(name = "ApplicationServices", kind = "framework")]
 extern {
+    pub static CGRectNull: CGRect;
+    pub static CGRectInfinite: CGRect;
+
     pub fn CGMainDisplayID() -> CGDirectDisplayID;
     pub fn CGDisplayIsActive(display: CGDirectDisplayID) -> boolean_t;
     pub fn CGDisplayIsAlwaysInMirrorSet(display: CGDirectDisplayID) -> boolean_t;
@@ -73,5 +86,9 @@ extern {
 
     // Window Services Reference
     pub fn CGWindowListCopyWindowInfo(option: CGWindowListOption, relativeToWindow: CGWindowID ) -> CFArrayRef;
+    pub fn CGWindowListCreateImage(screenBounds: CGRect,
+                                   listOptions: CGWindowListOption,
+                                   windowId: CGWindowID,
+                                   imageOptions: CGWindowImageOption) -> CGImageRef;
 
 }
