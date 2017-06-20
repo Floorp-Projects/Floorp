@@ -232,9 +232,6 @@ function test_load_replace() {
     file = do_get_file("data/system_root.lnk", false);
     var chan = new_file_channel(file);
 
-    // The LOAD_REPLACE flag should be set
-    do_check_eq(chan.loadFlags & chan.LOAD_REPLACE, chan.LOAD_REPLACE);
-
     // The original URI path should differ from the URI path
     do_check_neq(chan.URI.path, chan.originalURI.path);
 

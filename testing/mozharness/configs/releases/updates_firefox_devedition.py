@@ -31,7 +31,7 @@ config = {
             "mar_channel_ids": [],
             "channel_names": ["aurora", "aurora-localtest", "aurora-cdntest"],
             "rules_to_update": ["devedition-cdntest", "devedition-localtest"],
-            "publish_rules": ["devedition"],
+            "publish_rules": [10],
         },
     },
     "balrog_use_dummy_suffix": False,
