@@ -24,11 +24,6 @@ const kMinTimeoutBackground = 100 * 1000 * 1000;
 
 const kDelay = 10;
 
-// Allow a very generous error range due to debug automation tests running
-// very slowly.  This is still far below the configured background throttle
-// amount.
-const kAllowedError = 1000;
-
 Services.scriptloader.loadSubScript(kPluginJS, this);
 
 function* runTest(url) {
@@ -53,7 +48,7 @@ function* runTest(url) {
       }, delay);
     });
   });
-  ok(timeout <= kDelay + kAllowedError, `Got the correct timeout (${timeout}`);
+  ok(timeout <= kMinTimeoutBackground, `Got the correct timeout (${timeout})`);
 
   // All done.
   yield BrowserTestUtils.removeTab(newTab);

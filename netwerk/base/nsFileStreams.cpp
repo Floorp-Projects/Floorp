@@ -793,6 +793,9 @@ nsAtomicFileOutputStream::DoOpen()
     nsCOMPtr<nsIFile> file;
     file.swap(mOpenParams.localFile);
 
+    if (!file) {
+        return NS_ERROR_NOT_INITIALIZED;
+    }
     nsresult rv = file->Exists(&mTargetFileExists);
     if (NS_FAILED(rv)) {
         NS_ERROR("Can't tell if target file exists");

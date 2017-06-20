@@ -6,15 +6,8 @@
 
 "use strict";
 
-const { Cu, Cc, Ci } = require("chrome");
+const { Ci } = require("chrome");
 const Services = require("Services");
-
-const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
-
-XPCOMUtils.defineLazyGetter(this, "WindowMediator", function () {
-  return Cc["@mozilla.org/appshell/window-mediator;1"]
-    .getService(Ci.nsIWindowMediator);
-});
 
 /**
  * Singleton object that represents the JSON View in-content tool.
@@ -48,7 +41,7 @@ var JsonView = {
    * in the parent process.
    */
   onSave: function (message) {
-    let chrome = WindowMediator.getMostRecentWindow("navigator:browser");
+    let chrome = Services.wm.getMostRecentWindow("navigator:browser");
     let browser = chrome.gBrowser.selectedBrowser;
     if (message.data.url === null) {
       // Save original contents

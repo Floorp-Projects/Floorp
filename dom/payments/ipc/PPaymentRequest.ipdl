@@ -75,9 +75,71 @@ struct IPCPaymentCreateActionRequest
   IPCPaymentOptions options;
 };
 
+struct IPCPaymentCanMakeActionRequest
+{
+  nsString requestId;
+};
+
+struct IPCPaymentShowActionRequest
+{
+  nsString requestId;
+};
+
+struct IPCPaymentAbortActionRequest
+{
+  nsString requestId;
+};
+
+struct IPCPaymentCompleteActionRequest
+{
+  nsString requestId;
+  nsString completeStatus;
+};
+
 union IPCPaymentActionRequest
 {
   IPCPaymentCreateActionRequest;
+  IPCPaymentCanMakeActionRequest;
+  IPCPaymentShowActionRequest;
+  IPCPaymentAbortActionRequest;
+  IPCPaymentCompleteActionRequest;
+};
+
+struct IPCPaymentCanMakeActionResponse
+{
+  nsString requestId;
+  bool result;
+};
+
+struct IPCPaymentShowActionResponse
+{
+  nsString requestId;
+  bool isAccepted;
+  nsString methodName;
+  nsString data;
+  nsString payerName;
+  nsString payerEmail;
+  nsString payerPhone;
+};
+
+struct IPCPaymentAbortActionResponse
+{
+  nsString requestId;
+  bool isSucceeded;
+};
+
+struct IPCPaymentCompleteActionResponse
+{
+  nsString requestId;
+  bool isCompleted;
+};
+
+union IPCPaymentActionResponse
+{
+  IPCPaymentCanMakeActionResponse;
+  IPCPaymentShowActionResponse;
+  IPCPaymentAbortActionResponse;
+  IPCPaymentCompleteActionResponse;
 };
 
 sync protocol PPaymentRequest
@@ -88,6 +150,9 @@ parent:
   async __delete__();
 
   async RequestPayment(IPCPaymentActionRequest aAction);
+
+child:
+  async RespondPayment(IPCPaymentActionResponse aResponse);
 };
 
 } // end of namespace dom

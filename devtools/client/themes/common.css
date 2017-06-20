@@ -102,7 +102,6 @@ html|button, html|select {
 .CodeMirror-Tern-tooltip {
   border: 1px solid hsl(210,24%,90%);
   background-image: linear-gradient(to bottom, hsla(209,18%,100%,0.9), hsl(210,24%,95%));
-  box-shadow: 0 1px 0 hsla(209,29%,90%,.25) inset;
 }
 
 .theme-dark .devtools-autocomplete-popup,
@@ -110,7 +109,6 @@ html|button, html|select {
 .theme-dark .CodeMirror-Tern-tooltip {
   border: 1px solid hsl(210,11%,10%);
   background-image: linear-gradient(to bottom, hsla(209,18%,18%,0.9), hsl(210,11%,16%));
-  box-shadow: none;
 }
 
 .theme-firebug .devtools-autocomplete-popup {
