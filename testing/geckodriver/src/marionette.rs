@@ -740,30 +740,30 @@ impl MarionetteSession {
                 let width = try_opt!(
                     try_opt!(resp.result.find("width"),
                              ErrorStatus::UnknownError,
-                             "Failed to find width field").as_f64(),
+                             "Failed to find width field").as_u64(),
                     ErrorStatus::UnknownError,
-                    "Failed to interpret width as float");
+                    "Failed to interpret width as integer");
 
                 let height = try_opt!(
                     try_opt!(resp.result.find("height"),
                              ErrorStatus::UnknownError,
-                             "Failed to find height field").as_f64(),
+                             "Failed to find height field").as_u64(),
                     ErrorStatus::UnknownError,
-                    "Failed to interpret height as float");
+                    "Failed to interpret height as integer");
 
                 let x = try_opt!(
                     try_opt!(resp.result.find("x"),
                              ErrorStatus::UnknownError,
-                             "Failed to find x field").as_f64(),
+                             "Failed to find x field").as_i64(),
                     ErrorStatus::UnknownError,
-                    "Failed to interpret x as float");
+                    "Failed to interpret x as integer");
 
                 let y = try_opt!(
                     try_opt!(resp.result.find("y"),
                              ErrorStatus::UnknownError,
-                             "Failed to find y field").as_f64(),
+                             "Failed to find y field").as_i64(),
                     ErrorStatus::UnknownError,
-                    "Failed to interpret y as float");
+                    "Failed to interpret y as integer");
 
                 WebDriverResponse::WindowRect(RectResponse::new(x, y, width, height))
             },
