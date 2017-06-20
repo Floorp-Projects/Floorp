@@ -14,14 +14,71 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor/destructor
 
-RootAccessibleWrap::
-  RootAccessibleWrap(nsIDocument* aDocument, nsIPresShell* aPresShell) :
-  RootAccessible(aDocument, aPresShell)
+RootAccessibleWrap::RootAccessibleWrap(nsIDocument* aDocument,
+                                       nsIPresShell* aPresShell)
+  : RootAccessible(aDocument, aPresShell)
+  , mOuter(&mInternalUnknown)
 {
 }
 
 RootAccessibleWrap::~RootAccessibleWrap()
 {
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Aggregated IUnknown
+HRESULT
+RootAccessibleWrap::InternalQueryInterface(REFIID aIid, void** aOutInterface)
+{
+  if (!aOutInterface) {
+    return E_INVALIDARG;
+  }
+
+  // InternalQueryInterface should always return its internal unknown
+  // when queried for IID_IUnknown...
+  if (aIid == IID_IUnknown) {
+    RefPtr<IUnknown> punk(&mInternalUnknown);
+    punk.forget(aOutInterface);
+    return S_OK;
+  }
+
+  // ...Otherwise we pass through to the base COM implementation of
+  // QueryInterface which is provided by DocAccessibleWrap.
+  return DocAccessibleWrap::QueryInterface(aIid, aOutInterface);
+}
+
+ULONG
+RootAccessibleWrap::InternalAddRef()
+{
+  return DocAccessible::AddRef();
+}
+
+ULONG
+RootAccessibleWrap::InternalRelease()
+{
+  return DocAccessible::Release();
+}
+
+already_AddRefed<IUnknown>
+RootAccessibleWrap::Aggregate(IUnknown* aOuter)
+{
+  MOZ_ASSERT(mOuter && (mOuter == &mInternalUnknown || mOuter == aOuter || !aOuter));
+  if (!aOuter) {
+    // If there is no aOuter then we should always set mOuter to
+    // mInternalUnknown. This is standard COM aggregation stuff.
+    mOuter = &mInternalUnknown;
+    return nullptr;
+  }
+
+  mOuter = aOuter;
+  return GetInternalUnknown();
+}
+
+already_AddRefed<IUnknown>
+RootAccessibleWrap::GetInternalUnknown()
+{
+  RefPtr<IUnknown> result(&mInternalUnknown);
+  return result.forget();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
