@@ -6,7 +6,6 @@
 
 Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Components.utils.import("resource://gre/modules/InlineSpellChecker.jsm");
-Components.utils.import("resource://gre/modules/LoginManagerContextMenu.jsm");
 Components.utils.import("resource://gre/modules/BrowserUtils.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -14,6 +13,8 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
   "resource://gre/modules/LoginHelper.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerContextMenu",
+  "resource://gre/modules/LoginManagerContextMenu.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
   "resource://gre/modules/WebNavigationFrames.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
@@ -146,7 +147,9 @@ nsContextMenu.prototype = {
     InlineSpellCheckerUI.clearSuggestionsFromMenu();
     InlineSpellCheckerUI.clearDictionaryListFromMenu();
     InlineSpellCheckerUI.uninit();
-    LoginManagerContextMenu.clearLoginsFromMenu(document);
+    if (Cu.isModuleLoaded("resource://gre/modules/LoginManagerContextMenu.jsm")) {
+      LoginManagerContextMenu.clearLoginsFromMenu(document);
+    }
 
     // This handler self-deletes, only run it if it is still there:
     if (this._onPopupHiding) {
