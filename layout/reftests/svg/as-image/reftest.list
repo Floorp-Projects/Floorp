@@ -81,6 +81,20 @@ test-pref(svg.context-properties.content.enabled,true) == context-stroke-06.html
 test-pref(svg.context-properties.content.enabled,true) == context-stroke-07.html context-stroke-07-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-stroke-08.html blue100x100-border-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-stroke-bg-image-01.html blue100x100-border-ref.html
+# context-fill-opacity:
+== context-fill-opacity-01.html blue100x100-ref.html
+fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-fill-opacity-01.html context-fill-or-stroke-opacity-01-ref.html # Bug 1377327
+fuzzy-if(winWidget,1,20000) test-pref(svg.context-properties.content.enabled,true) == context-fill-opacity-02.html context-fill-or-stroke-opacity-02-ref.html # Bug 1377327
+fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-fill-opacity-03.html context-fill-or-stroke-opacity-03-ref.html # Bug 1377327
+fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-fill-opacity-04.html blue100x100-ref.html # Bug 1377327
+fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-fill-opacity-05.html blue100x100-ref.html # Bug 1377327
+# context-stroke-opacity:
+== context-stroke-opacity-01.html blue100x100-ref.html
+fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-stroke-opacity-01.html context-fill-or-stroke-opacity-01-ref.html # Bug 1377327
+fuzzy-if(winWidget,1,20000) test-pref(svg.context-properties.content.enabled,true) == context-stroke-opacity-02.html context-fill-or-stroke-opacity-02-ref.html # Bug 1377327
+fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-stroke-opacity-03.html context-fill-or-stroke-opacity-03-ref.html # Bug 1377327
+fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-stroke-opacity-04.html blue100x100-ref.html # Bug 1377327
+fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-stroke-opacity-05.html blue100x100-ref.html # Bug 1377327
 
 # Simple <img> tests
 == img-simple-1.html  lime100x100-ref.html
