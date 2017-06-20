@@ -171,12 +171,12 @@ fails-if(!styloVsGecko) == object-fit-fill-svg-006p.html object-fit-fill-svg-006
 == object-fit-scale-down-svg-006i.html object-fit-scale-down-svg-006-ref.html
 == object-fit-scale-down-svg-006o.html object-fit-scale-down-svg-006-ref.html
 == object-fit-scale-down-svg-006p.html object-fit-scale-down-svg-006-ref.html
-fails-if(!styloVsGecko) == object-position-png-001c.html object-position-png-001-ref.html # bug 1105150
+fails-if(!styloVsGecko&&!webrender) == object-position-png-001c.html object-position-png-001-ref.html # bug 1105150
 == object-position-png-001e.html object-position-png-001-ref.html
 == object-position-png-001i.html object-position-png-001-ref.html
 == object-position-png-001o.html object-position-png-001-ref.html
 == object-position-png-001p.html object-position-png-001-ref.html
-fails-if(!styloVsGecko) == object-position-png-002c.html object-position-png-002-ref.html # bug 1105150
+fails-if(!styloVsGecko&&!webrender) == object-position-png-002c.html object-position-png-002-ref.html # bug 1105150
 == object-position-png-002e.html object-position-png-002-ref.html
 == object-position-png-002i.html object-position-png-002-ref.html
 == object-position-png-002o.html object-position-png-002-ref.html
