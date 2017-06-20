@@ -172,9 +172,7 @@ SVGFEImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     ClearBrokenState();
     RemoveStatesSilently(NS_EVENT_STATE_BROKEN);
     nsContentUtils::AddScriptRunner(
-      NewRunnableMethod("dom::SVGFEImageElement::MaybeLoadSVGImage",
-                        this,
-                        &SVGFEImageElement::MaybeLoadSVGImage));
+      NewRunnableMethod(this, &SVGFEImageElement::MaybeLoadSVGImage));
   }
 
   return rv;

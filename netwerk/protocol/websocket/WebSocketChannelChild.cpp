@@ -111,8 +111,7 @@ WebSocketChannelChild::MaybeReleaseIPCObject()
   if (!NS_IsMainThread()) {
     nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
     MOZ_ALWAYS_SUCCEEDS(
-      target->Dispatch(NewRunnableMethod("WebSocketChannelChild::MaybeReleaseIPCObject",
-                                         this,
+      target->Dispatch(NewRunnableMethod(this,
                                          &WebSocketChannelChild::MaybeReleaseIPCObject),
                        NS_DISPATCH_NORMAL));
     return;
@@ -136,9 +135,8 @@ WebSocketChannelChild::IsEncrypted() const
 class WrappedChannelEvent : public Runnable
 {
 public:
-  explicit WrappedChannelEvent(ChannelEvent* aChannelEvent)
-    : Runnable("net::WrappedChannelEvent")
-    , mChannelEvent(aChannelEvent)
+  explicit WrappedChannelEvent(ChannelEvent *aChannelEvent)
+    : mChannelEvent(aChannelEvent)
   {
     MOZ_RELEASE_ASSERT(aChannelEvent);
   }
@@ -600,11 +598,10 @@ WebSocketChannelChild::AsyncOpen(nsIURI *aURI,
 class CloseEvent : public Runnable
 {
 public:
-  CloseEvent(WebSocketChannelChild* aChild,
+  CloseEvent(WebSocketChannelChild *aChild,
              uint16_t aCode,
              const nsACString& aReason)
-    : Runnable("net::CloseEvent")
-    , mChild(aChild)
+    : mChild(aChild)
     , mCode(aCode)
     , mReason(aReason)
   {
@@ -651,11 +648,10 @@ WebSocketChannelChild::Close(uint16_t code, const nsACString & reason)
 class MsgEvent : public Runnable
 {
 public:
-  MsgEvent(WebSocketChannelChild* aChild,
-           const nsACString& aMsg,
+  MsgEvent(WebSocketChannelChild *aChild,
+           const nsACString &aMsg,
            bool aBinaryMsg)
-    : Runnable("net::MsgEvent")
-    , mChild(aChild)
+    : mChild(aChild)
     , mMsg(aMsg)
     , mBinaryMsg(aBinaryMsg)
   {
@@ -731,11 +727,10 @@ WebSocketChannelChild::SendBinaryMsg(const nsACString &aMsg)
 class BinaryStreamEvent : public Runnable
 {
 public:
-  BinaryStreamEvent(WebSocketChannelChild* aChild,
+  BinaryStreamEvent(WebSocketChannelChild *aChild,
                     nsIInputStream* aStream,
                     uint32_t aLength)
-    : Runnable("net::BinaryStreamEvent")
-    , mChild(aChild)
+    : mChild(aChild)
     , mStream(aStream)
     , mLength(aLength)
   {

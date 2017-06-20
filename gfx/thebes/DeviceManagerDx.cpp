@@ -976,8 +976,7 @@ DeviceManagerDx::PreloadAttachmentsOnCompositorThread()
     return;
   }
 
-  RefPtr<Runnable> task = NS_NewRunnableFunction("DeviceManagerDx::PreloadAttachmentsOnCompositorThread",
-                                                 []() -> void {
+  RefPtr<Runnable> task = NS_NewRunnableFunction([]() -> void {
     if (DeviceManagerDx* dm = DeviceManagerDx::Get()) {
       RefPtr<ID3D11Device> device;
       RefPtr<layers::DeviceAttachmentsD3D11> attachments;

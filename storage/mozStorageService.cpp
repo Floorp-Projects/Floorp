@@ -371,11 +371,9 @@ Service::minimizeMemory()
     } else {
       // We are on the wrong thread, the query should be executed on the
       // opener thread, so we must dispatch to it.
-      nsCOMPtr<nsIRunnable> event = NewRunnableMethod<const nsCString>(
-        "storage::Connection::ExecuteSimpleSQL",
-        conn,
-        &Connection::ExecuteSimpleSQL,
-        shrinkPragma);
+      nsCOMPtr<nsIRunnable> event =
+        NewRunnableMethod<const nsCString>(
+          conn, &Connection::ExecuteSimpleSQL, shrinkPragma);
       conn->threadOpenedOn->Dispatch(event, NS_DISPATCH_NORMAL);
     }
   }
@@ -665,8 +663,7 @@ public:
                     nsIFile* aStorageFile,
                     int32_t aGrowthIncrement,
                     mozIStorageCompletionCallback* aCallback)
-    : Runnable("storage::AsyncInitDatabase")
-    , mConnection(aConnection)
+    : mConnection(aConnection)
     , mStorageFile(aStorageFile)
     , mGrowthIncrement(aGrowthIncrement)
     , mCallback(aCallback)
@@ -682,7 +679,6 @@ public:
     if (NS_FAILED(rv)) {
       nsCOMPtr<nsIRunnable> closeRunnable =
         NewRunnableMethod<mozIStorageCompletionCallback*>(
-          "storage::Connection::AsyncClose",
           mConnection.get(),
           &Connection::AsyncClose,
           nullptr);

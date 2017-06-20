@@ -793,11 +793,7 @@ IsInFeedSubscribeLine(nsXULElement* aElement)
 class XULInContentErrorReporter : public Runnable
 {
 public:
-  explicit XULInContentErrorReporter(nsIDocument* aDocument)
-    : mozilla::Runnable("XULInContentErrorReporter")
-    , mDocument(aDocument)
-  {
-  }
+  explicit XULInContentErrorReporter(nsIDocument* aDocument) : mDocument(aDocument) {}
 
   NS_IMETHOD Run() override
   {
@@ -1877,8 +1873,7 @@ class SetDrawInTitleBarEvent : public Runnable
 {
 public:
   SetDrawInTitleBarEvent(nsIWidget* aWidget, bool aState)
-    : mozilla::Runnable("SetDrawInTitleBarEvent")
-    , mWidget(aWidget)
+    : mWidget(aWidget)
     , mState(aState)
   {}
 
@@ -1933,25 +1928,19 @@ nsXULElement::UpdateBrightTitlebarForeground(nsIDocument* aDoc)
 class MarginSetter : public Runnable
 {
 public:
-  explicit MarginSetter(nsIWidget* aWidget)
-    : mozilla::Runnable("MarginSetter")
-    , mWidget(aWidget)
-    , mMargin(-1, -1, -1, -1)
-  {
-  }
-  MarginSetter(nsIWidget* aWidget, const LayoutDeviceIntMargin& aMargin)
-    : mozilla::Runnable("MarginSetter")
-    , mWidget(aWidget)
-    , mMargin(aMargin)
-  {
-  }
+    explicit MarginSetter(nsIWidget* aWidget) :
+        mWidget(aWidget), mMargin(-1, -1, -1, -1)
+    {}
+    MarginSetter(nsIWidget *aWidget, const LayoutDeviceIntMargin& aMargin) :
+        mWidget(aWidget), mMargin(aMargin)
+    {}
 
-  NS_IMETHOD Run() override
-  {
-    // SetNonClientMargins can dispatch native events, hence doing
-    // it off a script runner.
-    mWidget->SetNonClientMargins(mMargin);
-    return NS_OK;
+    NS_IMETHOD Run() override
+    {
+        // SetNonClientMargins can dispatch native events, hence doing
+        // it off a script runner.
+        mWidget->SetNonClientMargins(mMargin);
+        return NS_OK;
     }
 
 private:
@@ -2640,25 +2629,21 @@ class NotifyOffThreadScriptCompletedRunnable : public Runnable
     void *mToken;
 
 public:
-  NotifyOffThreadScriptCompletedRunnable(nsIOffThreadScriptReceiver* aReceiver,
-                                         void* aToken)
-    : mozilla::Runnable("NotifyOffThreadScriptCompletedRunnable")
-    , mReceiver(aReceiver)
-    , mToken(aToken)
-  {
-  }
+    NotifyOffThreadScriptCompletedRunnable(nsIOffThreadScriptReceiver* aReceiver,
+                                           void *aToken)
+      : mReceiver(aReceiver), mToken(aToken)
+    {}
 
-  static void NoteReceiver(nsIOffThreadScriptReceiver* aReceiver)
-  {
-    if (!sSetupClearOnShutdown) {
-      ClearOnShutdown(&sReceivers);
-      sSetupClearOnShutdown = true;
-      sReceivers = new nsTArray<nsCOMPtr<nsIOffThreadScriptReceiver>>();
-    }
+    static void NoteReceiver(nsIOffThreadScriptReceiver* aReceiver) {
+        if (!sSetupClearOnShutdown) {
+            ClearOnShutdown(&sReceivers);
+            sSetupClearOnShutdown = true;
+            sReceivers = new nsTArray<nsCOMPtr<nsIOffThreadScriptReceiver>>();
+        }
 
-    // If we ever crash here, it's because we tried to lazy compile script
-    // too late in shutdown.
-    sReceivers->AppendElement(aReceiver);
+        // If we ever crash here, it's because we tried to lazy compile script
+        // too late in shutdown.
+        sReceivers->AppendElement(aReceiver);
     }
 
     NS_DECL_NSIRUNNABLE

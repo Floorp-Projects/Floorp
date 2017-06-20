@@ -2635,11 +2635,7 @@ class PreciseGCRunnable : public Runnable
 {
   public:
     PreciseGCRunnable(ScheduledGCCallback* aCallback, bool aShrinking)
-      : mozilla::Runnable("PreciseGCRunnable")
-      , mCallback(aCallback)
-      , mShrinking(aShrinking)
-    {
-    }
+    : mCallback(aCallback), mShrinking(aShrinking) {}
 
     NS_IMETHOD Run() override
     {

@@ -32,7 +32,6 @@ class DumpStatusInfoToTempDirRunnable : public mozilla::Runnable
 {
 public:
   DumpStatusInfoToTempDirRunnable()
-    : mozilla::Runnable("DumpStatusInfoToTempDirRunnable")
   {
   }
 

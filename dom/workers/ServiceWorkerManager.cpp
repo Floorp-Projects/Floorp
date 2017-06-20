@@ -206,8 +206,7 @@ class TeardownRunnable final : public Runnable
 {
 public:
   explicit TeardownRunnable(ServiceWorkerManagerChild* aActor)
-    : Runnable("dom::workers::TeardownRunnable")
-    , mActor(aActor)
+    : mActor(aActor)
   {
     MOZ_ASSERT(mActor);
   }
@@ -387,8 +386,7 @@ class PropagateSoftUpdateRunnable final : public Runnable
 public:
   PropagateSoftUpdateRunnable(const OriginAttributes& aOriginAttributes,
                               const nsAString& aScope)
-    : Runnable("dom::workers::PropagateSoftUpdateRunnable")
-    , mOriginAttributes(aOriginAttributes)
+    : mOriginAttributes(aOriginAttributes)
     , mScope(aScope)
   {}
 
@@ -418,8 +416,7 @@ public:
   PropagateUnregisterRunnable(nsIPrincipal* aPrincipal,
                               nsIServiceWorkerUnregisterCallback* aCallback,
                               const nsAString& aScope)
-    : Runnable("dom::workers::PropagateUnregisterRunnable")
-    , mPrincipal(aPrincipal)
+    : mPrincipal(aPrincipal)
     , mCallback(aCallback)
     , mScope(aScope)
   {
@@ -451,9 +448,7 @@ class RemoveRunnable final : public Runnable
 {
 public:
   explicit RemoveRunnable(const nsACString& aHost)
-    : Runnable("dom::workers::RemoveRunnable")
-  {
-  }
+  {}
 
   NS_IMETHOD Run() override
   {
@@ -478,9 +473,7 @@ class PropagateRemoveRunnable final : public Runnable
 {
 public:
   explicit PropagateRemoveRunnable(const nsACString& aHost)
-    : Runnable("dom::workers::PropagateRemoveRunnable")
-  {
-  }
+  {}
 
   NS_IMETHOD Run() override
   {
@@ -505,9 +498,7 @@ class PropagateRemoveAllRunnable final : public Runnable
 {
 public:
   PropagateRemoveAllRunnable()
-    : Runnable("dom::workers::PropagateRemoveAllRunnable")
-  {
-  }
+  {}
 
   NS_IMETHOD Run() override
   {
@@ -587,11 +578,9 @@ class SoftUpdateRunnable final : public CancelableRunnable
 {
 public:
   SoftUpdateRunnable(const OriginAttributes& aOriginAttributes,
-                     const nsACString& aScope,
-                     bool aInternalMethod,
+                     const nsACString& aScope, bool aInternalMethod,
                      GenericPromise::Private* aPromise)
-    : CancelableRunnable("dom::workers::SoftUpdateRunnable")
-    , mAttrs(aOriginAttributes)
+    : mAttrs(aOriginAttributes)
     , mScope(aScope)
     , mInternalMethod(aInternalMethod)
     , mPromise(aPromise)
@@ -661,8 +650,7 @@ public:
                  ServiceWorkerUpdateFinishCallback* aCallback,
                  Type aType,
                  GenericPromise::Private* aPromise)
-    : CancelableRunnable("dom::workers::UpdateRunnable")
-    , mPrincipal(aPrincipal)
+    : mPrincipal(aPrincipal)
     , mScope(aScope)
     , mCallback(aCallback)
     , mType(aType)
@@ -726,8 +714,7 @@ class ResolvePromiseRunnable final : public CancelableRunnable
 {
 public:
   explicit ResolvePromiseRunnable(GenericPromise::Private* aPromise)
-    : CancelableRunnable("dom::workers::ResolvePromiseRunnable")
-    , mPromise(aPromise)
+    : mPromise(aPromise)
   {}
 
   NS_IMETHOD
@@ -972,9 +959,7 @@ class GetRegistrationsRunnable final : public Runnable
   RefPtr<Promise> mPromise;
 public:
   GetRegistrationsRunnable(nsPIDOMWindowInner* aWindow, Promise* aPromise)
-    : Runnable("dom::workers::GetRegistrationsRunnable")
-    , mWindow(aWindow)
-    , mPromise(aPromise)
+    : mWindow(aWindow), mPromise(aPromise)
   {}
 
   NS_IMETHOD
@@ -1100,13 +1085,9 @@ class GetRegistrationRunnable final : public Runnable
   nsString mDocumentURL;
 
 public:
-  GetRegistrationRunnable(nsPIDOMWindowInner* aWindow,
-                          Promise* aPromise,
+  GetRegistrationRunnable(nsPIDOMWindowInner* aWindow, Promise* aPromise,
                           const nsAString& aDocumentURL)
-    : Runnable("dom::workers::GetRegistrationRunnable")
-    , mWindow(aWindow)
-    , mPromise(aPromise)
-    , mDocumentURL(aDocumentURL)
+    : mWindow(aWindow), mPromise(aPromise), mDocumentURL(aDocumentURL)
   {}
 
   NS_IMETHOD
@@ -1210,9 +1191,7 @@ class GetReadyPromiseRunnable final : public Runnable
 
 public:
   GetReadyPromiseRunnable(nsPIDOMWindowInner* aWindow, Promise* aPromise)
-    : Runnable("dom::workers::GetReadyPromiseRunnable")
-    , mWindow(aWindow)
-    , mPromise(aPromise)
+    : mWindow(aWindow), mPromise(aPromise)
   {}
 
   NS_IMETHOD
@@ -2640,14 +2619,12 @@ class ContinueDispatchFetchEventRunnable : public Runnable
   nsString mDocumentId;
   bool mIsReload;
 public:
-  ContinueDispatchFetchEventRunnable(
-    ServiceWorkerPrivate* aServiceWorkerPrivate,
-    nsIInterceptedChannel* aChannel,
-    nsILoadGroup* aLoadGroup,
-    const nsAString& aDocumentId,
-    bool aIsReload)
-    : Runnable("dom::workers::ContinueDispatchFetchEventRunnable")
-    , mServiceWorkerPrivate(aServiceWorkerPrivate)
+  ContinueDispatchFetchEventRunnable(ServiceWorkerPrivate* aServiceWorkerPrivate,
+                                     nsIInterceptedChannel* aChannel,
+                                     nsILoadGroup* aLoadGroup,
+                                     const nsAString& aDocumentId,
+                                     bool aIsReload)
+    : mServiceWorkerPrivate(aServiceWorkerPrivate)
     , mChannel(aChannel)
     , mLoadGroup(aLoadGroup)
     , mDocumentId(aDocumentId)
@@ -2788,8 +2765,7 @@ ServiceWorkerManager::DispatchFetchEvent(const OriginAttributes& aOriginAttribut
   // When this service worker was registered, we also sent down the permissions
   // for the runnable. They should have arrived by now, but we still need to
   // wait for them if they have not.
-  nsCOMPtr<nsIRunnable> permissionsRunnable = NS_NewRunnableFunction(
-    "dom::workers::ServiceWorkerManager::DispatchFetchEvent", [=]() {
+  nsCOMPtr<nsIRunnable> permissionsRunnable = NS_NewRunnableFunction([=] () {
       nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
       MOZ_ALWAYS_SUCCEEDS(permMgr->WhenPermissionsAvailable(serviceWorker->Principal(),
                                                             continueRunnable));

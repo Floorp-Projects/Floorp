@@ -22,8 +22,7 @@ using namespace dom;
 
 AsyncEventDispatcher::AsyncEventDispatcher(EventTarget* aTarget,
                                            WidgetEvent& aEvent)
-  : CancelableRunnable("AsyncEventDispatcher")
-  , mTarget(aTarget)
+  : mTarget(aTarget)
 {
   MOZ_ASSERT(mTarget);
   RefPtr<Event> event =

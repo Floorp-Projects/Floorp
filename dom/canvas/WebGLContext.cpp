@@ -1737,10 +1737,9 @@ class UpdateContextLossStatusTask : public CancelableRunnable
     RefPtr<WebGLContext> mWebGL;
 
 public:
-  explicit UpdateContextLossStatusTask(WebGLContext* webgl)
-    : CancelableRunnable("UpdateContextLossStatusTask")
-    , mWebGL(webgl)
-  {
+    explicit UpdateContextLossStatusTask(WebGLContext* webgl)
+        : mWebGL(webgl)
+    {
     }
 
     NS_IMETHOD Run() override {

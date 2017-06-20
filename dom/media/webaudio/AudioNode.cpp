@@ -340,10 +340,7 @@ AudioNode::DisconnectFromOutputIfConnected<AudioNode>(uint32_t aOutputNodeIndex,
   {
   public:
     explicit RunnableRelease(already_AddRefed<AudioNode> aNode)
-      : mozilla::Runnable("RunnableRelease")
-      , mNode(aNode)
-    {
-    }
+      : mNode(aNode) {}
 
     NS_IMETHOD Run() override
     {

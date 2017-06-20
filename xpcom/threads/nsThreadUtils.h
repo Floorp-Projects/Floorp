@@ -430,10 +430,7 @@ class IdleRunnable : public CancelableRunnable,
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  IdleRunnable()
-    : CancelableRunnable("IdleRunnable")
-  {
-  }
+  IdleRunnable() {}
   explicit IdleRunnable(const char* aName) : CancelableRunnable(aName) {}
 
 protected:
@@ -455,8 +452,7 @@ class RunnableFunction : public Runnable
 public:
   template <typename F>
   explicit RunnableFunction(F&& aFunction)
-    : Runnable("RunnableFunction")
-    , mFunction(Forward<F>(aFunction))
+    : mFunction(Forward<F>(aFunction))
   { }
 
   NS_IMETHOD Run() override {
@@ -575,7 +571,7 @@ ToSupports(mozilla::Runnable *p)
 
 template<typename Function>
 already_AddRefed<mozilla::Runnable>
-NS_NewRunnableFunctionXXX(Function&& aFunction)
+NS_NewRunnableFunction(Function&& aFunction)
 {
   // We store a non-reference in RunnableFunction, but still forward aFunction
   // to move if possible.
@@ -588,7 +584,7 @@ already_AddRefed<mozilla::Runnable>
 NS_NewRunnableFunction(const char* aName, Function&& aFunction)
 {
   return mozilla::detail::SetRunnableName(
-    NS_NewRunnableFunctionXXX(mozilla::Forward<Function>(aFunction)), aName);
+    NS_NewRunnableFunction(mozilla::Forward<Function>(aFunction)), aName);
 }
 
 namespace mozilla {
@@ -655,15 +651,7 @@ class nsRunnableMethod
                                   mozilla::IdleRunnable>::Type>::Type,
     protected mozilla::detail::TimerBehaviour<Kind>
 {
-  using BaseType = typename mozilla::Conditional<Kind == mozilla::Standard,
-                                                 mozilla::Runnable,
-                                                 typename mozilla::Conditional<
-                                                   Kind == mozilla::Cancelable,
-                                                   mozilla::CancelableRunnable,
-                                                   mozilla::IdleRunnable>::Type>::Type;
 public:
-  nsRunnableMethod() : BaseType("nsRunnableMethod") {}
-
   virtual void Revoke() = 0;
 
   // These ReturnTypeEnforcer classes set up a blacklist for return types that
@@ -1180,11 +1168,8 @@ public:
     if (nsCOMPtr<nsITimer> timer = GetTimer()) {
       timer->Cancel();
       timer->SetTarget(aTarget);
-      timer->InitWithNamedFuncCallback(TimedOut,
-                                       this,
-                                       aDelay,
-                                       nsITimer::TYPE_ONE_SHOT,
-                                       "detail::RunnableMethodImpl::SetTimer");
+      timer->InitWithFuncCallback(TimedOut, this, aDelay,
+                                  nsITimer::TYPE_ONE_SHOT);
     }
   }
 };
@@ -1343,7 +1328,7 @@ using NonOwningIdleRunnableMethodWithTimerImpl = RunnableMethodImpl<
 
 template<typename PtrType, typename Method>
 already_AddRefed<detail::OwningRunnableMethod<PtrType, Method>>
-NewRunnableMethodXXX(PtrType&& aPtr, Method aMethod)
+NewRunnableMethod(PtrType&& aPtr, Method aMethod)
 {
   return do_AddRef(
     new detail::OwningRunnableMethodImpl<PtrType, Method>
@@ -1355,12 +1340,12 @@ already_AddRefed<detail::OwningRunnableMethod<PtrType, Method>>
 NewRunnableMethod(const char* aName, PtrType&& aPtr, Method aMethod)
 {
   return detail::SetRunnableName(
-    NewRunnableMethodXXX(Forward<PtrType>(aPtr), aMethod), aName);
+    NewRunnableMethod(Forward<PtrType>(aPtr), aMethod), aName);
 }
 
 template<typename PtrType, typename Method>
 already_AddRefed<detail::CancelableRunnableMethod<PtrType, Method>>
-NewCancelableRunnableMethodXXX(PtrType&& aPtr, Method aMethod)
+NewCancelableRunnableMethod(PtrType&& aPtr, Method aMethod)
 {
   return do_AddRef(
     new detail::CancelableRunnableMethodImpl<PtrType, Method>
@@ -1372,12 +1357,12 @@ already_AddRefed<detail::CancelableRunnableMethod<PtrType, Method>>
 NewCancelableRunnableMethod(const char* aName, PtrType&& aPtr, Method aMethod)
 {
   return detail::SetRunnableName(
-    NewCancelableRunnableMethodXXX(Forward<PtrType>(aPtr), aMethod), aName);
+    NewCancelableRunnableMethod(Forward<PtrType>(aPtr), aMethod), aName);
 }
 
 template<typename PtrType, typename Method>
 already_AddRefed<detail::IdleRunnableMethod<PtrType, Method>>
-NewIdleRunnableMethodXXX(PtrType&& aPtr, Method aMethod)
+NewIdleRunnableMethod(PtrType&& aPtr, Method aMethod)
 {
   return do_AddRef(new detail::IdleRunnableMethodImpl<PtrType, Method>(
     Forward<PtrType>(aPtr), aMethod));
@@ -1388,12 +1373,12 @@ already_AddRefed<detail::IdleRunnableMethod<PtrType, Method>>
 NewIdleRunnableMethod(const char* aName, PtrType&& aPtr, Method aMethod)
 {
   return detail::SetRunnableName(
-    NewIdleRunnableMethodXXX(Forward<PtrType>(aPtr), aMethod), aName);
+    NewIdleRunnableMethod(Forward<PtrType>(aPtr), aMethod), aName);
 }
 
 template<typename PtrType, typename Method>
 already_AddRefed<detail::IdleRunnableMethodWithTimer<PtrType, Method>>
-NewIdleRunnableMethodWithTimerXXX(PtrType&& aPtr, Method aMethod)
+NewIdleRunnableMethodWithTimer(PtrType&& aPtr, Method aMethod)
 {
   return do_AddRef(new detail::IdleRunnableMethodWithTimerImpl<PtrType, Method>(
     Forward<PtrType>(aPtr), aMethod));
@@ -1406,13 +1391,13 @@ NewIdleRunnableMethodWithTimer(const char* aName,
                                Method aMethod)
 {
   return detail::SetRunnableName(
-    NewIdleRunnableMethodWithTimerXXX(Forward<PtrType>(aPtr), aMethod),
+    NewIdleRunnableMethodWithTimer(Forward<PtrType>(aPtr), aMethod),
     aName);
 }
 
 template<typename PtrType, typename Method>
 already_AddRefed<detail::NonOwningRunnableMethod<PtrType, Method>>
-NewNonOwningRunnableMethodXXX(PtrType&& aPtr, Method aMethod)
+NewNonOwningRunnableMethod(PtrType&& aPtr, Method aMethod)
 {
   return do_AddRef(
     new detail::NonOwningRunnableMethodImpl<PtrType, Method>
@@ -1424,12 +1409,12 @@ already_AddRefed<detail::NonOwningRunnableMethod<PtrType, Method>>
 NewNonOwningRunnableMethod(const char* aName, PtrType&& aPtr, Method aMethod)
 {
   return detail::SetRunnableName(
-    NewNonOwningRunnableMethodXXX(Forward<PtrType>(aPtr), aMethod), aName);
+    NewNonOwningRunnableMethod(Forward<PtrType>(aPtr), aMethod), aName);
 }
 
 template<typename PtrType, typename Method>
 already_AddRefed<detail::NonOwningCancelableRunnableMethod<PtrType, Method>>
-NewNonOwningCancelableRunnableMethodXXX(PtrType&& aPtr, Method aMethod)
+NewNonOwningCancelableRunnableMethod(PtrType&& aPtr, Method aMethod)
 {
   return do_AddRef(
     new detail::NonOwningCancelableRunnableMethodImpl<PtrType, Method>
@@ -1442,12 +1427,12 @@ NewNonOwningCancelableRunnableMethod(const char* aName, PtrType&& aPtr,
                                      Method aMethod)
 {
   return detail::SetRunnableName(
-    NewNonOwningCancelableRunnableMethodXXX(Forward<PtrType>(aPtr), aMethod), aName);
+    NewNonOwningCancelableRunnableMethod(Forward<PtrType>(aPtr), aMethod), aName);
 }
 
 template<typename PtrType, typename Method>
 already_AddRefed<detail::NonOwningIdleRunnableMethod<PtrType, Method>>
-NewNonOwningIdleRunnableMethodXXX(PtrType&& aPtr, Method aMethod)
+NewNonOwningIdleRunnableMethod(PtrType&& aPtr, Method aMethod)
 {
   return do_AddRef(
     new detail::NonOwningIdleRunnableMethodImpl<PtrType, Method>(
@@ -1461,12 +1446,12 @@ NewNonOwningIdleRunnableMethod(const char* aName,
                                Method aMethod)
 {
   return detail::SetRunnableName(
-    NewNonOwningIdleRunnableMethodXXX(Forward<PtrType>(aPtr), aMethod), aName);
+    NewNonOwningIdleRunnableMethod(Forward<PtrType>(aPtr), aMethod), aName);
 }
 
 template<typename PtrType, typename Method>
 already_AddRefed<detail::NonOwningIdleRunnableMethodWithTimer<PtrType, Method>>
-NewNonOwningIdleRunnableMethodWithTimerXXX(PtrType&& aPtr,
+NewNonOwningIdleRunnableMethodWithTimer(PtrType&& aPtr,
                                         Method aMethod)
 {
   return do_AddRef(
@@ -1480,7 +1465,7 @@ NewNonOwningIdleRunnableMethodWithTimer(const char* aName,
                                         PtrType&& aPtr,
                                         Method aMethod)
 {
-  return detail::SetRunnableName(NewNonOwningIdleRunnableMethodWithTimerXXX(
+  return detail::SetRunnableName(NewNonOwningIdleRunnableMethodWithTimer(
                                    Forward<PtrType>(aPtr), aMethod),
                                  aName);
 }
@@ -1491,7 +1476,7 @@ NewNonOwningIdleRunnableMethodWithTimer(const char* aName,
 // 'Types' are the stored type for each argument, see ParameterStorage for details.
 template<typename... Storages, typename PtrType, typename Method, typename... Args>
 already_AddRefed<detail::OwningRunnableMethod<PtrType, Method>>
-NewRunnableMethodXXX(PtrType&& aPtr, Method aMethod, Args&&... aArgs)
+NewRunnableMethod(PtrType&& aPtr, Method aMethod, Args&&... aArgs)
 {
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
@@ -1507,13 +1492,13 @@ NewRunnableMethod(const char* aName, PtrType&& aPtr, Method aMethod, Args&&... a
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
   return detail::SetRunnableName(
-    NewRunnableMethodXXX<Storages...>
+    NewRunnableMethod<Storages...>
       (Forward<PtrType>(aPtr), aMethod, mozilla::Forward<Args>(aArgs)...), aName);
 }
 
 template<typename... Storages, typename PtrType, typename Method, typename... Args>
 already_AddRefed<detail::NonOwningRunnableMethod<PtrType, Method>>
-NewNonOwningRunnableMethodXXX(PtrType&& aPtr, Method aMethod, Args&&... aArgs)
+NewNonOwningRunnableMethod(PtrType&& aPtr, Method aMethod, Args&&... aArgs)
 {
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
@@ -1530,13 +1515,13 @@ NewNonOwningRunnableMethod(const char* aName, PtrType&& aPtr, Method aMethod,
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
   return detail::SetRunnableName(
-    NewNonOwningRunnableMethodXXX<Storages...>
+    NewNonOwningRunnableMethod<Storages...>
       (Forward<PtrType>(aPtr), aMethod, mozilla::Forward<Args>(aArgs)...), aName);
 }
 
 template<typename... Storages, typename PtrType, typename Method, typename... Args>
 already_AddRefed<detail::CancelableRunnableMethod<PtrType, Method>>
-NewCancelableRunnableMethodXXX(PtrType&& aPtr, Method aMethod, Args&&... aArgs)
+NewCancelableRunnableMethod(PtrType&& aPtr, Method aMethod, Args&&... aArgs)
 {
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
@@ -1553,13 +1538,13 @@ NewCancelableRunnableMethod(const char* aName, PtrType&& aPtr, Method aMethod,
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
   return detail::SetRunnableName(
-    NewCancelableRunnableMethodXXX<Storages...>
+    NewCancelableRunnableMethod<Storages...>
       (Forward<PtrType>(aPtr), aMethod, mozilla::Forward<Args>(aArgs)...), aName);
 }
 
 template<typename... Storages, typename PtrType, typename Method, typename... Args>
 already_AddRefed<detail::NonOwningCancelableRunnableMethod<PtrType, Method>>
-NewNonOwningCancelableRunnableMethodXXX(PtrType&& aPtr, Method aMethod,
+NewNonOwningCancelableRunnableMethod(PtrType&& aPtr, Method aMethod,
                                      Args&&... aArgs)
 {
   static_assert(sizeof...(Storages) == sizeof...(Args),
@@ -1577,7 +1562,7 @@ NewNonOwningCancelableRunnableMethod(const char* aName, PtrType&& aPtr,
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
   return detail::SetRunnableName(
-    NewNonOwningCancelableRunnableMethodXXX<Storages...>
+    NewNonOwningCancelableRunnableMethod<Storages...>
       (Forward<PtrType>(aPtr), aMethod, mozilla::Forward<Args>(aArgs)...), aName);
 }
 
@@ -1586,7 +1571,7 @@ template<typename... Storages,
          typename Method,
          typename... Args>
 already_AddRefed<detail::IdleRunnableMethod<PtrType, Method>>
-NewIdleRunnableMethodXXX(PtrType&& aPtr, Method aMethod, Args&&... aArgs)
+NewIdleRunnableMethod(PtrType&& aPtr, Method aMethod, Args&&... aArgs)
 {
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
@@ -1608,7 +1593,7 @@ NewIdleRunnableMethod(const char* aName,
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
   return detail::SetRunnableName(
-    NewIdleRunnableMethodXXX<Storages...>(
+    NewIdleRunnableMethod<Storages...>(
       Forward<PtrType>(aPtr), aMethod, mozilla::Forward<Args>(aArgs)...),
     aName);
 }
@@ -1618,7 +1603,7 @@ template<typename... Storages,
          typename Method,
          typename... Args>
 already_AddRefed<detail::NonOwningIdleRunnableMethod<PtrType, Method>>
-NewNonOwningIdleRunnableMethodXXX(PtrType&& aPtr, Method aMethod, Args&&... aArgs)
+NewNonOwningIdleRunnableMethod(PtrType&& aPtr, Method aMethod, Args&&... aArgs)
 {
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
@@ -1640,7 +1625,7 @@ NewNonOwningIdleRunnableMethod(const char* aName,
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
   return detail::SetRunnableName(
-    NewNonOwningIdleRunnableMethodXXX<Storages...>(
+    NewNonOwningIdleRunnableMethod<Storages...>(
       Forward<PtrType>(aPtr), aMethod, mozilla::Forward<Args>(aArgs)...),
     aName);
 }

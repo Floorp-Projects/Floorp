@@ -32,11 +32,9 @@ class NotifyObserverRunnable : public Runnable
 public:
   NotifyObserverRunnable(nsIObserver * observer,
                          const char * topicStringLiteral)
-    : Runnable("psm::NotifyObserverRunnable")
-    , mObserver(new nsMainThreadPtrHolder<nsIObserver>(
-        "psm::NotifyObserverRunnable::mObserver", observer))
-    , mTopic(topicStringLiteral)
-  {
+    : mObserver(new nsMainThreadPtrHolder<nsIObserver>(
+        "psm::NotifyObserverRunnable::mObserver", observer)),
+      mTopic(topicStringLiteral) {
   }
   NS_DECL_NSIRUNNABLE
 private:

@@ -125,8 +125,7 @@ public:
   {
   public:
     OnCompleteTask(AudioContext* aAudioContext, AudioBuffer* aRenderedBuffer)
-      : Runnable("dom::OfflineDestinationNodeEngine::OnCompleteTask")
-      , mAudioContext(aAudioContext)
+      : mAudioContext(aAudioContext)
       , mRenderedBuffer(aRenderedBuffer)
     {}
 
@@ -205,9 +204,9 @@ private:
 class InputMutedRunnable final : public Runnable
 {
 public:
-  InputMutedRunnable(AudioNodeStream* aStream, bool aInputMuted)
-    : Runnable("dom::InputMutedRunnable")
-    , mStream(aStream)
+  InputMutedRunnable(AudioNodeStream* aStream,
+                     bool aInputMuted)
+    : mStream(aStream)
     , mInputMuted(aInputMuted)
   {
   }
@@ -413,10 +412,8 @@ AudioDestinationNode::NotifyMainThreadStreamFinished()
   MOZ_ASSERT(mStream->IsFinished());
 
   if (mIsOffline) {
-    NS_DispatchToCurrentThread(
-      NewRunnableMethod("dom::AudioDestinationNode::FireOfflineCompletionEvent",
-                        this,
-                        &AudioDestinationNode::FireOfflineCompletionEvent));
+    NS_DispatchToCurrentThread(NewRunnableMethod(this,
+                                                 &AudioDestinationNode::FireOfflineCompletionEvent));
   }
 }
 

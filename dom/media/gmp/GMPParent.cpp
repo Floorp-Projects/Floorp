@@ -334,7 +334,6 @@ GMPParent::ChildTerminated()
     LOGD("%s::%s: GMPEventTarget() returned nullptr.", __CLASS__, __FUNCTION__);
   } else {
     gmpEventTarget->Dispatch(NewRunnableMethod<RefPtr<GMPParent>>(
-                               "gmp::GeckoMediaPluginServiceParent::PluginTerminated",
                                mService,
                                &GeckoMediaPluginServiceParent::PluginTerminated,
                                self),
@@ -353,8 +352,7 @@ GMPParent::DeleteProcess()
     mState = GMPStateClosing;
     Close();
   }
-  mProcess->Delete(NewRunnableMethod(
-    "gmp::GMPParent::ChildTerminated", this, &GMPParent::ChildTerminated));
+  mProcess->Delete(NewRunnableMethod(this, &GMPParent::ChildTerminated));
   LOGD("%s: Shut down process", __FUNCTION__);
   mProcess = nullptr;
   mState = GMPStateNotLoaded;

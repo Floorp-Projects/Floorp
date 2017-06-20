@@ -85,9 +85,9 @@ GetExtraJSContextHeapSize()
 class ExecuteCallback final : public Runnable
 {
 public:
-  ExecuteCallback(nsPACManCallback* aCallback, nsresult status)
-    : Runnable("net::ExecuteCallback")
-    , mCallback(aCallback)
+  ExecuteCallback(nsPACManCallback *aCallback,
+                  nsresult status)
+    : mCallback(aCallback)
     , mStatus(status)
   {
   }
@@ -125,9 +125,8 @@ private:
 class ShutdownThread final : public Runnable
 {
 public:
-  explicit ShutdownThread(nsIThread* thread)
-    : Runnable("net::ShutdownThread")
-    , mThread(thread)
+  explicit ShutdownThread(nsIThread *thread)
+    : mThread(thread)
   {
   }
 
@@ -147,9 +146,8 @@ private:
 class WaitForThreadShutdown final : public Runnable
 {
 public:
-  explicit WaitForThreadShutdown(nsPACMan* aPACMan)
-    : Runnable("net::WaitForThreadShutdown")
-    , mPACMan(aPACMan)
+  explicit WaitForThreadShutdown(nsPACMan *aPACMan)
+    : mPACMan(aPACMan)
   {
   }
 
@@ -176,9 +174,8 @@ private:
 class PACLoadComplete final : public Runnable
 {
 public:
-  explicit PACLoadComplete(nsPACMan* aPACMan)
-    : Runnable("net::PACLoadComplete")
-    , mPACMan(aPACMan)
+  explicit PACLoadComplete(nsPACMan *aPACMan)
+    : mPACMan(aPACMan)
   {
   }
 
@@ -204,9 +201,8 @@ class ExecutePACThreadAction final : public Runnable
 {
 public:
   // by default we just process the queue
-  explicit ExecutePACThreadAction(nsPACMan* aPACMan)
-    : Runnable("net::ExecutePACThreadAction")
-    , mPACMan(aPACMan)
+  explicit ExecutePACThreadAction(nsPACMan *aPACMan)
+    : mPACMan(aPACMan)
     , mCancel(false)
     , mCancelStatus(NS_OK)
     , mSetupPAC(false)
@@ -270,12 +266,10 @@ private:
 
 //-----------------------------------------------------------------------------
 
-PendingPACQuery::PendingPACQuery(nsPACMan* pacMan,
-                                 nsIURI* uri,
-                                 nsPACManCallback* callback,
+PendingPACQuery::PendingPACQuery(nsPACMan *pacMan, nsIURI *uri,
+                                 nsPACManCallback *callback,
                                  bool mainThreadResponse)
-  : Runnable("net::PendingPACQuery")
-  , mPACMan(pacMan)
+  : mPACMan(pacMan)
   , mCallback(callback)
   , mOnMainThreadOnly(mainThreadResponse)
 {
@@ -439,8 +433,7 @@ nsPACMan::LoadPACFromURI(const nsCString &spec)
 
   if (!mLoadPending) {
     nsresult rv;
-    if (NS_FAILED(rv = NS_DispatchToCurrentThread(NewRunnableMethod("nsPACMan::StartLoading",
-                                                                    this, &nsPACMan::StartLoading))))
+    if (NS_FAILED(rv = NS_DispatchToCurrentThread(NewRunnableMethod(this, &nsPACMan::StartLoading))))
       return rv;
     mLoadPending = true;
   }

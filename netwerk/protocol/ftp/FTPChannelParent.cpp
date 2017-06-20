@@ -755,9 +755,7 @@ FTPChannelParent::DivertTo(nsIStreamListener *aListener)
   // Call OnStartRequest and SendDivertMessages asynchronously to avoid
   // reentering client context.
   NS_DispatchToCurrentThread(
-    NewRunnableMethod("net::FTPChannelParent::StartDiversion",
-                      this,
-                      &FTPChannelParent::StartDiversion));
+    NewRunnableMethod(this, &FTPChannelParent::StartDiversion));
   return;
 }
 
@@ -802,11 +800,10 @@ FTPChannelParent::StartDiversion()
 class FTPFailDiversionEvent : public Runnable
 {
 public:
-  FTPFailDiversionEvent(FTPChannelParent* aChannelParent,
+  FTPFailDiversionEvent(FTPChannelParent *aChannelParent,
                         nsresult aErrorCode,
                         bool aSkipResume)
-    : Runnable("net::FTPFailDiversionEvent")
-    , mChannelParent(aChannelParent)
+    : mChannelParent(aChannelParent)
     , mErrorCode(aErrorCode)
     , mSkipResume(aSkipResume)
   {

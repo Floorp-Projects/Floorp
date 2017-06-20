@@ -1453,9 +1453,7 @@ Animation::DoFinishNotification(SyncNotifyFlag aSyncNotifyFlag)
     DoFinishNotificationImmediately();
   } else if (!mFinishNotificationTask.IsPending()) {
     RefPtr<nsRunnableMethod<Animation>> runnable =
-      NewRunnableMethod("dom::Animation::DoFinishNotificationImmediately",
-                        this,
-                        &Animation::DoFinishNotificationImmediately);
+      NewRunnableMethod(this, &Animation::DoFinishNotificationImmediately);
     context->DispatchToMicroTask(do_AddRef(runnable));
     mFinishNotificationTask = runnable.forget();
   }

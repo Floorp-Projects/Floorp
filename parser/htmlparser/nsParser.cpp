@@ -110,8 +110,7 @@ public:
   RefPtr<nsParser> mParser;
 
   explicit nsParserContinueEvent(nsParser* aParser)
-    : mozilla::Runnable("nsParserContinueEvent")
-    , mParser(aParser)
+    : mParser(aParser)
   {}
 
   NS_IMETHOD Run() override

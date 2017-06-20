@@ -210,11 +210,8 @@ public:
                          nsIAtom* aWhich,
                          int32_t aValue,
                          bool aUserChanged)
-    : mozilla::Runnable("nsValueChangedRunnable")
-    , mListener(aListener)
-    , mWhich(aWhich)
-    , mValue(aValue)
-    , mUserChanged(aUserChanged)
+  : mListener(aListener), mWhich(aWhich),
+    mValue(aValue), mUserChanged(aUserChanged)
   {}
 
   NS_IMETHOD Run() override
@@ -232,10 +229,10 @@ public:
 class nsDragStateChangedRunnable : public Runnable
 {
 public:
-  nsDragStateChangedRunnable(nsISliderListener* aListener, bool aDragBeginning)
-    : mozilla::Runnable("nsDragStateChangedRunnable")
-    , mListener(aListener)
-    , mDragBeginning(aDragBeginning)
+  nsDragStateChangedRunnable(nsISliderListener* aListener,
+                             bool aDragBeginning)
+  : mListener(aListener),
+    mDragBeginning(aDragBeginning)
   {}
 
   NS_IMETHOD Run() override

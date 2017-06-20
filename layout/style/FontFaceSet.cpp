@@ -1498,9 +1498,7 @@ FontFaceSet::DispatchCheckLoadingFinishedAfterDelay()
   }
 
   nsCOMPtr<nsIRunnable> checkTask =
-    NewRunnableMethod("dom::FontFaceSet::CheckLoadingFinishedAfterDelay",
-                      this,
-                      &FontFaceSet::CheckLoadingFinishedAfterDelay);
+    NewRunnableMethod(this, &FontFaceSet::CheckLoadingFinishedAfterDelay);
   mDocument->Dispatch("FontFaceSet::CheckLoadingFinishedAfterDelay",
                       TaskCategory::Other, checkTask.forget());
 }

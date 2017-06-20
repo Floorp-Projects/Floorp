@@ -130,11 +130,7 @@ private:
 class GlyphMetricsUpdater : public Runnable {
 public:
   NS_DECL_NSIRUNNABLE
-  explicit GlyphMetricsUpdater(SVGTextFrame* aFrame)
-    : Runnable("GlyphMetricsUpdater")
-    , mFrame(aFrame)
-  {
-  }
+  explicit GlyphMetricsUpdater(SVGTextFrame* aFrame) : mFrame(aFrame) { }
   static void Run(SVGTextFrame* aFrame);
   void Revoke() { mFrame = nullptr; }
 private:
