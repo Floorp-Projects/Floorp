@@ -10,6 +10,7 @@ const {getCSSLexer} = require("devtools/shared/css/lexer");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {
   ANGLE_TAKING_FUNCTIONS,
+  BASIC_SHAPE_FUNCTIONS,
   BEZIER_KEYWORDS,
   COLOR_TAKING_FUNCTIONS,
   CSS_TYPES
@@ -18,6 +19,7 @@ const Services = require("Services");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const CSS_GRID_ENABLED_PREF = "layout.css.grid.enabled";
+const CSS_SHAPES_ENABLED_PREF = "devtools.inspector.shapesHighlighter.enabled";
 
 /**
  * This module is used to process text for output by developer tools. This means
@@ -77,6 +79,7 @@ OutputParser.prototype = {
     options.expectCubicBezier = this.supportsType(name, CSS_TYPES.TIMING_FUNCTION);
     options.expectDisplay = name === "display";
     options.expectFilter = name === "filter";
+    options.expectShape = name === "clip-path" || name === "shape-outside";
     options.supportsColor = this.supportsType(name, CSS_TYPES.COLOR) ||
                             this.supportsType(name, CSS_TYPES.GRADIENT);
 
@@ -162,14 +165,12 @@ OutputParser.prototype = {
     };
 
     let spaceNeeded = false;
-    while (true) {
-      let token = tokenStream.nextToken();
-      if (!token) {
-        break;
-      }
+    let token = tokenStream.nextToken();
+    while (token) {
       if (token.tokenType === "comment") {
         // This doesn't change spaceNeeded, because we didn't emit
         // anything to the output.
+        token = tokenStream.nextToken();
         continue;
       }
 
@@ -197,6 +198,10 @@ OutputParser.prototype = {
             } else if (colorOK() &&
                        colorUtils.isValidCSSColor(functionText, this.cssColor4)) {
               this._appendColor(functionText, options);
+            } else if (options.expectShape &&
+                       Services.prefs.getBoolPref(CSS_SHAPES_ENABLED_PREF) &&
+                       BASIC_SHAPE_FUNCTIONS.includes(token.text)) {
+              this._appendShape(functionText, options);
             } else {
               this._appendTextNode(functionText);
             }
@@ -273,6 +278,8 @@ OutputParser.prototype = {
                      token.tokenType === "id" || token.tokenType === "hash" ||
                      token.tokenType === "number" || token.tokenType === "dimension" ||
                      token.tokenType === "percentage" || token.tokenType === "dimension");
+
+      token = tokenStream.nextToken();
     }
 
     let result = this._toDOM();
@@ -347,6 +354,21 @@ OutputParser.prototype = {
 
     let value = this._createNode("span", {});
     value.textContent = grid;
+
+    container.appendChild(toggle);
+    container.appendChild(value);
+    this.parsed.push(container);
+  },
+
+  _appendShape: function (shape, options) {
+    let container = this._createNode("span", {});
+
+    let toggle = this._createNode("span", {
+      class: options.shapeClass
+    });
+
+    let value = this._createNode("span", {});
+    value.textContent = shape;
 
     container.appendChild(toggle);
     container.appendChild(value);
@@ -697,6 +719,7 @@ OutputParser.prototype = {
    *                                    // _wrapFilter.  Used only for
    *                                    // previewing with the filter swatch.
    *           - gridClass: ""          // The class to use for the grid icon.
+   *           - shapeClass: ""         // The class to use for the shape icon.
    *           - supportsColor: false   // Does the CSS property support colors?
    *           - urlClass: ""           // The class to be used for url() links.
    *           - baseURI: undefined     // A string used to resolve
@@ -715,6 +738,7 @@ OutputParser.prototype = {
       colorSwatchClass: "",
       filterSwatch: false,
       gridClass: "",
+      shapeClass: "",
       supportsColor: false,
       urlClass: "",
       baseURI: undefined,

@@ -452,7 +452,8 @@
 }
 
 .ruleview-grid,
-.ruleview-swatch {
+.ruleview-swatch,
+.ruleview-shape {
   cursor: pointer;
   border-radius: 50%;
   width: 1em;
@@ -468,6 +469,12 @@
 .ruleview-grid {
   background: url("chrome://devtools/skin/images/grid.svg");
   border-radius: 0;
+}
+
+.ruleview-shape {
+  background: url("chrome://devtools/skin/images/tool-shadereditor.svg");
+  border-radius: 0;
+  background-size: 1em;
 }
 
 .ruleview-colorswatch::before {
@@ -596,7 +603,8 @@
 
 .ruleview-grid.active,
 .ruleview-selectorhighlighter:active,
-.ruleview-selectorhighlighter.highlighted {
+.ruleview-selectorhighlighter.highlighted,
+.ruleview-shape.active {
   filter: url(images/filters.svg#checked-icon-state) brightness(0.9);
 }
 
