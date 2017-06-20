@@ -16,13 +16,14 @@
 #include <memory>
 #include "cubeb/cubeb.h"
 #include "common.h"
+#include <atomic>
 
 #define SAMPLE_FREQUENCY 48000
 #define STREAM_FORMAT CUBEB_SAMPLE_FLOAT32LE
 
 struct user_state_record
 {
-  bool seen_audio;
+  std::atomic<int> seen_audio{ 0 };
 };
 
 long data_cb_record(cubeb_stream * stream, void * user, const void * inputbuffer, void * outputbuffer, long nframes)
@@ -34,10 +35,10 @@ long data_cb_record(cubeb_stream * stream, void * user, const void * inputbuffer
     return CUBEB_ERROR;
   }
 
-  bool seen_audio = true;
+  bool seen_audio = 1;
   for (long i = 0; i < nframes; i++) {
     if (b[i] <= -1.0 && b[i] >= 1.0) {
-      seen_audio = false;
+      seen_audio = 0;
       break;
     }
   }
@@ -75,7 +76,7 @@ TEST(cubeb, record)
   cubeb_stream *stream;
   cubeb_stream_params params;
   int r;
-  user_state_record stream_state = { false };
+  user_state_record stream_state;
 
   r = common_init(&ctx, "Cubeb record example");
   ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb library";
@@ -109,6 +110,6 @@ TEST(cubeb, record)
   // user callback does not arrive in Linux, silence the error
   fprintf(stderr, "Check is disabled in Linux\n");
 #else
-  ASSERT_TRUE(stream_state.seen_audio);
+  ASSERT_TRUE(stream_state.seen_audio.load());
 #endif
 }
