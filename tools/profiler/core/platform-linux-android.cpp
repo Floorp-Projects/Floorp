@@ -76,7 +76,7 @@ Thread::GetCurrentId()
 }
 
 static void
-FillInRegs(Registers& aRegs, ucontext_t* aContext)
+PopulateRegsFromContext(Registers& aRegs, ucontext_t* aContext)
 {
   aRegs.mContext = aContext;
   mcontext_t& mcontext = aContext->uc_mcontext;
@@ -86,10 +86,12 @@ FillInRegs(Registers& aRegs, ucontext_t* aContext)
   aRegs.mPC = reinterpret_cast<Address>(mcontext.gregs[REG_EIP]);
   aRegs.mSP = reinterpret_cast<Address>(mcontext.gregs[REG_ESP]);
   aRegs.mFP = reinterpret_cast<Address>(mcontext.gregs[REG_EBP]);
+  aRegs.mLR = 0;
 #elif defined(GP_ARCH_amd64)
   aRegs.mPC = reinterpret_cast<Address>(mcontext.gregs[REG_RIP]);
   aRegs.mSP = reinterpret_cast<Address>(mcontext.gregs[REG_RSP]);
   aRegs.mFP = reinterpret_cast<Address>(mcontext.gregs[REG_RBP]);
+  aRegs.mLR = 0;
 #elif defined(GP_ARCH_arm)
   aRegs.mPC = reinterpret_cast<Address>(mcontext.arm_pc);
   aRegs.mSP = reinterpret_cast<Address>(mcontext.arm_sp);
@@ -359,7 +361,7 @@ Sampler::SuspendAndSampleAndResumeThread(PSLockRef aLock,
 
   // Extract the current register values.
   Registers regs;
-  FillInRegs(regs, &sSigHandlerCoordinator->mUContext);
+  PopulateRegsFromContext(regs, &sSigHandlerCoordinator->mUContext);
   aProcessRegs(regs);
 
   //----------------------------------------------------------------//
@@ -523,13 +525,18 @@ PlatformInit(PSLockRef aLock)
 
 #endif
 
-void
-Registers::SyncPopulate(ucontext_t* aContext)
-{
-  MOZ_ASSERT(aContext);
+#if defined(HAVE_NATIVE_UNWIND)
+// Context used by synchronous samples. It's safe to have a single one because
+// only one synchronous sample can be taken at a time (due to
+// profiler_get_backtrace()'s PSAutoLock).
+ucontext_t sSyncUContext;
 
-  if (!getcontext(aContext)) {
-    FillInRegs(*this, aContext);
+void
+Registers::SyncPopulate()
+{
+  if (!getcontext(&sSyncUContext)) {
+    PopulateRegsFromContext(*this, &sSyncUContext);
   }
 }
+#endif
 

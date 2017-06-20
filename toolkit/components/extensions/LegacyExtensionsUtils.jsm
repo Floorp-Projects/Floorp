@@ -109,12 +109,15 @@ class EmbeddedExtension {
    *   An object with the following properties:
    * @param {string} containerAddonParams.id
    *   The Add-on id of the Legacy Extension which will contain the embedded webextension.
+   * @param {string} containerAddonParams.version
+   *   The add-on version.
    * @param {nsIURI} containerAddonParams.resourceURI
    *   The nsIURI of the Legacy Extension container add-on.
    */
-  constructor({id, resourceURI}) {
+  constructor({id, resourceURI, version}) {
     this.addonId = id;
     this.resourceURI = resourceURI;
+    this.version = version;
 
     // Setup status flag.
     this.started = false;
@@ -139,6 +142,7 @@ class EmbeddedExtension {
       this.extension = new Extension({
         id: this.addonId,
         resourceURI: embeddedExtensionURI,
+        version: this.version,
       });
 
       // This callback is register to the "startup" event, emitted by the Extension instance
@@ -227,11 +231,11 @@ EmbeddedExtensionManager = {
     }
   },
 
-  getEmbeddedExtensionFor({id, resourceURI}) {
+  getEmbeddedExtensionFor({id, resourceURI, version}) {
     let embeddedExtension = this.embeddedExtensionsByAddonId.get(id);
 
     if (!embeddedExtension) {
-      embeddedExtension = new EmbeddedExtension({id, resourceURI});
+      embeddedExtension = new EmbeddedExtension({id, resourceURI, version});
       // Keep track of the embedded extension instance.
       this.embeddedExtensionsByAddonId.set(id, embeddedExtension);
     }

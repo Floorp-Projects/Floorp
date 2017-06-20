@@ -3360,19 +3360,7 @@ WorkerMain(void* arg)
     WorkerInput* input = (WorkerInput*) arg;
     MOZ_ASSERT(!!input->parentRuntime != !!input->siblingContext);
 
-    JSContext* cx = nullptr;
-
-    auto guard = mozilla::MakeScopeExit([&] {
-            if (cx)
-                JS_DestroyContext(cx);
-            if (input->siblingContext) {
-                cooperationState->numThreads--;
-                CooperativeYield();
-            }
-            js_delete(input);
-        });
-
-    cx = input->parentRuntime
+    JSContext* cx = input->parentRuntime
          ? JS_NewContext(8L * 1024L * 1024L, 2L * 1024L * 1024L, input->parentRuntime)
          : JS_NewCooperativeContext(input->siblingContext);
     if (!cx)
@@ -3381,6 +3369,16 @@ WorkerMain(void* arg)
     UniquePtr<ShellContext> sc = MakeUnique<ShellContext>(cx);
     if (!sc)
         return;
+
+    auto guard = mozilla::MakeScopeExit([&] {
+        if (cx)
+            JS_DestroyContext(cx);
+        if (input->siblingContext) {
+            cooperationState->numThreads--;
+            CooperativeYield();
+        }
+        js_delete(input);
+    });
 
     if (input->parentRuntime)
         sc->isWorker = true;

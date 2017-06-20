@@ -10,9 +10,61 @@
 #include "nsIURI.h"
 #include "nsIDocShell.h"
 #include "mozilla/net/ReferrerPolicy.h"
+#include "mozilla/Unused.h"
+
+namespace mozilla {
+
+void
+GetMaybeResultPrincipalURI(nsIDocShellLoadInfo* aLoadInfo, Maybe<nsCOMPtr<nsIURI>>& aRPURI)
+{
+  if (!aLoadInfo) {
+    return;
+  }
+
+  nsresult rv;
+
+  bool isSome;
+  rv = aLoadInfo->GetResultPrincipalURIIsSome(&isSome);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  aRPURI.reset();
+
+  if (!isSome) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  rv = aLoadInfo->GetResultPrincipalURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  aRPURI.emplace(Move(uri));
+}
+
+void
+SetMaybeResultPrincipalURI(nsIDocShellLoadInfo* aLoadInfo, Maybe<nsCOMPtr<nsIURI>> const& aRPURI)
+{
+  if (!aLoadInfo) {
+    return;
+  }
+
+  nsresult rv;
+
+  rv = aLoadInfo->SetResultPrincipalURI(aRPURI.refOr(nullptr));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+
+  rv = aLoadInfo->SetResultPrincipalURIIsSome(aRPURI.isSome());
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+}
+
+} // mozilla
 
 nsDocShellLoadInfo::nsDocShellLoadInfo()
-  : mLoadReplace(false)
+  : mResultPrincipalURIIsSome(false)
+  , mLoadReplace(false)
   , mInheritPrincipal(false)
   , mPrincipalIsExplicit(false)
   , mSendReferrer(true)
@@ -65,6 +117,37 @@ NS_IMETHODIMP
 nsDocShellLoadInfo::SetOriginalURI(nsIURI* aOriginalURI)
 {
   mOriginalURI = aOriginalURI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShellLoadInfo::GetResultPrincipalURI(nsIURI** aResultPrincipalURI)
+{
+  NS_ENSURE_ARG_POINTER(aResultPrincipalURI);
+
+  *aResultPrincipalURI = mResultPrincipalURI;
+  NS_IF_ADDREF(*aResultPrincipalURI);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShellLoadInfo::SetResultPrincipalURI(nsIURI* aResultPrincipalURI)
+{
+  mResultPrincipalURI = aResultPrincipalURI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShellLoadInfo::GetResultPrincipalURIIsSome(bool* aIsSome)
+{
+  *aIsSome = mResultPrincipalURIIsSome;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShellLoadInfo::SetResultPrincipalURIIsSome(bool aIsSome)
+{
+  mResultPrincipalURIIsSome = aIsSome;
   return NS_OK;
 }
 
