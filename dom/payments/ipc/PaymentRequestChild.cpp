@@ -21,8 +21,26 @@ PaymentRequestChild::RequestPayment(const IPCPaymentActionRequest& aAction)
   if (!mActorAlive) {
     return NS_ERROR_FAILURE;
   }
-  SendRequestPayment(aAction);
+  if (!SendRequestPayment(aAction)) {
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
+}
+
+mozilla::ipc::IPCResult
+PaymentRequestChild::RecvRespondPayment(const IPCPaymentActionResponse& aResponse)
+{
+  if (!mActorAlive) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  const IPCPaymentActionResponse& response = aResponse;
+  RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
+  MOZ_ASSERT(manager);
+  nsresult rv = manager->RespondPayment(response);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 void
@@ -31,7 +49,10 @@ PaymentRequestChild::ActorDestroy(ActorDestroyReason aWhy)
   mActorAlive = false;
   RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
   MOZ_ASSERT(manager);
-  manager->ReleasePaymentChild(this);
+  nsresult rv = manager->ReleasePaymentChild(this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MOZ_ASSERT(false);
+  }
 }
 
 void

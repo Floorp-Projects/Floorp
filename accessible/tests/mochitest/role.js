@@ -2,6 +2,7 @@
 // Role constants
 
 const ROLE_ALERT = nsIAccessibleRole.ROLE_ALERT;
+const ROLE_ARTICLE = nsIAccessibleRole.ROLE_ARTICLE;
 const ROLE_ANIMATION = nsIAccessibleRole.ROLE_ANIMATION;
 const ROLE_APPLICATION = nsIAccessibleRole.ROLE_APPLICATION;
 const ROLE_APP_ROOT = nsIAccessibleRole.ROLE_APP_ROOT;

@@ -5118,8 +5118,11 @@ EditorBase::GetFocusedContent()
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   NS_ENSURE_TRUE(fm, nullptr);
 
-  nsCOMPtr<nsIContent> content = fm->GetFocusedContent();
-  return SameCOMIdentity(content, piTarget) ? content.forget() : nullptr;
+  nsIContent* content = fm->GetFocusedContent();
+  MOZ_ASSERT((content == piTarget) == SameCOMIdentity(content, piTarget));
+
+  return (content == piTarget) ?
+    piTarget.forget().downcast<nsIContent>() : nullptr;
 }
 
 already_AddRefed<nsIContent>

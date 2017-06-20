@@ -673,7 +673,7 @@ public:
   typedef typename ReturnTypeEnforcer<ReturnType>::ReturnTypeIsSafe check;
 };
 
-template<class ClassType, bool Owning, bool Idle>
+template<class ClassType, bool Owning>
 struct nsRunnableMethodReceiver
 {
   RefPtr<ClassType> mObj;
@@ -681,27 +681,15 @@ struct nsRunnableMethodReceiver
   ~nsRunnableMethodReceiver() { Revoke(); }
   ClassType* Get() const { return mObj.get(); }
   void Revoke() { mObj = nullptr; }
-  void SetDeadline(mozilla::TimeStamp aDeadline) { if (mObj) mObj->SetDeadline(aDeadline); }
 };
 
 template<class ClassType>
-struct nsRunnableMethodReceiver<ClassType, false, false>
+struct nsRunnableMethodReceiver<ClassType, false>
 {
   ClassType* MOZ_NON_OWNING_REF mObj;
   explicit nsRunnableMethodReceiver(ClassType* aObj) : mObj(aObj) {}
   ClassType* Get() const { return mObj; }
   void Revoke() { mObj = nullptr; }
-  void SetDeadline(mozilla::TimeStamp aDeadline) {}
-};
-
-template<class ClassType>
-struct nsRunnableMethodReceiver<ClassType, false, true>
-{
-  ClassType* MOZ_NON_OWNING_REF mObj;
-  explicit nsRunnableMethodReceiver(ClassType* aObj) : mObj(aObj) {}
-  ClassType* Get() const { return mObj; }
-  void Revoke() { mObj = nullptr; }
-  void SetDeadline(mozilla::TimeStamp aDeadline) { if (mObj) mObj->SetDeadline(aDeadline); }
 };
 
 static inline constexpr bool
@@ -709,17 +697,6 @@ IsIdle(mozilla::RunnableKind aKind)
 {
   return aKind == mozilla::Idle || aKind == mozilla::IdleWithTimer;
 }
-
-template<class ClassType>
-struct nsRunnableMethodReceiver<ClassType, true, false>
-{
-  RefPtr<ClassType> mObj;
-  explicit nsRunnableMethodReceiver(ClassType* aObj) : mObj(aObj) {}
-  ~nsRunnableMethodReceiver() { Revoke(); }
-  ClassType* Get() const { return mObj.get(); }
-  void Revoke() { mObj = nullptr; }
-  void SetDeadline(mozilla::TimeStamp aDeadline) {}
-};
 
 template<typename PtrType, typename Method, bool Owning, mozilla::RunnableKind Kind>
 struct nsRunnableMethodTraits;
@@ -1061,10 +1038,37 @@ struct ParameterStorage
                          typename NonParameterStorageClass<T>::Type>
 {};
 
+template<class T>
+using SetDeadline_t = decltype(
+  mozilla::DeclVal<T>().SetDeadline(mozilla::DeclVal<mozilla::TimeStamp>()));
+
+template<class T>
+static auto
+HasSetDeadlineTest(int) -> SFINAE1True<SetDeadline_t<T>>;
+
+template<class T>
+static auto
+HasSetDeadlineTest(long) -> mozilla::FalseType;
+
+template<class T>
+struct HasSetDeadline : decltype(HasSetDeadlineTest<T>(0))
+{};
+
+template <class T>
+typename mozilla::EnableIf<::detail::HasSetDeadline<T>::value>::Type
+SetDeadlineImpl(T* aObj, mozilla::TimeStamp aTimeStamp)
+{
+  aObj->SetDeadline(aTimeStamp);
+}
+
+template <class T>
+typename mozilla::EnableIf<!::detail::HasSetDeadline<T>::value>::Type
+SetDeadlineImpl(T* aObj, mozilla::TimeStamp aTimeStamp)
+{
+}
 } /* namespace detail */
 
 namespace mozilla {
-
 namespace detail {
 
 // struct used to store arguments and later apply them to a method.
@@ -1100,7 +1104,7 @@ class RunnableMethodImpl final
 
   typedef typename Traits::class_type ClassType;
   typedef typename Traits::base_type BaseType;
-  ::nsRunnableMethodReceiver<ClassType, Owning, IsIdle(Kind)> mReceiver;
+  ::nsRunnableMethodReceiver<ClassType, Owning> mReceiver;
   Method mMethod;
   RunnableMethodArguments<Storages...> mArgs;
   using BaseType::GetTimer;
@@ -1151,7 +1155,9 @@ public:
 
   void SetDeadline(TimeStamp aDeadline)
   {
-    mReceiver.SetDeadline(aDeadline);
+    if (MOZ_LIKELY(mReceiver.Get())) {
+      ::detail::SetDeadlineImpl(mReceiver.Get(), aDeadline);
+    }
   }
 
   void SetTimer(uint32_t aDelay, nsIEventTarget* aTarget)
