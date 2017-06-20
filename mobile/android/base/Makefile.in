@@ -449,23 +449,18 @@ ANDROID_AAPT_IGNORE := !.svn:!.git:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*.scc
 # removes the target file if any recipe command fails.
 
 define aapt_command
-$(1): $$(call mkdir_deps,$(filter-out ./,$(dir $(3) $(4) $(5)))) $(2)
+$(1): $(topsrcdir)/python/mozbuild/mozbuild/action/aapt_package.py $$(call mkdir_deps,$(filter-out ./,$(dir $(3) $(4) $(5)))) $(2)
 	@$$(TOUCH) $$@
-	$$(AAPT) package -f -m \
+	$$(call py_action,aapt_package,-f \
 		-M AndroidManifest.xml \
-		-I $(ANDROID_SDK)/android.jar \
-		$(if $(MOZ_ANDROID_MAX_SDK_VERSION),--max-res-version $(MOZ_ANDROID_MAX_SDK_VERSION),) \
-		--auto-add-overlay \
-		$$(addprefix -S ,$$(ANDROID_RES_DIRS)) \
 		$$(addprefix -A ,$$(ANDROID_ASSETS_DIRS)) \
-		$(if $(ANDROID_EXTRA_PACKAGES),--extra-packages $$(subst $$(NULL) ,:,$$(strip $$(ANDROID_EXTRA_PACKAGES)))) \
+		$$(addprefix -S ,$$(ANDROID_RES_DIRS)) \
 		$(if $(ANDROID_EXTRA_RES_DIRS),$$(addprefix -S ,$$(ANDROID_EXTRA_RES_DIRS))) \
-		--custom-package org.mozilla.gecko \
-		--no-version-vectors \
+		$(if $(ANDROID_EXTRA_PACKAGES),--extra-packages $$(subst $$(NULL) ,:,$$(strip $$(ANDROID_EXTRA_PACKAGES)))) \
 		-F $(3) \
 		-J $(4) \
 		--output-text-symbols $(5) \
-		--ignore-assets "$$(ANDROID_AAPT_IGNORE)"
+	  --verbose)
 endef
 
 # [Comment 3/3] The first of these rules is used during regular
