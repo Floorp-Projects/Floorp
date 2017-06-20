@@ -400,9 +400,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
       if (!Attach(AsLayer(op.layer()), host, false)) {
         return IPC_FAIL_NO_REASON(this);
       }
-      if (mLayerManager->GetCompositor()) {
-        host->SetCompositorID(mLayerManager->GetCompositor()->GetCompositorID());
-      }
+      host->SetCompositorBridgeID(mLayerManager->GetCompositorBridgeID());
       break;
     }
     case Edit::TOpAttachAsyncCompositable: {
@@ -423,9 +421,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
       if (!Attach(AsLayer(op.layer()), host, true)) {
         return IPC_FAIL_NO_REASON(this);
       }
-      if (mLayerManager->GetCompositor()) {
-        host->SetCompositorID(mLayerManager->GetCompositor()->GetCompositorID());
-      }
+      host->SetCompositorBridgeID(mLayerManager->GetCompositorBridgeID());
       break;
     }
     default:
