@@ -136,6 +136,9 @@ private:
   Mutex& operator=(const Mutex&);
 };
 
+template<typename T>
+class MOZ_RAII BaseAutoUnlock;
+
 /**
  * MutexAutoLock
  * Acquires the Mutex when it enters scope, and releases it when it leaves
@@ -174,6 +177,8 @@ private:
   BaseAutoLock& operator=(BaseAutoLock&);
   static void* operator new(size_t) CPP_THROW_NEW;
 
+  friend class BaseAutoUnlock<T>;
+
   T* mLock;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
@@ -194,6 +199,15 @@ class MOZ_RAII BaseAutoUnlock
 public:
   explicit BaseAutoUnlock(T& aLock MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mLock(&aLock)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    NS_ASSERTION(mLock, "null lock");
+    mLock->Unlock();
+  }
+
+  explicit BaseAutoUnlock(
+    BaseAutoLock<T>& aAutoLock MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : mLock(aAutoLock.mLock)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     NS_ASSERTION(mLock, "null lock");
