@@ -22,7 +22,6 @@
 interface ApplicationCache;
 interface IID;
 interface nsIBrowserDOMWindow;
-interface nsIMessageBroadcaster;
 interface XULControllers;
 
 // http://www.whatwg.org/specs/web-apps/current-work/
@@ -424,14 +423,14 @@ partial interface Window {
   void notifyDefaultButtonLoaded(Element defaultButton);
 
   [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
-  readonly attribute nsIMessageBroadcaster messageManager;
+  readonly attribute ChromeMessageBroadcaster messageManager;
 
   /**
    * Returns the message manager identified by the given group name that
    * manages all frame loaders belonging to that group.
    */
   [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
-  nsIMessageBroadcaster getGroupMessageManager(DOMString aGroup);
+  ChromeMessageBroadcaster getGroupMessageManager(DOMString aGroup);
 
   /**
    * On some operating systems, we must allow the window manager to
