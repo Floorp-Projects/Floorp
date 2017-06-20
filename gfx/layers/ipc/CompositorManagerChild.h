@@ -66,8 +66,6 @@ public:
 
   bool DeallocPCompositorBridgeChild(PCompositorBridgeChild* aActor) override;
 
-  bool ShouldContinueFromReplyTimeout() override;
-
 private:
   static StaticRefPtr<CompositorManagerChild> sInstance;
 
@@ -91,8 +89,6 @@ private:
 
   already_AddRefed<nsIEventTarget>
   GetSpecificMessageEventTarget(const Message& aMsg) override;
-
-  void SetReplyTimeout();
 
   bool mCanSend;
   uint32_t mNamespace;
