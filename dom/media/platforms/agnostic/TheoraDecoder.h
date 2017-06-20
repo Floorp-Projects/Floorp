@@ -38,7 +38,6 @@ private:
 
   RefPtr<DecodePromise> ProcessDecode(MediaRawData* aSample);
 
-  RefPtr<layers::KnowsCompositor> mImageAllocator;
   RefPtr<layers::ImageContainer> mImageContainer;
   RefPtr<TaskQueue> mTaskQueue;
 
