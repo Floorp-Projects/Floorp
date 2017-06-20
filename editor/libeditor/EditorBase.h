@@ -9,12 +9,14 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
 #include "mozilla/OwningNonNull.h"      // for OwningNonNull
 #include "mozilla/SelectionState.h"     // for RangeUpdater, etc.
-#include "mozilla/StyleSheet.h"   // for StyleSheet
+#include "mozilla/StyleSheet.h"         // for StyleSheet
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WeakPtr.h"            // for WeakPtr
 #include "mozilla/dom/Text.h"
 #include "nsCOMPtr.h"                   // for already_AddRefed, nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
 #include "nsGkAtoms.h"
+#include "nsIDocument.h"                // for nsIDocument
 #include "nsIEditor.h"                  // for nsIEditor, etc.
 #include "nsIObserver.h"                // for NS_DECL_NSIOBSERVER, etc.
 #include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor, etc.
@@ -34,7 +36,6 @@ class nsIDOMEvent;
 class nsIDOMEventListener;
 class nsIDOMEventTarget;
 class nsIDOMNode;
-class nsIDocument;
 class nsIDocumentStateListener;
 class nsIEditActionListener;
 class nsIEditorObserver;
@@ -116,6 +117,7 @@ class HTMLEditor;
 class InsertNodeTransaction;
 class InsertTextTransaction;
 class JoinNodeTransaction;
+class PlaceholderTransaction;
 class RemoveStyleSheetTransaction;
 class SetTextTransaction;
 class SplitNodeTransaction;
@@ -134,6 +136,57 @@ class Text;
 namespace widget {
 struct IMEState;
 } // namespace widget
+
+/**
+ * CachedWeakPtr stores a pointer to a class which inherits nsIWeakReference.
+ * If the instance of the class has already been destroyed, this returns
+ * nullptr.  Otherwise, returns cached pointer.
+ */
+template<class T>
+class CachedWeakPtr final
+{
+public:
+  CachedWeakPtr<T>()
+    : mCache(nullptr)
+  {
+  }
+
+  CachedWeakPtr<T>& operator=(T* aObject)
+  {
+    mWeakPtr = do_GetWeakReference(aObject);
+    mCache = aObject;
+    return *this;
+  }
+  CachedWeakPtr<T>& operator=(const nsCOMPtr<T>& aOther)
+  {
+    mWeakPtr = do_GetWeakReference(aOther);
+    mCache = aOther;
+    return *this;
+  }
+  CachedWeakPtr<T>& operator=(already_AddRefed<T>& aOther)
+  {
+    nsCOMPtr<T> other = aOther;
+    mWeakPtr = do_GetWeakReference(other);
+    mCache = other;
+    return *this;
+  }
+
+  bool IsAlive() const { return mWeakPtr && mWeakPtr->IsAlive(); }
+
+  explicit operator bool() const { return mWeakPtr; }
+  operator T*() const { return get(); }
+  T* get() const
+  {
+    if (mCache && !mWeakPtr->IsAlive()) {
+      const_cast<CachedWeakPtr<T>*>(this)->mCache = nullptr;
+    }
+    return mCache;
+  }
+
+private:
+  nsWeakPtr mWeakPtr;
+  T* MOZ_NON_OWNING_REF mCache;
+};
 
 #define kMOZEditorBogusNodeAttrAtom nsGkAtoms::mozeditorbogusnode
 #define kMOZEditorBogusNodeValue NS_LITERAL_STRING("TRUE")
@@ -181,6 +234,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(EditorBase, nsIEditor)
 
+  bool IsInitialized() const { return !!mDocumentWeak; }
   already_AddRefed<nsIDOMDocument> GetDOMDocument();
   already_AddRefed<nsIDocument> GetDocument();
   already_AddRefed<nsIPresShell> GetPresShell();
@@ -886,7 +940,7 @@ public:
 
   bool HasIndependentSelection() const
   {
-    return !!mSelConWeak;
+    return !!mSelectionControllerWeak;
   }
 
   bool IsModifiable() const
@@ -984,6 +1038,14 @@ public:
    */
   void HideCaret(bool aHide);
 
+private:
+  // Weak reference to the nsISelectionController.
+  // Use GetSelectionController() to retrieve actual pointer.
+  CachedWeakPtr<nsISelectionController> mSelectionControllerWeak;
+  // Weak reference to the nsIDocument.
+  // Use GetDocument() to retrieve actual pointer.
+  CachedWeakPtr<nsIDocument> mDocumentWeak;
+
 protected:
   enum Tristate
   {
@@ -1005,14 +1067,10 @@ protected:
   // The form field as an event receiver.
   nsCOMPtr<dom::EventTarget> mEventTarget;
   nsCOMPtr<nsIDOMEventListener> mEventListener;
-  // Weak reference to the nsISelectionController.
-  nsWeakPtr mSelConWeak;
   // Weak reference to placeholder for begin/end batch purposes.
-  nsWeakPtr mPlaceHolderTxn;
-  // Weak reference to the nsIDOMDocument.
-  nsWeakPtr mDocWeak;
+  WeakPtr<PlaceholderTransaction> mPlaceholderTransactionWeak;
   // Name of placeholder transaction.
-  nsIAtom* mPlaceHolderName;
+  nsIAtom* mPlaceholderName;
   // Saved selection state for placeholder transaction batching.
   mozilla::UniquePtr<SelectionState> mSelState;
   // IME composition this is not null between compositionstart and
@@ -1045,7 +1103,7 @@ protected:
   int32_t mUpdateCount;
 
   // Nesting count for batching.
-  int32_t mPlaceHolderBatch;
+  int32_t mPlaceholderBatch;
   // The current editor action.
   EditAction mAction;
 

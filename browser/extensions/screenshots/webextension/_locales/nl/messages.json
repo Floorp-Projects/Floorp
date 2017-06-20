@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "U kunt geen afbeelding van een Firefox Screenshots-pagina maken!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "Uw selectie is te klein"
+  },
   "genericErrorTitle": {
     "message": "Ho! Er is iets mis met Firefox Screenshots."
   },
@@ -80,16 +83,16 @@
     "message": "Klik en sleep om alleen een gedeelte van een pagina vast te leggen. U kunt ook de muisaanwijzer boven een gebied houden om uw selectie te accentueren."
   },
   "tourHeaderThree": {
-    "message": "Zoals u wilt"
-  },
-  "tourBodyThree": {
-    "message": "Sla uw bijgesneden afbeeldingen op op het web voor makkelijker delen, of download ze naar uw computer. U kunt ook op de knop Mijn afbeeldingen klikken om al uw gemaakte afbeeldingen te vinden."
-  },
-  "tourHeaderFour": {
     "message": "Leg vensters of hele pagina’s vast"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Selecteer de knoppen rechtsboven om het zichtbare gebied in het venster vast te leggen, of om een hele pagina vast te leggen."
+  },
+  "tourHeaderFour": {
+    "message": "Zoals u wilt"
+  },
+  "tourBodyFour": {
+    "message": "Sla uw bijgesneden afbeeldingen op op het web voor makkelijker delen, of download ze naar uw computer. U kunt ook op de knop Mijn afbeeldingen klikken om al uw gemaakte afbeeldingen te vinden."
   },
   "tourSkip": {
     "message": "Overslaan"

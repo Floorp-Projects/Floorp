@@ -83,16 +83,16 @@
     "message": "Cliquez et glissez pour capturer seulement une partie de la page. Vous pouvez aussi survoler une zone avec votre curseur pour surligner votre sélection."
   },
   "tourHeaderThree": {
-    "message": "À votre guise"
-  },
-  "tourBodyThree": {
-    "message": "Sauvegardez en ligne vos captures recadrées pour les partager plus facilement, ou téléchargez-les sur votre ordinateur. Vous pouvez aussi cliquer sur « Mes captures d’écran » pour retrouver toutes vos captures."
-  },
-  "tourHeaderFour": {
     "message": "Effectuez des captures d’écran de fenêtres ou de pages entières"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Utilisez les boutons en haut à droite pour capturer au choix la zone visible dans la fenêtre ou la page entière."
+  },
+  "tourHeaderFour": {
+    "message": "À votre guise"
+  },
+  "tourBodyFour": {
+    "message": "Sauvegardez en ligne vos captures recadrées pour les partager plus facilement, ou téléchargez-les sur votre ordinateur. Vous pouvez aussi cliquer sur « Mes captures d’écran » pour retrouver toutes vos captures."
   },
   "tourSkip": {
     "message": "IGNORER"

@@ -167,6 +167,8 @@ private:
 protected:
   virtual ~CSSStyleSheet();
 
+  void LastRelease();
+
   void ClearRuleCascades();
 
   // Add the namespace mapping from this @namespace rule to our namespace map

@@ -234,7 +234,7 @@ this.ExtensionsUI = {
 
       // If we don't have any promptable permissions, just proceed
       if (strings.msgs.length == 0) {
-        resolve();
+        resolve(true);
         return;
       }
 

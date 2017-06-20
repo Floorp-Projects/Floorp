@@ -55,7 +55,14 @@ this.main = (function() {
     if ((!hasSeenOnboarding) && !active) {
       path = "icons/icon-starred-32.svg";
     }
-    browser.browserAction.setIcon({path, tabId});
+    browser.browserAction.setIcon({path, tabId}).catch((error) => {
+      // FIXME: use errorCode
+      if (error.message && /Invalid tab ID/.test(error.message)) {
+        // This is a normal exception that we can ignore
+      } else {
+        catcher.unhandled(error);
+      }
+    });
   }
 
   function toggleSelector(tab) {
@@ -66,6 +73,9 @@ this.main = (function() {
         return active;
       })
       .catch((error) => {
+        if (error.message && /Missing host permission for the tab/.test(error.message)) {
+          error.noReport = true;
+        }
         error.popupMessage = "UNSHOOTABLE_PAGE";
         throw error;
       });
@@ -87,7 +97,8 @@ this.main = (function() {
     return /^about:(?:newtab|blank)/i.test(url) || /^resource:\/\/activity-streams\//i.test(url);
   }
 
-  browser.browserAction.onClicked.addListener(catcher.watchFunction((tab) => {
+  // This is called by startBackground.js, directly in response to browser.browserAction.onClicked
+  exports.onClicked = catcher.watchFunction((tab) => {
     if (shouldOpenMyShots(tab.url)) {
       if (!hasSeenOnboarding) {
         catcher.watchPromise(analytics.refreshTelemetryPref().then(() => {
@@ -116,27 +127,13 @@ this.main = (function() {
             throw error;
           }));
     }
-  }));
-
-  function forceOnboarding() {
-    return browser.tabs.create({url: getOnboardingUrl()}).then((tab) => {
-      return toggleSelector(tab);
-    });
-  }
-
-  browser.contextMenus.create({
-    id: "create-screenshot",
-    title: browser.i18n.getMessage("contextMenuLabel"),
-    contexts: ["page"],
-    documentUrlPatterns: ["<all_urls>"]
-  }, () => {
-    // Note: unlike most browser.* functions this one does not return a promise
-    if (browser.runtime.lastError) {
-      catcher.unhandled(new Error(browser.runtime.lastError.message));
-    }
   });
 
-  browser.contextMenus.onClicked.addListener(catcher.watchFunction((info, tab) => {
+  function forceOnboarding() {
+    return browser.tabs.create({url: getOnboardingUrl()});
+  }
+
+  exports.onClickedContextMenu = catcher.watchFunction((info, tab) => {
     if (!tab) {
       // Not in a page/tab context, ignore
       return;
@@ -150,7 +147,7 @@ this.main = (function() {
     catcher.watchPromise(
       toggleSelector(tab)
         .then(() => sendEvent("start-shot", "context-menu")));
-  }));
+  });
 
   function urlEnabled(url) {
     if (shouldOpenMyShots(url)) {
@@ -171,7 +168,7 @@ this.main = (function() {
     if (path == "shots") {
       return true;
     }
-    if (/^[^/]+\/[^/]+$/.test(path)) {
+    if (/^[^/]{1,4000}\/[^/]{1,4000}$/.test(path)) {
       // Blocks {:id}/{:domain}, but not /, /privacy, etc
       return true;
     }
@@ -241,7 +238,7 @@ this.main = (function() {
   });
 
   communication.register("closeSelector", (sender) => {
-    setIconActive(false, sender.tab.id)
+    setIconActive(false, sender.tab.id);
   });
 
   catcher.watchPromise(communication.sendToBootstrap("getOldDeviceInfo").then((deviceInfo) => {
@@ -272,6 +269,16 @@ this.main = (function() {
 
   communication.register("abortFrameset", () => {
     sendEvent("abort-start-shot", "frame-page");
+    // Note, we only show the error but don't report it, as we know that we can't
+    // take shots of these pages:
+    senderror.showError({
+      popupMessage: "UNSHOOTABLE_PAGE"
+    });
+  });
+
+  communication.register("abortNoDocumentBody", (sender, tagName) => {
+    tagName = String(tagName || "").replace(/[^a-z0-9]/ig, "");
+    sendEvent("abort-start-shot", `document-is-${tagName}`);
     // Note, we only show the error but don't report it, as we know that we can't
     // take shots of these pages:
     senderror.showError({

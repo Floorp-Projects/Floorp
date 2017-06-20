@@ -614,6 +614,13 @@ DisplayListBuilder::PushScrollLayer(const layers::FrameMetrics::ViewID& aScrollI
   WRDL_LOG("PushScrollLayer id=%" PRIu64 " co=%s cl=%s\n",
       aScrollId, Stringify(aContentRect).c_str(), Stringify(aClipRect).c_str());
   wr_dp_push_scroll_layer(mWrState, aScrollId, aContentRect, aClipRect);
+  if (!mScrollIdStack.empty()) {
+    auto it = mScrollParents.insert({aScrollId, mScrollIdStack.back()});
+    if (!it.second) { // aScrollId was already a key in mScrollParents
+                      // so check that the parent value is the same.
+      MOZ_ASSERT(it.first->second == mScrollIdStack.back());
+    }
+  }
   mScrollIdStack.push_back(aScrollId);
 }
 
@@ -904,15 +911,8 @@ DisplayListBuilder::TopmostClipId()
 Maybe<layers::FrameMetrics::ViewID>
 DisplayListBuilder::ParentScrollIdFor(layers::FrameMetrics::ViewID aScrollId)
 {
-  // Finds the scrollId in mScrollIdStack immediately before aScrollId, or
-  // returns Nothing() if it can't find one
-  for (auto it = mScrollIdStack.rbegin(); it != mScrollIdStack.rend(); it++) {
-    if (*it == aScrollId) {
-      it++;
-      return (it == mScrollIdStack.rend() ? Nothing() : Some(*it));
-    }
-  }
-  return Nothing();
+  auto it = mScrollParents.find(aScrollId);
+  return (it == mScrollParents.end() ? Nothing() : Some(it->second));
 }
 
 } // namespace wr

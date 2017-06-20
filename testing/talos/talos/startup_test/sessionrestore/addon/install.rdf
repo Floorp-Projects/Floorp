@@ -3,7 +3,7 @@
 <!-- Required Items -->
 <em:id>session-restore-test-2@mozilla.org</em:id>
 <em:name>Session Restore Startup Performance Test</em:name>
-<em:version>2.0.9</em:version>
+<em:version>2.0.10</em:version>
 
 <em:targetApplication>
     <Description>

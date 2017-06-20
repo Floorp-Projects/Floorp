@@ -8,6 +8,7 @@
 #define MOZILLA_LAYERS_WEBRENDERAPI_H
 
 #include <vector>
+#include <unordered_map>
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Range.h"
@@ -293,10 +294,9 @@ public:
   // has not yet been popped with PopClip. Return Nothing() if the clip stack
   // is empty.
   Maybe<WrClipId> TopmostClipId();
-  // Returns the scroll id that was pushed just before the given scroll id.
-  // If the given scroll id is not in the stack of active scrolled layers, or if
-  // it is the rootmost scroll id (and therefore has no ancestor), this function
-  // returns Nothing().
+  // Returns the scroll id that was pushed just before the given scroll id. This
+  // function returns Nothing() if the given scrollid has not been encountered,
+  // or if it is the rootmost scroll id (and therefore has no ancestor).
   Maybe<layers::FrameMetrics::ViewID> ParentScrollIdFor(layers::FrameMetrics::ViewID aScrollId);
 
   // Try to avoid using this when possible.
@@ -310,6 +310,9 @@ protected:
   // scroll id is, and doing other "queries" of current state.
   std::vector<WrClipId> mClipIdStack;
   std::vector<layers::FrameMetrics::ViewID> mScrollIdStack;
+
+  // Track the parent scroll id of each scroll id that we encountered.
+  std::unordered_map<layers::FrameMetrics::ViewID, layers::FrameMetrics::ViewID> mScrollParents;
 
   friend class WebRenderAPI;
 };

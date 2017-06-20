@@ -5034,10 +5034,11 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
             do_GetService(NS_SSSERVICE_CONTRACTID, &rv);
           NS_ENSURE_SUCCESS(rv, rv);
           rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI,
-                                flags, mOriginAttributes, nullptr, &isStsHost);
+                                flags, mOriginAttributes, nullptr, nullptr,
+                                &isStsHost);
           NS_ENSURE_SUCCESS(rv, rv);
           rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HPKP, aURI,
-                                flags, mOriginAttributes, nullptr,
+                                flags, mOriginAttributes, nullptr, nullptr,
                                 &isPinnedHost);
           NS_ENSURE_SUCCESS(rv, rv);
         } else {

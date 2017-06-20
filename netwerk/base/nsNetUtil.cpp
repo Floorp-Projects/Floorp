@@ -2599,9 +2599,10 @@ NS_ShouldSecureUpgrade(nsIURI* aURI,
     NS_ENSURE_TRUE(sss, NS_ERROR_OUT_OF_MEMORY);
 
     bool isStsHost = false;
+    uint32_t hstsSource = 0;
     uint32_t flags = aPrivateBrowsing ? nsISocketProvider::NO_PERMANENT_STORAGE : 0;
     rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI, flags,
-                          aOriginAttributes, nullptr, &isStsHost);
+                          aOriginAttributes, nullptr, &hstsSource, &isStsHost);
 
     // if the SSS check fails, it's likely because this load is on a
     // malformed URI or something else in the setup is wrong, so any error
@@ -2613,6 +2614,22 @@ NS_ShouldSecureUpgrade(nsIURI* aURI,
       if (aAllowSTS) {
         Telemetry::Accumulate(Telemetry::HTTP_SCHEME_UPGRADE, 3);
         aShouldUpgrade = true;
+        switch (hstsSource) {
+          case nsISiteSecurityService::SOURCE_PRELOAD_LIST:
+              Telemetry::Accumulate(Telemetry::HSTS_UPGRADE_SOURCE, 0);
+              break;
+          case nsISiteSecurityService::SOURCE_ORGANIC_REQUEST:
+              Telemetry::Accumulate(Telemetry::HSTS_UPGRADE_SOURCE, 1);
+              break;
+          case nsISiteSecurityService::SOURCE_HSTS_PRIMING:
+              Telemetry::Accumulate(Telemetry::HSTS_UPGRADE_SOURCE, 2);
+              break;
+          case nsISiteSecurityService::SOURCE_UNKNOWN:
+          default:
+              // record this as an organic request
+              Telemetry::Accumulate(Telemetry::HSTS_UPGRADE_SOURCE, 1);
+              break;
+        }
         return NS_OK;
       } else {
         Telemetry::Accumulate(Telemetry::HTTP_SCHEME_UPGRADE, 2);

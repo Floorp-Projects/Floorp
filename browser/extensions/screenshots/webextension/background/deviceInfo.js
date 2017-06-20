@@ -11,9 +11,9 @@ this.deviceInfo = (function() {
   }));
 
   return function deviceInfo() {
-    let match = navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9\.]+)/);
+    let match = navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9\.]{1,1000})/);
     let chromeVersion = match ? match[1] : null;
-    match = navigator.userAgent.match(/Firefox\/([0-9\.]+)/);
+    match = navigator.userAgent.match(/Firefox\/([0-9\.]{1,1000})/);
     let firefoxVersion = match ? match[1] : null;
     let appName = chromeVersion ? "chrome" : "firefox";
 

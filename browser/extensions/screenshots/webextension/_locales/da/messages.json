@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Du kan ikke tage skærmbilleder af en side i Firefox Screenshots."
   },
+  "emptySelectionErrorTitle": {
+    "message": "Din markering er for lille"
+  },
   "genericErrorTitle": {
     "message": "Hov! Noget gik helt galt med Firefox Screenshots."
   },
@@ -80,16 +83,16 @@
     "message": "Klik og træk for at tage et udklip af en del af en side. Du kan også holde markøren over for at fremhæve din markering."
   },
   "tourHeaderThree": {
-    "message": "Som du vil have det."
-  },
-  "tourBodyThree": {
-    "message": "Gem dine beskårne skærmbilleder på nettet for nemmere at dele dem - eller hent dem ned på din computer. Du kan også klikke på knappen \"Mine skærmbilleder\" for at finde de skærmbilleder, du har taget."
-  },
-  "tourHeaderFour": {
     "message": "Tag skærmbilleder af vinduer eller hele sider."
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Brug knapperne øverst til højre for at tage et skærmbillede af det synlige område i vinduet eller for at tage et skærmbillede af hele siden."
+  },
+  "tourHeaderFour": {
+    "message": "Som du vil have det."
+  },
+  "tourBodyFour": {
+    "message": "Gem dine beskårne skærmbilleder på nettet for nemmere at dele dem - eller hent dem ned på din computer. Du kan også klikke på knappen \"Mine skærmbilleder\" for at finde de skærmbilleder, du har taget."
   },
   "tourSkip": {
     "message": "SPRING OVER"

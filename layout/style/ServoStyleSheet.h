@@ -125,6 +125,8 @@ public:
 protected:
   virtual ~ServoStyleSheet();
 
+  void LastRelease();
+
   ServoStyleSheetInner* Inner() const
   {
     return static_cast<ServoStyleSheetInner*>(mInner);

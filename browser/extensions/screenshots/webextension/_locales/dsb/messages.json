@@ -83,16 +83,16 @@
     "message": "Klikniśo a ześěgniśo, aby źěl boka fotografěrował. Móžośo teke špěrku myški nad nim gibaś, aby swój wuběr wuzwignuł."
   },
   "tourHeaderThree": {
-    "message": "Tak, kaž se wam spódoba"
-  },
-  "tourBodyThree": {
-    "message": "Składujśo swóje pśirězane fota wobrazowki w interneśe, aby je lažcej źělił, abo ześěgniśo je na swójo licadło. Móžośo teke na tłocašk „Móje fota wobrazowki“ kliknuś, abye wšě fota wobrazowki namakał, kótarež sćo gótował."
-  },
-  "tourHeaderFour": {
     "message": "Wokna abo cełe boki składowaś"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Wubjeŕśo tłocašk górjejce napšawo, aby widobny wobcerk we woknje abo ceły bok fotografěrowaś."
+  },
+  "tourHeaderFour": {
+    "message": "Tak, kaž se wam spódoba"
+  },
+  "tourBodyFour": {
+    "message": "Składujśo swóje pśirězane fota wobrazowki w interneśe, aby je lažcej źělił, abo ześěgniśo je na swójo licadło. Móžośo teke na tłocašk „Móje fota wobrazowki“ kliknuś, abye wšě fota wobrazowki namakał, kótarež sćo gótował."
   },
   "tourSkip": {
     "message": "Pśeskócyś"

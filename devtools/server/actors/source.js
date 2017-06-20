@@ -10,7 +10,7 @@ const { Cc, Ci } = require("chrome");
 const Services = require("Services");
 const { BreakpointActor, setBreakpointAtEntryPoints } = require("devtools/server/actors/breakpoint");
 const { OriginalLocation, GeneratedLocation } = require("devtools/server/actors/common");
-const { createValueGrip } = require("devtools/server/actors/object");
+const { createValueGrip, arrayBufferGrip } = require("devtools/server/actors/object");
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert, fetch } = DevToolsUtils;
@@ -331,6 +331,7 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
       content: t,
       contentType: this._contentType
     });
+    let isWasm = this.source && this.source.introductionType === "wasm";
 
     let genSource = this.generatedSource || this.source;
     return this.threadActor.sources.fetchSourceMap(genSource).then(map => {
@@ -344,6 +345,16 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
           this._reportLoadSourceError(error, map);
           throw error;
         }
+      }
+
+      if (isWasm) {
+        let wasm = this.source.binary;
+        let buffer = wasm.buffer;
+        assert(
+          wasm.byteOffset === 0 && wasm.byteLength === buffer.byteLength,
+          "Typed array from wasm source binary must cover entire buffer"
+        );
+        return toResolvedContent(buffer);
       }
 
       // Use `source.text` if it exists, is not the "no source" string, and
@@ -471,6 +482,13 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
     return promise.resolve(this._init)
       .then(this._getSourceText)
       .then(({ content, contentType }) => {
+        if (typeof content === "object" && content && content.constructor &&
+            content.constructor.name === "ArrayBuffer") {
+          return {
+            source: arrayBufferGrip(content, this.threadActor.threadLifetimePool),
+            contentType,
+          };
+        }
         return {
           source: createValueGrip(content, this.threadActor.threadLifetimePool,
             this.threadActor.objectGrip),

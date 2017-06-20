@@ -6,18 +6,18 @@
 <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 <style>
 body {
-	margin: 40px;
+  margin: 40px;
 }
 .wrapper {
-	display: grid;
-	width: 400px;
-	grid-gap: 10px;
-	grid-template-columns: 100px 1fr 1fr 100px;
-	background-color: #f00;
+  display: grid;
+  width: 400px;
+  grid-gap: 10px;
+  grid-template-columns: 100px 1fr 1fr 100px;
+  background-color: #f00;
 }
 .box {
-	background-color: #444;
-	color: #fff;
+  background-color: #444;
+  color: #fff;
 }
 </style>
 
@@ -27,43 +27,43 @@ body {
 SimpleTest.waitForExplicitFinish();
 
 function runTests() {
-	var wrapper = document.getElementById("wrapper");
-	var boxA = document.getElementById("boxA");
-	
-	// test function existence
-	is(typeof(wrapper.getGridFragments), "function",
-		"getGridFragments function exists."
-	);
-	
-	// test that display:grid elements have grids and display:block elements don't	
-	is(boxA.getGridFragments().length, 0, "No grid on display:block styled objects.");
-	is(wrapper.getGridFragments().length, 1,
-		"One grid on an un-fragmented display:grid styled object."
-	);
-	
-	if (wrapper.getGridFragments().length == 1) {
-		var grid = wrapper.getGridFragments()[0];
-		
-		isnot(typeof(grid.cols), "undefined", "Grid.cols property exists.");
-		isnot(typeof(grid.rows), "undefined", "Grid.rows property exists.");
-	}
-	
-	SimpleTest.finish();
+  var wrapper = document.getElementById("wrapper");
+  var boxA = document.getElementById("boxA");
+
+  // test function existence
+  is(typeof(wrapper.getGridFragments), "function",
+    "getGridFragments function exists."
+  );
+
+  // test that display:grid elements have grids and display:block elements don't
+  is(boxA.getGridFragments().length, 0, "No grid on display:block styled objects.");
+  is(wrapper.getGridFragments().length, 1,
+    "One grid on an un-fragmented display:grid styled object."
+  );
+
+  if (wrapper.getGridFragments().length == 1) {
+    var grid = wrapper.getGridFragments()[0];
+
+    isnot(typeof(grid.cols), "undefined", "Grid.cols property exists.");
+    isnot(typeof(grid.rows), "undefined", "Grid.rows property exists.");
+  }
+
+  SimpleTest.finish();
 }
 </script>
 </head>
 <body onLoad="runTests();">
 
-	<div id="wrapper" class="wrapper">
-		<div id="boxA" class="box a">A</div>
-		<div class="box b">B</div>
-		<div class="box c">C</div>
-		<div class="box d">D</div>
-		<div class="box e">E</div>
-		<div class="box f">F</div>
-		<div class="box g">G</div>
-		<div class="box h">H</div>
-	</div>
-	
+  <div id="wrapper" class="wrapper">
+    <div id="boxA" class="box a">A</div>
+    <div class="box b">B</div>
+    <div class="box c">C</div>
+    <div class="box d">D</div>
+    <div class="box e">E</div>
+    <div class="box f">F</div>
+    <div class="box g">G</div>
+    <div class="box h">H</div>
+  </div>
+
 </body>
 </html>
