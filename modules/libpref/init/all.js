@@ -413,7 +413,7 @@ pref("media.wave.enabled", true);
 pref("media.webm.enabled", true);
 
 pref("media.eme.chromium-api.enabled", true);
-pref("media.eme.chromium-api.video-shmems", 4);
+pref("media.eme.chromium-api.video-shmems", 6);
 
 #ifdef MOZ_APPLEMEDIA
 #ifdef MOZ_WIDGET_UIKIT
