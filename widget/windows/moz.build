@@ -111,6 +111,12 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 
+if CONFIG['MOZ_ENABLE_SKIA_PDF']:
+  LOCAL_INCLUDES += [
+    '/gfx/skia/skia/include/config',
+    '/gfx/skia/skia/include/core',
+  ]
+
 LOCAL_INCLUDES += [
     '/layout/generic',
     '/layout/xul',
