@@ -23,9 +23,11 @@
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/media/MediaUtils.h"
 #include "MediaStreamGraph.h"
+#include "AudioCaptureStream.h"
 #include "AudioStreamTrack.h"
 #include "VideoStreamTrack.h"
 #include "Layers.h"
+#include "MediaStreamListener.h"
 
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount() and conflicts with NS_DECL_NSIDOMMEDIASTREAM, containing
