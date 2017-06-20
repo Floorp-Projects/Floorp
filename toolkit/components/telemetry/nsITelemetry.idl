@@ -52,8 +52,8 @@ interface nsITelemetry : nsISupports
 
 
   /**
-   * An object containing a snapshot from all of the currently registered histograms.
-   * { name1: {data1}, name2:{data2}...}
+   * An object containing a snapshot from all of the currently registered histograms from all processes.
+   * { process1: {name1: {data1}, name2:{data2}...} }
    * where data is consists of the following properties:
    *   min - Minimal bucket size
    *   max - Maximum bucket size
