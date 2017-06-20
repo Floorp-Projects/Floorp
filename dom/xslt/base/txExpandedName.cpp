@@ -14,7 +14,7 @@ nsresult
 txExpandedName::init(const nsAString& aQName, txNamespaceMap* aResolver,
                      bool aUseDefault)
 {
-    const nsAFlatString& qName = PromiseFlatString(aQName);
+    const nsString& qName = PromiseFlatString(aQName);
     const char16_t* colon;
     bool valid = XMLUtils::isValidQName(qName, &colon);
     if (!valid) {

@@ -519,7 +519,7 @@ NS_EscapeURL(const nsSubstring& aStr, uint32_t aFlags, nsSubstring& aResult)
 // Starting at aStr[aStart] find the first index in aStr that matches any
 // character in aForbidden. Return false if not found.
 static bool
-FindFirstMatchFrom(const nsAFlatString& aStr, size_t aStart,
+FindFirstMatchFrom(const nsString& aStr, size_t aStart,
                    const nsTArray<char16_t>& aForbidden, size_t* aIndex)
 {
   const size_t len = aForbidden.Length();
@@ -534,7 +534,7 @@ FindFirstMatchFrom(const nsAFlatString& aStr, size_t aStart,
 }
 
 const nsSubstring&
-NS_EscapeURL(const nsAFlatString& aStr, const nsTArray<char16_t>& aForbidden,
+NS_EscapeURL(const nsString& aStr, const nsTArray<char16_t>& aForbidden,
              nsSubstring& aResult)
 {
   bool didEscape = false;

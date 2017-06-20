@@ -74,11 +74,11 @@ private:
      * error.
      */
     MOZ_MUST_USE nsresult GetCredentials(const char *challenges, bool proxyAuth,
-                                         nsAFlatCString &creds);
+                                         nsCString& creds);
     MOZ_MUST_USE nsresult
     GetCredentialsForChallenge(const char *challenge, const char *scheme,
                                bool proxyAuth, nsIHttpAuthenticator *auth,
-                               nsAFlatCString &creds);
+                               nsCString& creds);
     MOZ_MUST_USE nsresult PromptForIdentity(uint32_t level, bool proxyAuth,
                                             const char *realm,
                                             const char *authType,

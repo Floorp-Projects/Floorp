@@ -190,7 +190,7 @@ NS_EscapeURL(const nsSubstring& aStr, uint32_t aFlags, nsSubstring& aResult);
  *         is unmodified in that case)
  */
 const nsSubstring&
-NS_EscapeURL(const nsAFlatString& aStr, const nsTArray<char16_t>& aForbidden,
+NS_EscapeURL(const nsString& aStr, const nsTArray<char16_t>& aForbidden,
              nsSubstring& aResult);
 
 /**

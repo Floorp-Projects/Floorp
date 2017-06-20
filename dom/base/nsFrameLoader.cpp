@@ -272,7 +272,7 @@ nsFrameLoader::LoadFrame()
   }
 
   nsCOMPtr<nsIURI> base_uri = mOwnerContent->GetBaseURI();
-  const nsAFlatCString &doc_charset = doc->GetDocumentCharacterSet();
+  const nsCString& doc_charset = doc->GetDocumentCharacterSet();
   const char *charset = doc_charset.IsEmpty() ? nullptr : doc_charset.get();
 
   nsCOMPtr<nsIURI> uri;

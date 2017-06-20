@@ -64,7 +64,7 @@ private:
     void BuildHashKey();
 
 public:
-    const nsAFlatCString &HashKey() const { return mHashKey; }
+    const nsCString& HashKey() const { return mHashKey; }
 
     const nsCString &GetOrigin() const { return mOrigin; }
     const char   *Origin()       const { return mOrigin.get(); }

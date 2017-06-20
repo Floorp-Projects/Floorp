@@ -209,7 +209,7 @@ int32_t nsStandardURL::
 nsSegmentEncoder::EncodeSegmentCount(const char *str,
                                      const URLSegment &seg,
                                      int16_t mask,
-                                     nsAFlatCString &result,
+                                     nsCString& result,
                                      bool &appended,
                                      uint32_t extraLen)
 {
@@ -262,7 +262,7 @@ nsSegmentEncoder::EncodeSegmentCount(const char *str,
 const nsACString &nsStandardURL::
 nsSegmentEncoder::EncodeSegment(const nsACString& str,
                                 int16_t mask,
-                                nsAFlatCString &result)
+                                nsCString& result)
 {
     const char *text;
     bool encoded;

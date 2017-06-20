@@ -130,7 +130,7 @@ public: /* internal -- HPUX compiler can't handle this being private */
         int32_t EncodeSegmentCount(const char *str,
                                    const URLSegment &segment,
                                    int16_t mask,
-                                   nsAFlatCString &buf,
+                                   nsCString& buf,
                                    bool& appended,
                                    uint32_t extraLen = 0);
          
@@ -139,7 +139,7 @@ public: /* internal -- HPUX compiler can't handle this being private */
         // is required.  Otherwise, a reference to |str| is returned.
         const nsACString& EncodeSegment(const nsACString& str,
                                         int16_t mask,
-                                        nsAFlatCString &buf);
+                                        nsCString& buf);
     private:
       const Encoding* mEncoding;
     };
