@@ -11,12 +11,10 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/TimeStamp.h"
-
-#include <queue>
-
-#include "nsITimer.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/TimeStamp.h"
+#include "nsITimer.h"
+#include <queue>
 
 namespace mozilla {
 

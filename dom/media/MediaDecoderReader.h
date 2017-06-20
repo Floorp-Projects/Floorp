@@ -6,21 +6,20 @@
 #if !defined(MediaDecoderReader_h_)
 #define MediaDecoderReader_h_
 
+#include "AbstractMediaDecoder.h"
+#include "AudioCompactor.h"
+#include "Intervals.h"
+#include "MediaData.h"
+#include "MediaInfo.h"
+#include "MediaMetadataManager.h"
+#include "MediaQueue.h"
+#include "MediaResult.h"
+#include "MediaTimer.h"
+#include "SeekTarget.h"
+#include "TimeUnits.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/MozPromise.h"
 #include "nsAutoPtr.h"
-
-#include "AbstractMediaDecoder.h"
-#include "MediaInfo.h"
-#include "MediaData.h"
-#include "MediaResult.h"
-#include "MediaMetadataManager.h"
-#include "MediaQueue.h"
-#include "MediaTimer.h"
-#include "AudioCompactor.h"
-#include "Intervals.h"
-#include "TimeUnits.h"
-#include "SeekTarget.h"
 
 namespace mozilla {
 

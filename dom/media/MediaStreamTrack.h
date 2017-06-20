@@ -6,17 +6,17 @@
 #ifndef MEDIASTREAMTRACK_H_
 #define MEDIASTREAMTRACK_H_
 
-#include "mozilla/DOMEventTargetHelper.h"
-#include "nsError.h"
-#include "nsID.h"
-#include "nsIPrincipal.h"
-#include "StreamTracks.h"
 #include "MediaTrackConstraints.h"
-#include "mozilla/CORSMode.h"
 #include "PrincipalChangeObserver.h"
+#include "StreamTracks.h"
+#include "mozilla/CORSMode.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/dom/MediaTrackSettingsBinding.h"
 #include "mozilla/media/MediaUtils.h"
+#include "nsError.h"
+#include "nsID.h"
+#include "nsIPrincipal.h"
 
 namespace mozilla {
 

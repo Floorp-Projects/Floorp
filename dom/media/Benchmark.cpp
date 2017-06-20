@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Benchmark.h"
+
 #include "BufferMediaResource.h"
 #include "MediaData.h"
 #include "MediaPrefs.h"

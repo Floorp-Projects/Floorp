@@ -6,15 +6,14 @@
 #include "MediaStreamTrack.h"
 
 #include "DOMMediaStream.h"
+#include "MediaStreamError.h"
 #include "MediaStreamGraph.h"
+#include "MediaStreamListener.h"
+#include "mozilla/dom/Promise.h"
 #include "nsContentUtils.h"
 #include "nsIUUIDGenerator.h"
 #include "nsServiceManagerUtils.h"
-#include "MediaStreamError.h"
-#include "MediaStreamListener.h"
 #include "systemservices/MediaUtils.h"
-
-#include "mozilla/dom/Promise.h"
 
 #ifdef LOG
 #undef LOG

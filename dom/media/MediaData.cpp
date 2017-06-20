@@ -5,11 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaData.h"
+
+#include "ImageContainer.h"
 #include "MediaInfo.h"
 #include "VideoUtils.h"
-#include "ImageContainer.h"
-#include "mozilla/layers/SharedRGBImage.h"
 #include "YCbCrUtils.h"
+#include "mozilla/layers/SharedRGBImage.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include <cutils/properties.h>
