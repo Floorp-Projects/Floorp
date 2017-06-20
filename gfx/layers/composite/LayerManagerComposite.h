@@ -132,6 +132,18 @@ public:
     aNotifications->AppendElements(Move(mImageCompositeNotifications));
   }
 
+  void AppendImageCompositeNotification(const ImageCompositeNotificationInfo& aNotification)
+  {
+    // Only send composite notifications when we're drawing to the screen,
+    // because that's what they mean.
+    // Also when we're not drawing to the screen, DidComposite will not be
+    // called to extract and send these notifications, so they might linger
+    // and contain stale ImageContainerParent pointers.
+    if (IsCompositingToScreen()) {
+      mImageCompositeNotifications.AppendElement(aNotification);
+    }
+  }
+
   /**
    * LayerManagerComposite provides sophisticated debug overlays
    * that can request a next frame.
@@ -162,6 +174,9 @@ public:
   void SetPaintTime(const TimeDuration& aPaintTime) { mLastPaintTime = aPaintTime; }
 
   virtual bool AlwaysScheduleComposite() const {
+    return false;
+  }
+  virtual bool IsCompositingToScreen() const {
     return false;
   }
 
@@ -290,6 +305,7 @@ public:
     CreateOptimalMaskDrawTarget(const IntSize &aSize) override;
 
   virtual const char* Name() const override { return ""; }
+  virtual bool IsCompositingToScreen() const override;
 
   bool AlwaysScheduleComposite() const override;
 
@@ -385,19 +401,6 @@ public:
   }
 
   bool AsyncPanZoomEnabled() const override;
-
-public:
-  void AppendImageCompositeNotification(const ImageCompositeNotificationInfo& aNotification)
-  {
-    // Only send composite notifications when we're drawing to the screen,
-    // because that's what they mean.
-    // Also when we're not drawing to the screen, DidComposite will not be
-    // called to extract and send these notifications, so they might linger
-    // and contain stale ImageContainerParent pointers.
-    if (!mCompositor->GetTargetContext()) {
-      mImageCompositeNotifications.AppendElement(aNotification);
-    }
-  }
 
 public:
   virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() override
