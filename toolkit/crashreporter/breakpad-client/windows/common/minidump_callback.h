@@ -68,6 +68,10 @@ BOOL CALLBACK MinidumpWriteDumpCallback(
     const PMINIDUMP_CALLBACK_INPUT callback_input,
     PMINIDUMP_CALLBACK_OUTPUT callback_output);
 
+// Called during startup to initialize system information used by
+// IncludeAppMemoryFromExceptionContext().
+void InitAppMemoryInternal();
+
 }  // namespace google_breakpad
 
 #endif
