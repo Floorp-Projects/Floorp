@@ -33,7 +33,8 @@ config = {
             ],
             "channel_names": ["beta-dev", "beta-dev-localtest", "beta-dev-cdntest"],
             "rules_to_update": ["firefox-beta-dev-cdntest", "firefox-beta-dev-localtest"],
-             "publish_rules": ["firefox-beta"],
+            "publish_rules": ["firefox-beta"],
+            "schedule_asap": True,
         },
         "release-dev": {
             "version_regex": r"^\d+\.\d+(\.\d+)?$",

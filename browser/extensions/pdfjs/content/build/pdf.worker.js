@@ -1454,7 +1454,7 @@ var Dict = function DictClosure() {
     return nonSerializable;
   };
   function Dict(xref) {
-    this.map = Object.create(null);
+    this._map = Object.create(null);
     this.xref = xref;
     this.objId = null;
     this.suppressEncryption = false;
@@ -1468,32 +1468,32 @@ var Dict = function DictClosure() {
       var value;
       var xref = this.xref,
           suppressEncryption = this.suppressEncryption;
-      if (typeof (value = this.map[key1]) !== 'undefined' || key1 in this.map || typeof key2 === 'undefined') {
+      if (typeof (value = this._map[key1]) !== 'undefined' || key1 in this._map || typeof key2 === 'undefined') {
         return xref ? xref.fetchIfRef(value, suppressEncryption) : value;
       }
-      if (typeof (value = this.map[key2]) !== 'undefined' || key2 in this.map || typeof key3 === 'undefined') {
+      if (typeof (value = this._map[key2]) !== 'undefined' || key2 in this._map || typeof key3 === 'undefined') {
         return xref ? xref.fetchIfRef(value, suppressEncryption) : value;
       }
-      value = this.map[key3] || null;
+      value = this._map[key3] || null;
       return xref ? xref.fetchIfRef(value, suppressEncryption) : value;
     },
     getAsync: function Dict_getAsync(key1, key2, key3) {
       var value;
       var xref = this.xref,
           suppressEncryption = this.suppressEncryption;
-      if (typeof (value = this.map[key1]) !== 'undefined' || key1 in this.map || typeof key2 === 'undefined') {
+      if (typeof (value = this._map[key1]) !== 'undefined' || key1 in this._map || typeof key2 === 'undefined') {
         if (xref) {
           return xref.fetchIfRefAsync(value, suppressEncryption);
         }
         return Promise.resolve(value);
       }
-      if (typeof (value = this.map[key2]) !== 'undefined' || key2 in this.map || typeof key3 === 'undefined') {
+      if (typeof (value = this._map[key2]) !== 'undefined' || key2 in this._map || typeof key3 === 'undefined') {
         if (xref) {
           return xref.fetchIfRefAsync(value, suppressEncryption);
         }
         return Promise.resolve(value);
       }
-      value = this.map[key3] || null;
+      value = this._map[key3] || null;
       if (xref) {
         return xref.fetchIfRefAsync(value, suppressEncryption);
       }
@@ -1516,36 +1516,36 @@ var Dict = function DictClosure() {
       return value;
     },
     getRaw: function Dict_getRaw(key) {
-      return this.map[key];
+      return this._map[key];
     },
     getKeys: function Dict_getKeys() {
-      return Object.keys(this.map);
+      return Object.keys(this._map);
     },
     set: function Dict_set(key, value) {
-      this.map[key] = value;
+      this._map[key] = value;
     },
     has: function Dict_has(key) {
-      return key in this.map;
+      return key in this._map;
     },
     forEach: function Dict_forEach(callback) {
-      for (var key in this.map) {
+      for (var key in this._map) {
         callback(key, this.get(key));
       }
     }
   };
   Dict.empty = new Dict(null);
-  Dict.merge = function Dict_merge(xref, dictArray) {
-    var mergedDict = new Dict(xref);
-    for (var i = 0, ii = dictArray.length; i < ii; i++) {
-      var dict = dictArray[i];
+  Dict.merge = function (xref, dictArray) {
+    let mergedDict = new Dict(xref);
+    for (let i = 0, ii = dictArray.length; i < ii; i++) {
+      let dict = dictArray[i];
       if (!isDict(dict)) {
         continue;
       }
-      for (var keyName in dict.map) {
-        if (mergedDict.map[keyName]) {
+      for (let keyName in dict._map) {
+        if (mergedDict._map[keyName] !== undefined) {
           continue;
         }
-        mergedDict.map[keyName] = dict.map[keyName];
+        mergedDict._map[keyName] = dict._map[keyName];
       }
     }
     return mergedDict;
@@ -22751,86 +22751,83 @@ var FileSpec = function FileSpecClosure() {
   };
   return FileSpec;
 }();
-var ObjectLoader = function () {
+let ObjectLoader = function () {
   function mayHaveChildren(value) {
     return (0, _primitives.isRef)(value) || (0, _primitives.isDict)(value) || (0, _util.isArray)(value) || (0, _primitives.isStream)(value);
   }
   function addChildren(node, nodesToVisit) {
-    var value;
     if ((0, _primitives.isDict)(node) || (0, _primitives.isStream)(node)) {
-      var map;
-      if ((0, _primitives.isDict)(node)) {
-        map = node.map;
-      } else {
-        map = node.dict.map;
-      }
-      for (var key in map) {
-        value = map[key];
-        if (mayHaveChildren(value)) {
-          nodesToVisit.push(value);
+      let dict = (0, _primitives.isDict)(node) ? node : node.dict;
+      let dictKeys = dict.getKeys();
+      for (let i = 0, ii = dictKeys.length; i < ii; i++) {
+        let rawValue = dict.getRaw(dictKeys[i]);
+        if (mayHaveChildren(rawValue)) {
+          nodesToVisit.push(rawValue);
         }
       }
     } else if ((0, _util.isArray)(node)) {
-      for (var i = 0, ii = node.length; i < ii; i++) {
-        value = node[i];
+      for (let i = 0, ii = node.length; i < ii; i++) {
+        let value = node[i];
         if (mayHaveChildren(value)) {
           nodesToVisit.push(value);
         }
       }
     }
   }
-  function ObjectLoader(obj, keys, xref) {
-    this.obj = obj;
+  function ObjectLoader(dict, keys, xref) {
+    this.dict = dict;
     this.keys = keys;
     this.xref = xref;
     this.refSet = null;
     this.capability = null;
   }
   ObjectLoader.prototype = {
-    load: function ObjectLoader_load() {
-      var keys = this.keys;
+    load() {
       this.capability = (0, _util.createPromiseCapability)();
       if (!(this.xref.stream instanceof _chunked_stream.ChunkedStream) || this.xref.stream.getMissingChunks().length === 0) {
         this.capability.resolve();
         return this.capability.promise;
       }
+      let { keys, dict } = this;
       this.refSet = new _primitives.RefSet();
-      var nodesToVisit = [];
-      for (var i = 0; i < keys.length; i++) {
-        nodesToVisit.push(this.obj[keys[i]]);
+      let nodesToVisit = [];
+      for (let i = 0, ii = keys.length; i < ii; i++) {
+        let rawValue = dict.getRaw(keys[i]);
+        if (rawValue !== undefined) {
+          nodesToVisit.push(rawValue);
+        }
       }
       this._walk(nodesToVisit);
       return this.capability.promise;
     },
-    _walk: function ObjectLoader_walk(nodesToVisit) {
-      var nodesToRevisit = [];
-      var pendingRequests = [];
+    _walk(nodesToVisit) {
+      let nodesToRevisit = [];
+      let pendingRequests = [];
       while (nodesToVisit.length) {
-        var currentNode = nodesToVisit.pop();
+        let currentNode = nodesToVisit.pop();
         if ((0, _primitives.isRef)(currentNode)) {
           if (this.refSet.has(currentNode)) {
             continue;
           }
           try {
-            var ref = currentNode;
-            this.refSet.put(ref);
+            this.refSet.put(currentNode);
             currentNode = this.xref.fetch(currentNode);
-          } catch (e) {
-            if (!(e instanceof _util.MissingDataException)) {
-              throw e;
+          } catch (ex) {
+            if (!(ex instanceof _util.MissingDataException)) {
+              throw ex;
             }
             nodesToRevisit.push(currentNode);
             pendingRequests.push({
-              begin: e.begin,
-              end: e.end
+              begin: ex.begin,
+              end: ex.end
             });
           }
         }
         if (currentNode && currentNode.getBaseStreams) {
-          var baseStreams = currentNode.getBaseStreams();
-          var foundMissingData = false;
-          for (var i = 0; i < baseStreams.length; i++) {
-            var stream = baseStreams[i];
+          let baseStreams = currentNode.getBaseStreams();
+          let foundMissingData = false;
+          for (let i = 0, ii = baseStreams.length; i < ii; i++) {
+            let stream = baseStreams[i];
             if (stream.getMissingChunks && stream.getMissingChunks().length) {
               foundMissingData = true;
               pendingRequests.push({
@@ -22847,14 +22844,13 @@ var ObjectLoader = function () {
       }
       if (pendingRequests.length) {
         this.xref.stream.manager.requestRanges(pendingRequests).then(() => {
-          nodesToVisit = nodesToRevisit;
-          for (var i = 0; i < nodesToRevisit.length; i++) {
-            var node = nodesToRevisit[i];
+          for (let i = 0, ii = nodesToRevisit.length; i < ii; i++) {
+            let node = nodesToRevisit[i];
             if ((0, _primitives.isRef)(node)) {
               this.refSet.remove(node);
             }
           }
-          this._walk(nodesToVisit);
+          this._walk(nodesToRevisit);
         }, this.capability.reject);
         return;
       }
@@ -27469,7 +27465,7 @@ var Annotation = function AnnotationClosure() {
         if (!resources) {
           return;
         }
-        var objectLoader = new _obj.ObjectLoader(resources.map, keys, resources.xref);
+        let objectLoader = new _obj.ObjectLoader(resources, keys, resources.xref);
         return objectLoader.load().then(function () {
           return resources;
         });
@@ -29006,7 +29002,7 @@ var Page = function PageClosure() {
         this.resourcesPromise = this.pdfManager.ensure(this, 'resources');
       }
       return this.resourcesPromise.then(() => {
-        var objectLoader = new _obj.ObjectLoader(this.resources.map, keys, this.xref);
+        let objectLoader = new _obj.ObjectLoader(this.resources, keys, this.xref);
         return objectLoader.load();
       });
     },
@@ -39780,8 +39776,8 @@ exports.Type1Parser = Type1Parser;
 "use strict";
 
 
-var pdfjsVersion = '1.8.450';
-var pdfjsBuild = '20975134';
+var pdfjsVersion = '1.8.467';
+var pdfjsBuild = '679ffc84';
 var pdfjsCoreWorker = __w_pdfjs_require__(17);
 ;
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;

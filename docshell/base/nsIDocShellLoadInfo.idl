@@ -32,6 +32,16 @@ interface nsIDocShellLoadInfo : nsISupports
     attribute nsIURI originalURI;
 
     /**
+     * Result principal URL from nsILoadInfo, may be null.  Valid only if
+     * the "IsSome" part is true (has the same meaning as isSome()
+     * on mozilla::Maybe.)
+     *
+     * In C++ please use Get/SetMaybeResultPrincipalURI helper functions.
+     */
+    attribute nsIURI resultPrincipalURI;
+    attribute boolean resultPrincipalURIIsSome;
+
+    /**
      * loadReplace flag to be passed to nsIDocShell.internalLoad.
      */
     attribute boolean loadReplace;
@@ -123,3 +133,22 @@ interface nsIDocShellLoadInfo : nsISupports
      */
     attribute nsIURI baseURI;
 };
+
+%{C++
+
+#include "mozilla/Maybe.h"
+
+namespace mozilla {
+
+/**
+ * Helper function allowing convenient work with mozilla::Maybe in C++, hiding
+ * resultPrincipalURI and resultPrincipalURIIsSome attributes from the consumer.
+ */
+void
+GetMaybeResultPrincipalURI(nsIDocShellLoadInfo* aLoadInfo, Maybe<nsCOMPtr<nsIURI>>& aRPURI);
+void
+SetMaybeResultPrincipalURI(nsIDocShellLoadInfo* aLoadInfo, Maybe<nsCOMPtr<nsIURI>> const& aRPURI);
+
+} // mozilla
+
+%}

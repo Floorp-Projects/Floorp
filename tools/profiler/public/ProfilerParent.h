@@ -10,6 +10,8 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/PProfilerParent.h"
 
+class nsIProfilerStartParams;
+
 namespace mozilla {
 
 class ProfilerParentTracker;

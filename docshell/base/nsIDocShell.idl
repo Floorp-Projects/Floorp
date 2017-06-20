@@ -10,6 +10,7 @@
 
 %{ C++
 #include "js/TypeDecls.h"
+#include "mozilla/Maybe.h"
 class nsPresContext;
 class nsIPresShell;
 %}
@@ -20,6 +21,7 @@ class nsIPresShell;
 
 [ptr] native nsPresContext(nsPresContext);
 [ptr] native nsIPresShell(nsIPresShell);
+[ref] native MaybeURI(mozilla::Maybe<nsCOMPtr<nsIURI>>);
 
 interface nsIURI;
 interface nsIChannel;
@@ -127,6 +129,10 @@ interface nsIDocShell : nsIDocShellTreeItem
    * @param aOriginalURI         - The URI to set as the originalURI on the channel
    *                               that does the load. If null, aURI will be set as
    *                               the originalURI.
+   * @param aResultPrincipalURI  - The URI to be set to loadInfo.resultPrincipalURI
+   *                               When Nothing, there will be no change
+   *                               When Some, the principal URI will overwrite even
+   *                               with a null value.
    * @param aLoadReplace         - If set LOAD_REPLACE flag will be set on the
    *                               channel. aOriginalURI is null, this argument is
    *                               ignored.
@@ -174,6 +180,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
   [noscript]void internalLoad(in nsIURI aURI,
                               in nsIURI aOriginalURI,
+                              [const] in MaybeURI aResultPrincipalURI,
                               in boolean aLoadReplace,
                               in nsIURI aReferrer,
                               in unsigned long aReferrerPolicy,

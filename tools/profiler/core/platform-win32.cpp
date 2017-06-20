@@ -38,6 +38,23 @@ Thread::GetCurrentId()
   return GetCurrentThreadId();
 }
 
+static void
+PopulateRegsFromContext(Registers& aRegs, CONTEXT* aContext)
+{
+#if defined(GP_ARCH_amd64)
+  aRegs.mPC = reinterpret_cast<Address>(aContext->Rip);
+  aRegs.mSP = reinterpret_cast<Address>(aContext->Rsp);
+  aRegs.mFP = reinterpret_cast<Address>(aContext->Rbp);
+#elif defined(GP_ARCH_x86)
+  aRegs.mPC = reinterpret_cast<Address>(aContext->Eip);
+  aRegs.mSP = reinterpret_cast<Address>(aContext->Esp);
+  aRegs.mFP = reinterpret_cast<Address>(aContext->Ebp);
+#else
+ #error "bad arch"
+#endif
+  aRegs.mLR = 0;
+}
+
 class PlatformData
 {
 public:
@@ -139,16 +156,7 @@ Sampler::SuspendAndSampleAndResumeThread(PSLockRef aLock,
   // platform-linux-android.cpp for details.
 
   Registers regs;
-#if defined(GP_ARCH_amd64)
-  regs.mPC = reinterpret_cast<Address>(context.Rip);
-  regs.mSP = reinterpret_cast<Address>(context.Rsp);
-  regs.mFP = reinterpret_cast<Address>(context.Rbp);
-#else
-  regs.mPC = reinterpret_cast<Address>(context.Eip);
-  regs.mSP = reinterpret_cast<Address>(context.Esp);
-  regs.mFP = reinterpret_cast<Address>(context.Ebp);
-#endif
-
+  PopulateRegsFromContext(regs, &context);
   aProcessRegs(regs);
 
   //----------------------------------------------------------------//
@@ -264,20 +272,13 @@ PlatformInit(PSLockRef aLock)
 {
 }
 
+#if defined(HAVE_NATIVE_UNWIND)
 void
 Registers::SyncPopulate()
 {
   CONTEXT context;
   RtlCaptureContext(&context);
-
-#if defined(GP_ARCH_amd64)
-  mPC = reinterpret_cast<Address>(context.Rip);
-  mSP = reinterpret_cast<Address>(context.Rsp);
-  mFP = reinterpret_cast<Address>(context.Rbp);
-#elif defined(GP_ARCH_x86)
-  mPC = reinterpret_cast<Address>(context.Eip);
-  mSP = reinterpret_cast<Address>(context.Esp);
-  mFP = reinterpret_cast<Address>(context.Ebp);
-#endif
+  PopulateRegsFromContext(*this, &context);
 }
+#endif
 
