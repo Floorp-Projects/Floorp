@@ -44,6 +44,7 @@ public:
   ~ImageHost();
 
   virtual CompositableType GetType() override { return mTextureInfo.mCompositableType; }
+  virtual ImageHost* AsImageHost() override { return this; }
 
   virtual void Composite(Compositor* aCompositor,
                          LayerComposite* aLayer,

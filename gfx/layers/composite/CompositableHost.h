@@ -39,11 +39,13 @@ namespace layers {
 
 class Layer;
 class LayerComposite;
+class ImageHost;
 class Compositor;
 class ThebesBufferData;
 class TiledContentHost;
 class CompositableParentManager;
 class WebRenderImageHost;
+class ContentHostTexture;
 struct EffectChain;
 
 struct ImageCompositeNotificationInfo {
@@ -146,6 +148,8 @@ public:
   Layer* GetLayer() const { return mLayer; }
   void SetLayer(Layer* aLayer) { mLayer = aLayer; }
 
+  virtual ContentHostTexture* AsContentHostTexture() { return nullptr; }
+  virtual ImageHost* AsImageHost() { return nullptr; }
   virtual TiledContentHost* AsTiledContentHost() { return nullptr; }
   virtual WebRenderImageHost* AsWebRenderImageHost() { return nullptr; }
 

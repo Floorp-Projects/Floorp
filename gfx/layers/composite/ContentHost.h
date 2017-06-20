@@ -177,6 +177,8 @@ public:
     mLocked = false;
   }
 
+  ContentHostTexture* AsContentHostTexture() override { return this; }
+
   virtual already_AddRefed<TexturedEffect> GenEffect(const gfx::SamplingFilter aSamplingFilter) override;
 
 protected:
