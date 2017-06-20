@@ -90,6 +90,31 @@ public:
 
   bool IsOpaque();
 
+  struct RenderInfo {
+    int imageIndex;
+    TimedImage* img;
+    RefPtr<TextureHost> host;
+
+    RenderInfo() : imageIndex(-1), img(nullptr)
+    {}
+  };
+
+  // Acquire rendering information for the current frame.
+  bool PrepareToRender(TextureSourceProvider* aProvider, RenderInfo* aOutInfo);
+
+  // Acquire the TextureSource for the currently prepared frame.
+  RefPtr<TextureSource> AcquireTextureSource(const RenderInfo& aInfo);
+
+  // Send ImageComposite notifications and update the ChooseImage bias.
+  void FinishRendering(const RenderInfo& aInfo);
+
+  // This should only be called inside a lock, or during rendering. It is
+  // infallible to enforce this.
+  TextureHost* CurrentTextureHost() const {
+    MOZ_ASSERT(mCurrentTextureHost);
+    return mCurrentTextureHost;
+  }
+
 protected:
   // ImageComposite
   virtual TimeStamp GetCompositionTime() const override;

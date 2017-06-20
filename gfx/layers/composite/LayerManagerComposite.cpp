@@ -1406,6 +1406,15 @@ LayerManagerComposite::AutoAddMaskEffect::~AutoAddMaskEffect()
   mCompositable->RemoveMaskEffect();
 }
 
+bool
+LayerManagerComposite::IsCompositingToScreen() const
+{
+  if (!mCompositor) {
+    return true;
+  }
+  return !mCompositor->GetTargetContext();
+}
+
 LayerComposite::LayerComposite(LayerManagerComposite *aManager)
   : HostLayer(aManager)
   , mCompositeManager(aManager)
