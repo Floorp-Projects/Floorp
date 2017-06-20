@@ -74,6 +74,8 @@ private:
     return mWindowListeners[aType]->Length() > 0;
   }
 
+  bool AreSensorEventsDisabled(nsIDOMWindow* aWindow);
+
   mozilla::TimeStamp mLastDOMMotionEventTime;
   bool mIsUserProximityNear;
   mozilla::Maybe<DeviceAccelerationInit> mLastAcceleration;
