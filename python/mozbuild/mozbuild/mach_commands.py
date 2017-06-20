@@ -1542,9 +1542,6 @@ class PackageFrontend(MachCommandBase):
         '''
         pass
 
-    def _set_log_level(self, verbose):
-        self.log_manager.terminal_handler.setLevel(logging.INFO if not verbose else logging.DEBUG)
-
     def _make_artifacts(self, tree=None, job=None, skip_cache=False):
         state_dir = self._mach_context.state_dir
         cache_dir = os.path.join(state_dir, 'package-frontend')
