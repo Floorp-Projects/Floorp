@@ -25,8 +25,7 @@ VsyncIOThreadHolder::~VsyncIOThreadHolder()
   if (NS_IsMainThread()) {
     mThread->AsyncShutdown();
   } else {
-    NS_DispatchToMainThread(NewRunnableMethod(
-      "nsIThread::AsyncShutdown", mThread, &nsIThread::AsyncShutdown));
+    NS_DispatchToMainThread(NewRunnableMethod(mThread, &nsIThread::AsyncShutdown));
   }
 }
 

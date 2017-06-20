@@ -65,8 +65,7 @@ class ThrottledEventQueue::Inner final : public nsIObserver
 
   public:
     explicit Executor(Inner* aInner)
-      : Runnable("ThrottledEventQueue::Inner::Executor")
-      , mInner(aInner)
+      : mInner(aInner)
     { }
 
     NS_IMETHODIMP

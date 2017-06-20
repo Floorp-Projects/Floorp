@@ -36,14 +36,12 @@ public:
   nsFrameState mBitToAdd;
 };
 
-nsReflowFrameRunnable::nsReflowFrameRunnable(
-  nsIFrame* aFrame,
-  nsIPresShell::IntrinsicDirty aIntrinsicDirty,
-  nsFrameState aBitToAdd)
-  : mozilla::Runnable("nsReflowFrameRunnable")
-  , mWeakFrame(aFrame)
-  , mIntrinsicDirty(aIntrinsicDirty)
-  , mBitToAdd(aBitToAdd)
+nsReflowFrameRunnable::nsReflowFrameRunnable(nsIFrame* aFrame,
+                          nsIPresShell::IntrinsicDirty aIntrinsicDirty,
+                          nsFrameState aBitToAdd)
+  : mWeakFrame(aFrame),
+    mIntrinsicDirty(aIntrinsicDirty),
+    mBitToAdd(aBitToAdd)
 {
 }
 

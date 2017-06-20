@@ -111,9 +111,7 @@ MediaDecoderReaderWrapper::ReleaseResources()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod("MediaDecoderReader::ReleaseResources",
-                      mReader,
-                      &MediaDecoderReader::ReleaseResources);
+    NewRunnableMethod(mReader, &MediaDecoderReader::ReleaseResources);
   mReader->OwnerThread()->Dispatch(r.forget());
 }
 
@@ -122,8 +120,7 @@ MediaDecoderReaderWrapper::ResetDecode(TrackSet aTracks)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod<TrackSet>("MediaDecoderReader::ResetDecode",
-                                mReader,
+    NewRunnableMethod<TrackSet>(mReader,
                                 &MediaDecoderReader::ResetDecode,
                                 aTracks);
   mReader->OwnerThread()->Dispatch(r.forget());
@@ -164,9 +161,7 @@ MediaDecoderReaderWrapper::SetVideoBlankDecode(bool aIsBlankDecode)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod<bool>("MediaDecoderReader::SetVideoNullDecode",
-                            mReader,
-                            &MediaDecoderReader::SetVideoNullDecode,
+    NewRunnableMethod<bool>(mReader, &MediaDecoderReader::SetVideoNullDecode,
                             aIsBlankDecode);
   mReader->OwnerThread()->Dispatch(r.forget());
 }

@@ -35,16 +35,14 @@ PostMessageEvent::PostMessageEvent(nsGlobalWindow* aSource,
                                    nsIPrincipal* aProvidedPrincipal,
                                    nsIDocument* aSourceDocument,
                                    bool aTrustedCaller)
-  : Runnable("dom::PostMessageEvent")
-  , StructuredCloneHolder(CloningSupported,
-                          TransferringSupported,
-                          StructuredCloneScope::SameProcessSameThread)
-  , mSource(aSource)
-  , mCallerOrigin(aCallerOrigin)
-  , mTargetWindow(aTargetWindow)
-  , mProvidedPrincipal(aProvidedPrincipal)
-  , mSourceDocument(aSourceDocument)
-  , mTrustedCaller(aTrustedCaller)
+: StructuredCloneHolder(CloningSupported, TransferringSupported,
+                        StructuredCloneScope::SameProcessSameThread),
+  mSource(aSource),
+  mCallerOrigin(aCallerOrigin),
+  mTargetWindow(aTargetWindow),
+  mProvidedPrincipal(aProvidedPrincipal),
+  mSourceDocument(aSourceDocument),
+  mTrustedCaller(aTrustedCaller)
 {
 }
 

@@ -184,11 +184,8 @@ public:
 
   void DispatchSetPlaybackRate(double aPlaybackRate)
   {
-    OwnerThread()->DispatchStateChange(
-      NewRunnableMethod<double>("MediaDecoderStateMachine::SetPlaybackRate",
-                                this,
-                                &MediaDecoderStateMachine::SetPlaybackRate,
-                                aPlaybackRate));
+    OwnerThread()->DispatchStateChange(NewRunnableMethod<double>(
+      this, &MediaDecoderStateMachine::SetPlaybackRate, aPlaybackRate));
   }
 
   RefPtr<ShutdownPromise> BeginShutdown();
@@ -197,14 +194,11 @@ public:
   void DispatchSetFragmentEndTime(const media::TimeUnit& aEndTime)
   {
     RefPtr<MediaDecoderStateMachine> self = this;
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      "MediaDecoderStateMachine::DispatchSetFragmentEndTime",
-      [self, aEndTime]() {
-        // A negative number means we don't have a fragment end time at all.
-        self->mFragmentEndTime = aEndTime >= media::TimeUnit::Zero()
-                                   ? aEndTime
-                                   : media::TimeUnit::Invalid();
-      });
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self, aEndTime] () {
+      // A negative number means we don't have a fragment end time at all.
+      self->mFragmentEndTime = aEndTime >= media::TimeUnit::Zero()
+        ? aEndTime : media::TimeUnit::Invalid();
+    });
     OwnerThread()->Dispatch(r.forget());
   }
 

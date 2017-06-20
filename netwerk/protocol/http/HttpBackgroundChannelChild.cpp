@@ -205,19 +205,12 @@ HttpBackgroundChannelChild::RecvOnTransportAndData(
     LOG(("  > pending until OnStartRequest [offset=%" PRIu64 " count=%" PRIu32
          "]\n", aOffset, aCount));
 
-    mQueuedRunnables.AppendElement(NewRunnableMethod<const nsresult,
-                                                     const nsresult,
-                                                     const uint64_t,
-                                                     const uint32_t,
-                                                     const nsCString>(
-      "net::HttpBackgroundChannelChild::RecvOnTransportAndData",
-      this,
-      &HttpBackgroundChannelChild::RecvOnTransportAndData,
-      aChannelStatus,
-      aTransportStatus,
-      aOffset,
-      aCount,
-      aData));
+    mQueuedRunnables.AppendElement(
+      NewRunnableMethod<const nsresult, const nsresult, const uint64_t,
+                        const uint32_t, const nsCString>(
+        this, &HttpBackgroundChannelChild::RecvOnTransportAndData,
+        aChannelStatus, aTransportStatus, aOffset,
+        aCount, aData));
 
     return IPC_OK();
   }
@@ -249,11 +242,8 @@ HttpBackgroundChannelChild::RecvOnStopRequest(
 
     mQueuedRunnables.AppendElement(
       NewRunnableMethod<const nsresult, const ResourceTimingStruct>(
-        "net::HttpBackgroundChannelChild::RecvOnStopRequest",
-        this,
-        &HttpBackgroundChannelChild::RecvOnStopRequest,
-        aChannelStatus,
-        aTiming));
+        this, &HttpBackgroundChannelChild::RecvOnStopRequest,
+        aChannelStatus, aTiming));
 
     return IPC_OK();
   }
@@ -281,11 +271,8 @@ HttpBackgroundChannelChild::RecvOnProgress(const int64_t& aProgress,
 
     mQueuedRunnables.AppendElement(
       NewRunnableMethod<const int64_t, const int64_t>(
-        "net::HttpBackgroundChannelChild::RecvOnProgress",
-        this,
-        &HttpBackgroundChannelChild::RecvOnProgress,
-        aProgress,
-        aProgressMax));
+        this, &HttpBackgroundChannelChild::RecvOnProgress,
+        aProgress, aProgressMax));
 
     return IPC_OK();
   }
@@ -310,11 +297,9 @@ HttpBackgroundChannelChild::RecvOnStatus(const nsresult& aStatus)
     LOG(("  > pending until OnStartRequest [status=%" PRIx32 "]\n",
          static_cast<uint32_t>(aStatus)));
 
-    mQueuedRunnables.AppendElement(NewRunnableMethod<const nsresult>(
-      "net::HttpBackgroundChannelChild::RecvOnStatus",
-      this,
-      &HttpBackgroundChannelChild::RecvOnStatus,
-      aStatus));
+    mQueuedRunnables.AppendElement(
+      NewRunnableMethod<const nsresult>(
+        this, &HttpBackgroundChannelChild::RecvOnStatus, aStatus));
 
     return IPC_OK();
   }
@@ -337,10 +322,8 @@ HttpBackgroundChannelChild::RecvFlushedForDiversion()
   if (IsWaitingOnStartRequest()) {
     LOG(("  > pending until OnStartRequest\n"));
 
-    mQueuedRunnables.AppendElement(NewRunnableMethod(
-      "net::HttpBackgroundChannelChild::RecvFlushedForDiversion",
-      this,
-      &HttpBackgroundChannelChild::RecvFlushedForDiversion));
+    mQueuedRunnables.AppendElement(
+      NewRunnableMethod(this, &HttpBackgroundChannelChild::RecvFlushedForDiversion));
 
     return IPC_OK();
   }
@@ -364,9 +347,7 @@ HttpBackgroundChannelChild::RecvDivertMessages()
     LOG(("  > pending until OnStartRequest\n"));
 
     mQueuedRunnables.AppendElement(
-      NewRunnableMethod("net::HttpBackgroundChannelChild::RecvDivertMessages",
-                        this,
-                        &HttpBackgroundChannelChild::RecvDivertMessages));
+      NewRunnableMethod(this, &HttpBackgroundChannelChild::RecvDivertMessages));
 
     return IPC_OK();
   }
@@ -439,8 +420,8 @@ HttpBackgroundChannelChild::ActorDestroy(ActorDestroyReason aWhy)
   if (!mQueuedRunnables.IsEmpty()) {
     LOG(("  > pending until queued messages are flushed\n"));
     RefPtr<HttpBackgroundChannelChild> self = this;
-    mQueuedRunnables.AppendElement(NS_NewRunnableFunction(
-      "net::HttpBackgroundChannelChild::ActorDestroy", [self]() {
+    mQueuedRunnables.AppendElement(
+      NS_NewRunnableFunction([self]() {
         MOZ_ASSERT(NS_IsMainThread());
         RefPtr<HttpChannelChild> channelChild = self->mChannelChild.forget();
 

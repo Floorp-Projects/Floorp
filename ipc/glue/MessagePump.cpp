@@ -42,8 +42,7 @@ class DoWorkRunnable final : public CancelableRunnable,
 {
 public:
   explicit DoWorkRunnable(MessagePump* aPump)
-    : CancelableRunnable("ipc::DoWorkRunnable")
-    , mPump(aPump)
+  : mPump(aPump)
   {
     MOZ_ASSERT(aPump);
   }

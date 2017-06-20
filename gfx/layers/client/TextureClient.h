@@ -776,10 +776,8 @@ public:
 class TextureClientReleaseTask : public Runnable
 {
 public:
-  explicit TextureClientReleaseTask(TextureClient* aClient)
-    : Runnable("layers::TextureClientReleaseTask")
-    , mTextureClient(aClient)
-  {
+    explicit TextureClientReleaseTask(TextureClient* aClient)
+        : mTextureClient(aClient) {
     }
 
     NS_IMETHOD Run() override

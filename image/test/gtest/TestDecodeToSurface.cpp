@@ -29,8 +29,7 @@ public:
                           nsIInputStream* aInputStream,
                           ImageOps::ImageBuffer* aImageBuffer,
                           const ImageTestCase& aTestCase)
-    : mozilla::Runnable("DecodeToSurfaceRunnable")
-    , mSurface(aSurface)
+    : mSurface(aSurface)
     , mInputStream(aInputStream)
     , mImageBuffer(aImageBuffer)
     , mTestCase(aTestCase)

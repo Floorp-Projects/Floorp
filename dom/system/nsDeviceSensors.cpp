@@ -139,10 +139,10 @@ NS_IMETHODIMP nsDeviceSensors::HasWindowListener(uint32_t aType, nsIDOMWindow *a
 class DeviceSensorTestEvent : public Runnable
 {
 public:
-  DeviceSensorTestEvent(nsDeviceSensors* aTarget, uint32_t aType)
-    : mozilla::Runnable("DeviceSensorTestEvent")
-    , mTarget(aTarget)
-    , mType(aType)
+  DeviceSensorTestEvent(nsDeviceSensors* aTarget,
+                        uint32_t aType)
+  : mTarget(aTarget)
+  , mType(aType)
   {
   }
 

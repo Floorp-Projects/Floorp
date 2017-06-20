@@ -269,8 +269,7 @@ class DeferredDeleteGPUChild : public Runnable
 {
 public:
   explicit DeferredDeleteGPUChild(UniquePtr<GPUChild>&& aChild)
-    : Runnable("gfx::DeferredDeleteGPUChild")
-    , mChild(Move(aChild))
+    : mChild(Move(aChild))
   {
   }
 

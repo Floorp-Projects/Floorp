@@ -24,12 +24,7 @@ template<typename OnRunType>
 class LambdaTask : public Runnable
 {
 public:
-  explicit LambdaTask(OnRunType&& aOnRun)
-    : Runnable("media::LambdaTask")
-    , mOnRun(Move(aOnRun))
-  {
-  }
-
+  explicit LambdaTask(OnRunType&& aOnRun) : mOnRun(Move(aOnRun)) {}
 private:
   NS_IMETHOD
   Run() override

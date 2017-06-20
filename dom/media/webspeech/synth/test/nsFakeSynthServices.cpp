@@ -141,10 +141,8 @@ FakeDirectAudioSynth::Speak(const nsAString& aText, const nsAString& aUri,
   class Runnable final : public mozilla::Runnable
   {
   public:
-    Runnable(nsISpeechTask* aTask, const nsAString& aText)
-      : mozilla::Runnable("Runnable")
-      , mTask(aTask)
-      , mText(aText)
+    Runnable(nsISpeechTask* aTask, const nsAString& aText) :
+      mTask(aTask), mText(aText)
     {
     }
 
@@ -206,9 +204,8 @@ FakeIndirectAudioSynth::Speak(const nsAString& aText, const nsAString& aUri,
   class DispatchStart final : public Runnable
   {
   public:
-    explicit DispatchStart(nsISpeechTask* aTask)
-      : mozilla::Runnable("DispatchStart")
-      , mTask(aTask)
+    explicit DispatchStart(nsISpeechTask* aTask) :
+      mTask(aTask)
     {
     }
 
@@ -226,10 +223,8 @@ FakeIndirectAudioSynth::Speak(const nsAString& aText, const nsAString& aUri,
   class DispatchEnd final : public Runnable
   {
   public:
-    DispatchEnd(nsISpeechTask* aTask, const nsAString& aText)
-      : mozilla::Runnable("DispatchEnd")
-      , mTask(aTask)
-      , mText(aText)
+    DispatchEnd(nsISpeechTask* aTask, const nsAString& aText) :
+      mTask(aTask), mText(aText)
     {
     }
 
@@ -248,10 +243,8 @@ FakeIndirectAudioSynth::Speak(const nsAString& aText, const nsAString& aUri,
   class DispatchError final : public Runnable
   {
   public:
-    DispatchError(nsISpeechTask* aTask, const nsAString& aText)
-      : mozilla::Runnable("DispatchError")
-      , mTask(aTask)
-      , mText(aText)
+    DispatchError(nsISpeechTask* aTask, const nsAString& aText) :
+      mTask(aTask), mText(aText)
     {
     }
 
@@ -363,8 +356,7 @@ nsFakeSynthServices::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   if (Preferences::GetBool("media.webspeech.synth.test")) {
-    NS_DispatchToMainThread(NewRunnableMethod(
-      "dom::nsFakeSynthServices::Init", this, &nsFakeSynthServices::Init));
+    NS_DispatchToMainThread(NewRunnableMethod(this, &nsFakeSynthServices::Init));
   }
 
   return NS_OK;

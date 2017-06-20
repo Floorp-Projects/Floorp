@@ -257,14 +257,11 @@ class nsMenuBarSwitchMenu : public Runnable
 {
 public:
   nsMenuBarSwitchMenu(nsIContent* aMenuBar,
-                      nsIContent* aOldMenu,
-                      nsIContent* aNewMenu,
+                      nsIContent *aOldMenu,
+                      nsIContent *aNewMenu,
                       bool aSelectFirstItem)
-    : mozilla::Runnable("nsMenuBarSwitchMenu")
-    , mMenuBar(aMenuBar)
-    , mOldMenu(aOldMenu)
-    , mNewMenu(aNewMenu)
-    , mSelectFirstItem(aSelectFirstItem)
+    : mMenuBar(aMenuBar), mOldMenu(aOldMenu), mNewMenu(aNewMenu),
+      mSelectFirstItem(aSelectFirstItem)
   {
   }
 

@@ -18,8 +18,7 @@ BrowseReplyRunnable::BrowseReplyRunnable(DNSServiceRef aSdRef,
                                          const nsACString& aRegType,
                                          const nsACString& aReplyDomain,
                                          BrowseOperator* aContext)
-  : Runnable("net::BrowseReplyRunnable")
-  , mSdRef(aSdRef)
+  : mSdRef(aSdRef)
   , mFlags(aFlags)
   , mInterfaceIndex(aInterfaceIndex)
   , mErrorCode(aErrorCode)
@@ -84,8 +83,7 @@ RegisterReplyRunnable::RegisterReplyRunnable(DNSServiceRef aSdRef,
                                              const nsACString& aRegType,
                                              const nsACString& domain,
                                              RegisterOperator* aContext)
-  : Runnable("net::RegisterReplyRunnable")
-  , mSdRef(aSdRef)
+  : mSdRef(aSdRef)
   , mFlags(aFlags)
   , mErrorCode(aErrorCode)
   , mName(aName)
@@ -150,8 +148,7 @@ ResolveReplyRunnable::ResolveReplyRunnable(DNSServiceRef aSdRef,
                                            uint16_t aTxtLen,
                                            const unsigned char* aTxtRecord,
                                            ResolveOperator* aContext)
-  : Runnable("net::ResolveReplyRunnable")
-  , mSdRef(aSdRef)
+  : mSdRef(aSdRef)
   , mFlags(aFlags)
   , mInterfaceIndex(aInterfaceIndex)
   , mErrorCode(aErrorCode)
@@ -232,8 +229,7 @@ GetAddrInfoReplyRunnable::GetAddrInfoReplyRunnable(DNSServiceRef aSdRef,
                                                    const mozilla::net::NetAddr& aAddress,
                                                    uint32_t aTTL,
                                                    GetAddrInfoOperator* aContext)
-  : Runnable("net::GetAddrInfoReplyRunnable")
-  , mSdRef(aSdRef)
+  : mSdRef(aSdRef)
   , mFlags(aFlags)
   , mInterfaceIndex(aInterfaceIndex)
   , mErrorCode(aErrorCode)

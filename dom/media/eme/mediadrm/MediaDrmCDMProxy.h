@@ -151,8 +151,7 @@ private:
                       PromiseId aId,
                       nsresult aCode,
                       const nsCString& aReason)
-      : Runnable("RejectPromiseTask")
-      , mProxy(aProxy)
+      : mProxy(aProxy)
       , mId(aId)
       , mCode(aCode)
       , mReason(aReason)
