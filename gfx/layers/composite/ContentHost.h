@@ -177,6 +177,13 @@ public:
     mLocked = false;
   }
 
+  bool HasComponentAlpha() const {
+    return !!mTextureHostOnWhite;
+  }
+
+  RefPtr<TextureSource> AcquireTextureSource();
+  RefPtr<TextureSource> AcquireTextureSourceOnWhite();
+
   ContentHostTexture* AsContentHostTexture() override { return this; }
 
   virtual already_AddRefed<TexturedEffect> GenEffect(const gfx::SamplingFilter aSamplingFilter) override;
