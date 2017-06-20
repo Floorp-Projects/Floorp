@@ -10,7 +10,16 @@
         #else
         precision mediump sampler2DArray;
         #endif
+
+        // Sampler default precision is lowp on mobile GPUs.
+        // This causes RGBA32F texture data to be clamped to 16 bit floats on some GPUs (e.g. Mali-T880).
+        // Define highp precision macro to allow lossless FLOAT texture sampling.
+        #define HIGHP_SAMPLER_FLOAT highp
+    #else
+        #define HIGHP_SAMPLER_FLOAT
     #endif
+#else
+    #define HIGHP_SAMPLER_FLOAT
 #endif
 
 #define PST_TOP_LEFT     0
@@ -80,17 +89,8 @@ vec2 clamp_rect(vec2 point, RectWithSize rect) {
     return clamp(point, rect.p0, rect.p0 + rect.size);
 }
 
-vec2 clamp_rect(vec2 point, RectWithEndpoint rect) {
-    return clamp(point, rect.p0, rect.p1);
-}
-
-// Clamp 2 points at once.
-vec4 clamp_rect(vec4 points, RectWithSize rect) {
-    return clamp(points, rect.p0.xyxy, rect.p0.xyxy + rect.size.xyxy);
-}
-
 RectWithSize intersect_rect(RectWithSize a, RectWithSize b) {
-    vec4 p = clamp_rect(vec4(a.p0, a.p0 + a.size), b);
+    vec4 p = clamp(vec4(a.p0, a.p0 + a.size), b.p0.xyxy, b.p0.xyxy + b.size.xyxy);
     return RectWithSize(p.xy, max(vec2(0.0), p.zw - p.xy));
 }
 
@@ -118,7 +118,7 @@ ivec2 get_resource_cache_uv(int address) {
                  address / WR_MAX_VERTEX_TEXTURE_WIDTH);
 }
 
-uniform sampler2D sResourceCache;
+uniform HIGHP_SAMPLER_FLOAT sampler2D sResourceCache;
 
 vec4[2] fetch_from_resource_cache_2(int address) {
     ivec2 uv = get_resource_cache_uv(address);
@@ -137,12 +137,10 @@ vec4[2] fetch_from_resource_cache_2(int address) {
 #define VECS_PER_GRADIENT           3
 #define VECS_PER_GRADIENT_STOP      2
 
-uniform sampler2D sLayers;
-uniform sampler2D sRenderTasks;
+uniform HIGHP_SAMPLER_FLOAT sampler2D sLayers;
+uniform HIGHP_SAMPLER_FLOAT sampler2D sRenderTasks;
 
-uniform sampler2D sData16;
-uniform sampler2D sData32;
-uniform sampler2D sResourceRects;
+uniform HIGHP_SAMPLER_FLOAT sampler2D sData32;
 
 // Instanced attributes
 in ivec4 aData0;
@@ -153,11 +151,6 @@ in ivec4 aData1;
 // https://github.com/servo/webrender/pull/623
 // https://github.com/servo/servo/issues/13953
 #define get_fetch_uv(i, vpi)  ivec2(vpi * (i % (WR_MAX_VERTEX_TEXTURE_WIDTH/vpi)), i / (WR_MAX_VERTEX_TEXTURE_WIDTH/vpi))
-
-vec4 fetch_data_1(int index) {
-    ivec2 uv = get_fetch_uv(index, 1);
-    return texelFetch(sData16, uv, 0);
-}
 
 vec4[2] fetch_data_2(int index) {
     ivec2 uv = get_fetch_uv(index, 2);
@@ -455,6 +448,7 @@ struct PrimitiveInstance {
     int z;
     int user_data0;
     int user_data1;
+    int user_data2;
 };
 
 PrimitiveInstance fetch_prim_instance() {
@@ -468,6 +462,7 @@ PrimitiveInstance fetch_prim_instance() {
     pi.z = aData1.x;
     pi.user_data0 = aData1.y;
     pi.user_data1 = aData1.z;
+    pi.user_data2 = aData1.w;
 
     return pi;
 }
@@ -504,6 +499,7 @@ struct Primitive {
     int specific_prim_address;
     int user_data0;
     int user_data1;
+    int user_data2;
     float z;
 };
 
@@ -523,6 +519,7 @@ Primitive load_primitive() {
     prim.specific_prim_address = pi.specific_prim_address;
     prim.user_data0 = pi.user_data0;
     prim.user_data1 = pi.user_data1;
+    prim.user_data2 = pi.user_data2;
     prim.z = float(pi.z);
 
     return prim;
@@ -571,6 +568,35 @@ vec4 get_layer_pos(vec2 pos, Layer layer) {
     return untransform(pos, n, a, layer.inv_transform);
 }
 
+// Compute a snapping offset in world space (adjusted to pixel ratio),
+// given local position on the layer and a snap rectangle.
+vec2 compute_snap_offset(vec2 local_pos,
+                         RectWithSize local_clip_rect,
+                         Layer layer,
+                         RectWithSize snap_rect) {
+    // Ensure that the snap rect is at *least* one device pixel in size.
+    // TODO(gw): It's not clear to me that this is "correct". Specifically,
+    //           how should it interact with sub-pixel snap rects when there
+    //           is a layer transform with scale present? But it does fix
+    //           the test cases we have in Servo that are failing without it
+    //           and seem better than not having this at all.
+    snap_rect.size = max(snap_rect.size, vec2(1.0 / uDevicePixelRatio));
+
+    // Transform the snap corners to the world space.
+    vec4 world_snap_p0 = layer.transform * vec4(snap_rect.p0, 0.0, 1.0);
+    vec4 world_snap_p1 = layer.transform * vec4(snap_rect.p0 + snap_rect.size, 0.0, 1.0);
+    // Snap bounds in world coordinates, adjusted for pixel ratio. XY = top left, ZW = bottom right
+    vec4 world_snap = uDevicePixelRatio * vec4(world_snap_p0.xy, world_snap_p1.xy) /
+                                          vec4(world_snap_p0.ww, world_snap_p1.ww);
+    /// World offsets applied to the corners of the snap rectangle.
+    vec4 snap_offsets = floor(world_snap + 0.5) - world_snap;
+
+    /// Compute the position of this vertex inside the snap rectangle.
+    vec2 normalized_snap_pos = (local_pos - snap_rect.p0) / snap_rect.size;
+    /// Compute the actual world offset for this vertex needed to make it snap.
+    return mix(snap_offsets.xy, snap_offsets.zw, normalized_snap_pos);
+}
+
 struct VertexInfo {
     vec2 local_pos;
     vec2 screen_pos;
@@ -581,38 +607,32 @@ VertexInfo write_vertex(RectWithSize instance_rect,
                         float z,
                         Layer layer,
                         AlphaBatchTask task,
-                        vec2 snap_ref) {
+                        RectWithSize snap_rect) {
+
     // Select the corner of the local rect that we are processing.
     vec2 local_pos = instance_rect.p0 + instance_rect.size * aPosition.xy;
 
-    // xy = top left corner of the local rect, zw = position of current vertex.
-    vec4 local_p0_pos = vec4(snap_ref, local_pos);
-
     // Clamp to the two local clip rects.
-    local_p0_pos = clamp_rect(local_p0_pos, local_clip_rect);
-    local_p0_pos = clamp_rect(local_p0_pos, layer.local_clip_rect);
+    vec2 clamped_local_pos = clamp_rect(clamp_rect(local_pos, local_clip_rect),
+                                        layer.local_clip_rect);
 
-    // Transform the top corner and current vertex to world space.
-    vec4 world_p0 = layer.transform * vec4(local_p0_pos.xy, 0.0, 1.0);
-    world_p0.xyz /= world_p0.w;
-    vec4 world_pos = layer.transform * vec4(local_p0_pos.zw, 0.0, 1.0);
-    world_pos.xyz /= world_pos.w;
+    /// Compute the snapping offset.
+    vec2 snap_offset = compute_snap_offset(clamped_local_pos, local_clip_rect, layer, snap_rect);
 
-    // Convert the world positions to device pixel space. xy=top left corner. zw=current vertex.
-    vec4 device_p0_pos = vec4(world_p0.xy, world_pos.xy) * uDevicePixelRatio;
+    // Transform the current vertex to the world cpace.
+    vec4 world_pos = layer.transform * vec4(clamped_local_pos, 0.0, 1.0);
 
-    // Calculate the distance to snap the vertex by (snap top left corner).
-    vec2 snap_delta = device_p0_pos.xy - floor(device_p0_pos.xy + 0.5);
+    // Convert the world positions to device pixel space.
+    vec2 device_pos = world_pos.xy / world_pos.w * uDevicePixelRatio;
 
     // Apply offsets for the render task to get correct screen location.
-    vec2 final_pos = device_p0_pos.zw -
-                     snap_delta -
+    vec2 final_pos = device_pos + snap_offset -
                      task.screen_space_origin +
                      task.render_target_origin;
 
     gl_Position = uTransform * vec4(final_pos, z, 1.0);
 
-    VertexInfo vi = VertexInfo(local_p0_pos.zw, device_p0_pos.zw);
+    VertexInfo vi = VertexInfo(clamped_local_pos, device_pos);
     return vi;
 }
 
@@ -647,7 +667,7 @@ TransformVertexInfo write_transform_vertex(RectWithSize instance_rect,
                                            float z,
                                            Layer layer,
                                            AlphaBatchTask task,
-                                           vec2 snap_ref) {
+                                           RectWithSize snap_rect) {
     RectWithEndpoint local_rect = to_rect_with_endpoint(instance_rect);
 
     vec2 current_local_pos, prev_local_pos, next_local_pos;
@@ -706,14 +726,14 @@ TransformVertexInfo write_transform_vertex(RectWithSize instance_rect,
                                       adjusted_next_p0,
                                       adjusted_next_p1);
 
-    // Calculate the snap amount based on the first vertex as a reference point.
-    vec4 world_p0 = layer.transform * vec4(snap_ref, 0.0, 1.0);
-    vec2 device_p0 = uDevicePixelRatio * world_p0.xy / world_p0.w;
-    vec2 snap_delta = device_p0 - floor(device_p0 + 0.5);
+    vec4 layer_pos = get_layer_pos(device_pos / uDevicePixelRatio, layer);
+
+    /// Compute the snapping offset.
+    vec2 snap_offset = compute_snap_offset(layer_pos.xy / layer_pos.w,
+                                           local_clip_rect, layer, snap_rect);
 
     // Apply offsets for the render task to get correct screen location.
-    vec2 final_pos = device_pos -
-                     snap_delta -
+    vec2 final_pos = device_pos + snap_offset -
                      task.screen_space_origin +
                      task.render_target_origin;
 
@@ -721,25 +741,28 @@ TransformVertexInfo write_transform_vertex(RectWithSize instance_rect,
 
     vLocalBounds = vec4(local_rect.p0, local_rect.p1);
 
-    vec4 layer_pos = get_layer_pos(device_pos / uDevicePixelRatio, layer);
-
     return TransformVertexInfo(layer_pos.xyw, device_pos);
 }
 
 #endif //WR_FEATURE_TRANSFORM
 
-struct ResourceRect {
+struct GlyphResource {
+    vec4 uv_rect;
+    vec2 offset;
+};
+
+GlyphResource fetch_glyph_resource(int address) {
+    vec4 data[2] = fetch_from_resource_cache_2(address);
+    return GlyphResource(data[0], data[1].xy);
+}
+
+struct ImageResource {
     vec4 uv_rect;
 };
 
-ResourceRect fetch_resource_rect(int index) {
-    ResourceRect rect;
-
-    ivec2 uv = get_fetch_uv(index, 1);
-
-    rect.uv_rect = texelFetchOffset(sResourceRects, uv, 0, ivec2(0, 0));
-
-    return rect;
+ImageResource fetch_image_resource(int address) {
+    vec4 data = fetch_from_resource_cache_1(address);
+    return ImageResource(data);
 }
 
 struct Rectangle {
@@ -763,11 +786,12 @@ TextRun fetch_text_run(int address) {
 struct Image {
     vec4 stretch_size_and_tile_spacing;  // Size of the actual image and amount of space between
                                          //     tiled instances of this image.
+    vec4 sub_rect;                          // If negative, ignored.
 };
 
 Image fetch_image(int address) {
-    vec4 data = fetch_from_resource_cache_1(address);
-    return Image(data);
+    vec4 data[2] = fetch_from_resource_cache_2(address);
+    return Image(data[0], data[1]);
 }
 
 struct YuvImage {

@@ -8,11 +8,13 @@ void main(void) {
     TextRun text = fetch_text_run(prim.specific_prim_address);
 
     int glyph_index = prim.user_data0;
-    int resource_address = prim.user_data1;
+    int resource_address = prim.user_data2;
     Glyph glyph = fetch_glyph(prim.specific_prim_address, glyph_index);
-    ResourceRect res = fetch_resource_rect(resource_address + glyph_index);
+    GlyphResource res = fetch_glyph_resource(resource_address);
 
-    RectWithSize local_rect = RectWithSize(glyph.offset,
+    vec2 local_pos = glyph.offset + vec2(res.offset.x, -res.offset.y) / uDevicePixelRatio;
+
+    RectWithSize local_rect = RectWithSize(local_pos,
                                            (res.uv_rect.zw - res.uv_rect.xy) / uDevicePixelRatio);
 
 #ifdef WR_FEATURE_TRANSFORM
@@ -21,7 +23,7 @@ void main(void) {
                                                     prim.z,
                                                     prim.layer,
                                                     prim.task,
-                                                    local_rect.p0);
+                                                    local_rect);
     vLocalPos = vi.local_pos;
     vec2 f = (vi.local_pos.xy / vi.local_pos.z - local_rect.p0) / local_rect.size;
 #else
@@ -30,7 +32,7 @@ void main(void) {
                                  prim.z,
                                  prim.layer,
                                  prim.task,
-                                 local_rect.p0);
+                                 local_rect);
     vec2 f = (vi.local_pos - local_rect.p0) / local_rect.size;
 #endif
 

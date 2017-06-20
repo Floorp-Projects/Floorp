@@ -34,7 +34,7 @@ impl PayloadReceiverHelperMethods for PayloadReceiver {
     }
 }
 
-pub fn msg_channel<T: Serialize + Deserialize>() -> Result<(MsgSender<T>, MsgReceiver<T>), Error> {
+pub fn msg_channel<T: Serialize + for<'de> Deserialize<'de>>() -> Result<(MsgSender<T>, MsgReceiver<T>), Error> {
     ipc::channel()
 }
 

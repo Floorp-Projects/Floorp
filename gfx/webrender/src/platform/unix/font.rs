@@ -33,6 +33,8 @@ pub struct FontContext {
 unsafe impl Send for FontContext {}
 
 pub struct RasterizedGlyph {
+    pub top: f32,
+    pub left: f32,
     pub width: u32,
     pub height: u32,
     pub bytes: Vec<u8>,
@@ -258,6 +260,8 @@ impl FontContext {
         }
 
         Some(RasterizedGlyph {
+            left: dimensions.left as f32,
+            top: dimensions.top as f32,
             width: dimensions.width as u32,
             height: dimensions.height as u32,
             bytes: final_buffer,

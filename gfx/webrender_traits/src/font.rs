@@ -26,8 +26,8 @@ impl Serialize for NativeFontHandle {
 }
 
 #[cfg(target_os = "macos")]
-impl Deserialize for NativeFontHandle {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer {
+impl<'de> Deserialize<'de> for NativeFontHandle {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
         let postscript_name: String = try!(Deserialize::deserialize(deserializer));
 
         match CGFont::from_name(&CFString::new(&*postscript_name)) {

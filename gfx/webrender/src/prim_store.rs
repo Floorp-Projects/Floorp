@@ -6,22 +6,21 @@ use app_units::Au;
 use border::{BorderCornerClipData, BorderCornerDashClipData, BorderCornerDotClipData};
 use border::BorderCornerInstance;
 use euclid::{Size2D};
-use gpu_cache::{GpuBlockData, GpuCache, GpuCacheHandle, GpuDataRequest, ToGpuBlocks};
+use gpu_cache::{GpuCacheAddress, GpuBlockData, GpuCache, GpuCacheHandle, GpuDataRequest, ToGpuBlocks};
 use gpu_store::GpuStoreAddress;
-use internal_types::SourceTexture;
 use mask_cache::{ClipMode, ClipSource, MaskCacheInfo};
 use renderer::{VertexDataStore, MAX_VERTEX_TEXTURE_WIDTH};
 use render_task::{RenderTask, RenderTaskLocation};
-use resource_cache::{CacheItem, ImageProperties, ResourceCache};
+use resource_cache::{ImageProperties, ResourceCache};
 use std::mem;
 use std::usize;
 use util::{TransformedRect, recycle_vec};
 use webrender_traits::{BuiltDisplayList, ColorF, ImageKey, ImageRendering, YuvColorSpace};
-use webrender_traits::{YuvFormat, ClipRegion, ComplexClipRegion, ItemRange, GlyphKey};
+use webrender_traits::{YuvFormat, ClipRegion, ComplexClipRegion, ItemRange};
 use webrender_traits::{FontKey, FontRenderMode, WebGLContextId};
 use webrender_traits::{device_length, DeviceIntRect, DeviceIntSize};
-use webrender_traits::{DeviceRect, DevicePoint, DeviceSize};
-use webrender_traits::{LayerRect, LayerSize, LayerPoint, LayoutPoint};
+use webrender_traits::{DeviceRect, DevicePoint};
+use webrender_traits::{LayerRect, LayerSize, LayerPoint};
 use webrender_traits::{LayerToWorldTransform, GlyphInstance, GlyphOptions};
 use webrender_traits::{ExtendMode, GradientStop, TileOffset};
 
@@ -39,20 +38,26 @@ pub struct TexelRect {
     pub uv1: DevicePoint,
 }
 
-impl Default for TexelRect {
-    fn default() -> TexelRect {
-        TexelRect {
-            uv0: DevicePoint::zero(),
-            uv1: DevicePoint::zero(),
-        }
-    }
-}
-
 impl TexelRect {
     pub fn new(u0: u32, v0: u32, u1: u32, v1: u32) -> TexelRect {
         TexelRect {
             uv0: DevicePoint::new(u0 as f32, v0 as f32),
             uv1: DevicePoint::new(u1 as f32, v1 as f32),
+        }
+    }
+
+    pub fn invalid() -> TexelRect {
+        TexelRect {
+            uv0: DevicePoint::new(-1.0, -1.0),
+            uv1: DevicePoint::new(-1.0, -1.0),
+        }
+    }
+}
+
+impl Into<GpuBlockData> for TexelRect {
+    fn into(self) -> GpuBlockData {
+        GpuBlockData {
+            data: [self.uv0.x, self.uv0.y, self.uv1.x, self.uv1.y],
         }
     }
 }
@@ -66,7 +71,7 @@ impl TexelRect {
 /// thread to iterate this list and update any changed
 /// texture data and update the UV rect.
 pub struct DeferredResolve {
-    pub resource_address: GpuStoreAddress,
+    pub address: GpuCacheAddress,
     pub image_properties: ImageProperties,
 }
 
@@ -160,30 +165,21 @@ pub enum ImagePrimitiveKind {
 #[derive(Debug)]
 pub struct ImagePrimitiveCpu {
     pub kind: ImagePrimitiveKind,
-    pub color_texture_id: SourceTexture,
-    pub resource_address: GpuStoreAddress,
-    pub sub_rect: Option<TexelRect>,
     // TODO(gw): Build on demand
-    pub gpu_block: GpuBlockData,
+    pub gpu_blocks: [GpuBlockData; 2],
 }
 
 impl ToGpuBlocks for ImagePrimitiveCpu {
     fn write_gpu_blocks(&self, mut request: GpuDataRequest) {
-        request.push(self.gpu_block);
+        request.extend_from_slice(&self.gpu_blocks);
     }
 }
 
 #[derive(Debug)]
 pub struct YuvImagePrimitiveCpu {
     pub yuv_key: [ImageKey; 3],
-    // All textures should be the same type here.
-    pub yuv_texture_id: [SourceTexture; 3],
     pub format: YuvFormat,
     pub color_space: YuvColorSpace,
-
-    // The first address of yuv resource_address. Use "yuv_resource_address + N-th" to get the N-th channel data.
-    // e.g. yuv_resource_address + 0 => y channel resource_address
-    pub yuv_resource_address: GpuStoreAddress,
 
     pub image_rendering: ImageRendering,
 
@@ -466,10 +462,8 @@ pub struct TextRunPrimitiveCpu {
     pub glyph_count: usize,
     // TODO(gw): Maybe make this an Arc for sharing with resource cache
     pub glyph_instances: Vec<GlyphInstance>,
-    pub color_texture_id: SourceTexture,
     pub color: ColorF,
     pub render_mode: FontRenderMode,
-    pub resource_address: GpuStoreAddress,
     pub glyph_options: Option<GlyphOptions>,
 }
 
@@ -532,8 +526,8 @@ impl ClipCorner {
 #[derive(Debug, Clone)]
 #[repr(C)]
 pub struct ImageMaskData {
-    uv_rect: DeviceRect,
-    local_rect: LayerRect,
+    pub local_rect: LayerRect,
+    pub padding: DeviceRect,
 }
 
 #[derive(Debug, Clone)]
@@ -653,12 +647,6 @@ pub struct PrimitiveStore {
 
     /// Gets uploaded directly to GPU via vertex texture.
     pub gpu_data32: VertexDataStore<GpuBlock32>,
-
-    /// Resolved resource rects.
-    pub gpu_resource_rects: VertexDataStore<TexelRect>,
-
-    /// General
-    prims_to_resolve: Vec<PrimitiveIndex>,
 }
 
 impl PrimitiveStore {
@@ -674,9 +662,7 @@ impl PrimitiveStore {
             cpu_radial_gradients: Vec::new(),
             cpu_borders: Vec::new(),
             cpu_box_shadows: Vec::new(),
-            prims_to_resolve: Vec::new(),
             gpu_data32: VertexDataStore::new(),
-            gpu_resource_rects: VertexDataStore::new(),
         }
     }
 
@@ -692,9 +678,7 @@ impl PrimitiveStore {
             cpu_radial_gradients: recycle_vec(self.cpu_radial_gradients),
             cpu_borders: recycle_vec(self.cpu_borders),
             cpu_box_shadows: recycle_vec(self.cpu_box_shadows),
-            prims_to_resolve: recycle_vec(self.prims_to_resolve),
             gpu_data32: self.gpu_data32.recycle(),
-            gpu_resource_rects: self.gpu_resource_rects.recycle(),
         }
     }
 
@@ -736,9 +720,7 @@ impl PrimitiveStore {
 
                 metadata
             }
-            PrimitiveContainer::TextRun(mut text_cpu) => {
-                text_cpu.resource_address = self.gpu_resource_rects.alloc(text_cpu.glyph_count);
-
+            PrimitiveContainer::TextRun(text_cpu) => {
                 let metadata = PrimitiveMetadata {
                     is_opaque: false,
                     clips: clips,
@@ -755,9 +737,7 @@ impl PrimitiveStore {
                 self.cpu_text_runs.push(text_cpu);
                 metadata
             }
-            PrimitiveContainer::Image(mut image_cpu) => {
-                image_cpu.resource_address = self.gpu_resource_rects.alloc(1);
-
+            PrimitiveContainer::Image(image_cpu) => {
                 let metadata = PrimitiveMetadata {
                     is_opaque: false,
                     clips: clips,
@@ -774,9 +754,7 @@ impl PrimitiveStore {
                 self.cpu_images.push(image_cpu);
                 metadata
             }
-            PrimitiveContainer::YuvImage(mut image_cpu) => {
-                image_cpu.yuv_resource_address = self.gpu_resource_rects.alloc(3);
-
+            PrimitiveContainer::YuvImage(image_cpu) => {
                 let metadata = PrimitiveMetadata {
                     is_opaque: true,
                     clips: clips,
@@ -913,167 +891,6 @@ impl PrimitiveStore {
         PrimitiveIndex(prim_index)
     }
 
-    fn resolve_clip_cache_internal(gpu_data32: &mut VertexDataStore<GpuBlock32>,
-                                   clip_info: &MaskCacheInfo,
-                                   resource_cache: &ResourceCache) {
-        if let Some((ref mask, gpu_address)) = clip_info.image {
-            let cache_item = resource_cache.get_cached_image(mask.image, ImageRendering::Auto, None);
-            let mask_data = gpu_data32.get_slice_mut(gpu_address, MASK_DATA_GPU_SIZE);
-            mask_data[0] = GpuBlock32::from(ImageMaskData {
-                uv_rect: DeviceRect::new(cache_item.uv0,
-                                         DeviceSize::new(cache_item.uv1.x - cache_item.uv0.x,
-                                                         cache_item.uv1.y - cache_item.uv0.y)),
-                local_rect: mask.rect,
-            });
-        }
-    }
-
-    pub fn resolve_clip_cache(&mut self,
-                              clip_info: &MaskCacheInfo,
-                              resource_cache: &ResourceCache) {
-        Self::resolve_clip_cache_internal(&mut self.gpu_data32, clip_info, resource_cache)
-    }
-
-    fn resolve_image(resource_cache: &ResourceCache,
-                     deferred_resolves: &mut Vec<DeferredResolve>,
-                     image_key: ImageKey,
-                     image_uv_address: GpuStoreAddress,
-                     image_rendering: ImageRendering,
-                     tile_offset: Option<TileOffset>) -> (SourceTexture, Option<CacheItem>) {
-        let image_properties = resource_cache.get_image_properties(image_key);
-
-        // Check if an external image that needs to be resolved
-        // by the render thread.
-        match image_properties.external_image {
-            Some(external_image) => {
-                // This is an external texture - we will add it to
-                // the deferred resolves list to be patched by
-                // the render thread...
-                deferred_resolves.push(DeferredResolve {
-                    image_properties: image_properties,
-                    resource_address: image_uv_address,
-                });
-
-                (SourceTexture::External(external_image), None)
-            }
-            None => {
-                let cache_item = resource_cache.get_cached_image(image_key, image_rendering, tile_offset);
-                (cache_item.texture_id, Some(cache_item))
-            }
-        }
-    }
-
-    pub fn resolve_primitives(&mut self,
-                              resource_cache: &ResourceCache,
-                              device_pixel_ratio: f32) -> Vec<DeferredResolve> {
-        profile_scope!("resolve_primitives");
-        let mut deferred_resolves = Vec::new();
-
-        for prim_index in self.prims_to_resolve.drain(..) {
-            let metadata = &mut self.cpu_metadata[prim_index.0];
-            if let Some(ref clip_info) = metadata.clip_cache_info {
-                Self::resolve_clip_cache_internal(&mut self.gpu_data32, clip_info, resource_cache);
-            }
-
-            match metadata.prim_kind {
-                PrimitiveKind::Rectangle |
-                PrimitiveKind::Border |
-                PrimitiveKind::BoxShadow |
-                PrimitiveKind::AlignedGradient |
-                PrimitiveKind::AngleGradient |
-                PrimitiveKind::RadialGradient=> {}
-                PrimitiveKind::TextRun => {
-                    let text = &mut self.cpu_text_runs[metadata.cpu_prim_index.0];
-
-                    let font_size_dp = text.logical_font_size.scale_by(device_pixel_ratio);
-
-                    let dest_rects = self.gpu_resource_rects.get_slice_mut(text.resource_address,
-                                                                           text.glyph_count);
-
-                    let texture_id = resource_cache.get_glyphs(text.font_key,
-                                                               font_size_dp,
-                                                               text.color,
-                                                               &text.glyph_instances,
-                                                               text.render_mode,
-                                                               text.glyph_options, |index, uv0, uv1| {
-                        let dest_rect = &mut dest_rects[index];
-                        dest_rect.uv0 = uv0;
-                        dest_rect.uv1 = uv1;
-                    });
-
-                    text.color_texture_id = texture_id;
-                }
-                PrimitiveKind::Image => {
-                    let image_cpu = &mut self.cpu_images[metadata.cpu_prim_index.0];
-
-                    let (texture_id, cache_item) = match image_cpu.kind {
-                        ImagePrimitiveKind::Image(image_key, image_rendering, tile_offset, _) => {
-                            // Check if an external image that needs to be resolved
-                            // by the render thread.
-                            PrimitiveStore::resolve_image(resource_cache,
-                                                          &mut deferred_resolves,
-                                                          image_key,
-                                                          image_cpu.resource_address,
-                                                          image_rendering,
-                                                          tile_offset)
-                        }
-                        ImagePrimitiveKind::WebGL(context_id) => {
-                            let cache_item = resource_cache.get_webgl_texture(&context_id);
-                            (cache_item.texture_id, Some(cache_item))
-                        }
-                    };
-
-                    if let Some(cache_item) = cache_item {
-                        let resource_rect = self.gpu_resource_rects.get_mut(image_cpu.resource_address);
-                        match image_cpu.sub_rect {
-                            Some(sub_rect) => {
-                                resource_rect.uv0.x = cache_item.uv0.x + sub_rect.uv0.x;
-                                resource_rect.uv0.y = cache_item.uv0.y + sub_rect.uv0.y;
-                                resource_rect.uv1.x = cache_item.uv0.x + sub_rect.uv1.x;
-                                resource_rect.uv1.y = cache_item.uv0.y + sub_rect.uv1.y;
-                            }
-                            None => {
-                                resource_rect.uv0 = cache_item.uv0;
-                                resource_rect.uv1 = cache_item.uv1;
-                            }
-                        }
-                    }
-                    image_cpu.color_texture_id = texture_id;
-                }
-                PrimitiveKind::YuvImage => {
-                    let image_cpu = &mut self.cpu_yuv_images[metadata.cpu_prim_index.0];
-
-                    //yuv channel
-                    let channel_count = image_cpu.format.get_plane_num();
-                    debug_assert!(channel_count <= 3);
-                    for channel in 0..channel_count {
-                        // Check if an external image that needs to be resolved
-                        // by the render thread.
-                        let resource_address = image_cpu.yuv_resource_address + channel as i32;
-
-                        let (texture_id, cache_item) =
-                            PrimitiveStore::resolve_image(resource_cache,
-                                                          &mut deferred_resolves,
-                                                          image_cpu.yuv_key[channel],
-                                                          resource_address,
-                                                          image_cpu.image_rendering,
-                                                          None);
-                        // texture_id
-                        image_cpu.yuv_texture_id[channel] = texture_id;
-                        // uv coordinates
-                        if let Some(cache_item) = cache_item {
-                            let resource_rect = self.gpu_resource_rects.get_mut(image_cpu.yuv_resource_address + channel as i32);
-                            resource_rect.uv0 = cache_item.uv0;
-                            resource_rect.uv1 = cache_item.uv1;
-                        }
-                    }
-                }
-            }
-        }
-
-        deferred_resolves
-    }
-
     pub fn get_metadata(&self, index: PrimitiveIndex) -> &PrimitiveMetadata {
         &self.cpu_metadata[index.0]
     }
@@ -1114,7 +931,6 @@ impl PrimitiveStore {
                                    display_list: &BuiltDisplayList) {
 
         let metadata = &mut self.cpu_metadata[prim_index.0];
-        let mut prim_needs_resolve = false;
 
         if let Some(ref mut clip_info) = metadata.clip_cache_info {
             clip_info.update(&metadata.clips,
@@ -1125,7 +941,6 @@ impl PrimitiveStore {
             for clip in &metadata.clips {
                 if let ClipSource::Region(ClipRegion{ image_mask: Some(ref mask), .. }, ..) = *clip {
                     resource_cache.request_image(mask.image, ImageRendering::Auto, None);
-                    prim_needs_resolve = true;
                 }
             }
         }
@@ -1153,36 +968,16 @@ impl PrimitiveStore {
 
                 let font_size_dp = text.logical_font_size.scale_by(device_pixel_ratio);
                 let src_glyphs = display_list.get(text.glyph_range);
-                prim_needs_resolve = true;
 
                 // Cache the glyph positions, if not in the cache already.
+                // TODO(gw): In the future, remove `glyph_instances`
+                //           completely, and just reference the glyphs
+                //           directly from the displaty list.
                 if text.glyph_instances.is_empty() {
-                    let mut glyph_key = GlyphKey::new(text.font_key,
-                                                      font_size_dp,
-                                                      text.color,
-                                                      0,
-                                                      LayoutPoint::new(0.0, 0.0),
-                                                      text.render_mode);
                     for src in src_glyphs {
-                        glyph_key.index = src.index;
-                        glyph_key.subpixel_point.set_offset(src.point, text.render_mode);
-
-                        let dimensions = match resource_cache.get_glyph_dimensions(&glyph_key) {
-                            None => continue,
-                            Some(dimensions) => dimensions,
-                        };
-
-                        // TODO(gw): Check for this and ensure platforms return None in this case!!!
-                        debug_assert!(dimensions.width > 0 && dimensions.height > 0);
-
-                        let x = src.point.x + dimensions.left as f32 / device_pixel_ratio;
-                        let y = src.point.y - dimensions.top as f32 / device_pixel_ratio;
-
-                        let glyph_pos = LayerPoint::new(x, y);
-
                         text.glyph_instances.push(GlyphInstance {
                             index: src.index,
-                            point: glyph_pos,
+                            point: src.point,
                         });
                     }
                 }
@@ -1216,7 +1011,6 @@ impl PrimitiveStore {
             PrimitiveKind::Image => {
                 let image_cpu = &mut self.cpu_images[metadata.cpu_prim_index.0];
 
-                prim_needs_resolve = true;
                 match image_cpu.kind {
                     ImagePrimitiveKind::Image(image_key, image_rendering, tile_offset, tile_spacing) => {
                         resource_cache.request_image(image_key, image_rendering, tile_offset);
@@ -1235,7 +1029,6 @@ impl PrimitiveStore {
             }
             PrimitiveKind::YuvImage => {
                 let image_cpu = &mut self.cpu_yuv_images[metadata.cpu_prim_index.0];
-                prim_needs_resolve = true;
 
                 let channel_num = image_cpu.format.get_plane_num();
                 debug_assert!(channel_num <= 3);
@@ -1297,10 +1090,6 @@ impl PrimitiveStore {
                     text.write_gpu_blocks(request);
                 }
             }
-        }
-
-        if prim_needs_resolve {
-            self.prims_to_resolve.push(prim_index);
         }
     }
 }

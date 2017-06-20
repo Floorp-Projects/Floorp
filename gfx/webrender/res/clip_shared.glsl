@@ -15,12 +15,14 @@ in int aClipRenderTaskIndex;
 in int aClipLayerIndex;
 in int aClipDataIndex;
 in int aClipSegmentIndex;
+in int aClipResourceAddress;
 
 struct CacheClipInstance {
     int render_task_index;
     int layer_index;
     int data_index;
     int segment_index;
+    int resource_address;
 };
 
 CacheClipInstance fetch_clip_item(int index) {
@@ -30,6 +32,7 @@ CacheClipInstance fetch_clip_item(int index) {
     cci.layer_index = aClipLayerIndex;
     cci.data_index = aClipDataIndex;
     cci.segment_index = aClipSegmentIndex;
+    cci.resource_address = aClipResourceAddress;
 
     return cci;
 }

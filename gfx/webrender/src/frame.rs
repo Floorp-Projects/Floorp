@@ -32,11 +32,63 @@ pub struct FrameId(pub u32);
 
 static DEFAULT_SCROLLBAR_COLOR: ColorF = ColorF { r: 0.3, g: 0.3, b: 0.3, a: 0.6 };
 
+/// Nested display lists cause two types of replacements to ClipIds inside the nesting:
+///     1. References to the root scroll frame are replaced by the ClipIds that
+///        contained the nested display list.
+///     2. Other ClipIds (that aren't custom or reference frames) are assumed to be
+///        local to the nested display list and are converted to an id that is unique
+///        outside of the nested display list as well.
+///
+/// This structure keeps track of what ids are the "root" for one particular level of
+/// nesting as well as keeping and index, which can make ClipIds used internally unique
+/// in the full ClipScrollTree.
+struct NestedDisplayListInfo {
+    /// The index of this nested display list, which is used to generate
+    /// new ClipIds for clips that are defined inside it.
+    nest_index: u64,
+
+    /// The ClipId of the scroll frame node which contains this nested
+    /// display list. This is used to replace references to the root with
+    /// the proper ClipId.
+    scroll_node_id: ClipId,
+
+    /// The ClipId of the clip node which contains this nested display list.
+    /// This is used to replace references to the root with the proper ClipId.
+    clip_node_id: ClipId,
+}
+
+impl NestedDisplayListInfo {
+    fn convert_id_to_nested(&self, id: &ClipId) -> ClipId {
+        match *id {
+            ClipId::Clip(id, _, pipeline_id) => ClipId::Clip(id, self.nest_index, pipeline_id),
+            _ => *id,
+        }
+    }
+
+    fn convert_scroll_id_to_nested(&self, id: &ClipId) -> ClipId {
+        if id.is_root_scroll_node() {
+            self.scroll_node_id
+        } else {
+            self.convert_id_to_nested(id)
+        }
+    }
+
+    fn convert_clip_id_to_nested(&self, id: &ClipId) -> ClipId {
+        if id.is_root_scroll_node() {
+            self.clip_node_id
+        } else {
+            self.convert_id_to_nested(id)
+        }
+    }
+}
+
 struct FlattenContext<'a> {
     scene: &'a Scene,
     builder: &'a mut FrameBuilder,
     resource_cache: &'a mut ResourceCache,
     replacements: Vec<(ClipId, ClipId)>,
+    nested_display_list_info: Vec<NestedDisplayListInfo>,
+    current_nested_display_list_index: u64,
 }
 
 impl<'a> FlattenContext<'a> {
@@ -49,10 +101,52 @@ impl<'a> FlattenContext<'a> {
             builder: builder,
             resource_cache: resource_cache,
             replacements: Vec::new(),
+            nested_display_list_info: Vec::new(),
+            current_nested_display_list_index: 0,
         }
     }
 
-    fn clip_id_with_replacement(&self, id: ClipId) -> ClipId {
+    fn push_nested_display_list_ids(&mut self, info: ClipAndScrollInfo) {
+        self.current_nested_display_list_index += 1;
+        self.nested_display_list_info.push(NestedDisplayListInfo {
+            nest_index: self.current_nested_display_list_index,
+            scroll_node_id: info.scroll_node_id,
+            clip_node_id: info.clip_node_id(),
+        });
+    }
+
+    fn pop_nested_display_list_ids(&mut self) {
+        self.nested_display_list_info.pop();
+    }
+
+    fn convert_new_id_to_neested(&self, id: &ClipId) -> ClipId {
+        if let Some(nested_info) = self.nested_display_list_info.last() {
+            nested_info.convert_id_to_nested(id)
+        } else {
+            *id
+        }
+    }
+
+    fn convert_clip_scroll_info_to_nested(&self, info: &mut ClipAndScrollInfo) {
+        if let Some(nested_info) = self.nested_display_list_info.last() {
+            info.scroll_node_id = nested_info.convert_scroll_id_to_nested(&info.scroll_node_id);
+            info.clip_node_id =
+                info.clip_node_id.map(|ref id| nested_info.convert_clip_id_to_nested(id));
+        }
+
+        // We only want to produce nested ClipIds if we are in a nested display
+        // list situation.
+        debug_assert!(!info.scroll_node_id.is_nested() ||
+                      !self.nested_display_list_info.is_empty());
+        debug_assert!(!info.clip_node_id().is_nested() ||
+                      !self.nested_display_list_info.is_empty());
+    }
+
+    /// Since WebRender still handles fixed position and reference frame content internally
+    /// we need to apply this table of id replacements only to the id that affects the
+    /// position of a node. We can eventually remove this when clients start handling
+    /// reference frames themselves. This method applies these replacements.
+    fn apply_scroll_frame_id_replacement(&self, id: ClipId) -> ClipId {
         match self.replacements.last() {
             Some(&(to_replace, replacement)) if to_replace == id => replacement,
             _ => id,
@@ -275,7 +369,8 @@ impl Frame {
                                              &clip_viewport,
                                              clip,
                                              &mut self.clip_scroll_tree);
-        context.builder.add_scroll_frame(item.id,
+        let new_id = context.convert_new_id_to_neested(&item.id);
+        context.builder.add_scroll_frame(new_id,
                                          new_clip_id,
                                          pipeline_id,
                                          &content_rect,
@@ -314,8 +409,6 @@ impl Frame {
             return;
         }
 
-        let mut clip_id = context.clip_id_with_replacement(context_scroll_node_id);
-
         if stacking_context.scroll_policy == ScrollPolicy::Fixed {
             context.replacements.push((context_scroll_node_id,
                                        context.builder.current_reference_frame_id()));
@@ -339,6 +432,7 @@ impl Frame {
                                         .pre_mul(&perspective);
 
             let reference_frame_bounds = LayerRect::new(LayerPoint::zero(), bounds.size);
+            let mut clip_id = context.apply_scroll_frame_id_replacement(context_scroll_node_id);
             clip_id = context.builder.push_reference_frame(Some(clip_id),
                                                            pipeline_id,
                                                            &reference_frame_bounds,
@@ -435,8 +529,11 @@ impl Frame {
                             reference_frame_relative_offset: LayerVector2D)
                             -> Option<BuiltDisplayListIter<'a>> {
         let mut clip_and_scroll = item.clip_and_scroll();
+        context.convert_clip_scroll_info_to_nested(&mut clip_and_scroll);
+
+        let unreplaced_scroll_id = clip_and_scroll.scroll_node_id;
         clip_and_scroll.scroll_node_id =
-            context.clip_id_with_replacement(clip_and_scroll.scroll_node_id);
+            context.apply_scroll_frame_id_replacement(clip_and_scroll.scroll_node_id);
 
         match *item.item() {
             SpecificDisplayItem::WebGL(ref info) => {
@@ -572,7 +669,7 @@ impl Frame {
                 self.flatten_stacking_context(&mut subtraversal,
                                               pipeline_id,
                                               context,
-                                              item.clip_and_scroll().scroll_node_id,
+                                              unreplaced_scroll_id,
                                               reference_frame_relative_offset,
                                               &item.rect(),
                                               &info.stacking_context,
@@ -596,6 +693,14 @@ impl Frame {
                                   &content_rect,
                                   item.clip_region());
             }
+            SpecificDisplayItem::PushNestedDisplayList => {
+                // Using the clip and scroll already processed for nesting here
+                // means that in the case of multiple nested display lists, we
+                // will enter the outermost ids into the table and avoid having
+                // to do a replacement for every level of nesting.
+                context.push_nested_display_list_ids(clip_and_scroll);
+            }
+            SpecificDisplayItem::PopNestedDisplayList => context.pop_nested_display_list_ids(),
 
             // Do nothing; these are dummy items for the display list parser
             SpecificDisplayItem::SetGradientStops | SpecificDisplayItem::SetClipRegion(_) => { }

@@ -6,7 +6,7 @@
 void main(void) {
     Primitive prim = load_primitive();
     Image image = fetch_image(prim.specific_prim_address);
-    ResourceRect res = fetch_resource_rect(prim.user_data0);
+    ImageResource res = fetch_image_resource(prim.user_data0);
 
 #ifdef WR_FEATURE_TRANSFORM
     TransformVertexInfo vi = write_transform_vertex(prim.local_rect,
@@ -14,7 +14,7 @@ void main(void) {
                                                     prim.z,
                                                     prim.layer,
                                                     prim.task,
-                                                    prim.local_rect.p0);
+                                                    prim.local_rect);
     vLocalPos = vi.local_pos;
 #else
     VertexInfo vi = write_vertex(prim.local_rect,
@@ -22,7 +22,7 @@ void main(void) {
                                  prim.z,
                                  prim.layer,
                                  prim.task,
-                                 prim.local_rect.p0);
+                                 prim.local_rect);
     vLocalPos = vi.local_pos - prim.local_rect.p0;
 #endif
 
@@ -36,9 +36,19 @@ void main(void) {
     vec2 texture_size_normalization_factor = vec2(textureSize(sColor0, 0));
 #endif
 
+    vec2 uv0, uv1;
+
+    if (image.sub_rect.x < 0.0) {
+        uv0 = res.uv_rect.xy;
+        uv1 = res.uv_rect.zw;
+    } else {
+        uv0 = res.uv_rect.xy + image.sub_rect.xy;
+        uv1 = res.uv_rect.xy + image.sub_rect.zw;
+    }
+
     // vUv will contain how many times this image has wrapped around the image size.
-    vec2 st0 = res.uv_rect.xy / texture_size_normalization_factor;
-    vec2 st1 = res.uv_rect.zw / texture_size_normalization_factor;
+    vec2 st0 = uv0 / texture_size_normalization_factor;
+    vec2 st1 = uv1 / texture_size_normalization_factor;
 
     vTextureSize = st1 - st0;
     vTextureOffset = st0;
