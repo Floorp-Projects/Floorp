@@ -7,10 +7,6 @@
  * in the database is unordered so that a hierarchy is defined before its
  * ancestor in the bookmarks table.
  */
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function() {
   let bm = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                                 NetUtil.newURI("http://mozilla.org/"),

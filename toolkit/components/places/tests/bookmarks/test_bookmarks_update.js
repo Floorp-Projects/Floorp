@@ -392,7 +392,3 @@ add_task(async function update_move_append() {
   sep_2 = await PlacesUtils.bookmarks.fetch(sep_2.guid);
   ensurePosition(sep_2, folder_b.guid, 1);
 });
-
-function run_test() {
-  run_next_test();
-}

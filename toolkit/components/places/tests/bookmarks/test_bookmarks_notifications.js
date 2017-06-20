@@ -521,7 +521,3 @@ function expectNotifications() {
   PlacesUtils.bookmarks.addObserver(observer);
   return observer;
 }
-
-function run_test() {
-  run_next_test();
-}

@@ -8,7 +8,6 @@
 try {
   var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
                 getService(Ci.nsINavHistoryService);
-  var bhist = histsvc.QueryInterface(Ci.nsIBrowserHistory);
 } catch (ex) {
   do_throw("Could not get history services\n");
 }
