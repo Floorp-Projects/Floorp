@@ -126,7 +126,8 @@ CrashGenerationServer::CrashGenerationServer(
       server_state_(IPC_SERVER_STATE_UNINITIALIZED),
       shutting_down_(false),
       overlapped_(),
-      client_info_(NULL) {
+      client_info_(NULL),
+      include_context_heap_(false) {
   InitializeCriticalSection(&sync_);
 }
 
@@ -894,6 +895,11 @@ void CrashGenerationServer::HandleDumpRequest(const ClientInfo& client_info) {
   }
 
   SetEvent(client_info.dump_generated_handle());
+}
+
+void CrashGenerationServer::set_include_context_heap(bool enabled) {
+
+  include_context_heap_ = enabled;
 }
 
 bool CrashGenerationServer::GenerateDump(const ClientInfo& client,

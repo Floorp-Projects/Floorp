@@ -279,6 +279,8 @@ void ExceptionHandler::Initialize(
 
     LeaveCriticalSection(&handler_stack_critical_section_);
   }
+
+  include_context_heap_ = false;
 }
 
 ExceptionHandler::~ExceptionHandler() {
@@ -1024,6 +1026,10 @@ void ExceptionHandler::UnregisterAppMemory(void* ptr) {
   if (iter != app_memory_info_.end()) {
     app_memory_info_.erase(iter);
   }
+}
+
+void ExceptionHandler::set_include_context_heap(bool enabled) {
+  include_context_heap_ = enabled;
 }
 
 }  // namespace google_breakpad
