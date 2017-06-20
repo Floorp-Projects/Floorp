@@ -29,6 +29,7 @@
 #include "js/RootingAPI.h"
 #include "nsTObserverArray.h"
 #include "mozilla/TypedEnumBits.h"
+#include "mozilla/dom/CallbackObject.h"
 #include "mozilla/dom/SameProcessMessageQueue.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/jsipc/CpowHolder.h"
@@ -43,7 +44,10 @@ class nsIContentChild;
 class ChildProcessMessageManager;
 class ChromeMessageSender;
 class ClonedMessageData;
+class MessageListener;
+class MessageListenerManager;
 class MessageManagerReporter;
+template<typename T> class Optional;
 
 namespace ipc {
 
@@ -122,6 +126,10 @@ void UnpackClonedMessageDataForChild(const ClonedMessageData& aClonedData,
                                      StructuredCloneData& aData);
 
 } // namespace ipc
+
+typedef CallbackObjectHolder<mozilla::dom::MessageListener,
+                             nsIMessageListener> MessageListenerHolder;
+
 } // namespace dom
 } // namespace mozilla
 
@@ -132,12 +140,22 @@ struct nsMessageListenerInfo
     return &aOther == this;
   }
 
-  // Exactly one of mStrongListener and mWeakListener must be non-null.
-  nsCOMPtr<nsIMessageListener> mStrongListener;
+  // If mWeakListener is null then mStrongListener holds either a MessageListener or an
+  // nsIMessageListener. If mWeakListener is non-null then mStrongListener contains null.
+  mozilla::dom::MessageListenerHolder mStrongListener;
   nsWeakPtr mWeakListener;
   bool mListenWhenClosed;
 };
 
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            nsMessageListenerInfo& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  ImplCycleCollectionTraverse(aCallback, aField.mStrongListener, aName, aFlags);
+  ImplCycleCollectionTraverse(aCallback, aField.mWeakListener, aName, aFlags);
+}
 
 class MOZ_STACK_CLASS SameProcessCpowHolder : public mozilla::jsipc::CpowHolder
 {
@@ -178,6 +196,62 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsFrameMessageManager,
                                                          nsIContentFrameMessageManager)
+
+  // MessageListenerManager
+  void AddMessageListener(const nsAString& aMessageName,
+                          mozilla::dom::MessageListener& aListener,
+                          bool aListenWhenClosed,
+                          mozilla::ErrorResult& aError);
+  void RemoveMessageListener(const nsAString& aMessageName,
+                             mozilla::dom::MessageListener& aListener,
+                             mozilla::ErrorResult& aError);
+  void AddWeakMessageListener(const nsAString& aMessageName,
+                              mozilla::dom::MessageListener& aListener,
+                              mozilla::ErrorResult& aError);
+  void RemoveWeakMessageListener(const nsAString& aMessageName,
+                                 mozilla::dom::MessageListener& aListener,
+                                 mozilla::ErrorResult& aError);
+
+  // MessageSender
+  void SendAsyncMessage(JSContext* aCx, const nsAString& aMessageName,
+                        JS::Handle<JS::Value> aObj,
+                        JS::Handle<JSObject*> aObjects,
+                        nsIPrincipal* aPrincipal,
+                        JS::Handle<JS::Value> aTransfers,
+                        mozilla::ErrorResult& aError)
+  {
+    DispatchAsyncMessage(aCx, aMessageName, aObj, aObjects, aPrincipal, aTransfers,
+                         aError);
+  }
+  already_AddRefed<nsIMessageSender>
+    GetProcessMessageManager(mozilla::ErrorResult& aError);
+  void GetRemoteType(nsAString& aRemoteType, mozilla::ErrorResult& aError) const;
+
+  // SyncMessageSender
+  void SendSyncMessage(JSContext* aCx, const nsAString& aMessageName,
+                       JS::Handle<JS::Value> aObj,
+                       JS::Handle<JSObject*> aObjects,
+                       nsIPrincipal* aPrincipal,
+                       nsTArray<JS::Value>& aResult,
+                       mozilla::ErrorResult& aError)
+  {
+    SendMessage(aCx, aMessageName, aObj, aObjects, aPrincipal, true, aResult, aError);
+  }
+  void SendRpcMessage(JSContext* aCx, const nsAString& aMessageName,
+                      JS::Handle<JS::Value> aObj,
+                      JS::Handle<JSObject*> aObjects,
+                      nsIPrincipal* aPrincipal,
+                      nsTArray<JS::Value>& aResult,
+                      mozilla::ErrorResult& aError)
+  {
+    SendMessage(aCx, aMessageName, aObj, aObjects, aPrincipal, false, aResult, aError);
+  }
+
+  // GlobalProcessScriptLoader
+  void GetInitialProcessData(JSContext* aCx,
+                             JS::MutableHandle<JS::Value> aInitialProcessData,
+                             mozilla::ErrorResult& aError);
+
   NS_DECL_NSIMESSAGELISTENERMANAGER
   NS_DECL_NSIMESSAGESENDER
   NS_DECL_NSIMESSAGEBROADCASTER
@@ -197,11 +271,8 @@ public:
                           mozilla::jsipc::CpowHolder* aCpows, nsIPrincipal* aPrincipal,
                           nsTArray<StructuredCloneData>* aRetVal);
 
-  void AddChildManager(nsFrameMessageManager* aManager);
-  void RemoveChildManager(nsFrameMessageManager* aManager)
-  {
-    mChildManagers.RemoveObject(aManager);
-  }
+  void AddChildManager(mozilla::dom::MessageListenerManager* aManager);
+  void RemoveChildManager(mozilla::dom::MessageListenerManager* aManager);
   void Disconnect(bool aRemoveFromParent = true);
   void Close();
 
@@ -245,7 +316,9 @@ public:
 
   void LoadPendingScripts();
 
-private:
+protected:
+  friend class MMListenerRemover;
+
   virtual nsFrameMessageManager* GetParentManager()
   {
     return nullptr;
@@ -253,6 +326,13 @@ private:
   virtual void ClearParentManager(bool aRemove)
   {
   }
+
+  void DispatchAsyncMessage(JSContext* aCx, const nsAString& aMessageName,
+                            JS::Handle<JS::Value> aObj,
+                            JS::Handle<JSObject*> aObjects,
+                            nsIPrincipal* aPrincipal,
+                            JS::Handle<JS::Value> aTransfers,
+                            mozilla::ErrorResult& aError);
 
   nsresult SendMessage(const nsAString& aMessageName,
                        JS::Handle<JS::Value> aJSON,
@@ -262,6 +342,14 @@ private:
                        uint8_t aArgc,
                        JS::MutableHandle<JS::Value> aRetval,
                        bool aIsSync);
+  void SendMessage(JSContext* aCx, const nsAString& aMessageName,
+                   JS::Handle<JS::Value> aObj, JS::Handle<JSObject*> aObjects,
+                   nsIPrincipal* aPrincipal, bool aIsSync, nsTArray<JS::Value>& aResult,
+                   mozilla::ErrorResult& aError);
+  void SendMessage(JSContext* aCx, const nsAString& aMessageName,
+                   StructuredCloneData& aData, JS::Handle<JSObject*> aObjects,
+                   nsIPrincipal* aPrincipal, bool aIsSync,
+                   nsTArray<JS::Value>& aResult, mozilla::ErrorResult& aError);
 
   nsresult ReceiveMessage(nsISupports* aTarget, nsIFrameLoader* aTargetFrameLoader,
                           bool aTargetClosed, const nsAString& aMessage,
@@ -269,19 +357,28 @@ private:
                           mozilla::jsipc::CpowHolder* aCpows, nsIPrincipal* aPrincipal,
                           nsTArray<StructuredCloneData>* aRetVal);
 
-  NS_IMETHOD LoadScript(const nsAString& aURL,
-                        bool aAllowDelayedLoad,
-                        bool aRunInGlobalScope);
-  NS_IMETHOD RemoveDelayedScript(const nsAString& aURL);
-  NS_IMETHOD GetDelayedScripts(JSContext* aCx, JS::MutableHandle<JS::Value> aList);
+  void LoadScript(const nsAString& aURL, bool aAllowDelayedLoad,
+                  bool aRunInGlobalScope, mozilla::ErrorResult& aError);
+  void RemoveDelayedScript(const nsAString& aURL);
+  nsresult GetDelayedScripts(JSContext* aCx,
+                             JS::MutableHandle<JS::Value> aList);
+  void GetDelayedScripts(JSContext* aCx, nsTArray<nsTArray<JS::Value>>& aList,
+                         mozilla::ErrorResult& aError);
 
-protected:
-  friend class MMListenerRemover;
+  enum ProcessCheckerType {
+    PROCESS_CHECKER_PERMISSION,
+    PROCESS_CHECKER_MANIFEST_URL,
+    ASSERT_APP_HAS_PERMISSION
+  };
+  bool AssertProcessInternal(ProcessCheckerType aType,
+                             const nsAString& aCapability,
+                             mozilla::ErrorResult& aError);
+
   // We keep the message listeners as arrays in a hastable indexed by the
   // message name. That gives us fast lookups in ReceiveMessage().
   nsClassHashtable<nsStringHashKey,
                    nsAutoTObserverArray<nsMessageListenerInfo, 1>> mListeners;
-  nsCOMArray<nsIContentFrameMessageManager> mChildManagers;
+  nsTArray<RefPtr<mozilla::dom::MessageListenerManager>> mChildManagers;
   bool mChrome;     // true if we're in the chrome process
   bool mGlobal;     // true if we're the global frame message manager
   bool mIsProcessManager; // true if the message manager belongs to the process realm
@@ -303,15 +400,13 @@ public:
   static nsFrameMessageManager* sSameProcessParentManager;
   static nsTArray<nsCOMPtr<nsIRunnable> >* sPendingSameProcessAsyncMessages;
 private:
+  void AddMessageListener(const nsAString& aMessageName,
+                          mozilla::dom::MessageListenerHolder&& aListener,
+                          bool aListenWhenClosed);
+  void RemoveMessageListener(const nsAString& aMessageName,
+                             const mozilla::dom::MessageListenerHolder&  aListener);
+
   static mozilla::dom::ChildProcessMessageManager* sChildProcessManager;
-  enum ProcessCheckerType {
-    PROCESS_CHECKER_PERMISSION,
-    PROCESS_CHECKER_MANIFEST_URL,
-    ASSERT_APP_HAS_PERMISSION
-  };
-  nsresult AssertProcessInternal(ProcessCheckerType aType,
-                                 const nsAString& aCapability,
-                                 bool* aValid);
 };
 
 /* A helper class for taking care of many details for async message sending

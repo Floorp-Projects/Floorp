@@ -233,6 +233,13 @@ ToJSValue(JSContext* aCx,
 
 // Accept existing JS values (which may not be same-compartment with us
 MOZ_MUST_USE inline bool
+ToJSValue(JSContext* aCx, const JS::Value& aArgument,
+          JS::MutableHandle<JS::Value> aValue)
+{
+  aValue.set(aArgument);
+  return MaybeWrapValue(aCx, aValue);
+}
+MOZ_MUST_USE inline bool
 ToJSValue(JSContext* aCx, JS::Handle<JS::Value> aArgument,
           JS::MutableHandle<JS::Value> aValue)
 {
@@ -312,33 +319,13 @@ ToJSValue(JSContext* aCx,
           Promise& aArgument,
           JS::MutableHandle<JS::Value> aValue);
 
-// Accept arrays of other things we accept
+// Accept arrays (and nested arrays) of other things we accept
 template <typename T>
 MOZ_MUST_USE bool
 ToJSValue(JSContext* aCx,
           T* aArguments,
           size_t aLength,
-          JS::MutableHandle<JS::Value> aValue)
-{
-  // Make sure we're called in a compartment
-  MOZ_ASSERT(JS::CurrentGlobalOrNull(aCx));
-
-  JS::AutoValueVector v(aCx);
-  if (!v.resize(aLength)) {
-    return false;
-  }
-  for (size_t i = 0; i < aLength; ++i) {
-    if (!ToJSValue(aCx, aArguments[i], v[i])) {
-      return false;
-    }
-  }
-  JSObject* arrayObj = JS_NewArrayObject(aCx, v);
-  if (!arrayObj) {
-    return false;
-  }
-  aValue.setObject(*arrayObj);
-  return true;
-}
+          JS::MutableHandle<JS::Value> aValue);
 
 template <typename T>
 MOZ_MUST_USE bool
@@ -367,6 +354,34 @@ ToJSValue(JSContext* aCx,
           JS::MutableHandle<JS::Value> aValue)
 {
   return ToJSValue(aCx, aArgument, N, aValue);
+}
+
+// Accept arrays of other things we accept
+template <typename T>
+MOZ_MUST_USE bool
+ToJSValue(JSContext* aCx,
+          T* aArguments,
+          size_t aLength,
+          JS::MutableHandle<JS::Value> aValue)
+{
+  // Make sure we're called in a compartment
+  MOZ_ASSERT(JS::CurrentGlobalOrNull(aCx));
+
+  JS::AutoValueVector v(aCx);
+  if (!v.resize(aLength)) {
+    return false;
+  }
+  for (size_t i = 0; i < aLength; ++i) {
+    if (!ToJSValue(aCx, aArguments[i], v[i])) {
+      return false;
+    }
+  }
+  JSObject* arrayObj = JS_NewArrayObject(aCx, v);
+  if (!arrayObj) {
+    return false;
+  }
+  aValue.setObject(*arrayObj);
+  return true;
 }
 
 } // namespace dom

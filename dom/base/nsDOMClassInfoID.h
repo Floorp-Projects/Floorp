@@ -21,8 +21,6 @@ enum nsDOMClassInfoID
 
   eDOMClassInfo_ContentFrameMessageManager_id,
   eDOMClassInfo_ContentProcessMessageManager_id,
-  eDOMClassInfo_ChromeMessageBroadcaster_id,
-  eDOMClassInfo_ChromeMessageSender_id,
 
   // This one better be the last one in this list
   eDOMClassInfoIDCount

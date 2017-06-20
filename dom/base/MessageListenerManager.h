@@ -9,16 +9,23 @@
 
 #include "nsCycleCollectionNoteChild.h"
 #include "nsFrameMessageManager.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla {
 namespace dom {
 
-class MessageListenerManager : public nsFrameMessageManager
+class MessageListenerManager : public nsFrameMessageManager,
+                               public nsWrapperCache
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MessageListenerManager,
-                                           nsFrameMessageManager)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(MessageListenerManager,
+                                                         nsFrameMessageManager)
+
+  nsISupports* GetParentObject()
+  {
+    return ToSupports(mParentManager.get());
+  }
 
   virtual nsFrameMessageManager* GetParentManager() override
   {
