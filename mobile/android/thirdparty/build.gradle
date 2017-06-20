@@ -69,3 +69,11 @@ idea {
 // Bug 1353055 - Strip 'vars' debugging information to agree with moz.build.
 apply from: "${topsrcdir}/mobile/android/gradle/debug_level.gradle"
 android.libraryVariants.all configureVariantDebugLevel
+
+// Bug 1355625: strip extra .class files from Gradle builds; modified from
+// http://stackoverflow.com/a/40705699.
+android.libraryVariants.all { variant ->
+    variant.javaCompile.doLast {
+        delete fileTree(dir: "${project.buildDir}", include: "**/org/mozilla/gecko/thirdparty_unused/BuildConfig.class")
+    }
+}
