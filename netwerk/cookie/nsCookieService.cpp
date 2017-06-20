@@ -3023,7 +3023,7 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
   nsAutoCString buffer, baseDomain;
   bool isMore = true;
   int32_t hostIndex, isDomainIndex, pathIndex, secureIndex, expiresIndex, nameIndex, cookieIndex;
-  nsASingleFragmentCString::char_iterator iter;
+  nsACString::char_iterator iter;
   int32_t numInts;
   int64_t expires;
   bool isDomain, isHttpOnly = false;
@@ -3099,7 +3099,7 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
     }
 
     isDomain = Substring(buffer, isDomainIndex, pathIndex - isDomainIndex - 1).EqualsLiteral(kTrue);
-    const nsASingleFragmentCString &host = Substring(buffer, hostIndex, isDomainIndex - hostIndex - 1);
+    const nsACString& host = Substring(buffer, hostIndex, isDomainIndex - hostIndex - 1);
     // check for bad legacy cookies (domain not starting with a dot, or containing a port),
     // and discard
     if ((isDomain && !host.IsEmpty() && host.First() != '.') ||
@@ -3866,13 +3866,13 @@ static inline bool istokenseparator (char c) { return isvalueseparator(c) || c =
 // Parse a single token/value pair.
 // Returns true if a cookie terminator is found, so caller can parse new cookie.
 bool
-nsCookieService::GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter,
-                               nsASingleFragmentCString::const_char_iterator &aEndIter,
+nsCookieService::GetTokenValue(nsACString::const_char_iterator &aIter,
+                               nsACString::const_char_iterator &aEndIter,
                                nsDependentCSubstring                         &aTokenString,
                                nsDependentCSubstring                         &aTokenValue,
                                bool                                          &aEqualsFound)
 {
-  nsASingleFragmentCString::const_char_iterator start, lastSpace;
+  nsACString::const_char_iterator start, lastSpace;
   // initialize value string to clear garbage
   aTokenValue.Rebind(aIter, aIter);
 
@@ -3941,8 +3941,8 @@ nsCookieService::ParseAttributes(nsDependentCString &aCookieHeader,
   static const char kSecure[]  = "secure";
   static const char kHttpOnly[]  = "httponly";
 
-  nsASingleFragmentCString::const_char_iterator tempBegin, tempEnd;
-  nsASingleFragmentCString::const_char_iterator cookieStart, cookieEnd;
+  nsACString::const_char_iterator tempBegin, tempEnd;
+  nsACString::const_char_iterator cookieStart, cookieEnd;
   aCookieHeader.BeginReading(cookieStart);
   aCookieHeader.EndReading(cookieEnd);
 

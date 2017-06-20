@@ -92,7 +92,7 @@ txExprLexer::nextIsOperatorToken(Token* aToken)
  * Parses the given string into a sequence of Tokens
  */
 nsresult
-txExprLexer::parse(const nsASingleFragmentString& aPattern)
+txExprLexer::parse(const nsAString& aPattern)
 {
   iterator start, end;
   start = aPattern.BeginReading(mPosition);

@@ -355,8 +355,7 @@ inCSSValueSearch::SearchStyleValue(const nsAFlatString& aValue, nsIURI* aBaseURL
 {
   if (StringBeginsWith(aValue, NS_LITERAL_STRING("url(")) &&
       StringEndsWith(aValue, NS_LITERAL_STRING(")"))) {
-    const nsASingleFragmentString &url =
-      Substring(aValue, 4, aValue.Length() - 5);
+    const nsAString& url = Substring(aValue, 4, aValue.Length() - 5);
     // XXXldb Need to do more with |mReturnRelativeURLs|, perhaps?
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_NewURI(getter_AddRefs(uri), url, nullptr, aBaseURL);
