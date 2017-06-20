@@ -9,13 +9,15 @@
 
     <!-- Search icon must have exact position and size as site security in
          display layout -->
-    <ImageView
+    <org.mozilla.gecko.widget.themed.ThemedImageButton
         android:id="@+id/search_icon"
-        android:layout_width="@dimen/browser_toolbar_site_security_width"
+        style="@style/UrlBar.ImageButtonBase"
+        android:layout_width="@dimen/browser_toolbar_height"
         android:layout_height="@dimen/browser_toolbar_site_security_height"
         android:layout_marginBottom="@dimen/browser_toolbar_site_security_margin_bottom"
         android:layout_marginEnd="@dimen/browser_toolbar_site_security_margin_end"
         android:layout_marginRight="@dimen/browser_toolbar_site_security_margin_end"
+        android:background="@drawable/action_bar_button"
         android:paddingBottom="@dimen/browser_toolbar_site_security_padding_vertical"
         android:paddingEnd="@dimen/browser_toolbar_site_security_padding_horizontal"
         android:paddingLeft="@dimen/browser_toolbar_site_security_padding_horizontal"
@@ -40,18 +42,20 @@
         android:selectAllOnFocus="true"
         gecko:autoUpdateTheme="false" />
 
-    <ImageButton
+    <org.mozilla.gecko.widget.themed.ThemedImageButton
         android:id="@+id/qrcode"
-        android:layout_width="@dimen/page_action_button_width"
+        style="@style/UrlBar.ImageButtonBase"
+        android:layout_width="@dimen/browser_toolbar_height"
         android:layout_height="match_parent"
-        android:background="@android:color/transparent"
+        android:background="@drawable/action_bar_button"
         android:src="@drawable/ab_qrcode" />
 
-    <ImageButton
+    <org.mozilla.gecko.widget.themed.ThemedImageButton
         android:id="@+id/mic"
-        android:layout_width="@dimen/page_action_button_width"
+        style="@style/UrlBar.ImageButtonBase"
+        android:layout_width="@dimen/browser_toolbar_height"
         android:layout_height="match_parent"
-        android:background="@android:color/transparent"
+        android:background="@drawable/action_bar_button"
         android:src="@drawable/ab_mic" />
 
 </merge>
