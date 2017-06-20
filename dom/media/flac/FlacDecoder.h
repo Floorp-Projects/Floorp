@@ -21,7 +21,7 @@ public:
     : ChannelMediaDecoder(aInit)
   {
   }
-  MediaDecoder* Clone(MediaDecoderInit& aInit) override;
+  ChannelMediaDecoder* Clone(MediaDecoderInit& aInit) override;
   MediaDecoderStateMachine* CreateStateMachine() override;
 
   // Returns true if the Flac backend is pref'ed on, and we're running on a

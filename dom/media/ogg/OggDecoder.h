@@ -19,7 +19,8 @@ public:
     : ChannelMediaDecoder(aInit)
   {}
 
-  MediaDecoder* Clone(MediaDecoderInit& aInit) override {
+  ChannelMediaDecoder* Clone(MediaDecoderInit& aInit) override
+  {
     if (!IsOggEnabled()) {
       return nullptr;
     }

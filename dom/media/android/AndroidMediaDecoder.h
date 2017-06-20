@@ -18,7 +18,8 @@ class AndroidMediaDecoder : public ChannelMediaDecoder
 public:
   AndroidMediaDecoder(MediaDecoderInit& aInit, const MediaContainerType& aType);
 
-  MediaDecoder* Clone(MediaDecoderInit& aInit) override {
+  ChannelMediaDecoder* Clone(MediaDecoderInit& aInit) override
+  {
     return new AndroidMediaDecoder(aInit, mType);
   }
   MediaDecoderStateMachine* CreateStateMachine() override;

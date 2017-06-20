@@ -15,6 +15,10 @@ class ChannelMediaDecoder : public MediaDecoder
 {
 public:
   explicit ChannelMediaDecoder(MediaDecoderInit& aInit);
+
+  // Create a new decoder of the same type as this one.
+  // Subclasses must implement this.
+  virtual ChannelMediaDecoder* Clone(MediaDecoderInit& aInit) = 0;
 };
 
 } // namespace mozilla

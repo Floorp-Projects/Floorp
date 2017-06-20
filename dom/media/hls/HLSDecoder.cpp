@@ -34,7 +34,7 @@ HLSDecoder::CreateStateMachine()
   return new MediaDecoderStateMachine(this, mReader);
 }
 
-MediaDecoder*
+ChannelMediaDecoder*
 HLSDecoder::Clone(MediaDecoderInit& aInit)
 {
   if (!IsEnabled()) {

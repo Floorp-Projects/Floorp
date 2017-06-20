@@ -148,10 +148,6 @@ public:
   // Return a callback object used to register with MediaResource to receive
   // notifications.
   MediaResourceCallback* GetResourceCallback() const;
-
-  // Create a new decoder of the same type as this one.
-  // Subclasses must implement this.
-  virtual MediaDecoder* Clone(MediaDecoderInit& aInit) = 0;
   // Create a new state machine to run this decoder.
   // Subclasses must implement this.
   virtual MediaDecoderStateMachine* CreateStateMachine() = 0;

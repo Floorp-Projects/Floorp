@@ -15,8 +15,9 @@
 
 namespace mozilla {
 
-MediaDecoder*
-MP3Decoder::Clone(MediaDecoderInit& aInit) {
+ChannelMediaDecoder*
+MP3Decoder::Clone(MediaDecoderInit& aInit)
+{
   if (!IsEnabled()) {
     return nullptr;
   }
