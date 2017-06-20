@@ -73,7 +73,7 @@ add_task(async function() {
         type: "separator",
       });
 
-      let contexts = ["page", "selection", "image", "editable", "password"];
+      let contexts = ["page", "link", "selection", "image", "editable", "password"];
       for (let i = 0; i < contexts.length; i++) {
         let context = contexts[i];
         let title = context;
@@ -178,6 +178,30 @@ add_task(async function() {
   await closeExtensionContextMenu(image);
 
   let result = await extension.awaitMessage("onclick");
+  checkClickInfo(result);
+  result = await extension.awaitMessage("browser.contextMenus.onClicked");
+  checkClickInfo(result);
+
+
+  // Test "link" context and OnClick data property.
+  extensionMenuRoot = await openExtensionContextMenu("[href=some-link]");
+
+  // Click on ext-link and check the click results
+  items = extensionMenuRoot.getElementsByAttribute("label", "link");
+  is(items.length, 1, "contextMenu item for parent was found (context=link)");
+  let link = items[0];
+
+  expectedClickInfo = {
+    menuItemId: "ext-link",
+    linkUrl: "http://mochi.test:8888/browser/browser/components/extensions/test/browser/some-link",
+    linkText: "Some link",
+    pageUrl: PAGE,
+    editable: false,
+  };
+
+  await closeExtensionContextMenu(link);
+
+  result = await extension.awaitMessage("onclick");
   checkClickInfo(result);
   result = await extension.awaitMessage("browser.contextMenus.onClicked");
   checkClickInfo(result);
