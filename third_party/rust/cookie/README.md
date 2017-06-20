@@ -1,20 +1,16 @@
 # cookie-rs
 
 [![Build Status](https://travis-ci.org/alexcrichton/cookie-rs.svg?branch=master)](https://travis-ci.org/alexcrichton/cookie-rs)
-[![Current Crates.io Version](https://img.shields.io/crates/v/cookie.svg)](https://crates.io/crates/cookie)
 
-A library for parsing HTTP cookies and managing cookie jars.
+[Documentation](http://docs.rs/cookie)
 
-# Usage
-
-Add the following to your `Cargo.toml`:
+A library for parsing HTTP cookies and managing cookie jars
 
 ```toml
+# Cargo.toml
 [dependencies]
-cookie = "0.9"
+cookie = "0.6"
 ```
-
-See the [documentation](http://docs.rs/cookie) for detailed usage information.
 
 # License
 
@@ -22,5 +18,4 @@ See the [documentation](http://docs.rs/cookie) for detailed usage information.
 the Apache License (Version 2.0), with portions covered by various BSD-like
 licenses.
 
-See [LICENSE-APACHE](LICENSE-APACHE), and [LICENSE-MIT](LICENSE-MIT) for
-details.
+See LICENSE-APACHE, and LICENSE-MIT for details.
