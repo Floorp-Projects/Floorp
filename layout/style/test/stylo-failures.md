@@ -41,9 +41,6 @@ to mochitest command.
 * console support bug 1352669
   * test_bug413958.html `monitorConsole` [3]
   * test_parser_diagnostics_unprintables.html [550]
-* Transition support:
-  * Events:
-    * test_animations_event_order.html [2]
 * Unimplemented \@font-face descriptors:
   * test_font_face_parser.html `font-language-override`: bug 1355364 [8]
 * keyword values should be preserved in \@font-face bug 1355368
