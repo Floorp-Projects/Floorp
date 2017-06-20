@@ -137,6 +137,7 @@ class TypedOperandId : public OperandId
     _(GetProp)              \
     _(GetElem)              \
     _(GetName)              \
+    _(GetPropSuper)         \
     _(SetProp)              \
     _(SetElem)              \
     _(BindName)             \
@@ -1085,6 +1086,7 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
 {
     HandleValue val_;
     HandleValue idVal_;
+    HandleValue receiver_;
     bool* isTemporarilyUnoptimizable_;
     CanAttachGetter canAttachGetter_;
 
@@ -1135,6 +1137,15 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
         return ValOperandId(1);
     }
 
+    ValOperandId getSuperReceiverValueId() const {
+        MOZ_ASSERT(cacheKind_ == CacheKind::GetPropSuper);
+        return ValOperandId(1);
+    }
+
+    bool isSuper() const {
+        return (cacheKind_ == CacheKind::GetPropSuper);
+    }
+
     // No pc if idempotent, as there can be multiple bytecode locations
     // due to GVN.
     bool idempotent() const { return pc_ == nullptr; }
@@ -1149,7 +1160,7 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
   public:
     GetPropIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, CacheKind cacheKind,
                        ICState::Mode mode, bool* isTemporarilyUnoptimizable, HandleValue val,
-                       HandleValue idVal, CanAttachGetter canAttachGetter);
+                       HandleValue idVal, HandleValue receiver, CanAttachGetter canAttachGetter);
 
     bool tryAttachStub();
     bool tryAttachIdempotentStub();
