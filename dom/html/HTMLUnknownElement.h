@@ -29,7 +29,6 @@ public:
   {
     if (NodeInfo()->Equals(nsGkAtoms::bdi)) {
       AddStatesSilently(NS_EVENT_STATE_DIR_ATTR_LIKE_AUTO);
-      SetHasDirAuto();
     }
   }
 
