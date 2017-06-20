@@ -176,10 +176,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                                        DOM_DEFAULT_SCRIPTABLE_FLAGS |
                                        XPC_SCRIPTABLE_WANT_ENUMERATE |
                                        XPC_SCRIPTABLE_IS_GLOBAL_OBJECT)
-  NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ChromeMessageBroadcaster, nsDOMGenericSH,
-                                       DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ChromeMessageSender, nsDOMGenericSH,
-                                       DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nullptr;
@@ -426,21 +422,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIMessageSender)
     DOM_CLASSINFO_MAP_ENTRY(nsISyncMessageSender)
     DOM_CLASSINFO_MAP_ENTRY(nsIContentProcessMessageManager)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ChromeMessageBroadcaster, nsISupports)
-    DOM_CLASSINFO_MAP_ENTRY(nsIFrameScriptLoader)
-    DOM_CLASSINFO_MAP_ENTRY(nsIProcessScriptLoader)
-    DOM_CLASSINFO_MAP_ENTRY(nsIGlobalProcessScriptLoader)
-    DOM_CLASSINFO_MAP_ENTRY(nsIMessageListenerManager)
-    DOM_CLASSINFO_MAP_ENTRY(nsIMessageBroadcaster)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ChromeMessageSender, nsISupports)
-    DOM_CLASSINFO_MAP_ENTRY(nsIFrameScriptLoader)
-    DOM_CLASSINFO_MAP_ENTRY(nsIProcessScriptLoader)
-    DOM_CLASSINFO_MAP_ENTRY(nsIMessageListenerManager)
-    DOM_CLASSINFO_MAP_ENTRY(nsIMessageSender)
   DOM_CLASSINFO_MAP_END
 
   static_assert(MOZ_ARRAY_LENGTH(sClassInfoData) == eDOMClassInfoIDCount,
