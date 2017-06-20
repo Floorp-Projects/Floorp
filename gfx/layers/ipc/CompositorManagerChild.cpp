@@ -7,7 +7,6 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorManagerParent.h"
 #include "mozilla/layers/CompositorThread.h"
-#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/dom/ContentChild.h"   // for ContentChild
 #include "mozilla/dom/TabChild.h"       // for TabChild
 #include "mozilla/dom/TabGroup.h"       // for TabGroup
@@ -162,7 +161,6 @@ CompositorManagerChild::CompositorManagerChild(CompositorManagerParent* aParent,
 
   mCanSend = true;
   AddRef();
-  SetReplyTimeout();
 }
 
 CompositorManagerChild::CompositorManagerChild(Endpoint<PCompositorManagerChild>&& aEndpoint,
@@ -177,7 +175,6 @@ CompositorManagerChild::CompositorManagerChild(Endpoint<PCompositorManagerChild>
 
   mCanSend = true;
   AddRef();
-  SetReplyTimeout();
 }
 
 void
@@ -244,27 +241,6 @@ CompositorManagerChild::GetSpecificMessageEventTarget(const Message& aMsg)
   }
 
   return do_AddRef(tabChild->TabGroup()->EventTargetFor(TaskCategory::Other));
-}
-
-void
-CompositorManagerChild::SetReplyTimeout()
-{
-#ifndef DEBUG
-  // Add a timeout for release builds to kill GPU process when it hangs.
-  if (XRE_IsParentProcess()) {
-    int32_t timeout = gfxPrefs::GPUProcessIPCReplyTimeoutMs();
-    SetReplyTimeoutMs(timeout);
-  }
-#endif
-}
-
-bool
-CompositorManagerChild::ShouldContinueFromReplyTimeout()
-{
-  if (XRE_IsParentProcess()) {
-    GPUProcessManager::Get()->KillProcess();
-  }
-  return false;
 }
 
 } // namespace layers
