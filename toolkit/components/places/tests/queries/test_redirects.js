@@ -175,10 +175,6 @@ function cartProd(aSequences, aCallback) {
   return numProds;
 }
 
-function run_test() {
-  run_next_test();
-}
-
 /**
  * Populate the visits array and add visits to the database.
  * We will generate visit-chains like:
