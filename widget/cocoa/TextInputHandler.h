@@ -90,7 +90,7 @@ public:
   ~TISInputSourceWrapper() { Clear(); }
 
   void InitByInputSourceID(const char* aID);
-  void InitByInputSourceID(const nsAFlatString &aID);
+  void InitByInputSourceID(const nsString& aID);
   void InitByInputSourceID(const CFStringRef aID);
   /**
    * InitByLayoutID() initializes the keyboard layout by the layout ID.

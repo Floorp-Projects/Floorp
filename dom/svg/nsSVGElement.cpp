@@ -2494,7 +2494,7 @@ nsSVGElement::ReportAttributeParseFailure(nsIDocument* aDocument,
                                           nsIAtom* aAttribute,
                                           const nsAString& aValue)
 {
-  const nsAFlatString& attributeValue = PromiseFlatString(aValue);
+  const nsString& attributeValue = PromiseFlatString(aValue);
   const char16_t *strings[] = { aAttribute->GetUTF16String(),
                                  attributeValue.get() };
   return SVGContentUtils::ReportToConsole(aDocument,

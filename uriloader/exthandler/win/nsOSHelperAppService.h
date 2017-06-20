@@ -51,10 +51,10 @@ public:
 protected:
   nsresult GetDefaultAppInfo(const nsAString& aTypeName, nsAString& aDefaultDescription, nsIFile** aDefaultApplication);
   // Lookup a mime info by extension, using an optional type hint
-  already_AddRefed<nsMIMEInfoWin> GetByExtension(const nsAFlatString& aFileExt, const char *aTypeHint = nullptr);
+  already_AddRefed<nsMIMEInfoWin> GetByExtension(const nsString& aFileExt, const char *aTypeHint = nullptr);
   nsresult FindOSMimeInfoForType(const char * aMimeContentType, nsIURI * aURI, char ** aFileExtension, nsIMIMEInfo ** aMIMEInfo);
 
-  static nsresult GetMIMEInfoFromRegistry(const nsAFlatString& fileType, nsIMIMEInfo *pInfo);
+  static nsresult GetMIMEInfoFromRegistry(const nsString& fileType, nsIMIMEInfo *pInfo);
   /// Looks up the type for the extension aExt and compares it to aType
   static bool typeFromExtEquals(const char16_t* aExt, const char *aType);
 

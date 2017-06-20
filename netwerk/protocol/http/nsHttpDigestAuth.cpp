@@ -406,10 +406,10 @@ nsHttpDigestAuth::GetAuthFlags(uint32_t *flags)
 nsresult
 nsHttpDigestAuth::CalculateResponse(const char * ha1_digest,
                                     const char * ha2_digest,
-                                    const nsAFlatCString & nonce,
+                                    const nsCString& nonce,
                                     uint16_t qop,
                                     const char * nonce_count,
-                                    const nsAFlatCString & cnonce,
+                                    const nsCString& cnonce,
                                     char * result)
 {
   uint32_t len = 2*EXPANDED_DIGEST_LENGTH + nonce.Length() + 2;
@@ -473,12 +473,12 @@ nsHttpDigestAuth::ExpandToHex(const char * digest, char * result)
 }
 
 nsresult
-nsHttpDigestAuth::CalculateHA1(const nsAFlatCString & username,
-                               const nsAFlatCString & password,
-                               const nsAFlatCString & realm,
+nsHttpDigestAuth::CalculateHA1(const nsCString& username,
+                               const nsCString& password,
+                               const nsCString& realm,
                                uint16_t algorithm,
-                               const nsAFlatCString & nonce,
-                               const nsAFlatCString & cnonce,
+                               const nsCString& nonce,
+                               const nsCString& cnonce,
                                char * result)
 {
   int16_t len = username.Length() + password.Length() + realm.Length() + 2;
@@ -522,8 +522,8 @@ nsHttpDigestAuth::CalculateHA1(const nsAFlatCString & username,
 }
 
 nsresult
-nsHttpDigestAuth::CalculateHA2(const nsAFlatCString & method,
-                               const nsAFlatCString & path,
+nsHttpDigestAuth::CalculateHA2(const nsCString& method,
+                               const nsCString& path,
                                uint16_t qop,
                                const char * bodyDigest,
                                char * result)

@@ -184,7 +184,7 @@ void PREF_CleanupPrefs()
 }
 
 // note that this appends to aResult, and does not assign!
-static void str_escape(const char * original, nsAFlatCString& aResult)
+static void str_escape(const char * original, nsCString& aResult)
 {
     /* JavaScript does not allow quotes, slashes, or line terminators inside
      * strings so we must escape them. ECMAScript defines four line

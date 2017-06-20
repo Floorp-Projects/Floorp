@@ -928,9 +928,9 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
       errorFlag = nsIScriptError::errorFlag;
     }
 
-    const nsAFlatString& specUTF16 =
+    const nsString& specUTF16 =
       NS_ConvertUTF8toUTF16(channelURI->GetSpecOrDefault());
-    const nsAFlatString& ctypeUTF16 = NS_ConvertASCIItoUTF16(contentType);
+    const nsString& ctypeUTF16 = NS_ConvertASCIItoUTF16(contentType);
     const char16_t *strings[] = { specUTF16.get(), ctypeUTF16.get() };
 
     nsCOMPtr<nsIURI> referrer = GetReferrerURI();

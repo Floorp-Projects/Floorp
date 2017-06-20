@@ -19,8 +19,8 @@ private:
   virtual ~nsTextToSubURI();
 
   // We assume that the URI is encoded as UTF-8.
-  nsresult convertURItoUnicode(const nsAFlatCString &aCharset,
-                               const nsAFlatCString &aURI, 
+  nsresult convertURItoUnicode(const nsCString& aCharset,
+                               const nsCString& aURI,
                                nsAString &_retval);
 
   // Characters from the pref "network.IDN.blacklist_chars", or a built-in

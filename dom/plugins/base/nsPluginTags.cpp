@@ -444,7 +444,7 @@ nsPluginTag::InitSandboxLevel()
 
 #if !defined(XP_WIN) && !defined(XP_MACOSX)
 static void
-ConvertToUTF8(nsAFlatCString& aString)
+ConvertToUTF8(nsCString& aString)
 {
   Unused << UTF_8_ENCODING->DecodeWithoutBOMHandling(aString, aString);
 }

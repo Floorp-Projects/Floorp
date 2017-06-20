@@ -63,9 +63,4 @@ class nsXPIDLCString;
 typedef nsAString             nsSubstring;
 typedef nsACString            nsCSubstring;
 
-typedef nsString              nsAFlatString;
-
-typedef nsCString             nsAFlatCString;
-
-
 #endif /* !defined(nsStringFwd_h___) */

@@ -324,7 +324,7 @@ NS_IMPL_ISUPPORTS(ClearOriginDataObserver, nsIObserver)
 
 class MOZ_STACK_CLASS UpgradeHostToOriginHelper {
 public:
-  virtual nsresult Insert(const nsACString& aOrigin, const nsAFlatCString& aType,
+  virtual nsresult Insert(const nsACString& aOrigin, const nsCString& aType,
                           uint32_t aPermission, uint32_t aExpireType, int64_t aExpireTime,
                           int64_t aModificationTime) = 0;
 };
@@ -341,7 +341,7 @@ public:
   }
 
   nsresult
-  Insert(const nsACString& aOrigin, const nsAFlatCString& aType,
+  Insert(const nsACString& aOrigin, const nsCString& aType,
          uint32_t aPermission, uint32_t aExpireType, int64_t aExpireTime,
          int64_t aModificationTime) final
   {
@@ -391,7 +391,7 @@ public:
   {}
 
   nsresult
-  Insert(const nsACString& aOrigin, const nsAFlatCString& aType,
+  Insert(const nsACString& aOrigin, const nsCString& aType,
          uint32_t aPermission, uint32_t aExpireType, int64_t aExpireTime,
          int64_t aModificationTime) final
   {
@@ -426,7 +426,7 @@ public:
   }
 
   nsresult
-  Insert(const nsACString& aOrigin, const nsAFlatCString& aType,
+  Insert(const nsACString& aOrigin, const nsCString& aType,
          uint32_t aPermission, uint32_t aExpireType, int64_t aExpireTime,
          int64_t aModificationTime) final
   {
@@ -498,7 +498,7 @@ private:
 
 
 nsresult
-UpgradeHostToOriginAndInsert(const nsACString& aHost, const nsAFlatCString& aType,
+UpgradeHostToOriginAndInsert(const nsACString& aHost, const nsCString& aType,
                              uint32_t aPermission, uint32_t aExpireType, int64_t aExpireTime,
                              int64_t aModificationTime, uint32_t aAppId, bool aIsInIsolatedMozBrowserElement,
                              UpgradeHostToOriginHelper* aHelper)
@@ -1680,7 +1680,7 @@ nsPermissionManager::AddFromPrincipal(nsIPrincipal* aPrincipal,
 
 nsresult
 nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
-                                 const nsAFlatCString &aType,
+                                 const nsCString& aType,
                                  uint32_t              aPermission,
                                  int64_t               aID,
                                  uint32_t              aExpireType,

@@ -1215,7 +1215,7 @@ FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
 
   char weightKeywordBuf[8]; // plenty to sprintf() a uint16_t
   const char* weightKeyword;
-  const nsAFlatCString& weightKeywordString =
+  const nsCString& weightKeywordString =
     nsCSSProps::ValueToKeyword(aUserFontEntry->Weight(),
                                nsCSSProps::kFontWeightKTable);
   if (weightKeywordString.Length() > 0) {

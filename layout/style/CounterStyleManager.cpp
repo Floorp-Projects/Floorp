@@ -617,7 +617,7 @@ public:
 BuiltinCounterStyle::GetStyleName(nsSubstring& aResult)
 {
   MOZ_ASSERT(mStyle != NS_STYLE_LIST_STYLE_CUSTOM);
-  const nsAFlatCString& str =
+  const nsCString& str =
     nsCSSProps::ValueToKeyword(mStyle, nsCSSProps::kListStyleKTable);
   MOZ_ASSERT(!str.IsEmpty());
   aResult.Assign(NS_ConvertUTF8toUTF16(str));
