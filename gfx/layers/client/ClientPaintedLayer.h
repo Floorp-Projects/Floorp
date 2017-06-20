@@ -116,11 +116,11 @@ protected:
   bool CanRecordLayer(ReadbackProcessor* aReadback);
   bool HasMaskLayers();
   already_AddRefed<gfx::DrawEventRecorderMemory> RecordPaintedLayer();
-  void ReplayPaintedLayer(DrawEventRecorderMemory* aRecorder);
   bool EnsureContentClient();
   uint32_t GetPaintFlags();
   void UpdateContentClient(PaintState& aState);
   bool UpdatePaintRegion(PaintState& aState);
+  void PaintOffMainThread(DrawEventRecorderMemory* aRecorder);
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
