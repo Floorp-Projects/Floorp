@@ -353,6 +353,12 @@ public:
   virtual bool AreComponentAlphaLayersEnabled();
 
   /**
+   * Returns true if this LayerManager always requires an intermediate surface
+   * to render blend operations.
+   */
+  virtual bool BlendingRequiresIntermediateSurface() { return false; }
+
+  /**
    * CONSTRUCTION PHASE ONLY
    * Set the root layer. The root layer is initially null. If there is
    * no root layer, EndTransaction won't draw anything.
