@@ -103,6 +103,10 @@ private:
 
   RefPtr<TaskQueue> mTaskQueue;
   nsCOMPtr<nsIEventTarget> mEventTarget;
+
+  nsCOMPtr<nsISupports> mPendingParent;
+  nsCString mPendingContentType;
+  RefPtr<MutableBlobStorageCallback> mPendingCallback;
 };
 
 } // namespace dom
