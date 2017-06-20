@@ -1391,3 +1391,11 @@ ROLE(FOOTNOTE,
      USE_ROLE_STRING,
      IA2_ROLE_FOOTNOTE,
      eNoNameRule)
+
+ROLE(ARTICLE,
+     "article",
+     ATK_ROLE_ARTICLE,
+     NSAccessibilityGroupRole,
+     ROLE_SYSTEM_DOCUMENT,
+     ROLE_SYSTEM_DOCUMENT,
+     eNoNameRule)

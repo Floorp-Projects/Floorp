@@ -2597,7 +2597,7 @@ gfxFont::GetShapedWord(DrawTarget *aDrawTarget,
                      aAppUnitsPerDevUnit,
                      aFlags, aRounding);
 
-    CacheHashEntry *entry = mWordCache->PutEntry(key);
+    CacheHashEntry* entry = mWordCache->PutEntry(key, fallible);
     if (!entry) {
         NS_WARNING("failed to create word cache entry - expect missing text");
         return nullptr;

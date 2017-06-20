@@ -1000,7 +1000,14 @@ enum Role {
    */
   FOOTNOTE = 171,
 
-  LAST_ROLE = FOOTNOTE
+  /**
+   * A complete or self-contained composition in a document, page, application,
+   * or site and that is, in principle, independently distributable or reusable,
+   * e.g. in syndication.
+   */
+  ARTICLE = 172,
+
+  LAST_ROLE = ARTICLE
 };
 
 } // namespace role

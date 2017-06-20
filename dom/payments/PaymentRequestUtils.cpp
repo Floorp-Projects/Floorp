@@ -38,53 +38,5 @@ ConvertStringstoISupportsStrings(const nsTArray<nsString>& aStrings,
   return NS_OK;
 }
 
-nsresult
-ConvertISupportsStringstoStrings(nsIArray* aIStrings,
-                                 nsTArray<nsString>& aStrings)
-{
-  NS_ENSURE_ARG_POINTER(aIStrings);
-  uint32_t length;
-  aStrings.Clear();
-  nsresult rv = aIStrings->GetLength(&length);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  for (uint32_t index = 0; index < length; ++index) {
-    nsCOMPtr<nsISupportsString> iString = do_QueryElementAt(aIStrings, index);
-    if (NS_WARN_IF(!iString)) {
-      return NS_ERROR_FAILURE;
-    }
-    nsString string;
-    rv = iString->GetData(string);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    aStrings.AppendElement(string);
-  }
-  return NS_OK;
-}
-
-nsresult
-CopyISupportsStrings(nsIArray* aSourceStrings, nsIArray** aTargetStrings)
-{
-  NS_ENSURE_ARG_POINTER(aTargetStrings);
-  *aTargetStrings = nullptr;
-  nsCOMPtr<nsIMutableArray> strings = do_CreateInstance(NS_ARRAY_CONTRACTID);
-  uint32_t length;
-  nsresult rv = aSourceStrings->GetLength(&length);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  for (uint32_t index = 0; index < length; ++index) {
-    nsCOMPtr<nsISupportsString> string = do_QueryElementAt(aSourceStrings, index);
-    if (NS_WARN_IF(!string)) {
-      return NS_ERROR_FAILURE;
-    }
-    strings->AppendElement(string, false);
-  }
-  strings.forget(aTargetStrings);
-  return NS_OK;
-}
-
 } // end of namespace dom
 } // end of namespace mozilla
