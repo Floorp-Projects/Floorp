@@ -93,6 +93,9 @@ bool GetLastRunCrashID(nsAString& id);
 nsresult RegisterAppMemory(void* ptr, size_t length);
 nsresult UnregisterAppMemory(void* ptr);
 
+// Include heap regions of the crash context.
+void SetIncludeContextHeap(bool aValue);
+
 // Functions for working with minidumps and .extras
 typedef nsDataHashtable<nsCStringHashKey, nsCString> AnnotationTable;
 

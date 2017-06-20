@@ -267,6 +267,11 @@ class ExceptionHandler {
   void RegisterAppMemory(void* ptr, size_t length);
   void UnregisterAppMemory(void* ptr);
 
+  // Calling set_include_context_heap(true) causes heap regions to be included
+  // in the minidump when a crash happens. The heap regions are from the
+  // register values of the crashing context.
+  void set_include_context_heap(bool enabled);
+
  private:
   friend class AutoExceptionHandler;
 
@@ -489,6 +494,8 @@ class ExceptionHandler {
 
   // The number of instances of this class.
   static volatile LONG instance_count_;
+
+  bool include_context_heap_;
 
   // disallow copy ctor and operator=
   explicit ExceptionHandler(const ExceptionHandler &);
