@@ -2344,6 +2344,11 @@
       <infoURL>https://get.adobe.com/reader/</infoURL>
       <versionRange maxVersion="15.006.30244" minVersion="15.006" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
+    <pluginItem blockID="41bf48ab-7e0c-4349-8e3f-6890311b2f83">
+      <match exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" name="filename"/>
+      <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+      <versionRange maxVersion="25.0.0.171" minVersion="25.0.0.163" severity="0" vulnerabilitystatus="1"/>
+    </pluginItem>
     <pluginItem blockID="43b45ad8-a373-42c1-89c6-64e2746885e5">
       <match exp="(nppdf32\.dll)|(AdobePDFViewerNPAPI\.plugin)" name="filename"/>
       <infoURL>https://get.adobe.com/reader/</infoURL>
@@ -2652,6 +2657,11 @@
       <match exp="libflashplayer\.so" name="filename"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="25.0.0.163" minVersion="25.0.0.127" severity="0" vulnerabilitystatus="1"/>
+    </pluginItem>
+    <pluginItem blockID="91543128-a6f1-40ea-8766-57c54aebd0c7" os="Linux">
+      <match exp="libflashplayer\.so" name="filename"/>
+      <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+      <versionRange maxVersion="25.0.0.171" minVersion="25.0.0.163" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
     <pluginItem blockID="p34">
       <match exp="[Nn][Pp][Jj][Pp][Ii]1[56]0_[0-9]+\.[Dd][Ll][Ll]" name="filename"/>
