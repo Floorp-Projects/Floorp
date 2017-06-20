@@ -87,11 +87,11 @@ impl<F> TyParamBuilder<F>
 
     pub fn build(self) -> F::Result {
         self.callback.invoke(TyParam {
-            attrs: vec![],
-            ident: self.id,
-            bounds: self.bounds,
-            default: self.default,
-        })
+                                 attrs: vec![],
+                                 ident: self.id,
+                                 bounds: self.bounds,
+                                 default: self.default,
+                             })
     }
 }
 
@@ -245,9 +245,9 @@ impl<F> PolyTraitRefBuilder<F>
 
     pub fn build(self) -> F::Result {
         self.callback.invoke(PolyTraitRef {
-            bound_lifetimes: self.lifetimes,
-            trait_ref: self.trait_ref,
-        })
+                                 bound_lifetimes: self.lifetimes,
+                                 trait_ref: self.trait_ref,
+                             })
     }
 }
 

@@ -58,7 +58,7 @@ impl<'a> TyGenerics<'a> {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub struct Lifetime {
     pub ident: Ident,
 }
@@ -93,12 +93,24 @@ impl LifetimeDef {
     }
 }
 
+/// A generic type parameter, e.g. `T: Into<String>`.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct TyParam {
     pub attrs: Vec<Attribute>,
     pub ident: Ident,
     pub bounds: Vec<TyParamBound>,
     pub default: Option<Ty>,
+}
+
+impl From<Ident> for TyParam {
+    fn from(ident: Ident) -> Self {
+        TyParam {
+            attrs: vec![],
+            ident: ident,
+            bounds: vec![],
+            default: None,
+        }
+    }
 }
 
 /// The AST represents all type param bounds as types.
@@ -337,7 +349,10 @@ mod printing {
                 tokens.append("<");
                 tokens.append_separated(&self.0.lifetimes, ",");
                 // Leave off the type parameter defaults
-                for (i, ty_param) in self.0.ty_params.iter().enumerate() {
+                for (i, ty_param) in self.0
+                        .ty_params
+                        .iter()
+                        .enumerate() {
                     if i > 0 || has_lifetimes {
                         tokens.append(",");
                     }
@@ -360,13 +375,19 @@ mod printing {
             if has_lifetimes || has_ty_params {
                 tokens.append("<");
                 // Leave off the lifetime bounds and attributes
-                let lifetimes = self.0.lifetimes.iter().map(|ld| &ld.lifetime);
+                let lifetimes = self.0
+                    .lifetimes
+                    .iter()
+                    .map(|ld| &ld.lifetime);
                 tokens.append_separated(lifetimes, ",");
                 if has_lifetimes && has_ty_params {
                     tokens.append(",");
                 }
                 // Leave off the type parameter bounds, defaults, and attributes
-                let ty_params = self.0.ty_params.iter().map(|tp| &tp.ident);
+                let ty_params = self.0
+                    .ty_params
+                    .iter()
+                    .map(|tp| &tp.ident);
                 tokens.append_separated(ty_params, ",");
                 tokens.append(">");
             }
