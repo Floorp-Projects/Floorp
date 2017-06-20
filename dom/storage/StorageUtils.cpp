@@ -84,7 +84,7 @@ PrincipalsEqual(nsIPrincipal* aObjectPrincipal,
 }
 
 void
-ReverseString(const nsCSubstring& aSource, nsCSubstring& aResult)
+ReverseString(const nsACString& aSource, nsACString& aResult)
 {
   nsACString::const_iterator sourceBegin, sourceEnd;
   aSource.BeginReading(sourceBegin);

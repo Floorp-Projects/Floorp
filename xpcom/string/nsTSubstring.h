@@ -1042,7 +1042,7 @@ public:
    */
   void ForgetSharedBuffer()
   {
-    if (mFlags & nsSubstring::F_SHARED) {
+    if (mFlags & nsAString::F_SHARED) {
       mData = char_traits::sEmptyBuffer;
       mLength = 0;
       mFlags = F_TERMINATED;

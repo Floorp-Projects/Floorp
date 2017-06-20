@@ -660,11 +660,11 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
 
 nsresult
 nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
-                                   const nsSubstring& aHref,
+                                   const nsAString& aHref,
                                    bool aAlternate,
-                                   const nsSubstring& aTitle,
-                                   const nsSubstring& aType,
-                                   const nsSubstring& aMedia)
+                                   const nsAString& aTitle,
+                                   const nsAString& aType,
+                                   const nsAString& aMedia)
 {
   nsresult rv = NS_OK;
   mPrettyPrintXML = false;

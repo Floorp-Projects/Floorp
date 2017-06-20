@@ -86,7 +86,7 @@ class nsWhitespaceTokenizerTemplate
   : public nsTWhitespaceTokenizer<nsDependentSubstring, IsWhitespace>
 {
 public:
-  explicit nsWhitespaceTokenizerTemplate(const nsSubstring& aSource)
+  explicit nsWhitespaceTokenizerTemplate(const nsAString& aSource)
     : nsTWhitespaceTokenizer<nsDependentSubstring, IsWhitespace>(aSource)
   {
   }
@@ -99,7 +99,7 @@ class nsCWhitespaceTokenizerTemplate
   : public nsTWhitespaceTokenizer<nsDependentCSubstring, IsWhitespace>
 {
 public:
-  explicit nsCWhitespaceTokenizerTemplate(const nsCSubstring& aSource)
+  explicit nsCWhitespaceTokenizerTemplate(const nsACString& aSource)
     : nsTWhitespaceTokenizer<nsDependentCSubstring, IsWhitespace>(aSource)
   {
   }

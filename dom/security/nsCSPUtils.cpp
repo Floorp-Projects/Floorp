@@ -428,7 +428,7 @@ CSP_AppendCSPFromHeader(nsIContentSecurityPolicy* aCsp,
   nsresult rv = NS_OK;
   nsCharSeparatedTokenizer tokenizer(aHeaderValue, ',');
   while (tokenizer.hasMoreTokens()) {
-    const nsSubstring& policy = tokenizer.nextToken();
+    const nsAString& policy = tokenizer.nextToken();
     rv = aCsp->AppendPolicy(policy, aReportOnly, false);
     NS_ENSURE_SUCCESS(rv, rv);
     {

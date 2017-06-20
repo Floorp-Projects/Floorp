@@ -298,9 +298,9 @@ void ToUpperCase(nsACString&);
 
 void ToLowerCase(nsACString&);
 
-void ToUpperCase(nsCSubstring&);
+void ToUpperCase(nsACString&);
 
-void ToLowerCase(nsCSubstring&);
+void ToLowerCase(nsACString&);
 
 /**
  * Converts case from string aSource to aDest.

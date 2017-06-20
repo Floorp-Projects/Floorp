@@ -483,7 +483,7 @@ NS_EscapeURL(const char* aPart, int32_t aPartLen, uint32_t aFlags,
 }
 
 nsresult
-NS_EscapeURL(const nsCSubstring& aStr, uint32_t aFlags, nsCSubstring& aResult,
+NS_EscapeURL(const nsACString& aStr, uint32_t aFlags, nsACString& aResult,
              const mozilla::fallible_t&)
 {
   bool appended = false;
@@ -500,14 +500,14 @@ NS_EscapeURL(const nsCSubstring& aStr, uint32_t aFlags, nsCSubstring& aResult,
   return rv;
 }
 
-const nsSubstring&
-NS_EscapeURL(const nsSubstring& aStr, uint32_t aFlags, nsSubstring& aResult)
+const nsAString&
+NS_EscapeURL(const nsAString& aStr, uint32_t aFlags, nsAString& aResult)
 {
   bool result = false;
-  nsresult rv = T_EscapeURL<nsSubstring>(aStr.Data(), aStr.Length(), aFlags, aResult, result);
+  nsresult rv = T_EscapeURL<nsAString>(aStr.Data(), aStr.Length(), aFlags, aResult, result);
 
   if (NS_FAILED(rv)) {
-    ::NS_ABORT_OOM(aResult.Length() * sizeof(nsSubstring::char_type));
+    ::NS_ABORT_OOM(aResult.Length() * sizeof(nsAString::char_type));
   }
 
   if (result) {
@@ -533,9 +533,9 @@ FindFirstMatchFrom(const nsString& aStr, size_t aStart,
   return false;
 }
 
-const nsSubstring&
+const nsAString&
 NS_EscapeURL(const nsString& aStr, const nsTArray<char16_t>& aForbidden,
-             nsSubstring& aResult)
+             nsAString& aResult)
 {
   bool didEscape = false;
   for (size_t i = 0, strLen = aStr.Length(); i < strLen; ) {

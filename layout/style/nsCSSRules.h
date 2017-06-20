@@ -304,7 +304,7 @@ private:
 class nsCSSKeyframesRule final : public mozilla::dom::CSSKeyframesRule
 {
 public:
-  nsCSSKeyframesRule(const nsSubstring& aName,
+  nsCSSKeyframesRule(const nsAString& aName,
                      uint32_t aLineNumber, uint32_t aColumnNumber)
     : mozilla::dom::CSSKeyframesRule(aLineNumber, aColumnNumber)
     , mName(aName)

@@ -123,7 +123,7 @@ txMozillaXMLOutput::attribute(nsIAtom* aPrefix,
 
 nsresult
 txMozillaXMLOutput::attribute(nsIAtom* aPrefix,
-                              const nsSubstring& aLocalName,
+                              const nsAString& aLocalName,
                               const int32_t aNsID,
                               const nsString& aValue)
 {
@@ -171,7 +171,7 @@ txMozillaXMLOutput::attributeInternal(nsIAtom* aPrefix,
 }
 
 nsresult
-txMozillaXMLOutput::characters(const nsSubstring& aData, bool aDOE)
+txMozillaXMLOutput::characters(const nsAString& aData, bool aDOE)
 {
     nsresult rv = closePrevious(false);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -454,7 +454,7 @@ txMozillaXMLOutput::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
 
 nsresult
 txMozillaXMLOutput::startElement(nsIAtom* aPrefix,
-                                 const nsSubstring& aLocalName,
+                                 const nsAString& aLocalName,
                                  const int32_t aNsID)
 {
     int32_t nsId = aNsID;
@@ -777,7 +777,7 @@ void txMozillaXMLOutput::processHTTPEquiv(nsIAtom* aHeader, const nsString& aVal
 }
 
 nsresult
-txMozillaXMLOutput::createResultDocument(const nsSubstring& aName, int32_t aNsID,
+txMozillaXMLOutput::createResultDocument(const nsAString& aName, int32_t aNsID,
                                          nsIDOMDocument* aSourceDocument,
                                          bool aLoadedAsData)
 {

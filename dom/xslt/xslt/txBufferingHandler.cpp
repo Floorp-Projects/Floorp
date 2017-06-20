@@ -110,7 +110,7 @@ class txStartElementTransaction : public txOutputTransaction
 {
 public:
     txStartElementTransaction(nsIAtom* aPrefix,
-                              const nsSubstring& aLocalName, int32_t aNsID)
+                              const nsAString& aLocalName, int32_t aNsID)
         : txOutputTransaction(eStartElementTransaction),
           mPrefix(aPrefix),
           mLocalName(aLocalName),
@@ -131,7 +131,7 @@ class txAttributeTransaction : public txOutputTransaction
 {
 public:
     txAttributeTransaction(nsIAtom* aPrefix,
-                           const nsSubstring& aLocalName, int32_t aNsID,
+                           const nsAString& aLocalName, int32_t aNsID,
                            const nsString& aValue)
         : txOutputTransaction(eAttributeTransaction),
           mPrefix(aPrefix),
@@ -208,7 +208,7 @@ txBufferingHandler::attribute(nsIAtom* aPrefix, nsIAtom* aLocalName,
 }
 
 nsresult
-txBufferingHandler::attribute(nsIAtom* aPrefix, const nsSubstring& aLocalName,
+txBufferingHandler::attribute(nsIAtom* aPrefix, const nsAString& aLocalName,
                               const int32_t aNsID, const nsString& aValue)
 {
     NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
@@ -224,7 +224,7 @@ txBufferingHandler::attribute(nsIAtom* aPrefix, const nsSubstring& aLocalName,
 }
 
 nsresult
-txBufferingHandler::characters(const nsSubstring& aData, bool aDOE)
+txBufferingHandler::characters(const nsAString& aData, bool aDOE)
 {
     NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
 
@@ -320,7 +320,7 @@ txBufferingHandler::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
 
 nsresult
 txBufferingHandler::startElement(nsIAtom* aPrefix,
-                                 const nsSubstring& aLocalName,
+                                 const nsAString& aLocalName,
                                  const int32_t aNsID)
 {
     NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);

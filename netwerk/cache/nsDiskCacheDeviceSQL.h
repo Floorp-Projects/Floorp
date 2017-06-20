@@ -143,10 +143,10 @@ public:
                                                        nsACString const &aOriginSuffix,
                                                        nsACString &_result);
 
-  nsresult                ActivateCache(const nsCSubstring &group,
-                                        const nsCSubstring &clientID);
-  bool                    IsActiveCache(const nsCSubstring &group,
-                                        const nsCSubstring &clientID);
+  nsresult                ActivateCache(const nsACString& group,
+                                        const nsACString& clientID);
+  bool                    IsActiveCache(const nsACString& group,
+                                        const nsACString& clientID);
   nsresult                CreateApplicationCache(const nsACString &group,
                                                  nsIApplicationCache **out);
 
