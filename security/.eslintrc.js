@@ -36,20 +36,11 @@ module.exports = {
     // case/default clauses.
     "no-case-declarations": "error",
 
-    // Disallow modifying variables of class declarations.
-    "no-class-assign": "error",
-
     // Disallow use of the console API.
     "no-console": "error",
 
-    // Disallow modifying variables that are declared using const.
-    "no-const-assign": "error",
-
     // Disallow constant expressions in conditions (except for loops).
     "no-constant-condition": ["error", { "checkLoops": false }],
-
-    // Disallow duplicate class members.
-    "no-dupe-class-members": "error",
 
     // Disallow extending of native objects.
     "no-extend-native": "error",
