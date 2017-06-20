@@ -481,7 +481,9 @@ EditorBase::PreDestroy(bool aDestroyingFrames)
 NS_IMETHODIMP
 EditorBase::GetFlags(uint32_t* aFlags)
 {
-  *aFlags = mFlags;
+  // NOTE: If you need to override this method, you need to make Flags()
+  //       virtual.
+  *aFlags = Flags();
   return NS_OK;
 }
 
@@ -793,13 +795,23 @@ EditorBase::GetNumberOfRedoItems(int32_t* aNumItems)
 NS_IMETHODIMP
 EditorBase::GetTransactionManager(nsITransactionManager** aTxnManager)
 {
-  NS_ENSURE_ARG_POINTER(aTxnManager);
-
-  *aTxnManager = nullptr;
-  NS_ENSURE_TRUE(mTxnMgr, NS_ERROR_FAILURE);
-
-  NS_ADDREF(*aTxnManager = mTxnMgr);
+  // NOTE: If you need to override this method, you need to make
+  //       GetTransactionManager() virtual.
+  if (NS_WARN_IF(!aTxnManager)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aTxnManager = GetTransactionManager().take();
+  if (NS_WARN_IF(!*aTxnManager)) {
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
+}
+
+already_AddRefed<nsITransactionManager>
+EditorBase::GetTransactionManager() const
+{
+  nsCOMPtr<nsITransactionManager> transactionManager = mTxnMgr.get();
+  return transactionManager.forget();
 }
 
 NS_IMETHODIMP
@@ -5231,8 +5243,12 @@ EditorBase::OnFocus(nsIDOMEventTarget* aFocusEventTarget)
 NS_IMETHODIMP
 EditorBase::GetSuppressDispatchingInputEvent(bool* aSuppressed)
 {
-  NS_ENSURE_ARG_POINTER(aSuppressed);
-  *aSuppressed = !mDispatchInputEvent;
+  // NOTE: If you need to override this method, you need to make
+  //       IsSuppressingDispatchingInputEvent() virtual.
+  if (NS_WARN_IF(aSuppressed)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aSuppressed = IsSuppressingDispatchingInputEvent();
   return NS_OK;
 }
 
@@ -5246,8 +5262,10 @@ EditorBase::SetSuppressDispatchingInputEvent(bool aSuppress)
 NS_IMETHODIMP
 EditorBase::GetIsInEditAction(bool* aIsInEditAction)
 {
+  // NOTE: If you need to override this method, you need to make
+  //       IsInEditAction() virtual.
   MOZ_ASSERT(aIsInEditAction, "aIsInEditAction must not be null");
-  *aIsInEditAction = mIsInEditAction;
+  *aIsInEditAction = IsInEditAction();
   return NS_OK;
 }
 

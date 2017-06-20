@@ -177,6 +177,8 @@ public:
   static void GetDefaultEditorPrefs(int32_t& aNewLineHandling,
                                     int32_t& aCaretStyle);
 
+  int32_t MaxTextLength() const { return mMaxTextLength; }
+
 protected:
   virtual ~TextEditor();
 

@@ -2620,7 +2620,7 @@ HTMLInputElement::GetEditor()
 {
   nsTextEditorState* state = GetEditorState();
   if (state) {
-    return state->GetEditor();
+    return state->GetTextEditor();
   }
   return nullptr;
 }
