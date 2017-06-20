@@ -312,7 +312,7 @@ class nsCookieService final : public nsICookieService
     static bool                   GetExpiry(nsCookieAttributes &aCookie, int64_t aServerTime, int64_t aCurrentTime);
     void                          RemoveAllFromMemory();
     already_AddRefed<nsIArray>    PurgeCookies(int64_t aCurrentTimeInUsec);
-    bool                          FindCookie(const nsCookieKey& aKey, const nsAFlatCString &aHost, const nsAFlatCString &aName, const nsAFlatCString &aPath, nsListIter &aIter);
+    bool                          FindCookie(const nsCookieKey& aKey, const nsCString& aHost, const nsCString& aName, const nsCString& aPath, nsListIter &aIter);
     bool                          FindSecureCookie(const nsCookieKey& aKey, nsCookie* aCookie);
     int64_t                       FindStaleCookie(nsCookieEntry *aEntry, int64_t aCurrentTime, nsIURI* aSource, const mozilla::Maybe<bool> &aIsSecure, nsListIter &aIter);
     void                          TelemetryForEvictingStaleCookie(nsCookie* aEvicted, int64_t oldestCookieTime);

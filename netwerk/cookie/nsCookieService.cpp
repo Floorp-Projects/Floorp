@@ -316,15 +316,15 @@ LogEvicted(nsCookie *aCookie, const char* details)
   MOZ_LOG(gCookieLog, LogLevel::Debug,("\n"));
 }
 
-// inline wrappers to make passing in nsAFlatCStrings easier
+// inline wrappers to make passing in nsCStrings easier
 static inline void
-LogFailure(bool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieString, const char *aReason)
+LogFailure(bool aSetCookie, nsIURI *aHostURI, const nsCString& aCookieString, const char *aReason)
 {
   LogFailure(aSetCookie, aHostURI, aCookieString.get(), aReason);
 }
 
 static inline void
-LogSuccess(bool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieString, nsCookie *aCookie, bool aReplacing)
+LogSuccess(bool aSetCookie, nsIURI *aHostURI, const nsCString& aCookieString, nsCookie *aCookie, bool aReplacing)
 {
   LogSuccess(aSetCookie, aHostURI, aCookieString.get(), aCookie, aReplacing);
 }
@@ -5010,9 +5010,9 @@ nsCookieService::FindSecureCookie(const nsCookieKey    &aKey,
 // find an exact cookie specified by host, name, and path that hasn't expired.
 bool
 nsCookieService::FindCookie(const nsCookieKey    &aKey,
-                            const nsAFlatCString &aHost,
-                            const nsAFlatCString &aName,
-                            const nsAFlatCString &aPath,
+                            const nsCString& aHost,
+                            const nsCString& aName,
+                            const nsCString& aPath,
                             nsListIter           &aIter)
 {
   EnsureReadDomain(aKey);

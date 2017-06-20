@@ -357,7 +357,7 @@ txResultBuffer::addTransaction(txOutputTransaction* aTransaction)
 static nsresult
 flushTransaction(txOutputTransaction* aTransaction,
                  txAXMLEventHandler* aHandler,
-                 nsAFlatString::const_char_iterator& aIter)
+                 nsString::const_char_iterator& aIter)
 {
     switch (aTransaction->mType) {
         case txOutputTransaction::eAttributeAtomTransaction:
@@ -384,8 +384,8 @@ flushTransaction(txOutputTransaction* aTransaction,
         {
             txCharacterTransaction* charTransaction =
                 static_cast<txCharacterTransaction*>(aTransaction);
-            nsAFlatString::const_char_iterator start = aIter;
-            nsAFlatString::const_char_iterator end =
+            nsString::const_char_iterator start = aIter;
+            nsString::const_char_iterator end =
                 start + charTransaction->mLength;
             aIter = end;
             return aHandler->characters(Substring(start, end),
@@ -442,7 +442,7 @@ flushTransaction(txOutputTransaction* aTransaction,
 nsresult
 txResultBuffer::flushToHandler(txAXMLEventHandler* aHandler)
 {
-    nsAFlatString::const_char_iterator iter;
+    nsString::const_char_iterator iter;
     mStringValue.BeginReading(iter);
 
     for (uint32_t i = 0, len = mTransactions.Length(); i < len; ++i) {

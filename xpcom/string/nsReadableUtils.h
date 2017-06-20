@@ -400,11 +400,11 @@ bool StringEndsWith(const nsACString& aSource, const nsACString& aSubstring);
 bool StringEndsWith(const nsACString& aSource, const nsACString& aSubstring,
                     const nsCStringComparator& aComparator);
 
-const nsAFlatString& EmptyString();
-const nsAFlatCString& EmptyCString();
+const nsString& EmptyString();
+const nsCString& EmptyCString();
 
-const nsAFlatString& NullString();
-const nsAFlatCString& NullCString();
+const nsString& NullString();
+const nsCString& NullCString();
 
 /**
 * Compare a UTF-8 string to an UTF-16 string.

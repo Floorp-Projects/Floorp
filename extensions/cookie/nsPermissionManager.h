@@ -194,7 +194,7 @@ public:
   static const int64_t cIDPermissionIsDefault = -1;
 
   nsresult AddInternal(nsIPrincipal* aPrincipal,
-                       const nsAFlatCString &aType,
+                       const nsCString& aType,
                        uint32_t aPermission,
                        int64_t aID,
                        uint32_t aExpireType,

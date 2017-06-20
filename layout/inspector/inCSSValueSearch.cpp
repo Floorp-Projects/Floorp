@@ -351,7 +351,7 @@ inCSSValueSearch::SearchStyleRule(nsIDOMCSSStyleRule* aStyleRule, nsIURI* aBaseU
 }
 
 nsresult
-inCSSValueSearch::SearchStyleValue(const nsAFlatString& aValue, nsIURI* aBaseURL)
+inCSSValueSearch::SearchStyleValue(const nsString& aValue, nsIURI* aBaseURL)
 {
   if (StringBeginsWith(aValue, NS_LITERAL_STRING("url(")) &&
       StringEndsWith(aValue, NS_LITERAL_STRING(")"))) {

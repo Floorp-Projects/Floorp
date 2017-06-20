@@ -24,8 +24,8 @@
 #define nsReadableUtils_h___
 class nsACString;
 class nsAString;
-class nsAFlatString;
-class nsAFlatCString;
+class nsString;
+class nsCString;
 class nsAdoptingString;
 class nsAdoptingCString;
 class nsXPIDLString;

@@ -45,8 +45,7 @@ static const char kACEPrefix[] = "xn--";
 #define NS_NET_PREF_IDNUSEWHITELIST "network.IDN.use_whitelist"
 #define NS_NET_PREF_IDNRESTRICTION  "network.IDN.restriction_profile"
 
-inline bool isOnlySafeChars(const nsAFlatString& in,
-                              const nsAFlatString& blacklist)
+inline bool isOnlySafeChars(const nsString& in, const nsString& blacklist)
 {
   return (blacklist.IsEmpty() ||
           in.FindCharInSet(blacklist) == kNotFound);
