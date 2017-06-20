@@ -97,7 +97,7 @@ def check_prog(var, progs, what=None, input=None, allow_missing=False,
                paths=None, when=None):
     if input is not None:
         # Wrap input with type checking and normalization.
-        @depends(input)
+        @depends(input, when=when)
         def input(value):
             if not value:
                 return
@@ -108,7 +108,7 @@ def check_prog(var, progs, what=None, input=None, allow_missing=False,
             configure_error('input must resolve to a tuple or a list with a '
                             'single element, or a string')
     else:
-        option(env=var, nargs=1,
+        option(env=var, nargs=1, when=when,
                help='Path to %s' % (what or 'the %s program' % var.lower()))
         input = var
     what = what or var.lower()
@@ -135,7 +135,7 @@ def check_prog(var, progs, what=None, input=None, allow_missing=False,
         if not allow_missing or value:
             raise FatalCheckError('Cannot find %s' % what)
 
-    @depends_if(check, progs)
+    @depends_if(check, progs, when=when)
     def normalized_for_config(value, progs):
         return ':' if value is None else value
 
