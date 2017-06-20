@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1367586
+-->
+<head>
+  <title>Test for Bug 1367586</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe id="load-frame"></iframe>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var frm = document.getElementById("load-frame");
+var step = 0;
+
+window.addEventListener("load", () => {
+  frm.contentWindow.location = "http://mochi.test:8888/tests/caps/tests/mochitest/file_bug1367586-redirect.sjs";
+  frm.addEventListener("load", function() {
+    ++step;
+    SimpleTest.executeSoon((function(_step, _frm) {
+      switch (_step) {
+      case 1:
+        is(_frm.contentWindow.location.href, "http://mochi.test:8888/tests/caps/tests/mochitest/file_bug1367586-target.html",
+           "Redirected to the expected target in step 1");
+        _frm.contentWindow.location = "http://mochi.test:8888/tests/caps/tests/mochitest/file_bug1367586-followon.html";
+        break;
+      case 2:
+        is(_frm.contentWindow.location.href, "http://mochi.test:8888/tests/caps/tests/mochitest/file_bug1367586-followon.html",
+           "Navigated to the expected URL in step 2");
+        _frm.contentWindow.history.back();
+        break;
+      case 3:
+        is(_frm.contentWindow.location.href, "http://mochi.test:8888/tests/caps/tests/mochitest/file_bug1367586-target.html",
+           "Seeing the correct URL when navigating back in step 3");
+        SimpleTest.finish();
+        break;
+      }
+    }).bind(window, step, frm));
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

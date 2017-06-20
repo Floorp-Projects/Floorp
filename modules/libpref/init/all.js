@@ -934,6 +934,9 @@ pref("accessibility.AOM.enabled", false);
 // See bug 781791.
 pref("accessibility.delay_plugins", false);
 pref("accessibility.delay_plugin_time", 10000);
+
+// The COM handler used for Windows e10s performance and live regions
+pref("accessibility.handler.enabled", true);
 #endif
 
 pref("focusmanager.testmode", false);

@@ -876,6 +876,7 @@ var PDFViewerApplication = {
   l10n: null,
   pageRotation: 0,
   isInitialViewSet: false,
+  downloadComplete: false,
   viewerPrefs: {
     sidebarViewOnLoad: _pdf_sidebar.SidebarView.NONE,
     pdfBugEnabled: false,
@@ -891,6 +892,7 @@ var PDFViewerApplication = {
   url: '',
   baseUrl: '',
   externalServices: DefaultExternalServices,
+  _boundEvents: {},
   initialize: function pdfViewInitialize(appConfig) {
     this.preferences = this.externalServices.createPreferences();
     configure(_pdfjsLib.PDFJS);
@@ -1204,7 +1206,9 @@ var PDFViewerApplication = {
       this.pdfDocumentProperties.setDocument(null, null);
     }
     this.store = null;
+    this.pageRotation = 0;
     this.isInitialViewSet = false;
+    this.downloadComplete = false;
     this.pdfSidebar.reset();
     this.pdfOutlineViewer.reset();
     this.pdfAttachmentViewer.reset();
@@ -1247,7 +1251,6 @@ var PDFViewerApplication = {
         this.pdfDocumentProperties.setFileSize(args.length);
       }
     }
-    this.downloadComplete = false;
     let loadingTask = (0, _pdfjsLib.getDocument)(parameters);
     this.pdfLoadingTask = loadingTask;
     loadingTask.onPassword = (updateCallback, reason) => {
@@ -1373,12 +1376,10 @@ var PDFViewerApplication = {
     this.pdfLinkService.setDocument(pdfDocument, baseDocumentUrl);
     this.pdfDocumentProperties.setDocument(pdfDocument, this.url);
     let pdfViewer = this.pdfViewer;
-    pdfViewer.currentScale = scale;
     pdfViewer.setDocument(pdfDocument);
     let firstPagePromise = pdfViewer.firstPagePromise;
     let pagesPromise = pdfViewer.pagesPromise;
     let onePageRendered = pdfViewer.onePageRendered;
-    this.pageRotation = 0;
     let pdfThumbnailViewer = this.pdfThumbnailViewer;
     pdfThumbnailViewer.setDocument(pdfDocument);
     firstPagePromise.then(pdfPage => {
@@ -1618,8 +1619,11 @@ var PDFViewerApplication = {
     }
     this.forceRendering();
   },
-  rotatePages: function pdfViewRotatePages(delta) {
-    var pageNumber = this.page;
+  rotatePages(delta) {
+    if (!this.pdfDocument) {
+      return;
+    }
+    let pageNumber = this.page;
     this.pageRotation = (this.pageRotation + 360 + delta) % 360;
     this.pdfViewer.pagesRotation = this.pageRotation;
     this.pdfThumbnailViewer.pagesRotation = this.pageRotation;
@@ -1632,12 +1636,14 @@ var PDFViewerApplication = {
     }
     this.pdfPresentationMode.request();
   },
-  bindEvents: function pdfViewBindEvents() {
-    var eventBus = this.eventBus;
+  bindEvents() {
+    let eventBus = this.eventBus;
+    this._boundEvents.beforePrint = this.beforePrint.bind(this);
+    this._boundEvents.afterPrint = this.afterPrint.bind(this);
     eventBus.on('resize', webViewerResize);
     eventBus.on('hashchange', webViewerHashchange);
-    eventBus.on('beforeprint', this.beforePrint.bind(this));
-    eventBus.on('afterprint', this.afterPrint.bind(this));
+    eventBus.on('beforeprint', this._boundEvents.beforePrint);
+    eventBus.on('afterprint', this._boundEvents.afterPrint);
     eventBus.on('pagerendered', webViewerPageRendered);
     eventBus.on('textlayerrendered', webViewerTextLayerRendered);
     eventBus.on('updateviewarea', webViewerUpdateViewarea);
@@ -1665,23 +1671,75 @@ var PDFViewerApplication = {
     eventBus.on('find', webViewerFind);
     eventBus.on('findfromurlhash', webViewerFindFromUrlHash);
   },
-  bindWindowEvents: function pdfViewBindWindowEvents() {
-    var eventBus = this.eventBus;
+  bindWindowEvents() {
+    let eventBus = this.eventBus;
+    this._boundEvents.windowResize = () => {
+      eventBus.dispatch('resize');
+    };
+    this._boundEvents.windowHashChange = () => {
+      eventBus.dispatch('hashchange', { hash: document.location.hash.substring(1) });
+    };
+    this._boundEvents.windowBeforePrint = () => {
+      eventBus.dispatch('beforeprint');
+    };
+    this._boundEvents.windowAfterPrint = () => {
+      eventBus.dispatch('afterprint');
+    };
     window.addEventListener('wheel', webViewerWheel);
     window.addEventListener('click', webViewerClick);
     window.addEventListener('keydown', webViewerKeyDown);
-    window.addEventListener('resize', function windowResize() {
-      eventBus.dispatch('resize');
-    });
-    window.addEventListener('hashchange', function windowHashChange() {
-      eventBus.dispatch('hashchange', { hash: document.location.hash.substring(1) });
-    });
-    window.addEventListener('beforeprint', function windowBeforePrint() {
-      eventBus.dispatch('beforeprint');
-    });
-    window.addEventListener('afterprint', function windowAfterPrint() {
-      eventBus.dispatch('afterprint');
-    });
+    window.addEventListener('resize', this._boundEvents.windowResize);
+    window.addEventListener('hashchange', this._boundEvents.windowHashChange);
+    window.addEventListener('beforeprint', this._boundEvents.windowBeforePrint);
+    window.addEventListener('afterprint', this._boundEvents.windowAfterPrint);
+  },
+  unbindEvents() {
+    let eventBus = this.eventBus;
+    eventBus.off('resize', webViewerResize);
+    eventBus.off('hashchange', webViewerHashchange);
+    eventBus.off('beforeprint', this._boundEvents.beforePrint);
+    eventBus.off('afterprint', this._boundEvents.afterPrint);
+    eventBus.off('pagerendered', webViewerPageRendered);
+    eventBus.off('textlayerrendered', webViewerTextLayerRendered);
+    eventBus.off('updateviewarea', webViewerUpdateViewarea);
+    eventBus.off('pagechanging', webViewerPageChanging);
+    eventBus.off('scalechanging', webViewerScaleChanging);
+    eventBus.off('sidebarviewchanged', webViewerSidebarViewChanged);
+    eventBus.off('pagemode', webViewerPageMode);
+    eventBus.off('namedaction', webViewerNamedAction);
+    eventBus.off('presentationmodechanged', webViewerPresentationModeChanged);
+    eventBus.off('presentationmode', webViewerPresentationMode);
+    eventBus.off('openfile', webViewerOpenFile);
+    eventBus.off('print', webViewerPrint);
+    eventBus.off('download', webViewerDownload);
+    eventBus.off('firstpage', webViewerFirstPage);
+    eventBus.off('lastpage', webViewerLastPage);
+    eventBus.off('nextpage', webViewerNextPage);
+    eventBus.off('previouspage', webViewerPreviousPage);
+    eventBus.off('zoomin', webViewerZoomIn);
+    eventBus.off('zoomout', webViewerZoomOut);
+    eventBus.off('pagenumberchanged', webViewerPageNumberChanged);
+    eventBus.off('scalechanged', webViewerScaleChanged);
+    eventBus.off('rotatecw', webViewerRotateCw);
+    eventBus.off('rotateccw', webViewerRotateCcw);
+    eventBus.off('documentproperties', webViewerDocumentProperties);
+    eventBus.off('find', webViewerFind);
+    eventBus.off('findfromurlhash', webViewerFindFromUrlHash);
+    this._boundEvents.beforePrint = null;
+    this._boundEvents.afterPrint = null;
+  },
+  unbindWindowEvents() {
+    window.removeEventListener('wheel', webViewerWheel);
+    window.removeEventListener('click', webViewerClick);
+    window.removeEventListener('keydown', webViewerKeyDown);
+    window.removeEventListener('resize', this._boundEvents.windowResize);
+    window.removeEventListener('hashchange', this._boundEvents.windowHashChange);
+    window.removeEventListener('beforeprint', this._boundEvents.windowBeforePrint);
+    window.removeEventListener('afterprint', this._boundEvents.windowAfterPrint);
+    this._boundEvents.windowResize = null;
+    this._boundEvents.windowHashChange = null;
+    this._boundEvents.windowBeforePrint = null;
+    this._boundEvents.windowAfterPrint = null;
   }
 };
 var validateFileURL;
