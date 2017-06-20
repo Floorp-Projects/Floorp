@@ -13,7 +13,6 @@
 #include "MediaEventSource.h"
 #include "MediaMetadataManager.h"
 #include "MediaResource.h"
-#include "MediaResourceCallback.h"
 #include "MediaStatistics.h"
 #include "MediaStreamGraph.h"
 #include "SeekTarget.h"
@@ -88,41 +87,6 @@ struct MediaDecoderInit
 class MediaDecoder : public AbstractMediaDecoder
 {
 public:
-  // Used to register with MediaResource to receive notifications which will
-  // be forwarded to MediaDecoder.
-  class ResourceCallback : public MediaResourceCallback
-  {
-    // Throttle calls to MediaDecoder::NotifyDataArrived()
-    // to be at most once per 500ms.
-    static const uint32_t sDelay = 500;
-
-  public:
-    explicit ResourceCallback(AbstractThread* aMainThread);
-    // Start to receive notifications from ResourceCallback.
-    void Connect(MediaDecoder* aDecoder);
-    // Called upon shutdown to stop receiving notifications.
-    void Disconnect();
-
-  private:
-    /* MediaResourceCallback functions */
-    MediaDecoderOwner* GetMediaOwner() const override;
-    void SetInfinite(bool aInfinite) override;
-    void NotifyNetworkError() override;
-    void NotifyDataArrived() override;
-    void NotifyDataEnded(nsresult aStatus) override;
-    void NotifyPrincipalChanged() override;
-    void NotifySuspendedStatusChanged() override;
-    void NotifyBytesConsumed(int64_t aBytes, int64_t aOffset) override;
-
-    static void TimerCallback(nsITimer* aTimer, void* aClosure);
-
-    // The decoder to send notifications. Main-thread only.
-    MediaDecoder* mDecoder = nullptr;
-    nsCOMPtr<nsITimer> mTimer;
-    bool mTimerArmed = false;
-    const RefPtr<AbstractThread> mAbstractMainThread;
-  };
-
   typedef MozPromise<bool /* aIgnored */, bool /* aIgnored */,
                      /* IsExclusive = */ true>
     SeekPromise;
@@ -145,9 +109,6 @@ public:
 
   explicit MediaDecoder(MediaDecoderInit& aInit);
 
-  // Return a callback object used to register with MediaResource to receive
-  // notifications.
-  MediaResourceCallback* GetResourceCallback() const;
   // Create a new state machine to run this decoder.
   // Subclasses must implement this.
   virtual MediaDecoderStateMachine* CreateStateMachine() = 0;
@@ -578,12 +539,6 @@ protected:
     media::TimeUnit::FromMicroseconds(250000);
 
 private:
-  void NotifyDataArrivedInternal();
-
-  // Called to recompute playback rate and notify 'progress' event.
-  // Call on the main thread only.
-  void DownloadProgressed();
-
   nsCString GetDebugInfo();
 
   // Called when the metadata from the media file has been loaded by the
@@ -628,14 +583,47 @@ private:
   // Explicitly prievate to force access via accessors.
   RefPtr<MediaDecoderStateMachine> mDecoderStateMachine;
 
-  RefPtr<ResourceCallback> mResourceCallback;
-
   MozPromiseHolder<CDMProxyPromise> mCDMProxyPromiseHolder;
   RefPtr<CDMProxyPromise> mCDMProxyPromise;
 
 protected:
+  void NotifyDataArrivedInternal();
   void DiscardOngoingSeekIfExists();
   virtual void CallSeek(const SeekTarget& aTarget);
+
+  // Called to recompute playback rate and notify 'progress' event.
+  // Call on the main thread only.
+  void DownloadProgressed();
+
+  // A media stream is assumed to be infinite if the metadata doesn't
+  // contain the duration, and range requests are not supported, and
+  // no headers give a hint of a possible duration (Content-Length,
+  // Content-Duration, and variants), and we cannot seek in the media
+  // stream to determine the duration.
+  //
+  // When the media stream ends, we can know the duration, thus the stream is
+  // no longer considered to be infinite.
+  void SetInfinite(bool aInfinite);
+
+  // Called by MediaResource when the "cache suspended" status changes.
+  // If MediaResource::IsSuspendedByCache returns true, then the decoder
+  // should stop buffering or otherwise waiting for download progress and
+  // start consuming data, if possible, because the cache is full.
+  void NotifySuspendedStatusChanged();
+
+  // Called by MediaResource when the principal of the resource has
+  // changed. Called on main thread only.
+  void NotifyPrincipalChanged();
+
+  // Called by the MediaResource to keep track of the number of bytes read
+  // from the resource. Called on the main by an event runner dispatched
+  // by the MediaResource read functions.
+  void NotifyBytesConsumed(int64_t aBytes, int64_t aOffset);
+
+  // Called by nsChannelToPipeListener or MediaResource when the
+  // download has ended. Called on the main thread only. aStatus is
+  // the result from OnStopRequest.
+  void NotifyDownloadEnded(nsresult aStatus);
 
   MozPromiseRequestHolder<SeekPromise> mSeekRequest;
 
@@ -848,38 +836,6 @@ public:
 private:
   // Notify owner when the audible state changed
   void NotifyAudibleStateChanged();
-
-  /* Functions called by ResourceCallback */
-
-  // A media stream is assumed to be infinite if the metadata doesn't
-  // contain the duration, and range requests are not supported, and
-  // no headers give a hint of a possible duration (Content-Length,
-  // Content-Duration, and variants), and we cannot seek in the media
-  // stream to determine the duration.
-  //
-  // When the media stream ends, we can know the duration, thus the stream is
-  // no longer considered to be infinite.
-  void SetInfinite(bool aInfinite);
-
-  // Called by MediaResource when the principal of the resource has
-  // changed. Called on main thread only.
-  void NotifyPrincipalChanged();
-
-  // Called by MediaResource when the "cache suspended" status changes.
-  // If MediaResource::IsSuspendedByCache returns true, then the decoder
-  // should stop buffering or otherwise waiting for download progress and
-  // start consuming data, if possible, because the cache is full.
-  void NotifySuspendedStatusChanged();
-
-  // Called by the MediaResource to keep track of the number of bytes read
-  // from the resource. Called on the main by an event runner dispatched
-  // by the MediaResource read functions.
-  void NotifyBytesConsumed(int64_t aBytes, int64_t aOffset);
-
-  // Called by nsChannelToPipeListener or MediaResource when the
-  // download has ended. Called on the main thread only. aStatus is
-  // the result from OnStopRequest.
-  void NotifyDownloadEnded(nsresult aStatus);
 
   bool mTelemetryReported;
 
