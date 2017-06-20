@@ -28,28 +28,6 @@
   background: var(--chrome-background-color);
 }
 
-%ifdef MOZ_PHOTON_THEME
-@media (-moz-mac-yosemite-theme) {
-  #main-window[tabsintitlebar] #titlebar-content {
-    background: none;
-  }
-
-  #main-window[tabsintitlebar] > #titlebar {
-    -moz-appearance: -moz-mac-vibrancy-dark;
-  }
-
-  #main-window[tabsintitlebar] > #titlebar:-moz-lwtheme-darktext {
-    -moz-appearance: -moz-mac-vibrancy-light;
-  }
-
-  #main-window[tabsintitlebar] #tabbrowser-tabs,
-  #main-window[tabsintitlebar] #TabsToolbar,
-  #main-window[tabsintitlebar] #browser-panel {
-    background: none;
-  }
-}
-%endif
-
 %ifndef MOZ_PHOTON_THEME
 /* Resize things so that the native titlebar is in line with the tabs */
 #main-window[tabsintitlebar] > #titlebar > #titlebar-content > #titlebar-buttonbox-container,
