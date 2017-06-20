@@ -696,6 +696,8 @@ private:
   DECL_GFX_PREF(Live, "webrender.blob-images",                 WebRenderBlobImages, bool, false);
   DECL_GFX_PREF(Live, "webrender.highlight-painted-layers",    WebRenderHighlightPaintedLayers, bool, false);
 
+  DECL_GFX_PREF(Live, "widget.window-transforms.disabled",     WindowTransformsDisabled, bool, false);
+
   // WARNING:
   // Please make sure that you've added your new preference to the list above in alphabetical order.
   // Please do not just append it to the end of the list.

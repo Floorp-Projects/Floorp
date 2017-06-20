@@ -22,8 +22,8 @@ const PREF_TASKBAR_REFRESH   = "refreshInSeconds";
 
 // Hash keys for pendingStatements.
 const LIST_TYPE = {
-  FREQUENT: 0
-, RECENT: 1
+  FREQUENT: 0,
+  RECENT: 1
 }
 
 /**
@@ -405,8 +405,8 @@ this.WinTaskbarJumpList =
         for (let row; (row = aResultSet.getNextRow());) {
           try {
             aCallback.call(aScope,
-                           { uri: row.getResultByIndex(1)
-                           , title: row.getResultByIndex(2)
+                           { uri: row.getResultByIndex(1),
+                             title: row.getResultByIndex(2)
                            });
           } catch (e) {}
         }

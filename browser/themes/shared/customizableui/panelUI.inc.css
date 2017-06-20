@@ -261,7 +261,8 @@ photonpanelmultiview .panel-subview-header {
 }
 
 #appMenu-popup > .panel-arrowcontainer > .panel-arrowcontent,
-#PanelUI-popup > .panel-arrowcontainer > .panel-arrowcontent {
+#PanelUI-popup > .panel-arrowcontainer > .panel-arrowcontent,
+panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
   overflow: hidden;
 }
 
@@ -338,7 +339,8 @@ panelview:not([mainview]) .toolbarbutton-text,
 
 /* START photonpanelview adjustments */
 
-#appMenu-popup > .panel-arrowcontainer > .panel-arrowcontent {
+#appMenu-popup > .panel-arrowcontainer > .panel-arrowcontent,
+panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 0;
   border-radius: 0;
 }
@@ -348,7 +350,8 @@ photonpanelmultiview panelview {
   padding: 6px 0;
 }
 
-#appMenu-popup panelview {
+#appMenu-popup panelview,
+#customizationui-widget-multiview panelview:not([extension]) {
   min-width: @menuPanelWidth@;
 }
 
@@ -1250,14 +1253,16 @@ photonpanelmultiview .subviewbutton:focus {
   outline: 0;
 }
 
+photonpanelmultiview .subviewbutton > .toolbarbutton-text {
+  padding-inline-start: 24px; /* This is 16px for the icon + 8px for the padding as defined above. */
+}
+
 photonpanelmultiview .subviewbutton-iconic:not(.subviewbutton-back) > .toolbarbutton-text,
+photonpanelmultiview .cui-withicon > .toolbarbutton-text,
+photonpanelmultiview .subviewbutton[image] > .toolbarbutton-text,
 photonpanelmultiview .subviewbutton[checked="true"] > .toolbarbutton-text,
 photonpanelmultiview .panel-banner-item > .toolbarbutton-multiline-text {
   padding-inline-start: 8px; /* See '.subviewbutton-iconic > .toolbarbutton-text' rule above. */
-}
-
-photonpanelmultiview .subviewbutton:not(.subviewbutton-iconic):not([checked="true"]) > .toolbarbutton-text {
-  padding-inline-start: 24px; /* This is 16px for the icon + 8px for the padding as defined above. */
 }
 
 photonpanelmultiview .PanelUI-subView .panel-subview-footer {
@@ -2068,12 +2073,24 @@ photonpanelmultiview .PanelUI-subView .panel-header > .subviewbutton-back {
 }
 
 .panel-header > .subviewbutton-back > .toolbarbutton-text {
-  display: none;
+  /* !important to override .cui-widget-panel toolbarbutton:not([wrap]) > .toolbarbutton-text
+   * selector further down. */
+  display: none !important;
 }
 
 photonpanelmultiview .PanelUI-subView toolbarseparator {
   margin-inline-start: 0;
   margin-inline-end: 0;
+}
+
+photonpanelmultiview#customizationui-widget-multiview > .panel-viewcontainer {
+  overflow: hidden;
+}
+
+/* This is explicitly overriding the overflow properties set above. */
+photonpanelmultiview .cui-widget-panelview {
+  overflow-x: visible;
+  overflow-y: visible;
 }
 
 /* END photon adjustments */

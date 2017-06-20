@@ -90,8 +90,8 @@ PlacesCategoriesStarter.prototype = {
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(PlacesCategoriesStarter),
 
   QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIObserver
-  , Ci.nsINavBookmarkObserver
+    Ci.nsIObserver,
+    Ci.nsINavBookmarkObserver
   ])
 };
 

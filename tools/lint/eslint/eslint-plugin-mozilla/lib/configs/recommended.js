@@ -85,7 +85,7 @@ module.exports = {
     "comma-spacing": ["error", {"after": true, "before": false}],
 
     // Commas at the end of the line not the start
-    // "comma-style": "error",
+    "comma-style": "error",
 
     // Warn about cyclomatic complexity in functions.
     // XXX Get this down to 20?

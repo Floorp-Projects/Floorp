@@ -4782,6 +4782,8 @@ pref("widget.content.allow-gtk-dark-theme", false);
 #endif
 #endif
 
+pref("widget.window-transforms.disabled", false);
+
 #ifdef XP_WIN
 // Whether to disable the automatic detection and use of direct2d.
 pref("gfx.direct2d.disabled", false);

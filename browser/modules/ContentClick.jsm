@@ -47,14 +47,14 @@ var ContentClick = {
       // This is the Opera convention for a special link that, when clicked,
       // allows to add a sidebar panel.  The link's title attribute contains
       // the title that should be used for the sidebar panel.
-      PlacesUIUtils.showBookmarkDialog({ action: "add"
-                                       , type: "bookmark"
-                                       , uri: Services.io.newURI(json.href)
-                                       , title: json.title
-                                       , loadBookmarkInSidebar: true
-                                       , hiddenRows: [ "description"
-                                                     , "location"
-                                                     , "keyword" ]
+      PlacesUIUtils.showBookmarkDialog({ action: "add",
+                                         type: "bookmark",
+                                         uri: Services.io.newURI(json.href),
+                                         title: json.title,
+                                         loadBookmarkInSidebar: true,
+                                         hiddenRows: [ "description",
+                                                        "location",
+                                                        "keyword" ]
                                        }, window);
       return;
     }

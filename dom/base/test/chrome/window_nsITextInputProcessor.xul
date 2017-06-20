@@ -4041,6 +4041,7 @@ function* runCallbackTests(aForTests)
   dumpUnexpectedNotifications(1);
 
   input.focus();
+  yield waitUntilNotificationsReceived();
   notifications = [];
   TIP.setPendingCompositionString("foo");
   TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
@@ -4067,12 +4068,13 @@ function* runCallbackTests(aForTests)
   checkPositionChangeNotification(notifications[2], description + "synthesizeMouseAtCenter(input, {}) during composition");
   dumpUnexpectedNotifications(3);
 
+  input.focus();
+  yield waitUntilNotificationsReceived();
+  notifications = [];
   // XXX On macOS, window.moveBy() doesn't cause notify-position-change.
   //     Investigate this later (although, we cannot notify position change to
   //     native IME on macOS).
   if (!kIsMac) {
-    input.focus();
-    notifications = [];
     window.moveBy(0, 10);
     yield waitUntilNotificationsReceived();
     is(notifications.length, 1,
@@ -4080,7 +4082,6 @@ function* runCallbackTests(aForTests)
     checkPositionChangeNotification(notifications[0], description + "window.moveBy(0, 10)");
     dumpUnexpectedNotifications(1);
 
-    input.focus();
     notifications = [];
     window.moveBy(10, 0);
     yield waitUntilNotificationsReceived();

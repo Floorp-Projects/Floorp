@@ -1054,7 +1054,54 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
   -moz-image-region: auto;
 }
 
-%ifndef MOZ_WIDGET_GTK
+%ifdef MOZ_WIDGET_COCOA
+
+/* On Mac, use the properties "-moz-window-transform" and "-moz-window-opacity"
+   instead of "transform" and "opacity" for these animations.
+   The -moz-window* properties apply to the whole window including the window's
+   shadow, and they don't affect the window's "shape", so the system doesn't
+   have to recompute the shadow shape during the animation. This makes them a
+   lot faster. In fact, Gecko no longer triggers shadow shape recomputations
+   for repaints.
+   These properties are not implemented on other platforms. */
+#BMB_bookmarksPopup {
+  -moz-window-transform: scale(.4);
+  -moz-window-opacity: 0;
+  transition-property: -moz-window-transform, -moz-window-opacity;
+  transition-duration: 0.15s;
+  transition-timing-function: ease-out;
+}
+
+#BMB_bookmarksPopup[animate="open"] {
+  -moz-window-transform: none;
+  -moz-window-opacity: 1.0;
+}
+
+#BMB_bookmarksPopup[animate="cancel"] {
+  -moz-window-transform: none;
+}
+
+#BMB_bookmarksPopup[arrowposition="after_start"]:-moz-locale-dir(ltr),
+#BMB_bookmarksPopup[arrowposition="after_end"]:-moz-locale-dir(rtl) {
+  -moz-window-transform-origin: 20px top;
+}
+
+#BMB_bookmarksPopup[arrowposition="after_end"]:-moz-locale-dir(ltr),
+#BMB_bookmarksPopup[arrowposition="after_start"]:-moz-locale-dir(rtl) {
+  -moz-window-transform-origin: calc(100% - 20px) top;
+}
+
+#BMB_bookmarksPopup[arrowposition="before_start"]:-moz-locale-dir(ltr),
+#BMB_bookmarksPopup[arrowposition="before_end"]:-moz-locale-dir(rtl) {
+  -moz-window-transform-origin: 20px bottom;
+}
+
+#BMB_bookmarksPopup[arrowposition="before_end"]:-moz-locale-dir(ltr),
+#BMB_bookmarksPopup[arrowposition="before_start"]:-moz-locale-dir(rtl) {
+  -moz-window-transform-origin: calc(100% - 20px) bottom;
+}
+
+%elifndef MOZ_WIDGET_GTK
 
 #BMB_bookmarksPopup {
   transform: scale(.4);
@@ -1092,7 +1139,6 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
 #BMB_bookmarksPopup[arrowposition="before_start"]:-moz-locale-dir(rtl) {
   transform-origin: calc(100% - 20px) bottom;
 }
-
 %endif
 
 /* Customize mode */

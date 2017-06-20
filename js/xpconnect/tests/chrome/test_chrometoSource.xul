@@ -58,5 +58,13 @@ Services.scriptloader.loadSubScriptWithOptions(resolvedBase + "utf8_subscript.js
                                                {target: ns, charset: "UTF-8", ignoreCache: true});
 src = ns.f.toSource();
 isnot(src.indexOf("return 42;"), -1, "encoded subscript should have correct source");
+
+ns = {};
+let b = new Blob([
+  "var Exported = 17;"
+]);
+var blobUrl = URL.createObjectURL(b);
+Services.scriptloader.loadSubScript(blobUrl, ns);
+is(ns.Exported, 17, "subscript from a blob URL should work");
   ]]></script>
 </window>
