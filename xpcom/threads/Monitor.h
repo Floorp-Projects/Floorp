@@ -97,6 +97,8 @@ private:
   MonitorAutoLock& operator=(const MonitorAutoLock&);
   static void* operator new(size_t) CPP_THROW_NEW;
 
+  friend class MonitorAutoUnlock;
+
   Monitor* mMonitor;
 };
 
@@ -112,6 +114,12 @@ class MOZ_STACK_CLASS MonitorAutoUnlock
 public:
   explicit MonitorAutoUnlock(Monitor& aMonitor)
     : mMonitor(&aMonitor)
+  {
+    mMonitor->Unlock();
+  }
+
+  explicit MonitorAutoUnlock(MonitorAutoLock& aMonitorLock)
+    : mMonitor(aMonitorLock.mMonitor)
   {
     mMonitor->Unlock();
   }
