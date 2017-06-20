@@ -259,8 +259,9 @@ EffectCompositor::RequestRestyle(dom::Element* aElement,
     return;
   }
 
-  // Ignore animations on orphaned elements.
-  if (!aElement->IsInComposedDoc()) {
+  // Ignore animations on orphaned elements and elements in documents without
+  // a pres shell (e.g. XMLHttpRequest responseXML documents).
+  if (!nsComputedDOMStyle::GetPresShellForContent(aElement)) {
     return;
   }
 
@@ -487,6 +488,10 @@ EffectCompositor::GetServoAnimationRule(
   MOZ_ASSERT(aAnimationValues);
   MOZ_ASSERT(mPresContext && mPresContext->IsDynamic(),
              "Should not be in print preview");
+  // Gecko_GetAnimationRule should have already checked this
+  MOZ_ASSERT(nsComputedDOMStyle::GetPresShellForContent(aElement),
+             "Should not be trying to run animations on elements in documents"
+             " without a pres shell (e.g. XMLHttpRequest documents)");
 
   EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
   if (!effectSet) {
@@ -965,6 +970,9 @@ EffectCompositor::PreTraverseInSubtree(Element* aRoot,
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresContext->RestyleManager()->IsServo());
+  MOZ_ASSERT(!aRoot || nsComputedDOMStyle::GetPresShellForContent(aRoot),
+             "Traversal root, if provided, should be bound to a display "
+             "document");
 
   AutoRestore<bool> guard(mIsInPreTraverse);
   mIsInPreTraverse = true;
@@ -1082,6 +1090,13 @@ EffectCompositor::PreTraverse(dom::Element* aElement,
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresContext->RestyleManager()->IsServo());
+
+  // If |aElement|'s document does not have a pres shell, e.g. it is document
+  // without a browsing context such as we might get from an XMLHttpRequest, we
+  // should not run animations on it.
+  if (!nsComputedDOMStyle::GetPresShellForContent(aElement)) {
+    return false;
+  }
 
   bool found = false;
   if (aPseudoType != CSSPseudoElementType::NotPseudo &&
