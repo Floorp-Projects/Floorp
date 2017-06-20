@@ -218,12 +218,12 @@ public:
                   ? DIAGNOSTIC_FLASH_COUNTER_MAX : mFlashCounter + 1;
   }
 
-  uint64_t GetCompositorID() const { return mCompositorID; }
+  uint64_t GetCompositorBridgeID() const { return mCompositorBridgeID; }
 
   const AsyncCompositableRef& GetAsyncRef() const { return mAsyncRef; }
   void SetAsyncRef(const AsyncCompositableRef& aRef) { mAsyncRef = aRef; }
 
-  void SetCompositorID(uint64_t aID) { mCompositorID = aID; }
+  void SetCompositorBridgeID(uint64_t aID) { mCompositorBridgeID = aID; }
 
   virtual bool Lock() { return false; }
 
@@ -246,7 +246,7 @@ protected:
 protected:
   TextureInfo mTextureInfo;
   AsyncCompositableRef mAsyncRef;
-  uint64_t mCompositorID;
+  uint64_t mCompositorBridgeID;
   RefPtr<TextureSourceProvider> mTextureSourceProvider;
   Layer* mLayer;
   uint32_t mFlashCounter; // used when the pref "layers.flash-borders" is true.
