@@ -1,6 +1,7 @@
 /* exported MANAGE_PROFILES_DIALOG_URL, EDIT_PROFILE_DIALOG_URL, BASE_URL,
             TEST_ADDRESS_1, TEST_ADDRESS_2, TEST_ADDRESS_3,
-            sleep, expectPopupOpen, getAddresses, saveAddress, removeAddresses */
+            sleep, expectPopupOpen, openPopupOn,
+            getAddresses, saveAddress, removeAddresses */
 
 "use strict";
 
@@ -48,6 +49,16 @@ async function expectPopupOpen(browser) {
              item.hasAttribute("formautofillattached");
     });
   });
+}
+
+async function openPopupOn(browser, selector) {
+  /* eslint no-shadow: ["error", { "allow": ["selector"] }] */
+  await ContentTask.spawn(browser, {selector}, async function({selector}) {
+    content.document.querySelector(selector).focus();
+  });
+  await sleep(2000);
+  await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+  await expectPopupOpen(browser);
 }
 
 function getAddresses() {
