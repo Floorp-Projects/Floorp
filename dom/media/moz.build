@@ -134,6 +134,7 @@ EXPORTS += [
     'MediaStatistics.h',
     'MediaStreamGraph.h',
     'MediaStreamListener.h',
+    'MediaStreamTypes.h',
     'MediaStreamVideoSink.h',
     'MediaTimer.h',
     'MediaTrack.h',
