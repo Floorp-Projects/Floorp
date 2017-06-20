@@ -13,6 +13,8 @@ Components.utils.import("resource:///modules/ShellService.jsm");
 Components.utils.import("resource:///modules/TransientPrefs.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
+Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
+Components.utils.import("resource://gre/modules/LoadContextInfo.jsm");
 
 // Constants & Enumeration Values
 const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
@@ -2396,12 +2398,12 @@ var gMainPane = {
    *          the Downloads folder if aIndex == 1,
    *          the folder stored in browser.download.dir
    */
-  async _indexToFolder(aIndex) {
+  _indexToFolder(aIndex) {
     switch (aIndex) {
       case 0:
-        return await this._getDownloadsFolder("Desktop");
+        return this._getDownloadsFolder("Desktop");
       case 1:
-        return await this._getDownloadsFolder("Downloads");
+        return this._getDownloadsFolder("Downloads");
     }
     var currentDirPref = document.getElementById("browser.download.dir");
     return currentDirPref.value;
