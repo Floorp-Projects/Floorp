@@ -491,7 +491,7 @@ ClientLayerManager::GetCompositorBridgeChild()
 }
 
 void
-ClientLayerManager::Composite()
+ClientLayerManager::ScheduleComposite()
 {
   mForwarder->Composite();
 }
