@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 17);
+/******/ 	return __webpack_require__(__webpack_require__.s = 18);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -394,6 +394,10 @@ var _require = __webpack_require__(1);
 
 const at = _require.actionTypes;
 
+var _require2 = __webpack_require__(15);
+
+const perfSvc = _require2.perfService;
+
 
 const VISIBLE = "visible";
 const VISIBILITY_CHANGE_EVENT = "visibilitychange";
@@ -405,7 +409,7 @@ module.exports = class DetectUserSessionStart {
     // Overrides for testing
     this.sendAsyncMessage = options.sendAsyncMessage || window.sendAsyncMessage;
     this.document = options.document || document;
-
+    this._perfService = options.perfService || perfSvc;
     this._onVisibilityChange = this._onVisibilityChange.bind(this);
   }
 
@@ -427,11 +431,19 @@ module.exports = class DetectUserSessionStart {
   }
 
   /**
-   * _sendEvent - Sends a message to the main process to indicate the current tab
-   *             is now visible to the user.
+   * _sendEvent - Sends a message to the main process to indicate the current
+   *              tab is now visible to the user, includes the
+   *              visibility-change-event time in ms from the UNIX epoch.
    */
   _sendEvent() {
-    this.sendAsyncMessage("ActivityStream:ContentToMain", { type: at.NEW_TAB_VISIBLE });
+    this._perfService.mark("visibility-change-event");
+
+    let absVisChangeTime = this._perfService.getMostRecentAbsMarkStartByName("visibility-change-event");
+
+    this.sendAsyncMessage("ActivityStream:ContentToMain", {
+      type: at.NEW_TAB_VISIBLE,
+      data: { absVisibilityChangeTime: absVisChangeTime }
+    });
   }
 
   /**
@@ -455,7 +467,7 @@ module.exports = class DetectUserSessionStart {
 
 /* eslint-env mozilla/frame-script */
 
-var _require = __webpack_require__(16);
+var _require = __webpack_require__(17);
 
 const createStore = _require.createStore,
       combineReducers = _require.combineReducers,
@@ -892,7 +904,7 @@ var _require2 = __webpack_require__(3);
 const injectIntl = _require2.injectIntl,
       FormattedMessage = _require2.FormattedMessage;
 
-const classNames = __webpack_require__(15);
+const classNames = __webpack_require__(16);
 
 var _require3 = __webpack_require__(1);
 
@@ -1044,7 +1056,12 @@ class Search extends React.Component {
   }
   onInputMount(input) {
     if (input) {
-      this.controller = new ContentSearchUIController(input, input.parentNode, "activity", "newtab");
+      // The first "newtab" parameter here is called the "healthReportKey" and needs
+      // to be "newtab" so that BrowserUsageTelemetry.jsm knows to handle events with
+      // this name, and can add the appropriate telemetry probes for search. Without the
+      // correct name, certain tests like browser_UsageTelemetry_content.js will fail (See
+      // github ticket #2348 for more details)
+      this.controller = new ContentSearchUIController(input, input.parentNode, "newtab", "newtab");
       addEventListener("ContentSearchClient", this);
     } else {
       this.controller = null;
@@ -1052,13 +1069,18 @@ class Search extends React.Component {
     }
   }
 
+  /*
+   * Do not change the ID on the input field, as legacy newtab code
+   * specifically looks for the id 'newtab-search-text' on input fields
+   * in order to execute searches in various tests
+   */
   render() {
     return React.createElement(
       "form",
       { className: "search-wrapper" },
       React.createElement(
         "label",
-        { htmlFor: "search-input", className: "search-label" },
+        { htmlFor: "newtab-search-text", className: "search-label" },
         React.createElement(
           "span",
           { className: "sr-only" },
@@ -1066,7 +1088,7 @@ class Search extends React.Component {
         )
       ),
       React.createElement("input", {
-        id: "search-input",
+        id: "newtab-search-text",
         maxLength: "256",
         placeholder: this.props.intl.formatMessage({ id: "search_web_placeholder" }),
         ref: this.onInputMount,
@@ -1251,6 +1273,111 @@ module.exports = function shortURL(link) {
 /* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
+"use strict";
+/* globals Services */
+
+
+let usablePerfObj;
+
+let Cu;
+const isRunningInChrome = typeof Window === "undefined";
+
+/* istanbul ignore if */
+if (isRunningInChrome) {
+  Cu = Components.utils;
+} else {
+  Cu = { import() {} };
+}
+
+Cu.import("resource://gre/modules/Services.jsm");
+
+/* istanbul ignore if */
+if (isRunningInChrome) {
+  // Borrow the high-resolution timer from the hidden window....
+  usablePerfObj = Services.appShell.hiddenDOMWindow.performance;
+} else {
+  // we must be running in content space
+  usablePerfObj = performance;
+}
+
+var _PerfService = function _PerfService(options) {
+  // For testing, so that we can use a fake Window.performance object with
+  // known state.
+  if (options && options.performanceObj) {
+    this._perf = options.performanceObj;
+  } else {
+    this._perf = usablePerfObj;
+  }
+};
+
+_PerfService.prototype = {
+  /**
+   * Calls the underlying mark() method on the appropriate Window.performance
+   * object to add a mark with the given name to the appropriate performance
+   * timeline.
+   *
+   * @param  {String} name  the name to give the current mark
+   * @return {void}
+   */
+  mark: function mark(str) {
+    this._perf.mark(str);
+  },
+
+  /**
+   * Calls the underlying getEntriesByName on the appropriate Window.performance
+   * object.
+   *
+   * @param  {String} name
+   * @param  {String} type eg "mark"
+   * @return {Array}       Performance* objects
+   */
+  getEntriesByName: function getEntriesByName(name, type) {
+    return this._perf.getEntriesByName(name, type);
+  },
+
+  /**
+   * The timeOrigin property from the appropriate performance object.
+   * Used to ensure that timestamps from the add-on code and the content code
+   * are comparable.
+   *
+   * @return {Number} A double of milliseconds with a precision of 0.5us.
+   */
+  get timeOrigin() {
+    return this._perf.timeOrigin;
+  },
+
+  /**
+   * This returns the startTime from the most recen!t performance.mark()
+   * with the given name.
+   *
+   * @param  {String} name  the name to lookup the start time for
+   *
+   * @return {Number}       the returned start time, as a DOMHighResTimeStamp
+   *
+   * @throws {Error}        "No Marks with the name ..." if none are available
+   */
+  getMostRecentAbsMarkStartByName(name) {
+    let entries = this.getEntriesByName(name, "mark");
+
+    if (!entries.length) {
+      throw new Error(`No marks with the name ${name}`);
+    }
+
+    let mostRecentEntry = entries[entries.length - 1];
+    return this._perf.timeOrigin + mostRecentEntry.startTime;
+  }
+};
+
+var perfService = new _PerfService();
+module.exports = {
+  _PerfService,
+  perfService
+};
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
   Copyright (c) 2016 Jed Watson.
   Licensed under the MIT License (MIT), see
@@ -1303,13 +1430,13 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports) {
 
 module.exports = Redux;
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
