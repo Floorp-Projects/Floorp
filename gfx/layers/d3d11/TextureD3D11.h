@@ -264,6 +264,8 @@ public:
     mCurrentTile = 0;
   }
 
+  RefPtr<TextureSource> ExtractCurrentTile() override;
+
   void Reset();
 protected:
   gfx::IntRect GetTileRect(uint32_t aIndex) const;

@@ -1215,6 +1215,13 @@ DataTextureSourceD3D11::GetD3D11Texture() const
                     : mTexture;
 }
 
+RefPtr<TextureSource>
+DataTextureSourceD3D11::ExtractCurrentTile()
+{
+  MOZ_ASSERT(mIterating);
+  return new DataTextureSourceD3D11(mDevice, mFormat, mTileTextures[mCurrentTile]);
+}
+
 ID3D11ShaderResourceView*
 DataTextureSourceD3D11::GetShaderResourceView()
 {
