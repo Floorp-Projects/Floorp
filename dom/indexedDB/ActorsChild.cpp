@@ -2227,17 +2227,7 @@ BackgroundDatabaseChild::RecvPBackgroundIDBVersionChangeTransactionConstructor(
                                         request,
                                         aNextObjectStoreId,
                                         aNextIndexId);
-  if (NS_WARN_IF(!transaction)) {
-    // This can happen if we receive events after a worker has begun its
-    // shutdown process.
-    MOZ_ASSERT(!NS_IsMainThread());
-
-    // Report this to the console.
-    IDB_REPORT_INTERNAL_ERR();
-
-    MOZ_ALWAYS_TRUE(aActor->SendDeleteMe());
-    return IPC_OK();
-  }
+  MOZ_ASSERT(transaction);
 
   transaction->AssertIsOnOwningThread();
 

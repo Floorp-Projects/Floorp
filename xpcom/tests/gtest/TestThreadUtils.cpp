@@ -465,6 +465,45 @@ TEST(ThreadUtils, NamedRunnableMethod)
   }
 }
 
+class IdleObjectWithoutSetDeadline final
+{
+public:
+  NS_INLINE_DECL_REFCOUNTING(IdleObjectWithoutSetDeadline)
+  IdleObjectWithoutSetDeadline()
+    : mRunnableExecuted(false)
+  {
+  }
+  void Method() { mRunnableExecuted = true; }
+  bool mRunnableExecuted;
+
+private:
+  ~IdleObjectWithoutSetDeadline() {}
+};
+
+class IdleObjectParentWithSetDeadline
+{
+public:
+  IdleObjectParentWithSetDeadline() : mSetDeadlineCalled(false) {}
+  void SetDeadline(TimeStamp aDeadline) { mSetDeadlineCalled = true; }
+  bool mSetDeadlineCalled;
+};
+
+class IdleObjectInheritedSetDeadline final
+  : public IdleObjectParentWithSetDeadline
+{
+public:
+  NS_INLINE_DECL_REFCOUNTING(IdleObjectInheritedSetDeadline)
+  IdleObjectInheritedSetDeadline()
+    : mRunnableExecuted(false)
+  {
+  }
+  void Method() { mRunnableExecuted = true; }
+  bool mRunnableExecuted;
+
+private:
+  ~IdleObjectInheritedSetDeadline() {}
+};
+
 class IdleObject final
 {
 public:
@@ -473,21 +512,24 @@ public:
   {
     for (uint32_t index = 0; index < ArrayLength(mRunnableExecuted); ++index) {
       mRunnableExecuted[index] = false;
+      mSetIdleDeadlineCalled = false;
     }
   }
-  void SetDeadline(TimeStamp aTimeStamp)
-  {
+  void SetDeadline(TimeStamp aTimeStamp) {
+    mSetIdleDeadlineCalled = true;
   }
 
   void CheckExecutedMethods(const char* aKey, uint32_t aNumExecuted)
   {
     uint32_t index;
     for (index = 0; index < aNumExecuted; ++index) {
-      ASSERT_TRUE(mRunnableExecuted[index]) << aKey << ": Method" << index << " should've executed";
+      ASSERT_TRUE(mRunnableExecuted[index])
+          << aKey << ": Method" << index << " should've executed";
     }
 
     for (; index < ArrayLength(mRunnableExecuted); ++index) {
-      ASSERT_FALSE(mRunnableExecuted[index]) << aKey << ": Method" << index << " shouldn't have executed";
+      ASSERT_FALSE(mRunnableExecuted[index])
+        << aKey << ": Method" << index << " shouldn't have executed";
     }
   }
 
@@ -495,18 +537,23 @@ public:
   {
     CheckExecutedMethods("Method0", 0);
     mRunnableExecuted[0] = true;
+    mSetIdleDeadlineCalled = false;
   }
 
   void Method1()
   {
     CheckExecutedMethods("Method1", 1);
+    ASSERT_TRUE(mSetIdleDeadlineCalled);
     mRunnableExecuted[1] = true;
+    mSetIdleDeadlineCalled = false;
   }
 
   void Method2()
   {
     CheckExecutedMethods("Method2", 2);
+    ASSERT_TRUE(mSetIdleDeadlineCalled);
     mRunnableExecuted[2] = true;
+    mSetIdleDeadlineCalled = false;
     NS_DispatchToCurrentThread(NewRunnableMethod(this, &IdleObject::Method3));
   }
 
@@ -523,6 +570,7 @@ public:
 
     PR_Sleep(PR_MillisecondsToInterval(200));
     mRunnableExecuted[3] = true;
+    mSetIdleDeadlineCalled = false;
   }
 
   static void Method4(nsITimer* aTimer, void* aClosure)
@@ -530,29 +578,36 @@ public:
     RefPtr<IdleObject> self = static_cast<IdleObject*>(aClosure);
     self->CheckExecutedMethods("Method4", 4);
     self->mRunnableExecuted[4] = true;
+    self->mSetIdleDeadlineCalled = false;
   }
 
   void Method5()
   {
     CheckExecutedMethods("Method5", 5);
+    ASSERT_TRUE(mSetIdleDeadlineCalled);
     mRunnableExecuted[5] = true;
+    mSetIdleDeadlineCalled = false;
   }
 
   void Method6()
   {
     CheckExecutedMethods("Method6", 6);
     mRunnableExecuted[6] = true;
+    mSetIdleDeadlineCalled = false;
   }
 
   void Method7()
   {
     CheckExecutedMethods("Method7", 7);
+    ASSERT_TRUE(mSetIdleDeadlineCalled);
     mRunnableExecuted[7] = true;
+    mSetIdleDeadlineCalled = false;
   }
 
 private:
   nsCOMPtr<nsITimer> mTimer;
   bool mRunnableExecuted[8];
+  bool mSetIdleDeadlineCalled;
   ~IdleObject() {}
 };
 
@@ -560,6 +615,10 @@ TEST(ThreadUtils, IdleRunnableMethod)
 {
   {
     RefPtr<IdleObject> idle = new IdleObject();
+    RefPtr<IdleObjectWithoutSetDeadline> idleNoSetDeadline =
+      new IdleObjectWithoutSetDeadline();
+    RefPtr<IdleObjectInheritedSetDeadline> idleInheritedSetDeadline =
+      new IdleObjectInheritedSetDeadline();
 
     NS_DispatchToCurrentThread(NewRunnableMethod(idle, &IdleObject::Method0));
     NS_IdleDispatchToCurrentThread(
@@ -570,9 +629,17 @@ TEST(ThreadUtils, IdleRunnableMethod)
       NewIdleRunnableMethod(idle, &IdleObject::Method7));
     NS_IdleDispatchToCurrentThread(NewIdleRunnableMethod<const char*, uint32_t>(
       idle, &IdleObject::CheckExecutedMethods, "final", 8));
-  }
+    NS_IdleDispatchToCurrentThread(NewIdleRunnableMethod(
+      idleNoSetDeadline, &IdleObjectWithoutSetDeadline::Method));
+    NS_IdleDispatchToCurrentThread(NewIdleRunnableMethod(
+      idleInheritedSetDeadline, &IdleObjectInheritedSetDeadline::Method));
 
-  NS_ProcessPendingEvents(nullptr);
+    NS_ProcessPendingEvents(nullptr);
+
+    ASSERT_TRUE(idleNoSetDeadline->mRunnableExecuted);
+    ASSERT_TRUE(idleInheritedSetDeadline->mRunnableExecuted);
+    ASSERT_TRUE(idleInheritedSetDeadline->mSetDeadlineCalled);
+  }
 }
 
 // {9e70a320-be02-11d1-8031-006008159b5a}
