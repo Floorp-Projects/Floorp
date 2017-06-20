@@ -106,12 +106,10 @@ IMFYCbCrImage::GetD3D11TextureData(Data aData, gfx::IntSize aSize)
   HRESULT hr;
   RefPtr<ID3D10Multithread> mt;
 
-  RefPtr<ID3D11Device> device =
-    gfx::DeviceManagerDx::Get()->GetContentDevice();
+  RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetContentDevice();
 
   if (!device) {
-    device =
-      gfx::DeviceManagerDx::Get()->GetCompositorDevice();
+    device = gfx::DeviceManagerDx::Get()->GetCompositorDevice();
   }
 
   hr = device->QueryInterface((ID3D10Multithread**)getter_AddRefs(mt));
@@ -169,8 +167,7 @@ IMFYCbCrImage::GetD3D11TextureData(Data aData, gfx::IntSize aSize)
     AutoLockD3D11Texture lockY(textureY);
     AutoLockD3D11Texture lockCr(textureCr);
     AutoLockD3D11Texture lockCb(textureCb);
-
-    mt->Enter();
+    D3D11MTAutoEnter mtAutoEnter(mt.forget());
 
     RefPtr<ID3D11DeviceContext> ctx;
     device->GetImmediateContext((ID3D11DeviceContext**)getter_AddRefs(ctx));
@@ -186,8 +183,6 @@ IMFYCbCrImage::GetD3D11TextureData(Data aData, gfx::IntSize aSize)
     box.bottom = aData.mCbCrSize.height;
     ctx->UpdateSubresource(textureCb, 0, &box, aData.mCbChannel, aData.mCbCrStride, 0);
     ctx->UpdateSubresource(textureCr, 0, &box, aData.mCrChannel, aData.mCbCrStride, 0);
-
-    mt->Leave();
   }
 
   return DXGIYCbCrTextureData::Create(textureY, textureCb, textureCr,
