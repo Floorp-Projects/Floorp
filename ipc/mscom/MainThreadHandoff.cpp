@@ -122,8 +122,7 @@ class HandoffRunnable : public mozilla::Runnable
 {
 public:
   explicit HandoffRunnable(ICallFrame* aCallFrame, IUnknown* aTargetInterface)
-    : Runnable("HandoffRunnable")
-    , mCallFrame(aCallFrame)
+    : mCallFrame(aCallFrame)
     , mTargetInterface(aTargetInterface)
     , mResult(E_UNEXPECTED)
   {
@@ -549,7 +548,7 @@ MainThreadHandoff::OnWalkInterface(REFIID aIid, PVOID* aInterface,
       };
 
       MainThreadInvoker invoker;
-      invoker.Invoke(NS_NewRunnableFunction("MainThreadHandoff::OnWalkInterface", checkFn));
+      invoker.Invoke(NS_NewRunnableFunction(checkFn));
     }
 
     if (areTargetsEqual) {

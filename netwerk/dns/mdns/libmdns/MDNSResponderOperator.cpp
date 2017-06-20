@@ -75,8 +75,7 @@ public:
     PR_Close(mFD);
     mFD = nullptr;
 
-    mThread->Dispatch(NewRunnableMethod("MDNSResponderOperator::ServiceWatcher::Deallocate",
-                                        this, &ServiceWatcher::Deallocate),
+    mThread->Dispatch(NewRunnableMethod(this, &ServiceWatcher::Deallocate),
                       NS_DISPATCH_NORMAL);
   }
 
@@ -126,8 +125,7 @@ public:
     }
 
     mFD = PR_ImportFile(osfd);
-    return PostEvent("MDNSResponderOperator::ServiceWatcher::OnMsgAttach",
-                     &ServiceWatcher::OnMsgAttach);
+    return PostEvent(&ServiceWatcher::OnMsgAttach);
   }
 
   void Close()
@@ -139,8 +137,7 @@ public:
       return;
     }
 
-    PostEvent("MDNSResponderOperator::ServiceWatcher::OnMsgClose",
-              &ServiceWatcher::OnMsgClose);
+    PostEvent(&ServiceWatcher::OnMsgClose);
   }
 
 private:
@@ -155,10 +152,9 @@ private:
     mOperatorHolder = nullptr;
   }
 
-  nsresult PostEvent(const char* aName,
-                     void(ServiceWatcher::*func)(void))
+  nsresult PostEvent(void(ServiceWatcher::*func)(void))
   {
-    return gSocketTransportService->Dispatch(NewRunnableMethod(aName, this, func),
+    return gSocketTransportService->Dispatch(NewRunnableMethod(this, func),
                                              NS_DISPATCH_NORMAL);
   }
 
@@ -223,8 +219,7 @@ private:
     //
     if (!gSocketTransportService->CanAttachSocket()) {
       nsCOMPtr<nsIRunnable> event =
-        NewRunnableMethod("MDNSResponderOperator::ServiceWatcher::OnMsgAttach",
-                          this, &ServiceWatcher::OnMsgAttach);
+        NewRunnableMethod(this, &ServiceWatcher::OnMsgAttach);
 
       nsresult rv = gSocketTransportService->NotifyWhenCanAttachSocket(event);
       if (NS_FAILED(rv)) {

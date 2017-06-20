@@ -96,8 +96,7 @@ static AsyncColorChooser* gColorChooser;
 AsyncColorChooser::AsyncColorChooser(COLORREF aInitialColor,
                                      nsIWidget* aParentWidget,
                                      nsIColorPickerShownCallback* aCallback)
-  : mozilla::Runnable("AsyncColorChooser")
-  , mInitialColor(aInitialColor)
+  : mInitialColor(aInitialColor)
   , mColor(aInitialColor)
   , mParentWidget(aParentWidget)
   , mCallback(aCallback)

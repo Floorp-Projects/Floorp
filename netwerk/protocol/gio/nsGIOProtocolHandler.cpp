@@ -543,10 +543,8 @@ nsGIOInputStream::DoRead(char *aBuf, uint32_t aCount, uint32_t *aCountRead)
 class nsGIOSetContentTypeEvent : public mozilla::Runnable
 {
   public:
-    nsGIOSetContentTypeEvent(nsIChannel* channel, const char* contentType)
-      : mozilla::Runnable("nsGIOSetContentTypeEvent")
-      , mChannel(channel)
-      , mContentType(contentType)
+    nsGIOSetContentTypeEvent(nsIChannel *channel, const char *contentType)
+      : mChannel(channel), mContentType(contentType)
     {
       // stash channel reference in mChannel.  no AddRef here!  see note
       // in SetContentTypeOfchannel.

@@ -1005,8 +1005,7 @@ public:
         if (!AndroidBridge::IsJavaUiThread()) {
             RefPtr<nsThread> uiThread = GetAndroidUiThread();
             if (uiThread) {
-                uiThread->Dispatch(NewRunnableMethod("layers::UiCompositorControllerChild::InvalidateAndRender",
-                                                     child,
+                uiThread->Dispatch(NewRunnableMethod(child,
                                                      &UiCompositorControllerChild::InvalidateAndRender),
                                    nsIThread::DISPATCH_NORMAL);
             }
@@ -1036,7 +1035,6 @@ public:
             RefPtr<nsThread> uiThread = GetAndroidUiThread();
             if (uiThread) {
                 uiThread->Dispatch(NewRunnableMethod<bool, int32_t>(
-                                       "layers::UiCompositorControllerChild::SetPinned",
                                        child, &UiCompositorControllerChild::SetPinned, aPinned, aReason),
                                    nsIThread::DISPATCH_NORMAL);
             }
@@ -1059,7 +1057,6 @@ public:
             RefPtr<nsThread> uiThread = GetAndroidUiThread();
             if (uiThread) {
                 uiThread->Dispatch(NewRunnableMethod<int32_t>(
-                                       "layers::UiCompositorControllerChild::ToolbarAnimatorMessageFromUI",
                                        child, &UiCompositorControllerChild::ToolbarAnimatorMessageFromUI, aMessage),
                                    nsIThread::DISPATCH_NORMAL);
             }

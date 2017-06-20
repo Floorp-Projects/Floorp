@@ -206,7 +206,6 @@ public:
 
     nsCOMPtr<nsIRunnable> runnable =
       NewRunnableMethod<StoreRefPtrPassByPtr<Image>, bool>(
-        "VideoFrameConverter::ProcessVideoFrame",
         this, &VideoFrameConverter::ProcessVideoFrame,
         aChunk.mFrame.GetImage(), forceBlack);
     mTaskQueue->Dispatch(runnable.forget());

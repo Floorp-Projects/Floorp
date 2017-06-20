@@ -378,15 +378,14 @@ namespace {
 class AsyncCloseConnection final: public Runnable
 {
 public:
-  AsyncCloseConnection(Connection* aConnection,
-                       sqlite3* aNativeConnection,
-                       nsIRunnable* aCallbackEvent,
+  AsyncCloseConnection(Connection *aConnection,
+                       sqlite3 *aNativeConnection,
+                       nsIRunnable *aCallbackEvent,
                        already_AddRefed<nsIThread> aAsyncExecutionThread)
-    : Runnable("storage::AsyncCloseConnection")
-    , mConnection(aConnection)
-    , mNativeConnection(aNativeConnection)
-    , mCallbackEvent(aCallbackEvent)
-    , mAsyncExecutionThread(aAsyncExecutionThread)
+  : mConnection(aConnection)
+  , mNativeConnection(aNativeConnection)
+  , mCallbackEvent(aCallbackEvent)
+  , mAsyncExecutionThread(aAsyncExecutionThread)
   {
   }
 
@@ -399,11 +398,8 @@ public:
     MOZ_ASSERT(onAsyncThread);
 #endif // DEBUG
 
-    nsCOMPtr<nsIRunnable> event = NewRunnableMethod<nsCOMPtr<nsIThread>>(
-      "storage::Connection::shutdownAsyncThread",
-      mConnection,
-      &Connection::shutdownAsyncThread,
-      mAsyncExecutionThread);
+    nsCOMPtr<nsIRunnable> event = NewRunnableMethod<nsCOMPtr<nsIThread>>
+      (mConnection, &Connection::shutdownAsyncThread, mAsyncExecutionThread);
     (void)NS_DispatchToMainThread(event);
 
     // Internal close.

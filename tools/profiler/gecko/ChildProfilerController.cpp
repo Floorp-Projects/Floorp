@@ -32,11 +32,8 @@ ChildProfilerController::Init(Endpoint<PProfilerChild>&& aEndpoint)
   if (NS_SUCCEEDED(NS_NewNamedThread("ProfilerChild", getter_AddRefs(mThread)))) {
     // Now that mThread has been set, run SetupProfilerChild on the thread.
     mThread->Dispatch(NewRunnableMethod<Endpoint<PProfilerChild>&&>(
-                        "ChildProfilerController::SetupProfilerChild",
-                        this,
-                        &ChildProfilerController::SetupProfilerChild,
-                        Move(aEndpoint)),
-                      NS_DISPATCH_NORMAL);
+      this, &ChildProfilerController::SetupProfilerChild, Move(aEndpoint)),
+      NS_DISPATCH_NORMAL);
   }
 }
 
@@ -59,11 +56,8 @@ ChildProfilerController::ShutdownAndMaybeGrabShutdownProfileFirst(nsCString* aOu
 {
   if (mThread) {
     mThread->Dispatch(NewRunnableMethod<nsCString*>(
-                        "ChildProfilerController::ShutdownProfilerChild",
-                        this,
-                        &ChildProfilerController::ShutdownProfilerChild,
-                        aOutShutdownProfile),
-                      NS_DISPATCH_NORMAL);
+      this, &ChildProfilerController::ShutdownProfilerChild, aOutShutdownProfile),
+      NS_DISPATCH_NORMAL);
     // Shut down the thread. This call will spin until all runnables (including
     // the ShutdownProfilerChild runnable) have been processed.
     mThread->Shutdown();

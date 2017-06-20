@@ -2068,16 +2068,14 @@ nsHttpTransaction::GetResponseEnd()
 
 class DeleteHttpTransaction : public Runnable {
 public:
-  explicit DeleteHttpTransaction(nsHttpTransaction* trans)
-    : Runnable("net::DeleteHttpTransaction")
-    , mTrans(trans)
-  {
-  }
+    explicit DeleteHttpTransaction(nsHttpTransaction *trans)
+        : mTrans(trans)
+    {}
 
-  NS_IMETHOD Run() override
-  {
-    delete mTrans;
-    return NS_OK;
+    NS_IMETHOD Run() override
+    {
+        delete mTrans;
+        return NS_OK;
     }
 private:
     nsHttpTransaction *mTrans;

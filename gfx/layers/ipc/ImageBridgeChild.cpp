@@ -578,7 +578,6 @@ ImageBridgeChild::InitForContent(Endpoint<PImageBridgeChild>&& aEndpoint, uint32
   RefPtr<ImageBridgeChild> child = new ImageBridgeChild(aNamespace);
 
   RefPtr<Runnable> runnable = NewRunnableMethod<Endpoint<PImageBridgeChild>&&>(
-    "layers::ImageBridgeChild::Bind",
     child,
     &ImageBridgeChild::Bind,
     Move(aEndpoint));
@@ -734,10 +733,7 @@ ImageBridgeChild::InitWithGPUProcess(Endpoint<PImageBridgeChild>&& aEndpoint, ui
 
   MessageLoop* loop = child->GetMessageLoop();
   loop->PostTask(NewRunnableMethod<Endpoint<PImageBridgeChild>&&>(
-    "layers::ImageBridgeChild::Bind",
-    child,
-    &ImageBridgeChild::Bind,
-    Move(aEndpoint)));
+    child, &ImageBridgeChild::Bind, Move(aEndpoint)));
 
   // Assign this after so other threads can't post messages before we connect to IPDL.
   {

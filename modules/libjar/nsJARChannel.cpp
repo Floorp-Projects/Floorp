@@ -1081,8 +1081,7 @@ nsJARChannel::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
             FireOnProgress(offset + count);
         } else {
             NS_DispatchToMainThread(NewRunnableMethod
-                                    <uint64_t>("nsJARChannel::FireOnProgress",
-                                               this,
+                                    <uint64_t>(this,
                                                &nsJARChannel::FireOnProgress,
                                                offset + count));
         }

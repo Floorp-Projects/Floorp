@@ -208,11 +208,7 @@ private:
   {
   public:
     DoomCallbackRunnable(CacheEntry* aEntry, nsresult aRv)
-      : Runnable("net::CacheEntry::DoomCallbackRunnable")
-      , mEntry(aEntry)
-      , mRv(aRv)
-    {
-    }
+      : mEntry(aEntry), mRv(aRv) {}
 
   private:
     NS_IMETHOD Run() override

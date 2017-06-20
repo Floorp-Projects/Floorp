@@ -649,12 +649,9 @@ DocAccessible::ScrollPositionDidChange(nscoord aX, nscoord aY)
     mScrollWatchTimer = do_CreateInstance("@mozilla.org/timer;1");
     if (mScrollWatchTimer) {
       NS_ADDREF_THIS(); // Kung fu death grip
-      mScrollWatchTimer->InitWithNamedFuncCallback(
-        ScrollTimerCallback,
-        this,
-        kScrollPosCheckWait,
-        nsITimer::TYPE_REPEATING_SLACK,
-        "a11y::DocAccessible::ScrollPositionDidChange");
+      mScrollWatchTimer->InitWithFuncCallback(ScrollTimerCallback, this,
+                                              kScrollPosCheckWait,
+                                              nsITimer::TYPE_REPEATING_SLACK);
     }
   }
   mScrollPositionChangedTicks = 1;

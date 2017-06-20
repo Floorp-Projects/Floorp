@@ -734,8 +734,7 @@ class CertErrorRunnableRunnable : public Runnable
 {
 public:
   explicit CertErrorRunnableRunnable(CertErrorRunnable* certErrorRunnable)
-    : Runnable("psm::CertErrorRunnableRunnable")
-    , mCertErrorRunnable(certErrorRunnable)
+    : mCertErrorRunnable(certErrorRunnable)
   {
   }
 private:
@@ -795,18 +794,12 @@ private:
 };
 
 SSLServerCertVerificationJob::SSLServerCertVerificationJob(
-  const RefPtr<SharedCertVerifier>& certVerifier,
-  const void* fdForLogging,
-  nsNSSSocketInfo* infoObject,
-  const UniqueCERTCertificate& cert,
-  UniqueCERTCertList peerCertChain,
-  const SECItem* stapledOCSPResponse,
-  const SECItem* sctsFromTLSExtension,
-  uint32_t providerFlags,
-  Time time,
-  PRTime prtime)
-  : Runnable("psm::SSLServerCertVerificationJob")
-  , mCertVerifier(certVerifier)
+    const RefPtr<SharedCertVerifier>& certVerifier, const void* fdForLogging,
+    nsNSSSocketInfo* infoObject, const UniqueCERTCertificate& cert,
+    UniqueCERTCertList peerCertChain, const SECItem* stapledOCSPResponse,
+    const SECItem* sctsFromTLSExtension,
+    uint32_t providerFlags, Time time, PRTime prtime)
+  : mCertVerifier(certVerifier)
   , mFdForLogging(fdForLogging)
   , mInfoObject(infoObject)
   , mCert(CERT_DupCertificate(cert.get()))
@@ -1822,13 +1815,10 @@ AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig, PRBool isServer)
 }
 
 SSLServerCertVerificationResult::SSLServerCertVerificationResult(
-  nsNSSSocketInfo* infoObject,
-  PRErrorCode errorCode,
-  Telemetry::HistogramID telemetryID,
-  uint32_t telemetryValue,
-  SSLErrorMessageType errorMessageType)
-  : Runnable("psm::SSLServerCertVerificationResult")
-  , mInfoObject(infoObject)
+        nsNSSSocketInfo* infoObject, PRErrorCode errorCode,
+        Telemetry::HistogramID telemetryID, uint32_t telemetryValue,
+        SSLErrorMessageType errorMessageType)
+  : mInfoObject(infoObject)
   , mErrorCode(errorCode)
   , mErrorMessageType(errorMessageType)
   , mTelemetryID(telemetryID)

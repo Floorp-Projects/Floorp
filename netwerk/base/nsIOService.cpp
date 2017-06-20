@@ -1398,13 +1398,14 @@ nsIOService::GetPrefBranch(nsIPrefBranch **result)
 class nsWakeupNotifier : public Runnable
 {
 public:
-  explicit nsWakeupNotifier(nsIIOServiceInternal* ioService)
-    : Runnable("net::nsWakeupNotifier")
-    , mIOService(ioService)
-  {
-  }
+    explicit nsWakeupNotifier(nsIIOServiceInternal *ioService)
+        :mIOService(ioService)
+    { }
 
-  NS_IMETHOD Run() override { return mIOService->NotifyWakeup(); }
+    NS_IMETHOD Run() override
+    {
+        return mIOService->NotifyWakeup();
+    }
 
 private:
     virtual ~nsWakeupNotifier() { }

@@ -25,8 +25,7 @@ class ShutdownRunnable final : public CancelableRunnable
 {
 public:
   explicit ShutdownRunnable(IPCBlobInputStreamChild* aActor)
-    : CancelableRunnable("dom::ShutdownRunnable")
-    , mActor(aActor)
+    : mActor(aActor)
   {}
 
   NS_IMETHOD
@@ -46,8 +45,7 @@ class StreamNeededRunnable final : public CancelableRunnable
 {
 public:
   explicit StreamNeededRunnable(IPCBlobInputStreamChild* aActor)
-    : CancelableRunnable("dom::StreamNeededRunnable")
-    , mActor(aActor)
+    : mActor(aActor)
   {}
 
   NS_IMETHOD
@@ -72,8 +70,7 @@ class StreamReadyRunnable final : public CancelableRunnable
 public:
   StreamReadyRunnable(IPCBlobInputStream* aDestinationStream,
                       nsIInputStream* aCreatedStream)
-    : CancelableRunnable("dom::StreamReadyRunnable")
-    , mDestinationStream(aDestinationStream)
+    : mDestinationStream(aDestinationStream)
     , mCreatedStream(aCreatedStream)
   {
     MOZ_ASSERT(mDestinationStream);
@@ -105,10 +102,8 @@ public:
 class ReleaseWorkerHolderRunnable final : public CancelableRunnable
 {
 public:
-  explicit ReleaseWorkerHolderRunnable(
-    UniquePtr<workers::WorkerHolder>&& aWorkerHolder)
-    : CancelableRunnable("dom::ReleaseWorkerHolderRunnable")
-    , mWorkerHolder(Move(aWorkerHolder))
+  explicit ReleaseWorkerHolderRunnable(UniquePtr<workers::WorkerHolder>&& aWorkerHolder)
+    : mWorkerHolder(Move(aWorkerHolder))
   {}
 
   NS_IMETHOD

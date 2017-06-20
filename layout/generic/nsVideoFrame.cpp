@@ -265,10 +265,7 @@ class DispatchResizeToControls : public Runnable
 {
 public:
   explicit DispatchResizeToControls(nsIContent* aContent)
-    : mozilla::Runnable("DispatchResizeToControls")
-    , mContent(aContent)
-  {
-  }
+    : mContent(aContent) {}
   NS_IMETHOD Run() override {
     nsContentUtils::DispatchTrustedEvent(mContent->OwnerDoc(), mContent,
                                          NS_LITERAL_STRING("resizevideocontrols"),

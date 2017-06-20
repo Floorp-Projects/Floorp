@@ -193,11 +193,11 @@ public:
    */
   FinalizeStatementCacheProxy(
     mozilla::storage::StatementCache<StatementType>& aStatementCache,
-    nsISupports* aOwner)
-    : Runnable("places::FinalizeStatementCacheProxy")
-    , mStatementCache(aStatementCache)
-    , mOwner(aOwner)
-    , mCallingThread(do_GetCurrentThread())
+    nsISupports* aOwner
+  )
+  : mStatementCache(aStatementCache)
+  , mOwner(aOwner)
+  , mCallingThread(do_GetCurrentThread())
   {
   }
 

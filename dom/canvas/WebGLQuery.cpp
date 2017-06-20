@@ -18,16 +18,13 @@ class AvailableRunnable final : public Runnable
     const RefPtr<WebGLQuery> mQuery;
 
 public:
-  explicit AvailableRunnable(WebGLQuery* query)
-    : Runnable("AvailableRunnable")
-    , mQuery(query)
-  {
-  }
+    explicit AvailableRunnable(WebGLQuery* query)
+        : mQuery(query)
+    { }
 
-  NS_IMETHOD Run() override
-  {
-    mQuery->mCanBeAvailable = true;
-    return NS_OK;
+    NS_IMETHOD Run() override {
+        mQuery->mCanBeAvailable = true;
+        return NS_OK;
     }
 };
 

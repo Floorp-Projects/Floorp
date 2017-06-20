@@ -176,10 +176,7 @@ TestDemonParent::RunUnlimitedSequence()
   gFlushStack = false;
   DoAction();
 
-  MessageLoop::current()->PostTask(NewNonOwningRunnableMethod(
-    "_ipdltest::TestDemonParent::RunUnlimitedSequence",
-    this,
-    &TestDemonParent::RunUnlimitedSequence));
+  MessageLoop::current()->PostTask(NewNonOwningRunnableMethod(this, &TestDemonParent::RunUnlimitedSequence));
 }
 
 void
@@ -323,10 +320,7 @@ TestDemonChild::RunUnlimitedSequence()
   gFlushStack = false;
   DoAction();
 
-  MessageLoop::current()->PostTask(NewNonOwningRunnableMethod(
-    "_ipdltest::TestDemonChild::RunUnlimitedSequence",
-    this,
-    &TestDemonChild::RunUnlimitedSequence));
+  MessageLoop::current()->PostTask(NewNonOwningRunnableMethod(this, &TestDemonChild::RunUnlimitedSequence));
 }
 
 void

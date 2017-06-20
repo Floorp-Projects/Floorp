@@ -7,8 +7,7 @@
 namespace mozilla { namespace psm {
 
 SyncRunnableBase::SyncRunnableBase()
-  : Runnable("psm::SyncRunnableBase")
-  , monitor("SyncRunnableBase::monitor")
+  : monitor("SyncRunnableBase::monitor")
 {
 }
 

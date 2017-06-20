@@ -233,11 +233,8 @@ protected:
 
   class EditorInitializer : public mozilla::Runnable {
   public:
-    explicit EditorInitializer(nsTextControlFrame* aFrame)
-      : mozilla::Runnable("nsTextControlFrame::EditorInitializer")
-      , mFrame(aFrame)
-    {
-    }
+    explicit EditorInitializer(nsTextControlFrame* aFrame) :
+      mFrame(aFrame) {}
 
     NS_IMETHOD Run() override;
 
@@ -255,11 +252,8 @@ protected:
 
   class ScrollOnFocusEvent : public mozilla::Runnable {
   public:
-    explicit ScrollOnFocusEvent(nsTextControlFrame* aFrame)
-      : mozilla::Runnable("nsTextControlFrame::ScrollOnFocusEvent")
-      , mFrame(aFrame)
-    {
-    }
+    explicit ScrollOnFocusEvent(nsTextControlFrame* aFrame) :
+      mFrame(aFrame) {}
 
     NS_DECL_NSIRUNNABLE
 

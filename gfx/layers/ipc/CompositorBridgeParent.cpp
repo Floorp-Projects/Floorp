@@ -667,30 +667,21 @@ CompositorBridgeParent::ActorDestroy(ActorDestroyReason why)
   // We must keep the compositor parent alive untill the code handling message
   // reception is finished on this thread.
   mSelfRef = this;
-  MessageLoop::current()->PostTask(
-    NewRunnableMethod("layers::CompositorBridgeParent::DeferredDestroy",
-                      this,
-                      &CompositorBridgeParent::DeferredDestroy));
+  MessageLoop::current()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::DeferredDestroy));
 }
 
 void
 CompositorBridgeParent::ScheduleRenderOnCompositorThread()
 {
   MOZ_ASSERT(CompositorLoop());
-  CompositorLoop()->PostTask(
-    NewRunnableMethod("layers::CompositorBridgeParent::ScheduleComposition",
-                      this,
-                      &CompositorBridgeParent::ScheduleComposition));
+  CompositorLoop()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::ScheduleComposition));
 }
 
 void
 CompositorBridgeParent::InvalidateOnCompositorThread()
 {
   MOZ_ASSERT(CompositorLoop());
-  CompositorLoop()->PostTask(
-    NewRunnableMethod("layers::CompositorBridgeParent::Invalidate",
-                      this,
-                      &CompositorBridgeParent::Invalidate));
+  CompositorLoop()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::Invalidate));
 }
 
 void
@@ -786,10 +777,7 @@ CompositorBridgeParent::SchedulePauseOnCompositorThread()
   MonitorAutoLock lock(mPauseCompositionMonitor);
 
   MOZ_ASSERT(CompositorLoop());
-  CompositorLoop()->PostTask(
-    NewRunnableMethod("layers::CompositorBridgeParent::PauseComposition",
-                      this,
-                      &CompositorBridgeParent::PauseComposition));
+  CompositorLoop()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::PauseComposition));
 
   // Wait until the pause has actually been processed by the compositor thread
   lock.Wait();
@@ -801,10 +789,7 @@ CompositorBridgeParent::ScheduleResumeOnCompositorThread()
   MonitorAutoLock lock(mResumeCompositionMonitor);
 
   MOZ_ASSERT(CompositorLoop());
-  CompositorLoop()->PostTask(
-    NewRunnableMethod("layers::CompositorBridgeParent::ResumeComposition",
-                      this,
-                      &CompositorBridgeParent::ResumeComposition));
+  CompositorLoop()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::ResumeComposition));
 
   // Wait until the resume has actually been processed by the compositor thread
   lock.Wait();
@@ -818,12 +803,10 @@ CompositorBridgeParent::ScheduleResumeOnCompositorThread(int width, int height)
   MonitorAutoLock lock(mResumeCompositionMonitor);
 
   MOZ_ASSERT(CompositorLoop());
-  CompositorLoop()->PostTask(NewRunnableMethod<int, int>(
-    "layers::CompositorBridgeParent::ResumeCompositionAndResize",
-    this,
-    &CompositorBridgeParent::ResumeCompositionAndResize,
-    width,
-    height));
+  CompositorLoop()->PostTask(NewRunnableMethod
+                             <int, int>(this,
+                                        &CompositorBridgeParent::ResumeCompositionAndResize,
+                                        width, height));
 
   // Wait until the resume has actually been processed by the compositor thread
   lock.Wait();
@@ -1199,10 +1182,8 @@ CompositorBridgeParent::ScheduleRotationOnCompositorThread(const TargetConfig& a
     if (mForceCompositionTask != nullptr) {
       mForceCompositionTask->Cancel();
     }
-    RefPtr<CancelableRunnable> task = NewCancelableRunnableMethod(
-      "layers::CompositorBridgeParent::ForceComposition",
-      this,
-      &CompositorBridgeParent::ForceComposition);
+    RefPtr<CancelableRunnable> task =
+      NewCancelableRunnableMethod(this, &CompositorBridgeParent::ForceComposition);
     mForceCompositionTask = task;
     ScheduleTask(task.forget(), gfxPrefs::OrientationSyncMillis());
   }
@@ -1352,9 +1333,9 @@ CompositorBridgeParent::FlushApzRepaints(const uint64_t& aLayersId)
     layersId = mRootLayerTreeID;
   }
   RefPtr<CompositorBridgeParent> self = this;
-  APZThreadUtils::RunOnControllerThread(NS_NewRunnableFunction(
-    "layers::CompositorBridgeParent::FlushApzRepaints",
-    [=]() { self->mApzcTreeManager->FlushApzRepaints(layersId); }));
+  APZThreadUtils::RunOnControllerThread(NS_NewRunnableFunction([=] () {
+    self->mApzcTreeManager->FlushApzRepaints(layersId);
+  }));
 }
 
 void
@@ -1378,14 +1359,9 @@ CompositorBridgeParent::SetConfirmedTargetAPZC(const uint64_t& aLayersId,
   void (APZCTreeManager::*setTargetApzcFunc)
         (uint64_t, const nsTArray<ScrollableLayerGuid>&) =
         &APZCTreeManager::SetTargetAPZC;
-  RefPtr<Runnable> task =
-    NewRunnableMethod<uint64_t,
-                      StoreCopyPassByConstLRef<nsTArray<ScrollableLayerGuid>>>(
-      "layers::CompositorBridgeParent::SetConfirmedTargetAPZC",
-      mApzcTreeManager.get(),
-      setTargetApzcFunc,
-      aInputBlockId,
-      aTargets);
+  RefPtr<Runnable> task = NewRunnableMethod
+        <uint64_t, StoreCopyPassByConstLRef<nsTArray<ScrollableLayerGuid>>>
+        (mApzcTreeManager.get(), setTargetApzcFunc, aInputBlockId, aTargets);
   APZThreadUtils::RunOnControllerThread(task.forget());
 }
 
@@ -2181,10 +2157,7 @@ void
 CompositorBridgeParent::ScheduleShowAllPluginWindows()
 {
   MOZ_ASSERT(CompositorLoop());
-  CompositorLoop()->PostTask(
-    NewRunnableMethod("layers::CompositorBridgeParent::ShowAllPluginWindows",
-                      this,
-                      &CompositorBridgeParent::ShowAllPluginWindows));
+  CompositorLoop()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::ShowAllPluginWindows));
 }
 
 void
@@ -2199,10 +2172,7 @@ void
 CompositorBridgeParent::ScheduleHideAllPluginWindows()
 {
   MOZ_ASSERT(CompositorLoop());
-  CompositorLoop()->PostTask(
-    NewRunnableMethod("layers::CompositorBridgeParent::HideAllPluginWindows",
-                      this,
-                      &CompositorBridgeParent::HideAllPluginWindows));
+  CompositorLoop()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::HideAllPluginWindows));
 }
 
 void

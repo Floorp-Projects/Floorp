@@ -52,15 +52,14 @@ using namespace mozilla;
 
 class nsDiskCacheDeviceDeactivateEntryEvent : public Runnable {
 public:
-  nsDiskCacheDeviceDeactivateEntryEvent(nsDiskCacheDevice* device,
-                                        nsCacheEntry* entry,
-                                        nsDiskCacheBinding* binding)
-    : mozilla::Runnable("nsDiskCacheDeviceDeactivateEntryEvent")
-    , mCanceled(false)
-    , mEntry(entry)
-    , mDevice(device)
-    , mBinding(binding)
-  {
+    nsDiskCacheDeviceDeactivateEntryEvent(nsDiskCacheDevice *device,
+                                          nsCacheEntry * entry,
+                                          nsDiskCacheBinding * binding)
+        : mCanceled(false),
+          mEntry(entry),
+          mDevice(device),
+          mBinding(binding)
+    {
     }
 
     NS_IMETHOD Run() override
@@ -83,17 +82,14 @@ private:
 
 class nsEvictDiskCacheEntriesEvent : public Runnable {
 public:
-  explicit nsEvictDiskCacheEntriesEvent(nsDiskCacheDevice* device)
-    : mozilla::Runnable("nsEvictDiskCacheEntriesEvent")
-    , mDevice(device)
-  {
-  }
+    explicit nsEvictDiskCacheEntriesEvent(nsDiskCacheDevice *device)
+        : mDevice(device) {}
 
-  NS_IMETHOD Run() override
-  {
-    nsCacheServiceAutoLock lock;
-    mDevice->EvictDiskCacheEntries(mDevice->mCacheCapacity);
-    return NS_OK;
+    NS_IMETHOD Run() override
+    {
+        nsCacheServiceAutoLock lock;
+        mDevice->EvictDiskCacheEntries(mDevice->mCacheCapacity);
+        return NS_OK;
     }
 
 private:

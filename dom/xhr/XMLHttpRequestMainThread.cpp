@@ -145,11 +145,7 @@ NS_IMPL_ISUPPORTS(nsXHRParseEndListener, nsIDOMEventListener)
 class nsResumeTimeoutsEvent : public Runnable
 {
 public:
-  explicit nsResumeTimeoutsEvent(nsPIDOMWindowInner* aWindow)
-    : Runnable("dom::nsResumeTimeoutsEvent")
-    , mWindow(aWindow)
-  {
-  }
+  explicit nsResumeTimeoutsEvent(nsPIDOMWindowInner* aWindow) : mWindow(aWindow) {}
 
   NS_IMETHOD Run() override
   {
@@ -3127,11 +3123,9 @@ XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody)
     } else {
       // Defer the actual sending of async events just in case listeners
       // are attached after the send() method is called.
-      return DispatchToMainThread(NewRunnableMethod<ProgressEventType>(
-        "dom::XMLHttpRequestMainThread::CloseRequestWithError",
-        this,
-        &XMLHttpRequestMainThread::CloseRequestWithError,
-        ProgressEventType::error));
+      return DispatchToMainThread(NewRunnableMethod<ProgressEventType>(this,
+                 &XMLHttpRequestMainThread::CloseRequestWithError,
+                 ProgressEventType::error));
     }
   }
 
