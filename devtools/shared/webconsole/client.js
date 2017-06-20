@@ -8,8 +8,6 @@
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const EventEmitter = require("devtools/shared/event-emitter");
-const promise = require("promise");
-const defer = require("devtools/shared/defer");
 const {LongStringClient} = require("devtools/shared/client/main");
 
 /**
@@ -686,31 +684,28 @@ WebConsoleClient.prototype = {
    */
   getString: function (stringGrip) {
     // Make sure this is a long string.
-    if (typeof stringGrip != "object" || stringGrip.type != "longString") {
+    if (typeof stringGrip !== "object" || stringGrip.type !== "longString") {
       // Go home string, you're drunk.
-      return promise.resolve(stringGrip);
+      return Promise.resolve(stringGrip);
     }
 
     // Fetch the long string only once.
     if (stringGrip._fullText) {
-      return stringGrip._fullText.promise;
+      return stringGrip._fullText;
     }
 
-    let deferred = stringGrip._fullText = defer();
-    let { initial, length } = stringGrip;
-    let longStringClient = this.longString(stringGrip);
+    return new Promise((resolve, reject) => {
+      let { initial, length } = stringGrip;
+      let longStringClient = this.longString(stringGrip);
 
-    longStringClient.substring(initial.length, length, response => {
-      if (response.error) {
-        DevToolsUtils.reportException("getString",
-            response.error + ": " + response.message);
-
-        deferred.reject(response);
-        return;
-      }
-      deferred.resolve(initial + response.substring);
+      longStringClient.substring(initial.length, length, response => {
+        if (response.error) {
+          DevToolsUtils.reportException("getString",
+              response.error + ": " + response.message);
+          reject(response);
+        }
+        resolve(initial + response.substring);
+      });
     });
-
-    return deferred.promise;
   }
 };
