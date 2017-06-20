@@ -7,6 +7,7 @@
 #if !defined(MediaTimer_h_)
 #define MediaTimer_h_
 
+#include "mozilla/AbstractThread.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/MozPromise.h"
