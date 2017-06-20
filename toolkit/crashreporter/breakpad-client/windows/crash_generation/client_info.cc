@@ -27,6 +27,8 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <cassert>
+
 #include "windows/crash_generation/client_info.h"
 #include "windows/common/ipc_protocol.h"
 
@@ -133,17 +135,50 @@ ClientInfo::~ClientInfo() {
   }
 }
 
-bool ClientInfo::GetClientExceptionInfo(EXCEPTION_POINTERS** ex_info) const {
+bool ClientInfo::GetClientExceptionInfo(EXCEPTION_POINTERS** ex_info_ptr) const {
   SIZE_T bytes_count = 0;
+
+  static_assert(sizeof(*ex_info_ptr) == sizeof(void*),
+                "Expected to read sizeof(void*) bytes.");
   if (!ReadProcessMemory(process_handle_,
                          ex_info_,
-                         ex_info,
-                         sizeof(*ex_info),
+                         ex_info_ptr,
+                         sizeof(*ex_info_ptr),
                          &bytes_count)) {
     return false;
   }
 
-  return bytes_count == sizeof(*ex_info);
+  return bytes_count == sizeof(*ex_info_ptr);
+}
+
+bool ClientInfo::PopulateClientExceptionContext(EXCEPTION_POINTERS* ex_info_ptr,
+                                                CONTEXT* out_context) const {
+  SIZE_T bytes_count = 0;
+
+  EXCEPTION_POINTERS ex_info;
+  if (!ReadProcessMemory(process_handle_,
+                         ex_info_ptr,
+                         &ex_info,
+                         sizeof(ex_info),
+                         &bytes_count)) {
+    return false;
+  }
+
+  if (bytes_count != sizeof(ex_info)) {
+    return false;
+  }
+
+  static_assert(sizeof(*out_context) == sizeof(CONTEXT),
+                "Expected to read sizeof(CONTEXT) bytes.");
+  if (!ReadProcessMemory(process_handle_,
+                         ex_info.ContextRecord,
+                         out_context,
+                         sizeof(*out_context),
+                         &bytes_count)) {
+    return false;
+  }
+
+  return bytes_count == sizeof(*out_context);
 }
 
 bool ClientInfo::GetClientThreadId(DWORD* thread_id) const {
