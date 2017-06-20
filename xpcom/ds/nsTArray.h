@@ -13,6 +13,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/BinarySearch.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/fallible.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
@@ -2053,9 +2054,14 @@ void
 nsTArray_Impl<E, Alloc>::RemoveElementsAt(index_type aStart, size_type aCount)
 {
   MOZ_ASSERT(aCount == 0 || aStart < Length(), "Invalid aStart index");
-  MOZ_ASSERT(aStart + aCount <= Length(), "Invalid length");
-  // Check that the previous assert didn't overflow
-  MOZ_ASSERT(aStart <= aStart + aCount, "Start index plus length overflows");
+
+  mozilla::CheckedInt<index_type> rangeEnd = aStart;
+  rangeEnd += aCount;
+
+  if (MOZ_UNLIKELY(!rangeEnd.isValid() || rangeEnd.value() > Length())) {
+    InvalidArrayIndex_CRASH(aStart, Length());
+  }
+
   DestructRange(aStart, aCount);
   this->template ShiftData<InfallibleAlloc>(aStart, aCount, 0,
                                             sizeof(elem_type),
