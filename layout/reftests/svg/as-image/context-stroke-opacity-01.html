@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Basic context-stroke-opacity test</title>
+    <style>
+
+img {
+  width: 100px;
+  height: 100px;
+  -moz-context-properties: stroke-opacity;
+  stroke-opacity: 0.5;
+}
+
+    </style>
+  </head>
+  <body>
+    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><line x1='0' y1='50%' x2='100%' y2='50%' stroke-width='120%' stroke='blue' stroke-opacity='context-stroke-opacity'/></svg>">
+  </body>
+</html>
