@@ -50,7 +50,6 @@ void
 Compositor::Destroy()
 {
   TextureSourceProvider::Destroy();
-  FlushPendingNotifyNotUsed();
   mIsDestroyed = true;
 }
 
