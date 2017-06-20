@@ -1,3 +1,6 @@
+// slowwww shutdown on Windows 7 VM.
+requestLongerTimeout(10);
+
 var gMimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
 var gHandlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(Ci.nsIHandlerService);
 
@@ -16,8 +19,12 @@ function setupFakeHandler() {
 
 add_task(async function() {
   setupFakeHandler();
-  await openPreferencesViaOpenPreferencesAPI("applications", {leaveOpen: true});
-  info("Preferences page opened on the applications pane.");
+
+  // Ensure preferences is loaded before testing.
+  let syncPaneLoadedPromise = TestUtils.topicObserved("sync-pane-loaded", () => true);
+  let prefs = await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+  is(prefs.selectedPane, "paneGeneral", "General pane was selected");
+  await syncPaneLoadedPromise;
   let win = gBrowser.selectedBrowser.contentWindow;
 
   let container = win.document.getElementById("handlersView");
@@ -27,7 +34,7 @@ add_task(async function() {
   container.selectItem(ourItem);
   ok(ourItem.selected, "Should be able to select our item.");
 
-  let list = await waitForCondition(() => win.document.getAnonymousElementByAttribute(ourItem, "class", "actionsMenu"));
+  let list = await waitForCondition(() => win.document.getAnonymousElementByAttribute(ourItem, "class", "actionsMenu"), 3000);
   info("Got list after item was selected");
 
   let chooseItem = list.firstChild.querySelector(".choose-app-item");
@@ -50,7 +57,7 @@ add_task(async function() {
   ok(mimeInfo.preferredApplicationHandler.equals(selectedApp), "App should be set as preferred.");
 
   // Check that we display this result:
-  list = await waitForCondition(() => win.document.getAnonymousElementByAttribute(ourItem, "class", "actionsMenu"));
+  list = await waitForCondition(() => win.document.getAnonymousElementByAttribute(ourItem, "class", "actionsMenu"), 3000);
   info("Got list after item was selected");
   ok(list.selectedItem, "Should have a selected item");
   ok(mimeInfo.preferredApplicationHandler.equals(list.selectedItem.handlerApp),
@@ -83,12 +90,14 @@ add_task(async function() {
   ok(!mimeInfo.preferredApplicationHandler, "App should no longer be set as preferred.");
 
   // Check that we display this result:
-  list = await waitForCondition(() => win.document.getAnonymousElementByAttribute(ourItem, "class", "actionsMenu"));
+  list = await waitForCondition(() => win.document.getAnonymousElementByAttribute(ourItem, "class", "actionsMenu"), 3000);
   ok(list.selectedItem, "Should have a selected item");
   ok(!list.selectedItem.handlerApp,
      "No app should be visible as preferred item.");
 
+  let tabRemovedPromise = BrowserTestUtils.tabRemoved(gBrowser.selectedTab);
   gBrowser.removeCurrentTab();
+  await tabRemovedPromise;
 });
 
 registerCleanupFunction(function() {
