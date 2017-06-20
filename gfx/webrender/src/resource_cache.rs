@@ -6,6 +6,7 @@ use app_units::Au;
 use device::TextureFilter;
 use fnv::FnvHasher;
 use frame::FrameId;
+use gpu_cache::{GpuCache, GpuCacheHandle};
 use internal_types::{SourceTexture, TextureUpdateList};
 use profiler::TextureCacheProfileCounters;
 use std::collections::{HashMap, HashSet};
@@ -39,8 +40,7 @@ const DEFAULT_TILE_SIZE: TileSize = 512;
 // various CPU-side structures.
 pub struct CacheItem {
     pub texture_id: SourceTexture,
-    pub uv0: DevicePoint,
-    pub uv1: DevicePoint,
+    pub uv_rect_handle: GpuCacheHandle,
 }
 
 pub struct ImageProperties {
@@ -110,10 +110,6 @@ impl<K,V> ResourceClassCache<K,V> where K: Clone + Hash + Eq + Debug, V: Resourc
         }
     }
 
-    pub fn contains_key(&self, key: &K) -> bool {
-        self.resources.contains_key(key)
-    }
-
     fn get(&self, key: &K, frame: FrameId) -> &V {
         // This assert catches cases in which we accidentally request a resource that we forgot to
         // mark as needed this frame.
@@ -129,7 +125,7 @@ impl<K,V> ResourceClassCache<K,V> where K: Clone + Hash + Eq + Debug, V: Resourc
         self.resources.insert(key, value);
     }
 
-    fn entry(&mut self, key: K, frame: FrameId) -> Entry<K,V> {
+    pub fn entry(&mut self, key: K, frame: FrameId) -> Entry<K,V> {
         self.last_access_times.insert(key.clone(), frame);
         self.resources.entry(key)
     }
@@ -175,9 +171,9 @@ impl Into<BlobImageRequest> for ImageRequest {
     }
 }
 
-struct WebGLTexture {
-    id: SourceTexture,
-    size: DeviceIntSize,
+pub struct WebGLTexture {
+    pub id: SourceTexture,
+    pub size: DeviceIntSize,
 }
 
 struct Resources {
@@ -214,6 +210,9 @@ pub struct ResourceCache {
 
     blob_image_renderer: Option<Box<BlobImageRenderer>>,
     blob_image_requests: HashSet<ImageRequest>,
+
+    requested_glyphs: HashSet<TextureCacheItemId, BuildHasherDefault<FnvHasher>>,
+    requested_images: HashSet<TextureCacheItemId, BuildHasherDefault<FnvHasher>>,
 }
 
 impl ResourceCache {
@@ -237,6 +236,9 @@ impl ResourceCache {
 
             blob_image_renderer: blob_image_renderer,
             blob_image_requests: HashSet::new(),
+
+            requested_glyphs: HashSet::default(),
+            requested_images: HashSet::default(),
         }
     }
 
@@ -392,10 +394,21 @@ impl ResourceCache {
         }
         if template.data.is_blob() {
             if let Some(ref mut renderer) = self.blob_image_renderer {
-                let same_epoch = match self.cached_images.resources.get(&request) {
-                    Some(entry) => entry.epoch == template.epoch,
-                    None => false,
+                let (same_epoch, texture_cache_id) = match self.cached_images.resources
+                                                               .get(&request) {
+                    Some(entry) => {
+                        (entry.epoch == template.epoch, Some(entry.texture_cache_id))
+                    }
+                    None => {
+                        (false, None)
+                    }
                 };
+
+                // Ensure that blobs are added to the list of requested items
+                // foe the GPU cache, even if the cached blob image is up to date.
+                if let Some(texture_cache_id) = texture_cache_id {
+                    self.requested_images.insert(texture_cache_id);
+                }
 
                 if !same_epoch && self.blob_image_requests.insert(request) {
                     let (offset, w, h) = match template.tiling {
@@ -450,6 +463,7 @@ impl ResourceCache {
             glyph_instances,
             render_mode,
             glyph_options,
+            &mut self.requested_glyphs,
         );
     }
 
@@ -464,7 +478,7 @@ impl ResourceCache {
                          glyph_instances: &[GlyphInstance],
                          render_mode: FontRenderMode,
                          glyph_options: Option<GlyphOptions>,
-                         mut f: F) -> SourceTexture where F: FnMut(usize, DevicePoint, DevicePoint) {
+                         mut f: F) -> SourceTexture where F: FnMut(usize, &GpuCacheHandle) {
         debug_assert_eq!(self.state, State::QueryResources);
         let mut glyph_key = GlyphRequest::new(
             font_key,
@@ -483,11 +497,7 @@ impl ResourceCache {
             let image_id = self.cached_glyphs.get(&glyph_key, self.current_frame_id);
             let cache_item = image_id.map(|image_id| self.texture_cache.get(image_id));
             if let Some(cache_item) = cache_item {
-                let uv0 = DevicePoint::new(cache_item.pixel_rect.top_left.x as f32,
-                                           cache_item.pixel_rect.top_left.y as f32);
-                let uv1 = DevicePoint::new(cache_item.pixel_rect.bottom_right.x as f32,
-                                           cache_item.pixel_rect.bottom_right.y as f32);
-                f(loop_index, uv0, uv1);
+                f(loop_index, &cache_item.uv_rect_handle);
                 debug_assert!(texture_id == None ||
                               texture_id == Some(cache_item.texture_id));
                 texture_id = Some(cache_item.texture_id);
@@ -521,10 +531,7 @@ impl ResourceCache {
         let item = self.texture_cache.get(image_info.texture_cache_id);
         CacheItem {
             texture_id: SourceTexture::TextureCache(item.texture_id),
-            uv0: DevicePoint::new(item.pixel_rect.top_left.x as f32,
-                                  item.pixel_rect.top_left.y as f32),
-            uv1: DevicePoint::new(item.pixel_rect.bottom_right.x as f32,
-                                  item.pixel_rect.bottom_right.y as f32),
+            uv_rect_handle: item.uv_rect_handle,
         }
     }
 
@@ -554,14 +561,8 @@ impl ResourceCache {
         }
     }
 
-    #[inline]
-    pub fn get_webgl_texture(&self, context_id: &WebGLContextId) -> CacheItem {
-        let webgl_texture = &self.webgl_textures[context_id];
-        CacheItem {
-            texture_id: webgl_texture.id,
-            uv0: DevicePoint::new(0.0, webgl_texture.size.height as f32),
-            uv1: DevicePoint::new(webgl_texture.size.width as f32, 0.0),
-        }
+    pub fn get_webgl_texture(&self, context_id: &WebGLContextId) -> &WebGLTexture {
+        &self.webgl_textures[context_id]
     }
 
     pub fn get_webgl_texture_size(&self, context_id: &WebGLContextId) -> DeviceIntSize {
@@ -577,9 +578,12 @@ impl ResourceCache {
         debug_assert_eq!(self.state, State::Idle);
         self.state = State::AddResources;
         self.current_frame_id = frame_id;
+        debug_assert!(self.requested_glyphs.is_empty());
+        debug_assert!(self.requested_images.is_empty());
     }
 
     pub fn block_until_all_resources_added(&mut self,
+                                           gpu_cache: &mut GpuCache,
                                            texture_cache_profile: &mut TextureCacheProfileCounters) {
         profile_scope!("block_until_all_resources_added");
 
@@ -590,6 +594,7 @@ impl ResourceCache {
             self.current_frame_id,
             &mut self.cached_glyphs,
             &mut self.texture_cache,
+            &mut self.requested_glyphs,
             texture_cache_profile,
         );
 
@@ -624,6 +629,21 @@ impl ResourceCache {
                         panic!("Vector image error {}", msg);
                     }
                 }
+            }
+        }
+
+        for texture_cache_item_id in self.requested_images.drain() {
+            let item = self.texture_cache.get_mut(texture_cache_item_id);
+            if let Some(mut request) = gpu_cache.request(&mut item.uv_rect_handle) {
+                request.push(item.uv_rect.into());
+            }
+        }
+
+        for texture_cache_item_id in self.requested_glyphs.drain() {
+            let item = self.texture_cache.get_mut(texture_cache_item_id);
+            if let Some(mut request) = gpu_cache.request(&mut item.uv_rect_handle) {
+                request.push(item.uv_rect.into());
+                request.push([item.user_data[0], item.user_data[1], 0.0, 0.0].into());
             }
         }
     }
@@ -670,7 +690,7 @@ impl ResourceCache {
             image_template.descriptor.clone()
         };
 
-        match self.cached_images.entry(*request, self.current_frame_id) {
+        let image_id = match self.cached_images.entry(*request, self.current_frame_id) {
             Occupied(entry) => {
                 let image_id = entry.get().texture_cache_id;
 
@@ -687,6 +707,8 @@ impl ResourceCache {
                     };
                     image_template.dirty_rect = None;
                 }
+
+                image_id
             }
             Vacant(entry) => {
                 let filter = match request.rendering {
@@ -697,14 +719,19 @@ impl ResourceCache {
                 let image_id = self.texture_cache.insert(descriptor,
                                                          filter,
                                                          image_data,
+                                                         [0.0; 2],
                                                          texture_cache_profile);
 
                 entry.insert(CachedImageInfo {
                     texture_cache_id: image_id,
                     epoch: image_template.epoch,
                 });
+
+                image_id
             }
-        }
+        };
+
+        self.requested_images.insert(image_id);
     }
     fn finalize_image_request(&mut self,
                               request: ImageRequest,
