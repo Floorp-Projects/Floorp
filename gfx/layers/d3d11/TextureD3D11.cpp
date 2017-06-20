@@ -546,9 +546,10 @@ D3D11TextureData::GetDXGIResource(IDXGIResource** aOutResource)
 }
 
 DXGIYCbCrTextureData*
-DXGIYCbCrTextureData::Create(IDirect3DTexture9* aTextureY,
-                             IDirect3DTexture9* aTextureCb,
-                             IDirect3DTexture9* aTextureCr,
+DXGIYCbCrTextureData::Create(TextureFlags aFlags,
+                             IUnknown* aTextureY,
+                             IUnknown* aTextureCb,
+                             IUnknown* aTextureCr,
                              HANDLE aHandleY,
                              HANDLE aHandleCb,
                              HANDLE aHandleCr,
@@ -565,9 +566,9 @@ DXGIYCbCrTextureData::Create(IDirect3DTexture9* aTextureY,
   texture->mHandles[0] = aHandleY;
   texture->mHandles[1] = aHandleCb;
   texture->mHandles[2] = aHandleCr;
-  texture->mD3D9Textures[0] = aTextureY;
-  texture->mD3D9Textures[1] = aTextureCb;
-  texture->mD3D9Textures[2] = aTextureCr;
+  texture->mHoldRefs[0] = aTextureY;
+  texture->mHoldRefs[1] = aTextureCb;
+  texture->mHoldRefs[2] = aTextureCr;
   texture->mSize = aSize;
   texture->mSizeY = aSizeY;
   texture->mSizeCbCr = aSizeCbCr;
@@ -576,7 +577,8 @@ DXGIYCbCrTextureData::Create(IDirect3DTexture9* aTextureY,
 }
 
 DXGIYCbCrTextureData*
-DXGIYCbCrTextureData::Create(ID3D11Texture2D* aTextureY,
+DXGIYCbCrTextureData::Create(TextureFlags aFlags,
+                             ID3D11Texture2D* aTextureY,
                              ID3D11Texture2D* aTextureCb,
                              ID3D11Texture2D* aTextureCr,
                              const gfx::IntSize& aSize,
@@ -619,18 +621,10 @@ DXGIYCbCrTextureData::Create(ID3D11Texture2D* aTextureY,
     return nullptr;
   }
 
-  DXGIYCbCrTextureData* texture = new DXGIYCbCrTextureData();
-  texture->mHandles[0] = handleY;
-  texture->mHandles[1] = handleCb;
-  texture->mHandles[2] = handleCr;
-  texture->mD3D11Textures[0] = aTextureY;
-  texture->mD3D11Textures[1] = aTextureCb;
-  texture->mD3D11Textures[2] = aTextureCr;
-  texture->mSize = aSize;
-  texture->mSizeY = aSizeY;
-  texture->mSizeCbCr = aSizeCbCr;
-
-  return texture;
+  return DXGIYCbCrTextureData::Create(aFlags,
+                                      aTextureY, aTextureCb, aTextureCr,
+                                      handleY, handleCb, handleCr,
+                                      aSize, aSizeY, aSizeCbCr);
 }
 
 void
@@ -656,12 +650,9 @@ DXGIYCbCrTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 void
 DXGIYCbCrTextureData::Deallocate(LayersIPCChannel*)
 {
-  mD3D9Textures[0] = nullptr;
-  mD3D9Textures[1] = nullptr;
-  mD3D9Textures[2] = nullptr;
-  mD3D11Textures[0] = nullptr;
-  mD3D11Textures[1] = nullptr;
-  mD3D11Textures[2] = nullptr;
+  mHoldRefs[0] = nullptr;
+  mHoldRefs[1] = nullptr;
+  mHoldRefs[2] = nullptr;
 }
 
 already_AddRefed<TextureHost>

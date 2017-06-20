@@ -190,8 +190,9 @@ IMFYCbCrImage::GetD3D11TextureData(Data aData, gfx::IntSize aSize)
     mt->Leave();
   }
 
-  return DXGIYCbCrTextureData::Create(textureY, textureCb, textureCr,
-                                      aSize, aData.mYSize, aData.mCbCrSize);
+  return DXGIYCbCrTextureData::Create(TextureFlags::DEFAULT, textureY,
+                                      textureCb, textureCr, aSize, aData.mYSize,
+                                      aData.mCbCrSize);
 }
 
 TextureClient*
