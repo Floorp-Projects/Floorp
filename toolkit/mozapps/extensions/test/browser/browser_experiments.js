@@ -169,13 +169,13 @@ add_task(async function testOpenPreferences() {
 
   let deferred = Promise.defer();
   Services.obs.addObserver(function observer(prefWin, topic, data) {
-    Services.obs.removeObserver(observer, "advanced-pane-loaded");
-    info("Advanced preference pane opened.");
+    Services.obs.removeObserver(observer, "privacy-pane-loaded");
+    info("Privacy preference pane opened.");
     executeSoon(function() {
       // We want this test to fail if the preferences pane changes,
       // but we can't check if the data-choices button is visible
       // since it is only in the DOM when MOZ_TELEMETRY_REPORTING=1.
-      let el = prefWin.document.getElementById("header-advanced");
+      let el = prefWin.document.getElementById("dataCollectionCategory");
       is_element_visible(el);
 
       prefWin.close();
@@ -183,7 +183,7 @@ add_task(async function testOpenPreferences() {
 
       deferred.resolve();
     });
-  }, "advanced-pane-loaded");
+  }, "privacy-pane-loaded");
 
   info("Loading preferences pane.");
   // We need to focus before synthesizing the mouse event (bug 1240052) as

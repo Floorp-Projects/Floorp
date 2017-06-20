@@ -288,6 +288,11 @@ var gPrivacyPane = {
       bundlePrefs.getString("removeAllCookies.label"),
       bundlePrefs.getString("removeSelectedCookies.label"),
     ]);
+
+    // Notify observers that the UI is now ready
+    Components.classes["@mozilla.org/observer-service;1"]
+              .getService(Components.interfaces.nsIObserverService)
+              .notifyObservers(window, "privacy-pane-loaded");
   },
 
   // TRACKING PROTECTION MODE
