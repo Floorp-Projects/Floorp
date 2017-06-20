@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Fetch.h"
+#include "FetchConsumer.h"
 
 #include "nsIDocument.h"
 #include "nsIGlobalObject.h"
@@ -832,134 +833,6 @@ ExtractByteStreamFromBody(const fetch::BodyInit& aBodyInit,
 
   NS_NOTREACHED("Should never reach here");
   return NS_ERROR_FAILURE;
-}
-
-template <class Derived>
-class FetchBodyWrapper;
-
-template <class Derived>
-class FetchBodyWorkerHolder final : public workers::WorkerHolder
-{
-  RefPtr<FetchBodyWrapper<Derived>> mWrapper;
-  bool mWasNotified;
-
-public:
-  explicit FetchBodyWorkerHolder(FetchBodyWrapper<Derived>* aWrapper)
-    : mWrapper(aWrapper)
-    , mWasNotified(false)
-  {
-    MOZ_ASSERT(aWrapper);
-  }
-
-  ~FetchBodyWorkerHolder() = default;
-
-  bool Notify(workers::Status aStatus) override;
-};
-
-// FetchBody is not thread-safe but we need to move it around threads.
-// In order to keep it alive all the time, we use a WorkerHolder, if created on
-// workers, plus a wrapper.
-template <class Derived>
-class FetchBodyWrapper final
-{
-public:
-  friend class ReleaseObjectHelper;
-
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FetchBodyWrapper<Derived>)
-
-  static already_AddRefed<FetchBodyWrapper<Derived>>
-  Create(FetchBody<Derived>* aBody)
-  {
-    MOZ_ASSERT(aBody);
-
-    RefPtr<FetchBodyWrapper<Derived>> wrapper =
-      new FetchBodyWrapper<Derived>(aBody);
-
-    if (!NS_IsMainThread()) {
-      WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-      MOZ_ASSERT(workerPrivate);
-
-      if (!wrapper->RegisterWorkerHolder(workerPrivate)) {
-        return nullptr;
-      }
-    }
-
-    return wrapper.forget();
-  }
-
-  void
-  ReleaseObject()
-  {
-    AssertIsOnTargetThread();
-
-    mWorkerHolder = nullptr;
-    mBody = nullptr;
-  }
-
-  FetchBody<Derived>*
-  Body() const
-  {
-    return mBody;
-  }
-
-private:
-  explicit FetchBodyWrapper(FetchBody<Derived>* aBody)
-    : mTargetThread(NS_GetCurrentThread())
-    , mBody(aBody)
-  {}
-
-  ~FetchBodyWrapper()
-  {
-    NS_ProxyRelease(mTargetThread, mBody.forget());
-  }
-
-  void
-  AssertIsOnTargetThread()
-  {
-    MOZ_ASSERT(NS_GetCurrentThread() == mTargetThread);
-  }
-
-  bool
-  RegisterWorkerHolder(WorkerPrivate* aWorkerPrivate)
-  {
-    MOZ_ASSERT(aWorkerPrivate);
-    aWorkerPrivate->AssertIsOnWorkerThread();
-
-    MOZ_ASSERT(!mWorkerHolder);
-    mWorkerHolder.reset(new FetchBodyWorkerHolder<Derived>(this));
-
-    if (!mWorkerHolder->HoldWorker(aWorkerPrivate, Closing)) {
-      NS_WARNING("Failed to add workerHolder");
-      mWorkerHolder = nullptr;
-      return false;
-    }
-
-    return true;
-  }
-
-  nsCOMPtr<nsIThread> mTargetThread;
-  RefPtr<FetchBody<Derived>> mBody;
-
-  // Set when consuming the body is attempted on a worker.
-  // Unset when consumption is done/aborted.
-  // This WorkerHolder keeps alive the wrapper via a cycle.
-  UniquePtr<workers::WorkerHolder> mWorkerHolder;
-};
-
-template <class Derived>
-bool
-FetchBodyWorkerHolder<Derived>::Notify(workers::Status aStatus)
-{
-  MOZ_ASSERT(aStatus > workers::Running);
-  if (!mWasNotified) {
-    mWasNotified = true;
-    // This will probably cause the releasing of the wrapper.
-    // The WorkerHolder will be released as well.
-    mWrapper->Body()->ContinueConsumeBody(mWrapper, NS_BINDING_ABORTED, 0,
-                                          nullptr);
-  }
-
-  return true;
 }
 
 namespace {
