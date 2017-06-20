@@ -159,14 +159,14 @@ public:
   //   If the editor is for designMode, nullptr.
   static void OnFocusInEditor(nsPresContext* aPresContext,
                               nsIContent* aContent,
-                              nsIEditor* aEditor);
+                              EditorBase& aEditorBase);
 
   // This method is called when the editor is initialized.
-  static void OnEditorInitialized(nsIEditor* aEditor);
+  static void OnEditorInitialized(EditorBase& aEditorBase);
 
   // This method is called when the editor is (might be temporarily) being
   // destroyed.
-  static void OnEditorDestroying(nsIEditor* aEditor);
+  static void OnEditorDestroying(EditorBase& aEditorBase);
 
   /**
    * All composition events must be dispatched via DispatchCompositionEvent()
@@ -256,7 +256,7 @@ protected:
                                  nsIContent* aContent);
 
   static void EnsureTextCompositionArray();
-  static void CreateIMEContentObserver(nsIEditor* aEditor);
+  static void CreateIMEContentObserver(EditorBase* aEditorBase);
   static void DestroyIMEContentObserver();
 
   static bool IsEditable(nsINode* node);

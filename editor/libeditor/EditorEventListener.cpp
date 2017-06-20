@@ -1157,7 +1157,7 @@ EditorEventListener::Focus(InternalFocusEvent* aFocusEvent)
   NS_ENSURE_TRUE(ps, NS_OK);
   nsCOMPtr<nsIContent> focusedContent = editorBase->GetFocusedContentForIME();
   IMEStateManager::OnFocusInEditor(ps->GetPresContext(), focusedContent,
-                                   editorBase);
+                                   *editorBase);
 
   return NS_OK;
 }
