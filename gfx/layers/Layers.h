@@ -1806,7 +1806,7 @@ public:
    * Clear the invalid rect, marking the layer as being identical to what is currently
    * composited.
    */
-  virtual void ClearInvalidRect() { mInvalidRegion.SetEmpty(); }
+  virtual void ClearInvalidRegion() { mInvalidRegion.SetEmpty(); }
 
   // These functions allow attaching an AsyncPanZoomController to this layer,
   // and can be used anytime.
@@ -2044,7 +2044,7 @@ public:
     mValidRegionIsCurrent = false;
   }
 
-  void ClearInvalidRect() override
+  void ClearInvalidRegion() override
   {
     // mInvalidRegion is about to be reset. This is the last chance to apply
     // any pending changes from it to mValidRegion. Do that by calling
@@ -2335,6 +2335,8 @@ public:
   }
 
   nsTArray<CSSFilter>& GetFilterChain() { return mFilterChain; }
+  
+  virtual void SetInvalidCompositeRect(const gfx::IntRect& aRect) {}
 
 protected:
   friend class ReadbackProcessor;
