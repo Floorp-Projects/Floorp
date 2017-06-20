@@ -14,10 +14,12 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Services.h"
 #include "nsThreadUtils.h"
 #include "CubebUtils.h"
 #include "nsAutoRef.h"
 #include "prdtoa.h"
+#include "MediaInfo.h"
 
 #define PREF_VOLUME_SCALE "media.volume_scale"
 #define PREF_CUBEB_BACKEND "media.cubeb.backend"
