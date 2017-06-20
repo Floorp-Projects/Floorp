@@ -8,19 +8,19 @@
 
 #include "AudioSampleFormat.h"
 #include "ImageTypes.h"
-#include "nsSize.h"
-#include "mozilla/gfx/Rect.h"
-#include "nsRect.h"
-#include "nsIMemoryReporter.h"
 #include "SharedBuffer.h"
+#include "TimeUnits.h"
+#include "mozilla/CheckedInt.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
+#include "mozilla/gfx/Rect.h"
+#include "nsIMemoryReporter.h"
+#include "nsRect.h"
+#include "nsSize.h"
 #include "nsTArray.h"
-#include "mozilla/CheckedInt.h"
-#include "mozilla/PodOperations.h"
-#include "TimeUnits.h"
 
 namespace mozilla {
 

@@ -6,22 +6,19 @@
 #ifndef MOZILLA_MEDIASTREAMGRAPH_H_
 #define MOZILLA_MEDIASTREAMGRAPH_H_
 
+#include "AudioStream.h"
+#include "MainThreadUtils.h"
+#include "MediaStreamTypes.h"
+#include "StreamTracks.h"
+#include "VideoSegment.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TaskQueue.h"
-
 #include "mozilla/dom/AudioChannelBinding.h"
-
-#include "AudioStream.h"
-#include "MediaStreamTypes.h"
-#include "nsTArray.h"
-#include "nsIRunnable.h"
-#include "VideoSegment.h"
-#include "StreamTracks.h"
-#include "MainThreadUtils.h"
-#include "StreamTracks.h"
 #include "nsAutoPtr.h"
 #include "nsAutoRef.h"
+#include "nsIRunnable.h"
+#include "nsTArray.h"
 #include <speex/speex_resampler.h>
 
 class nsIRunnable;
