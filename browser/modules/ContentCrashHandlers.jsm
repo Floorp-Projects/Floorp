@@ -648,7 +648,7 @@ this.UnsubmittedCrashHandler = {
 
     let reportIDs = [];
     try {
-      reportIDs = await CrashSubmit.pendingIDsAsync(dateLimit);
+      reportIDs = await CrashSubmit.pendingIDs(dateLimit);
     } catch (e) {
       Cu.reportError(e);
       return null;
