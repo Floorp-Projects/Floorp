@@ -239,6 +239,7 @@ void ExceptionHandler::Initialize(
   AppMemory instruction_memory;
   instruction_memory.ptr = NULL;
   instruction_memory.length = 0;
+  instruction_memory.preallocated = true;
   app_memory_info_.push_back(instruction_memory);
 
   // There is a race condition here. If the first instance has not yet
@@ -1017,6 +1018,7 @@ void ExceptionHandler::RegisterAppMemory(void* ptr, size_t length) {
   AppMemory app_memory;
   app_memory.ptr = reinterpret_cast<ULONG64>(ptr);
   app_memory.length = static_cast<ULONG>(length);
+  app_memory.preallocated = false;
   app_memory_info_.push_back(app_memory);
 }
 
