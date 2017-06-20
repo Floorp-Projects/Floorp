@@ -8,6 +8,7 @@
 #define mozilla_dom_ChildProcessMessageManager_h
 
 #include "mozilla/dom/SyncMessageSender.h"
+#include "mozilla/dom/MessageManagerBinding.h"
 
 namespace mozilla {
 namespace dom {
@@ -21,6 +22,11 @@ public:
                         MessageManagerFlags::MM_OWNSCALLBACK)
   {
     mozilla::HoldJSObjects(this);
+  }
+
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
+  {
+    return ChildProcessMessageManagerBinding::Wrap(aCx, this, aGivenProto);
   }
 
 protected:
