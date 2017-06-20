@@ -8,7 +8,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"
-#include <dwrite.h>
+#include <dwrite_1.h>
 
 #include "gfxFont.h"
 #include "gfxUserFontSet.h"
@@ -93,6 +93,8 @@ protected:
     bool GetForceGDIClassic();
 
     RefPtr<IDWriteFontFace> mFontFace;
+    RefPtr<IDWriteFontFace1> mFontFace1; // may be unavailable on older DWrite
+
     cairo_font_face_t *mCairoFontFace;
 
     Metrics *mMetrics;

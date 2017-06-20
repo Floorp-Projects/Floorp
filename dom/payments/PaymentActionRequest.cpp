@@ -18,12 +18,21 @@ namespace dom {
 NS_IMPL_ISUPPORTS(PaymentActionRequest,
                   nsIPaymentActionRequest)
 
+PaymentActionRequest::PaymentActionRequest()
+  : mRequestId(EmptyString())
+  , mType(nsIPaymentActionRequest::UNKNOWN_ACTION)
+  , mCallback(nullptr)
+{
+}
+
 NS_IMETHODIMP
 PaymentActionRequest::Init(const nsAString& aRequestId,
-                           const uint32_t aType)
+                           const uint32_t aType,
+                           nsIPaymentActionCallback* aCallback)
 {
   mRequestId = aRequestId;
   mType = aType;
+  mCallback = aCallback;
   return NS_OK;
 }
 
@@ -41,23 +50,42 @@ PaymentActionRequest::GetType(uint32_t* aType)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PaymentActionRequest::GetCallback(nsIPaymentActionCallback** aCallback)
+{
+  NS_ENSURE_ARG_POINTER(aCallback);
+  nsCOMPtr<nsIPaymentActionCallback> callback = mCallback;
+  callback.forget(aCallback);
+  return NS_OK;
+}
+
 /* PaymentCreateActionRequest */
 
 NS_IMPL_ISUPPORTS_INHERITED(PaymentCreateActionRequest,
                             PaymentActionRequest,
                             nsIPaymentCreateActionRequest)
 
+PaymentCreateActionRequest::PaymentCreateActionRequest()
+  : mTabId(0)
+{
+}
+
 NS_IMETHODIMP
 PaymentCreateActionRequest::InitRequest(const nsAString& aRequestId,
+                                        nsIPaymentActionCallback* aCallback,
                                         const uint64_t aTabId,
                                         nsIArray* aMethodData,
                                         nsIPaymentDetails* aDetails,
                                         nsIPaymentOptions* aOptions)
 {
+  NS_ENSURE_ARG_POINTER(aCallback);
   NS_ENSURE_ARG_POINTER(aMethodData);
   NS_ENSURE_ARG_POINTER(aDetails);
   NS_ENSURE_ARG_POINTER(aOptions);
-  Init(aRequestId, nsIPaymentActionRequest::CREATE_ACTION);
+  nsresult rv = Init(aRequestId, nsIPaymentActionRequest::CREATE_ACTION, aCallback);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   mTabId = aTabId;
   mMethodData = aMethodData;
   mDetails = aDetails;
@@ -77,7 +105,6 @@ NS_IMETHODIMP
 PaymentCreateActionRequest::GetMethodData(nsIArray** aMethodData)
 {
   NS_ENSURE_ARG_POINTER(aMethodData);
-  *aMethodData = nullptr;
   MOZ_ASSERT(mMethodData);
   nsCOMPtr<nsIArray> methodData = mMethodData;
   methodData.forget(aMethodData);
@@ -88,7 +115,6 @@ NS_IMETHODIMP
 PaymentCreateActionRequest::GetDetails(nsIPaymentDetails** aDetails)
 {
   NS_ENSURE_ARG_POINTER(aDetails);
-  *aDetails = nullptr;
   MOZ_ASSERT(mDetails);
   nsCOMPtr<nsIPaymentDetails> details = mDetails;
   details.forget(aDetails);
@@ -99,10 +125,41 @@ NS_IMETHODIMP
 PaymentCreateActionRequest::GetOptions(nsIPaymentOptions** aOptions)
 {
   NS_ENSURE_ARG_POINTER(aOptions);
-  *aOptions = nullptr;
   MOZ_ASSERT(mOptions);
   nsCOMPtr<nsIPaymentOptions> options = mOptions;
   options.forget(aOptions);
+  return NS_OK;
+}
+
+/* PaymentCompleteActionRequest */
+
+NS_IMPL_ISUPPORTS_INHERITED(PaymentCompleteActionRequest,
+                            PaymentActionRequest,
+                            nsIPaymentCompleteActionRequest)
+
+PaymentCompleteActionRequest::PaymentCompleteActionRequest()
+  : mCompleteStatus(EmptyString())
+{
+}
+
+NS_IMETHODIMP
+PaymentCompleteActionRequest::GetCompleteStatus(nsAString& aCompleteStatus)
+{
+  aCompleteStatus = mCompleteStatus;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PaymentCompleteActionRequest::InitRequest(const nsAString& aRequestId,
+                                          nsIPaymentActionCallback* aCallback,
+                                          const nsAString& aCompleteStatus)
+{
+  NS_ENSURE_ARG_POINTER(aCallback);
+  nsresult rv = Init(aRequestId, nsIPaymentActionRequest::COMPLETE_ACTION, aCallback);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  mCompleteStatus = aCompleteStatus;
   return NS_OK;
 }
 

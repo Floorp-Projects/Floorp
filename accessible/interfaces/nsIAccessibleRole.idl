@@ -994,4 +994,11 @@ interface nsIAccessibleRole : nsISupports
    * An object that contains the text of a footnote.
    */
   const unsigned long ROLE_FOOTNOTE = 171;
+
+  /**
+   * A complete or self-contained composition in a document, page, application,
+   * or site and that is, in principle, independently distributable or reusable,
+   * e.g. in syndication.
+   */
+  const unsigned long ROLE_ARTICLE = 172;
 };

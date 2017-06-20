@@ -157,7 +157,7 @@ public:
 protected:
   virtual ~CallbackObject()
   {
-    DropJSObjects();
+    mozilla::DropJSObjects(this);
   }
 
   explicit CallbackObject(CallbackObject* aCallbackObject)
@@ -188,7 +188,7 @@ protected:
 
     ~JSObjectsDropper()
     {
-      mHolder->DropJSObjects();
+      mHolder->ClearJSObjects();
     }
 
   private:
@@ -228,12 +228,11 @@ private:
   CallbackObject& operator =(const CallbackObject&) = delete;
 
 protected:
-  void DropJSObjects()
+  void ClearJSObjects()
   {
     MOZ_ASSERT_IF(mIncumbentJSGlobal, mCallback);
     if (mCallback) {
       ClearJSReferences();
-      mozilla::DropJSObjects(this);
     }
   }
 
