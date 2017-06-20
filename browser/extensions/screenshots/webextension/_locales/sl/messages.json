@@ -83,16 +83,16 @@
     "message": "Kliknite in povlecite, če želite zajeti samo del strani. Svojo izbiro lahko tudi poudarite, tako da preko nje povlečete miškin kazalec."
   },
   "tourHeaderThree": {
-    "message": "Kot vi želite"
-  },
-  "tourBodyThree": {
-    "message": "Shranite obrezane posnetke na splet za lažje deljenje ali jih prenesite na svoj računalnik. Vse zajete posnetke lahko najdete s klikom na gumb My Shots."
-  },
-  "tourHeaderFour": {
     "message": "Zajemite okna ali celotne strani"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "V zgornjem desnem kotu izberite gumb za zajem vidnega območja v oknu ali celotne strani."
+  },
+  "tourHeaderFour": {
+    "message": "Kot vi želite"
+  },
+  "tourBodyFour": {
+    "message": "Shranite obrezane posnetke na splet za lažje deljenje ali jih prenesite na svoj računalnik. Vse zajete posnetke lahko najdete s klikom na gumb My Shots."
   },
   "tourSkip": {
     "message": "Preskoči"

@@ -37,8 +37,8 @@ const MessageContainer = createClass({
     indent: PropTypes.number.isRequired,
     tableData: PropTypes.object,
     timestampsVisible: PropTypes.bool.isRequired,
-    repeat: PropTypes.object,
-    networkMessageUpdate: PropTypes.object.isRequired,
+    repeat: PropTypes.number,
+    networkMessageUpdate: PropTypes.object,
   },
 
   getDefaultProps: function () {

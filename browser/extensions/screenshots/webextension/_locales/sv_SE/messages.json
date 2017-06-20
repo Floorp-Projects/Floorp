@@ -83,16 +83,16 @@
     "message": "Klicka och dra för att fånga bara en del av en sida. Du kan också hovra för att markera ditt val."
   },
   "tourHeaderThree": {
-    "message": "Som du vill ha det"
-  },
-  "tourBodyThree": {
-    "message": "Spara dina beskurna bilder till webben för enklare delning, eller hämta dem till datorn. Du kan också klicka på knappen Mina skärmbilder för att hitta alla bilder du tagit."
-  },
-  "tourHeaderFour": {
     "message": "Fånga fönster eller hela sidor"
   },
-  "tourBodyFour": {
+  "tourBodyThree": {
     "message": "Välj knapparna i det övre högra hörnet för att fånga det synliga området i fönstret eller för att fånga en hel sida."
+  },
+  "tourHeaderFour": {
+    "message": "Som du vill ha det"
+  },
+  "tourBodyFour": {
+    "message": "Spara dina beskurna bilder till webben för enklare delning, eller hämta dem till datorn. Du kan också klicka på knappen Mina skärmbilder för att hitta alla bilder du tagit."
   },
   "tourSkip": {
     "message": "Hoppa över"

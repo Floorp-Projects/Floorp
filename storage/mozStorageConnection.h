@@ -139,6 +139,8 @@ public:
    * the thread may be re-claimed if left idle, so you should call this
    * method just before you dispatch and not save the reference.
    *
+   * This must be called from the main thread.
+   *
    * @returns an event target suitable for asynchronous statement execution.
    */
   nsIEventTarget *getAsyncExecutionTarget();
@@ -149,7 +151,6 @@ public:
    * asynchronous statements (they are serialized on mAsyncExecutionThread).
    * Currently protects:
    *  - Connection.mAsyncExecutionThreadShuttingDown
-   *  - Connection.mAsyncExecutionThread
    *  - Connection.mConnectionClosed
    *  - AsyncExecuteStatements.mCancelRequested
    */
@@ -234,6 +235,14 @@ public:
    */
   bool isClosed();
 
+  /**
+  * True if the async execution thread is alive and able to be used (i.e., it
+  * is not in the process of shutting down.)
+  *
+  * This must be called from the main thread.
+  */
+  bool isAsyncExecutionThreadAvailable();
+
   nsresult initializeClone(Connection *aClone, bool aReadOnly);
 
 private:
@@ -306,6 +315,8 @@ private:
    * Lazily created thread for asynchronous statement execution.  Consumers
    * should use getAsyncExecutionTarget rather than directly accessing this
    * field.
+   *
+   * This must be accessed only on the main thread.
    */
   nsCOMPtr<nsIThread> mAsyncExecutionThread;
 

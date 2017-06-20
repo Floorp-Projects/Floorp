@@ -681,6 +681,9 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     if ("observeAsmJS" in options) {
       this.dbg.allowUnobservedAsmJS = !options.observeAsmJS;
     }
+    if ("wasmBinarySource" in options) {
+      this.dbg.allowWasmBinarySource = !!options.wasmBinarySource;
+    }
 
     Object.assign(this._options, options);
 

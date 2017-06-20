@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<style>
+body {
+  padding: 0;
+  margin: 0;
+  font-size: 2px;
+  line-height: 1;
+}
+</style>
+<body>
+<script>
+  // This is the constant in nsTextFrame.cpp of the number of lines
+  // which a text run can be built up to.
+  const NUM_LINES_TO_BUILD_TEXT_RUNS = 200;
+  // Since the font-size is small, we need lots of blocks so that it can
+  // be seen clearer whether difference is fuzzy or real failure.
+  let x = '\u2588'.repeat(100) + '<br>';
+  for (let i = 0; i < NUM_LINES_TO_BUILD_TEXT_RUNS / 2 - 1; i++) {
+    document.write(x)
+  }
+  // We want this piece to be in whatever place inside the first
+  // NUM_LINES_TO_BUILD_TEXT_RUNS lines.
+  document.write('あ\nあ<br>');
+  // And we want another NUM_LINES_TO_BUILD_TEXT_RUNS lines to check.
+  for (let i = 0; i < NUM_LINES_TO_BUILD_TEXT_RUNS * 1.5; i++) {
+    document.write(x)
+  }
+</script>

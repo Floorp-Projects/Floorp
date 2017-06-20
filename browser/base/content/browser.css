@@ -12,6 +12,7 @@
   --lwt-additional-images: none;
   --lwt-background-alignment: right top;
   --lwt-background-tiling: no-repeat;
+  --lwt-toolbar-color: inherit;
 }
 
 :root:-moz-lwtheme {
@@ -23,6 +24,11 @@
   background-image: var(--lwt-header-image), var(--lwt-additional-images) !important;
   background-position: var(--lwt-background-alignment) !important;
   background-repeat: var(--lwt-background-tiling) !important;
+}
+
+#navigator-toolbox > toolbar,
+findbar {
+  background: var(--lwt-toolbar-color) !important;
 }
 
 #main-window:not([chromehidden~="toolbar"]) {

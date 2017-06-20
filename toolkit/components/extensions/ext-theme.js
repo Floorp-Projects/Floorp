@@ -64,6 +64,9 @@ class Theme {
       Services.obs.notifyObservers(null,
         "lightweight-theme-styling-update",
         JSON.stringify(this.lwtStyles));
+    } else {
+      this.logger.warn("Your theme doesn't include one of the following required " +
+        "properties: 'headerURL', 'accentcolor' or 'textcolor'");
     }
   }
 
@@ -93,6 +96,9 @@ class Theme {
         case "textcolor":
         case "tab_text":
           this.lwtStyles.textcolor = cssColor;
+          break;
+        case "toolbar":
+          this.lwtStyles.toolbarColor = cssColor;
           break;
       }
     }
