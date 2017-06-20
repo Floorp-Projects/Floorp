@@ -101,6 +101,10 @@ function Inspector(toolbox) {
   this.store = Store();
   this.telemetry = new Telemetry();
 
+  // Store the URL of the target page prior to navigation in order to ensure
+  // telemetry counts in the Grid Inspector are not double counted on reload.
+  this.previousURL = this.target.url;
+
   this.nodeMenuTriggerInfo = null;
 
   this._handleRejectionIfNotDestroyed = this._handleRejectionIfNotDestroyed.bind(this);
