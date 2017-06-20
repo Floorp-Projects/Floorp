@@ -1809,7 +1809,7 @@ pub unsafe extern "C" fn wr_dp_push_built_display_list(state: &mut WrState,
 
     let dl = BuiltDisplayList::from_data(dl_vec, dl_descriptor);
 
-    state.frame_builder.dl_builder.push_built_display_list(dl);
+    state.frame_builder.dl_builder.push_nested_display_list(&dl);
 }
 
 // TODO: nical
