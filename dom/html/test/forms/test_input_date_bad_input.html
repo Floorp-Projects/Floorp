@@ -1,0 +1,104 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1372369
+-->
+<head>
+  <title>Test for &lt;input type='date'&gt; bad input validity state</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    input    { background-color: rgb(0,0,0)   !important; }
+    :valid   { background-color: rgb(0,255,0) !important; }
+    :invalid { background-color: rgb(255,0,0) !important; }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1372369">Mozilla Bug 1372369</a>
+<p id="display"></p>
+<div id="content">
+  <form>
+    <input type="date" id="input">
+  <form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for <input type='date'> bad input validity state **/
+
+SimpleTest.waitForExplicitFinish();
+// Turn off Spatial Navigation because it hijacks arrow keydown events:
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, function() {
+    test();
+    SimpleTest.finish();
+  });
+});
+
+const DATE_BAD_INPUT_MSG = "Please enter a valid date.";
+
+function checkValidity(aElement, aIsBadInput) {
+  is(aElement.validity.valid, aIsBadInput ? false : true,
+     "validity.valid should be " + (aIsBadInput ? "false" : "true"));
+  is(aElement.validity.badInput, aIsBadInput ? true : false,
+     "validity.badInput should be " + (aIsBadInput ? "true" : "false"));
+  is(aElement.validationMessage, aIsBadInput ? DATE_BAD_INPUT_MSG : "",
+     "validationMessage should be: " + (aIsBadInput ? DATE_BAD_INPUT_MSG : ""));
+
+  is(window.getComputedStyle(aElement).getPropertyValue('background-color'),
+     aIsBadInput ? "rgb(255, 0, 0)" : "rgb(0, 255, 0)",
+     (aIsBadInput ? ":invalid" : "valid") + " pseudo-classs should apply");
+}
+
+function sendKeys(aKey) {
+  if (aKey.startsWith("VK")) {
+    synthesizeKey(aKey, {});
+  } else {
+    sendString(aKey);
+  }
+}
+
+function test() {
+  var elem = document.getElementById("input");
+  var inputRect = input.getBoundingClientRect();
+
+  // Points over the input's reset button
+  var resetButton_X = inputRect.width - 15;
+  var resetButton_Y = inputRect.height / 2;
+
+  elem.focus();
+  sendKeys("02312017");
+  elem.blur();
+  checkValidity(elem, true);
+
+  elem.focus();
+  sendKeys("02292016");
+  elem.blur();
+  checkValidity(elem, false);
+
+  elem.focus();
+  sendKeys("06312000");
+  elem.blur();
+  checkValidity(elem, true);
+
+  // Removing any of the fields makes the input valid again.
+  elem.focus();
+  sendKeys("VK_BACK_SPACE");
+  elem.blur();
+  checkValidity(elem, false);
+
+  elem.focus();
+  sendKeys("02292017");
+  elem.blur();
+  checkValidity(elem, true);
+
+  // Clearing all fields should clear bad input validity state as well.
+  synthesizeMouse(input, resetButton_X, resetButton_Y, {});
+  checkValidity(elem, false);
+}
+
+</script>
+</pre>
+</body>
+</html>

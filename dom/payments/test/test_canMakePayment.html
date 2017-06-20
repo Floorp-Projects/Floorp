@@ -1,0 +1,151 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1345365
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for PaymentRequest API canMakePayment()</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript">
+
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  var gUrl = SimpleTest.getTestFileURL('CanMakePaymentChromeScript.js');
+  var gScript = SpecialPowers.loadChromeScript(gUrl);
+
+  const defaultMethods = [{
+    supportedMethods: ["basic-card"],
+  }];
+  const defaultDetails = {
+    total: {
+      label: "Total",
+      amount: {
+        currency: "USD",
+        value: "1.00"
+      }
+    },
+  };
+
+  function testSimple() {
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
+      payRequest.canMakePayment().then((result) => {
+        ok(result, "Should be resolved with true, but got false.");
+        resolve();
+      }).catch((err) => {
+        ok(false, "Expected no error, but got '" + err.name +"'.");
+        resolve();
+      });
+    });
+  }
+
+  function testAfterShow() {
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
+      const acceptPromise = payRequest.show();
+      payRequest.canMakePayment().then((result) => {
+        ok(false, "Should throw 'InvalidStateError', but got resolved.");
+        resolve();
+      }).catch( (err) => {
+        is(err.name, "InvalidStateError",
+        "Expected 'InvalidStateError', but got '" + err.name + "'.");
+        payRequest.abort().then((abortResult) => {
+          is(abortResult, undefined, "abort() should be resolved with undefined.");
+          resolve();
+        }).catch( (err) => {
+          ok(false, "Expected no error, but got '" + err.name + "'.");
+          resolve();
+        });
+      });
+    });
+  }
+
+  function testAfterAbort() {
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
+      const acceptPromise = payRequest.show();
+      payRequest.abort().then((abortResult) => {
+        payRequest.canMakePayment().then((result) => {
+          ok(false, "Should throw 'InvalidStateError', but got resolved.");
+          resolve();
+        }).catch( (err) => {
+          is(err.name, "InvalidStateError",
+          "Expected 'InvalidStateError', but got '" + err.name + "'.");
+          resolve();
+        });
+      }).catch( (err) => {
+        ok(false, "Expected no error, but got '" + err.name +"'.");
+        resolve();
+      });
+    });
+  }
+
+  function testNotAllowed() {
+    return new Promise(async (resolve, reject) => {
+      let payRequest = new PaymentRequest(defaultMethods, defaultDetails);
+      for (let i = 0; i < 1000; i++) {
+        try {
+          await payRequest.canMakePayment();
+        } catch(err) {
+          is(err.name, "NotAllowedError",
+            "Expected 'NotAllowError', but got '" + err.name + "'");
+          break;
+        }
+      }
+      for (let i = 0; i < 1000; i++) {
+        try {
+          await new PaymentRequest(defaultMethods, defaultDetails).canMakePayment();
+        } catch(err) {
+          is(err.name, "NotAllowedError",
+            "Expected 'NotAllowError', but got '" + err.name + "'");
+          break;
+        }
+      }
+      resolve();
+    });
+  }
+
+  function teardown() {
+    gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+      gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
+      gScript.destroy();
+      SimpleTest.finish();
+    });
+    gScript.sendAsyncMessage("teardown");
+  }
+
+  function runTests() {
+    testSimple()
+    .then(testAfterShow)
+    .then(testAfterAbort)
+    .then(testNotAllowed)
+    .then(teardown)
+    .catch(e => {
+      ok(false, "Unexpected error: " + e.name);
+      SimpleTest.finish();
+    });
+  }
+
+  window.addEventListener('load', function() {
+    SpecialPowers.pushPrefEnv({
+      'set': [
+        ['dom.payments.request.enabled', true],
+      ]
+    }, runTests);
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1345365">Mozilla Bug 1345365</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

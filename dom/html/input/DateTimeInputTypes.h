@@ -18,6 +18,7 @@ public:
   bool IsRangeOverflow() const override;
   bool IsRangeUnderflow() const override;
   bool HasStepMismatch(bool aUseZeroIfValueNaN) const override;
+  bool HasBadInput() const override;
 
 protected:
   explicit DateTimeInputTypeBase(mozilla::dom::HTMLInputElement* aInputElement)

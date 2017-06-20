@@ -14,7 +14,7 @@
 #include "mozilla/Attributes.h"         // for override
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
 #include "mozilla/layers/PLayerTransactionParent.h"
-#include "nsDataHashtable.h"
+#include "nsRefPtrHashtable.h"
 #include "nsTArrayForwardDeclare.h"     // for InfallibleTArray
 
 namespace mozilla {
@@ -180,7 +180,7 @@ private:
   RefPtr<Layer> mRoot;
 
   // Mapping from LayerHandles to Layers.
-  nsDataHashtable<nsUint64HashKey, RefPtr<Layer>> mLayerMap;
+  nsRefPtrHashtable<nsUint64HashKey, Layer> mLayerMap;
 
   // When this is nonzero, it refers to a layer tree owned by the
   // compositor thread.  It is always true that

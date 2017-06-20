@@ -268,9 +268,7 @@ EffectCompositor::RequestRestyle(dom::Element* aElement,
   PseudoElementHashEntry::KeyType key = { aElement, aPseudoType };
 
   if (aRestyleType == RestyleType::Throttled) {
-    if (!elementsToRestyle.Contains(key)) {
-      elementsToRestyle.Put(key, false);
-    }
+    elementsToRestyle.LookupForAdd(key).OrInsert([]() { return false; });
     mPresContext->PresShell()->SetNeedThrottledAnimationFlush();
   } else {
     // Get() returns 0 if the element is not found. It will also return
