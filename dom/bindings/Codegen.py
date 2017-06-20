@@ -3446,12 +3446,27 @@ def getConditionList(idlobj, cxName, objName):
 
     objName is the name of the object that we're working with, because some of
     our test functions want that.
+
+    The return value is a pair.  The first element is a possibly-empty CGList
+    of conditions.  The second element, if not None, is a CGThing for som code
+    that needs to run before the list of conditions can be evaluated.
     """
     conditions = []
+    conditionSetup = None
     pref = idlobj.getExtendedAttribute("Pref")
     if pref:
         assert isinstance(pref, list) and len(pref) == 1
-        conditions.append('Preferences::GetBool("%s")' % pref[0])
+        conditionSetup = CGGeneric(fill(
+            """
+            static bool sPrefValue;
+            static bool sPrefCacheSetUp = false;
+            if (!sPrefCacheSetUp) {
+              sPrefCacheSetUp = true;
+              Preferences::AddBoolVarCache(&sPrefValue, "${prefName}");
+            }
+            """,
+            prefName=pref[0]))
+        conditions.append("sPrefValue")
     if idlobj.getExtendedAttribute("ChromeOnly"):
         conditions.append("nsContentUtils::ThreadsafeIsSystemCaller(%s)" % cxName)
     func = idlobj.getExtendedAttribute("Func")
@@ -3461,7 +3476,8 @@ def getConditionList(idlobj, cxName, objName):
     if idlobj.getExtendedAttribute("SecureContext"):
         conditions.append("mozilla::dom::IsSecureContextOrObjectIsFromSecureContext(%s, %s)" % (cxName, objName))
 
-    return CGList((CGGeneric(cond) for cond in conditions), " &&\n")
+    return (CGList((CGGeneric(cond) for cond in conditions), " &&\n"),
+            conditionSetup)
 
 
 class CGConstructorEnabled(CGAbstractMethod):
@@ -3505,13 +3521,14 @@ class CGConstructorEnabled(CGAbstractMethod):
                                                    "!NS_IsMainThread()")
             body.append(exposedInWorkerCheck)
 
-        conditions = getConditionList(iface, "aCx", "aObj")
+        (conditions, conditionsSetup) = getConditionList(iface, "aCx", "aObj")
 
         # We should really have some conditions
         assert len(body) or len(conditions)
 
         conditionsWrapper = ""
         if len(conditions):
+            body.append(conditionsSetup);
             conditionsWrapper = CGWrapper(conditions,
                                           pre="return ",
                                           post=";\n",
@@ -13328,7 +13345,12 @@ class CGDictionary(CGThing):
               return false;
             }
             """))
-        conditions = getConditionList(member, "cx", "*object")
+        (conditions, conditionsSetup) = getConditionList(member, "cx", "*object")
+        if conditionsSetup is not None:
+            raise TypeError("We don't support Pref annotations on dictionary "
+                            "members.  If we start to, we need to make sure all "
+                            "the variable names conditionsSetup uses for a "
+                            "given dictionary are unique.")
         if len(conditions) != 0:
             setTempValue = CGIfElseWrapper(conditions.define(),
                                            setTempValue,
@@ -13444,7 +13466,12 @@ class CGDictionary(CGThing):
         if member.canHaveMissingValue():
             # Only do the conversion if we have a value
             conversion = CGIfWrapper(conversion, "%s.WasPassed()" % memberLoc)
-        conditions = getConditionList(member, "cx", "obj")
+        (conditions, conditionsSetup) = getConditionList(member, "cx", "obj")
+        if conditionsSetup is not None:
+            raise TypeError("We don't support Pref annotations on dictionary "
+                            "members.  If we start to, we need to make sure all "
+                            "the variable names conditionsSetup uses for a "
+                            "given dictionary are unique.")
         if len(conditions) != 0:
             conversion = CGIfWrapper(conversion, conditions.define())
         return conversion
