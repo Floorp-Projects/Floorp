@@ -19,6 +19,7 @@ namespace google_breakpad {
 struct AppMemory {
   ULONG64 ptr;
   ULONG length;
+  bool preallocated;
 
   bool operator==(const struct AppMemory& other) const {
     return ptr == other.ptr;
@@ -27,6 +28,14 @@ struct AppMemory {
   bool operator==(const void* other) const {
     return ptr == reinterpret_cast<ULONG64>(other);
   }
+
+  AppMemory()
+    : ptr(0)
+    , length(0)
+    , preallocated(false)
+  {}
+
+  AppMemory& operator=(const AppMemory& other) = default;
 };
 typedef std::list<AppMemory> AppMemoryList;
 
@@ -35,6 +44,22 @@ typedef struct {
   AppMemoryList::const_iterator iter;
   AppMemoryList::const_iterator end;
 } MinidumpCallbackContext;
+
+static const size_t kExceptionAppMemoryRegions = 16;
+
+#if defined(_M_IX86)
+using RegisterValueType = DWORD;
+#elif defined(_M_AMD64)
+using RegisterValueType = DWORD64;
+#else
+#error Unsupported platform
+#endif
+
+void IncludeAppMemoryFromExceptionContext(HANDLE aProcess,
+                                          DWORD aThreadId,
+                                          AppMemoryList& aList,
+                                          PCONTEXT aExceptionContext,
+                                          bool aInsttructionPointerOnly);
 
 // This function is used as a callback when calling MinidumpWriteDump,
 // in order to add additional memory regions to the dump.
