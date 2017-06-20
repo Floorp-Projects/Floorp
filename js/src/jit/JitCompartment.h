@@ -477,6 +477,7 @@ class JitZone
 
 enum class BailoutReturnStub {
     GetProp,
+    GetPropSuper,
     SetProp,
     Call,
     New,

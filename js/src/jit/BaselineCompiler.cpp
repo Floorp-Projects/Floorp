@@ -2558,6 +2558,24 @@ BaselineCompiler::emit_JSOP_GETBOUNDNAME()
     return emit_JSOP_GETPROP();
 }
 
+bool
+BaselineCompiler::emit_JSOP_GETPROP_SUPER()
+{
+    // Receiver -> R1, Object -> R0
+    frame.popRegsAndSync(1);
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R1);
+    frame.pop();
+
+    ICGetProp_Fallback::Compiler compiler(cx, ICStubCompiler::Engine::Baseline,
+                                          /* hasReceiver = */ true);
+    if (!emitOpIC(compiler.getStub(&stubSpace_)))
+        return false;
+
+    frame.push(R0);
+    return true;
+}
+
+
 typedef bool (*DeletePropertyFn)(JSContext*, HandleValue, HandlePropertyName, bool*);
 static const VMFunction DeletePropertyStrictInfo =
     FunctionInfo<DeletePropertyFn>(DeletePropertyJit<true>, "DeletePropertyStrict");

@@ -1917,6 +1917,7 @@ BaselineCacheIRCompiler::init(CacheKind kind)
         allocator.initInputLocation(0, R0);
         break;
       case CacheKind::GetElem:
+      case CacheKind::GetPropSuper:
       case CacheKind::SetProp:
       case CacheKind::In:
       case CacheKind::HasOwn:
@@ -1994,6 +1995,7 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
       case CacheKind::GetProp:
       case CacheKind::GetElem:
       case CacheKind::GetName:
+      case CacheKind::GetPropSuper:
       case CacheKind::Call:
         stubDataOffset = sizeof(ICCacheIR_Monitored);
         stubKind = CacheIRStubKind::Monitored;
