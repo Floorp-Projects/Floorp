@@ -17,6 +17,18 @@ const GridFront = FrontClassWithSpec(gridSpec, {
   },
 
   /**
+   * In some cases, the GridActor already knows the NodeActor ID of the node where the
+   * grid is located. In such cases, this getter returns the NodeFront for it.
+   */
+  get containerNodeFront() {
+    if (!this._form.containerNodeActorID) {
+      return null;
+    }
+
+    return this.conn.getActor(this._form.containerNodeActorID);
+  },
+
+  /**
    * Getter for the grid fragments data.
    */
   get gridFragments() {
