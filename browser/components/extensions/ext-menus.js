@@ -529,6 +529,7 @@ MenuItem.prototype = {
 
     setIfDefined("parentMenuItemId", this.parentId);
     setIfDefined("mediaType", mediaType);
+    setIfDefined("linkText", contextData.linkText);
     setIfDefined("linkUrl", contextData.linkUrl);
     setIfDefined("srcUrl", contextData.srcUrl);
     setIfDefined("pageUrl", contextData.pageUrl);
