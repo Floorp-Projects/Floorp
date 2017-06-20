@@ -199,6 +199,8 @@ private:
   ReentrantMonitorAutoEnter& operator=(const ReentrantMonitorAutoEnter&);
   static void* operator new(size_t) CPP_THROW_NEW;
 
+  friend class ReentrantMonitorAutoExit;
+
   mozilla::ReentrantMonitor* mReentrantMonitor;
 };
 
@@ -223,6 +225,15 @@ public:
    **/
   explicit ReentrantMonitorAutoExit(ReentrantMonitor& aReentrantMonitor)
     : mReentrantMonitor(&aReentrantMonitor)
+  {
+    NS_ASSERTION(mReentrantMonitor, "null monitor");
+    mReentrantMonitor->AssertCurrentThreadIn();
+    mReentrantMonitor->Exit();
+  }
+
+  explicit ReentrantMonitorAutoExit(
+    ReentrantMonitorAutoEnter& aReentrantMonitorAutoEnter)
+    : mReentrantMonitor(aReentrantMonitorAutoEnter.mReentrantMonitor)
   {
     NS_ASSERTION(mReentrantMonitor, "null monitor");
     mReentrantMonitor->AssertCurrentThreadIn();
