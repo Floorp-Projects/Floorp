@@ -172,6 +172,13 @@ public:
     MOZ_ASSERT(mCompositableCount >= 0);
   }
 
+  // When iterating as a BigImage, this creates temporary TextureSources wrapping
+  // individual tiles.
+  virtual RefPtr<TextureSource> ExtractCurrentTile() {
+    NS_WARNING("Implementation does not expose tile sources");
+    return nullptr;
+  }
+
   int NumCompositableRefs() const { return mCompositableCount; }
 
 protected:
