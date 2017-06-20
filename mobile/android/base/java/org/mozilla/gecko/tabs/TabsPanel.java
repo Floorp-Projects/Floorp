@@ -16,6 +16,7 @@ import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.lwt.LightweightThemeDrawable;
+import org.mozilla.gecko.mma.MmaDelegate;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.restrictions.Restrictions;
@@ -47,6 +48,8 @@ import android.widget.RelativeLayout;
 import org.mozilla.gecko.switchboard.SwitchBoard;
 
 import org.mozilla.gecko.widget.themed.ThemedImageButton;
+
+import static org.mozilla.gecko.mma.MmaDelegate.NEW_TAB;
 
 public class TabsPanel extends LinearLayout
                        implements GeckoPopupMenu.OnMenuItemClickListener,
@@ -211,6 +214,8 @@ public class TabsPanel extends LinearLayout
 
         if (mCurrentPanel == Panel.NORMAL_TABS) {
             mActivity.addTab();
+            // We only track opening normal tab
+            MmaDelegate.track(NEW_TAB);
         } else {
             mActivity.addPrivateTab();
         }
