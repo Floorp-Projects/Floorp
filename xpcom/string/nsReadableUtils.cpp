@@ -1292,8 +1292,8 @@ NullCString()
 }
 
 int32_t
-CompareUTF8toUTF16(const nsASingleFragmentCString& aUTF8String,
-                   const nsASingleFragmentString& aUTF16String)
+CompareUTF8toUTF16(const nsACString& aUTF8String,
+                   const nsAString& aUTF16String)
 {
   static const uint32_t NOT_ASCII = uint32_t(~0x7F);
 

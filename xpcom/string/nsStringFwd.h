@@ -64,10 +64,8 @@ typedef nsAString             nsSubstring;
 typedef nsACString            nsCSubstring;
 
 typedef nsString              nsAFlatString;
-typedef nsSubstring           nsASingleFragmentString;
 
 typedef nsCString             nsAFlatCString;
-typedef nsCSubstring          nsASingleFragmentCString;
 
 
 #endif /* !defined(nsStringFwd_h___) */

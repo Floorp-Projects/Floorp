@@ -155,7 +155,7 @@ txExprParser::createExprInternal(const nsSubstring& aExpression,
     txExprLexer lexer;
     nsresult rv = lexer.parse(aExpression);
     if (NS_FAILED(rv)) {
-        nsASingleFragmentString::const_char_iterator start;
+        nsAString::const_char_iterator start;
         aExpression.BeginReading(start);
         aContext->SetErrorOffset(lexer.mPosition - start + aSubStringPos);
         return rv;
@@ -166,7 +166,7 @@ txExprParser::createExprInternal(const nsSubstring& aExpression,
         rv = NS_ERROR_XPATH_BINARY_EXPECTED;
     }
     if (NS_FAILED(rv)) {
-        nsASingleFragmentString::const_char_iterator start;
+        nsAString::const_char_iterator start;
         aExpression.BeginReading(start);
         aContext->SetErrorOffset(lexer.peek()->mStart - start + aSubStringPos);
 

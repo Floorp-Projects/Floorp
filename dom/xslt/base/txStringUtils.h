@@ -17,7 +17,7 @@ typedef nsCaseInsensitiveStringComparator txCaseInsensitiveStringComparator;
  * Check equality between a string and an atom containing ASCII.
  */
 inline bool
-TX_StringEqualsAtom(const nsASingleFragmentString& aString, nsIAtom* aAtom)
+TX_StringEqualsAtom(const nsAString& aString, nsIAtom* aAtom)
 {
   return aAtom->Equals(aString);
 }

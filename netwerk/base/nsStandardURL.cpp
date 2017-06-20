@@ -260,7 +260,7 @@ nsSegmentEncoder::EncodeSegmentCount(const char *str,
 }
 
 const nsACString &nsStandardURL::
-nsSegmentEncoder::EncodeSegment(const nsASingleFragmentCString &str,
+nsSegmentEncoder::EncodeSegment(const nsACString& str,
                                 int16_t mask,
                                 nsAFlatCString &result)
 {
