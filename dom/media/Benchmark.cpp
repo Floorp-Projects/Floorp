@@ -9,10 +9,13 @@
 #include "MediaData.h"
 #include "MediaPrefs.h"
 #include "PDMFactory.h"
+#include "VideoUtils.h"
 #include "WebMDemuxer.h"
 #include "gfxPrefs.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/SharedThreadPool.h"
+#include "mozilla/TaskQueue.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -20,6 +23,8 @@
 #ifndef MOZ_WIDGET_ANDROID
 #include "WebMSample.h"
 #endif
+
+using namespace mozilla::gfx;
 
 namespace mozilla {
 

@@ -12,7 +12,6 @@
 #include "PlatformDecoderModule.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/TaskQueue.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 
