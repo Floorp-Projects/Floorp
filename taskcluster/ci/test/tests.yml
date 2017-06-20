@@ -1257,7 +1257,7 @@ talos-chrome:
     run-on-projects:
         by-test-platform:
             linux64-stylo/.*: ['mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
     mozharness:
@@ -1282,7 +1282,7 @@ talos-dromaeojs:
     run-on-projects:
         by-test-platform:
             linux64-stylo/.*: ['mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
     mozharness:
@@ -1307,7 +1307,7 @@ talos-g1:
     run-on-projects:
         by-test-platform:
             linux64-stylo/.*: ['mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try'] 
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try'] 
     max-run-time: 7200
     e10s: true
     mozharness:
@@ -1334,7 +1334,7 @@ talos-g2:
         by-test-platform:
             linux64-stylo/.*: ['mozilla-central', 'try']
             linux64-stylo-sequential/.*: ['try']
-            default: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try'] 
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try'] 
     e10s: true
     mozharness:
         script: talos_script.py
@@ -1358,7 +1358,7 @@ talos-g3:
     run-on-projects:
         by-test-platform:
             linux64-stylo/.*: ['mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try'] 
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try'] 
     max-run-time: 3600
     e10s: true
     mozharness:
@@ -1383,7 +1383,7 @@ talos-g4:
     run-on-projects:
         by-test-platform:
             linux64-stylo/.*: ['mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try'] 
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try'] 
     max-run-time: 3600
     e10s: true
     mozharness:
@@ -1435,7 +1435,7 @@ talos-other:
     run-on-projects:
         by-test-platform:
             linux64-stylo/.*: ['mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try'] 
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try'] 
     max-run-time: 3600
     e10s: true
     mozharness:
@@ -1481,7 +1481,7 @@ talos-svgr:
     run-on-projects:
         by-test-platform:
             linux64-stylo/.*: ['mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
     mozharness:
@@ -1506,7 +1506,7 @@ talos-tp5o:
     run-on-projects:
         by-test-platform:
             linux64-stylo/.*: ['mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
     mozharness:
