@@ -288,6 +288,27 @@ private:
 #define NS_EVENT_STATE_LTR NS_DEFINE_EVENT_STATE_MACRO(44)
 // Element is rtl (for :dir pseudo-class)
 #define NS_EVENT_STATE_RTL NS_DEFINE_EVENT_STATE_MACRO(45)
+// States for tracking the state of the "dir" attribute for HTML elements.  We
+// use these to avoid having to get "dir" attributes all the time during
+// selector matching for some parts of the UA stylesheet.
+//
+// These states are externally managed, because we also don't want to keep
+// getting "dir" attributes in IntrinsicState.
+//
+// Element is HTML and has a "dir" attibute.  This state might go away depending
+// on how https://github.com/whatwg/html/issues/2769 gets resolved.  The value
+// could be anything.
+#define NS_EVENT_STATE_HAS_DIR_ATTR NS_DEFINE_EVENT_STATE_MACRO(46)
+// Element is HTML, has a "dir" attribute, and the attribute's value is
+// case-insensitively equal to "ltr".
+#define NS_EVENT_STATE_DIR_ATTR_LTR NS_DEFINE_EVENT_STATE_MACRO(47)
+// Element is HTML, has a "dir" attribute, and the attribute's value is
+// case-insensitively equal to "rtl".
+#define NS_EVENT_STATE_DIR_ATTR_RTL NS_DEFINE_EVENT_STATE_MACRO(48)
+// Element is HTML, and is either a <bdi> element with no valid-valued "dir"
+// attribute or any HTML element which has a "dir" attribute whose value is
+// "auto".
+#define NS_EVENT_STATE_DIR_ATTR_LIKE_AUTO NS_DEFINE_EVENT_STATE_MACRO(49)
 // Element is filled by Autofill feature.
 #define NS_EVENT_STATE_AUTOFILL NS_DEFINE_EVENT_STATE_MACRO(50)
 // Element is filled with preview data by Autofill feature.
@@ -301,6 +322,11 @@ private:
  */
 
 #define DIRECTION_STATES (NS_EVENT_STATE_LTR | NS_EVENT_STATE_RTL)
+
+#define DIR_ATTR_STATES (NS_EVENT_STATE_HAS_DIR_ATTR |          \
+                         NS_EVENT_STATE_DIR_ATTR_LTR |          \
+                         NS_EVENT_STATE_DIR_ATTR_RTL |          \
+                         NS_EVENT_STATE_DIR_ATTR_LIKE_AUTO)
 
 // Event states that can be added and removed through
 // Element::{Add,Remove}ManuallyManagedStates.
@@ -320,6 +346,7 @@ private:
 // and returned from Element::IntrinsicState.
 #define EXTERNALLY_MANAGED_STATES (           \
   MANUALLY_MANAGED_STATES |                   \
+  DIR_ATTR_STATES |                           \
   NS_EVENT_STATE_ACTIVE |                     \
   NS_EVENT_STATE_DRAGOVER |                   \
   NS_EVENT_STATE_FOCUS |                      \
