@@ -53,8 +53,8 @@ bool nsStyleUtil::DashMatchCompare(const nsAString& aAttributeValue,
 }
 
 bool
-nsStyleUtil::ValueIncludes(const nsSubstring& aValueList,
-                           const nsSubstring& aValue,
+nsStyleUtil::ValueIncludes(const nsAString& aValueList,
+                           const nsAString& aValue,
                            const nsStringComparator& aComparator)
 {
   const char16_t *p = aValueList.BeginReading(),
@@ -816,7 +816,7 @@ nsStyleUtil::CSPAllowsInlineStyle(nsIContent* aContent,
                                   nsIPrincipal* aPrincipal,
                                   nsIURI* aSourceURI,
                                   uint32_t aLineNumber,
-                                  const nsSubstring& aStyleText,
+                                  const nsAString& aStyleText,
                                   nsresult* aRv)
 {
   nsresult rv;

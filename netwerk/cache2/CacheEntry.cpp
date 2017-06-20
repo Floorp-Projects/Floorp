@@ -256,8 +256,8 @@ nsresult CacheEntry::HashingKey(nsACString &aResult) const
 }
 
 // static
-nsresult CacheEntry::HashingKey(nsCSubstring const& aStorageID,
-                                nsCSubstring const& aEnhanceID,
+nsresult CacheEntry::HashingKey(const nsACString& aStorageID,
+                                const nsACString& aEnhanceID,
                                 nsIURI* aURI,
                                 nsACString &aResult)
 {
@@ -269,9 +269,9 @@ nsresult CacheEntry::HashingKey(nsCSubstring const& aStorageID,
 }
 
 // static
-nsresult CacheEntry::HashingKey(nsCSubstring const& aStorageID,
-                                nsCSubstring const& aEnhanceID,
-                                nsCSubstring const& aURISpec,
+nsresult CacheEntry::HashingKey(const nsACString& aStorageID,
+                                const nsACString& aEnhanceID,
+                                const nsACString& aURISpec,
                                 nsACString &aResult)
 {
   /**

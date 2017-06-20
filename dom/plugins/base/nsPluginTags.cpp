@@ -43,7 +43,7 @@ static bool ExtensionInList(const nsCString& aExtensionList,
 {
   nsCCharSeparatedTokenizer extensions(aExtensionList, ',');
   while (extensions.hasMoreTokens()) {
-    const nsCSubstring& extension = extensions.nextToken();
+    const nsACString& extension = extensions.nextToken();
     if (extension.Equals(aExtension, nsCaseInsensitiveCStringComparator())) {
       return true;
     }

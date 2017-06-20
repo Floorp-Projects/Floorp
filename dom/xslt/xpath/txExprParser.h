@@ -30,7 +30,7 @@ class txExprParser
 {
 public:
 
-    static nsresult createExpr(const nsSubstring& aExpression,
+    static nsresult createExpr(const nsAString& aExpression,
                                txIParseContext* aContext, Expr** aExpr)
     {
         return createExprInternal(aExpression, 0, aContext, aExpr);
@@ -39,13 +39,13 @@ public:
     /**
      * Creates an Attribute Value Template using the given value
      */
-    static nsresult createAVT(const nsSubstring& aAttrValue,
+    static nsresult createAVT(const nsAString& aAttrValue,
                               txIParseContext* aContext,
                               Expr** aResult);
 
 
 protected:
-    static nsresult createExprInternal(const nsSubstring& aExpression,
+    static nsresult createExprInternal(const nsAString& aExpression,
                                        uint32_t aSubStringPos,
                                        txIParseContext* aContext,
                                        Expr** aExpr);

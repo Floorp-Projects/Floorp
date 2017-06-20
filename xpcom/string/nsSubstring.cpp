@@ -109,9 +109,9 @@ static nsStringStats gStringStats;
 void
 ReleaseData(void* aData, uint32_t aFlags)
 {
-  if (aFlags & nsSubstring::F_SHARED) {
+  if (aFlags & nsAString::F_SHARED) {
     nsStringBuffer::FromData(aData)->Release();
-  } else if (aFlags & nsSubstring::F_OWNED) {
+  } else if (aFlags & nsAString::F_OWNED) {
     free(aData);
     STRING_STAT_INCREMENT(AdoptFree);
     // Treat this as destruction of a "StringAdopt" object for leak
@@ -283,7 +283,7 @@ nsStringBuffer::FromString(const nsAString& aStr)
   const nsAStringAccessor* accessor =
     static_cast<const nsAStringAccessor*>(&aStr);
 
-  if (!(accessor->flags() & nsSubstring::F_SHARED)) {
+  if (!(accessor->flags() & nsAString::F_SHARED)) {
     return nullptr;
   }
 
@@ -296,7 +296,7 @@ nsStringBuffer::FromString(const nsACString& aStr)
   const nsACStringAccessor* accessor =
     static_cast<const nsACStringAccessor*>(&aStr);
 
-  if (!(accessor->flags() & nsCSubstring::F_SHARED)) {
+  if (!(accessor->flags() & nsACString::F_SHARED)) {
     return nullptr;
   }
 
@@ -315,7 +315,7 @@ nsStringBuffer::ToString(uint32_t aLen, nsAString& aStr,
 
   // preserve class flags
   uint32_t flags = accessor->flags();
-  flags = (flags & 0xFFFF0000) | nsSubstring::F_SHARED | nsSubstring::F_TERMINATED;
+  flags = (flags & 0xFFFF0000) | nsAString::F_SHARED | nsAString::F_TERMINATED;
 
   if (!aMoveOwnership) {
     AddRef();
@@ -335,7 +335,7 @@ nsStringBuffer::ToString(uint32_t aLen, nsACString& aStr,
 
   // preserve class flags
   uint32_t flags = accessor->flags();
-  flags = (flags & 0xFFFF0000) | nsCSubstring::F_SHARED | nsCSubstring::F_TERMINATED;
+  flags = (flags & 0xFFFF0000) | nsACString::F_SHARED | nsACString::F_TERMINATED;
 
   if (!aMoveOwnership) {
     AddRef();
@@ -357,13 +357,12 @@ nsStringBuffer::SizeOfIncludingThisEvenIfShared(mozilla::MallocSizeOf aMallocSiz
 
 // ---------------------------------------------------------------------------
 
-
-// define nsSubstring
+// define nsAString
 #include "string-template-def-unichar.h"
 #include "nsTSubstring.cpp"
 #include "string-template-undef.h"
 
-// define nsCSubstring
+// define nsACString
 #include "string-template-def-char.h"
 #include "nsTSubstring.cpp"
 #include "string-template-undef.h"

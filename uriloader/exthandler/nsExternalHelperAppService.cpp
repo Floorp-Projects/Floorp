@@ -1217,7 +1217,7 @@ NS_INTERFACE_MAP_BEGIN(nsExternalAppHandler)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
-                                           const nsCSubstring& aTempFileExtension,
+                                           const nsACString& aTempFileExtension,
                                            nsIInterfaceRequestor* aContentContext,
                                            nsIInterfaceRequestor* aWindowContext,
                                            nsExternalHelperAppService *aExtProtSvc,

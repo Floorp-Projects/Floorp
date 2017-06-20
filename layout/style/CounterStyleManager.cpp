@@ -52,7 +52,7 @@ struct PadType
 
 static bool
 GetCyclicCounterText(CounterValue aOrdinal,
-                     nsSubstring& aResult,
+                     nsAString& aResult,
                      const nsTArray<nsString>& aSymbols)
 {
   MOZ_ASSERT(aSymbols.Length() >= 1,
@@ -65,7 +65,7 @@ GetCyclicCounterText(CounterValue aOrdinal,
 
 static bool
 GetFixedCounterText(CounterValue aOrdinal,
-                    nsSubstring& aResult,
+                    nsAString& aResult,
                     CounterValue aStart,
                     const nsTArray<nsString>& aSymbols)
 {
@@ -80,7 +80,7 @@ GetFixedCounterText(CounterValue aOrdinal,
 
 static bool
 GetSymbolicCounterText(CounterValue aOrdinal,
-                       nsSubstring& aResult,
+                       nsAString& aResult,
                        const nsTArray<nsString>& aSymbols)
 {
   MOZ_ASSERT(aSymbols.Length() >= 1,
@@ -109,7 +109,7 @@ GetSymbolicCounterText(CounterValue aOrdinal,
 
 static bool
 GetAlphabeticCounterText(CounterValue aOrdinal,
-                         nsSubstring& aResult,
+                         nsAString& aResult,
                          const nsTArray<nsString>& aSymbols)
 {
   MOZ_ASSERT(aSymbols.Length() >= 2,
@@ -139,7 +139,7 @@ GetAlphabeticCounterText(CounterValue aOrdinal,
 
 static bool
 GetNumericCounterText(CounterValue aOrdinal,
-                      nsSubstring& aResult,
+                      nsAString& aResult,
                       const nsTArray<nsString>& aSymbols)
 {
   MOZ_ASSERT(aSymbols.Length() >= 2,
@@ -167,7 +167,7 @@ GetNumericCounterText(CounterValue aOrdinal,
 
 static bool
 GetAdditiveCounterText(CounterValue aOrdinal,
-                       nsSubstring& aResult,
+                       nsAString& aResult,
                        const nsTArray<AdditiveSymbol>& aSymbols)
 {
   MOZ_ASSERT(aOrdinal >= 0, "Invalid ordinal.");
@@ -209,7 +209,7 @@ GetAdditiveCounterText(CounterValue aOrdinal,
 }
 
 static bool
-DecimalToText(CounterValue aOrdinal, nsSubstring& aResult)
+DecimalToText(CounterValue aOrdinal, nsAString& aResult)
 {
   aResult.AppendInt(aOrdinal);
   return true;
@@ -324,7 +324,7 @@ static const CJKIdeographicData gDataTradChineseFormal = {
 };
 
 static bool
-CJKIdeographicToText(CounterValue aOrdinal, nsSubstring& aResult,
+CJKIdeographicToText(CounterValue aOrdinal, nsAString& aResult,
                      const CJKIdeographicData& data)
 {
   NS_ASSERTION(aOrdinal >= 0, "Only accept non-negative ordinal");
@@ -407,7 +407,7 @@ static const char16_t gHebrewDigit[22] =
 };
 
 static bool
-HebrewToText(CounterValue aOrdinal, nsSubstring& aResult)
+HebrewToText(CounterValue aOrdinal, nsAString& aResult)
 {
   if (aOrdinal < 1 || aOrdinal > 999999) {
     return false;
@@ -476,7 +476,7 @@ HebrewToText(CounterValue aOrdinal, nsSubstring& aResult)
 #define ETHIOPIC_TEN_THOUSAND    0x137C
 
 static bool
-EthiopicToText(CounterValue aOrdinal, nsSubstring& aResult)
+EthiopicToText(CounterValue aOrdinal, nsAString& aResult)
 {
   if (aOrdinal < 1) {
     return false;
@@ -590,12 +590,12 @@ protected:
   }
 
 public:
-  virtual void GetStyleName(nsSubstring& aResult) override;
-  virtual void GetPrefix(nsSubstring& aResult) override;
-  virtual void GetSuffix(nsSubstring& aResult) override;
+  virtual void GetStyleName(nsAString& aResult) override;
+  virtual void GetPrefix(nsAString& aResult) override;
+  virtual void GetSuffix(nsAString& aResult) override;
   virtual void GetSpokenCounterText(CounterValue aOrdinal,
                                     WritingMode aWritingMode,
-                                    nsSubstring& aResult,
+                                    nsAString& aResult,
                                     bool& aIsBullet) override;
   virtual bool IsBullet() override;
 
@@ -609,12 +609,12 @@ public:
 
   virtual bool GetInitialCounterText(CounterValue aOrdinal,
                                      WritingMode aWritingMode,
-                                     nsSubstring& aResult,
+                                     nsAString& aResult,
                                      bool& aIsRTL) override;
 };
 
 /* virtual */ void
-BuiltinCounterStyle::GetStyleName(nsSubstring& aResult)
+BuiltinCounterStyle::GetStyleName(nsAString& aResult)
 {
   MOZ_ASSERT(mStyle != NS_STYLE_LIST_STYLE_CUSTOM);
   const nsCString& str =
@@ -624,13 +624,13 @@ BuiltinCounterStyle::GetStyleName(nsSubstring& aResult)
 }
 
 /* virtual */ void
-BuiltinCounterStyle::GetPrefix(nsSubstring& aResult)
+BuiltinCounterStyle::GetPrefix(nsAString& aResult)
 {
   aResult.Truncate();
 }
 
 /* virtual */ void
-BuiltinCounterStyle::GetSuffix(nsSubstring& aResult)
+BuiltinCounterStyle::GetSuffix(nsAString& aResult)
 {
   switch (mStyle) {
     case NS_STYLE_LIST_STYLE_NONE:
@@ -677,7 +677,7 @@ static const char16_t kDownPointingCharacter = 0x25be;
 /* virtual */ void
 BuiltinCounterStyle::GetSpokenCounterText(CounterValue aOrdinal,
                                           WritingMode aWritingMode,
-                                          nsSubstring& aResult,
+                                          nsAString& aResult,
                                           bool& aIsBullet)
 {
   switch (mStyle) {
@@ -883,7 +883,7 @@ BuiltinCounterStyle::UseNegativeSign()
 /* virtual */ bool
 BuiltinCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
                                            WritingMode aWritingMode,
-                                           nsSubstring& aResult,
+                                           nsAString& aResult,
                                            bool& aIsRTL)
 {
   aIsRTL = false;
@@ -1047,12 +1047,12 @@ public:
   nsCSSCounterStyleRule* GetRule() const { return mRule; }
   uint32_t GetRuleGeneration() const { return mRuleGeneration; }
 
-  virtual void GetStyleName(nsSubstring& aResult) override;
-  virtual void GetPrefix(nsSubstring& aResult) override;
-  virtual void GetSuffix(nsSubstring& aResult) override;
+  virtual void GetStyleName(nsAString& aResult) override;
+  virtual void GetPrefix(nsAString& aResult) override;
+  virtual void GetSuffix(nsAString& aResult) override;
   virtual void GetSpokenCounterText(CounterValue aOrdinal,
                                     WritingMode aWritingMode,
-                                    nsSubstring& aResult,
+                                    nsAString& aResult,
                                     bool& aIsBullet) override;
   virtual bool IsBullet() override;
 
@@ -1066,11 +1066,11 @@ public:
 
   virtual void CallFallbackStyle(CounterValue aOrdinal,
                                  WritingMode aWritingMode,
-                                 nsSubstring& aResult,
+                                 nsAString& aResult,
                                  bool& aIsRTL) override;
   virtual bool GetInitialCounterText(CounterValue aOrdinal,
                                      WritingMode aWritingMode,
-                                     nsSubstring& aResult,
+                                     nsAString& aResult,
                                      bool& aIsRTL) override;
 
   bool IsExtendsSystem()
@@ -1205,14 +1205,14 @@ CustomCounterStyle::ResetDependentData()
 }
 
 /* virtual */ void
-CustomCounterStyle::GetStyleName(nsSubstring& aResult)
+CustomCounterStyle::GetStyleName(nsAString& aResult)
 {
   nsDependentAtomString name(mName);
   aResult.Assign(name);
 }
 
 /* virtual */ void
-CustomCounterStyle::GetPrefix(nsSubstring& aResult)
+CustomCounterStyle::GetPrefix(nsAString& aResult)
 {
   if (!(mFlags & FLAG_PREFIX_INITED)) {
     mFlags |= FLAG_PREFIX_INITED;
@@ -1230,7 +1230,7 @@ CustomCounterStyle::GetPrefix(nsSubstring& aResult)
 }
 
 /* virtual */ void
-CustomCounterStyle::GetSuffix(nsSubstring& aResult)
+CustomCounterStyle::GetSuffix(nsAString& aResult)
 {
   if (!(mFlags & FLAG_SUFFIX_INITED)) {
     mFlags |= FLAG_SUFFIX_INITED;
@@ -1250,7 +1250,7 @@ CustomCounterStyle::GetSuffix(nsSubstring& aResult)
 /* virtual */ void
 CustomCounterStyle::GetSpokenCounterText(CounterValue aOrdinal,
                                          WritingMode aWritingMode,
-                                         nsSubstring& aResult,
+                                         nsAString& aResult,
                                          bool& aIsBullet)
 {
   if (GetSpeakAs() != NS_STYLE_COUNTER_SPEAKAS_OTHER) {
@@ -1421,7 +1421,7 @@ CustomCounterStyle::UseNegativeSign()
 /* virtual */ void
 CustomCounterStyle::CallFallbackStyle(CounterValue aOrdinal,
                                       WritingMode aWritingMode,
-                                      nsSubstring& aResult,
+                                      nsAString& aResult,
                                       bool& aIsRTL)
 {
   CounterStyle* fallback = GetFallback();
@@ -1435,7 +1435,7 @@ CustomCounterStyle::CallFallbackStyle(CounterValue aOrdinal,
 /* virtual */ bool
 CustomCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
                                           WritingMode aWritingMode,
-                                          nsSubstring& aResult,
+                                          nsAString& aResult,
                                           bool& aIsRTL)
 {
   switch (mSystem) {
@@ -1692,7 +1692,7 @@ CustomCounterStyle::GetExtendsRoot()
   return mExtendsRoot;
 }
 
-AnonymousCounterStyle::AnonymousCounterStyle(const nsSubstring& aContent)
+AnonymousCounterStyle::AnonymousCounterStyle(const nsAString& aContent)
   : CounterStyle(NS_STYLE_LIST_STYLE_CUSTOM)
   , mSingleString(true)
   , mSystem(NS_STYLE_COUNTER_SYSTEM_CYCLIC)
@@ -1867,7 +1867,7 @@ CounterStyle::IsDependentStyle() const
 void
 CounterStyle::GetCounterText(CounterValue aOrdinal,
                              WritingMode aWritingMode,
-                             nsSubstring& aResult,
+                             nsAString& aResult,
                              bool& aIsRTL)
 {
   bool success = IsOrdinalInRange(aOrdinal);
@@ -1931,7 +1931,7 @@ CounterStyle::GetCounterText(CounterValue aOrdinal,
 /* virtual */ void
 CounterStyle::GetSpokenCounterText(CounterValue aOrdinal,
                                    WritingMode aWritingMode,
-                                   nsSubstring& aResult,
+                                   nsAString& aResult,
                                    bool& aIsBullet)
 {
   bool isRTL; // we don't care about direction for spoken text

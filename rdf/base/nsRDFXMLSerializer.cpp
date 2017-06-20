@@ -167,7 +167,7 @@ rdf_BlockingWrite(nsIOutputStream* stream, const char* buf, uint32_t size)
 }
 
 static nsresult
-rdf_BlockingWrite(nsIOutputStream* stream, const nsCSubstring& s)
+rdf_BlockingWrite(nsIOutputStream* stream, const nsACString& s)
 {
     return rdf_BlockingWrite(stream, s.BeginReading(), s.Length());
 }

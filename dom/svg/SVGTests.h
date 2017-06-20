@@ -46,7 +46,7 @@ public:
    * or -1 if no indices match.
    * XXX This algorithm is O(M*N).
    */
-  int32_t GetBestLanguagePreferenceRank(const nsSubstring& aAcceptLangs) const;
+  int32_t GetBestLanguagePreferenceRank(const nsAString& aAcceptLangs) const;
 
   /**
    * Special value to pass to PassesConditionalProcessingTests to ignore systemLanguage

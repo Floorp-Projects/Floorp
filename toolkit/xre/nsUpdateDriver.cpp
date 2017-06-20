@@ -190,7 +190,7 @@ GetXULRunnerStubPath(const char* argv0, nsIFile* *aResult)
 #endif /* XP_MACOSX */
 
 static bool
-GetFile(nsIFile *dir, const nsCSubstring &name, nsCOMPtr<nsIFile> &result)
+GetFile(nsIFile* dir, const nsACString& name, nsCOMPtr<nsIFile>& result)
 {
   nsresult rv;
 

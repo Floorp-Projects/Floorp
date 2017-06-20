@@ -64,7 +64,7 @@ nsFtpControlConnection::OnInputStreamReady(nsIAsyncInputStream *stream)
     return NS_OK;
 }
 
-nsFtpControlConnection::nsFtpControlConnection(const nsCSubstring& host,
+nsFtpControlConnection::nsFtpControlConnection(const nsACString& host,
                                                uint32_t port)
     : mServerType(0), mSessionId(gFtpHandler->GetSessionId())
     , mUseUTF8(false), mHost(host), mPort(port)
@@ -172,7 +172,7 @@ nsFtpControlConnection::Disconnect(nsresult status)
 }
 
 nsresult 
-nsFtpControlConnection::Write(const nsCSubstring& command)
+nsFtpControlConnection::Write(const nsACString& command)
 {
     NS_ENSURE_STATE(mSocketOutput);
 

@@ -1055,7 +1055,7 @@ net_ParseRequestContentType(const nsACString &aHeaderStr,
 }
 
 bool
-net_IsValidHostName(const nsCSubstring &host)
+net_IsValidHostName(const nsACString& host)
 {
     const char *end = host.EndReading();
     // Use explicit whitelists to select which characters we are

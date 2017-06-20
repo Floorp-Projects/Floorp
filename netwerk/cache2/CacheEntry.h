@@ -104,14 +104,14 @@ public:
   nsresult HashingKeyWithStorage(nsACString &aResult) const;
   nsresult HashingKey(nsACString &aResult) const;
 
-  static nsresult HashingKey(nsCSubstring const& aStorageID,
-                             nsCSubstring const& aEnhanceID,
+  static nsresult HashingKey(const nsACString& aStorageID,
+                             const nsACString& aEnhanceID,
                              nsIURI* aURI,
                              nsACString &aResult);
 
-  static nsresult HashingKey(nsCSubstring const& aStorageID,
-                             nsCSubstring const& aEnhanceID,
-                             nsCSubstring const& aURISpec,
+  static nsresult HashingKey(const nsACString& aStorageID,
+                             const nsACString& aEnhanceID,
+                             const nsACString& aURISpec,
                              nsACString &aResult);
 
   // Accessed only on the service management thread

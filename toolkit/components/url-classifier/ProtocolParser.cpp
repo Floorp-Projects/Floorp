@@ -223,7 +223,7 @@ ProtocolParserV2::ProcessExpirations(const nsCString& aLine)
     NS_WARNING("Got an expiration without a table.");
     return NS_ERROR_FAILURE;
   }
-  const nsCSubstring &list = Substring(aLine, 3);
+  const nsACString& list = Substring(aLine, 3);
   nsACString::const_iterator begin, end;
   list.BeginReading(begin);
   list.EndReading(end);
@@ -329,7 +329,7 @@ ProtocolParserV2::ProcessChunkControl(const nsCString& aLine)
 nsresult
 ProtocolParserV2::ProcessForward(const nsCString& aLine)
 {
-  const nsCSubstring &forward = Substring(aLine, 2);
+  const nsACString& forward = Substring(aLine, 2);
   return AddForward(forward);
 }
 
@@ -537,7 +537,7 @@ ProtocolParserV2::ProcessDigestSub(const nsACString& aChunk)
   uint32_t start = 0;
   while (start < aChunk.Length()) {
     // Read ADDCHUNKNUM
-    const nsCSubstring& addChunkStr = Substring(aChunk, start, 4);
+    const nsACString& addChunkStr = Substring(aChunk, start, 4);
     start += 4;
 
     uint32_t addChunk;
@@ -604,7 +604,7 @@ ProtocolParserV2::ProcessHostSub(const Prefix& aDomain, uint8_t aNumEntries,
       return NS_ERROR_FAILURE;
     }
 
-    const nsCSubstring& addChunkStr = Substring(aChunk, *aStart, 4);
+    const nsACString& addChunkStr = Substring(aChunk, *aStart, 4);
     *aStart += 4;
 
     uint32_t addChunk;
@@ -625,7 +625,7 @@ ProtocolParserV2::ProcessHostSub(const Prefix& aDomain, uint8_t aNumEntries,
   }
 
   for (uint8_t i = 0; i < aNumEntries; i++) {
-    const nsCSubstring& addChunkStr = Substring(aChunk, *aStart, 4);
+    const nsACString& addChunkStr = Substring(aChunk, *aStart, 4);
     *aStart += 4;
 
     uint32_t addChunk;
@@ -701,7 +701,7 @@ ProtocolParserV2::ProcessHostSubComplete(uint8_t aNumEntries,
     hash.Assign(Substring(aChunk, *aStart, COMPLETE_SIZE));
     *aStart += COMPLETE_SIZE;
 
-    const nsCSubstring& addChunkStr = Substring(aChunk, *aStart, 4);
+    const nsACString& addChunkStr = Substring(aChunk, *aStart, 4);
     *aStart += 4;
 
     uint32_t addChunk;

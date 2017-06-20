@@ -401,7 +401,7 @@ Navigator::GetAcceptLanguages(nsTArray<nsString>& aLanguages)
       int32_t pos = 0;
       bool first = true;
       while (localeTokenizer.hasMoreTokens()) {
-        const nsSubstring& code = localeTokenizer.nextToken();
+        const nsAString& code = localeTokenizer.nextToken();
 
         if (code.Length() == 2 && !first) {
           nsAutoString upper(code);

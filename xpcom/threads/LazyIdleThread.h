@@ -57,7 +57,7 @@ public:
    * number of milliseconds.
    */
   LazyIdleThread(uint32_t aIdleTimeoutMS,
-                 const nsCSubstring& aName,
+                 const nsACString& aName,
                  ShutdownMethod aShutdownMethod = AutomaticShutdown,
                  nsIObserver* aIdleObserver = nullptr);
 

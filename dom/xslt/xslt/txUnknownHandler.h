@@ -21,7 +21,7 @@ public:
 
 private:
     nsresult createHandlerAndFlush(bool aHTMLRoot,
-                                   const nsSubstring& aName,
+                                   const nsAString& aName,
                                    const int32_t aNsID);
 
     /*

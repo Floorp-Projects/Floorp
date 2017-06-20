@@ -726,7 +726,7 @@ nsContentSecurityManager::IsOriginPotentiallyTrustworthy(nsIPrincipal* aPrincipa
     if (whitelist) {
       nsCCharSeparatedTokenizer tokenizer(whitelist, ',');
       while (tokenizer.hasMoreTokens()) {
-        const nsCSubstring& allowedHost = tokenizer.nextToken();
+        const nsACString& allowedHost = tokenizer.nextToken();
         if (host.Equals(allowedHost)) {
           *aIsTrustWorthy = true;
           return NS_OK;
