@@ -867,6 +867,8 @@ public:
   /**
    * Accessor methods to flags.
    */
+  uint32_t Flags() const { return mFlags; }
+
   bool IsPlaintextEditor() const
   {
     return (mFlags & nsIPlaintextEditor::eEditorPlaintextMask) != 0;
@@ -880,6 +882,17 @@ public:
   bool IsPasswordEditor() const
   {
     return (mFlags & nsIPlaintextEditor::eEditorPasswordMask) != 0;
+  }
+
+  // FYI: Both IsRightToLeft() and IsLeftToRight() may return false if
+  //      the editor inherits the content node's direction.
+  bool IsRightToLeft() const
+  {
+    return (mFlags & nsIPlaintextEditor::eEditorRightToLeft) != 0;
+  }
+  bool IsLeftToRight() const
+  {
+    return (mFlags & nsIPlaintextEditor::eEditorLeftToRight) != 0;
   }
 
   bool IsReadonly() const
@@ -947,6 +960,27 @@ public:
   {
     return !IsReadonly();
   }
+
+  /**
+   * IsInEditAction() return true while the instance is handling an edit action.
+   * Otherwise, false.
+   */
+  bool IsInEditAction() const { return mIsInEditAction; }
+
+  /**
+   * IsSuppressingDispatchingInputEvent() returns true if the editor stops
+   * dispatching input event.  Otherwise, false.
+   */
+  bool IsSuppressingDispatchingInputEvent() const
+  {
+    return !mDispatchInputEvent;
+  }
+
+  /**
+   * GetTransactionManager() returns transaction manager associated with the
+   * editor.  This may return nullptr if undo/redo hasn't been enabled.
+   */
+  already_AddRefed<nsITransactionManager> GetTransactionManager() const;
 
   /**
    * Get the input event target. This might return null.
