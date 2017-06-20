@@ -5734,5 +5734,13 @@ pref("layers.advanced.filter-layers", 2);
 // Enable lowercased response header name
 pref("dom.xhr.lowercase_header.enabled", false);
 
+// When a crash happens, whether to include heap regions of the crash context
+// in the minidump. Enabled by default on nightly and aurora.
+#ifdef RELEASE_OR_BETA
+pref("toolkit.crashreporter.include_context_heap", false);
+#else
+pref("toolkit.crashreporter.include_context_heap", true);
+#endif
+
 // Open noopener links in a new process
 pref("dom.noopener.newprocess.enabled", true);
