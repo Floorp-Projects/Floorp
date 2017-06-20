@@ -11,8 +11,6 @@ registerCleanupFunction(function() {
 add_task(async function() {
   let prefs = await openPreferencesViaOpenPreferencesAPI("panePrivacy");
   is(prefs.selectedPane, "panePrivacy", "Privacy pane was selected");
-  prefs = await openPreferencesViaOpenPreferencesAPI("advanced");
-  is(prefs.selectedPane, "paneAdvanced", "Advanced pane was selected");
   prefs = await openPreferencesViaHash("privacy");
   is(prefs.selectedPane, "panePrivacy", "Privacy pane is selected when hash is 'privacy'");
   prefs = await openPreferencesViaOpenPreferencesAPI("nonexistant-category");
@@ -26,7 +24,6 @@ add_task(async function() {
   let doc = gBrowser.contentDocument;
   is(doc.location.hash, "#privacy", "The subcategory should be removed from the URI");
   ok(doc.querySelector("#locationBarGroup").hidden, "Location Bar prefs should be hidden when only Reports are requested");
-  ok(!doc.querySelector("#header-privacy").hidden, "The header should be visible when a subcategory is requested");
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
   prefs = await openPreferencesViaOpenPreferencesAPI("general-search", {leaveOpen: true});
   is(prefs.selectedPane, "paneGeneral", "General pane is selected by default");
@@ -54,7 +51,6 @@ add_task(async function() {
   is(selectedPane, "panePrivacy", "Privacy pane should be selected");
   is(doc.location.hash, "#privacy", "The subcategory should be removed from the URI");
   ok(doc.querySelector("#locationBarGroup").hidden, "Location Bar prefs should be hidden when only Reports are requested");
-  ok(!doc.querySelector("#header-privacy").hidden, "The header should be visible when a subcategory is requested");
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
