@@ -26,6 +26,7 @@ namespace mozilla {
 
 class CDMProxy;
 class MediaDecoderReader;
+class TaskQueue;
 
 struct WaitForDataRejectValue
 {

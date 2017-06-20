@@ -44,6 +44,12 @@ using namespace mozilla::media;
 
 namespace mozilla {
 
+// GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
+// GetTickCount() and conflicts with MediaDecoder::GetCurrentTime implementation.
+#ifdef GetCurrentTime
+#undef GetCurrentTime
+#endif
+
 // avoid redefined macro in unified build
 #undef LOG
 #undef DUMP
