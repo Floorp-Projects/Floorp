@@ -378,8 +378,8 @@ TCPFastOpenFinish(PRFileDesc *fd, PRErrorCode &err,
   // If sendto is not implemented it points to _PR_InvalidInt, therefore we
   // check if sendto != _PR_InvalidInt. _PR_InvalidInt is exposed so we use
   // reserved_fn_0 which also points to _PR_InvalidInt.
-//  if (!secret->mFirstPacketBufLen ||
-//      (tfoFd->lower->methods->sendto == (PRSendtoFN)tfoFd->lower->methods->reserved_fn_0)) {
+  if (!secret->mFirstPacketBufLen ||
+      (tfoFd->lower->methods->sendto == (PRSendtoFN)tfoFd->lower->methods->reserved_fn_0)) {
     // Because of the way our nsHttpTransaction dispatch work, it can happened
     // that data has not been written into the socket.
     // In this case we can just call connect.
@@ -396,7 +396,7 @@ TCPFastOpenFinish(PRFileDesc *fd, PRErrorCode &err,
         SOCKET_LOG(("TCPFastOpenFinish - sendto not implemented.\n"));
         fastOpenNotSupported = true;
     }
-/*  } else {
+  } else {
     // We have some data ready in the buffer we will send it with the syn
     // packet.
     PRInt32 rv = (tfoFd->lower->methods->sendto)(tfoFd->lower,
@@ -437,7 +437,6 @@ TCPFastOpenFinish(PRFileDesc *fd, PRErrorCode &err,
       }
     }
   }
-*/
 
   if (result == PR_IN_PROGRESS_ERROR) {
     secret->mState = TCPFastOpenSecret::WAITING_FOR_CONNECTCONTINUE;
