@@ -39,7 +39,6 @@ add_task(async function test_settingsOpen_button() {
         return;
       }
 
-      let closePromise = promiseWindowClosed(alertWindow);
       let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "about:preferences#privacy");
       let openSettingsMenuItem = alertWindow.document.getElementById("openSettingsMenuItem");
       openSettingsMenuItem.click();
@@ -48,7 +47,7 @@ add_task(async function test_settingsOpen_button() {
       let tab = await tabPromise;
       ok(tab, "The notification settings tab opened");
 
-      await closePromise;
+      await promiseWindowClosed(alertWindow);
       await BrowserTestUtils.removeTab(tab);
     });
   } finally {
