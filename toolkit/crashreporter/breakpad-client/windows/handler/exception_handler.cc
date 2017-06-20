@@ -918,49 +918,17 @@ bool ExceptionHandler::WriteMinidumpWithExceptionForProcess(
         ++user_streams.UserStreamCount;
       }
 
-      // Older versions of DbgHelp.dll don't correctly put the memory around
-      // the faulting instruction pointer into the minidump. This
-      // callback will ensure that it gets included.
-      if (exinfo) {
-        // Find a memory region of 256 bytes centered on the
-        // faulting instruction pointer.
-        const ULONG64 instruction_pointer =
-#if defined(_M_IX86)
-          exinfo->ContextRecord->Eip;
-#elif defined(_M_AMD64)
-        exinfo->ContextRecord->Rip;
-#else
-#error Unsupported platform
-#endif
-
-        MEMORY_BASIC_INFORMATION info;
-        if (VirtualQueryEx(process,
-                           reinterpret_cast<LPCVOID>(instruction_pointer),
-                           &info,
-                           sizeof(MEMORY_BASIC_INFORMATION)) != 0 &&
-            info.State == MEM_COMMIT) {
-          // Attempt to get 128 bytes before and after the instruction
-          // pointer, but settle for whatever's available up to the
-          // boundaries of the memory region.
-          const ULONG64 kIPMemorySize = 256;
-          ULONG64 base =
-            (std::max)(reinterpret_cast<ULONG64>(info.BaseAddress),
-                       instruction_pointer - (kIPMemorySize / 2));
-          ULONG64 end_of_range =
-            (std::min)(instruction_pointer + (kIPMemorySize / 2),
-                       reinterpret_cast<ULONG64>(info.BaseAddress)
-                       + info.RegionSize);
-          ULONG size = static_cast<ULONG>(end_of_range - base);
-
-          AppMemory& elt = app_memory_info_.front();
-          elt.ptr = base;
-          elt.length = size;
-        }
-      }
-
       MinidumpCallbackContext context;
       context.iter = app_memory_info_.begin();
       context.end = app_memory_info_.end();
+
+      if (exinfo) {
+        IncludeAppMemoryFromExceptionContext(process,
+                                             requesting_thread_id,
+                                             app_memory_info_,
+                                             exinfo->ContextRecord,
+                                             !include_context_heap_);
+      }
 
       // Skip the reserved element if there was no instruction memory
       if (context.iter->ptr == 0) {
@@ -1031,6 +999,24 @@ void ExceptionHandler::UnregisterAppMemory(void* ptr) {
 }
 
 void ExceptionHandler::set_include_context_heap(bool enabled) {
+  if (enabled && !include_context_heap_) {
+    // Preallocate AppMemory instances for exception context if necessary.
+    auto predicate = [] (const AppMemory& appMemory) -> bool {
+      return appMemory.preallocated;
+    };
+
+    int preallocatedCount =
+      std::count_if(app_memory_info_.begin(), app_memory_info_.end(), predicate);
+
+    for (size_t i = 0; i < kExceptionAppMemoryRegions - preallocatedCount; i++) {
+      AppMemory app_memory;
+      app_memory.ptr = reinterpret_cast<ULONG64>(nullptr);
+      app_memory.length = 0;
+      app_memory.preallocated = true;
+      app_memory_info_.push_back(app_memory);
+    }
+  }
+
   include_context_heap_ = enabled;
 }
 
