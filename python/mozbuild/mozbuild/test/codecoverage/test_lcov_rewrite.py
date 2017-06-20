@@ -83,6 +83,22 @@ LH:8
 end_of_record
 """
 
+fn_with_multiple_commas = """TN:Compartment_5f7f5c30251800
+SF:resource://gre/modules/osfile.jsm
+FN:1,function,name,with,commas
+FNDA:1,function,name,with,commas
+FNF:1
+FNH:1
+BRDA:9,0,61,1
+BRF:1
+BRH:1
+DA:9,1
+DA:24,1
+LF:2
+LH:2
+end_of_record
+"""
+
 class TestLcovParser(unittest.TestCase):
 
     def get_lcov(self, lcov_string):
@@ -112,6 +128,9 @@ class TestLcovParser(unittest.TestCase):
         output = self.parser_roundtrip(multiple_records, True)
         self.assertEqual(multiple_records, output)
 
+    def test_multiple_commas(self):
+        output = self.parser_roundtrip(fn_with_multiple_commas, True)
+        self.assertEqual(fn_with_multiple_commas, output)
 
 multiple_included_files = """//@line 1 "foo.js"
 bazfoobar

@@ -352,7 +352,7 @@ DOMIntersectionObserver::Update(nsIDocument* aDocument, DOMHighResTimeStamp time
         nsLayoutUtils::GetContainingBlockForClientRect(targetFrame),
         nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS
       );
-      intersectionRect = Some(targetFrame->GetVisualOverflowRect());
+      intersectionRect = Some(targetFrame->GetRectRelativeToSelf());
 
       nsIFrame* containerFrame = nsLayoutUtils::GetCrossDocParentFrame(targetFrame);
       while (containerFrame && containerFrame != rootFrame) {
