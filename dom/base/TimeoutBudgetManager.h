@@ -13,20 +13,19 @@
 namespace mozilla {
 namespace dom {
 
-class Timeout;
-
 class TimeoutBudgetManager
 {
 public:
   static TimeoutBudgetManager& Get();
+  TimeoutBudgetManager() : mLastCollection(TimeStamp::Now()) {}
+
   void StartRecording(const TimeStamp& aNow);
   void StopRecording();
-  void RecordExecution(const TimeStamp& aNow,
-                       const Timeout* aTimeout,
-                       bool aIsBackground);
+  TimeDuration RecordExecution(const TimeStamp& aNow,
+                               bool aIsTracking,
+                               bool aIsBackground);
   void MaybeCollectTelemetry(const TimeStamp& aNow);
 private:
-  TimeoutBudgetManager() : mLastCollection(TimeStamp::Now()) {}
   struct TelemetryData
   {
     TimeDuration mForegroundTracking;
