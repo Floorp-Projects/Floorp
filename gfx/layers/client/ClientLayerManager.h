@@ -187,7 +187,7 @@ public:
   }
   virtual bool NeedsComposite() const override { return mNeedsComposite; }
 
-  virtual void Composite() override;
+  virtual void ScheduleComposite() override;
   virtual void GetFrameUniformity(FrameUniformityData* aFrameUniformityData) override;
 
   virtual void DidComposite(uint64_t aTransactionId,
