@@ -6,10 +6,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=379959
 <head>
   <title>Test for Bug 379959</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script>
-    // TODO: Bug 1324406: Treat 'data:' documents as unique, opaque origins
-    SpecialPowers.setBoolPref("security.data_uri.unique_opaque_origin", true);
-  </script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body onload="runTest();">
@@ -37,7 +33,7 @@ function receiveMessage(e) {
   is(e.origin, "http://mochi.test:8888", "wrong sender!");
 
   if (e.data.test === "dataIsAllowed") {
-    is(e.data.result, 0, "data-url load should have blocked");
+    is(e.data.result, 1, "data-url load should have succeeded");
     seenData = true;
   }
   else if (e.data.test === "sameOriginIsAllowed") {
