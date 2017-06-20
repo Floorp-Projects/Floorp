@@ -168,11 +168,6 @@ public:
     return mSizeMode;
   }
 
-  virtual bool            IsFullyOccluded() const override
-  {
-    return mIsFullyOccluded;
-  }
-
   virtual nsCursor        GetCursor() override;
   virtual void            SetCursor(nsCursor aCursor) override;
   virtual nsresult        SetCursor(imgIContainer* aCursor,
@@ -692,7 +687,6 @@ protected:
   bool              mUpdateCursor;
   bool              mUseAttachedEvents;
   bool              mIMEHasFocus;
-  bool              mIsFullyOccluded;
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
   bool              mAccessibilityInUseFlag;
 #endif
