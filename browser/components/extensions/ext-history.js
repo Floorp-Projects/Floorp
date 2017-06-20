@@ -96,11 +96,11 @@ function getObserver() {
       onDeleteURI: function(uri, guid, reason) {
         this.emit("visitRemoved", {allHistory: false, urls: [uri.spec]});
       },
-      onVisit: function(uri, visitId, time, sessionId, referringId, transitionType, guid, hidden, visitCount, typed) {
+      onVisit: function(uri, visitId, time, sessionId, referringId, transitionType, guid, hidden, visitCount, typed, lastKnownTitle) {
         let data = {
           id: guid,
           url: uri.spec,
-          title: "",
+          title: lastKnownTitle || "",
           lastVisitTime: time / 1000,  // time from Places is microseconds,
           visitCount,
           typedCount: typed,
