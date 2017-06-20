@@ -17,90 +17,36 @@
 
 namespace mozilla {
 
-class ServoSpecifiedValues final: public GenericSpecifiedValues
+class ServoSpecifiedValues final : public GenericSpecifiedValues
 {
 public:
-
-  ServoSpecifiedValues(nsPresContext* aContext, RawServoDeclarationBlock* aDecl);
+  ServoSpecifiedValues(nsPresContext* aContext,
+                       RawServoDeclarationBlock* aDecl);
 
   // GenericSpecifiedValues overrides
   bool PropertyIsSet(nsCSSPropertyID aId);
 
-  void SetIdentStringValue(nsCSSPropertyID aId,
-                           const nsString& aValue);
+  void SetIdentStringValue(nsCSSPropertyID aId, const nsString& aValue);
 
-  void SetIdentStringValueIfUnset(nsCSSPropertyID aId,
-                                  const nsString& aValue) {
-    if (!PropertyIsSet(aId)) {
-      SetIdentStringValue(aId, aValue);
-    }
-  }
+  void SetIdentAtomValue(nsCSSPropertyID aId, nsIAtom* aValue);
 
-  void SetKeywordValue(nsCSSPropertyID aId,
-                       int32_t aValue);
+  void SetKeywordValue(nsCSSPropertyID aId, int32_t aValue);
 
-  void SetKeywordValueIfUnset(nsCSSPropertyID aId,
-                              int32_t aValue) {
-    if (!PropertyIsSet(aId)) {
-      SetKeywordValue(aId, aValue);
-    }
-  }
+  void SetIntValue(nsCSSPropertyID aId, int32_t aValue);
 
+  void SetPixelValue(nsCSSPropertyID aId, float aValue);
 
-  void SetIntValue(nsCSSPropertyID aId,
-                   int32_t aValue);
+  void SetLengthValue(nsCSSPropertyID aId, nsCSSValue aValue);
 
-  void SetPixelValue(nsCSSPropertyID aId,
-                     float aValue);
+  void SetNumberValue(nsCSSPropertyID aId, float aValue);
 
-  void SetPixelValueIfUnset(nsCSSPropertyID aId,
-                            float aValue) {
-    if (!PropertyIsSet(aId)) {
-      SetPixelValue(aId, aValue);
-    }
-  }
-
-  void SetLengthValue(nsCSSPropertyID aId,
-                      nsCSSValue aValue);
-
-  void SetNumberValue(nsCSSPropertyID aId,
-                     float aValue);
-
-  void SetPercentValue(nsCSSPropertyID aId,
-                       float aValue);
+  void SetPercentValue(nsCSSPropertyID aId, float aValue);
 
   void SetAutoValue(nsCSSPropertyID aId);
 
-  void SetAutoValueIfUnset(nsCSSPropertyID aId) {
-    if (!PropertyIsSet(aId)) {
-      SetAutoValue(aId);
-    }
-  }
-
-  void SetPercentValueIfUnset(nsCSSPropertyID aId,
-                              float aValue) {
-    if (!PropertyIsSet(aId)) {
-      SetPercentValue(aId, aValue);
-    }
-  }
-
   void SetCurrentColor(nsCSSPropertyID aId);
 
-  void SetCurrentColorIfUnset(nsCSSPropertyID aId) {
-    if (!PropertyIsSet(aId)) {
-      SetCurrentColor(aId);
-    }
-  }
-
-  void SetColorValue(nsCSSPropertyID aId,
-                     nscolor aValue);
-
-  void SetColorValueIfUnset(nsCSSPropertyID aId,
-                            nscolor aValue) {
-    if (!PropertyIsSet(aId)) {
-      SetColorValue(aId, aValue);
-    }
-  }
+  void SetColorValue(nsCSSPropertyID aId, nscolor aValue);
 
   void SetFontFamily(const nsString& aValue);
   void SetTextDecorationColorOverride();

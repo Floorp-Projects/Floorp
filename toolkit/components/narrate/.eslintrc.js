@@ -8,7 +8,6 @@ module.exports = {
     "block-scoped-var": "error",
     "camelcase": "warn",
     "comma-dangle": "off",
-    "comma-style": ["warn", "last"],
     "complexity": ["error", {"max": 20}],
     "curly": "error",
     "dot-location": ["warn", "property"],

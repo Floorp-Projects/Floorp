@@ -51,8 +51,8 @@ var gMoveBookmarksDialog = {
         // Nothing to do if the node is already under the selected folder.
         if (node.parent.itemId == selectedFolderId)
           continue;
-        await PlacesTransactions.Move({ guid: node.bookmarkGuid
-                                      , newParentGuid }).transact();
+        await PlacesTransactions.Move({ guid: node.bookmarkGuid,
+                                        newParentGuid }).transact();
       }
     }).then(null, Components.utils.reportError);
   },

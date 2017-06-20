@@ -4494,6 +4494,41 @@ CSS_PROP_UIRESET(
     kWindowShadowKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
+CSS_PROP_UIRESET(
+    -moz-window-opacity,
+    _moz_window_opacity,
+    CSS_PROP_DOMPROP_PREFIXED(WindowOpacity),
+    CSS_PROPERTY_INTERNAL | CSS_PROPERTY_PARSE_VALUE,
+    "",
+    VARIANT_HN,
+    nullptr,
+    offsetof(nsStyleUIReset, mWindowOpacity),
+    eStyleAnimType_float)
+CSS_PROP_UIRESET(
+    -moz-window-transform,
+    _moz_window_transform,
+    CSS_PROP_DOMPROP_PREFIXED(WindowTransform),
+    CSS_PROPERTY_INTERNAL |
+        CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
+    "",
+    0,
+    nullptr,
+    offsetof(nsStyleUIReset, mSpecifiedWindowTransform),
+    eStyleAnimType_Custom)
+CSS_PROP_UIRESET(
+    -moz-window-transform-origin,
+    _moz_window_transform_origin,
+    CSS_PROP_DOMPROP_PREFIXED(WindowTransformOrigin),
+    CSS_PROPERTY_INTERNAL |
+        CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_STORES_CALC |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
+    "",
+    0,
+    kImageLayerPositionKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_Custom)
 #endif // CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_TEXT(
     word-break,
