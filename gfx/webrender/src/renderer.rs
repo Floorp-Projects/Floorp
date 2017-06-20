@@ -18,7 +18,7 @@ use euclid::Transform3D;
 use fnv::FnvHasher;
 use frame_builder::FrameBuilderConfig;
 use gleam::gl;
-use gpu_cache::{GpuCacheUpdate, GpuCacheUpdateList};
+use gpu_cache::{GpuBlockData, GpuCacheUpdate, GpuCacheUpdateList};
 use gpu_store::{GpuStore, GpuStoreLayout};
 use internal_types::{CacheTextureId, RendererFrame, ResultMsg, TextureUpdateOp};
 use internal_types::{TextureUpdateList, PackedVertex, RenderTargetMode};
@@ -53,7 +53,7 @@ use util::TransformedRectKind;
 use webgl_types::GLContextHandleWrapper;
 use webrender_traits::{ColorF, Epoch, PipelineId, RenderNotifier, RenderDispatcher};
 use webrender_traits::{ExternalImageId, ExternalImageType, ImageData, ImageFormat, RenderApiSender};
-use webrender_traits::{DeviceIntRect, DeviceUintRect, DevicePoint, DeviceIntPoint, DeviceIntSize, DeviceUintSize};
+use webrender_traits::{DeviceIntRect, DeviceUintRect, DeviceIntPoint, DeviceIntSize, DeviceUintSize};
 use webrender_traits::{BlobImageRenderer, channel, FontRenderMode};
 use webrender_traits::VRCompositorHandler;
 use webrender_traits::{YuvColorSpace, YuvFormat};
@@ -207,6 +207,35 @@ impl CacheTexture {
         }
     }
 
+    fn apply_patch(&mut self,
+                   device: &mut Device,
+                   update: &GpuCacheUpdate,
+                   blocks: &[GpuBlockData]) {
+        match update {
+            &GpuCacheUpdate::Copy { block_index, block_count, address } => {
+                // Apply an incremental update to the cache texture.
+                // TODO(gw): For the initial implementation, we will just
+                //           use update_texture() since it's simple. If / when
+                //           we profile this and find it to be slow on some / all
+                //           devices - we can look into other options, such as
+                //           using glMapBuffer() with the unsynchronized bit,
+                //           and managing the synchronization ourselves with fences.
+                let data: &[u8] = unsafe {
+                    let ptr = blocks.as_ptr()
+                                    .offset(block_index as isize);
+                    slice::from_raw_parts(ptr as *const _, block_count * 16)
+                };
+                device.update_texture(self.current_id,
+                                      address.u as u32,
+                                      address.v as u32,
+                                      block_count as u32,
+                                      1,
+                                      None,
+                                      data);
+            }
+        }
+    }
+
     fn update(&mut self, device: &mut Device, updates: &GpuCacheUpdateList) {
         // See if we need to create or resize the texture.
         let current_dimensions = device.get_texture_dimensions(self.current_id);
@@ -243,30 +272,7 @@ impl CacheTexture {
         }
 
         for update in &updates.updates {
-            match update {
-                &GpuCacheUpdate::Copy { block_index, block_count, address } => {
-                    // Apply an incremental update to the cache texture.
-                    // TODO(gw): For the initial implementation, we will just
-                    //           use update_texture() since it's simple. If / when
-                    //           we profile this and find it to be slow on some / all
-                    //           devices - we can look into other options, such as
-                    //           using glMapBuffer() with the unsynchronized bit,
-                    //           and managing the synchronization ourselves with fences.
-                    let data: &[u8] = unsafe {
-                        let ptr = updates.blocks
-                                         .as_ptr()
-                                         .offset(block_index as isize);
-                        slice::from_raw_parts(ptr as *const _, block_count * 16)
-                    };
-                    device.update_texture(self.current_id,
-                                          address.u as u32,
-                                          address.v as u32,
-                                          block_count as u32,
-                                          1,
-                                          None,
-                                          data);
-                }
-            }
+            self.apply_patch(device, update, &updates.blocks);
         }
     }
 }
@@ -506,7 +512,6 @@ struct GpuDataTextures {
     layer_texture: VertexDataTexture,
     render_task_texture: VertexDataTexture,
     data32_texture: VertexDataTexture,
-    resource_rects_texture: VertexDataTexture,
 }
 
 impl GpuDataTextures {
@@ -515,20 +520,17 @@ impl GpuDataTextures {
             layer_texture: VertexDataTexture::new(device),
             render_task_texture: VertexDataTexture::new(device),
             data32_texture: VertexDataTexture::new(device),
-            resource_rects_texture: VertexDataTexture::new(device),
         }
     }
 
     fn init_frame(&mut self, device: &mut Device, frame: &mut Frame) {
         self.data32_texture.init(device, &mut frame.gpu_data32);
-        self.resource_rects_texture.init(device, &mut frame.gpu_resource_rects);
         self.layer_texture.init(device, &mut frame.layer_texture_data);
         self.render_task_texture.init(device, &mut frame.render_task_data);
 
         device.bind_texture(TextureSampler::Layers, self.layer_texture.id);
         device.bind_texture(TextureSampler::RenderTasks, self.render_task_texture.id);
         device.bind_texture(TextureSampler::Data32, self.data32_texture.id);
-        device.bind_texture(TextureSampler::ResourceRects, self.resource_rects_texture.id);
     }
 }
 
@@ -958,7 +960,7 @@ impl Renderer {
         device.init_texture(dummy_cache_texture_id,
                             1,
                             1,
-                            ImageFormat::RGBA8,
+                            ImageFormat::BGRA8,
                             TextureFilter::Linear,
                             RenderTargetMode::LayerRenderTarget(1),
                             None);
@@ -1314,9 +1316,12 @@ impl Renderer {
                         self.device.disable_depth();
                         self.device.set_blend(false);
                         //self.update_shaders();
+
                         self.update_texture_cache();
 
                         self.update_gpu_cache();
+                        self.update_deferred_resolves(frame);
+
                         self.device.bind_texture(TextureSampler::ResourceCache, self.gpu_cache_texture.current_id);
 
                         frame_id
@@ -1978,10 +1983,14 @@ impl Renderer {
                 };
 
                 self.external_images.insert((ext_image.id, ext_image.channel_index), texture_id);
-                let resource_rect_index = deferred_resolve.resource_address.0 as usize;
-                let resource_rect = &mut frame.gpu_resource_rects[resource_rect_index];
-                resource_rect.uv0 = DevicePoint::new(image.u0, image.v0);
-                resource_rect.uv1 = DevicePoint::new(image.u1, image.v1);
+
+                let update = GpuCacheUpdate::Copy {
+                    block_index: 0,
+                    block_count: 1,
+                    address: deferred_resolve.address,
+                };
+                let blocks = [ [image.u0, image.v0, image.u1, image.v1].into() ];
+                self.gpu_cache_texture.apply_patch(&mut self.device, &update, &blocks);
             }
         }
     }
@@ -2033,7 +2042,7 @@ impl Renderer {
                 self.device.init_texture(texture_id,
                                          frame.cache_size.width as u32,
                                          frame.cache_size.height as u32,
-                                         ImageFormat::RGBA8,
+                                         ImageFormat::BGRA8,
                                          TextureFilter::Linear,
                                          RenderTargetMode::LayerRenderTarget(target_count as i32),
                                          None);
@@ -2062,7 +2071,6 @@ impl Renderer {
                        frame: &mut Frame,
                        framebuffer_size: &DeviceUintSize) {
         let _gm = GpuMarker::new(self.device.rc_gl(), "tile frame draw");
-        self.update_deferred_resolves(frame);
 
         // Some tests use a restricted viewport smaller than the main screen size.
         // Ensure we clear the framebuffer in these tests.

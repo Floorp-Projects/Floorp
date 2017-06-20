@@ -4,13 +4,13 @@
 
 use border::BorderCornerClipSource;
 use gpu_store::GpuStoreAddress;
-use prim_store::{ClipData, GpuBlock32, PrimitiveStore};
+use prim_store::{ClipData, GpuBlock32, ImageMaskData, PrimitiveStore};
 use prim_store::{CLIP_DATA_GPU_SIZE, MASK_DATA_GPU_SIZE};
 use renderer::VertexDataStore;
 use util::{ComplexClipRegionHelpers, MatrixHelpers, TransformedRect};
 use webrender_traits::{BorderRadius, BuiltDisplayList, ClipRegion, ComplexClipRegion, ImageMask};
 use webrender_traits::{DeviceIntRect, LayerToWorldTransform};
-use webrender_traits::{LayerRect, LayerPoint, LayerSize};
+use webrender_traits::{DeviceRect, LayerRect, LayerPoint, LayerSize};
 use std::ops::Not;
 
 const MAX_CLIP: f32 = 1000000.0;
@@ -270,6 +270,14 @@ impl MaskCacheInfo {
                 let slice = clip_store.get_slice_mut(gpu_address,
                                                      1 + source.max_clip_count);
                 source.populate_gpu_data(slice);
+            }
+
+            if let Some((ref mask, gpu_address)) = self.image {
+                let mask_data = clip_store.get_slice_mut(gpu_address, MASK_DATA_GPU_SIZE);
+                mask_data[0] = GpuBlock32::from(ImageMaskData {
+                    padding: DeviceRect::zero(),
+                    local_rect: mask.rect,
+                });
             }
 
             // Work out the type of mask geometry we have, based on the
