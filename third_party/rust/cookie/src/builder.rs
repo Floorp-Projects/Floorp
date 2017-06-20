@@ -2,13 +2,13 @@ use std::borrow::Cow;
 
 use time::{Tm, Duration};
 
-use ::{Cookie, SameSite};
+use ::Cookie;
 
 /// Structure that follows the builder pattern for building `Cookie` structs.
 ///
 /// To construct a cookie:
 ///
-///   1. Call [`Cookie::build`](struct.Cookie.html#method.build) to start building.
+///   1. Call [Cookie::build](struct.Cookie.html#method.build) to start building.
 ///   2. Use any of the builder methods to set fields in the cookie.
 ///   3. Call [finish](#method.finish) to retrieve the built cookie.
 ///
@@ -31,6 +31,7 @@ use ::{Cookie, SameSite};
 ///     .finish();
 /// # }
 /// ```
+///
 #[derive(Debug, Clone)]
 pub struct CookieBuilder {
     /// The cookie being built.
@@ -178,52 +179,6 @@ impl CookieBuilder {
     #[inline]
     pub fn http_only(mut self, value: bool) -> CookieBuilder {
         self.cookie.set_http_only(value);
-        self
-    }
-
-    /// Sets the `same_site` field in the cookie being built.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use cookie::{Cookie, SameSite};
-    ///
-    /// let c = Cookie::build("foo", "bar")
-    ///     .same_site(SameSite::Strict)
-    ///     .finish();
-    ///
-    /// assert_eq!(c.same_site(), Some(SameSite::Strict));
-    /// ```
-    #[inline]
-    pub fn same_site(mut self, value: SameSite) -> CookieBuilder {
-        self.cookie.set_same_site(value);
-        self
-    }
-
-    /// Makes the cookie being built 'permanent' by extending its expiration and
-    /// max age 20 years into the future.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # extern crate cookie;
-    /// extern crate time;
-    ///
-    /// use cookie::Cookie;
-    /// use time::Duration;
-    ///
-    /// # fn main() {
-    /// let c = Cookie::build("foo", "bar")
-    ///     .permanent()
-    ///     .finish();
-    ///
-    /// assert_eq!(c.max_age(), Some(Duration::days(365 * 20)));
-    /// # assert!(c.expires().is_some());
-    /// # }
-    /// ```
-    #[inline]
-    pub fn permanent(mut self) -> CookieBuilder {
-        self.cookie.make_permanent();
         self
     }
 

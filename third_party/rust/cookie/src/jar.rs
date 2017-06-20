@@ -1,604 +1,637 @@
-use std::collections::HashSet;
-use std::mem::replace;
+//! A cookie jar implementation for storing a set of cookies.
+//!
+//! This CookieJar type can be used to manage a session of cookies by keeping
+//! track of cookies that are added and deleted over time. It provides a method,
+//! `delta`, which will calculate the number of `Set-Cookie` headers that need
+//! to be sent back to a client which tracks the changes in the lifetime of the
+//! jar itself.
+//!
+//! A cookie jar can also be borrowed to a child cookie jar with new
+//! functionality such as automatically signing cookies, storing permanent
+//! cookies, etc. This functionality can also be chained together.
+
+use std::collections::{HashMap, HashSet};
+use std::cell::RefCell;
+use std::fmt;
+use std::borrow::Cow;
 
 use time::{self, Duration};
 
-#[cfg(feature = "secure")]
-use secure::{PrivateJar, SignedJar, Key};
-use delta::DeltaCookie;
-use Cookie;
+use ::Cookie;
 
-/// A collection of cookies that tracks its modifications.
+/// A jar of cookies for managing a session.
 ///
-/// A `CookieJar` provides storage for any number of cookies. Any changes made
-/// to the jar are tracked; the changes can be retrieved via the
-/// [delta](#method.delta) method which returns an interator over the changes.
+/// # Example
 ///
-/// # Usage
-///
-/// A jar's life begins via [new](#method.new) and calls to
-/// [`add_original`](#method.add_original):
-///
-/// ```rust
+/// ```
 /// use cookie::{Cookie, CookieJar};
 ///
-/// let mut jar = CookieJar::new();
-/// jar.add_original(Cookie::new("name", "value"));
-/// jar.add_original(Cookie::new("second", "another"));
+/// let c = CookieJar::new(b"f8f9eaf1ecdedff5e5b749c58115441e");
+///
+/// // Add a cookie to this jar
+/// c.add(Cookie::new("key".to_string(), "value".to_string()));
+///
+/// // Remove the added cookie
+/// c.remove("key");
 /// ```
-///
-/// Cookies can be added via [add](#method.add) and removed via
-/// [remove](#method.remove). Finally, cookies can be looked up via
-/// [get](#method.get):
-///
-/// ```rust
-/// # use cookie::{Cookie, CookieJar};
-/// let mut jar = CookieJar::new();
-/// jar.add(Cookie::new("a", "one"));
-/// jar.add(Cookie::new("b", "two"));
-///
-/// assert_eq!(jar.get("a").map(|c| c.value()), Some("one"));
-/// assert_eq!(jar.get("b").map(|c| c.value()), Some("two"));
-///
-/// jar.remove(Cookie::named("b"));
-/// assert!(jar.get("b").is_none());
-/// ```
-///
-/// # Deltas
-///
-/// A jar keeps track of any modifications made to it over time. The
-/// modifications are recorded as cookies. The modifications can be retrieved
-/// via [delta](#method.delta). Any new `Cookie` added to a jar via `add`
-/// results in the same `Cookie` appearing in the `delta`; cookies added via
-/// `add_original` do not count towards the delta. Any _original_ cookie that is
-/// removed from a jar results in a "removal" cookie appearing in the delta. A
-/// "removal" cookie is a cookie that a server sends so that the cookie is
-/// removed from the client's machine.
-///
-/// Deltas are typically used to create `Set-Cookie` headers corresponding to
-/// the changes made to a cookie jar over a period of time.
-///
-/// ```rust
-/// # use cookie::{Cookie, CookieJar};
-/// let mut jar = CookieJar::new();
-///
-/// // original cookies don't affect the delta
-/// jar.add_original(Cookie::new("original", "value"));
-/// assert_eq!(jar.delta().count(), 0);
-///
-/// // new cookies result in an equivalent `Cookie` in the delta
-/// jar.add(Cookie::new("a", "one"));
-/// jar.add(Cookie::new("b", "two"));
-/// assert_eq!(jar.delta().count(), 2);
-///
-/// // removing an original cookie adds a "removal" cookie to the delta
-/// jar.remove(Cookie::named("original"));
-/// assert_eq!(jar.delta().count(), 3);
-///
-/// // removing a new cookie that was added removes that `Cookie` from the delta
-/// jar.remove(Cookie::named("a"));
-/// assert_eq!(jar.delta().count(), 2);
-/// ```
-#[derive(Default, Debug, Clone)]
-pub struct CookieJar {
-    original_cookies: HashSet<DeltaCookie>,
-    delta_cookies: HashSet<DeltaCookie>,
+pub struct CookieJar<'a> {
+    flavor: Flavor<'a>,
 }
 
-impl CookieJar {
-    /// Creates an empty cookie jar.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use cookie::CookieJar;
-    ///
-    /// let jar = CookieJar::new();
-    /// assert_eq!(jar.iter().count(), 0);
-    /// ```
-    pub fn new() -> CookieJar {
-        CookieJar::default()
-    }
-
-    /// Returns a reference to the `Cookie` inside this jar with the name
-    /// `name`. If no such cookie exists, returns `None`.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use cookie::{CookieJar, Cookie};
-    ///
-    /// let mut jar = CookieJar::new();
-    /// assert!(jar.get("name").is_none());
-    ///
-    /// jar.add(Cookie::new("name", "value"));
-    /// assert_eq!(jar.get("name").map(|c| c.value()), Some("value"));
-    /// ```
-    pub fn get(&self, name: &str) -> Option<&Cookie<'static>> {
-        self.delta_cookies
-            .get(name)
-            .or_else(|| self.original_cookies.get(name))
-            .and_then(|c| if !c.removed { Some(&c.cookie) } else { None })
-    }
-
-    /// Adds an "original" `cookie` to this jar. Adding an original cookie does
-    /// not affect the [delta](#method.delta) computation. This method is
-    /// intended to be used to seed the cookie jar with cookies received from a
-    /// client's HTTP message.
-    ///
-    /// For accurate `delta` computations, this method should not be called
-    /// after calling `remove`.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use cookie::{CookieJar, Cookie};
-    ///
-    /// let mut jar = CookieJar::new();
-    /// jar.add_original(Cookie::new("name", "value"));
-    /// jar.add_original(Cookie::new("second", "two"));
-    ///
-    /// assert_eq!(jar.get("name").map(|c| c.value()), Some("value"));
-    /// assert_eq!(jar.get("second").map(|c| c.value()), Some("two"));
-    /// assert_eq!(jar.iter().count(), 2);
-    /// assert_eq!(jar.delta().count(), 0);
-    /// ```
-    pub fn add_original(&mut self, cookie: Cookie<'static>) {
-        self.original_cookies.replace(DeltaCookie::added(cookie));
-    }
-
-    /// Adds `cookie` to this jar.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use cookie::{CookieJar, Cookie};
-    ///
-    /// let mut jar = CookieJar::new();
-    /// jar.add(Cookie::new("name", "value"));
-    /// jar.add(Cookie::new("second", "two"));
-    ///
-    /// assert_eq!(jar.get("name").map(|c| c.value()), Some("value"));
-    /// assert_eq!(jar.get("second").map(|c| c.value()), Some("two"));
-    /// assert_eq!(jar.iter().count(), 2);
-    /// assert_eq!(jar.delta().count(), 2);
-    /// ```
-    pub fn add(&mut self, cookie: Cookie<'static>) {
-        self.delta_cookies.replace(DeltaCookie::added(cookie));
-    }
-
-    /// Removes `cookie` from this jar. If an _original_ cookie with the same
-    /// name as `cookie` is present in the jar, a _removal_ cookie will be
-    /// present in the `delta` computation. To properly generate the removal
-    /// cookie, `cookie` must contain the same `path` and `domain` as the cookie
-    /// that was initially set.
-    ///
-    /// A "removal" cookie is a cookie that has the same name as the original
-    /// cookie but has an empty value, a max-age of 0, and an expiration date
-    /// far in the past.
-    ///
-    /// # Example
-    ///
-    /// Removing an _original_ cookie results in a _removal_ cookie:
-    ///
-    /// ```rust
-    /// # extern crate cookie;
-    /// extern crate time;
-    ///
-    /// use cookie::{CookieJar, Cookie};
-    /// use time::Duration;
-    ///
-    /// # fn main() {
-    /// let mut jar = CookieJar::new();
-    ///
-    /// // Assume this cookie originally had a path of "/" and domain of "a.b".
-    /// jar.add_original(Cookie::new("name", "value"));
-    ///
-    /// // If the path and domain were set, they must be provided to `remove`.
-    /// jar.remove(Cookie::build("name", "").path("/").domain("a.b").finish());
-    ///
-    /// // The delta will contain the removal cookie.
-    /// let delta: Vec<_> = jar.delta().collect();
-    /// assert_eq!(delta.len(), 1);
-    /// assert_eq!(delta[0].name(), "name");
-    /// assert_eq!(delta[0].max_age(), Some(Duration::seconds(0)));
-    /// # }
-    /// ```
-    ///
-    /// Removing a new cookie does not result in a _removal_ cookie:
-    ///
-    /// ```rust
-    /// use cookie::{CookieJar, Cookie};
-    ///
-    /// let mut jar = CookieJar::new();
-    /// jar.add(Cookie::new("name", "value"));
-    /// assert_eq!(jar.delta().count(), 1);
-    ///
-    /// jar.remove(Cookie::named("name"));
-    /// assert_eq!(jar.delta().count(), 0);
-    /// ```
-    pub fn remove(&mut self, mut cookie: Cookie<'static>) {
-        if self.original_cookies.contains(cookie.name()) {
-            cookie.set_value("");
-            cookie.set_max_age(Duration::seconds(0));
-            cookie.set_expires(time::now() - Duration::days(365));
-            self.delta_cookies.replace(DeltaCookie::removed(cookie));
-        } else {
-            self.delta_cookies.remove(cookie.name());
-        }
-    }
-
-    /// Removes all cookies from this cookie jar.
-    #[deprecated(since = "0.7.0", note = "calling this method may not remove \
-                 all cookies since the path and domain are not specified; use \
-                 `remove` instead")]
-    pub fn clear(&mut self) {
-        self.delta_cookies.clear();
-        for delta in replace(&mut self.original_cookies, HashSet::new()) {
-            self.remove(delta.cookie);
-        }
-    }
-
-    /// Returns an iterator over cookies that represent the changes to this jar
-    /// over time. These cookies can be rendered directly as `Set-Cookie` header
-    /// values to affect the changes made to this jar on the client.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use cookie::{CookieJar, Cookie};
-    ///
-    /// let mut jar = CookieJar::new();
-    /// jar.add_original(Cookie::new("name", "value"));
-    /// jar.add_original(Cookie::new("second", "two"));
-    ///
-    /// // Add new cookies.
-    /// jar.add(Cookie::new("new", "third"));
-    /// jar.add(Cookie::new("another", "fourth"));
-    /// jar.add(Cookie::new("yac", "fifth"));
-    ///
-    /// // Remove some cookies.
-    /// jar.remove(Cookie::named("name"));
-    /// jar.remove(Cookie::named("another"));
-    ///
-    /// // Delta contains two new cookies ("new", "yac") and a removal ("name").
-    /// assert_eq!(jar.delta().count(), 3);
-    /// ```
-    pub fn delta(&self) -> Delta {
-        Delta { iter: self.delta_cookies.iter() }
-    }
-
-    /// Returns an iterator over all of the cookies present in this jar.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use cookie::{CookieJar, Cookie};
-    ///
-    /// let mut jar = CookieJar::new();
-    ///
-    /// jar.add_original(Cookie::new("name", "value"));
-    /// jar.add_original(Cookie::new("second", "two"));
-    ///
-    /// jar.add(Cookie::new("new", "third"));
-    /// jar.add(Cookie::new("another", "fourth"));
-    /// jar.add(Cookie::new("yac", "fifth"));
-    ///
-    /// jar.remove(Cookie::named("name"));
-    /// jar.remove(Cookie::named("another"));
-    ///
-    /// // There are three cookies in the jar: "second", "new", and "yac".
-    /// # assert_eq!(jar.iter().count(), 3);
-    /// for cookie in jar.iter() {
-    ///     match cookie.name() {
-    ///         "second" => assert_eq!(cookie.value(), "two"),
-    ///         "new" => assert_eq!(cookie.value(), "third"),
-    ///         "yac" => assert_eq!(cookie.value(), "fifth"),
-    ///         _ => unreachable!("there are only three cookies in the jar")
-    ///     }
-    /// }
-    /// ```
-    pub fn iter(&self) -> Iter {
-        Iter { delta_cookies: self.delta_cookies.union(&self.original_cookies) }
-    }
-
-    /// Returns a `PrivateJar` with `self` as its parent jar using the key `key`
-    /// to sign/encrypt and verify/decrypt cookies added/retrieved from the
-    /// child jar.
-    ///
-    /// Any modifications to the child jar will be reflected on the parent jar,
-    /// and any retrievals from the child jar will be made from the parent jar.
-    ///
-    /// This method is only available when the `secure` feature is enabled.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use cookie::{Cookie, CookieJar, Key};
-    ///
-    /// // Generate a secure key.
-    /// let key = Key::generate();
-    ///
-    /// // Add a private (signed + encrypted) cookie.
-    /// let mut jar = CookieJar::new();
-    /// jar.private(&key).add(Cookie::new("private", "text"));
-    ///
-    /// // The cookie's contents are encrypted.
-    /// assert_ne!(jar.get("private").unwrap().value(), "text");
-    ///
-    /// // They can be decrypted and verified through the child jar.
-    /// assert_eq!(jar.private(&key).get("private").unwrap().value(), "text");
-    ///
-    /// // A tampered with cookie does not validate but still exists.
-    /// let mut cookie = jar.get("private").unwrap().clone();
-    /// jar.add(Cookie::new("private", cookie.value().to_string() + "!"));
-    /// assert!(jar.private(&key).get("private").is_none());
-    /// assert!(jar.get("private").is_some());
-    /// ```
-    #[cfg(feature = "secure")]
-    pub fn private(&mut self, key: &Key) -> PrivateJar {
-        PrivateJar::new(self, key)
-    }
-
-    /// Returns a `SignedJar` with `self` as its parent jar using the key `key`
-    /// to sign/verify cookies added/retrieved from the child jar.
-    ///
-    /// Any modifications to the child jar will be reflected on the parent jar,
-    /// and any retrievals from the child jar will be made from the parent jar.
-    ///
-    /// This method is only available when the `secure` feature is enabled.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use cookie::{Cookie, CookieJar, Key};
-    ///
-    /// // Generate a secure key.
-    /// let key = Key::generate();
-    ///
-    /// // Add a signed cookie.
-    /// let mut jar = CookieJar::new();
-    /// jar.signed(&key).add(Cookie::new("signed", "text"));
-    ///
-    /// // The cookie's contents are signed but still in plaintext.
-    /// assert_ne!(jar.get("signed").unwrap().value(), "text");
-    /// assert!(jar.get("signed").unwrap().value().contains("text"));
-    ///
-    /// // They can be verified through the child jar.
-    /// assert_eq!(jar.signed(&key).get("signed").unwrap().value(), "text");
-    ///
-    /// // A tampered with cookie does not validate but still exists.
-    /// let mut cookie = jar.get("signed").unwrap().clone();
-    /// jar.add(Cookie::new("signed", cookie.value().to_string() + "!"));
-    /// assert!(jar.signed(&key).get("signed").is_none());
-    /// assert!(jar.get("signed").is_some());
-    /// ```
-    #[cfg(feature = "secure")]
-    pub fn signed(&mut self, key: &Key) -> SignedJar {
-        SignedJar::new(self, key)
-    }
+enum Flavor<'a> {
+    Child(Child<'a>),
+    Root(Root),
 }
 
-use std::collections::hash_set::Iter as HashSetIter;
-
-/// Iterator over the changes to a cookie jar.
-pub struct Delta<'a> {
-    iter: HashSetIter<'a, DeltaCookie>,
+struct Child<'a> {
+    parent: &'a CookieJar<'a>,
+    read: Read,
+    write: Write,
 }
 
-impl<'a> Iterator for Delta<'a> {
-    type Item = &'a Cookie<'static>;
+type Read = fn(&Root, Cookie<'static>) -> Option<Cookie<'static>>;
+type Write = fn(&Root, Cookie<'static>) -> Cookie<'static>;
 
-    fn next(&mut self) -> Option<&'a Cookie<'static>> {
-        self.iter.next().map(|c| &c.cookie)
-    }
+struct Root {
+    map: RefCell<HashMap<Cow<'static, str>, Cookie<'static>>>,
+    new_cookies: RefCell<HashSet<Cow<'static, str>>>,
+    removed_cookies: RefCell<HashSet<Cow<'static, str>>>,
+    _key: secure::SigningKey,
 }
 
-use std::collections::hash_set::Union;
-use std::collections::hash_map::RandomState;
-
-/// Iterator over all of the cookies in a jar.
+/// Iterator over the cookies in a cookie jar
 pub struct Iter<'a> {
-    delta_cookies: Union<'a, DeltaCookie, RandomState>,
+    jar: &'a CookieJar<'a>,
+    keys: Vec<Cow<'static, str>>,
+}
+
+impl<'a> CookieJar<'a> {
+    /// Creates a new empty cookie jar with the given signing key.
+    ///
+    /// The given key is used to sign cookies in the signed cookie jar. If
+    /// signed cookies aren't used then you can pass an empty array.
+    pub fn new(key: &[u8]) -> CookieJar<'static> {
+        CookieJar {
+            flavor: Flavor::Root(Root {
+                map: RefCell::new(HashMap::new()),
+                new_cookies: RefCell::new(HashSet::new()),
+                removed_cookies: RefCell::new(HashSet::new()),
+                _key: secure::prepare_key(key),
+            }),
+        }
+    }
+
+    fn root<'b>(&'b self) -> &'b Root {
+        let mut cur = self;
+        loop {
+            match cur.flavor {
+                Flavor::Child(ref child) => cur = child.parent,
+                Flavor::Root(ref me) => return me,
+            }
+        }
+    }
+
+    /// Adds an original cookie from a request.
+    ///
+    /// This method only works on the root cookie jar and is not intended for
+    /// use during the lifetime of a request, it is intended to initialize a
+    /// cookie jar from an incoming request.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `self` is not the root cookie jar.
+    pub fn add_original(&mut self, cookie: Cookie<'static>) {
+        match self.flavor {
+            Flavor::Child(..) => panic!("can't add an original cookie to a child jar!"),
+            Flavor::Root(ref mut root) => {
+                let name = cookie.name().to_string();
+                root.map.borrow_mut().insert(name.into(), cookie);
+            }
+        }
+    }
+
+    /// Adds a new cookie to this cookie jar.
+    ///
+    /// If this jar is a child cookie jar, this will walk up the chain of
+    /// borrowed jars, modifying the cookie as it goes along.
+    pub fn add(&self, mut cookie: Cookie<'static>) {
+        let mut cur = self;
+        let root = self.root();
+        loop {
+            match cur.flavor {
+                Flavor::Child(ref child) => {
+                    cookie = (child.write)(root, cookie);
+                    cur = child.parent;
+                }
+                Flavor::Root(..) => break,
+            }
+        }
+        let name = cookie.name().to_string();
+        root.map.borrow_mut().insert(name.clone().into(), cookie);
+        root.removed_cookies.borrow_mut().remove(&*name);
+        root.new_cookies.borrow_mut().insert(name.into());
+    }
+
+    /// Removes a cookie from this cookie jar.
+    pub fn remove<N: Into<Cow<'static, str>>>(&self, cookie_name: N) {
+        let root = self.root();
+        let name = cookie_name.into();
+        root.map.borrow_mut().remove(&name);
+        root.new_cookies.borrow_mut().remove(&name);
+        root.removed_cookies.borrow_mut().insert(name);
+    }
+
+    /// Clears all cookies from this cookie jar.
+    pub fn clear(&self) {
+        let root = self.root();
+        let all_cookies: Vec<_> = root.map
+            .borrow()
+            .keys()
+            .map(|n| n.to_owned())
+            .collect();
+
+        root.map.borrow_mut().clear();
+        root.new_cookies.borrow_mut().clear();
+        root.removed_cookies.borrow_mut().extend(all_cookies);
+    }
+
+    /// Finds a cookie inside of this cookie jar.
+    ///
+    /// The cookie is subject to modification by any of the child cookie jars
+    /// that are currently borrowed. A copy of the cookie is returned.
+    pub fn find(&self, name: &str) -> Option<Cookie<'static>> {
+        let root = self.root();
+        if root.removed_cookies.borrow().contains(name) {
+            return None;
+        }
+        root.map.borrow().get(name).and_then(|c| self.try_read(root, c.clone()))
+    }
+
+    /// Creates a child signed cookie jar.
+    ///
+    /// All cookies read from the child jar will require a valid signature and
+    /// all cookies written will be signed automatically.
+    ///
+    /// This API is only available when the `secure` feature is enabled on this
+    /// crate.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use cookie::{Cookie, CookieJar};
+    /// let c = CookieJar::new(b"f8f9eaf1ecdedff5e5b749c58115441e");
+    ///
+    /// // Add a signed cookie to the jar
+    /// c.signed().add(Cookie::new("key".to_string(), "value".to_string()));
+    ///
+    /// // Add a permanently signed cookie to the jar
+    /// c.permanent().signed()
+    ///  .add(Cookie::new("key".to_string(), "value".to_string()));
+    /// ```
+    #[cfg(feature = "secure")]
+    pub fn signed<'b>(&'b self) -> CookieJar<'b> {
+        return CookieJar {
+            flavor: Flavor::Child(Child {
+                parent: self,
+                read: verify,
+                write: sign,
+            }),
+        };
+
+        fn verify(root: &Root, cookie: Cookie<'static>) -> Option<Cookie<'static>> {
+            secure::verify(&root._key, cookie)
+        }
+
+        fn sign(root: &Root, cookie: Cookie<'static>) -> Cookie<'static> {
+            secure::sign(&root._key, cookie)
+        }
+    }
+
+    /// Creates a child encrypted cookie jar.
+    ///
+    /// All cookies read from the child jar must be encrypted and signed by a
+    /// valid key and all cookies written will be encrypted and signed
+    /// automatically.
+    ///
+    /// This API is only available when the `secure` feature is enabled on this
+    /// crate.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use cookie::{Cookie, CookieJar};
+    /// let c = CookieJar::new(b"f8f9eaf1ecdedff5e5b749c58115441e");
+    ///
+    /// // Add a signed and encrypted cookie to the jar
+    /// c.encrypted().add(Cookie::new("key".to_string(), "value".to_string()));
+    ///
+    /// // Add a permanently signed and encrypted cookie to the jar
+    /// c.permanent().encrypted()
+    ///  .add(Cookie::new("key".to_string(), "value".to_string()));
+    /// ```
+    #[cfg(feature = "secure")]
+    pub fn encrypted<'b>(&'b self) -> CookieJar<'b> {
+        return CookieJar {
+            flavor: Flavor::Child(Child {
+                parent: self,
+                read: read,
+                write: write,
+            }),
+        };
+
+        fn read(root: &Root, cookie: Cookie<'static>) -> Option<Cookie<'static>> {
+            secure::verify_and_decrypt(&root._key, cookie)
+        }
+
+        fn write(root: &Root, cookie: Cookie<'static>) -> Cookie<'static> {
+            secure::encrypt_and_sign(&root._key, cookie)
+        }
+    }
+
+    /// Creates a child jar for permanent cookie storage.
+    ///
+    /// All cookies written to the child jar will have an expiration date 20
+    /// years into the future to ensure they stick around for a long time.
+    pub fn permanent<'b>(&'b self) -> CookieJar<'b> {
+        return CookieJar {
+            flavor: Flavor::Child(Child {
+                parent: self,
+                read: read,
+                write: write,
+            }),
+        };
+
+        fn read(_root: &Root, cookie: Cookie<'static>) -> Option<Cookie<'static>> {
+            Some(cookie)
+        }
+
+        fn write(_root: &Root, mut cookie: Cookie<'static>) -> Cookie<'static> {
+            // Expire 20 years in the future
+            cookie.set_max_age(Duration::days(365 * 20));
+            let mut now = time::now();
+            now.tm_year += 20;
+            cookie.set_expires(now);
+            cookie
+        }
+    }
+
+    /// Calculates the changes that have occurred to this cookie jar over time,
+    /// returning a vector of `Set-Cookie` headers.
+    pub fn delta(&self) -> Vec<Cookie<'static>> {
+        let mut ret = Vec::new();
+        let root = self.root();
+        for cookie in root.removed_cookies.borrow().iter() {
+            let mut c = Cookie::new(cookie.clone(), String::new());
+            c.set_max_age(Duration::zero());
+            let mut now = time::now();
+            now.tm_year -= 1;
+            c.set_expires(now);
+            ret.push(c);
+        }
+
+        let map = root.map.borrow();
+        for cookie in root.new_cookies.borrow().iter() {
+            ret.push(map.get(cookie).unwrap().clone());
+        }
+
+        return ret;
+    }
+
+    fn try_read(&self, root: &Root, mut cookie: Cookie<'static>) -> Option<Cookie<'static>> {
+        let mut jar = self;
+        loop {
+            match jar.flavor {
+                Flavor::Child(Child { read, parent, .. }) => {
+                    cookie = match read(root, cookie) {
+                        Some(c) => c,
+                        None => return None,
+                    };
+                    jar = parent;
+                }
+                Flavor::Root(..) => return Some(cookie),
+            }
+        }
+    }
+
+    /// Return an iterator over the cookies in this jar.
+    ///
+    /// This iterator will only yield valid cookies for this jar. For example if
+    /// this is an encrypted child jar then only valid encrypted cookies will be
+    /// yielded. If the root cookie jar is iterated over then all cookies will
+    /// be yielded.
+    pub fn iter(&self) -> Iter {
+        let map = self.root().map.borrow();
+        Iter {
+            jar: self,
+            keys: map.keys().cloned().collect(),
+        }
+    }
+}
+
+impl<'a> fmt::Debug for CookieJar<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let root = self.root();
+        try!(write!(f, "CookieJar {{"));
+        let mut first = true;
+        for (name, cookie) in &*root.map.borrow() {
+            if !first {
+                try!(write!(f, ", "));
+            }
+            first = false;
+            try!(write!(f, "{:?}: {:?}", name, cookie));
+        }
+        try!(write!(f, " }}"));
+        Ok(())
+    }
 }
 
 impl<'a> Iterator for Iter<'a> {
-    type Item = &'a Cookie<'static>;
+    type Item = Cookie<'static>;
 
-    fn next(&mut self) -> Option<&'a Cookie<'static>> {
-        for cookie in self.delta_cookies.by_ref() {
-            if !cookie.removed {
-                return Some(&*cookie);
+    fn next(&mut self) -> Option<Cookie<'static>> {
+        loop {
+            let key = match self.keys.pop() {
+                Some(v) => v,
+                None => return None,
+            };
+            let root = self.jar.root();
+            let map = root.map.borrow();
+            let cookie = match map.get(&key) {
+                Some(cookie) => cookie.clone(),
+                None => continue,
+            };
+            match self.jar.try_read(root, cookie) {
+                Some(cookie) => return Some(cookie),
+                None => {}
             }
         }
-
-        None
     }
+}
+
+
+#[cfg(not(feature = "secure"))]
+mod secure {
+    pub type SigningKey = ();
+
+    pub fn prepare_key(_key: &[u8]) -> () {
+        ()
+    }
+}
+
+#[cfg(feature = "secure")]
+mod secure {
+    extern crate openssl;
+    extern crate rustc_serialize;
+
+    use ::Cookie;
+    use self::openssl::{hash, memcmp, symm};
+    use self::openssl::pkey::PKey;
+    use self::openssl::sign::Signer;
+    use self::openssl::hash::MessageDigest;
+    use self::rustc_serialize::base64::{ToBase64, FromBase64, STANDARD};
+
+    pub type SigningKey = Vec<u8>;
+    pub const MIN_KEY_LEN: usize = 32;
+
+    pub fn prepare_key(key: &[u8]) -> Vec<u8> {
+        if key.len() >= MIN_KEY_LEN {
+            key.to_vec()
+        } else {
+            // Using a SHA-256 hash to normalize key as Rails suggests.
+            hash::hash(MessageDigest::sha256(), key).unwrap()
+        }
+    }
+
+    // If a SHA1 HMAC is good enough for rails, it's probably good enough
+    // for us as well:
+    //
+    // https://github.com/rails/rails/blob/master/activesupport/lib
+    //                   /active_support/message_verifier.rb#L70
+    pub fn sign(key: &[u8], mut cookie: Cookie<'static>) -> Cookie<'static> {
+        let signature = dosign(key, cookie.value()).to_base64(STANDARD);
+        let new_cookie_val = format!("{}--{}", cookie.value(), signature);
+        cookie.set_value(new_cookie_val);
+        cookie
+    }
+
+    fn split_value(val: &str) -> Option<(&str, Vec<u8>)> {
+        let parts = val.split("--");
+        let ext = match parts.last() {
+            Some(ext) => ext,
+            _ => return None,
+        };
+        let val_len = val.len();
+        if ext.len() == val_len {
+            return None;
+        }
+        let text = &val[..val_len - ext.len() - 2];
+        let ext = match ext.from_base64() {
+            Ok(sig) => sig,
+            Err(..) => return None,
+        };
+
+        Some((text, ext))
+    }
+
+    pub fn verify(key: &[u8], mut cookie: Cookie<'static>) -> Option<Cookie<'static>> {
+        let (text, signature) = match split_value(cookie.value()) {
+            Some((text, sig)) => (text.to_string(), sig),
+            None => return None,
+        };
+
+
+        let expected = dosign(key, &text);
+        if expected.len() != signature.len() || !memcmp::eq(&expected, &signature) {
+            return None;
+        }
+
+        cookie.set_value(text);
+        Some(cookie)
+    }
+
+    fn dosign(key: &[u8], val: &str) -> Vec<u8> {
+        let pkey = PKey::hmac(key).unwrap();
+        let mut signer = Signer::new(MessageDigest::sha1(), &pkey).unwrap();
+        signer.update(val.as_bytes()).unwrap();
+        signer.finish().unwrap()
+    }
+
+    // Implementation details were taken from Rails. See
+    // https://github.com/rails/rails/blob/master/activesupport/lib/active_support/message_encryptor.rb#L57
+    pub fn encrypt_and_sign(key: &[u8], mut cookie: Cookie<'static>) -> Cookie<'static> {
+        let encrypted_data = encrypt_data(key, cookie.value());
+        cookie.set_value(encrypted_data);
+        sign(key, cookie)
+    }
+
+    fn encrypt_data(key: &[u8], val: &str) -> String {
+        let iv = random_iv();
+        let iv_str = iv.to_base64(STANDARD);
+
+        let cipher = symm::Cipher::aes_256_cbc();
+        let encrypted = symm::encrypt(cipher, &key[..MIN_KEY_LEN], Some(&iv), val.as_bytes());
+        let mut encrypted_data = encrypted.unwrap().to_base64(STANDARD);
+
+        encrypted_data.push_str("--");
+        encrypted_data.push_str(&iv_str);
+        encrypted_data
+    }
+
+    pub fn verify_and_decrypt(key: &[u8], cookie: Cookie<'static>) -> Option<Cookie<'static>> {
+        let mut cookie = match verify(key, cookie) {
+            Some(cookie) => cookie,
+            None => return None,
+        };
+
+        decrypt_data(key, cookie.value())
+            .and_then(|data| String::from_utf8(data).ok())
+            .map(move |val| {
+                cookie.set_value(val);
+                cookie
+            })
+    }
+
+    fn decrypt_data(key: &[u8], val: &str) -> Option<Vec<u8>> {
+        let (val, iv) = match split_value(val) {
+            Some(pair) => pair,
+            None => return None,
+        };
+
+        let actual = match val.from_base64() {
+            Ok(actual) => actual,
+            Err(_) => return None,
+        };
+
+        Some(symm::decrypt(symm::Cipher::aes_256_cbc(),
+                           &key[..MIN_KEY_LEN],
+                           Some(&iv),
+                           &actual)
+            .unwrap())
+    }
+
+    fn random_iv() -> Vec<u8> {
+        let mut ret = vec![0; 16];
+        openssl::rand::rand_bytes(&mut ret).unwrap();
+        return ret;
+    }
+
 }
 
 #[cfg(test)]
 mod test {
-    use super::CookieJar;
-    use Cookie;
+    use {Cookie, CookieJar};
+
+    const KEY: &'static [u8] = b"f8f9eaf1ecdedff5e5b749c58115441e";
 
     #[test]
-    #[allow(deprecated)]
+    fn short_key() {
+        CookieJar::new(b"foo");
+    }
+
+    #[test]
     fn simple() {
-        let mut c = CookieJar::new();
+        let c = CookieJar::new(KEY);
 
         c.add(Cookie::new("test", ""));
         c.add(Cookie::new("test2", ""));
-        c.remove(Cookie::named("test"));
+        c.remove("test");
 
-        assert!(c.get("test").is_none());
-        assert!(c.get("test2").is_some());
+        assert!(c.find("test").is_none());
+        assert!(c.find("test2").is_some());
 
         c.add(Cookie::new("test3", ""));
         c.clear();
 
-        assert!(c.get("test").is_none());
-        assert!(c.get("test2").is_none());
-        assert!(c.get("test3").is_none());
+        assert!(c.find("test").is_none());
+        assert!(c.find("test2").is_none());
+        assert!(c.find("test3").is_none());
     }
 
-    #[test]
-    fn jar_is_send() {
-        fn is_send<T: Send>(_: T) -> bool {
-            true
-        }
+    macro_rules! secure_behaviour {
+        ($c:ident, $secure:ident) => ({
+            $c.$secure().add(Cookie::new("test", "test"));
+            assert!($c.find("test").unwrap().value() != "test");
+            assert!($c.$secure().find("test").unwrap().value() == "test");
 
-        assert!(is_send(CookieJar::new()))
+            let mut cookie = $c.find("test").unwrap();
+            let new_val = format!("{}l", cookie.value());
+            cookie.set_value(new_val);
+            $c.add(cookie);
+            assert!($c.$secure().find("test").is_none());
+
+            let mut cookie = $c.find("test").unwrap();
+            cookie.set_value("foobar");
+            $c.add(cookie);
+            assert!($c.$secure().find("test").is_none());
+        })
     }
 
-    #[test]
     #[cfg(feature = "secure")]
+    #[test]
+    fn signed() {
+        let c = CookieJar::new(KEY);
+        secure_behaviour!(c, signed)
+    }
+
+    #[cfg(feature = "secure")]
+    #[test]
+    fn encrypted() {
+        let c = CookieJar::new(KEY);
+        secure_behaviour!(c, encrypted)
+    }
+
+    #[test]
+    fn permanent() {
+        let c = CookieJar::new(KEY);
+
+        c.permanent().add(Cookie::new("test", "test"));
+
+        let cookie = c.find("test").unwrap();
+        assert_eq!(cookie.value(), "test");
+        assert_eq!(c.permanent().find("test").unwrap().value(), "test");
+        assert!(cookie.expires().is_some());
+        assert!(cookie.max_age().is_some());
+    }
+
+    #[cfg(feature = "secure")]
+    #[test]
+    fn chained() {
+        let c = CookieJar::new(KEY);
+        c.permanent().signed().add(Cookie::new("test", "test"));
+
+        let cookie = c.signed().find("test").unwrap();
+        assert_eq!(cookie.value(), "test");
+        assert!(cookie.expires().is_some());
+        assert!(cookie.max_age().is_some());
+    }
+
+    #[cfg(features = "secure")]
+    #[test]
     fn iter() {
-        let key = ::Key::generate();
-        let mut c = CookieJar::new();
+        let mut c = CookieJar::new(KEY);
 
         c.add_original(Cookie::new("original", "original"));
-
-        c.add(Cookie::new("test", "test"));
-        c.add(Cookie::new("test2", "test2"));
-        c.add(Cookie::new("test3", "test3"));
-        assert_eq!(c.iter().count(), 4);
-
-        c.signed(&key).add(Cookie::new("signed", "signed"));
-        c.private(&key).add(Cookie::new("encrypted", "encrypted"));
-        assert_eq!(c.iter().count(), 6);
-
-        c.remove(Cookie::named("test"));
-        assert_eq!(c.iter().count(), 5);
-
-        c.remove(Cookie::named("signed"));
-        c.remove(Cookie::named("test2"));
-        assert_eq!(c.iter().count(), 3);
-
-        c.add(Cookie::new("test2", "test2"));
-        assert_eq!(c.iter().count(), 4);
-
-        c.remove(Cookie::named("test2"));
-        assert_eq!(c.iter().count(), 3);
-    }
-
-    #[test]
-    #[cfg(feature = "secure")]
-    fn delta() {
-        use std::collections::HashMap;
-        use time::Duration;
-
-        let mut c = CookieJar::new();
-
-        c.add_original(Cookie::new("original", "original"));
-        c.add_original(Cookie::new("original1", "original1"));
 
         c.add(Cookie::new("test", "test"));
         c.add(Cookie::new("test2", "test2"));
         c.add(Cookie::new("test3", "test3"));
         c.add(Cookie::new("test4", "test4"));
 
-        c.remove(Cookie::named("test"));
-        c.remove(Cookie::named("original"));
+        c.signed().add(Cookie::new("signed", "signed"));
 
-        assert_eq!(c.delta().count(), 4);
+        c.encrypted().add(Cookie::new("encrypted", "encrypted"));
 
-        let names: HashMap<_, _> = c.delta()
-            .map(|c| (c.name(), c.max_age()))
-            .collect();
+        c.remove("test");
 
-        assert!(names.get("test2").unwrap().is_none());
-        assert!(names.get("test3").unwrap().is_none());
-        assert!(names.get("test4").unwrap().is_none());
-        assert_eq!(names.get("original").unwrap(), &Some(Duration::seconds(0)));
-    }
+        let cookies = c.iter().collect::<Vec<_>>();
+        assert_eq!(cookies.len(), 6);
 
-    #[test]
-    fn replace_original() {
-        let mut jar = CookieJar::new();
-        jar.add_original(Cookie::new("original_a", "a"));
-        jar.add_original(Cookie::new("original_b", "b"));
-        assert_eq!(jar.get("original_a").unwrap().value(), "a");
+        let encrypted_cookies = c.encrypted().iter().collect::<Vec<_>>();
+        assert_eq!(encrypted_cookies.len(), 1);
+        assert_eq!(encrypted_cookies[0].name, "encrypted");
 
-        jar.add(Cookie::new("original_a", "av2"));
-        assert_eq!(jar.get("original_a").unwrap().value(), "av2");
-    }
-
-    #[test]
-    fn empty_delta() {
-        let mut jar = CookieJar::new();
-        jar.add(Cookie::new("name", "val"));
-        assert_eq!(jar.delta().count(), 1);
-
-        jar.remove(Cookie::named("name"));
-        assert_eq!(jar.delta().count(), 0);
-
-        jar.add_original(Cookie::new("name", "val"));
-        assert_eq!(jar.delta().count(), 0);
-
-        jar.remove(Cookie::named("name"));
-        assert_eq!(jar.delta().count(), 1);
-
-        jar.add(Cookie::new("name", "val"));
-        assert_eq!(jar.delta().count(), 1);
-
-        jar.remove(Cookie::named("name"));
-        assert_eq!(jar.delta().count(), 1);
-    }
-
-    #[test]
-    fn add_remove_add() {
-        let mut jar = CookieJar::new();
-        jar.add_original(Cookie::new("name", "val"));
-        assert_eq!(jar.delta().count(), 0);
-
-        jar.remove(Cookie::named("name"));
-        assert_eq!(jar.delta().filter(|c| c.value().is_empty()).count(), 1);
-        assert_eq!(jar.delta().count(), 1);
-
-        // The cookie's been deleted. Another original doesn't change that.
-        jar.add_original(Cookie::new("name", "val"));
-        assert_eq!(jar.delta().filter(|c| c.value().is_empty()).count(), 1);
-        assert_eq!(jar.delta().count(), 1);
-
-        jar.remove(Cookie::named("name"));
-        assert_eq!(jar.delta().filter(|c| c.value().is_empty()).count(), 1);
-        assert_eq!(jar.delta().count(), 1);
-
-        jar.add(Cookie::new("name", "val"));
-        assert_eq!(jar.delta().filter(|c| !c.value().is_empty()).count(), 1);
-        assert_eq!(jar.delta().count(), 1);
-
-        jar.remove(Cookie::named("name"));
-        assert_eq!(jar.delta().filter(|c| c.value().is_empty()).count(), 1);
-        assert_eq!(jar.delta().count(), 1);
-    }
-
-    #[test]
-    fn replace_remove() {
-        let mut jar = CookieJar::new();
-        jar.add_original(Cookie::new("name", "val"));
-        assert_eq!(jar.delta().count(), 0);
-
-        jar.add(Cookie::new("name", "val"));
-        assert_eq!(jar.delta().count(), 1);
-        assert_eq!(jar.delta().filter(|c| !c.value().is_empty()).count(), 1);
-
-        jar.remove(Cookie::named("name"));
-        assert_eq!(jar.delta().filter(|c| c.value().is_empty()).count(), 1);
-    }
-
-    #[test]
-    fn remove_with_path() {
-        let mut jar = CookieJar::new();
-        jar.add_original(Cookie::build("name", "val").finish());
-        assert_eq!(jar.iter().count(), 1);
-        assert_eq!(jar.delta().count(), 0);
-        assert_eq!(jar.iter().filter(|c| c.path().is_none()).count(), 1);
-
-        jar.remove(Cookie::build("name", "").path("/").finish());
-        assert_eq!(jar.iter().count(), 0);
-        assert_eq!(jar.delta().count(), 1);
-        assert_eq!(jar.delta().filter(|c| c.value().is_empty()).count(), 1);
-        assert_eq!(jar.delta().filter(|c| c.path() == Some("/")).count(), 1);
+        let signed_cookies = c.signed().iter().collect::<Vec<_>>();
+        assert_eq!(signed_cookies.len(), 2);
+        assert!(signed_cookies[0].name == "signed" || signed_cookies[1].name == "signed");
     }
 }
