@@ -309,18 +309,18 @@ var BookmarkPropertiesPanel = {
 
     switch (this._action) {
       case ACTION_EDIT:
-        gEditItemOverlay.initPanel({ node: this._node
-                                   , hiddenRows: this._hiddenRows
-                                   , focusedElement: "first" });
+        gEditItemOverlay.initPanel({ node: this._node,
+                                     hiddenRows: this._hiddenRows,
+                                     focusedElement: "first" });
         acceptButton.disabled = gEditItemOverlay.readOnly;
         break;
       case ACTION_ADD:
         this._node = await this._promiseNewItem();
         // Edit the new item
-        gEditItemOverlay.initPanel({ node: this._node
-                                   , hiddenRows: this._hiddenRows
-                                   , postData: this._postData
-                                   , focusedElement: "first" });
+        gEditItemOverlay.initPanel({ node: this._node,
+                                     hiddenRows: this._hiddenRows,
+                                     postData: this._postData,
+                                     focusedElement: "first" });
 
         // Empty location field if the uri is about:blank, this way inserting a new
         // url will be easier for the user, Accept button will be automatically
@@ -630,12 +630,12 @@ var BookmarkPropertiesPanel = {
     let parentGuid = await PlacesUtils.promiseItemGuid(containerId);
     let annotations = [];
     if (this._description) {
-      annotations.push({ name: PlacesUIUtils.DESCRIPTION_ANNO
-                       , value: this._description });
+      annotations.push({ name: PlacesUIUtils.DESCRIPTION_ANNO,
+                         value: this._description });
     }
     if (this._loadInSidebar) {
-      annotations.push({ name: PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO
-                       , value: true });
+      annotations.push({ name: PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO,
+                         value: true });
     }
 
     let itemGuid;

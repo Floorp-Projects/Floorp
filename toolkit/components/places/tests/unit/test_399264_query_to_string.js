@@ -26,18 +26,18 @@ function run_test() {
            getService(Ci.nsINavBookmarksService);
 
   const QUERIES = [
-      "folder=PLACES_ROOT"
-    , "folder=BOOKMARKS_MENU"
-    , "folder=TAGS"
-    , "folder=UNFILED_BOOKMARKS"
-    , "folder=TOOLBAR"
+      "folder=PLACES_ROOT",
+      "folder=BOOKMARKS_MENU",
+      "folder=TAGS",
+      "folder=UNFILED_BOOKMARKS",
+      "folder=TOOLBAR"
   ];
   const FOLDER_IDS = [
-      bs.placesRoot
-    , bs.bookmarksMenuFolder
-    , bs.tagsFolder
-    , bs.unfiledBookmarksFolder
-    , bs.toolbarFolder
+      bs.placesRoot,
+      bs.bookmarksMenuFolder,
+      bs.tagsFolder,
+      bs.unfiledBookmarksFolder,
+      bs.toolbarFolder
   ];
 
 

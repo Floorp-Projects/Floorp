@@ -26,7 +26,7 @@ struct nsRuleData;
 
 typedef void (*nsPostResolveFunc)(void* aStyleStruct, nsRuleData* aData);
 
-struct nsRuleData final: mozilla::GenericSpecifiedValues
+struct nsRuleData final : mozilla::GenericSpecifiedValues
 {
   mozilla::RuleNodeCacheConditions mConditions;
   bool mIsImportantRule;
@@ -49,8 +49,10 @@ struct nsRuleData final: mozilla::GenericSpecifiedValues
 
   nsAutoPtr<mozilla::CSSVariableDeclarations> mVariables;
 
-  nsRuleData(uint32_t aSIDs, nsCSSValue* aValueStorage,
-             nsPresContext* aContext, nsStyleContext* aStyleContext);
+  nsRuleData(uint32_t aSIDs,
+             nsCSSValue* aValueStorage,
+             nsPresContext* aContext,
+             nsStyleContext* aStyleContext);
 
 #ifdef DEBUG
   ~nsRuleData();
@@ -77,13 +79,13 @@ struct nsRuleData final: mozilla::GenericSpecifiedValues
     // include that here since it includes us.
     MOZ_ASSERT(mSIDs & (1 << sid),
                "calling nsRuleData::ValueFor on property not in mSIDs");
-    MOZ_ASSERT(indexInStruct != size_t(-1),
-               "logical property");
+    MOZ_ASSERT(indexInStruct != size_t(-1), "logical property");
 
     return mValueStorage + mValueOffsets[sid] + indexInStruct;
   }
 
-  const nsCSSValue* ValueFor(nsCSSPropertyID aProperty) const {
+  const nsCSSValue* ValueFor(nsCSSPropertyID aProperty) const
+  {
     return const_cast<nsRuleData*>(this)->ValueFor(aProperty);
   }
 
@@ -120,65 +122,50 @@ struct nsRuleData final: mozilla::GenericSpecifiedValues
   #undef CSS_PROP_PUBLIC_OR_PRIVATE
 
   // GenericSpecifiedValues overrides
-  bool PropertyIsSet(nsCSSPropertyID aId) {
+  bool PropertyIsSet(nsCSSPropertyID aId)
+  {
     return ValueFor(aId)->GetUnit() != eCSSUnit_Null;
   }
 
-  void SetIdentStringValue(nsCSSPropertyID aId,
-                           const nsString& aValue) {
+  void SetIdentStringValue(nsCSSPropertyID aId, const nsString& aValue)
+  {
     ValueFor(aId)->SetStringValue(aValue, eCSSUnit_Ident);
   }
 
-  void SetIdentStringValueIfUnset(nsCSSPropertyID aId,
-                                const nsString& aValue) {
-    if (!PropertyIsSet(aId)) {
-      SetIdentStringValue(aId, aValue);
-    }
+  void SetIdentAtomValue(nsCSSPropertyID aId, nsIAtom* aValue)
+  {
+    nsCOMPtr<nsIAtom> atom = aValue;
+    ValueFor(aId)->SetAtomIdentValue(atom.forget());
   }
 
-  void SetKeywordValue(nsCSSPropertyID aId,
-                       int32_t aValue) {
+  void SetKeywordValue(nsCSSPropertyID aId, int32_t aValue)
+  {
     ValueFor(aId)->SetIntValue(aValue, eCSSUnit_Enumerated);
   }
 
-  void SetKeywordValueIfUnset(nsCSSPropertyID aId,
-                              int32_t aValue) {
-    if (!PropertyIsSet(aId)) {
-      SetKeywordValue(aId, aValue);
-    }
-  }
-
-
-  void SetIntValue(nsCSSPropertyID aId,
-                   int32_t aValue) {
+  void SetIntValue(nsCSSPropertyID aId, int32_t aValue)
+  {
     ValueFor(aId)->SetIntValue(aValue, eCSSUnit_Integer);
   }
 
-  void SetPixelValue(nsCSSPropertyID aId,
-                     float aValue) {
+  void SetPixelValue(nsCSSPropertyID aId, float aValue)
+  {
     ValueFor(aId)->SetFloatValue(aValue, eCSSUnit_Pixel);
   }
 
-  void SetPixelValueIfUnset(nsCSSPropertyID aId,
-                            float aValue) {
-    if (!PropertyIsSet(aId)) {
-      SetPixelValue(aId, aValue);
-    }
-  }
-
-  void SetLengthValue(nsCSSPropertyID aId,
-                      nsCSSValue aValue) {
+  void SetLengthValue(nsCSSPropertyID aId, nsCSSValue aValue)
+  {
     nsCSSValue* val = ValueFor(aId);
     *val = aValue;
   }
 
-  void SetNumberValue(nsCSSPropertyID aId,
-                     float aValue) {
+  void SetNumberValue(nsCSSPropertyID aId, float aValue)
+  {
     ValueFor(aId)->SetFloatValue(aValue, eCSSUnit_Number);
   }
 
-  void SetPercentValue(nsCSSPropertyID aId,
-                       float aValue) {
+  void SetPercentValue(nsCSSPropertyID aId, float aValue)
+  {
     ValueFor(aId)->SetPercentValue(aValue);
   }
 
@@ -186,39 +173,14 @@ struct nsRuleData final: mozilla::GenericSpecifiedValues
     ValueFor(aId)->SetAutoValue();
   }
 
-  void SetAutoValueIfUnset(nsCSSPropertyID aId) {
-    if (!PropertyIsSet(aId)) {
-      SetAutoValue(aId);
-    }
-  }
-
-  void SetPercentValueIfUnset(nsCSSPropertyID aId,
-                              float aValue) {
-    if (!PropertyIsSet(aId)) {
-      SetPercentValue(aId, aValue);
-    }
-  }
-
-  void SetCurrentColor(nsCSSPropertyID aId) {
+  void SetCurrentColor(nsCSSPropertyID aId)
+  {
     ValueFor(aId)->SetIntValue(NS_COLOR_CURRENTCOLOR, eCSSUnit_EnumColor);
   }
 
-  void SetCurrentColorIfUnset(nsCSSPropertyID aId) {
-    if (!PropertyIsSet(aId)) {
-      SetCurrentColor(aId);
-    }
-  }
-
-  void SetColorValue(nsCSSPropertyID aId,
-                     nscolor aValue) {
+  void SetColorValue(nsCSSPropertyID aId, nscolor aValue)
+  {
     ValueFor(aId)->SetColorValue(aValue);
-  }
-
-  void SetColorValueIfUnset(nsCSSPropertyID aId,
-                            nscolor aValue) {
-    if (!PropertyIsSet(aId)) {
-      SetColorValue(aId, aValue);
-    }
   }
 
   void SetFontFamily(const nsString& aValue);
@@ -227,7 +189,6 @@ struct nsRuleData final: mozilla::GenericSpecifiedValues
 
 private:
   inline size_t GetPoisonOffset();
-
 };
 
 #endif

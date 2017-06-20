@@ -182,17 +182,17 @@ var Bookmarks = Object.freeze({
       modTime = now;
     }
     let insertInfo = validateBookmarkObject(info,
-      { type: { defaultValue: this.TYPE_BOOKMARK }
-      , index: { defaultValue: this.DEFAULT_INDEX }
-      , url: { requiredIf: b => b.type == this.TYPE_BOOKMARK
-             , validIf: b => b.type == this.TYPE_BOOKMARK }
-      , parentGuid: { required: true }
-      , title: { validIf: b => [ this.TYPE_BOOKMARK
-                               , this.TYPE_FOLDER ].includes(b.type) }
-      , dateAdded: { defaultValue: addedTime }
-      , lastModified: { defaultValue: modTime,
-                        validIf: b => b.lastModified >= now || (b.dateAdded && b.lastModified >= b.dateAdded) }
-      , source: { defaultValue: this.SOURCES.DEFAULT }
+      { type: { defaultValue: this.TYPE_BOOKMARK },
+        index: { defaultValue: this.DEFAULT_INDEX },
+        url: { requiredIf: b => b.type == this.TYPE_BOOKMARK,
+               validIf: b => b.type == this.TYPE_BOOKMARK },
+        parentGuid: { required: true },
+        title: { validIf: b => [ this.TYPE_BOOKMARK,
+                                 this.TYPE_FOLDER ].includes(b.type) },
+        dateAdded: { defaultValue: addedTime },
+        lastModified: { defaultValue: modTime,
+                        validIf: b => b.lastModified >= now || (b.dateAdded && b.lastModified >= b.dateAdded) },
+        source: { defaultValue: this.SOURCES.DEFAULT }
       });
 
     return (async () => {
@@ -342,21 +342,21 @@ var Bookmarks = Object.freeze({
         // dateAdded may be imposed by the caller.
         let time = (info && info.dateAdded) || fallbackLastAdded;
         let insertInfo = validateBookmarkObject(info, {
-          type: { defaultValue: TYPE_BOOKMARK }
-          , url: { requiredIf: b => b.type == TYPE_BOOKMARK
-                 , validIf: b => b.type == TYPE_BOOKMARK }
-          , parentGuid: { required: true }
-          , title: { validIf: b => [ TYPE_BOOKMARK
-                                   , TYPE_FOLDER ].includes(b.type) }
-          , dateAdded: { defaultValue: time
-                       , validIf: b => !b.lastModified ||
-                                        b.dateAdded <= b.lastModified }
-          , lastModified: { defaultValue: time,
-                            validIf: b => (!b.dateAdded && b.lastModified >= time) ||
-                                          (b.dateAdded && b.lastModified >= b.dateAdded) }
-          , index: { replaceWith: indexToUse++ }
-          , source: { replaceWith: source }
-          , children: { validIf: b => b.type == TYPE_FOLDER && Array.isArray(b.children) }
+          type: { defaultValue: TYPE_BOOKMARK },
+          url: { requiredIf: b => b.type == TYPE_BOOKMARK,
+                 validIf: b => b.type == TYPE_BOOKMARK },
+          parentGuid: { required: true },
+          title: { validIf: b => [ TYPE_BOOKMARK,
+                                   TYPE_FOLDER ].includes(b.type) },
+          dateAdded: { defaultValue: time,
+                       validIf: b => !b.lastModified ||
+                                      b.dateAdded <= b.lastModified },
+          lastModified: { defaultValue: time,
+                          validIf: b => (!b.dateAdded && b.lastModified >= time) ||
+                                        (b.dateAdded && b.lastModified >= b.dateAdded) },
+          index: { replaceWith: indexToUse++ },
+          source: { replaceWith: source },
+          children: { validIf: b => b.type == TYPE_FOLDER && Array.isArray(b.children) }
         });
         if (shouldUseNullIndices) {
           insertInfo.index = null;
@@ -463,10 +463,10 @@ var Bookmarks = Object.freeze({
     // it's compared to the existing item to remove any properties that don't
     // need to be updated.
     let updateInfo = validateBookmarkObject(info,
-      { guid: { required: true }
-      , index: { requiredIf: b => b.hasOwnProperty("parentGuid")
-               , validIf: b => b.index >= 0 || b.index == this.DEFAULT_INDEX }
-      , source: { defaultValue: this.SOURCES.DEFAULT }
+      { guid: { required: true },
+        index: { requiredIf: b => b.hasOwnProperty("parentGuid"),
+                 validIf: b => b.index >= 0 || b.index == this.DEFAULT_INDEX },
+        source: { defaultValue: this.SOURCES.DEFAULT }
       });
 
     // There should be at last one more property in addition to guid and source.
@@ -490,13 +490,13 @@ var Bookmarks = Object.freeze({
       }
       const now = new Date();
       updateInfo = validateBookmarkObject(updateInfo,
-        { url: { validIf: () => item.type == this.TYPE_BOOKMARK }
-        , title: { validIf: () => [ this.TYPE_BOOKMARK
-                                  , this.TYPE_FOLDER ].includes(item.type) }
-        , lastModified: { defaultValue: now
-                        , validIf: b => b.lastModified >= now ||
-                                        b.lastModified >= (b.dateAdded || item.dateAdded) }
-        , dateAdded: { defaultValue: item.dateAdded }
+        { url: { validIf: () => item.type == this.TYPE_BOOKMARK },
+          title: { validIf: () => [ this.TYPE_BOOKMARK,
+                                    this.TYPE_FOLDER ].includes(item.type) },
+          lastModified: { defaultValue: now,
+                          validIf: b => b.lastModified >= now ||
+                                        b.lastModified >= (b.dateAdded || item.dateAdded) },
+          dateAdded: { defaultValue: item.dateAdded }
         });
 
       return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: update",
@@ -1100,8 +1100,8 @@ function updateBookmark(info, item, newParent) {
         // Ensure a page exists in moz_places for this URL.
         await maybeInsertPlace(db, info.url);
         // Update tuples for the update query.
-        tuples.set("url", { value: info.url.href
-                          , fragment: "fk = (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url)" });
+        tuples.set("url", { value: info.url.href,
+                            fragment: "fk = (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url)" });
       }
 
       let newIndex = info.hasOwnProperty("index") ? info.index : item.index;
@@ -1159,8 +1159,8 @@ function updateBookmark(info, item, newParent) {
         }
         let needsSyncChange = tuples.size > sizeThreshold;
         if (needsSyncChange) {
-          tuples.set("syncChangeDelta", { value: syncChangeDelta
-                                        , fragment: "syncChangeCounter = syncChangeCounter + :syncChangeDelta" });
+          tuples.set("syncChangeDelta", { value: syncChangeDelta,
+                                          fragment: "syncChangeCounter = syncChangeCounter + :syncChangeDelta" });
         }
       }
 

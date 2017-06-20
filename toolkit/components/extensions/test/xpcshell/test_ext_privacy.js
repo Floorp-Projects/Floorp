@@ -229,6 +229,9 @@ add_task(async function test_privacy_other_prefs() {
     "network.peerConnectionEnabled": {
       "media.peerconnection.enabled": true,
     },
+    "services.passwordSavingEnabled": {
+      "signon.rememberSignons": true,
+    },
     "websites.referrersEnabled": {
       "network.http.sendRefererHeader": 2,
     },
@@ -334,6 +337,15 @@ add_task(async function test_privacy_other_prefs() {
   await testSetting("websites.referrersEnabled", true,
     {
       "network.http.sendRefererHeader": 2,
+    });
+
+  await testSetting("services.passwordSavingEnabled", false,
+    {
+      "signon.rememberSignons": false,
+    });
+  await testSetting("services.passwordSavingEnabled", true,
+    {
+      "signon.rememberSignons": true,
     });
 
   await extension.unload();

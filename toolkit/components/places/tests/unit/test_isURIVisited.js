@@ -68,9 +68,9 @@ function* step() {
           },
         };
 
-        history.updatePlaces({ uri
-                             , visits: [ { transitionType: transition
-                                         , visitDate:      Date.now() * 1000
+        history.updatePlaces({ uri,
+                               visits: [ { transitionType: transition,
+                                           visitDate:      Date.now() * 1000
                                          } ]
                              }, callback);
       });

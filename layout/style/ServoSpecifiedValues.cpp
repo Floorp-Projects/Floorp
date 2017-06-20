@@ -11,7 +11,7 @@ namespace {
 #define STYLE_STRUCT(name, checkdata_cb) | NS_STYLE_INHERIT_BIT(name)
 const uint64_t ALL_SIDS = 0
 #include "nsStyleStructList.h"
-;
+  ;
 #undef STYLE_STRUCT
 
 } // anonymous namespace
@@ -22,10 +22,8 @@ ServoSpecifiedValues::ServoSpecifiedValues(nsPresContext* aContext,
                                            RawServoDeclarationBlock* aDecl)
 
   : GenericSpecifiedValues(StyleBackendType::Servo, aContext, ALL_SIDS)
-  ,  mDecl(aDecl)
-{
-
-}
+  , mDecl(aDecl)
+{}
 
 bool
 ServoSpecifiedValues::PropertyIsSet(nsCSSPropertyID aId)
@@ -38,7 +36,8 @@ ServoSpecifiedValues::PropertyIsSet(nsCSSPropertyID aId)
   // in debug mode (this is O(n^2) behavior since Servo will traverse
   // the array each time you add a new property)
   MOZ_ASSERT(!Servo_DeclarationBlock_PropertyIsSet(mDecl, aId),
-             "Presentation attribute mappers should never attempt to set the same property twice");
+             "Presentation attribute mappers should never attempt to set the "
+             "same property twice");
   return false;
 }
 
@@ -47,11 +46,17 @@ ServoSpecifiedValues::SetIdentStringValue(nsCSSPropertyID aId,
                                           const nsString& aValue)
 {
   nsCOMPtr<nsIAtom> atom = NS_Atomize(aValue);
-  Servo_DeclarationBlock_SetIdentStringValue(mDecl, aId, atom);
+  SetIdentAtomValue(aId, atom);
+}
+
+void
+ServoSpecifiedValues::SetIdentAtomValue(nsCSSPropertyID aId, nsIAtom* aValue)
+{
+  Servo_DeclarationBlock_SetIdentStringValue(mDecl, aId, aValue);
   if (aId == eCSSProperty__x_lang) {
     // This forces the lang prefs result to be cached
     // so that we can access them off main thread during traversal
-    mPresContext->ForceCacheLang(atom);
+    mPresContext->ForceCacheLang(aValue);
   }
 }
 
@@ -77,7 +82,8 @@ void
 ServoSpecifiedValues::SetLengthValue(nsCSSPropertyID aId, nsCSSValue aValue)
 {
   MOZ_ASSERT(aValue.IsLengthUnit());
-  Servo_DeclarationBlock_SetLengthValue(mDecl, aId, aValue.GetFloatValue(), aValue.GetUnit());
+  Servo_DeclarationBlock_SetLengthValue(
+    mDecl, aId, aValue.GetFloatValue(), aValue.GetUnit());
 }
 
 void
@@ -127,6 +133,6 @@ ServoSpecifiedValues::SetBackgroundImage(nsAttrValue& aValue)
 {
   nsAutoString str;
   aValue.ToString(str);
-  Servo_DeclarationBlock_SetBackgroundImage(mDecl, str,
-        mPresContext->Document()->DefaultStyleAttrURLData());
+  Servo_DeclarationBlock_SetBackgroundImage(
+    mDecl, str, mPresContext->Document()->DefaultStyleAttrURLData());
 }

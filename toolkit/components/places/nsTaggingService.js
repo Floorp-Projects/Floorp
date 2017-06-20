@@ -478,9 +478,9 @@ TaggingService.prototype = {
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(TaggingService),
 
   QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsITaggingService
-  , Ci.nsINavBookmarkObserver
-  , Ci.nsIObserver
+    Ci.nsITaggingService,
+    Ci.nsINavBookmarkObserver,
+    Ci.nsIObserver
   ])
 };
 

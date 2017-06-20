@@ -50,9 +50,6 @@ module.exports = {
     // No space padding in parentheses
     "space-in-parens": ["error", "never"],
 
-    // Commas at the end of the line not the start
-    "comma-style": "error",
-
     // Functions are not required to consistently return something or nothing
     "consistent-return": "off",
 
