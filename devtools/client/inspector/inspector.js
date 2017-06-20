@@ -620,12 +620,14 @@ Inspector.prototype = {
       INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
       defaultTab == "computedview");
 
-    // Grid and layout panels aren't lazy-loaded as their module end up
-    // calling inspector.addSidebarTab
-    this.gridInspector = new GridInspector(this, this.panelWin);
+    if (Services.prefs.getBoolPref("devtools.layoutview.enabled")) {
+      // Grid and layout panels aren't lazy-loaded as their module end up
+      // calling inspector.addSidebarTab
+      this.gridInspector = new GridInspector(this, this.panelWin);
 
-    const LayoutView = this.browserRequire("devtools/client/inspector/layout/layout");
-    this.layoutview = new LayoutView(this, this.panelWin);
+      const LayoutView = this.browserRequire("devtools/client/inspector/layout/layout");
+      this.layoutview = new LayoutView(this, this.panelWin);
+    }
 
     if (this.target.form.animationsActor) {
       this.sidebar.addFrameTab(
