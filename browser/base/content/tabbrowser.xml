@@ -7049,7 +7049,8 @@
           if (dropIndex && dropIndex > draggedTab._tPos)
             dropIndex--;
 
-          if (oldTranslateX && oldTranslateX != newTranslateX) {
+          let animate = Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled");
+          if (oldTranslateX && oldTranslateX != newTranslateX && animate) {
             draggedTab.setAttribute("tabdrop-samewindow", "true");
             draggedTab.style.transform = "translateX(" + newTranslateX + "px)";
             let onTransitionEnd = transitionendEvent => {
