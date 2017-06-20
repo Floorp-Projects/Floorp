@@ -137,12 +137,12 @@ add_task(async function test_bookmark_removal() {
 
 add_task(async function test_moz_hosts_typed_update() {
   const TEST_URI = NetUtil.newURI("http://typed.mozilla.com");
-  let places = [{ uri: TEST_URI
-                , title: "test for " + TEST_URI.spec
+  let places = [{ uri: TEST_URI,
+                  title: "test for " + TEST_URI.spec
                 },
-                { uri: TEST_URI
-                , title: "test for " + TEST_URI.spec
-                , transition: TRANSITION_TYPED
+                { uri: TEST_URI,
+                  title: "test for " + TEST_URI.spec,
+                  transition: TRANSITION_TYPED
                 }];
 
   await PlacesTestUtils.addVisits(places);
@@ -153,13 +153,13 @@ add_task(async function test_moz_hosts_typed_update() {
 
 add_task(async function test_moz_hosts_www_remove() {
   async function test_removal(aURIToRemove, aURIToKeep, aCallback) {
-    let places = [{ uri: aURIToRemove
-                  , title: "test for " + aURIToRemove.spec
-                  , transition: TRANSITION_TYPED
+    let places = [{ uri: aURIToRemove,
+                    title: "test for " + aURIToRemove.spec,
+                    transition: TRANSITION_TYPED
                   },
-                  { uri: aURIToKeep
-                  , title: "test for " + aURIToKeep.spec
-                  , transition: TRANSITION_TYPED
+                  { uri: aURIToKeep,
+                    title: "test for " + aURIToKeep.spec,
+                    transition: TRANSITION_TYPED
                   }];
 
     await PlacesTestUtils.addVisits(places);
@@ -209,8 +209,8 @@ add_task(async function test_moz_hosts_update_2() {
   // rev_hosts.
   const TEST_URI_1 = NetUtil.newURI("https://www.google.it/");
   const TEST_URI_2 = NetUtil.newURI("https://google.it/");
-  let places = [{ uri: TEST_URI_1
-                , transition: TRANSITION_TYPED
+  let places = [{ uri: TEST_URI_1,
+                  transition: TRANSITION_TYPED
                 },
                 { uri: TEST_URI_2
                 }];

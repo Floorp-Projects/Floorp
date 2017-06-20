@@ -1576,6 +1576,59 @@ add_task(async function test_other_clients_notified_on_first_sync() {
   }
 });
 
+add_task(async function device_disconnected_notification_updates_known_stale_clients() {
+  const spyUpdate = sinon.spy(engine, "updateKnownStaleClients");
+  const makeFakeClient = (id) => ({ id, fxaDeviceId: `fxa-${id}` });
+  const clients = [makeFakeClient("one"), makeFakeClient("two"), makeFakeClient("three")];
+  const stubRemoteClients = sinon.stub(engine._store, "_remoteClients").get(() => {
+    return clients;
+  });
+  const stubRefresh = sinon.stub(engine, "_refreshKnownStaleClients", () => {
+    engine._knownStaleFxADeviceIds = ["fxa-one", "fxa-two"];
+  });
+
+  engine._knownStaleFxADeviceIds = null;
+  Services.obs.notifyObservers(null, "fxaccounts:device_disconnected",
+                               JSON.stringify({ isLocalDevice: false }));
+  ok(spyUpdate.calledOnce, "updateKnownStaleClients should be called");
+  ok(clients[0].stale);
+  ok(clients[1].stale);
+  ok(!clients[2].stale);
+  spyUpdate.reset();
+
+  ok(engine._knownStaleFxADeviceIds)
+  Services.obs.notifyObservers(null, "fxaccounts:device_disconnected",
+                               JSON.stringify({ isLocalDevice: false }));
+  ok(spyUpdate.calledOnce, "updateKnownStaleClients should be called");
+  spyUpdate.reset();
+
+  Services.obs.notifyObservers(null, "fxaccounts:device_disconnected",
+                               JSON.stringify({ isLocalDevice: true }));
+  ok(spyUpdate.notCalled, "updateKnownStaleClients should not be called");
+
+  stubRemoteClients.restore();
+  spyUpdate.restore();
+  stubRefresh.restore();
+});
+
+add_task(async function process_incoming_refreshes_known_stale_clients() {
+  const stubProcessIncoming = sinon.stub(SyncEngine.prototype, "_processIncoming");
+  const stubRefresh = sinon.stub(engine, "_refreshKnownStaleClients", () => {
+    engine._knownStaleFxADeviceIds = ["one", "two"];
+  });
+
+  engine._knownStaleFxADeviceIds = null;
+  engine._processIncoming();
+  ok(stubRefresh.calledOnce, "Should refresh the known stale clients");
+  stubRefresh.reset();
+
+  engine._processIncoming();
+  ok(stubRefresh.notCalled, "Should not refresh the known stale clients since it's already populated");
+
+  stubProcessIncoming.restore();
+  stubRefresh.restore();
+});
+
 function run_test() {
   initTestLogging("Trace");
   Log.repository.getLogger("Sync.Engine.Clients").level = Log.Level.Trace;

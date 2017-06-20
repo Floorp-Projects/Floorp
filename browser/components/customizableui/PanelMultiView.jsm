@@ -167,9 +167,6 @@ this.PanelMultiView = class {
   get _mainView() {
     return this._mainViewId ? this.document.getElementById(this._mainViewId) : null;
   }
-  get showingSubViewAsMainView() {
-    return this.node.getAttribute("mainViewIsSubView") == "true";
-  }
 
   get _transitioning() {
     return this.__transitioning;
@@ -460,6 +457,7 @@ this.PanelMultiView = class {
       };
 
       // Make sure that new panels always have a title set.
+      let cancel = false;
       if (this.panelViews && aAnchor) {
         if (aAnchor && !viewNode.hasAttribute("title"))
           viewNode.setAttribute("title", aAnchor.getAttribute("label"));
@@ -468,17 +466,17 @@ this.PanelMultiView = class {
         if (custWidget) {
           if (custWidget.onInit)
             custWidget.onInit(aAnchor);
-          custWidget.onViewShowing({ target: aAnchor, detail });
+          custWidget.onViewShowing({ target: viewNode, preventDefault: () => cancel = true, detail });
         }
       }
-      viewNode.setAttribute("current", true);
       if (this.panelViews && this._mainViewWidth)
         viewNode.style.maxWidth = viewNode.style.minWidth = this._mainViewWidth + "px";
 
       let evt = new window.CustomEvent("ViewShowing", { bubbles: true, cancelable: true, detail });
       viewNode.dispatchEvent(evt);
 
-      let cancel = evt.defaultPrevented;
+      if (!cancel)
+        cancel = evt.defaultPrevented;
       if (detail.blockers.size) {
         try {
           let results = await Promise.all(detail.blockers);
@@ -494,6 +492,7 @@ this.PanelMultiView = class {
       }
 
       this._currentSubView = viewNode;
+      viewNode.setAttribute("current", true);
       if (this.panelViews) {
         this.node.setAttribute("viewtype", "subview");
         if (!playTransition)
@@ -625,8 +624,8 @@ this.PanelMultiView = class {
 
                 this._viewContainer.removeAttribute("transition-reverse");
 
-                evt = new window.CustomEvent("ViewShown", { bubbles: true, cancelable: false });
-                viewNode.dispatchEvent(evt);
+                viewNode.dispatchEvent(new window.CustomEvent("ViewShown",
+                  { bubbles: true, cancelable: false }));
               }, { once: true });
             });
           }, { once: true });
@@ -638,6 +637,8 @@ this.PanelMultiView = class {
           // Now that the subview is visible, we can check the height of the
           // description elements it contains.
           this.descriptionHeightWorkaround(viewNode);
+          viewNode.dispatchEvent(new window.CustomEvent("ViewShown",
+            { bubbles: true, cancelable: false }));
         });
         this._shiftMainView(aAnchor);
       }

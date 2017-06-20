@@ -105,6 +105,16 @@ ExtensionPreferencesManager.addSetting("network.webRTCIPHandlingPolicy", {
   },
 });
 
+ExtensionPreferencesManager.addSetting("services.passwordSavingEnabled", {
+  prefNames: [
+    "signon.rememberSignons",
+  ],
+
+  setCallback(value) {
+    return {[this.prefNames[0]]: value};
+  },
+});
+
 ExtensionPreferencesManager.addSetting("websites.hyperlinkAuditingEnabled", {
   prefNames: [
     "browser.send_pings",
@@ -166,6 +176,15 @@ this.privacy = class extends ExtensionAPI {
               return "default";
             }),
         },
+
+        services: {
+          passwordSavingEnabled: getAPI(extension,
+            "services.passwordSavingEnabled",
+            () => {
+              return Preferences.get("signon.rememberSignons");
+            }),
+        },
+
         websites: {
           hyperlinkAuditingEnabled: getAPI(extension,
             "websites.hyperlinkAuditingEnabled",

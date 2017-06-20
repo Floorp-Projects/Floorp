@@ -20,7 +20,9 @@
 
 namespace mozilla {
 
-MOZ_DEFINE_STYLO_METHODS(GenericSpecifiedValues, nsRuleData, ServoSpecifiedValues)
+MOZ_DEFINE_STYLO_METHODS(GenericSpecifiedValues,
+                         nsRuleData,
+                         ServoSpecifiedValues)
 
 bool
 GenericSpecifiedValues::PropertyIsSet(nsCSSPropertyID aId)
@@ -29,15 +31,34 @@ GenericSpecifiedValues::PropertyIsSet(nsCSSPropertyID aId)
 }
 
 void
-GenericSpecifiedValues::SetIdentStringValue(nsCSSPropertyID aId, const nsString& aValue)
+GenericSpecifiedValues::SetIdentStringValue(nsCSSPropertyID aId,
+                                            const nsString& aValue)
 {
   MOZ_STYLO_FORWARD(SetIdentStringValue, (aId, aValue))
 }
 
 void
-GenericSpecifiedValues::SetIdentStringValueIfUnset(nsCSSPropertyID aId, const nsString& aValue)
+GenericSpecifiedValues::SetIdentStringValueIfUnset(nsCSSPropertyID aId,
+                                                   const nsString& aValue)
 {
-  MOZ_STYLO_FORWARD(SetIdentStringValueIfUnset, (aId, aValue))
+  if (!PropertyIsSet(aId)) {
+    SetIdentStringValue(aId, aValue);
+  }
+}
+
+void
+GenericSpecifiedValues::SetIdentAtomValue(nsCSSPropertyID aId, nsIAtom* aValue)
+{
+  MOZ_STYLO_FORWARD(SetIdentAtomValue, (aId, aValue))
+}
+
+void
+GenericSpecifiedValues::SetIdentAtomValueIfUnset(nsCSSPropertyID aId,
+                                                 nsIAtom* aValue)
+{
+  if (!PropertyIsSet(aId)) {
+    SetIdentAtomValue(aId, aValue);
+  }
 }
 
 void
@@ -47,12 +68,14 @@ GenericSpecifiedValues::SetKeywordValue(nsCSSPropertyID aId, int32_t aValue)
   // won't work with the overloaded SetKeywordValue function,
   // so we copy its expansion and use SetIntValue for decltype
   // instead
-  static_assert(!mozilla::IsSame<decltype(&MOZ_STYLO_THIS_TYPE::SetIntValue),
-                 decltype(&MOZ_STYLO_GECKO_TYPE::SetKeywordValue)>
-        ::value, "Gecko subclass should define its own SetKeywordValue");
-  static_assert(!mozilla::IsSame<decltype(&MOZ_STYLO_THIS_TYPE::SetIntValue),
-                 decltype(&MOZ_STYLO_SERVO_TYPE::SetKeywordValue)>
-        ::value, "Servo subclass should define its own SetKeywordValue");
+  static_assert(
+    !mozilla::IsSame<decltype(&MOZ_STYLO_THIS_TYPE::SetIntValue),
+                     decltype(&MOZ_STYLO_GECKO_TYPE::SetKeywordValue)>::value,
+    "Gecko subclass should define its own SetKeywordValue");
+  static_assert(
+    !mozilla::IsSame<decltype(&MOZ_STYLO_THIS_TYPE::SetIntValue),
+                     decltype(&MOZ_STYLO_SERVO_TYPE::SetKeywordValue)>::value,
+    "Servo subclass should define its own SetKeywordValue");
 
   if (IsServo()) {
     return AsServo()->SetKeywordValue(aId, aValue);
@@ -61,23 +84,12 @@ GenericSpecifiedValues::SetKeywordValue(nsCSSPropertyID aId, int32_t aValue)
 }
 
 void
-GenericSpecifiedValues::SetKeywordValueIfUnset(nsCSSPropertyID aId, int32_t aValue)
+GenericSpecifiedValues::SetKeywordValueIfUnset(nsCSSPropertyID aId,
+                                               int32_t aValue)
 {
-  // there are some static asserts in MOZ_STYLO_FORWARD which
-  // won't work with the overloaded SetKeywordValue function,
-  // so we copy its expansion and use SetIntValue for decltype
-  // instead
-  static_assert(!mozilla::IsSame<decltype(&MOZ_STYLO_THIS_TYPE::SetIntValue),
-                 decltype(&MOZ_STYLO_GECKO_TYPE::SetKeywordValueIfUnset)>
-        ::value, "Gecko subclass should define its own SetKeywordValueIfUnset");
-  static_assert(!mozilla::IsSame<decltype(&MOZ_STYLO_THIS_TYPE::SetIntValue),
-                 decltype(&MOZ_STYLO_SERVO_TYPE::SetKeywordValueIfUnset)>
-        ::value, "Servo subclass should define its own SetKeywordValueIfUnset");
-
-  if (IsServo()) {
-    return AsServo()->SetKeywordValueIfUnset(aId, aValue);
+  if (!PropertyIsSet(aId)) {
+    SetKeywordValue(aId, aValue);
   }
-  return AsGecko()->SetKeywordValueIfUnset(aId, aValue);
 }
 
 void
@@ -95,7 +107,9 @@ GenericSpecifiedValues::SetPixelValue(nsCSSPropertyID aId, float aValue)
 void
 GenericSpecifiedValues::SetPixelValueIfUnset(nsCSSPropertyID aId, float aValue)
 {
-  MOZ_STYLO_FORWARD(SetPixelValueIfUnset, (aId, aValue))
+  if (!PropertyIsSet(aId)) {
+    SetPixelValue(aId, aValue);
+  }
 }
 
 void
@@ -117,9 +131,12 @@ GenericSpecifiedValues::SetPercentValue(nsCSSPropertyID aId, float aValue)
 }
 
 void
-GenericSpecifiedValues::SetPercentValueIfUnset(nsCSSPropertyID aId, float aValue)
+GenericSpecifiedValues::SetPercentValueIfUnset(nsCSSPropertyID aId,
+                                               float aValue)
 {
-  MOZ_STYLO_FORWARD(SetPercentValueIfUnset, (aId, aValue))
+  if (!PropertyIsSet(aId)) {
+    SetPercentValue(aId, aValue);
+  }
 }
 
 void
@@ -131,7 +148,9 @@ GenericSpecifiedValues::SetAutoValue(nsCSSPropertyID aId)
 void
 GenericSpecifiedValues::SetAutoValueIfUnset(nsCSSPropertyID aId)
 {
-  MOZ_STYLO_FORWARD(SetAutoValueIfUnset, (aId))
+  if (!PropertyIsSet(aId)) {
+    SetAutoValue(aId);
+  }
 }
 
 void
@@ -143,7 +162,9 @@ GenericSpecifiedValues::SetCurrentColor(nsCSSPropertyID aId)
 void
 GenericSpecifiedValues::SetCurrentColorIfUnset(nsCSSPropertyID aId)
 {
-  MOZ_STYLO_FORWARD(SetCurrentColorIfUnset, (aId))
+  if (!PropertyIsSet(aId)) {
+    SetCurrentColor(aId);
+  }
 }
 
 void
@@ -153,9 +174,12 @@ GenericSpecifiedValues::SetColorValue(nsCSSPropertyID aId, nscolor aValue)
 }
 
 void
-GenericSpecifiedValues::SetColorValueIfUnset(nsCSSPropertyID aId, nscolor aValue)
+GenericSpecifiedValues::SetColorValueIfUnset(nsCSSPropertyID aId,
+                                             nscolor aValue)
 {
-  MOZ_STYLO_FORWARD(SetColorValueIfUnset, (aId, aValue))
+  if (!PropertyIsSet(aId)) {
+    SetColorValue(aId, aValue);
+  }
 }
 
 void

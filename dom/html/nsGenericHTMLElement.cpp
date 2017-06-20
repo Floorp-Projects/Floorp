@@ -1219,17 +1219,17 @@ MapLangAttributeInto(const nsMappedAttributes* aAttributes, GenericSpecifiedValu
   }
 
   const nsAttrValue* langValue = aAttributes->GetAttr(nsGkAtoms::lang);
-  if (!langValue || langValue->Type() != nsAttrValue::eString) {
+  if (!langValue) {
     return;
   }
-
+  MOZ_ASSERT(langValue->Type() == nsAttrValue::eAtom);
   if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Font))) {
-    aData->SetIdentStringValueIfUnset(eCSSProperty__x_lang,
-                                      langValue->GetStringValue());
+    aData->SetIdentAtomValueIfUnset(eCSSProperty__x_lang,
+                                    langValue->GetAtomValue());
   }
   if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Text))) {
     if (!aData->PropertyIsSet(eCSSProperty_text_emphasis_position)) {
-      const nsAString& lang = langValue->GetStringValue();
+      const nsIAtom* lang = langValue->GetAtomValue();
       if (nsStyleUtil::MatchesLanguagePrefix(lang, u"zh")) {
         aData->SetKeywordValue(eCSSProperty_text_emphasis_position,
                                NS_STYLE_TEXT_EMPHASIS_POSITION_DEFAULT_ZH);

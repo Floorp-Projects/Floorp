@@ -642,16 +642,16 @@ var PlacesOrganizer = {
     if (selectedNode && !PlacesUtils.nodeIsSeparator(selectedNode)) {
       detailsDeck.selectedIndex = 1;
 
-      gEditItemOverlay.initPanel({ node: selectedNode
-                                 , hiddenRows: ["folderPicker"] });
+      gEditItemOverlay.initPanel({ node: selectedNode,
+                                   hiddenRows: ["folderPicker"] });
 
       this._detectAndSetDetailsPaneMinimalState(selectedNode);
     } else if (!selectedNode && aNodeList[0]) {
       if (aNodeList.every(PlacesUtils.nodeIsURI)) {
         let uris = aNodeList.map(node => PlacesUtils._uri(node.uri));
         detailsDeck.selectedIndex = 1;
-        gEditItemOverlay.initPanel({ uris
-                                   , hiddenRows: ["folderPicker",
+        gEditItemOverlay.initPanel({ uris,
+                                     hiddenRows: ["folderPicker",
                                                   "loadInSidebar",
                                                   "location",
                                                   "keyword",

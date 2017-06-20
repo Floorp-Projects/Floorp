@@ -1086,11 +1086,11 @@ nsPlacesExpiration.prototype = {
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(nsPlacesExpiration),
 
   QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIObserver
-  , Ci.nsINavHistoryObserver
-  , Ci.nsITimerCallback
-  , Ci.mozIStorageStatementCallback
-  , Ci.nsISupportsWeakReference
+    Ci.nsIObserver,
+    Ci.nsINavHistoryObserver,
+    Ci.nsITimerCallback,
+    Ci.mozIStorageStatementCallback,
+    Ci.nsISupportsWeakReference
   ])
 };
 

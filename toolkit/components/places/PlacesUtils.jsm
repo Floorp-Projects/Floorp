@@ -4,25 +4,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 this.EXPORTED_SYMBOLS = [
-  "PlacesUtils"
-, "PlacesAggregatedTransaction"
-, "PlacesCreateFolderTransaction"
-, "PlacesCreateBookmarkTransaction"
-, "PlacesCreateSeparatorTransaction"
-, "PlacesCreateLivemarkTransaction"
-, "PlacesMoveItemTransaction"
-, "PlacesRemoveItemTransaction"
-, "PlacesEditItemTitleTransaction"
-, "PlacesEditBookmarkURITransaction"
-, "PlacesSetItemAnnotationTransaction"
-, "PlacesSetPageAnnotationTransaction"
-, "PlacesEditBookmarkKeywordTransaction"
-, "PlacesEditBookmarkPostDataTransaction"
-, "PlacesEditItemDateAddedTransaction"
-, "PlacesEditItemLastModifiedTransaction"
-, "PlacesSortFolderByNameTransaction"
-, "PlacesTagURITransaction"
-, "PlacesUntagURITransaction"
+  "PlacesUtils",
+  "PlacesAggregatedTransaction",
+  "PlacesCreateFolderTransaction",
+  "PlacesCreateBookmarkTransaction",
+  "PlacesCreateSeparatorTransaction",
+  "PlacesCreateLivemarkTransaction",
+  "PlacesMoveItemTransaction",
+  "PlacesRemoveItemTransaction",
+  "PlacesEditItemTitleTransaction",
+  "PlacesEditBookmarkURITransaction",
+  "PlacesSetItemAnnotationTransaction",
+  "PlacesSetPageAnnotationTransaction",
+  "PlacesEditBookmarkKeywordTransaction",
+  "PlacesEditBookmarkPostDataTransaction",
+  "PlacesEditItemDateAddedTransaction",
+  "PlacesEditItemLastModifiedTransaction",
+  "PlacesSortFolderByNameTransaction",
+  "PlacesTagURITransaction",
+  "PlacesUntagURITransaction"
 ];
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
@@ -227,9 +227,9 @@ const BOOKMARK_VALIDATORS = Object.freeze({
   dateAdded: simpleValidateFunc(v => v.constructor.name == "Date"),
   lastModified: simpleValidateFunc(v => v.constructor.name == "Date"),
   type: simpleValidateFunc(v => Number.isInteger(v) &&
-                                [ PlacesUtils.bookmarks.TYPE_BOOKMARK
-                                , PlacesUtils.bookmarks.TYPE_FOLDER
-                                , PlacesUtils.bookmarks.TYPE_SEPARATOR ].includes(v)),
+                                [ PlacesUtils.bookmarks.TYPE_BOOKMARK,
+                                  PlacesUtils.bookmarks.TYPE_FOLDER,
+                                  PlacesUtils.bookmarks.TYPE_SEPARATOR ].includes(v)),
   title: v => {
     simpleValidateFunc(val => val === null || typeof(val) == "string").call(this, v);
     if (!v)
@@ -584,8 +584,8 @@ this.PlacesUtils = {
   SYNC_CHANGE_RECORD_VALIDATORS,
 
   QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIObserver
-  , Ci.nsITransactionListener
+    Ci.nsIObserver,
+    Ci.nsITransactionListener
   ]),
 
   _shutdownFunctions: [],
@@ -1952,10 +1952,10 @@ this.PlacesUtils = {
         try {
           // This is the first row.
           rootItem = item = await createItemInfoObject(row, true);
-          Object.defineProperty(rootItem, "itemsCount", { value: 1
-                                                        , writable: true
-                                                        , enumerable: false
-                                                        , configurable: false });
+          Object.defineProperty(rootItem, "itemsCount", { value: 1,
+                                                          writable: true,
+                                                          enumerable: false,
+                                                          configurable: false });
         } catch (ex) {
           throw new Error("Failed to fetch the data for the root item " + ex);
         }
@@ -3051,11 +3051,11 @@ PlacesCreateLivemarkTransaction.prototype = {
 
   doTransaction: function CLTXN_doTransaction() {
     this._promise = PlacesUtils.livemarks.addLivemark(
-      { title: this.item.title
-      , feedURI: this.item.feedURI
-      , parentId: this.item.parentId
-      , index: this.item.index
-      , siteURI: this.item.siteURI
+      { title: this.item.title,
+        feedURI: this.item.feedURI,
+        parentId: this.item.parentId,
+        index: this.item.index,
+        siteURI: this.item.siteURI
       }).then(aLivemark => {
         this.item.id = aLivemark.id;
         if (this.item.annotations && this.item.annotations.length > 0) {
@@ -3122,12 +3122,12 @@ PlacesRemoveLivemarkTransaction.prototype = {
     // is used just to serialize, so doesn't matter.
     PlacesUtils.livemarks.getLivemark({ id: this.item.id })
       .then(null, () => {
-        PlacesUtils.livemarks.addLivemark({ parentId: this.item.parentId
-                                          , title: this.item.title
-                                          , siteURI: this.item.siteURI
-                                          , feedURI: this.item.feedURI
-                                          , index: this.item.index
-                                          , lastModified: this.item.lastModified
+        PlacesUtils.livemarks.addLivemark({ parentId: this.item.parentId,
+                                            title: this.item.title,
+                                            siteURI: this.item.siteURI,
+                                            feedURI: this.item.feedURI,
+                                            index: this.item.index,
+                                            lastModified: this.item.lastModified
                                           }).then(
           aLivemark => {
             let itemId = aLivemark.id;
