@@ -159,6 +159,12 @@ Gecko_IsSignificantChild(RawGeckoNodeBorrowed aNode, bool aTextIsSignificant,
 }
 
 RawGeckoNodeBorrowedOrNull
+Gecko_GetLastChild(RawGeckoNodeBorrowed aNode)
+{
+  return aNode->GetLastChild();
+}
+
+RawGeckoNodeBorrowedOrNull
 Gecko_GetFlattenedTreeParentNode(RawGeckoNodeBorrowed aNode)
 {
   MOZ_ASSERT(!FlattenedTreeParentIsParent<nsIContent::eForStyle>(aNode),
@@ -166,60 +172,6 @@ Gecko_GetFlattenedTreeParentNode(RawGeckoNodeBorrowed aNode)
   MOZ_ASSERT(aNode->IsContent(), "Slow path only applies to content");
   const nsIContent* c = aNode->AsContent();
   return c->GetFlattenedTreeParentNodeInternal(nsIContent::eForStyle);
-}
-
-RawGeckoNodeBorrowedOrNull
-Gecko_GetFirstChild(RawGeckoNodeBorrowed aNode)
-{
-  return aNode->GetFirstChild();
-}
-
-RawGeckoNodeBorrowedOrNull
-Gecko_GetLastChild(RawGeckoNodeBorrowed aNode)
-{
-  return aNode->GetLastChild();
-}
-
-RawGeckoNodeBorrowedOrNull
-Gecko_GetPrevSibling(RawGeckoNodeBorrowed aNode)
-{
-  return aNode->GetPreviousSibling();
-}
-
-RawGeckoNodeBorrowedOrNull
-Gecko_GetNextSibling(RawGeckoNodeBorrowed aNode)
-{
-  return aNode->GetNextSibling();
-}
-
-RawGeckoElementBorrowedOrNull
-Gecko_GetFirstChildElement(RawGeckoElementBorrowed aElement)
-{
-  return aElement->GetFirstElementChild();
-}
-
-RawGeckoElementBorrowedOrNull
-Gecko_GetLastChildElement(RawGeckoElementBorrowed aElement)
-{
-  return aElement->GetLastElementChild();
-}
-
-RawGeckoElementBorrowedOrNull
-Gecko_GetPrevSiblingElement(RawGeckoElementBorrowed aElement)
-{
-  return aElement->GetPreviousElementSibling();
-}
-
-RawGeckoElementBorrowedOrNull
-Gecko_GetNextSiblingElement(RawGeckoElementBorrowed aElement)
-{
-  return aElement->GetNextElementSibling();
-}
-
-RawGeckoElementBorrowedOrNull
-Gecko_GetDocumentElement(RawGeckoDocumentBorrowed aDoc)
-{
-  return aDoc->GetDocumentElement();
 }
 
 RawGeckoElementBorrowedOrNull
@@ -272,16 +224,15 @@ Gecko_DropStyleChildrenIterator(StyleChildrenIteratorOwned aIterator)
   delete aIterator;
 }
 
-bool
-Gecko_ElementHasBindingWithAnonymousContent(RawGeckoElementBorrowed aElement)
+nsIContent*
+Gecko_ElementBindingAnonymousContent(RawGeckoElementBorrowed aElement)
 {
-  if (!aElement->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-    return false;
-  }
-
+  MOZ_ASSERT(aElement->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR));
   nsBindingManager* manager = aElement->OwnerDoc()->BindingManager();
-  nsXBLBinding* binding = manager->GetBindingWithContent(aElement);
-  return binding && binding->GetAnonymousContent();
+  if (nsXBLBinding* binding = manager->GetBindingWithContent(aElement)) {
+    return binding->GetAnonymousContent();
+  }
+  return nullptr;
 }
 
 RawGeckoNodeBorrowed
