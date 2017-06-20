@@ -196,14 +196,12 @@ ServoStyleSheet::LoadFailed()
 nsresult
 ServoStyleSheet::ReparseSheet(const nsAString& aInput)
 {
-  // TODO(kuoe0): Bug 1367996 - Need to call document notification
-  // (StyleRuleAdded() and StyleRuleRemoved()) like what we do in
-  // CSSStyleSheet::ReparseSheet().
-
   if (!mInner->mComplete) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
+  // Hold strong ref to the CSSLoader in case the document update
+  // kills the document
   RefPtr<css::Loader> loader;
   if (mDocument) {
     loader = mDocument->CSSLoader();
@@ -211,6 +209,10 @@ ServoStyleSheet::ReparseSheet(const nsAString& aInput)
   } else {
     loader = new css::Loader(StyleBackendType::Servo, nullptr);
   }
+
+  mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
+
+  WillDirty();
 
   // cache child sheets to reuse
   css::LoaderReusableStyleSheets reusableSheets;
@@ -238,10 +240,63 @@ ServoStyleSheet::ReparseSheet(const nsAString& aInput)
     }
   }
 
+  // Notify mDocument that all our rules are removed.
+  if (mDocument) {
+    // Get the rule list.
+    ServoCSSRuleList* ruleList = GetCssRulesInternal();
+    MOZ_ASSERT(ruleList);
+
+    uint32_t ruleCount = ruleList->Length();
+    for (uint32_t i = 0; i < ruleCount; ++i) {
+      css::Rule* rule = ruleList->GetRule(i);
+      MOZ_ASSERT(rule);
+      if (rule->GetType() == css::Rule::IMPORT_RULE &&
+          RuleHasPendingChildSheet(rule)) {
+        continue; // notify when loaded (see StyleSheetLoaded)
+      }
+      mDocument->StyleRuleRemoved(this, rule);
+
+      // Document observers could possibly detach document from this sheet.
+      if (!mDocument) {
+        // If detached, don't process any more rules.
+        break;
+      }
+    }
+  }
+
+  DropRuleList();
+
   nsresult rv = ParseSheet(loader, aInput, mInner->mSheetURI, mInner->mBaseURI,
                            mInner->mPrincipal, lineNumber,
                            eCompatibility_FullStandards, &reusableSheets);
+  DidDirty();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Notify mDocument that all our new rules are added.
+  if (mDocument) {
+    // Get the rule list (which will need to be regenerated after ParseSheet).
+    ServoCSSRuleList* ruleList = GetCssRulesInternal();
+    MOZ_ASSERT(ruleList);
+
+    uint32_t ruleCount = ruleList->Length();
+    for (uint32_t i = 0; i < ruleCount; ++i) {
+      css::Rule* rule = ruleList->GetRule(i);
+      MOZ_ASSERT(rule);
+      if (rule->GetType() == css::Rule::IMPORT_RULE &&
+          RuleHasPendingChildSheet(rule)) {
+        continue; // notify when loaded (see StyleSheetLoaded)
+      }
+
+      mDocument->StyleRuleAdded(this, rule);
+
+      // Document observers could possibly detach document from this sheet.
+      if (!mDocument) {
+        // If detached, don't process any more rules.
+        break;
+      }
+    }
+  }
+
   return NS_OK;
 }
 
