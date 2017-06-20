@@ -858,17 +858,12 @@ ContentParent::GetNewOrUsedBrowserProcess(const nsAString& aRemoteType,
     }
 
     // Try to take the preallocated process only for the default process type.
-    // The preallocated process manager might not had the chance yet to release the process
-    // after a very recent ShutDownProcess, let's make sure we don't try to reuse a process
-    // that is being shut down.
     RefPtr<ContentParent> p;
     if (aRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE) &&
-        (p = PreallocatedProcessManager::Take()) &&
-        !p->mShutdownPending) {
+        (p = PreallocatedProcessManager::Take())) {
       // For pre-allocated process we have not set the opener yet.
       p->mOpener = aOpener;
       contentParents.AppendElement(p);
-      p->mActivateTS = TimeStamp::Now();
       return p.forget();
     }
   }
@@ -883,7 +878,6 @@ ContentParent::GetNewOrUsedBrowserProcess(const nsAString& aRemoteType,
   p->Init();
 
   contentParents.AppendElement(p);
-  p->mActivateTS = TimeStamp::Now();
   return p.forget();
 }
 
@@ -1524,7 +1518,7 @@ ContentParent::ShutDownMessageManager()
 }
 
 void
-ContentParent::RemoveFromList()
+ContentParent::MarkAsTroubled()
 {
   if (IsForJSPlugin()) {
     if (sJSPluginContentParents) {
@@ -1556,12 +1550,6 @@ ContentParent::RemoveFromList()
       sPrivateContent = nullptr;
     }
   }
-}
-
-void
-ContentParent::MarkAsTroubled()
-{
-  RemoveFromList();
   mIsAvailable = false;
 }
 
@@ -1863,26 +1851,6 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
 }
 
 bool
-ContentParent::TryToRecycle()
-{
-  // This life time check should be replaced by a memory health check (memory usage + fragmentation).
-  const double kMaxLifeSpan = 5;
-  if (mShutdownPending ||
-      mCalledKillHard ||
-      !IsAvailable() ||
-      !mRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE) ||
-      (TimeStamp::Now() - mActivateTS).ToSeconds() > kMaxLifeSpan ||
-      !PreallocatedProcessManager::Provide(this)) {
-    return false;
-  }
-
-  // The PreallocatedProcessManager took over the ownership let's not keep a reference to it,
-  // until we don't take it back.
-  RemoveFromList();
-  return true;
-}
-
-bool
 ContentParent::ShouldKeepProcessAlive() const
 {
   if (IsForJSPlugin()) {
@@ -1944,10 +1912,6 @@ ContentParent::NotifyTabDestroying(const TabId& aTabId,
       return;
     }
 
-    if (cp->TryToRecycle()) {
-      return;
-    }
-
     // We're dying now, so prevent this content process from being
     // recycled during its shutdown procedure.
     cp->MarkAsDead();
@@ -1997,7 +1961,7 @@ ContentParent::NotifyTabDestroyed(const TabId& aTabId,
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
   nsTArray<TabId> tabIds = cpm->GetTabParentsByProcessId(this->ChildID());
 
-  if (tabIds.Length() == 1 && !ShouldKeepProcessAlive() && !TryToRecycle()) {
+  if (tabIds.Length() == 1 && !ShouldKeepProcessAlive()) {
     // In the case of normal shutdown, send a shutdown message to child to
     // allow it to perform shutdown tasks.
     MessageLoop::current()->PostTask(NewRunnableMethod
@@ -2130,7 +2094,6 @@ ContentParent::ContentParent(ContentParent* aOpener,
   : nsIContentParent()
   , mSubprocess(nullptr)
   , mLaunchTS(TimeStamp::Now())
-  , mActivateTS(TimeStamp::Now())
   , mOpener(aOpener)
   , mRemoteType(aRemoteType)
   , mChildID(gContentChildID++)
