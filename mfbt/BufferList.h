@@ -22,6 +22,8 @@
 // buffers may be of unequal size. Like SegmentedVector, BufferList is a nice
 // way to avoid large contiguous allocations (which can trigger OOMs).
 
+class InfallibleAllocPolicy;
+
 namespace mozilla {
 
 template<typename AllocPolicy>
@@ -64,9 +66,11 @@ class BufferList : private AllocPolicy
   static const size_t kSegmentAlignment = 8;
 
   // Allocate a BufferList. The BufferList will free all its buffers when it is
-  // destroyed. An initial buffer of size aInitialSize and capacity
-  // aInitialCapacity is allocated automatically. This data will be contiguous
-  // an can be accessed via |Start()|. Subsequent buffers will be allocated with
+  // destroyed. If an infallible allocator is used, an initial buffer of size
+  // aInitialSize and capacity aInitialCapacity is allocated automatically. This
+  // data will be contiguous and can be accessed via |Start()|. If a fallible
+  // alloc policy is used, aInitialSize must be 0, and the fallible |Init()|
+  // method may be called instead. Subsequent buffers will be allocated with
   // capacity aStandardCapacity.
   BufferList(size_t aInitialSize,
              size_t aInitialCapacity,
@@ -82,6 +86,10 @@ class BufferList : private AllocPolicy
     MOZ_ASSERT(aStandardCapacity % kSegmentAlignment == 0);
 
     if (aInitialCapacity) {
+      MOZ_ASSERT((aInitialSize == 0 || IsSame<AllocPolicy, InfallibleAllocPolicy>::value),
+                 "BufferList may only be constructed with an initial size when "
+                 "using an infallible alloc policy");
+
       AllocateSegment(aInitialSize, aInitialCapacity);
     }
   }
@@ -114,6 +122,17 @@ class BufferList : private AllocPolicy
 
   ~BufferList() { Clear(); }
 
+  // Initializes the BufferList with a segment of the given size and capacity.
+  // May only be called once, before any segments have been allocated.
+  bool Init(size_t aInitialSize, size_t aInitialCapacity)
+  {
+    MOZ_ASSERT(mSegments.empty());
+    MOZ_ASSERT(aInitialCapacity != 0);
+    MOZ_ASSERT(aInitialCapacity % kSegmentAlignment == 0);
+
+    return AllocateSegment(aInitialSize, aInitialCapacity);
+  }
+
   // Returns the sum of the sizes of all the buffers.
   size_t Size() const { return mSize; }
 
@@ -134,7 +153,7 @@ class BufferList : private AllocPolicy
   class IterImpl
   {
     // Invariants:
-    //   (0) mSegment <= bufferList.mSegments.size()
+    //   (0) mSegment <= bufferList.mSegments.length()
     //   (1) mData <= mDataEnd
     //   (2) If mSegment is not the last segment, mData < mDataEnd
     uintptr_t mSegment;
@@ -254,7 +273,11 @@ class BufferList : private AllocPolicy
   };
 
   // Special convenience method that returns Iter().Data().
-  char* Start() { return mSegments[0].mData; }
+  char* Start()
+  {
+    MOZ_RELEASE_ASSERT(!mSegments.empty());
+    return mSegments[0].mData;
+  }
   const char* Start() const { return mSegments[0].mData; }
 
   IterImpl Iter() const { return IterImpl(*this); }
@@ -321,6 +344,7 @@ private:
   char* AllocateSegment(size_t aSize, size_t aCapacity)
   {
     MOZ_RELEASE_ASSERT(mOwning);
+    MOZ_ASSERT(aCapacity != 0);
     MOZ_ASSERT(aSize <= aCapacity);
 
     char* data = this->template pod_malloc<char>(aCapacity);
