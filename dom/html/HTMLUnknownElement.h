@@ -7,6 +7,7 @@
 #define mozilla_dom_HTMLUnknownElement_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/EventStates.h"
 #include "nsGenericHTMLElement.h"
 
 namespace mozilla {
@@ -27,6 +28,7 @@ public:
     : nsGenericHTMLElement(aNodeInfo)
   {
     if (NodeInfo()->Equals(nsGkAtoms::bdi)) {
+      AddStatesSilently(NS_EVENT_STATE_DIR_ATTR_LIKE_AUTO);
       SetHasDirAuto();
     }
   }
