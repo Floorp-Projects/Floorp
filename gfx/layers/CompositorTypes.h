@@ -174,6 +174,7 @@ struct TextureFactoryIdentifier
   bool mSupportsTextureBlitting;
   bool mSupportsPartialUploads;
   bool mSupportsComponentAlpha;
+  bool mSupportsBackdropCopyForComponentAlpha;
   SyncHandle mSyncHandle;
 
   explicit TextureFactoryIdentifier(LayersBackend aLayersBackend = LayersBackend::LAYERS_NONE,
@@ -191,6 +192,7 @@ struct TextureFactoryIdentifier
     , mSupportsTextureBlitting(aSupportsTextureBlitting)
     , mSupportsPartialUploads(aSupportsPartialUploads)
     , mSupportsComponentAlpha(aSupportsComponentAlpha)
+    , mSupportsBackdropCopyForComponentAlpha(true)
     , mSyncHandle(aSyncHandle)
   {}
 };
