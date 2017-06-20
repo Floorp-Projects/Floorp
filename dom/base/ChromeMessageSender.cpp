@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ChromeMessageSender.h"
+#include "mozilla/dom/MessageManagerBinding.h"
 
 namespace mozilla {
 namespace dom {
@@ -25,6 +26,15 @@ ChromeMessageSender::ChromeMessageSender(ipc::MessageManagerCallback* aCallback,
   if (aParentManager && mCallback) {
     aParentManager->AddChildManager(this);
   }
+}
+
+JSObject*
+ChromeMessageSender::WrapObject(JSContext* aCx,
+                                JS::Handle<JSObject*> aGivenProto)
+{
+  MOZ_ASSERT(nsContentUtils::IsSystemCaller(aCx));
+
+  return ChromeMessageSenderBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

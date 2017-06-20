@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ChromeMessageBroadcaster.h"
+#include "AccessCheck.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/dom/MessageManagerBinding.h"
 
 namespace mozilla {
 namespace dom {
@@ -30,6 +32,15 @@ ChromeMessageBroadcaster::~ChromeMessageBroadcaster()
   if (mIsProcessManager) {
     mozilla::DropJSObjects(this);
   }
+}
+
+JSObject*
+ChromeMessageBroadcaster::WrapObject(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGivenProto)
+{
+  MOZ_ASSERT(nsContentUtils::IsSystemCaller(aCx));
+
+  return ChromeMessageBroadcasterBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

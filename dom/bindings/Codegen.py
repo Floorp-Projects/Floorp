@@ -1107,7 +1107,7 @@ class CGHeaders(CGWrapper):
                                       interfacesImplementingSelf)
 
         # Grab the includes for the things that involve XPCOM interfaces
-        hasInstanceIncludes = set("nsIDOM" + d.interface.identifier.name + ".h" for d
+        hasInstanceIncludes = set(self.getDeclarationFilename(d.interface) for d
                                   in descriptors if
                                   d.interface.hasInterfaceObject() and
                                   NeedsGeneratedHasInstance(d) and
