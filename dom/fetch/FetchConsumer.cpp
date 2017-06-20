@@ -23,15 +23,15 @@ namespace {
 template <class Derived>
 class FetchBodyWorkerHolder final : public workers::WorkerHolder
 {
-  RefPtr<FetchBodyWrapper<Derived>> mWrapper;
+  RefPtr<FetchBodyConsumer<Derived>> mConsumer;
   bool mWasNotified;
 
 public:
-  explicit FetchBodyWorkerHolder(FetchBodyWrapper<Derived>* aWrapper)
-    : mWrapper(aWrapper)
+  explicit FetchBodyWorkerHolder(FetchBodyConsumer<Derived>* aConsumer)
+    : mConsumer(aConsumer)
     , mWasNotified(false)
   {
-    MOZ_ASSERT(aWrapper);
+    MOZ_ASSERT(aConsumer);
   }
 
   ~FetchBodyWorkerHolder() = default;
@@ -41,10 +41,10 @@ public:
     MOZ_ASSERT(aStatus > workers::Running);
     if (!mWasNotified) {
       mWasNotified = true;
-      // This will probably cause the releasing of the wrapper.
+      // This will probably cause the releasing of the consumer.
       // The WorkerHolder will be released as well.
-      mWrapper->Body()->ContinueConsumeBody(mWrapper, NS_BINDING_ABORTED, 0,
-                                            nullptr);
+      mConsumer->Body()->ContinueConsumeBody(mConsumer, NS_BINDING_ABORTED, 0,
+                                             nullptr);
     }
 
     return true;
@@ -54,29 +54,29 @@ public:
 } // anonymous
 
 template <class Derived>
-/* static */ already_AddRefed<FetchBodyWrapper<Derived>>
-FetchBodyWrapper<Derived>::Create(FetchBody<Derived>* aBody)
+/* static */ already_AddRefed<FetchBodyConsumer<Derived>>
+FetchBodyConsumer<Derived>::Create(FetchBody<Derived>* aBody)
 {
   MOZ_ASSERT(aBody);
 
-  RefPtr<FetchBodyWrapper<Derived>> wrapper =
-    new FetchBodyWrapper<Derived>(aBody);
+  RefPtr<FetchBodyConsumer<Derived>> consumer =
+    new FetchBodyConsumer<Derived>(aBody);
 
   if (!NS_IsMainThread()) {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
 
-    if (!wrapper->RegisterWorkerHolder(workerPrivate)) {
+    if (!consumer->RegisterWorkerHolder(workerPrivate)) {
       return nullptr;
     }
   }
 
-  return wrapper.forget();
+  return consumer.forget();
 }
 
 template <class Derived>
 void
-FetchBodyWrapper<Derived>::ReleaseObject()
+FetchBodyConsumer<Derived>::ReleaseObject()
 {
   AssertIsOnTargetThread();
 
@@ -85,27 +85,27 @@ FetchBodyWrapper<Derived>::ReleaseObject()
 }
 
 template <class Derived>
-FetchBodyWrapper<Derived>::FetchBodyWrapper(FetchBody<Derived>* aBody)
+FetchBodyConsumer<Derived>::FetchBodyConsumer(FetchBody<Derived>* aBody)
   : mTargetThread(NS_GetCurrentThread())
   , mBody(aBody)
 {}
 
 template <class Derived>
-FetchBodyWrapper<Derived>::~FetchBodyWrapper()
+FetchBodyConsumer<Derived>::~FetchBodyConsumer()
 {
   NS_ProxyRelease(mTargetThread, mBody.forget());
 }
 
 template <class Derived>
 void
-FetchBodyWrapper<Derived>::AssertIsOnTargetThread() const
+FetchBodyConsumer<Derived>::AssertIsOnTargetThread() const
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mTargetThread);
 }
 
 template <class Derived>
 bool
-FetchBodyWrapper<Derived>::RegisterWorkerHolder(WorkerPrivate* aWorkerPrivate)
+FetchBodyConsumer<Derived>::RegisterWorkerHolder(WorkerPrivate* aWorkerPrivate)
 {
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
