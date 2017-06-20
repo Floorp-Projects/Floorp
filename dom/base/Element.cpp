@@ -2657,6 +2657,11 @@ Element::ParseAttribute(int32_t aNamespaceID,
                         const nsAString& aValue,
                         nsAttrValue& aResult)
 {
+  if (aAttribute == nsGkAtoms::lang) {
+    aResult.ParseAtom(aValue);
+    return true;
+  }
+
   if (aNamespaceID == kNameSpaceID_None) {
     MOZ_ASSERT(aAttribute != nsGkAtoms::_class,
                "The class attribute should be preparsed and therefore should "

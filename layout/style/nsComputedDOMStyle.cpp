@@ -1536,57 +1536,11 @@ nsComputedDOMStyle::DoGetTransformStyle()
   return val.forget();
 }
 
-/* If the property is "none", hand back "none" wrapped in a value.
- * Otherwise, compute the aggregate transform matrix and hands it back in a
- * "matrix" wrapper.
- */
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetTransform()
 {
-  /* First, get the display data.  We'll need it. */
   const nsStyleDisplay* display = StyleDisplay();
-
-  /* If there are no transforms, then we should construct a single-element
-   * entry and hand it back.
-   */
-  if (!display->mSpecifiedTransform) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-
-    /* Set it to "none." */
-    val->SetIdent(eCSSKeyword_none);
-    return val.forget();
-  }
-
-  /* Otherwise, we need to compute the current value of the transform matrix,
-   * store it in a string, and hand it back to the caller.
-   */
-
-  /* Use the inner frame for the reference box.  If we don't have an inner
-   * frame we use empty dimensions to allow us to continue (and percentage
-   * values in the transform will simply give broken results).
-   * TODO: There is no good way for us to represent the case where there's no
-   * frame, which is problematic.  The reason is that when we have percentage
-   * transforms, there are a total of four stored matrix entries that influence
-   * the transform based on the size of the element.  However, this poses a
-   * problem, because only two of these values can be explicitly referenced
-   * using the named transforms.  Until a real solution is found, we'll just
-   * use this approach.
-   */
-  nsStyleTransformMatrix::TransformReferenceBox refBox(mInnerFrame,
-                                                       nsSize(0, 0));
-
-   RuleNodeCacheConditions dummy;
-   bool dummyBool;
-   gfx::Matrix4x4 matrix =
-     nsStyleTransformMatrix::ReadTransforms(display->mSpecifiedTransform->mHead,
-                                            mStyleContext,
-                                            mStyleContext->PresContext(),
-                                            dummy,
-                                            refBox,
-                                            float(mozilla::AppUnitsPerCSSPixel()),
-                                            &dummyBool);
-
-  return MatrixToCSSValue(matrix);
+  return GetTransformValue(display->mSpecifiedTransform);
 }
 
 already_AddRefed<CSSValue>
@@ -4227,6 +4181,41 @@ nsComputedDOMStyle::DoGetWindowShadow()
 }
 
 already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetWindowOpacity()
+{
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  val->SetNumber(StyleUIReset()->mWindowOpacity);
+  return val.forget();
+}
+
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetWindowTransform()
+{
+  const nsStyleUIReset* uiReset = StyleUIReset();
+  return GetTransformValue(uiReset->mSpecifiedWindowTransform);
+}
+
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetWindowTransformOrigin()
+{
+  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
+
+  const nsStyleUIReset* uiReset = StyleUIReset();
+
+  RefPtr<nsROCSSPrimitiveValue> originX = new nsROCSSPrimitiveValue;
+  SetValueToCoord(originX, uiReset->mWindowTransformOrigin[0], false,
+                  &nsComputedDOMStyle::GetFrameBoundsWidthForTransform);
+  valueList->AppendCSSValue(originX.forget());
+
+  RefPtr<nsROCSSPrimitiveValue> originY = new nsROCSSPrimitiveValue;
+  SetValueToCoord(originY, uiReset->mWindowTransformOrigin[1], false,
+                  &nsComputedDOMStyle::GetFrameBoundsHeightForTransform);
+  valueList->AppendCSSValue(originY.forget());
+
+  return valueList.forget();
+}
+
+already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetWordBreak()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
@@ -5861,6 +5850,56 @@ nsComputedDOMStyle::GetSVGPaintFor(bool aFill)
   }
 
   return val.forget();
+}
+
+/* If the property is "none", hand back "none" wrapped in a value.
+ * Otherwise, compute the aggregate transform matrix and hands it back in a
+ * "matrix" wrapper.
+ */
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::GetTransformValue(nsCSSValueSharedList* aSpecifiedTransform)
+{
+  /* If there are no transforms, then we should construct a single-element
+   * entry and hand it back.
+   */
+  if (!aSpecifiedTransform) {
+    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+
+    /* Set it to "none." */
+    val->SetIdent(eCSSKeyword_none);
+    return val.forget();
+  }
+
+  /* Otherwise, we need to compute the current value of the transform matrix,
+   * store it in a string, and hand it back to the caller.
+   */
+
+  /* Use the inner frame for the reference box.  If we don't have an inner
+   * frame we use empty dimensions to allow us to continue (and percentage
+   * values in the transform will simply give broken results).
+   * TODO: There is no good way for us to represent the case where there's no
+   * frame, which is problematic.  The reason is that when we have percentage
+   * transforms, there are a total of four stored matrix entries that influence
+   * the transform based on the size of the element.  However, this poses a
+   * problem, because only two of these values can be explicitly referenced
+   * using the named transforms.  Until a real solution is found, we'll just
+   * use this approach.
+   */
+  nsStyleTransformMatrix::TransformReferenceBox refBox(mInnerFrame,
+                                                       nsSize(0, 0));
+
+   RuleNodeCacheConditions dummy;
+   bool dummyBool;
+   gfx::Matrix4x4 matrix =
+     nsStyleTransformMatrix::ReadTransforms(aSpecifiedTransform->mHead,
+                                            mStyleContext,
+                                            mStyleContext->PresContext(),
+                                            dummy,
+                                            refBox,
+                                            float(mozilla::AppUnitsPerCSSPixel()),
+                                            &dummyBool);
+
+  return MatrixToCSSValue(matrix);
 }
 
 already_AddRefed<CSSValue>

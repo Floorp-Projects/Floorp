@@ -310,11 +310,11 @@ var StarUI = {
         fn();
       }, {"capture": true, "once": true});
     };
-    gEditItemOverlay.initPanel({ node: aNode
-                               , onPanelReady
-                               , hiddenRows: ["description", "location",
-                                              "loadInSidebar", "keyword"]
-                               , focusedElement: "preferred"});
+    gEditItemOverlay.initPanel({ node: aNode,
+                                 onPanelReady,
+                                 hiddenRows: ["description", "location",
+                                              "loadInSidebar", "keyword"],
+                                 focusedElement: "preferred"});
 
     this.panel.openPopup(aAnchorElement, aPosition);
   },
@@ -499,8 +499,8 @@ var PlacesCommandHook = {
       }
 
       if (description) {
-        info.annotations = [{ name: PlacesUIUtils.DESCRIPTION_ANNO
-                            , value: description }];
+        info.annotations = [{ name: PlacesUIUtils.DESCRIPTION_ANNO,
+                              value: description }];
       }
 
       info.guid = await PlacesTransactions.NewBookmark(info).transact();
@@ -572,8 +572,8 @@ var PlacesCommandHook = {
   async bookmarkLink(aParentId, aURL, aTitle, aDescription = "") {
     let node = await PlacesUIUtils.fetchNodeLike({ url: aURL });
     if (node) {
-      PlacesUIUtils.showBookmarkDialog({ action: "edit"
-                                       , node
+      PlacesUIUtils.showBookmarkDialog({ action: "edit",
+                                         node
                                        }, window.top);
       return;
     }
@@ -581,16 +581,16 @@ var PlacesCommandHook = {
     let ip = new InsertionPoint(aParentId,
                                 PlacesUtils.bookmarks.DEFAULT_INDEX,
                                 Components.interfaces.nsITreeView.DROP_ON);
-    PlacesUIUtils.showBookmarkDialog({ action: "add"
-                                     , type: "bookmark"
-                                     , uri: makeURI(aURL)
-                                     , title: aTitle
-                                     , description: aDescription
-                                     , defaultInsertionPoint: ip
-                                     , hiddenRows: [ "description"
-                                                   , "location"
-                                                   , "loadInSidebar"
-                                                   , "keyword" ]
+    PlacesUIUtils.showBookmarkDialog({ action: "add",
+                                       type: "bookmark",
+                                       uri: makeURI(aURL),
+                                       title: aTitle,
+                                       description: aDescription,
+                                       defaultInsertionPoint: ip,
+                                       hiddenRows: [ "description",
+                                                     "location",
+                                                     "loadInSidebar",
+                                                     "keyword" ]
                                      }, window.top);
   },
 
@@ -623,10 +623,10 @@ var PlacesCommandHook = {
   bookmarkCurrentPages: function PCH_bookmarkCurrentPages() {
     let pages = this.uniqueCurrentPages;
     if (pages.length > 1) {
-    PlacesUIUtils.showBookmarkDialog({ action: "add"
-                                     , type: "folder"
-                                     , URIList: pages
-                                     , hiddenRows: [ "description" ]
+    PlacesUIUtils.showBookmarkDialog({ action: "add",
+                                       type: "folder",
+                                       URIList: pages,
+                                       hiddenRows: [ "description" ]
                                      }, window);
     }
   },
@@ -667,16 +667,16 @@ var PlacesCommandHook = {
       description = (await this._getPageDetails(gBrowser.selectedBrowser)).description;
     }
 
-    PlacesUIUtils.showBookmarkDialog({ action: "add"
-                                     , type: "livemark"
-                                     , feedURI
-                                     , siteURI: gBrowser.currentURI
-                                     , title
-                                     , description
-                                     , defaultInsertionPoint: toolbarIP
-                                     , hiddenRows: [ "feedLocation"
-                                                   , "siteLocation"
-                                                   , "description" ]
+    PlacesUIUtils.showBookmarkDialog({ action: "add",
+                                       type: "livemark",
+                                       feedURI,
+                                       siteURI: gBrowser.currentURI,
+                                       title,
+                                       description,
+                                       defaultInsertionPoint: toolbarIP,
+                                       hiddenRows: [ "feedLocation",
+                                                     "siteLocation",
+                                                     "description" ]
                                      }, window);
   },
 

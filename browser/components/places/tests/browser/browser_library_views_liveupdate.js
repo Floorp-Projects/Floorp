@@ -149,8 +149,8 @@ function finishTest() {
  */
 var bookmarksObserver = {
   QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsINavBookmarkObserver
-  , Ci.nsIAnnotationObserver
+    Ci.nsINavBookmarkObserver,
+    Ci.nsIAnnotationObserver
   ]),
 
   // nsIAnnotationObserver

@@ -579,9 +579,9 @@ this.PlacesUIUtils = {
       if (!this.PLACES_FLAVORS.includes(aData.type))
         throw new Error(`itemGuid unexpectedly set on ${aData.type} data`);
 
-      let info = { guid: aData.itemGuid
-                 , newParentGuid: aNewParentGuid
-                 , newIndex: aIndex };
+      let info = { guid: aData.itemGuid,
+                   newParentGuid: aNewParentGuid,
+                   newIndex: aIndex };
       if (aCopy) {
         info.excludingAnnotation = "Places/SmartBookmark";
         return PlacesTransactions.Copy(info);
@@ -597,16 +597,16 @@ this.PlacesUIUtils = {
       throw new Error("Can't copy a container from a legacy-transactions build");
 
     if (aData.type == PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR) {
-      return PlacesTransactions.NewSeparator({ parentGuid: aNewParentGuid
-                                             , index: aIndex });
+      return PlacesTransactions.NewSeparator({ parentGuid: aNewParentGuid,
+                                               index: aIndex });
     }
 
     let title = aData.type != PlacesUtils.TYPE_UNICODE ? aData.title
                                                        : aData.uri;
-    return PlacesTransactions.NewBookmark({ uri: NetUtil.newURI(aData.uri)
-                                          , title
-                                          , parentGuid: aNewParentGuid
-                                          , index: aIndex });
+    return PlacesTransactions.NewBookmark({ uri: NetUtil.newURI(aData.uri),
+                                            title,
+                                            parentGuid: aNewParentGuid,
+                                            index: aIndex });
   },
 
   /**

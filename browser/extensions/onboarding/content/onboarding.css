@@ -55,19 +55,20 @@
 }
 
 #onboarding-overlay.onboarding-opened > #onboarding-overlay-dialog {
-  width: 1200px;
-  height: 550px;
+  width: 960px;
+  height: 510px;
   background: #f5f5f7;
   border: 1px solid rgba(9, 6, 13, 0.1); /* #09060D, 0.1 opacity */
+  border-radius: 3px;
   position: relative;
-  margin: 0 calc(50% - 600px);
-  top: calc(50% - 275px);
+  margin: 0 calc(50% - 480px);
+  top: calc(50% - 255px);
   display: grid;
-  grid-template-rows: [dialog-start] 76px [page-start] 1fr [footer-start] 40px [dialog-end];
-  grid-template-columns: [dialog-start] 240px [page-start] 1fr [dialog-end];
+  grid-template-rows: [dialog-start] 76px [page-start] 1fr [footer-start] 30px [dialog-end];
+  grid-template-columns: [dialog-start] 230px [page-start] 1fr [dialog-end];
 }
 
-@media (max-height: 550px) {
+@media (max-height: 510px) {
   #onboarding-overlay.onboarding-opened > #onboarding-overlay-dialog {
     top: 0;
   }
@@ -76,11 +77,12 @@
 #onboarding-overlay-dialog > header {
   grid-row: dialog-start / page-start;
   grid-column: dialog-start / tour-end;
-  margin-top: 36px;
+  margin-top: 24px;
   margin-bottom: 0;
   margin-inline-end: 0;
   margin-inline-start: 36px;
   font-size: 22px;
+  font-weight: 200;
 }
 
 #onboarding-overlay-dialog > nav {
@@ -112,12 +114,15 @@
 
 #onboarding-tour-list > li {
   list-style: none;
-  height: 48px;
   border-inline-start: 6px solid transparent;
-  padding-inline-start: 66px;
-  line-height: 48px;
+  border-radius: 2px;
+  padding-inline-start: 49px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+  margin-inline-start: 10px;
+  margin-bottom: 9px;
   background-repeat: no-repeat;
-  background-position: left 27px center;
+  background-position: left 10px top 7px;
   background-size: 34px;
   font-size: 16px;
   cursor: pointer;
@@ -125,6 +130,17 @@
 
 #onboarding-tour-list > li:dir(rtl) {
   background-position: right 27px center;
+}
+
+#onboarding-tour-list > li.onboarding-complete::before {
+  content: url("img/icons_tour-complete.svg");
+  position: relative;
+  left: 6px;
+  top: -10px;
+}
+
+#onboarding-tour-list > li.onboarding-complete {
+  padding-inline-start: 29px;
 }
 
 #onboarding-tour-list > li.onboarding-active,
@@ -139,20 +155,23 @@
   grid-column: page-start;
   display: grid;
   grid-template-rows: [tour-page-start] 393px [tour-button-start] 1fr [tour-page-end];
-  grid-template-columns: [tour-page-start] 480px [tour-content-start] 1fr [tour-page-end];
+  grid-template-columns: [tour-page-start] 368px [tour-content-start] 1fr [tour-page-end];
 }
 
 .onboarding-tour-description {
   grid-row: tour-page-start / tour-page-end;
   grid-column: tour-page-start / tour-content-start;
-  padding: 40px;
   font-size: 15px;
-  padding-inline-end: 40px;
+  line-height: 22px;
+  padding-inline-start: 40px;
+  padding-inline-end: 28px;
 }
 
 .onboarding-tour-description > h1 {
   font-size: 36px;
-  margin: 40px 0 20px 0;
+  margin-top: 16px;
+  font-weight: 300;
+  line-height: 44px;
 }
 
 .onboarding-tour-content {
@@ -192,15 +211,19 @@
 }
 
 .onboarding-tour-button > button {
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 21px;
   background: #0d96ff;
   border: none;
   border-radius: 3px;
-  padding: 10px 20px;
-  font-size: 14px;
   color: #fff;
   box-shadow: 0 1px 0 rgba(0,0,0,0.23);
+  cursor: pointer;
   float: inline-end;
-  margin-inline-end: 70px;
+  margin-inline-end: 26px;
+  margin-top: -32px;
 }
 
 .onboarding-tour-button > button:active {

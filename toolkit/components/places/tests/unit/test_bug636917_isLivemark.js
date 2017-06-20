@@ -20,11 +20,11 @@ add_task(async function() {
 
 
   let livemark = await PlacesUtils.livemarks.addLivemark(
-    { title: "livemark title"
-    , parentGuid: PlacesUtils.bookmarks.unfiledGuid
-    , index: PlacesUtils.bookmarks.DEFAULT_INDEX
-    , siteURI: uri("http://example.com/")
-    , feedURI: uri("http://example.com/rdf")
+    { title: "livemark title",
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+      siteURI: uri("http://example.com/"),
+      feedURI: uri("http://example.com/rdf")
     });
 
   await annoPromise;
