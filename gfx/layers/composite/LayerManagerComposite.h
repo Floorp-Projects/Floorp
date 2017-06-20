@@ -118,6 +118,7 @@ public:
   virtual void EndTransaction(const TimeStamp& aTimeStamp,
                               EndTransactionFlags aFlags = END_DEFAULT) = 0;
   virtual void UpdateRenderBounds(const gfx::IntRect& aRect) {}
+  virtual void SetDiagnosticTypes(DiagnosticTypes aDiagnostics) {}
 
   virtual HostLayerManager* AsHostLayerManager() override {
     return this;
@@ -415,6 +416,9 @@ public:
   }
   virtual LayersBackend GetBackendType() override {
     return mCompositor ? mCompositor->GetBackendType() : LayersBackend::LAYERS_NONE;
+  }
+  virtual void SetDiagnosticTypes(DiagnosticTypes aDiagnostics) override {
+    mCompositor->SetDiagnosticTypes(aDiagnostics);
   }
 
   void ForcePresent() override { mCompositor->ForcePresent(); }

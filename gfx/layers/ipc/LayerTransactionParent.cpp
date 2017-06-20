@@ -273,8 +273,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
       break;
     }
     case Edit::TOpSetDiagnosticTypes: {
-      mLayerManager->GetCompositor()->SetDiagnosticTypes(
-        edit.get_OpSetDiagnosticTypes().diagnostics());
+      mLayerManager->SetDiagnosticTypes(edit.get_OpSetDiagnosticTypes().diagnostics());
       break;
     }
     case Edit::TOpWindowOverlayChanged: {
