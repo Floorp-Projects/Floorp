@@ -160,9 +160,6 @@ public:
   // the main thread.
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  // The following can be called on the main thread only:
-  // Get the URI
-  virtual nsIURI* URI() const { return nullptr; }
   // Close the resource, stop any listeners, channels, etc.
   // Cancels any currently blocking Read request and forces that request to
   // return an error.
@@ -314,22 +311,10 @@ public:
    */
   virtual nsresult GetCachedRanges(MediaByteRangeSet& aRanges) = 0;
 
-  // Ensure that the media cache writes any data held in its partial block.
-  // Called on the main thread only.
-  virtual void FlushCache() { }
-
-  // Notify that the last data byte range was loaded.
-  virtual void NotifyLastByteRange() { }
-
   // Returns the container content type of the resource. This is copied from the
   // nsIChannel when the MediaResource is created. Safe to call from
   // any thread.
   virtual const MediaContainerType& GetContentType() const = 0;
-
-  // Return true if the stream is a live stream
-  virtual bool IsRealTime() {
-    return false;
-  }
 
   // Returns true if the resource is a live stream.
   virtual bool IsLiveStream()
@@ -345,8 +330,6 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  const nsCString& GetContentURL() const { return EmptyCString(); }
-
 protected:
   virtual ~MediaResource() {};
 
@@ -356,7 +339,6 @@ private:
 
 class BaseMediaResource : public MediaResource {
 public:
-  nsIURI* URI() const override { return mURI; }
   void SetLoadInBackground(bool aLoadInBackground) override;
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
@@ -377,12 +359,6 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  // Returns the url of the resource. Safe to call from any thread?
-  const nsCString& GetContentURL() const
-  {
-    return mContentURL;
-  }
-
 protected:
   BaseMediaResource(MediaResourceCallback* aCallback,
                     nsIChannel* aChannel,
@@ -394,7 +370,6 @@ protected:
     mContainerType(aContainerType),
     mLoadInBackground(false)
   {
-    mURI->GetSpec(mContentURL);
   }
   virtual ~BaseMediaResource()
   {
@@ -428,9 +403,6 @@ protected:
   // MediaResource is created. This is constant, so accessing from any thread
   // is safe.
   const MediaContainerType mContainerType;
-
-  // Copy of the url of the channel resource.
-  nsCString mContentURL;
 
   // True if SetLoadInBackground() has been called with
   // aLoadInBackground = true, i.e. when the document load event is not
@@ -532,13 +504,6 @@ public:
   nsresult CacheClientResume();
 
   void ThrottleReadahead(bool bThrottle) override;
-
-  // Ensure that the media cache writes any data held in its partial block.
-  // Called on the main thread.
-  void FlushCache() override;
-
-  // Notify that the last data byte range was loaded.
-  void NotifyLastByteRange() override;
 
   // Main thread
   nsresult Open(nsIStreamListener** aStreamListener) override;

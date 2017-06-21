@@ -176,19 +176,19 @@ pub trait TemplateParameters {
 }
 
 /// A trait for things which may or may not be a named template type parameter.
-pub trait AsNamed {
+pub trait AsTemplateParam {
     /// Any extra information the implementor might need to make this decision.
     type Extra;
 
     /// Convert this thing to the item id of a named template type parameter.
-    fn as_named(&self,
-                ctx: &BindgenContext,
-                extra: &Self::Extra)
-                -> Option<ItemId>;
+    fn as_template_param(&self,
+                         ctx: &BindgenContext,
+                         extra: &Self::Extra)
+                         -> Option<ItemId>;
 
     /// Is this a named template type parameter?
-    fn is_named(&self, ctx: &BindgenContext, extra: &Self::Extra) -> bool {
-        self.as_named(ctx, extra).is_some()
+    fn is_template_param(&self, ctx: &BindgenContext, extra: &Self::Extra) -> bool {
+        self.as_template_param(ctx, extra).is_some()
     }
 }
 

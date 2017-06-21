@@ -950,26 +950,6 @@ ChannelMediaResource::CacheClientSeek(int64_t aOffset, bool aResume)
   return OpenChannel(nullptr);
 }
 
-void
-ChannelMediaResource::FlushCache()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-
-  // Ensure that data in the cache's partial block is written to disk.
-  mCacheStream.FlushPartialBlock();
-}
-
-void
-ChannelMediaResource::NotifyLastByteRange()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-
-  // Tell media cache that the last data has been downloaded.
-  // Note: subsequent seeks will require re-opening the channel etc.
-  mCacheStream.NotifyDataEnded(NS_OK);
-
-}
-
 nsresult
 ChannelMediaResource::CacheClientSuspend()
 {

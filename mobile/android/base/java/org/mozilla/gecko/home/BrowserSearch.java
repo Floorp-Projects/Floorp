@@ -179,9 +179,6 @@ public class BrowserSearch extends HomeFragment
     // On edit suggestion listener
     private OnEditSuggestionListener mEditSuggestionListener;
 
-    // Whether the suggestions will fade in when shown
-    private boolean mAnimateSuggestions;
-
     // Opt-in prompt view for search suggestions
     private View mSuggestionsOptInPrompt;
 
@@ -933,8 +930,7 @@ public class BrowserSearch extends HomeFragment
 
                         // Show search suggestions and update them
                         if (enabled) {
-                            mSuggestionsEnabled = enabled;
-                            mAnimateSuggestions = true;
+                            mSuggestionsEnabled = true;
                             mAdapter.notifyDataSetChanged();
                             filterSuggestions();
                         }
@@ -1164,13 +1160,7 @@ public class BrowserSearch extends HomeFragment
                 row.setSearchTerm(mSearchTerm);
 
                 final SearchEngine engine = mSearchEngines.get(position);
-                final boolean haveSuggestions = (engine.hasSuggestions() || !mSearchHistorySuggestions.isEmpty());
-                final boolean animate = (mAnimateSuggestions && haveSuggestions);
-                row.updateSuggestions(mSuggestionsEnabled, engine, mSearchHistorySuggestions, animate);
-                if (animate) {
-                    // Only animate suggestions the first time they are shown
-                    mAnimateSuggestions = false;
-                }
+                row.updateSuggestions(mSuggestionsEnabled, engine, mSearchHistorySuggestions);
             } else {
                 // Account for the search engines
                 position -= getPrimaryEngineCount();

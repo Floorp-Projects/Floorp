@@ -23,6 +23,40 @@ add_task(async function test_cookies() {
       browser.test.assertEq(Object.keys(expected).length, Object.keys(cookie).length, "all expected properties found");
     }
 
+    async function getDocumentCookie(tabId) {
+      let results = await browser.tabs.executeScript(tabId, {
+        code: "document.cookie",
+      });
+      browser.test.assertEq(results.length, 1, "executeScript returns one result");
+      return results[0];
+    }
+
+    async function openPrivateWindowAndTab(TEST_URL) {
+      // Add some random suffix to make sure that we select the right tab.
+      const PRIVATE_TEST_URL = TEST_URL + "?random" + Math.random();
+
+      let tabReadyPromise = new Promise((resolve) => {
+        browser.webNavigation.onDOMContentLoaded.addListener(function listener({tabId}) {
+          browser.webNavigation.onDOMContentLoaded.removeListener(listener);
+          resolve(tabId);
+        }, {
+          url: [{
+            urlPrefix: PRIVATE_TEST_URL,
+          }],
+        });
+      });
+      // This tab is opened for two purposes:
+      // 1. To allow tests to run content scripts in the context of a tab,
+      //    for fetching the value of document.cookie.
+      // 2. To work around bug 1309637, based on the analysis in comment 8.
+      let {id: windowId} = await browser.windows.create({
+        incognito: true,
+        url: PRIVATE_TEST_URL,
+      });
+      let tabId = await tabReadyPromise;
+      return {windowId, tabId};
+    }
+
     const TEST_URL = "http://example.org/";
     const TEST_SECURE_URL = "https://example.org/";
     const THE_FUTURE = Date.now() + 5 * 60;
@@ -88,9 +122,9 @@ add_task(async function test_cookies() {
     browser.test.assertEq(1, stores[0].tabIds.length, "one tabId returned for store");
     browser.test.assertEq("number", typeof stores[0].tabIds[0], "tabId is a number");
 
-    // This part causes intermittent failures see Bug 1309637.
-    if (false) {
-      let privateWindow = await browser.windows.create({incognito: true});
+    // Opening private windows/tabs is not supported on Android - bug 1372178
+    if (browser.windows) {
+      let {windowId} = await openPrivateWindowAndTab(TEST_URL);
       let stores = await browser.cookies.getAllCookieStores();
 
       browser.test.assertEq(2, stores.length, "expected number of stores returned");
@@ -99,7 +133,7 @@ add_task(async function test_cookies() {
       browser.test.assertEq(PRIVATE_STORE_ID, stores[1].id, "expected private store id returned");
       browser.test.assertEq(1, stores[0].tabIds.length, "one tab returned for private store");
 
-      await browser.windows.remove(privateWindow.id);
+      await browser.windows.remove(windowId);
     }
 
     cookie = await browser.cookies.set({url: TEST_URL, name: "name2", domain: ".example.org", expirationDate: THE_FUTURE});
@@ -180,12 +214,11 @@ add_task(async function test_cookies() {
     browser.test.assertEq("", cookie.value, "default value set");
     browser.test.assertEq(true, cookie.session, "no expiry date created session cookie");
 
-    // This part causes intermittent failures see Bug 1309637.
-    if (false) {
-      let privateWindow = await browser.windows.create({incognito: true});
+    // Opening private windows/tabs is not supported on Android - bug 1372178
+    if (browser.windows) {
+      let {tabId, windowId} = await openPrivateWindowAndTab(TEST_URL);
 
-      // Hacky work-around for bugzil.la/1309637
-      await new Promise(resolve => setTimeout(resolve, 700));
+      browser.test.assertEq("", await getDocumentCookie(tabId), "initially no cookie");
 
       let cookie = await browser.cookies.set({url: TEST_URL, name: "store", value: "private", expirationDate: THE_FUTURE, storeId: PRIVATE_STORE_ID});
       browser.test.assertEq("private", cookie.value, "set the private cookie");
@@ -201,6 +234,8 @@ add_task(async function test_cookies() {
       browser.test.assertEq("default", cookie.value, "get the default cookie");
       browser.test.assertEq(STORE_ID, cookie.storeId, "get the default cookie storeId");
 
+      browser.test.assertEq("store=private", await getDocumentCookie(tabId), "private document.cookie should be set");
+
       let details = await browser.cookies.remove({url: TEST_URL, name: "store", storeId: STORE_ID});
       assertExpected({url: TEST_URL, name: "store", storeId: STORE_ID}, details);
 
@@ -213,7 +248,9 @@ add_task(async function test_cookies() {
       cookie = await browser.cookies.get({url: TEST_URL, name: "store", storeId: PRIVATE_STORE_ID});
       browser.test.assertEq(null, cookie, "deleted the private cookie");
 
-      await browser.windows.remove(privateWindow.id);
+      browser.test.assertEq("", await getDocumentCookie(tabId), "private document.cookie should be removed");
+
+      await browser.windows.remove(windowId);
     }
 
     browser.test.notifyPass("cookies");
@@ -222,7 +259,7 @@ add_task(async function test_cookies() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
-      permissions: ["cookies", "*://example.org/"],
+      permissions: ["cookies", "*://example.org/", "webNavigation"],
     },
   });
 
