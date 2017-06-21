@@ -211,7 +211,7 @@ macosx64-devedition/opt:
     build-platform: macosx64-devedition/opt
     test-sets:
         - macosx64-tests-talos
-        - macosx64-tests-debug
+        - macosx64-tests
 
 ##
 # Android platforms (matching /android.*/)
