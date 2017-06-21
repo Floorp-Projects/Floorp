@@ -216,12 +216,10 @@ function _do_main() {
   _testLogger.info("running event loop");
 
   var tm = Components.classes["@mozilla.org/thread-manager;1"].getService();
-  var thr = tm.currentThread;
 
   tm.spinEventLoopUntil(() => _quit);
 
-  while (thr.hasPendingEvents())
-    thr.processNextEvent(true);
+  tm.spinEventLoopUntilEmpty();
 }
 
 function _do_quit() {

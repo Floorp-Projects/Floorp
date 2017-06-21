@@ -364,6 +364,18 @@ nsThreadManager::SpinEventLoopUntil(nsINestedEventLoopCondition* aCondition)
   return rv;
 }
 
+NS_IMETHODIMP
+nsThreadManager::SpinEventLoopUntilEmpty()
+{
+  nsIThread* thread = NS_GetCurrentThread();
+
+  while (NS_HasPendingEvents(thread)) {
+    (void)NS_ProcessNextEvent(thread, false);
+  }
+
+  return NS_OK;
+}
+
 uint32_t
 nsThreadManager::GetHighestNumberOfThreads()
 {
