@@ -127,8 +127,6 @@ browser.Context = class {
   get contentBrowser() {
     if (this.tab) {
       return browser.getBrowserForTab(this.tab);
-    } else if (this.tabBrowser && this.driver.isReftestBrowser(this.tabBrowser)) {
-      return this.tabBrowser;
     }
 
     return null;
@@ -141,7 +139,7 @@ browser.Context = class {
    */
   get curFrameId() {
     let rv = null;
-     if (this.tab || this.driver.isReftestBrowser(this.contentBrowser) ) {
+    if (this.tab) {
       rv = this.getIdForBrowser(this.contentBrowser);
     }
     return rv;
@@ -211,7 +209,7 @@ browser.Context = class {
   closeTab() {
     // If the current window is not a browser then close it directly. Do the
     // same if only one remaining tab is open, or no tab selected at all.
-    if (!this.tabBrowser || !this.tabBrowser.tabs || this.tabBrowser.tabs.length === 1 || !this.tab) {
+    if (!this.tabBrowser || this.tabBrowser.tabs.length === 1 || !this.tab) {
       return this.closeWindow();
     }
 

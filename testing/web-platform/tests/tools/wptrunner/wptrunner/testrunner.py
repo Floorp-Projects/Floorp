@@ -147,6 +147,8 @@ def next_manager_number():
 
 
 class BrowserManager(object):
+    init_lock = threading.Lock()
+
     def __init__(self, logger, browser, command_queue, no_timeout=False):
         self.logger = logger
         self.browser = browser
@@ -171,31 +173,34 @@ class BrowserManager(object):
         """Launch the browser that is being tested,
         and the TestRunner process that will run the tests."""
         # It seems that this lock is helpful to prevent some race that otherwise
-        # sometimes stops the spawned processes initialising correctly, and
+        # sometimes stops the spawned processes initalising correctly, and
         # leaves this thread hung
         if self.init_timer is not None:
             self.init_timer.cancel()
 
         self.logger.debug("Init called, starting browser and runner")
 
-        if not self.no_timeout:
-            self.init_timer = threading.Timer(self.browser.init_timeout,
-                                              self.init_timeout)
-        try:
-            if self.init_timer is not None:
-                self.init_timer.start()
-            self.logger.debug("Starting browser with settings %r" % self.browser_settings)
-            self.browser.start(**self.browser_settings)
-            self.browser_pid = self.browser.pid()
-        except:
-            self.logger.warning("Failure during init %s" % traceback.format_exc())
-            if self.init_timer is not None:
-                self.init_timer.cancel()
-            self.logger.error(traceback.format_exc())
-            succeeded = False
-        else:
-            succeeded = True
-            self.started = True
+        with self.init_lock:
+            # Guard against problems initialising the browser or the browser
+            # remote control method
+            if not self.no_timeout:
+                self.init_timer = threading.Timer(self.browser.init_timeout,
+                                                  self.init_timeout)
+            try:
+                if self.init_timer is not None:
+                    self.init_timer.start()
+                self.logger.debug("Starting browser with settings %r" % self.browser_settings)
+                self.browser.start(**self.browser_settings)
+                self.browser_pid = self.browser.pid()
+            except:
+                self.logger.warning("Failure during init %s" % traceback.format_exc())
+                if self.init_timer is not None:
+                    self.init_timer.cancel()
+                self.logger.error(traceback.format_exc())
+                succeeded = False
+            else:
+                succeeded = True
+                self.started = True
 
         return succeeded
 
@@ -232,10 +237,10 @@ class BrowserManager(object):
 
 class _RunnerManagerState(object):
     before_init = namedtuple("before_init", [])
-    initializing = namedtuple("initializing_browser",
-                             ["test", "test_queue", "queue_metadata", "failure_count"])
+    initalizing = namedtuple("initalizing_browser",
+                             ["test", "test_queue", "failure_count"])
     running = namedtuple("running", ["test", "test_queue"])
-    restarting = namedtuple("restarting", ["test", "test_queue", "queue_metadata"])
+    restarting = namedtuple("restarting", ["test", "test_queue"])
     error = namedtuple("error", [])
     stop = namedtuple("stop", [])
 
@@ -244,6 +249,8 @@ RunnerManagerState = _RunnerManagerState()
 
 
 class TestRunnerManager(threading.Thread):
+    init_lock = threading.Lock()
+
     def __init__(self, suite_name, tests, test_source_cls, browser_cls, browser_kwargs,
                  executor_cls, executor_kwargs, stop_flag, pause_after_test=False,
                  pause_on_unexpected=False, restart_on_unexpected=True, debug_info=None):
@@ -322,7 +329,7 @@ class TestRunnerManager(threading.Thread):
             self.test_source = test_source
             dispatch = {
                 RunnerManagerState.before_init: self.start_init,
-                RunnerManagerState.initializing: self.init,
+                RunnerManagerState.initalizing: self.init,
                 RunnerManagerState.running: self.run_test,
                 RunnerManagerState.restarting: self.restart_runner
             }
@@ -367,7 +374,7 @@ class TestRunnerManager(threading.Thread):
     def wait_event(self):
         dispatch = {
             RunnerManagerState.before_init: {},
-            RunnerManagerState.initializing:
+            RunnerManagerState.initalizing:
             {
                 "init_succeeded": self.init_succeeded,
                 "init_failed": self.init_failed,
@@ -430,14 +437,14 @@ class TestRunnerManager(threading.Thread):
         return self.child_stop_flag.is_set() or self.parent_stop_flag.is_set()
 
     def start_init(self):
-        test, test_queue, queue_metadata = self.get_next_test()
+        test, test_queue = self.get_next_test()
         if test is None:
             return RunnerManagerState.stop()
         else:
-            return RunnerManagerState.initializing(test, test_queue, queue_metadata, 0)
+            return RunnerManagerState.initalizing(test, test_queue, 0)
 
     def init(self):
-        assert isinstance(self.state, RunnerManagerState.initializing)
+        assert isinstance(self.state, RunnerManagerState.initalizing)
         if self.state.failure_count > self.max_restarts:
             self.logger.error("Max restarts exceeded")
             return RunnerManagerState.error()
@@ -448,19 +455,17 @@ class TestRunnerManager(threading.Thread):
         if result is Stop:
             return RunnerManagerState.error()
         elif not result:
-            return RunnerManagerState.initializing(self.state.test,
-                                                   self.state.test_queue,
-                                                   self.state.queue_metadata,
-                                                   self.state.failure_count + 1)
+            return RunnerManagerState.initalizing(self.state.test,
+                                                  self.state.test_queue,
+                                                  self.state.failure_count + 1)
         else:
-            self.executor_kwargs["queue_metadata"] = self.state.queue_metadata
             self.start_test_runner()
 
     def start_test_runner(self):
         # Note that we need to be careful to start the browser before the
         # test runner to ensure that any state set when the browser is started
         # can be passed in to the test runner.
-        assert isinstance(self.state, RunnerManagerState.initializing)
+        assert isinstance(self.state, RunnerManagerState.initalizing)
         assert self.command_queue is not None
         assert self.remote_queue is not None
         self.logger.info("Starting runner")
@@ -481,33 +486,34 @@ class TestRunnerManager(threading.Thread):
         # Now we wait for either an init_succeeded event or an init_failed event
 
     def init_succeeded(self):
-        assert isinstance(self.state, RunnerManagerState.initializing)
+        assert isinstance(self.state, RunnerManagerState.initalizing)
         self.browser.after_init()
         return RunnerManagerState.running(self.state.test,
                                           self.state.test_queue)
 
     def init_failed(self):
-        assert isinstance(self.state, RunnerManagerState.initializing)
+        assert isinstance(self.state, RunnerManagerState.initalizing)
         self.browser.after_init()
         self.stop_runner(force=True)
-        return RunnerManagerState.initializing(self.state.test,
-                                               self.state.test_queue,
-                                               self.state.queue_metadata,
-                                               self.state.failure_count + 1)
+        return RunnerManagerState.initalizing(self.state.test,
+                                              self.state.test_queue,
+                                              self.state.failure_count + 1)
 
     def get_next_test(self, test_queue=None):
         test = None
         while test is None:
             if test_queue is None:
-                test_queue, queue_metadata = self.test_source.get_queue()
+                test_queue = self.test_source.get_queue()
                 if test_queue is None:
                     self.logger.info("No more tests")
-                    return None, None, None
-                if len(test_queue) == 0:
-                    test_queue, queue_metadata = None, None
-                else:
-                    test = test_queue.popleft()
-        return test, test_queue, queue_metadata
+                    return None, None
+            try:
+                # Need to block here just to allow for contention with other processes
+                test = test_queue.get(block=True, timeout=2)
+            except Empty:
+                if test_queue.empty():
+                    test_queue = None
+        return test, test_queue
 
     def run_test(self):
         assert isinstance(self.state, RunnerManagerState.running)
@@ -516,8 +522,7 @@ class TestRunnerManager(threading.Thread):
         if self.browser.update_settings(self.state.test):
             self.logger.info("Restarting browser for new test environment")
             return RunnerManagerState.restarting(self.state.test,
-                                                 self.state.test_queue,
-                                                 self.state.queue_metadata)
+                                                 self.state.test_queue)
 
         self.logger.test_start(self.state.test.id)
         self.send_message("run_test", self.state.test)
@@ -590,14 +595,14 @@ class TestRunnerManager(threading.Thread):
 
     def after_test_end(self, restart):
         assert isinstance(self.state, RunnerManagerState.running)
-        test, test_queue, queue_metadata = self.get_next_test()
+        test, test_queue = self.get_next_test()
         if test is None:
             return RunnerManagerState.stop()
         if test_queue != self.state.test_queue:
             # We are starting a new group of tests, so force a restart
             restart = True
         if restart:
-            return RunnerManagerState.restarting(test, test_queue, queue_metadata)
+            return RunnerManagerState.restarting(test, test_queue)
         else:
             return RunnerManagerState.running(test, test_queue)
 
@@ -605,7 +610,7 @@ class TestRunnerManager(threading.Thread):
         """Stop and restart the TestRunner"""
         assert isinstance(self.state, RunnerManagerState.restarting)
         self.stop_runner()
-        return RunnerManagerState.initializing(self.state.test, self.state.test_queue, self.state.queue_metadata, 0)
+        return RunnerManagerState.initalizing(self.state.test, self.state.test_queue, 0)
 
     def log(self, action, kwargs):
         getattr(self.logger, action)(**kwargs)
