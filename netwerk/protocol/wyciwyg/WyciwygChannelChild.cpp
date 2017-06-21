@@ -66,7 +66,8 @@ WyciwygChannelChild::~WyciwygChannelChild()
 {
   LOG(("Destroying WyciwygChannelChild @%p\n", this));
   if (mLoadInfo) {
-    NS_ReleaseOnMainThread(mLoadInfo.forget());
+    NS_ReleaseOnMainThread(
+      "WyciwygChannelChild::mLoadInfo", mLoadInfo.forget());
   }
 }
 

@@ -116,7 +116,7 @@ function test() {
       .then(() => deleteLastWatchExpression("myVar.prop"))
       .then(() => testWatchExpressionsRemoved())
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
-      .then(null, aError => {
+      .catch(aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
       });
 

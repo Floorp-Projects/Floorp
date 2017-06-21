@@ -738,7 +738,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
                       column: originalLocation.originalColumn
                     };
                     resolve(onPacket(packet))
-          .then(null, error => {
+          .catch(error => {
             reportError(error);
             return {
               error: "unknownError",
@@ -1071,7 +1071,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       needNest = false;
       returnVal = resolvedVal;
     })
-    .then(null, (error) => {
+    .catch((error) => {
       reportError(error, "Error inside unsafeSynchronize:");
     })
     .then(() => {

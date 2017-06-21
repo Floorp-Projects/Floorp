@@ -512,7 +512,7 @@ CssComputedView.prototype = {
       );
       this._refreshProcess.schedule();
       return deferred.promise;
-    }).then(null, (err) => console.error(err));
+    }).catch((err) => console.error(err));
   },
 
   /**
@@ -676,7 +676,7 @@ CssComputedView.prototype = {
     CssComputedView.propertyNames.push.apply(CssComputedView.propertyNames,
       mozProps.sort());
 
-    this._createPropertyViews().then(null, e => {
+    this._createPropertyViews().catch(e => {
       if (!this._isDestroyed) {
         console.warn("The creation of property views was cancelled because " +
           "the computed-view was destroyed before it was done creating views");
@@ -1108,7 +1108,7 @@ PropertyView.prototype = {
             this.matchedExpander.setAttribute("open", "");
             this.tree.inspector.emit("computed-view-property-expanded");
           });
-        }).then(null, console.error);
+        }).catch(console.error);
     }
 
     this.matchedSelectorsContainer.innerHTML = "";

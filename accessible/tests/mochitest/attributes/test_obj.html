@@ -30,7 +30,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("autocomplete", {"autocomplete" : "true"}, true);
       testAttrs("checkbox", {"checkable" : "true"}, true);
       testAttrs("checkedCheckbox", {"checkable" : "true"}, true);
-      testAttrs("checkedMenuitem", {"checkable" : "true"}, true);
+      testAbsentAttrs("checkedMenuitem", {"checkable" : "true"}, true);
+      testAttrs("checkedMenuitemCheckbox", {"checkable" : "true"}, true);
+      testAttrs("checkedMenuitemRadio", {"checkable" : "true"}, true);
       testAttrs("checkedOption", {"checkable" : "true"}, true);
       testAttrs("checkedRadio", {"checkable" : "true"}, true);
       testAttrs("checkedTreeitem", {"checkable" : "true"}, true);
@@ -205,6 +207,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
   <div id="checkbox" role="checkbox"></div>
   <div id="checkedCheckbox" role="checkbox" aria-checked="true"></div>
   <div id="checkedMenuitem" role="menuitem" aria-checked="true"></div>
+  <div id="checkedMenuitemCheckbox" role="menuitemcheckbox" aria-checked="true"></div>
+  <div id="checkedMenuitemRadio" role="menuitemradio" aria-checked="true"></div>
   <div id="checkedOption" role="option" aria-checked="true"></div>
   <div id="checkedRadio" role="radio" aria-checked="true"></div>
   <div id="checkedTreeitem" role="treeitem" aria-checked="true"></div>

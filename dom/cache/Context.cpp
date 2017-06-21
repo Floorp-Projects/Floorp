@@ -777,7 +777,8 @@ Context::ThreadsafeHandle::~ThreadsafeHandle()
 
   // Dispatch is guaranteed to succeed here because we block shutdown until
   // all Contexts have been destroyed.
-  NS_ProxyRelease(mOwningEventTarget, mStrongRef.forget());
+  NS_ProxyRelease(
+    "Context::ThreadsafeHandle::mStrongRef", mOwningEventTarget, mStrongRef.forget());
 }
 
 void

@@ -20,7 +20,7 @@ add_task(function* test_globals() {
 add_task(function* test_promiseID() {
   let p1 = new Promise(resolve => {});
   let p2 = new Promise(resolve => {});
-  let p3 = p2.then(null, null);
+  let p3 = p2.catch(null);
   let promise = [p1, p2, p3];
 
   let identifiers = promise.map(PromiseDebugging.getPromiseID);
@@ -102,11 +102,11 @@ add_task(function* test_observe_uncaught() {
       name: "Resolution callback",
     };
     yield {
-      promise: Promise.resolve(0).then(null, null),
-      name: "`then(null, null)`"
+      promise: Promise.resolve(0).catch(null),
+      name: "`catch(null)`"
     };
     yield {
-      promise: Promise.reject(0).then(null, () => {}),
+      promise: Promise.reject(0).catch(() => {}),
       name: "Reject and catch immediately",
     };
     yield {
@@ -122,7 +122,7 @@ add_task(function* test_observe_uncaught() {
 
     // Reject a promise now, consume it later.
     let p = Promise.reject("Reject now, consume later");
-    setTimeout(() => p.then(null, () => {
+    setTimeout(() => p.catch(() => {
       do_print("Consumed promise");
     }), 200);
     yield {

@@ -221,7 +221,8 @@ MainThreadHandoff::Release()
       // main thread right now, so we send a reference to ourselves to the main
       // thread to be re-released there.
       RefPtr<MainThreadHandoff> self = this;
-      NS_ReleaseOnMainThread(self.forget());
+      NS_ReleaseOnMainThread(
+        "MainThreadHandoff", self.forget());
     }
   }
   return newRefCnt;

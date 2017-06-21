@@ -129,7 +129,7 @@ SelectLayerGeometry(const Maybe<gfx::Polygon>& aParentGeometry,
   return Nothing();
 }
 
-static void
+void
 TransformLayerGeometry(Layer* aLayer, Maybe<gfx::Polygon>& aGeometry)
 {
   Layer* parent = aLayer;

@@ -39,7 +39,7 @@ function test() {
       .then(() => testModification("Object.keys({})", "Array[0]"))
       .then(() => testModification("document.title", '"Debugger test page"'))
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
-      .then(null, aError => {
+      .catch(aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
       });
 

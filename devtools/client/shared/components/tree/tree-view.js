@@ -277,7 +277,7 @@ define(function (require, exports, module) {
 
       return children.map(child => {
         let key = provider.getKey(child);
-        let nodePath = path + "/" + key;
+        let nodePath = TreeView.subPath(path, key);
         let type = provider.getType(child);
         let hasChildren = provider.hasChildren(child);
 
@@ -418,6 +418,55 @@ define(function (require, exports, module) {
       );
     }
   });
+
+  TreeView.subPath = function (path, subKey) {
+    return path + "/" + String(subKey).replace(/[\\/]/g, "\\$&");
+  };
+
+  /**
+   * Creates a set with the paths of the nodes that should be expanded by default
+   * according to the passed options.
+   * @param {Object} The root node of the tree.
+   * @param {Object} [optional] An object with the following optional parameters:
+   *   - maxLevel: nodes nested deeper than this level won't be expanded.
+   *   - maxNodes: maximum number of nodes that can be expanded. The traversal is
+         breadth-first, so expanding nodes nearer to the root will be preferred.
+         Sibling nodes will either be all expanded or none expanded.
+   * }
+   */
+  TreeView.getExpandedNodes = function (rootObj,
+    { maxLevel = Infinity, maxNodes = Infinity } = {}
+  ) {
+    let expandedNodes = new Set();
+    let queue = [{
+      object: rootObj,
+      level: 1,
+      path: ""
+    }];
+    while (queue.length) {
+      let {object, level, path} = queue.shift();
+      if (Object(object) !== object) {
+        continue;
+      }
+      let keys = Object.keys(object);
+      if (expandedNodes.size + keys.length > maxNodes) {
+        // Avoid having children half expanded.
+        break;
+      }
+      for (let key of keys) {
+        let nodePath = TreeView.subPath(path, key);
+        expandedNodes.add(nodePath);
+        if (level < maxLevel) {
+          queue.push({
+            object: object[key],
+            level: level + 1,
+            path: nodePath
+          });
+        }
+      }
+    }
+    return expandedNodes;
+  };
 
   // Helpers
 

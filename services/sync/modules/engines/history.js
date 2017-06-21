@@ -268,7 +268,7 @@ HistoryStore.prototype = {
       try {
         if (record.deleted) {
           let promise = this.remove(record);
-          promise = promise.then(null, ex => failed.push(record.id));
+          promise = promise.catch(ex => failed.push(record.id));
           blockers.push(promise);
 
           // No further processing needed. Remove it from the list.

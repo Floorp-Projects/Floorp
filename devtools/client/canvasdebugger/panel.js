@@ -50,7 +50,7 @@ CanvasDebuggerPanel.prototype = {
         this.emit("ready");
         return this;
       })
-      .then(null, function onError(aReason) {
+      .catch(function onError(aReason) {
         DevToolsUtils.reportException("CanvasDebuggerPanel.prototype.open", aReason);
       });
   },

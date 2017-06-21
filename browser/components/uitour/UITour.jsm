@@ -653,7 +653,7 @@ this.UITour = {
             searchbar.textbox.popup.addEventListener("popupshown", onPopupShown);
             searchbar.openSuggestionsPanel();
           }
-        }).then(null, Cu.reportError);
+        }).catch(Cu.reportError);
         break;
       }
 

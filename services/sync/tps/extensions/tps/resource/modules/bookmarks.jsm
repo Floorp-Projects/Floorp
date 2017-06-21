@@ -25,7 +25,7 @@ var DumpBookmarks = function TPS_Bookmarks__DumpBookmarks() {
     let [bookmarks, ] = result;
     Logger.logInfo("Dumping Bookmarks...\n" + JSON.stringify(bookmarks) + "\n\n");
     cb(null);
-  }).then(null, error => {
+  }).catch(error => {
     cb(error);
   });
   cb.wait();

@@ -258,6 +258,13 @@ public:
   }
 
   /**
+   * Return true if the window is hidden and should not be composited.
+   */
+  virtual bool IsHidden() const {
+    return false;
+  }
+
+  /**
    * This is only used by out-of-process compositors.
    */
   virtual RefPtr<VsyncObserver> GetVsyncObserver() const;

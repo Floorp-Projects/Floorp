@@ -126,7 +126,8 @@ CrashGenerationServer::CrashGenerationServer(
       server_state_(IPC_SERVER_STATE_UNINITIALIZED),
       shutting_down_(false),
       overlapped_(),
-      client_info_(NULL) {
+      client_info_(NULL),
+      include_context_heap_(false) {
   InitializeCriticalSection(&sync_);
 }
 
@@ -896,21 +897,52 @@ void CrashGenerationServer::HandleDumpRequest(const ClientInfo& client_info) {
   SetEvent(client_info.dump_generated_handle());
 }
 
+void CrashGenerationServer::set_include_context_heap(bool enabled) {
+  include_context_heap_ = enabled;
+}
+
 bool CrashGenerationServer::GenerateDump(const ClientInfo& client,
                                          std::wstring* dump_path) {
   assert(client.pid() != 0);
   assert(client.process_handle());
 
+  DWORD client_thread_id = 0;
+  if (!client.GetClientThreadId(&client_thread_id)) {
+    return false;
+  }
+
   // We have to get the address of EXCEPTION_INFORMATION from
   // the client process address space.
   EXCEPTION_POINTERS* client_ex_info = NULL;
+
+  // Only needs to read the value of a remote pointer in client_ex_info.
   if (!client.GetClientExceptionInfo(&client_ex_info)) {
     return false;
   }
 
-  DWORD client_thread_id = 0;
-  if (!client.GetClientThreadId(&client_thread_id)) {
-    return false;
+  if (include_context_heap_) {
+    CONTEXT context_content;
+
+    // Needs to read the content of CONTEXT from the client.
+    if (!client.PopulateClientExceptionContext(client_ex_info,
+                                               &context_content)) {
+      include_context_heap_ = false;
+    }
+
+    // Allocate AppMemory instances for exception context.
+    for (int i = 0; i < kExceptionAppMemoryRegions; i++) {
+      AppMemory app_memory;
+      app_memory.ptr = reinterpret_cast<ULONG64>(nullptr);
+      app_memory.length = 0;
+      app_memory.preallocated = true;
+      app_memory_info_.push_back(app_memory);
+    }
+
+    IncludeAppMemoryFromExceptionContext(client.process_handle(),
+                                         client_thread_id,
+                                         app_memory_info_,
+                                         &context_content,
+                                         !include_context_heap_);
   }
 
   MinidumpGenerator dump_generator(dump_path_,
@@ -922,7 +954,21 @@ bool CrashGenerationServer::GenerateDump(const ClientInfo& client,
                                    client.assert_info(),
                                    client.dump_type(),
                                    true);
-  if (!dump_generator.GenerateDumpFile(dump_path)) {
+
+  MinidumpCallbackContext callback_context;
+  MINIDUMP_CALLBACK_INFORMATION callback;
+  if (include_context_heap_) {
+    // Set memory callback to include heap regions.
+    callback_context.iter = app_memory_info_.cbegin();
+    callback_context.end = app_memory_info_.cend();
+
+    callback.CallbackRoutine = MinidumpWriteDumpCallback;
+    callback.CallbackParam = &callback_context;
+
+    dump_generator.SetCallback(&callback);
+  }
+
+ if (!dump_generator.GenerateDumpFile(dump_path)) {
     return false;
   }
   return dump_generator.WriteMinidump();

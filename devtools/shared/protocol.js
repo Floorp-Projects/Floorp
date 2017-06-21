@@ -1112,7 +1112,7 @@ var generateRequestHandlers = function (actorSpec, actorProto) {
           return p
             .then(() => ret)
             .then(sendReturn)
-            .then(null, this.writeError.bind(this));
+            .catch(this.writeError.bind(this));
         });
       } catch (e) {
         this._queueResponse(p => {
@@ -1251,7 +1251,7 @@ var Front = Class({
       this.actor().then(actorID => {
         packet.to = actorID;
         this.conn._transport.send(packet);
-      }).then(null, e => console.error(e));
+      }).catch(e => console.error(e));
     }
   },
 

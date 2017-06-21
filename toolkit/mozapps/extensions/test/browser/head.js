@@ -184,7 +184,7 @@ function log_exceptions(aCallback, ...aArgs) {
 
 function log_callback(aPromise, aCallback) {
   aPromise.then(aCallback)
-    .then(null, e => info("Exception thrown: " + e));
+    .catch(e => info("Exception thrown: " + e));
   return aPromise;
 }
 

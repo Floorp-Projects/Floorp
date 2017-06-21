@@ -199,7 +199,7 @@ function test() {
     gDevTools.showToolbox(target, toolId).then(function (box) {
       toolbox = box;
       deferred.resolve();
-    }).then(null, console.error);
+    }).catch(console.error);
     return deferred.promise;
   }
 

@@ -43,7 +43,7 @@ Debugger.prototype.onPromiseResolved.
       is(wrappedPromise.unsafeDereference(), promise);
       dbg.onPromiseSettled = undefined;
     })
-    .then(null, function (e) {
+    .catch(function (e) {
       ok(false, "Got an unexpected error: " + e);
     })
     .then(SimpleTest.finish);

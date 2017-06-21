@@ -545,7 +545,8 @@ protected:
     // Conduits must be released on MainThread, and we might have the last reference
     // We don't need to worry about runnables still trying to access the conduit, since
     // the runnables hold a ref to AudioProxyThread.
-    NS_ReleaseOnMainThread(mConduit.forget());
+    NS_ReleaseOnMainThread(
+      "AudioProxyThread::mConduit", mConduit.forget());
     MOZ_COUNT_DTOR(AudioProxyThread);
   }
 

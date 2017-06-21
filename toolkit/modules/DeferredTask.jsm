@@ -293,7 +293,7 @@ this.DeferredTask.prototype = {
       // Indicate that the execution of the task has finished.  This happens
       // synchronously with the previous state changes in the function.
       this._runningPromise = null;
-    })().then(null, Cu.reportError));
+    })().catch(Cu.reportError));
   },
 
   /**

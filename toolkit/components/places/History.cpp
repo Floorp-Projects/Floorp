@@ -494,7 +494,8 @@ public:
     }
 
     nsMainThreadPtrHandle<mozIVisitedStatusCallback>
-      callback(new nsMainThreadPtrHolder<mozIVisitedStatusCallback>(aCallback));
+      callback(new nsMainThreadPtrHolder<mozIVisitedStatusCallback>(
+        "mozIVisitedStatusCallback", aCallback));
 
     nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
     NS_ENSURE_STATE(navHistory);
@@ -860,7 +861,8 @@ CanAddURI(nsIURI* aURI,
     VisitData place(aURI);
     place.guid = aGUID;
     nsMainThreadPtrHandle<mozIVisitInfoCallback>
-      callback(new nsMainThreadPtrHolder<mozIVisitInfoCallback>(aCallback));
+      callback(new nsMainThreadPtrHolder<mozIVisitInfoCallback>(
+        "mozIVisitInfoCallback", aCallback));
     nsCOMPtr<nsIRunnable> event =
       new NotifyPlaceInfoCallback(callback, place, true, NS_ERROR_INVALID_ARG);
     (void)NS_DispatchToMainThread(event);
@@ -921,7 +923,8 @@ public:
     }
 
     nsMainThreadPtrHandle<mozIVisitInfoCallback>
-      callback(new nsMainThreadPtrHolder<mozIVisitInfoCallback>(aCallback));
+      callback(new nsMainThreadPtrHolder<mozIVisitInfoCallback>(
+        "mozIVisitInfoCallback", aCallback));
     bool ignoreErrors = false, ignoreResults = false;
     if (aCallback) {
       // We ignore errors from either of these methods in case old JS consumers
@@ -1881,7 +1884,8 @@ StoreAndNotifyEmbedVisit(VisitData& aPlace,
 
   if (!!aCallback) {
     nsMainThreadPtrHandle<mozIVisitInfoCallback>
-      callback(new nsMainThreadPtrHolder<mozIVisitInfoCallback>(aCallback));
+      callback(new nsMainThreadPtrHolder<mozIVisitInfoCallback>(
+        "mozIVisitInfoCallback", aCallback));
     bool ignoreResults = false;
     Unused << aCallback->GetIgnoreResults(&ignoreResults);
     if (!ignoreResults) {
@@ -2705,7 +2709,8 @@ History::AddDownload(nsIURI* aSource, nsIURI* aReferrer,
 
   nsMainThreadPtrHandle<mozIVisitInfoCallback> callback;
   if (aDestination) {
-    callback = new nsMainThreadPtrHolder<mozIVisitInfoCallback>(new SetDownloadAnnotations(aDestination));
+    callback = new nsMainThreadPtrHolder<mozIVisitInfoCallback>(
+      "mozIVisitInfoCallback", new SetDownloadAnnotations(aDestination));
   }
 
   rv = InsertVisitedURIs::Start(dbConn, placeArray, callback);
@@ -2886,7 +2891,8 @@ History::UpdatePlaces(JS::Handle<JS::Value> aPlaceInfos,
   NS_ENSURE_STATE(dbConn);
 
   nsMainThreadPtrHandle<mozIVisitInfoCallback>
-    callback(new nsMainThreadPtrHolder<mozIVisitInfoCallback>(aCallback));
+    callback(new nsMainThreadPtrHolder<mozIVisitInfoCallback>(
+      "mozIVisitInfoCallback", aCallback));
 
   // It is possible that all of the visits we were passed were dissallowed by
   // CanAddURI, which isn't an error.  If we have no visits to add, however,

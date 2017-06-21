@@ -177,7 +177,7 @@ var test_bulk_request_cs = Task.async(function* (transportFactory, actorType, re
       client.close();
       transport.close();
     });
-  }).then(null, do_throw);
+  }).catch(do_throw);
 
   DebuggerServer.on("connectionchange", (event, type) => {
     if (type === "closed") {
@@ -219,7 +219,7 @@ var test_json_request_cs = Task.async(function* (transportFactory, actorType, re
       client.close();
       transport.close();
     });
-  }).then(null, do_throw);
+  }).catch(do_throw);
 
   DebuggerServer.on("connectionchange", (event, type) => {
     if (type === "closed") {

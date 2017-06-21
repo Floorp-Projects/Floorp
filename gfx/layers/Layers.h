@@ -327,7 +327,7 @@ public:
    * for this LayerManager. Useful in conjunction with the END_NO_REMOTE_COMPOSITE
    * flag to EndTransaction.
    */
-  virtual void Composite() {}
+  virtual void ScheduleComposite() {}
 
   virtual void SetNeedsComposite(bool aNeedsComposite) {}
   virtual bool NeedsComposite() const { return false; }
@@ -351,6 +351,18 @@ public:
    * transparent surfaces (and lose subpixel-AA for text).
    */
   virtual bool AreComponentAlphaLayersEnabled();
+
+  /**
+   * Returns true if this LayerManager always requires an intermediate surface
+   * to render blend operations.
+   */
+  virtual bool BlendingRequiresIntermediateSurface() { return false; }
+
+  /**
+   * Returns true if this LayerManager supports component alpha layers in
+   * situations that require a copy of the backdrop.
+   */
+  virtual bool SupportsBackdropCopyForComponentAlpha() { return true; }
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -1800,7 +1812,7 @@ public:
    * Clear the invalid rect, marking the layer as being identical to what is currently
    * composited.
    */
-  virtual void ClearInvalidRect() { mInvalidRegion.SetEmpty(); }
+  virtual void ClearInvalidRegion() { mInvalidRegion.SetEmpty(); }
 
   // These functions allow attaching an AsyncPanZoomController to this layer,
   // and can be used anytime.
@@ -2038,7 +2050,7 @@ public:
     mValidRegionIsCurrent = false;
   }
 
-  void ClearInvalidRect() override
+  void ClearInvalidRegion() override
   {
     // mInvalidRegion is about to be reset. This is the last chance to apply
     // any pending changes from it to mValidRegion. Do that by calling
@@ -2329,6 +2341,8 @@ public:
   }
 
   nsTArray<CSSFilter>& GetFilterChain() { return mFilterChain; }
+  
+  virtual void SetInvalidCompositeRect(const gfx::IntRect& aRect) {}
 
 protected:
   friend class ReadbackProcessor;

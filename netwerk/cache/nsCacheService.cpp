@@ -2695,7 +2695,8 @@ nsCacheService::ReleaseObject_Locked(nsISupports * obj,
     if (!target || (NS_SUCCEEDED(target->IsOnCurrentThread(&isCur)) && isCur)) {
         gService->mDoomedObjects.AppendElement(obj);
     } else {
-        NS_ProxyRelease(target, dont_AddRef(obj));
+        NS_ProxyRelease(
+          "nsCacheService::ReleaseObject_Locked::obj", target, dont_AddRef(obj));
     }
 }
 

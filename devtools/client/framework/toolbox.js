@@ -510,7 +510,7 @@ Toolbox.prototype = {
 
       this.emit("ready");
       this._isOpenDeferred.resolve();
-    }.bind(this)).then(null, console.error.bind(console));
+    }.bind(this)).catch(console.error.bind(console));
   },
 
   /**
@@ -2479,7 +2479,7 @@ Toolbox.prototype = {
               .getInterface(Ci.nsIDOMWindowUtils)
               .garbageCollect();
           }
-        }).then(null, console.error));
+        }).catch(console.error));
 
     let leakCheckObserver = ({wrappedJSObject: barrier}) => {
       // Make the leak detector wait until this toolbox is properly destroyed.

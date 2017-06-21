@@ -652,8 +652,7 @@ add_test(function test_fetchAndUnwrapKeys_no_token() {
     user2 => {
       return fxa.internal.fetchAndUnwrapKeys();
     }
-  ).then(
-    null,
+  ).catch(
     error => {
       log.info("setSignedInUser correctly rejected");
     }
@@ -1226,7 +1225,7 @@ add_test(function test_getOAuthToken_invalid_param() {
   let fxa = new MockFxAccounts();
 
   fxa.getOAuthToken()
-    .then(null, err => {
+    .catch(err => {
        do_check_eq(err.message, "INVALID_PARAMETER");
        fxa.signOut().then(run_next_test);
     });
@@ -1236,7 +1235,7 @@ add_test(function test_getOAuthToken_invalid_scope_array() {
   let fxa = new MockFxAccounts();
 
   fxa.getOAuthToken({scope: []})
-    .then(null, err => {
+    .catch(err => {
        do_check_eq(err.message, "INVALID_PARAMETER");
        fxa.signOut().then(run_next_test);
     });
@@ -1248,7 +1247,7 @@ add_test(function test_getOAuthToken_misconfigure_oauth_uri() {
   Services.prefs.deleteBranch("identity.fxaccounts.remote.oauth.uri");
 
   fxa.getOAuthToken()
-    .then(null, err => {
+    .catch(err => {
        do_check_eq(err.message, "INVALID_PARAMETER");
        // revert the pref
        Services.prefs.setCharPref("identity.fxaccounts.remote.oauth.uri", "https://example.com/v1");
@@ -1264,7 +1263,7 @@ add_test(function test_getOAuthToken_no_account() {
   };
 
   fxa.getOAuthToken({ scope: "profile" })
-    .then(null, err => {
+    .catch(err => {
        do_check_eq(err.message, "NO_ACCOUNT");
        fxa.signOut().then(run_next_test);
     });
@@ -1276,7 +1275,7 @@ add_test(function test_getOAuthToken_unverified() {
 
   fxa.setSignedInUser(alice).then(() => {
     fxa.getOAuthToken({ scope: "profile" })
-      .then(null, err => {
+      .catch(err => {
          do_check_eq(err.message, "UNVERIFIED_ACCOUNT");
          fxa.signOut().then(run_next_test);
       });
@@ -1304,7 +1303,7 @@ add_test(function test_getOAuthToken_network_error() {
 
   fxa.setSignedInUser(alice).then(() => {
     fxa.getOAuthToken({ scope: "profile", client })
-      .then(null, err => {
+      .catch(err => {
          do_check_eq(err.message, "NETWORK_ERROR");
          do_check_eq(err.details.errno, ERRNO_NETWORK);
          run_next_test();
@@ -1333,7 +1332,7 @@ add_test(function test_getOAuthToken_auth_error() {
 
   fxa.setSignedInUser(alice).then(() => {
     fxa.getOAuthToken({ scope: "profile", client })
-      .then(null, err => {
+      .catch(err => {
          do_check_eq(err.message, "AUTH_ERROR");
          do_check_eq(err.details.errno, ERRNO_INVALID_FXA_ASSERTION);
          run_next_test();
@@ -1359,7 +1358,7 @@ add_test(function test_getOAuthToken_unknown_error() {
 
   fxa.setSignedInUser(alice).then(() => {
     fxa.getOAuthToken({ scope: "profile", client })
-      .then(null, err => {
+      .catch(err => {
          do_check_eq(err.message, "UNKNOWN_ERROR");
          run_next_test();
       });

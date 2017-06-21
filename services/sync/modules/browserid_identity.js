@@ -840,8 +840,7 @@ BrowserIDClusterManager.prototype = {
     let cb = Async.makeSpinningCallback();
     promiseClusterURL().then(function(clusterURL) {
       cb(null, clusterURL);
-    }).then(
-      null, err => {
+    }).catch(err => {
       log.info("Failed to fetch the cluster URL", err);
       // service.js's verifyLogin() method will attempt to fetch a cluster
       // URL when it sees a 401.  If it gets null, it treats it as a "real"

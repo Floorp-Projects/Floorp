@@ -58,7 +58,7 @@
           },
         });
         sendAsyncMessage("navigate", "download.auto");
-      }).then(null, Cu.reportError);
+      }).catch(Cu.reportError);
     });
     script.addMessageListener("navigate", function(url) {
       window.location = url;
