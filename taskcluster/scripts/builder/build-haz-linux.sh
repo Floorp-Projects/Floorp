@@ -53,7 +53,7 @@ export MOZ_OBJDIR="$WORKSPACE/obj-analyzed"
 mkdir -p "$MOZ_OBJDIR"
 
 if [ -n "$DO_TOOLTOOL" ]; then
-  ( cd $TOOLTOOL_DIR; $GECKO_DIR/mach artifact toolchain -v --tooltool-url https://api.pub.build.mozilla.org/tooltool/ --tooltool-manifest $GECKO_DIR/$TOOLTOOL_MANIFEST --cache-dir $TOOLTOOL_CACHE )
+  ( cd $TOOLTOOL_DIR; $GECKO_DIR/mach artifact toolchain -v --tooltool-url https://api.pub.build.mozilla.org/tooltool/ --tooltool-manifest $GECKO_DIR/$TOOLTOOL_MANIFEST --cache-dir $TOOLTOOL_CACHE${MOZ_TOOLCHAINS:+ ${MOZ_TOOLCHAINS}} )
 fi
 
 export NO_MERCURIAL_SETUP_CHECK=1
