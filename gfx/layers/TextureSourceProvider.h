@@ -102,11 +102,25 @@ public:
   // used to composite).
   virtual bool IsValid() const = 0;
 
+public:
+  class MOZ_STACK_CLASS AutoReadUnlockTextures
+  {
+  public:
+    explicit AutoReadUnlockTextures(TextureSourceProvider* aProvider)
+     : mProvider(aProvider)
+    {}
+    ~AutoReadUnlockTextures() {
+      mProvider->ReadUnlockTextures();
+    }
+
+  private:
+    RefPtr<TextureSourceProvider> mProvider;
+  };
+
 protected:
   // Should be called at the end of each composition.
   void ReadUnlockTextures();
 
-protected:
   virtual ~TextureSourceProvider();
 
 private:

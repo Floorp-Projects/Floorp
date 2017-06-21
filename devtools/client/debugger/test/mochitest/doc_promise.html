@@ -23,7 +23,7 @@
 
     // Attach an error handler so that the logs don't have a warning about an
     // unhandled, rejected promise.
-    window.rejected.then(null, function () {});
+    window.rejected.catch(function () {});
     </script>
   </body>
 

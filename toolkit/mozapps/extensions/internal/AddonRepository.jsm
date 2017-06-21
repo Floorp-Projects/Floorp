@@ -1657,11 +1657,11 @@ var AddonDatabase = {
     this.DB = BLANK_DB();
 
     this._deleting = this.Writer.flush()
-      .then(null, () => {})
+      .catch(() => {})
       // shutdown(true) never rejects
       .then(() => this.shutdown(true))
       .then(() => OS.File.remove(this.jsonFile, {}))
-      .then(null, error => logger.error("Unable to delete Addon Repository file " +
+      .catch(error => logger.error("Unable to delete Addon Repository file " +
                                  this.jsonFile, error))
       .then(() => this._deleting = null)
       .then(aCallback);
@@ -1899,8 +1899,7 @@ var AddonDatabase = {
    *                 write to disk has completed.
    */
   _saveDBToDisk() {
-    return this.Writer.saveChanges().then(
-      null,
+    return this.Writer.saveChanges().catch(
       e => logger.error("SaveDBToDisk failed", e));
   },
 

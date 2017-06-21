@@ -26,7 +26,7 @@ function run_test() {
     yield test_async_once();
     yield test_async_invoke();
     do_test_finished();
-  }).then(null, error => {
+  }).catch(error => {
     do_throw(error);
   });
 }
@@ -66,7 +66,7 @@ function test_async_throw(async) {
     })
   };
 
-  return obj.method().then(null, error => {
+  return obj.method().catch(error => {
     do_check_true(error instanceof Error);
     do_check_eq(error.message, "boom");
   });
@@ -149,7 +149,7 @@ function test_async_invoke() {
       throw new Error("boom");
     }
 
-    yield promiseCall(thrower).then(null, error => {
+    yield promiseCall(thrower).catch(error => {
       do_check_true(error instanceof Error);
       do_check_eq(error.message, "boom");
     });

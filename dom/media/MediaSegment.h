@@ -67,7 +67,8 @@ typedef nsMainThreadPtrHandle<nsIPrincipal> PrincipalHandle;
 inline PrincipalHandle MakePrincipalHandle(nsIPrincipal* aPrincipal)
 {
   RefPtr<nsMainThreadPtrHolder<nsIPrincipal>> holder =
-    new nsMainThreadPtrHolder<nsIPrincipal>(aPrincipal);
+    new nsMainThreadPtrHolder<nsIPrincipal>(
+      "MakePrincipalHandle::nsIPrincipal", aPrincipal);
   return PrincipalHandle(holder);
 }
 

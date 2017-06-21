@@ -88,7 +88,12 @@ class ClientInfo {
   void UnregisterProcessExitWait(bool block_until_no_pending);
 
   bool Initialize();
-  bool GetClientExceptionInfo(EXCEPTION_POINTERS** ex_info) const;
+  bool GetClientExceptionInfo(EXCEPTION_POINTERS** ex_info_ptr) const;
+
+  // Reads the content of exception CONTEXT from the client process.
+  bool PopulateClientExceptionContext(EXCEPTION_POINTERS* ex_info,
+                                      CONTEXT* out_context) const;
+
   bool GetClientThreadId(DWORD* thread_id) const;
 
   // Reads the custom information from the client process address space.

@@ -13,7 +13,7 @@
                                      finish.bind(null, 'blocked'));
   navigator.serviceWorker
            .register("file_service_worker.js", {scope: "."})
-           .then(null, finish.bind(null, 'blocked'));
+           .catch(finish.bind(null, 'blocked'));
   </script>
 </body>
 </html>

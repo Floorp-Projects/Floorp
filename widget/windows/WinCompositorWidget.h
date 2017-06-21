@@ -64,6 +64,7 @@ public:
   CompositorWidgetDelegate* AsDelegate() override {
     return this;
   }
+  bool IsHidden() const override;
 
   // CompositorWidgetDelegate overrides.
   void EnterPresentLock() override;

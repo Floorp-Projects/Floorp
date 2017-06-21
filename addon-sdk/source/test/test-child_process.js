@@ -66,7 +66,7 @@ exports.testExecOptionsEnvironment = function (assert, done) {
         'receives environment option');
       done();
     });
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 };
 
 exports.testExecOptionsTimeout = function (assert, done) {
@@ -104,7 +104,7 @@ exports.testExecOptionsTimeout = function (assert, done) {
       child.off('close', closeHandler);
       done();
     }
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 };
 
 exports.testExecFileCallbackSuccess = function (assert, done) {
@@ -116,7 +116,7 @@ exports.testExecFileCallbackSuccess = function (assert, done) {
       assert.equal(stdout.trim(), '--myargs -j -s'.trim(), 'passes in correct arguments');
       done();
     });
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 };
 
 exports.testExecFileCallbackError = function (assert, done) {
@@ -143,7 +143,7 @@ exports.testExecFileOptionsEnvironment = function (assert, done) {
         'receives environment option');
       done();
     });
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 };
 
 exports.testExecFileOptionsTimeout = function (assert, done) {
@@ -181,7 +181,7 @@ exports.testExecFileOptionsTimeout = function (assert, done) {
       child.off('close', closeHandler);
       done();
     }
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 };
 
 /**
@@ -204,7 +204,7 @@ exports.testExecFileOptionsMaxBufferLargeStdOut = function (assert, done) {
     });
     stdoutChild.on('exit', exitHandler);
     stdoutChild.on('close', closeHandler);
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 
   function exitHandler (code, signal) {
     assert.equal(code, null, 'Exit code is null in exit handler');
@@ -239,7 +239,7 @@ exports.testExecFileOptionsMaxBufferLargeStdOErr = function (assert, done) {
     });
     stderrChild.on('exit', exitHandler);
     stderrChild.on('close', closeHandler);
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 
   function exitHandler (code, signal) {
     assert.equal(code, null, 'Exit code is null in exit handler');
@@ -280,7 +280,7 @@ exports.testExecFileOptionsMaxBufferSmallStdOut = function (assert, done) {
     });
     stdoutChild.on('exit', exitHandler);
     stdoutChild.on('close', closeHandler);
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 
   function exitHandler (code, signal) {
     // Sometimes the buffer limit is hit before the process closes successfully
@@ -331,7 +331,7 @@ exports.testExecFileOptionsMaxBufferSmallStdErr = function (assert, done) {
     });
     stderrChild.on('exit', exitHandler);
     stderrChild.on('close', closeHandler);
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 
   function exitHandler (code, signal) {
     // Sometimes the buffer limit is hit before the process closes successfully
@@ -377,7 +377,7 @@ exports.testChildExecFileKillSignal = function (assert, done) {
       assert.equal(err.signal, 'beepbeep', 'correctly used custom killSignal');
       done();
     });
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 };
 
 exports.testChildProperties = function (assert, done) {
@@ -508,7 +508,7 @@ exports.testSpawnOptions = function (assert, done) {
 
     envChild.on('close', envClose);
     cwdChild.on('close', cwdClose);
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 
   function envClose () {
     assert.equal(envStdout.trim(), 'my-value-test', 'spawn correctly passed in ENV');

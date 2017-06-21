@@ -26,7 +26,7 @@ function realstartup() {
 
   let branch = "racy-set";
   experiments.setExperimentBranch(experiment.id, branch)
-    .then(null, Cu.reportError);
+    .catch(Cu.reportError);
 }
 
 function shutdown() { }

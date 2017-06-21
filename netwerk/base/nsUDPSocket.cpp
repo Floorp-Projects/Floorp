@@ -531,7 +531,8 @@ nsUDPSocket::OnSocketDetached(PRFileDesc *fd)
 
     if (listener) {
       listener->OnStopListening(this, mCondition);
-      NS_ProxyRelease(mListenerTarget, listener.forget());
+      NS_ProxyRelease(
+        "nsUDPSocket::mListener", mListenerTarget, listener.forget());
     }
   }
 }
@@ -846,7 +847,8 @@ class SocketListenerProxy final : public nsIUDPSocketListener
 
 public:
   explicit SocketListenerProxy(nsIUDPSocketListener* aListener)
-    : mListener(new nsMainThreadPtrHolder<nsIUDPSocketListener>(aListener))
+    : mListener(new nsMainThreadPtrHolder<nsIUDPSocketListener>(
+        "SocketListenerProxy::mListener", aListener))
     , mTarget(GetCurrentThreadEventTarget())
   { }
 

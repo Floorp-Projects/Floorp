@@ -1105,7 +1105,7 @@ UploadLastDir::Observe(nsISupports* aSubject, char const* aTopic, char16_t const
 //Helper method
 static nsresult FireEventForAccessibility(nsIDOMHTMLInputElement* aTarget,
                                           nsPresContext* aPresContext,
-                                          const nsAString& aEventType);
+                                          EventMessage aEventMessage);
 #endif
 
 nsTextEditorState* HTMLInputElement::sCachedTextEditorState = nullptr;
@@ -4348,29 +4348,27 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
       }
     } else {
       // Fire input event and then change event.
-      nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
-                                           static_cast<nsIDOMHTMLInputElement*>(this),
-                                           NS_LITERAL_STRING("input"), true,
-                                           false);
+      nsContentUtils::DispatchTrustedEvent<InternalEditorInputEvent>
+        (OwnerDoc(), static_cast<nsIDOMHTMLInputElement*>(this),
+         eEditorInput, true, false);
 
-      nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
-                                           static_cast<nsIDOMHTMLInputElement*>(this),
-                                           NS_LITERAL_STRING("change"), true,
-                                           false);
+      nsContentUtils::DispatchTrustedEvent<WidgetEvent>
+        (OwnerDoc(), static_cast<nsIDOMHTMLInputElement*>(this),
+         eFormChange, true, false);
 #ifdef ACCESSIBILITY
       // Fire an event to notify accessibility
       if (mType == NS_FORM_INPUT_CHECKBOX) {
         FireEventForAccessibility(this, aVisitor.mPresContext,
-                                  NS_LITERAL_STRING("CheckboxStateChange"));
+                                  eFormCheckboxStateChange);
       } else {
         FireEventForAccessibility(this, aVisitor.mPresContext,
-                                  NS_LITERAL_STRING("RadioStateChange"));
+                                  eFormRadioStateChange);
         // Fire event for the previous selected radio.
         nsCOMPtr<nsIDOMHTMLInputElement> previous =
           do_QueryInterface(aVisitor.mItemData);
         if (previous) {
           FireEventForAccessibility(previous, aVisitor.mPresContext,
-                                    NS_LITERAL_STRING("RadioStateChange"));
+                                    eFormRadioStateChange);
         }
       }
 #endif
@@ -6283,17 +6281,11 @@ HTMLInputElement::SetSelectionDirection(const nsAString& aDirection, ErrorResult
 /*static*/ nsresult
 FireEventForAccessibility(nsIDOMHTMLInputElement* aTarget,
                           nsPresContext* aPresContext,
-                          const nsAString& aEventType)
+                          EventMessage aEventMessage)
 {
   nsCOMPtr<mozilla::dom::Element> element = do_QueryInterface(aTarget);
-  RefPtr<Event> event = NS_NewDOMEvent(element, aPresContext, nullptr);
-  event->InitEvent(aEventType, true, true);
-  event->SetTrusted(true);
-
-  EventDispatcher::DispatchDOMEvent(aTarget, nullptr, event, aPresContext,
-                                    nullptr);
-
-  return NS_OK;
+  return nsContentUtils::DispatchTrustedEvent<WidgetEvent>
+    (element->OwnerDoc(), aTarget, aEventMessage, true, true);
 }
 #endif
 

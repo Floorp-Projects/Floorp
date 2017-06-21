@@ -1336,6 +1336,9 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
     } else if ((!idealTransform.Is2D() || AnyAncestorOrThisIs3DContextLeaf()) &&
                Creates3DContextWithExtendingChildren()) {
       useIntermediateSurface = true;
+    } else if (blendMode != CompositionOp::OP_OVER &&
+               Manager()->BlendingRequiresIntermediateSurface()) {
+      useIntermediateSurface = true;
     } else {
       useIntermediateSurface = false;
       gfx::Matrix contTransform;
@@ -1433,7 +1436,9 @@ ContainerLayer::DefaultComputeSupportsComponentAlphaChildren(bool* aNeedsSurface
       if (HasOpaqueAncestorLayer(this) &&
           GetEffectiveTransform().Is2D(&transform) &&
           !gfx::ThebesMatrix(transform).HasNonIntegerTranslation() &&
-          blendMode == gfx::CompositionOp::OP_OVER) {
+          blendMode == gfx::CompositionOp::OP_OVER &&
+          Manager()->SupportsBackdropCopyForComponentAlpha())
+      {
         mSupportsComponentAlphaChildren = true;
         needsSurfaceCopy = true;
       }

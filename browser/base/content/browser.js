@@ -1674,7 +1674,7 @@ var gBrowserInit = {
       this.gmpInstallManager = new GMPInstallManager();
       // We don't really care about the results, if someone is interested they
       // can check the log.
-      this.gmpInstallManager.simpleCheckAndInstall().then(null, () => {});
+      this.gmpInstallManager.simpleCheckAndInstall().catch(() => {});
     }, {timeout: 1000 * 60});
 
     SessionStore.promiseInitialized.then(() => {

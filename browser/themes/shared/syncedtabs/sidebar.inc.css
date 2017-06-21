@@ -90,19 +90,23 @@ body {
 }
 
 .item.client.device-image-desktop > .item-title-container > .item-icon-container {
-  background-image: url("chrome://browser/skin/sync-desktopIcon.svg#icon");
+  background-image: url("chrome://browser/skin/sync-desktopIcon.svg");
+  -moz-context-properties: fill;
+  fill: #4d4d4d;
 }
 
 .item.client.device-image-desktop.selected:focus > .item-title-container > .item-icon-container {
-  background-image: url("chrome://browser/skin/sync-desktopIcon.svg#icon-inverted");
+  fill: white;
 }
 
 .item.client.device-image-mobile > .item-title-container > .item-icon-container {
-  background-image: url("chrome://browser/skin/sync-mobileIcon.svg#icon");
+  background-image: url("chrome://browser/skin/sync-mobileIcon.svg");
+  -moz-context-properties: fill;
+  fill: #4d4d4d;
 }
 
 .item.client.device-image-mobile.selected:focus > .item-title-container > .item-icon-container {
-  background-image: url("chrome://browser/skin/sync-mobileIcon.svg#icon-inverted");
+  fill: white;
 }
 
 .item.tab > .item-title-container > .item-icon-container {

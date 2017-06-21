@@ -154,13 +154,11 @@ toolbarbutton[type="menu-button"] {
 
 toolbar[mode="icons"] .toolbarbutton-text,
 toolbar[mode="icons"] .toolbarbutton-multiline-text,
-toolbar[mode="text"] .toolbarbutton-icon {
-  display: none;
-}
-
+toolbar[mode="text"] .toolbarbutton-icon,
 .toolbarbutton-multiline-text:not([wrap="true"]),
 .toolbarbutton-text[wrap="true"] {
   display: none;
+  -moz-binding: none;
 }
 
 /******** browser, editor, iframe ********/

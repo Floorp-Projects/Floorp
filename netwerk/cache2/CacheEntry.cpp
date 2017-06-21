@@ -134,7 +134,7 @@ CacheEntry::Callback::Callback(CacheEntry::Callback const &aThat)
 
 CacheEntry::Callback::~Callback()
 {
-  ProxyRelease(mCallback, mTarget);
+  ProxyRelease("CacheEntry::Callback::mCallback", mCallback, mTarget);
 
   mEntry->ReleaseHandleRef();
   MOZ_COUNT_DTOR(CacheEntry::Callback);

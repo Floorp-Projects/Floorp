@@ -42,7 +42,7 @@ function registerNewActor() {
     .registerActor("resource://test/hello-actor.js", options)
     .then(actorFront => (gActorFront = actorFront))
     .then(talkToNewActor)
-    .then(null, e => {
+    .catch(e => {
       DevToolsUtils.reportException("registerNewActor", e);
       do_check_true(false);
     });
@@ -65,7 +65,7 @@ function unregisterNewActor() {
   gActorFront
     .unregister()
     .then(testActorIsUnregistered)
-    .then(null, e => {
+    .catch(e => {
       DevToolsUtils.reportException("unregisterNewActor", e);
       do_check_true(false);
     });

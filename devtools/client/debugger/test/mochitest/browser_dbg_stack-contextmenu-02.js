@@ -26,7 +26,7 @@ function test() {
      .then(openContextMenu)
      .then(testCopyStackMenuItem)
      .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
-     .then(null, aError => {
+     .catch(aError => {
        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
      });
     callInTab(gTab, "simpleCall");

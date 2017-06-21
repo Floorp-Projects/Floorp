@@ -90,4 +90,18 @@ interface nsIThreadManager : nsISupports
    * C++ callers should instead use NS_DispatchToMainThread.
    */
   void dispatchToMainThread(in nsIRunnable event);
+
+  /**
+   * This queues a runnable to the main thread's idle queue.
+   *
+   * @param event
+   *   The event to dispatch.
+   * @param timeout
+   *   The time in milliseconds until this event should be moved from the idle
+   *   queue to the regular queue if it hasn't been executed by then.  If not
+   *   passed or a zero value is specified, the event will never be moved to
+   *   the regular queue.
+   */
+  void idleDispatchToMainThread(in nsIRunnable event,
+                                [optional] in uint32_t timeout);
 };

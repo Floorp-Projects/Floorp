@@ -147,7 +147,7 @@ this.ZipUtils = {
       }
 
       zipReader.close();
-    })().then(null, (e) => {
+    })().catch((e) => {
       zipReader.close();
       throw e;
     });

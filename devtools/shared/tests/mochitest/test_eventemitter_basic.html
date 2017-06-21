@@ -33,7 +33,7 @@
       testEmitter({});
 
       Task.spawn(testPromise)
-          .then(null, ok.bind(null, false))
+          .catch(ok.bind(null, false))
           .then(SimpleTest.finish);
 
       function testEmitter(aObject) {

@@ -491,7 +491,7 @@ ClientLayerManager::GetCompositorBridgeChild()
 }
 
 void
-ClientLayerManager::Composite()
+ClientLayerManager::ScheduleComposite()
 {
   mForwarder->Composite();
 }
@@ -797,6 +797,13 @@ ClientLayerManager::AreComponentAlphaLayersEnabled()
   return GetCompositorBackendType() != LayersBackend::LAYERS_BASIC &&
          AsShadowForwarder()->SupportsComponentAlpha() &&
          LayerManager::AreComponentAlphaLayersEnabled();
+}
+
+bool
+ClientLayerManager::SupportsBackdropCopyForComponentAlpha()
+{
+  const TextureFactoryIdentifier& ident = AsShadowForwarder()->GetTextureFactoryIdentifier();
+  return ident.mSupportsBackdropCopyForComponentAlpha;
 }
 
 void

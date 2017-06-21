@@ -75,7 +75,7 @@ exports.testBrowserWindowCreationOnActivate = function(assert, done) {
   open().then(function(window) {
     assert.ok(gotActivate, "Received activate event");
     return close(window);
-  }).then(done).then(null, assert.fail);
+  }).then(done).catch(assert.fail);
 }
 
 // TEST: tab unloader
@@ -176,7 +176,7 @@ exports.testTabPropertiesInNewWindow = function(assert, done) {
   let count = 0;
   function onReadyOrLoad (tab) {
     if (count++) {
-      close(getOwnerWindow(viewFor(tab))).then(done).then(null, assert.fail);
+      close(getOwnerWindow(viewFor(tab))).then(done).catch(assert.fail);
     }
   }
 
@@ -269,7 +269,7 @@ exports.testTabContentTypeAndReload = function(assert, done) {
         }
         else {
           assert.equal(tab.contentType, "text/xml");
-          close(window).then(done).then(null, assert.fail);
+          close(window).then(done).catch(assert.fail);
         }
       }
     });
@@ -294,7 +294,7 @@ exports.testTabsIteratorAndLength = function(assert, done) {
         assert.equal(count, startCount + 3, "iterated tab count matches");
         assert.equal(startCount + 3, tabs.length, "iterated tab count matches length property");
 
-        close(window).then(done).then(null, assert.fail);
+        close(window).then(done).catch(assert.fail);
       }
     });
   });
@@ -311,7 +311,7 @@ exports.testTabLocation = function(assert, done) {
         return;
       tabs.removeListener('ready', onReady);
       assert.pass("tab.load() loaded the correct url");
-      close(window).then(done).then(null, assert.fail);
+      close(window).then(done).catch(assert.fail);
     });
 
     tabs.open({
@@ -365,10 +365,10 @@ exports.testTabMove = function(assert, done) {
         assert.equal(tab.index, 1, "tab index before move matches");
         tab.index = 0;
         assert.equal(tab.index, 0, "tab index after move matches");
-        close(window).then(done).then(null, assert.fail);
+        close(window).then(done).catch(assert.fail);
       }
     });
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 };
 
 exports.testIgnoreClosing = function*(assert) {
@@ -481,7 +481,7 @@ exports.testOpenInNewWindow = function(assert, done) {
         assert.equal(tabs.activeTab.url, url, "URL of activeTab matches");
 
         return close(newWindow).then(done);
-      }).then(null, assert.fail);
+      }).catch(assert.fail);
     }
   });
 
@@ -502,7 +502,7 @@ exports.testOpenInNewWindowOnOpen = function(assert, done) {
         assert.equal(windows().length, startWindowCount + 1, "a new window was opened");
         assert.equal(getMostRecentBrowserWindow(), newWindow, "new window is active");
 
-        close(newWindow).then(done).then(null, assert.fail);
+        close(newWindow).then(done).catch(assert.fail);
       });
     }
   });
@@ -525,11 +525,11 @@ exports.testTabsEvent_onOpen = function(assert, done) {
       assert.equal(++eventCount, 2, "both listeners notified");
       tabs.removeListener('open', listener1);
       tabs.removeListener('open', listener2);
-      close(window).then(done).then(null, assert.fail);
+      close(window).then(done).catch(assert.fail);
     });
 
     tabs.open(url);
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 };
 
 // TEST: onClose event handler
@@ -621,7 +621,7 @@ exports.testTabsEvent_onCloseWindow = function(assert, done) {
       onOpen: testCasePossiblyLoaded,
       onClose: endTest
     });
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 }
 
 // TEST: onReady event handler
@@ -645,7 +645,7 @@ exports.testTabsEvent_onReady = function(assert, done) {
     });
 
     tabs.open(url);
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 };
 
 // TEST: onActivate event handler
@@ -665,11 +665,11 @@ exports.testTabsEvent_onActivate = function(assert, done) {
       assert.equal(++eventCount, 2, "both listeners notified");
       tabs.removeListener('activate', listener1);
       tabs.removeListener('activate', listener2);
-      close(window).then(done).then(null, assert.fail);
+      close(window).then(done).catch(assert.fail);
     });
 
     tabs.open(url);
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 };
 
 // onDeactivate event handler
@@ -726,11 +726,11 @@ exports.testTabsEvent_pinning = function(assert, done) {
     tabs.on('unpinned', function onUnpinned(tab) {
       tabs.removeListener('unpinned', onUnpinned);
       assert.ok(!tab.isPinned, "notified tab is not pinned");
-      close(window).then(done).then(null, assert.fail);
+      close(window).then(done).catch(assert.fail);
     });
 
     tabs.open(url);
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 };
 
 // TEST: per-tab event handlers
@@ -840,9 +840,9 @@ exports.testAttachOnMultipleDocuments = function (assert, done) {
 
       assert.pass("Got all detach events");
 
-      close(window).then(done).then(null, assert.fail);
+      close(window).then(done).catch(assert.fail);
     }
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 }
 
 
@@ -866,12 +866,12 @@ exports.testAttachWrappers = function (assert, done) {
           onMessage: function (msg) {
             assert.equal(msg, true, "Worker has wrapped objects ("+count+")");
             if (count++ == 1)
-              close(window).then(done).then(null, assert.fail);
+              close(window).then(done).catch(assert.fail);
           }
         });
       }
     });
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 }
 
 /*
@@ -931,7 +931,7 @@ exports['test window focus changes active tab'] = function(assert, done) {
             return close(win2).then(function() {
               assert.pass('window 2 was closed');
               return close(win1);
-            }).then(done).then(null, assert.fail);
+            }).then(done).catch(assert.fail);
           }
         });
 
@@ -948,7 +948,7 @@ exports['test ready event on new window tab'] = function(assert, done) {
     if (tab.url === uri) {
       require("sdk/tabs").removeListener("ready", onReady);
       assert.pass("ready event was emitted");
-      close(window).then(done).then(null, assert.fail);
+      close(window).then(done).catch(assert.fail);
     }
   });
 

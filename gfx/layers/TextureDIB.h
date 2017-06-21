@@ -77,6 +77,7 @@ public:
   virtual bool HasIntermediateBuffer() const { return true; }
 
   virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
+  virtual bool AcquireTextureSource(CompositableTextureSourceRef& aTexture) override;
 
 protected:
   RefPtr<TextureSourceProvider> mProvider;

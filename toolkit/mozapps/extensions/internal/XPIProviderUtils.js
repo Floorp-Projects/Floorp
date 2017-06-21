@@ -681,7 +681,7 @@ this.XPIDatabase = {
       // Return a promise that any pending writes of the DB are complete and we
       // are finished cleaning up
       let flushPromise = this.flush();
-      flushPromise.then(null, error => {
+      flushPromise.catch(error => {
           logger.error("Flush of XPI database failed", error);
           AddonManagerPrivate.recordSimpleMeasure("XPIDB_shutdownFlush_failed", 1);
           // If our last attempt to read or write the DB failed, force a new
@@ -744,7 +744,7 @@ this.XPIDatabase = {
       addonDB => {
         getRepositoryAddon(_findAddon(addonDB, aFilter), makeSafe(aCallback));
       })
-    .then(null,
+    .catch(
         error => {
           logger.error("getAddon failed", error);
           makeSafe(aCallback)(null);

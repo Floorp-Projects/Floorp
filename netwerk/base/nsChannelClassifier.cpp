@@ -1200,14 +1200,14 @@ nsChannelClassifier::CheckIsTrackerWithLocalTable(nsIURIClassifierCallback* aCal
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (!ShouldEnableTrackingProtection() && !ShouldEnableTrackingAnnotation()) {
-    return NS_ERROR_FAILURE;
-  }
-
   nsCOMPtr<nsIURIClassifier> uriClassifier =
     do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
     return rv;
+  }
+
+  if (!ShouldEnableTrackingProtection() && !ShouldEnableTrackingAnnotation()) {
+    return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIURI> uri;

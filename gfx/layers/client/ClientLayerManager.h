@@ -187,7 +187,7 @@ public:
   }
   virtual bool NeedsComposite() const override { return mNeedsComposite; }
 
-  virtual void Composite() override;
+  virtual void ScheduleComposite() override;
   virtual void GetFrameUniformity(FrameUniformityData* aFrameUniformityData) override;
 
   virtual void DidComposite(uint64_t aTransactionId,
@@ -195,6 +195,7 @@ public:
                             const mozilla::TimeStamp& aCompositeEnd) override;
 
   virtual bool AreComponentAlphaLayersEnabled() override;
+  virtual bool SupportsBackdropCopyForComponentAlpha() override;
 
   // Log APZ test data for the current paint. We supply the paint sequence
   // number ourselves, and take care of calling APZTestData::StartNewPaint()

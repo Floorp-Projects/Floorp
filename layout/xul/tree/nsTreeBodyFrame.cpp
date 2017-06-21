@@ -3714,7 +3714,7 @@ nsTreeBodyFrame::PaintImage(int32_t               aRowIndex,
     uint32_t drawFlags = aBuilder && aBuilder->IsPaintingToWindow() ?
       imgIContainer::FLAG_HIGH_QUALITY_SCALING : imgIContainer::FLAG_NONE;
     result &=
-      nsLayoutUtils::DrawImage(aRenderingContext, aPresContext, image,
+      nsLayoutUtils::DrawImage(aRenderingContext, imageContext, aPresContext, image,
         nsLayoutUtils::GetSamplingFilterForFrame(this),
         wholeImageDest, destRect, destRect.TopLeft(), aDirtyRect, drawFlags);
 
@@ -4006,7 +4006,7 @@ nsTreeBodyFrame::PaintProgressMeter(int32_t               aRowIndex,
       uint32_t drawFlags = aBuilder && aBuilder->IsPaintingToWindow() ?
         imgIContainer::FLAG_HIGH_QUALITY_SCALING : imgIContainer::FLAG_NONE;
       result &=
-        nsLayoutUtils::DrawImage(aRenderingContext,
+        nsLayoutUtils::DrawImage(aRenderingContext, meterContext,
           aPresContext, image,
           nsLayoutUtils::GetSamplingFilterForFrame(this),
           nsRect(meterRect.TopLeft(), size), meterRect, meterRect.TopLeft(),
@@ -4036,7 +4036,7 @@ nsTreeBodyFrame::PaintProgressMeter(int32_t               aRowIndex,
       uint32_t drawFlags = aBuilder && aBuilder->IsPaintingToWindow() ?
         imgIContainer::FLAG_HIGH_QUALITY_SCALING : imgIContainer::FLAG_NONE;
       result &=
-        nsLayoutUtils::DrawImage(aRenderingContext,
+        nsLayoutUtils::DrawImage(aRenderingContext, meterContext,
           aPresContext, image,
           nsLayoutUtils::GetSamplingFilterForFrame(this),
           nsRect(meterRect.TopLeft(), size), meterRect, meterRect.TopLeft(),

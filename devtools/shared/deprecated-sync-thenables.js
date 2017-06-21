@@ -61,6 +61,9 @@ function defer() {
       }
 
       return deferred.promise;
+    },
+    catch: function (callback) {
+      return this.then(null, callback);
     }
   };
 
