@@ -57,38 +57,6 @@ using UniqueProfilerBacktrace =
 #define PROFILER_FUNC(decl, rv)  decl;
 #define PROFILER_FUNC_VOID(decl) void decl;
 
-// Uncomment this to turn on systrace or build with
-// ac_add_options --enable-systace
-//#define MOZ_USE_SYSTRACE
-#ifdef MOZ_USE_SYSTRACE
-# ifndef ATRACE_TAG
-#  define ATRACE_TAG ATRACE_TAG_ALWAYS
-# endif
-// We need HAVE_ANDROID_OS to be defined for Trace.h.
-// If its not set we will set it temporary and remove it.
-# ifndef HAVE_ANDROID_OS
-#  define HAVE_ANDROID_OS
-#  define REMOVE_HAVE_ANDROID_OS
-# endif
-// Android source code will include <cutils/trace.h> before this. There is no
-// HAVE_ANDROID_OS defined in Firefox OS build at that time. Enabled it globally
-// will cause other build break. So atrace_begin and atrace_end are not defined.
-// It will cause a build-break when we include <utils/Trace.h>. Use undef
-// _LIBS_CUTILS_TRACE_H will force <cutils/trace.h> to define atrace_begin and
-// atrace_end with defined HAVE_ANDROID_OS again. Then there is no build-break.
-# undef _LIBS_CUTILS_TRACE_H
-# include <utils/Trace.h>
-# define PROFILER_PLATFORM_TRACING(name) \
-    android::ScopedTrace \
-    PROFILER_APPEND_LINE_NUMBER(scopedTrace)(ATRACE_TAG, name);
-# ifdef REMOVE_HAVE_ANDROID_OS
-#  undef HAVE_ANDROID_OS
-#  undef REMOVE_HAVE_ANDROID_OS
-# endif
-#else
-# define PROFILER_PLATFORM_TRACING(name)
-#endif
-
 #define PROFILER_APPEND_LINE_NUMBER_PASTE(id, line) id ## line
 #define PROFILER_APPEND_LINE_NUMBER_EXPAND(id, line) \
   PROFILER_APPEND_LINE_NUMBER_PASTE(id, line)
@@ -108,7 +76,6 @@ using UniqueProfilerBacktrace =
 // Use PROFILER_LABEL_DYNAMIC if you want to add additional / dynamic
 // information to the pseudo stack frame.
 #define PROFILER_LABEL(name_space, info, category) \
-  PROFILER_PLATFORM_TRACING(name_space "::" info) \
   mozilla::AutoProfilerLabel \
   PROFILER_APPEND_LINE_NUMBER(profiler_raii)(name_space "::" info, nullptr, \
                                              __LINE__, category)
@@ -116,7 +83,6 @@ using UniqueProfilerBacktrace =
 // Similar to PROFILER_LABEL, PROFILER_LABEL_FUNC will push/pop the enclosing
 // functon name as the pseudostack label.
 #define PROFILER_LABEL_FUNC(category) \
-  PROFILER_PLATFORM_TRACING(PROFILER_FUNCTION_NAME) \
   mozilla::AutoProfilerLabel \
   PROFILER_APPEND_LINE_NUMBER(profiler_raii)(PROFILER_FUNCTION_NAME, nullptr, \
                                              __LINE__, category)
@@ -138,7 +104,6 @@ using UniqueProfilerBacktrace =
 // PROFILER_LABEL frames take up considerably less space in the profile buffer
 // than PROFILER_LABEL_DYNAMIC frames.
 #define PROFILER_LABEL_DYNAMIC(name_space, info, category, dynamicStr) \
-  PROFILER_PLATFORM_TRACING(name_space "::" info) \
   mozilla::AutoProfilerLabel \
   PROFILER_APPEND_LINE_NUMBER(profiler_raii)(name_space "::" info, dynamicStr, \
                                              __LINE__, category)
