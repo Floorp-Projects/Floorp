@@ -11,6 +11,7 @@
 
 #include "nsInterfaceHashtable.h"
 #include "nsIOService.h"
+#include "nsISubstitutionObserver.h"
 #include "nsStandardURL.h"
 #include "mozilla/chrome/RegistryMessageUtils.h"
 #include "mozilla/Maybe.h"
@@ -73,10 +74,18 @@ protected:
   nsIIOService* IOService() { return mIOService; }
 
 private:
+  // Notifies all observers that a new substitution from |aRoot| to
+  // |aBaseURI| has been set/installed for this protocol handler.
+  void NotifyObservers(const nsACString& aRoot, nsIURI* aBaseURI);
+
   nsCString mScheme;
   Maybe<uint32_t> mFlags;
   nsInterfaceHashtable<nsCStringHashKey,nsIURI> mSubstitutions;
   nsCOMPtr<nsIIOService> mIOService;
+
+  // The list of observers added with AddObserver that will be
+  // notified when substitutions are set or unset.
+  nsTArray<nsCOMPtr<nsISubstitutionObserver>> mObservers;
 
   // In general, we expect the principal of a document loaded from a
   // substituting URI to be a codebase principal for that URI (rather than
