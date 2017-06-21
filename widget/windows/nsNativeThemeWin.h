@@ -11,8 +11,12 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsNativeTheme.h"
+#include "nsThemeConstants.h"
+#include "nsUXThemeConstants.h"
+#include "nsUXThemeData.h"
 #include "gfxTypes.h"
 #include <windows.h>
+#include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 #include "nsSize.h"
 
@@ -84,6 +88,7 @@ public:
   nsNativeThemeWin();
 
 protected:
+  mozilla::Maybe<nsUXThemeClass> GetThemeClass(uint8_t aWidgetType);
   HANDLE GetTheme(uint8_t aWidgetType);
   nsresult GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
                                 int32_t& aPart, int32_t& aState);
@@ -119,9 +124,21 @@ protected:
                                int aPart, int aState,
                                RECT* aWidgetRect, RECT* aClipRect);
 
+  nsresult GetCachedWidgetBorder(nsIFrame* aFrame, nsUXThemeClass aThemeClass,
+                                 uint8_t aWidgetType, int32_t aPart, int32_t aState,
+                                 nsIntMargin* aResult);
+
 private:
   TimeStamp mProgressDeterminateTimeStamp;
   TimeStamp mProgressIndeterminateTimeStamp;
+
+  // eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT is about 800 at the time of writing
+  // this, and nsIntMargin is 16 bytes wide, which makes this cache (1/8 + 16) * 800
+  // bytes, or about ~12KB. We could probably reduce this cache to 3KB by caching on
+  // the aWidgetType value instead, but there would be some uncacheable values, since
+  // we derive some theme parts from other arguments.
+  uint8_t mBorderCacheValid[(eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT + 7) / 8];
+  nsIntMargin mBorderCache[eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT];
 };
 
 #endif

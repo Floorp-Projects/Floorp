@@ -47,7 +47,8 @@ NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeWin, nsNativeTheme, nsITheme)
 
 nsNativeThemeWin::nsNativeThemeWin() :
   mProgressDeterminateTimeStamp(TimeStamp::Now()),
-  mProgressIndeterminateTimeStamp(TimeStamp::Now())
+  mProgressIndeterminateTimeStamp(TimeStamp::Now()),
+  mBorderCacheValid()
 {
   // If there is a relevant change in forms.css for windows platform,
   // static widget style variables (e.g. sButtonBorderSize) should be 
@@ -592,43 +593,80 @@ nsNativeThemeWin::DrawThemedProgressMeter(nsIFrame* aFrame, int aWidgetType,
   }
 }
 
-HANDLE
-nsNativeThemeWin::GetTheme(uint8_t aWidgetType)
-{ 
+nsresult nsNativeThemeWin::GetCachedWidgetBorder(nsIFrame * aFrame, nsUXThemeClass aThemeClass,
+                                                 uint8_t aWidgetType, int32_t aPart, int32_t aState,
+                                                 nsIntMargin * aResult)
+{
+  int32_t cacheIndex = aThemeClass * THEME_PART_DISTINCT_VALUE_COUNT + aPart;
+  int32_t cacheBitIndex = cacheIndex / 8;
+  uint8_t cacheBit = 1u << (cacheIndex % 8);
+
+  if (mBorderCacheValid[cacheBitIndex] & cacheBit) {
+    *aResult = mBorderCache[cacheIndex];
+    return NS_OK;
+  }
+
+  HANDLE theme = nsUXThemeData::GetTheme(aThemeClass);
+  // Get our info.
+  RECT outerRect; // Create a fake outer rect.
+  outerRect.top = outerRect.left = 100;
+  outerRect.right = outerRect.bottom = 200;
+  RECT contentRect(outerRect);
+  HRESULT res = GetThemeBackgroundContentRect(theme, nullptr, aPart, aState, &outerRect, &contentRect);
+
+  if (FAILED(res)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Now compute the delta in each direction and place it in our
+  // nsIntMargin struct.
+  aResult->top = contentRect.top - outerRect.top;
+  aResult->bottom = outerRect.bottom - contentRect.bottom;
+  aResult->left = contentRect.left - outerRect.left;
+  aResult->right = outerRect.right - contentRect.right;
+
+  mBorderCacheValid[cacheBitIndex] |= cacheBit;
+  mBorderCache[cacheIndex] = *aResult;
+
+  return NS_OK;
+}
+
+mozilla::Maybe<nsUXThemeClass> nsNativeThemeWin::GetThemeClass(uint8_t aWidgetType)
+{
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
     case NS_THEME_RADIO:
     case NS_THEME_CHECKBOX:
     case NS_THEME_GROUPBOX:
-      return nsUXThemeData::GetTheme(eUXButton);
+      return Some(eUXButton);
     case NS_THEME_NUMBER_INPUT:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
     case NS_THEME_FOCUS_OUTLINE:
-      return nsUXThemeData::GetTheme(eUXEdit);
+      return Some(eUXEdit);
     case NS_THEME_TOOLTIP:
-      return nsUXThemeData::GetTheme(eUXTooltip);
+      return Some(eUXTooltip);
     case NS_THEME_TOOLBOX:
-      return nsUXThemeData::GetTheme(eUXRebar);
+      return Some(eUXRebar);
     case NS_THEME_WIN_MEDIA_TOOLBOX:
-      return nsUXThemeData::GetTheme(eUXMediaRebar);
+      return Some(eUXMediaRebar);
     case NS_THEME_WIN_COMMUNICATIONS_TOOLBOX:
-      return nsUXThemeData::GetTheme(eUXCommunicationsRebar);
+      return Some(eUXCommunicationsRebar);
     case NS_THEME_WIN_BROWSERTABBAR_TOOLBOX:
-      return nsUXThemeData::GetTheme(eUXBrowserTabBarRebar);
+      return Some(eUXBrowserTabBarRebar);
     case NS_THEME_TOOLBAR:
     case NS_THEME_TOOLBARBUTTON:
     case NS_THEME_SEPARATOR:
-      return nsUXThemeData::GetTheme(eUXToolbar);
+      return Some(eUXToolbar);
     case NS_THEME_PROGRESSBAR:
     case NS_THEME_PROGRESSBAR_VERTICAL:
     case NS_THEME_PROGRESSCHUNK:
     case NS_THEME_PROGRESSCHUNK_VERTICAL:
-      return nsUXThemeData::GetTheme(eUXProgress);
+      return Some(eUXProgress);
     case NS_THEME_TAB:
     case NS_THEME_TABPANEL:
     case NS_THEME_TABPANELS:
-      return nsUXThemeData::GetTheme(eUXTab);
+      return Some(eUXTab);
     case NS_THEME_SCROLLBAR:
     case NS_THEME_SCROLLBAR_SMALL:
     case NS_THEME_SCROLLBAR_VERTICAL:
@@ -639,34 +677,34 @@ nsNativeThemeWin::GetTheme(uint8_t aWidgetType)
     case NS_THEME_SCROLLBARBUTTON_RIGHT:
     case NS_THEME_SCROLLBARTHUMB_VERTICAL:
     case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
-      return nsUXThemeData::GetTheme(eUXScrollbar);
+      return Some(eUXScrollbar);
     case NS_THEME_RANGE:
     case NS_THEME_RANGE_THUMB:
     case NS_THEME_SCALE_HORIZONTAL:
     case NS_THEME_SCALE_VERTICAL:
     case NS_THEME_SCALETHUMB_HORIZONTAL:
     case NS_THEME_SCALETHUMB_VERTICAL:
-      return nsUXThemeData::GetTheme(eUXTrackbar);
+      return Some(eUXTrackbar);
     case NS_THEME_SPINNER_UPBUTTON:
     case NS_THEME_SPINNER_DOWNBUTTON:
-      return nsUXThemeData::GetTheme(eUXSpin);
+      return Some(eUXSpin);
     case NS_THEME_STATUSBAR:
     case NS_THEME_STATUSBARPANEL:
     case NS_THEME_RESIZERPANEL:
     case NS_THEME_RESIZER:
-      return nsUXThemeData::GetTheme(eUXStatus);
+      return Some(eUXStatus);
     case NS_THEME_MENULIST:
     case NS_THEME_MENULIST_BUTTON:
-      return nsUXThemeData::GetTheme(eUXCombobox);
+      return Some(eUXCombobox);
     case NS_THEME_TREEHEADERCELL:
     case NS_THEME_TREEHEADERSORTARROW:
-      return nsUXThemeData::GetTheme(eUXHeader);
+      return Some(eUXHeader);
     case NS_THEME_LISTBOX:
     case NS_THEME_LISTITEM:
     case NS_THEME_TREEVIEW:
     case NS_THEME_TREETWISTYOPEN:
     case NS_THEME_TREEITEM:
-      return nsUXThemeData::GetTheme(eUXListview);
+      return Some(eUXListview);
     case NS_THEME_MENUBAR:
     case NS_THEME_MENUPOPUP:
     case NS_THEME_MENUITEM:
@@ -678,7 +716,7 @@ nsNativeThemeWin::GetTheme(uint8_t aWidgetType)
     case NS_THEME_MENUARROW:
     case NS_THEME_MENUIMAGE:
     case NS_THEME_MENUITEMTEXT:
-      return nsUXThemeData::GetTheme(eUXMenu);
+      return Some(eUXMenu);
     case NS_THEME_WINDOW_TITLEBAR:
     case NS_THEME_WINDOW_TITLEBAR_MAXIMIZED:
     case NS_THEME_WINDOW_FRAME_LEFT:
@@ -692,9 +730,19 @@ nsNativeThemeWin::GetTheme(uint8_t aWidgetType)
     case NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED:
     case NS_THEME_WIN_GLASS:
     case NS_THEME_WIN_BORDERLESS_GLASS:
-      return nsUXThemeData::GetTheme(eUXWindowFrame);
+      return Some(eUXWindowFrame);
   }
-  return nullptr;
+  return Nothing();
+}
+
+HANDLE
+nsNativeThemeWin::GetTheme(uint8_t aWidgetType)
+{
+  mozilla::Maybe<nsUXThemeClass> themeClass = GetThemeClass(aWidgetType);
+  if (themeClass.isNothing()) {
+    return nullptr;
+  }
+  return nsUXThemeData::GetTheme(themeClass.value());
 }
 
 int32_t
@@ -1819,9 +1867,9 @@ nsNativeThemeWin::GetWidgetBorder(nsDeviceContext* aContext,
                                   uint8_t aWidgetType,
                                   nsIntMargin* aResult)
 {
-  HANDLE theme = GetTheme(aWidgetType);
+  mozilla::Maybe<nsUXThemeClass> themeClass = GetThemeClass(aWidgetType);
   nsresult rv = NS_OK;
-  if (!theme) {
+  if (themeClass.isNothing()) {
     rv = ClassicGetWidgetBorder(aContext, aFrame, aWidgetType, aResult);
     ScaleForFrameDPI(aResult, aFrame);
     return rv;
@@ -1859,22 +1907,8 @@ nsNativeThemeWin::GetWidgetBorder(nsDeviceContext* aContext,
     return NS_OK;
   }
 
-  // Get our info.
-  RECT outerRect; // Create a fake outer rect.
-  outerRect.top = outerRect.left = 100;
-  outerRect.right = outerRect.bottom = 200;
-  RECT contentRect(outerRect);
-  HRESULT res = GetThemeBackgroundContentRect(theme, nullptr, part, state, &outerRect, &contentRect);
-  
-  if (FAILED(res))
-    return NS_ERROR_FAILURE;
-
-  // Now compute the delta in each direction and place it in our
-  // nsIntMargin struct.
-  aResult->top = contentRect.top - outerRect.top;
-  aResult->bottom = outerRect.bottom - contentRect.bottom;
-  aResult->left = contentRect.left - outerRect.left;
-  aResult->right = outerRect.right - contentRect.right;
+  rv = GetCachedWidgetBorder(aFrame, themeClass.value(), aWidgetType, part, state, aResult);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Remove the edges for tabs that are before or after the selected tab,
   if (aWidgetType == NS_THEME_TAB) {
@@ -2434,6 +2468,7 @@ NS_IMETHODIMP
 nsNativeThemeWin::ThemeChanged()
 {
   nsUXThemeData::Invalidate();
+  memset(mBorderCacheValid, 0, sizeof(mBorderCacheValid));
   return NS_OK;
 }
 
