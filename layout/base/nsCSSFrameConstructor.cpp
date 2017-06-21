@@ -2761,6 +2761,8 @@ nsCSSFrameConstructor::ConstructRootFrame()
   // What would that break?
   viewportFrame->Init(nullptr, nullptr, nullptr);
 
+  viewportFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
+
   // Bind the viewport frame to the root view
   nsView* rootView = mPresShell->GetViewManager()->GetRootView();
   viewportFrame->SetView(rootView);
