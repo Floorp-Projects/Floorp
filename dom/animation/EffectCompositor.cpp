@@ -1000,6 +1000,17 @@ EffectCompositor::PreTraverseInSubtree(Element* aRoot,
 
     const NonOwningAnimationTarget& target = aIter.Key();
 
+    // Skip elements in documents without a pres shell. Normally we filter out
+    // such elements in RequestRestyle but it can happen that, after adding
+    // them to mElementsToRestyle, they are transferred to a different document.
+    //
+    // We will drop them from mElementsToRestyle at the end of the next full
+    // document restyle (at the end of this function) but for consistency with
+    // how we treat such elements in RequestRestyle, we just ignore them here.
+    if (!nsComputedDOMStyle::GetPresShellForContent(target.mElement)) {
+      return returnTarget;
+    }
+
     // Ignore restyles that aren't in the flattened tree subtree rooted at
     // aRoot.
     if (aRoot &&
@@ -1080,7 +1091,16 @@ EffectCompositor::PreTraverseInSubtree(Element* aRoot,
       // about to restyle it.
       iter.Remove();
     }
+
+    // If this is a full document restyle, then unconditionally clear
+    // elementSet in case there are any elements that didn't match above
+    // because they were moved to a document without a pres shell after
+    // posting an animation restyle.
+    if (!aRoot && flushThrottledRestyles) {
+      elementSet.Clear();
+    }
   }
+
   return foundElementsNeedingRestyle;
 }
 
