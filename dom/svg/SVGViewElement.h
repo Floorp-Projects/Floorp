@@ -28,13 +28,14 @@ namespace mozilla {
 class SVGFragmentIdentifier;
 
 namespace dom {
-class SVGSVGElement;
+class SVGViewportElement;
 
 class SVGViewElement : public SVGViewElementBase
 {
 protected:
   friend class mozilla::SVGFragmentIdentifier;
   friend class SVGSVGElement;
+  friend class SVGViewportElement;
   friend class ::nsSVGOuterSVGFrame;
   explicit SVGViewElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   friend nsresult (::NS_NewSVGViewElement(nsIContent **aResult,

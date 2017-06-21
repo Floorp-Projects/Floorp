@@ -784,7 +784,7 @@ Database::BackupAndReplaceDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage)
 
   // Close database connection if open.
   if (mMainConn) {
-    rv = mMainConn->Close();
+    rv = mMainConn->SpinningSynchronousClose();
     NS_ENSURE_SUCCESS(rv, ForceCrashAndReplaceDatabase(
       NS_LITERAL_CSTRING("Unable to close the corrupt database.")));
   }

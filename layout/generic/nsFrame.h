@@ -646,6 +646,7 @@ public:
           type == mozilla::LayoutFrameType::BCTableCell ||
           type == mozilla::LayoutFrameType::SVGOuterSVG ||
           type == mozilla::LayoutFrameType::SVGInnerSVG ||
+          type == mozilla::LayoutFrameType::SVGSymbol ||
           type == mozilla::LayoutFrameType::SVGForeignObject) {
         return true;
       }

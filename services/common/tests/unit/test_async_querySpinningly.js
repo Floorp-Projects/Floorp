@@ -19,6 +19,7 @@ const SQLITE_CONSTRAINT_VIOLATION = 19;  // http://www.sqlite.org/c3ref/c_abort.
 
 // Init the forms database.
 FormHistory.schemaVersion;
+FormHistory.shutdown();
 
 // and open the database it just created.
 let dbFile = Services.dirsvc.get("ProfD", Ci.nsIFile).clone();
@@ -28,7 +29,7 @@ let dbConnection = Services.storage.openUnsharedDatabase(dbFile);
 do_register_cleanup(() => {
   let cb = Async.makeSpinningCallback();
   dbConnection.asyncClose(cb);
-  cb.wait();
+  return cb.wait();
 });
 
 function querySpinningly(query, names) {

@@ -64,10 +64,6 @@
               "textcolor": {
                 "type": "string",
                 "optional": true
-              },
-              "toolbar": {
-                "type": "string",
-                "optional": true
               }
             },
             "additionalProperties": { "$ref": "UnrecognizedProperty" }

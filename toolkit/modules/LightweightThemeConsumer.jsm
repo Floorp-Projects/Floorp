@@ -13,12 +13,6 @@ Cu.import("resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeImageOptimizer",
   "resource://gre/modules/addons/LightweightThemeImageOptimizer.jsm");
 
-const kCSSVarsMap = new Map([
-  ["--lwt-background-alignment", "backgroundsAlignment"],
-  ["--lwt-background-tiling", "backgroundsTiling"],
-  ["--lwt-toolbar-color", "toolbarColor"]
-]);
-
 this.LightweightThemeConsumer =
  function LightweightThemeConsumer(aDocument) {
   this._doc = aDocument;
@@ -141,7 +135,8 @@ LightweightThemeConsumer.prototype = {
     _setImage(root, active, "--lwt-header-image", aData.headerURL);
     _setImage(root, active, "--lwt-footer-image", aData.footerURL);
     _setImage(root, active, "--lwt-additional-images", aData.additionalBackgrounds);
-    _setProperties(root, active, aData);
+    _setProperty(root, active, "--lwt-background-alignment", aData.backgroundsAlignment);
+    _setProperty(root, active, "--lwt-background-tiling", aData.backgroundsTiling);
 
     if (active && aData.footerURL)
       root.setAttribute("lwthemefooter", "true");
@@ -186,12 +181,6 @@ function _setProperty(root, active, variableName, value) {
     root.style.setProperty(variableName, value);
   } else {
     root.style.removeProperty(variableName);
-  }
-}
-
-function _setProperties(root, active, vars) {
-  for (let [cssVarName, varsKey] of kCSSVarsMap) {
-    _setProperty(root, active, cssVarName, vars[varsKey]);
   }
 }
 

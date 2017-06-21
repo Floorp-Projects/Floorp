@@ -43,66 +43,12 @@ SVGSymbolElement::~SVGSymbolElement()
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGSymbolElement)
 
 //----------------------------------------------------------------------
-
-already_AddRefed<SVGAnimatedRect>
-SVGSymbolElement::ViewBox()
-{
-  return mViewBox.ToSVGAnimatedRect(this);
-}
-
-already_AddRefed<DOMSVGAnimatedPreserveAspectRatio>
-SVGSymbolElement::PreserveAspectRatio()
-{
-  return mPreserveAspectRatio.ToDOMAnimatedPreserveAspectRatio(this);
-}
-
-//----------------------------------------------------------------------
-// nsIContent methods
-
-NS_IMETHODIMP_(bool)
-SVGSymbolElement::IsAttributeMapped(const nsIAtom* name) const
-{
-  static const MappedAttributeEntry* const map[] = {
-    sColorMap,
-    sFEFloodMap,
-    sFillStrokeMap,
-    sFiltersMap,
-    sFontSpecificationMap,
-    sGradientStopMap,
-    sGraphicsMap,
-    sLightingEffectsMap,
-    sMarkersMap,
-    sTextContentElementsMap,
-    sViewportsMap
-   };
-
-  return FindAttributeDependence(name, map) ||
-    SVGSymbolElementBase::IsAttributeMapped(name);
-}
-
-//----------------------------------------------------------------------
 // SVGTests methods
 
 bool
 SVGSymbolElement::IsInChromeDoc() const
 {
   return nsContentUtils::IsChromeDoc(OwnerDoc());
-}
-
-
-//----------------------------------------------------------------------
-// nsSVGElement methods
-
-nsSVGViewBox *
-SVGSymbolElement::GetViewBox()
-{
-  return &mViewBox;
-}
-
-SVGAnimatedPreserveAspectRatio *
-SVGSymbolElement::GetPreserveAspectRatio()
-{
-  return &mPreserveAspectRatio;
 }
 
 } // namespace dom

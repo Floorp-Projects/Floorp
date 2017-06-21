@@ -114,7 +114,7 @@ function* openEyedropper(view, swatch) {
   swatch.click();
   yield onColorPickerReady;
 
-  let dropperButton = tooltip.doc.querySelector("#eyedropper-button");
+  let dropperButton = tooltip.container.querySelector("#eyedropper-button");
 
   info("Click on the eyedropper icon");
   let onOpened = tooltip.once("eyedropper-opened");

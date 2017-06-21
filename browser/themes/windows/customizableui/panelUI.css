@@ -152,8 +152,12 @@ menu.subviewbutton > .menu-right:-moz-locale-dir(rtl) {
 photonpanelmultiview .subviewbutton > .toolbarbutton-text,
 photonpanelmultiview .subviewbutton > .toolbarbutton-icon,
 photonpanelmultiview .panel-banner-item > .toolbarbutton-multiline-text {
-  padding: 0;
   margin: 0;
+}
+
+photonpanelmultiview .subviewbutton > .toolbarbutton-icon,
+photonpanelmultiview .panel-banner-item > .toolbarbutton-multiline-text {
+  padding: 0;
 }
 
 /* END photon adjustments */

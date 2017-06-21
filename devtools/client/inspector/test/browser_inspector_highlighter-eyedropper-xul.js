@@ -31,7 +31,7 @@ add_task(function* () {
   swatchEl.click();
   yield onColorPickerReady;
 
-  button = cPicker.tooltip.doc.querySelector("#eyedropper-button");
+  button = cPicker.tooltip.container.querySelector("#eyedropper-button");
   ok(isDisabled(button), "The button is disabled in the color picker");
 
   info("Navigate to a HTML document");
@@ -55,7 +55,7 @@ add_task(function* () {
   swatchEl.click();
   yield onColorPickerReady;
 
-  button = cPicker.tooltip.doc.querySelector("#eyedropper-button");
+  button = cPicker.tooltip.container.querySelector("#eyedropper-button");
   ok(!isDisabled(button), "The button is enabled in the color picker");
 });
 

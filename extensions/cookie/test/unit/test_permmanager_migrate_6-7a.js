@@ -13,10 +13,6 @@ function GetPermissionsFile(profile)
   return file;
 }
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function* test() {
   /* Create and set up the permissions database */
   let profile = do_get_profile();
@@ -81,7 +77,11 @@ add_task(function* test() {
     stmt6Insert.bindByName("expireTime", expireTime);
     stmt6Insert.bindByName("modificationTime", modificationTime);
 
-    stmt6Insert.execute();
+    try {
+      stmt6Insert.execute();
+    } finally {
+      stmt6Insert.reset();
+    }
 
     return {
       id: thisId,
@@ -107,7 +107,11 @@ add_task(function* test() {
     stmtInsert.bindByName("appId", appId);
     stmtInsert.bindByName("isInBrowserElement", isInBrowserElement);
 
-    stmtInsert.execute();
+    try {
+      stmtInsert.execute();
+    } finally {
+      stmtInsert.reset();
+    }
 
     return {
       id: thisId,
@@ -151,6 +155,7 @@ add_task(function* test() {
   ];
 
   // CLose the db connection
+  stmt6Insert.finalize();
   stmtInsert.finalize();
   db.close();
   stmtInsert = null;
@@ -253,31 +258,42 @@ add_task(function* test() {
 
     // The moz_hosts table should still exist but be empty
     let mozHostsCount = db.createStatement("SELECT count(*) FROM moz_hosts");
-    mozHostsCount.executeStep();
-    do_check_eq(mozHostsCount.getInt64(0), 0);
+    try {
+      mozHostsCount.executeStep();
+      do_check_eq(mozHostsCount.getInt64(0), 0);
+    } finally {
+      mozHostsCount.finalize();
+    }
 
     // Check that the moz_perms_v6 table contains the backup of the entry we created
     let mozPermsV6Stmt = db.createStatement("SELECT " +
                                             "origin, type, permission, expireType, expireTime, modificationTime " +
                                             "FROM moz_perms_v6 WHERE id = :id");
-
-    // Check that the moz_hosts table still contains the correct values.
-    created6.forEach((it) => {
-      mozPermsV6Stmt.reset();
-      mozPermsV6Stmt.bindByName("id", it.id);
-      mozPermsV6Stmt.executeStep();
-      do_check_eq(mozPermsV6Stmt.getUTF8String(0), it.origin);
-      do_check_eq(mozPermsV6Stmt.getUTF8String(1), it.type);
-      do_check_eq(mozPermsV6Stmt.getInt64(2), it.permission);
-      do_check_eq(mozPermsV6Stmt.getInt64(3), it.expireType);
-      do_check_eq(mozPermsV6Stmt.getInt64(4), it.expireTime);
-      do_check_eq(mozPermsV6Stmt.getInt64(5), it.modificationTime);
-    });
+    try {
+      // Check that the moz_hosts table still contains the correct values.
+      created6.forEach((it) => {
+        mozPermsV6Stmt.reset();
+        mozPermsV6Stmt.bindByName("id", it.id);
+        mozPermsV6Stmt.executeStep();
+        do_check_eq(mozPermsV6Stmt.getUTF8String(0), it.origin);
+        do_check_eq(mozPermsV6Stmt.getUTF8String(1), it.type);
+        do_check_eq(mozPermsV6Stmt.getInt64(2), it.permission);
+        do_check_eq(mozPermsV6Stmt.getInt64(3), it.expireType);
+        do_check_eq(mozPermsV6Stmt.getInt64(4), it.expireTime);
+        do_check_eq(mozPermsV6Stmt.getInt64(5), it.modificationTime);
+      });
+    } finally {
+      mozPermsV6Stmt.finalize();
+    }
 
     // Check that there are the right number of values
     let mozPermsV6Count = db.createStatement("SELECT count(*) FROM moz_perms_v6");
-    mozPermsV6Count.executeStep();
-    do_check_eq(mozPermsV6Count.getInt64(0), created6.length);
+    try {
+      mozPermsV6Count.executeStep();
+      do_check_eq(mozPermsV6Count.getInt64(0), created6.length);
+    } finally {
+      mozPermsV6Count.finalize();
+    }
 
     db.close();
   }

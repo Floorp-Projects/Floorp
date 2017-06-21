@@ -113,8 +113,8 @@ function StorageUI(front, target, panelWin, toolbox) {
     cellContextMenuId: "storage-table-popup"
   });
 
-  this.displayObjectSidebar = this.displayObjectSidebar.bind(this);
-  this.table.on(TableWidget.EVENTS.ROW_SELECTED, this.displayObjectSidebar);
+  this.updateObjectSidebar = this.updateObjectSidebar.bind(this);
+  this.table.on(TableWidget.EVENTS.ROW_SELECTED, this.updateObjectSidebar);
 
   this.handleScrollEnd = this.handleScrollEnd.bind(this);
   this.table.on(TableWidget.EVENTS.SCROLL_END, this.handleScrollEnd);
@@ -216,7 +216,7 @@ StorageUI.prototype = {
   },
 
   destroy: function () {
-    this.table.off(TableWidget.EVENTS.ROW_SELECTED, this.displayObjectSidebar);
+    this.table.off(TableWidget.EVENTS.ROW_SELECTED, this.updateObjectSidebar);
     this.table.off(TableWidget.EVENTS.SCROLL_END, this.handleScrollEnd);
     this.table.off(TableWidget.EVENTS.CELL_EDIT, this.editItem);
     this.table.destroy();
@@ -319,17 +319,16 @@ StorageUI.prototype = {
    * being removed was selected.
    */
   removeItemFromTable: function (name) {
-    if (this.table.isSelected(name)) {
+    if (this.table.isSelected(name) && this.table.items.size > 1) {
       if (this.table.selectedIndex == 0) {
         this.table.selectNextRow();
       } else {
         this.table.selectPreviousRow();
       }
-      this.table.remove(name);
-      this.displayObjectSidebar();
-    } else {
-      this.table.remove(name);
     }
+
+    this.table.remove(name);
+    this.updateObjectSidebar();
   },
 
   /**
@@ -666,19 +665,23 @@ StorageUI.prototype = {
    * Populates the selected entry from the table in the sidebar for a more
    * detailed view.
    */
-  displayObjectSidebar: Task.async(function* () {
+  updateObjectSidebar: Task.async(function* () {
     let item = this.table.selectedRow;
-    if (!item) {
-      // Make sure that sidebar is hidden and return
-      this.sidebar.hidden = true;
-      this.updateSidebarToggleButton();
-      return;
-    }
+    let value;
 
     // Get the string value (async action) and the update the UI synchronously.
-    let value;
-    if (item.name && item.valueActor) {
+    if (item && item.name && item.valueActor) {
       value = yield item.valueActor.string();
+    }
+
+    // Bail if the selectedRow is no longer selected, the item doesn't exist or the state
+    // changed in another way during the above yield.
+    if (this.table.items.size === 0 ||
+        !item ||
+        !this.table.selectedRow ||
+        item.uniqueKey !== this.table.selectedRow.uniqueKey) {
+      this.hideSidebar();
+      return;
     }
 
     // Start updating the UI. Everything is sync beyond this point.
@@ -979,7 +982,7 @@ StorageUI.prototype = {
         case REASON.UPDATE:
           this.table.update(item);
           if (item == this.table.selectedRow && !this.sidebar.hidden) {
-            this.displayObjectSidebar();
+            this.updateObjectSidebar();
           }
           break;
       }

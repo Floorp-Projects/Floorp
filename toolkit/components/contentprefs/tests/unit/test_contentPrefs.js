@@ -2,39 +2,39 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function run_test() {
+
+add_task(async function() {
   // Database Creation, Schema Migration, and Backup
 
   // Note: in these tests we use createInstance instead of getService
   // so we can instantiate the service multiple times and make it run
   // its database initialization code each time.
 
-  // Create a new database.
-  {
-    ContentPrefTest.deleteDatabase();
-
-    // Get the service and make sure it has a ready database connection.
-    let cps = Cc["@mozilla.org/content-pref/service;1"].
-              createInstance(Ci.nsIContentPrefService);
-    do_check_true(cps.DBConnection.connectionReady);
-    cps.DBConnection.close();
+  function with_cps_instance(testFn) {
+    let cps = Cc["@mozilla.org/content-pref/service;1"]
+                .createInstance(Ci.nsIContentPrefService)
+                .QueryInterface(Ci.nsIObserver);
+    testFn(cps);
+    let promiseClosed = TestUtils.topicObserved("content-prefs-db-closed");
+    cps.observe(null, "xpcom-shutdown", "");
+    return promiseClosed;
   }
+
+  // Create a new database.
+  ContentPrefTest.deleteDatabase();
+  await with_cps_instance(cps => {
+    do_check_true(cps.DBConnection.connectionReady);
+  });
 
   // Open an existing database.
-  {
-    let dbFile = ContentPrefTest.deleteDatabase();
 
-    let cps = Cc["@mozilla.org/content-pref/service;1"].
-               createInstance(Ci.nsIContentPrefService);
-    cps.DBConnection.close();
-    do_check_true(dbFile.exists());
+  ContentPrefTest.deleteDatabase();
+  await with_cps_instance(cps => {});
 
-    // Get the service and make sure it has a ready database connection.
-    cps = Cc["@mozilla.org/content-pref/service;1"].
-          createInstance(Ci.nsIContentPrefService);
+  // Get the service and make sure it has a ready database connection.
+  await with_cps_instance(cps => {
     do_check_true(cps.DBConnection.connectionReady);
-    cps.DBConnection.close();
-  }
+  });
 
   // Open an empty database.
   {
@@ -49,10 +49,9 @@ function run_test() {
     do_check_true(dbFile.exists());
 
     // Get the service and make sure it has created the schema.
-    let cps = Cc["@mozilla.org/content-pref/service;1"].
-              createInstance(Ci.nsIContentPrefService);
-    do_check_neq(cps.DBConnection.schemaVersion, 0);
-    cps.DBConnection.close();
+    await with_cps_instance(cps => {
+      do_check_neq(cps.DBConnection.schemaVersion, 0);
+    });
   }
 
   // Open a corrupted database.
@@ -69,12 +68,10 @@ function run_test() {
     foStream.close();
 
     // Get the service and make sure it backs up and recreates the database.
-    let cps = Cc["@mozilla.org/content-pref/service;1"].
-              createInstance(Ci.nsIContentPrefService);
-    do_check_true(backupDBFile.exists());
-    do_check_true(cps.DBConnection.connectionReady);
-
-    cps.DBConnection.close();
+    await with_cps_instance(cps => {
+      do_check_true(backupDBFile.exists());
+      do_check_true(cps.DBConnection.connectionReady);
+    });
   }
 
   // Open a database with a corrupted schema.
@@ -92,12 +89,10 @@ function run_test() {
     do_check_true(dbFile.exists());
 
     // Get the service and make sure it backs up and recreates the database.
-    let cps = Cc["@mozilla.org/content-pref/service;1"].
-              createInstance(Ci.nsIContentPrefService);
-    do_check_true(backupDBFile.exists());
-    do_check_true(cps.DBConnection.connectionReady);
-
-    cps.DBConnection.close();
+    await with_cps_instance(cps => {
+      do_check_true(backupDBFile.exists());
+      do_check_true(cps.DBConnection.connectionReady);
+    });
   }
 
 
@@ -108,8 +103,12 @@ function run_test() {
 
   // Make sure disk synchronization checking is turned off by default.
   var statement = cps.DBConnection.createStatement("PRAGMA synchronous");
-  statement.executeStep();
-  do_check_eq(0, statement.getInt32(0));
+  try {
+    statement.executeStep();
+    do_check_eq(0, statement.getInt32(0));
+  } finally {
+    statement.finalize();
+  }
 
   // Nonexistent Pref
 
@@ -460,4 +459,4 @@ function run_test() {
     do_check_true(globalPref.row.groupID == null);
     globalPref.reset();
   }
-}
+});

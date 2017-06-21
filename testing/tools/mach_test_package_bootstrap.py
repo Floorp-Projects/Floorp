@@ -37,6 +37,8 @@ SEARCH_PATHS = [
     'reftest',
     'tools/mach',
     'tools/wptserve',
+    'web-platform',
+    'web-platform/tests/tools/wptrunner',
     'xpcshell',
 ]
 
@@ -46,6 +48,7 @@ MACH_MODULES = [
     'mochitest/mach_test_package_commands.py',
     'reftest/mach_test_package_commands.py',
     'tools/mach/mach/commands/commandinfo.py',
+    'web-platform/mach_test_package_commands.py',
     'xpcshell/mach_test_package_commands.py',
 ]
 

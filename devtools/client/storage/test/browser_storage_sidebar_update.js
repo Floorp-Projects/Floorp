@@ -26,7 +26,7 @@ add_task(function* () {
   for (let i = 0; i < UPDATE_COUNT; i++) {
     info(`Performing update #${i}`);
     updates.push(gUI.once("sidebar-updated"));
-    gUI.displayObjectSidebar();
+    gUI.updateObjectSidebar();
   }
   yield promise.all(updates);
 

@@ -18,10 +18,12 @@
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/RestyleManagerInlines.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsCSSFrameConstructor.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsDeviceContext.h"
 #include "nsHTMLStyleSheet.h"
+#include "nsIAnonymousContentCreator.h"
 #include "nsIDocumentInlines.h"
 #include "nsPrintfCString.h"
 #include "nsSMILAnimationController.h"
@@ -89,6 +91,30 @@ ServoStyleSet::Init(nsPresContext* aPresContext)
   // mRawSet, so there was nothing to flush.
 }
 
+// Traverses the given frame tree, calling ClearServoDataFromSubtree on
+// any NAC that is found.
+static void
+ClearServoDataFromNAC(nsIFrame* aFrame)
+{
+  nsIAnonymousContentCreator* ac = do_QueryFrame(aFrame);
+  if (ac) {
+    nsTArray<nsIContent*> nodes;
+    ac->AppendAnonymousContentTo(nodes, 0);
+    for (nsIContent* node : nodes) {
+      if (node->IsElement()) {
+        ServoRestyleManager::ClearServoDataFromSubtree(node->AsElement());
+      }
+    }
+  }
+
+  nsIFrame::ChildListIterator lists(aFrame);
+  for (; !lists.IsDone(); lists.Next()) {
+    for (nsIFrame* child : lists.CurrentList()) {
+      ClearServoDataFromNAC(child);
+    }
+  }
+}
+
 void
 ServoStyleSet::BeginShutdown()
 {
@@ -124,6 +150,30 @@ ServoStyleSet::BeginShutdown()
   // clone.
   for (RefPtr<AnonymousContent>& ac : doc->GetAnonymousContents()) {
     ServoRestyleManager::ClearServoDataFromSubtree(ac->GetContentNode());
+  }
+
+  // Also look for any NAC created by position:fixed replicated frames in a
+  // print or print preview presentation.
+  if (nsIPresShell* shell = doc->GetShell()) {
+    if (nsIFrame* pageSeq = shell->FrameConstructor()->GetPageSequenceFrame()) {
+      auto iter = pageSeq->PrincipalChildList().begin();
+      if (*iter) {
+        ++iter;  // skip past first page
+        while (nsIFrame* page = *iter) {
+          MOZ_ASSERT(page->IsPageFrame());
+
+          // The position:fixed replicated frames live on the PageContent frame.
+          nsIFrame* pageContent = page->PrincipalChildList().FirstChild();
+          MOZ_ASSERT(pageContent && pageContent->IsPageContentFrame());
+
+          for (nsIFrame* f : pageContent->GetChildList(nsIFrame::kFixedList)) {
+            ClearServoDataFromNAC(f);
+          }
+
+          ++iter;
+        }
+      }
+    }
   }
 }
 

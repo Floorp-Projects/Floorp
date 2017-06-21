@@ -325,14 +325,14 @@ mix_remap(long inframes,
     return false;
   }
 
-  for (unsigned long i = 0, out_index = 0; i < inframes * in_channels; i += in_channels, out_index += out_channels) {
+  for (long i = 0, out_index = 0; i < inframes * in_channels; i += in_channels, out_index += out_channels) {
     for (unsigned int j = 0; j < out_channels; ++j) {
       cubeb_channel channel = CHANNEL_INDEX_TO_ORDER[out_layout][j];
       uint32_t channel_mask = 1 << channel;
       int channel_index = CHANNEL_ORDER_TO_INDEX[in_layout][channel];
-      assert(out_index + j < out_len);
+      assert((unsigned long)out_index + j < out_len);
       if (in_layout_mask & channel_mask) {
-        assert(i + channel_index < in_len);
+        assert((unsigned long)i + channel_index < in_len);
         assert(channel_index != -1);
         out[out_index + j] = in[i + channel_index];
       } else {
@@ -359,9 +359,9 @@ downmix_fallback(long inframes,
     return;
   }
 
-  for (unsigned long i = 0, out_index = 0; i < inframes * in_channels; i += in_channels, out_index += out_channels) {
+  for (long i = 0, out_index = 0; i < inframes * in_channels; i += in_channels, out_index += out_channels) {
     for (unsigned int j = 0; j < out_channels; ++j) {
-      assert(i + j < in_len && out_index + j < out_len);
+      assert((unsigned long)i + j < in_len && (unsigned long)out_index + j < out_len);
       out[out_index + j] = in[i + j];
     }
   }
@@ -416,7 +416,7 @@ mono_to_stereo(long insamples, T const * in, unsigned long in_len,
                T * out, unsigned long out_len, unsigned int out_channels)
 {
   for (long i = 0, j = 0; i < insamples; ++i, j += out_channels) {
-    assert(i < in_len && j + 1 < out_len);
+    assert((unsigned long)i < in_len && (unsigned long)j + 1 < out_len);
     out[j] = out[j + 1] = in[i];
   }
 }
@@ -460,7 +460,7 @@ cubeb_upmix(long inframes,
   /* Put silence in remaining channels. */
   for (long i = 0, o = 0; i < inframes; ++i, o += out_channels) {
     for (unsigned int j = 2; j < out_channels; ++j) {
-      assert(o + j < out_len);
+      assert((unsigned long)o + j < out_len);
       out[o + j] = 0.0;
     }
   }

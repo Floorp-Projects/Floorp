@@ -77,8 +77,8 @@ add_task(async function test_import_mobile_bookmarks_root() {
       guid: PlacesUtils.bookmarks.menuGuid,
       index: 0,
       children: [
-        { guid: "Utodo9b0oVws", index: 0 },
-        { guid: "X6lUyOspVYwi", index: 1 },
+        { guid: "X6lUyOspVYwi", index: 0 },
+        { guid: "Utodo9b0oVws", index: 1 },
       ],
     }, {
       guid: PlacesUtils.bookmarks.toolbarGuid,
@@ -96,10 +96,12 @@ add_task(async function test_import_mobile_bookmarks_root() {
         value: 1,
       }],
       children: [
-        { guid: "a17yW6-nTxEJ", index: 0 },
-        { guid: "xV10h9Wi3FBM", index: 1 },
-        { guid: "_o8e1_zxTJFg", index: 2 },
-        { guid: "QCtSqkVYUbXB", index: 3 },
+        // The first two are in ..._import.json, the second two are in
+        // ..._merge.json
+        { guid: "_o8e1_zxTJFg", index: 0 },
+        { guid: "QCtSqkVYUbXB", index: 1 },
+        { guid: "a17yW6-nTxEJ", index: 2 },
+        { guid: "xV10h9Wi3FBM", index: 3 },
       ],
     }],
   }, "Should merge bookmarks root contents");
@@ -169,9 +171,9 @@ add_task(async function test_import_mobile_bookmarks_folder() {
       guid: PlacesUtils.bookmarks.menuGuid,
       index: 0,
       children: [
-        { guid: "Utodo9b0oVws", index: 0 },
-        { guid: "X6lUyOspVYwi", index: 1 },
-        { guid: "XF4yRP6bTuil", index: 2 },
+        { guid: "X6lUyOspVYwi", index: 0 },
+        { guid: "XF4yRP6bTuil", index: 1 },
+        { guid: "Utodo9b0oVws", index: 2 },
       ],
     }, {
       guid: PlacesUtils.bookmarks.toolbarGuid,
@@ -191,10 +193,10 @@ add_task(async function test_import_mobile_bookmarks_folder() {
         value: 1,
       }],
       children: [
-        { guid: "a17yW6-nTxEJ", index: 0 },
-        { guid: "xV10h9Wi3FBM", index: 1 },
-        { guid: "_o8e1_zxTJFg", index: 2 },
-        { guid: "QCtSqkVYUbXB", index: 3 },
+        { guid: "_o8e1_zxTJFg", index: 0 },
+        { guid: "QCtSqkVYUbXB", index: 1 },
+        { guid: "a17yW6-nTxEJ", index: 2 },
+        { guid: "xV10h9Wi3FBM", index: 3 },
       ],
     }],
   }, "Should merge bookmarks folder contents into mobile root");
@@ -235,8 +237,8 @@ add_task(async function test_restore_multiple_bookmarks_folders() {
         value: 1,
       }],
       children: [
-        { guid: "sSZ86WT9WbN3", index: 0 },
-        { guid: "a17yW6-nTxEJ", index: 1 },
+        { guid: "a17yW6-nTxEJ", index: 0 },
+        { guid: "sSZ86WT9WbN3", index: 1 },
       ],
     }],
   }, "Should restore multiple bookmarks folder contents into root");
@@ -257,10 +259,10 @@ add_task(async function test_import_multiple_bookmarks_folders() {
       guid: PlacesUtils.bookmarks.menuGuid,
       index: 0,
       children: [
-        { guid: "buy7711R3ZgE", index: 0 },
-        { guid: "F_LBgd1fS_uQ", index: 1 },
-        { guid: "oIpmQXMWsXvY", index: 2 },
-        { guid: "X6lUyOspVYwi", index: 3 },
+        { guid: "X6lUyOspVYwi", index: 0 },
+        { guid: "buy7711R3ZgE", index: 1 },
+        { guid: "F_LBgd1fS_uQ", index: 2 },
+        { guid: "oIpmQXMWsXvY", index: 3 },
       ],
     }, {
       guid: PlacesUtils.bookmarks.toolbarGuid,
@@ -280,10 +282,10 @@ add_task(async function test_import_multiple_bookmarks_folders() {
         value: 1,
       }],
       children: [
-        { guid: "sSZ86WT9WbN3", index: 0 },
-        { guid: "a17yW6-nTxEJ", index: 1 },
-        { guid: "_o8e1_zxTJFg", index: 2 },
-        { guid: "QCtSqkVYUbXB", index: 3 },
+        { guid: "_o8e1_zxTJFg", index: 0 },
+        { guid: "QCtSqkVYUbXB", index: 1 },
+        { guid: "a17yW6-nTxEJ", index: 2 },
+        { guid: "sSZ86WT9WbN3", index: 3 },
       ],
     }],
   }, "Should merge multiple mobile folders into root");

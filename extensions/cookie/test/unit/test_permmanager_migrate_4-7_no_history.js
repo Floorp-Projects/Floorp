@@ -42,10 +42,6 @@ function GetPermissionsFile(profile)
  * Done nsINavHistoryService code
  */
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function test() {
   /* Create and set up the permissions database */
   let profile = do_get_profile();
@@ -96,7 +92,11 @@ add_task(function test() {
     stmtInsert.bindByName("appId", appId);
     stmtInsert.bindByName("isInBrowserElement", isInBrowserElement);
 
-    stmtInsert.execute();
+    try {
+      stmtInsert.execute();
+    } finally {
+      stmtInsert.reset();
+    }
 
     return {
       id: thisId,
@@ -216,8 +216,12 @@ add_task(function test() {
 
     // The moz_hosts table should still exist but be empty
     let mozHostsCount = db.createStatement("SELECT count(*) FROM moz_hosts");
-    mozHostsCount.executeStep();
-    do_check_eq(mozHostsCount.getInt64(0), 0);
+    try {
+      mozHostsCount.executeStep();
+      do_check_eq(mozHostsCount.getInt64(0), 0);
+    } finally {
+      mozHostsCount.finalize();
+    }
 
     db.close();
   }

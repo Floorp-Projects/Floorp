@@ -171,6 +171,7 @@ protected:
   nsresult WillOutputText(Selection* aSelection,
                           const nsAString* aInFormat,
                           nsAString* aOutText,
+                          uint32_t aFlags,
                           bool* aOutCancel,
                           bool* aHandled);
 
@@ -261,6 +262,8 @@ protected:
   friend class AutoLockRulesSniffing;
 };
 
+// TODO: This class (almost struct, though) is ugly and its size isn't
+//       optimized.  Should be refined later.
 class TextRulesInfo final : public RulesInfo
 {
 public:
@@ -270,6 +273,7 @@ public:
     , outString(nullptr)
     , outputFormat(nullptr)
     , maxLength(-1)
+    , flags(0)
     , collapsedAction(nsIEditor::eNext)
     , stripWrappers(nsIEditor::eStrip)
     , bOrdered(false)
@@ -284,6 +288,9 @@ public:
   nsAString* outString;
   const nsAString* outputFormat;
   int32_t maxLength;
+
+  // EditAction::outputText
+  uint32_t flags;
 
   // EditAction::deleteSelection
   nsIEditor::EDirection collapsedAction;

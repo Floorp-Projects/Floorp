@@ -79,7 +79,7 @@ struct cubeb {
   // The queue is asynchronously deallocated once all references to it are released
   dispatch_queue_t serial_queue = dispatch_queue_create(DISPATCH_QUEUE_LABEL, DISPATCH_QUEUE_SERIAL);
   // Current used channel layout
-  cubeb_channel_layout layout;
+  std::atomic<cubeb_channel_layout> layout{ CUBEB_LAYOUT_UNDEFINED };
 };
 
 static std::unique_ptr<AudioChannelLayout, decltype(&free)>
@@ -613,6 +613,7 @@ static int
 audiounit_reinit_stream(cubeb_stream * stm)
 {
   auto_lock context_lock(stm->context->mutex);
+  assert(stm->input_unit || stm->output_unit);
   if (!stm->shutdown) {
     audiounit_stream_stop_internal(stm);
   }
@@ -626,7 +627,7 @@ audiounit_reinit_stream(cubeb_stream * stm)
     auto_lock lock(stm->mutex);
     float volume = 0.0;
     int vol_rv = CUBEB_ERROR;
-    if (has_output(stm)) {
+    if (stm->output_unit) {
       vol_rv = audiounit_stream_get_volume(stm, &volume);
     }
 

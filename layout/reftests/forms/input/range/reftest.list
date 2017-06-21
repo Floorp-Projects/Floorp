@@ -6,7 +6,7 @@
 
 # dynamic type changes:
 fuzzy-if(skiaContent,1,40) == to-range-from-other-type-unthemed-1.html to-range-from-other-type-unthemed-1-ref.html
-skip-if(styloVsGecko) == from-range-to-other-type-unthemed-1.html from-range-to-other-type-unthemed-1-ref.html
+== from-range-to-other-type-unthemed-1.html from-range-to-other-type-unthemed-1-ref.html
 
 # for different values:
 != different-fraction-of-range-unthemed-1.html different-fraction-of-range-unthemed-1-notref.html
