@@ -942,8 +942,7 @@ class nsContentTitleSettingEvent : public Runnable
 {
 public:
   nsContentTitleSettingEvent(dom::Element* dse, const nsAString& wtm)
-    : Runnable("nsContentTitleSettingEvent"),
-      mElement(dse),
+    : mElement(dse),
       mTitleDefault(wtm) {}
 
   NS_IMETHOD Run() override

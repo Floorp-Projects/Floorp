@@ -428,8 +428,7 @@ private:
           threadLocalInfo->mActor.forget(&actor);
 
           MOZ_ALWAYS_SUCCEEDS(
-            NS_DispatchToMainThread(NewNonOwningRunnableMethod("ChildImpl::Release",
-                                                               actor, &ChildImpl::Release)));
+            NS_DispatchToMainThread(NewNonOwningRunnableMethod(actor, &ChildImpl::Release)));
         }
       }
       delete threadLocalInfo;
@@ -955,8 +954,7 @@ ParentImpl::GetContentParent(PBackgroundParent* aBackgroundActor)
     // will run before the reference we hand out can be released, and the
     // ContentParent can't die as long as the existing reference is maintained.
     MOZ_ALWAYS_SUCCEEDS(
-      NS_DispatchToMainThread(NewNonOwningRunnableMethod("ContentParent::AddRef",
-                                                         actor->mContent, &ContentParent::AddRef)));
+      NS_DispatchToMainThread(NewNonOwningRunnableMethod(actor->mContent, &ContentParent::AddRef)));
   }
 
   return already_AddRefed<ContentParent>(actor->mContent.get());
@@ -1235,8 +1233,7 @@ ParentImpl::Destroy()
   AssertIsInMainProcess();
 
   MOZ_ALWAYS_SUCCEEDS(
-    NS_DispatchToMainThread(NewNonOwningRunnableMethod("ParentImpl::MainThreadActorDestroy",
-                                                       this, &ParentImpl::MainThreadActorDestroy)));
+    NS_DispatchToMainThread(NewNonOwningRunnableMethod(this, &ParentImpl::MainThreadActorDestroy)));
 }
 
 void
@@ -1282,8 +1279,7 @@ ParentImpl::ActorDestroy(ActorDestroyReason aWhy)
   // long enough to be cleared in this call stack.
 
   MOZ_ALWAYS_SUCCEEDS(
-    NS_DispatchToCurrentThread(NewNonOwningRunnableMethod("ParentImpl::Destroy",
-                                                          this, &ParentImpl::Destroy)));
+    NS_DispatchToCurrentThread(NewNonOwningRunnableMethod(this, &ParentImpl::Destroy)));
 }
 
 NS_IMPL_ISUPPORTS(ParentImpl::ShutdownObserver, nsIObserver)

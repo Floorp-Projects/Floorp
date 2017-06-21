@@ -762,8 +762,7 @@ private:
       mCanceled = true;
 
       MOZ_ALWAYS_SUCCEEDS(
-        NS_DispatchToMainThread(NewRunnableMethod("ScriptLoaderRunnable::CancelMainThreadWithBindingAborted",
-                                                  this,
+        NS_DispatchToMainThread(NewRunnableMethod(this,
                                                   &ScriptLoaderRunnable::CancelMainThreadWithBindingAborted)));
     }
 

@@ -46,8 +46,8 @@ SoftwareDisplay::EnableVsync()
     }
     mVsyncEnabled = true;
 
-    mVsyncThread->message_loop()->PostTask(NewRunnableMethod(
-      "SoftwareDisplay::EnableVsync", this, &SoftwareDisplay::EnableVsync));
+    mVsyncThread->message_loop()->PostTask(
+      NewRunnableMethod(this, &SoftwareDisplay::EnableVsync));
     return;
   }
 
@@ -65,8 +65,8 @@ SoftwareDisplay::DisableVsync()
     }
     mVsyncEnabled = false;
 
-    mVsyncThread->message_loop()->PostTask(NewRunnableMethod(
-      "SoftwareDisplay::DisableVsync", this, &SoftwareDisplay::DisableVsync));
+    mVsyncThread->message_loop()->PostTask(
+      NewRunnableMethod(this, &SoftwareDisplay::DisableVsync));
     return;
   }
 
@@ -129,11 +129,10 @@ SoftwareDisplay::ScheduleNextVsync(mozilla::TimeStamp aVsyncTimestamp)
     nextVsync = mozilla::TimeStamp::Now();
   }
 
-  mCurrentVsyncTask = NewCancelableRunnableMethod<mozilla::TimeStamp>(
-    "SoftwareDisplay::NotifyVsync",
-    this,
-    &SoftwareDisplay::NotifyVsync,
-    nextVsync);
+  mCurrentVsyncTask =
+    NewCancelableRunnableMethod<mozilla::TimeStamp>(this,
+                                                    &SoftwareDisplay::NotifyVsync,
+                                                    nextVsync);
 
   RefPtr<Runnable> addrefedTask = mCurrentVsyncTask;
   mVsyncThread->message_loop()->PostDelayedTask(

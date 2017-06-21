@@ -332,11 +332,8 @@ WheelTransaction::SetTimeout()
   }
   sTimer->Cancel();
   DebugOnly<nsresult> rv =
-    sTimer->InitWithNamedFuncCallback(OnTimeout,
-                                      nullptr,
-                                      GetTimeoutTime(),
-                                      nsITimer::TYPE_ONE_SHOT,
-                                      "WheelTransaction::SetTimeout");
+    sTimer->InitWithFuncCallback(OnTimeout, nullptr, GetTimeoutTime(),
+                                 nsITimer::TYPE_ONE_SHOT);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "nsITimer::InitWithFuncCallback failed");
 }

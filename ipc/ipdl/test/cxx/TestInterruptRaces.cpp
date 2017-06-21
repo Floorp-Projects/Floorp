@@ -27,11 +27,9 @@ TestInterruptRacesParent::Main()
 mozilla::ipc::IPCResult
 TestInterruptRacesParent::RecvStartRace()
 {
-  MessageLoop::current()->PostTask(NewNonOwningRunnableMethod(
-    "_ipdltest::TestInterruptRacesParent::OnRaceTime",
-    this,
-    &TestInterruptRacesParent::OnRaceTime));
-  return IPC_OK();
+    MessageLoop::current()->PostTask(
+        NewNonOwningRunnableMethod(this, &TestInterruptRacesParent::OnRaceTime));
+    return IPC_OK();
 }
 
 void
@@ -46,9 +44,7 @@ TestInterruptRacesParent::OnRaceTime()
     mHasReply = true;
 
     MessageLoop::current()->PostTask(
-      NewNonOwningRunnableMethod("_ipdltest::TestInterruptRacesParent::Test2",
-                                 this,
-                                 &TestInterruptRacesParent::Test2));
+        NewNonOwningRunnableMethod(this, &TestInterruptRacesParent::Test2));
 }
 
 mozilla::ipc::IPCResult
@@ -75,9 +71,7 @@ TestInterruptRacesParent::Test2()
     puts("  passed");
 
     MessageLoop::current()->PostTask(
-      NewNonOwningRunnableMethod("_ipdltest::TestInterruptRacesParent::Test3",
-                                 this,
-                                 &TestInterruptRacesParent::Test3));
+        NewNonOwningRunnableMethod(this, &TestInterruptRacesParent::Test3));
 }
 
 mozilla::ipc::IPCResult

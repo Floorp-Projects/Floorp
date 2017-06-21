@@ -66,16 +66,12 @@ public:
             mStarted = true;
             aGraph->DispatchToMainThreadAfterStreamStateUpdate(
               mAbstractMainThread,
-              NewRunnableMethod("dom::SynthStreamListener::DoNotifyStarted",
-                                this,
-                                &SynthStreamListener::DoNotifyStarted));
+              NewRunnableMethod(this, &SynthStreamListener::DoNotifyStarted));
           }
 
           aGraph->DispatchToMainThreadAfterStreamStateUpdate(
             mAbstractMainThread,
-            NewRunnableMethod("dom::SynthStreamListener::DoNotifyFinished",
-                              this,
-                              &SynthStreamListener::DoNotifyFinished));
+            NewRunnableMethod(this, &SynthStreamListener::DoNotifyFinished));
         }
         break;
       case MediaStreamGraphEvent::EVENT_REMOVED:
@@ -94,9 +90,7 @@ public:
       mStarted = true;
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(
         mAbstractMainThread,
-        NewRunnableMethod("dom::SynthStreamListener::DoNotifyStarted",
-                          this,
-                          &SynthStreamListener::DoNotifyStarted));
+        NewRunnableMethod(this, &SynthStreamListener::DoNotifyStarted));
     }
   }
 

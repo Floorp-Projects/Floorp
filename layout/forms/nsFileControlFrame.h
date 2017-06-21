@@ -95,8 +95,7 @@ protected:
   {
   public:
     explicit SyncDisabledStateEvent(nsFileControlFrame* aFrame)
-      : mozilla::Runnable("nsFileControlFrame::SyncDisabledStateEvent")
-      , mFrame(aFrame)
+      : mFrame(aFrame)
     {}
 
     NS_IMETHOD Run() override {

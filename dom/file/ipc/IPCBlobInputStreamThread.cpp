@@ -27,8 +27,6 @@ bool gShutdownHasStarted = false;
 class ThreadInitializeRunnable final : public Runnable
 {
 public:
-  ThreadInitializeRunnable() : Runnable("dom::ThreadInitializeRunnable") {}
-
   NS_IMETHOD
   Run() override
   {
@@ -46,8 +44,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   explicit MigrateActorRunnable(IPCBlobInputStreamChild* aActor)
-    : Runnable("dom::MigrateActorRunnable")
-    , mActor(aActor)
+    : mActor(aActor)
   {
     MOZ_ASSERT(mActor);
   }

@@ -137,12 +137,11 @@ PresentationReconnectCallback::NotifySuccess(const nsAString& aUrl)
   }
 
   nsString sessionId = nsString(mSessionId);
-  return NS_DispatchToMainThread(NS_NewRunnableFunction(
-    "dom::PresentationReconnectCallback::NotifySuccess",
-    [sessionId, service]() -> void {
-      service->BuildTransport(sessionId,
-                              nsIPresentationService::ROLE_CONTROLLER);
-    }));
+  return NS_DispatchToMainThread(
+           NS_NewRunnableFunction([sessionId, service]() -> void {
+             service->BuildTransport(sessionId,
+                                     nsIPresentationService::ROLE_CONTROLLER);
+           }));
 }
 
 NS_IMETHODIMP

@@ -127,10 +127,9 @@ void
 GPUParent::NotifyDeviceReset()
 {
   if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(
-      NS_NewRunnableFunction("gfx::GPUParent::NotifyDeviceReset", []() -> void {
-        GPUParent::GetSingleton()->NotifyDeviceReset();
-      }));
+    NS_DispatchToMainThread(NS_NewRunnableFunction([] () -> void {
+      GPUParent::GetSingleton()->NotifyDeviceReset();
+    }));
     return;
   }
 

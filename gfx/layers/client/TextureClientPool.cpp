@@ -179,23 +179,15 @@ TextureClientPool::ResetTimers()
   if (mShrinkTimeoutMsec &&
       mTextureClients.size() + mTextureClientsDeferred.size() > mPoolUnusedSize) {
     TCP_LOG("TexturePool %p scheduling a shrink-to-max-size\n", this);
-    mShrinkTimer->InitWithNamedFuncCallback(
-      ShrinkCallback,
-      this,
-      mShrinkTimeoutMsec,
-      nsITimer::TYPE_ONE_SHOT,
-      "layers::TextureClientPool::ResetTimers");
+    mShrinkTimer->InitWithFuncCallback(ShrinkCallback, this, mShrinkTimeoutMsec,
+                                       nsITimer::TYPE_ONE_SHOT);
   }
 
   // Clear pool after a period of inactivity to reduce memory consumption
   if (mClearTimeoutMsec) {
     TCP_LOG("TexturePool %p scheduling a clear\n", this);
-    mClearTimer->InitWithNamedFuncCallback(
-      ClearCallback,
-      this,
-      mClearTimeoutMsec,
-      nsITimer::TYPE_ONE_SHOT,
-      "layers::TextureClientPool::ResetTimers");
+    mClearTimer->InitWithFuncCallback(ClearCallback, this, mClearTimeoutMsec,
+                                      nsITimer::TYPE_ONE_SHOT);
   }
 }
 

@@ -1610,8 +1610,7 @@ RasterImage::HandleErrorWorker::DispatchIfNeeded(RasterImage* aImage)
 }
 
 RasterImage::HandleErrorWorker::HandleErrorWorker(RasterImage* aImage)
-  : Runnable("image::RasterImage::HandleErrorWorker")
-  , mImage(aImage)
+  : mImage(aImage)
 {
   MOZ_ASSERT(mImage, "Should have image");
 }

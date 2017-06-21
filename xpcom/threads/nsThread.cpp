@@ -240,11 +240,10 @@ public:
   DelayedRunnable(already_AddRefed<nsIThread> aTargetThread,
                   already_AddRefed<nsIRunnable> aRunnable,
                   uint32_t aDelay)
-    : mozilla::Runnable("DelayedRunnable")
-    , mTargetThread(aTargetThread)
-    , mWrappedRunnable(aRunnable)
-    , mDelayedFrom(TimeStamp::NowLoRes())
-    , mDelay(aDelay)
+    : mTargetThread(aTargetThread),
+      mWrappedRunnable(aRunnable),
+      mDelayedFrom(TimeStamp::NowLoRes()),
+      mDelay(aDelay)
   { }
 
   NS_DECL_ISUPPORTS_INHERITED

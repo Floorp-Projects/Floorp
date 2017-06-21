@@ -342,11 +342,8 @@ public:
     mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
     if (mTimer) {
       mTimer->SetTarget(aTarget);
-      mTimer->InitWithNamedFuncCallback(TimedOut,
-                                        this,
-                                        aDelay,
-                                        nsITimer::TYPE_ONE_SHOT,
-                                        "IdleRunnableWrapper::SetTimer");
+      mTimer->InitWithFuncCallback(TimedOut, this, aDelay,
+                                   nsITimer::TYPE_ONE_SHOT);
     }
   }
 private:

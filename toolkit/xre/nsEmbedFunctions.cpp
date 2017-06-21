@@ -751,10 +751,10 @@ class MainFunctionRunnable : public Runnable
 public:
   NS_DECL_NSIRUNNABLE
 
-  MainFunctionRunnable(MainFunction aFunction, void* aData)
-    : mozilla::Runnable("MainFunctionRunnable")
-    , mFunction(aFunction)
-    , mData(aData)
+  MainFunctionRunnable(MainFunction aFunction,
+                       void* aData)
+  : mFunction(aFunction),
+    mData(aData)
   {
     NS_ASSERTION(aFunction, "Don't give me a null pointer!");
   }

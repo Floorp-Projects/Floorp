@@ -231,12 +231,10 @@ FileSystemTaskChildBase::SetError(const nsresult& aErrorValue)
  * FileSystemTaskParentBase class
  */
 
-FileSystemTaskParentBase::FileSystemTaskParentBase(
-  FileSystemBase* aFileSystem,
-  const FileSystemParams& aParam,
-  FileSystemRequestParent* aParent)
-  : Runnable("dom::FileSystemTaskParentBase")
-  , mErrorValue(NS_OK)
+FileSystemTaskParentBase::FileSystemTaskParentBase(FileSystemBase* aFileSystem,
+                                                   const FileSystemParams& aParam,
+                                                   FileSystemRequestParent* aParent)
+  : mErrorValue(NS_OK)
   , mFileSystem(aFileSystem)
   , mRequestParent(aParent)
   , mBackgroundEventTarget(GetCurrentThreadEventTarget())

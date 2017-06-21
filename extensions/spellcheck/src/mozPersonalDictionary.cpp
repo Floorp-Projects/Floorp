@@ -53,9 +53,7 @@ NS_INTERFACE_MAP_END
 class mozPersonalDictionaryLoader final : public mozilla::Runnable
 {
 public:
-  explicit mozPersonalDictionaryLoader(mozPersonalDictionary* dict)
-    : mozilla::Runnable("mozPersonalDictionaryLoader")
-    , mDict(dict)
+  explicit mozPersonalDictionaryLoader(mozPersonalDictionary *dict) : mDict(dict)
   {
   }
 
@@ -78,13 +76,12 @@ private:
 class mozPersonalDictionarySave final : public mozilla::Runnable
 {
 public:
-  explicit mozPersonalDictionarySave(mozPersonalDictionary* aDict,
+  explicit mozPersonalDictionarySave(mozPersonalDictionary *aDict,
                                      nsCOMPtr<nsIFile> aFile,
-                                     nsTArray<nsString>&& aDictWords)
-    : mozilla::Runnable("mozPersonalDictionarySave")
-    , mDictWords(aDictWords)
-    , mFile(aFile)
-    , mDict(aDict)
+                                     nsTArray<nsString> &&aDictWords)
+    : mDictWords(aDictWords),
+      mFile(aFile),
+      mDict(aDict)
   {
   }
 

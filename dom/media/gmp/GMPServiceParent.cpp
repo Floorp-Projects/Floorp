@@ -141,10 +141,8 @@ GeckoMediaPluginServiceParent::Init()
   int32_t expected = Preferences::GetInt("media.gmp.storage.version.expected", 0);
   if (version != expected) {
     Preferences::SetInt("media.gmp.storage.version.observed", expected);
-    return GMPDispatch(
-      NewRunnableMethod("gmp::GeckoMediaPluginServiceParent::ClearStorage",
-                        this,
-                        &GeckoMediaPluginServiceParent::ClearStorage));
+    return GMPDispatch(NewRunnableMethod(
+      this, &GeckoMediaPluginServiceParent::ClearStorage));
   }
   return NS_OK;
 }
@@ -300,8 +298,7 @@ GeckoMediaPluginServiceParent::Observe(nsISupports* aSubject,
       LOGD(("%s::%s Starting to unload plugins, waiting for sync shutdown..."
             , __CLASS__, __FUNCTION__));
       gmpThread->Dispatch(
-        NewRunnableMethod("gmp::GeckoMediaPluginServiceParent::UnloadPlugins",
-                          this,
+        NewRunnableMethod(this,
                           &GeckoMediaPluginServiceParent::UnloadPlugins),
         NS_DISPATCH_NORMAL);
 
@@ -326,10 +323,8 @@ GeckoMediaPluginServiceParent::Observe(nsISupports* aSubject,
   } else if (!strcmp("browser:purge-session-history", aTopic)) {
     // Clear everything!
     if (!aSomeData || nsDependentString(aSomeData).IsEmpty()) {
-      return GMPDispatch(
-        NewRunnableMethod("gmp::GeckoMediaPluginServiceParent::ClearStorage",
-                          this,
-                          &GeckoMediaPluginServiceParent::ClearStorage));
+      return GMPDispatch(NewRunnableMethod(
+          this, &GeckoMediaPluginServiceParent::ClearStorage));
     }
 
     // Clear nodeIds/records modified after |t|.
@@ -339,10 +334,8 @@ GeckoMediaPluginServiceParent::Observe(nsISupports* aSubject,
       return rv;
     }
     return GMPDispatch(NewRunnableMethod<PRTime>(
-      "gmp::GeckoMediaPluginServiceParent::ClearRecentHistoryOnGMPThread",
-      this,
-      &GeckoMediaPluginServiceParent::ClearRecentHistoryOnGMPThread,
-      t));
+        this, &GeckoMediaPluginServiceParent::ClearRecentHistoryOnGMPThread,
+        t));
   }
 
   return NS_OK;
@@ -734,7 +727,7 @@ GeckoMediaPluginServiceParent::EnsurePluginsOnDiskScanned()
     // cause an event to be dispatched to which scans for plugins. We
     // dispatch a sync event to the GMP thread here in order to wait until
     // after the GMP thread has scanned any paths in MOZ_GMP_PATH.
-    nsresult rv = GMPDispatch(new mozilla::Runnable("GMPDummyRunnable"), NS_DISPATCH_SYNC);
+    nsresult rv = GMPDispatch(new mozilla::Runnable(), NS_DISPATCH_SYNC);
     NS_ENSURE_SUCCESS(rv, rv);
     MOZ_ASSERT(mScannedPluginOnDisk, "Should have scanned MOZ_GMP_PATH by now");
   }
@@ -1604,13 +1597,9 @@ GeckoMediaPluginServiceParent::ForgetThisSiteNative(const nsAString& aSite,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  return GMPDispatch(
-    NewRunnableMethod<nsCString, mozilla::OriginAttributesPattern>(
-      "gmp::GeckoMediaPluginServiceParent::ForgetThisSiteOnGMPThread",
-      this,
-      &GeckoMediaPluginServiceParent::ForgetThisSiteOnGMPThread,
-      NS_ConvertUTF16toUTF8(aSite),
-      aPattern));
+  return GMPDispatch(NewRunnableMethod<nsCString, mozilla::OriginAttributesPattern>(
+      this, &GeckoMediaPluginServiceParent::ForgetThisSiteOnGMPThread,
+      NS_ConvertUTF16toUTF8(aSite), aPattern));
 }
 
 static bool IsNodeIdValid(GMPParent* aParent) {
@@ -1838,8 +1827,7 @@ class DeleteGMPServiceParent : public mozilla::Runnable
 {
 public:
   explicit DeleteGMPServiceParent(GMPServiceParent* aToDelete)
-    : Runnable("gmp::DeleteGMPServiceParent")
-    , mToDelete(aToDelete)
+    : mToDelete(aToDelete)
   {
   }
 
@@ -1873,12 +1861,11 @@ GMPServiceParent::ActorDestroy(ActorDestroyReason aWhy)
 
   // Make sure the IPC channel is closed before destroying mToDelete.
   MonitorAutoLock lock(monitor);
-  RefPtr<Runnable> task = NewNonOwningRunnableMethod<Monitor*, bool*>(
-    "gmp::GMPServiceParent::CloseTransport",
-    this,
-    &GMPServiceParent::CloseTransport,
-    &monitor,
-    &completed);
+  RefPtr<Runnable> task =
+    NewNonOwningRunnableMethod<Monitor*, bool*>(this,
+                                                &GMPServiceParent::CloseTransport,
+                                                &monitor,
+                                                &completed);
   XRE_GetIOMessageLoop()->PostTask(Move(task.forget()));
 
   while (!completed) {
@@ -1889,12 +1876,12 @@ GMPServiceParent::ActorDestroy(ActorDestroyReason aWhy)
   // GMPServiceParent until the current calling context is finished with
   // the object.
   GMPServiceParent* self = this;
-  NS_DispatchToCurrentThread(
-    NS_NewRunnableFunction("gmp::GMPServiceParent::ActorDestroy", [self]() {
-      // The GMPServiceParent must be destroyed on the main thread.
-      NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "gmp::GMPServiceParent::ActorDestroy", [self]() { delete self; }));
+  NS_DispatchToCurrentThread(NS_NewRunnableFunction([self]() {
+    // The GMPServiceParent must be destroyed on the main thread.
+    NS_DispatchToMainThread(NS_NewRunnableFunction([self]() {
+      delete self;
     }));
+  }));
 }
 
 class OpenPGMPServiceParent : public mozilla::Runnable
@@ -1903,10 +1890,9 @@ public:
   OpenPGMPServiceParent(GMPServiceParent* aGMPServiceParent,
                         ipc::Endpoint<PGMPServiceParent>&& aEndpoint,
                         bool* aResult)
-    : Runnable("gmp::OpenPGMPServiceParent")
-    , mGMPServiceParent(aGMPServiceParent)
-    , mEndpoint(Move(aEndpoint))
-    , mResult(aResult)
+    : mGMPServiceParent(aGMPServiceParent),
+      mEndpoint(Move(aEndpoint)),
+      mResult(aResult)
   {
   }
 

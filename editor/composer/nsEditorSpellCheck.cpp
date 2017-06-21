@@ -301,10 +301,7 @@ class CallbackCaller final : public Runnable
 {
 public:
   explicit CallbackCaller(nsIEditorSpellCheckCallback* aCallback)
-    : mozilla::Runnable("CallbackCaller")
-    , mCallback(aCallback)
-  {
-  }
+    : mCallback(aCallback) {}
 
   ~CallbackCaller()
   {

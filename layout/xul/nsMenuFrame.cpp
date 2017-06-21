@@ -68,13 +68,10 @@ const int32_t kBlinkDelay = 67; // milliseconds
 class nsMenuActivateEvent : public Runnable
 {
 public:
-  nsMenuActivateEvent(nsIContent* aMenu,
+  nsMenuActivateEvent(nsIContent *aMenu,
                       nsPresContext* aPresContext,
                       bool aIsActivate)
-    : mozilla::Runnable("nsMenuActivateEvent")
-    , mMenu(aMenu)
-    , mPresContext(aPresContext)
-    , mIsActivate(aIsActivate)
+    : mMenu(aMenu), mPresContext(aPresContext), mIsActivate(aIsActivate)
   {
   }
 
@@ -117,9 +114,7 @@ class nsMenuAttributeChangedEvent : public Runnable
 {
 public:
   nsMenuAttributeChangedEvent(nsIFrame* aFrame, nsIAtom* aAttr)
-    : mozilla::Runnable("nsMenuAttributeChangedEvent")
-    , mFrame(aFrame)
-    , mAttr(aAttr)
+  : mFrame(aFrame), mAttr(aAttr)
   {
   }
 

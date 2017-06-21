@@ -232,12 +232,10 @@ RejectPromises(const nsTArray<RefPtr<Promise>>& aPromises, nsresult aError)
 class nsMediaEvent : public Runnable
 {
 public:
-  explicit nsMediaEvent(HTMLMediaElement* aElement)
-    : Runnable("dom::nsMediaEvent")
-    , mElement(aElement)
-    , mLoadID(mElement->GetCurrentLoadID())
-  {
-  }
+
+  explicit nsMediaEvent(HTMLMediaElement* aElement) :
+    mElement(aElement),
+    mLoadID(mElement->GetCurrentLoadID()) {}
   ~nsMediaEvent() {}
 
   NS_IMETHOD Run() = 0;
@@ -407,11 +405,9 @@ public:
     for (VideoSegment::ConstChunkIterator c(video); !c.IsEnded(); c.Next()) {
       if (c->mFrame.GetIntrinsicSize() != gfx::IntSize(0,0)) {
         mInitialSizeFound = true;
-        nsCOMPtr<nsIRunnable> event = NewRunnableMethod<gfx::IntSize>(
-          "dom::HTMLMediaElement::StreamSizeListener::ReceivedSize",
-          this,
-          &StreamSizeListener::ReceivedSize,
-          c->mFrame.GetIntrinsicSize());
+        nsCOMPtr<nsIRunnable> event =
+          NewRunnableMethod<gfx::IntSize>(this, &StreamSizeListener::ReceivedSize,
+                                          c->mFrame.GetIntrinsicSize());
         // This is fine to dispatch straight to main thread (instead of via
         // ...AfterStreamUpdate()) since it reflects state of the element,
         // not the stream. Events reflecting stream or track state should be
@@ -974,26 +970,24 @@ private:
     }
 
     uint64_t windowID = mAudioChannelAgent->WindowID();
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "dom::HTMLMediaElement::AudioChannelAgentCallback::"
-      "MaybeNotifyMediaResumed",
-      [windowID]() -> void {
-        nsCOMPtr<nsIObserverService> observerService =
-          services::GetObserverService();
-        if (NS_WARN_IF(!observerService)) {
-          return;
-        }
+    NS_DispatchToMainThread(NS_NewRunnableFunction([windowID]() -> void {
+      nsCOMPtr<nsIObserverService> observerService =
+        services::GetObserverService();
+      if (NS_WARN_IF(!observerService)) {
+        return;
+      }
 
-        nsCOMPtr<nsISupportsPRUint64> wrapper =
-          do_CreateInstance(NS_SUPPORTS_PRUINT64_CONTRACTID);
-        if (NS_WARN_IF(!wrapper)) {
-          return;
-        }
+      nsCOMPtr<nsISupportsPRUint64> wrapper =
+        do_CreateInstance(NS_SUPPORTS_PRUINT64_CONTRACTID);
+      if (NS_WARN_IF(!wrapper)) {
+         return;
+      }
 
-        wrapper->SetData(windowID);
-        observerService->NotifyObservers(
-          wrapper, "media-playback-resumed", u"active");
-      }));
+      wrapper->SetData(windowID);
+      observerService->NotifyObservers(wrapper,
+                                       "media-playback-resumed",
+                                       u"active");
+    }));
   }
 
   bool
@@ -4096,12 +4090,8 @@ HTMLMediaElement::WakeLockBoolWrapper::UpdateWakeLock()
     int timeout = Preferences::GetInt("media.wakelock_timeout", 2000);
     mTimer = do_CreateInstance("@mozilla.org/timer;1");
     if (mTimer) {
-      mTimer->InitWithNamedFuncCallback(
-        TimerCallback,
-        this,
-        timeout,
-        nsITimer::TYPE_ONE_SHOT,
-        "dom::HTMLMediaElement::WakeLockBoolWrapper::UpdateWakeLock");
+      mTimer->InitWithFuncCallback(TimerCallback, this, timeout,
+                                   nsITimer::TYPE_ONE_SHOT);
     }
   }
 }
@@ -4541,12 +4531,11 @@ void HTMLMediaElement::UnbindFromTree(bool aDeep,
   NotifyDecoderActivityChanges();
 
   RefPtr<HTMLMediaElement> self(this);
-  nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableFunction("dom::HTMLMediaElement::UnbindFromTree", [self]() {
-      if (self->mUnboundFromTree) {
-        self->Pause();
-      }
-    });
+  nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction([self] () {
+    if (self->mUnboundFromTree) {
+      self->Pause();
+    }
+  });
   RunInStableState(task);
 }
 
@@ -4855,15 +4844,9 @@ public:
   {
     nsCOMPtr<nsIRunnable> event;
     if (aBlocked == BLOCKED) {
-      event = NewRunnableMethod(
-        "dom::HTMLMediaElement::StreamListener::DoNotifyBlocked",
-        this,
-        &StreamListener::DoNotifyBlocked);
+      event = NewRunnableMethod(this, &StreamListener::DoNotifyBlocked);
     } else {
-      event = NewRunnableMethod(
-        "dom::HTMLMediaElement::StreamListener::DoNotifyUnblocked",
-        this,
-        &StreamListener::DoNotifyUnblocked);
+      event = NewRunnableMethod(this, &StreamListener::DoNotifyUnblocked);
     }
     aGraph->DispatchToMainThreadAfterStreamStateUpdate(mAbstractMainThread,
                                                        event.forget());
@@ -4873,10 +4856,7 @@ public:
     MutexAutoLock lock(mMutex);
     aGraph->DispatchToMainThreadAfterStreamStateUpdate(
       mAbstractMainThread,
-      NewRunnableMethod(
-        "dom::HTMLMediaElement::StreamListener::DoNotifyHaveCurrentData",
-        this,
-        &StreamListener::DoNotifyHaveCurrentData));
+      NewRunnableMethod(this, &StreamListener::DoNotifyHaveCurrentData));
   }
   virtual void NotifyOutput(MediaStreamGraph* aGraph,
                             GraphTime aCurrentTime) override
@@ -4887,9 +4867,7 @@ public:
     mPendingNotifyOutput = true;
     aGraph->DispatchToMainThreadAfterStreamStateUpdate(
       mAbstractMainThread,
-      NewRunnableMethod("dom::HTMLMediaElement::StreamListener::DoNotifyOutput",
-                        this,
-                        &StreamListener::DoNotifyOutput));
+      NewRunnableMethod(this, &StreamListener::DoNotifyOutput));
   }
 
 private:
@@ -6318,9 +6296,7 @@ void HTMLMediaElement::AddRemoveSelfReference()
       // Dispatch Release asynchronously so that we don't destroy this object
       // inside a call stack of method calls on this object
       nsCOMPtr<nsIRunnable> event =
-        NewRunnableMethod("dom::HTMLMediaElement::DoRemoveSelfReference",
-                          this,
-                          &HTMLMediaElement::DoRemoveSelfReference);
+        NewRunnableMethod(this, &HTMLMediaElement::DoRemoveSelfReference);
       NS_DispatchToMainThread(event);
     }
   }
@@ -7517,9 +7493,9 @@ HTMLMediaElement::AsyncResolveSeekDOMPromiseIfExists()
   MOZ_ASSERT(NS_IsMainThread());
   if (mSeekDOMPromise) {
     RefPtr<dom::Promise> promise = mSeekDOMPromise.forget();
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      "dom::HTMLMediaElement::AsyncResolveSeekDOMPromiseIfExists",
-      [=]() { promise->MaybeResolveWithUndefined(); });
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
+      promise->MaybeResolveWithUndefined();
+    });
     mAbstractMainThread->Dispatch(r.forget());
     mSeekDOMPromise = nullptr;
   }
@@ -7531,9 +7507,9 @@ HTMLMediaElement::AsyncRejectSeekDOMPromiseIfExists()
   MOZ_ASSERT(NS_IsMainThread());
   if (mSeekDOMPromise) {
     RefPtr<dom::Promise> promise = mSeekDOMPromise.forget();
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      "dom::HTMLMediaElement::AsyncRejectSeekDOMPromiseIfExists",
-      [=]() { promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR); });
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
+      promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    });
     mAbstractMainThread->Dispatch(r.forget());
     mSeekDOMPromise = nullptr;
   }
@@ -7551,32 +7527,29 @@ HTMLMediaElement::ReportCanPlayTelemetry()
   }
 
   thread->Dispatch(
-    NS_NewRunnableFunction(
-      "dom::HTMLMediaElement::ReportCanPlayTelemetry",
-      [thread]() {
+    NS_NewRunnableFunction([thread]() {
 #if XP_WIN
-        // Windows Media Foundation requires MSCOM to be inited.
-        HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
-        MOZ_ASSERT(hr == S_OK);
+      // Windows Media Foundation requires MSCOM to be inited.
+      HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
+      MOZ_ASSERT(hr == S_OK);
 #endif
-        bool aac = MP4Decoder::IsSupportedType(
-          MediaContainerType(MEDIAMIMETYPE("audio/mp4")), nullptr);
-        bool h264 = MP4Decoder::IsSupportedType(
-          MediaContainerType(MEDIAMIMETYPE("video/mp4")), nullptr);
+      bool aac = MP4Decoder::IsSupportedType(
+        MediaContainerType(MEDIAMIMETYPE("audio/mp4")), nullptr);
+      bool h264 = MP4Decoder::IsSupportedType(
+        MediaContainerType(MEDIAMIMETYPE("video/mp4")), nullptr);
 #if XP_WIN
-        CoUninitialize();
+      CoUninitialize();
 #endif
-        AbstractThread::MainThread()->Dispatch(NS_NewRunnableFunction(
-          "dom::HTMLMediaElement::ReportCanPlayTelemetry",
-          [thread, aac, h264]() {
-            LOG(LogLevel::Debug, ("MediaTelemetry aac=%d h264=%d", aac, h264));
-            Telemetry::Accumulate(
-              Telemetry::HistogramID::VIDEO_CAN_CREATE_AAC_DECODER, aac);
-            Telemetry::Accumulate(
-              Telemetry::HistogramID::VIDEO_CAN_CREATE_H264_DECODER, h264);
-            thread->AsyncShutdown();
-          }));
-      }),
+      AbstractThread::MainThread()->Dispatch(
+        NS_NewRunnableFunction([thread, aac, h264]() {
+          LOG(LogLevel::Debug, ("MediaTelemetry aac=%d h264=%d", aac, h264));
+          Telemetry::Accumulate(
+            Telemetry::HistogramID::VIDEO_CAN_CREATE_AAC_DECODER, aac);
+          Telemetry::Accumulate(
+            Telemetry::HistogramID::VIDEO_CAN_CREATE_H264_DECODER, h264);
+          thread->AsyncShutdown();
+        }));
+    }),
     NS_DISPATCH_NORMAL);
 }
 

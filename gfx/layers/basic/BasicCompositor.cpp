@@ -1027,9 +1027,9 @@ BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd)
 
     const uint32_t retryMs = 2;
     RefPtr<BasicCompositor> self = this;
-    RefPtr<Runnable> runnable =
-      NS_NewRunnableFunction("layers::BasicCompositor::TryToEndRemoteDrawing",
-                             [self]() { self->TryToEndRemoteDrawing(); });
+    RefPtr<Runnable> runnable = NS_NewRunnableFunction([self]() {
+      self->TryToEndRemoteDrawing();
+    });
     MessageLoop::current()->PostDelayedTask(runnable.forget(), retryMs);
     return;
   }

@@ -189,12 +189,10 @@ gfxFontCache::gfxFontCache(nsIEventTarget* aEventTarget)
         if (XRE_IsContentProcess() && NS_IsMainThread()) {
             mWordCacheExpirationTimer->SetTarget(aEventTarget);
         }
-        mWordCacheExpirationTimer->InitWithNamedFuncCallback(
-          WordCacheExpirationTimerCallback,
-          this,
-          SHAPED_WORD_TIMEOUT_SECONDS * 1000,
-          nsITimer::TYPE_REPEATING_SLACK,
-          "gfxFontCache::gfxFontCache");
+        mWordCacheExpirationTimer->
+            InitWithFuncCallback(WordCacheExpirationTimerCallback, this,
+                                 SHAPED_WORD_TIMEOUT_SECONDS * 1000,
+                                 nsITimer::TYPE_REPEATING_SLACK);
     }
 #endif
 }

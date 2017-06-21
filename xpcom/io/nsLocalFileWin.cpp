@@ -114,7 +114,6 @@ class AsyncLocalFileWinDone : public Runnable
 {
 public:
   AsyncLocalFileWinDone() :
-    Runnable("AsyncLocalFileWinDone"),
     mWorkerThread(do_GetCurrentThread())
   {
     // Objects of this type must only be created on worker threads
@@ -144,8 +143,7 @@ class AsyncRevealOperation : public Runnable
 {
 public:
   explicit AsyncRevealOperation(const nsAString& aResolvedPath)
-    : Runnable("AsyncRevealOperation"),
-      mResolvedPath(aResolvedPath)
+    : mResolvedPath(aResolvedPath)
   {
   }
 

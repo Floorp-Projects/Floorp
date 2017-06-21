@@ -386,17 +386,16 @@ OmxDataDecoder::EmptyBufferDone(BufferData* aData)
     mCheckingInputExhausted = true;
 
     RefPtr<OmxDataDecoder> self = this;
-    nsCOMPtr<nsIRunnable> r =
-      NS_NewRunnableFunction("OmxDataDecoder::EmptyBufferDone", [self, this]() {
-        mCheckingInputExhausted = false;
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self, this]() {
+      mCheckingInputExhausted = false;
 
-        if (mMediaRawDatas.Length()) {
-          return;
-        }
+      if (mMediaRawDatas.Length()) {
+        return;
+      }
 
-        mDecodePromise.ResolveIfExists(mDecodedData, __func__);
-        mDecodedData.Clear();
-      });
+      mDecodePromise.ResolveIfExists(mDecodedData, __func__);
+      mDecodedData.Clear();
+    });
 
     mOmxTaskQueue->Dispatch(r.forget());
   }

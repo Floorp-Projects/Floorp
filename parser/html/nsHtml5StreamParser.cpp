@@ -1135,12 +1135,12 @@ nsHtml5StreamParser::DoDataAvailable(const uint8_t* aBuffer, uint32_t aLength)
 
   {
     mozilla::MutexAutoLock flushTimerLock(mFlushTimerMutex);
-    mFlushTimer->InitWithNamedFuncCallback(
-      nsHtml5StreamParser::TimerCallback,
-      static_cast<void*>(this),
-      mFlushTimerEverFired ? sTimerInitialDelay : sTimerSubsequentDelay,
-      nsITimer::TYPE_ONE_SHOT,
-      "nsHtml5StreamParser::DoDataAvailable");
+    mFlushTimer->InitWithFuncCallback(nsHtml5StreamParser::TimerCallback,
+                                      static_cast<void*> (this),
+                                      mFlushTimerEverFired ?
+                                          sTimerInitialDelay :
+                                          sTimerSubsequentDelay,
+                                      nsITimer::TYPE_ONE_SHOT);
   }
   mFlushTimerArmed = true;
 }

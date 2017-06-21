@@ -87,11 +87,9 @@ namespace
     int32_t              mDetail;
 
   public:
-    AsyncTimeEventRunner(nsIContent* aTarget,
-                         EventMessage aMsg,
+    AsyncTimeEventRunner(nsIContent* aTarget, EventMessage aMsg,
                          int32_t aDetail)
-      : mozilla::Runnable("AsyncTimeEventRunner")
-      , mTarget(aTarget)
+      : mTarget(aTarget)
       , mMsg(aMsg)
       , mDetail(aDetail)
     {

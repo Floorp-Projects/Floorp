@@ -85,11 +85,9 @@ private:
 class AudioPlaybackRunnable final : public Runnable
 {
 public:
-  AudioPlaybackRunnable(nsPIDOMWindowOuter* aWindow,
-                        bool aActive,
+  AudioPlaybackRunnable(nsPIDOMWindowOuter* aWindow, bool aActive,
                         AudioChannelService::AudibleChangedReasons aReason)
-    : mozilla::Runnable("AudioPlaybackRunnable")
-    , mWindow(aWindow)
+    : mWindow(aWindow)
     , mActive(aActive)
     , mReason(aReason)
   {}
@@ -876,9 +874,7 @@ AudioChannelService::AudioChannelWindow::NotifyMediaBlockStop(nsPIDOMWindowOuter
   mShouldSendBlockStopEvent = false;
   // Can't use raw pointer for lamba variable capturing, use smart ptr.
   nsCOMPtr<nsPIDOMWindowOuter> window = aWindow;
-  NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-    "dom::AudioChannelService::AudioChannelWindow::NotifyMediaBlockStop",
-    [window]() -> void {
+  NS_DispatchToCurrentThread(NS_NewRunnableFunction([window] () -> void {
       nsCOMPtr<nsIObserverService> observerService =
         services::GetObserverService();
       if (NS_WARN_IF(!observerService)) {
@@ -888,7 +884,8 @@ AudioChannelService::AudioChannelWindow::NotifyMediaBlockStop(nsPIDOMWindowOuter
       observerService->NotifyObservers(ToSupports(window),
                                        "audio-playback",
                                        u"blockStop");
-    }));
+    })
+  );
 }
 
 void
@@ -1052,19 +1049,18 @@ AudioChannelService::AudioChannelWindow::MaybeNotifyMediaBlockStart(AudioChannel
 
   if (!mShouldSendBlockStopEvent) {
       mShouldSendBlockStopEvent = true;
-      NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-        "dom::AudioChannelService::AudioChannelWindow::"
-        "MaybeNotifyMediaBlockStart",
-        [window]() -> void {
-          nsCOMPtr<nsIObserverService> observerService =
-            services::GetObserverService();
-          if (NS_WARN_IF(!observerService)) {
-            return;
-          }
+      NS_DispatchToCurrentThread(NS_NewRunnableFunction([window] () -> void {
+        nsCOMPtr<nsIObserverService> observerService =
+          services::GetObserverService();
+        if (NS_WARN_IF(!observerService)) {
+          return;
+        }
 
-          observerService->NotifyObservers(
-            ToSupports(window), "audio-playback", u"blockStart");
-        }));
+        observerService->NotifyObservers(ToSupports(window),
+                                         "audio-playback",
+                                         u"blockStart");
+      })
+    );
   }
 }
 

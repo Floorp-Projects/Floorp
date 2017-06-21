@@ -179,8 +179,7 @@ class AsyncErrorReporter final : public mozilla::Runnable
 public:
   // aWindow may be null if this error report is not associated with a window
   explicit AsyncErrorReporter(xpc::ErrorReport* aReport)
-    : Runnable("dom::AsyncErrorReporter")
-    , mReport(aReport)
+    : mReport(aReport)
   {}
 
   NS_IMETHOD Run() override

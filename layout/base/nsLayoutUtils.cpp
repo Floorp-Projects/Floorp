@@ -7931,23 +7931,19 @@ nsLayoutUtils::PostRestyleEvent(Element* aElement,
   }
 }
 
-nsSetAttrRunnable::nsSetAttrRunnable(nsIContent* aContent,
-                                     nsIAtom* aAttrName,
+nsSetAttrRunnable::nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,
                                      const nsAString& aValue)
-  : mozilla::Runnable("nsSetAttrRunnable")
-  , mContent(aContent)
-  , mAttrName(aAttrName)
-  , mValue(aValue)
+  : mContent(aContent),
+    mAttrName(aAttrName),
+    mValue(aValue)
 {
   NS_ASSERTION(aContent && aAttrName, "Missing stuff, prepare to crash");
 }
 
-nsSetAttrRunnable::nsSetAttrRunnable(nsIContent* aContent,
-                                     nsIAtom* aAttrName,
+nsSetAttrRunnable::nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,
                                      int32_t aValue)
-  : mozilla::Runnable("nsSetAttrRunnable")
-  , mContent(aContent)
-  , mAttrName(aAttrName)
+  : mContent(aContent),
+    mAttrName(aAttrName)
 {
   NS_ASSERTION(aContent && aAttrName, "Missing stuff, prepare to crash");
   mValue.AppendInt(aValue);
@@ -7961,9 +7957,8 @@ nsSetAttrRunnable::Run()
 
 nsUnsetAttrRunnable::nsUnsetAttrRunnable(nsIContent* aContent,
                                          nsIAtom* aAttrName)
-  : mozilla::Runnable("nsUnsetAttrRunnable")
-  , mContent(aContent)
-  , mAttrName(aAttrName)
+  : mContent(aContent),
+    mAttrName(aAttrName)
 {
   NS_ASSERTION(aContent && aAttrName, "Missing stuff, prepare to crash");
 }

@@ -250,22 +250,17 @@ nsHttpConnectionMgr::Shutdown()
 class ConnEvent : public Runnable
 {
 public:
-  ConnEvent(nsHttpConnectionMgr* mgr,
-            nsConnEventHandler handler,
-            int32_t iparam,
-            ARefBase* vparam)
-    : Runnable("net::ConnEvent")
-    , mMgr(mgr)
-    , mHandler(handler)
-    , mIParam(iparam)
-    , mVParam(vparam)
-  {
-  }
+    ConnEvent(nsHttpConnectionMgr *mgr,
+              nsConnEventHandler handler, int32_t iparam, ARefBase *vparam)
+        : mMgr(mgr)
+        , mHandler(handler)
+        , mIParam(iparam)
+        , mVParam(vparam) {}
 
-  NS_IMETHOD Run() override
-  {
-    (mMgr->*mHandler)(mIParam, mVParam);
-    return NS_OK;
+    NS_IMETHOD Run() override
+    {
+        (mMgr->*mHandler)(mIParam, mVParam);
+        return NS_OK;
     }
 
 private:

@@ -67,11 +67,10 @@ MediaResource::Destroy()
     delete this;
     return;
   }
-  nsresult rv = SystemGroup::Dispatch(
-    "MediaResource::Destroy",
-    TaskCategory::Other,
-    NewNonOwningRunnableMethod(
-      "MediaResource::Destroy", this, &MediaResource::Destroy));
+  nsresult rv =
+    SystemGroup::Dispatch("MediaResource::Destroy",
+                          TaskCategory::Other,
+                          NewNonOwningRunnableMethod(this, &MediaResource::Destroy));
   MOZ_ALWAYS_SUCCEEDS(rv);
 }
 

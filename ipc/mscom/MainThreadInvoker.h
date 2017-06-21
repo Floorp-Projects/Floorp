@@ -37,12 +37,11 @@ private:
 
 template <typename Class, typename... Args>
 inline bool
-InvokeOnMainThread(const char* aName,
-                   Class* aObject, void (Class::*aMethod)(Args...),
+InvokeOnMainThread(Class* aObject, void (Class::*aMethod)(Args...),
                    Args... aArgs)
 {
   nsCOMPtr<nsIRunnable> runnable(
-    NewNonOwningRunnableMethod<Args...>(aName, aObject, aMethod,
+      NewNonOwningRunnableMethod<Args...>(aObject, aMethod,
                                           Forward<Args>(aArgs)...));
 
   MainThreadInvoker invoker;

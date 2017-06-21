@@ -58,12 +58,7 @@ public:
    */
   class SurfaceReleaser : public mozilla::Runnable {
   public:
-    explicit SurfaceReleaser(RawRef aRef)
-      : mozilla::Runnable(
-          "nsAutoRefTraits<nsMainThreadSourceSurfaceRef>::SurfaceReleaser")
-      , mRef(aRef)
-    {
-    }
+    explicit SurfaceReleaser(RawRef aRef) : mRef(aRef) {}
     NS_IMETHOD Run() override {
       mRef->Release();
       return NS_OK;
@@ -101,12 +96,7 @@ public:
    */
   class SurfaceReleaser : public mozilla::Runnable {
   public:
-    explicit SurfaceReleaser(RawRef aRef)
-      : mozilla::Runnable(
-          "nsAutoRefTraits<nsOwningThreadSourceSurfaceRef>::SurfaceReleaser")
-      , mRef(aRef)
-    {
-    }
+    explicit SurfaceReleaser(RawRef aRef) : mRef(aRef) {}
     NS_IMETHOD Run() override {
       mRef->Release();
       return NS_OK;

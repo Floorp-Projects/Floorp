@@ -359,13 +359,10 @@ GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts, int aTime
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
   NS_ASSERTION(MessageLoop::current() != ioLoop, "sync launch from the IO thread NYI");
 
-  ioLoop->PostTask(NewNonOwningRunnableMethod<std::vector<std::string>,
-                                              base::ProcessArchitecture>(
-    "ipc::GeckoChildProcessHost::RunPerformAsyncLaunch",
-    this,
-    &GeckoChildProcessHost::RunPerformAsyncLaunch,
-    aExtraOpts,
-    arch));
+  ioLoop->PostTask(NewNonOwningRunnableMethod
+                   <std::vector<std::string>, base::ProcessArchitecture>
+                   (this, &GeckoChildProcessHost::RunPerformAsyncLaunch,
+                    aExtraOpts, arch));
 
   return WaitUntilConnected(aTimeoutMs);
 }
@@ -378,13 +375,10 @@ GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts,
 
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
 
-  ioLoop->PostTask(NewNonOwningRunnableMethod<std::vector<std::string>,
-                                              base::ProcessArchitecture>(
-    "ipc::GeckoChildProcessHost::RunPerformAsyncLaunch",
-    this,
-    &GeckoChildProcessHost::RunPerformAsyncLaunch,
-    aExtraOpts,
-    arch));
+  ioLoop->PostTask(NewNonOwningRunnableMethod
+                   <std::vector<std::string>, base::ProcessArchitecture>
+                   (this, &GeckoChildProcessHost::RunPerformAsyncLaunch,
+                    aExtraOpts, arch));
 
   // This may look like the sync launch wait, but we only delay as
   // long as it takes to create the channel.
@@ -440,13 +434,10 @@ GeckoChildProcessHost::LaunchAndWaitForProcessHandle(StringVector aExtraOpts)
   PrepareLaunch();
 
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
-  ioLoop->PostTask(NewNonOwningRunnableMethod<std::vector<std::string>,
-                                              base::ProcessArchitecture>(
-    "ipc::GeckoChildProcessHost::RunPerformAsyncLaunch",
-    this,
-    &GeckoChildProcessHost::RunPerformAsyncLaunch,
-    aExtraOpts,
-    base::GetCurrentProcessArchitecture()));
+  ioLoop->PostTask(NewNonOwningRunnableMethod
+                   <std::vector<std::string>, base::ProcessArchitecture>
+                   (this, &GeckoChildProcessHost::RunPerformAsyncLaunch,
+                    aExtraOpts, base::GetCurrentProcessArchitecture()));
 
   MonitorAutoLock lock(mMonitor);
   while (mProcessState < PROCESS_CREATED) {

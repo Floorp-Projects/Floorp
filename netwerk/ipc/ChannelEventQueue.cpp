@@ -149,8 +149,7 @@ ChannelEventQueue::ResumeInternal()
     {
     public:
       explicit CompleteResumeRunnable(ChannelEventQueue* aQueue, nsISupports* aOwner)
-        : CancelableRunnable("CompleteResumeRunnable")
-        , mQueue(aQueue)
+        : mQueue(aQueue)
         , mOwner(aOwner)
       {
       }

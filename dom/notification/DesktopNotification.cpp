@@ -37,8 +37,7 @@ public:
   NS_DECL_NSICONTENTPERMISSIONREQUEST
 
   explicit DesktopNotificationRequest(DesktopNotification* aNotification)
-    : Runnable("dom::DesktopNotificationRequest")
-    , mDesktopNotification(aNotification)
+    : mDesktopNotification(aNotification)
   {
     mRequester = new nsContentPermissionRequester(mDesktopNotification->GetOwner());
   }

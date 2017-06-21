@@ -421,8 +421,7 @@ void InitLibrary()
   Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_BACKEND);
   Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_LOG_LEVEL);
 #ifndef MOZ_WIDGET_ANDROID
-  NS_DispatchToMainThread(
-    NS_NewRunnableFunction("CubebUtils::InitLibrary", &InitBrandName));
+  NS_DispatchToMainThread(NS_NewRunnableFunction(&InitBrandName));
 #endif
 }
 

@@ -149,7 +149,6 @@ public:
     {
         struct NoOpRunnable : Runnable
         {
-            NoOpRunnable() : Runnable("NoOpRunnable") {}
             NS_IMETHOD Run() override { return NS_OK; }
         };
 

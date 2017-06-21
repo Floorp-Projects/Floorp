@@ -78,7 +78,7 @@ class SocketTransportServiceTest : public MtransportTest {
 class EventReceived : public Runnable {
 public:
   explicit EventReceived(SocketTransportServiceTest *test) :
-      Runnable("EventReceived"), test_(test) {}
+      test_(test) {}
 
   NS_IMETHOD Run() override {
     test_->ReceiveEvent();
@@ -93,7 +93,7 @@ public:
 class RegisterEvent : public Runnable {
 public:
   explicit RegisterEvent(SocketTransportServiceTest *test) :
-      Runnable("RegisterEvent"), test_(test) {}
+      test_(test) {}
 
   NS_IMETHOD Run() override {
     test_->RegisterHandler();

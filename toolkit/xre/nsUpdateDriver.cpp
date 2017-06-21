@@ -83,8 +83,7 @@ UpdateDriverSetupMacCommandLine(int& argc, char**& argv, bool restart)
   Monitor monitor("nsUpdateDriver SetupMacCommandLine");
 
   nsresult rv = NS_DispatchToMainThread(
-    NS_NewRunnableFunction("UpdateDriverSetupMacCommandLine",
-                           [&argc, &argv, restart, &monitor]() -> void
+    NS_NewRunnableFunction([&argc, &argv, restart, &monitor]() -> void
     {
       CommandLineServiceMac::SetupMacCommandLine(argc, argv, restart);
       MonitorAutoLock(monitor).Notify();
@@ -918,10 +917,7 @@ nsUpdateProcessor::ProcessUpdate(nsIUpdate* aUpdate)
   mInfo.mAppVersion = appVersion;
 
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");
-  nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod("nsUpdateProcessor::StartStagedUpdate",
-                      this,
-                      &nsUpdateProcessor::StartStagedUpdate);
+  nsCOMPtr<nsIRunnable> r = NewRunnableMethod(this, &nsUpdateProcessor::StartStagedUpdate);
   return NS_NewNamedThread("Update Watcher", getter_AddRefs(mProcessWatcher),
                            r);
 }
@@ -945,19 +941,13 @@ nsUpdateProcessor::StartStagedUpdate()
 
   if (mUpdaterPID) {
     // Track the state of the updater process while it is staging an update.
-    rv = NS_DispatchToCurrentThread(
-      NewRunnableMethod("nsUpdateProcessor::WaitForProcess",
-                        this,
-                        &nsUpdateProcessor::WaitForProcess));
+    rv = NS_DispatchToCurrentThread(NewRunnableMethod(this, &nsUpdateProcessor::WaitForProcess));
     NS_ENSURE_SUCCESS_VOID(rv);
   } else {
     // Failed to launch the updater process for some reason.
     // We need to shutdown the current thread as there isn't anything more for
     // us to do...
-    rv = NS_DispatchToMainThread(
-      NewRunnableMethod("nsUpdateProcessor::ShutdownWatcherThread",
-                        this,
-                        &nsUpdateProcessor::ShutdownWatcherThread));
+    rv = NS_DispatchToMainThread(NewRunnableMethod(this, &nsUpdateProcessor::ShutdownWatcherThread));
     NS_ENSURE_SUCCESS_VOID(rv);
   }
 }
@@ -975,13 +965,9 @@ nsUpdateProcessor::WaitForProcess()
 {
   MOZ_ASSERT(!NS_IsMainThread(), "main thread");
   if (ProcessHasTerminated(mUpdaterPID)) {
-    NS_DispatchToMainThread(NewRunnableMethod(
-      "nsUpdateProcessor::UpdateDone", this, &nsUpdateProcessor::UpdateDone));
+    NS_DispatchToMainThread(NewRunnableMethod(this, &nsUpdateProcessor::UpdateDone));
   } else {
-    NS_DispatchToCurrentThread(
-      NewRunnableMethod("nsUpdateProcessor::WaitForProcess",
-                        this,
-                        &nsUpdateProcessor::WaitForProcess));
+    NS_DispatchToCurrentThread(NewRunnableMethod(this, &nsUpdateProcessor::WaitForProcess));
   }
 }
 

@@ -79,14 +79,13 @@ TEST(TestCrashThreadAnnotation, TestGetFlatThreadAnnotation_AfterShutdown)
 already_AddRefed<nsIThread>
 CreateTestThread(const char* aName, Monitor& aMonitor, bool& aDone)
 {
-  nsCOMPtr<nsIRunnable> setNameRunnable = NS_NewRunnableFunction(
-    "CrashReporter::CreateTestThread", [aName, &aMonitor, &aDone]() -> void {
-      NS_SetCurrentThreadName(aName);
+  nsCOMPtr<nsIRunnable> setNameRunnable = NS_NewRunnableFunction([aName, &aMonitor, &aDone] () -> void {
+    NS_SetCurrentThreadName(aName);
 
-      MonitorAutoLock lock(aMonitor);
-      aDone = true;
-      aMonitor.NotifyAll();
-    });
+    MonitorAutoLock lock(aMonitor);
+    aDone = true;
+    aMonitor.NotifyAll();
+  });
   nsCOMPtr<nsIThread> thread;
   mozilla::Unused << NS_NewThread(getter_AddRefs(thread), setNameRunnable);
 
@@ -127,18 +126,15 @@ TEST(TestCrashThreadAnnotation, TestGetFlatThreadAnnotation_SetNameTwice)
   Monitor monitor("TestCrashThreadAnnotation");
   bool threadNameSet = false;
 
-  nsCOMPtr<nsIRunnable> setNameRunnable = NS_NewRunnableFunction(
-    "CrashReporter::TestCrashThreadAnnotation_TestGetFlatThreadAnnotation_"
-    "SetNameTwice_Test::TestBody",
-    [&]() -> void {
-      NS_SetCurrentThreadName("Thread1");
-      // Set the name again. We should get the latest name.
-      NS_SetCurrentThreadName("Thread1Again");
+  nsCOMPtr<nsIRunnable> setNameRunnable = NS_NewRunnableFunction([&] () -> void {
+    NS_SetCurrentThreadName("Thread1");
+    // Set the name again. We should get the latest name.
+    NS_SetCurrentThreadName("Thread1Again");
 
-      MonitorAutoLock lock(monitor);
-      threadNameSet = true;
-      monitor.NotifyAll();
-    });
+    MonitorAutoLock lock(monitor);
+    threadNameSet = true;
+    monitor.NotifyAll();
+  });
   nsCOMPtr<nsIThread> thread;
   nsresult rv = NS_NewThread(getter_AddRefs(thread), setNameRunnable);
   ASSERT_TRUE(NS_SUCCEEDED(rv));

@@ -203,8 +203,7 @@ protected:
   class Runner : public Runnable {
   public:
     explicit Runner(TaskQueue* aQueue)
-      : Runnable("TaskQueue::Runner")
-      , mQueue(aQueue)
+      : mQueue(aQueue)
     {
     }
     NS_IMETHOD Run() override;

@@ -24,9 +24,8 @@ class RegisterDebuggerMainThreadRunnable final : public mozilla::Runnable
 public:
   RegisterDebuggerMainThreadRunnable(WorkerPrivate* aWorkerPrivate,
                                      bool aNotifyListeners)
-    : mozilla::Runnable("RegisterDebuggerMainThreadRunnable")
-    , mWorkerPrivate(aWorkerPrivate)
-    , mNotifyListeners(aNotifyListeners)
+  : mWorkerPrivate(aWorkerPrivate),
+    mNotifyListeners(aNotifyListeners)
   { }
 
 private:
@@ -50,8 +49,7 @@ class UnregisterDebuggerMainThreadRunnable final : public mozilla::Runnable
 
 public:
   explicit UnregisterDebuggerMainThreadRunnable(WorkerPrivate* aWorkerPrivate)
-    : mozilla::Runnable("UnregisterDebuggerMainThreadRunnable")
-    , mWorkerPrivate(aWorkerPrivate)
+  : mWorkerPrivate(aWorkerPrivate)
   { }
 
 private:

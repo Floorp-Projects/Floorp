@@ -337,11 +337,11 @@ TextTrack::DispatchAsyncTrustedEvent(const nsString& aEventName)
   }
   RefPtr<TextTrack> self = this;
   nsGlobalWindow::Cast(win)->Dispatch(
-    "TextTrack::DispatchAsyncTrustedEvent",
-    TaskCategory::Other,
-    NS_NewRunnableFunction(
-      "dom::TextTrack::DispatchAsyncTrustedEvent",
-      [self, aEventName]() { self->DispatchTrustedEvent(aEventName); }));
+    "TextTrack::DispatchAsyncTrustedEvent", TaskCategory::Other,
+    NS_NewRunnableFunction([self, aEventName]() {
+      self->DispatchTrustedEvent(aEventName);
+    })
+  );
 }
 
 bool

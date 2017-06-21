@@ -867,7 +867,6 @@ nsDOMMutationObserver::HandleMutation()
 class AsyncMutationHandler : public mozilla::Runnable
 {
 public:
-  AsyncMutationHandler() : mozilla::Runnable("AsyncMutationHandler") {}
   NS_IMETHOD Run() override
   {
     nsDOMMutationObserver::HandleMutations();

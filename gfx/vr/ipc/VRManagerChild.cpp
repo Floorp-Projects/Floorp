@@ -544,9 +544,7 @@ VRManagerChild::RunFrameRequestCallbacks()
 void
 VRManagerChild::FireDOMVRDisplayMountedEvent(uint32_t aDisplayID)
 {
-  nsContentUtils::AddScriptRunner(NewRunnableMethod<uint32_t>(
-    "gfx::VRManagerChild::FireDOMVRDisplayMountedEventInternal",
-    this,
+  nsContentUtils::AddScriptRunner(NewRunnableMethod<uint32_t>(this,
     &VRManagerChild::FireDOMVRDisplayMountedEventInternal,
     aDisplayID));
 }
@@ -554,9 +552,7 @@ VRManagerChild::FireDOMVRDisplayMountedEvent(uint32_t aDisplayID)
 void
 VRManagerChild::FireDOMVRDisplayUnmountedEvent(uint32_t aDisplayID)
 {
-  nsContentUtils::AddScriptRunner(NewRunnableMethod<uint32_t>(
-    "gfx::VRManagerChild::FireDOMVRDisplayUnmountedEventInternal",
-    this,
+  nsContentUtils::AddScriptRunner(NewRunnableMethod<uint32_t>(this,
     &VRManagerChild::FireDOMVRDisplayUnmountedEventInternal,
     aDisplayID));
 }
@@ -564,9 +560,7 @@ VRManagerChild::FireDOMVRDisplayUnmountedEvent(uint32_t aDisplayID)
 void
 VRManagerChild::FireDOMVRDisplayConnectEvent(uint32_t aDisplayID)
 {
-  nsContentUtils::AddScriptRunner(NewRunnableMethod<uint32_t>(
-    "gfx::VRManagerChild::FireDOMVRDisplayConnectEventInternal",
-    this,
+  nsContentUtils::AddScriptRunner(NewRunnableMethod<uint32_t>(this,
     &VRManagerChild::FireDOMVRDisplayConnectEventInternal,
     aDisplayID));
 }
@@ -574,9 +568,7 @@ VRManagerChild::FireDOMVRDisplayConnectEvent(uint32_t aDisplayID)
 void
 VRManagerChild::FireDOMVRDisplayDisconnectEvent(uint32_t aDisplayID)
 {
-  nsContentUtils::AddScriptRunner(NewRunnableMethod<uint32_t>(
-    "gfx::VRManagerChild::FireDOMVRDisplayDisconnectEventInternal",
-    this,
+  nsContentUtils::AddScriptRunner(NewRunnableMethod<uint32_t>(this,
     &VRManagerChild::FireDOMVRDisplayDisconnectEventInternal,
     aDisplayID));
 }
@@ -584,9 +576,7 @@ VRManagerChild::FireDOMVRDisplayDisconnectEvent(uint32_t aDisplayID)
 void
 VRManagerChild::FireDOMVRDisplayPresentChangeEvent(uint32_t aDisplayID)
 {
-  nsContentUtils::AddScriptRunner(NewRunnableMethod<uint32_t>(
-    "gfx::VRManagerChild::FireDOMVRDisplayPresentChangeEventInternal",
-    this,
+  nsContentUtils::AddScriptRunner(NewRunnableMethod<uint32_t>(this,
     &VRManagerChild::FireDOMVRDisplayPresentChangeEventInternal,
     aDisplayID));
 }

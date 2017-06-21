@@ -208,8 +208,7 @@ struct ReleaseOnMainThreadTask : public Runnable
   UniquePtr<T> mObj;
 
   explicit ReleaseOnMainThreadTask(UniquePtr<T>& aObj)
-    : Runnable("layers::ReleaseOnMainThreadTask")
-    , mObj(Move(aObj))
+    : mObj(Move(aObj))
   {}
 
   NS_IMETHOD Run() override {
@@ -234,9 +233,7 @@ ShadowLayerForwarder::~ShadowLayerForwarder()
           nsIEventTarget::DISPATCH_NORMAL);
       } else {
         NS_DispatchToMainThread(
-          NewRunnableMethod("layers::LayerTransactionChild::Destroy",
-                            mShadowManager,
-                            &LayerTransactionChild::Destroy));
+          NewRunnableMethod(mShadowManager, &LayerTransactionChild::Destroy));
       }
     }
   }

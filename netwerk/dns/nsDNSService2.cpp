@@ -453,10 +453,9 @@ nsDNSSyncRequest::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
 class NotifyDNSResolution: public Runnable
 {
 public:
-  explicit NotifyDNSResolution(const nsACString& aHostname)
-    : mozilla::Runnable("NotifyDNSResolution")
-    , mHostname(aHostname)
-  {
+    explicit NotifyDNSResolution(const nsACString &aHostname)
+        : mHostname(aHostname)
+    {
     }
 
     NS_IMETHOD Run() override

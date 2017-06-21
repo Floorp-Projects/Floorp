@@ -789,13 +789,12 @@ HttpChannelChild::OnTransportAndData(const nsresult& channelStatus,
     nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
     MOZ_ASSERT(neckoTarget);
 
-    DebugOnly<nsresult> rv = neckoTarget->Dispatch(
-      NS_NewRunnableFunction("net::HttpChannelChild::OnTransportAndData",
-                             [self, transportStatus, progress, progressMax]() {
-                               self->DoOnStatus(self, transportStatus);
-                               self->DoOnProgress(self, progress, progressMax);
-                             }),
-      NS_DISPATCH_NORMAL);
+    DebugOnly<nsresult> rv =
+      neckoTarget->Dispatch(
+        NS_NewRunnableFunction([self, transportStatus, progress, progressMax]() {
+          self->DoOnStatus(self, transportStatus);
+          self->DoOnProgress(self, progress, progressMax);
+        }), NS_DISPATCH_NORMAL);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
@@ -988,9 +987,7 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
     MOZ_ASSERT(neckoTarget);
 
     DebugOnly<nsresult> rv = neckoTarget->Dispatch(
-      NewRunnableMethod(
-        "net::ChannelEventQueue::Resume", mEventQ, &ChannelEventQueue::Resume),
-      NS_DISPATCH_NORMAL);
+      NewRunnableMethod(mEventQ, &ChannelEventQueue::Resume), NS_DISPATCH_NORMAL);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     return;
   }
@@ -1304,9 +1301,7 @@ HttpChannelChild::CleanupBackgroundChannel()
     SystemGroup::Dispatch(
       "HttpChannelChild::CleanupBackgroundChannel",
       TaskCategory::Other,
-      NewRunnableMethod("net::HttpBackgroundChannelChild::OnChannelClosed",
-                        bgChild,
-                        &HttpBackgroundChannelChild::OnChannelClosed));
+      NewRunnableMethod(bgChild, &HttpBackgroundChannelChild::OnChannelClosed));
   } else {
     bgChild->OnChannelClosed();
   }
@@ -1339,13 +1334,11 @@ HttpChannelChild::RecvDeleteSelf()
   return IPC_OK();
 }
 
-HttpChannelChild::OverrideRunnable::OverrideRunnable(
-  HttpChannelChild* aChannel,
-  HttpChannelChild* aNewChannel,
-  InterceptStreamListener* aListener,
-  nsIInputStream* aInput,
-  nsAutoPtr<nsHttpResponseHead>& aHead)
-  : Runnable("net::HttpChannelChild::OverrideRunnable")
+HttpChannelChild::OverrideRunnable::OverrideRunnable(HttpChannelChild* aChannel,
+                                                     HttpChannelChild* aNewChannel,
+                                                     InterceptStreamListener* aListener,
+                                                     nsIInputStream* aInput,
+                                                     nsAutoPtr<nsHttpResponseHead>& aHead)
 {
   mChannel = aChannel;
   mNewChannel = aNewChannel;
@@ -1398,11 +1391,9 @@ HttpChannelChild::RecvFinishInterceptedRedirect()
   nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
   MOZ_ASSERT(neckoTarget);
 
-  Unused << neckoTarget->Dispatch(
-    NewRunnableMethod("net::HttpChannelChild::FinishInterceptedRedirect",
-                      this,
-                      &HttpChannelChild::FinishInterceptedRedirect),
-    NS_DISPATCH_NORMAL);
+ Unused << neckoTarget->Dispatch(
+    NewRunnableMethod(this, &HttpChannelChild::FinishInterceptedRedirect),
+                      NS_DISPATCH_NORMAL);
 
   return IPC_OK();
 }
@@ -3232,11 +3223,10 @@ HttpChannelChild::TrySendDeletingChannel()
   nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
   MOZ_ASSERT(neckoTarget);
 
-  DebugOnly<nsresult> rv = neckoTarget->Dispatch(
-    NewNonOwningRunnableMethod("net::HttpChannelChild::TrySendDeletingChannel",
-                               this,
-                               &HttpChannelChild::TrySendDeletingChannel),
-    NS_DISPATCH_NORMAL);
+  DebugOnly<nsresult> rv =
+    neckoTarget->Dispatch(
+      NewNonOwningRunnableMethod(this, &HttpChannelChild::TrySendDeletingChannel),
+      NS_DISPATCH_NORMAL);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
@@ -3244,10 +3234,7 @@ void
 HttpChannelChild::OnCopyComplete(nsresult aStatus)
 {
   nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod<nsresult>(
-    "net::HttpBaseChannel::EnsureUploadStreamIsCloneableComplete",
-    this,
-    &HttpChannelChild::EnsureUploadStreamIsCloneableComplete,
-    aStatus);
+    this, &HttpChannelChild::EnsureUploadStreamIsCloneableComplete, aStatus);
   nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
   MOZ_ASSERT(neckoTarget);
 
@@ -3261,7 +3248,7 @@ HttpChannelChild::AsyncCall(void (HttpChannelChild::*funcPtr)(),
   nsresult rv;
 
   RefPtr<nsRunnableMethod<HttpChannelChild>> event =
-    NewRunnableMethod("net::HttpChannelChild::AsyncCall", this, funcPtr);
+    NewRunnableMethod(this, funcPtr);
   nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
   MOZ_ASSERT(neckoTarget);
 

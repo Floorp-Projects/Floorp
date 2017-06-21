@@ -79,9 +79,7 @@ class ChildGrimReaper : public ChildReaper,
                         public mozilla::Runnable
 {
 public:
-  explicit ChildGrimReaper(pid_t process)
-    : ChildReaper(process)
-    , mozilla::Runnable("ChildGrimReaper")
+  explicit ChildGrimReaper(pid_t process) : ChildReaper(process)
   {
   } 
 

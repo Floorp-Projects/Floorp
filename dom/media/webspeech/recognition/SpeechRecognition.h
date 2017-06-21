@@ -257,15 +257,13 @@ private:
 class SpeechEvent : public Runnable
 {
 public:
-  SpeechEvent(SpeechRecognition* aRecognition,
-              SpeechRecognition::EventType aType)
-    : Runnable("dom::SpeechEvent")
-    , mAudioSegment(0)
-    , mRecognitionResultList(nullptr)
-    , mError(nullptr)
-    , mRecognition(aRecognition)
-    , mType(aType)
-    , mTrackRate(0)
+  SpeechEvent(SpeechRecognition* aRecognition, SpeechRecognition::EventType aType)
+  : mAudioSegment(0)
+  , mRecognitionResultList(nullptr)
+  , mError(nullptr)
+  , mRecognition(aRecognition)
+  , mType(aType)
+  , mTrackRate(0)
   {
   }
 

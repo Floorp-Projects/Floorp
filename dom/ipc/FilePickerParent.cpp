@@ -49,12 +49,11 @@ FilePickerParent::~FilePickerParent()
 // 2. The stream transport thread stat()s the file in Run() and then dispatches
 // the same runnable on the main thread.
 // 3. The main thread sends the results over IPC.
-FilePickerParent::IORunnable::IORunnable(FilePickerParent* aFPParent,
+FilePickerParent::IORunnable::IORunnable(FilePickerParent *aFPParent,
                                          nsTArray<nsCOMPtr<nsIFile>>& aFiles,
                                          bool aIsDirectory)
-  : mozilla::Runnable("dom::FilePickerParent::IORunnable")
-  , mFilePickerParent(aFPParent)
-  , mIsDirectory(aIsDirectory)
+ : mFilePickerParent(aFPParent)
+ , mIsDirectory(aIsDirectory)
 {
   mFiles.SwapElements(aFiles);
   MOZ_ASSERT_IF(aIsDirectory, mFiles.Length() == 1);

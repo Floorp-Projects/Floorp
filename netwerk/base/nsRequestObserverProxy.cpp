@@ -24,9 +24,8 @@ static LazyLogModule gRequestObserverProxyLog("nsRequestObserverProxy");
 // nsARequestObserverEvent internal class...
 //-----------------------------------------------------------------------------
 
-nsARequestObserverEvent::nsARequestObserverEvent(nsIRequest* request)
-  : Runnable("net::nsARequestObserverEvent")
-  , mRequest(request)
+nsARequestObserverEvent::nsARequestObserverEvent(nsIRequest *request)
+    : mRequest(request)
 {
     NS_PRECONDITION(mRequest, "null pointer");
 }

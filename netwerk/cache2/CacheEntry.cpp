@@ -663,8 +663,7 @@ bool CacheEntry::InvokeCallbacks(bool aReadOnly)
 
     if (NS_SUCCEEDED(rv) && !onCheckThread) {
       // Redispatch to the target thread
-      rv = mCallbacks[i].mTarget->Dispatch(NewRunnableMethod("net::CacheEntry::InvokeCallbacksLock",
-                                                             this,
+      rv = mCallbacks[i].mTarget->Dispatch(NewRunnableMethod(this,
                                                              &CacheEntry::InvokeCallbacksLock),
                                            nsIEventTarget::DISPATCH_NORMAL);
       if (NS_SUCCEEDED(rv)) {
@@ -1860,11 +1859,7 @@ void CacheEntry::BackgroundOp(uint32_t aOperations, bool aForceAsync)
 
       // Because CacheFile::Set*() are not thread-safe to use (uses WeakReference that
       // is not thread-safe) we must post to the main thread...
-      NS_DispatchToMainThread(
-        NewRunnableMethod<double>("net::CacheEntry::StoreFrecency",
-                                  this,
-                                  &CacheEntry::StoreFrecency,
-                                  mFrecency));
+      NS_DispatchToMainThread(NewRunnableMethod<double>(this, &CacheEntry::StoreFrecency, mFrecency));
     }
 
     if (aOperations & Ops::REGISTER) {
@@ -1899,8 +1894,7 @@ void CacheEntry::StoreFrecency(double aFrecency)
 // CacheOutputCloseListener
 
 CacheOutputCloseListener::CacheOutputCloseListener(CacheEntry* aEntry)
-  : Runnable("net::CacheOutputCloseListener")
-  , mEntry(aEntry)
+: mEntry(aEntry)
 {
 }
 

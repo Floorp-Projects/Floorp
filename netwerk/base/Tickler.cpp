@@ -108,8 +108,7 @@ void Tickler::Tickle()
 void Tickler::PostCheckTickler()
 {
   mLock.AssertCurrentThreadOwns();
-  mThread->Dispatch(NewRunnableMethod("net::Tickler::CheckTickler",
-                                      this, &Tickler::CheckTickler),
+  mThread->Dispatch(NewRunnableMethod(this, &Tickler::CheckTickler),
                     NS_DISPATCH_NORMAL);
   return;
 }
@@ -125,8 +124,7 @@ void Tickler::MaybeStartTickler()
   mLock.AssertCurrentThreadOwns();
   if (!NS_IsMainThread()) {
     NS_DispatchToMainThread(
-      NewRunnableMethod("net::Tickler::MaybeStartTicklerUnlocked",
-                        this, &Tickler::MaybeStartTicklerUnlocked));
+      NewRunnableMethod(this, &Tickler::MaybeStartTicklerUnlocked));
     return;
   }
 

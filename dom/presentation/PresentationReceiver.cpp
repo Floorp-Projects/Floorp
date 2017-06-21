@@ -135,9 +135,10 @@ PresentationReceiver::GetConnectionList(ErrorResult& aRv)
     }
 
     RefPtr<PresentationReceiver> self = this;
-    nsresult rv = NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "dom::PresentationReceiver::GetConnectionList",
-      [self]() -> void { self->CreateConnectionList(); }));
+    nsresult rv =
+      NS_DispatchToMainThread(NS_NewRunnableFunction([self] () -> void {
+        self->CreateConnectionList();
+      }));
     if (NS_FAILED(rv)) {
       aRv.Throw(rv);
       return nullptr;

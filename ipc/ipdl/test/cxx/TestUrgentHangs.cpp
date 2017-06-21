@@ -49,11 +49,8 @@ TestUrgentHangsParent::Main()
 
     // Do a second round of testing once the reply to Test2 comes back.
     MessageLoop::current()->PostDelayedTask(
-      NewNonOwningRunnableMethod(
-        "_ipdltest::TestUrgentHangsParent::SecondStage",
-        this,
-        &TestUrgentHangsParent::SecondStage),
-      3000);
+        NewNonOwningRunnableMethod(this, &TestUrgentHangsParent::SecondStage),
+        3000);
 }
 
 void
@@ -70,10 +67,8 @@ TestUrgentHangsParent::SecondStage()
         fail("sending Test4_1");
 
     MessageLoop::current()->PostDelayedTask(
-      NewNonOwningRunnableMethod("_ipdltest::TestUrgentHangsParent::ThirdStage",
-                                 this,
-                                 &TestUrgentHangsParent::ThirdStage),
-      3000);
+        NewNonOwningRunnableMethod(this, &TestUrgentHangsParent::ThirdStage),
+        3000);
 }
 
 void
@@ -95,9 +90,8 @@ TestUrgentHangsParent::ThirdStage()
 
     // Close the channel after the child finishes its work in RecvTest5.
     MessageLoop::current()->PostDelayedTask(
-      NewNonOwningRunnableMethod(
-        "ipc::IToplevelProtocol::Close", this, &TestUrgentHangsParent::Close),
-      3000);
+        NewNonOwningRunnableMethod(this, &TestUrgentHangsParent::Close),
+        3000);
 }
 
 mozilla::ipc::IPCResult

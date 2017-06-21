@@ -61,11 +61,8 @@ class nsInputStreamTeeWriteEvent : public Runnable
 {
 public:
   // aTee's lock is held across construction of this object
-  nsInputStreamTeeWriteEvent(const char* aBuf,
-                             uint32_t aCount,
-                             nsIOutputStream* aSink,
-                             nsInputStreamTee* aTee)
-    : mozilla::Runnable("nsInputStreamTeeWriteEvent")
+  nsInputStreamTeeWriteEvent(const char* aBuf, uint32_t aCount,
+                             nsIOutputStream* aSink, nsInputStreamTee* aTee)
   {
     // copy the buffer - will be free'd by dtor
     mBuf = (char*)malloc(aCount);

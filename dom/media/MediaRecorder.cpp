@@ -177,8 +177,7 @@ class MediaRecorder::Session: public nsIObserver,
   {
   public:
     explicit PushBlobRunnable(Session* aSession)
-      : Runnable("dom::MediaRecorder::Session::PushBlobRunnable")
-      , mSession(aSession)
+      : mSession(aSession)
     { }
 
     NS_IMETHOD Run() override
@@ -208,8 +207,7 @@ class MediaRecorder::Session: public nsIObserver,
   {
   public:
     explicit EncoderErrorNotifierRunnable(Session* aSession)
-      : Runnable("dom::MediaRecorder::Session::EncoderErrorNotifierRunnable")
-      , mSession(aSession)
+      : mSession(aSession)
     { }
 
     NS_IMETHOD Run() override
@@ -236,9 +234,8 @@ class MediaRecorder::Session: public nsIObserver,
   class DispatchStartEventRunnable : public Runnable
   {
   public:
-    DispatchStartEventRunnable(Session* aSession, const nsAString& aEventName)
-      : Runnable("dom::MediaRecorder::Session::DispatchStartEventRunnable")
-      , mSession(aSession)
+    DispatchStartEventRunnable(Session* aSession, const nsAString & aEventName)
+      : mSession(aSession)
       , mEventName(aEventName)
     { }
 
@@ -267,10 +264,7 @@ class MediaRecorder::Session: public nsIObserver,
   {
   public:
     explicit ExtractRunnable(Session* aSession)
-      : Runnable("dom::MediaRecorder::Session::ExtractRunnable")
-      , mSession(aSession)
-    {
-    }
+      : mSession(aSession) {}
 
     ~ExtractRunnable()
     {}
@@ -370,16 +364,10 @@ class MediaRecorder::Session: public nsIObserver,
   {
   public:
     explicit DestroyRunnable(Session* aSession)
-      : Runnable("dom::MediaRecorder::Session::DestroyRunnable")
-      , mSession(aSession)
-    {
-    }
+      : mSession(aSession) {}
 
     explicit DestroyRunnable(already_AddRefed<Session> aSession)
-      : Runnable("dom::MediaRecorder::Session::DestroyRunnable")
-      , mSession(aSession)
-    {
-    }
+      : mSession(aSession) {}
 
     NS_IMETHOD Run() override
     {
@@ -812,11 +800,8 @@ private:
       new DispatchStartEventRunnable(this, NS_LITERAL_STRING("start")));
 
     if (NS_FAILED(rv)) {
-      NS_DispatchToMainThread(
-        NewRunnableMethod<nsresult>("dom::MediaRecorder::NotifyError",
-                                    mRecorder,
-                                    &MediaRecorder::NotifyError,
-                                    rv));
+      NS_DispatchToMainThread(NewRunnableMethod<nsresult>(mRecorder,
+                                                          &MediaRecorder::NotifyError, rv));
     }
     if (NS_FAILED(NS_DispatchToMainThread(new EncoderErrorNotifierRunnable(this)))) {
       MOZ_ASSERT(false, "NS_DispatchToMainThread EncoderErrorNotifierRunnable failed");
