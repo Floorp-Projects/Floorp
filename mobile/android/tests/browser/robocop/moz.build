@@ -4,7 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEFINES['ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME']
+for var in ('ANDROID_PACKAGE_NAME',
+            'ANDROID_TARGET_SDK'):
+    DEFINES[var] = CONFIG[var]
+
+for var in ('MOZ_ANDROID_MIN_SDK_VERSION',
+            'MOZ_ANDROID_MAX_SDK_VERSION'):
+    if CONFIG[var]:
+        DEFINES[var] = CONFIG[var]
 
 ANDROID_APK_NAME = 'robocop-debug'
 ANDROID_APK_PACKAGE = 'org.mozilla.roboexample.test'
