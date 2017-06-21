@@ -2864,7 +2864,9 @@ ArrayBufferClient.prototype = {
   valid: true,
 
   slice: DebuggerClient.requester({
-    type: "slice"
+    type: "slice",
+    start: arg(0),
+    count: arg(1)
   }),
 };
 
