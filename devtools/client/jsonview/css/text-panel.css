@@ -10,13 +10,9 @@
   height: 100%;
 }
 
-.textPanelBox .data {
-  overflow: auto;
-  height: 100%;
-}
-
 .textPanelBox pre {
-  margin: 0;
+  margin: 8px;
+  white-space: pre-wrap;
   font-family: var(--monospace-font-family);
   color: var(--theme-content-color1);
 }
