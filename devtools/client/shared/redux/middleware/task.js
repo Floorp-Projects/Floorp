@@ -19,7 +19,7 @@ function task({ dispatch, getState }) {
   return next => action => {
     if (isGenerator(action)) {
       return Task.spawn(action.bind(null, dispatch, getState))
-        .then(null, handleError.bind(null, dispatch));
+        .catch(handleError.bind(null, dispatch));
     }
 
     /*

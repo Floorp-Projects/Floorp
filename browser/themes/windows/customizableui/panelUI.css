@@ -111,18 +111,20 @@ toolbarbutton.social-provider-menuitem > .toolbarbutton-icon {
 
 menu.subviewbutton > .menu-right {
   -moz-appearance: none;
-  list-style-image: url(chrome://browser/skin/customizableui/menu-arrow.svg#arrow);
+  list-style-image: url(chrome://browser/skin/customizableui/menu-arrow.svg);
+  -moz-context-properties: fill;
+  fill: MenuText;
   /* Reset the rect we inherit from the button: */
   -moz-image-region: auto;
 }
 
 menu[disabled="true"].subviewbutton > .menu-right {
-  list-style-image: url(chrome://browser/skin/customizableui/menu-arrow.svg#arrow-disabled);
+  fill: GrayText;
 }
 
 @media (-moz-windows-default-theme: 0) {
   menu[_moz-menuactive].subviewbutton > .menu-right {
-    list-style-image: url(chrome://browser/skin/customizableui/menu-arrow.svg#arrow-hover);
+    fill: HighlightText;
   }
 }
 

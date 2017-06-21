@@ -51,6 +51,15 @@ GPUVideoTextureHost::BindTextureSource(CompositableTextureSourceRef& aTexture)
   return mWrappedTextureHost->BindTextureSource(aTexture);
 }
 
+bool
+GPUVideoTextureHost::AcquireTextureSource(CompositableTextureSourceRef& aTexture)
+{
+  if (!mWrappedTextureHost) {
+    return false;
+  }
+  return mWrappedTextureHost->AcquireTextureSource(aTexture);
+}
+
 void
 GPUVideoTextureHost::SetTextureSourceProvider(TextureSourceProvider* aProvider)
 {

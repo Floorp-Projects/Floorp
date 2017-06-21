@@ -126,7 +126,7 @@ function ifTestingUnsupported() {
 
 function test() {
   let generator = isTestingSupported() ? ifTestingSupported : ifTestingUnsupported;
-  Task.spawn(generator).then(null, handleError);
+  Task.spawn(generator).catch(handleError);
 }
 
 function createCanvas() {

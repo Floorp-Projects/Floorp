@@ -235,7 +235,7 @@ function run_test() {
       client.close().then(() => {
         do_test_finished();
       });
-    }).then(null, err => {
+    }).catch(err => {
       do_report_unexpected_exception(err, "Failure executing test");
     });
   });

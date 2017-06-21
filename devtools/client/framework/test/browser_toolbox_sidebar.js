@@ -89,7 +89,7 @@ function test() {
       panel.sidebar.addTab("tab3", tab3URL);
 
       panel.sidebar.show();
-    }).then(null, console.error);
+    }).catch(console.error);
   });
 
   function allTabsReady(panel) {

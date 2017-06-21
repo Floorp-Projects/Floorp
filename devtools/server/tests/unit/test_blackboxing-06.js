@@ -28,7 +28,7 @@ function run_test() {
           .then(black_box_code)
           .then(run_code)
           .then(test_correct_location)
-          .then(null, function (error) {
+          .catch(function (error) {
             do_check_true(false, "Should not get an error, got " + error);
           })
           .then(function () {

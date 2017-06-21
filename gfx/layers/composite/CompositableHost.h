@@ -39,11 +39,13 @@ namespace layers {
 
 class Layer;
 class LayerComposite;
+class ImageHost;
 class Compositor;
 class ThebesBufferData;
 class TiledContentHost;
 class CompositableParentManager;
 class WebRenderImageHost;
+class ContentHostTexture;
 struct EffectChain;
 
 struct ImageCompositeNotificationInfo {
@@ -146,6 +148,8 @@ public:
   Layer* GetLayer() const { return mLayer; }
   void SetLayer(Layer* aLayer) { mLayer = aLayer; }
 
+  virtual ContentHostTexture* AsContentHostTexture() { return nullptr; }
+  virtual ImageHost* AsImageHost() { return nullptr; }
   virtual TiledContentHost* AsTiledContentHost() { return nullptr; }
   virtual WebRenderImageHost* AsWebRenderImageHost() { return nullptr; }
 
@@ -214,12 +218,12 @@ public:
                   ? DIAGNOSTIC_FLASH_COUNTER_MAX : mFlashCounter + 1;
   }
 
-  uint64_t GetCompositorID() const { return mCompositorID; }
+  uint64_t GetCompositorBridgeID() const { return mCompositorBridgeID; }
 
   const AsyncCompositableRef& GetAsyncRef() const { return mAsyncRef; }
   void SetAsyncRef(const AsyncCompositableRef& aRef) { mAsyncRef = aRef; }
 
-  void SetCompositorID(uint64_t aID) { mCompositorID = aID; }
+  void SetCompositorBridgeID(uint64_t aID) { mCompositorBridgeID = aID; }
 
   virtual bool Lock() { return false; }
 
@@ -242,7 +246,7 @@ protected:
 protected:
   TextureInfo mTextureInfo;
   AsyncCompositableRef mAsyncRef;
-  uint64_t mCompositorID;
+  uint64_t mCompositorBridgeID;
   RefPtr<TextureSourceProvider> mTextureSourceProvider;
   Layer* mLayer;
   uint32_t mFlashCounter; // used when the pref "layers.flash-borders" is true.

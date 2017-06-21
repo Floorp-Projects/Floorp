@@ -159,7 +159,7 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
     if (this.threadActor.sources.isPrettyPrinted(this.url)) {
       this._init = this.prettyPrint(
         this.threadActor.sources.prettyPrintIndent(this.url)
-      ).then(null, error => {
+      ).catch(error => {
         DevToolsUtils.reportException("SourceActor", error);
       });
     } else {
@@ -495,7 +495,7 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
           contentType: contentType
         };
       })
-      .then(null, error => {
+      .catch(error => {
         reportError(error, "Got an exception during SA_onSource: ");
         throw new Error("Could not load the source for " + this.url + ".\n" +
                         DevToolsUtils.safeErrorString(error));
@@ -518,7 +518,7 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
         this._init = null;
       })
       .then(this.onSource)
-      .then(null, error => {
+      .catch(error => {
         this.disablePrettyPrint();
         throw new Error(DevToolsUtils.safeErrorString(error));
       });

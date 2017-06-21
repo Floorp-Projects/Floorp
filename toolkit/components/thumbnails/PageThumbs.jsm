@@ -534,9 +534,7 @@ this.PageThumbsStorage = {
     // future operations can proceed without having to check whether
     // the directory exists.
     return PageThumbsWorker.post("makeDir",
-      [this.path, {ignoreExisting: true}]).then(
-        null,
-        function onError(aReason) {
+      [this.path, {ignoreExisting: true}]).catch(function onError(aReason) {
           Components.utils.reportError("Could not create thumbnails directory" + aReason);
         });
   },

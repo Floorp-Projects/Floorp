@@ -146,7 +146,7 @@ SelectionChangeListener::NotifySelectionChanged(nsIDOMDocument* aDoc,
 
     if (target) {
       RefPtr<AsyncEventDispatcher> asyncDispatcher =
-        new AsyncEventDispatcher(target, NS_LITERAL_STRING("selectionchange"), false);
+        new AsyncEventDispatcher(target, eSelectionChange, false);
       asyncDispatcher->PostDOMEvent();
     }
   } else {
@@ -161,7 +161,7 @@ SelectionChangeListener::NotifySelectionChanged(nsIDOMDocument* aDoc,
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
     if (doc) {
       RefPtr<AsyncEventDispatcher> asyncDispatcher =
-        new AsyncEventDispatcher(doc, NS_LITERAL_STRING("selectionchange"), false);
+        new AsyncEventDispatcher(doc, eSelectionChange, false);
       asyncDispatcher->PostDOMEvent();
     }
   }

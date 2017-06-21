@@ -235,7 +235,8 @@ DataChannelConnection::~DataChannelConnection()
     ASSERT_WEBRTC(NS_IsMainThread());
     if (mTransportFlow) {
       ASSERT_WEBRTC(mSTS);
-      NS_ProxyRelease(mSTS, mTransportFlow.forget());
+      NS_ProxyRelease(
+        "DataChannelConnection::mTransportFlow", mSTS, mTransportFlow.forget());
     }
 
     if (mInternalIOThread) {
@@ -2410,7 +2411,8 @@ DataChannelConnection::ReadBlob(already_AddRefed<DataChannelConnection> aThis,
     // Bug 966602:  Doesn't return an error to the caller via onerror.
     // We must release DataChannelConnection on MainThread to avoid issues (bug 876167)
     // aThis is now owned by the runnable; release it there
-    NS_ReleaseOnMainThread(runnable.forget());
+    NS_ReleaseOnMainThread(
+      "DataChannelBlobSendRunnable", runnable.forget());
     return;
   }
   aBlob->Close();

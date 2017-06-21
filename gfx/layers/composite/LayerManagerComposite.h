@@ -98,10 +98,6 @@ public:
     MOZ_CRASH("GFX: Call on compositor, not LayerManagerComposite");
   }
 
-  virtual LayersBackend GetBackendType() override
-  {
-    MOZ_CRASH("GFX: Shouldn't be called for composited layer manager");
-  }
   virtual void GetBackendName(nsAString& name) override
   {
     MOZ_CRASH("GFX: Shouldn't be called for composited layer manager");
@@ -122,6 +118,7 @@ public:
   virtual void EndTransaction(const TimeStamp& aTimeStamp,
                               EndTransactionFlags aFlags = END_DEFAULT) = 0;
   virtual void UpdateRenderBounds(const gfx::IntRect& aRect) {}
+  virtual void SetDiagnosticTypes(DiagnosticTypes aDiagnostics) {}
 
   virtual HostLayerManager* AsHostLayerManager() override {
     return this;
@@ -130,6 +127,18 @@ public:
   void ExtractImageCompositeNotifications(nsTArray<ImageCompositeNotificationInfo>* aNotifications)
   {
     aNotifications->AppendElements(Move(mImageCompositeNotifications));
+  }
+
+  void AppendImageCompositeNotification(const ImageCompositeNotificationInfo& aNotification)
+  {
+    // Only send composite notifications when we're drawing to the screen,
+    // because that's what they mean.
+    // Also when we're not drawing to the screen, DidComposite will not be
+    // called to extract and send these notifications, so they might linger
+    // and contain stale ImageContainerParent pointers.
+    if (IsCompositingToScreen()) {
+      mImageCompositeNotifications.AppendElement(aNotification);
+    }
   }
 
   /**
@@ -164,6 +173,9 @@ public:
   virtual bool AlwaysScheduleComposite() const {
     return false;
   }
+  virtual bool IsCompositingToScreen() const {
+    return false;
+  }
 
   void RecordPaintTimes(const PaintTiming& aTiming);
   void RecordUpdateTime(float aValue);
@@ -188,6 +200,16 @@ public:
     return mCompositeUntilTime;
   }
 
+  // We maintaining a global mapping from ID to CompositorBridgeParent for
+  // async compositables.
+  uint32_t GetCompositorBridgeID() const {
+    return mCompositorBridgeID;
+  }
+  void SetCompositorBridgeID(uint32_t aID) {
+    MOZ_ASSERT(mCompositorBridgeID == 0, "The compositor ID must be set only once.");
+    mCompositorBridgeID = aID;
+  }
+
 protected:
   bool mDebugOverlayWantsNextFrame;
   nsTArray<ImageCompositeNotificationInfo> mImageCompositeNotifications;
@@ -196,6 +218,7 @@ protected:
   float mWarningLevel;
   mozilla::TimeStamp mWarnTime;
   UniquePtr<Diagnostics> mDiagnostics;
+  uint32_t mCompositorBridgeID;
 
   bool mWindowOverlayChanged;
   TimeDuration mLastPaintTime;
@@ -290,6 +313,7 @@ public:
     CreateOptimalMaskDrawTarget(const IntSize &aSize) override;
 
   virtual const char* Name() const override { return ""; }
+  virtual bool IsCompositingToScreen() const override;
 
   bool AlwaysScheduleComposite() const override;
 
@@ -387,22 +411,14 @@ public:
   bool AsyncPanZoomEnabled() const override;
 
 public:
-  void AppendImageCompositeNotification(const ImageCompositeNotificationInfo& aNotification)
-  {
-    // Only send composite notifications when we're drawing to the screen,
-    // because that's what they mean.
-    // Also when we're not drawing to the screen, DidComposite will not be
-    // called to extract and send these notifications, so they might linger
-    // and contain stale ImageContainerParent pointers.
-    if (!mCompositor->GetTargetContext()) {
-      mImageCompositeNotifications.AppendElement(aNotification);
-    }
-  }
-
-public:
-  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() override
-  {
+  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() override {
     return mCompositor->GetTextureFactoryIdentifier();
+  }
+  virtual LayersBackend GetBackendType() override {
+    return mCompositor ? mCompositor->GetBackendType() : LayersBackend::LAYERS_NONE;
+  }
+  virtual void SetDiagnosticTypes(DiagnosticTypes aDiagnostics) override {
+    mCompositor->SetDiagnosticTypes(aDiagnostics);
   }
 
   void ForcePresent() override { mCompositor->ForcePresent(); }

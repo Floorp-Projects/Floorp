@@ -13,6 +13,7 @@ EXPORTS.mozilla.a11y += [
     'Compatibility.h',
     'HyperTextAccessibleWrap.h',
     'IDSet.h',
+    'LazyInstantiator.h',
     'MsaaIdGenerator.h',
     'nsWinUtils.h',
 ]
@@ -37,8 +38,10 @@ UNIFIED_SOURCES += [
     'TextLeafAccessibleWrap.cpp',
 ]
 
-# This file cannot be built in unified mode because it includes ISimpleDOMNode_i.c.
 SOURCES += [
+    # This file cannot be built in unified mode because it redefines _WIN32_WINNT
+    'LazyInstantiator.cpp',
+    # This file cannot be built in unified mode because it includes ISimpleDOMNode_i.c.
     'ServiceProvider.cpp',
 ]
 

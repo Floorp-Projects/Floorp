@@ -241,10 +241,10 @@ this.DownloadList.prototype = {
           // This works even if the download state has changed meanwhile.  We
           // don't need to wait for the procedure to be complete before
           // processing the other downloads in the list.
-          download.finalize(true).then(null, Cu.reportError);
+          download.finalize(true).catch(Cu.reportError);
         }
       }
-    })().then(null, Cu.reportError);
+    })().catch(Cu.reportError);
   },
 };
 
@@ -266,8 +266,8 @@ this.DownloadCombinedList = function(aPublicList, aPrivateList) {
   DownloadList.call(this);
   this._publicList = aPublicList;
   this._privateList = aPrivateList;
-  aPublicList.addView(this).then(null, Cu.reportError);
-  aPrivateList.addView(this).then(null, Cu.reportError);
+  aPublicList.addView(this).catch(Cu.reportError);
+  aPrivateList.addView(this).catch(Cu.reportError);
 }
 
 this.DownloadCombinedList.prototype = {

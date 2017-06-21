@@ -426,7 +426,7 @@ CustomizeMode.prototype = {
       if (!this._wantToBeInCustomizeMode) {
         this.exit();
       }
-    })().then(null, e => {
+    })().catch(e => {
       log.error("Error entering customize mode", e);
       // We should ensure this has been called, and calling it again doesn't hurt:
       window.PanelUI.endBatchUpdate();
@@ -596,7 +596,7 @@ CustomizeMode.prototype = {
       if (this._wantToBeInCustomizeMode) {
         this.enter();
       }
-    })().then(null, e => {
+    })().catch(e => {
       log.error("Error exiting customize mode", e);
       if (!gPhotonStructure) {
         // We should ensure this has been called, and calling it again doesn't hurt:
@@ -866,7 +866,7 @@ CustomizeMode.prototype = {
       }
       this.visiblePalette.hidden = false;
       this.window.gNavToolbox.palette = this._stowedPalette;
-    })().then(null, log.error);
+    })().catch(log.error);
   },
 
   isCustomizableItem(aNode) {
@@ -1072,7 +1072,7 @@ CustomizeMode.prototype = {
     this._addDragHandlers(target);
     for (let child of target.children) {
       if (this.isCustomizableItem(child) && !this.isWrappedToolbarItem(child)) {
-        await this.deferredWrapToolbarItem(child, CustomizableUI.getPlaceForItem(child)).then(null, log.error);
+        await this.deferredWrapToolbarItem(child, CustomizableUI.getPlaceForItem(child)).catch(log.error);
       }
     }
     this.areas.add(target);
@@ -1149,7 +1149,7 @@ CustomizeMode.prototype = {
         this._removeDragHandlers(target);
       }
       this.areas.clear();
-    })().then(null, log.error);
+    })().catch(log.error);
   },
 
   _removeExtraToolbarsIfEmpty() {
@@ -1205,7 +1205,7 @@ CustomizeMode.prototype = {
       if (!this._wantToBeInCustomizeMode) {
         this.exit();
       }
-    })().then(null, log.error);
+    })().catch(log.error);
   },
 
   undoReset() {
@@ -1229,7 +1229,7 @@ CustomizeMode.prototype = {
       this._updateUndoResetButton();
       this._updateEmptyPaletteNotice();
       this.resetting = false;
-    })().then(null, log.error);
+    })().catch(log.error);
   },
 
   _onToolbarVisibilityChange(aEvent) {

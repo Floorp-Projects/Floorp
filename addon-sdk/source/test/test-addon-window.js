@@ -16,7 +16,7 @@ exports.testReady = function(assert, done) {
 
     loader.unload();
     done();
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 }
 
 require('sdk/test').run(exports);

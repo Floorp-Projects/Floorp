@@ -504,11 +504,13 @@ AsyncFetchAndSetIconForPage::AsyncFetchAndSetIconForPage(
 , bool aFaviconLoadPrivate
 , nsIFaviconDataCallback* aCallback
 , nsIPrincipal* aLoadingPrincipal
-) : mCallback(new nsMainThreadPtrHolder<nsIFaviconDataCallback>(aCallback))
+) : mCallback(new nsMainThreadPtrHolder<nsIFaviconDataCallback>(
+      "AsyncFetchAndSetIconForPage::mCallback", aCallback))
   , mIcon(aIcon)
   , mPage(aPage)
   , mFaviconLoadPrivate(aFaviconLoadPrivate)
-  , mLoadingPrincipal(new nsMainThreadPtrHolder<nsIPrincipal>(aLoadingPrincipal))
+  , mLoadingPrincipal(new nsMainThreadPtrHolder<nsIPrincipal>(
+      "AsyncFetchAndSetIconForPage::mLoadingPrincipal", aLoadingPrincipal))
   , mCanceled(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -937,7 +939,8 @@ AsyncGetFaviconURLForPage::AsyncGetFaviconURLForPage(
 , uint16_t aPreferredWidth
 , nsIFaviconDataCallback* aCallback
 ) : mPreferredWidth(aPreferredWidth == 0 ? UINT16_MAX : aPreferredWidth)
-  , mCallback(new nsMainThreadPtrHolder<nsIFaviconDataCallback>(aCallback))
+  , mCallback(new nsMainThreadPtrHolder<nsIFaviconDataCallback>(
+      "AsyncGetFaviconURLForPage::mCallback", aCallback))
 {
   MOZ_ASSERT(NS_IsMainThread());
   mPageSpec.Assign(aPageSpec);
@@ -976,7 +979,8 @@ AsyncGetFaviconDataForPage::AsyncGetFaviconDataForPage(
 ,  uint16_t aPreferredWidth
 , nsIFaviconDataCallback* aCallback
 ) : mPreferredWidth(aPreferredWidth == 0 ? UINT16_MAX : aPreferredWidth)
-  , mCallback(new nsMainThreadPtrHolder<nsIFaviconDataCallback>(aCallback))
+  , mCallback(new nsMainThreadPtrHolder<nsIFaviconDataCallback>(
+      "AsyncGetFaviconDataForPage::mCallback", aCallback))
  {
   MOZ_ASSERT(NS_IsMainThread());
   mPageSpec.Assign(aPageSpec);
@@ -1383,7 +1387,8 @@ AsyncCopyFavicons::AsyncCopyFavicons(
 , nsIFaviconDataCallback* aCallback
 ) : mFromPage(aFromPage)
   , mToPage(aToPage)
-  , mCallback(new nsMainThreadPtrHolder<nsIFaviconDataCallback>(aCallback))
+  , mCallback(new nsMainThreadPtrHolder<nsIFaviconDataCallback>(
+      "AsyncCopyFavicons::mCallback", aCallback))
 {
   MOZ_ASSERT(NS_IsMainThread());
 }

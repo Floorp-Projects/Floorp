@@ -217,6 +217,26 @@ ContentHostTexture::Composite(Compositor* aCompositor,
                                aTransform, mFlashCounter);
 }
 
+RefPtr<TextureSource>
+ContentHostTexture::AcquireTextureSource()
+{
+  if (!mTextureHost || !mTextureHost->AcquireTextureSource(mTextureSource)) {
+    return nullptr;
+  }
+  return mTextureSource.get();
+}
+
+RefPtr<TextureSource>
+ContentHostTexture::AcquireTextureSourceOnWhite()
+{
+  if (!mTextureHostOnWhite ||
+      !mTextureHostOnWhite->AcquireTextureSource(mTextureSourceOnWhite))
+  {
+    return nullptr;
+  }
+  return mTextureSourceOnWhite.get();
+}
+
 void
 ContentHostTexture::UseTextureHost(const nsTArray<TimedTexture>& aTextures)
 {

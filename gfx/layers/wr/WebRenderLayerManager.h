@@ -90,7 +90,7 @@ public:
 
   virtual void SendInvalidRegion(const nsIntRegion& aRegion) override;
 
-  virtual void Composite() override;
+  virtual void ScheduleComposite() override;
 
   virtual void SetNeedsComposite(bool aNeedsComposite) override
   {

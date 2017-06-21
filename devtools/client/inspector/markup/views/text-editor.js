@@ -44,7 +44,7 @@ function TextEditor(container, node, type) {
       }
       this.node.getNodeValue().then(longstr => {
         longstr.string().then(oldValue => {
-          longstr.release().then(null, console.error);
+          longstr.release().catch(console.error);
 
           this.container.undo.do(() => {
             this.node.setNodeValue(val);
@@ -106,7 +106,7 @@ TextEditor.prototype = {
       longstr = ret;
       return longstr.string();
     }).then(str => {
-      longstr.release().then(null, console.error);
+      longstr.release().catch(console.error);
       this.value.textContent = str;
 
       let isWhitespace = !/[^\s]/.exec(str);
@@ -118,7 +118,7 @@ TextEditor.prototype = {
       this.value.setAttribute("title", isWhitespace
         ? INSPECTOR_L10N.getFormatStr("markupView.whitespaceOnly", chars)
         : "");
-    }).then(null, console.error);
+    }).catch(console.error);
   },
 
   destroy: function () {},

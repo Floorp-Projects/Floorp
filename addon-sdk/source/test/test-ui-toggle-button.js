@@ -1205,7 +1205,7 @@ exports['test button checked'] = function(assert, done) {
         then(loader.unload).
         then(done, assert.fail);
     })
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 }
 
 exports['test button is checked on window level'] = function(assert, done) {
@@ -1267,7 +1267,7 @@ exports['test button is checked on window level'] = function(assert, done) {
             then(done, assert.fail);
         })
       }).
-      then(null, assert.fail);
+      catch(assert.fail);
     }
   });
 

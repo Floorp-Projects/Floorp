@@ -74,7 +74,7 @@ exports.testWindowTrackerIgnoresPrivateWindows = function(assert, done) {
         return close(window);
       });
     });
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 };
 
 // Test setting activeWIndow and onFocus for private windows
@@ -146,7 +146,7 @@ exports.testSettingActiveWindowDoesNotIgnorePrivateWindow = function(assert, don
         assert.strictEqual(winUtils.activeWindow, browserWindow,
                           "Correct active window when pb mode is supported [4]");
 
-        close(window).then(done).then(null, assert.fail);
+        close(window).then(done).catch(assert.fail);
       }
     ];
 
@@ -236,5 +236,5 @@ exports.testWindowIteratorPrivateDefault = function(assert, done) {
     assert.equal(windows(null, { includePrivate: true }).length, 2);
 
     return close(window);
-  }).then(done).then(null, assert.fail);
+  }).then(done).catch(assert.fail);
 };

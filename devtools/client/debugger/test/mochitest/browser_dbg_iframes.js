@@ -30,7 +30,7 @@ function test() {
     checkIframeSource();
     checkIframePause()
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
-      .then(null, aError => {
+      .catch(aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
       });
   });

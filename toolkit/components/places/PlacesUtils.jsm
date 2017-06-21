@@ -3069,7 +3069,7 @@ PlacesCreateLivemarkTransaction.prototype = {
     // The getLivemark callback may fail, but it is used just to serialize,
     // so it doesn't matter.
     this._promise = PlacesUtils.livemarks.getLivemark({ id: this.item.id })
-      .then(null, null).then( () => {
+      .catch(() => {}).then(() => {
         PlacesUtils.bookmarks.removeItem(this.item.id);
       });
   }
@@ -3121,7 +3121,7 @@ PlacesRemoveLivemarkTransaction.prototype = {
     // The getLivemark callback is expected to receive a failure status but it
     // is used just to serialize, so doesn't matter.
     PlacesUtils.livemarks.getLivemark({ id: this.item.id })
-      .then(null, () => {
+      .catch(() => {
         PlacesUtils.livemarks.addLivemark({ parentId: this.item.parentId,
                                             title: this.item.title,
                                             siteURI: this.item.siteURI,

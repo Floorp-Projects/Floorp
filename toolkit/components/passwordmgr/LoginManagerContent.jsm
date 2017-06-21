@@ -446,7 +446,7 @@ var LoginManagerContent = {
 
     this._getLoginDataFromParent(form, { showMasterPassword: true })
         .then(this.loginsFound.bind(this))
-        .then(null, Cu.reportError);
+        .catch(Cu.reportError);
   },
 
   onPageShow(event, window) {
@@ -650,7 +650,7 @@ var LoginManagerContent = {
               userTriggered: true,
             });
           })
-          .then(null, Cu.reportError);
+          .catch(Cu.reportError);
     } else {
       // Ignore the event, it's for some input we don't care about.
     }

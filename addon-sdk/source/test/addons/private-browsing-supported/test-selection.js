@@ -233,14 +233,14 @@ exports["test PWPB Selection Listener"] = function(assert, done) {
           closeWindow(window).
             then(loader.unload).
             then(done).
-            then(null, assert.fail);
+            catch(assert.fail);
         });
       });
       return window;
     }).
     then(selectContentFirstDiv).
     then(dispatchSelectionEvent).
-    then(null, assert.fail);
+    catch(assert.fail);
 };
 
 exports["test PWPB Textarea OnSelect Listener"] = function(assert, done) {
@@ -263,14 +263,14 @@ exports["test PWPB Textarea OnSelect Listener"] = function(assert, done) {
           closeWindow(window).
             then(loader.unload).
             then(done).
-            then(null, assert.fail);
+            catch(assert.fail);
         });
       });
       return window;
     }).
     then(selectTextarea).
     then(dispatchOnSelectEvent).
-    then(null, assert.fail);
+    catch(assert.fail);
 };
 
 exports["test PWPB Single DOM Selection"] = function(assert, done) {
@@ -304,7 +304,7 @@ exports["test PWPB Single DOM Selection"] = function(assert, done) {
         "One iterable selection");
 
       return closeWindow(window);
-    }).then(loader.unload).then(done).then(null, assert.fail);
+    }).then(loader.unload).then(done).catch(assert.fail);
 }
 
 exports["test PWPB Textarea Selection"] = function(assert, done) {
@@ -340,7 +340,7 @@ exports["test PWPB Textarea Selection"] = function(assert, done) {
         "One iterable selection");
 
       return closeWindow(window);
-    }).then(loader.unload).then(done).then(null, assert.fail);
+    }).then(loader.unload).then(done).catch(assert.fail);
 };
 
 exports["test PWPB Set HTML in Multiple DOM Selection"] = function(assert, done) {
@@ -380,7 +380,7 @@ exports["test PWPB Set HTML in Multiple DOM Selection"] = function(assert, done)
         "Two iterable selections");
 
       return closeWindow(window);
-    }).then(loader.unload).then(done).then(null, assert.fail);
+    }).then(loader.unload).then(done).catch(assert.fail);
 };
 
 exports["test PWPB Set Text in Textarea Selection"] = function(assert, done) {
@@ -417,7 +417,7 @@ exports["test PWPB Set Text in Textarea Selection"] = function(assert, done) {
         "One iterable selection");
 
       return closeWindow(window);
-    }).then(loader.unload).then(done).then(null, assert.fail);
+    }).then(loader.unload).then(done).catch(assert.fail);
 };
 
 // If the platform doesn't support the PBPW, we're replacing PBPW tests

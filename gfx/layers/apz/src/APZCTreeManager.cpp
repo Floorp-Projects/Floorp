@@ -841,7 +841,7 @@ WillHandleInput(const PanGestureOrScrollWheelInput& aPanInput)
   }
 
   WidgetWheelEvent wheelEvent = aPanInput.ToWidgetWheelEvent(nullptr);
-  return WillHandleWheelEvent(&wheelEvent);
+  return IAPZCTreeManager::WillHandleWheelEvent(&wheelEvent);
 }
 
 void

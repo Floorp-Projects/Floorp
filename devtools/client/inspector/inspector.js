@@ -2154,7 +2154,7 @@ if (window.location.protocol === "chrome:" && url.search.length > 1) {
     );
     let inspectorUI = new Inspector(fakeToolbox);
     inspectorUI.init();
-  }).then(null, e => {
+  }).catch(e => {
     window.alert("Unable to start the inspector:" + e.message + "\n" + e.stack);
   });
 }

@@ -30,7 +30,7 @@ function test() {
       .then(testSwitch1)
       .then(testSwitch2)
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
-      .then(null, aError => {
+      .catch(aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
       });
 

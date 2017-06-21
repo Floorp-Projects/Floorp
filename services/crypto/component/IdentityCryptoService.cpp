@@ -328,7 +328,8 @@ KeyGenRunnable::KeyGenRunnable(KeyType keyType,
                                nsIIdentityKeyGenCallback * callback,
                                nsIEventTarget* operationThread)
   : mKeyType(keyType)
-  , mCallback(new nsMainThreadPtrHolder<nsIIdentityKeyGenCallback>(callback))
+  , mCallback(new nsMainThreadPtrHolder<nsIIdentityKeyGenCallback>(
+      "KeyGenRunnable::mCallback", callback))
   , mRv(NS_ERROR_NOT_INITIALIZED)
   , mThread(operationThread)
 {
@@ -351,8 +352,8 @@ GenerateKeyPair(PK11SlotInfo * slot,
     return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
   }
   if (!*publicKey) {
-	  SECKEY_DestroyPrivateKey(*privateKey);
-	  *privateKey = nullptr;
+    SECKEY_DestroyPrivateKey(*privateKey);
+    *privateKey = nullptr;
     MOZ_CRASH("PK11_GnerateKeyPair returned private key without public key");
   }
 
@@ -468,7 +469,7 @@ KeyGenRunnable::Run()
         if (NS_SUCCEEDED(mRv)) {
           MOZ_ASSERT(privk);
           MOZ_ASSERT(pubk);
-		  // mKeyPair will take over ownership of privk and pubk
+      // mKeyPair will take over ownership of privk and pubk
           mKeyPair = new KeyPair(privk, pubk, mThread);
         }
       }
@@ -487,7 +488,8 @@ SignRunnable::SignRunnable(const nsACString & aText,
                            nsIIdentitySignCallback * aCallback)
   : mTextToSign(aText)
   , mPrivateKey(SECKEY_CopyPrivateKey(privateKey))
-  , mCallback(new nsMainThreadPtrHolder<nsIIdentitySignCallback>(aCallback))
+  , mCallback(new nsMainThreadPtrHolder<nsIIdentitySignCallback>(
+      "SignRunnable::mCallback", aCallback))
   , mRv(NS_ERROR_NOT_INITIALIZED)
 {
 }

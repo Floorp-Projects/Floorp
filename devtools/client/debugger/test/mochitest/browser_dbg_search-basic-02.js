@@ -35,7 +35,7 @@ function test() {
       .then(combineWithTokenColonSearch)
       .then(() => verifySourceAndCaret("-01.js", 2, 11, [56, 63]))
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
-      .then(null, aError => {
+      .catch(aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
       });
 

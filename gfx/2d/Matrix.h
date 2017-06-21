@@ -1579,6 +1579,20 @@ public:
     return _14 != 0 || _24 != 0 || _34 != 0 || _44 != 1;
   }
 
+  /* Returns true if the matrix is a rectilinear transformation (i.e.
+   * grid-aligned rectangles are transformed to grid-aligned rectangles).
+   * This should only be called on 2D matrices.
+   */
+  bool IsRectilinear() const {
+    MOZ_ASSERT(Is2D());
+    if (gfx::FuzzyEqual(_12, 0) && gfx::FuzzyEqual(_21, 0)) {
+      return true;
+    } else if (gfx::FuzzyEqual(_22, 0) && gfx::FuzzyEqual(_11, 0)) {
+      return true;
+    }
+    return false;
+  }
+
   /**
    * Convert between typed and untyped matrices.
    */

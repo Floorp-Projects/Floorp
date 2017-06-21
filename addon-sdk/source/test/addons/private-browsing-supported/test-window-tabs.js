@@ -18,10 +18,10 @@ exports.testOpenTabWithPrivateActiveWindowNoIsPrivateOption = function(assert, d
       url: 'about:blank',
       onOpen: function(tab) {
         assert.ok(isPrivate(tab), 'new tab is private');
-        close(window).then(done).then(null, assert.fail);
+        close(window).then(done).catch(assert.fail);
       }
     })
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 }
 
 exports.testOpenTabWithNonPrivateActiveWindowNoIsPrivateOption = function(assert, done) {
@@ -34,10 +34,10 @@ exports.testOpenTabWithNonPrivateActiveWindowNoIsPrivateOption = function(assert
       url: 'about:blank',
       onOpen: function(tab) {
         assert.equal(isPrivate(tab), false, 'new tab is not private');
-        close(window).then(done).then(null, assert.fail);
+        close(window).then(done).catch(assert.fail);
       }
     })
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 }
 
 exports.testOpenTabWithPrivateActiveWindowWithIsPrivateOptionTrue = function(assert, done) {
@@ -51,10 +51,10 @@ exports.testOpenTabWithPrivateActiveWindowWithIsPrivateOptionTrue = function(ass
       isPrivate: true,
       onOpen: function(tab) {
         assert.ok(isPrivate(tab), 'new tab is private');
-        close(window).then(done).then(null, assert.fail);
+        close(window).then(done).catch(assert.fail);
       }
     })
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 }
 
 exports.testOpenTabWithNonPrivateActiveWindowWithIsPrivateOptionFalse = function(assert, done) {
@@ -68,8 +68,8 @@ exports.testOpenTabWithNonPrivateActiveWindowWithIsPrivateOptionFalse = function
       isPrivate: false,
       onOpen: function(tab) {
         assert.equal(isPrivate(tab), false, 'new tab is not private');
-        close(window).then(done).then(null, assert.fail);
+        close(window).then(done).catch(assert.fail);
       }
     })
-  }).then(null, assert.fail);
+  }).catch(assert.fail);
 }

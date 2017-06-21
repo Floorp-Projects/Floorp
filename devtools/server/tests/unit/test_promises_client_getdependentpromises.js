@@ -23,7 +23,7 @@ add_task(function* () {
     p.name = "p";
     let q = p.then();
     q.name = "q";
-    let r = p.then(null, () => {});
+    let r = p.catch(() => {});
     r.name = "r";
 
     return p;
@@ -42,7 +42,7 @@ add_task(function* () {
     p.name = "p";
     let q = p.then();
     q.name = "q";
-    let r = p.then(null, () => {});
+    let r = p.catch(() => {});
     r.name = "r";
 
     return p;

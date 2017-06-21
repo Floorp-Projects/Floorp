@@ -25,14 +25,8 @@ WillHandleMouseEvent(const WidgetMouseEventBase& aEvent)
          aEvent.mMessage == eDragEnd;
 }
 
-// Returns whether or not a wheel event action will be (or was) performed by
-// APZ. If this returns true, the event must not perform a synchronous
-// scroll.
-//
-// Even if this returns false, all wheel events in APZ-aware widgets must
-// be sent through APZ so they are transformed correctly for TabParent.
-static bool
-WillHandleWheelEvent(WidgetWheelEvent* aEvent)
+/* static */ bool
+IAPZCTreeManager::WillHandleWheelEvent(WidgetWheelEvent* aEvent)
 {
   return EventStateManager::WheelEventIsScrollAction(aEvent) &&
          (aEvent->mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE ||

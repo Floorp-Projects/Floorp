@@ -416,8 +416,10 @@ public:
   }
 
   ~AsyncCloseConnection() override {
-    NS_ReleaseOnMainThread(mConnection.forget());
-    NS_ReleaseOnMainThread(mCallbackEvent.forget());
+    NS_ReleaseOnMainThread(
+      "AsyncCloseConnection::mConnection", mConnection.forget());
+    NS_ReleaseOnMainThread(
+      "AsyncCloseConnection::mCallbackEvent", mCallbackEvent.forget());
   }
 private:
   RefPtr<Connection> mConnection;
@@ -479,13 +481,16 @@ private:
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     // Handle ambiguous nsISupports inheritance.
-    NS_ProxyRelease(thread, mConnection.forget());
-    NS_ProxyRelease(thread, mClone.forget());
+    NS_ProxyRelease(
+      "AsyncInitializeClone::mConnection", thread, mConnection.forget());
+    NS_ProxyRelease(
+        "AsyncInitializeClone::mClone", thread, mClone.forget());
 
     // Generally, the callback will be released by CallbackComplete.
     // However, if for some reason Run() is not executed, we still
     // need to ensure that it is released here.
-    NS_ProxyRelease(thread, mCallback.forget());
+    NS_ProxyRelease(
+      "AsyncInitializeClone::mCallback", thread, mCallback.forget());
   }
 
   RefPtr<Connection> mConnection;

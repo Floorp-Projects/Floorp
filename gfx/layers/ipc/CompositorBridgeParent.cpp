@@ -378,13 +378,13 @@ CompositorBridgeParent::Initialize()
   MOZ_ASSERT(CompositorThread(),
              "The compositor thread must be Initialized before instanciating a CompositorBridgeParent.");
 
-  mCompositorID = 0;
+  mCompositorBridgeID = 0;
   // FIXME: This holds on the the fact that right now the only thing that
   // can destroy this instance is initialized on the compositor thread after
   // this task has been processed.
   MOZ_ASSERT(CompositorLoop());
   CompositorLoop()->PostTask(NewRunnableFunction(&AddCompositor,
-                                                 this, &mCompositorID));
+                                                 this, &mCompositorBridgeID));
 
   CompositorLoop()->PostTask(NewRunnableFunction(SetThreadPriority));
 
@@ -647,7 +647,7 @@ CompositorBridgeParent::ActorDestroy(ActorDestroyReason why)
 
   StopAndClearResources();
 
-  RemoveCompositor(mCompositorID);
+  RemoveCompositor(mCompositorBridgeID);
 
   mCompositionManager = nullptr;
 
@@ -1377,6 +1377,7 @@ CompositorBridgeParent::InitializeLayerManager(const nsTArray<LayersBackend>& aB
   }
 
   mLayerManager = new LayerManagerComposite(mCompositor);
+  mLayerManager->SetCompositorBridgeID(mCompositorBridgeID);
 
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   sIndirectLayerTrees[mRootLayerTreeID].mLayerManager = mLayerManager;
@@ -1423,7 +1424,6 @@ CompositorBridgeParent::NewCompositor(const nsTArray<LayersBackend>& aBackendHin
       }
 #endif
 
-      compositor->SetCompositorID(mCompositorID);
       return compositor;
     }
 
