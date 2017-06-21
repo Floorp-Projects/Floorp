@@ -759,28 +759,13 @@ def bindgen_config_paths(llvm_config, libclang_path, clang_path,
         clang_path=clang_path[0],
     )
 
-@depends(stylo_config, bindgen_config_paths, '--enable-stylo-build-bindgen')
-@imports(_from='textwrap', _import='dedent')
-def stylo(stylo_config, bindgen_config_paths, bindgen_enabled):
-    if not stylo_config.build:
-        return None
-    elif not bindgen_enabled:
-        return namespace(
-            build=bool(stylo_config.build)
-        )
-
-    return namespace(
-        libclang_path=bindgen_config_paths.libclang_path,
-        clang_path=bindgen_config_paths.clang_path,
-    )
-
 set_config('MOZ_STYLO', stylo_config.build)
 set_define('MOZ_STYLO', stylo_config.build)
 set_config('MOZ_STYLO_ENABLE', stylo_config.enable)
 set_define('MOZ_STYLO_ENABLE', stylo_config.enable)
 
-set_config('MOZ_LIBCLANG_PATH', stylo.libclang_path)
-set_config('MOZ_CLANG_PATH', stylo.clang_path)
+set_config('MOZ_LIBCLANG_PATH', bindgen_config_paths.libclang_path)
+set_config('MOZ_CLANG_PATH', bindgen_config_paths.clang_path)
 set_config('MOZ_STYLO_BINDGEN', depends_if('--enable-stylo-build-bindgen')(lambda _: True))
 
 option('--with-servo', env='SERVO_TARGET_DIR', nargs=1,
