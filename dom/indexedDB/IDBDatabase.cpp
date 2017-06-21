@@ -177,7 +177,6 @@ IDBDatabase::IDBDatabase(IDBOpenDBRequest* aRequest,
   , mClosed(false)
   , mInvalidated(false)
   , mQuotaExceeded(false)
-  , mIncreasedActiveDatabaseCount(false)
 {
   MOZ_ASSERT(aRequest);
   MOZ_ASSERT(aFactory);
@@ -190,7 +189,6 @@ IDBDatabase::~IDBDatabase()
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mBackgroundActor);
-  MOZ_ASSERT(!mIncreasedActiveDatabaseCount);
 }
 
 // static
@@ -221,8 +219,11 @@ IDBDatabase::Create(IDBOpenDBRequest* aRequest,
       MOZ_ASSERT(obsSvc);
 
       // This topic must be successfully registered.
-      MOZ_ALWAYS_SUCCEEDS(
-        obsSvc->AddObserver(observer, kWindowObserverTopic, false));
+      if (NS_WARN_IF(NS_FAILED(
+            obsSvc->AddObserver(observer, kWindowObserverTopic, false)))) {
+        observer->Revoke();
+        return nullptr;
+      }
 
       // These topics are not crucial.
       if (NS_FAILED(obsSvc->AddObserver(observer,
@@ -237,8 +238,6 @@ IDBDatabase::Create(IDBOpenDBRequest* aRequest,
       db->mObserver.swap(observer);
     }
   }
-
-  db->IncreaseActiveDatabaseCount();
 
   return db.forget();
 }
@@ -290,10 +289,6 @@ IDBDatabase::CloseInternal()
     if (mBackgroundActor && !mInvalidated) {
       mBackgroundActor->SendClose();
     }
-
-    // Decrease the number of active databases right after the database is
-    // closed.
-    MaybeDecreaseActiveDatabaseCount();
   }
 }
 
@@ -695,7 +690,10 @@ IDBDatabase::Transaction(JSContext* aCx,
 
   RefPtr<IDBTransaction> transaction =
     IDBTransaction::Create(aCx, this, sortedStoreNames, mode);
-  MOZ_ASSERT(transaction);
+  if (NS_WARN_IF(!transaction)) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
 
   BackgroundTransactionChild* actor =
     new BackgroundTransactionChild(transaction);
@@ -969,30 +967,19 @@ IDBDatabase::NoteFinishedFileActor(PBackgroundIDBDatabaseFileChild* aFileActor)
 }
 
 void
-IDBDatabase::NoteActiveTransaction()
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mFactory);
-
-  // Increase the number of active transactions.
-  mFactory->UpdateActiveTransactionCount(1);
-}
-
-void
-IDBDatabase::NoteInactiveTransaction()
+IDBDatabase::DelayedMaybeExpireFileActors()
 {
   AssertIsOnOwningThread();
 
   if (!mBackgroundActor || !mFileActors.Count()) {
-    MOZ_ASSERT(mFactory);
-    mFactory->UpdateActiveTransactionCount(-1);
     return;
   }
 
   RefPtr<Runnable> runnable =
-    NewRunnableMethod("IDBDatabase::NoteInactiveTransactionDelayed",
-                      this,
-                      &IDBDatabase::NoteInactiveTransactionDelayed);
+    NewRunnableMethod<bool>("IDBDatabase::ExpireFileActors",
+                            this,
+                            &IDBDatabase::ExpireFileActors,
+                            /* aExpireAll */ false);
   MOZ_ASSERT(runnable);
 
   if (!NS_IsMainThread()) {
@@ -1142,15 +1129,6 @@ IDBDatabase::Invalidate()
 
     InvalidateInternal();
   }
-}
-
-void
-IDBDatabase::NoteInactiveTransactionDelayed()
-{
-  ExpireFileActors(/* aExpireAll */ false);
-
-  MOZ_ASSERT(mFactory);
-  mFactory->UpdateActiveTransactionCount(-1);
 }
 
 void
@@ -1372,30 +1350,6 @@ IDBDatabase::RenameIndex(int64_t aObjectStoreId,
   foundIndexMetadata->name() = nsString(aName);
 
   return NS_OK;
-}
-
-void
-IDBDatabase::IncreaseActiveDatabaseCount()
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mFactory);
-  MOZ_ASSERT(!mIncreasedActiveDatabaseCount);
-
-  mFactory->UpdateActiveDatabaseCount(1);
-  mIncreasedActiveDatabaseCount = true;
-}
-
-void
-IDBDatabase::MaybeDecreaseActiveDatabaseCount()
-{
-  AssertIsOnOwningThread();
-
-  if (mIncreasedActiveDatabaseCount) {
-    // Decrease the number of active databases.
-    MOZ_ASSERT(mFactory);
-    mFactory->UpdateActiveDatabaseCount(-1);
-    mIncreasedActiveDatabaseCount = false;
-  }
 }
 
 } // namespace dom
