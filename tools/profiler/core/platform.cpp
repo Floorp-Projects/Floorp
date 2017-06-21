@@ -571,7 +571,7 @@ public:
   static bool Init(PSLockRef)
   {
     bool ok1 = sThreadInfo.init();
-    bool ok2 = sPseudoStack.init();
+    bool ok2 = AutoProfilerLabel::sPseudoStack.init();
     return ok1 && ok2;
   }
 
@@ -588,12 +588,13 @@ public:
   // Get only the PseudoStack. Accesses are not guarded by gPSMutex. RacyInfo()
   // can also be used to get the PseudoStack, but that is marginally slower
   // because it requires an extra pointer indirection.
-  static PseudoStack* Stack() { return sPseudoStack.get(); }
+  static PseudoStack* Stack() { return AutoProfilerLabel::sPseudoStack.get(); }
 
   static void SetInfo(PSLockRef, ThreadInfo* aInfo)
   {
     sThreadInfo.set(aInfo);
-    sPseudoStack.set(aInfo ? aInfo->RacyInfo().get() : nullptr);  // an upcast
+    AutoProfilerLabel::sPseudoStack.set(
+      aInfo ? aInfo->RacyInfo().get() : nullptr);  // an upcast
   }
 
 private:
@@ -617,9 +618,8 @@ MOZ_THREAD_LOCAL(ThreadInfo*) TLSInfo::sThreadInfo;
 // - We don't want to expose TLSInfo (and ThreadInfo) in GeckoProfiler.h.
 //
 // This second pointer isn't ideal, but does provide a way to satisfy those
-// constraints. TLSInfo manages it, except for the uses in
-// AutoProfilerLabel.
-MOZ_THREAD_LOCAL(PseudoStack*) sPseudoStack;
+// constraints. TLSInfo is responsible for updating it.
+MOZ_THREAD_LOCAL(PseudoStack*) AutoProfilerLabel::sPseudoStack;
 
 // The name of the main thread.
 static const char* const kMainThreadName = "GeckoMain";
@@ -2083,7 +2083,7 @@ PseudoStack*
 MozGlueLabelEnter(const char* aLabel, const char* aDynamicString, void* aSp,
                   uint32_t aLine)
 {
-  PseudoStack* pseudoStack = sPseudoStack.get();
+  PseudoStack* pseudoStack = AutoProfilerLabel::sPseudoStack.get();
   if (pseudoStack) {
     pseudoStack->pushCppFrame(aLabel, aDynamicString, aSp, aLine,
                               js::ProfileEntry::Kind::CPP_NORMAL,

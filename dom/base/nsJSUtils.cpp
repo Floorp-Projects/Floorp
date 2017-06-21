@@ -135,10 +135,8 @@ EvaluationExceptionToNSResult(JSContext* aCx)
 nsJSUtils::ExecutionContext::ExecutionContext(JSContext* aCx,
                                               JS::Handle<JSObject*> aGlobal)
   :
-#ifdef MOZ_GECKO_PROFILER
     mAutoProfilerLabel("nsJSUtils::ExecutionContext", /* dynamicStr */ nullptr,
                        __LINE__, js::ProfileEntry::Category::JS),
-#endif
     mCx(aCx)
   , mCompartment(aCx, aGlobal)
   , mRetValue(aCx)

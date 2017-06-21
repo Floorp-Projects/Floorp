@@ -7,8 +7,6 @@
 #ifndef mozilla_AutoProfilerLabel_h
 #define mozilla_AutoProfilerLabel_h
 
-#ifdef MOZ_GECKO_PROFILER
-
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/Types.h"
@@ -60,7 +58,5 @@ private:
 #endif
 
 } // namespace mozilla
-
-#endif // MOZ_GECKO_PROFILER
 
 #endif // mozilla_AutoProfilerLabel_h

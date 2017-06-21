@@ -930,19 +930,19 @@ CycleCollectedJSRuntime::GCNurseryCollectionCallback(JSContext* aContext,
     timelines->AddMarkerForAllObservedDocShells(abstractMarker);
   }
 
-#ifdef MOZ_GECKO_PROFILER
   if (aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_START) {
     self->mLatestNurseryCollectionStart = TimeStamp::Now();
   } else if ((aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END) &&
              profiler_is_active())
   {
+#ifdef MOZ_GECKO_PROFILER
     PROFILER_MARKER_PAYLOAD(
       "GCMinor",
       MakeUnique<GCMinorMarkerPayload>(self->mLatestNurseryCollectionStart,
                                        TimeStamp::Now(),
                                        JS::MinorGcToJSON(aContext)));
-  }
 #endif
+  }
 
   if (self->mPrevGCNurseryCollectionCallback) {
     self->mPrevGCNurseryCollectionCallback(aContext, aProgress, aReason);
