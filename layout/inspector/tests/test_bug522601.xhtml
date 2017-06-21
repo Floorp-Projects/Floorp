@@ -237,32 +237,34 @@ addLoadEvent(function() {
   testFunc(walkerAnon, "previousNode", $("display"), "step back to root (anon)");
   testFunc(walkerAnon, "previousNode", null, "step back past root (anon)");
 
-  var shadowdiv = document.querySelector('#test-shadow');
-  var shadowRoot = shadowdiv.createShadowRoot();
-  var h = document.createElement("header");
-  var c = document.createElement("content");
-  c.setAttribute("select", "h2");
-  h.appendChild(c);
-  shadowRoot.appendChild(h);
+  if (Element.prototype.createShadowRoot) {
+    var shadowdiv = document.querySelector('#test-shadow');
+    var shadowRoot = shadowdiv.createShadowRoot();
+    var h = document.createElement("header");
+    var c = document.createElement("content");
+    c.setAttribute("select", "h2");
+    h.appendChild(c);
+    shadowRoot.appendChild(h);
 
-  var walkerShadow =
-    SpecialPowers.Cc["@mozilla.org/inspector/deep-tree-walker;1"]
-                 .createInstance(SpecialPowers.Ci.inIDeepTreeWalker);
-  walkerShadow.showAnonymousContent = true;
-  walkerShadow.init($("test-shadow"), NodeFilter.SHOW_ALL);
-  var c1 = walkerShadow.nextNode();
-  var c2 = walkerShadow.nextNode();
-  var c3 = walkerShadow.nextNode();
+    var walkerShadow =
+        SpecialPowers.Cc["@mozilla.org/inspector/deep-tree-walker;1"]
+                     .createInstance(SpecialPowers.Ci.inIDeepTreeWalker);
+    walkerShadow.showAnonymousContent = true;
+    walkerShadow.init($("test-shadow"), NodeFilter.SHOW_ALL);
+    var c1 = walkerShadow.nextNode();
+    var c2 = walkerShadow.nextNode();
+    var c3 = walkerShadow.nextNode();
 
-  walkerShadow.currentNode = c1;
-  is(SpecialPowers.unwrap(walkerShadow.currentNode), h,
-     "Unexpected shadow element 1");
-  walkerShadow.currentNode = c2;
-  is(SpecialPowers.unwrap(walkerShadow.currentNode), $("h2"),
-     "Unexpected shadow element 2");
-  walkerShadow.currentNode = c3;
-  is(SpecialPowers.unwrap(walkerShadow.currentNode), $("h2").firstChild,
-     "Unexpected shadow element 3");
+    walkerShadow.currentNode = c1;
+    is(SpecialPowers.unwrap(walkerShadow.currentNode), h,
+       "Unexpected shadow element 1");
+    walkerShadow.currentNode = c2;
+    is(SpecialPowers.unwrap(walkerShadow.currentNode), $("h2"),
+       "Unexpected shadow element 2");
+    walkerShadow.currentNode = c3;
+    is(SpecialPowers.unwrap(walkerShadow.currentNode), $("h2").firstChild,
+       "Unexpected shadow element 3");
+  }
 
   SimpleTest.finish();
 });
