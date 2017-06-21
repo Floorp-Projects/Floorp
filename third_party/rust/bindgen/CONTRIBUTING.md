@@ -10,6 +10,7 @@ out to us in a GitHub issue, or stop by
 
 - [Code of Conduct](#code-of-conduct)
 - [Filing an Issue](#filing-an-issue)
+- [Looking to Start Contributing to `bindgen`?](#looking-to-start-contributing-to-bindgen)
 - [Building](#building)
 - [Testing](#testing)
   - [Overview](#overview)
@@ -18,6 +19,7 @@ out to us in a GitHub issue, or stop by
   - [Authoring New Tests](#authoring-new-tests)
   - [Test Expectations and `libclang` Versions](#test-expectations-and-libclang-versions)
 - [Automatic code formatting](#automatic-code-formatting)
+- [Pull Requests and Code Reviews](#pull-requests-and-code-reviews)
 - [Generating Graphviz Dot Files](#generating-graphviz-dot-files)
 - [Debug Logging](#debug-logging)
 - [Using `creduce` to Minimize Test Cases](#using-creduce-to-minimize-test-cases)
@@ -37,11 +39,17 @@ We abide by the [Rust Code of Conduct][coc] and ask that you do as well.
 Think you've found a bug? File an issue! To help us understand and reproduce the
 issue, provide us with:
 
-* A (preferrably reduced) C/C++ header file that reproduces the issue
+* A (preferably reduced) C/C++ header file that reproduces the issue
 * The `bindgen` flags used to reproduce the issue with the header file
 * The expected `bindgen` output
 * The actual `bindgen` output
 * The [debugging logs](#logs) generated when running `bindgen` on this testcase
+
+## Looking to Start Contributing to `bindgen`?
+
+* [Issues labeled "easy"](https://github.com/servo/rust-bindgen/issues?q=is%3Aopen+is%3Aissue+label%3AE-easy)
+* [Issues labeled "less easy"](https://github.com/servo/rust-bindgen/issues?q=is%3Aopen+is%3Aissue+label%3AE-less-easy)
+* Still can't find something to work on? [Drop a comment here](https://github.com/servo/rust-bindgen/issues/747)
 
 ## Building
 
@@ -175,6 +183,27 @@ $ cargo fmt
 ```
 
 The code style is described in the `rustfmt.toml` file in top level of the repo.
+
+## Pull Requests and Code Reviews
+
+Ensure that each commit stands alone, and passes tests. This enables better `git
+bisect`ing when needed. If your commits do not stand on their own, then rebase
+them on top of the latest master and squash them into a single commit.
+
+All pull requests undergo code review before merging. To request review, comment
+`r? @github_username_of_reviewer`. They we will respond with `r+` to approve the
+pull request, or may leave feedback and request changes to the pull request. Any
+changes should be squashed into the original commit.
+
+Unsure who to ask for review? Ask any of:
+
+* `@emilio`
+* `@fitzgen`
+
+More resources:
+
+* [Servo's GitHub Workflow](https://github.com/servo/servo/wiki/Github-workflow)
+* [Beginner's Guide to Rebasing and Squashing](https://github.com/servo/servo/wiki/Beginner's-guide-to-rebasing-and-squashing)
 
 ## Generating Graphviz Dot Files
 

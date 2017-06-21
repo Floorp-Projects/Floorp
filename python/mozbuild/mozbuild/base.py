@@ -627,6 +627,10 @@ class MozbuildObject(ProcessExecutionMixin):
         self.virtualenv_manager.activate()
 
 
+    def _set_log_level(self, verbose):
+        self.log_manager.terminal_handler.setLevel(logging.INFO if not verbose else logging.DEBUG)
+
+
 class MachCommandBase(MozbuildObject):
     """Base class for mach command providers that wish to be MozbuildObjects.
 

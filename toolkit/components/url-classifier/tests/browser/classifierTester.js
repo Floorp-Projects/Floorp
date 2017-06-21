@@ -9,6 +9,7 @@ var classifierTester = {
   IFRAME_ID: "testFrame",
   FLASHBLOCK_ENABLE_PREF: "plugins.flashBlock.enabled",
   FLASH_PLUGIN_USER_SETTING_PREF: "plugin.state.flash",
+  URLCLASSIFIER_DISALLOW_COMPLETIONS_PREF: "urlclassifier.disallow_completions",
   NEVER_ACTIVATE_PREF_VALUE: 0,
   ASK_TO_ACTIVATE_PREF_VALUE: 1,
   ALWAYS_ACTIVATE_PREF_VALUE: 2,
@@ -38,21 +39,29 @@ var classifierTester = {
     {
       url: "subdocument.example.com/",
       db: "test-flashsubdoc-simple",
-      pref: "urlclassifier.flashThirdPartyTable"
+      pref: "urlclassifier.flashSubDocTable"
     },
     {
       url: "exception.subdocument.example.com/",
       db: "testexcept-flashsubdoc-simple",
-      pref: "urlclassifier.flashThirdPartyExceptTable"
+      pref: "urlclassifier.flashSubDocExceptTable"
     }
   ],
 
   setPrefs: function ({setDBs = true, flashBlockEnable = true, flashSetting = classifierTester.ALWAYS_ACTIVATE_PREF_VALUE} = {}) {
     if (setDBs) {
+      let DBs = [];
+
       for (let dbData of classifierTester.dbUrls) {
         Services.prefs.setCharPref(dbData.pref, dbData.db);
+        DBs.push(dbData.db);
       }
+
+      let completions = Services.prefs.getCharPref(classifierTester.URLCLASSIFIER_DISALLOW_COMPLETIONS_PREF);
+      completions += "," + DBs.join(",");
+      Services.prefs.setCharPref(classifierTester.URLCLASSIFIER_DISALLOW_COMPLETIONS_PREF, completions);
     }
+
     Services.prefs.setBoolPref(classifierTester.FLASHBLOCK_ENABLE_PREF,
                                flashBlockEnable);
     Services.prefs.setIntPref(classifierTester.FLASH_PLUGIN_USER_SETTING_PREF,
@@ -64,6 +73,8 @@ var classifierTester = {
     for (let dbData of classifierTester.dbUrls) {
       Services.prefs.clearUserPref(dbData.pref);
     }
+
+    Services.prefs.clearUserPref(classifierTester.URLCLASSIFIER_DISALLOW_COMPLETIONS_PREF);
     Services.prefs.clearUserPref(classifierTester.FLASHBLOCK_ENABLE_PREF);
     Services.prefs.clearUserPref(classifierTester.FLASH_PLUGIN_USER_SETTING_PREF);
     Services.prefs.clearUserPref(classifierTester.ALLOW_CTA_PREF);

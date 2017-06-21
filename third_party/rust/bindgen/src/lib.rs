@@ -333,7 +333,7 @@ impl Builder {
         }
 
         if !self.options.unstable_rust {
-            output_vector.push("--no-unstable-rust".into());
+            output_vector.push("--unstable-rust".into());
         }
 
         self.options
@@ -736,8 +736,8 @@ impl Builder {
     }
 
     /// Avoid generating any unstable Rust, such as Rust unions, in the generated bindings.
-    pub fn no_unstable_rust(mut self) -> Builder {
-        self.options.unstable_rust = false;
+    pub fn unstable_rust(mut self, doit: bool) -> Self {
+        self.options.unstable_rust = doit;
         self
     }
 
@@ -959,7 +959,7 @@ impl Default for BindgenOptions {
             derive_default: false,
             enable_cxx_namespaces: false,
             disable_name_namespacing: false,
-            unstable_rust: true,
+            unstable_rust: false,
             use_core: false,
             ctypes_prefix: None,
             namespaced_constants: true,
