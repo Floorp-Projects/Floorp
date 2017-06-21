@@ -7,7 +7,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
 
 Cu.import("resource://gre/modules/ExtensionPreferencesManager.jsm");
 
-function getAPI(extension, name, callback) {
+const getSettingsAPI = (extension, name, callback) => {
   return {
     async get(details) {
       return {
@@ -26,7 +26,7 @@ function getAPI(extension, name, callback) {
       return ExtensionPreferencesManager.removeSetting(extension, name);
     },
   };
-}
+};
 
 // Add settings objects for supported APIs to the preferences manager.
 ExtensionPreferencesManager.addSetting("cacheEnabled", {
@@ -49,7 +49,7 @@ this.browserSettings = class extends ExtensionAPI {
     let {extension} = context;
     return {
       browserSettings: {
-        cacheEnabled: getAPI(extension,
+        cacheEnabled: getSettingsAPI(extension,
           "cacheEnabled",
           () => {
             return Preferences.get("browser.cache.disk.enable") &&
