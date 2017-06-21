@@ -15,7 +15,7 @@ lazyRequire(this, "../core/promise", "resolve");
 function parseJsonURI(uri) {
   return readURI(uri).
     then(JSON.parse).
-    then(null, function (error) {
+    catch(function (error) {
       throw Error("Failed to parse locale file:\n" + uri + "\n" + error);
     });
 }

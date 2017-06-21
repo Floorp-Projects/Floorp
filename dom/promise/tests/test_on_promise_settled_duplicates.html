@@ -48,7 +48,7 @@ Bug 1084065 - Test that Debugger.prototype.onPromiseResolved doesn't get dupes.
     .then(function () {
       dbg.onPromiseSettled = undefined;
     })
-    .then(null, function (e) {
+    .catch(function (e) {
       ok(false, "Got an unexpected error: " + e);
     })
     .then(SimpleTest.finish);

@@ -117,12 +117,12 @@ exports['test error recovery with promise'] = function(assert, done) {
     let deferred = defer();
     deferred.reject('error');
     return deferred.promise;
-  }).then(null, function(actual) {
+  }).catch(function(actual) {
     assert.equal(actual, 'error', 'rejected via promise');
     let deferred = defer();
     deferred.reject('end');
     return deferred.promise;
-  }).then(null, function(actual) {
+  }).catch(function(actual) {
     assert.equal(actual, 'end', 'rejeced via promise');
     done();
   });
@@ -150,17 +150,17 @@ exports['test chaining'] = function(assert, done) {
   deferred.promise.then().then().then(function(actual) {
     assert.equal(actual, 2, 'value propagates unchanged');
     return actual + 2;
-  }).then(null, function(reason) {
+  }).catch(function(reason) {
     assert.fail('should not reject');
   }).then(function(actual) {
     assert.equal(actual, 4, 'value propagates through if not handled');
     throw boom;
   }).then(function(actual) {
     assert.fail('exception must reject promise');
-  }).then().then(null, function(actual) {
+  }).then().catch(function(actual) {
     assert.equal(actual, boom, 'reason propagates unchanged');
     throw brax;
-  }).then().then(null, function(actual) {
+  }).then().catch(function(actual) {
     assert.equal(actual, brax, 'reason changed becase of exception');
     return 'recovery';
   }).then(function(actual) {
@@ -241,7 +241,7 @@ exports['test errors in promise resolution handlers are propagated'] = function(
     throw expected;
   }).then(function() {
     return undefined;
-  }).then(null, function(actual) {
+  }).catch(function(actual) {
     assert.equal(actual, expected, 'rejected as expected');
   }).then(done, assert.fail);
 
@@ -445,7 +445,7 @@ function testEnvironment ({all, resolve, defer, reject, promised}, assert, done,
   }).then(value => {
     assert.equal(value, 1000, 'promise#resolve works ' + type);
     return reject('testing reject');
-  }).then(null, reason => {
+  }).catch(reason => {
     assert.equal(reason, 'testing reject', 'promise#reject works ' + type);
     let deferred = defer();
     setTimeout(() => deferred.resolve('\\m/'), 10);

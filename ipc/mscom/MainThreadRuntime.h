@@ -9,6 +9,8 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/mscom/COMApartmentRegion.h"
+#include "mozilla/mscom/MainThreadClientInfo.h"
+#include "mozilla/RefPtr.h"
 
 namespace mozilla {
 namespace mscom {
@@ -17,6 +19,7 @@ class MOZ_NON_TEMPORARY_CLASS MainThreadRuntime
 {
 public:
   MainThreadRuntime();
+  ~MainThreadRuntime();
 
   explicit operator bool() const
   {
@@ -28,11 +31,21 @@ public:
   MainThreadRuntime& operator=(MainThreadRuntime&) = delete;
   MainThreadRuntime& operator=(MainThreadRuntime&&) = delete;
 
+  /**
+   * @return 0 if call is in-process or resolving the calling thread failed,
+   *         otherwise contains the thread id of the calling thread.
+   */
+  static DWORD GetClientThreadId();
+
 private:
   HRESULT InitializeSecurity();
 
   STARegion mStaRegion;
   HRESULT mInitResult;
+
+  RefPtr<MainThreadClientInfo>  mClientInfo;
+
+  static MainThreadRuntime* sInstance;
 };
 
 } // namespace mscom

@@ -290,7 +290,7 @@ StyleSheetEditor.prototype = {
     return this._getSourceTextAndPrettify().then((source) => {
       this.sourceLoaded = true;
       return source;
-    }).then(null, e => {
+    }).catch(e => {
       if (this._isDestroyed) {
         console.warn("Could not fetch the source for " +
                      this.styleSheet.href +
@@ -518,7 +518,7 @@ StyleSheetEditor.prototype = {
    * Toggled the disabled state of the underlying stylesheet.
    */
   toggleDisabled: function () {
-    this.styleSheet.toggleDisabled().then(null, e => console.error(e));
+    this.styleSheet.toggleDisabled().catch(e => console.error(e));
   },
 
   /**
@@ -560,7 +560,7 @@ StyleSheetEditor.prototype = {
 
     this._isUpdating = true;
     this.styleSheet.update(this._state.text, this.transitionsEnabled)
-      .then(null, e => console.error(e));
+      .catch(e => console.error(e));
   },
 
   /**

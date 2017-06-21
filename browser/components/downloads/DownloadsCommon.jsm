@@ -467,7 +467,7 @@ this.DownloadsCommon = {
           .getService(Ci.nsIExternalProtocolService)
           .loadUrl(NetUtil.newURI(aFile));
       }
-    }).then(null, Cu.reportError);
+    }).catch(Cu.reportError);
   },
 
   /**
@@ -674,7 +674,7 @@ DownloadsDataCtor.prototype = {
     if (!this._dataLinkInitialized) {
       let promiseList = Downloads.getList(this._isPrivate ? Downloads.PRIVATE
                                                           : Downloads.PUBLIC);
-      promiseList.then(list => list.addView(this)).then(null, Cu.reportError);
+      promiseList.then(list => list.addView(this)).catch(Cu.reportError);
       this._dataLinkInitialized = true;
     }
   },
@@ -708,7 +708,7 @@ DownloadsDataCtor.prototype = {
     let promiseList = Downloads.getList(this._isPrivate ? Downloads.PRIVATE
                                                         : Downloads.PUBLIC);
     promiseList.then(list => list.removeFinished())
-               .then(null, Cu.reportError);
+               .catch(Cu.reportError);
     let indicatorData = this._isPrivate ? PrivateDownloadsIndicatorData
                                         : DownloadsIndicatorData;
     indicatorData.attention = DownloadsCommon.ATTENTION_NONE;

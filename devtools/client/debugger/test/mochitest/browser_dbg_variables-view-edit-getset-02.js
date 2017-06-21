@@ -37,7 +37,7 @@ function test() {
       .then(() => addWatchExpression())
       .then(() => testEdit("\"xlerb\"", "xlerb"))
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
-      .then(null, aError => {
+      .catch(aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
       });
 

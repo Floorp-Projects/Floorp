@@ -31,7 +31,7 @@ function test() {
       .then(() => gClient.close())
       .then(uninstallAddon)
       .then(finish)
-      .then(null, aError => {
+      .catch(aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
       });
   });

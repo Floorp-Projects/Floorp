@@ -778,7 +778,7 @@ CssRuleView.prototype = {
           document.documentElement.namespaceURI;
       this._dummyElement = document.createElementNS(namespaceURI,
                                                    this.element.tagName);
-    }).then(null, promiseWarn);
+    }).catch(promiseWarn);
 
     let elementStyle = new ElementStyle(element, this, this.store,
       this.pageStyle, this.showUserAgentStyles);
@@ -801,7 +801,7 @@ CssRuleView.prototype = {
           this._changed();
         };
       }
-    }).then(null, e => {
+    }).catch(e => {
       if (this._elementStyle === elementStyle) {
         this._stopSelectingElement();
         this._clearRules();
@@ -886,7 +886,7 @@ CssRuleView.prototype = {
       return onEditorsReady.then(() => {
         this.emit("ruleview-refreshed");
       }, e => console.error(e));
-    }).then(null, promiseWarn);
+    }).catch(promiseWarn);
   },
 
   /**

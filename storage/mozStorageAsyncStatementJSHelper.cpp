@@ -61,7 +61,8 @@ AsyncStatementJSHelper::getParams(AsyncStatement *aStatement,
     RefPtr<AsyncStatementParamsHolder> paramsHolder =
       new AsyncStatementParamsHolder(holder);
     aStatement->mStatementParamsHolder =
-      new nsMainThreadPtrHolder<nsIXPConnectJSObjectHolder>(paramsHolder);
+      new nsMainThreadPtrHolder<nsIXPConnectJSObjectHolder>(
+        "AsyncStatement::mStatementParamsHolder", paramsHolder);
   }
 
   JS::Rooted<JSObject*> obj(aCtx);

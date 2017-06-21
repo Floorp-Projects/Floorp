@@ -71,7 +71,7 @@
           yield closeWebIDE(win);
 
           SimpleTest.finish();
-        }).then(null, e => {
+        }).catch(e => {
           ok(false, "Exception: " + e);
           SimpleTest.finish();
         });

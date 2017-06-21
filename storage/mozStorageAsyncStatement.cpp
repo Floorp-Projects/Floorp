@@ -221,7 +221,9 @@ AsyncStatement::~AsyncStatement()
     // NS_ProxyRelase only magic forgets for us if mDBConnection is an
     // nsCOMPtr.  Which it is not; it's an nsRefPtr.
     nsCOMPtr<nsIThread> targetThread(mDBConnection->threadOpenedOn);
-    NS_ProxyRelease(targetThread, mDBConnection.forget());
+    NS_ProxyRelease(
+      "AsyncStatement::mDBConnection",
+      targetThread, mDBConnection.forget());
   }
 }
 
@@ -375,7 +377,7 @@ AsyncStatement::GetState(int32_t *_state)
 //// mozIStorageBindingParams
 
 BOILERPLATE_BIND_PROXIES(
-  AsyncStatement, 
+  AsyncStatement,
   if (mFinalized) return NS_ERROR_UNEXPECTED;
 )
 

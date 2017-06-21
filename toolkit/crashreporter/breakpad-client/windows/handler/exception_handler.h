@@ -69,6 +69,7 @@
 #include <string>
 #include <vector>
 
+#include "windows/common/minidump_callback.h"
 #include "windows/common/ipc_protocol.h"
 #include "windows/crash_generation/crash_generation_client.h"
 #include "common/scoped_ptr.h"
@@ -78,22 +79,6 @@ namespace google_breakpad {
 
 using std::vector;
 using std::wstring;
-
-// These entries store a list of memory regions that the client wants included
-// in the minidump.
-struct AppMemory {
-  ULONG64 ptr;
-  ULONG length;
-
-  bool operator==(const struct AppMemory& other) const {
-    return ptr == other.ptr;
-  }
-
-  bool operator==(const void* other) const {
-    return ptr == reinterpret_cast<ULONG64>(other);
-  }
-};
-typedef std::list<AppMemory> AppMemoryList;
 
 class ExceptionHandler {
  public:
@@ -282,6 +267,11 @@ class ExceptionHandler {
   void RegisterAppMemory(void* ptr, size_t length);
   void UnregisterAppMemory(void* ptr);
 
+  // Calling set_include_context_heap(true) causes heap regions to be included
+  // in the minidump when a crash happens. The heap regions are from the
+  // register values of the crashing context.
+  void set_include_context_heap(bool enabled);
+
  private:
   friend class AutoExceptionHandler;
 
@@ -356,13 +346,6 @@ class ExceptionHandler {
   bool WriteMinidumpWithException(DWORD requesting_thread_id,
                                   EXCEPTION_POINTERS* exinfo,
                                   MDRawAssertionInfo* assertion);
-
-  // This function is used as a callback when calling MinidumpWriteDump,
-  // in order to add additional memory regions to the dump.
-  static BOOL CALLBACK MinidumpWriteDumpCallback(
-      PVOID context,
-      const PMINIDUMP_CALLBACK_INPUT callback_input,
-      PMINIDUMP_CALLBACK_OUTPUT callback_output);
 
   // This function does the actual writing of a minidump.  It is
   // called on the handler thread.  requesting_thread_id is the ID of
@@ -511,6 +494,8 @@ class ExceptionHandler {
 
   // The number of instances of this class.
   static volatile LONG instance_count_;
+
+  bool include_context_heap_;
 
   // disallow copy ctor and operator=
   explicit ExceptionHandler(const ExceptionHandler &);

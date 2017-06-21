@@ -195,23 +195,12 @@ ImageHost::Composite(Compositor* aCompositor,
                      const nsIntRegion* aVisibleRegion,
                      const Maybe<gfx::Polygon>& aGeometry)
 {
-  HostLayerManager* lm = GetLayerManager();
-  if (!lm) {
+  RenderInfo info;
+  if (!PrepareToRender(aCompositor, &info)) {
     return;
   }
 
-  int imageIndex = ChooseImageIndex();
-  if (imageIndex < 0) {
-    return;
-  }
-
-  if (uint32_t(imageIndex) + 1 < mImages.Length()) {
-    lm->CompositeUntil(mImages[imageIndex + 1].mTimeStamp + TimeDuration::FromMilliseconds(BIAS_TIME_MS));
-  }
-
-  TimedImage* img = &mImages[imageIndex];
-  img->mTextureHost->SetTextureSourceProvider(aCompositor);
-  SetCurrentTextureHost(img->mTextureHost);
+  TimedImage* img = info.img;
 
   {
     AutoLockCompositableHost autoLock(this);
@@ -250,20 +239,6 @@ ImageHost::Composite(Compositor* aCompositor,
       diagnosticFlags |= DiagnosticFlags::YCBCR;
     }
 
-    if (mLastFrameID != img->mFrameID || mLastProducerID != img->mProducerID) {
-      if (mAsyncRef) {
-        ImageCompositeNotificationInfo info;
-        info.mImageBridgeProcessId = mAsyncRef.mProcessId;
-        info.mNotification = ImageCompositeNotification(
-          mAsyncRef.mHandle,
-          img->mTimeStamp, lm->GetCompositionTime(),
-          img->mFrameID, img->mProducerID);
-        static_cast<LayerManagerComposite*>(aLayer->GetLayerManager())->
-            AppendImageCompositeNotification(info);
-      }
-      mLastFrameID = img->mFrameID;
-      mLastProducerID = img->mProducerID;
-    }
     aEffectChain.mPrimaryEffect = effect;
     gfx::Rect pictureRect(0, 0, img->mPictureRect.width, img->mPictureRect.height);
     BigImageIterator* it = mCurrentTextureSource->AsBigImageIterator();
@@ -325,6 +300,67 @@ ImageHost::Composite(Compositor* aCompositor,
                                    pictureRect, aClipRect,
                                    aTransform, mFlashCounter);
     }
+  }
+
+  FinishRendering(info);
+}
+
+bool
+ImageHost::PrepareToRender(TextureSourceProvider* aProvider, RenderInfo* aOutInfo)
+{
+  HostLayerManager* lm = GetLayerManager();
+  if (!lm) {
+    return false;
+  }
+
+  int imageIndex = ChooseImageIndex();
+  if (imageIndex < 0) {
+    return false;
+  }
+
+  if (uint32_t(imageIndex) + 1 < mImages.Length()) {
+    lm->CompositeUntil(mImages[imageIndex + 1].mTimeStamp + TimeDuration::FromMilliseconds(BIAS_TIME_MS));
+  }
+
+  TimedImage* img = &mImages[imageIndex];
+  img->mTextureHost->SetTextureSourceProvider(aProvider);
+  SetCurrentTextureHost(img->mTextureHost);
+
+  aOutInfo->imageIndex = imageIndex;
+  aOutInfo->img = img;
+  aOutInfo->host = mCurrentTextureHost;
+  return true;
+}
+
+RefPtr<TextureSource>
+ImageHost::AcquireTextureSource(const RenderInfo& aInfo)
+{
+  MOZ_ASSERT(aInfo.host == mCurrentTextureHost);
+  if (!aInfo.host->AcquireTextureSource(mCurrentTextureSource)) {
+    return nullptr;
+  }
+  return mCurrentTextureSource.get();
+}
+
+void
+ImageHost::FinishRendering(const RenderInfo& aInfo)
+{
+  HostLayerManager* lm = GetLayerManager();
+  TimedImage* img = aInfo.img;
+  int imageIndex = aInfo.imageIndex;
+
+  if (mLastFrameID != img->mFrameID || mLastProducerID != img->mProducerID) {
+    if (mAsyncRef) {
+      ImageCompositeNotificationInfo info;
+      info.mImageBridgeProcessId = mAsyncRef.mProcessId;
+      info.mNotification = ImageCompositeNotification(
+        mAsyncRef.mHandle,
+        img->mTimeStamp, lm->GetCompositionTime(),
+        img->mFrameID, img->mProducerID);
+      lm->AppendImageCompositeNotification(info);
+    }
+    mLastFrameID = img->mFrameID;
+    mLastProducerID = img->mProducerID;
   }
 
   // Update mBias last. This can change which frame ChooseImage(Index) would

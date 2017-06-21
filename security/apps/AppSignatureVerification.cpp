@@ -900,7 +900,8 @@ public:
                         nsIOpenSignedAppFileCallback* aCallback)
     : mTrustedRoot(aTrustedRoot)
     , mJarFile(aJarFile)
-    , mCallback(new nsMainThreadPtrHolder<nsIOpenSignedAppFileCallback>(aCallback))
+    , mCallback(new nsMainThreadPtrHolder<nsIOpenSignedAppFileCallback>(
+        "OpenSignedAppFileTask::mCallback", aCallback))
   {
   }
 
@@ -1402,7 +1403,8 @@ public:
                             nsIVerifySignedDirectoryCallback* aCallback)
     : mTrustedRoot(aTrustedRoot)
     , mDirectory(aUnpackedJar)
-    , mCallback(new nsMainThreadPtrHolder<nsIVerifySignedDirectoryCallback>(aCallback))
+    , mCallback(new nsMainThreadPtrHolder<nsIVerifySignedDirectoryCallback>(
+        "VerifySignedDirectoryTask::mCallback", aCallback))
   {
   }
 

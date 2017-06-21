@@ -1021,7 +1021,7 @@ exports['test panel CSS'] = function(assert, done) {
 
         loader.unload();
         done();
-      }).then(null, assert.fail);
+      }).catch(assert.fail);
     }
   });
 

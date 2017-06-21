@@ -115,7 +115,7 @@ nsHttpActivityDistributor::AddObserver(nsIHttpActivityObserver *aObserver)
 {
     MutexAutoLock lock(mLock);
 
-    ObserverHandle observer(new ObserverHolder(aObserver));
+    ObserverHandle observer(new ObserverHolder("nsIHttpActivityObserver", aObserver));
     if (!mObservers.AppendElement(observer))
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -127,7 +127,7 @@ nsHttpActivityDistributor::RemoveObserver(nsIHttpActivityObserver *aObserver)
 {
     MutexAutoLock lock(mLock);
 
-    ObserverHandle observer(new ObserverHolder(aObserver));
+    ObserverHandle observer(new ObserverHolder("nsIHttpActivityObserver", aObserver));
     if (!mObservers.RemoveElement(observer))
         return NS_ERROR_FAILURE;
 

@@ -49,7 +49,7 @@ DocGroup::~DocGroup()
   MOZ_ASSERT(mDocuments.IsEmpty());
   if (!NS_IsMainThread()) {
     nsIEventTarget* target = EventTargetFor(TaskCategory::Other);
-    NS_ProxyRelease(target, mReactionsStack.forget());
+    NS_ProxyRelease("DocGroup::mReactionsStack", target, mReactionsStack.forget());
   }
 
   mTabGroup->mDocGroups.RemoveEntry(mKey);

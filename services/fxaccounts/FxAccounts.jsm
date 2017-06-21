@@ -1180,7 +1180,7 @@ FxAccountsInternal.prototype = {
         // is yet to start up.)  This might cause "A promise chain failed to
         // handle a rejection" messages, so add an error handler directly
         // on the promise to log the error.
-        currentState.whenVerifiedDeferred.promise.then(null, err => {
+        currentState.whenVerifiedDeferred.promise.catch(err => {
           log.info("the wait for user verification was stopped: " + err);
         });
       }

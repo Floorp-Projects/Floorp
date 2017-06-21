@@ -134,7 +134,7 @@ var { helpers, assert } = (function () {
     var loaded = helpers.listenOnce(options.browser, "load", true).then(function (ev) {
       var reply = callback.call(null, options);
 
-      return Promise.resolve(reply).then(null, function (error) {
+      return Promise.resolve(reply).catch(function (error) {
         ok(false, error);
       }).then(function () {
         tabbrowser.removeTab(options.tab);
@@ -330,7 +330,7 @@ var { helpers, assert } = (function () {
 
         var reply = callback.call(null, innerOptions);
 
-        return Promise.resolve(reply).then(null, function (error) {
+        return Promise.resolve(reply).catch(function (error) {
           ok(false, error);
           console.error(error);
         }).then(function () {

@@ -621,7 +621,8 @@ GetFilesHelperParent::GetFilesHelperParent(const nsID& aUUID,
 
 GetFilesHelperParent::~GetFilesHelperParent()
 {
-  NS_ReleaseOnMainThread(mContentParent.forget());
+  NS_ReleaseOnMainThread(
+    "GetFilesHelperParent::mContentParent", mContentParent.forget());
 }
 
 /* static */ already_AddRefed<GetFilesHelperParent>

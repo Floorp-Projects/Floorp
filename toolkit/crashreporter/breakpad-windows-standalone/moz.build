@@ -17,10 +17,12 @@ LOCAL_INCLUDES += [
 include('/toolkit/crashreporter/google-breakpad/src/common/windows/objs.mozbuild')
 include('/toolkit/crashreporter/breakpad-client/windows/handler/objs.mozbuild')
 include('/toolkit/crashreporter/breakpad-client/windows/crash_generation/objs.mozbuild')
+include('/toolkit/crashreporter/breakpad-client/windows/common/objs.mozbuild')
 
 SOURCES += objs_common
 SOURCES += objs_crash_generation
 SOURCES += objs_handler
+SOURCES += objs_client_common
 
 USE_STATIC_LIBS = True
 

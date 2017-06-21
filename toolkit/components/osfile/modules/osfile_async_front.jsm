@@ -374,9 +374,9 @@ var Scheduler = this.Scheduler = {
   push: function(code) {
     let promise = this.queue.then(code);
     // By definition, |this.queue| can never reject.
-    this.queue = promise.then(null, () => undefined);
+    this.queue = promise.catch(() => undefined);
     // Fork |promise| to ensure that uncaught errors are reported
-    return promise.then(null, null);
+    return promise.then();
   },
 
   /**

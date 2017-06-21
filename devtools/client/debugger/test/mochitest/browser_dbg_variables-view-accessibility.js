@@ -17,7 +17,7 @@ function test() {
     gDebugger = gPanel.panelWin;
     gVariablesView = gDebugger.DebuggerView.Variables;
 
-    performTest().then(null, aError => {
+    performTest().catch(aError => {
       ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
     });
   });

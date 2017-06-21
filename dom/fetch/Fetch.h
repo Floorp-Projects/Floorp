@@ -8,7 +8,6 @@
 #define mozilla_dom_Fetch_h
 
 #include "nsAutoPtr.h"
-#include "nsIInputStreamPump.h"
 #include "nsIStreamLoader.h"
 
 #include "nsCOMPtr.h"
@@ -20,7 +19,6 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/RequestBinding.h"
-#include "mozilla/dom/workers/bindings/WorkerHolder.h"
 
 class nsIGlobalObject;
 class nsIEventTarget;
@@ -72,7 +70,16 @@ ExtractByteStreamFromBody(const fetch::BodyInit& aBodyInit,
                           nsCString& aContentType,
                           uint64_t& aContentLength);
 
-template <class Derived> class FetchBodyWorkerHolder;
+template <class Derived> class FetchBodyConsumer;
+
+enum FetchConsumeType
+{
+  CONSUME_ARRAYBUFFER,
+  CONSUME_BLOB,
+  CONSUME_FORMDATA,
+  CONSUME_JSON,
+  CONSUME_TEXT,
+};
 
 /*
  * FetchBody's body consumption uses nsIInputStreamPump to read from the
@@ -108,8 +115,13 @@ template <class Derived> class FetchBodyWorkerHolder;
  * The pump is always released on the main thread.
  */
 template <class Derived>
-class FetchBody {
+class FetchBody
+{
 public:
+  friend class FetchBodyConsumer<Derived>;
+
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
   bool
   BodyUsed() const { return mBodyUsed; }
 
@@ -144,17 +156,6 @@ public:
   }
 
   // Utility public methods accessed by various runnables.
-  void
-  BeginConsumeBodyMainThread();
-
-  void
-  ContinueConsumeBody(nsresult aStatus, uint32_t aLength, uint8_t* aResult);
-
-  void
-  ContinueConsumeBlobBody(BlobImpl* aBlobImpl);
-
-  void
-  CancelPump();
 
   void
   SetBodyUsed()
@@ -162,15 +163,17 @@ public:
     mBodyUsed = true;
   }
 
-  // Always set whenever the FetchBody is created on the worker thread.
-  workers::WorkerPrivate* mWorkerPrivate;
-
-  // Set when consuming the body is attempted on a worker.
-  // Unset when consumption is done/aborted.
-  nsAutoPtr<workers::WorkerHolder> mWorkerHolder;
+  const nsCString&
+  MimeType() const
+  {
+    return mMimeType;
+  }
 
 protected:
   nsCOMPtr<nsIGlobalObject> mOwner;
+
+  // Always set whenever the FetchBody is created on the worker thread.
+  workers::WorkerPrivate* mWorkerPrivate;
 
   explicit FetchBody(nsIGlobalObject* aOwner);
 
@@ -178,39 +181,16 @@ protected:
 
   void
   SetMimeType();
-private:
-  enum ConsumeType
-  {
-    CONSUME_ARRAYBUFFER,
-    CONSUME_BLOB,
-    CONSUME_FORMDATA,
-    CONSUME_JSON,
-    CONSUME_TEXT,
-  };
 
+private:
   Derived*
   DerivedClass() const
   {
     return static_cast<Derived*>(const_cast<FetchBody*>(this));
   }
 
-  nsresult
-  BeginConsumeBody();
-
   already_AddRefed<Promise>
-  ConsumeBody(ConsumeType aType, ErrorResult& aRv);
-
-  bool
-  AddRefObject();
-
-  void
-  ReleaseObject();
-
-  bool
-  RegisterWorkerHolder();
-
-  void
-  UnregisterWorkerHolder();
+  ConsumeBody(FetchConsumeType aType, ErrorResult& aRv);
 
   bool
   IsOnTargetThread()
@@ -227,15 +207,6 @@ private:
   // Only ever set once, always on target thread.
   bool mBodyUsed;
   nsCString mMimeType;
-
-  // Only touched on target thread.
-  ConsumeType mConsumeType;
-  RefPtr<Promise> mConsumePromise;
-#ifdef DEBUG
-  bool mReadDone;
-#endif
-
-  nsMainThreadPtrHandle<nsIInputStreamPump> mConsumeBodyPump;
 
   // The main-thread event target for runnable dispatching.
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;

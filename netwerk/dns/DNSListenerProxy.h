@@ -28,7 +28,8 @@ public:
     // sometimes it's a threadsafe object like nsSOCKSSocketInfo. Use a main-
     // thread pointer holder, but disable strict enforcement of thread invariants.
     // The AddRef implementation of XPCWrappedJS will assert if we go wrong here.
-    : mListener(new nsMainThreadPtrHolder<nsIDNSListener>(aListener, false))
+    : mListener(new nsMainThreadPtrHolder<nsIDNSListener>(
+        "DNSListenerProxy::mListener", aListener, false))
     , mTargetThread(aTargetThread)
   { }
 

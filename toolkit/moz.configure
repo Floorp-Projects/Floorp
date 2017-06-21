@@ -749,6 +749,7 @@ def stylo(stylo_config, bindgen_config_paths, bindgen_enabled):
 
 set_config('MOZ_STYLO', stylo.build)
 set_define('MOZ_STYLO', stylo.build)
+set_config('MOZ_STYLO_ENABLE', stylo_config.enable)
 set_define('MOZ_STYLO_ENABLE', stylo_config.enable)
 
 set_config('MOZ_LIBCLANG_PATH', stylo.libclang_path)

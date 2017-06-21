@@ -8,7 +8,8 @@
 
 define(function (require, exports, module) {
   const { DOM: dom, createFactory, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
-  const TreeView = createFactory(require("devtools/client/shared/components/tree/tree-view"));
+  const TreeViewClass = require("devtools/client/shared/components/tree/tree-view");
+  const TreeView = createFactory(TreeViewClass);
 
   const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
   const { createFactories } = require("devtools/client/shared/react-utils");
@@ -20,6 +21,10 @@ define(function (require, exports, module) {
   const { div } = dom;
   const AUTO_EXPAND_MAX_SIZE = 100 * 1024;
   const AUTO_EXPAND_MAX_LEVEL = 7;
+
+  function isObject(value) {
+    return Object(value) === value;
+  }
 
   /**
    * This template represents the 'JSON' panel. The panel is
@@ -65,33 +70,11 @@ define(function (require, exports, module) {
       return json.toLowerCase().indexOf(this.props.searchFilter.toLowerCase()) >= 0;
     },
 
-    getExpandedNodes: function (object, path = "", level = 0) {
-      if (typeof object != "object") {
-        return null;
-      }
-
-      if (level > AUTO_EXPAND_MAX_LEVEL) {
-        return null;
-      }
-
-      let expandedNodes = new Set();
-      for (let prop in object) {
-        let nodePath = path + "/" + prop;
-        expandedNodes.add(nodePath);
-
-        let nodes = this.getExpandedNodes(object[prop], nodePath, level + 1);
-        if (nodes) {
-          expandedNodes = new Set([...expandedNodes, ...nodes]);
-        }
-      }
-      return expandedNodes;
-    },
-
     renderValue: props => {
       let member = props.member;
 
-      // Hide object summary when object is expanded (bug 1244912).
-      if (typeof member.value == "object" && member.open) {
+      // Hide object summary when non-empty object is expanded (bug 1244912).
+      if (isObject(member.value) && member.hasChildren && member.open) {
         return null;
       }
 
@@ -112,7 +95,10 @@ define(function (require, exports, module) {
       // Expand the document by default if its size isn't bigger than 100KB.
       let expandedNodes = new Set();
       if (this.props.jsonTextLength <= AUTO_EXPAND_MAX_SIZE) {
-        expandedNodes = this.getExpandedNodes(this.props.data);
+        expandedNodes = TreeViewClass.getExpandedNodes(
+          this.props.data,
+          {maxLevel: AUTO_EXPAND_MAX_LEVEL}
+        );
       }
 
       // Render tree component.
@@ -131,7 +117,7 @@ define(function (require, exports, module) {
       let data = this.props.data;
 
       try {
-        if (typeof data == "object") {
+        if (isObject(data)) {
           content = this.renderTree();
         } else {
           content = div({className: "jsonParseError"},

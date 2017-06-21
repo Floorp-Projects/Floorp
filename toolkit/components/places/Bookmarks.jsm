@@ -769,7 +769,7 @@ var Bookmarks = Object.freeze({
 
         // We don't wait for the frecency calculation.
         if (urls && urls.length) {
-          updateFrecency(db, urls, true).then(null, Cu.reportError);
+          updateFrecency(db, urls, true).catch(Cu.reportError);
         }
       }
     );

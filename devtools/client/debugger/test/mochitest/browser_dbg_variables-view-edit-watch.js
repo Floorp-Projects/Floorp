@@ -46,7 +46,7 @@ function test() {
       .then(() => testExprFinalDeletion("ermahgerd", "44"))
       .then(() => testIntegrity7())
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
-      .then(null, aError => {
+      .catch(aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
       });
 

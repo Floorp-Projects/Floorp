@@ -470,23 +470,6 @@ public:
   bool NotifyNotUsedAfterComposition(TextureHost* aTextureHost) override;
 
   /**
-   * Each Compositor has a unique ID.
-   * This ID is used to keep references to each Compositor in a map accessed
-   * from the compositor thread only, so that async compositables can find
-   * the right compositor parent and schedule compositing even if the compositor
-   * changed.
-   */
-  uint32_t GetCompositorID() const
-  {
-    return mCompositorID;
-  }
-  void SetCompositorID(uint32_t aID)
-  {
-    MOZ_ASSERT(mCompositorID == 0, "The compositor ID must be set only once.");
-    mCompositorID = aID;
-  }
-
-  /**
    * Notify the compositor that composition is being paused. This allows the
    * compositor to temporarily release any resources.
    * Between calling Pause and Resume, compositing may fail.
@@ -587,7 +570,6 @@ protected:
    */
   TimeStamp mLastCompositionEndTime;
 
-  uint32_t mCompositorID;
   DiagnosticTypes mDiagnosticTypes;
   CompositorBridgeParent* mParent;
 

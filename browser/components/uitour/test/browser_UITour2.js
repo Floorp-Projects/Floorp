@@ -63,7 +63,7 @@ var tests = [
           });
         }, "Info should be shown after showInfo() for fixed menu panel items");
       });
-    }).then(null, Components.utils.reportError);
+    }).catch(Components.utils.reportError);
   },
   taskify(async function test_bookmarks_menu() {
     let bookmarksMenuButton = document.getElementById("bookmarks-menu-button");

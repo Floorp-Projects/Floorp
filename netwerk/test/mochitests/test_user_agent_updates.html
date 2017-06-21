@@ -277,7 +277,7 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
             }
           );
         }
-      ).then(null,
+      ).catch(
         (reason) => {
           throw reason
         }

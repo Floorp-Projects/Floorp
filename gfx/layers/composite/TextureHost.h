@@ -172,6 +172,13 @@ public:
     MOZ_ASSERT(mCompositableCount >= 0);
   }
 
+  // When iterating as a BigImage, this creates temporary TextureSources wrapping
+  // individual tiles.
+  virtual RefPtr<TextureSource> ExtractCurrentTile() {
+    NS_WARNING("Implementation does not expose tile sources");
+    return nullptr;
+  }
+
   int NumCompositableRefs() const { return mCompositableCount; }
 
 protected:
@@ -445,6 +452,14 @@ public:
   virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) = 0;
 
   /**
+   * Called when preparing the rendering pipeline for advanced-layers. This is
+   * a lockless version of BindTextureSource.
+   */
+  virtual bool AcquireTextureSource(CompositableTextureSourceRef& aTexture) {
+    return false;
+  }
+
+  /**
    * Called when another TextureHost will take over.
    */
   virtual void UnbindTextureSource();
@@ -695,6 +710,7 @@ public:
   virtual void PrepareTextureSource(CompositableTextureSourceRef& aTexture) override;
 
   virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
+  virtual bool AcquireTextureSource(CompositableTextureSourceRef& aTexture) override;
 
   virtual void UnbindTextureSource() override;
 
@@ -740,7 +756,8 @@ public:
 
 protected:
   bool Upload(nsIntRegion *aRegion = nullptr);
-  bool MaybeUpload(nsIntRegion *aRegion = nullptr);
+  bool UploadIfNeeded();
+  bool MaybeUpload(nsIntRegion *aRegion);
   bool EnsureWrappingTextureSource();
 
   virtual void UpdatedInternal(const nsIntRegion* aRegion = nullptr) override;
