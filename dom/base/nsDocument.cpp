@@ -6535,9 +6535,8 @@ nsIDocument::ImportNode(nsINode& aNode, bool aDeep, ErrorResult& rv) const
     case nsIDOMNode::DOCUMENT_TYPE_NODE:
     {
       nsCOMPtr<nsINode> newNode;
-      nsCOMArray<nsINode> nodesWithProperties;
-      rv = nsNodeUtils::Clone(imported, aDeep, mNodeInfoManager,
-                              nodesWithProperties, getter_AddRefs(newNode));
+      rv = nsNodeUtils::Clone(imported, aDeep, mNodeInfoManager, nullptr,
+                              getter_AddRefs(newNode));
       if (rv.Failed()) {
         return nullptr;
       }
