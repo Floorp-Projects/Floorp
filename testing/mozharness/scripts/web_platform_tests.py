@@ -62,6 +62,24 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
             "default": False,
             "help": "Tries to enable the WebRender compositor."}
          ],
+        [["--headless"], {
+            "action": "store_true",
+            "dest": "headless",
+            "default": False,
+            "help": "Run tests in headless mode."}
+         ],
+        [["--headless-width"], {
+            "action": "store",
+            "dest": "headless_width",
+            "default": "1600",
+            "help": "Specify headless fake screen width (default: 1600)."}
+         ],
+        [["--headless-height"], {
+            "action": "store",
+            "dest": "headless_height",
+            "default": "1200",
+            "help": "Specify headless fake screen height (default: 1200)."}
+         ],
         [["--single-stylo-traversal"], {
             "action": "store_true",
             "dest": "single_stylo_traversal",
@@ -266,6 +284,10 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
             env['MOZ_LAYERS_ALLOW_SOFTWARE_GL'] = '1'
         if self.config['enable_webrender']:
             env['MOZ_WEBRENDER'] = '1'
+        if self.config['headless']:
+            env['MOZ_HEADLESS'] = '1'
+            env['MOZ_HEADLESS_WIDTH'] = self.config['headless_width']
+            env['MOZ_HEADLESS_HEIGHT'] = self.config['headless_height']
 
         if self.config['single_stylo_traversal']:
             env['STYLO_THREADS'] = '1'
