@@ -8,6 +8,7 @@
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/ThrottledEventQueue.h"
+#include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIThreadPool.h"
 #include "nsThreadUtils.h"
