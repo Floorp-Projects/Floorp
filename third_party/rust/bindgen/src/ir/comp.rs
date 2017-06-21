@@ -293,18 +293,15 @@ impl Bitfield {
 
     /// Get the mask value that when &'ed with this bitfield's allocation unit
     /// produces this bitfield's value.
-    ///
-    /// TODO(emilio): This should probably use the target's word size, and what
-    /// about bitfields that are bigger than that?
-    pub fn mask(&self) -> usize {
+    pub fn mask(&self) -> u64 {
         use std::mem;
-        use std::usize;
+        use std::u64;
 
         let unoffseted_mask =
-            if self.width() as usize == mem::size_of::<usize>() * 8 {
-                usize::MAX
+            if self.width() as u64 == mem::size_of::<u64>() as u64 * 8 {
+                u64::MAX
             } else {
-                ((1usize << self.width()) - 1usize)
+                ((1u64 << self.width()) - 1u64)
             };
 
         unoffseted_mask << self.offset_into_unit()
@@ -488,8 +485,9 @@ fn bitfields_to_allocation_units<E, I>(ctx: &BindgenContext,
         where E: Extend<Field>
     {
         *bitfield_unit_count += 1;
-        let layout = Layout::new(bytes_from_bits_pow2(unit_size_in_bits),
-                                 bytes_from_bits_pow2(unit_align_in_bits));
+        let align = bytes_from_bits_pow2(unit_align_in_bits);
+        let size = align_to(unit_size_in_bits, align * 8) / 8;
+        let layout = Layout::new(size, align);
         fields.extend(Some(Field::Bitfields(BitfieldUnit {
             nth: *bitfield_unit_count,
             layout: layout,
