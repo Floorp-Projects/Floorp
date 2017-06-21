@@ -141,6 +141,7 @@ public class TelemetrySyncPingBuilder extends TelemetryLocalPingBuilder {
 
     @Override
     public TelemetryLocalPing build() {
+        payload.put("when", System.currentTimeMillis());
         return new TelemetryLocalPing(payload, docID);
     }
 
