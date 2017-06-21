@@ -603,28 +603,14 @@ ProfilingFrameIterator::initFromExitFP()
     MOZ_ASSERT(!done());
 }
 
-typedef JS::ProfilingFrameIterator::RegisterState RegisterState;
-
-ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
-                                               const RegisterState& state)
-  : activation_(&activation),
-    code_(nullptr),
-    codeRange_(nullptr),
-    callerFP_(nullptr),
-    callerPC_(nullptr),
-    stackAddress_(nullptr),
-    exitReason_(ExitReason::Fixed::None)
+bool
+js::wasm::StartUnwinding(const WasmActivation& activation, const RegisterState& registers,
+                         UnwindState* unwindState, bool* unwoundCaller)
 {
-    // In the case of ImportJitExit, the fp register may be temporarily
-    // clobbered on return from Ion so always use activation.fp when it is set.
-    if (activation.exitFP()) {
-        initFromExitFP();
-        return;
-    }
-
-    Frame* fp = (Frame*)state.fp;
-    uint8_t* pc = (uint8_t*)state.pc;
-    void** sp = (void**)state.sp;
+    // Shorthands.
+    uint8_t* const pc = (uint8_t*) registers.pc;
+    Frame* const fp = (Frame*) registers.fp;
+    void** const sp = (void**) registers.sp;
 
     // Get the CodeRange describing pc and the base address to which the
     // CodeRange is relative. If the pc is not in a wasm module or a builtin
@@ -632,14 +618,13 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
     // that pushed the WasmActivation.
     const CodeRange* codeRange;
     uint8_t* codeBase;
-    code_ = activation_->compartment()->wasm.lookupCode(pc);
-    if (code_) {
+    const Code* code = activation.compartment()->wasm.lookupCode(pc);
+    if (code) {
         const CodeSegment* codeSegment;
-        codeRange = code_->lookupRange(pc, &codeSegment);
+        codeRange = code->lookupRange(pc, &codeSegment);
         codeBase = codeSegment->base();
     } else if (!LookupBuiltinThunk(pc, &codeRange, &codeBase)) {
-        MOZ_ASSERT(done());
-        return;
+        return false;
     }
 
     // When the pc is inside the prologue/epilogue, the innermost call's Frame
@@ -667,6 +652,12 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
         offsetFromEntry = offsetInCode - codeRange->begin();
     }
 
+    // Most cases end up unwinding to the caller state; not unwinding is the
+    // exception here.
+    *unwoundCaller = true;
+
+    Frame* fixedFP = nullptr;
+    void* fixedPC = nullptr;
     switch (codeRange->kind()) {
       case CodeRange::Function:
       case CodeRange::FarJumpIsland:
@@ -677,91 +668,130 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
         if (offsetFromEntry == BeforePushRetAddr || codeRange->isThunk()) {
             // The return address is still in lr and fp holds the caller's fp.
-            callerPC_ = state.lr;
-            callerFP_ = fp;
-            AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
+            fixedPC = (uint8_t*) registers.lr;
+            fixedFP = fp;
+            AssertMatchesCallSite(activation, fixedPC, fixedFP);
         } else
 #endif
         if (offsetFromEntry == PushedRetAddr || codeRange->isThunk()) {
             // The return address has been pushed on the stack but fp still
             // points to the caller's fp.
-            callerPC_ = sp[0];
-            callerFP_ = fp;
-            AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
+            fixedPC = sp[0];
+            fixedFP = fp;
+            AssertMatchesCallSite(activation, fixedPC, fixedFP);
         } else if (offsetFromEntry >= PushedTLS && offsetFromEntry < PushedExitReason) {
             // The return address and caller's TLS have been pushed on the
             // stack; fp is still the caller's fp.
-            callerPC_ = sp[1];
-            callerFP_ = fp;
-            AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
+            fixedPC = sp[1];
+            fixedFP = fp;
+            AssertMatchesCallSite(activation, fixedPC, fixedFP);
         } else if (offsetFromEntry == PushedExitReason) {
             // The return address, caller's TLS and exit reason have been
             // pushed on the stack; fp is still the caller's fp.
-            callerPC_ = sp[2];
-            callerFP_ = fp;
-            AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
+            fixedPC = sp[2];
+            fixedFP = fp;
+            AssertMatchesCallSite(activation, fixedPC, fixedFP);
         } else if (offsetFromEntry == PushedFP) {
             // The full Frame has been pushed; fp is still the caller's fp.
             MOZ_ASSERT(fp == reinterpret_cast<Frame*>(sp)->callerFP);
-            callerPC_ = reinterpret_cast<Frame*>(sp)->returnAddress;
-            callerFP_ = fp;
-            AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
+            fixedPC = reinterpret_cast<Frame*>(sp)->returnAddress;
+            fixedFP = fp;
+            AssertMatchesCallSite(activation, fixedPC, fixedFP);
         } else if (offsetInCode == codeRange->ret() - PoppedFP) {
-            // The callerFP field of the Frame has been popped into fp, but the
+            // The fixedFP field of the Frame has been popped into fp, but the
             // exit reason hasn't been popped yet.
-            callerPC_ = sp[2];
-            callerFP_ = fp;
-            AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
+            fixedPC = sp[2];
+            fixedFP = fp;
+            AssertMatchesCallSite(activation, fixedPC, fixedFP);
         } else if (offsetInCode == codeRange->ret() - PoppedExitReason) {
-            // The callerFP field of the Frame has been popped into fp, and the
+            // The fixedFP field of the Frame has been popped into fp, and the
             // exit reason has been popped.
-            callerPC_ = sp[1];
-            callerFP_ = fp;
-            AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
+            fixedPC = sp[1];
+            fixedFP = fp;
+            AssertMatchesCallSite(activation, fixedPC, fixedFP);
         } else if (offsetInCode == codeRange->ret()) {
-            // Both the TLS and callerFP fields have been popped and fp now
+            // Both the TLS and fixedFP fields have been popped and fp now
             // points to the caller's frame.
-            callerPC_ = sp[0];
-            callerFP_ = fp;
-            AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
+            fixedPC = sp[0];
+            fixedFP = fp;
+            AssertMatchesCallSite(activation, fixedPC, fixedFP);
         } else {
             // Not in the prologue/epilogue.
-            callerPC_ = fp->returnAddress;
-            callerFP_ = fp->callerFP;
-            AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
+            fixedPC = pc;
+            fixedFP = fp;
+            *unwoundCaller = false;
+            AssertMatchesCallSite(activation, fp->returnAddress, fp->callerFP);
+            break;
         }
         break;
       case CodeRange::DebugTrap:
       case CodeRange::Inline:
         // Inline code stubs execute after the prologue/epilogue have completed
-        // so we can simply unwind based on fp.
-        callerPC_ = fp->returnAddress;
-        callerFP_ = fp->callerFP;
-        AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
+        // so pc/fp contains the right values here.
+        fixedPC = pc;
+        fixedFP = fp;
+        *unwoundCaller = false;
+        AssertMatchesCallSite(activation, fp->returnAddress, fp->callerFP);
         break;
       case CodeRange::Entry:
         // The entry trampoline is the final frame in an WasmActivation. The entry
         // trampoline also doesn't GeneratePrologue/Epilogue so we can't use
         // the general unwinding logic above.
-        callerPC_ = nullptr;
-        callerFP_ = nullptr;
         break;
       case CodeRange::Throw:
         // The throw stub executes a small number of instructions before popping
         // the entire activation. To simplify testing, we simply pretend throw
         // stubs have already popped the entire stack.
-        MOZ_ASSERT(done());
-        return;
+        return false;
       case CodeRange::Interrupt:
         // When the PC is in the async interrupt stub, the fp may be garbage and
         // so we cannot blindly unwind it. Since the percent of time spent in
         // the interrupt stub is extremely small, just ignore the stack.
+        return false;
+    }
+
+    unwindState->code = code;
+    unwindState->codeRange = codeRange;
+    unwindState->fp = fixedFP;
+    unwindState->pc = fixedPC;
+    return true;
+}
+
+ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
+                                               const RegisterState& state)
+  : activation_(&activation),
+    code_(nullptr),
+    codeRange_(nullptr),
+    callerFP_(nullptr),
+    callerPC_(nullptr),
+    stackAddress_(nullptr),
+    exitReason_(ExitReason::Fixed::None)
+{
+    // In the case of ImportJitExit, the fp register may be temporarily
+    // clobbered on return from Ion so always use activation.fp when it is set.
+    if (activation.exitFP()) {
+        initFromExitFP();
+        return;
+    }
+
+    bool unwoundCaller;
+    UnwindState unwindState;
+    if (!StartUnwinding(*activation_, state, &unwindState, &unwoundCaller)) {
         MOZ_ASSERT(done());
         return;
     }
 
-    codeRange_ = codeRange;
-    stackAddress_ = sp;
+    if (unwoundCaller) {
+        callerFP_ = unwindState.fp;
+        callerPC_ = unwindState.pc;
+    } else {
+        callerFP_ = unwindState.fp->callerFP;
+        callerPC_ = unwindState.fp->returnAddress;
+    }
+
+    code_ = unwindState.code;
+    codeRange_ = unwindState.codeRange;
+    stackAddress_ = state.sp;
     MOZ_ASSERT(!done());
 }
 
