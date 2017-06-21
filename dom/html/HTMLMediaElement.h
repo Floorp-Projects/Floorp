@@ -959,7 +959,6 @@ protected:
    * Called by InitializeDecoderForChannel/InitializeDecoderAsClone.
    */
   nsresult FinishDecoderSetup(MediaDecoder* aDecoder,
-                              MediaResource* aStream,
                               nsIStreamListener **aListener);
 
   /**
