@@ -215,7 +215,6 @@ task_description_schema = Schema({
 
         # the exit status code that indicates the task should be retried
         Optional('retry-exit-status'): int,
-
     }, {
         Required('implementation'): 'generic-worker',
         Required('os'): Any('windows', 'macosx'),
