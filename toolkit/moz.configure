@@ -631,7 +631,7 @@ def stylo_config(value):
     # The default is to not build Stylo at all.
     if value.origin == 'default':
         pass
-    elif value == 'build':
+    elif len(value) and value[0] == 'build':
         build_stylo = True
     elif bool(value):
         build_stylo = True
