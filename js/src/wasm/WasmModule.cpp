@@ -961,8 +961,10 @@ Module::instantiate(JSContext* cx,
         return false;
 
     auto globalSegment = GlobalSegment::create(metadata().globalDataLength);
-    if (!globalSegment)
+    if (!globalSegment) {
+        ReportOutOfMemory(cx);
         return false;
+    }
 
     SharedCode code(code_);
 
@@ -977,12 +979,16 @@ Module::instantiate(JSContext* cx,
                                                    *bytecode_,
                                                    linkData_.linkData(Tier::Baseline),
                                                    metadata());
-            if (!codeSegment)
+            if (!codeSegment) {
+                ReportOutOfMemory(cx);
                 return false;
+            }
 
             code = js_new<Code>(Move(codeSegment), metadata());
-            if (!code)
+            if (!code) {
+                ReportOutOfMemory(cx);
                 return false;
+            }
         }
     }
 
