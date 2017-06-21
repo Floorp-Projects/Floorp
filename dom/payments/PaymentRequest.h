@@ -43,9 +43,9 @@ public:
                 const nsAString& aStr,
                 nsAString& aErrorMsg);
   static bool
-  IsPositiveNumber(const nsAString& aItem,
-                   const nsAString& aStr,
-                   nsAString& aErrorMsg);
+  IsNonNegativeNumber(const nsAString& aItem,
+                      const nsAString& aStr,
+                      nsAString& aErrorMsg);
 
   static bool
   IsValidDetailsInit(const PaymentDetailsInit& aDetails,
