@@ -759,6 +759,11 @@ D3D11DXVA2Manager::InitInternal(layers::KnowsCompositor* aKnowsCompositor,
     }
   }
 
+  RefPtr<ID3D10Multithread> mt;
+  hr = mDevice->QueryInterface((ID3D10Multithread**)getter_AddRefs(mt));
+  NS_ENSURE_TRUE(SUCCEEDED(hr) && mt, hr);
+  mt->SetMultithreadProtected(TRUE);
+
   mDevice->GetImmediateContext(getter_AddRefs(mContext));
 
   hr = wmf::MFCreateDXGIDeviceManager(&mDeviceManagerToken,
