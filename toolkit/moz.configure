@@ -659,9 +659,9 @@ option('--disable-stylo-build-bindgen',
        help='Enable build-time bindgen for Stylo')
 
 option('--with-libclang-path', nargs=1,
-       help='Absolute path to Clang/LLVM libraries for Stylo (version 3.9.x')
+       help='Absolute path to a directory containing Clang/LLVM libraries for Stylo (version 3.9.x or above)')
 option('--with-clang-path', nargs=1,
-       help='Absolute path to a Clang binary for Stylo bindgen (version 3.9.x)')
+       help='Absolute path to a Clang binary for Stylo bindgen (version 3.9.x or above)')
 
 def invoke_llvm_config(llvm_config, *options):
     '''Invoke llvm_config with the given options and return the first line of
@@ -687,6 +687,7 @@ def check_minimum_llvm_config_version(llvm_config):
 @depends(stylo_config, '--enable-stylo-build-bindgen',
          llvm_config, '--with-libclang-path', '--with-clang-path',
          host)
+@imports('os.path')
 @imports(_from='textwrap', _import='dedent')
 def bindgen_config_paths(stylo_config, bindgen_enabled,
                          llvm_config, libclang_path, clang_path,
@@ -716,6 +717,18 @@ def bindgen_config_paths(stylo_config, bindgen_enabled,
         die(dedent('''\
         You must provide both of --with-libclang-path and --with-clang-path
         or neither of them.'''))
+
+    if not os.path.exists(libclang_path) or \
+       not os.path.isdir(libclang_path):
+        die(dedent('''\
+        The argument to --with-libclang-path is not a directory: {}
+        '''.format(libclang_path)))
+
+    if not os.path.exists(clang_path) or \
+       not os.path.isfile(clang_path):
+        die(dedent('''\
+        The argument to --with-clang-path is not a file: {}
+        '''.format(clang_path)))
 
     return namespace(
         libclang_path=libclang_path[0],
