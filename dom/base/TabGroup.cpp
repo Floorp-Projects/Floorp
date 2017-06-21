@@ -26,8 +26,6 @@ static StaticRefPtr<TabGroup> sChromeTabGroup;
 TabGroup::TabGroup(bool aIsChrome)
  : mLastWindowLeft(false)
  , mThrottledQueuesInitialized(false)
- , mNumOfIndexedDBTransactions(0)
- , mNumOfIndexedDBDatabases(0)
  , mIsChrome(aIsChrome)
  , mForegroundCount(0)
 {
