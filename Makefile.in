@@ -147,7 +147,12 @@ endif
 
 .PHONY: tup
 tup:
-	$(call BUILDSTATUS,TIERS make tup)
+	$(call BUILDSTATUS,TIERS $(if $(MOZ_ARTIFACT_BUILDS),artifact )make tup)
+ifdef MOZ_ARTIFACT_BUILDS
+	$(call BUILDSTATUS,TIER_START artifact)
+	$(MAKE) recurse_artifact
+	$(call BUILDSTATUS,TIER_FINISH artifact)
+endif
 	$(call BUILDSTATUS,TIER_START make)
 	$(MAKE) buildid.h source-repo.h
 	$(call BUILDSTATUS,TIER_FINISH make)
