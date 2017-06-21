@@ -155,19 +155,16 @@ def make_task_description(config, jobs):
                                dep_job.dependencies["docker-image"]
                                }
         dependencies.update(docker_dependencies)
-        signing_name = "build-signing"
-        if job.get('locale'):
-            signing_name = "nightly-l10n-signing"
-        signing_dependencies = {signing_name:
-                                dep_job.dependencies[signing_name]
+        signing_dependencies = {"build-signing":
+                                dep_job.dependencies["build-signing"]
                                 }
         dependencies.update(signing_dependencies)
-
-        build_name = "build"
-        if job.get('locale'):
-            build_name = "unsigned-repack"
+        repackage_dependencies = {"repackage":
+                                  dep_job.label
+                                  }
+        dependencies.update(repackage_dependencies)
         build_dependencies = {"build":
-                              dep_job.dependencies[build_name]
+                              dep_job.dependencies["build-signing"].replace("signing-", "build-")
                               }
         dependencies.update(build_dependencies)
 
