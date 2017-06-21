@@ -10,7 +10,7 @@ use super::int::IntKind;
 use super::item::Item;
 use super::layout::{Layout, Opaque};
 use super::objc::ObjCInterface;
-use super::template::{AsNamed, TemplateInstantiation, TemplateParameters};
+use super::template::{AsTemplateParam, TemplateInstantiation, TemplateParameters};
 use super::traversal::{EdgeKind, Trace, Tracer};
 use clang::{self, Cursor};
 use parse::{ClangItemParser, ParseError, ParseResult};
@@ -374,21 +374,21 @@ impl Type {
     }
 }
 
-impl AsNamed for Type {
+impl AsTemplateParam for Type {
     type Extra = Item;
 
-    fn as_named(&self, ctx: &BindgenContext, item: &Item) -> Option<ItemId> {
-        self.kind.as_named(ctx, item)
+    fn as_template_param(&self, ctx: &BindgenContext, item: &Item) -> Option<ItemId> {
+        self.kind.as_template_param(ctx, item)
     }
 }
 
-impl AsNamed for TypeKind {
+impl AsTemplateParam for TypeKind {
     type Extra = Item;
 
-    fn as_named(&self, ctx: &BindgenContext, item: &Item) -> Option<ItemId> {
+    fn as_template_param(&self, ctx: &BindgenContext, item: &Item) -> Option<ItemId> {
         match *self {
             TypeKind::Named => Some(item.id()),
-            TypeKind::ResolvedTypeRef(id) => id.as_named(ctx, &()),
+            TypeKind::ResolvedTypeRef(id) => id.as_template_param(ctx, &()),
             _ => None,
         }
     }

@@ -36,6 +36,10 @@ android {
         targetCompatibility JavaVersion.VERSION_1_7
     }
 
+    aaptOptions {
+        cruncherEnabled = false
+    }
+
     dexOptions {
         javaMaxHeapSize "2g"
         jumboMode = true
@@ -136,6 +140,12 @@ android {
                 srcDir "${topsrcdir}/mobile/android/base/java"
                 srcDir "${topsrcdir}/mobile/android/search/java"
                 srcDir "${topsrcdir}/mobile/android/services/src/main/java"
+
+                // These aren't included in moz.build builds, for reasons unknown.
+                exclude "org/mozilla/gecko/dlc/CleanupAction.java"
+                // This is a marker file for linting.  We can probably find
+                // other ways to achieve this once we're Gradle-only.
+                exclude "org/mozilla/gecko/util/UnusedResourcesUtil.java"
 
                 if (mozconfig.substs.MOZ_ANDROID_MLS_STUMBLER) {
                     srcDir "${topsrcdir}/mobile/android/stumbler/java"
@@ -542,5 +552,19 @@ android.applicationVariants.all { variant ->
                 }
             })
         }
+    }
+}
+
+// Bug 1355625: strip extra .class files from Gradle builds; modified from
+// http://stackoverflow.com/a/40705699.
+android.applicationVariants.all { variant ->
+    variant.javaCompile.doLast {
+        // BuildConfig is not part of release builds, but it is required by the
+        // local unit tests of the android-test job.  Since the debug buildType
+        // is overloaded as the release type (see comments above), we have to
+        // keep the BuildConfig for testing.
+        // delete fileTree(dir: "${project.buildDir}", include: '**/org/mozilla/gecko/BuildConfig.class')
+        delete fileTree(dir: "${project.buildDir}", include: '**/org/mozilla/gecko/Manifest.class')
+        delete fileTree(dir: "${project.buildDir}", include: '**/org/mozilla/gecko/Manifest$permission.class')
     }
 }
