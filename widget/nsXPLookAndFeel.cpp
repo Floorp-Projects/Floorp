@@ -661,8 +661,6 @@ nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID)
     case eColorID__moz_win_accentcolor:
       // Seems to be the default color (hardcoded because of bug 1065998)
       result = NS_RGB(0x9E, 0x9E, 0x9E); break;
-    case eColorID__moz_win_accentcolortext:
-      result = NS_RGB(0x00, 0x00, 0x00); break;
     case eColorID__moz_win_mediatext:
       result = NS_RGB(0xFF, 0xFF, 0xFF); break;
     case eColorID__moz_win_communicationstext:
