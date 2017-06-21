@@ -67,6 +67,7 @@ class Message : public Pickle {
   // and is used to trigger the IPC_WRITE_LATENCY_MS telemetry.
   Message(int32_t routing_id,
           msgid_t type,
+          uint32_t segmentCapacity = 0, // 0 for the default capacity.
           NestedLevel nestedLevel = NOT_NESTED,
           PriorityValue priority = NORMAL_PRIORITY,
           MessageCompression compression = COMPRESSION_NONE,
