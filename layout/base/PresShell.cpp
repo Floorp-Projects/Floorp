@@ -4064,7 +4064,6 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
 
   MOZ_ASSERT(NeedFlush(flushType), "Why did we get called?");
 
-#ifdef MOZ_GECKO_PROFILER
   static const EnumeratedArray<FlushType,
                                FlushType::Count,
                                const char*> flushTypeNames = {
@@ -4078,9 +4077,7 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
   };
 
   PROFILER_LABEL_DYNAMIC("PresShell", "Flush",
-    js::ProfileEntry::Category::GRAPHICS,
-    flushTypeNames[flushType]);
-#endif
+    js::ProfileEntry::Category::GRAPHICS, flushTypeNames[flushType]);
 
 #ifdef ACCESSIBILITY
 #ifdef DEBUG
@@ -6291,7 +6288,6 @@ PresShell::Paint(nsView*         aViewToPaint,
                  const nsRegion& aDirtyRegion,
                  uint32_t        aFlags)
 {
-#ifdef MOZ_GECKO_PROFILER
   nsIURI* uri = mDocument->GetDocumentURI();
   nsIDocument* contentRoot = GetPrimaryContentDocument();
   if (contentRoot) {
@@ -6300,7 +6296,6 @@ PresShell::Paint(nsView*         aViewToPaint,
   nsCString uriString = uri ? uri->GetSpecOrDefault() : NS_LITERAL_CSTRING("N/A");
   PROFILER_LABEL_DYNAMIC("PresShell", "Paint",
     js::ProfileEntry::Category::GRAPHICS, uriString.get());
-#endif
 
   Maybe<js::AutoAssertNoContentJS> nojs;
 
@@ -9205,12 +9200,10 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
     parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
   }
 
-#ifdef MOZ_GECKO_PROFILER
   nsIURI* uri = mDocument->GetDocumentURI();
   nsCString uriString = uri ? uri->GetSpecOrDefault() : NS_LITERAL_CSTRING("N/A");
   PROFILER_LABEL_DYNAMIC("PresShell", "DoReflow",
     js::ProfileEntry::Category::GRAPHICS, uriString.get());
-#endif
 
   nsDocShell* docShell = static_cast<nsDocShell*>(GetPresContext()->GetDocShell());
   RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
