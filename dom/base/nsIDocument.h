@@ -2956,6 +2956,8 @@ public:
   virtual mozilla::dom::FlashClassification DocumentFlashClassification() = 0;
   virtual bool IsThirdParty() = 0;
 
+  bool IsScopedStyleEnabled();
+
 protected:
   bool GetUseCounter(mozilla::UseCounter aUseCounter)
   {
@@ -3278,6 +3280,10 @@ protected:
   bool mIsTopLevelContentDocument : 1;
 
   bool mIsContentDocument : 1;
+
+  // Whether <style scoped> support is enabled in this document.
+  enum { eScopedStyle_Unknown, eScopedStyle_Disabled, eScopedStyle_Enabled };
+  unsigned int mIsScopedStyleEnabled : 2;
 
   // Compatibility mode
   nsCompatibility mCompatMode;

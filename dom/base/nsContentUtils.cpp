@@ -305,6 +305,7 @@ bool nsContentUtils::sLowerNetworkPriority = false;
 #ifndef RELEASE_OR_BETA
 bool nsContentUtils::sBypassCSSOMOriginCheck = false;
 #endif
+bool nsContentUtils::sIsScopedStyleEnabled = false;
 
 bool nsContentUtils::sIsBytecodeCacheEnabled = false;
 int32_t nsContentUtils::sBytecodeCacheStrategy = 0;
@@ -726,6 +727,9 @@ nsContentUtils::Init()
 #ifndef RELEASE_OR_BETA
   sBypassCSSOMOriginCheck = getenv("MOZ_BYPASS_CSSOM_ORIGIN_CHECK");
 #endif
+
+  Preferences::AddBoolVarCache(&sIsScopedStyleEnabled,
+                               "layout.css.scoped-style.enabled", false);
 
   Preferences::AddBoolVarCache(&sLowerNetworkPriority,
                                "privacy.trackingprotection.lower_network_priority", false);

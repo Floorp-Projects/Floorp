@@ -2255,6 +2255,14 @@ public:
   }
 
   /**
+   * Returns true if the <style scoped> enabling pref is true.
+   */
+  static bool IsScopedStylePrefEnabled()
+  {
+    return sIsScopedStyleEnabled;
+  }
+
+  /**
    * Return true if this doc is controlled by a ServiceWorker.
    */
   static bool IsControlledByServiceWorker(nsIDocument* aDocument);
@@ -3142,6 +3150,7 @@ private:
 #ifndef RELEASE_OR_BETA
   static bool sBypassCSSOMOriginCheck;
 #endif
+  static bool sIsScopedStyleEnabled;
   static bool sIsBytecodeCacheEnabled;
   static int32_t sBytecodeCacheStrategy;
   static uint32_t sCookiesLifetimePolicy;
