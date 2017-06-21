@@ -20,7 +20,7 @@ ALLOW_COMPILER_WARNINGS = True
 FINAL_LIBRARY = 'gkmedias'
 
 DEFINES['OPUS_BUILD'] = True
-DEFINES['OPUS_VERSION'] = '"v1.2-rc1-mozilla"'
+DEFINES['OPUS_VERSION'] = '"v1.2-mozilla"'
 DEFINES['USE_ALLOCA'] = True
 
 # Don't export symbols

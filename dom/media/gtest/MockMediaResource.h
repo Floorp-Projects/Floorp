@@ -18,7 +18,6 @@ public:
   explicit MockMediaResource(const char* aFileName,
                              const MediaContainerType& aMimeType =
                                MediaContainerType(MEDIAMIMETYPE("video/mp4")));
-  nsIURI* URI() const override { return nullptr; }
   nsresult Close() override { return NS_OK; }
   void Suspend(bool aCloseImmediately) override {}
   void Resume() override {}
