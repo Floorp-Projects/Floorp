@@ -2026,6 +2026,13 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   long getDirectionFromText(in AString aString);
 
+  /**
+   * Whether the current document is styled by Servo's style engine.
+   *
+   * This calls nsIDocument::IsStyledByServo().
+   */
+  readonly attribute boolean isStyledByServo;
+
   // These consts are only for testing purposes.
   const long DEFAULT_MOUSE_POINTER_ID = 0;
   const long DEFAULT_PEN_POINTER_ID   = 1;
