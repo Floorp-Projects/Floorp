@@ -32,7 +32,8 @@ this.CoverageCollector = function (prefix) {
 
   // Source -> coverage data;
   this._allCoverage = {};
-  this._encoder = null;
+  this._encoder = new TextEncoder();
+
   this._testIndex = 0;
 }
 
@@ -175,8 +176,7 @@ Object.prototype[Symbol.iterator] = function * () {
  */
 CoverageCollector.prototype.recordTestCoverage = function (testName) {
   let ccov_scope = {};
-  const {TextEncoder, OS} = Cu.import("resource://gre/modules/osfile.jsm", ccov_scope);
-  this._encoder = new TextEncoder();
+  const {OS} = Cu.import("resource://gre/modules/osfile.jsm", ccov_scope);
 
   dump("Collecting coverage for: " + testName + "\n");
   let rawLines = this._getLinesCovered(testName);
