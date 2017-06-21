@@ -153,6 +153,12 @@ InputBlockState::IsDownchainOfScrolledApzc(AsyncPanZoomController* aApzc) const
   return IsDownchainOf(mScrolledApzc, aApzc);
 }
 
+void
+InputBlockState::DispatchEvent(const InputData& aEvent) const
+{
+  GetTargetApzc()->HandleInputEvent(aEvent, mTransformToApzc);
+}
+
 CancelableBlockState::CancelableBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
                                            bool aTargetConfirmed)
   : InputBlockState(aTargetApzc, aTargetConfirmed)
@@ -223,12 +229,6 @@ CancelableBlockState::IsReadyForHandling() const
     return false;
   }
   return mContentResponded || mContentResponseTimerExpired;
-}
-
-void
-CancelableBlockState::DispatchEvent(const InputData& aEvent) const
-{
-  GetTargetApzc()->HandleInputEvent(aEvent, mTransformToApzc);
 }
 
 void
