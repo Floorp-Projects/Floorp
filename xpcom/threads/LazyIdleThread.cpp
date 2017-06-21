@@ -513,6 +513,12 @@ LazyIdleThread::IdleDispatch(already_AddRefed<nsIRunnable> aEvent)
 }
 
 NS_IMETHODIMP
+LazyIdleThread::IdleDispatchFromScript(nsIRunnable* aEvent)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 LazyIdleThread::RegisterIdlePeriod(already_AddRefed<nsIIdlePeriod> aIdlePeriod)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
