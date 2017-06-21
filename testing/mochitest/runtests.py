@@ -150,7 +150,7 @@ class MessageLogger(object):
     DELIMITER = u'\ue175\uee31\u2c32\uacbf'
     BUFFERED_ACTIONS = set(['test_status', 'log'])
     VALID_ACTIONS = set(['suite_start', 'suite_end', 'test_start', 'test_end',
-                         'test_status', 'log',
+                         'test_status', 'log', 'assertion_count',
                          'buffering_on', 'buffering_off'])
     TEST_PATH_PREFIXES = ['/tests/',
                           'chrome://mochitests/content/a11y/',
