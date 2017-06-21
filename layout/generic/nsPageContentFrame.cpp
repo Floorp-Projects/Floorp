@@ -108,6 +108,15 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
+void
+nsPageContentFrame::AppendDirectlyOwnedAnonBoxes(
+  nsTArray<OwnedAnonBox>& aResult)
+{
+  MOZ_ASSERT(mFrames.FirstChild(),
+             "pageContentFrame must have a canvasFrame child");
+  aResult.AppendElement(mFrames.FirstChild());
+}
+
 #ifdef DEBUG_FRAME_DUMP
 nsresult
 nsPageContentFrame::GetFrameName(nsAString& aResult) const
