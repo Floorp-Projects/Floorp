@@ -979,7 +979,8 @@ D3D11DXVA2Manager::CopyToBGRATexture(ID3D11Texture2D *aInTexture,
 
   CD3D11_TEXTURE2D_DESC desc;
   aInTexture->GetDesc(&desc);
-  ConfigureForSize(desc.Width, desc.Height);
+  hr = ConfigureForSize(desc.Width, desc.Height);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   RefPtr<IDXGIKeyedMutex> mutex;
   inTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
