@@ -31,7 +31,7 @@ function promiseOnboardingOverlayOpened(browser) {
     return ContentTask.spawn(browser, {}, function() {
       return new Promise(resolve => {
         let overlay = content.document.querySelector("#onboarding-overlay");
-        if (overlay.classList.contains("opened")) {
+        if (overlay.classList.contains("onboarding-opened")) {
           resolve(true);
           return;
         }
