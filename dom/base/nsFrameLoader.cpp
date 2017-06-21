@@ -100,6 +100,8 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 
+#include "mozilla/dom/HTMLBodyElement.h"
+
 #include "ContentPrincipal.h"
 
 #ifdef XP_WIN
