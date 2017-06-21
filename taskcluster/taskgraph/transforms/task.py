@@ -451,7 +451,6 @@ GROUP_NAMES = {
     'tc-L10n': 'Localised Repacks executed by Taskcluster',
     'tc-L10n-Rpk': 'Localized Repackaged Repacks executed by Taskcluster',
     'tc-BM-L10n': 'Beetmover for locales executed by Taskcluster',
-    'tc-BMR-L10n': 'Beetmover repackages for locales executed by Taskcluster',
     'tc-Up': 'Balrog submission of updates, executed by Taskcluster',
     'tc-cs': 'Checksum signing executed by Taskcluster',
     'tc-BMcs': 'Beetmover checksums, executed by Taskcluster',
