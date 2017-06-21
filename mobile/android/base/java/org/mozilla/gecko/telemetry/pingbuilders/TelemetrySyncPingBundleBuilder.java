@@ -11,6 +11,7 @@ import android.support.annotation.NonNull;
 
 import org.json.simple.JSONArray;
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.telemetry.TelemetryOutgoingPing;
 import org.mozilla.gecko.telemetry.TelemetryPing;
@@ -87,7 +88,14 @@ public class TelemetrySyncPingBundleBuilder extends TelemetryPingBuilder {
         application.put("xpcomAbi", AppConstants.MOZ_APP_ABI);
         application.put("channel", AppConstants.MOZ_UPDATE_CHANNEL);
 
+        // Limited environment object, to help identify platforms easier. See Bug 1374758.
+        final ExtendedJSONObject os = new ExtendedJSONObject();
+        os.put("name", "Android");
+        os.put("version", Integer.toString(Build.VERSION.SDK_INT));
+        os.put("locale", Locales.getLanguageTag(Locale.getDefault()));
+
         payload.put("application", application);
+        payload.put("os", os);
 
         pingData.put("version", PING_SYNC_DATA_FORMAT_VERSION);
 
