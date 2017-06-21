@@ -10,6 +10,21 @@ from mozharness.mozilla.mock import ERROR_MSGS
 
 class Repackage(BaseScript):
 
+    config_options = [[
+        ['--signed-input', ],
+        {"action": "store",
+         "dest": "signed_input",
+         "type": "string",
+         "default": os.environ.get('SIGNED_INPUT'),
+         "help": "Specify the signed input (url)"}
+    ], [
+        ['--output-file', ],
+        {"action": "store",
+         "dest": "output_file",
+         "type": "string",
+         "help": "Specify the output filename"}
+    ]]
+
     def __init__(self, require_config_file=False):
         script_kwargs = {
             'all_actions': [
@@ -20,22 +35,24 @@ class Repackage(BaseScript):
         }
         BaseScript.__init__(
             self,
+            config_options=self.config_options,
             require_config_file=require_config_file,
             **script_kwargs
         )
 
+        # Assert we have it either passed in or in environment
+        assert self.config.get('signed_input'), \
+            "Must pass --signed-input or be set in the environment as SIGNED_INPUT"
+
     def download_input(self):
         config = self.config
-        dirs = self.query_abs_dirs()
 
-        input_home = config['input_home'].format(**dirs)
-
-        for path, url in config["download_config"].items():
-            status = self.download_file(url=url,
-                                        file_name=path,
-                                        parent_dir=input_home)
-            if not status:
-                self.fatal("Unable to fetch signed input from %s" % url)
+        url = config['signed_input']
+        status = self.download_file(url=url,
+                                    file_name=config['input_filename'],
+                                    parent_dir=config['input_home'])
+        if not status:
+            self.fatal("Unable to fetch signed input from %s" % config['signed_input'])
 
     def setup(self):
         self._run_tooltool()
@@ -52,7 +69,6 @@ class Repackage(BaseScript):
         dirs = {}
         dirs['abs_tools_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'tools')
         dirs['abs_mozilla_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'src')
-        dirs['output_home'] = os.path.join(abs_dirs['abs_work_dir'], 'artifacts')
         for key in dirs.keys():
             if key not in abs_dirs:
                 abs_dirs[key] = dirs[key]
@@ -62,19 +78,17 @@ class Repackage(BaseScript):
     def repackage(self):
         config = self.config
         dirs = self.query_abs_dirs()
-
-        # Make sure the upload dir is around.
-        self.mkdir_p(dirs['output_home'])
-
-        for repack_config in config["repackage_config"]:
-            command = [sys.executable, 'mach', '--log-no-times', 'repackage'] + \
-                [arg.format(**dirs)
-                    for arg in list(repack_config)]
-            self.run_command(
-                command=command,
-                cwd=dirs['abs_mozilla_dir'],
-                halt_on_failure=True,
-            )
+        infile = os.path.join(config['input_home'], config['input_filename'])
+        outfile = os.path.join(dirs['abs_upload_dir'], config['output_filename'])
+        command = [sys.executable, 'mach', '--log-no-times', 'repackage',
+                   'dmg',
+                   '--input', infile,
+                   '--output', outfile]
+        return self.run_command(
+            command=command,
+            cwd=dirs['abs_mozilla_dir'],
+            halt_on_failure=True,
+        )
 
     def _run_tooltool(self):
         config = self.config
@@ -84,45 +98,23 @@ class Repackage(BaseScript):
             manifest_src = config.get('tooltool_manifest_src')
         if not manifest_src:
             return self.warning(ERROR_MSGS['tooltool_manifest_undetermined'])
+        fetch_script_path = os.path.join(dirs['abs_tools_dir'],
+                                         'scripts/tooltool/tooltool_wrapper.sh')
         tooltool_manifest_path = os.path.join(dirs['abs_mozilla_dir'],
                                               manifest_src)
         cmd = [
-            sys.executable, '-u',
-            os.path.join(dirs['abs_mozilla_dir'], 'mach'),
-            'artifact',
-            'toolchain',
-            '-v',
-            '--retry', '4',
-            '--tooltool-manifest',
+            'sh',
+            fetch_script_path,
             tooltool_manifest_path,
-            '--tooltool-url',
             config['tooltool_url'],
+            config['tooltool_bootstrap'],
         ]
-        auth_file = self._get_tooltool_auth_file()
-        if auth_file:
-            cmd.extend(['--authentication-file', auth_file])
+        cmd.extend(config['tooltool_script'])
         cache = config.get('tooltool_cache')
         if cache:
-            cmd.extend(['--cache-dir', cache])
+            cmd.extend(['-c', cache])
         self.info(str(cmd))
         self.run_command(cmd, cwd=dirs['abs_mozilla_dir'], halt_on_failure=True)
-
-    def _get_tooltool_auth_file(self):
-        # set the default authentication file based on platform; this
-        # corresponds to where puppet puts the token
-        if 'tooltool_authentication_file' in self.config:
-            fn = self.config['tooltool_authentication_file']
-        elif self._is_windows():
-            fn = r'c:\builds\relengapi.tok'
-        else:
-            fn = '/builds/relengapi.tok'
-
-        # if the file doesn't exist, don't pass it to tooltool (it will just
-        # fail).  In taskcluster, this will work OK as the relengapi-proxy will
-        # take care of auth.  Everywhere else, we'll get auth failures if
-        # necessary.
-        if os.path.exists(fn):
-            return fn
 
     def _get_mozconfig(self):
         """assign mozconfig."""

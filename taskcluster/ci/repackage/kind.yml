@@ -6,7 +6,6 @@ loader: taskgraph.loader.single_dep:loader
 
 transforms:
    - taskgraph.transforms.repackage:transforms
-   - taskgraph.transforms.job:transforms
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
