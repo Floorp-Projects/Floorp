@@ -14,11 +14,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=391777
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 391777 **/
-var arg = {};
-arg.testVal = "foo";
-var result = window.showModalDialog("javascript:window.returnValue = window.dialogArguments.testVal; window.close(); 'This window should close on its own.';", arg);
-ok(true, "We should get here without user interaction");
-is(result, "foo", "Unexpected result from showModalDialog");
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({ set: [[ "dom.disable_window_showModalDialog", false ]] }, doTest);
+async function doTest() {
+  let iframe = document.createElement("iframe");
+  document.body.appendChild(iframe);
+  await new Promise(resolve => {
+    iframe.addEventListener("load", resolve);
+  });
+  window.showModalDialog = iframe.contentWindow.showModalDialog;
+  var arg = {};
+  arg.testVal = "foo";
+  var result = window.showModalDialog("javascript:window.returnValue = window.dialogArguments.testVal; window.close(); 'This window should close on its own.';", arg);
+  ok(true, "We should get here without user interaction");
+  is(result, "foo", "Unexpected result from showModalDialog");
+  SimpleTest.finish();
+}
 
 </script>
 </body>

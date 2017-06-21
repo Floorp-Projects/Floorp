@@ -4,7 +4,6 @@
 const FAVICON_URI = NetUtil.newURI(do_get_file("favicon-normal32.png"));
 const FAVICON_DATA = readFileData(do_get_file("favicon-normal32.png"));
 const FAVICON_MIMETYPE = "image/png";
-const ICON16_URL = "http://places.test/favicon-normal16.png";
 const ICON32_URL = "http://places.test/favicon-normal32.png";
 
 add_task(async function test_normal() {

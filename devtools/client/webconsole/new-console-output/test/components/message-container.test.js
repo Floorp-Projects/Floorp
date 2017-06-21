@@ -21,7 +21,10 @@ const serviceContainer = require("devtools/client/webconsole/new-console-output/
 describe("MessageContainer component:", () => {
   it("pipes data to children as expected", () => {
     const message = stubPreparedMessages.get("console.log('foobar', 'test')");
-    const rendered = renderComponent(MessageContainer, {message, serviceContainer});
+    const rendered = renderComponent(MessageContainer, {
+      getMessage: () => message,
+      serviceContainer
+    });
 
     expect(rendered.textContent.includes("foobar")).toBe(true);
   });

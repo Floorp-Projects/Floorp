@@ -5,6 +5,6 @@ config = {
     'stage_product': 'devedition',
 
     # Enable sendchanges for bug 1372412
-    'enable_talos_sendchange': True,
-    'enable_unittest_sendchange': True,
+    'enable_talos_sendchange': False,
+    'enable_unittest_sendchange': False,
 }

@@ -831,6 +831,22 @@ ServoStyleSet::InsertStyleSheetBefore(SheetType aType,
   return NS_OK;
 }
 
+void
+ServoStyleSet::UpdateStyleSheet(ServoStyleSheet* aSheet)
+{
+  MOZ_ASSERT(aSheet);
+
+  if (mRawSet) {
+    // Inform servo that the underlying raw sheet has changed.
+    Servo_StyleSet_UpdateStyleSheet(mRawSet.get(),
+                                    aSheet->RawSheet(),
+                                    UniqueIDForSheet(aSheet));
+    // No need to set the stylesheets as dirty, since this is only
+    // used to notify servo of a cloned raw sheet. It styles the
+    // same until the sheet is changed through other methods.
+  }
+}
+
 int32_t
 ServoStyleSet::SheetCount(SheetType aType) const
 {

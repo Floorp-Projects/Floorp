@@ -229,8 +229,9 @@ describe("Message reducer:", () => {
 
       expect(messages.count()).toBe(logLimit);
       expect(visibleMessages.length).toBe(logLimit);
-      expect(visibleMessages[0].parameters[0]).toBe(`message-0`);
-      expect(visibleMessages[logLimit - 1].parameters[0]).toBe(`message-${logLimit - 1}`);
+      expect(messages.get(visibleMessages[0]).parameters[0]).toBe(`message-0`);
+      expect(messages.get(visibleMessages[logLimit - 1]).parameters[0])
+        .toBe(`message-${logLimit - 1}`);
 
       // The groups were cleaned up.
       const groups = getAllGroupsById(getState());
@@ -263,7 +264,7 @@ describe("Message reducer:", () => {
       const groups = getAllGroupsById(getState());
       expect(groups.count()).toBe(logLimit);
 
-      expect(visibleMessages[1].parameters[0]).toBe(`message-2-a`);
+      expect(messages.get(visibleMessages[1]).parameters[0]).toBe(`message-2-a`);
       expect(messages.last().parameters[0]).toBe(`message-${logLimit + 1}-b`);
     });
 
@@ -299,8 +300,9 @@ describe("Message reducer:", () => {
 
       const visibleMessages = getVisibleMessages(getState());
       expect(visibleMessages.length).toBe(logLimit);
-      const lastVisibleMessage = visibleMessages[visibleMessages.length - 1];
-      expect(lastVisibleMessage.parameters[0]).toBe(`group-${logLimit + 1}`);
+      const lastVisibleMessageId = visibleMessages[visibleMessages.length - 1];
+      expect(messages.get(lastVisibleMessageId).parameters[0])
+        .toBe(`group-${logLimit + 1}`);
     });
 
     it("does not add null messages to the store", () => {

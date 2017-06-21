@@ -130,9 +130,10 @@ function setCohort(cohortName) {
 }
 
 function watchForPrefChanges() {
-  Preferences.observe(PREF_FLASH_STATE, function() {
+  Preferences.observe(PREF_FLASH_STATE, function prefWatcher() {
     let currentCohort = Preferences.get(PREF_COHORT_NAME, "unknown");
     setCohort(`user-changed-from-${currentCohort}`);
+    Preferences.ignore(PREF_FLASH_STATE, prefWatcher);
   });
 }
 

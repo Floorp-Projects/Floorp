@@ -8,11 +8,10 @@
 #define MOZILLA_BENCHMARK_H
 
 #include "MediaDataDemuxer.h"
-#include "QueueObject.h"
 #include "PlatformDecoderModule.h"
+#include "QueueObject.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/TaskQueue.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 

@@ -300,7 +300,3 @@ add_task(async function test_addRemoveBookmark() {
   await PlacesTestUtils.promiseAsyncUpdates();
   check_orphans();
 });
-
-function run_test() {
-  run_next_test();
-}

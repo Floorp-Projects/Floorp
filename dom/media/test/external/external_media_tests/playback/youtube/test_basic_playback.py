@@ -46,15 +46,13 @@ class TestBasicYouTubePlayback(MediaTestCase):
                     self.logger.info('Almost done: {} - {} seconds left.'
                                      .format(url, time_left))
                     if time_left > final_piece:
-                        self.marionette.log('time_left greater than '
-                                            'final_piece - {}'
-                                            .format(time_left),
-                                            level='WARNING')
+                        self.logger.warn('time_left greater than '
+                                         'final_piece - {}'
+                                         .format(time_left))
                         self.save_screenshot()
                 else:
-                    self.marionette.log('Duration close to 0 - {}'
-                                        .format(youtube),
-                                        level='WARNING')
+                    self.logger.warn('Duration close to 0 - {}'
+                                     .format(youtube))
                     self.save_screenshot()
                 try:
                     verbose_until(Wait(youtube,

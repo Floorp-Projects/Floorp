@@ -89,6 +89,7 @@ use selectors::attr::{AttrSelectorOperation, NamespaceConstraint, CaseSensitivit
 use selectors::matching::{ElementSelectorFlags, LocalMatchingContext, MatchingContext, MatchingMode};
 use selectors::matching::{HAS_EDGE_CHILD_SELECTOR, HAS_SLOW_SELECTOR, HAS_SLOW_SELECTOR_LATER_SIBLINGS};
 use selectors::matching::{RelevantLinkStatus, matches_selector_list};
+use selectors::sink::Push;
 use servo_atoms::Atom;
 use std::ascii::AsciiExt;
 use std::borrow::Cow;
@@ -109,7 +110,6 @@ use style::rule_tree::CascadeLevel;
 use style::selector_parser::{NonTSPseudoClass, PseudoElement, RestyleDamage, SelectorImpl, SelectorParser};
 use style::selector_parser::extended_filtering;
 use style::shared_lock::{SharedRwLock, Locked};
-use style::sink::Push;
 use style::stylearc::Arc;
 use style::thread_state;
 use style::values::{CSSFloat, Either};
@@ -1543,6 +1543,10 @@ impl ElementMethods for Element {
 
     // https://dom.spec.whatwg.org/#dom-element-setattributenode
     fn SetAttributeNode(&self, attr: &Attr) -> Fallible<Option<Root<Attr>>> {
+        // Workaround for https://github.com/servo/servo/issues/17366
+        // This ensures that if this is an "id" attr, its value is an Atom
+        attr.swap_value(&mut self.parse_plain_attribute(attr.local_name(), attr.Value()));
+
         // Step 1.
         if let Some(owner) = attr.GetOwnerElement() {
             if &*owner != self {

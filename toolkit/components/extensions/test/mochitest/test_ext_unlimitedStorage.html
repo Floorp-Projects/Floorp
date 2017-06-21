@@ -1,0 +1,140 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for simple WebExtension</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <script type="text/javascript" src="head_unlimitedStorage.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+
+"use strict";
+
+add_task(async function test_background_storagePersist() {
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      ["dom.storageManager.enabled", true],
+      // Enable the storageManager permission prompt.
+      ["browser.storageManager.enabled", true],
+      ["dom.storageManager.prompt.testing", false],
+      ["dom.storageManager.prompt.testing.allow", false],
+    ],
+  });
+
+  const EXTENSION_ID = "test-storagePersist@mozilla";
+
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+
+    manifest: {
+      permissions: ["unlimitedStorage"],
+      applications: {
+        gecko: {
+          id: EXTENSION_ID,
+        },
+      },
+    },
+
+    background: async function() {
+      const PROMISE_RACE_TIMEOUT = 2000;
+
+      browser.test.sendMessage("extension-uuid", window.location.host);
+
+      const requestStoragePersist = async () => {
+        const persistAllowed = await navigator.storage.persist();
+        if (!persistAllowed) {
+          throw new Error("navigator.storage.persist() has been denied");
+        }
+      };
+
+      await Promise.race([
+        requestStoragePersist(),
+        new Promise((resolve, reject) => {
+          setTimeout(() => {
+            reject(new Error("Timeout opening persistent db from background page"));
+          }, PROMISE_RACE_TIMEOUT);
+        }),
+      ]).then(
+        () => {
+          browser.test.notifyPass("indexeddb-storagePersistent-unlimitedStorage-done");
+        },
+        (error) => {
+          browser.test.fail(`error while testing persistent IndexedDB storage: ${error}`);
+          browser.test.notifyFail("indexeddb-storagePersistent-unlimitedStorage-done");
+        }
+      );
+    },
+  });
+
+  await extension.startup();
+
+  const uuid = await extension.awaitMessage("extension-uuid");
+
+  await extension.awaitFinish("indexeddb-storagePersistent-unlimitedStorage-done");
+  await extension.unload();
+
+  checkSitePermissions(uuid, Services.perms.UNKNOWN_ACTION, "has been cleared");
+});
+
+add_task(async function test_unlimitedStorage_removed_on_update() {
+  const EXTENSION_ID = "test-unlimitedStorage-removed-on-update@mozilla";
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["unlimitedStorage"],
+      applications: {
+        gecko: {
+          id: EXTENSION_ID,
+        },
+      },
+    },
+
+    background: async function() {
+      browser.test.sendMessage("extension-uuid", window.location.host);
+    },
+  });
+
+  await extension.startup();
+
+  const uuid = await extension.awaitMessage("extension-uuid");
+
+  checkSitePermissions(uuid, Services.perms.ALLOW_ACTION, "has been allowed");
+
+  await extension.unload();
+
+  // Simulate an update which do not require the unlimitedStorage permission.
+  let updatedExtension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: {
+          id: EXTENSION_ID,
+        },
+      },
+    },
+
+    background: async function() {
+      browser.test.sendMessage("updated-extension-uuid", window.location.host);
+    },
+  });
+
+  updatedExtension.startup();
+
+  const updatedExtensionUUID = await updatedExtension.awaitMessage("updated-extension-uuid");
+
+  is(uuid, updatedExtensionUUID, "The updated extension has the same uuid");
+
+  checkSitePermissions(uuid, Services.perms.UNKNOWN_ACTION, "has been cleared");
+
+  await updatedExtension.unload();
+});
+
+</script>
+
+</body>
+</html>

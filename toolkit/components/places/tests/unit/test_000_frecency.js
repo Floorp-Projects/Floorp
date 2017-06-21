@@ -49,7 +49,6 @@ var bonusPrefs = {
 // create test data
 var searchTerm = "frecency";
 var results = [];
-var matchCount = 0;
 var now = Date.now();
 var prefPrefix = "places.frecency.";
 

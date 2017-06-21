@@ -14,12 +14,6 @@
 
 // Globals and Constants
 
-var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-         getService(Ci.nsINavHistoryService);
-var bh = hs.QueryInterface(Ci.nsIBrowserHistory);
-var tagging = Cc["@mozilla.org/browser/tagging-service;1"].
-              getService(Ci.nsITaggingService);
-
 var resultTypes = [
   {value: Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY, name: "RESULTS_AS_DATE_QUERY"},
   {value: Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY, name: "RESULTS_AS_SITE_QUERY"},
@@ -370,10 +364,6 @@ function check_children_sorting(aRootNode, aExpectedSortingMode) {
 }
 
 // Main
-
-function run_test() {
-  run_next_test();
-}
 
 add_task(async function test_containersQueries_sorting() {
   // Add visits, bookmarks and tags to our database.

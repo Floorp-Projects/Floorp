@@ -37,6 +37,11 @@ public:
 
   virtual bool HasTransformGetter() const override { return true; }
 
+  /**
+   * Return our canvas frame.
+   */
+  void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
+
 #ifdef DEBUG_FRAME_DUMP
   // Debugging
   virtual nsresult  GetFrameName(nsAString& aResult) const override;

@@ -25,7 +25,6 @@ marionette.jar:
   content/cookies.js (cookies.js)
   content/atom.js (atom.js)
   content/evaluate.js (evaluate.js)
-  content/logging.js (logging.js)
   content/navigate.js (navigate.js)
   content/l10n.js (l10n.js)
   content/assert.js (assert.js)

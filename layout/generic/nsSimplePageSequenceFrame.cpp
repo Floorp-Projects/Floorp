@@ -895,3 +895,12 @@ nsSimplePageSequenceFrame::GetSTFPercent(float& aSTFPercent)
   aSTFPercent = mPageData->mShrinkToFitRatio;
   return NS_OK;
 }
+
+void
+nsSimplePageSequenceFrame::AppendDirectlyOwnedAnonBoxes(
+  nsTArray<OwnedAnonBox>& aResult)
+{
+  if (mFrames.NotEmpty()) {
+    aResult.AppendElement(mFrames.FirstChild());
+  }
+}

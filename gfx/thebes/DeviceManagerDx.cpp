@@ -598,9 +598,9 @@ DeviceManagerDx::CreateDecoderDevice()
 
   RefPtr<ID3D10Multithread> multi;
   device->QueryInterface(__uuidof(ID3D10Multithread), getter_AddRefs(multi));
-
-  multi->SetMultithreadProtected(TRUE);
-
+  if (multi) {
+    multi->SetMultithreadProtected(TRUE);
+  }
   if (reuseDevice) {
     mDecoderDevice = device;
   }

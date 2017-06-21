@@ -13,8 +13,6 @@
 // Include PlacesDBUtils module
 Components.utils.import("resource://gre/modules/PlacesDBUtils.jsm");
 
-const FINISHED_MAINTENANCE_NOTIFICATION_TOPIC = "places-maintenance-finished";
-
 // Get services and database connection
 var hs = PlacesUtils.history;
 var bs = PlacesUtils.bookmarks;

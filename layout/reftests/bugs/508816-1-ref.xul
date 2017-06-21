@@ -2,14 +2,20 @@
 <!DOCTYPE window>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" title="RTL overflow test" width="640px" height="480px" style="direction: rtl" onload="load()" class="reftest-wait">
 
+<style type="text/css" xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
+button {
+  margin: 0;
+}
+]]></style>
+
 <hbox style="max-width: 200px; border: 1px solid red;">
-<scrollbox id="sb" align="start" pack="start" orient="horizontal" flex="1">
+<scrollbox align="start" pack="start" orient="horizontal" flex="1">
   <button id="sb1" label="test1"/><button label="test2"/><button label="test3"/><button label="test4"/><button label="test5"/>
 </scrollbox>
 </hbox>
 
 <hbox style="max-width: 200px; border: 1px solid blue">
-<arrowscrollbox id="asb" align="start" pack="start" orient="horizontal" flex="1">
+<arrowscrollbox align="start" pack="start" orient="horizontal" flex="1">
   <button id="asb1" label="test1"/><button label="test2"/><button label="test3"/><button label="test4"/><button label="test5"/>
 </arrowscrollbox>
 </hbox>
@@ -23,26 +29,8 @@
 <script type="text/javascript">
   <![CDATA[
     function load() {
-      // arrowscrollbox provides a helper ensureElementIsVisible method
-      document.getElementById("asb").ensureElementIsVisible(document.getElementById("asb1"), false);
-
-      // scrollbox doesn't provide that, so we have to do the heavy lifting directly
-      var sb = document.getElementById("sb");
-      var sb1 = document.getElementById("sb1");
-      var rect = sb.getBoundingClientRect();
-      var containerStart = rect.left;
-      var containerEnd = rect.right;
-      rect = sb1.getBoundingClientRect();
-      var elementStart = rect.left;
-      var elementEnd = rect.right;
-
-      var amountToScroll = 0;
-      if (elementStart < containerStart) {
-        amountToScroll = elementStart - containerStart;
-      } else if (elementEnd > containerEnd) {
-        amountToScroll = elementEnd - containerEnd;
-      }
-      sb.scrollLeft += amountToScroll;
+      document.getElementById("sb1").scrollIntoView({ behavior: "instant" });
+      document.getElementById("asb1").scrollIntoView({ behavior: "instant" });
 
       document.documentElement.removeAttribute("class");
     }

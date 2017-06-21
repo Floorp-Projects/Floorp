@@ -43,9 +43,6 @@ to mochitest command.
   * test_parser_diagnostics_unprintables.html [550]
 * Unimplemented \@font-face descriptors:
   * test_font_face_parser.html `font-language-override`: bug 1355364 [8]
-* keyword values should be preserved in \@font-face bug 1355368
-  * test_font_face_parser.html `font-weight` [4]
-  * test_font_loading_api.html `weight` [1]
 * @namespace support:
   * test_namespace_rule.html: bug 1355715 [6]
 * test_font_feature_values_parsing.html: \@font-feature-values support bug 1355721 [107]

@@ -24,7 +24,7 @@ add_task(async function () {
   const currentTab = gBrowser.selectedTab;
   info("Network panel is open.");
 
-  await loadDocument(currentTab.linkedBrowser);
+  await loadDocument(currentTab.linkedBrowser, TEST_PATH);
   info("Document loaded.");
 
   // Test that the request appears in the network panel.

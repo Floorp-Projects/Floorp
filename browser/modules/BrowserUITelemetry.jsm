@@ -76,6 +76,10 @@ XPCOMUtils.defineLazyGetter(this, "DEFAULT_AREA_PLACEMENTS", function() {
     ],
   };
 
+  if (AppConstants.MOZ_PHOTON_THEME) {
+    result["nav-bar"].push("sidebar-button");
+  }
+
   if (gPhotonStructure) {
     result["widget-overflow-fixed-list"] = [];
   } else {

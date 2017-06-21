@@ -246,7 +246,7 @@ function ensureTagsForURI(aURI, aTags) {
 }
 
 function createTestFolderInfo(aTitle = "Test Folder") {
-  return { parentGuid: rootGuid, title: "Test Folder" };
+  return { parentGuid: rootGuid, title: aTitle };
 }
 
 function isLivemarkTree(aTree) {

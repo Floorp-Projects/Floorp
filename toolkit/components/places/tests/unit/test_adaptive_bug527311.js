@@ -10,8 +10,6 @@ const SUGGEST_TYPES = ["history", "bookmark", "openpage"];
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-         getService(Ci.nsINavHistoryService);
 var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
          getService(Ci.nsINavBookmarksService);
 var os = Cc["@mozilla.org/observer-service;1"].

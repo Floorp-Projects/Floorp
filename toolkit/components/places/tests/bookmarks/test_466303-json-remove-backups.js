@@ -118,7 +118,3 @@ add_task(async function check_max_backups_undefined() {
   do_check_eq(count, 2);
   do_check_neq(lastBackupPath, null);
 });
-
-function run_test() {
-  run_next_test();
-}
