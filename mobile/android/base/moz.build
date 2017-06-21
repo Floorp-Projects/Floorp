@@ -1010,6 +1010,15 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'widget/themed/ThemedTextView.java',
     'widget/themed/ThemedView.java',
 ]]
+if CONFIG['MOZ_ANDROID_PHOTON']:
+    gbjar.sources += ['../app/src/photon/java/org/mozilla/gecko/' + x for x in [
+        'skin/SkinConfig.java',
+    ]]
+else:
+    gbjar.sources += ['../app/src/australis/java/org/mozilla/gecko/' + x for x in [
+        'skin/SkinConfig.java',
+    ]]
+
 android_package_dir = CONFIG['ANDROID_PACKAGE_NAME'].replace('.', '/')
 gbjar.generated_sources = [] # Keep it this way.
 gbjar.extra_jars += [
