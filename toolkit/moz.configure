@@ -694,11 +694,31 @@ with only_when(building_stylo_bindgen):
             '''.format(version, min_version)))
 
     @depends(llvm_config, '--with-libclang-path', '--with-clang-path',
-             host)
+             library_name_info, host)
     @imports('os.path')
     @imports(_from='textwrap', _import='dedent')
     def bindgen_config_paths(llvm_config, libclang_path, clang_path,
-                             host):
+                             library_name_info, host):
+        def search_for_libclang(path):
+            # Try to ensure that the clang shared library that bindgen is going
+            # to look for is actually present.  The files that we search for
+            # mirror the logic in clang-sys/build.rs.
+            libclang_choices = []
+            if host.os == 'WINNT':
+                libclang_choices.append('libclang.dll')
+            libclang_choices.append('%sclang%s' % (library_name_info.dll_prefix,
+                                                   library_name_info.dll_suffix))
+            if host.kernel == 'Linux':
+                libclang_choices.append('libclang.so.1')
+
+            # At least one of the choices must be found.
+            for choice in libclang_choices:
+                libclang = os.path.join(path, choice)
+                if os.path.exists(libclang):
+                    return (True, None)
+            else:
+                return (False, list(set(libclang_choices)))
+
         if not libclang_path and not clang_path:
             # We must have LLVM_CONFIG in this case.
             if not llvm_config:
@@ -728,6 +748,14 @@ with only_when(building_stylo_bindgen):
                 Please check your system configuration.
                 '''.format(libclang_path, libclang_arg)))
 
+            (found, searched) = search_for_libclang(libclang_path)
+            if not found:
+                die(dedent('''\
+                Could not find the clang shared library in the path {}
+                returned by `llvm-config {}` (searched for files {}).
+                Please check your system configuration.
+                '''.format(libclang_path, libclang_arg, searched)))
+
             if not os.path.exists(clang_path):
                 die(dedent('''\
                 The file {} returned by `llvm-config {}` does not exist.
@@ -750,6 +778,13 @@ with only_when(building_stylo_bindgen):
             die(dedent('''\
             The argument to --with-libclang-path is not a directory: {}
             '''.format(libclang_path)))
+
+        (found, searched) = search_for_libclang(libclang_path)
+        if not found:
+            die(dedent('''\
+            Could not find the clang shared library in the path {}
+            specified by --with-libclang-path (searched for files {}).
+            '''.format(libclang_path, searched)))
 
         if not os.path.exists(clang_path) or \
            not os.path.isfile(clang_path):
