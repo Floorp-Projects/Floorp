@@ -17,11 +17,10 @@ function do_check_throws(f, result, stack)
   try {
     f();
   } catch (exc) {
-    if (exc.result == result)
-      return;
-    do_throw("expected result " + result + ", caught " + exc, stack);
+    equal(exc.result, result, "Correct exception was thrown");
+    return;
   }
-  do_throw("expected result " + result + ", none thrown", stack);
+  ok(false, "expected result " + result + ", none thrown");
 }
 
 var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
