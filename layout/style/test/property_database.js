@@ -2828,7 +2828,7 @@ var gCSSProperties = {
     other_values: [ "green", "#f3c", "#fed292", "rgba(45,300,12,2)", "transparent", "-moz-nativehyperlinktext", "rgba(255,128,0,0.5)", "#e0fc", "#10fcee72",
       /* css-color-4: */
       "rgb(100, 100.0, 100)", "rgb(300 300 300 / 200%)", "rgb(300.0 300.0 300.0 / 2.0)", "hsl(720, 200%, 200%, 2.0)", "hsla(720 200% 200% / 200%)",
-      "hsl(480deg, 20%, 30%, 0.3)", "hsl(55grad, 400%, 30%)", "hsl(0.5grad 400% 500% / 9.0)", "hsl(33rad 100% 90% / 4)", "hsl(0.33turn, 40%, 40%, 10%)",
+      "hsl(480deg, 20%, 30%, 0.3)", "hsl(55grad, 400%, 30%)", "hsl(0.5grad 400% 500% / 9.0)", "hsl(33rad 100% 90% / 4)", "hsl(0.33turn, 40%, 40%, 10%)", "hsl(63e292, 41%, 34%)",
     ],
     invalid_values: [ "#f", "#ff", "#fffff", "#fffffff", "#fffffffff",
       "rgb(100%, 0, 100%)", "rgba(100, 0, 100%, 30%)",

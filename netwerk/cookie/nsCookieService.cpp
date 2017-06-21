@@ -5188,6 +5188,11 @@ nsCookieService::AddCookieToList(const nsCookieKey             &aKey,
   NS_ASSERTION(!(!aDBState->dbConn && aParamsArray),
                "Do not have a DB connection but have a params array?");
 
+  if (!aCookie) {
+    NS_WARNING("Attempting to AddCookieToList with null cookie");
+    return;
+  }
+
   nsCookieEntry *entry = aDBState->hostTable.PutEntry(aKey);
   NS_ASSERTION(entry, "can't insert element into a null entry!");
 

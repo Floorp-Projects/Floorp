@@ -7,12 +7,12 @@
 #ifndef MediaCache_h_
 #define MediaCache_h_
 
-#include "nsTArray.h"
-#include "nsCOMPtr.h"
-#include "nsHashKeys.h"
-#include "nsTHashtable.h"
 #include "Intervals.h"
 #include "mozilla/UniquePtr.h"
+#include "nsCOMPtr.h"
+#include "nsHashKeys.h"
+#include "nsTArray.h"
+#include "nsTHashtable.h"
 
 class nsIPrincipal;
 

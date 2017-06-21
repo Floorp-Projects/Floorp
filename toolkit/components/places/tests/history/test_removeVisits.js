@@ -1,7 +1,6 @@
 const JS_NOW = Date.now();
 const DB_NOW = JS_NOW * 1000;
 const TEST_URI = uri("http://example.com/");
-const PLACE_URI = uri("place:queryType=0&sort=8&maxResults=10");
 
 async function cleanup() {
   await PlacesTestUtils.clearHistory();

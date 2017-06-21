@@ -2761,6 +2761,8 @@ nsCSSFrameConstructor::ConstructRootFrame()
   // What would that break?
   viewportFrame->Init(nullptr, nullptr, nullptr);
 
+  viewportFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
+
   // Bind the viewport frame to the root view
   nsView* rootView = mPresShell->GetViewManager()->GetRootView();
   viewportFrame->SetView(rootView);
@@ -2876,6 +2878,7 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
     rootFrame = NS_NewSimplePageSequenceFrame(mPresShell, viewportPseudoStyle);
     mPageSequenceFrame = rootFrame;
     rootPseudo = nsCSSAnonBoxes::pageSequence;
+    rootFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
   }
 
 
@@ -2969,6 +2972,7 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
     nsContainerFrame* canvasFrame;
     nsContainerFrame* pageFrame =
       ConstructPageFrame(mPresShell, rootFrame, nullptr, canvasFrame);
+    pageFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
     SetInitialSingleChild(rootFrame, pageFrame);
 
     // The eventual parent of the document element frame.
@@ -3043,6 +3047,9 @@ nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*  aPresShell,
     NS_ASSERTION(prevPageContentFrame, "missing page content frame");
   }
   pageContentFrame->Init(nullptr, pageFrame, prevPageContentFrame);
+  if (!prevPageContentFrame) {
+    pageContentFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
+  }
   SetInitialSingleChild(pageFrame, pageContentFrame);
   // Make it an absolute container for fixed-pos elements
   pageContentFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);

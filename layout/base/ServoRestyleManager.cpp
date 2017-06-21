@@ -10,6 +10,7 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/Unused.h"
+#include "mozilla/ViewportFrame.h"
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/ElementInlines.h"
 #include "nsBlockFrame.h"
@@ -120,7 +121,8 @@ ServoRestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
 {
   StyleSet()->ClearDataAndMarkDeviceDirty();
 
-  if (Element* root = mPresContext->Document()->GetRootElement()) {
+  DocumentStyleRootIterator iter(mPresContext->Document());
+  while (Element* root = iter.GetNextStyleRoot()) {
     PostRestyleEvent(root, aRestyleHint, aExtraHint);
   }
 
@@ -430,6 +432,15 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
     if (styleFrame) {
       styleFrame->UpdateStyleOfOwnedAnonBoxes(*aStyleSet, aChangeList, changeHint);
       UpdateFramePseudoElementStyles(styleFrame, *aStyleSet, aChangeList);
+    }
+
+    if (!aElement->GetParent()) {
+      // This is the root.  Update styles on the viewport as needed.
+      ViewportFrame* viewport =
+        do_QueryFrame(mPresContext->PresShell()->GetRootFrame());
+      if (viewport) {
+        viewport->UpdateStyle(*aStyleSet, aChangeList);
+      }
     }
 
     // Some changes to animations don't affect the computed style and yet still

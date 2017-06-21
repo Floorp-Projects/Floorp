@@ -1,0 +1,11 @@
+<!DOCTYPE HTML>
+<title>Test insert rule after clone</title>
+<link rel=stylesheet href="importrule.css">
+<link id="two" rel=stylesheet href="importrule.css">
+<body onload="run()">
+<script>
+function run() {
+  document.getElementById("two").sheet.insertRule("div { color: green}", 1);
+}
+</script>
+<div>This should be green</div>

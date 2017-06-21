@@ -72,6 +72,17 @@ public:
    */
   nsRect AdjustReflowInputAsContainingBlock(ReflowInput* aReflowInput) const;
 
+  /**
+   * Update our style (and recursively the styles of any anonymous boxes we
+   * might own)
+   */
+  void UpdateStyle(ServoStyleSet& aStyleSet, nsStyleChangeList& aChangeList);
+
+  /**
+   * Return our single anonymous box child.
+   */
+  void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
+
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif

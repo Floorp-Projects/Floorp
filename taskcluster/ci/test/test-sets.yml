@@ -149,6 +149,8 @@ macosx64-tests:
     - crashtest
     - external-media-tests-base
     - external-media-tests-youtube
+    - firefox-ui-functional-local
+    - firefox-ui-functional-remote
     - gtest
     - jittest
     - jsreftest

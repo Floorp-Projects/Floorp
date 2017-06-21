@@ -678,6 +678,7 @@ class tsvgm(PageloaderTest):
     tpcycles = 1
     tppagecycles = 7
     tpmozafterpaint = False
+    tpchrome = False
     gecko_profile_interval = 10
     gecko_profile_entries = 1000000
     """ASAP mode"""
@@ -698,6 +699,7 @@ class tsvgx(PageloaderTest):
     tpcycles = 1
     tppagecycles = 25
     tpmozafterpaint = False
+    tpchrome = False
     gecko_profile_interval = 10
     gecko_profile_entries = 1000000
     """ASAP mode"""
@@ -718,6 +720,7 @@ class tsvg_static(PageloaderTest):
     tpcycles = 1
     tppagecycles = 25
     tpmozafterpaint = True
+    tpchrome = False
     gecko_profile_interval = 1
     gecko_profile_entries = 10000000
     filters = filter.ignore_first.prepare(5) + filter.median.prepare()

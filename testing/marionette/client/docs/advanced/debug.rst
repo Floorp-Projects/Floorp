@@ -14,26 +14,6 @@ a related topic about `using the debugger with Marionette`_ on MDN.
 .. _ones that ship with Gecko: https://developer.mozilla.org/en-US/docs/Tools
 .. _using the debugger with Marionette: https://developer.mozilla.org/en-US/docs/Marionette/Debugging
 
-
-Storing Logs on the Server
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-By calling :func:`~Marionette.log` it is possible to store a message on the
-server.
-Logs can later be retrieved using :func:`~Marionette.get_logs`. For example::
-
-    try:
-        marionette.log("Sending a click event") # logged at INFO level
-        elem.click()
-    except:
-        marionette.log("Something went wrong!", "ERROR")
-
-    print(marionette.get_logs())
-
-Disclaimer: Example for illustrative purposes only, don't actually hide
-tracebacks like that!
-
-
 Seeing What's on the Page
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 

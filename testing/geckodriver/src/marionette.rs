@@ -40,9 +40,9 @@ use webdriver::command::{
     SwitchToFrameParameters, LocatorParameters, JavascriptCommandParameters,
     GetNamedCookieParameters, AddCookieParameters, TimeoutsParameters,
     ActionsParameters, TakeScreenshotParameters};
-use webdriver::response::{CloseWindowResponse, Cookie, CookieResponse, ElementRectResponse,
-                          NewSessionResponse, TimeoutsResponse, ValueResponse, WebDriverResponse,
-                          WindowRectResponse};
+use webdriver::response::{CloseWindowResponse, Cookie, CookieResponse, CookiesResponse,
+                          RectResponse, NewSessionResponse, TimeoutsResponse, ValueResponse,
+                          WebDriverResponse};
 use webdriver::common::{
     Date, Nullable, WebElement, FrameId, ELEMENT_KEY};
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
@@ -637,7 +637,7 @@ impl MarionetteSession {
         Ok(match msg.command {
             // Everything that doesn't have a response value
             Get(_) | GoBack | GoForward | Refresh | SetTimeouts(_) |
-            MaximizeWindow | SwitchToWindow(_) | SwitchToFrame(_) |
+            SwitchToWindow(_) | SwitchToFrame(_) |
             SwitchToParentFrame | AddCookie(_) | DeleteCookies | DeleteCookie(_) |
             DismissAlert | AcceptAlert | SendAlertText(_) | ElementClick(_) |
             ElementTap(_) | ElementClear(_) | ElementSendKeys(_, _) |
@@ -704,40 +704,6 @@ impl MarionetteSession {
                                             })
                                        .collect());
                 WebDriverResponse::CloseWindow(CloseWindowResponse { window_handles: handles })
-            }
-            GetWindowRect => {
-                let width = try_opt!(
-                    try_opt!(resp.result.find("width"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find width field").as_u64(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret width as integer");
-
-                let height = try_opt!(
-                    try_opt!(resp.result.find("height"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find height field").as_u64(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret width as integer");
-
-                let x = try_opt!(
-                    try_opt!(resp.result.find("x"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find x field").as_i64(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret x as integer");
-
-                let y = try_opt!(
-                    try_opt!(resp.result.find("y"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find y field").as_i64(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret y as integer");
-
-                WebDriverResponse::WindowRect(WindowRectResponse {x: x,
-                                                                  y: y,
-                                                                  width: width,
-                                                                  height: height})
             },
             GetElementRect(_) => {
                 let x = try_opt!(
@@ -768,9 +734,24 @@ impl MarionetteSession {
                     ErrorStatus::UnknownError,
                     "Failed to interpret width as float");
 
-                WebDriverResponse::ElementRect(ElementRectResponse::new(x, y, width, height))
+                WebDriverResponse::ElementRect(RectResponse::new(x, y, width, height))
             },
+            FullscreenWindow | MaximizeWindow | GetWindowRect |
             SetWindowRect(_) => {
+                let width = try_opt!(
+                    try_opt!(resp.result.find("width"),
+                             ErrorStatus::UnknownError,
+                             "Failed to find width field").as_f64(),
+                    ErrorStatus::UnknownError,
+                    "Failed to interpret width as float");
+
+                let height = try_opt!(
+                    try_opt!(resp.result.find("height"),
+                             ErrorStatus::UnknownError,
+                             "Failed to find height field").as_f64(),
+                    ErrorStatus::UnknownError,
+                    "Failed to interpret height as float");
+
                 let x = try_opt!(
                     try_opt!(resp.result.find("x"),
                              ErrorStatus::UnknownError,
@@ -785,64 +766,16 @@ impl MarionetteSession {
                     ErrorStatus::UnknownError,
                     "Failed to interpret y as float");
 
-                let width = try_opt!(
-                    try_opt!(resp.result.find("width"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find width field").as_f64(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret width as float");
-
-                let height = try_opt!(
-                    try_opt!(resp.result.find("height"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find height field").as_f64(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret width as float");
-
-                WebDriverResponse::ElementRect(ElementRectResponse::new(x, y, width, height))
-            },
-            FullscreenWindow => {
-                let width = try_opt!(
-                    try_opt!(resp.result.find("width"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find width field").as_u64(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret width as integer");
-
-                let height = try_opt!(
-                    try_opt!(resp.result.find("height"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find height field").as_u64(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret height as integer");
-
-                let x = try_opt!(
-                    try_opt!(resp.result.find("x"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find x field").as_i64(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret x as integer");
-
-                let y = try_opt!(
-                    try_opt!(resp.result.find("y"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find y field").as_i64(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret y as integer");
-
-                WebDriverResponse::WindowRect(WindowRectResponse {x: x,
-                                                                  y: y,
-                                                                  width: width,
-                                                                  height: height})
+                WebDriverResponse::WindowRect(RectResponse::new(x, y, width, height))
             },
             GetCookies => {
                 let cookies = try!(self.process_cookies(&resp.result));
-                WebDriverResponse::Cookie(CookieResponse::new(cookies))
+                WebDriverResponse::Cookies(CookiesResponse {value: cookies})
             },
             GetNamedCookie(ref name) => {
                 let mut cookies = try!(self.process_cookies(&resp.result));
                 cookies.retain(|x| x.name == *name);
-                WebDriverResponse::Cookie(CookieResponse::new(cookies))
+                WebDriverResponse::Cookies(CookiesResponse { value : cookies })
             }
             FindElement(_) | FindElementElement(_, _) => {
                 let element = try!(self.to_web_element(
@@ -975,7 +908,8 @@ impl MarionetteSession {
                 x.find("httpOnly").map_or(Some(false), |x| x.as_boolean()),
                 ErrorStatus::UnknownError,
                 "Failed to interpret httpOnly as boolean");
-            Ok(Cookie::new(name, value, path, domain, expiry, secure, http_only))
+            Ok(Cookie {name: name , value: value, path: path, domain: domain,
+                      expiry: expiry, secure: secure , httpOnly: http_only})
         }).collect::<Result<Vec<_>, _>>()
     }
 

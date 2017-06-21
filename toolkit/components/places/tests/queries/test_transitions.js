@@ -4,7 +4,6 @@
   Any copyright is dedicated to the Public Domain.
   http://creativecommons.org/publicdomain/zero/1.0/
  * ***** END LICENSE BLOCK ***** */
-var beginTime = Date.now();
 var testData = [
   {
     isVisit: true,
@@ -82,15 +81,6 @@ var testData = [
 var testDataTyped = [0, 5, 7, 9];
 var testDataDownload = [1, 2, 4, 6, 10];
 var testDataBookmark = [3, 8, 11];
-
-/**
- * run_test is where the magic happens.  This is automatically run by the test
- * harness.  It is where you do the work of creating the query, running it, and
- * playing with the result set.
- */
-function run_test() {
-  run_next_test();
-}
 
 add_task(async function test_transitions() {
   let timeNow = Date.now();

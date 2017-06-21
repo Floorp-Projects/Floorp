@@ -56,10 +56,6 @@ function testQueryContents(aQuery, aOptions, aCallback) {
   root.containerOpen = false;
 }
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_initialize() {
   await task_populateDB(gTestData);
 });
