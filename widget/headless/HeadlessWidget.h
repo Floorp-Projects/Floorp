@@ -37,6 +37,8 @@ public:
 
   virtual nsIWidget* GetTopLevelWidget() override;
 
+  virtual void GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData* aInitData) override;
+
   virtual void Show(bool aState) override;
   virtual bool IsVisible() const override;
   virtual void Move(double aX, double aY) override;

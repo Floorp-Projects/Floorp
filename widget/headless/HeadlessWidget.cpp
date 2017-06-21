@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "HeadlessWidget.h"
+#include "HeadlessCompositorWidget.h"
 #include "Layers.h"
 #include "BasicLayers.h"
 #include "BasicEvents.h"
@@ -79,6 +80,17 @@ HeadlessWidget::CreateChild(const LayoutDeviceIntRect& aRect,
     return nullptr;
   }
   return widget.forget();
+}
+
+void HeadlessWidget::GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData* aInitData)
+{
+  uintptr_t xWindow(0);
+  nsCString xDisplayString(0);
+
+  *aInitData = mozilla::widget::CompositorWidgetInitData(
+                                  xWindow,
+                                  xDisplayString,
+                                  GetClientSize());
 }
 
 nsIWidget*
@@ -190,14 +202,7 @@ HeadlessWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
                                 LayersBackend aBackendHint,
                                 LayerManagerPersistence aPersistence)
 {
-  if (!mLayerManager) {
-    RefPtr<BasicLayerManager> layerManager = new BasicLayerManager(this);
-    RefPtr<gfxContext> ctx = CreateDefaultTarget(IntSize(mBounds.width, mBounds.height));
-    layerManager->SetDefaultTarget(ctx);
-    mLayerManager = layerManager;
-  }
-
-  return mLayerManager;
+  return nsBaseWidget::GetLayerManager(aShadowManager, aBackendHint, aPersistence);
 }
 
 void
@@ -210,9 +215,9 @@ HeadlessWidget::Resize(double aWidth,
   ConstrainSize(&width, &height);
   mBounds.SizeTo(LayoutDeviceIntSize(width, height));
 
-  if (mLayerManager) {
-    RefPtr<gfxContext> ctx = CreateDefaultTarget(IntSize(mBounds.width, mBounds.height));
-    mLayerManager->AsBasicLayerManager()->SetDefaultTarget(ctx);
+  if (mCompositorWidgetDelegate) {
+    mCompositorWidgetDelegate->NotifyClientSizeChanged(
+        LayoutDeviceIntSize(mBounds.width, mBounds.height));
   }
   if (mWidgetListener) {
     mWidgetListener->WindowResized(this, mBounds.width, mBounds.height);
