@@ -5,4 +5,5 @@ StringLinter:
         - '**/*.js'
         - '**/*.jsm'
     type: string
+    extensions: ['.js', 'jsm']
     payload: foobar

@@ -41,6 +41,9 @@ class Parser(object):
                 raise LinterParseError(linter['path'], "The {} directive must be a "
                                                        "list of strings!".format(attr))
 
+        if 'extensions' in linter:
+            linter['extensions'] = [e.strip('.') for e in linter['extensions']]
+
     def parse(self, path):
         """Read a linter and return its LINTER definition.
 

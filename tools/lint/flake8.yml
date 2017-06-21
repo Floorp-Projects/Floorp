@@ -18,6 +18,6 @@ flake8:
         - toolkit/components/telemetry
     exclude:
         - testing/mochitest/pywebsocket
-    extensions: ['.py']
+    extensions: ['py']
     type: external
     payload: flake8_:lint
