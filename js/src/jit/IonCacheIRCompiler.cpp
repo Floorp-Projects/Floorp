@@ -472,6 +472,7 @@ IonCacheIRCompiler::init()
       case CacheKind::Call:
       case CacheKind::TypeOf:
       case CacheKind::GetPropSuper:
+      case CacheKind::GetElemSuper:
         MOZ_CRASH("Unsupported IC");
     }
 

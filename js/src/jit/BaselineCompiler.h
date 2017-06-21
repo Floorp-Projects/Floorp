@@ -122,6 +122,7 @@ namespace jit {
     _(JSOP_CALLELEM)           \
     _(JSOP_DELELEM)            \
     _(JSOP_STRICTDELELEM)      \
+    _(JSOP_GETELEM_SUPER)      \
     _(JSOP_IN)                 \
     _(JSOP_HASOWN)             \
     _(JSOP_GETGNAME)           \

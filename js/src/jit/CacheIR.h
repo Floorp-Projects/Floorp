@@ -138,6 +138,7 @@ class TypedOperandId : public OperandId
     _(GetElem)              \
     _(GetName)              \
     _(GetPropSuper)         \
+    _(GetElemSuper)         \
     _(SetProp)              \
     _(SetElem)              \
     _(BindName)             \
@@ -1133,17 +1134,21 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
     void attachMegamorphicNativeSlot(ObjOperandId objId, jsid id, bool handleMissing);
 
     ValOperandId getElemKeyValueId() const {
-        MOZ_ASSERT(cacheKind_ == CacheKind::GetElem);
+        MOZ_ASSERT(cacheKind_ == CacheKind::GetElem || cacheKind_ == CacheKind::GetElemSuper);
         return ValOperandId(1);
     }
 
     ValOperandId getSuperReceiverValueId() const {
-        MOZ_ASSERT(cacheKind_ == CacheKind::GetPropSuper);
-        return ValOperandId(1);
+        if (cacheKind_ == CacheKind::GetPropSuper)
+            return ValOperandId(1);
+
+        MOZ_ASSERT(cacheKind_ == CacheKind::GetElemSuper);
+        return ValOperandId(2);
     }
 
     bool isSuper() const {
-        return (cacheKind_ == CacheKind::GetPropSuper);
+        return (cacheKind_ == CacheKind::GetPropSuper ||
+                cacheKind_ == CacheKind::GetElemSuper);
     }
 
     // No pc if idempotent, as there can be multiple bytecode locations
