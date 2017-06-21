@@ -238,7 +238,9 @@ LazyInstantiator::ShouldInstantiate(const DWORD aClientTid)
 
   nsCOMPtr<nsIFile> clientExe;
   if (!GetClientExecutableName(aClientTid, getter_AddRefs(clientExe))) {
+#if defined(MOZ_TELEMETRY_REPORTING)
     AccumulateTelemetry(NS_LITERAL_STRING("(Failed to retrieve client image name)"));
+#endif // defined(MOZ_TELEMETRY_REPORTING)
     // We should return true as a failsafe
     return true;
   }
