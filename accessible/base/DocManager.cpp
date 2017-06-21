@@ -92,10 +92,10 @@ DocManager::RemoveFromXPCDocumentCache(DocAccessible* aDocument)
   if (xpcDoc) {
     xpcDoc->Shutdown();
     mXPCDocumentCache.Remove(aDocument);
-  }
 
-  if (!HasXPCDocuments()) {
-    MaybeShutdownAccService(nsAccessibilityService::eXPCOM);
+    if (!HasXPCDocuments()) {
+      MaybeShutdownAccService(nsAccessibilityService::eXPCOM);
+    }
   }
 }
 
