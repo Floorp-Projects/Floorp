@@ -905,7 +905,7 @@ private:
   void CancelAnimationAndGestureState();
 
   RefPtr<InputQueue> mInputQueue;
-  CancelableBlockState* GetCurrentInputBlock() const;
+  InputBlockState* GetCurrentInputBlock() const;
   TouchBlockState* GetCurrentTouchBlock() const;
   bool HasReadyTouchBlock() const;
 
