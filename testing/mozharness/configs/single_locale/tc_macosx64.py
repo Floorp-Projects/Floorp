@@ -24,7 +24,7 @@ config = {
     },
 
     "tooltool_url": 'http://relengapi/tooltool/',
-    'tooltool_manifest_src': "browser/config/tooltool-manifests/macosx64/cross-releng.manifest",
+    'tooltool_manifest_src': "browser/config/tooltool-manifests/macosx64/cross-l10n.manifest",
     "mozilla_dir": "src/",
     "simple_name_move": True,
 }
