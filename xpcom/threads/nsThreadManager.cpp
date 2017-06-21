@@ -338,15 +338,6 @@ nsThreadManager::GetCurrentThread(nsIThread** aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThreadManager::GetIsMainThread(bool* aResult)
-{
-  // This method may be called post-Shutdown
-
-  *aResult = (PR_GetCurrentThread() == mMainPRThread);
-  return NS_OK;
-}
-
 uint32_t
 nsThreadManager::GetHighestNumberOfThreads()
 {

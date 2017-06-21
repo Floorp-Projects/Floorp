@@ -76,12 +76,6 @@ interface nsIThreadManager : nsISupports
   readonly attribute nsIThread currentThread;
 
   /**
-   * This attribute is true if the calling thread is the main thread of the
-   * application process.
-   */
-  readonly attribute boolean isMainThread;
-
-  /**
    * This queues a runnable to the main thread. It's a shortcut for JS callers
    * to be used instead of
    *   .mainThread.dispatch(runnable, Ci.nsIEventTarget.DISPATCH_NORMAL);
