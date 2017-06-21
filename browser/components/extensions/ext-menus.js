@@ -298,7 +298,7 @@ global.actionContextMenu = function(contextData) {
   gMenuBuilder.buildActionContextMenu(contextData);
 };
 
-function getContexts(contextData) {
+const getMenuContexts = contextData => {
   let contexts = new Set();
 
   if (contextData.inFrame) {
@@ -355,7 +355,7 @@ function getContexts(contextData) {
   }
 
   return contexts;
-}
+};
 
 function MenuItem(extension, createProperties, isRoot = false) {
   this.extension = extension;
@@ -546,7 +546,7 @@ MenuItem.prototype = {
   },
 
   enabledForContext(contextData) {
-    let contexts = getContexts(contextData);
+    let contexts = getMenuContexts(contextData);
     if (!this.contexts.some(n => contexts.has(n))) {
       return false;
     }

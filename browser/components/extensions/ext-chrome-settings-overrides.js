@@ -7,7 +7,7 @@
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionPreferencesManager",
                                   "resource://gre/modules/ExtensionPreferencesManager.jsm");
 
-function searchInitialized() {
+const searchInitialized = () => {
   return new Promise(resolve => {
     if (Services.search.isInitialized) {
       resolve();
@@ -22,7 +22,7 @@ function searchInitialized() {
       resolve();
     }, SEARCH_SERVICE_TOPIC);
   });
-}
+};
 
 this.chrome_settings_overrides = class extends ExtensionAPI {
   async onManifestEntry(entryName) {
