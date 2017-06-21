@@ -279,19 +279,27 @@ NS_DelayedDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent, uint32
 }
 
 nsresult
-NS_IdleDispatchToThread(already_AddRefed<nsIRunnable>&& aEvent,
-                        nsIThread* aThread)
+NS_IdleDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent)
 {
   nsresult rv;
   nsCOMPtr<nsIRunnable> event(aEvent);
   NS_ENSURE_TRUE(event, NS_ERROR_INVALID_ARG);
-  if (!aThread) {
+#ifdef MOZILLA_INTERNAL_API
+  nsIThread* thread = NS_GetCurrentThread();
+  if (!thread) {
     return NS_ERROR_UNEXPECTED;
   }
+#else
+  nsCOMPtr<nsIThread> thread;
+  rv = NS_GetCurrentThread(getter_AddRefs(thread));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+#endif
   // To keep us from leaking the runnable if dispatch method fails,
   // we grab the reference on failures and release it.
   nsIRunnable* temp = event.get();
-  rv = aThread->IdleDispatch(event.forget());
+  rv = thread->IdleDispatch(event.forget());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // Dispatch() leaked the reference to the event, but due to caller's
     // assumptions, we shouldn't leak here. And given we are on the same
@@ -300,13 +308,6 @@ NS_IdleDispatchToThread(already_AddRefed<nsIRunnable>&& aEvent,
   }
 
   return rv;
-}
-
-nsresult
-NS_IdleDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent)
-{
-  return NS_IdleDispatchToThread(Move(aEvent),
-                                 NS_GetCurrentThread());
 }
 
 class IdleRunnableWrapper : public IdleRunnable
@@ -364,9 +365,8 @@ private:
 };
 
 extern nsresult
-NS_IdleDispatchToThread(already_AddRefed<nsIRunnable>&& aEvent,
-                        uint32_t aTimeout,
-                        nsIThread* aThread)
+NS_IdleDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent,
+                               uint32_t aTimeout)
 {
   nsCOMPtr<nsIRunnable> event(Move(aEvent));
   NS_ENSURE_TRUE(event, NS_ERROR_INVALID_ARG);
@@ -386,15 +386,7 @@ NS_IdleDispatchToThread(already_AddRefed<nsIRunnable>&& aEvent,
   }
   idleEvent->SetTimer(aTimeout, target);
 
-  return NS_IdleDispatchToThread(event.forget(), aThread);
-}
-
-extern nsresult
-NS_IdleDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent,
-                               uint32_t aTimeout)
-{
-  return NS_IdleDispatchToThread(Move(aEvent), aTimeout,
-                                 NS_GetCurrentThread());
+  return NS_IdleDispatchToCurrentThread(event.forget());
 }
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
