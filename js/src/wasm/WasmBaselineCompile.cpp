@@ -2341,6 +2341,10 @@ class BaseCompiler
         // frame size. Flush the constant pool in case it needs to be patched.
         MOZ_ASSERT(maxFramePushed_ >= localSize_);
         masm.flush();
+
+        // Precondition for patching.
+        if (masm.oom())
+            return false;
         masm.patchAdd32ToPtr(stackAddOffset_, Imm32(-int32_t(maxFramePushed_ - localSize_)));
 
         // Since we just overflowed the stack, to be on the safe side, pop the
