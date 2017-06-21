@@ -176,20 +176,6 @@ NS_GetMainThread(nsIThread** aResult)
 #endif
 }
 
-#ifndef MOZILLA_INTERNAL_API
-bool
-NS_IsMainThread()
-{
-  bool result = false;
-  nsCOMPtr<nsIThreadManager> mgr =
-    do_GetService(NS_THREADMANAGER_CONTRACTID);
-  if (mgr) {
-    mgr->GetIsMainThread(&result);
-  }
-  return bool(result);
-}
-#endif
-
 nsresult
 NS_DispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent)
 {
