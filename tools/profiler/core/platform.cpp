@@ -2980,12 +2980,6 @@ profiler_tracing(const char* aCategory, const char* aMarkerName,
   racy_profiler_add_marker(aMarkerName, Move(payload));
 }
 
-void
-profiler_log(const char* aStr)
-{
-  profiler_tracing("log", aStr);
-}
-
 PseudoStack*
 profiler_get_pseudo_stack()
 {
