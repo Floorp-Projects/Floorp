@@ -78,7 +78,7 @@ public class TelemetrySyncPingBundleBuilder extends TelemetryPingBuilder {
 
         final ExtendedJSONObject application = new ExtendedJSONObject();
         application.put("architecture", Build.CPU_ABI);
-        application.put("buildID", AppConstants.MOZ_APP_BUILDID);
+        application.put("buildId", AppConstants.MOZ_APP_BUILDID);
         application.put("platformVersion", AppConstants.MOZ_APP_VERSION);
         application.put("name", AppConstants.MOZ_APP_BASENAME);
         application.put("version", AppConstants.MOZ_APP_VERSION);
