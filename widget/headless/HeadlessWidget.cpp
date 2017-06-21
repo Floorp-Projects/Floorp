@@ -34,6 +34,14 @@ CreateDefaultTarget(IntSize aSize)
 
 NS_IMPL_ISUPPORTS_INHERITED0(HeadlessWidget, nsBaseWidget)
 
+HeadlessWidget* HeadlessWidget::sActiveWindow = nullptr;
+
+HeadlessWidget::~HeadlessWidget()
+{
+  if (sActiveWindow == this)
+    sActiveWindow = nullptr;
+}
+
 nsresult
 HeadlessWidget::Create(nsIWidget* aParent,
                        nsNativeWidget aNativeParent,
@@ -43,10 +51,18 @@ HeadlessWidget::Create(nsIWidget* aParent,
   MOZ_ASSERT(!aNativeParent, "No native parents for headless widgets.");
 
   BaseCreate(nullptr, aInitData);
+
   mBounds = aRect;
   mRestoreBounds = aRect;
   mVisible = true;
   mEnabled = true;
+
+  if (aParent) {
+    mTopLevel = aParent->GetTopLevelWidget();
+  } else {
+    mTopLevel = this;
+  }
+
   return NS_OK;
 }
 
@@ -59,28 +75,50 @@ HeadlessWidget::CreateChild(const LayoutDeviceIntRect& aRect,
   if (!widget) {
     return nullptr;
   }
-  if (NS_FAILED(widget->Create(nullptr, nullptr, aRect, aInitData))) {
+  if (NS_FAILED(widget->Create(this, nullptr, aRect, aInitData))) {
     return nullptr;
   }
   return widget.forget();
 }
 
-void
-HeadlessWidget::SendSetZLevelEvent()
+nsIWidget*
+HeadlessWidget::GetTopLevelWidget()
 {
+  return mTopLevel;
+}
+
+void
+HeadlessWidget::RaiseWindow()
+{
+  MOZ_ASSERT(mTopLevel == this, "Raising a non-toplevel window.");
+
+  if (sActiveWindow == this)
+    return;
+
+  // Raise the window to the top of the stack.
   nsWindowZ placement = nsWindowZTop;
   nsCOMPtr<nsIWidget> actualBelow;
   if (mWidgetListener)
     mWidgetListener->ZLevelChanged(true, &placement, nullptr, getter_AddRefs(actualBelow));
+
+  // Deactivate the last active window.
+  if (sActiveWindow && sActiveWindow->mWidgetListener)
+    sActiveWindow->mWidgetListener->WindowDeactivated();
+
+  // Activate this window.
+  sActiveWindow = this;
+  if (mWidgetListener)
+    mWidgetListener->WindowActivated();
 }
 
 void
 HeadlessWidget::Show(bool aState)
 {
   mVisible = aState;
-  if (aState) {
-    SendSetZLevelEvent();
-  }
+
+  // Top-level windows are activated/raised when shown.
+  if (aState && mTopLevel == this)
+    RaiseWindow();
 }
 
 bool
@@ -92,8 +130,14 @@ HeadlessWidget::IsVisible() const
 nsresult
 HeadlessWidget::SetFocus(bool aRaise)
 {
-  if (aRaise && mVisible) {
-    SendSetZLevelEvent();
+  // aRaise == true means we request activation of our toplevel window.
+  if (aRaise) {
+    HeadlessWidget* topLevel = (HeadlessWidget*) GetTopLevelWidget();
+
+    // The toplevel only becomes active if it's currently visible; otherwise, it
+    // will be activated anyway when it's shown.
+    if (topLevel->IsVisible())
+      topLevel->RaiseWindow();
   }
   return NS_OK;
 }
