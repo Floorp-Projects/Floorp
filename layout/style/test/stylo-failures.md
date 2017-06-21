@@ -117,7 +117,6 @@ to mochitest command.
   * Gecko rejects calc() in -webkit-gradient bug 1363349
     * test_property_syntax_errors.html `-webkit-gradient` [20]
 * test_specified_value_serialization.html `-webkit-radial-gradient`: bug 1367299 [1]
-* test_variables.html `var(--var6)`: irrelevant test for stylo bug 1367306 [1]
 
 ## Unknown / Unsure
 
