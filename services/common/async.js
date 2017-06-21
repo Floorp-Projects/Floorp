@@ -91,12 +91,10 @@ this.Async = {
    */
   waitForSyncCallback: function waitForSyncCallback(callback) {
     // Grab the current thread so we can make it give up priority.
-    let thread = Cc["@mozilla.org/thread-manager;1"].getService().currentThread;
+    let tm = Cc["@mozilla.org/thread-manager;1"].getService();
 
     // Keep waiting until our callback is triggered (unless the app is quitting).
-    while (Async.checkAppReady() && callback.state == CB_READY) {
-      thread.processNextEvent(true);
-    }
+    tm.spinEventLoopUntil(() => !Async.checkAppReady || callback.state != CB_READY);
 
     // Reset the state of the callback to prepare for another call.
     let state = callback.state;
