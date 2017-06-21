@@ -442,9 +442,7 @@ protected:
    *         or the error code related to the read attempt.
    */
   nsresult UseDefaultPrefFile();
-  nsresult UseUserPrefFile();
-  nsresult ReadAndOwnUserPrefFile(nsIFile *aFile);
-  nsresult ReadAndOwnSharedUserPrefFile(nsIFile *aFile);
+  void UseUserPrefFile();
   nsresult MakeBackupPrefFile(nsIFile *aFile);
 
   // Default pref file save can be blocking or not.
