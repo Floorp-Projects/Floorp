@@ -38,12 +38,16 @@ interface nsICookieManager : nsISupports
   /**
    * Called to enumerate through each cookie in the cookie list.
    * The objects enumerated over are of type nsICookie
+   * This enumerator should only be used for non-private browsing cookies.
+   * To retrieve an enumerator for private browsing cookies, use
+   * getCookiesWithOriginAttributes from nsICookieManager2.
    */
   readonly attribute nsISimpleEnumerator enumerator;
 
   /**
    * Called to enumerate through each session cookie in the cookie list.
    * The objects enumerated over are of type nsICookie
+   * This enumerator should only be used for non-private browsing cookies.
    */
   readonly attribute nsISimpleEnumerator sessionEnumerator;
 
@@ -79,16 +83,4 @@ interface nsICookieManager : nsISupports
                         in AUTF8String   aPath,
                         in boolean       aBlocked,
                         in OriginAttributesPtr aOriginAttributes);
-
-  /**
-   * Set the cookie manager to work on private or non-private cookies for the
-   * duration of the callback.
-   *
-   * @param aIsPrivate True to work on private cookies, false to work on
-   *                   non-private cookies.
-   * @param aCallback Methods on the cookie manager interface will work on
-   *                  private or non-private cookies for the duration of this
-   *                  callback.
-   */
-  void usePrivateMode(in boolean aIsPrivate, in nsIPrivateModeCallback aCallback);
 };

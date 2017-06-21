@@ -175,24 +175,22 @@ function* query(detailsIn, props, context) {
   // We can use getCookiesFromHost for faster searching.
   let enumerator;
   let uri;
+  let originAttributes = {
+    userContextId,
+    privateBrowsingId: isPrivate ? 1 : 0,
+  };
   if ("url" in details) {
     try {
       uri = NetUtil.newURI(details.url).QueryInterface(Ci.nsIURL);
-      Services.cookies.usePrivateMode(isPrivate, () => {
-        enumerator = Services.cookies.getCookiesFromHost(uri.host, {userContextId});
-      });
+      enumerator = Services.cookies.getCookiesFromHost(uri.host, originAttributes);
     } catch (ex) {
       // This often happens for about: URLs
       return;
     }
   } else if ("domain" in details) {
-    Services.cookies.usePrivateMode(isPrivate, () => {
-      enumerator = Services.cookies.getCookiesFromHost(details.domain, {userContextId});
-    });
+    enumerator = Services.cookies.getCookiesFromHost(details.domain, originAttributes);
   } else {
-    Services.cookies.usePrivateMode(isPrivate, () => {
-      enumerator = Services.cookies.enumerator;
-    });
+    enumerator = Services.cookies.getCookiesWithOriginAttributes(JSON.stringify(originAttributes));
   }
 
   // Based on nsCookieService::GetCookieStringInternal
@@ -235,10 +233,6 @@ function* query(detailsIn, props, context) {
     }
 
     if ("name" in details && details.name != cookie.name) {
-      return false;
-    }
-
-    if (userContextId != cookie.originAttributes.userContextId) {
       return false;
     }
 
@@ -340,21 +334,22 @@ this.cookies = class extends ExtensionAPI {
             return Promise.reject({message: `Permission denied to set cookie ${JSON.stringify(details)}`});
           }
 
+          let originAttributes = {
+            userContextId,
+            privateBrowsingId: isPrivate ? 1 : 0,
+          };
+
           // The permission check may have modified the domain, so use
           // the new value instead.
-          Services.cookies.usePrivateMode(isPrivate, () => {
-            Services.cookies.add(cookieAttrs.host, path, name, value,
-                                 secure, httpOnly, isSession, expiry, {userContextId});
-          });
+          Services.cookies.add(cookieAttrs.host, path, name, value,
+                               secure, httpOnly, isSession, expiry, originAttributes);
 
           return self.cookies.get(details);
         },
 
         remove: function(details) {
-          for (let {cookie, isPrivate, storeId} of query(details, ["url", "name", "storeId"], context)) {
-            Services.cookies.usePrivateMode(isPrivate, () => {
-              Services.cookies.remove(cookie.host, cookie.name, cookie.path, false, cookie.originAttributes);
-            });
+          for (let {cookie, storeId} of query(details, ["url", "name", "storeId"], context)) {
+            Services.cookies.remove(cookie.host, cookie.name, cookie.path, false, cookie.originAttributes);
 
             // Todo: could there be multiple per subdomain?
             return Promise.resolve({

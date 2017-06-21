@@ -8,7 +8,7 @@ use super::function::Function;
 use super::item_kind::ItemKind;
 use super::layout::Opaque;
 use super::module::Module;
-use super::template::{AsNamed, TemplateParameters};
+use super::template::{AsTemplateParam, TemplateParameters};
 use super::traversal::{EdgeKind, Trace, Tracer};
 use super::ty::{Type, TypeKind};
 use clang;
@@ -131,28 +131,28 @@ impl<'a, 'b> Iterator for ItemAncestorsIter<'a, 'b>
     }
 }
 
-impl AsNamed for ItemId {
+impl AsTemplateParam for ItemId {
     type Extra = ();
 
-    fn as_named(&self, ctx: &BindgenContext, _: &()) -> Option<ItemId> {
-        ctx.resolve_item(*self).as_named(ctx, &())
+    fn as_template_param(&self, ctx: &BindgenContext, _: &()) -> Option<ItemId> {
+        ctx.resolve_item(*self).as_template_param(ctx, &())
     }
 }
 
-impl AsNamed for Item {
+impl AsTemplateParam for Item {
     type Extra = ();
 
-    fn as_named(&self, ctx: &BindgenContext, _: &()) -> Option<ItemId> {
-        self.kind.as_named(ctx, self)
+    fn as_template_param(&self, ctx: &BindgenContext, _: &()) -> Option<ItemId> {
+        self.kind.as_template_param(ctx, self)
     }
 }
 
-impl AsNamed for ItemKind {
+impl AsTemplateParam for ItemKind {
     type Extra = Item;
 
-    fn as_named(&self, ctx: &BindgenContext, item: &Item) -> Option<ItemId> {
+    fn as_template_param(&self, ctx: &BindgenContext, item: &Item) -> Option<ItemId> {
         match *self {
-            ItemKind::Type(ref ty) => ty.as_named(ctx, item),
+            ItemKind::Type(ref ty) => ty.as_template_param(ctx, item),
             ItemKind::Module(..) |
             ItemKind::Function(..) |
             ItemKind::Var(..) => None,
@@ -756,7 +756,7 @@ impl Item {
 
         // Named template type arguments are never namespaced, and never
         // mangled.
-        if target.is_named(ctx, &()) {
+        if target.is_template_param(ctx, &()) {
             return base_name;
         }
 

@@ -150,8 +150,14 @@ module.exports = {
     // Use [] instead of Array()
     "no-array-constructor": "error",
 
+    // Disallow modifying variables of class declarations.
+    "no-class-assign": "error",
+
     // Disallow assignment operators in conditional statements
     "no-cond-assign": "error",
+
+    // Disallow modifying variables that are declared using const.
+    "no-const-assign": "error",
 
     // Disallow control characters in regular expressions.
     "no-control-regex": "error",
@@ -164,6 +170,9 @@ module.exports = {
 
     // No duplicate arguments in function declarations
     "no-dupe-args": "error",
+
+    // Disallow duplicate class members.
+    "no-dupe-class-members": "error",
 
     // No duplicate keys in object declarations
     "no-dupe-keys": "error",

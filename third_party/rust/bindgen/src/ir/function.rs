@@ -128,16 +128,8 @@ fn get_abi(cc: CXCallingConv) -> Abi {
     })
 }
 
-// Mac os and Win32 need __ for mangled symbols but rust will automatically
-// prepend the extra _.
-//
-// We need to make sure that we don't include __ because rust will turn into
-// ___.
 fn mangling_hack_if_needed(ctx: &BindgenContext, symbol: &mut String) {
-    // NB: win64 also contains the substring "win32" in the target triple, so
-    // we need to actually check for i686...
-    if ctx.target().contains("darwin") ||
-       (ctx.target().contains("i686") && ctx.target().contains("windows")) {
+    if ctx.needs_mangling_hack() {
         symbol.remove(0);
     }
 }
