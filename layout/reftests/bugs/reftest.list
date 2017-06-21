@@ -2015,3 +2015,4 @@ fails-if(!stylo||styloVsGecko) == 1365162-1.html 1365162-1-ref.html
 == 1369954-1.xhtml 1369954-1-ref.xhtml
 == 1369985-1.html 1369985-1-ref.html
 == 1371130.xhtml 1371130-ref.xhtml
+== 1374062.html 1374062-ref.html
