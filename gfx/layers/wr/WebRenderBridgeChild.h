@@ -96,6 +96,11 @@ public:
     mIdNamespace = aIdNamespace;
   }
 
+  WrImageKey GetNextImageKey()
+  {
+    return WrImageKey{ GetNamespace(), GetNextResourceId() };
+  }
+
   void PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArray<GlyphArray>& aGlyphs,
                   gfx::ScaledFont* aFont, const StackingContextHelper& aSc,
                   const LayerRect& aBounds, const LayerRect& aClip);

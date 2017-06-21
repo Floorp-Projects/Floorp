@@ -74,6 +74,8 @@ WebRenderLayerManager::Destroy()
     return;
   }
 
+  mWidget->CleanupWebRenderWindowOverlay(WrBridge());
+
   LayerManager::Destroy();
   DiscardImages();
   DiscardCompositorAnimations();
@@ -203,6 +205,7 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   WrSize contentSize { (float)size.width, (float)size.height };
   wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize);
   WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer(builder, sc);
+  mWidget->AddWindowOverlayWebRenderCommands(WrBridge(), builder);
   WrBridge()->ClearReadLocks();
 
   // We can't finish this transaction so return. This usually
