@@ -13,6 +13,10 @@ from mozbuild.backend.recursivemake import RecursiveMakeBackend
 from mozbuild.shellutil import quote as shell_quote
 from mozbuild.util import OrderedDefaultDict
 
+from mozpack.files import (
+    FileFinder,
+)
+
 from .common import CommonBackend
 from ..frontend.data import (
     ChromeManifestEntry,
@@ -320,8 +324,21 @@ class TupOnly(CommonBackend, PartialBackend):
                             # TODO: This is only needed for Windows, so we can
                             # skip this for now.
                             pass
+                        elif '**' not in f:
+                            def _prefix(s):
+                                for p in mozpath.split(s):
+                                    if '*' not in p:
+                                        yield p + '/'
+                            prefix = ''.join(_prefix(f.full_path))
+                            self.backend_input_files.add(prefix)
+                            finder = FileFinder(prefix)
+                            for p, _ in finder.find(f.full_path[len(prefix):]):
+                                backend_file.symlink_rule(mozpath.join(prefix, p),
+                                                          output=mozpath.join(f.target_basename, p),
+                                                          output_group=self._installed_files)
                         else:
-                            # TODO: This is needed for tests
+                            # TODO: Handle wildcards containing '**' used under '_tests'
+                            # (bug 1372381).
                             pass
                     else:
                         backend_file.symlink_rule(f.full_path, output=f.target_basename, output_group=self._installed_files)
