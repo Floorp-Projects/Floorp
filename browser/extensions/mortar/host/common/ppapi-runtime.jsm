@@ -2079,12 +2079,11 @@ dump(`callFromJSON: < ${JSON.stringify(call)}\n`);
       return result ? JSON.parse(result) : result;
     }
 
-    let thread = Services.tm.currentThread;
-    thread.dispatch(() => {
+    Services.tm.dispatchToMainThread(() => {
 dump(`callFromJSON (async): > ${JSON.stringify(call)}\n`);
       let result = this.process.sendMessage(JSON.stringify(call));
 dump(`callFromJSON: < ${JSON.stringify(call)}\n`);
-    }, Ci.nsIThread.DISPATCH_NORMAL);
+    });
   },
 
   table: {

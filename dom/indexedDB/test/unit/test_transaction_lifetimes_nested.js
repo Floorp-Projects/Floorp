@@ -28,15 +28,14 @@ function* testSteps()
   let comp = this.window ? SpecialPowers.wrap(Components) : Components;
   let tm = comp.classes["@mozilla.org/thread-manager;1"]
                .getService(comp.interfaces.nsIThreadManager);
-  let thread = tm.currentThread;
 
   let eventHasRun;
 
-  thread.dispatch(function() {
+  tm.dispatchToMainThread(function() {
     eventHasRun = true;
 
     transaction2 = db.transaction("foo");
-  }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
+  });
 
   tm.spinEventLoopUntil(() => eventHasRun);
 
