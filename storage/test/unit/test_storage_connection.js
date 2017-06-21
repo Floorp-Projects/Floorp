@@ -205,10 +205,8 @@ add_task(function* test_close_does_not_spin_event_loop() {
 
   // Post the event before we call close, so it would run if the event loop was
   // spun during close.
-  let thread = Cc["@mozilla.org/thread-manager;1"].
-               getService(Ci.nsIThreadManager).
-               currentThread;
-  thread.dispatch(event, Ci.nsIThread.DISPATCH_NORMAL);
+  Cc["@mozilla.org/thread-manager;1"].
+    getService(Ci.nsIThreadManager).dispatchToMainThread(event);
 
   // Sanity check, then close the database.  Afterwards, we should not have ran!
   do_check_false(event.ran);

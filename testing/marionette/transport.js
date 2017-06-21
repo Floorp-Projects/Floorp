@@ -23,7 +23,7 @@ const defer = function () {
   return deferred;
 };
 const executeSoon = function (func) {
-  Services.tm.mainThread.dispatch(func, Ci.nsIThread.DISPATCH_NORMAL);
+  Services.tm.dispatchToMainThread(func);
 };
 const flags = { wantVerbose: false, wantLogging: false };
 
