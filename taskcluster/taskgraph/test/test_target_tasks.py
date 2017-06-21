@@ -45,7 +45,6 @@ class TestTargetTasks(unittest.TestCase):
         """run_on_projects=[all] includes release, integration, and other projects"""
         self.assertTrue(self.default_matches(['all'], 'mozilla-central'))
         self.assertTrue(self.default_matches(['all'], 'mozilla-inbound'))
-        self.assertTrue(self.default_matches(['all'], 'mozilla-aurora'))
         self.assertTrue(self.default_matches(['all'], 'baobab'))
 
     def test_default_integration(self):

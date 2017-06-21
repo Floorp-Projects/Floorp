@@ -201,21 +201,25 @@ label.findbar-find-fast:-moz-lwtheme,
   border-left: none;
   border-right: none;
   margin-inline-end: 0;
-  list-style-image: url(chrome://global/skin/icons/find-arrows.svg#previous);
+  list-style-image: url(chrome://global/skin/icons/find-previous-arrow.svg);
+  -moz-context-properties: fill;
+  fill: -moz-dialogtext;
   border-radius: 0;
 }
 
 .findbar-find-next {
-  list-style-image: url(chrome://global/skin/icons/find-arrows.svg#next);
+  list-style-image: url(chrome://global/skin/icons/find-next-arrow.svg);
+  -moz-context-properties: fill;
+  fill: -moz-dialogtext;
   padding-inline-end: 7px;
 }
 
 .findbar-find-previous[disabled] {
-  list-style-image: url(chrome://global/skin/icons/find-arrows.svg#previous-disabled);
+  fill: GrayText;
 }
 
 .findbar-find-next[disabled] {
-  list-style-image: url(chrome://global/skin/icons/find-arrows.svg#next-disabled);
+  fill: GrayText;
 }
 
 .findbar-find-next:-moz-locale-dir(ltr) {

@@ -506,6 +506,11 @@ CrossProcessCompositorBridgeParent::AllocPTextureParent(const SurfaceDescriptor&
 
   TextureFlags flags = aFlags;
 
+  LayersBackend actualBackend = LayersBackend::LAYERS_NONE;
+  if (state && state->mLayerManager) {
+    actualBackend = state->mLayerManager->GetBackendType();
+  }
+
   if (!state) {
     // The compositor was recreated, and we're receiving layers updates for a
     // a layer manager that will soon be discarded or invalidated. We can't
@@ -513,8 +518,7 @@ CrossProcessCompositorBridgeParent::AllocPTextureParent(const SurfaceDescriptor&
     // kill the content process. Instead, we signal that the underlying
     // TextureHost should not attempt to access the compositor.
     flags |= TextureFlags::INVALID_COMPOSITOR;
-  } else if (state->mLayerManager && state->mLayerManager->GetCompositor() &&
-             aLayersBackend != state->mLayerManager->GetCompositor()->GetBackendType()) {
+  } else if (actualBackend != LayersBackend::LAYERS_NONE && aLayersBackend != actualBackend) {
     gfxDevCrash(gfx::LogReason::PAllocTextureBackendMismatch) << "Texture backend is wrong";
   }
 

@@ -444,7 +444,8 @@ ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
   mRegistration->SetEvaluating(sw);
 
   nsMainThreadPtrHandle<ServiceWorkerUpdateJob> handle(
-      new nsMainThreadPtrHolder<ServiceWorkerUpdateJob>(this));
+      new nsMainThreadPtrHolder<ServiceWorkerUpdateJob>(
+        "ServiceWorkerUpdateJob", this));
   RefPtr<LifeCycleEventCallback> callback = new ContinueUpdateRunnable(handle);
 
   ServiceWorkerPrivate* workerPrivate = sw->WorkerPrivate();
@@ -519,7 +520,8 @@ ServiceWorkerUpdateJob::Install(ServiceWorkerManager* aSWM)
     (this, &ServiceWorkerUpdateJob::ContinueAfterInstallEvent, false);
 
   nsMainThreadPtrHandle<ServiceWorkerUpdateJob> handle(
-    new nsMainThreadPtrHolder<ServiceWorkerUpdateJob>(this));
+    new nsMainThreadPtrHolder<ServiceWorkerUpdateJob>(
+      "ServiceWorkerUpdateJob", this));
   RefPtr<LifeCycleEventCallback> callback = new ContinueInstallRunnable(handle);
 
   // Send the install event to the worker thread

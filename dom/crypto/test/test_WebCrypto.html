@@ -491,10 +491,7 @@ TestArray.addTest(
 
     function doEncrypt(x) {
       return encrypt(x, new Uint8Array(15))
-        .then(
-          null,
-          function () { return encrypt(new Uint8Array(17)); }
-        );
+        .catch(function () { return encrypt(new Uint8Array(17)); });
     }
 
     crypto.subtle.importKey("raw", tv.aes_cbc_enc.key, "AES-CBC", false, ['encrypt'])
@@ -541,10 +538,7 @@ TestArray.addTest(
 
     function doDecrypt(x) {
       return decrypt(x, new Uint8Array(15))
-        .then(
-          null,
-          function () { return decrypt(x, new Uint8Array(17)); }
-        );
+        .catch(function () { return decrypt(x, new Uint8Array(17)); });
     }
 
     crypto.subtle.importKey("raw", tv.aes_cbc_dec.key, "AES-CBC", false, ['decrypt'])
@@ -591,10 +585,7 @@ TestArray.addTest(
 
     function doEncrypt(x) {
       return encrypt(x, new Uint8Array(15))
-        .then(
-          null,
-          function () { return encrypt(x, new Uint8Array(17)); }
-        );
+        .catch(function () { return encrypt(x, new Uint8Array(17)); });
     }
 
     crypto.subtle.importKey("raw", tv.aes_ctr_enc.key, "AES-CTR", false, ['encrypt'])
@@ -641,10 +632,7 @@ TestArray.addTest(
 
     function decrypt(x) {
       return decrypt(x, new Uint8Array(15))
-        .then(
-          null,
-          function () { return decrypt(x, new Uint8Array(17)); }
-        );
+        .catch(function () { return decrypt(x, new Uint8Array(17)); });
     }
 
     crypto.subtle.importKey("raw", tv.aes_ctr_dec.key, "AES-CTR", false, ['decrypt'])

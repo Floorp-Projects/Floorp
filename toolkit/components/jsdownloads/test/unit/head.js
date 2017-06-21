@@ -336,7 +336,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
       // are controlling becomes visible in the list of downloads.
       aList.addView({
         onDownloadAdded(aDownload) {
-          aList.removeView(this).then(null, do_report_unexpected_exception);
+          aList.removeView(this).catch(do_report_unexpected_exception);
 
           // Remove the download to keep the list empty for the next test.  This
           // also allows the caller to register the "onchange" event directly.
@@ -346,7 +346,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
           promise.then(() => resolve(aDownload),
                        do_report_unexpected_exception);
         },
-      }).then(null, do_report_unexpected_exception);
+      }).catch(do_report_unexpected_exception);
 
       let isPrivate = aOptions && aOptions.isPrivate;
 
@@ -359,7 +359,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
       // Start the actual download process.
       persist.savePrivacyAwareURI(sourceURI, null, null, 0, null, null, targetFile,
                                   isPrivate);
-    }).then(null, do_report_unexpected_exception);
+    }).catch(do_report_unexpected_exception);
 
   });
 }
@@ -389,7 +389,7 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
       // are controlling becomes visible in the list of downloads.
       aList.addView({
         onDownloadAdded(aDownload) {
-          aList.removeView(this).then(null, do_report_unexpected_exception);
+          aList.removeView(this).catch(do_report_unexpected_exception);
 
           // Remove the download to keep the list empty for the next test.  This
           // also allows the caller to register the "onchange" event directly.
@@ -399,7 +399,7 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
           promise.then(() => resolve(aDownload),
                        do_report_unexpected_exception);
         },
-      }).then(null, do_report_unexpected_exception);
+      }).catch(do_report_unexpected_exception);
 
       let channel = NetUtil.newChannel({
         uri: sourceURI,
@@ -427,7 +427,7 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
                                                aOffset, aCount);
         },
       });
-    }).then(null, do_report_unexpected_exception);
+    }).catch(do_report_unexpected_exception);
 
   });
 }
@@ -639,7 +639,7 @@ function registerInterruptibleHandler(aPath, aFirstPartFn, aSecondPartFn) {
       aSecondPartFn(aRequest, aResponse);
       aResponse.finish();
       do_print("Interruptible request finished.");
-    }).then(null, Cu.reportError);
+    }).catch(Cu.reportError);
   });
 }
 

@@ -1,6 +1,24 @@
 # This file contains a definition of the scalar probes that are recorded in Telemetry.
 # They are submitted with the "main" pings and can be inspected in about:telemetry.
 
+# The following section contains the accessibility scalars.
+a11y:
+  instantiators:
+    bug_numbers:
+      - 1323069
+    description: >
+      The leaf name and version number of the binary for the process responsible
+      for remotely instantiating a11y.
+    expires: "61"
+    kind: string
+    notification_emails:
+      - dbolter@mozilla.com
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
+    keyed: false
+    cpp_guard: 'ACCESSIBILITY'
+
 # The following section contains the aushelper system add-on scalars.
 aushelper:
   websense_reg_version:

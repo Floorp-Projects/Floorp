@@ -1520,7 +1520,7 @@ var AddonManagerInternal = {
                                    "addons-background-update-complete");
     })();
     // Fork the promise chain so we can log the error and let our caller see it too.
-    buPromise.then(null, e => logger.warn("Error in background update", e));
+    buPromise.catch(e => logger.warn("Error in background update", e));
     return buPromise;
   },
 

@@ -1642,7 +1642,7 @@ PlacesToolbar.prototype = {
     let dropPoint = this._getDropPoint(aEvent);
     if (dropPoint && dropPoint.ip) {
       PlacesControllerDragHelper.onDrop(dropPoint.ip, aEvent.dataTransfer)
-                                .then(null, Components.utils.reportError);
+                                .catch(Components.utils.reportError);
       aEvent.preventDefault();
     }
 

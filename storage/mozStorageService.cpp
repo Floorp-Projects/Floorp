@@ -320,7 +320,8 @@ Service::unregisterConnection(Connection *aConnection)
         // Ensure the connection is released on its opening thread.  Note, we
         // must use .forget().take() so that we can manually cast to an
         // unambiguous nsISupports type.
-        NS_ProxyRelease(thread, mConnections[i].forget());
+        NS_ProxyRelease(
+          "storage::Service::mConnections", thread, mConnections[i].forget());
 
         mConnections.RemoveElementAt(i);
         return;
@@ -713,13 +714,16 @@ private:
 
   ~AsyncInitDatabase()
   {
-    NS_ReleaseOnMainThread(mStorageFile.forget());
-    NS_ReleaseOnMainThread(mConnection.forget());
+    NS_ReleaseOnMainThread(
+      "AsyncInitDatabase::mStorageFile", mStorageFile.forget());
+    NS_ReleaseOnMainThread(
+      "AsyncInitDatabase::mConnection", mConnection.forget());
 
     // Generally, the callback will be released by CallbackComplete.
     // However, if for some reason Run() is not executed, we still
     // need to ensure that it is released here.
-    NS_ReleaseOnMainThread(mCallback.forget());
+    NS_ReleaseOnMainThread(
+      "AsyncInitDatabase::mCallback", mCallback.forget());
   }
 
   RefPtr<Connection> mConnection;

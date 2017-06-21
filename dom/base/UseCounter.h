@@ -31,6 +31,12 @@ enum UseCounter : int16_t {
   eUseCounter_Count
 };
 
+enum IncCounter : int16_t {
+  eIncCounter_UNKNOWN = -1,
+  eIncCounter_ScriptTag,
+  eIncCounter_Count
+};
+
 }
 
 #endif

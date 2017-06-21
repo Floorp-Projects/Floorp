@@ -25,7 +25,7 @@ function test() {
     gSources = gDebugger.DebuggerView.Sources;
     gContextMenu = gDebugger.document.getElementById("sourceEditorContextMenu");
 
-    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1).then(performTest).then(null, info);
+    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1).then(performTest).catch(info);
     callInTab(gTab, "firstCall");
   });
 
@@ -50,7 +50,7 @@ function test() {
     gEditor.focus();
     gEditor.setSelection({ line: 1, ch: 0 }, { line: 1, ch: 10 });
 
-    once(gContextMenu, "popupshown").then(testContextMenu).then(null, info);
+    once(gContextMenu, "popupshown").then(testContextMenu).catch(info);
     gContextMenu.openPopup(gEditor.container, "overlap", 0, 0, true, false);
   }
 

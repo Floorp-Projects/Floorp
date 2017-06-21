@@ -129,19 +129,23 @@ private:
             // callbacks called normally they will all be null and this is a nop
 
             if (mChannel) {
-                NS_ReleaseOnMainThread(mChannel.forget());
+                NS_ReleaseOnMainThread(
+                  "nsAsyncResolveRequest::mChannel", mChannel.forget());
             }
 
             if (mCallback) {
-                NS_ReleaseOnMainThread(mCallback.forget());
+                NS_ReleaseOnMainThread(
+                  "nsAsyncResolveRequest::mCallback", mCallback.forget());
             }
 
             if (mProxyInfo) {
-                NS_ReleaseOnMainThread(mProxyInfo.forget());
+                NS_ReleaseOnMainThread(
+                  "nsAsyncResolveRequest::mProxyInfo", mProxyInfo.forget());
             }
 
             if (mXPComPPS) {
-                NS_ReleaseOnMainThread(mXPComPPS.forget());
+                NS_ReleaseOnMainThread(
+                  "nsAsyncResolveRequest::mXPComPPS", mXPComPPS.forget());
             }
         }
     }
@@ -362,7 +366,8 @@ private:
     ~AsyncGetPACURIRequest()
     {
         MOZ_ASSERT(NS_IsMainThread() == mIsMainThreadOnly);
-        NS_ReleaseOnMainThread(mServiceHolder.forget());
+        NS_ReleaseOnMainThread(
+          "AsyncGetPACURIRequest::mServiceHolder", mServiceHolder.forget());
     }
 
     bool mIsMainThreadOnly;

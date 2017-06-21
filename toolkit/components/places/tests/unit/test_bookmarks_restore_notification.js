@@ -214,7 +214,7 @@ add_task(async function test_html_restore_normal() {
   await PlacesUtils.bookmarks.eraseEverything();
   try {
     BookmarkHTMLUtils.importFromFile(file, false)
-                     .then(null, do_report_unexpected_exception);
+                     .catch(do_report_unexpected_exception);
   } catch (e) {
     do_throw("  Restore should not have failed");
   }
@@ -234,7 +234,7 @@ add_task(async function test_html_restore_empty() {
   let file = await promiseFile("bookmarks-test_restoreNotification.init.html");
   try {
     BookmarkHTMLUtils.importFromFile(file, false)
-                     .then(null, do_report_unexpected_exception);
+                     .catch(do_report_unexpected_exception);
   } catch (e) {
     do_throw("  Restore should not have failed");
   }
@@ -276,7 +276,7 @@ add_task(async function test_html_init_restore_normal() {
   await PlacesUtils.bookmarks.eraseEverything();
   try {
     BookmarkHTMLUtils.importFromFile(file, true)
-                     .then(null, do_report_unexpected_exception);
+                     .catch(do_report_unexpected_exception);
   } catch (e) {
     do_throw("  Restore should not have failed");
   }
@@ -296,7 +296,7 @@ add_task(async function test_html_init_restore_empty() {
   let file = await promiseFile("bookmarks-test_restoreNotification.init.html");
   try {
     BookmarkHTMLUtils.importFromFile(file, true)
-                     .then(null, do_report_unexpected_exception);
+                     .catch(do_report_unexpected_exception);
   } catch (e) {
     do_throw("  Restore should not have failed");
   }

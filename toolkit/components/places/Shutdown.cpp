@@ -97,7 +97,8 @@ ClientsShutdownBlocker::ClientsShutdownBlocker()
   if (asyncShutdown) {
     nsCOMPtr<nsIAsyncShutdownBarrier> barrier;
     MOZ_ALWAYS_SUCCEEDS(asyncShutdown->MakeBarrier(mName, getter_AddRefs(barrier)));
-    mBarrier = new nsMainThreadPtrHolder<nsIAsyncShutdownBarrier>(barrier);
+    mBarrier = new nsMainThreadPtrHolder<nsIAsyncShutdownBarrier>(
+      "ClientsShutdownBlocker::mBarrier", barrier);
   }
 }
 
@@ -116,7 +117,8 @@ NS_IMETHODIMP
 ClientsShutdownBlocker::BlockShutdown(nsIAsyncShutdownClient* aParentClient)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mParentClient = new nsMainThreadPtrHolder<nsIAsyncShutdownClient>(aParentClient);
+  mParentClient = new nsMainThreadPtrHolder<nsIAsyncShutdownClient>(
+    "ClientsShutdownBlocker::mParentClient", aParentClient);
   mState = RECEIVED_BLOCK_SHUTDOWN;
 
   if (NS_WARN_IF(!mBarrier)) {
@@ -168,7 +170,8 @@ NS_IMETHODIMP
 ConnectionShutdownBlocker::BlockShutdown(nsIAsyncShutdownClient* aParentClient)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mParentClient = new nsMainThreadPtrHolder<nsIAsyncShutdownClient>(aParentClient);
+  mParentClient = new nsMainThreadPtrHolder<nsIAsyncShutdownClient>(
+    "ConnectionShutdownBlocker::mParentClient", aParentClient);
   mState = RECEIVED_BLOCK_SHUTDOWN;
   // Annotate that Database shutdown started.
   sIsStarted = true;
@@ -209,8 +212,8 @@ ConnectionShutdownBlocker::Complete(nsresult, nsISupports*)
   MOZ_ASSERT(os);
   if (os) {
     MOZ_ALWAYS_SUCCEEDS(os->NotifyObservers(nullptr,
-					    TOPIC_PLACES_CONNECTION_CLOSED,
-					    nullptr));
+              TOPIC_PLACES_CONNECTION_CLOSED,
+              nullptr));
   }
   mState = NOTIFIED_OBSERVERS_PLACES_CONNECTION_CLOSED;
 

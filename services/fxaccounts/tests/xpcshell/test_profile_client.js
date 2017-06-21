@@ -140,9 +140,7 @@ add_test(function parseErrorResponse() {
 
   client._Request = new mockResponse(response);
   client.fetchProfile()
-    .then(
-      null,
-      function(e) {
+    .catch(function(e) {
         do_check_eq(e.name, "FxAccountsProfileClientError");
         do_check_eq(e.code, STATUS_SUCCESS);
         do_check_eq(e.errno, ERRNO_PARSE);
@@ -162,9 +160,7 @@ add_test(function serverErrorResponse() {
 
   client._Request = new mockResponse(response);
   client.fetchProfile()
-    .then(
-    null,
-    function(e) {
+    .catch(function(e) {
       do_check_eq(e.name, "FxAccountsProfileClientError");
       do_check_eq(e.code, 500);
       do_check_eq(e.errno, 100);
@@ -298,9 +294,7 @@ add_test(function server401ResponsePersists() {
     };
   }
 
-  client.fetchProfile().then(
-    null,
-    function(e) {
+  client.fetchProfile().catch(function(e) {
       do_check_eq(e.name, "FxAccountsProfileClientError");
       do_check_eq(e.code, 401);
       do_check_eq(e.errno, 100);
@@ -321,9 +315,7 @@ add_test(function networkErrorResponse() {
     fxa: mockFxa,
   });
   client.fetchProfile()
-    .then(
-      null,
-      function(e) {
+    .catch(function(e) {
         do_check_eq(e.name, "FxAccountsProfileClientError");
         do_check_eq(e.code, null);
         do_check_eq(e.errno, ERRNO_NETWORK);
@@ -337,9 +329,7 @@ add_test(function unsupportedMethod() {
   let client = new FxAccountsProfileClient(PROFILE_OPTIONS);
 
   return client._createRequest("/profile", "PUT")
-    .then(
-      null,
-      function(e) {
+    .catch(function(e) {
         do_check_eq(e.name, "FxAccountsProfileClientError");
         do_check_eq(e.code, ERROR_CODE_METHOD_NOT_ALLOWED);
         do_check_eq(e.errno, ERRNO_NETWORK);
@@ -354,9 +344,7 @@ add_test(function onCompleteRequestError() {
   let client = new FxAccountsProfileClient(PROFILE_OPTIONS);
   client._Request = new mockResponseError(new Error("onComplete error"));
   client.fetchProfile()
-    .then(
-      null,
-      function(e) {
+    .catch(function(e) {
         do_check_eq(e.name, "FxAccountsProfileClientError");
         do_check_eq(e.code, null);
         do_check_eq(e.errno, ERRNO_NETWORK);

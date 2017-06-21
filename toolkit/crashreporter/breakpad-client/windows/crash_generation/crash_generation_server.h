@@ -32,6 +32,7 @@
 
 #include <list>
 #include <string>
+#include "windows/common/minidump_callback.h"
 #include "windows/common/ipc_protocol.h"
 #include "windows/crash_generation/minidump_generator.h"
 #include "common/scoped_ptr.h"
@@ -105,6 +106,11 @@ class CrashGenerationServer {
   void pre_fetch_custom_info(bool do_pre_fetch) {
     pre_fetch_custom_info_ = do_pre_fetch;
   }
+
+  // Calling set_include_context_heap(true) causes heap regions to be included
+  // in the minidump when a crash happens. The heap regions are from the
+  // register values of the client crashing context.
+  void set_include_context_heap(bool enabled);
 
  private:
   // Various states the client can be in during the handshake with
@@ -288,6 +294,11 @@ class CrashGenerationServer {
 
   // Client Info for the client that's connecting to the server.
   ClientInfo* client_info_;
+
+  // Whether to include heap regions of the crashing context.
+  bool include_context_heap_;
+
+  AppMemoryList app_memory_info_;
 
   // Disable copy ctor and operator=.
   CrashGenerationServer(const CrashGenerationServer& crash_server);

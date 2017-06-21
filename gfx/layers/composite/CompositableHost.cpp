@@ -31,7 +31,7 @@ class Compositor;
 
 CompositableHost::CompositableHost(const TextureInfo& aTextureInfo)
   : mTextureInfo(aTextureInfo)
-  , mCompositorID(0)
+  , mCompositorBridgeID(0)
   , mLayer(nullptr)
   , mFlashCounter(0)
   , mAttached(false)

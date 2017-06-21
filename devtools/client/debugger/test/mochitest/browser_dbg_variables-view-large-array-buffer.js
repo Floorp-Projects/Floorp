@@ -33,7 +33,7 @@ function test() {
     waitForCaretAndScopes(gPanel, 28, 1)
       .then(() => performTests())
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
-      .then(null, error => {
+      .catch(error => {
         ok(false, "Got an error: " + error.message + "\n" + error.stack);
       });
 

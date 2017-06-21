@@ -1006,7 +1006,7 @@ OutputPanel.prototype._outputChanged = function (ev) {
     this._update();
   } else {
     this.displayedOutput.promise.then(this._update, this._update)
-                                .then(null, console.error);
+                                .catch(console.error);
   }
 };
 

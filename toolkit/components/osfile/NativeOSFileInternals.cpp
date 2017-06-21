@@ -528,7 +528,7 @@ public:
       // Last ditch attempt to release on the main thread - some of
       // the members of event are not thread-safe, so letting the
       // pointer go out of scope would cause a crash.
-      NS_ReleaseOnMainThread(event.forget());
+      NS_ReleaseOnMainThread("AbstractDoEvent::ErrorEvent", event.forget());
     }
   }
 
@@ -545,7 +545,7 @@ public:
       // Last ditch attempt to release on the main thread - some of
       // the members of event are not thread-safe, so letting the
       // pointer go out of scope would cause a crash.
-      NS_ReleaseOnMainThread(event.forget());
+      NS_ReleaseOnMainThread("AbstractDoEvent::SuccessEvent", event.forget());
     }
 
   }
@@ -746,7 +746,7 @@ public:
     if (!mResult) {
       return;
     }
-    NS_ReleaseOnMainThread(mResult.forget());
+    NS_ReleaseOnMainThread("DoReadToTypedArrayEvent::mResult", mResult.forget());
   }
 
 protected:
@@ -783,7 +783,7 @@ public:
     if (!mResult) {
       return;
     }
-    NS_ReleaseOnMainThread(mResult.forget());
+    NS_ReleaseOnMainThread("DoReadToStringEvent::mResult", mResult.forget());
   }
 
 protected:
@@ -890,10 +890,12 @@ NativeOSFileInternalsService::Read(const nsAString& aPath,
   // Prepare the off main thread event and dispatch it
   nsCOMPtr<nsINativeOSFileSuccessCallback> onSuccess(aOnSuccess);
   nsMainThreadPtrHandle<nsINativeOSFileSuccessCallback> onSuccessHandle(
-    new nsMainThreadPtrHolder<nsINativeOSFileSuccessCallback>(onSuccess));
+    new nsMainThreadPtrHolder<nsINativeOSFileSuccessCallback>(
+      "nsINativeOSFileSuccessCallback", onSuccess));
   nsCOMPtr<nsINativeOSFileErrorCallback> onError(aOnError);
   nsMainThreadPtrHandle<nsINativeOSFileErrorCallback> onErrorHandle(
-    new nsMainThreadPtrHolder<nsINativeOSFileErrorCallback>(onError));
+    new nsMainThreadPtrHolder<nsINativeOSFileErrorCallback>(
+      "nsINativeOSFileErrorCallback", onError));
 
   RefPtr<AbstractDoEvent> event;
   if (encoding.IsEmpty()) {

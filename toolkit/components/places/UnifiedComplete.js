@@ -2204,7 +2204,7 @@ UnifiedComplete.prototype = {
         await SwitchToTabStorage.initDatabase(conn);
 
         return conn;
-      })().then(null, ex => {
+      })().catch(ex => {
         dump("Couldn't get database handle: " + ex + "\n");
         Cu.reportError(ex);
       });
@@ -2256,7 +2256,7 @@ UnifiedComplete.prototype = {
 
     let search = this._currentSearch;
     this.getDatabaseHandle().then(conn => search.execute(conn))
-                            .then(null, ex => {
+                            .catch(ex => {
                               dump(`Query failed: ${ex}\n`);
                               Cu.reportError(ex);
                             })

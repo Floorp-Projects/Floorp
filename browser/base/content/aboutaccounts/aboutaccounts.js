@@ -445,7 +445,7 @@ function migrateToDevEdition(urlParams) {
       show("remote");
       wrapper.init(url, urlParams);
     });
-  }).then(null, error => {
+  }).catch(error => {
     log("Failed to migrate FX Account: " + error);
     show("stage", "intro");
     // load the remote frame in the background
@@ -459,7 +459,7 @@ function migrateToDevEdition(urlParams) {
     // Reset the pref after migration.
     Services.prefs.setBoolPref("identity.fxaccounts.migrateToDevEdition", false);
     return true;
-  }).then(null, err => {
+  }).catch(err => {
     Cu.reportError("Failed to reset the migrateToDevEdition pref: " + err);
     return false;
   });

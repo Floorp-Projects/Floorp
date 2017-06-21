@@ -41,12 +41,6 @@
 
 namespace google_breakpad {
 
-// This is passed as the context to the MinidumpWriteDump callback.
-typedef struct {
-  AppMemoryList::const_iterator iter;
-  AppMemoryList::const_iterator end;
-} MinidumpCallbackContext;
-
 vector<ExceptionHandler*>* ExceptionHandler::handler_stack_ = NULL;
 LONG ExceptionHandler::handler_stack_index_ = 0;
 CRITICAL_SECTION ExceptionHandler::handler_stack_critical_section_;
@@ -245,6 +239,7 @@ void ExceptionHandler::Initialize(
   AppMemory instruction_memory;
   instruction_memory.ptr = NULL;
   instruction_memory.length = 0;
+  instruction_memory.preallocated = true;
   app_memory_info_.push_back(instruction_memory);
 
   // There is a race condition here. If the first instance has not yet
@@ -285,6 +280,8 @@ void ExceptionHandler::Initialize(
 
     LeaveCriticalSection(&handler_stack_critical_section_);
   }
+
+  include_context_heap_ = false;
 }
 
 ExceptionHandler::~ExceptionHandler() {
@@ -864,44 +861,6 @@ bool ExceptionHandler::WriteMinidumpWithException(
 }
 
 // static
-BOOL CALLBACK ExceptionHandler::MinidumpWriteDumpCallback(
-    PVOID context,
-    const PMINIDUMP_CALLBACK_INPUT callback_input,
-    PMINIDUMP_CALLBACK_OUTPUT callback_output) {
-  switch (callback_input->CallbackType) {
-  case MemoryCallback: {
-    MinidumpCallbackContext* callback_context =
-        reinterpret_cast<MinidumpCallbackContext*>(context);
-    if (callback_context->iter == callback_context->end)
-      return FALSE;
-
-    // Include the specified memory region.
-    callback_output->MemoryBase = callback_context->iter->ptr;
-    callback_output->MemorySize = callback_context->iter->length;
-    callback_context->iter++;
-    return TRUE;
-  }
-
-    // Include all modules.
-  case IncludeModuleCallback:
-  case ModuleCallback:
-    return TRUE;
-
-    // Include all threads.
-  case IncludeThreadCallback:
-  case ThreadCallback:
-    return TRUE;
-
-    // Stop receiving cancel callbacks.
-  case CancelCallback:
-    callback_output->CheckCancel = FALSE;
-    callback_output->Cancel = FALSE;
-    return TRUE;
-  }
-  // Ignore other callback types.
-  return FALSE;
-}
-
 bool ExceptionHandler::WriteMinidumpWithExceptionForProcess(
     DWORD requesting_thread_id,
     EXCEPTION_POINTERS* exinfo,
@@ -959,49 +918,17 @@ bool ExceptionHandler::WriteMinidumpWithExceptionForProcess(
         ++user_streams.UserStreamCount;
       }
 
-      // Older versions of DbgHelp.dll don't correctly put the memory around
-      // the faulting instruction pointer into the minidump. This
-      // callback will ensure that it gets included.
-      if (exinfo) {
-        // Find a memory region of 256 bytes centered on the
-        // faulting instruction pointer.
-        const ULONG64 instruction_pointer =
-#if defined(_M_IX86)
-          exinfo->ContextRecord->Eip;
-#elif defined(_M_AMD64)
-        exinfo->ContextRecord->Rip;
-#else
-#error Unsupported platform
-#endif
-
-        MEMORY_BASIC_INFORMATION info;
-        if (VirtualQueryEx(process,
-                           reinterpret_cast<LPCVOID>(instruction_pointer),
-                           &info,
-                           sizeof(MEMORY_BASIC_INFORMATION)) != 0 &&
-            info.State == MEM_COMMIT) {
-          // Attempt to get 128 bytes before and after the instruction
-          // pointer, but settle for whatever's available up to the
-          // boundaries of the memory region.
-          const ULONG64 kIPMemorySize = 256;
-          ULONG64 base =
-            (std::max)(reinterpret_cast<ULONG64>(info.BaseAddress),
-                       instruction_pointer - (kIPMemorySize / 2));
-          ULONG64 end_of_range =
-            (std::min)(instruction_pointer + (kIPMemorySize / 2),
-                       reinterpret_cast<ULONG64>(info.BaseAddress)
-                       + info.RegionSize);
-          ULONG size = static_cast<ULONG>(end_of_range - base);
-
-          AppMemory& elt = app_memory_info_.front();
-          elt.ptr = base;
-          elt.length = size;
-        }
-      }
-
       MinidumpCallbackContext context;
       context.iter = app_memory_info_.begin();
       context.end = app_memory_info_.end();
+
+      if (exinfo) {
+        IncludeAppMemoryFromExceptionContext(process,
+                                             requesting_thread_id,
+                                             app_memory_info_,
+                                             exinfo->ContextRecord,
+                                             !include_context_heap_);
+      }
 
       // Skip the reserved element if there was no instruction memory
       if (context.iter->ptr == 0) {
@@ -1059,6 +986,7 @@ void ExceptionHandler::RegisterAppMemory(void* ptr, size_t length) {
   AppMemory app_memory;
   app_memory.ptr = reinterpret_cast<ULONG64>(ptr);
   app_memory.length = static_cast<ULONG>(length);
+  app_memory.preallocated = false;
   app_memory_info_.push_back(app_memory);
 }
 
@@ -1068,6 +996,31 @@ void ExceptionHandler::UnregisterAppMemory(void* ptr) {
   if (iter != app_memory_info_.end()) {
     app_memory_info_.erase(iter);
   }
+}
+
+void ExceptionHandler::set_include_context_heap(bool enabled) {
+  if (enabled && !include_context_heap_) {
+    // Initialize system info used in including context heap regions.
+    InitAppMemoryInternal();
+
+    // Preallocate AppMemory instances for exception context if necessary.
+    auto predicate = [] (const AppMemory& appMemory) -> bool {
+      return appMemory.preallocated;
+    };
+
+    int preallocatedCount =
+      std::count_if(app_memory_info_.begin(), app_memory_info_.end(), predicate);
+
+    for (size_t i = 0; i < kExceptionAppMemoryRegions - preallocatedCount; i++) {
+      AppMemory app_memory;
+      app_memory.ptr = reinterpret_cast<ULONG64>(nullptr);
+      app_memory.length = 0;
+      app_memory.preallocated = true;
+      app_memory_info_.push_back(app_memory);
+    }
+  }
+
+  include_context_heap_ = enabled;
 }
 
 }  // namespace google_breakpad

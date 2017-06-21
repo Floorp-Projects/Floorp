@@ -904,7 +904,7 @@ MarkupView.prototype = {
         nextSibling = isValidSibling ? nextSibling : null;
         this.walker.insertBefore(node, parent, nextSibling);
       });
-    }).then(null, console.error);
+    }).catch(console.error);
   },
 
   /**
@@ -1172,7 +1172,7 @@ MarkupView.prototype = {
         child = child.nextSibling;
       }
       return promise.all(promises);
-    }).then(null, console.error);
+    }).catch(console.error);
   },
 
   /**
@@ -1215,7 +1215,7 @@ MarkupView.prototype = {
 
     return walkerPromise.then(longstr => {
       return longstr.string().then(html => {
-        longstr.release().then(null, console.error);
+        longstr.release().catch(console.error);
         return html;
       });
     });
@@ -1332,7 +1332,7 @@ MarkupView.prototype = {
     // Changing the outerHTML removes the node which outerHTML was changed.
     // Listen to this removal to reselect the right node afterwards.
     this.reselectOnRemoved(node, "outerhtml");
-    return this.walker.setOuterHTML(node, newValue).then(null, () => {
+    return this.walker.setOuterHTML(node, newValue).catch(() => {
       this.cancelReselectOnRemoved();
     });
   },

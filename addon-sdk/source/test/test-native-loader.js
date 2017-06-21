@@ -237,7 +237,7 @@ for (let variant of variants) {
       testLoader(program, assert);
       unload(loader);
       done();
-    }).then(null, (reason) => console.error(reason));
+    }).catch((reason) => console.error(reason));
   };
 
   exports[`test require#resolve with relative, dependencies (${variant.description})`] = function(assert, done) {
@@ -265,7 +265,7 @@ for (let variant of variants) {
 
       unload(loader);
       done();
-    }).then(null, (reason) => console.error(reason));
+    }).catch((reason) => console.error(reason));
   };
 }
 
@@ -309,7 +309,7 @@ exports['test JSM loading'] = function (assert, done) {
       assert.equal(jsabsolute, 30, 'JS files resolved from full resource:// work');
     }).then(done, console.error);
 
-  }).then(null, console.error);
+  }).catch(console.error);
 };
 
 function testLoader (program, assert) {
@@ -388,7 +388,7 @@ function loadAddon (uri, map) {
       }
     });
     let program = main(loader);
-  }).then(null, console.error);
+  }).catch(console.error);
 }
 
 require('sdk/test').run(exports);

@@ -400,15 +400,15 @@ private:
 };
 
 template<class T>
-void ProxyRelease(nsCOMPtr<T> &object, nsIEventTarget* target)
+void ProxyRelease(const char* aName, nsCOMPtr<T> &object, nsIEventTarget* target)
 {
-  NS_ProxyRelease(target, object.forget());
+  NS_ProxyRelease(aName, target, object.forget());
 }
 
 template<class T>
-void ProxyReleaseMainThread(nsCOMPtr<T> &object)
+void ProxyReleaseMainThread(const char* aName, nsCOMPtr<T> &object)
 {
-  ProxyRelease(object, GetMainThreadEventTarget());
+  ProxyRelease(aName, object, GetMainThreadEventTarget());
 }
 
 } // namespace net

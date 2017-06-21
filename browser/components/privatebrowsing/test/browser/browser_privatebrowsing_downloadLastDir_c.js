@@ -78,7 +78,7 @@ function test() {
       gDownloadLastDir.cleanupPrivateFile();
       aWin.close();
       aCallback();
-    }).then(null, function() { ok(false); });
+    }).catch(function() { ok(false); });
   }
 
   testOnWindow(false, function(win, downloadDir) {

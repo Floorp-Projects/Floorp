@@ -174,7 +174,7 @@ function processNode(state, node, data) {
                 /* jshint loopfunc:true */
                 replacement.then(function (newValue) {
                   node.setAttribute(name, newValue);
-                }).then(null, console.error);
+                }).catch(console.error);
               } else {
                 if (state.options.blankNullUndefined && replacement == null) {
                   replacement = "";
@@ -453,7 +453,7 @@ function handleAsync(thing, siblingNode, inserter) {
       if (tempNode.parentNode != null) {
         tempNode.remove();
       }
-    }).then(null, function (error) {
+    }).catch(function (error) {
       console.error(error.stack);
     });
   } else {

@@ -42,7 +42,7 @@ function evalCode(debuggee) {
     "doTest();\n" +
     function doTest() {
       var resolved = Promise.reject(new Error("uh oh"));
-      resolved.then(null, () => {
+      resolved.catch(() => {
         var p = resolved;
         debugger;
       });

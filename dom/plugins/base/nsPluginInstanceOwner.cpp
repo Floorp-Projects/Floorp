@@ -1617,7 +1617,7 @@ void nsPluginInstanceOwner::Recomposite() {
 
   clm->SendInvalidRegion(
       clm->GetRoot()->GetLocalVisibleRegion().ToUnknownRegion().GetBounds());
-  clm->Composite();
+  clm->ScheduleComposite();
 }
 
 void nsPluginInstanceOwner::RequestFullScreen() {

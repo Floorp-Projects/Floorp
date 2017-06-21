@@ -122,6 +122,8 @@ NS_EVENT_MESSAGE(eFormReset)
 NS_EVENT_MESSAGE(eFormChange)
 NS_EVENT_MESSAGE(eFormSelect)
 NS_EVENT_MESSAGE(eFormInvalid)
+NS_EVENT_MESSAGE(eFormCheckboxStateChange)
+NS_EVENT_MESSAGE(eFormRadioStateChange)
 
 //Need separate focus/blur notifications for non-native widgets
 NS_EVENT_MESSAGE(eFocus)

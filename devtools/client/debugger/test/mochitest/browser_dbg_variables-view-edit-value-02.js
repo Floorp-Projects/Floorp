@@ -34,7 +34,7 @@ function test() {
       .then(() => testModification("\u2028", "\\u2028", "123", "123"))
       .then(() => testModification("\u2029", "\\u2029", "456", "456"))
       .then(() => resumeDebuggerThenCloseAndFinish(panel))
-      .then(null, aError => {
+      .catch(aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
       });
   });

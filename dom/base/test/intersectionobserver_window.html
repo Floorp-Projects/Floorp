@@ -27,7 +27,9 @@
                        records[0].rootBounds.bottom === viewportHeight &&
                        records[0].rootBounds.height === viewportHeight;
           if (!result) {
-              result = [records[0].rootBounds.top,
+              result = [records.length,
+                        records[0].isIntersecting,
+                        records[0].rootBounds.top,
                         records[0].rootBounds.left,
                         records[0].rootBounds.right,
                         records[0].rootBounds.width,

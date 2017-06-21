@@ -1209,7 +1209,8 @@ private:
       : mObserver(aWeakObserver) { }
     virtual ~DiskConsumptionObserver() {
       if (mObserver && !NS_IsMainThread()) {
-        NS_ReleaseOnMainThread(mObserver.forget());
+        NS_ReleaseOnMainThread(
+          "DiskConsumptionObserver::mObserver", mObserver.forget());
       }
     }
 

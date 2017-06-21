@@ -38,13 +38,13 @@ function test() {
       p.name = "p";
       let q = p.then();
       q.name = "q";
-      let r = p.then(null, () => {});
+      let r = p.catch(() => {});
       r.name = "r";
     });
 
     yield close(client);
     finish();
-  }).then(null, error => {
+  }).catch(error => {
     ok(false, "Got an error: " + error.message + "\n" + error.stack);
   });
 }

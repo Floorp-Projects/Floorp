@@ -444,7 +444,7 @@ const PanelUI = {
       this._updateQuitTooltip();
       this.panel.hidden = false;
       this._isReady = true;
-    })().then(null, Cu.reportError);
+    })().catch(Cu.reportError);
 
     return this._readyPromise;
   },

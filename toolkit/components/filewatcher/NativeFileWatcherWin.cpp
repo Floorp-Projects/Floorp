@@ -1301,13 +1301,16 @@ NativeFileWatcherService::AddPath(const nsAString& aPathToWatch,
   }
 
   nsMainThreadPtrHandle<nsINativeFileWatcherCallback> changeCallbackHandle(
-    new nsMainThreadPtrHolder<nsINativeFileWatcherCallback>(aOnChange));
+    new nsMainThreadPtrHolder<nsINativeFileWatcherCallback>(
+      "nsINativeFileWatcherCallback", aOnChange));
 
   nsMainThreadPtrHandle<nsINativeFileWatcherErrorCallback> errorCallbackHandle(
-    new nsMainThreadPtrHolder<nsINativeFileWatcherErrorCallback>(aOnError));
+    new nsMainThreadPtrHolder<nsINativeFileWatcherErrorCallback>(
+      "nsINativeFileWatcherErrorCallback", aOnError));
 
   nsMainThreadPtrHandle<nsINativeFileWatcherSuccessCallback> successCallbackHandle(
-    new nsMainThreadPtrHolder<nsINativeFileWatcherSuccessCallback>(aOnSuccess));
+    new nsMainThreadPtrHolder<nsINativeFileWatcherSuccessCallback>(
+      "nsINativeFileWatcherSuccessCallback", aOnSuccess));
 
   // Wrap the path and the callbacks in order to pass them using NewRunnableMethod.
   UniquePtr<PathRunnablesParametersWrapper> wrappedCallbacks(
@@ -1371,13 +1374,16 @@ NativeFileWatcherService::RemovePath(const nsAString& aPathToRemove,
   }
 
   nsMainThreadPtrHandle<nsINativeFileWatcherCallback> changeCallbackHandle(
-    new nsMainThreadPtrHolder<nsINativeFileWatcherCallback>(aOnChange));
+    new nsMainThreadPtrHolder<nsINativeFileWatcherCallback>(
+      "nsINativeFileWatcherCallback", aOnChange));
 
   nsMainThreadPtrHandle<nsINativeFileWatcherErrorCallback> errorCallbackHandle(
-    new nsMainThreadPtrHolder<nsINativeFileWatcherErrorCallback>(aOnError));
+    new nsMainThreadPtrHolder<nsINativeFileWatcherErrorCallback>(
+      "nsINativeFileWatcherErrorCallback", aOnError));
 
   nsMainThreadPtrHandle<nsINativeFileWatcherSuccessCallback> successCallbackHandle(
-    new nsMainThreadPtrHolder<nsINativeFileWatcherSuccessCallback>(aOnSuccess));
+    new nsMainThreadPtrHolder<nsINativeFileWatcherSuccessCallback>(
+      "nsINativeFileWatcherSuccessCallback", aOnSuccess));
 
   // Wrap the path and the callbacks in order to pass them using NewRunnableMethod.
   UniquePtr<PathRunnablesParametersWrapper> wrappedCallbacks(

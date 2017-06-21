@@ -395,6 +395,12 @@ TextureHostDirectUpload::DeallocateDeviceData()
 bool
 TextureHostDirectUpload::BindTextureSource(CompositableTextureSourceRef& aTexture)
 {
+  return AcquireTextureSource(aTexture);
+}
+
+bool
+TextureHostDirectUpload::AcquireTextureSource(CompositableTextureSourceRef& aTexture)
+{
   if (!mTextureSource) {
     Updated();
   }

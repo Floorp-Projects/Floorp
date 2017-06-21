@@ -362,7 +362,7 @@ nsUnknownContentTypeDialog.prototype = {
           aLauncher.saveDestinationAvailable(result);
         });
       });
-    })().then(null, Components.utils.reportError);
+    })().catch(Components.utils.reportError);
   },
 
   getFinalLeafName: function (aLeafName, aFileExt)

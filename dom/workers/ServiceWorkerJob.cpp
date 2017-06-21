@@ -232,7 +232,8 @@ ServiceWorkerJob::Finish(ErrorResult& aRv)
 
   // Async release this object to ensure that our caller methods complete
   // as well.
-  NS_ReleaseOnMainThread(kungFuDeathGrip.forget(), true /* always proxy */);
+  NS_ReleaseOnMainThread("ServiceWorkerJob",
+    kungFuDeathGrip.forget(), true /* always proxy */);
 }
 
 void
