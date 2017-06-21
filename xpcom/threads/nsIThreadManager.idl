@@ -106,6 +106,14 @@ interface nsIThreadManager : nsISupports
   void spinEventLoopUntil(in nsINestedEventLoopCondition condition);
 
   /**
+   * Spin the current thread's event loop until there are no more pending
+   * events.  This could be done with spinEventLoopUntil, but that would
+   * require access to the current thread from JavaScript, which we are
+   * moving away from.
+   */
+  void spinEventLoopUntilEmpty();
+
+  /**
    * This queues a runnable to the main thread's idle queue.
    *
    * @param event

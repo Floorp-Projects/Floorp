@@ -5177,11 +5177,7 @@ function server(port, basePath)
 
   gThreadManager.spinEventLoopUntil(() => srv.isStopped());
 
-  var thread = gThreadManager.currentThread;
-
-  // get rid of any pending requests
-  while (thread.hasPendingEvents())
-    thread.processNextEvent(true);
+  gThreadManager.spinEventLoopUntilEmpty();
 
   DEBUG = false;
 }
