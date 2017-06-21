@@ -5,11 +5,6 @@
 /**
  * Checks that we don't encodeURI twice when creating bookmarks.html.
  */
-
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function() {
   let uri = NetUtil.newURI("http://bt.ktxp.com/search.php?keyword=%E5%A6%84%E6%83%B3%E5%AD%A6%E7%94%9F%E4%BC%9A");
   let bm = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,

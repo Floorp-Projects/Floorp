@@ -255,7 +255,3 @@ add_task(async function create_bookmark_without_type() {
   Assert.equal(bm.url.href, "http://example.com/");
   Assert.equal(bm.title, "a bookmark");
 });
-
-function run_test() {
-  run_next_test();
-}

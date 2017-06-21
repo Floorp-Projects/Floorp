@@ -8,7 +8,6 @@
   * Check for correct functionality of PlacesUtils.setAnnotationsForItem/URI
   */
 
-var hs = PlacesUtils.history;
 var bs = PlacesUtils.bookmarks;
 var as = PlacesUtils.annotations;
 

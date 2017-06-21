@@ -116,6 +116,46 @@ FakePrefs.prototype = {
   }
 };
 
+function FakePerformance() {}
+FakePerformance.prototype = {
+  marks: new Map(),
+  now() {
+    return window.performance.now();
+  },
+  timing: {navigationStart: 222222},
+  get timeOrigin() {
+    return 10000;
+  },
+  // XXX assumes type == "mark"
+  getEntriesByName(name, type) {
+    if (this.marks.has(name)) {
+      return this.marks.get(name);
+    }
+    return [];
+  },
+  callsToMark: 0,
+
+  /**
+   * @note The "startTime" for each mark is simply the number of times mark
+   * has been called in this object.
+   */
+  mark(name) {
+    let markObj = {
+      name,
+      "entryType": "mark",
+      "startTime": ++this.callsToMark,
+      "duration": 0
+    };
+
+    if (this.marks.has(name)) {
+      this.marks.get(name).push(markObj);
+      return;
+    }
+
+    this.marks.set(name, [markObj]);
+  }
+};
+
 /**
  * addNumberReducer - a simple dummy reducer for testing that adds a number
  */
@@ -142,6 +182,7 @@ function mountWithIntl(node) {
 }
 
 module.exports = {
+  FakePerformance,
   FakePrefs,
   GlobalOverrider,
   addNumberReducer,

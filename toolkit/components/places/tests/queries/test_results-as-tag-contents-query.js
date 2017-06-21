@@ -59,10 +59,6 @@ function getIdForTag(aTagName) {
  /**
   * This test will test Queries that use relative search terms and URI options
   */
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_results_as_tag_contents_query() {
   await task_populateDB(testData);
 

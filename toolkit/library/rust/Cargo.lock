@@ -284,7 +284,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "encoding_c"
-version = "0.7.4"
+version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "encoding_rs 0.6.11 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -384,7 +384,7 @@ name = "gkrust-shared"
 version = "0.1.0"
 dependencies = [
  "cubeb-pulse 0.0.1",
- "encoding_c 0.7.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding_c 0.7.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "encoding_glue 0.1.0",
  "geckoservo 0.0.1",
  "mp4parse_capi 0.8.0",
@@ -1245,7 +1245,7 @@ dependencies = [
 "checksum cssparser-macros 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "079adec4af52bb5275eadd004292028c79eb3c5f5b4ee8086a36d4197032f6df"
 "checksum dwrote 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "36e3b27cd0b8a68e00f07e8d8e1e4f4d8a6b8b873290a734f63bd56d792d23e1"
 "checksum either 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "18785c1ba806c258137c937e44ada9ee7e69a37e3c72077542cd2f069d78562a"
-"checksum encoding_c 0.7.4 (registry+https://github.com/rust-lang/crates.io-index)" = "45ef700aebe8c5fb44f081a54ab400f4f6b002a426bc5332381c108f49713432"
+"checksum encoding_c 0.7.6 (registry+https://github.com/rust-lang/crates.io-index)" = "1e563195f16d7439103c49281b8b00bd0f223c16e19f0d500448239a27712570"
 "checksum encoding_rs 0.6.11 (registry+https://github.com/rust-lang/crates.io-index)" = "e00a1b1e95eb46988805ceee6f34cd95c46a6753e290cb3ff0486931989d4a4c"
 "checksum env_logger 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "ed39959122ea027670b704fb70539f4286ddf4a49eefede23bf0b4b2a069ec03"
 "checksum euclid 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)" = "afc5fcf274fa860e18379115ac336e9b41553f61c9ed34ad09e8101ed3defae2"

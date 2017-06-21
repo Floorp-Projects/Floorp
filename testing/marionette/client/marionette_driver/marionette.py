@@ -1865,34 +1865,6 @@ class Marionette(object):
             return HTMLElement(self, el_or_ref)
         return el_or_ref
 
-    def log(self, msg, level="INFO"):
-        """Stores a timestamped log message in the Marionette server
-        for later retrieval.
-
-        :param msg: String with message to log.
-        :param level: String with log level (e.g. "INFO" or "DEBUG").
-            Defaults to "INFO".
-        """
-        body = {"value": msg, "level": level}
-        self._send_message("log", body)
-
-    def get_logs(self):
-        """Returns the list of logged messages.
-
-        Each log message is an array with three string elements: the level,
-        the message, and a date.
-
-        Usage example::
-
-            marionette.log("I AM INFO")
-            marionette.log("I AM ERROR", "ERROR")
-            logs = marionette.get_logs()
-            assert logs[0][1] == "I AM INFO"
-            assert logs[1][1] == "I AM ERROR"
-        """
-        return self._send_message("getLogs",
-                                  key="value" if self.protocol == 1 else None)
-
     def add_cookie(self, cookie):
         """Adds a cookie to your current session.
 

@@ -6,10 +6,6 @@
  * To confirm that metadata i.e. bookmark count is set and retrieved for
  * automatic backups.
  */
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_saveBookmarksToJSONFile_and_create() {
   // Add a bookmark
   let uri = NetUtil.newURI("http://getfirefox.com/");

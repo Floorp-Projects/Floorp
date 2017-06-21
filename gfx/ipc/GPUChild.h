@@ -50,6 +50,7 @@ public:
   mozilla::ipc::IPCResult RecvUpdateChildScalars(InfallibleTArray<ScalarAction>&& aScalarActions) override;
   mozilla::ipc::IPCResult RecvUpdateChildKeyedScalars(InfallibleTArray<KeyedScalarAction>&& aScalarActions) override;
   mozilla::ipc::IPCResult RecvRecordChildEvents(nsTArray<ChildEventData>&& events) override;
+  mozilla::ipc::IPCResult RecvRecordDiscardedData(const DiscardedData& aDiscardedData) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   mozilla::ipc::IPCResult RecvGraphicsError(const nsCString& aError) override;

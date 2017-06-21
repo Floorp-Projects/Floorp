@@ -61,15 +61,9 @@ class ParentDevToolsPanel {
     this.id = this.panelOptions.id;
 
     this.onToolboxPanelSelect = this.onToolboxPanelSelect.bind(this);
-    this.onToolboxReady = this.onToolboxReady.bind(this);
 
     this.panelAdded = false;
-
-    if (this.toolbox.isReady) {
-      this.onToolboxReady();
-    } else {
-      this.toolbox.once("ready", this.onToolboxReady);
-    }
+    this.addPanel();
 
     this.waitTopLevelContext = new Promise(resolve => {
       this._resolveTopLevelContext = resolve;
@@ -99,6 +93,8 @@ class ParentDevToolsPanel {
         return {toolbox, destroy};
       },
     });
+
+    this.panelAdded = true;
   }
 
   buildPanel(window, toolbox) {
@@ -180,13 +176,6 @@ class ParentDevToolsPanel {
     };
   }
 
-  onToolboxReady() {
-    if (!this.panelAdded) {
-      this.panelAdded = true;
-      this.addPanel();
-    }
-  }
-
   onToolboxPanelSelect(what, id) {
     if (!this.waitTopLevelContext || !this.panelAdded) {
       return;
@@ -214,11 +203,9 @@ class ParentDevToolsPanel {
       throw new Error("Unable to destroy a closed devtools panel");
     }
 
-    toolbox.off("ready", this.onToolboxReady);
-
     // Explicitly remove the panel if it is registered and the toolbox is not
     // closing itself.
-    if (toolbox.isToolRegistered(this.id) && !toolbox._destroyer) {
+    if (this.panelAdded && toolbox.isToolRegistered(this.id) && !toolbox._destroyer) {
       toolbox.removeAdditionalTool(this.id);
     }
 

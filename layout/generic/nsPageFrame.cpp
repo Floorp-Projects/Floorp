@@ -668,6 +668,15 @@ nsPageFrame::SetSharedPageData(nsSharedPageData* aPD)
 
 }
 
+void
+nsPageFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
+{
+  MOZ_ASSERT(mFrames.FirstChild() &&
+             mFrames.FirstChild()->IsPageContentFrame(),
+             "pageFrame must have a pageContentFrame child");
+  aResult.AppendElement(mFrames.FirstChild());
+}
+
 nsIFrame*
 NS_NewPageBreakFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {

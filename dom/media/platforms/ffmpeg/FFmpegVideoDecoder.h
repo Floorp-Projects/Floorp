@@ -24,11 +24,13 @@ class FFmpegVideoDecoder<LIBAV_VER> : public FFmpegDataDecoder<LIBAV_VER>
 {
   typedef mozilla::layers::Image Image;
   typedef mozilla::layers::ImageContainer ImageContainer;
+  typedef mozilla::layers::KnowsCompositor KnowsCompositor;
   typedef SimpleMap<int64_t> DurationMap;
 
 public:
   FFmpegVideoDecoder(FFmpegLibWrapper* aLib, TaskQueue* aTaskQueue,
                      const VideoInfo& aConfig,
+                     KnowsCompositor* aAllocator,
                      ImageContainer* aImageContainer,
                      bool aLowLatency);
   virtual ~FFmpegVideoDecoder();
@@ -69,6 +71,7 @@ private:
   int AllocateYUV420PVideoBuffer(AVCodecContext* aCodecContext,
                                  AVFrame* aFrame);
 
+  RefPtr<KnowsCompositor> mImageAllocator;
   RefPtr<ImageContainer> mImageContainer;
   VideoInfo mInfo;
 

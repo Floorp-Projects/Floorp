@@ -31,7 +31,6 @@ Cu.import("chrome://marionette/content/event.js");
 Cu.import("chrome://marionette/content/interaction.js");
 Cu.import("chrome://marionette/content/l10n.js");
 Cu.import("chrome://marionette/content/legacyaction.js");
-Cu.import("chrome://marionette/content/logging.js");
 Cu.import("chrome://marionette/content/modal.js");
 Cu.import("chrome://marionette/content/proxy.js");
 Cu.import("chrome://marionette/content/session.js");
@@ -126,7 +125,6 @@ this.GeckoDriver = function (appName, server) {
   this.timer = null;
   this.inactivityTimer = null;
 
-  this.marionetteLog = new logging.ContentLogger();
   this.testName = null;
 
   this.capabilities = new session.Capabilities();
@@ -684,26 +682,6 @@ GeckoDriver.prototype.getSessionCapabilities = function (cmd, resp) {
 };
 
 /**
- * Log message.  Accepts user defined log-level.
- *
- * @param {string} value
- *     Log message.
- * @param {string} level
- *     Arbitrary log level.
- */
-GeckoDriver.prototype.log = function (cmd, resp) {
-  // if level is null, we want to use ContentLogger#send's default
-  this.marionetteLog.log(
-      cmd.parameters.value,
-      cmd.parameters.level || undefined);
-};
-
-/** Return all logged messages. */
-GeckoDriver.prototype.getLogs = function (cmd, resp) {
-  resp.body = this.marionetteLog.get();
-};
-
-/**
  * Sets the context of the subsequent commands to be either "chrome" or
  * "content".
  *
@@ -884,10 +862,6 @@ GeckoDriver.prototype.execute_ = function (script, args, timeout, opts = {}) {
 
     case Context.CHROME:
       let sb = this.sandboxes.get(opts.sandboxName, opts.newSandbox);
-      if (opts.sandboxName) {
-        sb = sandbox.augment(sb, new logging.Adapter(this.marionetteLog));
-      }
-
       opts.timeout = timeout;
       let wargs = evaluate.fromJSON(args, this.curBrowser.seenEls, sb.window);
       return evaluate.sandbox(sb, script, wargs, opts)
@@ -1262,12 +1236,7 @@ GeckoDriver.prototype.getWindowRect = function (cmd, resp) {
   const win = assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  return {
-    x: win.screenX,
-    y: win.screenY,
-    width: win.outerWidth,
-    height: win.outerHeight,
-  };
+  return this.curBrowser.rect;
 };
 
 /**
@@ -1300,42 +1269,58 @@ GeckoDriver.prototype.getWindowRect = function (cmd, resp) {
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
-GeckoDriver.prototype.setWindowRect = function* (cmd, resp) {
+GeckoDriver.prototype.setWindowRect = async function (cmd, resp) {
   assert.firefox()
   const win = assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
   let {x, y, width, height} = cmd.parameters;
-  let optimisedResize = resolve => () => win.requestAnimationFrame(resolve);
+  let origRect = this.curBrowser.rect;
 
-  if (win.windowState == win.STATE_FULLSCREEN) {
-    yield new Promise(resolve => {
+  // Throttle resize event by forcing the event queue to flush and delay
+  // until the main thread is idle.
+  function optimisedResize (resolve) {
+    return () => Services.tm.mainThread.idleDispatch(() => {
+      win.requestAnimationFrame(resolve);
+    });
+  }
+
+  // Exit fullscreen and wait for window to resize.
+  async function exitFullscreen () {
+    return new Promise(resolve => {
       win.addEventListener("sizemodechange", optimisedResize(resolve), {once: true});
       win.fullScreen = false;
     });
   }
 
-  if (height != null && width != null) {
-    assert.positiveInteger(height);
-    assert.positiveInteger(width);
-
-    if (win.outerWidth != width || win.outerHeight != height) {
-      yield new Promise(resolve => {
-        win.addEventListener("resize", optimisedResize(resolve), {once: true});
-        win.resizeTo(width, height);
-      });
-    }
+  // Synchronous resize to |width| and |height| dimensions.
+  async function resizeWindow (width, height) {
+    return new Promise(resolve => {
+      win.addEventListener("resize", optimisedResize(resolve), {once: true});
+      win.resizeTo(width, height);
+    });
   }
 
-  if (x != null && y != null) {
-    assert.integer(x);
-    assert.integer(y);
-    const orig = {screenX: win.screenX, screenY: win.screenY};
+  // Wait until window size has changed.  We can't wait for the
+  // user-requested window size as this may not be achievable on the
+  // current system.
+  const windowResizeChange = async () => {
+    return wait.until((resolve, reject) => {
+      let curRect = this.curBrowser.rect;
+      if (curRect.width != origRect.width &&
+          curRect.height != origRect.height) {
+        resolve();
+      } else {
+        reject();
+      }
+    });
+  };
 
-    win.moveTo(x, y);
-    yield wait.until((resolve, reject) => {
+  // Wait for the window position to change.
+  async function windowPosition (x, y) {
+    return wait.until((resolve, reject) => {
       if ((x == win.screenX && y == win.screenY) ||
-        (win.screenX != orig.screenX || win.screenY != orig.screenY)) {
+          (win.screenX != origRect.x || win.screenY != origRect.y)) {
         resolve();
       } else {
         reject();
@@ -1343,12 +1328,29 @@ GeckoDriver.prototype.setWindowRect = function* (cmd, resp) {
     });
   }
 
-  resp.body = {
-    "x": win.screenX,
-    "y": win.screenY,
-    "width": win.outerWidth,
-    "height": win.outerHeight,
-  };
+  if (win.windowState == win.STATE_FULLSCREEN) {
+    await exitFullscreen();
+  }
+
+  if (height != null && width != null) {
+    assert.positiveInteger(height);
+    assert.positiveInteger(width);
+
+    if (win.outerWidth != width || win.outerHeight != height) {
+      await resizeWindow(width, height);
+      await windowResizeChange();
+    }
+  }
+
+  if (x != null && y != null) {
+    assert.integer(x);
+    assert.integer(y);
+
+    win.moveTo(x, y);
+    await windowPosition(x, y);
+  }
+
+  return this.curBrowser.rect;
 };
 
 /**
@@ -3061,13 +3063,6 @@ GeckoDriver.prototype.receiveMessage = function (message) {
       logger.info(message.json.message);
       break;
 
-    case "Marionette:shareData":
-      // log messages from tests
-      if (message.json.log) {
-        this.marionetteLog.addAll(message.json.log);
-      }
-      break;
-
     case "Marionette:switchToModalOrigin":
       this.curBrowser.frameManager.switchToModalOrigin(message);
       this.mm = this.curBrowser.frameManager
@@ -3206,8 +3201,6 @@ GeckoDriver.prototype.commands = {
   "sayHello": GeckoDriver.prototype.sayHello,
   "newSession": GeckoDriver.prototype.newSession,
   "getSessionCapabilities": GeckoDriver.prototype.getSessionCapabilities,
-  "log": GeckoDriver.prototype.log,
-  "getLogs": GeckoDriver.prototype.getLogs,
   "setContext": GeckoDriver.prototype.setContext,
   "getContext": GeckoDriver.prototype.getContext,
   "executeScript": GeckoDriver.prototype.executeScript,

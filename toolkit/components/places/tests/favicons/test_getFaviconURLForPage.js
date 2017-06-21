@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const ICON16_URL = "http://places.test/favicon-normal16.png";
 const ICON32_URL = "http://places.test/favicon-normal32.png";
 
 add_task(async function test_normal() {

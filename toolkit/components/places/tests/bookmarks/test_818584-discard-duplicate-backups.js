@@ -6,10 +6,6 @@
  * Checks that automatically created bookmark backups are discarded if they are
  * duplicate of an existing ones.
  */
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function() {
   // Create a backup for yesterday in the backups folder.
   let backupFolder = await PlacesBackups.getBackupFolder();
