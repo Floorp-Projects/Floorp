@@ -1,22 +1,36 @@
 use super::*;
 
+/// An enum variant.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Variant {
+    /// Name of the variant.
     pub ident: Ident,
+
+    /// Attributes tagged on the variant.
     pub attrs: Vec<Attribute>,
+
+    /// Type of variant.
     pub data: VariantData,
+
     /// Explicit discriminant, e.g. `Foo = 1`
     pub discriminant: Option<ConstExpr>,
 }
 
+/// Data stored within an enum variant or struct.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum VariantData {
+    /// Struct variant, e.g. `Point { x: f64, y: f64 }`.
     Struct(Vec<Field>),
+
+    /// Tuple variant, e.g. `Some(T)`.
     Tuple(Vec<Field>),
+
+    /// Unit variant, e.g. `None`.
     Unit,
 }
 
 impl VariantData {
+    /// Slice containing the fields stored in the variant.
     pub fn fields(&self) -> &[Field] {
         match *self {
             VariantData::Struct(ref fields) |
@@ -25,6 +39,7 @@ impl VariantData {
         }
     }
 
+    /// Mutable slice containing the fields stored in the variant.
     pub fn fields_mut(&mut self) -> &mut [Field] {
         match *self {
             VariantData::Struct(ref mut fields) |
@@ -34,19 +49,38 @@ impl VariantData {
     }
 }
 
+/// A field of a struct or enum variant.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Field {
+    /// Name of the field, if any.
+    ///
+    /// Fields of tuple structs have no names.
     pub ident: Option<Ident>,
+
+    /// Visibility of the field.
     pub vis: Visibility,
+
+    /// Attributes tagged on the field.
     pub attrs: Vec<Attribute>,
+
+    /// Type of the field.
     pub ty: Ty,
 }
 
+
+/// Visibility level of an item.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum Visibility {
+    /// Public, i.e. `pub`.
     Public,
+
+    /// Crate-visible, i.e. `pub(crate)`.
     Crate,
+
+    /// Restricted, e.g. `pub(some::module)`.
     Restricted(Box<Path>),
+
+    /// Inherited, i.e. private.
     Inherited,
 }
 

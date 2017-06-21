@@ -169,9 +169,7 @@ impl<F> GenericsBuilder<F>
     }
 
     pub fn strip_bounds(self) -> Self {
-        self.strip_lifetimes()
-            .strip_ty_params()
-            .strip_predicates()
+        self.strip_lifetimes().strip_ty_params().strip_predicates()
     }
 
     pub fn strip_lifetimes(mut self) -> Self {
@@ -195,10 +193,10 @@ impl<F> GenericsBuilder<F>
 
     pub fn build(self) -> F::Result {
         self.callback.invoke(Generics {
-            lifetimes: self.lifetimes,
-            ty_params: self.ty_params,
-            where_clause: WhereClause { predicates: self.predicates },
-        })
+                                 lifetimes: self.lifetimes,
+                                 ty_params: self.ty_params,
+                                 where_clause: WhereClause { predicates: self.predicates },
+                             })
     }
 }
 

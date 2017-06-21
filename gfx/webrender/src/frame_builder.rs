@@ -6,7 +6,7 @@ use app_units::Au;
 use frame::FrameId;
 use gpu_cache::GpuCache;
 use gpu_store::GpuStoreAddress;
-use internal_types::{HardwareCompositeOp, SourceTexture};
+use internal_types::HardwareCompositeOp;
 use mask_cache::{ClipMode, ClipSource, MaskCacheInfo, RegionMode};
 use plane_split::{BspSplitter, Polygon, Splitter};
 use prim_store::{GradientPrimitiveCpu, ImagePrimitiveCpu};
@@ -784,11 +784,9 @@ impl FrameBuilder {
             glyph_range: glyph_range,
             glyph_count: glyph_count,
             glyph_instances: Vec::new(),
-            color_texture_id: SourceTexture::Invalid,
             color: *color,
             render_mode: render_mode,
             glyph_options: glyph_options,
-            resource_address: GpuStoreAddress(0),
         };
 
         self.add_primitive(clip_and_scroll,
@@ -1014,10 +1012,8 @@ impl FrameBuilder {
                                context_id: WebGLContextId) {
         let prim_cpu = ImagePrimitiveCpu {
             kind: ImagePrimitiveKind::WebGL(context_id),
-            color_texture_id: SourceTexture::Invalid,
-            resource_address: GpuStoreAddress(0),
-            sub_rect: None,
-            gpu_block: [rect.size.width, rect.size.height, 0.0, 0.0].into(),
+            gpu_blocks: [ [rect.size.width, rect.size.height, 0.0, 0.0].into(),
+                          TexelRect::invalid().into() ],
         };
 
         self.add_primitive(clip_and_scroll,
@@ -1037,18 +1033,19 @@ impl FrameBuilder {
                      image_key: ImageKey,
                      image_rendering: ImageRendering,
                      tile: Option<TileOffset>) {
+        let sub_rect_block = sub_rect.unwrap_or(TexelRect::invalid()).into();
+
         let prim_cpu = ImagePrimitiveCpu {
             kind: ImagePrimitiveKind::Image(image_key,
                                             image_rendering,
                                             tile,
                                             *tile_spacing),
-            color_texture_id: SourceTexture::Invalid,
-            resource_address: GpuStoreAddress(0),
-            sub_rect: sub_rect,
-            gpu_block: [ stretch_size.width,
-                         stretch_size.height,
-                         tile_spacing.width,
-                         tile_spacing.height ].into(),
+            gpu_blocks: [ [ stretch_size.width,
+                            stretch_size.height,
+                            tile_spacing.width,
+                            tile_spacing.height ].into(),
+                            sub_rect_block,
+                        ],
         };
 
         self.add_primitive(clip_and_scroll,
@@ -1076,8 +1073,6 @@ impl FrameBuilder {
 
         let prim_cpu = YuvImagePrimitiveCpu {
             yuv_key: yuv_key,
-            yuv_texture_id: [SourceTexture::Invalid, SourceTexture::Invalid, SourceTexture::Invalid],
-            yuv_resource_address: GpuStoreAddress(0),
             format: format,
             color_space: color_space,
             image_rendering: image_rendering,
@@ -1413,20 +1408,9 @@ impl FrameBuilder {
         let mut required_pass_count = 0;
         main_render_task.max_depth(0, &mut required_pass_count);
 
-        resource_cache.block_until_all_resources_added(texture_cache_profile);
+        resource_cache.block_until_all_resources_added(gpu_cache, texture_cache_profile);
 
-        for node in clip_scroll_tree.nodes.values() {
-            if let NodeType::Clip(ref clip_info) = node.node_type {
-                if let Some(ref mask_info) = clip_info.mask_cache_info {
-                    self.prim_store.resolve_clip_cache(mask_info, resource_cache);
-                }
-            }
-        }
-
-        let deferred_resolves = self.prim_store.resolve_primitives(resource_cache,
-                                                                   device_pixel_ratio);
-
-        let gpu_cache_updates = gpu_cache.end_frame(gpu_cache_profile);
+        let mut deferred_resolves = vec![];
 
         let mut passes = Vec::new();
 
@@ -1442,19 +1426,21 @@ impl FrameBuilder {
 
         for pass in &mut passes {
             let ctx = RenderTargetContext {
+                device_pixel_ratio: device_pixel_ratio,
                 stacking_context_store: &self.stacking_context_store,
                 clip_scroll_group_store: &self.clip_scroll_group_store,
                 prim_store: &self.prim_store,
                 resource_cache: resource_cache,
-                gpu_cache: gpu_cache,
             };
 
-            pass.build(&ctx, &mut render_tasks);
+            pass.build(&ctx, gpu_cache, &mut render_tasks, &mut deferred_resolves);
 
             profile_counters.passes.inc();
             profile_counters.color_targets.add(pass.color_targets.target_count());
             profile_counters.alpha_targets.add(pass.alpha_targets.target_count());
         }
+
+        let gpu_cache_updates = gpu_cache.end_frame(gpu_cache_profile);
 
         resource_cache.end_frame();
 
@@ -1468,7 +1454,6 @@ impl FrameBuilder {
             layer_texture_data: self.packed_layers.clone(),
             render_task_data: render_tasks.render_task_data,
             gpu_data32: self.prim_store.gpu_data32.build(),
-            gpu_resource_rects: self.prim_store.gpu_resource_rects.build(),
             deferred_resolves: deferred_resolves,
             gpu_cache_updates: Some(gpu_cache_updates),
         }

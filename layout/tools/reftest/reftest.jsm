@@ -532,7 +532,9 @@ function StartTests()
             tIDs.push(gURLs[i].identifier);
         }
 
-        logger.suiteStart(tIDs, {"skipped": gURLs.length - tURLs.length});
+        if (gStartAfter === undefined) {
+            logger.suiteStart(tIDs, {"skipped": gURLs.length - tURLs.length});
+        }
 
         if (gTotalChunks > 0 && gThisChunk > 0) {
             // Calculate start and end indices of this chunk if tURLs array were

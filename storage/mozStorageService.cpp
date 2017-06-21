@@ -129,9 +129,11 @@ Service::CollectReports(nsIHandleReportCallback *aHandleReport,
       RefPtr<Connection> &conn = connections[i];
 
       // Someone may have closed the Connection, in which case we skip it.
-      bool isReady;
-      (void)conn->GetConnectionReady(&isReady);
-      if (!isReady) {
+      // Note that we have consumers of the synchronous API that are off the
+      // main-thread, like the DOM Cache and IndexedDB, and as such we must be
+      // sure that we have a connection.
+      MutexAutoLock lockedAsyncScope(conn->sharedAsyncExecutionMutex);
+      if (!conn->connectionReady()) {
           continue;
       }
 
@@ -349,6 +351,8 @@ Service::minimizeMemory()
 
   for (uint32_t i = 0; i < connections.Length(); i++) {
     RefPtr<Connection> conn = connections[i];
+    // For non-main-thread owning/opening threads, we may be racing against them
+    // closing their connection or their thread.  That's okay, see below.
     if (!conn->connectionReady())
       continue;
 
@@ -377,10 +381,14 @@ Service::minimizeMemory()
     } else {
       // We are on the wrong thread, the query should be executed on the
       // opener thread, so we must dispatch to it.
+      // It's possible the connection is already closed or will be closed by the
+      // time our runnable runs.  ExecuteSimpleSQL will safely return with a
+      // failure in that case.  If the thread is shutting down or shut down, the
+      // dispatch will fail and that's okay.
       nsCOMPtr<nsIRunnable> event =
         NewRunnableMethod<const nsCString>(
           conn, &Connection::ExecuteSimpleSQL, shrinkPragma);
-      conn->threadOpenedOn->Dispatch(event, NS_DISPATCH_NORMAL);
+      Unused << conn->threadOpenedOn->Dispatch(event, NS_DISPATCH_NORMAL);
     }
   }
 }
@@ -680,17 +688,8 @@ public:
   NS_IMETHOD Run() override
   {
     MOZ_ASSERT(!NS_IsMainThread());
-    nsresult rv = mStorageFile ? mConnection->initialize(mStorageFile)
-                               : mConnection->initialize();
+    nsresult rv = mConnection->initializeOnAsyncThread(mStorageFile);
     if (NS_FAILED(rv)) {
-      nsCOMPtr<nsIRunnable> closeRunnable =
-        NewRunnableMethod<mozIStorageCompletionCallback*>(
-          mConnection.get(),
-          &Connection::AsyncClose,
-          nullptr);
-      MOZ_ASSERT(closeRunnable);
-      MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(closeRunnable));
-
       return DispatchResult(rv, nullptr);
     }
 
@@ -942,17 +941,16 @@ Service::Observe(nsISupports *, const char *aTopic, const char16_t *)
     }
 
     SpinEventLoopUntil([&]() -> bool {
-        // We must wait until all connections are closed.
-        nsTArray<RefPtr<Connection>> connections;
-        getConnections(connections);
-        for (auto& conn : connections) {
-          if (conn->isClosing()) {
-            return false;
-          }
+      // We must wait until all the closing connections are closed.
+      nsTArray<RefPtr<Connection>> connections;
+      getConnections(connections);
+      for (auto& conn : connections) {
+        if (conn->isClosing()) {
+          return false;
         }
-
-        return true;
-      });
+      }
+      return true;
+    });
 
     if (gShutdownChecks == SCM_CRASH) {
       nsTArray<RefPtr<Connection> > connections;

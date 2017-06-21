@@ -10,6 +10,8 @@ WEB_PLATFORM_TESTS_MANIFESTS += [
 ]
 
 TEST_HARNESS_FILES['web-platform'] += [
+    'mach_commands_base.py',
+    'mach_test_package_commands.py',
     'outbound/**',
     'runtests.py',
     'wptrunner.ini'

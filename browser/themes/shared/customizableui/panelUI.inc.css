@@ -1254,6 +1254,7 @@ photonpanelmultiview .subviewbutton:focus {
 }
 
 photonpanelmultiview .subviewbutton > .toolbarbutton-text {
+  padding: 0;
   padding-inline-start: 24px; /* This is 16px for the icon + 8px for the padding as defined above. */
 }
 

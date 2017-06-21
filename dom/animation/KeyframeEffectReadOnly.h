@@ -464,7 +464,7 @@ private:
 
   static const TimeDuration OverflowRegionRefreshInterval();
 
-  void UpadateEffectSet(mozilla::EffectSet* aEffectSet = nullptr) const;
+  void UpdateEffectSet(mozilla::EffectSet* aEffectSet = nullptr) const;
 
   // FIXME: This flag will be removed in bug 1324966.
   bool mIsComposingStyle = false;

@@ -11,7 +11,6 @@ import math
 import mozdebug
 import mozinfo
 import os
-import os.path
 import random
 import re
 import shutil
@@ -21,10 +20,11 @@ import tempfile
 import time
 import traceback
 
+from argparse import ArgumentParser
 from collections import defaultdict, deque, namedtuple
 from distutils import dir_util
+from functools import partial
 from multiprocessing import cpu_count
-from argparse import ArgumentParser
 from subprocess import Popen, PIPE, STDOUT
 from tempfile import mkdtemp, gettempdir
 from threading import (
@@ -827,6 +827,21 @@ class XPCShellTests(object):
                                   "to set path explicitly." % (ini_path,))
             sys.exit(1)
 
+    def normalizeTest(self, root, test_object):
+        path = test_object.get('file_relpath', test_object['relpath'])
+        if 'dupe-manifest' in test_object and 'ancestor-manifest' in test_object:
+            test_object['id'] = '%s:%s' % (os.path.basename(test_object['ancestor-manifest']), path)
+        else:
+            test_object['id'] = path
+
+        test_object['manifest'] = os.path.relpath(test_object['manifest'], root)
+
+        if os.sep != '/':
+            for key in ('id', 'manifest'):
+                test_object[key] = test_object[key].replace(os.sep, '/')
+
+        return test_object
+
     def buildTestList(self, test_tags=None, test_paths=None):
         """
           read the xpcshell.ini manifest and set self.alltests to be
@@ -844,6 +859,7 @@ class XPCShellTests(object):
             self.singleFile = None
 
         mp = self.getTestManifest(self.manifest)
+        normalize = partial(self.normalizeTest, mp.rootdir)
 
         filters = []
         if test_tags:
@@ -855,7 +871,7 @@ class XPCShellTests(object):
         if self.singleFile is None and self.totalChunks > 1:
             filters.append(chunk_by_slice(self.thisChunk, self.totalChunks))
         try:
-            self.alltests = mp.active_tests(filters=filters, **mozinfo.info)
+            self.alltests = map(normalize, mp.active_tests(filters=filters, **mozinfo.info))
         except TypeError:
             sys.stderr.write("*** offending mozinfo.info: %s\n" % repr(mozinfo.info))
             raise
@@ -1084,16 +1100,6 @@ class XPCShellTests(object):
         self.passCount += test.passCount
         self.failCount += test.failCount
         self.todoCount += test.todoCount
-
-    def makeTestId(self, test_object):
-        """Calculate an identifier for a test based on its path or a combination of
-        its path and the source manifest."""
-
-        relpath_key = 'file_relpath' if 'file_relpath' in test_object else 'relpath'
-        path = test_object[relpath_key].replace('\\', '/');
-        if 'dupe-manifest' in test_object and 'ancestor-manifest' in test_object:
-            return '%s:%s' % (os.path.basename(test_object['ancestor-manifest']), path)
-        return path
 
     def runTests(self, xpcshell=None, xrePath=None, appPath=None, symbolsPath=None,
                  manifest=None, testPaths=None, mobileArgs=None, tempDir=None,
@@ -1340,7 +1346,6 @@ class XPCShellTests(object):
             # are re-run.
 
             path = test_object['path']
-            test_object['id'] = self.makeTestId(test_object)
 
             if self.singleFile and not path.endswith(self.singleFile):
                 continue
