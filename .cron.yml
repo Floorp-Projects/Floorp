@@ -26,8 +26,14 @@ jobs:
           treeherder-symbol: Nd-OSX
           target-tasks-method: nightly_macosx
       run-on-projects:
+          - mozilla-central
           - date
-      when: [] # never (hook only)
+      when:
+          by-project:
+            # Match buildbot starts for now
+            date: [{hour: 15, minute: 0}]
+            mozilla-central: [{hour: 10, minute: 0}]
+            # No default
 
     - name: nightly-desktop-win64
       job:
