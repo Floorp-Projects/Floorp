@@ -301,6 +301,18 @@ class RefTest(object):
            '5.1' in platform.version() and options.e10s:
             prefs['layers.acceleration.disabled'] = True
 
+        sandbox_whitelist_paths = [SCRIPT_DIRECTORY]
+        try:
+            if options.workPath:
+                sandbox_whitelist_paths.append(options.workPath)
+        except AttributeError:
+            pass
+        if platform.system() == "Linux":
+            # Trailing slashes are needed to indicate directories on Linux
+            for idx, path in enumerate(sandbox_whitelist_paths):
+                if not path.endswith("/"):
+                    sandbox_whitelist_paths[idx] = path + "/"
+
         # Bug 1300355: Disable canvas cache for win7 as it uses
         # too much memory and causes OOMs.
         if platform.system() in ("Windows", "Microsoft") and \
@@ -345,7 +357,8 @@ class RefTest(object):
 
         kwargs = {'addons': addons,
                   'preferences': prefs,
-                  'locations': locations}
+                  'locations': locations,
+                  'whitelistpaths': sandbox_whitelist_paths}
         if profile_to_clone:
             profile = mozprofile.Profile.clone(profile_to_clone, **kwargs)
         else:
