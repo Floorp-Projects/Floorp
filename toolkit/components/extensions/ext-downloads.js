@@ -235,7 +235,7 @@ const DownloadMap = {
 
 // Create a callable function that filters a DownloadItem based on a
 // query object of the type passed to search() or erase().
-function downloadQuery(query) {
+const downloadQuery = query => {
   let queryTerms = [];
   let queryNegativeTerms = [];
   if (query.query != null) {
@@ -337,9 +337,9 @@ function downloadQuery(query) {
 
     return true;
   };
-}
+};
 
-function queryHelper(query) {
+const queryHelper = query => {
   let matchFn;
   try {
     matchFn = downloadQuery(query);
@@ -390,7 +390,7 @@ function queryHelper(query) {
     }
     return results;
   });
-}
+};
 
 this.downloads = class extends ExtensionAPI {
   getAPI(context) {
