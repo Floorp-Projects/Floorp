@@ -7,6 +7,7 @@
 #ifndef mozilla_unused_h
 #define mozilla_unused_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Types.h"
 
 #ifdef __cplusplus
@@ -20,7 +21,7 @@ namespace mozilla {
 struct unused_t
 {
   template<typename T>
-  inline void
+  MOZ_ALWAYS_INLINE_EVEN_DEBUG void
   operator<<(const T& /*unused*/) const {}
 };
 
