@@ -87,7 +87,6 @@
 
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "GeckoProfiler.h"
-#include "mozilla/IdleTaskRunner.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -121,7 +120,7 @@ const size_t gStackSize = 8192;
 #define NS_CC_SKIPPABLE_DELAY       250 // ms
 
 // ForgetSkippable is usually fast, so we can use small budgets.
-// This isn't a real budget but a hint to IdleTaskRunner whether there
+// This isn't a real budget but a hint to CollectorRunner whether there
 // is enough time to call ForgetSkippable.
 static const int64_t kForgetSkippableSliceDuration = 2;
 
@@ -150,14 +149,16 @@ static const uint32_t kMaxICCDuration = 2000; // ms
 // Large value used to specify that a script should run essentially forever
 #define NS_UNLIMITED_SCRIPT_RUNTIME (0x40000000LL << 32)
 
+class CollectorRunner;
+
 // if you add statics here, add them to the list in StartupJSEnvironment
 
 static nsITimer *sGCTimer;
 static nsITimer *sShrinkingGCTimer;
-static StaticRefPtr<IdleTaskRunner> sCCRunner;
-static StaticRefPtr<IdleTaskRunner> sICCRunner;
+static StaticRefPtr<CollectorRunner> sCCRunner;
+static StaticRefPtr<CollectorRunner> sICCRunner;
 static nsITimer *sFullGCTimer;
-static StaticRefPtr<IdleTaskRunner> sInterSliceGCRunner;
+static StaticRefPtr<CollectorRunner> sInterSliceGCRunner;
 
 static TimeStamp sLastCCEndTime;
 
@@ -227,6 +228,183 @@ static int32_t sExpensiveCollectorPokes = 0;
 static const int32_t kPokesBetweenExpensiveCollectorTriggers = 5;
 
 static TimeDuration sGCUnnotifiedTotalTime;
+
+// Return true if some meaningful work was done.
+typedef bool (*CollectorRunnerCallback) (TimeStamp aDeadline, void* aData);
+
+// Repeating callback runner for CC and GC.
+class CollectorRunner final : public IdleRunnable
+{
+public:
+  static already_AddRefed<CollectorRunner>
+  Create(CollectorRunnerCallback aCallback, uint32_t aDelay,
+         int64_t aBudget, bool aRepeating, void* aData = nullptr)
+  {
+    if (sShuttingDown) {
+      return nullptr;
+    }
+
+    RefPtr<CollectorRunner> runner =
+      new CollectorRunner(aCallback, aDelay, aBudget, aRepeating, aData);
+    runner->Schedule(false); // Initial scheduling shouldn't use idle dispatch.
+    return runner.forget();
+  }
+
+  NS_IMETHOD Run() override
+  {
+    if (!mCallback) {
+      return NS_OK;
+    }
+
+    // Deadline is null when called from timer.
+    bool deadLineWasNull = mDeadline.IsNull();
+    bool didRun = false;
+    if (deadLineWasNull || ((TimeStamp::Now() + mBudget) < mDeadline)) {
+      CancelTimer();
+      didRun = mCallback(mDeadline, mData);
+    }
+
+    if (mCallback && (mRepeating || !didRun)) {
+      // If we didn't do meaningful work, don't schedule using immediate
+      // idle dispatch, since that could lead to a loop until the idle
+      // period ends.
+      Schedule(didRun);
+    }
+
+    return NS_OK;
+  }
+
+  static void
+  TimedOut(nsITimer* aTimer, void* aClosure)
+  {
+    RefPtr<CollectorRunner> runnable = static_cast<CollectorRunner*>(aClosure);
+    runnable->Run();
+  }
+
+  void SetDeadline(mozilla::TimeStamp aDeadline) override
+  {
+    mDeadline = aDeadline;
+  };
+
+  void SetTimer(uint32_t aDelay, nsIEventTarget* aTarget) override
+  {
+    if (mTimerActive) {
+      return;
+    }
+
+    mTarget = aTarget;
+    if (!mTimer) {
+      mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    } else {
+      mTimer->Cancel();
+    }
+
+    if (mTimer) {
+      mTimer->SetTarget(mTarget);
+      mTimer->InitWithFuncCallback(TimedOut, this, aDelay,
+                                   nsITimer::TYPE_ONE_SHOT);
+      mTimerActive = true;
+    }
+  }
+
+  nsresult Cancel() override
+  {
+    CancelTimer();
+    mTimer = nullptr;
+    mScheduleTimer = nullptr;
+    mCallback = nullptr;
+    return NS_OK;
+  }
+
+  static void
+  ScheduleTimedOut(nsITimer* aTimer, void* aClosure)
+  {
+    RefPtr<CollectorRunner> runnable = static_cast<CollectorRunner*>(aClosure);
+    runnable->Schedule(true);
+  }
+
+  void Schedule(bool aAllowIdleDispatch)
+  {
+    if (!mCallback) {
+      return;
+    }
+
+    if (sShuttingDown) {
+      Cancel();
+      return;
+    }
+
+    mDeadline = TimeStamp();
+    TimeStamp now = TimeStamp::Now();
+    TimeStamp hint = nsRefreshDriver::GetIdleDeadlineHint(now);
+    if (hint != now) {
+      // RefreshDriver is ticking, let it schedule the idle dispatch.
+      nsRefreshDriver::DispatchIdleRunnableAfterTick(this, mDelay);
+      // Ensure we get called at some point, even if RefreshDriver is stopped.
+      SetTimer(mDelay, mTarget);
+    } else {
+      // RefreshDriver doesn't seem to be running.
+      if (aAllowIdleDispatch) {
+        nsCOMPtr<nsIRunnable> runnable = this;
+        NS_IdleDispatchToCurrentThread(runnable.forget(), mDelay);
+        SetTimer(mDelay, mTarget);
+      } else {
+        if (!mScheduleTimer) {
+          mScheduleTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+          if (!mScheduleTimer) {
+            return;
+          }
+        } else {
+          mScheduleTimer->Cancel();
+        }
+
+        // We weren't allowed to do idle dispatch immediately, do it after a
+        // short timeout.
+        mScheduleTimer->InitWithFuncCallback(ScheduleTimedOut, this, 16,
+                                             nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY);
+      }
+    }
+  }
+
+private:
+  explicit CollectorRunner(CollectorRunnerCallback aCallback,
+                           uint32_t aDelay, int64_t aBudget,
+                           bool aRepeating, void* aData)
+    : mCallback(aCallback), mDelay(aDelay)
+    , mBudget(TimeDuration::FromMilliseconds(aBudget))
+    , mRepeating(aRepeating), mTimerActive(false), mData(aData)
+  {
+  }
+
+  ~CollectorRunner()
+  {
+    CancelTimer();
+  }
+
+  void CancelTimer()
+  {
+    nsRefreshDriver::CancelIdleRunnable(this);
+    if (mTimer) {
+      mTimer->Cancel();
+    }
+    if (mScheduleTimer) {
+      mScheduleTimer->Cancel();
+    }
+    mTimerActive = false;
+  }
+
+  nsCOMPtr<nsITimer> mTimer;
+  nsCOMPtr<nsITimer> mScheduleTimer;
+  nsCOMPtr<nsIEventTarget> mTarget;
+  CollectorRunnerCallback mCallback;
+  uint32_t mDelay;
+  TimeStamp mDeadline;
+  TimeDuration mBudget;
+  bool mRepeating;
+  bool mTimerActive;
+  void* mData;
+};
+
 static const char*
 ProcessNameForCollectorLog()
 {
