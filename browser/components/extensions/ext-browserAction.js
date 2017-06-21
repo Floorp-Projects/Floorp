@@ -43,14 +43,14 @@ const POPUP_RESULT_HISTOGRAM = "WEBEXT_BROWSERACTION_POPUP_PRELOAD_RESULT_COUNT"
 
 var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-function isAncestorOrSelf(target, node) {
+const isAncestorOrSelf = (target, node) => {
   for (; node; node = node.parentNode) {
     if (node === target) {
       return true;
     }
   }
   return false;
-}
+};
 
 // WeakMap[Extension -> BrowserAction]
 const browserActionMap = new WeakMap();
