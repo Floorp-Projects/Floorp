@@ -123,7 +123,7 @@ NotifySubdocumentInvalidation(Layer* aLayer, NotifySubDocInvalidationFunc aCallb
       aLayer,
       [aCallback] (Layer* layer)
       {
-        layer->ClearInvalidRect();
+        layer->ClearInvalidRegion();
         if (layer->GetMaskLayer()) {
           NotifySubdocumentInvalidation(layer->GetMaskLayer(), aCallback);
         }
@@ -252,7 +252,7 @@ public:
       }
     }
 
-    mLayer->ClearInvalidRect();
+    mLayer->ClearInvalidRegion();
     return result;
   }
 
@@ -322,12 +322,13 @@ public:
     container->CheckCanary();
 
     bool childrenChanged = false;
-
+    bool invalidateWholeLayer = false;
     if (mPreXScale != container->GetPreXScale() ||
         mPreYScale != container->GetPreYScale()) {
       invalidOfLayer = OldTransformedBounds();
       AddRegion(invalidOfLayer, NewTransformedBounds());
       childrenChanged = true;
+      invalidateWholeLayer = true;
 
       // Can't bail out early, we need to update the child container layers
     }
@@ -419,6 +420,13 @@ public:
       container->SetChildrenChanged(true);
     }
 
+    if (container->UseIntermediateSurface()) {
+      IntRect bounds = invalidateWholeLayer
+                       ? mLayer->GetLocalVisibleRegion().ToUnknownRegion().GetBounds()
+                       : result.GetBounds();
+      container->SetInvalidCompositeRect(bounds);
+    }
+
     if (!mLayer->Extend3DContext()) {
       // |result| contains invalid regions only of children.
       result.Transform(GetTransformForInvalidation(mLayer));
@@ -427,7 +435,6 @@ public:
 
     LTI_DUMP(invalidOfLayer, "invalidOfLayer");
     result.OrWith(invalidOfLayer);
-
     return result;
   }
 
@@ -739,7 +746,7 @@ LayerProperties::ClearInvalidations(Layer *aLayer)
         aLayer,
         [] (Layer* layer)
         {
-          layer->ClearInvalidRect();
+          layer->ClearInvalidRegion();
           if (layer->GetMaskLayer()) {
             ClearInvalidations(layer->GetMaskLayer());
           }

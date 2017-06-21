@@ -15,7 +15,7 @@
         p.name = "p";
         var q = p.then();
         q.name = "q";
-        var r = p.then(null, () => {});
+        var r = p.catch(() => {});
         r.name = "r";
       }
     </script>

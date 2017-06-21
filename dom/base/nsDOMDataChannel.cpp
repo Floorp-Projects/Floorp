@@ -578,7 +578,7 @@ nsDOMDataChannel::UpdateMustKeepAlive()
 
   if (mSelfRef && !shouldKeepAlive) {
     // release our self-reference (safely) by putting it in an event (always)
-    NS_ReleaseOnMainThread(mSelfRef.forget(), true);
+    NS_ReleaseOnMainThread("nsDOMDataChannel::mSelfRef", mSelfRef.forget(), true);
   } else if (!mSelfRef && shouldKeepAlive) {
     mSelfRef = this;
   }
@@ -591,7 +591,7 @@ nsDOMDataChannel::DontKeepAliveAnyMore()
 
   if (mSelfRef) {
     // Since we're on MainThread, force an eventloop trip to avoid deleting ourselves.
-    NS_ReleaseOnMainThread(mSelfRef.forget(), true);
+    NS_ReleaseOnMainThread("nsDOMDataChannel::mSelfRef", mSelfRef.forget(), true);
   }
 
   mCheckMustKeepAlive = false;

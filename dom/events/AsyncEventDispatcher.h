@@ -38,22 +38,54 @@ public:
                        bool aBubbles, bool aOnlyChromeDispatch)
     : mTarget(aTarget)
     , mEventType(aEventType)
+    , mEventMessage(eUnidentifiedEvent)
     , mBubbles(aBubbles)
     , mOnlyChromeDispatch(aOnlyChromeDispatch)
   {
+  }
+
+  /**
+   * If aOnlyChromeDispatch is true, the event is dispatched to only
+   * chrome node. In that case, if aTarget is already a chrome node,
+   * the event is dispatched to it, otherwise the dispatch path starts
+   * at the first chrome ancestor of that target.
+   */
+  AsyncEventDispatcher(nsINode* aTarget,
+                       mozilla::EventMessage aEventMessage,
+                       bool aBubbles, bool aOnlyChromeDispatch)
+    : mTarget(aTarget)
+    , mEventMessage(aEventMessage)
+    , mBubbles(aBubbles)
+    , mOnlyChromeDispatch(aOnlyChromeDispatch)
+  {
+    mEventType.SetIsVoid(true);
+    MOZ_ASSERT(mEventMessage != eUnidentifiedEvent);
   }
 
   AsyncEventDispatcher(dom::EventTarget* aTarget, const nsAString& aEventType,
                        bool aBubbles)
     : mTarget(aTarget)
     , mEventType(aEventType)
+    , mEventMessage(eUnidentifiedEvent)
     , mBubbles(aBubbles)
   {
+  }
+
+  AsyncEventDispatcher(dom::EventTarget* aTarget,
+                       mozilla::EventMessage aEventMessage,
+                       bool aBubbles)
+    : mTarget(aTarget)
+    , mEventMessage(aEventMessage)
+    , mBubbles(aBubbles)
+  {
+    mEventType.SetIsVoid(true);
+    MOZ_ASSERT(mEventMessage != eUnidentifiedEvent);
   }
 
   AsyncEventDispatcher(dom::EventTarget* aTarget, nsIDOMEvent* aEvent)
     : mTarget(aTarget)
     , mEvent(aEvent)
+    , mEventMessage(eUnidentifiedEvent)
   {
   }
 
@@ -71,7 +103,11 @@ public:
 
   nsCOMPtr<dom::EventTarget> mTarget;
   nsCOMPtr<nsIDOMEvent> mEvent;
+  // If mEventType is set, mEventMessage will be eUnidentifiedEvent.
+  // If mEventMessage is set, mEventType will be void.
+  // They can never both be set at the same time.
   nsString              mEventType;
+  mozilla::EventMessage mEventMessage;
   bool                  mBubbles = false;
   bool                  mOnlyChromeDispatch = false;
   bool                  mCanceled = false;

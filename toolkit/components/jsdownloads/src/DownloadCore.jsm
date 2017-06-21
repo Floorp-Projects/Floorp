@@ -574,7 +574,7 @@ this.Download.prototype = {
     this._deferSucceeded.resolve();
 
     if (this.launchWhenSucceeded) {
-      this.launch().then(null, Cu.reportError);
+      this.launch().catch(Cu.reportError);
 
       // Always schedule files to be deleted at the end of the private browsing
       // mode, regardless of the value of the pref.
@@ -959,7 +959,7 @@ this.Download.prototype = {
 
         this._notifyChange();
       }
-    })().then(null, Cu.reportError);
+    })().catch(Cu.reportError);
   },
 
   /**

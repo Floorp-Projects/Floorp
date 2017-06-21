@@ -276,7 +276,8 @@ class TLSServerSecurityObserverProxy final : public nsITLSServerSecurityObserver
 
 public:
   explicit TLSServerSecurityObserverProxy(nsITLSServerSecurityObserver* aListener)
-    : mListener(new nsMainThreadPtrHolder<nsITLSServerSecurityObserver>(aListener))
+    : mListener(new nsMainThreadPtrHolder<nsITLSServerSecurityObserver>(
+        "TLSServerSecurityObserverProxy::mListener", aListener))
   { }
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -355,7 +356,8 @@ TLSServerConnectionInfo::~TLSServerConnectionInfo()
   }
 
   if (observer) {
-    NS_ReleaseOnMainThread(observer.forget());
+    NS_ReleaseOnMainThread(
+      "TLSServerConnectionInfo::mSecurityObserver", observer.forget());
   }
 }
 

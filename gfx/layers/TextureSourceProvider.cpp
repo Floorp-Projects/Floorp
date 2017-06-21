@@ -62,6 +62,7 @@ void
 TextureSourceProvider::Destroy()
 {
   ReadUnlockTextures();
+  FlushPendingNotifyNotUsed();
 }
 
 } // namespace layers

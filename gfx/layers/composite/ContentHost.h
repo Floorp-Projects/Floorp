@@ -63,6 +63,11 @@ public:
   // tiles are fading in.
   virtual void AddAnimationInvalidation(nsIntRegion& aRegion) { }
 
+  virtual gfx::IntRect GetBufferRect() {
+    MOZ_ASSERT_UNREACHABLE("Must be implemented in derived class");
+    return gfx::IntRect();
+  }
+
 protected:
   explicit ContentHost(const TextureInfo& aTextureInfo)
     : CompositableHost(aTextureInfo)
@@ -92,13 +97,19 @@ public:
   explicit ContentHostBase(const TextureInfo& aTextureInfo);
   virtual ~ContentHostBase();
 
-protected:
+  virtual gfx::IntRect GetBufferRect() override { return mBufferRect; }
+
   virtual nsIntPoint GetOriginOffset()
   {
     return mBufferRect.TopLeft() - mBufferRotation;
   }
 
+  gfx::IntPoint GetBufferRotation()
+  {
+    return mBufferRotation.ToUnknownPoint();
+  }
 
+protected:
   gfx::IntRect mBufferRect;
   nsIntPoint mBufferRotation;
   bool mInitialised;
@@ -165,6 +176,15 @@ public:
     }
     mLocked = false;
   }
+
+  bool HasComponentAlpha() const {
+    return !!mTextureHostOnWhite;
+  }
+
+  RefPtr<TextureSource> AcquireTextureSource();
+  RefPtr<TextureSource> AcquireTextureSourceOnWhite();
+
+  ContentHostTexture* AsContentHostTexture() override { return this; }
 
   virtual already_AddRefed<TexturedEffect> GenEffect(const gfx::SamplingFilter aSamplingFilter) override;
 

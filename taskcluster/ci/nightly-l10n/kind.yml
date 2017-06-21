@@ -31,7 +31,7 @@ job-template:
       by-build-platform:
          macosx64-nightly: 8
          default: 6
-   run-on-projects: ['mozilla-central', 'mozilla-aurora', 'mozilla-beta']
+   run-on-projects: ['mozilla-central', 'mozilla-beta']
    ignore-locales:
       by-build-platform:
          # OSX has a special locale for japanese

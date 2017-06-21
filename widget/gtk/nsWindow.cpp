@@ -2102,7 +2102,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     }
 
     if (GetLayerManager()->AsKnowsCompositor() && GetLayerManager()->NeedsComposite()) {
-      GetLayerManager()->Composite();
+      GetLayerManager()->ScheduleComposite();
       GetLayerManager()->SetNeedsComposite(false);
     }
 

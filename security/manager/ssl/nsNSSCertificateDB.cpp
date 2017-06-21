@@ -1492,7 +1492,8 @@ public:
     , mFlags(aFlags)
     , mHostname(aHostname)
     , mTime(aTime)
-    , mCallback(new nsMainThreadPtrHolder<nsICertVerificationCallback>(aCallback))
+    , mCallback(new nsMainThreadPtrHolder<nsICertVerificationCallback>(
+        "nsICertVerificationCallback", aCallback))
     , mPRErrorCode(SEC_ERROR_LIBRARY_FAILURE)
     , mVerifiedCertList(nullptr)
     , mHasEVPolicy(false)

@@ -918,7 +918,7 @@ var Cmds = {
     let url = AppManager.deviceFront.screenshotToDataURL();
     return UI.busyUntil(url.then(longstr => {
       return longstr.string().then(dataURL => {
-        longstr.release().then(null, console.error);
+        longstr.release().catch(console.error);
         UI.openInBrowser(dataURL);
       });
     }), "taking screenshot");

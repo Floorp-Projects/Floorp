@@ -142,8 +142,8 @@ this.UserAgentUpdates = {
         }
       );
       // try to load next one if the previous load failed
-      return prevLoad ? prevLoad.then(null, tryNext) : tryNext();
-    }, null).then(null, (ex) => {
+      return prevLoad ? prevLoad.catch(tryNext) : tryNext();
+    }, null).catch((ex) => {
       if (AppConstants.platform !== "android") {
         // All previous (non-Android) load attempts have failed, so we bail.
         throw new Error("UserAgentUpdates: Failed to load " + FILE_UPDATES +

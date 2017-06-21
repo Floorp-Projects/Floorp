@@ -118,6 +118,7 @@ LayerManagerComposite::ClearCachedResources(Layer* aSubtree)
 HostLayerManager::HostLayerManager()
   : mDebugOverlayWantsNextFrame(false)
   , mWarningLevel(0.0f)
+  , mCompositorBridgeID(0)
   , mWindowOverlayChanged(false)
   , mLastPaintTime(TimeDuration::Forever())
   , mRenderStartTime(TimeStamp::Now())
@@ -1404,6 +1405,15 @@ LayerManagerComposite::AutoAddMaskEffect::~AutoAddMaskEffect()
   }
 
   mCompositable->RemoveMaskEffect();
+}
+
+bool
+LayerManagerComposite::IsCompositingToScreen() const
+{
+  if (!mCompositor) {
+    return true;
+  }
+  return !mCompositor->GetTargetContext();
 }
 
 LayerComposite::LayerComposite(LayerManagerComposite *aManager)

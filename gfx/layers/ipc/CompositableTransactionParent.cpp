@@ -48,7 +48,7 @@ class Compositor;
 static bool
 ScheduleComposition(CompositableHost* aCompositable)
 {
-  uint64_t id = aCompositable->GetCompositorID();
+  uint64_t id = aCompositable->GetCompositorBridgeID();
   if (!id) {
     return false;
   }

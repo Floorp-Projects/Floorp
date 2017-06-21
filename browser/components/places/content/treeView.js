@@ -1357,7 +1357,7 @@ PlacesTreeView.prototype = {
     let ip = this._getInsertionPoint(aRow, aOrientation);
     if (ip) {
       PlacesControllerDragHelper.onDrop(ip, aDataTransfer)
-                                .then(null, Components.utils.reportError);
+                                .catch(Components.utils.reportError);
     }
 
     PlacesControllerDragHelper.currentDropTarget = null;

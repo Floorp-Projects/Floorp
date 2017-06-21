@@ -19,7 +19,7 @@ const DeviceFront = protocol.FrontClassWithSpec(deviceSpec, {
     return this.screenshotToDataURL().then(longstr => {
       return longstr.string().then(dataURL => {
         let deferred = defer();
-        longstr.release().then(null, Cu.reportError);
+        longstr.release().catch(Cu.reportError);
         let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
             .createInstance(Ci.nsIXMLHttpRequest);
         req.open("GET", dataURL, true);

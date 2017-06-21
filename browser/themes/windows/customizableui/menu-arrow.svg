@@ -1,26 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="16" width="16" viewBox="0 0 16 16">
-  <style>
-    use:not(:target) {
-      display: none;
-    }
-    use {
-      fill: MenuText;
-    }
-    use[id$="-disabled"] {
-      fill: GrayText;
-    }
-    use[id$="-hover"] {
-      fill: HighlightText;
-    }
-  </style>
-  <defs>
-    <path id="arrow-shape" d="m 6,4 0,8 5,-4 z"/>
-  </defs>
-  <use id="arrow" xlink:href="#arrow-shape"/>
-  <use id="arrow-disabled" xlink:href="#arrow-shape"/>
-  <use id="arrow-hover" xlink:href="#arrow-shape"/>
+<svg xmlns="http://www.w3.org/2000/svg"
+     height="16" width="16" viewBox="0 0 16 16">
+  <path fill="context-fill" d="m 6,4 0,8 5,-4 z"/>
 </svg>

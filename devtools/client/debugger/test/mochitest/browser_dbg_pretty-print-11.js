@@ -36,7 +36,7 @@ function test() {
       })
       .then(testSourceIsPretty)
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
-      .then(null, aError => {
+      .catch(aError => {
         ok(false, "Got an error: " + DevToolsUtils.safeErrorString(aError));
       });
   });

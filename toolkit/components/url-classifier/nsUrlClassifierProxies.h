@@ -210,7 +210,8 @@ class UrlClassifierLookupCallbackProxy final :
 {
 public:
   explicit UrlClassifierLookupCallbackProxy(nsIUrlClassifierLookupCallback* aTarget)
-    : mTarget(new nsMainThreadPtrHolder<nsIUrlClassifierLookupCallback>(aTarget))
+    : mTarget(new nsMainThreadPtrHolder<nsIUrlClassifierLookupCallback>(
+        "UrlClassifierLookupCallbackProxy::mTarget", aTarget))
   { }
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -242,7 +243,8 @@ class UrlClassifierCallbackProxy final : public nsIUrlClassifierCallback
 {
 public:
   explicit UrlClassifierCallbackProxy(nsIUrlClassifierCallback* aTarget)
-    : mTarget(new nsMainThreadPtrHolder<nsIUrlClassifierCallback>(aTarget))
+    : mTarget(new nsMainThreadPtrHolder<nsIUrlClassifierCallback>(
+        "UrlClassifierCallbackProxy::mTarget", aTarget))
   { }
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -275,7 +277,8 @@ class UrlClassifierUpdateObserverProxy final :
 {
 public:
   explicit UrlClassifierUpdateObserverProxy(nsIUrlClassifierUpdateObserver* aTarget)
-    : mTarget(new nsMainThreadPtrHolder<nsIUrlClassifierUpdateObserver>(aTarget))
+    : mTarget(new nsMainThreadPtrHolder<nsIUrlClassifierUpdateObserver>(
+        "UrlClassifierUpdateObserverProxy::mTarget", aTarget))
   { }
 
   NS_DECL_THREADSAFE_ISUPPORTS

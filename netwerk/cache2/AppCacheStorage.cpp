@@ -32,7 +32,7 @@ AppCacheStorage::AppCacheStorage(nsILoadContextInfo* aInfo,
 
 AppCacheStorage::~AppCacheStorage()
 {
-  ProxyReleaseMainThread(mAppCache);
+  ProxyReleaseMainThread("AppCacheStorage::mAppCache", mAppCache);
 }
 
 NS_IMETHODIMP AppCacheStorage::AsyncOpenURI(nsIURI *aURI,

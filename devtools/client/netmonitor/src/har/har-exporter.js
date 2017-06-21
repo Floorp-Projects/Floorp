@@ -158,7 +158,7 @@ const HarExporter = {
       }
 
       return jsonString;
-    }).then(null, function onError(err) {
+    }).catch(function onError(err) {
       console.error(err);
     });
   },

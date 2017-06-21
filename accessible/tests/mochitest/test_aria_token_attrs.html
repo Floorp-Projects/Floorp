@@ -96,12 +96,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
       testStates("option_checked_undefined", 0, 0, STATE_CHECKABLE | STATE_CHECKED);
       testStates("option_checked_absent", 0, 0, STATE_CHECKABLE | STATE_CHECKED);
 
-      // test (menuitem) checkable and checked states
-      testStates("menuitem_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
-      testStates("menuitem_checked_false", STATE_CHECKABLE, 0, STATE_CHECKED);
+      // test (menuitem) checkable and checked states, which are unsupported on this role
+      testStates("menuitem_checked_true", 0, 0, (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("menuitem_checked_false", 0, 0, (STATE_CHECKABLE | STATE_CHECKED));
       testStates("menuitem_checked_empty", 0, 0, (STATE_CHECKABLE | STATE_CHECKED));
       testStates("menuitem_checked_undefined", 0, 0, (STATE_CHECKABLE | STATE_CHECKED));
       testStates("menuitem_checked_absent", 0, 0, (STATE_CHECKABLE | STATE_CHECKED));
+
+      // test (menuitemcheckbox) checkable and checked states
+      testStates("menuitemcheckbox_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("menuitemcheckbox_checked_false", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("menuitemcheckbox_checked_empty", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("menuitemcheckbox_checked_undefined", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("menuitemcheckbox_checked_absent", STATE_CHECKABLE, 0, STATE_CHECKED);
+
+      // test (menuitemcheckbox) readonly states
+      testStates("menuitemcheckbox_readonly_true", STATE_READONLY);
+      testStates("menuitemcheckbox_readonly_false", 0, 0, STATE_READONLY);
+      testStates("menuitemcheckbox_readonly_empty", 0, 0, STATE_READONLY);
+      testStates("menuitemcheckbox_readonly_undefined", 0, 0, STATE_READONLY);
+      testStates("menuitemcheckbox_readonly_absent", 0, 0, STATE_READONLY);
 
       // test (menuitemradio) checkable and checked states
       testStates("menuitemradio_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
@@ -110,12 +124,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
       testStates("menuitemradio_checked_undefined", STATE_CHECKABLE, 0, STATE_CHECKED);
       testStates("menuitemradio_checked_absent", STATE_CHECKABLE, 0, STATE_CHECKED);
 
+      // test (menuitemradio) readonly states
+      testStates("menuitemradio_readonly_true", STATE_READONLY);
+      testStates("menuitemradio_readonly_false", 0, 0, STATE_READONLY);
+      testStates("menuitemradio_readonly_empty", 0, 0, STATE_READONLY);
+      testStates("menuitemradio_readonly_undefined", 0, 0, STATE_READONLY);
+      testStates("menuitemradio_readonly_absent", 0, 0, STATE_READONLY);
+
       // test (radio) checkable and checked states
       testStates("radio_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
       testStates("radio_checked_false", STATE_CHECKABLE, 0, STATE_CHECKED);
       testStates("radio_checked_empty", STATE_CHECKABLE, 0, STATE_CHECKED);
       testStates("radio_checked_undefined", STATE_CHECKABLE, 0, STATE_CHECKED);
       testStates("radio_checked_absent", STATE_CHECKABLE, 0, STATE_CHECKED);
+
+      // test (radiogroup) readonly states
+      testStates("radiogroup_readonly_true", STATE_READONLY);
+      testStates("radiogroup_readonly_false", 0, 0, STATE_READONLY);
+      testStates("radiogroup_readonly_empty", 0, 0, STATE_READONLY);
+      testStates("radiogroup_readonly_undefined", 0, 0, STATE_READONLY);
+      testStates("radiogroup_readonly_absent", 0, 0, STATE_READONLY);
+
+      // test (switch) readonly states
+      testStates("switch_readonly_true", STATE_READONLY);
+      testStates("switch_readonly_false", 0, 0, STATE_READONLY);
+      testStates("switch_readonly_empty", 0, 0, STATE_READONLY);
+      testStates("switch_readonly_undefined", 0, 0, STATE_READONLY);
+      testStates("switch_readonly_absent", 0, 0, STATE_READONLY);
 
       // test (textbox) multiline states
       testStates("textbox_multiline_true", 0, EXT_STATE_MULTI_LINE);
@@ -260,11 +295,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
   </div>
 
   <div role="menu">
-    <div id="menuitem_checked_true" role="menuitem" aria-checked="true">This menuitem has aria-checked="true" and should get STATE_CHECKABLE. It should also get STATE_checked.</div>
-    <div id="menuitem_checked_false" role="menuitem" aria-checked="false">This menuitem has aria-checked="false" and should get STATE_CHECKABLE.</div>
-    <div id="menuitem_checked_empty" role="menuitem" aria-checked="">This menuitem has aria-checked="" and should <emph>not</emph> get STATE_CHECKABLE.</div>
-    <div id="menuitem_checked_undefined" role="menuitem" aria-checked="undefined">This menuitem has aria-checked="undefined" and should <emph>not</emph> get STATE_CHECKABLE.</div>
-    <div id="menuitem_checked_absent" role="menuitem">This menuitem has <emph>no</emph> aria-checked attribute and should <emph>not</emph> get STATE_CHECKABLE.</div>
+    <div id="menuitem_checked_true" role="menuitem" aria-checked="true">Generic menuitems don't support aria-checked.</div>
+    <div id="menuitem_checked_false" role="menuitem" aria-checked="false">Generic menuitems don't support aria-checked.</div>
+    <div id="menuitem_checked_empty" role="menuitem" aria-checked="">Generic menuitems don't support aria-checked.</div>
+    <div id="menuitem_checked_undefined" role="menuitem" aria-checked="undefined">Generic menuitems don't support aria-checked.</div>
+    <div id="menuitem_checked_absent" role="menuitem">Generic menuitems don't support aria-checked.</div>
+
+    <div id="menuitemcheckbox_checked_true" role="menuitemcheckbox" aria-checked="true">This menuitemcheckbox has aria-checked="true" and should get STATE_CHECKABLE. It should also get STATE_checked.</div>
+    <div id="menuitemcheckbox_checked_false" role="menuitemcheckbox" aria-checked="false">This menuitemcheckbox has aria-checked="false" and should get STATE_CHECKABLE.</div>
+    <div id="menuitemcheckbox_checked_empty" role="menuitemcheckbox" aria-checked="">This menuitemcheckbox has aria-checked="" and should <emph>not</emph> get STATE_CHECKABLE.</div>
+    <div id="menuitemcheckbox_checked_undefined" role="menuitemcheckbox" aria-checked="undefined">This menuitemcheckbox has aria-checked="undefined" and should <emph>not</emph> get STATE_CHECKABLE.</div>
+    <div id="menuitemcheckbox_checked_absent" role="menuitemcheckbox">This menuitemcheckbox has <emph>no</emph> aria-checked attribute and should <emph>not</emph> get STATE_CHECKABLE.</div>
+
+    <div id="menuitemcheckbox_readonly_true" role="menuitemcheckbox" aria-readonly="true">This menuitemcheckbox has aria-readonly="true" and should get STATE_READONLY.</div>
+    <div id="menuitemcheckbox_readonly_false" role="menuitemcheckbox" aria-readonly="false">This menuitemcheckbox has aria-readonly="false" and should <emph>not</emph> get STATE_READONLY.</div>
+    <div id="menuitemcheckbox_readonly_empty" role="menuitemcheckbox" aria-readonly="">This menuitemcheckbox has aria-readonly="" and should <emph>not</emph> get STATE_READONLY.</div>
+    <div id="menuitemcheckbox_readonly_undefined" role="menuitemcheckbox" aria-readonly="undefined">This menuitemcheckbox has aria-readonly="undefined" and should <emph>not</emph> get STATE_READONLY.</div>
+    <div id="menuitemcheckbox_readonly_absent" role="menuitemcheckbox">This menuitemcheckbox has <emph>no</emph> aria-readonly attribute and should <emph>not</emph> get STATE_READONLY.</div>
 
     <div id="menuitemradio_checked_true" role="menuitemradio" aria-checked="true">This menuitem has aria-checked="true" and should get STATE_CHECKABLE. It should also get STATE_checked.</div>
     <div id="menuitemradio_checked_false" role="menuitemradio" aria-checked="false">This menuitem has aria-checked="false" and should get STATE_CHECKABLE.</div>
@@ -273,11 +320,44 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
     <div id="menuitemradio_checked_absent" role="menuitemradio">This menuitem has <emph>no</emph> aria-checked attribute but should get STATE_CHECKABLE.</div>
   </div>
 
+    <div id="menuitemradio_readonly_true" role="menuitemradio" aria-readonly="true">This menuitemradio has aria-readonly="true" and should get STATE_READONLY.</div>
+    <div id="menuitemradio_readonly_false" role="menuitemradio" aria-readonly="false">This menuitemradio has aria-readonly="false" and should <emph>not</emph> get STATE_READONLY.</div>
+    <div id="menuitemradio_readonly_empty" role="menuitemradio" aria-readonly="">This menuitemradio has aria-readonly="" and should <emph>not</emph> get STATE_READONLY.</div>
+    <div id="menuitemradio_readonly_undefined" role="menuitemradio" aria-readonly="undefined">This menuitemradio has aria-readonly="undefined" and should <emph>not</emph> get STATE_READONLY.</div>
+    <div id="menuitemradio_readonly_absent" role="menuitemradio">This menuitemradio has <emph>no</emph> aria-readonly attribute and should <emph>not</emph> get STATE_READONLY.</div>
+
   <div id="radio_checked_true" role="radio" aria-checked="true">This menuitem has aria-checked="true" and should get STATE_CHECKABLE. It should also get STATE_CHECKED.</div>
   <div id="radio_checked_false" role="radio" aria-checked="false">This menuitem has aria-checked="false" and should get STATE_CHECKABLE.</div>
   <div id="radio_checked_empty" role="radio" aria-checked="">This menuitem has aria-checked="" and should <emph>not</emph> get STATE_CHECKABLE.</div>
   <div id="radio_checked_undefined" role="radio" aria-checked="undefined">This menuitem has aria-checked="undefined" and should <emph>not</emph> get STATE_CHECKABLE.</div>
   <div id="radio_checked_absent" role="radio">This menuitem has <emph>no</emph> aria-checked attribute but should get STATE_CHECKABLE.</div>
+
+  <div id="radiogroup_readonly_true" role="radiogroup" aria-readonly="true">
+    <div role="radio">yes</div>
+    <div role="radio">no</div>
+  </div>
+  <div id="radiogroup_readonly_false" role="radiogroup" aria-readonly="false">
+    <div role="radio">yes</div>
+    <div role="radio">no</div>
+  </div>
+  <div id="radiogroup_readonly_empty" role="radiogroup" aria-readonly="">
+    <div role="radio">yes</div>
+    <div role="radio">no</div>
+  </div>
+  <div id="radiogroup_readonly_undefined" role="radiogroup" aria-readonly="undefined">
+    <div role="radio">yes</div>
+    <div role="radio">no</div>
+  </div>
+  <div id="radiogroup_readonly_absent" role="radiogroup">
+    <div role="radio">yes</div>
+    <div role="radio">no</div>
+  </div>
+
+  <div id="switch_readonly_true" role="switch" aria-readonly="true">This switch has aria-readonly="true" and should get STATE_READONLY.</div>
+  <div id="switch_readonly_false" role="switch" aria-readonly="false">This switch has aria-readonly="false" and should <emph>not</emph> get STATE_READONLY.</div>
+  <div id="switch_readonly_empty" role="switch" aria-readonly="">This switch has aria-readonly="" and should <emph>not</emph> get STATE_READONLY.</div>
+  <div id="switch_readonly_undefined" role="switch" aria-readonly="undefined">This switch has aria-readonly="undefined" and should <emph>not</emph> get STATE_READONLY.</div>
+  <div id="switch_readonly_absent" role="switch">This switch has <emph>no</emph> aria-readonly attribute and should <emph>not</emph> get STATE_READONLY.</div>
 
   <div id="textbox_readonly_true" role="textbox" aria-readonly="true"></div>
   <div id="textbox_readonly_false" role="textbox" aria-readonly="false"></div>

@@ -41,7 +41,7 @@ def write_histogram_table(output, histograms):
     label_table = []
     label_count = 0
 
-    print("const HistogramInfo gHistograms[] = {", file=output)
+    print("constexpr HistogramInfo gHistograms[] = {", file=output)
     for histogram in histograms:
         name_index = string_table.stringIndex(histogram.name())
         exp_index = string_table.stringIndex(histogram.expiration())

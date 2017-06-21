@@ -590,7 +590,7 @@ protected:
   mozilla::Monitor mPauseCompositionMonitor;
   mozilla::Monitor mResumeCompositionMonitor;
 
-  uint64_t mCompositorID;
+  uint64_t mCompositorBridgeID;
   uint64_t mRootLayerTreeID;
 
   bool mOverrideComposeReadiness;

@@ -19,6 +19,7 @@
 #include "nsIStreamLoader.h"
 #include "nsIThreadRetargetableRequest.h"
 
+#include "nsIInputStreamPump.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"

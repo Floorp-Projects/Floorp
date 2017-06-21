@@ -69,7 +69,7 @@ function test() {
       panel.sidebar.once("tab1-selected", () => finishUp(panel));
       panel.sidebar.addTab("tab1", tab1URL, {selected: true});
       panel.sidebar.show();
-    }).then(null, console.error);
+    }).catch(console.error);
   });
 
   function finishUp(panel) {
