@@ -1112,20 +1112,33 @@ Statistics::beginPhase(PhaseKind phaseKind)
 void
 Statistics::recordPhaseBegin(Phase phase)
 {
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
+
     // Guard against any other re-entry.
     MOZ_ASSERT(!phaseStartTimes[phase]);
 
     MOZ_ASSERT(phaseStack.length() < MAX_PHASE_NESTING);
-    MOZ_ASSERT(phases[phase].parent == currentPhase());
+
+    Phase current = currentPhase();
+    MOZ_ASSERT(phases[phase].parent == current);
+
+    TimeStamp now = TimeStamp::Now();
+    if (current != Phase::NONE)
+        MOZ_RELEASE_ASSERT(now >= phaseStartTimes[currentPhase()]);
 
     phaseStack.infallibleAppend(phase);
-    phaseStartTimes[phase] = TimeStamp::Now();
+    phaseStartTimes[phase] = now;
 }
 
 void
 Statistics::recordPhaseEnd(Phase phase)
 {
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
+
+    MOZ_ASSERT(phaseStartTimes[phase]);
+
     TimeStamp now = TimeStamp::Now();
+    MOZ_RELEASE_ASSERT(now >= phaseStartTimes[phase]);
 
     if (phase == Phase::MUTATOR)
         timedGCStart = now;
