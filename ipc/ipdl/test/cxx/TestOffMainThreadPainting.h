@@ -89,7 +89,7 @@ private:
 class TestPaintThreadChild final : public PTestPaintThreadChild
 {
 public:
-  TestPaintThreadChild();
+  explicit TestPaintThreadChild(MessageChannel* aOtherChannel);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TestPaintThreadChild);
 
@@ -103,6 +103,7 @@ private:
   ~TestPaintThreadChild() override;
 
   bool mCanSend;
+  MessageChannel* mMainChannel;
 };
 
 } // namespace _ipdltest

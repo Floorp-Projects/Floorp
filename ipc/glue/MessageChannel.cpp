@@ -537,7 +537,8 @@ MessageChannel::MessageChannel(const char* aName,
     mNotifiedChannelDone(false),
     mFlags(REQUIRE_DEFAULT),
     mPeerPidSet(false),
-    mPeerPid(-1)
+    mPeerPid(-1),
+    mIsPostponingSends(false)
 {
     MOZ_COUNT_CTOR(ipc::MessageChannel);
 
@@ -901,8 +902,51 @@ MessageChannel::Send(Message* aMsg)
         ReportConnectionError("MessageChannel", msg);
         return false;
     }
-    mLink->SendMessage(msg.forget());
+
+    SendMessageToLink(msg.forget());
     return true;
+}
+
+void
+MessageChannel::SendMessageToLink(Message* aMsg)
+{
+    if (mIsPostponingSends) {
+        UniquePtr<Message> msg(aMsg);
+        mPostponedSends.push_back(Move(msg));
+        return;
+    }
+    mLink->SendMessage(aMsg);
+}
+
+void
+MessageChannel::BeginPostponingSends()
+{
+    AssertWorkerThread();
+    mMonitor->AssertNotCurrentThreadOwns();
+
+    MonitorAutoLock lock(*mMonitor);
+    {
+        MOZ_ASSERT(!mIsPostponingSends);
+        mIsPostponingSends = true;
+    }
+}
+
+void
+MessageChannel::StopPostponingSends()
+{
+    // Note: this can be called from any thread.
+    MonitorAutoLock lock(*mMonitor);
+
+    MOZ_ASSERT(mIsPostponingSends);
+
+    for (UniquePtr<Message>& iter : mPostponedSends) {
+      mLink->SendMessage(iter.release());
+    }
+
+    // We unset this after SendMessage so we can make correct thread
+    // assertions in MessageLink.
+    mIsPostponingSends = false;
+    mPostponedSends.clear();
 }
 
 already_AddRefed<MozPromiseRefcountable>
@@ -1365,6 +1409,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         msg->nested_level() < AwaitingSyncReplyNestedLevel())
     {
         MOZ_RELEASE_ASSERT(DispatchingSyncMessage() || DispatchingAsyncMessage());
+        MOZ_RELEASE_ASSERT(!mIsPostponingSends);
         IPC_LOG("Cancel from Send");
         CancelMessage *cancel = new CancelMessage(CurrentNestedInsideSyncTransaction());
         CancelTransaction(CurrentNestedInsideSyncTransaction());
@@ -1413,7 +1458,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     // msg will be destroyed soon, but name() is not owned by msg.
     const char* msgName = msg->name();
 
-    mLink->SendMessage(msg.forget());
+    SendMessageToLink(msg.forget());
 
     while (true) {
         MOZ_RELEASE_ASSERT(!transact.IsCanceled());
@@ -1544,6 +1589,7 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
     IPC_ASSERT(!DispatchingSyncMessage(),
                "violation of sync handler invariant");
     IPC_ASSERT(msg->is_interrupt(), "can only Call() Interrupt messages here");
+    IPC_ASSERT(!mIsPostponingSends, "not postponing sends");
 
     msg->set_seqno(NextSeqno());
     msg->set_interrupt_remote_stack_depth_guess(mRemoteStackDepthGuess);
