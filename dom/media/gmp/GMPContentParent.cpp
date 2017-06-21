@@ -50,8 +50,7 @@ class ReleaseGMPContentParent : public Runnable
 {
 public:
   explicit ReleaseGMPContentParent(GMPContentParent* aToRelease)
-    : Runnable("gmp::ReleaseGMPContentParent")
-    , mToRelease(aToRelease)
+    : mToRelease(aToRelease)
   {
   }
 
@@ -146,8 +145,8 @@ GMPContentParent::CloseIfUnused()
         GeckoMediaPluginServiceChild::GetSingleton());
       gmp->RemoveGMPContentParent(toClose);
     }
-    NS_DispatchToCurrentThread(NewRunnableMethod(
-      "gmp::GMPContentParent::Close", toClose, &GMPContentParent::Close));
+    NS_DispatchToCurrentThread(NewRunnableMethod(toClose,
+                                                 &GMPContentParent::Close));
   }
 }
 

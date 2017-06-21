@@ -76,9 +76,9 @@ TestCancelParent::RecvTest3_2()
 mozilla::ipc::IPCResult
 TestCancelParent::RecvDone()
 {
-  MessageLoop::current()->PostTask(NewNonOwningRunnableMethod(
-    "ipc::IToplevelProtocol::Close", this, &TestCancelParent::Close));
-  return IPC_OK();
+    MessageLoop::current()->PostTask(
+	NewNonOwningRunnableMethod(this, &TestCancelParent::Close));
+    return IPC_OK();
 }
 
 mozilla::ipc::IPCResult

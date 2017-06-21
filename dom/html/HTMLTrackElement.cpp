@@ -265,10 +265,7 @@ void
 HTMLTrackElement::DispatchLoadResource()
 {
   if (!mLoadResourceDispatched) {
-    RefPtr<Runnable> r =
-      NewRunnableMethod("dom::HTMLTrackElement::LoadResource",
-                        this,
-                        &HTMLTrackElement::LoadResource);
+    RefPtr<Runnable> r = NewRunnableMethod(this, &HTMLTrackElement::LoadResource);
     nsContentUtils::RunInStableState(r.forget());
     mLoadResourceDispatched = true;
   }
@@ -440,11 +437,11 @@ HTMLTrackElement::DispatchTrackRunnable(const nsString& aEventName)
   if (!doc) {
     return;
   }
-  nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod<const nsString>(
-    "dom::HTMLTrackElement::DispatchTrustedEvent",
-    this,
-    &HTMLTrackElement::DispatchTrustedEvent,
-    aEventName);
+  nsCOMPtr<nsIRunnable> runnable =
+    NewRunnableMethod
+      <const nsString>(this,
+                       &HTMLTrackElement::DispatchTrustedEvent,
+                       aEventName);
   doc->Dispatch("HTMLTrackElement::DispatchTrackRunnable",
                 TaskCategory::Other, runnable.forget());
 }

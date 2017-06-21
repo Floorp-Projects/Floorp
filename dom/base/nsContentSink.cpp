@@ -285,9 +285,8 @@ nsContentSink::ProcessHTTPHeaders(nsIChannel* aChannel)
                  "Already dispatched an event?");
 
     mProcessLinkHeaderEvent =
-      NewNonOwningRunnableMethod("nsContentSink::DoProcessLinkHeader",
-                                 this,
-                                 &nsContentSink::DoProcessLinkHeader);
+      NewNonOwningRunnableMethod(this,
+        &nsContentSink::DoProcessLinkHeader);
     rv = NS_DispatchToCurrentThread(mProcessLinkHeaderEvent.get());
     if (NS_FAILED(rv)) {
       mProcessLinkHeaderEvent.Forget();

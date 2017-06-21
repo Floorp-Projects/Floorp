@@ -309,15 +309,9 @@ nsInProcessTabChildGlobal::InitTabChildGlobal()
 class nsAsyncScriptLoad : public Runnable
 {
 public:
-  nsAsyncScriptLoad(nsInProcessTabChildGlobal* aTabChild,
-                    const nsAString& aURL,
-                    bool aRunInGlobalScope)
-    : mozilla::Runnable("nsAsyncScriptLoad")
-    , mTabChild(aTabChild)
-    , mURL(aURL)
-    , mRunInGlobalScope(aRunInGlobalScope)
-  {
-  }
+    nsAsyncScriptLoad(nsInProcessTabChildGlobal* aTabChild, const nsAString& aURL,
+                      bool aRunInGlobalScope)
+      : mTabChild(aTabChild), mURL(aURL), mRunInGlobalScope(aRunInGlobalScope) {}
 
   NS_IMETHOD Run() override
   {

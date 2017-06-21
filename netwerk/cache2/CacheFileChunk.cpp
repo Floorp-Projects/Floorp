@@ -246,10 +246,9 @@ CacheFileChunkWriteHandle::UpdateDataSize(uint32_t aOffset, uint32_t aLen)
 
 class NotifyUpdateListenerEvent : public Runnable {
 public:
-  NotifyUpdateListenerEvent(CacheFileChunkListener* aCallback,
-                            CacheFileChunk* aChunk)
-    : Runnable("net::NotifyUpdateListenerEvent")
-    , mCallback(aCallback)
+  NotifyUpdateListenerEvent(CacheFileChunkListener *aCallback,
+                            CacheFileChunk *aChunk)
+    : mCallback(aCallback)
     , mChunk(aChunk)
   {
     LOG(("NotifyUpdateListenerEvent::NotifyUpdateListenerEvent() [this=%p]",
@@ -284,8 +283,7 @@ CacheFileChunk::DispatchRelease()
     return false;
   }
 
-  NS_DispatchToMainThread(NewNonOwningRunnableMethod(
-    "net::CacheFileChunk::Release", this, &CacheFileChunk::Release));
+  NS_DispatchToMainThread(NewNonOwningRunnableMethod(this, &CacheFileChunk::Release));
 
   return true;
 }

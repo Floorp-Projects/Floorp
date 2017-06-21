@@ -65,8 +65,7 @@ PrincipalVerifier::RemoveListener(Listener* aListener)
 PrincipalVerifier::PrincipalVerifier(Listener* aListener,
                                      PBackgroundParent* aActor,
                                      const PrincipalInfo& aPrincipalInfo)
-  : Runnable("dom::cache::PrincipalVerifier")
-  , mActor(BackgroundParent::GetContentParent(aActor))
+  : mActor(BackgroundParent::GetContentParent(aActor))
   , mPrincipalInfo(aPrincipalInfo)
   , mInitiatingEventTarget(GetCurrentThreadSerialEventTarget())
   , mResult(NS_OK)

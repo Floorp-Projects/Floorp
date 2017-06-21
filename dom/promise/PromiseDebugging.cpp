@@ -24,8 +24,6 @@ namespace dom {
 class FlushRejections: public CancelableRunnable
 {
 public:
-  FlushRejections() : CancelableRunnable("dom::FlushRejections") {}
-
   static void Init() {
     if (!sDispatched.init()) {
       MOZ_CRASH("Could not initialize FlushRejections::sDispatched");

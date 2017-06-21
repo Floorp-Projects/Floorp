@@ -100,8 +100,9 @@ SandboxReporter::Singleton()
     // by that point (so it won't race by calling Singleton()), all
     // non-main XPCOM threads will also be shut down, and currently
     // the only other user is the main-thread-only Troubleshoot.jsm.
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "SandboxReporter::Singleton", [] { ClearOnShutdown(&sSingleton); }));
+    NS_DispatchToMainThread(NS_NewRunnableFunction([] {
+      ClearOnShutdown(&sSingleton);
+    }));
   }
   return sSingleton.get();
 }

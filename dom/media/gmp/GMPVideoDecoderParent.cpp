@@ -202,15 +202,12 @@ GMPVideoDecoderParent::Reset()
   mIsAwaitingResetComplete = true;
 
   RefPtr<GMPVideoDecoderParent> self(this);
-  nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction(
-    "gmp::GMPVideoDecoderParent::Reset", [self]() -> void {
-      LOGD(("GMPVideoDecoderParent[%p]::ResetCompleteTimeout() timed out "
-            "waiting for ResetComplete",
-            self.get()));
-      self->mResetCompleteTimeout = nullptr;
-      LogToBrowserConsole(NS_LITERAL_STRING(
-        "GMPVideoDecoderParent timed out waiting for ResetComplete()"));
-    });
+  nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction([self]() -> void
+  {
+    LOGD(("GMPVideoDecoderParent[%p]::ResetCompleteTimeout() timed out waiting for ResetComplete", self.get()));
+    self->mResetCompleteTimeout = nullptr;
+    LogToBrowserConsole(NS_LITERAL_STRING("GMPVideoDecoderParent timed out waiting for ResetComplete()"));
+  });
   CancelResetCompleteTimeout();
   nsCOMPtr<nsISerialEventTarget> target = mPlugin->GMPEventTarget();
   mResetCompleteTimeout = SimpleTimer::Create(task, 5000, target);

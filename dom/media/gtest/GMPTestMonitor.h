@@ -37,8 +37,7 @@ public:
     mozilla::SystemGroup::Dispatch(
       "GMPTestMonitor::SetFinished",
       mozilla::TaskCategory::Other,
-      mozilla::NewNonOwningRunnableMethod(
-        "GMPTestMonitor::MarkFinished", this, &GMPTestMonitor::MarkFinished));
+      mozilla::NewNonOwningRunnableMethod(this, &GMPTestMonitor::MarkFinished));
   }
 
 private:

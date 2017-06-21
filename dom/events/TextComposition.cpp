@@ -712,13 +712,12 @@ TextComposition::HasEditor() const
  ******************************************************************************/
 
 TextComposition::CompositionEventDispatcher::CompositionEventDispatcher(
-  TextComposition* aComposition,
-  nsINode* aEventTarget,
-  EventMessage aEventMessage,
-  const nsAString& aData,
-  bool aIsSynthesizedEvent)
-  : Runnable("TextComposition::CompositionEventDispatcher")
-  , mTextComposition(aComposition)
+                                               TextComposition* aComposition,
+                                               nsINode* aEventTarget,
+                                               EventMessage aEventMessage,
+                                               const nsAString& aData,
+                                               bool aIsSynthesizedEvent)
+  : mTextComposition(aComposition)
   , mEventTarget(aEventTarget)
   , mData(aData)
   , mEventMessage(aEventMessage)

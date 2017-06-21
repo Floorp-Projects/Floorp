@@ -53,8 +53,6 @@ RunOnThreadInternal(nsIEventTarget *thread, nsIRunnable *runnable, uint32_t flag
 template<RunnableResult result>
 class runnable_args_base : public Runnable {
  public:
-  runnable_args_base() : Runnable("media-runnable_args_base") {}
-
   NS_IMETHOD Run() = 0;
 };
 

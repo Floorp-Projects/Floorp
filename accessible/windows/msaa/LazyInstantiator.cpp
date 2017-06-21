@@ -251,8 +251,7 @@ LazyInstantiator::ShouldInstantiate(const DWORD aClientTid)
     // Call GatherTelemetry on a background thread because it does I/O on
     // the executable file to retrieve version information.
     nsCOMPtr<nsIRunnable> runnable(
-        NewRunnableMethod<nsCOMPtr<nsIFile>>("LazyInstantiator::GatherTelemetry",
-                                             this,
+        NewRunnableMethod<nsCOMPtr<nsIFile>>(this,
                                              &LazyInstantiator::GatherTelemetry,
                                              clientExe));
     NS_NewThread(getter_AddRefs(mTelemetryThread), runnable);
@@ -328,9 +327,7 @@ LazyInstantiator::GatherTelemetry(nsIFile* aClientExe)
 
   // Now that we've (possibly) obtained version info, send the resulting
   // string back to the main thread to accumulate in telemetry.
-  NS_DispatchToMainThread(NewNonOwningRunnableMethod<nsString>(
-        "LazyInstantiator::AccumulateTelemetry",
-        this,
+  NS_DispatchToMainThread(NewNonOwningRunnableMethod<nsString>(this,
         &LazyInstantiator::AccumulateTelemetry, value));
 }
 

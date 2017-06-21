@@ -3268,10 +3268,8 @@ HTMLEditor::DoContentInserted(nsIDocument* aDocument,
   nsCOMPtr<nsIHTMLEditor> kungFuDeathGrip(this);
 
   if (ShouldReplaceRootElement()) {
-    nsContentUtils::AddScriptRunner(
-      NewRunnableMethod("HTMLEditor::ResetRootElementAndEventTarget",
-                        this,
-                        &HTMLEditor::ResetRootElementAndEventTarget));
+    nsContentUtils::AddScriptRunner(NewRunnableMethod(
+      this, &HTMLEditor::ResetRootElementAndEventTarget));
   }
   // We don't need to handle our own modifications
   else if (!mAction && (aContainer ? aContainer->IsEditable() : aDocument->IsEditable())) {
@@ -3318,10 +3316,8 @@ HTMLEditor::ContentRemoved(nsIDocument* aDocument,
   nsCOMPtr<nsIHTMLEditor> kungFuDeathGrip(this);
 
   if (SameCOMIdentity(aChild, mRootElement)) {
-    nsContentUtils::AddScriptRunner(
-      NewRunnableMethod("HTMLEditor::ResetRootElementAndEventTarget",
-                        this,
-                        &HTMLEditor::ResetRootElementAndEventTarget));
+    nsContentUtils::AddScriptRunner(NewRunnableMethod(
+      this, &HTMLEditor::ResetRootElementAndEventTarget));
   }
   // We don't need to handle our own modifications
   else if (!mAction && (aContainer ? aContainer->IsEditable() : aDocument->IsEditable())) {

@@ -1412,12 +1412,9 @@ EventStateManager::CreateClickHoldTimer(nsPresContext* inPresContext,
     int32_t clickHoldDelay =
       Preferences::GetInt("ui.click_hold_context_menus.delay", 500);
     mClickHoldTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::Other));
-    mClickHoldTimer->InitWithNamedFuncCallback(
-      sClickHoldCallback,
-      this,
-      clickHoldDelay,
-      nsITimer::TYPE_ONE_SHOT,
-      "EventStateManager::CreateClickHoldTimer");
+    mClickHoldTimer->InitWithFuncCallback(sClickHoldCallback, this,
+                                          clickHoldDelay,
+                                          nsITimer::TYPE_ONE_SHOT);
   }
 } // CreateClickHoldTimer
 

@@ -120,7 +120,6 @@ public:
         int32_t screenId = -1; // return value
         nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
         SyncRunnable::DispatchToThread(mainThread, NS_NewRunnableFunction(
-            "nsScreenManagerAndroid::ScreenManagerHelperSupport::AddDisplay",
             [&aDisplayType, &aWidth, &aHeight, &aDensity, &screenId] {
                 MOZ_ASSERT(NS_IsMainThread());
                 nsCOMPtr<nsIScreenManager> screenMgr =
@@ -142,7 +141,6 @@ public:
     static void RemoveDisplay(int32_t aScreenId) {
         nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
         SyncRunnable::DispatchToThread(mainThread, NS_NewRunnableFunction(
-            "nsScreenManagerAndroid::ScreenManagerHelperSupport::RemoveDisplay",
             [&aScreenId] {
                 MOZ_ASSERT(NS_IsMainThread());
                 nsCOMPtr<nsIScreenManager> screenMgr =

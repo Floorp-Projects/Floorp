@@ -141,10 +141,8 @@ ThreadedDriver::ThreadedDriver(MediaStreamGraphImpl* aGraphImpl)
 
 class MediaStreamGraphShutdownThreadRunnable : public Runnable {
 public:
-  explicit MediaStreamGraphShutdownThreadRunnable(
-    already_AddRefed<nsIThread> aThread)
-    : Runnable("MediaStreamGraphShutdownThreadRunnable")
-    , mThread(aThread)
+  explicit MediaStreamGraphShutdownThreadRunnable(already_AddRefed<nsIThread> aThread)
+    : mThread(aThread)
   {
   }
   NS_IMETHOD Run() override
@@ -175,8 +173,7 @@ ThreadedDriver::~ThreadedDriver()
 class MediaStreamGraphInitThreadRunnable : public Runnable {
 public:
   explicit MediaStreamGraphInitThreadRunnable(ThreadedDriver* aDriver)
-    : Runnable("MediaStreamGraphInitThreadRunnable")
-    , mDriver(aDriver)
+    : mDriver(aDriver)
   {
   }
   NS_IMETHOD Run() override
@@ -470,12 +467,10 @@ OfflineClockDriver::WakeUp()
   MOZ_ASSERT(false, "An offline graph should not have to wake up.");
 }
 
-AsyncCubebTask::AsyncCubebTask(AudioCallbackDriver* aDriver,
-                               AsyncCubebOperation aOperation)
-  : Runnable("AsyncCubebTask")
-  , mDriver(aDriver)
-  , mOperation(aOperation)
-  , mShutdownGrip(aDriver->GraphImpl())
+AsyncCubebTask::AsyncCubebTask(AudioCallbackDriver* aDriver, AsyncCubebOperation aOperation)
+  : mDriver(aDriver),
+    mOperation(aOperation),
+    mShutdownGrip(aDriver->GraphImpl())
 {
   NS_WARNING_ASSERTION(mDriver->mAudioStream || aOperation == INIT,
                        "No audio stream!");
@@ -497,10 +492,9 @@ AsyncCubebTask::EnsureThread()
     // since we don't know the order that the shutdown-threads observers
     // will run.  ClearOnShutdown guarantees it runs first.
     if (!NS_IsMainThread()) {
-      NS_DispatchToMainThread(
-        NS_NewRunnableFunction("AsyncCubebTask::EnsureThread", []() -> void {
-          ClearOnShutdown(&sThreadPool, ShutdownPhase::ShutdownThreads);
-        }));
+      NS_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
+            ClearOnShutdown(&sThreadPool, ShutdownPhase::ShutdownThreads);
+      }));
     } else {
       ClearOnShutdown(&sThreadPool, ShutdownPhase::ShutdownThreads);
     }

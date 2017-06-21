@@ -433,9 +433,7 @@ private:
     EventMessage mEventMessage;
     bool mIsSynthesizedEvent;
 
-    CompositionEventDispatcher()
-      : Runnable("TextComposition::CompositionEventDispatcher")
-      , mIsSynthesizedEvent(false){};
+    CompositionEventDispatcher() : mIsSynthesizedEvent(false) {};
   };
 
   /**

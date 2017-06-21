@@ -124,11 +124,7 @@ private:
 public:
   ServeResourceEvent(nsIInputStream* aInput, nsIOutputStream* aOutput,
                      AndroidMediaResourceServer* aServer)
-    : Runnable("ServeResourceEvent")
-    , mInput(aInput)
-    , mOutput(aOutput)
-    , mServer(aServer)
-  {}
+    : mInput(aInput), mOutput(aOutput), mServer(aServer) {}
 
   // This method runs on the thread and exits when it has completed the
   // HTTP request.
@@ -392,9 +388,8 @@ ResourceSocketListener::OnStopListening(nsIServerSocket* aServ, nsresult aStatus
   return NS_OK;
 }
 
-AndroidMediaResourceServer::AndroidMediaResourceServer()
-  : Runnable("AndroidMediaResourceServer")
-  , mMutex("AndroidMediaResourceServer")
+AndroidMediaResourceServer::AndroidMediaResourceServer() :
+  mMutex("AndroidMediaResourceServer")
 {
 }
 

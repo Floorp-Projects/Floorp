@@ -228,8 +228,7 @@ void
 ServiceWorkerRegistrationInfo::TryToActivateAsync()
 {
   MOZ_ALWAYS_SUCCEEDS(
-    NS_DispatchToMainThread(NewRunnableMethod("ServiceWorkerRegistrationInfo::TryToActivate",
-                                              this,
+    NS_DispatchToMainThread(NewRunnableMethod(this,
                                               &ServiceWorkerRegistrationInfo::TryToActivate)));
 }
 
@@ -268,17 +267,13 @@ ServiceWorkerRegistrationInfo::Activate()
   // "Queue a task to fire a simple event named controllerchange..."
   nsCOMPtr<nsIRunnable> controllerChangeRunnable =
     NewRunnableMethod<RefPtr<ServiceWorkerRegistrationInfo>>(
-      "dom::workers::ServiceWorkerManager::FireControllerChange",
-      swm,
-      &ServiceWorkerManager::FireControllerChange,
-      this);
+      swm, &ServiceWorkerManager::FireControllerChange, this);
   NS_DispatchToMainThread(controllerChangeRunnable);
 
-  nsCOMPtr<nsIRunnable> failRunnable = NewRunnableMethod<bool>(
-    "dom::workers::ServiceWorkerRegistrationInfo::FinishActivate",
-    this,
-    &ServiceWorkerRegistrationInfo::FinishActivate,
-    false /* success */);
+  nsCOMPtr<nsIRunnable> failRunnable =
+    NewRunnableMethod<bool>(this,
+                            &ServiceWorkerRegistrationInfo::FinishActivate,
+                            false /* success */);
 
   nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> handle(
     new nsMainThreadPtrHolder<ServiceWorkerRegistrationInfo>(
@@ -380,14 +375,9 @@ ServiceWorkerRegistrationInfo::UpdateRegistrationStateProperties(WhichServiceWor
 {
   AssertIsOnMainThread();
 
-  nsCOMPtr<nsIRunnable> runnable =
-    NewRunnableMethod<WhichServiceWorker, TransitionType>(
-      "dom::workers::ServiceWorkerRegistrationInfo::"
-      "AsyncUpdateRegistrationStateProperties",
-      this,
-      &ServiceWorkerRegistrationInfo::AsyncUpdateRegistrationStateProperties,
-      aWorker,
-      aTransition);
+  nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod<WhichServiceWorker, TransitionType>(
+         this,
+         &ServiceWorkerRegistrationInfo::AsyncUpdateRegistrationStateProperties, aWorker, aTransition);
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable.forget()));
 }
 

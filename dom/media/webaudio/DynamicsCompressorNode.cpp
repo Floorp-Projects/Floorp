@@ -148,8 +148,7 @@ private:
     {
     public:
       Command(AudioNodeStream* aStream, float aReduction)
-        : mozilla::Runnable("Command")
-        , mStream(aStream)
+        : mStream(aStream)
         , mReduction(aReduction)
       {
       }

@@ -553,11 +553,10 @@ public:
   nsFetchTelemetryData(const char* aShutdownTimeFilename,
                        nsIFile* aFailedProfileLockFile,
                        nsIFile* aProfileDir)
-    : mozilla::Runnable("nsFetchTelemetryData")
-    , mShutdownTimeFilename(aShutdownTimeFilename)
-    , mFailedProfileLockFile(aFailedProfileLockFile)
-    , mTelemetry(TelemetryImpl::sTelemetry)
-    , mProfileDir(aProfileDir)
+    : mShutdownTimeFilename(aShutdownTimeFilename),
+      mFailedProfileLockFile(aFailedProfileLockFile),
+      mTelemetry(TelemetryImpl::sTelemetry),
+      mProfileDir(aProfileDir)
   {
   }
 
@@ -582,9 +581,7 @@ public:
       ReadLastShutdownDuration(mShutdownTimeFilename);
     mTelemetry->ReadLateWritesStacks(mProfileDir);
     nsCOMPtr<nsIRunnable> e =
-      NewRunnableMethod("nsFetchTelemetryData::MainThread",
-                        this,
-                        &nsFetchTelemetryData::MainThread);
+      NewRunnableMethod(this, &nsFetchTelemetryData::MainThread);
     NS_ENSURE_STATE(e);
     NS_DispatchToMainThread(e);
     return NS_OK;
@@ -1059,10 +1056,8 @@ class GetLoadedModulesResultRunnable final : public Runnable
   nsCOMPtr<nsIThread> mWorkerThread;
 
 public:
-  GetLoadedModulesResultRunnable(const nsMainThreadPtrHandle<Promise>& aPromise,
-                                 const SharedLibraryInfo& rawModules)
-    : mozilla::Runnable("GetLoadedModulesResultRunnable")
-    , mPromise(aPromise)
+  GetLoadedModulesResultRunnable(const nsMainThreadPtrHandle<Promise>& aPromise, const SharedLibraryInfo& rawModules)
+    : mPromise(aPromise)
     , mRawModules(rawModules)
     , mWorkerThread(do_GetCurrentThread())
   {
@@ -1180,10 +1175,8 @@ class GetLoadedModulesRunnable final : public Runnable
   nsMainThreadPtrHandle<Promise> mPromise;
 
 public:
-  explicit GetLoadedModulesRunnable(
-    const nsMainThreadPtrHandle<Promise>& aPromise)
-    : mozilla::Runnable("GetLoadedModulesRunnable")
-    , mPromise(aPromise)
+  explicit GetLoadedModulesRunnable(const nsMainThreadPtrHandle<Promise>& aPromise)
+    : mPromise(aPromise)
   { }
 
   NS_IMETHOD

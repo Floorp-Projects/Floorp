@@ -151,8 +151,7 @@ WMFVideoMFTManager::~WMFVideoMFTManager()
         ? 2
         : mGotValidOutputAfterNullOutput ? 3 : 4;
 
-  nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction("WMFVideoMFTManager::~WMFVideoMFTManager",
-                                                      [=]() -> void {
+  nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction([=]() -> void {
     LOG(nsPrintfCString("Reporting telemetry VIDEO_MFT_OUTPUT_NULL_SAMPLES=%d",
                         telemetry)
         .get());
@@ -389,8 +388,7 @@ class CreateDXVAManagerEvent : public Runnable
 public:
   CreateDXVAManagerEvent(layers::KnowsCompositor* aKnowsCompositor,
                          nsCString& aFailureReason)
-    : Runnable("CreateDXVAManagerEvent")
-    , mBackend(LayersBackend::LAYERS_D3D11)
+    : mBackend(LayersBackend::LAYERS_D3D11)
     , mKnowsCompositor(aKnowsCompositor)
     , mFailureReason(aFailureReason)
   {
@@ -693,8 +691,7 @@ public:
   SupportsConfigEvent(DXVA2Manager* aDXVA2Manager,
                       IMFMediaType* aMediaType,
                       float aFramerate)
-    : Runnable("SupportsConfigEvent")
-    , mDXVA2Manager(aDXVA2Manager)
+    : mDXVA2Manager(aDXVA2Manager)
     , mMediaType(aMediaType)
     , mFramerate(aFramerate)
     , mSupportsConfig(false)

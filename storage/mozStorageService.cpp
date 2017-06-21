@@ -387,7 +387,6 @@ Service::minimizeMemory()
       // dispatch will fail and that's okay.
       nsCOMPtr<nsIRunnable> event =
         NewRunnableMethod<const nsCString>(
-          "Connection::ExecuteSimpleSQL",
           conn, &Connection::ExecuteSimpleSQL, shrinkPragma);
       Unused << conn->threadOpenedOn->Dispatch(event, NS_DISPATCH_NORMAL);
     }
@@ -678,8 +677,7 @@ public:
                     nsIFile* aStorageFile,
                     int32_t aGrowthIncrement,
                     mozIStorageCompletionCallback* aCallback)
-    : Runnable("storage::AsyncInitDatabase")
-    , mConnection(aConnection)
+    : mConnection(aConnection)
     , mStorageFile(aStorageFile)
     , mGrowthIncrement(aGrowthIncrement)
     , mCallback(aCallback)

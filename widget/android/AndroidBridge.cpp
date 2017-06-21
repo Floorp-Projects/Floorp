@@ -564,7 +564,7 @@ AndroidBridge::GetStaticStringField(const char *className, const char *fieldName
 namespace mozilla {
     class TracerRunnable : public Runnable{
     public:
-        TracerRunnable() : Runnable("TracerRunnable") {
+        TracerRunnable() {
             mTracerLock = new Mutex("TracerRunnable");
             mTracerCondVar = new CondVar(*mTracerLock, "TracerRunnable");
             mMainThread = do_GetMainThread();

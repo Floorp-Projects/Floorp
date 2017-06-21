@@ -392,9 +392,8 @@ class InvokeAsyncOpen : public Runnable
 public:
   InvokeAsyncOpen(const nsMainThreadPtrHandle<nsIInterfaceRequestor>& aChannel,
                   nsresult aStatus)
-    : Runnable("net::InvokeAsyncOpen")
-    , mChannel(aChannel)
-    , mStatus(aStatus)
+  : mChannel(aChannel)
+  , mStatus(aStatus)
   {
   }
 
@@ -1965,9 +1964,7 @@ HttpChannelParent::DivertTo(nsIStreamListener *aListener)
   // Call OnStartRequest and SendDivertMessages asynchronously to avoid
   // reentering client context.
   NS_DispatchToCurrentThread(
-    NewRunnableMethod("net::HttpChannelParent::StartDiversion",
-                      this,
-                      &HttpChannelParent::StartDiversion));
+    NewRunnableMethod(this, &HttpChannelParent::StartDiversion));
   return;
 }
 
@@ -2031,8 +2028,7 @@ class HTTPFailDiversionEvent : public Runnable
 public:
   HTTPFailDiversionEvent(HttpChannelParent *aChannelParent,
                          nsresult aErrorCode)
-    : Runnable("net::HTTPFailDiversionEvent")
-    , mChannelParent(aChannelParent)
+    : mChannelParent(aChannelParent)
     , mErrorCode(aErrorCode)
   {
     MOZ_RELEASE_ASSERT(aChannelParent);

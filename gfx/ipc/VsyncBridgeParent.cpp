@@ -15,10 +15,7 @@ VsyncBridgeParent::Start(Endpoint<PVsyncBridgeParent>&& aEndpoint)
   RefPtr<VsyncBridgeParent> parent = new VsyncBridgeParent();
 
   RefPtr<Runnable> task = NewRunnableMethod<Endpoint<PVsyncBridgeParent>&&>(
-    "gfx::VsyncBridgeParent::Open",
-    parent,
-    &VsyncBridgeParent::Open,
-    Move(aEndpoint));
+    parent, &VsyncBridgeParent::Open, Move(aEndpoint));
   CompositorThreadHolder::Loop()->PostTask(task.forget());
 
   return parent;
@@ -59,9 +56,7 @@ VsyncBridgeParent::Shutdown()
 {
   MessageLoop* ccloop = CompositorThreadHolder::Loop();
   if (MessageLoop::current() != ccloop) {
-    ccloop->PostTask(NewRunnableMethod("gfx::VsyncBridgeParent::ShutdownImpl",
-                                       this,
-                                       &VsyncBridgeParent::ShutdownImpl));
+    ccloop->PostTask(NewRunnableMethod(this, &VsyncBridgeParent::ShutdownImpl));
     return;
   }
 

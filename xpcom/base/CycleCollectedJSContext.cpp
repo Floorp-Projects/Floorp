@@ -186,12 +186,9 @@ CycleCollectedJSContext::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 class PromiseJobRunnable final : public Runnable
 {
 public:
-  PromiseJobRunnable(JS::HandleObject aCallback,
-                     JS::HandleObject aAllocationSite,
+  PromiseJobRunnable(JS::HandleObject aCallback, JS::HandleObject aAllocationSite,
                      nsIGlobalObject* aIncumbentGlobal)
-    : Runnable("PromiseJobRunnable")
-    , mCallback(
-        new PromiseJobCallback(aCallback, aAllocationSite, aIncumbentGlobal))
+    : mCallback(new PromiseJobCallback(aCallback, aAllocationSite, aIncumbentGlobal))
   {
   }
 

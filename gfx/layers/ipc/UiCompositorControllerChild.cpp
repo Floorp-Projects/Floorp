@@ -48,11 +48,7 @@ UiCompositorControllerChild::CreateForSameProcess(const int64_t& aRootLayerTreeI
 {
   RefPtr<UiCompositorControllerChild> child = new UiCompositorControllerChild(0);
   child->mParent = new UiCompositorControllerParent(aRootLayerTreeId);
-  GetUiThread()->Dispatch(
-    NewRunnableMethod("layers::UiCompositorControllerChild::OpenForSameProcess",
-                      child,
-                      &UiCompositorControllerChild::OpenForSameProcess),
-    nsIThread::DISPATCH_NORMAL);
+  GetUiThread()->Dispatch(NewRunnableMethod(child, &UiCompositorControllerChild::OpenForSameProcess), nsIThread::DISPATCH_NORMAL);
   return child;
 }
 
@@ -62,12 +58,8 @@ UiCompositorControllerChild::CreateForGPUProcess(const uint64_t& aProcessToken,
 {
   RefPtr<UiCompositorControllerChild> child = new UiCompositorControllerChild(aProcessToken);
 
-  RefPtr<nsIRunnable> task =
-    NewRunnableMethod<Endpoint<PUiCompositorControllerChild>&&>(
-      "layers::UiCompositorControllerChild::OpenForGPUProcess",
-      child,
-      &UiCompositorControllerChild::OpenForGPUProcess,
-      Move(aEndpoint));
+  RefPtr<nsIRunnable> task = NewRunnableMethod<Endpoint<PUiCompositorControllerChild>&&>(
+    child, &UiCompositorControllerChild::OpenForGPUProcess, Move(aEndpoint));
 
   GetUiThread()->Dispatch(task.forget(), nsIThread::DISPATCH_NORMAL);
   return child;
@@ -194,11 +186,7 @@ void
 UiCompositorControllerChild::Destroy()
 {
   if (!IsOnUiThread()) {
-    GetUiThread()->Dispatch(
-      NewRunnableMethod("layers::UiCompositorControllerChild::Destroy",
-                        this,
-                        &UiCompositorControllerChild::Destroy),
-      nsIThread::DISPATCH_NORMAL);
+    GetUiThread()->Dispatch(NewRunnableMethod(this, &UiCompositorControllerChild::Destroy), nsIThread::DISPATCH_NORMAL);
     return;
   }
 

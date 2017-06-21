@@ -103,11 +103,7 @@ private:
   RefPtr<nsAppStartup> mService;
 
 public:
-  explicit nsAppExitEvent(nsAppStartup* service)
-    : mozilla::Runnable("nsAppExitEvent")
-    , mService(service)
-  {
-  }
+  explicit nsAppExitEvent(nsAppStartup *service) : mService(service) {}
 
   NS_IMETHOD Run() override {
     // Tell the appshell to exit

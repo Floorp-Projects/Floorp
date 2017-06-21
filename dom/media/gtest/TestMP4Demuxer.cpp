@@ -148,8 +148,7 @@ private:
   void
   DispatchTask(FunctionType aFun)
   {
-    RefPtr<Runnable> r =
-      NS_NewRunnableFunction("MP4DemuxerBinding::DispatchTask", aFun);
+    RefPtr<Runnable> r = NS_NewRunnableFunction(aFun);
     mTaskQueue->Dispatch(r.forget());
   }
 

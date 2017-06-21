@@ -233,11 +233,7 @@ private:
       public:
         UpdateSecurityCallbacks(nsHttpTransaction* aTrans,
                                 nsIInterfaceRequestor* aCallbacks)
-          : Runnable("net::nsHttpTransaction::UpdateSecurityCallbacks")
-          , mTrans(aTrans)
-          , mCallbacks(aCallbacks)
-        {
-        }
+        : mTrans(aTrans), mCallbacks(aCallbacks) {}
 
         NS_IMETHOD Run() override
         {

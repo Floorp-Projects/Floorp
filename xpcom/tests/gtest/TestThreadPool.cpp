@@ -69,18 +69,14 @@ TEST(ThreadPool, Parallelism)
   EXPECT_TRUE(pool);
 
   // Dispatch and sleep to ensure we have an idle thread
-  nsCOMPtr<nsIRunnable> r0 = new Runnable("TestRunnable");
+  nsCOMPtr<nsIRunnable> r0 = new Runnable();
   pool->Dispatch(r0, NS_DISPATCH_SYNC);
   PR_Sleep(PR_SecondsToInterval(2));
 
   class Runnable1 : public Runnable {
   public:
     Runnable1(Monitor& aMonitor, bool& aDone)
-      : mozilla::Runnable("Runnable1")
-      , mMonitor(aMonitor)
-      , mDone(aDone)
-    {
-    }
+      : mMonitor(aMonitor), mDone(aDone) {}
 
     NS_IMETHOD Run() override {
       MonitorAutoLock mon(mMonitor);
@@ -100,11 +96,7 @@ TEST(ThreadPool, Parallelism)
   class Runnable2 : public Runnable {
   public:
     Runnable2(Monitor& aMonitor, bool& aDone)
-      : mozilla::Runnable("Runnable2")
-      , mMonitor(aMonitor)
-      , mDone(aDone)
-    {
-    }
+      : mMonitor(aMonitor), mDone(aDone) {}
 
     NS_IMETHOD Run() override {
       MonitorAutoLock mon(mMonitor);

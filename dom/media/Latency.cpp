@@ -47,24 +47,18 @@ GetLatencyLog()
 class LogEvent : public Runnable
 {
 public:
-  LogEvent(AsyncLatencyLogger::LatencyLogIndex aIndex,
-           uint64_t aID,
-           int64_t aValue,
-           TimeStamp aTimeStamp)
-    : mozilla::Runnable("LogEvent")
-    , mIndex(aIndex)
-    , mID(aID)
-    , mValue(aValue)
-    , mTimeStamp(aTimeStamp)
+  LogEvent(AsyncLatencyLogger::LatencyLogIndex aIndex, uint64_t aID, int64_t aValue,
+           TimeStamp aTimeStamp) :
+    mIndex(aIndex),
+    mID(aID),
+    mValue(aValue),
+    mTimeStamp(aTimeStamp)
   {}
-  LogEvent(AsyncLatencyLogger::LatencyLogIndex aIndex,
-           uint64_t aID,
-           int64_t aValue)
-    : mozilla::Runnable("LogEvent")
-    , mIndex(aIndex)
-    , mID(aID)
-    , mValue(aValue)
-    , mTimeStamp(TimeStamp())
+  LogEvent(AsyncLatencyLogger::LatencyLogIndex aIndex, uint64_t aID, int64_t aValue) :
+    mIndex(aIndex),
+    mID(aID),
+    mValue(aValue),
+    mTimeStamp(TimeStamp())
   {}
   ~LogEvent() {}
 

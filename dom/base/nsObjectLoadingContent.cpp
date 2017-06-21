@@ -279,8 +279,7 @@ public:
   }
 
   nsSimplePluginEvent(nsIDocument* aTarget, const nsAString& aEvent)
-    : mozilla::Runnable("nsSimplePluginEvent")
-    , mTarget(aTarget)
+    : mTarget(aTarget)
     , mDocument(aTarget)
     , mEvent(aEvent)
   {
@@ -290,8 +289,7 @@ public:
   nsSimplePluginEvent(nsIContent* aTarget,
                       nsIDocument* aDocument,
                       const nsAString& aEvent)
-    : mozilla::Runnable("nsSimplePluginEvent")
-    , mTarget(aTarget)
+    : mTarget(aTarget)
     , mDocument(aDocument)
     , mEvent(aEvent)
   {

@@ -160,8 +160,7 @@ class DecodePoolWorker : public Runnable
 {
 public:
   explicit DecodePoolWorker(DecodePoolImpl* aImpl)
-    : Runnable("image::DecodePoolWorker")
-    , mImpl(aImpl)
+    : mImpl(aImpl)
   { }
 
   NS_IMETHOD Run() override

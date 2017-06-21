@@ -149,8 +149,7 @@ PaymentRequestParent::RespondPayment(nsIPaymentActionResponse* aResponse)
     nsCOMPtr<nsIPaymentActionCallback> self = do_QueryInterface(this);
     MOZ_ASSERT(self);
     nsCOMPtr<nsIPaymentActionResponse> response = aResponse;
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction("PaymentRequestParent::RespondPayment",
-                                                     [self, response] ()
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self, response] ()
     {
       self->RespondPayment(response);
     });

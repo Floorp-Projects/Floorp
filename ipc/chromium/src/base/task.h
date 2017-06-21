@@ -159,16 +159,12 @@ class ScopedRunnableMethodFactory : public RevocableStore {
   template <class Method, class Params>
   class RunnableMethod : public mozilla::Runnable {
    public:
-     RunnableMethod()
-       : mozilla::Runnable("ScopedRunnableMethodFactory::RunnableMethod")
-     {
-     }
+    RunnableMethod() { }
 
-     void Init(T* obj, Method meth, Params&& params)
-     {
-       obj_ = obj;
-       meth_ = meth;
-       params_ = mozilla::Forward<Params>(params);
+    void Init(T* obj, Method meth, Params&& params) {
+      obj_ = obj;
+      meth_ = meth;
+      params_ = mozilla::Forward<Params>(params);
     }
 
     NS_IMETHOD Run() override {
@@ -197,10 +193,7 @@ class ScopedRunnableMethodFactory : public RevocableStore {
 template<class T>
 class DeleteTask : public mozilla::CancelableRunnable {
  public:
-   explicit DeleteTask(T* obj)
-     : mozilla::CancelableRunnable("DeleteTask")
-     , obj_(obj)
-   {
+  explicit DeleteTask(T* obj) : obj_(obj) {
   }
   NS_IMETHOD Run() override {
     delete obj_;
@@ -277,13 +270,9 @@ template <class T, class Method, class Params>
 class RunnableMethod : public mozilla::CancelableRunnable,
                        public RunnableMethodTraits<T> {
  public:
-   RunnableMethod(T* obj, Method meth, Params&& params)
-     : mozilla::CancelableRunnable("RunnableMethod")
-     , obj_(obj)
-     , meth_(meth)
-     , params_(mozilla::Forward<Params>(params))
-   {
-     this->RetainCallee(obj_);
+  RunnableMethod(T* obj, Method meth, Params&& params)
+      : obj_(obj), meth_(meth), params_(mozilla::Forward<Params>(params)) {
+    this->RetainCallee(obj_);
   }
   ~RunnableMethod() {
     ReleaseCallee();
@@ -335,11 +324,8 @@ NewRunnableMethod(T* object, Method method, Args&&... args) {
 template <class Function, class Params>
 class RunnableFunction : public mozilla::CancelableRunnable {
  public:
-   RunnableFunction(Function function, Params&& params)
-     : mozilla::CancelableRunnable("RunnableFunction")
-     , function_(function)
-     , params_(mozilla::Forward<Params>(params))
-   {
+  RunnableFunction(Function function, Params&& params)
+      : function_(function), params_(mozilla::Forward<Params>(params)) {
   }
 
   ~RunnableFunction() {

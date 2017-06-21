@@ -185,8 +185,7 @@ class DestroyViewerEvent : public mozilla::Runnable
 {
 public:
   DestroyViewerEvent(nsIContentViewer* aViewer, nsIDocument* aDocument)
-    : mozilla::Runnable("DestroyViewerEvent")
-    , mViewer(aViewer)
+    : mViewer(aViewer)
     , mDocument(aDocument)
   {
   }

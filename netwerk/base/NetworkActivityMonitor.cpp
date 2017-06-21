@@ -152,8 +152,7 @@ nsNetMon_AcceptRead(PRFileDesc *listenSock,
 class NotifyNetworkActivity : public mozilla::Runnable {
 public:
   explicit NotifyNetworkActivity(NetworkActivityMonitor::Direction aDirection)
-    : mozilla::Runnable("NotifyNetworkActivity")
-    , mDirection(aDirection)
+    : mDirection(aDirection)
   {}
   NS_IMETHOD Run() override
   {

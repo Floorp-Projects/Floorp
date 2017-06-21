@@ -268,8 +268,7 @@ class CallDispatchConnectionCloseEvents final : public CancelableRunnable
 {
 public:
   explicit CallDispatchConnectionCloseEvents(WebSocketImpl* aWebSocketImpl)
-    : CancelableRunnable("dom::CallDispatchConnectionCloseEvents")
-    , mWebSocketImpl(aWebSocketImpl)
+    : mWebSocketImpl(aWebSocketImpl)
   {
     aWebSocketImpl->AssertIsOnTargetThread();
   }
@@ -405,11 +404,9 @@ namespace {
 class CancelWebSocketRunnable final : public Runnable
 {
 public:
-  CancelWebSocketRunnable(nsIWebSocketChannel* aChannel,
-                          uint16_t aReasonCode,
+  CancelWebSocketRunnable(nsIWebSocketChannel* aChannel, uint16_t aReasonCode,
                           const nsACString& aReasonString)
-    : Runnable("dom::CancelWebSocketRunnable")
-    , mChannel(aChannel)
+    : mChannel(aChannel)
     , mReasonCode(aReasonCode)
     , mReasonString(aReasonString)
   {}
@@ -461,8 +458,7 @@ public:
   CloseConnectionRunnable(WebSocketImpl* aImpl,
                           uint16_t aReasonCode,
                           const nsACString& aReasonString)
-    : Runnable("dom::CloseConnectionRunnable")
-    , mImpl(aImpl)
+    : mImpl(aImpl)
     , mReasonCode(aReasonCode)
     , mReasonString(aReasonString)
   {}

@@ -571,10 +571,8 @@ ScriptPreloader::WriteCache()
         MonitorAutoUnlock mau(mSaveMonitor);
 
         NS_DispatchToMainThread(
-          NewRunnableMethod("ScriptPreloader::PrepareCacheWrite",
-                            this,
-                            &ScriptPreloader::PrepareCacheWrite),
-          NS_DISPATCH_SYNC);
+            NewRunnableMethod(this, &ScriptPreloader::PrepareCacheWrite),
+            NS_DISPATCH_SYNC);
     }
 
     if (mSaveComplete) {
@@ -804,9 +802,7 @@ ScriptPreloader::OffThreadDecodeCallback(void* token, void* context)
     if (cache->mToken && !cache->mFinishDecodeRunnablePending) {
         cache->mFinishDecodeRunnablePending = true;
         NS_DispatchToMainThread(
-          NewRunnableMethod("ScriptPreloader::DoFinishOffThreadDecode",
-                            cache,
-                            &ScriptPreloader::DoFinishOffThreadDecode));
+            NewRunnableMethod(cache, &ScriptPreloader::DoFinishOffThreadDecode));
     }
 }
 

@@ -92,11 +92,7 @@ private:
 class ShutdownThreadEvent : public Runnable
 {
 public:
-  explicit ShutdownThreadEvent(nsIThread* aThread)
-    : Runnable("ShutdownThreadEvent")
-    , mThread(aThread)
-  {
-  }
+  explicit ShutdownThreadEvent(nsIThread* aThread) : mThread(aThread) {}
   ~ShutdownThreadEvent() {}
   NS_IMETHOD Run() override {
     mThread->Shutdown();
@@ -271,11 +267,8 @@ RefPtr<GenericPromise> InvokeUntil(Work aWork, Condition aCondition) {
       } else if (aLocalCondition()) {
         aPromise->Resolve(true, __func__);
       } else {
-        nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-          "InvokeUntil::Helper::Iteration",
-          [aPromise, aLocalWork, aLocalCondition]() {
-            Iteration(aPromise, aLocalWork, aLocalCondition);
-          });
+        nsCOMPtr<nsIRunnable> r =
+          NS_NewRunnableFunction([aPromise, aLocalWork, aLocalCondition] () { Iteration(aPromise, aLocalWork, aLocalCondition); });
         AbstractThread::GetCurrent()->Dispatch(r.forget());
       }
     }

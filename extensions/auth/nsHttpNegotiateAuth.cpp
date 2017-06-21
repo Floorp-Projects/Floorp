@@ -330,26 +330,26 @@ class GetNextTokenRunnable final : public mozilla::Runnable
 {
     ~GetNextTokenRunnable() override = default;
     public:
-      GetNextTokenRunnable(nsIHttpAuthenticableChannel* authChannel,
-                           const char* challenge,
-                           bool isProxyAuth,
-                           const char16_t* domain,
-                           const char16_t* username,
-                           const char16_t* password,
-                           nsISupports* sessionState,
-                           nsISupports* continuationState,
-                           GetNextTokenCompleteEvent* aCompleteEvent)
-        : mozilla::Runnable("GetNextTokenRunnable")
-        , mAuthChannel(authChannel)
-        , mChallenge(challenge)
-        , mIsProxyAuth(isProxyAuth)
-        , mDomain(domain)
-        , mUsername(username)
-        , mPassword(password)
-        , mSessionState(sessionState)
-        , mContinuationState(continuationState)
-        , mCompleteEvent(aCompleteEvent)
-      {
+        GetNextTokenRunnable(nsIHttpAuthenticableChannel *authChannel,
+                             const char *challenge,
+                             bool isProxyAuth,
+                             const char16_t *domain,
+                             const char16_t *username,
+                             const char16_t *password,
+                             nsISupports *sessionState,
+                             nsISupports *continuationState,
+                             GetNextTokenCompleteEvent *aCompleteEvent
+                             )
+            : mAuthChannel(authChannel)
+            , mChallenge(challenge)
+            , mIsProxyAuth(isProxyAuth)
+            , mDomain(domain)
+            , mUsername(username)
+            , mPassword(password)
+            , mSessionState(sessionState)
+            , mContinuationState(continuationState)
+            , mCompleteEvent(aCompleteEvent)
+        {
         }
 
         NS_IMETHODIMP Run() override

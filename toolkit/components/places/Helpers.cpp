@@ -321,8 +321,7 @@ GetHiddenState(bool aIsRedirect,
 //// PlacesEvent
 
 PlacesEvent::PlacesEvent(const char* aTopic)
-  : Runnable("places::PlacesEvent")
-  , mTopic(aTopic)
+: mTopic(aTopic)
 {
 }
 

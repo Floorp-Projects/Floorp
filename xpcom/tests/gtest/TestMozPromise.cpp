@@ -43,11 +43,10 @@ public:
                          TestPromise::Private* aPromise,
                          const TestPromise::ResolveOrRejectValue& aValue,
                          int aIterations)
-    : mozilla::Runnable("DelayedResolveOrReject")
-    , mTaskQueue(aTaskQueue)
-    , mPromise(aPromise)
-    , mValue(aValue)
-    , mIterations(aIterations)
+  : mTaskQueue(aTaskQueue)
+  , mPromise(aPromise)
+  , mValue(aValue)
+  , mIterations(aIterations)
   {}
 
   NS_IMETHOD Run() override
@@ -86,7 +85,7 @@ template<typename FunctionType>
 void
 RunOnTaskQueue(TaskQueue* aQueue, FunctionType aFun)
 {
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction("RunOnTaskQueue", aFun);
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(aFun);
   aQueue->Dispatch(r.forget());
 }
 

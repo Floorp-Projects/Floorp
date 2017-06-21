@@ -147,9 +147,7 @@ void CacheStorageService::Shutdown()
   mShutdown = true;
 
   nsCOMPtr<nsIRunnable> event =
-    NewRunnableMethod("net::CacheStorageService::ShutdownBackground",
-                      this,
-                      &CacheStorageService::ShutdownBackground);
+    NewRunnableMethod(this, &CacheStorageService::ShutdownBackground);
   Dispatch(event);
 
 #ifdef NS_FREE_PERMANENT_DATA
@@ -197,9 +195,9 @@ class WalkCacheRunnable : public Runnable
                         , public CacheStorageService::EntryInfoCallback
 {
 protected:
-  WalkCacheRunnable(nsICacheStorageVisitor* aVisitor, bool aVisitEntries)
-    : Runnable("net::WalkCacheRunnable")
-    , mService(CacheStorageService::Self())
+  WalkCacheRunnable(nsICacheStorageVisitor* aVisitor,
+                    bool aVisitEntries)
+    : mService(CacheStorageService::Self())
     , mCallback(aVisitor)
     , mSize(0)
     , mNotifyStorage(true)
@@ -392,8 +390,7 @@ private:
   {
   public:
     explicit OnCacheEntryInfoRunnable(WalkDiskCacheRunnable* aWalker)
-      : Runnable("net::WalkDiskCacheRunnable::OnCacheEntryInfoRunnable")
-      , mWalker(aWalker)
+      : mWalker(aWalker)
     {
     }
 
@@ -575,9 +572,7 @@ public:
 
 private:
   CleaupCacheDirectoriesRunnable(uint32_t aVersion, uint32_t aActive)
-    : Runnable("net::CleaupCacheDirectoriesRunnable")
-    , mVersion(aVersion)
-    , mActive(aActive)
+    : mVersion(aVersion), mActive(aActive)
   {
     nsCacheService::GetDiskCacheDirectory(getter_AddRefs(mCache1Dir));
     CacheFileIOManager::GetCacheDirectory(getter_AddRefs(mCache2Dir));
@@ -1270,9 +1265,7 @@ CacheStorageService::OnMemoryConsumptionChange(CacheMemoryConsumer* aConsumer,
   // Dispatch as a priority task, we want to set the purge timer
   // ASAP to prevent vain redispatch of this event.
   nsCOMPtr<nsIRunnable> event =
-    NewRunnableMethod("net::CacheStorageService::SchedulePurgeOverMemoryLimit",
-                      this,
-                      &CacheStorageService::SchedulePurgeOverMemoryLimit);
+    NewRunnableMethod(this, &CacheStorageService::SchedulePurgeOverMemoryLimit);
   cacheIOTarget->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
 }
 
@@ -1328,9 +1321,7 @@ CacheStorageService::Notify(nsITimer* aTimer)
     mPurgeTimer = nullptr;
 
     nsCOMPtr<nsIRunnable> event =
-      NewRunnableMethod("net::CacheStorageService::PurgeOverMemoryLimit",
-                        this,
-                        &CacheStorageService::PurgeOverMemoryLimit);
+      NewRunnableMethod(this, &CacheStorageService::PurgeOverMemoryLimit);
     Dispatch(event);
   }
 
@@ -1821,11 +1812,7 @@ CacheStorageService::DoomStorageEntry(CacheStorage const* aStorage,
   class Callback : public Runnable
   {
   public:
-    explicit Callback(nsICacheEntryDoomCallback* aCallback)
-      : mozilla::Runnable("Callback")
-      , mCallback(aCallback)
-    {
-    }
+    explicit Callback(nsICacheEntryDoomCallback* aCallback) : mCallback(aCallback) { }
     NS_IMETHOD Run() override
     {
       mCallback->OnCacheEntryDoomed(NS_ERROR_NOT_AVAILABLE);
@@ -1949,11 +1936,7 @@ CacheStorageService::DoomStorageEntries(nsCSubstring const& aContextKey,
   class Callback : public Runnable
   {
   public:
-    explicit Callback(nsICacheEntryDoomCallback* aCallback)
-      : mozilla::Runnable("Callback")
-      , mCallback(aCallback)
-    {
-    }
+    explicit Callback(nsICacheEntryDoomCallback* aCallback) : mCallback(aCallback) { }
     NS_IMETHOD Run() override
     {
       mCallback->OnCacheEntryDoomed(NS_OK);

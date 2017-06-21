@@ -908,10 +908,9 @@ nsBaseChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
         OnTransportStatusAsyncEvent(nsBaseChannel* aChannel,
                                     int64_t aProgress,
                                     int64_t aContentLength)
-          : mozilla::Runnable("OnTransportStatusAsyncEvent")
-          , mChannel(aChannel)
-          , mProgress(aProgress)
-          , mContentLength(aContentLength)
+          : mChannel(aChannel),
+            mProgress(aProgress),
+            mContentLength(aContentLength)
         { }
 
         NS_IMETHOD Run() override

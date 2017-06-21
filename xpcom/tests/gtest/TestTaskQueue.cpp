@@ -29,39 +29,26 @@ TEST(TaskQueue, EventOrder)
 
   // We expect task1 happens before task3.
   for (int i = 0; i < 10000; ++i) {
-    tq1->Dispatch(
-      NS_NewRunnableFunction(
-        "TestTaskQueue::TaskQueue_EventOrder_Test::TestBody",
-        [&]() {
-          tq2->Dispatch(NS_NewRunnableFunction(
-            "TestTaskQueue::TaskQueue_EventOrder_Test::TestBody",
-            []() { // task0
-            }));
-          tq3->Dispatch(NS_NewRunnableFunction(
-            "TestTaskQueue::TaskQueue_EventOrder_Test::TestBody",
-            [&]() { // task1
-              EXPECT_EQ(1, ++counter);
-              errored = counter != 1;
-              MonitorAutoLock mon(monitor);
-              ++sync;
-              mon.Notify();
-            }));
-          tq2->Dispatch(NS_NewRunnableFunction(
-            "TestTaskQueue::TaskQueue_EventOrder_Test::TestBody",
-            [&]() { // task2
-              tq3->Dispatch(NS_NewRunnableFunction(
-                "TestTaskQueue::TaskQueue_EventOrder_Test::TestBody",
-                [&]() { // task3
-                  EXPECT_EQ(0, --counter);
-                  errored = counter != 0;
-                  MonitorAutoLock mon(monitor);
-                  ++sync;
-                  mon.Notify();
-                }));
-            }));
-        }),
-      AbstractThread::AssertDispatchSuccess,
-      AbstractThread::TailDispatch);
+    tq1->Dispatch(NS_NewRunnableFunction([&] () {
+      tq2->Dispatch(NS_NewRunnableFunction([] () {     // task0
+      }));
+      tq3->Dispatch(NS_NewRunnableFunction([&] () {    // task1
+        EXPECT_EQ(1, ++counter);
+        errored = counter != 1;
+        MonitorAutoLock mon(monitor);
+        ++sync;
+        mon.Notify();
+      }));
+      tq2->Dispatch(NS_NewRunnableFunction([&] () {    // task2
+        tq3->Dispatch(NS_NewRunnableFunction([&] () {  // task3
+          EXPECT_EQ(0, --counter);
+          errored = counter != 0;
+          MonitorAutoLock mon(monitor);
+          ++sync;
+          mon.Notify();
+        }));
+      }));
+    }), AbstractThread::AssertDispatchSuccess, AbstractThread::TailDispatch);
 
     // Ensure task1 and task3 are done before next loop.
     MonitorAutoLock mon(monitor);

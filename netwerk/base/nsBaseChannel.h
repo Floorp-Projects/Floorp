@@ -261,9 +261,7 @@ private:
   {
   public:
     RedirectRunnable(nsBaseChannel* chan, nsIChannel* newChannel)
-      : mozilla::Runnable("nsBaseChannel::RedirectRunnable")
-      , mChannel(chan)
-      , mNewChannel(newChannel)
+      : mChannel(chan), mNewChannel(newChannel)
     {
       NS_PRECONDITION(newChannel, "Must have channel to redirect to");
     }

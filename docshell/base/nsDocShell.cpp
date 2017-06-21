@@ -454,12 +454,9 @@ nsPingListener::StartTimeout(DocGroup* aDocGroup)
   timer->SetTarget(aDocGroup->EventTargetFor(TaskCategory::Network));
 
   if (timer) {
-    nsresult rv =
-      timer->InitWithNamedFuncCallback(OnPingTimeout,
-                                       mLoadGroup,
-                                       PING_TIMEOUT,
-                                       nsITimer::TYPE_ONE_SHOT,
-                                       "nsPingListener::StartTimeout");
+    nsresult rv = timer->InitWithFuncCallback(OnPingTimeout, mLoadGroup,
+                                              PING_TIMEOUT,
+                                              nsITimer::TYPE_ONE_SHOT);
     if (NS_SUCCEEDED(rv)) {
       mTimer = timer;
       return NS_OK;
@@ -1770,12 +1767,10 @@ nsDocShell::DispatchToTabGroup(const char* aName,
 NS_IMETHODIMP
 nsDocShell::DispatchLocationChangeEvent()
 {
-  return DispatchToTabGroup(
-    "nsDocShell::FireDummyOnLocationChange",
-    TaskCategory::Other,
-    NewRunnableMethod("nsDocShell::FireDummyOnLocationChange",
-                      this,
-                      &nsDocShell::FireDummyOnLocationChange));
+  return DispatchToTabGroup("nsDocShell::FireDummyOnLocationChange",
+                            TaskCategory::Other,
+                            NewRunnableMethod(this,
+                              &nsDocShell::FireDummyOnLocationChange));
 }
 
 bool
@@ -9649,20 +9644,13 @@ public:
                     bool aLoadReplace,
                     nsIURI* aReferrer, uint32_t aReferrerPolicy,
                     nsIPrincipal* aTriggeringPrincipal,
-                    nsIPrincipal* aPrincipalToInherit,
-                    uint32_t aFlags,
-                    const char* aTypeHint,
-                    nsIInputStream* aPostData,
-                    nsIInputStream* aHeadersData,
-                    uint32_t aLoadType,
-                    nsISHEntry* aSHEntry,
-                    bool aFirstParty,
-                    const nsAString& aSrcdoc,
-                    nsIDocShell* aSourceDocShell,
-                    nsIURI* aBaseURI,
-                    bool aCheckForPrerender)
-    : mozilla::Runnable("InternalLoadEvent")
-    , mSrcdoc(aSrcdoc)
+                    nsIPrincipal* aPrincipalToInherit, uint32_t aFlags,
+                    const char* aTypeHint, nsIInputStream* aPostData,
+                    nsIInputStream* aHeadersData, uint32_t aLoadType,
+                    nsISHEntry* aSHEntry, bool aFirstParty,
+                    const nsAString& aSrcdoc, nsIDocShell* aSourceDocShell,
+                    nsIURI* aBaseURI, bool aCheckForPrerender)
+    : mSrcdoc(aSrcdoc)
     , mDocShell(aDocShell)
     , mURI(aURI)
     , mOriginalURI(aOriginalURI)
@@ -14052,8 +14040,7 @@ OnLinkClickEvent::OnLinkClickEvent(nsDocShell* aHandler,
                                    bool aNoOpenerImplied,
                                    bool aIsTrusted,
                                    nsIPrincipal* aTriggeringPrincipal)
-  : mozilla::Runnable("OnLinkClickEvent")
-  , mHandler(aHandler)
+  : mHandler(aHandler)
   , mURI(aURI)
   , mTargetSpec(aTargetSpec)
   , mFileName(aFileName)

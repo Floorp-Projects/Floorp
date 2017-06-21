@@ -52,8 +52,7 @@ class nsHtml5ExecutorReflusher : public Runnable
     RefPtr<nsHtml5TreeOpExecutor> mExecutor;
   public:
     explicit nsHtml5ExecutorReflusher(nsHtml5TreeOpExecutor* aExecutor)
-      : mozilla::Runnable("nsHtml5ExecutorReflusher")
-      , mExecutor(aExecutor)
+      : mExecutor(aExecutor)
     {}
     NS_IMETHOD Run() override
     {
@@ -242,8 +241,7 @@ nsHtml5TreeOpExecutor::MarkAsBroken(nsresult aReason)
   // a safer point.
   if (mParser) { // can mParser ever be null here?
     MOZ_ALWAYS_SUCCEEDS(
-      NS_DispatchToMainThread(NewRunnableMethod("nsHtml5Parser::Terminate",
-                                                GetParser(), &nsHtml5Parser::Terminate)));
+      NS_DispatchToMainThread(NewRunnableMethod(GetParser(), &nsHtml5Parser::Terminate)));
   }
   return aReason;
 }

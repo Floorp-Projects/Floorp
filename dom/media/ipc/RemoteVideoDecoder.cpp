@@ -34,11 +34,10 @@ RemoteVideoDecoder::~RemoteVideoDecoder()
   // it alive until we send the delete message.
   RefPtr<VideoDecoderChild> actor = mActor;
 
-  RefPtr<Runnable> task = NS_NewRunnableFunction(
-    "dom::RemoteVideoDecoder::~RemoteVideoDecoder", [actor]() {
-      MOZ_ASSERT(actor);
-      actor->DestroyIPDL();
-    });
+  RefPtr<Runnable> task = NS_NewRunnableFunction([actor]() {
+    MOZ_ASSERT(actor);
+    actor->DestroyIPDL();
+  });
 
   // Drop out references to the actor so that the last ref
   // always gets released on the manager thread.
@@ -104,13 +103,10 @@ RemoteVideoDecoder::SetSeekThreshold(const media::TimeUnit& aTime)
 {
   RefPtr<RemoteVideoDecoder> self = this;
   media::TimeUnit time = aTime;
-  VideoDecoderManagerChild::GetManagerThread()->Dispatch(
-    NS_NewRunnableFunction("dom::RemoteVideoDecoder::SetSeekThreshold",
-                           [=]() {
-                             MOZ_ASSERT(self->mActor);
-                             self->mActor->SetSeekThreshold(time);
-                           }),
-    NS_DISPATCH_NORMAL);
+  VideoDecoderManagerChild::GetManagerThread()->Dispatch(NS_NewRunnableFunction([=]() {
+    MOZ_ASSERT(self->mActor);
+    self->mActor->SetSeekThreshold(time);
+  }), NS_DISPATCH_NORMAL);
 }
 
 MediaDataDecoder::ConversionRequired
@@ -164,16 +160,11 @@ RemoteDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
 
   SynchronousTask task("InitIPDL");
   bool success;
-  VideoDecoderManagerChild::GetManagerThread()->Dispatch(
-    NS_NewRunnableFunction(
-      "dom::RemoteDecoderModule::CreateVideoDecoder",
-      [&]() {
-        AutoCompleteTask complete(&task);
-        success = object->mActor->InitIPDL(
-          aParams.VideoConfig(),
-          aParams.mKnowsCompositor->GetTextureFactoryIdentifier());
-      }),
-    NS_DISPATCH_NORMAL);
+  VideoDecoderManagerChild::GetManagerThread()->Dispatch(NS_NewRunnableFunction([&]() {
+    AutoCompleteTask complete(&task);
+    success = object->mActor->InitIPDL(aParams.VideoConfig(),
+                                       aParams.mKnowsCompositor->GetTextureFactoryIdentifier());
+  }), NS_DISPATCH_NORMAL);
   task.Wait();
 
   if (!success) {

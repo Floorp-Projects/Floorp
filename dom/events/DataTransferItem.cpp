@@ -446,10 +446,9 @@ DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
   class GASRunnable final : public Runnable
   {
   public:
-    GASRunnable(FunctionStringCallback* aCallback, const nsAString& aStringData)
-      : mozilla::Runnable("GASRunnable")
-      , mCallback(aCallback)
-      , mStringData(aStringData)
+    GASRunnable(FunctionStringCallback* aCallback,
+                const nsAString& aStringData)
+      : mCallback(aCallback), mStringData(aStringData)
     {}
 
     NS_IMETHOD Run() override

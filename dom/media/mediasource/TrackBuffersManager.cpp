@@ -65,8 +65,7 @@ public:
   DispatchKeyNeededEvent(AbstractMediaDecoder* aDecoder,
                          nsTArray<uint8_t>& aInitData,
                          const nsString& aInitDataType)
-    : Runnable("DispatchKeyNeededEvent")
-    , mDecoder(aDecoder)
+    : mDecoder(aDecoder)
     , mInitData(aInitData)
     , mInitDataType(aInitDataType)
   {
@@ -148,10 +147,7 @@ TrackBuffersManager::QueueTask(SourceBufferTask* aTask)
 {
   if (!OnTaskQueue()) {
     GetTaskQueue()->Dispatch(NewRunnableMethod<RefPtr<SourceBufferTask>>(
-      "TrackBuffersManager::QueueTask",
-      this,
-      &TrackBuffersManager::QueueTask,
-      aTask));
+      this, &TrackBuffersManager::QueueTask, aTask));
     return;
   }
   MOZ_ASSERT(OnTaskQueue());
@@ -216,10 +212,7 @@ TrackBuffersManager::ProcessTasks()
     default:
       NS_WARNING("Invalid Task");
   }
-  GetTaskQueue()->Dispatch(
-    NewRunnableMethod("TrackBuffersManager::ProcessTasks",
-                      this,
-                      &TrackBuffersManager::ProcessTasks));
+  GetTaskQueue()->Dispatch(NewRunnableMethod(this, &TrackBuffersManager::ProcessTasks));
 }
 
 // The MSE spec requires that we abort the current SegmentParserLoop
@@ -797,10 +790,7 @@ TrackBuffersManager::RejectAppend(const MediaResult& aRejectValue, const char* a
 void
 TrackBuffersManager::ScheduleSegmentParserLoop()
 {
-  GetTaskQueue()->Dispatch(
-    NewRunnableMethod("TrackBuffersManager::SegmentParserLoop",
-                      this,
-                      &TrackBuffersManager::SegmentParserLoop));
+  GetTaskQueue()->Dispatch(NewRunnableMethod(this, &TrackBuffersManager::SegmentParserLoop));
 }
 
 void
@@ -884,12 +874,11 @@ TrackBuffersManager::OnDemuxerResetDone(const MediaResult& aResult)
 
   if (aResult != NS_OK && mParentDecoder) {
     RefPtr<TrackBuffersManager> self = this;
-    mAbstractMainThread->Dispatch(NS_NewRunnableFunction(
-      "TrackBuffersManager::OnDemuxerResetDone", [self, aResult]() {
-        if (self->mParentDecoder && self->mParentDecoder->GetOwner()) {
-          self->mParentDecoder->GetOwner()->DecodeWarning(aResult);
-        }
-      }));
+    mAbstractMainThread->Dispatch(NS_NewRunnableFunction([self, aResult] () {
+      if (self->mParentDecoder && self->mParentDecoder->GetOwner()) {
+        self->mParentDecoder->GetOwner()->DecodeWarning(aResult);
+      }
+    }));
   }
 
   // Recreate track demuxers.
@@ -1010,11 +999,10 @@ TrackBuffersManager::OnDemuxerInitDone(const MediaResult& aResult)
   int64_t duration = std::max(videoDuration, audioDuration);
   // 1. Update the duration attribute if it currently equals NaN.
   // Those steps are performed by the MediaSourceDecoder::SetInitialDuration
-  mAbstractMainThread->Dispatch(
-    NewRunnableMethod<int64_t>("MediaSourceDecoder::SetInitialDuration",
-                               mParentDecoder.get(),
-                               &MediaSourceDecoder::SetInitialDuration,
-                               duration ? duration : -1));
+  mAbstractMainThread->Dispatch(NewRunnableMethod<int64_t>
+                                (mParentDecoder.get(),
+                                &MediaSourceDecoder::SetInitialDuration,
+                                duration ? duration : -1));
 
   // 2. If the initialization segment has no audio, video, or text tracks, then
   // run the append error algorithm with the decode error parameter set to true
@@ -1171,12 +1159,11 @@ TrackBuffersManager::OnDemuxerInitDone(const MediaResult& aResult)
 
   if (aResult != NS_OK && mParentDecoder) {
     RefPtr<TrackBuffersManager> self = this;
-    mAbstractMainThread->Dispatch(NS_NewRunnableFunction(
-      "TrackBuffersManager::OnDemuxerInitDone", [self, aResult]() {
-        if (self->mParentDecoder && self->mParentDecoder->GetOwner()) {
-          self->mParentDecoder->GetOwner()->DecodeWarning(aResult);
-        }
-      }));
+    mAbstractMainThread->Dispatch(NS_NewRunnableFunction([self, aResult] () {
+      if (self->mParentDecoder && self->mParentDecoder->GetOwner()) {
+        self->mParentDecoder->GetOwner()->DecodeWarning(aResult);
+      }
+    }));
   }
 }
 

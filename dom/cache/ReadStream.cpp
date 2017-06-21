@@ -132,8 +132,7 @@ class ReadStream::Inner::NoteClosedRunnable final : public CancelableRunnable
 {
 public:
   explicit NoteClosedRunnable(ReadStream::Inner* aStream)
-    : CancelableRunnable("dom::cache::ReadStream::Inner::NoteClosedRunnable")
-    , mStream(aStream)
+    : mStream(aStream)
   { }
 
   NS_IMETHOD Run() override
@@ -168,8 +167,7 @@ class ReadStream::Inner::ForgetRunnable final : public CancelableRunnable
 {
 public:
   explicit ForgetRunnable(ReadStream::Inner* aStream)
-    : CancelableRunnable("dom::cache::ReadStream::Inner::ForgetRunnable")
-    , mStream(aStream)
+    : mStream(aStream)
   { }
 
   NS_IMETHOD Run() override

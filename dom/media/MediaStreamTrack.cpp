@@ -111,11 +111,7 @@ public:
     aGraph->DispatchToMainThreadAfterStreamStateUpdate(
       mAbstractMainThread,
       NewRunnableMethod<StoreCopyPassByConstLRef<PrincipalHandle>>(
-        "dom::MediaStreamTrack::PrincipalHandleListener::"
-        "DoNotifyPrincipalHandleChanged",
-        this,
-        &PrincipalHandleListener::DoNotifyPrincipalHandleChanged,
-        aNewPrincipalHandle));
+        this, &PrincipalHandleListener::DoNotifyPrincipalHandleChanged, aNewPrincipalHandle));
   }
 
 protected:

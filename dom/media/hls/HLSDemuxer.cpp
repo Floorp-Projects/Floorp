@@ -88,7 +88,6 @@ public:
     if (!mDemuxer) { return; }
     RefPtr<HLSDemuxerCallbacksSupport> self = this;
     mDemuxer->GetTaskQueue()->Dispatch(NS_NewRunnableFunction(
-     "HLSDemuxer::HLSDemuxerCallbacksSupport::OnInitialized",
      [=] () {
        MutexAutoLock lock(self->mMutex);
        if (self->mDemuxer) {
@@ -639,8 +638,7 @@ HLSTrackDemuxer::BreakCycles()
 {
   RefPtr<HLSTrackDemuxer> self = this;
   nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableFunction("HLSTrackDemuxer::BreakCycles",
-    [self]() {
+    NS_NewRunnableFunction([self]() {
       self->mParent = nullptr;
     } );
   mParent->GetTaskQueue()->Dispatch(task.forget());

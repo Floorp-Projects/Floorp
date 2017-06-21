@@ -404,8 +404,7 @@ class InitUDPSocketParentCallback final : public Runnable
 public:
   InitUDPSocketParentCallback(UDPSocketParent* aActor,
                               const nsACString& aFilter)
-    : Runnable("ipc::InitUDPSocketParentCallback")
-    , mActor(aActor)
+    : mActor(aActor)
     , mFilter(aFilter)
   {
     AssertIsInMainProcess();
@@ -529,8 +528,7 @@ public:
   CheckPrincipalRunnable(already_AddRefed<ContentParent> aParent,
                          const PrincipalInfo& aPrincipalInfo,
                          const nsCString& aOrigin)
-    : Runnable("ipc::CheckPrincipalRunnable")
-    , mContentParent(aParent)
+    : mContentParent(aParent)
     , mPrincipalInfo(aPrincipalInfo)
     , mOrigin(aOrigin)
   {

@@ -42,8 +42,7 @@ public:
   ReportResultTask(WebAudioDecodeJob& aDecodeJob,
                    WebAudioDecodeJob::ResultFn aFunction,
                    WebAudioDecodeJob::ErrorCode aErrorCode)
-    : Runnable("ReportResultTask")
-    , mDecodeJob(aDecodeJob)
+    : mDecodeJob(aDecodeJob)
     , mFunction(aFunction)
     , mErrorCode(aErrorCode)
   {
@@ -79,12 +78,10 @@ enum class PhaseEnum : int
 class MediaDecodeTask final : public Runnable
 {
 public:
-  MediaDecodeTask(const MediaContainerType& aContainerType,
-                  uint8_t* aBuffer,
+  MediaDecodeTask(const MediaContainerType& aContainerType, uint8_t* aBuffer,
                   uint32_t aLength,
                   WebAudioDecodeJob& aDecodeJob)
-    : Runnable("MediaDecodeTask")
-    , mContainerType(aContainerType)
+    : mContainerType(aContainerType)
     , mBuffer(aBuffer)
     , mLength(aLength)
     , mDecodeJob(aDecodeJob)
@@ -106,8 +103,8 @@ private:
       mDecodeJob.OnFailure(aErrorCode);
     } else {
       // Take extra care to cleanup on the main thread
-      mMainThread->Dispatch(NewRunnableMethod(
-        "MediaDecodeTask::Cleanup", this, &MediaDecodeTask::Cleanup));
+      mMainThread->Dispatch(NewRunnableMethod(this, &MediaDecodeTask::Cleanup));
+
 
       nsCOMPtr<nsIRunnable> event =
         new ReportResultTask(mDecodeJob, &WebAudioDecodeJob::OnFailure, aErrorCode);
@@ -269,14 +266,13 @@ MediaDecodeTask::OnMetadataRead(MetadataHolder&& aMetadata)
                             mContainerType.Type().AsString().Data());
   }
 
-  nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction(
-    "MediaDecodeTask::OnMetadataRead", [codec]() -> void {
-      MOZ_ASSERT(!codec.IsEmpty());
-      MOZ_LOG(gMediaDecoderLog,
-              LogLevel::Debug,
-              ("Telemetry (WebAudio) MEDIA_CODEC_USED= '%s'", codec.get()));
-      Telemetry::Accumulate(Telemetry::HistogramID::MEDIA_CODEC_USED, codec);
-    });
+  nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction([codec]() -> void {
+    MOZ_ASSERT(!codec.IsEmpty());
+    MOZ_LOG(gMediaDecoderLog,
+            LogLevel::Debug,
+            ("Telemetry (WebAudio) MEDIA_CODEC_USED= '%s'", codec.get()));
+    Telemetry::Accumulate(Telemetry::HistogramID::MEDIA_CODEC_USED, codec);
+  });
   SystemGroup::Dispatch("MediaDecodeTask::OnMetadataRead()::report_telemetry",
                         TaskCategory::Other,
                         task.forget());

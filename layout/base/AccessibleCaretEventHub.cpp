@@ -655,12 +655,8 @@ AccessibleCaretEventHub::LaunchLongTapInjector()
   }
 
   int32_t longTapDelay = gfxPrefs::UiClickHoldContextMenusDelay();
-  mLongTapInjectorTimer->InitWithNamedFuncCallback(
-    FireLongTap,
-    this,
-    longTapDelay,
-    nsITimer::TYPE_ONE_SHOT,
-    "AccessibleCaretEventHub::LaunchLongTapInjector");
+  mLongTapInjectorTimer->InitWithFuncCallback(FireLongTap, this, longTapDelay,
+                                              nsITimer::TYPE_ONE_SHOT);
 }
 
 void
@@ -757,12 +753,8 @@ AccessibleCaretEventHub::LaunchScrollEndInjector()
     return;
   }
 
-  mScrollEndInjectorTimer->InitWithNamedFuncCallback(
-    FireScrollEnd,
-    this,
-    kScrollEndTimerDelay,
-    nsITimer::TYPE_ONE_SHOT,
-    "AccessibleCaretEventHub::LaunchScrollEndInjector");
+  mScrollEndInjectorTimer->InitWithFuncCallback(
+    FireScrollEnd, this, kScrollEndTimerDelay, nsITimer::TYPE_ONE_SHOT);
 }
 
 void

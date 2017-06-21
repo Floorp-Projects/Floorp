@@ -35,14 +35,12 @@ using namespace mozilla::net;
 
 class nsFileCopyEvent : public Runnable {
 public:
-  nsFileCopyEvent(nsIOutputStream* dest, nsIInputStream* source, int64_t len)
-    : mozilla::Runnable("nsFileCopyEvent")
-    , mDest(dest)
+  nsFileCopyEvent(nsIOutputStream *dest, nsIInputStream *source, int64_t len)
+    : mDest(dest)
     , mSource(source)
     , mLen(len)
     , mStatus(NS_OK)
-    , mInterruptStatus(NS_OK)
-  {
+    , mInterruptStatus(NS_OK) {
   }
 
   // Read the current status of the file copy operation.
@@ -235,9 +233,7 @@ nsFileUploadContentStream::AsyncWait(nsIInputStreamCallback *callback,
 
   if (IsNonBlocking()) {
     nsCOMPtr<nsIRunnable> callback =
-      NewRunnableMethod("nsFileUploadContentStream::OnCopyComplete",
-                        this,
-                        &nsFileUploadContentStream::OnCopyComplete);
+      NewRunnableMethod(this, &nsFileUploadContentStream::OnCopyComplete);
     mCopyEvent->Dispatch(callback, mSink, target);
   }
 

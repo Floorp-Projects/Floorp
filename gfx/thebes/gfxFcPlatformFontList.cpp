@@ -1181,12 +1181,10 @@ gfxFcPlatformFontList::gfxFcPlatformFontList()
         mLastConfig = FcConfigGetCurrent();
         mCheckFontUpdatesTimer = do_CreateInstance("@mozilla.org/timer;1");
         if (mCheckFontUpdatesTimer) {
-          mCheckFontUpdatesTimer->InitWithNamedFuncCallback(
-            CheckFontUpdates,
-            this,
-            (rescanInterval + 1) * 1000,
-            nsITimer::TYPE_REPEATING_SLACK,
-            "gfxFcPlatformFontList::gfxFcPlatformFontList");
+            mCheckFontUpdatesTimer->
+                InitWithFuncCallback(CheckFontUpdates, this,
+                                     (rescanInterval + 1) * 1000,
+                                     nsITimer::TYPE_REPEATING_SLACK);
         } else {
             NS_WARNING("Failure to create font updates timer");
         }
