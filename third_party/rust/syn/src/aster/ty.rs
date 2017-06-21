@@ -410,9 +410,7 @@ impl<F> TyImplTraitTyBuilder<F>
     }
 
     pub fn with_generics(self, generics: Generics) -> Self {
-        self.with_lifetimes(generics.lifetimes
-            .into_iter()
-            .map(|def| def.lifetime))
+        self.with_lifetimes(generics.lifetimes.into_iter().map(|def| def.lifetime))
     }
 
     pub fn with_lifetimes<I, L>(mut self, lifetimes: I) -> Self

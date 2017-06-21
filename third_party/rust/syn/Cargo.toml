@@ -1,6 +1,6 @@
 [package]
 name = "syn"
-version = "0.11.8" # don't forget to update version in readme for breaking changes
+version = "0.11.11" # don't forget to update version in readme for breaking changes
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 license = "MIT/Apache-2.0"
 description = "Nom parser for Rust source code"
@@ -27,5 +27,4 @@ synom = { version = "0.11", path = "synom", optional = true }
 syntex_pos = "0.58"
 syntex_syntax = "0.58"
 tempdir = "0.3.5"
-time = "0.1.35"
 walkdir = "1.0.1"

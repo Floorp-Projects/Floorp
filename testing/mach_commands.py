@@ -536,19 +536,21 @@ class PushToTry(MachCommandBase):
 
     def validate_args(self, **kwargs):
         from autotry import AutoTry
-        if not kwargs["paths"] and not kwargs["tests"] and not kwargs["tags"]:
-            print("Paths, tags, or tests must be specified as an argument to autotry.")
-            sys.exit(1)
 
-        if kwargs["platforms"] is None:
+        tests_selected = kwargs["tests"] or kwargs["paths"] or kwargs["tags"]
+        if kwargs["platforms"] is None and (kwargs["jobs"] is None or tests_selected):
             if 'AUTOTRY_PLATFORM_HINT' in os.environ:
                 kwargs["platforms"] = [os.environ['AUTOTRY_PLATFORM_HINT']]
+            elif tests_selected:
+                print("Must specify platform when selecting tests.")
+                sys.exit(1)
             else:
-                print("Platforms must be specified as an argument to autotry.")
+                print("Either platforms or jobs must be specified as an argument to autotry.")
                 sys.exit(1)
 
         try:
-            platforms = self.normalise_list(kwargs["platforms"])
+            platforms = (self.normalise_list(kwargs["platforms"])
+                         if kwargs["platforms"] else {})
         except ValueError as e:
             print("Error parsing -p argument:\n%s" % e.message)
             sys.exit(1)
@@ -565,6 +567,12 @@ class PushToTry(MachCommandBase):
                      if kwargs["talos"] else [])
         except ValueError as e:
             print("Error parsing -t argument:\n%s" % e.message)
+            sys.exit(1)
+
+        try:
+            jobs = (self.normalise_list(kwargs["jobs"]) if kwargs["jobs"] else {})
+        except ValueError as e:
+            print("Error parsing -j argument:\n%s" % e.message)
             sys.exit(1)
 
         paths = []
@@ -590,7 +598,7 @@ class PushToTry(MachCommandBase):
         extra_args = {k: v for k, v in kwargs.items()
                       if k in extra_values and v}
 
-        return kwargs["builds"], platforms, tests, talos, paths, tags, extra_args
+        return kwargs["builds"], platforms, tests, talos, jobs, paths, tags, extra_args
 
 
     @Command('try',
@@ -669,7 +677,7 @@ class PushToTry(MachCommandBase):
         if not any(kwargs[item] for item in ("paths", "tests", "tags")):
             kwargs["paths"], kwargs["tags"] = at.find_paths_and_tags(kwargs["verbose"])
 
-        builds, platforms, tests, talos, paths, tags, extra = self.validate_args(**kwargs)
+        builds, platforms, tests, talos, jobs, paths, tags, extra = self.validate_args(**kwargs)
 
         if paths or tags:
             if not os.path.exists(os.path.join(self.topobjdir, 'config.status')):
@@ -690,26 +698,28 @@ class PushToTry(MachCommandBase):
         else:
             paths_by_flavor = {}
 
+        # No point in dealing with artifacts if we aren't running any builds
         local_artifact_build = False
-        try:
-            if self.substs.get("MOZ_ARTIFACT_BUILDS"):
-                local_artifact_build = True
-        except BuildEnvironmentNotFoundException:
-            # If we don't have a build locally, we can't tell whether
-            # an artifact build is desired, but we still want the
-            # command to succeed, if possible.
-            pass
+        if platforms:
+            try:
+                if self.substs.get("MOZ_ARTIFACT_BUILDS"):
+                    local_artifact_build = True
+            except BuildEnvironmentNotFoundException:
+                # If we don't have a build locally, we can't tell whether
+                # an artifact build is desired, but we still want the
+                # command to succeed, if possible.
+                pass
 
-        # Add --artifact if --enable-artifact-builds is set ...
-        if local_artifact_build:
-            extra["artifact"] = True
-        # ... unless --no-artifact is explicitly given.
-        if kwargs["no_artifact"]:
-            if "artifact" in extra:
-                del extra["artifact"]
+            # Add --artifact if --enable-artifact-builds is set ...
+            if local_artifact_build:
+                extra["artifact"] = True
+            # ... unless --no-artifact is explicitly given.
+            if kwargs["no_artifact"]:
+                if "artifact" in extra:
+                    del extra["artifact"]
 
         try:
-            msg = at.calc_try_syntax(platforms, tests, talos, builds, paths_by_flavor, tags,
+            msg = at.calc_try_syntax(platforms, tests, talos, jobs, builds, paths_by_flavor, tags,
                                      extra, kwargs["intersection"])
         except ValueError as e:
             print(e.message)

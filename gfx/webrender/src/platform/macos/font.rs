@@ -31,6 +31,8 @@ pub struct FontContext {
 unsafe impl Send for FontContext {}
 
 pub struct RasterizedGlyph {
+    pub top: f32,
+    pub left: f32,
     pub width: u32,
     pub height: u32,
     pub bytes: Vec<u8>,
@@ -39,6 +41,8 @@ pub struct RasterizedGlyph {
 impl RasterizedGlyph {
     pub fn blank() -> RasterizedGlyph {
         RasterizedGlyph {
+            top: 0.0,
+            left: 0.0,
             width: 0,
             height: 0,
             bytes: vec![],
@@ -59,7 +63,7 @@ struct GlyphMetrics {
 // this function from Skia which is used to check if a glyph
 // can be rendered with subpixel AA.
 fn supports_subpixel_aa() -> bool {
-    let mut cg_context = CGContext::create_bitmap_context(1, 1, 8, 4,
+    let mut cg_context = CGContext::create_bitmap_context(None, 1, 1, 8, 4,
                                                           &CGColorSpace::create_device_rgb(),
                                                           kCGImageAlphaNoneSkipFirst |
                                                           kCGBitmapByteOrder32Little);
@@ -285,7 +289,7 @@ impl FontContext {
             FontRenderMode::Alpha | FontRenderMode::Mono => kCGImageAlphaPremultipliedLast,
         };
 
-        let mut cg_context = CGContext::create_bitmap_context(metrics.rasterized_width as usize,
+        let mut cg_context = CGContext::create_bitmap_context(None, metrics.rasterized_width as usize,
                                                               metrics.rasterized_height as usize,
                                                               8,
                                                               metrics.rasterized_width as usize * 4,
@@ -400,6 +404,8 @@ impl FontContext {
                                   key.color);
 
         Some(RasterizedGlyph {
+            left: metrics.rasterized_left as f32,
+            top: metrics.rasterized_ascent as f32,
             width: metrics.rasterized_width,
             height: metrics.rasterized_height,
             bytes: rasterized_pixels,

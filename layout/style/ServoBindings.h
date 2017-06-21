@@ -127,24 +127,11 @@ bool Gecko_FlattenedTreeParentIsParent(RawGeckoNodeBorrowed node);
 bool Gecko_IsSignificantChild(RawGeckoNodeBorrowed node,
                               bool text_is_significant,
                               bool whitespace_is_significant);
-RawGeckoNodeBorrowedOrNull Gecko_GetFlattenedTreeParentNode(RawGeckoNodeBorrowed node);
-RawGeckoNodeBorrowedOrNull Gecko_GetFirstChild(RawGeckoNodeBorrowed node);
 RawGeckoNodeBorrowedOrNull Gecko_GetLastChild(RawGeckoNodeBorrowed node);
-RawGeckoNodeBorrowedOrNull Gecko_GetPrevSibling(RawGeckoNodeBorrowed node);
-RawGeckoNodeBorrowedOrNull Gecko_GetNextSibling(RawGeckoNodeBorrowed node);
-RawGeckoElementBorrowedOrNull Gecko_GetFirstChildElement(RawGeckoElementBorrowed element);
-RawGeckoElementBorrowedOrNull Gecko_GetLastChildElement(RawGeckoElementBorrowed element);
-RawGeckoElementBorrowedOrNull Gecko_GetPrevSiblingElement(RawGeckoElementBorrowed element);
-RawGeckoElementBorrowedOrNull Gecko_GetNextSiblingElement(RawGeckoElementBorrowed element);
-RawGeckoElementBorrowedOrNull Gecko_GetDocumentElement(RawGeckoDocumentBorrowed document);
-void Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
-                          mozilla::ServoStyleSheet* parent,
-                          mozilla::css::LoaderReusableStyleSheets* reusable_sheets,
-                          RawServoStyleSheetBorrowed child_sheet,
-                          RawGeckoURLExtraData* base_url_data,
-                          const uint8_t* url_bytes,
-                          uint32_t url_length,
-                          RawServoMediaListStrong media_list);
+RawGeckoNodeBorrowedOrNull Gecko_GetFlattenedTreeParentNode(RawGeckoNodeBorrowed node);
+RawGeckoElementBorrowedOrNull Gecko_GetBeforeOrAfterPseudo(RawGeckoElementBorrowed element, bool is_before);
+nsTArray<nsIContent*>* Gecko_GetAnonymousContentForElement(RawGeckoElementBorrowed element);
+void Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* anon_content);
 
 // By default, Servo walks the DOM by traversing the siblings of the DOM-view
 // first child. This generally works, but misses anonymous children, which we
@@ -155,7 +142,15 @@ void Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
 StyleChildrenIteratorOwnedOrNull Gecko_MaybeCreateStyleChildrenIterator(RawGeckoNodeBorrowed node);
 void Gecko_DropStyleChildrenIterator(StyleChildrenIteratorOwned it);
 RawGeckoNodeBorrowedOrNull Gecko_GetNextStyleChild(StyleChildrenIteratorBorrowedMut it);
-bool Gecko_ElementHasBindingWithAnonymousContent(RawGeckoElementBorrowed element);
+
+void Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
+                          mozilla::ServoStyleSheet* parent,
+                          mozilla::css::LoaderReusableStyleSheets* reusable_sheets,
+                          RawServoStyleSheetBorrowed child_sheet,
+                          RawGeckoURLExtraData* base_url_data,
+                          const uint8_t* url_bytes,
+                          uint32_t url_length,
+                          RawServoMediaListStrong media_list);
 
 // Selector Matching.
 uint64_t Gecko_ElementState(RawGeckoElementBorrowed element);

@@ -54,7 +54,7 @@ function testAnimatedGrid(targetTagName,    targetAttrHash,
       Y_POSNS.length != numElementsToMake) {
     return;
   }
-  
+
   for (var i = 0; i < animationAttrHashList.length; i++) {
     var animationAttrHash = animationAttrHashList[i];
     // Default to fill="freeze" so we can test the final value of the animation
@@ -83,6 +83,103 @@ function testAnimatedGrid(targetTagName,    targetAttrHash,
     }
     // Insert target into DOM
     svg.appendChild(targetElem);
+  }
+
+  // Take snapshot
+  setTimeAndSnapshot(SNAPSHOT_TIME, true);
+}
+
+// Generates a visual grid of elements of type |graphicElemTagName|, with the
+// attribute values given in |graphicElemAttrHash|. This is a variation of the
+// above function. We use <defs> to include the reference elements because
+// some animatable properties are only applicable to some specific elements
+// (e.g. feFlood, stop), so then we apply an animation element of type
+// |animationTagName|, with the attribute values given in |animationAttrHash|,
+// to those specific elements. |defTagNameList| is an array of tag names.
+// We will create elements hierarchically according to this array. The first tag
+// in |defTagNameList| is the outer-most one in <defs>, and the last tag is the
+// inner-most one and it is the target to which the animation element will be
+// applied. We visualize the effect of our animation by referencing each
+// animated subtree from some graphical element that we generate. The
+// |graphicElemIdValueProperty| parameter provides the name of the CSS property
+// that we should use to hook up this reference.
+//
+// e.g. if a caller passes a defTagNameList of [ "linearGradient", "stop" ],
+//      this function will generate the following subtree:
+// <defs>
+//   <linearGradient id="elem0">
+//     <stop>
+//       <animate ..../>
+//     </stop>
+//   </linearGradient>
+//   <linearGradient id="elem1">
+//     <stop>
+//       <animate ..../>
+//     </stop>
+//   </linearGradient>
+//
+//   <!--- more similar linearGradients here, up to START_TIMES.length -->
+// </defs>
+function testAnimatedGridWithDefs(graphicElemTagName,
+                                  graphicElemAttrHash,
+                                  graphicElemIdValuedProperty,
+                                  defTagNameList,
+                                  animationTagName,
+                                  animationAttrHashList) {
+  // SANITY CHECK
+  const numElementsToMake = START_TIMES.length;
+  if (X_POSNS.length != numElementsToMake ||
+      Y_POSNS.length != numElementsToMake) {
+    return;
+  }
+
+  if (defTagNameList.length == 0) {
+    return;
+  }
+
+  for (var i = 0; i < animationAttrHashList.length; i++) {
+    var animationAttrHash = animationAttrHashList[i];
+    // Default to fill="freeze" so we can test the final value of the animation
+    if (!animationAttrHash["fill"]) {
+      animationAttrHash["fill"] = "freeze";
+    }
+  }
+
+  var svg = document.documentElement;
+
+  // Build defs element.
+  var defs = buildElement('defs');
+  for (var i = 0; i < numElementsToMake; i++) {
+    // This will track the innermost element in our subtree:
+    var innerElement = defs;
+
+    for (var defIdx = 0; defIdx < defTagNameList.length; ++defIdx) {
+      // Set an ID on the first level of nesting (on child of defs):
+      var attrs = defIdx == 0 ? { "id": "elem" + i } : {};
+
+      var newElem = buildElement(defTagNameList[defIdx], attrs);
+      innerElement.appendChild(newElem);
+      innerElement = newElem;
+    }
+
+    for (var j = 0; j < animationAttrHashList.length; ++j) {
+      var animationAttrHash = animationAttrHashList[j];
+      var animElem = buildElement(animationTagName, animationAttrHash);
+      animElem.setAttribute("begin", START_TIMES[i]);
+      animElem.setAttribute("dur", DURATION);
+      innerElement.appendChild(animElem);
+    }
+  }
+  svg.appendChild(defs);
+
+  // Build the grid!
+  for (var i = 0; i < numElementsToMake; ++i) {
+    var graphicElem = buildElement(graphicElemTagName, graphicElemAttrHash);
+    graphicElem.setAttribute("x", X_POSNS[i]);
+    graphicElem.setAttribute("y", Y_POSNS[i]);
+    graphicElem.setAttribute("style", graphicElemIdValuedProperty +
+                                      ":url(#elem" + i + ")");
+    svg.appendChild(graphicElem);
   }
 
   // Take snapshot

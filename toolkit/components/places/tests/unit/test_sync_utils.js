@@ -6,17 +6,13 @@ const {
   fetchGuidsWithAnno,
 } = Cu.import("resource://gre/modules/PlacesSyncUtils.jsm", {});
 Cu.import("resource://testing-common/httpd.js");
-Cu.importGlobalProperties(["crypto", "URLSearchParams"]);
+Cu.importGlobalProperties(["URLSearchParams"]);
 
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const SYNC_PARENT_ANNO = "sync/parent";
 
-function makeGuid() {
-  return ChromeUtils.base64URLEncode(crypto.getRandomValues(new Uint8Array(9)), {
-    pad: false,
-  });
-}
+var makeGuid = PlacesUtils.history.makeGuid;
 
 function makeLivemarkServer() {
   let server = new HttpServer();

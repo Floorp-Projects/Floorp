@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="application/javascript">
+      let form = document.createElement('form');
+      let input1 = document.createElement('input');
+      let input2 = document.createElement('input');
+      document.documentElement.appendChild(form);
+      document.documentElement.appendChild(input1);
+      form.appendChild(input2);
+      form.contentEditable = true
+      input1.focus();
+
+      let range = document.createRange();
+      range.selectNode(input2);
+      window.getSelection().addRange(range);
+      document.execCommand("italic", false, null);
+    </script>
+  </head>
+  <body></body>
+</html>

@@ -10,11 +10,12 @@
 use base::CGFloat;
 use color_space::{CGColorSpace, CGColorSpaceRef};
 use core_foundation::base::{CFRelease, CFRetain, CFTypeID, CFTypeRef, TCFType};
-use libc::{c_void, size_t};
+use libc::{c_void, c_int, size_t};
 use std::mem;
 use std::ptr;
 use std::slice;
 use geometry::CGRect;
+use image::{CGImage, CGImageRef};
 
 #[repr(C)]
 pub enum CGTextDrawingMode {
@@ -87,7 +88,8 @@ impl TCFType<CGContextRef> for CGContext {
 }
 
 impl CGContext {
-    pub fn create_bitmap_context(width: size_t,
+    pub fn create_bitmap_context(data: Option<*mut c_void>,
+                                 width: size_t,
                                  height: size_t,
                                  bits_per_component: size_t,
                                  bytes_per_row: size_t,
@@ -95,7 +97,7 @@ impl CGContext {
                                  bitmap_info: u32)
                                  -> CGContext {
         unsafe {
-            let result = CGBitmapContextCreate(ptr::null_mut(),
+            let result = CGBitmapContextCreate(data.unwrap_or(ptr::null_mut()),
                                                width,
                                                height,
                                                bits_per_component,
@@ -141,6 +143,12 @@ impl CGContext {
     pub fn set_allows_font_smoothing(&self, allows_font_smoothing: bool) {
         unsafe {
             CGContextSetAllowsFontSmoothing(self.as_concrete_TypeRef(), allows_font_smoothing)
+        }
+    }
+
+    pub fn set_font_smoothing_style(&self, style: i32) {
+        unsafe {
+            CGContextSetFontSmoothingStyle(self.as_concrete_TypeRef(), style as _);
         }
     }
 
@@ -197,6 +205,21 @@ impl CGContext {
             CGContextFillRect(self.as_concrete_TypeRef(), rect)
         }
     }
+
+    pub fn draw_image(&self, rect: CGRect, image: &CGImage) {
+        unsafe {
+            CGContextDrawImage(self.as_concrete_TypeRef(), rect, image.as_concrete_TypeRef());
+        }
+    }
+
+    pub fn create_image(&self) -> Option<CGImage> {
+        let image = unsafe { CGBitmapContextCreateImage(self.as_concrete_TypeRef()) };
+        if image != ptr::null() {
+            Some(unsafe { CGImage::wrap_under_create_rule(image) })
+        } else {
+            None
+        }
+    }
 }
 
 #[link(name = "ApplicationServices", kind = "framework")]
@@ -213,9 +236,11 @@ extern {
     fn CGBitmapContextGetWidth(context: CGContextRef) -> size_t;
     fn CGBitmapContextGetHeight(context: CGContextRef) -> size_t;
     fn CGBitmapContextGetBytesPerRow(context: CGContextRef) -> size_t;
+    fn CGBitmapContextCreateImage(context: CGContextRef) -> CGImageRef;
     fn CGContextGetTypeID() -> CFTypeID;
     fn CGContextSetAllowsFontSmoothing(c: CGContextRef, allowsFontSmoothing: bool);
     fn CGContextSetShouldSmoothFonts(c: CGContextRef, shouldSmoothFonts: bool);
+    fn CGContextSetFontSmoothingStyle(c: CGContextRef, style: c_int);
     fn CGContextSetAllowsAntialiasing(c: CGContextRef, allowsAntialiasing: bool);
     fn CGContextSetShouldAntialias(c: CGContextRef, shouldAntialias: bool);
     fn CGContextSetAllowsFontSubpixelQuantization(c: CGContextRef,
@@ -234,5 +259,6 @@ extern {
                                 alpha: CGFloat);
     fn CGContextFillRect(context: CGContextRef,
                          rect: CGRect);
+    fn CGContextDrawImage(c: CGContextRef, rect: CGRect, image: CGImageRef);
 }
 

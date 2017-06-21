@@ -541,7 +541,7 @@ impl RenderBackend {
     fn handle_vr_compositor_command(&mut self, ctx_id: WebGLContextId, cmd: VRCompositorCommand) {
         let texture = match cmd {
             VRCompositorCommand::SubmitFrame(..) => {
-                    match self.resource_cache.get_webgl_texture(&ctx_id).texture_id {
+                    match self.resource_cache.get_webgl_texture(&ctx_id).id {
                         SourceTexture::WebGL(texture_id) => {
                             let size = self.resource_cache.get_webgl_texture_size(&ctx_id);
                             Some((texture_id, size))

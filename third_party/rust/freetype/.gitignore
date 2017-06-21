@@ -1,7 +1,0 @@
-*.dummy
-*.rlib
-*.so
-Makefile
-/doc
-/target
-/Cargo.lock

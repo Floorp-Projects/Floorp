@@ -113,6 +113,12 @@ fn expand_num_fields(ast: &syn::DeriveInput) -> quote::Tokens {
 }
 ```
 
+For a more elaborate example that involves trait bounds, enums, and different
+kinds of structs, check out [`DeepClone`] and [`deep-clone-derive`].
+
+[`DeepClone`]: https://github.com/asajeffrey/deep-clone
+[`deep-clone-derive`]: https://github.com/asajeffrey/deep-clone/blob/master/deep-clone-derive/lib.rs
+
 ## Testing
 
 Macros 1.1 has a restriction that your proc-macro crate must export nothing but

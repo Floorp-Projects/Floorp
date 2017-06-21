@@ -3,57 +3,42 @@ extern crate serde_derive;
 
 extern crate bincode;
 extern crate serde;
+extern crate serde_bytes;
 extern crate byteorder;
 
 use std::fmt::Debug;
 use std::collections::HashMap;
-use std::ops::Deref;
-
-use bincode::refbox::{RefBox, StrBox, SliceBox};
+use std::borrow::Cow;
 
 use bincode::{Infinite, Bounded};
 use bincode::{serialized_size, ErrorKind, Result};
-use bincode::endian_choice::{serialize, deserialize};
+use bincode::internal::{serialize, deserialize, deserialize_from};
 
 use bincode::serialize as serialize_little;
 use bincode::deserialize as deserialize_little;
 use bincode::deserialize_from as deserialize_from_little;
 
 fn the_same<V>(element: V)
-    where V: serde::Serialize+serde::Deserialize+PartialEq+Debug+'static
+    where V: serde::Serialize+serde::de::DeserializeOwned+PartialEq+Debug+'static
 {
-    // Make sure that the bahavior isize correct when wrapping with a RefBox.
-    fn ref_box_correct<V>(v: &V) -> bool
-        where V: serde::Serialize + serde::Deserialize + PartialEq + Debug + 'static
-    {
-        let rf = RefBox::new(v);
-        let encoded = serialize_little(&rf, Infinite).unwrap();
-        let decoded: RefBox<'static, V> = deserialize_little(&encoded[..]).unwrap();
-
-        decoded.take().deref() == v
-    }
-
     let size = serialized_size(&element);
+
     {
-        let encoded = serialize_little(&element, Infinite);
-        let encoded = encoded.unwrap();
-        let decoded = deserialize_little(&encoded[..]);
-        let decoded = decoded.unwrap();
+        let encoded = serialize_little(&element, Infinite).unwrap();
+        let decoded = deserialize_little(&encoded[..]).unwrap();
 
         assert_eq!(element, decoded);
         assert_eq!(size, encoded.len() as u64);
-        assert!(ref_box_correct(&element));
     }
 
     {
-        let encoded = serialize::<_, _, byteorder::BigEndian>(&element, Infinite);
-        let encoded = encoded.unwrap();
-        let decoded = deserialize::<_, byteorder::BigEndian>(&encoded[..]);
-        let decoded = decoded.unwrap();
+        let encoded = serialize::<_, _, byteorder::BigEndian>(&element, Infinite).unwrap();
+        let decoded = deserialize::<_, byteorder::BigEndian>(&encoded[..]).unwrap();
+        let decoded_reader = deserialize_from::<_, _, _, byteorder::BigEndian>(&mut &encoded[..], Infinite).unwrap();
 
         assert_eq!(element, decoded);
+        assert_eq!(element, decoded_reader);
         assert_eq!(size, encoded.len() as u64);
-        assert!(ref_box_correct(&element));
     }
 }
 
@@ -304,7 +289,7 @@ fn encode_box() {
 }
 
 #[test]
-fn test_refbox_serialize() {
+fn test_cow_serialize() {
     let large_object = vec![1u32,2,3,4,5,6];
     let mut large_map = HashMap::new();
     large_map.insert(1, 2);
@@ -312,28 +297,28 @@ fn test_refbox_serialize() {
 
     #[derive(Serialize, Deserialize, Debug)]
     enum Message<'a> {
-        M1(RefBox<'a, Vec<u32>>),
-        M2(RefBox<'a, HashMap<u32, u32>>)
+        M1(Cow<'a, Vec<u32>>),
+        M2(Cow<'a, HashMap<u32, u32>>)
     }
 
     // Test 1
     {
-        let serialized = serialize_little(&Message::M1(RefBox::new(&large_object)), Infinite).unwrap();
+        let serialized = serialize_little(&Message::M1(Cow::Borrowed(&large_object)), Infinite).unwrap();
         let deserialized: Message<'static> = deserialize_from_little(&mut &serialized[..], Infinite).unwrap();
 
         match deserialized {
-            Message::M1(b) => assert!(b.take().deref() == &large_object),
+            Message::M1(b) => assert!(&b.into_owned() == &large_object),
             _ => assert!(false)
         }
     }
 
     // Test 2
     {
-        let serialized = serialize_little(&Message::M2(RefBox::new(&large_map)), Infinite).unwrap();
+        let serialized = serialize_little(&Message::M2(Cow::Borrowed(&large_map)), Infinite).unwrap();
         let deserialized: Message<'static> = deserialize_from_little(&mut &serialized[..], Infinite).unwrap();
 
         match deserialized {
-            Message::M2(b) => assert!(b.take().deref() == &large_map),
+            Message::M2(b) => assert!(&b.into_owned() == &large_map),
             _ => assert!(false)
         }
     }
@@ -342,22 +327,23 @@ fn test_refbox_serialize() {
 #[test]
 fn test_strbox_serialize() {
     let strx: &'static str = "hello world";
-    let serialized = serialize_little(&StrBox::new(strx), Infinite).unwrap();
-    let deserialized: StrBox<'static> = deserialize_from_little(&mut &serialized[..], Infinite).unwrap();
-    let stringx: String = deserialized.take();
+    let serialized = serialize_little(&Cow::Borrowed(strx), Infinite).unwrap();
+    let deserialized: Cow<'static, String> = deserialize_from_little(&mut &serialized[..], Infinite).unwrap();
+    let stringx: String = deserialized.into_owned();
     assert!(strx == &stringx[..]);
 }
 
 #[test]
 fn test_slicebox_serialize() {
     let slice = [1u32, 2, 3 ,4, 5];
-    let serialized = serialize_little(&SliceBox::new(&slice), Infinite).unwrap();
-    let deserialized: SliceBox<'static, u32> = deserialize_from_little(&mut &serialized[..], Infinite).unwrap();
+    let serialized = serialize_little(&Cow::Borrowed(&slice[..]), Infinite).unwrap();
+    println!("{:?}", serialized);
+    let deserialized: Cow<'static, Vec<u32>> = deserialize_from_little(&mut &serialized[..], Infinite).unwrap();
     {
         let sb: &[u32] = &deserialized;
         assert!(slice == sb);
     }
-    let vecx: Vec<u32> = deserialized.take();
+    let vecx: Vec<u32> = deserialized.into_owned();
     assert!(slice == &vecx[..]);
 }
 
@@ -366,18 +352,18 @@ fn test_multi_strings_serialize() {
     assert!(serialize_little(&("foo", "bar", "baz"), Infinite).is_ok());
 }
 
-/*
 #[test]
 fn test_oom_protection() {
     use std::io::Cursor;
+    #[derive(Serialize, Deserialize, PartialEq, Debug)]
     struct FakeVec {
         len: u64,
         byte: u8
     }
-    let x = bincode::rustc_serialize::encode(&FakeVec { len: 0xffffffffffffffffu64, byte: 1 }, bincode::SizeLimit::Bounded(10)).unwrap();
-    let y : Result<Vec<u8>, _> = bincode::rustc_serialize::decode_from(&mut Cursor::new(&x[..]), bincode::SizeLimit::Bounded(10));
+    let x = serialize_little(&FakeVec { len: 0xffffffffffffffffu64, byte: 1 }, Bounded(10)).unwrap();
+    let y: Result<Vec<u8>> = deserialize_from_little(&mut Cursor::new(&x[..]), Bounded(10));
     assert!(y.is_err());
-}*/
+}
 
 #[test]
 fn path_buf() {
@@ -390,12 +376,18 @@ fn path_buf() {
 
 #[test]
 fn bytes() {
-    use serde::bytes::Bytes;
+    use serde_bytes::Bytes;
 
     let data = b"abc\0123";
-    let s = serialize_little(&data, Infinite).unwrap();
+    let s = serialize_little(&data[..], Infinite).unwrap();
     let s2 = serialize_little(&Bytes::new(data), Infinite).unwrap();
-    assert_eq!(s[..], s2[8..]);
+    assert_eq!(s[..], s2[..]);
+}
+
+#[test]
+fn serde_bytes() {
+    use serde_bytes::ByteBuf;
+    the_same(ByteBuf::from(vec![1,2,3,4,5]));
 }
 
 
@@ -405,4 +397,23 @@ fn endian_difference() {
     let little = serialize_little(&x, Infinite).unwrap();
     let big = serialize::<_, _, byteorder::BigEndian>(&x, Infinite).unwrap();
     assert_ne!(little, big);
+}
+
+#[test]
+fn test_zero_copy_parse() {
+    #[derive(Serialize, Deserialize, Eq, PartialEq, Debug)]
+    struct Foo<'a> {
+        borrowed_str: &'a str,
+        borrowed_bytes: &'a [u8],
+    }
+
+    let f = Foo {
+        borrowed_str: "hi",
+        borrowed_bytes: &[0, 1, 2, 3],
+    };
+    {
+        let encoded = serialize_little(&f, Infinite).unwrap();
+        let out: Foo = deserialize_little(&encoded[..]).unwrap();
+        assert_eq!(out, f);
+    }
 }

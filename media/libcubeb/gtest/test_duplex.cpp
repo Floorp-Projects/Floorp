@@ -17,13 +17,14 @@
 #include <memory>
 #include "cubeb/cubeb.h"
 #include "common.h"
+#include <atomic>
 
 #define SAMPLE_FREQUENCY 48000
 #define STREAM_FORMAT CUBEB_SAMPLE_FLOAT32LE
 
 struct user_state_duplex
 {
-  bool seen_audio;
+  std::atomic<int> seen_audio{ 0 };
 };
 
 long data_cb_duplex(cubeb_stream * stream, void * user, const void * inputbuffer, void * outputbuffer, long nframes)
@@ -31,7 +32,7 @@ long data_cb_duplex(cubeb_stream * stream, void * user, const void * inputbuffer
   user_state_duplex * u = reinterpret_cast<user_state_duplex*>(user);
   float *ib = (float *)inputbuffer;
   float *ob = (float *)outputbuffer;
-  bool seen_audio = true;
+  bool seen_audio = 1;
 
   if (stream == NULL || inputbuffer == NULL || outputbuffer == NULL) {
     return CUBEB_ERROR;
@@ -42,7 +43,7 @@ long data_cb_duplex(cubeb_stream * stream, void * user, const void * inputbuffer
   long output_index = 0;
   for (long i = 0; i < nframes; i++) {
     if (ib[i] <= -1.0 && ib[i] >= 1.0) {
-      seen_audio = false;
+      seen_audio = 0;
       break;
     }
     ob[output_index] = ob[output_index + 1] = ib[i];
@@ -80,7 +81,7 @@ TEST(cubeb, duplex)
   cubeb_stream_params input_params;
   cubeb_stream_params output_params;
   int r;
-  user_state_duplex stream_state = { false };
+  user_state_duplex stream_state;
   uint32_t latency_frames = 0;
 
   r = common_init(&ctx, "Cubeb duplex example");
@@ -120,5 +121,5 @@ TEST(cubeb, duplex)
   delay(500);
   cubeb_stream_stop(stream);
 
-  ASSERT_TRUE(stream_state.seen_audio);
+  ASSERT_TRUE(stream_state.seen_audio.load());
 }

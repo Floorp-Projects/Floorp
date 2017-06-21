@@ -53,23 +53,25 @@ add_task(function* test_asyncClose_does_not_complete_before_statements() {
  * async thread is not available and fall back to invoking Close() which will
  * notice the mDBConn is already gone.
  */
-add_task(function* test_double_asyncClose_throws() {
-  let db = yield openAsyncDatabase(getTestDB());
+if (!AppConstants.DEBUG) {
+  add_task(function* test_double_asyncClose_throws() {
+    let db = yield openAsyncDatabase(getTestDB());
 
-  // (Don't yield control flow yet, save the promise for after we make the
-  // second call.)
-  // Branch coverage: (asyncThread && mDBConn)
-  let realClosePromise = yield asyncClose(db);
-  try {
-    // Branch coverage: (!asyncThread && !mDBConn)
-    db.asyncClose();
-    ok(false, "should have thrown");
-  } catch (e) {
-    equal(e.result, Cr.NS_ERROR_NOT_INITIALIZED);
-  }
+    // (Don't yield control flow yet, save the promise for after we make the
+    // second call.)
+    // Branch coverage: (asyncThread && mDBConn)
+    let realClosePromise = yield asyncClose(db);
+    try {
+      // Branch coverage: (!asyncThread && !mDBConn)
+      db.asyncClose();
+      ok(false, "should have thrown");
+    } catch (e) {
+      equal(e.result, Cr.NS_ERROR_NOT_INITIALIZED);
+    }
 
-  yield realClosePromise;
-});
+    yield realClosePromise;
+  });
+}
 
 /**
  * Create a sync db connection and never take it asynchronous and then call

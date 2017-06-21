@@ -635,9 +635,9 @@ mod printing {
                     if qself.position > 0 {
                         tokens.append("as");
                         for (i, segment) in path.segments
-                            .iter()
-                            .take(qself.position)
-                            .enumerate() {
+                                .iter()
+                                .take(qself.position)
+                                .enumerate() {
                             if i > 0 || path.global {
                                 tokens.append("::");
                             }

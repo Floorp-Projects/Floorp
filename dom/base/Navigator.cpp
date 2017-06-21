@@ -61,6 +61,7 @@
 #include "nsIPermissionManager.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
+#include "nsRFPService.h"
 #include "nsStringStream.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIStringStream.h"
@@ -465,6 +466,13 @@ Navigator::GetOscpu(nsAString& aOSCPU, CallerType aCallerType,
                     ErrorResult& aRv) const
 {
   if (aCallerType != CallerType::System) {
+    // If fingerprinting resistance is on, we will spoof this value. See nsRFPService.h
+    // for details about spoofed values.
+    if (nsContentUtils::ShouldResistFingerprinting()) {
+      aOSCPU.AssignLiteral(SPOOFED_OSCPU);
+      return;
+    }
+
     const nsAdoptingString& override =
       Preferences::GetString("general.oscpu.override");
 
@@ -517,7 +525,7 @@ NS_IMETHODIMP
 Navigator::GetProductSub(nsAString& aProductSub)
 {
   // Legacy build ID hardcoded for backward compatibility (bug 776376)
-  aProductSub.AssignLiteral("20100101");
+  aProductSub.AssignLiteral(LEGACY_BUILD_ID);
   return NS_OK;
 }
 
@@ -639,6 +647,12 @@ Navigator::GetBuildID(nsAString& aBuildID, CallerType aCallerType,
                       ErrorResult& aRv) const
 {
   if (aCallerType != CallerType::System) {
+    // If fingerprinting resistance is on, we will spoof this value. See nsRFPService.h
+    // for details about spoofed values.
+    if (nsContentUtils::ShouldResistFingerprinting()) {
+      aBuildID.AssignLiteral(LEGACY_BUILD_ID);
+      return;
+    }
     const nsAdoptingString& override =
       Preferences::GetString("general.buildID.override");
 
@@ -1769,6 +1783,12 @@ Navigator::GetPlatform(nsAString& aPlatform, bool aUsePrefOverriddenValue)
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aUsePrefOverriddenValue) {
+    // If fingerprinting resistance is on, we will spoof this value. See nsRFPService.h
+    // for details about spoofed values.
+    if (nsContentUtils::ShouldResistFingerprinting()) {
+      aPlatform.AssignLiteral(SPOOFED_PLATFORM);
+      return NS_OK;
+    }
     const nsAdoptingString& override =
       mozilla::Preferences::GetString("general.platform.override");
 
@@ -1814,6 +1834,12 @@ Navigator::GetAppVersion(nsAString& aAppVersion, bool aUsePrefOverriddenValue)
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aUsePrefOverriddenValue) {
+    // If fingerprinting resistance is on, we will spoof this value. See nsRFPService.h
+    // for details about spoofed values.
+    if (nsContentUtils::ShouldResistFingerprinting()) {
+      aAppVersion.AssignLiteral(SPOOFED_APPVERSION);
+      return NS_OK;
+    }
     const nsAdoptingString& override =
       mozilla::Preferences::GetString("general.appversion.override");
 
@@ -1851,6 +1877,13 @@ Navigator::AppName(nsAString& aAppName, bool aUsePrefOverriddenValue)
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aUsePrefOverriddenValue) {
+    // If fingerprinting resistance is on, we will spoof this value. See nsRFPService.h
+    // for details about spoofed values.
+    if (nsContentUtils::ShouldResistFingerprinting()) {
+      aAppName.AssignLiteral(SPOOFED_APPNAME);
+      return;
+    }
+
     const nsAdoptingString& override =
       mozilla::Preferences::GetString("general.appname.override");
 
@@ -1876,7 +1909,10 @@ Navigator::GetUserAgent(nsPIDOMWindowInner* aWindow,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!aIsCallerChrome) {
+  // We will skip the override and pass to httpHandler to get spoofed userAgent
+  // when 'privacy.resistFingerprinting' is true.
+  if (!aIsCallerChrome &&
+      !nsContentUtils::ShouldResistFingerprinting()) {
     const nsAdoptingString& override =
       mozilla::Preferences::GetString("general.useragent.override");
 
@@ -1901,7 +1937,11 @@ Navigator::GetUserAgent(nsPIDOMWindowInner* aWindow,
 
   CopyASCIItoUTF16(ua, aUserAgent);
 
-  if (!aWindow) {
+  // When the caller is content, we will always return spoofed userAgent and
+  // ignore the User-Agent header from the document channel when
+  // 'privacy.resistFingerprinting' is true.
+  if (!aWindow ||
+      (nsContentUtils::ShouldResistFingerprinting() && !aIsCallerChrome)) {
     return NS_OK;
   }
 

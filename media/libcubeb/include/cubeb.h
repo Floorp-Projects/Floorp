@@ -405,7 +405,7 @@ typedef void (* cubeb_device_changed_callback)(void * user_ptr);
 /**
  * User supplied callback called when the underlying device collection changed.
  * @param context A pointer to the cubeb context.
- * @param user_ptr The pointer passed to cubeb_stream_init. */
+ * @param user_ptr The pointer passed to cubeb_register_device_collection_changed. */
 typedef void (* cubeb_device_collection_changed_callback)(cubeb * context,
                                                           void * user_ptr);
 

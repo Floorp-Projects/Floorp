@@ -11,25 +11,27 @@ pub type CGKeyCode = libc::uint16_t;
 /// Flags for events
 ///
 /// [Ref](http://opensource.apple.com/source/IOHIDFamily/IOHIDFamily-700/IOHIDSystem/IOKit/hidsystem/IOLLEvent.h)
-#[repr(C)]
-#[derive(Clone, Copy, Debug)]
-pub enum CGEventFlags {
-  // Device-independent modifier key bits.
-  AlphaShift = 0x00010000,
-  Shift = 0x00020000,
-  Control = 0x00040000,
-  Alternate = 0x00080000,
-  Command = 0x00100000,
+bitflags! {
+    pub flags CGEventFlags: u64 {
+        const CGEventFlagNull = 0,
 
-  // Special key identifiers.
-  Help = 0x00400000,
-  SecondaryFn = 0x00800000,
+        // Device-independent modifier key bits.
+        const CGEventFlagAlphaShift = 0x00010000,
+        const CGEventFlagShift = 0x00020000,
+        const CGEventFlagControl = 0x00040000,
+        const CGEventFlagAlternate = 0x00080000,
+        const CGEventFlagCommand = 0x00100000,
 
-  // Identifies key events from numeric keypad area on extended keyboards.
-  NumericPad = 0x00200000,
+        // Special key identifiers.
+        const CGEventFlagHelp = 0x00400000,
+        const CGEventFlagSecondaryFn = 0x00800000,
 
-  // Indicates if mouse/pen movement events are not being coalesced
-  NonCoalesced = 0x00000100,
+        // Identifies key events from numeric keypad area on extended keyboards.
+        const CGEventFlagNumericPad = 0x00200000,
+
+        // Indicates if mouse/pen movement events are not being coalesced
+        const CGEventFlagNonCoalesced = 0x00000100,
+    }
 }
 
 /// Constants that specify the different types of input events.
@@ -38,29 +40,29 @@ pub enum CGEventFlags {
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub enum CGEventType {
-    Null = 1 << 0,
+    Null = 0,
 
     // Mouse events.
-    LeftMouseDown = 1 << 1,
-    LeftMouseUp = 1 << 2,
-    RightMouseDown = 1 << 3,
-    RightMouseUp = 1 << 4,
-    MouseMoved = 1 << 5,
-    LeftMouseDragged = 1 << 6,
-    RightMouseDragged = 1 << 7,
+    LeftMouseDown = 1,
+    LeftMouseUp = 2,
+    RightMouseDown = 3,
+    RightMouseUp = 4,
+    MouseMoved = 5,
+    LeftMouseDragged = 6,
+    RightMouseDragged = 7,
 
     // Keyboard events.
-    KeyDown = 1 << 10,
-    KeyUp = 1 << 11,
-    FlagsChanged = 1 << 12,
+    KeyDown = 10,
+    KeyUp = 11,
+    FlagsChanged = 12,
 
     // Specialized control devices.
-    ScrollWheel = 1 << 22,
-    TabletPointer = 1 << 23,
-    TabletProximity = 1 << 24,
-    OtherMouseDown = 1 << 25,
-    OtherMouseUp = 1 << 26,
-    OtherMouseDragged = 1 << 27,
+    ScrollWheel = 22,
+    TabletPointer = 23,
+    TabletProximity = 24,
+    OtherMouseDown = 25,
+    OtherMouseUp = 26,
+    OtherMouseDragged = 27,
 
     // Out of band event types. These are delivered to the event tap callback
     // to notify it of unusual conditions that disable the event tap.
@@ -222,6 +224,30 @@ impl CGEvent {
             CGEventGetFlags(self.as_concrete_TypeRef())
         }
     }
+
+    pub fn set_type(&self, event_type: CGEventType) {
+        unsafe {
+            CGEventSetType(self.as_concrete_TypeRef(), event_type);
+        }
+    }
+
+    pub fn get_type(&self) -> CGEventType {
+        unsafe {
+            CGEventGetType(self.as_concrete_TypeRef())
+        }
+    }
+
+    pub fn set_string_from_utf16_unchecked(&self, buf: &[u16]) {
+        let buflen = buf.len() as libc::c_ulong;
+        unsafe {
+            CGEventKeyboardSetUnicodeString(self.as_concrete_TypeRef(), buflen, buf.as_ptr());
+        }
+    }
+
+    pub fn set_string(&self, string: &str) {
+        let buf: Vec<u16> = string.encode_utf16().collect();
+        self.set_string_from_utf16_unchecked(&buf);
+    }
 }
 
 #[link(name = "ApplicationServices", kind = "framework")]
@@ -282,4 +308,22 @@ extern {
     /// Return the location of an event in global display coordinates.
     /// CGPointZero is returned if event is not a valid CGEventRef.
     fn CGEventGetLocation(event: CGEventRef) -> CGPoint;
+
+    /// Set the event type of an event.
+    fn CGEventSetType(event: CGEventRef, eventType: CGEventType);
+
+    /// Return the event type of an event (left mouse down, for example).
+    fn CGEventGetType(event: CGEventRef) -> CGEventType;
+
+    /// Set the Unicode string associated with a keyboard event.
+    ///
+    /// By default, the system translates the virtual key code in a keyboard
+    /// event into a Unicode string based on the keyboard ID in the event
+    /// source.  This function allows you to manually override this string.
+    /// Note that application frameworks may ignore the Unicode string in a
+    /// keyboard event and do their own translation based on the virtual
+    /// keycode and perceived event state.
+    fn CGEventKeyboardSetUnicodeString(event: CGEventRef, 
+                                       length: libc::c_ulong,
+                                       string: *const u16);
 }

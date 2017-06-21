@@ -1383,8 +1383,9 @@ pub extern "C" fn wr_dp_push_clip(state: &mut WrState,
     state.frame_builder.dl_builder.push_clip_id(clip_id);
     // return the u64 id value from inside the ClipId::Clip(..)
     match clip_id {
-        ClipId::Clip(id, pipeline_id) => {
+        ClipId::Clip(id, nesting_index, pipeline_id) => {
             assert!(pipeline_id == state.pipeline_id);
+            assert!(nesting_index == 0);
             id
         },
         _ => panic!("Got unexpected clip id type"),
@@ -1447,7 +1448,7 @@ pub extern "C" fn wr_dp_push_clip_and_scroll_info(state: &mut WrState,
     let info = if let Some(&id) = unsafe { clip_id.as_ref() } {
         ClipAndScrollInfo::new(
             scroll_id,
-            ClipId::Clip(id, state.pipeline_id))
+            ClipId::Clip(id, 0, state.pipeline_id))
     } else {
         ClipAndScrollInfo::simple(scroll_id)
     };
@@ -1809,7 +1810,7 @@ pub unsafe extern "C" fn wr_dp_push_built_display_list(state: &mut WrState,
 
     let dl = BuiltDisplayList::from_data(dl_vec, dl_descriptor);
 
-    state.frame_builder.dl_builder.push_built_display_list(dl);
+    state.frame_builder.dl_builder.push_nested_display_list(&dl);
 }
 
 // TODO: nical

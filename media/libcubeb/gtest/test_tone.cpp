@@ -17,13 +17,14 @@
 #include <limits.h>
 #include "cubeb/cubeb.h"
 #include "common.h"
+#include <atomic>
 
 #define SAMPLE_FREQUENCY 48000
 #define STREAM_FORMAT CUBEB_SAMPLE_S16LE
 
 /* store the phase of the generated waveform */
 struct cb_user_data {
-  long position;
+  std::atomic<long> position;
 };
 
 long data_cb_tone(cubeb_stream *stream, void *user, const void* /*inputbuffer*/, void *outputbuffer, long nframes)
@@ -111,5 +112,5 @@ TEST(cubeb, tone)
   delay(500);
   cubeb_stream_stop(stream);
 
-  ASSERT_TRUE(user_data->position);
+  ASSERT_TRUE(user_data->position.load());
 }

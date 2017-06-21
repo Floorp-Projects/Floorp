@@ -4,7 +4,6 @@
 
 use app_units::Au;
 use device::TextureFilter;
-use euclid::{TypedPoint2D, UnknownUnit};
 use fnv::FnvHasher;
 use profiler::BackendProfileCounters;
 use std::collections::{HashMap, HashSet};
@@ -16,7 +15,7 @@ use std::sync::Arc;
 use tiling;
 use renderer::BlendMode;
 use webrender_traits::{ClipId, ColorF, DeviceUintRect, Epoch, ExternalImageData, ExternalImageId};
-use webrender_traits::{ImageData, ImageFormat, NativeFontHandle, PipelineId};
+use webrender_traits::{DevicePoint, ImageData, ImageFormat, PipelineId};
 
 // An ID for a texture that is owned by the
 // texture cache module. This can include atlases
@@ -64,7 +63,6 @@ pub enum TextureSampler {
     ResourceCache,
     Layers,
     RenderTasks,
-    ResourceRects,
     Dither,
 }
 
@@ -129,6 +127,7 @@ pub enum ClipAttribute {
     LayerIndex,
     DataIndex,
     SegmentIndex,
+    ResourceAddress,
 }
 
 // A packed RGBA8 color ordered for vertex data or similar.
@@ -303,11 +302,9 @@ pub enum AxisDirection {
 pub struct StackingContextIndex(pub usize);
 
 #[derive(Clone, Copy, Debug)]
-pub struct RectUv<T, U = UnknownUnit> {
-    pub top_left: TypedPoint2D<T, U>,
-    pub top_right: TypedPoint2D<T, U>,
-    pub bottom_left: TypedPoint2D<T, U>,
-    pub bottom_right: TypedPoint2D<T, U>,
+pub struct UvRect {
+    pub uv0: DevicePoint,
+    pub uv1: DevicePoint,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

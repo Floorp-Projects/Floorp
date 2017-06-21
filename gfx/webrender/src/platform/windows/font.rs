@@ -29,6 +29,8 @@ pub struct FontContext {
 unsafe impl Send for FontContext {}
 
 pub struct RasterizedGlyph {
+    pub top: f32,
+    pub left: f32,
     pub width: u32,
     pub height: u32,
     pub bytes: Vec<u8>,
@@ -309,6 +311,8 @@ impl FontContext {
         let rgba_pixels = self.convert_to_rgba(&mut pixels, render_mode);
 
         Some(RasterizedGlyph {
+            left: bounds.left as f32,
+            top: -bounds.top as f32,
             width: width as u32,
             height: height as u32,
             bytes: rgba_pixels,

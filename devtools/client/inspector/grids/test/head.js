@@ -16,11 +16,9 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/test/shared-redux-head.js",
   this);
 
-Services.prefs.setBoolPref("devtools.layoutview.enabled", true);
 Services.prefs.setBoolPref("devtools.promote.layoutview.showPromoteBar", false);
 Services.prefs.setIntPref("devtools.toolbox.footer.height", 350);
 registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("devtools.layoutview.enabled");
   Services.prefs.clearUserPref("devtools.promote.layoutview.showPromoteBar");
   Services.prefs.clearUserPref("devtools.toolbox.footer.height");
 });
