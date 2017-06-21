@@ -3,10 +3,10 @@ namespace mozilla {
 namespace _ipdltest {
 
 // This is supposed to be analagous to PPaintingBridge.
-protocol PTestPaintThread
+sync protocol PTestPaintThread
 {
 parent:
-  async FinishedPaint(uint64_t aTxnId);
+  sync FinishedPaint(uint64_t aTxnId);
 };
 
 } // namespace mozilla
