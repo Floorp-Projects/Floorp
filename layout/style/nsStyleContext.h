@@ -419,35 +419,6 @@ protected:
     }
   }
 
-#ifdef DEBUG
-  struct AutoCheckDependency {
-
-    nsStyleContext* mStyleContext;
-    nsStyleStructID mOuterSID;
-
-    AutoCheckDependency(nsStyleContext* aContext, nsStyleStructID aInnerSID)
-      : mStyleContext(aContext)
-    {
-      mOuterSID = aContext->mComputingStruct;
-      MOZ_ASSERT(mOuterSID == nsStyleStructID_None ||
-                 DependencyAllowed(mOuterSID, aInnerSID),
-                 "Undeclared dependency, see generate-stylestructlist.py");
-      aContext->mComputingStruct = aInnerSID;
-    }
-
-    ~AutoCheckDependency()
-    {
-      mStyleContext->mComputingStruct = mOuterSID;
-    }
-
-  };
-
-#define AUTO_CHECK_DEPENDENCY(sid_) \
-  AutoCheckDependency checkNesting_(this, sid_)
-#else
-#define AUTO_CHECK_DEPENDENCY(sid_)
-#endif
-
   // Helper functions for GetStyle* and PeekStyle*
   #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)                  \
     template<bool aComputeData>                                         \
@@ -484,8 +455,6 @@ protected:
 #ifdef DEBUG
   uint32_t                mFrameRefCnt; // number of frames that use this
                                         // as their style context
-
-  nsStyleStructID         mComputingStruct;
 
   static bool DependencyAllowed(nsStyleStructID aOuterSID,
                                 nsStyleStructID aInnerSID)
