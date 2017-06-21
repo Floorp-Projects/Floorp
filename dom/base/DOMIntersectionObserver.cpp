@@ -268,17 +268,21 @@ DOMIntersectionObserver::Update(nsIDocument* aDocument, DOMHighResTimeStamp time
     root = mRoot;
     rootFrame = root->GetPrimaryFrame();
     if (rootFrame) {
+      nsRect rootRectRelativeToRootFrame;
       if (rootFrame->IsScrollFrame()) {
+        // rootRectRelativeToRootFrame should be the content rect of rootFrame, not including the scrollbars.
         nsIScrollableFrame* scrollFrame = do_QueryFrame(rootFrame);
-        rootRect = nsLayoutUtils::TransformFrameRectToAncestor(
-          rootFrame,
-          rootFrame->GetContentRectRelativeToSelf(),
-          scrollFrame->GetScrolledFrame());
+        rootRectRelativeToRootFrame = scrollFrame->GetScrollPortRect();
       } else {
-        rootRect = nsLayoutUtils::GetAllInFlowRectsUnion(rootFrame,
-          nsLayoutUtils::GetContainingBlockForClientRect(rootFrame),
-          nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
+        // rootRectRelativeToRootFrame should be the border rect of rootFrame.
+        rootRectRelativeToRootFrame = rootFrame->GetRectRelativeToSelf();
       }
+      nsIFrame* containingBlock =
+        nsLayoutUtils::GetContainingBlockForClientRect(rootFrame);
+      rootRect =
+        nsLayoutUtils::TransformFrameRectToAncestor(rootFrame,
+                                                    rootRectRelativeToRootFrame,
+                                                    containingBlock);
     }
   } else {
     nsCOMPtr<nsIPresShell> presShell = aDocument->GetShell();
