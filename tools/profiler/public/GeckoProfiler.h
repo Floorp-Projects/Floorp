@@ -455,10 +455,6 @@ void profiler_add_marker(const char* aMarkerName,
 # define PROFILER_DEFAULT_ENTRIES 100000
 #endif
 
-// In the case of profiler_get_backtrace we know that we only need enough space
-// for a single backtrace.
-#define PROFILER_GET_BACKTRACE_ENTRIES 1000
-
 #define PROFILER_DEFAULT_INTERVAL 1
 
 namespace mozilla {
