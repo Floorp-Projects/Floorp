@@ -97,9 +97,13 @@ public final class CodecProxy {
                 mCallbacks.onOutput(sample);
             } else {
                 // Non-surface output needs no rendering.
-                mCallbacks.onOutput(sample);
-                mRemote.releaseOutput(sample, false);
-                sample.dispose();
+                try {
+                    mCallbacks.onOutput(sample);
+                    mRemote.releaseOutput(sample, false);
+                    sample.dispose();
+                } catch (Exception e) {
+                    reportError(true);
+                }
             }
         }
 
@@ -209,12 +213,12 @@ public final class CodecProxy {
             return sendInput(mRemote.dequeueInput(info.size).set(bytes, info, cryptoInfo));
         } catch (RemoteException | NullPointerException e) {
             Log.e(LOGTAG, "fail to dequeue input buffer", e);
-            return false;
         } catch (IOException e) {
             Log.e(LOGTAG, "fail to copy input data.", e);
             // Balance dequeue/queue.
-            return sendInput(null);
+            sendInput(null);
         }
+        return false;
     }
 
     private boolean sendInput(Sample sample) {
