@@ -54,9 +54,15 @@ Message::Message()
   InitLoggingVariables();
 }
 
-Message::Message(int32_t routing_id, msgid_t type, NestedLevel nestedLevel, PriorityValue priority,
-                 MessageCompression compression, const char* const aName, bool recordWriteLatency)
-    : Pickle(MSG_HEADER_SZ) {
+Message::Message(int32_t routing_id,
+                 msgid_t type,
+                 uint32_t segment_capacity,
+                 NestedLevel nestedLevel,
+                 PriorityValue priority,
+                 MessageCompression compression,
+                 const char* const aName,
+                 bool recordWriteLatency)
+    : Pickle(MSG_HEADER_SZ, segment_capacity) {
   MOZ_COUNT_CTOR(IPC::Message);
   header()->routing = routing_id;
   header()->type = type;
