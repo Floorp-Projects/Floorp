@@ -36,7 +36,6 @@ class FreeBSDBootstrapper(BaseBootstrapper):
             'gconf2',
             'gtk2',
             'gtk3',
-            'libGL',
             'pulseaudio',
             'v4l_compat',
             'yasm',
