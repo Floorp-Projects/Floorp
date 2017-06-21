@@ -705,11 +705,31 @@ def bindgen_config_paths(stylo_config, bindgen_enabled,
 
         check_minimum_llvm_config_version(llvm_config)
         libclang_arg = '--bindir' if host.os == 'WINNT' else '--libdir'
+        libclang_path = invoke_llvm_config(llvm_config, libclang_arg)
         clang_path = os.path.join(invoke_llvm_config(llvm_config, '--bindir'),
                                   'clang')
+        libclang_path = normsep(libclang_path)
+        clang_path = normsep(clang_path)
+
+        # Debian-based distros, at least, can have llvm-config installed
+        # but not have other packages installed.  Since the user is trying
+        # to use their system packages, we can't be more specific about what
+        # they need.
+        if not os.path.exists(libclang_path)
+            die(dedent('''\
+            The directory {} returned by `llvm-config {}` does not exist.
+            Please check your system configuration.
+            '''.format(libclang_path, libclang_arg)))
+
+        if not os.path.exists(clang_path):
+            die(dedent('''\
+            The file {} returned by `llvm-config {}` does not exist.
+            Please check your system configuration.
+            '''.format(clang_path, '--bindir')))
+
         return namespace(
-            libclang_path=normsep(invoke_llvm_config(llvm_config, libclang_arg)),
-            clang_path=normsep(clang_path),
+            libclang_path=libclang_path,
+            clang_path=clang_path,
         )
 
     if (not libclang_path and clang_path) or \
