@@ -424,7 +424,7 @@ public:
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSINAMED
 
-  Runnable() = delete;
+  Runnable() {}
 
 #ifdef RELEASE_OR_BETA
   explicit Runnable(const char* aName) {}
@@ -454,7 +454,7 @@ public:
   // nsICancelableRunnable
   virtual nsresult Cancel() override;
 
-  CancelableRunnable() = delete;
+  CancelableRunnable() {}
   explicit CancelableRunnable(const char* aName) : Runnable(aName) {}
 
 protected:
