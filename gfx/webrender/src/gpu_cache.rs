@@ -25,6 +25,7 @@
 //! for this frame.
 
 use device::FrameId;
+use internal_types::UvRect;
 use profiler::GpuCacheProfileCounters;
 use renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use std::{mem, u32};
@@ -79,6 +80,17 @@ impl Into<GpuBlockData> for LayerRect {
                     self.origin.y,
                     self.size.width,
                     self.size.height ],
+        }
+    }
+}
+
+impl Into<GpuBlockData> for UvRect {
+    fn into(self) -> GpuBlockData {
+        GpuBlockData {
+            data: [ self.uv0.x,
+                    self.uv0.y,
+                    self.uv1.x,
+                    self.uv1.y ],
         }
     }
 }
@@ -285,7 +297,7 @@ impl Texture {
     // where the data was pushed into the texture ```pending_blocks``` array.
     // Return the allocated address for this data.
     fn push_data(&mut self,
-                 pending_block_index: usize,
+                 pending_block_index: Option<usize>,
                  block_count: usize,
                  frame_id: FrameId) -> CacheLocation {
         // Find the appropriate free list to use based on the block size.
@@ -331,13 +343,15 @@ impl Texture {
         self.occupied_list_head = Some(free_block_index);
         self.allocated_block_count += alloc_size;
 
-        // Add this update to the pending list of blocks that need
-        // to be updated on the GPU.
-        self.updates.push(GpuCacheUpdate::Copy {
-            block_index: pending_block_index,
-            block_count: block_count,
-            address: block.address,
-        });
+        if let Some(pending_block_index) = pending_block_index {
+            // Add this update to the pending list of blocks that need
+            // to be updated on the GPU.
+            self.updates.push(GpuCacheUpdate::Copy {
+                block_index: pending_block_index,
+                block_count: block_count,
+                address: block.address,
+            });
+        }
 
         CacheLocation {
             block_index: free_block_index,
@@ -430,7 +444,7 @@ impl<'a> Drop for GpuDataRequest<'a> {
     fn drop(&mut self) {
         // Push the data to the texture pending updates list.
         let block_count = self.texture.pending_blocks.len() - self.start_index;
-        let location = self.texture.push_data(self.start_index,
+        let location = self.texture.push_data(Some(self.start_index),
                                               block_count,
                                               self.frame_id);
         self.handle.location = Some(location);
@@ -501,8 +515,20 @@ impl GpuCache {
     pub fn push_per_frame_blocks(&mut self, blocks: &[GpuBlockData]) -> GpuCacheHandle {
         let start_index = self.texture.pending_blocks.len();
         self.texture.pending_blocks.extend_from_slice(blocks);
-        let location = self.texture.push_data(start_index,
+        let location = self.texture.push_data(Some(start_index),
                                               blocks.len(),
+                                              self.frame_id);
+        GpuCacheHandle {
+            location: Some(location),
+        }
+    }
+
+    // Reserve space in the cache for per-frame blocks that
+    // will be resolved by the render thread via the
+    // external image callback.
+    pub fn push_deferred_per_frame_blocks(&mut self, block_count: usize) -> GpuCacheHandle {
+        let location = self.texture.push_data(None,
+                                              block_count,
                                               self.frame_id);
         GpuCacheHandle {
             location: Some(location),

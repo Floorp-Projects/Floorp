@@ -54,8 +54,6 @@ pub struct BuiltDisplayList {
 #[repr(C)]
 #[derive(Copy, Clone, Default, Deserialize, Serialize)]
 pub struct BuiltDisplayListDescriptor {
-    /// The size in bytes of the display list items in this display list.
-    display_list_items_size: usize,
     /// The first IPC time stamp: before any work has been done
     builder_start_time: u64,
     /// The second IPC time stamp: after serialization
@@ -92,9 +90,6 @@ pub struct AuxIter<'a, T> {
 }
 
 impl BuiltDisplayListDescriptor {
-    pub fn size(&self) -> usize {
-        self.display_list_items_size
-    }
 }
 
 impl BuiltDisplayList {
@@ -125,7 +120,7 @@ impl BuiltDisplayList {
         BuiltDisplayListIter::new(self)
     }
 
-    pub fn get<T: Deserialize>(&self, range: ItemRange<T>) -> AuxIter<T> {
+    pub fn get<'de, T: Deserialize<'de>>(&self, range: ItemRange<T>) -> AuxIter<T> {
         AuxIter::new(&self.data[range.start .. range.start + range.length])
     }
 }
@@ -212,7 +207,7 @@ impl<'a> BuiltDisplayListIter<'a> {
 
     /// Returns the byte-range the slice occupied, and the number of elements
     /// in the slice.
-    fn skip_slice<T: Deserialize>(&mut self) -> (ItemRange<T>, usize) {
+    fn skip_slice<T: for<'de> Deserialize<'de>>(&mut self) -> (ItemRange<T>, usize) {
         let base = self.list.data.as_ptr() as usize;
         let start = self.data.as_ptr() as usize;
 
@@ -333,7 +328,7 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
     }
 }
 
-impl<'a, T: Deserialize> AuxIter<'a, T> {
+impl<'de, 'a, T: Deserialize<'de>> AuxIter<'a, T> {
     pub fn new(mut data: &'a [u8]) -> Self {
 
         let size: usize = if data.len() == 0 {
@@ -351,7 +346,7 @@ impl<'a, T: Deserialize> AuxIter<'a, T> {
     }
 }
 
-impl<'a, T: Deserialize> Iterator for AuxIter<'a, T> {
+impl<'a, T: for<'de> Deserialize<'de>> Iterator for AuxIter<'a, T> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
@@ -369,7 +364,7 @@ impl<'a, T: Deserialize> Iterator for AuxIter<'a, T> {
     }
 }
 
-impl<'a, T: Deserialize> ::std::iter::ExactSizeIterator for AuxIter<'a, T> { }
+impl<'a, T: for<'de> Deserialize<'de>> ::std::iter::ExactSizeIterator for AuxIter<'a, T> { }
 
 
 // This is purely for the JSON writer in wrench
@@ -435,13 +430,19 @@ pub struct DisplayListBuilder {
 
 impl DisplayListBuilder {
     pub fn new(pipeline_id: PipelineId, content_size: LayoutSize) -> DisplayListBuilder {
+        Self::with_capacity(pipeline_id, content_size, 0)
+    }
+
+    pub fn with_capacity(pipeline_id: PipelineId,
+                         content_size: LayoutSize,
+                         capacity: usize) -> DisplayListBuilder {
         let start_time = precise_time_ns();
 
         // We start at 1 here, because the root scroll id is always 0.
         const FIRST_CLIP_ID : u64 = 1;
 
         DisplayListBuilder {
-            data: Vec::with_capacity(1024 * 1024),
+            data: Vec::with_capacity(capacity),
             pipeline_id: pipeline_id,
             clip_stack: vec![ClipAndScrollInfo::simple(ClipId::root_scroll_node(pipeline_id))],
             next_clip_id: FIRST_CLIP_ID,
@@ -496,10 +497,6 @@ impl DisplayListBuilder {
         }
 
         debug_assert_eq!(len, count);
-    }
-
-    fn push_range<T>(&mut self, range: ItemRange<T>, src: &BuiltDisplayList) {
-        self.data.extend_from_slice(&src.data[range.start..range.start+range.length]);
     }
 
     pub fn push_rect(&mut self,
@@ -865,7 +862,7 @@ impl DisplayListBuilder {
             Some(id) => id,
             None => {
                 self.next_clip_id += 1;
-                ClipId::Clip(self.next_clip_id - 1, self.pipeline_id)
+                ClipId::Clip(self.next_clip_id - 1, 0, self.pipeline_id)
             }
         };
 
@@ -909,42 +906,19 @@ impl DisplayListBuilder {
     }
 
     // Don't use this function. It will go away.
-    // We're using it as a hack in Gecko to retain parts sub-parts of display lists so that
-    // we can regenerate them without building Gecko display items.
-    pub fn push_built_display_list(&mut self, dl: BuiltDisplayList) {
-        // NOTE: Iframe and Clips aren't supported.
+    //
+    // We're using this method as a hack in Gecko to retain parts sub-parts of display
+    // lists so that we can regenerate them without building Gecko display items. WebRender
+    // will replace references to the root scroll frame id with the current scroll frame
+    // id.
+    pub fn push_nested_display_list(&mut self, built_display_list: &BuiltDisplayList) {
+        self.push_clip_region(&LayoutRect::zero(), vec![], None);
+        self.push_new_empty_item(SpecificDisplayItem::PushNestedDisplayList);
 
-        // FIXME: what `iter` here is doing an expensive deserialization
-        // because we need to update clip_and_scroll info! If we didn't need to
-        // update that, this function could just be memcopy!
+        self.data.extend_from_slice(&built_display_list.data);
 
-        // This implementation is basically BuiltDisplayListIter::next in reverse.
-
-        let mut iter = dl.iter();
-        while let Some(item) = iter.next() {
-            // First handle explicit prefix dummy items
-            let clip_region = item.clip_region();
-            if *clip_region != ClipRegion::empty() {
-                self.push_new_empty_item(SpecificDisplayItem::SetClipRegion(*clip_region));
-                self.push_range(clip_region.complex_clips, &dl);
-            }
-
-            let stops = item.gradient_stops();
-            if stops != ItemRange::default() {
-                self.push_new_empty_item(SpecificDisplayItem::SetGradientStops);
-                self.push_range(stops, &dl);
-            }
-
-            // Then reinsert the actual item, updating its clip_and_scroll
-            self.push_item(*item.item(), item.rect());
-
-            // Then handle implicit suffix items
-            match *item.item() {
-                SpecificDisplayItem::Text(_)                => self.push_range(item.glyphs(), &dl),
-                SpecificDisplayItem::PushStackingContext(_) => self.push_range(item.filters(), &dl),
-                _ => { /* do nothing */ }
-            }
-        }
+        self.push_clip_region(&LayoutRect::zero(), vec![], None);
+        self.push_new_empty_item(SpecificDisplayItem::PopNestedDisplayList);
     }
 
     pub fn push_clip_region<I>(&mut self,
@@ -970,7 +944,6 @@ impl DisplayListBuilder {
          self.content_size,
          BuiltDisplayList {
             descriptor: BuiltDisplayListDescriptor {
-                display_list_items_size: self.data.len(),
                 builder_start_time: self.builder_start_time,
                 builder_finish_time: end_time,
             },

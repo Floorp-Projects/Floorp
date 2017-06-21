@@ -291,8 +291,8 @@ pub mod parsing {
                     }
                     chars.next();
                     if chars.peek()
-                        .map(|&ch| ch == '.' || UnicodeXID::is_xid_start(ch))
-                        .unwrap_or(false) {
+                           .map(|&ch| ch == '.' || UnicodeXID::is_xid_start(ch))
+                           .unwrap_or(false) {
                         return IResult::Error;
                     }
                     len += 1;
@@ -413,8 +413,8 @@ mod printing {
                 Lit::Str(ref s, StrStyle::Cooked) => s.to_tokens(tokens),
                 Lit::Str(ref s, StrStyle::Raw(n)) => {
                     tokens.append(&format!("r{delim}\"{string}\"{delim}",
-                        delim = iter::repeat("#").take(n).collect::<String>(),
-                        string = s));
+                                           delim = iter::repeat("#").take(n).collect::<String>(),
+                                           string = s));
                 }
                 Lit::ByteStr(ref v, StrStyle::Cooked) => {
                     let mut escaped = "b\"".to_string();
@@ -430,8 +430,8 @@ mod printing {
                 }
                 Lit::ByteStr(ref vec, StrStyle::Raw(n)) => {
                     tokens.append(&format!("br{delim}\"{string}\"{delim}",
-                        delim = iter::repeat("#").take(n).collect::<String>(),
-                        string = str::from_utf8(vec).unwrap()));
+                                           delim = iter::repeat("#").take(n).collect::<String>(),
+                                           string = str::from_utf8(vec).unwrap()));
                 }
                 Lit::Byte(b) => {
                     match b {

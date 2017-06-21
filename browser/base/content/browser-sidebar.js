@@ -68,7 +68,6 @@ var SidebarUI = {
     enumerator.getNext();
     if (!enumerator.hasMoreElements()) {
       document.persist("sidebar-box", "sidebarcommand");
-      document.persist("sidebar-box", "checked");
       document.persist("sidebar-box", "width");
       document.persist("sidebar-title", "value");
     }

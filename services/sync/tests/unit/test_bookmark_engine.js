@@ -563,6 +563,10 @@ add_task(async function test_sync_dateAdded() {
 
   let collection = server.user("foo").collection("bookmarks");
 
+  // TODO: Avoid random orange (bug 1374599), this is only necessary
+  // intermittently - reset the last sync date so that we'll get all bookmarks.
+  engine.lastSync = 1;
+
   Svc.Obs.notify("weave:engine:start-tracking");   // We skip usual startup...
 
   // Just matters that it's in the past, not how far.

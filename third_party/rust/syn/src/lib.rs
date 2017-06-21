@@ -1,3 +1,5 @@
+#![doc(html_root_url = "https://dtolnay.github.io/syn")]
+
 #![cfg_attr(feature = "cargo-clippy", allow(large_enum_variant))]
 
 #[cfg(feature = "printing")]
@@ -28,8 +30,8 @@ mod escape;
 #[cfg(feature = "full")]
 mod expr;
 #[cfg(feature = "full")]
-pub use expr::{Arm, BindingMode, Block, CaptureBy, Expr, ExprKind, FieldPat, FieldValue,
-               Local, MacStmtStyle, Pat, RangeLimits, Stmt};
+pub use expr::{Arm, BindingMode, Block, CaptureBy, Expr, ExprKind, FieldPat, FieldValue, Local,
+               MacStmtStyle, Pat, RangeLimits, Stmt};
 
 mod generics;
 pub use generics::{Generics, Lifetime, LifetimeDef, TraitBoundModifier, TyParam, TyParamBound,
@@ -87,7 +89,7 @@ pub use parsing::*;
 #[cfg(feature = "parsing")]
 mod parsing {
     use super::*;
-    use {derive, generics, ident, mac, ty};
+    use {derive, generics, ident, mac, ty, attr};
     use synom::{space, IResult};
 
     #[cfg(feature = "full")]
@@ -138,7 +140,18 @@ mod parsing {
     }
 
     pub fn parse_ty_param_bound(input: &str) -> Result<TyParamBound, String> {
-        unwrap("type parameter bound", generics::parsing::ty_param_bound, input)
+        unwrap("type parameter bound",
+               generics::parsing::ty_param_bound,
+               input)
+    }
+
+    pub fn parse_outer_attr(input: &str) -> Result<Attribute, String> {
+        unwrap("outer attribute", attr::parsing::outer_attr, input)
+    }
+
+    #[cfg(feature = "full")]
+    pub fn parse_inner_attr(input: &str) -> Result<Attribute, String> {
+        unwrap("inner attribute", attr::parsing::inner_attr, input)
     }
 
     // Deprecated. Use `parse_derive_input` instead.

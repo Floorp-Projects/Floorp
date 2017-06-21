@@ -18,9 +18,8 @@ extern crate heapsize;
 extern crate ipc_channel;
 #[cfg(feature = "webgl")]
 extern crate offscreen_gl_context;
-extern crate serde;
 #[macro_use]
-extern crate serde_derive;
+extern crate serde;
 extern crate time;
 
 #[cfg(target_os = "macos")]

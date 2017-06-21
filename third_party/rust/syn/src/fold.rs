@@ -183,7 +183,7 @@ pub fn noop_fold_derive_input<F: ?Sized + Folder>(folder: &mut F,
                                                       vis,
                                                       attrs,
                                                       generics,
-                                                      body }: DeriveInput) -> DeriveInput {
+body }: DeriveInput) -> DeriveInput{
     use Body::*;
     DeriveInput {
         ident: folder.fold_ident(ident),
@@ -206,18 +206,18 @@ pub fn noop_fold_ty<F: ?Sized + Folder>(folder: &mut F, ty: Ty) -> Ty {
             let mutable_type_ = *mutable_type;
             let MutTy { ty, mutability }: MutTy = mutable_type_;
             Ptr(Box::new(MutTy {
-                ty: folder.fold_ty(ty),
-                mutability: mutability,
-            }))
+                             ty: folder.fold_ty(ty),
+                             mutability: mutability,
+                         }))
         }
         Rptr(opt_lifetime, mutable_type) => {
             let mutable_type_ = *mutable_type;
             let MutTy { ty, mutability }: MutTy = mutable_type_;
             Rptr(opt_lifetime.map(|l| folder.fold_lifetime(l)),
                  Box::new(MutTy {
-                     ty: folder.fold_ty(ty),
-                     mutability: mutability,
-                 }))
+                              ty: folder.fold_ty(ty),
+                              mutability: mutability,
+                          }))
         }
         Never => Never,
         Infer => Infer,
@@ -226,18 +226,18 @@ pub fn noop_fold_ty<F: ?Sized + Folder>(folder: &mut F, ty: Ty) -> Ty {
             let bf_ = *bare_fn;
             let BareFnTy { unsafety, abi, lifetimes, inputs, output, variadic } = bf_;
             BareFn(Box::new(BareFnTy {
-                unsafety: unsafety,
-                abi: abi,
-                lifetimes: lifetimes.lift(|l| folder.fold_lifetime_def(l)),
-                inputs: inputs.lift(|v| {
-                    BareFnArg {
-                        name: v.name.map(|n| folder.fold_ident(n)),
-                        ty: folder.fold_ty(v.ty),
-                    }
-                }),
-                output: folder.fold_fn_ret_ty(output),
-                variadic: variadic,
-            }))
+                                unsafety: unsafety,
+                                abi: abi,
+                                lifetimes: lifetimes.lift(|l| folder.fold_lifetime_def(l)),
+                                inputs: inputs.lift(|v| {
+                BareFnArg {
+                    name: v.name.map(|n| folder.fold_ident(n)),
+                    ty: folder.fold_ty(v.ty),
+                }
+            }),
+                                output: folder.fold_fn_ret_ty(output),
+                                variadic: variadic,
+                            }))
         }
         Path(maybe_qself, path) => {
             Path(maybe_qself.map(|v| noop_fold_qself(folder, v)),
@@ -264,7 +264,7 @@ fn noop_fold_qself<F: ?Sized + Folder>(folder: &mut F, QSelf { ty, position }: Q
 
 pub fn noop_fold_generics<F: ?Sized + Folder>(folder: &mut F,
                                      Generics { lifetimes, ty_params, where_clause }: Generics)
-                                     -> Generics {
+-> Generics{
     use WherePredicate::*;
     Generics {
         lifetimes: lifetimes.lift(|l| folder.fold_lifetime_def(l)),
@@ -272,15 +272,13 @@ pub fn noop_fold_generics<F: ?Sized + Folder>(folder: &mut F,
             TyParam {
                 attrs: ty.attrs.lift(|a| folder.fold_attribute(a)),
                 ident: folder.fold_ident(ty.ident),
-                bounds: ty.bounds
-                    .lift(|ty_pb| folder.fold_ty_param_bound(ty_pb)),
+                bounds: ty.bounds.lift(|ty_pb| folder.fold_ty_param_bound(ty_pb)),
                 default: ty.default.map(|v| folder.fold_ty(v)),
             }
         }),
         where_clause: WhereClause {
-            predicates: where_clause.predicates
-                .lift(|p| match p {
-                    BoundPredicate(bound_predicate) => {
+            predicates: where_clause.predicates.lift(|p| match p {
+                                                         BoundPredicate(bound_predicate) => {
                         BoundPredicate(WhereBoundPredicate {
                             bound_lifetimes: bound_predicate.bound_lifetimes
                                 .lift(|l| folder.fold_lifetime_def(l)),
@@ -289,20 +287,20 @@ pub fn noop_fold_generics<F: ?Sized + Folder>(folder: &mut F,
                                 .lift(|ty_pb| folder.fold_ty_param_bound(ty_pb)),
                         })
                     }
-                    RegionPredicate(region_predicate) => {
+                                                         RegionPredicate(region_predicate) => {
                         RegionPredicate(WhereRegionPredicate {
                             lifetime: folder.fold_lifetime(region_predicate.lifetime),
                             bounds: region_predicate.bounds
                                 .lift(|b| folder.fold_lifetime(b)),
                         })
                     }
-                    EqPredicate(eq_predicate) => {
+                                                         EqPredicate(eq_predicate) => {
                         EqPredicate(WhereEqPredicate {
                             lhs_ty: folder.fold_ty(eq_predicate.lhs_ty),
                             rhs_ty: folder.fold_ty(eq_predicate.rhs_ty),
                         })
                     }
-                }),
+                                                     }),
         },
     }
 }
@@ -321,8 +319,7 @@ pub fn noop_fold_poly_trait_ref<F: ?Sized + Folder>(folder: &mut F,
                                                     trait_ref: PolyTraitRef)
                                                     -> PolyTraitRef {
     PolyTraitRef {
-        bound_lifetimes: trait_ref.bound_lifetimes
-            .lift(|bl| folder.fold_lifetime_def(bl)),
+        bound_lifetimes: trait_ref.bound_lifetimes.lift(|bl| folder.fold_lifetime_def(bl)),
         trait_ref: folder.fold_path(trait_ref.trait_ref),
     }
 }
@@ -349,7 +346,7 @@ pub fn noop_fold_field<F: ?Sized + Folder>(folder: &mut F, field: Field) -> Fiel
 
 pub fn noop_fold_variant<F: ?Sized + Folder>(folder: &mut F,
                                     Variant { ident, attrs, data, discriminant }: Variant)
-                                    -> Variant {
+-> Variant{
     Variant {
         ident: folder.fold_ident(ident),
         attrs: attrs.lift(|v| folder.fold_attribute(v)),
@@ -364,7 +361,7 @@ pub fn noop_fold_lifetime<F: ?Sized + Folder>(folder: &mut F, _lifetime: Lifetim
 
 pub fn noop_fold_lifetime_def<F: ?Sized + Folder>(folder: &mut F,
                                          LifetimeDef { attrs, lifetime, bounds }: LifetimeDef)
-                                         -> LifetimeDef {
+-> LifetimeDef{
     LifetimeDef {
         attrs: attrs.lift(|x| folder.fold_attribute(x)),
         lifetime: folder.fold_lifetime(lifetime),
@@ -396,17 +393,19 @@ pub fn noop_fold_path_parameters<F: ?Sized + Folder>(folder: &mut F,
         AngleBracketed(d) => {
             let AngleBracketedParameterData { lifetimes, types, bindings } = d;
             AngleBracketed(AngleBracketedParameterData {
-                lifetimes: lifetimes.into_iter().map(|l| folder.fold_lifetime(l)).collect(),
-                types: types.lift(|ty| folder.fold_ty(ty)),
-                bindings: bindings.lift(|tb| folder.fold_assoc_type_binding(tb)),
-            })
+                               lifetimes: lifetimes.into_iter()
+                                   .map(|l| folder.fold_lifetime(l))
+                                   .collect(),
+                               types: types.lift(|ty| folder.fold_ty(ty)),
+                               bindings: bindings.lift(|tb| folder.fold_assoc_type_binding(tb)),
+                           })
         }
         Parenthesized(d) => {
             let ParenthesizedParameterData { inputs, output } = d;
             Parenthesized(ParenthesizedParameterData {
-                inputs: inputs.lift(|i| folder.fold_ty(i)),
-                output: output.map(|v| folder.fold_ty(v)),
-            })
+                              inputs: inputs.lift(|i| folder.fold_ty(i)),
+                              output: output.map(|v| folder.fold_ty(v)),
+                          })
         }
     }
 }
@@ -469,7 +468,9 @@ fn noop_fold_other_const_expr<F: ?Sized + Folder>(folder: &mut F, e: Expr) -> Ex
 }
 
 #[cfg(not(feature = "full"))]
-fn noop_fold_other_const_expr<F: ?Sized + Folder>(_: &mut F, e: constant::Other) -> constant::Other {
+fn noop_fold_other_const_expr<F: ?Sized + Folder>(_: &mut F,
+                                                  e: constant::Other)
+                                                  -> constant::Other {
     e
 }
 
@@ -483,17 +484,17 @@ pub fn noop_fold_tt<F: ?Sized + Folder>(folder: &mut F, tt: TokenTree) -> TokenT
     match tt {
         Token(token) => {
             Token(match token {
-                Literal(lit) => Literal(folder.fold_lit(lit)),
-                Ident(ident) => Ident(folder.fold_ident(ident)),
-                Lifetime(ident) => Lifetime(folder.fold_ident(ident)),
-                x => x,
-            })
+                      Literal(lit) => Literal(folder.fold_lit(lit)),
+                      Ident(ident) => Ident(folder.fold_ident(ident)),
+                      Lifetime(ident) => Lifetime(folder.fold_ident(ident)),
+                      x => x,
+                  })
         }
         Delimited(super::Delimited { delim, tts }) => {
             Delimited(super::Delimited {
-                delim: delim,
-                tts: tts.lift(|v| noop_fold_tt(folder, v)),
-            })
+                          delim: delim,
+                          tts: tts.lift(|v| noop_fold_tt(folder, v)),
+                      })
         }
     }
 }
@@ -564,9 +565,11 @@ pub fn noop_fold_item<F: ?Sized + Folder>(folder: &mut F,
             Mod(items) => Mod(items.map(|items| items.lift(|i| folder.fold_item(i)))),
             ForeignMod(super::ForeignMod { abi, items }) => {
                 ForeignMod(super::ForeignMod {
-                    abi: abi,
-                    items: items.lift(|foreign_item| folder.fold_foreign_item(foreign_item)),
-                })
+                               abi: abi,
+                               items: items.lift(|foreign_item| {
+                                                     folder.fold_foreign_item(foreign_item)
+                                                 }),
+                           })
             }
             Ty(ty, generics) => {
                 Ty(ty.lift(|ty| folder.fold_ty(ty)),
@@ -747,7 +750,7 @@ pub fn noop_fold_expr<F: ?Sized + Folder>(folder: &mut F, Expr { node, attrs }: 
 #[cfg(feature = "full")]
 pub fn noop_fold_foreign_item<F: ?Sized + Folder>(folder: &mut F,
                                          ForeignItem { ident, attrs, node, vis }: ForeignItem)
-                                         -> ForeignItem {
+-> ForeignItem{
     ForeignItem {
         ident: folder.fold_ident(ident),
         attrs: attrs.into_iter().map(|a| folder.fold_attribute(a)).collect(),
@@ -861,7 +864,7 @@ pub fn noop_fold_trait_item<F: ?Sized + Folder>(folder: &mut F,
 #[cfg(feature = "full")]
 pub fn noop_fold_impl_item<F: ?Sized + Folder>(folder: &mut F,
                                       ImplItem { ident, vis, defaultness, attrs, node }: ImplItem)
-                                      -> ImplItem {
+-> ImplItem{
     use ImplItemKind::*;
     ImplItem {
         ident: folder.fold_ident(ident),
@@ -878,7 +881,7 @@ pub fn noop_fold_impl_item<F: ?Sized + Folder>(folder: &mut F,
 }
 
 #[cfg(feature = "full")]
-pub fn noop_fold_method_sig<F: ?Sized + Folder>(folder: &mut F, MethodSig{unsafety, constness, abi, decl, generics}:MethodSig) -> MethodSig {
+pub fn noop_fold_method_sig<F: ?Sized + Folder>(folder: &mut F, MethodSig{unsafety, constness, abi, decl, generics}:MethodSig) -> MethodSig{
     MethodSig {
         unsafety: unsafety,
         constness: constness,
@@ -899,8 +902,10 @@ pub fn noop_fold_stmt<F: ?Sized + Folder>(folder: &mut F, stmt: Stmt) -> Stmt {
         Semi(expr) => Semi(expr.lift(|v| folder.fold_expr(v))),
         Mac(mac_stmt) => {
             Mac(mac_stmt.lift(|(mac, style, attrs)| {
-                (folder.fold_mac(mac), style, attrs.lift(|a| folder.fold_attribute(a)))
-            }))
+                                  (folder.fold_mac(mac),
+                                   style,
+                                   attrs.lift(|a| folder.fold_attribute(a)))
+                              }))
         }
     }
 
@@ -927,11 +932,11 @@ pub fn noop_fold_view_path<F: ?Sized + Folder>(folder: &mut F, view_path: ViewPa
         List(path, items) => {
             List(folder.fold_path(path),
                  items.lift(|PathListItem { name, rename }: PathListItem| {
-                     PathListItem {
-                         name: folder.fold_ident(name),
-                         rename: rename.map(|i| folder.fold_ident(i)),
-                     }
-                 }))
+                                PathListItem {
+                                    name: folder.fold_ident(name),
+                                    rename: rename.map(|i| folder.fold_ident(i)),
+                                }
+                            }))
         }
     }
 }
