@@ -1091,7 +1091,7 @@ add_task(async function testChoices() {
   talliedErrors.length = 0;
 
   Assert.throws(() => root.choices.meh("frog"),
-                /Value must either: be one of \["foo", "bar", "baz"\], match the pattern \/florg\.\*meh\/, or be an integer value/);
+                /Value "frog" must either: be one of \["foo", "bar", "baz"\], match the pattern \/florg\.\*meh\/, or be an integer value/);
 
   Assert.throws(() => root.choices.meh(4),
                 /be a string value, or be at least 12/);

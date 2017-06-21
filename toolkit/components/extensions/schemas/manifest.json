@@ -168,13 +168,8 @@
             "type": "array",
             "default": [],
             "items": {
-              "choices": [
-                { "$ref": "Permission" },
-                {
-                  "type": "string",
-                  "deprecated": "Unknown permission ${value}"
-                }
-              ]
+              "$ref": "Permission",
+              "onError": "warn"
             },
             "optional": true
           },
