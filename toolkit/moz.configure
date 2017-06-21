@@ -774,14 +774,13 @@ def stylo(stylo_config, bindgen_config_paths, bindgen_enabled):
         which may not be what you intended.'''))
 
     return namespace(
-        build=bool(stylo_config.build),
         libclang_path=bindgen_config_paths.libclang_path,
         clang_path=bindgen_config_paths.clang_path,
         bindgen_enabled=bool(bindgen_enabled),
     )
 
-set_config('MOZ_STYLO', stylo.build)
-set_define('MOZ_STYLO', stylo.build)
+set_config('MOZ_STYLO', stylo_config.build)
+set_define('MOZ_STYLO', stylo_config.build)
 set_config('MOZ_STYLO_ENABLE', stylo_config.enable)
 set_define('MOZ_STYLO_ENABLE', stylo_config.enable)
 
