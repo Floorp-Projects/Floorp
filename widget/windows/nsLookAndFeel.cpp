@@ -272,13 +272,6 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       // Seems to be the default color (hardcoded because of bug 1065998)
       aColor = NS_RGB(158, 158, 158);
       return NS_OK;
-    case eColorID__moz_win_accentcolortext:
-      res = GetAccentColorText(aColor);
-      if (NS_SUCCEEDED(res)) {
-        return res;
-      }
-      aColor = NS_RGB(0, 0, 0);
-      return NS_OK;
     case eColorID__moz_win_mediatext:
       if (IsAppThemed()) {
         res = ::GetColorFromTheme(eUXMediaToolbar,
@@ -802,29 +795,4 @@ nsLookAndFeel::GetAccentColor(nscolor& aColor)
   mDwmKey->Close();
 
   return rv;
-}
-
-/* static */ nsresult
-nsLookAndFeel::GetAccentColorText(nscolor& aColor)
-{
-  nscolor accentColor;
-  nsresult rv = GetAccentColor(accentColor);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // We want the color that we return for text that will be drawn over
-  // a background that has the accent color to have good contrast with
-  // the accent color.  Windows itself uses either white or black text
-  // depending on how light or dark the accent color is.  We do the same
-  // here based on the luminance of the accent color with a threshhold
-  // value that seem consistent with what Windows does.
-
-  float luminance = 0.2125f * NS_GET_R(accentColor) +
-                    0.7154f * NS_GET_G(accentColor) +
-                    0.0721f * NS_GET_B(accentColor);
-
-  aColor = (luminance <= 110) ? NS_RGB(255, 255, 255) : NS_RGB(0, 0, 0);
-
-  return NS_OK;
 }
