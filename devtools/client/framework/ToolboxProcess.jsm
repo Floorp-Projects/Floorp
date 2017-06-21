@@ -11,6 +11,7 @@ const { interfaces: Ci, utils: Cu, results: Cr } = Components;
 const DBG_XUL = "chrome://devtools/content/framework/toolbox-process-window.xul";
 const CHROME_DEBUGGER_PROFILE_NAME = "chrome_debugger_profile";
 
+const { console } = Cu.import("resource://gre/modules/Console.jsm", {});
 const { require, DevToolsLoader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -302,6 +303,8 @@ BrowserToolboxProcess.prototype = {
       proc.wait().then(() => this.close());
 
       return proc;
+    }, err => {
+      console.log(`Error loading Browser Toolbox: ${command} ${args.join(" ")}`, err);
     });
   },
 
