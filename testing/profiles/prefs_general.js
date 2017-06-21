@@ -195,9 +195,6 @@ user_pref("layout.css.text-justify.enabled", true);
 // Disable spammy layout warnings because they pollute test logs
 user_pref("layout.spammy_warnings.enabled", false);
 
-// Disable interuptable reflow
-user_pref("layout.interruptible-reflow.enabled", false);
-
 // Enable Media Source Extensions for testing
 user_pref("media.mediasource.mp4.enabled", true);
 user_pref("media.mediasource.webm.enabled", true);
