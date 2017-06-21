@@ -337,7 +337,7 @@ public final class IntentHelper implements BundleEventListener {
             }
 
             final Uri data = intent.getData();
-            if (data != null && "file".equals(data.normalizeScheme().getScheme())) {
+            if (data != null && "file".equals(normalizeUriScheme(data).getScheme())) {
                 Log.w(LOGTAG, "Blocked intent with \"file://\" data scheme.");
                 return null;
             }
