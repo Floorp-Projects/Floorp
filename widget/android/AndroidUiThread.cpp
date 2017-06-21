@@ -6,12 +6,15 @@
 #include "base/message_loop.h"
 #include "GeneratedJNIWrappers.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/EventQueue.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/ThreadEventQueue.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/UniquePtr.h"
 #include "nsThread.h"
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"
@@ -50,7 +53,9 @@ class AndroidUiThread : public nsThread
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  AndroidUiThread() : nsThread(nsThread::NOT_MAIN_THREAD, 0)
+  AndroidUiThread()
+    : nsThread(WrapNotNull(new ThreadEventQueue<mozilla::EventQueue>(MakeUnique<mozilla::EventQueue>())),
+               nsThread::NOT_MAIN_THREAD, 0)
   {}
 
   nsresult Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags) override;

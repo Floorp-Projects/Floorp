@@ -16,7 +16,7 @@
 class nsThreadSyncDispatch : public mozilla::Runnable
 {
 public:
-  nsThreadSyncDispatch(nsIThread* aOrigin, already_AddRefed<nsIRunnable>&& aTask)
+  nsThreadSyncDispatch(already_AddRefed<nsIEventTarget> aOrigin, already_AddRefed<nsIRunnable>&& aTask)
     : Runnable("nsThreadSyncDispatch")
     , mOrigin(aOrigin)
     , mSyncTask(mozilla::Move(aTask))
@@ -54,7 +54,7 @@ private:
     return NS_OK;
   }
 
-  nsCOMPtr<nsIThread> mOrigin;
+  nsCOMPtr<nsIEventTarget> mOrigin;
   // The task is leaked by default when Run() is not called, because
   // otherwise we may release it in an incorrect thread.
   mozilla::LeakRefPtr<nsIRunnable> mSyncTask;
