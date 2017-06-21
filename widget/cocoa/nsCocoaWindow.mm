@@ -2268,6 +2268,14 @@ nsCocoaWindow::SetWindowTransform(const gfx::Matrix& aTransform)
 
   transform.PreTranslate(-mBounds.x, -mBounds.y);
 
+  // Snap translations to device pixels, to match what we do for CSS transforms
+  // and because the window server rounds down instead of to nearest.
+  if (!transform.HasNonTranslation() && transform.HasNonIntegerTranslation()) {
+    auto snappedTranslation = gfx::IntPoint::Round(transform.GetTranslation());
+    transform = gfx::Matrix::Translation(snappedTranslation.x,
+                                         snappedTranslation.y);
+  }
+
   // We also need to account for the backing scale factor: aTransform is given
   // in device pixels, but CGSSetWindowTransform works with logical display
   // pixels.
