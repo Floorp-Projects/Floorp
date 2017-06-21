@@ -39,7 +39,8 @@ import java.util.TimeZone;
  */
 public class TelemetrySyncPingBundleBuilder extends TelemetryPingBuilder {
     private static final String PING_TYPE = "sync";
-    private static final int PING_VERSION = 4;
+    private static final int PING_BUNDLE_VERSION = 5; // Bug 1374758
+    private static final int PING_SYNC_DATA_FORMAT_VERSION = 1; // Bug 1374758
 
     public static final String UPLOAD_REASON_FIRST = "first";
     public static final String UPLOAD_REASON_CLOCK_DRIFT = "clockdrift";
@@ -71,7 +72,7 @@ public class TelemetrySyncPingBundleBuilder extends TelemetryPingBuilder {
         pingCreationDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         payload.put("type", PING_TYPE);
-        payload.put("version", PING_VERSION);
+        payload.put("version", PING_BUNDLE_VERSION);
         payload.put("id", docID);
         payload.put("creationDate", pingCreationDateFormat.format(new Date()));
 
@@ -87,6 +88,9 @@ public class TelemetrySyncPingBundleBuilder extends TelemetryPingBuilder {
         application.put("channel", AppConstants.MOZ_UPDATE_CHANNEL);
 
         payload.put("application", application);
+
+        pingData.put("version", PING_SYNC_DATA_FORMAT_VERSION);
+
         payload.put("payload", pingData);
         return super.build();
     }
