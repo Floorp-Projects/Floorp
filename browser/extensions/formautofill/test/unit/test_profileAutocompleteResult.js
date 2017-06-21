@@ -24,6 +24,7 @@ let matchingProfiles = [{
   guid: "test-guid-3",
   organization: "",
   "street-address": "321, No Name St. 2nd line 3rd line",
+  "-moz-street-address-one-line": "321, No Name St. 2nd line 3rd line",
   "address-line1": "321, No Name St.",
   "address-line2": "2nd line",
   "address-line3": "3rd line",
