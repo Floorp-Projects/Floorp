@@ -56,13 +56,6 @@ class ChannelMediaDecoder : public MediaDecoder
 public:
   explicit ChannelMediaDecoder(MediaDecoderInit& aInit);
 
-  // Return a callback object used to register with MediaResource to receive
-  // notifications.
-  MediaResourceCallback* GetResourceCallback() const
-  {
-    return mResourceCallback;
-  }
-
   void Shutdown() override;
 
   // Create a new decoder of the same type as this one.
