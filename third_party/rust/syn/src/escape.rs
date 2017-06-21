@@ -281,12 +281,14 @@ fn backslash_u<I>(chars: &mut I) -> Option<char>
 fn test_cooked_string() {
     let input = "\\x62 \\\n \\u{7} \\u{64} \\u{bf5} \\u{12ba} \\u{1F395} \\u{102345}\"";
     let expected = "\x62 \u{7} \u{64} \u{bf5} \u{12ba} \u{1F395} \u{102345}";
-    assert_eq!(cooked_string(input), IResult::Done("\"", expected.to_string()));
+    assert_eq!(cooked_string(input),
+               IResult::Done("\"", expected.to_string()));
 }
 
 #[test]
 fn test_cooked_byte_string() {
     let input = "\\x62 \\\n \\xEF\"";
     let expected = b"\x62 \xEF";
-    assert_eq!(cooked_byte_string(input), IResult::Done("\"", expected.to_vec()));
+    assert_eq!(cooked_byte_string(input),
+               IResult::Done("\"", expected.to_vec()));
 }

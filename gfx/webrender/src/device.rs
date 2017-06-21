@@ -276,6 +276,7 @@ impl VertexFormat {
                                      ClipAttribute::LayerIndex,
                                      ClipAttribute::DataIndex,
                                      ClipAttribute::SegmentIndex,
+                                     ClipAttribute::ResourceAddress,
                                     ].into_iter().enumerate() {
                     gl.enable_vertex_attrib_array(attrib as gl::GLuint);
                     gl.vertex_attrib_divisor(attrib as gl::GLuint, 1);
@@ -411,6 +412,7 @@ impl Program {
                 self.gl.bind_attrib_location(self.id, ClipAttribute::LayerIndex as gl::GLuint, "aClipLayerIndex");
                 self.gl.bind_attrib_location(self.id, ClipAttribute::DataIndex as gl::GLuint, "aClipDataIndex");
                 self.gl.bind_attrib_location(self.id, ClipAttribute::SegmentIndex as gl::GLuint, "aClipSegmentIndex");
+                self.gl.bind_attrib_location(self.id, ClipAttribute::ResourceAddress as gl::GLuint, "aClipResourceAddress");
             }
         }
 
@@ -1564,11 +1566,6 @@ impl Device {
             self.gl.uniform_1i(u_resource_cache, TextureSampler::ResourceCache as i32);
         }
 
-        let u_resource_rects = self.gl.get_uniform_location(program.id, "sResourceRects");
-        if u_resource_rects != -1 {
-            self.gl.uniform_1i(u_resource_rects, TextureSampler::ResourceRects as i32);
-        }
-
         Ok(())
     }
 
@@ -1653,7 +1650,7 @@ impl Device {
                 }
             }
             ImageFormat::RGB8 => (gl::RGB, 3, data, gl::UNSIGNED_BYTE),
-            ImageFormat::RGBA8 => (get_gl_format_bgra(self.gl()), 4, data, gl::UNSIGNED_BYTE),
+            ImageFormat::BGRA8 => (get_gl_format_bgra(self.gl()), 4, data, gl::UNSIGNED_BYTE),
             ImageFormat::RG8 => (gl::RG, 2, data, gl::UNSIGNED_BYTE),
             ImageFormat::RGBAF32 => (gl::RGBA, 16, data, gl::FLOAT),
             ImageFormat::Invalid => unreachable!(),
@@ -2033,7 +2030,7 @@ fn gl_texture_formats_for_image_format(gl: &gl::Gl, format: ImageFormat) -> (gl:
             }
         },
         ImageFormat::RGB8 => (gl::RGB as gl::GLint, gl::RGB),
-        ImageFormat::RGBA8 => {
+        ImageFormat::BGRA8 => {
             match gl.get_type() {
                 gl::GlType::Gl =>  {
                     (gl::RGBA as gl::GLint, get_gl_format_bgra(gl))

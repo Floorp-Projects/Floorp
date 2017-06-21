@@ -124,7 +124,9 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 void
 nsCanvasFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements, uint32_t aFilter)
 {
-  aElements.AppendElement(mCustomContentContainer);
+  if (mCustomContentContainer) {
+    aElements.AppendElement(mCustomContentContainer);
+  }
 }
 
 void

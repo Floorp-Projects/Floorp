@@ -83,16 +83,16 @@ impl<T> Serialize for MsgSender<T> {
     }
 }
 
-impl<T> Deserialize for MsgReceiver<T> {
+impl<'de, T> Deserialize<'de> for MsgReceiver<T> {
     fn deserialize<D>(_: D) -> Result<MsgReceiver<T>, D::Error>
-                      where D: Deserializer {
+                      where D: Deserializer<'de> {
         unreachable!();
     }
 }
 
-impl<T> Deserialize for MsgSender<T> {
+impl<'de, T> Deserialize<'de> for MsgSender<T> {
     fn deserialize<D>(_: D) -> Result<MsgSender<T>, D::Error>
-                      where D: Deserializer {
+                      where D: Deserializer<'de> {
         unreachable!();
     }
 }

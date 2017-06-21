@@ -1,6 +1,6 @@
 [package]
 name = "bincode"
-version = "1.0.0-alpha6"
+version = "0.8.0"
 authors = ["Ty Overby <ty@pre-alpha.com>", "Francesco Mazzoli <f@mazzo.li>", "David Tolnay <dtolnay@gmail.com>", "Daniel Griffen"]
 
 repository = "https://github.com/TyOverby/bincode"
@@ -13,9 +13,8 @@ description = "A binary serialization / deserialization strategy that uses Serde
 [dependencies]
 byteorder = "1.0.0"
 num-traits = "0.1.32"
-
-[dependencies.serde]
-version = "0.9.*"
+serde = "1.*.*"
 
 [dev-dependencies]
-serde_derive = "0.9.*"
+serde_bytes = "0.10.*"
+serde_derive = "1.*.*"

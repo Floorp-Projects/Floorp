@@ -63,6 +63,13 @@ Connection::AsyncClose(mozIStorageCompletionCallback*)
 }
 
 NS_IMETHODIMP
+Connection::SpinningSynchronousClose()
+{
+  // not supported
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 Connection::AsyncClone(bool, mozIStorageCompletionCallback*)
 {
   // async methods are not supported
