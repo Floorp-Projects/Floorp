@@ -27,8 +27,18 @@ if CONFIG['MOZ_DEVTOOLS'] != 'addon':
         'shared',
     ]
     FINAL_TARGET_FILES.features['devtools@mozilla.org'] += [
-        'bootstrap.js',
         'install.rdf',
+    ]
+
+# For Fennec, provide an empty bootstrap.js that doesn't do anything.
+# DevTools initialization is handled by mobile/android/chrome/content/RemoteDebugger.js
+if CONFIG['MOZ_DEVTOOLS'] == 'server':
+    FINAL_TARGET_FILES.features['devtools@mozilla.org'] += [
+      'server/bootstrap.js',
+    ]
+elif CONFIG['MOZ_DEVTOOLS'] != 'addon':
+    FINAL_TARGET_FILES.features['devtools@mozilla.org'] += [
+      'bootstrap.js',
     ]
 
 # /browser uses DIST_SUBDIR.  We opt-in to this treatment when building
