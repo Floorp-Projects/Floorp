@@ -60,6 +60,8 @@ def _defines():
             DEFINES[var] = 1
 
     for var in ('MOZ_ANDROID_GCM_SENDERID',
+                'MOZ_ANDROID_MAX_SDK_VERSION',
+                'MOZ_ANDROID_MIN_SDK_VERSION',
                 'MOZ_PKG_SPECIAL',
                 'MOZ_UPDATER'):
         if CONFIG[var]:
@@ -67,6 +69,7 @@ def _defines():
 
     for var in ('ANDROID_CPU_ARCH',
                 'ANDROID_PACKAGE_NAME',
+                'ANDROID_TARGET_SDK',
                 'GRE_MILESTONE',
                 'MOZ_ANDROID_SHARED_ID',
                 'MOZ_ANDROID_APPLICATION_CLASS',
