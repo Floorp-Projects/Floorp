@@ -32,7 +32,9 @@ enum class CommandType : int8_t {
   MASKSURFACE,
   PUSHCLIP,
   PUSHCLIPRECT,
+  PUSHLAYER,
   POPCLIP,
+  POPLAYER,
   SETTRANSFORM,
   FLUSH
 };
@@ -543,6 +545,40 @@ private:
   Rect mRect;
 };
 
+class PushLayerCommand : public DrawingCommand
+{
+public:
+  PushLayerCommand(const bool aOpaque,
+                   const Float aOpacity,
+                   SourceSurface* aMask,
+                   const Matrix& aMaskTransform,
+                   const IntRect& aBounds,
+                   bool aCopyBackground)
+    : DrawingCommand(CommandType::PUSHLAYER)
+    , mOpaque(aOpaque)
+    , mOpacity(aOpacity)
+    , mMask(aMask)
+    , mMaskTransform(aMaskTransform)
+    , mBounds(aBounds)
+    , mCopyBackground(aCopyBackground)
+  {
+  }
+
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  {
+    aDT->PushLayer(mOpaque, mOpacity, mMask,
+                   mMaskTransform, mBounds, mCopyBackground);
+  }
+
+private:
+  bool mOpaque;
+  float mOpacity;
+  RefPtr<SourceSurface> mMask;
+  Matrix mMaskTransform;
+  IntRect mBounds;
+  bool mCopyBackground;
+};
+
 class PopClipCommand : public DrawingCommand
 {
 public:
@@ -554,6 +590,20 @@ public:
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->PopClip();
+  }
+};
+
+class PopLayerCommand : public DrawingCommand
+{
+public:
+  PopLayerCommand()
+    : DrawingCommand(CommandType::POPLAYER)
+  {
+  }
+
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  {
+    aDT->PopLayer();
   }
 };
 
