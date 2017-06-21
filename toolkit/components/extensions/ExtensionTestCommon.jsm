@@ -220,6 +220,7 @@ this.ExtensionTestCommon = class ExtensionTestCommon {
                   em:type="2"
                   em:version="${manifest.version}"
                   em:description=""
+                  em:multiprocessCompatible="true"
                   em:hasEmbeddedWebExtension="true"
                   em:bootstrap="true">
 
@@ -229,6 +230,13 @@ this.ExtensionTestCommon = class ExtensionTestCommon {
                           em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                           em:minVersion="51.0a1"
                           em:maxVersion="*"/>
+                  </em:targetApplication>
+                  <em:targetApplication>
+                    <Description>
+                      <em:id>toolkit@mozilla.org</em:id>
+                      <em:minVersion>0</em:minVersion>
+                      <em:maxVersion>*</em:maxVersion>
+                    </Description>
                   </em:targetApplication>
               </Description>
           </RDF>
