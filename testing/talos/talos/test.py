@@ -583,6 +583,7 @@ class kraken(PageloaderTest):
     gecko_profile_interval = 0.1
     gecko_profile_entries = 1000000
     tpmozafterpaint = False
+    tpchrome = False
     preferences = {'dom.send_after_paint_to_content': False}
     filters = filter.mean.prepare()
     unit = 'score'
