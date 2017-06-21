@@ -98,8 +98,8 @@ function getListStyleImage(button) {
 async function promiseAnimationFrame(win = window) {
   await new Promise(resolve => win.requestAnimationFrame(resolve));
 
-  let {mainThread} = Services.tm;
-  return new Promise(resolve => mainThread.dispatch(resolve, mainThread.DISPATCH_NORMAL));
+  let {tm} = Services;
+  return new Promise(resolve => tm.dispatchToMainThread(resolve));
 }
 
 function promisePopupShown(popup) {
