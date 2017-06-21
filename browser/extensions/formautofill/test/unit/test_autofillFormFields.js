@@ -45,14 +45,15 @@ const TESTCASES = [
     ],
     profileData: {
       "guid": "123",
-      "street-address": "2 Harrison St",
+      "street-address": "2 Harrison St line2",
+      "-moz-street-address-one-line": "2 Harrison St line2",
       "address-level2": "San Francisco",
       "country": "US",
       "email": "foo@mozilla.com",
       "tel": "1234567",
     },
     expectedResult: {
-      "street-addr": "2 Harrison St",
+      "street-addr": "2 Harrison St line2",
       "city": "San Francisco",
       "country": "US",
       "email": "foo@mozilla.com",
