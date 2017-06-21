@@ -67,11 +67,10 @@ LocalFileToDirectoryOrBlob(nsPIDOMWindowInner* aWindow,
 class AsyncShowFilePicker : public mozilla::Runnable
 {
 public:
-  AsyncShowFilePicker(nsIFilePicker* aFilePicker,
-                      nsIFilePickerShownCallback* aCallback)
-    : mozilla::Runnable("AsyncShowFilePicker")
-    , mFilePicker(aFilePicker)
-    , mCallback(aCallback)
+  AsyncShowFilePicker(nsIFilePicker *aFilePicker,
+                      nsIFilePickerShownCallback *aCallback) :
+    mFilePicker(aFilePicker),
+    mCallback(aCallback)
   {
   }
 

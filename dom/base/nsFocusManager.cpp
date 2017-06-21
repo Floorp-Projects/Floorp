@@ -2021,14 +2021,10 @@ nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow,
 class FocusBlurEvent : public Runnable
 {
 public:
-  FocusBlurEvent(nsISupports* aTarget,
-                 EventMessage aEventMessage,
-                 nsPresContext* aContext,
-                 bool aWindowRaised,
-                 bool aIsRefocus,
-                 EventTarget* aRelatedTarget)
-    : mozilla::Runnable("FocusBlurEvent")
-    , mTarget(aTarget)
+  FocusBlurEvent(nsISupports* aTarget, EventMessage aEventMessage,
+                 nsPresContext* aContext, bool aWindowRaised,
+                 bool aIsRefocus, EventTarget* aRelatedTarget)
+    : mTarget(aTarget)
     , mContext(aContext)
     , mEventMessage(aEventMessage)
     , mWindowRaised(aWindowRaised)
@@ -2059,14 +2055,12 @@ public:
 class FocusInOutEvent : public Runnable
 {
 public:
-  FocusInOutEvent(nsISupports* aTarget,
-                  EventMessage aEventMessage,
-                  nsPresContext* aContext,
-                  nsPIDOMWindowOuter* aOriginalFocusedWindow,
-                  nsIContent* aOriginalFocusedContent,
-                  EventTarget* aRelatedTarget)
-    : mozilla::Runnable("FocusInOutEvent")
-    , mTarget(aTarget)
+  FocusInOutEvent(nsISupports* aTarget, EventMessage aEventMessage,
+                 nsPresContext* aContext,
+                 nsPIDOMWindowOuter* aOriginalFocusedWindow,
+                 nsIContent* aOriginalFocusedContent,
+                 EventTarget* aRelatedTarget)
+    : mTarget(aTarget)
     , mContext(aContext)
     , mEventMessage(aEventMessage)
     , mOriginalFocusedWindow(aOriginalFocusedWindow)
@@ -2270,8 +2264,8 @@ nsFocusManager::RaiseWindow(nsPIDOMWindowOuter* aWindow)
     nsCOMPtr<nsPIDOMWindowOuter> active(mActiveWindow);
     nsCOMPtr<nsPIDOMWindowOuter> window(aWindow);
     RefPtr<nsFocusManager> self(this);
-    NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-      "nsFocusManager::RaiseWindow", [self, active, window]() -> void {
+    NS_DispatchToCurrentThread(
+      NS_NewRunnableFunction([self, active, window] () -> void {
         if (active) {
           self->WindowLowered(active);
         }
@@ -3629,7 +3623,6 @@ class PointerUnlocker : public Runnable
 {
 public:
   PointerUnlocker()
-    : mozilla::Runnable("PointerUnlocker")
   {
     MOZ_ASSERT(!PointerUnlocker::sActiveUnlocker);
     PointerUnlocker::sActiveUnlocker = this;

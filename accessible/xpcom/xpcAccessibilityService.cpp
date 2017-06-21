@@ -79,12 +79,8 @@ xpcAccessibilityService::Release(void)
   if (count == 1 && !mShutdownTimer) {
     mShutdownTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
     if (mShutdownTimer) {
-      mShutdownTimer->InitWithNamedFuncCallback(
-        ShutdownCallback,
-        this,
-        100,
-        nsITimer::TYPE_ONE_SHOT,
-        "xpcAccessibilityService::Release");
+      mShutdownTimer->InitWithFuncCallback(ShutdownCallback, this, 100,
+                                           nsITimer::TYPE_ONE_SHOT);
     }
   }
 

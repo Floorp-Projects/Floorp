@@ -404,10 +404,9 @@ WebBrowserChrome2Stub::Blur()
 class BrowserDestroyer final : public Runnable
 {
 public:
-  BrowserDestroyer(nsIWebBrowser* aBrowser, nsISupports* aContainer)
-    : mozilla::Runnable("BrowserDestroyer")
-    , mBrowser(aBrowser)
-    , mContainer(aContainer)
+  BrowserDestroyer(nsIWebBrowser *aBrowser, nsISupports *aContainer) :
+    mBrowser(aBrowser),
+    mContainer(aContainer)
   {
   }
 

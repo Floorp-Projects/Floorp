@@ -325,10 +325,9 @@ KeyPair::Sign(const nsACString & textToSign,
 }
 
 KeyGenRunnable::KeyGenRunnable(KeyType keyType,
-                               nsIIdentityKeyGenCallback* callback,
+                               nsIIdentityKeyGenCallback * callback,
                                nsIEventTarget* operationThread)
-  : mozilla::Runnable("KeyGenRunnable")
-  , mKeyType(keyType)
+  : mKeyType(keyType)
   , mCallback(new nsMainThreadPtrHolder<nsIIdentityKeyGenCallback>(
       "KeyGenRunnable::mCallback", callback))
   , mRv(NS_ERROR_NOT_INITIALIZED)
@@ -484,11 +483,10 @@ KeyGenRunnable::Run()
   return NS_OK;
 }
 
-SignRunnable::SignRunnable(const nsACString& aText,
-                           SECKEYPrivateKey* privateKey,
-                           nsIIdentitySignCallback* aCallback)
-  : mozilla::Runnable("SignRunnable")
-  , mTextToSign(aText)
+SignRunnable::SignRunnable(const nsACString & aText,
+                           SECKEYPrivateKey * privateKey,
+                           nsIIdentitySignCallback * aCallback)
+  : mTextToSign(aText)
   , mPrivateKey(SECKEY_CopyPrivateKey(privateKey))
   , mCallback(new nsMainThreadPtrHolder<nsIIdentitySignCallback>(
       "SignRunnable::mCallback", aCallback))

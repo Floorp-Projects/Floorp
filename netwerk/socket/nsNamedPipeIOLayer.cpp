@@ -211,7 +211,7 @@ NamedPipeInfo::OnDataAvailable(uint32_t aBytesTransferred,
   mErrorCode = ERROR_SUCCESS;
 
   // dispatch an empty event to trigger STS thread
-  gSocketTransportService->Dispatch(NS_NewRunnableFunction("NamedPipeInfo::OnDataAvailable", []{}),
+  gSocketTransportService->Dispatch(NS_NewRunnableFunction([]{}),
                                     NS_DISPATCH_NORMAL);
 
   return NS_OK;
@@ -229,7 +229,7 @@ NamedPipeInfo::OnError(uint32_t aError,
   mErrorCode = aError;
 
   // dispatch an empty event to trigger STS thread
-  gSocketTransportService->Dispatch(NS_NewRunnableFunction("NamedPipeInfo::OnError", []{}),
+  gSocketTransportService->Dispatch(NS_NewRunnableFunction([]{}),
                                     NS_DISPATCH_NORMAL);
 
   return NS_OK;

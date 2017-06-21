@@ -307,8 +307,7 @@ nsProcess::Monitor(void* aArg)
   if (NS_IsMainThread()) {
     process->ProcessComplete();
   } else {
-    NS_DispatchToMainThread(NewRunnableMethod(
-      "nsProcess::ProcessComplete", process, &nsProcess::ProcessComplete));
+    NS_DispatchToMainThread(NewRunnableMethod(process, &nsProcess::ProcessComplete));
   }
 
   if (!process->mBlocking) {

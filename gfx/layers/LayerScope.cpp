@@ -344,10 +344,9 @@ private:
     class CreateServerSocketRunnable : public Runnable
     {
     public:
-      explicit CreateServerSocketRunnable(LayerScopeManager* aLayerScopeManager)
-        : Runnable("layers::LayerScopeManager::CreateServerSocketRunnable")
-        , mLayerScopeManager(aLayerScopeManager)
-      {
+        explicit CreateServerSocketRunnable(LayerScopeManager *aLayerScopeManager)
+            : mLayerScopeManager(aLayerScopeManager)
+        {
         }
         NS_IMETHOD Run() override {
             mLayerScopeManager->mWebSocketManager =

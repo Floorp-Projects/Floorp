@@ -3690,10 +3690,8 @@ nsPrintEngine::Observe(nsISupports *aSubject, const char *aTopic, const char16_t
 //---------------------------------------------------------------
 class nsPrintCompletionEvent : public Runnable {
 public:
-  explicit nsPrintCompletionEvent(nsIDocumentViewerPrint* docViewerPrint)
-    : mozilla::Runnable("nsPrintCompletionEvent")
-    , mDocViewerPrint(docViewerPrint)
-  {
+  explicit nsPrintCompletionEvent(nsIDocumentViewerPrint *docViewerPrint)
+    : mDocViewerPrint(docViewerPrint) {
     NS_ASSERTION(mDocViewerPrint, "mDocViewerPrint is null.");
   }
 

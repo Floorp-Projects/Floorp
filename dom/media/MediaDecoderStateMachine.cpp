@@ -1663,9 +1663,7 @@ private:
   {
   public:
     explicit AysncNextFrameSeekTask(NextFrameSeekingState* aStateObject)
-      : Runnable("MediaDecoderStateMachine::NextFrameSeekingState::"
-                 "AysncNextFrameSeekTask")
-      , mStateObj(aStateObject)
+      : mStateObj(aStateObject)
     {
     }
 
@@ -2895,10 +2893,7 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
 
   // Dispatch initialization that needs to happen on that task queue.
   nsCOMPtr<nsIRunnable> r = NewRunnableMethod<RefPtr<MediaDecoder>>(
-    "MediaDecoderStateMachine::InitializationTask",
-    this,
-    &MediaDecoderStateMachine::InitializationTask,
-    aDecoder);
+    this, &MediaDecoderStateMachine::InitializationTask, aDecoder);
   mTaskQueue->DispatchStateChange(r.forget());
 
   mAudioQueueListener = AudioQueue().PopEvent().Connect(
@@ -3105,11 +3100,10 @@ void MediaDecoderStateMachine::PlayStateChanged()
 
 void MediaDecoderStateMachine::SetVideoDecodeMode(VideoDecodeMode aMode)
 {
-  nsCOMPtr<nsIRunnable> r = NewRunnableMethod<VideoDecodeMode>(
-    "MediaDecoderStateMachine::SetVideoDecodeModeInternal",
-    this,
-    &MediaDecoderStateMachine::SetVideoDecodeModeInternal,
-    aMode);
+  nsCOMPtr<nsIRunnable> r =
+    NewRunnableMethod<VideoDecodeMode>(this,
+                                       &MediaDecoderStateMachine::SetVideoDecodeModeInternal,
+                                       aMode);
   OwnerThread()->DispatchStateChange(r.forget());
 }
 
@@ -3658,9 +3652,7 @@ MediaDecoderStateMachine::ScheduleStateMachine()
   mDispatchedStateMachine = true;
 
   OwnerThread()->Dispatch(
-    NewRunnableMethod("MediaDecoderStateMachine::RunStateMachine",
-                      this,
-                      &MediaDecoderStateMachine::RunStateMachine));
+    NewRunnableMethod(this, &MediaDecoderStateMachine::RunStateMachine));
 }
 
 void
@@ -3895,12 +3887,9 @@ MediaDecoderStateMachine::RequestDebugInfo()
   using PromiseType = MediaDecoder::DebugInfoPromise;
   RefPtr<PromiseType::Private> p = new PromiseType::Private(__func__);
   RefPtr<MediaDecoderStateMachine> self = this;
-  OwnerThread()->Dispatch(
-    NS_NewRunnableFunction(
-      "MediaDecoderStateMachine::RequestDebugInfo",
-      [self, p]() { p->Resolve(self->GetDebugInfo(), __func__); }),
-    AbstractThread::AssertDispatchSuccess,
-    AbstractThread::TailDispatch);
+  OwnerThread()->Dispatch(NS_NewRunnableFunction([self, p] () {
+    p->Resolve(self->GetDebugInfo(), __func__);
+  }), AbstractThread::AssertDispatchSuccess, AbstractThread::TailDispatch);
   return p.forget();
 }
 
@@ -3910,11 +3899,8 @@ void MediaDecoderStateMachine::AddOutputStream(ProcessedMediaStream* aStream,
   MOZ_ASSERT(NS_IsMainThread());
   LOG("AddOutputStream aStream=%p!", aStream);
   mOutputStreamManager->Add(aStream, aFinishWhenEnded);
-  nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod<bool>("MediaDecoderStateMachine::SetAudioCaptured",
-                            this,
-                            &MediaDecoderStateMachine::SetAudioCaptured,
-                            true);
+  nsCOMPtr<nsIRunnable> r = NewRunnableMethod<bool>(
+    this, &MediaDecoderStateMachine::SetAudioCaptured, true);
   OwnerThread()->Dispatch(r.forget());
 }
 
@@ -3924,11 +3910,8 @@ void MediaDecoderStateMachine::RemoveOutputStream(MediaStream* aStream)
   LOG("RemoveOutputStream=%p!", aStream);
   mOutputStreamManager->Remove(aStream);
   if (mOutputStreamManager->IsEmpty()) {
-    nsCOMPtr<nsIRunnable> r =
-      NewRunnableMethod<bool>("MediaDecoderStateMachine::SetAudioCaptured",
-                              this,
-                              &MediaDecoderStateMachine::SetAudioCaptured,
-                              false);
+    nsCOMPtr<nsIRunnable> r = NewRunnableMethod<bool>(
+      this, &MediaDecoderStateMachine::SetAudioCaptured, false);
     OwnerThread()->Dispatch(r.forget());
   }
 }

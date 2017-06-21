@@ -122,11 +122,9 @@ CompositorVsyncScheduler::PostCompositeTask(TimeStamp aCompositeTimestamp)
   // can be called from the compositor or vsync thread
   MonitorAutoLock lock(mCurrentCompositeTaskMonitor);
   if (mCurrentCompositeTask == nullptr && CompositorThreadHolder::Loop()) {
-    RefPtr<CancelableRunnable> task = NewCancelableRunnableMethod<TimeStamp>(
-      "layers::CompositorVsyncScheduler::Composite",
-      this,
-      &CompositorVsyncScheduler::Composite,
-      aCompositeTimestamp);
+    RefPtr<CancelableRunnable> task =
+      NewCancelableRunnableMethod<TimeStamp>(this, &CompositorVsyncScheduler::Composite,
+                                             aCompositeTimestamp);
     mCurrentCompositeTask = task;
     ScheduleTask(task.forget(), 0);
   }
@@ -183,10 +181,8 @@ CompositorVsyncScheduler::SetNeedsComposite()
 {
   if (!CompositorThreadHolder::IsInCompositorThread()) {
     MonitorAutoLock lock(mSetNeedsCompositeMonitor);
-    RefPtr<CancelableRunnable> task = NewCancelableRunnableMethod(
-      "layers::CompositorVsyncScheduler::SetNeedsComposite",
-      this,
-      &CompositorVsyncScheduler::SetNeedsComposite);
+    RefPtr<CancelableRunnable> task =
+      NewCancelableRunnableMethod(this, &CompositorVsyncScheduler::SetNeedsComposite);
     mSetNeedsCompositeTask = task;
     ScheduleTask(task.forget(), 0);
     return;

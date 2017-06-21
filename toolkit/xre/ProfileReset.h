@@ -20,8 +20,7 @@ class ProfileResetCleanupResultTask : public mozilla::Runnable
 {
 public:
   ProfileResetCleanupResultTask()
-    : mozilla::Runnable("ProfileResetCleanupResultTask")
-    , mWorkerThread(do_GetCurrentThread())
+    : mWorkerThread(do_GetCurrentThread())
   {
     MOZ_ASSERT(!NS_IsMainThread());
   }
@@ -39,12 +38,9 @@ private:
 class ProfileResetCleanupAsyncTask : public mozilla::Runnable
 {
 public:
-  ProfileResetCleanupAsyncTask(nsIFile* aProfileDir,
-                               nsIFile* aProfileLocalDir,
-                               nsIFile* aTargetDir,
-                               const nsAString& aLeafName)
-    : mozilla::Runnable("ProfileResetCleanupAsyncTask")
-    , mProfileDir(aProfileDir)
+  ProfileResetCleanupAsyncTask(nsIFile* aProfileDir, nsIFile* aProfileLocalDir,
+                               nsIFile* aTargetDir, const nsAString &aLeafName)
+    : mProfileDir(aProfileDir)
     , mProfileLocalDir(aProfileLocalDir)
     , mTargetDir(aTargetDir)
     , mLeafName(aLeafName)

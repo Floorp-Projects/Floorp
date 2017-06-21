@@ -206,9 +206,7 @@ PreallocatedProcessManagerImpl::AllocateAfterDelay()
   // message loop in practice never goes idle, that didn't work out well.
   // Let's just launch the process after the delay.
   NS_DelayedDispatchToCurrentThread(
-    NewRunnableMethod("PreallocatedProcessManagerImpl::AllocateNow",
-                      this,
-                      &PreallocatedProcessManagerImpl::AllocateNow),
+    NewRunnableMethod(this, &PreallocatedProcessManagerImpl::AllocateNow),
     Preferences::GetUint("dom.ipc.processPrelaunch.delayMs",
                          DEFAULT_ALLOCATE_DELAY));
 }
@@ -220,10 +218,7 @@ PreallocatedProcessManagerImpl::AllocateOnIdle()
     return;
   }
 
-  NS_IdleDispatchToCurrentThread(
-    NewRunnableMethod("PreallocatedProcessManagerImpl::AllocateNow",
-                      this,
-                      &PreallocatedProcessManagerImpl::AllocateNow));
+  NS_IdleDispatchToCurrentThread(NewRunnableMethod(this, &PreallocatedProcessManagerImpl::AllocateNow));
 }
 
 void

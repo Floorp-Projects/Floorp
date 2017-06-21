@@ -411,14 +411,13 @@ public:
              already_AddRefed<AbstractResult>& aDiscardedResult,
              const nsACString& aOperation,
              int32_t aOSError)
-    : Runnable("ErrorEvent")
-    , mOnSuccess(aOnSuccess)
+    : mOnSuccess(aOnSuccess)
     , mOnError(aOnError)
     , mDiscardedResult(aDiscardedResult)
     , mOSError(aOSError)
     , mOperation(aOperation)
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
+    {
+      MOZ_ASSERT(!NS_IsMainThread());
     }
 
   NS_IMETHOD Run() override {
@@ -461,16 +460,14 @@ public:
    * we do not manipulate xpconnect refcounters off the main thread
    * (which is illegal).
    */
-  SuccessEvent(
-    nsMainThreadPtrHandle<nsINativeOSFileSuccessCallback>& aOnSuccess,
-    nsMainThreadPtrHandle<nsINativeOSFileErrorCallback>& aOnError,
-    already_AddRefed<nsINativeOSFileResult>& aResult)
-    : Runnable("SuccessEvent")
-    , mOnSuccess(aOnSuccess)
+  SuccessEvent(nsMainThreadPtrHandle<nsINativeOSFileSuccessCallback>& aOnSuccess,
+               nsMainThreadPtrHandle<nsINativeOSFileErrorCallback>& aOnError,
+               already_AddRefed<nsINativeOSFileResult>& aResult)
+    : mOnSuccess(aOnSuccess)
     , mOnError(aOnError)
     , mResult(aResult)
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
+    {
+      MOZ_ASSERT(!NS_IsMainThread());
     }
 
   NS_IMETHOD Run() override {
@@ -503,11 +500,9 @@ public:
  */
 class AbstractDoEvent: public Runnable {
 public:
-  AbstractDoEvent(
-    nsMainThreadPtrHandle<nsINativeOSFileSuccessCallback>& aOnSuccess,
-    nsMainThreadPtrHandle<nsINativeOSFileErrorCallback>& aOnError)
-    : Runnable("AbstractDoEvent")
-    , mOnSuccess(aOnSuccess)
+  AbstractDoEvent(nsMainThreadPtrHandle<nsINativeOSFileSuccessCallback>& aOnSuccess,
+                  nsMainThreadPtrHandle<nsINativeOSFileErrorCallback>& aOnError)
+    : mOnSuccess(aOnSuccess)
     , mOnError(aOnError)
 #if defined(DEBUG)
     , mResolved(false)

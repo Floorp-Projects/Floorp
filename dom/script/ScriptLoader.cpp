@@ -1050,9 +1050,9 @@ private:
   RefPtr<ScriptLoader> mLoader;
   RefPtr<ScriptLoadRequest> mRequest;
 public:
-  ScriptRequestProcessor(ScriptLoader* aLoader, ScriptLoadRequest* aRequest)
-    : Runnable("dom::ScriptRequestProcessor")
-    , mLoader(aLoader)
+  ScriptRequestProcessor(ScriptLoader* aLoader,
+                         ScriptLoadRequest* aRequest)
+    : mLoader(aLoader)
     , mRequest(aRequest)
   {}
   NS_IMETHOD Run() override
@@ -1207,8 +1207,7 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
     if (!scriptURI) {
       // Asynchronously report the failure to create a URI object
       NS_DispatchToCurrentThread(
-        NewRunnableMethod("nsIScriptElement::FireErrorEvent",
-                          aElement,
+        NewRunnableMethod(aElement,
                           &nsIScriptElement::FireErrorEvent));
       return false;
     }
@@ -1298,8 +1297,7 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
 
         // Asynchronously report the load failure
         NS_DispatchToCurrentThread(
-          NewRunnableMethod("nsIScriptElement::FireErrorEvent",
-                            aElement,
+          NewRunnableMethod(aElement,
                             &nsIScriptElement::FireErrorEvent));
         return false;
       }
@@ -1484,8 +1482,7 @@ class NotifyOffThreadScriptLoadCompletedRunnable : public Runnable
 public:
   NotifyOffThreadScriptLoadCompletedRunnable(ScriptLoadRequest* aRequest,
                                              ScriptLoader* aLoader)
-    : Runnable("dom::NotifyOffThreadScriptLoadCompletedRunnable")
-    , mRequest(aRequest)
+    : mRequest(aRequest)
     , mLoader(aLoader)
     , mDocGroup(aLoader->GetDocGroup())
     , mToken(nullptr)
@@ -2414,10 +2411,8 @@ void
 ScriptLoader::ProcessPendingRequestsAsync()
 {
   if (HasPendingRequests()) {
-    nsCOMPtr<nsIRunnable> task =
-      NewRunnableMethod("dom::ScriptLoader::ProcessPendingRequests",
-                        this,
-                        &ScriptLoader::ProcessPendingRequests);
+    nsCOMPtr<nsIRunnable> task = NewRunnableMethod(this,
+                                                   &ScriptLoader::ProcessPendingRequests);
     if (mDocument) {
       mDocument->Dispatch("ScriptLoader", TaskCategory::Other, task.forget());
     } else {

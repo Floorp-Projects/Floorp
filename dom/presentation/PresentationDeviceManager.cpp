@@ -157,9 +157,7 @@ PresentationDeviceManager::GetAvailableDevices(nsIArray* aPresentationUrls, nsIA
   // Bug 1194049: some providers may discontinue discovery after timeout.
   // Call |ForceDiscovery()| here to make sure device lists are updated.
   NS_DispatchToMainThread(
-    NewRunnableMethod("dom::PresentationDeviceManager::ForceDiscovery",
-                      this,
-                      &PresentationDeviceManager::ForceDiscovery));
+      NewRunnableMethod(this, &PresentationDeviceManager::ForceDiscovery));
 
   nsTArray<nsString> presentationUrls;
   if (aPresentationUrls) {

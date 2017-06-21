@@ -446,8 +446,7 @@ public:
                       BackgroundHangThread* aThread,
                       Telemetry::HangHistogram&& aHistogram,
                       Telemetry::NativeHangStack&& aNativeStack)
-    : CancelableRunnable("ProcessHangRunnable")
-    , mManager(aManager)
+    : mManager(aManager)
     , mNativeStack(mozilla::Move(aNativeStack))
     , mThread(aThread)
     , mHistogram(mozilla::Move(aHistogram))

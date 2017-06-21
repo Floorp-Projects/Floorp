@@ -120,11 +120,7 @@ using namespace mozilla::dom;
 class nsAutoFocusEvent : public Runnable
 {
 public:
-  explicit nsAutoFocusEvent(nsGenericHTMLFormElement* aElement)
-    : mozilla::Runnable("nsAutoFocusEvent")
-    , mElement(aElement)
-  {
-  }
+  explicit nsAutoFocusEvent(nsGenericHTMLFormElement* aElement) : mElement(aElement) {}
 
   NS_IMETHOD Run() override {
     nsFocusManager* fm = nsFocusManager::GetFocusManager();

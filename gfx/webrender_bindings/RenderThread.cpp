@@ -124,11 +124,9 @@ void
 RenderThread::NewFrameReady(wr::WindowId aWindowId)
 {
   if (!IsInRenderThread()) {
-    Loop()->PostTask(
-      NewRunnableMethod<wr::WindowId>("wr::RenderThread::NewFrameReady",
-                                      this,
-                                      &RenderThread::NewFrameReady,
-                                      aWindowId));
+    Loop()->PostTask(NewRunnableMethod<wr::WindowId>(
+      this, &RenderThread::NewFrameReady, aWindowId
+    ));
     return;
   }
 
@@ -141,11 +139,8 @@ RenderThread::NewScrollFrameReady(wr::WindowId aWindowId, bool aCompositeNeeded)
 {
   if (!IsInRenderThread()) {
     Loop()->PostTask(NewRunnableMethod<wr::WindowId, bool>(
-      "wr::RenderThread::NewScrollFrameReady",
-      this,
-      &RenderThread::NewScrollFrameReady,
-      aWindowId,
-      aCompositeNeeded));
+      this, &RenderThread::NewScrollFrameReady, aWindowId, aCompositeNeeded
+    ));
     return;
   }
 
@@ -156,13 +151,10 @@ void
 RenderThread::RunEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aEvent)
 {
   if (!IsInRenderThread()) {
-    Loop()->PostTask(
-      NewRunnableMethod<wr::WindowId, UniquePtr<RendererEvent>&&>(
-        "wr::RenderThread::RunEvent",
-        this,
-        &RenderThread::RunEvent,
-        aWindowId,
-        Move(aEvent)));
+    Loop()->PostTask(NewRunnableMethod<wr::WindowId, UniquePtr<RendererEvent>&&>(
+      this, &RenderThread::RunEvent,
+      aWindowId, Move(aEvent)
+    ));
     return;
   }
 
@@ -310,7 +302,6 @@ RenderThread::UnregisterExternalImage(uint64_t aExternalImageId)
     RefPtr<RenderTextureHost> texture = mRenderTextures.Get(aExternalImageId);
     mRenderTextures.Remove(aExternalImageId);
     Loop()->PostTask(NewRunnableMethod<RefPtr<RenderTextureHost>>(
-      "RenderThread::DeferredRenderTextureHostDestroy",
       this, &RenderThread::DeferredRenderTextureHostDestroy, Move(texture)
     ));
   } else {

@@ -42,11 +42,7 @@ template<typename T>
 struct DeleteOnMainThreadTask : public Runnable
 {
   T* mToDelete;
-  explicit DeleteOnMainThreadTask(T* aToDelete)
-    : Runnable("layers::DeleteOnMainThreadTask")
-    , mToDelete(aToDelete)
-  {
-  }
+  explicit DeleteOnMainThreadTask(T* aToDelete) : mToDelete(aToDelete) {}
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
     mToDelete->DeleteToBeCalledOnMainThread();

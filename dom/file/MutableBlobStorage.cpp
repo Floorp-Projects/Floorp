@@ -31,8 +31,7 @@ public:
                            MutableBlobStorageCallback* aCallback,
                            Blob* aBlob,
                            nsresult aRv)
-    : Runnable("dom::BlobCreationDoneRunnable")
-    , mBlobStorage(aBlobStorage)
+    : mBlobStorage(aBlobStorage)
     , mCallback(aCallback)
     , mBlob(aBlob)
     , mRv(aRv)
@@ -80,8 +79,7 @@ class FileCreatedRunnable final : public Runnable
 {
 public:
   FileCreatedRunnable(MutableBlobStorage* aBlobStorage, PRFileDesc* aFD)
-    : Runnable("dom::FileCreatedRunnable")
-    , mBlobStorage(aBlobStorage)
+    : mBlobStorage(aBlobStorage)
     , mFD(aFD)
   {
     MOZ_ASSERT(aBlobStorage);
@@ -116,8 +114,7 @@ class CreateTemporaryFileRunnable final : public Runnable
 {
 public:
   explicit CreateTemporaryFileRunnable(MutableBlobStorage* aBlobStorage)
-    : Runnable("dom::CreateTemporaryFileRunnable")
-    , mBlobStorage(aBlobStorage)
+    : mBlobStorage(aBlobStorage)
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(XRE_IsParentProcess());
@@ -151,8 +148,7 @@ class ErrorPropagationRunnable final : public Runnable
 {
 public:
   ErrorPropagationRunnable(MutableBlobStorage* aBlobStorage, nsresult aRv)
-    : Runnable("dom::ErrorPropagationRunnable")
-    , mBlobStorage(aBlobStorage)
+    : mBlobStorage(aBlobStorage)
     , mRv(aRv)
   {}
 
@@ -221,12 +217,9 @@ public:
   }
 
 private:
-  WriteRunnable(MutableBlobStorage* aBlobStorage,
-                PRFileDesc* aFD,
-                void* aData,
-                uint32_t aLength)
-    : Runnable("dom::WriteRunnable")
-    , mBlobStorage(aBlobStorage)
+  WriteRunnable(MutableBlobStorage* aBlobStorage, PRFileDesc* aFD,
+                void* aData, uint32_t aLength)
+    : mBlobStorage(aBlobStorage)
     , mFD(aFD)
     , mData(aData)
     , mLength(aLength)
@@ -254,8 +247,7 @@ class CloseFileRunnable final : public Runnable
 {
 public:
   explicit CloseFileRunnable(PRFileDesc* aFD)
-    : Runnable("dom::CloseFileRunnable")
-    , mFD(aFD)
+    : mFD(aFD)
   {}
 
   NS_IMETHOD
@@ -287,8 +279,7 @@ public:
                      already_AddRefed<nsISupports> aParent,
                      const nsACString& aContentType,
                      already_AddRefed<MutableBlobStorageCallback> aCallback)
-    : Runnable("dom::CreateBlobRunnable")
-    , mBlobStorage(aBlobStorage)
+    : mBlobStorage(aBlobStorage)
     , mParent(aParent)
     , mContentType(aContentType)
     , mCallback(aCallback)
@@ -336,8 +327,7 @@ public:
                nsISupports* aParent,
                const nsACString& aContentType,
                MutableBlobStorageCallback* aCallback)
-    : Runnable("dom::LastRunnable")
-    , mBlobStorage(aBlobStorage)
+    : mBlobStorage(aBlobStorage)
     , mParent(aParent)
     , mContentType(aContentType)
     , mCallback(aCallback)

@@ -82,8 +82,7 @@ public:
                           FileSystemRequestParent* aActor,
                           FileSystemTaskParentBase* aTask,
                           const nsAString& aPath)
-    : Runnable("dom::CheckPermissionRunnable")
-    , mContentParent(aParent)
+    : mContentParent(aParent)
     , mActor(aActor)
     , mTask(aTask)
     , mPath(aPath)

@@ -35,9 +35,9 @@ IsChildProcess()
 class WebSocketBaseRunnable : public Runnable
 {
 public:
-  WebSocketBaseRunnable(uint32_t aWebSocketSerialID, uint64_t aInnerWindowID)
-    : Runnable("net::WebSocketBaseRunnable")
-    , mWebSocketSerialID(aWebSocketSerialID)
+  WebSocketBaseRunnable(uint32_t aWebSocketSerialID,
+                        uint64_t aInnerWindowID)
+    : mWebSocketSerialID(aWebSocketSerialID)
     , mInnerWindowID(aInnerWindowID)
   {}
 

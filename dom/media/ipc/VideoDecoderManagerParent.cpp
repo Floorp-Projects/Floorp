@@ -50,12 +50,10 @@ public:
 
 private:
   ~VideoDecoderManagerThreadHolder() {
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "dom::VideoDecoderManagerThreadHolder::~VideoDecoderManagerThreadHolder",
-      []() -> void {
-        sVideoDecoderManagerThread->Shutdown();
-        sVideoDecoderManagerThread = nullptr;
-      }));
+    NS_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
+      sVideoDecoderManagerThread->Shutdown();
+      sVideoDecoderManagerThread = nullptr;
+    }));
   }
 };
 StaticRefPtr<VideoDecoderManagerThreadHolder> sVideoDecoderManagerThreadHolder;
@@ -101,16 +99,14 @@ VideoDecoderManagerParent::StartupThreads()
   sVideoDecoderManagerThread = managerThread;
   sVideoDecoderManagerThreadHolder = new VideoDecoderManagerThreadHolder();
 #if XP_WIN
-  sVideoDecoderManagerThread->Dispatch(NS_NewRunnableFunction("VideoDecoderManagerParent::StartupThreads",
-  []() {
+  sVideoDecoderManagerThread->Dispatch(NS_NewRunnableFunction([]() {
     HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
     MOZ_ASSERT(hr == S_OK);
   }), NS_DISPATCH_NORMAL);
 #endif
-  sVideoDecoderManagerThread->Dispatch(
-    NS_NewRunnableFunction("dom::VideoDecoderManagerParent::StartupThreads",
-                           []() { layers::VideoBridgeChild::Startup(); }),
-    NS_DISPATCH_NORMAL);
+  sVideoDecoderManagerThread->Dispatch(NS_NewRunnableFunction([]() {
+    layers::VideoBridgeChild::Startup();
+  }), NS_DISPATCH_NORMAL);
 
   sManagerTaskQueue = new TaskQueue(
     managerThread.forget(), "VideoDecoderManagerParent::sManagerTaskQueue");
@@ -136,9 +132,9 @@ void
 VideoDecoderManagerParent::ShutdownVideoBridge()
 {
   if (sVideoDecoderManagerThread) {
-    RefPtr<Runnable> task = NS_NewRunnableFunction(
-      "dom::VideoDecoderManagerParent::ShutdownVideoBridge",
-      []() { VideoBridgeChild::Shutdown(); });
+    RefPtr<Runnable> task = NS_NewRunnableFunction([]() {
+      VideoBridgeChild::Shutdown();
+    });
     SyncRunnable::DispatchToThread(sVideoDecoderManagerThread, task);
   }
 }
@@ -163,12 +159,8 @@ VideoDecoderManagerParent::CreateForContent(Endpoint<PVideoDecoderManagerParent>
   RefPtr<VideoDecoderManagerParent> parent =
     new VideoDecoderManagerParent(sVideoDecoderManagerThreadHolder);
 
-  RefPtr<Runnable> task =
-    NewRunnableMethod<Endpoint<PVideoDecoderManagerParent>&&>(
-      "dom::VideoDecoderManagerParent::Open",
-      parent,
-      &VideoDecoderManagerParent::Open,
-      Move(aEndpoint));
+  RefPtr<Runnable> task = NewRunnableMethod<Endpoint<PVideoDecoderManagerParent>&&>(
+    parent, &VideoDecoderManagerParent::Open, Move(aEndpoint));
   sVideoDecoderManagerThread->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
   return true;
 }

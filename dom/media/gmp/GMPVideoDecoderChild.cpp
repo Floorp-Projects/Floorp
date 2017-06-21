@@ -228,9 +228,7 @@ GMPVideoDecoderChild::Alloc(size_t aSize,
   if (mPendingDecodeComplete && mNeedShmemIntrCount == 0) {
     mPendingDecodeComplete = false;
     mPlugin->GMPMessageLoop()->PostTask(
-      NewRunnableMethod("gmp::GMPVideoDecoderChild::RecvDecodingComplete",
-                        this,
-                        &GMPVideoDecoderChild::RecvDecodingComplete));
+      NewRunnableMethod(this, &GMPVideoDecoderChild::RecvDecodingComplete));
   }
 #else
 #ifdef GMP_SAFE_SHMEM

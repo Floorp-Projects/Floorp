@@ -21,7 +21,6 @@ int gTestsIndex = 0;
 class RunNextTest : public mozilla::Runnable
 {
 public:
-  RunNextTest() : mozilla::Runnable("RunNextTest") {}
   NS_IMETHOD Run() override
   {
     NS_ASSERTION(NS_IsMainThread(), "Not running on the main thread?");

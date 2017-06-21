@@ -588,8 +588,7 @@ public:
   ProgressRunnable(CopyFileHandleOp* aCopyFileHandleOp,
                    uint64_t aProgress,
                    uint64_t aProgressMax)
-    : Runnable("dom::CopyFileHandleOp::ProgressRunnable")
-    , mCopyFileHandleOp(aCopyFileHandleOp)
+    : mCopyFileHandleOp(aCopyFileHandleOp)
     , mProgress(aProgress)
     , mProgressMax(aProgressMax)
   { }
@@ -1082,11 +1081,10 @@ FileHandleThreadPool::MaybeFireCallback(StoragesCompleteCallback* aCallback)
   return true;
 }
 
-FileHandleThreadPool::FileHandleQueue::FileHandleQueue(
-  FileHandleThreadPool* aFileHandleThreadPool,
-  FileHandle* aFileHandle)
-  : Runnable("dom::FileHandleThreadPool::FileHandleQueue")
-  , mOwningFileHandleThreadPool(aFileHandleThreadPool)
+FileHandleThreadPool::
+FileHandleQueue::FileHandleQueue(FileHandleThreadPool* aFileHandleThreadPool,
+                                 FileHandle* aFileHandle)
+  : mOwningFileHandleThreadPool(aFileHandleThreadPool)
   , mFileHandle(aFileHandle)
   , mShouldFinish(false)
 {

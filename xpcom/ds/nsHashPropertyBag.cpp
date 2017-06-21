@@ -276,8 +276,7 @@ class ProxyHashtableDestructor final : public mozilla::Runnable
 public:
   using HashtableType = nsInterfaceHashtable<nsStringHashKey, nsIVariant>;
   explicit ProxyHashtableDestructor(HashtableType&& aTable)
-    : mozilla::Runnable("ProxyHashtableDestructor")
-    , mPropertyHash(mozilla::Move(aTable))
+    : mPropertyHash(mozilla::Move(aTable))
   {}
 
   NS_IMETHODIMP

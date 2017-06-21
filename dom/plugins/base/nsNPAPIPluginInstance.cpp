@@ -887,8 +887,7 @@ java::GeckoSurface::LocalRef nsNPAPIPluginInstance::CreateSurface()
     return nullptr;
   }
 
-  nsCOMPtr<nsIRunnable> frameCallback = NewRunnableMethod("nsNPAPIPluginInstance::OnSurfaceTextureFrameAvailable",
-                                                          this, &nsNPAPIPluginInstance::OnSurfaceTextureFrameAvailable);
+  nsCOMPtr<nsIRunnable> frameCallback = NewRunnableMethod(this, &nsNPAPIPluginInstance::OnSurfaceTextureFrameAvailable);
 
   java::SurfaceTextureListener::LocalRef listener = java::SurfaceTextureListener::New();
 
@@ -1448,11 +1447,7 @@ nsNPAPIPluginInstance::ScheduleTimer(uint32_t interval, NPBool repeat, void (*ti
     return 0;
   }
   const short timerType = (repeat ? (short)nsITimer::TYPE_REPEATING_SLACK : (short)nsITimer::TYPE_ONE_SHOT);
-  xpcomTimer->InitWithNamedFuncCallback(PluginTimerCallback,
-                                        newTimer,
-                                        interval,
-                                        timerType,
-                                        "nsNPAPIPluginInstance::ScheduleTimer");
+  xpcomTimer->InitWithFuncCallback(PluginTimerCallback, newTimer, interval, timerType);
   newTimer->timer = xpcomTimer;
 
   // save callback function

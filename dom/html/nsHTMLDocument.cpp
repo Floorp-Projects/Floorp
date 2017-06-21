@@ -2505,9 +2505,7 @@ nsHTMLDocument::MaybeEditingStateChanged()
       EditingStateChanged();
     } else if (!mInDestructor) {
       nsContentUtils::AddScriptRunner(
-        NewRunnableMethod("nsHTMLDocument::MaybeEditingStateChanged",
-                          this,
-                          &nsHTMLDocument::MaybeEditingStateChanged));
+        NewRunnableMethod(this, &nsHTMLDocument::MaybeEditingStateChanged));
     }
   }
 }
@@ -2538,10 +2536,9 @@ nsHTMLDocument::SetMayStartLayout(bool aMayStartLayout)
 class DeferredContentEditableCountChangeEvent : public Runnable
 {
 public:
-  DeferredContentEditableCountChangeEvent(nsHTMLDocument* aDoc,
-                                          nsIContent* aElement)
-    : mozilla::Runnable("DeferredContentEditableCountChangeEvent")
-    , mDoc(aDoc)
+  DeferredContentEditableCountChangeEvent(nsHTMLDocument *aDoc,
+                                          nsIContent *aElement)
+    : mDoc(aDoc)
     , mElement(aElement)
   {
   }

@@ -467,49 +467,37 @@ public:
     NO_LONGER_BUFFERED,
   };  /* types */
 
-  DataChannelOnMessageAvailable(
-    int32_t aType,
-    DataChannelConnection* aConnection,
-    DataChannel* aChannel,
-    nsCString& aData, // XXX this causes inefficiency
-    int32_t aLen)
-    : Runnable("DataChannelOnMessageAvailable")
-    , mType(aType)
-    , mChannel(aChannel)
-    , mConnection(aConnection)
-    , mData(aData)
-    , mLen(aLen)
-  {
-  }
+  DataChannelOnMessageAvailable(int32_t     aType,
+                                DataChannelConnection *aConnection,
+                                DataChannel *aChannel,
+                                nsCString   &aData,  // XXX this causes inefficiency
+                                int32_t     aLen)
+    : mType(aType),
+      mChannel(aChannel),
+      mConnection(aConnection),
+      mData(aData),
+      mLen(aLen) {}
 
-  DataChannelOnMessageAvailable(int32_t aType, DataChannel* aChannel)
-    : Runnable("DataChannelOnMessageAvailable")
-    , mType(aType)
-    , mChannel(aChannel)
-  {
-  }
+  DataChannelOnMessageAvailable(int32_t     aType,
+                                DataChannel *aChannel)
+    : mType(aType),
+      mChannel(aChannel) {}
   // XXX is it safe to leave mData/mLen uninitialized?  This should only be
   // used for notifications that don't use them, but I'd like more
   // bulletproof compile-time checking.
 
-  DataChannelOnMessageAvailable(int32_t aType,
-                                DataChannelConnection* aConnection,
-                                DataChannel* aChannel)
-    : Runnable("DataChannelOnMessageAvailable")
-    , mType(aType)
-    , mChannel(aChannel)
-    , mConnection(aConnection)
-  {
-  }
+  DataChannelOnMessageAvailable(int32_t     aType,
+                                DataChannelConnection *aConnection,
+                                DataChannel *aChannel)
+    : mType(aType),
+      mChannel(aChannel),
+      mConnection(aConnection) {}
 
   // for ON_CONNECTION/ON_DISCONNECTED
-  DataChannelOnMessageAvailable(int32_t aType,
-                                DataChannelConnection* aConnection)
-    : Runnable("DataChannelOnMessageAvailable")
-    , mType(aType)
-    , mConnection(aConnection)
-  {
-  }
+  DataChannelOnMessageAvailable(int32_t     aType,
+                                DataChannelConnection *aConnection)
+    : mType(aType),
+      mConnection(aConnection) {}
 
   NS_IMETHOD Run() override
   {

@@ -2107,12 +2107,11 @@ Http2Session::RecvContinuation(Http2Session *self)
 class UpdateAltSvcEvent : public Runnable
 {
 public:
-  UpdateAltSvcEvent(const nsCString& header,
-                    const nsCString& aOrigin,
-                    nsHttpConnectionInfo* aCI,
-                    nsIInterfaceRequestor* callbacks)
-    : Runnable("net::UpdateAltSvcEvent")
-    , mHeader(header)
+UpdateAltSvcEvent(const nsCString &header,
+                  const nsCString &aOrigin,
+                  nsHttpConnectionInfo *aCI,
+                  nsIInterfaceRequestor *callbacks)
+    : mHeader(header)
     , mOrigin(aOrigin)
     , mCI(aCI)
     , mCallbacks(callbacks)

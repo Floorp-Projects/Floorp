@@ -1779,11 +1779,10 @@ nsFtpState::KillControlConnection()
 class nsFtpAsyncAlert : public Runnable
 {
 public:
-  nsFtpAsyncAlert(nsIPrompt* aPrompter, nsString aResponseMsg)
-    : mozilla::Runnable("nsFtpAsyncAlert")
-    , mPrompter(aPrompter)
-    , mResponseMsg(aResponseMsg)
-  {
+    nsFtpAsyncAlert(nsIPrompt *aPrompter, nsString aResponseMsg)
+        : mPrompter(aPrompter)
+        , mResponseMsg(aResponseMsg)
+    {
     }
 protected:
     virtual ~nsFtpAsyncAlert()

@@ -5035,11 +5035,8 @@ GetPaintStyleInfo(const nsIFrame* aFrame,
 
 class nsDelayedCalcBCBorders : public Runnable {
 public:
-  explicit nsDelayedCalcBCBorders(nsIFrame* aFrame)
-    : mozilla::Runnable("nsDelayedCalcBCBorders")
-    , mFrame(aFrame)
-  {
-  }
+  explicit nsDelayedCalcBCBorders(nsIFrame* aFrame) :
+    mFrame(aFrame) {}
 
   NS_IMETHOD Run() override {
     if (mFrame) {

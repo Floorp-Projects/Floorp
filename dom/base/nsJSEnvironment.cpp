@@ -436,8 +436,7 @@ public:
                    JS::RootingContext* aRootingCx,
                    xpc::ErrorReport* aReport,
                    JS::Handle<JS::Value> aError)
-    : mozilla::Runnable("ScriptErrorEvent")
-    , mWindow(aWindow)
+    : mWindow(aWindow)
     , mReport(aReport)
     , mError(aRootingCx, aError)
   {}
@@ -2220,11 +2219,7 @@ class NotifyGCEndRunnable : public Runnable
   nsString mMessage;
 
 public:
-  explicit NotifyGCEndRunnable(const nsString& aMessage)
-    : mozilla::Runnable("NotifyGCEndRunnable")
-    , mMessage(aMessage)
-  {
-  }
+  explicit NotifyGCEndRunnable(const nsString& aMessage) : mMessage(aMessage) {}
 
   NS_DECL_NSIRUNNABLE
 };
@@ -2550,8 +2545,7 @@ class AsyncTaskRunnable final : public Runnable
 
 public:
   explicit AsyncTaskRunnable(JS::AsyncTask* aTask)
-    : mozilla::Runnable("AsyncTaskRunnable")
-    , mTask(aTask)
+    : mTask(aTask)
   {
     MOZ_ASSERT(mTask);
   }

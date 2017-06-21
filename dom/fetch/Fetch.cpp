@@ -75,8 +75,7 @@ class FetchSignalProxy final : public FetchSignal::Follower
 
   public:
     explicit FetchSignalProxyRunnable(FetchSignalProxy* aProxy)
-      : Runnable("dom::FetchSignalProxy::FetchSignalProxyRunnable")
-      , mProxy(aProxy)
+      : mProxy(aProxy)
     {}
 
     NS_IMETHOD
@@ -265,8 +264,7 @@ class MainThreadFetchRunnable : public Runnable
 public:
   MainThreadFetchRunnable(WorkerFetchResolver* aResolver,
                           InternalRequest* aRequest)
-    : Runnable("dom::MainThreadFetchRunnable")
-    , mResolver(aResolver)
+    : mResolver(aResolver)
     , mRequest(aRequest)
   {
     MOZ_ASSERT(mResolver);

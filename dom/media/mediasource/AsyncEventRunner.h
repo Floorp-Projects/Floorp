@@ -16,8 +16,7 @@ class AsyncEventRunner : public Runnable
 {
 public:
   AsyncEventRunner(T* aTarget, const char* aName)
-    : Runnable("AsyncEventRunner")
-    , mTarget(aTarget)
+    : mTarget(aTarget)
     , mName(aName)
   {}
 

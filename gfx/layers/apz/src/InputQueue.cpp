@@ -509,12 +509,10 @@ InputQueue::ScheduleMainThreadTimeout(const RefPtr<AsyncPanZoomController>& aTar
                                       CancelableBlockState* aBlock) {
   INPQ_LOG("scheduling main thread timeout for target %p\n", aTarget.get());
   aBlock->StartContentResponseTimer();
-  aTarget->PostDelayedTask(
-    NewRunnableMethod<uint64_t>("layers::InputQueue::MainThreadTimeout",
-                                this,
-                                &InputQueue::MainThreadTimeout,
-                                aBlock->GetBlockId()),
-    gfxPrefs::APZContentResponseTimeout());
+  aTarget->PostDelayedTask(NewRunnableMethod<uint64_t>(this,
+                                                       &InputQueue::MainThreadTimeout,
+                                                       aBlock->GetBlockId()),
+                           gfxPrefs::APZContentResponseTimeout());
 }
 
 CancelableBlockState*

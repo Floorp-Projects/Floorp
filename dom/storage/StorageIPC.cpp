@@ -315,8 +315,7 @@ class SendInitialChildDataRunnable : public Runnable
 {
 public:
   explicit SendInitialChildDataRunnable(StorageDBParent* aParent)
-    : Runnable("dom::SendInitialChildDataRunnable")
-    , mParent(aParent)
+    : mParent(aParent)
   {}
 
 private:
@@ -646,13 +645,12 @@ public:
                const nsACString& aOriginNoSuffix,
                const nsAString& aKey = EmptyString(),
                const nsAString& aValue = EmptyString())
-    : Runnable("dom::LoadRunnable")
-    , mParent(aParent)
-    , mType(aType)
-    , mSuffix(aOriginSuffix)
-    , mOrigin(aOriginNoSuffix)
-    , mKey(aKey)
-    , mValue(aValue)
+  : mParent(aParent)
+  , mType(aType)
+  , mSuffix(aOriginSuffix)
+  , mOrigin(aOriginNoSuffix)
+  , mKey(aKey)
+  , mValue(aValue)
   { }
 
   LoadRunnable(StorageDBParent* aParent,
@@ -660,12 +658,11 @@ public:
                const nsACString& aOriginSuffix,
                const nsACString& aOriginNoSuffix,
                nsresult aRv)
-    : Runnable("dom::LoadRunnable")
-    , mParent(aParent)
-    , mType(aType)
-    , mSuffix(aOriginSuffix)
-    , mOrigin(aOriginNoSuffix)
-    , mRv(aRv)
+  : mParent(aParent)
+  , mType(aType)
+  , mSuffix(aOriginSuffix)
+  , mOrigin(aOriginNoSuffix)
+  , mRv(aRv)
   { }
 
 private:
@@ -753,11 +750,9 @@ namespace {
 class UsageRunnable : public Runnable
 {
 public:
-  UsageRunnable(StorageDBParent* aParent,
-                const nsACString& aOriginScope,
+  UsageRunnable(StorageDBParent* aParent, const nsACString& aOriginScope,
                 const int64_t& aUsage)
-    : Runnable("dom::UsageRunnable")
-    , mParent(aParent)
+    : mParent(aParent)
     , mOriginScope(aOriginScope)
     , mUsage(aUsage)
   {}

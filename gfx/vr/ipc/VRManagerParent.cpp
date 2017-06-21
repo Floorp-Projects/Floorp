@@ -165,10 +165,7 @@ VRManagerParent::CreateForContent(Endpoint<PVRManagerParent>&& aEndpoint)
 
   RefPtr<VRManagerParent> vmp = new VRManagerParent(aEndpoint.OtherPid(), true);
   loop->PostTask(NewRunnableMethod<Endpoint<PVRManagerParent>&&>(
-    "gfx::VRManagerParent::Bind",
-    vmp,
-    &VRManagerParent::Bind,
-    Move(aEndpoint)));
+    vmp, &VRManagerParent::Bind, Move(aEndpoint)));
 
   return true;
 }
@@ -209,10 +206,7 @@ VRManagerParent::CreateForGPUProcess(Endpoint<PVRManagerParent>&& aEndpoint)
   RefPtr<VRManagerParent> vmp = new VRManagerParent(aEndpoint.OtherPid(), false);
   vmp->mCompositorThreadHolder = layers::CompositorThreadHolder::GetSingleton();
   loop->PostTask(NewRunnableMethod<Endpoint<PVRManagerParent>&&>(
-    "gfx::VRManagerParent::Bind",
-    vmp,
-    &VRManagerParent::Bind,
-    Move(aEndpoint)));
+    vmp, &VRManagerParent::Bind, Move(aEndpoint)));
   return true;
 }
 
@@ -227,10 +221,7 @@ void
 VRManagerParent::ActorDestroy(ActorDestroyReason why)
 {
   UnregisterFromManager();
-  MessageLoop::current()->PostTask(
-    NewRunnableMethod("gfx::VRManagerParent::DeferredDestroy",
-                      this,
-                      &VRManagerParent::DeferredDestroy));
+  MessageLoop::current()->PostTask(NewRunnableMethod(this, &VRManagerParent::DeferredDestroy));
 }
 
 void

@@ -243,11 +243,8 @@ private:
 private:
   class ProcessBackupQueueRunnable : public mozilla::Runnable {
     public:
-      explicit ProcessBackupQueueRunnable(
-        CustomElementReactionsStack* aReactionStack)
-        : Runnable(
-            "dom::CustomElementReactionsStack::ProcessBackupQueueRunnable")
-        , mReactionStack(aReactionStack)
+      explicit ProcessBackupQueueRunnable(CustomElementReactionsStack* aReactionStack)
+        : mReactionStack(aReactionStack)
       {
         MOZ_ASSERT(!mReactionStack->mIsBackupQueueProcessing,
                    "mIsBackupQueueProcessing should be initially false");

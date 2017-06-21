@@ -2776,12 +2776,10 @@ ContentChild::StartForceKillTimer()
   if (timeoutSecs > 0) {
     mForceKillTimer = do_CreateInstance("@mozilla.org/timer;1");
     MOZ_ASSERT(mForceKillTimer);
-    mForceKillTimer->InitWithNamedFuncCallback(
-      ContentChild::ForceKillTimerCallback,
+    mForceKillTimer->InitWithFuncCallback(ContentChild::ForceKillTimerCallback,
       this,
       timeoutSecs * 1000,
-      nsITimer::TYPE_ONE_SHOT,
-      "dom::ContentChild::StartForceKillTimer");
+      nsITimer::TYPE_ONE_SHOT);
   }
 }
 
@@ -2811,9 +2809,7 @@ ContentChild::RecvShutdown()
       // time (100ms) in the hopes that the event loop will have finished by
       // then.
       MessageLoop::current()->PostDelayedTask(
-        NewRunnableMethod(
-          "dom::ContentChild::RecvShutdown", this, &ContentChild::RecvShutdown),
-        100);
+        NewRunnableMethod(this, &ContentChild::RecvShutdown), 100);
       return IPC_OK();
     }
   }

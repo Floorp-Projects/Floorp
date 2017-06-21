@@ -232,9 +232,7 @@ TestEndpointOpensOpenedChild::RecvHi()
   // Need to close the channel without message-processing frames on
   // the C++ stack
   MessageLoop::current()->PostTask(
-    NewNonOwningRunnableMethod("ipc::IToplevelProtocol::Close",
-                               this,
-                               &TestEndpointOpensOpenedChild::Close));
+    NewNonOwningRunnableMethod(this, &TestEndpointOpensOpenedChild::Close));
   return IPC_OK();
 }
 
@@ -255,9 +253,7 @@ ShutdownTestEndpointOpensOpenedChild(TestEndpointOpensOpenedChild* child,
 
   // Kick off main-thread shutdown.
   gMainThread->PostTask(
-    NewNonOwningRunnableMethod("ipc::IToplevelProtocol::Close",
-                               gOpensChild,
-                               &TestEndpointOpensChild::Close));
+    NewNonOwningRunnableMethod(gOpensChild, &TestEndpointOpensChild::Close));
 }
 
 void

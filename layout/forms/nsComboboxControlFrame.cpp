@@ -383,8 +383,7 @@ class nsResizeDropdownAtFinalPosition final
 {
 public:
   explicit nsResizeDropdownAtFinalPosition(nsComboboxControlFrame* aFrame)
-    : mozilla::Runnable("nsResizeDropdownAtFinalPosition")
-    , mFrame(aFrame)
+    : mFrame(aFrame)
   {
   }
 
@@ -520,11 +519,7 @@ nsComboboxControlFrame::GetCSSTransformTranslation()
 class nsAsyncRollup : public Runnable
 {
 public:
-  explicit nsAsyncRollup(nsComboboxControlFrame* aFrame)
-    : mozilla::Runnable("nsAsyncRollup")
-    , mFrame(aFrame)
-  {
-  }
+  explicit nsAsyncRollup(nsComboboxControlFrame* aFrame) : mFrame(aFrame) {}
   NS_IMETHOD Run() override
   {
     if (mFrame.IsAlive()) {
@@ -539,11 +534,7 @@ public:
 class nsAsyncResize : public Runnable
 {
 public:
-  explicit nsAsyncResize(nsComboboxControlFrame* aFrame)
-    : mozilla::Runnable("nsAsyncResize")
-    , mFrame(aFrame)
-  {
-  }
+  explicit nsAsyncResize(nsComboboxControlFrame* aFrame) : mFrame(aFrame) {}
   NS_IMETHOD Run() override
   {
     if (mFrame.IsAlive()) {

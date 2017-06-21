@@ -25,14 +25,13 @@ namespace net {
 
 class CallChannelOnPush final : public Runnable {
   public:
-    CallChannelOnPush(nsIHttpChannelInternal* associatedChannel,
-                      const nsACString& pushedURI,
-                      Http2PushedStream* pushStream)
-      : Runnable("net::CallChannelOnPush")
-      , mAssociatedChannel(associatedChannel)
-      , mPushedURI(pushedURI)
-      , mPushedStream(pushStream)
-    {
+  CallChannelOnPush(nsIHttpChannelInternal *associatedChannel,
+                    const nsACString &pushedURI,
+                    Http2PushedStream *pushStream)
+    : mAssociatedChannel(associatedChannel)
+    , mPushedURI(pushedURI)
+    , mPushedStream(pushStream)
+  {
   }
 
   NS_IMETHOD Run() override

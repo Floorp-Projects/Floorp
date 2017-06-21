@@ -124,10 +124,7 @@ PluginProcessParent::Delete()
       return;
   }
 
-  ioLoop->PostTask(
-    NewNonOwningRunnableMethod("plugins::PluginProcessParent::Delete",
-                               this,
-                               &PluginProcessParent::Delete));
+  ioLoop->PostTask(NewNonOwningRunnableMethod(this, &PluginProcessParent::Delete));
 }
 
 void

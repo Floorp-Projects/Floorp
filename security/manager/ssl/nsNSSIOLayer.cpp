@@ -1730,8 +1730,7 @@ class FallbackPrefRemover final : public Runnable
 {
 public:
   explicit FallbackPrefRemover(const nsACString& aHost)
-    : mozilla::Runnable("FallbackPrefRemover")
-    , mHost(aHost)
+    : mHost(aHost)
   {}
   NS_IMETHOD Run() override;
 private:

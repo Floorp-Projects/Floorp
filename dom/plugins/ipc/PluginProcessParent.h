@@ -27,10 +27,9 @@ namespace plugins {
 class LaunchCompleteTask : public Runnable
 {
 public:
-  LaunchCompleteTask()
-    : Runnable("plugins::LaunchCompleteTask")
-    , mLaunchSucceeded(false)
-  {
+    LaunchCompleteTask()
+        : mLaunchSucceeded(false)
+    {
     }
 
     void SetLaunchSucceeded() { mLaunchSucceeded = true; }

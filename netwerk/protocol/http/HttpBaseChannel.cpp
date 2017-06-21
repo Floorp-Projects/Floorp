@@ -916,10 +916,7 @@ HttpBaseChannel::OnCopyComplete(nsresult aStatus)
   MOZ_ASSERT(XRE_IsParentProcess());
 
   nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod<nsresult>(
-    "net::HttpBaseChannel::EnsureUploadStreamIsCloneableComplete",
-    this,
-    &HttpBaseChannel::EnsureUploadStreamIsCloneableComplete,
-    aStatus);
+    this, &HttpBaseChannel::EnsureUploadStreamIsCloneableComplete, aStatus);
   NS_DispatchToMainThread(runnable.forget());
 }
 

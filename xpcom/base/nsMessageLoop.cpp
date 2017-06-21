@@ -72,8 +72,7 @@ private:
 
 MessageLoopIdleTask::MessageLoopIdleTask(nsIRunnable* aTask,
                                          uint32_t aEnsureRunsAfterMS)
-  : mozilla::Runnable("MessageLoopIdleTask")
-  , mTask(aTask)
+  : mTask(aTask)
 {
   // Init() really shouldn't fail, but if it does, we schedule our runnable
   // immediately, because it's more important to guarantee that we run the task

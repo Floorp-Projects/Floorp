@@ -279,8 +279,7 @@ class TeardownURLRunnable : public Runnable
 {
 public:
   explicit TeardownURLRunnable(URLWorker::URLProxy* aURLProxy)
-    : Runnable("dom::TeardownURLRunnable")
-    , mURLProxy(aURLProxy)
+    : mURLProxy(aURLProxy)
   {
   }
 

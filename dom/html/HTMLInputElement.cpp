@@ -4870,9 +4870,7 @@ HTMLInputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
       ClearBrokenState();
       RemoveStatesSilently(NS_EVENT_STATE_BROKEN);
       nsContentUtils::AddScriptRunner(
-        NewRunnableMethod("dom::HTMLInputElement::MaybeLoadImage",
-                          this,
-                          &HTMLInputElement::MaybeLoadImage));
+        NewRunnableMethod(this, &HTMLInputElement::MaybeLoadImage));
     }
   }
 

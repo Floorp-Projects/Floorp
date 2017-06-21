@@ -48,8 +48,7 @@ PostEvent(nsUDPSocket *s, nsUDPSocketFunc func)
   if (!gSocketTransportService)
     return NS_ERROR_FAILURE;
 
-  return gSocketTransportService->Dispatch(
-    NewRunnableMethod("net::PostEvent", s, func), NS_DISPATCH_NORMAL);
+  return gSocketTransportService->Dispatch(NewRunnableMethod(s, func), NS_DISPATCH_NORMAL);
 }
 
 static nsresult
@@ -92,8 +91,7 @@ class SetSocketOptionRunnable : public Runnable
 {
 public:
   SetSocketOptionRunnable(nsUDPSocket* aSocket, const PRSocketOptionData& aOpt)
-    : Runnable("net::SetSocketOptionRunnable")
-    , mSocket(aSocket)
+    : mSocket(aSocket)
     , mOpt(aOpt)
   {}
 
@@ -356,8 +354,8 @@ nsUDPSocket::TryAttach()
   //
   if (!gSocketTransportService->CanAttachSocket())
   {
-    nsCOMPtr<nsIRunnable> event = NewRunnableMethod(
-      "net::nsUDPSocket::OnMsgAttach", this, &nsUDPSocket::OnMsgAttach);
+    nsCOMPtr<nsIRunnable> event =
+      NewRunnableMethod(this, &nsUDPSocket::OnMsgAttach);
 
     nsresult rv = gSocketTransportService->NotifyWhenCanAttachSocket(event);
     if (NS_FAILED(rv))
@@ -860,12 +858,10 @@ public:
   class OnPacketReceivedRunnable : public Runnable
   {
   public:
-    OnPacketReceivedRunnable(
-      const nsMainThreadPtrHandle<nsIUDPSocketListener>& aListener,
-      nsIUDPSocket* aSocket,
-      nsIUDPMessage* aMessage)
-      : Runnable("net::SocketListenerProxy::OnPacketReceivedRunnable")
-      , mListener(aListener)
+    OnPacketReceivedRunnable(const nsMainThreadPtrHandle<nsIUDPSocketListener>& aListener,
+                             nsIUDPSocket* aSocket,
+                             nsIUDPMessage* aMessage)
+      : mListener(aListener)
       , mSocket(aSocket)
       , mMessage(aMessage)
     { }
@@ -881,12 +877,10 @@ public:
   class OnStopListeningRunnable : public Runnable
   {
   public:
-    OnStopListeningRunnable(
-      const nsMainThreadPtrHandle<nsIUDPSocketListener>& aListener,
-      nsIUDPSocket* aSocket,
-      nsresult aStatus)
-      : Runnable("net::SocketListenerProxy::OnStopListeningRunnable")
-      , mListener(aListener)
+    OnStopListeningRunnable(const nsMainThreadPtrHandle<nsIUDPSocketListener>& aListener,
+                            nsIUDPSocket* aSocket,
+                            nsresult aStatus)
+      : mListener(aListener)
       , mSocket(aSocket)
       , mStatus(aStatus)
     { }
@@ -972,8 +966,7 @@ public:
     OnPacketReceivedRunnable(const nsCOMPtr<nsIUDPSocketListener>& aListener,
                              nsIUDPSocket* aSocket,
                              nsIUDPMessage* aMessage)
-      : Runnable("net::SocketListenerProxyBackground::OnPacketReceivedRunnable")
-      , mListener(aListener)
+      : mListener(aListener)
       , mSocket(aSocket)
       , mMessage(aMessage)
     { }
@@ -992,8 +985,7 @@ public:
     OnStopListeningRunnable(const nsCOMPtr<nsIUDPSocketListener>& aListener,
                             nsIUDPSocket* aSocket,
                             nsresult aStatus)
-      : Runnable("net::SocketListenerProxyBackground::OnStopListeningRunnable")
-      , mListener(aListener)
+      : mListener(aListener)
       , mSocket(aSocket)
       , mStatus(aStatus)
     { }
@@ -1149,11 +1141,10 @@ PendingSendStream::OnLookupComplete(nsICancelable *request,
 
 class SendRequestRunnable: public Runnable {
 public:
-  SendRequestRunnable(nsUDPSocket* aSocket,
-                      const NetAddr& aAddr,
+  SendRequestRunnable(nsUDPSocket *aSocket,
+                      const NetAddr &aAddr,
                       FallibleTArray<uint8_t>&& aData)
-    : Runnable("net::SendRequestRunnable")
-    , mSocket(aSocket)
+    : mSocket(aSocket)
     , mAddr(aAddr)
     , mData(Move(aData))
   { }

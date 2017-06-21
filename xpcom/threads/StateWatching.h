@@ -256,10 +256,7 @@ private:
       mStrongRef = mOwner; // Hold the owner alive while notifying.
 
       // Queue up our notification jobs to run in a stable state.
-      mOwnerThread->TailDispatcher().AddDirectTask(
-        NewRunnableMethod("WatchManager::PerCallbackWatcher::DoNotify",
-                          this,
-                          &PerCallbackWatcher::DoNotify));
+      mOwnerThread->TailDispatcher().AddDirectTask(NewRunnableMethod(this, &PerCallbackWatcher::DoNotify));
     }
 
     bool CallbackMethodIs(CallbackMethod aMethod) const

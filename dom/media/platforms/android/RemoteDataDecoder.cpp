@@ -555,8 +555,7 @@ RemoteDataDecoder::UpdateInputStatus(int64_t aTimestamp, bool aProcessed)
 {
   if (!mTaskQueue->IsCurrentThreadIn()) {
     mTaskQueue->Dispatch(
-      NewRunnableMethod<int64_t, bool>("RemoteDataDecoder::UpdateInputStatus",
-                                       this,
+      NewRunnableMethod<int64_t, bool>(this,
                                        &RemoteDataDecoder::UpdateInputStatus,
                                        aTimestamp,
                                        aProcessed));
@@ -584,8 +583,7 @@ RemoteDataDecoder::UpdateOutputStatus(MediaData* aSample)
 {
   if (!mTaskQueue->IsCurrentThreadIn()) {
     mTaskQueue->Dispatch(
-      NewRunnableMethod<MediaData*>("RemoteDataDecoder::UpdateOutputStatus",
-                                    this,
+      NewRunnableMethod<MediaData*>(this,
                                     &RemoteDataDecoder::UpdateOutputStatus,
                                     aSample));
     return;
@@ -619,8 +617,7 @@ RemoteDataDecoder::DrainComplete()
 {
   if (!mTaskQueue->IsCurrentThreadIn()) {
     mTaskQueue->Dispatch(
-      NewRunnableMethod("RemoteDataDecoder::DrainComplete",
-                        this, &RemoteDataDecoder::DrainComplete));
+      NewRunnableMethod(this, &RemoteDataDecoder::DrainComplete));
     return;
   }
   AssertOnTaskQueue();
@@ -638,8 +635,7 @@ RemoteDataDecoder::Error(const MediaResult& aError)
 {
   if (!mTaskQueue->IsCurrentThreadIn()) {
     mTaskQueue->Dispatch(
-      NewRunnableMethod<MediaResult>("RemoteDataDecoder::Error",
-                                     this, &RemoteDataDecoder::Error, aError));
+      NewRunnableMethod<MediaResult>(this, &RemoteDataDecoder::Error, aError));
     return;
   }
   AssertOnTaskQueue();
