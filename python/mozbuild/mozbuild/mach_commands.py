@@ -1692,7 +1692,8 @@ class PackageFrontend(MachCommandBase):
     @CommandArgument('--retry', type=int, default=0,
         help='Number of times to retry failed downloads')
     @CommandArgument('files', nargs='*',
-        help='Only download the given file names (you may use file name stems)')
+        help='A list of files to download, in the form path@task-id, in '
+             'addition to the files listed in the tooltool manifest.')
     def artifact_toolchain(self, verbose=False, cache_dir=None,
                           skip_cache=False, from_build=(),
                           tooltool_manifest=None, authentication_file=None,
@@ -1841,6 +1842,21 @@ class PackageFrontend(MachCommandBase):
                     records[name] = DownloadRecord(
                         get_artifact_url(task_id, artifact['name']),
                         name, None, None, None, unpack=True)
+
+        # Handle the list of files of the form path@task-id on the command
+        # line. Each of those give a path to an artifact to download.
+        # For backwards compatibility with mozboot's
+        # install_tooltool_clang_package (until that is migrated to use
+        # --from-build), files without a @ are considered as a filter over the
+        # tooltool manifest contents.
+        for f in files:
+            if '@' in f:
+                name, task_id = f.rsplit('@', 1)
+                records[name] = DownloadRecord(
+                    get_artifact_url(task_id, name), os.path.basename(name),
+                    None, None, None, unpack=True)
+
+        files = tuple(f for f in files if '@' not in f)
 
         for record in records.itervalues():
             if files and not any(record.basename == f or
