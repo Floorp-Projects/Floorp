@@ -27,7 +27,7 @@ class FilterPath(object):
 
     @property
     def ext(self):
-        return os.path.splitext(self.path)[1]
+        return os.path.splitext(self.path)[1].strip('.')
 
     @property
     def exists(self):
