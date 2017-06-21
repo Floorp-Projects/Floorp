@@ -80,6 +80,8 @@ class TestToolkitMozConfigure(BaseConfigureTest):
         with self.assertRaises(InvalidOptionError):
             get_value(['--disable-release'], environ={'MOZILLA_OFFICIAL': 1})
 
+        self.assertEqual(get_value(environ={'MOZ_AUTOMATION': 1}), None)
+
 
 if __name__ == '__main__':
     main()
