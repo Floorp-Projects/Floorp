@@ -35,6 +35,8 @@ public:
                                                   nsWidgetInitData* aInitData = nullptr,
                                                   bool aForceUseIWidgetParent = false) override;
 
+  virtual nsIWidget* GetTopLevelWidget() override;
+
   virtual void Show(bool aState) override;
   virtual bool IsVisible() const override;
   virtual void Move(double aX, double aY) override;
@@ -85,16 +87,20 @@ public:
                                  nsEventStatus& aStatus) override;
 
 private:
-  ~HeadlessWidget() {}
+  ~HeadlessWidget();
   bool mEnabled;
   bool mVisible;
+  nsIWidget* mTopLevel;
   // The size mode before entering fullscreen mode.
   nsSizeMode mLastSizeMode;
   InputContext mInputContext;
   // In headless there is no window manager to track window bounds
   // across size mode changes, so we must track it to emulate.
   LayoutDeviceIntRect mRestoreBounds;
-  void SendSetZLevelEvent();
+  // Similarly, we must track the active window ourselves in order
+  // to dispatch (de)activation events properly.
+  void RaiseWindow();
+  static HeadlessWidget* sActiveWindow;
 };
 
 } // namespace widget
