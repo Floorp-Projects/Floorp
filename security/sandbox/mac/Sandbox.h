@@ -49,7 +49,9 @@ typedef struct _MacSandboxInfo {
       appPath(other.appPath), appBinaryPath(other.appBinaryPath),
       appDir(other.appDir), appTempDir(other.appTempDir),
       profileDir(other.profileDir), debugWriteDir(other.debugWriteDir),
-      shouldLog(other.shouldLog) {}
+      testingReadPath1(other.testingReadPath1),
+      testingReadPath2(other.testingReadPath2),
+      testingReadPath3(other.testingReadPath3), shouldLog(other.shouldLog) {}
   MacSandboxType type;
   int32_t level;
   bool hasFilePrivileges;
@@ -61,6 +63,11 @@ typedef struct _MacSandboxInfo {
   std::string appTempDir;
   std::string profileDir;
   std::string debugWriteDir;
+
+  std::string testingReadPath1;
+  std::string testingReadPath2;
+  std::string testingReadPath3;
+
   bool shouldLog;
 } MacSandboxInfo;
 
