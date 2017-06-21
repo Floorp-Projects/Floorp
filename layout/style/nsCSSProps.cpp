@@ -1137,7 +1137,6 @@ const KTableEntry nsCSSProps::kColorKTable[] = {
   { eCSSKeyword__moz_oddtreerow, LookAndFeel::eColorID__moz_oddtreerow },
   { eCSSKeyword__moz_visitedhyperlinktext, NS_COLOR_MOZ_VISITEDHYPERLINKTEXT },
   { eCSSKeyword_currentcolor, NS_COLOR_CURRENTCOLOR },
-  { eCSSKeyword__moz_win_accentcolor, LookAndFeel::eColorID__moz_win_accentcolor },
   { eCSSKeyword__moz_win_mediatext, LookAndFeel::eColorID__moz_win_mediatext },
   { eCSSKeyword__moz_win_communicationstext, LookAndFeel::eColorID__moz_win_communicationstext },
   { eCSSKeyword__moz_nativehyperlinktext, LookAndFeel::eColorID__moz_nativehyperlinktext },
