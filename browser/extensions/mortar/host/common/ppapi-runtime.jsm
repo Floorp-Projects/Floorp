@@ -915,10 +915,10 @@ class Buffer extends PP_Resource {
 class Flash_MessageLoop extends PP_Resource {
   run() {
     this._running = true;
-    let thread = Cc["@mozilla.org/thread-manager;1"].getService().currentThread;
-    while (this._running) {
-      thread.processNextEvent(true);
-    }
+    let tm = Cc["@mozilla.org/thread-manager;1"].getService();
+    tm.spinEventLoopUntil(() => {
+      return !this._running;
+    });
   }
   quit() {
     this._running = false;

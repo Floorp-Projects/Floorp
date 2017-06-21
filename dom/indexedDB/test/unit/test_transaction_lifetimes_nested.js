@@ -26,9 +26,9 @@ function* testSteps()
   let transaction2;
 
   let comp = this.window ? SpecialPowers.wrap(Components) : Components;
-  let thread = comp.classes["@mozilla.org/thread-manager;1"]
-                   .getService(comp.interfaces.nsIThreadManager)
-                   .currentThread;
+  let tm = comp.classes["@mozilla.org/thread-manager;1"]
+               .getService(comp.interfaces.nsIThreadManager);
+  let thread = tm.currentThread;
 
   let eventHasRun;
 
@@ -38,9 +38,7 @@ function* testSteps()
     transaction2 = db.transaction("foo");
   }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
 
-  while (!eventHasRun) {
-    thread.processNextEvent(false);
-  }
+  tm.spinEventLoopUntil(() => eventHasRun);
 
   ok(transaction2, "Non-null transaction2");
 
