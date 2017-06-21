@@ -88,9 +88,6 @@ def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
     executor_kwargs["timeout_multiplier"] = get_timeout_multiplier(test_type,
                                                                    run_info_data,
                                                                    **kwargs)
-    if test_type == "reftest":
-        executor_kwargs["reftest_internal"] = kwargs["reftest_internal"]
-        executor_kwargs["reftest_screenshot"] = kwargs["reftest_screenshot"]
     if test_type == "wdspec":
         executor_kwargs["binary"] = kwargs["binary"]
         executor_kwargs["webdriver_binary"] = kwargs.get("webdriver_binary")
@@ -187,9 +184,7 @@ class FirefoxBrowser(Browser):
                                       "dom.disable_open_during_load": False,
                                       "network.dns.localDomains": ",".join(hostnames),
                                       "network.proxy.type": 0,
-                                      "places.history.enabled": False,
-                                      "dom.send_after_paint_to_content": True,
-                                      "layout.interruptible-reflow.enabled": False})
+                                      "places.history.enabled": False})
         if self.e10s:
             self.profile.set_preferences({"browser.tabs.remote.autostart": True})
 

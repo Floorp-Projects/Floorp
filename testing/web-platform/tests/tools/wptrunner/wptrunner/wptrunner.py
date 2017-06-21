@@ -132,13 +132,13 @@ def run_tests(config, test_paths, product, **kwargs):
                                                run_info_extras=run_info_extras(**kwargs),
                                                **kwargs)
 
-        test_source_kwargs = {"processes": kwargs["processes"]}
         if kwargs["run_by_dir"] is False:
             test_source_cls = testloader.SingleTestSource
+            test_source_kwargs = {}
         else:
             # A value of None indicates infinite depth
             test_source_cls = testloader.PathGroupedSource
-            test_source_kwargs["depth"] = kwargs["run_by_dir"]
+            test_source_kwargs = {"depth": kwargs["run_by_dir"]}
 
         logger.info("Using %i client processes" % kwargs["processes"])
 

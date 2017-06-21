@@ -563,74 +563,75 @@ class TestLoader(object):
 
 class TestSource(object):
     __metaclass__ = ABCMeta
-    def __init__(self, test_queue):
-        self.test_queue = test_queue
-        self.current_queue = None
-        self.current_metadata = None
 
     @abstractmethod
-    def queue_tests(self, test_queue, test_type, tests, **kwargs):
+    def queue_tests(self, test_queue):
+        pass
+
+    @abstractmethod
+    def requeue_test(self, test):
         pass
 
     def __enter__(self):
         return self
 
-    def get_queue(self):
-        if not self.current_queue or len(self.current_queue) == 0:
-            try:
-                self.current_queue, self.current_metadata = self.test_queue.get(block=False)
-            except Empty:
-                return None, None
-        return self.current_queue, self.current_metadata
-
     def __exit__(self, *args, **kwargs):
         pass
 
 
-class GroupedSource(TestSource):
-    @classmethod
-    def new_group(cls, state, test, **kwargs):
-        raise NotImplementedError
+class SingleTestSource(TestSource):
+    def __init__(self, test_queue):
+        self.test_queue = test_queue
 
     @classmethod
-    def queue_tests(cls, test_queue, test_type, tests, **kwargs):
-        state = {}
+    def queue_tests(cls, test_queue, test_type, tests):
+        for test in tests[test_type]:
+            test_queue.put(test)
+
+    def get_queue(self):
+        if self.test_queue.empty():
+            return None
+        return self.test_queue
+
+    def requeue_test(self, test):
+        self.test_queue.put(test)
+
+class PathGroupedSource(TestSource):
+    def __init__(self, test_queue):
+        self.test_queue = test_queue
+        self.current_queue = None
+
+    @classmethod
+    def queue_tests(cls, test_queue, test_type, tests, depth=None):
+        if depth is True:
+            depth = None
+
+        prev_path = None
         group = None
 
         for test in tests[test_type]:
-            if cls.new_group(state, test, **kwargs):
-                group = deque([])
-                metadata = {}
-                test_queue.put((group, metadata))
+            path = urlparse.urlsplit(test.url).path.split("/")[1:-1][:depth]
+            if path != prev_path:
+                group = []
+                test_queue.put(group)
+                prev_path = path
 
             group.append(test)
-            test.update_metadata(metadata)
 
+    def get_queue(self):
+        if not self.current_queue or self.current_queue.empty():
+            try:
+                data = self.test_queue.get(block=True, timeout=1)
+                self.current_queue = Queue()
+                for item in data:
+                    self.current_queue.put(item)
+            except Empty:
+                return None
+        return self.current_queue
 
-class SingleTestSource(TestSource):
-    @classmethod
-    def queue_tests(cls, test_queue, test_type, tests, **kwargs):
-        processes = kwargs["processes"]
-        queues = [deque([]) for _ in xrange(processes)]
-        metadatas = [{} for _ in xrange(processes)]
-        for test in tests[test_type]:
-            idx = hash(test.id) % processes
-            group = queues[idx]
-            metadata = metadatas[idx]
-            group.append(test)
-            test.update_metadata(metadata)
+    def requeue_test(self, test):
+        self.current_queue.put(test)
 
-        for item in zip(queues, metadatas):
-            test_queue.put(item)
-
-
-class PathGroupedSource(GroupedSource):
-    @classmethod
-    def new_group(cls, state, test, **kwargs):
-        depth = kwargs.get("depth")
-        if depth is True:
-            depth = None
-        path = urlparse.urlsplit(test.url).path.split("/")[1:-1][:depth]
-        rv = path != state.get("prev_path")
-        state["prev_path"] = path
-        return rv
+    def __exit__(self, *args, **kwargs):
+        if self.current_queue:
+            self.current_queue.close()
