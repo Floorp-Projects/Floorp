@@ -20,9 +20,6 @@ const TWO_MINUTES_MS = 1000 * 60 * 2;
 
 initTestLogging("Trace");
 
-// XXX until bug 937114 is fixed
-Cu.importGlobalProperties(["atob"]);
-
 var log = Log.repository.getLogger("Services.FxAccounts.test");
 log.level = Log.Level.Debug;
 

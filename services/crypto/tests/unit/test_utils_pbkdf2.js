@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// XXX until bug 937114 is fixed
-Cu.importGlobalProperties(["btoa"]);
 Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://services-common/utils.js");
 

@@ -10,9 +10,6 @@ Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://testing-common/services/common/logging.js");
 Cu.import("resource://testing-common/MockRegistrar.jsm");
 
-var btoa = Cu.import("resource://gre/modules/Log.jsm").btoa;
-var atob = Cu.import("resource://gre/modules/Log.jsm").atob;
-
 function do_check_empty(obj) {
   do_check_attribute_count(obj, 0);
 }
