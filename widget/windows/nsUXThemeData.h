@@ -81,24 +81,15 @@ enum WindowsThemeColor {
 class nsUXThemeData {
   static HMODULE sThemeDLL;
   static HANDLE sThemes[eUXNumClasses];
-
-  // We initialize sCommandButtonBoxMetrics separately as a performance
-  // optimization to avoid fetching dummy values for sCommandButtonMetrics
-  // when we don't need those.
-  static SIZE sCommandButtonMetrics[3];
-  static bool sCommandButtonMetricsInitialized;
-  static SIZE sCommandButtonBoxMetrics;
-  static bool sCommandButtonBoxMetricsInitialized;
-
+  
   static const wchar_t *GetClassName(nsUXThemeClass);
-  static void EnsureCommandButtonMetrics();
-  static void EnsureCommandButtonBoxMetrics();
 
 public:
   static const wchar_t kThemeLibraryName[];
   static bool sFlatMenus;
   static bool sTitlebarInfoPopulatedAero;
   static bool sTitlebarInfoPopulatedThemed;
+  static SIZE sCommandButtons[4];
   static mozilla::LookAndFeel::WindowsTheme sThemeId;
   static bool sIsDefaultWindowsTheme;
   static bool sIsHighContrastOn;
@@ -110,16 +101,9 @@ public:
   static HMODULE GetThemeDLL();
 
   // nsWindow calls this to update desktop settings info
+  static void InitTitlebarInfo();
   static void UpdateTitlebarInfo(HWND aWnd);
 
-  static SIZE GetCommandButtonMetrics(int aMetric) {
-    EnsureCommandButtonMetrics();
-    return sCommandButtonMetrics[aMetric];
-  }
-  static SIZE GetCommandButtonBoxMetrics() {
-    EnsureCommandButtonBoxMetrics();
-    return sCommandButtonBoxMetrics;
-  }
   static void UpdateNativeThemeInfo();
   static mozilla::LookAndFeel::WindowsTheme GetNativeThemeId();
   static bool IsDefaultWindowTheme();
