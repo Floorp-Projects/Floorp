@@ -485,7 +485,8 @@ protected:
 
 private:
   nsCOMPtr<nsIFile>        mCurrentFile;
-  bool                     mDirty;
+  bool                     mDirty = false;
+  bool                     mProfileShutdown = false;
 
   static Preferences*      sPreferences;
   static nsIPrefBranch*    sRootBranch;
