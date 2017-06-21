@@ -310,6 +310,11 @@ class TupOnly(CommonBackend, PartialBackend):
             if not path:
                 raise Exception("Cannot install to " + target)
 
+        if target.startswith('_tests'):
+            # TODO: TEST_HARNESS_FILES present a few challenges for the tup
+            # backend (bug 1372381).
+            return
+
         for path, files in obj.files.walk():
             backend_file = self._get_backend_file(mozpath.join(target, path))
             for f in files:
@@ -324,7 +329,7 @@ class TupOnly(CommonBackend, PartialBackend):
                             # TODO: This is only needed for Windows, so we can
                             # skip this for now.
                             pass
-                        elif '**' not in f:
+                        else:
                             def _prefix(s):
                                 for p in mozpath.split(s):
                                     if '*' not in p:
@@ -336,15 +341,18 @@ class TupOnly(CommonBackend, PartialBackend):
                                 backend_file.symlink_rule(mozpath.join(prefix, p),
                                                           output=mozpath.join(f.target_basename, p),
                                                           output_group=self._installed_files)
-                        else:
-                            # TODO: Handle wildcards containing '**' used under '_tests'
-                            # (bug 1372381).
-                            pass
                     else:
                         backend_file.symlink_rule(f.full_path, output=f.target_basename, output_group=self._installed_files)
                 else:
-                    # TODO: Support installing generated files
-                    pass
+                    # We're not generating files in these directories yet, so
+                    # don't attempt to install files generated from them.
+                    if f.context.relobjdir not in ('layout/style/test',
+                                                   'toolkit/library'):
+                        output = mozpath.join('$(MOZ_OBJ_ROOT)', target, path,
+                                              f.target_basename)
+                        gen_backend_file = self._get_backend_file(f.context.relobjdir)
+                        gen_backend_file.symlink_rule(f.full_path, output=output,
+                                                      output_group=self._installed_files)
 
     def _process_final_target_pp_files(self, obj, backend_file):
         for i, (path, files) in enumerate(obj.files.walk()):
