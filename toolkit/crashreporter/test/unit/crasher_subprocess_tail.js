@@ -3,14 +3,13 @@
 // Let the event loop process a bit before crashing.
 if (shouldDelay) {
   let shouldCrashNow = false;
-  let thr = Components.classes["@mozilla.org/thread-manager;1"]
-                          .getService().currentThread;
+  let tm = Components.classes["@mozilla.org/thread-manager;1"]
+                     .getService();
+  let thr = tm.currentThread;
   thr.dispatch({ run: () => { shouldCrashNow = true; } },
                Components.interfaces.nsIThread.DISPATCH_NORMAL);
 
-  while (!shouldCrashNow) {
-    thr.processNextEvent(true);
-  }
+  tm.spinEventLoopUntil(() => shouldCrashNow);
 }
 
 // now actually crash

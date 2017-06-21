@@ -338,6 +338,32 @@ nsThreadManager::GetCurrentThread(nsIThread** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsThreadManager::SpinEventLoopUntil(nsINestedEventLoopCondition* aCondition)
+{
+  nsCOMPtr<nsINestedEventLoopCondition> condition(aCondition);
+  nsresult rv = NS_OK;
+
+  if (!mozilla::SpinEventLoopUntil([&]() -> bool {
+        bool isDone = false;
+        rv = condition->IsDone(&isDone);
+        // JS failure should be unusual, but we need to stop and propagate
+        // the error back to the caller.
+        if (NS_FAILED(rv)) {
+          return true;
+        }
+
+        return isDone;
+      })) {
+    // We stopped early for some reason, which is unexpected.
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // If we exited when the condition told us to, we need to return whether
+  // the condition encountered failure when executing.
+  return rv;
+}
+
 uint32_t
 nsThreadManager::GetHighestNumberOfThreads()
 {

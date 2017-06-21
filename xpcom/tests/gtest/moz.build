@@ -44,6 +44,7 @@ UNIFIED_SOURCES += [
     'TestTArray2.cpp',
     'TestTaskQueue.cpp',
     'TestTextFormatter.cpp',
+    'TestThreadManager.cpp',
     'TestThreadPool.cpp',
     'TestThreadPoolListener.cpp',
     'TestThreads.cpp',

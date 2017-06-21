@@ -73,10 +73,8 @@ function asyncCleanup() {
   print("*** Storage Tests: Trying to asyncClose!");
   getOpenedDatabase().asyncClose(function() { closed = true; });
 
-  let curThread = Components.classes["@mozilla.org/thread-manager;1"]
-                            .getService().currentThread;
-  while (!closed)
-    curThread.processNextEvent(true);
+  let tm = Cc["@mozilla.org/thread-manager;1"].getService();
+  tm.spinEventLoopUntil(() => closed);
 
   // we need to null out the database variable to get a new connection the next
   // time getOpenedDatabase is called

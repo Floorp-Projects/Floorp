@@ -56,10 +56,7 @@ TabSource.prototype = {
     });
 
     // Spin this thread while we wait for a result.
-    let thread = Services.tm.currentThread;
-    while (result == null) {
-      thread.processNextEvent(true);
-    }
+    Services.tm.spinEventLoopUntil(() => result != null);
 
     if (result == -1) {
       return null;

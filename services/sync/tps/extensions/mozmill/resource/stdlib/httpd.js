@@ -5341,9 +5341,9 @@ function server(port, basePath)
   srv.identity.setPrimary("http", "localhost", port);
   srv.start(port);
 
+  gThreadManager.spinEventLoopUntil(() => srv.isStopped());
+
   var thread = gThreadManager.currentThread;
-  while (!srv.isStopped())
-    thread.processNextEvent(true);
 
   // get rid of any pending requests
   while (thread.hasPendingEvents())
