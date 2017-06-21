@@ -27,8 +27,6 @@ import java.util.HashMap;
  * somewhere in {@link org.mozilla.gecko.sync.telemetry.TelemetryCollector} and friends.
  */
 public class TelemetrySyncPingBuilder extends TelemetryLocalPingBuilder {
-    private static final int DATA_FORMAT_VERSION = 1;
-
     public TelemetrySyncPingBuilder setStages(@NonNull final Serializable data) {
         HashMap<String, TelemetryStageCollector> stages = castSyncData(data);
 
@@ -143,7 +141,6 @@ public class TelemetrySyncPingBuilder extends TelemetryLocalPingBuilder {
 
     @Override
     public TelemetryLocalPing build() {
-        payload.put("version", DATA_FORMAT_VERSION);
         return new TelemetryLocalPing(payload, docID);
     }
 
