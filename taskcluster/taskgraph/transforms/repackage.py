@@ -79,6 +79,10 @@ def make_job_description(config, jobs):
         if len(dep_job.dependencies) > 1:
             raise NotImplementedError(
                 "Can't repackage a signing task with multiple dependencies")
+        signing_dependencies = dep_job.dependencies
+        # This is so we get the build task in our dependencies to
+        # have better beetmover support.
+        dependencies.update(signing_dependencies)
 
         treeherder = job.get('treeherder', {})
         treeherder.setdefault('symbol', 'tc(Nr)')
