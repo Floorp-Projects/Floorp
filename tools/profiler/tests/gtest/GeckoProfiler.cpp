@@ -581,13 +581,11 @@ TEST(GeckoProfiler, PseudoStack)
     ASSERT_TRUE(profiler_get_backtrace());
   }
 
-#if defined(MOZ_GECKO_PROFILER)
   AutoProfilerLabel label1("A", nullptr, 888,
                            js::ProfileEntry::Category::STORAGE);
   AutoProfilerLabel label2("A", dynamic.get(), 888,
                            js::ProfileEntry::Category::NETWORK);
   ASSERT_TRUE(profiler_get_backtrace());
-#endif
 
   profiler_stop();
 

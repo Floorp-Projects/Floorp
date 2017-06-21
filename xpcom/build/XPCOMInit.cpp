@@ -1010,7 +1010,6 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
     NS_WARNING("Component Manager was never created ...");
   }
 
-#ifdef MOZ_GECKO_PROFILER
   // In optimized builds we don't do shutdown collections by default, so
   // uncollected (garbage) objects may keep the nsXPConnect singleton alive,
   // and its XPCJSContext along with it. However, we still destroy various
@@ -1020,7 +1019,6 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
   // duplicating the call in XPCJSContext::~XPCJSContext() in case that
   // never fired.
   profiler_clear_js_context();
-#endif
 
   if (sInitializedJS) {
     // Shut down the JS engine.

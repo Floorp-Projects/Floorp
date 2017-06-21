@@ -2905,9 +2905,7 @@ WorkerThreadPrimaryRunnable::Run()
     }
 
     {
-#ifdef MOZ_GECKO_PROFILER
       profiler_set_js_context(cx);
-#endif
 
       {
         JSAutoRequest ar(cx);
@@ -2921,9 +2919,7 @@ WorkerThreadPrimaryRunnable::Run()
 
       BackgroundChild::CloseForCurrentThread();
 
-#ifdef MOZ_GECKO_PROFILER
       profiler_clear_js_context();
-#endif
     }
 
     // There may still be runnables on the debugger event queue that hold a

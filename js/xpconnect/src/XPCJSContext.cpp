@@ -728,9 +728,7 @@ XPCJSContext::~XPCJSContext()
     delete rtPrivate;
     JS_SetContextPrivate(Context(), nullptr);
 
-#ifdef MOZ_GECKO_PROFILER
     profiler_clear_js_context();
-#endif
 
     gTlsContext.set(nullptr);
 }
@@ -908,9 +906,7 @@ XPCJSContext::Initialize(XPCJSContext* aPrimaryContext)
                            kStackQuota - kSystemCodeBuffer,
                            kStackQuota - kSystemCodeBuffer - kTrustedScriptBuffer);
 
-#ifdef MOZ_GECKO_PROFILER
     profiler_set_js_context(cx);
-#endif
 
     js::SetActivityCallback(cx, ActivityCallback, this);
     JS_AddInterruptCallback(cx, InterruptCallback);

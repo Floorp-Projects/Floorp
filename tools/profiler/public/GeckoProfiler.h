@@ -16,16 +16,30 @@
 #ifndef GeckoProfiler_h
 #define GeckoProfiler_h
 
-#include <stdint.h>
-#include <stdarg.h>
 #include <functional>
+#include <signal.h>
+#include <stdarg.h>
+#include <stdint.h>
+#include <stdlib.h>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "js/TypeDecls.h"
 #include "mozilla/GuardObjects.h"
+#include "mozilla/Sprintf.h"
+#include "mozilla/ThreadLocal.h"
 #include "mozilla/UniquePtr.h"
+#include "js/TypeDecls.h"
+#include "js/ProfilingStack.h"
+#include "nscore.h"
 
+// Make sure that we can use std::min here without the Windows headers messing
+// with us.
+#ifdef min
+# undef min
+#endif
+
+class ProfilerBacktrace;
+class ProfilerMarkerPayload;
 class SpliceableJSONWriter;
 
 namespace mozilla {
@@ -39,23 +53,13 @@ enum TracingKind {
   TRACING_INTERVAL_END,
 };
 
-class ProfilerBacktrace;
-
 struct ProfilerBacktraceDestructor
 {
   void operator()(ProfilerBacktrace*);
 };
+
 using UniqueProfilerBacktrace =
   mozilla::UniquePtr<ProfilerBacktrace, ProfilerBacktraceDestructor>;
-
-#if defined(MOZ_GECKO_PROFILER)
-
-// Use these for functions below that must be visible whether the profiler is
-// enabled or not. When the profiler is disabled they are static inline
-// functions (with a simple return value if they are non-void) that should be
-// optimized away during compilation.
-#define PROFILER_FUNC(decl, rv)  decl;
-#define PROFILER_FUNC_VOID(decl) void decl;
 
 #define PROFILER_APPEND_LINE_NUMBER_PASTE(id, line) id ## line
 #define PROFILER_APPEND_LINE_NUMBER_EXPAND(id, line) \
@@ -118,27 +122,6 @@ using UniqueProfilerBacktrace =
 #define PROFILER_MARKER_PAYLOAD(marker_name, payload) \
   profiler_add_marker(marker_name, payload)
 
-#else   // defined(MOZ_GECKO_PROFILER)
-
-#define PROFILER_FUNC(decl, rv)  static inline decl { return rv; }
-#define PROFILER_FUNC_VOID(decl) static inline void decl {}
-
-#define PROFILER_LABEL(name_space, info, category) do {} while (0)
-#define PROFILER_LABEL_FUNC(category) do {} while (0)
-#define PROFILER_LABEL_DYNAMIC(name_space, info, category, dynamicStr) \
-  do {} while (0)
-
-#define PROFILER_MARKER(marker_name) do {} while (0)
-
-// Note: this is deliberately not defined when MOZ_GECKO_PROFILER is undefined.
-// This macro should not be used in that case -- i.e. all uses of this macro
-// should be guarded by a MOZ_GECKO_PROFILER check -- because payload creation
-// requires allocation, which is something we should not do in builds that
-// don't contain the profiler.
-//#define PROFILER_MARKER_PAYLOAD(marker_name, payload) /* undefined */
-
-#endif  // defined(MOZ_GECKO_PROFILER)
-
 // Higher-order macro containing all the feature info in one place. Define
 // |macro| appropriately to extract the relevant parts. Note that the number
 // values are used internally only and so can be changed without consequence.
@@ -199,7 +182,16 @@ struct ProfilerFeature
   #undef DECLARE
 };
 
-// These functions are defined whether the profiler is enabled or not.
+// When the profiler is disabled functions declared with these macros are
+// static inline functions (with a trivial return value if they are non-void)
+// that will be optimized away during compilation.
+#ifdef MOZ_GECKO_PROFILER
+# define PROFILER_FUNC(decl, rv)  decl;
+# define PROFILER_FUNC_VOID(decl) void decl;
+#else
+# define PROFILER_FUNC(decl, rv)  static inline decl { return rv; }
+# define PROFILER_FUNC_VOID(decl) static inline void decl {}
+#endif
 
 // Adds a tracing marker to the PseudoStack. A no-op if the profiler is
 // inactive or in privacy mode.
@@ -257,7 +249,7 @@ PROFILER_FUNC_VOID(profiler_get_backtrace_noalloc(char* aOutput,
                                                   size_t aOutputSize))
 
 // Free a ProfilerBacktrace returned by profiler_get_backtrace().
-#if !defined(MOZ_GECKO_PROFILER)
+#ifndef MOZ_GECKO_PROFILER
 inline void
 ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {}
 #endif
@@ -384,33 +376,18 @@ PROFILER_FUNC_VOID(profiler_suspend_and_sample_thread(int aThreadId,
                                                       const std::function<void(void**, size_t)>& aCallback,
                                                       bool aSampleNative = true))
 
-// End of the functions defined whether the profiler is enabled or not.
-
-#if defined(MOZ_GECKO_PROFILER)
-
-#include <stdlib.h>
-#include <signal.h>
-#include "js/ProfilingStack.h"
-#include "mozilla/Sprintf.h"
-#include "mozilla/ThreadLocal.h"
-#include "nscore.h"
-
-// Make sure that we can use std::min here without the Windows headers messing with us.
-#ifdef min
-# undef min
-#endif
-
-class ProfilerMarkerPayload;
-
-// This exists purely for AutoProfilerLabel. See the comment on the
-// definition in platform.cpp for details.
-extern MOZ_THREAD_LOCAL(PseudoStack*) sPseudoStack;
-
 // Adds a marker to the PseudoStack. A no-op if the profiler is inactive or in
 // privacy mode.
-void profiler_add_marker(const char* aMarkerName);
-void profiler_add_marker(const char* aMarkerName,
-                         mozilla::UniquePtr<ProfilerMarkerPayload> aPayload);
+PROFILER_FUNC_VOID(profiler_add_marker(const char* aMarkerName))
+PROFILER_FUNC_VOID(profiler_add_marker(const char* aMarkerName,
+                                       mozilla::UniquePtr<ProfilerMarkerPayload> aPayload))
+
+// Get the current thread's PseudoStack.
+PROFILER_FUNC(PseudoStack* profiler_get_pseudo_stack(), nullptr)
+
+// Set and clear the current thread's JSContext.
+PROFILER_FUNC_VOID(profiler_set_js_context(JSContext* aCx))
+PROFILER_FUNC_VOID(profiler_clear_js_context())
 
 #if !defined(ARCH_ARMV6)
 # define PROFILER_DEFAULT_ENTRIES 1000000
@@ -426,7 +403,8 @@ namespace mozilla {
 // are stack-allocated, and so exist within a thread, and are thus bounded by
 // the lifetime of the thread, which ensures that the references held can't be
 // used after the PseudoStack is destroyed.
-class MOZ_RAII AutoProfilerLabel {
+class MOZ_RAII AutoProfilerLabel
+{
 public:
   AutoProfilerLabel(const char* aLabel, const char* aDynamicString,
                     uint32_t aLine, js::ProfileEntry::Category aCategory
@@ -436,39 +414,39 @@ public:
 
     // This function runs both on and off the main thread.
 
+#ifdef MOZ_GECKO_PROFILER
     mPseudoStack = sPseudoStack.get();
     if (mPseudoStack) {
       mPseudoStack->pushCppFrame(aLabel, aDynamicString, this, aLine,
                                  js::ProfileEntry::Kind::CPP_NORMAL, aCategory);
     }
+#endif
   }
 
   ~AutoProfilerLabel()
   {
     // This function runs both on and off the main thread.
 
+#ifdef MOZ_GECKO_PROFILER
     if (mPseudoStack) {
       mPseudoStack->pop();
     }
+#endif
   }
 
 private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+#ifdef MOZ_GECKO_PROFILER
   // We save a PseudoStack pointer in the ctor so we don't have to redo the TLS
   // lookup in the dtor.
   PseudoStack* mPseudoStack;
+
+public:
+  // See the comment on the definition in platform.cpp for details about this.
+  static MOZ_THREAD_LOCAL(PseudoStack*) sPseudoStack;
+#endif
 };
-
-} // namespace mozilla
-
-PseudoStack* profiler_get_pseudo_stack();
-
-void profiler_set_js_context(JSContext* aCx);
-void profiler_clear_js_context();
-
-#endif  // defined(MOZ_GECKO_PROFILER)
-
-namespace mozilla {
 
 class MOZ_RAII AutoProfilerInit
 {
