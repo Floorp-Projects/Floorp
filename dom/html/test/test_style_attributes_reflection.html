@@ -29,11 +29,13 @@ reflectString({
   attribute: "type"
 });
 
-// .scoped
-reflectBoolean({
-  element: e,
-  attribute: "scoped"
-});
+if (SpecialPowers.getBoolPref("layout.css.scoped-style.enabled")) {
+  // .scoped
+  reflectBoolean({
+    element: e,
+    attribute: "scoped"
+  });
+}
 
 </script>
 </pre>
