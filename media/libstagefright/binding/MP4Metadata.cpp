@@ -829,6 +829,10 @@ MP4MetadataRust::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
     if (rv != mp4parse_status_OK) {
       continue;
     }
+    // JPEG 'video' decoder is not supported in media stack yet.
+    if (track_info.codec == mp4parse_codec::mp4parse_codec_JPEG) {
+      continue;
+    }
     if (TrackTypeEqual(aType, track_info.track_type)) {
         total += 1;
     }
@@ -901,6 +905,7 @@ MP4MetadataRust::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
     case mp4parse_codec_VP9: codec_string = "vp9"; break;
     case mp4parse_codec_MP3: codec_string = "mp3"; break;
     case mp4parse_codec_MP4V: codec_string = "mp4v"; break;
+    case mp4parse_codec_JPEG: codec_string = "jpeg"; break;
     case mp4parse_codec_AC3: codec_string = "ac-3"; break;
     case mp4parse_codec_EC3: codec_string = "ec-3"; break;
   }
