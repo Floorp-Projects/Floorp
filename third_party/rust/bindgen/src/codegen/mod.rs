@@ -23,7 +23,7 @@ use ir::item_kind::ItemKind;
 use ir::layout::Layout;
 use ir::module::Module;
 use ir::objc::{ObjCInterface, ObjCMethod};
-use ir::template::{AsNamed, TemplateInstantiation, TemplateParameters};
+use ir::template::{AsTemplateParam, TemplateInstantiation, TemplateParameters};
 use ir::ty::{Type, TypeKind};
 use ir::var::Var;
 
@@ -641,7 +641,7 @@ impl CodeGenerator for Type {
                     if let Some(ref params) = used_template_params {
                         for template_param in params {
                             if let Some(id) =
-                                template_param.as_named(ctx, &()) {
+                                template_param.as_template_param(ctx, &()) {
                                 let template_param = ctx.resolve_type(id);
                                 if template_param.is_invalid_named_type() {
                                     warn!("Item contained invalid template \
@@ -1113,9 +1113,9 @@ impl Bitfield {
                 #[inline]
                 $fn_prefix $ctor_name($params $param_name : $bitfield_ty)
                                       -> $unit_field_int_ty {
-                    ($body | 
-                        (($param_name as $bitfield_int_ty as $unit_field_int_ty) << $offset) & 
-                        ($mask as $unit_field_int_ty)) 
+                    ($body |
+                        (($param_name as $bitfield_int_ty as $unit_field_int_ty) << $offset) &
+                        ($mask as $unit_field_int_ty))
                 }
             }
         ).unwrap()
@@ -1147,12 +1147,18 @@ impl<'a> FieldCodegen<'a> for BitfieldUnit {
             .build_ty(field_ty.clone());
         fields.extend(Some(field));
 
-        let unit_field_int_ty = match self.layout().size {
+        let mut field_int_size = self.layout().size;
+        if !field_int_size.is_power_of_two() {
+            field_int_size = field_int_size.next_power_of_two();
+        }
+
+        let unit_field_int_ty = match field_int_size {
             8 => quote_ty!(ctx.ext_cx(), u64),
             4 => quote_ty!(ctx.ext_cx(), u32),
             2 => quote_ty!(ctx.ext_cx(), u16),
             1 => quote_ty!(ctx.ext_cx(), u8),
-            _ => {
+            size => {
+                debug_assert!(size > 8);
                 // Can't generate bitfield accessors for unit sizes larget than
                 // 64 bits at the moment.
                 struct_layout.saw_bitfield_unit(self.layout());
@@ -1273,17 +1279,26 @@ impl<'a> FieldCodegen<'a> for Bitfield {
         let bitfield_ty = bitfield_ty.to_rust_ty_or_opaque(ctx, bitfield_ty_item);
 
         let offset = self.offset_into_unit();
-        let mask: usize = self.mask();
+        let mask = self.mask();
 
         let impl_item = quote_item!(
             ctx.ext_cx(),
             impl XxxIgnored {
                 #[inline]
                 pub fn $getter_name(&self) -> $bitfield_ty {
-                    let mask = $mask as $unit_field_int_ty;
-                    let unit_field_val: $unit_field_int_ty = unsafe {
-                        ::$prefix::mem::transmute(self.$unit_field_ident)
+                    let mut unit_field_val: $unit_field_int_ty = unsafe {
+                        ::$prefix::mem::uninitialized()
                     };
+
+                    unsafe {
+                        ::$prefix::ptr::copy_nonoverlapping(
+                            &self.$unit_field_ident as *const _ as *const u8,
+                            &mut unit_field_val as *mut $unit_field_int_ty as *mut u8,
+                            ::$prefix::mem::size_of::<$unit_field_int_ty>(),
+                        )
+                    };
+
+                    let mask = $mask as $unit_field_int_ty;
                     let val = (unit_field_val & mask) >> $offset;
                     unsafe {
                         ::$prefix::mem::transmute(val as $bitfield_int_ty)
@@ -1296,14 +1311,27 @@ impl<'a> FieldCodegen<'a> for Bitfield {
                     let val = val as $bitfield_int_ty as $unit_field_int_ty;
 
                     let mut unit_field_val: $unit_field_int_ty = unsafe {
-                        ::$prefix::mem::transmute(self.$unit_field_ident)
+                        ::$prefix::mem::uninitialized()
                     };
+
+                    unsafe {
+                        ::$prefix::ptr::copy_nonoverlapping(
+                            &self.$unit_field_ident as *const _ as *const u8,
+                            &mut unit_field_val as *mut $unit_field_int_ty as *mut u8,
+                            ::$prefix::mem::size_of::<$unit_field_int_ty>(),
+                        )
+                    };
+
                     unit_field_val &= !mask;
                     unit_field_val |= (val << $offset) & mask;
 
-                    self.$unit_field_ident = unsafe {
-                        ::$prefix::mem::transmute(unit_field_val)
-                    };
+                    unsafe {
+                        ::$prefix::ptr::copy_nonoverlapping(
+                            &unit_field_val as *const _ as *const u8,
+                            &mut self.$unit_field_ident as *mut _ as *mut u8,
+                            ::$prefix::mem::size_of::<$unit_field_int_ty>(),
+                        );
+                    }
                 }
             }
         ).unwrap();
@@ -2264,7 +2292,8 @@ impl CodeGenerator for Enum {
             builder = builder.with_attr(derives);
         }
 
-        fn add_constant<'a>(enum_: &Type,
+        fn add_constant<'a>(ctx: &BindgenContext,
+                            enum_: &Type,
                             // Only to avoid recomputing every time.
                             enum_canonical_name: &str,
                             // May be the same as "variant" if it's because the
@@ -2275,7 +2304,11 @@ impl CodeGenerator for Enum {
                             enum_rust_ty: P<ast::Ty>,
                             result: &mut CodegenResult<'a>) {
             let constant_name = if enum_.name().is_some() {
-                format!("{}_{}", enum_canonical_name, variant_name)
+                if ctx.options().prepend_enum_name {
+                    format!("{}_{}", enum_canonical_name, variant_name)
+                } else {
+                    variant_name.into()
+                }
             } else {
                 variant_name.into()
             };
@@ -2358,7 +2391,8 @@ impl CodeGenerator for Enum {
                         };
 
                         let existing_variant_name = entry.get();
-                        add_constant(enum_ty,
+                        add_constant(ctx,
+                                     enum_ty,
                                      &name,
                                      &*mangled_name,
                                      existing_variant_name,
@@ -2397,7 +2431,8 @@ impl CodeGenerator for Enum {
                                                variant_name))
                         };
 
-                        add_constant(enum_ty,
+                        add_constant(ctx,
+                                     enum_ty,
                                      &name,
                                      &mangled_name,
                                      &variant_name,
@@ -2709,7 +2744,7 @@ impl TryToRustTy for Type {
                 let template_params = item.used_template_params(ctx)
                     .unwrap_or(vec![])
                     .into_iter()
-                    .filter(|param| param.is_named(ctx, &()))
+                    .filter(|param| param.is_template_param(ctx, &()))
                     .collect::<Vec<_>>();
 
                 let spelling = self.name().expect("Unnamed alias?");

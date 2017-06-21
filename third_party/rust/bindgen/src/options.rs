@@ -135,9 +135,9 @@ pub fn builder_from_flags<I>
             Arg::with_name("no-prepend-enum-name")
                 .long("no-prepend-enum-name")
                 .help("Do not prepend the enum name to bitfield or constant variants."),
-            Arg::with_name("no-unstable-rust")
-                .long("no-unstable-rust")
-                .help("Do not generate unstable Rust code.")
+            Arg::with_name("unstable-rust")
+                .long("unstable-rust")
+                .help("Generate unstable Rust code.")
                 .multiple(true), // FIXME: Pass legacy test suite
             Arg::with_name("opaque-type")
                 .long("opaque-type")
@@ -325,8 +325,8 @@ pub fn builder_from_flags<I>
         builder = builder.ignore_methods();
     }
 
-    if matches.is_present("no-unstable-rust") {
-        builder = builder.no_unstable_rust();
+    if matches.is_present("unstable-rust") {
+        builder = builder.unstable_rust(true);
     }
 
     if matches.is_present("no-convert-floats") {
