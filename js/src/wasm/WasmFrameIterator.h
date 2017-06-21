@@ -205,6 +205,34 @@ ActivationIfInnermost(JSContext* cx);
 bool
 InCompiledCode(void* pc);
 
+// Describes register state and associated code at a given call frame.
+
+struct UnwindState
+{
+    Frame* fp;
+    void* pc;
+    const Code* code;
+    const CodeRange* codeRange;
+    UnwindState() : fp(nullptr), pc(nullptr), code(nullptr), codeRange(nullptr) {}
+};
+
+typedef JS::ProfilingFrameIterator::RegisterState RegisterState;
+
+// Ensures the register state at a call site is consistent: pc must be in the
+// code range of the code described by fp. This prevents issues when using
+// the values of pc/fp, especially at call sites boundaries, where the state
+// hasn't fully transitioned from the caller's to the callee's.
+//
+// unwoundCaller is set to true if we were in a transitional state and had to
+// rewind to the caller's frame instead of the current frame.
+//
+// Returns true if it was possible to get to a clear state, or false if the
+// frame should be ignored.
+
+bool
+StartUnwinding(const WasmActivation& activation, const RegisterState& registers,
+               UnwindState* unwindState, bool* unwoundCaller);
+
 } // namespace wasm
 } // namespace js
 
