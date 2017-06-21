@@ -405,8 +405,6 @@ PROFILER_FUNC_VOID(profiler_js_interrupt_callback())
 // whether the profiler is active or inactive.
 PROFILER_FUNC(double profiler_time(), 0)
 
-PROFILER_FUNC_VOID(profiler_log(const char* aStr))
-
 PROFILER_FUNC(int profiler_current_thread_id(), 0)
 
 // This method suspends the thread identified by aThreadId, optionally samples

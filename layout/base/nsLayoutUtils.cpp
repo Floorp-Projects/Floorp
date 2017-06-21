@@ -3662,7 +3662,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
       // Flush stream now to avoid reordering dump output relative to
       // messages dumped by PaintRoot below.
       if (profilerNeedsDisplayList && !consoleNeedsDisplayList) {
-        profiler_log(ss->str().c_str());
+        profiler_tracing("log", ss->str().c_str());
       } else {
         fprint_stderr(gfxUtils::sDumpPaintFile, *ss);
       }
@@ -3735,7 +3735,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
     }
 
     if (profilerNeedsDisplayList && !consoleNeedsDisplayList) {
-      profiler_log(ss->str().c_str());
+      profiler_tracing("log", ss->str().c_str());
     } else {
       fprint_stderr(gfxUtils::sDumpPaintFile, *ss);
     }
