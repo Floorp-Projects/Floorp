@@ -41,8 +41,8 @@ def typecheck(ast, errout=sys.stderr):
     return TypeCheck().check(ast, errout)
 
 
-def gencxx(ipdlfilename, ast, outheadersdir, outcppdir):
-    headers, cpps = LowerToCxx().lower(ast)
+def gencxx(ipdlfilename, ast, outheadersdir, outcppdir, segmentcapacitydict):
+    headers, cpps = LowerToCxx().lower(ast, segmentcapacitydict)
 
     def resolveHeader(hdr):
         return [
