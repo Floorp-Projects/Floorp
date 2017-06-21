@@ -161,6 +161,21 @@ browser.Context = class {
   }
 
   /**
+   * Gets the position and dimensions of the top-level browsing context.
+   *
+   * @return {Map.<string, number>}
+   *     Object with |x|, |y|, |width|, and |height| properties.
+   */
+  get rect() {
+    return {
+      x: this.window.screenX,
+      y: this.window.screenY,
+      width: this.window.outerWidth,
+      height: this.window.outerHeight,
+    };
+  }
+
+  /**
    * Retrieves the current tabmodal UI object.  According to the browser
    * associated with the currently selected tab.
    */
