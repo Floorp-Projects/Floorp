@@ -386,6 +386,7 @@ class ICToNumber_Fallback : public ICFallbackStub
 
 // GetElem
 //      JSOP_GETELEM
+//      JSOP_GETELEM_SUPER
 
 class ICGetElem_Fallback : public ICMonitoredFallbackStub
 {
@@ -415,11 +416,19 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
     // Compiler for this stub kind.
     class Compiler : public ICStubCompiler {
       protected:
+        bool hasReceiver_;
         MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
 
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(engine_) |
+                  (static_cast<int32_t>(kind) << 1) |
+                  (static_cast<int32_t>(hasReceiver_) << 17);
+        }
+
       public:
-        explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::GetElem_Fallback, Engine::Baseline)
+        explicit Compiler(JSContext* cx, bool hasReceiver = false)
+          : ICStubCompiler(cx, ICStub::GetElem_Fallback, Engine::Baseline),
+            hasReceiver_(hasReceiver)
         { }
 
         ICStub* getStub(ICStubSpace* space) {
