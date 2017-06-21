@@ -46,13 +46,16 @@ fuzzy-if(skiaContent,1,580) == anim-css-fill-3-from-by-ident-ident.svg  anim-css
 fuzzy-if(skiaContent,1,580) == anim-css-fill-3-from-by-rgb-ident.svg    anim-css-fill-3-ref.svg
 
 # check handling of overflowing color values
-# NOTE: The second test fails because we compute "from + by" as the animation
-# end-point, and we clamp that final color value (due to bug 515919) and use
-# the clamped value for interpolation.  That's earlier than the SVG spec wants
-# us to clamp -- we're only supposed to clamp *final presentation values*.
+# NOTE: Some of the tests below fail in Gecko because we compute
+# "from + by" as the animation end-point, and we clamp that final color value
+# (due to bug 515919) and use the clamped value for interpolation.
+# That's earlier than the SVG spec wants us to clamp -- we're only supposed to
+# clamp *final presentation values*.
 # (Reference: SVG 1.1 Appendix F.4)
 fails-if(styloVsGecko||stylo) == anim-css-fill-overflow-1-by.svg       anim-css-fill-overflow-1-ref.svg
-fails-if(!stylo) == anim-css-fill-overflow-1-from-by.svg anim-css-fill-overflow-1-ref.svg
+fails-if(!stylo) == anim-css-fill-overflow-1-from-by.svg anim-css-fill-overflow-1-ref.svg # bug 515919
+fails-if(!stylo) == anim-css-stopcolor-overflow-1-from-by.svg anim-css-stopcolor-overflow-1-ref.svg # bug 515919
+fails-if(!stylo) == anim-css-floodcolor-overflow-1-from-by.svg anim-css-floodcolor-overflow-1-ref.svg # bug 515919
 
 # 'fill-opacity' property
 fuzzy-if(skiaContent,1,885) fails-if(styloVsGecko||stylo) == anim-css-fillopacity-1-by.svg            anim-css-fillopacity-1-ref.svg

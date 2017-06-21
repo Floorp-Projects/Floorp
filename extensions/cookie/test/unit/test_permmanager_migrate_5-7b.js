@@ -13,10 +13,6 @@ function GetPermissionsFile(profile)
   return file;
 }
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function test() {
   /* Create and set up the permissions database */
   let profile = do_get_profile();
@@ -58,7 +54,11 @@ add_task(function test() {
     stmt5Insert.bindByName("expireTime", expireTime);
     stmt5Insert.bindByName("modificationTime", modificationTime);
 
-    stmt5Insert.execute();
+    try {
+      stmt5Insert.execute();
+    } finally {
+      stmt5Insert.reset();
+    }
 
     return {
       id: thisId,
@@ -142,26 +142,33 @@ add_task(function test() {
                                           "host, type, permission, expireType, expireTime, " +
                                           "modificationTime, appId, isInBrowserElement " +
                                           "FROM moz_hosts WHERE id = :id");
-
-    // Check that the moz_hosts table still contains the correct values.
-    created4.forEach((it) => {
-      mozHostsStmt.reset();
-      mozHostsStmt.bindByName("id", it.id);
-      mozHostsStmt.executeStep();
-      do_check_eq(mozHostsStmt.getUTF8String(0), it.host);
-      do_check_eq(mozHostsStmt.getUTF8String(1), it.type);
-      do_check_eq(mozHostsStmt.getInt64(2), it.permission);
-      do_check_eq(mozHostsStmt.getInt64(3), it.expireType);
-      do_check_eq(mozHostsStmt.getInt64(4), it.expireTime);
-      do_check_eq(mozHostsStmt.getInt64(5), it.modificationTime);
-      do_check_eq(mozHostsStmt.getInt64(6), it.appId);
-      do_check_eq(mozHostsStmt.getInt64(7), it.isInBrowserElement);
-    });
+    try {
+      // Check that the moz_hosts table still contains the correct values.
+      created4.forEach((it) => {
+        mozHostsStmt.reset();
+        mozHostsStmt.bindByName("id", it.id);
+        mozHostsStmt.executeStep();
+        do_check_eq(mozHostsStmt.getUTF8String(0), it.host);
+        do_check_eq(mozHostsStmt.getUTF8String(1), it.type);
+        do_check_eq(mozHostsStmt.getInt64(2), it.permission);
+        do_check_eq(mozHostsStmt.getInt64(3), it.expireType);
+        do_check_eq(mozHostsStmt.getInt64(4), it.expireTime);
+        do_check_eq(mozHostsStmt.getInt64(5), it.modificationTime);
+        do_check_eq(mozHostsStmt.getInt64(6), it.appId);
+        do_check_eq(mozHostsStmt.getInt64(7), it.isInBrowserElement);
+      });
+    } finally {
+      mozHostsStmt.finalize();
+    }
 
     // Check that there are the right number of values
     let mozHostsCount = db.createStatement("SELECT count(*) FROM moz_hosts");
-    mozHostsCount.executeStep();
-    do_check_eq(mozHostsCount.getInt64(0), created4.length);
+    try {
+      mozHostsCount.executeStep();
+      do_check_eq(mozHostsCount.getInt64(0), created4.length);
+    } finally {
+      mozHostsCount.finalize();
+    }
 
     db.close();
   }

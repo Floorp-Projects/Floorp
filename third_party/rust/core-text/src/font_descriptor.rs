@@ -271,15 +271,17 @@ impl CTFontDescriptor {
         value.expect("A font must have a non-null display name.")
     }
 
-    pub fn font_path(&self) -> String {
+    pub fn font_path(&self) -> Option<String> {
         unsafe {
             let value = CTFontDescriptorCopyAttribute(self.obj, kCTFontURLAttribute);
-            assert!(!value.is_null());
+            if (value.is_null()) {
+                return None;
+            }
 
             let value: CFType = TCFType::wrap_under_get_rule(value);
             assert!(value.instance_of::<CFURLRef,CFURL>());
             let url: CFURL = TCFType::wrap_under_get_rule(mem::transmute(value.as_CFTypeRef()));
-            format!("{:?}", url)
+            Some(format!("{:?}", url))
         }
     }
 }
@@ -297,7 +299,7 @@ pub fn debug_descriptor(desc: &CTFontDescriptor) {
     println!("name: {}", desc.font_name());
     println!("style: {}", desc.style_name());
     println!("display: {}", desc.display_name());
-    println!("path: {}", desc.font_path());
+    println!("path: {:?}", desc.font_path());
     desc.show();
 }
 

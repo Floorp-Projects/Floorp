@@ -39,7 +39,7 @@ AltDataOutputStreamParent::RecvWriteData(const nsCString& data)
   uint32_t n;
   if (mOutputStream) {
     rv = mOutputStream->Write(data.BeginReading(), data.Length(), &n);
-    MOZ_ASSERT(n == data.Length());
+    MOZ_ASSERT(n == data.Length() || NS_FAILED(rv));
     if (NS_FAILED(rv) && mIPCOpen) {
       Unused << SendError(rv);
     }

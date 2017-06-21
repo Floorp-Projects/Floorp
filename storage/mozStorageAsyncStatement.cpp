@@ -118,7 +118,7 @@ AsyncStatement::initialize(Connection *aDBConnection,
                            const nsACString &aSQLStatement)
 {
   MOZ_ASSERT(aDBConnection, "No database connection given!");
-  MOZ_ASSERT(!aDBConnection->isClosed(), "Database connection should be valid");
+  MOZ_ASSERT(aDBConnection->isConnectionReadyOnThisThread(), "Database connection should be valid");
   MOZ_ASSERT(aNativeConnection, "No native connection given!");
 
   mDBConnection = aDBConnection;

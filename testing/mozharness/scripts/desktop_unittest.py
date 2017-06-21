@@ -122,12 +122,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             "default": False,
             "help": "Run tests with multiple processes."}
          ],
-        [['--strict-content-sandbox', ], {
-            "action": "store_true",
-            "dest": "strict_content_sandbox",
-            "default": False,
-            "help": "Run tests with a more strict content sandbox (Windows only)."}
-         ],
         [['--no-random', ], {
             "action": "store_true",
             "dest": "no_random",
@@ -387,12 +381,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 base_cmd.append('--disable-e10s')
             elif suite_category not in SUITE_DEFAULT_E10S and c['e10s']:
                 base_cmd.append('--e10s')
-
-            if c.get('strict_content_sandbox'):
-                if suite_category == "mochitest":
-                    base_cmd.append('--strict-content-sandbox')
-                else:
-                    self.fatal("--strict-content-sandbox only works with mochitest suites.")
 
             if c.get('total_chunks') and c.get('this_chunk'):
                 base_cmd.extend(['--total-chunks', c['total_chunks'],

@@ -7486,6 +7486,7 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
                                nsIInputStream *input,
                                uint64_t offset, uint32_t count)
 {
+    nsresult rv;
     PROFILER_LABEL("nsHttpChannel", "OnDataAvailable",
         js::ProfileEntry::Category::NETWORK);
 
@@ -7530,7 +7531,11 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
         // of a byte range request, the content length stored in the cached
         // response headers is what we want to use here.
 
-        int64_t progressMax(mResponseHead->ContentLength());
+        int64_t progressMax = -1;
+        rv = GetContentLength(&progressMax);
+        if (NS_FAILED(rv)) {
+            NS_WARNING("GetContentLength failed");
+        }
         int64_t progress = mLogicalOffset + count;
 
         if ((progress > progressMax) && (progressMax != -1)) {
@@ -7550,7 +7555,7 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
         if (NS_IsMainThread()) {
             OnTransportStatus(nullptr, transportStatus, progress, progressMax);
         } else {
-            nsresult rv = NS_DispatchToMainThread(
+            rv = NS_DispatchToMainThread(
                 new OnTransportStatusAsyncEvent(this, transportStatus,
                                                 progress, progressMax));
             NS_ENSURE_SUCCESS(rv, rv);

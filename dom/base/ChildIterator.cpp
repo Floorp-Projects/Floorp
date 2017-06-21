@@ -370,35 +370,8 @@ AllChildrenIterator::Seek(nsIContent* aChildToFind)
 void
 AllChildrenIterator::AppendNativeAnonymousChildren()
 {
-  if (nsIFrame* primaryFrame = mOriginalContent->GetPrimaryFrame()) {
-    // NAC created by the element's primary frame.
-    AppendNativeAnonymousChildrenFromFrame(primaryFrame);
-
-    // NAC created by any other non-primary frames for the element.
-    AutoTArray<nsIFrame::OwnedAnonBox,8> ownedAnonBoxes;
-    primaryFrame->AppendOwnedAnonBoxes(ownedAnonBoxes);
-    for (nsIFrame::OwnedAnonBox& box : ownedAnonBoxes) {
-      MOZ_ASSERT(box.mAnonBoxFrame->GetContent() == mOriginalContent);
-      AppendNativeAnonymousChildrenFromFrame(box.mAnonBoxFrame);
-    }
-  }
-
-  // The root scroll frame is not the primary frame of the root element.
-  // Detect and handle this case.
-  if (!(mFlags & nsIContent::eSkipDocumentLevelNativeAnonymousContent) &&
-      mOriginalContent == mOriginalContent->OwnerDoc()->GetRootElement()) {
-    nsContentUtils::AppendDocumentLevelNativeAnonymousContentTo(
-        mOriginalContent->OwnerDoc(), mAnonKids);
-  }
-}
-
-void
-AllChildrenIterator::AppendNativeAnonymousChildrenFromFrame(nsIFrame* aFrame)
-{
-  nsIAnonymousContentCreator* ac = do_QueryFrame(aFrame);
-  if (ac) {
-    ac->AppendAnonymousContentTo(mAnonKids, mFlags);
-  }
+  nsContentUtils::AppendNativeAnonymousChildren(
+      mOriginalContent, mAnonKids, mFlags);
 }
 
 nsIContent*
@@ -541,7 +514,6 @@ StyleChildrenIterator::IsNeeded(const Element* aElement)
 
   return false;
 }
-
 
 nsIContent*
 StyleChildrenIterator::GetNextChild()

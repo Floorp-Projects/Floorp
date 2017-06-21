@@ -628,8 +628,6 @@ divs = [];
 
 // 4j. Test sorting transitions with cancel
 // The order of transitioncancel is based on StyleManager.
-// So this test looks like wrong result at a glance. However
-// the gecko will cancel div1's transition before div2 in this case.
 
 divs = [ document.createElement('div'),
          document.createElement('div') ];
@@ -648,16 +646,22 @@ getComputedStyle(divs[0]).marginLeft;
 
 advance_clock(0);
 advance_clock(5 * 1000);
-divs.forEach(div =>  div.style.display = 'none' );
-getComputedStyle(divs[0]).display;
+divs.forEach(div =>  {
+  div.style.display = 'none';
+  // The transitioncancel event order is not absolute when firing siblings
+  // transitioncancel on same elapsed time.
+  // Force to flush style for the element so that the transition on the element
+  // iscancelled and corresponding cancel event is queued respectively.
+  getComputedStyle(div).display;
+});
 advance_clock(10 * 1000);
 
 checkEventOrder([ divs[0], 'transitionrun' ],
                 [ divs[1], 'transitionrun' ],
                 [ divs[1], 'transitionstart' ],
                 [ divs[0], 'transitionstart' ],
-                [ divs[1], 'transitioncancel' ],
                 [ divs[0], 'transitioncancel' ],
+                [ divs[1], 'transitioncancel' ],
                 'Simultaneous transitionrun/start/cancel on siblings');
 
 divs.forEach(div => div.remove());
@@ -682,14 +686,20 @@ getComputedStyle(divs[0]).animation; // flush
 
 advance_clock(0);  // divs[1]'s animation start
 advance_clock(5 * 1000);  // divs[0]'s animation start
-divs.forEach(div => div.style.display = 'none' );
-getComputedStyle(divs[0]).display;
+divs.forEach(div => {
+  div.style.display = 'none';
+  // The animationcancel event order is not absolute when firing siblings
+  // animationcancel on same elapsed time.
+  // Force to flush style for the element so that the transition on the element
+  // iscancelled and corresponding cancel event is queued respectively.
+  getComputedStyle(div).display;
+});
 advance_clock(10 * 1000);
 
 checkEventOrder([ divs[1], 'animationstart' ],
                 [ divs[0], 'animationstart' ],
-                [ divs[1], 'animationcancel' ],
                 [ divs[0], 'animationcancel' ],
+                [ divs[1], 'animationcancel' ],
                 'Simultaneous animationcancel on siblings');
 
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();

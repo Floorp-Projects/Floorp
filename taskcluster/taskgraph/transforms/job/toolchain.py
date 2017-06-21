@@ -71,6 +71,7 @@ def add_optimizations(config, run, taskdesc):
 @run_job_using("docker-worker", "toolchain-script", schema=toolchain_run_schema)
 def docker_worker_toolchain(config, job, taskdesc):
     run = job['run']
+    taskdesc['run-on-projects'] = ['trunk', 'try']
 
     worker = taskdesc['worker']
     worker['artifacts'] = []
@@ -135,6 +136,7 @@ def docker_worker_toolchain(config, job, taskdesc):
 @run_job_using("generic-worker", "toolchain-script", schema=toolchain_run_schema)
 def windows_toolchain(config, job, taskdesc):
     run = job['run']
+    taskdesc['run-on-projects'] = ['trunk', 'try']
 
     worker = taskdesc['worker']
 

@@ -483,27 +483,21 @@ get_rate(cubeb_stream * stm)
 }
 
 uint32_t
-hns_to_ms(REFERENCE_TIME hns)
+hns_to_frames(uint32_t rate, REFERENCE_TIME hns)
 {
-  return static_cast<uint32_t>(hns / 10000);
+  return std::ceil(hns / 10000000.0 * rate);
 }
 
 uint32_t
 hns_to_frames(cubeb_stream * stm, REFERENCE_TIME hns)
 {
-  return hns_to_ms(hns * get_rate(stm)) / 1000;
-}
-
-uint32_t
-hns_to_frames(uint32_t rate, REFERENCE_TIME hns)
-{
-  return hns_to_ms(hns * rate) / 1000;
+  return hns_to_frames(get_rate(stm), hns);
 }
 
 REFERENCE_TIME
 frames_to_hns(cubeb_stream * stm, uint32_t frames)
 {
-   return frames * 1000 / get_rate(stm);
+  return std::ceil(frames * 10000000.0 / get_rate(stm));
 }
 
 /* This returns the size of a frame in the stream, before the eventual upmix

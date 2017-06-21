@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="f0"><feFlood flood-color="yellowgreen" /></filter>
+    <filter id="f1"><feFlood flood-color="yellowgreen" /></filter>
+    <filter id="f2"><feFlood flood-color="rgb(184, 220, 88)" /></filter>
+    <filter id="f3"><feFlood flood-color="rgb(229, 243, 144)" /></filter>
+    <filter id="f4"><feFlood flood-color="rgb(253, 255, 174)" /></filter>
+    <filter id="f5"><feFlood flood-color="rgb(255, 255, 238)" /></filter>
+    <filter id="f6"><feFlood flood-color="rgb(255, 255, 250)" /></filter>
+    <filter id="f7"><feFlood flood-color="rgb(255, 255, 255)" /></filter>
+    <filter id="f8"><feFlood flood-color="rgb(255, 255, 255)" /></filter>
+  </defs>
+  <rect x="20px" y="20px" width="15px" height="15px"
+        style="filter:url(#f0)">
+  </rect>
+  <rect x="70px" y="20px" width="15px" height="15px"
+        style="filter:url(#f1)">
+  </rect>
+  <rect x="120px" y="20px" width="15px" height="15px"
+        style="filter:url(#f2)">
+  </rect>
+  <rect x="20px" y="70px" width="15px" height="15px"
+        style="filter:url(#f3)">
+  </rect>
+  <rect x="70px" y="70px" width="15px" height="15px"
+        style="filter:url(#f4)">
+  </rect>
+  <rect x="120px" y="70px" width="15px" height="15px"
+        style="filter:url(#f5)">
+  </rect>
+  <rect x="20px" y="120px" width="15px" height="15px"
+        style="filter:url(#f6)">
+  </rect>
+  <rect x="70px" y="120px" width="15px" height="15px"
+        style="filter:url(#f7)">
+  </rect>
+  <rect x="120px" y="120px" width="15px" height="15px"
+        style="filter:url(#f8)">
+  </rect>
+</svg>

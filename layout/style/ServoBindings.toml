@@ -329,6 +329,7 @@ structs-types = [
     "mozilla::css::URLValue",
     "mozilla::MallocSizeOf",
     "mozilla::Side",
+    "nsIContent",
     "RawGeckoAnimationPropertySegment",
     "RawGeckoComputedTiming",
     "RawGeckoCSSPropertyIDList",

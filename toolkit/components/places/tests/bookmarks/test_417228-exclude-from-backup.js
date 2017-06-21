@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXCLUDE_FROM_BACKUP_ANNO = "places/excludeFromBackup";
 // Menu, Toolbar, Unsorted, Tags, Mobile
 const PLACES_ROOTS_COUNT  = 5;
 var tests = [];
@@ -49,7 +48,7 @@ var test = {
                                               idx, "exclude uri");
     // Annotate the bookmark for exclusion.
     PlacesUtils.annotations.setItemAnnotation(exItemId,
-                                              EXCLUDE_FROM_BACKUP_ANNO, 1, 0,
+                                              PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO, 1, 0,
                                               PlacesUtils.annotations.EXPIRE_NEVER);
 
     // create a root to be exclude
@@ -59,7 +58,7 @@ var test = {
                                                    this._excludeRootTitle, idx);
     // Annotate the root for exclusion.
     PlacesUtils.annotations.setItemAnnotation(this._excludeRootId,
-                                              EXCLUDE_FROM_BACKUP_ANNO, 1, 0,
+                                              PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO, 1, 0,
                                               PlacesUtils.annotations.EXPIRE_NEVER);
     // add a test bookmark exclude by exclusion of its parent
     PlacesUtils.bookmarks.insertBookmark(this._excludeRootId,
@@ -105,26 +104,30 @@ var test = {
   }
 }
 
-function run_test() {
-  run_next_test();
-}
+// make json file
+var jsonFile;
 
-add_task(async function() {
-  // make json file
-  let jsonFile = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.json");
+add_task(async function setup() {
+  jsonFile = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.json");
+});
 
+add_task(async function test_export_import_excluded_file() {
   // populate db
   test.populate();
 
   await BookmarkJSONUtils.exportToFile(jsonFile);
 
   // restore json file
+  do_print("Restoring json file");
   await BookmarkJSONUtils.importFromFile(jsonFile, true);
 
   // validate without removing all bookmarks
   // restore do not remove backup exclude entries
+  do_print("Validating...");
   test.validate(false);
+});
 
+add_task(async function test_clearing_then_importing() {
   // cleanup
   await PlacesUtils.bookmarks.eraseEverything();
   // manually remove the excluded root

@@ -84,15 +84,16 @@ HarCollector.prototype = {
       // the page loaded.
       // If some new requests appears in the meantime the promise will
       // be rejected and we need to wait for responses all over again.
-      return this.waitForTimeout().then(() => {
+
+      this.pageLoadDeferred = this.waitForTimeout().then(() => {
         // Page loaded!
       }, () => {
         trace.log("HarCollector.waitForResponses; NEW requests " +
           "appeared during page timeout!");
-
         // New requests executed, let's wait again.
         return this.waitForResponses();
       });
+      return this.pageLoadDeferred;
     });
   },
 
@@ -112,10 +113,11 @@ HarCollector.prototype = {
 
     trace.log("HarCollector.waitForTimeout; " + timeout);
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       if (timeout <= 0) {
         resolve();
       }
+      this.pageLoadReject = reject;
       this.pageLoadTimeout = setTimeout(() => {
         trace.log("HarCollector.onPageLoadTimeout;");
         resolve();
@@ -133,9 +135,9 @@ HarCollector.prototype = {
     }
 
     // Reject the current page load promise
-    if (this.pageLoadDeferred) {
-      this.pageLoadDeferred.reject();
-      this.pageLoadDeferred = null;
+    if (this.pageLoadReject) {
+      this.pageLoadReject();
+      this.pageLoadReject = null;
     }
   },
 
@@ -440,6 +442,7 @@ function waitForAll(promises) {
     if (promises.length) {
       return waitForAll(promises);
     }
+
     return undefined;
   });
 }

@@ -77,7 +77,7 @@ fn render_blob(
             let tc = if tile_checker { 0 } else { (1 - checker) * 40 };
 
             match descriptor.format {
-                wt::ImageFormat::RGBA8 => {
+                wt::ImageFormat::BGRA8 => {
                     texels.push(color.b * checker + tc);
                     texels.push(color.g * checker + tc);
                     texels.push(color.r * checker + tc);
@@ -221,7 +221,7 @@ fn body(api: &wt::RenderApi,
     let blob_img1 = api.generate_image_key();
     api.add_image(
         blob_img1,
-        wt::ImageDescriptor::new(500, 500, wt::ImageFormat::RGBA8, true),
+        wt::ImageDescriptor::new(500, 500, wt::ImageFormat::BGRA8, true),
         wt::ImageData::new_blob_image(serialize_blob(wt::ColorU::new(50, 50, 150, 255))),
         Some(128),
     );
@@ -229,7 +229,7 @@ fn body(api: &wt::RenderApi,
     let blob_img2 = api.generate_image_key();
     api.add_image(
         blob_img2,
-        wt::ImageDescriptor::new(200, 200, wt::ImageFormat::RGBA8, true),
+        wt::ImageDescriptor::new(200, 200, wt::ImageFormat::BGRA8, true),
         wt::ImageData::new_blob_image(serialize_blob(wt::ColorU::new(50, 150, 50, 255))),
         None,
     );

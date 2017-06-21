@@ -173,7 +173,9 @@ ContentPrefService.prototype = {
     if (this._contentPrefService2)
       this._contentPrefService2.destroy();
 
-    this._dbConnection.asyncClose();
+    this._dbConnection.asyncClose(() => {
+      Services.obs.notifyObservers(null, "content-prefs-db-closed");
+    });
 
     // Delete references to XPCOM components to make sure we don't leak them
     // (although we haven't observed leakage in tests).  Also delete references

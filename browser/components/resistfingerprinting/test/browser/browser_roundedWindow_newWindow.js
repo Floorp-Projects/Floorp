@@ -6,7 +6,7 @@
 const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu } = Components;
 
 const TEST_DOMAIN = "http://example.net/";
-const TEST_PATH = TEST_DOMAIN + "browser/browser/components/resistFingerprinting/test/browser/";
+const TEST_PATH = TEST_DOMAIN + "browser/browser/components/resistfingerprinting/test/browser/";
 
 let gMaxAvailWidth;
 let gMaxAvailHeight;

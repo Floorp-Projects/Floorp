@@ -22,3 +22,6 @@
 
 ** Changed SizeLimit to be a trait instead of an enum
  Mostly for performance reasons.
+
+** Removed RefBox / StrBox / SliceBox
+ Since rustc-serialize support was phased out, you can use `Cow<T>` with serde.

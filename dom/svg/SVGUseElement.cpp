@@ -275,51 +275,6 @@ SVGUseElement::CreateAnonymousContent()
   if (!newcontent)
     return nullptr;
 
-  if (newcontent->IsSVGElement(nsGkAtoms::symbol)) {
-    nsIDocument *document = GetComposedDoc();
-    if (!document)
-      return nullptr;
-
-    nsNodeInfoManager *nodeInfoManager = document->NodeInfoManager();
-    if (!nodeInfoManager)
-      return nullptr;
-
-    RefPtr<mozilla::dom::NodeInfo> nodeInfo;
-    nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::svg, nullptr,
-                                            kNameSpaceID_SVG,
-                                            nsIDOMNode::ELEMENT_NODE);
-
-    nsCOMPtr<nsIContent> svgNode;
-    NS_NewSVGSVGElement(getter_AddRefs(svgNode), nodeInfo.forget(),
-                        NOT_FROM_PARSER);
-
-    if (!svgNode)
-      return nullptr;
-
-    // copy attributes
-    BorrowedAttrInfo info;
-    uint32_t i;
-    for (i = 0; (info = newcontent->GetAttrInfoAt(i)); i++) {
-      nsAutoString value;
-      int32_t nsID = info.mName->NamespaceID();
-      nsIAtom* lname = info.mName->LocalName();
-
-      info.mValue->ToString(value);
-
-      svgNode->SetAttr(nsID, lname, info.mName->GetPrefix(), value, false);
-    }
-
-    // move the children over
-    uint32_t num = newcontent->GetChildCount();
-    for (i = 0; i < num; i++) {
-      nsCOMPtr<nsIContent> child = newcontent->GetFirstChild();
-      newcontent->RemoveChildAt(0, false);
-      svgNode->InsertChildAt(child, i, true);
-    }
-
-    newcontent = svgNode;
-  }
-
   if (newcontent->IsAnyOfSVGElements(nsGkAtoms::svg, nsGkAtoms::symbol)) {
     nsSVGElement *newElement = static_cast<nsSVGElement*>(newcontent.get());
 

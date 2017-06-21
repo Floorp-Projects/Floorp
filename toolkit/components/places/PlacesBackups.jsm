@@ -81,6 +81,30 @@ function getBackupFileForSameDate(aFilename) {
   })();
 }
 
+/**
+ * Returns the top-level bookmark folders ids and guids.
+ *
+ * @return {Promise} Resolve with an array of objects containing id and guid
+ *                   when the query is complete.
+ */
+async function getTopLevelFolderIds() {
+  let db =  await PlacesUtils.promiseDBConnection();
+  let rows = await db.execute(
+    "SELECT id, guid FROM moz_bookmarks WHERE parent = :parentId",
+    { parentId: PlacesUtils.placesRootId }
+  );
+
+  let guids = [];
+  for (let row of rows) {
+    guids.push({
+      id: row.getResultByName("id"),
+      guid: row.getResultByName("guid")
+    });
+  }
+  return guids;
+}
+
+
 this.PlacesBackups = {
   /**
    * Matches the backup filename:
@@ -544,6 +568,44 @@ this.PlacesBackups = {
       Components.utils.reportError("Unable to report telemetry.");
     }
     return [root, root.itemsCount];
-  }
-}
+  },
 
+  /**
+   * Wrapper for PlacesUtils.bookmarks.eraseEverything that removes non-default
+   * roots.
+   *
+   * Note that default roots are preserved, only their children will be removed.
+   *
+   * TODO Ideally we wouldn't need to worry about non-default roots. However,
+   * until bug 1310299 is fixed, we still need to manage them.
+   *
+   * @param {Object} [options={}]
+   *        Additional options. Currently supports the following properties:
+   *         - source: The change source, forwarded to all bookmark observers.
+   *           Defaults to nsINavBookmarksService::SOURCE_DEFAULT.
+   *
+   * @return {Promise} resolved when the removal is complete.
+   * @resolves once the removal is complete.
+   */
+  async eraseEverythingIncludingUserRoots(options = {}) {
+    if (!options.source) {
+      options.source = PlacesUtils.bookmarks.SOURCES.DEFAULT;
+    }
+
+    let excludeItems =
+      PlacesUtils.annotations.getItemsWithAnnotation(PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO);
+
+    let rootFolderChildren = await getTopLevelFolderIds();
+
+    // We only need to do top-level roots here.
+    for (let child of rootFolderChildren) {
+      if (!PlacesUtils.bookmarks.userContentRoots.includes(child.guid) &&
+          child.guid != PlacesUtils.bookmarks.tagsGuid &&
+          !excludeItems.includes(child.id)) {
+       await PlacesUtils.bookmarks.remove(child.guid, {source: options.source});
+      }
+    }
+
+    return PlacesUtils.bookmarks.eraseEverything(options);
+  },
+}

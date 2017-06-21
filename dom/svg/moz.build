@@ -102,6 +102,7 @@ EXPORTS.mozilla.dom += [
     'SVGTSpanElement.h',
     'SVGUseElement.h',
     'SVGViewElement.h',
+    'SVGViewportElement.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -248,6 +249,7 @@ UNIFIED_SOURCES += [
     'SVGUseElement.cpp',
     'SVGViewBoxSMILType.cpp',
     'SVGViewElement.cpp',
+    'SVGViewportElement.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

@@ -25,6 +25,7 @@
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
+#include "nsIDocumentEncoder.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeFilter.h"
@@ -296,7 +297,7 @@ TextEditRules::WillDoAction(Selection* aSelection,
       return WillRemoveTextProperty(aSelection, aCancel, aHandled);
     case EditAction::outputText:
       return WillOutputText(aSelection, info->outputFormat, info->outString,
-                            aCancel, aHandled);
+                            info->flags, aCancel, aHandled);
     case EditAction::insertElement:
       // i had thought this would be html rules only.  but we put pre elements
       // into plaintext mail when doing quoting for reply!  doh!
@@ -1186,11 +1187,13 @@ nsresult
 TextEditRules::WillOutputText(Selection* aSelection,
                               const nsAString* aOutputFormat,
                               nsAString* aOutString,
+                              uint32_t aFlags,
                               bool* aCancel,
                               bool* aHandled)
 {
   // null selection ok
-  if (!aOutString || !aOutputFormat || !aCancel || !aHandled) {
+  if (NS_WARN_IF(!aOutString) || NS_WARN_IF(!aOutputFormat) ||
+      NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
     return NS_ERROR_NULL_POINTER;
   }
 
@@ -1198,17 +1201,100 @@ TextEditRules::WillOutputText(Selection* aSelection,
   *aCancel = false;
   *aHandled = false;
 
-  if (aOutputFormat->LowerCaseEqualsLiteral("text/plain")) {
-    // Only use these rules for plain text output.
-    if (IsPasswordEditor()) {
-      *aOutString = mPasswordText;
-      *aHandled = true;
-    } else if (mBogusNode) {
-      // This means there's no content, so output null string.
-      aOutString->Truncate();
-      *aHandled = true;
-    }
+  if (!aOutputFormat->LowerCaseEqualsLiteral("text/plain")) {
+    return NS_OK;
   }
+
+  // XXX Looks like that even if it's password field, we need to use the
+  //     expensive path if the caller requests some complicated handling.
+  //     However, changing the behavior for password field might cause
+  //     security issue.  So, be careful when you touch here.
+  if (IsPasswordEditor()) {
+    *aOutString = mPasswordText;
+    *aHandled = true;
+    return NS_OK;
+  }
+
+  // If there is a bogus node, there's no content.  So output empty string.
+  if (mBogusNode) {
+    aOutString->Truncate();
+    *aHandled = true;
+    return NS_OK;
+  }
+
+  // If it's necessary to check selection range or the editor wraps hard,
+  // we need some complicated handling.  In such case, we need to use the
+  // expensive path.
+  // XXX Anything else what we cannot return plain text simply?
+  if (aFlags & nsIDocumentEncoder::OutputSelectionOnly ||
+      aFlags & nsIDocumentEncoder::OutputWrap) {
+    return NS_OK;
+  }
+
+  // If it's neither <input type="text"> nor <textarea>, e.g., an HTML editor
+  // which is in plaintext mode (e.g., plaintext email composer on Thunderbird),
+  // it should be handled by the expensive path.
+  if (NS_WARN_IF(!mTextEditor) || mTextEditor->AsHTMLEditor()) {
+    return NS_OK;
+  }
+
+  RefPtr<Element> root = mTextEditor->GetRoot();
+  if (!root) { // Don't warn it, this is possible, e.g., 997805.html
+    aOutString->Truncate();
+    *aHandled = true;
+    return NS_OK;
+  }
+
+  nsIContent* firstChild = root->GetFirstChild();
+  if (!firstChild) {
+    aOutString->Truncate();
+    *aHandled = true;
+    return NS_OK;
+  }
+
+  // If it's an <input type="text"> element, the DOM tree should be:
+  // <div class="anonymous-div">
+  //   #text
+  // </div>
+  //
+  // If it's a <textarea> element, the DOM tree should be:
+  // <div class="anonymous-div">
+  //   #text (if there is)
+  //   <br type="_moz">
+  //   <scrollbar orient="horizontal">
+  //   ...
+  // </div>
+
+  Text* text = firstChild->GetAsText();
+  nsIContent* firstChildExceptText =
+    text ? firstChild->GetNextSibling() : firstChild;
+  // If the DOM tree is unexpected, fall back to the expensive path.
+  bool isInput = IsSingleLineEditor();
+  bool isTextarea = !isInput;
+  if (NS_WARN_IF(isInput && firstChildExceptText) ||
+      NS_WARN_IF(isTextarea && !firstChildExceptText) ||
+      NS_WARN_IF(isTextarea &&
+                 !TextEditUtils::IsMozBR(firstChildExceptText) &&
+                 !firstChildExceptText->IsXULElement(nsGkAtoms::scrollbar))) {
+    return NS_OK;
+  }
+
+  // If there is no text node in the expected DOM tree, we can say that it's
+  // just empty.
+  if (!text) {
+    aOutString->Truncate();
+    *aHandled = true;
+    return NS_OK;
+  }
+
+  // Otherwise, the text is the value.
+  nsresult rv = text->GetData(*aOutString);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // Fall back to the expensive path if it fails.
+    return NS_OK;
+  }
+
+  *aHandled = true;
   return NS_OK;
 }
 

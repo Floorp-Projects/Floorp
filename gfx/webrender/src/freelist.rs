@@ -83,6 +83,11 @@ impl<T: FreeListItem> FreeList<T> {
         &self.items[id.0 as usize]
     }
 
+    pub fn get_mut(&mut self, id: FreeListItemId) -> &mut T {
+        debug_assert_eq!(self.free_iter().find(|&fid| fid==id), None);
+        &mut self.items[id.0 as usize]
+    }
+
     #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.alloc_count

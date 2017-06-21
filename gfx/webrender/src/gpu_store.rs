@@ -38,7 +38,7 @@ pub trait GpuStoreLayout {
 
     fn texel_size() -> usize {
         match Self::image_format() {
-            ImageFormat::RGBA8 => 4,
+            ImageFormat::BGRA8 => 4,
             ImageFormat::RGBAF32 => 16,
             _ => unreachable!(),
         }

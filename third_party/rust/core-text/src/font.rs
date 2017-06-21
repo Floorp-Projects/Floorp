@@ -12,6 +12,7 @@
 use font_descriptor::{CTFontDescriptor, CTFontDescriptorRef, CTFontOrientation};
 use font_descriptor::{CTFontSymbolicTraits, CTFontTraits, SymbolicTraitAccessors, TraitAccessors};
 
+use core_foundation::array::{CFArray, CFArrayRef};
 use core_foundation::base::{CFIndex, CFOptionFlags, CFTypeID, CFRelease, CFRetain, CFTypeRef, TCFType};
 use core_foundation::data::{CFData, CFDataRef};
 use core_foundation::dictionary::CFDictionaryRef;
@@ -378,6 +379,16 @@ pub fn debug_font_traits(font: &CTFont) {
 //    println!("kCTFontSlantTrait: {}", traits.normalized_slant());
 }
 
+#[cfg(not(feature = "lion"))]
+pub fn cascade_list_for_languages(font: &CTFont, language_pref_list: &CFArray) -> CFArray {
+    unsafe {
+        let font_collection_ref =
+            CTFontCopyDefaultCascadeListForLanguages(font.as_concrete_TypeRef(),
+                                                     language_pref_list.as_concrete_TypeRef());
+        TCFType::wrap_under_create_rule(font_collection_ref)
+    }
+}
+
 #[link(name = "ApplicationServices", kind = "framework")]
 extern {
     /*
@@ -453,6 +464,9 @@ extern {
     fn CTFontCopyName(font: CTFontRef, nameKey: CFStringRef) -> CFStringRef;
     //fn CTFontCopyLocalizedName(font: CTFontRef, nameKey: CFStringRef, 
     //                           language: *CFStringRef) -> CFStringRef;
+    #[cfg(not(feature = "lion"))]
+    fn CTFontCopyDefaultCascadeListForLanguages(font: CTFontRef, languagePrefList: CFArrayRef) -> CFArrayRef;
+
 
     /* Working With Encoding */
     //fn CTFontCopyCharacterSet

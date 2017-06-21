@@ -10243,6 +10243,45 @@ nsContentUtils::AppendDocumentLevelNativeAnonymousContentTo(
   }
 }
 
+static void
+AppendNativeAnonymousChildrenFromFrame(
+    nsIFrame* aFrame,
+    nsTArray<nsIContent*>& aKids,
+    uint32_t aFlags)
+{
+  if (nsIAnonymousContentCreator* ac = do_QueryFrame(aFrame)) {
+    ac->AppendAnonymousContentTo(aKids, aFlags);
+  }
+}
+
+/* static */ void
+nsContentUtils::AppendNativeAnonymousChildren(
+    const nsIContent* aContent,
+    nsTArray<nsIContent*>& aKids,
+    uint32_t aFlags)
+{
+  if (nsIFrame* primaryFrame = aContent->GetPrimaryFrame()) {
+    // NAC created by the element's primary frame.
+    AppendNativeAnonymousChildrenFromFrame(primaryFrame, aKids, aFlags);
+
+    // NAC created by any other non-primary frames for the element.
+    AutoTArray<nsIFrame::OwnedAnonBox, 8> ownedAnonBoxes;
+    primaryFrame->AppendOwnedAnonBoxes(ownedAnonBoxes);
+    for (nsIFrame::OwnedAnonBox& box : ownedAnonBoxes) {
+      MOZ_ASSERT(box.mAnonBoxFrame->GetContent() == aContent);
+      AppendNativeAnonymousChildrenFromFrame(box.mAnonBoxFrame, aKids, aFlags);
+    }
+  }
+
+  // The root scroll frame is not the primary frame of the root element.
+  // Detect and handle this case.
+  if (!(aFlags & nsIContent::eSkipDocumentLevelNativeAnonymousContent) &&
+      aContent == aContent->OwnerDoc()->GetRootElement()) {
+    AppendDocumentLevelNativeAnonymousContentTo(aContent->OwnerDoc(), aKids);
+  }
+}
+
+
 /* static */ void
 nsContentUtils::GetContentPolicyTypeForUIImageLoading(nsIContent* aLoadingNode,
                                                       nsIPrincipal** aLoadingPrincipal,

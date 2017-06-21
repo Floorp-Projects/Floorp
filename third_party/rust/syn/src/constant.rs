@@ -7,21 +7,29 @@ pub enum ConstExpr {
     /// The first field resolves to the function itself,
     /// and the second field is the list of arguments
     Call(Box<ConstExpr>, Vec<ConstExpr>),
+
     /// A binary operation (For example: `a + b`, `a * b`)
     Binary(BinOp, Box<ConstExpr>, Box<ConstExpr>),
+
     /// A unary operation (For example: `!x`, `*x`)
     Unary(UnOp, Box<ConstExpr>),
+
     /// A literal (For example: `1`, `"foo"`)
     Lit(Lit),
+
     /// A cast (`foo as f64`)
     Cast(Box<ConstExpr>, Box<Ty>),
+
     /// Variable reference, possibly containing `::` and/or type
     /// parameters, e.g. foo::bar::<baz>.
     Path(Path),
+
     /// An indexing operation (`foo[2]`)
     Index(Box<ConstExpr>, Box<ConstExpr>),
+
     /// No-op: used solely so we can pretty-print faithfully
     Paren(Box<ConstExpr>),
+
     /// If compiling with full support for expression syntax, any expression is
     /// allowed
     Other(Other),

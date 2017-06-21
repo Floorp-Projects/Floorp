@@ -583,7 +583,7 @@ AsyncExecuteStatements::Cancel()
 NS_IMETHODIMP
 AsyncExecuteStatements::Run()
 {
-  MOZ_ASSERT(!mConnection->isClosed());
+  MOZ_ASSERT(mConnection->isConnectionReadyOnThisThread());
 
   // Do not run if we have been canceled.
   {
