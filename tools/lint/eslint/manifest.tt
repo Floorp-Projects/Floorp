@@ -1,8 +1,8 @@
 [
   {
-    "size": 3040936,
+    "size": 2905242,
     "visibility": "public",
-    "digest": "febfdc55c2c51937cea0394f6167a2398e9043d58b43c8c8ceacdd72f13074bd536cc90a13afdd7036487ff599a228418fbb6caa34a36daf7726fe0f5c3e8b9b",
+    "digest": "e5e239ffbc6ad3f152a046bf116c736da874dbf99aa98117eee72b7aaeef1a77304b2885b22a964d5d25dcc3652dee7b92996067bf14ffadecf6a883c52ef8d9",
     "algorithm": "sha512",
     "filename": "eslint.tar.gz"
   }
