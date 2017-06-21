@@ -190,8 +190,7 @@ windows10-64/opt:
 windows10-64-asan/opt:
     build-platform: win64-asan/opt
     test-sets:
-        - common-tests
-        - headless        
+        - common-tests     
 
 ##
 # MacOS X platforms (matching /macosx.*/)
