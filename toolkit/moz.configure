@@ -623,8 +623,8 @@ id_and_secret_keyfile('Leanplum SDK')
 option('--enable-stylo', nargs='?', choices=('build',),
        help='Include Stylo in the build and/or enable it at runtime')
 
-@depends('--enable-stylo')
-def stylo_config(value):
+@depends('--enable-stylo', '--help')
+def stylo_config(value, _):
     build_stylo = None
     enable_stylo = None
 
@@ -645,8 +645,10 @@ def stylo_config(value):
 option('--disable-stylo-build-bindgen',
        help='Disable build-time bindgen for Stylo')
 
-@depends(stylo_config, '--enable-stylo-build-bindgen')
-def building_stylo_bindgen(stylo_config, bindgen_enabled):
+@depends(stylo_config, '--enable-stylo-build-bindgen', '--enable-compile-environment')
+def building_stylo_bindgen(stylo_config, bindgen_enabled, compile_environment):
+    if not compile_environment:
+        return False
     if not bindgen_enabled:
         return False
     return stylo_config.build
@@ -664,109 +666,110 @@ llvm_config = check_prog('LLVM_CONFIG', ('llvm-config-4.0',
                          when=building_stylo_bindgen,
                          what='llvm-config', allow_missing=True)
 
-option('--with-libclang-path', nargs=1,
-       help='Absolute path to a directory containing Clang/LLVM libraries for Stylo (version 3.9.x or above)')
-option('--with-clang-path', nargs=1,
-       help='Absolute path to a Clang binary for Stylo bindgen (version 3.9.x or above)')
+with only_when(building_stylo_bindgen):
+    option('--with-libclang-path', nargs=1,
+           help='Absolute path to a directory containing Clang/LLVM libraries for Stylo (version 3.9.x or above)')
+    option('--with-clang-path', nargs=1,
+           help='Absolute path to a Clang binary for Stylo bindgen (version 3.9.x or above)')
 
-def invoke_llvm_config(llvm_config, *options):
-    '''Invoke llvm_config with the given options and return the first line of
-    output.'''
-    lines = check_cmd_output(llvm_config, *options).splitlines()
-    return lines[0]
+    def invoke_llvm_config(llvm_config, *options):
+        '''Invoke llvm_config with the given options and return the first line of
+        output.'''
+        lines = check_cmd_output(llvm_config, *options).splitlines()
+        return lines[0]
 
-@imports(_from='textwrap', _import='dedent')
-def check_minimum_llvm_config_version(llvm_config):
-    version = Version(invoke_llvm_config(llvm_config, '--version'))
-    min_version = Version('3.9.0')
-    if version < min_version:
-        die(dedent('''\
-        llvm installation {} is incompatible with Stylo bindgen.
-
-        To compile Stylo, please install version {} or greater of
-        Clang + LLVM and ensure that the 'llvm-config' from that
-        installation is first on your path.
-
-        You can verify this by typing 'llvm-config --version'.
-        '''.format(version, min_version)))
-
-@depends(llvm_config, '--with-libclang-path', '--with-clang-path',
-         host, when=building_stylo_bindgen)
-@imports('os.path')
-@imports(_from='textwrap', _import='dedent')
-def bindgen_config_paths(llvm_config, libclang_path, clang_path,
-                         host):
-    if not libclang_path and not clang_path:
-        # We must have LLVM_CONFIG in this case.
-        if not llvm_config:
+    @imports(_from='textwrap', _import='dedent')
+    def check_minimum_llvm_config_version(llvm_config):
+        version = Version(invoke_llvm_config(llvm_config, '--version'))
+        min_version = Version('3.9.0')
+        if version < min_version:
             die(dedent('''\
-            Could not find LLVM/Clang installation for compiling stylo build-time
-            bindgen.  Please specify the 'LLVM_CONFIG' environment variable
-            (recommended), pass the '--with-libclang-path' and '--with-clang-path'
-            options to configure, or put 'llvm-config' in your PATH.  Altering your
-            PATH may expose 'clang' as well, potentially altering your compiler,
-            which may not be what you intended.'''))
+            llvm installation {} is incompatible with Stylo bindgen.
 
-        check_minimum_llvm_config_version(llvm_config)
-        libclang_arg = '--bindir' if host.os == 'WINNT' else '--libdir'
-        libclang_path = invoke_llvm_config(llvm_config, libclang_arg)
-        clang_path = os.path.join(invoke_llvm_config(llvm_config, '--bindir'),
-                                  'clang')
-        libclang_path = normsep(libclang_path)
-        clang_path = normsep(clang_path)
+            To compile Stylo, please install version {} or greater of
+            Clang + LLVM and ensure that the 'llvm-config' from that
+            installation is first on your path.
 
-        # Debian-based distros, at least, can have llvm-config installed
-        # but not have other packages installed.  Since the user is trying
-        # to use their system packages, we can't be more specific about what
-        # they need.
-        if not os.path.exists(libclang_path)
+            You can verify this by typing 'llvm-config --version'.
+            '''.format(version, min_version)))
+
+    @depends(llvm_config, '--with-libclang-path', '--with-clang-path',
+             host)
+    @imports('os.path')
+    @imports(_from='textwrap', _import='dedent')
+    def bindgen_config_paths(llvm_config, libclang_path, clang_path,
+                             host):
+        if not libclang_path and not clang_path:
+            # We must have LLVM_CONFIG in this case.
+            if not llvm_config:
+                die(dedent('''\
+                Could not find LLVM/Clang installation for compiling stylo build-time
+                bindgen.  Please specify the 'LLVM_CONFIG' environment variable
+                (recommended), pass the '--with-libclang-path' and '--with-clang-path'
+                options to configure, or put 'llvm-config' in your PATH.  Altering your
+                PATH may expose 'clang' as well, potentially altering your compiler,
+                which may not be what you intended.'''))
+
+            check_minimum_llvm_config_version(llvm_config)
+            libclang_arg = '--bindir' if host.os == 'WINNT' else '--libdir'
+            libclang_path = invoke_llvm_config(llvm_config, libclang_arg)
+            clang_path = os.path.join(invoke_llvm_config(llvm_config, '--bindir'),
+                                      'clang')
+            libclang_path = normsep(libclang_path)
+            clang_path = normsep(clang_path)
+
+            # Debian-based distros, at least, can have llvm-config installed
+            # but not have other packages installed.  Since the user is trying
+            # to use their system packages, we can't be more specific about what
+            # they need.
+            if not os.path.exists(libclang_path):
+                die(dedent('''\
+                The directory {} returned by `llvm-config {}` does not exist.
+                Please check your system configuration.
+                '''.format(libclang_path, libclang_arg)))
+
+            if not os.path.exists(clang_path):
+                die(dedent('''\
+                The file {} returned by `llvm-config {}` does not exist.
+                Please check your system configuration.
+                '''.format(clang_path, '--bindir')))
+
+            return namespace(
+                libclang_path=libclang_path,
+                clang_path=clang_path,
+            )
+
+        if (not libclang_path and clang_path) or \
+           (libclang_path and not clang_path):
             die(dedent('''\
-            The directory {} returned by `llvm-config {}` does not exist.
-            Please check your system configuration.
-            '''.format(libclang_path, libclang_arg)))
+            You must provide both of --with-libclang-path and --with-clang-path
+            or neither of them.'''))
 
-        if not os.path.exists(clang_path):
+        if not os.path.exists(libclang_path) or \
+           not os.path.isdir(libclang_path):
             die(dedent('''\
-            The file {} returned by `llvm-config {}` does not exist.
-            Please check your system configuration.
-            '''.format(clang_path, '--bindir')))
+            The argument to --with-libclang-path is not a directory: {}
+            '''.format(libclang_path)))
+
+        if not os.path.exists(clang_path) or \
+           not os.path.isfile(clang_path):
+            die(dedent('''\
+            The argument to --with-clang-path is not a file: {}
+            '''.format(clang_path)))
 
         return namespace(
-            libclang_path=libclang_path,
-            clang_path=clang_path,
+            libclang_path=libclang_path[0],
+            clang_path=clang_path[0],
         )
 
-    if (not libclang_path and clang_path) or \
-       (libclang_path and not clang_path):
-        die(dedent('''\
-        You must provide both of --with-libclang-path and --with-clang-path
-        or neither of them.'''))
-
-    if not os.path.exists(libclang_path) or \
-       not os.path.isdir(libclang_path):
-        die(dedent('''\
-        The argument to --with-libclang-path is not a directory: {}
-        '''.format(libclang_path)))
-
-    if not os.path.exists(clang_path) or \
-       not os.path.isfile(clang_path):
-        die(dedent('''\
-        The argument to --with-clang-path is not a file: {}
-        '''.format(clang_path)))
-
-    return namespace(
-        libclang_path=libclang_path[0],
-        clang_path=clang_path[0],
-    )
+    set_config('MOZ_LIBCLANG_PATH', bindgen_config_paths.libclang_path)
+    set_config('MOZ_CLANG_PATH', bindgen_config_paths.clang_path)
+    set_config('MOZ_STYLO_BINDGEN', depends_if('--enable-stylo-build-bindgen')(lambda _: True))
 
 set_config('MOZ_STYLO', stylo_config.build)
 set_define('MOZ_STYLO', stylo_config.build)
 set_config('MOZ_STYLO_ENABLE', stylo_config.enable)
 set_define('MOZ_STYLO_ENABLE', stylo_config.enable)
-
-set_config('MOZ_LIBCLANG_PATH', bindgen_config_paths.libclang_path)
-set_config('MOZ_CLANG_PATH', bindgen_config_paths.clang_path)
-set_config('MOZ_STYLO_BINDGEN', depends_if('--enable-stylo-build-bindgen')(lambda _: True))
 
 option('--with-servo', env='SERVO_TARGET_DIR', nargs=1,
        help='Absolute path of the target directory where libgeckoservo can '
