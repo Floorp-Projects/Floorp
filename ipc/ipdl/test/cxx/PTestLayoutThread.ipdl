@@ -1,0 +1,19 @@
+include protocol PTestPaintThread;
+
+namespace mozilla {
+namespace _ipdltest {
+
+// This is supposed to be analagous to PLayerTransaction.
+sync protocol PTestLayoutThread
+{
+parent:
+  async FinishedLayout(uint64_t aTxnId);
+  async AsyncMessage(uint64_t aTxnId);
+  sync SyncMessage(uint64_t aTxnId);
+  async EndTest();
+child:
+  async StartTest(Endpoint<PTestPaintThreadChild> endpoint);
+};
+
+} // namespace mozilla
+} // namespace _ipdltest

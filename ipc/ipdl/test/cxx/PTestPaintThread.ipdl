@@ -1,0 +1,13 @@
+
+namespace mozilla {
+namespace _ipdltest {
+
+// This is supposed to be analagous to PPaintingBridge.
+protocol PTestPaintThread
+{
+parent:
+  async FinishedPaint(uint64_t aTxnId);
+};
+
+} // namespace mozilla
+} // namespace _ipdltest
