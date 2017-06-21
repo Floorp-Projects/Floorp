@@ -1400,11 +1400,6 @@ nsFormFillController::StopControllingInput()
   if (mFocusedInputNode) {
     MaybeRemoveMutationObserver(mFocusedInputNode);
 
-    auto formAutoComplete = GetFormAutoComplete();
-    if (formAutoComplete) {
-      formAutoComplete->StopControllingInput(mFocusedInput);
-    }
-
     mFocusedInputNode = nullptr;
     mFocusedInput = nullptr;
   }
