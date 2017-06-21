@@ -121,7 +121,8 @@ ServoRestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
 {
   StyleSet()->ClearDataAndMarkDeviceDirty();
 
-  if (Element* root = mPresContext->Document()->GetRootElement()) {
+  DocumentStyleRootIterator iter(mPresContext->Document());
+  while (Element* root = iter.GetNextStyleRoot()) {
     PostRestyleEvent(root, aRestyleHint, aExtraHint);
   }
 
