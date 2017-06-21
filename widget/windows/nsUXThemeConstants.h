@@ -230,7 +230,8 @@ enum {
   WP_SMALLFRAMERIGHTSIZINGTEMPLATE = 35,
   WP_FRAMEBOTTOMSIZINGTEMPLATE = 36,
   WP_SMALLFRAMEBOTTOMSIZINGTEMPLATE = 37,
-  WP_FRAME = 38
+  WP_FRAME = 38,
+  WP_Count
 };
 
 enum FRAMESTATES {
@@ -247,5 +248,9 @@ enum {
 };
 
 }}} // mozilla::widget::themeconst
+
+// If any theme part ends up having a value higher than WP_Count, this will
+// need to change.
+#define THEME_PART_DISTINCT_VALUE_COUNT mozilla::widget::themeconst::WP_Count
 
 #endif
