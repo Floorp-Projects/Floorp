@@ -10179,16 +10179,18 @@ nsDocShell::InternalLoad(nsIURI* aURI,
         //      do nothing.
       }
 
-      // Switch to target tab if we're currently focused window.
-      // Take loadDivertedInBackground into account so the behavior would be
-      // the same as how the tab first opened.
-      bool isTargetActive = false;
-      targetDocShell->GetIsActive(&isTargetActive);
-      if (mIsActive && !isTargetActive &&
-          !Preferences::GetBool("browser.tabs.loadDivertedInBackground", false)) {
-        if (NS_FAILED(nsContentUtils::DispatchFocusChromeEvent(
-            targetDocShell->GetWindow()))) {
-          return NS_ERROR_FAILURE;
+      if (NS_SUCCEEDED(rv)) {
+        // Switch to target tab if we're currently focused window.
+        // Take loadDivertedInBackground into account so the behavior would be
+        // the same as how the tab first opened.
+        bool isTargetActive = false;
+        targetDocShell->GetIsActive(&isTargetActive);
+        nsCOMPtr<nsPIDOMWindowOuter> domWin = targetDocShell->GetWindow();
+        if (mIsActive && !isTargetActive && domWin &&
+            !Preferences::GetBool("browser.tabs.loadDivertedInBackground", false)) {
+          if (NS_FAILED(nsContentUtils::DispatchFocusChromeEvent(domWin))) {
+            return NS_ERROR_FAILURE;
+          }
         }
       }
     }
