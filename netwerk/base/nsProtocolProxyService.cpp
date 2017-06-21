@@ -1980,6 +1980,14 @@ nsProtocolProxyService::Resolve_Internal(nsIChannel *channel,
         uri->GetScheme(scheme);
         uri->GetPort(&port);
 
+        if (flags & RESOLVE_PREFER_SOCKS_PROXY) {
+            LOG(("Ignoring RESOLVE_PREFER_SOCKS_PROXY for system proxy setting\n"));
+        } else if (flags & RESOLVE_PREFER_HTTPS_PROXY) {
+            scheme.AssignLiteral("https");
+        } else if (flags & RESOLVE_IGNORE_URI_SCHEME) {
+            scheme.AssignLiteral("http");
+        }
+
         // now try the system proxy settings for this particular url
         if (NS_SUCCEEDED(mSystemProxySettings->
                          GetProxyForURI(spec, scheme, host, port,
