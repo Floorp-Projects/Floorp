@@ -3,8 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "InProcessX11CompositorWidget.h"
+#include "gfxPlatform.h"
+#include "HeadlessCompositorWidget.h"
+#include "HeadlessWidget.h"
 
+#include "InProcessX11CompositorWidget.h"
 #include "nsWindow.h"
 
 namespace mozilla {
@@ -15,7 +18,11 @@ CompositorWidget::CreateLocal(const CompositorWidgetInitData& aInitData,
                               const layers::CompositorOptions& aOptions,
                               nsIWidget* aWidget)
 {
-  return new InProcessX11CompositorWidget(aInitData, aOptions, static_cast<nsWindow*>(aWidget));
+  if (gfxPlatform::IsHeadless()) {
+    return new HeadlessCompositorWidget(aInitData, aOptions, static_cast<HeadlessWidget*>(aWidget));
+  } else {
+    return new InProcessX11CompositorWidget(aInitData, aOptions, static_cast<nsWindow*>(aWidget));
+  }
 }
 
 InProcessX11CompositorWidget::InProcessX11CompositorWidget(const CompositorWidgetInitData& aInitData,
