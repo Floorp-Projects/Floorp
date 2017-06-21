@@ -9,19 +9,6 @@
 # ==============================================================
 # Some of the options here imply an option from js/moz.configure,
 # so, need to be declared before the include.
-option('--enable-systrace', env='MOZ_USE_SYSTRACE',
-       help='Turn on systrace for the Gecko profiler on android/b2g')
-
-@depends('--enable-systrace', target)
-def systrace(value, target):
-    if value and target.os != 'Android':
-        die('--enable-systrace cannot be used when targeting %s',
-            target.os)
-    if value:
-        return True
-
-set_define('MOZ_USE_SYSTRACE', systrace)
-
 
 option('--enable-jprof', env='MOZ_JPROF',
        help='Enable jprof profiling tool (needs mozilla/tools/jprof)')
