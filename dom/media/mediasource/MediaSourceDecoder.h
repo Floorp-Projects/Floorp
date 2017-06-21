@@ -44,8 +44,6 @@ public:
 
   void Shutdown() override;
 
-  static already_AddRefed<MediaResource> CreateResource(nsIPrincipal* aPrincipal = nullptr);
-
   void AttachMediaSource(dom::MediaSource* aMediaSource);
   void DetachMediaSource();
 
@@ -78,6 +76,8 @@ public:
   bool IsMSE() const override { return true; }
 
   void NotifyInitDataArrived();
+
+  void CreateResource(nsIPrincipal* aPrincipal);
 
 private:
   void DoSetMediaSourceDuration(double aDuration);

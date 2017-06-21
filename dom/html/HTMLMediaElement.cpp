@@ -2512,9 +2512,8 @@ nsresult HTMLMediaElement::LoadResource()
       return NS_ERROR_FAILURE;
     }
     ChangeDelayLoadStatus(false);
-    RefPtr<MediaResource> resource =
-      MediaSourceDecoder::CreateResource(mMediaSource->GetPrincipal());
-    return FinishDecoderSetup(decoder, resource, nullptr);
+    decoder->CreateResource(mMediaSource->GetPrincipal());
+    return FinishDecoderSetup(decoder, nullptr, nullptr);
   }
 
   RefPtr<ChannelLoader> loader = new ChannelLoader;
@@ -4650,16 +4649,14 @@ HTMLMediaElement::InitializeDecoderAsClone(ChannelMediaDecoder* aOriginal)
 
   LOG(LogLevel::Debug, ("%p Cloned decoder %p from %p", this, decoder.get(), aOriginal));
 
-  RefPtr<MediaResource> resource =
-    originalResource->CloneData(decoder->GetResourceCallback());
-
-  if (!resource) {
+  nsresult rv = decoder->CreateResource(originalResource);
+  if (NS_FAILED(rv)) {
     decoder->Shutdown();
     LOG(LogLevel::Debug, ("%p Failed to cloned stream for decoder %p", this, decoder.get()));
-    return NS_ERROR_FAILURE;
+    return rv;
   }
 
-  return FinishDecoderSetup(decoder, resource, nullptr);
+  return FinishDecoderSetup(decoder, nullptr, nullptr);
 }
 
 nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
@@ -4701,12 +4698,10 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
   LOG(LogLevel::Debug, ("%p Created decoder %p for type %s", this, decoder.get(), mimeType.get()));
 
   bool isPrivateBrowsing = NodePrincipal()->GetPrivateBrowsingId() > 0;
-  RefPtr<MediaResource> resource = MediaResource::Create(
-    decoder->GetResourceCallback(), aChannel, isPrivateBrowsing);
-
-  if (!resource) {
+  nsresult rv = decoder->CreateResource(aChannel, isPrivateBrowsing);
+  if (NS_FAILED(rv)) {
     decoder->Shutdown();
-    return NS_ERROR_OUT_OF_MEMORY;
+    return rv;
   }
 
   if (mChannelLoader) {
@@ -4714,7 +4709,7 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
     mChannelLoader = nullptr;
   }
 
-  nsresult rv = FinishDecoderSetup(decoder, resource, aListener);
+  rv = FinishDecoderSetup(decoder, nullptr, aListener);
   if (NS_SUCCEEDED(rv)) {
     AddMediaElementToURITable();
     NS_ASSERTION(MediaElementTableCount(this, mLoadingSrc) == 1,
@@ -4738,7 +4733,9 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
 
   // Tell the decoder about its MediaResource now so things like principals are
   // available immediately.
-  mDecoder->SetResource(aStream);
+  if (aStream) {
+    mDecoder->SetResource(aStream);
+  }
   // Notify the decoder of the initial activity status.
   NotifyDecoderActivityChanges();
 

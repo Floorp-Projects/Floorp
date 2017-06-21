@@ -162,4 +162,22 @@ ChannelMediaDecoder::Shutdown()
   MediaDecoder::Shutdown();
 }
 
+nsresult
+ChannelMediaDecoder::CreateResource(nsIChannel* aChannel,
+                                    bool aIsPrivateBrowsing)
+{
+  MOZ_ASSERT(!mResource);
+  mResource =
+    MediaResource::Create(mResourceCallback, aChannel, aIsPrivateBrowsing);
+  return mResource ? NS_OK : NS_ERROR_FAILURE;
+}
+
+nsresult
+ChannelMediaDecoder::CreateResource(MediaResource* aOriginal)
+{
+  MOZ_ASSERT(!mResource);
+  mResource = aOriginal->CloneData(mResourceCallback);
+  return mResource ? NS_OK : NS_ERROR_FAILURE;
+}
+
 } // namespace mozilla
