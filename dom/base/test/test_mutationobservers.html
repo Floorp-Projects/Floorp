@@ -606,6 +606,12 @@ function testExpandos() {
 }
 
 function testOutsideShadowDOM() {
+  if (!div.createShadowRoot) {
+    todo(false, "Skipping testOutsideShadowDOM and testInsideShadowDOM " +
+         "because createShadowRoot is not supported");
+    then(testMarquee);
+    return;
+  }
   var m = new M(function(records, observer) {
     is(records.length, 1);
     is(records[0].type, "attributes", "Should have got attributes");
