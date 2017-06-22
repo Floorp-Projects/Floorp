@@ -19,8 +19,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 
 const BackgroundFileSaverOutputStream = Components.Constructor(
       "@mozilla.org/network/background-file-saver;1?mode=outputstream",
@@ -144,7 +142,7 @@ function readFileToString(aFilename) {
   return buf;
 }
 
-add_task(function test_signature()
+add_task(async function test_signature()
 {
   // Check that we get a signature if the saver is finished on Windows.
   let destFile = getTempFile(TEST_FILE_NAME_1);
@@ -160,10 +158,10 @@ add_task(function test_signature()
 
   saver.enableSignatureInfo();
   saver.setTarget(destFile, false);
-  yield promiseCopyToSaver(data, saver, true);
+  await promiseCopyToSaver(data, saver, true);
 
   saver.finish(Cr.NS_OK);
-  yield completionPromise;
+  await completionPromise;
 
   // There's only one nsIX509CertList in the signature array.
   do_check_eq(1, saver.signatureInfo.length);

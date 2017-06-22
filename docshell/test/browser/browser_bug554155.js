@@ -1,5 +1,5 @@
-add_task(function* test() {
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "http://example.com" }, function* (browser) {
+add_task(async function test() {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "http://example.com" }, async function(browser) {
     let numLocationChanges = 0;
 
     let listener = {
@@ -11,13 +11,13 @@ add_task(function* test() {
 
     gBrowser.addTabsProgressListener(listener);
 
-    yield ContentTask.spawn(browser, null, function() {
+    await ContentTask.spawn(browser, null, function() {
       // pushState to a new URL (http://example.com/foo").  This should trigger
       // exactly one LocationChange event.
       content.history.pushState(null, null, "foo");
     });
 
-    yield Promise.resolve();
+    await Promise.resolve();
 
     gBrowser.removeTabsProgressListener(listener);
     is(numLocationChanges, 1,

@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1208217
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1208217">Mozilla Bug 1208217</a>
 <script type="application/javascript">
 
-  add_task(function*() {
+  add_task(async function() {
     let pasteCount = 0;
     document.addEventListener('paste', function() {
       pasteCount++;

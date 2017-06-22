@@ -37,7 +37,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test1() {
+add_task(async function test1() {
 
   let db = PushServiceHttp2.newPushDB();
   do_register_cleanup(_ => {
@@ -58,7 +58,7 @@ add_task(function* test1() {
     systemRecord: true,
   };
 
-  yield db.put(record);
+  await db.put(record);
 
   let notifyPromise = promiseObserverNotification(PushServiceComponent.subscriptionChangeTopic,
                                                   _ => true);
@@ -68,9 +68,9 @@ add_task(function* test1() {
     db
   });
 
-  yield notifyPromise;
+  await notifyPromise;
 
-  let aRecord = yield db.getByKeyID(serverURL + '/subscriptionNoKey');
+  let aRecord = await db.getByKeyID(serverURL + '/subscriptionNoKey');
   ok(aRecord, 'The record should still be there');
   ok(aRecord.p256dhPublicKey, 'There should be a public key');
   ok(aRecord.p256dhPrivateKey, 'There should be a private key');

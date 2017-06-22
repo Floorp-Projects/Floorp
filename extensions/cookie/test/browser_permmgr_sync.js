@@ -7,7 +7,7 @@ function hasPerm(aURI, aName) {
     == Services.perms.ALLOW_ACTION;
 }
 
-add_task(function* () {
+add_task(async function() {
   // Make sure that we get a new process for the tab which we create. This is
   // important, becuase we wanto to assert information about the initial state
   // of the local permissions cache.
@@ -26,7 +26,7 @@ add_task(function* () {
   let safeProcessCount = keepAliveCount + 2;
   info("dom.ipc.keepProcessesAlive.web is " + keepAliveCount + ", boosting " +
        "process count temporarily to " + safeProcessCount);
-  yield SpecialPowers.pushPrefEnv({
+  await SpecialPowers.pushPrefEnv({
     set: [
       ["dom.ipc.processCount", safeProcessCount],
       ["dom.ipc.processCount.web", safeProcessCount]
@@ -40,8 +40,8 @@ add_task(function* () {
   // NOTE: This permission is a preload permission, so it should be avaliable in the content process from startup.
   addPerm("https://somerandomwebsite.com", "document");
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function* (aBrowser) {
-    yield ContentTask.spawn(aBrowser, null, function* () {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, async function(aBrowser) {
+    await ContentTask.spawn(aBrowser, null, async function() {
       // Before the load http URIs shouldn't have been sent down yet
       is(Services.perms.testPermission(Services.io.newURI("http://example.com"),
                                        "perm1"),
@@ -60,7 +60,7 @@ add_task(function* () {
          Services.perms.ALLOW_ACTION, "document-1");
 
       // Perform a load of example.com
-      yield new Promise(resolve => {
+      await new Promise(resolve => {
         let iframe = content.document.createElement('iframe');
         iframe.setAttribute('src', 'http://example.com');
         iframe.onload = resolve;
@@ -91,7 +91,7 @@ add_task(function* () {
     addPerm("https://example.com", "newperm4");
     addPerm("https://someotherrandomwebsite.com", "document");
 
-    yield ContentTask.spawn(aBrowser, null, function* () {
+    await ContentTask.spawn(aBrowser, null, async function() {
       // The new permissions should be avaliable, but only for
       // http://example.com, and about:home
       is(Services.perms.testPermission(Services.io.newURI("http://example.com"),
@@ -126,7 +126,7 @@ add_task(function* () {
          Services.perms.ALLOW_ACTION, "otherdocument-3");
 
       // Loading a subdomain now, on https
-      yield new Promise(resolve => {
+      await new Promise(resolve => {
         let iframe = content.document.createElement('iframe');
         iframe.setAttribute('src', 'https://sub1.test1.example.com');
         iframe.onload = resolve;

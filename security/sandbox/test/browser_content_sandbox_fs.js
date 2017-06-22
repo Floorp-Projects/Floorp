@@ -145,7 +145,7 @@ function minHomeReadSandboxLevel(level) {
 // Tests reading various files and directories from file and web
 // content processes.
 //
-add_task(function* () {
+add_task(async function() {
   // This test is only relevant in e10s
   if (!gMultiProcessBrowser) {
     ok(false, "e10s is enabled");
@@ -195,11 +195,11 @@ add_task(function* () {
 });
 
 // Test if the content process can create in $HOME, this should fail
-function* createFileInHome() {
+async function createFileInHome() {
   let browser = gBrowser.selectedBrowser;
   let homeFile = fileInHomeDir();
   let path = homeFile.path;
-  let fileCreated = yield ContentTask.spawn(browser, path, createFile);
+  let fileCreated = await ContentTask.spawn(browser, path, createFile);
   ok(fileCreated == false, "creating a file in home dir is not permitted");
   if (fileCreated == true) {
     // content process successfully created the file, now remove it
@@ -208,18 +208,18 @@ function* createFileInHome() {
 }
 
 // Test if the content process can create a temp file, should pass
-function* createTempFile() {
+async function createTempFile() {
   let browser = gBrowser.selectedBrowser;
   let path = fileInTempDir().path;
-  let fileCreated = yield ContentTask.spawn(browser, path, createFile);
+  let fileCreated = await ContentTask.spawn(browser, path, createFile);
   ok(fileCreated == true, "creating a file in content temp is permitted");
   // now delete the file
-  let fileDeleted = yield ContentTask.spawn(browser, path, deleteFile);
+  let fileDeleted = await ContentTask.spawn(browser, path, deleteFile);
   ok(fileDeleted == true, "deleting a file in content temp is permitted");
 }
 
 // Test reading files and dirs from web and file content processes.
-function* testFileAccess() {
+async function testFileAccess() {
   // for tests that run in a web content process
   let webBrowser = gBrowser.selectedBrowser;
 
@@ -443,7 +443,7 @@ function* testFileAccess() {
     let okString = test.ok ? "allowed" : "blocked";
     let processType = test.browser === webBrowser ? "web" : "file";
 
-    let result = yield ContentTask.spawn(test.browser, test.file.path,
+    let result = await ContentTask.spawn(test.browser, test.file.path,
         testFunc);
 
     ok(result.ok == test.ok,

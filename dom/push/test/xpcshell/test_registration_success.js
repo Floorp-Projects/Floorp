@@ -13,7 +13,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_registration_success() {
+add_task(async function test_registration_success() {
   let db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => {return db.drop().then(_ => db.close());});
   let records = [{
@@ -41,7 +41,7 @@ add_task(function* test_registration_success() {
     quota: Infinity,
   }];
   for (let record of records) {
-    yield db.put(record);
+    await db.put(record);
   }
 
   let handshakeDone;
@@ -63,9 +63,9 @@ add_task(function* test_registration_success() {
     }
   });
 
-  yield handshakePromise;
+  await handshakePromise;
 
-  let registration = yield PushService.registration({
+  let registration = await PushService.registration({
     scope: 'https://example.net/a',
     originAttributes: '',
   });

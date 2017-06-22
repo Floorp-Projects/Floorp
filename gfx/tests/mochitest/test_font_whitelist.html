@@ -42,7 +42,7 @@ const fonts = { mono : fontUsed("mono"),
 // default mono, sans, and serif fonts. Check that the rendering
 // of our three test elements uses only fonts present in the
 // whitelist.
-let testFontWhitelist = function* (useMono, useSans, useSerif) {
+let testFontWhitelist = async function(useMono, useSans, useSerif) {
   let whitelist = [];
   if (useMono) {
     whitelist.push(fonts.mono);
@@ -53,7 +53,7 @@ let testFontWhitelist = function* (useMono, useSans, useSerif) {
   if (useSerif) {
     whitelist.push(fonts.serif);
   }
-  yield SpecialPowers.pushPrefEnv({"set": [["font.system.whitelist",
+  await SpecialPowers.pushPrefEnv({"set": [["font.system.whitelist",
                                             whitelist.join(", ")]]});
   // If whitelist is empty, then whitelisting is considered disabled
   // and all fonts are allowed.
@@ -70,11 +70,11 @@ let testFontWhitelist = function* (useMono, useSans, useSerif) {
 // Run tests to confirm that only whitelisting fonts are present in a
 // rendered page. Try turning mono, sans, and serif off and on in
 // every combination.
-add_task(function* () {
+add_task(async function() {
   for (let useMono of [false, true]) {
     for (let useSans of [false, true]) {
       for (let useSerif of [false, true]) {
-        yield testFontWhitelist(useMono, useSans, useSerif);
+        await testFontWhitelist(useMono, useSans, useSerif);
       }
     }
   }

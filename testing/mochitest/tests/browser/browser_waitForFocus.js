@@ -1,7 +1,7 @@
 
 const gBaseURL = "https://example.com/browser/testing/mochitest/tests/browser/";
 
-function *promiseTabLoadEvent(tab, url)
+function promiseTabLoadEvent(tab, url)
 {
   return new Promise(function (resolve, reject) {
     function handleLoadEvent(event) {
@@ -22,13 +22,13 @@ function *promiseTabLoadEvent(tab, url)
 }
 
 // Load a new blank tab
-add_task(function *() {
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser);
+add_task(async function() {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
   gURLBar.focus();
 
   let browser = gBrowser.selectedBrowser;
-  yield SimpleTest.promiseFocus(browser.contentWindowAsCPOW, true);
+  await SimpleTest.promiseFocus(browser.contentWindowAsCPOW, true);
 
   is(document.activeElement, browser, "Browser is focused when about:blank is loaded");
 
@@ -37,18 +37,18 @@ add_task(function *() {
 });
 
 // Load a tab with a subframe inside it and wait until the subframe is focused
-add_task(function *() {
+add_task(async function() {
   let tab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = tab;
 
   let browser = gBrowser.getBrowserForTab(tab);
-  yield promiseTabLoadEvent(tab, gBaseURL + "waitForFocusPage.html");
+  await promiseTabLoadEvent(tab, gBaseURL + "waitForFocusPage.html");
 
-  yield SimpleTest.promiseFocus(browser.contentWindowAsCPOW);
+  await SimpleTest.promiseFocus(browser.contentWindowAsCPOW);
 
   is(document.activeElement, browser, "Browser is focused when page is loaded");
 
-  yield SimpleTest.promiseFocus(browser.contentWindowAsCPOW.frames[0]);
+  await SimpleTest.promiseFocus(browser.contentWindowAsCPOW.frames[0]);
 
   is(browser.contentWindowAsCPOW.document.activeElement.localName, "iframe", "Child iframe is focused");
 
@@ -56,12 +56,12 @@ add_task(function *() {
 });
 
 // Pass a browser to promiseFocus
-add_task(function *() {
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, gBaseURL + "waitForFocusPage.html");
+add_task(async function() {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, gBaseURL + "waitForFocusPage.html");
 
   gURLBar.focus();
 
-  yield SimpleTest.promiseFocus(gBrowser.selectedBrowser);
+  await SimpleTest.promiseFocus(gBrowser.selectedBrowser);
 
   is(document.activeElement, gBrowser.selectedBrowser, "Browser is focused when promiseFocus is passed a browser");
 

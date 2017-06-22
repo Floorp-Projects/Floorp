@@ -20,7 +20,7 @@ var expected_telemetry = {
 };
 
 //jscs:disable
-add_task(function*() {
+add_task(async function() {
   //jscs:enable
   Services.obs.addObserver(Observer, "console-api-log-event");
   Services.obs.addObserver(Observer, "http-on-examine-response");
@@ -32,7 +32,7 @@ add_task(function*() {
   clear_hists(expected_telemetry);
 
   for (let server of Object.keys(test_servers)) {
-    yield execute_test(server, test_settings[which].mimetype);
+    await execute_test(server, test_settings[which].mimetype);
   }
 
   test_telemetry(expected_telemetry);

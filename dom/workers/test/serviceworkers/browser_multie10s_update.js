@@ -7,9 +7,9 @@ const { classes: Cc, interfaces: Ci, results: Cr } = Components;
 
 const BASE_URI = "http://mochi.test:8888/browser/dom/workers/test/serviceworkers/";
 
-add_task(function* test_update() {
+add_task(async function test_update() {
   info("Setting the prefs to having multi-e10s enabled");
-  yield SpecialPowers.pushPrefEnv({"set": [
+  await SpecialPowers.pushPrefEnv({"set": [
     ["dom.ipc.processCount", 4],
     ["dom.serviceWorkers.enabled", true],
     ["dom.serviceWorkers.testing.enabled", true],
@@ -20,17 +20,17 @@ add_task(function* test_update() {
   info("Creating the first tab...");
   let tab1 = BrowserTestUtils.addTab(gBrowser, url);
   let browser1 = gBrowser.getBrowserForTab(tab1);
-  yield BrowserTestUtils.browserLoaded(browser1);
+  await BrowserTestUtils.browserLoaded(browser1);
 
   info("Creating the second tab...");
   let tab2 = BrowserTestUtils.addTab(gBrowser, url);
   let browser2 = gBrowser.getBrowserForTab(tab2);
-  yield BrowserTestUtils.browserLoaded(browser2);
+  await BrowserTestUtils.browserLoaded(browser2);
 
   let sw = BASE_URI + "server_multie10s_update.sjs";
 
   info("Let's start the test...");
-  let status = yield ContentTask.spawn(browser1, sw, function(url) {
+  let status = await ContentTask.spawn(browser1, sw, function(url) {
     // Registration of the SW
     return content.navigator.serviceWorker.register(url)
 
@@ -75,6 +75,6 @@ add_task(function* test_update() {
     ok(false, "both failed. This is definitely wrong.");
   }
 
-  yield BrowserTestUtils.removeTab(tab1);
-  yield BrowserTestUtils.removeTab(tab2);
+  await BrowserTestUtils.removeTab(tab1);
+  await BrowserTestUtils.removeTab(tab2);
 });

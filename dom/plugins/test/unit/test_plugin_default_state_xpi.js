@@ -28,7 +28,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_state() {
+add_task(async function test_state() {
   // Remove test so we will have only one "Test Plug-in" registered.
   // xpcshell tests have plugins in per-test profiles, so that's fine.
   let file = get_test_plugin();
@@ -39,7 +39,7 @@ add_task(function* test_state() {
   Services.prefs.setIntPref("plugin.default.state", Ci.nsIPluginTag.STATE_CLICKTOPLAY);
   Services.prefs.setIntPref("plugin.defaultXpi.state", Ci.nsIPluginTag.STATE_ENABLED);
 
-  let success = yield installAddon("testaddon.xpi");
+  let success = await installAddon("testaddon.xpi");
   Assert.ok(success, "Should have installed addon.");
   let addonDir = getAddonRoot(gProfileDir, ADDON_ID);
 
@@ -91,7 +91,7 @@ add_task(function* test_state() {
   Assert.ok(pluginDir.exists(), "Addon plugins path should exist: " + pluginDir.path);
   Assert.ok(pluginDir.isDirectory(), "Addon plugins path should be a directory: " + pluginDir.path);
 
-  let addon = yield getAddonByID(ADDON_ID);
+  let addon = await getAddonByID(ADDON_ID);
   Assert.ok(!addon.appDisabled, "Addon should not be appDisabled");
   Assert.ok(addon.isActive, "Addon should be active");
   Assert.ok(addon.isCompatible, "Addon should be compatible");

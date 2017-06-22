@@ -4,12 +4,12 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-add_task(function*() {
+add_task(async function() {
   let scriptUrl = Services.io.newFileURI(do_get_file("file_simple_script.js")).spec;
 
 
-  let script1 = yield ChromeUtils.compileScript(scriptUrl, {hasReturnValue: true});
-  let script2 = yield ChromeUtils.compileScript(scriptUrl, {hasReturnValue: false});
+  let script1 = await ChromeUtils.compileScript(scriptUrl, {hasReturnValue: true});
+  let script2 = await ChromeUtils.compileScript(scriptUrl, {hasReturnValue: false});
 
   equal(script1.url, scriptUrl, "Script URL is correct")
   equal(script2.url, scriptUrl, "Script URL is correct")
@@ -54,19 +54,19 @@ add_task(function*() {
   equal(sandbox2.bar.foo, "\u00ae", "Object value has the correct charset");
 });
 
-add_task(function* test_syntaxError() {
+add_task(async function test_syntaxError() {
   // Generate an artificially large script to force off-main-thread
   // compilation.
   let scriptUrl = `data:,${";".repeat(1024 * 1024)}(`;
 
-  yield Assert.rejects(
+  await Assert.rejects(
     ChromeUtils.compileScript(scriptUrl),
     SyntaxError);
 
   // Generate a small script to force main thread compilation.
   scriptUrl = `data:,;(`;
 
-  yield Assert.rejects(
+  await Assert.rejects(
     ChromeUtils.compileScript(scriptUrl),
     SyntaxError);
 });

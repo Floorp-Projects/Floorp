@@ -6,9 +6,9 @@
 <script type="text/javascript" src="https://example.com/tests/dom/tests/mochitest/general/storagePermissionsUtils.js"></script>
 <script  type="text/javascript">
 
-  task(function* () {
+  task(async function() {
     // We shouldn't be able to access storage
-    yield storagePrevented();
+    await storagePrevented();
 
     // This hash of the URI is set to #nullprincipal by the test if the current page has a null principal,
     // and thus attempting to create a dedicated worker will throw
@@ -30,12 +30,12 @@
         });
       }
 
-      yield createWorker();
+      await createWorker();
       return;
     }
 
     // Try to run a worker, which shouldn't be able to access storage
-    yield runWorker("workerStoragePrevented.js");
+    await runWorker("workerStoragePrevented.js");
   });
 
 </script>

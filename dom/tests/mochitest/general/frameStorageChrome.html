@@ -5,10 +5,10 @@
 <script type="text/javascript" src="https://example.com/tests/dom/tests/mochitest/general/storagePermissionsUtils.js"></script>
 <script type="text/javascript">
 
-  task(function* () {
+  task(async function() {
     // We just check if we can access storage as chrome using special powers!
     var params = new URLSearchParams(location.search.substr(1));
-    yield chromePower(params.get('allowed') == 'yes', params.get('blockSessionStorage') == 'yes');
+    await chromePower(params.get('allowed') == 'yes', params.get('blockSessionStorage') == 'yes');
   });
 
 </script>

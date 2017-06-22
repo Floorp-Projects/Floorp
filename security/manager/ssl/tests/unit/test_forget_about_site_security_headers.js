@@ -48,7 +48,7 @@ var sslStatus = new FakeSSLStatus(constructCertFromFile(
 // a.pinning2.example.com, using "Forget About Site" on a.pinning2.example.com,
 // and then checking that the platform doesn't consider a.pinning2.example.com
 // to be HSTS or HPKP any longer.
-add_task(function* () {
+add_task(async function() {
   sss.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri, GOOD_MAX_AGE,
                     sslStatus, 0,
                     Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
@@ -61,7 +61,7 @@ add_task(function* () {
   Assert.ok(sss.isSecureURI(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0),
             "a.pinning2.example.com should be HPKP");
 
-  yield ForgetAboutSite.removeDataFromDomain("a.pinning2.example.com");
+  await ForgetAboutSite.removeDataFromDomain("a.pinning2.example.com");
 
   Assert.ok(!sss.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0),
             "a.pinning2.example.com should not be HSTS now");
@@ -73,7 +73,7 @@ add_task(function* () {
 // using "Forget About Site" on example.com, and then checking that the platform
 // doesn't consider the subdomain to be HSTS or HPKP any longer. Also test that
 // unrelated sites don't also get removed.
-add_task(function* () {
+add_task(async function() {
   sss.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri, GOOD_MAX_AGE,
                     sslStatus, 0,
                     Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
@@ -95,7 +95,7 @@ add_task(function* () {
   Assert.ok(sss.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
                              unrelatedURI, 0), "example.org should be HSTS");
 
-  yield ForgetAboutSite.removeDataFromDomain("example.com");
+  await ForgetAboutSite.removeDataFromDomain("example.com");
 
   Assert.ok(!sss.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0),
             "a.pinning2.example.com should not be HSTS now (subdomain case)");
@@ -112,7 +112,7 @@ add_task(function* () {
 // then checking that the platform doesn't consider the subdomain to be HSTS or
 // HPKP for any originAttributes any longer. Also test that unrelated sites
 // don't also get removed.
-add_task(function* () {
+add_task(async function() {
   let originAttributesList = [
     {},
     { userContextId: 1 },
@@ -149,7 +149,7 @@ add_task(function* () {
               "example.org should be HSTS (originAttributes case)");
   }
 
-  yield ForgetAboutSite.removeDataFromDomain("example.com");
+  await ForgetAboutSite.removeDataFromDomain("example.com");
 
   for (let originAttributes of originAttributesList) {
     Assert.ok(!sss.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri,

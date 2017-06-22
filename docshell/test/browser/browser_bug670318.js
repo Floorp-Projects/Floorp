@@ -10,10 +10,10 @@
 
 const URL = "http://mochi.test:8888/browser/docshell/test/browser/file_bug670318.html";
 
-add_task(function* test() {
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" },
-                                    function* (browser) {
-    yield ContentTask.spawn(browser, URL, function* (URL) {
+add_task(async function test() {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" },
+                                    async function(browser) {
+    await ContentTask.spawn(browser, URL, async function(URL) {
       let history = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
       let count = 0;
 
@@ -64,7 +64,7 @@ add_task(function* test() {
       content._testListener = listener;
       content.location = URL;
 
-      yield testDone.promise;
+      await testDone.promise;
     });
   });
 });

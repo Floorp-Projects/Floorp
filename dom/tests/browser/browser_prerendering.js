@@ -40,8 +40,8 @@ function awaitAndCloseBeforeUnloadDialog() {
   });
 }
 
-add_task(function* () {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
     set: [["browser.groupedhistory.enabled", true],
           ["dom.linkPrerender.enabled", true],
           ["dom.require_user_interaction_for_beforeunload", false]]
@@ -50,30 +50,30 @@ add_task(function* () {
 
 // Test 1: Creating a prerendered browser, and clicking on a link to that browser,
 // will cause changes.
-add_task(function* () {
-  yield PlacesUtils.history.clear();
+add_task(async function() {
+  await PlacesUtils.history.clear();
 
   let tab = BrowserTestUtils.addTab(gBrowser, URL);
 
-  is(yield prerenderedVisited(), false, "Should not have been visited");
+  is(await prerenderedVisited(), false, "Should not have been visited");
 
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     tab.linkedBrowser.messageManager.addMessageListener("Prerender:Request", function f() {
       tab.linkedBrowser.messageManager.removeMessageListener("Prerender:Request", f);
       info("Successfully received the prerender request");
       resolve();
     });
   });
-  yield BrowserTestUtils.switchTab(gBrowser, tab);
+  await BrowserTestUtils.switchTab(gBrowser, tab);
 
-  is(yield prerenderedVisited(), false, "Should not have been visited");
+  is(await prerenderedVisited(), false, "Should not have been visited");
 
   // Check that visibilityState is set correctly in the prerendered tab. We
   // check all of the tabs because we have no easy way to tell which one is
   // which.
   let foundTab;
   for (let i = 0; i < gBrowser.tabs.length; ++i) {
-    foundTab = yield ContentTask.spawn(gBrowser.tabs[i].linkedBrowser, null,
+    foundTab = await ContentTask.spawn(gBrowser.tabs[i].linkedBrowser, null,
                                        () => content.document.visibilityState == "prerender");
     if (foundTab) {
       break;
@@ -82,21 +82,21 @@ add_task(function* () {
   ok(foundTab, "The prerender tab was found!");
 
   let dialogShown = awaitAndCloseBeforeUnloadDialog();
-  ContentTask.spawn(tab.linkedBrowser, null, function*() {
+  ContentTask.spawn(tab.linkedBrowser, null, async function() {
     let anchor = content.document.querySelector("a");
     anchor.click();
   });
-  yield dialogShown;
+  await dialogShown;
 
-  yield awaitProcessChange(tab.linkedBrowser);
+  await awaitProcessChange(tab.linkedBrowser);
 
-  yield ContentTask.spawn(tab.linkedBrowser, PRERENDERED_URL, function*(PRERENDERED_URL) {
+  await ContentTask.spawn(tab.linkedBrowser, PRERENDERED_URL, async function(PRERENDERED_URL) {
     is(content.document.location.toString(), PRERENDERED_URL);
     isnot(content.document.visibilityState, "prerender",
           "VisibilityState of formerly prerendered window must not be prerender");
   });
 
-  is(yield prerenderedVisited(), true, "Should have been visited");
+  is(await prerenderedVisited(), true, "Should have been visited");
 
   let groupedSHistory = tab.linkedBrowser.frameLoader.groupedSHistory;
   is(groupedSHistory.count, 2, "Check total length of grouped shistory.");
@@ -114,24 +114,24 @@ add_task(function* () {
     });
   });
 
-  yield BrowserTestUtils.removeTab(tab);
-  yield closed;
+  await BrowserTestUtils.removeTab(tab);
+  await closed;
 
-  is(yield prerenderedVisited(), true, "Should have been visited");
+  is(await prerenderedVisited(), true, "Should have been visited");
 
   is(gBrowser.tabs.length, 1);
 });
 
 // Test 2: Creating a prerendered browser, and navigating to a different url,
 // succeeds, and closes the prerendered browser.
-add_task(function* () {
-  yield PlacesUtils.history.clear();
+add_task(async function() {
+  await PlacesUtils.history.clear();
 
   let tab = BrowserTestUtils.addTab(gBrowser, URL);
 
-  is(yield prerenderedVisited(), false, "Should not have been visited");
+  is(await prerenderedVisited(), false, "Should not have been visited");
 
-  yield Promise.all([
+  await Promise.all([
     BrowserTestUtils.browserLoaded(tab.linkedBrowser),
     new Promise(resolve => {
       tab.linkedBrowser.messageManager.addMessageListener("Prerender:Request", function f() {
@@ -144,16 +144,16 @@ add_task(function* () {
   ]);
 
   let dialogShown = awaitAndCloseBeforeUnloadDialog();
-  ContentTask.spawn(tab.linkedBrowser, null, function*() {
+  ContentTask.spawn(tab.linkedBrowser, null, async function() {
     let anchor = content.document.querySelector("a");
     anchor.setAttribute("href", "data:text/html,something_else");
     anchor.click();
   });
-  yield dialogShown;
+  await dialogShown;
 
-  is(yield prerenderedVisited(), false, "Should not have been visited");
+  is(await prerenderedVisited(), false, "Should not have been visited");
 
-  yield Promise.all([
+  await Promise.all([
     BrowserTestUtils.browserLoaded(tab.linkedBrowser),
     new Promise(resolve => {
       let seen = false;
@@ -167,11 +167,11 @@ add_task(function* () {
     }),
   ]);
 
-  yield ContentTask.spawn(tab.linkedBrowser, null, function*() {
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     is(content.document.location.toString(), "data:text/html,something_else");
   });
 
-  is(yield prerenderedVisited(), false, "Should not have been visited");
+  is(await prerenderedVisited(), false, "Should not have been visited");
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });

@@ -28,7 +28,7 @@ var vectors = {
 };
 
 // A simple test suite with no utf8 encoding madness.
-add_task(function* test_onepw_setup_credentials() {
+add_task(async function test_onepw_setup_credentials() {
   let email = "francine@example.org";
   let password = CommonUtils.encodeUTF8("i like pie");
 
@@ -65,7 +65,7 @@ add_task(function* test_onepw_setup_credentials() {
   do_check_eq(b2h(unwrapKey), "8ff58975be391338e4ec5d7138b5ed7b65c7d1bfd1f3a4f93e05aa47d5b72be9");
 });
 
-add_task(function* test_client_stretch_kdf() {
+add_task(async function test_client_stretch_kdf() {
   let expected = vectors["client stretch-KDF"];
 
   let email = h2s(expected.email);
@@ -85,7 +85,7 @@ add_task(function* test_client_stretch_kdf() {
     hkdfLength: 32,
   };
 
-  let results = yield Credentials.setup(email, password, options);
+  let results = await Credentials.setup(email, password, options);
 
   do_check_eq(expected.quickStretchedPW, b2h(results.quickStretchedPW),
       "quickStretchedPW is wrong");

@@ -47,7 +47,7 @@ function once(target, eventName, useCapture = false) {
   });
 }
 
-function* loadFrame(attributes = {}) {
+async function loadFrame(attributes = {}) {
   let iframe = document.createElement("iframe");
   iframe.setAttribute("src", FRAME_URL);
   for (let key in attributes) {
@@ -55,6 +55,6 @@ function* loadFrame(attributes = {}) {
   }
   let loaded = once(iframe, [ "load", "mozbrowserloadend" ]);
   document.body.appendChild(iframe);
-  yield loaded;
+  await loaded;
   return iframe;
 }

@@ -15,96 +15,96 @@
 
 const BASE_URL = "http://mochi.test:8888/browser/dom/base/test/";
 
-add_task(function*() {
-  yield* testLinkClick(false, false);
-  yield* testLinkClick(false, true);
-  yield* testLinkClick(true, false);
-  yield* testLinkClick(true, true);
+add_task(async function() {
+  await testLinkClick(false, false);
+  await testLinkClick(false, true);
+  await testLinkClick(true, false);
+  await testLinkClick(true, true);
 });
 
-function* testLinkClick(withFrame, loadDivertedInBackground) {
-  yield SpecialPowers.pushPrefEnv({"set": [["browser.tabs.loadDivertedInBackground", loadDivertedInBackground]]});
+async function testLinkClick(withFrame, loadDivertedInBackground) {
+  await SpecialPowers.pushPrefEnv({"set": [["browser.tabs.loadDivertedInBackground", loadDivertedInBackground]]});
 
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser,
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser,
     BASE_URL + (withFrame ? "file_bug1303838_with_iframe.html" : "file_bug1303838.html"));
   is(gBrowser.tabs.length, 2, "check tabs.length");
   is(gBrowser.selectedTab, tab, "check selectedTab");
 
   info("Test normal links with loadDivertedInBackground=" + loadDivertedInBackground + ", withFrame=" + withFrame);
 
-  let [testTab] = yield clickLink(withFrame, "#link-1", tab.linkedBrowser);
+  let [testTab] = await clickLink(withFrame, "#link-1", tab.linkedBrowser);
   is(gBrowser.tabs.length, 3, "check tabs.length");
   is(gBrowser.selectedTab, loadDivertedInBackground ? tab : testTab, "check selectedTab");
 
   if (!loadDivertedInBackground) {
-    yield BrowserTestUtils.switchTab(gBrowser, tab);
+    await BrowserTestUtils.switchTab(gBrowser, tab);
   }
-  yield clickLink(withFrame, "#link-2", tab.linkedBrowser, testTab.linkedBrowser, !loadDivertedInBackground);
+  await clickLink(withFrame, "#link-2", tab.linkedBrowser, testTab.linkedBrowser, !loadDivertedInBackground);
   is(gBrowser.tabs.length, 3, "check tabs.length");
   is(gBrowser.selectedTab, loadDivertedInBackground ? tab : testTab, "check selectedTab");
 
   if (!loadDivertedInBackground) {
-    yield BrowserTestUtils.switchTab(gBrowser, tab);
+    await BrowserTestUtils.switchTab(gBrowser, tab);
   }
-  yield clickLink(withFrame, "#link-3", tab.linkedBrowser, testTab.linkedBrowser, !loadDivertedInBackground);
+  await clickLink(withFrame, "#link-3", tab.linkedBrowser, testTab.linkedBrowser, !loadDivertedInBackground);
   is(gBrowser.tabs.length, 3, "check tabs.length");
   is(gBrowser.selectedTab, loadDivertedInBackground ? tab : testTab, "check selectedTab");
 
   if (!loadDivertedInBackground) {
-    yield BrowserTestUtils.switchTab(gBrowser, tab);
+    await BrowserTestUtils.switchTab(gBrowser, tab);
   }
-  yield clickLink(withFrame, "#link-4", tab.linkedBrowser, testTab.linkedBrowser, !loadDivertedInBackground, 2);
+  await clickLink(withFrame, "#link-4", tab.linkedBrowser, testTab.linkedBrowser, !loadDivertedInBackground, 2);
   is(gBrowser.tabs.length, 3, "check tabs.length");
   is(gBrowser.selectedTab, loadDivertedInBackground ? tab : testTab, "check selectedTab");
 
   info("Test anchor links with loadDivertedInBackground=" + loadDivertedInBackground + ", withFrame=" + withFrame);
 
   if (!loadDivertedInBackground) {
-    yield BrowserTestUtils.switchTab(gBrowser, tab);
+    await BrowserTestUtils.switchTab(gBrowser, tab);
   }
-  yield clickLink(withFrame, "#anchor-link-1", tab.linkedBrowser, testTab.linkedBrowser, !loadDivertedInBackground);
+  await clickLink(withFrame, "#anchor-link-1", tab.linkedBrowser, testTab.linkedBrowser, !loadDivertedInBackground);
   is(gBrowser.tabs.length, 3, "check tabs.length");
   is(gBrowser.selectedTab, loadDivertedInBackground ? tab : testTab, "check selectedTab");
 
   if (!loadDivertedInBackground) {
-    yield BrowserTestUtils.switchTab(gBrowser, tab);
+    await BrowserTestUtils.switchTab(gBrowser, tab);
   }
-  yield clickLink(withFrame, "#anchor-link-2", tab.linkedBrowser, testTab.linkedBrowser, !loadDivertedInBackground);
+  await clickLink(withFrame, "#anchor-link-2", tab.linkedBrowser, testTab.linkedBrowser, !loadDivertedInBackground);
   is(gBrowser.tabs.length, 3, "check tabs.length");
   is(gBrowser.selectedTab, loadDivertedInBackground ? tab : testTab, "check selectedTab");
 
   if (!loadDivertedInBackground) {
-    yield BrowserTestUtils.switchTab(gBrowser, tab);
+    await BrowserTestUtils.switchTab(gBrowser, tab);
   }
-  yield clickLink(withFrame, "#anchor-link-3", tab.linkedBrowser, testTab.linkedBrowser, !loadDivertedInBackground);
+  await clickLink(withFrame, "#anchor-link-3", tab.linkedBrowser, testTab.linkedBrowser, !loadDivertedInBackground);
   is(gBrowser.tabs.length, 3, "check tabs.length");
   is(gBrowser.selectedTab, loadDivertedInBackground ? tab : testTab, "check selectedTab");
 
   info("Test iframe links with loadDivertedInBackground=" + loadDivertedInBackground + ", withFrame=" + withFrame);
 
   if (!loadDivertedInBackground) {
-    yield BrowserTestUtils.switchTab(gBrowser, tab);
+    await BrowserTestUtils.switchTab(gBrowser, tab);
   }
-  yield clickLink(withFrame, "#frame-link-1", tab.linkedBrowser, testTab.linkedBrowser, !loadDivertedInBackground);
+  await clickLink(withFrame, "#frame-link-1", tab.linkedBrowser, testTab.linkedBrowser, !loadDivertedInBackground);
   is(gBrowser.tabs.length, 3, "check tabs.length");
   is(gBrowser.selectedTab, loadDivertedInBackground ? tab : testTab, "check selectedTab");
 
   if (!loadDivertedInBackground) {
-    yield BrowserTestUtils.switchTab(gBrowser, tab);
+    await BrowserTestUtils.switchTab(gBrowser, tab);
   }
-  yield clickLink(withFrame, "#frame-link-2", tab.linkedBrowser, testTab.linkedBrowser, !loadDivertedInBackground);
+  await clickLink(withFrame, "#frame-link-2", tab.linkedBrowser, testTab.linkedBrowser, !loadDivertedInBackground);
   is(gBrowser.tabs.length, 3, "check tabs.length");
   is(gBrowser.selectedTab, loadDivertedInBackground ? tab : testTab, "check selectedTab");
 
   if (!loadDivertedInBackground) {
-    yield BrowserTestUtils.switchTab(gBrowser, tab);
+    await BrowserTestUtils.switchTab(gBrowser, tab);
   }
-  yield clickLink(withFrame, "#frame-link-3", tab.linkedBrowser, testTab.linkedBrowser, !loadDivertedInBackground);
+  await clickLink(withFrame, "#frame-link-3", tab.linkedBrowser, testTab.linkedBrowser, !loadDivertedInBackground);
   is(gBrowser.tabs.length, 3, "check tabs.length");
   is(gBrowser.selectedTab, loadDivertedInBackground ? tab : testTab, "check selectedTab");
 
-  yield BrowserTestUtils.removeTab(testTab);
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(testTab);
+  await BrowserTestUtils.removeTab(tab);
 }
 
 function clickLink(isFrame, linkId, browser, testBrowser, awaitTabSwitch = false, locationChangeNum = 1) {

@@ -18,24 +18,24 @@ function makeTestURL(manifest) {
   return url.href;
 }
 
-add_task(function*() {
+add_task(async function() {
 
   const tabOptions = {gBrowser, url: makeTestURL(manifest)};
 
-  yield BrowserTestUtils.withNewTab(tabOptions, function*(browser) {
+  await BrowserTestUtils.withNewTab(tabOptions, async function(browser) {
 
-    let manifest = yield Manifests.getManifest(browser, manifestUrl);
+    let manifest = await Manifests.getManifest(browser, manifestUrl);
     is(manifest.installed, false, "We havent installed this manifest yet");
 
-    yield manifest.install(browser);
+    await manifest.install(browser);
     is(manifest.name, "hello World", "Manifest has correct name");
     is(manifest.installed, true, "Manifest is installed");
     is(manifest.url, manifestUrl, "has correct url");
 
-    manifest = yield Manifests.getManifest(browser, manifestUrl);
+    manifest = await Manifests.getManifest(browser, manifestUrl);
     is(manifest.installed, true, "New instances are installed");
 
-    manifest = yield Manifests.getManifest(browser);
+    manifest = await Manifests.getManifest(browser);
     is(manifest.installed, true, "Will find manifest without being given url");
 
     let foundManifest = Manifests.findManifestUrl("http://example.org/browser/dom/");

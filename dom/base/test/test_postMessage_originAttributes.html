@@ -11,12 +11,12 @@
 <iframe id="target-iframe"></iframe>
 <script type="application/javascript">
 
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv(
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv(
     { "set": [["network.disable.ipc.security", true]] });
 });
 
-add_task(function*() {
+add_task(async function() {
   let iframe = document.querySelector("#target-iframe");
 
   let win = SpecialPowers.wrap(iframe).contentWindow;
@@ -26,7 +26,7 @@ add_task(function*() {
   // Add private browsing ID to docShell origin and load document.
   docShell.setOriginAttributes({privateBrowsingId: 1});
 
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     iframe.addEventListener("load", resolve, true);
 
     iframe.src = SimpleTest.getTestFileURL("file_receiveMessage.html");
@@ -45,10 +45,10 @@ add_task(function*() {
 
   // Post to the content window via SpecialPowers' system principal scope.
   win.postMessage("Hello. o/", "http://mochi.test:8888");
-  yield new Promise(resolve => setTimeout(resolve, 0));
+  await new Promise(resolve => setTimeout(resolve, 0));
 
   SimpleTest.endMonitorConsole();
-  yield consolePromise;
+  await consolePromise;
 
   // Check that the window received and handled the message.
   is(win.document.body.textContent, "|Hello. o/",

@@ -181,7 +181,7 @@ add_test(function fetchAndCacheProfile_sendsETag() {
 
 // Check that a second profile request when one is already in-flight reuses
 // the in-flight one.
-add_task(function* fetchAndCacheProfileOnce() {
+add_task(async function fetchAndCacheProfileOnce() {
   // A promise that remains unresolved while we fire off 2 requests for
   // a profile.
   let resolveProfile;
@@ -217,9 +217,9 @@ add_task(function* fetchAndCacheProfileOnce() {
   resolveProfile({ body: { avatar: "myimg"} });
 
   // both requests should complete with the same data.
-  let got1 = yield request1;
+  let got1 = await request1;
   do_check_eq(got1.avatar, "myimg");
-  let got2 = yield request1;
+  let got2 = await request1;
   do_check_eq(got2.avatar, "myimg");
 
   // and still only 1 request was made.
@@ -228,7 +228,7 @@ add_task(function* fetchAndCacheProfileOnce() {
 
 // Check that sharing a single fetch promise works correctly when the promise
 // is rejected.
-add_task(function* fetchAndCacheProfileOnce() {
+add_task(async function fetchAndCacheProfileOnce() {
   // A promise that remains unresolved while we fire off 2 requests for
   // a profile.
   let rejectProfile;
@@ -265,7 +265,7 @@ add_task(function* fetchAndCacheProfileOnce() {
 
   // both requests should reject.
   try {
-    yield request1;
+    await request1;
     throw new Error("should have rejected");
   } catch (ex) {
     if (ex != "oh noes") {
@@ -273,7 +273,7 @@ add_task(function* fetchAndCacheProfileOnce() {
     }
   }
   try {
-    yield request2;
+    await request2;
     throw new Error("should have rejected");
   } catch (ex) {
     if (ex != "oh noes") {
@@ -286,7 +286,7 @@ add_task(function* fetchAndCacheProfileOnce() {
     return Promise.resolve({body: { avatar: "myimg"}});
   };
 
-  let got = yield profile._fetchAndCacheProfile();
+  let got = await profile._fetchAndCacheProfile();
   do_check_eq(got.avatar, "myimg");
 });
 
@@ -315,7 +315,7 @@ add_test(function fetchAndCacheProfile_alreadyCached() {
 
 // Check that a new profile request within PROFILE_FRESHNESS_THRESHOLD of the
 // last one doesn't kick off a new request to check the cached copy is fresh.
-add_task(function* fetchAndCacheProfileAfterThreshold() {
+add_task(async function fetchAndCacheProfileAfterThreshold() {
   let numFetches = 0;
   let client = mockClient(mockFxa());
   client.fetchProfile = function() {
@@ -325,24 +325,24 @@ add_task(function* fetchAndCacheProfileAfterThreshold() {
   let profile = CreateFxAccountsProfile(null, client);
   profile.PROFILE_FRESHNESS_THRESHOLD = 1000;
 
-  yield profile.getProfile();
+  await profile.getProfile();
   do_check_eq(numFetches, 1);
 
-  yield profile.getProfile();
+  await profile.getProfile();
   do_check_eq(numFetches, 1);
 
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     do_timeout(1000, resolve);
   });
 
-  yield profile.getProfile();
+  await profile.getProfile();
   do_check_eq(numFetches, 2);
 });
 
 // Check that a new profile request within PROFILE_FRESHNESS_THRESHOLD of the
 // last one *does* kick off a new request if ON_PROFILE_CHANGE_NOTIFICATION
 // is sent.
-add_task(function* fetchAndCacheProfileBeforeThresholdOnNotification() {
+add_task(async function fetchAndCacheProfileBeforeThresholdOnNotification() {
   let numFetches = 0;
   let client = mockClient(mockFxa());
   client.fetchProfile = function() {
@@ -352,12 +352,12 @@ add_task(function* fetchAndCacheProfileBeforeThresholdOnNotification() {
   let profile = CreateFxAccountsProfile(null, client);
   profile.PROFILE_FRESHNESS_THRESHOLD = 1000;
 
-  yield profile.getProfile();
+  await profile.getProfile();
   do_check_eq(numFetches, 1);
 
   Services.obs.notifyObservers(null, ON_PROFILE_CHANGE_NOTIFICATION);
 
-  yield profile.getProfile();
+  await profile.getProfile();
   do_check_eq(numFetches, 2);
 });
 

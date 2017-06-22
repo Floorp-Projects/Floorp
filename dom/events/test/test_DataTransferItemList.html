@@ -24,8 +24,8 @@
     });
   }
 
-  add_task(function* () {
-    yield spin();
+  add_task(async function() {
+    await spin();
     var draggable = document.getElementById('image');
     var over = document.getElementById('over');
 
@@ -201,7 +201,7 @@
     synthesizeDrop(draggable, over, null, null);
 
     // Wait for the getAsString callbacks to complete
-    yield spin();
+    await spin();
     is(getAsStringCalled, 2, "getAsString should be called twice");
 
     // Sanity-check to make sure that the events were actually run

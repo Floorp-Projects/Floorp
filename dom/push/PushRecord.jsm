@@ -19,8 +19,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher",
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
@@ -132,7 +130,7 @@ PushRecord.prototype = {
    *  visited the site, or `-Infinity` if the site is not in the user's history.
    *  The time is expressed in milliseconds since Epoch.
    */
-  getLastVisit: Task.async(function* () {
+  async getLastVisit() {
     if (!this.quotaApplies() || this.isTabOpen()) {
       // If the registration isn't subject to quota, or the user already
       // has the site open, skip expensive database queries.
@@ -140,7 +138,7 @@ PushRecord.prototype = {
     }
 
     if (AppConstants.MOZ_ANDROID_HISTORY) {
-      let result = yield EventDispatcher.instance.sendRequestForResult({
+      let result = await EventDispatcher.instance.sendRequestForResult({
         type: "History:GetPrePathLastVisitedTimeMilliseconds",
         prePath: this.uri.prePath,
       });
@@ -159,13 +157,13 @@ PushRecord.prototype = {
       Ci.nsINavHistoryService.TRANSITION_REDIRECT_TEMPORARY
     ].join(",");
 
-    let db =  yield PlacesUtils.promiseDBConnection();
+    let db =  await PlacesUtils.promiseDBConnection();
     // We're using a custom query instead of `nsINavHistoryQueryOptions`
     // because the latter doesn't expose a way to filter by transition type:
     // `setTransitions` performs a logical "and," but we want an "or." We
     // also avoid an unneeded left join with favicons, and an `ORDER BY`
     // clause that emits a suboptimal index warning.
-    let rows = yield db.executeCached(
+    let rows = await db.executeCached(
       `SELECT MAX(visit_date) AS lastVisit
        FROM moz_places p
        JOIN moz_historyvisits ON p.id = place_id
@@ -187,7 +185,7 @@ PushRecord.prototype = {
     let lastVisit = rows[0].getResultByName("lastVisit");
 
     return lastVisit / 1000;
-  }),
+  },
 
   isTabOpen() {
     let windows = Services.wm.getEnumerator("navigator:browser");

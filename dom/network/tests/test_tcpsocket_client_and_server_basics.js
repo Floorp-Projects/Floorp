@@ -184,7 +184,7 @@ function defer() {
 }
 
 
-function* test_basics() {
+async function test_basics() {
   // See bug 903830; in e10s mode we never get to find out the localPort if we
   // let it pick a free port by choosing 0.  This is the same port the xpcshell
   // test was using.
@@ -203,11 +203,11 @@ function* test_basics() {
   let clientQueue = listenForEventsOnSocket(clientSocket, 'client');
 
   // (the client connects)
-  is((yield clientQueue.waitForEvent()).type, 'open', 'got open event');
+  is((await clientQueue.waitForEvent()).type, 'open', 'got open event');
   is(clientSocket.readyState, 'open', 'client readyState is open');
 
   // (the server connected)
-  let { socket: serverSocket, queue: serverQueue } = yield connectedPromise;
+  let { socket: serverSocket, queue: serverQueue } = await connectedPromise;
   is(serverSocket.readyState, 'open', 'server readyState is open');
 
   // -- Simple send / receive
@@ -220,7 +220,7 @@ function* test_basics() {
   is(clientSocket.send(smallUint8Array.buffer, 0, smallUint8Array.length), true,
      'Client sending less than 64k, buffer should not be full.');
 
-  let serverReceived = yield serverQueue.waitForDataWithAtLeastLength(256);
+  let serverReceived = await serverQueue.waitForDataWithAtLeastLength(256);
   assertUint8ArraysEqual(serverReceived, smallUint8Array,
                          'Server received/client sent');
 
@@ -229,7 +229,7 @@ function* test_basics() {
   is(serverSocket.send(smallUint8Array.buffer, 0, smallUint8Array.length), true,
      'Server sending less than 64k, buffer should not be full.');
 
-  let clientReceived = yield clientQueue.waitForDataWithAtLeastLength(256);
+  let clientReceived = await clientQueue.waitForDataWithAtLeastLength(256);
   assertUint8ArraysEqual(clientReceived, smallUint8Array,
                          'Client received/server sent');
 
@@ -241,7 +241,7 @@ function* test_basics() {
   is(clientSocket.send(smallUint8Array.buffer, 7, smallUint8Array.length - 7),
      true, 'Client sending less than 64k, buffer should not be full.');
 
-  serverReceived = yield serverQueue.waitForDataWithAtLeastLength(256);
+  serverReceived = await serverQueue.waitForDataWithAtLeastLength(256);
   assertUint8ArraysEqual(serverReceived, smallUint8Array,
                          'Server received/client sent');
 
@@ -252,7 +252,7 @@ function* test_basics() {
   is(serverSocket.send(smallUint8Array.buffer, 7, smallUint8Array.length - 7),
      true, 'Server sending less than 64k, buffer should not be full.');
 
-  clientReceived = yield clientQueue.waitForDataWithAtLeastLength(256);
+  clientReceived = await clientQueue.waitForDataWithAtLeastLength(256);
   assertUint8ArraysEqual(clientReceived, smallUint8Array,
                          'Client received/server sent');
 
@@ -269,10 +269,10 @@ function* test_basics() {
     // - Send "big" data from the client to the server
     is(clientSocket.send(bigUint8Array.buffer, 0, bigUint8Array.length), false,
        'Client sending more than 64k should result in the buffer being full.');
-    is((yield clientQueue.waitForEvent()).type, 'drain',
+    is((await clientQueue.waitForEvent()).type, 'drain',
        'The drain event should fire after a large send that indicated full.');
 
-    serverReceived = yield serverQueue.waitForDataWithAtLeastLength(
+    serverReceived = await serverQueue.waitForDataWithAtLeastLength(
       bigUint8Array.length);
     assertUint8ArraysEqual(serverReceived, bigUint8Array,
                            'server received/client sent');
@@ -280,10 +280,10 @@ function* test_basics() {
     // - Send "big" data from the server to the client
     is(serverSocket.send(bigUint8Array.buffer, 0, bigUint8Array.length), false,
        'Server sending more than 64k should result in the buffer being full.');
-    is((yield serverQueue.waitForEvent()).type, 'drain',
+    is((await serverQueue.waitForEvent()).type, 'drain',
        'The drain event should fire after a large send that indicated full.');
 
-    clientReceived = yield clientQueue.waitForDataWithAtLeastLength(
+    clientReceived = await clientQueue.waitForDataWithAtLeastLength(
       bigUint8Array.length);
     assertUint8ArraysEqual(clientReceived, bigUint8Array,
                            'client received/server sent');
@@ -294,11 +294,11 @@ function* test_basics() {
   is(serverSocket.readyState, 'closing',
      'readyState should be closing immediately after calling close');
 
-  is((yield clientQueue.waitForEvent()).type, 'close',
+  is((await clientQueue.waitForEvent()).type, 'close',
      'The client should get a close event when the server closes.');
   is(clientSocket.readyState, 'closed',
      'client readyState should be closed after close event');
-  is((yield serverQueue.waitForEvent()).type, 'close',
+  is((await serverQueue.waitForEvent()).type, 'close',
      'The server should get a close event when it closes itself.');
   is(serverSocket.readyState, 'closed',
      'server readyState should be closed after close event');
@@ -308,9 +308,9 @@ function* test_basics() {
   clientSocket = createSocket('127.0.0.1', serverPort,
                               { binaryType: 'arraybuffer' });
   clientQueue = listenForEventsOnSocket(clientSocket, 'client');
-  is((yield clientQueue.waitForEvent()).type, 'open', 'got open event');
+  is((await clientQueue.waitForEvent()).type, 'open', 'got open event');
 
-  let connectedResult = yield connectedPromise;
+  let connectedResult = await connectedPromise;
   // destructuring assignment is not yet ES6 compliant, must manually unpack
   serverSocket = connectedResult.socket;
   serverQueue = connectedResult.queue;
@@ -320,11 +320,11 @@ function* test_basics() {
   is(clientSocket.readyState, 'closing',
      'client readyState should be losing immediately after calling close');
 
-  is((yield clientQueue.waitForEvent()).type, 'close',
+  is((await clientQueue.waitForEvent()).type, 'close',
      'The client should get a close event when it closes itself.');
   is(clientSocket.readyState, 'closed',
      'client readyState should be closed after the close event is received');
-  is((yield serverQueue.waitForEvent()).type, 'close',
+  is((await serverQueue.waitForEvent()).type, 'close',
      'The server should get a close event when the client closes.');
   is(serverSocket.readyState, 'closed',
      'server readyState should be closed after the close event is received');
@@ -335,9 +335,9 @@ function* test_basics() {
   clientSocket = createSocket('127.0.0.1', serverPort,
                               { binaryType: 'arraybuffer' });
   clientQueue = listenForEventsOnSocket(clientSocket, 'client');
-  is((yield clientQueue.waitForEvent()).type, 'open', 'got open event');
+  is((await clientQueue.waitForEvent()).type, 'open', 'got open event');
 
-  connectedResult = yield connectedPromise;
+  connectedResult = await connectedPromise;
   // destructuring assignment is not yet ES6 compliant, must manually unpack
   serverSocket = connectedResult.socket;
   serverQueue = connectedResult.queue;
@@ -348,19 +348,19 @@ function* test_basics() {
      'Client sending more than 64k should result in the buffer being full.');
   clientSocket.close();
   // The drain will still fire
-  is((yield clientQueue.waitForEvent()).type, 'drain',
+  is((await clientQueue.waitForEvent()).type, 'drain',
      'The drain event should fire after a large send that returned true.');
   // Then we'll get a close
-  is((yield clientQueue.waitForEvent()).type, 'close',
+  is((await clientQueue.waitForEvent()).type, 'close',
      'The close event should fire after the drain event.');
 
   // The server will get its data
-  serverReceived = yield serverQueue.waitForDataWithAtLeastLength(
+  serverReceived = await serverQueue.waitForDataWithAtLeastLength(
     bigUint8Array.length);
   assertUint8ArraysEqual(serverReceived, bigUint8Array,
                          'server received/client sent');
   // And a close.
-  is((yield serverQueue.waitForEvent()).type, 'close',
+  is((await serverQueue.waitForEvent()).type, 'close',
      'The drain event should fire after a large send that returned true.');
 
 
@@ -369,9 +369,9 @@ function* test_basics() {
   clientSocket = createSocket('127.0.0.1', serverPort,
                               { binaryType: 'string' });
   clientQueue = listenForEventsOnSocket(clientSocket, 'client');
-  is((yield clientQueue.waitForEvent()).type, 'open', 'got open event');
+  is((await clientQueue.waitForEvent()).type, 'open', 'got open event');
 
-  connectedResult = yield connectedPromise;
+  connectedResult = await connectedPromise;
   // destructuring assignment is not yet ES6 compliant, must manually unpack
   serverSocket = connectedResult.socket;
   serverQueue = connectedResult.queue;
@@ -384,10 +384,10 @@ function* test_basics() {
      'Client sending a large non-string should only send a small string.');
   clientSocket.close();
   // The server will get its data
-  serverReceived = yield serverQueue.waitForDataWithAtLeastLength(
+  serverReceived = await serverQueue.waitForDataWithAtLeastLength(
     bigUint8Array.toString().length);
   // Then we'll get a close
-  is((yield clientQueue.waitForEvent()).type, 'close',
+  is((await clientQueue.waitForEvent()).type, 'close',
      'The close event should fire after the drain event.');
 
   // -- Re-establish connection (Test for Close Immediately)
@@ -395,9 +395,9 @@ function* test_basics() {
   clientSocket = createSocket('127.0.0.1', serverPort,
                                { binaryType: 'arraybuffer' });
   clientQueue = listenForEventsOnSocket(clientSocket, 'client');
-  is((yield clientQueue.waitForEvent()).type, 'open', 'got open event');
+  is((await clientQueue.waitForEvent()).type, 'open', 'got open event');
 
-  connectedResult = yield connectedPromise;
+  connectedResult = await connectedPromise;
   // destructuring assignment is not yet ES6 compliant, must manually unpack
   serverSocket = connectedResult.socket;
   serverQueue = connectedResult.queue;
@@ -409,7 +409,7 @@ function* test_basics() {
      'Server sending more than 64k should result in the buffer being full.');
   clientSocket.closeImmediately();
 
-  serverReceived = yield serverQueue.waitForAnyDataAndClose();
+  serverReceived = await serverQueue.waitForAnyDataAndClose();
 
   is(serverReceived.length < (2 * bigUint8Array.length), true, 'Received array length less than sent array length');
 
@@ -424,7 +424,7 @@ function* test_basics() {
     clientSocket = createSocket('127.0.0.1', serverPort,
                                 { binaryType: 'arraybuffer' });
     clientQueue = listenForEventsOnSocket(clientSocket, 'client');
-    is((yield clientQueue.waitForEvent()).type, 'error', 'fail to connect');
+    is((await clientQueue.waitForEvent()).type, 'error', 'fail to connect');
     is(clientSocket.readyState, 'closed',
        'client readyState should be closed after the failure to connect');
   }

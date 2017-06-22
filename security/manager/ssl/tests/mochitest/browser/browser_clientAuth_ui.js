@@ -100,27 +100,27 @@ function findCertByCommonName(commonName) {
   return null;
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   cert = findCertByCommonName("Mochitest client");
   Assert.notEqual(cert, null, "Should be able to find the test client cert");
 });
 
 // Test that the contents of the dialog correspond to the details of the
 // provided cert.
-add_task(function* testContents() {
-  let [win] = yield openClientAuthDialog(cert);
+add_task(async function testContents() {
+  let [win] = await openClientAuthDialog(cert);
   checkDialogContents(win, cert.validity.notBeforeLocalTime,
                       cert.validity.notAfterLocalTime);
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
 // Test that the right values are returned when the dialog is accepted.
-add_task(function* testAcceptDialogReturnValues() {
-  let [win, retVals] = yield openClientAuthDialog(cert);
+add_task(async function testAcceptDialogReturnValues() {
+  let [win, retVals] = await openClientAuthDialog(cert);
   win.document.getElementById("rememberBox").checked = true;
   info("Accepting dialog");
   win.document.getElementById("certAuthAsk").acceptDialog();
-  yield BrowserTestUtils.windowClosed(win);
+  await BrowserTestUtils.windowClosed(win);
 
   Assert.ok(retVals.get("certChosen"),
             "Return value should signal user chose a certificate");
@@ -132,12 +132,12 @@ add_task(function* testAcceptDialogReturnValues() {
 });
 
 // Test that the right values are returned when the dialog is canceled.
-add_task(function* testCancelDialogReturnValues() {
-  let [win, retVals] = yield openClientAuthDialog(cert);
+add_task(async function testCancelDialogReturnValues() {
+  let [win, retVals] = await openClientAuthDialog(cert);
   win.document.getElementById("rememberBox").checked = false;
   info("Canceling dialog");
   win.document.getElementById("certAuthAsk").cancelDialog();
-  yield BrowserTestUtils.windowClosed(win);
+  await BrowserTestUtils.windowClosed(win);
 
   Assert.ok(!retVals.get("certChosen"),
             "Return value should signal user did not choose a certificate");

@@ -21,20 +21,20 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(_ => db.drop().then(_ => db.close()));
 
   // Active subscriptions; should be expired then dropped.
-  yield putTestRecord(db, 'active-1', 'https://example.info/some-page', 8);
-  yield putTestRecord(db, 'active-2', 'https://example.com/another-page', 16);
+  await putTestRecord(db, 'active-1', 'https://example.info/some-page', 8);
+  await putTestRecord(db, 'active-2', 'https://example.com/another-page', 16);
 
   // Expired subscription; should be dropped.
-  yield putTestRecord(db, 'expired', 'https://example.net/yet-another-page', 0);
+  await putTestRecord(db, 'expired', 'https://example.net/yet-another-page', 0);
 
   // A privileged subscription that should not be affected by sanitizing data
   // because its quota is set to `Infinity`.
-  yield putTestRecord(db, 'privileged', 'app://chrome/only', Infinity);
+  await putTestRecord(db, 'privileged', 'app://chrome/only', Infinity);
 
   let handshakeDone;
   let handshakePromise = new Promise(r => handshakeDone = r);
@@ -69,10 +69,10 @@ add_task(function* setup() {
       });
     },
   });
-  yield handshakePromise;
+  await handshakePromise;
 });
 
-add_task(function* test_sanitize() {
+add_task(async function test_sanitize() {
   let modifiedScopes = [];
   let changeScopes = [];
 
@@ -95,11 +95,11 @@ add_task(function* test_sanitize() {
     }),
   ]);
 
-  yield PushService.clear({
+  await PushService.clear({
     domain: '*',
   });
 
-  yield promiseCleared;
+  await promiseCleared;
 
   deepEqual(modifiedScopes.sort(compareAscending), [
     'app://chrome/only',
@@ -110,6 +110,6 @@ add_task(function* test_sanitize() {
   deepEqual(changeScopes, ['app://chrome/only'],
     'Should fire change notification for privileged scope');
 
-  let remainingIDs = yield getAllKeyIDs(db);
+  let remainingIDs = await getAllKeyIDs(db);
   deepEqual(remainingIDs, [], 'Should drop all subscriptions');
 });

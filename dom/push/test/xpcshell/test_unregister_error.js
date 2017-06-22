@@ -13,10 +13,10 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_unregister_error() {
+add_task(async function test_unregister_error() {
   let db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => {return db.drop().then(_ => db.close());});
-  yield db.put({
+  await db.put({
     channelID: channelID,
     pushEndpoint: 'https://example.org/update/failure',
     scope: 'https://example.net/page/failure',
@@ -55,14 +55,14 @@ add_task(function* test_unregister_error() {
     }
   });
 
-  yield PushService.unregister({
+  await PushService.unregister({
     scope: 'https://example.net/page/failure',
     originAttributes: '',
   });
 
-  let result = yield db.getByKeyID(channelID);
+  let result = await db.getByKeyID(channelID);
   ok(!result, 'Deleted push record exists');
 
   // Make sure we send a request to the server.
-  yield unregisterPromise;
+  await unregisterPromise;
 });

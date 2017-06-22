@@ -32,7 +32,7 @@ function do_get_kinto_collection(collectionName) {
 // correctly and that simple kinto operations are working as expected. There
 // are more tests for core Kinto.js (and its storage adapter) in the
 // xpcshell tests under /services/common
-add_task(function* test_something() {
+add_task(async function test_something() {
   const configPath = "/v1/";
   const recordsPath = "/v1/buckets/blocklists/collections/certificates/records";
 
@@ -65,13 +65,13 @@ add_task(function* test_something() {
   server.registerPathHandler(recordsPath, handleResponse);
 
   // Test an empty db populates
-  yield OneCRLBlocklistClient.maybeSync(2000, Date.now());
+  await OneCRLBlocklistClient.maybeSync(2000, Date.now());
 
-  sqliteHandle = yield FirefoxAdapter.openConnection({path: KINTO_FILENAME});
+  sqliteHandle = await FirefoxAdapter.openConnection({path: KINTO_FILENAME});
   const collection = do_get_kinto_collection("certificates");
 
   // Open the collection, verify it's been populated:
-  let list = yield collection.list();
+  let list = await collection.list();
   // We know there will be initial values from the JSON dump.
   // (at least as many as in the dump shipped when this test was written).
   do_check_true(list.data.length >= 363);
@@ -80,7 +80,7 @@ add_task(function* test_something() {
   Services.prefs.clearUserPref("services.settings.server");
   Services.prefs.setIntPref("services.blocklist.onecrl.checked", 0);
   // Use any last_modified older than highest shipped in JSON dump.
-  yield OneCRLBlocklistClient.maybeSync(123456, Date.now());
+  await OneCRLBlocklistClient.maybeSync(123456, Date.now());
   // Last check value was updated.
   do_check_neq(0, Services.prefs.getIntPref("services.blocklist.onecrl.checked"));
 
@@ -88,38 +88,38 @@ add_task(function* test_something() {
   Services.prefs.setCharPref("services.settings.server", dummyServerURL);
   // clear the collection, save a non-zero lastModified so we don't do
   // import of initial data when we sync again.
-  yield collection.clear();
+  await collection.clear();
   // a lastModified value of 1000 means we get a remote collection with a
   // single record
-  yield collection.db.saveLastModified(1000);
-  yield OneCRLBlocklistClient.maybeSync(2000, Date.now());
+  await collection.db.saveLastModified(1000);
+  await OneCRLBlocklistClient.maybeSync(2000, Date.now());
 
   // Open the collection, verify it's been updated:
   // Our test data now has two records; both should be in the local collection
-  list = yield collection.list();
+  list = await collection.list();
   do_check_eq(list.data.length, 1);
 
   // Test the db is updated when we call again with a later lastModified value
-  yield OneCRLBlocklistClient.maybeSync(4000, Date.now());
+  await OneCRLBlocklistClient.maybeSync(4000, Date.now());
 
   // Open the collection, verify it's been updated:
   // Our test data now has two records; both should be in the local collection
-  list = yield collection.list();
+  list = await collection.list();
   do_check_eq(list.data.length, 3);
 
   // Try to maybeSync with the current lastModified value - no connection
   // should be attempted.
   // Clear the kinto base pref so any connections will cause a test failure
   Services.prefs.clearUserPref("services.settings.server");
-  yield OneCRLBlocklistClient.maybeSync(4000, Date.now());
+  await OneCRLBlocklistClient.maybeSync(4000, Date.now());
 
   // Try again with a lastModified value at some point in the past
-  yield OneCRLBlocklistClient.maybeSync(3000, Date.now());
+  await OneCRLBlocklistClient.maybeSync(3000, Date.now());
 
   // Check the OneCRL check time pref is modified, even if the collection
   // hasn't changed
   Services.prefs.setIntPref("services.blocklist.onecrl.checked", 0);
-  yield OneCRLBlocklistClient.maybeSync(3000, Date.now());
+  await OneCRLBlocklistClient.maybeSync(3000, Date.now());
   let newValue = Services.prefs.getIntPref("services.blocklist.onecrl.checked");
   do_check_neq(newValue, 0);
 
@@ -127,7 +127,7 @@ add_task(function* test_something() {
   // collection. This will throw on fail, so just calling maybeSync is an
   // acceptible test.
   Services.prefs.setCharPref("services.settings.server", dummyServerURL);
-  yield OneCRLBlocklistClient.maybeSync(5000, Date.now());
+  await OneCRLBlocklistClient.maybeSync(5000, Date.now());
 });
 
 function run_test() {

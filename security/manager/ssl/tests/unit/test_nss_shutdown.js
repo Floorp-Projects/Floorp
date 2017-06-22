@@ -21,7 +21,7 @@ function startAsyncNSSOperation(certdb, appFile) {
   });
 }
 
-add_task(function* () {
+add_task(async function() {
   do_get_profile();
   let psm = Cc["@mozilla.org/psm;1"]
               .getService(Ci.nsISupports)
@@ -40,5 +40,5 @@ add_task(function* () {
   for (let i = 0; i < 25; i++) {
     promises.push(startAsyncNSSOperation(certdb, appFile));
   }
-  yield Promise.all(promises);
+  await Promise.all(promises);
 });

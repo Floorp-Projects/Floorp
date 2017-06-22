@@ -10,92 +10,92 @@
 
 var { OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
 
-add_task(function* testCAandTitle() {
-  let cert = yield readCertificate("ca.pem", "CTu,CTu,CTu");
-  let win = yield displayCertificate(cert);
+add_task(async function testCAandTitle() {
+  let cert = await readCertificate("ca.pem", "CTu,CTu,CTu");
+  let win = await displayCertificate(cert);
   checkUsages(win, ["SSL Certificate Authority"]);
 
   // There's no real need to test the title for every cert, so we just test it
   // once here.
   Assert.equal(win.document.title, "Certificate Viewer: \u201Cca\u201D",
                "Actual and expected title should match");
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
-add_task(function* testSSLEndEntity() {
-  let cert = yield readCertificate("ssl-ee.pem", ",,");
-  let win = yield displayCertificate(cert);
+add_task(async function testSSLEndEntity() {
+  let cert = await readCertificate("ssl-ee.pem", ",,");
+  let win = await displayCertificate(cert);
   checkUsages(win, ["SSL Server Certificate", "SSL Client Certificate"]);
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
-add_task(function* testEmailEndEntity() {
-  let cert = yield readCertificate("email-ee.pem", ",,");
-  let win = yield displayCertificate(cert);
+add_task(async function testEmailEndEntity() {
+  let cert = await readCertificate("email-ee.pem", ",,");
+  let win = await displayCertificate(cert);
   checkUsages(win, ["Email Recipient Certificate", "Email Signer Certificate"]);
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
-add_task(function* testCodeSignEndEntity() {
-  let cert = yield readCertificate("code-ee.pem", ",,");
-  let win = yield displayCertificate(cert);
+add_task(async function testCodeSignEndEntity() {
+  let cert = await readCertificate("code-ee.pem", ",,");
+  let win = await displayCertificate(cert);
   checkUsages(win, ["Object Signer"]);
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
-add_task(function* testExpired() {
-  let cert = yield readCertificate("expired-ca.pem", ",,");
-  let win = yield displayCertificate(cert);
+add_task(async function testExpired() {
+  let cert = await readCertificate("expired-ca.pem", ",,");
+  let win = await displayCertificate(cert);
   checkError(win, "Could not verify this certificate because it has expired.");
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
-add_task(function* testIssuerExpired() {
-  let cert = yield readCertificate("ee-from-expired-ca.pem", ",,");
-  let win = yield displayCertificate(cert);
+add_task(async function testIssuerExpired() {
+  let cert = await readCertificate("ee-from-expired-ca.pem", ",,");
+  let win = await displayCertificate(cert);
   checkError(win,
              "Could not verify this certificate because the CA certificate " +
              "is invalid.");
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
-add_task(function* testUnknownIssuer() {
-  let cert = yield readCertificate("unknown-issuer.pem", ",,");
-  let win = yield displayCertificate(cert);
+add_task(async function testUnknownIssuer() {
+  let cert = await readCertificate("unknown-issuer.pem", ",,");
+  let win = await displayCertificate(cert);
   checkError(win,
              "Could not verify this certificate because the issuer is " +
              "unknown.");
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
-add_task(function* testInsecureAlgo() {
-  let cert = yield readCertificate("md5-ee.pem", ",,");
-  let win = yield displayCertificate(cert);
+add_task(async function testInsecureAlgo() {
+  let cert = await readCertificate("md5-ee.pem", ",,");
+  let win = await displayCertificate(cert);
   checkError(win,
              "Could not verify this certificate because it was signed using " +
              "a signature algorithm that was disabled because that algorithm " +
              "is not secure.");
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
-add_task(function* testUntrusted() {
-  let cert = yield readCertificate("untrusted-ca.pem", "p,p,p");
-  let win = yield displayCertificate(cert);
+add_task(async function testUntrusted() {
+  let cert = await readCertificate("untrusted-ca.pem", "p,p,p");
+  let win = await displayCertificate(cert);
   checkError(win,
              "Could not verify this certificate because it is not trusted.");
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
-add_task(function* testUntrustedIssuer() {
-  let cert = yield readCertificate("ee-from-untrusted-ca.pem", ",,");
-  let win = yield displayCertificate(cert);
+add_task(async function testUntrustedIssuer() {
+  let cert = await readCertificate("ee-from-untrusted-ca.pem", ",,");
+  let win = await displayCertificate(cert);
   checkError(win,
              "Could not verify this certificate because the issuer is not " +
              "trusted.");
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
-add_task(function* testRevoked() {
+add_task(async function testRevoked() {
   // Note that there's currently no way to un-do this. This should only be a
   // problem if another test re-uses a certificate with this same key (perhaps
   // likely) and subject (less likely).
@@ -104,25 +104,25 @@ add_task(function* testRevoked() {
   certBlocklist.revokeCertBySubjectAndPubKey(
     "MBIxEDAOBgNVBAMMB3Jldm9rZWQ=", // CN=revoked
     "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8="); // hash of the shared key
-  let cert = yield readCertificate("revoked.pem", ",,");
-  let win = yield displayCertificate(cert);
+  let cert = await readCertificate("revoked.pem", ",,");
+  let win = await displayCertificate(cert);
   // As of bug 1312827, OneCRL only applies to TLS web server certificates, so
   // this certificate will actually verify successfully for every end-entity
   // usage except TLS web server.
   checkUsages(win, ["Email Recipient Certificate", "Email Signer Certificate",
                     "Object Signer", "SSL Client Certificate"]);
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
-add_task(function* testInvalid() {
+add_task(async function testInvalid() {
   // This certificate has a keyUsage extension asserting cRLSign and
   // keyCertSign, but it doesn't have a basicConstraints extension. This
   // shouldn't be valid for any usage. Sadly, we give a pretty lame error
   // message in this case.
-  let cert = yield readCertificate("invalid.pem", ",,");
-  let win = yield displayCertificate(cert);
+  let cert = await readCertificate("invalid.pem", ",,");
+  let win = await displayCertificate(cert);
   checkError(win, "Could not verify this certificate for unknown reasons.");
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
 /**

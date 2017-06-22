@@ -54,16 +54,16 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function*() {
+add_task(async function() {
   // Simple change, shouldn't cause a warning
   do_print("Checking that a simple change doesn't cause a warning");
   let buf = makeBuffer(100);
-  let warned = yield checkWarning("string.accept", buf);
+  let warned = await checkWarning("string.accept", buf);
   do_check_false(warned);
 
   // Large change, should cause a warning
   do_print("Checking that a large change causes a warning");
   buf = makeBuffer(32 * 1024);
-  warned = yield checkWarning("string.warn", buf);
+  warned = await checkWarning("string.warn", buf);
   do_check_true(warned);
 });

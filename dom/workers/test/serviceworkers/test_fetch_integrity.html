@@ -44,7 +44,7 @@ add_task(function setupPrefs() {
   ]});
 });
 
-add_task(function* test_integrity_serviceWorker() {
+add_task(async function test_integrity_serviceWorker() {
   var filename = make_absolute_url("fetch.js");
   var filename2 = make_absolute_url("fake.html");
 
@@ -53,9 +53,9 @@ add_task(function* test_integrity_serviceWorker() {
     navigator.serviceWorker.oncontrollerchange = resolve;
   });
 
-  let registration = yield navigator.serviceWorker.register("fetch.js",
+  let registration = await navigator.serviceWorker.register("fetch.js",
                                                             { scope: "./" });
-  yield waitForControlled;
+  await waitForControlled;
 
   info("Test for mNavigationInterceptions.")
   // The client_win will reload to another URL after opening filename2.
@@ -88,17 +88,17 @@ add_task(function* test_integrity_serviceWorker() {
   info("Test for mControlledDocuments and report error message to console.");
   // The fetch will succeed because the integrity value is invalid and we are
   // looking for the console message regarding the bad integrity value.
-  yield fetch("fail.html");
+  await fetch("fail.html");
 
-  yield wait_for_expected_message(expectedMessage);
+  await wait_for_expected_message(expectedMessage);
 
-  yield wait_for_expected_message(expectedMessage2);
+  await wait_for_expected_message(expectedMessage2);
 
-  yield registration.unregister();
+  await registration.unregister();
   client_win.close();
 });
 
-add_task(function* test_integrity_sharedWorker() {
+add_task(async function test_integrity_sharedWorker() {
   var filename = make_absolute_url("sharedWorker_fetch.js");
 
   info("Attch main window to a SharedWorker.");
@@ -112,7 +112,7 @@ add_task(function* test_integrity_sharedWorker() {
       }
     }
   });
-  yield waitForConnected;
+  await waitForConnected;
 
   info("Attch another window to the same SharedWorker.");
   // Open another window and its also managed by the shared worker.
@@ -126,7 +126,7 @@ add_task(function* test_integrity_sharedWorker() {
       }
     }
   });
-  yield waitForBothConnected;
+  await waitForBothConnected;
 
   // XXX windowID should be innerWindowID
   let mainWindowID = SpecialPowers.getDOMWindowUtils(window).outerWindowID;
@@ -165,11 +165,11 @@ add_task(function* test_integrity_sharedWorker() {
       }
     }
   });
-  yield waitForSRIFailed;
+  await waitForSRIFailed;
 
-  yield wait_for_expected_message(expectedMessage);
+  await wait_for_expected_message(expectedMessage);
 
-  yield wait_for_expected_message(expectedMessage2);
+  await wait_for_expected_message(expectedMessage2);
   client_win.close();
 });
 

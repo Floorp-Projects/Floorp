@@ -20,12 +20,12 @@
     const DEBUGGER_URL = BASE_URL + "WorkerDebuggerGlobalScope.setImmediate_debugger.js";
 
     function test() {
-      Task.spawn(function* () {
+      (async function() {
         SimpleTest.waitForExplicitFinish();
 
         let promise = waitForRegister(WORKER_URL, DEBUGGER_URL);
         let worker = new Worker(WORKER_URL);
-        let dbg = yield promise;
+        let dbg = await promise;
 
         info("Send a request to the worker debugger. This should cause a " +
              "the worker debugger to send two responses. The worker debugger " +
@@ -36,10 +36,10 @@
           waitForDebuggerMessage(dbg, "pong1")
         ]);
         dbg.postMessage("ping");
-        yield promise;
+        await promise;
 
         SimpleTest.finish();
-      });
+      })();
     }
 
   ]]>

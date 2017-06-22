@@ -7,16 +7,16 @@ const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
 
 const userAgentID = 'bd744428-f125-436a-b6d0-dd0c9845837f';
 
-let clearForPattern = Task.async(function* (testRecords, pattern) {
+let clearForPattern = async function(testRecords, pattern) {
   let patternString = JSON.stringify(pattern);
-  yield PushService._clearOriginData(patternString);
+  await PushService._clearOriginData(patternString);
 
   for (let length = testRecords.length; length--;) {
     let test = testRecords[length];
     let originSuffix = ChromeUtils.originAttributesToSuffix(
       test.originAttributes);
 
-    let registration = yield PushService.registration({
+    let registration = await PushService.registration({
       scope: test.scope,
       originAttributes: originSuffix,
     });
@@ -32,7 +32,7 @@ let clearForPattern = Task.async(function* (testRecords, pattern) {
         ' for pattern ' + patternString);
     }
   }
-});
+};
 
 function run_test() {
   do_get_profile();
@@ -44,7 +44,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_webapps_cleardata() {
+add_task(async function test_webapps_cleardata() {
   let db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => {return db.drop().then(_ => db.close());});
 
@@ -114,7 +114,7 @@ add_task(function* test_webapps_cleardata() {
     }
   });
 
-  yield Promise.all(testRecords.map(test =>
+  await Promise.all(testRecords.map(test =>
     PushService.register({
       scope: test.scope,
       originAttributes: ChromeUtils.originAttributesToSuffix(
@@ -124,18 +124,18 @@ add_task(function* test_webapps_cleardata() {
 
   // Removes records for all scopes with the same app ID. Excludes records
   // where `inIsolatedMozBrowser` is true.
-  yield clearForPattern(testRecords, { appId: 1, inIsolatedMozBrowser: false });
+  await clearForPattern(testRecords, { appId: 1, inIsolatedMozBrowser: false });
 
   // Removes the remaining record for app ID 1, where `inIsolatedMozBrowser` is true.
-  yield clearForPattern(testRecords, { appId: 1 });
+  await clearForPattern(testRecords, { appId: 1 });
 
   // Removes all records for all scopes with the same app ID, where
   // `inIsolatedMozBrowser` is true.
-  yield clearForPattern(testRecords, { appId: 2, inIsolatedMozBrowser: true });
+  await clearForPattern(testRecords, { appId: 2, inIsolatedMozBrowser: true });
 
   // Removes all records where `inIsolatedMozBrowser` is true.
-  yield clearForPattern(testRecords, { inIsolatedMozBrowser: true });
+  await clearForPattern(testRecords, { inIsolatedMozBrowser: true });
 
   equal(testRecords.length, 0, 'Should remove all test records');
-  yield unregisterPromise;
+  await unregisterPromise;
 });

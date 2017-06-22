@@ -1,5 +1,5 @@
-add_task(function* () {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
     set: [["browser.groupedhistory.enabled", true]]
   });
 
@@ -19,7 +19,7 @@ add_task(function* () {
       !tab.linkedBrowser.frameLoader.isDead;
   }
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "data:text/html,a" }, function* (browser1) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "data:text/html,a" }, async function(browser1) {
     // Set up the grouped SHEntry setup
     let tab2 = gBrowser.loadOneTab("data:text/html,b", {
       referrerPolicy: Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
@@ -28,25 +28,25 @@ add_task(function* () {
       isPrerendered: true,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
-    yield BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
+    await BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
     browser1.frameLoader.appendPartialSHistoryAndSwap(tab2.linkedBrowser.frameLoader);
-    yield awaitProcessChange(browser1);
+    await awaitProcessChange(browser1);
     ok(isAlive(tab2));
 
     // Load some URIs and make sure that we lose the old process once we are 3 history entries away.
     browser1.loadURI("data:text/html,c", null, null);
-    yield BrowserTestUtils.browserLoaded(browser1);
+    await BrowserTestUtils.browserLoaded(browser1);
     ok(isAlive(tab2), "frameloader should still be alive");
     browser1.loadURI("data:text/html,d", null, null);
-    yield BrowserTestUtils.browserLoaded(browser1);
+    await BrowserTestUtils.browserLoaded(browser1);
     ok(isAlive(tab2), "frameloader should still be alive");
     browser1.loadURI("data:text/html,e", null, null);
-    yield BrowserTestUtils.browserLoaded(browser1);
+    await BrowserTestUtils.browserLoaded(browser1);
     ok(isAlive(tab2), "frameloader should still be alive");
 
     // The 4th navigation should kill the frameloader
     browser1.loadURI("data:text/html,f", null, null);
-    yield new Promise(resolve => {
+    await new Promise(resolve => {
       tab2.addEventListener("TabClose", function() {
         ok(true, "The tab is being closed!\n");
         resolve();
