@@ -45,6 +45,7 @@ struct TimingParams
   {
     mDuration.emplace(StickyTimeDuration::FromMilliseconds(aDuration));
     mDelay = TimeDuration::FromMilliseconds(aDelay);
+    Update();
   }
 
   TimingParams(const TimeDuration& aDuration,
@@ -64,6 +65,7 @@ struct TimingParams
     , mFunction(aFunction)
   {
     mDuration.emplace(aDuration);
+    Update();
   }
 
   template <class OptionsType>
@@ -123,25 +125,35 @@ struct TimingParams
                                                    nsIDocument* aDocument,
                                                    ErrorResult& aRv);
 
-  // Return the duration of the active interval calculated by duration and
-  // iteration count.
-  StickyTimeDuration ActiveDuration() const
+  static StickyTimeDuration CalcActiveDuration(
+    const Maybe<StickyTimeDuration>& aDuration,
+    double aIterations)
   {
     // If either the iteration duration or iteration count is zero,
     // Web Animations says that the active duration is zero. This is to
     // ensure that the result is defined when the other argument is Infinity.
     static const StickyTimeDuration zeroDuration;
-    if (!mDuration || *mDuration == zeroDuration || mIterations == 0.0) {
+    if (!aDuration || *aDuration == zeroDuration || aIterations == 0.0) {
       return zeroDuration;
     }
 
-    return mDuration->MultDouble(mIterations);
+    return aDuration->MultDouble(aIterations);
+  }
+  // Return the duration of the active interval calculated by duration and
+  // iteration count.
+  StickyTimeDuration ActiveDuration() const
+  {
+    MOZ_ASSERT(CalcActiveDuration(mDuration, mIterations) == mActiveDuration,
+               "Cached value of active duration should be up to date");
+    return mActiveDuration;
   }
 
   StickyTimeDuration EndTime() const
   {
-    return std::max(mDelay + ActiveDuration() + mEndDelay,
-                    StickyTimeDuration());
+    MOZ_ASSERT(mEndTime == std::max(mDelay + ActiveDuration() + mEndDelay,
+                                    StickyTimeDuration()),
+               "Cached value of end time should be up to date");
+    return mEndTime;
   }
 
   bool operator==(const TimingParams& aOther) const;
@@ -153,24 +165,28 @@ struct TimingParams
   void SetDuration(Maybe<StickyTimeDuration>&& aDuration)
   {
     mDuration = Move(aDuration);
+    Update();
   }
   const Maybe<StickyTimeDuration>& Duration() const { return mDuration; }
 
   void SetDelay(const TimeDuration& aDelay)
   {
     mDelay = aDelay;
+    Update();
   }
   const TimeDuration& Delay() const { return mDelay; }
 
   void SetEndDelay(const TimeDuration& aEndDelay)
   {
     mEndDelay = aEndDelay;
+    Update();
   }
   const TimeDuration& EndDelay() const { return mEndDelay; }
 
   void SetIterations(double aIterations)
   {
     mIterations = aIterations;
+    Update();
   }
   double Iterations() const { return mIterations; }
 
@@ -199,6 +215,14 @@ struct TimingParams
   const Maybe<ComputedTimingFunction>& Function() const { return mFunction; }
 
 private:
+  void Update()
+  {
+    mActiveDuration = CalcActiveDuration(mDuration, mIterations);
+
+    mEndTime = std::max(mDelay + mActiveDuration + mEndDelay,
+                        StickyTimeDuration());
+  }
+
   // mDuration.isNothing() represents the "auto" value
   Maybe<StickyTimeDuration> mDuration;
   TimeDuration mDelay;      // Initializes to zero
@@ -208,6 +232,8 @@ private:
   dom::PlaybackDirection mDirection = dom::PlaybackDirection::Normal;
   dom::FillMode mFill = dom::FillMode::Auto;
   Maybe<ComputedTimingFunction> mFunction;
+  StickyTimeDuration mActiveDuration = StickyTimeDuration();
+  StickyTimeDuration mEndTime = StickyTimeDuration();
 };
 
 } // namespace mozilla

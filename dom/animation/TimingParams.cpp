@@ -87,6 +87,8 @@ TimingParams::FromOptionsType(const OptionsType& aOptions,
     result.mFill = timing.mFill;
     result.mFunction = easing;
   }
+  result.Update();
+
   return result;
 }
 
@@ -189,6 +191,8 @@ TimingParams::ParseEasing(const nsAString& aEasing,
 bool
 TimingParams::operator==(const TimingParams& aOther) const
 {
+  // We don't compare mActiveDuration and mEndTime because they are calculated
+  // from other timing parameters.
   return mDuration == aOther.mDuration &&
          mDelay == aOther.mDelay &&
          mIterations == aOther.mIterations &&
