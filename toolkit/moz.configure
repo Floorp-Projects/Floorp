@@ -773,6 +773,9 @@ with only_when(building_stylo_bindgen):
             You must provide both of --with-libclang-path and --with-clang-path
             or neither of them.'''))
 
+        libclang_path = libclang_path[0]
+        clang_path = clang_path[0]
+
         if not os.path.exists(libclang_path) or \
            not os.path.isdir(libclang_path):
             die(dedent('''\
@@ -793,8 +796,8 @@ with only_when(building_stylo_bindgen):
             '''.format(clang_path)))
 
         return namespace(
-            libclang_path=libclang_path[0],
-            clang_path=clang_path[0],
+            libclang_path=libclang_path,
+            clang_path=clang_path,
         )
 
     set_config('MOZ_LIBCLANG_PATH', bindgen_config_paths.libclang_path)
