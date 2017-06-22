@@ -50,6 +50,14 @@ AtomToId(JSAtom* atom)
 inline bool
 ValueToIdPure(const Value& v, jsid* id)
 {
+    if (v.isString()) {
+        if (v.toString()->isAtom()) {
+            *id = AtomToId(&v.toString()->asAtom());
+            return true;
+        }
+        return false;
+    }
+
     int32_t i;
     if (ValueFitsInInt32(v, &i) && INT_FITS_IN_JSID(i)) {
         *id = INT_TO_JSID(i);
@@ -61,11 +69,7 @@ ValueToIdPure(const Value& v, jsid* id)
         return true;
     }
 
-    if (!v.isString() || !v.toString()->isAtom())
-        return false;
-
-    *id = AtomToId(&v.toString()->asAtom());
-    return true;
+    return false;
 }
 
 template <AllowGC allowGC>
@@ -73,15 +77,22 @@ inline bool
 ValueToId(JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType v,
           typename MaybeRooted<jsid, allowGC>::MutableHandleType idp)
 {
-    int32_t i;
-    if (ValueFitsInInt32(v, &i) && INT_FITS_IN_JSID(i)) {
-        idp.set(INT_TO_JSID(i));
-        return true;
-    }
+    if (v.isString()) {
+        if (v.toString()->isAtom()) {
+            idp.set(AtomToId(&v.toString()->asAtom()));
+            return true;
+        }
+    } else {
+        int32_t i;
+        if (ValueFitsInInt32(v, &i) && INT_FITS_IN_JSID(i)) {
+            idp.set(INT_TO_JSID(i));
+            return true;
+        }
 
-    if (js::IsSymbolOrSymbolWrapper(v)) {
-        idp.set(SYMBOL_TO_JSID(js::ToSymbolPrimitive(v)));
-        return true;
+        if (js::IsSymbolOrSymbolWrapper(v)) {
+            idp.set(SYMBOL_TO_JSID(js::ToSymbolPrimitive(v)));
+            return true;
+        }
     }
 
     JSAtom* atom = ToAtom<allowGC>(cx, v);

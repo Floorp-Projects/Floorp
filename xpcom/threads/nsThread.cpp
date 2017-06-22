@@ -1162,13 +1162,6 @@ nsThread::IdleDispatch(already_AddRefed<nsIRunnable> aEvent)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThread::IdleDispatchFromScript(nsIRunnable* aEvent)
-{
-  nsCOMPtr<nsIRunnable> event(aEvent);
-  return IdleDispatch(event.forget());
-}
-
 #ifdef MOZ_CANARY
 void canary_alarm_handler(int signum);
 

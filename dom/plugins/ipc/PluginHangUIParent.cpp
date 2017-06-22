@@ -355,10 +355,13 @@ PluginHangUIParent::RecvUserResponse(const unsigned int& aResponse)
   int responseCode;
   if (aResponse & HANGUI_USER_RESPONSE_STOP) {
     // User clicked Stop
+    std::function<void(bool)> callback = [](bool aResult) { };
     mModule->TerminateChildProcess(mMainThreadMessageLoop,
                                    mozilla::ipc::kInvalidProcessId,
                                    NS_LITERAL_CSTRING("ModalHangUI"),
-                                   EmptyString());
+                                   EmptyString(),
+                                   mModule->DummyCallback<bool>(),
+                                   /* aAsync = */ false);
     responseCode = 1;
   } else if(aResponse & HANGUI_USER_RESPONSE_CONTINUE) {
     mModule->OnHangUIContinue();
