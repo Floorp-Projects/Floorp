@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<style type="text/css">
+  div {
+    width: 100px;
+    height:100px;
+    position: fixed;
+  }
+
+  /* #outer is in main DOM, circle instance in use-element shadow DOM,
+     should not match this rule for cloned circle instance. */
+  #outer circle {
+	  stroke: red;
+	  fill: red;
+	  stroke-width: 4px;
+  }
+
+  /* div is in main DOM, rect instance in use-element shadow DOM.
+     should not match this rule for cloned rect instance. */
+  div rect {
+	  stroke: red;
+	  fill: red;
+	  stroke-width: 4px;
+  }
+
+  /* use element is host of shadow tree, not part of it. This rule should
+     not match any elements in the use-element shadow tree. */
+  use > rect, use > circle {
+    stroke: red;
+    fill: red;
+    stroke-width: 4px;
+  }
+
+  /* A cloned symbol instance inside an use-element shadow tree should match
+     rules of symbol tag, instead of svg tag. */
+  svg {
+    fill: red;
+  }
+  symbol {
+    fill: lime;
+  }
+</style>
+
+<body style="background-color: lime;">
+
+<svg>
+  <defs>
+    <circle id="circle" cx="25" cy="25" r="25" />
+    <rect id="rect" width="100" height="100"/>
+    <symbol id="symbol">
+      <circle cx="25" cy="25" r="25" />
+    </symbol>
+  </defs>
+
+  <g id="outer">
+    <use xlink:href="#circle" fill="lime" width="50" height="50" />
+  </g>
+</svg>
+
+<div style="left: 0px; top: 10px;">
+  <svg>
+    <use xlink:href="#rect" fill="lime" width="50" height="50" />
+  </svg>
+</div>
+
+<div style="left: 110px; top: 10px;">
+  <svg>
+    <use xlink:href="#symbol" fill="lime" width="50" height="50" />
+  </svg>
+</div>
+
+<div style="left: 220px; top: 10px;">
+  <svg>
+    <use xlink:href="#symbol" width="50" height="50" />
+  </svg>
+</div>
+
+</body>
+</html>

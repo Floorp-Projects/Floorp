@@ -651,10 +651,12 @@ mochitest-browser-screenshots:
     loopback-video: true
     run-on-projects:
         by-test-platform:
-            windows.*: ['mozilla-central', 'try']
+            windows10/opt: ['mozilla-central', 'try']
+            windows7/opt: ['mozilla-central', 'try']
             linux64/opt: ['mozilla-central', 'try']
+            macosx/opt: ['mozilla-central', 'try']
             default: []
-    e10s: true
+    e10s: both
     max-run-time: 3600
     mozharness:
         mochitest-flavor: browser
@@ -665,7 +667,6 @@ mochitest-browser-screenshots:
                 windows.*:
                     - unittests/win_taskcluster_unittest.py
                 macosx.*:
-                    - remove_executables.py
                     - unittests/mac_unittest.py
                 linux.*:
                     - unittests/linux_unittest.py

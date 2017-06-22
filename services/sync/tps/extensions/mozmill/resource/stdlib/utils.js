@@ -210,11 +210,7 @@ function sleep(milliseconds) {
   var timeup = false;
 
   hwindow.setTimeout(function () { timeup = true; }, milliseconds);
-  var thread = Services.tm.currentThread;
-
-  while (!timeup) {
-    thread.processNextEvent(true);
-  }
+  Services.tm.spinEventLoopUntil(() => timeup);
 
   broker.pass({'function':'utils.sleep()'});
 }

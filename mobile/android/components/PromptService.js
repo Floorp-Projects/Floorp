@@ -200,9 +200,7 @@ InternalPrompt.prototype = {
     });
 
     // Spin this thread while we wait for a result
-    let thread = Services.tm.currentThread;
-    while (retval == null)
-      thread.processNextEvent(true);
+    Services.tm.spinEventLoopUntil(() => retval != null);
 
     if (this._domWin) {
       let winUtils = this._domWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);

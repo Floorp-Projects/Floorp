@@ -94,6 +94,9 @@ public:
   Reset();
 
   void
+  DispatchNonTransactionError(nsresult aErrorCode);
+
+  void
   SetResultCallback(ResultCallback* aCallback);
 
   void
@@ -224,7 +227,6 @@ class IDBOpenDBRequest final
   nsAutoPtr<WorkerHolder> mWorkerHolder;
 
   const bool mFileHandleDisabled;
-  bool mIncreasedActiveDatabaseCount;
 
 public:
   static already_AddRefed<IDBOpenDBRequest>
@@ -246,9 +248,6 @@ public:
 
   void
   SetTransaction(IDBTransaction* aTransaction);
-
-  void
-  DispatchNonTransactionError(nsresult aErrorCode);
 
   void
   NoteComplete();
@@ -279,12 +278,6 @@ private:
                    bool aFileHandleDisabled);
 
   ~IDBOpenDBRequest();
-
-  void
-  IncreaseActiveDatabaseCount();
-
-  void
-  MaybeDecreaseActiveDatabaseCount();
 };
 
 } // namespace dom
