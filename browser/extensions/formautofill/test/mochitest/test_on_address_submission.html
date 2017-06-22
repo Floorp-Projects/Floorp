@@ -44,6 +44,8 @@ add_task(async function check_storage_after_form_submitted() {
 
   let expectedAddresses = TEST_ADDRESSES.slice(0, 1);
   await onAddressChanged("add");
+  // Check if timesUsed is set correctly
+  expectedAddresses[0].timesUsed = 1;
   let matching = await checkAddresses(expectedAddresses);
   ok(matching, "Address saved as expected");
 });

@@ -63,7 +63,7 @@ var AboutModuleFactory = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
 };
 
-add_task(function* init() {
+add_task(async function init() {
   let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
   for (let module of TEST_MODULES) {
     registrar.registerFactory(Components.ID(module.id), "",
@@ -101,14 +101,14 @@ function test_url(url, chromeResult, contentResult) {
      contentResult, "Check URL with query and ref in content process.");
 }
 
-add_task(function* test_chrome() {
+add_task(async function test_chrome() {
   test_url("about:" + CHROME.path, true, false);
 });
 
-add_task(function* test_any() {
+add_task(async function test_any() {
   test_url("about:" + CANREMOTE.path, true, true);
 });
 
-add_task(function* test_remote() {
+add_task(async function test_remote() {
   test_url("about:" + MUSTREMOTE.path, false, true);
 });

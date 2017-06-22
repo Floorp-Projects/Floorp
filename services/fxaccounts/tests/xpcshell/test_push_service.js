@@ -47,22 +47,22 @@ let mockLog = {
 };
 
 
-add_task(function* initialize() {
+add_task(async function initialize() {
   let pushService = new FxAccountsPushService();
   equal(pushService.initialize(), false);
 });
 
-add_task(function* registerPushEndpointSuccess() {
+add_task(async function registerPushEndpointSuccess() {
   let pushService = new FxAccountsPushService({
     pushService: mockPushService,
     fxAccounts: mockFxAccounts,
   });
 
-  let subscription = yield pushService.registerPushEndpoint();
+  let subscription = await pushService.registerPushEndpoint();
   equal(subscription.endpoint, MOCK_ENDPOINT);
 });
 
-add_task(function* registerPushEndpointFailure() {
+add_task(async function registerPushEndpointFailure() {
   let failPushService = Object.assign(mockPushService, {
     subscribe(scope, principal, cb) {
       cb(Components.results.NS_ERROR_ABORT);
@@ -74,21 +74,21 @@ add_task(function* registerPushEndpointFailure() {
     fxAccounts: mockFxAccounts,
   });
 
-  let subscription = yield pushService.registerPushEndpoint();
+  let subscription = await pushService.registerPushEndpoint();
   equal(subscription, null);
 });
 
-add_task(function* unsubscribeSuccess() {
+add_task(async function unsubscribeSuccess() {
   let pushService = new FxAccountsPushService({
     pushService: mockPushService,
     fxAccounts: mockFxAccounts,
   });
 
-  let result = yield pushService.unsubscribe();
+  let result = await pushService.unsubscribe();
   equal(result, true);
 });
 
-add_task(function* unsubscribeFailure() {
+add_task(async function unsubscribeFailure() {
   let failPushService = Object.assign(mockPushService, {
     unsubscribe(scope, principal, cb) {
       cb(Components.results.NS_ERROR_ABORT);
@@ -100,7 +100,7 @@ add_task(function* unsubscribeFailure() {
     fxAccounts: mockFxAccounts,
   });
 
-  let result = yield pushService.unsubscribe();
+  let result = await pushService.unsubscribe();
   equal(result, null);
 });
 

@@ -39,10 +39,10 @@ class KnownTabs {
  * reliably create the StorageDBChild instance, and its corresponding
  * StorageDBParent will send the set of origins when it is constructed.)
  */
-function* openTestTabInOwnProcess(name, knownTabs) {
+async function openTestTabInOwnProcess(name, knownTabs) {
   let realUrl = HELPER_PAGE_URL + '?' + encodeURIComponent(name);
   // Load and wait for about:blank.
-  let tab = yield BrowserTestUtils.openNewForegroundTab({
+  let tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser, opening: 'about:blank', forceNewProcess: true
   });
   let pid = tab.linkedBrowser.frameLoader.tabParent.osPid;
@@ -55,7 +55,7 @@ function* openTestTabInOwnProcess(name, knownTabs) {
 
   // Now trigger the actual load of our page.
   tab.linkedBrowser.loadURI(realUrl);
-  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   is(tab.linkedBrowser.frameLoader.tabParent.osPid, pid, "still same pid");
   return knownTab;
 }
@@ -63,9 +63,9 @@ function* openTestTabInOwnProcess(name, knownTabs) {
 /**
  * Close all the tabs we opened.
  */
-function* cleanupTabs(knownTabs) {
+async function cleanupTabs(knownTabs) {
   for (let knownTab of knownTabs.byName.values()) {
-    yield BrowserTestUtils.removeTab(knownTab.tab);
+    await BrowserTestUtils.removeTab(knownTab.tab);
     knownTab.cleanup();
   }
   knownTabs.cleanup();
@@ -138,8 +138,8 @@ function clearOriginStorageEnsuringNoPreload() {
   return triggerAndWaitForLocalStorageFlush();
 }
 
-function* verifyTabPreload(knownTab, expectStorageExists) {
-  let storageExists = yield ContentTask.spawn(
+async function verifyTabPreload(knownTab, expectStorageExists) {
+  let storageExists = await ContentTask.spawn(
     knownTab.tab.linkedBrowser,
     HELPER_PAGE_ORIGIN,
     function(origin) {
@@ -155,8 +155,8 @@ function* verifyTabPreload(knownTab, expectStorageExists) {
  * Instruct the given tab to execute the given series of mutations.  For
  * simplicity, the mutations representation matches the expected events rep.
  */
-function* mutateTabStorage(knownTab, mutations) {
-  yield ContentTask.spawn(
+async function mutateTabStorage(knownTab, mutations) {
+  await ContentTask.spawn(
     knownTab.tab.linkedBrowser,
     { mutations },
     function(args) {
@@ -169,8 +169,8 @@ function* mutateTabStorage(knownTab, mutations) {
  * received events.  verifyTabStorageEvents is the corresponding method to
  * check and assert the recorded events.
  */
-function* recordTabStorageEvents(knownTab) {
-  yield ContentTask.spawn(
+async function recordTabStorageEvents(knownTab) {
+  await ContentTask.spawn(
     knownTab.tab.linkedBrowser,
     {},
     function() {
@@ -182,8 +182,8 @@ function* recordTabStorageEvents(knownTab) {
  * Retrieve the current localStorage contents perceived by the tab and assert
  * that they match the provided expected state.
  */
-function* verifyTabStorageState(knownTab, expectedState) {
-  let actualState = yield ContentTask.spawn(
+async function verifyTabStorageState(knownTab, expectedState) {
+  let actualState = await ContentTask.spawn(
     knownTab.tab.linkedBrowser,
     {},
     function() {
@@ -206,8 +206,8 @@ function* verifyTabStorageState(knownTab, expectedState) {
  * they match the provided expected events.  For simplicity, the expected events
  * representation is the same as that used by mutateTabStorage.
  */
-function* verifyTabStorageEvents(knownTab, expectedEvents) {
-  let actualEvents = yield ContentTask.spawn(
+async function verifyTabStorageEvents(knownTab, expectedEvents) {
+  let actualEvents = await ContentTask.spawn(
     knownTab.tab.linkedBrowser,
     {},
     function() {
@@ -273,8 +273,8 @@ requestLongerTimeout(4);
  *   it preloads/precaches the data without us having touched localStorage or
  *   added an event listener.
  */
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
     set: [
       // Stop the preallocated process manager from speculatively creating
       // processes.  Our test explicitly asserts on whether preload happened or
@@ -299,26 +299,26 @@ add_task(function*() {
   // Ensure that there is no localstorage data or potential false positives for
   // localstorage preloads by forcing the origin to be cleared prior to the
   // start of our test.
-  yield clearOriginStorageEnsuringNoPreload();
+  await clearOriginStorageEnsuringNoPreload();
 
   // Make sure mOriginsHavingData gets updated.
-  yield triggerAndWaitForLocalStorageFlush();
+  await triggerAndWaitForLocalStorageFlush();
 
   // - Open tabs.  Don't configure any of them yet.
   const knownTabs = new KnownTabs();
-  const writerTab = yield* openTestTabInOwnProcess("writer", knownTabs);
-  const listenerTab = yield* openTestTabInOwnProcess("listener", knownTabs);
-  const readerTab = yield* openTestTabInOwnProcess("reader", knownTabs);
-  const lateWriteThenListenTab = yield* openTestTabInOwnProcess(
+  const writerTab = await openTestTabInOwnProcess("writer", knownTabs);
+  const listenerTab = await openTestTabInOwnProcess("listener", knownTabs);
+  const readerTab = await openTestTabInOwnProcess("reader", knownTabs);
+  const lateWriteThenListenTab = await openTestTabInOwnProcess(
     "lateWriteThenListen", knownTabs);
 
   // Sanity check that preloading did not occur in the tabs.
-  yield* verifyTabPreload(writerTab, false);
-  yield* verifyTabPreload(listenerTab, false);
-  yield* verifyTabPreload(readerTab, false);
+  await verifyTabPreload(writerTab, false);
+  await verifyTabPreload(listenerTab, false);
+  await verifyTabPreload(readerTab, false);
 
   // - Configure the tabs.
-  yield* recordTabStorageEvents(listenerTab);
+  await recordTabStorageEvents(listenerTab);
 
   // - Issue the initial batch of writes and verify.
   const initialWriteMutations = [
@@ -341,12 +341,12 @@ add_task(function*() {
     alsoStays: "6"
   };
 
-  yield* mutateTabStorage(writerTab, initialWriteMutations);
+  await mutateTabStorage(writerTab, initialWriteMutations);
 
-  yield* verifyTabStorageState(writerTab, initialWriteState);
-  yield* verifyTabStorageEvents(listenerTab, initialWriteMutations);
-  yield* verifyTabStorageState(listenerTab, initialWriteState);
-  yield* verifyTabStorageState(readerTab, initialWriteState);
+  await verifyTabStorageState(writerTab, initialWriteState);
+  await verifyTabStorageEvents(listenerTab, initialWriteMutations);
+  await verifyTabStorageState(listenerTab, initialWriteState);
+  await verifyTabStorageState(readerTab, initialWriteState);
 
   // - Issue second set of writes from lateWriteThenListen
   const lateWriteMutations = [
@@ -361,13 +361,13 @@ add_task(function*() {
     lateClobbered: "lastPost"
   });
 
-  yield* mutateTabStorage(lateWriteThenListenTab, lateWriteMutations);
-  yield* recordTabStorageEvents(lateWriteThenListenTab);
+  await mutateTabStorage(lateWriteThenListenTab, lateWriteMutations);
+  await recordTabStorageEvents(lateWriteThenListenTab);
 
-  yield* verifyTabStorageState(writerTab, lateWriteState);
-  yield* verifyTabStorageEvents(listenerTab, lateWriteMutations);
-  yield* verifyTabStorageState(listenerTab, lateWriteState);
-  yield* verifyTabStorageState(readerTab, lateWriteState);
+  await verifyTabStorageState(writerTab, lateWriteState);
+  await verifyTabStorageEvents(listenerTab, lateWriteMutations);
+  await verifyTabStorageState(listenerTab, lateWriteState);
+  await verifyTabStorageState(readerTab, lateWriteState);
 
   // - Issue last set of writes from writerTab.
   const lastWriteMutations = [
@@ -382,14 +382,14 @@ add_task(function*() {
     lastClobbered: "lastPost"
   });
 
-  yield* mutateTabStorage(writerTab, lastWriteMutations);
+  await mutateTabStorage(writerTab, lastWriteMutations);
 
-  yield* verifyTabStorageState(writerTab, lastWriteState);
-  yield* verifyTabStorageEvents(listenerTab, lastWriteMutations);
-  yield* verifyTabStorageState(listenerTab, lastWriteState);
-  yield* verifyTabStorageState(readerTab, lastWriteState);
-  yield* verifyTabStorageEvents(lateWriteThenListenTab, lastWriteMutations);
-  yield* verifyTabStorageState(lateWriteThenListenTab, lastWriteState);
+  await verifyTabStorageState(writerTab, lastWriteState);
+  await verifyTabStorageEvents(listenerTab, lastWriteMutations);
+  await verifyTabStorageState(listenerTab, lastWriteState);
+  await verifyTabStorageState(readerTab, lastWriteState);
+  await verifyTabStorageEvents(lateWriteThenListenTab, lastWriteMutations);
+  await verifyTabStorageState(lateWriteThenListenTab, lastWriteState);
 
   // - Force a LocalStorage DB flush so mOriginsHavingData is updated.
   // mOriginsHavingData is only updated when the storage thread runs its
@@ -397,15 +397,15 @@ add_task(function*() {
   // that a flush has occurred before moving on to the next step,
   // mOriginsHavingData may not include our origin when it's sent down to the
   // child process.
-  yield triggerAndWaitForLocalStorageFlush();
+  await triggerAndWaitForLocalStorageFlush();
 
   // - Open a fresh tab and make sure it sees the precache/preload
   const lateOpenSeesPreload =
-    yield* openTestTabInOwnProcess("lateOpenSeesPreload", knownTabs);
-  yield* verifyTabPreload(lateOpenSeesPreload, true);
+    await openTestTabInOwnProcess("lateOpenSeesPreload", knownTabs);
+  await verifyTabPreload(lateOpenSeesPreload, true);
 
   // - Clean up.
-  yield* cleanupTabs(knownTabs);
+  await cleanupTabs(knownTabs);
 
   clearOriginStorageEnsuringNoPreload();
 });

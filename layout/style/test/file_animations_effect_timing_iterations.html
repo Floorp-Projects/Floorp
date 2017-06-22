@@ -38,7 +38,7 @@ runOMTATest(function() {
   });
 }, finish, opener.SpecialPowers);
 
-addAsyncAnimTest(function *() {
+addAsyncAnimTest(async function() {
   var [ div ] = new_div("");
   var animation = div.animate(
     [ { transform: 'translate(0px)' },
@@ -46,7 +46,7 @@ addAsyncAnimTest(function *() {
       { duration: 4000,
         iterations: 2
       });
-  yield waitForPaints();
+  await waitForPaints();
 
   advance_clock(6000);
   omta_is(div, "transform", { tx: 50 }, RunningOn.Compositor,
@@ -54,14 +54,14 @@ addAsyncAnimTest(function *() {
   animation.effect.timing.iterations = 1;
   advance_clock(0);
 
-  yield waitForPaints();
+  await waitForPaints();
   omta_is(div, "transform", { tx: 0 }, RunningOn.MainThread,
           "Animation is on MainThread");
 
   animation.effect.timing.iterations = 3;
 
   advance_clock(0);
-  yield waitForPaints();
+  await waitForPaints();
   omta_is(div, "transform", { tx: 50 }, RunningOn.Compositor,
           "Animation is running again on compositor");
 

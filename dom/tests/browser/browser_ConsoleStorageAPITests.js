@@ -9,10 +9,10 @@ function tearDown()
     gBrowser.removeCurrentTab();
 }
 
-add_task(function*()
+add_task(async function()
 {
   // Don't cache removed tabs, so "clear console cache on tab close" triggers.
-  yield SpecialPowers.pushPrefEnv({ set: [[ "browser.tabs.max_tabs_undo", 0 ]] });
+  await SpecialPowers.pushPrefEnv({ set: [[ "browser.tabs.max_tabs_undo", 0 ]] });
 
   registerCleanupFunction(tearDown);
 
@@ -25,7 +25,7 @@ add_task(function*()
   gBrowser.selectedTab = tab;
   var browser = gBrowser.selectedBrowser;
 
-  let observerPromise = ContentTask.spawn(browser, null, function* (opt) {
+  let observerPromise = ContentTask.spawn(browser, null, async function(opt) {
     const TEST_URI = "http://example.com/browser/dom/tests/browser/test-console-api.html";
     let ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
           .getService(Ci.nsIConsoleAPIStorage);
@@ -59,7 +59,7 @@ add_task(function*()
       content.window.location = TEST_URI;
     });
 
-    yield ContentTaskUtils.waitForEvent(this, "DOMContentLoaded");
+    await ContentTaskUtils.waitForEvent(this, "DOMContentLoaded");
 
     content.console.log("this", "is", "a", "log message");
     content.console.info("this", "is", "a", "info message");
@@ -68,9 +68,9 @@ add_task(function*()
     return observerPromise;
   });
 
-  let windowId = yield observerPromise;
+  let windowId = await observerPromise;
 
-  yield ContentTask.spawn(browser, null, function() {
+  await ContentTask.spawn(browser, null, function() {
     // make sure a closed window's events are in fact removed from
     // the storage cache
     content.console.log("adding a new event");
@@ -86,11 +86,11 @@ add_task(function*()
   browser = gBrowser.selectedBrowser;
 
   // Spin the event loop to make sure everything is cleared.
-  yield ContentTask.spawn(browser, null, function () {
+  await ContentTask.spawn(browser, null, function () {
     return Promise.resolve();
   });
 
-  yield ContentTask.spawn(browser, windowId, function(windowId) {
+  await ContentTask.spawn(browser, windowId, function(windowId) {
     var ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
           .getService(Ci.nsIConsoleAPIStorage);
     is(ConsoleAPIStorage.getEvents(windowId).length, 0, "tab close is clearing the cache");

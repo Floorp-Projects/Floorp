@@ -6,18 +6,22 @@
 #if !defined(WebMDecoder_h_)
 #define WebMDecoder_h_
 
-#include "MediaDecoder.h"
+#include "ChannelMediaDecoder.h"
 #include "MediaFormatReader.h"
 
 namespace mozilla {
 
 class MediaContainerType;
 
-class WebMDecoder : public MediaDecoder
+class WebMDecoder : public ChannelMediaDecoder
 {
 public:
-  explicit WebMDecoder(MediaDecoderInit& aInit) : MediaDecoder(aInit) {}
-  MediaDecoder* Clone(MediaDecoderInit& aInit) override {
+  explicit WebMDecoder(MediaDecoderInit& aInit)
+    : ChannelMediaDecoder(aInit)
+  {
+  }
+  ChannelMediaDecoder* Clone(MediaDecoderInit& aInit) override
+  {
     if (!IsWebMEnabled()) {
       return nullptr;
     }

@@ -2,7 +2,7 @@
  * https://bugzilla.mozilla.org/show_bug.cgi?id=503832
  */
 
-add_task(function* () {
+add_task(async function() {
     var pagetitle = "Page Title for Bug 503832";
     var pageurl = "http://mochi.test:8888/browser/docshell/test/browser/file_bug503832.html";
     var fragmenturl = "http://mochi.test:8888/browser/docshell/test/browser/file_bug503832.html#firefox";
@@ -76,12 +76,12 @@ add_task(function* () {
     ok(!info, "The fragment test page must not have been visited already.");
 
     // Now open the test page in a new tab
-    yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageurl);
+    await BrowserTestUtils.openNewForegroundTab(gBrowser, pageurl);
 
     // Now that the page is loaded, click on fragment link
-    yield BrowserTestUtils.synthesizeMouseAtCenter("#firefox-link", {},
+    await BrowserTestUtils.synthesizeMouseAtCenter("#firefox-link", {},
                                                    gBrowser.selectedBrowser);
-    yield fragmentPromise;
+    await fragmentPromise;
 
     gBrowser.removeCurrentTab();
 });

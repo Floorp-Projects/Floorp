@@ -10,8 +10,8 @@
   TRY_ACCESS_SESSION_STORAGE =
     'http://example.com/tests/dom/tests/mochitest/localstorage/file_tryAccessSessionStorage.html';
 
-  add_task(function*() {
-    yield SpecialPowers.pushPrefEnv({
+  add_task(async function() {
+    await SpecialPowers.pushPrefEnv({
       set: [['network.cookie.cookieBehavior', SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT]],
     });
 
@@ -22,7 +22,7 @@
       ok(true, "Shouldn't be avaliable yet");
     }
 
-    yield new Promise(resolve => SpecialPowers.pushPermissions([{
+    await new Promise(resolve => SpecialPowers.pushPermissions([{
       type: 'cookie',
       allow: SpecialPowers.Ci.nsICookiePermission.ACCESS_ALLOW_FIRST_PARTY_ONLY,
       context: document,
@@ -39,7 +39,7 @@
     }
 
     // A third party iframe should not have access however.
-    yield new Promise(resolve => {
+    await new Promise(resolve => {
       window.onmessage = evt => {
         window.onmessage = null;
         is(evt.data, "sessionStorage=false");

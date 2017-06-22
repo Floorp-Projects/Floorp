@@ -7,18 +7,21 @@
 #ifndef ADTS_DECODER_H_
 #define ADTS_DECODER_H_
 
-#include "MediaDecoder.h"
+#include "ChannelMediaDecoder.h"
 
 namespace mozilla {
 
 class MediaContainerType;
 
-class ADTSDecoder : public MediaDecoder
+class ADTSDecoder : public ChannelMediaDecoder
 {
 public:
   // MediaDecoder interface.
-  explicit ADTSDecoder(MediaDecoderInit& aInit) : MediaDecoder(aInit) {}
-  MediaDecoder* Clone(MediaDecoderInit& aInit) override;
+  explicit ADTSDecoder(MediaDecoderInit& aInit)
+    : ChannelMediaDecoder(aInit)
+  {
+  }
+  ChannelMediaDecoder* Clone(MediaDecoderInit& aInit) override;
   MediaDecoderStateMachine* CreateStateMachine() override;
 
   // Returns true if the ADTS backend is pref'ed on, and we're running on a

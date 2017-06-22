@@ -50,7 +50,7 @@ function getKnownHandlerInfo(type) {
  * Checks that the information stored in the handler service instance under
  * testing matches the test data files.
  */
-function* assertAllHandlerInfosMatchTestData() {
+function assertAllHandlerInfosMatchTestData() {
   let handlerInfos = HandlerServiceTestUtils.getAllHandlerInfos();
 
   // It's important that the MIME types we check here do not exist at the
@@ -156,17 +156,17 @@ function* assertAllHandlerInfosMatchTestData() {
  * Loads data from a file in a predefined format, verifying that the format is
  * recognized and all the known properties are loaded and saved.
  */
-add_task(function* test_store_fillHandlerInfo_predefined() {
+add_task(async function test_store_fillHandlerInfo_predefined() {
   // Test that the file format used in previous versions can be loaded.
-  yield copyTestDataToHandlerStore();
-  yield assertAllHandlerInfosMatchTestData();
+  await copyTestDataToHandlerStore();
+  await assertAllHandlerInfosMatchTestData();
 
   // Keep a copy of the nsIHandlerInfo instances, then delete the handler store
   // and populate it with the known data. Since the handler store is empty, the
   // default handlers for the current locale are also injected, so we have to
   // delete them manually before adding the other nsIHandlerInfo instances.
   let testHandlerInfos = HandlerServiceTestUtils.getAllHandlerInfos();
-  yield deleteHandlerStore();
+  await deleteHandlerStore();
   for (let handlerInfo of HandlerServiceTestUtils.getAllHandlerInfos()) {
     gHandlerService.remove(handlerInfo);
   }
@@ -175,20 +175,20 @@ add_task(function* test_store_fillHandlerInfo_predefined() {
   }
 
   // Test that the known data still matches after saving it and reloading.
-  yield unloadHandlerStore();
-  yield assertAllHandlerInfosMatchTestData();
+  await unloadHandlerStore();
+  await assertAllHandlerInfosMatchTestData();
 });
 
 /**
  * Check that "store" is able to add new instances, that "remove" and "exists"
  * work, and that "fillHandlerInfo" throws when the instance does not exist.
  */
-add_task(function* test_store_remove_exists() {
+add_task(async function test_store_remove_exists() {
   // Test both MIME types and protocols.
   for (let type of ["example/type.usehelperapp",
                     "examplescheme.usehelperapp"]) {
     // Create new nsIHandlerInfo instances before loading the test data.
-    yield deleteHandlerStore();
+    await deleteHandlerStore();
     let handlerInfoPresent = HandlerServiceTestUtils.getHandlerInfo(type);
     let handlerInfoAbsent = HandlerServiceTestUtils.getHandlerInfo(type + "2");
 
@@ -196,7 +196,7 @@ add_task(function* test_store_remove_exists() {
     handlerInfoAbsent.preferredAction = Ci.nsIHandlerInfo.saveToDisk;
     handlerInfoAbsent.alwaysAskBeforeHandling = false;
 
-    yield copyTestDataToHandlerStore();
+    await copyTestDataToHandlerStore();
 
     do_check_true(gHandlerService.exists(handlerInfoPresent));
     do_check_false(gHandlerService.exists(handlerInfoAbsent));
@@ -204,7 +204,7 @@ add_task(function* test_store_remove_exists() {
     gHandlerService.store(handlerInfoAbsent);
     gHandlerService.remove(handlerInfoPresent);
 
-    yield unloadHandlerStore();
+    await unloadHandlerStore();
 
     do_check_false(gHandlerService.exists(handlerInfoPresent));
     do_check_true(gHandlerService.exists(handlerInfoAbsent));
@@ -227,8 +227,8 @@ add_task(function* test_store_remove_exists() {
  * "preferredAction" that is alwaysAsk or has an unknown value, but the
  * action always becomes useHelperApp when reloading.
  */
-add_task(function* test_store_preferredAction() {
-  yield deleteHandlerStore();
+add_task(async function test_store_preferredAction() {
+  await deleteHandlerStore();
 
   let handlerInfo = getKnownHandlerInfo("example/new");
 
@@ -245,7 +245,7 @@ add_task(function* test_store_preferredAction() {
  * nsILocalHandlerApp instance pointing to an executable that doesn't exist, but
  * this entry is ignored when reloading.
  */
-add_task(function* test_store_localHandlerApp_missing() {
+add_task(async function test_store_localHandlerApp_missing() {
   if (!("@mozilla.org/uriloader/dbus-handler-app;1" in Cc)) {
     do_print("Skipping test because it does not apply to this platform.");
     return;
@@ -256,7 +256,7 @@ add_task(function* test_store_localHandlerApp_missing() {
   missingHandlerApp.name = "Non-existing Handler";
   missingHandlerApp.executable = FileUtils.getFile("TmpD", ["nonexisting"]);
 
-  yield deleteHandlerStore();
+  await deleteHandlerStore();
 
   let handlerInfo = getKnownHandlerInfo("example/new");
   handlerInfo.preferredApplicationHandler = missingHandlerApp;
@@ -264,7 +264,7 @@ add_task(function* test_store_localHandlerApp_missing() {
   handlerInfo.possibleApplicationHandlers.appendElement(webHandlerApp);
   gHandlerService.store(handlerInfo);
 
-  yield unloadHandlerStore();
+  await unloadHandlerStore();
 
   let actualHandlerInfo = HandlerServiceTestUtils.getHandlerInfo("example/new");
   HandlerServiceTestUtils.assertHandlerInfoMatches(actualHandlerInfo, {
@@ -278,7 +278,7 @@ add_task(function* test_store_localHandlerApp_missing() {
 /**
  * Test saving and reloading an instance of nsIDBusHandlerApp.
  */
-add_task(function* test_store_dBusHandlerApp() {
+add_task(async function test_store_dBusHandlerApp() {
   if (!("@mozilla.org/uriloader/dbus-handler-app;1" in Cc)) {
     do_print("Skipping test because it does not apply to this platform.");
     return;
@@ -300,14 +300,14 @@ add_task(function* test_store_dBusHandlerApp() {
     objectPath: dBusHandlerApp.objectPath,
   };
 
-  yield deleteHandlerStore();
+  await deleteHandlerStore();
 
   let handlerInfo = getKnownHandlerInfo("example/new");
   handlerInfo.preferredApplicationHandler = dBusHandlerApp;
   handlerInfo.possibleApplicationHandlers.appendElement(dBusHandlerApp);
   gHandlerService.store(handlerInfo);
 
-  yield unloadHandlerStore();
+  await unloadHandlerStore();
 
   let actualHandlerInfo = HandlerServiceTestUtils.getHandlerInfo("example/new");
   HandlerServiceTestUtils.assertHandlerInfoMatches(actualHandlerInfo, {
@@ -324,14 +324,14 @@ add_task(function* test_store_dBusHandlerApp() {
  * "preferredApplicationHandler" and no "possibleApplicationHandlers", but the
  * former is always included in the latter list when reloading.
  */
-add_task(function* test_store_possibleApplicationHandlers_includes_preferred() {
-  yield deleteHandlerStore();
+add_task(async function test_store_possibleApplicationHandlers_includes_preferred() {
+  await deleteHandlerStore();
 
   let handlerInfo = getKnownHandlerInfo("example/new");
   handlerInfo.preferredApplicationHandler = localHandlerApp;
   gHandlerService.store(handlerInfo);
 
-  yield unloadHandlerStore();
+  await unloadHandlerStore();
 
   let actualHandlerInfo = HandlerServiceTestUtils.getHandlerInfo("example/new");
   HandlerServiceTestUtils.assertHandlerInfoMatches(actualHandlerInfo, {
@@ -349,8 +349,8 @@ add_task(function* test_store_possibleApplicationHandlers_includes_preferred() {
  * "possibleApplicationHandlers", but the former is always included as the first
  * element of the latter list when reloading.
  */
-add_task(function* test_store_possibleApplicationHandlers_preferred_first() {
-  yield deleteHandlerStore();
+add_task(async function test_store_possibleApplicationHandlers_preferred_first() {
+  await deleteHandlerStore();
 
   let handlerInfo = getKnownHandlerInfo("example/new");
   handlerInfo.preferredApplicationHandler = webHandlerApp;
@@ -359,7 +359,7 @@ add_task(function* test_store_possibleApplicationHandlers_preferred_first() {
   handlerInfo.possibleApplicationHandlers.appendElement(webHandlerApp);
   gHandlerService.store(handlerInfo);
 
-  yield unloadHandlerStore();
+  await unloadHandlerStore();
 
   let actualHandlerInfo = HandlerServiceTestUtils.getHandlerInfo("example/new");
   HandlerServiceTestUtils.assertHandlerInfoMatches(actualHandlerInfo, {
@@ -378,15 +378,15 @@ add_task(function* test_store_possibleApplicationHandlers_preferred_first() {
  * Tests that it is possible to save an nsIHandlerInfo instance with an
  * uppercase file extension, but it is converted to lowercase when reloading.
  */
-add_task(function* test_store_fileExtensions_lowercase() {
-  yield deleteHandlerStore();
+add_task(async function test_store_fileExtensions_lowercase() {
+  await deleteHandlerStore();
 
   let handlerInfo = getKnownHandlerInfo("example/new");
   handlerInfo.appendExtension("extension_test1");
   handlerInfo.appendExtension("EXTENSION_test2");
   gHandlerService.store(handlerInfo);
 
-  yield unloadHandlerStore();
+  await unloadHandlerStore();
 
   let actualHandlerInfo = HandlerServiceTestUtils.getHandlerInfo("example/new");
   HandlerServiceTestUtils.assertHandlerInfoMatches(actualHandlerInfo, {
@@ -404,8 +404,8 @@ add_task(function* test_store_fileExtensions_lowercase() {
  * Tests that duplicates added with "appendExtension" or present in
  * "possibleApplicationHandlers" are removed when saving and reloading.
  */
-add_task(function* test_store_no_duplicates() {
-  yield deleteHandlerStore();
+add_task(async function test_store_no_duplicates() {
+  await deleteHandlerStore();
 
   let handlerInfo = getKnownHandlerInfo("example/new");
   handlerInfo.preferredApplicationHandler = webHandlerApp;
@@ -419,7 +419,7 @@ add_task(function* test_store_no_duplicates() {
   handlerInfo.appendExtension("EXTENSION_test1");
   gHandlerService.store(handlerInfo);
 
-  yield unloadHandlerStore();
+  await unloadHandlerStore();
 
   let actualHandlerInfo = HandlerServiceTestUtils.getHandlerInfo("example/new");
   HandlerServiceTestUtils.assertHandlerInfoMatches(actualHandlerInfo, {
@@ -444,8 +444,8 @@ add_task(function* test_store_no_duplicates() {
  *
  * File extensions are never deleted once they have been associated.
  */
-add_task(function* test_store_deletes_properties_except_extensions() {
-  yield deleteHandlerStore();
+add_task(async function test_store_deletes_properties_except_extensions() {
+  await deleteHandlerStore();
 
   // Prepare an nsIHandlerInfo instance with all the properties set to values
   // that will result in deletions. The preferredAction is also set to a defined
@@ -457,11 +457,11 @@ add_task(function* test_store_deletes_properties_except_extensions() {
 
   // All the properties for "example/type.savetodisk" are present in the test
   // data, so we load the data before overwriting their values.
-  yield copyTestDataToHandlerStore();
+  await copyTestDataToHandlerStore();
   gHandlerService.store(handlerInfo);
 
   // Now we can reload the data and verify that no extra values have been kept.
-  yield unloadHandlerStore();
+  await unloadHandlerStore();
   let actualHandlerInfo =
       HandlerServiceTestUtils.getHandlerInfo("example/type.savetodisk");
   HandlerServiceTestUtils.assertHandlerInfoMatches(actualHandlerInfo, {
@@ -478,17 +478,17 @@ add_task(function* test_store_deletes_properties_except_extensions() {
 /**
  * Tests the "overrideType" argument of "fillHandlerInfo".
  */
-add_task(function* test_fillHandlerInfo_overrideType() {
+add_task(async function test_fillHandlerInfo_overrideType() {
   // Test both MIME types and protocols.
   for (let type of ["example/type.usesystemdefault",
                     "examplescheme.usesystemdefault"]) {
-    yield deleteHandlerStore();
+    await deleteHandlerStore();
 
     // Create new nsIHandlerInfo instances before loading the test data.
     let handlerInfoAbsent = HandlerServiceTestUtils.getHandlerInfo(type + "2");
 
     // Fill the nsIHandlerInfo instance using the type that actually exists.
-    yield copyTestDataToHandlerStore();
+    await copyTestDataToHandlerStore();
     gHandlerService.fillHandlerInfo(handlerInfoAbsent, type);
     HandlerServiceTestUtils.assertHandlerInfoMatches(handlerInfoAbsent, {
       // While the data is populated from another type, the type is unchanged.
@@ -506,8 +506,8 @@ add_task(function* test_fillHandlerInfo_overrideType() {
 /**
  * Tests "getTypeFromExtension" including unknown extensions.
  */
-add_task(function* test_getTypeFromExtension() {
-  yield copyTestDataToHandlerStore();
+add_task(async function test_getTypeFromExtension() {
+  await copyTestDataToHandlerStore();
 
   do_check_eq(gHandlerService.getTypeFromExtension(""), "");
   do_check_eq(gHandlerService.getTypeFromExtension("example_unknown"), "");
@@ -521,7 +521,7 @@ add_task(function* test_getTypeFromExtension() {
  * Checks that the information stored in the handler service instance under
  * testing matches the default handlers for the English locale.
  */
-function* assertAllHandlerInfosMatchDefaultHandlers() {
+function assertAllHandlerInfosMatchDefaultHandlers() {
   let handlerInfos = HandlerServiceTestUtils.getAllHandlerInfos();
 
   for (let type of ["irc", "ircs"]) {
@@ -562,30 +562,30 @@ function* assertAllHandlerInfosMatchDefaultHandlers() {
 /**
  * Tests the default protocol handlers imported from the locale-specific data.
  */
-add_task(function* test_default_protocol_handlers() {
+add_task(async function test_default_protocol_handlers() {
   if (!Services.prefs.getPrefType("gecko.handlerService.defaultHandlersVersion")) {
     do_print("This platform or locale does not have default handlers.");
     return;
   }
 
   // This will inject the default protocol handlers for the current locale.
-  yield deleteHandlerStore();
+  await deleteHandlerStore();
 
-  yield assertAllHandlerInfosMatchDefaultHandlers();
+  await assertAllHandlerInfosMatchDefaultHandlers();
 });
 
 /**
  * Tests that the default protocol handlers are not imported again from the
  * locale-specific data if they already exist.
  */
-add_task(function* test_default_protocol_handlers_no_duplicates() {
+add_task(async function test_default_protocol_handlers_no_duplicates() {
   if (!Services.prefs.getPrefType("gecko.handlerService.defaultHandlersVersion")) {
     do_print("This platform or locale does not have default handlers.");
     return;
   }
 
   // This will inject the default protocol handlers for the current locale.
-  yield deleteHandlerStore();
+  await deleteHandlerStore();
 
   // Remove the "irc" handler so we can verify that the injection is repeated.
   let ircHandlerInfo = HandlerServiceTestUtils.getHandlerInfo("irc");
@@ -598,13 +598,13 @@ add_task(function* test_default_protocol_handlers_no_duplicates() {
   Services.prefs.setStringPref("gecko.handlerService.defaultHandlersVersion",
                                "999");
 
-  yield unloadHandlerStore();
+  await unloadHandlerStore();
 
   // Check that "irc" exists to make sure that the injection was repeated.
   do_check_true(gHandlerService.exists(ircHandlerInfo));
 
   // There should be no duplicate handlers in the protocols.
-  yield assertAllHandlerInfosMatchDefaultHandlers();
+  await assertAllHandlerInfosMatchDefaultHandlers();
 
   Services.prefs.setStringPref("gecko.handlerService.defaultHandlersVersion",
                                originalDefaultHandlersVersion);

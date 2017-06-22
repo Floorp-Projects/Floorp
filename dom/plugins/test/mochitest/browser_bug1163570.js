@@ -31,22 +31,22 @@ function promiseWaitForEvent(object, eventName, capturing = false, chrome = fals
   });
 }
 
-add_task(function* () {
+add_task(async function() {
   registerCleanupFunction(function () {
     window.focus();
   });
 });
 
-add_task(function* () {
+add_task(async function() {
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
 
   let pluginTab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   let prefTab = BrowserTestUtils.addTab(gBrowser);
 
-  yield promiseTabLoad(pluginTab, gTestRoot + "plugin_test.html");
-  yield promiseTabLoad(prefTab, "about:preferences");
+  await promiseTabLoad(pluginTab, gTestRoot + "plugin_test.html");
+  await promiseTabLoad(prefTab, "about:preferences");
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     Assert.ok(!!plugin, "plugin is loaded");
@@ -54,7 +54,7 @@ add_task(function* () {
 
   let ppromise = promiseWaitForEvent(window, "MozAfterPaint");
   gBrowser.selectedTab = prefTab;
-  yield ppromise;
+  await ppromise;
 
   // We're going to switch tabs using actual mouse clicks, which helps
   // reproduce this bug.
@@ -70,9 +70,9 @@ add_task(function* () {
   for (let iteration = 0; iteration < 5; iteration++) {
     ppromise = promiseWaitForEvent(window, "MozAfterPaint");
     EventUtils.synthesizeMouseAtCenter(tabStripContainer.childNodes[1], {}, window);
-    yield ppromise;
+    await ppromise;
 
-    yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+    await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       Assert.ok(XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible(),
@@ -81,9 +81,9 @@ add_task(function* () {
 
     ppromise = promiseWaitForEvent(window, "MozAfterPaint");
     EventUtils.synthesizeMouseAtCenter(tabStripContainer.childNodes[2], {}, window);
-    yield ppromise;
+    await ppromise;
 
-    yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+    await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       Assert.ok(!XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible(),

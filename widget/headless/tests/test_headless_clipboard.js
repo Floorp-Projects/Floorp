@@ -31,7 +31,7 @@ function getString(clipboard) {
   return str;
 }
 
-add_task(function* test_clipboard() {
+add_task(async function test_clipboard() {
   let clipboard = Cc['@mozilla.org/widget/clipboard;1']
                   .getService(Ci.nsIClipboard);
 

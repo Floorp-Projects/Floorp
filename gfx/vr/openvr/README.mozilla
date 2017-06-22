@@ -37,8 +37,11 @@ Steps to update the library:
 - Update "gfx/vr/openvr/moz.build" when files are added or removed.
 
 - Update the "strtools_public.h" and "strtools_public.cpp" files, commenting out
-  the "Uint64ToString" function. This function name conflicts with another used
-  in Gecko. Fortunately, the OpenVR SDK does not use this function either.
+  the "Uint64ToString", "wcsncpy_s", and "strncpy_s" functions.
+  The "Uint64ToString" function name conflicts with another used in Gecko and
+  the "errno_t" return type returned by the other functions is not defined in
+  Mozilla's macOS continuous integration build environments.  Fortunately, the
+  OpenVR SDK does not use these functions.
 
 - Replace the #define VR_INTERFACE in openvr.h to avoid extern'ing the functions.
   Unlike the usual OpenVR API builds, we are not building a separate dll.

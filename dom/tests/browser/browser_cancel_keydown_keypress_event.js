@@ -14,12 +14,12 @@ function awaitAndCloseAlertDialog() {
   });
 }
 
-add_task(function* () {
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
+add_task(async function() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
 
   // Focus and enter random text on input.
-  yield ContentTask.spawn(browser, null, function* () {
+  await ContentTask.spawn(browser, null, async function() {
     let input = content.document.getElementById("input");
     input.focus();
     input.value = "abcd";
@@ -28,10 +28,10 @@ add_task(function* () {
   // Send return key (cross process) to submit the form implicitly.
   let dialogShown = awaitAndCloseAlertDialog();
   EventUtils.synthesizeKey("VK_RETURN", {});
-  yield dialogShown;
+  await dialogShown;
 
   // Check that the form should not have been submitted.
-  yield ContentTask.spawn(browser, null, function* () {
+  await ContentTask.spawn(browser, null, async function() {
     let result = content.document.getElementById("result").innerHTML;
     info("submit result: " + result);
     is(result, "not submitted", "form should not have submitted");

@@ -18,7 +18,7 @@ var expected_telemetry = {
 };
 
 //jscs:disable
-add_task(function*() {
+add_task(async function() {
   //jscs:enable
   Observer.add_observers(Services);
   registerCleanupFunction(do_cleanup);
@@ -28,12 +28,12 @@ add_task(function*() {
   SetupPrefTestEnvironment(which, [["security.mixed_content.hsts_priming_cache_timeout", 1]]);
   clear_hists(expected_telemetry);
 
-  yield execute_test("no-ssl", test_settings[which].mimetype);
+  await execute_test("no-ssl", test_settings[which].mimetype);
 
   let pre_promise = performance.now();
 
   while ((performance.now() - pre_promise) < 1000) {
-    yield new Promise(function (resolve) {
+    await new Promise(function (resolve) {
       setTimeout(resolve, 1000);
     });
   }
@@ -41,7 +41,7 @@ add_task(function*() {
   // clear the fact that we saw a priming request
   test_settings[which].priming = {};
 
-  yield execute_test("no-ssl", test_settings[which].mimetype);
+  await execute_test("no-ssl", test_settings[which].mimetype);
   is(test_settings[which].priming["no-ssl"], true,
     "Correctly send a priming request after expiration.");
 

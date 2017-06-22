@@ -31,7 +31,7 @@
  * worried that the close will happen and then the statement will magically
  * complete.
  */
-add_task(function* test_asyncClose_does_not_complete_before_statements() {
+add_task(async function test_asyncClose_does_not_complete_before_statements() {
   let db = getService().openDatabase(getTestDB());
   let stmt = db.createStatement("SELECT * FROM sqlite_master");
   // Issue the executeAsync but don't yield for it...
@@ -40,8 +40,8 @@ add_task(function* test_asyncClose_does_not_complete_before_statements() {
 
   // Issue the close.  (And now the order of yielding doesn't matter.)
   // Branch coverage: (asyncThread && mDBConn)
-  yield asyncClose(db);
-  equal((yield asyncStatementPromise),
+  await asyncClose(db);
+  equal((await asyncStatementPromise),
         Ci.mozIStorageStatementCallback.REASON_FINISHED);
 });
 
@@ -54,13 +54,13 @@ add_task(function* test_asyncClose_does_not_complete_before_statements() {
  * notice the mDBConn is already gone.
  */
 if (!AppConstants.DEBUG) {
-  add_task(function* test_double_asyncClose_throws() {
-    let db = yield openAsyncDatabase(getTestDB());
+  add_task(async function test_double_asyncClose_throws() {
+    let db = await openAsyncDatabase(getTestDB());
 
     // (Don't yield control flow yet, save the promise for after we make the
     // second call.)
     // Branch coverage: (asyncThread && mDBConn)
-    let realClosePromise = yield asyncClose(db);
+    let realClosePromise = await asyncClose(db);
     try {
       // Branch coverage: (!asyncThread && !mDBConn)
       db.asyncClose();
@@ -69,7 +69,7 @@ if (!AppConstants.DEBUG) {
       equal(e.result, Cr.NS_ERROR_NOT_INITIALIZED);
     }
 
-    yield realClosePromise;
+    await realClosePromise;
   });
 }
 
@@ -80,11 +80,11 @@ if (!AppConstants.DEBUG) {
  * tell the difference between this happening and the method secretly shunting
  * to close().
  */
-add_task(function* test_asyncClose_on_sync_db() {
+add_task(async function test_asyncClose_on_sync_db() {
   let db = getService().openDatabase(getTestDB());
 
   // Branch coverage: (!asyncThread && mDBConn)
-  yield asyncClose(db);
+  await asyncClose(db);
   ok(true, "closed sync connection asynchronously");
 });
 
@@ -96,10 +96,10 @@ add_task(function* test_asyncClose_on_sync_db() {
  * provided with a reference to the connection and so cannot call AsyncClose on
  * it ourselves.
  */
-add_task(function* test_asyncClose_failed_open() {
+add_task(async function test_asyncClose_failed_open() {
   // This will fail and the promise will be rejected.
   let openPromise = openAsyncDatabase(getFakeDB());
-  yield openPromise.then(
+  await openPromise.then(
     () => {
       ok(false, "we should have failed to open the db; this test is broken!");
     },
@@ -117,8 +117,8 @@ add_task(function* test_asyncClose_failed_open() {
  * callback the shutdown is not actually observable, so we run this test last
  * in order to avoid weird overlaps.
  */
-add_task(function* test_asyncClose_does_not_throw_without_callback() {
-  let db = yield openAsyncDatabase(getTestDB());
+add_task(async function test_asyncClose_does_not_throw_without_callback() {
+  let db = await openAsyncDatabase(getTestDB());
   // Branch coverage: (asyncThread && mDBConn)
   db.asyncClose();
   ok(true, "if we shutdown cleanly and do not crash, then we succeeded");

@@ -4342,6 +4342,14 @@ nsDOMWindowUtils::GetDirectionFromText(const nsAString& aString, int32_t* aRetva
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::GetIsStyledByServo(bool* aStyledByServo)
+{
+  nsIDocument* doc = GetDocument();
+  *aStyledByServo = doc && doc->IsStyledByServo();
+  return NS_OK;
+}
+
 NS_INTERFACE_MAP_BEGIN(nsTranslationNodeList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsITranslationNodeList)

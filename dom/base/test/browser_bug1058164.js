@@ -57,23 +57,23 @@ function prepareForVisibilityEvents(browser, expectedOrder) {
  * swapping browser frameloaders (which occurs when moving a tab
  * into a different window).
  */
-add_task(function* test_swap_frameloader_pagevisibility_events() {
+add_task(async function test_swap_frameloader_pagevisibility_events() {
   // Load a new tab that we'll tear out...
   let tab = BrowserTestUtils.addTab(gBrowser, PAGE);
   gBrowser.selectedTab = tab;
   let firstBrowser = tab.linkedBrowser;
-  yield BrowserTestUtils.browserLoaded(firstBrowser);
+  await BrowserTestUtils.browserLoaded(firstBrowser);
 
   // Swap the browser out to a new window
   let newWindow = gBrowser.replaceTabWithWindow(tab);
 
   // We have to wait for the window to load so we can get the selected browser
   // to listen to.
-  yield BrowserTestUtils.waitForEvent(newWindow, "load");
+  await BrowserTestUtils.waitForEvent(newWindow, "load");
   let newWindowBrowser = newWindow.gBrowser.selectedBrowser;
 
   // Wait for the expected pagehide and pageshow events on the initial browser
-  yield prepareForVisibilityEvents(newWindowBrowser, ["pagehide", "pageshow"]);
+  await prepareForVisibilityEvents(newWindowBrowser, ["pagehide", "pageshow"]);
 
   // Now let's send the browser back to the original window
 
@@ -89,7 +89,7 @@ add_task(function* test_swap_frameloader_pagevisibility_events() {
   // find a way of sending down a frame script to the newly opened windows
   // and tabs fast enough to attach the event handlers before they were
   // fired.
-  yield new Promise((resolve) => {
+  await new Promise((resolve) => {
     emptyBrowser.addEventListener("pageshow", function() {
       resolve();
     }, {once: true});
@@ -102,7 +102,7 @@ add_task(function* test_swap_frameloader_pagevisibility_events() {
 
   gBrowser.swapBrowsersAndCloseOther(newTab, newWindow.gBrowser.selectedTab);
 
-  yield emptyBrowserPromise;
+  await emptyBrowserPromise;
 
   gBrowser.removeTab(gBrowser.selectedTab);
 });

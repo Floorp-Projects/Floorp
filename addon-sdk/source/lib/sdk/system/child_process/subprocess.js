@@ -8,7 +8,6 @@ const { Ci, Cu } = require("chrome");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Subprocess.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 const Runtime = require("sdk/system/runtime");
 const Environment = require("sdk/system/environment").env;
@@ -35,11 +34,11 @@ function awaitPromise(promise) {
   throw value;
 }
 
-let readAllData = Task.async(function* (pipe, read, callback) {
+let readAllData = async function(pipe, read, callback) {
   let string;
-  while (string = yield read(pipe))
+  while (string = await read(pipe))
     callback(string);
-});
+};
 
 let write = (pipe, data) => {
   let buffer = new Uint8Array(Array.from(data, c => c.charCodeAt(0)));
@@ -50,7 +49,7 @@ var subprocess = {
   call: function(options) {
     var result;
 
-    let procPromise = Task.spawn(function*() {
+    let procPromise = (async function() {
       let opts = {};
 
       if (options.mergeStderr) {
@@ -62,7 +61,7 @@ var subprocess = {
       if (options.command instanceof Ci.nsIFile) {
         opts.command = options.command.path;
       } else {
-        opts.command = yield Subprocess.pathSearch(options.command);
+        opts.command = await Subprocess.pathSearch(options.command);
       }
 
       if (options.workdir) {
@@ -87,7 +86,7 @@ var subprocess = {
       }
 
 
-      let proc = yield Subprocess.call(opts);
+      let proc = await Subprocess.call(opts);
 
       Object.defineProperty(result, "pid", {
         value: proc.pid,
@@ -131,7 +130,7 @@ var subprocess = {
           .then(options.done);
 
       return proc;
-    });
+    })();
 
     procPromise.catch(e => {
       if (options.done)

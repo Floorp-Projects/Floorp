@@ -1,7 +1,7 @@
 <html>
 <meta charset='utf-8'>
 <script language="JavaScript" type="text/javascript" src="../scripts/MozillaFileLogger.js"></script>
-<script language="JavaScript" type="text/javascript" src="../scripts/Profiler.js"></script>
+<script language="JavaScript" src="chrome://talos-powers-content/content/TalosContentProfiler.js"></script>
 <script language="JavaScript" type="text/javascript" src="chrome://talos-powers-content/content/TalosPowersContent.js"></script>
 <script language="JavaScript" type="text/javascript" src="../tests/quit.js"></script>
 <script>
@@ -20,13 +20,13 @@ var auto = document.location.search.split('=')[1]; // ?auto=1
  *     3) set browser.link.open_newwindow = 2 (else it opens in a tab)
  */
 
-function startTest() {
+async function startTest() {
   // Initialize
   windowIndex = -1;
   openTimes = [];
 
-  Profiler.initFromURLQueryParams(location.search);
-  Profiler.beginTest("tpaint");
+  TalosContentProfiler.initFromURLQueryParams(location.search);
+  await TalosContentProfiler.beginTest("tpaint");
   scheduleNextWindow();
 }
 
@@ -52,8 +52,8 @@ function calcMedian( numbers ) {
   return ( sortedNumbers[n-1] + sortedNumbers[n] ) / 2;
 }
 
-function reportTimes() {
-  Profiler.finishTest();
+async function reportTimes() {
+  await TalosContentProfiler.finishTest();
 
   var min = 99999, max = 0, avg = 0;
   var count = openTimes.length;
@@ -90,9 +90,9 @@ function reportTimes() {
   }
 }
 
-function childIsOpen() {
+async function childIsOpen() {
   kidEndTime = window.performance.now();
-  Profiler.pause('tpaint ' + windowIndex);
+  await TalosContentProfiler.pause('tpaint ' + windowIndex);
   openTimes[windowIndex] = kidEndTime - kidStartTime;
   scheduleNextWindow();
 }
@@ -108,8 +108,8 @@ var kidHTML = "<html><meta charset='utf-8'><script>" +
               "</" + "script>TPAINT</html>";
 var kidURI = "data:text/html," + encodeURI(kidHTML);
 
-function openWindow() {
-  Profiler.resume('tpaint ' + windowIndex);
+async function openWindow() {
+  await TalosContentProfiler.resume('tpaint ' + windowIndex);
   kidStartTime = window.performance.now();
   kid = window.open(kidURI);
 }

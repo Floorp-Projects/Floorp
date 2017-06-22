@@ -1,6 +1,6 @@
-add_task(function* test() {
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function* (newBrowser) {
-    yield ContentTask.spawn(newBrowser, null, function* () {
+add_task(async function test() {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, async function(newBrowser) {
+    await ContentTask.spawn(newBrowser, null, async function() {
       var prin = content.document.nodePrincipal;
       Assert.notEqual(prin, null, "Loaded principal must not be null");
       Assert.notEqual(prin, undefined, "Loaded principal must not be undefined");
