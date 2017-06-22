@@ -825,6 +825,14 @@ bin/libfreebl_32int64_3.so
 @RESPATH@/components/SanityTest.js
 #endif
 
-#ifdef MOZ_MULET
-#include ../../b2g/installer/package-manifest.in
+#ifdef MOZ_DMD
+; DMD
+@RESPATH@/dmd.py
+@RESPATH@/fix_stack_using_bpsyms.py
+#ifdef XP_MACOSX
+@RESPATH@/fix_macosx_stack.py
+#endif
+#ifdef XP_LINUX
+@RESPATH@/fix_linux_stack.py
+#endif
 #endif
