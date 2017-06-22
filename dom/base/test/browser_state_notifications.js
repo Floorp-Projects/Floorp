@@ -12,7 +12,7 @@ const { openWindow } = Cc["@mozilla.org/embedcomp/window-watcher;1"].
 
 const Test = routine => () => {
   waitForExplicitFinish();
-  (routine)()
+  routine()
       .then(finish, error => {
         ok(false, error);
         finish();
