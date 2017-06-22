@@ -206,11 +206,15 @@ var Settings = {
     {
       pref: PREF_FHR_UPLOAD_ENABLED,
       defaultPrefValue: false,
+      descriptionEnabledId: "description-upload-enabled",
+      descriptionDisabledId: "description-upload-disabled",
     },
     // extended "Telemetry" recording
     {
       pref: PREF_TELEMETRY_ENABLED,
       defaultPrefValue: false,
+      descriptionEnabledId: "description-extended-recording-enabled",
+      descriptionDisabledId: "description-extended-recording-disabled",
     },
   ],
 
@@ -250,23 +254,22 @@ var Settings = {
     }
   },
 
-  getStatusStringForSetting(setting) {
-    let enabled = Preferences.get(setting.pref, setting.defaultPrefValue);
-    let status = bundle.GetStringFromName(enabled ? "enabled" : "disabled");
-    return status;
-  },
-
   /**
    * Updates the button & text at the top of the page to reflect Telemetry state.
    */
   render() {
-    let homeExplanation = document.getElementById("home-explanation");
-    let fhrEnabled = this.getStatusStringForSetting(this.SETTINGS[0]);
-    let extendedEnabled = this.getStatusStringForSetting(this.SETTINGS[1]);
+    for (let setting of this.SETTINGS) {
+      let enabledElement = document.getElementById(setting.descriptionEnabledId);
+      let disabledElement = document.getElementById(setting.descriptionDisabledId);
 
-    let explanation = bundle.formatStringFromName("homeExplanation", [fhrEnabled, extendedEnabled], 2);
-    homeExplanation.innerHTML = explanation;
-    this.attachObservers()
+      if (Preferences.get(setting.pref, setting.defaultPrefValue)) {
+        enabledElement.hidden = false;
+        disabledElement.hidden = true;
+      } else {
+        enabledElement.hidden = true;
+        disabledElement.hidden = false;
+      }
+    }
   }
 };
 
@@ -323,15 +326,6 @@ var PingPicker = {
     this.update();
   },
 
-  render() {
-    let pingExplanation = document.getElementById("ping-explanation");
-    let pingName = this._getSelectedPingName()
-
-    let explanation = bundle.formatStringFromName("pingExplanation", [pingName], 1);
-    pingExplanation.innerHTML = explanation;
-    this.attachObservers();
-  },
-
   async update() {
     let viewCurrent = document.getElementById("ping-source-current").checked;
     let currentChanged = viewCurrent !== this.viewCurrentPingData;
@@ -354,7 +348,6 @@ var PingPicker = {
         document.getElementById("archived-ping-picker").hidden = false;
       }
     }
-    this.render();
   },
 
   _updateCurrentPingData() {
@@ -458,14 +451,6 @@ var PingPicker = {
     }
   },
 
-  _getSelectedPingName() {
-    if (this.viewCurrentPingData) return "current";
-
-    let pingSelector = document.getElementById("choose-ping-id");
-    let selected = pingSelector.selectedOptions.item(0);
-    return selected.textContent;
-  },
-
   _getSelectedPingId() {
     let pingSelector = document.getElementById("choose-ping-id");
     let selected = pingSelector.selectedOptions.item(0);
@@ -536,7 +521,7 @@ var EnvironmentData = {
     let ignore = ["addons"];
     let env = filterObject(ping.environment, ignore);
     let sections = sectionalizeObject(env);
-    GenericSubsection.render(sections, dataDiv, "environment-data-section");
+    GenericSubsection.render(sections, dataDiv);
 
     // We use specialized rendering here to make the addon and plugin listings
     // more readable.
@@ -625,7 +610,7 @@ var EnvironmentData = {
     this.renderPersona(addons, addonSection, "persona");
 
     let hasAddonData = Object.keys(ping.environment.addons).length > 0;
-    let s = GenericSubsection.renderSubsectionHeader("addons", hasAddonData, "environment-data-section");
+    let s = GenericSubsection.renderSubsectionHeader("addons", hasAddonData);
     s.appendChild(addonSection);
     dataDiv.appendChild(s);
   },
@@ -1380,30 +1365,46 @@ function RenderObject(aObject) {
 
 var GenericSubsection = {
 
-  addSubSectionToSidebar(id, title) {
-    let category = document.querySelector("#categories > [value=" + id + "]");
-    let subCategory = document.createElement("div");
-    subCategory.setAttribute("class", "subsection");
-    subCategory.appendChild(document.createTextNode(title))
-    category.appendChild(subCategory);
-  },
-
-  render(data, dataDiv, sectionID) {
+  render(data, dataDiv) {
     for (let [title, sectionData] of data) {
       let hasData = sectionData.size > 0;
-      let s = this.renderSubsectionHeader(title, hasData, sectionID);
+      let s = this.renderSubsectionHeader(title, hasData);
       s.appendChild(this.renderSubsectionData(sectionData));
       dataDiv.appendChild(s);
     }
   },
 
-  renderSubsectionHeader(title, hasData, sectionID) {
-    this.addSubSectionToSidebar(sectionID, title);
+  renderSubsectionHeader(title, hasData) {
     let section = document.createElement("section");
     section.classList.add("data-subsection");
     if (hasData) {
       section.classList.add("has-subdata");
     }
+
+    // Create section heading
+    let sectionName = document.createElement("h2");
+    sectionName.setAttribute("class", "section-name");
+    sectionName.appendChild(document.createTextNode(title));
+    sectionName.addEventListener("click", toggleSection);
+
+    // Create caption for toggling the subsection visibility.
+    let toggleCaption = document.createElement("span");
+    toggleCaption.setAttribute("class", "toggle-caption");
+    let toggleText = bundle.GetStringFromName("environmentDataSubsectionToggle");
+    toggleCaption.appendChild(document.createTextNode(" " + toggleText));
+    toggleCaption.addEventListener("click", toggleSection);
+
+    // Create caption for empty subsections.
+    let emptyCaption = document.createElement("span");
+    emptyCaption.setAttribute("class", "empty-caption");
+    let emptyText = bundle.GetStringFromName("environmentDataSubsectionEmpty");
+    emptyCaption.appendChild(document.createTextNode(" " + emptyText));
+
+    // Append elements
+    section.appendChild(sectionName);
+    section.appendChild(toggleCaption);
+    section.appendChild(emptyCaption);
+
     return section;
   },
 
