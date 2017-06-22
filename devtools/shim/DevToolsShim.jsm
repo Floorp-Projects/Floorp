@@ -177,6 +177,26 @@ this.DevToolsShim = {
     this.gDevTools.restoreScratchpadSession(scratchpads);
   },
 
+  /**
+   * Called from nsContextMenu.js in mozilla-central when using the Inspect Element
+   * context menu item.
+   *
+   * @param {XULTab} tab
+   *        The browser tab on which inspect node was used.
+   * @param {Array} selectors
+   *        An array of CSS selectors to find the target node. Several selectors can be
+   *        needed if the element is nested in frames and not directly in the root
+   *        document.
+   * @return {Promise} a promise that resolves when the node is selected in the inspector
+   *         markup view or that resolves immediately if DevTools are not installed.
+   */
+  inspectNode: function (tab, selectors) {
+    if (!this.isInstalled()) {
+      return Promise.resolve();
+    }
+    return this.gDevTools.inspectNode(tab, selectors);
+  },
+
   _onDevToolsRegistered: function () {
     // Register all pending event listeners on the real gDevTools object.
     for (let [event, listener] of this.listeners) {

@@ -135,7 +135,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IMEContentObserver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRootContent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditableNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditor)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditorBase)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentObserver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEndOfAddedTextCache.mContainerNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mStartOfRemovingTextRangeCache.mContainerNode)
@@ -151,7 +151,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IMEContentObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRootContent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEditableNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEditor)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEditorBase)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEndOfAddedTextCache.mContainerNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
@@ -197,7 +197,7 @@ void
 IMEContentObserver::Init(nsIWidget* aWidget,
                          nsPresContext* aPresContext,
                          nsIContent* aContent,
-                         nsIEditor* aEditor)
+                         EditorBase* aEditorBase)
 {
   State state = GetState();
   if (NS_WARN_IF(state == eState_Observing)) {
@@ -224,7 +224,7 @@ IMEContentObserver::Init(nsIWidget* aWidget,
       return;
     }
   } else {
-    if (!InitWithEditor(aPresContext, aContent, aEditor)) {
+    if (!InitWithEditor(aPresContext, aContent, aEditorBase)) {
       Clear();
       return;
     }
@@ -289,9 +289,9 @@ IMEContentObserver::OnIMEReceivedFocus()
 bool
 IMEContentObserver::InitWithEditor(nsPresContext* aPresContext,
                                    nsIContent* aContent,
-                                   nsIEditor* aEditor)
+                                   EditorBase* aEditorBase)
 {
-  MOZ_ASSERT(aEditor);
+  MOZ_ASSERT(aEditorBase);
 
   mEditableNode =
     IMEStateManager::GetRootEditableNode(aPresContext, aContent);
@@ -299,8 +299,8 @@ IMEContentObserver::InitWithEditor(nsPresContext* aPresContext,
     return false;
   }
 
-  mEditor = aEditor;
-  if (NS_WARN_IF(!mEditor)) {
+  mEditorBase = aEditorBase;
+  if (NS_WARN_IF(!mEditorBase)) {
     return false;
   }
 
@@ -389,7 +389,7 @@ IMEContentObserver::InitWithPlugin(nsPresContext* aPresContext,
     return false;
   }
 
-  mEditor = nullptr;
+  mEditorBase = nullptr;
   mEditableNode = aContent;
   mRootContent = aContent;
   // Should be safe to clear mDocumentObserver here even though it *might*
@@ -411,13 +411,13 @@ IMEContentObserver::InitWithPlugin(nsPresContext* aPresContext,
 bool
 IMEContentObserver::WasInitializedWithPlugin() const
 {
-  return mDocShell && !mEditor;
+  return mDocShell && !mEditorBase;
 }
 
 void
 IMEContentObserver::Clear()
 {
-  mEditor = nullptr;
+  mEditorBase = nullptr;
   mSelection = nullptr;
   mEditableNode = nullptr;
   mRootContent = nullptr;
@@ -450,8 +450,8 @@ IMEContentObserver::ObserveEditableNode()
   }
 
   mIsObserving = true;
-  if (mEditor) {
-    mEditor->AddEditorObserver(this);
+  if (mEditorBase) {
+    mEditorBase->AddEditorObserver(this);
   }
 
   if (!WasInitializedWithPlugin()) {
@@ -529,8 +529,8 @@ IMEContentObserver::UnregisterObservers()
   }
   mIsObserving = false;
 
-  if (mEditor) {
-    mEditor->RemoveEditorObserver(this);
+  if (mEditorBase) {
+    mEditorBase->RemoveEditorObserver(this);
   }
 
   if (mSelection) {
@@ -597,14 +597,14 @@ bool
 IMEContentObserver::MaybeReinitialize(nsIWidget* aWidget,
                                       nsPresContext* aPresContext,
                                       nsIContent* aContent,
-                                      nsIEditor* aEditor)
+                                      EditorBase* aEditorBase)
 {
   if (!IsObservingContent(aPresContext, aContent)) {
     return false;
   }
 
   if (GetState() == eState_StoppedObserving) {
-    Init(aWidget, aPresContext, aContent, aEditor);
+    Init(aWidget, aPresContext, aContent, aEditorBase);
   }
   return IsManaging(aPresContext, aContent);
 }
@@ -680,15 +680,10 @@ IMEContentObserver::IsEditorComposing() const
   // whether the editor already started to handle composition because
   // web contents can change selection, text content and/or something from
   // compositionstart event listener which is run before EditorBase handles it.
-  if (NS_WARN_IF(!mEditor)) {
+  if (NS_WARN_IF(!mEditorBase)) {
     return false;
   }
-  bool isComposing = false;
-  nsresult rv = mEditor->GetComposing(&isComposing);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-  return isComposing;
+  return mEditorBase->IsIMEComposing();
 }
 
 nsresult
@@ -1676,9 +1671,7 @@ IMEContentObserver::IsSafeToNotifyIME() const
   }
 
   // If we're in handling an edit action, this method will be called later.
-  bool isInEditAction = false;
-  if (mEditor && NS_SUCCEEDED(mEditor->GetIsInEditAction(&isInEditAction)) &&
-      isInEditAction) {
+  if (mEditorBase && mEditorBase->IsInEditAction()) {
     return false;
   }
 

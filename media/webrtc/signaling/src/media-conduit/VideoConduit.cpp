@@ -962,7 +962,8 @@ WebrtcVideoConduit::GetRTPStats(unsigned int* jitterMs,
     }
 
     const webrtc::VideoReceiveStream::Stats& stats = mRecvStream->GetStats();
-    *jitterMs = stats.rtcp_stats.jitter;
+    *jitterMs =
+        stats.rtcp_stats.jitter / (webrtc::kVideoPayloadTypeFrequency / 1000);
     *cumulativeLost = stats.rtcp_stats.cumulative_lost;
   }
   return true;
@@ -994,7 +995,8 @@ bool WebrtcVideoConduit::GetRTCPReceiverReport(DOMHighResTimeStamp* timestamp,
         __FUNCTION__, this);
       return false;
     }
-    *jitterMs = ind->second.rtcp_stats.jitter;
+    *jitterMs = ind->second.rtcp_stats.jitter
+        / (webrtc::kVideoPayloadTypeFrequency / 1000);
     *cumulativeLost = ind->second.rtcp_stats.cumulative_lost;
     *bytesReceived = ind->second.rtp_stats.MediaPayloadBytes();
     *packetsReceived = ind->second.rtp_stats.transmitted.packets;
