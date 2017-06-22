@@ -211,7 +211,7 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
                                      nsContentPolicyType aContentPolicyType =
                                        nsIContentPolicy::TYPE_OTHER)
 {
-  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
+  AUTO_PROFILER_LABEL("nsBaseDragService::InvokeDragSession", OTHER);
 
   NS_ENSURE_TRUE(aDOMNode, NS_ERROR_INVALID_ARG);
   NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);

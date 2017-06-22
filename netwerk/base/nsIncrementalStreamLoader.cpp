@@ -87,8 +87,7 @@ NS_IMETHODIMP
 nsIncrementalStreamLoader::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                                          nsresult aStatus)
 {
-  PROFILER_LABEL("nsIncrementalStreamLoader", "OnStopRequest",
-    js::ProfileEntry::Category::NETWORK);
+  AUTO_PROFILER_LABEL("nsIncrementalStreamLoader::OnStopRequest", NETWORK);
 
   if (mObserver) {
     // provide nsIIncrementalStreamLoader::request during call to OnStreamComplete

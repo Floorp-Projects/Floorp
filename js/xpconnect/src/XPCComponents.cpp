@@ -2504,9 +2504,8 @@ nsXPCComponents_Utils::Import(const nsACString& registryLocation,
         return NS_ERROR_FAILURE;
 
     const nsCString& flatLocation = PromiseFlatCString(registryLocation);
-    PROFILER_LABEL_DYNAMIC("Components.utils", "import",
-                           js::ProfileEntry::Category::OTHER,
-                           flatLocation.get());
+    AUTO_PROFILER_LABEL_DYNAMIC("nsXPCComponents_Utils::Import", OTHER,
+                                flatLocation.get());
 
     return moduleloader->Import(registryLocation, targetObj, cx, optionalArgc, retval);
 }
@@ -3039,7 +3038,7 @@ nsXPCComponents_Utils::CrashIfNotInAutomation()
 NS_IMETHODIMP
 nsXPCComponents_Utils::NukeSandbox(HandleValue obj, JSContext* cx)
 {
-    PROFILER_LABEL_FUNC(js::ProfileEntry::Category::JS);
+    AUTO_PROFILER_LABEL("nsXPCComponents_Utils::NukeSandbox", JS);
     NS_ENSURE_TRUE(obj.isObject(), NS_ERROR_INVALID_ARG);
     JSObject* wrapper = &obj.toObject();
     NS_ENSURE_TRUE(IsWrapper(wrapper), NS_ERROR_INVALID_ARG);

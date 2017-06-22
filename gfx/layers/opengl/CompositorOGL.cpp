@@ -635,8 +635,7 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
                           IntRect *aClipRectOut,
                           IntRect *aRenderBoundsOut)
 {
-  PROFILER_LABEL("CompositorOGL", "BeginFrame",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("CompositorOGL::BeginFrame", GRAPHICS);
 
   MOZ_ASSERT(!mFrameInProgress, "frame still in progress (should have called EndFrame");
 
@@ -992,8 +991,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
                         const gfx::Matrix4x4& aTransform,
                         const gfx::Rect& aVisibleRect)
 {
-  PROFILER_LABEL("CompositorOGL", "DrawQuad",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("CompositorOGL::DrawQuad", GRAPHICS);
 
   DrawGeometry(aRect, aRect, aClipRect, aEffectChain,
                aOpacity, aTransform, aVisibleRect);
@@ -1008,8 +1006,7 @@ CompositorOGL::DrawTriangles(const nsTArray<gfx::TexturedTriangle>& aTriangles,
                              const gfx::Matrix4x4& aTransform,
                              const gfx::Rect& aVisibleRect)
 {
-  PROFILER_LABEL("CompositorOGL", "DrawTriangles",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("CompositorOGL::DrawTriangles", GRAPHICS);
 
   DrawGeometry(aTriangles, aRect, aClipRect, aEffectChain,
                aOpacity, aTransform, aVisibleRect);
@@ -1580,8 +1577,7 @@ CompositorOGL::InitializeVAO(const GLuint aAttrib, const GLint aComponents,
 void
 CompositorOGL::EndFrame()
 {
-  PROFILER_LABEL("CompositorOGL", "EndFrame",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("CompositorOGL::EndFrame", GRAPHICS);
 
   MOZ_ASSERT(mCurrentRenderTarget == mWindowRenderTarget, "Rendering target not properly restored");
 

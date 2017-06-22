@@ -9,7 +9,7 @@
 #include <stack>                        // for stack
 #include "BasicContainerLayer.h"        // for BasicContainerLayer
 #include "BasicLayersImpl.h"            // for ToData, BasicReadbackLayer, etc
-#include "GeckoProfiler.h"              // for PROFILER_LABEL
+#include "GeckoProfiler.h"              // for AUTO_PROFILER_LABEL
 #include "ImageContainer.h"             // for ImageFactory
 #include "Layers.h"                     // for Layer, ContainerLayer, etc
 #include "ReadbackLayer.h"              // for ReadbackLayer
@@ -562,8 +562,7 @@ BasicLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
                                           void* aCallbackData,
                                           EndTransactionFlags aFlags)
 {
-  PROFILER_LABEL("BasicLayerManager", "EndTransactionInternal",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("BasicLayerManager::EndTransactionInternal", GRAPHICS);
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   MOZ_LAYERS_LOG(("  ----- (beginning paint)"));
@@ -814,8 +813,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
 {
   MOZ_ASSERT(aTarget);
 
-  PROFILER_LABEL("BasicLayerManager", "PaintLayer",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("BasicLayerManager::PaintLayer", GRAPHICS);
 
   PaintLayerContext paintLayerContext(aTarget, aLayer,
                                       aCallback, aCallbackData);
