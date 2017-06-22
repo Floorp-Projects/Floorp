@@ -32,7 +32,7 @@ function verifyButtonProperties(selector, shouldHaveCustomStyling, message) {
 
     let listStyleImage = getComputedStyle(element).listStyleImage;
     info(`listStyleImage for fox.svg is ${listStyleImage}`);
-    is(listStyleImage.includes("fox.svg"), shouldHaveCustomStyling, message);
+    is(listStyleImage.includes("moz-extension:"), shouldHaveCustomStyling, message);
   } catch (ex) {
     ok(false, `Unable to verify ${selector}: ${ex}`);
   }
@@ -77,10 +77,10 @@ function checkButtons(icons, iconInfo, area) {
     let iconInfo = icons.find(arr => arr[0] == button[0]);
     if (iconInfo[1]) {
       verifyButtonWithCustomStyling(button[1],
-        `The ${button[1]} should have it's icon customized in the ${area}`);
+        `The ${button[1]} should have its icon customized in the ${area}`);
     } else {
       verifyButtonWithoutCustomStyling(button[1],
-        `The ${button[1]} should not have it's icon customized in the ${area}`);
+        `The ${button[1]} should not have its icon customized in the ${area}`);
     }
   }
 }
@@ -114,8 +114,6 @@ async function runTestWithIcons(icons) {
     ["forward", "#forward-button"],
     ["reload", "#reload-button"],
     ["stop", "#stop-button"],
-    ["bookmark_star", "#bookmarks-menu-button", "bookmarks-menu-button"],
-    ["bookmark_menu", "#bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon"],
     ["downloads", "#downloads-button", "downloads-button"],
     ["home", "#home-button", "home-button"],
     ["app_menu", "#PanelUI-menu-button"],
@@ -142,6 +140,13 @@ async function runTestWithIcons(icons) {
     ["forget", "#panic-button", "panic-button"],
     ["pocket", "#pocket-button", "pocket-button"],
   ];
+  if (AppConstants.MOZ_PHOTON_THEME) {
+    ICON_INFO.push(["bookmark_star", "#star-button"]);
+    ICON_INFO.push(["bookmark_menu", "#bookmarks-menu-button", "bookmarks-menu-button"]);
+  } else {
+    ICON_INFO.push(["bookmark_star", "#bookmarks-menu-button", "bookmarks-menu-button"]);
+    ICON_INFO.push(["bookmark_menu", "#bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon"]);
+  }
 
   window.maximize();
 
@@ -151,7 +156,7 @@ async function runTestWithIcons(icons) {
     }
 
     verifyButtonWithoutCustomStyling(button[1],
-      `The ${button[1]} should not have it's icon customized when the test starts`);
+      `The ${button[1]} should not have its icon customized when the test starts`);
 
     let iconInfo = icons.find(arr => arr[0] == button[0]);
     manifest.theme.icons[button[0]] = iconInfo[1];
@@ -181,7 +186,7 @@ async function runTestWithIcons(icons) {
 
   for (let button of ICON_INFO) {
     verifyButtonWithoutCustomStyling(button[1],
-      `The ${button[1]} should not have it's icon customized when the theme is unloaded`);
+      `The ${button[1]} should not have its icon customized when the theme is unloaded`);
   }
 }
 
