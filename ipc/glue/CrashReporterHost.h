@@ -164,6 +164,7 @@ private:
 #endif
   nsString mDumpID;
   bool mFinalized;
+  nsCOMPtr<nsIFile> mTargetDump;
 };
 
 } // namespace ipc
