@@ -33,6 +33,7 @@ type WrBuiltDisplayListDescriptor = BuiltDisplayListDescriptor;
 type WrImageFormat = ImageFormat;
 type WrImageRendering = ImageRendering;
 type WrMixBlendMode = MixBlendMode;
+type WrTransformStyle = TransformStyle;
 type WrRenderer = Renderer;
 type WrSideOffsets2Du32 = WrSideOffsets2D<u32>;
 type WrSideOffsets2Df32 = WrSideOffsets2D<f32>;
@@ -1303,6 +1304,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               animation_id: u64,
                                               opacity: *const f32,
                                               transform: *const WrMatrix,
+                                              transform_style: WrTransformStyle,
                                               mix_blend_mode: WrMixBlendMode,
                                               filters: *const WrFilterOp,
                                               filter_count: usize) {
@@ -1348,7 +1350,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
          .push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                 bounds,
                                 transform_binding,
-                                TransformStyle::Flat,
+                                transform_style,
                                 None,
                                 mix_blend_mode,
                                 filters);

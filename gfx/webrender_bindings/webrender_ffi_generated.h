@@ -121,6 +121,13 @@ enum class WrRepeatMode : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
+enum class WrTransformStyle : uint32_t {
+  Flat = 0,
+  Preserve3D = 1,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
 enum class WrYuvColorSpace : uint32_t {
   Rec601 = 0,
   Rec709 = 1,
@@ -818,6 +825,7 @@ void wr_dp_push_stacking_context(WrState *aState,
                                  uint64_t aAnimationId,
                                  const float *aOpacity,
                                  const WrMatrix *aTransform,
+                                 WrTransformStyle aTransformStyle,
                                  WrMixBlendMode aMixBlendMode,
                                  const WrFilterOp *aFilters,
                                  size_t aFilterCount)
