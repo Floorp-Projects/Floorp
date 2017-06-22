@@ -27,7 +27,7 @@ function initTest()
 
 function runTest()
 {
-  async function() {
+  (async function() {
     await pressKey(false);
 
     ok(window.scrollY > 0, "Space with no focus" + window.scrollY);
@@ -55,7 +55,7 @@ function runTest()
 
     windowUtils.restoreNormalRefresh();
     SimpleTest.finish();
-  }();
+  })();
 }
 
   </script>
