@@ -353,6 +353,7 @@ photonpanelmultiview panelview {
 #appMenu-popup panelview,
 #customizationui-widget-multiview panelview:not([extension]) {
   min-width: @menuPanelWidth@;
+  max-width: 30em;
 }
 
 photonpanelmultiview panelview[title] {
