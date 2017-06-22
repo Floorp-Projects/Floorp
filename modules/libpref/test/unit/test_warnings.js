@@ -18,36 +18,36 @@ function makeBuffer(length) {
  * |false| if there was a warning.
  */
 function checkWarning(pref, buffer) {
-  let deferred = Promise.defer();
-  let complete = false;
-  let listener = {
-    observe: function(event) {
-      let message = event.message;
-      if (!(message.startsWith("Warning: attempting to write")
-            && message.includes(pref))) {
-        return;
+  return new Promise(resolve => {
+    let complete = false;
+    let listener = {
+      observe: function(event) {
+        let message = event.message;
+        if (!(message.startsWith("Warning: attempting to write")
+              && message.includes(pref))) {
+          return;
+        }
+        if (complete) {
+          return;
+        }
+        complete = true;
+        do_print("Warning while setting " + pref);
+        cs.unregisterListener(listener);
+        resolve(true);
       }
+    };
+    do_timeout(1000, function() {
       if (complete) {
         return;
       }
       complete = true;
-      do_print("Warning while setting " + pref);
+      do_print("No warning while setting " + pref);
       cs.unregisterListener(listener);
-      deferred.resolve(true);
-    }
-  };
-  do_timeout(1000, function() {
-    if (complete) {
-      return;
-    }
-    complete = true;
-    do_print("No warning while setting " + pref);
-    cs.unregisterListener(listener);
-    deferred.resolve(false);
+      resolve(false);
+    });
+    cs.registerListener(listener);
+    ps.setCharPref(pref, buffer);
   });
-  cs.registerListener(listener);
-  ps.setCharPref(pref, buffer);
-  return deferred.promise;
 }
 
 function run_test() {
