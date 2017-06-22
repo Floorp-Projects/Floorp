@@ -131,22 +131,23 @@ CrashReporterHost::GenerateMinidumpAndPair(GeckoChildProcessHost* aChildProcess,
     return;
   }
 
-  nsCOMPtr<nsIFile> targetDump;
-  if (!CrashReporter::CreateMinidumpsAndPair(childHandle,
-                                             mThreadId,
-                                             aPairName,
-                                             aMinidumpToPair,
-                                             getter_AddRefs(targetDump))) {
-    mCreateMinidumpCallback.Invoke(false);
-    return;
-  }
+  std::function<void(bool)> callback =
+    [this](bool aResult) {
+      if (aResult &&
+          CrashReporter::GetIDFromMinidump(this->mTargetDump, this->mDumpID)) {
+        this->mCreateMinidumpCallback.Invoke(true);
+      } else {
+        this->mCreateMinidumpCallback.Invoke(false);
+      }
+    };
 
-  if (!CrashReporter::GetIDFromMinidump(targetDump, mDumpID)) {
-    mCreateMinidumpCallback.Invoke(false);
-    return;
-  }
-
-  mCreateMinidumpCallback.Invoke(true);
+  CrashReporter::CreateMinidumpsAndPair(childHandle,
+                                        mThreadId,
+                                        aPairName,
+                                        aMinidumpToPair,
+                                        getter_AddRefs(mTargetDump),
+                                        Move(callback),
+                                        aAsync);
 }
 
 /* static */ void
