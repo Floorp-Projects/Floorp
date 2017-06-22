@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<script>
+  onload = function() {
+    var height = document.body.offsetHeight; // Flush layout
+    document.querySelector("button").style.color = "green";
+  }
+</script>
+<button style="display: list-item; color: red">
+  Bullet should be green.
+</button>

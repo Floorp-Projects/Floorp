@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<script>
+  onload = function() {
+    var height = document.body.offsetHeight; // Flush layout
+    document.querySelector("select").style.color = "green";
+  }
+</script>
+<select style="display: list-item; list-style-position: inside; color: red">
+  <option>Bullets should be green</option>
+</select>
