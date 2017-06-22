@@ -21,8 +21,10 @@ extern crate webdriver;
 extern crate log;
 
 use std::borrow::ToOwned;
+use std::fmt;
+use std::fmt::Display;
 use std::io::Write;
-use std::net::{SocketAddr, IpAddr};
+use std::net::{IpAddr, SocketAddr};
 use std::path::PathBuf;
 use std::str::FromStr;
 
@@ -44,6 +46,35 @@ mod capabilities;
 
 use logging::LogLevel;
 use marionette::{MarionetteHandler, MarionetteSettings, extension_routes};
+
+include!(concat!(env!("OUT_DIR"), "/build-info.rs"));
+
+struct BuildInfo;
+impl BuildInfo {
+    pub fn version() -> &'static str {
+        crate_version!()
+    }
+
+    pub fn hash() -> Option<&'static str> {
+        COMMIT_HASH
+    }
+
+    pub fn date() -> Option<&'static str> {
+        COMMIT_DATE
+    }
+}
+
+impl Display for BuildInfo {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", BuildInfo::version())?;
+        match (BuildInfo::hash(), BuildInfo::date()) {
+            (Some(hash), Some(date)) => write!(f, " ({} {})", hash, date)?,
+            (Some(hash), None) => write!(f, " ({})", hash)?,
+            _ => {},
+        }
+        Ok(())
+    }
+}
 
 type ProgramResult = std::result::Result<(), (ExitCode, String)>;
 
@@ -104,7 +135,7 @@ fn run() -> ProgramResult {
     let matches = app().get_matches();
 
     if matches.is_present("version") {
-        println!("geckodriver {}\n\n{}", crate_version!(),
+        println!("geckodriver {}\n\n{}", BuildInfo,
 "The source code of this program is available at
 https://github.com/mozilla/geckodriver.
 
