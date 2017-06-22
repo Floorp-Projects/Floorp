@@ -259,10 +259,10 @@ HTMLTextAreaElement::GetValueInternal(nsAString& aValue, bool aIgnoreWrap) const
   mState.GetValue(aValue, aIgnoreWrap);
 }
 
-NS_IMETHODIMP_(nsIEditor*)
+NS_IMETHODIMP_(TextEditor*)
 HTMLTextAreaElement::GetTextEditor()
 {
-  return GetEditor();
+  return mState.GetTextEditor();
 }
 
 NS_IMETHODIMP_(nsISelectionController*)

@@ -98,6 +98,7 @@
 #include "mozInlineSpellChecker.h"
 #include "nsDocShell.h"
 #include "nsIConsoleListener.h"
+#include "nsIContentViewer.h"
 #include "nsICycleCollectorListener.h"
 #include "nsIIdlePeriod.h"
 #include "nsIDragService.h"

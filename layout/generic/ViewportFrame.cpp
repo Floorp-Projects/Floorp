@@ -10,6 +10,7 @@
 
 #include "mozilla/ViewportFrame.h"
 
+#include "mozilla/ServoRestyleManager.h"
 #include "nsGkAtoms.h"
 #include "nsIScrollableFrame.h"
 #include "nsSubDocumentFrame.h"
@@ -416,13 +417,12 @@ ViewportFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas)
 }
 
 void
-ViewportFrame::UpdateStyle(ServoStyleSet& aStyleSet,
-                           nsStyleChangeList& aChangeList)
+ViewportFrame::UpdateStyle(ServoRestyleState& aRestyleState)
 {
   nsStyleContext* oldContext = StyleContext();
   nsIAtom* pseudo = oldContext->GetPseudo();
   RefPtr<nsStyleContext> newContext =
-    aStyleSet.ResolveInheritingAnonymousBoxStyle(pseudo, nullptr);
+    aRestyleState.StyleSet().ResolveInheritingAnonymousBoxStyle(pseudo, nullptr);
 
   // We're special because we have a null GetContent(), so don't call things
   // like UpdateStyleOfOwnedChildFrame that try to append changes for the
@@ -433,7 +433,7 @@ ViewportFrame::UpdateStyle(ServoStyleSet& aStyleSet,
   MOZ_ASSERT(!GetNextContinuation(), "Viewport has continuations?");
   SetStyleContext(newContext);
 
-  UpdateStyleOfOwnedAnonBoxes(aStyleSet, aChangeList, nsChangeHint_Empty);
+  UpdateStyleOfOwnedAnonBoxes(aRestyleState);
 }
 
 void

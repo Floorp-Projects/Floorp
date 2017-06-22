@@ -970,8 +970,12 @@ TextEditor::SetMaxTextLength(int32_t aMaxTextLength)
 NS_IMETHODIMP
 TextEditor::GetMaxTextLength(int32_t* aMaxTextLength)
 {
-  NS_ENSURE_TRUE(aMaxTextLength, NS_ERROR_INVALID_POINTER);
-  *aMaxTextLength = mMaxTextLength;
+  // NOTE: If you need to override this method, you need to make
+  //       MaxTextLength() virtual.
+  if (NS_WARN_IF(!aMaxTextLength)) {
+    return NS_ERROR_INVALID_POINTER;
+  }
+  *aMaxTextLength = MaxTextLength();
   return NS_OK;
 }
 

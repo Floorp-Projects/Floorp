@@ -31,9 +31,7 @@
 #include "nsIDOMNode.h"
 #include "nsDOMCSSRGBColor.h"
 #include "nsIDOMWindow.h"
-#include "nsIEditor.h"
 #include "nsIEditRules.h"
-#include "nsIHTMLEditor.h"
 #include "nsIHTMLObjectResizer.h"
 #include "nsINode.h"
 #include "nsIPresShell.h"
@@ -373,7 +371,7 @@ HTMLEditor::GrabberClicked()
   // add a mouse move listener to the editor
   nsresult rv = NS_OK;
   if (!mMouseMotionListenerP) {
-    mMouseMotionListenerP = new ResizerMouseMotionListener(this);
+    mMouseMotionListenerP = new ResizerMouseMotionListener(*this);
     if (!mMouseMotionListenerP) {return NS_ERROR_NULL_POINTER;}
 
     nsCOMPtr<nsIDOMEventTarget> piTarget = GetDOMEventTarget();

@@ -370,7 +370,7 @@ class MercurialVCS(ScriptMixin, LogMixin, TransferMixin):
 
         # Log HG version and install info to aid debugging.
         self.run_command(self.hg + ['--version'])
-        self.run_command(self.hg + ['debuginstall'])
+        self.run_command(self.hg + ['debuginstall', '--config=ui.username=worker'])
 
         args = self.hg + [
             '--config', 'extensions.robustcheckout=%s' % self.robustcheckout_path,
