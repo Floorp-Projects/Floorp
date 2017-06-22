@@ -8,6 +8,8 @@
 #define mozilla_dom_FetchConsumer_h
 
 #include "Fetch.h"
+#include "nsIObserver.h"
+#include "nsWeakReference.h"
 
 class nsIThread;
 
@@ -27,10 +29,12 @@ template <class Derived> class FetchBody;
 // In order to keep it alive all the time, we use a WorkerHolder, if created on
 // workers, plus a this consumer.
 template <class Derived>
-class FetchBodyConsumer final
+class FetchBodyConsumer final : public nsIObserver
+                              , public nsSupportsWeakReference
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FetchBodyConsumer<Derived>)
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIOBSERVER
 
   static already_AddRefed<Promise>
   Create(nsIGlobalObject* aGlobal,
@@ -68,6 +72,7 @@ public:
 
 private:
   FetchBodyConsumer(nsIEventTarget* aMainThreadEventTarget,
+                    nsIGlobalObject* aGlobalObject,
                     workers::WorkerPrivate* aWorkerPrivate,
                     FetchBody<Derived>* aBody,
                     Promise* aPromise,
@@ -89,6 +94,8 @@ private:
   // Unset when consumption is done/aborted.
   // This WorkerHolder keeps alive the consumer via a cycle.
   UniquePtr<workers::WorkerHolder> mWorkerHolder;
+
+  nsCOMPtr<nsIGlobalObject> mGlobal;
 
   // Always set whenever the FetchBodyConsumer is created on the worker thread.
   workers::WorkerPrivate* mWorkerPrivate;

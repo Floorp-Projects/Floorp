@@ -120,6 +120,11 @@ interface nsIAccessibleRelation : nsISupports
   const unsigned long RELATION_CONTAINING_TAB_PANE = 0x12;
 
   /**
+   * The target object is the containing window object.
+   */
+  const unsigned long RELATION_CONTAINING_WINDOW = 0x13;
+
+  /**
    * The target object is the containing application object.
    */
   const unsigned long RELATION_CONTAINING_APPLICATION = 0x14;

@@ -250,6 +250,8 @@ private:
   void SendHangNotification(const HangData& aHangData,
                             const nsString& aBrowserDumpId,
                             bool aTakeMinidump);
+  void OnTakeFullMinidumpComplete(const HangData& aHangData,
+                                  const nsString& aDumpId);
 
   void ClearHangNotification();
 
@@ -673,24 +675,40 @@ HangMonitorParent::SendHangNotification(const HangData& aHangData,
   // chrome process, main thread
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  nsString dumpId;
   if ((aHangData.type() == HangData::TPluginHangData) && aTakeMinidump) {
     // We've been handed a partial minidump; complete it with plugin and
     // content process dumps.
     const PluginHangData& phd = aHangData.get_PluginHangData();
-    plugins::TakeFullMinidump(phd.pluginId(), phd.contentProcessId(),
-                              aBrowserDumpId, dumpId);
-    UpdateMinidump(phd.pluginId(), dumpId);
+
+    std::function<void(nsString)> callback =
+      [this, aHangData](nsString aResult) {
+        this->UpdateMinidump(aHangData.get_PluginHangData().pluginId(),
+                       aResult);
+        this->OnTakeFullMinidumpComplete(aHangData, aResult);
+      };
+
+    plugins::TakeFullMinidump(phd.pluginId(),
+                              phd.contentProcessId(),
+                              aBrowserDumpId,
+                              Move(callback),
+                              true);
   } else {
     // We already have a full minidump; go ahead and use it.
-    dumpId = aBrowserDumpId;
+    OnTakeFullMinidumpComplete(aHangData, aBrowserDumpId);
   }
+}
 
-  mProcess->SetHangData(aHangData, dumpId);
+void
+HangMonitorParent::OnTakeFullMinidumpComplete(const HangData& aHangData,
+                                              const nsString& aDumpId)
+{
+  mProcess->SetHangData(aHangData, aDumpId);
 
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
-  observerService->NotifyObservers(mProcess, "process-hang-report", nullptr);
+  observerService->NotifyObservers(mProcess,
+                                   "process-hang-report",
+                                   nullptr);
 }
 
 void
@@ -994,12 +1012,20 @@ HangMonitoredProcess::TerminatePlugin()
   // Use the multi-process crash report generated earlier.
   uint32_t id = mHangData.get_PluginHangData().pluginId();
   base::ProcessId contentPid = mHangData.get_PluginHangData().contentProcessId();
-  plugins::TerminatePlugin(id, contentPid, NS_LITERAL_CSTRING("HangMonitor"),
-                           mDumpId);
 
-  if (mActor) {
-    mActor->CleanupPluginHang(id, false);
-  }
+  RefPtr<HangMonitoredProcess> self{this};
+  std::function<void(bool)> callback =
+    [self, id](bool aResult) {
+      if (self->mActor) {
+        self->mActor->CleanupPluginHang(id, false);
+      }
+    };
+
+  plugins::TerminatePlugin(id,
+                           contentPid,
+                           NS_LITERAL_CSTRING("HangMonitor"),
+                           mDumpId,
+                           Move(callback));
   return NS_OK;
 }
 

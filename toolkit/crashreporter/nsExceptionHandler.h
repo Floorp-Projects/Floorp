@@ -8,6 +8,7 @@
 
 #include "mozilla/Assertions.h"
 
+#include <functional>
 #include <stddef.h>
 #include <stdint.h>
 #include "nsError.h"
@@ -198,11 +199,14 @@ ThreadId CurrentThreadId();
  *   aIncomingDumpToPair.
  * @return bool indicating success or failure
  */
-bool CreateMinidumpsAndPair(ProcessHandle aTargetPid,
-                            ThreadId aTargetBlamedThread,
-                            const nsACString& aIncomingPairName,
-                            nsIFile* aIncomingDumpToPair,
-                            nsIFile** aTargetDumpOut);
+void
+CreateMinidumpsAndPair(ProcessHandle aTargetPid,
+                       ThreadId aTargetBlamedThread,
+                       const nsACString& aIncomingPairName,
+                       nsIFile* aIncomingDumpToPair,
+                       nsIFile** aTargetDumpOut,
+                       std::function<void(bool)>&& aCallback,
+                       bool aAsync);
 
 // Create an additional minidump for a child of a process which already has
 // a minidump (|parentMinidump|).
