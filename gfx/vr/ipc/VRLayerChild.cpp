@@ -88,11 +88,10 @@ VRLayerChild::ClearSurfaces()
   mShSurfClient = nullptr;
 }
 
-mozilla::ipc::IPCResult
-VRLayerChild::Recv__delete__()
+void
+VRLayerChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   mIPCOpen = false;
-  return IPC_OK();
 }
 
 } // namespace gfx

@@ -50,6 +50,7 @@ public:
 
   bool CheckClearDisplayInfoDirty();
   void SetGroupMask(uint32_t aGroupMask);
+  bool GetIsConnected();
 
 protected:
   explicit VRDisplayHost(VRDeviceType aType);
