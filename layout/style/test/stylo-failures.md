@@ -66,8 +66,6 @@ to mochitest command.
     * test_value_storage.html `-moz-linear-gradient` [322]
     * ... `-moz-radial-gradient` [309]
     * ... `-moz-repeating-` [298]
-  * -webkit-{flex,inline-flex} for display servo/servo#15400
-    * test_webkit_flex_display.html [4]
 * Unsupported values
   * SVG-in-OpenType values not supported servo/servo#15211 bug 1355412
     * test_value_storage.html `context-` [7]
