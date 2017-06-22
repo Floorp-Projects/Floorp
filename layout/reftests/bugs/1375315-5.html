@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<script>
+  onload = function() {
+    var height = document.body.offsetHeight; // Flush layout
+    document.querySelector("details").style.color = "green";
+  }
+</script>
+<details open
+         style="display: list-item; padding: 40px; margin: 40px; color: red">
+    Bullet should be green.
+</details>
