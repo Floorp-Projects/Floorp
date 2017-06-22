@@ -149,7 +149,9 @@ ProcessLink::SendMessage(Message *msg)
       MOZ_CRASH("IPC message size is too large");
     }
 
-    mChan->AssertWorkerThread();
+    if (!mChan->mIsPostponingSends) {
+        mChan->AssertWorkerThread();
+    }
     mChan->mMonitor->AssertCurrentThreadOwns();
 
     mIOLoop->PostTask(NewNonOwningRunnableMethod<Message*>(mTransport, &Transport::Send, msg));
@@ -212,7 +214,9 @@ ThreadLink::EchoMessage(Message *msg)
 void
 ThreadLink::SendMessage(Message *msg)
 {
-    mChan->AssertWorkerThread();
+    if (!mChan->mIsPostponingSends) {
+        mChan->AssertWorkerThread();
+    }
     mChan->mMonitor->AssertCurrentThreadOwns();
 
     if (mTargetChan)

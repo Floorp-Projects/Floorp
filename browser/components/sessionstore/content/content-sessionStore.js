@@ -378,6 +378,14 @@ var SessionHistoryListener = {
     this.collect();
   },
 
+  OnLengthChanged(aCount) {
+    // Ignore, the method is implemented so that XPConnect doesn't throw!
+  },
+
+  OnIndexChanged(aIndex) {
+    // Ignore, the method is implemented so that XPConnect doesn't throw!
+  },
+
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsISHistoryListener,
     Ci.nsISupportsWeakReference

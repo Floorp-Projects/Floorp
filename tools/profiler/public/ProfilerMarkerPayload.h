@@ -71,9 +71,6 @@ public:
   TracingMarkerPayload(const char* aCategory, TracingKind aKind,
                        UniqueProfilerBacktrace aCause);
 
-  const char *GetCategory() const { return mCategory; }
-  TracingKind GetKind() const { return mKind; }
-
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
                              const mozilla::TimeStamp& aProcessStartTime,
                              UniqueStacks& aUniqueStacks) override;

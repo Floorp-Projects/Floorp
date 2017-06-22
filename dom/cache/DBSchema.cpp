@@ -300,7 +300,6 @@ typedef int32_t EntryId;
 
 struct IdCount
 {
-  IdCount() : mId(-1), mCount(0) { }
   explicit IdCount(int32_t aId) : mId(aId), mCount(1) { }
   int32_t mId;
   int32_t mCount;

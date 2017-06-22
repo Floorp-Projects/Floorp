@@ -4127,8 +4127,10 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     // We haven't computed visibility at this point, so item->GetVisibleRect()
     // is just the dirty rect that item was initialized with. We intersect it
     // with the clipped item bounds to get a tighter visible rect.
-    itemVisibleRect = itemVisibleRect.Intersect(
-      ScaleToOutsidePixels(item->GetVisibleRect(), false));
+    if (!prerenderedTransform) {
+      itemVisibleRect = itemVisibleRect.Intersect(
+        ScaleToOutsidePixels(item->GetVisibleRect(), false));
+    }
 
     if (maxLayers != -1 && layerCount >= maxLayers) {
       forceInactive = true;

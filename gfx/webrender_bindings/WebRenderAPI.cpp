@@ -599,11 +599,11 @@ DisplayListBuilder::PopClip()
 }
 
 void
-DisplayListBuilder::PushBuiltDisplayList(BuiltDisplayList dl)
+DisplayListBuilder::PushBuiltDisplayList(BuiltDisplayList &dl)
 {
   wr_dp_push_built_display_list(mWrState,
                                 dl.dl_desc,
-                                dl.dl.Extract());
+                                &dl.dl.inner);
 }
 
 void
