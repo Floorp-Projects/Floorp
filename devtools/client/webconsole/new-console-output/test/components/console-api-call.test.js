@@ -86,7 +86,10 @@ describe("ConsoleAPICall component:", () => {
       const message = stubPreparedMessages.get("console.log('foobar', 'test')");
 
       const indent = 10;
-      let wrapper = render(ConsoleApiCall({ message, serviceContainer, indent }));
+      let wrapper = render(ConsoleApiCall({
+        message: Object.assign({}, message, {indent}),
+        serviceContainer
+      }));
       expect(wrapper.find(".indent").prop("style").width)
         .toBe(`${indent * INDENT_WIDTH}px`);
 
