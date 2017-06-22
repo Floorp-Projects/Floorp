@@ -2,6 +2,7 @@ import pytest
 
 from tests.support.inline import inline
 from tests.actions.support.refine import get_events, filter_dict
+from tests.support.wait import wait
 
 
 def link_doc(dest):
@@ -71,15 +72,17 @@ def test_click_navigation(session, url):
     def click(link):
         mouse_chain = session.actions.sequence(
             "pointer", "pointer_id", {"pointerType": "mouse"})
-        mouse_chain.click(element=link).pause(300).perform()
+        mouse_chain.click(element=link).perform()
 
     session.url = start
+    error_message = "Did not navigate to %s" % destination
+
     click(session.find.css("#link", all=False))
-    assert session.url == destination
+    wait(session, lambda s: s.url == destination, error_message)
     # repeat steps to check behaviour after document unload
     session.url = start
     click(session.find.css("#link", all=False))
-    assert session.url == destination
+    wait(session, lambda s: s.url == destination, error_message)
 
 
 @pytest.mark.parametrize("drag_duration", [0, 300, 800])
