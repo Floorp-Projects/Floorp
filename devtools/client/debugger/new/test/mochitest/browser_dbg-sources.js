@@ -58,13 +58,32 @@ add_task(function*() {
   );
 
   // Make sure named eval sources appear in the list.
+});
+
+add_task(function*() {
+  const dbg = yield initDebugger("doc-sources.html");
+  const { selectors: { getSelectedSource }, getState } = dbg;
+
+  yield waitForSources(dbg, "simple1", "simple2", "nested-source", "long.js");
+
   ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.eval("window.evaledFunc = function() {} //# sourceURL=evaled.js");
   });
-  yield waitForSourceCount(dbg, 11);
+  yield waitForSourceCount(dbg, 3);
   is(
-    findElement(dbg, "sourceNode", 2).textContent,
+    findElement(dbg, "sourceNode", 3).textContent,
+    "(no domain)",
+    "the folder exists"
+  );
+
+  // work around: the folder is rendered at the bottom, so we close the
+  // root folder and open the (no domain) folder
+  clickElement(dbg, "sourceArrow", 3);
+  yield waitForSourceCount(dbg, 4);
+
+  is(
+    findElement(dbg, "sourceNode", 4).textContent,
     "evaled.js",
-    "The eval script exists"
+    "the eval script exists"
   );
 });
