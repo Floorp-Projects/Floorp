@@ -302,14 +302,13 @@ TimingParamsFromCSSParams(float aDuration, float aDelay,
              "aIterations should be nonnegative & finite, as ensured by "
              "CSSParser");
 
-  TimingParams timing;
-  timing.mDuration.emplace(StickyTimeDuration::FromMilliseconds(aDuration));
-  timing.mDelay = TimeDuration::FromMilliseconds(aDelay);
-  timing.mIterations = aIterationCount;
-  timing.mDirection = aDirection;
-  timing.mFill = aFillMode;
-
-  return timing;
+  return TimingParams {
+    aDuration,
+    aDelay,
+    aIterationCount,
+    aDirection,
+    aFillMode
+  };
 }
 
 } // namespace mozilla
