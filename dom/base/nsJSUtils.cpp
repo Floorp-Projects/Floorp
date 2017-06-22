@@ -380,8 +380,7 @@ nsJSUtils::CompileModule(JSContext* aCx,
                        JS::CompileOptions &aCompileOptions,
                        JS::MutableHandle<JSObject*> aModule)
 {
-  PROFILER_LABEL("nsJSUtils", "CompileModule",
-    js::ProfileEntry::Category::JS);
+  AUTO_PROFILER_LABEL("nsJSUtils::CompileModule", JS);
 
   MOZ_ASSERT_IF(aCompileOptions.versionSet,
                 aCompileOptions.version != JSVERSION_UNKNOWN);
@@ -405,8 +404,7 @@ nsJSUtils::CompileModule(JSContext* aCx,
 nsresult
 nsJSUtils::ModuleDeclarationInstantiation(JSContext* aCx, JS::Handle<JSObject*> aModule)
 {
-  PROFILER_LABEL("nsJSUtils", "ModuleDeclarationInstantiation",
-    js::ProfileEntry::Category::JS);
+  AUTO_PROFILER_LABEL("nsJSUtils::ModuleDeclarationInstantiation", JS);
 
   MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
   MOZ_ASSERT(NS_IsMainThread());
@@ -423,8 +421,7 @@ nsJSUtils::ModuleDeclarationInstantiation(JSContext* aCx, JS::Handle<JSObject*> 
 nsresult
 nsJSUtils::ModuleEvaluation(JSContext* aCx, JS::Handle<JSObject*> aModule)
 {
-  PROFILER_LABEL("nsJSUtils", "ModuleEvaluation",
-    js::ProfileEntry::Category::JS);
+  AUTO_PROFILER_LABEL("nsJSUtils::ModuleEvaluation", JS);
 
   MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
   MOZ_ASSERT(NS_IsMainThread());

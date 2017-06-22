@@ -25,8 +25,7 @@ nsresult
 WebMWriter::WriteEncodedTrack(const EncodedFrameContainer& aData,
                               uint32_t aFlags)
 {
-  PROFILER_LABEL("WebMWriter", "SetMetadata",
-    js::ProfileEntry::Category::OTHER);
+  AUTO_PROFILER_LABEL("WebMWriter::WriteEncodedTrack", OTHER);
   for (uint32_t i = 0 ; i < aData.GetEncodedFrames().Length(); i++) {
     mEbmlComposer->WriteSimpleBlock(aData.GetEncodedFrames().ElementAt(i).get());
   }
@@ -37,8 +36,7 @@ nsresult
 WebMWriter::GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
                              uint32_t aFlags)
 {
-  PROFILER_LABEL("WebMWriter", "GetContainerData",
-    js::ProfileEntry::Category::OTHER);
+  AUTO_PROFILER_LABEL("WebMWriter::GetContainerData", OTHER);
   mEbmlComposer->ExtractBuffer(aOutputBufs, aFlags);
   if (aFlags & ContainerWriter::FLUSH_NEEDED) {
     mIsWritingComplete = true;
@@ -50,8 +48,7 @@ nsresult
 WebMWriter::SetMetadata(TrackMetadataBase* aMetadata)
 {
   MOZ_ASSERT(aMetadata);
-  PROFILER_LABEL("WebMWriter", "SetMetadata",
-    js::ProfileEntry::Category::OTHER);
+  AUTO_PROFILER_LABEL("WebMWriter::SetMetadata", OTHER);
 
   if (aMetadata->GetKind() == TrackMetadataBase::METADATA_VP8) {
     VP8Metadata* meta = static_cast<VP8Metadata*>(aMetadata);

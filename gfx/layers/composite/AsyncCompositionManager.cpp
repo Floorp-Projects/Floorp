@@ -1367,8 +1367,7 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
                                              TimeDuration aVsyncRate,
                                              TransformsToSkip aSkip)
 {
-  PROFILER_LABEL("AsyncCompositionManager", "TransformShadowTree",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("AsyncCompositionManager::TransformShadowTree", GRAPHICS);
 
   Layer* root = mLayerManager->GetRoot();
   if (!root) {

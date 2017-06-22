@@ -1295,9 +1295,9 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
               nsAutoString typeStr;
               (*aDOMEvent)->GetType(typeStr);
               NS_LossyConvertUTF16toASCII typeCStr(typeStr);
-              PROFILER_LABEL_DYNAMIC("EventListenerManager", "HandleEventInternal",
-                                     js::ProfileEntry::Category::EVENTS,
-                                     typeCStr.get());
+              AUTO_PROFILER_LABEL_DYNAMIC(
+                "EventListenerManager::HandleEventInternal", EVENTS,
+                typeCStr.get());
               TimeStamp startTime = TimeStamp::Now();
 
               rv = HandleEventSubType(listener, *aDOMEvent, aCurrentTarget);

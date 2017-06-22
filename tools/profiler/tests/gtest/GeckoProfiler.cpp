@@ -567,13 +567,11 @@ TEST(GeckoProfiler, PseudoStack)
   uint32_t features = ProfilerFeature::StackWalk;
   const char* filters[] = { "GeckoMain" };
 
-  PROFILER_LABEL("A", "B", js::ProfileEntry::Category::OTHER);
-  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
+  AUTO_PROFILER_LABEL("A::B", OTHER);
 
   UniqueFreePtr<char> dynamic(strdup("dynamic"));
   {
-    PROFILER_LABEL_DYNAMIC("A", "C", js::ProfileEntry::Category::JS,
-                           dynamic.get());
+    AUTO_PROFILER_LABEL_DYNAMIC("A::C", JS, dynamic.get());
 
     profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                    features, filters, MOZ_ARRAY_LENGTH(filters));

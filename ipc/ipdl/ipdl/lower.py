@@ -4679,10 +4679,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                              else 'mozilla::ipc::MessageDirection::eSending') ])) ])
 
     def profilerLabel(self, md):
-        return StmtExpr(ExprCall(ExprVar('PROFILER_LABEL'),
-                                 [ ExprLiteral.String(self.protocol.name),
-                                   ExprLiteral.String(md.prettyMsgName()),
-                                   ExprVar('js::ProfileEntry::Category::OTHER') ]))
+        labelStr = self.protocol.name + '::' + md.prettyMsgName()
+        return StmtExpr(ExprCall(ExprVar('AUTO_PROFILER_LABEL'),
+                                 [ ExprLiteral.String(labelStr),
+                                   ExprVar('OTHER') ]))
 
     def saveActorId(self, md):
         idvar = ExprVar('id__')

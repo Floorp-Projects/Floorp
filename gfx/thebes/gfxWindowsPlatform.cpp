@@ -929,7 +929,8 @@ InvalidateWindowForDeviceReset(HWND aWnd, LPARAM aMsg)
 void
 gfxWindowsPlatform::SchedulePaintIfDeviceReset()
 {
-  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("gfxWindowsPlatform::SchedulePaintIfDeviceReset",
+                      GRAPHICS);
 
   DeviceResetReason resetReason = DeviceResetReason::OK;
   if (!DidRenderingDeviceReset(&resetReason)) {

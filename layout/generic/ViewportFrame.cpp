@@ -56,8 +56,7 @@ ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists)
 {
-  PROFILER_LABEL("ViewportFrame", "BuildDisplayList",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("ViewportFrame::BuildDisplayList", GRAPHICS);
 
   if (nsIFrame* kid = mFrames.FirstChild()) {
     // make the kid's BorderBackground our own. This ensures that the canvas

@@ -17,6 +17,7 @@
 #include "nsIEventTarget.h"
 #include "nsIObserver.h"
 #include "mozilla/RefPtr.h"
+#include "nsStringFwd.h"
 
 class nsIThread;
 class nsIThreadPool;
@@ -64,7 +65,7 @@ public:
    * immediately.
    * @return true if the task was run sync, false otherwise.
    */
-  bool SyncRunIfPreferred(IDecodingTask* aTask);
+  bool SyncRunIfPreferred(IDecodingTask* aTask, const nsCString& aURI);
 
   /**
    * Run @aTask synchronously. This does not guarantee that @aTask will complete
@@ -72,7 +73,7 @@ public:
    * run synchronously, it may recover by scheduling an async task to finish up
    * the work when the remaining data is available.
    */
-  void SyncRunIfPossible(IDecodingTask* aTask);
+  void SyncRunIfPossible(IDecodingTask* aTask, const nsCString& aURI);
 
   /**
    * Returns an event target interface to the DecodePool's I/O thread. Callers

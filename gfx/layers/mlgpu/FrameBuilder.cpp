@@ -35,7 +35,7 @@ FrameBuilder::~FrameBuilder()
 bool
 FrameBuilder::Build()
 {
-  PROFILER_LABEL("FrameBuilder", "Build", js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("FrameBuilder::Build", GRAPHICS);
 
   // AcquireBackBuffer can fail, so we check the result here.
   RefPtr<MLGRenderTarget> target = mSwapChain->AcquireBackBuffer();
@@ -94,7 +94,7 @@ FrameBuilder::Build()
 void
 FrameBuilder::Render()
 {
-  PROFILER_LABEL("FrameBuilder", "Render", js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("FrameBuilder::Render", GRAPHICS);
 
   // Render combined masks into single mask textures.
   for (const auto& pair : mCombinedTextureMasks) {

@@ -1101,8 +1101,7 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
                       RuleProcessorData* aData, Element* aElement,
                       nsRuleWalker* aRuleWalker)
 {
-  PROFILER_LABEL("nsStyleSet", "FileRules",
-    js::ProfileEntry::Category::CSS);
+  AUTO_PROFILER_LABEL("nsStyleSet::FileRules", CSS);
 
   NS_ASSERTION(mBatching == 0, "rule processors out of date");
 

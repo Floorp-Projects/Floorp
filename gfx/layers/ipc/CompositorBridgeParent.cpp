@@ -918,8 +918,7 @@ void
 CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRect* aRect)
 {
   AutoProfilerTracing tracing("Paint", "Composite");
-  PROFILER_LABEL("CompositorBridgeParent", "Composite",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("CompositorBridgeParent::CompositeToTarget", GRAPHICS);
 
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread(),
              "Composite can only be called on the compositor thread");
@@ -1088,8 +1087,7 @@ CompositorBridgeParent::RecvRemotePluginsReady()
 void
 CompositorBridgeParent::ForceComposeToTarget(DrawTarget* aTarget, const gfx::IntRect* aRect)
 {
-  PROFILER_LABEL("CompositorBridgeParent", "ForceComposeToTarget",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("CompositorBridgeParent::ForceComposeToTarget", GRAPHICS);
 
   AutoRestore<bool> override(mOverrideComposeReadiness);
   mOverrideComposeReadiness = true;

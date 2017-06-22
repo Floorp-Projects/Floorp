@@ -1088,7 +1088,7 @@ nsXREDirProvider::DoStartup()
 void
 nsXREDirProvider::DoShutdown()
 {
-  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
+  AUTO_PROFILER_LABEL("nsXREDirProvider::DoShutdown", OTHER);
 
   if (mProfileNotified) {
     nsCOMPtr<nsIObserverService> obsSvc =
