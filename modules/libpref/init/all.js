@@ -5632,11 +5632,14 @@ pref("media.block-autoplay-until-in-foreground", false);
 pref("media.block-autoplay-until-in-foreground", true);
 #endif
 
-// Is the Servo-backed style system enabled?
+// Is Stylo CSS support built and enabled?
+// Only define this pref if Stylo support is actually built in.
+#ifdef MOZ_STYLO
 #ifdef MOZ_STYLO_ENABLE
 pref("layout.css.servo.enabled", true);
 #else
 pref("layout.css.servo.enabled", false);
+#endif
 #endif
 
 // HSTS Priming
