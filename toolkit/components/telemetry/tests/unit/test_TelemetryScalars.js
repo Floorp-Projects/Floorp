@@ -14,7 +14,7 @@ function getParentProcessScalars(aChannel, aKeyed = false, aClear = false) {
   return scalars || {};
 }
 
-add_task(function* test_serializationFormat() {
+add_task(async function test_serializationFormat() {
   Telemetry.clearScalars();
 
   // Set the scalars to a known value.
@@ -48,7 +48,7 @@ add_task(function* test_serializationFormat() {
             "Keyed scalars must be reported in a separate section.");
 });
 
-add_task(function* test_keyedSerializationFormat() {
+add_task(async function test_keyedSerializationFormat() {
   Telemetry.clearScalars();
 
   const expectedKey = "first_key";
@@ -82,7 +82,7 @@ add_task(function* test_keyedSerializationFormat() {
                KEYED_UINT_SCALAR + "." + expectedOtherKey + " must have the correct value.");
 });
 
-add_task(function* test_nonexistingScalar() {
+add_task(async function test_nonexistingScalar() {
   const NON_EXISTING_SCALAR = "telemetry.test.non_existing";
 
   Telemetry.clearScalars();
@@ -110,7 +110,7 @@ add_task(function* test_nonexistingScalar() {
             "The non existing keyed scalar must not be persisted.");
 });
 
-add_task(function* test_expiredScalar() {
+add_task(async function test_expiredScalar() {
   const EXPIRED_SCALAR = "telemetry.test.expired";
   const EXPIRED_KEYED_SCALAR = "telemetry.test.keyed_expired";
   const UNEXPIRED_SCALAR = "telemetry.test.unexpired";
@@ -143,7 +143,7 @@ add_task(function* test_expiredScalar() {
             "The expired keyed scalar must not be persisted.");
 });
 
-add_task(function* test_unsignedIntScalar() {
+add_task(async function test_unsignedIntScalar() {
   let checkScalar = (expectedValue) => {
     const scalars =
       getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
@@ -196,7 +196,7 @@ add_task(function* test_unsignedIntScalar() {
   checkScalar(1);
 });
 
-add_task(function* test_stringScalar() {
+add_task(async function test_stringScalar() {
   let checkExpectedString = (expectedString) => {
     const scalars =
       getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
@@ -227,7 +227,7 @@ add_task(function* test_stringScalar() {
   checkExpectedString(LONG_STRING.substr(0, 50));
 });
 
-add_task(function* test_booleanScalar() {
+add_task(async function test_booleanScalar() {
   let checkExpectedBool = (expectedBoolean) => {
     const scalars =
       getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
@@ -263,7 +263,7 @@ add_task(function* test_booleanScalar() {
   Telemetry.scalarSet(BOOLEAN_SCALAR, "true");
 });
 
-add_task(function* test_scalarRecording() {
+add_task(async function test_scalarRecording() {
   const OPTIN_SCALAR = "telemetry.test.release_optin";
   const OPTOUT_SCALAR = "telemetry.test.release_optout";
 
@@ -305,7 +305,7 @@ add_task(function* test_scalarRecording() {
   checkValue(OPTIN_SCALAR, 6);
 });
 
-add_task(function* test_keyedScalarRecording() {
+add_task(async function test_keyedScalarRecording() {
   const OPTIN_SCALAR = "telemetry.test.keyed_release_optin";
   const OPTOUT_SCALAR = "telemetry.test.keyed_release_optout";
   const testKey = "policy_key";
@@ -348,7 +348,7 @@ add_task(function* test_keyedScalarRecording() {
   checkValue(OPTIN_SCALAR, 6);
 });
 
-add_task(function* test_subsession() {
+add_task(async function test_subsession() {
   Telemetry.clearScalars();
 
   // Set the scalars to a known value.
@@ -385,7 +385,7 @@ add_task(function* test_subsession() {
   Assert.ok(!(KEYED_UINT_SCALAR in keyedScalars), KEYED_UINT_SCALAR + " must be empty and not reported.");
 });
 
-add_task(function* test_keyed_uint() {
+add_task(async function test_keyed_uint() {
   Telemetry.clearScalars();
 
   const KEYS = [ "a_key", "another_key", "third_key" ];
@@ -421,7 +421,7 @@ add_task(function* test_keyed_uint() {
   Telemetry.keyedScalarSet(KEYED_UINT_SCALAR, "new_key", "unexpected value");
 });
 
-add_task(function* test_keyed_boolean() {
+add_task(async function test_keyed_boolean() {
   Telemetry.clearScalars();
 
   const KEYED_BOOLEAN_TYPE = "telemetry.test.keyed_boolean_kind";
@@ -458,7 +458,7 @@ add_task(function* test_keyed_boolean() {
   Telemetry.keyedScalarAdd(KEYED_BOOLEAN_TYPE, "somehey", 1);
 });
 
-add_task(function* test_keyed_keys_length() {
+add_task(async function test_keyed_keys_length() {
   Telemetry.clearScalars();
 
   const LONG_KEY_STRING =
@@ -491,7 +491,7 @@ add_task(function* test_keyed_keys_length() {
             "The data for the empty key should not have been recorded.");
 });
 
-add_task(function* test_keyed_max_keys() {
+add_task(async function test_keyed_max_keys() {
   Telemetry.clearScalars();
 
   // Generate the names for the first 100 keys.

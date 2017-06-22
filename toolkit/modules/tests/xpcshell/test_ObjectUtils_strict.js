@@ -3,7 +3,7 @@
 var {ObjectUtils} = Components.utils.import("resource://gre/modules/ObjectUtils.jsm", {});
 var {PromiseTestUtils} = Components.utils.import("resource://testing-common/PromiseTestUtils.jsm", {});
 
-add_task(function* test_strict() {
+add_task(async function test_strict() {
   let loose = { a: 1 };
   let strict = ObjectUtils.strict(loose);
 

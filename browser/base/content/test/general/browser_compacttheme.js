@@ -17,7 +17,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref(PREF_LWTHEME_USED_THEMES);
 });
 
-add_task(function* startTests() {
+add_task(async function startTests() {
   if (SKIP_TEST) {
     ok(true, "No need to run this test since themes aren't installed");
     return;
@@ -59,7 +59,7 @@ function dummyLightweightTheme(id) {
   };
 }
 
-add_task(function* testLightweightThemePreview() {
+add_task(async function testLightweightThemePreview() {
   if (SKIP_TEST) {
     ok(true, "No need to run this test since themes aren't installed");
     return;

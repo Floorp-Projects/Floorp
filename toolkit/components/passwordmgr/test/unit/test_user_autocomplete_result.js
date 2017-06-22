@@ -456,7 +456,7 @@ let expectedResults = [
   },
 ];
 
-add_task(function* test_all_patterns() {
+add_task(async function test_all_patterns() {
   LoginHelper.createLogger("UserAutoCompleteResult");
   expectedResults.forEach(pattern => {
     Services.prefs.setBoolPref(PREF_INSECURE_FIELD_WARNING_ENABLED,

@@ -13,7 +13,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* () {
+add_task(async function() {
   remove_bookmarks_html();
 
   Services.prefs.setBoolPref("browser.bookmarks.autoExportHTML", true);

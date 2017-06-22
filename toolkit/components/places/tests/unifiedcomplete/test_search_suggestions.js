@@ -651,14 +651,14 @@ add_task(async function avoid_url_suggestions() {
   await cleanUpSuggestions();
 });
 
-add_task(function* avoid_http_url_suggestions() {
+add_task(async function avoid_http_url_suggestions() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
 
   setSuggestionsFn(searchStr => {
     return [searchStr + "ed"];
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "htt",
     searchParam: "enable-actions",
     matches: [
@@ -677,7 +677,7 @@ add_task(function* avoid_http_url_suggestions() {
     ],
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "ftp",
     searchParam: "enable-actions",
     matches: [
@@ -685,7 +685,7 @@ add_task(function* avoid_http_url_suggestions() {
     ],
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "http",
     searchParam: "enable-actions",
     matches: [
@@ -693,7 +693,7 @@ add_task(function* avoid_http_url_suggestions() {
     ],
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "https",
     searchParam: "enable-actions",
     matches: [
@@ -701,7 +701,7 @@ add_task(function* avoid_http_url_suggestions() {
     ],
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "httpd",
     searchParam: "enable-actions",
     matches: [
@@ -720,7 +720,7 @@ add_task(function* avoid_http_url_suggestions() {
     ],
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "http:",
     searchParam: "enable-actions",
     matches: [
@@ -732,7 +732,7 @@ add_task(function* avoid_http_url_suggestions() {
     ],
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "https:",
     searchParam: "enable-actions",
     matches: [
@@ -744,7 +744,7 @@ add_task(function* avoid_http_url_suggestions() {
     ],
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "ftp:",
     searchParam: "enable-actions",
     matches: [
@@ -756,7 +756,7 @@ add_task(function* avoid_http_url_suggestions() {
     ],
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "http:/",
     searchParam: "enable-actions",
     matches: [
@@ -768,7 +768,7 @@ add_task(function* avoid_http_url_suggestions() {
     ],
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "https:/",
     searchParam: "enable-actions",
     matches: [
@@ -780,7 +780,7 @@ add_task(function* avoid_http_url_suggestions() {
     ],
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "ftp:/",
     searchParam: "enable-actions",
     matches: [
@@ -792,7 +792,7 @@ add_task(function* avoid_http_url_suggestions() {
     ],
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "http://",
     searchParam: "enable-actions",
     matches: [
@@ -800,7 +800,7 @@ add_task(function* avoid_http_url_suggestions() {
     ],
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "https://",
     searchParam: "enable-actions",
     matches: [
@@ -808,7 +808,7 @@ add_task(function* avoid_http_url_suggestions() {
     ],
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "ftp://",
     searchParam: "enable-actions",
     matches: [
@@ -816,7 +816,7 @@ add_task(function* avoid_http_url_suggestions() {
     ],
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "http://www",
     searchParam: "enable-actions",
     matches: [
@@ -828,7 +828,7 @@ add_task(function* avoid_http_url_suggestions() {
     ],
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "https://www",
     searchParam: "enable-actions",
     matches: [
@@ -840,7 +840,7 @@ add_task(function* avoid_http_url_suggestions() {
     ],
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "http://test",
     searchParam: "enable-actions",
     matches: [
@@ -852,7 +852,7 @@ add_task(function* avoid_http_url_suggestions() {
     ],
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "https://test",
     searchParam: "enable-actions",
     matches: [
@@ -864,7 +864,7 @@ add_task(function* avoid_http_url_suggestions() {
     ],
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "ftp://test",
     searchParam: "enable-actions",
     matches: [
@@ -876,7 +876,7 @@ add_task(function* avoid_http_url_suggestions() {
     ],
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "http://www.test",
     searchParam: "enable-actions",
     matches: [
@@ -888,5 +888,5 @@ add_task(function* avoid_http_url_suggestions() {
     ],
   });
 
-  yield cleanUpSuggestions();
+  await cleanUpSuggestions();
 });

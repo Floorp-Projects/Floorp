@@ -22,7 +22,7 @@ function clickSwitcherButton(querySelector) {
   return switcherPromise;
 }
 
-add_task(function* () {
+add_task(async function() {
   // If a sidebar is already open, close it.
   if (!document.getElementById("sidebar-box").hidden) {
     ok(false, "Unexpected sidebar found - a previous test failed to cleanup correctly");
@@ -30,17 +30,17 @@ add_task(function* () {
   }
 
   let sidebar = document.querySelector("#sidebar-box");
-  yield SidebarUI.show("viewBookmarksSidebar");
+  await SidebarUI.show("viewBookmarksSidebar");
 
-  yield showSwitcherPanelPromise();
-  yield clickSwitcherButton("#sidebar-switcher-history");
+  await showSwitcherPanelPromise();
+  await clickSwitcherButton("#sidebar-switcher-history");
   is(sidebar.getAttribute("sidebarcommand"), "viewHistorySidebar", "History sidebar loaded");
 
-  yield showSwitcherPanelPromise();
-  yield clickSwitcherButton("#sidebar-switcher-tabs");
+  await showSwitcherPanelPromise();
+  await clickSwitcherButton("#sidebar-switcher-tabs");
   is(sidebar.getAttribute("sidebarcommand"), "viewTabsSidebar", "Tabs sidebar loaded");
 
-  yield showSwitcherPanelPromise();
-  yield clickSwitcherButton("#sidebar-switcher-bookmarks");
+  await showSwitcherPanelPromise();
+  await clickSwitcherButton("#sidebar-switcher-bookmarks");
   is(sidebar.getAttribute("sidebarcommand"), "viewBookmarksSidebar", "Bookmarks sidebar loaded");
 });

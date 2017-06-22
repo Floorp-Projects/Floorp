@@ -119,7 +119,7 @@ add_task(function test_dedupeLogins() {
 });
 
 
-add_task(function* test_dedupeLogins_resolveBy() {
+add_task(async function test_dedupeLogins_resolveBy() {
   Assert.ok(DOMAIN1_HTTP_TO_HTTP_U1_P1.timeLastUsed > DOMAIN1_HTTPS_TO_HTTPS_U1_P1.timeLastUsed,
             "Sanity check timeLastUsed difference");
   Assert.ok(DOMAIN1_HTTP_TO_HTTP_U1_P1.timePasswordChanged < DOMAIN1_HTTPS_TO_HTTPS_U1_P1.timePasswordChanged,
@@ -248,7 +248,7 @@ add_task(function* test_dedupeLogins_resolveBy() {
 
 });
 
-add_task(function* test_dedupeLogins_preferredOriginMissing() {
+add_task(async function test_dedupeLogins_preferredOriginMissing() {
   let testcases = [
     [
       "resolveBy scheme + timePasswordChanged, missing preferredOrigin",

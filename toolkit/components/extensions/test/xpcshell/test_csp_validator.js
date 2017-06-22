@@ -4,7 +4,7 @@
 
 const cps = Cc["@mozilla.org/addons/content-policy;1"].getService(Ci.nsIAddonContentPolicy);
 
-add_task(function* test_csp_validator() {
+add_task(async function test_csp_validator() {
   let checkPolicy = (policy, expectedResult, message = null) => {
     do_print(`Checking policy: ${policy}`);
 

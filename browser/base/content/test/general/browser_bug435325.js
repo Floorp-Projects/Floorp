@@ -29,7 +29,7 @@ add_task(async function checkSwitchPageToOnlineMode() {
     let changeObserved = TestUtils.topicObserved("network:offline-status-changed");
 
     // Click on the 'Try again' button.
-    await ContentTask.spawn(browser, null, function* () {
+    await ContentTask.spawn(browser, null, async function() {
       ok(content.document.documentURI.startsWith("about:neterror?e=netOffline"), "Should be showing error page");
       content.document.getElementById("errorTryAgain").click();
     });

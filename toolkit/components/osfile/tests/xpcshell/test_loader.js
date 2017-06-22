@@ -14,7 +14,7 @@ function run_test() {
 }
 
 
-add_task(function*() {
+add_task(async function() {
   let dataDir = Services.io.newFileURI(do_get_file("test_loader/", true)).spec + "/";
   let loader = Loader.Loader({
     paths: {'': dataDir }

@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* testAutocompletePopup() {
+add_task(async function testAutocompletePopup() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "browser_action": {
@@ -42,43 +42,43 @@ add_task(function* testAutocompletePopup() {
     },
   });
 
-  function* testDatalist(browser, doc) {
+  async function testDatalist(browser, doc) {
     let autocompletePopup = doc.getElementById("PopupAutoComplete");
     let opened = promisePopupShown(autocompletePopup);
     info("click in test-input now");
     // two clicks to open
-    yield BrowserTestUtils.synthesizeMouseAtCenter("#test-input", {}, browser);
-    yield BrowserTestUtils.synthesizeMouseAtCenter("#test-input", {}, browser);
+    await BrowserTestUtils.synthesizeMouseAtCenter("#test-input", {}, browser);
+    await BrowserTestUtils.synthesizeMouseAtCenter("#test-input", {}, browser);
     info("wait for opened event");
-    yield opened;
+    await opened;
     // third to close
     let closed = promisePopupHidden(autocompletePopup);
     info("click in test-input now");
-    yield BrowserTestUtils.synthesizeMouseAtCenter("#test-input", {}, browser);
+    await BrowserTestUtils.synthesizeMouseAtCenter("#test-input", {}, browser);
     info("wait for closed event");
-    yield closed;
+    await closed;
     // If this didn't work, we hang. Other tests deal with testing the actual functionality of datalist.
     ok(true, "datalist popup has been shown");
   }
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
-  yield extension.startup();
-  yield extension.awaitMessage("ready");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+  await extension.startup();
+  await extension.awaitMessage("ready");
 
   clickPageAction(extension);
   // intentional misspell so eslint is ok with browser in background script.
-  let bowser = yield awaitExtensionPanel(extension);
+  let bowser = await awaitExtensionPanel(extension);
   ok(!!bowser, "panel opened with browser");
-  yield testDatalist(bowser, document);
+  await testDatalist(bowser, document);
   closePageAction(extension);
-  yield new Promise(resolve => setTimeout(resolve, 0));
+  await new Promise(resolve => setTimeout(resolve, 0));
 
   clickBrowserAction(extension);
-  bowser = yield awaitExtensionPanel(extension);
+  bowser = await awaitExtensionPanel(extension);
   ok(!!bowser, "panel opened with browser");
-  yield testDatalist(bowser, document);
+  await testDatalist(bowser, document);
   closeBrowserAction(extension);
-  yield new Promise(resolve => setTimeout(resolve, 0));
+  await new Promise(resolve => setTimeout(resolve, 0));
 
-  yield extension.unload();
-  yield BrowserTestUtils.removeTab(tab);
+  await extension.unload();
+  await BrowserTestUtils.removeTab(tab);
 });

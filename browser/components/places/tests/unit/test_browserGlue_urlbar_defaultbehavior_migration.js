@@ -37,7 +37,7 @@ function setupBehaviorAndMigrate(aDefaultBehavior, aAutocompleteEnabled = true) 
   gBrowserGlue.observe(null, TOPIC_BROWSERGLUE_TEST, TOPICDATA_BROWSERGLUE_TEST);
 }
 
-add_task(function*() {
+add_task(async function() {
   do_print("Migrate default.behavior = 0");
   setupBehaviorAndMigrate(0);
 
@@ -51,7 +51,7 @@ add_task(function*() {
     "Typed preference should be false.");
 });
 
-add_task(function*() {
+add_task(async function() {
   do_print("Migrate default.behavior = 1");
   setupBehaviorAndMigrate(1);
 
@@ -65,7 +65,7 @@ add_task(function*() {
     "Typed preference should be false");
 });
 
-add_task(function*() {
+add_task(async function() {
   do_print("Migrate default.behavior = 2");
   setupBehaviorAndMigrate(2);
 
@@ -79,7 +79,7 @@ add_task(function*() {
     "Typed preference should be false");
 });
 
-add_task(function*() {
+add_task(async function() {
   do_print("Migrate default.behavior = 3");
   setupBehaviorAndMigrate(3);
 
@@ -93,7 +93,7 @@ add_task(function*() {
     "Typed preference should be false");
 });
 
-add_task(function*() {
+add_task(async function() {
   do_print("Migrate default.behavior = 19");
   setupBehaviorAndMigrate(19);
 
@@ -107,7 +107,7 @@ add_task(function*() {
     "Typed preference should be false");
 });
 
-add_task(function*() {
+add_task(async function() {
   do_print("Migrate default.behavior = 33");
   setupBehaviorAndMigrate(33);
 
@@ -121,7 +121,7 @@ add_task(function*() {
     "Typed preference should be true");
 });
 
-add_task(function*() {
+add_task(async function() {
   do_print("Migrate default.behavior = 129");
   setupBehaviorAndMigrate(129);
 
@@ -135,7 +135,7 @@ add_task(function*() {
     "Typed preference should be false");
 });
 
-add_task(function*() {
+add_task(async function() {
   do_print("Migrate default.behavior = 0, autocomplete.enabled = false");
   setupBehaviorAndMigrate(0, false);
 

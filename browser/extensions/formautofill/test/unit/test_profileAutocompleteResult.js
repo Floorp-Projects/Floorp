@@ -161,7 +161,7 @@ let testCases = [{
   },
 }];
 
-add_task(function* test_all_patterns() {
+add_task(async function test_all_patterns() {
   testCases.forEach(testCase => {
     do_print("Starting testcase: " + testCase.description);
     let actual = new ProfileAutoCompleteResult(testCase.searchString,
