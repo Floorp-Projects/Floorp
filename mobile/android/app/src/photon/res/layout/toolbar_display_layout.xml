@@ -11,15 +11,16 @@
          we add a bottom margin to align their bottoms.
          Site security icon must have exact position and size as search icon in
          edit layout -->
-    <ImageButton
+    <org.mozilla.gecko.widget.themed.ThemedImageButton
         android:id="@+id/site_security"
-        style="@style/UrlBar.ImageButton"
+        style="@style/UrlBar.Button"
         android:layout_width="@dimen/browser_toolbar_site_security_width"
         android:layout_height="@dimen/browser_toolbar_site_security_height"
         android:layout_gravity="center_vertical"
         android:layout_marginBottom="@dimen/browser_toolbar_site_security_margin_bottom"
         android:layout_marginEnd="@dimen/browser_toolbar_site_security_margin_end"
         android:layout_marginRight="@dimen/browser_toolbar_site_security_margin_end"
+        android:background="@android:color/transparent"
         android:contentDescription="@string/site_security"
         android:paddingBottom="@dimen/browser_toolbar_site_security_padding_vertical"
         android:paddingEnd="@dimen/browser_toolbar_site_security_padding_horizontal"
