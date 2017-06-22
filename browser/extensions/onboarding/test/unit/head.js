@@ -25,6 +25,7 @@ if (!extensionDir.exists()) {
 Components.manager.addBootstrappedManifestLocation(extensionDir);
 
 const TOURSET_VERSION = 1;
+const NEXT_TOURSET_VERSION = 2;
 const PREF_TOUR_TYPE = "browser.onboarding.tour-type";
 const PREF_TOURSET_VERSION = "browser.onboarding.tourset-version";
 const PREF_SEEN_TOURSET_VERSION = "browser.onboarding.seen-tourset-version";
@@ -35,5 +36,13 @@ function resetOnboardingDefaultState() {
   Services.prefs.setBoolPref(PREF_ONBOARDING_HIDDEN, false);
   Services.prefs.setIntPref(PREF_TOURSET_VERSION, TOURSET_VERSION);
   Services.prefs.clearUserPref(PREF_SEEN_TOURSET_VERSION);
+  Services.prefs.clearUserPref(PREF_TOUR_TYPE);
+}
+
+function resetOldProfileDefaultState() {
+  // All the prefs should be reset to what prefs should looks like in a older new user profile
+  Services.prefs.setIntPref(PREF_TOURSET_VERSION, TOURSET_VERSION);
+  Services.prefs.setIntPref(PREF_SEEN_TOURSET_VERSION, 0);
+  Services.prefs.clearUserPref(PREF_ONBOARDING_HIDDEN);
   Services.prefs.clearUserPref(PREF_TOUR_TYPE);
 }
