@@ -12,6 +12,7 @@
 #include "mozilla/Telemetry.h"
 #ifdef MOZ_CRASHREPORTER
 # include "nsExceptionHandler.h"
+# include "nsIAsyncShutdown.h"
 # include "nsICrashService.h"
 #endif
 
@@ -105,6 +106,52 @@ CrashReporterHost::FinalizeCrashReport()
   return true;
 }
 
+namespace {
+class GenerateMinidumpShutdownBlocker : public nsIAsyncShutdownBlocker {
+public:
+  GenerateMinidumpShutdownBlocker() = default;
+
+  NS_IMETHOD BlockShutdown(nsIAsyncShutdownClient* aBarrierClient) override
+  {
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetName(nsAString& aName) override
+  {
+    aName = NS_LITERAL_STRING("Crash Reporter: blocking on minidump"
+                              "generation.");
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetState(nsIPropertyBag**) override
+  {
+    return NS_OK;
+  }
+
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+private:
+  virtual ~GenerateMinidumpShutdownBlocker() = default;
+};
+
+NS_IMPL_ISUPPORTS(GenerateMinidumpShutdownBlocker, nsIAsyncShutdownBlocker)
+}
+
+static nsCOMPtr<nsIAsyncShutdownClient> GetShutdownBarrier()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdown();
+  nsCOMPtr<nsIAsyncShutdownClient> barrier;
+  nsresult rv = svc->GetProfileBeforeChange(getter_AddRefs(barrier));
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  return barrier.forget();
+}
+
 void
 CrashReporterHost::GenerateMinidumpAndPair(GeckoChildProcessHost* aChildProcess,
                                            nsIFile* aMinidumpToPair,
@@ -131,13 +178,36 @@ CrashReporterHost::GenerateMinidumpAndPair(GeckoChildProcessHost* aChildProcess,
     return;
   }
 
+  nsCOMPtr<nsIAsyncShutdownBlocker> shutdownBlocker;
+  if (aAsync && NS_IsMainThread()) {
+    nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
+    if (!barrier) {
+      mCreateMinidumpCallback.Invoke(false);
+      return;
+    }
+
+    shutdownBlocker = new GenerateMinidumpShutdownBlocker();
+
+    nsresult rv = barrier->AddBlocker(shutdownBlocker,
+                                      NS_LITERAL_STRING(__FILE__), __LINE__,
+                                      NS_LITERAL_STRING("Minidump generation"));
+    Unused << NS_WARN_IF(NS_FAILED(rv));
+  }
+
   std::function<void(bool)> callback =
-    [this](bool aResult) {
+    [this, shutdownBlocker](bool aResult) {
       if (aResult &&
           CrashReporter::GetIDFromMinidump(this->mTargetDump, this->mDumpID)) {
         this->mCreateMinidumpCallback.Invoke(true);
       } else {
         this->mCreateMinidumpCallback.Invoke(false);
+       }
+
+       if (shutdownBlocker) {
+         nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
+         if (barrier) {
+           barrier->RemoveBlocker(shutdownBlocker);
+         }
       }
     };
 
