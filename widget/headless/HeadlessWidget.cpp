@@ -161,8 +161,11 @@ HeadlessWidget::Resize(double aWidth,
                        double aHeight,
                        bool   aRepaint)
 {
-  mBounds.SizeTo(LayoutDeviceIntSize(NSToIntRound(aWidth),
-                                     NSToIntRound(aHeight)));
+  int32_t width = NSToIntRound(aWidth);
+  int32_t height = NSToIntRound(aHeight);
+  ConstrainSize(&width, &height);
+  mBounds.SizeTo(LayoutDeviceIntSize(width, height));
+
   if (mLayerManager) {
     RefPtr<gfxContext> ctx = CreateDefaultTarget(IntSize(mBounds.width, mBounds.height));
     mLayerManager->AsBasicLayerManager()->SetDefaultTarget(ctx);
