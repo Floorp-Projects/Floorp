@@ -3125,13 +3125,14 @@ nsPermissionManager::GetPermissionsWithKey(const nsACString& aPermissionKey,
   for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
     PermissionHashKey* entry = iter.Get();
 
-    nsAutoCString permissionKey;
-    GetKeyForOrigin(entry->GetKey()->mOrigin, permissionKey);
+    // XXX: Is it worthwhile to have a shortcut Origin->Key implementation? as
+    // we could implement this without creating a codebase principal.
 
-    // If the keys don't match, and we aren't getting the default "" key, then
-    // we can exit early. We have to keep looking if we're getting the default
-    // key, as we may see a preload permission which should be transmitted.
-    if (aPermissionKey != permissionKey && !aPermissionKey.IsEmpty()) {
+    // Fetch the principal for the given origin.
+    nsCOMPtr<nsIPrincipal> principal;
+    nsresult rv = GetPrincipalFromOrigin(entry->GetKey()->mOrigin,
+                                         getter_AddRefs(principal));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       continue;
     }
 
@@ -3143,8 +3144,14 @@ nsPermissionManager::GetPermissionsWithKey(const nsACString& aPermissionKey,
         continue;
       }
 
-      bool isPreload = IsPreloadPermission(mTypeArray[permEntry.mType].get());
-      if ((isPreload && aPermissionKey.IsEmpty()) || (!isPreload && aPermissionKey == permissionKey)) {
+      // XXX: This performs extra work, such as in many cases re-computing the
+      // Origin (which we just computed the nsIPrincipal from). We may want to
+      // implement a custom version of this logic which avoids that extra work.
+      // See bug 1354700.
+      nsAutoCString permissionKey;
+      GetKeyForPermission(principal, mTypeArray[permEntry.mType].get(), permissionKey);
+
+      if (permissionKey == aPermissionKey) {
         aPerms.AppendElement(IPC::Permission(entry->GetKey()->mOrigin,
                                              mTypeArray.ElementAt(permEntry.mType),
                                              permEntry.mPermission,
@@ -3207,63 +3214,43 @@ nsPermissionManager::SetPermissionsWithKey(const nsACString& aPermissionKey,
 }
 
 /* static */ void
-nsPermissionManager::GetKeyForOrigin(const nsACString& aOrigin, nsACString& aKey)
-{
-  aKey.Truncate();
-
-  // We only key origins for http, https, and ftp URIs. All origins begin with
-  // the URL which they apply to, which means that they should begin with their
-  // scheme in the case where they are one of these interesting URIs. We don't
-  // want to actually parse the URL here however, because this can be called on
-  // hot paths.
-  if (!StringBeginsWith(aOrigin, NS_LITERAL_CSTRING("http:")) &&
-      !StringBeginsWith(aOrigin, NS_LITERAL_CSTRING("https:")) &&
-      !StringBeginsWith(aOrigin, NS_LITERAL_CSTRING("ftp:"))) {
-    return;
-  }
-
-  // We need to look at the originAttributes if they are present, to make sure
-  // to remove any which we don't want. We put the rest of the origin, not
-  // including the attributes, into the key.
-  OriginAttributes attrs;
-  if (!attrs.PopulateFromOrigin(aOrigin, aKey)) {
-    aKey.Truncate();
-    return;
-  }
-  attrs.StripAttributes(OriginAttributes::STRIP_USER_CONTEXT_ID |
-                        OriginAttributes::STRIP_FIRST_PARTY_DOMAIN);
-
-#ifdef DEBUG
-  // Parse the origin string into a principal, and extract some useful
-  // information from it for assertions.
-  nsCOMPtr<nsIPrincipal> dbgPrincipal;
-  MOZ_ALWAYS_SUCCEEDS(GetPrincipalFromOrigin(aOrigin, getter_AddRefs(dbgPrincipal)));
-  nsCOMPtr<nsIURI> dbgUri;
-  MOZ_ALWAYS_SUCCEEDS(dbgPrincipal->GetURI(getter_AddRefs(dbgUri)));
-  nsAutoCString dbgScheme;
-  MOZ_ALWAYS_SUCCEEDS(dbgUri->GetScheme(dbgScheme));
-  MOZ_ASSERT(dbgScheme.EqualsLiteral("http") ||
-             dbgScheme.EqualsLiteral("https") ||
-             dbgScheme.EqualsLiteral("ftp"));
-  MOZ_ASSERT(dbgPrincipal->OriginAttributesRef() == attrs);
-#endif
-
-  // Append the stripped suffix to the output origin key.
-  nsAutoCString suffix;
-  attrs.CreateSuffix(suffix);
-  aKey.Append(suffix);
-}
-
-/* static */ void
 nsPermissionManager::GetKeyForPrincipal(nsIPrincipal* aPrincipal, nsACString& aKey)
 {
-  nsAutoCString origin;
-  nsresult rv = aPrincipal->GetOrigin(origin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  MOZ_ASSERT(aPrincipal);
+  aKey.Truncate();
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv) || !uri)) {
+    // NOTE: We don't propagate the error here, instead we produce the default
+    // "" permission key. This means that we can assign every principal a key,
+    // even if the GetURI operation on that principal is not meaningful.
     aKey.Truncate();
     return;
   }
-  GetKeyForOrigin(origin, aKey);
+
+  nsAutoCString scheme;
+  rv = uri->GetScheme(scheme);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // NOTE: Produce the default "" key as a fallback.
+    aKey.Truncate();
+    return;
+  }
+
+  // URIs which have schemes other than http, https and ftp share the ""
+  // permission key.
+  if (scheme.EqualsLiteral("http") ||
+      scheme.EqualsLiteral("https") ||
+      scheme.EqualsLiteral("ftp")) {
+    rv = GetOriginFromPrincipal(aPrincipal, aKey);
+    if (NS_SUCCEEDED(rv)) {
+      return;
+    }
+  }
+
+  // NOTE: Produce the default "" key as a fallback.
+  aKey.Truncate();
+  return;
 }
 
 /* static */ void

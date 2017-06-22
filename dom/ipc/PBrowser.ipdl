@@ -150,6 +150,11 @@ parent:
     async PPaymentRequest();
 
     /**
+     * Return native data of root widget
+     */
+    nested(inside_cpow) sync GetWidgetNativeData() returns (WindowsHandle value);
+
+    /**
      * Sends an NS_NATIVE_CHILD_OF_SHAREABLE_WINDOW to be adopted by the
      * widget's shareable window on the chrome side. Only used on Windows.
      */
@@ -454,9 +459,13 @@ parent:
      *
      * @param opener the PBrowser whose content called window.open.
      */
-    async BrowserFrameOpenWindow(PBrowser opener, PRenderFrame renderFrame,
-                                 nsString aURL, nsString aName, nsString aFeatures)
-        returns (CreatedWindowInfo window);
+    sync BrowserFrameOpenWindow(PBrowser opener, PRenderFrame renderFrame,
+                                nsString aURL, nsString aName, nsString aFeatures)
+      returns (bool windowOpened,
+               TextureFactoryIdentifier textureFactoryIdentifier,
+               uint64_t layersId,
+               CompositorOptions compositorOptions,
+               uint32_t maxTouchPoints);
 
     /**
      * Tells the containing widget whether the given input block results in a
@@ -888,12 +897,6 @@ child:
      * be called before the first non-blank document is loaded in the TabChild.
      */
     async SetOriginAttributes(OriginAttributes aOriginAttributes);
-
-    /**
-     * Pass the current handle for the current native widget to the content
-     * process, so it can be used by PuppetWidget.
-     */
-    async SetWidgetNativeData(WindowsHandle aHandle);
 
 /*
  * FIXME: write protocol!
