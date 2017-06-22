@@ -1672,20 +1672,8 @@ GeckoDriver.prototype.getTimeouts = function (cmd, resp) {
  *     not an integer.
  */
 GeckoDriver.prototype.setTimeouts = function (cmd, resp) {
-  // backwards compatibility with old API
-  // that accepted a dictionary {type: <string>, ms: <number>}
-  let json = {};
-  if (typeof cmd.parameters == "object" &&
-      "type" in cmd.parameters &&
-      "ms" in cmd.parameters) {
-    logger.warn("Using deprecated data structure for setting timeouts");
-    json = {[cmd.parameters.type]: parseInt(cmd.parameters.ms)};
-  } else {
-    json = cmd.parameters;
-  }
-
   // merge with existing timeouts
-  let merged = Object.assign(this.timeouts.toJSON(), json);
+  let merged = Object.assign(this.timeouts.toJSON(), cmd.parameters);
   this.timeouts = session.Timeouts.fromJSON(merged);
 };
 
@@ -3203,7 +3191,6 @@ GeckoDriver.prototype.commands = {
   "getContext": GeckoDriver.prototype.getContext,
   "executeScript": GeckoDriver.prototype.executeScript,
   "getTimeouts": GeckoDriver.prototype.getTimeouts,
-  "timeouts": GeckoDriver.prototype.setTimeouts,  // deprecated until Firefox 55
   "setTimeouts": GeckoDriver.prototype.setTimeouts,
   "singleTap": GeckoDriver.prototype.singleTap,
   "performActions": GeckoDriver.prototype.performActions,
@@ -3269,7 +3256,6 @@ GeckoDriver.prototype.commands = {
   "getTextFromDialog": GeckoDriver.prototype.getTextFromDialog,
   "sendKeysToDialog": GeckoDriver.prototype.sendKeysToDialog,
   "acceptConnections": GeckoDriver.prototype.acceptConnections,
-  "quitApplication": GeckoDriver.prototype.quit,  // deprecated, can be removed in Firefox 56
   "quit": GeckoDriver.prototype.quit,
 
   "localization:l10n:localizeEntity": GeckoDriver.prototype.localizeEntity,
