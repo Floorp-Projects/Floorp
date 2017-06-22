@@ -112,7 +112,7 @@ ContextStateTrackerOGL::Flush(GLContext* aGL)
     aGL->fDeleteQueries(1, &handle);
 
 #ifdef MOZ_GECKO_PROFILER
-    PROFILER_MARKER_PAYLOAD(
+    profiler_add_marker(
       "gpu_timer_query",
       MakeUnique<GPUMarkerPayload>(mCompletedSections[0].mCpuTimeStart,
                                    mCompletedSections[0].mCpuTimeEnd,

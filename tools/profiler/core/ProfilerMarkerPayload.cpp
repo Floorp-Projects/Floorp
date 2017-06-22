@@ -203,7 +203,7 @@ DOMEventMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
 void
 ProfilerJSEventMarker(const char *event)
 {
-    PROFILER_MARKER(event);
+  profiler_add_marker(event);
 }
 
 LayerTranslationMarkerPayload::LayerTranslationMarkerPayload(layers::Layer* aLayer,
