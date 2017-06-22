@@ -23,7 +23,7 @@ add_task(async function test() {
     }
 
     await ContentTask.spawn(browser, null, startTests);
-    await (mozBrowserTests(browser))();
+    await mozBrowserTests(browser);
   });
 });
 

@@ -23,7 +23,7 @@
 
   function expectUseGlobalHistory(id, expected) {
     let browser = document.getElementById(id);
-    return ContentTask.spawn(browser, {id, expected}, function*({id, expected}) {
+    return ContentTask.spawn(browser, {id, expected}, function({id, expected}) {
       Assert.equal(docShell.useGlobalHistory, expected,
                    "Got the right useGlobalHistory state in the docShell of " + id);
     });

@@ -72,7 +72,8 @@ this.ManifestObtainer = { // jshint ignore:line
       throw err;
     }
     return manifest;
-  }};
+  }
+};
 
 function toError(aErrorClone) {
   let error;

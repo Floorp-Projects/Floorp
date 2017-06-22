@@ -229,7 +229,15 @@ function task(fn) {
     it.value.then(next_step, (e) => next_step(null, e));
   }
 
-  next_step();
+  if (!gen.then) {
+    next_step();
+  } else {
+    gen.then(finishTest, e => {
+      ok(false, "An error was thrown while stepping: " + e);
+      ok(false, "Stack: " + e.stack);
+      finishTest();
+    });
+  }
 }
 
 var thirdparty = "https://example.com/tests/dom/tests/mochitest/general/";
