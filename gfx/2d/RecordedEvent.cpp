@@ -1910,7 +1910,6 @@ RecordedFilterNodeSetAttribute::PlayEvent(Translator *aTranslator) const
 void
 RecordedFilterNodeSetAttribute::RecordToStream(ostream &aStream) const
 {
-  RecordedEvent::RecordToStream(aStream);
   WriteElement(aStream, mNode);
   WriteElement(aStream, mIndex);
   WriteElement(aStream, mArgType);
@@ -1953,7 +1952,6 @@ RecordedFilterNodeSetInput::PlayEvent(Translator *aTranslator) const
 void
 RecordedFilterNodeSetInput::RecordToStream(ostream &aStream) const
 {
-  RecordedEvent::RecordToStream(aStream);
   WriteElement(aStream, mNode);
   WriteElement(aStream, mIndex);
   WriteElement(aStream, mInputFilter);
