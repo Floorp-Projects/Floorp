@@ -22,8 +22,6 @@ using CSSRect from "Units.h";
 using CSSSize from "Units.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
 using mozilla::dom::ScreenOrientationInternal from "mozilla/dom/ScreenOrientation.h";
-using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
-using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
 
 namespace mozilla {
 namespace dom {
@@ -96,28 +94,6 @@ struct DimensionInfo
   ScreenOrientationInternal orientation;
   LayoutDeviceIntPoint clientOffset;
   LayoutDeviceIntPoint chromeDisp;
-};
-
-struct FrameScriptInfo
-{
-  nsString url;
-  bool runInGlobalScope;
-};
-
-/**
- * The information required to complete a window creation request.
- */
-struct CreatedWindowInfo
-{
-  nsresult rv;
-  bool windowOpened;
-  FrameScriptInfo[] frameScripts;
-  nsCString urlToLoad;
-  TextureFactoryIdentifier textureFactoryIdentifier;
-  uint64_t layersId;
-  CompositorOptions compositorOptions;
-  uint32_t maxTouchPoints;
-  DimensionInfo dimensions;
 };
 
 } // namespace dom

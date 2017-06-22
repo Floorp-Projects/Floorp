@@ -2583,31 +2583,21 @@ TabParent::RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
                                       const nsString& aURL,
                                       const nsString& aName,
                                       const nsString& aFeatures,
-                                      BrowserFrameOpenWindowResolver&& aResolve)
+                                      bool* aOutWindowOpened,
+                                      TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                      uint64_t* aLayersId,
+                                      CompositorOptions* aCompositorOptions,
+                                      uint32_t* aMaxTouchPoints)
 {
-  CreatedWindowInfo cwi;
-  cwi.rv() = NS_OK;
-  cwi.layersId() = 0;
-  cwi.maxTouchPoints() = 0;
-
   BrowserElementParent::OpenWindowResult opened =
     BrowserElementParent::OpenWindowOOP(TabParent::GetFrom(aOpener),
                                         this, aRenderFrame, aURL, aName, aFeatures,
-                                        &cwi.textureFactoryIdentifier(),
-                                        &cwi.layersId());
-  cwi.compositorOptions() =
-    static_cast<RenderFrameParent*>(aRenderFrame)->GetCompositorOptions();
-  cwi.windowOpened() = (opened == BrowserElementParent::OPEN_WINDOW_ADDED);
+                                        aTextureFactoryIdentifier, aLayersId);
+  *aCompositorOptions = static_cast<RenderFrameParent*>(aRenderFrame)->GetCompositorOptions();
+  *aOutWindowOpened = (opened == BrowserElementParent::OPEN_WINDOW_ADDED);
   nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (widget) {
-    cwi.maxTouchPoints() = widget->GetMaxTouchPoints();
-    cwi.dimensions() = GetDimensionInfo();
-  }
-
-  // Resolve the request with the information we collected.
-  aResolve(cwi);
-
-  if (!cwi.windowOpened()) {
+  *aMaxTouchPoints = widget ? widget->GetMaxTouchPoints() : 0;
+  if (!*aOutWindowOpened) {
     Destroy();
   }
   return IPC_OK();
