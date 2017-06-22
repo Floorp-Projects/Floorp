@@ -150,6 +150,11 @@ parent:
     async PPaymentRequest();
 
     /**
+     * Return native data of root widget
+     */
+    nested(inside_cpow) sync GetWidgetNativeData() returns (WindowsHandle value);
+
+    /**
      * Sends an NS_NATIVE_CHILD_OF_SHAREABLE_WINDOW to be adopted by the
      * widget's shareable window on the chrome side. Only used on Windows.
      */
@@ -888,12 +893,6 @@ child:
      * be called before the first non-blank document is loaded in the TabChild.
      */
     async SetOriginAttributes(OriginAttributes aOriginAttributes);
-
-    /**
-     * Pass the current handle for the current native widget to the content
-     * process, so it can be used by PuppetWidget.
-     */
-    async SetWidgetNativeData(WindowsHandle aHandle);
 
 /*
  * FIXME: write protocol!
