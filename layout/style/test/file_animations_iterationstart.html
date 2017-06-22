@@ -35,21 +35,21 @@ runOMTATest(function() {
 }, finish, opener.SpecialPowers);
 
 
-addAsyncAnimTest(function *() {
+addAsyncAnimTest(async function() {
   var [ div ] = new_div("test");
   var animation = div.animate(
     { transform: ["translate(0px)", "translate(100px)"] },
     { iterationStart: 0.5, duration: 10000, fill: "both"}
   );
-  yield waitForPaints();
+  await waitForPaints();
   omta_is(div, "transform", { tx: 50 }, RunningOn.Compositor, "Start of Animation");
 
   advance_clock(4000);
-  yield waitForPaints();
+  await waitForPaints();
   omta_is(div, "transform", { tx: 90 }, RunningOn.Compositor, "40% of Animation");
 
   advance_clock(6000);
-  yield waitForPaints();
+  await waitForPaints();
   // Bug 1352336: The following should be RunningOn.MainThread
   omta_is(div, "transform", { tx: 50 }, RunningOn.Either, "End of Animation");
 

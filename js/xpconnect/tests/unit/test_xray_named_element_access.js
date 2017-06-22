@@ -8,7 +8,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 const XRAY_PREF = "dom.allow_named_properties_object_for_xrays";
 
-add_task(function*() {
+add_task(async function() {
   let webnav = Services.appShell.createWindowlessBrowser(false);
 
   let docShell = webnav.QueryInterface(Ci.nsIInterfaceRequestor)

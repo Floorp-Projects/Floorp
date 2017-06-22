@@ -10,7 +10,6 @@ try {
 } catch (ex) {}
 
 Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/Task.jsm");
 Components.utils.import("resource:///modules/E10SUtils.jsm");
 
 var NUM_CYCLES = 5;
@@ -446,14 +445,14 @@ function loadFail() {
   }
 }
 
-var plNextPage = Task.async(function*() {
+var plNextPage = async function() {
   var doNextPage = false;
   if (pageCycle < numPageCycles) {
     pageCycle++;
     doNextPage = true;
   } else {
     if (profilingInfo) {
-      yield Profiler.finishTestAsync();
+      await Profiler.finishTestAsync();
     }
 
     if (pageIndex < pages.length-1) {
@@ -479,7 +478,7 @@ var plNextPage = Task.async(function*() {
       // Now asynchronously trigger GC / CC in the content process if we're
       // in an e10s window.
       if (browserWindow.gMultiProcessBrowser) {
-        yield forceContentGC();
+        await forceContentGC();
       }
     }
 
@@ -487,7 +486,7 @@ var plNextPage = Task.async(function*() {
   } else {
     plStop(false);
   }
-});
+};
 
 function forceContentGC() {
   return new Promise((resolve) => {

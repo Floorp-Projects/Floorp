@@ -21,7 +21,7 @@
     const DEBUGGER_URL = BASE_URL + "WorkerDebugger.postMessage_debugger.js";
 
     function test() {
-      Task.spawn(function* () {
+      (async function() {
         SimpleTest.waitForExplicitFinish();
 
         info("Create a worker that creates a child worker, wait for their " +
@@ -31,22 +31,22 @@
           waitForRegister(CHILD_WORKER_URL, DEBUGGER_URL)
         ]);
         let worker = new Worker(WORKER_URL);
-        let [dbg, childDbg] = yield promise;
+        let [dbg, childDbg] = await promise;
 
         info("Send a request to the worker debugger. This should cause the " +
              "the worker debugger to send a response.");
         promise = waitForDebuggerMessage(dbg, "pong");
         dbg.postMessage("ping");
-        yield promise;
+        await promise;
 
         info("Send a request to the child worker debugger. This should cause " +
              "the child worker debugger to send a response.");
         promise = waitForDebuggerMessage(childDbg, "pong");
         childDbg.postMessage("ping");
-        yield promise;
+        await promise;
 
         SimpleTest.finish();
-      });
+      })();
     }
 
   ]]>

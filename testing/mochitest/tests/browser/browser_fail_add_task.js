@@ -9,19 +9,19 @@ function rejectOnNextTick(error) {
   return new Promise((resolve, reject) => executeSoon(() => reject(error)));
 }
 
-add_task(function failWithoutError() {
-  yield rejectOnNextTick(undefined);
+add_task(async function failWithoutError() {
+  await rejectOnNextTick(undefined);
 });
 
-add_task(function failWithString() {
-  yield rejectOnNextTick("This is a string");
+add_task(async function failWithString() {
+  await rejectOnNextTick("This is a string");
 });
 
-add_task(function failWithInt() {
-  yield rejectOnNextTick(42);
+add_task(async function failWithInt() {
+  await rejectOnNextTick(42);
 });
 
 // This one should display a stack trace
-add_task(function failWithError() {
-  yield rejectOnNextTick(new Error("This is an error"));
+add_task(async function failWithError() {
+  await rejectOnNextTick(new Error("This is an error"));
 });

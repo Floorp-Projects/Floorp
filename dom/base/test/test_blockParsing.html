@@ -10,7 +10,7 @@
 <script>
 Components.utils.import("resource://testing-common/TestUtils.jsm");
 
-function* runTest(url, initialHTML, finalHTML) {
+async function runTest(url, initialHTML, finalHTML) {
   let iframe = document.createElement("iframe");
   iframe.src = url;
 
@@ -39,7 +39,7 @@ function* runTest(url, initialHTML, finalHTML) {
   document.body.appendChild(iframe);
 
   // Wait for document-element-inserted to fire.
-  let doc = yield promise;
+  let doc = await promise;
   let win = doc.defaultView.wrappedJSObject;
   let root = doc.documentElement;
 
@@ -48,14 +48,14 @@ function* runTest(url, initialHTML, finalHTML) {
   is(root.outerHTML, initialHTML, "Should have initial HTML after document-element-inserted returns");
   is(win.scriptRan, undefined, "Script node should still not have run");
 
-  yield blockerPromise;
+  await blockerPromise;
 
   // Just after the promise that's blocking the parser fires, we shouldn't have
   // returned to the main event loop, so we should still have the initial HTML.
   is(root.outerHTML, initialHTML, "Should still have initial HTML");
   is(win.scriptRan, undefined, "Script node should still not have run");
 
-  yield new Promise(resolve => win.addEventListener("DOMContentLoaded", resolve, {once: true}));
+  await new Promise(resolve => win.addEventListener("DOMContentLoaded", resolve, {once: true}));
 
   // Parsing should have resumed, and we should have finished loading the document.
   is(root.outerHTML, finalHTML, "Should have final HTML");
@@ -64,25 +64,25 @@ function* runTest(url, initialHTML, finalHTML) {
   iframe.remove();
 }
 
-add_task(function* () {
-  yield runTest("http://mochi.test:8888/chrome/dom/base/test/file_inline_script.html",
+add_task(async function() {
+  await runTest("http://mochi.test:8888/chrome/dom/base/test/file_inline_script.html",
                 '<html lang="en"></html>',
                 '<html lang="en"><head>\n  <script>window.scriptRan = true;<\/script>\n  <meta charset="utf-8">\n  <title></title>\n</head>\n<body>\n  <p>Hello Mochitest</p>\n\n\n</body></html>');
 
-  yield runTest("http://mochi.test:8888/chrome/dom/base/test/file_inline_script.xhtml",
+  await runTest("http://mochi.test:8888/chrome/dom/base/test/file_inline_script.xhtml",
                 '<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml"></html>',
                 '<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">\n<head>\n  <script>window.scriptRan = true;<\/script>\n  <title></title>\n</head>\n<body>\n  <p>Hello Mochitest</p>\n</body>\n</html>');
 
-  yield runTest("http://mochi.test:8888/chrome/dom/base/test/file_external_script.html",
+  await runTest("http://mochi.test:8888/chrome/dom/base/test/file_external_script.html",
                 '<html lang="en"></html>',
                 '<html lang="en"><head>\n  <script src="file_script.js"><\/script>\n  <meta charset="utf-8">\n  <title></title>\n</head>\n<body>\n  <p>Hello Mochitest</p>\n\n\n</body></html>');
 
-  yield runTest("http://mochi.test:8888/chrome/dom/base/test/file_external_script.xhtml",
+  await runTest("http://mochi.test:8888/chrome/dom/base/test/file_external_script.xhtml",
                 '<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml"></html>',
                 '<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">\n<head>\n  <script src="file_script.js"><\/script>\n  <title></title>\n</head>\n<body>\n  <p>Hello Mochitest</p>\n</body>\n</html>');
 });
 
-add_task(function* test_cleanup() {
+add_task(async function test_cleanup() {
   const TOPIC = "blocking-promise-destroyed";
 
   const finalizationWitness = Components.classes["@mozilla.org/toolkit/finalizationwitness;1"]
@@ -109,7 +109,7 @@ add_task(function* test_cleanup() {
     });
 
     document.body.appendChild(iframe);
-    yield insertedPromise;
+    await insertedPromise;
 
     // Clear the promise reference, destroy the document, and force GC/CC. This should
     // trigger any potential leaks or cleanup issues.
@@ -122,7 +122,7 @@ add_task(function* test_cleanup() {
     Components.utils.forceGC();
 
     // Make sure the blocker promise has been collected.
-    let [, data] = yield destroyedPromise;
+    let [, data] = await destroyedPromise;
     is(data, url, "Should have correct finalizer URL");
   }
 });

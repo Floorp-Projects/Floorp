@@ -2,9 +2,9 @@ let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(testDir + "/helper_largeAllocation.js", this);
 
 // Force-enabling the Large-Allocation header
-add_task(function*() {
+add_task(async function() {
   info("Test 1 - force enabling the Large-Allocation header");
-  yield SpecialPowers.pushPrefEnv({
+  await SpecialPowers.pushPrefEnv({
     set: [
       // Enable the header if it is disabled
       ["dom.largeAllocationHeader.enabled", true],
@@ -17,12 +17,12 @@ add_task(function*() {
     ]
   });
 
-  yield* largeAllocSuccessTests();
+  await largeAllocSuccessTests();
 });
 
-add_task(function*() {
+add_task(async function() {
   info("Test 2 - not force enabling the Large-Allocation header");
-  yield SpecialPowers.pushPrefEnv({
+  await SpecialPowers.pushPrefEnv({
     set: [
       // Enable the header if it is disabled
       ["dom.largeAllocationHeader.enabled", true],
@@ -35,5 +35,5 @@ add_task(function*() {
     ]
   });
 
-  yield* largeAllocFailTests();
+  await largeAllocFailTests();
 });

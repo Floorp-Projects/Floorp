@@ -11,12 +11,12 @@
   <body>
     <iframe width="500"></iframe>
     <script>
-      add_task(function* () {
+      add_task(async function() {
         // Push the correct preferences for the test
-        yield SpecialPowers.pushPrefEnv({'set': [['dom.select_events.enabled', true]]});
+        await SpecialPowers.pushPrefEnv({'set': [['dom.select_events.enabled', true]]});
 
         // Start the actual test
-        yield new Promise((done) => {
+        await new Promise((done) => {
           var iframe = document.querySelector('iframe');
           iframe.addEventListener('load', done);
           iframe.setAttribute('src', 'frameSelectEvents.html');

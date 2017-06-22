@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_task(function*() {
+add_task(async function() {
   let Cu = Components.utils;
   let sb = new Cu.Sandbox('http://www.example.com',
                           { wantGlobalProperties: ["MessageChannel"] });
@@ -20,7 +20,7 @@ add_task(function*() {
 
   mc.port1.postMessage(42);
 
-  let result = yield new Promise(resolve => {
+  let result = await new Promise(resolve => {
     mc.port2.onmessage = e => {
       resolve(e.data);
     }

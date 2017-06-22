@@ -13,7 +13,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_register_case() {
+add_task(async function test_register_case() {
   let db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => {return db.drop().then(_ => db.close());});
 
@@ -42,7 +42,7 @@ add_task(function* test_register_case() {
     }
   });
 
-  let newRecord = yield PushService.register({
+  let newRecord = await PushService.register({
     scope: 'https://example.net/case',
     originAttributes: ChromeUtils.originAttributesToSuffix(
       { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
@@ -50,7 +50,7 @@ add_task(function* test_register_case() {
   equal(newRecord.endpoint, 'https://example.com/update/case',
     'Wrong push endpoint in registration record');
 
-  let record = yield db.getByPushEndpoint('https://example.com/update/case');
+  let record = await db.getByPushEndpoint('https://example.com/update/case');
   equal(record.scope, 'https://example.net/case',
     'Wrong scope in database record');
 });

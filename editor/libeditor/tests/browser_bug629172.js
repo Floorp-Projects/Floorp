@@ -1,12 +1,12 @@
-add_task(function*() {
-  yield new Promise(resolve => waitForFocus(resolve, window));
+add_task(async function() {
+  await new Promise(resolve => waitForFocus(resolve, window));
 
   const kPageURL = "http://example.org/browser/editor/libeditor/tests/bug629172.html";
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: kPageURL
-  }, function*(aBrowser) {
-    yield ContentTask.spawn(aBrowser, {}, function*() {
+  }, async function(aBrowser) {
+    await ContentTask.spawn(aBrowser, {}, async function() {
       var window = content.window.wrappedJSObject;
       var document = window.document;
 
@@ -51,8 +51,8 @@ add_task(function*() {
       return Promise.resolve();
     }
 
-    function* testDirection(initialDir, aBrowser) {
-      yield ContentTask.spawn(aBrowser, {initialDir}, function({initialDir}) {
+    async function testDirection(initialDir, aBrowser) {
+      await ContentTask.spawn(aBrowser, {initialDir}, function({initialDir}) {
         var window = content.window.wrappedJSObject;
         var document = window.document;
 
@@ -74,8 +74,8 @@ add_task(function*() {
         t.focus();
         is(window.inputEventCount, 0, "input event count must be 0 before");
       });
-      yield simulateCtrlShiftX(aBrowser);
-      yield ContentTask.spawn(aBrowser, {initialDir}, function({initialDir}) {
+      await simulateCtrlShiftX(aBrowser);
+      await ContentTask.spawn(aBrowser, {initialDir}, function({initialDir}) {
         var window = content.window.wrappedJSObject;
         var expectedDir = initialDir == "ltr" ? "rtl" : "ltr"
         is(window.t.getAttribute("dir"), expectedDir,
@@ -93,8 +93,8 @@ add_task(function*() {
         window.t.focus();
         is(window.inputEventCount, 1, "input event count must be 1 before");
       });
-      yield simulateCtrlShiftX(aBrowser);
-      yield ContentTask.spawn(aBrowser, {initialDir}, function({initialDir}) {
+      await simulateCtrlShiftX(aBrowser);
+      await ContentTask.spawn(aBrowser, {initialDir}, function({initialDir}) {
         var window = content.window.wrappedJSObject;
 
         is(window.inputEventCount, 2, "input event count must be 2 after");
@@ -112,7 +112,7 @@ add_task(function*() {
       });
     }
 
-    yield testDirection("ltr", aBrowser);
-    yield testDirection("rtl", aBrowser);
+    await testDirection("ltr", aBrowser);
+    await testDirection("rtl", aBrowser);
   });
 });

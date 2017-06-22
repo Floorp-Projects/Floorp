@@ -121,7 +121,7 @@ function areContentSyscallsSandboxed(level) {
 // Tests executing OS API calls in the content process. Limited to Mac
 // and Linux calls for now.
 //
-add_task(function* () {
+add_task(async function() {
   // This test is only relevant in e10s
   if (!gMultiProcessBrowser) {
     ok(false, "e10s is enabled");
@@ -168,7 +168,7 @@ add_task(function* () {
   if (isMac()) {
     // exec something harmless, this should fail
     let cmd = getOSExecCmd();
-    let rv = yield ContentTask.spawn(browser, {lib, cmd}, callExec);
+    let rv = await ContentTask.spawn(browser, {lib, cmd}, callExec);
     ok(rv == -1, `exec(${cmd}) is not permitted`);
   }
 
@@ -177,7 +177,7 @@ add_task(function* () {
     // open a file for writing in $HOME, this should fail
     let path = fileInHomeDir().path;
     let flags = openWriteCreateFlags();
-    let fd = yield ContentTask.spawn(browser, {lib, path, flags}, callOpen);
+    let fd = await ContentTask.spawn(browser, {lib, path, flags}, callOpen);
     ok(fd < 0, "opening a file for writing in home is not permitted");
   }
 
@@ -187,13 +187,13 @@ add_task(function* () {
     // and the open handler in the content process closes the file for us
     let path = fileInTempDir().path;
     let flags = openWriteCreateFlags();
-    let fd = yield ContentTask.spawn(browser, {lib, path, flags}, callOpen);
+    let fd = await ContentTask.spawn(browser, {lib, path, flags}, callOpen);
     ok(fd >= 0, "opening a file for writing in content temp is permitted");
   }
 
   // use fork syscall
   if (isLinux() || isMac()) {
-    let rv = yield ContentTask.spawn(browser, {lib}, callFork);
+    let rv = await ContentTask.spawn(browser, {lib}, callFork);
     ok(rv == -1, "calling fork is not permitted");
   }
 });

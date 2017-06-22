@@ -20,14 +20,14 @@
     const DEBUGGER_URL = BASE_URL + "WorkerDebugger_suspended_debugger.js";
 
     function test() {
-      Task.spawn(function* () {
+      (async function() {
         SimpleTest.waitForExplicitFinish();
 
         info("Create a worker, wait for its debugger to be registered, and " +
              "initialize it.");
         let promise = waitForRegister(WORKER_URL, DEBUGGER_URL);
         let worker = new Worker(WORKER_URL);
-        let dbg = yield promise;
+        let dbg = await promise;
 
         info("Send a request to the worker. This should cause both the " +
              "worker and the worker debugger to send a response.");
@@ -36,7 +36,7 @@
           waitForDebuggerMessage(dbg, "debugger")
         ]);
         worker.postMessage("ping");
-        yield promise;
+        await promise;
 
         info("Suspend the workers for this window, and send another request " +
              "to the worker. This should cause only the worker debugger to " +
@@ -50,17 +50,17 @@
         worker.addEventListener("message", onmessage);
         promise = waitForDebuggerMessage(dbg, "debugger");
         worker.postMessage("ping");
-        yield promise;
+        await promise;
         worker.removeEventListener("message", onmessage);
 
         info("Resume the workers for this window. This should cause the " +
              "worker to send a response to the previous request.");
         promise = waitForWorkerMessage(worker, "worker");
         windowUtils.resumeTimeouts();
-        yield promise;
+        await promise;
 
         SimpleTest.finish();
-      });
+      })();
     }
 
   ]]>

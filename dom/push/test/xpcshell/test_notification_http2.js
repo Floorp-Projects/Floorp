@@ -36,7 +36,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_pushNotifications() {
+add_task(async function test_pushNotifications() {
 
   // /pushNotifications/subscription1 will send a message with no rs and padding
   // length 1.
@@ -138,7 +138,7 @@ add_task(function* test_pushNotifications() {
   }];
 
   for (let record of records) {
-    yield db.put(record);
+    await db.put(record);
   }
 
   let notifyPromise = Promise.all([
@@ -177,5 +177,5 @@ add_task(function* test_pushNotifications() {
     db
   });
 
-  yield notifyPromise;
+  await notifyPromise;
 });

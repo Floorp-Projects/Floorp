@@ -20,7 +20,7 @@
     const CHILD_WORKER_URL = "WorkerDebuggerManager_childWorker.js";
 
     function test() {
-      Task.spawn(function* () {
+      (async function() {
         SimpleTest.waitForExplicitFinish();
 
         info("Check that worker debuggers are not enumerated before they are " +
@@ -38,7 +38,7 @@
           waitForRegister(CHILD_WORKER_URL)
         ]);
         let worker = new Worker(WORKER_URL);
-        let [dbg, childDbg] = yield promise;
+        let [dbg, childDbg] = await promise;
 
         info("Check that worker debuggers are enumerated after they are " +
              "registered.");
@@ -63,7 +63,7 @@
           waitForUnregister(WORKER_URL),
         ]);
         worker.terminate();
-        yield promise;
+        await promise;
 
         info("Check that worker debuggers are not enumerated after they are " +
              "unregistered.");
@@ -91,7 +91,7 @@
                      "throw after it is closed.");
 
         SimpleTest.finish();
-      });
+      })();
     }
 
   ]]>

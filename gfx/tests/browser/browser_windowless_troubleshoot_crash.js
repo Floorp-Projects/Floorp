@@ -1,6 +1,6 @@
 let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
-add_task(function* test_windowlessBrowserTroubleshootCrash() {
+add_task(async function test_windowlessBrowserTroubleshootCrash() {
   let webNav = Services.appShell.createWindowlessBrowser(false);
 
   let onLoaded = new Promise((resolve, reject) => {
@@ -23,7 +23,7 @@ add_task(function* test_windowlessBrowserTroubleshootCrash() {
   });
   webNav.loadURI("about:blank", 0, null, null, null);
 
-  yield onLoaded;
+  await onLoaded;
 
   let winUtils = webNav.document.defaultView.
                         QueryInterface(Ci.nsIInterfaceRequestor).
@@ -37,7 +37,7 @@ add_task(function* test_windowlessBrowserTroubleshootCrash() {
   ok(true, "not crashed");
 
   var Troubleshoot = Cu.import("resource://gre/modules/Troubleshoot.jsm", {}).Troubleshoot;
-  var data = yield new Promise((resolve, reject) => {
+  var data = await new Promise((resolve, reject) => {
     Troubleshoot.snapshot((data) => {
       resolve(data);
     });

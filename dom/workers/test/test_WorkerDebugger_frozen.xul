@@ -26,7 +26,7 @@
     const WORKER2_URL = "WorkerDebugger_frozen_worker2.js";
 
     function test() {
-      Task.spawn(function* () {
+      (async function() {
         SimpleTest.waitForExplicitFinish();
 
         var oldMaxTotalViewers = SpecialPowers.getIntPref(MAX_TOTAL_VIEWERS);
@@ -41,7 +41,7 @@
           waitForWindowMessage(window, "ready"),
         ]);
         iframe.src = IFRAME1_URL;
-        let [dbg1] = yield promise;
+        let [dbg1] = await promise;
         is(dbg1.isClosed, false,
            "debugger for worker on page 1 should not be closed");
 
@@ -52,7 +52,7 @@
           waitForWindowMessage(window, "ready"),
         ]);
         iframe.src = IFRAME2_URL;
-        let [,, dbg2] = yield promise;
+        let [,, dbg2] = await promise;
         is(dbg1.isClosed, true,
            "debugger for worker on page 1 should be closed");
         is(dbg2.isClosed, false,
@@ -64,7 +64,7 @@
           waitForRegister(WORKER1_URL)
         ]);
         iframe.contentWindow.history.back();
-        [,, dbg1] = yield promise;
+        [,, dbg1] = await promise;
         is(dbg1.isClosed, false,
            "debugger for worker on page 1 should not be closed");
         is(dbg2.isClosed, true,
@@ -74,7 +74,7 @@
         SpecialPowers.setIntPref(MAX_TOTAL_VIEWERS, oldMaxTotalViewers);
 
         SimpleTest.finish();
-      });
+      })();
     }
 
   ]]>

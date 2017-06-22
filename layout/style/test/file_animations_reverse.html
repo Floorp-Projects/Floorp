@@ -39,12 +39,12 @@ runOMTATest(function() {
   });
 }, finish, opener.SpecialPowers);
 
-addAsyncAnimTest(function *() {
+addAsyncAnimTest(async function() {
   var [ div, cs ] = new_div("animation: anim 10s linear");
   const animation = div.getAnimations()[0];
 
   // Animation is initially running on compositor
-  yield waitForPaintsFlushed();
+  await waitForPaintsFlushed();
   advance_clock(5000);
   omta_is(div, 'transform', { tx: 50 }, RunningOn.Compositor,
           'Animation is initally animating on compositor');
@@ -54,7 +54,7 @@ addAsyncAnimTest(function *() {
 
   // At this point the playbackRate has changed but the transform will
   // not have changed.
-  yield waitForPaints();
+  await waitForPaints();
   omta_is(div, 'transform', { tx: 50 }, RunningOn.Compositor,
           'Animation value does not change after being reversed');
 

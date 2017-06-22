@@ -19,17 +19,17 @@ https://bugzilla.mozilla.org/1281963
 // __setPref(key, value)__.
 // Set a pref value asynchronously, returning a promise that resolves
 // when it succeeds.
-let setPref = function* (key, value) {
+let setPref = function(key, value) {
   return SpecialPowers.pushPrefEnv({"set": [[key, value]]});
 };
 
 // Run a test to see that we don't expose the supported mimeTypes
 // or installed plugins when "privacy.resistFingerprinting" is active.
-add_task(function* () {
+add_task(async function() {
   let exampleMimeType = undefined,
       examplePlugin = undefined;
   // Disable fingerprinting resistance.
-  yield setPref("privacy.resistFingerprinting", false);
+  await setPref("privacy.resistFingerprinting", false);
   // Depending on the testing platform, we may have at least
   // one mimeType and plugin available.
   exampleMimeType = navigator.mimeTypes[0];
@@ -47,7 +47,7 @@ add_task(function* () {
   }
 
   // Now test with fingerprinting resistance enabled
-  yield setPref("privacy.resistFingerprinting", true);
+  await setPref("privacy.resistFingerprinting", true);
   if (exampleMimeType) {
     is(navigator.mimeTypes[exampleMimeType.type], undefined, "Don't reveal mime type");
   }

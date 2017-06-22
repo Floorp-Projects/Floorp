@@ -260,7 +260,7 @@ var sleep = function (timeoutMs) {
 // Test to see if media queries are properly spoofed in picture elements
 // when we are resisting fingerprinting. A generator function
 // to be used with SpawnTask.js.
-var testMediaQueriesInPictureElements = function* (resisting) {
+var testMediaQueriesInPictureElements = async function(resisting) {
   let lines = "";
   for (let [key, offVal, onVal] of expected_values) {
     let expected = resisting ? onVal : offVal;
@@ -274,7 +274,7 @@ var testMediaQueriesInPictureElements = function* (resisting) {
   }
   document.getElementById("pictures").innerHTML = lines;
   var testImages = document.getElementsByClassName("testImage");
-  yield sleep(0);
+  await sleep(0);
   for (let testImage of testImages) {
     ok(testImage.currentSrc.endsWith("/match.png"), "Media query '" + testImage.title + "' in picture should match.");
   }
@@ -292,9 +292,9 @@ var pushPref = function (key, value) {
 // __test(isContent)__.
 // Run all tests. A generator function to be used
 // with SpawnTask.js.
-var test = function* (isContent) {
+var test = async function(isContent) {
   for (prefValue of [false, true]) {
-    yield pushPref("privacy.resistFingerprinting", prefValue);
+    await pushPref("privacy.resistFingerprinting", prefValue);
     let resisting = prefValue && isContent;
     expected_values.forEach(
       function ([key, offVal, onVal]) {
@@ -309,6 +309,6 @@ var test = function* (isContent) {
     if (OS === "Darwin") {
       testOSXFontSmoothing(resisting);
     }
-    yield testMediaQueriesInPictureElements(resisting);
+    await testMediaQueriesInPictureElements(resisting);
   }
 };

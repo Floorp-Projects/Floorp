@@ -8,7 +8,6 @@
 
 SimpleTest.waitForExplicitFinish();
 
-Components.utils.import("resource://gre/modules/Task.jsm");
 
 var windowUtils = SpecialPowers.getDOMWindowUtils(window);
 
@@ -28,35 +27,35 @@ function initTest()
 
 function runTest()
 {
-  Task.async(function* () {
-    yield pressKey(false);
+  async function() {
+    await pressKey(false);
 
     ok(window.scrollY > 0, "Space with no focus" + window.scrollY);
-    yield pressKey(true);
+    await pressKey(true);
     is(window.scrollY, 0, "Shift+Space with no focus");
 
     let checkbox = document.getElementById("checkbox");
     checkbox.focus();
-    yield pressKey(false);
+    await pressKey(false);
 
     is(window.scrollY, 0, "Space with checkbox focused");
     ok(checkbox.checked, "Space with checkbox focused, checked");
-    yield pressKey(true);
+    await pressKey(true);
     is(window.scrollY, 0, "Shift+Space with checkbox focused");
     ok(!checkbox.checked, "Space with checkbox focused, unchecked");
 
     let input = document.getElementById("input");
     input.focus();
-    yield pressKey(false);
+    await pressKey(false);
     is(window.scrollY, 0, "Space with input focused");
     is(input.value, " ", "Space with input focused, value");
-    yield pressKey(true);
+    await pressKey(true);
     is(window.scrollY, 0, "Shift+Space with input focused");
     is(input.value, "  ", "Space with input focused, value");
 
     windowUtils.restoreNormalRefresh();
     SimpleTest.finish();
-  })();
+  }();
 }
 
   </script>

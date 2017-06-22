@@ -38,11 +38,11 @@ runOMTATest(function() {
   });
 }, finish, opener.SpecialPowers);
 
-addAsyncAnimTest(function *() {
+addAsyncAnimTest(async function() {
   var [ div, cs ] = new_div("animation: anim 10s 2 linear alternate");
 
   // Animation is initially running on compositor
-  yield waitForPaintsFlushed();
+  await waitForPaintsFlushed();
   advance_clock(1000);
   omta_is(div, "transform", { tx: 10 }, RunningOn.Compositor,
           "Animation is initally animating on compositor");
@@ -54,7 +54,7 @@ addAsyncAnimTest(function *() {
   // transaction but it won't schedule a paint immediately so we need to tick
   // the refresh driver before we can wait on the next paint.
   advance_clock(0);
-  yield waitForPaints();
+  await waitForPaints();
   omta_is(div, "transform", { tx: 10 }, RunningOn.MainThread,
           "After pausing, animation is removed from compositor");
 
@@ -69,7 +69,7 @@ addAsyncAnimTest(function *() {
   // transaction but won't schedule a paint so we need to tick the refresh
   // driver before waiting on the next paint.
   advance_clock(0);
-  yield waitForPaints();
+  await waitForPaints();
   omta_is(div, "transform", { tx: 10 }, RunningOn.Compositor,
           "After playing, animation is sent to compositor");
 

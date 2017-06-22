@@ -30,48 +30,48 @@ http://creativecommons.org/licenses/publicdomain/
   }
 
   var registration;
-  add_task(function* start() {
-    yield setupPrefsAndMockSocket(new MockWebSocket());
-    yield setPushPermission(true);
+  add_task(async function start() {
+    await setupPrefsAndMockSocket(new MockWebSocket());
+    await setPushPermission(true);
 
-    registration = yield navigator.serviceWorker.register(
+    registration = await navigator.serviceWorker.register(
       generateURL(), {scope: "."});
-    yield waitForActive(registration);
+    await waitForActive(registration);
   });
 
   var pushSubscription;
-  add_task(function* setupPushNotification() {
-    pushSubscription = yield registration.pushManager.subscribe();
+  add_task(async function setupPushNotification() {
+    pushSubscription = await registration.pushManager.subscribe();
     ok(pushSubscription, "successful registered for push notification");
   });
 
-  add_task(function* unregisterPushNotification() {
-    var result = yield pushSubscription.unsubscribe();
+  add_task(async function unregisterPushNotification() {
+    var result = await pushSubscription.unsubscribe();
     ok(result, "unsubscribe() on existing subscription should return true.");
   });
 
-  add_task(function* unregisterAgain() {
-    var result = yield pushSubscription.unsubscribe();
+  add_task(async function unregisterAgain() {
+    var result = await pushSubscription.unsubscribe();
     ok(!result, "unsubscribe() on previously unsubscribed subscription should return false.");
   });
 
-  add_task(function* subscribeAgain() {
-    pushSubscription = yield registration.pushManager.subscribe();
+  add_task(async function subscribeAgain() {
+    pushSubscription = await registration.pushManager.subscribe();
     ok(pushSubscription, "Should create a new push subscription");
 
-    var result = yield registration.unregister();
+    var result = await registration.unregister();
     ok(result, "Should unregister the service worker");
 
-    registration = yield navigator.serviceWorker.register(
+    registration = await navigator.serviceWorker.register(
       generateURL(), {scope: "."});
-    yield waitForActive(registration);
-    var pushSubscription = yield registration.pushManager.getSubscription();
+    await waitForActive(registration);
+    var pushSubscription = await registration.pushManager.getSubscription();
     ok(!pushSubscription,
       "Unregistering a service worker should drop its subscription");
   });
 
-  add_task(function* unregister() {
-    var result = yield registration.unregister();
+  add_task(async function unregister() {
+    var result = await registration.unregister();
     ok(result, "Unregister should return true.");
   });
 

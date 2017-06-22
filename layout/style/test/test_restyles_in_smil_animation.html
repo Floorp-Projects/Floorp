@@ -68,8 +68,8 @@ function waitForPaintFlushed() {
 
 SimpleTest.waitForExplicitFinish();
 
-add_task(function* smil_is_in_display_none_subtree() {
-  yield waitForPaintFlushed();
+add_task(async function smil_is_in_display_none_subtree() {
+  await waitForPaintFlushed();
 
   var animate =
     document.createElementNS("http://www.w3.org/2000/svg", "animate");
@@ -80,9 +80,9 @@ add_task(function* smil_is_in_display_none_subtree() {
   animate.setAttribute("repeatCount", "indefinite");
   document.getElementById("svg-rect").appendChild(animate);
 
-  yield waitForPaintFlushed();
+  await waitForPaintFlushed();
 
-  var displayMarkers = yield observeStyling(5);
+  var displayMarkers = await observeStyling(5);
   // FIXME: Bug 866411: SMIL animations sometimes skip restyles when the target
   // element is newly associated with an nsIFrame.
   ok(displayMarkers.length == 5 || displayMarkers.length == 4,
@@ -93,23 +93,23 @@ add_task(function* smil_is_in_display_none_subtree() {
 
   div.style.display = "none";
   getComputedStyle(div).display;
-  yield waitForPaintFlushed();
+  await waitForPaintFlushed();
 
-  var displayNoneMarkers = yield observeStyling(5);
+  var displayNoneMarkers = await observeStyling(5);
   is(displayNoneMarkers.length, 0, "should never restyle if display:none");
 
   div.style.display = "";
   getComputedStyle(div).display;
-  yield waitForPaintFlushed();
+  await waitForPaintFlushed();
 
-  var displayAgainMarkers = yield observeStyling(5);
+  var displayAgainMarkers = await observeStyling(5);
   // FIXME: Bug 866411: SMIL animations sometimes skip restyles when the target
   // element is newly associated with an nsIFrame.
   ok(displayMarkers.length == 5 || displayMarkers.length == 4,
      `should restyle again (got ${displayMarkers.length} restyles over`
      + ' five frames, expected 4~5)');
 
-  yield ensureElementRemoval(animate);
+  await ensureElementRemoval(animate);
 });
 </script>
 </body>

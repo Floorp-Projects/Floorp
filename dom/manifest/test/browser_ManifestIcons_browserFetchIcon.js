@@ -41,16 +41,16 @@ function getIconColor(icon) {
   });
 }
 
-add_task(function*() {
+add_task(async function() {
   const tabOptions = {gBrowser, url: makeTestURL(manifest)};
-  yield BrowserTestUtils.withNewTab(tabOptions, function*(browser) {
-    const manifest = yield ManifestObtainer.browserObtainManifest(browser);
-    let icon = yield ManifestIcons.browserFetchIcon(browser, manifest, 25);
-    let color = yield ContentTask.spawn(browser, icon, getIconColor);
+  await BrowserTestUtils.withNewTab(tabOptions, async function(browser) {
+    const manifest = await ManifestObtainer.browserObtainManifest(browser);
+    let icon = await ManifestIcons.browserFetchIcon(browser, manifest, 25);
+    let color = await ContentTask.spawn(browser, icon, getIconColor);
     is(color[0], 255, 'Fetched red icon');
 
-    icon = yield ManifestIcons.browserFetchIcon(browser, manifest, 500);
-    color = yield ContentTask.spawn(browser, icon, getIconColor);
+    icon = await ManifestIcons.browserFetchIcon(browser, manifest, 500);
+    color = await ContentTask.spawn(browser, icon, getIconColor);
     is(color[2], 255, 'Fetched blue icon');
   });
 });

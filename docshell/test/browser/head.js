@@ -10,11 +10,11 @@
  */
 function makeTimelineTest(frameScriptName, url) {
   info("in timelineTest");
-  return Task.async(function*() {
+  return async function() {
     info("in in timelineTest");
     waitForExplicitFinish();
 
-    yield timelineTestOpenUrl(url);
+    await timelineTestOpenUrl(url);
 
     const here = "chrome://mochitests/content/browser/docshell/test/browser/";
 
@@ -34,7 +34,7 @@ function makeTimelineTest(frameScriptName, url) {
       gBrowser.removeCurrentTab();
       finish();
     });
-  });
+  };
 }
 
 /* Open a URL for a timeline test.  */

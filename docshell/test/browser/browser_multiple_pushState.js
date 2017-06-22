@@ -1,11 +1,11 @@
-add_task(function* test_multiple_pushState() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_multiple_pushState() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.org/browser/docshell/test/browser/file_multiple_pushState.html",
-  }, function* (browser) {
+  }, async function(browser) {
     const kExpected = "http://example.org/bar/ABC/DEF?key=baz";
 
-    let contentLocation = yield ContentTask.spawn(browser, null, function* () {
+    let contentLocation = await ContentTask.spawn(browser, null, async function() {
       return content.document.location.href;
     });
 

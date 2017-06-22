@@ -1,15 +1,15 @@
-add_task(function* () {
-  yield SpecialPowers.pushPrefEnv({"set": [["browser.autofocus", false]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({"set": [["browser.autofocus", false]]});
 
   const url = "data:text/html,<!DOCTYPE html><html><body><input autofocus><button autofocus></button><textarea autofocus></textarea><select autofocus></select></body></html>";
 
   let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   gBrowser.selectedBrowser.loadURI(url);
-  yield loadedPromise;
+  await loadedPromise;
 
-  yield new Promise(resolve => executeSoon(resolve));
+  await new Promise(resolve => executeSoon(resolve));
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     is(content.document.activeElement, content.document.body, "body focused");
   });
 });

@@ -212,16 +212,16 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
    * This will be called automatically by open().
    */
   static async _init(connection) {
-    await connection.executeTransaction(function* doSetup() {
-      const schema = yield connection.getSchemaVersion();
+    await connection.executeTransaction(async function doSetup() {
+      const schema = await connection.getSchemaVersion();
 
       if (schema == 0) {
 
         for (let statementName of createStatements) {
-          yield connection.execute(statements[statementName]);
+          await connection.execute(statements[statementName]);
         }
 
-        yield connection.setSchemaVersion(currentSchemaVersion);
+        await connection.setSchemaVersion(currentSchemaVersion);
       } else if (schema != 1) {
         throw new Error("Unknown database schema: " + schema);
       }
@@ -258,7 +258,7 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
     const conn = this._connection;
     const collection = this.collection;
 
-    return conn.executeTransaction(function* doExecuteTransaction() {
+    return conn.executeTransaction(async function doExecuteTransaction() {
       // Preload specified records from DB, within transaction.
       const parameters = [
         collection,
@@ -266,7 +266,7 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
       ];
       const placeholders = options.preload.map(_ => "?");
       const stmt = statements.listRecordsById + "(" + placeholders.join(",") + ");";
-      const rows = yield conn.execute(stmt, parameters);
+      const rows = await conn.execute(stmt, parameters);
 
       const preloaded = rows.reduce((acc, row) => {
         const record = JSON.parse(row.getResultByName("record"));
@@ -278,7 +278,7 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
       result = callback(proxy);
 
       for (let { statement, params } of proxy.operations) {
-        yield conn.executeCached(statement, params);
+        await conn.executeCached(statement, params);
       }
     }, conn.TRANSACTION_EXCLUSIVE).then(_ => result);
   }
@@ -327,20 +327,20 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
   async loadDump(records) {
     const connection = this._connection;
     const collection_name = this.collection;
-    await connection.executeTransaction(function* doImport() {
+    await connection.executeTransaction(async function doImport() {
       for (let record of records) {
         const params = {
           collection_name,
           record_id: record.id,
           record: JSON.stringify(record),
         };
-        yield connection.execute(statements.importData, params);
+        await connection.execute(statements.importData, params);
       }
       const lastModified = Math.max(...records.map(record => record.last_modified));
       const params = {
         collection_name,
       };
-      const previousLastModified = yield connection.execute(
+      const previousLastModified = await connection.execute(
         statements.getLastModified, params).then(result => {
           return result.length > 0
             ? result[0].getResultByName("last_modified")
@@ -351,7 +351,7 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
           collection_name,
           last_modified: lastModified,
         };
-        yield connection.execute(statements.saveLastModified, params);
+        await connection.execute(statements.saveLastModified, params);
       }
     });
     return records;
@@ -402,9 +402,9 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
       throw new Error("The storage adapter is not open");
     }
 
-    return this._connection.executeTransaction(function* (conn) {
+    return this._connection.executeTransaction(async function(conn) {
       const promises = [];
-      yield conn.execute(statements.scanAllRecords, null, function(row) {
+      await conn.execute(statements.scanAllRecords, null, function(row) {
         const record = JSON.parse(row.getResultByName("record"));
         const record_id = row.getResultByName("record_id");
         const collection_name = row.getResultByName("collection_name");
@@ -423,8 +423,8 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
           }));
         }
       });
-      yield Promise.all(promises);
-      yield conn.execute(statements.clearCollectionMetadata);
+      await Promise.all(promises);
+      await conn.execute(statements.clearCollectionMetadata);
     });
   }
 }

@@ -38,28 +38,28 @@ runOMTATest(function() {
   });
 }, finish, opener.SpecialPowers);
 
-addAsyncAnimTest(function *() {
+addAsyncAnimTest(async function() {
   var [ div, cs ] = new_div("animation: anim 10s 1 linear forwards");
   var animation = div.getAnimations()[0];
   animation.playbackRate = 10;
 
   advance_clock(300);
 
-  yield waitForPaints();
+  await waitForPaints();
   omta_is(div, "transform", { tx: 30 }, RunningOn.Compositor,
           "at 300ms");
   done_div();
 });
 
-addAsyncAnimTest(function *() {
+addAsyncAnimTest(async function() {
   var [ div, cs ] = new_div("animation: anim 10s 1 linear forwards");
   var animation = div.getAnimations()[0];
   advance_clock(300);
-  yield waitForPaints();
+  await waitForPaints();
 
   animation.playbackRate = 0;
 
-  yield waitForPaintsFlushed();
+  await waitForPaintsFlushed();
 
   // Bug 1352336: The following should be RunningOn.MainThread
   omta_is(div, "transform", { tx: 3 }, RunningOn.Either,
@@ -69,14 +69,14 @@ addAsyncAnimTest(function *() {
   done_div();
 });
 
-addAsyncAnimTest(function *() {
+addAsyncAnimTest(async function() {
   var [ div, cs ] = new_div("animation: anim 10s 1s");
   var animation = div.getAnimations()[0];
   animation.playbackRate = 0.5;
 
   advance_clock(2000); // 1s * (1 / playbackRate)
 
-  yield waitForPaints();
+  await waitForPaints();
   omta_is(div, "transform", { tx: 0 }, RunningOn.Compositor,
           "animation with positive delay and playbackRate > 1 should " +
           "start from the initial position at the beginning of the " +
@@ -84,14 +84,14 @@ addAsyncAnimTest(function *() {
   done_div();
 });
 
-addAsyncAnimTest(function *() {
+addAsyncAnimTest(async function() {
   var [ div, cs ] = new_div("animation: anim 10s 1s");
   var animation = div.getAnimations()[0];
   animation.playbackRate = 2.0;
 
   advance_clock(500); // 1s * (1 / playbackRate)
 
-  yield waitForPaints();
+  await waitForPaints();
   omta_is(div, "transform", { tx: 0 }, RunningOn.Compositor,
           "animation with positive delay and playbackRate < 1 should " +
           "start from the initial position at the beginning of the " +

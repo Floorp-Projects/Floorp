@@ -11,23 +11,23 @@ function checkPaintCount(aCount) {
 // A bad regression would either be 0, or 100+.
 const kMaxPaints = 10;
 
-add_task(function* () {
+add_task(async function() {
   let result, tabSwitchedPromise;
 
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
 
   let testTab = gBrowser.selectedTab;
-  let pluginTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, gTestRoot + "plugin_test.html");
-  let homeTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home");
+  let pluginTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, gTestRoot + "plugin_test.html");
+  let homeTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home");
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     return !!plugin;
   });
   is(result, true, "plugin is loaded");
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     return !XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -35,7 +35,7 @@ add_task(function* () {
   is(result, true, "plugin is hidden");
 
   // reset plugin paint count
-  yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     XPCNativeWrapper.unwrap(plugin).resetPaintCount();
@@ -44,12 +44,12 @@ add_task(function* () {
   // select plugin tab
   tabSwitchedPromise = waitTabSwitched();
   gBrowser.selectedTab = pluginTab;
-  yield tabSwitchedPromise;
+  await tabSwitchedPromise;
 
   // wait a bit for spurious paints
-  yield waitForMs(100);
+  await waitForMs(100);
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -57,7 +57,7 @@ add_task(function* () {
   is(result, true, "plugin is visible");
 
   // check for good paint count
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     return XPCNativeWrapper.unwrap(plugin).getPaintCount();
@@ -67,27 +67,27 @@ add_task(function* () {
   // select home tab
   tabSwitchedPromise = waitTabSwitched();
   gBrowser.selectedTab = homeTab;
-  yield tabSwitchedPromise;
+  await tabSwitchedPromise;
 
   // reset paint count
-  yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     XPCNativeWrapper.unwrap(plugin).resetPaintCount();
   });
 
   // wait a bit for spurious paints
-  yield waitForMs(100);
+  await waitForMs(100);
 
   // check for no paint count
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     return XPCNativeWrapper.unwrap(plugin).getPaintCount();
   });
   is(result, 0, "no paints, this is correct.");
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     return !XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -95,7 +95,7 @@ add_task(function* () {
   is(result, true, "plugin is hidden");
 
   // reset paint count
-  yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     XPCNativeWrapper.unwrap(plugin).resetPaintCount();
@@ -104,10 +104,10 @@ add_task(function* () {
   // select plugin tab
   tabSwitchedPromise = waitTabSwitched();
   gBrowser.selectedTab = pluginTab;
-  yield tabSwitchedPromise;
+  await tabSwitchedPromise;
 
   // check paint count
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     return XPCNativeWrapper.unwrap(plugin).getPaintCount();

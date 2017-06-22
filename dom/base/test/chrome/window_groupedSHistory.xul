@@ -22,7 +22,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1310768
   Cu.import("resource://testing-common/TestUtils.jsm");
   Cu.import("resource://testing-common/ContentTask.jsm");
   Cu.import("resource://testing-common/BrowserTestUtils.jsm");
-  Cu.import("resource://gre/modules/Task.jsm");
   ContentTask.setTestScope(window.opener.wrappedJSObject);
 
   let imports = ['SimpleTest', 'SpecialPowers', 'ok', 'is', 'info'];
@@ -581,7 +580,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1310768
       'test:content-pagehide', msg => msg.data && (msg.data.title == prevTitle)));
     promises.push(BrowserTestUtils.waitForMessage(browser.messageManager,
       'test:content-pageshow', msg => msg.data && (msg.data.title == nextTitle)));
-    promises.push(Task.spawn(navFn));
+    promises.push((navFn)());
 
     // For swapping remote browsers, we'll also receive Content:LocationChange
     if (browserToSwap && browser.isRemoteBrowser) {

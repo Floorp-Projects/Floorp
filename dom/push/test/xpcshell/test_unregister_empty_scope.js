@@ -11,7 +11,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_unregister_empty_scope() {
+add_task(async function test_unregister_empty_scope() {
   PushService.init({
     serverURI: "wss://push.example.org/",
     makeWebSocket(uri) {
@@ -27,7 +27,7 @@ add_task(function* test_unregister_empty_scope() {
     }
   });
 
-  yield rejects(
+  await rejects(
     PushService.unregister({
       scope: '',
       originAttributes: ChromeUtils.originAttributesToSuffix(

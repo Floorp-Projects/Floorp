@@ -175,70 +175,70 @@ function ensureVerifiesAsDVWithVeryOldEndEntityOCSPResponse(testcase) {
 }
 
 // These should all verify as EV.
-add_task(function* plainExpectSuccessEVTests() {
-  yield ensureVerifiesAsEV("anyPolicy-int-path");
-  yield ensureVerifiesAsEV("test-oid-path");
-  yield ensureVerifiesAsEV("cabforum-oid-path");
-  yield ensureVerifiesAsEV("cabforum-and-test-oid-ee-path");
-  yield ensureVerifiesAsEV("test-and-cabforum-oid-ee-path");
-  yield ensureVerifiesAsEV("reverse-order-oids-path");
+add_task(async function plainExpectSuccessEVTests() {
+  await ensureVerifiesAsEV("anyPolicy-int-path");
+  await ensureVerifiesAsEV("test-oid-path");
+  await ensureVerifiesAsEV("cabforum-oid-path");
+  await ensureVerifiesAsEV("cabforum-and-test-oid-ee-path");
+  await ensureVerifiesAsEV("test-and-cabforum-oid-ee-path");
+  await ensureVerifiesAsEV("reverse-order-oids-path");
   // In this case, the end-entity has both the CA/B Forum OID and the test OID
   // (in that order). The intermediate has the CA/B Forum OID. Since the
   // implementation uses the first EV policy it encounters in the end-entity as
   // the required one, this successfully verifies as EV.
-  yield ensureVerifiesAsEV("cabforum-and-test-oid-ee-cabforum-oid-int-path");
+  await ensureVerifiesAsEV("cabforum-and-test-oid-ee-cabforum-oid-int-path");
 });
 
 // These fail for various reasons to verify as EV, but fallback to DV should
 // succeed.
-add_task(function* expectDVFallbackTests() {
-  yield ensureVerifiesAsDV("anyPolicy-ee-path");
-  yield ensureVerifiesAsDV("non-ev-root-path");
-  yield ensureVerifiesAsDV("no-ocsp-ee-path",
+add_task(async function expectDVFallbackTests() {
+  await ensureVerifiesAsDV("anyPolicy-ee-path");
+  await ensureVerifiesAsDV("non-ev-root-path");
+  await ensureVerifiesAsDV("no-ocsp-ee-path",
                            gEVExpected ? [ "no-ocsp-ee-path-int" ] : []);
-  yield ensureVerifiesAsDV("no-ocsp-int-path");
+  await ensureVerifiesAsDV("no-ocsp-int-path");
   // In this case, the end-entity has the test OID and the intermediate has the
   // CA/B Forum OID. Since the CA/B Forum OID is not treated the same as the
   // anyPolicy OID, this will not verify as EV.
-  yield ensureVerifiesAsDV("test-oid-ee-cabforum-oid-int-path");
+  await ensureVerifiesAsDV("test-oid-ee-cabforum-oid-int-path");
   // In this case, the end-entity has both the test OID and the CA/B Forum OID
   // (in that order). The intermediate has only the CA/B Forum OID. Since the
   // implementation uses the first EV policy it encounters in the end-entity as
   // the required one, this fails to verify as EV.
-  yield ensureVerifiesAsDV("test-and-cabforum-oid-ee-cabforum-oid-int-path");
+  await ensureVerifiesAsDV("test-and-cabforum-oid-ee-cabforum-oid-int-path");
 });
 
 // Test that removing the trust bits from an EV root causes verifications
 // relying on that root to fail (and then test that adding back the trust bits
 // causes the verifications to succeed again).
-add_task(function* evRootTrustTests() {
+add_task(async function evRootTrustTests() {
   clearOCSPCache();
   do_print("untrusting evroot");
   certdb.setCertTrust(evroot, Ci.nsIX509Cert.CA_CERT,
                       Ci.nsIX509CertDB.UNTRUSTED);
-  yield ensureVerificationFails("test-oid-path", SEC_ERROR_UNKNOWN_ISSUER);
+  await ensureVerificationFails("test-oid-path", SEC_ERROR_UNKNOWN_ISSUER);
   do_print("re-trusting evroot");
   certdb.setCertTrust(evroot, Ci.nsIX509Cert.CA_CERT,
                       Ci.nsIX509CertDB.TRUSTED_SSL);
-  yield ensureVerifiesAsEV("test-oid-path");
+  await ensureVerifiesAsEV("test-oid-path");
 });
 
 // Test that if FLAG_LOCAL_ONLY and FLAG_MUST_BE_EV are specified, that no OCSP
 // requests are made (this also means that nothing will verify as EV).
-add_task(function* localOnlyMustBeEVTests() {
+add_task(async function localOnlyMustBeEVTests() {
   clearOCSPCache();
-  yield ensureNoOCSPMeansNoEV("anyPolicy-ee-path");
-  yield ensureNoOCSPMeansNoEV("anyPolicy-int-path");
-  yield ensureNoOCSPMeansNoEV("non-ev-root-path");
-  yield ensureNoOCSPMeansNoEV("no-ocsp-ee-path");
-  yield ensureNoOCSPMeansNoEV("no-ocsp-int-path");
-  yield ensureNoOCSPMeansNoEV("test-oid-path");
+  await ensureNoOCSPMeansNoEV("anyPolicy-ee-path");
+  await ensureNoOCSPMeansNoEV("anyPolicy-int-path");
+  await ensureNoOCSPMeansNoEV("non-ev-root-path");
+  await ensureNoOCSPMeansNoEV("no-ocsp-ee-path");
+  await ensureNoOCSPMeansNoEV("no-ocsp-int-path");
+  await ensureNoOCSPMeansNoEV("test-oid-path");
 });
 
 
 // Under certain conditions, OneCRL allows us to skip OCSP requests for
 // intermediates.
-add_task(function* oneCRLTests() {
+add_task(async function oneCRLTests() {
   clearOCSPCache();
 
   // enable OneCRL OCSP skipping - allow staleness of up to 30 hours
@@ -251,18 +251,18 @@ add_task(function* oneCRLTests() {
     "app.update.lastUpdateTime.blocklist-background-update-timer",
     Math.floor(Date.now() / 1000) - 1);
 
-  yield ensureOneCRLSkipsOCSPForIntermediates("anyPolicy-int-path");
-  yield ensureOneCRLSkipsOCSPForIntermediates("no-ocsp-int-path");
-  yield ensureOneCRLSkipsOCSPForIntermediates("test-oid-path");
+  await ensureOneCRLSkipsOCSPForIntermediates("anyPolicy-int-path");
+  await ensureOneCRLSkipsOCSPForIntermediates("no-ocsp-int-path");
+  await ensureOneCRLSkipsOCSPForIntermediates("test-oid-path");
 
   clearOCSPCache();
   // disable OneCRL OCSP Skipping (no staleness allowed)
   Services.prefs.setIntPref("security.onecrl.maximum_staleness_in_seconds", 0);
-  yield ensureVerifiesAsEV("anyPolicy-int-path");
+  await ensureVerifiesAsEV("anyPolicy-int-path");
   // Because the intermediate in this case is missing an OCSP URI, it will not
   // validate as EV, but it should fall back to DV.
-  yield ensureVerifiesAsDV("no-ocsp-int-path");
-  yield ensureVerifiesAsEV("test-oid-path");
+  await ensureVerifiesAsDV("no-ocsp-int-path");
+  await ensureVerifiesAsEV("test-oid-path");
 
   clearOCSPCache();
   // enable OneCRL OCSP skipping - allow staleness of up to 30 hours
@@ -274,9 +274,9 @@ add_task(function* oneCRLTests() {
   Services.prefs.setIntPref(
     "app.update.lastUpdateTime.blocklist-background-update-timer",
     Math.floor(Date.now() / 1000) - 108080);
-  yield ensureVerifiesAsEV("anyPolicy-int-path");
-  yield ensureVerifiesAsDV("no-ocsp-int-path");
-  yield ensureVerifiesAsEV("test-oid-path");
+  await ensureVerifiesAsEV("anyPolicy-int-path");
+  await ensureVerifiesAsDV("no-ocsp-int-path");
+  await ensureVerifiesAsEV("test-oid-path");
 
   clearOCSPCache();
   // test that setting "security.onecrl.via.amo" results in the correct
@@ -292,9 +292,9 @@ add_task(function* oneCRLTests() {
     "app.update.lastUpdateTime.blocklist-background-update-timer",
     Math.floor(Date.now() / 1000) - 1);
 
-  yield ensureVerifiesAsEV("anyPolicy-int-path");
-  yield ensureVerifiesAsDV("no-ocsp-int-path");
-  yield ensureVerifiesAsEV("test-oid-path");
+  await ensureVerifiesAsEV("anyPolicy-int-path");
+  await ensureVerifiesAsDV("no-ocsp-int-path");
+  await ensureVerifiesAsEV("test-oid-path");
 
   clearOCSPCache();
   // test that setting "security.onecrl.via.amo" results in the correct
@@ -306,9 +306,9 @@ add_task(function* oneCRLTests() {
   // now set services.blocklist.onecrl.checked to a recent value
   Services.prefs.setIntPref("services.blocklist.onecrl.checked",
                             Math.floor(Date.now() / 1000) - 1);
-  yield ensureOneCRLSkipsOCSPForIntermediates("anyPolicy-int-path");
-  yield ensureOneCRLSkipsOCSPForIntermediates("no-ocsp-int-path");
-  yield ensureOneCRLSkipsOCSPForIntermediates("test-oid-path");
+  await ensureOneCRLSkipsOCSPForIntermediates("anyPolicy-int-path");
+  await ensureOneCRLSkipsOCSPForIntermediates("no-ocsp-int-path");
+  await ensureOneCRLSkipsOCSPForIntermediates("test-oid-path");
 
   Services.prefs.clearUserPref("security.onecrl.via.amo");
   Services.prefs.clearUserPref("security.onecrl.maximum_staleness_in_seconds");
@@ -321,34 +321,34 @@ add_task(function* oneCRLTests() {
 // without hitting the network. There's two cases here: one where we simply
 // validate like normal and then check that the network was never accessed and
 // another where we use flags to mandate that the network not be used.
-add_task(function* ocspCachingTests() {
+add_task(async function ocspCachingTests() {
   clearOCSPCache();
 
-  yield ensureVerifiesAsEV("anyPolicy-int-path");
-  yield ensureVerifiesAsEV("test-oid-path");
+  await ensureVerifiesAsEV("anyPolicy-int-path");
+  await ensureVerifiesAsEV("test-oid-path");
 
-  yield ensureVerifiesAsEVWithNoOCSPRequests("anyPolicy-int-path");
-  yield ensureVerifiesAsEVWithNoOCSPRequests("test-oid-path");
+  await ensureVerifiesAsEVWithNoOCSPRequests("anyPolicy-int-path");
+  await ensureVerifiesAsEVWithNoOCSPRequests("test-oid-path");
 
-  yield ensureVerifiesAsEVWithFLAG_LOCAL_ONLY("anyPolicy-int-path");
-  yield ensureVerifiesAsEVWithFLAG_LOCAL_ONLY("test-oid-path");
+  await ensureVerifiesAsEVWithFLAG_LOCAL_ONLY("anyPolicy-int-path");
+  await ensureVerifiesAsEVWithFLAG_LOCAL_ONLY("test-oid-path");
 });
 
 // Old-but-still-valid OCSP responses are accepted for intermediates but not
 // end-entity certificates (because of OCSP soft-fail this results in DV
 // fallback).
-add_task(function* oldOCSPResponseTests() {
+add_task(async function oldOCSPResponseTests() {
   clearOCSPCache();
 
-  yield ensureVerifiesAsEVWithOldIntermediateOCSPResponse("anyPolicy-int-path");
-  yield ensureVerifiesAsEVWithOldIntermediateOCSPResponse("test-oid-path");
+  await ensureVerifiesAsEVWithOldIntermediateOCSPResponse("anyPolicy-int-path");
+  await ensureVerifiesAsEVWithOldIntermediateOCSPResponse("test-oid-path");
 
   clearOCSPCache();
-  yield ensureVerifiesAsDVWithOldEndEntityOCSPResponse("anyPolicy-int-path");
-  yield ensureVerifiesAsDVWithOldEndEntityOCSPResponse("test-oid-path");
+  await ensureVerifiesAsDVWithOldEndEntityOCSPResponse("anyPolicy-int-path");
+  await ensureVerifiesAsDVWithOldEndEntityOCSPResponse("test-oid-path");
 
   clearOCSPCache();
-  yield ensureVerifiesAsDVWithVeryOldEndEntityOCSPResponse(
+  await ensureVerifiesAsDVWithVeryOldEndEntityOCSPResponse(
     "anyPolicy-int-path");
-  yield ensureVerifiesAsDVWithVeryOldEndEntityOCSPResponse("test-oid-path");
+  await ensureVerifiesAsDVWithVeryOldEndEntityOCSPResponse("test-oid-path");
 });

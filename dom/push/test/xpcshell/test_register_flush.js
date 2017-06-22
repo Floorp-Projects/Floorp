@@ -18,7 +18,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_register_flush() {
+add_task(async function test_register_flush() {
   let db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => {return db.drop().then(_ => db.close());});
   let record = {
@@ -30,7 +30,7 @@ add_task(function* test_register_flush() {
     quota: Infinity,
     systemRecord: true,
   };
-  yield db.put(record);
+  await db.put(record);
 
   let notifyPromise = promiseObserverNotification(PushServiceComponent.pushTopic);
 
@@ -72,25 +72,25 @@ add_task(function* test_register_flush() {
     }
   });
 
-  let newRecord = yield PushService.register({
+  let newRecord = await PushService.register({
     scope: 'https://example.com/page/2',
     originAttributes: '',
   });
   equal(newRecord.endpoint, 'https://example.org/update/2',
     'Wrong push endpoint in record');
 
-  let {data: scope} = yield notifyPromise;
+  let {data: scope} = await notifyPromise;
   equal(scope, 'https://example.com/page/1', 'Wrong notification scope');
 
-  yield ackPromise;
+  await ackPromise;
 
-  let prevRecord = yield db.getByKeyID(
+  let prevRecord = await db.getByKeyID(
     '9bcc7efb-86c7-4457-93ea-e24e6eb59b74');
   equal(prevRecord.pushEndpoint, 'https://example.org/update/1',
     'Wrong existing push endpoint');
   strictEqual(prevRecord.version, 3,
     'Should record version updates sent before register responses');
 
-  let registeredRecord = yield db.getByPushEndpoint('https://example.org/update/2');
+  let registeredRecord = await db.getByPushEndpoint('https://example.org/update/2');
   ok(!registeredRecord.version, 'Should not record premature updates');
 });

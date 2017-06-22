@@ -26,9 +26,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1272623
 
 /** Test for Bug 1272623 **/
 
-  function *performCorrection(misspelled, area) {
+  async function performCorrection(misspelled, area) {
     synthesizeMouseAtCenter($(misspelled), {}, window);
-    yield new Promise(resolve => onSpellCheck($(area), resolve));
+    await new Promise(resolve => onSpellCheck($(area), resolve));
     synthesizeMouseAtCenter($(misspelled), {type: 'contextmenu'}, window);
 
     // Perform the spelling correction
@@ -50,23 +50,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1272623
       });
     });
     info("Loaded chrome script");
-    yield new Promise(resolve => mm.addMessageListener('spellingCorrected', resolve));
+    await new Promise(resolve => mm.addMessageListener('spellingCorrected', resolve));
   }
 
-  add_task(function* () {
+  add_task(async function() {
     SpecialPowers.Cu.import(
       "resource://testing-common/AsyncSpellCheckTestHelper.jsm", window);
 
     // Wait for the page to be ready
-    yield new Promise(resolve => SimpleTest.waitForFocus(() => SimpleTest.executeSoon(resolve), window));
+    await new Promise(resolve => SimpleTest.waitForFocus(() => SimpleTest.executeSoon(resolve), window));
 
     // Check that <b> tags aren't inserted inside of other <b> tags when it would change the style
-    yield* performCorrection('misspelled', 'area');
+    await performCorrection('misspelled', 'area');
     is($('area').innerHTML, "<b style=\"font-weight:normal;\">testing <span id=\"misspelled\">spellcheck</span></b>");
     is($('area').textContent, 'testing spellcheck', "Spelling corrected properly");
 
     // Check that nodes aren't removed when the entire text inside of them is spelling-corrected
-    yield* performCorrection('misspelled2', 'area2');
+    await performCorrection('misspelled2', 'area2');
     is($('area2').innerHTML, "testing <span id=\"misspelled2\" style=\"font-weight:bold;\">spellcheck</span>");
     is($('area2').textContent, 'testing spellcheck', "Spelling corrected properly");
   });

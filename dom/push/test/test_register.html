@@ -45,43 +45,43 @@ http://creativecommons.org/licenses/publicdomain/
   };
 
   var registration;
-  add_task(function* start() {
-    yield setupPrefsAndMockSocket(mockSocket);
-    yield setPushPermission(true);
+  add_task(async function start() {
+    await setupPrefsAndMockSocket(mockSocket);
+    await setPushPermission(true);
 
     var url = "worker.js" + "?" + (Math.random());
-    registration = yield navigator.serviceWorker.register(url, {scope: "."});
-    yield waitForActive(registration);
+    registration = await navigator.serviceWorker.register(url, {scope: "."});
+    await waitForActive(registration);
   });
 
   var controlledFrame;
-  add_task(function* createControlledIFrame() {
-    controlledFrame = yield injectControlledFrame();
+  add_task(async function createControlledIFrame() {
+    controlledFrame = await injectControlledFrame();
   });
 
-  add_task(function* checkPermissionState() {
-    var state = yield registration.pushManager.permissionState();
+  add_task(async function checkPermissionState() {
+    var state = await registration.pushManager.permissionState();
     is(state, "granted", "permissionState() should resolve to granted.");
   });
 
   var pushSubscription;
-  add_task(function* subscribe() {
-    pushSubscription = yield registration.pushManager.subscribe();
+  add_task(async function subscribe() {
+    pushSubscription = await registration.pushManager.subscribe();
     is(pushSubscription.options.applicationServerKey, null,
        "Subscription should not have an app server key");
   });
 
-  add_task(function* resubscribe() {
-    var data = yield sendRequestToWorker({
+  add_task(async function resubscribe() {
+    var data = await sendRequestToWorker({
       type: "resubscribe",
       endpoint: pushSubscription.endpoint,
     });
-    pushSubscription = yield registration.pushManager.getSubscription();
+    pushSubscription = await registration.pushManager.getSubscription();
     is(data.endpoint, pushSubscription.endpoint,
        "Subscription endpoints should match after resubscribing in worker");
   });
 
-  add_task(function* waitForPushNotification() {
+  add_task(async function waitForPushNotification() {
     var finishedPromise = controlledFrame.waitOnWorkerMessage("finished");
 
     // Send a blank message.
@@ -91,16 +91,16 @@ http://creativecommons.org/licenses/publicdomain/
       channelID: channelID
     }));
 
-    yield finishedPromise;
+    await finishedPromise;
   });
 
-  add_task(function* unsubscribe() {
+  add_task(async function unsubscribe() {
     controlledFrame.remove();
-    yield pushSubscription.unsubscribe();
+    await pushSubscription.unsubscribe();
   });
 
-  add_task(function* unregister() {
-    var result = yield registration.unregister();
+  add_task(async function unregister() {
+    var result = await registration.unregister();
     ok(result, "Unregister should return true.");
   });
 

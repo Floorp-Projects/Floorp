@@ -1,4 +1,4 @@
-add_task(function* () {
+add_task(async function() {
   let tabs = [ gBrowser.selectedTab, BrowserTestUtils.addTab(gBrowser) ];
 
   // The first tab has an autofocused element.
@@ -14,11 +14,11 @@ add_task(function* () {
   // Load the second tab in the background.
   let loadedPromise = BrowserTestUtils.browserLoaded(tabs[1].linkedBrowser);
   tabs[1].linkedBrowser.loadURI(testingList[0].uri);
-  yield loadedPromise;
+  await loadedPromise;
 
   for (var i = 0; i < testingList.length; ++i) {
     // Get active element in the tab.
-    let tagName = yield ContentTask.spawn(tabs[i + 1].linkedBrowser, null, function* () {
+    let tagName = await ContentTask.spawn(tabs[i + 1].linkedBrowser, null, async function() {
       return content.document.activeElement.tagName;
     });
 
@@ -31,7 +31,7 @@ add_task(function* () {
 
   // Cleaning up.
   for (let i = 1; i < tabs.length; i++) {
-    yield BrowserTestUtils.removeTab(tabs[i]);
+    await BrowserTestUtils.removeTab(tabs[i]);
   }
 });
 

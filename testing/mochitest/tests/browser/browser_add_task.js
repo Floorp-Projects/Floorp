@@ -15,13 +15,13 @@ function executeWithTimeout() {
   );
 }
 
-add_task(function* asyncTest_no1() {
-  yield executeWithTimeout();
+add_task(async function asyncTest_no1() {
+  await executeWithTimeout();
   test1Complete = true;
 });
 
-add_task(function* asyncTest_no2() {
-  yield executeWithTimeout();
+add_task(async function asyncTest_no2() {
+  await executeWithTimeout();
   test2Complete = true;
 });
 

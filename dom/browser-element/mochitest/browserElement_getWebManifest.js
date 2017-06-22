@@ -9,24 +9,24 @@ browserElementTestHelpers.setEnabledPref(true);
 
 // request to load a manifest from a page that doesn't have a manifest.
 // The expected result to be null.
-var test1 = async(function* () {
-  var manifest = yield requestManifest('file_empty.html');
+var test1 = async(async function() {
+  var manifest = await requestManifest('file_empty.html');
   is(manifest, null, 'it should be null.');
 });
 
 // request to load a manifest from a page that has a manifest.
 // The expected manifest to have a property name whose value is 'pass'.
-var test2 = async(function* () {
-  var manifest = yield requestManifest('file_web_manifest.html');
+var test2 = async(async function() {
+  var manifest = await requestManifest('file_web_manifest.html');
   is(manifest && manifest.name, 'pass', 'it should return a manifest with name pass.');
 });
 
 // Cause an exception by attempting to fetch a file URL,
 // expect onerror to be called.
-var test3 = async(function* () {
+var test3 = async(async function() {
   var gotError = false;
   try {
-    yield requestManifest('file_illegal_web_manifest.html');
+    await requestManifest('file_illegal_web_manifest.html');
   } catch (err) {
     gotError = true;
   }

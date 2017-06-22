@@ -61,7 +61,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test1() {
+add_task(async function test1() {
 
   let db = PushServiceHttp2.newPushDB();
   do_register_cleanup(() => {
@@ -84,7 +84,7 @@ add_task(function* test1() {
     appId: Ci.nsIScriptSecurityManager.NO_APP_ID,
     inIsolatedMozBrowser: false,
   });
-  let newRecord = yield PushService.register({
+  let newRecord = await PushService.register({
     scope: 'https://example.com/retry5xxCode',
     originAttributes: originAttributes,
   });
@@ -98,7 +98,7 @@ add_task(function* test1() {
   equal(newRecord.pushReceiptEndpoint, pushReceiptEndpoint,
     'Wrong push endpoint receipt in registration record');
 
-  let record = yield db.getByKeyID(subscriptionUri);
+  let record = await db.getByKeyID(subscriptionUri);
   equal(record.subscriptionUri, subscriptionUri,
     'Wrong subscription ID in database record');
   equal(record.pushEndpoint, pushEndpoint,

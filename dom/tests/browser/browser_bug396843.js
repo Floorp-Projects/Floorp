@@ -263,25 +263,25 @@ function testInDocument(doc, documentID) {
     runTestUnwrapped();
 }
 
-add_task(function* test1() {
+add_task(async function test1() {
     testInDocument(document, "browser window");
 });
 
-function* newTabTest(location) {
-    yield BrowserTestUtils.withNewTab({ gBrowser, url: location },
-        function* (browser) {
-          yield ContentTask.spawn(browser, { location, testInDocument_: testInDocument.toSource() },
-            function* ({ location, testInDocument_ }) {
+async function newTabTest(location) {
+    await BrowserTestUtils.withNewTab({ gBrowser, url: location },
+        async function(browser) {
+          await ContentTask.spawn(browser, { location, testInDocument_: testInDocument.toSource() },
+            async function({ location, testInDocument_ }) {
               let testInDocument = eval(`(() => (${testInDocument_}))()`);
               testInDocument(content.document, location);
             });
         });
 }
 
-add_task(function* test2() {
-    yield newTabTest("about:blank");
+add_task(async function test2() {
+    await newTabTest("about:blank");
 });
 
-add_task(function* test3() {
-    yield newTabTest("about:config");
+add_task(async function test3() {
+    await newTabTest("about:config");
 });

@@ -8,12 +8,12 @@
  * SHEntry.
  **/
 
-add_task(function* test() {
+add_task(async function test() {
   waitForExplicitFinish();
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "http://example.com" },
-    function* (browser) {
-      yield ContentTask.spawn(browser, null, function* () {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "http://example.com" },
+    async function(browser) {
+      await ContentTask.spawn(browser, null, async function() {
         let cw = content;
         let oldTitle = cw.document.title;
         ok(oldTitle, 'Content window should initially have a title.');

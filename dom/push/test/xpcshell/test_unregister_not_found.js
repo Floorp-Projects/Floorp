@@ -11,7 +11,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_unregister_not_found() {
+add_task(async function test_unregister_not_found() {
   PushService.init({
     serverURI: "wss://push.example.org/",
     makeWebSocket(uri) {
@@ -27,7 +27,7 @@ add_task(function* test_unregister_not_found() {
     }
   });
 
-  let result = yield PushService.unregister({
+  let result = await PushService.unregister({
     scope: 'https://example.net/nonexistent',
     originAttributes: ChromeUtils.originAttributesToSuffix(
       { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),

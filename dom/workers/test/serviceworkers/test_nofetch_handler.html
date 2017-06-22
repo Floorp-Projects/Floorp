@@ -42,16 +42,16 @@ function create_iframe(url) {
   })
 }
 
-add_task(function* test_nofetch_worker() {
-  let registration = yield navigator.serviceWorker.register(
+add_task(async function test_nofetch_worker() {
+  let registration = await navigator.serviceWorker.register(
     "nofetch_handler_worker.js", { scope: "./nofetch_handler_worker/"} )
     .then(swr => waitForState(swr.installing, 'activated', swr));
 
-  let iframe = yield create_iframe("./nofetch_handler_worker/doesnt_exist.html");
+  let iframe = await create_iframe("./nofetch_handler_worker/doesnt_exist.html");
   ok(!iframe.contentDocument.body.innerHTML.includes("intercepted"), "Request was not intercepted.");
 
-  yield SpecialPowers.popPrefEnv();
-  yield registration.unregister();
+  await SpecialPowers.popPrefEnv();
+  await registration.unregister();
 });
 </script>
 </body>
