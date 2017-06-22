@@ -185,7 +185,7 @@ def mozharness_on_generic_worker(config, job, taskdesc):
 
     # fail if invalid run options are included
     invalid = []
-    for prop in ['actions', 'custom-build-variant-cfg',
+    for prop in ['actions',
                  'tooltool-downloads', 'secrets', 'taskcluster-proxy',
                  'need-xvfb']:
         if prop in run and run[prop]:
@@ -226,6 +226,9 @@ def mozharness_on_generic_worker(config, job, taskdesc):
     mh_command.append(r'--skip-buildbot-actions --work-dir %cd:Z:=z:%\build')
     for option in run.get('options', []):
         mh_command.append('--' + option)
+    if run.get('custom-build-variant-cfg'):
+        mh_command.append('--custom-build-variant')
+        mh_command.append(run['custom-build-variant-cfg'])
 
     hg_command = ['"c:\\Program Files\\Mercurial\\hg.exe"']
     hg_command.append('robustcheckout')
