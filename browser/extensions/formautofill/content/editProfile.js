@@ -16,12 +16,17 @@ function EditDialog() {
 
 EditDialog.prototype = {
   init() {
-    this.refs = {
+    this._elements = {
       controlsContainer: document.getElementById("controls-container"),
       cancel: document.getElementById("cancel"),
       save: document.getElementById("save"),
     };
     this.attachEventListeners();
+  },
+
+  uninit() {
+    this.detachEventListeners();
+    this._elements = null;
   },
 
   /**
@@ -84,10 +89,14 @@ EditDialog.prototype = {
         // Toggle disabled attribute on the save button based on
         // whether the form is filled or empty.
         if (Object.keys(this.buildAddressObject()).length == 0) {
-          this.refs.save.setAttribute("disabled", true);
+          this._elements.save.setAttribute("disabled", true);
         } else {
-          this.refs.save.removeAttribute("disabled");
+          this._elements.save.removeAttribute("disabled");
         }
+        break;
+      }
+      case "unload": {
+        this.uninit();
         break;
       }
     }
@@ -99,11 +108,10 @@ EditDialog.prototype = {
    * @param  {DOMEvent} event
    */
   handleClick(event) {
-    if (event.target == this.refs.cancel) {
-      this.detachEventListeners();
+    if (event.target == this._elements.cancel) {
       window.close();
     }
-    if (event.target == this.refs.save) {
+    if (event.target == this._elements.save) {
       if (this._address) {
         this.saveAddress({
           guid: this._address.guid,
@@ -114,7 +122,6 @@ EditDialog.prototype = {
           address: this.buildAddressObject(),
         });
       }
-      this.detachEventListeners();
       window.close();
     }
   },
@@ -123,7 +130,7 @@ EditDialog.prototype = {
    * Attach event listener
    */
   attachEventListeners() {
-    this.refs.controlsContainer.addEventListener("click", this);
+    this._elements.controlsContainer.addEventListener("click", this);
     document.addEventListener("input", this);
   },
 
@@ -131,10 +138,9 @@ EditDialog.prototype = {
    * Remove event listener
    */
   detachEventListeners() {
-    this.refs.controlsContainer.removeEventListener("click", this);
+    this._elements.controlsContainer.removeEventListener("click", this);
     document.removeEventListener("input", this);
   },
 };
 
-// Pass in argument from openDialog
 new EditDialog();
