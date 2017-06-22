@@ -92,8 +92,15 @@ LazyInstantiator::GetRootAccessible(HWND aHwnd)
 
   // a11y is running, so we just resolve the real root accessible.
   a11y::Accessible* rootAcc = widget::WinUtils::GetRootAccessibleForHWND(aHwnd);
-  if (!rootAcc || !rootAcc->IsRoot()) {
+  if (!rootAcc) {
     return nullptr;
+  }
+
+  if (!rootAcc->IsRoot()) {
+    // rootAcc might represent a popup as opposed to a true root accessible.
+    // In that case we just use the regular Accessible::GetNativeInterface.
+    rootAcc->GetNativeInterface(getter_AddRefs(result));
+    return result.forget();
   }
 
   // Subtle: rootAcc might still be wrapped by a LazyInstantiator, but we
