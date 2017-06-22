@@ -413,6 +413,7 @@ public:
   static already_AddRefed<mozilla::MediaByteBuffer> DecodeNALUnit(
     const mozilla::MediaByteBuffer* aNAL);
 
+  /* Check if out of band extradata contains a SPS NAL */
   static bool HasSPS(const mozilla::MediaRawData* aSample);
   static bool HasSPS(const mozilla::MediaByteBuffer* aExtraData);
   // Extract SPS and PPS NALs from aSample by looking into each NALs.
