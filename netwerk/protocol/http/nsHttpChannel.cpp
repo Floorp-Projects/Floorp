@@ -7188,6 +7188,8 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         conv->GetDecodedDataLength(&mDecodedBodySize);
     }
 
+    bool isFromNet = request == mTransactionPump;
+
     if (mTransaction) {
         // determine if we should call DoAuthRetry
         bool authRetry = mAuthRetryPending && NS_SUCCEEDED(status);
@@ -7404,7 +7406,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         }
     }
 
-    ReportRcwnStats(request);
+    ReportRcwnStats(request, isFromNet);
 
     // Register entry to the Performance resource timing
     mozilla::dom::Performance* documentPerformance = GetPerformance();
@@ -8934,7 +8936,7 @@ nsHttpChannel::SetDoNotTrack()
 }
 
 void
-nsHttpChannel::ReportRcwnStats(nsIRequest* firstResponseRequest)
+nsHttpChannel::ReportRcwnStats(nsIRequest* firstResponseRequest, bool isFromNet)
 {
     if (!sRCWNEnabled) {
         return;
@@ -8954,7 +8956,7 @@ nsHttpChannel::ReportRcwnStats(nsIRequest* firstResponseRequest)
     };
 
     RaceCacheAndNetStatus rcwnStatus = kDidNotRaceUsedNetwork;
-    if (firstResponseRequest == mTransactionPump) {
+    if (isFromNet) {
         rcwnStatus = mRaceCacheWithNetwork ? kRaceUsedNetwork : kDidNotRaceUsedNetwork;
     } else if (firstResponseRequest == mCachePump) {
         rcwnStatus = mRaceCacheWithNetwork ? kRaceUsedCache : kDidNotRaceUsedCache;
