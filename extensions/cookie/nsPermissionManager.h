@@ -233,22 +233,6 @@ public:
    * See `nsIPermissionManager::GetPermissionsWithKey` for more info on
    * permission keys.
    *
-   * Get the permission key corresponding to the given Origin. This method is
-   * like GetKeyForPrincipal, except that it avoids creating a nsIPrincipal
-   * object when you already have access to an origin string.
-   *
-   * If this method is passed a nonsensical origin string it may produce a
-   * nonsensical permission key result.
-   *
-   * @param aOrigin  The origin which the key is to be extracted from.
-   * @param aPermissionKey  A string which will be filled with the permission key.
-   */
-  static void GetKeyForOrigin(const nsACString& aOrigin, nsACString& aPermissionKey);
-
-  /**
-   * See `nsIPermissionManager::GetPermissionsWithKey` for more info on
-   * permission keys.
-   *
    * Get the permission key corresponding to the given Principal and type. This
    * method is intentionally infallible, as we want to provide an permission key
    * to every principal. Principals which don't have meaningful URIs with
