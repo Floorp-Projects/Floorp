@@ -35,6 +35,18 @@ struct TimingParams
 {
   TimingParams() = default;
 
+  TimingParams(float aDuration, float aDelay,
+               float aIterationCount,
+               dom::PlaybackDirection aDirection,
+               dom::FillMode aFillMode)
+    : mIterations(aIterationCount)
+    , mDirection(aDirection)
+    , mFill(aFillMode)
+  {
+    mDuration.emplace(StickyTimeDuration::FromMilliseconds(aDuration));
+    mDelay = TimeDuration::FromMilliseconds(aDelay);
+  }
+
   template <class OptionsType>
   static TimingParams FromOptionsType(
     const OptionsType& aOptions,
