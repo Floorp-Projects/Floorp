@@ -255,6 +255,11 @@ public:
    */
   static bool IsMSJapaneseIMEActive();
 
+  /**
+   * Returns true if TSF may crash if GetSelection() returns E_FAIL.
+   */
+  static bool DoNotReturnErrorFromGetSelection();
+
 #ifdef DEBUG
   // Returns true when keyboard layout has IME (TIP).
   static bool     CurrentKeyboardLayoutHasIME();
