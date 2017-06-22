@@ -503,6 +503,7 @@ mochitest:
             android.*: 20
             macosx.*: 5
             windows.*: 5
+            linux32/debug: 16
             linux.*: 10
     e10s:
         by-test-platform:

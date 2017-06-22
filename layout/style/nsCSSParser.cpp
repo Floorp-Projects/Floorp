@@ -505,101 +505,6 @@ protected:
   void ReleaseScanner(void);
 
   /**
-   * This is a RAII class which behaves like an "AutoRestore<>" for our parser
-   * input state. When instantiated, this class saves the current parser input
-   * state (in a CSSParserInputState object), and it restores the parser to
-   * that state when destructed, unless "DoNotRestore()" has been called.
-  */
-  class MOZ_RAII nsAutoCSSParserInputStateRestorer {
-    public:
-      explicit nsAutoCSSParserInputStateRestorer(CSSParserImpl* aParser
-                                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mParser(aParser),
-          mShouldRestore(true)
-      {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        mParser->SaveInputState(mSavedState);
-      }
-
-      void DoNotRestore()
-      {
-        mShouldRestore = false;
-      }
-
-      ~nsAutoCSSParserInputStateRestorer()
-      {
-        if (mShouldRestore) {
-          mParser->RestoreSavedInputState(mSavedState);
-        }
-      }
-
-    private:
-      MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-      CSSParserImpl* mParser;
-      CSSParserInputState mSavedState;
-      bool mShouldRestore;
-  };
-
-  /**
-   * This is a RAII class which creates a temporary nsCSSScanner for the given
-   * string, and reconfigures aParser to use *that* scanner instead of its
-   * existing scanner, until we go out of scope.  (This allows us to rewrite
-   * a portion of a stylesheet using a temporary string, and switch to parsing
-   * that rewritten section, and then resume parsing the original stylesheet.)
-   *
-   * aParser must have a non-null nsCSSScanner (which we'll be temporarily
-   * replacing) and ErrorReporter (which this class will co-opt for the
-   * temporary parser). While we're in scope, we also suppress error reporting,
-   * so it doesn't really matter which reporter we use. We suppress reporting
-   * because this class is only used with CSS that is synthesized & didn't
-   * come directly from an author, and it would be confusing if we reported
-   * syntax errors for CSS that an author didn't provide.
-   *
-   * XXXdholbert we could also change this & report errors, if needed. Might
-   * want to customize the error reporting somehow though.
-   */
-  class MOZ_RAII nsAutoScannerChanger {
-    public:
-      nsAutoScannerChanger(CSSParserImpl* aParser,
-                           const nsAString& aStringToScan
-                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mParser(aParser),
-          mOriginalScanner(aParser->mScanner),
-          mStringScanner(aStringToScan, 0),
-          mParserStateRestorer(aParser),
-          mErrorSuppresser(aParser)
-      {
-        MOZ_ASSERT(mOriginalScanner,
-                   "Shouldn't use nsAutoScannerChanger unless we already "
-                   "have a scanner");
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-
-        // Set & setup the new scanner:
-        mParser->mScanner = &mStringScanner;
-        mStringScanner.SetErrorReporter(mParser->mReporter);
-
-        // We might've had push-back on our original scanner (and if we did,
-        // that fact is saved via mParserStateRestorer).  But we don't have
-        // push-back in mStringScanner, so clear that flag.
-        mParser->mHavePushBack = false;
-      }
-
-      ~nsAutoScannerChanger()
-      {
-        // Restore original scanner. All other cleanup is done by RAII members.
-        mParser->mScanner = mOriginalScanner;
-      }
-
-    private:
-      MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-      CSSParserImpl* mParser;
-      nsCSSScanner *mOriginalScanner;
-      nsCSSScanner mStringScanner;
-      nsAutoCSSParserInputStateRestorer mParserStateRestorer;
-      nsAutoSuppressErrors mErrorSuppresser;
-  };
-
-  /**
    * Saves the current input state, which includes any currently pushed
    * back token, and the current position of the scanner.
    */
@@ -1231,21 +1136,6 @@ protected:
     MOZ_ASSERT(!(aVariantMask & VARIANT_MULTIPLE_TOKENS),
                "use ParseVariant for variants in VARIANT_MULTIPLE_TOKENS");
     CSSParseResult result = ParseVariant(aValue, aVariantMask, aKeywordTable);
-    MOZ_ASSERT(result != CSSParseResult::Error);
-    return result == CSSParseResult::Ok;
-  }
-  bool ParseSingleTokenVariantWithRestrictions(
-      nsCSSValue& aValue,
-      int32_t aVariantMask,
-      const KTableEntry aKeywordTable[],
-      uint32_t aRestrictions)
-  {
-    MOZ_ASSERT(!(aVariantMask & VARIANT_MULTIPLE_TOKENS),
-               "use ParseVariantWithRestrictions for variants in "
-               "VARIANT_MULTIPLE_TOKENS");
-    CSSParseResult result =
-      ParseVariantWithRestrictions(aValue, aVariantMask, aKeywordTable,
-                                   aRestrictions);
     MOZ_ASSERT(result != CSSParseResult::Error);
     return result == CSSParseResult::Ok;
   }

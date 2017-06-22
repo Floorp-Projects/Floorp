@@ -237,7 +237,13 @@ LazyInstantiator::ShouldInstantiate(const DWORD aClientTid)
   }
 
   nsCOMPtr<nsIFile> clientExe;
-  GetClientExecutableName(aClientTid, getter_AddRefs(clientExe));
+  if (!GetClientExecutableName(aClientTid, getter_AddRefs(clientExe))) {
+#if defined(MOZ_TELEMETRY_REPORTING)
+    AccumulateTelemetry(NS_LITERAL_STRING("(Failed to retrieve client image name)"));
+#endif // defined(MOZ_TELEMETRY_REPORTING)
+    // We should return true as a failsafe
+    return true;
+  }
 
   // Blocklist checks should go here. return false if we should not instantiate.
   /*
@@ -340,8 +346,10 @@ LazyInstantiator::AccumulateTelemetry(const nsString& aValue)
     Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_INSTANTIATORS, aValue);
   }
 
-  mTelemetryThread->Shutdown();
-  mTelemetryThread = nullptr;
+  if (mTelemetryThread) {
+    mTelemetryThread->Shutdown();
+    mTelemetryThread = nullptr;
+  }
 }
 #endif // defined(MOZ_TELEMETRY_REPORTING)
 

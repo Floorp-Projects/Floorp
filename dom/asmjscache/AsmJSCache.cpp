@@ -367,6 +367,7 @@ private:
     MOZ_ASSERT(mActorDestroyed);
   }
 
+#ifdef DEBUG
   bool
   IsOnOwningThread() const
   {
@@ -375,6 +376,7 @@ private:
     bool current;
     return NS_SUCCEEDED(mOwningEventTarget->IsOnCurrentThread(&current)) && current;
   }
+#endif
 
   void
   AssertIsOnOwningThread() const

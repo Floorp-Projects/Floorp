@@ -1803,14 +1803,16 @@ pub unsafe extern "C" fn wr_api_finalize_builder(state: &mut WrState,
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wr_dp_push_built_display_list(state: &mut WrState,
-                                                       dl_descriptor: WrBuiltDisplayListDescriptor,
-                                                       dl_data: WrVecU8) {
-    let dl_vec = dl_data.to_vec();
+pub extern "C" fn wr_dp_push_built_display_list(state: &mut WrState,
+                                                dl_descriptor: WrBuiltDisplayListDescriptor,
+                                                dl_data: &mut WrVecU8) {
+    let dl_vec = mem::replace(dl_data, WrVecU8::from_vec(Vec::new())).to_vec();
 
     let dl = BuiltDisplayList::from_data(dl_vec, dl_descriptor);
 
     state.frame_builder.dl_builder.push_nested_display_list(&dl);
+    let (data, _) = dl.into_data();
+    mem::replace(dl_data, WrVecU8::from_vec(data));
 }
 
 // TODO: nical
