@@ -327,6 +327,7 @@ public:
                                                 nsIObserver* aObserver) override;
 
     void DispatchSizeModeEvent();
+    void DispatchOcclusionEvent();
 
     // be notified that a some form of drag event needs to go into Gecko
     virtual bool DragEvent(unsigned int aMessage, mozilla::gfx::Point aMouseGlobal, UInt16 aKeyModifiers);

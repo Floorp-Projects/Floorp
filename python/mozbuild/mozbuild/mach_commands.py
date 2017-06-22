@@ -1781,12 +1781,18 @@ class PackageFrontend(MachCommandBase):
                                                      sleeptime=60)):
                 try:
                     record.fetch_with(cache)
-                except requests.exceptions.HTTPError as e:
-                    status = e.response.status_code
-                    # The relengapi proxy likes to return error 400 bad request
-                    # which seems improbably to be due to our (simple) GET
-                    # being borked.
-                    should_retry = status >= 500 or status == 400
+                except (requests.exceptions.HTTPError,
+                        requests.exceptions.ConnectionError) as e:
+
+                    if isinstance(e, requests.exceptions.ConnectionError):
+                        should_retry = True
+                    else:
+                        # The relengapi proxy likes to return error 400 bad request
+                        # which seems improbably to be due to our (simple) GET
+                        # being borked.
+                        status = e.response.status_code
+                        should_retry = status >= 500 or status == 400
+
                     if should_retry or attempt < retry:
                         level = logging.WARN
                     else:

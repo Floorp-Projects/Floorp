@@ -407,6 +407,9 @@ interface ChromeWindow {
   [Func="nsGlobalWindow::IsPrivilegedChromeWindow"]
   readonly attribute unsigned short windowState;
 
+  [Func="nsGlobalWindow::IsPrivilegedChromeWindow"]
+  readonly attribute boolean isFullyOccluded;
+
   /**
    * browserDOMWindow provides access to yet another layer of
    * utility functions implemented by chrome script. It will be null

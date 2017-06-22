@@ -476,6 +476,76 @@ devtools.copy.xpath:
     record_in_processes:
       - 'main'
 
+devtools.rules.gridinspector:
+  opened:
+    bug_numbers:
+      - 1373483
+    description: >
+      Number of times the DevTools grid inspector was opened from the rules view.
+    expires: never
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+devtools.grid.gridinspector:
+  opened:
+    bug_numbers:
+      - 1373483
+    description: >
+      Number of times the DevTools grid inspector was opened from the grid view.
+    expires: never
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+devtools.grid.showGridAreasOverlay:
+  checked:
+    bug_numbers:
+      - 1373483
+    description: >
+      Number of times the DevTools grid inspector's "Display grid areas" was checked.
+    expires: never
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+devtools.grid.showGridLineNumbers:
+  checked:
+    bug_numbers:
+      - 1373483
+    description: >
+      Number of times the DevTools grid inspector's "Display grid numbers" was checked.
+    expires: never
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+devtools.grid.showInfiniteLines:
+  checked:
+    bug_numbers:
+      - 1373483
+    description: >
+      Number of times the DevTools grid inspector's "Extend grid lines infinitely" was checked.
+    expires: never
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 navigator.storage:
   estimate_count:
     bug_numbers:

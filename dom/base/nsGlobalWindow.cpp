@@ -1609,9 +1609,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 #endif
     mCanSkipCCGeneration(0),
     mAutoActivateVRDisplayID(0),
-    mBeforeUnloadListenerCount(0),
-    mNumOfIndexedDBTransactions(0),
-    mNumOfIndexedDBDatabases(0)
+    mBeforeUnloadListenerCount(0)
 {
   AssertIsOnMainThread();
 
@@ -14107,6 +14105,15 @@ nsGlobalWindow::WindowState()
   return nsIDOMChromeWindow::STATE_NORMAL;
 }
 
+bool
+nsGlobalWindow::IsFullyOccluded()
+{
+  MOZ_ASSERT(IsInnerWindow());
+
+  nsCOMPtr<nsIWidget> widget = GetMainWidget();
+  return widget && widget->IsFullyOccluded();
+}
+
 NS_IMETHODIMP
 nsGlobalChromeWindow::Maximize()
 {
@@ -15432,56 +15439,6 @@ nsGlobalWindow::GetIntlUtils(ErrorResult& aError)
   return mIntlUtils;
 }
 #endif
-
-#define DEFINE_INDEXEDDB_COUNTER_FOR(name)                                     \
-void                                                                           \
-nsPIDOMWindowInner::UpdateActive##name##Count(int32_t aDelta)                  \
-{                                                                              \
-  nsGlobalWindow::Cast(this)->UpdateActive##name##Count(aDelta);               \
-}                                                                              \
-                                                                               \
-bool nsPIDOMWindowInner::HasActive##name##s()                                  \
-{                                                                              \
-  return nsGlobalWindow::Cast(this)->HasActive##name##s();                     \
-}                                                                              \
-                                                                               \
-void                                                                           \
-nsGlobalWindow::UpdateActive##name##Count(int32_t aDelta)                      \
-{                                                                              \
-  if (aDelta == 0) {                                                           \
-    return;                                                                    \
-  }                                                                            \
-                                                                               \
-  DebugOnly<uint32_t> count = mNumOf##name##s;                                 \
-  mNumOf##name##s += aDelta;                                                   \
-  TabGroup()->name##Counter() += aDelta;                                       \
-  MOZ_ASSERT(                                                                  \
-    aDelta > 0 ? mNumOf##name##s > count : mNumOf##name##s < count,            \
-    "The counters are either overflow or underflow!");                         \
-}                                                                              \
-                                                                               \
-bool                                                                           \
-nsGlobalWindow::HasActive##name##s()                                           \
-{                                                                              \
-  MOZ_ASSERT(NS_IsMainThread());                                               \
-  MOZ_DIAGNOSTIC_ASSERT(IsInnerWindow());                                      \
-                                                                               \
-  if (!AsInner()->IsCurrentInnerWindow())                                      \
-  {                                                                            \
-    return false;                                                              \
-  }                                                                            \
-                                                                               \
-  nsCOMPtr<nsPIDOMWindowOuter> topOutterWindow = this->GetScriptableTop();     \
-  MOZ_ASSERT(topOutterWindow);                                                 \
-  RefPtr<nsGlobalWindow> topInnerWindow =                                      \
-    nsGlobalWindow::Cast(topOutterWindow->GetCurrentInnerWindow());            \
-                                                                               \
-  return topInnerWindow ? topInnerWindow->mNumOf##name##s > 0 : false;         \
-}
-
-DEFINE_INDEXEDDB_COUNTER_FOR(IndexedDBTransaction)
-DEFINE_INDEXEDDB_COUNTER_FOR(IndexedDBDatabase)
-#undef DEFINE_INDEXEDDB_COUNTER_FOR
 
 template class nsPIDOMWindow<mozIDOMWindowProxy>;
 template class nsPIDOMWindow<mozIDOMWindow>;

@@ -11,6 +11,15 @@
 interface nsIRunnable;
 interface nsIThread;
 
+[scriptable, function, uuid(039a227d-0cb7-44a5-a8f9-dbb7071979f2)]
+interface nsINestedEventLoopCondition : nsISupports
+{
+  /**
+   * Returns true if the current nested event loop should stop spinning.
+   */
+  bool isDone();
+};
+
 /**
  * An interface for creating and locating nsIThread instances.
  */
@@ -76,12 +85,6 @@ interface nsIThreadManager : nsISupports
   readonly attribute nsIThread currentThread;
 
   /**
-   * This attribute is true if the calling thread is the main thread of the
-   * application process.
-   */
-  readonly attribute boolean isMainThread;
-
-  /**
    * This queues a runnable to the main thread. It's a shortcut for JS callers
    * to be used instead of
    *   .mainThread.dispatch(runnable, Ci.nsIEventTarget.DISPATCH_NORMAL);
@@ -90,4 +93,37 @@ interface nsIThreadManager : nsISupports
    * C++ callers should instead use NS_DispatchToMainThread.
    */
   void dispatchToMainThread(in nsIRunnable event);
+
+  /**
+   * Enter a nested event loop on the current thread, waiting on, and
+   * processing events until condition.isDone() returns true.
+   *
+   * If condition.isDone() throws, this function will throw as well.
+   *
+   * C++ code should not use this function, instead preferring
+   * mozilla::SpinEventLoopUntil.
+   */
+  void spinEventLoopUntil(in nsINestedEventLoopCondition condition);
+
+  /**
+   * Spin the current thread's event loop until there are no more pending
+   * events.  This could be done with spinEventLoopUntil, but that would
+   * require access to the current thread from JavaScript, which we are
+   * moving away from.
+   */
+  void spinEventLoopUntilEmpty();
+
+  /**
+   * This queues a runnable to the main thread's idle queue.
+   *
+   * @param event
+   *   The event to dispatch.
+   * @param timeout
+   *   The time in milliseconds until this event should be moved from the idle
+   *   queue to the regular queue if it hasn't been executed by then.  If not
+   *   passed or a zero value is specified, the event will never be moved to
+   *   the regular queue.
+   */
+  void idleDispatchToMainThread(in nsIRunnable event,
+                                [optional] in uint32_t timeout);
 };

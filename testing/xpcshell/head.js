@@ -215,14 +215,11 @@ function _do_main() {
 
   _testLogger.info("running event loop");
 
-  var thr = Components.classes["@mozilla.org/thread-manager;1"]
-                      .getService().currentThread;
+  var tm = Components.classes["@mozilla.org/thread-manager;1"].getService();
 
-  while (!_quit)
-    thr.processNextEvent(true);
+  tm.spinEventLoopUntil(() => _quit);
 
-  while (thr.hasPendingEvents())
-    thr.processNextEvent(true);
+  tm.spinEventLoopUntilEmpty();
 }
 
 function _do_quit() {
@@ -479,12 +476,14 @@ function _initDebugging(port) {
   listener.open();
 
   // spin an event loop until the debugger connects.
-  let thr = Components.classes["@mozilla.org/thread-manager;1"]
-              .getService().currentThread;
-  while (!initialized) {
+  let tm = Components.classes["@mozilla.org/thread-manager;1"].getService();
+  tm.spinEventLoopUntil(() => {
+    if (initialized) {
+      return true;
+    }
     do_print("Still waiting for debugger to connect...");
-    thr.processNextEvent(true);
-  }
+    return false;
+  });
   // NOTE: if you want to debug the harness itself, you can now add a 'debugger'
   // statement anywhere and it will stop - but we've already added a breakpoint
   // for the first line of the test scripts, so we just continue...
@@ -614,11 +613,8 @@ function _execute_test() {
     }
     _cleanupFunctions = [];
   }).catch(reportCleanupError).then(() => complete = true);
-  let thr = Components.classes["@mozilla.org/thread-manager;1"]
-                      .getService().currentThread;
-  while (!complete) {
-    thr.processNextEvent(true);
-  }
+  let tm = Components.classes["@mozilla.org/thread-manager;1"].getService();
+  tm.spinEventLoopUntil(() => complete);
 
   // Restore idle service to avoid leaks.
   _fakeIdleService.deactivate();

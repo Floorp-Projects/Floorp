@@ -116,6 +116,7 @@ LOCAL_INCLUDES += [
     '/layout/xul',
     '/toolkit/xre',
     '/widget',
+    '/widget/headless',
     '/xpcom/base',
 ]
 

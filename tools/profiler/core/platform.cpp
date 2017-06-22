@@ -1220,24 +1220,18 @@ DoNativeBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
     }
   }
 
-  size_t scannedFramesAllowed = 0;
-
-  size_t scannedFramesAcquired = 0, framePointerFramesAcquired = 0;
+  size_t framePointerFramesAcquired = 0;
   lul::LUL* lul = CorePS::Lul(aLock);
   lul->Unwind(reinterpret_cast<uintptr_t*>(aNativeStack.mPCs),
               reinterpret_cast<uintptr_t*>(aNativeStack.mSPs),
               &aNativeStack.mCount, &framePointerFramesAcquired,
-              &scannedFramesAcquired,
-              MAX_NATIVE_FRAMES, scannedFramesAllowed,
-              &startRegs, &stackImg);
+              MAX_NATIVE_FRAMES, &startRegs, &stackImg);
 
   // Update stats in the LUL stats object.  Unfortunately this requires
   // three global memory operations.
   lul->mStats.mContext += 1;
-  lul->mStats.mCFI     += aNativeStack.mCount - 1 - framePointerFramesAcquired -
-                          scannedFramesAcquired;
+  lul->mStats.mCFI     += aNativeStack.mCount - 1 - framePointerFramesAcquired;
   lul->mStats.mFP      += framePointerFramesAcquired;
-  lul->mStats.mScanned += scannedFramesAcquired;
 }
 
 #endif

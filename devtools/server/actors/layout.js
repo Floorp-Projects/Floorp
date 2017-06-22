@@ -4,7 +4,6 @@
 
 "use strict";
 
-const events = require("sdk/event/core");
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { getStringifiableFragments } =
   require("devtools/server/actors/utils/css-grid-utils");
@@ -72,16 +71,10 @@ var LayoutActor = ActorClassWithSpec(layoutSpec, {
 
     this.tabActor = tabActor;
     this.walker = walker;
-
-    this.onNavigate = this.onNavigate.bind(this);
-
-    events.on(this.tabActor, "navigate", this.onNavigate);
   },
 
   destroy: function () {
     Actor.prototype.destroy.call(this);
-
-    events.off(this.tabActor, "navigate", this.onNavigate);
 
     this.tabActor = null;
     this.walker = null;
@@ -140,11 +133,6 @@ var LayoutActor = ActorClassWithSpec(layoutSpec, {
     }
 
     return grids;
-  },
-
-  onNavigate: function () {
-    let grids = this.getAllGrids(this.walker.rootNode);
-    events.emit(this, "grid-layout-changed", grids);
   },
 
 });

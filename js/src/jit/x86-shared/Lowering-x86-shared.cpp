@@ -307,7 +307,7 @@ LIRGeneratorX86Shared::visitWasmSelect(MWasmSelect* ins)
 }
 
 void
-LIRGeneratorX86Shared::visitAsmJSNeg(MAsmJSNeg* ins)
+LIRGeneratorX86Shared::visitWasmNeg(MWasmNeg* ins)
 {
     switch (ins->type()) {
       case MIRType::Int32:

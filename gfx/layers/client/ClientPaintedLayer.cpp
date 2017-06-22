@@ -15,7 +15,6 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/gfx/2D.h"             // for DrawTarget
 #include "mozilla/gfx/DrawEventRecorder.h"
-#include "mozilla/gfx/InlineTranslator.h"
 #include "mozilla/gfx/Matrix.h"         // for Matrix
 #include "mozilla/gfx/Rect.h"           // for Rect, IntRect
 #include "mozilla/gfx/Types.h"          // for Float, etc
@@ -115,8 +114,9 @@ ClientPaintedLayer::UpdatePaintRegion(PaintState& aState)
 }
 
 void
-ClientPaintedLayer::ReplayPaintedLayer(DrawEventRecorderMemory* aRecorder)
+ClientPaintedLayer::PaintOffMainThread(DrawEventRecorderMemory* aRecorder)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   LayerIntRegion visibleRegion = GetVisibleRegion();
   mContentClient->BeginPaint();
 
@@ -140,13 +140,8 @@ ClientPaintedLayer::ReplayPaintedLayer(DrawEventRecorderMemory* aRecorder)
 
     SetAntialiasingFlags(this, target);
 
-    // Draw all the things into the actual content client
-    // This shouldn't exist in the future. For now, its just testing
-    // to make sure we properly record and can replay all the draw
-    // commands
-    std::istream& stream = aRecorder->GetInputStream();
-    InlineTranslator translator(target, nullptr);
-    translator.TranslateRecording(stream);
+    // Basic version, wait for the paint thread to finish painting.
+    PaintThread::Get()->PaintContents(aRecorder, target);
 
     mContentClient->ReturnDrawTargetToBuffer(target);
     didUpdate = true;
@@ -305,7 +300,7 @@ ClientPaintedLayer::RenderLayerWithReadback(ReadbackProcessor *aReadback)
         return;
       }
 
-      ReplayPaintedLayer(recorder);
+      PaintOffMainThread(recorder);
       return;
     }
   }
