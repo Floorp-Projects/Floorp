@@ -313,13 +313,19 @@ CustomizeMode.prototype = {
         window.PanelUI.menuButton.open = true;
         window.PanelUI.beginBatchUpdate();
 
-        // The menu panel is lazy, and registers itself when the popup shows. We
-        // need to force the menu panel to register itself, or else customization
-        // is really not going to work. We pass "true" to ensureReady to
-        // indicate that we're handling calling startBatchUpdate and
-        // endBatchUpdate.
+        // The menu panel is lazy, and registers itself when the popup shows.
+        // If it hasn't been opened yet, we need to force the menu panel to
+        // register itself, or else customization is not going to work.
+        // We pass "true" to ensureReady to indicate that we're handling
+        // calling startBatchUpdate and endBatchUpdate.
         if (!window.PanelUI.isReady) {
           await window.PanelUI.ensureReady(true);
+          // Up to now, it will have been hidden, and its XBL bindings won't have
+          // been constructed. Unhiding it won't trigger the construction of
+          // those bindings immediately, but the next layout flush will.
+          // Because we don't want to sync flush layout, we wait for the next
+          // natural style/layout flush.
+          await new Promise(resolve => window.requestIdleCallback(resolve));
         }
 
         // Hide the palette before starting the transition for increased perf.
