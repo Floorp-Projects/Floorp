@@ -75,8 +75,6 @@ to mochitest command.
     * test_supports_rules.html [6]
     * test_condition_text.html [1]
 * Incorrect serialization
-  * color value not canonicalized servo/servo#15397
-    * test_shorthand_property_getters.html `should condense to canonical case` [2]
   * place-{content,items,self} shorthands bug 1363971
     * test_align_shorthand_serialization.html [6]
   * system font serialization with subprop specified bug 1364286
