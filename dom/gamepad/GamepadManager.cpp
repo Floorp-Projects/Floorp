@@ -139,6 +139,17 @@ GamepadManager::AddListener(nsGlobalWindow* aWindow)
   MOZ_ASSERT(aWindow->IsInnerWindow());
   MOZ_ASSERT(NS_IsMainThread());
 
+  // IPDL child has not been created
+  if (mChannelChildren.IsEmpty()) {
+    PBackgroundChild *actor = BackgroundChild::GetForCurrentThread();
+    //Try to get the PBackground Child actor
+    if (actor) {
+      ActorCreated(actor);
+    } else {
+      Unused << BackgroundChild::GetOrCreateForCurrentThread(this);
+    }
+  }
+
   if (!mEnabled || mShuttingDown || nsContentUtils::ShouldResistFingerprinting()) {
     return;
   }
@@ -148,19 +159,6 @@ GamepadManager::AddListener(nsGlobalWindow* aWindow)
   }
 
   mListeners.AppendElement(aWindow);
-
-  // IPDL child has been created
-  if (!mChannelChildren.IsEmpty()) {
-    return;
-  }
-
-  PBackgroundChild *actor = BackgroundChild::GetForCurrentThread();
-  //Try to get the PBackground Child actor
-  if (actor) {
-    ActorCreated(actor);
-  } else {
-    Unused << BackgroundChild::GetOrCreateForCurrentThread(this);
-  }
 }
 
 void
@@ -501,7 +499,7 @@ GamepadManager::SetWindowHasSeenGamepad(nsGlobalWindow* aWindow,
 void
 GamepadManager::Update(const GamepadChangeEvent& aEvent)
 {
-  if (mShuttingDown) {
+  if (!mEnabled || mShuttingDown || nsContentUtils::ShouldResistFingerprinting()) {
     return;
   }
 
