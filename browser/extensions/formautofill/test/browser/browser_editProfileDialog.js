@@ -13,6 +13,19 @@ add_task(async function test_cancelEditProfileDialog() {
   });
 });
 
+add_task(async function test_cancelEditProfileDialogWithESC() {
+  await new Promise(resolve => {
+    let win = window.openDialog(EDIT_PROFILE_DIALOG_URL);
+    win.addEventListener("load", () => {
+      win.addEventListener("unload", () => {
+        ok(true, "Edit profile dialog is closed with ESC key");
+        resolve();
+      }, {once: true});
+      EventUtils.synthesizeKey("VK_ESCAPE", {}, win);
+    }, {once: true});
+  });
+});
+
 add_task(async function test_saveAddress() {
   await new Promise(resolve => {
     let win = window.openDialog(EDIT_PROFILE_DIALOG_URL, null, null, null);

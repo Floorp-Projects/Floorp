@@ -35,6 +35,19 @@ add_task(async function test_manageProfilesInitialState() {
   });
 });
 
+add_task(async function test_cancelManageProfileDialogWithESC() {
+  await new Promise(resolve => {
+    let win = window.openDialog(MANAGE_PROFILES_DIALOG_URL);
+    win.addEventListener("load", () => {
+      win.addEventListener("unload", () => {
+        ok(true, "Manage profiles dialog is closed with ESC key");
+        resolve();
+      }, {once: true});
+      EventUtils.synthesizeKey("VK_ESCAPE", {}, win);
+    }, {once: true});
+  });
+});
+
 add_task(async function test_removingSingleAndMultipleProfiles() {
   await saveAddress(TEST_ADDRESS_1);
   await saveAddress(TEST_ADDRESS_2);
