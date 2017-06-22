@@ -576,7 +576,11 @@ WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
 static bool
 WasmBinaryToText(JSContext* cx, unsigned argc, Value* vp)
 {
-    MOZ_ASSERT(cx->options().wasm());
+    if (!cx->options().wasm()) {
+        JS_ReportErrorASCII(cx, "wasm support unavailable");
+        return false;
+    }
+
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (!args.get(0).isObject() || !args.get(0).toObject().is<TypedArrayObject>()) {
@@ -640,7 +644,11 @@ WasmBinaryToText(JSContext* cx, unsigned argc, Value* vp)
 static bool
 WasmExtractCode(JSContext* cx, unsigned argc, Value* vp)
 {
-    MOZ_ASSERT(cx->options().wasm());
+    if (!cx->options().wasm()) {
+        JS_ReportErrorASCII(cx, "wasm support unavailable");
+        return false;
+    }
+
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (!args.get(0).isObject()) {
