@@ -38,6 +38,28 @@ win32/opt:
         config:
             - builds/taskcluster_firefox_windows_32_opt.py
 
+win32-dmd/opt:
+    description: "Win32 DMD Opt"
+    index:
+        product: firefox
+        job-name: win32-dmd-opt
+    treeherder:
+        platform: windows2012-32-dmd/opt
+        symbol: tc(Bdmd)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
+    run:
+        using: mozharness
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/taskcluster_firefox_windows_32_opt.py
+        custom-build-variant-cfg: dmd
+    run-on-projects: [ ]
+
 win32/pgo:
     description: "Win32 Opt PGO"
     index:
@@ -98,6 +120,28 @@ win64/opt:
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/taskcluster_firefox_windows_64_opt.py
+
+win64-dmd/opt:
+    description: "Win64 DMD Opt"
+    index:
+        product: firefox
+        job-name: win64-dmd-opt
+    treeherder:
+        platform: windows2012-64-dmd/opt
+        symbol: tc(Bdmd)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
+    run:
+        using: mozharness
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/taskcluster_firefox_windows_64_opt.py
+        custom-build-variant-cfg: dmd
+    run-on-projects: [ ]
 
 win64-nightly/opt:
     description: "Win64 Nightly"

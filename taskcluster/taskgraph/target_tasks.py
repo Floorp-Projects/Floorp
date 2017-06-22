@@ -319,3 +319,13 @@ def target_tasks_nightly_win64(full_task_graph, parameters):
         if platform in ('win64-nightly', ):
             return task.attributes.get('nightly', False)
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
+# Opt DMD builds should only run nightly
+@_target_task('nightly_dmd')
+def target_tasks_dmd(full_task_graph, parameters):
+    """Target DMD that run nightly on the m-c branch."""
+    def filter(task):
+        platform = task.attributes.get('build_platform', '')
+        return platform.endswith('-dmd')
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
