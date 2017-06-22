@@ -47,6 +47,25 @@ struct TimingParams
     mDelay = TimeDuration::FromMilliseconds(aDelay);
   }
 
+  TimingParams(const TimeDuration& aDuration,
+               const TimeDuration& aDelay,
+               const TimeDuration& aEndDelay,
+               float aIterations,
+               float aIterationStart,
+               dom::PlaybackDirection aDirection,
+               dom::FillMode aFillMode,
+               Maybe<ComputedTimingFunction>&& aFunction)
+    : mDelay(aDelay)
+    , mEndDelay(aEndDelay)
+    , mIterations(aIterations)
+    , mIterationStart(aIterationStart)
+    , mDirection(aDirection)
+    , mFill(aFillMode)
+    , mFunction(aFunction)
+  {
+    mDuration.emplace(aDuration);
+  }
+
   template <class OptionsType>
   static TimingParams FromOptionsType(
     const OptionsType& aOptions,
