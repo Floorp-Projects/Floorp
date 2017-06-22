@@ -163,9 +163,9 @@ function tunnelToInnerBrowser(outer, inner) {
       // The constructor of the new XBL binding is run asynchronously and there is no
       // event to signal its completion.  Spin an event loop to watch for properties that
       // are set by the contructor.
-      while (!outer._remoteWebNavigation) {
-        Services.tm.currentThread.processNextEvent(true);
-      }
+      Services.tm.spinEventLoopUntil(() => {
+        return outer._remoteWebNavigation;
+      });
 
       // Replace the `webNavigation` object with our own version which tries to use
       // mozbrowser APIs where possible.  This replaces the webNavigation object that the

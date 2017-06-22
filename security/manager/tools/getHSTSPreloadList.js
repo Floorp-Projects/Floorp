@@ -387,10 +387,7 @@ function waitForAResponse(outputList) {
   // From <https://developer.mozilla.org/en/XPConnect/xpcshell/HOWTO>
   var threadManager = Cc["@mozilla.org/thread-manager;1"]
                       .getService(Ci.nsIThreadManager);
-  var mainThread = threadManager.currentThread;
-  while (outputList.length == 0) {
-    mainThread.processNextEvent(true);
-  }
+  threadManager.spinEventLoopUntil(() => outputList.length != 0);
 }
 
 function readCurrentList(filename) {

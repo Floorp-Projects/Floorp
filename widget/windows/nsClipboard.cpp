@@ -36,6 +36,8 @@
 #include "nsIOutputStream.h"
 #include "nsEscape.h"
 #include "nsIObserverService.h"
+#include "HeadlessClipboard.h"
+#include "mozilla/ClearOnShutdown.h"
 
 using mozilla::LogLevel;
 
@@ -45,6 +47,28 @@ static mozilla::LazyLogModule gWin32ClipboardLog("nsClipboard");
 UINT nsClipboard::CF_HTML = ::RegisterClipboardFormatW(L"HTML Format");
 UINT nsClipboard::CF_CUSTOMTYPES = ::RegisterClipboardFormatW(L"application/x-moz-custom-clipdata");
 
+namespace mozilla {
+namespace clipboard {
+StaticRefPtr<nsIClipboard> sInstance;
+}
+}
+/* static */ already_AddRefed<nsIClipboard>
+nsClipboard::GetInstance()
+{
+  using namespace mozilla::clipboard;
+
+  if (!sInstance) {
+    if (gfxPlatform::IsHeadless()) {
+      sInstance = new widget::HeadlessClipboard();
+    } else {
+      sInstance = new nsClipboard();
+    }
+    ClearOnShutdown(&sInstance);
+  }
+
+  RefPtr<nsIClipboard> service = sInstance.get();
+  return service.forget();
+}
 
 //-------------------------------------------------------------------------
 //

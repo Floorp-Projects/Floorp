@@ -724,6 +724,94 @@ TestArray.addTest(
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
+  "AES-GCM encryption, fail with a zero-length IV",
+  function () {
+    var that = this;
+    var alg = {
+      name: "AES-GCM",
+      iv: new Uint8Array(),
+      additionalData: tv.aes_gcm_enc.adata,
+      tagLength: 128
+    };
+
+    function doEncrypt(x) {
+      return crypto.subtle.encrypt(alg, x, tv.aes_gcm_enc.data);
+    }
+
+    crypto.subtle.importKey("raw", tv.aes_gcm_enc.key, "AES-GCM", false, ['encrypt'])
+      .then(doEncrypt)
+      .then(error(that), complete(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "AES-GCM encryption, accept an all-zero IV (1 byte)",
+  function () {
+    var that = this;
+    var alg = {
+      name: "AES-GCM",
+      iv: new Uint8Array(1),
+      additionalData: tv.aes_gcm_enc.adata,
+      tagLength: 128
+    };
+
+    function doEncrypt(x) {
+      return crypto.subtle.encrypt(alg, x, tv.aes_gcm_enc.data);
+    }
+
+    crypto.subtle.importKey("raw", tv.aes_gcm_enc.key, "AES-GCM", false, ['encrypt'])
+      .then(doEncrypt)
+      .then(complete(that), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "AES-GCM encryption, accept an all-zero IV (12 bytes)",
+  function () {
+    var that = this;
+    var alg = {
+      name: "AES-GCM",
+      iv: new Uint8Array(12),
+      additionalData: tv.aes_gcm_enc.adata,
+      tagLength: 128
+    };
+
+    function doEncrypt(x) {
+      return crypto.subtle.encrypt(alg, x, tv.aes_gcm_enc.data);
+    }
+
+    crypto.subtle.importKey("raw", tv.aes_gcm_enc.key, "AES-GCM", false, ['encrypt'])
+      .then(doEncrypt)
+      .then(complete(that), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "AES-GCM encryption, accept an all-zero IV (16 bytes)",
+  function () {
+    var that = this;
+    var alg = {
+      name: "AES-GCM",
+      iv: new Uint8Array(16),
+      additionalData: tv.aes_gcm_enc.adata,
+      tagLength: 128
+    };
+
+    function doEncrypt(x) {
+      return crypto.subtle.encrypt(alg, x, tv.aes_gcm_enc.data);
+    }
+
+    crypto.subtle.importKey("raw", tv.aes_gcm_enc.key, "AES-GCM", false, ['encrypt'])
+      .then(doEncrypt)
+      .then(complete(that), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
   "HMAC SHA-256 sign",
   function() {
     var that = this;

@@ -60,12 +60,10 @@ var WindowWatcher = {
     // The dialog is meant to be opened modally and the install operation can be
     // asynchronous, so we must spin an event loop (like the modal window does)
     // until the install is complete
-    let thr = AM_Cc["@mozilla.org/thread-manager;1"].
-              getService(AM_Ci.nsIThreadManager).
-              mainThread;
+    let tm = AM_Cc["@mozilla.org/thread-manager;1"].
+             getService(AM_Ci.nsIThreadManager);
 
-    while (!installed || !updated)
-      thr.processNextEvent(false);
+    tm.spinEventLoopUntil(() => installed && updated);
   },
 
   QueryInterface(iid) {

@@ -68,6 +68,19 @@ extern NSMenu* sApplicationMenu; // Application menu shared by all menubars
 // defined in nsChildView.mm
 extern BOOL                gSomeMenuBarPainted;
 
+#if !defined(MAC_OS_X_VERSION_10_9) || \
+    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_9
+
+enum NSWindowOcclusionState {
+  NSWindowOcclusionStateVisible = 0x1 << 1
+};
+
+@interface NSWindow(OcclusionState)
+- (NSWindowOcclusionState) occlusionState;
+@end
+
+#endif
+
 #if !defined(MAC_OS_X_VERSION_10_12) || \
     MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
 
@@ -1972,6 +1985,27 @@ nsCocoaWindow::DispatchSizeModeEvent()
 }
 
 void
+nsCocoaWindow::DispatchOcclusionEvent()
+{
+  if (!mWindow) {
+    return;
+  }
+
+  bool newOcclusionState =
+    !([mWindow occlusionState] & NSWindowOcclusionStateVisible);
+
+  // Don't dispatch if the new occlustion state is the same as the current state.
+  if (mIsFullyOccluded == newOcclusionState) {
+    return;
+  }
+
+  mIsFullyOccluded = newOcclusionState;
+  if (mWidgetListener) {
+    mWidgetListener->OcclusionStateChanged(mIsFullyOccluded);
+  }
+}
+
+void
 nsCocoaWindow::ReportSizeEvent()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -2787,6 +2821,14 @@ nsCocoaWindow::GetEditCommands(NativeKeyBindingsType aType,
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+// This method is on NSWindowDelegate starting with 10.9
+- (void)windowDidChangeOcclusionState:(NSNotification*)aNotification
+{
+  if (mGeckoWindow) {
+    mGeckoWindow->DispatchOcclusionEvent();
+  }
 }
 
 - (nsCocoaWindow*)geckoWidget

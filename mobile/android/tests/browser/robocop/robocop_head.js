@@ -838,9 +838,7 @@ JavaBridge.prototype = {
     // spin the event loop, but here we're in a test and our API
     // specifies a synchronous call, so we spin the loop to wait for
     // the call to finish.
-    while (this._repliesNeeded > initialReplies) {
-      thread.processNextEvent(true);
-    }
+    this._Services.tm.spinEventLoopUntil(() => this._repliesNeeded <= initialReplies);
   },
 
   /**

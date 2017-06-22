@@ -127,18 +127,6 @@ public:
   // the background.
   bool IsBackground() const override;
 
-  // Increase/Decrease the number of IndexedDB transactions/databases for the
-  // decision making of the preemption in the scheduler.
-  Atomic<uint32_t>& IndexedDBTransactionCounter()
-  {
-    return mNumOfIndexedDBTransactions;
-  }
-
-  Atomic<uint32_t>& IndexedDBDatabaseCounter()
-  {
-    return mNumOfIndexedDBDatabases;
-  }
-
 private:
   virtual AbstractThread*
   AbstractMainThreadForImpl(TaskCategory aCategory) override;
@@ -152,8 +140,6 @@ private:
   // Thread-safe members
   Atomic<bool> mLastWindowLeft;
   Atomic<bool> mThrottledQueuesInitialized;
-  Atomic<uint32_t> mNumOfIndexedDBTransactions;
-  Atomic<uint32_t> mNumOfIndexedDBDatabases;
   const bool mIsChrome;
 
   // Main thread only

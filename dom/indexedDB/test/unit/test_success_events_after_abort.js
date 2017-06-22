@@ -46,12 +46,9 @@ function* testSteps()
   if (this.window) {
     // Make sure the success event isn't queued somehow.
     let comp = SpecialPowers.wrap(Components);
-    let thread = comp.classes["@mozilla.org/thread-manager;1"]
-                     .getService(comp.interfaces.nsIThreadManager)
-                     .currentThread;
-    while (thread.hasPendingEvents()) {
-      thread.processNextEvent(false);
-    }
+    let tm = comp.classes["@mozilla.org/thread-manager;1"]
+                 .getService(comp.interfaces.nsIThreadManager);
+    tm.spinEventLoopUntilEmpty();
   }
 
   finishTest();

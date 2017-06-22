@@ -401,8 +401,7 @@ var AddonTestUtils = {
       done = true;
     });
 
-    while (!done)
-      Services.tm.mainThread.processNextEvent(true);
+    Services.tm.spinEventLoopUntil(() => done);
 
     if (error !== undefined)
       throw error;

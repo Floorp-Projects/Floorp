@@ -270,7 +270,9 @@ xul|button[type="menu"] > xul|*.button-box > xul|*.button-menu-dropmarker {
   height: 16px;
   border: none;
   background-color: transparent;
-  list-style-image: url("chrome://global/skin/in-content/dropdown.svg#dropdown");
+  list-style-image: url("chrome://global/skin/in-content/dropdown.svg");
+  -moz-context-properties: fill;
+  fill: -moz-DialogText;
 }
 
 xul|*.help-button {
@@ -279,21 +281,27 @@ xul|*.help-button {
   border-width: 0;
   background-image: none;
   box-shadow: none;
-  list-style-image: url("chrome://global/skin/in-content/help-glyph.svg#help");
+  list-style-image: url("chrome://global/skin/in-content/help-glyph.svg");
+  -moz-context-properties: fill, stroke, stroke-opacity;
+  fill: #999;
+  stroke: #999;
+  stroke-opacity: 0;
 }
 
 xul|*.help-button:not([disabled="true"]):hover {
   background-image: none;
   /* Override default button background */
   background-color: transparent;
-  list-style-image: url("chrome://global/skin/in-content/help-glyph.svg#help-hover");
+  fill: white;
+  stroke: #808080;
+  stroke-opacity: 1;
 }
 
 xul|*.help-button:not([disabled="true"]):hover:active {
   background-image: none;
   /* Override default button background */
   background-color: transparent;
-  list-style-image: url("chrome://global/skin/in-content/help-glyph.svg#help-pressed");
+  stroke: #666;
 }
 
 xul|*.close-icon > xul|*.button-box,
@@ -319,18 +327,24 @@ html|*.help-button {
   border: 0;
   padding: 0;
   display: inline-block;
-  background-image: url("chrome://global/skin/in-content/help-glyph.svg#help");
+  background-image: url("chrome://global/skin/in-content/help-glyph.svg");
+  -moz-context-properties: fill, stroke, stroke-opacity;
+  fill: #999;
+  stroke: #999;
+  stroke-opacity: 0;
   background-repeat: no-repeat;
   background-position: center center;
   background-size: contain;
 }
 
 html|*.help-button:hover {
-  background-image: url("chrome://global/skin/in-content/help-glyph.svg#help-hover");
+  fill: white;
+  stroke: #808080;
+  stroke-opacity: 1;
 }
 
 html|*.help-button:hover:active {
-  background-image: url("chrome://global/skin/in-content/help-glyph.svg#help-pressed");
+  stroke: #666;
 }
 
 xul|*.spinbuttons-button {
@@ -375,7 +389,9 @@ xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker {
   padding: 0;
   border: none;
   background-color: transparent;
-  list-style-image: url("chrome://global/skin/in-content/dropdown.svg#dropdown");
+  list-style-image: url("chrome://global/skin/in-content/dropdown.svg");
+  -moz-context-properties: fill;
+  fill: -moz-DialogText;
 }
 
 xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker > xul|*.dropmarker-icon {
@@ -384,7 +400,7 @@ xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker > xul|*.dropmark
 }
 
 xul|menulist[disabled="true"]:not([editable="true"]) > xul|*.menulist-dropmarker {
-  list-style-image: url("chrome://global/skin/in-content/dropdown.svg#dropdown-disabled")
+  fill: GrayText;
 }
 
 xul|menulist > xul|menupopup,
@@ -566,11 +582,17 @@ html|input[type="checkbox"]:not(:disabled):hover {
 }
 
 xul|*.checkbox-check[checked] {
-  list-style-image: url("chrome://global/skin/in-content/check.svg#check");
+  list-style-image: url("chrome://global/skin/in-content/check.svg");
+  -moz-context-properties: fill, stroke;
+  fill: #2292d0;
+  stroke: none;
 }
 
 html|input[type="checkbox"]:checked {
-  background-image: url("chrome://global/skin/in-content/check.svg#check"), linear-gradient(#fff, rgba(255,255,255,0.8));
+  background-image: url("chrome://global/skin/in-content/check.svg"), linear-gradient(#fff, rgba(255,255,255,0.8));
+  -moz-context-properties: fill, stroke;
+  fill: #2292d0;
+  stroke: none;
 }
 
 xul|checkbox[disabled="true"] > xul|*.checkbox-check,
@@ -609,7 +631,9 @@ xul|radio:not([disabled="true"]):hover > xul|*.radio-check {
 }
 
 xul|*.radio-check[selected] {
-  list-style-image: url("chrome://global/skin/in-content/radio.svg#radio");
+  list-style-image: url("chrome://global/skin/in-content/radio.svg");
+  -moz-context-properties: fill;
+  fill: #2292d0;
 }
 
 xul|radio[disabled="true"] > xul|*.radio-check {
@@ -819,7 +843,9 @@ xul|treecolpicker {
 }
 
 xul|treecol:not([hideheader="true"]) > xul|*.treecol-sortdirection[sortDirection] {
-  list-style-image: url("chrome://global/skin/in-content/dropdown.svg#dropdown");
+  list-style-image: url("chrome://global/skin/in-content/dropdown.svg");
+  -moz-context-properties: fill;
+  fill: -moz-DialogText;
   width: 18px;
   height: 18px;
 }

@@ -177,6 +177,15 @@ Telemetry.prototype = {
     reloadAddonReload: {
       histogram: "DEVTOOLS_RELOAD_ADDON_RELOAD_COUNT",
     },
+    gridInspectorShowGridAreasOverlayChecked: {
+      scalar: "devtools.grid.showGridAreasOverlay.checked",
+    },
+    gridInspectorShowGridLineNumbersChecked: {
+      scalar: "devtools.grid.showGridLineNumbers.checked",
+    },
+    gridInspectorShowInfiniteLinesChecked: {
+      scalar: "devtools.grid.showInfiniteLines.checked",
+    },
   },
 
   /**
