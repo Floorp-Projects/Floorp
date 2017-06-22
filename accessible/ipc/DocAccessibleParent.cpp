@@ -397,7 +397,7 @@ DocAccessibleParent::RecvRoleChangedEvent(const uint32_t& aRole)
     return IPC_OK();
   }
 
- if (aRole >= roles::LAST_ROLE) {
+ if (aRole > roles::LAST_ROLE) {
    NS_ERROR("child sent bad role in RoleChangedEvent");
    return IPC_FAIL_NO_REASON(this);
  }
