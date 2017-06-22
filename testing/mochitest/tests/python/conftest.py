@@ -29,8 +29,10 @@ environment variable is required.
 """.lstrip()
 
 
-def filter_action(action, lines):
-    return filter(lambda x: x['action'] == action, lines)
+def filter_action(actions, lines):
+    if isinstance(actions, basestring):
+        actions = (actions,)
+    return filter(lambda x: x['action'] in actions, lines)
 
 
 def _get_harness_root():
