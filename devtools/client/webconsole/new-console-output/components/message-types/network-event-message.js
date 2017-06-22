@@ -22,17 +22,11 @@ NetworkEventMessage.propTypes = {
   serviceContainer: PropTypes.shape({
     openNetworkPanel: PropTypes.func.isRequired,
   }),
-  indent: PropTypes.number.isRequired,
   timestampsVisible: PropTypes.bool.isRequired,
   networkMessageUpdate: PropTypes.object.isRequired,
 };
 
-NetworkEventMessage.defaultProps = {
-  indent: 0,
-};
-
 function NetworkEventMessage({
-  indent,
   message = {},
   serviceContainer,
   timestampsVisible,
@@ -40,6 +34,7 @@ function NetworkEventMessage({
 }) {
   const {
     actor,
+    indent,
     source,
     type,
     level,

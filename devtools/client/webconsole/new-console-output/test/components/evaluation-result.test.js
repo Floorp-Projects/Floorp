@@ -81,7 +81,9 @@ describe("EvaluationResult component:", () => {
     const message = stubPreparedMessages.get("new Date(0)");
 
     const indent = 10;
-    let wrapper = render(EvaluationResult({ message, indent}));
+    let wrapper = render(EvaluationResult({
+      message: Object.assign({}, message, {indent}),
+    }));
     expect(wrapper.find(".indent").prop("style").width)
         .toBe(`${indent * INDENT_WIDTH}px`);
 
