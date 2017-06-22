@@ -36,7 +36,6 @@ namespace videocapturemodule
 {
 
 VideoCaptureMacAVFoundation::VideoCaptureMacAVFoundation(const int32_t id) :
-    VideoCaptureImpl(id),
     _captureDevice(NULL),
     _captureInfo(NULL),
     _isCapturing(false),
