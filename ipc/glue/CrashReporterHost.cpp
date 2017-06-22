@@ -6,10 +6,12 @@
 
 #include "CrashReporterHost.h"
 #include "CrashReporterMetadataShmem.h"
+#include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
 #ifdef MOZ_CRASHREPORTER
+# include "nsExceptionHandler.h"
 # include "nsICrashService.h"
 #endif
 
@@ -18,7 +20,7 @@ namespace ipc {
 
 CrashReporterHost::CrashReporterHost(GeckoProcessType aProcessType,
                                      const Shmem& aShmem,
-                                     CrashReporter::ThreadId aThreadId)
+                                     ThreadId aThreadId)
  : mProcessType(aProcessType),
    mShmem(aShmem),
    mThreadId(aThreadId),
@@ -101,6 +103,34 @@ CrashReporterHost::FinalizeCrashReport()
 
   mFinalized = true;
   return true;
+}
+
+bool
+CrashReporterHost::GenerateMinidumpAndPair(GeckoChildProcessHost* aChildProcess,
+                                           nsIFile* aMinidumpToPair,
+                                           const nsACString& aPairName)
+{
+  base::ProcessHandle childHandle;
+#ifdef XP_MACOSX
+  childHandle = aChildProcess->GetChildTask();
+#else
+  childHandle = aChildProcess->GetChildProcessHandle();
+  if (!childHandle) {
+    NS_WARNING("Failed to get child process handle.");
+    return false;
+  }
+#endif
+
+  nsCOMPtr<nsIFile> targetDump;
+  if (!CrashReporter::CreateMinidumpsAndPair(childHandle,
+                                             mThreadId,
+                                             aPairName,
+                                             aMinidumpToPair,
+                                             getter_AddRefs(targetDump))) {
+    return false;
+  }
+
+  return CrashReporter::GetIDFromMinidump(targetDump, mDumpID);
 }
 
 /* static */ void

@@ -1205,7 +1205,7 @@ PluginModuleChromeParent::TakeFullMinidump(base::ProcessId aContentPid,
         // We have a single browser report, generate a new plugin process parent
         // report and pair it up with the browser report handed in.
         reportsReady = mCrashReporter->GenerateMinidumpAndPair(
-          this,
+          Process(),
           browserDumpFile,
           NS_LITERAL_CSTRING("browser"));
 
@@ -1221,7 +1221,7 @@ PluginModuleChromeParent::TakeFullMinidump(base::ProcessId aContentPid,
     // various flash subprocesses if we're the flash module.
     if (!reportsReady) {
         reportsReady = mCrashReporter->GenerateMinidumpAndPair(
-          this,
+          Process(),
           nullptr, // Pair with a dump of this process and thread.
           NS_LITERAL_CSTRING("browser"));
     }
