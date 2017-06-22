@@ -75,6 +75,28 @@
                 'linux/video_capture_linux.h',
               ],
             }],
+            ['OS=="mac"', {
+              'sources': [
+                'mac/avfoundation/video_capture_avfoundation.h',
+                'mac/avfoundation/video_capture_avfoundation.mm',
+                'mac/avfoundation/video_capture_avfoundation_info.h',
+                'mac/avfoundation/video_capture_avfoundation_info.mm',
+                'mac/avfoundation/video_capture_avfoundation_info_objc.h',
+                'mac/avfoundation/video_capture_avfoundation_info_objc.mm',
+                'mac/avfoundation/video_capture_avfoundation_objc.h',
+                'mac/avfoundation/video_capture_avfoundation_objc.mm',
+                'mac/avfoundation/video_capture_avfoundation_utility.h',
+                'mac/video_capture_mac.mm',
+              ],
+              'link_settings': {
+                'xcode_settings': {
+                  'OTHER_LDFLAGS': [
+                    '-framework Cocoa',
+                    '-framework CoreVideo',
+                  ],
+                },
+              },
+            }],  # mac
             ['OS=="win"', {
               'conditions': [
                 ['build_with_mozilla==0', {
@@ -133,7 +155,7 @@
                 'android/video_capture_android.h',
               ],
             }],  # android
-            ['OS=="ios" or OS=="mac"', {
+            ['OS=="ios"', {
               'sources': [
                 'objc/device_info.h',
                 'objc/device_info.mm',

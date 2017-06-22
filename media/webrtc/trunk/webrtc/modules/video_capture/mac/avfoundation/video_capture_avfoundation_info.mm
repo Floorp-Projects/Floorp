@@ -19,8 +19,7 @@ namespace webrtc
 namespace videocapturemodule
 {
 
-VideoCaptureMacAVFoundationInfo::VideoCaptureMacAVFoundationInfo(const int32_t id) :
-    DeviceInfoImpl(id)
+VideoCaptureMacAVFoundationInfo::VideoCaptureMacAVFoundationInfo(const int32_t id)
 {
     nsAutoreleasePool localPool;
     _captureInfo = [[VideoCaptureMacAVFoundationInfoObjC alloc] init];
@@ -99,7 +98,7 @@ int32_t VideoCaptureMacAVFoundationInfo::DisplayCaptureSettingsDialogBox(
     const char* dialogTitleUTF8, void* parentWindow,
     uint32_t positionX, uint32_t positionY)
 {
-    WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _id,
+    WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, 0,
                  "API not supported on Mac OS X.");
     return -1;
 }
@@ -107,7 +106,7 @@ int32_t VideoCaptureMacAVFoundationInfo::DisplayCaptureSettingsDialogBox(
 int32_t VideoCaptureMacAVFoundationInfo::CreateCapabilityMap(
     const char* deviceUniqueIdUTF8)
 {
-    WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _id,
+    WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, 0,
                  "API not supported on Mac OS X.");
     return -1;
 }
