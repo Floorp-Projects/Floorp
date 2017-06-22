@@ -1665,9 +1665,44 @@ AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent) cons
   return delta;
 }
 
+static
+void ReportKeyboardScrollAction(const KeyboardScrollAction& aAction)
+{
+  ScrollInputMethod scrollMethod;
+
+  switch (aAction.mType) {
+    case KeyboardScrollAction::eScrollLine: {
+      scrollMethod = ScrollInputMethod::ApzScrollLine;
+      break;
+    }
+    case KeyboardScrollAction::eScrollCharacter: {
+      scrollMethod = ScrollInputMethod::ApzScrollCharacter;
+      break;
+    }
+    case KeyboardScrollAction::eScrollPage: {
+      scrollMethod = ScrollInputMethod::ApzScrollPage;
+      break;
+    }
+    case KeyboardScrollAction::eScrollComplete: {
+      scrollMethod = ScrollInputMethod::ApzCompleteScroll;
+      break;
+    }
+    case KeyboardScrollAction::eSentinel: {
+      MOZ_ASSERT_UNREACHABLE("Invalid KeyboardScrollAction.");
+      return;
+    }
+  }
+
+  mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
+      (uint32_t)scrollMethod);
+}
+
 nsEventStatus
 AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent)
 {
+  // Report the type of scroll action to telemetry
+  ReportKeyboardScrollAction(aEvent.mAction);
+
   // Calculate the destination for this keyboard scroll action
   nsPoint destination = CSSPoint::ToAppUnits(GetKeyboardDestination(aEvent.mAction));
 
