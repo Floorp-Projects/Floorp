@@ -945,6 +945,10 @@ Accessible::Attributes()
                            NS_LITERAL_STRING("true"));
   }
 
+  // XXX: In ARIA 1.1, the value of aria-haspopup became a token (bug 1355449).
+  if (aria::UniversalStatesFor(mContent->AsElement()) & states::HASPOPUP)
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::haspopup, NS_LITERAL_STRING("true"));
+
   // If there is no aria-live attribute then expose default value of 'live'
   // object attribute used for ARIA role of this accessible.
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
