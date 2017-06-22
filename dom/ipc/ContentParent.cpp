@@ -2977,7 +2977,7 @@ ContentParent::KillHard(const char* aReason)
       reason);
 
     // Generate the report and insert into the queue for submittal.
-    if (mCrashReporter->GenerateMinidumpAndPair(this,
+    if (mCrashReporter->GenerateMinidumpAndPair(Process(),
                                                 nullptr,
                                                 NS_LITERAL_CSTRING("browser")))
     {
