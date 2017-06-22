@@ -64,6 +64,7 @@ SOURCES += [
     'TelemetryEvent.cpp',
     'TelemetryHistogram.cpp',
     'TelemetryScalar.cpp',
+    'ThreadHangStats.cpp',
     'WebrtcTelemetry.cpp',
 ]
 
