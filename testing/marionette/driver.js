@@ -3201,6 +3201,12 @@ GeckoDriver.prototype.commands = {
   "Addon:Uninstall": GeckoDriver.prototype.uninstallAddon,
   "addon:uninstall": GeckoDriver.prototype.uninstallAddon,  // deprecated, remove in Firefox 60
 
+  // L10n service
+  "L10n:LocalizeEntity": GeckoDriver.prototype.localizeEntity,
+  "localization:l10n:localizeEntity": GeckoDriver.prototype.localizeEntity,  // deprecated, remove in Firefox 60
+  "L10n:LocalizeProperty": GeckoDriver.prototype.localizeProperty,
+  "localization:l10n:localizeProperty": GeckoDriver.prototype.localizeProperty,  // deprecated, remove in Firefox 60
+
   "newSession": GeckoDriver.prototype.newSession,
   "getSessionCapabilities": GeckoDriver.prototype.getSessionCapabilities,
   "executeScript": GeckoDriver.prototype.executeScript,
@@ -3269,9 +3275,6 @@ GeckoDriver.prototype.commands = {
   "acceptDialog": GeckoDriver.prototype.acceptDialog,
   "getTextFromDialog": GeckoDriver.prototype.getTextFromDialog,
   "sendKeysToDialog": GeckoDriver.prototype.sendKeysToDialog,
-
-  "localization:l10n:localizeEntity": GeckoDriver.prototype.localizeEntity,
-  "localization:l10n:localizeProperty": GeckoDriver.prototype.localizeProperty,
 };
 
 function copy (obj) {
