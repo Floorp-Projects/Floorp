@@ -1015,9 +1015,7 @@ nsInlineFrame::AccessibleType()
 
 void
 nsInlineFrame::UpdateStyleOfOwnedAnonBoxesForIBSplit(
-    ServoStyleSet& aStyleSet,
-    nsStyleChangeList& aChangeList,
-    nsChangeHint aHintForThisFrame)
+  ServoRestyleState& aRestyleState)
 {
   MOZ_ASSERT(GetStateBits() & NS_FRAME_OWNS_ANON_BOXES,
              "Why did we get called?");
@@ -1037,13 +1035,13 @@ nsInlineFrame::UpdateStyleOfOwnedAnonBoxesForIBSplit(
   // The anonymous block's style inherits from ours, and we already have our new
   // style context.
   RefPtr<nsStyleContext> newContext =
-    aStyleSet.ResolveInheritingAnonymousBoxStyle(
+    aRestyleState.StyleSet().ResolveInheritingAnonymousBoxStyle(
       nsCSSAnonBoxes::mozBlockInsideInlineWrapper, StyleContext());
 
   // We're guaranteed that newContext only differs from the old style context on
   // the block in things they might inherit from us.  And changehint processing
   // guarantees walking the continuation and ib-sibling chains, so our existing
-  // changehint beign in aChangeList is good enough.  So we don't need to touch
+  // changehint being in aChangeList is good enough.  So we don't need to touch
   // aChangeList at all here.
 
   while (blockFrame) {

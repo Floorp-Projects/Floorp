@@ -14,6 +14,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/TextEditor.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/HTMLInputElementBinding.h"
 #include "mozilla/dom/Nullable.h"
@@ -24,7 +25,6 @@ class nsTextInputSelectionImpl;
 class nsAnonDivObserver;
 class nsISelectionController;
 class nsFrameSelection;
-class nsIEditor;
 class nsITextControlElement;
 class nsFrame;
 
@@ -153,7 +153,7 @@ public:
     MOZ_ASSERT(!mMutationObserver);
   }
 
-  nsIEditor* GetEditor();
+  mozilla::TextEditor* GetTextEditor();
   nsISelectionController* GetSelectionController() const;
   nsFrameSelection* GetConstFrameSelection();
   nsresult BindToFrame(nsTextControlFrame* aFrame);
@@ -450,7 +450,7 @@ private:
   // mSelCon is non-null while we have an mBoundFrame.
   RefPtr<nsTextInputSelectionImpl> mSelCon;
   RefPtr<RestoreSelectionState> mRestoringSelection;
-  nsCOMPtr<nsIEditor> mEditor;
+  RefPtr<mozilla::TextEditor> mTextEditor;
   nsCOMPtr<mozilla::dom::Element> mRootNode;
   nsCOMPtr<mozilla::dom::Element> mPlaceholderDiv;
   nsCOMPtr<mozilla::dom::Element> mPreviewDiv;

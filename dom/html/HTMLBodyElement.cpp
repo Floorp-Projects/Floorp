@@ -7,6 +7,7 @@
 #include "HTMLBodyElement.h"
 #include "mozilla/dom/HTMLBodyElementBinding.h"
 #include "mozilla/GenericSpecifiedValuesInlines.h"
+#include "mozilla/TextEditor.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
@@ -394,9 +395,9 @@ HTMLBodyElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 already_AddRefed<nsIEditor>
 HTMLBodyElement::GetAssociatedEditor()
 {
-  nsCOMPtr<nsIEditor> editor = GetEditorInternal();
-  if (editor) {
-    return editor.forget();
+  RefPtr<TextEditor> textEditor = GetTextEditorInternal();
+  if (textEditor) {
+    return textEditor.forget();
   }
 
   // Make sure this is the actual body of the document
@@ -415,6 +416,7 @@ HTMLBodyElement::GetAssociatedEditor()
     return nullptr;
   }
 
+  nsCOMPtr<nsIEditor> editor;
   docShell->GetEditor(getter_AddRefs(editor));
   return editor.forget();
 }

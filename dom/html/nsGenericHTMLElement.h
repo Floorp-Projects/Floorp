@@ -37,6 +37,7 @@ class EventChainPreVisitor;
 class EventChainVisitor;
 class EventListenerManager;
 class EventStates;
+class TextEditor;
 namespace dom {
 class HTMLFormElement;
 class HTMLMenuElement;
@@ -811,11 +812,6 @@ public:
    * @param doc the document
    */
   static bool InNavQuirksMode(nsIDocument* aDoc);
-
-  /**
-   * Locate an nsIEditor rooted at this content node, if there is one.
-   */
-  nsresult GetEditor(nsIEditor** aEditor);
 
   /**
    * Helper method for NS_IMPL_URI_ATTR macro.
