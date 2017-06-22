@@ -30,6 +30,7 @@ import org.mozilla.gecko.lwt.LightweightThemeDrawable;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.MenuPopup;
 import org.mozilla.gecko.preferences.GeckoPreferences;
+import org.mozilla.gecko.skin.SkinConfig;
 import org.mozilla.gecko.tabs.TabHistoryController;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnStopListener;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnTitleChangeListener;
@@ -124,7 +125,8 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
     private ToolbarProgressView progressBar;
     protected final TabCounter tabsCounter;
-    protected final ThemedFrameLayout menuButton;
+    protected final View menuButton;
+    // bug 1375351: There is no menuIcon in Photon flavor, menuIcon should be removed
     protected final ThemedImageView menuIcon;
     private MenuPopup menuPopup;
     protected final List<View> focusOrder;
@@ -195,7 +197,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         tabsCounter = (TabCounter) findViewById(R.id.tabs_counter);
         tabsCounter.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
-        menuButton = (ThemedFrameLayout) findViewById(R.id.menu);
+        menuButton = findViewById(R.id.menu);
         menuIcon = (ThemedImageView) findViewById(R.id.menu_icon);
 
         // The focusOrder List should be filled by sub-classes.
@@ -839,8 +841,14 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         super.setPrivateMode(isPrivate);
 
         tabsButton.setPrivateMode(isPrivate);
-        menuButton.setPrivateMode(isPrivate);
         urlEditLayout.setPrivateMode(isPrivate);
+
+        // bug 1375351: menuButton is a ThemedImageButton in Photon flavor
+        if (SkinConfig.isPhoton()) {
+            ((ThemedImageButton)menuButton).setPrivateMode(isPrivate);
+        } else {
+            ((ThemedFrameLayout)menuButton).setPrivateMode(isPrivate);
+        }
 
         shadowPaint.setColor(isPrivate ? shadowPrivateColor : shadowColor);
     }
