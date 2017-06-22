@@ -70,7 +70,7 @@ ElementPropertyTransition::CurrentValuePortion() const
   // case, we override the fill mode to 'both' to ensure the progress
   // is never null.
   TimingParams timingToUse = SpecifiedTiming();
-  timingToUse.mFill = dom::FillMode::Both;
+  timingToUse.SetFill(dom::FillMode::Both);
   ComputedTiming computedTiming = GetComputedTiming(&timingToUse);
 
   MOZ_ASSERT(!computedTiming.mProgress.IsNull(),
@@ -226,10 +226,10 @@ CSSTransition::QueueEvents(StickyTimeDuration aActiveTime)
 
     currentPhase = static_cast<TransitionPhase>(computedTiming.mPhase);
     intervalStartTime =
-      std::max(std::min(StickyTimeDuration(-mEffect->SpecifiedTiming().mDelay),
+      std::max(std::min(StickyTimeDuration(-mEffect->SpecifiedTiming().Delay()),
                         computedTiming.mActiveDuration), zeroDuration);
     intervalEndTime =
-      std::max(std::min((EffectEnd() - mEffect->SpecifiedTiming().mDelay),
+      std::max(std::min((EffectEnd() - mEffect->SpecifiedTiming().Delay()),
                         computedTiming.mActiveDuration), zeroDuration);
   }
 
