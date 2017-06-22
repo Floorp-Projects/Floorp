@@ -286,7 +286,7 @@ function makeURI(aURL) {
   return Services.io.newURI(aURL);
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   if (AppConstants.isPlatformAndVersionAtLeast("win", "6.2")) {
     Assert.throws(() => getFirstResourceOfType(MigrationUtils.resourceTypes.PASSWORDS),
                   "The migrator doesn't exist for win8+");
@@ -305,7 +305,7 @@ add_task(function* setup() {
   }
 });
 
-add_task(function* test_passwordsNotAvailable() {
+add_task(async function test_passwordsNotAvailable() {
   if (AppConstants.isPlatformAndVersionAtLeast("win", "6.2")) {
     return;
   }
@@ -327,7 +327,7 @@ add_task(function* test_passwordsNotAvailable() {
   }
 });
 
-add_task(function* test_passwordsAvailable() {
+add_task(async function test_passwordsAvailable() {
   if (AppConstants.isPlatformAndVersionAtLeast("win", "6.2")) {
     return;
   }

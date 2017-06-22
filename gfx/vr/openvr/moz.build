@@ -14,13 +14,19 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     else:
         DEFINES['WIN32'] = True
 
-# When we support platforms other than Windows, we
-# will also need to define these:
-#
-#   LINUX64
-#   LINUX
-#   OSX
-#   POSIX
+if CONFIG['OS_ARCH'] == 'Darwin':
+    DEFINES['POSIX'] = True
+    DEFINES['OSX'] = True
+    if CONFIG['GNU_CXX']:
+        CXXFLAGS += ['-xobjective-c++']
+
+if CONFIG['OS_ARCH'] == 'Linux':
+    DEFINES['POSIX'] = True
+    DEFINES['LINUX'] = True
+    if CONFIG['HAVE_64BIT_BUILD']:
+        DEFINES['LINUX64'] = True
+    else:
+        DEFINES['LINUX32'] = True
 
 LOCAL_INCLUDES += [
     '/toolkit/components/jsoncpp/include',
@@ -45,3 +51,9 @@ SOURCES += [
     'src/vrpathregistry_public.cpp',
 ]
 
+if CONFIG['CLANG_CXX'] or CONFIG['GNU_CXX']:
+    # Harmless warnings in 3rd party code
+    CXXFLAGS += [
+        '-Wno-error=parentheses',
+        '-Wno-error=unused-variable',
+    ]

@@ -188,18 +188,17 @@ AnimationHelper::SampleAnimationForEachNode(TimeStamp aTime,
       : (aTime - animation.originTime() -
          animation.startTime().get_TimeDuration())
         .MultDouble(animation.playbackRate());
-    TimingParams timing;
-    timing.mDuration.emplace(animation.duration());
-    timing.mDelay = animation.delay();
-    timing.mEndDelay = animation.endDelay();
-    timing.mIterations = animation.iterations();
-    timing.mIterationStart = animation.iterationStart();
-    timing.mDirection =
-      static_cast<dom::PlaybackDirection>(animation.direction());
-    timing.mFill = static_cast<dom::FillMode>(animation.fillMode());
-    timing.mFunction =
-      AnimationUtils::TimingFunctionToComputedTimingFunction(
-        animation.easingFunction());
+    TimingParams timing {
+      animation.duration(),
+      animation.delay(),
+      animation.endDelay(),
+      animation.iterations(),
+      animation.iterationStart(),
+      static_cast<dom::PlaybackDirection>(animation.direction()),
+      static_cast<dom::FillMode>(animation.fillMode()),
+      Move(AnimationUtils::TimingFunctionToComputedTimingFunction(
+           animation.easingFunction()))
+    };
 
     ComputedTiming computedTiming =
       dom::AnimationEffectReadOnly::GetComputedTimingAt(

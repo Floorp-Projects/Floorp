@@ -2,7 +2,7 @@
 
 const BUTTONID = "test-seenwidget-post-reset";
 
-add_task(function*() {
+add_task(async function() {
   CustomizableUI.createWidget({
     id: BUTTONID,
     label: "Test widget seen post reset",

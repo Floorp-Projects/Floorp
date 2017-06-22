@@ -26,42 +26,42 @@ http://creativecommons.org/licenses/publicdomain/
 <script class="testbody" type="text/javascript">
 
   var registration;
-  add_task(function* start() {
-    yield setupPrefsAndMockSocket(new MockWebSocket());
-    yield setPushPermission(true);
+  add_task(async function start() {
+    await setupPrefsAndMockSocket(new MockWebSocket());
+    await setPushPermission(true);
 
     var url = "worker.js" + "?" + (Math.random());
-    registration = yield navigator.serviceWorker.register(url, {scope: "."});
-    yield waitForActive(registration);
+    registration = await navigator.serviceWorker.register(url, {scope: "."});
+    await waitForActive(registration);
   });
 
   var controlledFrame;
-  add_task(function* createControlledIFrame() {
-    controlledFrame = yield injectControlledFrame();
+  add_task(async function createControlledIFrame() {
+    controlledFrame = await injectControlledFrame();
   });
 
-  add_task(function* togglePermission() {
-    var subscription = yield registration.pushManager.subscribe();
+  add_task(async function togglePermission() {
+    var subscription = await registration.pushManager.subscribe();
     ok(subscription, "Should create a push subscription");
 
-    yield setPushPermission(false);
-    var permissionState = yield registration.pushManager.permissionState();
+    await setPushPermission(false);
+    var permissionState = await registration.pushManager.permissionState();
     is(permissionState, "denied", "Should deny push permission");
 
-    var subscription = yield registration.pushManager.getSubscription();
+    var subscription = await registration.pushManager.getSubscription();
     is(subscription, null, "Should not return subscription when permission is revoked");
 
     var changePromise = controlledFrame.waitOnWorkerMessage("changed");
-    yield setPushPermission(true);
-    yield changePromise;
+    await setPushPermission(true);
+    await changePromise;
 
-    subscription = yield registration.pushManager.getSubscription();
+    subscription = await registration.pushManager.getSubscription();
     is(subscription, null, "Should drop subscription after reinstating permission");
   });
 
-  add_task(function* unsubscribe() {
+  add_task(async function unsubscribe() {
     controlledFrame.remove();
-    yield registration.unregister();
+    await registration.unregister();
   });
 
 </script>

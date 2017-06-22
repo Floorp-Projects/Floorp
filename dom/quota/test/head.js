@@ -79,8 +79,8 @@ function dismissNotification(popup, win)
 
 function promiseMessage(aMessage, browser)
 {
-  return ContentTask.spawn(browser.selectedBrowser, aMessage, function* (aMessage) {
-    yield new Promise((resolve, reject) => {
+  return ContentTask.spawn(browser.selectedBrowser, aMessage, async function(aMessage) {
+    await new Promise((resolve, reject) => {
       content.addEventListener("message", function(event) {
         is(event.data, aMessage, "received " + aMessage);
         if (event.data == aMessage)

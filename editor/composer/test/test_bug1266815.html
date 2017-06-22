@@ -47,7 +47,7 @@ var helperAppDlgPromise = new Promise(function(resolve) {
                             mockHelperAppService);
 });
 
-add_task(function*() {
+add_task(async function() {
   let promise = new Promise(function(resolve) {
     let iframe = document.createElement("iframe");
     iframe.onload = function() {
@@ -60,7 +60,7 @@ add_task(function*() {
     document.body.appendChild(iframe);
   });
 
-  yield promise;
+  await promise;
 
   let iframe = document.getElementById("testframe");
   let docShell = SpecialPowers.wrap(iframe.contentWindow)
@@ -73,7 +73,7 @@ add_task(function*() {
   document.getElementById("testframe").src =
     "data:application/octet-stream,TESTCONTENT";
 
-  yield helperAppDlgPromise;
+  await helperAppDlgPromise;
 
   ok(docShell.hasEditingSession, "Should have editing session");
 });

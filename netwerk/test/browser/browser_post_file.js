@@ -4,14 +4,14 @@
 
 Components.utils.import("resource://gre/modules/osfile.jsm");
 
-function* createTestFile(filename, content) {
+async function createTestFile(filename, content) {
   let path = OS.Path.join(OS.Constants.Path.tmpDir, filename);
-  yield OS.File.writeAtomic(path, content);
+  await OS.File.writeAtomic(path, content);
   return path;
 }
 
-function* readFile(path) {
-  var array = yield OS.File.read(path);
+async function readFile(path) {
+  var array = await OS.File.read(path);
   var decoder = new TextDecoder();
   return decoder.decode(array);
 }
@@ -37,7 +37,7 @@ function frameScript() {
   });
 }
 
-add_task(function*() {
+add_task(async function() {
   var postFilename = "post_file.html";
   var actionFilename = "action_file.html";
 
@@ -71,15 +71,15 @@ add_task(function*() {
 </html>
 `;
 
-  var postPath = yield* createTestFile(postFilename, postFileContent);
-  var actionPath = yield* createTestFile(actionFilename, actionFileContent);
+  var postPath = await createTestFile(postFilename, postFileContent);
+  var actionPath = await createTestFile(actionFilename, actionFileContent);
 
   var postURI = OS.Path.toFileURI(postPath);
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, postURI);
   let browser = gBrowser.selectedBrowser;
   browser.messageManager.loadFrameScript("data:,(" + frameScript.toString() + ")();", true);
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     let manager = browser.messageManager;
 
     function listener() {
@@ -91,11 +91,11 @@ add_task(function*() {
     manager.sendAsyncMessage("Test:WaitForIFrame");
   });
 
-  var actionFileContentAfter = yield* readFile(actionPath);
+  var actionFileContentAfter = await readFile(actionPath);
   is(actionFileContentAfter, actionFileContent, "action file is not modified");
 
-  yield OS.File.remove(postPath);
-  yield OS.File.remove(actionPath);
+  await OS.File.remove(postPath);
+  await OS.File.remove(actionPath);
 
   gBrowser.removeCurrentTab();
 });

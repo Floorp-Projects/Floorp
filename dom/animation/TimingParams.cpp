@@ -40,10 +40,10 @@ GetTimingProperties(
 }
 
 template <class OptionsType>
-static TimingParams
-TimingParamsFromOptionsUnion(const OptionsType& aOptions,
-                             nsIDocument* aDocument,
-                             ErrorResult& aRv)
+/* static */ TimingParams
+TimingParams::FromOptionsType(const OptionsType& aOptions,
+                              nsIDocument* aDocument,
+                              ErrorResult& aRv)
 {
   TimingParams result;
   if (aOptions.IsUnrestrictedDouble()) {
@@ -53,6 +53,7 @@ TimingParamsFromOptionsUnion(const OptionsType& aOptions,
         StickyTimeDuration::FromMilliseconds(durationInMs));
     } else {
       aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+      return result;
     }
   } else {
     const dom::AnimationEffectTimingProperties& timing =
@@ -86,6 +87,8 @@ TimingParamsFromOptionsUnion(const OptionsType& aOptions,
     result.mFill = timing.mFill;
     result.mFunction = easing;
   }
+  result.Update();
+
   return result;
 }
 
@@ -95,7 +98,7 @@ TimingParams::FromOptionsUnion(
   nsIDocument* aDocument,
   ErrorResult& aRv)
 {
-  return TimingParamsFromOptionsUnion(aOptions, aDocument, aRv);
+  return FromOptionsType(aOptions, aDocument, aRv);
 }
 
 /* static */ TimingParams
@@ -104,7 +107,7 @@ TimingParams::FromOptionsUnion(
   nsIDocument* aDocument,
   ErrorResult& aRv)
 {
-  return TimingParamsFromOptionsUnion(aOptions, aDocument, aRv);
+  return FromOptionsType(aOptions, aDocument, aRv);
 }
 
 /* static */ Maybe<ComputedTimingFunction>
@@ -188,6 +191,8 @@ TimingParams::ParseEasing(const nsAString& aEasing,
 bool
 TimingParams::operator==(const TimingParams& aOther) const
 {
+  // We don't compare mActiveDuration and mEndTime because they are calculated
+  // from other timing parameters.
   return mDuration == aOther.mDuration &&
          mDelay == aOther.mDelay &&
          mIterations == aOther.mIterations &&

@@ -57,10 +57,10 @@ function FormAutofillParent() {
     let {profileStorage} = Cu.import("resource://formautofill/ProfileStorage.jsm", {});
     log.debug("Loading profileStorage");
 
-    profileStorage.initialize().then(function onStorageInitialized() {
+    profileStorage.initialize().then(() => {
       // Update the saved field names to compute the status and update child processes.
       this._updateSavedFieldNames();
-    }.bind(this));
+    });
 
     return profileStorage;
   });
@@ -286,13 +286,16 @@ FormAutofillParent.prototype = {
       this.profileStorage.addresses.notifyUsed(address.guid);
     } else {
       if (!Services.prefs.getBoolPref("extensions.formautofill.firstTimeUse")) {
-        if (!this.profileStorage.addresses.mergeToStorage(address.record)) {
-          this.profileStorage.addresses.add(address.record);
+        let changedGUIDs = this.profileStorage.addresses.mergeToStorage(address.record);
+        if (!changedGUIDs.length) {
+          changedGUIDs.push(this.profileStorage.addresses.add(address.record));
         }
+        changedGUIDs.forEach(guid => this.profileStorage.addresses.notifyUsed(guid));
         return;
       }
 
-      this.profileStorage.addresses.add(address.record);
+      let guid = this.profileStorage.addresses.add(address.record);
+      this.profileStorage.addresses.notifyUsed(guid);
       Services.prefs.setBoolPref("extensions.formautofill.firstTimeUse", false);
       FormAutofillDoorhanger.show(target, "firstTimeUse");
     }

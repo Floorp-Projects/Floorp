@@ -60,7 +60,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test1() {
+add_task(async function test1() {
 
   let db = PushServiceHttp2.newPushDB();
   do_register_cleanup(() => {
@@ -79,7 +79,7 @@ add_task(function* test1() {
   }];
 
   for (let record of records) {
-    yield db.put(record);
+    await db.put(record);
   }
 
   PushService.init({
@@ -87,9 +87,9 @@ add_task(function* test1() {
     db
   });
 
-  yield handlerPromise;
+  await handlerPromise;
 
-  let record = yield db.getByIdentifiers({
+  let record = await db.getByIdentifiers({
     scope: 'https://example.com/page',
     originAttributes: '',
   });

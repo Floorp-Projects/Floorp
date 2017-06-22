@@ -41,7 +41,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1022869
     });
   }
 
-  function* continueTest() {
+  async function continueTest() {
     var sameOrigin = "http://mochi.test:8888";
     var thirdParty = "http://example.org";
     var page = "tests/dom/tests/mochitest/bugs/file_cookieOutputter.html"
@@ -55,22 +55,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1022869
 
     // Same origin to same origin.
     f.contentWindow.location = createRedirect(sameOrigin, sameOrigin);
-    let cookie = yield waitForLoad();
+    let cookie = await waitForLoad();
     is(cookie, "a=b", "got the cookie");
 
     // Cross origin to cross origin.
     f.contentWindow.location = createRedirect(thirdParty, thirdParty);
-    cookie = yield waitForLoad();
+    cookie = await waitForLoad();
     is(cookie, "", "no third-party cookies");
 
     // Same origin to cross origin.
     f.contentWindow.location = createRedirect(sameOrigin, thirdParty);
-    cookie = yield waitForLoad();
+    cookie = await waitForLoad();
     is(cookie, "", "no third-party cookies");
 
     // Cross origin to same origin
     f.contentWindow.location = createRedirect(thirdParty, sameOrigin);
-    cookie = yield waitForLoad();
+    cookie = await waitForLoad();
     is(cookie, "a=b", "got the cookie");
 
     SimpleTest.finish();

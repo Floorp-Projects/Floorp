@@ -6,14 +6,14 @@
 const testPageURL =
   "https://example.com/browser/dom/quota/test/browser_permissionsPrompt.html";
 
-add_task(function* testPermissionAllow() {
+add_task(async function testPermissionAllow() {
   removePermission(testPageURL, "persistent-storage");
   info("Creating tab");
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   info("Loading test page: " + testPageURL);
   gBrowser.selectedBrowser.loadURI(testPageURL);
-  yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   registerPopupEventHandler("popupshowing", function () {
     ok(true, "prompt showing");
@@ -26,7 +26,7 @@ add_task(function* testPermissionAllow() {
     ok(true, "prompt hidden");
   });
 
-  yield promiseMessage(true, gBrowser);
+  await promiseMessage(true, gBrowser);
 
   is(getPermission(testPageURL, "persistent-storage"),
      Components.interfaces.nsIPermissionManager.ALLOW_ACTION,
@@ -36,13 +36,13 @@ add_task(function* testPermissionAllow() {
   // Keep persistent-storage permission for the next test.
 });
 
-add_task(function* testNoPermissionPrompt() {
+add_task(async function testNoPermissionPrompt() {
   info("Creating tab");
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   info("Loading test page: " + testPageURL);
   gBrowser.selectedBrowser.loadURI(testPageURL);
-  yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   registerPopupEventHandler("popupshowing", function () {
     ok(false, "Shouldn't show a popup this time");
@@ -54,7 +54,7 @@ add_task(function* testNoPermissionPrompt() {
     ok(false, "Shouldn't show a popup this time");
   });
 
-  yield promiseMessage(true, gBrowser);
+  await promiseMessage(true, gBrowser);
 
   is(getPermission(testPageURL, "persistent-storage"),
      Components.interfaces.nsIPermissionManager.ALLOW_ACTION,

@@ -62,10 +62,10 @@ function captureUnexpectedFullscreenChange() {
   ok(false, "Caught an unexpected fullscreen change");
 }
 
-function* temporaryRemoveUnexpectedFullscreenChangeCapture(callback) {
+async function temporaryRemoveUnexpectedFullscreenChangeCapture(callback) {
   gMessageManager.removeMessageListener(
     "Test:FullscreenChanged", captureUnexpectedFullscreenChange);
-  yield* callback();
+  await callback();
   gMessageManager.addMessageListener(
     "Test:FullscreenChanged", captureUnexpectedFullscreenChange);
 }
@@ -74,10 +74,10 @@ function captureUnexpectedKeyEvent(type) {
   ok(false, `Caught an unexpected ${type} event`);
 }
 
-function* temporaryRemoveUnexpectedKeyEventCapture(callback) {
+async function temporaryRemoveUnexpectedKeyEventCapture(callback) {
   gMessageManager.removeMessageListener(
     "Test:KeyReceived", captureUnexpectedKeyEvent);
-  yield* callback();
+  await callback();
   gMessageManager.addMessageListener(
     "Test:KeyReceived", captureUnexpectedKeyEvent);
 }
@@ -102,8 +102,8 @@ function receiveExpectedKeyEvents(keyCode) {
 const kPage = "http://example.org/browser/" +
               "dom/html/test/file_fullscreen-api-keys.html";
 
-add_task(function* () {
-  yield pushPrefs(
+add_task(async function() {
+  await pushPrefs(
     ["full-screen-api.transition-duration.enter", "0 0"],
     ["full-screen-api.transition-duration.leave", "0 0"]);
 
@@ -111,7 +111,7 @@ add_task(function* () {
   let browser = tab.linkedBrowser;
   gBrowser.selectedTab = tab;
   registerCleanupFunction(() => gBrowser.removeTab(tab));
-  yield waitForDocLoadComplete();
+  await waitForDocLoadComplete();
 
   gMessageManager = browser.messageManager;
   gMessageManager.loadFrameScript(
@@ -119,7 +119,7 @@ add_task(function* () {
 
   // Wait for the document being actived, so that
   // fullscreen request won't be denied.
-  yield promiseOneMessage("Test:Activated");
+  await promiseOneMessage("Test:Activated");
 
   // Register listener to capture unexpected events
   gMessageManager.addMessageListener(
@@ -138,29 +138,29 @@ add_task(function* () {
     info(`Test keycode ${code} (${keyCode})`);
 
     info("Enter fullscreen");
-    yield* temporaryRemoveUnexpectedFullscreenChangeCapture(function* () {
+    await temporaryRemoveUnexpectedFullscreenChangeCapture(async function() {
       gMessageManager.sendAsyncMessage("Test:RequestFullscreen");
-      let state = yield promiseOneMessage("Test:FullscreenChanged");
+      let state = await promiseOneMessage("Test:FullscreenChanged");
       ok(state, "The content should have entered fullscreen");
       ok(document.fullscreenElement,
          "The chrome should also be in fullscreen");
     });
 
     info("Dispatch untrusted key events from content");
-    yield* temporaryRemoveUnexpectedKeyEventCapture(function* () {
+    await temporaryRemoveUnexpectedKeyEventCapture(async function() {
       let promiseExpectedKeyEvents = receiveExpectedKeyEvents(keyCode);
       gMessageManager.sendAsyncMessage("Test:DispatchUntrustedKeyEvents", code);
-      yield promiseExpectedKeyEvents;
+      await promiseExpectedKeyEvents;
     });
 
     info("Send trusted key events");
-    yield* temporaryRemoveUnexpectedFullscreenChangeCapture(function* () {
-      yield* temporaryRemoveUnexpectedKeyEventCapture(function* () {
+    await temporaryRemoveUnexpectedFullscreenChangeCapture(async function() {
+      await temporaryRemoveUnexpectedKeyEventCapture(async function() {
         let promiseExpectedKeyEvents = suppressed ?
           Promise.resolve() : receiveExpectedKeyEvents(keyCode);
         EventUtils.synthesizeKey(code, {});
-        yield promiseExpectedKeyEvents;
-        let state = yield promiseOneMessage("Test:FullscreenChanged");
+        await promiseExpectedKeyEvents;
+        let state = await promiseOneMessage("Test:FullscreenChanged");
         ok(!state, "The content should have exited fullscreen");
         ok(!document.fullscreenElement,
            "The chrome should also have exited fullscreen");

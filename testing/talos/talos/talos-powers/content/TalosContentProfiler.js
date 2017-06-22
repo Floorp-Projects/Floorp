@@ -144,6 +144,8 @@ var TalosContentProfiler;
      *        The name of the test to use in Profiler markers.
      * @returns Promise
      *        Resolves once the Gecko Profiler has been initialized and paused.
+     *        If the TalosContentProfiler is not initialized, then this resolves
+     *        without doing anything.
      */
     beginTest(testName) {
       if (initted) {
@@ -153,12 +155,8 @@ var TalosContentProfiler;
           entries,
           threadsArray,
         });
-      } else {
-        var msg = "You should not call beginTest without having first " +
-                  "initted the Profiler"
-        console.error(msg);
-        return Promise.reject(msg);
       }
+      return Promise.resolve();
     },
 
     /**
@@ -169,17 +167,15 @@ var TalosContentProfiler;
      * @returns Promise
      *          Resolves once the profile has been dumped to disk. The test should
      *          not try to quit the browser until this has resolved.
+     *          If the TalosContentProfiler is not initialized, then this resolves
+     *          without doing anything.
      */
     finishTest() {
       if (initted) {
         let profileFile = profileDir + "/" + currentTest + ".profile";
         return sendEventAndWait("Profiler:Finish", { profileFile });
-      } else {
-        var msg = "You should not call finishTest without having first " +
-                  "initted the Profiler";
-        console.error(msg);
-        return Promise.reject(msg);
       }
+      return Promise.resolve();
     },
 
     /**

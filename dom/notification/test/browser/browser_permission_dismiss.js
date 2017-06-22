@@ -52,34 +52,34 @@ function tabWithRequest(task, permission) {
   return BrowserTestUtils.withNewTab({
     gBrowser,
     url: TEST_URL,
-  }, function*(browser) {
+  }, async function(browser) {
     let requestPromise = ContentTask.spawn(browser, {
       permission
-    }, function*({permission}) {
+    }, async function({permission}) {
       function requestCallback(perm) {
         is(perm, permission,
           "Should call the legacy callback with the permission state");
       }
-      let perm = yield content.window.Notification
+      let perm = await content.window.Notification
                               .requestPermission(requestCallback);
       is(perm, permission,
          "Should resolve the promise with the permission state");
     });
 
-    yield BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
-    yield task();
-    yield requestPromise;
+    await BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
+    await task();
+    await requestPromise;
   });
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   SimpleTest.registerCleanupFunction(() => {
     Services.perms.remove(ORIGIN_URI, PERMISSION_NAME);
   });
 });
 
-add_task(function* test_requestPermission_granted() {
-  yield tabWithRequest(function() {
+add_task(async function test_requestPermission_granted() {
+  await tabWithRequest(function() {
     clickDoorhangerButton(PROMPT_ALLOW_BUTTON);
   }, "granted");
 
@@ -91,8 +91,8 @@ add_task(function* test_requestPermission_granted() {
      "Check permission in perm. manager");
 });
 
-add_task(function* test_requestPermission_denied_temporarily() {
-  yield tabWithRequest(function() {
+add_task(async function test_requestPermission_denied_temporarily() {
+  await tabWithRequest(function() {
     clickDoorhangerButton(PROMPT_NOT_NOW_BUTTON);
   }, "default");
 
@@ -104,9 +104,9 @@ add_task(function* test_requestPermission_denied_temporarily() {
      "Check permission in perm. manager");
 });
 
-add_task(function* test_requestPermission_denied_permanently() {
-  yield tabWithRequest(function*() {
-    yield clickDoorhangerButton(PROMPT_NEVER_BUTTON);
+add_task(async function test_requestPermission_denied_permanently() {
+  await tabWithRequest(async function() {
+    await clickDoorhangerButton(PROMPT_NEVER_BUTTON);
   }, "denied");
 
   ok(!PopupNotifications.getNotification("web-notifications"),

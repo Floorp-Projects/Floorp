@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=744830
 <div id="testnodes"><span>hi</span> there <!-- mon ami --></div>
 <pre id="test">
 <script type="application/javascript">
-  add_task(function* () {
+  add_task(async function() {
     const initialPrefValue = SpecialPowers.getBoolPref("svg.disabled");
     SpecialPowers.setBoolPref("svg.disabled", true);
     const Cu = SpecialPowers.Components.utils;
@@ -26,7 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=744830
     chromeIframeEl.src = url;
     t.appendChild(chromeIframeEl);
 
-    yield chromeLoadPromise;
+    await chromeLoadPromise;
     const chromeBR = chromeIframeEl.contentDocument.body.getBoundingClientRect();
 
     url = "http://mochi.test:8888/chrome/layout/svg/tests/svg_example_test.html";
@@ -34,7 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=744830
     iframeEl.src = url;
     let loadPromise = ContentTaskUtils.waitForEvent(iframeEl, 'load', false);
     t.appendChild(iframeEl);
-    yield loadPromise;
+    await loadPromise;
 
     const contentBR = iframeEl.contentDocument.body.getBoundingClientRect();
     ok(chromeBR.height > contentBR.height, "Chrome content height should be bigger than content due to layout");
@@ -47,7 +47,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=744830
     let loadPromiseScript = ContentTaskUtils.waitForEvent(iframeElScript, "load", false);
     iframeElScript.src = url;
     t.appendChild(iframeElScript);
-    yield loadPromiseScript;
+    await loadPromiseScript;
     ok(!iframeElScript.contentDocument.documentElement.style, "Content should not be styled");
 
     SpecialPowers.setBoolPref("svg.disabled", initialPrefValue);

@@ -133,63 +133,63 @@ function loadAddonManager() {
 // Install addon and return a Promise<boolean> that is
 // resolve with true on success, false otherwise.
 function installAddon(relativePath) {
-  let deferred = Promise.defer();
-  let success = () => deferred.resolve(true);
-  let fail = () => deferred.resolve(false);
-  let listener = {
-    onDownloadCancelled: fail,
-    onDownloadFailed: fail,
-    onInstallCancelled: fail,
-    onInstallFailed: fail,
-    onInstallEnded: success,
-  };
+  return new Promise(resolve => {
+    let success = () => resolve(true);
+    let fail = () => resolve(false);
+    let listener = {
+      onDownloadCancelled: fail,
+      onDownloadFailed: fail,
+      onInstallCancelled: fail,
+      onInstallFailed: fail,
+      onInstallEnded: success,
+    };
 
-  let installCallback = install => {
-    install.addListener(listener);
-    install.install();
-  };
+    let installCallback = install => {
+      install.addListener(listener);
+      install.install();
+    };
 
-  let file = do_get_file(relativePath, false);
-  AddonManager.getInstallForFile(file, installCallback,
-                                 "application/x-xpinstall");
+    let file = do_get_file(relativePath, false);
+    AddonManager.getInstallForFile(file, installCallback,
+                                   "application/x-xpinstall");
 
-  return deferred.promise;
+  });
 }
 
 // Uninstall addon and return a Promise<boolean> that is
 // resolve with true on success, false otherwise.
 function uninstallAddon(id) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  AddonManager.getAddonByID(id, addon => {
-    if (!addon) {
-      deferred.resolve(false);
-    }
-
-    let listener = {};
-    let handler = addon => {
-      if (addon.id !== id) {
-        return;
+    AddonManager.getAddonByID(id, addon => {
+      if (!addon) {
+        resolve(false);
       }
 
-      AddonManager.removeAddonListener(listener);
-      deferred.resolve(true);
-    };
+      let listener = {};
+      let handler = addon => {
+        if (addon.id !== id) {
+          return;
+        }
 
-    listener.onUninstalled = handler;
-    listener.onDisabled = handler;
+        AddonManager.removeAddonListener(listener);
+        resolve(true);
+      };
 
-    AddonManager.addAddonListener(listener);
-    addon.uninstall();
+      listener.onUninstalled = handler;
+      listener.onDisabled = handler;
+
+      AddonManager.addAddonListener(listener);
+      addon.uninstall();
+    });
+
   });
-
-  return deferred.promise;
 }
 
 // Returns a Promise<Addon> that is resolved with
 // the corresponding addon or rejected.
 function getAddonByID(id) {
-  let deferred = Promise.defer();
-  AddonManager.getAddonByID(id, addon => deferred.resolve(addon));
-  return deferred.promise;
+  return new Promise(resolve => {
+    AddonManager.getAddonByID(id, addon => resolve(addon));
+  });
 }

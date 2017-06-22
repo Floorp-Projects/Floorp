@@ -108,7 +108,7 @@ function MockFxAccounts(mockGrantClient) {
   });
 }
 
-function* createMockFxA(mockGrantClient) {
+async function createMockFxA(mockGrantClient) {
   let fxa = new MockFxAccounts(mockGrantClient);
   let credentials = {
     email: "foo@example.com",
@@ -120,7 +120,7 @@ function* createMockFxA(mockGrantClient) {
     verified: true
   };
 
-  yield fxa.setSignedInUser(credentials);
+  await fxa.setSignedInUser(credentials);
   return fxa;
 }
 
@@ -152,13 +152,13 @@ MockFxAccountsOAuthGrantClient.prototype = {
   activeTokens: null,
 }
 
-add_task(function* testRevoke() {
+add_task(async function testRevoke() {
   let client = new MockFxAccountsOAuthGrantClient();
   let tokenOptions = { scope: "test-scope", client };
-  let fxa = yield createMockFxA(client);
+  let fxa = await createMockFxA(client);
 
   // get our first token and check we hit the mock.
-  let token1 = yield fxa.getOAuthToken(tokenOptions);
+  let token1 = await fxa.getOAuthToken(tokenOptions);
   equal(client.numTokenFetches, 1);
   equal(client.activeTokens.size, 1);
   ok(token1, "got a token");
@@ -167,31 +167,31 @@ add_task(function* testRevoke() {
   // FxA fires an observer when the "background" revoke is complete.
   let revokeComplete = promiseNotification("testhelper-fxa-revoke-complete");
   // drop the new token from our cache.
-  yield fxa.removeCachedOAuthToken({token: token1});
-  yield revokeComplete;
+  await fxa.removeCachedOAuthToken({token: token1});
+  await revokeComplete;
 
   // the revoke should have been successful.
   equal(client.activeTokens.size, 0);
   // fetching it again hits the server.
-  let token2 = yield fxa.getOAuthToken(tokenOptions);
+  let token2 = await fxa.getOAuthToken(tokenOptions);
   equal(client.numTokenFetches, 2);
   equal(client.activeTokens.size, 1);
   ok(token2, "got a token");
   notEqual(token1, token2, "got a different token");
 });
 
-add_task(function* testSignOutDestroysTokens() {
+add_task(async function testSignOutDestroysTokens() {
   let client = new MockFxAccountsOAuthGrantClient();
-  let fxa = yield createMockFxA(client);
+  let fxa = await createMockFxA(client);
 
   // get our first token and check we hit the mock.
-  let token1 = yield fxa.getOAuthToken({ scope: "test-scope", client });
+  let token1 = await fxa.getOAuthToken({ scope: "test-scope", client });
   equal(client.numTokenFetches, 1);
   equal(client.activeTokens.size, 1);
   ok(token1, "got a token");
 
   // get another
-  let token2 = yield fxa.getOAuthToken({ scope: "test-scope-2", client });
+  let token2 = await fxa.getOAuthToken({ scope: "test-scope-2", client });
   equal(client.numTokenFetches, 2);
   equal(client.activeTokens.size, 2);
   ok(token2, "got a token");
@@ -200,20 +200,20 @@ add_task(function* testSignOutDestroysTokens() {
   // FxA fires an observer when the "background" signout is complete.
   let signoutComplete = promiseNotification("testhelper-fxa-signout-complete");
   // now sign out - they should be removed.
-  yield fxa.signOut();
-  yield signoutComplete;
+  await fxa.signOut();
+  await signoutComplete;
   // No active tokens left.
   equal(client.activeTokens.size, 0);
 });
 
-add_task(function* testTokenRaces() {
+add_task(async function testTokenRaces() {
   // Here we do 2 concurrent fetches each for 2 different token scopes (ie,
   // 4 token fetches in total).
   // This should provoke a potential race in the token fetching but we should
   // handle and detect that leaving us with one of the fetch tokens being
   // revoked and the same token value returned to both calls.
   let client = new MockFxAccountsOAuthGrantClient();
-  let fxa = yield createMockFxA(client);
+  let fxa = await createMockFxA(client);
 
   // We should see 2 notifications as part of this - set up the listeners
   // now (and wait on them later)
@@ -221,7 +221,7 @@ add_task(function* testTokenRaces() {
     promiseNotification("testhelper-fxa-revoke-complete"),
     promiseNotification("testhelper-fxa-revoke-complete"),
   ]);
-  let results = yield Promise.all([
+  let results = await Promise.all([
     fxa.getOAuthToken({scope: "test-scope", client}),
     fxa.getOAuthToken({scope: "test-scope", client}),
     fxa.getOAuthToken({scope: "test-scope-2", client}),
@@ -230,7 +230,7 @@ add_task(function* testTokenRaces() {
 
   equal(client.numTokenFetches, 4, "should have fetched 4 tokens.");
   // We should see 2 of the 4 revoked due to the race.
-  yield notifications;
+  await notifications;
 
   // Should have 2 unique tokens
   results.sort();
@@ -243,9 +243,9 @@ add_task(function* testTokenRaces() {
     promiseNotification("testhelper-fxa-revoke-complete"),
     promiseNotification("testhelper-fxa-revoke-complete"),
   ]);
-  yield fxa.removeCachedOAuthToken({token: results[0]});
+  await fxa.removeCachedOAuthToken({token: results[0]});
   equal(client.activeTokens.size, 1);
-  yield fxa.removeCachedOAuthToken({token: results[2]});
+  await fxa.removeCachedOAuthToken({token: results[2]});
   equal(client.activeTokens.size, 0);
-  yield notifications;
+  await notifications;
 });

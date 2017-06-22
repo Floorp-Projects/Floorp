@@ -71,11 +71,11 @@ function openDeleteCertConfirmDialog(tabID) {
   });
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   for (let testCase of TEST_CASES) {
     let cert = null;
     if (testCase.certFilename) {
-      cert = yield readCertificate(testCase.certFilename, ",,");
+      cert = await readCertificate(testCase.certFilename, ",,");
     }
     let certTreeItem = {
       hostPort: FAKE_HOST_PORT,
@@ -104,8 +104,8 @@ add_task(function* setup() {
  * @param {String} expectedImpact
  *        Impact the dialog is expected to show.
  */
-function* testHelper(tabID, expectedTitle, expectedConfirmMsg, expectedImpact) {
-  let [win] = yield openDeleteCertConfirmDialog(tabID);
+async function testHelper(tabID, expectedTitle, expectedConfirmMsg, expectedImpact) {
+  let [win] = await openDeleteCertConfirmDialog(tabID);
   let certList = win.document.getElementById("certlist");
 
   Assert.equal(win.document.title, expectedTitle,
@@ -126,23 +126,23 @@ function* testHelper(tabID, expectedTitle, expectedConfirmMsg, expectedImpact) {
                  `index ${i} for ${tabID}`);
   }
 
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 }
 
 // Test deleting certs from the "Your Certificates" tab.
-add_task(function* testDeletePersonalCerts() {
+add_task(async function testDeletePersonalCerts() {
   const expectedTitle = "Delete your Certificates";
   const expectedConfirmMsg =
     "Are you sure you want to delete these certificates?";
   const expectedImpact =
     "If you delete one of your own certificates, you can no longer use it to " +
     "identify yourself.";
-  yield* testHelper("mine_tab", expectedTitle, expectedConfirmMsg,
+  await testHelper("mine_tab", expectedTitle, expectedConfirmMsg,
                     expectedImpact);
 });
 
 // Test deleting certs from the "People" tab.
-add_task(function* testDeleteOtherPeopleCerts() {
+add_task(async function testDeleteOtherPeopleCerts() {
   const expectedTitle = "Delete E-Mail Certificates";
   // ’ doesn't seem to work when embedded in the following literals, which is
   // why escape codes are used instead.
@@ -151,24 +151,24 @@ add_task(function* testDeleteOtherPeopleCerts() {
   const expectedImpact =
     "If you delete a person\u2019s e-mail certificate, you will no longer be " +
     "able to send encrypted e-mail to that person.";
-  yield* testHelper("others_tab", expectedTitle, expectedConfirmMsg,
+  await testHelper("others_tab", expectedTitle, expectedConfirmMsg,
                     expectedImpact);
 });
 
 // Test deleting certs from the "Servers" tab.
-add_task(function* testDeleteServerCerts() {
+add_task(async function testDeleteServerCerts() {
   const expectedTitle = "Delete Server Certificate Exceptions";
   const expectedConfirmMsg =
     "Are you sure you want to delete these server exceptions?";
   const expectedImpact =
     "If you delete a server exception, you restore the usual security checks " +
     "for that server and require it uses a valid certificate.";
-  yield* testHelper("websites_tab", expectedTitle, expectedConfirmMsg,
+  await testHelper("websites_tab", expectedTitle, expectedConfirmMsg,
                     expectedImpact);
 });
 
 // Test deleting certs from the "Authorities" tab.
-add_task(function* testDeleteCACerts() {
+add_task(async function testDeleteCACerts() {
   const expectedTitle = "Delete or Distrust CA Certificates";
   const expectedConfirmMsg =
     "You have requested to delete these CA certificates. For built-in " +
@@ -177,37 +177,37 @@ add_task(function* testDeleteCACerts() {
   const expectedImpact =
     "If you delete or distrust a certificate authority (CA) certificate, " +
     "this application will no longer trust any certificates issued by that CA.";
-  yield* testHelper("ca_tab", expectedTitle, expectedConfirmMsg,
+  await testHelper("ca_tab", expectedTitle, expectedConfirmMsg,
                     expectedImpact);
 });
 
 // Test deleting certs from the "Other" tab.
-add_task(function* testDeleteOtherCerts() {
+add_task(async function testDeleteOtherCerts() {
   const expectedTitle = "Delete Certificates";
   const expectedConfirmMsg =
     "Are you sure you want to delete these certificates?";
   const expectedImpact = "";
-  yield* testHelper("orphan_tab", expectedTitle, expectedConfirmMsg,
+  await testHelper("orphan_tab", expectedTitle, expectedConfirmMsg,
                     expectedImpact);
 });
 
 // Test that the right values are returned when the dialog is accepted.
-add_task(function* testAcceptDialogReturnValues() {
-  let [win, retVals] = yield openDeleteCertConfirmDialog("ca_tab" /* arbitrary */);
+add_task(async function testAcceptDialogReturnValues() {
+  let [win, retVals] = await openDeleteCertConfirmDialog("ca_tab" /* arbitrary */);
   info("Accepting dialog");
   win.document.getElementById("deleteCertificate").acceptDialog();
-  yield BrowserTestUtils.windowClosed(win);
+  await BrowserTestUtils.windowClosed(win);
 
   Assert.ok(retVals.deleteConfirmed,
             "Return value should signal user accepted");
 });
 
 // Test that the right values are returned when the dialog is canceled.
-add_task(function* testCancelDialogReturnValues() {
-  let [win, retVals] = yield openDeleteCertConfirmDialog("ca_tab" /* arbitrary */);
+add_task(async function testCancelDialogReturnValues() {
+  let [win, retVals] = await openDeleteCertConfirmDialog("ca_tab" /* arbitrary */);
   info("Canceling dialog");
   win.document.getElementById("deleteCertificate").cancelDialog();
-  yield BrowserTestUtils.windowClosed(win);
+  await BrowserTestUtils.windowClosed(win);
 
   Assert.ok(!retVals.deleteConfirmed,
             "Return value should signal user did not accept");

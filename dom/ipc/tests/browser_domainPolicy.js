@@ -11,7 +11,7 @@ function deactivateDomainPolicy() {
   }
 }
 
-function* test_domainPolicy() {
+async function test_domainPolicy() {
 
   XPCOMUtils.defineLazyModuleGetter(this, "Promise", "resource://gre/modules/Promise.jsm");
   let deferred = Promise.defer();
@@ -21,7 +21,7 @@ function* test_domainPolicy() {
           ["browser.pagethumbnails.capturing_disabled", false],
           ["dom.mozBrowserFramesEnabled", false]]},
     () => { return deferred.resolve()});
-  yield currentTask;
+  await currentTask;
 
   // Create tab
   let tab;
@@ -113,21 +113,21 @@ function* test_domainPolicy() {
 
   info("Creating child process first, activating domainPolicy after");
   currentTask = initProcess();
-  yield currentTask;
+  await currentTask;
   activateDomainPolicy();
   var bl = policy.blacklist;
   bl.add(Services.io.newURI('http://example.com'));
   currentTask = runTest(testDomain("http://example.com"));
-  checkAndCleanup(yield currentTask);
+  checkAndCleanup(await currentTask);
 
   info("Activating domainPolicy first, creating child process after");
   activateDomainPolicy();
   var bl = policy.blacklist;
   bl.add(Services.io.newURI('http://example.com'));
   currentTask = initProcess();
-  yield currentTask;
+  await currentTask;
   currentTask = runTest(testDomain("http://example.com"));
-  checkAndCleanup(yield currentTask);
+  checkAndCleanup(await currentTask);
 
   function testList(expectEnabled, list) {
     ipcArgs.expectEnabled = expectEnabled;
@@ -183,51 +183,51 @@ function* test_domainPolicy() {
   info("Activating domainPolicy first, creating child process after");
   activate(true, testPolicy.exceptions, testPolicy.superExceptions);
   currentTask = initProcess();
-  yield currentTask;
+  await currentTask;
   let results = [];
   currentTask = runTest(testList(true, testPolicy.notExempt));
-  results = results.concat(yield currentTask);
+  results = results.concat(await currentTask);
   currentTask = runTest(testList(false, testPolicy.exempt));
-  results = results.concat(yield currentTask);
+  results = results.concat(await currentTask);
   checkAndCleanup(results);
 
   info("Creating child process first, activating domainPolicy after");
   currentTask = initProcess();
-  yield currentTask;
+  await currentTask;
   activate(true, testPolicy.exceptions, testPolicy.superExceptions);
   results = [];
   currentTask = runTest(testList(true, testPolicy.notExempt));
-  results = results.concat(yield currentTask);
+  results = results.concat(await currentTask);
   currentTask = runTest(testList(false, testPolicy.exempt));
-  results = results.concat(yield currentTask);
+  results = results.concat(await currentTask);
   checkAndCleanup(results);
 
   info("Testing Whitelist-style Domain Policy");
   deferred = Promise.defer();
   currentTask = deferred.promise;
   SpecialPowers.pushPrefEnv({set:[["javascript.enabled", false]]}, () => { return deferred.resolve()});
-  yield currentTask;
+  await currentTask;
 
   info("Activating domainPolicy first, creating child process after");
   activate(false, testPolicy.exceptions, testPolicy.superExceptions);
   currentTask = initProcess();
-  yield currentTask;
+  await currentTask;
   results = [];
   currentTask = runTest(testList(false, testPolicy.notExempt));
-  results = results.concat(yield currentTask);
+  results = results.concat(await currentTask);
   currentTask = runTest(testList(true, testPolicy.exempt));
-  results = results.concat(yield currentTask);
+  results = results.concat(await currentTask);
   checkAndCleanup(results);
 
   info("Creating child process first, activating domainPolicy after");
   currentTask = initProcess();
-  yield currentTask;
+  await currentTask;
   activate(false, testPolicy.exceptions, testPolicy.superExceptions);
   results = [];
   currentTask = runTest(testList(false, testPolicy.notExempt));
-  results = results.concat(yield currentTask);
+  results = results.concat(await currentTask);
   currentTask = runTest(testList(true, testPolicy.exempt));
-  results = results.concat(yield currentTask);
+  results = results.concat(await currentTask);
   checkAndCleanup(results);
   finish();
 }

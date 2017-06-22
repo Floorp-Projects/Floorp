@@ -7,12 +7,12 @@
     <script>
       const ACCEPT_SESSION = 2;
 
-      add_task(function*() {
-        yield SpecialPowers.pushPrefEnv({"set": [["network.cookie.lifetimePolicy",
+      add_task(async function() {
+        await SpecialPowers.pushPrefEnv({"set": [["network.cookie.lifetimePolicy",
                                                   ACCEPT_SESSION]]});
 
         // Before setting permission
-        yield new Promise((resolve) => {
+        await new Promise((resolve) => {
           var frame = document.createElement('iframe');
           frame.src = "frameLocalStorageSessionOnly.html";
 
@@ -26,12 +26,12 @@
         });
 
         // After setting permission
-        yield new Promise((resolve) => {
+        await new Promise((resolve) => {
           SpecialPowers.pushPermissions([{"type": "cookie", "allow": 1, "context": document}],
                                         resolve);
         });
 
-        yield new Promise((resolve) => {
+        await new Promise((resolve) => {
           var frame = document.createElement('iframe');
           frame.src = "frameLocalStorageSessionOnly.html";
 

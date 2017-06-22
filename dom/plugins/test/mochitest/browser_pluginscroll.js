@@ -18,14 +18,14 @@ var apzEnabled = Preferences.get("layers.async-pan-zoom.enabled", false);
 var pluginHideEnabled = Preferences.get("gfx.e10s.hide-plugins-for-scroll", true);
 
 
-add_task(function* () {
+add_task(async function() {
   registerCleanupFunction(function () {
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
   });
 });
 
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
     "set": [
              ["general.smoothScroll", true],
              ["general.smoothScroll.other", true],
@@ -41,7 +41,7 @@ add_task(function*() {
  * test plugin visibility when scrolling with scroll wheel and apz in a top level document.
  */
 
-add_task(function* () {
+add_task(async function() {
   let result;
 
   if (!apzEnabled) {
@@ -57,16 +57,16 @@ add_task(function* () {
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
 
   let testTab = gBrowser.selectedTab;
-  let pluginTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, gTestRoot + "plugin_test.html");
+  let pluginTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, gTestRoot + "plugin_test.html");
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     return !!plugin;
   });
   is(result, true, "plugin is loaded");
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -81,18 +81,18 @@ add_task(function* () {
                                    nativeId, 0, -50, 0, 0, 0,
                                    gBrowser.selectedBrowser);
 
-  yield waitScrollStart(gBrowser.selectedBrowser);
+  await waitScrollStart(gBrowser.selectedBrowser);
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
   });
   is(result, false, "plugin is hidden");
 
-  yield waitScrollFinish(gBrowser.selectedBrowser);
+  await waitScrollFinish(gBrowser.selectedBrowser);
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -106,7 +106,7 @@ add_task(function* () {
  * test plugin visibility when scrolling with scroll wheel and apz in a sub document.
  */
 
-add_task(function* () {
+add_task(async function() {
   let result;
 
   if (!apzEnabled) {
@@ -122,16 +122,16 @@ add_task(function* () {
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
 
   let testTab = gBrowser.selectedTab;
-  let pluginTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, gTestRoot + "plugin_subframe_test.html");
+  let pluginTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, gTestRoot + "plugin_subframe_test.html");
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document.getElementById("subframe").contentDocument;
     let plugin = doc.getElementById("testplugin");
     return !!plugin;
   });
   is(result, true, "plugin is loaded");
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document.getElementById("subframe").contentDocument;
     let plugin = doc.getElementById("testplugin");
     return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -146,18 +146,18 @@ add_task(function* () {
                                    nativeId, 0, -50, 0, 0, 0,
                                    gBrowser.selectedBrowser);
 
-  yield waitScrollStart(gBrowser.selectedBrowser);
+  await waitScrollStart(gBrowser.selectedBrowser);
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document.getElementById("subframe").contentDocument;
     let plugin = doc.getElementById("testplugin");
     return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
   });
   is(result, false, "plugin is hidden");
 
-  yield waitScrollFinish(gBrowser.selectedBrowser);
+  await waitScrollFinish(gBrowser.selectedBrowser);
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document.getElementById("subframe").contentDocument;
     let plugin = doc.getElementById("testplugin");
     return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -173,7 +173,7 @@ add_task(function* () {
  * for this test.
  */
 
-add_task(function* () {
+add_task(async function() {
   let result;
 
   if (!pluginHideEnabled) {
@@ -184,16 +184,16 @@ add_task(function* () {
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
 
   let testTab = gBrowser.selectedTab;
-  let pluginTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, gTestRoot + "plugin_test.html");
+  let pluginTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, gTestRoot + "plugin_test.html");
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     return !!plugin;
   });
   is(result, true, "plugin is loaded");
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -202,18 +202,18 @@ add_task(function* () {
 
   EventUtils.synthesizeKey("VK_END", {});
 
-  yield waitScrollStart(gBrowser.selectedBrowser);
+  await waitScrollStart(gBrowser.selectedBrowser);
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
   });
   is(result, false, "plugin is hidden");
 
-  yield waitScrollFinish(gBrowser.selectedBrowser);
+  await waitScrollFinish(gBrowser.selectedBrowser);
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -222,9 +222,9 @@ add_task(function* () {
 
   EventUtils.synthesizeKey("VK_HOME", {});
 
-  yield waitScrollFinish(gBrowser.selectedBrowser);
+  await waitScrollFinish(gBrowser.selectedBrowser);
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -238,7 +238,7 @@ add_task(function* () {
  * test visibility when scrolling with keyboard shortcuts for a sub document.
  */
 
-add_task(function* () {
+add_task(async function() {
   let result;
 
   if (!pluginHideEnabled) {
@@ -249,16 +249,16 @@ add_task(function* () {
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
 
   let testTab = gBrowser.selectedTab;
-  let pluginTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, gTestRoot + "plugin_subframe_test.html");
+  let pluginTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, gTestRoot + "plugin_subframe_test.html");
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document.getElementById("subframe").contentDocument;
     let plugin = doc.getElementById("testplugin");
     return !!plugin;
   });
   is(result, true, "plugin is loaded");
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document.getElementById("subframe").contentDocument;
     let plugin = doc.getElementById("testplugin");
     return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -267,18 +267,18 @@ add_task(function* () {
 
   EventUtils.synthesizeKey("VK_END", {});
 
-  yield waitScrollStart(gBrowser.selectedBrowser);
+  await waitScrollStart(gBrowser.selectedBrowser);
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document.getElementById("subframe").contentDocument;
     let plugin = doc.getElementById("testplugin");
     return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
   });
   is(result, false, "plugin is hidden");
 
-  yield waitScrollFinish(gBrowser.selectedBrowser);
+  await waitScrollFinish(gBrowser.selectedBrowser);
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document.getElementById("subframe").contentDocument;
     let plugin = doc.getElementById("testplugin");
     return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -287,9 +287,9 @@ add_task(function* () {
 
   EventUtils.synthesizeKey("VK_HOME", {});
 
-  yield waitScrollFinish(gBrowser.selectedBrowser);
+  await waitScrollFinish(gBrowser.selectedBrowser);
 
-  result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let doc = content.document.getElementById("subframe").contentDocument;
     let plugin = doc.getElementById("testplugin");
     return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();

@@ -2695,6 +2695,11 @@ nsTextEditorState::SetValue(const nsAString& aValue, const nsAString* aOldValue,
 
           mTextListener->SetValueChanged(true);
           mTextListener->SettingValue(false);
+
+          if (!notifyValueChanged) {
+            // Listener doesn't update frame, but it is required for placeholder
+            ValueWasChanged(true);
+          }
         }
 
         if (!weakFrame.IsAlive()) {
@@ -2757,11 +2762,11 @@ nsTextEditorState::SetValue(const nsAString& aValue, const nsAString* aOldValue,
         props.SetIsDirty();
       }
     }
-  }
 
-  // If we've reached the point where the root node has been created, we
-  // can assume that it's safe to notify.
-  ValueWasChanged(!!mRootNode);
+    // If we've reached the point where the root node has been created, we
+    // can assume that it's safe to notify.
+    ValueWasChanged(!!mRootNode);
+  }
 
   mTextCtrlElement->OnValueChanged(/* aNotify = */ !!mRootNode,
                                    /* aWasInteractiveUserChange = */ false);

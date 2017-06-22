@@ -13,6 +13,10 @@ from mozbuild.backend.recursivemake import RecursiveMakeBackend
 from mozbuild.shellutil import quote as shell_quote
 from mozbuild.util import OrderedDefaultDict
 
+from mozpack.files import (
+    FileFinder,
+)
+
 from .common import CommonBackend
 from ..frontend.data import (
     ChromeManifestEntry,
@@ -127,6 +131,14 @@ class TupOnly(CommonBackend, PartialBackend):
         self._backend_files = {}
         self._cmd = MozbuildObject.from_environment()
         self._manifest_entries = OrderedDefaultDict(set)
+        self._compile_env_gen_files = (
+            '*.c',
+            '*.cpp',
+            '*.h',
+            '*.inc',
+            '*.py',
+            '*.rs',
+        )
 
         # This is a 'group' dependency - All rules that list this as an output
         # will be built before any rules that list this as an input.
@@ -170,9 +182,13 @@ class TupOnly(CommonBackend, PartialBackend):
                 'buildid.h',
                 'source-repo.h',
             )
-            if any(f in skip_files for f in obj.outputs):
-                # Let the RecursiveMake backend handle these.
-                return False
+
+            if self.environment.is_artifact_build:
+                skip_files = skip_files + self._compile_env_gen_files
+
+            for f in obj.outputs:
+                if any(mozpath.match(f, p) for p in skip_files):
+                    return False
 
             if 'application.ini.h' in obj.outputs:
                 # application.ini.h is a special case since we need to process
@@ -306,6 +322,11 @@ class TupOnly(CommonBackend, PartialBackend):
             if not path:
                 raise Exception("Cannot install to " + target)
 
+        if target.startswith('_tests'):
+            # TODO: TEST_HARNESS_FILES present a few challenges for the tup
+            # backend (bug 1372381).
+            return
+
         for path, files in obj.files.walk():
             backend_file = self._get_backend_file(mozpath.join(target, path))
             for f in files:
@@ -321,13 +342,35 @@ class TupOnly(CommonBackend, PartialBackend):
                             # skip this for now.
                             pass
                         else:
-                            # TODO: This is needed for tests
-                            pass
+                            def _prefix(s):
+                                for p in mozpath.split(s):
+                                    if '*' not in p:
+                                        yield p + '/'
+                            prefix = ''.join(_prefix(f.full_path))
+                            self.backend_input_files.add(prefix)
+                            finder = FileFinder(prefix)
+                            for p, _ in finder.find(f.full_path[len(prefix):]):
+                                backend_file.symlink_rule(mozpath.join(prefix, p),
+                                                          output=mozpath.join(f.target_basename, p),
+                                                          output_group=self._installed_files)
                     else:
                         backend_file.symlink_rule(f.full_path, output=f.target_basename, output_group=self._installed_files)
                 else:
-                    # TODO: Support installing generated files
-                    pass
+                    if (self.environment.is_artifact_build and
+                        any(mozpath.match(f.target_basename, p) for p in self._compile_env_gen_files)):
+                        # If we have an artifact build we never would have generated this file,
+                        # so do not attempt to install it.
+                        continue
+
+                    # We're not generating files in these directories yet, so
+                    # don't attempt to install files generated from them.
+                    if f.context.relobjdir not in ('layout/style/test',
+                                                   'toolkit/library'):
+                        output = mozpath.join('$(MOZ_OBJ_ROOT)', target, path,
+                                              f.target_basename)
+                        gen_backend_file = self._get_backend_file(f.context.relobjdir)
+                        gen_backend_file.symlink_rule(f.full_path, output=output,
+                                                      output_group=self._installed_files)
 
     def _process_final_target_pp_files(self, obj, backend_file):
         for i, (path, files) in enumerate(obj.files.walk()):
@@ -336,6 +379,9 @@ class TupOnly(CommonBackend, PartialBackend):
                                  destdir=mozpath.join(self.environment.topobjdir, obj.install_target, path))
 
     def _handle_idl_manager(self, manager):
+        if self.environment.is_artifact_build:
+            return
+
         dist_idl_backend_file = self._get_backend_file('dist/idl')
         for idl in manager.idls.values():
             dist_idl_backend_file.symlink_rule(idl['source'], output_group=self._installed_files)

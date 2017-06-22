@@ -39,50 +39,50 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
   });
 
   function navigateFrame(ifr, src) {
-    let deferred = Promise.defer();
-    function onload() {
-      ifr.removeEventListener('load', onload);
-      deferred.resolve();
-    }
-    ifr.addEventListener('load', onload, false);
-    ifr.setAttribute('src', src);
-    return deferred.promise;
+    return new Promise(resolve => {
+      function onload() {
+        ifr.removeEventListener('load', onload);
+        resolve();
+      }
+      ifr.addEventListener('load', onload, false);
+      ifr.setAttribute('src', src);
+    });
   }
 
   function navigateBack(ifr) {
-    let deferred = Promise.defer();
+    return new Promise(resolve => {
 
-    // pageshow events don't fire on the iframe element, so we need to use the
-    // chrome event handler for the docshell.
-    var browser = ifr.contentWindow
-                     .QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIWebNavigation)
-                     .QueryInterface(Ci.nsIDocShell)
-                     .chromeEventHandler;
-    function onpageshow(evt) {
-      info("Navigated back. Persisted: " + evt.persisted);
-      browser.removeEventListener('pageshow', onpageshow);
-      deferred.resolve();
-    }
-    browser.addEventListener('pageshow', onpageshow, false);
-    ifr.contentWindow.history.back();
-    return deferred.promise;
+      // pageshow events don't fire on the iframe element, so we need to use the
+      // chrome event handler for the docshell.
+      var browser = ifr.contentWindow
+                       .QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIWebNavigation)
+                       .QueryInterface(Ci.nsIDocShell)
+                       .chromeEventHandler;
+      function onpageshow(evt) {
+        info("Navigated back. Persisted: " + evt.persisted);
+        browser.removeEventListener('pageshow', onpageshow);
+        resolve();
+      }
+      browser.addEventListener('pageshow', onpageshow, false);
+      ifr.contentWindow.history.back();
+    });
   }
 
   function addFrame(parentWin, name, expectOnload) {
     let ifr = parentWin.document.createElement('iframe');
     parentWin.document.body.appendChild(ifr);
     ifr.setAttribute('name', name);
-    let deferred = Promise.defer();
-    // We need to append 'name' to avoid running afoul of recursive frame detection.
-    let frameURI = uri + "?name=" + name;
-    navigateFrame(ifr, frameURI).then(function() {
-      is(String(ifr.contentWindow.location), frameURI, "Successful load");
-      is(!!ifr.contentWindow.wrappedJSObject.gFiredOnload, expectOnload,
-         "onload should only fire when scripts are enabled");
-      deferred.resolve();
+    return new Promise(resolve => {
+      // We need to append 'name' to avoid running afoul of recursive frame detection.
+      let frameURI = uri + "?name=" + name;
+      navigateFrame(ifr, frameURI).then(function() {
+        is(String(ifr.contentWindow.location), frameURI, "Successful load");
+        is(!!ifr.contentWindow.wrappedJSObject.gFiredOnload, expectOnload,
+           "onload should only fire when scripts are enabled");
+        resolve();
+      });
     });
-    return deferred.promise;
   }
 
   function checkScriptEnabled(win, expectEnabled) {
@@ -99,17 +99,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
 
   function testList(expectEnabled, win, list, idx) {
     idx = idx || 0;
-    let deferred = Promise.defer();
-    let target = list[idx] + path;
-    info("Testing scriptability for: " + target + ". expecting " + expectEnabled);
-    navigateFrame(win.frameElement, target).then(function() {
-      checkScriptEnabled(win, expectEnabled);
-      if (idx == list.length - 1)
-        deferred.resolve();
-      else
-      testList(expectEnabled, win, list, idx + 1).then(function() { deferred.resolve(); });
+    return new Promise(resolve => {
+      let target = list[idx] + path;
+      info("Testing scriptability for: " + target + ". expecting " + expectEnabled);
+      navigateFrame(win.frameElement, target).then(function() {
+        checkScriptEnabled(win, expectEnabled);
+        if (idx == list.length - 1)
+          resolve();
+        else
+        testList(expectEnabled, win, list, idx + 1).then(function() { resolve(); });
+      });
     });
-    return deferred.promise;
   }
 
   function testDomainPolicy(defaultScriptability, exceptions, superExceptions,
@@ -131,13 +131,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
   }
 
   function reloadFrame(frame) {
-    let deferred = Promise.defer();
-    frame.addEventListener('load', function onload() {
-      deferred.resolve();
-      frame.removeEventListener('load', onload);
-    }, false);
-    frame.contentWindow.location.reload(true);
-    return deferred.promise;
+    return new Promise(resolve => {
+      frame.addEventListener('load', function onload() {
+        resolve();
+        frame.removeEventListener('load', onload);
+      }, false);
+      frame.contentWindow.location.reload(true);
+    });
   }
 
   function go() {

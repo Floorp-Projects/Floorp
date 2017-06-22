@@ -7,11 +7,11 @@ const URIs = [
   "http://example.com/browser/dom/base/test/empty.html"
 ];
 
-function* runTest(input, url) {
+async function runTest(input, url) {
   let tab = BrowserTestUtils.addTab(gBrowser, url);
   let browser = gBrowser.getBrowserForTab(tab);
 
-  yield BrowserTestUtils.browserLoaded(browser);
+  await BrowserTestUtils.browserLoaded(browser);
 
   let stream = Cc['@mozilla.org/io/string-input-stream;1']
                .createInstance(Ci.nsIStringInputStream);
@@ -23,7 +23,7 @@ function* runTest(input, url) {
 
   is(data.inputStream.available(), input.length, "The length of the inputStream matches: " + input.length);
 
-  let dataBack = yield ContentTask.spawn(browser, data, function(data) {
+  let dataBack = await ContentTask.spawn(browser, data, function(data) {
     let dataBack = {
       inputStream: data.inputStream,
       check: true,
@@ -40,17 +40,17 @@ function* runTest(input, url) {
   ok(data.inputStream instanceof Ci.nsIInputStream, "The original object was an inputStream");
   ok(dataBack.inputStream instanceof Ci.nsIInputStream, "We have an inputStream back from the content.");
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 }
 
-add_task(function* test() {
+add_task(async function test() {
   let a = "a";
   for (let i = 0; i < 25; ++i) {
     a+=a;
   }
 
   for (let i = 0; i < URIs.length; ++i) {
-    yield runTest("Hello world", URIs[i]);
-    yield runTest(a, URIs[i]);
+    await runTest("Hello world", URIs[i]);
+    await runTest(a, URIs[i]);
   }
 });

@@ -5,7 +5,6 @@
 "use strict";
 
 this.EXPORTED_SYMBOLS = [
-  "btoa", // It comes from a module import.
   "encryptPayload",
   "makeIdentityConfig",
   "makeFxAccountsInternalMock",

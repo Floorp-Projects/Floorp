@@ -19,7 +19,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_register_wrong_id() {
+add_task(async function test_register_wrong_id() {
   // Should reconnect after the register request times out.
   let registers = 0;
   let helloDone;
@@ -54,7 +54,7 @@ add_task(function* test_register_wrong_id() {
     }
   });
 
-  yield rejects(
+  await rejects(
     PushService.register({
       scope: 'https://example.com/mismatched',
       originAttributes: ChromeUtils.originAttributesToSuffix(
@@ -63,6 +63,6 @@ add_task(function* test_register_wrong_id() {
     'Expected error for mismatched register reply'
   );
 
-  yield helloPromise;
+  await helloPromise;
   equal(registers, 1, 'Wrong register count');
 });

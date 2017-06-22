@@ -757,6 +757,18 @@ public:
                           uint32_t aCount,
                           uint32_t* aBytes) const;
 
+  // Similar to ReadAt, but doesn't try to cache around the read.
+  // Useful if you know that you will not read again from the same area.
+  // Will attempt to read aRequestedCount+aExtraCount, repeatedly calling
+  // MediaResource/ ReadAt()'s until a read returns 0 bytes (so we may actually
+  // get less than aRequestedCount bytes), or until we get at least
+  // aRequestedCount bytes (so we may not get any/all of the aExtraCount bytes.)
+  nsresult UncachedRangedReadAt(int64_t aOffset,
+                                char* aBuffer,
+                                uint32_t aRequestedCount,
+                                uint32_t aExtraCount,
+                                uint32_t* aBytes) const;
+
   // This method returns nullptr if anything fails.
   // Otherwise, it returns an owned buffer.
   // MediaReadAt may return fewer bytes than requested if end of stream is
