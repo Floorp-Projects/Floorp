@@ -21,7 +21,7 @@
  * of the code base, so it's consistent and modules can be easily reused.
  */
 require.config({
-  baseUrl: ".",
+  baseUrl: "resource://devtools/client/jsonview/",
   paths: {
     "devtools/client/shared": "resource://devtools/client/shared",
     "devtools/shared": "resource://devtools/shared",

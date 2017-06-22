@@ -206,21 +206,22 @@ function initialHTML(doc) {
     os = "linux";
   }
 
-  let base = doc.createElement("base");
-  base.href = "resource://devtools/client/jsonview/";
+  // The base URI is prepended to all URIs instead of using a <base> element
+  // because the latter can be blocked by a CSP base-uri directive (bug 1316393)
+  let baseURI = "resource://devtools/client/jsonview/";
 
   let style = doc.createElement("link");
   style.rel = "stylesheet";
   style.type = "text/css";
-  style.href = "css/main.css";
+  style.href = baseURI + "css/main.css";
 
   let script = doc.createElement("script");
-  script.src = "lib/require.js";
-  script.dataset.main = "viewer-config";
+  script.src = baseURI + "lib/require.js";
+  script.dataset.main = baseURI + "viewer-config.js";
   script.defer = true;
 
   let head = doc.createElement("head");
-  head.append(base, style, script);
+  head.append(style, script);
 
   return "<!DOCTYPE html>\n" +
     startTag("html", {
