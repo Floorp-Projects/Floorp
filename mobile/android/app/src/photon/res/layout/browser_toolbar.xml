@@ -34,25 +34,14 @@
         android:src="@drawable/url_bar_translating_edge"
         android:visibility="invisible" />
 
-    <org.mozilla.gecko.toolbar.ShapedButtonFrameLayout
+    <org.mozilla.gecko.widget.themed.ThemedImageButton
         android:id="@+id/menu"
         style="@style/UrlBar.Menu"
-        android:background="@drawable/shaped_button"
-        android:contentDescription="@string/menu">
+        android:background="@drawable/action_bar_button"
+        android:contentDescription="@string/menu"
+        android:src="@drawable/menu" />
 
-        <org.mozilla.gecko.widget.themed.ThemedImageView
-            android:id="@+id/menu_icon"
-            style="@style/UrlBar.ImageButton"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/browser_toolbar_menu_icon_height"
-            android:layout_gravity="center"
-            android:scaleType="centerInside"
-            android:src="@drawable/menu"
-            android:tint="@color/tabs_tray_icon_grey" />
-
-    </org.mozilla.gecko.toolbar.ShapedButtonFrameLayout>
-
-    <org.mozilla.gecko.toolbar.PhoneTabsButton
+    <org.mozilla.gecko.widget.themed.ThemedImageButton
         android:id="@+id/tabs"
         style="@style/UrlBar.Tabs"
         android:layout_width="64dip"
