@@ -281,6 +281,40 @@ add_test(function observePushTopicAccountDestroyed() {
   pushService.observe(msg, mockPushService.pushTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
 });
 
+add_test(function observePushTopicVerifyLogin() {
+  let url = "http://localhost/newLogin";
+  let title = "bogustitle";
+  let body = "bogusbody";
+  let msg = {
+    data: {
+      json: () => ({
+        command: ON_VERIFY_LOGIN_NOTIFICATION,
+        data: {
+          body,
+          title,
+          url
+        }
+      })
+    },
+    QueryInterface() {
+      return this;
+    }
+  };
+  let obs = (subject, topic, data) => {
+    Services.obs.removeObserver(obs, topic);
+    Assert.equal(data, JSON.stringify(msg.data.json().data));
+    run_next_test();
+  };
+  Services.obs.addObserver(obs, ON_VERIFY_LOGIN_NOTIFICATION);
+
+  let pushService = new FxAccountsPushService({
+    pushService: mockPushService,
+    fxAccounts: mockFxAccounts,
+  });
+
+  pushService.observe(msg, mockPushService.pushTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
+});
+
 add_test(function observePushTopicProfileUpdated() {
   let msg = {
     data: {
