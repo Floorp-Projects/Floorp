@@ -61,16 +61,6 @@
 <string name="fxaccount_options_title">&fxaccount_options_title;</string>
 <string name="fxaccount_options_configure_title">&fxaccount_options_configure_title;</string>
 
-<string name="fxaccount_remote_error_UPGRADE_REQUIRED">&fxaccount_remote_error_UPGRADE_REQUIRED;</string>
-<string name="fxaccount_remote_error_ATTEMPT_TO_CREATE_AN_ACCOUNT_THAT_ALREADY_EXISTS">&fxaccount_remote_error_ATTEMPT_TO_CREATE_AN_ACCOUNT_THAT_ALREADY_EXISTS_2;</string>
-<string name="fxaccount_remote_error_ATTEMPT_TO_ACCESS_AN_ACCOUNT_THAT_DOES_NOT_EXIST">&fxaccount_remote_error_ATTEMPT_TO_ACCESS_AN_ACCOUNT_THAT_DOES_NOT_EXIST;</string>
-<string name="fxaccount_remote_error_INCORRECT_PASSWORD">&fxaccount_remote_error_INCORRECT_PASSWORD;</string>
-<string name="fxaccount_remote_error_ATTEMPT_TO_OPERATE_ON_AN_UNVERIFIED_ACCOUNT">&fxaccount_remote_error_ATTEMPT_TO_OPERATE_ON_AN_UNVERIFIED_ACCOUNT;</string>
-<string name="fxaccount_remote_error_CLIENT_HAS_SENT_TOO_MANY_REQUESTS">&fxaccount_remote_error_CLIENT_HAS_SENT_TOO_MANY_REQUESTS;</string>
-<string name="fxaccount_remote_error_SERVICE_TEMPORARILY_UNAVAILABLE_TO_DUE_HIGH_LOAD">&fxaccount_remote_error_SERVICE_TEMPORARILY_UNAVAILABLE_TO_DUE_HIGH_LOAD;</string>
-<string name="fxaccount_remote_error_UNKNOWN_ERROR">&fxaccount_remote_error_UNKNOWN_ERROR;</string>
-<string name="fxaccount_remote_error_ACCOUNT_LOCKED">&fxaccount_remote_error_ACCOUNT_LOCKED;</string>
-
 <string name="fxaccount_sync_sign_in_error_notification_title">&fxaccount_sync_sign_in_error_notification_title2;</string>
 <string name="fxaccount_sync_sign_in_error_notification_text">&fxaccount_sync_sign_in_error_notification_text2;</string>
 
