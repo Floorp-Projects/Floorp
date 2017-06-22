@@ -208,11 +208,14 @@ struct TimingParams
   }
   dom::FillMode Fill() const { return mFill; }
 
-  void SetFunction(Maybe<ComputedTimingFunction>&& aFunction)
+  void SetTimingFunction(Maybe<ComputedTimingFunction>&& aFunction)
   {
     mFunction = Move(aFunction);
   }
-  const Maybe<ComputedTimingFunction>& Function() const { return mFunction; }
+  const Maybe<ComputedTimingFunction>& TimingFunction() const
+  {
+    return mFunction;
+  }
 
 private:
   void Update()

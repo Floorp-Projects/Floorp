@@ -40,8 +40,8 @@ AnimationEffectTimingReadOnly::GetDuration(
 void
 AnimationEffectTimingReadOnly::GetEasing(nsString& aRetVal) const
 {
-  if (mTiming.Function()) {
-    mTiming.Function()->AppendToString(aRetVal);
+  if (mTiming.TimingFunction()) {
+    mTiming.TimingFunction()->AppendToString(aRetVal);
   } else {
     aRetVal.AssignLiteral("linear");
   }

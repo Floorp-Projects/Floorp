@@ -250,8 +250,8 @@ AnimationEffectReadOnly::GetComputedTimingAt(
   }
 
   // Apply the easing.
-  if (aTiming.Function()) {
-    progress = aTiming.Function()->GetValue(progress, result.mBeforeFlag);
+  if (aTiming.TimingFunction()) {
+    progress = aTiming.TimingFunction()->GetValue(progress, result.mBeforeFlag);
   }
 
   MOZ_ASSERT(IsFinite(progress), "Progress value should be finite");
