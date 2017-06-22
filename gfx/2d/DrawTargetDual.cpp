@@ -208,15 +208,9 @@ DrawTargetDual::PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
 already_AddRefed<DrawTarget>
 DrawTargetDual::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
 {
-  RefPtr<DrawTarget> dtA = mA->CreateSimilarDrawTarget(aSize, aFormat);
-  RefPtr<DrawTarget> dtB = mB->CreateSimilarDrawTarget(aSize, aFormat);
-
-  if (!dtA || !dtB) {
-    gfxWarning() << "Failure to allocate a similar DrawTargetDual. Size: " << aSize;
-    return nullptr;
-  }
-
-  return MakeAndAddRef<DrawTargetDual>(dtA, dtB);
+  /* Now that we have PushLayer there a very few cases where a user of DrawTargetDual
+   * wants to have a DualTarget when creating a similar one. */
+  return mA->CreateSimilarDrawTarget(aSize, aFormat);
 }
 
 } // namespace gfx
