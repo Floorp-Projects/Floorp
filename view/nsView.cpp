@@ -68,10 +68,6 @@ nsView::~nsView()
 
   bool printRelated = mViewManager && mViewManager->GetPrintRelated();
 
-  if (mViewManager && (mViewManager->GetRootView() == this)) {
-    MOZ_RELEASE_ASSERT(!GetFirstChild());
-  }
-
   while (GetFirstChild())
   {
     nsView* child = GetFirstChild();
@@ -480,8 +476,6 @@ void nsView::InsertChild(nsView *aChild, nsView *aSibling)
     {
       aChild->SetNextSibling(mFirstChild);
       mFirstChild = aChild;
-      MOZ_RELEASE_ASSERT(!mFirstChild || mFrame ||
-        mFirstChild->GetViewManager() != GetViewManager());
     }
     aChild->SetParent(this);
 

@@ -409,8 +409,6 @@ protected:
   bool mInitializedForPrintPreview;
   bool mHidden;
   bool mPrintRelated; // Only use for asserts.
-  bool mPresShellDestroyed; // Only use for asserts.
-  bool mDestroyWasFull; // Only use for asserts.
 };
 
 namespace mozilla {
@@ -547,9 +545,7 @@ nsDocumentViewer::nsDocumentViewer()
     mIsPageMode(false),
     mInitializedForPrintPreview(false),
     mHidden(false),
-    mPrintRelated(false),
-    mPresShellDestroyed(true),
-    mDestroyWasFull(false)
+    mPrintRelated(false)
 {
   PrepareToStartLoad();
 }
@@ -586,30 +582,15 @@ nsDocumentViewer::~nsDocumentViewer()
     mDocument->Destroy();
   }
 
-  nsIFrame* vmRootFrame =
-    mViewManager && mViewManager->GetRootView()
-      ? mViewManager->GetRootView()->GetFrame()
-      : nullptr;
-  nsIFrame* psRootFrame = mPresShell ? mPresShell->GetRootFrame() : nullptr;
-  MOZ_RELEASE_ASSERT(vmRootFrame == psRootFrame);
-
   NS_ASSERTION(!mPresShell && !mPresContext,
                "User did not call nsIContentViewer::Destroy");
   if (mPresShell || mPresContext) {
     // Make sure we don't hand out a reference to the content viewer to
     // the SHEntry!
     mSHEntry = nullptr;
-    mDestroyWasFull = false;
+
     Destroy();
-    MOZ_RELEASE_ASSERT(mDestroyWasFull);
   }
-
-  MOZ_RELEASE_ASSERT(mPresShellDestroyed);
-
-  MOZ_RELEASE_ASSERT(!mPresShell || !mPresShell->GetRootFrame());
-  MOZ_RELEASE_ASSERT(!mViewManager || !mViewManager->GetRootView() ||
-    (!mViewManager->GetRootView()->GetFrame() &&
-     !mViewManager->GetRootView()->GetFirstChild()));
 
   if (mSelectionListener) {
     mSelectionListener->Disconnect();
@@ -738,7 +719,6 @@ nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow)
     styleSet->Delete();
     return NS_ERROR_FAILURE;
   }
-  mPresShellDestroyed = false;
 
   // We're done creating the style set
   styleSet->EndUpdate();
@@ -1843,8 +1823,6 @@ nsDocumentViewer::Destroy()
   mWindow = nullptr;
   mViewManager = nullptr;
   mContainer = WeakPtr<nsDocShell>();
-
-  mDestroyWasFull = true;
 
   return NS_OK;
 }
@@ -4777,13 +4755,6 @@ nsDocumentViewer::DestroyPresShell()
   MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript(),
              "DestroyPresShell must only be called when scripts are blocked");
 
-  nsIFrame* vmRootFrame =
-    mViewManager && mViewManager->GetRootView()
-      ? mViewManager->GetRootView()->GetFrame()
-      : nullptr;
-  nsIFrame* psRootFrame = mPresShell ? mPresShell->GetRootFrame() : nullptr;
-  MOZ_RELEASE_ASSERT(vmRootFrame == psRootFrame);
-
   // Break circular reference (or something)
   mPresShell->EndObservingDocument();
 
@@ -4791,18 +4762,7 @@ nsDocumentViewer::DestroyPresShell()
   if (selection && mSelectionListener)
     selection->RemoveSelectionListener(mSelectionListener);
 
-  bool hadRootFrame = !!mPresShell->GetRootFrame();
   mPresShell->Destroy();
-  mPresShellDestroyed = true;
-  MOZ_RELEASE_ASSERT(!mPresShell->GetRootFrame());
-  // destroying the frame tree via presshell destroy should have done this
-  if (hadRootFrame) {
-    MOZ_RELEASE_ASSERT(!mViewManager || !mViewManager->GetRootView());
-  }
-  MOZ_RELEASE_ASSERT(!mViewManager || !mViewManager->GetRootView() ||
-    (!mViewManager->GetRootView()->GetFrame() &&
-     !mViewManager->GetRootView()->GetFirstChild()));
-
   mPresShell = nullptr;
 }
 
