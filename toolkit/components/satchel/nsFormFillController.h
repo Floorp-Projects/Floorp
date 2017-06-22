@@ -87,6 +87,8 @@ protected:
   void RemoveForDocument(nsIDocument* aDoc);
   bool IsEventTrusted(nsIDOMEvent *aEvent);
 
+  bool IsTextControl(nsINode* aNode);
+
   // members //////////////////////////////////////////
 
   nsCOMPtr<nsIAutoCompleteController> mController;

@@ -3,7 +3,7 @@ Cu.importGlobalProperties(["crypto"]);
 
 var cryptoSvc = new WeaveCrypto();
 
-add_task(function* test_key_memoization() {
+add_task(async function test_key_memoization() {
   let cryptoGlobal = cryptoSvc._getCrypto();
   let oldImport = cryptoGlobal.subtle.importKey;
   if (!oldImport) {
@@ -37,7 +37,7 @@ add_task(function* test_key_memoization() {
 });
 
 // Just verify that it gets populated with the correct bytes.
-add_task(function* test_makeUint8Array() {
+add_task(async function test_makeUint8Array() {
   Components.utils.import("resource://gre/modules/ctypes.jsm");
 
   let item1 = cryptoSvc.makeUint8Array("abcdefghi", false);
@@ -46,7 +46,7 @@ add_task(function* test_makeUint8Array() {
     do_check_eq(item1[i], "abcdefghi".charCodeAt(i));
 });
 
-add_task(function* test_encrypt_decrypt() {
+add_task(async function test_encrypt_decrypt() {
   // First, do a normal run with expected usage... Generate a random key and
   // iv, encrypt and decrypt a string.
   var iv = cryptoSvc.generateRandomIV();

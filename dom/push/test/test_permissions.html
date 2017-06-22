@@ -30,18 +30,18 @@ http://creativecommons.org/licenses/publicdomain/
   }
 
   var registration;
-  add_task(function* start() {
-    yield setupPrefsAndMockSocket(new MockWebSocket());
-    yield setPushPermission(false);
+  add_task(async function start() {
+    await setupPrefsAndMockSocket(new MockWebSocket());
+    await setPushPermission(false);
 
     var url = "worker.js" + "?" + Math.random();
-    registration = yield navigator.serviceWorker.register(url, {scope: "."});
-    yield waitForActive(registration);
+    registration = await navigator.serviceWorker.register(url, {scope: "."});
+    await waitForActive(registration);
   });
 
-  add_task(function* denySubscribe() {
+  add_task(async function denySubscribe() {
     try {
-      yield registration.pushManager.subscribe();
+      await registration.pushManager.subscribe();
       ok(false, "subscribe() should fail because no permission for push");
     } catch (error) {
       ok(error instanceof DOMException, "Wrong exception type");
@@ -49,23 +49,23 @@ http://creativecommons.org/licenses/publicdomain/
     }
   });
 
-  add_task(function* denySubscribeInWorker() {
+  add_task(async function denySubscribeInWorker() {
     // If permission is revoked, `getSubscription()` should return `null`, and
     // `subscribe()` should reject immediately. Calling these from the worker
     // should not deadlock the main thread (see bug 1228723).
-    var errorInfo = yield sendRequestToWorker({
+    var errorInfo = await sendRequestToWorker({
       type: "denySubscribe",
     });
     ok(errorInfo.isDOMException, "Wrong exception type");
     is(errorInfo.name, "NotAllowedError", "Wrong exception name");
   });
 
-  add_task(function* getEndpoint() {
-    var pushSubscription = yield registration.pushManager.getSubscription();
+  add_task(async function getEndpoint() {
+    var pushSubscription = await registration.pushManager.getSubscription();
     is(pushSubscription, null, "getSubscription() should return null because no permission for push");
   });
 
-  add_task(function* checkPermissionState() {
+  add_task(async function checkPermissionState() {
     var permissionManager = SpecialPowers.Ci.nsIPermissionManager;
     var tests = [{
       action: permissionManager.ALLOW_ACTION,
@@ -81,23 +81,23 @@ http://creativecommons.org/licenses/publicdomain/
       state: "prompt",
     }];
     for (var test of tests) {
-      yield setPushPermission(test.action);
-      var state = yield registration.pushManager.permissionState();
+      await setPushPermission(test.action);
+      var state = await registration.pushManager.permissionState();
       is(state, test.state, JSON.stringify(test));
       try {
-        yield SpecialPowers.pushPrefEnv({ set: [
+        await SpecialPowers.pushPrefEnv({ set: [
           ["dom.push.testing.ignorePermission", true]] });
-        state = yield registration.pushManager.permissionState();
+        state = await registration.pushManager.permissionState();
         is(state, "granted", `Should ignore ${
           test.action} if the override pref is set`);
       } finally {
-        yield SpecialPowers.flushPrefEnv();
+        await SpecialPowers.flushPrefEnv();
       }
     }
   });
 
-  add_task(function* unregister() {
-    var result = yield registration.unregister();
+  add_task(async function unregister() {
+    var result = await registration.unregister();
     ok(result, "Unregister should return true.");
   });
 

@@ -41,26 +41,26 @@ http://creativecommons.org/licenses/publicdomain/
   };
 
   var registration;
-  add_task(function* start() {
-    yield setupPrefsAndMockSocket(mockSocket);
-    yield setPushPermission(true);
+  add_task(async function start() {
+    await setupPrefsAndMockSocket(mockSocket);
+    await setPushPermission(true);
 
     var url = "worker.js" + "?" + (Math.random());
-    registration = yield navigator.serviceWorker.register(url, {scope: "."});
-    yield waitForActive(registration);
+    registration = await navigator.serviceWorker.register(url, {scope: "."});
+    await waitForActive(registration);
   });
 
   var controlledFrame;
-  add_task(function* createControlledIFrame() {
-    controlledFrame = yield injectControlledFrame();
+  add_task(async function createControlledIFrame() {
+    controlledFrame = await injectControlledFrame();
   });
 
   var pushSubscription;
-  add_task(function* subscribe() {
-    pushSubscription = yield registration.pushManager.subscribe();
+  add_task(async function subscribe() {
+    pushSubscription = await registration.pushManager.subscribe();
   });
 
-  add_task(function* compareJSONSubscription() {
+  add_task(async function compareJSONSubscription() {
     var json = pushSubscription.toJSON();
     is(json.endpoint, pushSubscription.endpoint, "Wrong endpoint");
 
@@ -73,8 +73,8 @@ http://creativecommons.org/licenses/publicdomain/
     });
   });
 
-  add_task(function* comparePublicKey() {
-    var data = yield sendRequestToWorker({ type: "publicKey" });
+  add_task(async function comparePublicKey() {
+    var data = await sendRequestToWorker({ type: "publicKey" });
     var p256dhKey = new Uint8Array(pushSubscription.getKey("p256dh"));
     is(p256dhKey.length, 65, "Key share should be 65 octets");
     isDeeply(
@@ -116,28 +116,28 @@ http://creativecommons.org/licenses/publicdomain/
     ]).then(([message]) => message);
   }
 
-  add_task(function* sendPushMessageFromPage() {
+  add_task(async function sendPushMessageFromPage() {
     var typedArray = new Uint8Array([226, 130, 40, 240, 40, 140, 188]);
     var json = { hello: "world" };
 
-    var message = yield waitForMessage(pushSubscription, "Text message from page");
+    var message = await waitForMessage(pushSubscription, "Text message from page");
     is(message.data.text, "Text message from page", "Wrong text message data");
 
-    message = yield waitForMessage(
+    message = await waitForMessage(
       pushSubscription,
       typedArray
     );
     isDeeply(new Uint8Array(message.data.arrayBuffer), typedArray,
       "Wrong array buffer message data");
 
-    message = yield waitForMessage(
+    message = await waitForMessage(
       pushSubscription,
       JSON.stringify(json)
     );
     ok(message.data.json.ok, "Unexpected error parsing JSON");
     isDeeply(message.data.json.value, json, "Wrong JSON message data");
 
-    message = yield waitForMessage(
+    message = await waitForMessage(
       pushSubscription,
       ""
     );
@@ -146,12 +146,12 @@ http://creativecommons.org/licenses/publicdomain/
     is(message.data.arrayBuffer.byteLength, 0, "Wrong buffer length for empty message");
     ok(!message.data.json.ok, "Expected JSON parse error for empty message");
 
-    message = yield waitForMessage(
+    message = await waitForMessage(
       pushSubscription,
       new Uint8Array([0x48, 0x69, 0x21, 0x20, 0xf0, 0x9f, 0x91, 0x80])
     );
     is(message.data.text, "Hi! \ud83d\udc40", "Wrong text for message with emoji");
-    var text = yield new Promise((resolve, reject) => {
+    var text = await new Promise((resolve, reject) => {
       var reader = new FileReader();
       reader.onloadend = event => {
         if (reader.error) {
@@ -172,17 +172,17 @@ http://creativecommons.org/licenses/publicdomain/
       channelID: channelID
     }));
 
-    var message = yield finishedPromise;
+    var message = await finishedPromise;
     ok(!message.data, "Should exclude data for blank messages");
   });
 
-  add_task(function* unsubscribe() {
+  add_task(async function unsubscribe() {
     controlledFrame.remove();
-    yield pushSubscription.unsubscribe();
+    await pushSubscription.unsubscribe();
   });
 
-  add_task(function* unregister() {
-    yield registration.unregister();
+  add_task(async function unregister() {
+    await registration.unregister();
   });
 
 </script>

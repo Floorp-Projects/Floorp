@@ -1,18 +1,18 @@
-add_task(function*() {
-  yield new Promise(resolve => waitForFocus(resolve, window));
+add_task(async function() {
+  await new Promise(resolve => waitForFocus(resolve, window));
 
   const kPageURL = "http://example.org/browser/editor/libeditor/tests/bug527935.html";
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: kPageURL
-  }, function*(aBrowser) {
+  }, async function(aBrowser) {
     var popupShown = false;
     function listener() {
       popupShown = true;
     }
     SpecialPowers.addAutoCompletePopupEventListener(window, "popupshowing", listener);
 
-    yield ContentTask.spawn(aBrowser, {}, function*() {
+    await ContentTask.spawn(aBrowser, {}, async function() {
       var window = content.window.wrappedJSObject;
       var document = window.document;
       var formTarget = document.getElementById("formTarget");
@@ -28,11 +28,11 @@ add_task(function*() {
 
     EventUtils.synthesizeKey("VK_RETURN", {});
 
-    yield ContentTask.spawn(aBrowser, {}, function*() {
+    await ContentTask.spawn(aBrowser, {}, async function() {
       var window = content.window.wrappedJSObject;
       var document = window.document;
 
-      yield window.loadPromise;
+      await window.loadPromise;
 
       var newInput = document.createElement("input");
       newInput.setAttribute("name", "test");
@@ -47,7 +47,7 @@ add_task(function*() {
       newInput.dispatchEvent(event);
     });
 
-    yield new Promise(resolve => hitEventLoop(resolve, 100));
+    await new Promise(resolve => hitEventLoop(resolve, 100));
 
     ok(!popupShown, "Popup must not be opened");
     SpecialPowers.removeAutoCompletePopupEventListener(window, "popupshowing", listener);

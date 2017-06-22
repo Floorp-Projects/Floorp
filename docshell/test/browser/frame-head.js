@@ -5,7 +5,6 @@
 // timeline tests.
 
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 var { Promise } = Cu.import('resource://gre/modules/Promise.jsm', {});
 
 Cu.import("resource://gre/modules/Timer.jsm");
@@ -50,7 +49,7 @@ this.finish = function() {
  *             as an argument and checks the results of the test.
  */
 this.timelineContentTest = function(tests) {
-  Task.spawn(function*() {
+  (async function() {
     let docShell = content.QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsIWebNavigation)
                           .QueryInterface(Ci.nsIDocShell);
@@ -69,7 +68,7 @@ this.timelineContentTest = function(tests) {
       let onMarkers = timelineWaitForMarkers(docShell, searchFor);
       setup(docShell);
       info("Waiting for new markers on the docShell");
-      let markers = yield onMarkers;
+      let markers = await onMarkers;
 
       // Cycle collection markers are non-deterministic, and none of these tests
       // expect them to show up.
@@ -82,7 +81,7 @@ this.timelineContentTest = function(tests) {
     info("Stop recording");
     docShell.recordProfileTimelineMarkers = false;
     finish();
-  });
+  })();
 }
 
 function timelineWaitForMarkers(docshell, searchFor) {

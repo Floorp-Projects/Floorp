@@ -14,7 +14,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_register_request_queue() {
+add_task(async function test_register_request_queue() {
   let db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => {return db.drop().then(_ => db.close());});
 
@@ -52,10 +52,10 @@ add_task(function* test_register_request_queue() {
       { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
   });
 
-  yield Promise.all([
+  await Promise.all([
     rejects(firstRegister, 'Should time out the first request'),
     rejects(secondRegister, 'Should time out the second request')
   ]);
 
-  yield helloPromise;
+  await helloPromise;
 });

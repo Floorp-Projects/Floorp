@@ -4,7 +4,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-add_task(function* test_executeScriptAfterNuked() {
+add_task(async function test_executeScriptAfterNuked() {
   let scriptUrl = Services.io.newFileURI(do_get_file("file_simple_script.js")).spec;
 
   // Load the script for the first time into a sandbox, and then nuke

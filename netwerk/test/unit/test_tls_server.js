@@ -222,8 +222,8 @@ const versions = [{
   prefValue: 4, version: Ci.nsITLSClientStatus.TLS_VERSION_1_3, versionStr: "TLS 1.3"
 }];
 
-add_task(function*() {
-  let cert = yield getCert();
+add_task(async function() {
+  let cert = await getCert();
   ok(!!cert, "Got self-signed cert");
   for (let v of versions) {
     prefs.setIntPref("security.tls.version.max", v.prefValue);
@@ -234,7 +234,7 @@ add_task(function*() {
                                v.version,
                                v.versionStr);
       storeCertOverride(server.port, cert);
-      yield startClient(server.port, t.sendClientCert ? cert : null,
+      await startClient(server.port, t.sendClientCert ? cert : null,
                         t.expectingBadCertAlert);
       server.close();
     }

@@ -20,23 +20,23 @@
     const DEBUGGER_URL = BASE_URL + "WorkerDebuggerGlobalScope.createSandbox_debugger.js";
 
     function test() {
-      Task.spawn(function* () {
+      (async function() {
         SimpleTest.waitForExplicitFinish();
 
         info("Create a worker, wait for its debugger to be registered, and " +
              "initialize it.");
         let promise = waitForRegister(WORKER_URL, DEBUGGER_URL);
         let worker = new Worker(WORKER_URL);
-        let dbg = yield promise;
+        let dbg = await promise;
 
         info("Send a request to the worker debugger. This should cause the " +
              "worker debugger to send a response from within a sandbox.");
         promise = waitForDebuggerMessage(dbg, "pong");
         dbg.postMessage("ping");
-        yield promise;
+        await promise;
 
         SimpleTest.finish();
-      });
+      })();
     }
 
   ]]>

@@ -13,7 +13,7 @@ function GetPermissionsFile(profile)
   return file;
 }
 
-add_task(function* test() {
+add_task(async function test() {
   /* Create and set up the permissions database */
   let profile = do_get_profile();
 
@@ -155,8 +155,8 @@ add_task(function* test() {
   let found = expected.map((it) => 0);
 
   // Add some places to the places database
-  yield PlacesTestUtils.addVisits(Services.io.newURI("https://foo.com/some/other/subdirectory"));
-  yield PlacesTestUtils.addVisits(Services.io.newURI("ftp://some.subdomain.of.foo.com:8000/some/subdirectory"));
+  await PlacesTestUtils.addVisits(Services.io.newURI("https://foo.com/some/other/subdirectory"));
+  await PlacesTestUtils.addVisits(Services.io.newURI("ftp://some.subdomain.of.foo.com:8000/some/subdirectory"));
 
   // Force initialization of the nsPermissionManager
   let enumerator = Services.perms.enumerator;

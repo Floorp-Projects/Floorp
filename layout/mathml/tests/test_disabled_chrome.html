@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=744830
 <div id="testnodes"><span>hi</span> there <!-- mon ami --></div>
 <pre id="test">
 <script type="application/javascript">
-  add_task(function* () {
+  add_task(async function() {
     const initialPrefValue = SpecialPowers.getBoolPref("mathml.disabled");
     SpecialPowers.setBoolPref("mathml.disabled", true);
     const Cu = SpecialPowers.Components.utils;
@@ -29,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=744830
     chromeIframeEl.src = url;
     t.appendChild(chromeIframeEl);
 
-    yield chromeLoadPromise;
+    await chromeLoadPromise;
     const chromeBR = chromeIframeEl.contentDocument.body.getBoundingClientRect();
 
     url = "http://mochi.test:8888/chrome/layout/mathml/tests/mathml_example_test.html";
@@ -37,7 +37,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=744830
     iframeEl.src = url;
     let loadPromise = ContentTaskUtils.waitForEvent(iframeEl, 'load', false);
     t.appendChild(iframeEl);
-    yield loadPromise;
+    await loadPromise;
 
     const contentBR = iframeEl.contentDocument.body.getBoundingClientRect();
 

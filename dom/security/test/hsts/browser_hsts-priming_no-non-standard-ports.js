@@ -20,7 +20,7 @@ var expected_telemetry = {
 };
 
 //jscs:disable
-add_task(function*() {
+add_task(async function() {
   //jscs:enable
   Observer.add_observers(Services);
   registerCleanupFunction(do_cleanup);
@@ -38,9 +38,9 @@ add_task(function*() {
   SetupPrefTestEnvironment(which);
   clear_hists(expected_telemetry);
 
-  yield execute_test("non-standard-port", test_settings[which].mimetype);
+  await execute_test("non-standard-port", test_settings[which].mimetype);
 
-  yield execute_test("prime-hsts", test_settings[which].mimetype);
+  await execute_test("prime-hsts", test_settings[which].mimetype);
 
   ok("prime-hsts" in test_settings[which_test].priming, "Sent priming request on standard port after non-standard was not primed");
 

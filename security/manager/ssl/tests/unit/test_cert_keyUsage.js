@@ -43,15 +43,15 @@ const expectedUsagesMap = {
   "ee-keyCertSign-and-keyEncipherment-ca-all-usages": serverEEUsages,
 };
 
-add_task(function* () {
+add_task(async function() {
   for (let ca of caList) {
     addCertFromFile(certdb, "test_cert_keyUsage/" + ca + ".pem", "CTu,CTu,CTu");
     let caCert = constructCertFromFile("test_cert_keyUsage/" + ca + ".pem");
-    yield asyncTestCertificateUsages(certdb, caCert, expectedUsagesMap[ca]);
+    await asyncTestCertificateUsages(certdb, caCert, expectedUsagesMap[ca]);
     for (let ee of eeList) {
       let eeFullName = ee + "-" + ca;
       let eeCert = constructCertFromFile("test_cert_keyUsage/" + eeFullName + ".pem");
-      yield asyncTestCertificateUsages(certdb, eeCert, expectedUsagesMap[eeFullName]);
+      await asyncTestCertificateUsages(certdb, eeCert, expectedUsagesMap[eeFullName]);
     }
   }
 });

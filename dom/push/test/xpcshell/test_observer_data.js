@@ -8,7 +8,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_notifyWithData() {
+add_task(async function test_notifyWithData() {
   let textData = '{"hello":"world"}';
   let payload = new TextEncoder('utf-8').encode(textData);
 
@@ -17,7 +17,7 @@ add_task(function* test_notifyWithData() {
   pushNotifier.notifyPushWithData('chrome://notify-test', systemPrincipal,
     '' /* messageId */, payload.length, payload);
 
-  let data = (yield notifyPromise).subject.QueryInterface(
+  let data = (await notifyPromise).subject.QueryInterface(
     Ci.nsIPushMessage).data;
   deepEqual(data.json(), {
     hello: 'world',
@@ -27,13 +27,13 @@ add_task(function* test_notifyWithData() {
   equal(data.text(), textData, 'Should extract text data');
 });
 
-add_task(function* test_empty_notifyWithData() {
+add_task(async function test_empty_notifyWithData() {
   let notifyPromise =
     promiseObserverNotification(PushServiceComponent.pushTopic);
   pushNotifier.notifyPushWithData('chrome://notify-test', systemPrincipal,
     '' /* messageId */, 0, null);
 
-  let data = (yield notifyPromise).subject.QueryInterface(
+  let data = (await notifyPromise).subject.QueryInterface(
     Ci.nsIPushMessage).data;
   throws(_ => data.json(),
     'Should throw an error when parsing an empty string as JSON');

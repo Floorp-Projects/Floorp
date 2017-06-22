@@ -122,14 +122,14 @@ function MockFxAccounts(device = {}) {
   });
 }
 
-add_task(function* test_updateDeviceRegistration_with_new_device() {
+add_task(async function test_updateDeviceRegistration_with_new_device() {
   const deviceName = "foo";
   const deviceType = "bar";
 
   const credentials = getTestUser("baz");
   delete credentials.deviceId;
   const fxa = new MockFxAccounts({ name: deviceName });
-  yield fxa.internal.setSignedInUser(credentials);
+  await fxa.internal.setSignedInUser(credentials);
 
   const spy = {
     registerDevice: { count: 0, args: [] },
@@ -158,7 +158,7 @@ add_task(function* test_updateDeviceRegistration_with_new_device() {
     return Promise.resolve([]);
   };
 
-  const result = yield fxa.updateDeviceRegistration();
+  const result = await fxa.updateDeviceRegistration();
 
   do_check_eq(result, "newly-generated device id");
   do_check_eq(spy.updateDevice.count, 0);
@@ -173,18 +173,18 @@ add_task(function* test_updateDeviceRegistration_with_new_device() {
   do_check_eq(spy.registerDevice.args[0][3].pushAuthKey, BOGUS_AUTHKEY);
 
   const state = fxa.internal.currentAccountState;
-  const data = yield state.getUserAccountData();
+  const data = await state.getUserAccountData();
 
   do_check_eq(data.deviceId, "newly-generated device id");
   do_check_eq(data.deviceRegistrationVersion, DEVICE_REGISTRATION_VERSION);
 });
 
-add_task(function* test_updateDeviceRegistration_with_existing_device() {
+add_task(async function test_updateDeviceRegistration_with_existing_device() {
   const deviceName = "phil's device";
 
   const credentials = getTestUser("pb");
   const fxa = new MockFxAccounts({ name: deviceName });
-  yield fxa.internal.setSignedInUser(credentials);
+  await fxa.internal.setSignedInUser(credentials);
 
   const spy = {
     registerDevice: { count: 0, args: [] },
@@ -210,7 +210,7 @@ add_task(function* test_updateDeviceRegistration_with_existing_device() {
     spy.getDeviceList.args.push(arguments);
     return Promise.resolve([]);
   };
-  const result = yield fxa.updateDeviceRegistration();
+  const result = await fxa.updateDeviceRegistration();
 
   do_check_eq(result, credentials.deviceId);
   do_check_eq(spy.registerDevice.count, 0);
@@ -225,19 +225,19 @@ add_task(function* test_updateDeviceRegistration_with_existing_device() {
   do_check_eq(spy.updateDevice.args[0][3].pushAuthKey, BOGUS_AUTHKEY);
 
   const state = fxa.internal.currentAccountState;
-  const data = yield state.getUserAccountData();
+  const data = await state.getUserAccountData();
 
   do_check_eq(data.deviceId, credentials.deviceId);
   do_check_eq(data.deviceRegistrationVersion, DEVICE_REGISTRATION_VERSION);
 });
 
-add_task(function* test_updateDeviceRegistration_with_unknown_device_error() {
+add_task(async function test_updateDeviceRegistration_with_unknown_device_error() {
   const deviceName = "foo";
   const deviceType = "bar";
 
   const credentials = getTestUser("baz");
   const fxa = new MockFxAccounts({ name: deviceName });
-  yield fxa.internal.setSignedInUser(credentials);
+  await fxa.internal.setSignedInUser(credentials);
 
   const spy = {
     registerDevice: { count: 0, args: [] },
@@ -269,7 +269,7 @@ add_task(function* test_updateDeviceRegistration_with_unknown_device_error() {
     return Promise.resolve([]);
   };
 
-  const result = yield fxa.updateDeviceRegistration();
+  const result = await fxa.updateDeviceRegistration();
 
   do_check_null(result);
   do_check_eq(spy.getDeviceList.count, 0);
@@ -285,19 +285,19 @@ add_task(function* test_updateDeviceRegistration_with_unknown_device_error() {
 
 
   const state = fxa.internal.currentAccountState;
-  const data = yield state.getUserAccountData();
+  const data = await state.getUserAccountData();
 
   do_check_null(data.deviceId);
   do_check_eq(data.deviceRegistrationVersion, DEVICE_REGISTRATION_VERSION);
 });
 
-add_task(function* test_deleteDeviceRegistration() {
+add_task(async function test_deleteDeviceRegistration() {
   const credentials = getTestUser("pb");
   const fxa = new MockFxAccounts({ name: "my device" });
-  yield fxa.internal.setSignedInUser(credentials);
+  await fxa.internal.setSignedInUser(credentials);
 
   const state = fxa.internal.currentAccountState;
-  let data = yield state.getUserAccountData();
+  let data = await state.getUserAccountData();
   do_check_eq(data.deviceId, credentials.deviceId);
   do_check_eq(data.deviceRegistrationVersion, DEVICE_REGISTRATION_VERSION);
 
@@ -310,26 +310,26 @@ add_task(function* test_deleteDeviceRegistration() {
     spy.signOutAndDestroyDevice.args.push(arguments);
     return Promise.resolve({});
   };
-  yield fxa.deleteDeviceRegistration(credentials.sessionToken, credentials.deviceId);
+  await fxa.deleteDeviceRegistration(credentials.sessionToken, credentials.deviceId);
 
   do_check_eq(spy.signOutAndDestroyDevice.count, 1);
   do_check_eq(spy.signOutAndDestroyDevice.args[0].length, 2);
   do_check_eq(spy.signOutAndDestroyDevice.args[0][0], credentials.sessionToken);
   do_check_eq(spy.signOutAndDestroyDevice.args[0][1], credentials.deviceId);
 
-  data = yield state.getUserAccountData();
+  data = await state.getUserAccountData();
 
   do_check_false(data.deviceId);
   do_check_false(data.deviceRegistrationVersion);
 });
 
-add_task(function* test_updateDeviceRegistration_with_device_session_conflict_error() {
+add_task(async function test_updateDeviceRegistration_with_device_session_conflict_error() {
   const deviceName = "foo";
   const deviceType = "bar";
 
   const credentials = getTestUser("baz");
   const fxa = new MockFxAccounts({ name: deviceName });
-  yield fxa.internal.setSignedInUser(credentials);
+  await fxa.internal.setSignedInUser(credentials);
 
   const spy = {
     registerDevice: { count: 0, args: [] },
@@ -367,7 +367,7 @@ add_task(function* test_updateDeviceRegistration_with_device_session_conflict_er
     ]);
   };
 
-  const result = yield fxa.updateDeviceRegistration();
+  const result = await fxa.updateDeviceRegistration();
 
   do_check_eq(result, credentials.deviceId);
   do_check_eq(spy.registerDevice.count, 0);
@@ -385,19 +385,19 @@ add_task(function* test_updateDeviceRegistration_with_device_session_conflict_er
   do_check_true(spy.getDeviceList.time >= spy.updateDevice.time);
 
   const state = fxa.internal.currentAccountState;
-  const data = yield state.getUserAccountData();
+  const data = await state.getUserAccountData();
 
   do_check_eq(data.deviceId, credentials.deviceId);
   do_check_eq(data.deviceRegistrationVersion, null);
 });
 
-add_task(function* test_updateDeviceRegistration_with_unrecoverable_error() {
+add_task(async function test_updateDeviceRegistration_with_unrecoverable_error() {
   const deviceName = "foo";
 
   const credentials = getTestUser("baz");
   delete credentials.deviceId;
   const fxa = new MockFxAccounts({ name: deviceName });
-  yield fxa.internal.setSignedInUser(credentials);
+  await fxa.internal.setSignedInUser(credentials);
 
   const spy = {
     registerDevice: { count: 0, args: [] },
@@ -424,7 +424,7 @@ add_task(function* test_updateDeviceRegistration_with_unrecoverable_error() {
     return Promise.resolve([]);
   };
 
-  const result = yield fxa.updateDeviceRegistration();
+  const result = await fxa.updateDeviceRegistration();
 
   do_check_null(result);
   do_check_eq(spy.getDeviceList.count, 0);
@@ -433,17 +433,17 @@ add_task(function* test_updateDeviceRegistration_with_unrecoverable_error() {
   do_check_eq(spy.registerDevice.args[0].length, 4);
 
   const state = fxa.internal.currentAccountState;
-  const data = yield state.getUserAccountData();
+  const data = await state.getUserAccountData();
 
   do_check_null(data.deviceId);
 });
 
-add_task(function* test_getDeviceId_with_no_device_id_invokes_device_registration() {
+add_task(async function test_getDeviceId_with_no_device_id_invokes_device_registration() {
   const credentials = getTestUser("foo");
   credentials.verified = true;
   delete credentials.deviceId;
   const fxa = new MockFxAccounts();
-  yield fxa.internal.setSignedInUser(credentials);
+  await fxa.internal.setSignedInUser(credentials);
 
   const spy = { count: 0, args: [] };
   fxa.internal.currentAccountState.getUserAccountData =
@@ -455,7 +455,7 @@ add_task(function* test_getDeviceId_with_no_device_id_invokes_device_registratio
     return Promise.resolve("bar");
   };
 
-  const result = yield fxa.internal.getDeviceId();
+  const result = await fxa.internal.getDeviceId();
 
   do_check_eq(spy.count, 1);
   do_check_eq(spy.args[0].length, 1);
@@ -464,11 +464,11 @@ add_task(function* test_getDeviceId_with_no_device_id_invokes_device_registratio
   do_check_eq(result, "bar");
 });
 
-add_task(function* test_getDeviceId_with_registration_version_outdated_invokes_device_registration() {
+add_task(async function test_getDeviceId_with_registration_version_outdated_invokes_device_registration() {
   const credentials = getTestUser("foo");
   credentials.verified = true;
   const fxa = new MockFxAccounts();
-  yield fxa.internal.setSignedInUser(credentials);
+  await fxa.internal.setSignedInUser(credentials);
 
   const spy = { count: 0, args: [] };
   fxa.internal.currentAccountState.getUserAccountData =
@@ -479,7 +479,7 @@ add_task(function* test_getDeviceId_with_registration_version_outdated_invokes_d
     return Promise.resolve("wibble");
   };
 
-  const result = yield fxa.internal.getDeviceId();
+  const result = await fxa.internal.getDeviceId();
 
   do_check_eq(spy.count, 1);
   do_check_eq(spy.args[0].length, 1);
@@ -487,11 +487,11 @@ add_task(function* test_getDeviceId_with_registration_version_outdated_invokes_d
   do_check_eq(result, "wibble");
 });
 
-add_task(function* test_getDeviceId_with_device_id_and_uptodate_registration_version_doesnt_invoke_device_registration() {
+add_task(async function test_getDeviceId_with_device_id_and_uptodate_registration_version_doesnt_invoke_device_registration() {
   const credentials = getTestUser("foo");
   credentials.verified = true;
   const fxa = new MockFxAccounts();
-  yield fxa.internal.setSignedInUser(credentials);
+  await fxa.internal.setSignedInUser(credentials);
 
   const spy = { count: 0 };
   fxa.internal.currentAccountState.getUserAccountData =
@@ -501,17 +501,17 @@ add_task(function* test_getDeviceId_with_device_id_and_uptodate_registration_ver
     return Promise.resolve("bar");
   };
 
-  const result = yield fxa.internal.getDeviceId();
+  const result = await fxa.internal.getDeviceId();
 
   do_check_eq(spy.count, 0);
   do_check_eq(result, "foo's device id");
 });
 
-add_task(function* test_getDeviceId_with_device_id_and_with_no_registration_version_invokes_device_registration() {
+add_task(async function test_getDeviceId_with_device_id_and_with_no_registration_version_invokes_device_registration() {
   const credentials = getTestUser("foo");
   credentials.verified = true;
   const fxa = new MockFxAccounts();
-  yield fxa.internal.setSignedInUser(credentials);
+  await fxa.internal.setSignedInUser(credentials);
 
   const spy = { count: 0, args: [] };
   fxa.internal.currentAccountState.getUserAccountData =
@@ -522,7 +522,7 @@ add_task(function* test_getDeviceId_with_device_id_and_with_no_registration_vers
     return Promise.resolve("wibble");
   };
 
-  const result = yield fxa.internal.getDeviceId();
+  const result = await fxa.internal.getDeviceId();
 
   do_check_eq(spy.count, 1);
   do_check_eq(spy.args[0].length, 1);

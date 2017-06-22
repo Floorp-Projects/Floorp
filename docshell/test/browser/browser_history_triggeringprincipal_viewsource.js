@@ -4,9 +4,9 @@ const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/conte
 const HTML_URI = TEST_PATH + "dummy_page.html";
 const VIEW_SRC_URI = "view-source:" + HTML_URI;
 
-add_task(function*() {
+add_task(async function() {
   info("load baseline html in new tab");
-  yield BrowserTestUtils.withNewTab(HTML_URI, function*(aBrowser) {
+  await BrowserTestUtils.withNewTab(HTML_URI, async function(aBrowser) {
     is(gBrowser.selectedBrowser.currentURI.spec, HTML_URI,
        "sanity check to make sure html loaded");
 
@@ -14,21 +14,21 @@ add_task(function*() {
     let vSrcCtxtMenu = document.getElementById("contentAreaContextMenu");
     let popupPromise = BrowserTestUtils.waitForEvent(vSrcCtxtMenu, "popupshown");
     BrowserTestUtils.synthesizeMouseAtCenter("body", { type: "contextmenu", button: 2 }, aBrowser);
-    yield popupPromise;
+    await popupPromise;
     let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, VIEW_SRC_URI);
     let vSrcItem = vSrcCtxtMenu.getElementsByAttribute("id", "context-viewsource")[0];
     vSrcItem.click();
     vSrcCtxtMenu.hidePopup();
-    let tab = yield tabPromise;
+    let tab = await tabPromise;
     is(gBrowser.selectedBrowser.currentURI.spec, VIEW_SRC_URI,
        "loading view-source of html succeeded");
 
     info ("load html file again before going .back()");
     let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, HTML_URI);
-    yield ContentTask.spawn(tab.linkedBrowser, HTML_URI, HTML_URI => {
+    await ContentTask.spawn(tab.linkedBrowser, HTML_URI, HTML_URI => {
       content.document.location = HTML_URI;
     });
-    yield loadPromise;
+    await loadPromise;
     is(gBrowser.selectedBrowser.currentURI.spec, HTML_URI,
       "loading html another time succeeded");
 
@@ -36,15 +36,15 @@ add_task(function*() {
     let backCtxtMenu = document.getElementById("contentAreaContextMenu");
     popupPromise = BrowserTestUtils.waitForEvent(backCtxtMenu, "popupshown");
     BrowserTestUtils.synthesizeMouseAtCenter("body", { type: "contextmenu", button: 2 }, aBrowser);
-    yield popupPromise;
+    await popupPromise;
     loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, VIEW_SRC_URI);
     let backItem = backCtxtMenu.getElementsByAttribute("id", "context-back")[0];
     backItem.click();
     backCtxtMenu.hidePopup();
-    yield loadPromise;
+    await loadPromise;
     is(gBrowser.selectedBrowser.currentURI.spec, VIEW_SRC_URI,
       "clicking .back() to view-source of html succeeded");
 
-    yield BrowserTestUtils.removeTab(tab);
+    await BrowserTestUtils.removeTab(tab);
   });
 });

@@ -17,7 +17,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_register_timeout() {
+add_task(async function test_register_timeout() {
   let handshakes = 0;
   let timeoutDone;
   let timeoutPromise = new Promise(resolve => timeoutDone = resolve);
@@ -70,7 +70,7 @@ add_task(function* test_register_timeout() {
     }
   });
 
-  yield rejects(
+  await rejects(
     PushService.register({
       scope: 'https://example.net/page/timeout',
       originAttributes: ChromeUtils.originAttributesToSuffix(
@@ -79,9 +79,9 @@ add_task(function* test_register_timeout() {
     'Expected error for request timeout'
   );
 
-  let record = yield db.getByKeyID(channelID);
+  let record = await db.getByKeyID(channelID);
   ok(!record, 'Should not store records for timed-out responses');
 
-  yield timeoutPromise;
+  await timeoutPromise;
   equal(registers, 1, 'Should not handle timed-out register requests');
 });

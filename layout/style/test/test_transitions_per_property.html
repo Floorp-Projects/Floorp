@@ -2542,25 +2542,25 @@ function addAsyncTransformTests() {
   });
 }
 
-function *runTransformTest(test) {
+async function runTransformTest(test) {
   OMTAdiv.style.setProperty("transition-property", "none", "");
   OMTAdiv.style.setProperty("transform", test.start, "");
   OMTACs.getPropertyValue("transform");
   OMTAdiv.style.setProperty("transition-property", "transform", "");
   OMTAdiv.style.setProperty("transform", test.end, "");
   OMTACs.getPropertyValue("transform");
-  yield waitForPaints();
+  await waitForPaints();
 
   // If the start value produced a non-invertible matrix the layer won't be
   // created yet so we need to force an extra sample.
   if (!isTransformInvertible(test.start)) {
     winUtils.advanceTimeAndRefresh(100000);
-    yield waitForPaints();
+    await waitForPaints();
     winUtils.advanceTimeAndRefresh(100000);
-    yield waitForPaints();
+    await waitForPaints();
   } else {
     winUtils.advanceTimeAndRefresh(200000);
-    yield waitForPaints();
+    await waitForPaints();
   }
 
   omta_is_approx(OMTAdiv, "transform", OMTACs.getPropertyValue("transform"),
@@ -2572,7 +2572,7 @@ function *runTransformTest(test) {
 }
 
 function addAsyncOpacityTest() {
-  addAsyncAnimTest(function *() {
+  addAsyncAnimTest(async function() {
     OMTAdiv.style.setProperty("transition-property", "none", "");
     OMTAdiv.style.setProperty("opacity", 0, "");
     OMTACs.getPropertyValue("opacity");
@@ -2580,7 +2580,7 @@ function addAsyncOpacityTest() {
     OMTAdiv.style.setProperty("opacity", 1, "");
     OMTACs.getPropertyValue("opacity");
 
-    yield waitForPaints();
+    await waitForPaints();
 
     winUtils.advanceTimeAndRefresh(200000);
 
@@ -2590,7 +2590,7 @@ function addAsyncOpacityTest() {
 }
 
 function addAsyncDelayTest() {
-  addAsyncAnimTest(function *() {
+  addAsyncAnimTest(async function() {
     OMTAdiv.style.setProperty("transition-property", "none", "");
     OMTAdiv.style.setProperty("transition-delay", "100s", "");
     OMTAdiv.style.setProperty("transition-duration", "200s", "");
@@ -2601,7 +2601,7 @@ function addAsyncDelayTest() {
     OMTACs.getPropertyValue("transform");
 
     winUtils.advanceTimeAndRefresh(200000);
-    yield waitForPaints();
+    await waitForPaints();
 
     omta_is_approx(OMTAdiv, "transform", { tx: 50 }, 0.0001,
                    RunningOn.Compositor,

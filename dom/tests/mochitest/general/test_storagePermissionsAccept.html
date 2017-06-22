@@ -11,30 +11,30 @@
 
     <script type="text/javascript">
 
-task(function* () {
-  yield setCookieBehavior(BEHAVIOR_ACCEPT);
+task(async function() {
+  await setCookieBehavior(BEHAVIOR_ACCEPT);
 
   // We should be able to access storage
-  yield storageAllowed();
+  await storageAllowed();
 
   // Same origin iframes should be allowed, unless they redirect to a URI with the null principal
-  yield runIFrame("frameStorageAllowed.html");
-  yield runIFrame("frameStorageNullprincipal.sjs");
-  yield runIFrame("frameStorageChrome.html?allowed=yes");
+  await runIFrame("frameStorageAllowed.html");
+  await runIFrame("frameStorageNullprincipal.sjs");
+  await runIFrame("frameStorageChrome.html?allowed=yes");
 
   // Sandboxed iframes should have the null principal, and thus can't access storage
   document.querySelector('iframe').setAttribute('sandbox', 'allow-scripts');
-  yield runIFrame("frameStoragePrevented.html#nullprincipal");
-  yield runIFrame("frameStorageNullprincipal.sjs");
+  await runIFrame("frameStoragePrevented.html#nullprincipal");
+  await runIFrame("frameStorageNullprincipal.sjs");
   document.querySelector('iframe').removeAttribute('sandbox');
 
   // Thirdparty iframes should be allowed, unless they redirect to a URI with the null principal
-  yield runIFrame(thirdparty + "frameStorageAllowed.html");
-  yield runIFrame(thirdparty + "frameStorageNullprincipal.sjs");
-  yield runIFrame(thirdparty + "frameStorageChrome.html?allowed=yes");
+  await runIFrame(thirdparty + "frameStorageAllowed.html");
+  await runIFrame(thirdparty + "frameStorageNullprincipal.sjs");
+  await runIFrame(thirdparty + "frameStorageChrome.html?allowed=yes");
 
   // Workers should be able to access storage
-  yield runWorker("workerStorageAllowed.js");
+  await runWorker("workerStorageAllowed.js");
 });
 
     </script>

@@ -20,24 +20,24 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(_ => db.drop().then(_ => db.close()));
 
   // Active and expired subscriptions for a subdomain. The active subscription
   // should be expired, then removed; the expired subscription should be
   // removed immediately.
-  yield putTestRecord(db, 'active-sub', 'https://sub.example.com/sub-page', 4);
-  yield putTestRecord(db, 'expired-sub', 'https://sub.example.com/yet-another-page', 0);
+  await putTestRecord(db, 'active-sub', 'https://sub.example.com/sub-page', 4);
+  await putTestRecord(db, 'expired-sub', 'https://sub.example.com/yet-another-page', 0);
 
   // Active subscriptions for another subdomain. Should be unsubscribed and
   // dropped.
-  yield putTestRecord(db, 'active-1', 'https://sub2.example.com/some-page', 8);
-  yield putTestRecord(db, 'active-2', 'https://sub3.example.com/another-page', 16);
+  await putTestRecord(db, 'active-1', 'https://sub2.example.com/some-page', 8);
+  await putTestRecord(db, 'active-2', 'https://sub3.example.com/another-page', 16);
 
   // A privileged subscription with a real URL that should not be affected
   // because its quota is set to `Infinity`.
-  yield putTestRecord(db, 'privileged', 'https://sub.example.com/real-url', Infinity);
+  await putTestRecord(db, 'privileged', 'https://sub.example.com/real-url', Infinity);
 
   let handshakeDone;
   let handshakePromise = new Promise(r => handshakeDone = r);
@@ -74,10 +74,10 @@ add_task(function* setup() {
   });
   // For cleared subscriptions, we only send unregister requests in the
   // background and if we're connected.
-  yield handshakePromise;
+  await handshakePromise;
 });
 
-add_task(function* test_forgetAboutSubdomain() {
+add_task(async function test_forgetAboutSubdomain() {
   let modifiedScopes = [];
   let promiseForgetSubs = Promise.all([
     // Active subscriptions should be dropped.
@@ -89,19 +89,19 @@ add_task(function* test_forgetAboutSubdomain() {
       }
     ),
   ]);
-  yield ForgetAboutSite.removeDataFromDomain('sub.example.com');
-  yield promiseForgetSubs;
+  await ForgetAboutSite.removeDataFromDomain('sub.example.com');
+  await promiseForgetSubs;
 
   deepEqual(modifiedScopes.sort(compareAscending), [
     'https://sub.example.com/sub-page',
   ], 'Should fire modified notifications for active subscriptions');
 
-  let remainingIDs = yield getAllKeyIDs(db);
+  let remainingIDs = await getAllKeyIDs(db);
   deepEqual(remainingIDs, ['active-1', 'active-2', 'privileged'],
     'Should only forget subscriptions for subdomain');
 });
 
-add_task(function* test_forgetAboutRootDomain() {
+add_task(async function test_forgetAboutRootDomain() {
   let modifiedScopes = [];
   let promiseForgetSubs = Promise.all([
     promiseUnregister('active-1'),
@@ -114,15 +114,15 @@ add_task(function* test_forgetAboutRootDomain() {
     ),
   ]);
 
-  yield ForgetAboutSite.removeDataFromDomain('example.com');
-  yield promiseForgetSubs;
+  await ForgetAboutSite.removeDataFromDomain('example.com');
+  await promiseForgetSubs;
 
   deepEqual(modifiedScopes.sort(compareAscending), [
     'https://sub2.example.com/some-page',
     'https://sub3.example.com/another-page',
   ], 'Should fire modified notifications for entire domain');
 
-  let remainingIDs = yield getAllKeyIDs(db);
+  let remainingIDs = await getAllKeyIDs(db);
   deepEqual(remainingIDs, ['privileged'],
     'Should ignore privileged records with a real URL');
 });

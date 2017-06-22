@@ -35,7 +35,7 @@ function StubPolicy(id) {
   });
 }
 
-add_task(function*() {
+add_task(async function() {
   let policy = StubPolicy("foo");
   policy.active = true;
 
@@ -62,7 +62,7 @@ add_task(function*() {
   webnavB.close();
 
   // Wrappers are nuked asynchronously, so wait for that to happen.
-  yield TestUtils.topicObserved("inner-window-nuked");
+  await TestUtils.topicObserved("inner-window-nuked");
 
   // Check that it can't be accessed after he window has been closed.
   let result = getThing();

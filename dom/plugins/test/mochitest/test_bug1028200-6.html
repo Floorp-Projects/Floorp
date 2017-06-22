@@ -40,12 +40,12 @@
      * screen element - and therefore remain in the fullscreen element.
      */
     let load = function testCrashChildPlugin_expectFullScreenElementToRemain() {
-      add_task(function* () {
+      add_task(async function() {
         /* Needed to be able to programatically (without user interaction) enter
          * fullscreen  (has been deemed a security issue otherwise and therefore
          * disabled by default)
          */
-        yield SpecialPowers.pushPrefEnv({
+        await SpecialPowers.pushPrefEnv({
           "set": [
             ["full-screen-api.allow-trusted-requests-only", false],
             ["full-screen-api.unprefix.enabled", true],
@@ -53,16 +53,16 @@
         });
       });
 
-      add_task(function* () {
+      add_task(async function() {
         let fullScreenElement = document.getElementById('iframe1');
         let plugin = document.getElementById('plugin1');
 
         let fullScreenChange = promiseFullScreenChange();
         fullScreenElement.mozRequestFullScreen();
-        yield fullScreenChange;
+        await fullScreenChange;
         ok(true, "Element is fullscreen");
 
-        yield crashPlugin(plugin)
+        await crashPlugin(plugin)
           .then(() => {
             ok(true, "Plugin was crashed");
           })
@@ -71,14 +71,14 @@
           });
       });
 
-      add_task(function* () {
+      add_task(async function() {
         /**
          * We expect the fullscreen mode to _not_ change in this test. We'll wait
          * 5 seconds for any kind of fullscreen change to occur, and fail if it
          * does. Otherwise, we'll assume fullscreen didn't change and finish the
          * test.
          */
-        yield new Promise((resolve, reject) => {
+        await new Promise((resolve, reject) => {
           let timeoutId;
           let onFullScreenChange = () => {
             document.removeEventListener("fullscreenchange", onFullScreenChange);

@@ -4,7 +4,7 @@
 
 // This file tests the functions of mozIStorageValueArray
 
-add_task(function* setup() {
+add_task(async function setup() {
   getOpenedDatabase().createTable("test", "id INTEGER PRIMARY KEY, name TEXT," +
                                           "number REAL, nuller NULL, blobber BLOB");
 
@@ -26,7 +26,7 @@ add_task(function* setup() {
   do_register_cleanup(cleanup);
 });
 
-add_task(function* test_getIsNull_for_null() {
+add_task(async function test_getIsNull_for_null() {
   var stmt = createStatement("SELECT nuller, blobber FROM test WHERE id = ?1");
   stmt.bindByIndex(0, 1);
   do_check_true(stmt.executeStep());
@@ -37,7 +37,7 @@ add_task(function* test_getIsNull_for_null() {
   stmt.finalize();
 });
 
-add_task(function* test_getIsNull_for_non_null() {
+add_task(async function test_getIsNull_for_non_null() {
   var stmt = createStatement("SELECT name, blobber FROM test WHERE id = ?1");
   stmt.bindByIndex(0, 2);
   do_check_true(stmt.executeStep());
@@ -48,7 +48,7 @@ add_task(function* test_getIsNull_for_non_null() {
   stmt.finalize();
 });
 
-add_task(function* test_value_type_null() {
+add_task(async function test_value_type_null() {
   var stmt = createStatement("SELECT nuller FROM test WHERE id = ?1");
   stmt.bindByIndex(0, 1);
   do_check_true(stmt.executeStep());
@@ -59,7 +59,7 @@ add_task(function* test_value_type_null() {
   stmt.finalize();
 });
 
-add_task(function* test_value_type_integer() {
+add_task(async function test_value_type_integer() {
   var stmt = createStatement("SELECT id FROM test WHERE id = ?1");
   stmt.bindByIndex(0, 1);
   do_check_true(stmt.executeStep());
@@ -70,7 +70,7 @@ add_task(function* test_value_type_integer() {
   stmt.finalize();
 });
 
-add_task(function* test_value_type_float() {
+add_task(async function test_value_type_float() {
   var stmt = createStatement("SELECT number FROM test WHERE id = ?1");
   stmt.bindByIndex(0, 1);
   do_check_true(stmt.executeStep());
@@ -81,7 +81,7 @@ add_task(function* test_value_type_float() {
   stmt.finalize();
 });
 
-add_task(function* test_value_type_text() {
+add_task(async function test_value_type_text() {
   var stmt = createStatement("SELECT name FROM test WHERE id = ?1");
   stmt.bindByIndex(0, 1);
   do_check_true(stmt.executeStep());
@@ -92,7 +92,7 @@ add_task(function* test_value_type_text() {
   stmt.finalize();
 });
 
-add_task(function* test_value_type_blob() {
+add_task(async function test_value_type_blob() {
   var stmt = createStatement("SELECT blobber FROM test WHERE id = ?1");
   stmt.bindByIndex(0, 2);
   do_check_true(stmt.executeStep());
@@ -103,7 +103,7 @@ add_task(function* test_value_type_blob() {
   stmt.finalize();
 });
 
-add_task(function* test_numEntries_one() {
+add_task(async function test_numEntries_one() {
   var stmt = createStatement("SELECT blobber FROM test WHERE id = ?1");
   stmt.bindByIndex(0, 2);
   do_check_true(stmt.executeStep());
@@ -113,7 +113,7 @@ add_task(function* test_numEntries_one() {
   stmt.finalize();
 });
 
-add_task(function* test_numEntries_all() {
+add_task(async function test_numEntries_all() {
   var stmt = createStatement("SELECT * FROM test WHERE id = ?1");
   stmt.bindByIndex(0, 2);
   do_check_true(stmt.executeStep());
@@ -123,7 +123,7 @@ add_task(function* test_numEntries_all() {
   stmt.finalize();
 });
 
-add_task(function* test_getInt() {
+add_task(async function test_getInt() {
   var stmt = createStatement("SELECT id FROM test WHERE id = ?1");
   stmt.bindByIndex(0, 2);
   do_check_true(stmt.executeStep());
@@ -134,7 +134,7 @@ add_task(function* test_getInt() {
   stmt.finalize();
 });
 
-add_task(function* test_getDouble() {
+add_task(async function test_getDouble() {
   var stmt = createStatement("SELECT number FROM test WHERE id = ?1");
   stmt.bindByIndex(0, 2);
   do_check_true(stmt.executeStep());
@@ -144,7 +144,7 @@ add_task(function* test_getDouble() {
   stmt.finalize();
 });
 
-add_task(function* test_getUTF8String() {
+add_task(async function test_getUTF8String() {
   var stmt = createStatement("SELECT name FROM test WHERE id = ?1");
   stmt.bindByIndex(0, 1);
   do_check_true(stmt.executeStep());
@@ -154,7 +154,7 @@ add_task(function* test_getUTF8String() {
   stmt.finalize();
 });
 
-add_task(function* test_getString() {
+add_task(async function test_getString() {
   var stmt = createStatement("SELECT name FROM test WHERE id = ?1");
   stmt.bindByIndex(0, 2);
   do_check_true(stmt.executeStep());
@@ -164,7 +164,7 @@ add_task(function* test_getString() {
   stmt.finalize();
 });
 
-add_task(function* test_getBlob() {
+add_task(async function test_getBlob() {
   var stmt = createStatement("SELECT blobber FROM test WHERE id = ?1");
   stmt.bindByIndex(0, 2);
   do_check_true(stmt.executeStep());

@@ -35,8 +35,8 @@
       }
 
       // The main test
-      parent.add_task(function *() {
-        yield spin();
+      parent.add_task(async function() {
+        await spin();
 
         var selectstart = 0;
         var selectionchange = 0;
@@ -46,10 +46,10 @@
         var cancel = false;
         var selectstartTarget = null;
 
-        function* UpdateSelectEventsOntextControlsPref(aEnabled) {
-          yield SpecialPowers.pushPrefEnv({'set': [['dom.select_events.textcontrols.enabled', aEnabled]]});
+        async function UpdateSelectEventsOntextControlsPref(aEnabled) {
+          await SpecialPowers.pushPrefEnv({'set': [['dom.select_events.textcontrols.enabled', aEnabled]]});
         }
-        yield* UpdateSelectEventsOntextControlsPref(false);
+        await UpdateSelectEventsOntextControlsPref(false);
 
         document.addEventListener('selectstart', function(aEvent) {
           console.log("originaltarget", aEvent.originalTarget, "new", selectstartTarget);
@@ -92,7 +92,7 @@
           console.log(textareaSelectionchange);
           textareaSelectionchange++;
         });
-        function* mouseAction(aElement, aOffset, aType,
+        async function mouseAction(aElement, aOffset, aType,
                               aSelStart, aSelChng, aISelChng, aTSelChng,
                               aYOffset)
         {
@@ -103,7 +103,7 @@
             aYOffset = 10;
           }
           synthesizeMouse(aElement, aOffset, aYOffset, { type: aType });
-          yield spin();
+          await spin();
 
           is(selectstart, aSelStart,
              "SelStart Mouse Action (" + aOffset + " - " + aType + ")");
@@ -116,11 +116,11 @@
           reset();
         }
 
-        function* keyAction(aKey, aShift, aAccel,
+        async function keyAction(aKey, aShift, aAccel,
                             aSelStart, aSelChng, aISelChng, aTSelChng)
         {
           synthesizeKey(aKey, { shiftKey: aShift, accelKey: aAccel });
-          yield spin();
+          await spin();
           is(selectstart, aSelStart,
              "SelStart Key Action (" + aKey + " - " + aShift + " - " + aAccel + ")");
           is(selectionchange, aSelChng,
@@ -132,13 +132,13 @@
           reset();
         }
 
-        function* contentEditableAction(aElement, aContentEditable,
+        async function contentEditableAction(aElement, aContentEditable,
                                         aSelStart, aSelChng,
                                         aISelChng, aTSelChng)
         {
           aElement.setAttribute("contenteditable",
                                 aContentEditable ? "true" : "false");
-          yield spin();
+          await spin();
 
           is(selectstart, aSelStart,
              "SelStart ContentEditable Action");
@@ -160,133 +160,133 @@
         }
 
         // Make sure setting the element to contentEditable doesn't cause any selectionchange events
-        yield* contentEditableAction(elt("ce"), true, 0, 0, 0, 0);
+        await contentEditableAction(elt("ce"), true, 0, 0, 0, 0);
 
         // Make sure setting the element to not be contentEditable doesn't cause any selectionchange events
-        yield* contentEditableAction(elt("ce"), false, 0, 0, 0, 0);
+        await contentEditableAction(elt("ce"), false, 0, 0, 0, 0);
 
         // Now make the div contentEditable and proceed with the test
-        yield* contentEditableAction(elt("ce"), true, 0, 0, 0, 0);
+        await contentEditableAction(elt("ce"), true, 0, 0, 0, 0);
 
         // Focus the contenteditable text
-        yield* mouseAction(elt("ce"), 100, "click", 0, 1);
+        await mouseAction(elt("ce"), 100, "click", 0, 1);
         isCollapsed();
 
         // Move the selection to the right, this should only fire selectstart once
         selectstartTarget = elt("ce").firstChild;
-        yield* keyAction("VK_RIGHT", true, false, 1, 1);
+        await keyAction("VK_RIGHT", true, false, 1, 1);
         isNotCollapsed();
-        yield* keyAction("VK_RIGHT", true, false, 0, 1);
+        await keyAction("VK_RIGHT", true, false, 0, 1);
         isNotCollapsed();
 
         // Move it back so that the selection is empty again
-        yield* keyAction("VK_LEFT", true, false, 0, 1);
+        await keyAction("VK_LEFT", true, false, 0, 1);
         isNotCollapsed();
-        yield* keyAction("VK_LEFT", true, false, 0, 1);
+        await keyAction("VK_LEFT", true, false, 0, 1);
         isCollapsed();
 
         // Going from empty to non-empty should fire selectstart again
         selectstartTarget = elt("ce").firstChild;
-        yield* keyAction("VK_LEFT", true, false, 1, 1);
+        await keyAction("VK_LEFT", true, false, 1, 1);
         isNotCollapsed();
 
-        function* mouseMoves(aElement, aTarget) {
+        async function mouseMoves(aElement, aTarget) {
           // Select a region
-          yield* mouseAction(aElement, 50, "mousedown", 0, 1);
+          await mouseAction(aElement, 50, "mousedown", 0, 1);
           isCollapsed();
 
           selectstartTarget = aTarget;
-          yield* mouseAction(aElement, 100, "mousemove", 1, 1);
+          await mouseAction(aElement, 100, "mousemove", 1, 1);
           isNotCollapsed();
 
           // Moving it more shouldn't trigger a start (move back to empty)
-          yield* mouseAction(aElement, 75, "mousemove", 0, 1);
+          await mouseAction(aElement, 75, "mousemove", 0, 1);
           isNotCollapsed();
-          yield* mouseAction(aElement, 50, "mousemove", 0, 1);
+          await mouseAction(aElement, 50, "mousemove", 0, 1);
           isCollapsed();
 
           // Wiggling the mouse a little such that it doesn't select any
           // characters shouldn't trigger a selection
-          yield* mouseAction(aElement, 50, "mousemove", 0, 0, 0, 0, 11);
+          await mouseAction(aElement, 50, "mousemove", 0, 0, 0, 0, 11);
           isCollapsed();
 
           // Moving the mouse again from an empty selection should trigger a
           // selectstart
           selectstartTarget = aTarget;
-          yield* mouseAction(aElement, 25, "mousemove", 1, 1);
+          await mouseAction(aElement, 25, "mousemove", 1, 1);
           isNotCollapsed();
 
           // Releasing the mouse shouldn't do anything
-          yield* mouseAction(aElement, 25, "mouseup", 0, 0);
+          await mouseAction(aElement, 25, "mouseup", 0, 0);
           isNotCollapsed();
 
           // And neither should moving your mouse around when the mouse
           // button isn't pressed
-          yield* mouseAction(aElement, 50, "mousemove", 0, 0);
+          await mouseAction(aElement, 50, "mousemove", 0, 0);
           isNotCollapsed();
 
           // Clicking in an random location should move the selection, but not perform a
           // selectstart
-          yield* mouseAction(aElement, 50, "click", 0, 1);
+          await mouseAction(aElement, 50, "click", 0, 1);
           isCollapsed();
 
           // Clicking there again should do nothing
-          yield* mouseAction(aElement, 50, "click", 0, 0);
+          await mouseAction(aElement, 50, "click", 0, 0);
           isCollapsed();
 
           // Selecting a region, and canceling the selectstart should mean that the
           // selection remains collapsed
-          yield* mouseAction(aElement, 75, "mousedown", 0, 1);
+          await mouseAction(aElement, 75, "mousedown", 0, 1);
           isCollapsed();
           cancel = true;
           selectstartTarget = aTarget;
-          yield* mouseAction(aElement, 100, "mousemove", 1, 1);
+          await mouseAction(aElement, 100, "mousemove", 1, 1);
           isCollapsed();
-          yield* mouseAction(aElement, 100, "mouseup", 0, 0);
+          await mouseAction(aElement, 100, "mouseup", 0, 0);
           isCollapsed();
         }
 
         // Should work both on normal
-        yield* mouseMoves(elt("inner"), elt("inner").firstChild);
+        await mouseMoves(elt("inner"), elt("inner").firstChild);
         // and contenteditable fields
-        yield* mouseMoves(elt("ce"), elt("ce").firstChild);
+        await mouseMoves(elt("ce"), elt("ce").firstChild);
         // and fields with elements in them
-        yield* mouseMoves(elt("normal"), elt("inner").firstChild);
+        await mouseMoves(elt("normal"), elt("inner").firstChild);
 
-        yield* mouseAction(elt("inner"), 50, "click", 0, 1);
+        await mouseAction(elt("inner"), 50, "click", 0, 1);
         isCollapsed();
 
         reset();
         // Select all should fire both selectstart and change
         selectstartTarget = document.body;
-        yield* keyAction("A", false, true, 1, 1);
+        await keyAction("A", false, true, 1, 1);
         isNotCollapsed();
 
         // Clear the selection
-        yield* mouseAction(elt("inner"), 50, "click", 0, 1);
+        await mouseAction(elt("inner"), 50, "click", 0, 1);
         isCollapsed();
 
         // Even if we already have a selection
-        yield* mouseAction(elt("inner"), 75, "mousedown", 0, 1);
+        await mouseAction(elt("inner"), 75, "mousedown", 0, 1);
         isCollapsed();
         selectstartTarget = elt("inner").firstChild;
-        yield* mouseAction(elt("inner"), 100, "mousemove", 1, 1);
+        await mouseAction(elt("inner"), 100, "mousemove", 1, 1);
         isNotCollapsed();
-        yield* mouseAction(elt("inner"), 100, "mouseup", 0, 0);
+        await mouseAction(elt("inner"), 100, "mouseup", 0, 0);
         isNotCollapsed();
 
         selectstartTarget = document.body;
-        yield* keyAction("A", false, true, 1, 1);
+        await keyAction("A", false, true, 1, 1);
         isNotCollapsed();
 
         // Clear the selection
-        yield* mouseAction(elt("inner"), 50, "click", 0, 1);
+        await mouseAction(elt("inner"), 50, "click", 0, 1);
         isCollapsed();
 
         // Make sure that a synthesized selection change doesn't fire selectstart
         var s = document.getSelection();
         s.removeAllRanges();
-        yield spin();
+        await spin();
         is(selectstart, 0, "Synthesized range removals shouldn't fire selectstart");
         is(selectionchange, 1, "Synthesized range removals should change selectionchange");
         reset();
@@ -295,7 +295,7 @@
         var range = document.createRange();
         range.selectNode(elt("inner"));
         s.addRange(range);
-        yield spin();
+        await spin();
         is(selectstart, 0, "Synthesized range additions shouldn't fire selectstart");
         is(selectionchange, 1, "Synthesized range additions should change selectionchange");
         reset();
@@ -303,7 +303,7 @@
 
         // Change the range, without replacing
         range.selectNode(elt("ce"));
-        yield spin();
+        await spin();
         is(selectstart, 0, "Synthesized range mutations shouldn't fire selectstart");
         is(selectionchange, 1, "Synthesized range mutations should change selectionchange");
         reset();
@@ -311,7 +311,7 @@
 
         // Remove the range
         s.removeAllRanges();
-        yield spin();
+        await spin();
         is(selectstart, 0, "Synthesized range removal");
         is(selectionchange, 1, "Synthesized range removal");
         reset();
@@ -326,112 +326,112 @@
 
         // Without the dom.select_events.textcontrols.enabled pref,
         // pressing the mouse shouldn't do anything.
-        yield* mouseAction(elt("input"), 50, "mousedown", 0, 1, 0, 0);
+        await mouseAction(elt("input"), 50, "mousedown", 0, 1, 0, 0);
 
         // Releasing the mouse shouldn't do anything
-        yield* mouseAction(elt("input"), 50, "mouseup", 0, 0, 0, 0);
+        await mouseAction(elt("input"), 50, "mouseup", 0, 0, 0, 0);
 
-        yield* UpdateSelectEventsOntextControlsPref(true);
+        await UpdateSelectEventsOntextControlsPref(true);
 
-        yield* mouseAction(elt("input"), 50, "mousedown", 0, 0, 0, 0);
+        await mouseAction(elt("input"), 50, "mousedown", 0, 0, 0, 0);
 
         selectstartTarget = elt("input");
-        yield* mouseAction(elt("input"), 100, "mousemove", 1, 0, 1, 0);
+        await mouseAction(elt("input"), 100, "mousemove", 1, 0, 1, 0);
 
         // Moving it more shouldn't trigger a start (move back to empty)
-        yield* mouseAction(elt("input"), 75, "mousemove", 0, 0, 1, 0);
-        yield* mouseAction(elt("input"), 50, "mousemove", 0, 0, 1, 0);
+        await mouseAction(elt("input"), 75, "mousemove", 0, 0, 1, 0);
+        await mouseAction(elt("input"), 50, "mousemove", 0, 0, 1, 0);
 
         // Wiggling the mouse a little such that it doesn't select any
         // characters shouldn't trigger a selection
-        yield* mouseAction(elt("input"), 50, "mousemove", 0, 0, 0, 0, 11);
+        await mouseAction(elt("input"), 50, "mousemove", 0, 0, 0, 0, 11);
 
         // Moving the mouse again from an empty selection should trigger a
         // selectstart
         selectstartTarget = elt("input");
-        yield* mouseAction(elt("input"), 25, "mousemove", 1, 0, 1, 0);
+        await mouseAction(elt("input"), 25, "mousemove", 1, 0, 1, 0);
 
         // Releasing the mouse shouldn't do anything
-        yield* mouseAction(elt("input"), 25, "mouseup", 0, 0, 0, 0);
+        await mouseAction(elt("input"), 25, "mouseup", 0, 0, 0, 0);
 
         // And neither should moving your mouse around when the mouse
         // button isn't pressed
-        yield* mouseAction(elt("input"), 50, "mousemove", 0, 0, 0, 0);
+        await mouseAction(elt("input"), 50, "mousemove", 0, 0, 0, 0);
 
         // Clicking in an random location should move the selection, but
         // not perform a selectstart
-        yield* mouseAction(elt("input"), 50, "click", 0, 0, 1, 0);
+        await mouseAction(elt("input"), 50, "click", 0, 0, 1, 0);
 
         // Clicking there again should do nothing
-        yield* mouseAction(elt("input"), 50, "click", 0, 0, 0, 0);
+        await mouseAction(elt("input"), 50, "click", 0, 0, 0, 0);
 
         // Selecting a region, and canceling the selectstart should mean that the
         // selection remains collapsed
-        yield* mouseAction(elt("input"), 75, "mousedown", 0, 0, 1, 0);
+        await mouseAction(elt("input"), 75, "mousedown", 0, 0, 1, 0);
         cancel = true;
         selectstartTarget = elt("input");
-        yield* mouseAction(elt("input"), 100, "mousemove", 1, 0, 1, 0);
-        yield* mouseAction(elt("input"), 100, "mouseup", 0, 0, 0, 0);
+        await mouseAction(elt("input"), 100, "mousemove", 1, 0, 1, 0);
+        await mouseAction(elt("input"), 100, "mouseup", 0, 0, 0, 0);
 
 
-        yield* UpdateSelectEventsOntextControlsPref(false);
+        await UpdateSelectEventsOntextControlsPref(false);
 
         // Without the dom.select_events.textcontrols.enabled pref,
         // pressing the mouse shouldn't do anything.
         // XXX For some reason we fire 2 selectchange events on the body
         // when switching from the input to the text area.
-        yield* mouseAction(elt("textarea"), 50, "mousedown", 0, 2, 0, 0);
+        await mouseAction(elt("textarea"), 50, "mousedown", 0, 2, 0, 0);
 
         // Releasing the mouse shouldn't do anything
-        yield* mouseAction(elt("textarea"), 50, "mouseup", 0, 0, 0, 0);
+        await mouseAction(elt("textarea"), 50, "mouseup", 0, 0, 0, 0);
 
-        yield* UpdateSelectEventsOntextControlsPref(true);
+        await UpdateSelectEventsOntextControlsPref(true);
 
         // Select a region
-        yield* mouseAction(elt("textarea"), 50, "mousedown", 0, 0, 0, 0);
+        await mouseAction(elt("textarea"), 50, "mousedown", 0, 0, 0, 0);
 
         selectstartTarget = elt("textarea");
-        yield* mouseAction(elt("textarea"), 100, "mousemove", 1, 0, 0, 1);
+        await mouseAction(elt("textarea"), 100, "mousemove", 1, 0, 0, 1);
 
         // Moving it more shouldn't trigger a start (move back to empty)
-        yield* mouseAction(elt("textarea"), 75, "mousemove", 0, 0, 0, 1);
-        yield* mouseAction(elt("textarea"), 50, "mousemove", 0, 0, 0, 1);
+        await mouseAction(elt("textarea"), 75, "mousemove", 0, 0, 0, 1);
+        await mouseAction(elt("textarea"), 50, "mousemove", 0, 0, 0, 1);
 
         // Wiggling the mouse a little such that it doesn't select any
         // characters shouldn't trigger a selection
-        yield* mouseAction(elt("textarea"), 50, "mousemove", 0, 0, 0, 0, 11);
+        await mouseAction(elt("textarea"), 50, "mousemove", 0, 0, 0, 0, 11);
 
         // Moving the mouse again from an empty selection should trigger a
         // selectstart
         selectstartTarget = elt("textarea");
-        yield* mouseAction(elt("textarea"), 25, "mousemove", 1, 0, 0, 1);
+        await mouseAction(elt("textarea"), 25, "mousemove", 1, 0, 0, 1);
 
         // Releasing the mouse shouldn't do anything
-        yield* mouseAction(elt("textarea"), 25, "mouseup", 0, 0, 0, 0);
+        await mouseAction(elt("textarea"), 25, "mouseup", 0, 0, 0, 0);
 
         // And neither should moving your mouse around when the mouse
         // button isn't pressed
-        yield* mouseAction(elt("textarea"), 50, "mousemove", 0, 0, 0, 0);
+        await mouseAction(elt("textarea"), 50, "mousemove", 0, 0, 0, 0);
 
         // Clicking in an random location should move the selection, but not perform a
         // selectstart
-        yield* mouseAction(elt("textarea"), 50, "click", 0, 0, 0, 1);
+        await mouseAction(elt("textarea"), 50, "click", 0, 0, 0, 1);
 
         // Clicking there again should do nothing
-        yield* mouseAction(elt("textarea"), 50, "click", 0, 0, 0, 0);
+        await mouseAction(elt("textarea"), 50, "click", 0, 0, 0, 0);
 
         // Selecting a region, and canceling the selectstart should mean that the
         // selection remains collapsed
-        yield* mouseAction(elt("textarea"), 75, "mousedown", 0, 0, 0, 1);
+        await mouseAction(elt("textarea"), 75, "mousedown", 0, 0, 0, 1);
         cancel = true;
         selectstartTarget = elt("textarea");
-        yield* mouseAction(elt("textarea"), 100, "mousemove", 1, 0, 0, 1);
-        yield* mouseAction(elt("textarea"), 100, "mouseup", 0, 0, 0, 0);
+        await mouseAction(elt("textarea"), 100, "mousemove", 1, 0, 0, 1);
+        await mouseAction(elt("textarea"), 100, "mouseup", 0, 0, 0, 0);
 
         // Marking the input and textarea as display: none and then as visible again
         // shouldn't trigger any changes, although the nodes will be re-framed
         elt("input").setAttribute("style", "display: none;");
-        yield spin();
+        await spin();
         is(selectstart, 0, "idn - ss 1");
         is(selectionchange, 0, "idn - sc 1");
         is(inputSelectionchange, 0, "idn - isc 1");
@@ -439,7 +439,7 @@
         reset();
 
         elt("input").setAttribute("style", "");
-        yield spin();
+        await spin();
         is(selectstart, 0, "idn - ss 2");
         is(selectionchange, 0, "idn - sc 2");
         is(inputSelectionchange, 0, "idn - isc 2");
@@ -447,7 +447,7 @@
         reset();
 
         elt("textarea").setAttribute("style", "display: none;");
-        yield spin();
+        await spin();
         is(selectstart, 0, "tdn - ss 1");
         is(selectionchange, 0, "tdn - sc 1");
         is(inputSelectionchange, 0, "tdn - isc 1");
@@ -455,7 +455,7 @@
         reset();
 
         elt("textarea").setAttribute("style", "");
-        yield spin();
+        await spin();
         is(selectstart, 0, "tdn - ss 2");
         is(selectionchange, 0, "tdn - sc 2");
         is(inputSelectionchange, 0, "tdn - isc 2");

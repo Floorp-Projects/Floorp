@@ -1,7 +1,7 @@
 let { classes: Cc, interfaces: Ci } = Components;
 
-add_task(function* test() {
-  yield SpecialPowers.pushPrefEnv(
+add_task(async function test() {
+  await SpecialPowers.pushPrefEnv(
     {set: [["browser.tabs.remote.separateFileUriProcess", true]]}
   );
 
@@ -21,9 +21,9 @@ add_task(function* test() {
   let tab = BrowserTestUtils.addTab(gBrowser, fileURL);
 
   let browser = gBrowser.getBrowserForTab(tab);
-  yield BrowserTestUtils.browserLoaded(browser);
+  await BrowserTestUtils.browserLoaded(browser);
 
-  let blob = yield ContentTask.spawn(browser, null, function() {
+  let blob = await ContentTask.spawn(browser, null, function() {
     return new content.window.Promise(resolve => {
       let xhr = new content.window.XMLHttpRequest();
       xhr.responseType = "blob";

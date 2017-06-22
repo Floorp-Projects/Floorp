@@ -2126,6 +2126,9 @@ profiler_init(void* aStackTop)
     PrintUsageThenExit(0); // terminates execution
   }
 
+  int entries = PROFILER_DEFAULT_ENTRIES;
+  double interval = PROFILER_DEFAULT_INTERVAL;
+
   {
     PSAutoLock lock(gPSMutex);
 
@@ -2163,7 +2166,6 @@ profiler_init(void* aStackTop)
 
     LOG("- MOZ_PROFILER_STARTUP is set");
 
-    int entries = PROFILER_DEFAULT_ENTRIES;
     const char* startupEntries = getenv("MOZ_PROFILER_STARTUP_ENTRIES");
     if (startupEntries) {
       errno = 0;
@@ -2175,7 +2177,6 @@ profiler_init(void* aStackTop)
       }
     }
 
-    double interval = PROFILER_DEFAULT_INTERVAL;
     const char* startupInterval = getenv("MOZ_PROFILER_STARTUP_INTERVAL");
     if (startupInterval) {
       errno = 0;
@@ -2193,8 +2194,8 @@ profiler_init(void* aStackTop)
 
   // We do this with gPSMutex unlocked. The comment in profiler_stop() explains
   // why.
-  NotifyProfilerStarted(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
-                        features, filters, MOZ_ARRAY_LENGTH(filters));
+  NotifyProfilerStarted(entries, interval, features, filters,
+                        MOZ_ARRAY_LENGTH(filters));
 }
 
 static void
@@ -2827,7 +2828,8 @@ profiler_get_backtrace()
   regs.Clear();
 #endif
 
-  auto buffer = MakeUnique<ProfileBuffer>(PROFILER_GET_BACKTRACE_ENTRIES);
+  // 1000 should be plenty for a single backtrace.
+  auto buffer = MakeUnique<ProfileBuffer>(1000);
 
   DoSyncSample(lock, *info, now, regs, buffer.get());
 
@@ -2976,12 +2978,6 @@ profiler_tracing(const char* aCategory, const char* aMarkerName,
   auto payload =
     MakeUnique<TracingMarkerPayload>(aCategory, aKind, Move(aCause));
   racy_profiler_add_marker(aMarkerName, Move(payload));
-}
-
-void
-profiler_log(const char* aStr)
-{
-  profiler_tracing("log", aStr);
 }
 
 PseudoStack*

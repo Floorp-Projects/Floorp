@@ -4588,6 +4588,14 @@ Tab.prototype = {
     Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
   },
 
+  OnLengthChanged: function(aCount) {
+    // Ignore, the method is implemented so that XPConnect doesn't throw!
+  },
+
+  OnIndexChanged: function(aIndex) {
+    // Ignore, the method is implemented so that XPConnect doesn't throw!
+  },
+
   UpdateMediaPlaybackRelatedObserver: function(active) {
     // Media control is only used for the tab which has playing media, so we
     // only need to register observer after having the active media. And the
