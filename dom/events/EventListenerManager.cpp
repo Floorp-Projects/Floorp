@@ -130,6 +130,7 @@ EventListenerManagerBase::EventListenerManagerBase()
   , mMayHavePointerEnterLeaveEventListener(false)
   , mMayHaveKeyEventListener(false)
   , mMayHaveInputOrCompositionEventListener(false)
+  , mMayHaveSelectionChangeEventListener(false)
   , mClearingListeners(false)
   , mIsMainThreadELM(NS_IsMainThread())
 {
@@ -416,6 +417,11 @@ EventListenerManager::AddEventListenerInternal(
              aTypeAtom == nsGkAtoms::oninput) {
     if (!aFlags.mInSystemGroup) {
       mMayHaveInputOrCompositionEventListener = true;
+    }
+  } else if (aEventMessage == eSelectionChange) {
+    mMayHaveSelectionChangeEventListener = true;
+     if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+      window->SetHasSelectionChangeEventListeners();
     }
   }
 

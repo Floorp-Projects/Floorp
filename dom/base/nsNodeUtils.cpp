@@ -545,6 +545,9 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
           if (elm->MayHavePointerEnterLeaveEventListener()) {
             window->SetHasPointerEnterLeaveEventListeners();
           }
+          if (elm->MayHaveSelectionChangeEventListener()) {
+            window->SetHasSelectionChangeEventListeners();
+          }
         }
       }
     }
