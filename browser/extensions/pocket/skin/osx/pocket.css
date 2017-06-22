@@ -1,13 +1,5 @@
 @import url("chrome://pocket-shared/skin/pocket.css");
 
-#nav-bar #pocket-button > .toolbarbutton-icon {
-%ifndef MOZ_PHOTON_THEME
-  padding: var(--toolbarbutton-inner-padding) 6px;
-%else
-  padding: calc(var(--toolbarbutton-inner-padding) - 1px);
-%endif
-}
-
 #PanelUI-pocketView[mainview=true] > .panel-subview-body > #pocket-panel-iframe {
   border-radius: var(--arrowpanel-border-radius);
 }
