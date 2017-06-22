@@ -26,7 +26,7 @@ class DrawEventRecorderPrivate : public DrawEventRecorder
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorderPrivate)
-  explicit DrawEventRecorderPrivate(std::ostream *aStream);
+  DrawEventRecorderPrivate();
   virtual ~DrawEventRecorderPrivate() { }
   virtual void Finish() {
     // The iteration is a bit awkward here because our iterator will
@@ -42,9 +42,10 @@ public:
 
   }
 
-  void WriteHeader();
+  template<class S>
+  void WriteHeader(S &aStream);
 
-  void RecordEvent(const RecordedEvent &aEvent);
+  virtual void RecordEvent(const RecordedEvent &aEvent) = 0;
   void WritePath(const PathRecording *aPath);
 
   void AddStoredObject(const ReferencePtr aObject) {
@@ -84,8 +85,6 @@ public:
   }
 
 protected:
-  std::ostream *mOutputStream;
-
   virtual void Flush() = 0;
 
 #if defined(_MSC_VER)
@@ -109,9 +108,11 @@ protected:
 class DrawEventRecorderFile : public DrawEventRecorderPrivate
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorderFile)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorderFile, override)
   explicit DrawEventRecorderFile(const char *aFilename);
   ~DrawEventRecorderFile();
+
+  void RecordEvent(const RecordedEvent &aEvent) override;
 
   /**
    * Returns whether a recording file is currently open.
@@ -133,9 +134,9 @@ public:
   void Close();
 
 private:
-  virtual void Flush();
+  void Flush() override;
 
-  std::ofstream mOutputFile;
+  std::ofstream mOutputStream;
 };
 
 // WARNING: This should not be used in its existing state because
@@ -143,12 +144,14 @@ private:
 class DrawEventRecorderMemory final : public DrawEventRecorderPrivate
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorderMemory)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorderMemory, override)
 
   /**
    * Constructs a DrawEventRecorder that stores the recording in memory.
    */
   DrawEventRecorderMemory();
+
+  void RecordEvent(const RecordedEvent &aEvent) override;
 
   /**
    * @return the current size of the recording (in chars).
@@ -171,20 +174,11 @@ public:
    */
   void WipeRecording();
 
-  /**
-   * Gets a readable reference of the underlying stream, reset to the beginning.
-   */
-  std::istream& GetInputStream() {
-    mMemoryStream.seekg(0);
-    return mMemoryStream;
-  }
-
 private:
   ~DrawEventRecorderMemory() {};
 
-  void Flush() final;
-
-  std::stringstream mMemoryStream;
+  void Flush() override;
+  MemStream mOutputStream;
 };
 
 } // namespace gfx

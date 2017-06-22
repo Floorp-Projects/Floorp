@@ -198,6 +198,12 @@ struct MemStream {
       mData = (char*)realloc(mData, mCapacity * 2);
     }
   }
+
+  void write(const char* aData, size_t aSize) {
+    Resize(mLength + aSize);
+    memcpy(mData + mLength - aSize, aData, aSize);
+  }
+
   MemStream() : mData(nullptr), mLength(0), mCapacity(0) {}
   ~MemStream() { free(mData); }
 };
@@ -287,6 +293,8 @@ public:
   EventType GetType() { return (EventType)mType; }
 protected:
   friend class DrawEventRecorderPrivate;
+  friend class DrawEventRecorderFile;
+  friend class DrawEventRecorderMemory;
 
   MOZ_IMPLICIT RecordedEvent(int32_t aType) : mType(aType)
   {}
