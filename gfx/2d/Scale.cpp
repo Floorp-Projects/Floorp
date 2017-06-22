@@ -6,8 +6,7 @@
 
 #ifdef USE_SKIA
 #include "HelpersSkia.h"
-#include "skia/include/core/SkBitmap.h"
-#include "image_operations.h"
+#include "skia/src/core/SkBitmapScaler.h"
 #endif
 
 namespace mozilla {
@@ -18,23 +17,21 @@ bool Scale(uint8_t* srcData, int32_t srcWidth, int32_t srcHeight, int32_t srcStr
            SurfaceFormat format)
 {
 #ifdef USE_SKIA
-  SkBitmap imgSrc;
-  imgSrc.installPixels(MakeSkiaImageInfo(IntSize(srcWidth, srcHeight), format),
-                       srcData, srcStride);
+  SkPixmap srcPixmap(MakeSkiaImageInfo(IntSize(srcWidth, srcHeight), format),
+                     srcData, srcStride);
 
-  // Rescaler is compatible with 32 bpp only. Convert to RGB32 if needed.
-  if (imgSrc.colorType() != kBGRA_8888_SkColorType) {
-    imgSrc.copyTo(&imgSrc, kBGRA_8888_SkColorType);
+  // Rescaler is compatible with N32 only. Convert to N32 if needed.
+  SkBitmap tmpBitmap;
+  if (srcPixmap.colorType() != kN32_SkColorType) {
+    if (!tmpBitmap.tryAllocPixels(SkImageInfo::MakeN32Premul(srcWidth, srcHeight)) ||
+        !tmpBitmap.writePixels(srcPixmap) ||
+        !tmpBitmap.peekPixels(&srcPixmap)) {
+      return false;
+    }
   }
 
-  // This returns an SkBitmap backed by dstData; since it also wrote to dstData,
-  // we don't need to look at that SkBitmap.
-  SkBitmap result = skia::ImageOperations::Resize(imgSrc,
-                                                  skia::ImageOperations::RESIZE_BEST,
-                                                  dstWidth, dstHeight,
-                                                  dstData);
-
-  return !result.isNull();
+  SkPixmap dstPixmap(SkImageInfo::MakeN32Premul(dstWidth, dstHeight), dstData, dstStride);
+  return SkBitmapScaler::Resize(dstPixmap, srcPixmap, SkBitmapScaler::RESIZE_LANCZOS3);
 #else
   return false;
 #endif
