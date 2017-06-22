@@ -7182,10 +7182,10 @@ nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix, uint32_t aFlags) con
     aTo += nsPrintfCString(" perspective");
   }
   if (Extend3DContext()) {
-    aTo += nsPrintfCString(" preserves-3d-children");
+    aTo += nsPrintfCString(" extend-3d");
   }
   if (Combines3DTransformWithAncestors()) {
-    aTo += nsPrintfCString(" preserves-3d");
+    aTo += nsPrintfCString(" combines-3d-transform-with-ancestors");
   }
   if (mContent) {
     aTo += nsPrintfCString(" [content=%p]", static_cast<void*>(mContent));

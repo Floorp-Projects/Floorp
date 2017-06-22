@@ -2976,17 +2976,36 @@ ContentParent::KillHard(const char* aReason)
       NS_LITERAL_CSTRING("ipc_channel_error"),
       reason);
 
-    // Generate the report and insert into the queue for submittal.
-    if (mCrashReporter->GenerateMinidumpAndPair(this,
-                                                nullptr,
-                                                NS_LITERAL_CSTRING("browser")))
-    {
-      mCreatedPairedMinidumps = mCrashReporter->FinalizeCrashReport();
-    }
-
     Telemetry::Accumulate(Telemetry::SUBPROCESS_KILL_HARD, reason, 1);
+
+    RefPtr<ContentParent> self = this;
+    std::function<void(bool)> callback = [self](bool aResult) {
+      self->OnGenerateMinidumpComplete(aResult);
+    };
+    // Generate the report and insert into the queue for submittal.
+    mCrashReporter->GenerateMinidumpAndPair(Process(),
+                                            nullptr,
+                                            NS_LITERAL_CSTRING("browser"),
+                                            Move(callback),
+                                            true);
+    return;
   }
 #endif
+  OnGenerateMinidumpComplete(false);
+}
+
+void
+ContentParent::OnGenerateMinidumpComplete(bool aDumpResult)
+{
+#if defined(MOZ_CRASHREPORTER) && !defined(MOZ_B2G)
+  if (mCrashReporter && aDumpResult) {
+    // CrashReporterHost::GenerateMinidumpAndPair() is successful.
+    mCreatedPairedMinidumps = mCrashReporter->FinalizeCrashReport();
+  }
+#endif
+
+  Unused << aDumpResult; // Don't care about result if no minidump was requested.
+
   ProcessHandle otherProcessHandle;
   if (!base::OpenProcessHandle(OtherPid(), &otherProcessHandle)) {
     NS_ERROR("Failed to open child process when attempting kill.");

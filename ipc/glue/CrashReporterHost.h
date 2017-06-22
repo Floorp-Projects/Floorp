@@ -7,13 +7,19 @@
 #ifndef mozilla_ipc_CrashReporterHost_h
 #define mozilla_ipc_CrashReporterHost_h
 
+#include <functional>
+
 #include "mozilla/UniquePtr.h"
 #include "mozilla/ipc/Shmem.h"
 #include "base/process.h"
+#ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
+#endif
 
 namespace mozilla {
 namespace ipc {
+
+class GeckoChildProcessHost;
 
 // This is the newer replacement for CrashReporterParent. It is created in
 // response to a InitCrashReporter message on a top-level actor, and simply
@@ -23,12 +29,73 @@ namespace ipc {
 class CrashReporterHost
 {
   typedef mozilla::ipc::Shmem Shmem;
+#ifdef MOZ_CRASHREPORTER
   typedef CrashReporter::AnnotationTable AnnotationTable;
+  typedef CrashReporter::ThreadId ThreadId;
+#else
+  // unused in this case
+  typedef int32_t ThreadId;
+#endif
 
 public:
+
+  template <typename T>
+  class CallbackWrapper {
+  public:
+    void Init(std::function<void(T)>&& aCallback, bool aAsync)
+    {
+      mCallback = Move(aCallback);
+      mAsync = aAsync;
+      if (IsAsync()) {
+        // Don't call do_GetCurrentThread() is this is called synchronously
+        // because 1. it's unnecessary, and 2. more importantly, it might create
+        // one if called from a native thread, and the thread will be leaked.
+        mTargetThread = do_GetCurrentThread();
+      }
+    }
+
+    bool IsEmpty()
+    {
+      return !mCallback;
+    }
+
+    bool IsAsync()
+    {
+      return mAsync;
+    }
+
+    void Invoke(T aResult)
+    {
+      if (IsAsync()) {
+        decltype(mCallback) callback = Move(mCallback);
+        mTargetThread->
+          Dispatch(NS_NewRunnableFunction([callback, aResult](){
+                     callback(aResult);
+                   }), NS_DISPATCH_NORMAL);
+      } else {
+        MOZ_ASSERT(!mTargetThread);
+        mCallback(aResult);
+      }
+
+      Clear();
+    }
+
+  private:
+    void Clear()
+    {
+      mCallback = nullptr;
+      mTargetThread = nullptr;
+      mAsync = false;
+    }
+
+    bool mAsync;
+    std::function<void(T)> mCallback;
+    nsCOMPtr<nsIThread> mTargetThread;
+  };
+
   CrashReporterHost(GeckoProcessType aProcessType,
                     const Shmem& aShmem,
-                    CrashReporter::ThreadId aThreadId);
+                    ThreadId aThreadId);
 
 #ifdef MOZ_CRASHREPORTER
   // Helper function for generating a crash report for a process that probably
@@ -51,37 +118,15 @@ public:
 
   // Generate a paired minidump. This does not take the crash report, as
   // GenerateCrashReport does. After this, FinalizeCrashReport may be called.
-  //
-  // This calls TakeCrashedChildMinidump and FinalizeCrashReport.
-  template <typename Toplevel>
-  bool GenerateMinidumpAndPair(Toplevel* aToplevelProtocol,
-                               nsIFile* aMinidumpToPair,
-                               const nsACString& aPairName)
-  {
-    ScopedProcessHandle childHandle;
-#ifdef XP_MACOSX
-    childHandle = aToplevelProtocol->Process()->GetChildTask();
-#else
-    if (!base::OpenPrivilegedProcessHandle(aToplevelProtocol->OtherPid(),
-                                           &childHandle.rwget()))
-    {
-      NS_WARNING("Failed to open child process handle.");
-      return false;
-    }
-#endif
-
-    nsCOMPtr<nsIFile> targetDump;
-    if (!CrashReporter::CreateMinidumpsAndPair(childHandle,
-                                               mThreadId,
-                                               aPairName,
-                                               aMinidumpToPair,
-                                               getter_AddRefs(targetDump)))
-    {
-      return false;
-    }
-
-    return CrashReporter::GetIDFromMinidump(targetDump, mDumpID);
-  }
+  // Minidump(s) can be generated synchronously or asynchronously, specified in
+  // argument aAsync. When the operation completes, aCallback is invoked, where
+  // the callback argument denotes whether the operation succeeded.
+  void
+  GenerateMinidumpAndPair(GeckoChildProcessHost* aChildProcess,
+                          nsIFile* aMinidumpToPair,
+                          const nsACString& aPairName,
+                          std::function<void(bool)>&& aCallback,
+                          bool aAsync);
 
   // This is a static helper function to notify the crash service that a
   // crash has occurred. When PCrashReporter is removed, we can make this
@@ -109,13 +154,17 @@ private:
                             const nsString& aChildDumpID);
 
 private:
+  CallbackWrapper<bool> mCreateMinidumpCallback;
   GeckoProcessType mProcessType;
   Shmem mShmem;
-  CrashReporter::ThreadId mThreadId;
+  ThreadId mThreadId;
   time_t mStartTime;
+#ifdef MOZ_CRASHREPORTER
   AnnotationTable mExtraNotes;
+#endif
   nsString mDumpID;
   bool mFinalized;
+  nsCOMPtr<nsIFile> mTargetDump;
 };
 
 } // namespace ipc

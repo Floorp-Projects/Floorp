@@ -325,13 +325,29 @@ FetchBodyConsumer<Derived>::Create(nsIGlobalObject* aGlobal,
   }
 
   RefPtr<FetchBodyConsumer<Derived>> consumer =
-    new FetchBodyConsumer<Derived>(aMainThreadEventTarget, workerPrivate,
-                                   aBody, promise, aType);
+    new FetchBodyConsumer<Derived>(aMainThreadEventTarget, aGlobal,
+                                   workerPrivate, aBody, promise, aType);
 
   if (!NS_IsMainThread()) {
     MOZ_ASSERT(workerPrivate);
     if (NS_WARN_IF(!consumer->RegisterWorkerHolder(workerPrivate))) {
       aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+  } else {
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (NS_WARN_IF(!os)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    aRv = os->AddObserver(consumer, DOM_WINDOW_DESTROYED_TOPIC, true);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+
+    aRv = os->AddObserver(consumer, DOM_WINDOW_FROZEN_TOPIC, true);
+    if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
   }
@@ -351,12 +367,22 @@ FetchBodyConsumer<Derived>::ReleaseObject()
 {
   AssertIsOnTargetThread();
 
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os) {
+      os->RemoveObserver(this, DOM_WINDOW_DESTROYED_TOPIC);
+      os->RemoveObserver(this, DOM_WINDOW_FROZEN_TOPIC);
+    }
+  }
+
+  mGlobal = nullptr;
   mWorkerHolder = nullptr;
   mBody = nullptr;
 }
 
 template <class Derived>
 FetchBodyConsumer<Derived>::FetchBodyConsumer(nsIEventTarget* aMainThreadEventTarget,
+                                              nsIGlobalObject* aGlobalObject,
                                               WorkerPrivate* aWorkerPrivate,
                                               FetchBody<Derived>* aBody,
                                               Promise* aPromise,
@@ -364,6 +390,7 @@ FetchBodyConsumer<Derived>::FetchBodyConsumer(nsIEventTarget* aMainThreadEventTa
   : mTargetThread(NS_GetCurrentThread())
   , mMainThreadEventTarget(aMainThreadEventTarget)
   , mBody(aBody)
+  , mGlobal(aGlobalObject)
   , mWorkerPrivate(aWorkerPrivate)
   , mConsumeType(aType)
   , mConsumePromise(aPromise)
@@ -674,6 +701,36 @@ FetchBodyConsumer<Derived>::CancelPump()
   MOZ_ASSERT(mConsumeBodyPump);
   mConsumeBodyPump->Cancel(NS_BINDING_ABORTED);
 }
+
+template <class Derived>
+NS_IMETHODIMP
+FetchBodyConsumer<Derived>::Observe(nsISupports* aSubject,
+                                    const char* aTopic,
+                                    const char16_t* aData)
+{
+  AssertIsOnMainThread();
+
+  MOZ_ASSERT((strcmp(aTopic, DOM_WINDOW_FROZEN_TOPIC) == 0) ||
+             (strcmp(aTopic, DOM_WINDOW_DESTROYED_TOPIC) == 0));
+
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
+  if (SameCOMIdentity(aSubject, window)) {
+    ContinueConsumeBody(NS_BINDING_ABORTED, 0, nullptr);
+  }
+
+  return NS_OK;
+}
+
+template <class Derived>
+NS_IMPL_ADDREF(FetchBodyConsumer<Derived>)
+
+template <class Derived>
+NS_IMPL_RELEASE(FetchBodyConsumer<Derived>)
+
+template <class Derived>
+NS_IMPL_QUERY_INTERFACE(FetchBodyConsumer<Derived>,
+                        nsIObserver,
+                        nsISupportsWeakReference)
 
 } // namespace dom
 } // namespace mozilla
