@@ -1557,7 +1557,6 @@ web-platform-tests:
     max-run-time: 7200
     instance-size: xlarge
     docker-image: {"in-tree": "desktop1604-test"}
-    checkout: true
     run-on-projects:
         by-test-platform:
             windows10.*: ['mozilla-central', 'try']
@@ -1592,7 +1591,6 @@ web-platform-tests-reftests:
             macosx.*: true
             default: both
     docker-image: {"in-tree": "desktop1604-test"}
-    checkout: true
     run-on-projects:
         by-test-platform:
             windows10.*: ['mozilla-central', 'try']
@@ -1622,7 +1620,6 @@ web-platform-tests-wdspec:
     max-run-time: 5400
     instance-size: xlarge
     docker-image: {"in-tree": "desktop1604-test"}
-    checkout: true
     mozharness:
         script: web_platform_tests.py
         no-read-buildbot-config: true
