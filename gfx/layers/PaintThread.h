@@ -13,8 +13,8 @@
 
 namespace mozilla {
 namespace gfx {
-class DrawEventRecorderMemory;
 class DrawTarget;
+class DrawTargetCapture;
 };
 
 namespace layers {
@@ -25,7 +25,7 @@ public:
   static void Start();
   static void Shutdown();
   static PaintThread* Get();
-  void PaintContents(gfx::DrawEventRecorderMemory* aRecording,
+  void PaintContents(gfx::DrawTargetCapture* aCapture,
                      gfx::DrawTarget* aTarget);
   // Sync Runnables need threads to be ref counted,
   // But this thread lives through the whole process.
