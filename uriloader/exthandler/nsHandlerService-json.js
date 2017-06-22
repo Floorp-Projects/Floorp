@@ -213,12 +213,12 @@ HandlerService.prototype = {
   },
 
   _onDBChange() {
-    return (async function() {
+    return (async () => {
       if (this.__store) {
         await this.__store.finalize();
       }
       this.__store = null;
-    }.bind(this))().catch(Cu.reportError);
+    })().catch(Cu.reportError);
   },
 
   // nsIObserver
