@@ -104,25 +104,25 @@ function toHex(str) {
  * @rejects Never.
  */
 function promiseVerifyContents(aFile, aExpectedContents) {
-  let deferred = Promise.defer();
-  NetUtil.asyncFetch({
-    uri: NetUtil.newURI(aFile),
-    loadUsingSystemPrincipal: true
-  }, function(aInputStream, aStatus) {
-    do_check_true(Components.isSuccessCode(aStatus));
-    let contents = NetUtil.readInputStreamToString(aInputStream,
-                                                   aInputStream.available());
-    if (contents.length <= TEST_DATA_SHORT.length * 2) {
-      do_check_eq(contents, aExpectedContents);
-    } else {
-      // Do not print the entire content string to the test log.
-      do_check_eq(contents.length, aExpectedContents.length);
-      do_check_true(contents == aExpectedContents);
-    }
-    deferred.resolve();
-  });
+  return new Promise(resolve => {
+    NetUtil.asyncFetch({
+      uri: NetUtil.newURI(aFile),
+      loadUsingSystemPrincipal: true
+    }, function(aInputStream, aStatus) {
+      do_check_true(Components.isSuccessCode(aStatus));
+      let contents = NetUtil.readInputStreamToString(aInputStream,
+                                                     aInputStream.available());
+      if (contents.length <= TEST_DATA_SHORT.length * 2) {
+        do_check_eq(contents, aExpectedContents);
+      } else {
+        // Do not print the entire content string to the test log.
+        do_check_eq(contents.length, aExpectedContents.length);
+        do_check_true(contents == aExpectedContents);
+      }
+      resolve();
+    });
 
-  return deferred.promise;
+  });
 }
 
 /**
@@ -138,24 +138,24 @@ function promiseVerifyContents(aFile, aExpectedContents) {
  * @rejects With an exception, if onSaveComplete is called with a failure code.
  */
 function promiseSaverComplete(aSaver, aOnTargetChangeFn) {
-  let deferred = Promise.defer();
-  aSaver.observer = {
-    onTargetChange: function BFSO_onSaveComplete(aSaver, aTarget)
-    {
-      if (aOnTargetChangeFn) {
-        aOnTargetChangeFn(aTarget);
-      }
-    },
-    onSaveComplete: function BFSO_onSaveComplete(aSaver, aStatus)
-    {
-      if (Components.isSuccessCode(aStatus)) {
-        deferred.resolve();
-      } else {
-        deferred.reject(new Components.Exception("Saver failed.", aStatus));
-      }
-    },
-  };
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    aSaver.observer = {
+      onTargetChange: function BFSO_onSaveComplete(aSaver, aTarget)
+      {
+        if (aOnTargetChangeFn) {
+          aOnTargetChangeFn(aTarget);
+        }
+      },
+      onSaveComplete: function BFSO_onSaveComplete(aSaver, aStatus)
+      {
+        if (Components.isSuccessCode(aStatus)) {
+          resolve();
+        } else {
+          reject(new Components.Exception("Saver failed.", aStatus));
+        }
+      },
+    };
+  });
 }
 
 /**
@@ -173,24 +173,24 @@ function promiseSaverComplete(aSaver, aOnTargetChangeFn) {
  * @rejects With an exception, if the copy fails.
  */
 function promiseCopyToSaver(aSourceString, aSaverOutputStream, aCloseWhenDone) {
-  let deferred = Promise.defer();
-  let inputStream = new StringInputStream(aSourceString, aSourceString.length);
-  let copier = Cc["@mozilla.org/network/async-stream-copier;1"]
-               .createInstance(Ci.nsIAsyncStreamCopier);
-  copier.init(inputStream, aSaverOutputStream, null, false, true, 0x8000, true,
-              aCloseWhenDone);
-  copier.asyncCopy({
-    onStartRequest: function () { },
-    onStopRequest: function (aRequest, aContext, aStatusCode)
-    {
-      if (Components.isSuccessCode(aStatusCode)) {
-        deferred.resolve();
-      } else {
-        deferred.reject(new Components.Exception(aResult));
-      }
-    },
-  }, null);
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    let inputStream = new StringInputStream(aSourceString, aSourceString.length);
+    let copier = Cc["@mozilla.org/network/async-stream-copier;1"]
+                 .createInstance(Ci.nsIAsyncStreamCopier);
+    copier.init(inputStream, aSaverOutputStream, null, false, true, 0x8000, true,
+                aCloseWhenDone);
+    copier.asyncCopy({
+      onStartRequest: function () { },
+      onStopRequest: function (aRequest, aContext, aStatusCode)
+      {
+        if (Components.isSuccessCode(aStatusCode)) {
+          resolve();
+        } else {
+          reject(new Components.Exception(aResult));
+        }
+      },
+    }, null);
+  });
 }
 
 /**
@@ -209,35 +209,35 @@ function promiseCopyToSaver(aSourceString, aSaverOutputStream, aCloseWhenDone) {
  */
 function promisePumpToSaver(aSourceString, aSaverStreamListener,
                             aCloseWhenDone) {
-  let deferred = Promise.defer();
-  aSaverStreamListener.QueryInterface(Ci.nsIStreamListener);
-  let inputStream = new StringInputStream(aSourceString, aSourceString.length);
-  let pump = Cc["@mozilla.org/network/input-stream-pump;1"]
-             .createInstance(Ci.nsIInputStreamPump);
-  pump.init(inputStream, -1, -1, 0, 0, true);
-  pump.asyncRead({
-    onStartRequest: function PPTS_onStartRequest(aRequest, aContext)
-    {
-      aSaverStreamListener.onStartRequest(aRequest, aContext);
-    },
-    onStopRequest: function PPTS_onStopRequest(aRequest, aContext, aStatusCode)
-    {
-      aSaverStreamListener.onStopRequest(aRequest, aContext, aStatusCode);
-      if (Components.isSuccessCode(aStatusCode)) {
-        deferred.resolve();
-      } else {
-        deferred.reject(new Components.Exception(aResult));
-      }
-    },
-    onDataAvailable: function PPTS_onDataAvailable(aRequest, aContext,
-                                                   aInputStream, aOffset,
-                                                   aCount)
-    {
-      aSaverStreamListener.onDataAvailable(aRequest, aContext, aInputStream,
-                                           aOffset, aCount);
-    },
-  }, null);
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    aSaverStreamListener.QueryInterface(Ci.nsIStreamListener);
+    let inputStream = new StringInputStream(aSourceString, aSourceString.length);
+    let pump = Cc["@mozilla.org/network/input-stream-pump;1"]
+               .createInstance(Ci.nsIInputStreamPump);
+    pump.init(inputStream, -1, -1, 0, 0, true);
+    pump.asyncRead({
+      onStartRequest: function PPTS_onStartRequest(aRequest, aContext)
+      {
+        aSaverStreamListener.onStartRequest(aRequest, aContext);
+      },
+      onStopRequest: function PPTS_onStopRequest(aRequest, aContext, aStatusCode)
+      {
+        aSaverStreamListener.onStopRequest(aRequest, aContext, aStatusCode);
+        if (Components.isSuccessCode(aStatusCode)) {
+          resolve();
+        } else {
+          reject(new Components.Exception(aResult));
+        }
+      },
+      onDataAvailable: function PPTS_onDataAvailable(aRequest, aContext,
+                                                     aInputStream, aOffset,
+                                                     aCount)
+      {
+        aSaverStreamListener.onDataAvailable(aRequest, aContext, aInputStream,
+                                             aOffset, aCount);
+      },
+    }, null);
+  });
 }
 
 var gStillRunning = true;

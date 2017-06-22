@@ -58,24 +58,24 @@ function getTempFile(aLeafName) {
  * @rejects With an exception, if onSaveComplete is called with a failure code.
  */
 function promiseSaverComplete(aSaver, aOnTargetChangeFn) {
-  let deferred = Promise.defer();
-  aSaver.observer = {
-    onTargetChange: function BFSO_onSaveComplete(aSaver, aTarget)
-    {
-      if (aOnTargetChangeFn) {
-        aOnTargetChangeFn(aTarget);
-      }
-    },
-    onSaveComplete: function BFSO_onSaveComplete(aSaver, aStatus)
-    {
-      if (Components.isSuccessCode(aStatus)) {
-        deferred.resolve();
-      } else {
-        deferred.reject(new Components.Exception("Saver failed.", aStatus));
-      }
-    },
-  };
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    aSaver.observer = {
+      onTargetChange: function BFSO_onSaveComplete(aSaver, aTarget)
+      {
+        if (aOnTargetChangeFn) {
+          aOnTargetChangeFn(aTarget);
+        }
+      },
+      onSaveComplete: function BFSO_onSaveComplete(aSaver, aStatus)
+      {
+        if (Components.isSuccessCode(aStatus)) {
+          resolve();
+        } else {
+          reject(new Components.Exception("Saver failed.", aStatus));
+        }
+      },
+    };
+  });
 }
 
 /**
@@ -93,24 +93,24 @@ function promiseSaverComplete(aSaver, aOnTargetChangeFn) {
  * @rejects With an exception, if the copy fails.
  */
 function promiseCopyToSaver(aSourceString, aSaverOutputStream, aCloseWhenDone) {
-  let deferred = Promise.defer();
-  let inputStream = new StringInputStream(aSourceString, aSourceString.length);
-  let copier = Cc["@mozilla.org/network/async-stream-copier;1"]
-               .createInstance(Ci.nsIAsyncStreamCopier);
-  copier.init(inputStream, aSaverOutputStream, null, false, true, 0x8000, true,
-              aCloseWhenDone);
-  copier.asyncCopy({
-    onStartRequest: function () { },
-    onStopRequest: function (aRequest, aContext, aStatusCode)
-    {
-      if (Components.isSuccessCode(aStatusCode)) {
-        deferred.resolve();
-      } else {
-        deferred.reject(new Components.Exception(aResult));
-      }
-    },
-  }, null);
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    let inputStream = new StringInputStream(aSourceString, aSourceString.length);
+    let copier = Cc["@mozilla.org/network/async-stream-copier;1"]
+                 .createInstance(Ci.nsIAsyncStreamCopier);
+    copier.init(inputStream, aSaverOutputStream, null, false, true, 0x8000, true,
+                aCloseWhenDone);
+    copier.asyncCopy({
+      onStartRequest: function () { },
+      onStopRequest: function (aRequest, aContext, aStatusCode)
+      {
+        if (Components.isSuccessCode(aStatusCode)) {
+          resolve();
+        } else {
+          reject(new Components.Exception(aResult));
+        }
+      },
+    }, null);
+  });
 }
 
 var gStillRunning = true;

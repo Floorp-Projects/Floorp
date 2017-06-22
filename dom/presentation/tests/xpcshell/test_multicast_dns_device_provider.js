@@ -30,18 +30,18 @@ versionAttr.setPropertyAsUint32("version", LATEST_VERSION);
 var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
 
 function sleep(aMs) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  let timer = Cc["@mozilla.org/timer;1"]
-                .createInstance(Ci.nsITimer);
+    let timer = Cc["@mozilla.org/timer;1"]
+                  .createInstance(Ci.nsITimer);
 
-  timer.initWithCallback({
-    notify: function () {
-      deferred.resolve();
-    },
-  }, aMs, timer.TYPE_ONE_SHOT);
+    timer.initWithCallback({
+      notify: function () {
+        resolve();
+      },
+    }, aMs, timer.TYPE_ONE_SHOT);
 
-  return deferred.promise;
+  });
 }
 
 function MockFactory(aClass) {

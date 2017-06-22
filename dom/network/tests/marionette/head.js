@@ -32,21 +32,21 @@ let gTestSuite = (function() {
    * @return A deferred promise.
    */
   function runEmulatorShellSafe(command) {
-    let deferred = Promise.defer();
+    return new Promise((resolve, reject) => {
 
-    ++pendingEmulatorShellCount;
-    runEmulatorShell(command, function(aResult) {
-      --pendingEmulatorShellCount;
+      ++pendingEmulatorShellCount;
+      runEmulatorShell(command, function(aResult) {
+        --pendingEmulatorShellCount;
 
-      ok(true, "Emulator shell response: " + JSON.stringify(aResult));
-      if (Array.isArray(aResult)) {
-        deferred.resolve(aResult);
-      } else {
-        deferred.reject(aResult);
-      }
+        ok(true, "Emulator shell response: " + JSON.stringify(aResult));
+        if (Array.isArray(aResult)) {
+          resolve(aResult);
+        } else {
+          reject(aResult);
+        }
+      });
+
     });
-
-    return deferred.promise;
   }
 
   /**
@@ -270,13 +270,13 @@ let gTestSuite = (function() {
    * @return A deferred promise.
    */
   function scanInterfaces() {
-    let deferred = Promise.defer();
+    return new Promise(resolve => {
 
-    ethernetManager.scan(function onScan(list) {
-      deferred.resolve(list);
+      ethernetManager.scan(function onScan(list) {
+        resolve(list);
+      });
+
     });
-
-    return deferred.promise;
   }
 
   /**
@@ -290,16 +290,16 @@ let gTestSuite = (function() {
    * @return A deferred promise.
    */
   function addInterface(ifname) {
-    let deferred = Promise.defer();
+    return new Promise(resolve => {
 
-    ethernetManager.addInterface(ifname, function onAdd(success, message) {
-      ok(success, "Add interface " + ifname + " succeeded.");
-      is(message, "ok", "Message is as expected.");
+      ethernetManager.addInterface(ifname, function onAdd(success, message) {
+        ok(success, "Add interface " + ifname + " succeeded.");
+        is(message, "ok", "Message is as expected.");
 
-      deferred.resolve(success);
+        resolve(success);
+      });
+
     });
-
-    return deferred.promise;
   }
 
   /**
@@ -313,16 +313,16 @@ let gTestSuite = (function() {
    * @return A deferred promise.
    */
   function removeInterface(ifname) {
-    let deferred = Promise.defer();
+    return new Promise(resolve => {
 
-    ethernetManager.removeInterface(ifname, function onRemove(success, message) {
-      ok(success, "Remove interface " + ifname + " succeeded.");
-      is(message, "ok", "Message is as expected.");
+      ethernetManager.removeInterface(ifname, function onRemove(success, message) {
+        ok(success, "Remove interface " + ifname + " succeeded.");
+        is(message, "ok", "Message is as expected.");
 
-      deferred.resolve(success);
+        resolve(success);
+      });
+
     });
-
-    return deferred.promise;
   }
 
   /**
@@ -336,16 +336,16 @@ let gTestSuite = (function() {
    * @return A deferred promise.
    */
   function enableInterface(ifname) {
-    let deferred = Promise.defer();
+    return new Promise(resolve => {
 
-    ethernetManager.enable(ifname, function onEnable(success, message) {
-      ok(success, "Enable interface " + ifname + " succeeded.");
-      is(message, "ok", "Message is as expected.");
+      ethernetManager.enable(ifname, function onEnable(success, message) {
+        ok(success, "Enable interface " + ifname + " succeeded.");
+        is(message, "ok", "Message is as expected.");
 
-      deferred.resolve(success);
+        resolve(success);
+      });
+
     });
-
-    return deferred.promise;
   }
 
   /**
@@ -359,16 +359,16 @@ let gTestSuite = (function() {
    * @return A deferred promise.
    */
   function disableInterface(ifname) {
-    let deferred = Promise.defer();
+    return new Promise(resolve => {
 
-    ethernetManager.disable(ifname, function onDisable(success, message) {
-      ok(success, "Disable interface " + ifname + " succeeded.");
-      is(message, "ok", "Message is as expected.");
+      ethernetManager.disable(ifname, function onDisable(success, message) {
+        ok(success, "Disable interface " + ifname + " succeeded.");
+        is(message, "ok", "Message is as expected.");
 
-      deferred.resolve(success);
+        resolve(success);
+      });
+
     });
-
-    return deferred.promise;
   }
 
   /**
@@ -382,16 +382,16 @@ let gTestSuite = (function() {
    * @return A deferred promise.
    */
   function makeInterfaceConnect(ifname) {
-    let deferred = Promise.defer();
+    return new Promise(resolve => {
 
-    ethernetManager.connect(ifname, function onConnect(success, message) {
-      ok(success, "Interface " + ifname + " is connected successfully.");
-      is(message, "ok", "Message is as expected.");
+      ethernetManager.connect(ifname, function onConnect(success, message) {
+        ok(success, "Interface " + ifname + " is connected successfully.");
+        is(message, "ok", "Message is as expected.");
 
-      deferred.resolve(success);
+        resolve(success);
+      });
+
     });
-
-    return deferred.promise;
   }
 
   /**
@@ -405,16 +405,16 @@ let gTestSuite = (function() {
    * @return A deferred promise.
    */
   function makeInterfaceDisconnect(ifname) {
-    let deferred = Promise.defer();
+    return new Promise(resolve => {
 
-    ethernetManager.disconnect(ifname, function onDisconnect(success, message) {
-      ok(success, "Interface " + ifname + " is disconnected successfully.");
-      is(message, "ok", "Message is as expected.");
+      ethernetManager.disconnect(ifname, function onDisconnect(success, message) {
+        ok(success, "Interface " + ifname + " is disconnected successfully.");
+        is(message, "ok", "Message is as expected.");
 
-      deferred.resolve(success);
+        resolve(success);
+      });
+
     });
-
-    return deferred.promise;
   }
 
   /**
@@ -434,18 +434,18 @@ let gTestSuite = (function() {
    * @return A deferred promise.
    */
   function updateInterfaceConfig(ifname, config) {
-    let deferred = Promise.defer();
+    return new Promise(resolve => {
 
-    ethernetManager.updateInterfaceConfig(ifname, config,
-                                          function onUpdated(success, message) {
-      ok(success, "Interface " + ifname + " config is updated successfully " +
-                  "with " + JSON.stringify(config));
-      is(message, "ok", "Message is as expected.");
+      ethernetManager.updateInterfaceConfig(ifname, config,
+                                            function onUpdated(success, message) {
+        ok(success, "Interface " + ifname + " config is updated successfully " +
+                    "with " + JSON.stringify(config));
+        is(message, "ok", "Message is as expected.");
 
-      deferred.resolve(success);
+        resolve(success);
+      });
+
     });
-
-    return deferred.promise;
   }
 
   /**
@@ -457,14 +457,14 @@ let gTestSuite = (function() {
    * @return A deferred promise.
    */
   function waitForTimeout(timeout) {
-    let deferred = Promise.defer();
+    return new Promise(resolve => {
 
-    setTimeout(function() {
-      ok(true, "waitForTimeout " + timeout);
-      deferred.resolve();
-    }, timeout);
+      setTimeout(function() {
+        ok(true, "waitForTimeout " + timeout);
+        resolve();
+      }, timeout);
 
-    return deferred.promise;
+    });
   }
 
   /**

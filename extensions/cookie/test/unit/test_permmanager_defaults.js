@@ -10,9 +10,9 @@ const TEST_PERMISSION = "test-permission";
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
 function promiseTimeout(delay) {
-  let deferred = Promise.defer();
-  do_timeout(delay, deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    do_timeout(delay, resolve);
+  });
 }
 
 function run_test() {
@@ -237,29 +237,29 @@ function findCapabilityViaEnum(origin = TEST_ORIGIN, type = TEST_PERMISSION) {
 // the permission manager update has completed - so we just retry a few times.
 // Returns a promise.
 function checkCapabilityViaDB(expected, origin = TEST_ORIGIN, type = TEST_PERMISSION) {
-  let deferred = Promise.defer();
-  let count = 0;
-  let max = 20;
-  let do_check = () => {
-    let got = findCapabilityViaDB(origin, type);
-    if (got == expected) {
-      // the do_check_eq() below will succeed - which is what we want.
-      do_check_eq(got, expected, "The database has the expected value");
-      deferred.resolve();
-      return;
+  return new Promise(resolve => {
+    let count = 0;
+    let max = 20;
+    let do_check = () => {
+      let got = findCapabilityViaDB(origin, type);
+      if (got == expected) {
+        // the do_check_eq() below will succeed - which is what we want.
+        do_check_eq(got, expected, "The database has the expected value");
+        resolve();
+        return;
+      }
+      // value isn't correct - see if we've retried enough
+      if (count++ == max) {
+        // the do_check_eq() below will fail - which is what we want.
+        do_check_eq(got, expected, "The database wasn't updated with the expected value");
+        resolve();
+        return;
+      }
+      // we can retry...
+      do_timeout(100, do_check);
     }
-    // value isn't correct - see if we've retried enough
-    if (count++ == max) {
-      // the do_check_eq() below will fail - which is what we want.
-      do_check_eq(got, expected, "The database wasn't updated with the expected value");
-      deferred.resolve();
-      return;
-    }
-    // we can retry...
-    do_timeout(100, do_check);
-  }
-  do_check();
-  return deferred.promise;
+    do_check();
+  });
 }
 
 // use the DB to find the requested permission.   Returns the permission
