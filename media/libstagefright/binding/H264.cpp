@@ -188,17 +188,146 @@ SPSData::operator==(const SPSData& aOther) const
     !memcmp(this, &aOther, sizeof(SPSData));
 }
 
+bool
+SPSData::operator!=(const SPSData& aOther) const
+{
+  return !(operator==(aOther));
+}
+
+// SPSNAL and SPSNALIterator do not own their data.
+class SPSNAL
+{
+public:
+  SPSNAL(const uint8_t* aPtr, size_t aLength)
+  {
+    MOZ_ASSERT(aPtr);
+
+    if (aLength == 0 || (*aPtr & 0x1f) != H264_NAL_SPS) {
+      return;
+    }
+    mDecodedNAL = H264::DecodeNALUnit(aPtr, aLength);
+    if (mDecodedNAL) {
+      mLength = GetBitLength(mDecodedNAL);
+    }
+  }
+
+  SPSNAL() { }
+
+  bool IsValid() const { return mDecodedNAL; }
+
+  bool operator==(const SPSNAL& aOther) const
+  {
+    if (!mDecodedNAL || !aOther.mDecodedNAL) {
+      return false;
+    }
+    if (mLength != aOther.mLength) {
+      return false;
+    }
+
+    MOZ_ASSERT(mLength / 8 <= mDecodedNAL->Length());
+
+    if (memcmp(mDecodedNAL->Elements(),
+               aOther.mDecodedNAL->Elements(),
+               mLength / 8)) {
+      return false;
+    }
+
+    uint32_t remaining = mLength - (mLength & ~7);
+
+    BitReader b1(mDecodedNAL->Elements() + mLength / 8, remaining);
+    BitReader b2(aOther.mDecodedNAL->Elements() + mLength / 8, remaining);
+    for (uint32_t i = 0; i < remaining; i++) {
+      if (b1.ReadBit() != b2.ReadBit()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool operator!=(const SPSNAL& aOther) const
+  {
+    return !(operator==(aOther));
+  }
+
+  bool GetSPSData(SPSData& aDest)
+  {
+    return H264::DecodeSPS(mDecodedNAL, aDest);
+  }
+
+private:
+  RefPtr<mozilla::MediaByteBuffer> mDecodedNAL;
+  uint32_t mLength = 0;
+};
+
+class SPSNALIterator
+{
+public:
+  explicit SPSNALIterator(const mozilla::MediaByteBuffer* aExtraData)
+    : mExtraDataPtr(aExtraData->Elements())
+    , mReader(aExtraData)
+  {
+    if (!mReader.Read(5)) {
+      return;
+    }
+
+    mNumSPS = mReader.ReadU8() & 0x1f;
+    if (mNumSPS == 0) {
+      return;
+    }
+    mValid = true;
+  }
+
+  SPSNALIterator& operator++()
+  {
+    if (mEOS || !mValid) {
+      return *this;
+    }
+    if (--mNumSPS == 0) {
+      mEOS = true;
+    }
+    uint16_t length = mReader.ReadU16();
+    if (length == 0 || !mReader.Read(length)) {
+      mEOS = true;
+    }
+    return *this;
+  }
+
+  explicit operator bool() const
+  {
+    return mValid && !mEOS;
+  }
+
+  SPSNAL operator*() const
+  {
+    MOZ_ASSERT(bool(*this));
+    ByteReader reader(mExtraDataPtr + mReader.Offset(), mReader.Remaining());
+    uint16_t length = reader.ReadU16();
+    const uint8_t* ptr = reader.Read(length);
+    if (!ptr) {
+      return SPSNAL();
+    }
+    return SPSNAL(ptr, length);
+  }
+
+private:
+  const uint8_t* mExtraDataPtr;
+  ByteReader mReader;
+  bool mValid = false;
+  bool mEOS = false;
+  uint8_t mNumSPS = 0;
+};
+
 /* static */ already_AddRefed<mozilla::MediaByteBuffer>
-H264::DecodeNALUnit(const mozilla::MediaByteBuffer* aNAL)
+H264::DecodeNALUnit(const uint8_t* aNAL, size_t aLength)
 {
   MOZ_ASSERT(aNAL);
 
-  if (aNAL->Length() < 4) {
+  if (aLength < 4) {
     return nullptr;
   }
 
   RefPtr<mozilla::MediaByteBuffer> rbsp = new mozilla::MediaByteBuffer;
-  ByteReader reader(aNAL);
+  ByteReader reader(aNAL, aLength);
   uint8_t nal_unit_type = reader.ReadU8() & 0x1f;
   uint32_t nalUnitHeaderBytes = 1;
   if (nal_unit_type == H264_NAL_PREFIX ||
@@ -628,10 +757,7 @@ H264::DecodeSPSFromExtraData(const mozilla::MediaByteBuffer* aExtraData,
     return false;
   }
 
-  RefPtr<mozilla::MediaByteBuffer> rawNAL = new mozilla::MediaByteBuffer;
-  rawNAL->AppendElements(ptr, length);
-
-  RefPtr<mozilla::MediaByteBuffer> sps = DecodeNALUnit(rawNAL);
+  RefPtr<mozilla::MediaByteBuffer> sps = DecodeNALUnit(ptr, length);
 
   if (!sps) {
     return false;
@@ -770,9 +896,7 @@ H264::ExtractExtraData(const mozilla::MediaRawData* aSample)
     uint8_t nalType = *p & 0x1f;
 
     if (nalType == H264_NAL_SPS) {
-      RefPtr<mozilla::MediaByteBuffer> rawNAL = new mozilla::MediaByteBuffer;
-      rawNAL->AppendElements(p, nalLen);
-      RefPtr<mozilla::MediaByteBuffer> sps = DecodeNALUnit(rawNAL);
+      RefPtr<mozilla::MediaByteBuffer> sps = DecodeNALUnit(p, nalLen);
       SPSData data;
       if (!DecodeSPS(sps, data)) {
         // Invalid SPS, ignore.
