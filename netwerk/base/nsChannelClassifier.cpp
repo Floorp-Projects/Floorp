@@ -13,6 +13,7 @@
 #include "nsICacheEntry.h"
 #include "nsICachingChannel.h"
 #include "nsIChannel.h"
+#include "nsIClassOfService.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -204,6 +205,17 @@ LowerPriorityHelper(nsIChannel* aChannel)
   nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(aChannel);
   if (p) {
     p->SetPriority(nsISupportsPriority::PRIORITY_LOWEST);
+  }
+}
+
+static void
+SetThrottleableHelper(nsIChannel* aChannel)
+{
+  MOZ_ASSERT(aChannel);
+
+  nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(aChannel));
+  if (cos) {
+    cos->AddClassFlags(nsIClassOfService::Throttleable);
   }
 }
 
@@ -1003,6 +1015,7 @@ IsTrackerBlacklistedCallback::OnClassifyComplete(nsresult aErrorCode,
     if (CachedPrefs::GetInstance()->IsLowerNetworkPriority()) {
       LowerPriorityHelper(channel);
     }
+    SetThrottleableHelper(channel);
 
     // We don't want to disable speculative connection when tracking protection
     // is disabled. So, change the status to NS_OK.
@@ -1049,6 +1062,7 @@ IsTrackerBlacklistedCallback::OnClassifyCompleteInternal(nsresult aErrorCode,
   if (CachedPrefs::GetInstance()->IsLowerNetworkPriority()) {
     LowerPriorityHelper(channel);
   }
+  SetThrottleableHelper(channel);
 
   return mChannelCallback->OnClassifyComplete(
       NS_OK, aLists, aProvider, aPrefix);

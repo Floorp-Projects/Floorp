@@ -1280,7 +1280,7 @@ GeckoDriver.prototype.setWindowRect = async function (cmd, resp) {
   // Throttle resize event by forcing the event queue to flush and delay
   // until the main thread is idle.
   function optimisedResize (resolve) {
-    return () => Services.tm.mainThread.idleDispatch(() => {
+    return () => Services.tm.idleDispatchToMainThread(() => {
       win.requestAnimationFrame(resolve);
     });
   }

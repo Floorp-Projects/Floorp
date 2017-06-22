@@ -7,6 +7,8 @@
 #include "IPCBlobInputStreamThread.h"
 
 #include "mozilla/StaticMutex.h"
+#include "mozilla/SystemGroup.h"
+#include "mozilla/TaskCategory.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "nsIIPCBackgroundChildCreateCallback.h"
@@ -120,7 +122,10 @@ void
 IPCBlobInputStreamThread::Initialize()
 {
   if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(new ThreadInitializeRunnable());
+    RefPtr<Runnable> runnable = new ThreadInitializeRunnable();
+    SystemGroup::Dispatch("IPCBlobInputStreamThread::Initialize",
+                          TaskCategory::Other,
+                          runnable.forget());
     return;
   }
 
