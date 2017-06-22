@@ -744,7 +744,7 @@ Animation::ElapsedTimeToTimeStamp(
   const StickyTimeDuration& aElapsedTime) const
 {
   TimeDuration delay = mEffect
-                       ? mEffect->SpecifiedTiming().mDelay
+                       ? mEffect->SpecifiedTiming().Delay()
                        : TimeDuration();
   return AnimationTimeToTimeStamp(aElapsedTime + delay);
 }

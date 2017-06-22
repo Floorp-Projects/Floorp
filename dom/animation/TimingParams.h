@@ -123,16 +123,6 @@ struct TimingParams
                                                    nsIDocument* aDocument,
                                                    ErrorResult& aRv);
 
-  // mDuration.isNothing() represents the "auto" value
-  Maybe<StickyTimeDuration> mDuration;
-  TimeDuration mDelay;      // Initializes to zero
-  TimeDuration mEndDelay;
-  double mIterations = 1.0; // Can be NaN, negative, +/-Infinity
-  double mIterationStart = 0.0;
-  dom::PlaybackDirection mDirection = dom::PlaybackDirection::Normal;
-  dom::FillMode mFill = dom::FillMode::Auto;
-  Maybe<ComputedTimingFunction> mFunction;
-
   // Return the duration of the active interval calculated by duration and
   // iteration count.
   StickyTimeDuration ActiveDuration() const
@@ -159,6 +149,65 @@ struct TimingParams
   {
     return !(*this == aOther);
   }
+
+  void SetDuration(Maybe<StickyTimeDuration>&& aDuration)
+  {
+    mDuration = Move(aDuration);
+  }
+  const Maybe<StickyTimeDuration>& Duration() const { return mDuration; }
+
+  void SetDelay(const TimeDuration& aDelay)
+  {
+    mDelay = aDelay;
+  }
+  const TimeDuration& Delay() const { return mDelay; }
+
+  void SetEndDelay(const TimeDuration& aEndDelay)
+  {
+    mEndDelay = aEndDelay;
+  }
+  const TimeDuration& EndDelay() const { return mEndDelay; }
+
+  void SetIterations(double aIterations)
+  {
+    mIterations = aIterations;
+  }
+  double Iterations() const { return mIterations; }
+
+  void SetIterationStart(double aIterationStart)
+  {
+    mIterationStart = aIterationStart;
+  }
+  double IterationStart() const { return mIterationStart; }
+
+  void SetDirection(dom::PlaybackDirection aDirection)
+  {
+    mDirection = aDirection;
+  }
+  dom::PlaybackDirection Direction() const { return mDirection; }
+
+  void SetFill(dom::FillMode aFill)
+  {
+    mFill = aFill;
+  }
+  dom::FillMode Fill() const { return mFill; }
+
+  void SetFunction(Maybe<ComputedTimingFunction>&& aFunction)
+  {
+    mFunction = Move(aFunction);
+  }
+  const Maybe<ComputedTimingFunction>& Function() const { return mFunction; }
+
+private:
+  // mDuration.isNothing() represents the "auto" value
+  Maybe<StickyTimeDuration> mDuration;
+  TimeDuration mDelay;      // Initializes to zero
+  TimeDuration mEndDelay;
+  double mIterations = 1.0; // Can be NaN, negative, +/-Infinity
+  double mIterationStart = 0.0;
+  dom::PlaybackDirection mDirection = dom::PlaybackDirection::Normal;
+  dom::FillMode mFill = dom::FillMode::Auto;
+  Maybe<ComputedTimingFunction> mFunction;
 };
 
 } // namespace mozilla

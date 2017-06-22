@@ -545,17 +545,17 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
 
   const ComputedTiming computedTiming =
     aAnimation->GetEffect()->GetComputedTiming();
-  animation->delay() = timing.mDelay;
-  animation->endDelay() = timing.mEndDelay;
+  animation->delay() = timing.Delay();
+  animation->endDelay() = timing.EndDelay();
   animation->duration() = computedTiming.mDuration;
   animation->iterations() = computedTiming.mIterations;
   animation->iterationStart() = computedTiming.mIterationStart;
-  animation->direction() = static_cast<uint8_t>(timing.mDirection);
+  animation->direction() = static_cast<uint8_t>(timing.Direction());
   animation->fillMode() = static_cast<uint8_t>(computedTiming.mFill);
   animation->property() = aProperty.mProperty;
   animation->playbackRate() = aAnimation->PlaybackRate();
   animation->data() = aData;
-  animation->easingFunction() = ToTimingFunction(timing.mFunction);
+  animation->easingFunction() = ToTimingFunction(timing.Function());
   animation->iterationComposite() =
     static_cast<uint8_t>(aAnimation->GetEffect()->
                          AsKeyframeEffect()->IterationComposite());
