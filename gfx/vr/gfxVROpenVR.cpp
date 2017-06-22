@@ -178,18 +178,23 @@ VRDisplayOpenVR::PollEvents()
 {
   ::vr::VREvent_t event;
   while (mVRSystem->PollNextEvent(&event, sizeof(event))) {
-    if (event.trackedDeviceIndex == ::vr::k_unTrackedDeviceIndex_Hmd) {
-      switch (event.eventType) {
+    switch (event.eventType) {
       case ::vr::VREvent_TrackedDeviceUserInteractionStarted:
         mDisplayInfo.mIsMounted = true;
         break;
       case ::vr::VREvent_TrackedDeviceUserInteractionEnded:
         mDisplayInfo.mIsMounted = false;
         break;
+      case ::vr::EVREventType::VREvent_DriverRequestedQuit:
+      case ::vr::EVREventType::VREvent_Quit:
+      case ::vr::EVREventType::VREvent_ProcessQuit:
+      case ::vr::EVREventType::VREvent_QuitAcknowledged:
+      case ::vr::EVREventType::VREvent_QuitAborted_UserPrompt:
+        mDisplayInfo.mIsConnected = false;
+        break;
       default:
         // ignore
         break;
-      }
     }
   }
 }
@@ -467,7 +472,6 @@ void
 VRControllerOpenVR::VibrateHapticComplete(uint32_t aPromiseID)
 {
   VRManager *vm = VRManager::Get();
-  MOZ_ASSERT(vm);
 
   CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod<uint32_t>
     (vm, &VRManager::NotifyVibrateHapticCompleted, aPromiseID));
@@ -546,10 +550,12 @@ VRSystemManagerOpenVR::Shutdown()
 void
 VRSystemManagerOpenVR::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
 {
-  if (!::vr::VR_IsHmdPresent()) {
-    if (mOpenVRHMD) {
-      mOpenVRHMD = nullptr;
-    }
+  if (!::vr::VR_IsHmdPresent() ||
+      (mOpenVRHMD && !mOpenVRHMD->GetIsConnected())) {
+    // OpenVR runtime could be quit accidentally,
+    // and we make it re-initialize.
+    mOpenVRHMD = nullptr;
+    mVRSystem = nullptr;
   } else if (mOpenVRHMD == nullptr) {
     ::vr::HmdError err;
 
