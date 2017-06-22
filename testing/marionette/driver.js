@@ -3185,10 +3185,18 @@ GeckoDriver.prototype.localizeProperty = function (cmd, resp) {
 }
 
 GeckoDriver.prototype.commands = {
+  // Marionette service
+  "Marionette:SetContext": GeckoDriver.prototype.setContext,
+  "setContext": GeckoDriver.prototype.setContext,  // deprecated, remove in Firefox 60
+  "Marionette:GetContext": GeckoDriver.prototype.getContext,
+  "getContext": GeckoDriver.prototype.getContext,
+  "Marionette:AcceptConnections": GeckoDriver.prototype.acceptConnections,
+  "acceptConnections": GeckoDriver.prototype.acceptConnections,  // deprecated, remove in Firefox 60
+  "Marionette:Quit": GeckoDriver.prototype.quit,
+  "quit": GeckoDriver.prototype.quit,  // deprecated, remove in Firefox 60
+
   "newSession": GeckoDriver.prototype.newSession,
   "getSessionCapabilities": GeckoDriver.prototype.getSessionCapabilities,
-  "setContext": GeckoDriver.prototype.setContext,
-  "getContext": GeckoDriver.prototype.getContext,
   "executeScript": GeckoDriver.prototype.executeScript,
   "getTimeouts": GeckoDriver.prototype.getTimeouts,
   "setTimeouts": GeckoDriver.prototype.setTimeouts,
@@ -3255,8 +3263,6 @@ GeckoDriver.prototype.commands = {
   "acceptDialog": GeckoDriver.prototype.acceptDialog,
   "getTextFromDialog": GeckoDriver.prototype.getTextFromDialog,
   "sendKeysToDialog": GeckoDriver.prototype.sendKeysToDialog,
-  "acceptConnections": GeckoDriver.prototype.acceptConnections,
-  "quit": GeckoDriver.prototype.quit,
 
   "localization:l10n:localizeEntity": GeckoDriver.prototype.localizeEntity,
   "localization:l10n:localizeProperty": GeckoDriver.prototype.localizeProperty,
