@@ -5,7 +5,7 @@
 
 #include "BasicPaintedLayer.h"
 #include <stdint.h>                     // for uint32_t
-#include "GeckoProfiler.h"              // for PROFILER_LABEL
+#include "GeckoProfiler.h"              // for AUTO_PROFILER_LABEL
 #include "ReadbackLayer.h"              // for ReadbackLayer, ReadbackSink
 #include "ReadbackProcessor.h"          // for ReadbackProcessor::Update, etc
 #include "RenderTrace.h"                // for RenderTraceInvalidateEnd, etc
@@ -48,8 +48,7 @@ BasicPaintedLayer::PaintThebes(gfxContext* aContext,
                               LayerManager::DrawPaintedLayerCallback aCallback,
                               void* aCallbackData)
 {
-  PROFILER_LABEL("BasicPaintedLayer", "PaintThebes",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("BasicPaintedLayer::PaintThebes", GRAPHICS);
 
   NS_ASSERTION(BasicManager()->InDrawing(),
                "Can only draw in drawing phase");

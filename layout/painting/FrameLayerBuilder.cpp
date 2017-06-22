@@ -3966,8 +3966,7 @@ IsScrollThumbLayer(nsDisplayItem* aItem)
 void
 ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 {
-  PROFILER_LABEL("ContainerState", "ProcessDisplayItems",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("ContainerState::ProcessDisplayItems", GRAPHICS);
 
   AnimatedGeometryRoot* lastAnimatedGeometryRoot = mContainerAnimatedGeometryRoot;
   const ActiveScrolledRoot* lastASR = mContainerASR;
@@ -6022,11 +6021,10 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
       continue;
 
 #ifdef MOZ_DUMP_PAINTING
-    PROFILER_LABEL_DYNAMIC("DisplayList", "Draw",
-      js::ProfileEntry::Category::GRAPHICS, cdi->mItem->Name());
+    AUTO_PROFILER_LABEL_DYNAMIC("FrameLayerBuilder::PaintItems", GRAPHICS,
+                                cdi->mItem->Name());
 #else
-    PROFILER_LABEL("DisplayList", "Draw",
-      js::ProfileEntry::Category::GRAPHICS);
+    AUTO_PROFILER_LABEL("FrameLayerBuilder::PaintItems", GRAPHICS);
 #endif
 
     // If the new desired clip state is different from the current state,
@@ -6066,10 +6064,9 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
 #ifdef MOZ_DUMP_PAINTING
       if (gfxEnv::DumpPaintItems()) {
         DebugPaintItem(aDrawTarget, aPresContext, cdi->mItem, aBuilder);
-      } else {
-#else
-      {
+      } else
 #endif
+      {
         cdi->mItem->Paint(aBuilder, aRC);
       }
     }
@@ -6148,8 +6145,7 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
 {
   DrawTarget& aDrawTarget = *aContext->GetDrawTarget();
 
-  PROFILER_LABEL("FrameLayerBuilder", "DrawPaintedLayer",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("FrameLayerBuilder::DrawPaintedLayer", GRAPHICS);
 
   nsDisplayListBuilder* builder = static_cast<nsDisplayListBuilder*>
     (aCallbackData);

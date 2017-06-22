@@ -1657,7 +1657,7 @@ NPObjWrapper_Resolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> 
   if (JSID_IS_SYMBOL(id))
     return true;
 
-  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::JS);
+  AUTO_PROFILER_LABEL("NPObjWrapper_Resolve", JS);
 
   NPObject *npobj = GetNPObject(cx, obj);
 
@@ -2142,7 +2142,7 @@ static bool
 NPObjectMember_GetProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                            JS::MutableHandleValue vp)
 {
-  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
+  AUTO_PROFILER_LABEL("NPObjectMember_GetProperty", OTHER);
 
   if (JSID_IS_SYMBOL(id)) {
     JS::RootedSymbol sym(cx, JSID_TO_SYMBOL(id));

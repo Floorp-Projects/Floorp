@@ -58,8 +58,7 @@ nsresult
 OggWriter::WriteEncodedTrack(const EncodedFrameContainer& aData,
                              uint32_t aFlags)
 {
-  PROFILER_LABEL("OggWriter", "WriteEncodedTrack",
-    js::ProfileEntry::Category::OTHER);
+  AUTO_PROFILER_LABEL("OggWriter::WriteEncodedTrack", OTHER);
 
   uint32_t len = aData.GetEncodedFrames().Length();
   for (uint32_t i = 0; i < len; i++) {
@@ -140,8 +139,7 @@ OggWriter::GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
                             uint32_t aFlags)
 {
   int rc = -1;
-  PROFILER_LABEL("OggWriter", "GetContainerData",
-    js::ProfileEntry::Category::OTHER);
+  AUTO_PROFILER_LABEL("OggWriter::GetContainerData", OTHER);
   // Generate the oggOpus Header
   if (aFlags & ContainerWriter::GET_HEADER) {
     OpusMetadata* meta = static_cast<OpusMetadata*>(mMetadata.get());
@@ -190,8 +188,7 @@ OggWriter::SetMetadata(TrackMetadataBase* aMetadata)
 {
   MOZ_ASSERT(aMetadata);
 
-  PROFILER_LABEL("OggWriter", "SetMetadata",
-    js::ProfileEntry::Category::OTHER);
+  AUTO_PROFILER_LABEL("OggWriter::SetMetadata", OTHER);
 
   if (aMetadata->GetKind() != TrackMetadataBase::METADATA_OPUS) {
     LOG("wrong meta data type!");

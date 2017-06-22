@@ -725,8 +725,7 @@ private:
 #ifdef MOZ_WIDGET_ANDROID
 // Record the name of the GL call for better hang stacks on Android.
 #define BEFORE_GL_CALL                              \
-            PROFILER_LABEL_FUNC(                    \
-              js::ProfileEntry::Category::GRAPHICS);\
+            AUTO_PROFILER_LABEL(__func__, GRAPHICS);\
             BeforeGLCall(MOZ_FUNCTION_NAME)
 #else
 #define BEFORE_GL_CALL                              \
@@ -751,7 +750,7 @@ private:
 
 #ifdef MOZ_WIDGET_ANDROID
 // Record the name of the GL call for better hang stacks on Android.
-#define BEFORE_GL_CALL PROFILER_LABEL_FUNC(js::ProfileEntry::Category::GRAPHICS)
+#define BEFORE_GL_CALL AUTO_PROFILER_LABEL(__func__, GRAPHICS)
 #else
 #define BEFORE_GL_CALL do { } while (0)
 #endif

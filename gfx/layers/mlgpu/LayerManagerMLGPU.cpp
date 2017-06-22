@@ -229,8 +229,7 @@ private:
 void
 LayerManagerMLGPU::EndTransaction(const TimeStamp& aTimeStamp, EndTransactionFlags aFlags)
 {
-  PROFILER_LABEL("LayerManager", "EndTransaction",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("LayerManagerMLGPU::EndTransaction", GRAPHICS);
 
   SetCompositionTime(aTimeStamp);
 
@@ -278,8 +277,7 @@ LayerManagerMLGPU::EndTransaction(const TimeStamp& aTimeStamp, EndTransactionFla
 void
 LayerManagerMLGPU::Composite()
 {
-  PROFILER_LABEL("LayerManagerMLGPU", "Composite",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("LayerManagerMLGPU::Composite", GRAPHICS);
 
   // Don't composite if we're minimized/hidden, or if there is nothing to draw.
   if (mWidget->IsHidden()) {
@@ -331,8 +329,7 @@ LayerManagerMLGPU::Composite()
 void
 LayerManagerMLGPU::RenderLayers()
 {
-  PROFILER_LABEL("LayerManagerMLGPU", "RenderLayers",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("LayerManagerMLGPU::RenderLayers", GRAPHICS);
 
   // Traverse the layer tree and assign each layer to a render target.
   FrameBuilder builder(this, mSwapChain);
@@ -561,8 +558,7 @@ LayerManagerMLGPU::UpdateRenderBounds(const gfx::IntRect& aRect)
 bool
 LayerManagerMLGPU::PreRender()
 {
-  PROFILER_LABEL("LayerManagerMLGPU", "PreRender",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("LayerManagerMLGPU::PreRender", GRAPHICS);
 
   widget::WidgetRenderingContext context;
   if (!mWidget->PreRender(&context)) {

@@ -191,8 +191,7 @@ gfxContext::Fill()
 void
 gfxContext::Fill(const Pattern& aPattern)
 {
-  PROFILER_LABEL("gfxContext", "Fill",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("gfxContext::Fill", GRAPHICS);
   FillAzure(aPattern, 1.0f);
 }
 
@@ -735,8 +734,7 @@ gfxContext::Mask(SourceSurface *surface, float alpha, const Point& offset)
 void
 gfxContext::Paint(gfxFloat alpha)
 {
-  PROFILER_LABEL("gfxContext", "Paint",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("gfxContext::Paint", GRAPHICS);
 
   AzureState &state = CurrentState();
 
