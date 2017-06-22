@@ -130,9 +130,11 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
     private final ForegroundColorSpan mUrlColorSpan;
     private final ForegroundColorSpan mPrivateUrlColorSpan;
     private final ForegroundColorSpan mBlockedColorSpan;
+    private final ForegroundColorSpan mPrivateBlockedColorSpan;
     private final ForegroundColorSpan mDomainColorSpan;
     private final ForegroundColorSpan mPrivateDomainColorSpan;
     private final ForegroundColorSpan mCertificateOwnerColorSpan;
+    private final ForegroundColorSpan mPrivateCertificateOwnerColorSpan;
 
     public ToolbarDisplayLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -148,9 +150,11 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         mUrlColorSpan = new ForegroundColorSpan(ContextCompat.getColor(context, R.color.url_bar_urltext));
         mPrivateUrlColorSpan = new ForegroundColorSpan(ContextCompat.getColor(context, R.color.url_bar_urltext_private));
         mBlockedColorSpan = new ForegroundColorSpan(ContextCompat.getColor(context, R.color.url_bar_blockedtext));
+        mPrivateBlockedColorSpan = new ForegroundColorSpan(ContextCompat.getColor(context, R.color.url_bar_blockedtext_private));
         mDomainColorSpan = new ForegroundColorSpan(ContextCompat.getColor(context, R.color.url_bar_domaintext));
         mPrivateDomainColorSpan = new ForegroundColorSpan(ContextCompat.getColor(context, R.color.url_bar_domaintext_private));
-        mCertificateOwnerColorSpan = new ForegroundColorSpan(ContextCompat.getColor(context, R.color.affirmative_green));
+        mCertificateOwnerColorSpan = new ForegroundColorSpan(ContextCompat.getColor(context, R.color.url_bar_certificate_owner));
+        mPrivateCertificateOwnerColorSpan = new ForegroundColorSpan(ContextCompat.getColor(context, R.color.url_bar_certificate_owner_private));
 
         mSiteSecurity = (ThemedImageButton) findViewById(R.id.site_security);
 
@@ -285,7 +289,10 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
             final String title = tab.getDisplayTitle();
 
             final SpannableStringBuilder builder = new SpannableStringBuilder(title);
-            builder.setSpan(mBlockedColorSpan, 0, title.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+            final ForegroundColorSpan fgColorSpan = tab.isPrivate()
+                    ? mPrivateBlockedColorSpan
+                    : mBlockedColorSpan;
+            builder.setSpan(fgColorSpan, 0, title.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
 
             setTitle(builder);
             setContentDescription(null);
@@ -315,7 +322,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         final SiteIdentity siteIdentity = tab.getSiteIdentity();
         if (siteIdentity.hasOwner() && SwitchBoard.isInExperiment(mActivity, Experiments.URLBAR_SHOW_EV_CERT_OWNER)) {
             // Show Owner of EV certificate as title
-            updateTitleFromSiteIdentity(siteIdentity);
+            updateTitleFromSiteIdentity(siteIdentity, tab.isPrivate());
         } else if (isHttpOrHttps && !HardwareUtils.isTablet() && !TextUtils.isEmpty(baseDomain)
                 && SwitchBoard.isInExperiment(mActivity, Experiments.URLBAR_SHOW_ORIGIN_ONLY)) {
             // Show just the base domain as title
@@ -326,7 +333,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         }
     }
 
-    private void updateTitleFromSiteIdentity(SiteIdentity siteIdentity) {
+    private void updateTitleFromSiteIdentity(SiteIdentity siteIdentity, boolean isPrivate) {
         final String title;
 
         if (siteIdentity.hasCountry()) {
@@ -336,7 +343,10 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         }
 
         final SpannableString spannable = new SpannableString(title);
-        spannable.setSpan(mCertificateOwnerColorSpan, 0, title.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        final ForegroundColorSpan colorSpan = isPrivate
+                ? mPrivateCertificateOwnerColorSpan
+                : mCertificateOwnerColorSpan;
+        spannable.setSpan(colorSpan, 0, title.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         setTitle(spannable);
     }
