@@ -514,8 +514,8 @@ class OSXBootstrapper(BaseBootstrapper):
         return active_name.lower()
 
     def ensure_stylo_packages(self, state_dir, checkout_root):
-        import stylo
-        self.install_tooltool_clang_package(state_dir, checkout_root, stylo.OSX)
+        # We installed these via homebrew earlier.
+        pass
 
     def install_homebrew(self):
         print(PACKAGE_MANAGER_INSTALL % ('Homebrew', 'Homebrew', 'Homebrew', 'brew'))
