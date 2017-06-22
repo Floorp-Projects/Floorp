@@ -159,6 +159,11 @@ struct PatternStorage
   };
 };
 
+class MemWriter {
+  public:
+    void write(const char*, size_t);
+};
+
 class RecordedEvent {
 public:
   enum EventType {
@@ -219,13 +224,16 @@ public:
   virtual bool PlayEvent(Translator *aTranslator) const { return true; }
 
   virtual void RecordToStream(std::ostream &aStream) const {}
+  virtual void RecordToStream(MemWriter &aStream) const {}
 
   virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const { }
 
-  void RecordPatternData(std::ostream &aStream, const PatternStorage &aPatternStorage) const;
+  template<class S>
+  void RecordPatternData(S &aStream, const PatternStorage &aPatternStorage) const;
   void ReadPatternData(std::istream &aStream, PatternStorage &aPatternStorage) const;
   void StorePattern(PatternStorage &aDestination, const Pattern &aSource) const;
-  void RecordStrokeOptions(std::ostream &aStream, const StrokeOptions &aStrokeOptions) const;
+  template<class S>
+  void RecordStrokeOptions(S &aStream, const StrokeOptions &aStrokeOptions) const;
   void ReadStrokeOptions(std::istream &aStream, StrokeOptions &aStrokeOptions);
 
   virtual std::string GetName() const = 0;
@@ -253,3 +261,4 @@ protected:
 } // namespace mozilla
 
 #endif
+
