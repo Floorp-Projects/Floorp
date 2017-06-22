@@ -21,16 +21,12 @@
 #include <stdint.h>
 
 #include "mozilla/Maybe.h"
-#include "mozilla/SSE.h"
-#include "mozilla/mips.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/2D.h"
 #include "gfxPrefs.h"
 
 #ifdef MOZ_ENABLE_SKIA
-#include "convolver.h"
-#include "image_operations.h"
-#include "skia/include/core/SkTypes.h"
+#include "mozilla/gfx/ConvolutionFilter.h"
 #endif
 
 #include "SurfacePipe.h"
@@ -97,9 +93,7 @@ class DownscalingFilter final : public SurfaceFilter
 {
 public:
   DownscalingFilter()
-    : mXFilter(MakeUnique<skia::ConvolutionFilter1D>())
-    , mYFilter(MakeUnique<skia::ConvolutionFilter1D>())
-    , mWindowCapacity(0)
+    : mWindowCapacity(0)
     , mRowsInWindow(0)
     , mInputRow(0)
     , mOutputRow(0)
@@ -151,17 +145,12 @@ public:
 
     ReleaseWindow();
 
-    auto resizeMethod = skia::ImageOperations::RESIZE_LANCZOS3;
-
-    skia::resize::ComputeFilters(resizeMethod,
-                                 mInputSize.width, outputSize.width,
-                                 0, outputSize.width,
-                                 mXFilter.get());
-
-    skia::resize::ComputeFilters(resizeMethod,
-                                 mInputSize.height, outputSize.height,
-                                 0, outputSize.height,
-                                 mYFilter.get());
+    auto resizeMethod = gfx::ConvolutionFilter::ResizeMethod::LANCZOS3;
+    if (!mXFilter.ComputeResizeFilter(resizeMethod, mInputSize.width, outputSize.width) ||
+        !mYFilter.ComputeResizeFilter(resizeMethod, mInputSize.height, outputSize.height)) {
+      NS_WARNING("Failed to compute filters for image downscaling");
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     // Allocate the buffer, which contains scanlines of the input image.
     mRowBuffer.reset(new (fallible)
@@ -176,7 +165,7 @@ public:
     // Allocate the window, which contains horizontally downscaled scanlines. (We
     // can store scanlines which are already downscaled because our downscaling
     // filter is separable.)
-    mWindowCapacity = mYFilter->max_filter();
+    mWindowCapacity = mYFilter.MaxFilter();
     mWindow.reset(new (fallible) uint8_t*[mWindowCapacity]);
     if (MOZ_UNLIKELY(!mWindow)) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -240,15 +229,13 @@ protected:
 
     int32_t filterOffset = 0;
     int32_t filterLength = 0;
-    GetFilterOffsetAndLength(mYFilter, mOutputRow,
-                             &filterOffset, &filterLength);
+    mYFilter.GetFilterOffsetAndLength(mOutputRow,
+                                      &filterOffset, &filterLength);
 
     int32_t inputRowToRead = filterOffset + mRowsInWindow;
     MOZ_ASSERT(mInputRow <= inputRowToRead, "Reading past end of input");
     if (mInputRow == inputRowToRead) {
-      skia::ConvolveHorizontally(mRowBuffer.get(), *mXFilter,
-                                 mWindow[mRowsInWindow++], mHasAlpha,
-                                 supports_sse2() || supports_mmi());
+      mXFilter.ConvolveHorizontally(mRowBuffer.get(), mWindow[mRowsInWindow++], mHasAlpha);
     }
 
     MOZ_ASSERT(mOutputRow < mNext.InputSize().height,
@@ -261,8 +248,8 @@ protected:
         break;  // We're done.
       }
 
-      GetFilterOffsetAndLength(mYFilter, mOutputRow,
-                               &filterOffset, &filterLength);
+      mYFilter.GetFilterOffsetAndLength(mOutputRow,
+                                        &filterOffset, &filterLength);
     }
 
     mInputRow++;
@@ -281,37 +268,20 @@ private:
     return aLogicalWidth * sizeof(uint32_t) + 15;
   }
 
-  static void
-  GetFilterOffsetAndLength(UniquePtr<skia::ConvolutionFilter1D>& aFilter,
-                           int32_t aOutputImagePosition,
-                           int32_t* aFilterOffsetOut,
-                           int32_t* aFilterLengthOut)
-  {
-    MOZ_ASSERT(aOutputImagePosition < aFilter->num_values());
-    aFilter->FilterForValue(aOutputImagePosition,
-                            aFilterOffsetOut,
-                            aFilterLengthOut);
-  }
-
   void DownscaleInputRow()
   {
-    typedef skia::ConvolutionFilter1D::Fixed FilterValue;
-
     MOZ_ASSERT(mOutputRow < mNext.InputSize().height,
                "Writing past end of output");
 
     int32_t filterOffset = 0;
     int32_t filterLength = 0;
-    MOZ_ASSERT(mOutputRow < mYFilter->num_values());
-    auto filterValues =
-      mYFilter->FilterForValue(mOutputRow, &filterOffset, &filterLength);
+    mYFilter.GetFilterOffsetAndLength(mOutputRow,
+                                      &filterOffset, &filterLength);
 
     mNext.template WriteUnsafeComputedRow<uint32_t>([&](uint32_t* aRow,
                                                         uint32_t aLength) {
-      skia::ConvolveVertically(static_cast<const FilterValue*>(filterValues),
-                               filterLength, mWindow.get(), mXFilter->num_values(),
-                               reinterpret_cast<uint8_t*>(aRow), mHasAlpha,
-                               supports_sse2() || supports_mmi());
+      mYFilter.ConvolveVertically(mWindow.get(), reinterpret_cast<uint8_t*>(aRow),
+                                  mOutputRow, mXFilter.NumValues(), mHasAlpha);
     });
 
     mOutputRow++;
@@ -322,8 +292,8 @@ private:
 
     int32_t newFilterOffset = 0;
     int32_t newFilterLength = 0;
-    GetFilterOffsetAndLength(mYFilter, mOutputRow,
-                             &newFilterOffset, &newFilterLength);
+    mYFilter.GetFilterOffsetAndLength(mOutputRow,
+                                      &newFilterOffset, &newFilterLength);
 
     int diff = newFilterOffset - filterOffset;
     MOZ_ASSERT(diff >= 0, "Moving backwards in the filter?");
@@ -360,8 +330,8 @@ private:
   UniquePtr<uint8_t[]> mRowBuffer;  /// The buffer into which input is written.
   UniquePtr<uint8_t*[]> mWindow;    /// The last few rows which were written.
 
-  UniquePtr<skia::ConvolutionFilter1D> mXFilter;  /// The Lanczos filter in X.
-  UniquePtr<skia::ConvolutionFilter1D> mYFilter;  /// The Lanczos filter in Y.
+  gfx::ConvolutionFilter mXFilter;  /// The Lanczos filter in X.
+  gfx::ConvolutionFilter mYFilter;  /// The Lanczos filter in Y.
 
   int32_t mWindowCapacity;  /// How many rows the window contains.
 
