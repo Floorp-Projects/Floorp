@@ -69,8 +69,6 @@ public:
 
   uint32_t QueueSize(bool highPriority);
 
-  uint32_t EventCounter() const { return mEventCounter; }
-
   /**
    * Callable only on this thread, checks if there is an event waiting in
    * the event queue with a higher execution priority.  If so, the result
@@ -138,8 +136,6 @@ private:
   // can be canceled when after shutdown, see the Shutdown() method
   // for usage. Made a counter to allow nesting of the Cancelable class.
   Atomic<uint32_t, Relaxed> mIOCancelableEvents;
-  // Event counter that increases with every event processed.
-  Atomic<uint32_t, Relaxed> mEventCounter;
 #ifdef DEBUG
   bool mInsideLoop;
 #endif
