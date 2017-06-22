@@ -48,7 +48,8 @@ NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeWin, nsNativeTheme, nsITheme)
 nsNativeThemeWin::nsNativeThemeWin() :
   mProgressDeterminateTimeStamp(TimeStamp::Now()),
   mProgressIndeterminateTimeStamp(TimeStamp::Now()),
-  mBorderCacheValid()
+  mBorderCacheValid(),
+  mMinimumWidgetSizeCacheValid()
 {
   // If there is a relevant change in forms.css for windows platform,
   // static widget style variables (e.g. sButtonBorderSize) should be 
@@ -627,6 +628,62 @@ nsresult nsNativeThemeWin::GetCachedWidgetBorder(nsIFrame * aFrame, nsUXThemeCla
 
   mBorderCacheValid[cacheBitIndex] |= cacheBit;
   mBorderCache[cacheIndex] = *aResult;
+
+  return NS_OK;
+}
+
+nsresult nsNativeThemeWin::GetCachedMinimumWidgetSize(nsIFrame * aFrame, HANDLE aTheme,
+                                                      nsUXThemeClass aThemeClass, uint8_t aWidgetType,
+                                                      int32_t aPart, int32_t aState, THEMESIZE aSizeReq,
+                                                      mozilla::LayoutDeviceIntSize * aResult)
+{
+  MOZ_ASSERT(aPart < THEME_PART_DISTINCT_VALUE_COUNT);
+  int32_t cacheIndex = aThemeClass * THEME_PART_DISTINCT_VALUE_COUNT + aPart;
+  int32_t cacheBitIndex = cacheIndex / 8;
+  uint8_t cacheBit = 1u << (cacheIndex % 8);
+
+  if (mMinimumWidgetSizeCacheValid[cacheBitIndex] & cacheBit) {
+    *aResult = mMinimumWidgetSizeCache[cacheIndex];
+    return NS_OK;
+  }
+
+  HDC hdc = ::GetDC(NULL);
+  if (!hdc) {
+    return NS_ERROR_FAILURE;
+  }
+
+  SIZE sz;
+  GetThemePartSize(aTheme, hdc, aPart, aState, nullptr, aSizeReq, &sz);
+  aResult->width = sz.cx;
+  aResult->height = sz.cy;
+
+  switch (aWidgetType) {
+    case NS_THEME_SPINNER_UPBUTTON:
+    case NS_THEME_SPINNER_DOWNBUTTON:
+      aResult->width++;
+      aResult->height = aResult->height / 2 + 1;
+      break;
+
+    case NS_THEME_MENUSEPARATOR:
+    {
+      SIZE gutterSize(GetGutterSize(aTheme, hdc));
+      aResult->width += gutterSize.cx;
+      break;
+    }
+
+    case NS_THEME_MENUARROW:
+    {
+      // Use the width of the arrow glyph as padding. See the drawing
+      // code for details.
+      aResult->width *= 2;
+      break;
+    }
+  }
+
+  ::ReleaseDC(nullptr, hdc);
+
+  mMinimumWidgetSizeCacheValid[cacheBitIndex] |= cacheBit;
+  mMinimumWidgetSizeCache[cacheIndex] = *aResult;
 
   return NS_OK;
 }
@@ -2143,12 +2200,14 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
   *aIsOverridable = true;
   nsresult rv = NS_OK;
 
-  HANDLE theme = GetTheme(aWidgetType);
-  if (!theme) {
+  mozilla::Maybe<nsUXThemeClass> themeClass = GetThemeClass(aWidgetType);
+  if (themeClass.isNothing()) {
     rv = ClassicGetMinimumWidgetSize(aFrame, aWidgetType, aResult, aIsOverridable);
     ScaleForFrameDPI(aResult, aFrame);
     return rv;
   }
+
+  HANDLE theme = nsUXThemeData::GetTheme(themeClass.value());
   switch (aWidgetType) {
     case NS_THEME_GROUPBOX:
     case NS_THEME_NUMBER_INPUT:
@@ -2352,39 +2411,8 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
   if (NS_FAILED(rv))
     return rv;
 
-  HDC hdc = ::GetDC(NULL);
-  if (!hdc)
-    return NS_ERROR_FAILURE;
-
-  SIZE sz;
-  GetThemePartSize(theme, hdc, part, state, nullptr, sizeReq, &sz);
-  aResult->width = sz.cx;
-  aResult->height = sz.cy;
-
-  switch(aWidgetType) {
-    case NS_THEME_SPINNER_UPBUTTON:
-    case NS_THEME_SPINNER_DOWNBUTTON:
-      aResult->width++;
-      aResult->height = aResult->height / 2 + 1;
-      break;
-
-    case NS_THEME_MENUSEPARATOR:
-    {
-      SIZE gutterSize(GetGutterSize(theme, hdc));
-      aResult->width += gutterSize.cx;
-      break;
-    }
-
-    case NS_THEME_MENUARROW:
-    {
-      // Use the width of the arrow glyph as padding. See the drawing
-      // code for details.
-      aResult->width *= 2;
-      break;
-    }
-  }
-
-  ::ReleaseDC(nullptr, hdc);
+  rv = GetCachedMinimumWidgetSize(aFrame, theme, themeClass.value(), aWidgetType, part,
+                                  state, sizeReq, aResult);
 
   ScaleForFrameDPI(aResult, aFrame);
   return rv;
@@ -2469,6 +2497,7 @@ nsNativeThemeWin::ThemeChanged()
 {
   nsUXThemeData::Invalidate();
   memset(mBorderCacheValid, 0, sizeof(mBorderCacheValid));
+  memset(mMinimumWidgetSizeCacheValid, 0, sizeof(mMinimumWidgetSizeCacheValid));
   return NS_OK;
 }
 
