@@ -511,6 +511,147 @@ DetailedCacheHitTelemetry::AddRecord(ERecType aType, TimeStamp aLoadStart)
   }
 }
 
+StaticMutex CachePerfStats::sLock;
+CachePerfStats::PerfData CachePerfStats::sData[CachePerfStats::LAST];
+
+CachePerfStats::MMA::MMA(uint32_t aTotalWeight, bool aFilter)
+  : mSum(0)
+  , mSumSq(0)
+  , mCnt(0)
+  , mWeight(aTotalWeight)
+  , mFilter(aFilter)
+{
+}
+
+void
+CachePerfStats::MMA::AddValue(uint32_t aValue)
+{
+  if (mFilter) {
+    // Filter high spikes
+    uint32_t avg = GetAverage();
+    uint32_t stddev = GetStdDev();
+    if (avg && aValue > 3 * stddev + avg) {
+      return;
+    }
+  }
+
+  if (mCnt < mWeight) {
+    // Compute arithmetic average until we have at least mWeight values
+    CheckedInt<uint64_t> newSumSq = CheckedInt<uint64_t>(aValue) * aValue;
+    newSumSq += mSumSq;
+    if (!newSumSq.isValid()) {
+      return; // ignore this value
+    }
+    mSumSq = newSumSq.value();
+    mSum += aValue;
+    ++mCnt;
+  } else {
+    CheckedInt<uint64_t> newSumSq = mSumSq - mSumSq / mCnt;
+    newSumSq += static_cast<uint64_t>(aValue) * aValue;
+    if (!newSumSq.isValid()) {
+      return; // ignore this value
+    }
+    mSumSq = newSumSq.value();
+
+    // Compute modified moving average for more values:
+    // newAvg = ((weight - 1) * oldAvg + newValue) / weight
+    mSum -= GetAverage();
+    mSum += aValue;
+  }
+}
+
+uint32_t
+CachePerfStats::MMA::GetAverage()
+{
+  if (mCnt == 0) {
+    return 0;
+  }
+
+  return mSum / mCnt;
+}
+
+uint32_t
+CachePerfStats::MMA::GetStdDev()
+{
+  if (mCnt == 0) {
+    return 0;
+  }
+
+  uint32_t avg = GetAverage();
+  uint64_t avgSq = static_cast<uint64_t>(avg) * avg;
+  uint64_t variance = mSumSq / mCnt;
+  MOZ_RELEASE_ASSERT(variance >= avgSq);
+  variance -= avgSq;
+  return sqrt(variance);
+}
+
+CachePerfStats::PerfData::PerfData()
+  : mFilteredAvg(50, true)
+  , mShortAvg(3, false)
+{
+}
+
+void
+CachePerfStats::PerfData::AddValue(uint32_t aValue, bool aShortOnly)
+{
+  if (!aShortOnly) {
+    mFilteredAvg.AddValue(aValue);
+  }
+  mShortAvg.AddValue(aValue);
+}
+
+uint32_t
+CachePerfStats::PerfData::GetAverage(bool aFiltered)
+{
+  return aFiltered ? mFilteredAvg.GetAverage() : mShortAvg.GetAverage();
+}
+
+uint32_t
+CachePerfStats::PerfData::GetStdDev(bool aFiltered)
+{
+  return aFiltered ? mFilteredAvg.GetStdDev() : mShortAvg.GetStdDev();
+}
+
+// static
+void
+CachePerfStats::AddValue(EDataType aType, uint32_t aValue, bool aShortOnly)
+{
+  StaticMutexAutoLock lock(sLock);
+  sData[aType].AddValue(aValue, aShortOnly);
+}
+
+// static
+uint32_t
+CachePerfStats::GetAverage(EDataType aType, bool aFiltered)
+{
+  StaticMutexAutoLock lock(sLock);
+  return sData[aType].GetAverage(aFiltered);
+}
+
+//static
+bool
+CachePerfStats::IsCacheSlow()
+{
+  // Compare mShortAvg with mFilteredAvg to find out whether cache is getting
+  // slower. Use only data about single IO operations because ENTRY_OPEN can be
+  // affected by more factors than a slow disk.
+  for (uint32_t i = 0; i < ENTRY_OPEN; ++i) {
+    uint32_t avgLong = sData[i].GetAverage(true);
+    if (avgLong == 0) {
+      // We have no perf data yet, skip this data type.
+      continue;
+    }
+    uint32_t avgShort = sData[i].GetAverage(false);
+    uint32_t stddevLong = sData[i].GetStdDev(true);
+
+    if (avgShort > 3 * stddevLong + avgLong) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void
 FreeBuffer(void *aBuf) {
 #ifndef NS_FREE_PERMANENT_DATA
