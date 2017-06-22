@@ -181,6 +181,13 @@ SPSData::SPSData()
   memset(scaling_matrix8x8, 16, sizeof(scaling_matrix8x8));
 }
 
+bool
+SPSData::operator==(const SPSData& aOther) const
+{
+  return this->valid && aOther.valid &&
+    !memcmp(this, &aOther, sizeof(SPSData));
+}
+
 /* static */ already_AddRefed<mozilla::MediaByteBuffer>
 H264::DecodeNALUnit(const mozilla::MediaByteBuffer* aNAL)
 {
@@ -400,6 +407,8 @@ H264::DecodeSPS(const mozilla::MediaByteBuffer* aSPS, SPSData& aDest)
       ConditionDimension(aDest.pic_height / aDest.sample_ratio);
   }
 
+  aDest.valid = true;
+
   return true;
 }
 
@@ -606,6 +615,9 @@ H264::DecodeSPSFromExtraData(const mozilla::MediaByteBuffer* aExtraData,
   }
 
   uint16_t length = reader.ReadU16();
+  if (length == 0) {
+    return false;
+  }
 
   if ((reader.PeekU8() & 0x1f) != H264_NAL_SPS) {
     // Not a SPS NAL type.
@@ -736,6 +748,12 @@ H264::ExtractExtraData(const mozilla::MediaRawData* aSample)
 
   ByteReader reader(aSample->Data(), sampleSize);
 
+  nsTArray<SPSData> SPSTable(MAX_SPS_COUNT);
+  SPSTable.SetLength(MAX_SPS_COUNT);
+  // If we encounter SPS with the same id but different content, we will stop
+  // attempting to detect duplicates.
+  bool checkDuplicate = true;
+
   // Find SPS and PPS NALUs in AVCC data
   while (reader.Remaining() > nalLenSize) {
     uint32_t nalLen;
@@ -745,19 +763,39 @@ H264::ExtractExtraData(const mozilla::MediaRawData* aSample)
       case 3: nalLen = reader.ReadU24(); break;
       case 4: nalLen = reader.ReadU32(); break;
     }
-    uint8_t nalType = reader.PeekU8() & 0x1f;
     const uint8_t* p = reader.Read(nalLen);
     if (!p) {
       return extradata.forget();
     }
+    uint8_t nalType = *p & 0x1f;
 
-    if (nalType == 0x7) { /* SPS */
+    if (nalType == H264_NAL_SPS) {
+      RefPtr<mozilla::MediaByteBuffer> rawNAL = new mozilla::MediaByteBuffer;
+      rawNAL->AppendElements(p, nalLen);
+      RefPtr<mozilla::MediaByteBuffer> sps = DecodeNALUnit(rawNAL);
+      SPSData data;
+      if (!DecodeSPS(sps, data)) {
+        // Invalid SPS, ignore.
+        continue;
+      }
+      uint8_t spsId = data.seq_parameter_set_id;
+      if (checkDuplicate && SPSTable[spsId].valid && SPSTable[spsId] == data) {
+        // Duplicate ignore.
+        continue;
+      }
+      if (SPSTable[spsId].valid) {
+        // We already have detected a SPS with this Id. Just to be safe we
+        // disable SPS duplicate detection.
+        checkDuplicate = false;
+      } else {
+        SPSTable[spsId] = data;
+      }
       numSps++;
       if (!spsw.WriteU16(nalLen)
           || !spsw.Write(p, nalLen)) {
         return extradata.forget();
       }
-    } else if (nalType == 0x8) { /* PPS */
+    } else if (nalType == H264_NAL_PPS) {
       numPps++;
       if (!ppsw.WriteU16(nalLen)
           || !ppsw.Write(p, nalLen)) {
@@ -765,6 +803,10 @@ H264::ExtractExtraData(const mozilla::MediaRawData* aSample)
       }
     }
   }
+
+  // We ignore PPS data if we didn't find a SPS as we would be unable to
+  // decode it anyway.
+  numPps = numSps ? numPps : 0;
 
   if (numSps && sps.Length() > 5) {
     extradata->AppendElement(1);        // version
