@@ -203,8 +203,10 @@ var pedanticChecks = report => {
         stat.type + ".packetsLost is a sane number for a short test. value="
         + stat.packetsLost);
 
+      // This should be much lower for audio, TODO: Bug 1330575
+      let expectedJitter = stat.mediaType == "video" ? 0.5 : 1;
       // jitter
-      ok(stat.jitter < 10, // This should be much lower, TODO: Bug 1330575
+      ok(stat.jitter < expectedJitter,
         stat.type + ".jitter is sane number for a local only test. value="
         + stat.jitter);
 

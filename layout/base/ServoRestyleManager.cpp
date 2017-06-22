@@ -181,31 +181,25 @@ ServoRestyleManager::ClearRestyleStateFromSubtree(Element* aElement)
  */
 struct ServoRestyleManager::TextPostTraversalState
 {
-  nsStyleContext& mParentContext;
-  ServoStyleSet& mStyleSet;
-  RefPtr<nsStyleContext> mStyle;
-  bool mShouldPostHints;
-  bool mShouldComputeHints;
-  nsChangeHint mComputedHint;
-  nsChangeHint mHintsHandled;
-
+public:
   TextPostTraversalState(nsStyleContext& aParentContext,
-                         ServoStyleSet& aStyleSet,
                          bool aDisplayContentsParentStyleChanged,
-                         nsChangeHint aHintsHandled)
+                         ServoRestyleState& aParentRestyleState)
     : mParentContext(aParentContext)
-    , mStyleSet(aStyleSet)
+    , mParentRestyleState(aParentRestyleState)
     , mStyle(nullptr)
     , mShouldPostHints(aDisplayContentsParentStyleChanged)
     , mShouldComputeHints(aDisplayContentsParentStyleChanged)
     , mComputedHint(nsChangeHint_Empty)
-    , mHintsHandled(aHintsHandled)
   {}
+
+  nsStyleChangeList& ChangeList() { return mParentRestyleState.ChangeList(); }
 
   nsStyleContext& ComputeStyle(nsIContent* aTextNode)
   {
     if (!mStyle) {
-      mStyle = mStyleSet.ResolveStyleForText(aTextNode, &mParentContext);
+      mStyle = mParentRestyleState.StyleSet().ResolveStyleForText(
+        aTextNode, &mParentContext);
     }
     MOZ_ASSERT(mStyle);
     return *mStyle;
@@ -213,8 +207,7 @@ struct ServoRestyleManager::TextPostTraversalState
 
   void ComputeHintIfNeeded(nsIContent* aContent,
                            nsIFrame* aTextFrame,
-                           nsStyleContext& aNewContext,
-                           nsStyleChangeList& aChangeList)
+                           nsStyleContext& aNewContext)
   {
     MOZ_ASSERT(aTextFrame);
     MOZ_ASSERT(aNewContext.GetPseudo() == nsCSSAnonBoxes::mozText);
@@ -238,36 +231,43 @@ struct ServoRestyleManager::TextPostTraversalState
         oldContext->CalcStyleDifference(&aNewContext,
                                         &equalStructs,
                                         &samePointerStructs);
-      mComputedHint = NS_RemoveSubsumedHints(mComputedHint, mHintsHandled);
+      mComputedHint = NS_RemoveSubsumedHints(
+        mComputedHint, mParentRestyleState.ChangesHandled());
     }
 
     if (mComputedHint) {
-      aChangeList.AppendChange(aTextFrame, aContent, mComputedHint);
+      mParentRestyleState.ChangeList().AppendChange(
+        aTextFrame, aContent, mComputedHint);
     }
   }
+
+private:
+  nsStyleContext& mParentContext;
+  ServoRestyleState& mParentRestyleState;
+  RefPtr<nsStyleContext> mStyle;
+  bool mShouldPostHints;
+  bool mShouldComputeHints;
+  nsChangeHint mComputedHint;
 };
 
 static void
 UpdateBlockFramePseudoElements(nsBlockFrame* aFrame,
-                               ServoStyleSet& aStyleSet,
-                               nsStyleChangeList& aChangeList)
+                               ServoRestyleState& aRestyleState)
 {
   if (nsBulletFrame* bullet = aFrame->GetBullet()) {
     RefPtr<nsStyleContext> newContext =
-      aStyleSet.ResolvePseudoElementStyle(
-          aFrame->GetContent()->AsElement(),
-          bullet->StyleContext()->GetPseudoType(),
-          aFrame->StyleContext(),
-          /* aPseudoElement = */ nullptr);
+      aRestyleState.StyleSet().ResolvePseudoElementStyle(
+        aFrame->GetContent()->AsElement(),
+        bullet->StyleContext()->GetPseudoType(),
+        aFrame->StyleContext(),
+        /* aPseudoElement = */ nullptr);
 
-    aFrame->UpdateStyleOfOwnedChildFrame(bullet, newContext, aChangeList);
+    aFrame->UpdateStyleOfOwnedChildFrame(bullet, newContext, aRestyleState);
   }
 }
 
 static void
-UpdateBackdropIfNeeded(nsIFrame* aFrame,
-                       ServoStyleSet& aStyleSet,
-                       nsStyleChangeList& aChangeList)
+UpdateBackdropIfNeeded(nsIFrame* aFrame, ServoRestyleState& aRestyleState)
 {
   const nsStyleDisplay* display = aFrame->StyleContext()->StyleDisplay();
   if (display->mTopLayer != NS_STYLE_TOP_LAYER_TOP) {
@@ -292,44 +292,39 @@ UpdateBackdropIfNeeded(nsIFrame* aFrame,
              CSSPseudoElementType::backdrop);
 
   RefPtr<nsStyleContext> newContext =
-    aStyleSet.ResolvePseudoElementStyle(
-        aFrame->GetContent()->AsElement(),
-        CSSPseudoElementType::backdrop,
-        aFrame->StyleContext(),
-        /* aPseudoElement = */ nullptr);
+    aRestyleState.StyleSet().ResolvePseudoElementStyle(
+      aFrame->GetContent()->AsElement(),
+      CSSPseudoElementType::backdrop,
+      aFrame->StyleContext(),
+      /* aPseudoElement = */ nullptr);
 
-  aFrame->UpdateStyleOfOwnedChildFrame(backdropFrame,
-                                       newContext,
-                                       aChangeList);
+  aFrame->UpdateStyleOfOwnedChildFrame(
+    backdropFrame, newContext, aRestyleState);
 }
 
 static void
 UpdateFramePseudoElementStyles(nsIFrame* aFrame,
-                               ServoStyleSet& aStyleSet,
-                               nsStyleChangeList& aChangeList)
+                               ServoRestyleState& aRestyleState)
 {
   if (aFrame->IsFrameOfType(nsIFrame::eBlockFrame)) {
     UpdateBlockFramePseudoElements(static_cast<nsBlockFrame*>(aFrame),
-                                   aStyleSet,
-                                   aChangeList);
+                                   aRestyleState);
   }
 
-  UpdateBackdropIfNeeded(aFrame, aStyleSet, aChangeList);
+  UpdateBackdropIfNeeded(aFrame, aRestyleState);
 }
 
 bool
 ServoRestyleManager::ProcessPostTraversal(Element* aElement,
                                           nsStyleContext* aParentContext,
-                                          ServoStyleSet* aStyleSet,
-                                          nsStyleChangeList& aChangeList,
-                                          nsChangeHint aChangesHandled)
+                                          ServoRestyleState& aRestyleState)
 {
   nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(aElement);
 
   // Grab the change hint from Servo.
   nsChangeHint changeHint = Servo_TakeChangeHint(aElement);
-  changeHint = NS_RemoveSubsumedHints(changeHint, aChangesHandled);
-  aChangesHandled |= changeHint;
+  changeHint =
+    NS_RemoveSubsumedHints(changeHint, aRestyleState.ChangesHandled());
 
   // Handle lazy frame construction by posting a reconstruct for any lazily-
   // constructed roots.
@@ -346,7 +341,7 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
   // PostRestyleEvent, such as a RepaintFrame hint when a :link changes to be
   // :visited.  Skip processing these hints if there is no frame.
   if ((styleFrame || (changeHint & nsChangeHint_ReconstructFrame)) && changeHint) {
-    aChangeList.AppendChange(styleFrame, aElement, changeHint);
+    aRestyleState.ChangeList().AppendChange(styleFrame, aElement, changeHint);
   }
 
   // If our change hint is reconstruct, we delegate to the frame constructor,
@@ -381,7 +376,7 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
   }
 
   RefPtr<ServoComputedValues> computedValues =
-    aStyleSet->ResolveServoStyle(aElement);
+    aRestyleState.StyleSet().ResolveServoStyle(aElement);
 
   // Note that we rely in the fact that we don't cascade pseudo-element styles
   // separately right now (that is, if a pseudo style changes, the normal style
@@ -396,6 +391,8 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
   const bool recreateContext = oldStyleContext &&
     oldStyleContext->ComputedValues() != computedValues;
 
+  ServoRestyleState childrenRestyleState(aRestyleState, changeHint);
+
   RefPtr<nsStyleContext> newContext = nullptr;
   if (recreateContext) {
     MOZ_ASSERT(styleFrame || displayContentsNode);
@@ -404,12 +401,8 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
     nsIAtom* pseudoTag = pseudo == CSSPseudoElementType::NotPseudo
       ? nullptr : nsCSSPseudoElements::GetPseudoAtom(pseudo);
 
-    newContext =
-      aStyleSet->GetContext(computedValues.forget(),
-                            aParentContext,
-                            pseudoTag,
-                            pseudo,
-                            aElement);
+    newContext = aRestyleState.StyleSet().GetContext(
+      computedValues.forget(), aParentContext, pseudoTag, pseudo, aElement);
 
     newContext->EnsureSameStructsCached(oldStyleContext);
 
@@ -430,8 +423,8 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
     }
 
     if (styleFrame) {
-      styleFrame->UpdateStyleOfOwnedAnonBoxes(*aStyleSet, aChangeList, changeHint);
-      UpdateFramePseudoElementStyles(styleFrame, *aStyleSet, aChangeList);
+      styleFrame->UpdateStyleOfOwnedAnonBoxes(childrenRestyleState);
+      UpdateFramePseudoElementStyles(styleFrame, childrenRestyleState);
     }
 
     if (!aElement->GetParent()) {
@@ -439,7 +432,7 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
       ViewportFrame* viewport =
         do_QueryFrame(mPresContext->PresShell()->GetRootFrame());
       if (viewport) {
-        viewport->UpdateStyle(*aStyleSet, aChangeList);
+        viewport->UpdateStyle(childrenRestyleState);
       }
     }
 
@@ -452,7 +445,8 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
     // Since AddLayerChangesForAnimation checks if |styleFrame| has a transform
     // style or not, we need to call it *after* setting |newContext| to
     // |styleFrame| to ensure the animated transform has been removed first.
-    AddLayerChangesForAnimation(styleFrame, aElement, aChangeList);
+    AddLayerChangesForAnimation(
+      styleFrame, aElement, aRestyleState.ChangeList());
   }
 
   const bool descendantsNeedFrames =
@@ -468,19 +462,15 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
       recreateContext ? newContext : oldStyleContext;
 
     StyleChildrenIterator it(aElement);
-    TextPostTraversalState textState(
-        *upToDateContext,
-        *aStyleSet,
-        displayContentsNode && recreateContext,
-        aChangesHandled);
+    TextPostTraversalState textState(*upToDateContext,
+                                     displayContentsNode && recreateContext,
+                                     childrenRestyleState);
     for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
       if (traverseElementChildren && n->IsElement()) {
-        recreatedAnyContext |=
-          ProcessPostTraversal(n->AsElement(), upToDateContext,
-                               aStyleSet, aChangeList, aChangesHandled);
+        recreatedAnyContext |= ProcessPostTraversal(
+          n->AsElement(), upToDateContext, childrenRestyleState);
       } else if (traverseTextChildren && n->IsNodeOfType(nsINode::eTEXT)) {
-        recreatedAnyContext |=
-          ProcessPostTraversalForText(n, aChangeList, textState);
+        recreatedAnyContext |= ProcessPostTraversalForText(n, textState);
       }
     }
   }
@@ -494,12 +484,12 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
 bool
 ServoRestyleManager::ProcessPostTraversalForText(
     nsIContent* aTextNode,
-    nsStyleChangeList& aChangeList,
     TextPostTraversalState& aPostTraversalState)
 {
   // Handle lazy frame construction.
   if (aTextNode->HasFlag(NODE_NEEDS_FRAME)) {
-    aChangeList.AppendChange(nullptr, aTextNode, nsChangeHint_ReconstructFrame);
+    aPostTraversalState.ChangeList().AppendChange(
+      nullptr, aTextNode, nsChangeHint_ReconstructFrame);
     return true;
   }
 
@@ -511,8 +501,7 @@ ServoRestyleManager::ProcessPostTraversalForText(
 
   RefPtr<nsStyleContext> oldStyleContext = primaryFrame->StyleContext();
   nsStyleContext& newContext = aPostTraversalState.ComputeStyle(aTextNode);
-  aPostTraversalState.ComputeHintIfNeeded(
-      aTextNode, primaryFrame, newContext, aChangeList);
+  aPostTraversalState.ComputeHintIfNeeded(aTextNode, primaryFrame, newContext);
 
   for (nsIFrame* f = primaryFrame; f;
        f = GetNextContinuationWithSameStyle(f, oldStyleContext)) {
@@ -642,9 +631,8 @@ ServoRestyleManager::DoProcessPendingRestyles(TraversalRestyleBehavior
     DocumentStyleRootIterator iter(doc);
     bool anyStyleChanged = false;
     while (Element* root = iter.GetNextStyleRoot()) {
-      anyStyleChanged |=
-        ProcessPostTraversal(
-            root, nullptr, styleSet, currentChanges, nsChangeHint(0));
+      ServoRestyleState state(*styleSet, currentChanges);
+      anyStyleChanged |= ProcessPostTraversal(root, nullptr, state);
     }
 
     // Process the change hints.

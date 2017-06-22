@@ -56,6 +56,7 @@ def run(path, server_config, session_config, timeout=0):
                      "--verbose",  # show each individual subtest
                      "--capture", "no",  # enable stdout/stderr from tests
                      "--basetemp", cache,  # temporary directory
+                     "-p", "no:mozlog",
                      path],
                     plugins=plugins)
 

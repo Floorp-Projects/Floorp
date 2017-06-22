@@ -21,7 +21,6 @@
 #include "nsIDocumentObserver.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"
-#include "nsIEditor.h"
 #include "nsIEditorMailSupport.h"
 #include "nsIEditorStyleSheets.h"
 #include "nsIEditorUtils.h"
@@ -39,6 +38,7 @@
 class nsDocumentFragment;
 class nsITransferable;
 class nsIClipboard;
+class nsIDOMMouseEvent;
 class nsILinkHandler;
 class nsTableWrapperFrame;
 class nsIDOMRange;
@@ -134,6 +134,8 @@ public:
                                             bool aSuppressTransaction) override;
   using EditorBase::RemoveAttributeOrEquivalent;
   using EditorBase::SetAttributeOrEquivalent;
+
+  nsresult MouseMove(nsIDOMMouseEvent* aMouseEvent);
 
   // nsStubMutationObserver overrides
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED

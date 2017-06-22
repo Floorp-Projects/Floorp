@@ -67,6 +67,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
 #include "nsNodeUtils.h"
 #include "mozilla/dom/DirectionalityUtils.h"
@@ -103,7 +104,6 @@
 #include "nsICategoryManager.h"
 #include "nsIDOMDocumentType.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIEditor.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsIControllers.h"
 #include "nsView.h"
@@ -3942,8 +3942,8 @@ Element::InsertAdjacentText(
   InsertAdjacent(aWhere, textNode, aError);
 }
 
-nsIEditor*
-Element::GetEditorInternal()
+TextEditor*
+Element::GetTextEditorInternal()
 {
   nsCOMPtr<nsITextControlElement> textCtrl = do_QueryInterface(this);
   return textCtrl ? textCtrl->GetTextEditor() : nullptr;

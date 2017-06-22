@@ -20,6 +20,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
   "resource://gre/modules/WebNavigationFrames.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
   "resource://gre/modules/ContextualIdentityService.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DevToolsShim",
+  "chrome://devtools-shim/content/DevToolsShim.jsm");
 
 var gContextMenuContentData = null;
 
@@ -304,7 +306,11 @@ nsContextMenu.prototype = {
                        this.onImage || this.onCanvas ||
                        this.onVideo || this.onAudio ||
                        this.onLink || this.onTextInput);
-    var showInspect = this.inTabBrowser && gPrefService.getBoolPref("devtools.inspector.enabled");
+
+    var showInspect = DevToolsShim.isInstalled() &&
+                      this.inTabBrowser &&
+                      gPrefService.getBoolPref("devtools.inspector.enabled", false);
+
     this.showItem("context-viewsource", shouldShow);
     this.showItem("context-viewinfo", shouldShow);
     // The page info is broken for WebExtension popups, as the browser is
@@ -631,10 +637,7 @@ nsContextMenu.prototype = {
   },
 
   inspectNode() {
-    let gBrowser = this.browser.ownerGlobal.gBrowser;
-    let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-    let { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
-    return gDevToolsBrowser.inspectNode(gBrowser.selectedTab, this.targetSelectors);
+    return DevToolsShim.inspectNode(gBrowser.selectedTab, this.targetSelectors);
   },
 
   /**

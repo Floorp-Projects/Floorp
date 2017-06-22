@@ -24,6 +24,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/ServoRestyleManager.h"
+#include "mozilla/TextEditor.h"
 #include "mozilla/URLExtraData.h"
 #include "mozilla/dom/Attr.h"
 #include "nsDOMAttributeMap.h"
@@ -93,7 +94,6 @@
 #include "nsNodeInfoManager.h"
 #include "nsICategoryManager.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIEditor.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsIControllers.h"
 #include "nsView.h"
@@ -2289,8 +2289,8 @@ FragmentOrElement::GetMarkup(bool aIncludeSelf, nsAString& aMarkup)
 
   if (IsEditable()) {
     nsCOMPtr<Element> elem = do_QueryInterface(this);
-    nsIEditor* editor = elem ? elem->GetEditorInternal() : nullptr;
-    if (editor && editor->OutputsMozDirty()) {
+    TextEditor* textEditor = elem ? elem->GetTextEditorInternal() : nullptr;
+    if (textEditor && textEditor->OutputsMozDirty()) {
       flags &= ~nsIDocumentEncoder::OutputIgnoreMozDirty;
     }
   }

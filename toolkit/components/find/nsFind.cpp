@@ -16,8 +16,6 @@
 #include "nsIFrame.h"
 #include "nsITextControlFrame.h"
 #include "nsIFormControl.h"
-#include "nsIEditor.h"
-#include "nsIPlaintextEditor.h"
 #include "nsTextFragment.h"
 #include "nsString.h"
 #include "nsIAtom.h"
@@ -29,6 +27,7 @@
 #include "nsRange.h"
 #include "nsContentUtils.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/TextEditor.h"
 
 using namespace mozilla;
 
@@ -373,21 +372,14 @@ nsFindContentIterator::SetupInnerIterator(nsIContent* aContent)
     return;
   }
 
-  nsCOMPtr<nsIEditor> editor;
-  tcFrame->GetEditor(getter_AddRefs(editor));
-  if (!editor) {
-    return;
-  }
-
   // don't mess with disabled input fields
-  uint32_t editorFlags = 0;
-  editor->GetFlags(&editorFlags);
-  if (editorFlags & nsIPlaintextEditor::eEditorDisabledMask) {
+  RefPtr<TextEditor> textEditor = tcFrame->GetTextEditor();
+  if (!textEditor || textEditor->IsDisabled()) {
     return;
   }
 
   nsCOMPtr<nsIDOMElement> rootElement;
-  editor->GetRootElement(getter_AddRefs(rootElement));
+  textEditor->GetRootElement(getter_AddRefs(rootElement));
 
   nsCOMPtr<nsIDOMRange> innerRange = CreateRange(aContent);
   nsCOMPtr<nsIDOMRange> outerRange = CreateRange(aContent);

@@ -1157,7 +1157,7 @@ EditorEventListener::Focus(InternalFocusEvent* aFocusEvent)
   NS_ENSURE_TRUE(ps, NS_OK);
   nsCOMPtr<nsIContent> focusedContent = editorBase->GetFocusedContentForIME();
   IMEStateManager::OnFocusInEditor(ps->GetPresContext(), focusedContent,
-                                   editorBase);
+                                   *editorBase);
 
   return NS_OK;
 }
@@ -1238,8 +1238,7 @@ EditorEventListener::ShouldHandleNativeKeyBindings(
   }
 
   RefPtr<EditorBase> editorBase(mEditorBase);
-  nsCOMPtr<nsIHTMLEditor> htmlEditor =
-    do_QueryInterface(static_cast<nsIEditor*>(editorBase));
+  HTMLEditor* htmlEditor = editorBase->AsHTMLEditor();
   if (!htmlEditor) {
     return false;
   }

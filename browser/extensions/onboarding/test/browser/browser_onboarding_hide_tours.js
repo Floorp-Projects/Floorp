@@ -3,9 +3,6 @@
 
 "use strict";
 
-const ABOUT_HOME_URL = "about:home";
-const ABOUT_NEWTAB_URL = "about:newtab";
-
 function assertOnboardingDestroyed(browser) {
   return ContentTask.spawn(browser, {}, function() {
     let expectedRemovals = [
