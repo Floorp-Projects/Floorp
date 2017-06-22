@@ -34,7 +34,7 @@ do_register_cleanup(() => {
   policy.active = false;
 });
 
-add_task(function* test_addon_csp() {
+add_task(async function test_addon_csp() {
   equal(aps.baseCSP, Preferences.get("extensions.webextensions.base-content-security-policy"),
         "Expected base CSP value");
 

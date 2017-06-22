@@ -88,7 +88,7 @@ do_register_cleanup(function() {
   Assert.ok(!distDir.exists());
 });
 
-add_task(function* () {
+add_task(async function() {
   // Force distribution.
   let glue = Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIObserver)
   glue.observe(null, TOPIC_BROWSERGLUE_TEST, TOPICDATA_DISTRIBUTION_CUSTOMIZATION);

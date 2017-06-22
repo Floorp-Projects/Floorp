@@ -105,7 +105,7 @@ function check_histogram(histogram_type, name, min, max, bucket_count) {
 add_task({
   skip_if: () => gIsAndroid
 },
-function* test_instantiate() {
+function test_instantiate() {
   const ID = "TELEMETRY_TEST_COUNT";
   let h = Telemetry.getHistogramById(ID);
 
@@ -121,7 +121,7 @@ function* test_instantiate() {
   h.clear();
 });
 
-add_task(function* test_parameterChecks() {
+add_task(async function test_parameterChecks() {
   let kinds = [Telemetry.HISTOGRAM_EXPONENTIAL, Telemetry.HISTOGRAM_LINEAR]
   let testNames = ["TELEMETRY_TEST_EXPONENTIAL", "TELEMETRY_TEST_LINEAR"]
   for (let i = 0; i < kinds.length; i++) {
@@ -132,7 +132,7 @@ add_task(function* test_parameterChecks() {
   }
 });
 
-add_task(function* test_parameterCounts() {
+add_task(async function test_parameterCounts() {
   let histogramIds = [
     "TELEMETRY_TEST_EXPONENTIAL",
     "TELEMETRY_TEST_LINEAR",
@@ -150,7 +150,7 @@ add_task(function* test_parameterCounts() {
   }
 });
 
-add_task(function* test_parameterCountsKeyed() {
+add_task(async function test_parameterCountsKeyed() {
   let histogramIds = [
     "TELEMETRY_TEST_KEYED_FLAG",
     "TELEMETRY_TEST_KEYED_BOOLEAN",
@@ -167,14 +167,14 @@ add_task(function* test_parameterCountsKeyed() {
   }
 });
 
-add_task(function* test_noSerialization() {
+add_task(async function test_noSerialization() {
   // Instantiate the storage for this histogram and make sure it doesn't
   // get reflected into JS, as it has no interesting data in it.
   Telemetry.getHistogramById("NEWTAB_PAGE_PINNED_SITES_COUNT");
   do_check_false("NEWTAB_PAGE_PINNED_SITES_COUNT" in Telemetry.histogramSnapshots);
 });
 
-add_task(function* test_boolean_histogram() {
+add_task(async function test_boolean_histogram() {
   var h = Telemetry.getHistogramById("TELEMETRY_TEST_BOOLEAN");
   var r = h.snapshot().ranges;
   // boolean histograms ignore numeric parameters
@@ -193,7 +193,7 @@ add_task(function* test_boolean_histogram() {
   do_check_eq(s.counts[0], 2);
 });
 
-add_task(function* test_flag_histogram() {
+add_task(async function test_flag_histogram() {
   var h = Telemetry.getHistogramById("TELEMETRY_TEST_FLAG");
   var r = h.snapshot().ranges;
   // Flag histograms ignore numeric parameters.
@@ -218,7 +218,7 @@ add_task(function* test_flag_histogram() {
   do_check_eq(h.snapshot().histogram_type, Telemetry.HISTOGRAM_FLAG);
 });
 
-add_task(function* test_count_histogram() {
+add_task(async function test_count_histogram() {
   let h = Telemetry.getHistogramById("TELEMETRY_TEST_COUNT2");
   let s = h.snapshot();
   do_check_eq(uneval(s.ranges), uneval([0, 1, 2]));
@@ -234,7 +234,7 @@ add_task(function* test_count_histogram() {
   do_check_eq(s.sum, 2);
 });
 
-add_task(function* test_categorical_histogram() {
+add_task(async function test_categorical_histogram() {
   let h1 = Telemetry.getHistogramById("TELEMETRY_TEST_CATEGORICAL");
   for (let v of ["CommonLabel", "Label2", "Label3", "Label3", 0, 0, 1]) {
     h1.add(v);
@@ -289,7 +289,7 @@ add_task(function* test_categorical_histogram() {
   Assert.deepEqual(snapshot.counts.slice(0, 4), [1, 1, 1, 0]);
 });
 
-add_task(function* test_add_error_behaviour() {
+add_task(async function test_add_error_behaviour() {
   const PLAIN_HISTOGRAMS_TO_TEST = [
     "TELEMETRY_TEST_FLAG",
     "TELEMETRY_TEST_EXPONENTIAL",
@@ -318,7 +318,7 @@ add_task(function* test_add_error_behaviour() {
   }
 });
 
-add_task(function* test_API_return_values() {
+add_task(async function test_API_return_values() {
   // Check that the plain scalar functions don't allow to crash the browser.
   // We expect 'undefined' to be returned so that .add(1).add() can't be called.
   // See bug 1321349 for context.
@@ -338,7 +338,7 @@ add_task(function* test_API_return_values() {
   }
 });
 
-add_task(function* test_getHistogramById() {
+add_task(async function test_getHistogramById() {
   try {
     Telemetry.getHistogramById("nonexistent");
     do_throw("This can't happen");
@@ -352,12 +352,12 @@ add_task(function* test_getHistogramById() {
   do_check_eq(s.max, 10000);
 });
 
-add_task(function* test_getSlowSQL() {
+add_task(async function test_getSlowSQL() {
   var slow = Telemetry.slowSQL;
   do_check_true(("mainThread" in slow) && ("otherThreads" in slow));
 });
 
-add_task(function* test_getWebrtc() {
+add_task(async function test_getWebrtc() {
   var webrtc = Telemetry.webrtcStats;
   do_check_true("IceCandidatesStats" in webrtc);
   var icestats = webrtc.IceCandidatesStats;
@@ -365,7 +365,7 @@ add_task(function* test_getWebrtc() {
 });
 
 // Check that telemetry doesn't record in private mode
-add_task(function* test_privateMode() {
+add_task(async function test_privateMode() {
   var h = Telemetry.getHistogramById("TELEMETRY_TEST_BOOLEAN");
   var orig = h.snapshot();
   Telemetry.canRecordExtended = false;
@@ -377,7 +377,7 @@ add_task(function* test_privateMode() {
 });
 
 // Check that telemetry records only when it is suppose to.
-add_task(function* test_histogramRecording() {
+add_task(async function test_histogramRecording() {
   // Check that no histogram is recorded if both base and extended recording are off.
   Telemetry.canRecordBase = false;
   Telemetry.canRecordExtended = false;
@@ -430,7 +430,7 @@ add_task(function* test_histogramRecording() {
                "Histogram value should have incremented by 1 due to recording.");
 });
 
-add_task(function* test_expired_histogram() {
+add_task(async function test_expired_histogram() {
   var test_expired_id = "TELEMETRY_TEST_EXPIRED";
   var dummy = Telemetry.getHistogramById(test_expired_id);
   var rh = Telemetry.registeredHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, []);
@@ -443,7 +443,7 @@ add_task(function* test_expired_histogram() {
   do_check_eq(rh[test_expired_id], undefined);
 });
 
-add_task(function* test_keyed_histogram() {
+add_task(async function test_keyed_histogram() {
   // Check that invalid names get rejected.
 
   let threw = false;
@@ -456,7 +456,7 @@ add_task(function* test_keyed_histogram() {
   Assert.ok(threw, "getKeyedHistogramById should have thrown");
 });
 
-add_task(function* test_keyed_boolean_histogram() {
+add_task(async function test_keyed_boolean_histogram() {
   const KEYED_ID = "TELEMETRY_TEST_KEYED_BOOLEAN";
   let KEYS = numberRange(0, 2).map(i => "key" + (i + 1));
   KEYS.push("漢語");
@@ -504,7 +504,7 @@ add_task(function* test_keyed_boolean_histogram() {
   Assert.deepEqual(h.snapshot(), {});
 });
 
-add_task(function* test_keyed_count_histogram() {
+add_task(async function test_keyed_count_histogram() {
   const KEYED_ID = "TELEMETRY_TEST_KEYED_COUNT";
   const KEYS = numberRange(0, 5).map(i => "key" + (i + 1));
   let histogramBase = {
@@ -565,7 +565,7 @@ add_task(function* test_keyed_count_histogram() {
   Assert.equal(h.snapshot("key").sum, 1);
 });
 
-add_task(function* test_keyed_categorical_histogram() {
+add_task(async function test_keyed_categorical_histogram() {
   const KEYED_ID = "TELEMETRY_TEST_KEYED_CATEGORICAL";
   const KEYS = numberRange(0, 5).map(i => "key" + (i + 1));
 
@@ -605,7 +605,7 @@ add_task(function* test_keyed_categorical_histogram() {
   }
 });
 
-add_task(function* test_keyed_flag_histogram() {
+add_task(async function test_keyed_flag_histogram() {
   const KEYED_ID = "TELEMETRY_TEST_KEYED_FLAG";
   let h = Telemetry.getKeyedHistogramById(KEYED_ID);
 
@@ -633,7 +633,7 @@ add_task(function* test_keyed_flag_histogram() {
   Assert.deepEqual(h.snapshot(), {});
 });
 
-add_task(function* test_keyed_histogram_recording() {
+add_task(async function test_keyed_histogram_recording() {
   // Check that no histogram is recorded if both base and extended recording are off.
   Telemetry.canRecordBase = false;
   Telemetry.canRecordExtended = false;
@@ -677,7 +677,7 @@ add_task(function* test_keyed_histogram_recording() {
   Assert.equal(h.snapshot(TEST_KEY).sum, 1);
 });
 
-add_task(function* test_histogram_recording_enabled() {
+add_task(async function test_histogram_recording_enabled() {
   Telemetry.canRecordBase = true;
   Telemetry.canRecordExtended = true;
 
@@ -726,7 +726,7 @@ add_task(function* test_histogram_recording_enabled() {
                "When recording is disabled add should not record.");
 });
 
-add_task(function* test_keyed_histogram_recording_enabled() {
+add_task(async function test_keyed_histogram_recording_enabled() {
   Telemetry.canRecordBase = true;
   Telemetry.canRecordExtended = true;
 
@@ -770,7 +770,7 @@ add_task(function* test_keyed_histogram_recording_enabled() {
     "Keyed histogram add should not record when recording is disabled");
 });
 
-add_task(function* test_histogramSnapshots() {
+add_task(async function test_histogramSnapshots() {
   let keyed = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_COUNT");
   keyed.add("a", 1);
 
@@ -778,7 +778,7 @@ add_task(function* test_histogramSnapshots() {
   Assert.ok(!("TELEMETRY_TEST_KEYED_COUNT#a" in Telemetry.histogramSnapshots));
 });
 
-add_task(function* test_datasets() {
+add_task(async function test_datasets() {
   // Check that datasets work as expected.
 
   const RELEASE_CHANNEL_OPTOUT = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
@@ -810,7 +810,7 @@ add_task(function* test_datasets() {
 add_task({
   skip_if: () => gIsAndroid
 },
-function* test_subsession() {
+function test_subsession() {
   const ID = "TELEMETRY_TEST_COUNT";
   const FLAG = "TELEMETRY_TEST_FLAG";
   let h = Telemetry.getHistogramById(ID);
@@ -896,7 +896,7 @@ function* test_subsession() {
 add_task({
   skip_if: () => gIsAndroid
 },
-function* test_keyed_subsession() {
+function test_keyed_subsession() {
   let h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_FLAG");
   const KEY = "foo";
 

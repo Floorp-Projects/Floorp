@@ -15,7 +15,7 @@ function run_test() {
 /**
  * Test removing non watched path
  */
-add_task(function* test_remove_not_watched() {
+add_task(async function test_remove_not_watched() {
   let nonExistingDir =
     OS.Path.join(OS.Constants.Path.profileDir, "absolutelyNotExisting");
 

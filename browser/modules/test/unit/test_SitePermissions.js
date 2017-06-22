@@ -8,7 +8,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 
 const STORAGE_MANAGER_ENABLED = Services.prefs.getBoolPref("browser.storageManager.enabled");
 
-add_task(function* testPermissionsListing() {
+add_task(async function testPermissionsListing() {
   let expectedPermissions = ["camera", "cookie", "desktop-notification", "focus-tab-by-prompt",
      "geo", "image", "indexedDB", "install", "microphone", "popup", "screen"];
   if (STORAGE_MANAGER_ENABLED) {
@@ -21,7 +21,7 @@ add_task(function* testPermissionsListing() {
     "Correct list of all permissions");
 });
 
-add_task(function* testGetAllByURI() {
+add_task(async function testGetAllByURI() {
   // check that it returns an empty array on an invalid URI
   // like a file URI, which doesn't support site permissions
   let wrongURI = Services.io.newURI("file:///example.js")
@@ -60,7 +60,7 @@ add_task(function* testGetAllByURI() {
   SitePermissions.remove(uri, "addon");
 });
 
-add_task(function* testGetAvailableStates() {
+add_task(async function testGetAvailableStates() {
   Assert.deepEqual(SitePermissions.getAvailableStates("camera"),
                    [ SitePermissions.UNKNOWN,
                      SitePermissions.ALLOW,
@@ -76,7 +76,7 @@ add_task(function* testGetAvailableStates() {
                      SitePermissions.BLOCK ]);
 });
 
-add_task(function* testExactHostMatch() {
+add_task(async function testExactHostMatch() {
   let uri = Services.io.newURI("https://example.com");
   let subUri = Services.io.newURI("https://test1.example.com");
 

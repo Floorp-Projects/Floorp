@@ -22,7 +22,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_purpose() {
+add_task(async function test_purpose() {
   let engine = Services.search.getEngineByName("Test search engine");
 
   function check_submission(aExpected, aSearchTerm, aType, aPurpose) {

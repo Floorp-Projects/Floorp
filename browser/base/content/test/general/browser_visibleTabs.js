@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(function* () {
+add_task(async function() {
   // There should be one tab when we start the test
   let [origTab] = gBrowser.visibleTabs;
 

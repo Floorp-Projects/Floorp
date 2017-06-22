@@ -21,7 +21,7 @@ const ACTION_METHODS = [
   "onFilterBlur",
 ];
 
-add_task(function* testInitUninit() {
+add_task(async function testInitUninit() {
   let store = new SyncedTabsListStore();
   let ViewMock = sinon.stub();
   let view = {render() {}, destroy() {}};
@@ -68,7 +68,7 @@ add_task(function* testInitUninit() {
   Assert.ok(view.destroy.calledOnce, "view is destroyed on uninit");
 });
 
-add_task(function* testActions() {
+add_task(async function testActions() {
   let store = new SyncedTabsListStore();
   let chromeWindowMock = {
     gBrowser: {

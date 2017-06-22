@@ -188,21 +188,21 @@ function getResult(url) {
 }
 
 // url constructed with %PRODUCT%
-add_task(function* test_product() {
+add_task(async function test_product() {
   let url = URL_PREFIX + "%PRODUCT%/";
   Assert.equal(getResult(url), gAppInfo.name,
                "the url param for %PRODUCT%" + MSG_SHOULD_EQUAL);
 });
 
 // url constructed with %VERSION%
-add_task(function* test_version() {
+add_task(async function test_version() {
   let url = URL_PREFIX + "%VERSION%/";
   Assert.equal(getResult(url), gAppInfo.version,
                "the url param for %VERSION%" + MSG_SHOULD_EQUAL);
 });
 
 // url constructed with %BUILD_ID%
-add_task(function* test_build_id() {
+add_task(async function test_build_id() {
   let url = URL_PREFIX + "%BUILD_ID%/";
   Assert.equal(getResult(url), gAppInfo.appBuildID,
                "the url param for %BUILD_ID%" + MSG_SHOULD_EQUAL);
@@ -210,7 +210,7 @@ add_task(function* test_build_id() {
 
 // url constructed with %BUILD_TARGET%
 // XXX TODO - it might be nice if we tested the actual ABI
-add_task(function* test_build_target() {
+add_task(async function test_build_target() {
   let url = URL_PREFIX + "%BUILD_TARGET%/";
 
   let abi;
@@ -241,7 +241,7 @@ add_task(function* test_build_target() {
 
 // url constructed with %LOCALE%
 // Bug 488936 added the update.locale file that stores the update locale
-add_task(function* test_locale() {
+add_task(async function test_locale() {
   // The code that gets the locale accesses the profile which is only available
   // after calling do_get_profile in xpcshell tests. This prevents an error from
   // being logged.
@@ -253,7 +253,7 @@ add_task(function* test_locale() {
 });
 
 // url constructed with %CHANNEL%
-add_task(function* test_channel() {
+add_task(async function test_channel() {
   let url = URL_PREFIX + "%CHANNEL%/";
   setUpdateChannel("test_channel");
   Assert.equal(getResult(url), "test_channel",
@@ -261,7 +261,7 @@ add_task(function* test_channel() {
 });
 
 // url constructed with %CHANNEL% with distribution partners
-add_task(function* test_channel_distribution() {
+add_task(async function test_channel_distribution() {
   let url = URL_PREFIX + "%CHANNEL%/";
   gDefaultPrefBranch.setCharPref(PREF_APP_PARTNER_BRANCH + "test_partner1",
                                  "test_partner1");
@@ -273,14 +273,14 @@ add_task(function* test_channel_distribution() {
 });
 
 // url constructed with %PLATFORM_VERSION%
-add_task(function* test_platform_version() {
+add_task(async function test_platform_version() {
   let url = URL_PREFIX + "%PLATFORM_VERSION%/";
   Assert.equal(getResult(url), gAppInfo.platformVersion,
                "the url param for %PLATFORM_VERSION%" + MSG_SHOULD_EQUAL);
 });
 
 // url constructed with %OS_VERSION%
-add_task(function* test_os_version() {
+add_task(async function test_os_version() {
   let url = URL_PREFIX + "%OS_VERSION%/";
   let osVersion;
   let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
@@ -320,7 +320,7 @@ add_task(function* test_os_version() {
 });
 
 // url constructed with %DISTRIBUTION%
-add_task(function* test_distribution() {
+add_task(async function test_distribution() {
   let url = URL_PREFIX + "%DISTRIBUTION%/";
   gDefaultPrefBranch.setCharPref(PREF_DISTRIBUTION_ID, "test_distro");
   Assert.equal(getResult(url), "test_distro",
@@ -328,14 +328,14 @@ add_task(function* test_distribution() {
 });
 
 // url constructed with %DISTRIBUTION_VERSION%
-add_task(function* test_distribution_version() {
+add_task(async function test_distribution_version() {
   let url = URL_PREFIX + "%DISTRIBUTION_VERSION%/";
   gDefaultPrefBranch.setCharPref(PREF_DISTRIBUTION_VERSION, "test_distro_version");
   Assert.equal(getResult(url), "test_distro_version",
                "the url param for %DISTRIBUTION_VERSION%" + MSG_SHOULD_EQUAL);
 });
 
-add_task(function* test_custom() {
+add_task(async function test_custom() {
   Services.prefs.setCharPref("app.update.custom", "custom");
   let url = URL_PREFIX + "%CUSTOM%/";
   Assert.equal(getResult(url), "custom",
@@ -343,7 +343,7 @@ add_task(function* test_custom() {
 });
 
 // url constructed with %SYSTEM_CAPABILITIES%
-add_task(function* test_systemCapabilities() {
+add_task(async function test_systemCapabilities() {
   let url = URL_PREFIX + "%SYSTEM_CAPABILITIES%/";
   let systemCapabilities = getInstructionSet() + "," + getMemoryMB();
   Assert.equal(getResult(url), systemCapabilities,

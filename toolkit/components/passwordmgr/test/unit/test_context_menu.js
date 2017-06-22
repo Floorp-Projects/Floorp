@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyGetter(this, "_stringBundle", function() {
 /**
  * Prepare data for the following tests.
  */
-add_task(function* test_initialize() {
+add_task(async function test_initialize() {
   for (let login of loginList()) {
     Services.logins.addLogin(login);
   }
@@ -24,7 +24,7 @@ add_task(function* test_initialize() {
 /**
  * Tests if the LoginManagerContextMenu returns the correct login items.
  */
-add_task(function* test_contextMenuAddAndRemoveLogins() {
+add_task(async function test_contextMenuAddAndRemoveLogins() {
   const DOCUMENT_CONTENT = "<form><input id='pw' type=password></form>";
   const INPUT_QUERY = "input[type='password']";
 
