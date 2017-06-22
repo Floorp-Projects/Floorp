@@ -99,12 +99,6 @@ DrawEventRecorderMemory::RecordingSize()
   return mOutputStream.mLength;
 }
 
-bool
-DrawEventRecorderMemory::CopyRecording(char* aBuffer, size_t aBufferLen)
-{
-  return memcpy(aBuffer, mOutputStream.mData, aBufferLen);
-}
-
 void
 DrawEventRecorderMemory::WipeRecording()
 {
