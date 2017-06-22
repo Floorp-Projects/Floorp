@@ -3,11 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_harness.runtests import cli as mn_cli
-from testcase import TelemetryTestCase
+from runner import TelemetryTestRunner
 
 
-def cli():
-    mn_cli(testcase_class=TelemetryTestCase)
+def cli(args=None):
+    mn_cli(runner_class=TelemetryTestRunner,
+           args=args)
 
 
 if __name__ == '__main__':
