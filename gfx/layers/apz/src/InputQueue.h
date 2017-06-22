@@ -24,6 +24,7 @@ class ScrollWheelInput;
 namespace layers {
 
 class AsyncPanZoomController;
+class InputBlockState;
 class CancelableBlockState;
 class TouchBlockState;
 class WheelBlockState;
@@ -93,7 +94,7 @@ public:
    * Returns the pending input block at the head of the queue, if there is one.
    * This may return null if there all input events have been processed.
    */
-  CancelableBlockState* GetCurrentBlock() const;
+  InputBlockState* GetCurrentBlock() const;
   /*
    * Returns the current pending input block as a specific kind of block. If
    * GetCurrentBlock() returns null, these functions additionally check the
@@ -143,7 +144,7 @@ private:
    * If animations are present for the current pending input block, cancel
    * them as soon as possible.
    */
-  void CancelAnimationsForNewBlock(CancelableBlockState* aBlock,
+  void CancelAnimationsForNewBlock(InputBlockState* aBlock,
                                    CancelAnimationFlags aExtraFlags = Default);
 
   /**
@@ -178,13 +179,13 @@ private:
    * non-null if the block id provided matches one of the depleted-but-still-
    * active blocks (mActiveTouchBlock, mActiveWheelBlock, etc.).
    */
-  CancelableBlockState* FindBlockForId(uint64_t aInputBlockId,
-                                       InputData** aOutFirstInput);
+  InputBlockState* FindBlockForId(uint64_t aInputBlockId,
+                                  InputData** aOutFirstInput);
   void ScheduleMainThreadTimeout(const RefPtr<AsyncPanZoomController>& aTarget,
                                  CancelableBlockState* aBlock);
   void MainThreadTimeout(uint64_t aInputBlockId);
   void ProcessQueue();
-  bool CanDiscardBlock(CancelableBlockState* aBlock);
+  bool CanDiscardBlock(InputBlockState* aBlock);
   void UpdateActiveApzc(const RefPtr<AsyncPanZoomController>& aNewActive);
 
 private:

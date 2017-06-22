@@ -26,11 +26,7 @@ var jan12_1730 = (endTime - (DAY_MSEC * 3) - (HOUR_MSEC * 4)) * 1000;
 
 // Dates outside our query - mult by 1000 to convert to PRTIME
 var jan6_700 = (beginTime - HOUR_MSEC) * 1000;
-var jan5_800 = (beginTime - DAY_MSEC) * 1000;
 var dec27_800 = (beginTime - (DAY_MSEC * 10)) * 1000;
-var jan15_2145 = (endTime + (MIN_MSEC * 15)) * 1000;
-var jan16_2130 = (endTime + (DAY_MSEC)) * 1000;
-var jan25_2130 = (endTime + (DAY_MSEC * 10)) * 1000;
 
 // So that we can easily use these too, convert them to PRTIME
 beginTime *= 1000;
@@ -120,10 +116,6 @@ var testData = [
  *                 AND annotationIsNot(match) GROUP BY Domain, Day SORT BY uri,ascending
  *                 excludeITems(should be ignored)
  */
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_abstime_annotation_domain() {
   // Initialize database
   await task_populateDB(testData);

@@ -546,10 +546,9 @@ D3D11TextureData::GetDXGIResource(IDXGIResource** aOutResource)
 }
 
 DXGIYCbCrTextureData*
-DXGIYCbCrTextureData::Create(TextureFlags aFlags,
-                             IUnknown* aTextureY,
-                             IUnknown* aTextureCb,
-                             IUnknown* aTextureCr,
+DXGIYCbCrTextureData::Create(IDirect3DTexture9* aTextureY,
+                             IDirect3DTexture9* aTextureCb,
+                             IDirect3DTexture9* aTextureCr,
                              HANDLE aHandleY,
                              HANDLE aHandleCb,
                              HANDLE aHandleCr,
@@ -566,9 +565,9 @@ DXGIYCbCrTextureData::Create(TextureFlags aFlags,
   texture->mHandles[0] = aHandleY;
   texture->mHandles[1] = aHandleCb;
   texture->mHandles[2] = aHandleCr;
-  texture->mHoldRefs[0] = aTextureY;
-  texture->mHoldRefs[1] = aTextureCb;
-  texture->mHoldRefs[2] = aTextureCr;
+  texture->mD3D9Textures[0] = aTextureY;
+  texture->mD3D9Textures[1] = aTextureCb;
+  texture->mD3D9Textures[2] = aTextureCr;
   texture->mSize = aSize;
   texture->mSizeY = aSizeY;
   texture->mSizeCbCr = aSizeCbCr;
@@ -577,8 +576,7 @@ DXGIYCbCrTextureData::Create(TextureFlags aFlags,
 }
 
 DXGIYCbCrTextureData*
-DXGIYCbCrTextureData::Create(TextureFlags aFlags,
-                             ID3D11Texture2D* aTextureY,
+DXGIYCbCrTextureData::Create(ID3D11Texture2D* aTextureY,
                              ID3D11Texture2D* aTextureCb,
                              ID3D11Texture2D* aTextureCr,
                              const gfx::IntSize& aSize,
@@ -621,10 +619,18 @@ DXGIYCbCrTextureData::Create(TextureFlags aFlags,
     return nullptr;
   }
 
-  return DXGIYCbCrTextureData::Create(aFlags,
-                                      aTextureY, aTextureCb, aTextureCr,
-                                      handleY, handleCb, handleCr,
-                                      aSize, aSizeY, aSizeCbCr);
+  DXGIYCbCrTextureData* texture = new DXGIYCbCrTextureData();
+  texture->mHandles[0] = handleY;
+  texture->mHandles[1] = handleCb;
+  texture->mHandles[2] = handleCr;
+  texture->mD3D11Textures[0] = aTextureY;
+  texture->mD3D11Textures[1] = aTextureCb;
+  texture->mD3D11Textures[2] = aTextureCr;
+  texture->mSize = aSize;
+  texture->mSizeY = aSizeY;
+  texture->mSizeCbCr = aSizeCbCr;
+
+  return texture;
 }
 
 void
@@ -650,9 +656,12 @@ DXGIYCbCrTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 void
 DXGIYCbCrTextureData::Deallocate(LayersIPCChannel*)
 {
-  mHoldRefs[0] = nullptr;
-  mHoldRefs[1] = nullptr;
-  mHoldRefs[2] = nullptr;
+  mD3D9Textures[0] = nullptr;
+  mD3D9Textures[1] = nullptr;
+  mD3D9Textures[2] = nullptr;
+  mD3D11Textures[0] = nullptr;
+  mD3D11Textures[1] = nullptr;
+  mD3D11Textures[2] = nullptr;
 }
 
 already_AddRefed<TextureHost>
@@ -1439,6 +1448,33 @@ uint32_t
 GetMaxTextureSizeFromDevice(ID3D11Device* aDevice)
 {
   return GetMaxTextureSizeForFeatureLevel(aDevice->GetFeatureLevel());
+}
+
+AutoLockD3D11Texture::AutoLockD3D11Texture(ID3D11Texture2D* aTexture)
+{
+  aTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mMutex));
+  if (!mMutex) {
+    return;
+  }
+  HRESULT hr = mMutex->AcquireSync(0, 10000);
+  if (hr == WAIT_TIMEOUT) {
+    MOZ_CRASH("GFX: IMFYCbCrImage timeout");
+  }
+
+  if (FAILED(hr)) {
+    NS_WARNING("Failed to lock the texture");
+  }
+}
+
+AutoLockD3D11Texture::~AutoLockD3D11Texture()
+{
+  if (!mMutex) {
+    return;
+  }
+  HRESULT hr = mMutex->ReleaseSync(0);
+  if (FAILED(hr)) {
+    NS_WARNING("Failed to unlock the texture");
+  }
 }
 
 } // namespace layers

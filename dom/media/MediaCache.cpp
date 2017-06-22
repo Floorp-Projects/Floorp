@@ -4,25 +4,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ReentrantMonitor.h"
-
 #include "MediaCache.h"
-#include "prio.h"
-#include "nsContentUtils.h"
-#include "nsThreadUtils.h"
-#include "MediaResource.h"
-#include "mozilla/Logging.h"
-#include "mozilla/Preferences.h"
+
 #include "FileBlockCache.h"
 #include "MediaBlockCacheBase.h"
+#include "MediaResource.h"
 #include "MemoryBlockCache.h"
-#include "nsIObserverService.h"
-#include "nsISeekableStream.h"
-#include "nsIPrincipal.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Logging.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
+#include "nsContentUtils.h"
+#include "nsIObserverService.h"
+#include "nsIPrincipal.h"
+#include "nsISeekableStream.h"
+#include "nsThreadUtils.h"
+#include "prio.h"
 #include <algorithm>
 
 namespace mozilla {

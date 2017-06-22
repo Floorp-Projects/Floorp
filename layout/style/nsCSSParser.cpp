@@ -6956,34 +6956,29 @@ CSSParserImpl::ParseColorComponent(float& aComponent, const Maybe<char>& aSepara
 bool
 CSSParserImpl::ParseHue(float& aAngle)
 {
-  if (!GetToken(true)) {
-    REPORT_UNEXPECTED_EOF(PEColorHueEOF);
+  nsCSSValue value;
+  // <hue> = <number> | <angle>
+  // https://drafts.csswg.org/css-color/#typedef-hue
+  if (!ParseSingleTokenVariant(value,
+                               VARIANT_NUMBER | VARIANT_ANGLE,
+                               nullptr)) {
+    REPORT_UNEXPECTED_TOKEN(PEExpectedNumberOrAngle);
     return false;
   }
 
-  // <number>
-  if (mToken.mType == eCSSToken_Number) {
-    aAngle = mToken.mNumber;
-    return true;
-  }
-  UngetToken();
-
-  // <angle>
-  nsCSSValue angleValue;
-  // The '0' value is handled by <number> parsing, so use VARIANT_ANGLE flag
-  // instead of VARIANT_ANGLE_OR_ZERO.
-  if (ParseSingleTokenVariant(angleValue, VARIANT_ANGLE, nullptr)) {
+  float unclampedResult;
+  if (value.GetUnit() == eCSSUnit_Number) {
+    unclampedResult = value.GetFloatValue();
+  } else {
     // Convert double value of GetAngleValueInDegrees() to float.
-    aAngle = angleValue.GetAngleValueInDegrees();
-    // And then clamp it as finite values in float.
-    aAngle = mozilla::clamped(aAngle,
-                              -std::numeric_limits<float>::max(),
-                               std::numeric_limits<float>::max());
-    return true;
+    unclampedResult = value.GetAngleValueInDegrees();
   }
 
-  REPORT_UNEXPECTED_TOKEN(PEExpectedNumberOrAngle);
-  return false;
+  // Clamp it as finite values in float.
+  aAngle = mozilla::clamped(unclampedResult,
+                            -std::numeric_limits<float>::max(),
+                             std::numeric_limits<float>::max());
+  return true;
 }
 
 bool

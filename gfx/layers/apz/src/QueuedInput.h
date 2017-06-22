@@ -20,7 +20,7 @@ class PanGestureInput;
 
 namespace layers {
 
-class CancelableBlockState;
+class InputBlockState;
 class TouchBlockState;
 class WheelBlockState;
 class DragBlockState;
@@ -40,7 +40,7 @@ public:
   QueuedInput(const PanGestureInput& aInput, PanGestureBlockState& aBlock);
 
   InputData* Input();
-  CancelableBlockState* Block();
+  InputBlockState* Block();
 
 private:
   // A copy of the input event that is provided to the constructor. This must
@@ -49,7 +49,7 @@ private:
   UniquePtr<InputData> mInput;
   // A pointer to the block that the input event is associated with. This must
   // be non-null.
-  RefPtr<CancelableBlockState> mBlock;
+  RefPtr<InputBlockState> mBlock;
 };
 
 } // namespace layers

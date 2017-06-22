@@ -22,6 +22,7 @@ struct KeyedAccumulation;
 struct ScalarAction;
 struct KeyedScalarAction;
 struct ChildEventData;
+struct DiscardedData;
 
 }
 
@@ -71,6 +72,15 @@ void UpdateChildKeyedScalars(Telemetry::ProcessID aProcessType,
  */
 void RecordChildEvents(Telemetry::ProcessID aProcessType,
                        const nsTArray<Telemetry::ChildEventData>& aEvents);
+
+/**
+ * Record the counts of data the child process had to discard
+ *
+ * @param aProcessType - the process reporting the discarded data
+ * @param aDiscardedData - stats about the discarded data
+ */
+void RecordDiscardedData(Telemetry::ProcessID aProcessType,
+                         const Telemetry::DiscardedData& aDiscardedData);
 
 }
 }

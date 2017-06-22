@@ -18,24 +18,6 @@ def window_position_supported(session):
     except webdriver.InvalidArgumentException:
         return True
 
-def test_window_size_types(http, session):
-    if not window_size_supported(session):
-        pytest.skip()
-
-    with http.get("/session/%s/window/size" % session.session_id) as resp:
-        assert resp.status == 200
-        body = json.load(resp)
-    assert "value" in body
-    assert "width" in body["value"]
-    assert "height" in body["value"]
-    assert isinstance(body["value"]["width"], int)
-    assert isinstance(body["value"]["height"], int)
-
-    size = session.window.size
-    assert isinstance(size, tuple)
-    assert isinstance(size[0], int)
-    assert isinstance(size[1], int)
-
 
 def test_window_resize(session):
     if not window_size_supported(session):

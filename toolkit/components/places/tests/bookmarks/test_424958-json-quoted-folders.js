@@ -54,10 +54,6 @@ var quotesTest = {
 }
 tests.push(quotesTest);
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function() {
   // make json file
   let jsonFile = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.json");

@@ -6,21 +6,19 @@
 #ifndef MOZILLA_MEDIASTREAMGRAPH_H_
 #define MOZILLA_MEDIASTREAMGRAPH_H_
 
+#include "AudioStream.h"
+#include "MainThreadUtils.h"
+#include "MediaStreamTypes.h"
+#include "StreamTracks.h"
+#include "VideoSegment.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TaskQueue.h"
-
 #include "mozilla/dom/AudioChannelBinding.h"
-
-#include "AudioStream.h"
-#include "nsTArray.h"
-#include "nsIRunnable.h"
-#include "VideoSegment.h"
-#include "StreamTracks.h"
-#include "MainThreadUtils.h"
-#include "StreamTracks.h"
 #include "nsAutoPtr.h"
 #include "nsAutoRef.h"
+#include "nsIRunnable.h"
+#include "nsTArray.h"
 #include <speex/speex_resampler.h>
 
 class nsIRunnable;
@@ -170,9 +168,6 @@ class ProcessedMediaStream;
 class SourceMediaStream;
 class TrackUnionStream;
 
-enum MediaStreamGraphEvent : uint32_t;
-enum TrackEventCommand : uint32_t;
-
 /**
  * Helper struct for binding a track listener to a specific TrackID.
  */
@@ -181,24 +176,6 @@ struct TrackBound
 {
   RefPtr<Listener> mListener;
   TrackID mTrackID;
-};
-
-/**
- * Describes how a track should be disabled.
- *
- * ENABLED        Not disabled.
- * SILENCE_BLACK  Audio data is turned into silence, video frames are made black.
- * SILENCE_FREEZE Audio data is turned into silence, video freezes at last frame.
- */
-enum class DisabledTrackMode
-{
-  ENABLED, SILENCE_BLACK, SILENCE_FREEZE
-};
-struct DisabledTrack {
-  DisabledTrack(TrackID aTrackID, DisabledTrackMode aMode)
-    : mTrackID(aTrackID), mMode(aMode) {}
-  TrackID mTrackID;
-  DisabledTrackMode mMode;
 };
 
 /**

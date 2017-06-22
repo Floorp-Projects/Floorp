@@ -4,20 +4,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <stdint.h>
-#include <algorithm>
-#include "nsIStringBundle.h"
-#include "nsDebug.h"
-#include "nsString.h"
+#include "CubebUtils.h"
+
+#include "MediaInfo.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Logging.h"
-#include "nsThreadUtils.h"
-#include "CubebUtils.h"
 #include "nsAutoRef.h"
+#include "nsDebug.h"
+#include "nsIStringBundle.h"
+#include "nsString.h"
+#include "nsThreadUtils.h"
 #include "prdtoa.h"
+#include <algorithm>
+#include <stdint.h>
 
 #define PREF_VOLUME_SCALE "media.volume_scale"
 #define PREF_CUBEB_BACKEND "media.cubeb.backend"

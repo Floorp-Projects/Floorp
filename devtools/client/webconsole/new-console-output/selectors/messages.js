@@ -30,7 +30,7 @@ function getCurrentGroup(state) {
 }
 
 function getVisibleMessages(state) {
-  return state.messages.visibleMessages.map(id => getMessage(state, id));
+  return state.messages.visibleMessages;
 }
 
 function getAllRepeatById(state) {

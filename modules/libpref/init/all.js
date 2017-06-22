@@ -1224,6 +1224,7 @@ pref("dom.disable_window_open_feature.menubar",     false);
 pref("dom.disable_window_open_feature.resizable",   true);
 pref("dom.disable_window_open_feature.minimizable", false);
 pref("dom.disable_window_open_feature.status",      true);
+pref("dom.disable_window_showModalDialog",          true);
 
 pref("dom.allow_scripts_to_close_windows",          false);
 
@@ -5641,7 +5642,7 @@ pref("layout.css.servo.enabled", false);
 // HSTS Priming
 // If a request is mixed-content, send an HSTS priming request to attempt to
 // see if it is available over HTTPS.
-#ifdef RELEASE_OR_BETA
+#ifdef RELEASE
 // Don't change the order of evaluation of mixed-content and HSTS upgrades in
 // order to be most compatible with current standards
 pref("security.mixed_content.send_hsts_priming", false);
@@ -5654,9 +5655,9 @@ pref("security.mixed_content.use_hsts", true);
 #endif
 // Approximately 1 week default cache for HSTS priming failures, in seconds
 pref("security.mixed_content.hsts_priming_cache_timeout", 604800);
-// Force the channel to timeout in 3 seconds if we have not received
+// Force the channel to timeout in 2 seconds if we have not received
 // expects a time in milliseconds
-pref("security.mixed_content.hsts_priming_request_timeout", 3000);
+pref("security.mixed_content.hsts_priming_request_timeout", 2000);
 
 // TODO: Bug 1324406: Treat 'data:' documents as unique, opaque origins
 // If true, data: URIs will be treated as unique opaque origins, hence will use

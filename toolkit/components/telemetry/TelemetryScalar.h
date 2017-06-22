@@ -67,6 +67,9 @@ void UpdateChildData(mozilla::Telemetry::ProcessID aProcessType,
 void UpdateChildKeyedData(mozilla::Telemetry::ProcessID aProcessType,
                           const nsTArray<mozilla::Telemetry::KeyedScalarAction>& aScalarActions);
 
+void RecordDiscardedData(mozilla::Telemetry::ProcessID aProcessType,
+                         const mozilla::Telemetry::DiscardedData& aDiscardedData);
+
 } // namespace TelemetryScalar
 
 #endif // TelemetryScalar_h__

@@ -20,10 +20,6 @@ async function getForeignCountForURL(conn, url) {
   return rows[0].getResultByName("foreign_count");
 }
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function add_remove_change_bookmark_test() {
   let conn = await PlacesUtils.promiseDBConnection();
 

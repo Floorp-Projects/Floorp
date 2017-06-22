@@ -14,3 +14,6 @@ kind-dependencies:
 
 only-for-attributes:
   - nightly
+
+not-for-build-platforms:
+   - macosx64-nightly/opt

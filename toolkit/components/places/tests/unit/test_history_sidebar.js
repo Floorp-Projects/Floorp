@@ -7,11 +7,8 @@
 // Get history service
 var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
          getService(Ci.nsINavHistoryService);
-var bh = hs.QueryInterface(Ci.nsIBrowserHistory);
 var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
          getService(Ci.nsINavBookmarksService);
-var ps = Cc["@mozilla.org/preferences-service;1"].
-         getService(Ci.nsIPrefBranch);
 
 /**
  * Adds a test URI visit to the database.

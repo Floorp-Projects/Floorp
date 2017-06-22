@@ -75,11 +75,6 @@ var root = bs.bookmarksMenuFolder;
 // Index at which items should begin.
 var bmStartIndex = 0;
 
-
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_bookmarks() {
   bs.addObserver(bookmarksObserver);
 

@@ -1,4 +1,4 @@
-const {GlobalOverrider, FakePrefs} = require("test/unit/utils");
+const {GlobalOverrider, FakePrefs, FakePerformance} = require("test/unit/utils");
 const {chaiAssertions} = require("test/schemas/pings");
 
 const req = require.context(".", true, /\.test\.jsx?$/);
@@ -10,6 +10,7 @@ sinon.assert.expose(assert, {prefix: ""});
 chai.use(chaiAssertions);
 
 let overrider = new GlobalOverrider();
+
 overrider.set({
   Components: {
     interfaces: {},
@@ -31,6 +32,7 @@ overrider.set({
       addMessageListener: (msg, cb) => cb(),
       removeMessageListener() {}
     },
+    appShell: {hiddenDOMWindow: {performance: new FakePerformance()}},
     obs: {
       addObserver() {},
       removeObserver() {}

@@ -7,7 +7,10 @@
 #ifndef VideoUtils_h
 #define VideoUtils_h
 
+#include "AudioSampleFormat.h"
 #include "MediaInfo.h"
+#include "TimeUnits.h"
+#include "VideoLimits.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
@@ -15,19 +18,14 @@
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
-
 #include "nsAutoPtr.h"
+#include "nsCOMPtr.h"
 #include "nsIThread.h"
-#include "nsSize.h"
+#include "nsITimer.h"
 #include "nsRect.h"
-
+#include "nsSize.h"
 #include "nsThreadUtils.h"
 #include "prtime.h"
-#include "AudioSampleFormat.h"
-#include "TimeUnits.h"
-#include "nsITimer.h"
-#include "nsCOMPtr.h"
-#include "VideoLimits.h"
 
 using mozilla::CheckedInt64;
 using mozilla::CheckedUint64;
