@@ -835,6 +835,11 @@ class nsIWidget : public nsISupports
     virtual void SetSizeMode(nsSizeMode aMode) = 0;
 
     /**
+     * Suppress animations that are applied to a window by OS.
+     */
+    virtual void SuppressAnimation(bool aSuppress) {}
+
+    /**
      * Return size mode (minimized, maximized, normalized).
      * Returns a value from nsSizeMode (see nsIWidgetListener.h)
      */
