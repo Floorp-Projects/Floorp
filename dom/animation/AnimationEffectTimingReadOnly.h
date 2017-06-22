@@ -38,13 +38,13 @@ public:
   nsISupports* GetParentObject() const { return mDocument; }
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  double Delay() const { return mTiming.mDelay.ToMilliseconds(); }
-  double EndDelay() const { return mTiming.mEndDelay.ToMilliseconds(); }
-  FillMode Fill() const { return mTiming.mFill; }
-  double IterationStart() const { return mTiming.mIterationStart; }
-  double Iterations() const { return mTiming.mIterations; }
+  double Delay() const { return mTiming.Delay().ToMilliseconds(); }
+  double EndDelay() const { return mTiming.EndDelay().ToMilliseconds(); }
+  FillMode Fill() const { return mTiming.Fill(); }
+  double IterationStart() const { return mTiming.IterationStart(); }
+  double Iterations() const { return mTiming.Iterations(); }
   void GetDuration(OwningUnrestrictedDoubleOrString& aRetVal) const;
-  PlaybackDirection Direction() const { return mTiming.mDirection; }
+  PlaybackDirection Direction() const { return mTiming.Direction(); }
   void GetEasing(nsString& aRetVal) const;
 
   const TimingParams& AsTimingParams() const { return mTiming; }

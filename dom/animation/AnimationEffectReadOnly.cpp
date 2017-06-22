@@ -97,27 +97,27 @@ AnimationEffectReadOnly::GetComputedTimingAt(
   // Always return the same object to benefit from return-value optimization.
   ComputedTiming result;
 
-  if (aTiming.mDuration) {
-    MOZ_ASSERT(aTiming.mDuration.ref() >= zeroDuration,
+  if (aTiming.Duration()) {
+    MOZ_ASSERT(aTiming.Duration().ref() >= zeroDuration,
                "Iteration duration should be positive");
-    result.mDuration = aTiming.mDuration.ref();
+    result.mDuration = aTiming.Duration().ref();
   }
 
-  MOZ_ASSERT(aTiming.mIterations >= 0.0 && !IsNaN(aTiming.mIterations),
+  MOZ_ASSERT(aTiming.Iterations() >= 0.0 && !IsNaN(aTiming.Iterations()),
              "mIterations should be nonnegative & finite, as ensured by "
              "ValidateIterations or CSSParser");
-  result.mIterations = aTiming.mIterations;
+  result.mIterations = aTiming.Iterations();
 
-  MOZ_ASSERT(aTiming.mIterationStart >= 0.0,
+  MOZ_ASSERT(aTiming.IterationStart() >= 0.0,
              "mIterationStart should be nonnegative, as ensured by "
              "ValidateIterationStart");
-  result.mIterationStart = aTiming.mIterationStart;
+  result.mIterationStart = aTiming.IterationStart();
 
   result.mActiveDuration = aTiming.ActiveDuration();
   result.mEndTime = aTiming.EndTime();
-  result.mFill = aTiming.mFill == dom::FillMode::Auto ?
+  result.mFill = aTiming.Fill() == dom::FillMode::Auto ?
                  dom::FillMode::None :
-                 aTiming.mFill;
+                 aTiming.Fill();
 
   // The default constructor for ComputedTiming sets all other members to
   // values consistent with an animation that has not been sampled.
@@ -127,11 +127,11 @@ AnimationEffectReadOnly::GetComputedTimingAt(
   const TimeDuration& localTime = aLocalTime.Value();
 
   StickyTimeDuration beforeActiveBoundary =
-    std::max(std::min(StickyTimeDuration(aTiming.mDelay), result.mEndTime),
+    std::max(std::min(StickyTimeDuration(aTiming.Delay()), result.mEndTime),
              zeroDuration);
 
   StickyTimeDuration activeAfterBoundary =
-    std::max(std::min(StickyTimeDuration(aTiming.mDelay +
+    std::max(std::min(StickyTimeDuration(aTiming.Delay() +
                                          result.mActiveDuration),
                       result.mEndTime),
              zeroDuration);
@@ -144,7 +144,7 @@ AnimationEffectReadOnly::GetComputedTimingAt(
       return result;
     }
     result.mActiveTime =
-      std::max(std::min(StickyTimeDuration(localTime - aTiming.mDelay),
+      std::max(std::min(StickyTimeDuration(localTime - aTiming.Delay()),
                         result.mActiveDuration),
                zeroDuration);
   } else if (localTime < beforeActiveBoundary ||
@@ -155,13 +155,13 @@ AnimationEffectReadOnly::GetComputedTimingAt(
       return result;
     }
     result.mActiveTime
-      = std::max(StickyTimeDuration(localTime - aTiming.mDelay),
+      = std::max(StickyTimeDuration(localTime - aTiming.Delay()),
                  zeroDuration);
   } else {
     MOZ_ASSERT(result.mActiveDuration != zeroDuration,
                "How can we be in the middle of a zero-duration interval?");
     result.mPhase = ComputedTiming::AnimationPhase::Active;
-    result.mActiveTime = localTime - aTiming.mDelay;
+    result.mActiveTime = localTime - aTiming.Delay();
   }
 
   // Convert active time to a multiple of iterations.
@@ -220,7 +220,7 @@ AnimationEffectReadOnly::GetComputedTimingAt(
 
   // Factor in the direction.
   bool thisIterationReverse = false;
-  switch (aTiming.mDirection) {
+  switch (aTiming.Direction()) {
     case PlaybackDirection::Normal:
       thisIterationReverse = false;
       break;
@@ -250,8 +250,8 @@ AnimationEffectReadOnly::GetComputedTimingAt(
   }
 
   // Apply the easing.
-  if (aTiming.mFunction) {
-    progress = aTiming.mFunction->GetValue(progress, result.mBeforeFlag);
+  if (aTiming.Function()) {
+    progress = aTiming.Function()->GetValue(progress, result.mBeforeFlag);
   }
 
   MOZ_ASSERT(IsFinite(progress), "Progress value should be finite");
@@ -276,14 +276,14 @@ GetComputedTimingDictionary(const ComputedTiming& aComputedTiming,
                             ComputedTimingProperties& aRetVal)
 {
   // AnimationEffectTimingProperties
-  aRetVal.mDelay = aTiming.mDelay.ToMilliseconds();
-  aRetVal.mEndDelay = aTiming.mEndDelay.ToMilliseconds();
+  aRetVal.mDelay = aTiming.Delay().ToMilliseconds();
+  aRetVal.mEndDelay = aTiming.EndDelay().ToMilliseconds();
   aRetVal.mFill = aComputedTiming.mFill;
   aRetVal.mIterations = aComputedTiming.mIterations;
   aRetVal.mIterationStart = aComputedTiming.mIterationStart;
   aRetVal.mDuration.SetAsUnrestrictedDouble() =
     aComputedTiming.mDuration.ToMilliseconds();
-  aRetVal.mDirection = aTiming.mDirection;
+  aRetVal.mDirection = aTiming.Direction();
 
   // ComputedTimingProperties
   aRetVal.mActiveDuration = aComputedTiming.mActiveDuration.ToMilliseconds();

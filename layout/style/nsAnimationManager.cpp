@@ -219,11 +219,11 @@ CSSAnimation::QueueEvents(StickyTimeDuration aActiveTime)
       return;
     }
     intervalStartTime =
-      std::max(std::min(StickyTimeDuration(-mEffect->SpecifiedTiming().mDelay),
+      std::max(std::min(StickyTimeDuration(-mEffect->SpecifiedTiming().Delay()),
                         computedTiming.mActiveDuration),
                zeroDuration);
     intervalEndTime =
-      std::max(std::min((EffectEnd() - mEffect->SpecifiedTiming().mDelay),
+      std::max(std::min((EffectEnd() - mEffect->SpecifiedTiming().Delay()),
                         computedTiming.mActiveDuration),
                zeroDuration);
 

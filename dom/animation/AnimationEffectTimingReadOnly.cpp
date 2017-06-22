@@ -30,8 +30,8 @@ void
 AnimationEffectTimingReadOnly::GetDuration(
     OwningUnrestrictedDoubleOrString& aRetVal) const
 {
-  if (mTiming.mDuration) {
-    aRetVal.SetAsUnrestrictedDouble() = mTiming.mDuration->ToMilliseconds();
+  if (mTiming.Duration()) {
+    aRetVal.SetAsUnrestrictedDouble() = mTiming.Duration()->ToMilliseconds();
   } else {
     aRetVal.SetAsString().AssignLiteral("auto");
   }
@@ -40,8 +40,8 @@ AnimationEffectTimingReadOnly::GetDuration(
 void
 AnimationEffectTimingReadOnly::GetEasing(nsString& aRetVal) const
 {
-  if (mTiming.mFunction) {
-    mTiming.mFunction->AppendToString(aRetVal);
+  if (mTiming.Function()) {
+    mTiming.Function()->AppendToString(aRetVal);
   } else {
     aRetVal.AssignLiteral("linear");
   }
