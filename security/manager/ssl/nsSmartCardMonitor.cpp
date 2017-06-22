@@ -28,14 +28,17 @@ using namespace mozilla;
 //
 // Once the event is found, it is dispatched to the main thread to notify
 // any window where window.crypto.enableSmartCardEvents is true.
-// Additionally, all observers of the topics "smartcard-insert" and
-// "smartcard-remove" are notified by the observer service of the appropriate
+// Additionally, all observers of the topics |kSmartcardInsert| and
+// |kSmartcardRemove| are notified by the observer service of the appropriate
 // event.
 //
 
+#define kSmartcardInsert "smartcard-insert"
+#define kSmartcardRemove "smartcard-remove"
+
 class nsTokenEventRunnable : public nsIRunnable {
 public:
-  nsTokenEventRunnable(const nsAString& aType, const nsAString& aTokenName)
+  nsTokenEventRunnable(const char* aType, const nsAString& aTokenName)
     : mType(aType)
     , mTokenName(aTokenName)
   {
@@ -47,7 +50,7 @@ public:
 private:
   virtual ~nsTokenEventRunnable() {}
 
-  nsString mType;
+  const char* mType;
   nsString mTokenName;
 };
 
@@ -63,11 +66,7 @@ nsTokenEventRunnable::Run()
   if (!observerService) {
     return NS_ERROR_FAILURE;
   }
-  // This conversion is safe because mType can only be "smartcard-insert"
-  // or "smartcard-remove".
-  NS_ConvertUTF16toUTF8 eventTypeUTF8(mType);
-  return observerService->NotifyObservers(nullptr, eventTypeUTF8.get(),
-                                          mTokenName.get());
+  return observerService->NotifyObservers(nullptr, mType, mTokenName.get());
 }
 
 // self linking and removing double linked entry
@@ -299,7 +298,7 @@ SmartCardMonitoringThread::GetTokenSeries(CK_SLOT_ID slotid)
 // helper function to pass the event off to nsNSSComponent.
 //
 void
-SmartCardMonitoringThread::SendEvent(const nsAString& eventType,
+SmartCardMonitoringThread::SendEvent(const char* eventType,
                                      const char* tokenName)
 {
   // The token name should be UTF8, but it's not clear that this is enforced
@@ -360,12 +359,12 @@ void SmartCardMonitoringThread::Execute()
         // event for the previous token, do so now...
         tokenName = GetTokenName(slotID);
         if (tokenName) {
-          SendEvent(NS_LITERAL_STRING("smartcard-remove"), tokenName);
+          SendEvent(kSmartcardRemove, tokenName);
         }
         tokenName = PK11_GetTokenName(slot.get());
         // save the token name and series
         SetTokenName(slotID, tokenName, series);
-        SendEvent(NS_LITERAL_STRING("smartcard-insert"), tokenName);
+        SendEvent(kSmartcardInsert, tokenName);
       }
     } else {
       // retrieve token name
@@ -374,7 +373,7 @@ void SmartCardMonitoringThread::Execute()
       // if there's not a token name, then the software isn't expecting
       // a (or another) remove event.
       if (tokenName) {
-        SendEvent(NS_LITERAL_STRING("smartcard-remove"), tokenName);
+        SendEvent(kSmartcardRemove, tokenName);
         // clear the token name (after we send it)
         SetTokenName(slotID, nullptr, 0);
       }

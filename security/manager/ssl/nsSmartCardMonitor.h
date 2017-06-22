@@ -52,7 +52,7 @@ class SmartCardMonitoringThread
   void SetTokenName(CK_SLOT_ID slotid, const char* tokenName, uint32_t series);
   const char* GetTokenName(CK_SLOT_ID slotid);
   uint32_t GetTokenSeries(CK_SLOT_ID slotid);
-  void SendEvent(const nsAString& type, const char* tokenName);
+  void SendEvent(const char* type, const char* tokenName);
   
   SECMODModule* mModule;
   PLHashTable* mHash;
