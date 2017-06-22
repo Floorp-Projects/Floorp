@@ -41,6 +41,12 @@ VRDisplayHost::SetGroupMask(uint32_t aGroupMask)
   mDisplayInfo.mGroupMask = aGroupMask;
 }
 
+bool
+VRDisplayHost::GetIsConnected()
+{
+  return mDisplayInfo.mIsConnected;
+}
+
 void
 VRDisplayHost::AddLayer(VRLayerParent *aLayer)
 {
