@@ -17,7 +17,7 @@ function run_test() {
 }
 
 // Should acknowledge duplicate notifications, but not notify apps.
-add_task(function* test_notification_duplicate() {
+add_task(async function test_notification_duplicate() {
   let db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => {return db.drop().then(_ => db.close());});
   let records = [{
@@ -45,7 +45,7 @@ add_task(function* test_notification_duplicate() {
     systemRecord: true,
   }];
   for (let record of records) {
-    yield db.put(record);
+    await db.put(record);
   }
 
   let testData = [{
@@ -129,11 +129,11 @@ add_task(function* test_notification_duplicate() {
     }
   });
 
-  yield notifyPromise;
-  yield ackPromise;
+  await notifyPromise;
+  await ackPromise;
 
   for (let {channelID, recents} of testData) {
-    let record = yield db.getByKeyID(channelID);
+    let record = await db.getByKeyID(channelID);
     deepEqual(record.recentMessageIDs, recents,
       `Wrong recent message IDs for ${channelID}`);
   }

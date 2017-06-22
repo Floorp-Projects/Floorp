@@ -11,15 +11,15 @@ const INTEGER = 1;
 const TEXT = "this is test text";
 const REAL = 3.23;
 
-add_task(function* test_create_and_add() {
-  let adb = yield openAsyncDatabase(getTestDB());
+add_task(async function test_create_and_add() {
+  let adb = await openAsyncDatabase(getTestDB());
 
-  let completion = yield executeSimpleSQLAsync(adb,
+  let completion = await executeSimpleSQLAsync(adb,
     "CREATE TABLE test (id INTEGER, string TEXT, number REAL)");
 
   do_check_eq(Ci.mozIStorageStatementCallback.REASON_FINISHED, completion);
 
-  completion = yield executeSimpleSQLAsync(adb,
+  completion = await executeSimpleSQLAsync(adb,
     "INSERT INTO test (id, string, number) " +
     "VALUES (" + INTEGER + ", \"" + TEXT + "\", " + REAL + ")");
 
@@ -27,7 +27,7 @@ add_task(function* test_create_and_add() {
 
   let result = null;
 
-  completion = yield executeSimpleSQLAsync(adb,
+  completion = await executeSimpleSQLAsync(adb,
     "SELECT string, number FROM test WHERE id = 1",
     function(aResultSet) {
       result = aResultSet.getNextRow();
@@ -41,7 +41,7 @@ add_task(function* test_create_and_add() {
   do_check_neq(result, null);
   result = null;
 
-  yield executeSimpleSQLAsync(adb, "SELECT COUNT(0) FROM test",
+  await executeSimpleSQLAsync(adb, "SELECT COUNT(0) FROM test",
     function(aResultSet) {
       result = aResultSet.getNextRow();
       do_check_eq(1, result.getInt32(0));
@@ -49,15 +49,15 @@ add_task(function* test_create_and_add() {
 
   do_check_neq(result, null);
 
-  yield asyncClose(adb);
+  await asyncClose(adb);
 });
 
 
-add_task(function* test_asyncClose_does_not_complete_before_statement() {
-  let adb = yield openAsyncDatabase(getTestDB());
+add_task(async function test_asyncClose_does_not_complete_before_statement() {
+  let adb = await openAsyncDatabase(getTestDB());
   let executed = false;
 
-  let reason = yield executeSimpleSQLAsync(adb, "SELECT * FROM test",
+  let reason = await executeSimpleSQLAsync(adb, "SELECT * FROM test",
     function(aResultSet) {
       let result = aResultSet.getNextRow();
 
@@ -75,5 +75,5 @@ add_task(function* test_asyncClose_does_not_complete_before_statement() {
   // Ensure that the statement executed to completion.
   do_check_true(executed);
 
-  yield asyncClose(adb);
+  await asyncClose(adb);
 });

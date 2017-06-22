@@ -218,7 +218,7 @@ function removeSubframeFrom(browser, frameDepth = 0) {
  * @return {Promise}
  */
 function controlFrameAt(browser, frameDepth, command) {
-  return ContentTask.spawn(browser, { frameDepth, command }, function*(args) {
+  return ContentTask.spawn(browser, { frameDepth, command }, async function(args) {
     Cu.import("resource://testing-common/TestUtils.jsm", this);
 
     let { command: contentCommand, frameDepth: contentFrameDepth } = args;
@@ -278,7 +278,7 @@ function controlFrameAt(browser, frameDepth, command) {
 
         let destroyedOuterWindows = depth - contentFrameDepth;
         if (destroyedOuterWindows) {
-          yield TestUtils.topicObserved("outer-window-destroyed", () => {
+          await TestUtils.topicObserved("outer-window-destroyed", () => {
             destroyedOuterWindows--;
             return !destroyedOuterWindows;
           });
@@ -292,7 +292,7 @@ function controlFrameAt(browser, frameDepth, command) {
 
         let destroyedOuterWindows = depth - contentFrameDepth;
         if (destroyedOuterWindows) {
-          yield TestUtils.topicObserved("outer-window-destroyed", () => {
+          await TestUtils.topicObserved("outer-window-destroyed", () => {
             destroyedOuterWindows--;
             return !destroyedOuterWindows;
           });
@@ -342,11 +342,11 @@ function controlFrameAt(browser, frameDepth, command) {
  *
  * @return {Promise}
  */
-function* prepareSubframes(browser, options) {
+async function prepareSubframes(browser, options) {
   browser.reload();
-  yield BrowserTestUtils.browserLoaded(browser);
+  await BrowserTestUtils.browserLoaded(browser);
 
-  yield ContentTask.spawn(browser, { options, PAGE_URL }, function*(args) {
+  await ContentTask.spawn(browser, { options, PAGE_URL }, async function(args) {
     let { options: allSubframeOptions, PAGE_URL: contentPageURL } = args;
     function loadBeforeUnloadHelper(doc, subframeOptions) {
       let subframe = doc.getElementById("subframe");
@@ -365,7 +365,7 @@ function* prepareSubframes(browser, options) {
 
     let currentDoc = content.document;
     for (let subframeOptions of allSubframeOptions) {
-      currentDoc = yield loadBeforeUnloadHelper(currentDoc, subframeOptions);
+      currentDoc = await loadBeforeUnloadHelper(currentDoc, subframeOptions);
     }
   });
 }
@@ -391,11 +391,11 @@ function assertHasBeforeUnload(browser, expected) {
  * navigation, or when an <iframe> with a beforeunload listener on its
  * inner window is removed from the DOM.
  */
-add_task(function* test_inner_window_scenarios() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_inner_window_scenarios() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE_URL,
-  }, function*(browser) {
+  }, async function(browser) {
     Assert.ok(browser.isRemoteBrowser,
               "This test only makes sense with out of process browsers.");
     assertHasBeforeUnload(browser, false);
@@ -403,35 +403,35 @@ add_task(function* test_inner_window_scenarios() {
     // Test the simple case on the top-level window by adding a single
     // beforeunload event listener on the inner window and then removing
     // it.
-    yield addBeforeUnloadListeners(browser);
+    await addBeforeUnloadListeners(browser);
     assertHasBeforeUnload(browser, true);
-    yield removeBeforeUnloadListeners(browser);
+    await removeBeforeUnloadListeners(browser);
     assertHasBeforeUnload(browser, false);
 
     // Now let's add several beforeunload listeners, and
     // ensure that we only set hasBeforeUnload to false once
     // the last listener is removed.
-    yield addBeforeUnloadListeners(browser, 3);
+    await addBeforeUnloadListeners(browser, 3);
     assertHasBeforeUnload(browser, true);
-    yield removeBeforeUnloadListeners(browser); // 2 left...
+    await removeBeforeUnloadListeners(browser); // 2 left...
     assertHasBeforeUnload(browser, true);
-    yield removeBeforeUnloadListeners(browser); // 1 left...
+    await removeBeforeUnloadListeners(browser); // 1 left...
     assertHasBeforeUnload(browser, true);
-    yield removeBeforeUnloadListeners(browser); // None left!
+    await removeBeforeUnloadListeners(browser); // None left!
 
     assertHasBeforeUnload(browser, false);
 
     // Now let's have the top-level content window navigate
     // away with a beforeunload listener set, and ensure
     // that we clear the hasBeforeUnload value.
-    yield addBeforeUnloadListeners(browser, 5);
-    yield navigateSubframe(browser, "http://example.com");
+    await addBeforeUnloadListeners(browser, 5);
+    await navigateSubframe(browser, "http://example.com");
     assertHasBeforeUnload(browser, false);
 
     // Now send the page back to the test page for
     // the next few tests.
     browser.loadURI(PAGE_URL);
-    yield BrowserTestUtils.browserLoaded(browser);
+    await BrowserTestUtils.browserLoaded(browser);
 
     // We want to test hasBeforeUnload works properly with
     // beforeunload event listeners in <iframe> elements too.
@@ -444,7 +444,7 @@ add_task(function* test_inner_window_scenarios() {
     //      |
     //      |--> <iframe at PAGE_URL> (BOTTOM)
     //
-    yield prepareSubframes(browser, [
+    await prepareSubframes(browser, [
       { sandboxAttributes: null, },
       { sandboxAttributes: null, },
     ]);
@@ -462,32 +462,32 @@ add_task(function* test_inner_window_scenarios() {
     // all levels of our window structure, that we only set
     // hasBeforeUnload to false once the last beforeunload
     // listener has been unset.
-    yield addBeforeUnloadListeners(browser, 2, MIDDLE);
+    await addBeforeUnloadListeners(browser, 2, MIDDLE);
     assertHasBeforeUnload(browser, true);
-    yield addBeforeUnloadListeners(browser, 1, TOP);
+    await addBeforeUnloadListeners(browser, 1, TOP);
     assertHasBeforeUnload(browser, true);
-    yield addBeforeUnloadListeners(browser, 5, BOTTOM);
+    await addBeforeUnloadListeners(browser, 5, BOTTOM);
     assertHasBeforeUnload(browser, true);
 
-    yield removeBeforeUnloadListeners(browser, 1, TOP);
+    await removeBeforeUnloadListeners(browser, 1, TOP);
     assertHasBeforeUnload(browser, true);
-    yield removeBeforeUnloadListeners(browser, 5, BOTTOM);
+    await removeBeforeUnloadListeners(browser, 5, BOTTOM);
     assertHasBeforeUnload(browser, true);
-    yield removeBeforeUnloadListeners(browser, 2, MIDDLE);
+    await removeBeforeUnloadListeners(browser, 2, MIDDLE);
     assertHasBeforeUnload(browser, false);
 
     // Tests that if a beforeunload event listener is set on
     // an iframe that navigates away to a page without a
     // beforeunload listener, that hasBeforeUnload is set
     // to false.
-    yield addBeforeUnloadListeners(browser, 5, BOTTOM);
+    await addBeforeUnloadListeners(browser, 5, BOTTOM);
     assertHasBeforeUnload(browser, true);
 
-    yield navigateSubframe(browser, "http://example.com", BOTTOM);
+    await navigateSubframe(browser, "http://example.com", BOTTOM);
     assertHasBeforeUnload(browser, false);
 
     // Reset our window structure now.
-    yield prepareSubframes(browser, [
+    await prepareSubframes(browser, [
       { sandboxAttributes: null, },
       { sandboxAttributes: null, },
     ]);
@@ -495,71 +495,71 @@ add_task(function* test_inner_window_scenarios() {
     // This time, add beforeunload event listeners to both the
     // MIDDLE and BOTTOM frame, and then navigate the MIDDLE
     // away. This should set hasBeforeUnload to false.
-    yield addBeforeUnloadListeners(browser, 3, MIDDLE);
-    yield addBeforeUnloadListeners(browser, 1, BOTTOM);
+    await addBeforeUnloadListeners(browser, 3, MIDDLE);
+    await addBeforeUnloadListeners(browser, 1, BOTTOM);
     assertHasBeforeUnload(browser, true);
-    yield navigateSubframe(browser, "http://example.com", MIDDLE);
+    await navigateSubframe(browser, "http://example.com", MIDDLE);
     assertHasBeforeUnload(browser, false);
 
     // Tests that if the MIDDLE and BOTTOM frames have beforeunload
     // event listeners, and if we remove the BOTTOM <iframe> and the
     // MIDDLE <iframe>, that hasBeforeUnload is set to false.
-    yield prepareSubframes(browser, [
+    await prepareSubframes(browser, [
       { sandboxAttributes: null, },
       { sandboxAttributes: null, },
     ]);
-    yield addBeforeUnloadListeners(browser, 3, MIDDLE);
-    yield addBeforeUnloadListeners(browser, 1, BOTTOM);
+    await addBeforeUnloadListeners(browser, 3, MIDDLE);
+    await addBeforeUnloadListeners(browser, 1, BOTTOM);
     assertHasBeforeUnload(browser, true);
-    yield removeSubframeFrom(browser, MIDDLE);
+    await removeSubframeFrom(browser, MIDDLE);
     assertHasBeforeUnload(browser, true);
-    yield removeSubframeFrom(browser, TOP);
+    await removeSubframeFrom(browser, TOP);
     assertHasBeforeUnload(browser, false);
 
     // Tests that if the MIDDLE and BOTTOM frames have beforeunload
     // event listeners, and if we remove just the MIDDLE <iframe>, that
     // hasBeforeUnload is set to false.
-    yield prepareSubframes(browser, [
+    await prepareSubframes(browser, [
       { sandboxAttributes: null, },
       { sandboxAttributes: null, },
     ]);
-    yield addBeforeUnloadListeners(browser, 3, MIDDLE);
-    yield addBeforeUnloadListeners(browser, 1, BOTTOM);
+    await addBeforeUnloadListeners(browser, 3, MIDDLE);
+    await addBeforeUnloadListeners(browser, 1, BOTTOM);
     assertHasBeforeUnload(browser, true);
-    yield removeSubframeFrom(browser, TOP);
+    await removeSubframeFrom(browser, TOP);
     assertHasBeforeUnload(browser, false);
 
     // Test that two sandboxed iframes, _without_ the allow-modals
     // permission, do not result in the hasBeforeUnload attribute
     // being set to true when beforeunload event listeners are added.
-    yield prepareSubframes(browser, [
+    await prepareSubframes(browser, [
       { sandboxAttributes: "allow-scripts", },
       { sandboxAttributes: "allow-scripts", },
     ]);
 
-    yield addBeforeUnloadListeners(browser, 3, MIDDLE);
-    yield addBeforeUnloadListeners(browser, 1, BOTTOM);
+    await addBeforeUnloadListeners(browser, 3, MIDDLE);
+    await addBeforeUnloadListeners(browser, 1, BOTTOM);
     assertHasBeforeUnload(browser, false);
 
-    yield removeBeforeUnloadListeners(browser, 3, MIDDLE);
-    yield removeBeforeUnloadListeners(browser, 1, BOTTOM);
+    await removeBeforeUnloadListeners(browser, 3, MIDDLE);
+    await removeBeforeUnloadListeners(browser, 1, BOTTOM);
     assertHasBeforeUnload(browser, false);
 
     // Test that two sandboxed iframes, both with the allow-modals
     // permission, cause the hasBeforeUnload attribute to be set
     // to true when beforeunload event listeners are added.
-    yield prepareSubframes(browser, [
+    await prepareSubframes(browser, [
       { sandboxAttributes: "allow-scripts allow-modals", },
       { sandboxAttributes: "allow-scripts allow-modals", },
     ]);
 
-    yield addBeforeUnloadListeners(browser, 3, MIDDLE);
-    yield addBeforeUnloadListeners(browser, 1, BOTTOM);
+    await addBeforeUnloadListeners(browser, 3, MIDDLE);
+    await addBeforeUnloadListeners(browser, 1, BOTTOM);
     assertHasBeforeUnload(browser, true);
 
-    yield removeBeforeUnloadListeners(browser, 1, BOTTOM);
+    await removeBeforeUnloadListeners(browser, 1, BOTTOM);
     assertHasBeforeUnload(browser, true);
-    yield removeBeforeUnloadListeners(browser, 3, MIDDLE);
+    await removeBeforeUnloadListeners(browser, 3, MIDDLE);
     assertHasBeforeUnload(browser, false);
   });
 });
@@ -570,11 +570,11 @@ add_task(function* test_inner_window_scenarios() {
  * the above set of tests, except that we add the beforeunload listeners
  * to the iframe DOM nodes instead of the inner windows.
  */
-add_task(function* test_outer_window_scenarios() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_outer_window_scenarios() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE_URL,
-  }, function*(browser) {
+  }, async function(browser) {
     Assert.ok(browser.isRemoteBrowser,
               "This test only makes sense with out of process browsers.");
     assertHasBeforeUnload(browser, false);
@@ -590,7 +590,7 @@ add_task(function* test_outer_window_scenarios() {
     //      |
     //      |--> <iframe at PAGE_URL> (BOTTOM)
     //
-    yield prepareSubframes(browser, [
+    await prepareSubframes(browser, [
       { sandboxAttributes: null, },
       { sandboxAttributes: null, },
     ]);
@@ -605,22 +605,22 @@ add_task(function* test_outer_window_scenarios() {
     // Test the simple case on the top-level window by adding a single
     // beforeunload event listener on the outer window of the iframe
     // in the TOP document.
-    yield addOuterBeforeUnloadListeners(browser);
+    await addOuterBeforeUnloadListeners(browser);
     assertHasBeforeUnload(browser, true);
 
-    yield removeOuterBeforeUnloadListeners(browser);
+    await removeOuterBeforeUnloadListeners(browser);
     assertHasBeforeUnload(browser, false);
 
     // Now let's add several beforeunload listeners, and
     // ensure that we only set hasBeforeUnload to false once
     // the last listener is removed.
-    yield addOuterBeforeUnloadListeners(browser, 3);
+    await addOuterBeforeUnloadListeners(browser, 3);
     assertHasBeforeUnload(browser, true);
-    yield removeOuterBeforeUnloadListeners(browser); // 2 left...
+    await removeOuterBeforeUnloadListeners(browser); // 2 left...
     assertHasBeforeUnload(browser, true);
-    yield removeOuterBeforeUnloadListeners(browser); // 1 left...
+    await removeOuterBeforeUnloadListeners(browser); // 1 left...
     assertHasBeforeUnload(browser, true);
-    yield removeOuterBeforeUnloadListeners(browser); // None left!
+    await removeOuterBeforeUnloadListeners(browser); // None left!
 
     assertHasBeforeUnload(browser, false);
 
@@ -628,19 +628,19 @@ add_task(function* test_outer_window_scenarios() {
     // with a beforeunload listener set on the outer window of the
     // iframe inside it, and ensure that we clear the hasBeforeUnload
     // value.
-    yield addOuterBeforeUnloadListeners(browser, 5);
-    yield navigateSubframe(browser, "http://example.com", TOP);
+    await addOuterBeforeUnloadListeners(browser, 5);
+    await navigateSubframe(browser, "http://example.com", TOP);
     assertHasBeforeUnload(browser, false);
 
     // Now send the page back to the test page for
     // the next few tests.
     browser.loadURI(PAGE_URL);
-    yield BrowserTestUtils.browserLoaded(browser);
+    await BrowserTestUtils.browserLoaded(browser);
 
     // We should initially start with hasBeforeUnload set to false.
     assertHasBeforeUnload(browser, false);
 
-    yield prepareSubframes(browser, [
+    await prepareSubframes(browser, [
       { sandboxAttributes: null, },
       { sandboxAttributes: null, },
     ]);
@@ -649,14 +649,14 @@ add_task(function* test_outer_window_scenarios() {
     // all levels of our window structure, that we only set
     // hasBeforeUnload to false once the last beforeunload
     // listener has been unset.
-    yield addOuterBeforeUnloadListeners(browser, 3, MIDDLE);
+    await addOuterBeforeUnloadListeners(browser, 3, MIDDLE);
     assertHasBeforeUnload(browser, true);
-    yield addOuterBeforeUnloadListeners(browser, 7, BOTTOM);
+    await addOuterBeforeUnloadListeners(browser, 7, BOTTOM);
     assertHasBeforeUnload(browser, true);
 
-    yield removeOuterBeforeUnloadListeners(browser, 7, BOTTOM);
+    await removeOuterBeforeUnloadListeners(browser, 7, BOTTOM);
     assertHasBeforeUnload(browser, true);
-    yield removeOuterBeforeUnloadListeners(browser, 3, MIDDLE);
+    await removeOuterBeforeUnloadListeners(browser, 3, MIDDLE);
     assertHasBeforeUnload(browser, false);
 
     // Tests that if a beforeunload event listener is set on
@@ -665,15 +665,15 @@ add_task(function* test_outer_window_scenarios() {
     // to false. We're setting the event listener on the
     // outer window on the <iframe> in the MIDDLE, which
     // itself contains the BOTTOM frame it our structure.
-    yield addOuterBeforeUnloadListeners(browser, 5, BOTTOM);
+    await addOuterBeforeUnloadListeners(browser, 5, BOTTOM);
     assertHasBeforeUnload(browser, true);
 
     // Now navigate that BOTTOM frame.
-    yield navigateSubframe(browser, "http://example.com", BOTTOM);
+    await navigateSubframe(browser, "http://example.com", BOTTOM);
     assertHasBeforeUnload(browser, false);
 
     // Reset our window structure now.
-    yield prepareSubframes(browser, [
+    await prepareSubframes(browser, [
       { sandboxAttributes: null, },
       { sandboxAttributes: null, },
     ]);
@@ -681,39 +681,39 @@ add_task(function* test_outer_window_scenarios() {
     // This time, add beforeunload event listeners to the outer
     // windows for MIDDLE and BOTTOM. Then navigate the MIDDLE
     // frame. This should set hasBeforeUnload to false.
-    yield addOuterBeforeUnloadListeners(browser, 3, MIDDLE);
-    yield addOuterBeforeUnloadListeners(browser, 1, BOTTOM);
+    await addOuterBeforeUnloadListeners(browser, 3, MIDDLE);
+    await addOuterBeforeUnloadListeners(browser, 1, BOTTOM);
     assertHasBeforeUnload(browser, true);
-    yield navigateSubframe(browser, "http://example.com", MIDDLE);
+    await navigateSubframe(browser, "http://example.com", MIDDLE);
     assertHasBeforeUnload(browser, false);
 
     // Adds beforeunload event listeners to the outer windows of
     // MIDDLE and BOTOTM, and then removes those iframes. Removing
     // both iframes should set hasBeforeUnload to false.
-    yield prepareSubframes(browser, [
+    await prepareSubframes(browser, [
       { sandboxAttributes: null, },
       { sandboxAttributes: null, },
     ]);
-    yield addOuterBeforeUnloadListeners(browser, 3, MIDDLE);
-    yield addOuterBeforeUnloadListeners(browser, 1, BOTTOM);
+    await addOuterBeforeUnloadListeners(browser, 3, MIDDLE);
+    await addOuterBeforeUnloadListeners(browser, 1, BOTTOM);
     assertHasBeforeUnload(browser, true);
-    yield removeSubframeFrom(browser, BOTTOM);
+    await removeSubframeFrom(browser, BOTTOM);
     assertHasBeforeUnload(browser, true);
-    yield removeSubframeFrom(browser, MIDDLE);
+    await removeSubframeFrom(browser, MIDDLE);
     assertHasBeforeUnload(browser, false);
 
     // Adds beforeunload event listeners to the outer windows of MIDDLE
     // and BOTTOM, and then removes just the MIDDLE iframe (which will
     // take the bottom one with it). This should set hasBeforeUnload to
     // false.
-    yield prepareSubframes(browser, [
+    await prepareSubframes(browser, [
       { sandboxAttributes: null, },
       { sandboxAttributes: null, },
     ]);
-    yield addOuterBeforeUnloadListeners(browser, 3, MIDDLE);
-    yield addOuterBeforeUnloadListeners(browser, 1, BOTTOM);
+    await addOuterBeforeUnloadListeners(browser, 3, MIDDLE);
+    await addOuterBeforeUnloadListeners(browser, 1, BOTTOM);
     assertHasBeforeUnload(browser, true);
-    yield removeSubframeFrom(browser, TOP);
+    await removeSubframeFrom(browser, TOP);
     assertHasBeforeUnload(browser, false);
 
     // Test that two sandboxed iframes, _without_ the allow-modals
@@ -722,17 +722,17 @@ add_task(function* test_outer_window_scenarios() {
     // to the outer windows. Note that this requires the
     // allow-same-origin permission, otherwise a cross-origin
     // security exception is thrown.
-    yield prepareSubframes(browser, [
+    await prepareSubframes(browser, [
       { sandboxAttributes: "allow-same-origin allow-scripts", },
       { sandboxAttributes: "allow-same-origin allow-scripts", },
     ]);
 
-    yield addOuterBeforeUnloadListeners(browser, 3, MIDDLE);
-    yield addOuterBeforeUnloadListeners(browser, 1, BOTTOM);
+    await addOuterBeforeUnloadListeners(browser, 3, MIDDLE);
+    await addOuterBeforeUnloadListeners(browser, 1, BOTTOM);
     assertHasBeforeUnload(browser, false);
 
-    yield removeOuterBeforeUnloadListeners(browser, 3, MIDDLE);
-    yield removeOuterBeforeUnloadListeners(browser, 1, BOTTOM);
+    await removeOuterBeforeUnloadListeners(browser, 3, MIDDLE);
+    await removeOuterBeforeUnloadListeners(browser, 1, BOTTOM);
     assertHasBeforeUnload(browser, false);
 
     // Test that two sandboxed iframes, both with the allow-modals
@@ -740,18 +740,18 @@ add_task(function* test_outer_window_scenarios() {
     // to true when beforeunload event listeners are added. Note
     // that this requires the allow-same-origin permission,
     // otherwise a cross-origin security exception is thrown.
-    yield prepareSubframes(browser, [
+    await prepareSubframes(browser, [
       { sandboxAttributes: "allow-same-origin allow-scripts allow-modals", },
       { sandboxAttributes: "allow-same-origin allow-scripts allow-modals", },
     ]);
 
-    yield addOuterBeforeUnloadListeners(browser, 3, MIDDLE);
-    yield addOuterBeforeUnloadListeners(browser, 1, BOTTOM);
+    await addOuterBeforeUnloadListeners(browser, 3, MIDDLE);
+    await addOuterBeforeUnloadListeners(browser, 1, BOTTOM);
     assertHasBeforeUnload(browser, true);
 
-    yield removeOuterBeforeUnloadListeners(browser, 1, BOTTOM);
+    await removeOuterBeforeUnloadListeners(browser, 1, BOTTOM);
     assertHasBeforeUnload(browser, true);
-    yield removeOuterBeforeUnloadListeners(browser, 3, MIDDLE);
+    await removeOuterBeforeUnloadListeners(browser, 3, MIDDLE);
     assertHasBeforeUnload(browser, false);
   });
 });
@@ -760,11 +760,11 @@ add_task(function* test_outer_window_scenarios() {
  * Tests hasBeforeUnload behaviour when beforeunload event listeners
  * are added on both inner and outer windows.
  */
-add_task(function* test_mixed_inner_and_outer_window_scenarios() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_mixed_inner_and_outer_window_scenarios() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE_URL,
-  }, function*(browser) {
+  }, async function(browser) {
     Assert.ok(browser.isRemoteBrowser,
               "This test only makes sense with out of process browsers.");
     assertHasBeforeUnload(browser, false);
@@ -780,7 +780,7 @@ add_task(function* test_mixed_inner_and_outer_window_scenarios() {
     //      |
     //      |--> <iframe at PAGE_URL> (BOTTOM)
     //
-    yield prepareSubframes(browser, [
+    await prepareSubframes(browser, [
       { sandboxAttributes: null, },
       { sandboxAttributes: null, },
     ]);
@@ -792,31 +792,31 @@ add_task(function* test_mixed_inner_and_outer_window_scenarios() {
     const MIDDLE = 1;
     const BOTTOM = 2;
 
-    yield addBeforeUnloadListeners(browser, 1, TOP);
+    await addBeforeUnloadListeners(browser, 1, TOP);
     assertHasBeforeUnload(browser, true);
-    yield addBeforeUnloadListeners(browser, 2, MIDDLE);
+    await addBeforeUnloadListeners(browser, 2, MIDDLE);
     assertHasBeforeUnload(browser, true);
-    yield addBeforeUnloadListeners(browser, 5, BOTTOM);
-    assertHasBeforeUnload(browser, true);
-
-    yield addOuterBeforeUnloadListeners(browser, 3, MIDDLE);
-    assertHasBeforeUnload(browser, true);
-    yield addOuterBeforeUnloadListeners(browser, 7, BOTTOM);
+    await addBeforeUnloadListeners(browser, 5, BOTTOM);
     assertHasBeforeUnload(browser, true);
 
-    yield removeBeforeUnloadListeners(browser, 5, BOTTOM);
+    await addOuterBeforeUnloadListeners(browser, 3, MIDDLE);
+    assertHasBeforeUnload(browser, true);
+    await addOuterBeforeUnloadListeners(browser, 7, BOTTOM);
     assertHasBeforeUnload(browser, true);
 
-    yield removeBeforeUnloadListeners(browser, 2, MIDDLE);
+    await removeBeforeUnloadListeners(browser, 5, BOTTOM);
     assertHasBeforeUnload(browser, true);
 
-    yield removeOuterBeforeUnloadListeners(browser, 3, MIDDLE);
+    await removeBeforeUnloadListeners(browser, 2, MIDDLE);
     assertHasBeforeUnload(browser, true);
 
-    yield removeBeforeUnloadListeners(browser, 1, TOP);
+    await removeOuterBeforeUnloadListeners(browser, 3, MIDDLE);
     assertHasBeforeUnload(browser, true);
 
-    yield removeOuterBeforeUnloadListeners(browser, 7, BOTTOM);
+    await removeBeforeUnloadListeners(browser, 1, TOP);
+    assertHasBeforeUnload(browser, true);
+
+    await removeOuterBeforeUnloadListeners(browser, 7, BOTTOM);
     assertHasBeforeUnload(browser, false);
   });
 });

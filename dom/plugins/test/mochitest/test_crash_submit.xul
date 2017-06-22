@@ -22,7 +22,6 @@ SimpleTest.ignoreAllUncaughtExceptions();
 
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/Task.jsm");
 
 var crashReporter =
   Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
@@ -79,10 +78,10 @@ var testObserver = {
     crashReporter.serverURL = oldServerURL;
 
     // Check and cleanup CrashManager.
-    Task.spawn(function* () {
+    (async function() {
       let cm = Services.crashmanager;
-      yield cm.ensureCrashIsPresent(crashID);
-      let store = yield cm._getStore();
+      await cm.ensureCrashIsPresent(crashID);
+      let store = await cm._getStore();
       is(store.crashesCount, 1, "Store should have only 1 item");
 
       let crash = store.getCrash(crashID);
@@ -99,7 +98,7 @@ var testObserver = {
       store.reset();
 
       SimpleTest.finish();
-    });
+    })();
   },
 
   QueryInterface: function(iid) {
@@ -142,14 +141,14 @@ function runTests() {
 
   var pluginElement = document.getElementById("plugin1");
   try {
-    Task.spawn(function* () {
+    (async function() {
       // Clear data in CrashManager in case previous tests caused something
       // to be added.
-      let store = yield Services.crashmanager._getStore();
+      let store = await Services.crashmanager._getStore();
       store.reset();
 
       pluginElement.crash();
-    });
+    })();
   } catch (e) {
   }
 }

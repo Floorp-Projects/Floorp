@@ -15,11 +15,11 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_with_data_enabled() {
+add_task(async function test_with_data_enabled() {
   let db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => {return db.drop().then(_ => db.close());});
 
-  let [publicKey, privateKey] = yield PushCrypto.generateKeys();
+  let [publicKey, privateKey] = await PushCrypto.generateKeys();
   let records = [{
     channelID: 'eb18f12a-cc42-4f14-accb-3bfc1227f1aa',
     pushEndpoint: 'https://example.org/push/no-key/1',
@@ -36,7 +36,7 @@ add_task(function* test_with_data_enabled() {
     quota: Infinity,
   }];
   for (let record of records) {
-    yield db.put(record);
+    await db.put(record);
   }
 
   PushService.init({
@@ -67,18 +67,18 @@ add_task(function* test_with_data_enabled() {
     },
   });
 
-  let newRecord = yield PushService.register({
+  let newRecord = await PushService.register({
     scope: 'https://example.com/page/3',
     originAttributes: ChromeUtils.originAttributesToSuffix(
       { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
   });
   ok(newRecord.p256dhKey, 'Should generate public keys for new records');
 
-  let record = yield db.getByKeyID('eb18f12a-cc42-4f14-accb-3bfc1227f1aa');
+  let record = await db.getByKeyID('eb18f12a-cc42-4f14-accb-3bfc1227f1aa');
   ok(record.p256dhPublicKey, 'Should add public key to partial record');
   ok(record.p256dhPrivateKey, 'Should add private key to partial record');
 
-  record = yield db.getByKeyID('0d8886b9-8da1-4778-8f5d-1cf93a877ed6');
+  record = await db.getByKeyID('0d8886b9-8da1-4778-8f5d-1cf93a877ed6');
   deepEqual(record.p256dhPublicKey, publicKey,
     'Should leave existing public key');
   deepEqual(record.p256dhPrivateKey, privateKey,

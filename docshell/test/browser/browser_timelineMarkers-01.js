@@ -7,10 +7,10 @@
 
 const URL = "data:text/html;charset=utf-8,Test page";
 
-add_task(function* () {
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: URL },
-    function* (browser) {
-      yield ContentTask.spawn(browser, null, function() {
+add_task(async function() {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: URL },
+    async function(browser) {
+      await ContentTask.spawn(browser, null, function() {
         ok("recordProfileTimelineMarkers" in docShell,
            "The recordProfileTimelineMarkers attribute exists");
         ok("popProfileTimelineMarkers" in docShell,

@@ -20,30 +20,30 @@
     const DEBUGGER_URL = BASE_URL + "WorkerDebugger_promise_debugger.js";
 
     function test() {
-      Task.spawn(function* () {
+      (async function() {
         SimpleTest.waitForExplicitFinish();
 
         let promise = waitForRegister(WORKER_URL, DEBUGGER_URL);
         let worker = new Worker(WORKER_URL);
-        let dbg = yield promise;
+        let dbg = await promise;
 
         info("Send a request to the worker. This should cause the worker " +
              "to send a response.");
         promise = waitForWorkerMessage(worker, "resolved");
         worker.postMessage("resolve");
-        yield promise;
+        await promise;
 
         info("Send a request to the debugger. This should cause the debugger " +
              "to send a response.");
         promise = waitForDebuggerMessage(dbg, "resolved");
         dbg.postMessage("resolve");
-        yield promise;
+        await promise;
 
         info("Send a request to the worker. This should cause the debugger " +
              "to enter a nested event loop.");
         promise = waitForDebuggerMessage(dbg, "paused");
         worker.postMessage("pause");
-        yield promise;
+        await promise;
 
         info("Send a request to the debugger. This should cause the debugger " +
              "to leave the nested event loop.");
@@ -52,10 +52,10 @@
           waitForWorkerMessage(worker, "resumed")
         ]);
         dbg.postMessage("resume");
-        yield promise;
+        await promise;
 
         SimpleTest.finish();
-      });
+      })();
     }
 
   ]]>

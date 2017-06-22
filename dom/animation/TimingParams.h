@@ -35,6 +35,44 @@ struct TimingParams
 {
   TimingParams() = default;
 
+  TimingParams(float aDuration, float aDelay,
+               float aIterationCount,
+               dom::PlaybackDirection aDirection,
+               dom::FillMode aFillMode)
+    : mIterations(aIterationCount)
+    , mDirection(aDirection)
+    , mFill(aFillMode)
+  {
+    mDuration.emplace(StickyTimeDuration::FromMilliseconds(aDuration));
+    mDelay = TimeDuration::FromMilliseconds(aDelay);
+    Update();
+  }
+
+  TimingParams(const TimeDuration& aDuration,
+               const TimeDuration& aDelay,
+               const TimeDuration& aEndDelay,
+               float aIterations,
+               float aIterationStart,
+               dom::PlaybackDirection aDirection,
+               dom::FillMode aFillMode,
+               Maybe<ComputedTimingFunction>&& aFunction)
+    : mDelay(aDelay)
+    , mEndDelay(aEndDelay)
+    , mIterations(aIterations)
+    , mIterationStart(aIterationStart)
+    , mDirection(aDirection)
+    , mFill(aFillMode)
+    , mFunction(aFunction)
+  {
+    mDuration.emplace(aDuration);
+    Update();
+  }
+
+  template <class OptionsType>
+  static TimingParams FromOptionsType(
+    const OptionsType& aOptions,
+    nsIDocument* aDocument,
+    ErrorResult& aRv);
   static TimingParams FromOptionsUnion(
     const dom::UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
     nsIDocument* aDocument, ErrorResult& aRv);
@@ -87,6 +125,107 @@ struct TimingParams
                                                    nsIDocument* aDocument,
                                                    ErrorResult& aRv);
 
+  static StickyTimeDuration CalcActiveDuration(
+    const Maybe<StickyTimeDuration>& aDuration,
+    double aIterations)
+  {
+    // If either the iteration duration or iteration count is zero,
+    // Web Animations says that the active duration is zero. This is to
+    // ensure that the result is defined when the other argument is Infinity.
+    static const StickyTimeDuration zeroDuration;
+    if (!aDuration || *aDuration == zeroDuration || aIterations == 0.0) {
+      return zeroDuration;
+    }
+
+    return aDuration->MultDouble(aIterations);
+  }
+  // Return the duration of the active interval calculated by duration and
+  // iteration count.
+  StickyTimeDuration ActiveDuration() const
+  {
+    MOZ_ASSERT(CalcActiveDuration(mDuration, mIterations) == mActiveDuration,
+               "Cached value of active duration should be up to date");
+    return mActiveDuration;
+  }
+
+  StickyTimeDuration EndTime() const
+  {
+    MOZ_ASSERT(mEndTime == std::max(mDelay + ActiveDuration() + mEndDelay,
+                                    StickyTimeDuration()),
+               "Cached value of end time should be up to date");
+    return mEndTime;
+  }
+
+  bool operator==(const TimingParams& aOther) const;
+  bool operator!=(const TimingParams& aOther) const
+  {
+    return !(*this == aOther);
+  }
+
+  void SetDuration(Maybe<StickyTimeDuration>&& aDuration)
+  {
+    mDuration = Move(aDuration);
+    Update();
+  }
+  const Maybe<StickyTimeDuration>& Duration() const { return mDuration; }
+
+  void SetDelay(const TimeDuration& aDelay)
+  {
+    mDelay = aDelay;
+    Update();
+  }
+  const TimeDuration& Delay() const { return mDelay; }
+
+  void SetEndDelay(const TimeDuration& aEndDelay)
+  {
+    mEndDelay = aEndDelay;
+    Update();
+  }
+  const TimeDuration& EndDelay() const { return mEndDelay; }
+
+  void SetIterations(double aIterations)
+  {
+    mIterations = aIterations;
+    Update();
+  }
+  double Iterations() const { return mIterations; }
+
+  void SetIterationStart(double aIterationStart)
+  {
+    mIterationStart = aIterationStart;
+  }
+  double IterationStart() const { return mIterationStart; }
+
+  void SetDirection(dom::PlaybackDirection aDirection)
+  {
+    mDirection = aDirection;
+  }
+  dom::PlaybackDirection Direction() const { return mDirection; }
+
+  void SetFill(dom::FillMode aFill)
+  {
+    mFill = aFill;
+  }
+  dom::FillMode Fill() const { return mFill; }
+
+  void SetTimingFunction(Maybe<ComputedTimingFunction>&& aFunction)
+  {
+    mFunction = Move(aFunction);
+  }
+  const Maybe<ComputedTimingFunction>& TimingFunction() const
+  {
+    return mFunction;
+  }
+
+private:
+  void Update()
+  {
+    mActiveDuration = CalcActiveDuration(mDuration, mIterations);
+
+    mEndTime = std::max(mDelay + mActiveDuration + mEndDelay,
+                        StickyTimeDuration());
+  }
+
   // mDuration.isNothing() represents the "auto" value
   Maybe<StickyTimeDuration> mDuration;
   TimeDuration mDelay;      // Initializes to zero
@@ -96,33 +235,8 @@ struct TimingParams
   dom::PlaybackDirection mDirection = dom::PlaybackDirection::Normal;
   dom::FillMode mFill = dom::FillMode::Auto;
   Maybe<ComputedTimingFunction> mFunction;
-
-  // Return the duration of the active interval calculated by duration and
-  // iteration count.
-  StickyTimeDuration ActiveDuration() const
-  {
-    // If either the iteration duration or iteration count is zero,
-    // Web Animations says that the active duration is zero. This is to
-    // ensure that the result is defined when the other argument is Infinity.
-    static const StickyTimeDuration zeroDuration;
-    if (!mDuration || *mDuration == zeroDuration || mIterations == 0.0) {
-      return zeroDuration;
-    }
-
-    return mDuration->MultDouble(mIterations);
-  }
-
-  StickyTimeDuration EndTime() const
-  {
-    return std::max(mDelay + ActiveDuration() + mEndDelay,
-                    StickyTimeDuration());
-  }
-
-  bool operator==(const TimingParams& aOther) const;
-  bool operator!=(const TimingParams& aOther) const
-  {
-    return !(*this == aOther);
-  }
+  StickyTimeDuration mActiveDuration = StickyTimeDuration();
+  StickyTimeDuration mEndTime = StickyTimeDuration();
 };
 
 } // namespace mozilla

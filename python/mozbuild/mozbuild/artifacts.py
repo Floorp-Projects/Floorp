@@ -138,7 +138,7 @@ class ArtifactJob(object):
         ('bin/xpcshell', ('bin', 'bin')),
         ('bin/plugins/gmp-*/*/*', ('bin/plugins', 'bin')),
         ('bin/plugins/*', ('bin/plugins', 'plugins')),
-        ('bin/components/*', ('bin/components', 'bin/components')),
+        ('bin/components/*.xpt', ('bin/components', 'bin/components')),
     }
 
     # We can tell our input is a test archive by this suffix, which happens to

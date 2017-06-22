@@ -26,7 +26,6 @@
 
   Cu.import("resource://testing-common/BrowserTestUtils.jsm");
   Cu.import("resource://testing-common/ContentTask.jsm");
-  Cu.import("resource://gre/modules/Task.jsm");
   Cu.import("resource://gre/modules/Services.jsm");
 
   // This is how many sub-tests (testframes) in each round.
@@ -72,15 +71,15 @@
   function testOnWindow(aIsPrivate, aCallback) {
     let win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
 
-    Task.spawn(function* () {
-      yield new Promise(resolve => whenDelayedStartupFinished(win, resolve));
+    (async function() {
+      await new Promise(resolve => whenDelayedStartupFinished(win, resolve));
 
       let browser = win.gBrowser.selectedBrowser;
-      yield BrowserTestUtils.loadURI(browser, CONTENT_PAGE);
-      yield BrowserTestUtils.browserLoaded(browser);
+      await BrowserTestUtils.loadURI(browser, CONTENT_PAGE);
+      await BrowserTestUtils.browserLoaded(browser);
 
       aCallback(win);
-    });
+    })();
   }
 
   function startRound(win, isPrivate, round) {
@@ -91,7 +90,7 @@
     let browser = win.gBrowser.selectedBrowser;
     let src = `https://example.com/${STSPATH}/${round}_bootstrap.html`;
 
-    ContentTask.spawn(browser, src, function* (contentSrc) {
+    ContentTask.spawn(browser, src, async function(contentSrc) {
       let frame = content.document.createElement("iframe");
       frame.setAttribute("id", "ifr_bootstrap");
       frame.setAttribute("src", contentSrc);
@@ -120,7 +119,7 @@
     let src = test.url + "?id=" + testName;
     let browser = win.gBrowser.selectedBrowser;
 
-    ContentTask.spawn(browser, [id, src], function* ([contentId, contentSrc]) {
+    ContentTask.spawn(browser, [id, src], async function([contentId, contentSrc]) {
       let frame = content.document.createElement("iframe");
       frame.setAttribute("id", contentId);
       frame.setAttribute("src", contentSrc);
@@ -181,7 +180,7 @@
       SimpleTest.info("DONE WITH ROUND " + currentround);
       // remove all the iframes in the document
       let browser = win.gBrowser.selectedBrowser;
-      ContentTask.spawn(browser, testframes, function* (contentTestFrames) {
+      ContentTask.spawn(browser, testframes, async function(contentTestFrames) {
         content.document.body.removeChild(
           content.document.getElementById("ifr_bootstrap"));
         for (let test in contentTestFrames) {

@@ -26,20 +26,20 @@ const kDelay = 10;
 
 Services.scriptloader.loadSubScript(kPluginJS, this);
 
-function* runTest(url) {
+async function runTest(url) {
   let currentTab = gBrowser.selectedTab;
-  let newTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, kBaseURI);
+  let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, kBaseURI);
   let newBrowser = gBrowser.getBrowserForTab(newTab);
 
   // Wait for the UI to indicate that audio is being played back.
   let promise = BrowserTestUtils.waitForAttribute("soundplaying", newTab, "true");
   newBrowser.loadURI(url);
-  yield promise;
+  await promise;
 
   // Put the tab in the background.
-  yield BrowserTestUtils.switchTab(gBrowser, currentTab);
+  await BrowserTestUtils.switchTab(gBrowser, currentTab);
 
-  let timeout = yield ContentTask.spawn(newBrowser, kDelay, function(delay) {
+  let timeout = await ContentTask.spawn(newBrowser, kDelay, function(delay) {
     return new Promise(resolve => {
       let before = new Date();
       content.window.setTimeout(function() {
@@ -51,17 +51,17 @@ function* runTest(url) {
   ok(timeout <= kMinTimeoutBackground, `Got the correct timeout (${timeout})`);
 
   // All done.
-  yield BrowserTestUtils.removeTab(newTab);
+  await BrowserTestUtils.removeTab(newTab);
 }
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({"set": [
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set": [
     ["dom.min_background_timeout_value", kMinTimeoutBackground],
   ]});
 });
 
-add_task(function* test() {
+add_task(async function test() {
   for (var url of testURLs) {
-    yield runTest(url);
+    await runTest(url);
   }
 });

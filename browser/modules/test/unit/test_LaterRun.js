@@ -12,7 +12,7 @@ Services.prefs.setBoolPref(kEnabledPref, true);
 Components.utils.import("resource://testing-common/AppInfo.jsm");
 updateAppInfo();
 
-add_task(function* test_page_applies() {
+add_task(async function test_page_applies() {
   Services.prefs.setCharPref(kPagePrefRoot + "test_LaterRun_unittest.url", "https://www.mozilla.org/%VENDOR%/%NAME%/%ID%/%VERSION%/");
   Services.prefs.setIntPref(kPagePrefRoot + "test_LaterRun_unittest.minimumHoursSinceInstall", 10);
   Services.prefs.setIntPref(kPagePrefRoot + "test_LaterRun_unittest.minimumSessionCount", 3);
@@ -82,7 +82,7 @@ add_task(function* test_page_applies() {
   clearAllPagePrefs();
 });
 
-add_task(function* test_get_URL() {
+add_task(async function test_get_URL() {
   Services.prefs.setIntPref(kProfileCreationTime, Math.floor((Date.now() - 11 * 60 * 60 * 1000) / 1000));
   Services.prefs.setCharPref(kPagePrefRoot + "test_LaterRun_unittest.url", "https://www.mozilla.org/");
   Services.prefs.setIntPref(kPagePrefRoot + "test_LaterRun_unittest.minimumHoursSinceInstall", 10);
@@ -107,7 +107,7 @@ add_task(function* test_get_URL() {
   clearAllPagePrefs();
 });
 
-add_task(function* test_insecure_urls() {
+add_task(async function test_insecure_urls() {
   Services.prefs.setCharPref(kPagePrefRoot + "test_LaterRun_unittest.url", "http://www.mozilla.org/");
   Services.prefs.setIntPref(kPagePrefRoot + "test_LaterRun_unittest.minimumHoursSinceInstall", 10);
   Services.prefs.setIntPref(kPagePrefRoot + "test_LaterRun_unittest.minimumSessionCount", 3);
@@ -119,7 +119,7 @@ add_task(function* test_insecure_urls() {
   clearAllPagePrefs();
 });
 
-add_task(function* test_dynamic_pref_getter_setter() {
+add_task(async function test_dynamic_pref_getter_setter() {
   delete LaterRun._sessionCount;
   Services.prefs.setIntPref(kSessionCountPref, 0);
   Assert.equal(LaterRun.sessionCount, 0, "Should start at 0");

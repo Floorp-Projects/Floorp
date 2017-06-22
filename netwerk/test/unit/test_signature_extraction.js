@@ -19,8 +19,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 
 const BackgroundFileSaverOutputStream = Components.Constructor(
       "@mozilla.org/network/background-file-saver;1?mode=outputstream",
@@ -60,24 +58,24 @@ function getTempFile(aLeafName) {
  * @rejects With an exception, if onSaveComplete is called with a failure code.
  */
 function promiseSaverComplete(aSaver, aOnTargetChangeFn) {
-  let deferred = Promise.defer();
-  aSaver.observer = {
-    onTargetChange: function BFSO_onSaveComplete(aSaver, aTarget)
-    {
-      if (aOnTargetChangeFn) {
-        aOnTargetChangeFn(aTarget);
-      }
-    },
-    onSaveComplete: function BFSO_onSaveComplete(aSaver, aStatus)
-    {
-      if (Components.isSuccessCode(aStatus)) {
-        deferred.resolve();
-      } else {
-        deferred.reject(new Components.Exception("Saver failed.", aStatus));
-      }
-    },
-  };
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    aSaver.observer = {
+      onTargetChange: function BFSO_onSaveComplete(aSaver, aTarget)
+      {
+        if (aOnTargetChangeFn) {
+          aOnTargetChangeFn(aTarget);
+        }
+      },
+      onSaveComplete: function BFSO_onSaveComplete(aSaver, aStatus)
+      {
+        if (Components.isSuccessCode(aStatus)) {
+          resolve();
+        } else {
+          reject(new Components.Exception("Saver failed.", aStatus));
+        }
+      },
+    };
+  });
 }
 
 /**
@@ -95,24 +93,24 @@ function promiseSaverComplete(aSaver, aOnTargetChangeFn) {
  * @rejects With an exception, if the copy fails.
  */
 function promiseCopyToSaver(aSourceString, aSaverOutputStream, aCloseWhenDone) {
-  let deferred = Promise.defer();
-  let inputStream = new StringInputStream(aSourceString, aSourceString.length);
-  let copier = Cc["@mozilla.org/network/async-stream-copier;1"]
-               .createInstance(Ci.nsIAsyncStreamCopier);
-  copier.init(inputStream, aSaverOutputStream, null, false, true, 0x8000, true,
-              aCloseWhenDone);
-  copier.asyncCopy({
-    onStartRequest: function () { },
-    onStopRequest: function (aRequest, aContext, aStatusCode)
-    {
-      if (Components.isSuccessCode(aStatusCode)) {
-        deferred.resolve();
-      } else {
-        deferred.reject(new Components.Exception(aResult));
-      }
-    },
-  }, null);
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    let inputStream = new StringInputStream(aSourceString, aSourceString.length);
+    let copier = Cc["@mozilla.org/network/async-stream-copier;1"]
+                 .createInstance(Ci.nsIAsyncStreamCopier);
+    copier.init(inputStream, aSaverOutputStream, null, false, true, 0x8000, true,
+                aCloseWhenDone);
+    copier.asyncCopy({
+      onStartRequest: function () { },
+      onStopRequest: function (aRequest, aContext, aStatusCode)
+      {
+        if (Components.isSuccessCode(aStatusCode)) {
+          resolve();
+        } else {
+          reject(new Components.Exception(aResult));
+        }
+      },
+    }, null);
+  });
 }
 
 var gStillRunning = true;
@@ -144,7 +142,7 @@ function readFileToString(aFilename) {
   return buf;
 }
 
-add_task(function test_signature()
+add_task(async function test_signature()
 {
   // Check that we get a signature if the saver is finished on Windows.
   let destFile = getTempFile(TEST_FILE_NAME_1);
@@ -160,10 +158,10 @@ add_task(function test_signature()
 
   saver.enableSignatureInfo();
   saver.setTarget(destFile, false);
-  yield promiseCopyToSaver(data, saver, true);
+  await promiseCopyToSaver(data, saver, true);
 
   saver.finish(Cr.NS_OK);
-  yield completionPromise;
+  await completionPromise;
 
   // There's only one nsIX509CertList in the signature array.
   do_check_eq(1, saver.signatureInfo.length);

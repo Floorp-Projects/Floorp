@@ -52,7 +52,7 @@ function run_test() {
  * Test that the blocklist service correctly loads and returns the infoURL for
  * a plugin that matches the first entry in the blocklist.
  */
-add_task(function* test_infoURL() {
+add_task(async function test_infoURL() {
   // The testInfoURL must match the value within the
   // <infoURL> tag in pluginInfoURL_block.xml.
   let testInfoURL = "http://test.url.com/";
@@ -65,7 +65,7 @@ add_task(function* test_infoURL() {
  * Test that the blocklist service correctly loads and returns the infoURL for
  * a plugin that partially matches an earlier entry in the blocklist.
  */
-add_task(function* test_altInfoURL() {
+add_task(async function test_altInfoURL() {
   let altTestInfoURL = "http://alt.test.url.com/";
 
   Assert.strictEqual(Services.blocklist.getPluginInfoURL(PLUGINS[1]),
@@ -76,12 +76,12 @@ add_task(function* test_altInfoURL() {
  * Test that the blocklist service correctly returns null
  * if the infoURL tag is missing in the blocklist.xml file.
  */
-add_task(function* test_infoURL_missing() {
+add_task(async function test_infoURL_missing() {
   Assert.strictEqual(Services.blocklist.getPluginInfoURL(PLUGINS[2]), null,
     "Should be null when no infoURL tag is available.");
 });
 
-add_task(function* test_intoURL_newVersion() {
+add_task(async function test_intoURL_newVersion() {
   let testInfoURL = "http://test.url2.com/";
   Assert.strictEqual(Services.blocklist.getPluginInfoURL(PLUGINS[3]),
     testInfoURL, "Old plugin should match");

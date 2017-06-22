@@ -36,7 +36,7 @@ function checkEventFormat(events) {
   }
 }
 
-add_task(function* test_recording_state() {
+add_task(async function test_recording_state() {
   const events = [
     ["telemetry.test", "test1", "object1"],
     ["telemetry.test.second", "test", "object1"],
@@ -73,14 +73,14 @@ add_task(function* test_recording_state() {
   Assert.equal(snapshot.parent[0][1], "telemetry.test.second", "Should have recorded one event in telemetry.test.second");
 });
 
-add_task(function* recording_setup() {
+add_task(async function recording_setup() {
   // Make sure both test categories are enabled for the remaining tests.
   // Otherwise their event recording won't work.
   Telemetry.setEventRecordingEnabled("telemetry.test", true);
   Telemetry.setEventRecordingEnabled("telemetry.test.second", true);
 });
 
-add_task(function* test_recording() {
+add_task(async function test_recording() {
   Telemetry.clearEvents();
 
   // Record some events.
@@ -156,7 +156,7 @@ add_task(function* test_recording() {
   checkEvents(snapshot.parent, filtered);
 });
 
-add_task(function* test_clear() {
+add_task(async function test_clear() {
   Telemetry.clearEvents();
 
   const COUNT = 10;
@@ -176,7 +176,7 @@ add_task(function* test_clear() {
   Assert.equal(Object.keys(snapshot).length, 0, `Should have cleared the events.`);
 });
 
-add_task(function* test_expiry() {
+add_task(async function test_expiry() {
   Telemetry.clearEvents();
 
   // Recording call with event that is expired by version.
@@ -196,7 +196,7 @@ add_task(function* test_expiry() {
   Assert.equal(snapshot.parent.length, 1, "Should record event when date and version are not expired.");
 });
 
-add_task(function* test_invalidParams() {
+add_task(async function test_invalidParams() {
   Telemetry.clearEvents();
 
   // Recording call with wrong type for value argument.
@@ -220,7 +220,7 @@ add_task(function* test_invalidParams() {
   Assert.equal(Object.keys(snapshot).length, 0, "Should not record event when extra argument with invalid value type is passed.");
 });
 
-add_task(function* test_storageLimit() {
+add_task(async function test_storageLimit() {
   Telemetry.clearEvents();
 
   // Record more events than the storage limit allows.
@@ -239,7 +239,7 @@ add_task(function* test_storageLimit() {
             "Should have recorded all events from before hitting the limit.");
 });
 
-add_task(function* test_valueLimits() {
+add_task(async function test_valueLimits() {
   Telemetry.clearEvents();
 
   // Record values that are at or over the limits for string lengths.
@@ -285,7 +285,7 @@ add_task(function* test_valueLimits() {
   }
 });
 
-add_task(function* test_unicodeValues() {
+add_task(async function test_unicodeValues() {
   Telemetry.clearEvents();
 
   // Record string values containing unicode characters.

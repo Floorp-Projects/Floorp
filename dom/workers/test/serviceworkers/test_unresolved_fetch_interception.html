@@ -32,10 +32,10 @@ add_task(function setupPrefs() {
   ]});
 });
 
-add_task(function* grace_timeout_termination_with_interrupted_intercept() {
+add_task(async function grace_timeout_termination_with_interrupted_intercept() {
   // Setup timeouts so that the service worker will go into grace timeout after
   // a zero-length idle timeout.
-  yield SpecialPowers.pushPrefEnv({"set": [
+  await SpecialPowers.pushPrefEnv({"set": [
     ["dom.serviceWorkers.idle_timeout", 0],
     ["dom.serviceWorkers.idle_extended_timeout", 299999]]});
 
@@ -44,9 +44,9 @@ add_task(function* grace_timeout_termination_with_interrupted_intercept() {
     navigator.serviceWorker.oncontrollerchange = resolve;
   });
 
-  let registration = yield navigator.serviceWorker.register(
+  let registration = await navigator.serviceWorker.register(
     "unresolved_fetch_worker.js", { scope: "./"} );
-  yield waitForControlled;
+  await waitForControlled;
   ok(navigator.serviceWorker.controller, "Controlled"); // double check!
 
   // We want to make sure the SW is active and processing the fetch before we
@@ -61,7 +61,7 @@ add_task(function* grace_timeout_termination_with_interrupted_intercept() {
     .then(() => { ok(false, "should have rejected "); },
           () => { ok(true, "hung fetch terminates when worker dies"); });
 
-  yield waitForFetchActive;
+  await waitForFetchActive;
 
   let expectedMessage = expect_console_message(
     // Termination error
@@ -79,21 +79,21 @@ add_task(function* grace_timeout_termination_with_interrupted_intercept() {
   // zero-length timer firings.  Note that we need to do something to get the
   // SW to renew its keepalive for this to actually cause the timers to be
   // rescheduled...
-  yield SpecialPowers.pushPrefEnv({"set": [
+  await SpecialPowers.pushPrefEnv({"set": [
     ["dom.serviceWorkers.idle_extended_timeout", 0]]});
   // ...which we do by postMessaging it.
   navigator.serviceWorker.controller.postMessage("doomity doom doom");
 
   // Now wait for signs that the worker was terminated by the fetch failing.
-  yield hangingFetch;
+  await hangingFetch;
 
   // The worker should now be dead and the error logged, wait/assert.
-  yield wait_for_expected_message(expectedMessage);
+  await wait_for_expected_message(expectedMessage);
 
   // roll back all of our test case specific preferences and otherwise cleanup
-  yield SpecialPowers.popPrefEnv();
-  yield SpecialPowers.popPrefEnv();
-  yield registration.unregister();
+  await SpecialPowers.popPrefEnv();
+  await SpecialPowers.popPrefEnv();
+  await registration.unregister();
 });
 </script>
 </body>

@@ -78,9 +78,9 @@ const gCertificateDialogs = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICertificateDialogs])
 };
 
-add_task(function* setup() {
+add_task(async function setup() {
   for (let testCase of TEST_CASES) {
-    testCase.cert = yield readCertificate(testCase.certFilename, ",,");
+    testCase.cert = await readCertificate(testCase.certFilename, ",,");
     Assert.notEqual(testCase.cert, null,
                     `'${testCase.certFilename}' should have been read`);
   }
@@ -95,9 +95,9 @@ add_task(function* setup() {
 
 // Test that the trust header message corresponds to the provided cert, and that
 // the View Cert button launches the cert viewer for the provided cert.
-add_task(function* testTrustHeaderAndViewCertButton() {
+add_task(async function testTrustHeaderAndViewCertButton() {
   for (let testCase of TEST_CASES) {
-    let [win] = yield openCertDownloadDialog(testCase.cert);
+    let [win] = await openCertDownloadDialog(testCase.cert);
     let expectedTrustHeaderString =
       `Do you want to trust \u201C${testCase.expectedDisplayString}\u201D ` +
       "for the following purposes?";
@@ -113,19 +113,19 @@ add_task(function* testTrustHeaderAndViewCertButton() {
     Assert.equal(gCertificateDialogs.viewCertCallCount, 1,
                  "viewCert() should've been called once");
 
-    yield BrowserTestUtils.closeWindow(win);
+    await BrowserTestUtils.closeWindow(win);
   }
 });
 
 // Test that the right values are returned when the dialog is accepted.
-add_task(function* testAcceptDialogReturnValues() {
-  let [win, retVals] = yield openCertDownloadDialog(TEST_CASES[0].cert);
+add_task(async function testAcceptDialogReturnValues() {
+  let [win, retVals] = await openCertDownloadDialog(TEST_CASES[0].cert);
   win.document.getElementById("trustSSL").checked = true;
   win.document.getElementById("trustEmail").checked = false;
   win.document.getElementById("trustObjSign").checked = true;
   info("Accepting dialog");
   win.document.getElementById("download_cert").acceptDialog();
-  yield BrowserTestUtils.windowClosed(win);
+  await BrowserTestUtils.windowClosed(win);
 
   Assert.ok(retVals.get("importConfirmed"),
             "Return value should signal user chose to import the cert");
@@ -138,11 +138,11 @@ add_task(function* testAcceptDialogReturnValues() {
 });
 
 // Test that the right values are returned when the dialog is canceled.
-add_task(function* testCancelDialogReturnValues() {
-  let [win, retVals] = yield openCertDownloadDialog(TEST_CASES[0].cert);
+add_task(async function testCancelDialogReturnValues() {
+  let [win, retVals] = await openCertDownloadDialog(TEST_CASES[0].cert);
   info("Canceling dialog");
   win.document.getElementById("download_cert").cancelDialog();
-  yield BrowserTestUtils.windowClosed(win);
+  await BrowserTestUtils.windowClosed(win);
 
   Assert.ok(!retVals.get("importConfirmed"),
             "Return value should signal user chose not to import the cert");
