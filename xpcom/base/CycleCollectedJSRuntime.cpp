@@ -837,13 +837,13 @@ CycleCollectedJSRuntime::GCSliceCallback(JSContext* aContext,
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_is_active()) {
     if (aProgress == JS::GC_CYCLE_END) {
-      PROFILER_MARKER_PAYLOAD(
+      profiler_add_marker(
         "GCMajor",
         MakeUnique<GCMajorMarkerPayload>(aDesc.startTime(aContext),
                                          aDesc.endTime(aContext),
                                          aDesc.summaryToJSON(aContext)));
     } else if (aProgress == JS::GC_SLICE_END) {
-      PROFILER_MARKER_PAYLOAD(
+      profiler_add_marker(
         "GCSlice",
         MakeUnique<GCSliceMarkerPayload>(aDesc.lastSliceStart(aContext),
                                          aDesc.lastSliceEnd(aContext),
@@ -936,7 +936,7 @@ CycleCollectedJSRuntime::GCNurseryCollectionCallback(JSContext* aContext,
              profiler_is_active())
   {
 #ifdef MOZ_GECKO_PROFILER
-    PROFILER_MARKER_PAYLOAD(
+    profiler_add_marker(
       "GCMinor",
       MakeUnique<GCMinorMarkerPayload>(self->mLatestNurseryCollectionStart,
                                        TimeStamp::Now(),

@@ -1305,7 +1305,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
               TimeStamp endTime = TimeStamp::Now();
               uint16_t phase;
               (*aDOMEvent)->GetEventPhase(&phase);
-              PROFILER_MARKER_PAYLOAD(
+              profiler_add_marker(
                 "DOMEvent",
                 MakeUnique<DOMEventMarkerPayload>(typeStr, phase,
                                                   startTime, endTime));
