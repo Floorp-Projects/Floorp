@@ -99,7 +99,7 @@ enum class CSSPseudoElementType : uint8_t;
 class EventStates;
 struct ReflowInput;
 class ReflowOutput;
-class ServoStyleSet;
+class ServoRestyleState;
 class DisplayItemData;
 class EffectSet;
 
@@ -3291,22 +3291,22 @@ public:
 
   /**
    * Called by ServoRestyleManager to update the style contexts of anonymous
-   * boxes directly associtated with this frame.  The passed-in ServoStyleSet
-   * can be used to create new style contexts as needed.
+   * boxes directly associtated with this frame.
+   *
+   * The passed-in ServoRestyleState can be used to create new style contexts
+   * as needed, as well as posting changes to the change list.
+   *
+   * It's guaranteed to already have a change in it for this frame and this
+   * frame's content.
    *
    * This function will be called after this frame's style context has already
    * been updated.  This function will only be called on frames which have the
    * NS_FRAME_OWNS_ANON_BOXES bit set.
-   *
-   * The nsStyleChangeList can be used to append additional changes.  It's
-   * guaranteed to already have a change in it for this frame and this frame's
-   * content and a change hint of aHintForThisFrame.
    */
-  void UpdateStyleOfOwnedAnonBoxes(mozilla::ServoStyleSet& aStyleSet,
-                                   nsStyleChangeList& aChangeList,
-                                   nsChangeHint aHintForThisFrame) {
+  void UpdateStyleOfOwnedAnonBoxes(mozilla::ServoRestyleState& aRestyleState)
+  {
     if (GetStateBits() & NS_FRAME_OWNS_ANON_BOXES) {
-      DoUpdateStyleOfOwnedAnonBoxes(aStyleSet, aChangeList, aHintForThisFrame);
+      DoUpdateStyleOfOwnedAnonBoxes(aRestyleState);
     }
   }
 
@@ -3314,16 +3314,12 @@ protected:
   // This does the actual work of UpdateStyleOfOwnedAnonBoxes.  It calls
   // AppendDirectlyOwnedAnonBoxes to find all of the anonymous boxes
   // owned by this frame, and then updates styles on each of them.
-  void DoUpdateStyleOfOwnedAnonBoxes(mozilla::ServoStyleSet& aStyleSet,
-                                     nsStyleChangeList& aChangeList,
-                                     nsChangeHint aHintForThisFrame);
+  void DoUpdateStyleOfOwnedAnonBoxes(mozilla::ServoRestyleState& aRestyleState);
 
   // A helper for DoUpdateStyleOfOwnedAnonBoxes for the specific case
   // of the owned anon box being a child of this frame.
   void UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
-                                 mozilla::ServoStyleSet& aStyleSet,
-                                 nsStyleChangeList& aChangeList,
-                                 nsChangeHint aHintForThisFrame);
+                                 mozilla::ServoRestyleState& aRestyleState);
 
 public:
   // A helper both for UpdateStyleOfChildAnonBox, and to update frame-backed
@@ -3335,15 +3331,15 @@ public:
   //
   // Returns the generated change hint for the frame.
   nsChangeHint UpdateStyleOfOwnedChildFrame(
-      nsIFrame* aChildFrame,
-      nsStyleContext* aNewStyleContext,
-      nsStyleChangeList& aChangeList);
+    nsIFrame* aChildFrame,
+    nsStyleContext* aNewStyleContext,
+    mozilla::ServoRestyleState& aRestyleState);
 
   struct OwnedAnonBox
   {
-    typedef void (*UpdateStyleFn)(nsIFrame* aOwningFrame, nsIFrame* aAnonBox,
-                                  mozilla::ServoStyleSet&,
-                                  nsStyleChangeList&, nsChangeHint);
+    typedef void (*UpdateStyleFn)(nsIFrame* aOwningFrame,
+                                  nsIFrame* aAnonBox,
+                                  mozilla::ServoRestyleState& aRestyleState);
 
     explicit OwnedAnonBox(nsIFrame* aAnonBoxFrame,
                           UpdateStyleFn aUpdateStyleFn = nullptr)

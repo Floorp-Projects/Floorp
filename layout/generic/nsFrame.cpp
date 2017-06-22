@@ -10202,9 +10202,7 @@ nsFrame::BoxMetrics() const
 
 void
 nsIFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
-                                    ServoStyleSet& aStyleSet,
-                                    nsStyleChangeList& aChangeList,
-                                    nsChangeHint aHintForThisFrame)
+                                    ServoRestyleState& aRestyleState)
 {
   MOZ_ASSERT(aChildFrame->GetParent() == this,
              "This should only be used for children!");
@@ -10223,20 +10221,22 @@ nsIFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
 
   // Anon boxes inherit from their parent; that's us.
   RefPtr<nsStyleContext> newContext =
-    aStyleSet.ResolveInheritingAnonymousBoxStyle(pseudo, StyleContext());
+    aRestyleState.StyleSet().ResolveInheritingAnonymousBoxStyle(pseudo,
+                                                                StyleContext());
 
   nsChangeHint childHint =
-    UpdateStyleOfOwnedChildFrame(aChildFrame, newContext, aChangeList);
+    UpdateStyleOfOwnedChildFrame(aChildFrame, newContext, aRestyleState);
 
   // Now that we've updated the style on aChildFrame, check whether it itself
   // has anon boxes to deal with.
-  aChildFrame->UpdateStyleOfOwnedAnonBoxes(aStyleSet, aChangeList, childHint);
+  ServoRestyleState childrenState(aRestyleState, childHint);
+  aChildFrame->UpdateStyleOfOwnedAnonBoxes(childrenState);
 }
 
 nsChangeHint
 nsIFrame::UpdateStyleOfOwnedChildFrame(nsIFrame* aChildFrame,
                                        nsStyleContext* aNewStyleContext,
-                                       nsStyleChangeList& aChangeList)
+                                       ServoRestyleState& aRestyleState)
 {
   // Figure out whether we have an actual change.  It's important that we do
   // this, for several reasons:
@@ -10253,13 +10253,16 @@ nsIFrame::UpdateStyleOfOwnedChildFrame(nsIFrame* aChildFrame,
     aNewStyleContext,
     &equalStructs,
     &samePointerStructs);
+  childHint = NS_RemoveSubsumedHints(childHint, aRestyleState.ChangesHandled());
   if (childHint) {
     if (childHint & nsChangeHint_ReconstructFrame) {
       // If we generate a reconstruct here, remove any non-reconstruct hints we
       // may have already generated for this content.
-      aChangeList.PopChangesForContent(aChildFrame->GetContent());
+      aRestyleState.ChangeList().PopChangesForContent(
+        aChildFrame->GetContent());
     }
-    aChangeList.AppendChange(aChildFrame, aChildFrame->GetContent(), childHint);
+    aRestyleState.ChangeList().AppendChange(
+      aChildFrame, aChildFrame->GetContent(), childHint);
   }
 
   for (nsIFrame* kid = aChildFrame; kid; kid = kid->GetNextContinuation()) {
@@ -10561,9 +10564,7 @@ nsIFrame::UpdateWidgetProperties()
 }
 
 void
-nsIFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoStyleSet& aStyleSet,
-                                        nsStyleChangeList& aChangeList,
-                                        nsChangeHint aHintForThisFrame)
+nsIFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoRestyleState& aRestyleState)
 {
   // As a special case, we check for {ib}-split block frames here, rather
   // than have an nsInlineFrame::AppendDirectlyOwnedAnonBoxes implementation
@@ -10578,9 +10579,8 @@ nsIFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoStyleSet& aStyleSet,
   // UpdateStyleOfOwnedAnonBoxesForIBSplit directly here.)
   if (IsInlineFrame()) {
     if ((GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) {
-      static_cast<nsInlineFrame*>(this)->
-        UpdateStyleOfOwnedAnonBoxesForIBSplit(aStyleSet, aChangeList,
-                                              aHintForThisFrame);
+      static_cast<nsInlineFrame*>(this)->UpdateStyleOfOwnedAnonBoxesForIBSplit(
+        aRestyleState);
     }
     return;
   }
@@ -10589,11 +10589,9 @@ nsIFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoStyleSet& aStyleSet,
   AppendDirectlyOwnedAnonBoxes(frames);
   for (OwnedAnonBox& box : frames) {
     if (box.mUpdateStyleFn) {
-      box.mUpdateStyleFn(this, box.mAnonBoxFrame,
-                         aStyleSet, aChangeList, aHintForThisFrame);
+      box.mUpdateStyleFn(this, box.mAnonBoxFrame, aRestyleState);
     } else {
-      UpdateStyleOfChildAnonBox(box.mAnonBoxFrame,
-                                aStyleSet, aChangeList, aHintForThisFrame);
+      UpdateStyleOfChildAnonBox(box.mAnonBoxFrame, aRestyleState);
     }
   }
 }

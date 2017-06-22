@@ -356,16 +356,28 @@ SkAdvancedTypefaceMetrics* DWriteFontTypeface::onGetAdvancedTypefaceMetrics(
     // SkAdvancedTypefaceMetrics::fFontName is in theory supposed to be
     // the PostScript name of the font. However, due to the way it is currently
     // used, it must actually be a family name.
-    SkTScopedComPtr<IDWriteLocalizedStrings> familyNames;
-    hr = fDWriteFontFamily->GetFamilyNames(&familyNames);
+    if (fDWriteFontFamily) {
+      SkTScopedComPtr<IDWriteLocalizedStrings> familyNames;
+      hr = fDWriteFontFamily->GetFamilyNames(&familyNames);
 
-    UINT32 familyNameLen;
-    hr = familyNames->GetStringLength(0, &familyNameLen);
+      UINT32 familyNameLen;
+      hr = familyNames->GetStringLength(0, &familyNameLen);
 
-    SkSMallocWCHAR familyName(familyNameLen+1);
-    hr = familyNames->GetString(0, familyName.get(), familyNameLen+1);
+      SkSMallocWCHAR familyName(familyNameLen+1);
+      hr = familyNames->GetString(0, familyName.get(), familyNameLen+1);
 
-    hr = sk_wchar_to_skstring(familyName.get(), familyNameLen, &info->fFontName);
+      hr = sk_wchar_to_skstring(familyName.get(), familyNameLen, &info->fFontName);
+    } else {
+      // The name length would be passed to WideCharToMultiByte. It allows
+      // setting -1 in WideCharToMultiByte. The document says "If this
+      // parameter is -1, the function processes the entire input string,
+      // including the terminating null character. Therefore, the resulting
+      // character string has a terminating null character, and the length
+      // returned by the function includes this character."
+      // https://msdn.microsoft.com/library/windows/desktop/dd374130(v=vs.85).aspx
+      hr = sk_wchar_to_skstring(L"Unknown", -1 /* == strlen("Unknown") + 1 */,
+                                &info->fFontName);
+    }
 
     if (perGlyphInfo & kToUnicode_PerGlyphInfo) {
         populate_glyph_to_unicode(fDWriteFontFace.get(), glyphCount, &(info->fGlyphToUnicode));

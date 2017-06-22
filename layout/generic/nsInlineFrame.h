@@ -117,9 +117,7 @@ public:
   // Restyles the block wrappers around our non-inline-outside kids.
   // This will only be called when such wrappers in fact exist.
   void UpdateStyleOfOwnedAnonBoxesForIBSplit(
-      mozilla::ServoStyleSet& aStyleSet,
-      nsStyleChangeList& aChangeList,
-      nsChangeHint aHintForThisFrame);
+    mozilla::ServoRestyleState& aRestyleState);
 
 protected:
   // Additional reflow state used during our reflow methods

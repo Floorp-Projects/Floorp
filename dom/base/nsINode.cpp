@@ -22,6 +22,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/TextEditor.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/css/StyleRule.h"
 #include "mozilla/dom/Element.h"
@@ -230,24 +231,29 @@ static nsIContent* GetEditorRootContent(nsIEditor* aEditor)
 }
 
 nsIContent*
-nsINode::GetTextEditorRootContent(nsIEditor** aEditor)
+nsINode::GetTextEditorRootContent(TextEditor** aTextEditor)
 {
-  if (aEditor)
-    *aEditor = nullptr;
+  if (aTextEditor) {
+    *aTextEditor = nullptr;
+  }
   for (nsINode* node = this; node; node = node->GetParentNode()) {
     if (!node->IsElement() ||
         !node->IsHTMLElement())
       continue;
 
-    nsCOMPtr<nsIEditor> editor =
-      static_cast<nsGenericHTMLElement*>(node)->GetEditorInternal();
-    if (!editor)
+    RefPtr<TextEditor> textEditor =
+      static_cast<nsGenericHTMLElement*>(node)->GetTextEditorInternal();
+    if (!textEditor) {
       continue;
+    }
 
-    nsIContent* rootContent = GetEditorRootContent(editor);
-    if (aEditor)
-      editor.swap(*aEditor);
-    return rootContent;
+    MOZ_ASSERT(!textEditor->AsHTMLEditor(),
+               "If it were an HTML editor, needs to use GetRootElement()");
+    Element* rootElement = textEditor->GetRoot();
+    if (aTextEditor) {
+      textEditor.forget(aTextEditor);
+    }
+    return rootElement;
   }
   return nullptr;
 }

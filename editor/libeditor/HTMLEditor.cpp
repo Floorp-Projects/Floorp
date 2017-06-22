@@ -295,7 +295,7 @@ HTMLEditor::Init(nsIDOMDocument* aDoc,
     mTypeInState = new TypeInState();
 
     // init the selection listener for image resizing
-    mSelectionListenerP = new ResizerSelectionListener(this);
+    mSelectionListenerP = new ResizerSelectionListener(*this);
 
     if (!IsInteractionAllowed()) {
       // ignore any errors from this in case the file is missing

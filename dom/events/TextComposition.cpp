@@ -9,10 +9,10 @@
 #include "IMEStateManager.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
-#include "nsIEditor.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/EditorBase.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MiscEvents.h"
@@ -673,38 +673,39 @@ TextComposition::EditorDidHandleCompositionChangeEvent()
 }
 
 void
-TextComposition::StartHandlingComposition(nsIEditor* aEditor)
+TextComposition::StartHandlingComposition(EditorBase* aEditorBase)
 {
   MOZ_RELEASE_ASSERT(!mTabParent);
 
   MOZ_ASSERT(!HasEditor(), "There is a handling editor already");
-  mEditorWeak = do_GetWeakReference(aEditor);
+  mEditorBaseWeak = do_GetWeakReference(static_cast<nsIEditor*>(aEditorBase));
 }
 
 void
-TextComposition::EndHandlingComposition(nsIEditor* aEditor)
+TextComposition::EndHandlingComposition(EditorBase* aEditorBase)
 {
   MOZ_RELEASE_ASSERT(!mTabParent);
 
 #ifdef DEBUG
-  nsCOMPtr<nsIEditor> editor = GetEditor();
-  MOZ_ASSERT(editor == aEditor, "Another editor handled the composition?");
+  RefPtr<EditorBase> editorBase = GetEditorBase();
+  MOZ_ASSERT(editorBase == aEditorBase,
+             "Another editor handled the composition?");
 #endif // #ifdef DEBUG
-  mEditorWeak = nullptr;
+  mEditorBaseWeak = nullptr;
 }
 
-already_AddRefed<nsIEditor>
-TextComposition::GetEditor() const
+already_AddRefed<EditorBase>
+TextComposition::GetEditorBase() const
 {
-  nsCOMPtr<nsIEditor> editor = do_QueryReferent(mEditorWeak);
-  return editor.forget();
+  nsCOMPtr<nsIEditor> editor = do_QueryReferent(mEditorBaseWeak);
+  RefPtr<EditorBase> editorBase = static_cast<EditorBase*>(editor.get());
+  return editorBase.forget();
 }
 
 bool
 TextComposition::HasEditor() const
 {
-  nsCOMPtr<nsIEditor> editor = GetEditor();
-  return !!editor;
+  return mEditorBaseWeak && mEditorBaseWeak->IsAlive();
 }
 
 /******************************************************************************

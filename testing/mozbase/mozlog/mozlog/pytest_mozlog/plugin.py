@@ -5,6 +5,8 @@
 import mozlog
 import time
 
+import pytest
+
 
 def pytest_addoption(parser):
     # We can't simply use mozlog.commandline.add_logging_group(parser) here because
@@ -61,6 +63,7 @@ class MozLog(object):
         '''Called after test collection is completed, just before tests are run (suite start)'''
         self._log_suite_start([item.nodeid for item in session.items])
 
+    @pytest.mark.optionalhook
     def pytest_xdist_node_collection_finished(self, node, ids):
         '''Called after each pytest-xdist node collection is completed'''
         self._log_suite_start(ids)
