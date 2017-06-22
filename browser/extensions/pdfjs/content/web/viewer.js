@@ -874,7 +874,6 @@ var PDFViewerApplication = {
   secondaryToolbar: null,
   eventBus: null,
   l10n: null,
-  pageRotation: 0,
   isInitialViewSet: false,
   downloadComplete: false,
   viewerPrefs: {
@@ -1100,6 +1099,9 @@ var PDFViewerApplication = {
   get pagesCount() {
     return this.pdfDocument ? this.pdfDocument.numPages : 0;
   },
+  get pageRotation() {
+    return this.pdfViewer.pagesRotation;
+  },
   set page(val) {
     this.pdfViewer.currentPageNumber = val;
   },
@@ -1206,7 +1208,6 @@ var PDFViewerApplication = {
       this.pdfDocumentProperties.setDocument(null, null);
     }
     this.store = null;
-    this.pageRotation = 0;
     this.isInitialViewSet = false;
     this.downloadComplete = false;
     this.pdfSidebar.reset();
@@ -1623,12 +1624,13 @@ var PDFViewerApplication = {
     if (!this.pdfDocument) {
       return;
     }
-    let pageNumber = this.page;
-    this.pageRotation = (this.pageRotation + 360 + delta) % 360;
-    this.pdfViewer.pagesRotation = this.pageRotation;
-    this.pdfThumbnailViewer.pagesRotation = this.pageRotation;
+    let { pdfViewer, pdfThumbnailViewer } = this;
+    let pageNumber = pdfViewer.currentPageNumber;
+    let newRotation = (pdfViewer.pagesRotation + 360 + delta) % 360;
+    pdfViewer.pagesRotation = newRotation;
+    pdfThumbnailViewer.pagesRotation = newRotation;
     this.forceRendering();
-    this.pdfViewer.currentPageNumber = pageNumber;
+    pdfViewer.currentPageNumber = pageNumber;
   },
   requestPresentationMode: function pdfViewRequestPresentationMode() {
     if (!this.pdfPresentationMode) {
@@ -5024,7 +5026,7 @@ class PDFPageView {
         });
         return;
       }
-      if (!this.zoomLayer) {
+      if (!this.zoomLayer && !this.canvas.hasAttribute('hidden')) {
         this.zoomLayer = this.canvas.parentNode;
         this.zoomLayer.style.position = 'absolute';
       }
@@ -7648,11 +7650,11 @@ exports.Toolbar = undefined;
 
 var _ui_utils = __webpack_require__(0);
 
-var PAGE_NUMBER_LOADING_INDICATOR = 'visiblePageIsLoading';
-var SCALE_SELECT_CONTAINER_PADDING = 8;
-var SCALE_SELECT_PADDING = 22;
-var Toolbar = function ToolbarClosure() {
-  function Toolbar(options, mainContainer, eventBus, l10n = _ui_utils.NullL10n) {
+const PAGE_NUMBER_LOADING_INDICATOR = 'visiblePageIsLoading';
+const SCALE_SELECT_CONTAINER_PADDING = 8;
+const SCALE_SELECT_PADDING = 22;
+class Toolbar {
+  constructor(options, mainContainer, eventBus, l10n = _ui_utils.NullL10n) {
     this.toolbar = options.container;
     this.mainContainer = mainContainer;
     this.eventBus = eventBus;
@@ -7662,170 +7664,167 @@ var Toolbar = function ToolbarClosure() {
     this.reset();
     this._bindListeners();
   }
-  Toolbar.prototype = {
-    setPageNumber(pageNumber, pageLabel) {
-      this.pageNumber = pageNumber;
-      this.pageLabel = pageLabel;
-      this._updateUIState(false);
-    },
-    setPagesCount(pagesCount, hasPageLabels) {
-      this.pagesCount = pagesCount;
-      this.hasPageLabels = hasPageLabels;
-      this._updateUIState(true);
-    },
-    setPageScale(pageScaleValue, pageScale) {
-      this.pageScaleValue = pageScaleValue;
-      this.pageScale = pageScale;
-      this._updateUIState(false);
-    },
-    reset() {
-      this.pageNumber = 0;
-      this.pageLabel = null;
-      this.hasPageLabels = false;
-      this.pagesCount = 0;
-      this.pageScaleValue = _ui_utils.DEFAULT_SCALE_VALUE;
-      this.pageScale = _ui_utils.DEFAULT_SCALE;
-      this._updateUIState(true);
-    },
-    _bindListeners: function Toolbar_bindClickListeners() {
-      var eventBus = this.eventBus;
-      var self = this;
-      var items = this.items;
-      items.previous.addEventListener('click', function () {
-        eventBus.dispatch('previouspage');
+  setPageNumber(pageNumber, pageLabel) {
+    this.pageNumber = pageNumber;
+    this.pageLabel = pageLabel;
+    this._updateUIState(false);
+  }
+  setPagesCount(pagesCount, hasPageLabels) {
+    this.pagesCount = pagesCount;
+    this.hasPageLabels = hasPageLabels;
+    this._updateUIState(true);
+  }
+  setPageScale(pageScaleValue, pageScale) {
+    this.pageScaleValue = pageScaleValue;
+    this.pageScale = pageScale;
+    this._updateUIState(false);
+  }
+  reset() {
+    this.pageNumber = 0;
+    this.pageLabel = null;
+    this.hasPageLabels = false;
+    this.pagesCount = 0;
+    this.pageScaleValue = _ui_utils.DEFAULT_SCALE_VALUE;
+    this.pageScale = _ui_utils.DEFAULT_SCALE;
+    this._updateUIState(true);
+  }
+  _bindListeners() {
+    let eventBus = this.eventBus;
+    let self = this;
+    let items = this.items;
+    items.previous.addEventListener('click', function () {
+      eventBus.dispatch('previouspage');
+    });
+    items.next.addEventListener('click', function () {
+      eventBus.dispatch('nextpage');
+    });
+    items.zoomIn.addEventListener('click', function () {
+      eventBus.dispatch('zoomin');
+    });
+    items.zoomOut.addEventListener('click', function () {
+      eventBus.dispatch('zoomout');
+    });
+    items.pageNumber.addEventListener('click', function () {
+      this.select();
+    });
+    items.pageNumber.addEventListener('change', function () {
+      eventBus.dispatch('pagenumberchanged', {
+        source: self,
+        value: this.value
       });
-      items.next.addEventListener('click', function () {
-        eventBus.dispatch('nextpage');
-      });
-      items.zoomIn.addEventListener('click', function () {
-        eventBus.dispatch('zoomin');
-      });
-      items.zoomOut.addEventListener('click', function () {
-        eventBus.dispatch('zoomout');
-      });
-      items.pageNumber.addEventListener('click', function () {
-        this.select();
-      });
-      items.pageNumber.addEventListener('change', function () {
-        eventBus.dispatch('pagenumberchanged', {
-          source: self,
-          value: this.value
-        });
-      });
-      items.scaleSelect.addEventListener('change', function () {
-        if (this.value === 'custom') {
-          return;
-        }
-        eventBus.dispatch('scalechanged', {
-          source: self,
-          value: this.value
-        });
-      });
-      items.presentationModeButton.addEventListener('click', function (e) {
-        eventBus.dispatch('presentationmode');
-      });
-      items.openFile.addEventListener('click', function (e) {
-        eventBus.dispatch('openfile');
-      });
-      items.print.addEventListener('click', function (e) {
-        eventBus.dispatch('print');
-      });
-      items.download.addEventListener('click', function (e) {
-        eventBus.dispatch('download');
-      });
-      items.scaleSelect.oncontextmenu = _ui_utils.noContextMenuHandler;
-      eventBus.on('localized', evt => {
-        this._localized();
-      });
-    },
-    _localized: function Toolbar_localized() {
-      this._wasLocalized = true;
-      this._adjustScaleWidth();
-      this._updateUIState(true);
-    },
-    _updateUIState: function Toolbar_updateUIState(resetNumPages) {
-      if (!this._wasLocalized) {
+    });
+    items.scaleSelect.addEventListener('change', function () {
+      if (this.value === 'custom') {
         return;
       }
-      let selectScaleOption = (value, scale) => {
-        let customScale = Math.round(scale * 10000) / 100;
-        this.l10n.get('page_scale_percent', { scale: customScale }, '{{scale}}%').then(msg => {
-          let options = items.scaleSelect.options;
-          let predefinedValueFound = false;
-          for (let i = 0, ii = options.length; i < ii; i++) {
-            let option = options[i];
-            if (option.value !== value) {
-              option.selected = false;
-              continue;
-            }
-            option.selected = true;
-            predefinedValueFound = true;
+      eventBus.dispatch('scalechanged', {
+        source: self,
+        value: this.value
+      });
+    });
+    items.presentationModeButton.addEventListener('click', function () {
+      eventBus.dispatch('presentationmode');
+    });
+    items.openFile.addEventListener('click', function () {
+      eventBus.dispatch('openfile');
+    });
+    items.print.addEventListener('click', function () {
+      eventBus.dispatch('print');
+    });
+    items.download.addEventListener('click', function () {
+      eventBus.dispatch('download');
+    });
+    items.scaleSelect.oncontextmenu = _ui_utils.noContextMenuHandler;
+    eventBus.on('localized', () => {
+      this._localized();
+    });
+  }
+  _localized() {
+    this._wasLocalized = true;
+    this._adjustScaleWidth();
+    this._updateUIState(true);
+  }
+  _updateUIState(resetNumPages = false) {
+    if (!this._wasLocalized) {
+      return;
+    }
+    let selectScaleOption = (value, scale) => {
+      let customScale = Math.round(scale * 10000) / 100;
+      this.l10n.get('page_scale_percent', { scale: customScale }, '{{scale}}%').then(msg => {
+        let options = items.scaleSelect.options;
+        let predefinedValueFound = false;
+        for (let i = 0, ii = options.length; i < ii; i++) {
+          let option = options[i];
+          if (option.value !== value) {
+            option.selected = false;
+            continue;
           }
-          if (!predefinedValueFound) {
-            items.customScaleOption.textContent = msg;
-            items.customScaleOption.selected = true;
-          }
-        });
-      };
-      var pageNumber = this.pageNumber;
-      var scaleValue = (this.pageScaleValue || this.pageScale).toString();
-      var scale = this.pageScale;
-      var items = this.items;
-      var pagesCount = this.pagesCount;
-      if (resetNumPages) {
-        if (this.hasPageLabels) {
-          items.pageNumber.type = 'text';
-        } else {
-          items.pageNumber.type = 'number';
-          this.l10n.get('of_pages', { pagesCount }, 'of {{pagesCount}}').then(msg => {
-            items.numPages.textContent = msg;
-          });
+          option.selected = true;
+          predefinedValueFound = true;
         }
-        items.pageNumber.max = pagesCount;
-      }
-      if (this.hasPageLabels) {
-        items.pageNumber.value = this.pageLabel;
-        this.l10n.get('page_of_pages', {
-          pageNumber,
-          pagesCount
-        }, '({{pageNumber}} of {{pagesCount}})').then(msg => {
-          items.numPages.textContent = msg;
-        });
-      } else {
-        items.pageNumber.value = pageNumber;
-      }
-      items.previous.disabled = pageNumber <= 1;
-      items.next.disabled = pageNumber >= pagesCount;
-      items.zoomOut.disabled = scale <= _ui_utils.MIN_SCALE;
-      items.zoomIn.disabled = scale >= _ui_utils.MAX_SCALE;
-      selectScaleOption(scaleValue, scale);
-    },
-    updateLoadingIndicatorState: function Toolbar_updateLoadingIndicatorState(loading) {
-      var pageNumberInput = this.items.pageNumber;
-      if (loading) {
-        pageNumberInput.classList.add(PAGE_NUMBER_LOADING_INDICATOR);
-      } else {
-        pageNumberInput.classList.remove(PAGE_NUMBER_LOADING_INDICATOR);
-      }
-    },
-    _adjustScaleWidth: function Toolbar_adjustScaleWidth() {
-      var container = this.items.scaleSelectContainer;
-      var select = this.items.scaleSelect;
-      _ui_utils.animationStarted.then(function () {
-        if (container.clientWidth === 0) {
-          container.setAttribute('style', 'display: inherit;');
-        }
-        if (container.clientWidth > 0) {
-          select.setAttribute('style', 'min-width: inherit;');
-          var width = select.clientWidth + SCALE_SELECT_CONTAINER_PADDING;
-          select.setAttribute('style', 'min-width: ' + (width + SCALE_SELECT_PADDING) + 'px;');
-          container.setAttribute('style', 'min-width: ' + width + 'px; ' + 'max-width: ' + width + 'px;');
+        if (!predefinedValueFound) {
+          items.customScaleOption.textContent = msg;
+          items.customScaleOption.selected = true;
         }
       });
+    };
+    let pageNumber = this.pageNumber;
+    let scaleValue = (this.pageScaleValue || this.pageScale).toString();
+    let scale = this.pageScale;
+    let items = this.items;
+    let pagesCount = this.pagesCount;
+    if (resetNumPages) {
+      if (this.hasPageLabels) {
+        items.pageNumber.type = 'text';
+      } else {
+        items.pageNumber.type = 'number';
+        this.l10n.get('of_pages', { pagesCount }, 'of {{pagesCount}}').then(msg => {
+          items.numPages.textContent = msg;
+        });
+      }
+      items.pageNumber.max = pagesCount;
     }
-  };
-  return Toolbar;
-}();
+    if (this.hasPageLabels) {
+      items.pageNumber.value = this.pageLabel;
+      this.l10n.get('page_of_pages', {
+        pageNumber,
+        pagesCount
+      }, '({{pageNumber}} of {{pagesCount}})').then(msg => {
+        items.numPages.textContent = msg;
+      });
+    } else {
+      items.pageNumber.value = pageNumber;
+    }
+    items.previous.disabled = pageNumber <= 1;
+    items.next.disabled = pageNumber >= pagesCount;
+    items.zoomOut.disabled = scale <= _ui_utils.MIN_SCALE;
+    items.zoomIn.disabled = scale >= _ui_utils.MAX_SCALE;
+    selectScaleOption(scaleValue, scale);
+  }
+  updateLoadingIndicatorState(loading = false) {
+    let pageNumberInput = this.items.pageNumber;
+    if (loading) {
+      pageNumberInput.classList.add(PAGE_NUMBER_LOADING_INDICATOR);
+    } else {
+      pageNumberInput.classList.remove(PAGE_NUMBER_LOADING_INDICATOR);
+    }
+  }
+  _adjustScaleWidth() {
+    let container = this.items.scaleSelectContainer;
+    let select = this.items.scaleSelect;
+    _ui_utils.animationStarted.then(function () {
+      if (container.clientWidth === 0) {
+        container.setAttribute('style', 'display: inherit;');
+      }
+      if (container.clientWidth > 0) {
+        select.setAttribute('style', 'min-width: inherit;');
+        let width = select.clientWidth + SCALE_SELECT_CONTAINER_PADDING;
+        select.setAttribute('style', 'min-width: ' + (width + SCALE_SELECT_PADDING) + 'px;');
+        container.setAttribute('style', 'min-width: ' + width + 'px; ' + 'max-width: ' + width + 'px;');
+      }
+    });
+  }
+}
 exports.Toolbar = Toolbar;
 
 /***/ }),
