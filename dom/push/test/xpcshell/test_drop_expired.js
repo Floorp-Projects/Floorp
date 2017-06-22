@@ -20,7 +20,7 @@ function visitURI(uri, timestamp) {
   });
 }
 
-var putRecord = Task.async(function* ({scope, perm, quota, lastPush, lastVisit}) {
+var putRecord = async function({scope, perm, quota, lastPush, lastVisit}) {
   let uri = Services.io.newURI(scope);
 
   Services.perms.add(uri, 'desktop-notification',
@@ -29,9 +29,9 @@ var putRecord = Task.async(function* ({scope, perm, quota, lastPush, lastVisit})
     Services.perms.remove(uri, 'desktop-notification');
   });
 
-  yield visitURI(uri, lastVisit);
+  await visitURI(uri, lastVisit);
 
-  yield db.put({
+  await db.put({
     channelID: uri.path,
     pushEndpoint: 'https://example.org/push' + uri.path,
     scope: uri.spec,
@@ -43,7 +43,7 @@ var putRecord = Task.async(function* ({scope, perm, quota, lastPush, lastVisit})
   });
 
   return uri;
-});
+};
 
 function run_test() {
   do_get_profile();
@@ -57,11 +57,11 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* setUp() {
+add_task(async function setUp() {
   // An expired registration that should be evicted on startup. Permission is
   // granted for this origin, and the last visit is more recent than the last
   // push message.
-  yield putRecord({
+  await putRecord({
     scope: 'https://example.com/expired-quota-restored',
     perm: 'ALLOW_ACTION',
     quota: 0,
@@ -71,7 +71,7 @@ add_task(function* setUp() {
 
   // An expired registration that we should evict when the origin is visited
   // again.
-  quotaURI = yield putRecord({
+  quotaURI = await putRecord({
     scope: 'https://example.xyz/expired-quota-exceeded',
     perm: 'ALLOW_ACTION',
     quota: 0,
@@ -81,7 +81,7 @@ add_task(function* setUp() {
 
   // An expired registration that we should evict when permission is granted
   // again.
-  permURI = yield putRecord({
+  permURI = await putRecord({
     scope: 'https://example.info/expired-perm-revoked',
     perm: 'DENY_ACTION',
     quota: 0,
@@ -90,7 +90,7 @@ add_task(function* setUp() {
   });
 
   // An active registration that we should leave alone.
-  yield putRecord({
+  await putRecord({
     scope: 'https://example.ninja/active',
     perm: 'ALLOW_ACTION',
     quota: 16,
@@ -126,22 +126,22 @@ add_task(function* setUp() {
     },
   });
 
-  yield subChangePromise;
+  await subChangePromise;
 });
 
-add_task(function* test_site_visited() {
+add_task(async function test_site_visited() {
   let subChangePromise = promiseObserverNotification(
     PushServiceComponent.subscriptionChangeTopic,
     (subject, data) => data == 'https://example.xyz/expired-quota-exceeded'
   );
 
-  yield visitURI(quotaURI, Date.now());
+  await visitURI(quotaURI, Date.now());
   PushService.observe(null, 'idle-daily', '');
 
-  yield subChangePromise;
+  await subChangePromise;
 });
 
-add_task(function* test_perm_restored() {
+add_task(async function test_perm_restored() {
   let subChangePromise = promiseObserverNotification(
     PushServiceComponent.subscriptionChangeTopic,
     (subject, data) => data == 'https://example.info/expired-perm-revoked'
@@ -150,5 +150,5 @@ add_task(function* test_perm_restored() {
   Services.perms.add(permURI, 'desktop-notification',
     Ci.nsIPermissionManager.ALLOW_ACTION);
 
-  yield subChangePromise;
+  await subChangePromise;
 });

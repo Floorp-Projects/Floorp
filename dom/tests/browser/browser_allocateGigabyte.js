@@ -17,25 +17,25 @@ function expectProcessCreated() {
   });
 }
 
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
     set: [
       ["dom.largeAllocationHeader.enabled", true],
     ]
   });
 
   // A toplevel tab should be able to navigate cross process!
-  yield BrowserTestUtils.withNewTab("about:blank", function*(aBrowser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function(aBrowser) {
     let epc = expectProcessCreated();
-    yield ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+    await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
       content.document.location = TEST_URI;
     });
 
     // Wait for the new process to be created by the Large-Allocation header
-    yield epc;
+    await epc;
 
     // Allocate a gigabyte of memory in the content process
-    yield ContentTask.spawn(aBrowser, null, () => {
+    await ContentTask.spawn(aBrowser, null, () => {
       let arrayBuffer = new ArrayBuffer(1024*1024*1024);
       ok(arrayBuffer, "Successfully allocated a gigabyte of memory in content process");
     });

@@ -21,7 +21,7 @@ Cu.import("resource://gre/modules/AppConstants.jsm");
 
 // Test that the default paths searched for native host manifests
 // are the ones we expect.
-add_task(function* test_default_paths() {
+add_task(async function test_default_paths() {
   let expectUser, expectGlobal;
   switch (AppConstants.platform) {
     case "macosx": {

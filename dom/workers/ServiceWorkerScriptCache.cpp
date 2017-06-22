@@ -198,12 +198,6 @@ public:
     return mBuffer;
   }
 
-  const nsString& URL() const
-  {
-    AssertIsOnMainThread();
-    return mURL;
-  }
-
 private:
   ~CompareCache()
   {

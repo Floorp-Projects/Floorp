@@ -3,22 +3,22 @@
 /**
  * Open a dummy page, then open about:cache and verify the opened page shows up in the cache.
  */
-add_task(function*() {
+add_task(async function() {
   const kRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/",
                                                     "https://example.com/");
   const kTestPage = kRoot + "dummy.html";
   // Open the dummy page to get it cached.
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, kTestPage, true);
-  yield BrowserTestUtils.removeTab(tab);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, kTestPage, true);
+  await BrowserTestUtils.removeTab(tab);
 
-  tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:cache", true);
+  tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:cache", true);
   let expectedPageCheck = function(uri) {
     info("Saw load for " + uri);
     // Can't easily use searchParms and new URL() because it's an about: URI...
     return uri.startsWith("about:cache?") && uri.includes("storage=disk");
   };
   let diskPageLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, expectedPageCheck);
-  yield ContentTask.spawn(tab.linkedBrowser, null, function() {
+  await ContentTask.spawn(tab.linkedBrowser, null, function() {
     ok(!content.document.nodePrincipal.isSystemPrincipal,
        "about:cache should not have system principal");
     let principalURI = content.document.nodePrincipal.URI;
@@ -29,7 +29,7 @@ add_task(function*() {
     is(links.length, 1, "Should have 1 link to the disk entries");
     links[0].click();
   });
-  yield diskPageLoaded;
+  await diskPageLoaded;
   info("about:cache disk subpage loaded");
 
   expectedPageCheck = function(uri) {
@@ -38,7 +38,7 @@ add_task(function*() {
   };
   let triggeringURISpec = tab.linkedBrowser.currentURI.spec;
   let entryLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, expectedPageCheck);
-  yield ContentTask.spawn(tab.linkedBrowser, kTestPage, function(kTestPage) {
+  await ContentTask.spawn(tab.linkedBrowser, kTestPage, function(kTestPage) {
     ok(!content.document.nodePrincipal.isSystemPrincipal,
        "about:cache with query params should still not have system principal");
     let principalURI = content.document.nodePrincipal.URI;
@@ -51,11 +51,11 @@ add_task(function*() {
     is(links.length, 1, "Should have 1 link to the entry for " + kTestPage);
     links[0].click();
   });
-  yield entryLoaded;
+  await entryLoaded;
   info("about:cache entry loaded");
 
 
-  yield ContentTask.spawn(tab.linkedBrowser, triggeringURISpec, function(triggeringURISpec) {
+  await ContentTask.spawn(tab.linkedBrowser, triggeringURISpec, function(triggeringURISpec) {
     ok(!content.document.nodePrincipal.isSystemPrincipal,
        "about:cache-entry should also not have system principal");
     let principalURI = content.document.nodePrincipal.URI;
@@ -67,5 +67,5 @@ add_task(function*() {
     ok(content.document.querySelectorAll("th").length,
        "Should have several table headers with data.");
   });
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });

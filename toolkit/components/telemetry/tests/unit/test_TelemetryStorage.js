@@ -20,14 +20,14 @@ function getPing() {
 
 // Setting up test environment.
 
-add_task(function* test_setup() {
+add_task(async function test_setup() {
   do_get_profile();
 });
 
 // Testing whether correct values are being recorded in
 // "TELEMETRY_PENDING_LOAD_MS" histogram.
 
-add_task(function* test_pendingLoadTime() {
+add_task(async function test_pendingLoadTime() {
   TelemetryStorage.reset();
   var ping = getPing();
 
@@ -46,7 +46,7 @@ add_task(function* test_pendingLoadTime() {
 // Testing whether correct values are being recorded in
 // "TELEMETRY_ARCHIVE_LOAD_MS" histogram.
 
-add_task(function* test_archiveLoadTime() {
+add_task(async function test_archiveLoadTime() {
   TelemetryStorage.reset();
 
   var ping = getPing();

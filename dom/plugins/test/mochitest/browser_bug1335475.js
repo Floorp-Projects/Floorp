@@ -1,15 +1,15 @@
 var rootDir = getRootDirectory(gTestPath);
 const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
 
-add_task(function*() {
+add_task(async function() {
   is(navigator.plugins.length, 0,
      "plugins should not be available to chrome-privilege pages");
   ok(!("application/x-test" in navigator.mimeTypes),
      "plugins should not be available to chrome-privilege pages");
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function*(browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, async function(browser) {
     // about:blank triggered from a toplevel load should not inherit permissions
-    yield ContentTask.spawn(browser, null, function*() {
+    await ContentTask.spawn(browser, null, async function() {
       is(content.window.navigator.plugins.length, 0,
          "plugins should not be available to null-principal about:blank");
       ok(!("application/x-test" in content.window.navigator.mimeTypes),
@@ -18,9 +18,9 @@ add_task(function*() {
 
     let promise = BrowserTestUtils.browserLoaded(browser);
     browser.loadURI(gTestRoot + "plugin_test.html");
-    yield promise;
+    await promise;
 
-    yield ContentTask.spawn(browser, null, function*() {
+    await ContentTask.spawn(browser, null, async function() {
       ok(content.window.navigator.plugins.length > 0,
          "plugins should be available to HTTP-loaded pages");
       ok("application/x-test" in content.window.navigator.mimeTypes,
@@ -35,12 +35,12 @@ add_task(function*() {
     // navigate from the HTTP page to an about:blank page which ought to
     // inherit permissions
     promise = BrowserTestUtils.browserLoaded(browser);
-    yield ContentTask.spawn(browser, null, function*() {
+    await ContentTask.spawn(browser, null, async function() {
       content.document.getElementById("aboutlink").click();
     });
-    yield promise;
+    await promise;
 
-    yield ContentTask.spawn(browser, null, function*() {
+    await ContentTask.spawn(browser, null, async function() {
       is(content.window.location.href, "about:blank", "sanity-check about:blank load");
       ok("application/x-test" in content.window.navigator.mimeTypes,
          "plugins should be available when a site triggers an about:blank load");
@@ -51,9 +51,9 @@ add_task(function*() {
     promise = BrowserTestUtils.browserLoaded(browser);
     let converteduri = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry).convertChromeURL(Services.io.newURI(rootDir + "plugin_test.html"));
     browser.loadURI(converteduri.spec);
-    yield promise;
+    await promise;
 
-    yield ContentTask.spawn(browser, null, function*() {
+    await ContentTask.spawn(browser, null, async function() {
       ok(!("application/x-test" in content.window.navigator.mimeTypes),
          "plugins should not be available to file: URI content");
     });

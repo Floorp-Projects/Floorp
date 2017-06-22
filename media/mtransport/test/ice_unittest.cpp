@@ -350,10 +350,6 @@ class SchedulableTrickleCandidate {
       return candidate_;
     }
 
-    size_t Stream() const {
-      return stream_;
-    }
-
     bool IsHost() const {
       return candidate_.find("typ host") != std::string::npos;
     }
@@ -407,7 +403,6 @@ class IceTestPeer : public sigslot::has_slots<> {
       expected_local_transport_(kNrIceTransportUdp),
       expected_remote_type_(NrIceCandidate::ICE_HOST),
       trickle_mode_(TRICKLE_NONE),
-      trickled_(0),
       simulate_ice_lite_(false),
       nat_(new TestNat),
       test_utils_(utils) {
@@ -1070,7 +1065,6 @@ class IceTestPeer : public sigslot::has_slots<> {
           ASSERT_GT(ctx->GetStreamCount(), i);
           nsresult res = ctx->GetStream(i)->ParseTrickleCandidate(candidate);
           ASSERT_TRUE(NS_SUCCEEDED(res));
-          ++trickled_;
           return;
         }
       }
@@ -1391,8 +1385,6 @@ class IceTestPeer : public sigslot::has_slots<> {
         NS_DISPATCH_SYNC);
   }
 
-  int trickled() { return trickled_; }
-
   void SetControlling(NrIceCtx::Controlling controlling) {
     nsresult res;
     test_utils_->sts_target()->Dispatch(
@@ -1466,7 +1458,6 @@ class IceTestPeer : public sigslot::has_slots<> {
   NrIceCandidate::Type expected_remote_type_;
   std::string expected_remote_addr_;
   TrickleMode trickle_mode_;
-  int trickled_;
   bool simulate_ice_lite_;
   RefPtr<mozilla::TestNat> nat_;
   MtransportTestUtils* test_utils_;
@@ -1862,12 +1853,6 @@ class WebRtcIceConnectTest : public StunTest {
                         std::string transport = kNrIceTransportUdp) {
     p1_->SetExpectedTypes(local, remote, transport);
     p2_->SetExpectedTypes(local, remote, transport);
-  }
-
-  void SetExpectedTypes(NrIceCandidate::Type local1, NrIceCandidate::Type remote1,
-                        NrIceCandidate::Type local2, NrIceCandidate::Type remote2) {
-    p1_->SetExpectedTypes(local1, remote1);
-    p2_->SetExpectedTypes(local2, remote2);
   }
 
   void SetExpectedRemoteCandidateAddr(const std::string& addr) {

@@ -26,11 +26,6 @@ interface nsIFormAutoComplete: nsISupports {
      * to cancel an existing search, for example, in preparation for a new search.
      */
     void stopAutoCompleteSearch();
-
-    /**
-     * Since the controller is disconnecting, any related data must be cleared.
-     */
-    void stopControllingInput(in nsIDOMHTMLInputElement aField);
 };
 
 [scriptable, function, uuid(604419ab-55a0-4831-9eca-1b9e67cc4751)]

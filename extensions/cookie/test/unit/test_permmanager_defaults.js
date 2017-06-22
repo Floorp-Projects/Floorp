@@ -10,16 +10,16 @@ const TEST_PERMISSION = "test-permission";
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
 function promiseTimeout(delay) {
-  let deferred = Promise.defer();
-  do_timeout(delay, deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    do_timeout(delay, resolve);
+  });
 }
 
 function run_test() {
   run_next_test();
 }
 
-add_task(function* do_test() {
+add_task(async function do_test() {
   // setup a profile.
   do_get_profile();
 
@@ -85,7 +85,7 @@ add_task(function* do_test() {
   do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION, findCapabilityViaEnum(TEST_ORIGIN_3));
 
   // but should not have been written to the DB
-  yield checkCapabilityViaDB(null);
+  await checkCapabilityViaDB(null);
 
   // remove all should not throw and the default should remain
   pm.removeAll();
@@ -117,7 +117,7 @@ add_task(function* do_test() {
   do_check_eq(Ci.nsIPermissionManager.UNKNOWN_ACTION,
               pm.testPermissionFromPrincipal(principal8, TEST_PERMISSION));
   // and we should have this UNKNOWN_ACTION reflected in the DB
-  yield checkCapabilityViaDB(Ci.nsIPermissionManager.UNKNOWN_ACTION);
+  await checkCapabilityViaDB(Ci.nsIPermissionManager.UNKNOWN_ACTION);
   // but the permission should *not* appear in the enumerator.
   do_check_eq(null, findCapabilityViaEnum());
 
@@ -150,7 +150,7 @@ add_task(function* do_test() {
   do_check_eq(Ci.nsIPermissionManager.DENY_ACTION,
               pm.testPermissionFromPrincipal(principal8, TEST_PERMISSION));
   do_check_eq(Ci.nsIPermissionManager.DENY_ACTION, findCapabilityViaEnum());
-  yield checkCapabilityViaDB(Ci.nsIPermissionManager.DENY_ACTION);
+  await checkCapabilityViaDB(Ci.nsIPermissionManager.DENY_ACTION);
 
   // explicitly add a different permission - in this case we are no longer
   // replacing the default, but instead replacing the replacement!
@@ -167,7 +167,7 @@ add_task(function* do_test() {
   do_check_eq(Ci.nsIPermissionManager.PROMPT_ACTION,
               pm.testPermissionFromPrincipal(principal8, TEST_PERMISSION));
   do_check_eq(Ci.nsIPermissionManager.PROMPT_ACTION, findCapabilityViaEnum());
-  yield checkCapabilityViaDB(Ci.nsIPermissionManager.PROMPT_ACTION);
+  await checkCapabilityViaDB(Ci.nsIPermissionManager.PROMPT_ACTION);
 
   // --------------------------------------------------------------
   // check default permissions and removeAllSince work as expected.
@@ -184,10 +184,10 @@ add_task(function* do_test() {
   pm.addFromPrincipal(principal2, TEST_PERMISSION, Ci.nsIPermissionManager.DENY_ACTION);
   do_check_eq(Ci.nsIPermissionManager.DENY_ACTION,
               pm.testPermissionFromPrincipal(principal2, TEST_PERMISSION));
-  yield promiseTimeout(20);
+  await promiseTimeout(20);
 
   let since = Number(Date.now());
-  yield promiseTimeout(20);
+  await promiseTimeout(20);
 
   // explicitly add a permission which overrides the default for the first
   // principal - this one *should* be removed by removeAllSince.
@@ -237,29 +237,29 @@ function findCapabilityViaEnum(origin = TEST_ORIGIN, type = TEST_PERMISSION) {
 // the permission manager update has completed - so we just retry a few times.
 // Returns a promise.
 function checkCapabilityViaDB(expected, origin = TEST_ORIGIN, type = TEST_PERMISSION) {
-  let deferred = Promise.defer();
-  let count = 0;
-  let max = 20;
-  let do_check = () => {
-    let got = findCapabilityViaDB(origin, type);
-    if (got == expected) {
-      // the do_check_eq() below will succeed - which is what we want.
-      do_check_eq(got, expected, "The database has the expected value");
-      deferred.resolve();
-      return;
+  return new Promise(resolve => {
+    let count = 0;
+    let max = 20;
+    let do_check = () => {
+      let got = findCapabilityViaDB(origin, type);
+      if (got == expected) {
+        // the do_check_eq() below will succeed - which is what we want.
+        do_check_eq(got, expected, "The database has the expected value");
+        resolve();
+        return;
+      }
+      // value isn't correct - see if we've retried enough
+      if (count++ == max) {
+        // the do_check_eq() below will fail - which is what we want.
+        do_check_eq(got, expected, "The database wasn't updated with the expected value");
+        resolve();
+        return;
+      }
+      // we can retry...
+      do_timeout(100, do_check);
     }
-    // value isn't correct - see if we've retried enough
-    if (count++ == max) {
-      // the do_check_eq() below will fail - which is what we want.
-      do_check_eq(got, expected, "The database wasn't updated with the expected value");
-      deferred.resolve();
-      return;
-    }
-    // we can retry...
-    do_timeout(100, do_check);
-  }
-  do_check();
-  return deferred.promise;
+    do_check();
+  });
 }
 
 // use the DB to find the requested permission.   Returns the permission

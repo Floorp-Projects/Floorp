@@ -32,9 +32,9 @@ function openEditCertTrustDialog() {
   });
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   // Initially trust ca.pem for SSL, but not e-mail or object signing.
-  gCert = yield readCertificate("ca.pem", "CT,,");
+  gCert = await readCertificate("ca.pem", "CT,,");
   Assert.ok(gCertDB.isCertTrusted(gCert, Ci.nsIX509Cert.CA_CERT,
                                   Ci.nsIX509CertDB.TRUSTED_SSL),
             "Sanity check: ca.pem should be trusted for SSL");
@@ -50,8 +50,8 @@ add_task(function* setup() {
 // 1. The checkboxes correctly reflect the trust set in setup().
 // 2. Accepting the dialog after flipping some of the checkboxes results in the
 //    correct trust being set in the cert DB.
-add_task(function* testAcceptDialog() {
-  let win = yield openEditCertTrustDialog();
+add_task(async function testAcceptDialog() {
+  let win = await openEditCertTrustDialog();
 
   let sslCheckbox = win.document.getElementById("trustSSL");
   let emailCheckbox = win.document.getElementById("trustEmail");
@@ -68,7 +68,7 @@ add_task(function* testAcceptDialog() {
 
   info("Accepting dialog");
   win.document.getElementById("editCaCert").acceptDialog();
-  yield BrowserTestUtils.windowClosed(win);
+  await BrowserTestUtils.windowClosed(win);
 
   Assert.ok(!gCertDB.isCertTrusted(gCert, Ci.nsIX509Cert.CA_CERT,
                                    Ci.nsIX509CertDB.TRUSTED_SSL),
@@ -85,8 +85,8 @@ add_task(function* testAcceptDialog() {
 // 1. The checkboxes correctly reflect the trust set in testAcceptDialog().
 // 2. Canceling the dialog even after flipping the checkboxes doesn't result in
 //    a change of trust in the cert DB.
-add_task(function* testCancelDialog() {
-  let win = yield openEditCertTrustDialog();
+add_task(async function testCancelDialog() {
+  let win = await openEditCertTrustDialog();
 
   let sslCheckbox = win.document.getElementById("trustSSL");
   let emailCheckbox = win.document.getElementById("trustEmail");
@@ -104,7 +104,7 @@ add_task(function* testCancelDialog() {
 
   info("Canceling dialog");
   win.document.getElementById("editCaCert").cancelDialog();
-  yield BrowserTestUtils.windowClosed(win);
+  await BrowserTestUtils.windowClosed(win);
 
   Assert.ok(!gCertDB.isCertTrusted(gCert, Ci.nsIX509Cert.CA_CERT,
                                   Ci.nsIX509CertDB.TRUSTED_SSL),

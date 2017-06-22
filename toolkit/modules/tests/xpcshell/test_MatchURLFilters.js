@@ -33,7 +33,7 @@ function expectThrow({url, filters, exceptionMessageContains}) {
   );
 }
 
-add_task(function* test_match_url_filters() {
+add_task(async function test_match_url_filters() {
   const shouldPass = true;
   const shouldFail = true;
   const shouldThrow = true;

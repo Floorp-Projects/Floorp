@@ -78,13 +78,13 @@ TracingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
 {
   StreamCommonProps("tracing", aWriter, aProcessStartTime, aUniqueStacks);
 
-  if (GetCategory()) {
-    aWriter.StringProperty("category", GetCategory());
+  if (mCategory) {
+    aWriter.StringProperty("category", mCategory);
   }
 
-  if (GetKind() == TRACING_INTERVAL_START) {
+  if (mKind == TRACING_INTERVAL_START) {
     aWriter.StringProperty("interval", "start");
-  } else if (GetKind() == TRACING_INTERVAL_END) {
+  } else if (mKind == TRACING_INTERVAL_END) {
     aWriter.StringProperty("interval", "end");
   }
 }

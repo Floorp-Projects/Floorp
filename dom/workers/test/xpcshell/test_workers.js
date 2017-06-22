@@ -13,25 +13,25 @@ function run_test() {
 }
 
 function talk_with_worker(worker) {
-  let deferred = Promise.defer();
-  worker.onmessage = function(event) {
-    let success = true;
-    if (event.data == "OK") {
-      deferred.resolve();
-    } else {
-      success = false;
-      deferred.reject(event);
-    }
-    do_check_true(success);
-    worker.terminate();
-  };
-  worker.onerror = function(event) {
-    let error = new Error(event.message, event.filename, event.lineno);
-    worker.terminate();
-    deferred.reject(error);
-  };
-  worker.postMessage("START");
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    worker.onmessage = function(event) {
+      let success = true;
+      if (event.data == "OK") {
+        resolve();
+      } else {
+        success = false;
+        reject(event);
+      }
+      do_check_true(success);
+      worker.terminate();
+    };
+    worker.onerror = function(event) {
+      let error = new Error(event.message, event.filename, event.lineno);
+      worker.terminate();
+      reject(error);
+    };
+    worker.postMessage("START");
+  });
 }
 
 

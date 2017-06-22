@@ -21,7 +21,7 @@
     const DEBUGGER_URL = BASE_URL + "WorkerDebugger.initialize_debugger.js";
 
     function test() {
-      Task.spawn(function* () {
+      (async function() {
         SimpleTest.waitForExplicitFinish();
 
         info("Create a worker that creates a child worker, wait for their " +
@@ -31,11 +31,11 @@
           waitForRegister(CHILD_WORKER_URL, DEBUGGER_URL)
         ]);
         let worker = new Worker(WORKER_URL);
-        yield promise;
+        await promise;
 
         info("Check that the debuggers are initialized before the workers " +
              "start running.");
-        yield waitForMultiple([
+        await waitForMultiple([
           waitForWorkerMessage(worker, "debugger"),
           waitForWorkerMessage(worker, "worker"),
           waitForWorkerMessage(worker, "child:debugger"),
@@ -43,7 +43,7 @@
         ]);
 
         SimpleTest.finish();
-      });
+      })();
     }
 
   ]]>

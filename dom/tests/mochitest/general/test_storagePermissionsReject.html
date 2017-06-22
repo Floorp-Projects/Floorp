@@ -11,30 +11,30 @@
 
     <script type="text/javascript">
 
-task(function* () {
-  yield setCookieBehavior(BEHAVIOR_REJECT);
+task(async function() {
+  await setCookieBehavior(BEHAVIOR_REJECT);
 
   // We should be unable to access storage
-  yield storagePrevented();
+  await storagePrevented();
 
   // Same origin iframes should be blocked.
-  yield runIFrame("frameStoragePrevented.html");
-  yield runIFrame("frameStorageNullprincipal.sjs");
-  yield runIFrame("frameStorageChrome.html?allowed=no&blockSessionStorage=yes");
+  await runIFrame("frameStoragePrevented.html");
+  await runIFrame("frameStorageNullprincipal.sjs");
+  await runIFrame("frameStorageChrome.html?allowed=no&blockSessionStorage=yes");
 
   // Sandboxed iframes should have the null principal, and thus can't access storage
   document.querySelector('iframe').setAttribute('sandbox', 'allow-scripts');
-  yield runIFrame("frameStoragePrevented.html#nullprincipal");
-  yield runIFrame("frameStorageNullprincipal.sjs");
+  await runIFrame("frameStoragePrevented.html#nullprincipal");
+  await runIFrame("frameStorageNullprincipal.sjs");
   document.querySelector('iframe').removeAttribute('sandbox');
 
   // thirdparty iframes should be blocked.
-  yield runIFrame(thirdparty + "frameStoragePrevented.html");
-  yield runIFrame(thirdparty + "frameStorageNullprincipal.sjs");
-  yield runIFrame(thirdparty + "frameStorageChrome.html?allowed=no&blockSessionStorage=yes");
+  await runIFrame(thirdparty + "frameStoragePrevented.html");
+  await runIFrame(thirdparty + "frameStorageNullprincipal.sjs");
+  await runIFrame(thirdparty + "frameStorageChrome.html?allowed=no&blockSessionStorage=yes");
 
   // Workers should be unable to access storage
-  yield runWorker("workerStoragePrevented.js");
+  await runWorker("workerStoragePrevented.js");
 });
 
     </script>

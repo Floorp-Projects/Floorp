@@ -2,7 +2,7 @@
 
 let { EventEmitter } = Cu.import("resource:///modules/syncedtabs/EventEmitter.jsm", {});
 
-add_task(function* testSingleListener() {
+add_task(async function testSingleListener() {
   let eventEmitter = new EventEmitter();
   let spy = sinon.spy();
 
@@ -16,7 +16,7 @@ add_task(function* testSingleListener() {
   Assert.ok(spy.calledOnce);
 });
 
-add_task(function* testMultipleListeners() {
+add_task(async function testMultipleListeners() {
   let eventEmitter = new EventEmitter();
   let spy1 = sinon.spy();
   let spy2 = sinon.spy();

@@ -14,7 +14,7 @@ function promiseEvent(target, event) {
   });
 }
 
-add_task(function*() {
+add_task(async function() {
   let principal = Services.scriptSecurityManager
     .createCodebasePrincipalFromOrigin("http://example.com/");
 
@@ -43,10 +43,10 @@ add_task(function*() {
   do_print("Dispatch FromTest event");
   window.dispatchEvent(new window.CustomEvent("FromTest"));
 
-  yield fromTestPromise;
+  await fromTestPromise;
   do_print("Got event from test");
 
-  yield fromSandboxPromise;
+  await fromSandboxPromise;
   do_print("Got response from sandbox");
 
 
@@ -61,7 +61,7 @@ add_task(function*() {
   do_print("Dispatch FromTest event");
   fromTestPromise = promiseEvent(window, "FromTest");
   window.dispatchEvent(new window.CustomEvent("FromTest"));
-  yield fromTestPromise;
+  await fromTestPromise;
   do_print("Got event from test");
 
 
@@ -74,7 +74,7 @@ add_task(function*() {
   do_print("Dispatch FromTest event");
   fromTestPromise = promiseEvent(window, "FromTest");
   window.dispatchEvent(new window.CustomEvent("FromTest"));
-  yield fromTestPromise;
+  await fromTestPromise;
   do_print("Got event from test");
 
   let listeners = Services.els.getListenerInfoFor(window);

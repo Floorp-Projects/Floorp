@@ -42,9 +42,9 @@ function wait_for_message(expected_message) {
   });
 }
 
-add_task(function* async_wait_until() {
+add_task(async function async_wait_until() {
   var worker;
-  let registration = yield navigator.serviceWorker.register(
+  let registration = await navigator.serviceWorker.register(
     "async_waituntil_worker.js", { scope: "./"} )
     .then(function(registration) {
       worker = registration.installing;
@@ -56,7 +56,7 @@ add_task(function* async_wait_until() {
 
   // This will make the service worker die immediately if there are no pending
   // waitUntil promises to keep it alive.
-  yield SpecialPowers.pushPrefEnv({"set": [
+  await SpecialPowers.pushPrefEnv({"set": [
     ["dom.serviceWorkers.idle_timeout", 0],
     ["dom.serviceWorkers.idle_extended_timeout", 299999]]});
 
@@ -65,27 +65,27 @@ add_task(function* async_wait_until() {
   // the value of a global variable.
   let waitForStart = wait_for_message("Started");
   worker.postMessage("Start");
-  yield waitForStart;
+  await waitForStart;
 
-  yield new Promise((res, rej) => {
+  await new Promise((res, rej) => {
     setTimeout(res, 0);
   });
 
   let waitResult = wait_for_message("Success");
   worker.postMessage("Result");
-  yield waitResult;
+  await waitResult;
 
   // Test the behaviour of calling waitUntil asynchronously. The important
   // part is that we receive the message event.
   let waitForMessage = wait_for_message("Done");
-  yield fetch("doesnt_exist.html").then(() => {
+  await fetch("doesnt_exist.html").then(() => {
     ok(true, "Fetch was successful.");
   });
-  yield waitForMessage;
+  await waitForMessage;
 
-  yield SpecialPowers.popPrefEnv();
-  yield SpecialPowers.popPrefEnv();
-  yield registration.unregister();
+  await SpecialPowers.popPrefEnv();
+  await SpecialPowers.popPrefEnv();
+  await registration.unregister();
 });
 </script>
 </body>
